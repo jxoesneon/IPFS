@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package ipfs.dht.red_black_tree;
+
+import "common_tree.proto";
+
+message RedBlackTreeNode {
+  int32 K = 1;
+  ipfs.dht.common.Node V = 2;  // Fully qualified type name
+  ipfs.dht.common.NodeColor color = 3; // Fully qualified type name
+  RedBlackTreeNode left_child = 4;
+  RedBlackTreeNode right_child = 5;
+}
