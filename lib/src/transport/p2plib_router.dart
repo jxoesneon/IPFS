@@ -1,6 +1,7 @@
 // lib/src/transport/p2plib_router.dart
 
 import 'dart:async';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:ipfs/src/core/config/config.dart';
@@ -55,11 +56,25 @@ class P2plibRouter {
     );
   }
 
-  /// Receives a message from a peer.
+/// Receives a message from a peer.
   Future<Uint8List> receiveMessage(p2p.Peer peer) async {
-    // TODO: Implement logic to receive messages with a timeout
-    throw UnimplementedError();
+    // Implement logic to receive messages with a timeout
+    try {
+      final datagram = await _router.receiveDatagram(
+        timeout: Duration(seconds: 10), // Set a timeout of 10 seconds
+      );
+      return datagram.data;
+    } catch (e) {
+      if (e is TimeoutException) {
+        print('Timeout while receiving message from peer: ${peer.id}');
+        // Handle timeout, e.g., return null or throw a custom exception
+        return null;
+      } else {
+        rethrow; // Re-throw other exceptions
+      }
+    }
   }
+
 
   /// Resolves a peer ID to a list of addresses.
   List<String> resolvePeerId(p2p.PeerId peerId) {
