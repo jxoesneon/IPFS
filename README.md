@@ -1,123 +1,149 @@
 # IPFS Server in Dart
 
-This repository contains a Dart implementation of an IPFS server. It aims to provide a robust, production-ready server that can seamlessly integrate with the IPFS network.
+Welcome to the **IPFS Server in Dart** repository! This project aims to deliver a robust, production-ready server leveraging Dart for seamless integration with the IPFS network.
 
-## Features
+![IPFS Logo](https://ipfs.io/images/ipfs-logo.svg)
 
-* **Core IPFS Functionality:**
-    * Content addressing and CID generation
-    * Merkle DAG representation and traversal
-    * Block storage and retrieval
-    * Directory listing and file fetching
-* **Networking and Communication:**
-    * libp2p-based peer-to-peer communication (using `p2plib`)
-    * DHT (Distributed Hash Table) for content discovery
-    * PubSub for real-time communication
-    * Circuit Relay for NAT traversal
-* **Content Routing:**
-    * Content routing with DHT and alternative strategies
-    * DNSLink support for name resolution
-* **Data Management:**
-    * Persistent data storage using a pluggable `Datastore`
-    * IPLD (InterPlanetary Linked Data) resolution and processing
-    * Graphsync for efficient data synchronization
-    * CAR (Content Addressable aRchive) import and export
-* **Security:**
-    * TLS encryption for secure communication
-    * Key management for IPNS
-    * Input validation and sanitization
-    * Quota management to prevent abuse
-* **Monitoring and Management:**
-    * Metrics collection and monitoring
-    * Logging with configurable levels
-    * Comprehensive node management capabilities
+[![GitHub issues](https://img.shields.io/github/issues/jxoesneon/IPFS)](https://github.com/jxoesneon/IPFS/issues)
+[![GitHub forks](https://img.shields.io/github/forks/jxoesneon/IPFS)](https://github.com/jxoesneon/IPFS/network)
+[![GitHub stars](https://img.shields.io/github/stars/jxoesneon/IPFS)](https://github.com/jxoesneon/IPFS/stargazers)
+[![GitHub license](https://img.shields.io/github/license/jxoesneon/IPFS)](https://github.com/jxoesneon/IPFS/blob/main/LICENSE)
 
-## Architecture
+---
 
-The server follows a modular architecture to promote flexibility and maintainability. The core component is the `IPFSNode` class, which orchestrates various sub-components and modules responsible for specific functionalities.
+## 🚀 Features
 
-### Core Data Structures
+- **🌐 Core IPFS Functionality:**
+  - 🔗 Content addressing and CID generation
+  - 🌲 Merkle DAG representation and traversal
+  - 📦 Block storage and retrieval
+  - 📁 Directory listing and file fetching
 
-These structures represent the fundamental data units within the IPFS system:
+- **📡 Networking and Communication:**
+  - 👥 libp2p-based peer-to-peer communication (utilizing `p2plib`)
+  - 🌍 DHT for content discovery
+  - 🔊 PubSub for real-time communication
+  - 🔄 Circuit Relay for NAT traversal
 
-*   **`Block`:**  Encapsulates a block of data and its corresponding Content Identifier (CID).
-*   **`Node`:** Represents a file or directory within the IPFS Merkle DAG (Directed Acyclic Graph).
-*   **`Link`:**  Defines a connection between nodes in the DAG, enabling navigation and retrieval of linked content.
+- **🧭 Content Routing:**
+  - 🎯 Content routing with DHT and alternative strategies
+  - 🖇️ DNSLink support for name resolution
 
-### IPFS Node Class (`IPFSNode`)
+- **💾 Data Management:**
+  - ⏳ Persistent data storage using a pluggable `Datastore`
+  - 🛠️ IPLD resolution and processing
+  - 📡 Graphsync for efficient data synchronization
+  - 🗂️ CAR import and export
 
-The `IPFSNode` class serves as the central component of the server, managing all other components and exposing the primary API for interacting with the IPFS network. It is responsible for:
+- **🔒 Security:**
+  - 🔐 TLS encryption for secure communication
+  - 🔑 Key management for IPNS
+  - 🛡️ Input validation and sanitization
+  - 📏 Quota management to prevent abuse
 
-*   **Initialization and Configuration:**  Loading configuration settings, initializing sub-components, and establishing network connections.
-*   **Content Management:**  Handling content addition, retrieval, and storage, including directory listing and file fetching.
-*   **Protocol Management:**  Managing various IPFS protocols such as Bitswap, DHT, PubSub, and Graphsync.
-*   **Routing and Resolution:**  Providing content routing capabilities and resolving IPNS names and DNSLinks.
-*   **Monitoring and Management:**  Collecting metrics, logging events, and offering node management functionalities.
+- **📈 Monitoring and Management:**
+  - 📊 Metrics collection and monitoring
+  - 📝 Logging with configurable levels
+  - 🛠 Comprehensive node management capabilities
 
-### Sub-Components and Modules
+---
 
-The `IPFSNode` interacts with several sub-components and modules, each responsible for a specific function:
+## 🏗 Architecture
 
-*   **`Bitswap`:**  Handles the exchange of blocks with other peers in the IPFS network.
-*   **`Datastore`:** Provides persistent storage for blocks, allowing retrieval even after the server restarts.
-*   **`Keystore`:** Manages IPNS key pairs, enabling the publishing and resolution of IPNS records.
-*   **`DHTClient`:**  Interacts with the Distributed Hash Table (DHT) to discover peers and content.
-*   **`PubSubClient`:**  Facilitates real-time communication and event propagation through the PubSub protocol.
-*   **`CircuitRelayClient`:**  Enables NAT traversal using circuit relay, allowing nodes behind firewalls to connect.
-*   **`ContentRouting`:**  Provides content routing capabilities, potentially using DHT or alternative strategies.
-*   **`Graphsync`:**  Enables efficient synchronization of subgraphs within the IPFS DAG.
-*   **`IPLDResolver`:** Resolves and processes InterPlanetary Linked Data (IPLD) links, facilitating interaction with diverse data formats.
-*   **`DNSLinkResolver`:**  Resolves IPFS content addressed through DNSLink entries.
-*   **`MetricsCollector`:**  Collects and exposes metrics related to server performance and resource usage.
+This server is built with a modular architecture that enhances flexibility and maintainability. At its core is the `IPFSNode` class, coordinating various sub-components and modules to manage specific functionalities.
 
-This modular structure ensures that each component has a well-defined responsibility, making the codebase easier to understand, maintain, and extend.
-## Getting Started
+### 🌟 Core Data Structures
+
+- **`Block`:** Represents a block of data alongside its CID.
+- **`Node`:** Depicts a file or directory within the IPFS DAG.
+- **`Link`:** Defines the connection between nodes in the DAG.
+
+### 💡 IPFS Node Class (`IPFSNode`)
+
+The primary conductor of our server, the `IPFSNode`, manages:
+
+- **Initialization & Configuration:** Loads settings, initializes components, and establishes connections.
+- **Content Management:** Oversees content addition, retrieval, and storage.
+- **Protocol Management:** Handles Bitswap, DHT, PubSub, and Graphsync.
+- **Routing & Resolution:** Manages content routing and resolves IPNS/DNSLinks.
+- **Monitoring & Management:** Collects metrics, logs events, and offers management tools.
+
+### ⚙ Sub-Components and Modules
+
+Key components include:
+
+- **`Bitswap`:** Facilitates block exchange with peers.
+- **`Datastore`:** Provides persistent storage solutions.
+- **`Keystore`:** Manages IPNS key pairs.
+- **`DHTClient`:** Interfaces with the DHT for peer/content discovery.
+- **`PubSubClient`:** Manages real-time communication.
+- **`CircuitRelayClient`:** Ensures NAT traversal using circuit relay.
+- **`ContentRouting`:** Enables diverse routing strategies.
+- **`Graphsync`:** Synchronizes DAG subgraphs efficiently.
+- **`IPLDResolver`:** Processes InterPlanetary Linked Data links.
+- **`DNSLinkResolver`:** Handles IPFS content via DNSLink.
+- **`MetricsCollector`:** Gathers performance and usage metrics.
+
+This architecture promotes clear responsibility distribution, facilitating ease in understanding, maintaining, and extending the codebase.
+
+---
+
+## 🛠 Getting Started
 
 1. **Clone the repository:**
 
    ```bash
-   git clone [invalid URL removed]
+   git clone https://github.com/jxoesneon/IPFS.git
+   ```
+
 2. **Install dependencies:**
 
     ```bash
-    cd ipfs
+    cd IPFS
     dart pub get
-    ````
+    ```
 
 3. **Run the example:**
 
-    ```Bash
+    ```bash
     dart example/main.dart
-    ````
+    ```
 
-4. **Usage:**
+4. **Basic Usage:**
 
     ```dart
     import 'package:ipfs/ipfs.dart';
 
     void main() async {
-    // Create a new IPFS node
-    final node = await IPFS.create();
+      final node = await IPFS.create();
+      await node.start();
 
-    // Start the node
-    await node.start();
+      final cid = await node.addFile(Uint8List.fromList(utf8.encode('Hello IPFS!')));
+      print('Added file with CID: $cid');
 
-    // Add a file
-    final cid = await node.addFile(Uint8List.fromList(utf8.encode('Hello IPFS!')));
-    print('Added file with CID: $cid');
+      final data = await node.get(cid);
+      print('File content: ${utf8.decode(data!)}');
 
-    // Get the file content
-    final data = await node.get(cid);
-    print('File content: ${utf8.decode(data!)}');
-
-    // Stop the node
-    await node.stop();
+      await node.stop();
     }
     ```
 
-## Contributing
-Contributions are welcome! Please feel free to open issues and submit pull requests.
+---
 
-## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 🤝 Contributing
 
+Contributions are always welcome! Feel free to open issues or submit pull requests.
+
+### Development Process
+
+1. Fork the repository.
+2. Create a new branch: `git checkout -b feature/your-feature-name`.
+3. Commit your changes: `git commit -m 'Add some feature'`.
+4. Push to the branch: `git push origin feature/your-feature-name`.
+5. Open a pull request.
+
+---
+
+## 📜 License
+
+This project is under the MIT License. For more details, please refer to the [LICENSE](LICENSE) file.
