@@ -54,12 +54,21 @@ void main() async {
 
   // 8. Retrieve a file from the directory
   // Access a specific file from a given directory CID
+  final directoryContent = {
+    'myFolder/file1.txt': Uint8List.fromList(utf8.encode('Content of file1')),
+    'myFolder/file2.txt': Uint8List.fromList(utf8.encode('Content of file2')),
+  };
+  final dirCid = await node.addDirectory(directoryContent);
+  print('Added directory with CID: $dirCid');
+
+  // Now, retrieve file2.txt using the dirCid
   final file2Data = await node.get(dirCid, path: 'myFolder/file2.txt');
   if (file2Data != null) {
     print('Retrieved file2.txt content: ${utf8.decode(file2Data)}');
   } else {
     print('Failed to retrieve file2.txt content.');
   }
+
 
   // 9. Resolve an IPNS name
   // Convert an IPNS name to its current CID mapping
