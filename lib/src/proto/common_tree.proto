@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package ipfs.dht.common; // Package definition
+
+enum NodeColor {
+  RED = 0;
+  BLACK = 1;
+}
+
+message PeerId {
+  string id = 1;
+}
+
+message Node {
+  PeerId peer_id = 1;
+  bytes data = 2; 
+}
