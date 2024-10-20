@@ -174,8 +174,4 @@ class IPFS {
     return _node.resolveDNSLink(domainName);
   }
 
-  /// Gets the node's statistics.
-  Future<NodeStats> stats() async {
-    return _node.stats();
-  }
 }
