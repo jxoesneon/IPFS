@@ -1,0 +1,40 @@
+name: ipfs
+description: A Dart implementation of an IPFS server.
+version: 0.1.0 # Initial version
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  uuid: ^4.5.1
+
+  # Networking and P2P
+  p2plib: ^2.2.2 # Or a suitable libp2p implementation for Dart
+  # Consider a more robust and feature-rich networking library if needed
+
+  # Cryptography
+  crypto: ^3.0.2 # For CID calculation and other cryptographic operations
+  # You might need additional cryptography libraries for specific needs
+  # (e.g., for TLS, IPNS key management)
+
+  # Serialization
+  protobuf: ^3.1.0 # Or another efficient serialization format for messages
+  # (e.g., CBOR, MsgPack)
+
+  # Data Storage
+  hive: ^2.2.3 # Or another local database for persistent storage
+  # (e.g., ObjectBox, sqflite)
+
+  # Logging
+  logging: ^1.0.2 # For logging events and debugging
+
+  # Metrics (Optional)
+  prometheus_client: ^1.0.0+1 # Or another metrics library for monitoring
+
+  # Other Utilities (as needed)
+  # ...
+
+dev_dependencies:
+  test: ^1.21.0 # For unit and integration tests
+  lints: ^5.0.0 # For code style analysis
+  # ... (other development dependencies)
