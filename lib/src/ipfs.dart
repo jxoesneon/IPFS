@@ -6,6 +6,8 @@ import 'core/config/config.dart';
 import 'core/ipfs_node.dart';
 import 'core/data_structures/block.dart';
 import 'core/data_structures/link.dart';
+import 'core/data_structures/node_stats.dart';
+import 'transport/p2plib_router.dart'; // Import P2plibRouter
 
 // Main API class for interacting with the IPFS server
 class IPFS {
@@ -37,6 +39,36 @@ class IPFS {
   /// This closes all connections and shuts down the server gracefully.
   Future<void> stop() async {
     await _node.stop();
+  }
+
+  /// Gets the node's statistics.
+  Future<NodeStats> stats() async {
+    // Gather the actual statistics from the node's components
+
+    // 1. Get datastore stats
+    final numBlocks = await _datastore
+        .numBlocks(); // You'll need to implement numBlocks() in Datastore
+    final datastoreSize =
+        await _datastore.size(); // You'll need to implement size() in Datastore
+
+    // 2. Get router stats
+    final numConnectedPeers = _router.connectedPeers.length;
+    // You might need to adjust this based on how your p2plib router provides connected peers
+
+    // 3. Get Bitswap stats
+    final bandwidthSent = _bitswap
+        .bandwidthSent; // You'll need to add bandwidth tracking to Bitswap
+    final bandwidthReceived = _bitswap
+        .bandwidthReceived; // You'll need to add bandwidth tracking to Bitswap
+
+    // 4. Construct and return the NodeStats object
+    return NodeStats(
+      numBlocks: numBlocks,
+      datastoreSize: datastoreSize,
+      numConnectedPeers: numConnectedPeers,
+      bandwidthSent: bandwidthSent,
+      bandwidthReceived: bandwidthReceived,
+    );
   }
 
   // Expose a stream of new content CIDs
