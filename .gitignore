@@ -146,3 +146,6 @@ paket-files/
 .fake/
 .cr/personal
 .ntvs_analysis.dat
+
+# IDX-specific ignores
+.idx/
