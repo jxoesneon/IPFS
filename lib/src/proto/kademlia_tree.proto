@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package ipfs.dht.kademlia_tree;
+
+import "common_tree.proto";
+import "red_black_tree.proto";
+
+message KademliaNode {
+  ipfs.dht.common.PeerId peer_id = 1;
+  int32 distance = 2;  // XOR distance from the local node
+
+  // Using RedBlackTree from red_black_tree.proto to store child nodes
+  ipfs.dht.red_black_tree.RedBlackTreeNode children = 3; 
+}
+
+message KademliaBucket {
+  // Using RedBlackTree from red_black_tree.proto to represent the bucket
+  ipfs.dht.red_black_tree.RedBlackTreeNode tree = 1; 
+}
+
+message KademliaTree {
+  KademliaNode local_node = 1;
+  repeated KademliaBucket buckets = 2;
+}
