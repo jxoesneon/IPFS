@@ -21,36 +21,21 @@ import 'pubsub_handler.dart';
 
 /// The main class representing an IPFS node.
 class IPFSNode {
-  /// Creates a new IPFS node with the given [config].
-  IPFSNode(this.config) {
-    _router = P2plibRouter(config);
-    _datastore = Datastore(config.datastorePath);
-    _ledger = BitLedger(); // Initialize BitLedger
-    _bitswap = Bitswap(
-        _router, _ledger, _datastore, _peerId); // Pass peerId to Bitswap
-    _dht = DHTClient(this);
-    _pubsub = PubSubClient(this);
-    _circuitRelay = CircuitRelayClient(this);
-    _contentRouting = ContentRouting(this);
-    _dnslinkResolver = DNSLinkResolver();
-  }
 
-  Stream<String> get onNewContent => _newContentController.stream;
+  /// The Bitswap protocol instance.
+  late final Bitswap _bitswap;
+
+  // Declare _router as a member variable
+  late final P2plibRouter _router; 
 
   /// The ledger used to track blocks and peers in Bitswap.
   late final BitLedger _ledger;
-
-  /// The peer ID of this node.
-  String get _peerId => _router.peerID; // Assuming P2plibRouter provides peerID
 
   /// The configuration for this IPFS node.
   final IPFSConfig config;
 
   /// The datastore used to store IPFS blocks.
   late final Datastore _datastore;
-
-  /// The router used for network communication.
-  late final P2plibRouter _router;
 
   /// The DHT client for finding peers and content.
   late final DHTClient _dht;
@@ -119,6 +104,26 @@ class IPFSNode {
   /// The stream controller for application-specific messages.
   final _applicationMessageController =
       StreamController<ApplicationMessage>.broadcast();
+
+  /// Creates a new IPFS node with the given [config].
+  IPFSNode(this.config) {
+    _router = P2plibRouter(config);
+    _datastore = Datastore(config.datastorePath);
+    _ledger = BitLedger(); // Initialize BitLedger
+    _bitswap = Bitswap(_router, _ledger, _datastore, _peerId); // Pass peerId to Bitswap
+    _dht = DHTClient(this);
+    _pubsub = PubSubClient(this);
+    _circuitRelay = CircuitRelayClient(this);
+    _contentRouting = ContentRouting(this);
+    _dnslinkResolver = DNSLinkResolver();
+  }
+
+  Stream<String> get onNewContent => _newContentController.stream;
+
+
+
+  /// The peer ID of this node.
+  String get _peerId => _router.peerID; // Assuming P2plibRouter provides peerID
 
   /// The peer ID of this node.
   String get peerID => _router.peerID;
