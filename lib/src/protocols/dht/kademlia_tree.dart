@@ -40,12 +40,38 @@ class KademliaTree {
   void addPeer(p2p.PeerId peerId, p2p.PeerId associatedPeerId) =>
       this.addPeer(peerId, associatedPeerId);
   void removePeer(p2p.PeerId peerId) => this.removePeer(peerId);
-  //p2p.PeerId? getAssociatedPeer(p2p.PeerId peerId) =>
-  //    this.getAssociatedPeer(peerId); // TODO: Implement this if needed
+  // TODO: Implement `getAssociatedPeer` to retrieve the associated peer for a given ID.
+  p2p.PeerId? getAssociatedPeer(p2p.PeerId peerId) => 
+      this.getAssociatedPeer(peerId); 
   List<p2p.PeerId> findClosestPeers(p2p.PeerId target, int k) =>
       this.findClosestPeers(target, k);
-  Future<List<p2p.PeerId>> nodeLookup(p2p.PeerId target) =>
-      this.nodeLookup(target);
+  Future<List<p2p.PeerId>> nodeLookup(p2p.PeerId target) async {
+  List<Future<List<p2p.PeerId>>> queries = [];
+  for (var node in closestNodes) {
+    queries.add(_queryNode(node, target)); // Assume _queryNode is a helper function
+  }
+  List<List<p2p.PeerId>> results = await Future.wait(queries);
+
+    
+    while (!converged && iterationCount < maxIterations) {
+      // Select α closest nodes not yet queried
+      List<p2p.PeerId> nodesToQuery = _selectClosestNodes(closestNodes, alpha);
+
+      // Send parallel queries and await responses
+      List<List<p2p.PeerId>> results = await Future.wait(
+          nodesToQuery.map((node) => _queryNode(node, target)));
+
+      // Process responses and update closestNodes
+      _updateClosestNodes(closestNodes, results);
+
+      // Check for convergence
+      converged = _checkConvergence(closestNodes);
+
+      iterationCount++;
+    }
+    
+    return this.nodeLookup(target);
+  }
   void refresh() => this.refresh();
 
   // Bucket management operations (using extensions)
