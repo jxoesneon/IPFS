@@ -16,29 +16,30 @@ import 'package:protobuf/protobuf.dart' as $pb;
 import 'common_tree.pb.dart' as $0;
 import 'common_tree.pbenum.dart' as $0;
 
+/// Represents a node in a Red-Black Tree.
 class RedBlackTreeNode extends $pb.GeneratedMessage {
   factory RedBlackTreeNode({
-    $core.int? k,
-    $0.Node? v,
+    $0.K_PeerId? key,
+    $0.V_PeerInfo? value,
     $0.NodeColor? color,
-    RedBlackTreeNode? leftChild,
-    RedBlackTreeNode? rightChild,
+    RedBlackTreeNode? left,
+    RedBlackTreeNode? right,
   }) {
     final $result = create();
-    if (k != null) {
-      $result.k = k;
+    if (key != null) {
+      $result.key = key;
     }
-    if (v != null) {
-      $result.v = v;
+    if (value != null) {
+      $result.value = value;
     }
     if (color != null) {
       $result.color = color;
     }
-    if (leftChild != null) {
-      $result.leftChild = leftChild;
+    if (left != null) {
+      $result.left = left;
     }
-    if (rightChild != null) {
-      $result.rightChild = rightChild;
+    if (right != null) {
+      $result.right = right;
     }
     return $result;
   }
@@ -47,11 +48,11 @@ class RedBlackTreeNode extends $pb.GeneratedMessage {
   factory RedBlackTreeNode.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RedBlackTreeNode', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.red_black_tree'), createEmptyInstance: create)
-    ..a<$core.int>(1, _omitFieldNames ? '' : 'K', $pb.PbFieldType.O3, protoName: 'K')
-    ..aOM<$0.Node>(2, _omitFieldNames ? '' : 'V', protoName: 'V', subBuilder: $0.Node.create)
+    ..aOM<$0.K_PeerId>(1, _omitFieldNames ? '' : 'key', subBuilder: $0.K_PeerId.create)
+    ..aOM<$0.V_PeerInfo>(2, _omitFieldNames ? '' : 'value', subBuilder: $0.V_PeerInfo.create)
     ..e<$0.NodeColor>(3, _omitFieldNames ? '' : 'color', $pb.PbFieldType.OE, defaultOrMaker: $0.NodeColor.RED, valueOf: $0.NodeColor.valueOf, enumValues: $0.NodeColor.values)
-    ..aOM<RedBlackTreeNode>(4, _omitFieldNames ? '' : 'leftChild', subBuilder: RedBlackTreeNode.create)
-    ..aOM<RedBlackTreeNode>(5, _omitFieldNames ? '' : 'rightChild', subBuilder: RedBlackTreeNode.create)
+    ..aOM<RedBlackTreeNode>(4, _omitFieldNames ? '' : 'left', subBuilder: RedBlackTreeNode.create)
+    ..aOM<RedBlackTreeNode>(5, _omitFieldNames ? '' : 'right', subBuilder: RedBlackTreeNode.create)
     ..hasRequiredFields = false
   ;
 
@@ -76,26 +77,31 @@ class RedBlackTreeNode extends $pb.GeneratedMessage {
   static RedBlackTreeNode getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RedBlackTreeNode>(create);
   static RedBlackTreeNode? _defaultInstance;
 
+  /// The key associated with this node.
   @$pb.TagNumber(1)
-  $core.int get k => $_getIZ(0);
+  $0.K_PeerId get key => $_getN(0);
   @$pb.TagNumber(1)
-  set k($core.int v) { $_setSignedInt32(0, v); }
+  set key($0.K_PeerId v) { setField(1, v); }
   @$pb.TagNumber(1)
-  $core.bool hasK() => $_has(0);
+  $core.bool hasKey() => $_has(0);
   @$pb.TagNumber(1)
-  void clearK() => clearField(1);
+  void clearKey() => clearField(1);
+  @$pb.TagNumber(1)
+  $0.K_PeerId ensureKey() => $_ensure(0);
 
+  /// The value associated with this node.
   @$pb.TagNumber(2)
-  $0.Node get v => $_getN(1);
+  $0.V_PeerInfo get value => $_getN(1);
   @$pb.TagNumber(2)
-  set v($0.Node v) { setField(2, v); }
+  set value($0.V_PeerInfo v) { setField(2, v); }
   @$pb.TagNumber(2)
-  $core.bool hasV() => $_has(1);
+  $core.bool hasValue() => $_has(1);
   @$pb.TagNumber(2)
-  void clearV() => clearField(2);
+  void clearValue() => clearField(2);
   @$pb.TagNumber(2)
-  $0.Node ensureV() => $_ensure(1);
+  $0.V_PeerInfo ensureValue() => $_ensure(1);
 
+  /// The color of this node (RED or BLACK).
   @$pb.TagNumber(3)
   $0.NodeColor get color => $_getN(2);
   @$pb.TagNumber(3)
@@ -105,27 +111,29 @@ class RedBlackTreeNode extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearColor() => clearField(3);
 
+  /// The left child of this node.
   @$pb.TagNumber(4)
-  RedBlackTreeNode get leftChild => $_getN(3);
+  RedBlackTreeNode get left => $_getN(3);
   @$pb.TagNumber(4)
-  set leftChild(RedBlackTreeNode v) { setField(4, v); }
+  set left(RedBlackTreeNode v) { setField(4, v); }
   @$pb.TagNumber(4)
-  $core.bool hasLeftChild() => $_has(3);
+  $core.bool hasLeft() => $_has(3);
   @$pb.TagNumber(4)
-  void clearLeftChild() => clearField(4);
+  void clearLeft() => clearField(4);
   @$pb.TagNumber(4)
-  RedBlackTreeNode ensureLeftChild() => $_ensure(3);
+  RedBlackTreeNode ensureLeft() => $_ensure(3);
 
+  /// The right child of this node.
   @$pb.TagNumber(5)
-  RedBlackTreeNode get rightChild => $_getN(4);
+  RedBlackTreeNode get right => $_getN(4);
   @$pb.TagNumber(5)
-  set rightChild(RedBlackTreeNode v) { setField(5, v); }
+  set right(RedBlackTreeNode v) { setField(5, v); }
   @$pb.TagNumber(5)
-  $core.bool hasRightChild() => $_has(4);
+  $core.bool hasRight() => $_has(4);
   @$pb.TagNumber(5)
-  void clearRightChild() => clearField(5);
+  void clearRight() => clearField(5);
   @$pb.TagNumber(5)
-  RedBlackTreeNode ensureRightChild() => $_ensure(4);
+  RedBlackTreeNode ensureRight() => $_ensure(4);
 }
 
 
