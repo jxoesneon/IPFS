@@ -11,6 +11,7 @@ class RoutingTable {
   /// Keys: Peer IDs (p2p.PeerId)
   /// Values: Associated Peer IDs (p2p.PeerId)
   final Map<p2p.PeerId, p2p.PeerId> _table = {};
+
   // TODO: Consider using a more specialized data structure for efficient lookup and routing (e.g., a Kademlia tree).
 
   // 2. Basic Peer Management
@@ -60,8 +61,6 @@ class RoutingTable {
   // 3. Kademlia-Specific Components
   // 3.1. Distance Metric
   int distance(p2p.PeerId a, p2p.PeerId b) {
-    // ... implement XOR distance calculation ...
-    // throw UnimplementedError();
     // TODO: Implement XOR distance calculation between two Peer IDs, ensuring it aligns with Kademlia specifications.
     return 0;
   }
@@ -73,88 +72,60 @@ class RoutingTable {
 
   // 3.3. Bucket Management
   void addPeerToBucket(p2p.PeerId peerId) {
-    // ... determine bucket and add peer ...
     // TODO: Calculate the distance between the peer and the local node.
     // TODO: Find the appropriate bucket based on the calculated distance.
     // TODO: Add the peer to the bucket, respecting bucket size limits and replacement strategies.
   }
 
   void removePeerFromBucket(p2p.PeerId peerId) {
-    // ... find and remove peer from bucket ...
     // TODO: Find the bucket containing the peer based on its distance.
     // TODO: Remove the peer from the bucket.
   }
 
   // 3.4. Closest Peers
   List<p2p.PeerId> findClosestPeers(p2p.PeerId target, int k) {
-    // ... find k closest peers to target ...
     // TODO: Implement logic to efficiently find the k closest peers to the target Peer ID using the buckets.
     // TODO: Consider using a priority queue or similar data structure for efficient retrieval.
     return [];
   }
 
   // 3.5. Node Lookup
-  Future<List<p2p.PeerId>> nodeLookup(p2p.PeerId target) {
-    // ... perform iterative node lookup ...
-    // throw UnimplementedError();
+  Future<List<p2p.PeerId>> nodeLookup(p2p.PeerId target) async {
     // TODO: Implement the iterative node lookup algorithm as defined in the Kademlia specification.
     // TODO: Handle concurrency and timeouts appropriately.
-    return Future.value([]);
+    return [];
   }
 
   // 3.6. Refresh
   void refresh() {
-    // ... periodically refresh buckets ...
     // TODO: Implement a mechanism to periodically refresh buckets and evict stale peers.
     // TODO: Consider using a background task or timer for periodic refresh.
   }
 
   // 4. Record Storage and Retrieval
   void storeProvider(p2p.PeerId key, p2p.PeerId provider) {
-    // ...
     // TODO: Implement logic to store the provider for the given key, considering data replication and persistence.
   }
 
   List<p2p.PeerId> getProviders(p2p.PeerId key) {
-    // ...
     // TODO: Implement logic to retrieve the providers for the given key, handling potential lookup failures.
     return [];
   }
 
   // 5. Peer Routing and Lookup
-  Future<p2p.PeerId> findPeer(p2p.PeerId peerId) {
-    // ... using nodeLookup or other K
+  Future<p2p.PeerId?> findPeer(p2p.PeerId peerId) async {
     // TODO: Implement logic to find the peer using node lookup or other Kademlia routing strategies.
     // TODO: Handle cases where the peer is not found.
-  }
-    
-  // Duplicate of the previous method, consider removing or renaming
-  Future<p2p.PeerId> findPeerDuplicate(p2p.PeerId peerId) {
-    // ... using nodeLookup or other Kademlia logic ...
-    // throw UnimplementedError();
-    // TODO: Implement logic to find the peer using node lookup or other Kademlia logic.
-    return Future.value(peerId); // Placeholder, replace with actual logic
-  }
-
-  Future<List<p2p.PeerId>> findProvidersForContent(p2p.PeerId key) {
-    // ... using nodeLookup or other Kademlia logic ...
-    // throw UnimplementedError();
-    // TODO: Implement logic to find providers for content using node lookup or other Kademlia routing strategies.
-    // TODO: Handle cases where no providers are found.
-    return Future.value([]); // Placeholder, replace with actual logic
+    return null;
   }
 
   // 6. Bucket Maintenance
-  // Note: splitBucket was previously mentioned in section 3.3, 
-  //       but its implementation is placed here for better organization
   void splitBucket(int bucketIndex) {
-    // ...
     // TODO: Implement bucket splitting logic according to Kademlia specifications.
     // TODO: Ensure the split bucket is correctly integrated into the routing table.
   }
 
   void mergeBuckets(int bucketIndex1, int bucketIndex2) {
-    // ... (if needed) ...
     // TODO: Implement bucket merging logic according to Kademlia specifications, if necessary.
     // TODO: Ensure the merged bucket is correctly integrated into the routing table.
   }
