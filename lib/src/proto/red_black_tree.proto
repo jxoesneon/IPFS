@@ -4,10 +4,20 @@ package ipfs.dht.red_black_tree;
 
 import "common_tree.proto";
 
+// Represents a node in a Red-Black Tree.
 message RedBlackTreeNode {
-  int32 K = 1;
-  ipfs.dht.common.Node V = 2;  // Fully qualified type name
-  ipfs.dht.common.NodeColor color = 3; // Fully qualified type name
-  RedBlackTreeNode left_child = 4;
-  RedBlackTreeNode right_child = 5;
+  // The key associated with this node.
+  ipfs.dht.common.K_PeerId key = 1;
+
+  // The value associated with this node.
+  ipfs.dht.common.V_PeerInfo value = 2;
+
+  // The color of this node (RED or BLACK).
+  ipfs.dht.common.NodeColor color = 3;
+
+  // The left child of this node.
+  RedBlackTreeNode left = 4;
+
+  // The right child of this node.
+  RedBlackTreeNode right = 5;
 }
