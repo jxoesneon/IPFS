@@ -13,6 +13,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+/// Defines an enum representing the color of a node in a tree structure.
 class NodeColor extends $pb.ProtobufEnum {
   static const NodeColor RED = NodeColor._(0, _omitEnumNames ? '' : 'RED');
   static const NodeColor BLACK = NodeColor._(1, _omitEnumNames ? '' : 'BLACK');
@@ -26,6 +27,24 @@ class NodeColor extends $pb.ProtobufEnum {
   static NodeColor? valueOf($core.int value) => _byValue[value];
 
   const NodeColor._($core.int v, $core.String n) : super(v, n);
+}
+
+/// The current connection status of the peer.
+class V_PeerInfo_ConnectionStatus extends $pb.ProtobufEnum {
+  static const V_PeerInfo_ConnectionStatus DISCONNECTED = V_PeerInfo_ConnectionStatus._(0, _omitEnumNames ? '' : 'DISCONNECTED');
+  static const V_PeerInfo_ConnectionStatus CONNECTING = V_PeerInfo_ConnectionStatus._(1, _omitEnumNames ? '' : 'CONNECTING');
+  static const V_PeerInfo_ConnectionStatus CONNECTED = V_PeerInfo_ConnectionStatus._(2, _omitEnumNames ? '' : 'CONNECTED');
+
+  static const $core.List<V_PeerInfo_ConnectionStatus> values = <V_PeerInfo_ConnectionStatus> [
+    DISCONNECTED,
+    CONNECTING,
+    CONNECTED,
+  ];
+
+  static final $core.Map<$core.int, V_PeerInfo_ConnectionStatus> _byValue = $pb.ProtobufEnum.initByValue(values);
+  static V_PeerInfo_ConnectionStatus? valueOf($core.int value) => _byValue[value];
+
+  const V_PeerInfo_ConnectionStatus._($core.int v, $core.String n) : super(v, n);
 }
 
 
