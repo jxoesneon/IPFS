@@ -1,17 +1,84 @@
+// lib/src/proto/common_tree.proto
+// Specifies that this file uses Protocol Buffer version 3 syntax.
 syntax = "proto3";
 
+// Defines the package name for this file to prevent naming conflicts.
 package ipfs.dht.common; // Package definition
 
+import "google/protobuf/timestamp.proto"; // Import for Timestamp
+
+// Defines an enum representing the color of a node in a tree structure.
 enum NodeColor {
-  RED = 0;
+  // Represents the color red, typically used in red-black trees.
+  RED = 0; 
+  // Represents the color black, typically used in red-black trees.
   BLACK = 1;
 }
 
+// Defines a message representing a peer's unique identifier.
 message PeerId {
-  string id = 1;
+  // The ID of the peer, represented as a string.
+  string id = 1; 
 }
 
+// Defines a message representing a node in a data structure.
 message Node {
-  PeerId peer_id = 1;
-  bytes data = 2; 
+  // The unique identifier of the peer associated with this node.
+  PeerId peer_id = 1; 
+  // Arbitrary data associated with this node, represented as bytes.
+  bytes data = 2;  
 }
+
+// Defines a message representing a PeerId specifically for keys.
+message K_PeerId {
+  // The ID of the peer, represented as bytes.
+  bytes id = 1; 
+}
+
+message V_PeerInfo {
+  // The unique identifier of the peer.
+  bytes peer_id = 1; 
+
+  // The IP address of the peer.
+  string ip_address = 2; 
+
+  // The port number on which the peer is listening for connections.
+  int32 port = 3; 
+
+  // A list of protocols supported by the peer.
+  repeated string protocols = 4; 
+
+  // The estimated latency to the peer, in milliseconds.
+  int32 latency = 5; 
+
+  // The current connection status of the peer.
+  enum ConnectionStatus {
+    DISCONNECTED = 0;
+    CONNECTING = 1;
+    CONNECTED = 2;
+  }
+  ConnectionStatus connection_status = 6; 
+
+  // The timestamp when the peer was last seen or contacted.
+  google.protobuf.Timestamp last_seen = 7; 
+
+  // The version of the IPFS agent or client running on the peer.
+  string agent_version = 8; 
+
+  // The public key of the peer, used for authentication.
+  bytes public_key = 9; 
+
+  // A list of multiaddresses for the peer.
+  repeated string addresses = 10; 
+
+  // The address from which this peer was observed or learned about.
+  string observed_addr = 11; 
+}
+
+
+
+
+
+
+
+
