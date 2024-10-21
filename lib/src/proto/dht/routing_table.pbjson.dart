@@ -27,7 +27,7 @@ const RoutingTable_EntriesEntry$json = {
   '1': 'EntriesEntry',
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
-    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.ipfs.dht.kademlia_tree.KademliaNode', '10': 'value'},
+    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.ipfs.dht.kademlia_node.KademliaNode', '10': 'value'},
   ],
   '7': {'7': true},
 };
@@ -36,6 +36,6 @@ const RoutingTable_EntriesEntry$json = {
 final $typed_data.Uint8List routingTableDescriptor = $convert.base64Decode(
     'CgxSb3V0aW5nVGFibGUSSwoHZW50cmllcxgBIAMoCzIxLmlwZnMuZGh0LnJvdXRpbmdfdGFibG'
     'UuUm91dGluZ1RhYmxlLkVudHJpZXNFbnRyeVIHZW50cmllcxpgCgxFbnRyaWVzRW50cnkSEAoD'
-    'a2V5GAEgASgJUgNrZXkSOgoFdmFsdWUYAiABKAsyJC5pcGZzLmRodC5rYWRlbWxpYV90cmVlLk'
+    'a2V5GAEgASgJUgNrZXkSOgoFdmFsdWUYAiABKAsyJC5pcGZzLmRodC5rYWRlbWxpYV9ub2RlLk'
     'thZGVtbGlhTm9kZVIFdmFsdWU6AjgB');
 

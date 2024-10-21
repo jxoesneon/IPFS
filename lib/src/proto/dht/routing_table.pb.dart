@@ -13,7 +13,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'kademlia_tree.pb.dart' as $0;
+import 'kademlia_node.pb.dart' as $0;
 
 class RoutingTable extends $pb.GeneratedMessage {
   factory RoutingTable({

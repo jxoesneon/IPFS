@@ -13,8 +13,8 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'common_tree.pb.dart' as $0;
-import 'common_tree.pbenum.dart' as $0;
+import 'common_red_black_tree.pb.dart' as $0;
+import 'common_red_black_tree.pbenum.dart' as $0;
 
 /// Represents a node in a Red-Black Tree.
 class RedBlackTreeNode extends $pb.GeneratedMessage {

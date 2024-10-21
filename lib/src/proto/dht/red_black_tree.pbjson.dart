@@ -17,9 +17,9 @@ import 'dart:typed_data' as $typed_data;
 const RedBlackTreeNode$json = {
   '1': 'RedBlackTreeNode',
   '2': [
-    {'1': 'key', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common.K_PeerId', '10': 'key'},
-    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.ipfs.dht.common.V_PeerInfo', '10': 'value'},
-    {'1': 'color', '3': 3, '4': 1, '5': 14, '6': '.ipfs.dht.common.NodeColor', '10': 'color'},
+    {'1': 'key', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_red_black_tree.K_PeerId', '10': 'key'},
+    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.ipfs.dht.common_red_black_tree.V_PeerInfo', '10': 'value'},
+    {'1': 'color', '3': 3, '4': 1, '5': 14, '6': '.ipfs.dht.common_red_black_tree.NodeColor', '10': 'color'},
     {'1': 'left', '3': 4, '4': 1, '5': 11, '6': '.ipfs.dht.red_black_tree.RedBlackTreeNode', '10': 'left'},
     {'1': 'right', '3': 5, '4': 1, '5': 11, '6': '.ipfs.dht.red_black_tree.RedBlackTreeNode', '10': 'right'},
   ],
@@ -27,10 +27,11 @@ const RedBlackTreeNode$json = {
 
 /// Descriptor for `RedBlackTreeNode`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List redBlackTreeNodeDescriptor = $convert.base64Decode(
-    'ChBSZWRCbGFja1RyZWVOb2RlEisKA2tleRgBIAEoCzIZLmlwZnMuZGh0LmNvbW1vbi5LX1BlZX'
-    'JJZFIDa2V5EjEKBXZhbHVlGAIgASgLMhsuaXBmcy5kaHQuY29tbW9uLlZfUGVlckluZm9SBXZh'
-    'bHVlEjAKBWNvbG9yGAMgASgOMhouaXBmcy5kaHQuY29tbW9uLk5vZGVDb2xvclIFY29sb3ISPQ'
-    'oEbGVmdBgEIAEoCzIpLmlwZnMuZGh0LnJlZF9ibGFja190cmVlLlJlZEJsYWNrVHJlZU5vZGVS'
-    'BGxlZnQSPwoFcmlnaHQYBSABKAsyKS5pcGZzLmRodC5yZWRfYmxhY2tfdHJlZS5SZWRCbGFja1'
-    'RyZWVOb2RlUgVyaWdodA==');
+    'ChBSZWRCbGFja1RyZWVOb2RlEjoKA2tleRgBIAEoCzIoLmlwZnMuZGh0LmNvbW1vbl9yZWRfYm'
+    'xhY2tfdHJlZS5LX1BlZXJJZFIDa2V5EkAKBXZhbHVlGAIgASgLMiouaXBmcy5kaHQuY29tbW9u'
+    'X3JlZF9ibGFja190cmVlLlZfUGVlckluZm9SBXZhbHVlEj8KBWNvbG9yGAMgASgOMikuaXBmcy'
+    '5kaHQuY29tbW9uX3JlZF9ibGFja190cmVlLk5vZGVDb2xvclIFY29sb3ISPQoEbGVmdBgEIAEo'
+    'CzIpLmlwZnMuZGh0LnJlZF9ibGFja190cmVlLlJlZEJsYWNrVHJlZU5vZGVSBGxlZnQSPwoFcm'
+    'lnaHQYBSABKAsyKS5pcGZzLmRodC5yZWRfYmxhY2tfdHJlZS5SZWRCbGFja1RyZWVOb2RlUgVy'
+    'aWdodA==');
 
