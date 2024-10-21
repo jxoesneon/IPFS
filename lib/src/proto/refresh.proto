@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package ipfs.dht.refresh;
+
+message RefreshRequest {
+  // You might not need any fields here if refresh is a simple trigger
+}
+
+message RefreshResponse {
+  bool success = 1;
+}

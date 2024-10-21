@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package ipfs.dht.bucket_management;
+
+message SplitBucketRequest {
+  int32 bucket_index = 1;
+}
+
+message SplitBucketResponse {
+  bool success = 1;
+}
+
+message MergeBucketsRequest {
+  int32 bucket_index_1 = 1;
+  int32 bucket_index_2 = 2;
+}
+
+message MergeBucketsResponse {
+  bool success = 1;
+}

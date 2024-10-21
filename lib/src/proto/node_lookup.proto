@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package ipfs.dht.node_lookup;
+
+import "common_kademlia.proto";
+
+message NodeLookupRequest {
+  ipfs.dht.common_kademlia.KademliaId target = 1;
+}
+
+message NodeLookupResponse {
+  repeated ipfs.dht.common_kademlia.KademliaId closest_nodes = 1; 
+}

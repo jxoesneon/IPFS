@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package ipfs.dht.find_closest_peers;
+
+import "common_kademlia.proto";
+
+message FindClosestPeersRequest {
+  ipfs.dht.common_kademlia.KademliaId target = 1;
+  int32 count = 2;
+}
+
+message FindClosestPeersResponse {
+  repeated ipfs.dht.common_kademlia.KademliaId peer_ids = 1; 
+}

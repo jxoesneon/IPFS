@@ -1,0 +1,8 @@
+// lib/src/proto/common_kademlia.proto
+syntax = "proto3";
+
+package ipfs.dht.common_kademlia;
+
+message KademliaId {
+    bytes id = 1; // 20-byte Kademlia ID
+}

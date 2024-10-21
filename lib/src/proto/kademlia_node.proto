@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package ipfs.dht.kademlia_node;
+
+import "common_kademlia.proto";
+
+message KademliaNode {
+  ipfs.dht.common_kademlia.KademliaId peer_id = 1;
+  int32 distance = 2;
+  ipfs.dht.common_kademlia.KademliaId associated_peer_id = 3;
+}

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package ipfs.dht.add_peer;
+
+import "common_kademlia.proto";
+
+message AddPeerRequest {
+  ipfs.dht.common_kademlia.KademliaId peer_id = 1;
+  ipfs.dht.common_kademlia.KademliaId associated_peer_id = 2;
+}
+
+message AddPeerResponse {
+  bool success = 1;
+}

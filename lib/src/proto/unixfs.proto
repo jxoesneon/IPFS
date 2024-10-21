@@ -1,28 +1,32 @@
-message Data {
-	enum DataType {
-		Raw = 0;
-		Directory = 1;
-		File = 2;
-		Metadata = 3;
-		Symlink = 4;
-		HAMTShard = 5;
-	}
+syntax = "proto3";
 
-	required DataType Type = 1;
-	optional bytes Data = 2;
-	optional uint64 filesize = 3;
-	repeated uint64 blocksizes = 4;
-	optional uint64 hashType = 5;
-	optional uint64 fanout = 6;
-	optional uint32 mode = 7;
-	optional UnixTime mtime = 8;
+package ipfs.unixfs;
+
+message Data {
+  enum DataType {
+    RAW = 0;
+    DIRECTORY = 1;
+    FILE = 2;
+    METADATA = 3;
+    SYMLINK = 4;
+    HAMT_SHARD = 5;
+  }
+
+  DataType type = 1;
+  bytes data = 2;
+  uint64 filesize = 3;
+  repeated uint64 blocksizes = 4;
+  uint64 hash_type = 5;
+  uint64 fanout = 6;
+  uint32 mode = 7;
+  UnixTime mtime = 8;
 }
 
 message Metadata {
-	optional string MimeType = 1;
+  string mime_type = 1;
 }
 
 message UnixTime {
-	required int64 Seconds = 1;
-	optional fixed32 FractionalNanoseconds = 2;
+  int64 seconds = 1;
+  fixed32 fractional_nanoseconds = 2;
 }

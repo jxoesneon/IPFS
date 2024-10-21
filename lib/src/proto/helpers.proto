@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package ipfs.dht.helpers;
+
+import "common_kademlia.proto";
+
+message CalculateDistanceRequest {
+  ipfs.dht.common_kademlia.KademliaId id1 = 1;
+  ipfs.dht.common_kademlia.KademliaId id2 = 2;
+}
+
+message CalculateDistanceResponse {
+  int64 distance = 1;
+}

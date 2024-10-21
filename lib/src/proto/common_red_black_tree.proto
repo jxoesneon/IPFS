@@ -1,9 +1,8 @@
-// lib/src/proto/common_tree.proto
-// Specifies that this file uses Protocol Buffer version 3 syntax.
+// lib/src/proto/common_red_black_tree.proto
 syntax = "proto3";
 
 // Defines the package name for this file to prevent naming conflicts.
-package ipfs.dht.common; // Package definition
+package ipfs.dht.common_red_black_tree; // Package definition
 
 import "google/protobuf/timestamp.proto"; // Import for Timestamp
 
