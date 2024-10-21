@@ -32,6 +32,8 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
   final deletion.Deletion<K_PeerId, V_PeerInfo> _deletion;
   final rb_search.Search<K_PeerId, V_PeerInfo> _search;
 
+  var size;
+
   RedBlackTree({int Function(K_PeerId, K_PeerId)? compare})
       : _compare = compare ?? ((a, b) => (a as int).compareTo(b as int)),
         _insertion = insertion.Insertion<K_PeerId, V_PeerInfo>(),
