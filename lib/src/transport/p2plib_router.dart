@@ -22,6 +22,9 @@ class P2plibRouter {
 
   final IPFSConfig _config;
   final p2p.RouterL0 _router;
+  
+  // Getter to access the RouterL0 instance
+  p2p.RouterL0 get routerL0 => _router; // Expose _router as routerL0
 
   /// The peer ID of this node.
   String get peerID => _router.peerId.toBase58String();
