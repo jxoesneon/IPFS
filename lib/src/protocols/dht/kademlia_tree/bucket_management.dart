@@ -4,6 +4,7 @@ import '../red_black_tree.dart';
 import 'helpers.dart';
 import 'kademlia_node.dart';
 import '../kademlia_tree.dart';
+import '/../src/proto/dht/bucket_management.pb.dart' as bucket_management_pb;
 
 extension BucketManagement on KademliaTree {
   // Bucket splitting logic
