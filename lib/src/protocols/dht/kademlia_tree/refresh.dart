@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'remove_peer.dart'; // Import for removePeer
 import '../kademlia_tree.dart'; // Import the main KademliaTree class
+import '/../src/proto/dht/refresh.pb.dart' as refresh_pb;
 
 extension Refresh on KademliaTree {
   /// Refreshes the Kademlia tree by periodically checking and updating buckets.
