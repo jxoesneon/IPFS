@@ -1,7 +1,7 @@
 // lib/src/protocols/dht/red_black_tree/deletion.dart
 import '../red_black_tree.dart';
 import 'fix_violations.dart';
-import '/../src/proto/dht/common_tree.pb.dart' as common_tree;
+import '/../src/proto/dht/common_red_black_tree.pb.dart' as common_tree;
 
 class Deletion<K_PeerId, V_PeerInfo> {
   void delete(RedBlackTree<K_PeerId, V_PeerInfo> tree, K_PeerId key) {
