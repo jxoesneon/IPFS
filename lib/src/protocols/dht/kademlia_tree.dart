@@ -10,6 +10,8 @@ import 'kademlia_tree/node_lookup.dart';
 import 'kademlia_tree/refresh.dart';
 import 'kademlia_tree/remove_peer.dart';
 import 'red_black_tree.dart';
+import '/../src/proto/dht/kademlia_tree.pb.dart' as kademlia_tree_pb;
+import '/../src/proto/dht/kademlia_node.pb.dart' as kademlia_node_pb;
 
 
 /// Represents a Kademlia tree for efficient peer routing and lookup.
@@ -18,6 +20,16 @@ class KademliaTree {
   KademliaNode? _root; // Root node of the tree
   List<RedBlackTree<p2p.PeerId, KademliaNode>> _buckets =
       []; // List of k-buckets (now RedBlackTrees)
+  Map<p2p.PeerId, DateTime> _lastSeen = {}; // Add _lastSeen map
+  // Public getter for _lastSeen
+  Map<p2p.PeerId, DateTime> get lastSeen => _lastSeen;
+  Set<p2p.PeerId> _recentContacts = {}; // Store as member variable
+  // Public getter for _recentContacts (optional, for access from outside)
+  Set<p2p.PeerId> get recentContacts => _recentContacts;
+  // Method to clear recent contacts
+  void clearRecentContacts() {
+    _recentContacts = {}; // Re-initialize to an empty set
+  }
 
   // Define kBucketSize (usually 20)
   static const int kBucketSize = 20;
