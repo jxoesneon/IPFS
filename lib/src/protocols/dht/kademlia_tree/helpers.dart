@@ -1,5 +1,7 @@
 // lib/src/protocols/dht/kademlia_tree/helpers.dart
 import 'package:p2plib/p2plib.dart' as p2p;
+import '/../src/proto/dht/helpers.pb.dart' as helpers_pb;
+import '/../src/proto/dht/common_kademlia.pb.dart' as common_kademlia_pb;
 
 /// Calculates the XOR distance between two Peer IDs.
 int calculateDistance(p2p.PeerId a, p2p.PeerId b) {
