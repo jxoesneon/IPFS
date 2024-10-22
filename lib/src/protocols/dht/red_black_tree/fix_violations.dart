@@ -2,7 +2,7 @@
 
 import '../red_black_tree.dart';
 import 'rotations.dart';
-import '/../src/proto/dht/common_tree.pb.dart' as common_tree;
+import '/../src/proto/dht/common_red_black_tree.pb.dart' as common_tree;
 
 class FixViolations<K_PeerId, V_PeerInfo> {
   void fixInsertion(
