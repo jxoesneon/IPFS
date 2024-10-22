@@ -13,7 +13,6 @@ import 'red_black_tree.dart';
 import '/../src/proto/dht/kademlia_tree.pb.dart' as kademlia_tree_pb;
 import '/../src/proto/dht/kademlia_node.pb.dart' as kademlia_node_pb;
 
-
 /// Represents a Kademlia tree for efficient peer routing and lookup.
 class KademliaTree {
   // Tree structure
@@ -26,6 +25,16 @@ class KademliaTree {
   Set<p2p.PeerId> _recentContacts = {}; // Store as member variable
   // Public getter for _recentContacts (optional, for access from outside)
   Set<p2p.PeerId> get recentContacts => _recentContacts;
+  // Define _lookupSuccessHistory in KademliaTree
+  Map<p2p.PeerId, List<bool>> _lookupSuccessHistory = {};
+  // Getter for _lookupSuccessHistory
+  Map<p2p.PeerId, List<bool>> get lookupSuccessHistory => _lookupSuccessHistory;
+  // Define _connectionStats to store connection statistics
+  Map<p2p.PeerId, ConnectionStatistics> _connectionStats = {};
+
+  // Getter for _connectionStats
+  Map<p2p.PeerId, ConnectionStatistics> get connectionStats => _connectionStats;
+
   // Method to clear recent contacts
   void clearRecentContacts() {
     _recentContacts = {}; // Re-initialize to an empty set
@@ -48,23 +57,25 @@ class KademliaTree {
     }
   }
 
+  get router => null;
+
   // Core Kademlia operations (using extensions)
   void addPeer(p2p.PeerId peerId, p2p.PeerId associatedPeerId) =>
       this.addPeer(peerId, associatedPeerId);
   void removePeer(p2p.PeerId peerId) => this.removePeer(peerId);
   // TODO: Implement `getAssociatedPeer` to retrieve the associated peer for a given ID.
-  p2p.PeerId? getAssociatedPeer(p2p.PeerId peerId) => 
-      this.getAssociatedPeer(peerId); 
+  p2p.PeerId? getAssociatedPeer(p2p.PeerId peerId) =>
+      this.getAssociatedPeer(peerId);
   List<p2p.PeerId> findClosestPeers(p2p.PeerId target, int k) =>
       this.findClosestPeers(target, k);
   Future<List<p2p.PeerId>> nodeLookup(p2p.PeerId target) async {
-  List<Future<List<p2p.PeerId>>> queries = [];
-  for (var node in closestNodes) {
-    queries.add(_queryNode(node, target)); // Assume _queryNode is a helper function
-  }
-  List<List<p2p.PeerId>> results = await Future.wait(queries);
+    List<Future<List<p2p.PeerId>>> queries = [];
+    for (var node in closestNodes) {
+      queries.add(
+          _queryNode(node, target)); // Assume _queryNode is a helper function
+    }
+    List<List<p2p.PeerId>> results = await Future.wait(queries);
 
-    
     while (!converged && iterationCount < maxIterations) {
       // Select α closest nodes not yet queried
       List<p2p.PeerId> nodesToQuery = _selectClosestNodes(closestNodes, alpha);
@@ -81,9 +92,10 @@ class KademliaTree {
 
       iterationCount++;
     }
-    
+
     return this.nodeLookup(target);
   }
+
   void refresh() => this.refresh();
 
   // Bucket management operations (using extensions)
