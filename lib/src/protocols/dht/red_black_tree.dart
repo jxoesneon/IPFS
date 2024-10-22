@@ -34,6 +34,10 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
 
   var size;
 
+  bool isEmpty;
+
+  var entries;
+
   RedBlackTree({int Function(K_PeerId, K_PeerId)? compare})
       : _compare = compare ?? ((a, b) => (a as int).compareTo(b as int)),
         _insertion = insertion.Insertion<K_PeerId, V_PeerInfo>(),
