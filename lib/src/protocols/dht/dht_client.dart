@@ -15,9 +15,10 @@ import '/../src/utils/varint.dart';
 /// A DHT client implementation.
 class DHTClient {
   /// Creates a new [DHTClient].
-  DHTClient(this._node);
+  DHTClient(IPFSNode node) : router = node.router.routerL0; // Access through _router
 
-  final IPFSNode _node;
+  final IPFSNode node;
+  final p2p.RouterL0 router; // Store the RouterL0 instance
 
   // Routing table to store known peers in the DHT
   final Map<String, p2p.Peer> _routingTable = {}; // Using a Map to store peers by their ID
