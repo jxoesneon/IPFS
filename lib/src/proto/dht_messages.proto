@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package ipfs.dht.dht_messages;
+
+import "common_kademlia.proto";
+
+message PingRequest {
+  ipfs.dht.common_kademlia.KademliaId peer_id = 1;
+}
+
+message PingResponse {
+  ipfs.dht.common_kademlia.KademliaId peer_id = 1;
+  bool success = 2;
+}
