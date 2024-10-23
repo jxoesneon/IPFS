@@ -1,0 +1,23 @@
+// lib/src/proto/bitfield.proto
+syntax = "proto3";
+
+package ipfs;
+
+message BitField {
+    repeated bool bits = 1;  // Stores the bits in the BitField
+    int32 size = 2;          // Size of the BitField
+
+    // Functionality to set a bit at a specific index
+    message SetBitRequest {
+        int32 index = 1; // Index to set the bit
+    }
+
+    // Functionality to get a bit at a specific index
+    message GetBitRequest {
+        int32 index = 1; // Index to get the bit
+    }
+
+    message BitResponse {
+        bool value = 1;  // Value of the bit at the requested index
+    }
+}
