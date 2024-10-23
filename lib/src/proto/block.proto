@@ -1,0 +1,11 @@
+// lib/src/proto/block.proto
+syntax = "proto3";
+
+package ipfs.core.data_structures;
+
+import "cid.proto";
+
+message BlockProto {
+  bytes data = 1;
+  CIDProto cid = 2;  // Reference to a CID message defined elsewhere
+}
