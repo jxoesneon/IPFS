@@ -1,3 +1,4 @@
+lib/src/proto/kademlia_node.proto
 syntax = "proto3";
 
 package ipfs.dht.kademlia_node;
