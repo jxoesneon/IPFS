@@ -1,3 +1,4 @@
+// lib/src/proto/find_closest_peers.proto
 syntax = "proto3";
 
 package ipfs.dht.find_closest_peers;
