@@ -1,3 +1,4 @@
+// lib/src/proto/cid.proto
 syntax = "proto3";
 
 package ipfs.core.data_structures;
