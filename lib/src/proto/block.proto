@@ -7,5 +7,5 @@ import "cid.proto";
 
 message BlockProto {
   bytes data = 1;
-  CIDProto cid = 2;  // Reference to a CID message defined elsewhere
+  CID cid = 2;  // Reference to a CID message defined elsewhere
 }
