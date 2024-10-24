@@ -1,3 +1,4 @@
+// lib/src/proto/helpers.proto
 syntax = "proto3";
 
 package ipfs.dht.helpers;
