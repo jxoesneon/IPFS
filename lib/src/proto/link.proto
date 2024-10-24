@@ -1,0 +1,28 @@
+// lib/src/proto/link.proto
+syntax = "proto3";
+
+package ipfs.core.data_structures;
+
+// A message representing a link between nodes or objects in IPFS
+message Link {
+  // The name of the link (optional, could be a human-readable identifier)
+  string name = 1;
+
+  // The CID (Content Identifier) that the link points to
+  bytes cid = 2;
+
+  // The size of the linked object or node (in bytes)
+  uint64 size = 3;
+
+  // Optional hash of the linked content for integrity checks (optional)
+  bytes hash = 4;
+
+  // Unix timestamp of when the link was created
+  int64 timestamp = 5;
+
+  // A flag indicating whether the linked object is a directory
+  bool is_directory = 6;
+
+  // Custom metadata or additional fields for the link
+  map<string, string> metadata = 7;
+}
