@@ -1,0 +1,47 @@
+// lib/src/proto/merkle_dag_node.proto
+syntax = "proto3";
+
+package ipfs.core.data_structures;
+
+
+// Represents a Merkle DAG node.
+message MerkleDAGNode {
+  // The CID (Content Identifier) of the node.
+  bytes cid = 1;
+
+  // Links to other nodes in the DAG.
+  repeated Link links = 2;
+
+  // The data stored in the node (optional).
+  bytes data = 3;
+
+  // The size of the node's data.
+  uint64 size = 4;
+
+  // The timestamp of when the node was created.
+  int64 timestamp = 5;
+
+  // Optional metadata associated with the node.
+  map<string, string> metadata = 6;
+
+  // Indicates if the node is a directory.
+  bool is_directory = 7;
+
+  // Optional parent CID to represent the relationship in DAG.
+  bytes parent_cid = 8;
+}
+
+// Represents a link to another node.
+message Link {
+  // The name of the linked node.
+  string name = 1;
+
+  // The CID of the linked node.
+  bytes cid = 2;
+
+  // The size of the linked content.
+  uint64 size = 3;
+
+  // Optional metadata for the link.
+  map<string, string> metadata = 4;
+}
