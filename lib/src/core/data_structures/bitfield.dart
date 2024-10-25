@@ -1,50 +1,54 @@
+// lib/src/core/data_structures/bitfield.dart
+import '/../src/proto/dht/bitfield.pb.dart'; // Import the generated Dart file for BitFieldProto
 import 'dart:typed_data';
-import 'package:protobuf/protobuf.dart';
-import 'bitfield.pb.dart'; // Import the generated Dart file for BitField
 
+/// A class representing a simple bit field, used to manage binary flags efficiently.
 class BitField {
-  final List<bool> _bits;
+  final Uint8List _bits;  // Using Uint8List for memory efficiency
 
-  BitField(int size) : _bits = List<bool>.filled(size, false);
+  /// Constructs a BitField of a given size, initializing all bits to false (0).
+  BitField(int size) : _bits = Uint8List((size + 7) ~/ 8); // Efficient storage
 
-  // Sets a bit at the specified index
+  /// Sets the bit at the specified index to true.
   void setBit(int index) {
-    if (index < 0 || index >= _bits.length) {
-      throw RangeError('Index out of range');
-    }
-    _bits[index] = true;
+    _validateIndex(index);
+    _bits[index >> 3] |= 1 << (index & 7);
   }
 
-  // Clears a bit at the specified index
+  /// Clears the bit at the specified index (sets it to false).
   void clearBit(int index) {
-    if (index < 0 || index >= _bits.length) {
-      throw RangeError('Index out of range');
-    }
-    _bits[index] = false;
+    _validateIndex(index);
+    _bits[index >> 3] &= ~(1 << (index & 7));
   }
 
-  // Gets the value of a bit at the specified index
+  /// Returns whether the bit at the specified index is set (true) or cleared (false).
   bool getBit(int index) {
-    if (index < 0 || index >= _bits.length) {
-      throw RangeError('Index out of range');
+    _validateIndex(index);
+    return (_bits[index >> 3] & (1 << (index & 7))) != 0;
+  }
+
+  /// Validates the provided index, throwing a RangeError if it is out of bounds.
+  void _validateIndex(int index) {
+    if (index < 0 || index >= _bits.length * 8) {
+      throw RangeError('Index $index out of range (size: ${_bits.length * 8})');
     }
-    return _bits[index];
   }
 
-  // Serializes the BitField to a protobuf message
+  /// Serializes the BitField to a protobuf message for storage or transmission.
   BitFieldProto toProto() {
-    final bitFieldProto = BitFieldProto()
-      ..size = _bits.length
-      ..bits.addAll(_bits);
-    return bitFieldProto;
+    final proto = BitFieldProto()
+      ..size = _bits.length * 8
+      ..bits = _bits;  // Uint8List is directly supported
+    return proto;
   }
 
-  // Deserialize a BitField from a protobuf message
+  /// Deserializes a BitField from a protobuf message.
   static BitField fromProto(BitFieldProto proto) {
     final bitField = BitField(proto.size);
-    for (int i = 0; i < proto.bits.length; i++) {
-      bitField._bits[i] = proto.bits[i];
-    }
+    bitField._bits.setAll(0, proto.bits);  // Setting all bits from proto
     return bitField;
   }
+
+  /// Returns the total size of the BitField in bits.
+  int get size => _bits.length * 8;
 }
