@@ -1,4 +1,3 @@
-// lib/src/proto/block.proto
 syntax = "proto3";
 
 package ipfs.core.data_structures;
@@ -6,6 +5,6 @@ package ipfs.core.data_structures;
 import "cid.proto";
 
 message BlockProto {
-  bytes data = 1;
-  CID cid = 2;  // Reference to a CID message defined elsewhere
+  bytes data = 1;  // Raw binary data of the block
+  CIDProto cid = 2;  // Reference to a CID message defined in cid.proto
 }
