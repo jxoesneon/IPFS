@@ -3,43 +3,32 @@ syntax = "proto3";
 
 package ipfs.core.data_structures;
 
-import "block.proto"; // Import the BlockProto definition
-import "cid.proto";   // Import the CID definition
+// Import necessary proto definitions
+import "block.proto"; // Import BlockProto definition
+import "cid.proto";   // Import CIDProto definition
+import "google/protobuf/empty.proto";
+// Response message for adding a block
+message AddBlockResponse {
+  bool success = 1;          // Indicates if the operation was successful
+  string message = 2;       // Message providing additional information
+}
 
-// Represents a BlockStore that contains multiple blocks.
-message BlockStoreProto {
-  repeated BlockProto blocks = 1; // A list of blocks stored in the block store
+// Response message for retrieving a block
+message GetBlockResponse {
+  BlockProto block = 1;     // The block retrieved
+  bool found = 2;           // Indicates if the block was found
+}
 
-  // Functionality for adding a block to the store
-  message AddBlockRequest {
-    BlockProto block = 1; // The block to be added
-  }
+// Response message for removing a block
+message RemoveBlockResponse {
+  bool success = 1;          // Indicates if the operation was successful
+  string message = 2;       // Message providing additional information
+}
 
-  // Response for adding a block
-  message AddBlockResponse {
-    bool success = 1; // Indicates whether the addition was successful
-    string message = 2; // Additional information or error message
-  }
-
-  // Functionality for retrieving a block by its CID
-  message GetBlockRequest {
-    CID cid = 1; // The CID of the block to retrieve
-  }
-
-  // Response for retrieving a block
-  message GetBlockResponse {
-    BlockProto block = 1; // The retrieved block
-    bool found = 2; // Indicates whether the block was found
-  }
-
-  // Functionality for removing a block from the store
-  message RemoveBlockRequest {
-    CID cid = 1; // The CID of the block to remove
-  }
-
-  // Response for removing a block
-  message RemoveBlockResponse {
-    bool success = 1; // Indicates whether the removal was successful
-    string message = 2; // Additional information or error message
-  }
+// The BlockStore service definition
+service BlockStoreService {
+  rpc AddBlock(BlockProto) returns (AddBlockResponse);  // Adds a block
+  rpc GetBlock(CIDProto) returns (GetBlockResponse);    // Retrieves a block by CIDProto
+  rpc RemoveBlock(CIDProto) returns (RemoveBlockResponse); // Removes a block by CIDProto
+  rpc GetAllBlocks(google.protobuf.Empty) returns (stream BlockProto); // Retrieves all blocks
 }
