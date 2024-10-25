@@ -1,0 +1,23 @@
+// lib/src/proto/node_type.proto
+
+syntax = "proto3";
+
+package ipfs.core.data_structures;
+
+// Enum representing the different types of nodes in the IPFS network.
+enum NodeTypeProto {
+  // Represents a regular node that participates in the IPFS network.
+  REGULAR = 0;
+
+  // Represents a bootstrap node, which helps new nodes join the network.
+  BOOTSTRAP = 1;
+
+  // Represents a relay node, which assists in routing traffic for other nodes.
+  RELAY = 2;
+
+  // Represents a gateway node, which provides HTTP access to IPFS content.
+  GATEWAY = 3;
+
+  // Represents an archival node, which stores large amounts of data for long-term preservation.
+  ARCHIVAL = 4;
+}
