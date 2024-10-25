@@ -1,10 +1,7 @@
-import 'dart:typed_data';
-import 'package:protobuf/protobuf.dart';
-import 'block.dart';
-import 'cid.dart';
-import 'proto/blockstore.pb.dart'; // Import the generated BlockStoreProto
-import 'proto/block.pb.dart';       // Import the generated BlockProto
-import 'proto/cid.pb.dart';         // Import the generated CIDProto
+// lib/src/core/data_structures/blockstore.dart
+import '/../src/proto/dht/blockstore.pb.dart'; // Import the generated BlockStoreProto
+import '/../src/proto/dht/block.pb.dart';       // Import the generated BlockProto
+import '/../src/proto/dht/cid.pb.dart';         // Import the generated CIDProto
 
 /// Represents a block store that manages blocks.
 class BlockStore {
@@ -12,6 +9,12 @@ class BlockStore {
 
   /// Adds a block to the store.
   AddBlockResponse addBlock(BlockProto block) {
+    if (_blocks.any((b) => b.cid == block.cid)) {
+      return AddBlockResponse()
+        ..success = false
+        ..message = "Block already exists.";
+    }
+
     _blocks.add(block);
     return AddBlockResponse()
       ..success = true
@@ -22,27 +25,22 @@ class BlockStore {
   GetBlockResponse getBlock(CIDProto cid) {
     final block = _blocks.firstWhere(
       (b) => b.cid == cid,
-      orElse: () => null,
+      orElse: () => BlockProto(),
     );
 
-    if (block != null) {
-      return GetBlockResponse()
-        ..block = block
-        ..found = true;
-    } else {
-      return GetBlockResponse()
-        ..found = false;
-    }
+    return GetBlockResponse()
+      ..block = block
+      ..found = block.cid != null;
   }
 
   /// Removes a block from the store by its CID.
   RemoveBlockResponse removeBlock(CIDProto cid) {
     final blockToRemove = _blocks.firstWhere(
       (b) => b.cid == cid,
-      orElse: () => null,
+      orElse: () => BlockProto(),
     );
 
-    if (blockToRemove != null) {
+    if (blockToRemove.cid != null && _blocks.contains(blockToRemove)) {
       _blocks.remove(blockToRemove);
       return RemoveBlockResponse()
         ..success = true
