@@ -13,27 +13,20 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-class Data_DataType extends $pb.ProtobufEnum {
-  static const Data_DataType RAW = Data_DataType._(0, _omitEnumNames ? '' : 'RAW');
-  static const Data_DataType DIRECTORY = Data_DataType._(1, _omitEnumNames ? '' : 'DIRECTORY');
-  static const Data_DataType FILE = Data_DataType._(2, _omitEnumNames ? '' : 'FILE');
-  static const Data_DataType METADATA = Data_DataType._(3, _omitEnumNames ? '' : 'METADATA');
-  static const Data_DataType SYMLINK = Data_DataType._(4, _omitEnumNames ? '' : 'SYMLINK');
-  static const Data_DataType HAMT_SHARD = Data_DataType._(5, _omitEnumNames ? '' : 'HAMT_SHARD');
+/// Enum representing the different types of UnixFS nodes.
+class UnixFSTypeProto extends $pb.ProtobufEnum {
+  static const UnixFSTypeProto FILE = UnixFSTypeProto._(0, _omitEnumNames ? '' : 'FILE');
+  static const UnixFSTypeProto DIRECTORY = UnixFSTypeProto._(1, _omitEnumNames ? '' : 'DIRECTORY');
 
-  static const $core.List<Data_DataType> values = <Data_DataType> [
-    RAW,
-    DIRECTORY,
+  static const $core.List<UnixFSTypeProto> values = <UnixFSTypeProto> [
     FILE,
-    METADATA,
-    SYMLINK,
-    HAMT_SHARD,
+    DIRECTORY,
   ];
 
-  static final $core.Map<$core.int, Data_DataType> _byValue = $pb.ProtobufEnum.initByValue(values);
-  static Data_DataType? valueOf($core.int value) => _byValue[value];
+  static final $core.Map<$core.int, UnixFSTypeProto> _byValue = $pb.ProtobufEnum.initByValue(values);
+  static UnixFSTypeProto? valueOf($core.int value) => _byValue[value];
 
-  const Data_DataType._($core.int v, $core.String n) : super(v, n);
+  const UnixFSTypeProto._($core.int v, $core.String n) : super(v, n);
 }
 
 
