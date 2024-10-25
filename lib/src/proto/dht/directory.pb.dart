@@ -22,20 +22,20 @@ class DirectoryEntry extends $pb.GeneratedMessage {
     $fixnum.Int64? size,
     $core.bool? isDirectory,
   }) {
-    final $result = create();
+    final result = create();
     if (name != null) {
-      $result.name = name;
+      result.name = name;
     }
     if (hash != null) {
-      $result.hash = hash;
+      result.hash = hash;
     }
     if (size != null) {
-      $result.size = size;
+      result.size = size;
     }
     if (isDirectory != null) {
-      $result.isDirectory = isDirectory;
+      result.isDirectory = isDirectory;
     }
-    return $result;
+    return result;
   }
   DirectoryEntry._() : super();
   factory DirectoryEntry.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -116,23 +116,23 @@ class Directory extends $pb.GeneratedMessage {
     $core.int? numberOfFiles,
     $core.int? numberOfDirectories,
   }) {
-    final $result = create();
+    final result = create();
     if (entries != null) {
-      $result.entries.addAll(entries);
+      result.entries.addAll(entries);
     }
     if (path != null) {
-      $result.path = path;
+      result.path = path;
     }
     if (totalSize != null) {
-      $result.totalSize = totalSize;
+      result.totalSize = totalSize;
     }
     if (numberOfFiles != null) {
-      $result.numberOfFiles = numberOfFiles;
+      result.numberOfFiles = numberOfFiles;
     }
     if (numberOfDirectories != null) {
-      $result.numberOfDirectories = numberOfDirectories;
+      result.numberOfDirectories = numberOfDirectories;
     }
-    return $result;
+    return result;
   }
   Directory._() : super();
   factory Directory.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -213,11 +213,11 @@ class AddDirectoryEntryRequest extends $pb.GeneratedMessage {
   factory AddDirectoryEntryRequest({
     DirectoryEntry? entry,
   }) {
-    final $result = create();
+    final result = create();
     if (entry != null) {
-      $result.entry = entry;
+      result.entry = entry;
     }
-    return $result;
+    return result;
   }
   AddDirectoryEntryRequest._() : super();
   factory AddDirectoryEntryRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -266,11 +266,11 @@ class AddDirectoryEntryResponse extends $pb.GeneratedMessage {
   factory AddDirectoryEntryResponse({
     $core.bool? success,
   }) {
-    final $result = create();
+    final result = create();
     if (success != null) {
-      $result.success = success;
+      result.success = success;
     }
-    return $result;
+    return result;
   }
   AddDirectoryEntryResponse._() : super();
   factory AddDirectoryEntryResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -317,11 +317,11 @@ class RemoveDirectoryEntryRequest extends $pb.GeneratedMessage {
   factory RemoveDirectoryEntryRequest({
     $core.String? name,
   }) {
-    final $result = create();
+    final result = create();
     if (name != null) {
-      $result.name = name;
+      result.name = name;
     }
-    return $result;
+    return result;
   }
   RemoveDirectoryEntryRequest._() : super();
   factory RemoveDirectoryEntryRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -368,11 +368,11 @@ class RemoveDirectoryEntryResponse extends $pb.GeneratedMessage {
   factory RemoveDirectoryEntryResponse({
     $core.bool? success,
   }) {
-    final $result = create();
+    final result = create();
     if (success != null) {
-      $result.success = success;
+      result.success = success;
     }
-    return $result;
+    return result;
   }
   RemoveDirectoryEntryResponse._() : super();
   factory RemoveDirectoryEntryResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -419,11 +419,11 @@ class ListDirectoryRequest extends $pb.GeneratedMessage {
   factory ListDirectoryRequest({
     $core.String? path,
   }) {
-    final $result = create();
+    final result = create();
     if (path != null) {
-      $result.path = path;
+      result.path = path;
     }
-    return $result;
+    return result;
   }
   ListDirectoryRequest._() : super();
   factory ListDirectoryRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -470,11 +470,11 @@ class ListDirectoryResponse extends $pb.GeneratedMessage {
   factory ListDirectoryResponse({
     $core.Iterable<DirectoryEntry>? entries,
   }) {
-    final $result = create();
+    final result = create();
     if (entries != null) {
-      $result.entries.addAll(entries);
+      result.entries.addAll(entries);
     }
-    return $result;
+    return result;
   }
   ListDirectoryResponse._() : super();
   factory ListDirectoryResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -515,11 +515,11 @@ class GetDirectoryEntryRequest extends $pb.GeneratedMessage {
   factory GetDirectoryEntryRequest({
     $core.String? name,
   }) {
-    final $result = create();
+    final result = create();
     if (name != null) {
-      $result.name = name;
+      result.name = name;
     }
-    return $result;
+    return result;
   }
   GetDirectoryEntryRequest._() : super();
   factory GetDirectoryEntryRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -566,11 +566,11 @@ class GetDirectoryEntryResponse extends $pb.GeneratedMessage {
   factory GetDirectoryEntryResponse({
     DirectoryEntry? entry,
   }) {
-    final $result = create();
+    final result = create();
     if (entry != null) {
-      $result.entry = entry;
+      result.entry = entry;
     }
-    return $result;
+    return result;
   }
   GetDirectoryEntryResponse._() : super();
   factory GetDirectoryEntryResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

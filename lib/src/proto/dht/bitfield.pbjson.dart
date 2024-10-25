@@ -13,43 +13,52 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-@$core.Deprecated('Use bitFieldDescriptor instead')
-const BitField$json = {
-  '1': 'BitField',
+@$core.Deprecated('Use bitFieldProtoDescriptor instead')
+const BitFieldProto$json = {
+  '1': 'BitFieldProto',
   '2': [
-    {'1': 'bits', '3': 1, '4': 3, '5': 8, '10': 'bits'},
+    {'1': 'bits', '3': 1, '4': 1, '5': 12, '10': 'bits'},
     {'1': 'size', '3': 2, '4': 1, '5': 5, '10': 'size'},
   ],
-  '3': [BitField_SetBitRequest$json, BitField_GetBitRequest$json, BitField_BitResponse$json],
+  '3': [BitFieldProto_SetBitRequest$json, BitFieldProto_ClearBitRequest$json, BitFieldProto_GetBitRequest$json, BitFieldProto_BitResponse$json],
 };
 
-@$core.Deprecated('Use bitFieldDescriptor instead')
-const BitField_SetBitRequest$json = {
+@$core.Deprecated('Use bitFieldProtoDescriptor instead')
+const BitFieldProto_SetBitRequest$json = {
   '1': 'SetBitRequest',
   '2': [
     {'1': 'index', '3': 1, '4': 1, '5': 5, '10': 'index'},
   ],
 };
 
-@$core.Deprecated('Use bitFieldDescriptor instead')
-const BitField_GetBitRequest$json = {
+@$core.Deprecated('Use bitFieldProtoDescriptor instead')
+const BitFieldProto_ClearBitRequest$json = {
+  '1': 'ClearBitRequest',
+  '2': [
+    {'1': 'index', '3': 1, '4': 1, '5': 5, '10': 'index'},
+  ],
+};
+
+@$core.Deprecated('Use bitFieldProtoDescriptor instead')
+const BitFieldProto_GetBitRequest$json = {
   '1': 'GetBitRequest',
   '2': [
     {'1': 'index', '3': 1, '4': 1, '5': 5, '10': 'index'},
   ],
 };
 
-@$core.Deprecated('Use bitFieldDescriptor instead')
-const BitField_BitResponse$json = {
+@$core.Deprecated('Use bitFieldProtoDescriptor instead')
+const BitFieldProto_BitResponse$json = {
   '1': 'BitResponse',
   '2': [
     {'1': 'value', '3': 1, '4': 1, '5': 8, '10': 'value'},
   ],
 };
 
-/// Descriptor for `BitField`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List bitFieldDescriptor = $convert.base64Decode(
-    'CghCaXRGaWVsZBISCgRiaXRzGAEgAygIUgRiaXRzEhIKBHNpemUYAiABKAVSBHNpemUaJQoNU2'
-    'V0Qml0UmVxdWVzdBIUCgVpbmRleBgBIAEoBVIFaW5kZXgaJQoNR2V0Qml0UmVxdWVzdBIUCgVp'
-    'bmRleBgBIAEoBVIFaW5kZXgaIwoLQml0UmVzcG9uc2USFAoFdmFsdWUYASABKAhSBXZhbHVl');
+/// Descriptor for `BitFieldProto`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List bitFieldProtoDescriptor = $convert.base64Decode(
+    'Cg1CaXRGaWVsZFByb3RvEhIKBGJpdHMYASABKAxSBGJpdHMSEgoEc2l6ZRgCIAEoBVIEc2l6ZR'
+    'olCg1TZXRCaXRSZXF1ZXN0EhQKBWluZGV4GAEgASgFUgVpbmRleBonCg9DbGVhckJpdFJlcXVl'
+    'c3QSFAoFaW5kZXgYASABKAVSBWluZGV4GiUKDUdldEJpdFJlcXVlc3QSFAoFaW5kZXgYASABKA'
+    'VSBWluZGV4GiMKC0JpdFJlc3BvbnNlEhQKBXZhbHVlGAEgASgIUgV2YWx1ZQ==');
 

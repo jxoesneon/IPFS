@@ -21,17 +21,17 @@ class KademliaNode extends $pb.GeneratedMessage {
     $core.int? distance,
     $0.KademliaId? associatedPeerId,
   }) {
-    final $result = create();
+    final result = create();
     if (peerId != null) {
-      $result.peerId = peerId;
+      result.peerId = peerId;
     }
     if (distance != null) {
-      $result.distance = distance;
+      result.distance = distance;
     }
     if (associatedPeerId != null) {
-      $result.associatedPeerId = associatedPeerId;
+      result.associatedPeerId = associatedPeerId;
     }
-    return $result;
+    return result;
   }
   KademliaNode._() : super();
   factory KademliaNode.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

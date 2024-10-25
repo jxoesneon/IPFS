@@ -19,11 +19,11 @@ class RemovePeerRequest extends $pb.GeneratedMessage {
   factory RemovePeerRequest({
     $0.KademliaId? peerId,
   }) {
-    final $result = create();
+    final result = create();
     if (peerId != null) {
-      $result.peerId = peerId;
+      result.peerId = peerId;
     }
-    return $result;
+    return result;
   }
   RemovePeerRequest._() : super();
   factory RemovePeerRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -71,11 +71,11 @@ class RemovePeerResponse extends $pb.GeneratedMessage {
   factory RemovePeerResponse({
     $core.bool? success,
   }) {
-    final $result = create();
+    final result = create();
     if (success != null) {
-      $result.success = success;
+      result.success = success;
     }
-    return $result;
+    return result;
   }
   RemovePeerResponse._() : super();
   factory RemovePeerResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

@@ -17,11 +17,11 @@ class KademliaId extends $pb.GeneratedMessage {
   factory KademliaId({
     $core.List<$core.int>? id,
   }) {
-    final $result = create();
+    final result = create();
     if (id != null) {
-      $result.id = id;
+      result.id = id;
     }
-    return $result;
+    return result;
   }
   KademliaId._() : super();
   factory KademliaId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

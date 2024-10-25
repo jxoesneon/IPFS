@@ -9,86 +9,35 @@
 // ignore_for_file: non_constant_identifier_names, prefer_final_fields
 // ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
+import 'dart:async' as $async;
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'block.pb.dart' as $0;
 import 'cid.pb.dart' as $1;
+import 'google/protobuf/empty.pb.dart' as $2;
 
-/// Functionality for adding a block to the store
-class BlockStoreProto_AddBlockRequest extends $pb.GeneratedMessage {
-  factory BlockStoreProto_AddBlockRequest({
-    $0.BlockProto? block,
-  }) {
-    final $result = create();
-    if (block != null) {
-      $result.block = block;
-    }
-    return $result;
-  }
-  BlockStoreProto_AddBlockRequest._() : super();
-  factory BlockStoreProto_AddBlockRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory BlockStoreProto_AddBlockRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockStoreProto.AddBlockRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..aOM<$0.BlockProto>(1, _omitFieldNames ? '' : 'block', subBuilder: $0.BlockProto.create)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  BlockStoreProto_AddBlockRequest clone() => BlockStoreProto_AddBlockRequest()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  BlockStoreProto_AddBlockRequest copyWith(void Function(BlockStoreProto_AddBlockRequest) updates) => super.copyWith((message) => updates(message as BlockStoreProto_AddBlockRequest)) as BlockStoreProto_AddBlockRequest;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static BlockStoreProto_AddBlockRequest create() => BlockStoreProto_AddBlockRequest._();
-  BlockStoreProto_AddBlockRequest createEmptyInstance() => create();
-  static $pb.PbList<BlockStoreProto_AddBlockRequest> createRepeated() => $pb.PbList<BlockStoreProto_AddBlockRequest>();
-  @$core.pragma('dart2js:noInline')
-  static BlockStoreProto_AddBlockRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockStoreProto_AddBlockRequest>(create);
-  static BlockStoreProto_AddBlockRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $0.BlockProto get block => $_getN(0);
-  @$pb.TagNumber(1)
-  set block($0.BlockProto v) { setField(1, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasBlock() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearBlock() => clearField(1);
-  @$pb.TagNumber(1)
-  $0.BlockProto ensureBlock() => $_ensure(0);
-}
-
-/// Response for adding a block
-class BlockStoreProto_AddBlockResponse extends $pb.GeneratedMessage {
-  factory BlockStoreProto_AddBlockResponse({
+/// Response message for adding a block
+class AddBlockResponse extends $pb.GeneratedMessage {
+  factory AddBlockResponse({
     $core.bool? success,
     $core.String? message,
   }) {
-    final $result = create();
+    final result = create();
     if (success != null) {
-      $result.success = success;
+      result.success = success;
     }
     if (message != null) {
-      $result.message = message;
+      result.message = message;
     }
-    return $result;
+    return result;
   }
-  BlockStoreProto_AddBlockResponse._() : super();
-  factory BlockStoreProto_AddBlockResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory BlockStoreProto_AddBlockResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  AddBlockResponse._() : super();
+  factory AddBlockResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory AddBlockResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockStoreProto.AddBlockResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AddBlockResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
     ..aOS(2, _omitFieldNames ? '' : 'message')
     ..hasRequiredFields = false
@@ -98,22 +47,22 @@ class BlockStoreProto_AddBlockResponse extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  BlockStoreProto_AddBlockResponse clone() => BlockStoreProto_AddBlockResponse()..mergeFromMessage(this);
+  AddBlockResponse clone() => AddBlockResponse()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  BlockStoreProto_AddBlockResponse copyWith(void Function(BlockStoreProto_AddBlockResponse) updates) => super.copyWith((message) => updates(message as BlockStoreProto_AddBlockResponse)) as BlockStoreProto_AddBlockResponse;
+  AddBlockResponse copyWith(void Function(AddBlockResponse) updates) => super.copyWith((message) => updates(message as AddBlockResponse)) as AddBlockResponse;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static BlockStoreProto_AddBlockResponse create() => BlockStoreProto_AddBlockResponse._();
-  BlockStoreProto_AddBlockResponse createEmptyInstance() => create();
-  static $pb.PbList<BlockStoreProto_AddBlockResponse> createRepeated() => $pb.PbList<BlockStoreProto_AddBlockResponse>();
+  static AddBlockResponse create() => AddBlockResponse._();
+  AddBlockResponse createEmptyInstance() => create();
+  static $pb.PbList<AddBlockResponse> createRepeated() => $pb.PbList<AddBlockResponse>();
   @$core.pragma('dart2js:noInline')
-  static BlockStoreProto_AddBlockResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockStoreProto_AddBlockResponse>(create);
-  static BlockStoreProto_AddBlockResponse? _defaultInstance;
+  static AddBlockResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AddBlockResponse>(create);
+  static AddBlockResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.bool get success => $_getBF(0);
@@ -134,79 +83,26 @@ class BlockStoreProto_AddBlockResponse extends $pb.GeneratedMessage {
   void clearMessage() => clearField(2);
 }
 
-/// Functionality for retrieving a block by its CID
-class BlockStoreProto_GetBlockRequest extends $pb.GeneratedMessage {
-  factory BlockStoreProto_GetBlockRequest({
-    $1.CID? cid,
-  }) {
-    final $result = create();
-    if (cid != null) {
-      $result.cid = cid;
-    }
-    return $result;
-  }
-  BlockStoreProto_GetBlockRequest._() : super();
-  factory BlockStoreProto_GetBlockRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory BlockStoreProto_GetBlockRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockStoreProto.GetBlockRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..aOM<$1.CID>(1, _omitFieldNames ? '' : 'cid', subBuilder: $1.CID.create)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  BlockStoreProto_GetBlockRequest clone() => BlockStoreProto_GetBlockRequest()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  BlockStoreProto_GetBlockRequest copyWith(void Function(BlockStoreProto_GetBlockRequest) updates) => super.copyWith((message) => updates(message as BlockStoreProto_GetBlockRequest)) as BlockStoreProto_GetBlockRequest;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static BlockStoreProto_GetBlockRequest create() => BlockStoreProto_GetBlockRequest._();
-  BlockStoreProto_GetBlockRequest createEmptyInstance() => create();
-  static $pb.PbList<BlockStoreProto_GetBlockRequest> createRepeated() => $pb.PbList<BlockStoreProto_GetBlockRequest>();
-  @$core.pragma('dart2js:noInline')
-  static BlockStoreProto_GetBlockRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockStoreProto_GetBlockRequest>(create);
-  static BlockStoreProto_GetBlockRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $1.CID get cid => $_getN(0);
-  @$pb.TagNumber(1)
-  set cid($1.CID v) { setField(1, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasCid() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearCid() => clearField(1);
-  @$pb.TagNumber(1)
-  $1.CID ensureCid() => $_ensure(0);
-}
-
-/// Response for retrieving a block
-class BlockStoreProto_GetBlockResponse extends $pb.GeneratedMessage {
-  factory BlockStoreProto_GetBlockResponse({
+/// Response message for retrieving a block
+class GetBlockResponse extends $pb.GeneratedMessage {
+  factory GetBlockResponse({
     $0.BlockProto? block,
     $core.bool? found,
   }) {
-    final $result = create();
+    final result = create();
     if (block != null) {
-      $result.block = block;
+      result.block = block;
     }
     if (found != null) {
-      $result.found = found;
+      result.found = found;
     }
-    return $result;
+    return result;
   }
-  BlockStoreProto_GetBlockResponse._() : super();
-  factory BlockStoreProto_GetBlockResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory BlockStoreProto_GetBlockResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  GetBlockResponse._() : super();
+  factory GetBlockResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetBlockResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockStoreProto.GetBlockResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..aOM<$0.BlockProto>(1, _omitFieldNames ? '' : 'block', subBuilder: $0.BlockProto.create)
     ..aOB(2, _omitFieldNames ? '' : 'found')
     ..hasRequiredFields = false
@@ -216,22 +112,22 @@ class BlockStoreProto_GetBlockResponse extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  BlockStoreProto_GetBlockResponse clone() => BlockStoreProto_GetBlockResponse()..mergeFromMessage(this);
+  GetBlockResponse clone() => GetBlockResponse()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  BlockStoreProto_GetBlockResponse copyWith(void Function(BlockStoreProto_GetBlockResponse) updates) => super.copyWith((message) => updates(message as BlockStoreProto_GetBlockResponse)) as BlockStoreProto_GetBlockResponse;
+  GetBlockResponse copyWith(void Function(GetBlockResponse) updates) => super.copyWith((message) => updates(message as GetBlockResponse)) as GetBlockResponse;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static BlockStoreProto_GetBlockResponse create() => BlockStoreProto_GetBlockResponse._();
-  BlockStoreProto_GetBlockResponse createEmptyInstance() => create();
-  static $pb.PbList<BlockStoreProto_GetBlockResponse> createRepeated() => $pb.PbList<BlockStoreProto_GetBlockResponse>();
+  static GetBlockResponse create() => GetBlockResponse._();
+  GetBlockResponse createEmptyInstance() => create();
+  static $pb.PbList<GetBlockResponse> createRepeated() => $pb.PbList<GetBlockResponse>();
   @$core.pragma('dart2js:noInline')
-  static BlockStoreProto_GetBlockResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockStoreProto_GetBlockResponse>(create);
-  static BlockStoreProto_GetBlockResponse? _defaultInstance;
+  static GetBlockResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetBlockResponse>(create);
+  static GetBlockResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $0.BlockProto get block => $_getN(0);
@@ -254,79 +150,26 @@ class BlockStoreProto_GetBlockResponse extends $pb.GeneratedMessage {
   void clearFound() => clearField(2);
 }
 
-/// Functionality for removing a block from the store
-class BlockStoreProto_RemoveBlockRequest extends $pb.GeneratedMessage {
-  factory BlockStoreProto_RemoveBlockRequest({
-    $1.CID? cid,
-  }) {
-    final $result = create();
-    if (cid != null) {
-      $result.cid = cid;
-    }
-    return $result;
-  }
-  BlockStoreProto_RemoveBlockRequest._() : super();
-  factory BlockStoreProto_RemoveBlockRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory BlockStoreProto_RemoveBlockRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockStoreProto.RemoveBlockRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..aOM<$1.CID>(1, _omitFieldNames ? '' : 'cid', subBuilder: $1.CID.create)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  BlockStoreProto_RemoveBlockRequest clone() => BlockStoreProto_RemoveBlockRequest()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  BlockStoreProto_RemoveBlockRequest copyWith(void Function(BlockStoreProto_RemoveBlockRequest) updates) => super.copyWith((message) => updates(message as BlockStoreProto_RemoveBlockRequest)) as BlockStoreProto_RemoveBlockRequest;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static BlockStoreProto_RemoveBlockRequest create() => BlockStoreProto_RemoveBlockRequest._();
-  BlockStoreProto_RemoveBlockRequest createEmptyInstance() => create();
-  static $pb.PbList<BlockStoreProto_RemoveBlockRequest> createRepeated() => $pb.PbList<BlockStoreProto_RemoveBlockRequest>();
-  @$core.pragma('dart2js:noInline')
-  static BlockStoreProto_RemoveBlockRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockStoreProto_RemoveBlockRequest>(create);
-  static BlockStoreProto_RemoveBlockRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $1.CID get cid => $_getN(0);
-  @$pb.TagNumber(1)
-  set cid($1.CID v) { setField(1, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasCid() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearCid() => clearField(1);
-  @$pb.TagNumber(1)
-  $1.CID ensureCid() => $_ensure(0);
-}
-
-/// Response for removing a block
-class BlockStoreProto_RemoveBlockResponse extends $pb.GeneratedMessage {
-  factory BlockStoreProto_RemoveBlockResponse({
+/// Response message for removing a block
+class RemoveBlockResponse extends $pb.GeneratedMessage {
+  factory RemoveBlockResponse({
     $core.bool? success,
     $core.String? message,
   }) {
-    final $result = create();
+    final result = create();
     if (success != null) {
-      $result.success = success;
+      result.success = success;
     }
     if (message != null) {
-      $result.message = message;
+      result.message = message;
     }
-    return $result;
+    return result;
   }
-  BlockStoreProto_RemoveBlockResponse._() : super();
-  factory BlockStoreProto_RemoveBlockResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory BlockStoreProto_RemoveBlockResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  RemoveBlockResponse._() : super();
+  factory RemoveBlockResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory RemoveBlockResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockStoreProto.RemoveBlockResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RemoveBlockResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
     ..aOS(2, _omitFieldNames ? '' : 'message')
     ..hasRequiredFields = false
@@ -336,22 +179,22 @@ class BlockStoreProto_RemoveBlockResponse extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  BlockStoreProto_RemoveBlockResponse clone() => BlockStoreProto_RemoveBlockResponse()..mergeFromMessage(this);
+  RemoveBlockResponse clone() => RemoveBlockResponse()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  BlockStoreProto_RemoveBlockResponse copyWith(void Function(BlockStoreProto_RemoveBlockResponse) updates) => super.copyWith((message) => updates(message as BlockStoreProto_RemoveBlockResponse)) as BlockStoreProto_RemoveBlockResponse;
+  RemoveBlockResponse copyWith(void Function(RemoveBlockResponse) updates) => super.copyWith((message) => updates(message as RemoveBlockResponse)) as RemoveBlockResponse;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static BlockStoreProto_RemoveBlockResponse create() => BlockStoreProto_RemoveBlockResponse._();
-  BlockStoreProto_RemoveBlockResponse createEmptyInstance() => create();
-  static $pb.PbList<BlockStoreProto_RemoveBlockResponse> createRepeated() => $pb.PbList<BlockStoreProto_RemoveBlockResponse>();
+  static RemoveBlockResponse create() => RemoveBlockResponse._();
+  RemoveBlockResponse createEmptyInstance() => create();
+  static $pb.PbList<RemoveBlockResponse> createRepeated() => $pb.PbList<RemoveBlockResponse>();
   @$core.pragma('dart2js:noInline')
-  static BlockStoreProto_RemoveBlockResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockStoreProto_RemoveBlockResponse>(create);
-  static BlockStoreProto_RemoveBlockResponse? _defaultInstance;
+  static RemoveBlockResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RemoveBlockResponse>(create);
+  static RemoveBlockResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.bool get success => $_getBF(0);
@@ -372,49 +215,22 @@ class BlockStoreProto_RemoveBlockResponse extends $pb.GeneratedMessage {
   void clearMessage() => clearField(2);
 }
 
-/// Represents a BlockStore that contains multiple blocks.
-class BlockStoreProto extends $pb.GeneratedMessage {
-  factory BlockStoreProto({
-    $core.Iterable<$0.BlockProto>? blocks,
-  }) {
-    final $result = create();
-    if (blocks != null) {
-      $result.blocks.addAll(blocks);
-    }
-    return $result;
-  }
-  BlockStoreProto._() : super();
-  factory BlockStoreProto.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory BlockStoreProto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+class BlockStoreServiceApi {
+  $pb.RpcClient _client;
+  BlockStoreServiceApi(this._client);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockStoreProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..pc<$0.BlockProto>(1, _omitFieldNames ? '' : 'blocks', $pb.PbFieldType.PM, subBuilder: $0.BlockProto.create)
-    ..hasRequiredFields = false
+  $async.Future<AddBlockResponse> addBlock($pb.ClientContext? ctx, $0.BlockProto request) =>
+    _client.invoke<AddBlockResponse>(ctx, 'BlockStoreService', 'AddBlock', request, AddBlockResponse())
   ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  BlockStoreProto clone() => BlockStoreProto()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  BlockStoreProto copyWith(void Function(BlockStoreProto) updates) => super.copyWith((message) => updates(message as BlockStoreProto)) as BlockStoreProto;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static BlockStoreProto create() => BlockStoreProto._();
-  BlockStoreProto createEmptyInstance() => create();
-  static $pb.PbList<BlockStoreProto> createRepeated() => $pb.PbList<BlockStoreProto>();
-  @$core.pragma('dart2js:noInline')
-  static BlockStoreProto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockStoreProto>(create);
-  static BlockStoreProto? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.List<$0.BlockProto> get blocks => $_getList(0);
+  $async.Future<GetBlockResponse> getBlock($pb.ClientContext? ctx, $1.CIDProto request) =>
+    _client.invoke<GetBlockResponse>(ctx, 'BlockStoreService', 'GetBlock', request, GetBlockResponse())
+  ;
+  $async.Future<RemoveBlockResponse> removeBlock($pb.ClientContext? ctx, $1.CIDProto request) =>
+    _client.invoke<RemoveBlockResponse>(ctx, 'BlockStoreService', 'RemoveBlock', request, RemoveBlockResponse())
+  ;
+  $async.Future<$0.BlockProto> getAllBlocks($pb.ClientContext? ctx, $2.Empty request) =>
+    _client.invoke<$0.BlockProto>(ctx, 'BlockStoreService', 'GetAllBlocks', request, $0.BlockProto())
+  ;
 }
 
 

@@ -29,32 +29,32 @@ class Data extends $pb.GeneratedMessage {
     $core.int? mode,
     UnixTime? mtime,
   }) {
-    final $result = create();
+    final result = create();
     if (type != null) {
-      $result.type = type;
+      result.type = type;
     }
     if (data != null) {
-      $result.data = data;
+      result.data = data;
     }
     if (filesize != null) {
-      $result.filesize = filesize;
+      result.filesize = filesize;
     }
     if (blocksizes != null) {
-      $result.blocksizes.addAll(blocksizes);
+      result.blocksizes.addAll(blocksizes);
     }
     if (hashType != null) {
-      $result.hashType = hashType;
+      result.hashType = hashType;
     }
     if (fanout != null) {
-      $result.fanout = fanout;
+      result.fanout = fanout;
     }
     if (mode != null) {
-      $result.mode = mode;
+      result.mode = mode;
     }
     if (mtime != null) {
-      $result.mtime = mtime;
+      result.mtime = mtime;
     }
-    return $result;
+    return result;
   }
   Data._() : super();
   factory Data.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -166,11 +166,11 @@ class Metadata extends $pb.GeneratedMessage {
   factory Metadata({
     $core.String? mimeType,
   }) {
-    final $result = create();
+    final result = create();
     if (mimeType != null) {
-      $result.mimeType = mimeType;
+      result.mimeType = mimeType;
     }
-    return $result;
+    return result;
   }
   Metadata._() : super();
   factory Metadata.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -217,14 +217,14 @@ class UnixTime extends $pb.GeneratedMessage {
     $fixnum.Int64? seconds,
     $core.int? fractionalNanoseconds,
   }) {
-    final $result = create();
+    final result = create();
     if (seconds != null) {
-      $result.seconds = seconds;
+      result.seconds = seconds;
     }
     if (fractionalNanoseconds != null) {
-      $result.fractionalNanoseconds = fractionalNanoseconds;
+      result.fractionalNanoseconds = fractionalNanoseconds;
     }
-    return $result;
+    return result;
   }
   UnixTime._() : super();
   factory UnixTime.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

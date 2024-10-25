@@ -49,11 +49,11 @@ class RefreshResponse extends $pb.GeneratedMessage {
   factory RefreshResponse({
     $core.bool? success,
   }) {
-    final $result = create();
+    final result = create();
     if (success != null) {
-      $result.success = success;
+      result.success = success;
     }
-    return $result;
+    return result;
   }
   RefreshResponse._() : super();
   factory RefreshResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

@@ -20,14 +20,14 @@ class Peer extends $pb.GeneratedMessage {
     $core.List<$core.int>? id,
     $core.Iterable<$core.String>? addrs,
   }) {
-    final $result = create();
+    final result = create();
     if (id != null) {
-      $result.id = id;
+      result.id = id;
     }
     if (addrs != null) {
-      $result.addrs.addAll(addrs);
+      result.addrs.addAll(addrs);
     }
-    return $result;
+    return result;
   }
   Peer._() : super();
   factory Peer.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -83,20 +83,20 @@ class Record extends $pb.GeneratedMessage {
     Peer? publisher,
     $fixnum.Int64? sequence,
   }) {
-    final $result = create();
+    final result = create();
     if (key != null) {
-      $result.key = key;
+      result.key = key;
     }
     if (value != null) {
-      $result.value = value;
+      result.value = value;
     }
     if (publisher != null) {
-      $result.publisher = publisher;
+      result.publisher = publisher;
     }
     if (sequence != null) {
-      $result.sequence = sequence;
+      result.sequence = sequence;
     }
-    return $result;
+    return result;
   }
   Record._() : super();
   factory Record.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -180,14 +180,14 @@ class FindProvidersRequest extends $pb.GeneratedMessage {
     $core.List<$core.int>? key,
     $core.int? count,
   }) {
-    final $result = create();
+    final result = create();
     if (key != null) {
-      $result.key = key;
+      result.key = key;
     }
     if (count != null) {
-      $result.count = count;
+      result.count = count;
     }
-    return $result;
+    return result;
   }
   FindProvidersRequest._() : super();
   factory FindProvidersRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -247,14 +247,14 @@ class FindProvidersResponse extends $pb.GeneratedMessage {
     $core.Iterable<Peer>? providers,
     $core.bool? closerPeers,
   }) {
-    final $result = create();
+    final result = create();
     if (providers != null) {
-      $result.providers.addAll(providers);
+      result.providers.addAll(providers);
     }
     if (closerPeers != null) {
-      $result.closerPeers = closerPeers;
+      result.closerPeers = closerPeers;
     }
-    return $result;
+    return result;
   }
   FindProvidersResponse._() : super();
   factory FindProvidersResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -308,14 +308,14 @@ class ProvideRequest extends $pb.GeneratedMessage {
     $core.List<$core.int>? key,
     Peer? provider,
   }) {
-    final $result = create();
+    final result = create();
     if (key != null) {
-      $result.key = key;
+      result.key = key;
     }
     if (provider != null) {
-      $result.provider = provider;
+      result.provider = provider;
     }
-    return $result;
+    return result;
   }
   ProvideRequest._() : super();
   factory ProvideRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -376,11 +376,11 @@ class ProvideResponse extends $pb.GeneratedMessage {
   factory ProvideResponse({
     $core.bool? success,
   }) {
-    final $result = create();
+    final result = create();
     if (success != null) {
-      $result.success = success;
+      result.success = success;
     }
-    return $result;
+    return result;
   }
   ProvideResponse._() : super();
   factory ProvideResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -428,11 +428,11 @@ class FindValueRequest extends $pb.GeneratedMessage {
   factory FindValueRequest({
     $core.List<$core.int>? key,
   }) {
-    final $result = create();
+    final result = create();
     if (key != null) {
-      $result.key = key;
+      result.key = key;
     }
-    return $result;
+    return result;
   }
   FindValueRequest._() : super();
   factory FindValueRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -481,14 +481,14 @@ class FindValueResponse extends $pb.GeneratedMessage {
     $core.List<$core.int>? value,
     $core.Iterable<Peer>? closerPeers,
   }) {
-    final $result = create();
+    final result = create();
     if (value != null) {
-      $result.value = value;
+      result.value = value;
     }
     if (closerPeers != null) {
-      $result.closerPeers.addAll(closerPeers);
+      result.closerPeers.addAll(closerPeers);
     }
-    return $result;
+    return result;
   }
   FindValueResponse._() : super();
   factory FindValueResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -542,14 +542,14 @@ class PutValueRequest extends $pb.GeneratedMessage {
     $core.List<$core.int>? key,
     $core.List<$core.int>? value,
   }) {
-    final $result = create();
+    final result = create();
     if (key != null) {
-      $result.key = key;
+      result.key = key;
     }
     if (value != null) {
-      $result.value = value;
+      result.value = value;
     }
-    return $result;
+    return result;
   }
   PutValueRequest._() : super();
   factory PutValueRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -608,11 +608,11 @@ class PutValueResponse extends $pb.GeneratedMessage {
   factory PutValueResponse({
     $core.bool? success,
   }) {
-    final $result = create();
+    final result = create();
     if (success != null) {
-      $result.success = success;
+      result.success = success;
     }
-    return $result;
+    return result;
   }
   PutValueResponse._() : super();
   factory PutValueResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -660,11 +660,11 @@ class FindNodeRequest extends $pb.GeneratedMessage {
   factory FindNodeRequest({
     $core.List<$core.int>? peerId,
   }) {
-    final $result = create();
+    final result = create();
     if (peerId != null) {
-      $result.peerId = peerId;
+      result.peerId = peerId;
     }
-    return $result;
+    return result;
   }
   FindNodeRequest._() : super();
   factory FindNodeRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -712,11 +712,11 @@ class FindNodeResponse extends $pb.GeneratedMessage {
   factory FindNodeResponse({
     $core.Iterable<Peer>? closerPeers,
   }) {
-    final $result = create();
+    final result = create();
     if (closerPeers != null) {
-      $result.closerPeers.addAll(closerPeers);
+      result.closerPeers.addAll(closerPeers);
     }
-    return $result;
+    return result;
   }
   FindNodeResponse._() : super();
   factory FindNodeResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

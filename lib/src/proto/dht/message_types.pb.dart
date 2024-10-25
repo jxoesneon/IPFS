@@ -25,23 +25,23 @@ class Wantlist_Entry extends $pb.GeneratedMessage {
     WantType? wantType,
     $core.bool? sendDontHave,
   }) {
-    final $result = create();
+    final result = create();
     if (block != null) {
-      $result.block = block;
+      result.block = block;
     }
     if (priority != null) {
-      $result.priority = priority;
+      result.priority = priority;
     }
     if (cancel != null) {
-      $result.cancel = cancel;
+      result.cancel = cancel;
     }
     if (wantType != null) {
-      $result.wantType = wantType;
+      result.wantType = wantType;
     }
     if (sendDontHave != null) {
-      $result.sendDontHave = sendDontHave;
+      result.sendDontHave = sendDontHave;
     }
-    return $result;
+    return result;
   }
   Wantlist_Entry._() : super();
   factory Wantlist_Entry.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -129,14 +129,14 @@ class Wantlist extends $pb.GeneratedMessage {
     $core.Iterable<Wantlist_Entry>? entries,
     $core.bool? full,
   }) {
-    final $result = create();
+    final result = create();
     if (entries != null) {
-      $result.entries.addAll(entries);
+      result.entries.addAll(entries);
     }
     if (full != null) {
-      $result.full = full;
+      result.full = full;
     }
-    return $result;
+    return result;
   }
   Wantlist._() : super();
   factory Wantlist.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -188,14 +188,14 @@ class BlockMsg extends $pb.GeneratedMessage {
     $core.List<$core.int>? prefix,
     $core.List<$core.int>? data,
   }) {
-    final $result = create();
+    final result = create();
     if (prefix != null) {
-      $result.prefix = prefix;
+      result.prefix = prefix;
     }
     if (data != null) {
-      $result.data = data;
+      result.data = data;
     }
-    return $result;
+    return result;
   }
   BlockMsg._() : super();
   factory BlockMsg.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -253,14 +253,14 @@ class BlockPresence extends $pb.GeneratedMessage {
     $core.List<$core.int>? cid,
     BlockPresenceType? type,
   }) {
-    final $result = create();
+    final result = create();
     if (cid != null) {
-      $result.cid = cid;
+      result.cid = cid;
     }
     if (type != null) {
-      $result.type = type;
+      result.type = type;
     }
-    return $result;
+    return result;
   }
   BlockPresence._() : super();
   factory BlockPresence.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -320,20 +320,20 @@ class Message extends $pb.GeneratedMessage {
     $core.Iterable<BlockPresence>? blockPresences,
     $core.int? pendingBytes,
   }) {
-    final $result = create();
+    final result = create();
     if (wantlist != null) {
-      $result.wantlist = wantlist;
+      result.wantlist = wantlist;
     }
     if (payload != null) {
-      $result.payload.addAll(payload);
+      result.payload.addAll(payload);
     }
     if (blockPresences != null) {
-      $result.blockPresences.addAll(blockPresences);
+      result.blockPresences.addAll(blockPresences);
     }
     if (pendingBytes != null) {
-      $result.pendingBytes = pendingBytes;
+      result.pendingBytes = pendingBytes;
     }
-    return $result;
+    return result;
   }
   Message._() : super();
   factory Message.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

@@ -21,14 +21,14 @@ class CalculateDistanceRequest extends $pb.GeneratedMessage {
     $0.KademliaId? id1,
     $0.KademliaId? id2,
   }) {
-    final $result = create();
+    final result = create();
     if (id1 != null) {
-      $result.id1 = id1;
+      result.id1 = id1;
     }
     if (id2 != null) {
-      $result.id2 = id2;
+      result.id2 = id2;
     }
-    return $result;
+    return result;
   }
   CalculateDistanceRequest._() : super();
   factory CalculateDistanceRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -88,11 +88,11 @@ class CalculateDistanceResponse extends $pb.GeneratedMessage {
   factory CalculateDistanceResponse({
     $fixnum.Int64? distance,
   }) {
-    final $result = create();
+    final result = create();
     if (distance != null) {
-      $result.distance = distance;
+      result.distance = distance;
     }
-    return $result;
+    return result;
   }
   CalculateDistanceResponse._() : super();
   factory CalculateDistanceResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

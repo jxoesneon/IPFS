@@ -18,32 +18,37 @@ import 'cid.pbenum.dart';
 export 'cid.pbenum.dart';
 
 /// CID message structure
-class CID extends $pb.GeneratedMessage {
-  factory CID({
+class CIDProto extends $pb.GeneratedMessage {
+  factory CIDProto({
     CIDVersion? version,
     $core.List<$core.int>? multihash,
     $core.String? codec,
+    $core.String? multibasePrefix,
   }) {
-    final $result = create();
+    final result = create();
     if (version != null) {
-      $result.version = version;
+      result.version = version;
     }
     if (multihash != null) {
-      $result.multihash = multihash;
+      result.multihash = multihash;
     }
     if (codec != null) {
-      $result.codec = codec;
+      result.codec = codec;
     }
-    return $result;
+    if (multibasePrefix != null) {
+      result.multibasePrefix = multibasePrefix;
+    }
+    return result;
   }
-  CID._() : super();
-  factory CID.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory CID.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  CIDProto._() : super();
+  factory CIDProto.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory CIDProto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CID', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CIDProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..e<CIDVersion>(1, _omitFieldNames ? '' : 'version', $pb.PbFieldType.OE, defaultOrMaker: CIDVersion.CID_VERSION_UNSPECIFIED, valueOf: CIDVersion.valueOf, enumValues: CIDVersion.values)
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'multihash', $pb.PbFieldType.OY)
     ..aOS(3, _omitFieldNames ? '' : 'codec')
+    ..aOS(4, _omitFieldNames ? '' : 'multibasePrefix')
     ..hasRequiredFields = false
   ;
 
@@ -51,22 +56,22 @@ class CID extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  CID clone() => CID()..mergeFromMessage(this);
+  CIDProto clone() => CIDProto()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  CID copyWith(void Function(CID) updates) => super.copyWith((message) => updates(message as CID)) as CID;
+  CIDProto copyWith(void Function(CIDProto) updates) => super.copyWith((message) => updates(message as CIDProto)) as CIDProto;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static CID create() => CID._();
-  CID createEmptyInstance() => create();
-  static $pb.PbList<CID> createRepeated() => $pb.PbList<CID>();
+  static CIDProto create() => CIDProto._();
+  CIDProto createEmptyInstance() => create();
+  static $pb.PbList<CIDProto> createRepeated() => $pb.PbList<CIDProto>();
   @$core.pragma('dart2js:noInline')
-  static CID getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CID>(create);
-  static CID? _defaultInstance;
+  static CIDProto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CIDProto>(create);
+  static CIDProto? _defaultInstance;
 
   @$pb.TagNumber(1)
   CIDVersion get version => $_getN(0);
@@ -94,6 +99,15 @@ class CID extends $pb.GeneratedMessage {
   $core.bool hasCodec() => $_has(2);
   @$pb.TagNumber(3)
   void clearCodec() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get multibasePrefix => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set multibasePrefix($core.String v) { $_setString(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasMultibasePrefix() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMultibasePrefix() => clearField(4);
 }
 
 

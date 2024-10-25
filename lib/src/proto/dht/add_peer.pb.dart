@@ -20,14 +20,14 @@ class AddPeerRequest extends $pb.GeneratedMessage {
     $0.KademliaId? peerId,
     $0.KademliaId? associatedPeerId,
   }) {
-    final $result = create();
+    final result = create();
     if (peerId != null) {
-      $result.peerId = peerId;
+      result.peerId = peerId;
     }
     if (associatedPeerId != null) {
-      $result.associatedPeerId = associatedPeerId;
+      result.associatedPeerId = associatedPeerId;
     }
-    return $result;
+    return result;
   }
   AddPeerRequest._() : super();
   factory AddPeerRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -87,11 +87,11 @@ class AddPeerResponse extends $pb.GeneratedMessage {
   factory AddPeerResponse({
     $core.bool? success,
   }) {
-    final $result = create();
+    final result = create();
     if (success != null) {
-      $result.success = success;
+      result.success = success;
     }
-    return $result;
+    return result;
   }
   AddPeerResponse._() : super();
   factory AddPeerResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

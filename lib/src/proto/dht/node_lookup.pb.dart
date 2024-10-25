@@ -19,11 +19,11 @@ class NodeLookupRequest extends $pb.GeneratedMessage {
   factory NodeLookupRequest({
     $0.KademliaId? target,
   }) {
-    final $result = create();
+    final result = create();
     if (target != null) {
-      $result.target = target;
+      result.target = target;
     }
-    return $result;
+    return result;
   }
   NodeLookupRequest._() : super();
   factory NodeLookupRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -71,11 +71,11 @@ class NodeLookupResponse extends $pb.GeneratedMessage {
   factory NodeLookupResponse({
     $core.Iterable<$0.KademliaId>? closestNodes,
   }) {
-    final $result = create();
+    final result = create();
     if (closestNodes != null) {
-      $result.closestNodes.addAll(closestNodes);
+      result.closestNodes.addAll(closestNodes);
     }
-    return $result;
+    return result;
   }
   NodeLookupResponse._() : super();
   factory NodeLookupResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

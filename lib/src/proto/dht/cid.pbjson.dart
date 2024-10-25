@@ -28,19 +28,21 @@ final $typed_data.Uint8List cIDVersionDescriptor = $convert.base64Decode(
     'CgpDSURWZXJzaW9uEhsKF0NJRF9WRVJTSU9OX1VOU1BFQ0lGSUVEEAASEQoNQ0lEX1ZFUlNJT0'
     '5fMBABEhEKDUNJRF9WRVJTSU9OXzEQAg==');
 
-@$core.Deprecated('Use cIDDescriptor instead')
-const CID$json = {
-  '1': 'CID',
+@$core.Deprecated('Use cIDProtoDescriptor instead')
+const CIDProto$json = {
+  '1': 'CIDProto',
   '2': [
     {'1': 'version', '3': 1, '4': 1, '5': 14, '6': '.ipfs.core.data_structures.CIDVersion', '10': 'version'},
     {'1': 'multihash', '3': 2, '4': 1, '5': 12, '10': 'multihash'},
     {'1': 'codec', '3': 3, '4': 1, '5': 9, '10': 'codec'},
+    {'1': 'multibase_prefix', '3': 4, '4': 1, '5': 9, '10': 'multibasePrefix'},
   ],
 };
 
-/// Descriptor for `CID`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List cIDDescriptor = $convert.base64Decode(
-    'CgNDSUQSPwoHdmVyc2lvbhgBIAEoDjIlLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuQ0lEVm'
-    'Vyc2lvblIHdmVyc2lvbhIcCgltdWx0aWhhc2gYAiABKAxSCW11bHRpaGFzaBIUCgVjb2RlYxgD'
-    'IAEoCVIFY29kZWM=');
+/// Descriptor for `CIDProto`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List cIDProtoDescriptor = $convert.base64Decode(
+    'CghDSURQcm90bxI/Cgd2ZXJzaW9uGAEgASgOMiUuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy'
+    '5DSURWZXJzaW9uUgd2ZXJzaW9uEhwKCW11bHRpaGFzaBgCIAEoDFIJbXVsdGloYXNoEhQKBWNv'
+    'ZGVjGAMgASgJUgVjb2RlYxIpChBtdWx0aWJhc2VfcHJlZml4GAQgASgJUg9tdWx0aWJhc2VQcm'
+    'VmaXg=');
 

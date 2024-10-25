@@ -17,11 +17,11 @@ class SplitBucketRequest extends $pb.GeneratedMessage {
   factory SplitBucketRequest({
     $core.int? bucketIndex,
   }) {
-    final $result = create();
+    final result = create();
     if (bucketIndex != null) {
-      $result.bucketIndex = bucketIndex;
+      result.bucketIndex = bucketIndex;
     }
-    return $result;
+    return result;
   }
   SplitBucketRequest._() : super();
   factory SplitBucketRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -67,11 +67,11 @@ class SplitBucketResponse extends $pb.GeneratedMessage {
   factory SplitBucketResponse({
     $core.bool? success,
   }) {
-    final $result = create();
+    final result = create();
     if (success != null) {
-      $result.success = success;
+      result.success = success;
     }
-    return $result;
+    return result;
   }
   SplitBucketResponse._() : super();
   factory SplitBucketResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -118,14 +118,14 @@ class MergeBucketsRequest extends $pb.GeneratedMessage {
     $core.int? bucketIndex1,
     $core.int? bucketIndex2,
   }) {
-    final $result = create();
+    final result = create();
     if (bucketIndex1 != null) {
-      $result.bucketIndex1 = bucketIndex1;
+      result.bucketIndex1 = bucketIndex1;
     }
     if (bucketIndex2 != null) {
-      $result.bucketIndex2 = bucketIndex2;
+      result.bucketIndex2 = bucketIndex2;
     }
-    return $result;
+    return result;
   }
   MergeBucketsRequest._() : super();
   factory MergeBucketsRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -181,11 +181,11 @@ class MergeBucketsResponse extends $pb.GeneratedMessage {
   factory MergeBucketsResponse({
     $core.bool? success,
   }) {
-    final $result = create();
+    final result = create();
     if (success != null) {
-      $result.success = success;
+      result.success = success;
     }
-    return $result;
+    return result;
   }
   MergeBucketsResponse._() : super();
   factory MergeBucketsResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

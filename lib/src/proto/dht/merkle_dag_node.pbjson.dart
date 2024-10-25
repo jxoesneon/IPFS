@@ -17,14 +17,14 @@ import 'dart:typed_data' as $typed_data;
 const MerkleDAGNode$json = {
   '1': 'MerkleDAGNode',
   '2': [
-    {'1': 'cid', '3': 1, '4': 1, '5': 12, '10': 'cid'},
-    {'1': 'links', '3': 2, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.Link', '10': 'links'},
+    {'1': 'cid', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.CID', '10': 'cid'},
+    {'1': 'links', '3': 2, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.PBLink', '10': 'links'},
     {'1': 'data', '3': 3, '4': 1, '5': 12, '10': 'data'},
     {'1': 'size', '3': 4, '4': 1, '5': 4, '10': 'size'},
     {'1': 'timestamp', '3': 5, '4': 1, '5': 3, '10': 'timestamp'},
     {'1': 'metadata', '3': 6, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.MerkleDAGNode.MetadataEntry', '10': 'metadata'},
     {'1': 'is_directory', '3': 7, '4': 1, '5': 8, '10': 'isDirectory'},
-    {'1': 'parent_cid', '3': 8, '4': 1, '5': 12, '10': 'parentCid'},
+    {'1': 'parent_cid', '3': 8, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.CID', '10': 'parentCid'},
   ],
   '3': [MerkleDAGNode_MetadataEntry$json],
 };
@@ -41,40 +41,12 @@ const MerkleDAGNode_MetadataEntry$json = {
 
 /// Descriptor for `MerkleDAGNode`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List merkleDAGNodeDescriptor = $convert.base64Decode(
-    'Cg1NZXJrbGVEQUdOb2RlEhAKA2NpZBgBIAEoDFIDY2lkEjUKBWxpbmtzGAIgAygLMh8uaXBmcy'
-    '5jb3JlLmRhdGFfc3RydWN0dXJlcy5MaW5rUgVsaW5rcxISCgRkYXRhGAMgASgMUgRkYXRhEhIK'
-    'BHNpemUYBCABKARSBHNpemUSHAoJdGltZXN0YW1wGAUgASgDUgl0aW1lc3RhbXASUgoIbWV0YW'
-    'RhdGEYBiADKAsyNi5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLk1lcmtsZURBR05vZGUuTWV0'
-    'YWRhdGFFbnRyeVIIbWV0YWRhdGESIQoMaXNfZGlyZWN0b3J5GAcgASgIUgtpc0RpcmVjdG9yeR'
-    'IdCgpwYXJlbnRfY2lkGAggASgMUglwYXJlbnRDaWQaOwoNTWV0YWRhdGFFbnRyeRIQCgNrZXkY'
-    'ASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
-
-@$core.Deprecated('Use linkDescriptor instead')
-const Link$json = {
-  '1': 'Link',
-  '2': [
-    {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'cid', '3': 2, '4': 1, '5': 12, '10': 'cid'},
-    {'1': 'size', '3': 3, '4': 1, '5': 4, '10': 'size'},
-    {'1': 'metadata', '3': 4, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.Link.MetadataEntry', '10': 'metadata'},
-  ],
-  '3': [Link_MetadataEntry$json],
-};
-
-@$core.Deprecated('Use linkDescriptor instead')
-const Link_MetadataEntry$json = {
-  '1': 'MetadataEntry',
-  '2': [
-    {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
-    {'1': 'value', '3': 2, '4': 1, '5': 9, '10': 'value'},
-  ],
-  '7': {'7': true},
-};
-
-/// Descriptor for `Link`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List linkDescriptor = $convert.base64Decode(
-    'CgRMaW5rEhIKBG5hbWUYASABKAlSBG5hbWUSEAoDY2lkGAIgASgMUgNjaWQSEgoEc2l6ZRgDIA'
-    'EoBFIEc2l6ZRJJCghtZXRhZGF0YRgEIAMoCzItLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMu'
-    'TGluay5NZXRhZGF0YUVudHJ5UghtZXRhZGF0YRo7Cg1NZXRhZGF0YUVudHJ5EhAKA2tleRgBIA'
-    'EoCVIDa2V5EhQKBXZhbHVlGAIgASgJUgV2YWx1ZToCOAE=');
+    'Cg1NZXJrbGVEQUdOb2RlEjAKA2NpZBgBIAEoCzIeLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZX'
+    'MuQ0lEUgNjaWQSNwoFbGlua3MYAiADKAsyIS5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLlBC'
+    'TGlua1IFbGlua3MSEgoEZGF0YRgDIAEoDFIEZGF0YRISCgRzaXplGAQgASgEUgRzaXplEhwKCX'
+    'RpbWVzdGFtcBgFIAEoA1IJdGltZXN0YW1wElIKCG1ldGFkYXRhGAYgAygLMjYuaXBmcy5jb3Jl'
+    'LmRhdGFfc3RydWN0dXJlcy5NZXJrbGVEQUdOb2RlLk1ldGFkYXRhRW50cnlSCG1ldGFkYXRhEi'
+    'EKDGlzX2RpcmVjdG9yeRgHIAEoCFILaXNEaXJlY3RvcnkSPQoKcGFyZW50X2NpZBgIIAEoCzIe'
+    'LmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuQ0lEUglwYXJlbnRDaWQaOwoNTWV0YWRhdGFFbn'
+    'RyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
 

@@ -25,23 +25,23 @@ class RedBlackTreeNode extends $pb.GeneratedMessage {
     RedBlackTreeNode? left,
     RedBlackTreeNode? right,
   }) {
-    final $result = create();
+    final result = create();
     if (key != null) {
-      $result.key = key;
+      result.key = key;
     }
     if (value != null) {
-      $result.value = value;
+      result.value = value;
     }
     if (color != null) {
-      $result.color = color;
+      result.color = color;
     }
     if (left != null) {
-      $result.left = left;
+      result.left = left;
     }
     if (right != null) {
-      $result.right = right;
+      result.right = right;
     }
-    return $result;
+    return result;
   }
   RedBlackTreeNode._() : super();
   factory RedBlackTreeNode.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
