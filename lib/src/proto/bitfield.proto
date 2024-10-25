@@ -1,23 +1,29 @@
 // lib/src/proto/bitfield.proto
 syntax = "proto3";
 
-package ipfs;
+package ipfs.core.data_structures;
 
-message BitField {
-    repeated bool bits = 1;  // Stores the bits in the BitField
-    int32 size = 2;          // Size of the BitField
+message BitFieldProto {
+    bytes bits = 1;      // Store the bits in a compressed bytes format (aligned with Uint8List)
+    int32 size = 2;      // Total size of the BitField in bits
 
     // Functionality to set a bit at a specific index
     message SetBitRequest {
-        int32 index = 1; // Index to set the bit
+        int32 index = 1;  // Index to set the bit
+    }
+
+    // Functionality to clear a bit at a specific index
+    message ClearBitRequest {
+        int32 index = 1;  // Index to clear the bit
     }
 
     // Functionality to get a bit at a specific index
     message GetBitRequest {
-        int32 index = 1; // Index to get the bit
+        int32 index = 1;  // Index to get the bit
     }
 
+    // Response message for bit value
     message BitResponse {
-        bool value = 1;  // Value of the bit at the requested index
+        bool value = 1;   // Value of the bit at the requested index
     }
 }
