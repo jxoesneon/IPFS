@@ -1,0 +1,23 @@
+// lib/src/proto/node_stats.proto
+
+syntax = "proto3";
+
+package ipfs.core.data_structures;
+
+// Represents statistics about the IPFS node.
+message NodeStats {
+  // The number of blocks stored in the datastore.
+  int32 num_blocks = 1;
+
+  // The total size of the blocks stored in the datastore (in bytes).
+  int64 datastore_size = 2;
+
+  // The number of connected peers.
+  int32 num_connected_peers = 3;
+
+  // The total bandwidth used for sending data (in bytes).
+  int64 bandwidth_sent = 4;
+
+  // The total bandwidth used for receiving data (in bytes).
+  int64 bandwidth_received = 5;
+}
