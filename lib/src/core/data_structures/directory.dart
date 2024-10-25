@@ -1,27 +1,35 @@
+// lib/src/core/data_structures/directory.dart
 import 'package:fixnum/fixnum.dart';
-import 'package:protobuf/protobuf.dart';
-import '/../src/proto/dht/directory.pb.dart'; // Import the generated protobuf file for directory
+import '/../src/proto/dht/directory.pb.dart';
 import 'dart:typed_data';
 
+/// Represents a directory entry in the IPFS directory structure.
 class DirectoryHandler {
-  Directory _directory;
-
+  Directory _directory = Directory();
+  // Constructor to initialize the directory with a given path
   DirectoryHandler(String path) {
-    // Initialize an empty directory with the given path
-    _directory = Directory()
+    _directory
       ..path = path
       ..totalSize = Int64(0)
       ..numberOfFiles = 0
       ..numberOfDirectories = 0;
   }
 
+// Get a directory entry by name
+  DirectoryEntry getEntryByName(String name) {
+    return _directory.entries.firstWhere(
+      (e) => e.name == name,
+      orElse: () =>
+          DirectoryEntry(), // Return a default DirectoryEntry if not found
+    );
+  }
+
   // Add a new directory entry (file or subdirectory)
   bool addEntry(DirectoryEntry entry) {
     // Check if the entry already exists
-    var existingEntry = _directory.entries
-        .firstWhere((e) => e.name == entry.name, orElse: () => null);
+    bool entryExists = _directory.entries.any((e) => e.name == entry.name);
 
-    if (existingEntry != null) {
+    if (entryExists) {
       return false; // Entry already exists
     }
 
@@ -65,13 +73,7 @@ class DirectoryHandler {
 
   // List all directory entries
   List<DirectoryEntry> listEntries() {
-    return _directory.entries;
-  }
-
-  // Get a directory entry by name
-  DirectoryEntry getEntry(String name) {
-    return _directory.entries
-        .firstWhere((e) => e.name == name, orElse: () => null);
+    return List.unmodifiable(_directory.entries);
   }
 
   // Get the total size of the directory
