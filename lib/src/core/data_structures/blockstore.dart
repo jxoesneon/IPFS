@@ -30,7 +30,7 @@ class BlockStore {
 
     return GetBlockResponse()
       ..block = block
-      ..found = block.cid != null;
+      ..found = _blocks.contains(block); // Check if block is in the list
   }
 
   /// Removes a block from the store by its CID.
@@ -40,7 +40,7 @@ class BlockStore {
       orElse: () => BlockProto(),
     );
 
-    if (blockToRemove.cid != null && _blocks.contains(blockToRemove)) {
+    if (_blocks.contains(blockToRemove)) { // Check if block is in the list
       _blocks.remove(blockToRemove);
       return RemoveBlockResponse()
         ..success = true
