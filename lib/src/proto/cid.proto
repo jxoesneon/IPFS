@@ -11,8 +11,9 @@ enum CIDVersion {
 }
 
 // CID message structure
-message CID {
+message CIDProto {
     CIDVersion version = 1;         // Version of the CID
     bytes multihash = 2;            // The multihash of the content
     string codec = 3;               // Codec used to encode the content
+    string multibase_prefix = 4;    // Multibase prefix (optional, for CIDv1)
 }
