@@ -31,9 +31,9 @@ dependencies:
   # Metrics (Optional)
   prometheus_client: ^1.0.0+1 # Or another metrics library for monitoring
 
-  # Other Utilities (as needed)
-  # ...
-
+  dart_merkle_lib: ^1.0.1
+  multibase: ^1.0.0
+  dart_multihash: ^1.0.1
 dev_dependencies:
   test: ^1.21.0 # For unit and integration tests
   lints: ^5.0.0 # For code style analysis
