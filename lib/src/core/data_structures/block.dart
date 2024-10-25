@@ -1,10 +1,10 @@
+// lib/src/core/data_structures/block.dart
 import 'dart:typed_data';
-import 'package:protobuf/protobuf.dart';
-import '/../src/proto/dht/block.pb.dart';
-import 'cid.dart'; // Import for handling CIDs
+import '/../src/proto/dht/block.pb.dart';  // Correct path for BlockProto
+import 'cid.dart';  // Import for handling CIDs
 
 /// Represents a Block in the IPFS network.
-/// A block consists of raw binary data and a corresponding CID.
+/// A block consists of raw binary data and a corresponding CID (Content Identifier).
 class Block {
   // The binary data of the block
   final Uint8List data;
@@ -20,27 +20,26 @@ class Block {
     return Block(data, cid);
   }
 
-  /// Serializes the Block to a .proto message.
+  /// Serializes the Block to a Protobuf message for transmission or storage.
   BlockProto toProto() {
-    final blockProto = BlockProto();
-    blockProto.data = data;
-    blockProto.cid = cid.toProto(); // Assuming CID has a toProto() method.
+    final blockProto = BlockProto()
+      ..data = data
+      ..cid = cid.toProto();  // Serializes CID to its Protobuf representation
     return blockProto;
   }
 
-  /// Deserializes a Block from a .proto message.
+  /// Deserializes a Block from a Protobuf message.
   factory Block.fromProto(BlockProto proto) {
-    final cid = CID.fromProto(proto.cid); // Assuming CID can be deserialized.
-    return Block(proto.data, cid);
+    // Convert List<int> to Uint8List using Uint8List.fromList()
+    final cid = CID.fromProto(proto.cid);  // Deserializes CID from Protobuf
+    return Block(Uint8List.fromList(proto.data), cid);  // Convert data
   }
 
   /// Returns the size of the block's data in bytes.
-  int size() {
-    return data.length;
-  }
+  int size() => data.length;
 
   @override
   String toString() {
     return 'Block{cid: $cid, size: ${size()} bytes}';
-  }
+  }  
 }
