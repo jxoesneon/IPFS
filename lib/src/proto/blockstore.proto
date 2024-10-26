@@ -1,34 +1,34 @@
-// lib/src/proto/blockstore.proto
-syntax = "proto3";
+  // lib/src/proto/blockstore.proto
+  syntax = "proto3";
 
-package ipfs.core.data_structures;
+  package ipfs.core.data_structures;
 
-// Import necessary proto definitions
-import "block.proto"; // Import BlockProto definition
-import "cid.proto";   // Import CIDProto definition
-import "google/protobuf/empty.proto";
-// Response message for adding a block
-message AddBlockResponse {
-  bool success = 1;          // Indicates if the operation was successful
-  string message = 2;       // Message providing additional information
-}
+  // Import necessary proto definitions
+  import "block.proto"; // Import BlockProto definition
+  import "cid.proto";   // Import CIDProto definition
+  import "google/protobuf/empty.proto";
+  // Response message for adding a block
+  message AddBlockResponse {
+    bool success = 1;          // Indicates if the operation was successful
+    string message = 2;       // Message providing additional information
+  }
 
-// Response message for retrieving a block
-message GetBlockResponse {
-  BlockProto block = 1;     // The block retrieved
-  bool found = 2;           // Indicates if the block was found
-}
+  // Response message for retrieving a block
+  message GetBlockResponse {
+    BlockProto block = 1;     // The block retrieved
+    bool found = 2;           // Indicates if the block was found
+  }
 
-// Response message for removing a block
-message RemoveBlockResponse {
-  bool success = 1;          // Indicates if the operation was successful
-  string message = 2;       // Message providing additional information
-}
+  // Response message for removing a block
+  message RemoveBlockResponse {
+    bool success = 1;          // Indicates if the operation was successful
+    string message = 2;       // Message providing additional information
+  }
 
-// The BlockStore service definition
-service BlockStoreService {
-  rpc AddBlock(BlockProto) returns (AddBlockResponse);  // Adds a block
-  rpc GetBlock(CIDProto) returns (GetBlockResponse);    // Retrieves a block by CIDProto
-  rpc RemoveBlock(CIDProto) returns (RemoveBlockResponse); // Removes a block by CIDProto
-  rpc GetAllBlocks(google.protobuf.Empty) returns (stream BlockProto); // Retrieves all blocks
-}
+  // The BlockStore service definition
+  service BlockStoreService {
+    rpc AddBlock(BlockProto) returns (AddBlockResponse);  // Adds a block
+    rpc GetBlock(CIDProto) returns (GetBlockResponse);    // Retrieves a block by CIDProto
+    rpc RemoveBlock(CIDProto) returns (RemoveBlockResponse); // Removes a block by CIDProto
+    rpc GetAllBlocks(google.protobuf.Empty) returns (stream BlockProto); // Retrieves all blocks
+  }
