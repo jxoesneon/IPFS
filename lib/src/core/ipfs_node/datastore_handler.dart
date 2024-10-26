@@ -3,9 +3,9 @@
 import 'dart:typed_data';
 
 import '/../src/storage/datastore.dart';
-import '../data_structures/block.dart';
-import '../utils/car_reader.dart'; // Assuming you have a CarReader utility
-import '../utils/car_writer.dart'; // Assuming you have a CarWriter utility
+import '/../src/core/data_structures/block.dart';
+import '/../src/utils/car_reader.dart'; // Assuming you have a CarReader utility
+import '/../src/utils/car_writer.dart'; // Assuming you have a CarWriter utility
 
 /// Handles datastore operations for an IPFS node.
 class DatastoreHandler {
