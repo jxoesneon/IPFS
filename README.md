@@ -1,6 +1,6 @@
-# IPFS Server in Dart ![IPFS Logo](lib/assets/logo.svg)
+# WIP IPFS Server in Dart ![IPFS Logo](lib/assets/logo.svg)
 
-Welcome to the **IPFS Server in Dart** repository! This project aims to deliver a robust, production-ready server leveraging Dart for seamless integration with the IPFS network.
+Welcome to the **IPFS Server in Dart** repository! This a **WIP** project that aims to deliver a robust, production-ready server leveraging Dart for seamless integration with the IPFS network.
 
 
 
