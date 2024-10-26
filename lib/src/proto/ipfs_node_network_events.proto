@@ -1,0 +1,143 @@
+// lib/src/proto/ipfs_node_network_events.proto
+syntax = "proto3";
+
+package ipfs.core.ipfs_node;
+
+// NetworkEvent represents different network events related to the IPFS node.
+message NetworkEvent {
+  // Types of network events.
+  oneof event {
+    PeerConnectedEvent peer_connected = 1;
+    PeerDisconnectedEvent peer_disconnected = 2;
+    ConnectionAttemptedEvent connection_attempted = 3;
+    ConnectionFailedEvent connection_failed = 4;
+    MessageReceivedEvent message_received = 5;
+    MessageSentEvent message_sent = 6;
+    BlockReceivedEvent block_received = 7;
+    BlockSentEvent block_sent = 8;
+    DhtQueryStartedEvent dht_query_started = 9;
+    DhtQueryCompletedEvent dht_query_completed = 10;
+    DhtValueFoundEvent dht_value_found = 11;
+    DhtValueProvidedEvent dht_value_provided = 12;
+    PubsubMessagePublishedEvent pubsub_message_published = 13;
+    PubsubMessageReceivedEvent pubsub_message_received = 14;
+    PubsubSubscriptionCreatedEvent pubsub_subscription_created = 15;
+    PubsubSubscriptionCancelledEvent pubsub_subscription_cancelled = 16;
+    CircuitRelayCreatedEvent circuit_relay_created = 17;
+    CircuitRelayClosedEvent circuit_relay_closed = 18;
+    CircuitRelayTrafficEvent circuit_relay_traffic = 19;
+    NodeStartedEvent node_started = 20;
+    NodeStoppedEvent node_stopped = 21;
+    ErrorEvent error = 22;
+    NetworkChangedEvent network_changed = 23;
+  }
+}
+
+// Event message definitions:
+
+message PeerConnectedEvent {
+  string peer_id = 1;
+  string multiaddress = 2;
+}
+
+message PeerDisconnectedEvent {
+  string peer_id = 1;
+  string reason = 2; // Optional reason for disconnection
+}
+
+message ConnectionAttemptedEvent {
+  string peer_id = 1; // or multiaddress
+  bool success = 2;
+}
+
+message ConnectionFailedEvent {
+  string peer_id = 1; // or multiaddress
+  string reason = 2;
+}
+
+message MessageReceivedEvent {
+  string peer_id = 1;
+  bytes message_content = 2;
+}
+
+message MessageSentEvent {
+  string peer_id = 1;
+  bytes message_content = 2;
+}
+
+message BlockReceivedEvent {
+  string cid = 1;
+  string peer_id = 2; // Source of the block
+}
+
+message BlockSentEvent {
+  string cid = 1;
+  string peer_id = 2; // Destination of the block
+}
+
+message DhtQueryStartedEvent {
+  string query_type = 1;
+  string target_key = 2;
+}
+
+message DhtQueryCompletedEvent {
+  string query_type = 1;
+  string target_key = 2;
+  repeated string results = 3; // List of results (if any)
+}
+
+message DhtValueFoundEvent {
+  string key = 1;
+  bytes value = 2;
+  string peer_id = 3; // Provider of the value
+}
+
+message DhtValueProvidedEvent {
+  string key = 1;
+  bytes value = 2;
+}
+
+message PubsubMessagePublishedEvent {
+  string topic = 1;
+  bytes message_content = 2;
+}
+
+message PubsubMessageReceivedEvent {
+  string topic = 1;
+  bytes message_content = 2;
+  string peer_id = 3; // Sender of the message
+}
+
+message PubsubSubscriptionCreatedEvent {
+  string topic = 1;
+}
+
+message PubsubSubscriptionCancelledEvent {
+  string topic = 1;
+}
+
+message CircuitRelayCreatedEvent {
+  string relay_address = 1;
+}
+
+message CircuitRelayClosedEvent {
+  string relay_address = 1;
+  string reason = 2; // Optional reason for closure
+}
+
+message CircuitRelayTrafficEvent {
+  string relay_address = 1;
+  int64 data_size = 2; // Amount of data relayed
+}
+
+message NodeStartedEvent {}
+
+message NodeStoppedEvent {}
+
+message ErrorEvent {
+  string error_type = 1;
+  string message = 2;
+  string stack_trace = 3; // Optional stack trace
+}
+
+message NetworkChangedEvent {}
