@@ -1,7 +1,5 @@
 // lib/src/core/config/config.dart
 
-import 'package:p2plib/p2plib.dart' as p2p;
-
 /// Configuration class for the IPFS node.
 class IPFSConfig {
   /// Creates a new IPFSConfig with default values.
@@ -31,8 +29,8 @@ class IPFSConfig {
     this.defaultBandwidthQuota = 1048576, // 1 MB/s
     this.garbageCollectionEnabled = true,
     this.garbageCollectionInterval = const Duration(hours: 24),
-    this.security = SecurityConfig(),
-  });
+    SecurityConfig? security, // Change to nullable and provide default value below
+  }) : security = security ?? SecurityConfig(); // Assign default in initializer list
 
   /// The addresses and ports to listen on.
   final List<String> addresses;
@@ -101,11 +99,17 @@ class IPFSConfig {
 /// Security-related configuration options.
 class SecurityConfig {
   /// Whether to enable TLS for secure communication.
-  final bool enableTLS = false;
+  final bool enableTLS;
 
   /// The path to the TLS certificate file.
   final String? tlsCertificatePath;
 
   /// The path to the TLS private key file.
   final String? tlsPrivateKeyPath;
+
+  SecurityConfig({
+    this.enableTLS = false,
+    this.tlsCertificatePath, 
+    this.tlsPrivateKeyPath, 
+  });
 }
