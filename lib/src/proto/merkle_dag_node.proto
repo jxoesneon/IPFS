@@ -30,5 +30,5 @@ message MerkleDAGNode {
   bool is_directory = 7;
 
   // Optional parent CID to represent the relationship in DAG.
-  CID parent_cid = 8; // Use CID message
+  CIDProto parent_cid = 8; // Use CID message
 }
