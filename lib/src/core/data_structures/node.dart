@@ -2,7 +2,8 @@
 
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart' as fixnum;
-import '/../src/proto/dht/node.pb.dart' as proto; // Import the generated Protobuf file
+import '/../src/proto/dht/node.pb.dart'
+    as proto; // Import the generated Protobuf file
 import '/../src/proto/dht/node_type.pbenum.dart';
 import 'cid.dart'; // Use the CID class for handling CIDs
 import 'link.dart'; // Use the Link class for handling links
@@ -54,6 +55,24 @@ class Node {
     pbNode.metadata.addAll(metadata);
 
     return pbNode;
+  }
+
+  /// Converts the [Node] to a byte array (Uint8List).
+  Uint8List toBytes() {
+    return toProto()
+        .writeToBuffer(); // Serialize using Protobuf's writeToBuffer method
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'data': data,
+      'links': links,
+      'size': size,
+      'timestamp': timestamp,
+      'metadata': metadata,
+      'cid': cid,
+      'type': type,
+    };
   }
 
   @override
