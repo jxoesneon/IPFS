@@ -1,3 +1,3 @@
-// lib/IPFS.dart
+// lib/ipfs.dart
 
 export 'src/ipfs.dart';
