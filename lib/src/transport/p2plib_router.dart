@@ -4,8 +4,8 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:ipfs/src/core/config/config.dart';
-import 'package:ipfs/src/utils/base58.dart';
+import '/../src/core/config/config.dart';
+import '/../src/utils/base58.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 
 /// A router implementation using the `p2plib` package.

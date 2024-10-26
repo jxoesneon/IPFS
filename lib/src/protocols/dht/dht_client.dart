@@ -4,7 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:ipfs/src/core/ipfs_node.dart';
+import '/../src/core/ipfs_node/ipfs_node.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import '/../src/utils/base58.dart';
 import '/../src/proto/unixfs/unixfs.pb.dart';

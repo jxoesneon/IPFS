@@ -3,7 +3,7 @@
 import 'dart:convert';
 import 'dart:async'; // Make sure to import this if it's not already imported
 
-import '../../IPFS.dart';
+import '../../ipfs.dart';
 import '../protocols/bitswap/bitswap.dart';
 import '../protocols/dht/dht_client.dart';
 

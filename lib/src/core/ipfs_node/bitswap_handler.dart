@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:convert/convert.dart'; // For encoding utilities
 import 'package:crypto/crypto.dart'; // For hashing utilities
-import 'package:ipfs/src/proto/dht/cid.pb.dart';
+import '/../src/proto/dht/cid.pb.dart';
 
 import '../data_structures/block.dart';
 import '../data_structures/cid.dart';
