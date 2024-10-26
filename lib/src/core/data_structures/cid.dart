@@ -30,9 +30,9 @@ class CID {
 
   /// Creates a CID from the given content, codec, and hashing algorithm.
   /// Automatically generates the multihash from the content using the specified hash algorithm.
-  factory CID.fromContent(Uint8List content, String codec,
+  factory CID.fromContent(String codec,
       {CIDVersion version = CIDVersion.CID_VERSION_0,
-      String hashType = 'sha2-256'}) {
+      String hashType = 'sha2-256', required Uint8List content}) {
     final multihash = _hashContent(content, hashType);
     return CID.fromBytes(multihash, codec, version: version);
   }
