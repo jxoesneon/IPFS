@@ -9,7 +9,7 @@ import "cid.proto";  // Import the CID definition
 // Represents a Merkle DAG node.
 message MerkleDAGNode {
   // The CID (Content Identifier) of the node.
-  CID cid = 1; // Use CID message
+  CIDProto cid = 1; // Use CID message
 
   // Links to other nodes in the DAG.
   repeated PBLink links = 2; // Use PBLink from link.proto
