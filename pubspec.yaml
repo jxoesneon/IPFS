@@ -11,6 +11,14 @@ environment:
   sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
+  collection: ^1.19.1
+  
+  http: ^1.2.2
+
+  fixnum: ^1.1.1
+
+  convert: ^3.1.2
+
   uuid: ^4.5.1
 
   # Networking and P2P
@@ -57,9 +65,3 @@ example:
 include:
   - lib/src/core/
   - lib/src/proto/
-
-# Add a homepage URL to your project repository (replace with your actual URL)
-homepage: https://github.com/yourusername/ipfs_project
-
-# Add a license type (replace with your actual license)
-license: MIT
