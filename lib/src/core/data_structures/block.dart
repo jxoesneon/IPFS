@@ -1,3 +1,4 @@
+// lib/src/core/data_structures/block.dart
 import 'dart:typed_data';
 import 'package:multibase/multibase.dart'; // Import multibase for decoding
 import 'package:dart_multihash/dart_multihash.dart'; // Import multihash for decoding
@@ -24,26 +25,26 @@ class Block {
   /// Factory constructor to create a Block from raw bytes.
   factory Block.fromBytes(Uint8List bytes) {
     try {
-      // Assume that the first part of bytes contains the CID in multibase format
-      final cidLength = bytes[0]; // Example: first byte indicates length of CID
-      final cidBytes = bytes.sublist(1, cidLength + 1);
-      
-      // Decode the CID using multibase and multihash libraries
-      final decodedCid = Multibase.decode(Uint8List.fromList(cidBytes));
-      final multihash = Multihash.fromBytes(decodedCid);
+      // 1. Decode using multibaseDecode:
+      final decodedCid = multibaseDecode(String.fromCharCodes(bytes));
+      print(decodedCid);
 
-      // Create a CID instance from decoded multihash
-      final cid = CID.fromBytes(multihash.digest, 'dag-pb');
+      // 2. Create the MultihashInfo:
+      final multihashInfo = Multihash.decode(decodedCid);
 
-      // Extract block data after CID
-      final blockData = bytes.sublist(cidLength + 1);
+      // 3. Create the CID:
+      final cid = CID.fromBytes(Uint8List.fromList(multihashInfo.digest), 'dag-pb'); // Convert to Uint8List
+
+      // 4. Extract block data (after the encoded CID):
+      final encodedCidLength = bytes.length; // Calculate length
+      final blockData = bytes.sublist(encodedCidLength);
 
       return Block(blockData, cid);
     } catch (e) {
-      throw Exception('CIDExtractionException: Failed to extract CID from bytes');
+      throw Exception('CIDExtractionException: Failed to extract CID from bytes: $e');
     }
   }
-
+  
   /// Serializes the Block to a Protobuf message for transmission or storage.
   BlockProto toProto() {
     final blockProto = BlockProto()
