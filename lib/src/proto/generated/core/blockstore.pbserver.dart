@@ -19,7 +19,7 @@ import 'block.pb.dart' as $0;
 import 'blockstore.pb.dart' as $3;
 import 'blockstore.pbjson.dart';
 import 'cid.pb.dart' as $1;
-import 'google/protobuf/empty.pb.dart' as $2;
+import '../../dht/google/protobuf/empty.pb.dart' as $2;
 
 export 'blockstore.pb.dart';
 

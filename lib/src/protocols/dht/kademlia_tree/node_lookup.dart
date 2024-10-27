@@ -6,8 +6,8 @@ import 'dart:async';
 import 'find_closest_peers.dart'; // Import for findClosestPeers
 import 'helpers.dart'; // Import for _calculateDistance, _findNode
 import '../kademlia_tree.dart'; // Import the main KademliaTree class
-import '/../src/proto/dht/node_lookup.pb.dart' as node_lookup_pb;
-import '/../src/proto/dht/common_kademlia.pb.dart' as common_kademlia_pb;
+import '../../../proto/generated/dht/node_lookup.pb.dart' as node_lookup_pb;
+import '../../../proto/generated/dht/common_kademlia.pb.dart' as common_kademlia_pb;
 
 extension NodeLookup on KademliaTree {
   /// Performs an iterative node lookup for a target peer ID.

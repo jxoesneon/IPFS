@@ -1,5 +1,5 @@
 // lib/src/core/data_structures/bitfield.dart
-import '/../src/proto/dht/bitfield.pb.dart'; // Import the generated Dart file for BitFieldProto
+import '../../proto/generated/core/bitfield.pb.dart'; // Import the generated Dart file for BitFieldProto
 import 'dart:typed_data';
 
 /// A class representing a simple bit field, used to manage binary flags efficiently.

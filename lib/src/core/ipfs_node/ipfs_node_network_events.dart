@@ -1,7 +1,7 @@
 // lib/src/core/ipfs_node/ipfs_node_network_events.dart
 
 import 'dart:async';
-import '/../src/proto/dht/ipfs_node_network_events.pb.dart';
+import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
 import '/../src/transport/circuit_relay_client.dart';
 import '/../src/transport/p2plib_router.dart';
 

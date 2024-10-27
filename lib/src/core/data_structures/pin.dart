@@ -1,7 +1,7 @@
 // lib/src/core/data_structures/pin.dart
 
 import 'package:fixnum/fixnum.dart' as fixnum;
-import '/../src/proto/dht/pin.pb.dart' as proto; // Import the generated Protobuf file
+import '../../proto/generated/core/pin.pb.dart' as proto; // Import the generated Protobuf file
 import 'cid.dart'; // Import CID class for handling CIDs
 
 /// Represents a pin in the IPFS network.

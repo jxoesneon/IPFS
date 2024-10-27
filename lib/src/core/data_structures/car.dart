@@ -1,7 +1,7 @@
 // lib/src/core/data_structures/car.dart
 
 import 'dart:typed_data';
-import '/../src/proto/dht/car.pb.dart'; // Import the generated Protobuf file
+import '../../proto/generated/core/car.pb.dart'; // Import the generated Protobuf file
 import '../data_structures/block.dart';
 
 /// Represents a Content Addressable Archive (CAR).

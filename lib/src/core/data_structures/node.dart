@@ -2,9 +2,9 @@
 
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart' as fixnum;
-import '/../src/proto/dht/node.pb.dart'
+import '../../proto/generated/core/node.pb.dart'
     as proto; // Import the generated Protobuf file
-import '/../src/proto/dht/node_type.pbenum.dart';
+import '../../proto/generated/core/node_type.pbenum.dart';
 import 'cid.dart'; // Use the CID class for handling CIDs
 import 'link.dart'; // Use the Link class for handling links
 import 'node_type.dart'; // Use the NodeType enum

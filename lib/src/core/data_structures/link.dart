@@ -1,7 +1,7 @@
 // lib/src/core/data_structures/link.dart
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart' as fixnum;
-import '/../src/proto/dht/link.pb.dart' as proto; // Correct path for Protobuf
+import '../../proto/generated/core/link.pb.dart' as proto; // Correct path for Protobuf
 import 'package:convert/convert.dart'; // Example package for conversions
 
 class Base58 {

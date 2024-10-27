@@ -7,8 +7,8 @@ import 'dart:math';
 import '/../src/core/ipfs_node/ipfs_node.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import '/../src/utils/base58.dart';
-import '/../src/proto/unixfs/unixfs.pb.dart';
-import '/../src/proto/dht/dht.pb.dart';
+import '../../proto/generated/unixfs/unixfs.pb.dart';
+import '../../proto/generated/dht/dht.pb.dart';
 import '/../src/proto/bitswap/bitswap.pb.dart';
 import '/../src/utils/varint.dart';
 

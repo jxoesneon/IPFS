@@ -2,7 +2,7 @@
 import 'dart:typed_data';
 import 'package:multibase/multibase.dart'; // Import multibase for decoding
 import 'package:dart_multihash/dart_multihash.dart'; // Import multihash for decoding
-import '/../src/proto/dht/block.pb.dart';  // Correct path for BlockProto
+import '../../proto/generated/core/block.pb.dart';  // Correct path for BlockProto
 import 'cid.dart';  // Import for handling CIDs
 
 /// Represents a Block in the IPFS network.

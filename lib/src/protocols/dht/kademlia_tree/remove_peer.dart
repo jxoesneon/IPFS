@@ -3,8 +3,8 @@ import 'package:p2plib/p2plib.dart' as p2p;
 import 'bucket_management.dart'; // Import for mergeBuckets
 import 'helpers.dart'; // Import for _calculateDistance, _getBucketIndex
 import '../kademlia_tree.dart'; // Import the main KademliaTree class
-import '/../src/proto/dht/remove_peer.pb.dart' as remove_peer_pb;
-import '/../src/proto/dht/common_kademlia.pb.dart' as common_kademlia_pb;
+import '../../../proto/generated/dht/remove_peer.pb.dart' as remove_peer_pb;
+import '../../../proto/generated/dht/common_kademlia.pb.dart' as common_kademlia_pb;
 
 
 extension RemovePeer on KademliaTree {

@@ -2,7 +2,7 @@
 
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart' as fixnum;
-import '/../src/proto/dht/merkle_dag_node.pb.dart' as proto; // Correct path for Protobuf
+import '../../proto/generated/dht/merkle_dag_node.pb.dart' as proto; // Correct path for Protobuf
 import 'link.dart';
 import 'cid.dart'; // Use the CID class for handling CIDs
 

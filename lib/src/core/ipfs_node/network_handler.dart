@@ -6,7 +6,7 @@ import 'dart:typed_data';
 import '/../src/transport/circuit_relay_client.dart';
 import '/../src/transport/p2plib_router.dart';
 import 'ipfs_node_network_events.dart';
-import '/../src/proto/dht/ipfs_node_network_events.pb.dart';
+import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
 
 /// Handles network operations for an IPFS node.
 class NetworkHandler {

@@ -16,7 +16,7 @@ import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'block.pb.dart' as $0;
 import 'cid.pb.dart' as $1;
-import 'google/protobuf/empty.pb.dart' as $2;
+import '../../dht/google/protobuf/empty.pb.dart' as $2;
 
 /// Response message for adding a block
 class AddBlockResponse extends $pb.GeneratedMessage {

@@ -8,7 +8,7 @@ import 'kademlia_tree/kademlia_node.dart';
 import 'red_black_tree.dart';
 import '/../src/core/data_structures/node_stats.dart';
 import 'connection_statistics.dart';
-import '/../src/proto/dht/dht_messages.pb.dart';
+import '../../proto/generated/dht/dht_messages.pb.dart';
 
 /// Represents a Kademlia tree for efficient peer routing and lookup.
 class KademliaTree {

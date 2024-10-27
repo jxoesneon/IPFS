@@ -1,7 +1,7 @@
 // lib/src/core/data_structures/blockstore.dart
-import '/../src/proto/dht/blockstore.pb.dart'; // Import the generated BlockStoreProto
-import '/../src/proto/dht/block.pb.dart';       // Import the generated BlockProto
-import '/../src/proto/dht/cid.pb.dart';         // Import the generated CIDProto
+import '../../proto/generated/core/blockstore.pb.dart'; // Import the generated BlockStoreProto
+import '../../proto/generated/core/block.pb.dart';       // Import the generated BlockProto
+import '../../proto/generated/core/cid.pb.dart';         // Import the generated CIDProto
 
 /// Represents a block store that manages blocks.
 class BlockStore {

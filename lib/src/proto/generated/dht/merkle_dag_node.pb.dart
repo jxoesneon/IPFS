@@ -14,8 +14,8 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'cid.pb.dart' as $0;
-import 'link.pb.dart' as $1;
+import '../core/cid.pb.dart' as $0;
+import '../core/link.pb.dart' as $1;
 
 /// Represents a Merkle DAG node.
 class MerkleDAGNode extends $pb.GeneratedMessage {

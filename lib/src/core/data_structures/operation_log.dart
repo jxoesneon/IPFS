@@ -3,10 +3,10 @@
 import 'dart:collection';
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart' as fixnum;
-import '/../src/proto/dht/operation_log.pb.dart' as proto; // Import the generated Protobuf file
+import '../../proto/generated/core/operation_log.pb.dart' as proto; // Import the generated Protobuf file
 import 'cid.dart'; // Import CID class for logging CIDs
 import 'node_type.dart'; // Import NodeType for logging node types
-import '/../src/proto/dht/node_type.pbenum.dart'; // Import the NodeTypeProto enum directly
+import '../../proto/generated/core/node_type.pbenum.dart'; // Import the NodeTypeProto enum directly
 
 class OperationLogEntry {
   final DateTime timestamp;

@@ -4,7 +4,7 @@
 
 import '../red_black_tree.dart';
 import 'fix_violations.dart';
-import '/../src/proto/dht/common_red_black_tree.pb.dart' as common_tree;
+import '../../../proto/generated/dht/common_red_black_tree.pb.dart' as common_tree;
 
 // The Insertion class provides methods to insert nodes while maintaining Red-Black Tree properties.
 class Insertion<K_PeerId, V_PeerInfo> {

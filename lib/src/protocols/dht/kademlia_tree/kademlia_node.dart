@@ -1,7 +1,7 @@
 // lib/src/protocols/dht/kademlia_tree/kademlia_node.dart
 import 'package:p2plib/p2plib.dart' as p2p;
-import '/../src/proto/dht/kademlia_node.pb.dart' as kademlia_node_pb;
-import '/../src/proto/dht/common_kademlia.pb.dart' as common_kademlia_pb;
+import '../../../proto/generated/dht/kademlia_node.pb.dart' as kademlia_node_pb;
+import '../../../proto/generated/dht/common_kademlia.pb.dart' as common_kademlia_pb;
 
 class KademliaNode {
   final p2p.PeerId peerId;

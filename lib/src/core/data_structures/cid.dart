@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:dart_multihash/dart_multihash.dart';
 
-import '/../src/proto/dht/cid.pb.dart'; // Import the generated CID from Protobuf
+import '../../proto/generated/core/cid.pb.dart'; // Import the generated CID from Protobuf
 import 'package:multibase/multibase.dart'; // Multibase encoding package
 import '/../src/utils/base58.dart'; // Base58 utility for CIDv0
 

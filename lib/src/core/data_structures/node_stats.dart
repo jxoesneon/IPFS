@@ -1,7 +1,7 @@
 // lib/src/core/data_structures/node_stats.dart
 
 import 'package:fixnum/fixnum.dart' as fixnum;
-import '/../src/proto/dht/node_stats.pb.dart' as proto; // Import the generated Protobuf file
+import '../../proto/generated/core/node_stats.pb.dart' as proto; // Import the generated Protobuf file
 
 /// Represents statistics about the IPFS node.
 class NodeStats {

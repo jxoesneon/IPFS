@@ -4,8 +4,8 @@ import 'package:p2plib/p2plib.dart' as p2p;
 import 'dart:collection';
 import 'helpers.dart'; // Import for _calculateDistance
 import '../kademlia_tree.dart'; // Import the main KademliaTree class
-import '/../src/proto/dht/find_closest_peers.pb.dart' as find_closest_peers_pb;
-import '/../src/proto/dht/common_kademlia.pb.dart' as common_kademlia_pb;
+import '../../../proto/generated/dht/find_closest_peers.pb.dart' as find_closest_peers_pb;
+import '../../../proto/generated/dht/common_kademlia.pb.dart' as common_kademlia_pb;
 
 
 extension FindClosestPeers on KademliaTree {

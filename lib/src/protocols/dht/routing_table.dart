@@ -1,8 +1,8 @@
 // lib/src/protocols/dht/routing_table.dart
 
 import 'package:p2plib/p2plib.dart' as p2p;
-import '/../src/proto/dht/routing_table.pb.dart' as routing_table_pb;
-import '/../src/proto/dht/kademlia_node.pb.dart' as kademlia_node_pb;
+import '../../proto/transport/routing_table.pb.dart' as routing_table_pb;
+import '../../proto/generated/dht/kademlia_node.pb.dart' as kademlia_node_pb;
 
 /// Represents the routing table for the DHT client.
 ///
