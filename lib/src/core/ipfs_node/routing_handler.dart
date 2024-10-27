@@ -3,16 +3,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '/../src/routing/content_routing.dart';
-import '/../src/routing/dnslink_resolver.dart';
+import '/../src/utils/dnslink_resolver.dart'; // Import your DNSLinkResolver utility
 
 /// Handles routing operations for an IPFS node.
 class RoutingHandler {
   final ContentRouting _contentRouting;
-  final DNSLinkResolver _dnslinkResolver;
 
-  RoutingHandler(config)
-      : _contentRouting = ContentRouting(config),
-        _dnslinkResolver = DNSLinkResolver();
+  RoutingHandler(config) : _contentRouting = ContentRouting(config);
 
   /// Starts the routing services.
   Future<void> start() async {
@@ -41,7 +38,6 @@ class RoutingHandler {
       if (providers.isEmpty) {
         print('No providers found for CID $cid. Attempting alternative discovery methods...');
         // Implement alternative provider discovery methods here
-        // For example, querying a public provider service or using additional DHT queries
       } else {
         print('Found providers for CID $cid: ${providers.length}');
       }
@@ -55,7 +51,7 @@ class RoutingHandler {
   /// Resolves a DNSLink to its corresponding CID with comprehensive error handling.
   Future<String?> resolveDNSLink(String domainName) async {
     try {
-      final cid = await _dnslinkResolver.resolve(domainName);
+      final cid = await DNSLinkResolver.resolve(domainName); // Use static access
       if (cid != null) {
         print('Resolved DNSLink for domain $domainName to CID: $cid');
         return cid;
