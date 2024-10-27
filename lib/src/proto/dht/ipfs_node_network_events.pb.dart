@@ -34,10 +34,20 @@ enum NetworkEvent_Event {
   circuitRelayCreated, 
   circuitRelayClosed, 
   circuitRelayTraffic, 
+  circuitRelayFailed, 
   nodeStarted, 
   nodeStopped, 
   error, 
   networkChanged, 
+  dhtProviderAdded, 
+  dhtProviderQueried, 
+  streamStarted, 
+  streamEnded, 
+  peerDiscovered, 
+  circuitRelayDataReceived, 
+  circuitRelayDataSent, 
+  resourceLimitExceeded, 
+  systemAlert, 
   notSet
 }
 
@@ -52,10 +62,10 @@ class NetworkEvent extends $pb.GeneratedMessage {
     MessageSentEvent? messageSent,
     BlockReceivedEvent? blockReceived,
     BlockSentEvent? blockSent,
-    DhtQueryStartedEvent? dhtQueryStarted,
-    DhtQueryCompletedEvent? dhtQueryCompleted,
-    DhtValueFoundEvent? dhtValueFound,
-    DhtValueProvidedEvent? dhtValueProvided,
+    DHTQueryStartedEvent? dhtQueryStarted,
+    DHTQueryCompletedEvent? dhtQueryCompleted,
+    DHTValueFoundEvent? dhtValueFound,
+    DHTValueProvidedEvent? dhtValueProvided,
     PubsubMessagePublishedEvent? pubsubMessagePublished,
     PubsubMessageReceivedEvent? pubsubMessageReceived,
     PubsubSubscriptionCreatedEvent? pubsubSubscriptionCreated,
@@ -63,82 +73,122 @@ class NetworkEvent extends $pb.GeneratedMessage {
     CircuitRelayCreatedEvent? circuitRelayCreated,
     CircuitRelayClosedEvent? circuitRelayClosed,
     CircuitRelayTrafficEvent? circuitRelayTraffic,
+    CircuitRelayFailedEvent? circuitRelayFailed,
     NodeStartedEvent? nodeStarted,
     NodeStoppedEvent? nodeStopped,
     ErrorEvent? error,
     NetworkChangedEvent? networkChanged,
+    DHTProviderAddedEvent? dhtProviderAdded,
+    DHTProviderQueriedEvent? dhtProviderQueried,
+    StreamStartedEvent? streamStarted,
+    StreamEndedEvent? streamEnded,
+    PeerDiscoveredEvent? peerDiscovered,
+    CircuitRelayDataReceivedEvent? circuitRelayDataReceived,
+    CircuitRelayDataSentEvent? circuitRelayDataSent,
+    ResourceLimitExceededEvent? resourceLimitExceeded,
+    SystemAlertEvent? systemAlert,
   }) {
-    final result = create();
+    final $result = create();
     if (peerConnected != null) {
-      result.peerConnected = peerConnected;
+      $result.peerConnected = peerConnected;
     }
     if (peerDisconnected != null) {
-      result.peerDisconnected = peerDisconnected;
+      $result.peerDisconnected = peerDisconnected;
     }
     if (connectionAttempted != null) {
-      result.connectionAttempted = connectionAttempted;
+      $result.connectionAttempted = connectionAttempted;
     }
     if (connectionFailed != null) {
-      result.connectionFailed = connectionFailed;
+      $result.connectionFailed = connectionFailed;
     }
     if (messageReceived != null) {
-      result.messageReceived = messageReceived;
+      $result.messageReceived = messageReceived;
     }
     if (messageSent != null) {
-      result.messageSent = messageSent;
+      $result.messageSent = messageSent;
     }
     if (blockReceived != null) {
-      result.blockReceived = blockReceived;
+      $result.blockReceived = blockReceived;
     }
     if (blockSent != null) {
-      result.blockSent = blockSent;
+      $result.blockSent = blockSent;
     }
     if (dhtQueryStarted != null) {
-      result.dhtQueryStarted = dhtQueryStarted;
+      $result.dhtQueryStarted = dhtQueryStarted;
     }
     if (dhtQueryCompleted != null) {
-      result.dhtQueryCompleted = dhtQueryCompleted;
+      $result.dhtQueryCompleted = dhtQueryCompleted;
     }
     if (dhtValueFound != null) {
-      result.dhtValueFound = dhtValueFound;
+      $result.dhtValueFound = dhtValueFound;
     }
     if (dhtValueProvided != null) {
-      result.dhtValueProvided = dhtValueProvided;
+      $result.dhtValueProvided = dhtValueProvided;
     }
     if (pubsubMessagePublished != null) {
-      result.pubsubMessagePublished = pubsubMessagePublished;
+      $result.pubsubMessagePublished = pubsubMessagePublished;
     }
     if (pubsubMessageReceived != null) {
-      result.pubsubMessageReceived = pubsubMessageReceived;
+      $result.pubsubMessageReceived = pubsubMessageReceived;
     }
     if (pubsubSubscriptionCreated != null) {
-      result.pubsubSubscriptionCreated = pubsubSubscriptionCreated;
+      $result.pubsubSubscriptionCreated = pubsubSubscriptionCreated;
     }
     if (pubsubSubscriptionCancelled != null) {
-      result.pubsubSubscriptionCancelled = pubsubSubscriptionCancelled;
+      $result.pubsubSubscriptionCancelled = pubsubSubscriptionCancelled;
     }
     if (circuitRelayCreated != null) {
-      result.circuitRelayCreated = circuitRelayCreated;
+      $result.circuitRelayCreated = circuitRelayCreated;
     }
     if (circuitRelayClosed != null) {
-      result.circuitRelayClosed = circuitRelayClosed;
+      $result.circuitRelayClosed = circuitRelayClosed;
     }
     if (circuitRelayTraffic != null) {
-      result.circuitRelayTraffic = circuitRelayTraffic;
+      $result.circuitRelayTraffic = circuitRelayTraffic;
+    }
+    if (circuitRelayFailed != null) {
+      $result.circuitRelayFailed = circuitRelayFailed;
     }
     if (nodeStarted != null) {
-      result.nodeStarted = nodeStarted;
+      $result.nodeStarted = nodeStarted;
     }
     if (nodeStopped != null) {
-      result.nodeStopped = nodeStopped;
+      $result.nodeStopped = nodeStopped;
     }
     if (error != null) {
-      result.error = error;
+      $result.error = error;
     }
     if (networkChanged != null) {
-      result.networkChanged = networkChanged;
+      $result.networkChanged = networkChanged;
     }
-    return result;
+    if (dhtProviderAdded != null) {
+      $result.dhtProviderAdded = dhtProviderAdded;
+    }
+    if (dhtProviderQueried != null) {
+      $result.dhtProviderQueried = dhtProviderQueried;
+    }
+    if (streamStarted != null) {
+      $result.streamStarted = streamStarted;
+    }
+    if (streamEnded != null) {
+      $result.streamEnded = streamEnded;
+    }
+    if (peerDiscovered != null) {
+      $result.peerDiscovered = peerDiscovered;
+    }
+    if (circuitRelayDataReceived != null) {
+      $result.circuitRelayDataReceived = circuitRelayDataReceived;
+    }
+    if (circuitRelayDataSent != null) {
+      $result.circuitRelayDataSent = circuitRelayDataSent;
+    }
+    if (resourceLimitExceeded != null) {
+      $result.resourceLimitExceeded = resourceLimitExceeded;
+    }
+    if (systemAlert != null) {
+      $result.systemAlert = systemAlert;
+    }
+    return $result;
   }
   NetworkEvent._() : super();
   factory NetworkEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -164,14 +214,24 @@ class NetworkEvent extends $pb.GeneratedMessage {
     17 : NetworkEvent_Event.circuitRelayCreated,
     18 : NetworkEvent_Event.circuitRelayClosed,
     19 : NetworkEvent_Event.circuitRelayTraffic,
-    20 : NetworkEvent_Event.nodeStarted,
-    21 : NetworkEvent_Event.nodeStopped,
-    22 : NetworkEvent_Event.error,
-    23 : NetworkEvent_Event.networkChanged,
+    20 : NetworkEvent_Event.circuitRelayFailed,
+    21 : NetworkEvent_Event.nodeStarted,
+    22 : NetworkEvent_Event.nodeStopped,
+    23 : NetworkEvent_Event.error,
+    24 : NetworkEvent_Event.networkChanged,
+    25 : NetworkEvent_Event.dhtProviderAdded,
+    26 : NetworkEvent_Event.dhtProviderQueried,
+    27 : NetworkEvent_Event.streamStarted,
+    28 : NetworkEvent_Event.streamEnded,
+    29 : NetworkEvent_Event.peerDiscovered,
+    30 : NetworkEvent_Event.circuitRelayDataReceived,
+    31 : NetworkEvent_Event.circuitRelayDataSent,
+    32 : NetworkEvent_Event.resourceLimitExceeded,
+    33 : NetworkEvent_Event.systemAlert,
     0 : NetworkEvent_Event.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NetworkEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33])
     ..aOM<PeerConnectedEvent>(1, _omitFieldNames ? '' : 'peerConnected', subBuilder: PeerConnectedEvent.create)
     ..aOM<PeerDisconnectedEvent>(2, _omitFieldNames ? '' : 'peerDisconnected', subBuilder: PeerDisconnectedEvent.create)
     ..aOM<ConnectionAttemptedEvent>(3, _omitFieldNames ? '' : 'connectionAttempted', subBuilder: ConnectionAttemptedEvent.create)
@@ -180,10 +240,10 @@ class NetworkEvent extends $pb.GeneratedMessage {
     ..aOM<MessageSentEvent>(6, _omitFieldNames ? '' : 'messageSent', subBuilder: MessageSentEvent.create)
     ..aOM<BlockReceivedEvent>(7, _omitFieldNames ? '' : 'blockReceived', subBuilder: BlockReceivedEvent.create)
     ..aOM<BlockSentEvent>(8, _omitFieldNames ? '' : 'blockSent', subBuilder: BlockSentEvent.create)
-    ..aOM<DhtQueryStartedEvent>(9, _omitFieldNames ? '' : 'dhtQueryStarted', subBuilder: DhtQueryStartedEvent.create)
-    ..aOM<DhtQueryCompletedEvent>(10, _omitFieldNames ? '' : 'dhtQueryCompleted', subBuilder: DhtQueryCompletedEvent.create)
-    ..aOM<DhtValueFoundEvent>(11, _omitFieldNames ? '' : 'dhtValueFound', subBuilder: DhtValueFoundEvent.create)
-    ..aOM<DhtValueProvidedEvent>(12, _omitFieldNames ? '' : 'dhtValueProvided', subBuilder: DhtValueProvidedEvent.create)
+    ..aOM<DHTQueryStartedEvent>(9, _omitFieldNames ? '' : 'dhtQueryStarted', subBuilder: DHTQueryStartedEvent.create)
+    ..aOM<DHTQueryCompletedEvent>(10, _omitFieldNames ? '' : 'dhtQueryCompleted', subBuilder: DHTQueryCompletedEvent.create)
+    ..aOM<DHTValueFoundEvent>(11, _omitFieldNames ? '' : 'dhtValueFound', subBuilder: DHTValueFoundEvent.create)
+    ..aOM<DHTValueProvidedEvent>(12, _omitFieldNames ? '' : 'dhtValueProvided', subBuilder: DHTValueProvidedEvent.create)
     ..aOM<PubsubMessagePublishedEvent>(13, _omitFieldNames ? '' : 'pubsubMessagePublished', subBuilder: PubsubMessagePublishedEvent.create)
     ..aOM<PubsubMessageReceivedEvent>(14, _omitFieldNames ? '' : 'pubsubMessageReceived', subBuilder: PubsubMessageReceivedEvent.create)
     ..aOM<PubsubSubscriptionCreatedEvent>(15, _omitFieldNames ? '' : 'pubsubSubscriptionCreated', subBuilder: PubsubSubscriptionCreatedEvent.create)
@@ -191,10 +251,20 @@ class NetworkEvent extends $pb.GeneratedMessage {
     ..aOM<CircuitRelayCreatedEvent>(17, _omitFieldNames ? '' : 'circuitRelayCreated', subBuilder: CircuitRelayCreatedEvent.create)
     ..aOM<CircuitRelayClosedEvent>(18, _omitFieldNames ? '' : 'circuitRelayClosed', subBuilder: CircuitRelayClosedEvent.create)
     ..aOM<CircuitRelayTrafficEvent>(19, _omitFieldNames ? '' : 'circuitRelayTraffic', subBuilder: CircuitRelayTrafficEvent.create)
-    ..aOM<NodeStartedEvent>(20, _omitFieldNames ? '' : 'nodeStarted', subBuilder: NodeStartedEvent.create)
-    ..aOM<NodeStoppedEvent>(21, _omitFieldNames ? '' : 'nodeStopped', subBuilder: NodeStoppedEvent.create)
-    ..aOM<ErrorEvent>(22, _omitFieldNames ? '' : 'error', subBuilder: ErrorEvent.create)
-    ..aOM<NetworkChangedEvent>(23, _omitFieldNames ? '' : 'networkChanged', subBuilder: NetworkChangedEvent.create)
+    ..aOM<CircuitRelayFailedEvent>(20, _omitFieldNames ? '' : 'circuitRelayFailed', subBuilder: CircuitRelayFailedEvent.create)
+    ..aOM<NodeStartedEvent>(21, _omitFieldNames ? '' : 'nodeStarted', subBuilder: NodeStartedEvent.create)
+    ..aOM<NodeStoppedEvent>(22, _omitFieldNames ? '' : 'nodeStopped', subBuilder: NodeStoppedEvent.create)
+    ..aOM<ErrorEvent>(23, _omitFieldNames ? '' : 'error', subBuilder: ErrorEvent.create)
+    ..aOM<NetworkChangedEvent>(24, _omitFieldNames ? '' : 'networkChanged', subBuilder: NetworkChangedEvent.create)
+    ..aOM<DHTProviderAddedEvent>(25, _omitFieldNames ? '' : 'dhtProviderAdded', subBuilder: DHTProviderAddedEvent.create)
+    ..aOM<DHTProviderQueriedEvent>(26, _omitFieldNames ? '' : 'dhtProviderQueried', subBuilder: DHTProviderQueriedEvent.create)
+    ..aOM<StreamStartedEvent>(27, _omitFieldNames ? '' : 'streamStarted', subBuilder: StreamStartedEvent.create)
+    ..aOM<StreamEndedEvent>(28, _omitFieldNames ? '' : 'streamEnded', subBuilder: StreamEndedEvent.create)
+    ..aOM<PeerDiscoveredEvent>(29, _omitFieldNames ? '' : 'peerDiscovered', subBuilder: PeerDiscoveredEvent.create)
+    ..aOM<CircuitRelayDataReceivedEvent>(30, _omitFieldNames ? '' : 'circuitRelayDataReceived', subBuilder: CircuitRelayDataReceivedEvent.create)
+    ..aOM<CircuitRelayDataSentEvent>(31, _omitFieldNames ? '' : 'circuitRelayDataSent', subBuilder: CircuitRelayDataSentEvent.create)
+    ..aOM<ResourceLimitExceededEvent>(32, _omitFieldNames ? '' : 'resourceLimitExceeded', subBuilder: ResourceLimitExceededEvent.create)
+    ..aOM<SystemAlertEvent>(33, _omitFieldNames ? '' : 'systemAlert', subBuilder: SystemAlertEvent.create)
     ..hasRequiredFields = false
   ;
 
@@ -311,48 +381,48 @@ class NetworkEvent extends $pb.GeneratedMessage {
   BlockSentEvent ensureBlockSent() => $_ensure(7);
 
   @$pb.TagNumber(9)
-  DhtQueryStartedEvent get dhtQueryStarted => $_getN(8);
+  DHTQueryStartedEvent get dhtQueryStarted => $_getN(8);
   @$pb.TagNumber(9)
-  set dhtQueryStarted(DhtQueryStartedEvent v) { setField(9, v); }
+  set dhtQueryStarted(DHTQueryStartedEvent v) { setField(9, v); }
   @$pb.TagNumber(9)
   $core.bool hasDhtQueryStarted() => $_has(8);
   @$pb.TagNumber(9)
   void clearDhtQueryStarted() => clearField(9);
   @$pb.TagNumber(9)
-  DhtQueryStartedEvent ensureDhtQueryStarted() => $_ensure(8);
+  DHTQueryStartedEvent ensureDhtQueryStarted() => $_ensure(8);
 
   @$pb.TagNumber(10)
-  DhtQueryCompletedEvent get dhtQueryCompleted => $_getN(9);
+  DHTQueryCompletedEvent get dhtQueryCompleted => $_getN(9);
   @$pb.TagNumber(10)
-  set dhtQueryCompleted(DhtQueryCompletedEvent v) { setField(10, v); }
+  set dhtQueryCompleted(DHTQueryCompletedEvent v) { setField(10, v); }
   @$pb.TagNumber(10)
   $core.bool hasDhtQueryCompleted() => $_has(9);
   @$pb.TagNumber(10)
   void clearDhtQueryCompleted() => clearField(10);
   @$pb.TagNumber(10)
-  DhtQueryCompletedEvent ensureDhtQueryCompleted() => $_ensure(9);
+  DHTQueryCompletedEvent ensureDhtQueryCompleted() => $_ensure(9);
 
   @$pb.TagNumber(11)
-  DhtValueFoundEvent get dhtValueFound => $_getN(10);
+  DHTValueFoundEvent get dhtValueFound => $_getN(10);
   @$pb.TagNumber(11)
-  set dhtValueFound(DhtValueFoundEvent v) { setField(11, v); }
+  set dhtValueFound(DHTValueFoundEvent v) { setField(11, v); }
   @$pb.TagNumber(11)
   $core.bool hasDhtValueFound() => $_has(10);
   @$pb.TagNumber(11)
   void clearDhtValueFound() => clearField(11);
   @$pb.TagNumber(11)
-  DhtValueFoundEvent ensureDhtValueFound() => $_ensure(10);
+  DHTValueFoundEvent ensureDhtValueFound() => $_ensure(10);
 
   @$pb.TagNumber(12)
-  DhtValueProvidedEvent get dhtValueProvided => $_getN(11);
+  DHTValueProvidedEvent get dhtValueProvided => $_getN(11);
   @$pb.TagNumber(12)
-  set dhtValueProvided(DhtValueProvidedEvent v) { setField(12, v); }
+  set dhtValueProvided(DHTValueProvidedEvent v) { setField(12, v); }
   @$pb.TagNumber(12)
   $core.bool hasDhtValueProvided() => $_has(11);
   @$pb.TagNumber(12)
   void clearDhtValueProvided() => clearField(12);
   @$pb.TagNumber(12)
-  DhtValueProvidedEvent ensureDhtValueProvided() => $_ensure(11);
+  DHTValueProvidedEvent ensureDhtValueProvided() => $_ensure(11);
 
   @$pb.TagNumber(13)
   PubsubMessagePublishedEvent get pubsubMessagePublished => $_getN(12);
@@ -432,48 +502,170 @@ class NetworkEvent extends $pb.GeneratedMessage {
   CircuitRelayTrafficEvent ensureCircuitRelayTraffic() => $_ensure(18);
 
   @$pb.TagNumber(20)
-  NodeStartedEvent get nodeStarted => $_getN(19);
+  CircuitRelayFailedEvent get circuitRelayFailed => $_getN(19);
   @$pb.TagNumber(20)
-  set nodeStarted(NodeStartedEvent v) { setField(20, v); }
+  set circuitRelayFailed(CircuitRelayFailedEvent v) { setField(20, v); }
   @$pb.TagNumber(20)
-  $core.bool hasNodeStarted() => $_has(19);
+  $core.bool hasCircuitRelayFailed() => $_has(19);
   @$pb.TagNumber(20)
-  void clearNodeStarted() => clearField(20);
+  void clearCircuitRelayFailed() => clearField(20);
   @$pb.TagNumber(20)
-  NodeStartedEvent ensureNodeStarted() => $_ensure(19);
+  CircuitRelayFailedEvent ensureCircuitRelayFailed() => $_ensure(19);
 
   @$pb.TagNumber(21)
-  NodeStoppedEvent get nodeStopped => $_getN(20);
+  NodeStartedEvent get nodeStarted => $_getN(20);
   @$pb.TagNumber(21)
-  set nodeStopped(NodeStoppedEvent v) { setField(21, v); }
+  set nodeStarted(NodeStartedEvent v) { setField(21, v); }
   @$pb.TagNumber(21)
-  $core.bool hasNodeStopped() => $_has(20);
+  $core.bool hasNodeStarted() => $_has(20);
   @$pb.TagNumber(21)
-  void clearNodeStopped() => clearField(21);
+  void clearNodeStarted() => clearField(21);
   @$pb.TagNumber(21)
-  NodeStoppedEvent ensureNodeStopped() => $_ensure(20);
+  NodeStartedEvent ensureNodeStarted() => $_ensure(20);
 
   @$pb.TagNumber(22)
-  ErrorEvent get error => $_getN(21);
+  NodeStoppedEvent get nodeStopped => $_getN(21);
   @$pb.TagNumber(22)
-  set error(ErrorEvent v) { setField(22, v); }
+  set nodeStopped(NodeStoppedEvent v) { setField(22, v); }
   @$pb.TagNumber(22)
-  $core.bool hasError() => $_has(21);
+  $core.bool hasNodeStopped() => $_has(21);
   @$pb.TagNumber(22)
-  void clearError() => clearField(22);
+  void clearNodeStopped() => clearField(22);
   @$pb.TagNumber(22)
-  ErrorEvent ensureError() => $_ensure(21);
+  NodeStoppedEvent ensureNodeStopped() => $_ensure(21);
 
   @$pb.TagNumber(23)
-  NetworkChangedEvent get networkChanged => $_getN(22);
+  ErrorEvent get error => $_getN(22);
   @$pb.TagNumber(23)
-  set networkChanged(NetworkChangedEvent v) { setField(23, v); }
+  set error(ErrorEvent v) { setField(23, v); }
   @$pb.TagNumber(23)
-  $core.bool hasNetworkChanged() => $_has(22);
+  $core.bool hasError() => $_has(22);
   @$pb.TagNumber(23)
-  void clearNetworkChanged() => clearField(23);
+  void clearError() => clearField(23);
   @$pb.TagNumber(23)
-  NetworkChangedEvent ensureNetworkChanged() => $_ensure(22);
+  ErrorEvent ensureError() => $_ensure(22);
+
+  @$pb.TagNumber(24)
+  NetworkChangedEvent get networkChanged => $_getN(23);
+  @$pb.TagNumber(24)
+  set networkChanged(NetworkChangedEvent v) { setField(24, v); }
+  @$pb.TagNumber(24)
+  $core.bool hasNetworkChanged() => $_has(23);
+  @$pb.TagNumber(24)
+  void clearNetworkChanged() => clearField(24);
+  @$pb.TagNumber(24)
+  NetworkChangedEvent ensureNetworkChanged() => $_ensure(23);
+
+  @$pb.TagNumber(25)
+  DHTProviderAddedEvent get dhtProviderAdded => $_getN(24);
+  @$pb.TagNumber(25)
+  set dhtProviderAdded(DHTProviderAddedEvent v) { setField(25, v); }
+  @$pb.TagNumber(25)
+  $core.bool hasDhtProviderAdded() => $_has(24);
+  @$pb.TagNumber(25)
+  void clearDhtProviderAdded() => clearField(25);
+  @$pb.TagNumber(25)
+  DHTProviderAddedEvent ensureDhtProviderAdded() => $_ensure(24);
+
+  @$pb.TagNumber(26)
+  DHTProviderQueriedEvent get dhtProviderQueried => $_getN(25);
+  @$pb.TagNumber(26)
+  set dhtProviderQueried(DHTProviderQueriedEvent v) { setField(26, v); }
+  @$pb.TagNumber(26)
+  $core.bool hasDhtProviderQueried() => $_has(25);
+  @$pb.TagNumber(26)
+  void clearDhtProviderQueried() => clearField(26);
+  @$pb.TagNumber(26)
+  DHTProviderQueriedEvent ensureDhtProviderQueried() => $_ensure(25);
+
+  @$pb.TagNumber(27)
+  StreamStartedEvent get streamStarted => $_getN(26);
+  @$pb.TagNumber(27)
+  set streamStarted(StreamStartedEvent v) { setField(27, v); }
+  @$pb.TagNumber(27)
+  $core.bool hasStreamStarted() => $_has(26);
+  @$pb.TagNumber(27)
+  void clearStreamStarted() => clearField(27);
+  @$pb.TagNumber(27)
+  StreamStartedEvent ensureStreamStarted() => $_ensure(26);
+
+  @$pb.TagNumber(28)
+  StreamEndedEvent get streamEnded => $_getN(27);
+  @$pb.TagNumber(28)
+  set streamEnded(StreamEndedEvent v) { setField(28, v); }
+  @$pb.TagNumber(28)
+  $core.bool hasStreamEnded() => $_has(27);
+  @$pb.TagNumber(28)
+  void clearStreamEnded() => clearField(28);
+  @$pb.TagNumber(28)
+  StreamEndedEvent ensureStreamEnded() => $_ensure(27);
+
+  @$pb.TagNumber(29)
+  PeerDiscoveredEvent get peerDiscovered => $_getN(28);
+  @$pb.TagNumber(29)
+  set peerDiscovered(PeerDiscoveredEvent v) { setField(29, v); }
+  @$pb.TagNumber(29)
+  $core.bool hasPeerDiscovered() => $_has(28);
+  @$pb.TagNumber(29)
+  void clearPeerDiscovered() => clearField(29);
+  @$pb.TagNumber(29)
+  PeerDiscoveredEvent ensurePeerDiscovered() => $_ensure(28);
+
+  @$pb.TagNumber(30)
+  CircuitRelayDataReceivedEvent get circuitRelayDataReceived => $_getN(29);
+  @$pb.TagNumber(30)
+  set circuitRelayDataReceived(CircuitRelayDataReceivedEvent v) { setField(30, v); }
+  @$pb.TagNumber(30)
+  $core.bool hasCircuitRelayDataReceived() => $_has(29);
+  @$pb.TagNumber(30)
+  void clearCircuitRelayDataReceived() => clearField(30);
+  @$pb.TagNumber(30)
+  CircuitRelayDataReceivedEvent ensureCircuitRelayDataReceived() => $_ensure(29);
+
+  @$pb.TagNumber(31)
+  CircuitRelayDataSentEvent get circuitRelayDataSent => $_getN(30);
+  @$pb.TagNumber(31)
+  set circuitRelayDataSent(CircuitRelayDataSentEvent v) { setField(31, v); }
+  @$pb.TagNumber(31)
+  $core.bool hasCircuitRelayDataSent() => $_has(30);
+  @$pb.TagNumber(31)
+  void clearCircuitRelayDataSent() => clearField(31);
+  @$pb.TagNumber(31)
+  CircuitRelayDataSentEvent ensureCircuitRelayDataSent() => $_ensure(30);
+
+  @$pb.TagNumber(32)
+  ResourceLimitExceededEvent get resourceLimitExceeded => $_getN(31);
+  @$pb.TagNumber(32)
+  set resourceLimitExceeded(ResourceLimitExceededEvent v) { setField(32, v); }
+  @$pb.TagNumber(32)
+  $core.bool hasResourceLimitExceeded() => $_has(31);
+  @$pb.TagNumber(32)
+  void clearResourceLimitExceeded() => clearField(32);
+  @$pb.TagNumber(32)
+  ResourceLimitExceededEvent ensureResourceLimitExceeded() => $_ensure(31);
+
+  @$pb.TagNumber(33)
+  SystemAlertEvent get systemAlert => $_getN(32);
+
+  set stackTrace(stackTrace) {}
+
+  set message(message) {}
+
+  set errorType(errorType) {}
+
+  set pubsubSubscriptionCancelledEvent(PubsubSubscriptionCancelledEvent pubsubSubscriptionCancelledEvent) {}
+
+  set pubsubSubscriptionCreatedEvent(PubsubSubscriptionCreatedEvent pubsubSubscriptionCreatedEvent) {}
+
+  set dhtValueNotFound(DHTValueNotFoundEvent dhtValueNotFound) {}
+  @$pb.TagNumber(33)
+  set systemAlert(SystemAlertEvent v) { setField(33, v); }
+  @$pb.TagNumber(33)
+  $core.bool hasSystemAlert() => $_has(32);
+  @$pb.TagNumber(33)
+  void clearSystemAlert() => clearField(33);
+  @$pb.TagNumber(33)
+  SystemAlertEvent ensureSystemAlert() => $_ensure(32);
 }
 
 class PeerConnectedEvent extends $pb.GeneratedMessage {
@@ -481,14 +673,14 @@ class PeerConnectedEvent extends $pb.GeneratedMessage {
     $core.String? peerId,
     $core.String? multiaddress,
   }) {
-    final result = create();
+    final $result = create();
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
     if (multiaddress != null) {
-      result.multiaddress = multiaddress;
+      $result.multiaddress = multiaddress;
     }
-    return result;
+    return $result;
   }
   PeerConnectedEvent._() : super();
   factory PeerConnectedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -545,14 +737,14 @@ class PeerDisconnectedEvent extends $pb.GeneratedMessage {
     $core.String? peerId,
     $core.String? reason,
   }) {
-    final result = create();
+    final $result = create();
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
     if (reason != null) {
-      result.reason = reason;
+      $result.reason = reason;
     }
-    return result;
+    return $result;
   }
   PeerDisconnectedEvent._() : super();
   factory PeerDisconnectedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -609,14 +801,14 @@ class ConnectionAttemptedEvent extends $pb.GeneratedMessage {
     $core.String? peerId,
     $core.bool? success,
   }) {
-    final result = create();
+    final $result = create();
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
     if (success != null) {
-      result.success = success;
+      $result.success = success;
     }
-    return result;
+    return $result;
   }
   ConnectionAttemptedEvent._() : super();
   factory ConnectionAttemptedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -673,14 +865,14 @@ class ConnectionFailedEvent extends $pb.GeneratedMessage {
     $core.String? peerId,
     $core.String? reason,
   }) {
-    final result = create();
+    final $result = create();
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
     if (reason != null) {
-      result.reason = reason;
+      $result.reason = reason;
     }
-    return result;
+    return $result;
   }
   ConnectionFailedEvent._() : super();
   factory ConnectionFailedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -737,14 +929,14 @@ class MessageReceivedEvent extends $pb.GeneratedMessage {
     $core.String? peerId,
     $core.List<$core.int>? messageContent,
   }) {
-    final result = create();
+    final $result = create();
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
     if (messageContent != null) {
-      result.messageContent = messageContent;
+      $result.messageContent = messageContent;
     }
-    return result;
+    return $result;
   }
   MessageReceivedEvent._() : super();
   factory MessageReceivedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -801,14 +993,14 @@ class MessageSentEvent extends $pb.GeneratedMessage {
     $core.String? peerId,
     $core.List<$core.int>? messageContent,
   }) {
-    final result = create();
+    final $result = create();
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
     if (messageContent != null) {
-      result.messageContent = messageContent;
+      $result.messageContent = messageContent;
     }
-    return result;
+    return $result;
   }
   MessageSentEvent._() : super();
   factory MessageSentEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -865,14 +1057,14 @@ class BlockReceivedEvent extends $pb.GeneratedMessage {
     $core.String? cid,
     $core.String? peerId,
   }) {
-    final result = create();
+    final $result = create();
     if (cid != null) {
-      result.cid = cid;
+      $result.cid = cid;
     }
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
-    return result;
+    return $result;
   }
   BlockReceivedEvent._() : super();
   factory BlockReceivedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -929,14 +1121,14 @@ class BlockSentEvent extends $pb.GeneratedMessage {
     $core.String? cid,
     $core.String? peerId,
   }) {
-    final result = create();
+    final $result = create();
     if (cid != null) {
-      result.cid = cid;
+      $result.cid = cid;
     }
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
-    return result;
+    return $result;
   }
   BlockSentEvent._() : super();
   factory BlockSentEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -988,25 +1180,25 @@ class BlockSentEvent extends $pb.GeneratedMessage {
   void clearPeerId() => clearField(2);
 }
 
-class DhtQueryStartedEvent extends $pb.GeneratedMessage {
-  factory DhtQueryStartedEvent({
+class DHTQueryStartedEvent extends $pb.GeneratedMessage {
+  factory DHTQueryStartedEvent({
     $core.String? queryType,
     $core.String? targetKey,
   }) {
-    final result = create();
+    final $result = create();
     if (queryType != null) {
-      result.queryType = queryType;
+      $result.queryType = queryType;
     }
     if (targetKey != null) {
-      result.targetKey = targetKey;
+      $result.targetKey = targetKey;
     }
-    return result;
+    return $result;
   }
-  DhtQueryStartedEvent._() : super();
-  factory DhtQueryStartedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory DhtQueryStartedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  DHTQueryStartedEvent._() : super();
+  factory DHTQueryStartedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DHTQueryStartedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DhtQueryStartedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DHTQueryStartedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'queryType')
     ..aOS(2, _omitFieldNames ? '' : 'targetKey')
     ..hasRequiredFields = false
@@ -1016,22 +1208,22 @@ class DhtQueryStartedEvent extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  DhtQueryStartedEvent clone() => DhtQueryStartedEvent()..mergeFromMessage(this);
+  DHTQueryStartedEvent clone() => DHTQueryStartedEvent()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  DhtQueryStartedEvent copyWith(void Function(DhtQueryStartedEvent) updates) => super.copyWith((message) => updates(message as DhtQueryStartedEvent)) as DhtQueryStartedEvent;
+  DHTQueryStartedEvent copyWith(void Function(DHTQueryStartedEvent) updates) => super.copyWith((message) => updates(message as DHTQueryStartedEvent)) as DHTQueryStartedEvent;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static DhtQueryStartedEvent create() => DhtQueryStartedEvent._();
-  DhtQueryStartedEvent createEmptyInstance() => create();
-  static $pb.PbList<DhtQueryStartedEvent> createRepeated() => $pb.PbList<DhtQueryStartedEvent>();
+  static DHTQueryStartedEvent create() => DHTQueryStartedEvent._();
+  DHTQueryStartedEvent createEmptyInstance() => create();
+  static $pb.PbList<DHTQueryStartedEvent> createRepeated() => $pb.PbList<DHTQueryStartedEvent>();
   @$core.pragma('dart2js:noInline')
-  static DhtQueryStartedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DhtQueryStartedEvent>(create);
-  static DhtQueryStartedEvent? _defaultInstance;
+  static DHTQueryStartedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTQueryStartedEvent>(create);
+  static DHTQueryStartedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get queryType => $_getSZ(0);
@@ -1052,29 +1244,29 @@ class DhtQueryStartedEvent extends $pb.GeneratedMessage {
   void clearTargetKey() => clearField(2);
 }
 
-class DhtQueryCompletedEvent extends $pb.GeneratedMessage {
-  factory DhtQueryCompletedEvent({
+class DHTQueryCompletedEvent extends $pb.GeneratedMessage {
+  factory DHTQueryCompletedEvent({
     $core.String? queryType,
     $core.String? targetKey,
     $core.Iterable<$core.String>? results,
   }) {
-    final result = create();
+    final $result = create();
     if (queryType != null) {
-      result.queryType = queryType;
+      $result.queryType = queryType;
     }
     if (targetKey != null) {
-      result.targetKey = targetKey;
+      $result.targetKey = targetKey;
     }
     if (results != null) {
-      result.results.addAll(results);
+      $result.results.addAll(results);
     }
-    return result;
+    return $result;
   }
-  DhtQueryCompletedEvent._() : super();
-  factory DhtQueryCompletedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory DhtQueryCompletedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  DHTQueryCompletedEvent._() : super();
+  factory DHTQueryCompletedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DHTQueryCompletedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DhtQueryCompletedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DHTQueryCompletedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'queryType')
     ..aOS(2, _omitFieldNames ? '' : 'targetKey')
     ..pPS(3, _omitFieldNames ? '' : 'results')
@@ -1085,22 +1277,22 @@ class DhtQueryCompletedEvent extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  DhtQueryCompletedEvent clone() => DhtQueryCompletedEvent()..mergeFromMessage(this);
+  DHTQueryCompletedEvent clone() => DHTQueryCompletedEvent()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  DhtQueryCompletedEvent copyWith(void Function(DhtQueryCompletedEvent) updates) => super.copyWith((message) => updates(message as DhtQueryCompletedEvent)) as DhtQueryCompletedEvent;
+  DHTQueryCompletedEvent copyWith(void Function(DHTQueryCompletedEvent) updates) => super.copyWith((message) => updates(message as DHTQueryCompletedEvent)) as DHTQueryCompletedEvent;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static DhtQueryCompletedEvent create() => DhtQueryCompletedEvent._();
-  DhtQueryCompletedEvent createEmptyInstance() => create();
-  static $pb.PbList<DhtQueryCompletedEvent> createRepeated() => $pb.PbList<DhtQueryCompletedEvent>();
+  static DHTQueryCompletedEvent create() => DHTQueryCompletedEvent._();
+  DHTQueryCompletedEvent createEmptyInstance() => create();
+  static $pb.PbList<DHTQueryCompletedEvent> createRepeated() => $pb.PbList<DHTQueryCompletedEvent>();
   @$core.pragma('dart2js:noInline')
-  static DhtQueryCompletedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DhtQueryCompletedEvent>(create);
-  static DhtQueryCompletedEvent? _defaultInstance;
+  static DHTQueryCompletedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTQueryCompletedEvent>(create);
+  static DHTQueryCompletedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get queryType => $_getSZ(0);
@@ -1124,29 +1316,29 @@ class DhtQueryCompletedEvent extends $pb.GeneratedMessage {
   $core.List<$core.String> get results => $_getList(2);
 }
 
-class DhtValueFoundEvent extends $pb.GeneratedMessage {
-  factory DhtValueFoundEvent({
+class DHTValueFoundEvent extends $pb.GeneratedMessage {
+  factory DHTValueFoundEvent({
     $core.String? key,
     $core.List<$core.int>? value,
     $core.String? peerId,
   }) {
-    final result = create();
+    final $result = create();
     if (key != null) {
-      result.key = key;
+      $result.key = key;
     }
     if (value != null) {
-      result.value = value;
+      $result.value = value;
     }
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
-    return result;
+    return $result;
   }
-  DhtValueFoundEvent._() : super();
-  factory DhtValueFoundEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory DhtValueFoundEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  DHTValueFoundEvent._() : super();
+  factory DHTValueFoundEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DHTValueFoundEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DhtValueFoundEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DHTValueFoundEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'key')
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..aOS(3, _omitFieldNames ? '' : 'peerId')
@@ -1157,22 +1349,22 @@ class DhtValueFoundEvent extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  DhtValueFoundEvent clone() => DhtValueFoundEvent()..mergeFromMessage(this);
+  DHTValueFoundEvent clone() => DHTValueFoundEvent()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  DhtValueFoundEvent copyWith(void Function(DhtValueFoundEvent) updates) => super.copyWith((message) => updates(message as DhtValueFoundEvent)) as DhtValueFoundEvent;
+  DHTValueFoundEvent copyWith(void Function(DHTValueFoundEvent) updates) => super.copyWith((message) => updates(message as DHTValueFoundEvent)) as DHTValueFoundEvent;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static DhtValueFoundEvent create() => DhtValueFoundEvent._();
-  DhtValueFoundEvent createEmptyInstance() => create();
-  static $pb.PbList<DhtValueFoundEvent> createRepeated() => $pb.PbList<DhtValueFoundEvent>();
+  static DHTValueFoundEvent create() => DHTValueFoundEvent._();
+  DHTValueFoundEvent createEmptyInstance() => create();
+  static $pb.PbList<DHTValueFoundEvent> createRepeated() => $pb.PbList<DHTValueFoundEvent>();
   @$core.pragma('dart2js:noInline')
-  static DhtValueFoundEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DhtValueFoundEvent>(create);
-  static DhtValueFoundEvent? _defaultInstance;
+  static DHTValueFoundEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTValueFoundEvent>(create);
+  static DHTValueFoundEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get key => $_getSZ(0);
@@ -1202,25 +1394,75 @@ class DhtValueFoundEvent extends $pb.GeneratedMessage {
   void clearPeerId() => clearField(3);
 }
 
-class DhtValueProvidedEvent extends $pb.GeneratedMessage {
-  factory DhtValueProvidedEvent({
+class DHTValueNotFoundEvent extends $pb.GeneratedMessage {
+  factory DHTValueNotFoundEvent({
+    $core.String? key,
+  }) {
+    final $result = create();
+    if (key != null) {
+      $result.key = key;
+    }
+    return $result;
+  }
+  DHTValueNotFoundEvent._() : super();
+  factory DHTValueNotFoundEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DHTValueNotFoundEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DHTValueNotFoundEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'key')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  DHTValueNotFoundEvent clone() => DHTValueNotFoundEvent()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  DHTValueNotFoundEvent copyWith(void Function(DHTValueNotFoundEvent) updates) => super.copyWith((message) => updates(message as DHTValueNotFoundEvent)) as DHTValueNotFoundEvent;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DHTValueNotFoundEvent create() => DHTValueNotFoundEvent._();
+  DHTValueNotFoundEvent createEmptyInstance() => create();
+  static $pb.PbList<DHTValueNotFoundEvent> createRepeated() => $pb.PbList<DHTValueNotFoundEvent>();
+  @$core.pragma('dart2js:noInline')
+  static DHTValueNotFoundEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTValueNotFoundEvent>(create);
+  static DHTValueNotFoundEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get key => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set key($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKey() => clearField(1);
+}
+
+class DHTValueProvidedEvent extends $pb.GeneratedMessage {
+  factory DHTValueProvidedEvent({
     $core.String? key,
     $core.List<$core.int>? value,
   }) {
-    final result = create();
+    final $result = create();
     if (key != null) {
-      result.key = key;
+      $result.key = key;
     }
     if (value != null) {
-      result.value = value;
+      $result.value = value;
     }
-    return result;
+    return $result;
   }
-  DhtValueProvidedEvent._() : super();
-  factory DhtValueProvidedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory DhtValueProvidedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  DHTValueProvidedEvent._() : super();
+  factory DHTValueProvidedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DHTValueProvidedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DhtValueProvidedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DHTValueProvidedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'key')
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
@@ -1230,22 +1472,22 @@ class DhtValueProvidedEvent extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  DhtValueProvidedEvent clone() => DhtValueProvidedEvent()..mergeFromMessage(this);
+  DHTValueProvidedEvent clone() => DHTValueProvidedEvent()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  DhtValueProvidedEvent copyWith(void Function(DhtValueProvidedEvent) updates) => super.copyWith((message) => updates(message as DhtValueProvidedEvent)) as DhtValueProvidedEvent;
+  DHTValueProvidedEvent copyWith(void Function(DHTValueProvidedEvent) updates) => super.copyWith((message) => updates(message as DHTValueProvidedEvent)) as DHTValueProvidedEvent;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static DhtValueProvidedEvent create() => DhtValueProvidedEvent._();
-  DhtValueProvidedEvent createEmptyInstance() => create();
-  static $pb.PbList<DhtValueProvidedEvent> createRepeated() => $pb.PbList<DhtValueProvidedEvent>();
+  static DHTValueProvidedEvent create() => DHTValueProvidedEvent._();
+  DHTValueProvidedEvent createEmptyInstance() => create();
+  static $pb.PbList<DHTValueProvidedEvent> createRepeated() => $pb.PbList<DHTValueProvidedEvent>();
   @$core.pragma('dart2js:noInline')
-  static DhtValueProvidedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DhtValueProvidedEvent>(create);
-  static DhtValueProvidedEvent? _defaultInstance;
+  static DHTValueProvidedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTValueProvidedEvent>(create);
+  static DHTValueProvidedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get key => $_getSZ(0);
@@ -1266,19 +1508,141 @@ class DhtValueProvidedEvent extends $pb.GeneratedMessage {
   void clearValue() => clearField(2);
 }
 
+class DHTProviderAddedEvent extends $pb.GeneratedMessage {
+  factory DHTProviderAddedEvent({
+    $core.String? key,
+    $core.String? peerId,
+  }) {
+    final $result = create();
+    if (key != null) {
+      $result.key = key;
+    }
+    if (peerId != null) {
+      $result.peerId = peerId;
+    }
+    return $result;
+  }
+  DHTProviderAddedEvent._() : super();
+  factory DHTProviderAddedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DHTProviderAddedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DHTProviderAddedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'key')
+    ..aOS(2, _omitFieldNames ? '' : 'peerId')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  DHTProviderAddedEvent clone() => DHTProviderAddedEvent()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  DHTProviderAddedEvent copyWith(void Function(DHTProviderAddedEvent) updates) => super.copyWith((message) => updates(message as DHTProviderAddedEvent)) as DHTProviderAddedEvent;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DHTProviderAddedEvent create() => DHTProviderAddedEvent._();
+  DHTProviderAddedEvent createEmptyInstance() => create();
+  static $pb.PbList<DHTProviderAddedEvent> createRepeated() => $pb.PbList<DHTProviderAddedEvent>();
+  @$core.pragma('dart2js:noInline')
+  static DHTProviderAddedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTProviderAddedEvent>(create);
+  static DHTProviderAddedEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get key => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set key($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKey() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get peerId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set peerId($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasPeerId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPeerId() => clearField(2);
+}
+
+class DHTProviderQueriedEvent extends $pb.GeneratedMessage {
+  factory DHTProviderQueriedEvent({
+    $core.String? key,
+    $core.Iterable<$core.String>? providers,
+  }) {
+    final $result = create();
+    if (key != null) {
+      $result.key = key;
+    }
+    if (providers != null) {
+      $result.providers.addAll(providers);
+    }
+    return $result;
+  }
+  DHTProviderQueriedEvent._() : super();
+  factory DHTProviderQueriedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DHTProviderQueriedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DHTProviderQueriedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'key')
+    ..pPS(2, _omitFieldNames ? '' : 'providers')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  DHTProviderQueriedEvent clone() => DHTProviderQueriedEvent()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  DHTProviderQueriedEvent copyWith(void Function(DHTProviderQueriedEvent) updates) => super.copyWith((message) => updates(message as DHTProviderQueriedEvent)) as DHTProviderQueriedEvent;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DHTProviderQueriedEvent create() => DHTProviderQueriedEvent._();
+  DHTProviderQueriedEvent createEmptyInstance() => create();
+  static $pb.PbList<DHTProviderQueriedEvent> createRepeated() => $pb.PbList<DHTProviderQueriedEvent>();
+  @$core.pragma('dart2js:noInline')
+  static DHTProviderQueriedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTProviderQueriedEvent>(create);
+  static DHTProviderQueriedEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get key => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set key($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKey() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.String> get providers => $_getList(1);
+}
+
 class PubsubMessagePublishedEvent extends $pb.GeneratedMessage {
   factory PubsubMessagePublishedEvent({
     $core.String? topic,
     $core.List<$core.int>? messageContent,
   }) {
-    final result = create();
+    final $result = create();
     if (topic != null) {
-      result.topic = topic;
+      $result.topic = topic;
     }
     if (messageContent != null) {
-      result.messageContent = messageContent;
+      $result.messageContent = messageContent;
     }
-    return result;
+    return $result;
   }
   PubsubMessagePublishedEvent._() : super();
   factory PubsubMessagePublishedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -1336,17 +1700,17 @@ class PubsubMessageReceivedEvent extends $pb.GeneratedMessage {
     $core.List<$core.int>? messageContent,
     $core.String? peerId,
   }) {
-    final result = create();
+    final $result = create();
     if (topic != null) {
-      result.topic = topic;
+      $result.topic = topic;
     }
     if (messageContent != null) {
-      result.messageContent = messageContent;
+      $result.messageContent = messageContent;
     }
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
-    return result;
+    return $result;
   }
   PubsubMessageReceivedEvent._() : super();
   factory PubsubMessageReceivedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -1412,11 +1776,11 @@ class PubsubSubscriptionCreatedEvent extends $pb.GeneratedMessage {
   factory PubsubSubscriptionCreatedEvent({
     $core.String? topic,
   }) {
-    final result = create();
+    final $result = create();
     if (topic != null) {
-      result.topic = topic;
+      $result.topic = topic;
     }
-    return result;
+    return $result;
   }
   PubsubSubscriptionCreatedEvent._() : super();
   factory PubsubSubscriptionCreatedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -1462,11 +1826,11 @@ class PubsubSubscriptionCancelledEvent extends $pb.GeneratedMessage {
   factory PubsubSubscriptionCancelledEvent({
     $core.String? topic,
   }) {
-    final result = create();
+    final $result = create();
     if (topic != null) {
-      result.topic = topic;
+      $result.topic = topic;
     }
-    return result;
+    return $result;
   }
   PubsubSubscriptionCancelledEvent._() : super();
   factory PubsubSubscriptionCancelledEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -1512,11 +1876,11 @@ class CircuitRelayCreatedEvent extends $pb.GeneratedMessage {
   factory CircuitRelayCreatedEvent({
     $core.String? relayAddress,
   }) {
-    final result = create();
+    final $result = create();
     if (relayAddress != null) {
-      result.relayAddress = relayAddress;
+      $result.relayAddress = relayAddress;
     }
-    return result;
+    return $result;
   }
   CircuitRelayCreatedEvent._() : super();
   factory CircuitRelayCreatedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -1563,14 +1927,14 @@ class CircuitRelayClosedEvent extends $pb.GeneratedMessage {
     $core.String? relayAddress,
     $core.String? reason,
   }) {
-    final result = create();
+    final $result = create();
     if (relayAddress != null) {
-      result.relayAddress = relayAddress;
+      $result.relayAddress = relayAddress;
     }
     if (reason != null) {
-      result.reason = reason;
+      $result.reason = reason;
     }
-    return result;
+    return $result;
   }
   CircuitRelayClosedEvent._() : super();
   factory CircuitRelayClosedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -1627,14 +1991,14 @@ class CircuitRelayTrafficEvent extends $pb.GeneratedMessage {
     $core.String? relayAddress,
     $fixnum.Int64? dataSize,
   }) {
-    final result = create();
+    final $result = create();
     if (relayAddress != null) {
-      result.relayAddress = relayAddress;
+      $result.relayAddress = relayAddress;
     }
     if (dataSize != null) {
-      result.dataSize = dataSize;
+      $result.dataSize = dataSize;
     }
-    return result;
+    return $result;
   }
   CircuitRelayTrafficEvent._() : super();
   factory CircuitRelayTrafficEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -1684,6 +2048,392 @@ class CircuitRelayTrafficEvent extends $pb.GeneratedMessage {
   $core.bool hasDataSize() => $_has(1);
   @$pb.TagNumber(2)
   void clearDataSize() => clearField(2);
+}
+
+class CircuitRelayDataReceivedEvent extends $pb.GeneratedMessage {
+  factory CircuitRelayDataReceivedEvent({
+    $core.String? relayAddress,
+    $fixnum.Int64? dataSize,
+  }) {
+    final $result = create();
+    if (relayAddress != null) {
+      $result.relayAddress = relayAddress;
+    }
+    if (dataSize != null) {
+      $result.dataSize = dataSize;
+    }
+    return $result;
+  }
+  CircuitRelayDataReceivedEvent._() : super();
+  factory CircuitRelayDataReceivedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory CircuitRelayDataReceivedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CircuitRelayDataReceivedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'relayAddress')
+    ..aInt64(2, _omitFieldNames ? '' : 'dataSize')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  CircuitRelayDataReceivedEvent clone() => CircuitRelayDataReceivedEvent()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  CircuitRelayDataReceivedEvent copyWith(void Function(CircuitRelayDataReceivedEvent) updates) => super.copyWith((message) => updates(message as CircuitRelayDataReceivedEvent)) as CircuitRelayDataReceivedEvent;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CircuitRelayDataReceivedEvent create() => CircuitRelayDataReceivedEvent._();
+  CircuitRelayDataReceivedEvent createEmptyInstance() => create();
+  static $pb.PbList<CircuitRelayDataReceivedEvent> createRepeated() => $pb.PbList<CircuitRelayDataReceivedEvent>();
+  @$core.pragma('dart2js:noInline')
+  static CircuitRelayDataReceivedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CircuitRelayDataReceivedEvent>(create);
+  static CircuitRelayDataReceivedEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get relayAddress => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set relayAddress($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasRelayAddress() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRelayAddress() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get dataSize => $_getI64(1);
+  @$pb.TagNumber(2)
+  set dataSize($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasDataSize() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDataSize() => clearField(2);
+}
+
+class CircuitRelayDataSentEvent extends $pb.GeneratedMessage {
+  factory CircuitRelayDataSentEvent({
+    $core.String? relayAddress,
+    $fixnum.Int64? dataSize,
+  }) {
+    final $result = create();
+    if (relayAddress != null) {
+      $result.relayAddress = relayAddress;
+    }
+    if (dataSize != null) {
+      $result.dataSize = dataSize;
+    }
+    return $result;
+  }
+  CircuitRelayDataSentEvent._() : super();
+  factory CircuitRelayDataSentEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory CircuitRelayDataSentEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CircuitRelayDataSentEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'relayAddress')
+    ..aInt64(2, _omitFieldNames ? '' : 'dataSize')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  CircuitRelayDataSentEvent clone() => CircuitRelayDataSentEvent()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  CircuitRelayDataSentEvent copyWith(void Function(CircuitRelayDataSentEvent) updates) => super.copyWith((message) => updates(message as CircuitRelayDataSentEvent)) as CircuitRelayDataSentEvent;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CircuitRelayDataSentEvent create() => CircuitRelayDataSentEvent._();
+  CircuitRelayDataSentEvent createEmptyInstance() => create();
+  static $pb.PbList<CircuitRelayDataSentEvent> createRepeated() => $pb.PbList<CircuitRelayDataSentEvent>();
+  @$core.pragma('dart2js:noInline')
+  static CircuitRelayDataSentEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CircuitRelayDataSentEvent>(create);
+  static CircuitRelayDataSentEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get relayAddress => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set relayAddress($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasRelayAddress() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRelayAddress() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get dataSize => $_getI64(1);
+  @$pb.TagNumber(2)
+  set dataSize($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasDataSize() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDataSize() => clearField(2);
+}
+
+class CircuitRelayFailedEvent extends $pb.GeneratedMessage {
+  factory CircuitRelayFailedEvent({
+    $core.String? relayAddress,
+    $core.String? reason,
+  }) {
+    final $result = create();
+    if (relayAddress != null) {
+      $result.relayAddress = relayAddress;
+    }
+    if (reason != null) {
+      $result.reason = reason;
+    }
+    return $result;
+  }
+  CircuitRelayFailedEvent._() : super();
+  factory CircuitRelayFailedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory CircuitRelayFailedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CircuitRelayFailedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'relayAddress')
+    ..aOS(2, _omitFieldNames ? '' : 'reason')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  CircuitRelayFailedEvent clone() => CircuitRelayFailedEvent()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  CircuitRelayFailedEvent copyWith(void Function(CircuitRelayFailedEvent) updates) => super.copyWith((message) => updates(message as CircuitRelayFailedEvent)) as CircuitRelayFailedEvent;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CircuitRelayFailedEvent create() => CircuitRelayFailedEvent._();
+  CircuitRelayFailedEvent createEmptyInstance() => create();
+  static $pb.PbList<CircuitRelayFailedEvent> createRepeated() => $pb.PbList<CircuitRelayFailedEvent>();
+  @$core.pragma('dart2js:noInline')
+  static CircuitRelayFailedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CircuitRelayFailedEvent>(create);
+  static CircuitRelayFailedEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get relayAddress => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set relayAddress($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasRelayAddress() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRelayAddress() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get reason => $_getSZ(1);
+
+  set errorMessage(errorMessage) {}
+  @$pb.TagNumber(2)
+  set reason($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasReason() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearReason() => clearField(2);
+}
+
+class StreamStartedEvent extends $pb.GeneratedMessage {
+  factory StreamStartedEvent({
+    $core.String? streamId,
+    $core.String? peerId,
+  }) {
+    final $result = create();
+    if (streamId != null) {
+      $result.streamId = streamId;
+    }
+    if (peerId != null) {
+      $result.peerId = peerId;
+    }
+    return $result;
+  }
+  StreamStartedEvent._() : super();
+  factory StreamStartedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory StreamStartedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StreamStartedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'streamId')
+    ..aOS(2, _omitFieldNames ? '' : 'peerId')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  StreamStartedEvent clone() => StreamStartedEvent()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  StreamStartedEvent copyWith(void Function(StreamStartedEvent) updates) => super.copyWith((message) => updates(message as StreamStartedEvent)) as StreamStartedEvent;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StreamStartedEvent create() => StreamStartedEvent._();
+  StreamStartedEvent createEmptyInstance() => create();
+  static $pb.PbList<StreamStartedEvent> createRepeated() => $pb.PbList<StreamStartedEvent>();
+  @$core.pragma('dart2js:noInline')
+  static StreamStartedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<StreamStartedEvent>(create);
+  static StreamStartedEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get streamId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set streamId($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasStreamId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearStreamId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get peerId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set peerId($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasPeerId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPeerId() => clearField(2);
+}
+
+class StreamEndedEvent extends $pb.GeneratedMessage {
+  factory StreamEndedEvent({
+    $core.String? streamId,
+    $core.String? peerId,
+    $core.String? reason,
+  }) {
+    final $result = create();
+    if (streamId != null) {
+      $result.streamId = streamId;
+    }
+    if (peerId != null) {
+      $result.peerId = peerId;
+    }
+    if (reason != null) {
+      $result.reason = reason;
+    }
+    return $result;
+  }
+  StreamEndedEvent._() : super();
+  factory StreamEndedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory StreamEndedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StreamEndedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'streamId')
+    ..aOS(2, _omitFieldNames ? '' : 'peerId')
+    ..aOS(3, _omitFieldNames ? '' : 'reason')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  StreamEndedEvent clone() => StreamEndedEvent()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  StreamEndedEvent copyWith(void Function(StreamEndedEvent) updates) => super.copyWith((message) => updates(message as StreamEndedEvent)) as StreamEndedEvent;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StreamEndedEvent create() => StreamEndedEvent._();
+  StreamEndedEvent createEmptyInstance() => create();
+  static $pb.PbList<StreamEndedEvent> createRepeated() => $pb.PbList<StreamEndedEvent>();
+  @$core.pragma('dart2js:noInline')
+  static StreamEndedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<StreamEndedEvent>(create);
+  static StreamEndedEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get streamId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set streamId($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasStreamId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearStreamId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get peerId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set peerId($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasPeerId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPeerId() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get reason => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set reason($core.String v) { $_setString(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasReason() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearReason() => clearField(3);
+}
+
+class PeerDiscoveredEvent extends $pb.GeneratedMessage {
+  factory PeerDiscoveredEvent({
+    $core.String? peerId,
+  }) {
+    final $result = create();
+    if (peerId != null) {
+      $result.peerId = peerId;
+    }
+    return $result;
+  }
+  PeerDiscoveredEvent._() : super();
+  factory PeerDiscoveredEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory PeerDiscoveredEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PeerDiscoveredEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'peerId')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  PeerDiscoveredEvent clone() => PeerDiscoveredEvent()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  PeerDiscoveredEvent copyWith(void Function(PeerDiscoveredEvent) updates) => super.copyWith((message) => updates(message as PeerDiscoveredEvent)) as PeerDiscoveredEvent;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PeerDiscoveredEvent create() => PeerDiscoveredEvent._();
+  PeerDiscoveredEvent createEmptyInstance() => create();
+  static $pb.PbList<PeerDiscoveredEvent> createRepeated() => $pb.PbList<PeerDiscoveredEvent>();
+  @$core.pragma('dart2js:noInline')
+  static PeerDiscoveredEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PeerDiscoveredEvent>(create);
+  static PeerDiscoveredEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get peerId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set peerId($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasPeerId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPeerId() => clearField(1);
 }
 
 class NodeStartedEvent extends $pb.GeneratedMessage {
@@ -1756,17 +2506,17 @@ class ErrorEvent extends $pb.GeneratedMessage {
     $core.String? message,
     $core.String? stackTrace,
   }) {
-    final result = create();
+    final $result = create();
     if (errorType != null) {
-      result.errorType = errorType;
+      $result.errorType = errorType;
     }
     if (message != null) {
-      result.message = message;
+      $result.message = message;
     }
     if (stackTrace != null) {
-      result.stackTrace = stackTrace;
+      $result.stackTrace = stackTrace;
     }
-    return result;
+    return $result;
   }
   ErrorEvent._() : super();
   factory ErrorEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -1829,12 +2579,21 @@ class ErrorEvent extends $pb.GeneratedMessage {
 }
 
 class NetworkChangedEvent extends $pb.GeneratedMessage {
-  factory NetworkChangedEvent() => create();
+  factory NetworkChangedEvent({
+    $core.String? changeType,
+  }) {
+    final $result = create();
+    if (changeType != null) {
+      $result.changeType = changeType;
+    }
+    return $result;
+  }
   NetworkChangedEvent._() : super();
   factory NetworkChangedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory NetworkChangedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NetworkChangedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'changeType')
     ..hasRequiredFields = false
   ;
 
@@ -1858,6 +2617,143 @@ class NetworkChangedEvent extends $pb.GeneratedMessage {
   @$core.pragma('dart2js:noInline')
   static NetworkChangedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NetworkChangedEvent>(create);
   static NetworkChangedEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get changeType => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set changeType($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasChangeType() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearChangeType() => clearField(1);
+}
+
+class ResourceLimitExceededEvent extends $pb.GeneratedMessage {
+  factory ResourceLimitExceededEvent({
+    $core.String? resourceType,
+    $core.String? message,
+  }) {
+    final $result = create();
+    if (resourceType != null) {
+      $result.resourceType = resourceType;
+    }
+    if (message != null) {
+      $result.message = message;
+    }
+    return $result;
+  }
+  ResourceLimitExceededEvent._() : super();
+  factory ResourceLimitExceededEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ResourceLimitExceededEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ResourceLimitExceededEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'resourceType')
+    ..aOS(2, _omitFieldNames ? '' : 'message')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ResourceLimitExceededEvent clone() => ResourceLimitExceededEvent()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ResourceLimitExceededEvent copyWith(void Function(ResourceLimitExceededEvent) updates) => super.copyWith((message) => updates(message as ResourceLimitExceededEvent)) as ResourceLimitExceededEvent;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ResourceLimitExceededEvent create() => ResourceLimitExceededEvent._();
+  ResourceLimitExceededEvent createEmptyInstance() => create();
+  static $pb.PbList<ResourceLimitExceededEvent> createRepeated() => $pb.PbList<ResourceLimitExceededEvent>();
+  @$core.pragma('dart2js:noInline')
+  static ResourceLimitExceededEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ResourceLimitExceededEvent>(create);
+  static ResourceLimitExceededEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get resourceType => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set resourceType($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasResourceType() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearResourceType() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get message => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set message($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasMessage() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMessage() => clearField(2);
+}
+
+class SystemAlertEvent extends $pb.GeneratedMessage {
+  factory SystemAlertEvent({
+    $core.String? alertType,
+    $core.String? message,
+  }) {
+    final $result = create();
+    if (alertType != null) {
+      $result.alertType = alertType;
+    }
+    if (message != null) {
+      $result.message = message;
+    }
+    return $result;
+  }
+  SystemAlertEvent._() : super();
+  factory SystemAlertEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory SystemAlertEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SystemAlertEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'alertType')
+    ..aOS(2, _omitFieldNames ? '' : 'message')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  SystemAlertEvent clone() => SystemAlertEvent()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  SystemAlertEvent copyWith(void Function(SystemAlertEvent) updates) => super.copyWith((message) => updates(message as SystemAlertEvent)) as SystemAlertEvent;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SystemAlertEvent create() => SystemAlertEvent._();
+  SystemAlertEvent createEmptyInstance() => create();
+  static $pb.PbList<SystemAlertEvent> createRepeated() => $pb.PbList<SystemAlertEvent>();
+  @$core.pragma('dart2js:noInline')
+  static SystemAlertEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SystemAlertEvent>(create);
+  static SystemAlertEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get alertType => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set alertType($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasAlertType() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAlertType() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get message => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set message($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasMessage() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMessage() => clearField(2);
 }
 
 
