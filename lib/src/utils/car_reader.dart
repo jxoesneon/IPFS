@@ -2,47 +2,24 @@
 
 import 'dart:typed_data';
 import '../core/data_structures/block.dart';
+import '../core/data_structures/car.dart';
 
-/// A utility class for reading CAR (Content Addressable aRchive) files.
+/// Utility class for reading CAR files.
 class CarReader {
-  /// Reads a CAR file from the given [carData] and returns a list of [Block]s.
-  static Future<Car> readCar(Uint8List carData) async {
-    // Placeholder logic for reading a CAR file
-    // Implement actual CAR file parsing logic here
+  /// Reads a CAR file from the given byte data and returns a [CAR] object.
+  static Future<CAR> readCar(Uint8List carData) async {
+    // Deserialize the CAR from bytes
+    final car = CAR.fromBytes(carData);
 
-    // For demonstration, let's assume the CAR file contains blocks serialized in sequence
-    final blocks = <Block>[];
-    int offset = 0;
+    // Perform any additional processing or validation if necessary
+    // For example, you might want to verify the integrity of the blocks
 
-    while (offset < carData.length) {
-      // Read block size (assuming each block is prefixed with its size as a 4-byte integer)
-      final blockSize = _readInt32(carData, offset);
-      offset += 4;
-
-      // Read block data
-      final blockData = carData.sublist(offset, offset + blockSize);
-      offset += blockSize;
-
-      // Deserialize block data into a Block object
-      final block = Block.fromBytes(blockData);
-      blocks.add(block);
-    }
-
-    return Car(blocks: blocks);
+    return car;
   }
 
-  /// Reads a 32-bit integer from [data] starting at [offset].
-  static int _readInt32(Uint8List data, int offset) {
-    return (data[offset] << 24) |
-        (data[offset + 1] << 16) |
-        (data[offset + 2] << 8) |
-        data[offset + 3];
+  /// Extracts blocks from a CAR file and returns them as a list.
+  static Future<List<Block>> extractBlocks(Uint8List carData) async {
+    final car = await readCar(carData);
+    return car.blocks;
   }
-}
-
-/// Represents a CAR file containing multiple blocks.
-class Car {
-  final List<Block> blocks;
-
-  Car({required this.blocks});
 }
