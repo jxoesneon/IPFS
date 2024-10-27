@@ -1,0 +1,12 @@
+// lib/src/proto/car.proto
+
+syntax = "proto3";
+
+package ipfs.core.data_structures;
+
+import "block.proto"; // Import the BlockProto definition
+
+// Represents a Content Addressable Archive (CAR).
+message CarProto {
+    repeated BlockProto blocks = 1; // List of blocks in the CAR.
+}
