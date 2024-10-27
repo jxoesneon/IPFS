@@ -1,4 +1,5 @@
 // lib/src/core/data_structures/merkle_dag_node.dart
+
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart' as fixnum;
 import '/../src/proto/dht/merkle_dag_node.pb.dart' as proto; // Correct path for Protobuf
