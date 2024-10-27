@@ -33,6 +33,18 @@ class P2plibRouter {
   List<p2p.Peer> get connectedPeers =>
       _router.routes.values.map((e) => e.peer).toList();
 
+  get connectionEvents => null;
+
+  get messageEvents => null;
+
+  get dhtEvents => null;
+
+  get pubSubEvents => null;
+
+  get errorEvents => null;
+
+  get streamEvents => null;
+
   /// Starts the router.
   Future<void> start() async {
     await _router.start();
@@ -58,26 +70,26 @@ class P2plibRouter {
       datagram: message,
     );
   }
-
-/// Receives a message from a peer.
-  Future<Uint8List> receiveMessage(p2p.Peer peer) async {
-    // Implement logic to receive messages with a timeout
-    try {
-      final datagram = await _router.receiveDatagram(
-        timeout: Duration(seconds: 10), // Set a timeout of 10 seconds
-      );
-      return datagram.data;
-    } catch (e) {
-      if (e is TimeoutException) {
-        print('Timeout while receiving message from peer: ${peer.id}');
-        // Handle timeout, e.g., return null or throw a custom exception
-        return null;
-      } else {
-        rethrow; // Re-throw other exceptions
+/// Receives messages from a specific peer.
+  Stream<String> receiveMessages(String peerId) async* {
+    while (true) {
+      try {
+        // Assuming _router.receiveMessage returns a Future<Uint8List>
+        Uint8List? messageBytes = await _router.receiveMessage(peerId); 
+        if (messageBytes != null) {
+          yield utf8.decode(messageBytes);
+        } else {
+          // Handle the case where receiveMessage returns null (e.g., timeout)
+          // You might want to add a delay or break the loop here
+          await Future.delayed(Duration(seconds: 1)); 
+        }
+      } catch (e) {
+        print('Error receiving messages from peer $peerId: $e');
+        // You might want to rethrow the exception or break the loop here
+        break;  
       }
     }
   }
-
 
   /// Resolves a peer ID to a list of addresses.
   List<String> resolvePeerId(p2p.PeerId peerId) {
@@ -89,4 +101,10 @@ class P2plibRouter {
     final random = Random.secure();
     return Uint8List.fromList(List.generate(32, (i) => random.nextInt(256)));
   }
+
+  connect(String multiaddress) {}
+
+  disconnect(String multiaddress) {}
+
+  listConnectedPeers() {}
 }
