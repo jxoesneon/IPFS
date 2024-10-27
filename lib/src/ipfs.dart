@@ -3,7 +3,7 @@
 import 'dart:typed_data';
 
 import 'core/config/config.dart';
-import 'core/ipfs_node.dart';
+import 'core/ipfs_node/ipfs_node.dart';
 import 'core/data_structures/block.dart';
 import 'core/data_structures/link.dart';
 import 'core/data_structures/node_stats.dart';
