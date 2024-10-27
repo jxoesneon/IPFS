@@ -15,10 +15,10 @@ message NetworkEvent {
     MessageSentEvent message_sent = 6;
     BlockReceivedEvent block_received = 7;
     BlockSentEvent block_sent = 8;
-    DhtQueryStartedEvent dht_query_started = 9;
-    DhtQueryCompletedEvent dht_query_completed = 10;
-    DhtValueFoundEvent dht_value_found = 11;
-    DhtValueProvidedEvent dht_value_provided = 12;
+    DHTQueryStartedEvent dht_query_started = 9;
+    DHTQueryCompletedEvent dht_query_completed = 10;
+    DHTValueFoundEvent dht_value_found = 11;
+    DHTValueProvidedEvent dht_value_provided = 12;
     PubsubMessagePublishedEvent pubsub_message_published = 13;
     PubsubMessageReceivedEvent pubsub_message_received = 14;
     PubsubSubscriptionCreatedEvent pubsub_subscription_created = 15;
@@ -26,108 +26,162 @@ message NetworkEvent {
     CircuitRelayCreatedEvent circuit_relay_created = 17;
     CircuitRelayClosedEvent circuit_relay_closed = 18;
     CircuitRelayTrafficEvent circuit_relay_traffic = 19;
-    NodeStartedEvent node_started = 20;
-    NodeStoppedEvent node_stopped = 21;
-    ErrorEvent error = 22;
-    NetworkChangedEvent network_changed = 23;
+    CircuitRelayFailedEvent circuit_relay_failed = 20;
+    NodeStartedEvent node_started = 21;
+    NodeStoppedEvent node_stopped = 22;
+    ErrorEvent error = 23;
+    NetworkChangedEvent network_changed = 24;
+    DHTProviderAddedEvent dht_provider_added = 25; // New event
+    DHTProviderQueriedEvent dht_provider_queried = 26; // New event
+    StreamStartedEvent stream_started = 27; // New event
+    StreamEndedEvent stream_ended = 28; // New event
+    PeerDiscoveredEvent peer_discovered = 29; // New event
+    CircuitRelayDataReceivedEvent circuit_relay_data_received = 30; // New event
+    CircuitRelayDataSentEvent circuit_relay_data_sent = 31; // New event
+    ResourceLimitExceededEvent resource_limit_exceeded = 32; // New event
+    SystemAlertEvent system_alert = 33; // New event
   }
 }
 
 // Event message definitions:
 
 message PeerConnectedEvent {
-  string peer_id = 1;
-  string multiaddress = 2;
+  string peer_id = 1; // ID of the connected peer
+  string multiaddress = 2; // Multiaddress of the connected peer
 }
 
 message PeerDisconnectedEvent {
-  string peer_id = 1;
+  string peer_id = 1; // ID of the disconnected peer
   string reason = 2; // Optional reason for disconnection
 }
 
 message ConnectionAttemptedEvent {
-  string peer_id = 1; // or multiaddress
-  bool success = 2;
+  string peer_id = 1; // ID of the peer being connected to
+  bool success = 2; // Indicates if the connection was successful
 }
 
 message ConnectionFailedEvent {
-  string peer_id = 1; // or multiaddress
-  string reason = 2;
+  string peer_id = 1; // ID of the peer that failed to connect
+  string reason = 2; // Reason for connection failure
 }
 
 message MessageReceivedEvent {
-  string peer_id = 1;
-  bytes message_content = 2;
+  string peer_id = 1; // ID of the sender
+  bytes message_content = 2; // Content of the received message
 }
 
 message MessageSentEvent {
-  string peer_id = 1;
-  bytes message_content = 2;
+  string peer_id = 1; // ID of the recipient
+  bytes message_content = 2; // Content of the sent message
 }
 
 message BlockReceivedEvent {
-  string cid = 1;
+  string cid = 1; // CID of the received block
   string peer_id = 2; // Source of the block
 }
 
 message BlockSentEvent {
-  string cid = 1;
+  string cid = 1; // CID of the sent block
   string peer_id = 2; // Destination of the block
 }
 
-message DhtQueryStartedEvent {
-  string query_type = 1;
-  string target_key = 2;
+message DHTQueryStartedEvent {
+  string query_type = 1; // Type of DHT query (e.g., find providers)
+  string target_key = 2; // Key being queried in DHT 
 }
 
-message DhtQueryCompletedEvent {
-  string query_type = 1;
-  string target_key = 2;
-  repeated string results = 3; // List of results (if any)
+message DHTQueryCompletedEvent {
+  string query_type = 1; // Type of DHT query 
+  string target_key = 2; // Key that was queried 
+  repeated string results = 3; // List of results from query 
 }
 
-message DhtValueFoundEvent {
-  string key = 1;
-  bytes value = 2;
-  string peer_id = 3; // Provider of the value
+message DHTValueFoundEvent {
+  string key = 1; // Key that was found 
+  bytes value = 2; // Value associated with key 
+  string peer_id = 3; // Provider of value 
 }
 
-message DhtValueProvidedEvent {
-  string key = 1;
-  bytes value = 2;
+message DHTValueNotFoundEvent {
+  string key = 1; // Key that was not found
+}
+
+message DHTValueProvidedEvent {
+  string key = 1; // Key that was provided 
+  bytes value = 2; // Value associated with key 
+}
+
+message DHTProviderAddedEvent {
+  string key = 1; // Key that was added as a provider 
+  string peer_id = 2; // Provider peer ID
+}
+
+message DHTProviderQueriedEvent {
+  string key = 1; // Key that was queried for providers
+  repeated string providers = 2; // List of provider peer IDs 
 }
 
 message PubsubMessagePublishedEvent {
-  string topic = 1;
-  bytes message_content = 2;
+  string topic = 1; // Topic to which message was published 
+  bytes message_content = 2; // Content of published message 
 }
 
 message PubsubMessageReceivedEvent {
-  string topic = 1;
-  bytes message_content = 2;
-  string peer_id = 3; // Sender of the message
+  string topic = 1; // Topic from which message was received 
+  bytes message_content = 2; // Content of received message 
+  string peer_id = 3; // Sender of the message 
 }
 
 message PubsubSubscriptionCreatedEvent {
-  string topic = 1;
+  string topic = 1; // Topic that was subscribed to 
 }
 
 message PubsubSubscriptionCancelledEvent {
-  string topic = 1;
+  string topic = 1; // Topic that was unsubscribed from 
 }
 
 message CircuitRelayCreatedEvent {
-  string relay_address = 1;
+  string relay_address = 1; // Address of created relay 
 }
 
 message CircuitRelayClosedEvent {
-  string relay_address = 1;
-  string reason = 2; // Optional reason for closure
+  string relay_address = 1; // Address of closed relay 
+  string reason = 2; // Optional reason for closure 
 }
 
 message CircuitRelayTrafficEvent {
-  string relay_address = 1;
-  int64 data_size = 2; // Amount of data relayed
+  string relay_address = 1; // Address of relay where traffic occurred 
+  int64 data_size = 2; // Amount of data relayed in bytes 
+}
+
+message CircuitRelayDataReceivedEvent {
+  string relay_address = 1; // Address of relay where data was received 
+  int64 data_size = 2; // Size of received data in bytes
+}
+
+message CircuitRelayDataSentEvent {
+  string relay_address = 1; // Address of relay where data was sent
+  int64 data_size = 2; // Size of sent data in bytes
+}
+
+message CircuitRelayFailedEvent {
+  string relay_address = 1; // Address of the relay that failed
+  string reason = 2; // Optional reason for the failure
+}
+
+message StreamStartedEvent {
+  string stream_id = 1; // ID of the stream started
+  string peer_id = 2; // ID of the peer for the stream
+}
+
+message StreamEndedEvent {
+  string stream_id = 1; // ID of the stream ended
+  string peer_id = 2; // ID of the peer for the stream
+  string reason = 3; // Optional reason for ending
+}
+
+message PeerDiscoveredEvent {
+  string peer_id = 1; // ID of the discovered peer
 }
 
 message NodeStartedEvent {}
@@ -135,9 +189,21 @@ message NodeStartedEvent {}
 message NodeStoppedEvent {}
 
 message ErrorEvent {
-  string error_type = 1;
-  string message = 2;
-  string stack_trace = 3; // Optional stack trace
+  string error_type = 1; // Type/category of error (e.g., network, protocol) 
+  string message = 2; // Description/message about error encountered 
+  string stack_trace = 3; // Optional stack trace for debugging purposes 
 }
 
-message NetworkChangedEvent {}
+message NetworkChangedEvent {
+  string change_type = 1; // Type of network change (e.g., IP address change)
+}
+
+message ResourceLimitExceededEvent {
+  string resource_type = 1; // Type of resource that was exceeded (e.g., memory)
+  string message = 2; // Description of the exceeded limit
+}
+
+message SystemAlertEvent {
+  string alert_type = 1; // Type of system alert (e.g., high CPU usage)
+  string message = 2; // Description of the alert
+}
