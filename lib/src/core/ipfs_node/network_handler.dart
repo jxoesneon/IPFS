@@ -1,16 +1,18 @@
 // lib/src/core/ipfs_node/network_handler.dart
 
 import 'dart:async';
-
+import 'dart:convert';
+import 'dart:typed_data';
 import '/../src/transport/circuit_relay_client.dart';
 import '/../src/transport/p2plib_router.dart';
-import 'ipfs_node_network_events.dart'; // Import IpfsNodeNetworkEvents
+import 'ipfs_node_network_events.dart';
+import '/../src/proto/dht/ipfs_node_network_events.pb.dart';
 
 /// Handles network operations for an IPFS node.
 class NetworkHandler {
   final CircuitRelayClient _circuitRelayClient;
   final P2plibRouter _router;
-  late final IpfsNodeNetworkEvents _networkEvents; // Instance of IpfsNodeNetworkEvents
+  late final IpfsNodeNetworkEvents _networkEvents;
   final StreamController<String> _peerJoinedController = StreamController<String>.broadcast();
   final StreamController<String> _peerLeftController = StreamController<String>.broadcast();
 
@@ -91,22 +93,28 @@ class NetworkHandler {
   /// Sends a message to a specific peer.
   Future<void> sendMessage(String peerId, String message) async {
     try {
-      await _router.sendMessage(peerId, message);
+      Uint8List messageBytes = Uint8List.fromList(utf8.encode(message)); // Convert String to Uint8List
+      await _router.sendMessage(peerId, messageBytes); // Ensure sendMessage accepts Uint8List
       print('Message sent to peer $peerId.');
     } catch (e) {
       print('Error sending message to peer $peerId: $e');
     }
   }
 
-  /// Receives messages from a specific peer.
-  Stream<String> receiveMessages(String peerId) {
-    try {
-      return _router.receiveMessages(peerId);
-    } catch (e) {
-      print('Error receiving messages from peer $peerId: $e');
-      return Stream.empty();
-    }
+/// Receives messages from a specific peer.
+Stream<String> receiveMessages(String peerId) {
+  try {
+    // Assuming _router.receiveMessage returns a Stream<Uint8List>
+    return _router.receiveMessages(peerId).map((messageBytes) {
+      // Convert Uint8List back to String
+      return utf8.decode(messageBytes as List<int>);
+    });
+  } catch (e) {
+    print('Error receiving messages from peer $peerId: $e');
+    return Stream.empty();
   }
+}
+
 
   /// Listens for network events and handles them appropriately.
   void _listenForNetworkEvents() {
