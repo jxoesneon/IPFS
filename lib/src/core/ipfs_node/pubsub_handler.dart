@@ -1,21 +1,34 @@
 // lib/src/core/ipfs_node/pubsub_handler.dart
 
 import 'dart:convert';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import '../../utils/dnslink_resolver.dart';
 import '/../src/protocols/pubsub/pubsub_client.dart';
-import '../utils/utils.dart'; // Assuming you have a utils file for common functions
 import '../data_structures/node_stats.dart'; // Assuming you have a NodeStats class
+import '/../src/core/ipfs_node/ipfs_node_network_events.dart'; // Import network events
 
 /// Handles PubSub operations for an IPFS node.
 class PubSubHandler {
   final PubSubClient _pubSubClient;
+  final IpfsNodeNetworkEvents _networkEvents; // Add reference to network events
 
-  PubSubHandler(config) : _pubSubClient = PubSubClient(config);
+  // Update the constructor to accept both required parameters
+  PubSubHandler(P2plibRouter router, String peerId, this._networkEvents)
+      : _pubSubClient = PubSubClient(router, peerId); 
 
   /// Starts the PubSub client.
   Future<void> start() async {
     try {
       await _pubSubClient.start();
       print('PubSub client started.');
+
+      // Listen for network events related to PubSub
+      _networkEvents.networkEvents.listen((event) {
+        if (event.hasPubsubMessageReceived()) {
+          final message = event.pubsubMessageReceived.messageContent;
+          print('Received message on topic ${event.pubsubMessageReceived.topic}: $message');
+        }
+      });
     } catch (e) {
       print('Error starting PubSub client: $e');
     }
@@ -64,9 +77,9 @@ class PubSubHandler {
   /// Handles incoming messages on a subscribed topic.
   void onMessage(String topic, Function(String) handler) {
     try {
-      _pubSubClient.onMessage(topic, (message) {
+      _pubSubClient.onMessage.listen((message) { 
         // Decode the message if necessary
-        final decodedMessage = utf8.decode(message);
+        final decodedMessage = utf8.decode(message as List<int>);
 
         // Process the decoded message
         handler(decodedMessage);
@@ -80,13 +93,12 @@ class PubSubHandler {
   /// Resolves a DNSLink to its corresponding CID.
   Future<String?> resolveDNSLink(String domainName) async {
     try {
-      final cid = await IPFSUtils.resolveDNSLink(domainName);
+      final cid = await DNSLinkResolver.resolve(domainName); // Assuming you have a DNSLinkResolver utility
       if (cid != null) {
         print('Resolved DNSLink for domain $domainName to CID: $cid');
         return cid;
       } else {
-        print('DNSLink for domain $domainName not found.');
-        return null;
+        throw Exception('DNSLink for domain $domainName not found.');
       }
     } catch (e) {
       print('Error resolving DNSLink for domain $domainName: $e');
