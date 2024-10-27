@@ -1,4 +1,4 @@
-name: IPFS
+name: dart_ipfs
 description: A Dart implementation of an IPFS server.
 version: 0.0.1 # Initial version
 homepage: https://github.com/jxoesneon/IPFS
@@ -8,7 +8,7 @@ license: MIT  # Or your chosen license
 publish_to: none
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.5.4 <4.0.0'
 
 dependencies:
   collection: ^1.19.1
@@ -40,18 +40,14 @@ dependencies:
   prometheus_client: ^1.0.0+1 # Metrics library for monitoring
 
   dart_merkle_lib: ^1.0.1
+
   multibase: ^1.0.0
+
   dart_multihash: ^1.0.1
 
 dev_dependencies:
   test: ^1.21.0 # For unit and integration tests
   lints: ^5.0.0 # For code style analysis
-
-# Additional configurations can be added here, such as executables or scripts.
-executables:
-  build_protos: bin/build_protos.dart
-  clean_protos: bin/clean_protos.sh
-  compile_protos: bin/compile_protos.sh
 
 # Assets used in the project, such as images or other static files.
 assets:
