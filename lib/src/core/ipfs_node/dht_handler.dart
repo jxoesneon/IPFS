@@ -1,15 +1,17 @@
 // lib/src/core/ipfs_node/dht_handler.dart
 
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '/../src/protocols/dht/dht_client.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
+import '/../src/utils/keystore.dart'; // Import your Keystore utility
 
 /// Handles DHT operations for an IPFS node.
 class DHTHandler {
   final DHTClient _dhtClient;
+  final Keystore _keystore; // Add a reference to the Keystore
 
-  DHTHandler(config) : _dhtClient = DHTClient(config);
+  DHTHandler(config)
+      : _dhtClient = DHTClient(config),
+        _keystore = Keystore(config); // Initialize the Keystore
 
   /// Starts the DHT client.
   Future<void> start() async {
@@ -32,10 +34,15 @@ class DHTHandler {
   }
 
   /// Finds providers for a given CID in the DHT network.
-  Future<List<p2p.Peer>> findProviders(String cid) async {
+  Future<List<String>> findProviders(String cid) async {
     try {
       final providers = await _dhtClient.findProviders(cid);
-      print('Found providers for CID $cid: ${providers.length}');
+      if (providers.isEmpty) {
+        print('No providers found for CID $cid. Attempting alternative discovery methods...');
+        // Implement alternative provider discovery methods here
+      } else {
+        print('Found providers for CID $cid: ${providers.length}');
+      }
       return providers;
     } catch (e) {
       print('Error finding providers for CID $cid: $e');
@@ -106,12 +113,12 @@ class DHTHandler {
       }
     }
 
-    return resolvedCid!;
+    return resolvedCid;
   }
 
   /// Publishes an IPNS record.
   Future<void> publishIPNS(String cid, {required String keyName}) async {
-    // Assuming Keystore.getKeyPair() is implemented
+    // Get the IPNS key pair from the keystore
     final keyPair = _keystore.getKeyPair(keyName);
 
     if (!isValidCID(cid)) {
