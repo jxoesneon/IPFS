@@ -20,14 +20,14 @@ class FindClosestPeersRequest extends $pb.GeneratedMessage {
     $0.KademliaId? target,
     $core.int? count,
   }) {
-    final result = create();
+    final $result = create();
     if (target != null) {
-      result.target = target;
+      $result.target = target;
     }
     if (count != null) {
-      result.count = count;
+      $result.count = count;
     }
-    return result;
+    return $result;
   }
   FindClosestPeersRequest._() : super();
   factory FindClosestPeersRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -85,11 +85,11 @@ class FindClosestPeersResponse extends $pb.GeneratedMessage {
   factory FindClosestPeersResponse({
     $core.Iterable<$0.KademliaId>? peerIds,
   }) {
-    final result = create();
+    final $result = create();
     if (peerIds != null) {
-      result.peerIds.addAll(peerIds);
+      $result.peerIds.addAll(peerIds);
     }
-    return result;
+    return $result;
   }
   FindClosestPeersResponse._() : super();
   factory FindClosestPeersResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

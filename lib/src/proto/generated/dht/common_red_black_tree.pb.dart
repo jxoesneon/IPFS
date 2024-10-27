@@ -14,7 +14,7 @@ import 'dart:core' as $core;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'common_red_black_tree.pbenum.dart';
-import '../../dht/google/protobuf/timestamp.pb.dart' as $0;
+import 'google/protobuf/timestamp.pb.dart' as $0;
 
 export 'common_red_black_tree.pbenum.dart';
 
@@ -23,11 +23,11 @@ class PeerId extends $pb.GeneratedMessage {
   factory PeerId({
     $core.String? id,
   }) {
-    final result = create();
+    final $result = create();
     if (id != null) {
-      result.id = id;
+      $result.id = id;
     }
-    return result;
+    return $result;
   }
   PeerId._() : super();
   factory PeerId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -76,14 +76,14 @@ class Node extends $pb.GeneratedMessage {
     PeerId? peerId,
     $core.List<$core.int>? data,
   }) {
-    final result = create();
+    final $result = create();
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
     if (data != null) {
-      result.data = data;
+      $result.data = data;
     }
-    return result;
+    return $result;
   }
   Node._() : super();
   factory Node.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -144,11 +144,11 @@ class K_PeerId extends $pb.GeneratedMessage {
   factory K_PeerId({
     $core.List<$core.int>? id,
   }) {
-    final result = create();
+    final $result = create();
     if (id != null) {
-      result.id = id;
+      $result.id = id;
     }
-    return result;
+    return $result;
   }
   K_PeerId._() : super();
   factory K_PeerId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -205,41 +205,41 @@ class V_PeerInfo extends $pb.GeneratedMessage {
     $core.Iterable<$core.String>? addresses,
     $core.String? observedAddr,
   }) {
-    final result = create();
+    final $result = create();
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
     if (ipAddress != null) {
-      result.ipAddress = ipAddress;
+      $result.ipAddress = ipAddress;
     }
     if (port != null) {
-      result.port = port;
+      $result.port = port;
     }
     if (protocols != null) {
-      result.protocols.addAll(protocols);
+      $result.protocols.addAll(protocols);
     }
     if (latency != null) {
-      result.latency = latency;
+      $result.latency = latency;
     }
     if (connectionStatus != null) {
-      result.connectionStatus = connectionStatus;
+      $result.connectionStatus = connectionStatus;
     }
     if (lastSeen != null) {
-      result.lastSeen = lastSeen;
+      $result.lastSeen = lastSeen;
     }
     if (agentVersion != null) {
-      result.agentVersion = agentVersion;
+      $result.agentVersion = agentVersion;
     }
     if (publicKey != null) {
-      result.publicKey = publicKey;
+      $result.publicKey = publicKey;
     }
     if (addresses != null) {
-      result.addresses.addAll(addresses);
+      $result.addresses.addAll(addresses);
     }
     if (observedAddr != null) {
-      result.observedAddr = observedAddr;
+      $result.observedAddr = observedAddr;
     }
-    return result;
+    return $result;
   }
   V_PeerInfo._() : super();
   factory V_PeerInfo.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

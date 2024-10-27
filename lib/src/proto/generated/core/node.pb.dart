@@ -29,29 +29,29 @@ class Node extends $pb.GeneratedMessage {
     $fixnum.Int64? timestamp,
     $core.Map<$core.String, $core.String>? metadata,
   }) {
-    final result = create();
+    final $result = create();
     if (cid != null) {
-      result.cid = cid;
+      $result.cid = cid;
     }
     if (links != null) {
-      result.links.addAll(links);
+      $result.links.addAll(links);
     }
     if (data != null) {
-      result.data = data;
+      $result.data = data;
     }
     if (type != null) {
-      result.type = type;
+      $result.type = type;
     }
     if (size != null) {
-      result.size = size;
+      $result.size = size;
     }
     if (timestamp != null) {
-      result.timestamp = timestamp;
+      $result.timestamp = timestamp;
     }
     if (metadata != null) {
-      result.metadata.addAll(metadata);
+      $result.metadata.addAll(metadata);
     }
-    return result;
+    return $result;
   }
   Node._() : super();
   factory Node.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

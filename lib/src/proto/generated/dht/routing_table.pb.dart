@@ -13,17 +13,17 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../generated/dht/kademlia_node.pb.dart' as $0;
+import 'kademlia_node.pb.dart' as $0;
 
 class RoutingTable extends $pb.GeneratedMessage {
   factory RoutingTable({
     $core.Map<$core.String, $0.KademliaNode>? entries,
   }) {
-    final result = create();
+    final $result = create();
     if (entries != null) {
-      result.entries.addAll(entries);
+      $result.entries.addAll(entries);
     }
-    return result;
+    return $result;
   }
   RoutingTable._() : super();
   factory RoutingTable.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

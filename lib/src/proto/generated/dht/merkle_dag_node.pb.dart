@@ -14,8 +14,8 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../core/cid.pb.dart' as $0;
-import '../core/link.pb.dart' as $1;
+import 'cid.pb.dart' as $0;
+import 'link.pb.dart' as $1;
 
 /// Represents a Merkle DAG node.
 class MerkleDAGNode extends $pb.GeneratedMessage {
@@ -29,32 +29,32 @@ class MerkleDAGNode extends $pb.GeneratedMessage {
     $core.bool? isDirectory,
     $0.CIDProto? parentCid,
   }) {
-    final result = create();
+    final $result = create();
     if (cid != null) {
-      result.cid = cid;
+      $result.cid = cid;
     }
     if (links != null) {
-      result.links.addAll(links);
+      $result.links.addAll(links);
     }
     if (data != null) {
-      result.data = data;
+      $result.data = data;
     }
     if (size != null) {
-      result.size = size;
+      $result.size = size;
     }
     if (timestamp != null) {
-      result.timestamp = timestamp;
+      $result.timestamp = timestamp;
     }
     if (metadata != null) {
-      result.metadata.addAll(metadata);
+      $result.metadata.addAll(metadata);
     }
     if (isDirectory != null) {
-      result.isDirectory = isDirectory;
+      $result.isDirectory = isDirectory;
     }
     if (parentCid != null) {
-      result.parentCid = parentCid;
+      $result.parentCid = parentCid;
     }
-    return result;
+    return $result;
   }
   MerkleDAGNode._() : super();
   factory MerkleDAGNode.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

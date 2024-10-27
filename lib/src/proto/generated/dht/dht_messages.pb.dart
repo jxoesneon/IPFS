@@ -19,11 +19,11 @@ class PingRequest extends $pb.GeneratedMessage {
   factory PingRequest({
     $0.KademliaId? peerId,
   }) {
-    final result = create();
+    final $result = create();
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
-    return result;
+    return $result;
   }
   PingRequest._() : super();
   factory PingRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -72,14 +72,14 @@ class PingResponse extends $pb.GeneratedMessage {
     $0.KademliaId? peerId,
     $core.bool? success,
   }) {
-    final result = create();
+    final $result = create();
     if (peerId != null) {
-      result.peerId = peerId;
+      $result.peerId = peerId;
     }
     if (success != null) {
-      result.success = success;
+      $result.success = success;
     }
-    return result;
+    return $result;
   }
   PingResponse._() : super();
   factory PingResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

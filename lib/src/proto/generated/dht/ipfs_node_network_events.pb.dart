@@ -646,18 +646,6 @@ class NetworkEvent extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(33)
   SystemAlertEvent get systemAlert => $_getN(32);
-
-  set stackTrace(stackTrace) {}
-
-  set message(message) {}
-
-  set errorType(errorType) {}
-
-  set pubsubSubscriptionCancelledEvent(PubsubSubscriptionCancelledEvent pubsubSubscriptionCancelledEvent) {}
-
-  set pubsubSubscriptionCreatedEvent(PubsubSubscriptionCreatedEvent pubsubSubscriptionCreatedEvent) {}
-
-  set dhtValueNotFound(DHTValueNotFoundEvent dhtValueNotFound) {}
   @$pb.TagNumber(33)
   set systemAlert(SystemAlertEvent v) { setField(33, v); }
   @$pb.TagNumber(33)
@@ -2234,8 +2222,6 @@ class CircuitRelayFailedEvent extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(2)
   $core.String get reason => $_getSZ(1);
-
-  set errorMessage(errorMessage) {}
   @$pb.TagNumber(2)
   set reason($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(2)

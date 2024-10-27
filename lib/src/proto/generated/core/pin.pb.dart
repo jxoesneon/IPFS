@@ -26,17 +26,17 @@ class Pin extends $pb.GeneratedMessage {
     PinTypeProto? type,
     $fixnum.Int64? timestamp,
   }) {
-    final result = create();
+    final $result = create();
     if (cid != null) {
-      result.cid = cid;
+      $result.cid = cid;
     }
     if (type != null) {
-      result.type = type;
+      $result.type = type;
     }
     if (timestamp != null) {
-      result.timestamp = timestamp;
+      $result.timestamp = timestamp;
     }
-    return result;
+    return $result;
   }
   Pin._() : super();
   factory Pin.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

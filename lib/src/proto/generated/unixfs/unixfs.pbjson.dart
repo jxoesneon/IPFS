@@ -13,67 +13,35 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-@$core.Deprecated('Use dataDescriptor instead')
-const Data$json = {
-  '1': 'Data',
+@$core.Deprecated('Use unixFSTypeProtoDescriptor instead')
+const UnixFSTypeProto$json = {
+  '1': 'UnixFSTypeProto',
   '2': [
-    {'1': 'Type', '3': 1, '4': 2, '5': 14, '6': '.Data.DataType', '10': 'Type'},
-    {'1': 'Data', '3': 2, '4': 1, '5': 12, '10': 'Data'},
-    {'1': 'filesize', '3': 3, '4': 1, '5': 4, '10': 'filesize'},
-    {'1': 'blocksizes', '3': 4, '4': 3, '5': 4, '10': 'blocksizes'},
-    {'1': 'hashType', '3': 5, '4': 1, '5': 4, '10': 'hashType'},
-    {'1': 'fanout', '3': 6, '4': 1, '5': 4, '10': 'fanout'},
-    {'1': 'mode', '3': 7, '4': 1, '5': 13, '10': 'mode'},
-    {'1': 'mtime', '3': 8, '4': 1, '5': 11, '6': '.UnixTime', '10': 'mtime'},
-  ],
-  '4': [Data_DataType$json],
-};
-
-@$core.Deprecated('Use dataDescriptor instead')
-const Data_DataType$json = {
-  '1': 'DataType',
-  '2': [
-    {'1': 'Raw', '2': 0},
-    {'1': 'Directory', '2': 1},
-    {'1': 'File', '2': 2},
-    {'1': 'Metadata', '2': 3},
-    {'1': 'Symlink', '2': 4},
-    {'1': 'HAMTShard', '2': 5},
+    {'1': 'FILE', '2': 0},
+    {'1': 'DIRECTORY', '2': 1},
   ],
 };
 
-/// Descriptor for `Data`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List dataDescriptor = $convert.base64Decode(
-    'CgREYXRhEiIKBFR5cGUYASACKA4yDi5EYXRhLkRhdGFUeXBlUgRUeXBlEhIKBERhdGEYAiABKA'
-    'xSBERhdGESGgoIZmlsZXNpemUYAyABKARSCGZpbGVzaXplEh4KCmJsb2Nrc2l6ZXMYBCADKARS'
-    'CmJsb2Nrc2l6ZXMSGgoIaGFzaFR5cGUYBSABKARSCGhhc2hUeXBlEhYKBmZhbm91dBgGIAEoBF'
-    'IGZmFub3V0EhIKBG1vZGUYByABKA1SBG1vZGUSHwoFbXRpbWUYCCABKAsyCS5Vbml4VGltZVIF'
-    'bXRpbWUiVgoIRGF0YVR5cGUSBwoDUmF3EAASDQoJRGlyZWN0b3J5EAESCAoERmlsZRACEgwKCE'
-    '1ldGFkYXRhEAMSCwoHU3ltbGluaxAEEg0KCUhBTVRTaGFyZBAF');
+/// Descriptor for `UnixFSTypeProto`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List unixFSTypeProtoDescriptor = $convert.base64Decode(
+    'Cg9Vbml4RlNUeXBlUHJvdG8SCAoERklMRRAAEg0KCURJUkVDVE9SWRAB');
 
-@$core.Deprecated('Use metadataDescriptor instead')
-const Metadata$json = {
-  '1': 'Metadata',
+@$core.Deprecated('Use unixFSDescriptor instead')
+const UnixFS$json = {
+  '1': 'UnixFS',
   '2': [
-    {'1': 'MimeType', '3': 1, '4': 1, '5': 9, '10': 'MimeType'},
+    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.ipfs.core.data_structures.UnixFSTypeProto', '10': 'type'},
+    {'1': 'data', '3': 2, '4': 1, '5': 12, '10': 'data'},
+    {'1': 'block_size', '3': 3, '4': 1, '5': 3, '10': 'blockSize'},
+    {'1': 'file_size', '3': 4, '4': 1, '5': 3, '10': 'fileSize'},
+    {'1': 'blocksizes', '3': 5, '4': 3, '5': 5, '10': 'blocksizes'},
   ],
 };
 
-/// Descriptor for `Metadata`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List metadataDescriptor = $convert.base64Decode(
-    'CghNZXRhZGF0YRIaCghNaW1lVHlwZRgBIAEoCVIITWltZVR5cGU=');
-
-@$core.Deprecated('Use unixTimeDescriptor instead')
-const UnixTime$json = {
-  '1': 'UnixTime',
-  '2': [
-    {'1': 'Seconds', '3': 1, '4': 2, '5': 3, '10': 'Seconds'},
-    {'1': 'FractionalNanoseconds', '3': 2, '4': 1, '5': 7, '10': 'FractionalNanoseconds'},
-  ],
-};
-
-/// Descriptor for `UnixTime`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List unixTimeDescriptor = $convert.base64Decode(
-    'CghVbml4VGltZRIYCgdTZWNvbmRzGAEgAigDUgdTZWNvbmRzEjQKFUZyYWN0aW9uYWxOYW5vc2'
-    'Vjb25kcxgCIAEoB1IVRnJhY3Rpb25hbE5hbm9zZWNvbmRz');
+/// Descriptor for `UnixFS`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List unixFSDescriptor = $convert.base64Decode(
+    'CgZVbml4RlMSPgoEdHlwZRgBIAEoDjIqLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuVW5peE'
+    'ZTVHlwZVByb3RvUgR0eXBlEhIKBGRhdGEYAiABKAxSBGRhdGESHQoKYmxvY2tfc2l6ZRgDIAEo'
+    'A1IJYmxvY2tTaXplEhsKCWZpbGVfc2l6ZRgEIAEoA1IIZmlsZVNpemUSHgoKYmxvY2tzaXplcx'
+    'gFIAMoBVIKYmxvY2tzaXplcw==');
 

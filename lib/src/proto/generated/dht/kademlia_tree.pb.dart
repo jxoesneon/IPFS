@@ -20,14 +20,14 @@ class KademliaTree extends $pb.GeneratedMessage {
     $0.KademliaNode? localNode,
     $core.Iterable<KademliaBucket>? buckets,
   }) {
-    final result = create();
+    final $result = create();
     if (localNode != null) {
-      result.localNode = localNode;
+      $result.localNode = localNode;
     }
     if (buckets != null) {
-      result.buckets.addAll(buckets);
+      $result.buckets.addAll(buckets);
     }
-    return result;
+    return $result;
   }
   KademliaTree._() : super();
   factory KademliaTree.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -79,11 +79,11 @@ class KademliaBucket extends $pb.GeneratedMessage {
   factory KademliaBucket({
     $core.Iterable<$0.KademliaNode>? nodes,
   }) {
-    final result = create();
+    final $result = create();
     if (nodes != null) {
-      result.nodes.addAll(nodes);
+      $result.nodes.addAll(nodes);
     }
-    return result;
+    return $result;
   }
   KademliaBucket._() : super();
   factory KademliaBucket.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

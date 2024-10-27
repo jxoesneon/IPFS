@@ -26,23 +26,23 @@ class OperationLogEntry extends $pb.GeneratedMessage {
     $0.CIDProto? cid,
     $1.NodeTypeProto? nodeType,
   }) {
-    final result = create();
+    final $result = create();
     if (timestamp != null) {
-      result.timestamp = timestamp;
+      $result.timestamp = timestamp;
     }
     if (operation != null) {
-      result.operation = operation;
+      $result.operation = operation;
     }
     if (details != null) {
-      result.details = details;
+      $result.details = details;
     }
     if (cid != null) {
-      result.cid = cid;
+      $result.cid = cid;
     }
     if (nodeType != null) {
-      result.nodeType = nodeType;
+      $result.nodeType = nodeType;
     }
-    return result;
+    return $result;
   }
   OperationLogEntry._() : super();
   factory OperationLogEntry.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -136,11 +136,11 @@ class OperationLog extends $pb.GeneratedMessage {
   factory OperationLog({
     $core.Iterable<OperationLogEntry>? entries,
   }) {
-    final result = create();
+    final $result = create();
     if (entries != null) {
-      result.entries.addAll(entries);
+      $result.entries.addAll(entries);
     }
-    return result;
+    return $result;
   }
   OperationLog._() : super();
   factory OperationLog.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

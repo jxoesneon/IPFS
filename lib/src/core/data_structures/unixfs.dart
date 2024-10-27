@@ -2,7 +2,7 @@
 
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart' as fixnum;
-import '../../proto/generated/unixfs/unixfs.pb.dart' as proto; // Import the generated Protobuf file
+import '../../proto/generated/unixfs/unixfs.pb.dart' as proto;
 
 /// Represents a UnixFS node in IPFS.
 class UnixFS {
