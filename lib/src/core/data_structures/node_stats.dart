@@ -60,4 +60,14 @@ class NodeStats {
         'bandwidthReceived: $bandwidthReceived'
         '}';
   }
+
+  static NodeStats fromJson(Map<String, dynamic> json) {
+    return NodeStats(
+      numBlocks: json['numBlocks'] as int,
+      datastoreSize: json['datastoreSize'] as int,
+      numConnectedPeers: json['numConnectedPeers'] as int,
+      bandwidthSent: json['bandwidthSent'] as int,
+      bandwidthReceived: json['bandwidthReceived'] as int,
+    );
+  }
 }
