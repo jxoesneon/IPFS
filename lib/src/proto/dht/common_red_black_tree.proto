@@ -1,4 +1,4 @@
-// lib/src/proto/common_red_black_tree.proto
+// lib/src/proto/dht/common_red_black_tree.proto
 syntax = "proto3";
 
 // Defines the package name for this file to prevent naming conflicts.
@@ -73,11 +73,3 @@ message V_PeerInfo {
   // The address from which this peer was observed or learned about.
   string observed_addr = 11; 
 }
-
-
-
-
-
-
-
-
