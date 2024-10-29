@@ -1,4 +1,4 @@
-// lib/src/proto/node_stats.proto
+// lib/src/proto/core/node_stats.proto
 
 syntax = "proto3";
 
