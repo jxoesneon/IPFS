@@ -1,10 +1,10 @@
-// lib/src/proto/pin.proto
+// lib/src/proto/core/pin.proto
 
 syntax = "proto3";
 
 package ipfs.core.data_structures;
 
-import "cid.proto"; // Import the CID definition
+import "core/cid.proto"; // Import the CID definition
 
 // Enum representing the different types of pins in IPFS.
 enum PinTypeProto {
