@@ -1,6 +1,7 @@
 // lib/src/core/data_structures/cid.dart
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:convert/convert.dart';
 import 'package:dart_multihash/dart_multihash.dart';
 
 import '../../proto/generated/core/cid.pb.dart'; // Import the generated CID from Protobuf
@@ -32,7 +33,8 @@ class CID {
   /// Automatically generates the multihash from the content using the specified hash algorithm.
   factory CID.fromContent(String codec,
       {CIDVersion version = CIDVersion.CID_VERSION_0,
-      String hashType = 'sha2-256', required Uint8List content}) {
+      String hashType = 'sha2-256',
+      required Uint8List content}) {
     final multihash = _hashContent(content, hashType);
     return CID.fromBytes(multihash, codec, version: version);
   }
@@ -90,34 +92,34 @@ class CID {
   }
 
   /// Helper method to hash content using the specified hashing algorithm.
-static Uint8List _hashContent(Uint8List content, String hashType) {
-  // Hashing the content using the specified hashType
-  MultihashInfo multihashInfo;
+  static Uint8List _hashContent(Uint8List content, String hashType) {
+    // Hashing the content using the specified hashType
+    MultihashInfo multihashInfo;
 
-  // Specify the hash type that is supported
-  String hashName;
+    // Specify the hash type that is supported
+    String hashName;
 
-  switch (hashType.toLowerCase()) {
-    case 'sha2-256':
-      hashName = 'sha2-256'; // Use the string directly for encoding
-      break;
-    case 'sha2-512':
-      hashName = 'sha2-512'; // Use the string directly for encoding
-      break;
-    case 'sha3-256':
-      hashName = 'sha3-256'; // Use the string directly for encoding
-      break;
-    // Add other supported hash types as needed
-    default:
-      throw UnsupportedError('Unsupported hash type: $hashType');
+    switch (hashType.toLowerCase()) {
+      case 'sha2-256':
+        hashName = 'sha2-256'; // Use the string directly for encoding
+        break;
+      case 'sha2-512':
+        hashName = 'sha2-512'; // Use the string directly for encoding
+        break;
+      case 'sha3-256':
+        hashName = 'sha3-256'; // Use the string directly for encoding
+        break;
+      // Add other supported hash types as needed
+      default:
+        throw UnsupportedError('Unsupported hash type: $hashType');
+    }
+
+    // Encode the content using the appropriate hash name
+    multihashInfo = Multihash.encode(hashName, content);
+
+    // Return the digest as Uint8List
+    return Uint8List.fromList(multihashInfo.digest);
   }
-
-  // Encode the content using the appropriate hash name
-  multihashInfo = Multihash.encode(hashName, content);
-
-  // Return the digest as Uint8List
-  return Uint8List.fromList(multihashInfo.digest);
-}
 
   /// Converts the CID instance to a CIDProto message (Protobuf).
   CIDProto toProto() {
@@ -146,23 +148,28 @@ static Uint8List _hashContent(Uint8List content, String hashType) {
         throw UnsupportedError('Unsupported CID version: $version');
     }
   }
-  /// Creates a CID from its Protobuf representation.
-factory CID.fromProto(CIDProto proto) {
-  // Extract multihash from the protobuf and convert to Uint8List
-  final Uint8List multihash = Uint8List.fromList(proto.multihash);
-  
-  // Create a new CIDProto instance with the extracted data
-  final cid = CIDProto()
-    ..version = proto.version
-    ..multihash = multihash
-    ..codec = proto.codec;
 
-  // If it's a CIDv1, set the multibasePrefix if it's present
-  if (proto.version == CIDVersion.CID_VERSION_1) {
-    cid.multibasePrefix = proto.multibasePrefix;
+  /// Creates a CID from its Protobuf representation.
+  factory CID.fromProto(CIDProto proto) {
+    // Extract multihash from the protobuf and convert to Uint8List
+    final Uint8List multihash = Uint8List.fromList(proto.multihash);
+
+    // Create a new CIDProto instance with the extracted data
+    final cidProto = CIDProto()
+      ..version = proto.version
+      ..multihash = multihash
+      ..codec = proto.codec;
+
+    // If it's a CIDv1, set the multibasePrefix if it's present
+    if (proto.version == CIDVersion.CID_VERSION_1 &&
+        proto.hasMultibasePrefix()) {
+      cidProto.multibasePrefix = proto.multibasePrefix;
+    }
+
+    return CID(cidProto);
   }
 
-  return CID(cid);
-}
-
+  String hashedValue() {
+    return hex.encode(multihash);
+  }
 }
