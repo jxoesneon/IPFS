@@ -1,4 +1,4 @@
-// ledger.dart
+// lib/src/protocols/bitswap/ledger.dart
 
 class BitLedger {
   final String peerId;
