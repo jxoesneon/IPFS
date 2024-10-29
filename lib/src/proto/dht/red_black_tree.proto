@@ -1,8 +1,9 @@
+// lib/src/proto/dht/red_black_tree.proto
 syntax = "proto3";
 
 package ipfs.dht.red_black_tree;
 
-import "common_red_black_tree.proto";
+import "dht/common_red_black_tree.proto";
 
 // Represents a node in a Red-Black Tree.
 message RedBlackTreeNode {
