@@ -1,9 +1,9 @@
-// lib/src/proto/dht_messages.proto
+// lib/src/proto/dht/dht_messages.proto
 syntax = "proto3";
 
 package ipfs.dht.dht_messages;
 
-import "common_kademlia.proto";
+import "dht/common_kademlia.proto";
 
 message PingRequest {
   ipfs.dht.common_kademlia.KademliaId peer_id = 1;
