@@ -1,8 +1,9 @@
+// lib/src/proto/dht/remove_peer.proto
 syntax = "proto3";
 
 package ipfs.dht.remove_peer;
 
-import "common_kademlia.proto";
+import "dht/common_kademlia.proto";
 
 message RemovePeerRequest {
   ipfs.dht.common_kademlia.KademliaId peer_id = 1;
