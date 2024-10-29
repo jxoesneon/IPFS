@@ -1,11 +1,12 @@
 // lib/src/core/data_structures/merkle_dag_node.dart
 
 import 'dart:typed_data';
-import 'package:fixnum/fixnum.dart' as fixnum;
-import '../../proto/generated/dht/merkle_dag_node.pb.dart' as proto; // Correct path for Protobuf
-import 'link.dart';
-import 'cid.dart'; // Use the CID class for handling CIDs
 
+import 'package:dart_ipfs/src/proto/generated/core/link.pb.dart' as proto_l;
+import '/../src/proto/generated/dht/merkle_dag_node.pb.dart' as proto_m;
+import 'package:fixnum/fixnum.dart' as fixnum;
+import 'link.dart';
+import 'cid.dart';
 /// Represents a Merkle DAG node in IPFS.
 class MerkleDAGNode {
   final CID cid; // Use CID class
@@ -31,11 +32,15 @@ class MerkleDAGNode {
   /// Creates a [MerkleDAGNode] from its byte representation.
   static MerkleDAGNode fromBytes(Uint8List bytes) {
     try {
-      final pbNode = proto.MerkleDAGNode.fromBuffer(bytes);
+      final pbNode = proto_m.MerkleDAGNode.fromBuffer(bytes);
 
       return MerkleDAGNode(
         cid: CID.fromProto(pbNode.cid),
-        links: pbNode.links.map((link) => Link.fromProto(link)).toList(),
+        links: pbNode.links
+            .whereType<proto_l.PBLink>() // Filter to only include PBLink objects
+            .map((link) => Link.fromProto(link))
+            .toList(),
+
         data: Uint8List.fromList(pbNode.data), // Ensure data is copied
         size: pbNode.size.toInt(),
         timestamp: pbNode.timestamp.toInt(),
@@ -50,7 +55,7 @@ class MerkleDAGNode {
 
   /// Converts the [MerkleDAGNode] to its byte representation.
   Uint8List toBytes() {
-    final pbNode = proto.MerkleDAGNode()
+    final pbNode = proto_m.MerkleDAGNode()
       ..cid = cid.toProto()
       ..data = data
       ..size = fixnum.Int64(size)
