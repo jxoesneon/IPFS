@@ -1,12 +1,12 @@
-// lib/src/proto/node.proto
+// lib/src/proto/core/node.proto
 
 syntax = "proto3";
 
 package ipfs.core.data_structures;
 
-import "cid.proto";      // Import the CID definition
-import "link.proto";     // Import the Link definition
-import "node_type.proto"; // Import the NodeTypeProto enum
+import "core/cid.proto";      // Import the CID definition
+import "core/link.proto";     // Import the Link definition
+import "core/node_type.proto"; // Import the NodeTypeProto enum
 
 // Represents a node in the IPFS Merkle DAG.
 message Node {
