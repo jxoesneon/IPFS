@@ -1,4 +1,4 @@
-// lib/src/proto/dht.proto
+// lib/src/proto/dht/dht.proto
 syntax = "proto3";
 
 package ipfs.dht;
