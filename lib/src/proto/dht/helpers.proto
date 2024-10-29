@@ -1,9 +1,9 @@
-// lib/src/proto/helpers.proto
+// lib/src/proto/dht/helpers.proto
 syntax = "proto3";
 
 package ipfs.dht.helpers;
 
-import "common_kademlia.proto";
+import "dht/common_kademlia.proto";
 
 message CalculateDistanceRequest {
   ipfs.dht.common_kademlia.KademliaId id1 = 1;
