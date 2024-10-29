@@ -2,94 +2,113 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:protobuf/protobuf.dart';
-import '/../src/proto/bitswap/message_types.pb.dart' as bitswap;
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:p2plib/p2plib.dart'; // Import p2plib for peer management
 
+import '../../core/data_structures/block.dart';
+import '/../src/proto/generated/bitswap/bitswap.pb.dart' as bitswap;
 import 'ledger.dart';
 import '../../storage/datastore.dart';
 import '../../utils/varint.dart';
-import '../../utils/base58.dart';
 import '../../core/ipfs_node/ipfs_node.dart';
 
 class Bitswap {
-  final p2p.RouterL0 _router;
+  final P2plibRouter _router;
   final BitLedger _ledger;
   final Datastore _datastore;
   final String _nodeId;
-  final Set<String> _peers = <String>{};
-  final dynamic config;  
+  final Set<PeerId> _peers = <PeerId>{}; // Use PeerId from p2plib
+  final dynamic config;
 
   Bitswap(this._router, this._ledger, this._datastore, this._nodeId, [this.config]);
 
+  /// Starts the Bitswap protocol.
   Future<void> start() async {
     _router.onMessage((packet) => _handlePacket(packet));
     await _router.start();
     print('Bitswap started.');
   }
 
+  /// Stops the Bitswap protocol.
   Future<void> stop() async {
     await _router.stop();
     print('Bitswap stopped.');
   }
 
+  /// Requests a block from the network.
   Future<Block?> wantBlock(String cid) async {
-    // Logic to request a block from the network
-    // This could involve sending a message to peers asking for the block
     print('Requesting block with CID: $cid');
-    
-    // Here you would implement the logic to send a request for the block
-    // For now, we'll just return null as a placeholder
+
+    // Create a Wantlist entry for the requested block
+    final wantlistEntry = bitswap.Wantlist.Entry()
+      ..block = Uint8List.fromList(utf8.encode(cid))
+      ..wantType = bitswap.WantType.WANT_TYPE_BLOCK;
+
+    // Send the wantlist to peers
+    for (var peer in _peers) {
+      await _sendWantlist(peer.toBase58String(), wantlistEntry);
+    }
+
+    // Placeholder for actual block retrieval logic
     return null; 
   }
 
+  /// Provides a block to the network.
   void provide(String cid) {
-    // Logic to announce that a block is available
     print('Providing block with CID: $cid');
-    
-    // Here you would implement the logic to notify peers about the available block
+
+    // Notify peers about the available block
+    for (var peer in _peers) {
+      _sendHave(peer.toBase58String(), cid);
+    }
   }
 
+  /// Retrieves block data from the ledger.
   Uint8List getBlockData(String cid) {
-    // Logic to retrieve block data from the ledger
     return _ledger.getBlockData(cid);
   }
 
+  /// Handles incoming packets from peers.
   void _handlePacket(p2p.Packet packet) {
-    if (packet.datagram.length > 4 * 1024 * 1024) {
+    if (packet.datagram.length > (4 * 1024 * 1024)) { 
       print('Message exceeds the maximum allowed size.');
       return;
     }
 
     try {
-      // Decode the message length prefix
+      // Decode message length prefix
       final (messageLength, bytesRead) = decodeVarint(packet.datagram);
 
-      // Extract the message bytes
+      // Extract message bytes
       final messageBytes = packet.datagram.sublist(bytesRead);
 
-      // Deserialize the message using Protobuf
+      // Deserialize message using Protobuf
       final message = bitswap.Message.fromBuffer(messageBytes);
+
       _processIncomingMessage(packet, message);
     } catch (e) {
       print('Error deserializing message: $e');
     }
   }
 
+  /// Processes incoming messages from peers.
   void _processIncomingMessage(p2p.Packet packet, bitswap.Message message) {
     final srcPeerId = packet.getSrcPeerId().toBase58String();
 
     for (var entry in message.wantlist.entries) {
       if (entry.cancel) {
-        _handleCancel(entry);
+        handleCancel(srcPeerId, entry);
       } else {
         switch (entry.wantType) {
           case bitswap.WantType.WANT_TYPE_BLOCK:
-            _handleBlockRequest(srcPeerId, entry);
+            handleWantBlock(srcPeerId, entry);
             break;
           case bitswap.WantType.WANT_TYPE_HAVE:
-            _handleHaveRequest(srcPeerId, entry);
+            handleHave(srcPeerId, entry);
             break;
+          default:
+            print('Unknown want type: ${entry.wantType}');
         }
       }
     }
@@ -103,69 +122,102 @@ class Bitswap {
     }
   }
 
+  /// Handles received blocks from peers.
   void _handleReceivedBlock(String srcPeerId, bitswap.BlockMsg blockMsg) {
     print('Received block with CID prefix ${blockMsg.prefix} from $srcPeerId.');
-    
+
     // Store received block in datastore
     _datastore.put(
       base64.encode(blockMsg.prefix),
-      Block(data: blockMsg.data, cid: blockMsg.prefix),
+      Block(data: blockMsg.data, cid: base64.encode(blockMsg.prefix)),
     );
-    
+
     // Update ledger with received information
-    _ledger.recordReceived(srcPeerId, blockMsg.prefix);
+    _ledger.recordReceived(srcPeerId, base64.encode(blockMsg.prefix));
   }
 
-  void _handleBlockRequest(String peerId, bitswap.Wantlist_Entry entry) {
-    final blockId = base64.encode(entry.block);
-    
-    // Check if we have the requested block locally
-    _datastore.get(blockId).then((block) {
-      if (block != null) {
-        print('Sending requested block $blockId to $peerId.');
-        _sendBlock(peerId, block.data);
-      } else if (entry.sendDontHave) {
-        _sendDontHave(peerId, entry);
-      }
-    });
-  }
+  /// Handles requests for blocks from peers.
+  void handleWantBlock(String peerId, bitswap.Wantlist.Entry entry) {
+   final blockId = base64.encode(entry.block);
 
-  void _handleHaveRequest(String peerId, bitswap.Wantlist_Entry entry) {
-    final blockId = base64.encode(entry.block);
-    
-   if (_ledger.hasBlock(blockId)) { 
-     print('Responding to have request for block $blockId from $peerId.'); 
-     _sendHave(peerId, entry); 
-   } else if (entry.sendDontHave) { 
-     _sendDontHave(peerId, entry); 
-   } 
+   // Check if we have the requested block locally
+   _datastore.get(blockId).then((block) {
+     if (block != null) { 
+       print('Sending requested block $blockId to $peerId.'); 
+       sendBlock(peerId, block.data); 
+     } else if (entry.sendDontHave) { 
+       sendDontHave(peerId, entry); 
+     } 
+   });
 }
 
-void sendBlock(String peerId, Uint8List data) { 
+Future<void> sendBlock(String peerId, Uint8List data) async { 
    final message = bitswap.Message() 
-     ..wantlist = bitswap.Wantlist() 
-     ..payload.add(bitswap.BlockMsg(data: data)); 
-
-   // Send using router's send method 
+     ..payload.add(bitswap.BlockMsg(
+       prefix: Uint8List.fromList(utf8.encode(data.sublist(0, min(data.length, maxPrefixLength)).toString())), 
+       data: data,
+     ));
    await send(peerId, message); 
 }
 
-void addPeer(String peerId) { 
+Future<void> sendWantlist(String peerId, bitswap.Wantlist.Entry entry) async {
+   final message = bitswap.Message()
+     ..wantlist = bitswap.Wantlist()
+     ..wantlist.entries.add(entry);
+   await send(peerId, message);
+}
+
+void addPeer(PeerId peerId) { 
    _peers.add(peerId); 
-   print('Peer $peerId added to Bitswap network.'); 
+   print('Peer ${peerId.toBase58()} added to Bitswap network.'); 
 }
 
-void removePeer(String peerId) { 
+void removePeer(PeerId peerId) { 
    _peers.remove(peerId); 
-   print('Peer $peerId removed from Bitswap network.'); 
+   print('Peer ${peerId.toBase58()} removed from Bitswap network.'); 
 }
 
-void handleWantHave(String cid, p2p.Peer peer) { /* Implementation */ }
-void handleWantBlock(String cid, p2p.Peer peer) { /* Implementation */ }
-void handleBlock(bitswap.BlockMsg blockMsg, p2p.Peer peer) { /* Implementation */ }
-void handleHave(String cid, p2p.Peer peer) { /* Implementation */ }
-void handleCancel(String cid, p2p.Peer peer) { /* Implementation */ }
+// --- Handlers for other message types ---
+
+/// Handles incoming "have" requests from peers.
+void handleHave(String peerId, bitswap.Wantlist.Entry entry) {
+   final blockId = base64.encode(entry.block); 
+
+   // Check if we have the requested block in our ledger
+   if (_ledger.hasBlock(blockId)) { 
+     print('Responding to have request for block $blockId from $peerId.'); 
+     sendHave(peerId, entry); 
+   } else if (entry.sendDontHave) { 
+     sendDontHave(peerId, entry); 
+   } 
+}
+
+/// Handles cancel requests from peers.
+void handleCancel(String peerId, bitswap.Wantlist.Entry entry) {
+   final blockId = base64.encode(entry.block); 
+
+   // Log the cancellation
+   print('Received cancel request for block $blockId from $peerId.');
+
+   // Remove the block from our wantlist or any pending requests
+   _removeFromWantlist(blockId, peerId);
+}
+
+/// Removes a block from the wantlist or pending requests.
+void _removeFromWantlist(String blockId, String peerId) {
+   if (_peers.contains(Peer.fromBase58(peerId))) { // Check if peer exists in local list
+     print('Removing block $blockId from wantlist for peer $peerId.');
+     // Implement actual removal logic based on your data structures here
+   } else {
+     print('Peer $peerId not found in local peers list.');
+   }
+}
 
 // Helper function to send a Bitswap message to a peer
-void send(String peerId, bitswap.Message message) async { /* Implementation */ }
+Future<void> send(String peerId, bitswap.Message message) async { 
+   try { 
+       await _router.sendMessage(peerId, message.writeToBuffer()); 
+   } catch (e) { 
+       print('Error sending message to $peerId: $e'); 
+   } 
 }
