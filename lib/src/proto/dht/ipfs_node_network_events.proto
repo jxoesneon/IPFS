@@ -1,4 +1,4 @@
-// lib/src/proto/ipfs_node_network_events.proto
+// lib/src/proto/dht/ipfs_node_network_events.proto
 syntax = "proto3";
 
 package ipfs.core.ipfs_node;
@@ -19,191 +19,239 @@ message NetworkEvent {
     DHTQueryCompletedEvent dht_query_completed = 10;
     DHTValueFoundEvent dht_value_found = 11;
     DHTValueProvidedEvent dht_value_provided = 12;
-    PubsubMessagePublishedEvent pubsub_message_published = 13;
-    PubsubMessageReceivedEvent pubsub_message_received = 14;
-    PubsubSubscriptionCreatedEvent pubsub_subscription_created = 15;
-    PubsubSubscriptionCancelledEvent pubsub_subscription_cancelled = 16;
-    CircuitRelayCreatedEvent circuit_relay_created = 17;
-    CircuitRelayClosedEvent circuit_relay_closed = 18;
-    CircuitRelayTrafficEvent circuit_relay_traffic = 19;
-    CircuitRelayFailedEvent circuit_relay_failed = 20;
-    NodeStartedEvent node_started = 21;
-    NodeStoppedEvent node_stopped = 22;
-    ErrorEvent error = 23;
-    NetworkChangedEvent network_changed = 24;
-    DHTProviderAddedEvent dht_provider_added = 25; // New event
-    DHTProviderQueriedEvent dht_provider_queried = 26; // New event
-    StreamStartedEvent stream_started = 27; // New event
-    StreamEndedEvent stream_ended = 28; // New event
-    PeerDiscoveredEvent peer_discovered = 29; // New event
-    CircuitRelayDataReceivedEvent circuit_relay_data_received = 30; // New event
-    CircuitRelayDataSentEvent circuit_relay_data_sent = 31; // New event
-    ResourceLimitExceededEvent resource_limit_exceeded = 32; // New event
-    SystemAlertEvent system_alert = 33; // New event
+    DHTValueNotFoundEvent dht_value_not_found = 13; // Added event
+    PubsubMessagePublishedEvent pubsub_message_published = 14;
+    PubsubMessageReceivedEvent pubsub_message_received = 15;
+    PubsubSubscriptionCreatedEvent pubsub_subscription_created = 16;
+    PubsubSubscriptionCancelledEvent pubsub_subscription_cancelled = 17;
+    CircuitRelayCreatedEvent circuit_relay_created = 18;
+    CircuitRelayClosedEvent circuit_relay_closed = 19;
+    CircuitRelayTrafficEvent circuit_relay_traffic = 20;
+    CircuitRelayFailedEvent circuit_relay_failed = 21;
+    NodeStartedEvent node_started = 22;
+    NodeStoppedEvent node_stopped = 23;
+    NodeErrorEvent error = 24; // Renamed for consistency
+    NetworkStatusChangedEvent network_changed = 25; // Renamed for consistency
+    DHTProviderAddedEvent dht_provider_added = 26;
+    DHTProviderQueriedEvent dht_provider_queried = 27; 
+    StreamStartedEvent stream_started = 28;
+    StreamEndedEvent stream_ended = 29;
+    PeerDiscoveredEvent peer_discovered = 30; 
+    CircuitRelayDataReceivedEvent circuit_relay_data_received = 31; 
+    CircuitRelayDataSentEvent circuit_relay_data_sent = 32;
+    ResourceLimitExceededEvent resource_limit_exceeded = 33; 
+    SystemAlertEvent system_alert = 34; 
   }
 }
 
 // Event message definitions:
-
 message PeerConnectedEvent {
   string peer_id = 1; // ID of the connected peer
   string multiaddress = 2; // Multiaddress of the connected peer
 }
-
 message PeerDisconnectedEvent {
   string peer_id = 1; // ID of the disconnected peer
   string reason = 2; // Optional reason for disconnection
 }
-
 message ConnectionAttemptedEvent {
   string peer_id = 1; // ID of the peer being connected to
   bool success = 2; // Indicates if the connection was successful
 }
-
 message ConnectionFailedEvent {
   string peer_id = 1; // ID of the peer that failed to connect
   string reason = 2; // Reason for connection failure
 }
-
 message MessageReceivedEvent {
   string peer_id = 1; // ID of the sender
   bytes message_content = 2; // Content of the received message
 }
-
 message MessageSentEvent {
   string peer_id = 1; // ID of the recipient
   bytes message_content = 2; // Content of the sent message
 }
-
 message BlockReceivedEvent {
   string cid = 1; // CID of the received block
   string peer_id = 2; // Source of the block
 }
-
 message BlockSentEvent {
   string cid = 1; // CID of the sent block
   string peer_id = 2; // Destination of the block
 }
-
 message DHTQueryStartedEvent {
   string query_type = 1; // Type of DHT query (e.g., find providers)
   string target_key = 2; // Key being queried in DHT 
 }
-
 message DHTQueryCompletedEvent {
   string query_type = 1; // Type of DHT query 
   string target_key = 2; // Key that was queried 
   repeated string results = 3; // List of results from query 
 }
-
 message DHTValueFoundEvent {
   string key = 1; // Key that was found 
   bytes value = 2; // Value associated with key 
   string peer_id = 3; // Provider of value 
 }
-
 message DHTValueNotFoundEvent {
   string key = 1; // Key that was not found
 }
-
 message DHTValueProvidedEvent {
   string key = 1; // Key that was provided 
   bytes value = 2; // Value associated with key 
 }
-
 message DHTProviderAddedEvent {
   string key = 1; // Key that was added as a provider 
   string peer_id = 2; // Provider peer ID
 }
-
 message DHTProviderQueriedEvent {
   string key = 1; // Key that was queried for providers
   repeated string providers = 2; // List of provider peer IDs 
 }
-
 message PubsubMessagePublishedEvent {
   string topic = 1; // Topic to which message was published 
   bytes message_content = 2; // Content of published message 
 }
-
 message PubsubMessageReceivedEvent {
   string topic = 1; // Topic from which message was received 
   bytes message_content = 2; // Content of received message 
   string peer_id = 3; // Sender of the message 
 }
-
 message PubsubSubscriptionCreatedEvent {
   string topic = 1; // Topic that was subscribed to 
 }
-
 message PubsubSubscriptionCancelledEvent {
   string topic = 1; // Topic that was unsubscribed from 
 }
-
 message CircuitRelayCreatedEvent {
   string relay_address = 1; // Address of created relay 
 }
-
 message CircuitRelayClosedEvent {
   string relay_address = 1; // Address of closed relay 
   string reason = 2; // Optional reason for closure 
 }
-
 message CircuitRelayTrafficEvent {
   string relay_address = 1; // Address of relay where traffic occurred 
   int64 data_size = 2; // Amount of data relayed in bytes 
 }
-
 message CircuitRelayDataReceivedEvent {
   string relay_address = 1; // Address of relay where data was received 
   int64 data_size = 2; // Size of received data in bytes
 }
-
 message CircuitRelayDataSentEvent {
   string relay_address = 1; // Address of relay where data was sent
   int64 data_size = 2; // Size of sent data in bytes
 }
-
 message CircuitRelayFailedEvent {
   string relay_address = 1; // Address of the relay that failed
   string reason = 2; // Optional reason for the failure
 }
-
 message StreamStartedEvent {
   string stream_id = 1; // ID of the stream started
   string peer_id = 2; // ID of the peer for the stream
 }
-
 message StreamEndedEvent {
   string stream_id = 1; // ID of the stream ended
   string peer_id = 2; // ID of the peer for the stream
   string reason = 3; // Optional reason for ending
 }
-
 message PeerDiscoveredEvent {
   string peer_id = 1; // ID of the discovered peer
 }
-
 message NodeStartedEvent {}
-
 message NodeStoppedEvent {}
 
-message ErrorEvent {
-  string error_type = 1; // Type/category of error (e.g., network, protocol) 
-  string message = 2; // Description/message about error encountered 
-  string stack_trace = 3; // Optional stack trace for debugging purposes 
-}
+message NodeErrorEvent {
+  enum ErrorType {
+    UNKNOWN = 0;
 
-message NetworkChangedEvent {
-  string change_type = 1; // Type of network change (e.g., IP address change)
-}
+    // From IPFS Core API spec (Error Codes section)
+    INVALID_REQUEST = 1;  // Request was invalid (e.g., invalid CID)
+    NOT_FOUND = 2;        // Resource not found (e.g., block, object)
+    METHOD_NOT_FOUND = 3; // API method not found
+    INTERNAL_ERROR = 4;   // Internal server error
 
+    // From libp2p specs (general categories)
+    NETWORK = 5;          // General network-related errors
+    PROTOCOL = 6;        // Errors related to IPFS or libp2p protocols
+    SECURITY = 7;        // Security-related errors (e.g., encryption)
+
+    // More specific errors (can be expanded)
+    DATASTORE = 8;       // Errors related to the data storage
+  }
+
+  ErrorType error_type = 1;  // Type/category of error
+  string message = 2;        // Description/message about the error
+  string stack_trace = 3;    // Optional stack trace for debugging
+  string source = 4;         // Source of the error (e.g., component)
+}
+message NetworkStatusChangedEvent {
+  enum ChangeType {
+    UNKNOWN = 0;
+
+    // Connectivity Changes (generalized)
+    ONLINE = 1; 
+    OFFLINE = 2;
+    CONNECTIVITY_CHANGED = 3; // A more general event for any connectivity change
+
+    // Swarm Changes
+    SWARM_PEER_JOINED = 4;
+    SWARM_PEER_LEFT = 5; 
+
+    // Node Lifecycle
+    NODE_STARTED = 6;
+    NODE_STOPPED = 7;
+
+    // Interface Changes
+    INTERFACE_ADDED = 8;
+    INTERFACE_REMOVED = 9;
+    INTERFACE_UP = 10;
+    INTERFACE_DOWN = 11;
+    IP_ADDRESS_CHANGED = 12;
+    IP_ADDRESS_ADDED = 13;
+    IP_ADDRESS_REMOVED = 14;
+
+    // Gateway Changes (from HTTP Gateways spec)
+    GATEWAY_CHANGED = 15;
+    GATEWAY_REACHABLE = 16;
+    GATEWAY_UNREACHABLE = 17;
+
+    // Firewall Changes
+    FIREWALL_CHANGED = 18; 
+    FIREWALL_BLOCKING = 19;
+    FIREWALL_ALLOWING = 20;
+
+    // NAT Changes
+    NAT_TYPE_CHANGED = 21;
+    NAT_PORT_MAPPING_CHANGED = 22;
+
+    // DNS Changes (related to Routing V1 spec)
+    DNS_RESOLVED = 23;
+    DNS_FAILED = 24;
+
+    // Other
+    EXTERNAL_ADDRESS_CHANGED = 25; // Change in the publicly visible address
+    BANDWIDTH_CHANGED = 26; // Significant change in network bandwidth
+
+    // Routing Changes (from Routing V1 spec)
+    ROUTING_CHANGED = 27; // E.g., switch between DHT, delegated routing
+    CONTENT_ROUTING_CHANGED = 28; // Changes in content routing strategy
+    PEER_ROUTING_CHANGED = 29; // Changes in peer routing strategy
+
+    // Connection Changes (from libp2p specs)
+    CONNECTION_UPGRADED = 30; // E.g., to a secure or multiplexed connection
+    CONNECTION_PRUNED = 31; //  A connection was closed due to inactivity or resource limits
+
+    // Protocol Changes (from libp2p specs)
+    PROTOCOL_AVAILABLE = 32; // A new protocol became supported
+    PROTOCOL_UNAVAILABLE = 33; // A previously supported protocol is no longer available
+  }
+  ChangeType change_type = 1; // Type of network change 
+}
 message ResourceLimitExceededEvent {
   string resource_type = 1; // Type of resource that was exceeded (e.g., memory)
   string message = 2; // Description of the exceeded limit
 }
-
 message SystemAlertEvent {
   string alert_type = 1; // Type of system alert (e.g., high CPU usage)
   string message = 2; // Description of the alert
 }
+
