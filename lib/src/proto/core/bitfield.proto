@@ -1,4 +1,4 @@
-// lib/src/proto/bitfield.proto
+// lib/src/proto/core/bitfield.proto
 syntax = "proto3";
 
 package ipfs.core.data_structures;
