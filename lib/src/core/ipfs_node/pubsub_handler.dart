@@ -1,7 +1,9 @@
 // lib/src/core/ipfs_node/pubsub_handler.dart
 
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
 import '../../utils/dnslink_resolver.dart';
 import '/../src/protocols/pubsub/pubsub_client.dart';
 import '../data_structures/node_stats.dart'; // Assuming you have a NodeStats class
@@ -10,24 +12,24 @@ import '/../src/core/ipfs_node/ipfs_node_network_events.dart'; // Import network
 /// Handles PubSub operations for an IPFS node.
 class PubSubHandler {
   final PubSubClient _pubSubClient;
-  final IpfsNodeNetworkEvents _networkEvents; // Add reference to network events
+  final IpfsNodeNetworkEvents _networkEvents; // Reference to network events
 
-  // Update the constructor to accept both required parameters
+  /// Constructs a [PubSubHandler] with the provided router, peer ID, and network events.
   PubSubHandler(P2plibRouter router, String peerId, this._networkEvents)
-      : _pubSubClient = PubSubClient(router, peerId); 
+      : _pubSubClient = PubSubClient(router, peerId);
 
-  /// Starts the PubSub client.
+  /// Starts the PubSub client and listens for incoming messages.
   Future<void> start() async {
     try {
       await _pubSubClient.start();
       print('PubSub client started.');
 
-      // Listen for network events related to PubSub
+      // Listen for various network events
       _networkEvents.networkEvents.listen((event) {
         if (event.hasPubsubMessageReceived()) {
-          final message = event.pubsubMessageReceived.messageContent;
-          print('Received message on topic ${event.pubsubMessageReceived.topic}: $message');
+          _handlePubsubMessage(event.pubsubMessageReceived);
         }
+        // Add more event handlers as needed
       });
     } catch (e) {
       print('Error starting PubSub client: $e');
@@ -67,7 +69,9 @@ class PubSubHandler {
   /// Publishes a message to a PubSub topic.
   Future<void> publish(String topic, String message) async {
     try {
-      await _pubSubClient.publish(topic, message);
+      // Convert message to Uint8List for compliance with IPFS specifications
+      final messageBytes = utf8.encode(message);
+      await _pubSubClient.publish(topic, Uint8List.fromList(messageBytes) as String);
       print('Published message to topic: $topic');
     } catch (e) {
       print('Error publishing message to topic $topic: $e');
@@ -77,11 +81,8 @@ class PubSubHandler {
   /// Handles incoming messages on a subscribed topic.
   void onMessage(String topic, Function(String) handler) {
     try {
-      _pubSubClient.onMessage.listen((message) { 
-        // Decode the message if necessary
-        final decodedMessage = utf8.decode(message as List<int>);
-
-        // Process the decoded message
+      _pubSubClient.onMessage.listen((messageBytes) { 
+        final decodedMessage = utf8.decode(messageBytes as List<int>);
         handler(decodedMessage);
         print('Processed message on topic: $topic');
       });
@@ -116,5 +117,14 @@ class PubSubHandler {
       print('Error retrieving node statistics: $e');
       throw Exception('Failed to retrieve node statistics.');
     }
+  }
+
+  /// Handles a received Pubsub message event.
+  void _handlePubsubMessage(PubsubMessageReceivedEvent event) {
+    final message = utf8.decode(event.messageContent);
+    print('Received message on topic ${event.topic}: $message');
+    
+    // Further processing of the message can be done here
+    // For example, dispatching it to specific handlers based on the topic
   }
 }
