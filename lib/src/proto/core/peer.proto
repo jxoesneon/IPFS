@@ -1,0 +1,12 @@
+// lib/src/proto/core/peer.proto
+syntax = "proto3";
+
+package ipfs.core.data_structures;
+
+// Represents a peer in the IPFS network.
+message PeerProto {
+    string id = 1; // Unique identifier for the peer
+    repeated string addresses = 2; // List of multiaddresses for the peer
+    int64 latency = 3; // Estimated latency to the peer (in milliseconds)
+    string agent_version = 4; // Version of the IPFS agent running on the peer
+}
