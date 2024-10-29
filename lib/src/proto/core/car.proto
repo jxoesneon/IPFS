@@ -1,10 +1,10 @@
-// lib/src/proto/car.proto
+// lib/src/proto/core/car.proto
 
 syntax = "proto3";
 
 package ipfs.core.data_structures;
 
-import "block.proto"; // Import the BlockProto definition
+import "core/block.proto"; // Import the BlockProto definition
 
 // Represents a Content Addressable Archive (CAR).
 message CarProto {
