@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: bucket_management.proto
+//  source: dht/bucket_management.proto
 //
 // @dart = 2.12
 

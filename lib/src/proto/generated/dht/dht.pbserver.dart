@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: dht.proto
+//  source: dht/dht.proto
 //
 // @dart = 2.12
 

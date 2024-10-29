@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: helpers.proto
+//  source: dht/helpers.proto
 //
 // @dart = 2.12
 

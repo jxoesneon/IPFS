@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: remove_peer.proto
+//  source: dht/remove_peer.proto
 //
 // @dart = 2.12
 

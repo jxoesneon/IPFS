@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: ipfs_node_network_events.proto
+//  source: dht/ipfs_node_network_events.proto
 //
 // @dart = 2.12
 

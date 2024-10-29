@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: node_stats.proto
+//  source: core/node_stats.proto
 //
 // @dart = 2.12
 

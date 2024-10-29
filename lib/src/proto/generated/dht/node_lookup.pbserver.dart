@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: node_lookup.proto
+//  source: dht/node_lookup.proto
 //
 // @dart = 2.12
 

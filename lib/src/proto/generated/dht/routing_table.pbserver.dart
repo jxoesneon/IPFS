@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: routing_table.proto
+//  source: dht/routing_table.proto
 //
 // @dart = 2.12
 

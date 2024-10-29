@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: ipfs_node_network_events.proto
+//  source: dht/ipfs_node_network_events.proto
 //
 // @dart = 2.12
 
@@ -13,6 +13,10 @@ import 'dart:core' as $core;
 
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
+
+import 'ipfs_node_network_events.pbenum.dart';
+
+export 'ipfs_node_network_events.pbenum.dart';
 
 enum NetworkEvent_Event {
   peerConnected, 
@@ -27,6 +31,7 @@ enum NetworkEvent_Event {
   dhtQueryCompleted, 
   dhtValueFound, 
   dhtValueProvided, 
+  dhtValueNotFound, 
   pubsubMessagePublished, 
   pubsubMessageReceived, 
   pubsubSubscriptionCreated, 
@@ -66,6 +71,7 @@ class NetworkEvent extends $pb.GeneratedMessage {
     DHTQueryCompletedEvent? dhtQueryCompleted,
     DHTValueFoundEvent? dhtValueFound,
     DHTValueProvidedEvent? dhtValueProvided,
+    DHTValueNotFoundEvent? dhtValueNotFound,
     PubsubMessagePublishedEvent? pubsubMessagePublished,
     PubsubMessageReceivedEvent? pubsubMessageReceived,
     PubsubSubscriptionCreatedEvent? pubsubSubscriptionCreated,
@@ -76,8 +82,8 @@ class NetworkEvent extends $pb.GeneratedMessage {
     CircuitRelayFailedEvent? circuitRelayFailed,
     NodeStartedEvent? nodeStarted,
     NodeStoppedEvent? nodeStopped,
-    ErrorEvent? error,
-    NetworkChangedEvent? networkChanged,
+    NodeErrorEvent? error,
+    NetworkStatusChangedEvent? networkChanged,
     DHTProviderAddedEvent? dhtProviderAdded,
     DHTProviderQueriedEvent? dhtProviderQueried,
     StreamStartedEvent? streamStarted,
@@ -124,6 +130,9 @@ class NetworkEvent extends $pb.GeneratedMessage {
     }
     if (dhtValueProvided != null) {
       $result.dhtValueProvided = dhtValueProvided;
+    }
+    if (dhtValueNotFound != null) {
+      $result.dhtValueNotFound = dhtValueNotFound;
     }
     if (pubsubMessagePublished != null) {
       $result.pubsubMessagePublished = pubsubMessagePublished;
@@ -207,31 +216,32 @@ class NetworkEvent extends $pb.GeneratedMessage {
     10 : NetworkEvent_Event.dhtQueryCompleted,
     11 : NetworkEvent_Event.dhtValueFound,
     12 : NetworkEvent_Event.dhtValueProvided,
-    13 : NetworkEvent_Event.pubsubMessagePublished,
-    14 : NetworkEvent_Event.pubsubMessageReceived,
-    15 : NetworkEvent_Event.pubsubSubscriptionCreated,
-    16 : NetworkEvent_Event.pubsubSubscriptionCancelled,
-    17 : NetworkEvent_Event.circuitRelayCreated,
-    18 : NetworkEvent_Event.circuitRelayClosed,
-    19 : NetworkEvent_Event.circuitRelayTraffic,
-    20 : NetworkEvent_Event.circuitRelayFailed,
-    21 : NetworkEvent_Event.nodeStarted,
-    22 : NetworkEvent_Event.nodeStopped,
-    23 : NetworkEvent_Event.error,
-    24 : NetworkEvent_Event.networkChanged,
-    25 : NetworkEvent_Event.dhtProviderAdded,
-    26 : NetworkEvent_Event.dhtProviderQueried,
-    27 : NetworkEvent_Event.streamStarted,
-    28 : NetworkEvent_Event.streamEnded,
-    29 : NetworkEvent_Event.peerDiscovered,
-    30 : NetworkEvent_Event.circuitRelayDataReceived,
-    31 : NetworkEvent_Event.circuitRelayDataSent,
-    32 : NetworkEvent_Event.resourceLimitExceeded,
-    33 : NetworkEvent_Event.systemAlert,
+    13 : NetworkEvent_Event.dhtValueNotFound,
+    14 : NetworkEvent_Event.pubsubMessagePublished,
+    15 : NetworkEvent_Event.pubsubMessageReceived,
+    16 : NetworkEvent_Event.pubsubSubscriptionCreated,
+    17 : NetworkEvent_Event.pubsubSubscriptionCancelled,
+    18 : NetworkEvent_Event.circuitRelayCreated,
+    19 : NetworkEvent_Event.circuitRelayClosed,
+    20 : NetworkEvent_Event.circuitRelayTraffic,
+    21 : NetworkEvent_Event.circuitRelayFailed,
+    22 : NetworkEvent_Event.nodeStarted,
+    23 : NetworkEvent_Event.nodeStopped,
+    24 : NetworkEvent_Event.error,
+    25 : NetworkEvent_Event.networkChanged,
+    26 : NetworkEvent_Event.dhtProviderAdded,
+    27 : NetworkEvent_Event.dhtProviderQueried,
+    28 : NetworkEvent_Event.streamStarted,
+    29 : NetworkEvent_Event.streamEnded,
+    30 : NetworkEvent_Event.peerDiscovered,
+    31 : NetworkEvent_Event.circuitRelayDataReceived,
+    32 : NetworkEvent_Event.circuitRelayDataSent,
+    33 : NetworkEvent_Event.resourceLimitExceeded,
+    34 : NetworkEvent_Event.systemAlert,
     0 : NetworkEvent_Event.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NetworkEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34])
     ..aOM<PeerConnectedEvent>(1, _omitFieldNames ? '' : 'peerConnected', subBuilder: PeerConnectedEvent.create)
     ..aOM<PeerDisconnectedEvent>(2, _omitFieldNames ? '' : 'peerDisconnected', subBuilder: PeerDisconnectedEvent.create)
     ..aOM<ConnectionAttemptedEvent>(3, _omitFieldNames ? '' : 'connectionAttempted', subBuilder: ConnectionAttemptedEvent.create)
@@ -244,27 +254,28 @@ class NetworkEvent extends $pb.GeneratedMessage {
     ..aOM<DHTQueryCompletedEvent>(10, _omitFieldNames ? '' : 'dhtQueryCompleted', subBuilder: DHTQueryCompletedEvent.create)
     ..aOM<DHTValueFoundEvent>(11, _omitFieldNames ? '' : 'dhtValueFound', subBuilder: DHTValueFoundEvent.create)
     ..aOM<DHTValueProvidedEvent>(12, _omitFieldNames ? '' : 'dhtValueProvided', subBuilder: DHTValueProvidedEvent.create)
-    ..aOM<PubsubMessagePublishedEvent>(13, _omitFieldNames ? '' : 'pubsubMessagePublished', subBuilder: PubsubMessagePublishedEvent.create)
-    ..aOM<PubsubMessageReceivedEvent>(14, _omitFieldNames ? '' : 'pubsubMessageReceived', subBuilder: PubsubMessageReceivedEvent.create)
-    ..aOM<PubsubSubscriptionCreatedEvent>(15, _omitFieldNames ? '' : 'pubsubSubscriptionCreated', subBuilder: PubsubSubscriptionCreatedEvent.create)
-    ..aOM<PubsubSubscriptionCancelledEvent>(16, _omitFieldNames ? '' : 'pubsubSubscriptionCancelled', subBuilder: PubsubSubscriptionCancelledEvent.create)
-    ..aOM<CircuitRelayCreatedEvent>(17, _omitFieldNames ? '' : 'circuitRelayCreated', subBuilder: CircuitRelayCreatedEvent.create)
-    ..aOM<CircuitRelayClosedEvent>(18, _omitFieldNames ? '' : 'circuitRelayClosed', subBuilder: CircuitRelayClosedEvent.create)
-    ..aOM<CircuitRelayTrafficEvent>(19, _omitFieldNames ? '' : 'circuitRelayTraffic', subBuilder: CircuitRelayTrafficEvent.create)
-    ..aOM<CircuitRelayFailedEvent>(20, _omitFieldNames ? '' : 'circuitRelayFailed', subBuilder: CircuitRelayFailedEvent.create)
-    ..aOM<NodeStartedEvent>(21, _omitFieldNames ? '' : 'nodeStarted', subBuilder: NodeStartedEvent.create)
-    ..aOM<NodeStoppedEvent>(22, _omitFieldNames ? '' : 'nodeStopped', subBuilder: NodeStoppedEvent.create)
-    ..aOM<ErrorEvent>(23, _omitFieldNames ? '' : 'error', subBuilder: ErrorEvent.create)
-    ..aOM<NetworkChangedEvent>(24, _omitFieldNames ? '' : 'networkChanged', subBuilder: NetworkChangedEvent.create)
-    ..aOM<DHTProviderAddedEvent>(25, _omitFieldNames ? '' : 'dhtProviderAdded', subBuilder: DHTProviderAddedEvent.create)
-    ..aOM<DHTProviderQueriedEvent>(26, _omitFieldNames ? '' : 'dhtProviderQueried', subBuilder: DHTProviderQueriedEvent.create)
-    ..aOM<StreamStartedEvent>(27, _omitFieldNames ? '' : 'streamStarted', subBuilder: StreamStartedEvent.create)
-    ..aOM<StreamEndedEvent>(28, _omitFieldNames ? '' : 'streamEnded', subBuilder: StreamEndedEvent.create)
-    ..aOM<PeerDiscoveredEvent>(29, _omitFieldNames ? '' : 'peerDiscovered', subBuilder: PeerDiscoveredEvent.create)
-    ..aOM<CircuitRelayDataReceivedEvent>(30, _omitFieldNames ? '' : 'circuitRelayDataReceived', subBuilder: CircuitRelayDataReceivedEvent.create)
-    ..aOM<CircuitRelayDataSentEvent>(31, _omitFieldNames ? '' : 'circuitRelayDataSent', subBuilder: CircuitRelayDataSentEvent.create)
-    ..aOM<ResourceLimitExceededEvent>(32, _omitFieldNames ? '' : 'resourceLimitExceeded', subBuilder: ResourceLimitExceededEvent.create)
-    ..aOM<SystemAlertEvent>(33, _omitFieldNames ? '' : 'systemAlert', subBuilder: SystemAlertEvent.create)
+    ..aOM<DHTValueNotFoundEvent>(13, _omitFieldNames ? '' : 'dhtValueNotFound', subBuilder: DHTValueNotFoundEvent.create)
+    ..aOM<PubsubMessagePublishedEvent>(14, _omitFieldNames ? '' : 'pubsubMessagePublished', subBuilder: PubsubMessagePublishedEvent.create)
+    ..aOM<PubsubMessageReceivedEvent>(15, _omitFieldNames ? '' : 'pubsubMessageReceived', subBuilder: PubsubMessageReceivedEvent.create)
+    ..aOM<PubsubSubscriptionCreatedEvent>(16, _omitFieldNames ? '' : 'pubsubSubscriptionCreated', subBuilder: PubsubSubscriptionCreatedEvent.create)
+    ..aOM<PubsubSubscriptionCancelledEvent>(17, _omitFieldNames ? '' : 'pubsubSubscriptionCancelled', subBuilder: PubsubSubscriptionCancelledEvent.create)
+    ..aOM<CircuitRelayCreatedEvent>(18, _omitFieldNames ? '' : 'circuitRelayCreated', subBuilder: CircuitRelayCreatedEvent.create)
+    ..aOM<CircuitRelayClosedEvent>(19, _omitFieldNames ? '' : 'circuitRelayClosed', subBuilder: CircuitRelayClosedEvent.create)
+    ..aOM<CircuitRelayTrafficEvent>(20, _omitFieldNames ? '' : 'circuitRelayTraffic', subBuilder: CircuitRelayTrafficEvent.create)
+    ..aOM<CircuitRelayFailedEvent>(21, _omitFieldNames ? '' : 'circuitRelayFailed', subBuilder: CircuitRelayFailedEvent.create)
+    ..aOM<NodeStartedEvent>(22, _omitFieldNames ? '' : 'nodeStarted', subBuilder: NodeStartedEvent.create)
+    ..aOM<NodeStoppedEvent>(23, _omitFieldNames ? '' : 'nodeStopped', subBuilder: NodeStoppedEvent.create)
+    ..aOM<NodeErrorEvent>(24, _omitFieldNames ? '' : 'error', subBuilder: NodeErrorEvent.create)
+    ..aOM<NetworkStatusChangedEvent>(25, _omitFieldNames ? '' : 'networkChanged', subBuilder: NetworkStatusChangedEvent.create)
+    ..aOM<DHTProviderAddedEvent>(26, _omitFieldNames ? '' : 'dhtProviderAdded', subBuilder: DHTProviderAddedEvent.create)
+    ..aOM<DHTProviderQueriedEvent>(27, _omitFieldNames ? '' : 'dhtProviderQueried', subBuilder: DHTProviderQueriedEvent.create)
+    ..aOM<StreamStartedEvent>(28, _omitFieldNames ? '' : 'streamStarted', subBuilder: StreamStartedEvent.create)
+    ..aOM<StreamEndedEvent>(29, _omitFieldNames ? '' : 'streamEnded', subBuilder: StreamEndedEvent.create)
+    ..aOM<PeerDiscoveredEvent>(30, _omitFieldNames ? '' : 'peerDiscovered', subBuilder: PeerDiscoveredEvent.create)
+    ..aOM<CircuitRelayDataReceivedEvent>(31, _omitFieldNames ? '' : 'circuitRelayDataReceived', subBuilder: CircuitRelayDataReceivedEvent.create)
+    ..aOM<CircuitRelayDataSentEvent>(32, _omitFieldNames ? '' : 'circuitRelayDataSent', subBuilder: CircuitRelayDataSentEvent.create)
+    ..aOM<ResourceLimitExceededEvent>(33, _omitFieldNames ? '' : 'resourceLimitExceeded', subBuilder: ResourceLimitExceededEvent.create)
+    ..aOM<SystemAlertEvent>(34, _omitFieldNames ? '' : 'systemAlert', subBuilder: SystemAlertEvent.create)
     ..hasRequiredFields = false
   ;
 
@@ -425,237 +436,249 @@ class NetworkEvent extends $pb.GeneratedMessage {
   DHTValueProvidedEvent ensureDhtValueProvided() => $_ensure(11);
 
   @$pb.TagNumber(13)
-  PubsubMessagePublishedEvent get pubsubMessagePublished => $_getN(12);
+  DHTValueNotFoundEvent get dhtValueNotFound => $_getN(12);
   @$pb.TagNumber(13)
-  set pubsubMessagePublished(PubsubMessagePublishedEvent v) { setField(13, v); }
+  set dhtValueNotFound(DHTValueNotFoundEvent v) { setField(13, v); }
   @$pb.TagNumber(13)
-  $core.bool hasPubsubMessagePublished() => $_has(12);
+  $core.bool hasDhtValueNotFound() => $_has(12);
   @$pb.TagNumber(13)
-  void clearPubsubMessagePublished() => clearField(13);
+  void clearDhtValueNotFound() => clearField(13);
   @$pb.TagNumber(13)
-  PubsubMessagePublishedEvent ensurePubsubMessagePublished() => $_ensure(12);
+  DHTValueNotFoundEvent ensureDhtValueNotFound() => $_ensure(12);
 
   @$pb.TagNumber(14)
-  PubsubMessageReceivedEvent get pubsubMessageReceived => $_getN(13);
+  PubsubMessagePublishedEvent get pubsubMessagePublished => $_getN(13);
   @$pb.TagNumber(14)
-  set pubsubMessageReceived(PubsubMessageReceivedEvent v) { setField(14, v); }
+  set pubsubMessagePublished(PubsubMessagePublishedEvent v) { setField(14, v); }
   @$pb.TagNumber(14)
-  $core.bool hasPubsubMessageReceived() => $_has(13);
+  $core.bool hasPubsubMessagePublished() => $_has(13);
   @$pb.TagNumber(14)
-  void clearPubsubMessageReceived() => clearField(14);
+  void clearPubsubMessagePublished() => clearField(14);
   @$pb.TagNumber(14)
-  PubsubMessageReceivedEvent ensurePubsubMessageReceived() => $_ensure(13);
+  PubsubMessagePublishedEvent ensurePubsubMessagePublished() => $_ensure(13);
 
   @$pb.TagNumber(15)
-  PubsubSubscriptionCreatedEvent get pubsubSubscriptionCreated => $_getN(14);
+  PubsubMessageReceivedEvent get pubsubMessageReceived => $_getN(14);
   @$pb.TagNumber(15)
-  set pubsubSubscriptionCreated(PubsubSubscriptionCreatedEvent v) { setField(15, v); }
+  set pubsubMessageReceived(PubsubMessageReceivedEvent v) { setField(15, v); }
   @$pb.TagNumber(15)
-  $core.bool hasPubsubSubscriptionCreated() => $_has(14);
+  $core.bool hasPubsubMessageReceived() => $_has(14);
   @$pb.TagNumber(15)
-  void clearPubsubSubscriptionCreated() => clearField(15);
+  void clearPubsubMessageReceived() => clearField(15);
   @$pb.TagNumber(15)
-  PubsubSubscriptionCreatedEvent ensurePubsubSubscriptionCreated() => $_ensure(14);
+  PubsubMessageReceivedEvent ensurePubsubMessageReceived() => $_ensure(14);
 
   @$pb.TagNumber(16)
-  PubsubSubscriptionCancelledEvent get pubsubSubscriptionCancelled => $_getN(15);
+  PubsubSubscriptionCreatedEvent get pubsubSubscriptionCreated => $_getN(15);
   @$pb.TagNumber(16)
-  set pubsubSubscriptionCancelled(PubsubSubscriptionCancelledEvent v) { setField(16, v); }
+  set pubsubSubscriptionCreated(PubsubSubscriptionCreatedEvent v) { setField(16, v); }
   @$pb.TagNumber(16)
-  $core.bool hasPubsubSubscriptionCancelled() => $_has(15);
+  $core.bool hasPubsubSubscriptionCreated() => $_has(15);
   @$pb.TagNumber(16)
-  void clearPubsubSubscriptionCancelled() => clearField(16);
+  void clearPubsubSubscriptionCreated() => clearField(16);
   @$pb.TagNumber(16)
-  PubsubSubscriptionCancelledEvent ensurePubsubSubscriptionCancelled() => $_ensure(15);
+  PubsubSubscriptionCreatedEvent ensurePubsubSubscriptionCreated() => $_ensure(15);
 
   @$pb.TagNumber(17)
-  CircuitRelayCreatedEvent get circuitRelayCreated => $_getN(16);
+  PubsubSubscriptionCancelledEvent get pubsubSubscriptionCancelled => $_getN(16);
   @$pb.TagNumber(17)
-  set circuitRelayCreated(CircuitRelayCreatedEvent v) { setField(17, v); }
+  set pubsubSubscriptionCancelled(PubsubSubscriptionCancelledEvent v) { setField(17, v); }
   @$pb.TagNumber(17)
-  $core.bool hasCircuitRelayCreated() => $_has(16);
+  $core.bool hasPubsubSubscriptionCancelled() => $_has(16);
   @$pb.TagNumber(17)
-  void clearCircuitRelayCreated() => clearField(17);
+  void clearPubsubSubscriptionCancelled() => clearField(17);
   @$pb.TagNumber(17)
-  CircuitRelayCreatedEvent ensureCircuitRelayCreated() => $_ensure(16);
+  PubsubSubscriptionCancelledEvent ensurePubsubSubscriptionCancelled() => $_ensure(16);
 
   @$pb.TagNumber(18)
-  CircuitRelayClosedEvent get circuitRelayClosed => $_getN(17);
+  CircuitRelayCreatedEvent get circuitRelayCreated => $_getN(17);
   @$pb.TagNumber(18)
-  set circuitRelayClosed(CircuitRelayClosedEvent v) { setField(18, v); }
+  set circuitRelayCreated(CircuitRelayCreatedEvent v) { setField(18, v); }
   @$pb.TagNumber(18)
-  $core.bool hasCircuitRelayClosed() => $_has(17);
+  $core.bool hasCircuitRelayCreated() => $_has(17);
   @$pb.TagNumber(18)
-  void clearCircuitRelayClosed() => clearField(18);
+  void clearCircuitRelayCreated() => clearField(18);
   @$pb.TagNumber(18)
-  CircuitRelayClosedEvent ensureCircuitRelayClosed() => $_ensure(17);
+  CircuitRelayCreatedEvent ensureCircuitRelayCreated() => $_ensure(17);
 
   @$pb.TagNumber(19)
-  CircuitRelayTrafficEvent get circuitRelayTraffic => $_getN(18);
+  CircuitRelayClosedEvent get circuitRelayClosed => $_getN(18);
   @$pb.TagNumber(19)
-  set circuitRelayTraffic(CircuitRelayTrafficEvent v) { setField(19, v); }
+  set circuitRelayClosed(CircuitRelayClosedEvent v) { setField(19, v); }
   @$pb.TagNumber(19)
-  $core.bool hasCircuitRelayTraffic() => $_has(18);
+  $core.bool hasCircuitRelayClosed() => $_has(18);
   @$pb.TagNumber(19)
-  void clearCircuitRelayTraffic() => clearField(19);
+  void clearCircuitRelayClosed() => clearField(19);
   @$pb.TagNumber(19)
-  CircuitRelayTrafficEvent ensureCircuitRelayTraffic() => $_ensure(18);
+  CircuitRelayClosedEvent ensureCircuitRelayClosed() => $_ensure(18);
 
   @$pb.TagNumber(20)
-  CircuitRelayFailedEvent get circuitRelayFailed => $_getN(19);
+  CircuitRelayTrafficEvent get circuitRelayTraffic => $_getN(19);
   @$pb.TagNumber(20)
-  set circuitRelayFailed(CircuitRelayFailedEvent v) { setField(20, v); }
+  set circuitRelayTraffic(CircuitRelayTrafficEvent v) { setField(20, v); }
   @$pb.TagNumber(20)
-  $core.bool hasCircuitRelayFailed() => $_has(19);
+  $core.bool hasCircuitRelayTraffic() => $_has(19);
   @$pb.TagNumber(20)
-  void clearCircuitRelayFailed() => clearField(20);
+  void clearCircuitRelayTraffic() => clearField(20);
   @$pb.TagNumber(20)
-  CircuitRelayFailedEvent ensureCircuitRelayFailed() => $_ensure(19);
+  CircuitRelayTrafficEvent ensureCircuitRelayTraffic() => $_ensure(19);
 
   @$pb.TagNumber(21)
-  NodeStartedEvent get nodeStarted => $_getN(20);
+  CircuitRelayFailedEvent get circuitRelayFailed => $_getN(20);
   @$pb.TagNumber(21)
-  set nodeStarted(NodeStartedEvent v) { setField(21, v); }
+  set circuitRelayFailed(CircuitRelayFailedEvent v) { setField(21, v); }
   @$pb.TagNumber(21)
-  $core.bool hasNodeStarted() => $_has(20);
+  $core.bool hasCircuitRelayFailed() => $_has(20);
   @$pb.TagNumber(21)
-  void clearNodeStarted() => clearField(21);
+  void clearCircuitRelayFailed() => clearField(21);
   @$pb.TagNumber(21)
-  NodeStartedEvent ensureNodeStarted() => $_ensure(20);
+  CircuitRelayFailedEvent ensureCircuitRelayFailed() => $_ensure(20);
 
   @$pb.TagNumber(22)
-  NodeStoppedEvent get nodeStopped => $_getN(21);
+  NodeStartedEvent get nodeStarted => $_getN(21);
   @$pb.TagNumber(22)
-  set nodeStopped(NodeStoppedEvent v) { setField(22, v); }
+  set nodeStarted(NodeStartedEvent v) { setField(22, v); }
   @$pb.TagNumber(22)
-  $core.bool hasNodeStopped() => $_has(21);
+  $core.bool hasNodeStarted() => $_has(21);
   @$pb.TagNumber(22)
-  void clearNodeStopped() => clearField(22);
+  void clearNodeStarted() => clearField(22);
   @$pb.TagNumber(22)
-  NodeStoppedEvent ensureNodeStopped() => $_ensure(21);
+  NodeStartedEvent ensureNodeStarted() => $_ensure(21);
 
   @$pb.TagNumber(23)
-  ErrorEvent get error => $_getN(22);
+  NodeStoppedEvent get nodeStopped => $_getN(22);
   @$pb.TagNumber(23)
-  set error(ErrorEvent v) { setField(23, v); }
+  set nodeStopped(NodeStoppedEvent v) { setField(23, v); }
   @$pb.TagNumber(23)
-  $core.bool hasError() => $_has(22);
+  $core.bool hasNodeStopped() => $_has(22);
   @$pb.TagNumber(23)
-  void clearError() => clearField(23);
+  void clearNodeStopped() => clearField(23);
   @$pb.TagNumber(23)
-  ErrorEvent ensureError() => $_ensure(22);
+  NodeStoppedEvent ensureNodeStopped() => $_ensure(22);
 
   @$pb.TagNumber(24)
-  NetworkChangedEvent get networkChanged => $_getN(23);
+  NodeErrorEvent get error => $_getN(23);
   @$pb.TagNumber(24)
-  set networkChanged(NetworkChangedEvent v) { setField(24, v); }
+  set error(NodeErrorEvent v) { setField(24, v); }
   @$pb.TagNumber(24)
-  $core.bool hasNetworkChanged() => $_has(23);
+  $core.bool hasError() => $_has(23);
   @$pb.TagNumber(24)
-  void clearNetworkChanged() => clearField(24);
+  void clearError() => clearField(24);
   @$pb.TagNumber(24)
-  NetworkChangedEvent ensureNetworkChanged() => $_ensure(23);
+  NodeErrorEvent ensureError() => $_ensure(23);
 
   @$pb.TagNumber(25)
-  DHTProviderAddedEvent get dhtProviderAdded => $_getN(24);
+  NetworkStatusChangedEvent get networkChanged => $_getN(24);
   @$pb.TagNumber(25)
-  set dhtProviderAdded(DHTProviderAddedEvent v) { setField(25, v); }
+  set networkChanged(NetworkStatusChangedEvent v) { setField(25, v); }
   @$pb.TagNumber(25)
-  $core.bool hasDhtProviderAdded() => $_has(24);
+  $core.bool hasNetworkChanged() => $_has(24);
   @$pb.TagNumber(25)
-  void clearDhtProviderAdded() => clearField(25);
+  void clearNetworkChanged() => clearField(25);
   @$pb.TagNumber(25)
-  DHTProviderAddedEvent ensureDhtProviderAdded() => $_ensure(24);
+  NetworkStatusChangedEvent ensureNetworkChanged() => $_ensure(24);
 
   @$pb.TagNumber(26)
-  DHTProviderQueriedEvent get dhtProviderQueried => $_getN(25);
+  DHTProviderAddedEvent get dhtProviderAdded => $_getN(25);
   @$pb.TagNumber(26)
-  set dhtProviderQueried(DHTProviderQueriedEvent v) { setField(26, v); }
+  set dhtProviderAdded(DHTProviderAddedEvent v) { setField(26, v); }
   @$pb.TagNumber(26)
-  $core.bool hasDhtProviderQueried() => $_has(25);
+  $core.bool hasDhtProviderAdded() => $_has(25);
   @$pb.TagNumber(26)
-  void clearDhtProviderQueried() => clearField(26);
+  void clearDhtProviderAdded() => clearField(26);
   @$pb.TagNumber(26)
-  DHTProviderQueriedEvent ensureDhtProviderQueried() => $_ensure(25);
+  DHTProviderAddedEvent ensureDhtProviderAdded() => $_ensure(25);
 
   @$pb.TagNumber(27)
-  StreamStartedEvent get streamStarted => $_getN(26);
+  DHTProviderQueriedEvent get dhtProviderQueried => $_getN(26);
   @$pb.TagNumber(27)
-  set streamStarted(StreamStartedEvent v) { setField(27, v); }
+  set dhtProviderQueried(DHTProviderQueriedEvent v) { setField(27, v); }
   @$pb.TagNumber(27)
-  $core.bool hasStreamStarted() => $_has(26);
+  $core.bool hasDhtProviderQueried() => $_has(26);
   @$pb.TagNumber(27)
-  void clearStreamStarted() => clearField(27);
+  void clearDhtProviderQueried() => clearField(27);
   @$pb.TagNumber(27)
-  StreamStartedEvent ensureStreamStarted() => $_ensure(26);
+  DHTProviderQueriedEvent ensureDhtProviderQueried() => $_ensure(26);
 
   @$pb.TagNumber(28)
-  StreamEndedEvent get streamEnded => $_getN(27);
+  StreamStartedEvent get streamStarted => $_getN(27);
   @$pb.TagNumber(28)
-  set streamEnded(StreamEndedEvent v) { setField(28, v); }
+  set streamStarted(StreamStartedEvent v) { setField(28, v); }
   @$pb.TagNumber(28)
-  $core.bool hasStreamEnded() => $_has(27);
+  $core.bool hasStreamStarted() => $_has(27);
   @$pb.TagNumber(28)
-  void clearStreamEnded() => clearField(28);
+  void clearStreamStarted() => clearField(28);
   @$pb.TagNumber(28)
-  StreamEndedEvent ensureStreamEnded() => $_ensure(27);
+  StreamStartedEvent ensureStreamStarted() => $_ensure(27);
 
   @$pb.TagNumber(29)
-  PeerDiscoveredEvent get peerDiscovered => $_getN(28);
+  StreamEndedEvent get streamEnded => $_getN(28);
   @$pb.TagNumber(29)
-  set peerDiscovered(PeerDiscoveredEvent v) { setField(29, v); }
+  set streamEnded(StreamEndedEvent v) { setField(29, v); }
   @$pb.TagNumber(29)
-  $core.bool hasPeerDiscovered() => $_has(28);
+  $core.bool hasStreamEnded() => $_has(28);
   @$pb.TagNumber(29)
-  void clearPeerDiscovered() => clearField(29);
+  void clearStreamEnded() => clearField(29);
   @$pb.TagNumber(29)
-  PeerDiscoveredEvent ensurePeerDiscovered() => $_ensure(28);
+  StreamEndedEvent ensureStreamEnded() => $_ensure(28);
 
   @$pb.TagNumber(30)
-  CircuitRelayDataReceivedEvent get circuitRelayDataReceived => $_getN(29);
+  PeerDiscoveredEvent get peerDiscovered => $_getN(29);
   @$pb.TagNumber(30)
-  set circuitRelayDataReceived(CircuitRelayDataReceivedEvent v) { setField(30, v); }
+  set peerDiscovered(PeerDiscoveredEvent v) { setField(30, v); }
   @$pb.TagNumber(30)
-  $core.bool hasCircuitRelayDataReceived() => $_has(29);
+  $core.bool hasPeerDiscovered() => $_has(29);
   @$pb.TagNumber(30)
-  void clearCircuitRelayDataReceived() => clearField(30);
+  void clearPeerDiscovered() => clearField(30);
   @$pb.TagNumber(30)
-  CircuitRelayDataReceivedEvent ensureCircuitRelayDataReceived() => $_ensure(29);
+  PeerDiscoveredEvent ensurePeerDiscovered() => $_ensure(29);
 
   @$pb.TagNumber(31)
-  CircuitRelayDataSentEvent get circuitRelayDataSent => $_getN(30);
+  CircuitRelayDataReceivedEvent get circuitRelayDataReceived => $_getN(30);
   @$pb.TagNumber(31)
-  set circuitRelayDataSent(CircuitRelayDataSentEvent v) { setField(31, v); }
+  set circuitRelayDataReceived(CircuitRelayDataReceivedEvent v) { setField(31, v); }
   @$pb.TagNumber(31)
-  $core.bool hasCircuitRelayDataSent() => $_has(30);
+  $core.bool hasCircuitRelayDataReceived() => $_has(30);
   @$pb.TagNumber(31)
-  void clearCircuitRelayDataSent() => clearField(31);
+  void clearCircuitRelayDataReceived() => clearField(31);
   @$pb.TagNumber(31)
-  CircuitRelayDataSentEvent ensureCircuitRelayDataSent() => $_ensure(30);
+  CircuitRelayDataReceivedEvent ensureCircuitRelayDataReceived() => $_ensure(30);
 
   @$pb.TagNumber(32)
-  ResourceLimitExceededEvent get resourceLimitExceeded => $_getN(31);
+  CircuitRelayDataSentEvent get circuitRelayDataSent => $_getN(31);
   @$pb.TagNumber(32)
-  set resourceLimitExceeded(ResourceLimitExceededEvent v) { setField(32, v); }
+  set circuitRelayDataSent(CircuitRelayDataSentEvent v) { setField(32, v); }
   @$pb.TagNumber(32)
-  $core.bool hasResourceLimitExceeded() => $_has(31);
+  $core.bool hasCircuitRelayDataSent() => $_has(31);
   @$pb.TagNumber(32)
-  void clearResourceLimitExceeded() => clearField(32);
+  void clearCircuitRelayDataSent() => clearField(32);
   @$pb.TagNumber(32)
-  ResourceLimitExceededEvent ensureResourceLimitExceeded() => $_ensure(31);
+  CircuitRelayDataSentEvent ensureCircuitRelayDataSent() => $_ensure(31);
 
   @$pb.TagNumber(33)
-  SystemAlertEvent get systemAlert => $_getN(32);
+  ResourceLimitExceededEvent get resourceLimitExceeded => $_getN(32);
   @$pb.TagNumber(33)
-  set systemAlert(SystemAlertEvent v) { setField(33, v); }
+  set resourceLimitExceeded(ResourceLimitExceededEvent v) { setField(33, v); }
   @$pb.TagNumber(33)
-  $core.bool hasSystemAlert() => $_has(32);
+  $core.bool hasResourceLimitExceeded() => $_has(32);
   @$pb.TagNumber(33)
-  void clearSystemAlert() => clearField(33);
+  void clearResourceLimitExceeded() => clearField(33);
   @$pb.TagNumber(33)
-  SystemAlertEvent ensureSystemAlert() => $_ensure(32);
+  ResourceLimitExceededEvent ensureResourceLimitExceeded() => $_ensure(32);
+
+  @$pb.TagNumber(34)
+  SystemAlertEvent get systemAlert => $_getN(33);
+  @$pb.TagNumber(34)
+  set systemAlert(SystemAlertEvent v) { setField(34, v); }
+  @$pb.TagNumber(34)
+  $core.bool hasSystemAlert() => $_has(33);
+  @$pb.TagNumber(34)
+  void clearSystemAlert() => clearField(34);
+  @$pb.TagNumber(34)
+  SystemAlertEvent ensureSystemAlert() => $_ensure(33);
 }
 
+/// Event message definitions:
 class PeerConnectedEvent extends $pb.GeneratedMessage {
   factory PeerConnectedEvent({
     $core.String? peerId,
@@ -2486,11 +2509,12 @@ class NodeStoppedEvent extends $pb.GeneratedMessage {
   static NodeStoppedEvent? _defaultInstance;
 }
 
-class ErrorEvent extends $pb.GeneratedMessage {
-  factory ErrorEvent({
-    $core.String? errorType,
+class NodeErrorEvent extends $pb.GeneratedMessage {
+  factory NodeErrorEvent({
+    NodeErrorEvent_ErrorType? errorType,
     $core.String? message,
     $core.String? stackTrace,
+    $core.String? source,
   }) {
     final $result = create();
     if (errorType != null) {
@@ -2502,16 +2526,20 @@ class ErrorEvent extends $pb.GeneratedMessage {
     if (stackTrace != null) {
       $result.stackTrace = stackTrace;
     }
+    if (source != null) {
+      $result.source = source;
+    }
     return $result;
   }
-  ErrorEvent._() : super();
-  factory ErrorEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory ErrorEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  NodeErrorEvent._() : super();
+  factory NodeErrorEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory NodeErrorEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ErrorEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'errorType')
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NodeErrorEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..e<NodeErrorEvent_ErrorType>(1, _omitFieldNames ? '' : 'errorType', $pb.PbFieldType.OE, defaultOrMaker: NodeErrorEvent_ErrorType.UNKNOWN, valueOf: NodeErrorEvent_ErrorType.valueOf, enumValues: NodeErrorEvent_ErrorType.values)
     ..aOS(2, _omitFieldNames ? '' : 'message')
     ..aOS(3, _omitFieldNames ? '' : 'stackTrace')
+    ..aOS(4, _omitFieldNames ? '' : 'source')
     ..hasRequiredFields = false
   ;
 
@@ -2519,27 +2547,27 @@ class ErrorEvent extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  ErrorEvent clone() => ErrorEvent()..mergeFromMessage(this);
+  NodeErrorEvent clone() => NodeErrorEvent()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  ErrorEvent copyWith(void Function(ErrorEvent) updates) => super.copyWith((message) => updates(message as ErrorEvent)) as ErrorEvent;
+  NodeErrorEvent copyWith(void Function(NodeErrorEvent) updates) => super.copyWith((message) => updates(message as NodeErrorEvent)) as NodeErrorEvent;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ErrorEvent create() => ErrorEvent._();
-  ErrorEvent createEmptyInstance() => create();
-  static $pb.PbList<ErrorEvent> createRepeated() => $pb.PbList<ErrorEvent>();
+  static NodeErrorEvent create() => NodeErrorEvent._();
+  NodeErrorEvent createEmptyInstance() => create();
+  static $pb.PbList<NodeErrorEvent> createRepeated() => $pb.PbList<NodeErrorEvent>();
   @$core.pragma('dart2js:noInline')
-  static ErrorEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ErrorEvent>(create);
-  static ErrorEvent? _defaultInstance;
+  static NodeErrorEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NodeErrorEvent>(create);
+  static NodeErrorEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get errorType => $_getSZ(0);
+  NodeErrorEvent_ErrorType get errorType => $_getN(0);
   @$pb.TagNumber(1)
-  set errorType($core.String v) { $_setString(0, v); }
+  set errorType(NodeErrorEvent_ErrorType v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasErrorType() => $_has(0);
   @$pb.TagNumber(1)
@@ -2562,11 +2590,20 @@ class ErrorEvent extends $pb.GeneratedMessage {
   $core.bool hasStackTrace() => $_has(2);
   @$pb.TagNumber(3)
   void clearStackTrace() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get source => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set source($core.String v) { $_setString(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasSource() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSource() => clearField(4);
 }
 
-class NetworkChangedEvent extends $pb.GeneratedMessage {
-  factory NetworkChangedEvent({
-    $core.String? changeType,
+class NetworkStatusChangedEvent extends $pb.GeneratedMessage {
+  factory NetworkStatusChangedEvent({
+    NetworkStatusChangedEvent_ChangeType? changeType,
   }) {
     final $result = create();
     if (changeType != null) {
@@ -2574,12 +2611,12 @@ class NetworkChangedEvent extends $pb.GeneratedMessage {
     }
     return $result;
   }
-  NetworkChangedEvent._() : super();
-  factory NetworkChangedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory NetworkChangedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  NetworkStatusChangedEvent._() : super();
+  factory NetworkStatusChangedEvent.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory NetworkStatusChangedEvent.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NetworkChangedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'changeType')
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NetworkStatusChangedEvent', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'), createEmptyInstance: create)
+    ..e<NetworkStatusChangedEvent_ChangeType>(1, _omitFieldNames ? '' : 'changeType', $pb.PbFieldType.OE, defaultOrMaker: NetworkStatusChangedEvent_ChangeType.UNKNOWN, valueOf: NetworkStatusChangedEvent_ChangeType.valueOf, enumValues: NetworkStatusChangedEvent_ChangeType.values)
     ..hasRequiredFields = false
   ;
 
@@ -2587,27 +2624,27 @@ class NetworkChangedEvent extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  NetworkChangedEvent clone() => NetworkChangedEvent()..mergeFromMessage(this);
+  NetworkStatusChangedEvent clone() => NetworkStatusChangedEvent()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  NetworkChangedEvent copyWith(void Function(NetworkChangedEvent) updates) => super.copyWith((message) => updates(message as NetworkChangedEvent)) as NetworkChangedEvent;
+  NetworkStatusChangedEvent copyWith(void Function(NetworkStatusChangedEvent) updates) => super.copyWith((message) => updates(message as NetworkStatusChangedEvent)) as NetworkStatusChangedEvent;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static NetworkChangedEvent create() => NetworkChangedEvent._();
-  NetworkChangedEvent createEmptyInstance() => create();
-  static $pb.PbList<NetworkChangedEvent> createRepeated() => $pb.PbList<NetworkChangedEvent>();
+  static NetworkStatusChangedEvent create() => NetworkStatusChangedEvent._();
+  NetworkStatusChangedEvent createEmptyInstance() => create();
+  static $pb.PbList<NetworkStatusChangedEvent> createRepeated() => $pb.PbList<NetworkStatusChangedEvent>();
   @$core.pragma('dart2js:noInline')
-  static NetworkChangedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NetworkChangedEvent>(create);
-  static NetworkChangedEvent? _defaultInstance;
+  static NetworkStatusChangedEvent getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NetworkStatusChangedEvent>(create);
+  static NetworkStatusChangedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get changeType => $_getSZ(0);
+  NetworkStatusChangedEvent_ChangeType get changeType => $_getN(0);
   @$pb.TagNumber(1)
-  set changeType($core.String v) { $_setString(0, v); }
+  set changeType(NetworkStatusChangedEvent_ChangeType v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasChangeType() => $_has(0);
   @$pb.TagNumber(1)

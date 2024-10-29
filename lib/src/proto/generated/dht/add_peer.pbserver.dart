@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: add_peer.proto
+//  source: dht/add_peer.proto
 //
 // @dart = 2.12
 

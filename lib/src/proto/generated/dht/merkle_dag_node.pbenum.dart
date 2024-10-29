@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: merkle_dag_node.proto
+//  source: dht/merkle_dag_node.proto
 //
 // @dart = 2.12
 

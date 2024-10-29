@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: routing_table.proto
+//  source: dht/routing_table.proto
 //
 // @dart = 2.12
 
@@ -13,11 +13,11 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'kademlia_node.pb.dart' as $0;
+import 'kademlia_node.pb.dart' as $2;
 
 class RoutingTable extends $pb.GeneratedMessage {
   factory RoutingTable({
-    $core.Map<$core.String, $0.KademliaNode>? entries,
+    $core.Map<$core.String, $2.KademliaNode>? entries,
   }) {
     final $result = create();
     if (entries != null) {
@@ -30,7 +30,7 @@ class RoutingTable extends $pb.GeneratedMessage {
   factory RoutingTable.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RoutingTable', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.routing_table'), createEmptyInstance: create)
-    ..m<$core.String, $0.KademliaNode>(1, _omitFieldNames ? '' : 'entries', entryClassName: 'RoutingTable.EntriesEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OM, valueCreator: $0.KademliaNode.create, valueDefaultOrMaker: $0.KademliaNode.getDefault, packageName: const $pb.PackageName('ipfs.dht.routing_table'))
+    ..m<$core.String, $2.KademliaNode>(1, _omitFieldNames ? '' : 'entries', entryClassName: 'RoutingTable.EntriesEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OM, valueCreator: $2.KademliaNode.create, valueDefaultOrMaker: $2.KademliaNode.getDefault, packageName: const $pb.PackageName('ipfs.dht.routing_table'))
     ..hasRequiredFields = false
   ;
 
@@ -58,7 +58,7 @@ class RoutingTable extends $pb.GeneratedMessage {
   /// Represents the routing table entries.
   /// The key is the PeerId string, and the value is the associated KademliaNode.
   @$pb.TagNumber(1)
-  $core.Map<$core.String, $0.KademliaNode> get entries => $_getMap(0);
+  $core.Map<$core.String, $2.KademliaNode> get entries => $_getMap(0);
 }
 
 

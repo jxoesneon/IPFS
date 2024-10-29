@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: node.proto
+//  source: core/node.proto
 //
 // @dart = 2.12
 

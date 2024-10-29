@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: bitfield.proto
+//  source: core/bitfield.proto
 //
 // @dart = 2.12
 

@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: operation_log.proto
+//  source: core/operation_log.proto
 //
 // @dart = 2.12
 
@@ -15,7 +15,7 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'cid.pb.dart' as $0;
-import 'node_type.pbenum.dart' as $1;
+import 'node_type.pbenum.dart' as $5;
 
 /// Represents a log entry for an operation performed on the IPFS node.
 class OperationLogEntry extends $pb.GeneratedMessage {
@@ -24,7 +24,7 @@ class OperationLogEntry extends $pb.GeneratedMessage {
     $core.String? operation,
     $core.String? details,
     $0.CIDProto? cid,
-    $1.NodeTypeProto? nodeType,
+    $5.NodeTypeProto? nodeType,
   }) {
     final $result = create();
     if (timestamp != null) {
@@ -53,7 +53,7 @@ class OperationLogEntry extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'operation')
     ..aOS(3, _omitFieldNames ? '' : 'details')
     ..aOM<$0.CIDProto>(4, _omitFieldNames ? '' : 'cid', subBuilder: $0.CIDProto.create)
-    ..e<$1.NodeTypeProto>(5, _omitFieldNames ? '' : 'nodeType', $pb.PbFieldType.OE, defaultOrMaker: $1.NodeTypeProto.REGULAR, valueOf: $1.NodeTypeProto.valueOf, enumValues: $1.NodeTypeProto.values)
+    ..e<$5.NodeTypeProto>(5, _omitFieldNames ? '' : 'nodeType', $pb.PbFieldType.OE, defaultOrMaker: $5.NodeTypeProto.REGULAR, valueOf: $5.NodeTypeProto.valueOf, enumValues: $5.NodeTypeProto.values)
     ..hasRequiredFields = false
   ;
 
@@ -122,9 +122,9 @@ class OperationLogEntry extends $pb.GeneratedMessage {
 
   /// The type of node involved in the operation (optional).
   @$pb.TagNumber(5)
-  $1.NodeTypeProto get nodeType => $_getN(4);
+  $5.NodeTypeProto get nodeType => $_getN(4);
   @$pb.TagNumber(5)
-  set nodeType($1.NodeTypeProto v) { setField(5, v); }
+  set nodeType($5.NodeTypeProto v) { setField(5, v); }
   @$pb.TagNumber(5)
   $core.bool hasNodeType() => $_has(4);
   @$pb.TagNumber(5)

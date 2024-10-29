@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: refresh.proto
+//  source: dht/refresh.proto
 //
 // @dart = 2.12
 

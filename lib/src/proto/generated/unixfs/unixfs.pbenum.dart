@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: unixfs.proto
+//  source: unixfs/unixfs.proto
 //
 // @dart = 2.12
 

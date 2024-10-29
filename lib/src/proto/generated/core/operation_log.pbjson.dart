@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: operation_log.proto
+//  source: core/operation_log.proto
 //
 // @dart = 2.12
 

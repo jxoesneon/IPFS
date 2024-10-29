@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: node_stats.proto
+//  source: core/node_stats.proto
 //
 // @dart = 2.12
 
@@ -23,23 +23,23 @@ class NodeStats extends $pb.GeneratedMessage {
     $fixnum.Int64? bandwidthSent,
     $fixnum.Int64? bandwidthReceived,
   }) {
-    final result = create();
+    final $result = create();
     if (numBlocks != null) {
-      result.numBlocks = numBlocks;
+      $result.numBlocks = numBlocks;
     }
     if (datastoreSize != null) {
-      result.datastoreSize = datastoreSize;
+      $result.datastoreSize = datastoreSize;
     }
     if (numConnectedPeers != null) {
-      result.numConnectedPeers = numConnectedPeers;
+      $result.numConnectedPeers = numConnectedPeers;
     }
     if (bandwidthSent != null) {
-      result.bandwidthSent = bandwidthSent;
+      $result.bandwidthSent = bandwidthSent;
     }
     if (bandwidthReceived != null) {
-      result.bandwidthReceived = bandwidthReceived;
+      $result.bandwidthReceived = bandwidthReceived;
     }
-    return result;
+    return $result;
   }
   NodeStats._() : super();
   factory NodeStats.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);

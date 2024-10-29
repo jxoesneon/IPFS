@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: kademlia_tree.proto
+//  source: dht/kademlia_tree.proto
 //
 // @dart = 2.12
 

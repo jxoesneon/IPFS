@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: red_black_tree.proto
+//  source: dht/red_black_tree.proto
 //
 // @dart = 2.12
 
@@ -13,15 +13,15 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'common_red_black_tree.pb.dart' as $0;
-import 'common_red_black_tree.pbenum.dart' as $0;
+import 'common_red_black_tree.pb.dart' as $5;
+import 'common_red_black_tree.pbenum.dart' as $5;
 
 /// Represents a node in a Red-Black Tree.
 class RedBlackTreeNode extends $pb.GeneratedMessage {
   factory RedBlackTreeNode({
-    $0.K_PeerId? key,
-    $0.V_PeerInfo? value,
-    $0.NodeColor? color,
+    $5.K_PeerId? key,
+    $5.V_PeerInfo? value,
+    $5.NodeColor? color,
     RedBlackTreeNode? left,
     RedBlackTreeNode? right,
   }) {
@@ -48,9 +48,9 @@ class RedBlackTreeNode extends $pb.GeneratedMessage {
   factory RedBlackTreeNode.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RedBlackTreeNode', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.red_black_tree'), createEmptyInstance: create)
-    ..aOM<$0.K_PeerId>(1, _omitFieldNames ? '' : 'key', subBuilder: $0.K_PeerId.create)
-    ..aOM<$0.V_PeerInfo>(2, _omitFieldNames ? '' : 'value', subBuilder: $0.V_PeerInfo.create)
-    ..e<$0.NodeColor>(3, _omitFieldNames ? '' : 'color', $pb.PbFieldType.OE, defaultOrMaker: $0.NodeColor.RED, valueOf: $0.NodeColor.valueOf, enumValues: $0.NodeColor.values)
+    ..aOM<$5.K_PeerId>(1, _omitFieldNames ? '' : 'key', subBuilder: $5.K_PeerId.create)
+    ..aOM<$5.V_PeerInfo>(2, _omitFieldNames ? '' : 'value', subBuilder: $5.V_PeerInfo.create)
+    ..e<$5.NodeColor>(3, _omitFieldNames ? '' : 'color', $pb.PbFieldType.OE, defaultOrMaker: $5.NodeColor.RED, valueOf: $5.NodeColor.valueOf, enumValues: $5.NodeColor.values)
     ..aOM<RedBlackTreeNode>(4, _omitFieldNames ? '' : 'left', subBuilder: RedBlackTreeNode.create)
     ..aOM<RedBlackTreeNode>(5, _omitFieldNames ? '' : 'right', subBuilder: RedBlackTreeNode.create)
     ..hasRequiredFields = false
@@ -79,33 +79,33 @@ class RedBlackTreeNode extends $pb.GeneratedMessage {
 
   /// The key associated with this node.
   @$pb.TagNumber(1)
-  $0.K_PeerId get key => $_getN(0);
+  $5.K_PeerId get key => $_getN(0);
   @$pb.TagNumber(1)
-  set key($0.K_PeerId v) { setField(1, v); }
+  set key($5.K_PeerId v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasKey() => $_has(0);
   @$pb.TagNumber(1)
   void clearKey() => clearField(1);
   @$pb.TagNumber(1)
-  $0.K_PeerId ensureKey() => $_ensure(0);
+  $5.K_PeerId ensureKey() => $_ensure(0);
 
   /// The value associated with this node.
   @$pb.TagNumber(2)
-  $0.V_PeerInfo get value => $_getN(1);
+  $5.V_PeerInfo get value => $_getN(1);
   @$pb.TagNumber(2)
-  set value($0.V_PeerInfo v) { setField(2, v); }
+  set value($5.V_PeerInfo v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasValue() => $_has(1);
   @$pb.TagNumber(2)
   void clearValue() => clearField(2);
   @$pb.TagNumber(2)
-  $0.V_PeerInfo ensureValue() => $_ensure(1);
+  $5.V_PeerInfo ensureValue() => $_ensure(1);
 
   /// The color of this node (RED or BLACK).
   @$pb.TagNumber(3)
-  $0.NodeColor get color => $_getN(2);
+  $5.NodeColor get color => $_getN(2);
   @$pb.TagNumber(3)
-  set color($0.NodeColor v) { setField(3, v); }
+  set color($5.NodeColor v) { setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasColor() => $_has(2);
   @$pb.TagNumber(3)

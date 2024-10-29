@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: directory.proto
+//  source: dht/directory.proto
 //
 // @dart = 2.12
 

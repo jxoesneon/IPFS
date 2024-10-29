@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: common_red_black_tree.proto
+//  source: dht/common_red_black_tree.proto
 //
 // @dart = 2.12
 
@@ -13,8 +13,8 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import '../google/protobuf/timestamp.pb.dart' as $1;
 import 'common_red_black_tree.pbenum.dart';
-import 'google/protobuf/timestamp.pb.dart' as $0;
 
 export 'common_red_black_tree.pbenum.dart';
 
@@ -199,7 +199,7 @@ class V_PeerInfo extends $pb.GeneratedMessage {
     $core.Iterable<$core.String>? protocols,
     $core.int? latency,
     V_PeerInfo_ConnectionStatus? connectionStatus,
-    $0.Timestamp? lastSeen,
+    $1.Timestamp? lastSeen,
     $core.String? agentVersion,
     $core.List<$core.int>? publicKey,
     $core.Iterable<$core.String>? addresses,
@@ -252,7 +252,7 @@ class V_PeerInfo extends $pb.GeneratedMessage {
     ..pPS(4, _omitFieldNames ? '' : 'protocols')
     ..a<$core.int>(5, _omitFieldNames ? '' : 'latency', $pb.PbFieldType.O3)
     ..e<V_PeerInfo_ConnectionStatus>(6, _omitFieldNames ? '' : 'connectionStatus', $pb.PbFieldType.OE, defaultOrMaker: V_PeerInfo_ConnectionStatus.DISCONNECTED, valueOf: V_PeerInfo_ConnectionStatus.valueOf, enumValues: V_PeerInfo_ConnectionStatus.values)
-    ..aOM<$0.Timestamp>(7, _omitFieldNames ? '' : 'lastSeen', subBuilder: $0.Timestamp.create)
+    ..aOM<$1.Timestamp>(7, _omitFieldNames ? '' : 'lastSeen', subBuilder: $1.Timestamp.create)
     ..aOS(8, _omitFieldNames ? '' : 'agentVersion')
     ..a<$core.List<$core.int>>(9, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
     ..pPS(10, _omitFieldNames ? '' : 'addresses')
@@ -336,15 +336,15 @@ class V_PeerInfo extends $pb.GeneratedMessage {
 
   /// The timestamp when the peer was last seen or contacted.
   @$pb.TagNumber(7)
-  $0.Timestamp get lastSeen => $_getN(6);
+  $1.Timestamp get lastSeen => $_getN(6);
   @$pb.TagNumber(7)
-  set lastSeen($0.Timestamp v) { setField(7, v); }
+  set lastSeen($1.Timestamp v) { setField(7, v); }
   @$pb.TagNumber(7)
   $core.bool hasLastSeen() => $_has(6);
   @$pb.TagNumber(7)
   void clearLastSeen() => clearField(7);
   @$pb.TagNumber(7)
-  $0.Timestamp ensureLastSeen() => $_ensure(6);
+  $1.Timestamp ensureLastSeen() => $_ensure(6);
 
   /// The version of the IPFS agent or client running on the peer.
   @$pb.TagNumber(8)

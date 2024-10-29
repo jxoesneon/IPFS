@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: node.proto
+//  source: core/node.proto
 //
 // @dart = 2.12
 
@@ -15,16 +15,16 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'cid.pb.dart' as $0;
-import 'link.pb.dart' as $1;
-import 'node_type.pbenum.dart' as $2;
+import 'link.pb.dart' as $4;
+import 'node_type.pbenum.dart' as $5;
 
 /// Represents a node in the IPFS Merkle DAG.
 class Node extends $pb.GeneratedMessage {
   factory Node({
     $0.CIDProto? cid,
-    $core.Iterable<$1.PBLink>? links,
+    $core.Iterable<$4.PBLink>? links,
     $core.List<$core.int>? data,
-    $2.NodeTypeProto? type,
+    $5.NodeTypeProto? type,
     $fixnum.Int64? size,
     $fixnum.Int64? timestamp,
     $core.Map<$core.String, $core.String>? metadata,
@@ -59,9 +59,9 @@ class Node extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Node', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..aOM<$0.CIDProto>(1, _omitFieldNames ? '' : 'cid', subBuilder: $0.CIDProto.create)
-    ..pc<$1.PBLink>(2, _omitFieldNames ? '' : 'links', $pb.PbFieldType.PM, subBuilder: $1.PBLink.create)
+    ..pc<$4.PBLink>(2, _omitFieldNames ? '' : 'links', $pb.PbFieldType.PM, subBuilder: $4.PBLink.create)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
-    ..e<$2.NodeTypeProto>(4, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: $2.NodeTypeProto.REGULAR, valueOf: $2.NodeTypeProto.valueOf, enumValues: $2.NodeTypeProto.values)
+    ..e<$5.NodeTypeProto>(4, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: $5.NodeTypeProto.REGULAR, valueOf: $5.NodeTypeProto.valueOf, enumValues: $5.NodeTypeProto.values)
     ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..aInt64(6, _omitFieldNames ? '' : 'timestamp')
     ..m<$core.String, $core.String>(7, _omitFieldNames ? '' : 'metadata', entryClassName: 'Node.MetadataEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('ipfs.core.data_structures'))
@@ -103,7 +103,7 @@ class Node extends $pb.GeneratedMessage {
 
   /// Links to other nodes in the DAG.
   @$pb.TagNumber(2)
-  $core.List<$1.PBLink> get links => $_getList(1);
+  $core.List<$4.PBLink> get links => $_getList(1);
 
   /// The data stored in the node (optional).
   @$pb.TagNumber(3)
@@ -117,9 +117,9 @@ class Node extends $pb.GeneratedMessage {
 
   /// The type of the node (e.g., regular, bootstrap, etc.).
   @$pb.TagNumber(4)
-  $2.NodeTypeProto get type => $_getN(3);
+  $5.NodeTypeProto get type => $_getN(3);
   @$pb.TagNumber(4)
-  set type($2.NodeTypeProto v) { setField(4, v); }
+  set type($5.NodeTypeProto v) { setField(4, v); }
   @$pb.TagNumber(4)
   $core.bool hasType() => $_has(3);
   @$pb.TagNumber(4)

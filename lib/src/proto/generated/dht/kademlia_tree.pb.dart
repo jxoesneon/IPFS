@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: kademlia_tree.proto
+//  source: dht/kademlia_tree.proto
 //
 // @dart = 2.12
 
@@ -13,11 +13,11 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'kademlia_node.pb.dart' as $0;
+import 'kademlia_node.pb.dart' as $2;
 
 class KademliaTree extends $pb.GeneratedMessage {
   factory KademliaTree({
-    $0.KademliaNode? localNode,
+    $2.KademliaNode? localNode,
     $core.Iterable<KademliaBucket>? buckets,
   }) {
     final $result = create();
@@ -34,7 +34,7 @@ class KademliaTree extends $pb.GeneratedMessage {
   factory KademliaTree.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'KademliaTree', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.kademlia_tree'), createEmptyInstance: create)
-    ..aOM<$0.KademliaNode>(1, _omitFieldNames ? '' : 'localNode', subBuilder: $0.KademliaNode.create)
+    ..aOM<$2.KademliaNode>(1, _omitFieldNames ? '' : 'localNode', subBuilder: $2.KademliaNode.create)
     ..pc<KademliaBucket>(2, _omitFieldNames ? '' : 'buckets', $pb.PbFieldType.PM, subBuilder: KademliaBucket.create)
     ..hasRequiredFields = false
   ;
@@ -61,15 +61,15 @@ class KademliaTree extends $pb.GeneratedMessage {
   static KademliaTree? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $0.KademliaNode get localNode => $_getN(0);
+  $2.KademliaNode get localNode => $_getN(0);
   @$pb.TagNumber(1)
-  set localNode($0.KademliaNode v) { setField(1, v); }
+  set localNode($2.KademliaNode v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasLocalNode() => $_has(0);
   @$pb.TagNumber(1)
   void clearLocalNode() => clearField(1);
   @$pb.TagNumber(1)
-  $0.KademliaNode ensureLocalNode() => $_ensure(0);
+  $2.KademliaNode ensureLocalNode() => $_ensure(0);
 
   @$pb.TagNumber(2)
   $core.List<KademliaBucket> get buckets => $_getList(1);
@@ -77,7 +77,7 @@ class KademliaTree extends $pb.GeneratedMessage {
 
 class KademliaBucket extends $pb.GeneratedMessage {
   factory KademliaBucket({
-    $core.Iterable<$0.KademliaNode>? nodes,
+    $core.Iterable<$2.KademliaNode>? nodes,
   }) {
     final $result = create();
     if (nodes != null) {
@@ -90,7 +90,7 @@ class KademliaBucket extends $pb.GeneratedMessage {
   factory KademliaBucket.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'KademliaBucket', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.kademlia_tree'), createEmptyInstance: create)
-    ..pc<$0.KademliaNode>(1, _omitFieldNames ? '' : 'nodes', $pb.PbFieldType.PM, subBuilder: $0.KademliaNode.create)
+    ..pc<$2.KademliaNode>(1, _omitFieldNames ? '' : 'nodes', $pb.PbFieldType.PM, subBuilder: $2.KademliaNode.create)
     ..hasRequiredFields = false
   ;
 
@@ -116,7 +116,7 @@ class KademliaBucket extends $pb.GeneratedMessage {
   static KademliaBucket? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$0.KademliaNode> get nodes => $_getList(0);
+  $core.List<$2.KademliaNode> get nodes => $_getList(0);
 }
 
 

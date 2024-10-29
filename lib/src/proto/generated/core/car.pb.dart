@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: car.proto
+//  source: core/car.proto
 //
 // @dart = 2.12
 
@@ -13,12 +13,12 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'block.pb.dart' as $0;
+import 'block.pb.dart' as $1;
 
 /// Represents a Content Addressable Archive (CAR).
 class CarProto extends $pb.GeneratedMessage {
   factory CarProto({
-    $core.Iterable<$0.BlockProto>? blocks,
+    $core.Iterable<$1.BlockProto>? blocks,
   }) {
     final $result = create();
     if (blocks != null) {
@@ -31,7 +31,7 @@ class CarProto extends $pb.GeneratedMessage {
   factory CarProto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CarProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..pc<$0.BlockProto>(1, _omitFieldNames ? '' : 'blocks', $pb.PbFieldType.PM, subBuilder: $0.BlockProto.create)
+    ..pc<$1.BlockProto>(1, _omitFieldNames ? '' : 'blocks', $pb.PbFieldType.PM, subBuilder: $1.BlockProto.create)
     ..hasRequiredFields = false
   ;
 
@@ -57,7 +57,7 @@ class CarProto extends $pb.GeneratedMessage {
   static CarProto? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$0.BlockProto> get blocks => $_getList(0);
+  $core.List<$1.BlockProto> get blocks => $_getList(0);
 }
 
 

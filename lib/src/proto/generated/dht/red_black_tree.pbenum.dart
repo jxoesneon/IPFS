@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: red_black_tree.proto
+//  source: dht/red_black_tree.proto
 //
 // @dart = 2.12
 

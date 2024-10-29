@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: ipfs_node_network_events.proto
+//  source: dht/ipfs_node_network_events.proto
 //
 // @dart = 2.12
 
@@ -29,27 +29,28 @@ const NetworkEvent$json = {
     {'1': 'dht_query_completed', '3': 10, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTQueryCompletedEvent', '9': 0, '10': 'dhtQueryCompleted'},
     {'1': 'dht_value_found', '3': 11, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTValueFoundEvent', '9': 0, '10': 'dhtValueFound'},
     {'1': 'dht_value_provided', '3': 12, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTValueProvidedEvent', '9': 0, '10': 'dhtValueProvided'},
-    {'1': 'pubsub_message_published', '3': 13, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PubsubMessagePublishedEvent', '9': 0, '10': 'pubsubMessagePublished'},
-    {'1': 'pubsub_message_received', '3': 14, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PubsubMessageReceivedEvent', '9': 0, '10': 'pubsubMessageReceived'},
-    {'1': 'pubsub_subscription_created', '3': 15, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PubsubSubscriptionCreatedEvent', '9': 0, '10': 'pubsubSubscriptionCreated'},
-    {'1': 'pubsub_subscription_cancelled', '3': 16, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PubsubSubscriptionCancelledEvent', '9': 0, '10': 'pubsubSubscriptionCancelled'},
-    {'1': 'circuit_relay_created', '3': 17, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayCreatedEvent', '9': 0, '10': 'circuitRelayCreated'},
-    {'1': 'circuit_relay_closed', '3': 18, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayClosedEvent', '9': 0, '10': 'circuitRelayClosed'},
-    {'1': 'circuit_relay_traffic', '3': 19, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayTrafficEvent', '9': 0, '10': 'circuitRelayTraffic'},
-    {'1': 'circuit_relay_failed', '3': 20, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayFailedEvent', '9': 0, '10': 'circuitRelayFailed'},
-    {'1': 'node_started', '3': 21, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.NodeStartedEvent', '9': 0, '10': 'nodeStarted'},
-    {'1': 'node_stopped', '3': 22, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.NodeStoppedEvent', '9': 0, '10': 'nodeStopped'},
-    {'1': 'error', '3': 23, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.ErrorEvent', '9': 0, '10': 'error'},
-    {'1': 'network_changed', '3': 24, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.NetworkChangedEvent', '9': 0, '10': 'networkChanged'},
-    {'1': 'dht_provider_added', '3': 25, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTProviderAddedEvent', '9': 0, '10': 'dhtProviderAdded'},
-    {'1': 'dht_provider_queried', '3': 26, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTProviderQueriedEvent', '9': 0, '10': 'dhtProviderQueried'},
-    {'1': 'stream_started', '3': 27, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.StreamStartedEvent', '9': 0, '10': 'streamStarted'},
-    {'1': 'stream_ended', '3': 28, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.StreamEndedEvent', '9': 0, '10': 'streamEnded'},
-    {'1': 'peer_discovered', '3': 29, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PeerDiscoveredEvent', '9': 0, '10': 'peerDiscovered'},
-    {'1': 'circuit_relay_data_received', '3': 30, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayDataReceivedEvent', '9': 0, '10': 'circuitRelayDataReceived'},
-    {'1': 'circuit_relay_data_sent', '3': 31, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayDataSentEvent', '9': 0, '10': 'circuitRelayDataSent'},
-    {'1': 'resource_limit_exceeded', '3': 32, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.ResourceLimitExceededEvent', '9': 0, '10': 'resourceLimitExceeded'},
-    {'1': 'system_alert', '3': 33, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.SystemAlertEvent', '9': 0, '10': 'systemAlert'},
+    {'1': 'dht_value_not_found', '3': 13, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTValueNotFoundEvent', '9': 0, '10': 'dhtValueNotFound'},
+    {'1': 'pubsub_message_published', '3': 14, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PubsubMessagePublishedEvent', '9': 0, '10': 'pubsubMessagePublished'},
+    {'1': 'pubsub_message_received', '3': 15, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PubsubMessageReceivedEvent', '9': 0, '10': 'pubsubMessageReceived'},
+    {'1': 'pubsub_subscription_created', '3': 16, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PubsubSubscriptionCreatedEvent', '9': 0, '10': 'pubsubSubscriptionCreated'},
+    {'1': 'pubsub_subscription_cancelled', '3': 17, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PubsubSubscriptionCancelledEvent', '9': 0, '10': 'pubsubSubscriptionCancelled'},
+    {'1': 'circuit_relay_created', '3': 18, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayCreatedEvent', '9': 0, '10': 'circuitRelayCreated'},
+    {'1': 'circuit_relay_closed', '3': 19, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayClosedEvent', '9': 0, '10': 'circuitRelayClosed'},
+    {'1': 'circuit_relay_traffic', '3': 20, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayTrafficEvent', '9': 0, '10': 'circuitRelayTraffic'},
+    {'1': 'circuit_relay_failed', '3': 21, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayFailedEvent', '9': 0, '10': 'circuitRelayFailed'},
+    {'1': 'node_started', '3': 22, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.NodeStartedEvent', '9': 0, '10': 'nodeStarted'},
+    {'1': 'node_stopped', '3': 23, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.NodeStoppedEvent', '9': 0, '10': 'nodeStopped'},
+    {'1': 'error', '3': 24, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.NodeErrorEvent', '9': 0, '10': 'error'},
+    {'1': 'network_changed', '3': 25, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.NetworkStatusChangedEvent', '9': 0, '10': 'networkChanged'},
+    {'1': 'dht_provider_added', '3': 26, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTProviderAddedEvent', '9': 0, '10': 'dhtProviderAdded'},
+    {'1': 'dht_provider_queried', '3': 27, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTProviderQueriedEvent', '9': 0, '10': 'dhtProviderQueried'},
+    {'1': 'stream_started', '3': 28, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.StreamStartedEvent', '9': 0, '10': 'streamStarted'},
+    {'1': 'stream_ended', '3': 29, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.StreamEndedEvent', '9': 0, '10': 'streamEnded'},
+    {'1': 'peer_discovered', '3': 30, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PeerDiscoveredEvent', '9': 0, '10': 'peerDiscovered'},
+    {'1': 'circuit_relay_data_received', '3': 31, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayDataReceivedEvent', '9': 0, '10': 'circuitRelayDataReceived'},
+    {'1': 'circuit_relay_data_sent', '3': 32, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayDataSentEvent', '9': 0, '10': 'circuitRelayDataSent'},
+    {'1': 'resource_limit_exceeded', '3': 33, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.ResourceLimitExceededEvent', '9': 0, '10': 'resourceLimitExceeded'},
+    {'1': 'system_alert', '3': 34, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.SystemAlertEvent', '9': 0, '10': 'systemAlert'},
   ],
   '8': [
     {'1': 'event'},
@@ -76,44 +77,45 @@ final $typed_data.Uint8List networkEventDescriptor = $convert.base64Decode(
     'RlLkRIVFF1ZXJ5Q29tcGxldGVkRXZlbnRIAFIRZGh0UXVlcnlDb21wbGV0ZWQSUQoPZGh0X3Zh'
     'bHVlX2ZvdW5kGAsgASgLMicuaXBmcy5jb3JlLmlwZnNfbm9kZS5ESFRWYWx1ZUZvdW5kRXZlbn'
     'RIAFINZGh0VmFsdWVGb3VuZBJaChJkaHRfdmFsdWVfcHJvdmlkZWQYDCABKAsyKi5pcGZzLmNv'
-    'cmUuaXBmc19ub2RlLkRIVFZhbHVlUHJvdmlkZWRFdmVudEgAUhBkaHRWYWx1ZVByb3ZpZGVkEm'
-    'wKGHB1YnN1Yl9tZXNzYWdlX3B1Ymxpc2hlZBgNIAEoCzIwLmlwZnMuY29yZS5pcGZzX25vZGUu'
-    'UHVic3ViTWVzc2FnZVB1Ymxpc2hlZEV2ZW50SABSFnB1YnN1Yk1lc3NhZ2VQdWJsaXNoZWQSaQ'
-    'oXcHVic3ViX21lc3NhZ2VfcmVjZWl2ZWQYDiABKAsyLy5pcGZzLmNvcmUuaXBmc19ub2RlLlB1'
-    'YnN1Yk1lc3NhZ2VSZWNlaXZlZEV2ZW50SABSFXB1YnN1Yk1lc3NhZ2VSZWNlaXZlZBJ1ChtwdW'
-    'JzdWJfc3Vic2NyaXB0aW9uX2NyZWF0ZWQYDyABKAsyMy5pcGZzLmNvcmUuaXBmc19ub2RlLlB1'
-    'YnN1YlN1YnNjcmlwdGlvbkNyZWF0ZWRFdmVudEgAUhlwdWJzdWJTdWJzY3JpcHRpb25DcmVhdG'
-    'VkEnsKHXB1YnN1Yl9zdWJzY3JpcHRpb25fY2FuY2VsbGVkGBAgASgLMjUuaXBmcy5jb3JlLmlw'
-    'ZnNfbm9kZS5QdWJzdWJTdWJzY3JpcHRpb25DYW5jZWxsZWRFdmVudEgAUhtwdWJzdWJTdWJzY3'
-    'JpcHRpb25DYW5jZWxsZWQSYwoVY2lyY3VpdF9yZWxheV9jcmVhdGVkGBEgASgLMi0uaXBmcy5j'
-    'b3JlLmlwZnNfbm9kZS5DaXJjdWl0UmVsYXlDcmVhdGVkRXZlbnRIAFITY2lyY3VpdFJlbGF5Q3'
-    'JlYXRlZBJgChRjaXJjdWl0X3JlbGF5X2Nsb3NlZBgSIAEoCzIsLmlwZnMuY29yZS5pcGZzX25v'
-    'ZGUuQ2lyY3VpdFJlbGF5Q2xvc2VkRXZlbnRIAFISY2lyY3VpdFJlbGF5Q2xvc2VkEmMKFWNpcm'
-    'N1aXRfcmVsYXlfdHJhZmZpYxgTIAEoCzItLmlwZnMuY29yZS5pcGZzX25vZGUuQ2lyY3VpdFJl'
-    'bGF5VHJhZmZpY0V2ZW50SABSE2NpcmN1aXRSZWxheVRyYWZmaWMSYAoUY2lyY3VpdF9yZWxheV'
-    '9mYWlsZWQYFCABKAsyLC5pcGZzLmNvcmUuaXBmc19ub2RlLkNpcmN1aXRSZWxheUZhaWxlZEV2'
-    'ZW50SABSEmNpcmN1aXRSZWxheUZhaWxlZBJKCgxub2RlX3N0YXJ0ZWQYFSABKAsyJS5pcGZzLm'
-    'NvcmUuaXBmc19ub2RlLk5vZGVTdGFydGVkRXZlbnRIAFILbm9kZVN0YXJ0ZWQSSgoMbm9kZV9z'
-    'dG9wcGVkGBYgASgLMiUuaXBmcy5jb3JlLmlwZnNfbm9kZS5Ob2RlU3RvcHBlZEV2ZW50SABSC2'
-    '5vZGVTdG9wcGVkEjcKBWVycm9yGBcgASgLMh8uaXBmcy5jb3JlLmlwZnNfbm9kZS5FcnJvckV2'
-    'ZW50SABSBWVycm9yElMKD25ldHdvcmtfY2hhbmdlZBgYIAEoCzIoLmlwZnMuY29yZS5pcGZzX2'
-    '5vZGUuTmV0d29ya0NoYW5nZWRFdmVudEgAUg5uZXR3b3JrQ2hhbmdlZBJaChJkaHRfcHJvdmlk'
-    'ZXJfYWRkZWQYGSABKAsyKi5pcGZzLmNvcmUuaXBmc19ub2RlLkRIVFByb3ZpZGVyQWRkZWRFdm'
-    'VudEgAUhBkaHRQcm92aWRlckFkZGVkEmAKFGRodF9wcm92aWRlcl9xdWVyaWVkGBogASgLMiwu'
-    'aXBmcy5jb3JlLmlwZnNfbm9kZS5ESFRQcm92aWRlclF1ZXJpZWRFdmVudEgAUhJkaHRQcm92aW'
-    'RlclF1ZXJpZWQSUAoOc3RyZWFtX3N0YXJ0ZWQYGyABKAsyJy5pcGZzLmNvcmUuaXBmc19ub2Rl'
-    'LlN0cmVhbVN0YXJ0ZWRFdmVudEgAUg1zdHJlYW1TdGFydGVkEkoKDHN0cmVhbV9lbmRlZBgcIA'
-    'EoCzIlLmlwZnMuY29yZS5pcGZzX25vZGUuU3RyZWFtRW5kZWRFdmVudEgAUgtzdHJlYW1FbmRl'
-    'ZBJTCg9wZWVyX2Rpc2NvdmVyZWQYHSABKAsyKC5pcGZzLmNvcmUuaXBmc19ub2RlLlBlZXJEaX'
-    'Njb3ZlcmVkRXZlbnRIAFIOcGVlckRpc2NvdmVyZWQScwobY2lyY3VpdF9yZWxheV9kYXRhX3Jl'
-    'Y2VpdmVkGB4gASgLMjIuaXBmcy5jb3JlLmlwZnNfbm9kZS5DaXJjdWl0UmVsYXlEYXRhUmVjZW'
-    'l2ZWRFdmVudEgAUhhjaXJjdWl0UmVsYXlEYXRhUmVjZWl2ZWQSZwoXY2lyY3VpdF9yZWxheV9k'
-    'YXRhX3NlbnQYHyABKAsyLi5pcGZzLmNvcmUuaXBmc19ub2RlLkNpcmN1aXRSZWxheURhdGFTZW'
-    '50RXZlbnRIAFIUY2lyY3VpdFJlbGF5RGF0YVNlbnQSaQoXcmVzb3VyY2VfbGltaXRfZXhjZWVk'
-    'ZWQYICABKAsyLy5pcGZzLmNvcmUuaXBmc19ub2RlLlJlc291cmNlTGltaXRFeGNlZWRlZEV2ZW'
-    '50SABSFXJlc291cmNlTGltaXRFeGNlZWRlZBJKCgxzeXN0ZW1fYWxlcnQYISABKAsyJS5pcGZz'
-    'LmNvcmUuaXBmc19ub2RlLlN5c3RlbUFsZXJ0RXZlbnRIAFILc3lzdGVtQWxlcnRCBwoFZXZlbn'
-    'Q=');
+    'cmUuaXBmc19ub2RlLkRIVFZhbHVlUHJvdmlkZWRFdmVudEgAUhBkaHRWYWx1ZVByb3ZpZGVkEl'
+    'sKE2RodF92YWx1ZV9ub3RfZm91bmQYDSABKAsyKi5pcGZzLmNvcmUuaXBmc19ub2RlLkRIVFZh'
+    'bHVlTm90Rm91bmRFdmVudEgAUhBkaHRWYWx1ZU5vdEZvdW5kEmwKGHB1YnN1Yl9tZXNzYWdlX3'
+    'B1Ymxpc2hlZBgOIAEoCzIwLmlwZnMuY29yZS5pcGZzX25vZGUuUHVic3ViTWVzc2FnZVB1Ymxp'
+    'c2hlZEV2ZW50SABSFnB1YnN1Yk1lc3NhZ2VQdWJsaXNoZWQSaQoXcHVic3ViX21lc3NhZ2Vfcm'
+    'VjZWl2ZWQYDyABKAsyLy5pcGZzLmNvcmUuaXBmc19ub2RlLlB1YnN1Yk1lc3NhZ2VSZWNlaXZl'
+    'ZEV2ZW50SABSFXB1YnN1Yk1lc3NhZ2VSZWNlaXZlZBJ1ChtwdWJzdWJfc3Vic2NyaXB0aW9uX2'
+    'NyZWF0ZWQYECABKAsyMy5pcGZzLmNvcmUuaXBmc19ub2RlLlB1YnN1YlN1YnNjcmlwdGlvbkNy'
+    'ZWF0ZWRFdmVudEgAUhlwdWJzdWJTdWJzY3JpcHRpb25DcmVhdGVkEnsKHXB1YnN1Yl9zdWJzY3'
+    'JpcHRpb25fY2FuY2VsbGVkGBEgASgLMjUuaXBmcy5jb3JlLmlwZnNfbm9kZS5QdWJzdWJTdWJz'
+    'Y3JpcHRpb25DYW5jZWxsZWRFdmVudEgAUhtwdWJzdWJTdWJzY3JpcHRpb25DYW5jZWxsZWQSYw'
+    'oVY2lyY3VpdF9yZWxheV9jcmVhdGVkGBIgASgLMi0uaXBmcy5jb3JlLmlwZnNfbm9kZS5DaXJj'
+    'dWl0UmVsYXlDcmVhdGVkRXZlbnRIAFITY2lyY3VpdFJlbGF5Q3JlYXRlZBJgChRjaXJjdWl0X3'
+    'JlbGF5X2Nsb3NlZBgTIAEoCzIsLmlwZnMuY29yZS5pcGZzX25vZGUuQ2lyY3VpdFJlbGF5Q2xv'
+    'c2VkRXZlbnRIAFISY2lyY3VpdFJlbGF5Q2xvc2VkEmMKFWNpcmN1aXRfcmVsYXlfdHJhZmZpYx'
+    'gUIAEoCzItLmlwZnMuY29yZS5pcGZzX25vZGUuQ2lyY3VpdFJlbGF5VHJhZmZpY0V2ZW50SABS'
+    'E2NpcmN1aXRSZWxheVRyYWZmaWMSYAoUY2lyY3VpdF9yZWxheV9mYWlsZWQYFSABKAsyLC5pcG'
+    'ZzLmNvcmUuaXBmc19ub2RlLkNpcmN1aXRSZWxheUZhaWxlZEV2ZW50SABSEmNpcmN1aXRSZWxh'
+    'eUZhaWxlZBJKCgxub2RlX3N0YXJ0ZWQYFiABKAsyJS5pcGZzLmNvcmUuaXBmc19ub2RlLk5vZG'
+    'VTdGFydGVkRXZlbnRIAFILbm9kZVN0YXJ0ZWQSSgoMbm9kZV9zdG9wcGVkGBcgASgLMiUuaXBm'
+    'cy5jb3JlLmlwZnNfbm9kZS5Ob2RlU3RvcHBlZEV2ZW50SABSC25vZGVTdG9wcGVkEjsKBWVycm'
+    '9yGBggASgLMiMuaXBmcy5jb3JlLmlwZnNfbm9kZS5Ob2RlRXJyb3JFdmVudEgAUgVlcnJvchJZ'
+    'Cg9uZXR3b3JrX2NoYW5nZWQYGSABKAsyLi5pcGZzLmNvcmUuaXBmc19ub2RlLk5ldHdvcmtTdG'
+    'F0dXNDaGFuZ2VkRXZlbnRIAFIObmV0d29ya0NoYW5nZWQSWgoSZGh0X3Byb3ZpZGVyX2FkZGVk'
+    'GBogASgLMiouaXBmcy5jb3JlLmlwZnNfbm9kZS5ESFRQcm92aWRlckFkZGVkRXZlbnRIAFIQZG'
+    'h0UHJvdmlkZXJBZGRlZBJgChRkaHRfcHJvdmlkZXJfcXVlcmllZBgbIAEoCzIsLmlwZnMuY29y'
+    'ZS5pcGZzX25vZGUuREhUUHJvdmlkZXJRdWVyaWVkRXZlbnRIAFISZGh0UHJvdmlkZXJRdWVyaW'
+    'VkElAKDnN0cmVhbV9zdGFydGVkGBwgASgLMicuaXBmcy5jb3JlLmlwZnNfbm9kZS5TdHJlYW1T'
+    'dGFydGVkRXZlbnRIAFINc3RyZWFtU3RhcnRlZBJKCgxzdHJlYW1fZW5kZWQYHSABKAsyJS5pcG'
+    'ZzLmNvcmUuaXBmc19ub2RlLlN0cmVhbUVuZGVkRXZlbnRIAFILc3RyZWFtRW5kZWQSUwoPcGVl'
+    'cl9kaXNjb3ZlcmVkGB4gASgLMiguaXBmcy5jb3JlLmlwZnNfbm9kZS5QZWVyRGlzY292ZXJlZE'
+    'V2ZW50SABSDnBlZXJEaXNjb3ZlcmVkEnMKG2NpcmN1aXRfcmVsYXlfZGF0YV9yZWNlaXZlZBgf'
+    'IAEoCzIyLmlwZnMuY29yZS5pcGZzX25vZGUuQ2lyY3VpdFJlbGF5RGF0YVJlY2VpdmVkRXZlbn'
+    'RIAFIYY2lyY3VpdFJlbGF5RGF0YVJlY2VpdmVkEmcKF2NpcmN1aXRfcmVsYXlfZGF0YV9zZW50'
+    'GCAgASgLMi4uaXBmcy5jb3JlLmlwZnNfbm9kZS5DaXJjdWl0UmVsYXlEYXRhU2VudEV2ZW50SA'
+    'BSFGNpcmN1aXRSZWxheURhdGFTZW50EmkKF3Jlc291cmNlX2xpbWl0X2V4Y2VlZGVkGCEgASgL'
+    'Mi8uaXBmcy5jb3JlLmlwZnNfbm9kZS5SZXNvdXJjZUxpbWl0RXhjZWVkZWRFdmVudEgAUhVyZX'
+    'NvdXJjZUxpbWl0RXhjZWVkZWQSSgoMc3lzdGVtX2FsZXJ0GCIgASgLMiUuaXBmcy5jb3JlLmlw'
+    'ZnNfbm9kZS5TeXN0ZW1BbGVydEV2ZW50SABSC3N5c3RlbUFsZXJ0QgcKBWV2ZW50');
 
 @$core.Deprecated('Use peerConnectedEventDescriptor instead')
 const PeerConnectedEvent$json = {
@@ -523,32 +525,112 @@ const NodeStoppedEvent$json = {
 final $typed_data.Uint8List nodeStoppedEventDescriptor = $convert.base64Decode(
     'ChBOb2RlU3RvcHBlZEV2ZW50');
 
-@$core.Deprecated('Use errorEventDescriptor instead')
-const ErrorEvent$json = {
-  '1': 'ErrorEvent',
+@$core.Deprecated('Use nodeErrorEventDescriptor instead')
+const NodeErrorEvent$json = {
+  '1': 'NodeErrorEvent',
   '2': [
-    {'1': 'error_type', '3': 1, '4': 1, '5': 9, '10': 'errorType'},
+    {'1': 'error_type', '3': 1, '4': 1, '5': 14, '6': '.ipfs.core.ipfs_node.NodeErrorEvent.ErrorType', '10': 'errorType'},
     {'1': 'message', '3': 2, '4': 1, '5': 9, '10': 'message'},
     {'1': 'stack_trace', '3': 3, '4': 1, '5': 9, '10': 'stackTrace'},
+    {'1': 'source', '3': 4, '4': 1, '5': 9, '10': 'source'},
   ],
+  '4': [NodeErrorEvent_ErrorType$json],
 };
 
-/// Descriptor for `ErrorEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List errorEventDescriptor = $convert.base64Decode(
-    'CgpFcnJvckV2ZW50Eh0KCmVycm9yX3R5cGUYASABKAlSCWVycm9yVHlwZRIYCgdtZXNzYWdlGA'
-    'IgASgJUgdtZXNzYWdlEh8KC3N0YWNrX3RyYWNlGAMgASgJUgpzdGFja1RyYWNl');
-
-@$core.Deprecated('Use networkChangedEventDescriptor instead')
-const NetworkChangedEvent$json = {
-  '1': 'NetworkChangedEvent',
+@$core.Deprecated('Use nodeErrorEventDescriptor instead')
+const NodeErrorEvent_ErrorType$json = {
+  '1': 'ErrorType',
   '2': [
-    {'1': 'change_type', '3': 1, '4': 1, '5': 9, '10': 'changeType'},
+    {'1': 'UNKNOWN', '2': 0},
+    {'1': 'INVALID_REQUEST', '2': 1},
+    {'1': 'NOT_FOUND', '2': 2},
+    {'1': 'METHOD_NOT_FOUND', '2': 3},
+    {'1': 'INTERNAL_ERROR', '2': 4},
+    {'1': 'NETWORK', '2': 5},
+    {'1': 'PROTOCOL', '2': 6},
+    {'1': 'SECURITY', '2': 7},
+    {'1': 'DATASTORE', '2': 8},
   ],
 };
 
-/// Descriptor for `NetworkChangedEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List networkChangedEventDescriptor = $convert.base64Decode(
-    'ChNOZXR3b3JrQ2hhbmdlZEV2ZW50Eh8KC2NoYW5nZV90eXBlGAEgASgJUgpjaGFuZ2VUeXBl');
+/// Descriptor for `NodeErrorEvent`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List nodeErrorEventDescriptor = $convert.base64Decode(
+    'Cg5Ob2RlRXJyb3JFdmVudBJMCgplcnJvcl90eXBlGAEgASgOMi0uaXBmcy5jb3JlLmlwZnNfbm'
+    '9kZS5Ob2RlRXJyb3JFdmVudC5FcnJvclR5cGVSCWVycm9yVHlwZRIYCgdtZXNzYWdlGAIgASgJ'
+    'UgdtZXNzYWdlEh8KC3N0YWNrX3RyYWNlGAMgASgJUgpzdGFja1RyYWNlEhYKBnNvdXJjZRgEIA'
+    'EoCVIGc291cmNlIp4BCglFcnJvclR5cGUSCwoHVU5LTk9XThAAEhMKD0lOVkFMSURfUkVRVUVT'
+    'VBABEg0KCU5PVF9GT1VORBACEhQKEE1FVEhPRF9OT1RfRk9VTkQQAxISCg5JTlRFUk5BTF9FUl'
+    'JPUhAEEgsKB05FVFdPUksQBRIMCghQUk9UT0NPTBAGEgwKCFNFQ1VSSVRZEAcSDQoJREFUQVNU'
+    'T1JFEAg=');
+
+@$core.Deprecated('Use networkStatusChangedEventDescriptor instead')
+const NetworkStatusChangedEvent$json = {
+  '1': 'NetworkStatusChangedEvent',
+  '2': [
+    {'1': 'change_type', '3': 1, '4': 1, '5': 14, '6': '.ipfs.core.ipfs_node.NetworkStatusChangedEvent.ChangeType', '10': 'changeType'},
+  ],
+  '4': [NetworkStatusChangedEvent_ChangeType$json],
+};
+
+@$core.Deprecated('Use networkStatusChangedEventDescriptor instead')
+const NetworkStatusChangedEvent_ChangeType$json = {
+  '1': 'ChangeType',
+  '2': [
+    {'1': 'UNKNOWN', '2': 0},
+    {'1': 'ONLINE', '2': 1},
+    {'1': 'OFFLINE', '2': 2},
+    {'1': 'CONNECTIVITY_CHANGED', '2': 3},
+    {'1': 'SWARM_PEER_JOINED', '2': 4},
+    {'1': 'SWARM_PEER_LEFT', '2': 5},
+    {'1': 'NODE_STARTED', '2': 6},
+    {'1': 'NODE_STOPPED', '2': 7},
+    {'1': 'INTERFACE_ADDED', '2': 8},
+    {'1': 'INTERFACE_REMOVED', '2': 9},
+    {'1': 'INTERFACE_UP', '2': 10},
+    {'1': 'INTERFACE_DOWN', '2': 11},
+    {'1': 'IP_ADDRESS_CHANGED', '2': 12},
+    {'1': 'IP_ADDRESS_ADDED', '2': 13},
+    {'1': 'IP_ADDRESS_REMOVED', '2': 14},
+    {'1': 'GATEWAY_CHANGED', '2': 15},
+    {'1': 'GATEWAY_REACHABLE', '2': 16},
+    {'1': 'GATEWAY_UNREACHABLE', '2': 17},
+    {'1': 'FIREWALL_CHANGED', '2': 18},
+    {'1': 'FIREWALL_BLOCKING', '2': 19},
+    {'1': 'FIREWALL_ALLOWING', '2': 20},
+    {'1': 'NAT_TYPE_CHANGED', '2': 21},
+    {'1': 'NAT_PORT_MAPPING_CHANGED', '2': 22},
+    {'1': 'DNS_RESOLVED', '2': 23},
+    {'1': 'DNS_FAILED', '2': 24},
+    {'1': 'EXTERNAL_ADDRESS_CHANGED', '2': 25},
+    {'1': 'BANDWIDTH_CHANGED', '2': 26},
+    {'1': 'ROUTING_CHANGED', '2': 27},
+    {'1': 'CONTENT_ROUTING_CHANGED', '2': 28},
+    {'1': 'PEER_ROUTING_CHANGED', '2': 29},
+    {'1': 'CONNECTION_UPGRADED', '2': 30},
+    {'1': 'CONNECTION_PRUNED', '2': 31},
+    {'1': 'PROTOCOL_AVAILABLE', '2': 32},
+    {'1': 'PROTOCOL_UNAVAILABLE', '2': 33},
+  ],
+};
+
+/// Descriptor for `NetworkStatusChangedEvent`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List networkStatusChangedEventDescriptor = $convert.base64Decode(
+    'ChlOZXR3b3JrU3RhdHVzQ2hhbmdlZEV2ZW50EloKC2NoYW5nZV90eXBlGAEgASgOMjkuaXBmcy'
+    '5jb3JlLmlwZnNfbm9kZS5OZXR3b3JrU3RhdHVzQ2hhbmdlZEV2ZW50LkNoYW5nZVR5cGVSCmNo'
+    'YW5nZVR5cGUi9gUKCkNoYW5nZVR5cGUSCwoHVU5LTk9XThAAEgoKBk9OTElORRABEgsKB09GRk'
+    'xJTkUQAhIYChRDT05ORUNUSVZJVFlfQ0hBTkdFRBADEhUKEVNXQVJNX1BFRVJfSk9JTkVEEAQS'
+    'EwoPU1dBUk1fUEVFUl9MRUZUEAUSEAoMTk9ERV9TVEFSVEVEEAYSEAoMTk9ERV9TVE9QUEVEEA'
+    'cSEwoPSU5URVJGQUNFX0FEREVEEAgSFQoRSU5URVJGQUNFX1JFTU9WRUQQCRIQCgxJTlRFUkZB'
+    'Q0VfVVAQChISCg5JTlRFUkZBQ0VfRE9XThALEhYKEklQX0FERFJFU1NfQ0hBTkdFRBAMEhQKEE'
+    'lQX0FERFJFU1NfQURERUQQDRIWChJJUF9BRERSRVNTX1JFTU9WRUQQDhITCg9HQVRFV0FZX0NI'
+    'QU5HRUQQDxIVChFHQVRFV0FZX1JFQUNIQUJMRRAQEhcKE0dBVEVXQVlfVU5SRUFDSEFCTEUQER'
+    'IUChBGSVJFV0FMTF9DSEFOR0VEEBISFQoRRklSRVdBTExfQkxPQ0tJTkcQExIVChFGSVJFV0FM'
+    'TF9BTExPV0lORxAUEhQKEE5BVF9UWVBFX0NIQU5HRUQQFRIcChhOQVRfUE9SVF9NQVBQSU5HX0'
+    'NIQU5HRUQQFhIQCgxETlNfUkVTT0xWRUQQFxIOCgpETlNfRkFJTEVEEBgSHAoYRVhURVJOQUxf'
+    'QUREUkVTU19DSEFOR0VEEBkSFQoRQkFORFdJRFRIX0NIQU5HRUQQGhITCg9ST1VUSU5HX0NIQU'
+    '5HRUQQGxIbChdDT05URU5UX1JPVVRJTkdfQ0hBTkdFRBAcEhgKFFBFRVJfUk9VVElOR19DSEFO'
+    'R0VEEB0SFwoTQ09OTkVDVElPTl9VUEdSQURFRBAeEhUKEUNPTk5FQ1RJT05fUFJVTkVEEB8SFg'
+    'oSUFJPVE9DT0xfQVZBSUxBQkxFECASGAoUUFJPVE9DT0xfVU5BVkFJTEFCTEUQIQ==');
 
 @$core.Deprecated('Use resourceLimitExceededEventDescriptor instead')
 const ResourceLimitExceededEvent$json = {

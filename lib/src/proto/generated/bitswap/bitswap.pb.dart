@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: message_types.proto
+//  source: bitswap/bitswap.proto
 //
 // @dart = 2.12
 
@@ -13,45 +13,46 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'message_types.pbenum.dart';
+import 'bitswap.pbenum.dart';
 
-export 'message_types.pbenum.dart';
+export 'bitswap.pbenum.dart';
 
-class Wantlist_Entry extends $pb.GeneratedMessage {
-  factory Wantlist_Entry({
+/// Represents a single entry in the wantlist.
+class WantlistEntry extends $pb.GeneratedMessage {
+  factory WantlistEntry({
     $core.List<$core.int>? block,
     $core.int? priority,
     $core.bool? cancel,
     WantType? wantType,
     $core.bool? sendDontHave,
   }) {
-    final result = create();
+    final $result = create();
     if (block != null) {
-      result.block = block;
+      $result.block = block;
     }
     if (priority != null) {
-      result.priority = priority;
+      $result.priority = priority;
     }
     if (cancel != null) {
-      result.cancel = cancel;
+      $result.cancel = cancel;
     }
     if (wantType != null) {
-      result.wantType = wantType;
+      $result.wantType = wantType;
     }
     if (sendDontHave != null) {
-      result.sendDontHave = sendDontHave;
+      $result.sendDontHave = sendDontHave;
     }
-    return result;
+    return $result;
   }
-  Wantlist_Entry._() : super();
-  factory Wantlist_Entry.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Wantlist_Entry.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  WantlistEntry._() : super();
+  factory WantlistEntry.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory WantlistEntry.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Wantlist.Entry', package: const $pb.PackageName(_omitMessageNames ? '' : 'bitswap'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'WantlistEntry', package: const $pb.PackageName(_omitMessageNames ? '' : 'bitswap'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'block', $pb.PbFieldType.OY)
     ..a<$core.int>(2, _omitFieldNames ? '' : 'priority', $pb.PbFieldType.O3)
     ..aOB(3, _omitFieldNames ? '' : 'cancel')
-    ..e<WantType>(4, _omitFieldNames ? '' : 'wantType', $pb.PbFieldType.OE, protoName: 'wantType', defaultOrMaker: WantType.WANT_TYPE_BLOCK, valueOf: WantType.valueOf, enumValues: WantType.values)
+    ..e<WantType>(4, _omitFieldNames ? '' : 'wantType', $pb.PbFieldType.OE, protoName: 'wantType', defaultOrMaker: WantType.WANT_TYPE_UNSPECIFIED, valueOf: WantType.valueOf, enumValues: WantType.values)
     ..aOB(5, _omitFieldNames ? '' : 'sendDontHave', protoName: 'sendDontHave')
     ..hasRequiredFields = false
   ;
@@ -60,22 +61,22 @@ class Wantlist_Entry extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  Wantlist_Entry clone() => Wantlist_Entry()..mergeFromMessage(this);
+  WantlistEntry clone() => WantlistEntry()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Wantlist_Entry copyWith(void Function(Wantlist_Entry) updates) => super.copyWith((message) => updates(message as Wantlist_Entry)) as Wantlist_Entry;
+  WantlistEntry copyWith(void Function(WantlistEntry) updates) => super.copyWith((message) => updates(message as WantlistEntry)) as WantlistEntry;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Wantlist_Entry create() => Wantlist_Entry._();
-  Wantlist_Entry createEmptyInstance() => create();
-  static $pb.PbList<Wantlist_Entry> createRepeated() => $pb.PbList<Wantlist_Entry>();
+  static WantlistEntry create() => WantlistEntry._();
+  WantlistEntry createEmptyInstance() => create();
+  static $pb.PbList<WantlistEntry> createRepeated() => $pb.PbList<WantlistEntry>();
   @$core.pragma('dart2js:noInline')
-  static Wantlist_Entry getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Wantlist_Entry>(create);
-  static Wantlist_Entry? _defaultInstance;
+  static WantlistEntry getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<WantlistEntry>(create);
+  static WantlistEntry? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.List<$core.int> get block => $_getN(0);
@@ -123,27 +124,27 @@ class Wantlist_Entry extends $pb.GeneratedMessage {
   void clearSendDontHave() => clearField(5);
 }
 
-/// Define Wantlist message
+/// Represents a wantlist message.
 class Wantlist extends $pb.GeneratedMessage {
   factory Wantlist({
-    $core.Iterable<Wantlist_Entry>? entries,
+    $core.Iterable<WantlistEntry>? entries,
     $core.bool? full,
   }) {
-    final result = create();
+    final $result = create();
     if (entries != null) {
-      result.entries.addAll(entries);
+      $result.entries.addAll(entries);
     }
     if (full != null) {
-      result.full = full;
+      $result.full = full;
     }
-    return result;
+    return $result;
   }
   Wantlist._() : super();
   factory Wantlist.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Wantlist.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Wantlist', package: const $pb.PackageName(_omitMessageNames ? '' : 'bitswap'), createEmptyInstance: create)
-    ..pc<Wantlist_Entry>(1, _omitFieldNames ? '' : 'entries', $pb.PbFieldType.PM, subBuilder: Wantlist_Entry.create)
+    ..pc<WantlistEntry>(1, _omitFieldNames ? '' : 'entries', $pb.PbFieldType.PM, subBuilder: WantlistEntry.create)
     ..aOB(2, _omitFieldNames ? '' : 'full')
     ..hasRequiredFields = false
   ;
@@ -170,7 +171,7 @@ class Wantlist extends $pb.GeneratedMessage {
   static Wantlist? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<Wantlist_Entry> get entries => $_getList(0);
+  $core.List<WantlistEntry> get entries => $_getList(0);
 
   @$pb.TagNumber(2)
   $core.bool get full => $_getBF(1);
@@ -182,26 +183,26 @@ class Wantlist extends $pb.GeneratedMessage {
   void clearFull() => clearField(2);
 }
 
-/// Define Block message
-class BlockMsg extends $pb.GeneratedMessage {
-  factory BlockMsg({
+/// Represents a block message.
+class Block extends $pb.GeneratedMessage {
+  factory Block({
     $core.List<$core.int>? prefix,
     $core.List<$core.int>? data,
   }) {
-    final result = create();
+    final $result = create();
     if (prefix != null) {
-      result.prefix = prefix;
+      $result.prefix = prefix;
     }
     if (data != null) {
-      result.data = data;
+      $result.data = data;
     }
-    return result;
+    return $result;
   }
-  BlockMsg._() : super();
-  factory BlockMsg.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory BlockMsg.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  Block._() : super();
+  factory Block.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Block.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockMsg', package: const $pb.PackageName(_omitMessageNames ? '' : 'bitswap'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Block', package: const $pb.PackageName(_omitMessageNames ? '' : 'bitswap'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'prefix', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
@@ -211,22 +212,22 @@ class BlockMsg extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  BlockMsg clone() => BlockMsg()..mergeFromMessage(this);
+  Block clone() => Block()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  BlockMsg copyWith(void Function(BlockMsg) updates) => super.copyWith((message) => updates(message as BlockMsg)) as BlockMsg;
+  Block copyWith(void Function(Block) updates) => super.copyWith((message) => updates(message as Block)) as Block;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static BlockMsg create() => BlockMsg._();
-  BlockMsg createEmptyInstance() => create();
-  static $pb.PbList<BlockMsg> createRepeated() => $pb.PbList<BlockMsg>();
+  static Block create() => Block._();
+  Block createEmptyInstance() => create();
+  static $pb.PbList<Block> createRepeated() => $pb.PbList<Block>();
   @$core.pragma('dart2js:noInline')
-  static BlockMsg getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockMsg>(create);
-  static BlockMsg? _defaultInstance;
+  static Block getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Block>(create);
+  static Block? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.List<$core.int> get prefix => $_getN(0);
@@ -247,20 +248,20 @@ class BlockMsg extends $pb.GeneratedMessage {
   void clearData() => clearField(2);
 }
 
-/// Define BlockPresence message
+/// Represents a block presence message.
 class BlockPresence extends $pb.GeneratedMessage {
   factory BlockPresence({
     $core.List<$core.int>? cid,
-    BlockPresenceType? type,
+    BlockPresence_Type? type,
   }) {
-    final result = create();
+    final $result = create();
     if (cid != null) {
-      result.cid = cid;
+      $result.cid = cid;
     }
     if (type != null) {
-      result.type = type;
+      $result.type = type;
     }
-    return result;
+    return $result;
   }
   BlockPresence._() : super();
   factory BlockPresence.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -268,7 +269,7 @@ class BlockPresence extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockPresence', package: const $pb.PackageName(_omitMessageNames ? '' : 'bitswap'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'cid', $pb.PbFieldType.OY)
-    ..e<BlockPresenceType>(2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: BlockPresenceType.BLOCK_PRESENCE_HAVE, valueOf: BlockPresenceType.valueOf, enumValues: BlockPresenceType.values)
+    ..e<BlockPresence_Type>(2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: BlockPresence_Type.HAVE, valueOf: BlockPresence_Type.valueOf, enumValues: BlockPresence_Type.values)
     ..hasRequiredFields = false
   ;
 
@@ -303,37 +304,33 @@ class BlockPresence extends $pb.GeneratedMessage {
   void clearCid() => clearField(1);
 
   @$pb.TagNumber(2)
-  BlockPresenceType get type => $_getN(1);
+  BlockPresence_Type get type => $_getN(1);
   @$pb.TagNumber(2)
-  set type(BlockPresenceType v) { setField(2, v); }
+  set type(BlockPresence_Type v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasType() => $_has(1);
   @$pb.TagNumber(2)
   void clearType() => clearField(2);
 }
 
-/// Define the main Bitswap Message structure
+/// The main Bitswap Message structure.
 class Message extends $pb.GeneratedMessage {
   factory Message({
     Wantlist? wantlist,
-    $core.Iterable<BlockMsg>? payload,
+    $core.Iterable<Block>? blocks,
     $core.Iterable<BlockPresence>? blockPresences,
-    $core.int? pendingBytes,
   }) {
-    final result = create();
+    final $result = create();
     if (wantlist != null) {
-      result.wantlist = wantlist;
+      $result.wantlist = wantlist;
     }
-    if (payload != null) {
-      result.payload.addAll(payload);
+    if (blocks != null) {
+      $result.blocks.addAll(blocks);
     }
     if (blockPresences != null) {
-      result.blockPresences.addAll(blockPresences);
+      $result.blockPresences.addAll(blockPresences);
     }
-    if (pendingBytes != null) {
-      result.pendingBytes = pendingBytes;
-    }
-    return result;
+    return $result;
   }
   Message._() : super();
   factory Message.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
@@ -341,9 +338,8 @@ class Message extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Message', package: const $pb.PackageName(_omitMessageNames ? '' : 'bitswap'), createEmptyInstance: create)
     ..aOM<Wantlist>(1, _omitFieldNames ? '' : 'wantlist', subBuilder: Wantlist.create)
-    ..pc<BlockMsg>(3, _omitFieldNames ? '' : 'payload', $pb.PbFieldType.PM, subBuilder: BlockMsg.create)
-    ..pc<BlockPresence>(4, _omitFieldNames ? '' : 'blockPresences', $pb.PbFieldType.PM, protoName: 'blockPresences', subBuilder: BlockPresence.create)
-    ..a<$core.int>(5, _omitFieldNames ? '' : 'pendingBytes', $pb.PbFieldType.O3, protoName: 'pendingBytes')
+    ..pc<Block>(2, _omitFieldNames ? '' : 'blocks', $pb.PbFieldType.PM, subBuilder: Block.create)
+    ..pc<BlockPresence>(3, _omitFieldNames ? '' : 'blockPresences', $pb.PbFieldType.PM, protoName: 'blockPresences', subBuilder: BlockPresence.create)
     ..hasRequiredFields = false
   ;
 
@@ -379,20 +375,11 @@ class Message extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   Wantlist ensureWantlist() => $_ensure(0);
 
+  @$pb.TagNumber(2)
+  $core.List<Block> get blocks => $_getList(1);
+
   @$pb.TagNumber(3)
-  $core.List<BlockMsg> get payload => $_getList(1);
-
-  @$pb.TagNumber(4)
   $core.List<BlockPresence> get blockPresences => $_getList(2);
-
-  @$pb.TagNumber(5)
-  $core.int get pendingBytes => $_getIZ(3);
-  @$pb.TagNumber(5)
-  set pendingBytes($core.int v) { $_setSignedInt32(3, v); }
-  @$pb.TagNumber(5)
-  $core.bool hasPendingBytes() => $_has(3);
-  @$pb.TagNumber(5)
-  void clearPendingBytes() => clearField(5);
 }
 
 

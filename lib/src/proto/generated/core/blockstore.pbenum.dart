@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: blockstore.proto
+//  source: core/blockstore.proto
 //
 // @dart = 2.12
 

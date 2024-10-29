@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: find_closest_peers.proto
+//  source: dht/find_closest_peers.proto
 //
 // @dart = 2.12
 

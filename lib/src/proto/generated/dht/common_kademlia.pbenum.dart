@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: common_kademlia.proto
+//  source: dht/common_kademlia.proto
 //
 // @dart = 2.12
 

@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: pin.proto
+//  source: core/pin.proto
 //
 // @dart = 2.12
 
