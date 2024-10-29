@@ -1,0 +1,48 @@
+// lib/src/proto/bitswap/bitswap.proto
+syntax = "proto3";
+package bitswap;
+
+// Enum for WantType
+enum WantType {
+  WANT_TYPE_UNSPECIFIED = 0; // Matches the standard's use of UNSPECIFIED
+  WANT_TYPE_BLOCK = 1;       // Want the block
+  WANT_TYPE_HAVE = 2;        // Want a HAVE/DONT_HAVE response
+}
+
+// Represents a single entry in the wantlist.
+message WantlistEntry {
+  bytes block = 1;           // CID of the block (as bytes)
+  int32 priority = 2;        // The priority (normalized), default to 1
+  bool cancel = 3;           // Whether this revokes an entry
+  WantType wantType = 4;     // The type of want (block, have)
+  bool sendDontHave = 5;     // Whether to receive DontHave responses
+}
+
+// Represents a wantlist message.
+message Wantlist {
+  repeated WantlistEntry entries = 1; // A list of wantlist entries
+  bool full = 2;                      // Whether this is the full wantlist
+}
+
+// Represents a block message.
+message Block {
+  bytes prefix = 1;  // CID prefix (optional)
+  bytes data = 2;    // Block data
+}
+
+// Represents a block presence message.
+message BlockPresence {
+  bytes cid = 1;        // CID of the block (as bytes)
+  Type type = 2;        // Type of presence (HAVE/DONT_HAVE)
+  enum Type {
+    HAVE = 0;          // Node has the block
+    DONT_HAVE = 1;    // Node doesn't have the block
+  }
+}
+
+// The main Bitswap Message structure.
+message Message {
+  Wantlist wantlist = 1;                      // The wantlist
+  repeated Block blocks = 2;                  // Blocks being sent
+  repeated BlockPresence blockPresences = 3;  // Presence of blocks
+}
