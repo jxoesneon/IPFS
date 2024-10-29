@@ -1,8 +1,9 @@
+// lib/src/proto/dht/routing_table.proto
 syntax = "proto3";
 
 package ipfs.dht.routing_table;
 
-import "kademlia_node.proto";
+import "dht/kademlia_node.proto";
 
 message RoutingTable {
   // Represents the routing table entries.
