@@ -1,10 +1,10 @@
-// lib/src/proto/merkle_dag_node.proto
+// lib/src/proto/dht/merkle_dag_node.proto
 syntax = "proto3";
 
 package ipfs.core.data_structures;
 
-import "link.proto"; // Import the link definition
-import "cid.proto";  // Import the CID definition
+import "core/link.proto"; // Import the link definition
+import "core/cid.proto";  // Import the CID definition
 
 // Represents a Merkle DAG node.
 message MerkleDAGNode {
