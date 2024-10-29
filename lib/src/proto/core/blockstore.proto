@@ -1,11 +1,11 @@
-  // lib/src/proto/blockstore.proto
+  // lib/src/proto/core/blockstore.proto
   syntax = "proto3";
 
   package ipfs.core.data_structures;
 
   // Import necessary proto definitions
-  import "block.proto"; // Import BlockProto definition
-  import "cid.proto";   // Import CIDProto definition
+  import "core/block.proto"; // Import BlockProto definition
+  import "core/cid.proto";   // Import CIDProto definition
   import "google/protobuf/empty.proto";
   // Response message for adding a block
   message AddBlockResponse {
