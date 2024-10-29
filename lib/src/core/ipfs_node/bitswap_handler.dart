@@ -29,7 +29,7 @@ class BitswapHandler {
         _router = P2plibRouter(config) {
     // Initialize _bitswap in the constructor body
     _bitswap = Bitswap(
-      _router.routerL0, // Access the RouterL0 instance through the getter
+      _router, // Access the RouterL0 instance through the getter
       _ledger,
       _datastore,
       config.nodeId, // Provide the _nodeId value
