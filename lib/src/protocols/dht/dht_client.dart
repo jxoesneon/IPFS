@@ -9,7 +9,7 @@ import 'package:p2plib/p2plib.dart' as p2p;
 import '/../src/utils/base58.dart';
 import '../../proto/generated/unixfs/unixfs.pb.dart';
 import '../../proto/generated/dht/dht.pb.dart';
-import '/../src/proto/bitswap/bitswap.pb.dart';
+import '/../src/proto/generated/bitswap/bitswap.pb.dart';
 import '/../src/utils/varint.dart';
 
 /// A DHT client implementation.
