@@ -2,8 +2,8 @@
 import 'dart:typed_data';
 import 'package:multibase/multibase.dart'; // Import multibase for decoding
 import 'package:dart_multihash/dart_multihash.dart'; // Import multihash for decoding
-import '../../proto/generated/core/block.pb.dart';  // Correct path for BlockProto
-import 'cid.dart';  // Import for handling CIDs
+import '../../proto/generated/core/block.pb.dart'; // Correct path for BlockProto
+import 'cid.dart'; // Import for handling CIDs
 
 /// Represents a Block in the IPFS network.
 /// A block consists of raw binary data and a corresponding CID (Content Identifier).
@@ -33,7 +33,8 @@ class Block {
       final multihashInfo = Multihash.decode(decodedCid);
 
       // 3. Create the CID:
-      final cid = CID.fromBytes(Uint8List.fromList(multihashInfo.digest), 'dag-pb'); // Convert to Uint8List
+      final cid = CID.fromBytes(Uint8List.fromList(multihashInfo.digest),
+          'dag-pb'); // Convert to Uint8List
 
       // 4. Extract block data (after the encoded CID):
       final encodedCidLength = bytes.length; // Calculate length
@@ -41,22 +42,25 @@ class Block {
 
       return Block(blockData, cid);
     } catch (e) {
-      throw Exception('CIDExtractionException: Failed to extract CID from bytes: $e');
+      throw Exception(
+          'CIDExtractionException: Failed to extract CID from bytes: $e');
     }
   }
-  
+
   /// Serializes the Block to a Protobuf message for transmission or storage.
   BlockProto toProto() {
     final blockProto = BlockProto()
       ..data = data
-      ..cid = cid.toProto();  // Serializes CID to its Protobuf representation
+      ..cid = cid.toProto(); // Serializes CID to its Protobuf representation
     return blockProto;
   }
 
   /// Deserializes a Block from a Protobuf message.
   factory Block.fromProto(BlockProto proto) {
-    final cid = CID.fromProto(proto.cid);  // Deserializes CID from Protobuf
-    return Block(Uint8List.fromList(proto.data), cid);  // Convert data
+    // Ensure that proto.data is correctly converted to Uint8List
+    final cid = CID.fromProto(proto.cid); // Deserializes CID from Protobuf
+    final blockData = Uint8List.fromList(proto.data); // Convert data
+    return Block(blockData, cid);
   }
 
   /// Returns the size of the block's data in bytes.
