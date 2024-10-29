@@ -1,8 +1,9 @@
+// lib/src/proto/core/block.proto
 syntax = "proto3";
 
 package ipfs.core.data_structures;
 
-import "cid.proto";
+import "core/cid.proto";
 
 message BlockProto {
   bytes data = 1;  // Raw binary data of the block
