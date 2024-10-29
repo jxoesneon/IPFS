@@ -163,7 +163,7 @@ class IpfsNodeNetworkEvents {
         case 'circuit_relay_failed':
           networkEvent.circuitRelayFailed = CircuitRelayFailedEvent()
             ..relayAddress = event.relayAddress
-            ..errorMessage = event.errorMessage;
+            ..reason = event.errorMessage;
           break;
         case 'circuit_relay_closed':
           networkEvent.circuitRelayClosed = CircuitRelayClosedEvent()
@@ -190,17 +190,43 @@ class IpfsNodeNetworkEvents {
     });
   }
 
-  /// Listens for error events and emits corresponding network error events.
-  void _listenForErrorEvents() {
-    _router.errorEvents.listen((event) {
-      final networkEvent = NetworkEvent()
-        ..error = ErrorEvent()
-        ..errorType = event.errorType
-        ..message = event.message
-        ..stackTrace = event.stackTrace;
-      _networkEventsController.add(networkEvent);
-    });
+/// Listens for error events and emits corresponding network error events.
+void _listenForErrorEvents() {
+  _router.errorEvents.listen((event) {
+    final networkEvent = NetworkEvent()
+      ..error = NodeErrorEvent(
+        errorType: _mapToProtoErrorType(event.errorType),
+        message: event.message,
+        stackTrace: event.stackTrace,
+        // Add optional fields like source if available in 'event'
+      );
+    _networkEventsController.add(networkEvent);
+  });
+}
+
+// Helper function to map existing error types to the Proto enum
+NodeErrorEvent_ErrorType _mapToProtoErrorType(String errorType) {
+  switch (errorType) {
+    case 'invalidRequest':
+      return NodeErrorEvent_ErrorType.INVALID_REQUEST;
+    case 'notFound':
+      return NodeErrorEvent_ErrorType.NOT_FOUND;
+    case 'methodNotFound':
+      return NodeErrorEvent_ErrorType.METHOD_NOT_FOUND;
+    case 'internalError':
+      return NodeErrorEvent_ErrorType.INTERNAL_ERROR;
+    case 'networkError':
+      return NodeErrorEvent_ErrorType.NETWORK;
+    case 'protocolError':
+      return NodeErrorEvent_ErrorType.PROTOCOL;
+    case 'securityError':
+      return NodeErrorEvent_ErrorType.SECURITY;
+    case 'datastoreError':
+      return NodeErrorEvent_ErrorType.DATASTORE;
+    default:
+      return NodeErrorEvent_ErrorType.UNKNOWN;
   }
+}
 
   /// Stops listening for network events and closes the stream controller.
   void dispose() {
