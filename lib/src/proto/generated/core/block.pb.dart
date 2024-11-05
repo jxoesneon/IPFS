@@ -19,6 +19,7 @@ class BlockProto extends $pb.GeneratedMessage {
   factory BlockProto({
     $core.List<$core.int>? data,
     $0.CIDProto? cid,
+    $core.String? format,
   }) {
     final $result = create();
     if (data != null) {
@@ -26,6 +27,9 @@ class BlockProto extends $pb.GeneratedMessage {
     }
     if (cid != null) {
       $result.cid = cid;
+    }
+    if (format != null) {
+      $result.format = format;
     }
     return $result;
   }
@@ -36,6 +40,7 @@ class BlockProto extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..aOM<$0.CIDProto>(2, _omitFieldNames ? '' : 'cid', subBuilder: $0.CIDProto.create)
+    ..aOS(3, _omitFieldNames ? '' : 'format')
     ..hasRequiredFields = false
   ;
 
@@ -79,6 +84,15 @@ class BlockProto extends $pb.GeneratedMessage {
   void clearCid() => clearField(2);
   @$pb.TagNumber(2)
   $0.CIDProto ensureCid() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  $core.String get format => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set format($core.String v) { $_setString(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasFormat() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearFormat() => clearField(3);
 }
 
 

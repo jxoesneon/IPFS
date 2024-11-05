@@ -13,21 +13,21 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-class PinType extends $pb.ProtobufEnum {
-  static const PinType PIN_TYPE_UNSPECIFIED = PinType._(0, _omitEnumNames ? '' : 'PIN_TYPE_UNSPECIFIED');
-  static const PinType PIN_TYPE_DIRECT = PinType._(1, _omitEnumNames ? '' : 'PIN_TYPE_DIRECT');
-  static const PinType PIN_TYPE_RECURSIVE = PinType._(2, _omitEnumNames ? '' : 'PIN_TYPE_RECURSIVE');
+class PinTypeProto extends $pb.ProtobufEnum {
+  static const PinTypeProto PIN_TYPE_UNSPECIFIED = PinTypeProto._(0, _omitEnumNames ? '' : 'PIN_TYPE_UNSPECIFIED');
+  static const PinTypeProto PIN_TYPE_DIRECT = PinTypeProto._(1, _omitEnumNames ? '' : 'PIN_TYPE_DIRECT');
+  static const PinTypeProto PIN_TYPE_RECURSIVE = PinTypeProto._(2, _omitEnumNames ? '' : 'PIN_TYPE_RECURSIVE');
 
-  static const $core.List<PinType> values = <PinType> [
+  static const $core.List<PinTypeProto> values = <PinTypeProto> [
     PIN_TYPE_UNSPECIFIED,
     PIN_TYPE_DIRECT,
     PIN_TYPE_RECURSIVE,
   ];
 
-  static final $core.Map<$core.int, PinType> _byValue = $pb.ProtobufEnum.initByValue(values);
-  static PinType? valueOf($core.int value) => _byValue[value];
+  static final $core.Map<$core.int, PinTypeProto> _byValue = $pb.ProtobufEnum.initByValue(values);
+  static PinTypeProto? valueOf($core.int value) => _byValue[value];
 
-  const PinType._($core.int v, $core.String n) : super(v, n);
+  const PinTypeProto._($core.int v, $core.String n) : super(v, n);
 }
 
 

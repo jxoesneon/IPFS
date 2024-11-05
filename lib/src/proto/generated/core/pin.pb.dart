@@ -19,10 +19,10 @@ import 'pin.pbenum.dart';
 
 export 'pin.pbenum.dart';
 
-class Pin extends $pb.GeneratedMessage {
-  factory Pin({
+class PinProto extends $pb.GeneratedMessage {
+  factory PinProto({
     $0.CIDProto? cid,
-    PinType? type,
+    PinTypeProto? type,
     $fixnum.Int64? timestamp,
   }) {
     final $result = create();
@@ -37,13 +37,13 @@ class Pin extends $pb.GeneratedMessage {
     }
     return $result;
   }
-  Pin._() : super();
-  factory Pin.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Pin.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  PinProto._() : super();
+  factory PinProto.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory PinProto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Pin', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PinProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..aOM<$0.CIDProto>(1, _omitFieldNames ? '' : 'cid', subBuilder: $0.CIDProto.create)
-    ..e<PinType>(2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: PinType.PIN_TYPE_UNSPECIFIED, valueOf: PinType.valueOf, enumValues: PinType.values)
+    ..e<PinTypeProto>(2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: PinTypeProto.PIN_TYPE_UNSPECIFIED, valueOf: PinTypeProto.valueOf, enumValues: PinTypeProto.values)
     ..aInt64(3, _omitFieldNames ? '' : 'timestamp')
     ..hasRequiredFields = false
   ;
@@ -52,22 +52,22 @@ class Pin extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  Pin clone() => Pin()..mergeFromMessage(this);
+  PinProto clone() => PinProto()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Pin copyWith(void Function(Pin) updates) => super.copyWith((message) => updates(message as Pin)) as Pin;
+  PinProto copyWith(void Function(PinProto) updates) => super.copyWith((message) => updates(message as PinProto)) as PinProto;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Pin create() => Pin._();
-  Pin createEmptyInstance() => create();
-  static $pb.PbList<Pin> createRepeated() => $pb.PbList<Pin>();
+  static PinProto create() => PinProto._();
+  PinProto createEmptyInstance() => create();
+  static $pb.PbList<PinProto> createRepeated() => $pb.PbList<PinProto>();
   @$core.pragma('dart2js:noInline')
-  static Pin getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Pin>(create);
-  static Pin? _defaultInstance;
+  static PinProto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PinProto>(create);
+  static PinProto? _defaultInstance;
 
   @$pb.TagNumber(1)
   $0.CIDProto get cid => $_getN(0);
@@ -81,9 +81,9 @@ class Pin extends $pb.GeneratedMessage {
   $0.CIDProto ensureCid() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  PinType get type => $_getN(1);
+  PinTypeProto get type => $_getN(1);
   @$pb.TagNumber(2)
-  set type(PinType v) { setField(2, v); }
+  set type(PinTypeProto v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasType() => $_has(1);
   @$pb.TagNumber(2)
