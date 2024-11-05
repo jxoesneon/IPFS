@@ -1,19 +1,18 @@
-// lib/src/core/data_structures/operation_log.dart
-
 import 'dart:collection';
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart' as fixnum;
-import '../../proto/generated/core/operation_log.pb.dart' as proto; // Import the generated Protobuf file
+import '../../proto/generated/core/cid.pb.dart';
 import 'cid.dart'; // Import CID class for logging CIDs
-import 'node_type.dart'; // Import NodeType for logging node types
+import '../../proto/generated/core/operation_log.pb.dart'; // Import the generated Protobuf file
 import '../../proto/generated/core/node_type.pbenum.dart'; // Import the NodeTypeProto enum directly
+// lib/src/core/data_structures/operation_log.dart
 
 class OperationLogEntry {
   final DateTime timestamp;
   final String operation;
   final String details;
   final CID? cid; // Optional CID involved in the operation
-  final NodeType? nodeType; // Optional NodeType involved in the operation
+  final NodeTypeProto? nodeType; // Optional NodeType involved in the operation
 
   OperationLogEntry({
     required this.timestamp,
@@ -23,33 +22,24 @@ class OperationLogEntry {
     this.nodeType,
   });
 
-  factory OperationLogEntry.fromProto(proto.OperationLogEntry pbEntry) {
+  factory OperationLogEntry.fromProto(OperationLogEntryProto pbEntry) {
     return OperationLogEntry(
       timestamp: DateTime.fromMillisecondsSinceEpoch(pbEntry.timestamp.toInt()),
       operation: pbEntry.operation,
       details: pbEntry.details,
       cid: pbEntry.hasCid() ? CID.fromProto(pbEntry.cid) : null,
-      nodeType: pbEntry.hasNodeType()
-          ? NodeTypeExtension.fromName(pbEntry.nodeType.name)
-          : null,
+      nodeType: pbEntry.hasNodeType() ? pbEntry.nodeType : null,
     );
   }
 
-  proto.OperationLogEntry toProto() {
-    final pbEntry = proto.OperationLogEntry()
+  OperationLogEntryProto toProto() {
+    final pbEntry = OperationLogEntryProto();
+    return pbEntry
       ..timestamp = fixnum.Int64(timestamp.millisecondsSinceEpoch)
       ..operation = operation
-      ..details = details;
-
-    if (cid != null) {
-      pbEntry.cid = cid!.toProto();
-    }
-
-    if (nodeType != null) {
-      pbEntry.nodeType = NodeTypeProto.valueOf(nodeType!.index)!; // Use the imported enum
-    }
-
-    return pbEntry;
+      ..details = details
+      ..cid = cid?.toProto() ?? CIDProto()
+      ..nodeType = nodeType!;
   }
 
   @override
@@ -65,7 +55,7 @@ class OperationLog {
     required String operation,
     required String details,
     CID? cid,
-    NodeType? nodeType,
+    NodeTypeProto? nodeType,
   }) {
     final entry = OperationLogEntry(
       timestamp: DateTime.now(),
@@ -86,15 +76,16 @@ class OperationLog {
   }
 
   Uint8List serialize() {
-    final protoLog = proto.OperationLog()
+    final protoLog = OperationLogProto()
       ..entries.addAll(_logEntries.map((entry) => entry.toProto()));
     return protoLog.writeToBuffer();
   }
 
   void deserialize(Uint8List data) {
-    final protoLog = proto.OperationLog.fromBuffer(data);
+    final protoLog = OperationLogProto.fromBuffer(data);
     _logEntries.clear();
-    _logEntries.addAll(protoLog.entries.map((pbEntry) => OperationLogEntry.fromProto(pbEntry)));
+    _logEntries.addAll(protoLog.entries
+        .map((pbEntry) => OperationLogEntry.fromProto(pbEntry)));
   }
 
   @override
