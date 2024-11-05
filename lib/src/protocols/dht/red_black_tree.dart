@@ -1,10 +1,10 @@
-// lib/src/protocols/dht/red_black_tree.dart
-import '/../src/proto/dht/common_tree.pb.dart' as common_tree;
-import 'red_black_tree/insertion.dart' as insertion;
-import 'red_black_tree/deletion.dart' as deletion;
 import 'red_black_tree/search.dart' as rb_search;
+import 'red_black_tree/deletion.dart' as deletion;
+import 'red_black_tree/insertion.dart' as insertion;
 import 'red_black_tree/rotations.dart' as rotations;
+import '/../src/proto/dht/common_tree.pb.dart' as common_tree;
 import 'red_black_tree/fix_violations.dart' as fix_violations;
+// lib/src/protocols/dht/red_black_tree.dart
 
 // Represents a node in a Red-Black Tree.
 class RedBlackTreeNode<K_PeerId, V_PeerInfo> {
@@ -71,4 +71,21 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
   }
 
   int compare(K_PeerId a, K_PeerId b) => _compare(a, b);
+
+  clear() {}
+
+  // Add this operator definition
+  void operator []=(K_PeerId key, V_PeerInfo value) {
+    insert(key, value);
+  }
+
+  // Add operator [] getter
+  V_PeerInfo? operator [](K_PeerId key) {
+    return search(key);
+  }
+
+  // Add the remove method
+  void remove(K_PeerId key) {
+    _deletion.deleteNode(this, key); // Use the existing deletion logic
+  }
 }
