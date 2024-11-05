@@ -1,10 +1,13 @@
-// lib/src/core/ipfs_node/network_handler.dart
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import '/../src/transport/circuit_relay_client.dart';
 import '/../src/transport/p2plib_router.dart';
+import '/../src/transport/circuit_relay_client.dart';
+import 'package:ipfs_node/src/protocols/dht/peer.dart';
+import 'package:ipfs_node/src/protocols/dht/dht_client.dart';
+import 'package:ipfs_node/src/protocols/dht/routing_table.dart';
 import '../../proto/generated/dht/ipfs_node_network_events.pb.dart'; // Import generated Protobuf classes
+// lib/src/core/ipfs_node/network_handler.dart
 
 /// Handles network operations for an IPFS node.
 class NetworkHandler {
@@ -107,34 +110,51 @@ class NetworkHandler {
 
   /// Listens for network events and handles them appropriately.
   void _listenForNetworkEvents() {
-    // Listen for incoming NetworkEvent messages
-    // Assuming that you have a method in your router or circuit relay client that provides these events
-    // This is just an example; adjust according to your actual implementation
     _networkEventController.stream.listen((event) {
-      if (event.hasPeerConnected()) {
-        final peerId = event.peerConnected.peerId;
-        final multiaddress = event.peerConnected.multiaddress;
-        print('Peer joined: $peerId at address: $multiaddress');
-        // Handle additional logic for when a peer joins
-      } else if (event.hasPeerDisconnected()) {
-        final peerId = event.peerDisconnected.peerId;
-        final reason = event.peerDisconnected.reason;
-        print('Peer left: $peerId. Reason: $reason');
-        // Handle additional logic for when a peer leaves
+      try {
+        if (event.hasPeerConnected()) {
+          final peerId = event.peerConnected.peerId;
+          final multiaddress = event.peerConnected.multiaddress;
+          print('Peer joined: $peerId at address: $multiaddress');
+
+          // Add peer to DHT routing table
+          final peer = p2p.Peer(id: peerId, address: multiaddress);
+          _node.dhtHandler._dhtClient._routingTable
+              .addPeer(peer.id, _calculateClosestPeer(peer.id));
+        } else if (event.hasPeerDisconnected()) {
+          final peerId = event.peerDisconnected.peerId;
+          final reason = event.peerDisconnected.reason;
+          print('Peer left: $peerId. Reason: $reason');
+
+          // Remove peer from DHT routing table
+          _node.dhtHandler._dhtClient._routingTable.removePeer(peerId);
+        } else if (event.hasMessageReceived()) {
+          final messageContent =
+              utf8.decode(event.messageReceived.messageContent);
+          final senderId = event.messageReceived.peerId;
+          print('Message received from $senderId: $messageContent');
+        } else {
+          print('Unhandled event type: ${event.runtimeType}');
+        }
+      } catch (e, stackTrace) {
+        print('Error processing network event: $e');
+        print(stackTrace);
       }
-
-      // Handle other events similarly...
+    }, onError: (error) {
+      print('Error in network event stream: $error');
+    }, onDone: () {
+      print('Network event stream closed.');
     });
+  }
 
-    // You may also want to handle other types of events defined in your proto file here
-    // For example:
-    /*
-   else if (event.hasMessageReceived()) { 
-       final messageContent = utf8.decode(event.messageReceived.messageContent);
-       final senderId = event.messageReceived.peerId;
-       print('Message received from $senderId: $messageContent');
-   }
-   */
-    // Add more event handling as necessary based on your proto definitions.
+  // Add helper method for calculating closest peer
+  p2p.PeerId _calculateClosestPeer(p2p.PeerId peerId) {
+    // Implement Kademlia XOR distance calculation
+    // Return the ID of the closest known peer
+    return _node.dhtHandler._dhtClient._routingTable
+            .findClosestPeers(peerId, 1)
+            .firstOrNull
+            ?.id ??
+        peerId;
   }
 }
