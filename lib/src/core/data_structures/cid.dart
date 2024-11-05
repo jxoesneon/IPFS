@@ -1,12 +1,11 @@
-// lib/src/core/data_structures/cid.dart
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:convert/convert.dart';
 import 'package:dart_multihash/dart_multihash.dart';
-
-import '../../proto/generated/core/cid.pb.dart'; // Import the generated CID from Protobuf
-import 'package:multibase/multibase.dart'; // Multibase encoding package
 import '/../src/utils/base58.dart'; // Base58 utility for CIDv0
+import 'package:multibase/multibase.dart'; // Multibase encoding package
+import '../../proto/generated/core/cid.pb.dart'; // Import the generated CID from Protobuf
+// lib/src/core/data_structures/cid.dart
 
 /// Represents a Content Identifier (CID) in IPFS.
 class CID {
@@ -14,16 +13,28 @@ class CID {
 
   CID(this._cidProto);
 
+  static const _supportedCodecs = {
+    'raw': 0x55,
+    'dag-pb': 0x70,
+    'dag-cbor': 0x71,
+    'dag-json': 0x129,
+  };
+
   /// Creates a CID from the given multihash and codec.
   factory CID.fromBytes(Uint8List multihash, String codec,
       {CIDVersion version = CIDVersion.CID_VERSION_0}) {
+    if (!_supportedCodecs.containsKey(codec)) {
+      throw UnsupportedError('Unsupported codec: $codec');
+    }
+
     final cidProto = CIDProto()
       ..version = version
       ..multihash = multihash
-      ..codec = codec;
+      ..codec = codec
+      ..codecType = _supportedCodecs[codec]!;
 
     if (version == CIDVersion.CID_VERSION_1) {
-      cidProto.multibasePrefix = 'b'; // Default to base32 for CIDv1
+      cidProto.multibasePrefix = 'b';
     }
 
     return CID(cidProto);
@@ -171,5 +182,48 @@ class CID {
 
   String hashedValue() {
     return hex.encode(multihash);
+  }
+
+  String getPrefix() {
+    final prefix = CidPrefix()
+      ..version = version
+      ..codec = _cidProto.codecType
+      ..mhType = _getMultihashType()
+      ..mhLength = multihash.length;
+
+    return prefix.toString();
+  }
+
+  int _getMultihashType() {
+    // Implement your logic to determine the Multihash type based on the codec
+    // For example, you can use a switch statement to map codecs to Multihash types
+    switch (_cidProto.codecType) {
+      case 0x55:
+        return 0x12; // Multihash type for 'raw'
+      case 0x70:
+        return 0x12; // Multihash type for 'dag-pb'
+      case 0x71:
+        return 0x12; // Multihash type for 'dag-cbor'
+      case 0x129:
+        return 0x12; // Multihash type for 'dag-json'
+      default:
+        throw UnsupportedError('Unsupported codec: ${_cidProto.codec}');
+    }
+  }
+
+  /// Converts the CID to its byte representation
+  Uint8List toBytes() {
+    // For CIDv0, return just the multihash
+    if (version == CIDVersion.CID_VERSION_0) {
+      return multihash;
+    }
+
+    // For CIDv1, combine version, codec type, and multihash
+    final bytes = BytesBuilder();
+    bytes.addByte(_cidVersionToIndex(version));
+    bytes.addByte(_cidProto.codecType);
+    bytes.add(multihash);
+
+    return bytes.toBytes();
   }
 }
