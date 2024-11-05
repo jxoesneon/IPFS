@@ -1,8 +1,8 @@
+import 'package:fixnum/fixnum.dart' as fixnum;
+import 'cid.dart'; // Import CID class for handling CIDs
+import '../../proto/generated/core/pin.pb.dart' as proto; // Import the generated Protobuf file
 // lib/src/core/data_structures/pin.dart
 
-import 'package:fixnum/fixnum.dart' as fixnum;
-import '../../proto/generated/core/pin.pb.dart' as proto; // Import the generated Protobuf file
-import 'cid.dart'; // Import CID class for handling CIDs
 
 /// Represents a pin in the IPFS network.
 class Pin {
@@ -39,11 +39,11 @@ class Pin {
   }
 
   /// Converts a [proto.PinTypeProto] to a [PinType].
-  static PinType _pinTypeFromProto(proto.PinTypeProto protoType) {
+  static PinType _pinTypeFromProto(proto.PinType protoType) {
     switch (protoType) {
-      case proto.PinTypeProto.DIRECT:
+      case proto.PinType.PIN_TYPE_DIRECT:
         return PinType.DIRECT;
-      case proto.PinTypeProto.RECURSIVE:
+      case proto.PinType.PIN_TYPE_RECURSIVE:
         return PinType.RECURSIVE;
       default:
         throw ArgumentError('Unknown pin type in protobuf: $protoType');
@@ -51,12 +51,12 @@ class Pin {
   }
 
   /// Converts a [PinType] to a [proto.PinTypeProto].
-  static proto.PinTypeProto _pinTypeToProto(PinType type) {
+  static proto.PinType _pinTypeToProto(PinType type) {
     switch (type) {
       case PinType.DIRECT:
-        return proto.PinTypeProto.DIRECT;
+        return proto.PinType.PIN_TYPE_DIRECT;
       case PinType.RECURSIVE:
-        return proto.PinTypeProto.RECURSIVE;
+        return proto.PinType.PIN_TYPE_RECURSIVE;
       default:
         throw ArgumentError('Unknown pin type: $type');
     }
