@@ -227,3 +227,11 @@ class CID {
     return bytes.toBytes();
   }
 }
+
+extension CIDProtoExtension on CIDProto {
+  static CIDProto fromString(String cidStr) {
+    return CIDProto()
+      ..multihash = Uint8List.fromList(cidStr.codeUnits)
+      ..version = CIDVersion.CID_VERSION_1; // or appropriate version
+  }
+}
