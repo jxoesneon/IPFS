@@ -47,6 +47,8 @@ dependencies:
   archive: ^3.6.1
   murmurhash: ^1.0.1
 
+  cbor: ^5.1.0  # Or the latest version
+
 dev_dependencies:
   test: ^1.21.0 # For unit and integration tests
   lints: ^5.0.0 # For code style analysis
