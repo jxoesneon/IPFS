@@ -1,214 +1,240 @@
-// lib/src/core/ipfs_node/bitswap_handler.dart
-
-import 'dart:convert';
-import 'dart:typed_data';
-import 'package:convert/convert.dart'; // For encoding utilities
-import 'package:crypto/crypto.dart'; // For hashing utilities
-import '../../proto/generated/core/cid.pb.dart';
-
+import 'dart:io';
+import 'dart:async';
 import '../data_structures/block.dart';
-import '../data_structures/cid.dart';
-import '../data_structures/link.dart';
-import '../data_structures/node.dart';
-import '/../src/protocols/bitswap/bitswap.dart';
-import '/../src/protocols/bitswap/ledger.dart';
-import '/../src/transport/p2plib_router.dart';
-import '/../src/storage/datastore.dart';
-import '/../src/core/data_structures/node_type.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
+import '../data_structures/blockstore.dart';
+import '../../transport/p2plib_router.dart';
+import '../../protocols/bitswap/ledger.dart';
+import '../../protocols/bitswap/wantlist.dart';
+import '../../proto/generated/core/cid.pb.dart';
+import '../../protocols/bitswap/message.dart' as message;
 
-/// Handles Bitswap protocol operations for an IPFS node.
+/// Handles Bitswap protocol operations for an IPFS node following the Bitswap 1.2.0 specification
 class BitswapHandler {
-  late final Bitswap _bitswap;
-  final BitLedger _ledger;
+  final BlockStore _blockStore;
   final P2plibRouter _router;
-  final Datastore _datastore;
+  final Wantlist _wantlist = Wantlist();
+  final LedgerManager _ledgerManager = LedgerManager();
+  final Map<String, Completer<Block>> _pendingBlocks = {};
+  static const String _protocolId = '/ipfs/bitswap/1.2.0';
+  bool _running = false;
 
-  BitswapHandler(config)
-      : _ledger = BitLedger(config),
-        _datastore = Datastore(config.datastorePath),
-        _router = P2plibRouter(config) {
-    // Initialize _bitswap in the constructor body
-    _bitswap = Bitswap(
-      _router, // Access the RouterL0 instance through the getter
-      _ledger,
-      _datastore,
-      config.nodeId, // Provide the _nodeId value
-      config, // Pass the config object
-    );
-  }
+  BitswapHandler(this._blockStore, this._router);
 
-  /// Starts the Bitswap protocol.
+  /// Starts the Bitswap handler
   Future<void> start() async {
-    try {
-      await _bitswap.start();
-      print('Bitswap protocol started.');
-    } catch (e) {
-      print('Error starting Bitswap protocol: $e');
-    }
+    if (_running) return;
+    _running = true;
+
+    await _router.start();
+    _router.addMessageHandler(_protocolId, _handlePacket);
+    // Register protocol identifier
+    _router.registerProtocol(_protocolId);
+    print('Bitswap handler started with protocol: $_protocolId');
   }
 
-  /// Stops the Bitswap protocol.
+  /// Stops the Bitswap handler
   Future<void> stop() async {
-    try {
-      await _bitswap.stop();
-      print('Bitswap protocol stopped.');
-    } catch (e) {
-      print('Error stopping Bitswap protocol: $e');
+    if (!_running) return;
+    _running = false;
+
+    // Clean up pending requests
+    for (final completer in _pendingBlocks.values) {
+      completer.completeError('BitswapHandler stopped');
+    }
+    _pendingBlocks.clear();
+
+    await _router.stop();
+    print('Bitswap handler stopped');
+  }
+
+  /// Handles incoming Bitswap messages
+  void _handleMessage(message.Message message) {
+    if (!_running) return;
+
+    final fromPeer = message.from;
+    if (fromPeer == null) {
+      print('Received message without peer ID');
+      return;
+    }
+
+    // Update peer ledger
+    final ledger = _ledgerManager.getLedger(fromPeer);
+
+    if (message.hasWantlist()) {
+      final messageWantlist = message.getWantlist();
+      final wantlist = Wantlist()
+        ..entries.addAll(
+          Map.fromEntries(
+            messageWantlist.entries.entries.map(
+              (e) => MapEntry(e.key, e.value.priority),
+            ),
+          ),
+        );
+      _handleWantlist(wantlist, fromPeer);
+    }
+
+    if (message.hasBlocks()) {
+      final blocks = message.getBlocks();
+      _handleBlocks(blocks);
+      // Update received bytes in ledger
+      ledger.addReceivedBytes(blocks
+          .map((Block? b) => b?.data.length ?? 0)
+          .fold<int>(0, (sum, size) => (sum + size).toInt()));
     }
   }
 
-  /// Requests a block from the network using Bitswap.
-  Future<Block?> requestBlock(String cid) async {
-    try {
-      final block = await _bitswap.wantBlock(cid);
-      if (block != null) {
-        print('Successfully requested block with CID: $cid');
-      } else {
-        print('Block with CID $cid not found in network.');
-      }
-      return block;
-    } catch (e) {
-      print('Error requesting block with CID $cid: $e');
-      return null;
-    }
-  }
+  /// Handles incoming wantlist entries according to Bitswap spec
+  void _handleWantlist(Wantlist wantlist, String fromPeer) {
+    // Sort entries by priority before processing
+    final sortedEntries = wantlist.entries.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value)); // Higher priority first
 
-  /// Provides a block to the network using Bitswap.
-  void provideBlock(Block block) {
-    try {
-      _bitswap.provide(block.cid.encode()); // Use cid.encode()
-      print('Provided block with CID: ${block.cid}');
-    } catch (e) {
-      print('Error providing block with CID ${block.cid}: $e');
-    }
-  }
+    for (final entry in sortedEntries) {
+      final cidStr = entry.key;
+      final priority = entry.value;
 
-  /// Checks if a block is available locally or needs to be fetched from the network.
-  Future<Block?> getBlock(String cid) async {
-    try {
-      // Check if the block is available locally
-      final localBlock = await _datastore.get(cid);
-      if (localBlock != null) {
-        print('Retrieved local block with CID: $cid');
-        return localBlock;
-      }
+      // Add to our local wantlist with the received priority
+      _wantlist.add(cidStr, priority: priority);
 
-      // If not available locally, request it from the network
-      return await requestBlock(cid);
-    } catch (e) {
-      print('Error getting block with CID $cid: $e');
-      return null;
-    }
-  }
+      // Convert string CID to CIDProto
+      final cidProto = CIDProto()..codec = cidStr;
 
-  /// Calculates the CID for given data using multihash.
-  Future<String> calculateCID(Uint8List data) async {
-    final hash = sha256.convert(data); // Using SHA-256 for hashing
-    final digest = hash.bytes;
-    return hex.encode(digest); // Convert hash to hexadecimal string as CID
-  }
+      final response = _blockStore.getBlock(cidProto);
+      if (response.found) {
+        final msg = message.Message()
+          ..addBlock(Block.fromProto(response.block))
+          ..from = _router.peerID;
 
-  /// Adds a file to IPFS and returns its CID.
-  Future<String> addFile(Uint8List data) async {
-    // Create an IPFS Node object to represent the file
-    final fileNode = Node(
-      data: data,
-      links: [],
-      size: data.length,
-      timestamp: DateTime.now().millisecondsSinceEpoch, // Set current timestamp
-      metadata: {}, // Initialize with an empty map or provide actual metadata
-      cid: CID.fromContent(
-        'raw', // or a more specific codec if you know it
-        version: CIDVersion.CID_VERSION_1,
-        hashType: 'sha2-256',
-        content: data,
-      ),
-      type: NodeType.REGULAR,
-    );
+        final messageBytes = msg.toBytes();
 
-    // Create a Block with the file data
-    final block = Block(fileNode.toBytes(), fileNode.cid);
-
-    // Calculate the CID of the block
-    final cid = await calculateCID(block.data);
-
-    // Store the block in the datastore
-    await _datastore.put(cid, block);
-
-    // Announce availability of the block to the network
-    provideBlock(block);
-
-    return cid;
-  }
-
-  Future<String> addDirectory(Map<String, dynamic> directoryContent) async {
-    final links = <Link>[];
-
-    for (var entry in directoryContent.entries) {
-      final name = entry.key;
-      final content = entry.value;
-
-      if (content is Uint8List) {
-        // File content
-        final fileCid = await addFile(content) as Uint8List;
-        links.add(Link(name: name, cid: fileCid, size: content.length));
-      } else if (content is Map<String, dynamic>) {
-        // Subdirectory content
-        final subdirCid = await addDirectory(content) as Uint8List;
-        int dirSize = await calculateDirectorySize(content);
-        links.add(Link(name: name, cid: subdirCid, size: dirSize));
-      } else {
-        throw ArgumentError('Invalid directory content type for entry $name');
+        try {
+          // Send block to requesting peer
+          _router.routerL0.sendDatagram(
+            addresses: [
+              p2p.FullAddress(port: 4001, address: _getPeerAddress(fromPeer))
+            ],
+            datagram: messageBytes,
+          );
+          // Update sent bytes in ledger
+          final ledger = _ledgerManager.getLedger(fromPeer);
+          ledger.addSentBytes(response.block.data.length);
+        } catch (error) {
+          print('Error sending block to peer $fromPeer: $error');
+        }
       }
     }
-
-    // Create an IPFS Node object to represent the directory
-    final directoryNode = Node(
-      timestamp: DateTime.now().millisecondsSinceEpoch,
-      metadata: {},
-      cid: CID.fromContent(
-        'raw', // or a more specific codec if you know it
-        version: CIDVersion.CID_VERSION_1,
-        hashType: 'sha2-256',
-        content: Uint8List(0), // provide with content for cid calculation
-      ),
-      size: await calculateDirectorySize(directoryContent),
-      type: NodeType.REGULAR,
-      data: Uint8List(0), // Directories don't have direct data
-      links: links,
-    );
-
-    // Convert directoryNode to bytes using toBytes method and then encode it using utf8
-    final directoryNodeBytes = utf8.encode(directoryNode.toBytes() as String);
-
-    // Create a Block with the directory node data
-    final block = Block(directoryNodeBytes, directoryNode.cid);
-
-    // Calculate the CID of the block
-    final cid = await calculateCID(directoryNodeBytes);
-
-    // Store the block in the datastore
-    await _datastore.put(cid, block);
-
-    // Announce availability of the block to the network
-    provideBlock(block);
-
-    return cid;
   }
 
-  /// Helper function to calculate total size of a directory recursively.
-  Future<int> calculateDirectorySize(
-      Map<String, dynamic> directoryContent) async {
-    var totalSize = 0;
+  /// Handles incoming blocks according to Bitswap spec
+  void _handleBlocks(List<Block> blocks) {
+    for (final block in blocks) {
+      // Validate block before storing
+      if (!block.validate()) {
+        print('Received invalid block: ${block.cid}');
+        continue;
+      }
 
-    for (var entry in directoryContent.entries) {
-      if (entry.value is Uint8List) {
-        totalSize += (entry.value as Uint8List).length;
-      } else if (entry.value is Map<String, dynamic>) {
-        totalSize += await calculateDirectorySize(entry.value);
+      _blockStore.addBlock(block.toProto());
+
+      final cidStr = block.cid.encode();
+      // Complete pending request if exists
+      final completer = _pendingBlocks.remove(cidStr);
+      completer?.complete(block);
+
+      // Remove from wantlist
+      if (_wantlist.contains(cidStr)) {
+        _wantlist.remove(cidStr);
+      }
+    }
+  }
+
+  /// Requests blocks from the network with proper Bitswap session handling
+  Future<List<Block>> want(List<String> cids,
+      {int priority = 1,
+      Duration timeout = const Duration(seconds: 30)}) async {
+    if (!_running) {
+      throw StateError('BitswapHandler is not running');
+    }
+
+    final completers = <String, Completer<Block>>{};
+    for (final cid in cids) {
+      if (!_pendingBlocks.containsKey(cid)) {
+        final completer = Completer<Block>();
+        _pendingBlocks[cid] = completer;
+        completers[cid] = completer;
       }
     }
 
-    return totalSize;
+    final wantlist = Wantlist();
+    for (final cid in cids) {
+      wantlist.add(cid, priority: priority);
+      _wantlist.add(cid, priority: priority);
+    }
+
+    final msg = message.Message();
+    for (var entry in wantlist.entries.entries) {
+      msg.addWantlistEntry(entry.key, // this is the cid string
+          priority: entry.value, // this is the priority
+          wantType: message.WantType.block,
+          sendDontHave: true);
+    }
+    msg.from = _router.peerID;
+
+    await _broadcastWantRequest(msg);
+
+    // Wait for all blocks with timeout
+    final futures = completers.values
+        .map((completer) => completer.future.timeout(timeout,
+            onTimeout: () => throw TimeoutException('Block request timed out')))
+        .toList();
+
+    try {
+      return await Future.wait(futures);
+    } catch (e) {
+      // Clean up pending requests that failed
+      for (final cid in completers.keys) {
+        _pendingBlocks.remove(cid);
+      }
+      rethrow;
+    }
+  }
+
+  /// Broadcasts want request to connected peers
+  Future<void> _broadcastWantRequest(message.Message message) async {
+    final connectedPeers = _router.routes.values.map((e) => e.peer).toList();
+
+    if (connectedPeers.isEmpty) {
+      throw StateError('No connected peers to broadcast want request to');
+    }
+
+    final messageBytes = message.toBytes();
+    final futures = <Future<void>>[];
+
+    for (final peer in connectedPeers) {
+      futures.add(Future(() {
+        _router.routerL0.sendDatagram(
+          addresses: [peer.address.ip],
+          datagram: messageBytes,
+        );
+        print('Want request sent to peer: ${peer.id}');
+      }).catchError((error) {
+        print('Error sending want request to peer ${peer.id}: $error');
+      }));
+    }
+
+    await Future.wait(futures);
+  }
+
+  /// Helper method to get peer address
+  InternetAddress _getPeerAddress(String peerId) {
+    final peer = _router.routes.values.map((e) => e.peer).firstWhere(
+        (p) => p.id == peerId,
+        orElse: () => throw StateError('Peer not found: $peerId'));
+    return InternetAddress(peer.address.ip);
+  }
+
+  void _handlePacket(p2p.Packet packet) {
+    _handleMessage(message.Message.fromBytes(packet.datagram));
   }
 }
