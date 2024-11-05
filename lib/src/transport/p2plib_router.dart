@@ -1,12 +1,11 @@
-// lib/src/transport/p2plib_router.dart
-
-import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+import 'dart:async';
 import 'dart:typed_data';
-
-import '/../src/core/config/config.dart';
 import '/../src/utils/base58.dart';
+import '/../src/core/config/config.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
+// lib/src/transport/p2plib_router.dart
 
 /// A router implementation using the `p2plib` package.
 class P2plibRouter {
@@ -22,7 +21,7 @@ class P2plibRouter {
 
   final IPFSConfig _config;
   final p2p.RouterL0 _router;
-  
+
   // Getter to access the RouterL0 instance
   p2p.RouterL0 get routerL0 => _router; // Expose _router as routerL0
 
@@ -44,6 +43,8 @@ class P2plibRouter {
   get errorEvents => null;
 
   get streamEvents => null;
+
+  get routes => InternetAddress(address.ip);
 
   /// Starts the router.
   Future<void> start() async {
@@ -70,23 +71,24 @@ class P2plibRouter {
       datagram: message,
     );
   }
-/// Receives messages from a specific peer.
+
+  /// Receives messages from a specific peer.
   Stream<String> receiveMessages(String peerId) async* {
     while (true) {
       try {
         // Assuming _router.receiveMessage returns a Future<Uint8List>
-        Uint8List? messageBytes = await _router.receiveMessage(peerId); 
+        Uint8List? messageBytes = await _router.receiveMessage(peerId);
         if (messageBytes != null) {
           yield utf8.decode(messageBytes);
         } else {
           // Handle the case where receiveMessage returns null (e.g., timeout)
           // You might want to add a delay or break the loop here
-          await Future.delayed(Duration(seconds: 1)); 
+          await Future.delayed(Duration(seconds: 1));
         }
       } catch (e) {
         print('Error receiving messages from peer $peerId: $e');
         // You might want to rethrow the exception or break the loop here
-        break;  
+        break;
       }
     }
   }
@@ -107,4 +109,20 @@ class P2plibRouter {
   disconnect(String multiaddress) {}
 
   listConnectedPeers() {}
+
+  /// Registers a callback for handling incoming messages
+  void onMessage(void Function(Message) handler) {
+    _router.onDatagram((datagram) {
+      // Convert datagram to Message and call handler
+      final message = Message.fromBytes(datagram.data);
+      handler(message);
+    });
+  }
+
+  void addMessageHandler(
+      String protocolId, void Function(p2p.Packet packet) handlePacket) {}
+
+  void registerProtocol(String protocolId) {}
 }
+
+mixin address {}
