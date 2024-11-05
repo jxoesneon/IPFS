@@ -5,8 +5,25 @@ syntax = "proto3";
 package ipfs.core.data_structures;
 
 import "core/block.proto"; // Import the BlockProto definition
+import "google/protobuf/any.proto";  // Add this import
 
 // Represents a Content Addressable Archive (CAR).
 message CarProto {
-    repeated BlockProto blocks = 1; // List of blocks in the CAR.
+    int32 version = 1;
+    repeated string characteristics = 2;
+    map<string, google.protobuf.Any> pragma = 3;
+    repeated BlockProto blocks = 4;
+    CarIndex index = 5;
+}
+
+// Represents an index entry for a block in the CAR
+message CarIndex {
+    repeated IndexEntry entries = 1;
+}
+
+// Represents a single index entry
+message IndexEntry {
+    string cid = 1;
+    int64 offset = 2;
+    int64 length = 3;
 }
