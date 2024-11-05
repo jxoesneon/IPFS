@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package ipfs.dht.store_provider;
+
+import "dht/common_red_black_tree.proto";
+
+// Request message for storing provider information
+message StoreProviderRequest {
+  // The key for which provider information is being stored
+  ipfs.dht.common_red_black_tree.K_PeerId key = 1;
+  
+  // The provider information to store
+  ipfs.dht.common_red_black_tree.V_PeerInfo provider_info = 2;
+  
+  // Time-to-live in seconds for this provider record
+  int64 ttl = 3;
+}
+
+// Response message for store provider operation
+message StoreProviderResponse {
+  // Status of the store operation
+  enum Status {
+    SUCCESS = 0;
+    ERROR = 1;
+    CAPACITY_EXCEEDED = 2;
+  }
+  Status status = 1;
+  
+  // Error message if status is ERROR
+  string error_message = 2;
+  
+  // Number of successful replications
+  int32 replication_count = 3;
+}
+
+// Request to retrieve provider information
+message GetProvidersRequest {
+  // The key to look up providers for
+  ipfs.dht.common_red_black_tree.K_PeerId key = 1;
+  
+  // Maximum number of providers to return
+  int32 max_providers = 2;
+}
+
+// Response containing provider information
+message GetProvidersResponse {
+  // List of providers for the requested key
+  repeated ipfs.dht.common_red_black_tree.V_PeerInfo providers = 1;
+  
+  // Closest peers that might have the provider information
+  repeated ipfs.dht.common_red_black_tree.V_PeerInfo closest_peers = 2;
+} 
