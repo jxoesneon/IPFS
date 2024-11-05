@@ -1,17 +1,19 @@
-// lib/src/core/ipfs_node/dht_handler.dart
-
 import 'package:http/http.dart' as http;
+import '/../src/transport/p2plib_router.dart';
 import '/../src/protocols/dht/dht_client.dart';
 import '/../src/utils/keystore.dart'; // Import your Keystore utility
+// lib/src/core/ipfs_node/dht_handler.dart
 
 /// Handles DHT operations for an IPFS node.
 class DHTHandler {
   final DHTClient _dhtClient;
   final Keystore _keystore; // Add a reference to the Keystore
+  final P2plibRouter _router;
 
-  DHTHandler(config)
+  DHTHandler(config, P2plibRouter router)
       : _dhtClient = DHTClient(config),
-        _keystore = Keystore(config); // Initialize the Keystore
+        _keystore = Keystore(config),
+        _router = router;
 
   /// Starts the DHT client.
   Future<void> start() async {
@@ -38,7 +40,8 @@ class DHTHandler {
     try {
       final providers = await _dhtClient.findProviders(cid);
       if (providers.isEmpty) {
-        print('No providers found for CID $cid. Attempting alternative discovery methods...');
+        print(
+            'No providers found for CID $cid. Attempting alternative discovery methods...');
         // Implement alternative provider discovery methods here
       } else {
         print('Found providers for CID $cid: ${providers.length}');
@@ -145,7 +148,10 @@ class DHTHandler {
   String? extractCIDFromResponse(String responseBody) {
     // Placeholder logic to extract CID from response body
     // Implement actual extraction logic based on response format
-    final match = RegExp(r'Qm[1-9A-HJ-NP-Za-km-z]{44}').firstMatch(responseBody);
+    final match =
+        RegExp(r'Qm[1-9A-HJ-NP-Za-km-z]{44}').firstMatch(responseBody);
     return match?.group(0);
   }
+
+  P2plibRouter get router => _router;
 }
