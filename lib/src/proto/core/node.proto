@@ -4,30 +4,16 @@ syntax = "proto3";
 
 package ipfs.core.data_structures;
 
-import "core/cid.proto";      // Import the CID definition
-import "core/link.proto";     // Import the Link definition
-import "core/node_type.proto"; // Import the NodeTypeProto enum
+import "core/link.proto";
+import "core/cid.proto";
+import "core/node_type.proto";
 
-// Represents a node in the IPFS Merkle DAG.
-message Node {
-  // The CID (Content Identifier) of the node.
-  CIDProto cid = 1; // Use CID message
-
-  // Links to other nodes in the DAG.
-  repeated PBLink links = 2; // Use PBLink from link.proto
-
-  // The data stored in the node (optional).
+message NodeProto {
+  CIDProto cid = 1;
+  repeated PBLink links = 2;
   bytes data = 3;
-
-  // The type of the node (e.g., regular, bootstrap, etc.).
-  NodeTypeProto type = 4; // Use NodeTypeProto enum
-
-  // The size of the node's data.
+  NodeTypeProto type = 4;
   uint64 size = 5;
-
-  // The timestamp of when the node was created or last modified.
   int64 timestamp = 6;
-
-  // Optional metadata associated with the node.
   map<string, string> metadata = 7;
 }
