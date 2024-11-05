@@ -10,10 +10,19 @@ enum CIDVersion {
     CID_VERSION_1 = 2;
 }
 
-// CID message structure
+// Represents a Content Identifier (CID) in IPFS
 message CIDProto {
     CIDVersion version = 1;         // Version of the CID
     bytes multihash = 2;            // The multihash of the content
-    string codec = 3;               // Codec used to encode the content
-    string multibase_prefix = 4;    // Multibase prefix (optional, for CIDv1)
+    string codec = 3;               // Codec name (e.g., 'raw', 'dag-pb')
+    string multibase_prefix = 4;    // For CIDv1 (e.g., 'b' for base32)
+    int32 codec_type = 5;          // Numeric codec type from multicodec table
+}
+
+// Used for CID prefix encoding
+message CidPrefix {
+    CIDVersion version = 1;
+    int32 codec = 2;         // Numeric codec type
+    int32 mh_type = 3;       // Multihash type code
+    int32 mh_length = 4;     // Multihash length
 }
