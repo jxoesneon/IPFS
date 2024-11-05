@@ -7,7 +7,7 @@ import "core/cid.proto";      // Import the CID definition
 import "core/node_type.proto"; // Import the NodeTypeProto enum
 
 // Represents a log entry for an operation performed on the IPFS node.
-message OperationLogEntry {
+message OperationLogEntryProto {
   // The timestamp of when the operation was performed.
   int64 timestamp = 1;
 
@@ -25,7 +25,7 @@ message OperationLogEntry {
 }
 
 // Represents a collection of operation log entries.
-message OperationLog {
+message OperationLogProto {
   // A list of log entries.
-  repeated OperationLogEntry entries = 1;
+  repeated OperationLogEntryProto entries = 1;
 }
