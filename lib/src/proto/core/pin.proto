@@ -4,25 +4,16 @@ syntax = "proto3";
 
 package ipfs.core.data_structures;
 
-import "core/cid.proto"; // Import the CID definition
+import "core/cid.proto";
 
-// Enum representing the different types of pins in IPFS.
-enum PinTypeProto {
-  // Direct pinning of a specific CID.
-  DIRECT = 0;
-
-  // Recursive pinning, which includes all linked CIDs.
-  RECURSIVE = 1;
+enum PinType {
+  PIN_TYPE_UNSPECIFIED = 0;
+  PIN_TYPE_DIRECT = 1;
+  PIN_TYPE_RECURSIVE = 2;
 }
 
-// Represents a pin in the IPFS network.
 message Pin {
-  // The CID of the content to be pinned.
   CIDProto cid = 1;
-
-  // The type of pin (direct, recursive, etc.).
-  PinTypeProto type = 2;
-
-  // The timestamp when the pin was created.
+  PinType type = 2;
   int64 timestamp = 3;
 }
