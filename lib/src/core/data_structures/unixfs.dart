@@ -1,12 +1,13 @@
-// lib/src/core/data_structures/unixfs.dart
-
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart' as fixnum;
+import '../../proto/generated/unixfs/unixfs.pbenum.dart';
 import '../../proto/generated/unixfs/unixfs.pb.dart' as proto;
+// lib/src/core/data_structures/unixfs.dart
+
 
 /// Represents a UnixFS node in IPFS.
 class UnixFS {
-  final UnixFSType type;
+  final UnixFSTypeProto type;
   final Uint8List data;
   final int blockSize;
   final int fileSize;
@@ -21,9 +22,9 @@ class UnixFS {
   });
 
   /// Creates a [UnixFS] from its Protobuf representation.
-  factory UnixFS.fromProto(proto.UnixFS pbUnixFS) {
+  factory UnixFS.fromProto(proto.UnixFSProto pbUnixFS) {
     return UnixFS(
-      type: _unixFSTypeFromProto(pbUnixFS.type),
+      type: pbUnixFS.type,
       data: Uint8List.fromList(pbUnixFS.data),
       blockSize: pbUnixFS.blockSize.toInt(),
       fileSize: pbUnixFS.fileSize.toInt(),
@@ -32,9 +33,9 @@ class UnixFS {
   }
 
   /// Converts the [UnixFS] to its Protobuf representation.
-  proto.UnixFS toProto() {
-    return proto.UnixFS()
-      ..type = _unixFSTypeToProto(type)
+  proto.UnixFSProto toProto() {
+    return proto.UnixFSProto()
+      ..type = type
       ..data = data
       ..blockSize = fixnum.Int64(blockSize)
       ..fileSize = fixnum.Int64(fileSize)
@@ -45,34 +46,4 @@ class UnixFS {
   String toString() {
     return 'UnixFS(type: $type, blockSize: $blockSize, fileSize: $fileSize, blocksizes: $blocksizes)';
   }
-
-  /// Converts a [proto.UnixFSTypeProto] to a [UnixFSType].
-  static UnixFSType _unixFSTypeFromProto(proto.UnixFSTypeProto protoType) {
-    switch (protoType) {
-      case proto.UnixFSTypeProto.FILE:
-        return UnixFSType.FILE;
-      case proto.UnixFSTypeProto.DIRECTORY:
-        return UnixFSType.DIRECTORY;
-      default:
-        throw ArgumentError('Unknown UnixFS type in protobuf: $protoType');
-    }
-  }
-
-  /// Converts a [UnixFSType] to a [proto.UnixFSTypeProto].
-  static proto.UnixFSTypeProto _unixFSTypeToProto(UnixFSType type) {
-    switch (type) {
-      case UnixFSType.FILE:
-        return proto.UnixFSTypeProto.FILE;
-      case UnixFSType.DIRECTORY:
-        return proto.UnixFSTypeProto.DIRECTORY;
-      default:
-        throw ArgumentError('Unknown UnixFS type: $type');
-    }
-  }
-}
-
-/// Enum representing the different types of UnixFS nodes.
-enum UnixFSType {
-  FILE,
-  DIRECTORY,
 }
