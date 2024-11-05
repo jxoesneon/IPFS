@@ -29,8 +29,10 @@ class IPFSConfig {
     this.defaultBandwidthQuota = 1048576, // 1 MB/s
     this.garbageCollectionEnabled = true,
     this.garbageCollectionInterval = const Duration(hours: 24),
-    SecurityConfig? security, // Change to nullable and provide default value below
-  }) : security = security ?? SecurityConfig(); // Assign default in initializer list
+    SecurityConfig?
+        security, // Change to nullable and provide default value below
+  }) : security =
+            security ?? SecurityConfig(); // Assign default in initializer list
 
   /// The addresses and ports to listen on.
   final List<String> addresses;
@@ -109,7 +111,7 @@ class SecurityConfig {
 
   SecurityConfig({
     this.enableTLS = false,
-    this.tlsCertificatePath, 
-    this.tlsPrivateKeyPath, 
+    this.tlsCertificatePath,
+    this.tlsPrivateKeyPath,
   });
 }
