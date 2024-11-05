@@ -1,9 +1,10 @@
-// lib/src/core/data_structures/block.dart
 import 'dart:typed_data';
-import 'package:multibase/multibase.dart'; // Import multibase for decoding
-import 'package:dart_multihash/dart_multihash.dart'; // Import multihash for decoding
-import '../../proto/generated/core/block.pb.dart'; // Correct path for BlockProto
 import 'cid.dart'; // Import for handling CIDs
+import 'package:multibase/multibase.dart'; // Import multibase for decoding
+import '../../proto/generated/core/link.pb.dart'; // Add this import for Link
+import '../../proto/generated/core/block.pb.dart'; // Correct path for BlockProto
+import 'package:dart_multihash/dart_multihash.dart'; // Import multihash for decoding
+// lib/src/core/data_structures/block.dart
 
 /// Represents a Block in the IPFS network.
 /// A block consists of raw binary data and a corresponding CID (Content Identifier).
@@ -14,8 +15,11 @@ class Block {
   // The CID (Content Identifier) for the block, generated using the data
   final CID cid;
 
-  // Constructor to initialize the Block with its data and CID
-  Block(this.data, this.cid);
+  // Optional links within the block
+  final Map<String, dynamic>? _links;
+
+  // Constructor to initialize the Block with its data, CID, and optional links
+  Block(this.data, this.cid, [this._links]);
 
   /// Creates a Block from raw data. The CID will be generated from the data.
   factory Block.fromData(Uint8List data, CID cid) {
@@ -65,6 +69,34 @@ class Block {
 
   /// Returns the size of the block's data in bytes.
   int size() => data.length;
+
+  /// Validates the block according to IPFS specs
+  bool validate() {
+    if (data.isEmpty) return false;
+    
+    // Verify data matches CID
+    final computedCid = CID.fromContent(
+      'raw',
+      content: data,
+      hashType: 'sha2-256'
+    );
+    
+    return computedCid.encode() == cid.encode();
+  }
+
+  /// Resolves links within the block if it's a DAG node
+  Future<List<PBLink>> resolveLinks() async {
+    if (_links != null) {
+      return _links.entries
+          .map((e) => PBLink(
+                name: e.key,
+                cid: e.value['cid'],
+                size: e.value['size'],
+              ))
+          .toList();
+    }
+    return [];
+  }
 
   @override
   String toString() {
