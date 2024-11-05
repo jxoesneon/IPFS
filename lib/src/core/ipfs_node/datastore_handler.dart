@@ -1,12 +1,11 @@
-// lib/src/core/ipfs_node/datastore_handler.dart
-
 import 'dart:typed_data';
-import '../data_structures/block.dart';
 import '../data_structures/car.dart';
+import '../data_structures/block.dart';
+import '/../src/storage/datastore.dart';
 import '../data_structures/merkle_dag_node.dart'; // Import MerkleDAGNode
 import '/../src/utils/car_reader.dart'; // Assuming you have a CarReader utility
 import '/../src/utils/car_writer.dart'; // Assuming you have a CarWriter utility
-import '/../src/storage/datastore.dart';
+// lib/src/core/ipfs_node/datastore_handler.dart
 
 /// Handles datastore operations for an IPFS node.
 class DatastoreHandler {
@@ -107,7 +106,7 @@ class DatastoreHandler {
         // Optionally announce blocks to network
         // For example, using Bitswap or another protocol
         // bitswap.provide(block.cid.encode());
-        
+
         // You can also handle additional logic here, such as updating metrics
         // or notifying other components of the new data
       }
@@ -122,19 +121,21 @@ class DatastoreHandler {
       final blocks = <Block>[];
 
       // Retrieve root block
-      final rootBlock = await getBlock(cid); // Now returns MerkleDAGNode
+      final rootBlock = await getBlock(cid);
 
       if (rootBlock == null) {
         throw ArgumentError('Root block not found for CID: $cid');
       }
 
-      blocks.add(rootBlock as Block); // Ensure rootBlock is added to blocks
+      blocks.add(rootBlock as Block);
 
       // Recursively retrieve linked blocks
       await _recursiveGetBlocks(rootBlock, blocks);
 
       // Create a CAR object using the blocks list
-      final car = CAR(blocks);
+      final car = CAR(
+          blocks: blocks,
+          header: CarHeader(version: 1, roots: [blocks.first.cid]));
 
       // Pass the CAR object to writeCar
       final carData = await CarWriter.writeCar(car);
@@ -144,21 +145,22 @@ class DatastoreHandler {
       return carData;
     } catch (e) {
       print('Error exporting CAR file for CID $cid: $e');
-
-      return Uint8List(0); // Return empty data on error
+      return Uint8List(0);
     }
   }
 
   // Helper function to recursively retrieve blocks of linked nodes
-  Future<void> _recursiveGetBlocks(MerkleDAGNode node, List<Block> blocks) async { 
-     if (node.isDirectory) { 
-       for (var link in node.links) { 
-         final childBlock = await getBlock(link.cid.toString()); 
-         if (childBlock != null && !blocks.contains(childBlock)) { 
-           blocks.add(childBlock as Block); 
-           await _recursiveGetBlocks(MerkleDAGNode.fromBytes(childBlock.data), blocks); // Recursive call 
-         } 
-       } 
-     } 
-   }
+  Future<void> _recursiveGetBlocks(
+      MerkleDAGNode node, List<Block> blocks) async {
+    if (node.isDirectory) {
+      for (var link in node.links) {
+        final childBlock = await getBlock(link.cid.toString());
+        if (childBlock != null && !blocks.contains(childBlock)) {
+          blocks.add(childBlock as Block);
+          await _recursiveGetBlocks(MerkleDAGNode.fromBytes(childBlock.data),
+              blocks); // Recursive call
+        }
+      }
+    }
+  }
 }
