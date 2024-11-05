@@ -15,18 +15,26 @@ import 'package:protobuf/protobuf.dart' as $pb;
 
 /// Enum representing the different types of nodes in the IPFS network.
 class NodeTypeProto extends $pb.ProtobufEnum {
-  static const NodeTypeProto REGULAR = NodeTypeProto._(0, _omitEnumNames ? '' : 'REGULAR');
-  static const NodeTypeProto BOOTSTRAP = NodeTypeProto._(1, _omitEnumNames ? '' : 'BOOTSTRAP');
-  static const NodeTypeProto RELAY = NodeTypeProto._(2, _omitEnumNames ? '' : 'RELAY');
-  static const NodeTypeProto GATEWAY = NodeTypeProto._(3, _omitEnumNames ? '' : 'GATEWAY');
-  static const NodeTypeProto ARCHIVAL = NodeTypeProto._(4, _omitEnumNames ? '' : 'ARCHIVAL');
+  static const NodeTypeProto NODE_TYPE_UNSPECIFIED = NodeTypeProto._(0, _omitEnumNames ? '' : 'NODE_TYPE_UNSPECIFIED');
+  static const NodeTypeProto NODE_TYPE_FILE = NodeTypeProto._(1, _omitEnumNames ? '' : 'NODE_TYPE_FILE');
+  static const NodeTypeProto NODE_TYPE_DIRECTORY = NodeTypeProto._(2, _omitEnumNames ? '' : 'NODE_TYPE_DIRECTORY');
+  static const NodeTypeProto NODE_TYPE_SYMLINK = NodeTypeProto._(3, _omitEnumNames ? '' : 'NODE_TYPE_SYMLINK');
+  static const NodeTypeProto NODE_TYPE_REGULAR = NodeTypeProto._(4, _omitEnumNames ? '' : 'NODE_TYPE_REGULAR');
+  static const NodeTypeProto NODE_TYPE_BOOTSTRAP = NodeTypeProto._(5, _omitEnumNames ? '' : 'NODE_TYPE_BOOTSTRAP');
+  static const NodeTypeProto NODE_TYPE_RELAY = NodeTypeProto._(6, _omitEnumNames ? '' : 'NODE_TYPE_RELAY');
+  static const NodeTypeProto NODE_TYPE_GATEWAY = NodeTypeProto._(7, _omitEnumNames ? '' : 'NODE_TYPE_GATEWAY');
+  static const NodeTypeProto NODE_TYPE_ARCHIVAL = NodeTypeProto._(8, _omitEnumNames ? '' : 'NODE_TYPE_ARCHIVAL');
 
   static const $core.List<NodeTypeProto> values = <NodeTypeProto> [
-    REGULAR,
-    BOOTSTRAP,
-    RELAY,
-    GATEWAY,
-    ARCHIVAL,
+    NODE_TYPE_UNSPECIFIED,
+    NODE_TYPE_FILE,
+    NODE_TYPE_DIRECTORY,
+    NODE_TYPE_SYMLINK,
+    NODE_TYPE_REGULAR,
+    NODE_TYPE_BOOTSTRAP,
+    NODE_TYPE_RELAY,
+    NODE_TYPE_GATEWAY,
+    NODE_TYPE_ARCHIVAL,
   ];
 
   static final $core.Map<$core.int, NodeTypeProto> _byValue = $pb.ProtobufEnum.initByValue(values);

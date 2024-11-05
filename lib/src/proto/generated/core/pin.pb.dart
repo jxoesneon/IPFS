@@ -19,11 +19,10 @@ import 'pin.pbenum.dart';
 
 export 'pin.pbenum.dart';
 
-/// Represents a pin in the IPFS network.
 class Pin extends $pb.GeneratedMessage {
   factory Pin({
     $0.CIDProto? cid,
-    PinTypeProto? type,
+    PinType? type,
     $fixnum.Int64? timestamp,
   }) {
     final $result = create();
@@ -44,7 +43,7 @@ class Pin extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Pin', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..aOM<$0.CIDProto>(1, _omitFieldNames ? '' : 'cid', subBuilder: $0.CIDProto.create)
-    ..e<PinTypeProto>(2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: PinTypeProto.DIRECT, valueOf: PinTypeProto.valueOf, enumValues: PinTypeProto.values)
+    ..e<PinType>(2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: PinType.PIN_TYPE_UNSPECIFIED, valueOf: PinType.valueOf, enumValues: PinType.values)
     ..aInt64(3, _omitFieldNames ? '' : 'timestamp')
     ..hasRequiredFields = false
   ;
@@ -70,7 +69,6 @@ class Pin extends $pb.GeneratedMessage {
   static Pin getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Pin>(create);
   static Pin? _defaultInstance;
 
-  /// The CID of the content to be pinned.
   @$pb.TagNumber(1)
   $0.CIDProto get cid => $_getN(0);
   @$pb.TagNumber(1)
@@ -82,17 +80,15 @@ class Pin extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $0.CIDProto ensureCid() => $_ensure(0);
 
-  /// The type of pin (direct, recursive, etc.).
   @$pb.TagNumber(2)
-  PinTypeProto get type => $_getN(1);
+  PinType get type => $_getN(1);
   @$pb.TagNumber(2)
-  set type(PinTypeProto v) { setField(2, v); }
+  set type(PinType v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasType() => $_has(1);
   @$pb.TagNumber(2)
   void clearType() => clearField(2);
 
-  /// The timestamp when the pin was created.
   @$pb.TagNumber(3)
   $fixnum.Int64 get timestamp => $_getI64(2);
   @$pb.TagNumber(3)

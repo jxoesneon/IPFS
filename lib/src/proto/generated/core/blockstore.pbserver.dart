@@ -16,24 +16,24 @@ import 'dart:core' as $core;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import '../google/protobuf/empty.pb.dart' as $2;
-import 'block.pb.dart' as $1;
+import 'block.pb.dart' as $0;
 import 'blockstore.pb.dart' as $3;
 import 'blockstore.pbjson.dart';
-import 'cid.pb.dart' as $0;
+import 'cid.pb.dart' as $1;
 
 export 'blockstore.pb.dart';
 
 abstract class BlockStoreServiceBase extends $pb.GeneratedService {
-  $async.Future<$3.AddBlockResponse> addBlock($pb.ServerContext ctx, $1.BlockProto request);
-  $async.Future<$3.GetBlockResponse> getBlock($pb.ServerContext ctx, $0.CIDProto request);
-  $async.Future<$3.RemoveBlockResponse> removeBlock($pb.ServerContext ctx, $0.CIDProto request);
-  $async.Future<$1.BlockProto> getAllBlocks($pb.ServerContext ctx, $2.Empty request);
+  $async.Future<$3.AddBlockResponse> addBlock($pb.ServerContext ctx, $0.BlockProto request);
+  $async.Future<$3.GetBlockResponse> getBlock($pb.ServerContext ctx, $1.CIDProto request);
+  $async.Future<$3.RemoveBlockResponse> removeBlock($pb.ServerContext ctx, $1.CIDProto request);
+  $async.Future<$0.BlockProto> getAllBlocks($pb.ServerContext ctx, $2.Empty request);
 
   $pb.GeneratedMessage createRequest($core.String methodName) {
     switch (methodName) {
-      case 'AddBlock': return $1.BlockProto();
-      case 'GetBlock': return $0.CIDProto();
-      case 'RemoveBlock': return $0.CIDProto();
+      case 'AddBlock': return $0.BlockProto();
+      case 'GetBlock': return $1.CIDProto();
+      case 'RemoveBlock': return $1.CIDProto();
       case 'GetAllBlocks': return $2.Empty();
       default: throw $core.ArgumentError('Unknown method: $methodName');
     }
@@ -41,9 +41,9 @@ abstract class BlockStoreServiceBase extends $pb.GeneratedService {
 
   $async.Future<$pb.GeneratedMessage> handleCall($pb.ServerContext ctx, $core.String methodName, $pb.GeneratedMessage request) {
     switch (methodName) {
-      case 'AddBlock': return this.addBlock(ctx, request as $1.BlockProto);
-      case 'GetBlock': return this.getBlock(ctx, request as $0.CIDProto);
-      case 'RemoveBlock': return this.removeBlock(ctx, request as $0.CIDProto);
+      case 'AddBlock': return this.addBlock(ctx, request as $0.BlockProto);
+      case 'GetBlock': return this.getBlock(ctx, request as $1.CIDProto);
+      case 'RemoveBlock': return this.removeBlock(ctx, request as $1.CIDProto);
       case 'GetAllBlocks': return this.getAllBlocks(ctx, request as $2.Empty);
       default: throw $core.ArgumentError('Unknown method: $methodName');
     }

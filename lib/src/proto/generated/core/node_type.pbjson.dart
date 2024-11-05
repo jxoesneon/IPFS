@@ -17,16 +17,23 @@ import 'dart:typed_data' as $typed_data;
 const NodeTypeProto$json = {
   '1': 'NodeTypeProto',
   '2': [
-    {'1': 'REGULAR', '2': 0},
-    {'1': 'BOOTSTRAP', '2': 1},
-    {'1': 'RELAY', '2': 2},
-    {'1': 'GATEWAY', '2': 3},
-    {'1': 'ARCHIVAL', '2': 4},
+    {'1': 'NODE_TYPE_UNSPECIFIED', '2': 0},
+    {'1': 'NODE_TYPE_FILE', '2': 1},
+    {'1': 'NODE_TYPE_DIRECTORY', '2': 2},
+    {'1': 'NODE_TYPE_SYMLINK', '2': 3},
+    {'1': 'NODE_TYPE_REGULAR', '2': 4},
+    {'1': 'NODE_TYPE_BOOTSTRAP', '2': 5},
+    {'1': 'NODE_TYPE_RELAY', '2': 6},
+    {'1': 'NODE_TYPE_GATEWAY', '2': 7},
+    {'1': 'NODE_TYPE_ARCHIVAL', '2': 8},
   ],
 };
 
 /// Descriptor for `NodeTypeProto`. Decode as a `google.protobuf.EnumDescriptorProto`.
 final $typed_data.Uint8List nodeTypeProtoDescriptor = $convert.base64Decode(
-    'Cg1Ob2RlVHlwZVByb3RvEgsKB1JFR1VMQVIQABINCglCT09UU1RSQVAQARIJCgVSRUxBWRACEg'
-    'sKB0dBVEVXQVkQAxIMCghBUkNISVZBTBAE');
+    'Cg1Ob2RlVHlwZVByb3RvEhkKFU5PREVfVFlQRV9VTlNQRUNJRklFRBAAEhIKDk5PREVfVFlQRV'
+    '9GSUxFEAESFwoTTk9ERV9UWVBFX0RJUkVDVE9SWRACEhUKEU5PREVfVFlQRV9TWU1MSU5LEAMS'
+    'FQoRTk9ERV9UWVBFX1JFR1VMQVIQBBIXChNOT0RFX1RZUEVfQk9PVFNUUkFQEAUSEwoPTk9ERV'
+    '9UWVBFX1JFTEFZEAYSFQoRTk9ERV9UWVBFX0dBVEVXQVkQBxIWChJOT0RFX1RZUEVfQVJDSElW'
+    'QUwQCA==');
 

@@ -11,18 +11,36 @@
 
 import 'dart:core' as $core;
 
+import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import '../google/protobuf/any.pb.dart' as $2;
 import 'block.pb.dart' as $1;
 
 /// Represents a Content Addressable Archive (CAR).
 class CarProto extends $pb.GeneratedMessage {
   factory CarProto({
+    $core.int? version,
+    $core.Iterable<$core.String>? characteristics,
+    $core.Map<$core.String, $2.Any>? pragma,
     $core.Iterable<$1.BlockProto>? blocks,
+    CarIndex? index,
   }) {
     final $result = create();
+    if (version != null) {
+      $result.version = version;
+    }
+    if (characteristics != null) {
+      $result.characteristics.addAll(characteristics);
+    }
+    if (pragma != null) {
+      $result.pragma.addAll(pragma);
+    }
     if (blocks != null) {
       $result.blocks.addAll(blocks);
+    }
+    if (index != null) {
+      $result.index = index;
     }
     return $result;
   }
@@ -31,7 +49,11 @@ class CarProto extends $pb.GeneratedMessage {
   factory CarProto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CarProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..pc<$1.BlockProto>(1, _omitFieldNames ? '' : 'blocks', $pb.PbFieldType.PM, subBuilder: $1.BlockProto.create)
+    ..a<$core.int>(1, _omitFieldNames ? '' : 'version', $pb.PbFieldType.O3)
+    ..pPS(2, _omitFieldNames ? '' : 'characteristics')
+    ..m<$core.String, $2.Any>(3, _omitFieldNames ? '' : 'pragma', entryClassName: 'CarProto.PragmaEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OM, valueCreator: $2.Any.create, valueDefaultOrMaker: $2.Any.getDefault, packageName: const $pb.PackageName('ipfs.core.data_structures'))
+    ..pc<$1.BlockProto>(4, _omitFieldNames ? '' : 'blocks', $pb.PbFieldType.PM, subBuilder: $1.BlockProto.create)
+    ..aOM<CarIndex>(5, _omitFieldNames ? '' : 'index', subBuilder: CarIndex.create)
     ..hasRequiredFields = false
   ;
 
@@ -57,7 +79,157 @@ class CarProto extends $pb.GeneratedMessage {
   static CarProto? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$1.BlockProto> get blocks => $_getList(0);
+  $core.int get version => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set version($core.int v) { $_setSignedInt32(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasVersion() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVersion() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.String> get characteristics => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $core.Map<$core.String, $2.Any> get pragma => $_getMap(2);
+
+  @$pb.TagNumber(4)
+  $core.List<$1.BlockProto> get blocks => $_getList(3);
+
+  @$pb.TagNumber(5)
+  CarIndex get index => $_getN(4);
+  @$pb.TagNumber(5)
+  set index(CarIndex v) { setField(5, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasIndex() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearIndex() => clearField(5);
+  @$pb.TagNumber(5)
+  CarIndex ensureIndex() => $_ensure(4);
+}
+
+/// Represents an index entry for a block in the CAR
+class CarIndex extends $pb.GeneratedMessage {
+  factory CarIndex({
+    $core.Iterable<IndexEntry>? entries,
+  }) {
+    final $result = create();
+    if (entries != null) {
+      $result.entries.addAll(entries);
+    }
+    return $result;
+  }
+  CarIndex._() : super();
+  factory CarIndex.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory CarIndex.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CarIndex', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+    ..pc<IndexEntry>(1, _omitFieldNames ? '' : 'entries', $pb.PbFieldType.PM, subBuilder: IndexEntry.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  CarIndex clone() => CarIndex()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  CarIndex copyWith(void Function(CarIndex) updates) => super.copyWith((message) => updates(message as CarIndex)) as CarIndex;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CarIndex create() => CarIndex._();
+  CarIndex createEmptyInstance() => create();
+  static $pb.PbList<CarIndex> createRepeated() => $pb.PbList<CarIndex>();
+  @$core.pragma('dart2js:noInline')
+  static CarIndex getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CarIndex>(create);
+  static CarIndex? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<IndexEntry> get entries => $_getList(0);
+}
+
+/// Represents a single index entry
+class IndexEntry extends $pb.GeneratedMessage {
+  factory IndexEntry({
+    $core.String? cid,
+    $fixnum.Int64? offset,
+    $fixnum.Int64? length,
+  }) {
+    final $result = create();
+    if (cid != null) {
+      $result.cid = cid;
+    }
+    if (offset != null) {
+      $result.offset = offset;
+    }
+    if (length != null) {
+      $result.length = length;
+    }
+    return $result;
+  }
+  IndexEntry._() : super();
+  factory IndexEntry.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory IndexEntry.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'IndexEntry', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'cid')
+    ..aInt64(2, _omitFieldNames ? '' : 'offset')
+    ..aInt64(3, _omitFieldNames ? '' : 'length')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  IndexEntry clone() => IndexEntry()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  IndexEntry copyWith(void Function(IndexEntry) updates) => super.copyWith((message) => updates(message as IndexEntry)) as IndexEntry;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static IndexEntry create() => IndexEntry._();
+  IndexEntry createEmptyInstance() => create();
+  static $pb.PbList<IndexEntry> createRepeated() => $pb.PbList<IndexEntry>();
+  @$core.pragma('dart2js:noInline')
+  static IndexEntry getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<IndexEntry>(create);
+  static IndexEntry? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get cid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set cid($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasCid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCid() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get offset => $_getI64(1);
+  @$pb.TagNumber(2)
+  set offset($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasOffset() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearOffset() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get length => $_getI64(2);
+  @$pb.TagNumber(3)
+  set length($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasLength() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearLength() => clearField(3);
 }
 
 

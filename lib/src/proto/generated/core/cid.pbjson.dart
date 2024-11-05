@@ -36,6 +36,7 @@ const CIDProto$json = {
     {'1': 'multihash', '3': 2, '4': 1, '5': 12, '10': 'multihash'},
     {'1': 'codec', '3': 3, '4': 1, '5': 9, '10': 'codec'},
     {'1': 'multibase_prefix', '3': 4, '4': 1, '5': 9, '10': 'multibasePrefix'},
+    {'1': 'codec_type', '3': 5, '4': 1, '5': 5, '10': 'codecType'},
   ],
 };
 
@@ -44,5 +45,22 @@ final $typed_data.Uint8List cIDProtoDescriptor = $convert.base64Decode(
     'CghDSURQcm90bxI/Cgd2ZXJzaW9uGAEgASgOMiUuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy'
     '5DSURWZXJzaW9uUgd2ZXJzaW9uEhwKCW11bHRpaGFzaBgCIAEoDFIJbXVsdGloYXNoEhQKBWNv'
     'ZGVjGAMgASgJUgVjb2RlYxIpChBtdWx0aWJhc2VfcHJlZml4GAQgASgJUg9tdWx0aWJhc2VQcm'
-    'VmaXg=');
+    'VmaXgSHQoKY29kZWNfdHlwZRgFIAEoBVIJY29kZWNUeXBl');
+
+@$core.Deprecated('Use cidPrefixDescriptor instead')
+const CidPrefix$json = {
+  '1': 'CidPrefix',
+  '2': [
+    {'1': 'version', '3': 1, '4': 1, '5': 14, '6': '.ipfs.core.data_structures.CIDVersion', '10': 'version'},
+    {'1': 'codec', '3': 2, '4': 1, '5': 5, '10': 'codec'},
+    {'1': 'mh_type', '3': 3, '4': 1, '5': 5, '10': 'mhType'},
+    {'1': 'mh_length', '3': 4, '4': 1, '5': 5, '10': 'mhLength'},
+  ],
+};
+
+/// Descriptor for `CidPrefix`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List cidPrefixDescriptor = $convert.base64Decode(
+    'CglDaWRQcmVmaXgSPwoHdmVyc2lvbhgBIAEoDjIlLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZX'
+    'MuQ0lEVmVyc2lvblIHdmVyc2lvbhIUCgVjb2RlYxgCIAEoBVIFY29kZWMSFwoHbWhfdHlwZRgD'
+    'IAEoBVIGbWhUeXBlEhsKCW1oX2xlbmd0aBgEIAEoBVIIbWhMZW5ndGg=');
 

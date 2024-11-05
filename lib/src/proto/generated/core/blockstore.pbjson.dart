@@ -14,8 +14,8 @@ import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
 import '../google/protobuf/empty.pbjson.dart' as $2;
-import 'block.pbjson.dart' as $1;
-import 'cid.pbjson.dart' as $0;
+import 'block.pbjson.dart' as $0;
+import 'cid.pbjson.dart' as $1;
 
 @$core.Deprecated('Use addBlockResponseDescriptor instead')
 const AddBlockResponse$json = {
@@ -71,8 +71,8 @@ const $core.Map<$core.String, $core.dynamic> BlockStoreServiceBase$json = {
 
 @$core.Deprecated('Use blockStoreServiceDescriptor instead')
 const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> BlockStoreServiceBase$messageJson = {
-  '.ipfs.core.data_structures.BlockProto': $1.BlockProto$json,
-  '.ipfs.core.data_structures.CIDProto': $0.CIDProto$json,
+  '.ipfs.core.data_structures.BlockProto': $0.BlockProto$json,
+  '.ipfs.core.data_structures.CIDProto': $1.CIDProto$json,
   '.ipfs.core.data_structures.AddBlockResponse': AddBlockResponse$json,
   '.ipfs.core.data_structures.GetBlockResponse': GetBlockResponse$json,
   '.ipfs.core.data_structures.RemoveBlockResponse': RemoveBlockResponse$json,

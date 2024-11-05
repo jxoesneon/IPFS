@@ -19,8 +19,8 @@ import 'unixfs.pbenum.dart';
 export 'unixfs.pbenum.dart';
 
 /// Represents a UnixFS node in IPFS.
-class UnixFS extends $pb.GeneratedMessage {
-  factory UnixFS({
+class UnixFSProto extends $pb.GeneratedMessage {
+  factory UnixFSProto({
     UnixFSTypeProto? type,
     $core.List<$core.int>? data,
     $fixnum.Int64? blockSize,
@@ -45,11 +45,11 @@ class UnixFS extends $pb.GeneratedMessage {
     }
     return $result;
   }
-  UnixFS._() : super();
-  factory UnixFS.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory UnixFS.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  UnixFSProto._() : super();
+  factory UnixFSProto.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory UnixFSProto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'UnixFS', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'UnixFSProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..e<UnixFSTypeProto>(1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: UnixFSTypeProto.FILE, valueOf: UnixFSTypeProto.valueOf, enumValues: UnixFSTypeProto.values)
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..aInt64(3, _omitFieldNames ? '' : 'blockSize')
@@ -62,22 +62,22 @@ class UnixFS extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  UnixFS clone() => UnixFS()..mergeFromMessage(this);
+  UnixFSProto clone() => UnixFSProto()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  UnixFS copyWith(void Function(UnixFS) updates) => super.copyWith((message) => updates(message as UnixFS)) as UnixFS;
+  UnixFSProto copyWith(void Function(UnixFSProto) updates) => super.copyWith((message) => updates(message as UnixFSProto)) as UnixFSProto;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static UnixFS create() => UnixFS._();
-  UnixFS createEmptyInstance() => create();
-  static $pb.PbList<UnixFS> createRepeated() => $pb.PbList<UnixFS>();
+  static UnixFSProto create() => UnixFSProto._();
+  UnixFSProto createEmptyInstance() => create();
+  static $pb.PbList<UnixFSProto> createRepeated() => $pb.PbList<UnixFSProto>();
   @$core.pragma('dart2js:noInline')
-  static UnixFS getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<UnixFS>(create);
-  static UnixFS? _defaultInstance;
+  static UnixFSProto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<UnixFSProto>(create);
+  static UnixFSProto? _defaultInstance;
 
   /// The type of the node (file or directory).
   @$pb.TagNumber(1)

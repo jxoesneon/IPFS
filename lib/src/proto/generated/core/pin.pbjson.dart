@@ -13,25 +13,27 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-@$core.Deprecated('Use pinTypeProtoDescriptor instead')
-const PinTypeProto$json = {
-  '1': 'PinTypeProto',
+@$core.Deprecated('Use pinTypeDescriptor instead')
+const PinType$json = {
+  '1': 'PinType',
   '2': [
-    {'1': 'DIRECT', '2': 0},
-    {'1': 'RECURSIVE', '2': 1},
+    {'1': 'PIN_TYPE_UNSPECIFIED', '2': 0},
+    {'1': 'PIN_TYPE_DIRECT', '2': 1},
+    {'1': 'PIN_TYPE_RECURSIVE', '2': 2},
   ],
 };
 
-/// Descriptor for `PinTypeProto`. Decode as a `google.protobuf.EnumDescriptorProto`.
-final $typed_data.Uint8List pinTypeProtoDescriptor = $convert.base64Decode(
-    'CgxQaW5UeXBlUHJvdG8SCgoGRElSRUNUEAASDQoJUkVDVVJTSVZFEAE=');
+/// Descriptor for `PinType`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List pinTypeDescriptor = $convert.base64Decode(
+    'CgdQaW5UeXBlEhgKFFBJTl9UWVBFX1VOU1BFQ0lGSUVEEAASEwoPUElOX1RZUEVfRElSRUNUEA'
+    'ESFgoSUElOX1RZUEVfUkVDVVJTSVZFEAI=');
 
 @$core.Deprecated('Use pinDescriptor instead')
 const Pin$json = {
   '1': 'Pin',
   '2': [
     {'1': 'cid', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.CIDProto', '10': 'cid'},
-    {'1': 'type', '3': 2, '4': 1, '5': 14, '6': '.ipfs.core.data_structures.PinTypeProto', '10': 'type'},
+    {'1': 'type', '3': 2, '4': 1, '5': 14, '6': '.ipfs.core.data_structures.PinType', '10': 'type'},
     {'1': 'timestamp', '3': 3, '4': 1, '5': 3, '10': 'timestamp'},
   ],
 };
@@ -39,6 +41,6 @@ const Pin$json = {
 /// Descriptor for `Pin`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List pinDescriptor = $convert.base64Decode(
     'CgNQaW4SNQoDY2lkGAEgASgLMiMuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy5DSURQcm90b1'
-    'IDY2lkEjsKBHR5cGUYAiABKA4yJy5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLlBpblR5cGVQ'
-    'cm90b1IEdHlwZRIcCgl0aW1lc3RhbXAYAyABKANSCXRpbWVzdGFtcA==');
+    'IDY2lkEjYKBHR5cGUYAiABKA4yIi5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLlBpblR5cGVS'
+    'BHR5cGUSHAoJdGltZXN0YW1wGAMgASgDUgl0aW1lc3RhbXA=');
 

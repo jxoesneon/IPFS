@@ -26,9 +26,9 @@ const UnixFSTypeProto$json = {
 final $typed_data.Uint8List unixFSTypeProtoDescriptor = $convert.base64Decode(
     'Cg9Vbml4RlNUeXBlUHJvdG8SCAoERklMRRAAEg0KCURJUkVDVE9SWRAB');
 
-@$core.Deprecated('Use unixFSDescriptor instead')
-const UnixFS$json = {
-  '1': 'UnixFS',
+@$core.Deprecated('Use unixFSProtoDescriptor instead')
+const UnixFSProto$json = {
+  '1': 'UnixFSProto',
   '2': [
     {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.ipfs.core.data_structures.UnixFSTypeProto', '10': 'type'},
     {'1': 'data', '3': 2, '4': 1, '5': 12, '10': 'data'},
@@ -38,10 +38,10 @@ const UnixFS$json = {
   ],
 };
 
-/// Descriptor for `UnixFS`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List unixFSDescriptor = $convert.base64Decode(
-    'CgZVbml4RlMSPgoEdHlwZRgBIAEoDjIqLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuVW5peE'
-    'ZTVHlwZVByb3RvUgR0eXBlEhIKBGRhdGEYAiABKAxSBGRhdGESHQoKYmxvY2tfc2l6ZRgDIAEo'
-    'A1IJYmxvY2tTaXplEhsKCWZpbGVfc2l6ZRgEIAEoA1IIZmlsZVNpemUSHgoKYmxvY2tzaXplcx'
-    'gFIAMoBVIKYmxvY2tzaXplcw==');
+/// Descriptor for `UnixFSProto`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List unixFSProtoDescriptor = $convert.base64Decode(
+    'CgtVbml4RlNQcm90bxI+CgR0eXBlGAEgASgOMiouaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy'
+    '5Vbml4RlNUeXBlUHJvdG9SBHR5cGUSEgoEZGF0YRgCIAEoDFIEZGF0YRIdCgpibG9ja19zaXpl'
+    'GAMgASgDUglibG9ja1NpemUSGwoJZmlsZV9zaXplGAQgASgDUghmaWxlU2l6ZRIeCgpibG9ja3'
+    'NpemVzGAUgAygFUgpibG9ja3NpemVz');
 

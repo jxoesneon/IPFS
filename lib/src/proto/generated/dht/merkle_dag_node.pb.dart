@@ -14,20 +14,20 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../core/cid.pb.dart' as $3;
-import '../core/link.pb.dart' as $4;
+import '../core/cid.pb.dart' as $0;
+import '../core/link.pb.dart' as $1;
 
 /// Represents a Merkle DAG node.
 class MerkleDAGNode extends $pb.GeneratedMessage {
   factory MerkleDAGNode({
-    $3.CIDProto? cid,
-    $core.Iterable<$4.PBLink>? links,
+    $0.CIDProto? cid,
+    $core.Iterable<$1.PBLink>? links,
     $core.List<$core.int>? data,
     $fixnum.Int64? size,
     $fixnum.Int64? timestamp,
     $core.Map<$core.String, $core.String>? metadata,
     $core.bool? isDirectory,
-    $3.CIDProto? parentCid,
+    $0.CIDProto? parentCid,
   }) {
     final $result = create();
     if (cid != null) {
@@ -61,14 +61,14 @@ class MerkleDAGNode extends $pb.GeneratedMessage {
   factory MerkleDAGNode.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MerkleDAGNode', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..aOM<$3.CIDProto>(1, _omitFieldNames ? '' : 'cid', subBuilder: $3.CIDProto.create)
-    ..pc<$4.PBLink>(2, _omitFieldNames ? '' : 'links', $pb.PbFieldType.PM, subBuilder: $4.PBLink.create)
+    ..aOM<$0.CIDProto>(1, _omitFieldNames ? '' : 'cid', subBuilder: $0.CIDProto.create)
+    ..pc<$1.PBLink>(2, _omitFieldNames ? '' : 'links', $pb.PbFieldType.PM, subBuilder: $1.PBLink.create)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..aInt64(5, _omitFieldNames ? '' : 'timestamp')
     ..m<$core.String, $core.String>(6, _omitFieldNames ? '' : 'metadata', entryClassName: 'MerkleDAGNode.MetadataEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('ipfs.core.data_structures'))
     ..aOB(7, _omitFieldNames ? '' : 'isDirectory')
-    ..aOM<$3.CIDProto>(8, _omitFieldNames ? '' : 'parentCid', subBuilder: $3.CIDProto.create)
+    ..aOM<$0.CIDProto>(8, _omitFieldNames ? '' : 'parentCid', subBuilder: $0.CIDProto.create)
     ..hasRequiredFields = false
   ;
 
@@ -95,19 +95,19 @@ class MerkleDAGNode extends $pb.GeneratedMessage {
 
   /// The CID (Content Identifier) of the node.
   @$pb.TagNumber(1)
-  $3.CIDProto get cid => $_getN(0);
+  $0.CIDProto get cid => $_getN(0);
   @$pb.TagNumber(1)
-  set cid($3.CIDProto v) { setField(1, v); }
+  set cid($0.CIDProto v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasCid() => $_has(0);
   @$pb.TagNumber(1)
   void clearCid() => clearField(1);
   @$pb.TagNumber(1)
-  $3.CIDProto ensureCid() => $_ensure(0);
+  $0.CIDProto ensureCid() => $_ensure(0);
 
   /// Links to other nodes in the DAG.
   @$pb.TagNumber(2)
-  $core.List<$4.PBLink> get links => $_getList(1);
+  $core.List<$1.PBLink> get links => $_getList(1);
 
   /// The data stored in the node (optional).
   @$pb.TagNumber(3)
@@ -155,15 +155,15 @@ class MerkleDAGNode extends $pb.GeneratedMessage {
 
   /// Optional parent CID to represent the relationship in DAG.
   @$pb.TagNumber(8)
-  $3.CIDProto get parentCid => $_getN(7);
+  $0.CIDProto get parentCid => $_getN(7);
   @$pb.TagNumber(8)
-  set parentCid($3.CIDProto v) { setField(8, v); }
+  set parentCid($0.CIDProto v) { setField(8, v); }
   @$pb.TagNumber(8)
   $core.bool hasParentCid() => $_has(7);
   @$pb.TagNumber(8)
   void clearParentCid() => clearField(8);
   @$pb.TagNumber(8)
-  $3.CIDProto ensureParentCid() => $_ensure(7);
+  $0.CIDProto ensureParentCid() => $_ensure(7);
 }
 
 

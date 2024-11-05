@@ -14,16 +14,23 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'link.pbenum.dart';
+
+export 'link.pbenum.dart';
+
 /// A message representing a link between nodes or objects in IPFS.
 class PBLink extends $pb.GeneratedMessage {
   factory PBLink({
     $core.String? name,
     $core.List<$core.int>? cid,
-    $fixnum.Int64? size,
     $core.List<$core.int>? hash,
+    $fixnum.Int64? size,
     $fixnum.Int64? timestamp,
     $core.bool? isDirectory,
     $core.Map<$core.String, $core.String>? metadata,
+    LinkType? type,
+    $core.int? bucketIndex,
+    $core.int? depth,
   }) {
     final $result = create();
     if (name != null) {
@@ -32,11 +39,11 @@ class PBLink extends $pb.GeneratedMessage {
     if (cid != null) {
       $result.cid = cid;
     }
-    if (size != null) {
-      $result.size = size;
-    }
     if (hash != null) {
       $result.hash = hash;
+    }
+    if (size != null) {
+      $result.size = size;
     }
     if (timestamp != null) {
       $result.timestamp = timestamp;
@@ -47,6 +54,15 @@ class PBLink extends $pb.GeneratedMessage {
     if (metadata != null) {
       $result.metadata.addAll(metadata);
     }
+    if (type != null) {
+      $result.type = type;
+    }
+    if (bucketIndex != null) {
+      $result.bucketIndex = bucketIndex;
+    }
+    if (depth != null) {
+      $result.depth = depth;
+    }
     return $result;
   }
   PBLink._() : super();
@@ -56,11 +72,14 @@ class PBLink extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PBLink', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'cid', $pb.PbFieldType.OY)
-    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'hash', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'hash', $pb.PbFieldType.OY)
+    ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..aInt64(5, _omitFieldNames ? '' : 'timestamp')
     ..aOB(6, _omitFieldNames ? '' : 'isDirectory')
     ..m<$core.String, $core.String>(7, _omitFieldNames ? '' : 'metadata', entryClassName: 'PBLink.MetadataEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('ipfs.core.data_structures'))
+    ..e<LinkType>(8, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: LinkType.LINK_TYPE_UNSPECIFIED, valueOf: LinkType.valueOf, enumValues: LinkType.values)
+    ..a<$core.int>(9, _omitFieldNames ? '' : 'bucketIndex', $pb.PbFieldType.O3)
+    ..a<$core.int>(10, _omitFieldNames ? '' : 'depth', $pb.PbFieldType.O3)
     ..hasRequiredFields = false
   ;
 
@@ -105,25 +124,25 @@ class PBLink extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearCid() => clearField(2);
 
-  /// The size of the linked object or node (in bytes).
+  /// The hash of the linked object or node.
   @$pb.TagNumber(3)
-  $fixnum.Int64 get size => $_getI64(2);
+  $core.List<$core.int> get hash => $_getN(2);
   @$pb.TagNumber(3)
-  set size($fixnum.Int64 v) { $_setInt64(2, v); }
+  set hash($core.List<$core.int> v) { $_setBytes(2, v); }
   @$pb.TagNumber(3)
-  $core.bool hasSize() => $_has(2);
+  $core.bool hasHash() => $_has(2);
   @$pb.TagNumber(3)
-  void clearSize() => clearField(3);
+  void clearHash() => clearField(3);
 
-  /// Optional hash of the linked content for integrity checks.
+  /// The size of the linked object or node (in bytes).
   @$pb.TagNumber(4)
-  $core.List<$core.int> get hash => $_getN(3);
+  $fixnum.Int64 get size => $_getI64(3);
   @$pb.TagNumber(4)
-  set hash($core.List<$core.int> v) { $_setBytes(3, v); }
+  set size($fixnum.Int64 v) { $_setInt64(3, v); }
   @$pb.TagNumber(4)
-  $core.bool hasHash() => $_has(3);
+  $core.bool hasSize() => $_has(3);
   @$pb.TagNumber(4)
-  void clearHash() => clearField(4);
+  void clearSize() => clearField(4);
 
   /// Unix timestamp of when the link was created.
   @$pb.TagNumber(5)
@@ -148,6 +167,36 @@ class PBLink extends $pb.GeneratedMessage {
   /// Custom metadata or additional fields for the link.
   @$pb.TagNumber(7)
   $core.Map<$core.String, $core.String> get metadata => $_getMap(6);
+
+  /// Link type for different DAG structures
+  @$pb.TagNumber(8)
+  LinkType get type => $_getN(7);
+  @$pb.TagNumber(8)
+  set type(LinkType v) { setField(8, v); }
+  @$pb.TagNumber(8)
+  $core.bool hasType() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearType() => clearField(8);
+
+  /// For HAMT links
+  @$pb.TagNumber(9)
+  $core.int get bucketIndex => $_getIZ(8);
+  @$pb.TagNumber(9)
+  set bucketIndex($core.int v) { $_setSignedInt32(8, v); }
+  @$pb.TagNumber(9)
+  $core.bool hasBucketIndex() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearBucketIndex() => clearField(9);
+
+  /// For trickle-dag links
+  @$pb.TagNumber(10)
+  $core.int get depth => $_getIZ(9);
+  @$pb.TagNumber(10)
+  set depth($core.int v) { $_setSignedInt32(9, v); }
+  @$pb.TagNumber(10)
+  $core.bool hasDepth() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearDepth() => clearField(10);
 }
 
 

@@ -15,16 +15,16 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'cid.pb.dart' as $0;
-import 'node_type.pbenum.dart' as $5;
+import 'node_type.pbenum.dart' as $1;
 
 /// Represents a log entry for an operation performed on the IPFS node.
-class OperationLogEntry extends $pb.GeneratedMessage {
-  factory OperationLogEntry({
+class OperationLogEntryProto extends $pb.GeneratedMessage {
+  factory OperationLogEntryProto({
     $fixnum.Int64? timestamp,
     $core.String? operation,
     $core.String? details,
     $0.CIDProto? cid,
-    $5.NodeTypeProto? nodeType,
+    $1.NodeTypeProto? nodeType,
   }) {
     final $result = create();
     if (timestamp != null) {
@@ -44,16 +44,16 @@ class OperationLogEntry extends $pb.GeneratedMessage {
     }
     return $result;
   }
-  OperationLogEntry._() : super();
-  factory OperationLogEntry.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory OperationLogEntry.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  OperationLogEntryProto._() : super();
+  factory OperationLogEntryProto.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory OperationLogEntryProto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'OperationLogEntry', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'OperationLogEntryProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'timestamp')
     ..aOS(2, _omitFieldNames ? '' : 'operation')
     ..aOS(3, _omitFieldNames ? '' : 'details')
     ..aOM<$0.CIDProto>(4, _omitFieldNames ? '' : 'cid', subBuilder: $0.CIDProto.create)
-    ..e<$5.NodeTypeProto>(5, _omitFieldNames ? '' : 'nodeType', $pb.PbFieldType.OE, defaultOrMaker: $5.NodeTypeProto.REGULAR, valueOf: $5.NodeTypeProto.valueOf, enumValues: $5.NodeTypeProto.values)
+    ..e<$1.NodeTypeProto>(5, _omitFieldNames ? '' : 'nodeType', $pb.PbFieldType.OE, defaultOrMaker: $1.NodeTypeProto.NODE_TYPE_UNSPECIFIED, valueOf: $1.NodeTypeProto.valueOf, enumValues: $1.NodeTypeProto.values)
     ..hasRequiredFields = false
   ;
 
@@ -61,22 +61,22 @@ class OperationLogEntry extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  OperationLogEntry clone() => OperationLogEntry()..mergeFromMessage(this);
+  OperationLogEntryProto clone() => OperationLogEntryProto()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  OperationLogEntry copyWith(void Function(OperationLogEntry) updates) => super.copyWith((message) => updates(message as OperationLogEntry)) as OperationLogEntry;
+  OperationLogEntryProto copyWith(void Function(OperationLogEntryProto) updates) => super.copyWith((message) => updates(message as OperationLogEntryProto)) as OperationLogEntryProto;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static OperationLogEntry create() => OperationLogEntry._();
-  OperationLogEntry createEmptyInstance() => create();
-  static $pb.PbList<OperationLogEntry> createRepeated() => $pb.PbList<OperationLogEntry>();
+  static OperationLogEntryProto create() => OperationLogEntryProto._();
+  OperationLogEntryProto createEmptyInstance() => create();
+  static $pb.PbList<OperationLogEntryProto> createRepeated() => $pb.PbList<OperationLogEntryProto>();
   @$core.pragma('dart2js:noInline')
-  static OperationLogEntry getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<OperationLogEntry>(create);
-  static OperationLogEntry? _defaultInstance;
+  static OperationLogEntryProto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<OperationLogEntryProto>(create);
+  static OperationLogEntryProto? _defaultInstance;
 
   /// The timestamp of when the operation was performed.
   @$pb.TagNumber(1)
@@ -122,9 +122,9 @@ class OperationLogEntry extends $pb.GeneratedMessage {
 
   /// The type of node involved in the operation (optional).
   @$pb.TagNumber(5)
-  $5.NodeTypeProto get nodeType => $_getN(4);
+  $1.NodeTypeProto get nodeType => $_getN(4);
   @$pb.TagNumber(5)
-  set nodeType($5.NodeTypeProto v) { setField(5, v); }
+  set nodeType($1.NodeTypeProto v) { setField(5, v); }
   @$pb.TagNumber(5)
   $core.bool hasNodeType() => $_has(4);
   @$pb.TagNumber(5)
@@ -132,9 +132,9 @@ class OperationLogEntry extends $pb.GeneratedMessage {
 }
 
 /// Represents a collection of operation log entries.
-class OperationLog extends $pb.GeneratedMessage {
-  factory OperationLog({
-    $core.Iterable<OperationLogEntry>? entries,
+class OperationLogProto extends $pb.GeneratedMessage {
+  factory OperationLogProto({
+    $core.Iterable<OperationLogEntryProto>? entries,
   }) {
     final $result = create();
     if (entries != null) {
@@ -142,12 +142,12 @@ class OperationLog extends $pb.GeneratedMessage {
     }
     return $result;
   }
-  OperationLog._() : super();
-  factory OperationLog.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory OperationLog.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  OperationLogProto._() : super();
+  factory OperationLogProto.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory OperationLogProto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'OperationLog', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..pc<OperationLogEntry>(1, _omitFieldNames ? '' : 'entries', $pb.PbFieldType.PM, subBuilder: OperationLogEntry.create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'OperationLogProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+    ..pc<OperationLogEntryProto>(1, _omitFieldNames ? '' : 'entries', $pb.PbFieldType.PM, subBuilder: OperationLogEntryProto.create)
     ..hasRequiredFields = false
   ;
 
@@ -155,26 +155,26 @@ class OperationLog extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  OperationLog clone() => OperationLog()..mergeFromMessage(this);
+  OperationLogProto clone() => OperationLogProto()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  OperationLog copyWith(void Function(OperationLog) updates) => super.copyWith((message) => updates(message as OperationLog)) as OperationLog;
+  OperationLogProto copyWith(void Function(OperationLogProto) updates) => super.copyWith((message) => updates(message as OperationLogProto)) as OperationLogProto;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static OperationLog create() => OperationLog._();
-  OperationLog createEmptyInstance() => create();
-  static $pb.PbList<OperationLog> createRepeated() => $pb.PbList<OperationLog>();
+  static OperationLogProto create() => OperationLogProto._();
+  OperationLogProto createEmptyInstance() => create();
+  static $pb.PbList<OperationLogProto> createRepeated() => $pb.PbList<OperationLogProto>();
   @$core.pragma('dart2js:noInline')
-  static OperationLog getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<OperationLog>(create);
-  static OperationLog? _defaultInstance;
+  static OperationLogProto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<OperationLogProto>(create);
+  static OperationLogProto? _defaultInstance;
 
   /// A list of log entries.
   @$pb.TagNumber(1)
-  $core.List<OperationLogEntry> get entries => $_getList(0);
+  $core.List<OperationLogEntryProto> get entries => $_getList(0);
 }
 
 
