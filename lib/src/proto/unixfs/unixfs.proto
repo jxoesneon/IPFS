@@ -14,7 +14,7 @@ enum UnixFSTypeProto {
 }
 
 // Represents a UnixFS node in IPFS.
-message UnixFS {
+message UnixFSProto {
   // The type of the node (file or directory).
   UnixFSTypeProto type = 1;
 
