@@ -8,4 +8,5 @@ import "core/cid.proto";
 message BlockProto {
   bytes data = 1;  // Raw binary data of the block
   CIDProto cid = 2;  // Reference to a CID message defined in cid.proto
+  string format = 3;  // Format of the block (e.g., 'raw', 'dag-pb', 'dag-cbor')
 }
