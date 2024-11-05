@@ -1,12 +1,12 @@
+import 'cid.dart';
+import 'link.dart';
+import 'dart:typed_data';
+import 'package:fixnum/fixnum.dart' as fixnum;
+import '/../src/proto/generated/dht/merkle_dag_node.pb.dart' as proto_m;
+import 'package:dart_ipfs/src/proto/generated/core/link.pb.dart' as proto_l;
 // lib/src/core/data_structures/merkle_dag_node.dart
 
-import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/proto/generated/core/link.pb.dart' as proto_l;
-import '/../src/proto/generated/dht/merkle_dag_node.pb.dart' as proto_m;
-import 'package:fixnum/fixnum.dart' as fixnum;
-import 'link.dart';
-import 'cid.dart';
 /// Represents a Merkle DAG node in IPFS.
 class MerkleDAGNode {
   final CID cid; // Use CID class
