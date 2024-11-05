@@ -1,57 +1,52 @@
+import '../../proto/generated/core/node_type.pb.dart';
 // lib/src/core/data_structures/node_type.dart
 
-/// Enum representing the different types of nodes in the IPFS network.
-enum NodeType {
-  /// Represents a regular node that participates in the IPFS network.
-  REGULAR,
-
-  /// Represents a bootstrap node, which helps new nodes join the network.
-  BOOTSTRAP,
-
-  /// Represents a relay node, which assists in routing traffic for other nodes.
-  RELAY,
-
-  /// Represents a gateway node, which provides HTTP access to IPFS content.
-  GATEWAY,
-
-  /// Represents an archival node, which stores large amounts of data for long-term preservation.
-  ARCHIVAL,
-}
-
-extension NodeTypeExtension on NodeType {
-  /// Converts the [NodeType] to its string representation.
+extension NodeTypeProtoExtension on NodeTypeProto {
+  /// Converts the [NodeTypeProto] to its string representation.
   String get name {
     switch (this) {
-      case NodeType.REGULAR:
+      case NodeTypeProto.NODE_TYPE_FILE:
+        return 'FILE';
+      case NodeTypeProto.NODE_TYPE_DIRECTORY:
+        return 'DIRECTORY';
+      case NodeTypeProto.NODE_TYPE_SYMLINK:
+        return 'SYMLINK';
+      case NodeTypeProto.NODE_TYPE_REGULAR:
         return 'REGULAR';
-      case NodeType.BOOTSTRAP:
+      case NodeTypeProto.NODE_TYPE_BOOTSTRAP:
         return 'BOOTSTRAP';
-      case NodeType.RELAY:
+      case NodeTypeProto.NODE_TYPE_RELAY:
         return 'RELAY';
-      case NodeType.GATEWAY:
+      case NodeTypeProto.NODE_TYPE_GATEWAY:
         return 'GATEWAY';
-      case NodeType.ARCHIVAL:
+      case NodeTypeProto.NODE_TYPE_ARCHIVAL:
         return 'ARCHIVAL';
       default:
         return 'UNKNOWN';
     }
   }
 
-  /// Converts a string representation to a [NodeType].
-  static NodeType fromName(String name) {
+  /// Converts a string representation to a [NodeTypeProto].
+  static NodeTypeProto fromName(String name) {
     switch (name.toUpperCase()) {
+      case 'FILE':
+        return NodeTypeProto.NODE_TYPE_FILE;
+      case 'DIRECTORY':
+        return NodeTypeProto.NODE_TYPE_DIRECTORY;
+      case 'SYMLINK':
+        return NodeTypeProto.NODE_TYPE_SYMLINK;
       case 'REGULAR':
-        return NodeType.REGULAR;
+        return NodeTypeProto.NODE_TYPE_REGULAR;
       case 'BOOTSTRAP':
-        return NodeType.BOOTSTRAP;
+        return NodeTypeProto.NODE_TYPE_BOOTSTRAP;
       case 'RELAY':
-        return NodeType.RELAY;
+        return NodeTypeProto.NODE_TYPE_RELAY;
       case 'GATEWAY':
-        return NodeType.GATEWAY;
+        return NodeTypeProto.NODE_TYPE_GATEWAY;
       case 'ARCHIVAL':
-        return NodeType.ARCHIVAL;
+        return NodeTypeProto.NODE_TYPE_ARCHIVAL;    
       default:
-        throw ArgumentError('Unknown node type: $name');
+        return NodeTypeProto.NODE_TYPE_UNSPECIFIED;
     }
   }
 }
