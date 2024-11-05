@@ -1,5 +1,7 @@
 import 'pin.dart';
 import 'dart:async';
+import 'cid.dart';  // Add this import
+import '../../proto/generated/core/pin.pb.dart' as proto; // Add this import
 import '../../proto/generated/core/cid.pb.dart';         // Import the generated CIDProto
 import '../../proto/generated/core/block.pb.dart';       // Import the generated BlockProto
 import '../../proto/generated/core/blockstore.pb.dart'; // Import the generated BlockStoreProto
@@ -8,47 +10,48 @@ import '../../proto/generated/core/blockstore.pb.dart'; // Import the generated 
 /// Represents a block store that manages blocks with IPFS datastore compliance.
 class BlockStore {
   final List<BlockProto> _blocks = [];
-  final Set<String> _pinnedBlocks = {};
-  final Map<String, DateTime> _blockAccessTimes = {};
+  final PinManager _pinManager;
   final Duration _gcThreshold;
   Timer? _gcTimer;
 
-  BlockStore({Duration gcInterval = const Duration(hours: 1)}) : _gcThreshold = gcInterval {
+  BlockStore({Duration gcInterval = const Duration(hours: 1)}) 
+      : _pinManager = PinManager(),
+        _gcThreshold = gcInterval {
     _startGarbageCollection();
   }
 
   /// Adds a block to the store with optional pinning.
-  Future<AddBlockResponse> addBlock(BlockProto block, {bool pin = false}) async {
-    if (_blocks.any((b) => b.cid == block.cid)) {
-      if (pin) {
-        _pinnedBlocks.add(block.cid.toString());
-      }
+  Future<AddBlockResponse> addBlock(BlockProto block, {proto.PinType type = proto.PinType.PIN_TYPE_DIRECT}) async {
+    final cid = CID.fromProto(block.cid);
+    final cidHash = cid.hashedValue();
+    
+    if (_blocks.any((b) => CID.fromProto(b.cid).hashedValue() == cidHash)) {
       return AddBlockResponse()
         ..success = false
         ..message = "Block already exists.";
     }
 
     _blocks.add(block);
-    _blockAccessTimes[block.cid.toString()] = DateTime.now();
-    
-    if (pin) {
-      _pinnedBlocks.add(block.cid.toString());
-    }
+    _pinManager.pinBlock(block.cid, type);
 
     return AddBlockResponse()
       ..success = true
       ..message = "Block added successfully.";
   }
 
-  /// Pins a block by its CID.
-  Future<bool> pinBlock(CIDProto cid) async {
+  /// Pins a block by its CID with specified pin type.
+  Future<bool> pinBlock(CIDProto cidProto, {proto.PinType type = proto.PinType.PIN_TYPE_RECURSIVE}) async {
+    final cid = CID.fromProto(cidProto);
+    final cidHash = cid.hashedValue();
+    
     final block = _blocks.firstWhere(
-      (b) => b.cid == cid,
+      (b) => CID.fromProto(b.cid).hashedValue() == cidHash,
       orElse: () => BlockProto(),
     );
 
     if (_blocks.contains(block)) {
-      _pinnedBlocks.add(cid.toString());
+      _pinManager.pinBlock(cidProto, type);
+      _pinManager.setBlockAccessTime(cidHash, DateTime.now());
       return true;
     }
     return false;
@@ -56,23 +59,27 @@ class BlockStore {
 
   /// Unpins a block by its CID.
   Future<bool> unpinBlock(CIDProto cid) async {
-    return _pinnedBlocks.remove(cid.toString());
+    return _pinManager.unpinBlock(cid);
   }
 
   /// Gets all pinned blocks.
   List<BlockProto> getPinnedBlocks() {
-    return _blocks.where((b) => _pinnedBlocks.contains(b.cid.toString())).toList();
+    return _blocks.where((b) => _pinManager.isBlockPinned(b.cid)).toList();
   }
 
   /// Retrieves a block by its CID and updates access time.
-  GetBlockResponse getBlock(CIDProto cid) {
+  GetBlockResponse getBlock(CIDProto cidProto) {
+    final cid = CID.fromProto(cidProto);
+    final cidHash = cid.hashedValue();
+    
     final block = _blocks.firstWhere(
-      (b) => b.cid == cid,
+      (b) => CID.fromProto(b.cid).hashedValue() == cidHash,
       orElse: () => BlockProto(),
     );
 
     if (_blocks.contains(block)) {
-      _blockAccessTimes[cid.toString()] = DateTime.now();
+      _pinManager.setBlockAccessTime(cidHash, DateTime.now());
+      _pinManager.pinBlock(cidProto, proto.PinType.PIN_TYPE_DIRECT);
     }
 
     return GetBlockResponse()
@@ -93,12 +100,12 @@ class BlockStore {
 
     for (final block in _blocks) {
       final cidStr = block.cid.toString();
-      if (!_pinnedBlocks.contains(cidStr)) {
-        final lastAccess = _blockAccessTimes[cidStr];
+      if (!_pinManager.isBlockPinned(block.cid)) {
+        final lastAccess = _pinManager.getBlockAccessTime(cidStr);
         if (lastAccess != null && 
             now.difference(lastAccess) > _gcThreshold) {
           blocksToRemove.add(block);
-          _blockAccessTimes.remove(cidStr);
+          _pinManager.removeBlockAccessTime(cidStr);
         }
       }
     }
@@ -118,6 +125,6 @@ class BlockStore {
 
   @override
   String toString() {
-    return 'BlockStore(blocks: ${_blocks.length}, pinned: ${_pinnedBlocks.length})';
+    return 'BlockStore(blocks: ${_blocks.length}, pinned: ${_pinManager.getPinnedBlocks().length})';
   }
 }
