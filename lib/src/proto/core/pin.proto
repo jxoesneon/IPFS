@@ -6,14 +6,14 @@ package ipfs.core.data_structures;
 
 import "core/cid.proto";
 
-enum PinType {
+enum PinTypeProto {
   PIN_TYPE_UNSPECIFIED = 0;
   PIN_TYPE_DIRECT = 1;
   PIN_TYPE_RECURSIVE = 2;
 }
 
-message Pin {
+message PinProto {
   CIDProto cid = 1;
-  PinType type = 2;
+  PinTypeProto type = 2;
   int64 timestamp = 3;
 }
