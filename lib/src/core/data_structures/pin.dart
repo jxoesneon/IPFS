@@ -49,6 +49,21 @@ class Pin {
   String toString() {
     return 'Pin(cid: $cid, type: $type, timestamp: $timestamp)';
   }
+
+  /// Pins this block according to its type
+  Future<bool> pin() async {
+    return await _pinManager.pinBlock(cid.toProto(), type);
+  }
+
+  /// Unpins this block
+  Future<bool> unpin() async {
+    return await _pinManager.unpinBlock(cid.toProto());
+  }
+
+  /// Checks if this block is pinned
+  bool isPinned() {
+    return _pinManager.isBlockPinned(cid.toProto());
+  }
 }
 
 class PinManager {
