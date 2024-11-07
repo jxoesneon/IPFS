@@ -1,11 +1,11 @@
-import 'cid.dart';
-import 'link.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart' as fixnum;
-import '/../src/proto/generated/dht/merkle_dag_node.pb.dart' as proto_m;
+import 'package:dart_ipfs/src/proto/generated/dht/merkle_dag_node.pb.dart'
+    as proto_m;
 import 'package:dart_ipfs/src/proto/generated/core/link.pb.dart' as proto_l;
 // lib/src/core/data_structures/merkle_dag_node.dart
-
 
 /// Represents a Merkle DAG node in IPFS.
 class MerkleDAGNode {
@@ -37,7 +37,8 @@ class MerkleDAGNode {
       return MerkleDAGNode(
         cid: CID.fromProto(pbNode.cid),
         links: pbNode.links
-            .whereType<proto_l.PBLink>() // Filter to only include PBLink objects
+            .whereType<
+                proto_l.PBLink>() // Filter to only include PBLink objects
             .map((link) => Link.fromProto(link))
             .toList(),
 
@@ -46,7 +47,8 @@ class MerkleDAGNode {
         timestamp: pbNode.timestamp.toInt(),
         metadata: Map<String, String>.from(pbNode.metadata),
         isDirectory: pbNode.isDirectory,
-        parentCid: pbNode.hasParentCid() ? CID.fromProto(pbNode.parentCid) : null,
+        parentCid:
+            pbNode.hasParentCid() ? CID.fromProto(pbNode.parentCid) : null,
       );
     } catch (e) {
       throw FormatException('Failed to parse MerkleDAGNode from bytes: $e');
