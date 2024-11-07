@@ -1,3 +1,6 @@
+import 'package:dart_ipfs/src/core/types/p2p_types.dart';
+import 'package:dart_ipfs/src/proto/generated/metrics.pb.dart';
+
 class NetworkMetrics {
   final Map<LibP2PPeerId, PeerMetrics> peerMetrics = {};
   final Map<String, ProtocolMetrics> protocolMetrics = {};
