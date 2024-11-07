@@ -9,54 +9,54 @@ void main() {
   group('Block', () {
     test('Constructor initializes correctly', () {
       final data = Uint8List.fromList([1, 2, 3, 4]);
-      final cidProto = CIDProto()
+      final IPFSCIDProto = IPFSCIDProto()
         ..version = CIDVersion.CID_VERSION_1
         ..multihash = [0x12, 0x20] // Example multihash
         ..codec = 'dag-pb'
         ..multibasePrefix = 'base58btc';
-      final cid = CID.fromProto(cidProto);
+      final cid = CID.fromProto(IPFSCIDProto);
 
       final block = Block(data, cid);
 
       expect(block.data, data);
-      expect(block.cid.toProto(), cidProto);
+      expect(block.cid.toProto(), IPFSCIDProto);
     });
 
     test('fromData factory creates Block correctly', () {
       final data = Uint8List.fromList([5, 6, 7, 8]);
-      final cidProto = CIDProto()
+      final IPFSCIDProto = IPFSCIDProto()
         ..version = CIDVersion.CID_VERSION_1
         ..multihash = [0x12, 0x20]
         ..codec = 'dag-pb'
         ..multibasePrefix = 'base58btc';
-      final cid = CID.fromProto(cidProto);
+      final cid = CID.fromProto(IPFSCIDProto);
 
       final block = Block.fromData(data, cid);
 
       expect(block.data, data);
-      expect(block.cid.toProto(), cidProto);
+      expect(block.cid.toProto(), IPFSCIDProto);
     });
 
     test('toProto serializes Block correctly', () {
       final data = Uint8List.fromList([9, 10, 11]);
-      final cidProto = CIDProto()
+      final IPFSCIDProto = IPFSCIDProto()
         ..version = CIDVersion.CID_VERSION_1
         ..multihash = [0x12, 0x20]
         ..codec = 'dag-pb'
         ..multibasePrefix = 'base58btc';
-      final cid = CID.fromProto(cidProto);
+      final cid = CID.fromProto(IPFSCIDProto);
       final block = Block(data, cid);
 
       final proto = block.toProto();
 
       expect(proto.data, data);
-      expect(proto.cid.version, cidProto.version);
-      expect(proto.cid.multihash, cidProto.multihash);
+      expect(proto.cid.version, IPFSCIDProto.version);
+      expect(proto.cid.multihash, IPFSCIDProto.multihash);
     });
 
     test('fromProto deserializes Block correctly', () {
       // Create a CID proto object
-      final protoCid = CIDProto()
+      final protoCid = IPFSCIDProto()
         ..version = CIDVersion.CID_VERSION_1
         ..multihash.addAll([0x12, 0x20])
         ..codec = 'dag-pb'
@@ -79,13 +79,13 @@ void main() {
     });
     test('size returns correct size of data', () {
       final data = Uint8List.fromList([14, 15]);
-      final cidProto = CIDProto()
+      final IPFSCIDProto = IPFSCIDProto()
         ..version = CIDVersion.CID_VERSION_1
         ..multihash.addAll([0x12, 0x20])
         ..codec = 'dag-pb'
         ..multibasePrefix = 'base58btc';
 
-      final cid = CID.fromProto(cidProto);
+      final cid = CID.fromProto(IPFSCIDProto);
 
       final block = Block(data, cid);
 
