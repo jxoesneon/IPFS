@@ -6,9 +6,9 @@ import '/../src/protocols/dht/peer.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import '/../src/transport/p2plib_router.dart';
 import '/../src/protocols/dht/dht_client.dart';
-import '/../src/protocols/dht/routing_table.dart';
+import '/../src/protocols/dht/kademlia_routing_table.dart';
 import '/../src/transport/circuit_relay_client.dart';
-import '../../proto/generated/dht/ipfs_node_network_events.pb.dart'; // Import generated Protobuf classes
+import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
 // lib/src/core/ipfs_node/network_handler.dart
 
 /// Handles network operations for an IPFS node.
@@ -123,13 +123,18 @@ class NetworkHandler {
           // Convert peerId to PeerId object and add to routing table with itself as associated peer
           final peerIdBytes = Uint8List.fromList(utf8.encode(peerId));
           final peer = p2p.PeerId(value: peerIdBytes);
+          // Using the routing table's addPeer method
           ipfsNode.dhtHandler.dhtClient.routingTable.addPeer(peer, peer);
         } else if (event.hasPeerDisconnected()) {
-          final peerId = event.peerDisconnected.peerId;
+          final peerIdStr = event.peerDisconnected.peerId;
           final reason = event.peerDisconnected.reason;
-          print('Peer left: $peerId. Reason: $reason');
+          print('Peer left: $peerIdStr. Reason: $reason');
 
-          // Remove peer from DHT routing table
+          // Convert string to PeerId object before removing
+          final peerIdBytes = Uint8List.fromList(utf8.encode(peerIdStr));
+          final peerId = p2p.PeerId(value: peerIdBytes);
+          
+          // Using the routing table's removePeer method
           ipfsNode.dhtHandler.dhtClient.routingTable.removePeer(peerId);
         } else if (event.hasMessageReceived()) {
           final messageContent =
