@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package ipfs.base;
+
+import "google/protobuf/timestamp.proto";
+
+// Base message wrapper for all IPFS messages
+message IPFSMessage {
+  string protocol_id = 1;
+  bytes payload = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  string sender_id = 4;
+  MessageType type = 5;
+  
+  enum MessageType {
+    UNKNOWN = 0;
+    DHT = 1;
+    BITSWAP = 2;
+    PUBSUB = 3;
+    IDENTIFY = 4;
+    PING = 5;
+  }
+}
+
+// Network events
+message NetworkEvent {
+  google.protobuf.Timestamp timestamp = 1;
+  string event_type = 2;
+  string peer_id = 3;
+  bytes data = 4;
+} 
