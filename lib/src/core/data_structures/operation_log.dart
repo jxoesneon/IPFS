@@ -1,8 +1,8 @@
 import 'dart:collection';
 import 'dart:typed_data';
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 import '../../proto/generated/core/cid.pb.dart';
-import 'cid.dart'; // Import CID class for logging CIDs
 import '../../proto/generated/core/operation_log.pb.dart'; // Import the generated Protobuf file
 import '../../proto/generated/core/node_type.pbenum.dart'; // Import the NodeTypeProto enum directly
 // lib/src/core/data_structures/operation_log.dart
@@ -38,7 +38,7 @@ class OperationLogEntry {
       ..timestamp = fixnum.Int64(timestamp.millisecondsSinceEpoch)
       ..operation = operation
       ..details = details
-      ..cid = cid?.toProto() ?? CIDProto()
+      ..cid = cid?.toProto() ?? IPFSCIDProto()
       ..nodeType = nodeType!;
   }
 
