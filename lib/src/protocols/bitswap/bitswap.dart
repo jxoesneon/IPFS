@@ -12,13 +12,14 @@ import 'ledger.dart';
 import '../../storage/datastore.dart';
 import '../../utils/varint.dart';
 import '../../core/ipfs_node/ipfs_node.dart';
+import '../../core/types/p2p_types.dart';
 
 class Bitswap {
   final P2plibRouter _router;
   final BitLedger _ledger;
   final Datastore _datastore;
   final String _nodeId;
-  final Set<PeerId> _peers = <PeerId>{}; // Use PeerId from p2plib
+  final Set<LibP2PPeerId> _peers = {};
   final dynamic config;
 
   Bitswap(this._router, this._ledger, this._datastore, this._nodeId, [this.config]);
@@ -70,56 +71,9 @@ class Bitswap {
   }
 
   /// Handles incoming packets from peers.
-  void _handlePacket(p2p.Packet packet) {
-    if (packet.datagram.length > (4 * 1024 * 1024)) { 
-      print('Message exceeds the maximum allowed size.');
-      return;
-    }
-
-    try {
-      // Decode message length prefix
-      final (messageLength, bytesRead) = decodeVarint(packet.datagram);
-
-      // Extract message bytes
-      final messageBytes = packet.datagram.sublist(bytesRead);
-
-      // Deserialize message using Protobuf
-      final message = bitswap.Message.fromBuffer(messageBytes);
-
-      _processIncomingMessage(packet, message);
-    } catch (e) {
-      print('Error deserializing message: $e');
-    }
-  }
-
-  /// Processes incoming messages from peers.
-  void _processIncomingMessage(p2p.Packet packet, bitswap.Message message) {
-    final srcPeerId = packet.getSrcPeerId().toBase58String();
-
-    for (var entry in message.wantlist.entries) {
-      if (entry.cancel) {
-        handleCancel(srcPeerId, entry);
-      } else {
-        switch (entry.wantType) {
-          case bitswap.WantType.WANT_TYPE_BLOCK:
-            handleWantBlock(srcPeerId, entry);
-            break;
-          case bitswap.WantType.WANT_TYPE_HAVE:
-            handleHave(srcPeerId, entry);
-            break;
-          default:
-            print('Unknown want type: ${entry.wantType}');
-        }
-      }
-    }
-
-    for (var blockMsg in message.payload) {
-      _handleReceivedBlock(srcPeerId, blockMsg);
-    }
-
-    for (var blockPresence in message.blockPresences) {
-      _handleBlockPresence(srcPeerId, blockPresence);
-    }
+  void _handlePacket(LibP2PPacket packet) {
+    final message = NetworkMessage.fromBytes(packet.datagram);
+    // Handle message
   }
 
   /// Handles received blocks from peers.
@@ -167,12 +121,12 @@ Future<void> sendWantlist(String peerId, bitswap.Wantlist.Entry entry) async {
    await send(peerId, message);
 }
 
-void addPeer(PeerId peerId) { 
+void addPeer(LibP2PPeerId peerId) { 
    _peers.add(peerId); 
    print('Peer ${peerId.toBase58()} added to Bitswap network.'); 
 }
 
-void removePeer(PeerId peerId) { 
+void removePeer(LibP2PPeerId peerId) { 
    _peers.remove(peerId); 
    print('Peer ${peerId.toBase58()} removed from Bitswap network.'); 
 }
