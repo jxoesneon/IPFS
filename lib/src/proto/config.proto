@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package ipfs.config;
+
+message ProtocolConfig {
+  string protocol_id = 1;
+  uint32 message_timeout_seconds = 2;
+  uint32 max_retries = 3;
+  uint32 max_message_size = 4;
+  RateLimitConfig rate_limit = 5;
+  CircuitBreakerConfig circuit_breaker = 6;
+}
+
+message RateLimitConfig {
+  uint32 max_requests_per_window = 1;
+  uint32 window_seconds = 2;
+}
+
+message CircuitBreakerConfig {
+  uint32 reset_timeout_seconds = 1;
+  uint32 failure_threshold = 2;
+  uint32 half_open_timeout_seconds = 3;
+} 
