@@ -17,14 +17,20 @@ class DHTMessage_MessageType extends $pb.ProtobufEnum {
   static const DHTMessage_MessageType UNKNOWN = DHTMessage_MessageType._(0, _omitEnumNames ? '' : 'UNKNOWN');
   static const DHTMessage_MessageType FIND_NODE = DHTMessage_MessageType._(1, _omitEnumNames ? '' : 'FIND_NODE');
   static const DHTMessage_MessageType FIND_VALUE = DHTMessage_MessageType._(2, _omitEnumNames ? '' : 'FIND_VALUE');
-  static const DHTMessage_MessageType STORE = DHTMessage_MessageType._(3, _omitEnumNames ? '' : 'STORE');
-  static const DHTMessage_MessageType PING = DHTMessage_MessageType._(4, _omitEnumNames ? '' : 'PING');
+  static const DHTMessage_MessageType PUT_VALUE = DHTMessage_MessageType._(3, _omitEnumNames ? '' : 'PUT_VALUE');
+  static const DHTMessage_MessageType GET_VALUE = DHTMessage_MessageType._(4, _omitEnumNames ? '' : 'GET_VALUE');
+  static const DHTMessage_MessageType ADD_PROVIDER = DHTMessage_MessageType._(5, _omitEnumNames ? '' : 'ADD_PROVIDER');
+  static const DHTMessage_MessageType GET_PROVIDERS = DHTMessage_MessageType._(6, _omitEnumNames ? '' : 'GET_PROVIDERS');
+  static const DHTMessage_MessageType PING = DHTMessage_MessageType._(7, _omitEnumNames ? '' : 'PING');
 
   static const $core.List<DHTMessage_MessageType> values = <DHTMessage_MessageType> [
     UNKNOWN,
     FIND_NODE,
     FIND_VALUE,
-    STORE,
+    PUT_VALUE,
+    GET_VALUE,
+    ADD_PROVIDER,
+    GET_PROVIDERS,
     PING,
   ];
 
