@@ -1,3 +1,6 @@
+import 'dart:core' as $core;
+import 'kademlia_node.pb.dart' as $2;
+import 'package:protobuf/protobuf.dart' as $pb;
 //
 //  Generated code. Do not modify.
 //  source: dht/routing_table.proto
@@ -9,11 +12,8 @@
 // ignore_for_file: non_constant_identifier_names, prefer_final_fields
 // ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
-import 'dart:core' as $core;
 
-import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'kademlia_node.pb.dart' as $2;
 
 class RoutingTable extends $pb.GeneratedMessage {
   factory RoutingTable({
@@ -59,6 +59,35 @@ class RoutingTable extends $pb.GeneratedMessage {
   /// The key is the PeerId string, and the value is the associated KademliaNode.
   @$pb.TagNumber(1)
   $core.Map<$core.String, $2.KademliaNode> get entries => $_getMap(0);
+
+  void addPeer(p2p.PeerId peerId, p2p.PeerId associatedPeerId) {
+    final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
+    final bucketIndex = _getBucketIndex(distance);
+    final bucket = _getOrCreateBucket(bucketIndex);
+
+    if (bucket.containsKey(peerId)) {
+      final existingNode = bucket[peerId]!;
+      bucket[peerId] = existingNode; // Update last seen by re-inserting.
+      return;
+    }
+
+    if (bucket.size >= K_BUCKET_SIZE) {
+      if (!_removeStaleNode(bucket)) {
+        if (_isOurBucket(bucketIndex)) {
+          splitBucket(bucketIndex);
+          addPeer(peerId, associatedPeerId);
+        }
+        return;
+      }
+    }
+
+    bucket[peerId] = KademliaNode(
+      peerId,
+      distance,
+      associatedPeerId,
+      lastSeen: DateTime.now().millisecondsSinceEpoch,
+    );
+  }
 }
 
 
