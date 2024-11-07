@@ -1,7 +1,6 @@
 // lib/src/core/data_structures/directory.dart
 import 'package:fixnum/fixnum.dart';
 import '../../proto/generated/dht/directory.pb.dart';
-import 'dart:typed_data';
 
 /// Represents a single entry within an IPFS directory
 class IPFSDirectoryEntry {
