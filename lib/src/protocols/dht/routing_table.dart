@@ -10,12 +10,12 @@ import 'package:p2plib/p2plib.dart' as p2p;
 import '../../core/data_structures/node_stats.dart';
 
 // Represents the routing table for the DHT client.
-class RoutingTable {
+class KademliaRoutingTable {
   late final DHTClient dhtClient;
   late KademliaTree _tree;
   static const int K_BUCKET_SIZE = 20;
 
-  RoutingTable() : _tree = KademliaTree(p2p.PeerId(value: Uint8List(32)));
+  KademliaRoutingTable() : _tree = KademliaTree(p2p.PeerId(value: Uint8List(32)));
 
   /// Initializes the routing table with a reference to the DHT client
   void initialize(DHTClient client) {
@@ -95,18 +95,13 @@ class RoutingTable {
     );
   }
 
-  void removePeer(String peerId) {
-    // Convert string peerId to PeerId object
-    final peerIdBytes = Uint8List.fromList(utf8.encode(peerId));
-    final peer = p2p.PeerId(value: peerIdBytes);
-
-    // Find and remove the peer from the appropriate bucket
-    final distance = _calculateXorDistance(peer, _tree.root!.peerId);
+  void removePeer(p2p.PeerId peerId) {
+    final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
     final bucketIndex = _getBucketIndex(distance);
     final bucket = _tree.buckets[bucketIndex];
 
-    if (bucket.containsKey(peer)) {
-      bucket.remove(peer);
+    if (bucket.containsKey(peerId)) {
+      bucket.remove(peerId);
 
       // Check if bucket needs to be merged after removal
       if (bucket.isEmpty && bucketIndex > 0) {
