@@ -4,16 +4,15 @@ import 'dart:io';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:p2plib/p2plib.dart' as p2p; // Import p2plib for peer management
-import '../../proto/generated/core/peer.pb.dart'; // Import the generated Protobuf file
-import '/../src/utils/base58.dart';
+import 'package:dart_ipfs/src/proto/generated/core/peer.pb.dart'; // Import the generated Protobuf file
+import 'package:dart_ipfs/src/utils/base58.dart';
 
 /// Represents a peer in the IPFS network.
 class Peer {
-  final p2p.PeerId id; // Unique identifier for the peer using p2plib's PeerId
-  final List<p2p.FullAddress>
-      addresses; // List of multiaddresses for the peer using p2plib's FullAddress
-  final int latency; // Estimated latency to the peer
-  final String agentVersion; // Version of the IPFS agent running on the peer
+  final p2p.PeerId id;
+  final List<p2p.FullAddress> addresses;
+  final int latency;
+  final String agentVersion;
 
   Peer({
     required this.id,
@@ -80,5 +79,3 @@ p2p.FullAddress? parseMultiaddrString(String multiaddrString) {
     return null; // or throw an exception
   }
 }
-
-
