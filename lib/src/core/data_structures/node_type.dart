@@ -1,4 +1,3 @@
-import '../../proto/generated/core/node_type.pb.dart';
 // lib/src/core/data_structures/node_type.dart
 
 enum NodeType { unknown, file, directory, symlink, raw }
