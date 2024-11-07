@@ -9,7 +9,7 @@ import "core/cid.proto";  // Import the CID definition
 // Represents a Merkle DAG node.
 message MerkleDAGNode {
   // The CID (Content Identifier) of the node.
-  CIDProto cid = 1; // Use CID message
+  IPFSCIDProto cid = 1; // Use CID message
 
   // Links to other nodes in the DAG.
   repeated PBLink links = 2; // Use PBLink from link.proto
@@ -30,5 +30,5 @@ message MerkleDAGNode {
   bool is_directory = 7;
 
   // Optional parent CID to represent the relationship in DAG.
-  CIDProto parent_cid = 8; // Use CID message
+  IPFSCIDProto parent_cid = 8; // Use CID message
 }
