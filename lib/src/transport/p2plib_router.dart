@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import '/../src/utils/base58.dart';
 import '/../src/core/config/config.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
+import '../core/types/p2p_types.dart';
 // lib/src/transport/p2plib_router.dart
 
 /// A router implementation using the `p2plib` package.
@@ -120,9 +121,26 @@ class P2plibRouter {
   }
 
   void addMessageHandler(
-      String protocolId, void Function(p2p.Packet packet) handlePacket) {}
+      String protocolId, void Function(p2p.Packet packet) handlePacket) {
+    _router.addMessageHandler(protocolId, handlePacket);
+  }
 
-  void registerProtocol(String protocolId) {}
+  void registerProtocol(String protocolId) {
+    _router.registerProtocol(protocolId);
+  }
 }
 
-mixin address {}
+mixin MultiAddressHandler {
+  String get multiaddr;
+  void setMultiaddr(String addr);
+}
+
+class NetworkMessage {
+  final Uint8List data;
+
+  NetworkMessage(this.data);
+
+  static NetworkMessage fromBytes(Uint8List bytes) {
+    return NetworkMessage(bytes);
+  }
+}
