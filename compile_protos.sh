@@ -24,7 +24,7 @@ find "$PROTO_PATH" -name "*.proto" -print0 | while IFS= read -r -d $'\0' proto_f
     -I="$PROTO_PATH" \
     "$proto_file"
     # in proto file we should have 
-    # option dart_package = "package:your_package_name/proto/dht/$filename.pb.dart"; 
+    # option dart_package = "package:dart_ipfs_name/proto/dht/$filename.pb.dart"; 
     # and we should change -I
 
 done
