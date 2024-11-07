@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'ipfs_node.dart';
 import 'dart:typed_data';
+import '/../src/protocols/dht/peer.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 import '/../src/transport/p2plib_router.dart';
+import '/../src/protocols/dht/dht_client.dart';
+import '/../src/protocols/dht/routing_table.dart';
 import '/../src/transport/circuit_relay_client.dart';
-import 'package:ipfs_node/src/protocols/dht/peer.dart';
-import 'package:ipfs_node/src/protocols/dht/dht_client.dart';
-import 'package:ipfs_node/src/protocols/dht/routing_table.dart';
 import '../../proto/generated/dht/ipfs_node_network_events.pb.dart'; // Import generated Protobuf classes
 // lib/src/core/ipfs_node/network_handler.dart
 
@@ -13,6 +15,7 @@ import '../../proto/generated/dht/ipfs_node_network_events.pb.dart'; // Import g
 class NetworkHandler {
   final CircuitRelayClient _circuitRelayClient;
   final P2plibRouter _router;
+  late final IPFSNode ipfsNode;
   late final StreamController<NetworkEvent> _networkEventController =
       StreamController<NetworkEvent>.broadcast();
 
@@ -117,17 +120,17 @@ class NetworkHandler {
           final multiaddress = event.peerConnected.multiaddress;
           print('Peer joined: $peerId at address: $multiaddress');
 
-          // Add peer to DHT routing table
-          final peer = p2p.Peer(id: peerId, address: multiaddress);
-          _node.dhtHandler._dhtClient._routingTable
-              .addPeer(peer.id, _calculateClosestPeer(peer.id));
+          // Convert peerId to PeerId object and add to routing table with itself as associated peer
+          final peerIdBytes = Uint8List.fromList(utf8.encode(peerId));
+          final peer = p2p.PeerId(value: peerIdBytes);
+          ipfsNode.dhtHandler.dhtClient.routingTable.addPeer(peer, peer);
         } else if (event.hasPeerDisconnected()) {
           final peerId = event.peerDisconnected.peerId;
           final reason = event.peerDisconnected.reason;
           print('Peer left: $peerId. Reason: $reason');
 
           // Remove peer from DHT routing table
-          _node.dhtHandler._dhtClient._routingTable.removePeer(peerId);
+          ipfsNode.dhtHandler.dhtClient.routingTable.removePeer(peerId);
         } else if (event.hasMessageReceived()) {
           final messageContent =
               utf8.decode(event.messageReceived.messageContent);
@@ -147,14 +150,17 @@ class NetworkHandler {
     });
   }
 
-  // Add helper method for calculating closest peer
+  // Update helper method to use public property
   p2p.PeerId _calculateClosestPeer(p2p.PeerId peerId) {
-    // Implement Kademlia XOR distance calculation
-    // Return the ID of the closest known peer
-    return _node.dhtHandler._dhtClient._routingTable
+    return ipfsNode.dhtHandler.dhtClient.routingTable
             .findClosestPeers(peerId, 1)
             .firstOrNull
             ?.id ??
         peerId;
+  }
+
+  // Add setter method
+  void setIpfsNode(IPFSNode node) {
+    ipfsNode = node;
   }
 }
