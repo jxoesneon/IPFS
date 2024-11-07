@@ -3,19 +3,19 @@ import 'dart:typed_data';
 import '../../core/data_structures/cid.dart' show CID;
 import '../../core/data_structures/block.dart' show Block;
 import '../../proto/generated/bitswap/bitswap.pb.dart' as bitswap_pb;
-
+import '../../utils/encoding.dart';
 
 /// Represents a Bitswap protocol message
 class Message {
   /// List of blocks being sent
   final List<Block> _blocks = [];
-  
+
   /// The wantlist containing requested blocks
   final Wantlist _wantlist = Wantlist();
-  
+
   /// The peer ID of the sender
   String? from;
-  
+
   /// Block presences for HAVE/DONT_HAVE responses
   final List<BlockPresence> _blockPresences = [];
 
@@ -27,19 +27,17 @@ class Message {
 
   List<Block> getBlocks() => List.unmodifiable(_blocks);
 
-  void addWantlistEntry(String cid, {
-    int priority = 1,
-    bool cancel = false,
-    WantType wantType = WantType.block,
-    bool sendDontHave = false
-  }) {
+  void addWantlistEntry(String cid,
+      {int priority = 1,
+      bool cancel = false,
+      WantType wantType = WantType.block,
+      bool sendDontHave = false}) {
     _wantlist.addEntry(WantlistEntry(
-      cid: cid,
-      priority: priority,
-      cancel: cancel,
-      wantType: wantType,
-      sendDontHave: sendDontHave
-    ));
+        cid: cid,
+        priority: priority,
+        cancel: cancel,
+        wantType: wantType,
+        sendDontHave: sendDontHave));
   }
 
   Wantlist getWantlist() => _wantlist;
@@ -55,41 +53,34 @@ class Message {
   bool hasBlockPresences() => _blockPresences.isNotEmpty;
 
   /// Creates a Message from its protobuf byte representation
-  static Message fromBytes(List<int> bytes) {
+  static Message fromBytes(Uint8List bytes) {
     final pbMessage = bitswap_pb.Message.fromBuffer(bytes);
     final message = Message();
-    
+
     // Parse wantlist
     if (pbMessage.hasWantlist()) {
       for (var entry in pbMessage.wantlist.entries) {
-        message.addWantlistEntry(
-          base64.encode(entry.block),
-          priority: entry.priority,
-          cancel: entry.cancel,
-          wantType: _convertWantType(entry.wantType),
-          sendDontHave: entry.sendDontHave
-        );
+        message.addWantlistEntry(base64.encode(entry.block),
+            priority: entry.priority,
+            cancel: entry.cancel,
+            wantType: _convertWantType(entry.wantType),
+            sendDontHave: entry.sendDontHave);
       }
     }
-    
-    // Parse blocks
-    for (var blockMsg in pbMessage.blocks) {
-      final blockData = Uint8List.fromList(blockMsg.data);
-      final cid = CID.fromBytes(
-        Uint8List.fromList(blockMsg.prefix), 
-        'dag-pb'  // Using dag-pb as default codec
-      );
-      message.addBlock(Block(blockData, cid));
+
+    // Parse blocks using EncodingUtils
+    for (var block in pbMessage.blocks) {
+      final cid = CID.fromBytes(block.prefix, 'dag-pb');
+      message.addBlock(Block(block.data, cid));
     }
 
-    // Parse block presences
+    // Parse block presences using EncodingUtils
     for (var presence in pbMessage.blockPresences) {
       message.addBlockPresence(
-        base64.encode(presence.cid),
-        presence.type == bitswap_pb.BlockPresence_Type.HAVE 
-          ? BlockPresenceType.have 
-          : BlockPresenceType.dontHave
-      );
+          EncodingUtils.toBase58(presence.cid),
+          presence.type == bitswap_pb.BlockPresence_Type.HAVE
+              ? BlockPresenceType.have
+              : BlockPresenceType.dontHave);
     }
 
     return message;
@@ -99,37 +90,18 @@ class Message {
   Uint8List toBytes() {
     final pbMessage = bitswap_pb.Message();
 
-    // Add wantlist
-    if (hasWantlist()) {
-      final pbWantlist = bitswap_pb.Wantlist();
-      for (var entry in _wantlist.entries.values) {
-        pbWantlist.entries.add(bitswap_pb.WantlistEntry()
-          ..block = base64.decode(entry.cid)
-          ..priority = entry.priority
-          ..cancel = entry.cancel
-          ..wantType = _convertToPbWantType(entry.wantType)
-          ..sendDontHave = entry.sendDontHave
-        );
-      }
-      pbMessage.wantlist = pbWantlist;
-    }
-
     // Add blocks
     for (var block in _blocks) {
       pbMessage.blocks.add(bitswap_pb.Block()
-        ..prefix = block.cid.toBytes()
-        ..data = block.data
-      );
+        ..prefix = EncodingUtils.cidToBytes(block.cid)
+        ..data = block.data);
     }
 
     // Add block presences
     for (var presence in _blockPresences) {
       pbMessage.blockPresences.add(bitswap_pb.BlockPresence()
-        ..cid = base64.decode(presence.cid)
-        ..type = presence.type == BlockPresenceType.have 
-          ? bitswap_pb.BlockPresence_Type.HAVE 
-          : bitswap_pb.BlockPresence_Type.DONT_HAVE
-      );
+        ..cid = EncodingUtils.fromBase58(presence.cid)
+        ..type = _convertPresenceType(presence.type));
     }
 
     return pbMessage.writeToBuffer();
@@ -146,17 +118,16 @@ class Message {
     }
   }
 
-  static bitswap_pb.WantType _convertToPbWantType(WantType type) {
-    switch (type) {
-      case WantType.block:
-        return bitswap_pb.WantType.WANT_TYPE_BLOCK;
-      case WantType.have:
-        return bitswap_pb.WantType.WANT_TYPE_HAVE;
-    }
+  static bitswap_pb.BlockPresence_Type _convertPresenceType(
+      BlockPresenceType type) {
+    return type == BlockPresenceType.have
+        ? bitswap_pb.BlockPresence_Type.HAVE
+        : bitswap_pb.BlockPresence_Type.DONT_HAVE;
   }
 }
 
 enum WantType { block, have }
+
 enum BlockPresenceType { have, dontHave }
 
 class WantlistEntry {
