@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package ipfs.connection;
+
+import "google/protobuf/timestamp.proto";
+
+message ConnectionState {
+  string peer_id = 1;
+  Status status = 2;
+  google.protobuf.Timestamp connected_at = 3;
+  map<string, string> metadata = 4;
+  
+  enum Status {
+    UNKNOWN = 0;
+    CONNECTING = 1;
+    CONNECTED = 2;
+    DISCONNECTING = 3;
+    DISCONNECTED = 4;
+    ERROR = 5;
+  }
+}
+
+message ConnectionMetrics {
+  string peer_id = 1;
+  uint64 messages_sent = 2;
+  uint64 messages_received = 3;
+  uint64 bytes_sent = 4;
+  uint64 bytes_received = 5;
+  uint32 average_latency_ms = 6;
+} 
