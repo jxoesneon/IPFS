@@ -9,7 +9,7 @@ import "core/cid.proto";
 import "core/node_type.proto";
 
 message NodeProto {
-  CIDProto cid = 1;
+  IPFSCIDProto cid = 1;
   repeated PBLink links = 2;
   bytes data = 3;
   NodeTypeProto type = 4;
