@@ -13,7 +13,7 @@ enum PinTypeProto {
 }
 
 message PinProto {
-  CIDProto cid = 1;
+  IPFSCIDProto cid = 1;
   PinTypeProto type = 2;
   int64 timestamp = 3;
 }
