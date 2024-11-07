@@ -1,24 +1,28 @@
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:p2plib/p2plib.dart' as p2p;
 import '/../src/transport/p2plib_router.dart';
 import '/../src/protocols/dht/dht_client.dart';
+import '/../src/utils/base58.dart'; // Import your Base58 utility
 import '/../src/utils/keystore.dart'; // Import your Keystore utility
+import '/../src/core/ipfs_node/network_handler.dart'; // Import your NetworkHandler utility
 // lib/src/core/ipfs_node/dht_handler.dart
 
 /// Handles DHT operations for an IPFS node.
 class DHTHandler {
-  final DHTClient _dhtClient;
+  final DHTClient dhtClient;
   final Keystore _keystore; // Add a reference to the Keystore
   final P2plibRouter _router;
 
-  DHTHandler(config, P2plibRouter router)
-      : _dhtClient = DHTClient(config),
+  DHTHandler(config, P2plibRouter router, NetworkHandler networkHandler)
+      : dhtClient = DHTClient(networkHandler: networkHandler),
         _keystore = Keystore(config),
         _router = router;
 
   /// Starts the DHT client.
   Future<void> start() async {
     try {
-      await _dhtClient.start();
+      await dhtClient.start();
       print('DHT client started.');
     } catch (e) {
       print('Error starting DHT client: $e');
@@ -28,7 +32,7 @@ class DHTHandler {
   /// Stops the DHT client.
   Future<void> stop() async {
     try {
-      await _dhtClient.stop();
+      await dhtClient.stop();
       print('DHT client stopped.');
     } catch (e) {
       print('Error stopping DHT client: $e');
@@ -38,7 +42,7 @@ class DHTHandler {
   /// Finds providers for a given CID in the DHT network.
   Future<List<String>> findProviders(String cid) async {
     try {
-      final providers = await _dhtClient.findProviders(cid);
+      final providers = await dhtClient.findProviders(cid);
       if (providers.isEmpty) {
         print(
             'No providers found for CID $cid. Attempting alternative discovery methods...');
@@ -46,7 +50,8 @@ class DHTHandler {
       } else {
         print('Found providers for CID $cid: ${providers.length}');
       }
-      return providers;
+      // Convert PeerId objects to their string representations using Base58
+      return providers.map((peerId) => _convertPeerIdToBase58(peerId)).toList();
     } catch (e) {
       print('Error finding providers for CID $cid: $e');
       return [];
@@ -56,7 +61,7 @@ class DHTHandler {
   /// Publishes a value to the DHT network under a given key.
   Future<void> putValue(String key, String value) async {
     try {
-      await _dhtClient.putValue(key, value);
+      await dhtClient.putValue(key, value);
       print('Published value under key $key.');
     } catch (e) {
       print('Error publishing value under key $key: $e');
@@ -66,7 +71,7 @@ class DHTHandler {
   /// Retrieves a value from the DHT network by its key.
   Future<String?> getValue(String key) async {
     try {
-      final value = await _dhtClient.getValue(key);
+      final value = await dhtClient.getValue(key);
       if (value != null) {
         print('Retrieved value for key $key.');
         return value;
@@ -154,4 +159,14 @@ class DHTHandler {
   }
 
   P2plibRouter get router => _router;
+}
+
+// Add this helper method to convert PeerId to Base58 string
+String _convertPeerIdToBase58(p2p.PeerId peerId) {
+  // Combine encryption and signing keys into a single byte array
+  final combined =
+      Uint8List.fromList([...peerId.encPublicKey, ...peerId.signPiblicKey]);
+  // Create Base58 instance and convert to Base58
+  final base58 = Base58();
+  return base58.encode(combined);
 }
