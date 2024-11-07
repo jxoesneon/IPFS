@@ -1,16 +1,19 @@
 import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import '/../src/utils/base58.dart';
 import '/../src/utils/varint.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import '/../src/core/ipfs_node/ipfs_node.dart';
 import '../../proto/generated/dht/dht.pb.dart';
+import '/../src/core/ipfs_node/ipfs_node.dart';
 import '../../core/ipfs_node/network_handler.dart';
 import '../../proto/generated/unixfs/unixfs.pb.dart';
+import '/../src/core/ipfs_node/network_handler.dart';
 import '../../proto/generated/dht/routing_table.pb.dart';
 import '/../src/proto/generated/bitswap/bitswap.pb.dart';
-import '/../src/core/network_handler/network_handler.dart';
+
 // lib/src/protocols/dht/dht_client.dart
 
 /// Implementation of the Kademlia DHT protocol for IPFS
@@ -18,12 +21,11 @@ import '/../src/core/network_handler/network_handler.dart';
 class DHTClient {
   final IPFSNode node;
   final p2p.RouterL0 router;
-
-  // Make routing table public as it's a core DHT component
-  final RoutingTable routingTable;
-
+  late final RoutingTable routingTable;
   final NetworkHandler networkHandler;
-
+  final p2p.PeerId peerId;
+  final p2p.PeerId associatedPeerId;
+  
   // Protocol identifiers as per IPFS spec
   static const String PROTOCOL_DHT = '/ipfs/kad/1.0.0';
   static const String PROTOCOL_FIND_NODE = '/ipfs/kad/find-node/1.0.0';
@@ -33,10 +35,15 @@ class DHTClient {
   static const String PROTOCOL_GET_VALUE = '/ipfs/kad/get-value/1.0.0';
   static const String PROTOCOL_PUT_VALUE = '/ipfs/kad/put-value/1.0.0';
 
-  DHTClient(this.networkHandler)
+  DHTClient({required this.networkHandler})
       : node = networkHandler.ipfsNode,
         router = networkHandler.ipfsNode.dhtHandler.router.routerL0,
-        routingTable = RoutingTable() {
+        peerId = networkHandler.ipfsNode.dhtHandler.router.routerL0.routes.values.first.peerId,
+        associatedPeerId = networkHandler.ipfsNode.dhtHandler.router.routerL0.routes.values.first.peerId {
+    // Initialize routing table with this instance
+    routingTable = RoutingTable();
+    routingTable.initialize(this);
+    
     // Register DHT protocols
     node.dhtHandler.router.registerProtocol(PROTOCOL_DHT);
     node.dhtHandler.router.registerProtocol(PROTOCOL_FIND_NODE);
@@ -59,25 +66,30 @@ class DHTClient {
         .addMessageHandler(PROTOCOL_PUT_VALUE, _handlePutValue);
   }
 
-  p2p.PeerId get peerId => null;
-
   // Content Routing API
   Future<List<p2p.PeerId>> findProviders(String cid) async {
     final request = FindProvidersRequest()
       ..key = utf8.encode(cid)
       ..count = 20;
 
-    final closestPeers =
-        routingTable.findClosestPeers(p2p.PeerId.fromString(cid), 20);
-    final providers = <p2p.Peer>[];
+    // Convert CID to PeerId for routing table lookup
+    final targetPeerId = p2p.PeerId(value: Uint8List.fromList(utf8.encode(cid)));
+    
+    // Get closest peers from routing table using KademliaTree's findClosestPeers
+    final closestPeers = routingTable.findClosestPeers(targetPeerId, 20);
+
+    final providers = <p2p.PeerId>[];
 
     for (final peer in closestPeers) {
       try {
         final response = await _sendRequest(
             peer, PROTOCOL_GET_PROVIDERS, request.writeToBuffer());
-        providers.addAll(FindProvidersResponse.fromBuffer(response).providers);
+        final providerResponse = FindProvidersResponse.fromBuffer(response);
+        providers.addAll(
+          providerResponse.providers.map((p) => p2p.PeerId(value: p.id))
+        );
       } catch (e) {
-        print('Error querying peer ${peer.id} for providers: $e');
+        print('Error querying peer ${peer.toBase58String()} for providers: $e');
       }
     }
 
@@ -155,5 +167,97 @@ class DHTClient {
 
   void _handlePutValue(p2p.Packet packet) {
     // Implementation
+  }
+
+  /// Starts the DHT client and initializes necessary components
+  Future<void> start() async {
+    try {
+      // Register protocol handlers
+      for (final protocol in [
+        PROTOCOL_DHT,
+        PROTOCOL_FIND_NODE,
+        PROTOCOL_FIND_PEERS,
+        PROTOCOL_GET_PROVIDERS,
+        PROTOCOL_ADD_PROVIDER,
+        PROTOCOL_GET_VALUE,
+        PROTOCOL_PUT_VALUE,
+      ]) {
+        node.dhtHandler.router.registerProtocol(protocol);
+      }
+
+      // Initialize routing table
+      await _initializeRoutingTable();
+      
+      print('DHT client started successfully');
+    } catch (e) {
+      print('Error starting DHT client: $e');
+      rethrow;
+    }
+  }
+
+  /// Stops the DHT client and cleans up resources
+  Future<void> stop() async {
+    try {
+      // Clean up any active requests or connections
+      // Clear routing table
+      routingTable.clear();
+      
+      print('DHT client stopped successfully');
+    } catch (e) {
+      print('Error stopping DHT client: $e');
+      rethrow;
+    }
+  }
+
+  /// Initialize the routing table with bootstrap peers
+  Future<void> _initializeRoutingTable() async {
+    // Add bootstrap peers to routing table
+    final bootstrapPeers = node.config.bootstrapPeers;
+    for (final peerAddr in bootstrapPeers) {
+      try {
+        final peer = await _connectToPeer(peerAddr);
+        if (peer != null) {
+          routingTable.addPeer(peer);
+        }
+      } catch (e) {
+        print('Error connecting to bootstrap peer $peerAddr: $e');
+      }
+    }
+  }
+
+  /// Helper method to connect to a peer given their multiaddr
+  Future<p2p.Peer?> _connectToPeer(String multiaddr) async {
+    try {
+      // Implementation of peer connection logic
+      // This would use the router to establish connection
+      return null; // Replace with actual peer connection logic
+    } catch (e) {
+      print('Error connecting to peer $multiaddr: $e');
+      return null;
+    }
+  }
+
+  /// Retrieves a value from the DHT network by its key
+  Future<String?> getValue(String key) async {
+    final request = FindValueRequest()..key = utf8.encode(key);
+    final closestPeers = routingTable.findClosestPeers(p2p.PeerId.fromString(key), 20);
+
+    for (final peer in closestPeers) {
+      try {
+        final response = await _sendRequest(
+          peer,
+          PROTOCOL_GET_VALUE,
+          request.writeToBuffer(),
+        );
+        
+        final findValueResponse = FindValueResponse.fromBuffer(response);
+        if (findValueResponse.hasValue()) {
+          return utf8.decode(findValueResponse.value);
+        }
+      } catch (e) {
+        print('Error retrieving value from peer ${peer.id}: $e');
+      }
+    }
+    return null;
   }
 }
