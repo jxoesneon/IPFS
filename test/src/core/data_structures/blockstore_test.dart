@@ -9,12 +9,12 @@ void main() {
     print('Creating blockstore instance...');
     late BlockStore blockStore;
     late BlockProto block;
-    late CIDProto cid;
+    late IPFSCIDProto cid;
 
     setUp(() {
       print('Setting up test environment...');
       blockStore = BlockStore();
-      cid = CIDProto()
+      cid = IPFSCIDProto()
         ..version = CIDVersion.CID_VERSION_1
         ..multihash.addAll([0x12, 0x20])
         ..codec = 'dag-pb'
@@ -81,8 +81,8 @@ void main() {
 
     test('getAllBlocks retrieves all blocks', () {
       print('Running getAllBlocks retrieves all blocks...');
-      
-      final anotherCid = CIDProto()
+
+      final anotherCid = IPFSCIDProto()
         ..version = CIDVersion.CID_VERSION_1
         ..multihash.addAll([0x34, 0x56])
         ..codec = 'dag-pb'
