@@ -1,15 +1,17 @@
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:p2plib/p2plib.dart' as p2p;
-import '/../src/transport/p2plib_router.dart';
-import '/../src/protocols/dht/dht_client.dart';
-import '/../src/utils/base58.dart'; // Import your Base58 utility
-import '/../src/utils/keystore.dart'; // Import your Keystore utility
-import '/../src/core/ipfs_node/network_handler.dart'; // Import your NetworkHandler utility
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/utils/keystore.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
+import 'package:dart_ipfs/src/utils/encoding.dart';
 // lib/src/core/ipfs_node/dht_handler.dart
 
 /// Handles DHT operations for an IPFS node.
-class DHTHandler {
+class DHTHandler implements IDHTHandler {
   final DHTClient dhtClient;
   final Keystore _keystore; // Add a reference to the Keystore
   final P2plibRouter _router;
@@ -159,14 +161,21 @@ class DHTHandler {
   }
 
   P2plibRouter get router => _router;
+
+  @override
+  Future<List<PeerInfo>> findPeer(PeerID id) async {
+    // Implement interface method
+  }
+
+  @override
+  Future<void> provide(CID cid) async {
+    // Implement interface method
+  }
 }
 
-// Add this helper method to convert PeerId to Base58 string
+/// Encodes PeerId to Base58 string
 String _convertPeerIdToBase58(p2p.PeerId peerId) {
-  // Combine encryption and signing keys into a single byte array
   final combined =
-      Uint8List.fromList([...peerId.encPublicKey, ...peerId.signPiblicKey]);
-  // Create Base58 instance and convert to Base58
-  final base58 = Base58();
-  return base58.encode(combined);
+      Uint8List.fromList([...peerId.encPublicKey, ...peerId.signPublicKey]);
+  return EncodingUtils.toBase58(combined);
 }
