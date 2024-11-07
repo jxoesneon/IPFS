@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package ipfs.dht;
+
+import "google/protobuf/timestamp.proto";
+
+message DHTMessage {
+  string message_id = 1;
+  MessageType type = 2;
+  bytes key = 3;
+  bytes value = 4;
+  repeated string closer_peers = 5;
+  google.protobuf.Timestamp timestamp = 6;
+  
+  enum MessageType {
+    UNKNOWN = 0;
+    FIND_NODE = 1;
+    FIND_VALUE = 2;
+    STORE = 3;
+    PING = 4;
+  }
+}
+
+message FindNodeRequest {
+  bytes target_id = 1;
+  uint32 num_closest_peers = 2;
+}
+
+message FindNodeResponse {
+  repeated Peer closer_peers = 1;
+}
+
+message Peer {
+  bytes peer_id = 1;
+  repeated string addresses = 2;
+  map<string, string> metadata = 3;
+} 
