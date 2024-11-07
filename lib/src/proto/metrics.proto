@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package ipfs.metrics;
+
+import "google/protobuf/timestamp.proto";
+
+message NetworkMetrics {
+  google.protobuf.Timestamp timestamp = 1;
+  map<string, PeerMetrics> peer_metrics = 2;
+  map<string, ProtocolMetrics> protocol_metrics = 3;
+}
+
+message PeerMetrics {
+  uint64 messages_sent = 1;
+  uint64 messages_received = 2;
+  uint64 bytes_sent = 3;
+  uint64 bytes_received = 4;
+  uint32 average_latency_ms = 5;
+  uint32 error_count = 6;
+}
+
+message ProtocolMetrics {
+  uint64 messages_sent = 1;
+  uint64 messages_received = 2;
+  uint32 active_connections = 3;
+  map<string, uint64> error_counts = 4;
+} 
