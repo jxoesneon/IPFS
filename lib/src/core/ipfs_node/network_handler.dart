@@ -2,13 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'ipfs_node.dart';
 import 'dart:typed_data';
-import '/../src/protocols/dht/peer.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
-import '/../src/transport/p2plib_router.dart';
-import '/../src/protocols/dht/dht_client.dart';
-import '/../src/protocols/dht/kademlia_routing_table.dart';
-import '/../src/transport/circuit_relay_client.dart';
-import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
 // lib/src/core/ipfs_node/network_handler.dart
 
 /// Handles network operations for an IPFS node.
@@ -133,7 +130,7 @@ class NetworkHandler {
           // Convert string to PeerId object before removing
           final peerIdBytes = Uint8List.fromList(utf8.encode(peerIdStr));
           final peerId = p2p.PeerId(value: peerIdBytes);
-          
+
           // Using the routing table's removePeer method
           ipfsNode.dhtHandler.dhtClient.routingTable.removePeer(peerId);
         } else if (event.hasMessageReceived()) {
@@ -153,15 +150,6 @@ class NetworkHandler {
     }, onDone: () {
       print('Network event stream closed.');
     });
-  }
-
-  // Update helper method to use public property
-  p2p.PeerId _calculateClosestPeer(p2p.PeerId peerId) {
-    return ipfsNode.dhtHandler.dhtClient.routingTable
-            .findClosestPeers(peerId, 1)
-            .firstOrNull
-            ?.id ??
-        peerId;
   }
 
   // Add setter method
