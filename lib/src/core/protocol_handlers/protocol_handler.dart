@@ -5,9 +5,7 @@ import 'package:dart_ipfs/src/utils/generate_message_id.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 
-import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/core/messages/network_messages.dart';
-import 'package:dart_ipfs/src/core/types/peer_types.dart';
 
 abstract class ProtocolHandler {
   final String protocolId;
