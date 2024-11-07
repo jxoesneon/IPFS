@@ -1,13 +1,14 @@
-import 'dart:typed_data';
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:http/http.dart' as http;
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/utils/encoding.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
+import 'package:p2plib/p2plib.dart' show PeerId;
 // lib/src/core/ipfs_node/dht_handler.dart
 
 /// Handles DHT operations for an IPFS node.
@@ -163,19 +164,43 @@ class DHTHandler implements IDHTHandler {
   P2plibRouter get router => _router;
 
   @override
-  Future<List<PeerInfo>> findPeer(PeerID id) async {
-    // Implement interface method
+  Future<List<V_PeerInfo>> findPeer(PeerId id) async {
+    // Implementation here
+    throw UnimplementedError('findPeer not yet implemented');
   }
 
   @override
   Future<void> provide(CID cid) async {
     // Implement interface method
   }
+
+  /// Handles routing table updates when peer information changes
+  @override
+  Future<void> handleRoutingTableUpdate(V_PeerInfo peer) async {
+    try {
+      // Update the routing table in the DHT client
+      await dhtClient.routingTable.updatePeer(peer);
+      print('Updated routing table entry for peer: ${peer.peerId}');
+    } catch (e) {
+      print('Error updating routing table for peer ${peer.peerId}: $e');
+    }
+  }
+
+  /// Handles requests from peers to provide content
+  @override
+  Future<void> handleProvideRequest(CID cid, PeerId provider) async {
+    try {
+      // Add the provider to the DHT client's provider store
+      await dhtClient.addProvider(cid.toString(), provider.toString());
+      print('Added provider ${provider.toString()} for CID ${cid.toString()}');
+    } catch (e) {
+      print('Error handling provide request for CID ${cid.toString()}: $e');
+    }
+  }
 }
 
 /// Encodes PeerId to Base58 string
 String _convertPeerIdToBase58(p2p.PeerId peerId) {
-  final combined =
-      Uint8List.fromList([...peerId.encPublicKey, ...peerId.signPublicKey]);
-  return EncodingUtils.toBase58(combined);
+  // PeerId already contains the value as bytes
+  return EncodingUtils.toBase58(peerId.value);
 }
