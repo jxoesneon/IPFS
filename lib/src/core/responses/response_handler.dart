@@ -1,3 +1,4 @@
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/core/responses/block_operation_response.dart';
 
@@ -10,9 +11,11 @@ class ResponseHandler {
 
   static GetBlockResponse toGetBlockResponse(
       BlockOperationResponse<Block> response) {
-    return GetBlockResponse()
-      ..found = response.success
-      ..block = response.data?.toProto();
+    final getBlockResponse = GetBlockResponse()..found = response.success;
+    if (response.data != null) {
+      getBlockResponse.block = response.data!.toProto();
+    }
+    return getBlockResponse;
   }
 
   static RemoveBlockResponse toRemoveBlockResponse(
@@ -33,9 +36,7 @@ class ResponseHandler {
       return BlockOperationResponse(
         success: protoResponse.found,
         message: protoResponse.found ? 'Block found' : 'Block not found',
-        data: protoResponse.block != null
-            ? Block.fromProto(protoResponse.block)
-            : null,
+        data: Block.fromProto(protoResponse.block),
       );
     }
     throw ArgumentError('Unsupported proto response type');
