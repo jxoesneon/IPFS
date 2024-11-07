@@ -13,22 +13,21 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-/// Enum for CID versions
-class CIDVersion extends $pb.ProtobufEnum {
-  static const CIDVersion CID_VERSION_UNSPECIFIED = CIDVersion._(0, _omitEnumNames ? '' : 'CID_VERSION_UNSPECIFIED');
-  static const CIDVersion CID_VERSION_0 = CIDVersion._(1, _omitEnumNames ? '' : 'CID_VERSION_0');
-  static const CIDVersion CID_VERSION_1 = CIDVersion._(2, _omitEnumNames ? '' : 'CID_VERSION_1');
+class IPFSCIDVersion extends $pb.ProtobufEnum {
+  static const IPFSCIDVersion IPFS_CID_VERSION_UNSPECIFIED = IPFSCIDVersion._(0, _omitEnumNames ? '' : 'IPFS_CID_VERSION_UNSPECIFIED');
+  static const IPFSCIDVersion IPFS_CID_VERSION_0 = IPFSCIDVersion._(1, _omitEnumNames ? '' : 'IPFS_CID_VERSION_0');
+  static const IPFSCIDVersion IPFS_CID_VERSION_1 = IPFSCIDVersion._(2, _omitEnumNames ? '' : 'IPFS_CID_VERSION_1');
 
-  static const $core.List<CIDVersion> values = <CIDVersion> [
-    CID_VERSION_UNSPECIFIED,
-    CID_VERSION_0,
-    CID_VERSION_1,
+  static const $core.List<IPFSCIDVersion> values = <IPFSCIDVersion> [
+    IPFS_CID_VERSION_UNSPECIFIED,
+    IPFS_CID_VERSION_0,
+    IPFS_CID_VERSION_1,
   ];
 
-  static final $core.Map<$core.int, CIDVersion> _byValue = $pb.ProtobufEnum.initByValue(values);
-  static CIDVersion? valueOf($core.int value) => _byValue[value];
+  static final $core.Map<$core.int, IPFSCIDVersion> _byValue = $pb.ProtobufEnum.initByValue(values);
+  static IPFSCIDVersion? valueOf($core.int value) => _byValue[value];
 
-  const CIDVersion._($core.int v, $core.String n) : super(v, n);
+  const IPFSCIDVersion._($core.int v, $core.String n) : super(v, n);
 }
 
 

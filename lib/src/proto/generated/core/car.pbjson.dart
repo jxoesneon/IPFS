@@ -22,6 +22,7 @@ const CarProto$json = {
     {'1': 'pragma', '3': 3, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.CarProto.PragmaEntry', '10': 'pragma'},
     {'1': 'blocks', '3': 4, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.BlockProto', '10': 'blocks'},
     {'1': 'index', '3': 5, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.CarIndex', '10': 'index'},
+    {'1': 'header', '3': 6, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.CarHeader', '10': 'header'},
   ],
   '3': [CarProto_PragmaEntry$json],
 };
@@ -42,9 +43,41 @@ final $typed_data.Uint8List carProtoDescriptor = $convert.base64Decode(
     'gCIAMoCVIPY2hhcmFjdGVyaXN0aWNzEkcKBnByYWdtYRgDIAMoCzIvLmlwZnMuY29yZS5kYXRh'
     'X3N0cnVjdHVyZXMuQ2FyUHJvdG8uUHJhZ21hRW50cnlSBnByYWdtYRI9CgZibG9ja3MYBCADKA'
     'syJS5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLkJsb2NrUHJvdG9SBmJsb2NrcxI5CgVpbmRl'
-    'eBgFIAEoCzIjLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuQ2FySW5kZXhSBWluZGV4Gk8KC1'
-    'ByYWdtYUVudHJ5EhAKA2tleRgBIAEoCVIDa2V5EioKBXZhbHVlGAIgASgLMhQuZ29vZ2xlLnBy'
-    'b3RvYnVmLkFueVIFdmFsdWU6AjgB');
+    'eBgFIAEoCzIjLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuQ2FySW5kZXhSBWluZGV4EjwKBm'
+    'hlYWRlchgGIAEoCzIkLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuQ2FySGVhZGVyUgZoZWFk'
+    'ZXIaTwoLUHJhZ21hRW50cnkSEAoDa2V5GAEgASgJUgNrZXkSKgoFdmFsdWUYAiABKAsyFC5nb2'
+    '9nbGUucHJvdG9idWYuQW55UgV2YWx1ZToCOAE=');
+
+@$core.Deprecated('Use carHeaderDescriptor instead')
+const CarHeader$json = {
+  '1': 'CarHeader',
+  '2': [
+    {'1': 'version', '3': 1, '4': 1, '5': 5, '10': 'version'},
+    {'1': 'characteristics', '3': 2, '4': 3, '5': 9, '10': 'characteristics'},
+    {'1': 'roots', '3': 3, '4': 3, '5': 11, '6': '.ipfs.core.IPFSCIDProto', '10': 'roots'},
+    {'1': 'pragma', '3': 4, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.CarHeader.PragmaEntry', '10': 'pragma'},
+  ],
+  '3': [CarHeader_PragmaEntry$json],
+};
+
+@$core.Deprecated('Use carHeaderDescriptor instead')
+const CarHeader_PragmaEntry$json = {
+  '1': 'PragmaEntry',
+  '2': [
+    {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
+    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Any', '10': 'value'},
+  ],
+  '7': {'7': true},
+};
+
+/// Descriptor for `CarHeader`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List carHeaderDescriptor = $convert.base64Decode(
+    'CglDYXJIZWFkZXISGAoHdmVyc2lvbhgBIAEoBVIHdmVyc2lvbhIoCg9jaGFyYWN0ZXJpc3RpY3'
+    'MYAiADKAlSD2NoYXJhY3RlcmlzdGljcxItCgVyb290cxgDIAMoCzIXLmlwZnMuY29yZS5JUEZT'
+    'Q0lEUHJvdG9SBXJvb3RzEkgKBnByYWdtYRgEIAMoCzIwLmlwZnMuY29yZS5kYXRhX3N0cnVjdH'
+    'VyZXMuQ2FySGVhZGVyLlByYWdtYUVudHJ5UgZwcmFnbWEaTwoLUHJhZ21hRW50cnkSEAoDa2V5'
+    'GAEgASgJUgNrZXkSKgoFdmFsdWUYAiABKAsyFC5nb29nbGUucHJvdG9idWYuQW55UgV2YWx1ZT'
+    'oCOAE=');
 
 @$core.Deprecated('Use carIndexDescriptor instead')
 const CarIndex$json = {

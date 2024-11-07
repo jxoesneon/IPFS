@@ -21,7 +21,7 @@ export 'pin.pbenum.dart';
 
 class PinProto extends $pb.GeneratedMessage {
   factory PinProto({
-    $0.CIDProto? cid,
+    $0.IPFSCIDProto? cid,
     PinTypeProto? type,
     $fixnum.Int64? timestamp,
   }) {
@@ -42,7 +42,7 @@ class PinProto extends $pb.GeneratedMessage {
   factory PinProto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PinProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..aOM<$0.CIDProto>(1, _omitFieldNames ? '' : 'cid', subBuilder: $0.CIDProto.create)
+    ..aOM<$0.IPFSCIDProto>(1, _omitFieldNames ? '' : 'cid', subBuilder: $0.IPFSCIDProto.create)
     ..e<PinTypeProto>(2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: PinTypeProto.PIN_TYPE_UNSPECIFIED, valueOf: PinTypeProto.valueOf, enumValues: PinTypeProto.values)
     ..aInt64(3, _omitFieldNames ? '' : 'timestamp')
     ..hasRequiredFields = false
@@ -70,15 +70,15 @@ class PinProto extends $pb.GeneratedMessage {
   static PinProto? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $0.CIDProto get cid => $_getN(0);
+  $0.IPFSCIDProto get cid => $_getN(0);
   @$pb.TagNumber(1)
-  set cid($0.CIDProto v) { setField(1, v); }
+  set cid($0.IPFSCIDProto v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasCid() => $_has(0);
   @$pb.TagNumber(1)
   void clearCid() => clearField(1);
   @$pb.TagNumber(1)
-  $0.CIDProto ensureCid() => $_ensure(0);
+  $0.IPFSCIDProto ensureCid() => $_ensure(0);
 
   @$pb.TagNumber(2)
   PinTypeProto get type => $_getN(1);

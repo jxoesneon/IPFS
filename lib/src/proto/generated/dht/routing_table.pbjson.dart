@@ -13,17 +13,17 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-@$core.Deprecated('Use routingTableDescriptor instead')
-const RoutingTable$json = {
-  '1': 'RoutingTable',
+@$core.Deprecated('Use routingTableProtoDescriptor instead')
+const RoutingTableProto$json = {
+  '1': 'RoutingTableProto',
   '2': [
-    {'1': 'entries', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.routing_table.RoutingTable.EntriesEntry', '10': 'entries'},
+    {'1': 'entries', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.routing_table.RoutingTableProto.EntriesEntry', '10': 'entries'},
   ],
-  '3': [RoutingTable_EntriesEntry$json],
+  '3': [RoutingTableProto_EntriesEntry$json],
 };
 
-@$core.Deprecated('Use routingTableDescriptor instead')
-const RoutingTable_EntriesEntry$json = {
+@$core.Deprecated('Use routingTableProtoDescriptor instead')
+const RoutingTableProto_EntriesEntry$json = {
   '1': 'EntriesEntry',
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
@@ -32,10 +32,10 @@ const RoutingTable_EntriesEntry$json = {
   '7': {'7': true},
 };
 
-/// Descriptor for `RoutingTable`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List routingTableDescriptor = $convert.base64Decode(
-    'CgxSb3V0aW5nVGFibGUSSwoHZW50cmllcxgBIAMoCzIxLmlwZnMuZGh0LnJvdXRpbmdfdGFibG'
-    'UuUm91dGluZ1RhYmxlLkVudHJpZXNFbnRyeVIHZW50cmllcxpgCgxFbnRyaWVzRW50cnkSEAoD'
-    'a2V5GAEgASgJUgNrZXkSOgoFdmFsdWUYAiABKAsyJC5pcGZzLmRodC5rYWRlbWxpYV9ub2RlLk'
-    'thZGVtbGlhTm9kZVIFdmFsdWU6AjgB');
+/// Descriptor for `RoutingTableProto`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List routingTableProtoDescriptor = $convert.base64Decode(
+    'ChFSb3V0aW5nVGFibGVQcm90bxJQCgdlbnRyaWVzGAEgAygLMjYuaXBmcy5kaHQucm91dGluZ1'
+    '90YWJsZS5Sb3V0aW5nVGFibGVQcm90by5FbnRyaWVzRW50cnlSB2VudHJpZXMaYAoMRW50cmll'
+    'c0VudHJ5EhAKA2tleRgBIAEoCVIDa2V5EjoKBXZhbHVlGAIgASgLMiQuaXBmcy5kaHQua2FkZW'
+    '1saWFfbm9kZS5LYWRlbWxpYU5vZGVSBXZhbHVlOgI4AQ==');
 

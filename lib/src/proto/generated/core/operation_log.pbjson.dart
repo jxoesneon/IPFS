@@ -20,7 +20,7 @@ const OperationLogEntryProto$json = {
     {'1': 'timestamp', '3': 1, '4': 1, '5': 3, '10': 'timestamp'},
     {'1': 'operation', '3': 2, '4': 1, '5': 9, '10': 'operation'},
     {'1': 'details', '3': 3, '4': 1, '5': 9, '10': 'details'},
-    {'1': 'cid', '3': 4, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.CIDProto', '10': 'cid'},
+    {'1': 'cid', '3': 4, '4': 1, '5': 11, '6': '.ipfs.core.IPFSCIDProto', '10': 'cid'},
     {'1': 'node_type', '3': 5, '4': 1, '5': 14, '6': '.ipfs.core.data_structures.NodeTypeProto', '10': 'nodeType'},
   ],
 };
@@ -29,9 +29,9 @@ const OperationLogEntryProto$json = {
 final $typed_data.Uint8List operationLogEntryProtoDescriptor = $convert.base64Decode(
     'ChZPcGVyYXRpb25Mb2dFbnRyeVByb3RvEhwKCXRpbWVzdGFtcBgBIAEoA1IJdGltZXN0YW1wEh'
     'wKCW9wZXJhdGlvbhgCIAEoCVIJb3BlcmF0aW9uEhgKB2RldGFpbHMYAyABKAlSB2RldGFpbHMS'
-    'NQoDY2lkGAQgASgLMiMuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy5DSURQcm90b1IDY2lkEk'
-    'UKCW5vZGVfdHlwZRgFIAEoDjIoLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuTm9kZVR5cGVQ'
-    'cm90b1IIbm9kZVR5cGU=');
+    'KQoDY2lkGAQgASgLMhcuaXBmcy5jb3JlLklQRlNDSURQcm90b1IDY2lkEkUKCW5vZGVfdHlwZR'
+    'gFIAEoDjIoLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuTm9kZVR5cGVQcm90b1IIbm9kZVR5'
+    'cGU=');
 
 @$core.Deprecated('Use operationLogProtoDescriptor instead')
 const OperationLogProto$json = {

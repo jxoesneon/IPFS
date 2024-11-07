@@ -15,8 +15,8 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 /// Represents a peer participating in the DHT.
-class Peer extends $pb.GeneratedMessage {
-  factory Peer({
+class DHTPeer extends $pb.GeneratedMessage {
+  factory DHTPeer({
     $core.List<$core.int>? id,
     $core.Iterable<$core.String>? addrs,
   }) {
@@ -29,11 +29,11 @@ class Peer extends $pb.GeneratedMessage {
     }
     return $result;
   }
-  Peer._() : super();
-  factory Peer.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Peer.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  DHTPeer._() : super();
+  factory DHTPeer.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DHTPeer.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Peer', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DHTPeer', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OY)
     ..pPS(2, _omitFieldNames ? '' : 'addrs')
     ..hasRequiredFields = false
@@ -43,22 +43,22 @@ class Peer extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  Peer clone() => Peer()..mergeFromMessage(this);
+  DHTPeer clone() => DHTPeer()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Peer copyWith(void Function(Peer) updates) => super.copyWith((message) => updates(message as Peer)) as Peer;
+  DHTPeer copyWith(void Function(DHTPeer) updates) => super.copyWith((message) => updates(message as DHTPeer)) as DHTPeer;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Peer create() => Peer._();
-  Peer createEmptyInstance() => create();
-  static $pb.PbList<Peer> createRepeated() => $pb.PbList<Peer>();
+  static DHTPeer create() => DHTPeer._();
+  DHTPeer createEmptyInstance() => create();
+  static $pb.PbList<DHTPeer> createRepeated() => $pb.PbList<DHTPeer>();
   @$core.pragma('dart2js:noInline')
-  static Peer getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Peer>(create);
-  static Peer? _defaultInstance;
+  static DHTPeer getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTPeer>(create);
+  static DHTPeer? _defaultInstance;
 
   /// Required: The ID of the peer.
   @$pb.TagNumber(1)
@@ -80,7 +80,7 @@ class Record extends $pb.GeneratedMessage {
   factory Record({
     $core.List<$core.int>? key,
     $core.List<$core.int>? value,
-    Peer? publisher,
+    DHTPeer? publisher,
     $fixnum.Int64? sequence,
   }) {
     final $result = create();
@@ -105,7 +105,7 @@ class Record extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Record', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
-    ..aOM<Peer>(3, _omitFieldNames ? '' : 'publisher', subBuilder: Peer.create)
+    ..aOM<DHTPeer>(3, _omitFieldNames ? '' : 'publisher', subBuilder: DHTPeer.create)
     ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'sequence', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false
   ;
@@ -153,15 +153,15 @@ class Record extends $pb.GeneratedMessage {
 
   /// Optional: The publisher of the record.
   @$pb.TagNumber(3)
-  Peer get publisher => $_getN(2);
+  DHTPeer get publisher => $_getN(2);
   @$pb.TagNumber(3)
-  set publisher(Peer v) { setField(3, v); }
+  set publisher(DHTPeer v) { setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasPublisher() => $_has(2);
   @$pb.TagNumber(3)
   void clearPublisher() => clearField(3);
   @$pb.TagNumber(3)
-  Peer ensurePublisher() => $_ensure(2);
+  DHTPeer ensurePublisher() => $_ensure(2);
 
   /// Optional: The sequence number of the record.
   @$pb.TagNumber(4)
@@ -244,7 +244,7 @@ class FindProvidersRequest extends $pb.GeneratedMessage {
 /// Represents a response to a FindProviders request.
 class FindProvidersResponse extends $pb.GeneratedMessage {
   factory FindProvidersResponse({
-    $core.Iterable<Peer>? providers,
+    $core.Iterable<DHTPeer>? providers,
     $core.bool? closerPeers,
   }) {
     final $result = create();
@@ -261,7 +261,7 @@ class FindProvidersResponse extends $pb.GeneratedMessage {
   factory FindProvidersResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FindProvidersResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
-    ..pc<Peer>(1, _omitFieldNames ? '' : 'providers', $pb.PbFieldType.PM, subBuilder: Peer.create)
+    ..pc<DHTPeer>(1, _omitFieldNames ? '' : 'providers', $pb.PbFieldType.PM, subBuilder: DHTPeer.create)
     ..aOB(2, _omitFieldNames ? '' : 'closerPeers', protoName: 'closerPeers')
     ..hasRequiredFields = false
   ;
@@ -289,7 +289,7 @@ class FindProvidersResponse extends $pb.GeneratedMessage {
 
   /// Repeated: The providers found for the key.
   @$pb.TagNumber(1)
-  $core.List<Peer> get providers => $_getList(0);
+  $core.List<DHTPeer> get providers => $_getList(0);
 
   /// Optional: Whether or not closer peers were found during the search.
   @$pb.TagNumber(2)
@@ -306,7 +306,7 @@ class FindProvidersResponse extends $pb.GeneratedMessage {
 class ProvideRequest extends $pb.GeneratedMessage {
   factory ProvideRequest({
     $core.List<$core.int>? key,
-    Peer? provider,
+    DHTPeer? provider,
   }) {
     final $result = create();
     if (key != null) {
@@ -323,7 +323,7 @@ class ProvideRequest extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ProvideRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
-    ..aOM<Peer>(2, _omitFieldNames ? '' : 'provider', subBuilder: Peer.create)
+    ..aOM<DHTPeer>(2, _omitFieldNames ? '' : 'provider', subBuilder: DHTPeer.create)
     ..hasRequiredFields = false
   ;
 
@@ -360,15 +360,15 @@ class ProvideRequest extends $pb.GeneratedMessage {
 
   /// Optional: The peer providing the record.
   @$pb.TagNumber(2)
-  Peer get provider => $_getN(1);
+  DHTPeer get provider => $_getN(1);
   @$pb.TagNumber(2)
-  set provider(Peer v) { setField(2, v); }
+  set provider(DHTPeer v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasProvider() => $_has(1);
   @$pb.TagNumber(2)
   void clearProvider() => clearField(2);
   @$pb.TagNumber(2)
-  Peer ensureProvider() => $_ensure(1);
+  DHTPeer ensureProvider() => $_ensure(1);
 }
 
 /// Represents a response to a Provide request.
@@ -479,7 +479,7 @@ class FindValueRequest extends $pb.GeneratedMessage {
 class FindValueResponse extends $pb.GeneratedMessage {
   factory FindValueResponse({
     $core.List<$core.int>? value,
-    $core.Iterable<Peer>? closerPeers,
+    $core.Iterable<DHTPeer>? closerPeers,
   }) {
     final $result = create();
     if (value != null) {
@@ -496,7 +496,7 @@ class FindValueResponse extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FindValueResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
-    ..pc<Peer>(2, _omitFieldNames ? '' : 'closerPeers', $pb.PbFieldType.PM, protoName: 'closerPeers', subBuilder: Peer.create)
+    ..pc<DHTPeer>(2, _omitFieldNames ? '' : 'closerPeers', $pb.PbFieldType.PM, protoName: 'closerPeers', subBuilder: DHTPeer.create)
     ..hasRequiredFields = false
   ;
 
@@ -533,7 +533,7 @@ class FindValueResponse extends $pb.GeneratedMessage {
 
   /// Optional: The peers that are closer to the key (if no direct value is found).
   @$pb.TagNumber(2)
-  $core.List<Peer> get closerPeers => $_getList(1);
+  $core.List<DHTPeer> get closerPeers => $_getList(1);
 }
 
 /// Represents a request to store a value for a key.
@@ -710,7 +710,7 @@ class FindNodeRequest extends $pb.GeneratedMessage {
 /// Represents a response to a FindNode request.
 class FindNodeResponse extends $pb.GeneratedMessage {
   factory FindNodeResponse({
-    $core.Iterable<Peer>? closerPeers,
+    $core.Iterable<DHTPeer>? closerPeers,
   }) {
     final $result = create();
     if (closerPeers != null) {
@@ -723,7 +723,7 @@ class FindNodeResponse extends $pb.GeneratedMessage {
   factory FindNodeResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FindNodeResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
-    ..pc<Peer>(1, _omitFieldNames ? '' : 'closerPeers', $pb.PbFieldType.PM, protoName: 'closerPeers', subBuilder: Peer.create)
+    ..pc<DHTPeer>(1, _omitFieldNames ? '' : 'closerPeers', $pb.PbFieldType.PM, protoName: 'closerPeers', subBuilder: DHTPeer.create)
     ..hasRequiredFields = false
   ;
 
@@ -750,7 +750,7 @@ class FindNodeResponse extends $pb.GeneratedMessage {
 
   /// Repeated: The peers that are closer to the requested peer ID.
   @$pb.TagNumber(1)
-  $core.List<Peer> get closerPeers => $_getList(0);
+  $core.List<DHTPeer> get closerPeers => $_getList(0);
 }
 
 

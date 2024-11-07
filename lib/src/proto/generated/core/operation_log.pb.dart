@@ -15,7 +15,7 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'cid.pb.dart' as $0;
-import 'node_type.pbenum.dart' as $1;
+import 'node_type.pbenum.dart' as $6;
 
 /// Represents a log entry for an operation performed on the IPFS node.
 class OperationLogEntryProto extends $pb.GeneratedMessage {
@@ -23,8 +23,8 @@ class OperationLogEntryProto extends $pb.GeneratedMessage {
     $fixnum.Int64? timestamp,
     $core.String? operation,
     $core.String? details,
-    $0.CIDProto? cid,
-    $1.NodeTypeProto? nodeType,
+    $0.IPFSCIDProto? cid,
+    $6.NodeTypeProto? nodeType,
   }) {
     final $result = create();
     if (timestamp != null) {
@@ -52,8 +52,8 @@ class OperationLogEntryProto extends $pb.GeneratedMessage {
     ..aInt64(1, _omitFieldNames ? '' : 'timestamp')
     ..aOS(2, _omitFieldNames ? '' : 'operation')
     ..aOS(3, _omitFieldNames ? '' : 'details')
-    ..aOM<$0.CIDProto>(4, _omitFieldNames ? '' : 'cid', subBuilder: $0.CIDProto.create)
-    ..e<$1.NodeTypeProto>(5, _omitFieldNames ? '' : 'nodeType', $pb.PbFieldType.OE, defaultOrMaker: $1.NodeTypeProto.NODE_TYPE_UNSPECIFIED, valueOf: $1.NodeTypeProto.valueOf, enumValues: $1.NodeTypeProto.values)
+    ..aOM<$0.IPFSCIDProto>(4, _omitFieldNames ? '' : 'cid', subBuilder: $0.IPFSCIDProto.create)
+    ..e<$6.NodeTypeProto>(5, _omitFieldNames ? '' : 'nodeType', $pb.PbFieldType.OE, defaultOrMaker: $6.NodeTypeProto.NODE_TYPE_UNSPECIFIED, valueOf: $6.NodeTypeProto.valueOf, enumValues: $6.NodeTypeProto.values)
     ..hasRequiredFields = false
   ;
 
@@ -110,21 +110,21 @@ class OperationLogEntryProto extends $pb.GeneratedMessage {
 
   /// The CID involved in the operation (optional).
   @$pb.TagNumber(4)
-  $0.CIDProto get cid => $_getN(3);
+  $0.IPFSCIDProto get cid => $_getN(3);
   @$pb.TagNumber(4)
-  set cid($0.CIDProto v) { setField(4, v); }
+  set cid($0.IPFSCIDProto v) { setField(4, v); }
   @$pb.TagNumber(4)
   $core.bool hasCid() => $_has(3);
   @$pb.TagNumber(4)
   void clearCid() => clearField(4);
   @$pb.TagNumber(4)
-  $0.CIDProto ensureCid() => $_ensure(3);
+  $0.IPFSCIDProto ensureCid() => $_ensure(3);
 
   /// The type of node involved in the operation (optional).
   @$pb.TagNumber(5)
-  $1.NodeTypeProto get nodeType => $_getN(4);
+  $6.NodeTypeProto get nodeType => $_getN(4);
   @$pb.TagNumber(5)
-  set nodeType($1.NodeTypeProto v) { setField(5, v); }
+  set nodeType($6.NodeTypeProto v) { setField(5, v); }
   @$pb.TagNumber(5)
   $core.bool hasNodeType() => $_has(4);
   @$pb.TagNumber(5)

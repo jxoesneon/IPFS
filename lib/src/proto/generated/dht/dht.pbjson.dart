@@ -13,18 +13,18 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-@$core.Deprecated('Use peerDescriptor instead')
-const Peer$json = {
-  '1': 'Peer',
+@$core.Deprecated('Use dHTPeerDescriptor instead')
+const DHTPeer$json = {
+  '1': 'DHTPeer',
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 12, '10': 'id'},
     {'1': 'addrs', '3': 2, '4': 3, '5': 9, '10': 'addrs'},
   ],
 };
 
-/// Descriptor for `Peer`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List peerDescriptor = $convert.base64Decode(
-    'CgRQZWVyEg4KAmlkGAEgASgMUgJpZBIUCgVhZGRycxgCIAMoCVIFYWRkcnM=');
+/// Descriptor for `DHTPeer`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List dHTPeerDescriptor = $convert.base64Decode(
+    'CgdESFRQZWVyEg4KAmlkGAEgASgMUgJpZBIUCgVhZGRycxgCIAMoCVIFYWRkcnM=');
 
 @$core.Deprecated('Use recordDescriptor instead')
 const Record$json = {
@@ -32,16 +32,16 @@ const Record$json = {
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 12, '10': 'key'},
     {'1': 'value', '3': 2, '4': 1, '5': 12, '10': 'value'},
-    {'1': 'publisher', '3': 3, '4': 1, '5': 11, '6': '.ipfs.dht.Peer', '10': 'publisher'},
+    {'1': 'publisher', '3': 3, '4': 1, '5': 11, '6': '.ipfs.dht.DHTPeer', '10': 'publisher'},
     {'1': 'sequence', '3': 4, '4': 1, '5': 4, '10': 'sequence'},
   ],
 };
 
 /// Descriptor for `Record`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List recordDescriptor = $convert.base64Decode(
-    'CgZSZWNvcmQSEAoDa2V5GAEgASgMUgNrZXkSFAoFdmFsdWUYAiABKAxSBXZhbHVlEiwKCXB1Ym'
-    'xpc2hlchgDIAEoCzIOLmlwZnMuZGh0LlBlZXJSCXB1Ymxpc2hlchIaCghzZXF1ZW5jZRgEIAEo'
-    'BFIIc2VxdWVuY2U=');
+    'CgZSZWNvcmQSEAoDa2V5GAEgASgMUgNrZXkSFAoFdmFsdWUYAiABKAxSBXZhbHVlEi8KCXB1Ym'
+    'xpc2hlchgDIAEoCzIRLmlwZnMuZGh0LkRIVFBlZXJSCXB1Ymxpc2hlchIaCghzZXF1ZW5jZRgE'
+    'IAEoBFIIc2VxdWVuY2U=');
 
 @$core.Deprecated('Use findProvidersRequestDescriptor instead')
 const FindProvidersRequest$json = {
@@ -61,29 +61,29 @@ final $typed_data.Uint8List findProvidersRequestDescriptor = $convert.base64Deco
 const FindProvidersResponse$json = {
   '1': 'FindProvidersResponse',
   '2': [
-    {'1': 'providers', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.Peer', '10': 'providers'},
+    {'1': 'providers', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.DHTPeer', '10': 'providers'},
     {'1': 'closerPeers', '3': 2, '4': 1, '5': 8, '10': 'closerPeers'},
   ],
 };
 
 /// Descriptor for `FindProvidersResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List findProvidersResponseDescriptor = $convert.base64Decode(
-    'ChVGaW5kUHJvdmlkZXJzUmVzcG9uc2USLAoJcHJvdmlkZXJzGAEgAygLMg4uaXBmcy5kaHQuUG'
-    'VlclIJcHJvdmlkZXJzEiAKC2Nsb3NlclBlZXJzGAIgASgIUgtjbG9zZXJQZWVycw==');
+    'ChVGaW5kUHJvdmlkZXJzUmVzcG9uc2USLwoJcHJvdmlkZXJzGAEgAygLMhEuaXBmcy5kaHQuRE'
+    'hUUGVlclIJcHJvdmlkZXJzEiAKC2Nsb3NlclBlZXJzGAIgASgIUgtjbG9zZXJQZWVycw==');
 
 @$core.Deprecated('Use provideRequestDescriptor instead')
 const ProvideRequest$json = {
   '1': 'ProvideRequest',
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 12, '10': 'key'},
-    {'1': 'provider', '3': 2, '4': 1, '5': 11, '6': '.ipfs.dht.Peer', '10': 'provider'},
+    {'1': 'provider', '3': 2, '4': 1, '5': 11, '6': '.ipfs.dht.DHTPeer', '10': 'provider'},
   ],
 };
 
 /// Descriptor for `ProvideRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List provideRequestDescriptor = $convert.base64Decode(
-    'Cg5Qcm92aWRlUmVxdWVzdBIQCgNrZXkYASABKAxSA2tleRIqCghwcm92aWRlchgCIAEoCzIOLm'
-    'lwZnMuZGh0LlBlZXJSCHByb3ZpZGVy');
+    'Cg5Qcm92aWRlUmVxdWVzdBIQCgNrZXkYASABKAxSA2tleRItCghwcm92aWRlchgCIAEoCzIRLm'
+    'lwZnMuZGh0LkRIVFBlZXJSCHByb3ZpZGVy');
 
 @$core.Deprecated('Use provideResponseDescriptor instead')
 const ProvideResponse$json = {
@@ -114,14 +114,14 @@ const FindValueResponse$json = {
   '1': 'FindValueResponse',
   '2': [
     {'1': 'value', '3': 1, '4': 1, '5': 12, '10': 'value'},
-    {'1': 'closerPeers', '3': 2, '4': 3, '5': 11, '6': '.ipfs.dht.Peer', '10': 'closerPeers'},
+    {'1': 'closerPeers', '3': 2, '4': 3, '5': 11, '6': '.ipfs.dht.DHTPeer', '10': 'closerPeers'},
   ],
 };
 
 /// Descriptor for `FindValueResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List findValueResponseDescriptor = $convert.base64Decode(
-    'ChFGaW5kVmFsdWVSZXNwb25zZRIUCgV2YWx1ZRgBIAEoDFIFdmFsdWUSMAoLY2xvc2VyUGVlcn'
-    'MYAiADKAsyDi5pcGZzLmRodC5QZWVyUgtjbG9zZXJQZWVycw==');
+    'ChFGaW5kVmFsdWVSZXNwb25zZRIUCgV2YWx1ZRgBIAEoDFIFdmFsdWUSMwoLY2xvc2VyUGVlcn'
+    'MYAiADKAsyES5pcGZzLmRodC5ESFRQZWVyUgtjbG9zZXJQZWVycw==');
 
 @$core.Deprecated('Use putValueRequestDescriptor instead')
 const PutValueRequest$json = {
@@ -165,12 +165,12 @@ final $typed_data.Uint8List findNodeRequestDescriptor = $convert.base64Decode(
 const FindNodeResponse$json = {
   '1': 'FindNodeResponse',
   '2': [
-    {'1': 'closerPeers', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.Peer', '10': 'closerPeers'},
+    {'1': 'closerPeers', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.DHTPeer', '10': 'closerPeers'},
   ],
 };
 
 /// Descriptor for `FindNodeResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List findNodeResponseDescriptor = $convert.base64Decode(
-    'ChBGaW5kTm9kZVJlc3BvbnNlEjAKC2Nsb3NlclBlZXJzGAEgAygLMg4uaXBmcy5kaHQuUGVlcl'
-    'ILY2xvc2VyUGVlcnM=');
+    'ChBGaW5kTm9kZVJlc3BvbnNlEjMKC2Nsb3NlclBlZXJzGAEgAygLMhEuaXBmcy5kaHQuREhUUG'
+    'VlclILY2xvc2VyUGVlcnM=');
 

@@ -17,7 +17,7 @@ import 'dart:typed_data' as $typed_data;
 const NodeProto$json = {
   '1': 'NodeProto',
   '2': [
-    {'1': 'cid', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.CIDProto', '10': 'cid'},
+    {'1': 'cid', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.IPFSCIDProto', '10': 'cid'},
     {'1': 'links', '3': 2, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.PBLink', '10': 'links'},
     {'1': 'data', '3': 3, '4': 1, '5': 12, '10': 'data'},
     {'1': 'type', '3': 4, '4': 1, '5': 14, '6': '.ipfs.core.data_structures.NodeTypeProto', '10': 'type'},
@@ -40,12 +40,11 @@ const NodeProto_MetadataEntry$json = {
 
 /// Descriptor for `NodeProto`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List nodeProtoDescriptor = $convert.base64Decode(
-    'CglOb2RlUHJvdG8SNQoDY2lkGAEgASgLMiMuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy5DSU'
-    'RQcm90b1IDY2lkEjcKBWxpbmtzGAIgAygLMiEuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy5Q'
-    'QkxpbmtSBWxpbmtzEhIKBGRhdGEYAyABKAxSBGRhdGESPAoEdHlwZRgEIAEoDjIoLmlwZnMuY2'
-    '9yZS5kYXRhX3N0cnVjdHVyZXMuTm9kZVR5cGVQcm90b1IEdHlwZRISCgRzaXplGAUgASgEUgRz'
-    'aXplEhwKCXRpbWVzdGFtcBgGIAEoA1IJdGltZXN0YW1wEk4KCG1ldGFkYXRhGAcgAygLMjIuaX'
-    'Bmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy5Ob2RlUHJvdG8uTWV0YWRhdGFFbnRyeVIIbWV0YWRh'
-    'dGEaOwoNTWV0YWRhdGFFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdm'
-    'FsdWU6AjgB');
+    'CglOb2RlUHJvdG8SKQoDY2lkGAEgASgLMhcuaXBmcy5jb3JlLklQRlNDSURQcm90b1IDY2lkEj'
+    'cKBWxpbmtzGAIgAygLMiEuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy5QQkxpbmtSBWxpbmtz'
+    'EhIKBGRhdGEYAyABKAxSBGRhdGESPAoEdHlwZRgEIAEoDjIoLmlwZnMuY29yZS5kYXRhX3N0cn'
+    'VjdHVyZXMuTm9kZVR5cGVQcm90b1IEdHlwZRISCgRzaXplGAUgASgEUgRzaXplEhwKCXRpbWVz'
+    'dGFtcBgGIAEoA1IJdGltZXN0YW1wEk4KCG1ldGFkYXRhGAcgAygLMjIuaXBmcy5jb3JlLmRhdG'
+    'Ffc3RydWN0dXJlcy5Ob2RlUHJvdG8uTWV0YWRhdGFFbnRyeVIIbWV0YWRhdGEaOwoNTWV0YWRh'
+    'dGFFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
 

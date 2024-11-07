@@ -14,17 +14,19 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../google/protobuf/any.pb.dart' as $2;
+import '../google/protobuf/any.pb.dart' as $4;
 import 'block.pb.dart' as $1;
+import 'cid.pb.dart' as $0;
 
 /// Represents a Content Addressable Archive (CAR).
 class CarProto extends $pb.GeneratedMessage {
   factory CarProto({
     $core.int? version,
     $core.Iterable<$core.String>? characteristics,
-    $core.Map<$core.String, $2.Any>? pragma,
+    $core.Map<$core.String, $4.Any>? pragma,
     $core.Iterable<$1.BlockProto>? blocks,
     CarIndex? index,
+    CarHeader? header,
   }) {
     final $result = create();
     if (version != null) {
@@ -42,6 +44,9 @@ class CarProto extends $pb.GeneratedMessage {
     if (index != null) {
       $result.index = index;
     }
+    if (header != null) {
+      $result.header = header;
+    }
     return $result;
   }
   CarProto._() : super();
@@ -51,9 +56,10 @@ class CarProto extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CarProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..a<$core.int>(1, _omitFieldNames ? '' : 'version', $pb.PbFieldType.O3)
     ..pPS(2, _omitFieldNames ? '' : 'characteristics')
-    ..m<$core.String, $2.Any>(3, _omitFieldNames ? '' : 'pragma', entryClassName: 'CarProto.PragmaEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OM, valueCreator: $2.Any.create, valueDefaultOrMaker: $2.Any.getDefault, packageName: const $pb.PackageName('ipfs.core.data_structures'))
+    ..m<$core.String, $4.Any>(3, _omitFieldNames ? '' : 'pragma', entryClassName: 'CarProto.PragmaEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OM, valueCreator: $4.Any.create, valueDefaultOrMaker: $4.Any.getDefault, packageName: const $pb.PackageName('ipfs.core.data_structures'))
     ..pc<$1.BlockProto>(4, _omitFieldNames ? '' : 'blocks', $pb.PbFieldType.PM, subBuilder: $1.BlockProto.create)
     ..aOM<CarIndex>(5, _omitFieldNames ? '' : 'index', subBuilder: CarIndex.create)
+    ..aOM<CarHeader>(6, _omitFieldNames ? '' : 'header', subBuilder: CarHeader.create)
     ..hasRequiredFields = false
   ;
 
@@ -91,7 +97,7 @@ class CarProto extends $pb.GeneratedMessage {
   $core.List<$core.String> get characteristics => $_getList(1);
 
   @$pb.TagNumber(3)
-  $core.Map<$core.String, $2.Any> get pragma => $_getMap(2);
+  $core.Map<$core.String, $4.Any> get pragma => $_getMap(2);
 
   @$pb.TagNumber(4)
   $core.List<$1.BlockProto> get blocks => $_getList(3);
@@ -106,6 +112,92 @@ class CarProto extends $pb.GeneratedMessage {
   void clearIndex() => clearField(5);
   @$pb.TagNumber(5)
   CarIndex ensureIndex() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  CarHeader get header => $_getN(5);
+  @$pb.TagNumber(6)
+  set header(CarHeader v) { setField(6, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasHeader() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearHeader() => clearField(6);
+  @$pb.TagNumber(6)
+  CarHeader ensureHeader() => $_ensure(5);
+}
+
+/// Represents a CAR file header
+class CarHeader extends $pb.GeneratedMessage {
+  factory CarHeader({
+    $core.int? version,
+    $core.Iterable<$core.String>? characteristics,
+    $core.Iterable<$0.IPFSCIDProto>? roots,
+    $core.Map<$core.String, $4.Any>? pragma,
+  }) {
+    final $result = create();
+    if (version != null) {
+      $result.version = version;
+    }
+    if (characteristics != null) {
+      $result.characteristics.addAll(characteristics);
+    }
+    if (roots != null) {
+      $result.roots.addAll(roots);
+    }
+    if (pragma != null) {
+      $result.pragma.addAll(pragma);
+    }
+    return $result;
+  }
+  CarHeader._() : super();
+  factory CarHeader.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory CarHeader.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CarHeader', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+    ..a<$core.int>(1, _omitFieldNames ? '' : 'version', $pb.PbFieldType.O3)
+    ..pPS(2, _omitFieldNames ? '' : 'characteristics')
+    ..pc<$0.IPFSCIDProto>(3, _omitFieldNames ? '' : 'roots', $pb.PbFieldType.PM, subBuilder: $0.IPFSCIDProto.create)
+    ..m<$core.String, $4.Any>(4, _omitFieldNames ? '' : 'pragma', entryClassName: 'CarHeader.PragmaEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OM, valueCreator: $4.Any.create, valueDefaultOrMaker: $4.Any.getDefault, packageName: const $pb.PackageName('ipfs.core.data_structures'))
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  CarHeader clone() => CarHeader()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  CarHeader copyWith(void Function(CarHeader) updates) => super.copyWith((message) => updates(message as CarHeader)) as CarHeader;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CarHeader create() => CarHeader._();
+  CarHeader createEmptyInstance() => create();
+  static $pb.PbList<CarHeader> createRepeated() => $pb.PbList<CarHeader>();
+  @$core.pragma('dart2js:noInline')
+  static CarHeader getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CarHeader>(create);
+  static CarHeader? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get version => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set version($core.int v) { $_setSignedInt32(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasVersion() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVersion() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.String> get characteristics => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $core.List<$0.IPFSCIDProto> get roots => $_getList(2);
+
+  @$pb.TagNumber(4)
+  $core.Map<$core.String, $4.Any> get pragma => $_getMap(3);
 }
 
 /// Represents an index entry for a block in the CAR

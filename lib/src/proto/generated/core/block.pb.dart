@@ -18,7 +18,7 @@ import 'cid.pb.dart' as $0;
 class BlockProto extends $pb.GeneratedMessage {
   factory BlockProto({
     $core.List<$core.int>? data,
-    $0.CIDProto? cid,
+    $0.IPFSCIDProto? cid,
     $core.String? format,
   }) {
     final $result = create();
@@ -39,7 +39,7 @@ class BlockProto extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
-    ..aOM<$0.CIDProto>(2, _omitFieldNames ? '' : 'cid', subBuilder: $0.CIDProto.create)
+    ..aOM<$0.IPFSCIDProto>(2, _omitFieldNames ? '' : 'cid', subBuilder: $0.IPFSCIDProto.create)
     ..aOS(3, _omitFieldNames ? '' : 'format')
     ..hasRequiredFields = false
   ;
@@ -75,15 +75,15 @@ class BlockProto extends $pb.GeneratedMessage {
   void clearData() => clearField(1);
 
   @$pb.TagNumber(2)
-  $0.CIDProto get cid => $_getN(1);
+  $0.IPFSCIDProto get cid => $_getN(1);
   @$pb.TagNumber(2)
-  set cid($0.CIDProto v) { setField(2, v); }
+  set cid($0.IPFSCIDProto v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasCid() => $_has(1);
   @$pb.TagNumber(2)
   void clearCid() => clearField(2);
   @$pb.TagNumber(2)
-  $0.CIDProto ensureCid() => $_ensure(1);
+  $0.IPFSCIDProto ensureCid() => $_ensure(1);
 
   @$pb.TagNumber(3)
   $core.String get format => $_getSZ(2);

@@ -19,8 +19,8 @@ import 'common_red_black_tree.pbenum.dart';
 export 'common_red_black_tree.pbenum.dart';
 
 /// Defines a message representing a peer's unique identifier.
-class PeerId extends $pb.GeneratedMessage {
-  factory PeerId({
+class RBTreePeerId extends $pb.GeneratedMessage {
+  factory RBTreePeerId({
     $core.String? id,
   }) {
     final $result = create();
@@ -29,11 +29,11 @@ class PeerId extends $pb.GeneratedMessage {
     }
     return $result;
   }
-  PeerId._() : super();
-  factory PeerId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory PeerId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  RBTreePeerId._() : super();
+  factory RBTreePeerId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory RBTreePeerId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PeerId', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.common_red_black_tree'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RBTreePeerId', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.common_red_black_tree'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'id')
     ..hasRequiredFields = false
   ;
@@ -42,22 +42,22 @@ class PeerId extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  PeerId clone() => PeerId()..mergeFromMessage(this);
+  RBTreePeerId clone() => RBTreePeerId()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  PeerId copyWith(void Function(PeerId) updates) => super.copyWith((message) => updates(message as PeerId)) as PeerId;
+  RBTreePeerId copyWith(void Function(RBTreePeerId) updates) => super.copyWith((message) => updates(message as RBTreePeerId)) as RBTreePeerId;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static PeerId create() => PeerId._();
-  PeerId createEmptyInstance() => create();
-  static $pb.PbList<PeerId> createRepeated() => $pb.PbList<PeerId>();
+  static RBTreePeerId create() => RBTreePeerId._();
+  RBTreePeerId createEmptyInstance() => create();
+  static $pb.PbList<RBTreePeerId> createRepeated() => $pb.PbList<RBTreePeerId>();
   @$core.pragma('dart2js:noInline')
-  static PeerId getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PeerId>(create);
-  static PeerId? _defaultInstance;
+  static RBTreePeerId getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RBTreePeerId>(create);
+  static RBTreePeerId? _defaultInstance;
 
   /// The ID of the peer, represented as a string.
   @$pb.TagNumber(1)
@@ -73,7 +73,7 @@ class PeerId extends $pb.GeneratedMessage {
 /// Defines a message representing a node in a data structure.
 class Node extends $pb.GeneratedMessage {
   factory Node({
-    PeerId? peerId,
+    RBTreePeerId? peerId,
     $core.List<$core.int>? data,
   }) {
     final $result = create();
@@ -90,7 +90,7 @@ class Node extends $pb.GeneratedMessage {
   factory Node.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Node', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.common_red_black_tree'), createEmptyInstance: create)
-    ..aOM<PeerId>(1, _omitFieldNames ? '' : 'peerId', subBuilder: PeerId.create)
+    ..aOM<RBTreePeerId>(1, _omitFieldNames ? '' : 'peerId', subBuilder: RBTreePeerId.create)
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
@@ -118,15 +118,15 @@ class Node extends $pb.GeneratedMessage {
 
   /// The unique identifier of the peer associated with this node.
   @$pb.TagNumber(1)
-  PeerId get peerId => $_getN(0);
+  RBTreePeerId get peerId => $_getN(0);
   @$pb.TagNumber(1)
-  set peerId(PeerId v) { setField(1, v); }
+  set peerId(RBTreePeerId v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasPeerId() => $_has(0);
   @$pb.TagNumber(1)
   void clearPeerId() => clearField(1);
   @$pb.TagNumber(1)
-  PeerId ensurePeerId() => $_ensure(0);
+  RBTreePeerId ensurePeerId() => $_ensure(0);
 
   /// Arbitrary data associated with this node, represented as bytes.
   @$pb.TagNumber(2)

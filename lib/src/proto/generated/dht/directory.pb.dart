@@ -15,8 +15,8 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 /// Represents a single entry in the directory
-class DirectoryEntry extends $pb.GeneratedMessage {
-  factory DirectoryEntry({
+class DirectoryEntryProto extends $pb.GeneratedMessage {
+  factory DirectoryEntryProto({
     $core.String? name,
     $core.List<$core.int>? hash,
     $fixnum.Int64? size,
@@ -37,11 +37,11 @@ class DirectoryEntry extends $pb.GeneratedMessage {
     }
     return $result;
   }
-  DirectoryEntry._() : super();
-  factory DirectoryEntry.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory DirectoryEntry.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  DirectoryEntryProto._() : super();
+  factory DirectoryEntryProto.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DirectoryEntryProto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DirectoryEntry', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DirectoryEntryProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'hash', $pb.PbFieldType.OY)
     ..aInt64(3, _omitFieldNames ? '' : 'size')
@@ -53,22 +53,22 @@ class DirectoryEntry extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  DirectoryEntry clone() => DirectoryEntry()..mergeFromMessage(this);
+  DirectoryEntryProto clone() => DirectoryEntryProto()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  DirectoryEntry copyWith(void Function(DirectoryEntry) updates) => super.copyWith((message) => updates(message as DirectoryEntry)) as DirectoryEntry;
+  DirectoryEntryProto copyWith(void Function(DirectoryEntryProto) updates) => super.copyWith((message) => updates(message as DirectoryEntryProto)) as DirectoryEntryProto;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static DirectoryEntry create() => DirectoryEntry._();
-  DirectoryEntry createEmptyInstance() => create();
-  static $pb.PbList<DirectoryEntry> createRepeated() => $pb.PbList<DirectoryEntry>();
+  static DirectoryEntryProto create() => DirectoryEntryProto._();
+  DirectoryEntryProto createEmptyInstance() => create();
+  static $pb.PbList<DirectoryEntryProto> createRepeated() => $pb.PbList<DirectoryEntryProto>();
   @$core.pragma('dart2js:noInline')
-  static DirectoryEntry getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DirectoryEntry>(create);
-  static DirectoryEntry? _defaultInstance;
+  static DirectoryEntryProto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DirectoryEntryProto>(create);
+  static DirectoryEntryProto? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get name => $_getSZ(0);
@@ -108,9 +108,9 @@ class DirectoryEntry extends $pb.GeneratedMessage {
 }
 
 /// Represents the entire directory structure
-class Directory extends $pb.GeneratedMessage {
-  factory Directory({
-    $core.Iterable<DirectoryEntry>? entries,
+class DirectoryProto extends $pb.GeneratedMessage {
+  factory DirectoryProto({
+    $core.Iterable<DirectoryEntryProto>? entries,
     $core.String? path,
     $fixnum.Int64? totalSize,
     $core.int? numberOfFiles,
@@ -134,12 +134,12 @@ class Directory extends $pb.GeneratedMessage {
     }
     return $result;
   }
-  Directory._() : super();
-  factory Directory.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Directory.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  DirectoryProto._() : super();
+  factory DirectoryProto.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DirectoryProto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Directory', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..pc<DirectoryEntry>(1, _omitFieldNames ? '' : 'entries', $pb.PbFieldType.PM, subBuilder: DirectoryEntry.create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DirectoryProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+    ..pc<DirectoryEntryProto>(1, _omitFieldNames ? '' : 'entries', $pb.PbFieldType.PM, subBuilder: DirectoryEntryProto.create)
     ..aOS(2, _omitFieldNames ? '' : 'path')
     ..aInt64(3, _omitFieldNames ? '' : 'totalSize')
     ..a<$core.int>(4, _omitFieldNames ? '' : 'numberOfFiles', $pb.PbFieldType.O3)
@@ -151,25 +151,25 @@ class Directory extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  Directory clone() => Directory()..mergeFromMessage(this);
+  DirectoryProto clone() => DirectoryProto()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Directory copyWith(void Function(Directory) updates) => super.copyWith((message) => updates(message as Directory)) as Directory;
+  DirectoryProto copyWith(void Function(DirectoryProto) updates) => super.copyWith((message) => updates(message as DirectoryProto)) as DirectoryProto;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Directory create() => Directory._();
-  Directory createEmptyInstance() => create();
-  static $pb.PbList<Directory> createRepeated() => $pb.PbList<Directory>();
+  static DirectoryProto create() => DirectoryProto._();
+  DirectoryProto createEmptyInstance() => create();
+  static $pb.PbList<DirectoryProto> createRepeated() => $pb.PbList<DirectoryProto>();
   @$core.pragma('dart2js:noInline')
-  static Directory getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Directory>(create);
-  static Directory? _defaultInstance;
+  static DirectoryProto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DirectoryProto>(create);
+  static DirectoryProto? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<DirectoryEntry> get entries => $_getList(0);
+  $core.List<DirectoryEntryProto> get entries => $_getList(0);
 
   @$pb.TagNumber(2)
   $core.String get path => $_getSZ(1);
@@ -211,7 +211,7 @@ class Directory extends $pb.GeneratedMessage {
 /// Requests to add a new directory entry
 class AddDirectoryEntryRequest extends $pb.GeneratedMessage {
   factory AddDirectoryEntryRequest({
-    DirectoryEntry? entry,
+    DirectoryEntryProto? entry,
   }) {
     final $result = create();
     if (entry != null) {
@@ -224,7 +224,7 @@ class AddDirectoryEntryRequest extends $pb.GeneratedMessage {
   factory AddDirectoryEntryRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AddDirectoryEntryRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..aOM<DirectoryEntry>(1, _omitFieldNames ? '' : 'entry', subBuilder: DirectoryEntry.create)
+    ..aOM<DirectoryEntryProto>(1, _omitFieldNames ? '' : 'entry', subBuilder: DirectoryEntryProto.create)
     ..hasRequiredFields = false
   ;
 
@@ -250,15 +250,15 @@ class AddDirectoryEntryRequest extends $pb.GeneratedMessage {
   static AddDirectoryEntryRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  DirectoryEntry get entry => $_getN(0);
+  DirectoryEntryProto get entry => $_getN(0);
   @$pb.TagNumber(1)
-  set entry(DirectoryEntry v) { setField(1, v); }
+  set entry(DirectoryEntryProto v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasEntry() => $_has(0);
   @$pb.TagNumber(1)
   void clearEntry() => clearField(1);
   @$pb.TagNumber(1)
-  DirectoryEntry ensureEntry() => $_ensure(0);
+  DirectoryEntryProto ensureEntry() => $_ensure(0);
 }
 
 /// Response after adding a new directory entry
@@ -468,7 +468,7 @@ class ListDirectoryRequest extends $pb.GeneratedMessage {
 /// Response containing the list of directory entries
 class ListDirectoryResponse extends $pb.GeneratedMessage {
   factory ListDirectoryResponse({
-    $core.Iterable<DirectoryEntry>? entries,
+    $core.Iterable<DirectoryEntryProto>? entries,
   }) {
     final $result = create();
     if (entries != null) {
@@ -481,7 +481,7 @@ class ListDirectoryResponse extends $pb.GeneratedMessage {
   factory ListDirectoryResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ListDirectoryResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..pc<DirectoryEntry>(1, _omitFieldNames ? '' : 'entries', $pb.PbFieldType.PM, subBuilder: DirectoryEntry.create)
+    ..pc<DirectoryEntryProto>(1, _omitFieldNames ? '' : 'entries', $pb.PbFieldType.PM, subBuilder: DirectoryEntryProto.create)
     ..hasRequiredFields = false
   ;
 
@@ -507,7 +507,7 @@ class ListDirectoryResponse extends $pb.GeneratedMessage {
   static ListDirectoryResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<DirectoryEntry> get entries => $_getList(0);
+  $core.List<DirectoryEntryProto> get entries => $_getList(0);
 }
 
 /// Request to get the details of a specific directory entry
@@ -564,7 +564,7 @@ class GetDirectoryEntryRequest extends $pb.GeneratedMessage {
 /// Response containing the directory entry details
 class GetDirectoryEntryResponse extends $pb.GeneratedMessage {
   factory GetDirectoryEntryResponse({
-    DirectoryEntry? entry,
+    DirectoryEntryProto? entry,
   }) {
     final $result = create();
     if (entry != null) {
@@ -577,7 +577,7 @@ class GetDirectoryEntryResponse extends $pb.GeneratedMessage {
   factory GetDirectoryEntryResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetDirectoryEntryResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..aOM<DirectoryEntry>(1, _omitFieldNames ? '' : 'entry', subBuilder: DirectoryEntry.create)
+    ..aOM<DirectoryEntryProto>(1, _omitFieldNames ? '' : 'entry', subBuilder: DirectoryEntryProto.create)
     ..hasRequiredFields = false
   ;
 
@@ -603,15 +603,15 @@ class GetDirectoryEntryResponse extends $pb.GeneratedMessage {
   static GetDirectoryEntryResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  DirectoryEntry get entry => $_getN(0);
+  DirectoryEntryProto get entry => $_getN(0);
   @$pb.TagNumber(1)
-  set entry(DirectoryEntry v) { setField(1, v); }
+  set entry(DirectoryEntryProto v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasEntry() => $_has(0);
   @$pb.TagNumber(1)
   void clearEntry() => clearField(1);
   @$pb.TagNumber(1)
-  DirectoryEntry ensureEntry() => $_ensure(0);
+  DirectoryEntryProto ensureEntry() => $_ensure(0);
 }
 
 

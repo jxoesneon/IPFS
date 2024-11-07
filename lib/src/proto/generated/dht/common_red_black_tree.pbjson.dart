@@ -26,31 +26,31 @@ const NodeColor$json = {
 final $typed_data.Uint8List nodeColorDescriptor = $convert.base64Decode(
     'CglOb2RlQ29sb3ISBwoDUkVEEAASCQoFQkxBQ0sQAQ==');
 
-@$core.Deprecated('Use peerIdDescriptor instead')
-const PeerId$json = {
-  '1': 'PeerId',
+@$core.Deprecated('Use rBTreePeerIdDescriptor instead')
+const RBTreePeerId$json = {
+  '1': 'RBTreePeerId',
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
   ],
 };
 
-/// Descriptor for `PeerId`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List peerIdDescriptor = $convert.base64Decode(
-    'CgZQZWVySWQSDgoCaWQYASABKAlSAmlk');
+/// Descriptor for `RBTreePeerId`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List rBTreePeerIdDescriptor = $convert.base64Decode(
+    'CgxSQlRyZWVQZWVySWQSDgoCaWQYASABKAlSAmlk');
 
 @$core.Deprecated('Use nodeDescriptor instead')
 const Node$json = {
   '1': 'Node',
   '2': [
-    {'1': 'peer_id', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_red_black_tree.PeerId', '10': 'peerId'},
+    {'1': 'peer_id', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_red_black_tree.RBTreePeerId', '10': 'peerId'},
     {'1': 'data', '3': 2, '4': 1, '5': 12, '10': 'data'},
   ],
 };
 
 /// Descriptor for `Node`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List nodeDescriptor = $convert.base64Decode(
-    'CgROb2RlEj8KB3BlZXJfaWQYASABKAsyJi5pcGZzLmRodC5jb21tb25fcmVkX2JsYWNrX3RyZW'
-    'UuUGVlcklkUgZwZWVySWQSEgoEZGF0YRgCIAEoDFIEZGF0YQ==');
+    'CgROb2RlEkUKB3BlZXJfaWQYASABKAsyLC5pcGZzLmRodC5jb21tb25fcmVkX2JsYWNrX3RyZW'
+    'UuUkJUcmVlUGVlcklkUgZwZWVySWQSEgoEZGF0YRgCIAEoDFIEZGF0YQ==');
 
 @$core.Deprecated('Use k_PeerIdDescriptor instead')
 const K_PeerId$json = {

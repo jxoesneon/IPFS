@@ -14,8 +14,8 @@ import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
 import '../google/protobuf/empty.pbjson.dart' as $2;
-import 'block.pbjson.dart' as $0;
-import 'cid.pbjson.dart' as $1;
+import 'block.pbjson.dart' as $1;
+import 'cid.pbjson.dart' as $0;
 
 @$core.Deprecated('Use addBlockResponseDescriptor instead')
 const AddBlockResponse$json = {
@@ -63,16 +63,16 @@ const $core.Map<$core.String, $core.dynamic> BlockStoreServiceBase$json = {
   '1': 'BlockStoreService',
   '2': [
     {'1': 'AddBlock', '2': '.ipfs.core.data_structures.BlockProto', '3': '.ipfs.core.data_structures.AddBlockResponse'},
-    {'1': 'GetBlock', '2': '.ipfs.core.data_structures.CIDProto', '3': '.ipfs.core.data_structures.GetBlockResponse'},
-    {'1': 'RemoveBlock', '2': '.ipfs.core.data_structures.CIDProto', '3': '.ipfs.core.data_structures.RemoveBlockResponse'},
+    {'1': 'GetBlock', '2': '.ipfs.core.IPFSCIDProto', '3': '.ipfs.core.data_structures.GetBlockResponse'},
+    {'1': 'RemoveBlock', '2': '.ipfs.core.IPFSCIDProto', '3': '.ipfs.core.data_structures.RemoveBlockResponse'},
     {'1': 'GetAllBlocks', '2': '.google.protobuf.Empty', '3': '.ipfs.core.data_structures.BlockProto', '6': true},
   ],
 };
 
 @$core.Deprecated('Use blockStoreServiceDescriptor instead')
 const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> BlockStoreServiceBase$messageJson = {
-  '.ipfs.core.data_structures.BlockProto': $0.BlockProto$json,
-  '.ipfs.core.data_structures.CIDProto': $1.CIDProto$json,
+  '.ipfs.core.data_structures.BlockProto': $1.BlockProto$json,
+  '.ipfs.core.IPFSCIDProto': $0.IPFSCIDProto$json,
   '.ipfs.core.data_structures.AddBlockResponse': AddBlockResponse$json,
   '.ipfs.core.data_structures.GetBlockResponse': GetBlockResponse$json,
   '.ipfs.core.data_structures.RemoveBlockResponse': RemoveBlockResponse$json,
@@ -83,10 +83,9 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> BlockStore
 final $typed_data.Uint8List blockStoreServiceDescriptor = $convert.base64Decode(
     'ChFCbG9ja1N0b3JlU2VydmljZRJeCghBZGRCbG9jaxIlLmlwZnMuY29yZS5kYXRhX3N0cnVjdH'
     'VyZXMuQmxvY2tQcm90bxorLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuQWRkQmxvY2tSZXNw'
-    'b25zZRJcCghHZXRCbG9jaxIjLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuQ0lEUHJvdG8aKy'
-    '5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLkdldEJsb2NrUmVzcG9uc2USYgoLUmVtb3ZlQmxv'
-    'Y2sSIy5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLkNJRFByb3RvGi4uaXBmcy5jb3JlLmRhdG'
-    'Ffc3RydWN0dXJlcy5SZW1vdmVCbG9ja1Jlc3BvbnNlEk8KDEdldEFsbEJsb2NrcxIWLmdvb2ds'
-    'ZS5wcm90b2J1Zi5FbXB0eRolLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuQmxvY2tQcm90bz'
-    'AB');
+    'b25zZRJQCghHZXRCbG9jaxIXLmlwZnMuY29yZS5JUEZTQ0lEUHJvdG8aKy5pcGZzLmNvcmUuZG'
+    'F0YV9zdHJ1Y3R1cmVzLkdldEJsb2NrUmVzcG9uc2USVgoLUmVtb3ZlQmxvY2sSFy5pcGZzLmNv'
+    'cmUuSVBGU0NJRFByb3RvGi4uaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy5SZW1vdmVCbG9ja1'
+    'Jlc3BvbnNlEk8KDEdldEFsbEJsb2NrcxIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRolLmlwZnMu'
+    'Y29yZS5kYXRhX3N0cnVjdHVyZXMuQmxvY2tQcm90bzAB');
 

@@ -15,8 +15,8 @@ import 'dart:core' as $core;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import '../google/protobuf/empty.pb.dart' as $2;
-import 'block.pb.dart' as $0;
-import 'cid.pb.dart' as $1;
+import 'block.pb.dart' as $1;
+import 'cid.pb.dart' as $0;
 
 /// Response message for adding a block
 class AddBlockResponse extends $pb.GeneratedMessage {
@@ -86,7 +86,7 @@ class AddBlockResponse extends $pb.GeneratedMessage {
 /// Response message for retrieving a block
 class GetBlockResponse extends $pb.GeneratedMessage {
   factory GetBlockResponse({
-    $0.BlockProto? block,
+    $1.BlockProto? block,
     $core.bool? found,
   }) {
     final $result = create();
@@ -103,7 +103,7 @@ class GetBlockResponse extends $pb.GeneratedMessage {
   factory GetBlockResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..aOM<$0.BlockProto>(1, _omitFieldNames ? '' : 'block', subBuilder: $0.BlockProto.create)
+    ..aOM<$1.BlockProto>(1, _omitFieldNames ? '' : 'block', subBuilder: $1.BlockProto.create)
     ..aOB(2, _omitFieldNames ? '' : 'found')
     ..hasRequiredFields = false
   ;
@@ -130,15 +130,15 @@ class GetBlockResponse extends $pb.GeneratedMessage {
   static GetBlockResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $0.BlockProto get block => $_getN(0);
+  $1.BlockProto get block => $_getN(0);
   @$pb.TagNumber(1)
-  set block($0.BlockProto v) { setField(1, v); }
+  set block($1.BlockProto v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasBlock() => $_has(0);
   @$pb.TagNumber(1)
   void clearBlock() => clearField(1);
   @$pb.TagNumber(1)
-  $0.BlockProto ensureBlock() => $_ensure(0);
+  $1.BlockProto ensureBlock() => $_ensure(0);
 
   @$pb.TagNumber(2)
   $core.bool get found => $_getBF(1);
@@ -219,17 +219,17 @@ class BlockStoreServiceApi {
   $pb.RpcClient _client;
   BlockStoreServiceApi(this._client);
 
-  $async.Future<AddBlockResponse> addBlock($pb.ClientContext? ctx, $0.BlockProto request) =>
+  $async.Future<AddBlockResponse> addBlock($pb.ClientContext? ctx, $1.BlockProto request) =>
     _client.invoke<AddBlockResponse>(ctx, 'BlockStoreService', 'AddBlock', request, AddBlockResponse())
   ;
-  $async.Future<GetBlockResponse> getBlock($pb.ClientContext? ctx, $1.CIDProto request) =>
+  $async.Future<GetBlockResponse> getBlock($pb.ClientContext? ctx, $0.IPFSCIDProto request) =>
     _client.invoke<GetBlockResponse>(ctx, 'BlockStoreService', 'GetBlock', request, GetBlockResponse())
   ;
-  $async.Future<RemoveBlockResponse> removeBlock($pb.ClientContext? ctx, $1.CIDProto request) =>
+  $async.Future<RemoveBlockResponse> removeBlock($pb.ClientContext? ctx, $0.IPFSCIDProto request) =>
     _client.invoke<RemoveBlockResponse>(ctx, 'BlockStoreService', 'RemoveBlock', request, RemoveBlockResponse())
   ;
-  $async.Future<$0.BlockProto> getAllBlocks($pb.ClientContext? ctx, $2.Empty request) =>
-    _client.invoke<$0.BlockProto>(ctx, 'BlockStoreService', 'GetAllBlocks', request, $0.BlockProto())
+  $async.Future<$1.BlockProto> getAllBlocks($pb.ClientContext? ctx, $2.Empty request) =>
+    _client.invoke<$1.BlockProto>(ctx, 'BlockStoreService', 'GetAllBlocks', request, $1.BlockProto())
   ;
 }
 

@@ -13,9 +13,9 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-@$core.Deprecated('Use directoryEntryDescriptor instead')
-const DirectoryEntry$json = {
-  '1': 'DirectoryEntry',
+@$core.Deprecated('Use directoryEntryProtoDescriptor instead')
+const DirectoryEntryProto$json = {
+  '1': 'DirectoryEntryProto',
   '2': [
     {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
     {'1': 'hash', '3': 2, '4': 1, '5': 12, '10': 'hash'},
@@ -24,16 +24,17 @@ const DirectoryEntry$json = {
   ],
 };
 
-/// Descriptor for `DirectoryEntry`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List directoryEntryDescriptor = $convert.base64Decode(
-    'Cg5EaXJlY3RvcnlFbnRyeRISCgRuYW1lGAEgASgJUgRuYW1lEhIKBGhhc2gYAiABKAxSBGhhc2'
-    'gSEgoEc2l6ZRgDIAEoA1IEc2l6ZRIhCgxpc19kaXJlY3RvcnkYBCABKAhSC2lzRGlyZWN0b3J5');
+/// Descriptor for `DirectoryEntryProto`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List directoryEntryProtoDescriptor = $convert.base64Decode(
+    'ChNEaXJlY3RvcnlFbnRyeVByb3RvEhIKBG5hbWUYASABKAlSBG5hbWUSEgoEaGFzaBgCIAEoDF'
+    'IEaGFzaBISCgRzaXplGAMgASgDUgRzaXplEiEKDGlzX2RpcmVjdG9yeRgEIAEoCFILaXNEaXJl'
+    'Y3Rvcnk=');
 
-@$core.Deprecated('Use directoryDescriptor instead')
-const Directory$json = {
-  '1': 'Directory',
+@$core.Deprecated('Use directoryProtoDescriptor instead')
+const DirectoryProto$json = {
+  '1': 'DirectoryProto',
   '2': [
-    {'1': 'entries', '3': 1, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.DirectoryEntry', '10': 'entries'},
+    {'1': 'entries', '3': 1, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.DirectoryEntryProto', '10': 'entries'},
     {'1': 'path', '3': 2, '4': 1, '5': 9, '10': 'path'},
     {'1': 'total_size', '3': 3, '4': 1, '5': 3, '10': 'totalSize'},
     {'1': 'number_of_files', '3': 4, '4': 1, '5': 5, '10': 'numberOfFiles'},
@@ -41,26 +42,26 @@ const Directory$json = {
   ],
 };
 
-/// Descriptor for `Directory`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List directoryDescriptor = $convert.base64Decode(
-    'CglEaXJlY3RvcnkSQwoHZW50cmllcxgBIAMoCzIpLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZX'
-    'MuRGlyZWN0b3J5RW50cnlSB2VudHJpZXMSEgoEcGF0aBgCIAEoCVIEcGF0aBIdCgp0b3RhbF9z'
-    'aXplGAMgASgDUgl0b3RhbFNpemUSJgoPbnVtYmVyX29mX2ZpbGVzGAQgASgFUg1udW1iZXJPZk'
-    'ZpbGVzEjIKFW51bWJlcl9vZl9kaXJlY3RvcmllcxgFIAEoBVITbnVtYmVyT2ZEaXJlY3Rvcmll'
-    'cw==');
+/// Descriptor for `DirectoryProto`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List directoryProtoDescriptor = $convert.base64Decode(
+    'Cg5EaXJlY3RvcnlQcm90bxJICgdlbnRyaWVzGAEgAygLMi4uaXBmcy5jb3JlLmRhdGFfc3RydW'
+    'N0dXJlcy5EaXJlY3RvcnlFbnRyeVByb3RvUgdlbnRyaWVzEhIKBHBhdGgYAiABKAlSBHBhdGgS'
+    'HQoKdG90YWxfc2l6ZRgDIAEoA1IJdG90YWxTaXplEiYKD251bWJlcl9vZl9maWxlcxgEIAEoBV'
+    'INbnVtYmVyT2ZGaWxlcxIyChVudW1iZXJfb2ZfZGlyZWN0b3JpZXMYBSABKAVSE251bWJlck9m'
+    'RGlyZWN0b3JpZXM=');
 
 @$core.Deprecated('Use addDirectoryEntryRequestDescriptor instead')
 const AddDirectoryEntryRequest$json = {
   '1': 'AddDirectoryEntryRequest',
   '2': [
-    {'1': 'entry', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.DirectoryEntry', '10': 'entry'},
+    {'1': 'entry', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.DirectoryEntryProto', '10': 'entry'},
   ],
 };
 
 /// Descriptor for `AddDirectoryEntryRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List addDirectoryEntryRequestDescriptor = $convert.base64Decode(
-    'ChhBZGREaXJlY3RvcnlFbnRyeVJlcXVlc3QSPwoFZW50cnkYASABKAsyKS5pcGZzLmNvcmUuZG'
-    'F0YV9zdHJ1Y3R1cmVzLkRpcmVjdG9yeUVudHJ5UgVlbnRyeQ==');
+    'ChhBZGREaXJlY3RvcnlFbnRyeVJlcXVlc3QSRAoFZW50cnkYASABKAsyLi5pcGZzLmNvcmUuZG'
+    'F0YV9zdHJ1Y3R1cmVzLkRpcmVjdG9yeUVudHJ5UHJvdG9SBWVudHJ5');
 
 @$core.Deprecated('Use addDirectoryEntryResponseDescriptor instead')
 const AddDirectoryEntryResponse$json = {
@@ -115,14 +116,14 @@ final $typed_data.Uint8List listDirectoryRequestDescriptor = $convert.base64Deco
 const ListDirectoryResponse$json = {
   '1': 'ListDirectoryResponse',
   '2': [
-    {'1': 'entries', '3': 1, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.DirectoryEntry', '10': 'entries'},
+    {'1': 'entries', '3': 1, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.DirectoryEntryProto', '10': 'entries'},
   ],
 };
 
 /// Descriptor for `ListDirectoryResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List listDirectoryResponseDescriptor = $convert.base64Decode(
-    'ChVMaXN0RGlyZWN0b3J5UmVzcG9uc2USQwoHZW50cmllcxgBIAMoCzIpLmlwZnMuY29yZS5kYX'
-    'RhX3N0cnVjdHVyZXMuRGlyZWN0b3J5RW50cnlSB2VudHJpZXM=');
+    'ChVMaXN0RGlyZWN0b3J5UmVzcG9uc2USSAoHZW50cmllcxgBIAMoCzIuLmlwZnMuY29yZS5kYX'
+    'RhX3N0cnVjdHVyZXMuRGlyZWN0b3J5RW50cnlQcm90b1IHZW50cmllcw==');
 
 @$core.Deprecated('Use getDirectoryEntryRequestDescriptor instead')
 const GetDirectoryEntryRequest$json = {
@@ -140,12 +141,12 @@ final $typed_data.Uint8List getDirectoryEntryRequestDescriptor = $convert.base64
 const GetDirectoryEntryResponse$json = {
   '1': 'GetDirectoryEntryResponse',
   '2': [
-    {'1': 'entry', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.DirectoryEntry', '10': 'entry'},
+    {'1': 'entry', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.DirectoryEntryProto', '10': 'entry'},
   ],
 };
 
 /// Descriptor for `GetDirectoryEntryResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getDirectoryEntryResponseDescriptor = $convert.base64Decode(
-    'ChlHZXREaXJlY3RvcnlFbnRyeVJlc3BvbnNlEj8KBWVudHJ5GAEgASgLMikuaXBmcy5jb3JlLm'
-    'RhdGFfc3RydWN0dXJlcy5EaXJlY3RvcnlFbnRyeVIFZW50cnk=');
+    'ChlHZXREaXJlY3RvcnlFbnRyeVJlc3BvbnNlEkQKBWVudHJ5GAEgASgLMi4uaXBmcy5jb3JlLm'
+    'RhdGFfc3RydWN0dXJlcy5EaXJlY3RvcnlFbnRyeVByb3RvUgVlbnRyeQ==');
 

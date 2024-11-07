@@ -14,7 +14,7 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'common_red_black_tree.pb.dart' as $0;
+import 'common_red_black_tree.pb.dart' as $5;
 import 'store_provider.pbenum.dart';
 
 export 'store_provider.pbenum.dart';
@@ -22,8 +22,8 @@ export 'store_provider.pbenum.dart';
 /// Request message for storing provider information
 class StoreProviderRequest extends $pb.GeneratedMessage {
   factory StoreProviderRequest({
-    $0.K_PeerId? key,
-    $0.V_PeerInfo? providerInfo,
+    $5.K_PeerId? key,
+    $5.V_PeerInfo? providerInfo,
     $fixnum.Int64? ttl,
   }) {
     final $result = create();
@@ -43,8 +43,8 @@ class StoreProviderRequest extends $pb.GeneratedMessage {
   factory StoreProviderRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StoreProviderRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.store_provider'), createEmptyInstance: create)
-    ..aOM<$0.K_PeerId>(1, _omitFieldNames ? '' : 'key', subBuilder: $0.K_PeerId.create)
-    ..aOM<$0.V_PeerInfo>(2, _omitFieldNames ? '' : 'providerInfo', subBuilder: $0.V_PeerInfo.create)
+    ..aOM<$5.K_PeerId>(1, _omitFieldNames ? '' : 'key', subBuilder: $5.K_PeerId.create)
+    ..aOM<$5.V_PeerInfo>(2, _omitFieldNames ? '' : 'providerInfo', subBuilder: $5.V_PeerInfo.create)
     ..aInt64(3, _omitFieldNames ? '' : 'ttl')
     ..hasRequiredFields = false
   ;
@@ -72,27 +72,27 @@ class StoreProviderRequest extends $pb.GeneratedMessage {
 
   /// The key for which provider information is being stored
   @$pb.TagNumber(1)
-  $0.K_PeerId get key => $_getN(0);
+  $5.K_PeerId get key => $_getN(0);
   @$pb.TagNumber(1)
-  set key($0.K_PeerId v) { setField(1, v); }
+  set key($5.K_PeerId v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasKey() => $_has(0);
   @$pb.TagNumber(1)
   void clearKey() => clearField(1);
   @$pb.TagNumber(1)
-  $0.K_PeerId ensureKey() => $_ensure(0);
+  $5.K_PeerId ensureKey() => $_ensure(0);
 
   /// The provider information to store
   @$pb.TagNumber(2)
-  $0.V_PeerInfo get providerInfo => $_getN(1);
+  $5.V_PeerInfo get providerInfo => $_getN(1);
   @$pb.TagNumber(2)
-  set providerInfo($0.V_PeerInfo v) { setField(2, v); }
+  set providerInfo($5.V_PeerInfo v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasProviderInfo() => $_has(1);
   @$pb.TagNumber(2)
   void clearProviderInfo() => clearField(2);
   @$pb.TagNumber(2)
-  $0.V_PeerInfo ensureProviderInfo() => $_ensure(1);
+  $5.V_PeerInfo ensureProviderInfo() => $_ensure(1);
 
   /// Time-to-live in seconds for this provider record
   @$pb.TagNumber(3)
@@ -189,7 +189,7 @@ class StoreProviderResponse extends $pb.GeneratedMessage {
 /// Request to retrieve provider information
 class GetProvidersRequest extends $pb.GeneratedMessage {
   factory GetProvidersRequest({
-    $0.K_PeerId? key,
+    $5.K_PeerId? key,
     $core.int? maxProviders,
   }) {
     final $result = create();
@@ -206,7 +206,7 @@ class GetProvidersRequest extends $pb.GeneratedMessage {
   factory GetProvidersRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetProvidersRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.store_provider'), createEmptyInstance: create)
-    ..aOM<$0.K_PeerId>(1, _omitFieldNames ? '' : 'key', subBuilder: $0.K_PeerId.create)
+    ..aOM<$5.K_PeerId>(1, _omitFieldNames ? '' : 'key', subBuilder: $5.K_PeerId.create)
     ..a<$core.int>(2, _omitFieldNames ? '' : 'maxProviders', $pb.PbFieldType.O3)
     ..hasRequiredFields = false
   ;
@@ -234,15 +234,15 @@ class GetProvidersRequest extends $pb.GeneratedMessage {
 
   /// The key to look up providers for
   @$pb.TagNumber(1)
-  $0.K_PeerId get key => $_getN(0);
+  $5.K_PeerId get key => $_getN(0);
   @$pb.TagNumber(1)
-  set key($0.K_PeerId v) { setField(1, v); }
+  set key($5.K_PeerId v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasKey() => $_has(0);
   @$pb.TagNumber(1)
   void clearKey() => clearField(1);
   @$pb.TagNumber(1)
-  $0.K_PeerId ensureKey() => $_ensure(0);
+  $5.K_PeerId ensureKey() => $_ensure(0);
 
   /// Maximum number of providers to return
   @$pb.TagNumber(2)
@@ -258,8 +258,8 @@ class GetProvidersRequest extends $pb.GeneratedMessage {
 /// Response containing provider information
 class GetProvidersResponse extends $pb.GeneratedMessage {
   factory GetProvidersResponse({
-    $core.Iterable<$0.V_PeerInfo>? providers,
-    $core.Iterable<$0.V_PeerInfo>? closestPeers,
+    $core.Iterable<$5.V_PeerInfo>? providers,
+    $core.Iterable<$5.V_PeerInfo>? closestPeers,
   }) {
     final $result = create();
     if (providers != null) {
@@ -275,8 +275,8 @@ class GetProvidersResponse extends $pb.GeneratedMessage {
   factory GetProvidersResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetProvidersResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.store_provider'), createEmptyInstance: create)
-    ..pc<$0.V_PeerInfo>(1, _omitFieldNames ? '' : 'providers', $pb.PbFieldType.PM, subBuilder: $0.V_PeerInfo.create)
-    ..pc<$0.V_PeerInfo>(2, _omitFieldNames ? '' : 'closestPeers', $pb.PbFieldType.PM, subBuilder: $0.V_PeerInfo.create)
+    ..pc<$5.V_PeerInfo>(1, _omitFieldNames ? '' : 'providers', $pb.PbFieldType.PM, subBuilder: $5.V_PeerInfo.create)
+    ..pc<$5.V_PeerInfo>(2, _omitFieldNames ? '' : 'closestPeers', $pb.PbFieldType.PM, subBuilder: $5.V_PeerInfo.create)
     ..hasRequiredFields = false
   ;
 
@@ -303,11 +303,11 @@ class GetProvidersResponse extends $pb.GeneratedMessage {
 
   /// List of providers for the requested key
   @$pb.TagNumber(1)
-  $core.List<$0.V_PeerInfo> get providers => $_getList(0);
+  $core.List<$5.V_PeerInfo> get providers => $_getList(0);
 
   /// Closest peers that might have the provider information
   @$pb.TagNumber(2)
-  $core.List<$0.V_PeerInfo> get closestPeers => $_getList(1);
+  $core.List<$5.V_PeerInfo> get closestPeers => $_getList(1);
 }
 
 
