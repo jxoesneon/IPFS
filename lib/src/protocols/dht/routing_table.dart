@@ -1,27 +1,34 @@
 import 'dart:math';
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dht_client.dart';
 import 'kademlia_tree.dart';
 import 'red_black_tree.dart';
-import '../../utils/Base58.dart';
-import 'package:fixnum/fixnum.dart';
-import 'package:convert/convert.dart';
 import 'kademlia_tree/kademlia_node.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import '../../core/data_structures/node_stats.dart';
-import '../../proto/generated/dht/store_provider.pb.dart';
-import '../../proto/generated/dht/routing_table.pb.dart' as routing_table_pb;
-import '../../proto/generated/dht/kademlia_node.pb.dart' as kademlia_node_pb;
-import '../../proto/generated/dht/common_red_black_tree.pb.dart' as common_tree;
 
 // Represents the routing table for the DHT client.
 class RoutingTable {
-  final DHTClient dhtClient;
-  final KademliaTree _tree;
+  late final DHTClient dhtClient;
+  late KademliaTree _tree;
   static const int K_BUCKET_SIZE = 20;
 
-  RoutingTable(this.dhtClient) : _tree = KademliaTree(dhtClient.peerId);
+  RoutingTable() : _tree = KademliaTree(p2p.PeerId(value: Uint8List(32)));
+
+  /// Initializes the routing table with a reference to the DHT client
+  void initialize(DHTClient client) {
+    dhtClient = client;
+    // Re-initialize the tree with the actual client's peer ID
+    _tree = KademliaTree(client.peerId);
+    _tree.root = KademliaNode(
+      client.peerId,
+      0, // Distance to self is 0
+      client.associatedPeerId,
+      lastSeen: DateTime.now().millisecondsSinceEpoch,
+    );
+  }
 
   void addPeer(p2p.PeerId peerId, p2p.PeerId associatedPeerId) {
     final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
@@ -88,7 +95,40 @@ class RoutingTable {
     );
   }
 
-  void removePeer(p2p.PeerId peerId) => _tree.removePeer(peerId);
+  void removePeer(String peerId) {
+    // Convert string peerId to PeerId object
+    final peerIdBytes = Uint8List.fromList(utf8.encode(peerId));
+    final peer = p2p.PeerId(value: peerIdBytes);
+
+    // Find and remove the peer from the appropriate bucket
+    final distance = _calculateXorDistance(peer, _tree.root!.peerId);
+    final bucketIndex = _getBucketIndex(distance);
+    final bucket = _tree.buckets[bucketIndex];
+
+    if (bucket.containsKey(peer)) {
+      bucket.remove(peer);
+
+      // Check if bucket needs to be merged after removal
+      if (bucket.isEmpty && bucketIndex > 0) {
+        _mergeBuckets(bucketIndex);
+      }
+    }
+  }
+
+  void _mergeBuckets(int bucketIndex) {
+    if (bucketIndex > 0 && _tree.buckets[bucketIndex].isEmpty) {
+      final previousBucket = _tree.buckets[bucketIndex - 1];
+      final currentBucket = _tree.buckets[bucketIndex];
+
+      // Move all nodes from current bucket to previous bucket
+      for (var entry in currentBucket.entries) {
+        previousBucket[entry.key] = entry.value;
+      }
+
+      // Remove the empty bucket
+      _tree.buckets.removeAt(bucketIndex);
+    }
+  }
 
   p2p.PeerId? getAssociatedPeer(p2p.PeerId peerId) =>
       _tree.getAssociatedPeer(peerId);
