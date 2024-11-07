@@ -1,13 +1,14 @@
 import 'dart:io';
 import 'dart:async';
-import '../data_structures/block.dart';
+import 'dart:typed_data';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
-import '../data_structures/blockstore.dart';
-import '../../transport/p2plib_router.dart';
-import '../../protocols/bitswap/ledger.dart';
-import '../../protocols/bitswap/wantlist.dart';
-import '../../proto/generated/core/cid.pb.dart';
-import '../../protocols/bitswap/message.dart' as message;
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/ledger.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/wantlist.dart';
+import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as message;
 
 /// Handles Bitswap protocol operations for an IPFS node following the Bitswap 1.2.0 specification
 class BitswapHandler {
@@ -85,7 +86,7 @@ class BitswapHandler {
   }
 
   /// Handles incoming wantlist entries according to Bitswap spec
-  void _handleWantlist(Wantlist wantlist, String fromPeer) {
+  Future<void> _handleWantlist(Wantlist wantlist, String fromPeer) async {
     // Sort entries by priority before processing
     final sortedEntries = wantlist.entries.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value)); // Higher priority first
@@ -97,10 +98,12 @@ class BitswapHandler {
       // Add to our local wantlist with the received priority
       _wantlist.add(cidStr, priority: priority);
 
-      // Convert string CID to CIDProto
-      final cidProto = CIDProto()..codec = cidStr;
+      // Convert string CID to proto
+      final proto = IPFSCIDProto()
+        ..version = IPFSCIDVersion.IPFS_CID_VERSION_1
+        ..codec = cidStr;
 
-      final response = _blockStore.getBlock(cidProto);
+      final response = await _blockStore.getBlock(proto.toString());
       if (response.found) {
         final msg = message.Message()
           ..addBlock(Block.fromProto(response.block))
@@ -236,5 +239,25 @@ class BitswapHandler {
 
   void _handlePacket(p2p.Packet packet) {
     _handleMessage(message.Message.fromBytes(packet.datagram));
+  }
+
+  Future<void> handleWantRequest(String cidStr) async {
+    try {
+      final proto = IPFSCIDProto()
+        ..version = IPFSCIDVersion.IPFS_CID_VERSION_1
+        ..multihash = Uint8List.fromList(cidStr.codeUnits)
+        ..codec = 'raw'
+        ..multibasePrefix = 'base58btc';
+
+      // Create a custom Message directly without creating unused protobuf message
+      final customMessage = message.Message();
+      customMessage.addWantlistEntry(cidStr,
+          priority: 1, wantType: message.WantType.block, sendDontHave: true);
+
+      await _broadcastWantRequest(customMessage);
+    } catch (e) {
+      print('Error handling want request: $e');
+      rethrow;
+    }
   }
 }
