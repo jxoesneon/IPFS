@@ -18,7 +18,7 @@ message OperationLogEntryProto {
   string details = 3;
 
   // The CID involved in the operation (optional).
-  CIDProto cid = 4;
+  IPFSCIDProto cid = 4;
 
   // The type of node involved in the operation (optional).
   NodeTypeProto node_type = 5;
