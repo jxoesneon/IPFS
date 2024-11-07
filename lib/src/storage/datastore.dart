@@ -1,4 +1,3 @@
-
 // lib/src/storage/datastore.dart
 
 import 'dart:async';
@@ -60,5 +59,14 @@ class Datastore {
   Future<void> persistPinnedCIDs(Set<String> pinnedCIDs) async {
     // Implement saving pinned CIDs to disk or other persistent storage
     print('Persisted pinned CIDs.');
+  }
+
+  Future<void> delete(String key) async {
+    if (_store.containsKey(key)) {
+      _store.remove(key);
+      print('Deleted block with CID: $key');
+    } else {
+      print('Block with CID $key not found for deletion.');
+    }
   }
 }
