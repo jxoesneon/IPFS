@@ -294,4 +294,27 @@ class DHTClient {
   void _handlePacket(LibP2PPacket packet) {
     // Implementation
   }
+
+  /// Adds a provider for a given CID to the DHT network
+  Future<void> addProvider(String cid, String providerId) async {
+    final request = AddProviderRequest()
+      ..key = utf8.encode(cid)
+      ..providerId = utf8.encode(providerId);
+
+    final targetPeerId =
+        p2p.PeerId(value: Uint8List.fromList(utf8.encode(cid)));
+    final closestPeers = _routingTable.findClosestPeers(targetPeerId, 20);
+
+    for (final peer in closestPeers) {
+      try {
+        await _sendRequest(
+          peer,
+          PROTOCOL_ADD_PROVIDER,
+          request.writeToBuffer(),
+        );
+      } catch (e) {
+        print('Error adding provider to peer ${peer.toBase58String()}: $e');
+      }
+    }
+  }
 }
