@@ -18,13 +18,14 @@ import 'google/protobuf/timestamp.pb.dart' as $0;
 
 export 'dht_messages.pbenum.dart';
 
+/// Main DHT message wrapper
 class DHTMessage extends $pb.GeneratedMessage {
   factory DHTMessage({
     $core.String? messageId,
     DHTMessage_MessageType? type,
     $core.List<$core.int>? key,
-    $core.List<$core.int>? value,
-    $core.Iterable<$core.String>? closerPeers,
+    $core.List<$core.int>? record,
+    $core.Iterable<Peer>? closerPeers,
     $0.Timestamp? timestamp,
   }) {
     final $result = create();
@@ -37,8 +38,8 @@ class DHTMessage extends $pb.GeneratedMessage {
     if (key != null) {
       $result.key = key;
     }
-    if (value != null) {
-      $result.value = value;
+    if (record != null) {
+      $result.record = record;
     }
     if (closerPeers != null) {
       $result.closerPeers.addAll(closerPeers);
@@ -56,8 +57,8 @@ class DHTMessage extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'messageId')
     ..e<DHTMessage_MessageType>(2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: DHTMessage_MessageType.UNKNOWN, valueOf: DHTMessage_MessageType.valueOf, enumValues: DHTMessage_MessageType.values)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
-    ..pPS(5, _omitFieldNames ? '' : 'closerPeers')
+    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'record', $pb.PbFieldType.OY)
+    ..pc<Peer>(5, _omitFieldNames ? '' : 'closerPeers', $pb.PbFieldType.PM, subBuilder: Peer.create)
     ..aOM<$0.Timestamp>(6, _omitFieldNames ? '' : 'timestamp', subBuilder: $0.Timestamp.create)
     ..hasRequiredFields = false
   ;
@@ -111,16 +112,16 @@ class DHTMessage extends $pb.GeneratedMessage {
   void clearKey() => clearField(3);
 
   @$pb.TagNumber(4)
-  $core.List<$core.int> get value => $_getN(3);
+  $core.List<$core.int> get record => $_getN(3);
   @$pb.TagNumber(4)
-  set value($core.List<$core.int> v) { $_setBytes(3, v); }
+  set record($core.List<$core.int> v) { $_setBytes(3, v); }
   @$pb.TagNumber(4)
-  $core.bool hasValue() => $_has(3);
+  $core.bool hasRecord() => $_has(3);
   @$pb.TagNumber(4)
-  void clearValue() => clearField(4);
+  void clearRecord() => clearField(4);
 
   @$pb.TagNumber(5)
-  $core.List<$core.String> get closerPeers => $_getList(4);
+  $core.List<Peer> get closerPeers => $_getList(4);
 
   @$pb.TagNumber(6)
   $0.Timestamp get timestamp => $_getN(5);
@@ -134,14 +135,82 @@ class DHTMessage extends $pb.GeneratedMessage {
   $0.Timestamp ensureTimestamp() => $_ensure(5);
 }
 
+/// Represents a peer in the DHT network
+class Peer extends $pb.GeneratedMessage {
+  factory Peer({
+    $core.List<$core.int>? peerId,
+    $core.Iterable<$core.String>? addresses,
+    $core.Map<$core.String, $core.List<$core.int>>? connectionInfo,
+  }) {
+    final $result = create();
+    if (peerId != null) {
+      $result.peerId = peerId;
+    }
+    if (addresses != null) {
+      $result.addresses.addAll(addresses);
+    }
+    if (connectionInfo != null) {
+      $result.connectionInfo.addAll(connectionInfo);
+    }
+    return $result;
+  }
+  Peer._() : super();
+  factory Peer.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Peer.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Peer', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'peerId', $pb.PbFieldType.OY)
+    ..pPS(2, _omitFieldNames ? '' : 'addresses')
+    ..m<$core.String, $core.List<$core.int>>(3, _omitFieldNames ? '' : 'connectionInfo', entryClassName: 'Peer.ConnectionInfoEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OY, packageName: const $pb.PackageName('ipfs.dht'))
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Peer clone() => Peer()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Peer copyWith(void Function(Peer) updates) => super.copyWith((message) => updates(message as Peer)) as Peer;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Peer create() => Peer._();
+  Peer createEmptyInstance() => create();
+  static $pb.PbList<Peer> createRepeated() => $pb.PbList<Peer>();
+  @$core.pragma('dart2js:noInline')
+  static Peer getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Peer>(create);
+  static Peer? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get peerId => $_getN(0);
+  @$pb.TagNumber(1)
+  set peerId($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasPeerId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPeerId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.String> get addresses => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $core.Map<$core.String, $core.List<$core.int>> get connectionInfo => $_getMap(2);
+}
+
+/// Request to find a specific node
 class FindNodeRequest extends $pb.GeneratedMessage {
   factory FindNodeRequest({
-    $core.List<$core.int>? targetId,
+    $core.List<$core.int>? key,
     $core.int? numClosestPeers,
   }) {
     final $result = create();
-    if (targetId != null) {
-      $result.targetId = targetId;
+    if (key != null) {
+      $result.key = key;
     }
     if (numClosestPeers != null) {
       $result.numClosestPeers = numClosestPeers;
@@ -153,7 +222,7 @@ class FindNodeRequest extends $pb.GeneratedMessage {
   factory FindNodeRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FindNodeRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'targetId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
     ..a<$core.int>(2, _omitFieldNames ? '' : 'numClosestPeers', $pb.PbFieldType.OU3)
     ..hasRequiredFields = false
   ;
@@ -180,13 +249,13 @@ class FindNodeRequest extends $pb.GeneratedMessage {
   static FindNodeRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$core.int> get targetId => $_getN(0);
+  $core.List<$core.int> get key => $_getN(0);
   @$pb.TagNumber(1)
-  set targetId($core.List<$core.int> v) { $_setBytes(0, v); }
+  set key($core.List<$core.int> v) { $_setBytes(0, v); }
   @$pb.TagNumber(1)
-  $core.bool hasTargetId() => $_has(0);
+  $core.bool hasKey() => $_has(0);
   @$pb.TagNumber(1)
-  void clearTargetId() => clearField(1);
+  void clearKey() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.int get numClosestPeers => $_getIZ(1);
@@ -242,32 +311,28 @@ class FindNodeResponse extends $pb.GeneratedMessage {
   $core.List<Peer> get closerPeers => $_getList(0);
 }
 
-class Peer extends $pb.GeneratedMessage {
-  factory Peer({
-    $core.List<$core.int>? peerId,
-    $core.Iterable<$core.String>? addresses,
-    $core.Map<$core.String, $core.String>? metadata,
+/// Value storage messages
+class PutValueRequest extends $pb.GeneratedMessage {
+  factory PutValueRequest({
+    $core.List<$core.int>? key,
+    $core.List<$core.int>? value,
   }) {
     final $result = create();
-    if (peerId != null) {
-      $result.peerId = peerId;
+    if (key != null) {
+      $result.key = key;
     }
-    if (addresses != null) {
-      $result.addresses.addAll(addresses);
-    }
-    if (metadata != null) {
-      $result.metadata.addAll(metadata);
+    if (value != null) {
+      $result.value = value;
     }
     return $result;
   }
-  Peer._() : super();
-  factory Peer.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Peer.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  PutValueRequest._() : super();
+  factory PutValueRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory PutValueRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Peer', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'peerId', $pb.PbFieldType.OY)
-    ..pPS(2, _omitFieldNames ? '' : 'addresses')
-    ..m<$core.String, $core.String>(3, _omitFieldNames ? '' : 'metadata', entryClassName: 'Peer.MetadataEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('ipfs.dht'))
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PutValueRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
 
@@ -275,37 +340,148 @@ class Peer extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  Peer clone() => Peer()..mergeFromMessage(this);
+  PutValueRequest clone() => PutValueRequest()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Peer copyWith(void Function(Peer) updates) => super.copyWith((message) => updates(message as Peer)) as Peer;
+  PutValueRequest copyWith(void Function(PutValueRequest) updates) => super.copyWith((message) => updates(message as PutValueRequest)) as PutValueRequest;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Peer create() => Peer._();
-  Peer createEmptyInstance() => create();
-  static $pb.PbList<Peer> createRepeated() => $pb.PbList<Peer>();
+  static PutValueRequest create() => PutValueRequest._();
+  PutValueRequest createEmptyInstance() => create();
+  static $pb.PbList<PutValueRequest> createRepeated() => $pb.PbList<PutValueRequest>();
   @$core.pragma('dart2js:noInline')
-  static Peer getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Peer>(create);
-  static Peer? _defaultInstance;
+  static PutValueRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PutValueRequest>(create);
+  static PutValueRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$core.int> get peerId => $_getN(0);
+  $core.List<$core.int> get key => $_getN(0);
   @$pb.TagNumber(1)
-  set peerId($core.List<$core.int> v) { $_setBytes(0, v); }
+  set key($core.List<$core.int> v) { $_setBytes(0, v); }
   @$pb.TagNumber(1)
-  $core.bool hasPeerId() => $_has(0);
+  $core.bool hasKey() => $_has(0);
   @$pb.TagNumber(1)
-  void clearPeerId() => clearField(1);
+  void clearKey() => clearField(1);
 
   @$pb.TagNumber(2)
-  $core.List<$core.String> get addresses => $_getList(1);
+  $core.List<$core.int> get value => $_getN(1);
+  @$pb.TagNumber(2)
+  set value($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasValue() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearValue() => clearField(2);
+}
 
-  @$pb.TagNumber(3)
-  $core.Map<$core.String, $core.String> get metadata => $_getMap(2);
+class GetValueRequest extends $pb.GeneratedMessage {
+  factory GetValueRequest({
+    $core.List<$core.int>? key,
+  }) {
+    final $result = create();
+    if (key != null) {
+      $result.key = key;
+    }
+    return $result;
+  }
+  GetValueRequest._() : super();
+  factory GetValueRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetValueRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetValueRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetValueRequest clone() => GetValueRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetValueRequest copyWith(void Function(GetValueRequest) updates) => super.copyWith((message) => updates(message as GetValueRequest)) as GetValueRequest;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetValueRequest create() => GetValueRequest._();
+  GetValueRequest createEmptyInstance() => create();
+  static $pb.PbList<GetValueRequest> createRepeated() => $pb.PbList<GetValueRequest>();
+  @$core.pragma('dart2js:noInline')
+  static GetValueRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetValueRequest>(create);
+  static GetValueRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get key => $_getN(0);
+  @$pb.TagNumber(1)
+  set key($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKey() => clearField(1);
+}
+
+class GetValueResponse extends $pb.GeneratedMessage {
+  factory GetValueResponse({
+    $core.List<$core.int>? value,
+    $core.Iterable<Peer>? closerPeers,
+  }) {
+    final $result = create();
+    if (value != null) {
+      $result.value = value;
+    }
+    if (closerPeers != null) {
+      $result.closerPeers.addAll(closerPeers);
+    }
+    return $result;
+  }
+  GetValueResponse._() : super();
+  factory GetValueResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetValueResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetValueResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..pc<Peer>(2, _omitFieldNames ? '' : 'closerPeers', $pb.PbFieldType.PM, subBuilder: Peer.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetValueResponse clone() => GetValueResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetValueResponse copyWith(void Function(GetValueResponse) updates) => super.copyWith((message) => updates(message as GetValueResponse)) as GetValueResponse;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetValueResponse create() => GetValueResponse._();
+  GetValueResponse createEmptyInstance() => create();
+  static $pb.PbList<GetValueResponse> createRepeated() => $pb.PbList<GetValueResponse>();
+  @$core.pragma('dart2js:noInline')
+  static GetValueResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetValueResponse>(create);
+  static GetValueResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get value => $_getN(0);
+  @$pb.TagNumber(1)
+  set value($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasValue() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearValue() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<Peer> get closerPeers => $_getList(1);
 }
 
 
