@@ -1,14 +1,14 @@
-// lib/src/protocols/dht/kademlia_tree.dart
-import 'dart:async';
 import 'dart:math';
-
-import 'package:p2plib/p2plib.dart' as p2p;
-
-import 'kademlia_tree/kademlia_node.dart';
+import 'dart:async';
 import 'red_black_tree.dart';
-import '/../src/core/data_structures/node_stats.dart';
 import 'connection_statistics.dart';
+import 'kademlia_tree/kademlia_node.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
+import '/../src/core/data_structures/node_stats.dart';
 import '../../proto/generated/dht/dht_messages.pb.dart';
+// lib/src/protocols/dht/kademlia_tree.dart
+
+
 
 /// Represents a Kademlia tree for efficient peer routing and lookup.
 class KademliaTree {
@@ -29,16 +29,25 @@ class KademliaTree {
   Map<p2p.PeerId, NodeStats> _nodeStats = {};
 
   // Constructor
-  KademliaTree(p2p.PeerId localPeerId) {
-    _root = KademliaNode(localPeerId, 0, localPeerId);
+  KademliaTree(p2p.PeerId localPeerId, {KademliaNode? root}) {
+    _root = root ?? KademliaNode(
+      localPeerId,
+      0,
+      localPeerId,
+      lastSeen: DateTime.now().millisecondsSinceEpoch,
+    );
 
     // Pre-allocate buckets for 256-bit Peer IDs
     for (int i = 0; i < 256; i++) {
       _buckets.add(
         RedBlackTree<p2p.PeerId, KademliaNode>(
-          // TODO: Replace the comparison function with XOR distance comparison
-          compare: (p2p.PeerId a, p2p.PeerId b) =>
-              _xorDistance(a, b).compareTo(0),
+          compare: (p2p.PeerId a, p2p.PeerId b) {
+            // Calculate XOR distances from the local node to both peers
+            final distanceA = _xorDistance(_root!.peerId, a);
+            final distanceB = _xorDistance(_root!.peerId, b);
+            // Compare the distances to determine ordering
+            return distanceA.compareTo(distanceB);
+          },
         ),
       );
     }
@@ -263,6 +272,11 @@ class KademliaTree {
   // Clear recent contacts
   void clearRecentContacts() {
     _recentContacts.clear();
+  }
+
+  // Add setter for root
+  set root(KademliaNode? node) {
+    _root = node;
   }
 }
 
