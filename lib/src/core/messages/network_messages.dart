@@ -1,9 +1,14 @@
+import 'dart:typed_data';
+
 /// Base class for all network messages
 abstract class BaseMessage {
   final Uint8List data;
   final String protocol;
 
   BaseMessage(this.data, this.protocol);
+
+  // Add toBytes method that all messages must implement
+  Uint8List toBytes() => data;
 }
 
 /// DHT specific messages
