@@ -4,7 +4,7 @@ syntax = "proto3";
 package ipfs.dht;
 
 // Represents a peer participating in the DHT.
-message Peer {
+message DHTPeer {
   // Required: The ID of the peer.
   bytes id = 1;
 
@@ -21,7 +21,7 @@ message Record {
   bytes value = 2;
 
   // Optional: The publisher of the record.
-  Peer publisher = 3;
+  DHTPeer publisher = 3;
 
   // Optional: The sequence number of the record.
   uint64 sequence = 4;
@@ -39,7 +39,7 @@ message FindProvidersRequest {
 // Represents a response to a FindProviders request.
 message FindProvidersResponse {
   // Repeated: The providers found for the key.
-  repeated Peer providers = 1;
+  repeated DHTPeer providers = 1;
 
   // Optional: Whether or not closer peers were found during the search.
   bool closerPeers = 2;
@@ -51,7 +51,7 @@ message ProvideRequest {
   bytes key = 1;
 
   // Optional: The peer providing the record.
-  Peer provider = 2;
+  DHTPeer provider = 2;
 }
 
 // Represents a response to a Provide request.
@@ -72,7 +72,7 @@ message FindValueResponse {
   bytes value = 1;
 
   // Optional: The peers that are closer to the key (if no direct value is found).
-  repeated Peer closerPeers = 2;
+  repeated DHTPeer closerPeers = 2;
 }
 
 // Represents a request to store a value for a key.
@@ -99,5 +99,5 @@ message FindNodeRequest {
 // Represents a response to a FindNode request.
 message FindNodeResponse {
   // Repeated: The peers that are closer to the requested peer ID.
-  repeated Peer closerPeers = 1;
+  repeated DHTPeer closerPeers = 1;
 }
