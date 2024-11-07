@@ -1,11 +1,10 @@
 import 'dart:typed_data';
-import '../data_structures/cid.dart';
-import '../data_structures/block.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:fixnum/fixnum.dart' show Int64;
-import '../../proto/generated/core/car.pb.dart' as proto;
+import 'package:dart_ipfs/src/proto/generated/core/car.pb.dart' as proto;
 import '../../proto/generated/google/protobuf/any.pb.dart';
 // lib/src/core/data_structures/car.dart
-
 
 /// Represents a Content Addressable Archive (CAR) with v1 and v2 support.
 class CAR {
@@ -29,7 +28,7 @@ class CAR {
       characteristics: ['index-sorted', 'content-addressed'],
       roots: blocks.isNotEmpty ? [blocks.first.cid] : [],
     );
-    
+
     return CAR(blocks: blocks, header: header, index: index, version: 2);
   }
 
@@ -38,14 +37,12 @@ class CAR {
     final carProto = proto.CarProto()
       ..version = version
       ..characteristics.addAll(header.characteristics)
-      ..pragma.addAll(header.pragma);
+      ..pragma.addAll(header.pragma
+          .map((k, v) => MapEntry(k, Any()..value = v.toString().codeUnits)))
+      ..blocks.addAll(blocks.map((b) => b.toProto()));
 
-    if (version == 2 && index != null) {
+    if (index != null) {
       carProto.index = index!.toProto();
-    }
-
-    for (var block in blocks) {
-      carProto.blocks.add(block.toProto());
     }
 
     return carProto.writeToBuffer();
@@ -57,9 +54,8 @@ class CAR {
       throw UnsupportedError('Selective loading requires an index');
     }
 
-    final selectedBlocks = blocks.where(
-      (block) => cids.contains(block.cid.encode())
-    ).toList();
+    final selectedBlocks =
+        blocks.where((block) => cids.contains(block.cid.toString())).toList();
 
     return CAR(
       blocks: selectedBlocks,
@@ -80,7 +76,7 @@ class CarHeader {
   final int version;
   final List<String> characteristics;
   final List<CID> roots;
-  final Map<String, Any> pragma;
+  final Map<String, dynamic> pragma;
 
   CarHeader({
     required this.version,
@@ -88,6 +84,15 @@ class CarHeader {
     this.roots = const [],
     this.pragma = const {},
   });
+
+  proto.CarHeader toProto() {
+    return proto.CarHeader()
+      ..version = version
+      ..characteristics.addAll(characteristics)
+      ..roots.addAll(roots.map((r) => r.toProto()))
+      ..pragma.addAll(pragma
+          .map((k, v) => MapEntry(k, Any()..value = v.toString().codeUnits)));
+  }
 }
 
 /// Represents a CAR file index for fast block lookup
@@ -109,8 +114,8 @@ class CarIndex {
     var currentOffset = 0;
 
     for (var block in blocks) {
-      final cid = block.cid.encode();
-      final length = block.size();
+      final cid = block.cid.toString();
+      final length = block.size;
       index.addEntry(cid, currentOffset, length);
       currentOffset += length;
     }
