@@ -5,7 +5,7 @@
 
   // Import necessary proto definitions
   import "core/block.proto"; // Import BlockProto definition
-  import "core/cid.proto";   // Import CIDProto definition
+  import "core/cid.proto";   // Import IPFSCIDProto definition
   import "google/protobuf/empty.proto";
   // Response message for adding a block
   message AddBlockResponse {
@@ -28,7 +28,7 @@
   // The BlockStore service definition
   service BlockStoreService {
     rpc AddBlock(BlockProto) returns (AddBlockResponse);  // Adds a block
-    rpc GetBlock(CIDProto) returns (GetBlockResponse);    // Retrieves a block by CIDProto
-    rpc RemoveBlock(CIDProto) returns (RemoveBlockResponse); // Removes a block by CIDProto
+    rpc GetBlock(IPFSCIDProto) returns (GetBlockResponse);    // Retrieves a block by IPFSCIDProto
+    rpc RemoveBlock(IPFSCIDProto) returns (RemoveBlockResponse); // Removes a block by IPFSCIDProto
     rpc GetAllBlocks(google.protobuf.Empty) returns (stream BlockProto); // Retrieves all blocks
   }
