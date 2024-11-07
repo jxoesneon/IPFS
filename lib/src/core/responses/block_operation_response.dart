@@ -1,4 +1,5 @@
 import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 
 class BlockOperationResponse<T> {
   final bool success;
@@ -28,15 +29,18 @@ class BlockOperationResponse<T> {
 
   factory BlockOperationResponse.fromProto(dynamic proto) {
     if (proto is AddBlockResponse || proto is RemoveBlockResponse) {
-      return BlockOperationResponse(
+      return BlockOperationResponse<T>(
         success: proto.success,
         message: proto.message,
       );
     } else if (proto is GetBlockResponse) {
-      return BlockOperationResponse(
+      if (T != BlockProto) {
+        throw ArgumentError('Type mismatch: Expected BlockProto');
+      }
+      return BlockOperationResponse<T>(
         success: proto.found,
         message: proto.found ? 'Block found' : 'Block not found',
-        data: proto.found ? proto.block : null,
+        data: proto.block as T?,
       );
     }
     throw ArgumentError('Unsupported proto type');
