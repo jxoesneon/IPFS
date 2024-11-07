@@ -1,52 +1,36 @@
 import '../../proto/generated/core/node_type.pb.dart';
 // lib/src/core/data_structures/node_type.dart
 
-extension NodeTypeProtoExtension on NodeTypeProto {
-  /// Converts the [NodeTypeProto] to its string representation.
-  String get name {
+enum NodeType { unknown, file, directory, symlink, raw }
+
+extension NodeTypeExtension on NodeType {
+  int toProto() {
     switch (this) {
-      case NodeTypeProto.NODE_TYPE_FILE:
-        return 'FILE';
-      case NodeTypeProto.NODE_TYPE_DIRECTORY:
-        return 'DIRECTORY';
-      case NodeTypeProto.NODE_TYPE_SYMLINK:
-        return 'SYMLINK';
-      case NodeTypeProto.NODE_TYPE_REGULAR:
-        return 'REGULAR';
-      case NodeTypeProto.NODE_TYPE_BOOTSTRAP:
-        return 'BOOTSTRAP';
-      case NodeTypeProto.NODE_TYPE_RELAY:
-        return 'RELAY';
-      case NodeTypeProto.NODE_TYPE_GATEWAY:
-        return 'GATEWAY';
-      case NodeTypeProto.NODE_TYPE_ARCHIVAL:
-        return 'ARCHIVAL';
-      default:
-        return 'UNKNOWN';
+      case NodeType.unknown:
+        return 0;
+      case NodeType.file:
+        return 1;
+      case NodeType.directory:
+        return 2;
+      case NodeType.symlink:
+        return 3;
+      case NodeType.raw:
+        return 4;
     }
   }
 
-  /// Converts a string representation to a [NodeTypeProto].
-  static NodeTypeProto fromName(String name) {
-    switch (name.toUpperCase()) {
-      case 'FILE':
-        return NodeTypeProto.NODE_TYPE_FILE;
-      case 'DIRECTORY':
-        return NodeTypeProto.NODE_TYPE_DIRECTORY;
-      case 'SYMLINK':
-        return NodeTypeProto.NODE_TYPE_SYMLINK;
-      case 'REGULAR':
-        return NodeTypeProto.NODE_TYPE_REGULAR;
-      case 'BOOTSTRAP':
-        return NodeTypeProto.NODE_TYPE_BOOTSTRAP;
-      case 'RELAY':
-        return NodeTypeProto.NODE_TYPE_RELAY;
-      case 'GATEWAY':
-        return NodeTypeProto.NODE_TYPE_GATEWAY;
-      case 'ARCHIVAL':
-        return NodeTypeProto.NODE_TYPE_ARCHIVAL;    
+  static NodeType fromProto(int value) {
+    switch (value) {
+      case 1:
+        return NodeType.file;
+      case 2:
+        return NodeType.directory;
+      case 3:
+        return NodeType.symlink;
+      case 4:
+        return NodeType.raw;
       default:
-        return NodeTypeProto.NODE_TYPE_UNSPECIFIED;
+        return NodeType.unknown;
     }
   }
 }
