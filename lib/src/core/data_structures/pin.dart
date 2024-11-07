@@ -1,12 +1,8 @@
-import 'dart:collection';
-import 'dart:typed_data';
-import 'package:cbor/cbor.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/cid.dart'; // Import CID class for handling CIDs
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
-import 'package:cbor/simple.dart'; // Use simple CBOR API
 // lib/src/core/data_structures/pin.dart
 
 /// Represents a pin in the IPFS network.
