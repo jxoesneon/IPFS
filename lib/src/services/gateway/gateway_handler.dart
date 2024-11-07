@@ -14,7 +14,7 @@ class GatewayHandler {
   /// Handles path-based gateway requests (/ipfs/ and /ipns/)
   Future<Response> handlePath(Request request) async {
     final path = request.url.path;
-    
+
     // Parse IPFS path
     if (path.startsWith('ipfs/')) {
       final cidStr = path.substring(5).split('/')[0];
@@ -22,8 +22,10 @@ class GatewayHandler {
         final block = await _getBlockByCid(cidStr);
         if (block != null) {
           final contentTypeHandler = ContentTypeHandler();
-          final contentType = contentTypeHandler.detectContentType(block, filename: path.split('/').last);
-          final processedContent = contentTypeHandler.processContent(block, contentType);
+          final contentType = contentTypeHandler.detectContentType(block,
+              filename: path.split('/').last);
+          final processedContent =
+              contentTypeHandler.processContent(block, contentType);
 
           return Response.ok(
             processedContent,
@@ -38,7 +40,7 @@ class GatewayHandler {
         return Response.internalServerError(body: 'Error: $e');
       }
     }
-    
+
     return Response.notFound('Invalid IPFS path');
   }
 
@@ -67,7 +69,7 @@ class GatewayHandler {
         return Response.internalServerError(body: 'Error: $e');
       }
     }
-    
+
     return Response.badRequest(body: 'Invalid IPFS subdomain');
   }
 
@@ -109,9 +111,9 @@ class GatewayHandler {
   // Helper method to get a block by CID string
   Future<Block?> _getBlockByCid(String cidStr) async {
     try {
-      // Convert CID string to CIDProto
-      final cidProto = CIDProto()..codec = cidStr;
-      final response = blockStore.getBlock(cidProto);
+      // Convert CID string to IPFSCIDProto
+      final IPFSCIDProto = IPFSCIDProto()..codec = cidStr;
+      final response = blockStore.getBlock(IPFSCIDProto);
       if (response.found) {
         return Block.fromProto(response.block);
       }
