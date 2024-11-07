@@ -4,58 +4,58 @@ syntax = "proto3";
 package ipfs.core.data_structures;
 
 // Represents a single entry in the directory
-message DirectoryEntry {
-    string name = 1;        // Name of the file or directory
-    bytes hash = 2;         // Hash of the file or directory (CID)
-    int64 size = 3;         // Size of the file in bytes
-    bool is_directory = 4;  // Indicates if the entry is a directory
+message DirectoryEntryProto {
+    string name = 1;
+    bytes hash = 2;
+    int64 size = 3;
+    bool is_directory = 4;
 }
 
 // Represents the entire directory structure
-message Directory {
-    repeated DirectoryEntry entries = 1;   // List of files/directories inside this directory
-    string path = 2;                       // Path to the directory
-    int64 total_size = 3;                  // Total size of all files in the directory
-    int32 number_of_files = 4;             // Total number of files in the directory
-    int32 number_of_directories = 5;       // Total number of directories in the directory
+message DirectoryProto {
+    repeated DirectoryEntryProto entries = 1;
+    string path = 2;
+    int64 total_size = 3;
+    int32 number_of_files = 4;
+    int32 number_of_directories = 5;
 }
 
 // Requests to add a new directory entry
 message AddDirectoryEntryRequest {
-    DirectoryEntry entry = 1;  // Directory entry to add
+    DirectoryEntryProto entry = 1;
 }
 
 // Response after adding a new directory entry
 message AddDirectoryEntryResponse {
-    bool success = 1;          // Indicates whether the operation was successful
+    bool success = 1;
 }
 
 // Requests to remove a directory entry
 message RemoveDirectoryEntryRequest {
-    string name = 1;  // Name of the file or directory to remove
+    string name = 1;
 }
 
 // Response after removing a directory entry
 message RemoveDirectoryEntryResponse {
-    bool success = 1;          // Indicates whether the operation was successful
+    bool success = 1;
 }
 
 // Requests to list all entries in a directory
 message ListDirectoryRequest {
-    string path = 1;  // Path of the directory to list
+    string path = 1;
 }
 
 // Response containing the list of directory entries
 message ListDirectoryResponse {
-    repeated DirectoryEntry entries = 1;  // Directory entries
+    repeated DirectoryEntryProto entries = 1;
 }
 
 // Request to get the details of a specific directory entry
 message GetDirectoryEntryRequest {
-    string name = 1;  // Name of the directory entry to retrieve
+    string name = 1;
 }
 
 // Response containing the directory entry details
 message GetDirectoryEntryResponse {
-    DirectoryEntry entry = 1;  // Directory entry details
+    DirectoryEntryProto entry = 1;
 }
