@@ -15,7 +15,7 @@ enum NodeColor {
 }
 
 // Defines a message representing a peer's unique identifier.
-message PeerId {
+message RBTreePeerId {
   // The ID of the peer, represented as a string.
   string id = 1; 
 }
@@ -23,7 +23,7 @@ message PeerId {
 // Defines a message representing a node in a data structure.
 message Node {
   // The unique identifier of the peer associated with this node.
-  PeerId peer_id = 1; 
+  RBTreePeerId peer_id = 1; 
   // Arbitrary data associated with this node, represented as bytes.
   bytes data = 2;  
 }
