@@ -9,21 +9,24 @@ import '../../transport/p2plib_router.dart';
 
 /// The main class representing an IPFS node.
 class IPFSNode {
-  final BitswapHandler bitswapHandler;
-  final DHTHandler dhtHandler;
-  final DatastoreHandler datastoreHandler;
-  final RoutingHandler routingHandler;
-  final NetworkHandler networkHandler;
+  late final BitswapHandler bitswapHandler;
+  late final DHTHandler dhtHandler;
+  late final DatastoreHandler datastoreHandler;
+  late final RoutingHandler routingHandler;
+  late final NetworkHandler networkHandler;
   late final PubSubHandler pubSubHandler;
 
-  IPFSNode(config)
-      : bitswapHandler = BitswapHandler(config, P2plibRouter(config)),
-        dhtHandler = DHTHandler(config, P2plibRouter(config)),
-        pubSubHandler = PubSubHandler(
-            P2plibRouter(config), config.nodeId, config.networkEvents),
-        datastoreHandler = DatastoreHandler(config),
-        routingHandler = RoutingHandler(config),
-        networkHandler = NetworkHandler(config);
+  IPFSNode(config) {
+    networkHandler = NetworkHandler(config);
+    networkHandler.setIpfsNode(this);
+
+    bitswapHandler = BitswapHandler(config, P2plibRouter(config));
+    dhtHandler = DHTHandler(config, P2plibRouter(config), networkHandler);
+    pubSubHandler = PubSubHandler(
+        P2plibRouter(config), config.nodeId, config.networkEvents);
+    datastoreHandler = DatastoreHandler(config);
+    routingHandler = RoutingHandler(config);
+  }
 
   /// Starts the IPFS node.
   Future<void> start() async {
