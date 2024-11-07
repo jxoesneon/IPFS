@@ -2,21 +2,28 @@
 
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import '../../utils/encoding.dart';
 
 /// Utility class for common IPFS operations.
 class IPFSUtils {
   /// Validates if a given string is a valid CID.
   static bool isValidCID(String cid) {
-    // Implement actual CID validation logic
-    // This is a placeholder; replace with actual CID validation logic
-    return cid.isNotEmpty && RegExp(r'^[a-zA-Z0-9]+$').hasMatch(cid);
+    try {
+      final bytes = EncodingUtils.fromBase58(cid);
+      return bytes.length > 2 && EncodingUtils.isValidCIDBytes(bytes);
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Validates if a given string is a valid peer ID.
   static bool isValidPeerID(String peerId) {
-    // Implement actual Peer ID validation logic
-    // This is a placeholder; replace with actual Peer ID validation logic
-    return peerId.isNotEmpty && RegExp(r'^[a-zA-Z0-9]+$').hasMatch(peerId);
+    try {
+      final bytes = EncodingUtils.fromBase58(peerId);
+      return bytes.length == 32; // Expected length for peer ID
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Encodes a message using Base64 encoding.
@@ -39,9 +46,9 @@ class IPFSUtils {
 
   /// Extracts a CID from an HTTP response body.
   static String? extractCIDFromResponse(String responseBody) {
-    // Placeholder logic to extract CID from response body
-    // Implement actual extraction logic based on response format
-    final match = RegExp(r'Qm[1-9A-HJ-NP-Za-km-z]{44}').firstMatch(responseBody);
-    return match?.group(0);
+    final match =
+        RegExp(r'Qm[1-9A-HJ-NP-Za-km-z]{44}').firstMatch(responseBody);
+    final cid = match?.group(0);
+    return cid != null && isValidCID(cid) ? cid : null;
   }
 }
