@@ -1,3 +1,8 @@
+import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/data_structures/peer.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import '../../proto/generated/dht/dht.pb.dart';
 import '../../proto/generated/core/peer.pb.dart';
@@ -32,7 +37,7 @@ class IPFSPeer {
   /// Converts from DHTPeer (DHT proto message)
   factory IPFSPeer.fromDHTPeer(DHTPeer peer) {
     return IPFSPeer(
-      id: p2p.PeerId(value: peer.id),
+      id: p2p.PeerId(value: Uint8List.fromList(peer.id)),
       addresses: peer.addrs
           .map((addr) => parseMultiaddrString(addr))
           .whereType<p2p.FullAddress>()
