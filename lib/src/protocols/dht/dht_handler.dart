@@ -1,4 +1,5 @@
-class DHTHandler {
+// Change from DHTHandler to IDHTHandler to indicate it's an interface
+abstract class IDHTHandler {
   // Required operations
   Future<List<PeerInfo>> findPeer(PeerID id);
   Future<void> provide(CID cid);
