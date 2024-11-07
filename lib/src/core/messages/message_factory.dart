@@ -1,21 +1,20 @@
+import 'dart:typed_data';
+
 import 'package:fixnum/fixnum.dart';
-import 'package:protobuf/protobuf.dart';
-import '../generated/base_messages.pb.dart';
-import '../generated/dht_messages.pb.dart';
-import '../generated/bitswap_messages.pb.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/dht_messages.pb.dart';
 
 class MessageFactory {
   static IPFSMessage createBaseMessage({
     required String protocolId,
     required Uint8List payload,
     required String senderId,
-    required MessageType type,
+    required IPFSMessage_MessageType type,
   }) {
     return IPFSMessage()
       ..protocolId = protocolId
       ..payload = payload
-      ..timestamp = Int64.now()
+      ..timestamp = Int64(DateTime.now().millisecondsSinceEpoch)
       ..senderId = senderId
       ..type = type;
   }
@@ -24,15 +23,20 @@ class MessageFactory {
     required Uint8List targetId,
     required int numClosestPeers,
   }) {
-    final request = FindNodeRequest()
-      ..targetId = targetId
+    final findNodeRequest = FindNodeRequest()
+      ..key = targetId
       ..numClosestPeers = numClosestPeers;
 
-    return DHTMessage()
+    final message = DHTMessage()
       ..messageId = _generateMessageId()
       ..type = DHTMessage_MessageType.FIND_NODE
       ..key = targetId
-      ..timestamp = Int64.now();
+      ..record = findNodeRequest.writeToBuffer()
+      ..timestamp = Int64(DateTime.now().millisecondsSinceEpoch);
+
+    message.closerPeers.addAll([]);
+
+    return message;
   }
 
   static String _generateMessageId() =>
