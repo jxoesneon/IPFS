@@ -1,21 +1,28 @@
-// lib/src/ipfs.dart
-
 import 'dart:typed_data';
-
+import 'network/router.dart';
+import 'storage/datastore.dart';
 import 'core/config/config.dart';
 import 'core/ipfs_node/ipfs_node.dart';
-import 'core/data_structures/block.dart';
 import 'core/data_structures/link.dart';
+import 'core/data_structures/peer.dart';
 import 'core/data_structures/node_stats.dart';
-import 'transport/p2plib_router.dart'; // Import P2plibRouter
+import 'package:dart_ipfs/src/core/ipfs_node/bitswap_handler.dart';
+
+// lib/src/ipfs.dart
 
 // Main API class for interacting with the IPFS server
 class IPFS {
   // Private constructor to enforce factory pattern
-  IPFS._(this._node);
+  IPFS._(this._node)
+      : _datastore = _node.datastore,
+        _router = _node.router,
+        _bitswap = _node.bitswap;
 
   // The underlying IPFSNode instance
   final IPFSNode _node;
+  final Datastore _datastore;
+  final Router _router;
+  final BitswapHandler _bitswap;
 
   /// Creates a new IPFS node.
   ///
@@ -46,20 +53,15 @@ class IPFS {
     // Gather the actual statistics from the node's components
 
     // 1. Get datastore stats
-    final numBlocks = await _datastore
-        .numBlocks(); // You'll need to implement numBlocks() in Datastore
-    final datastoreSize =
-        await _datastore.size(); // You'll need to implement size() in Datastore
+    final numBlocks = _datastore.numBlocks;
+    final datastoreSize = _datastore.size;
 
     // 2. Get router stats
     final numConnectedPeers = _router.connectedPeers.length;
-    // You might need to adjust this based on how your p2plib router provides connected peers
 
     // 3. Get Bitswap stats
-    final bandwidthSent = _bitswap
-        .bandwidthSent; // You'll need to add bandwidth tracking to Bitswap
-    final bandwidthReceived = _bitswap
-        .bandwidthReceived; // You'll need to add bandwidth tracking to Bitswap
+    final bandwidthSent = _bitswap.bandwidthSent;
+    final bandwidthReceived = _bitswap.bandwidthReceived;
 
     // 4. Construct and return the NodeStats object
     return NodeStats(
@@ -119,12 +121,16 @@ class IPFS {
 
   /// Unpins a CID.
   Future<void> unpin(String cid) async {
-    return _node.unpin(cid);
+    final success = await _node.unpin(cid);
+    if (!success) {
+      throw Exception('Failed to unpin CID: $cid');
+    }
   }
 
   /// Resolves an IPNS name to its corresponding CID.
   Future<String> resolveIPNS(String ipnsName) async {
-    return _node.resolveIPNS(ipnsName);
+    final resolvedCid = await _node.dhtHandler.resolveIPNS(ipnsName);
+    return resolvedCid;
   }
 
   /// Publishes an IPNS record.
@@ -146,7 +152,6 @@ class IPFS {
 
   /// Finds providers for a CID.
   Future<List<String>> findProviders(String cid) async {
-    // Assuming the findProviders method in _node returns List<Peer> and Peer has a toString() method
     return _node
         .findProviders(cid)
         .then((peers) => peers.map((peer) => peer.toString()).toList());
@@ -154,8 +159,7 @@ class IPFS {
 
   /// Requests a block from the network using Bitswap.
   Future<void> requestBlock(String cid, String peerID) async {
-    // Assuming the requestBlock method in _node takes a Peer object, create a Peer from peerID
-    final peer = Peer.fromId(peerID); // You'll need to implement the Peer class
+    final peer = Peer.fromId(peerID);
     return _node.requestBlock(cid, peer);
   }
 
@@ -173,5 +177,4 @@ class IPFS {
   Future<String> resolveDNSLink(String domainName) async {
     return _node.resolveDNSLink(domainName);
   }
-
 }
