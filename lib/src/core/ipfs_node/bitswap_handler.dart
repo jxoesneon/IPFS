@@ -1,13 +1,12 @@
 import 'dart:io';
 import 'dart:async';
-import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/ledger.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/wantlist.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as message;
 
 /// Handles Bitswap protocol operations for an IPFS node following the Bitswap 1.2.0 specification
@@ -20,7 +19,9 @@ class BitswapHandler {
   static const String _protocolId = '/ipfs/bitswap/1.2.0';
   bool _running = false;
 
-  BitswapHandler(this._blockStore, this._router);
+  BitswapHandler(config, this._blockStore) : _router = P2plibRouter(config) {
+    _setupHandlers();
+  }
 
   /// Starts the Bitswap handler
   Future<void> start() async {
@@ -243,13 +244,6 @@ class BitswapHandler {
 
   Future<void> handleWantRequest(String cidStr) async {
     try {
-      final proto = IPFSCIDProto()
-        ..version = IPFSCIDVersion.IPFS_CID_VERSION_1
-        ..multihash = Uint8List.fromList(cidStr.codeUnits)
-        ..codec = 'raw'
-        ..multibasePrefix = 'base58btc';
-
-      // Create a custom Message directly without creating unused protobuf message
       final customMessage = message.Message();
       customMessage.addWantlistEntry(cidStr,
           priority: 1, wantType: message.WantType.block, sendDontHave: true);
@@ -258,6 +252,30 @@ class BitswapHandler {
     } catch (e) {
       print('Error handling want request: $e');
       rethrow;
+    }
+  }
+
+  void _setupHandlers() {
+    // Register the Bitswap protocol handler
+    _router.addMessageHandler(_protocolId, _handlePacket);
+
+    // Register the protocol with the router
+    _router.registerProtocol(_protocolId);
+
+    print('Bitswap protocol handlers initialized');
+  }
+
+  Future<Block?> wantBlock(String cid) async {
+    if (!_running) {
+      throw StateError('BitswapHandler is not running');
+    }
+
+    try {
+      final blocks = await want([cid]);
+      return blocks.isNotEmpty ? blocks.first : null;
+    } catch (e) {
+      print('Error requesting block $cid: $e');
+      return null;
     }
   }
 }
