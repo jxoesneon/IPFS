@@ -135,7 +135,7 @@ class MessageHandler {
       CID cid, Uint8List data, String contentType) async {
     try {
       // Create a new block with the processed data
-      final block = Block.fromData(data, cid);
+      final block = await Block.fromData(data, format: 'raw');
 
       // Store the block in the datastore
       final blockStore = BlockStore();
