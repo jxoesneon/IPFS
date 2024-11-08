@@ -1,9 +1,9 @@
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
-import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
-import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
+import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 
 class BlockStore {
   final Map<String, Block> _blocks = {};
@@ -64,5 +64,15 @@ class BlockStore {
       ..codec = 'raw'
       ..multibasePrefix = 'base58btc';
     return proto;
+  }
+
+  Future<bool> has(String cid) async {
+    try {
+      final block = _blocks[cid];
+      return block != null;
+    } catch (e) {
+      print('Error checking block existence: $e');
+      return false;
+    }
   }
 }
