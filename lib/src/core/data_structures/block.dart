@@ -1,127 +1,85 @@
 import 'dart:typed_data';
+import 'base_block.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/interfaces/block.dart';
 import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
     as bitswap_pb;
-import 'package:dart_ipfs/src/utils/encoding.dart';
-import 'package:dart_ipfs/src/core/interfaces/block.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
 
-class Block implements IBlock {
-  @override
-  final Uint8List data;
+/// Represents a block of data in IPFS
+class Block extends BaseBlock implements IBlock {
+  final String format;
 
-  @override
-  final CID cid;
+  const Block._({
+    required CID cid,
+    required Uint8List data,
+    required this.format,
+  }) : super(data, cid);
 
-  const Block(this.data, this.cid);
-
-  factory Block.fromProto(BlockProto proto) {
-    return Block(
-      Uint8List.fromList(proto.data),
-      CID.fromProto(proto.cid),
+  /// Creates a new block from raw data
+  static Future<Block> fromData(Uint8List data, {String format = 'raw'}) async {
+    final cid = await CID.computeForData(data, codec: format);
+    return Block._(
+      cid: cid,
+      data: data,
+      format: format,
     );
   }
 
-  factory Block.fromBitswapProto(bitswap_pb.Block proto) {
-    return Block(
-      Uint8List.fromList(proto.data),
-      CID.fromBytes(Uint8List.fromList(proto.prefix), 'raw'),
+  /// Creates a block from bytes using BaseBlock's fromBytes method
+  static Block fromBytes(Uint8List bytes) {
+    return BaseBlock.fromBytes<Block>(
+      bytes,
+      (data, cid) => Block._(
+        data: data,
+        cid: cid,
+        format: 'dag-pb', // Default format for fromBytes
+      ),
     );
-  }
-
-  factory Block.fromBytes(Uint8List bytes) {
-    final cidLength = bytes[0];
-    final cidBytes = bytes.sublist(1, cidLength + 1);
-    final data = bytes.sublist(cidLength + 1);
-    final cid = CID.fromBytes(cidBytes, 'raw');
-    return Block(data, cid);
-  }
-
-  factory Block.fromData(Uint8List data, CID cid) {
-    return Block(data, cid);
   }
 
   @override
   int get size => data.length;
 
+  /// Converts the block to its protobuf representation
   @override
   BlockProto toProto() {
     return BlockProto()
-      ..data = data
       ..cid = cid.toProto()
-      ..format = 'raw';
+      ..data = data
+      ..format = format;
   }
 
+  /// Converts the block to its Bitswap protobuf representation
   @override
   bitswap_pb.Block toBitswapProto() {
     return bitswap_pb.Block()
-      ..prefix = EncodingUtils.cidToBytes(cid)
+      ..prefix = cid.toBytes()
       ..data = data;
   }
 
-  @override
-  Uint8List toBytes() {
-    final bytes = BytesBuilder();
-    final cidBytes = EncodingUtils.cidToBytes(cid);
-    bytes.addByte(cidBytes.length);
-    bytes.add(cidBytes);
-    bytes.add(data);
-    return bytes.toBytes();
+  /// Creates a block from its protobuf representation
+  static Block fromProto(BlockProto proto) {
+    return Block._(
+      cid: CID.fromProto(proto.cid),
+      data: Uint8List.fromList(proto.data),
+      format: proto.format,
+    );
   }
 
+  /// Creates a block from its Bitswap protobuf representation
+  static Block fromBitswapProto(bitswap_pb.Block proto) {
+    return Block._(
+      cid: CID.fromBytes(Uint8List.fromList(proto.prefix), 'raw'),
+      data: Uint8List.fromList(proto.data),
+      format: 'raw',
+    );
+  }
+
+  /// Validates the block's data against its CID
   @override
   bool validate() {
-    try {
-      // Verify that the block's CID matches its content
-      final computedCid = CID.fromContent(
-        'raw',
-        content: data,
-      );
-      return computedCid.encode() == cid.encode();
-    } catch (e) {
-      print('Block validation error: $e');
-      return false;
-    }
-  }
-}
-
-class BlockFactory implements IBlockFactory<Block> {
-  @override
-  Block fromProto(BlockProto proto) {
-    return Block(
-      Uint8List.fromList(proto.data),
-      CID.fromProto(proto.cid),
-    );
-  }
-
-  @override
-  Block fromBitswapProto(bitswap_pb.Block proto) {
-    return Block(
-      Uint8List.fromList(proto.data),
-      CID.fromBytes(Uint8List.fromList(proto.prefix), 'dag-pb'),
-    );
-  }
-
-  @override
-  Block fromBytes(Uint8List bytes) {
-    if (bytes.length < 3) {
-      throw FormatException('Invalid block bytes: too short');
-    }
-
-    final cidLength = bytes[0];
-    if (bytes.length < cidLength + 2) {
-      throw FormatException('Invalid block bytes: incomplete CID');
-    }
-
-    final cidBytes = bytes.sublist(1, cidLength + 1);
-    final blockData = bytes.sublist(cidLength + 1);
-    final cid = CID.fromBytes(cidBytes, 'dag-pb');
-
-    return Block(blockData, cid);
-  }
-
-  @override
-  Block fromData(Uint8List data, CID cid) {
-    return Block(data, cid);
+    final computedCid = CID.computeForDataSync(data, codec: format);
+    return computedCid == cid;
   }
 }
