@@ -57,4 +57,17 @@ class LedgerManager {
   void clearAllLedgers() {
     _ledgers.clear();
   }
+
+  /// Gets the total bandwidth statistics for all ledgers
+  Map<String, int> getBandwidthStats() {
+    int totalSent = 0;
+    int totalReceived = 0;
+
+    for (final ledger in _ledgers.values) {
+      totalSent += ledger.sentBytes;
+      totalReceived += ledger.receivedBytes;
+    }
+
+    return {'sent': totalSent, 'received': totalReceived};
+  }
 }
