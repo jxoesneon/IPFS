@@ -1,6 +1,7 @@
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
+import 'package:crypto/crypto.dart';
 import 'package:dart_ipfs/src/utils/encoding.dart';
+import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 
 class CID {
   final IPFSCIDVersion version;
@@ -69,5 +70,40 @@ class CID {
       default:
         throw UnsupportedError('Unsupported CID version: $version');
     }
+  }
+
+  /// Computes a CID for the given data using the specified codec
+  static Future<CID> computeForData(Uint8List data, {String codec = 'raw'}) async {
+    // Compute SHA-256 hash of the data
+    final hash = sha256.convert(data);
+    final multihash = [0x12, hash.bytes.length, ...hash.bytes]; // 0x12 is SHA-256 identifier
+
+    return CID(
+      version: IPFSCIDVersion.IPFS_CID_VERSION_1,
+      multihash: multihash,
+      codec: codec,
+      multibasePrefix: 'base58btc',
+    );
+  }
+
+  /// Synchronous version of computeForData
+  static CID computeForDataSync(Uint8List data, {String codec = 'raw'}) {
+    final hash = sha256.convert(data);
+    final multihash = [0x12, hash.bytes.length, ...hash.bytes];
+
+    return CID(
+      version: IPFSCIDVersion.IPFS_CID_VERSION_1,
+      multihash: multihash,
+      codec: codec,
+      multibasePrefix: 'base58btc',
+    );
+  }
+
+  /// Converts CID to bytes for network transmission
+  Uint8List toBytes() {
+    final bytes = BytesBuilder();
+    bytes.addByte(_versionToIndex(version));
+    bytes.add(multihash);
+    return bytes.toBytes();
   }
 }
