@@ -1,11 +1,11 @@
-// lib/src/core/data_structures/peer.dart
-
 import 'dart:io';
-
 import 'package:fixnum/fixnum.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:p2plib/p2plib.dart' as p2p; // Import p2plib for peer management
 import 'package:dart_ipfs/src/proto/generated/core/peer.pb.dart'; // Import the generated Protobuf file
-import 'package:dart_ipfs/src/utils/base58.dart';
+// lib/src/core/data_structures/peer.dart
+
+
 
 /// Represents a peer in the IPFS network.
 class Peer {
@@ -49,6 +49,15 @@ class Peer {
   @override
   String toString() {
     return 'Peer{id: ${id.value}, addresses: ${addresses.map((addr) => addr.toString()).toList()}, latency: $latency, agentVersion: $agentVersion}';
+  }
+
+  factory Peer.fromId(String peerId) {
+    return Peer(
+      id: p2p.PeerId(value: Base58().base58Decode(peerId)),
+      addresses: [], // Empty list since we don't know addresses yet
+      latency: 0,   // Default latency
+      agentVersion: '', // Empty version since we don't know it yet
+    );
   }
 }
 
