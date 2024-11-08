@@ -3,9 +3,12 @@ import 'dart:convert';
 import 'ipfs_node.dart';
 import 'dart:typed_data';
 import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/network/router.dart';
+import 'package:dart_ipfs/src/core/config/config.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
+
 // lib/src/core/ipfs_node/network_handler.dart
 
 /// Handles network operations for an IPFS node.
@@ -16,9 +19,11 @@ class NetworkHandler {
   late final StreamController<NetworkEvent> _networkEventController =
       StreamController<NetworkEvent>.broadcast();
 
-  NetworkHandler(config)
-      : _circuitRelayClient = CircuitRelayClient(config),
-        _router = P2plibRouter(config) {
+  final IPFSConfig _config;
+
+  NetworkHandler(this._config)
+      : _router = P2plibRouter(_config),
+        _circuitRelayClient = CircuitRelayClient(P2plibRouter(_config)) {
     // Start listening for network events
     _listenForNetworkEvents();
   }
@@ -152,7 +157,9 @@ class NetworkHandler {
     });
   }
 
-  // Add setter method
+  // Create Router instance with the config
+  Router get router => Router(_config);
+
   void setIpfsNode(IPFSNode node) {
     ipfsNode = node;
   }
