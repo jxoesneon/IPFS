@@ -18,6 +18,8 @@ class BitswapHandler {
   final Map<String, Completer<Block>> _pendingBlocks = {};
   static const String _protocolId = '/ipfs/bitswap/1.2.0';
   bool _running = false;
+  int _bandwidthSent = 0;
+  int _bandwidthReceived = 0;
 
   BitswapHandler(config, this._blockStore) : _router = P2plibRouter(config) {
     _setupHandlers();
@@ -83,6 +85,7 @@ class BitswapHandler {
       ledger.addReceivedBytes(blocks
           .map((Block? b) => b?.data.length ?? 0)
           .fold<int>(0, (sum, size) => (sum + size).toInt()));
+      _updateBandwidthStats();
     }
   }
 
@@ -123,6 +126,7 @@ class BitswapHandler {
           // Update sent bytes in ledger
           final ledger = _ledgerManager.getLedger(fromPeer);
           ledger.addSentBytes(response.block.data.length);
+          _updateBandwidthStats();
         } catch (error) {
           print('Error sending block to peer $fromPeer: $error');
         }
@@ -277,5 +281,14 @@ class BitswapHandler {
       print('Error requesting block $cid: $e');
       return null;
     }
+  }
+
+  int get bandwidthSent => _bandwidthSent;
+  int get bandwidthReceived => _bandwidthReceived;
+
+  void _updateBandwidthStats() {
+    final stats = _ledgerManager.getBandwidthStats();
+    _bandwidthSent = stats['sent'] ?? 0;
+    _bandwidthReceived = stats['received'] ?? 0;
   }
 }
