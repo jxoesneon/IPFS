@@ -1,15 +1,19 @@
-import '../generated/connection.pb.dart';
-import '../core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/types/p2p_types.dart';
+import 'package:dart_ipfs/src/proto/generated/connection.pb.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:fixnum/fixnum.dart';
 
 class ConnectionManager {
   final Map<String, ConnectionState> _connections = {};
   final MetricsCollector _metrics;
 
+  ConnectionManager(this._metrics);
+
   Future<void> handleNewConnection(LibP2PPeerId peerId) async {
     final state = ConnectionState()
       ..peerId = peerId.toString()
       ..status = ConnectionState_Status.CONNECTED
-      ..connectedAt = Int64.now()
+      ..connectedAt = Int64(DateTime.now().millisecondsSinceEpoch)
       ..metadata.addAll({
         'client_version': 'ipfs-dart/1.0.0',
         'protocols': ['dht', 'bitswap'].join(','),
