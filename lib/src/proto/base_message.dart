@@ -18,7 +18,13 @@ abstract class BaseProtoMessage extends GeneratedMessage {
   }
 
   /// Create a deep copy of the message
-  T clone<T extends BaseProtoMessage>() {
-    return deepCopy() as T;
+  @override
+  GeneratedMessage clone() {
+    return deepCopy();
+  }
+
+  /// Type-safe clone method
+  T cloneAs<T extends BaseProtoMessage>() {
+    return clone() as T;
   }
 }
