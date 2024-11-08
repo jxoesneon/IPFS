@@ -72,8 +72,11 @@ class BitSwapHandler {
       try {
         final cid = CID.fromBytes(Uint8List.fromList(block.cid), 'dag-pb');
 
-        // Create a Block instance with positional parameters
-        final domainBlock = domain.Block(Uint8List.fromList(block.data), cid);
+        // Create a Block instance using the fromData factory constructor
+        final domainBlock = await domain.Block.fromData(
+          Uint8List.fromList(block.data),
+          format: 'dag-pb',
+        );
 
         // Store the block in the blockstore
         await _blockStore.addBlock(domainBlock.toProto());
