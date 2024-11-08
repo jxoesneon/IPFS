@@ -13,6 +13,8 @@ class ContentTypeHandler {
 
   final _directoryParser = DirectoryParser();
 
+  final Map<String, String> _contentTypeCache = {};
+
   /// Detects the content type of a block based on its data and metadata
   String detectContentType(Block block, {String? filename}) {
     // Check if it's a directory listing
@@ -42,13 +44,13 @@ class ContentTypeHandler {
           return _generateDirectoryListing(block);
         }
         return block.data;
-      
+
       case 'text/markdown':
         return _processMarkdown(block.data);
-      
+
       case 'application/vnd.ipfs.car':
         return _processCarArchive(block.data);
-      
+
       default:
         return block.data;
     }
@@ -57,9 +59,9 @@ class ContentTypeHandler {
   /// Checks if the block represents a directory listing
   bool _isDirectoryListing(Block block) {
     try {
-      return block.cid.codec == 'dag-pb' && 
-             block.data.isNotEmpty &&
-             block.data[0] == 0x08; // Directory marker in dag-pb
+      return block.cid.codec == 'dag-pb' &&
+          block.data.isNotEmpty &&
+          block.data[0] == 0x08; // Directory marker in dag-pb
     } catch (e) {
       return false;
     }
@@ -74,7 +76,8 @@ class ContentTypeHandler {
       return Uint8List.fromList(html.codeUnits);
     } catch (e) {
       print('Error generating directory listing: $e');
-      return Uint8List.fromList('Error: Failed to generate directory listing'.codeUnits);
+      return Uint8List.fromList(
+          'Error: Failed to generate directory listing'.codeUnits);
     }
   }
 
@@ -129,17 +132,18 @@ class ContentTypeHandler {
   bool _isTextContent(Uint8List data) {
     final sampleSize = data.length.clamp(0, 512);
     var textChars = 0;
-    
+
     for (var i = 0; i < sampleSize; i++) {
       final byte = data[i];
       if ((byte >= 32 && byte <= 126) || // ASCII printable
           (byte == 9) || // Tab
           (byte == 10) || // LF
-          (byte == 13)) { // CR
+          (byte == 13)) {
+        // CR
         textChars++;
       }
     }
-    
+
     return textChars / sampleSize > 0.8; // 80% text characters threshold
   }
 
@@ -147,4 +151,15 @@ class ContentTypeHandler {
     // TODO: Implement path extraction from request context
     return '/';
   }
-} 
+
+  /// Caches the content type mapping for a CID
+  Future<void> cacheContentType(String cidStr, String contentType) async {
+    try {
+      // Create a simple in-memory cache or use a persistent storage solution
+      // For now, we'll just store in memory since the cache would be cleared on restart anyway
+      _contentTypeCache[cidStr] = contentType;
+    } catch (e) {
+      print('Error caching content type for CID $cidStr: $e');
+    }
+  }
+}
