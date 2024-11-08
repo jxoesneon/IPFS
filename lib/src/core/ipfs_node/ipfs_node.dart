@@ -20,7 +20,7 @@ class IPFSNode {
     networkHandler = NetworkHandler(config);
     networkHandler.setIpfsNode(this);
 
-    bitswapHandler = BitswapHandler(config, P2plibRouter(config));
+    bitswapHandler = BitswapHandler(config, config);
     dhtHandler = DHTHandler(config, P2plibRouter(config), networkHandler);
     pubSubHandler = PubSubHandler(
         P2plibRouter(config), config.nodeId, config.networkEvents);
