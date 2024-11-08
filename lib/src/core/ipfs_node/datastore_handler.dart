@@ -11,6 +11,9 @@ import '/../src/utils/car_writer.dart'; // Assuming you have a CarWriter utility
 class DatastoreHandler {
   final Datastore _datastore;
 
+  // Add public getter for datastore
+  Datastore get datastore => _datastore;
+
   DatastoreHandler(config) : _datastore = Datastore(config.datastorePath);
 
   /// Initializes and starts the datastore.
