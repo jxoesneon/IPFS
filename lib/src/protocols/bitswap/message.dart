@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import '../../core/data_structures/cid.dart' show CID;
-import '../../core/data_structures/block.dart' show Block;
-import '../../proto/generated/bitswap/bitswap.pb.dart' as bitswap_pb;
-import '../../utils/encoding.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/utils/encoding.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart' show Block;
+import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
+    as bitswap_pb;
 
 /// Represents a Bitswap protocol message
 class Message {
@@ -53,7 +54,7 @@ class Message {
   bool hasBlockPresences() => _blockPresences.isNotEmpty;
 
   /// Creates a Message from its protobuf byte representation
-  static Message fromBytes(Uint8List bytes) {
+  static Future<Message> fromBytes(Uint8List bytes) async {
     final pbMessage = bitswap_pb.Message.fromBuffer(bytes);
     final message = Message();
 
@@ -70,14 +71,17 @@ class Message {
 
     // Parse blocks using EncodingUtils
     for (var block in pbMessage.blocks) {
-      final cid = CID.fromBytes(block.prefix, 'dag-pb');
-      message.addBlock(Block(block.data, cid));
+      final cid = CID.fromBytes(Uint8List.fromList(block.prefix), 'dag-pb');
+      message.addBlock(await Block.fromData(
+        Uint8List.fromList(block.data),
+        format: 'dag-pb',
+      ));
     }
 
     // Parse block presences using EncodingUtils
     for (var presence in pbMessage.blockPresences) {
       message.addBlockPresence(
-          EncodingUtils.toBase58(presence.cid),
+          EncodingUtils.toBase58(Uint8List.fromList(presence.cid)),
           presence.type == bitswap_pb.BlockPresence_Type.HAVE
               ? BlockPresenceType.have
               : BlockPresenceType.dontHave);
@@ -100,7 +104,7 @@ class Message {
     // Add block presences
     for (var presence in _blockPresences) {
       pbMessage.blockPresences.add(bitswap_pb.BlockPresence()
-        ..cid = EncodingUtils.fromBase58(presence.cid)
+        ..cid = Uint8List.fromList(EncodingUtils.fromBase58(presence.cid))
         ..type = _convertPresenceType(presence.type));
     }
 
