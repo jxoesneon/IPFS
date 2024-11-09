@@ -9,6 +9,7 @@ import 'network_handler.dart';
 import 'datastore_handler.dart';
 import '../data_structures/pin.dart';
 import 'package:http/http.dart' as http;
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 import '../../proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/network/router.dart';
@@ -16,8 +17,10 @@ import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/core/data_structures/node.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
+import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/directory.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 
 // lib/src/core/ipfs_node/ipfs_node.dart
@@ -130,14 +133,12 @@ class IPFSNode {
     }
 
     // Create a block from the directory data
-    final directoryProto = directoryManager._directory;
-    final block = Block(
-      cid: await _generateCID(directoryProto.writeToBuffer()),
-      data: directoryProto.writeToBuffer(),
-    );
+    final directoryProto = directoryManager.directory;
+    final block =
+        await Block.fromData(directoryProto.writeToBuffer(), format: 'dag-pb');
 
     // Store the directory block
-    await datastoreHandler.put(block.cid.toString(), block);
+    await datastoreHandler.putBlock(block);
 
     // Return the CID of the directory
     return block.cid.toString();
@@ -167,7 +168,9 @@ class IPFSNode {
       }
 
       // If not found locally, try to fetch from the network
-      return await bitswapHandler.getBlock(cid, path: path);
+      final networkBlock = await bitswapHandler.wantBlock(cid);
+      // Return the block data if found, null otherwise
+      return networkBlock?.data;
     } catch (e) {
       print('Error retrieving content for CID $cid: $e');
       return null;
@@ -202,30 +205,29 @@ class IPFSNode {
   Future<List<Link>> ls(String cid) async {
     try {
       // Get the directory block
-      final block = await datastoreHandler.getBlock(cid);
+      var block = await datastoreHandler.getBlock(cid);
       if (block == null) {
         // Try fetching from network if not found locally
-        final data = await bitswapHandler.getBlock(cid);
+        final data = await bitswapHandler.wantBlock(cid);
         if (data == null) {
           throw Exception('Directory not found: $cid');
         }
-        block = Block(cid: cid, data: data);
+        block = MerkleDAGNode.fromBytes(data.data);
       }
 
       // Parse the directory node
-      final dirNode = MerkleDAGNode.fromBytes(block.data);
-      if (!dirNode.isDirectory) {
+      if (!block.isDirectory) {
         throw Exception('CID does not point to a directory: $cid');
       }
 
       // Convert directory links to Link objects
-      return dirNode.links
+      return block.links
           .map((nodeLink) => Link(
                 name: nodeLink.name,
-                cid: Uint8List.fromList(nodeLink.cid.bytes),
-                hash: Uint8List.fromList(nodeLink.cid.bytes),
-                size: nodeLink.size,
-                isDirectory: nodeLink.metadata['type'] == 'directory',
+                cid: nodeLink.cid,
+                hash: nodeLink.hash,
+                size: nodeLink.size.toInt(),
+                isDirectory: nodeLink.metadata?['type'] == 'directory',
                 metadata: nodeLink.metadata,
               ))
           .toList();
@@ -271,13 +273,15 @@ class IPFSNode {
       final pin = Pin(
         cid: CID.decode(cid),
         type: PinTypeProto.PIN_TYPE_RECURSIVE,
-        blockStore: datastoreHandler.blockStore,
+        blockStore: BlockStore(),
       );
 
       // Attempt to unpin
       final success = await pin.unpin();
 
       if (success) {
+        // Update the datastore
+        await datastoreHandler.datastore.unpin(cid);
         print('Successfully unpinned CID: $cid');
       } else {
         print('Failed to unpin CID: $cid - CID may not be pinned');
@@ -335,7 +339,7 @@ class IPFSNode {
   Future<List<String>> findProviders(String cid) async {
     try {
       // First check if we have the content locally
-      final hasLocal = await datastoreHandler.has(cid);
+      final hasLocal = await datastoreHandler.hasBlock(cid);
       if (hasLocal) {
         // If we have it locally, return our own peer ID
         return [peerID];
