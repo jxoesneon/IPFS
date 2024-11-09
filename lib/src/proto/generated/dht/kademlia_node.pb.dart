@@ -11,6 +11,7 @@
 
 import 'dart:core' as $core;
 
+import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'common_kademlia.pb.dart' as $0;
@@ -20,6 +21,8 @@ class KademliaNode extends $pb.GeneratedMessage {
     $0.KademliaId? peerId,
     $core.int? distance,
     $0.KademliaId? associatedPeerId,
+    $core.Iterable<KademliaNode>? children,
+    $fixnum.Int64? lastSeen,
   }) {
     final $result = create();
     if (peerId != null) {
@@ -31,6 +34,12 @@ class KademliaNode extends $pb.GeneratedMessage {
     if (associatedPeerId != null) {
       $result.associatedPeerId = associatedPeerId;
     }
+    if (children != null) {
+      $result.children.addAll(children);
+    }
+    if (lastSeen != null) {
+      $result.lastSeen = lastSeen;
+    }
     return $result;
   }
   KademliaNode._() : super();
@@ -41,6 +50,8 @@ class KademliaNode extends $pb.GeneratedMessage {
     ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'peerId', subBuilder: $0.KademliaId.create)
     ..a<$core.int>(2, _omitFieldNames ? '' : 'distance', $pb.PbFieldType.O3)
     ..aOM<$0.KademliaId>(3, _omitFieldNames ? '' : 'associatedPeerId', subBuilder: $0.KademliaId.create)
+    ..pc<KademliaNode>(4, _omitFieldNames ? '' : 'children', $pb.PbFieldType.PM, subBuilder: KademliaNode.create)
+    ..aInt64(5, _omitFieldNames ? '' : 'lastSeen')
     ..hasRequiredFields = false
   ;
 
@@ -95,6 +106,18 @@ class KademliaNode extends $pb.GeneratedMessage {
   void clearAssociatedPeerId() => clearField(3);
   @$pb.TagNumber(3)
   $0.KademliaId ensureAssociatedPeerId() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  $core.List<KademliaNode> get children => $_getList(3);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get lastSeen => $_getI64(4);
+  @$pb.TagNumber(5)
+  set lastSeen($fixnum.Int64 v) { $_setInt64(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasLastSeen() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearLastSeen() => clearField(5);
 }
 
 
