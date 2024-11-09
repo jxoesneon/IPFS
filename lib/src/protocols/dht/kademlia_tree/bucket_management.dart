@@ -1,10 +1,9 @@
-// lib/src/protocols/dht/kademlia_tree/bucket_management.dart
-
-import 'package:p2plib/p2plib.dart' as p2p;
+import '../kademlia_tree.dart';
 import '../red_black_tree.dart';
 import 'helpers.dart' as helpers;
+import 'package:p2plib/p2plib.dart' as p2p;
 import '/../src/protocols/dht/kademlia_tree/kademlia_node.dart';
-import '../kademlia_tree.dart';
+// lib/src/protocols/dht/kademlia_tree/bucket_management.dart
 
 extension BucketManagement on KademliaTree {
   // Getters for private methods
@@ -29,12 +28,14 @@ extension BucketManagement on KademliaTree {
     buckets.insert(
       bucketIndex + 1,
       RedBlackTree<p2p.PeerId, KademliaNode>(
-        compare: (p2p.PeerId a, p2p.PeerId b) => a.toString().compareTo(b.toString()),
+        compare: (p2p.PeerId a, p2p.PeerId b) =>
+            a.toString().compareTo(b.toString()),
       ),
     );
 
     // 2. Move peers
-    var nodesToMove = buckets[bucketIndex].entries.map((entry) => entry.value).toList();
+    var nodesToMove =
+        buckets[bucketIndex].entries.map((entry) => entry.value).toList();
     for (var node in nodesToMove) {
       if (_getBucketIndex(node.distance) == bucketIndex + 1) {
         buckets[bucketIndex].delete(node.peerId);
@@ -72,7 +73,8 @@ extension BucketManagement on KademliaTree {
     }
 
     // Move peers
-    var nodesToMove = buckets[bucketIndex2].entries.map((entry) => entry.value).toList();
+    var nodesToMove =
+        buckets[bucketIndex2].entries.map((entry) => entry.value).toList();
     for (var node in nodesToMove) {
       buckets[bucketIndex1].insert(node.peerId, node);
       node.bucketIndex = bucketIndex1;
@@ -123,7 +125,8 @@ extension BucketManagement on KademliaTree {
       if (lastSeenTime == null) {
         leastRecentlySeenNode = node;
         break;
-      } else if (oldestLastSeenTime == null || lastSeenTime.isBefore(oldestLastSeenTime)) {
+      } else if (oldestLastSeenTime == null ||
+          lastSeenTime.isBefore(oldestLastSeenTime)) {
         oldestLastSeenTime = lastSeenTime;
         leastRecentlySeenNode = node;
       }
@@ -147,22 +150,31 @@ extension BucketManagement on KademliaTree {
     if (_canSplitBucket(bucketIndex)) {
       _splitBucket(bucketIndex);
     } else {
-      KademliaNode? leastRecentlySeenNode = _findLeastRecentlySeenNode(bucketIndex);
+      KademliaNode? leastRecentlySeenNode =
+          _findLeastRecentlySeenNode(bucketIndex);
       bool newNodeWasContact = _wasNodeContactInRecentLookup(peerId);
       final nodeActivityThreshold = Duration(minutes: 10);
 
       if (newNodeWasContact) {
         if (leastRecentlySeenNode != null) {
           //Calculate stability score for the candidate node
-          double candidateNodeStability = calculateConnectionStabilityScore(leastRecentlySeenNode);
+          double candidateNodeStability =
+              calculateConnectionStabilityScore(leastRecentlySeenNode);
 
           //Compare stability scores.  If the new node is more stable, replace.
-          if (candidateNodeStability < calculateConnectionStabilityScore(KademliaNode(peerId, helpers.calculateDistance(peerId, root!.peerId), associatedPeerId))) {
+          if (candidateNodeStability <
+              calculateConnectionStabilityScore(KademliaNode(
+                peerId,
+                helpers.calculateDistance(peerId, root!.peerId),
+                associatedPeerId,
+                lastSeen: DateTime.now().millisecondsSinceEpoch,
+              ))) {
             buckets[bucketIndex].delete(leastRecentlySeenNode.peerId);
             KademliaNode newNode = KademliaNode(
               peerId,
               helpers.calculateDistance(peerId, root!.peerId),
               associatedPeerId,
+              lastSeen: DateTime.now().millisecondsSinceEpoch,
             );
             newNode.bucketIndex = bucketIndex;
             buckets[bucketIndex].insert(peerId, newNode);
@@ -172,32 +184,49 @@ extension BucketManagement on KademliaTree {
         if (leastRecentlySeenNode != null) {
           final lastSeenTime = this.lastSeen[leastRecentlySeenNode.peerId];
 
-          if (lastSeenTime == null || now.difference(lastSeenTime) > nodeActivityThreshold) {
-              //Calculate stability score for the candidate node
-            double candidateNodeStability = calculateConnectionStabilityScore(leastRecentlySeenNode);
+          if (lastSeenTime == null ||
+              now.difference(lastSeenTime) > nodeActivityThreshold) {
+            //Calculate stability score for the candidate node
+            double candidateNodeStability =
+                calculateConnectionStabilityScore(leastRecentlySeenNode);
 
             //Compare stability scores.  If the new node is more stable, replace.
-            if (candidateNodeStability < calculateConnectionStabilityScore(KademliaNode(peerId, helpers.calculateDistance(peerId, root!.peerId), associatedPeerId))) {
+            if (candidateNodeStability <
+                calculateConnectionStabilityScore(KademliaNode(
+                  peerId,
+                  helpers.calculateDistance(peerId, root!.peerId),
+                  associatedPeerId,
+                  lastSeen: DateTime.now().millisecondsSinceEpoch,
+                ))) {
               buckets[bucketIndex].delete(leastRecentlySeenNode.peerId);
               KademliaNode newNode = KademliaNode(
                 peerId,
                 helpers.calculateDistance(peerId, root!.peerId),
                 associatedPeerId,
+                lastSeen: DateTime.now().millisecondsSinceEpoch,
               );
               newNode.bucketIndex = bucketIndex;
               buckets[bucketIndex].insert(peerId, newNode);
             }
           } else if (!await isNodeActive(leastRecentlySeenNode)) {
-              //Calculate stability score for the candidate node
-            double candidateNodeStability = calculateConnectionStabilityScore(leastRecentlySeenNode);
+            //Calculate stability score for the candidate node
+            double candidateNodeStability =
+                calculateConnectionStabilityScore(leastRecentlySeenNode);
 
             //Compare stability scores.  If the new node is more stable, replace.
-            if (candidateNodeStability < calculateConnectionStabilityScore(KademliaNode(peerId, helpers.calculateDistance(peerId, root!.peerId), associatedPeerId))) {
+            if (candidateNodeStability <
+                calculateConnectionStabilityScore(KademliaNode(
+                  peerId,
+                  helpers.calculateDistance(peerId, root!.peerId),
+                  associatedPeerId,
+                  lastSeen: DateTime.now().millisecondsSinceEpoch,
+                ))) {
               buckets[bucketIndex].delete(leastRecentlySeenNode.peerId);
               KademliaNode newNode = KademliaNode(
                 peerId,
                 helpers.calculateDistance(peerId, root!.peerId),
                 associatedPeerId,
+                lastSeen: DateTime.now().millisecondsSinceEpoch,
               );
               newNode.bucketIndex = bucketIndex;
               buckets[bucketIndex].insert(peerId, newNode);
@@ -208,5 +237,3 @@ extension BucketManagement on KademliaTree {
     }
   }
 }
-
-
