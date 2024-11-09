@@ -179,8 +179,8 @@ class DHTHandler implements IDHTHandler {
   @override
   Future<void> handleRoutingTableUpdate(V_PeerInfo peer) async {
     try {
-      // Update the routing table in the DHT client
-      await dhtClient.routingTable.updatePeer(peer);
+      // Change routingTable to kademliaRoutingTable
+      dhtClient.kademliaRoutingTable.updatePeer(peer);
       print('Updated routing table entry for peer: ${peer.peerId}');
     } catch (e) {
       print('Error updating routing table for peer ${peer.peerId}: $e');
@@ -215,7 +215,8 @@ class DHTHandler implements IDHTHandler {
       // If DHT resolution fails, try using DNSLinkResolver
       final resolvedCid = await DNSLinkResolver.resolve(domainName);
       if (resolvedCid != null) {
-        print('Resolved DNSLink using resolver for domain $domainName: $resolvedCid');
+        print(
+            'Resolved DNSLink using resolver for domain $domainName: $resolvedCid');
         return resolvedCid;
       }
 
