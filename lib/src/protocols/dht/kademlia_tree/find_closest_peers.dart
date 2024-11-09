@@ -1,25 +1,28 @@
-// lib/src/protocols/dht/kademlia_tree/find_closest_peers.dart
-import 'package:collection/collection.dart'; // Import for PriorityQueue
+import 'dart:typed_data' show Uint8List;
 import 'package:p2plib/p2plib.dart' as p2p;
-import 'dart:collection';
-import 'helpers.dart'; // Import for _calculateDistance
-import '../kademlia_tree.dart'; // Import the main KademliaTree class
-import '../../../proto/generated/dht/find_closest_peers.pb.dart' as find_closest_peers_pb;
-import '../../../proto/generated/dht/common_kademlia.pb.dart' as common_kademlia_pb;
+import 'package:collection/collection.dart';
+import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
+import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/helpers.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/kademlia_node.pb.dart';
+// lib/src/protocols/dht/kademlia_tree/find_closest_peers.dart
 
 
 extension FindClosestPeers on KademliaTree {
   /// Finds the k closest peers to a target peer ID.
   List<p2p.PeerId> findClosestPeers(p2p.PeerId target, int k) {
     // Create a priority queue to store peers based on distance
-    PriorityQueue<_KademliaNode> queue = PriorityQueue<_KademliaNode>(
-      (_KademliaNode a, _KademliaNode b) =>
-          _calculateDistance(target, a.peerId)
-              .compareTo(_calculateDistance(target, b.peerId)),
+    PriorityQueue<KademliaNode> queue = PriorityQueue<KademliaNode>(
+      (KademliaNode a, KademliaNode b) {
+        // Convert KademliaId to PeerId before calculating distance
+        final peerIdA = p2p.PeerId(value: Uint8List.fromList(a.peerId.id));
+        final peerIdB = p2p.PeerId(value: Uint8List.fromList(b.peerId.id));
+        return calculateDistance(target, peerIdA)
+            .compareTo(calculateDistance(target, peerIdB));
+      },
     );
 
     // Add all nodes from all buckets to the priority queue
-    for (var bucket in _buckets) {
+    for (var bucket in buckets) {
       for (var nodeEntry in bucket.entries) {
         queue.add(nodeEntry.value);
       }
@@ -28,7 +31,10 @@ extension FindClosestPeers on KademliaTree {
     // Retrieve the k closest peers from the priority queue
     List<p2p.PeerId> closestPeers = [];
     for (int i = 0; i < k && queue.isNotEmpty; i++) {
-      closestPeers.add(queue.removeFirst().peerId);
+      final node = queue.removeFirst();
+      // Convert KademliaId to PeerId
+      final peerId = p2p.PeerId(value: Uint8List.fromList(node.peerId.id));
+      closestPeers.add(peerId);
     }
 
     return closestPeers;
