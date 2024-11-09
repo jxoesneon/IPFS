@@ -1,6 +1,6 @@
-// lib/src/core/data_structures/directory.dart
 import 'package:fixnum/fixnum.dart';
 import '../../proto/generated/dht/directory.pb.dart';
+// lib/src/core/data_structures/directory.dart
 
 /// Represents a single entry within an IPFS directory
 class IPFSDirectoryEntry {
@@ -36,6 +36,8 @@ class IPFSDirectoryManager {
       ..numberOfFiles = 0
       ..numberOfDirectories = 0;
   }
+
+  DirectoryProto get directory => _directory;
 
   void addEntry(IPFSDirectoryEntry entry) {
     _directory.entries.add(entry.toProto());
