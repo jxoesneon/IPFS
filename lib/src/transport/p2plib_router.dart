@@ -128,6 +128,21 @@ class P2plibRouter {
   void registerProtocol(String protocolId) {
     _router.registerProtocol(protocolId);
   }
+
+  /// Sends a datagram to the specified addresses.
+  Future<void> sendDatagram({
+    required List<String> addresses,
+    required Uint8List datagram,
+  }) async {
+    await _router.sendDatagram(
+      addresses: addresses,
+      datagram: datagram,
+    );
+  }
+
+  void removeMessageHandler(String protocolId) {
+    _router.removeMessageHandler(protocolId);
+  }
 }
 
 mixin MultiAddressHandler {
