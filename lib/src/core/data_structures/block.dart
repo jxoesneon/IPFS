@@ -3,8 +3,7 @@ import 'base_block.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/interfaces/block.dart';
 import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
-    as bitswap_pb;
+import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as proto;
 
 /// Represents a block of data in IPFS
 class Block extends BaseBlock implements IBlock {
@@ -50,14 +49,6 @@ class Block extends BaseBlock implements IBlock {
       ..format = format;
   }
 
-  /// Converts the block to its Bitswap protobuf representation
-  @override
-  bitswap_pb.Block toBitswapProto() {
-    return bitswap_pb.Block()
-      ..prefix = cid.toBytes()
-      ..data = data;
-  }
-
   /// Creates a block from its protobuf representation
   static Block fromProto(BlockProto proto) {
     return Block._(
@@ -68,12 +59,11 @@ class Block extends BaseBlock implements IBlock {
   }
 
   /// Creates a block from its Bitswap protobuf representation
-  static Block fromBitswapProto(bitswap_pb.Block proto) {
+  static Block fromProtoBlock(proto.Block protoBlock) {
     return Block._(
-      cid: CID.fromBytes(Uint8List.fromList(proto.prefix), 'raw'),
-      data: Uint8List.fromList(proto.data),
-      format: 'raw',
-    );
+        cid: CID.fromBytes(Uint8List.fromList(protoBlock.prefix), 'raw'),
+        data: Uint8List.fromList(protoBlock.data),
+        format: 'raw');
   }
 
   /// Validates the block's data against its CID
@@ -81,5 +71,19 @@ class Block extends BaseBlock implements IBlock {
   bool validate() {
     final computedCid = CID.computeForDataSync(data, codec: format);
     return computedCid == cid;
+  }
+
+  static Block fromBitswapProto(proto.Block protoBlock) {
+    return Block._(
+        cid: CID.fromBytes(Uint8List.fromList(protoBlock.prefix), 'raw'),
+        data: Uint8List.fromList(protoBlock.data),
+        format: 'raw');
+  }
+
+  @override
+  proto.Block toBitswapProto() {
+    return proto.Block()
+      ..prefix = cid.toBytes()
+      ..data = data;
   }
 }
