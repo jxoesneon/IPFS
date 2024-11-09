@@ -1,21 +1,14 @@
-import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import '/../src/utils/base58.dart';
-import '/../src/utils/varint.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
-import '/../src/core/ipfs_node/ipfs_node.dart';
-import '../../proto/generated/dht/dht.pb.dart';
-import '/../src/core/ipfs_node/ipfs_node.dart';
-import '../../core/ipfs_node/network_handler.dart';
-import '../../proto/generated/unixfs/unixfs.pb.dart';
-import '/../src/core/ipfs_node/network_handler.dart';
-import '../../proto/generated/dht/routing_table.pb.dart';
-import '/../src/proto/generated/bitswap/bitswap.pb.dart';
-import '../core/types/peer_types.dart';
-import '../../core/types/p2p_types.dart';
-
+import 'package:dart_ipfs/src/core/types/p2p_types.dart';
+import 'package:dart_ipfs/src/core/types/peer_types.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart';
+import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
 // lib/src/protocols/dht/dht_client.dart
 
 /// Implementation of the Kademlia DHT protocol for IPFS
@@ -23,7 +16,7 @@ import '../../core/types/p2p_types.dart';
 class DHTClient {
   final IPFSNode node;
   final LibP2PRouterL0 router;
-  late final RoutingTable _routingTable;
+  late final KademliaRoutingTable _kademliaRoutingTable;
   final NetworkHandler networkHandler;
   final LibP2PPeerId peerId;
   final LibP2PPeerId associatedPeerId;
@@ -45,8 +38,8 @@ class DHTClient {
         associatedPeerId = networkHandler
             .ipfsNode.dhtHandler.router.routerL0.routes.values.first.peerId {
     // Initialize routing table with this instance
-    _routingTable = RoutingTable();
-    _routingTable.initialize(this);
+    _kademliaRoutingTable = KademliaRoutingTable();
+    _kademliaRoutingTable.initialize(this);
 
     // Register DHT protocols
     node.dhtHandler.router.registerProtocol(PROTOCOL_DHT);
@@ -90,7 +83,7 @@ class DHTClient {
 
     final targetPeerId =
         p2p.PeerId(value: Uint8List.fromList(utf8.encode(cid)));
-    final closestPeers = _routingTable.findClosestPeers(targetPeerId, 20);
+    final closestPeers = _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
     final providers = <p2p.PeerId>[];
 
     for (final peer in closestPeers) {
@@ -113,7 +106,7 @@ class DHTClient {
   // Peer Routing API
   Future<p2p.PeerId?> findPeer(p2p.PeerId id) async {
     final request = FindNodeRequest()..peerId = id.value;
-    final closestPeers = _routingTable.findClosestPeers(id, 20);
+    final closestPeers = _kademliaRoutingTable.findClosestPeers(id, 20);
 
     for (final peer in closestPeers) {
       try {
@@ -143,7 +136,7 @@ class DHTClient {
       ..value = utf8.encode(value);
 
     final closestPeers =
-        _routingTable.findClosestPeers(p2p.PeerId.fromString(key), 20);
+        _kademliaRoutingTable.findClosestPeers(p2p.PeerId.fromString(key), 20);
 
     for (final peer in closestPeers) {
       try {
@@ -218,7 +211,7 @@ class DHTClient {
     try {
       // Clean up any active requests or connections
       // Clear routing table
-      _routingTable.clear();
+      _kademliaRoutingTable.clear();
 
       print('DHT client stopped successfully');
     } catch (e) {
@@ -234,7 +227,7 @@ class DHTClient {
       try {
         final peer = await _connectToPeer(peerAddr);
         if (peer != null) {
-          _routingTable.addPeer(peer, peer);
+          _kademliaRoutingTable.addPeer(peer, peer);
         }
       } catch (e) {
         print('Error connecting to bootstrap peer $peerAddr: $e');
@@ -258,7 +251,7 @@ class DHTClient {
   Future<String?> getValue(String key) async {
     final request = FindValueRequest()..key = utf8.encode(key);
     final closestPeers =
-        _routingTable.findClosestPeers(p2p.PeerId.fromString(key), 20);
+        _kademliaRoutingTable.findClosestPeers(p2p.PeerId.fromString(key), 20);
 
     for (final peer in closestPeers) {
       try {
@@ -280,7 +273,7 @@ class DHTClient {
   }
 
   // Add a getter for the routing table
-  RoutingTable get routingTable => _routingTable;
+  KademliaRoutingTable get kademliaRoutingTable => _kademliaRoutingTable;
 
   // Update method signatures to use IPFSPeer
   IPFSPeer _convertDHTPeerToIPFSPeer(DHTPeer protoPeer) {
@@ -291,8 +284,40 @@ class DHTClient {
     return peer.toDHTPeer();
   }
 
-  void _handlePacket(LibP2PPacket packet) {
-    // Implementation
+  /// Handles incoming packets from peers.
+  void _handlePacket(LibP2PPacket packet) async {
+    try {
+      final message = await Message.fromBytes(packet.datagram);
+      final peerId = packet.srcPeerId;
+
+      // Handle blocks if present
+      if (message.hasBlocks()) {
+        for (final block in message.getBlocks()) {
+          await _handleReceivedBlock(peerId, block);
+        }
+      }
+
+      // Handle wantlist if present
+      if (message.hasWantlist()) {
+        final wantlist = message.getWantlist();
+        for (final entry in wantlist.entries.values) {
+          await handleWantBlock(peerId, entry);
+        }
+      }
+
+      // Handle block presences if present
+      if (message.hasBlockPresences()) {
+        for (final presence in message.getBlockPresences()) {
+          if (presence.type == BlockPresenceType.have) {
+            print('Peer $peerId has block ${presence.cid}');
+          } else {
+            print('Peer $peerId does not have block ${presence.cid}');
+          }
+        }
+      }
+    } catch (e) {
+      print('Error handling BitSwap packet: $e');
+    }
   }
 
   /// Adds a provider for a given CID to the DHT network
@@ -303,7 +328,7 @@ class DHTClient {
 
     final targetPeerId =
         p2p.PeerId(value: Uint8List.fromList(utf8.encode(cid)));
-    final closestPeers = _routingTable.findClosestPeers(targetPeerId, 20);
+    final closestPeers = _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
 
     for (final peer in closestPeers) {
       try {
