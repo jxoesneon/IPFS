@@ -73,10 +73,15 @@ class CID {
   }
 
   /// Computes a CID for the given data using the specified codec
-  static Future<CID> computeForData(Uint8List data, {String codec = 'raw'}) async {
+  static Future<CID> computeForData(Uint8List data,
+      {String codec = 'raw'}) async {
     // Compute SHA-256 hash of the data
     final hash = sha256.convert(data);
-    final multihash = [0x12, hash.bytes.length, ...hash.bytes]; // 0x12 is SHA-256 identifier
+    final multihash = [
+      0x12,
+      hash.bytes.length,
+      ...hash.bytes
+    ]; // 0x12 is SHA-256 identifier
 
     return CID(
       version: IPFSCIDVersion.IPFS_CID_VERSION_1,
@@ -105,5 +110,38 @@ class CID {
     bytes.addByte(_versionToIndex(version));
     bytes.add(multihash);
     return bytes.toBytes();
+  }
+
+  static CID decode(String cidStr) {
+    // Convert the CID string to bytes using Base58 decoding
+    final bytes = EncodingUtils.fromBase58(cidStr);
+
+    // First byte is the version
+    final versionIndex = bytes[0];
+    IPFSCIDVersion version;
+    switch (versionIndex) {
+      case 0:
+        version = IPFSCIDVersion.IPFS_CID_VERSION_UNSPECIFIED;
+        break;
+      case 1:
+        version = IPFSCIDVersion.IPFS_CID_VERSION_0;
+        break;
+      case 2:
+        version = IPFSCIDVersion.IPFS_CID_VERSION_1;
+        break;
+      default:
+        throw ArgumentError('Invalid CID version index: $versionIndex');
+    }
+
+    // The rest of the bytes are the multihash
+    final multihash = bytes.sublist(1);
+
+    // Create and return a new CID
+    return CID(
+      version: version,
+      multihash: multihash,
+      codec: 'raw', // Default to raw codec
+      multibasePrefix: 'base58btc',
+    );
   }
 }
