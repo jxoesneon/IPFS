@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
+import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
+
 import 'dht_handler.dart';
 import 'pubsub_handler.dart';
 import 'bitswap_handler.dart';
@@ -20,6 +23,7 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/directory.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
+import 'package:dart_ipfs/src/core/config/config.dart';
 
 // lib/src/core/ipfs_node/ipfs_node.dart
 
@@ -31,6 +35,7 @@ class IPFSNode {
   late final RoutingHandler routingHandler;
   late final NetworkHandler networkHandler;
   late final PubSubHandler pubSubHandler;
+  final IPFSConfig _config;
 
   final _newContentController = StreamController<String>.broadcast();
 
@@ -38,6 +43,7 @@ class IPFSNode {
   Datastore get datastore => datastoreHandler.datastore;
   Router get router => networkHandler.router;
   BitswapHandler get bitswap => bitswapHandler;
+  IPFSConfig get config => _config;
 
   // Add the onNewContent stream getter
   Stream<String> get onNewContent => _newContentController.stream;
@@ -48,19 +54,26 @@ class IPFSNode {
   // Add this getter
   String get peerID => _peerID;
 
-  IPFSNode(config) {
-    networkHandler = NetworkHandler(config);
+  IPFSNode(this._config) {
+    networkHandler = NetworkHandler(_config);
     networkHandler.setIpfsNode(this);
 
     // Initialize the peer ID from config
-    _peerID = config.nodeId;
+    _peerID = _config.nodeId;
 
-    bitswapHandler = BitswapHandler(config, config);
-    dhtHandler = DHTHandler(config, P2plibRouter(config), networkHandler);
+    // Create a BlockStore instance
+    final blockStore = BlockStore();
+
+    // Initialize handlers with correct parameters
+    bitswapHandler = BitswapHandler(_config, blockStore);
+    dhtHandler = DHTHandler(_config, P2plibRouter(_config), networkHandler);
     pubSubHandler = PubSubHandler(
-        P2plibRouter(config), config.nodeId, config.networkEvents);
-    datastoreHandler = DatastoreHandler(config);
-    routingHandler = RoutingHandler(config);
+        P2plibRouter(_config),
+        _config.nodeId,
+        IpfsNodeNetworkEvents(
+            CircuitRelayClient(P2plibRouter(_config)), P2plibRouter(_config)));
+    datastoreHandler = DatastoreHandler(_config);
+    routingHandler = RoutingHandler(_config);
   }
 
   /// Starts the IPFS node.
