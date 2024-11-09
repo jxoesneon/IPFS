@@ -8,8 +8,6 @@ import '/../src/core/data_structures/node_stats.dart';
 import '../../proto/generated/dht/dht_messages.pb.dart';
 // lib/src/protocols/dht/kademlia_tree.dart
 
-
-
 /// Represents a Kademlia tree for efficient peer routing and lookup.
 class KademliaTree {
   // Tree structure
@@ -30,12 +28,13 @@ class KademliaTree {
 
   // Constructor
   KademliaTree(p2p.PeerId localPeerId, {KademliaNode? root}) {
-    _root = root ?? KademliaNode(
-      localPeerId,
-      0,
-      localPeerId,
-      lastSeen: DateTime.now().millisecondsSinceEpoch,
-    );
+    _root = root ??
+        KademliaNode(
+          localPeerId,
+          0,
+          localPeerId,
+          lastSeen: DateTime.now().millisecondsSinceEpoch,
+        );
 
     // Pre-allocate buckets for 256-bit Peer IDs
     for (int i = 0; i < 256; i++) {
@@ -105,82 +104,79 @@ class KademliaTree {
   }
 
   int _xorDistance(p2p.PeerId a, p2p.PeerId b) {
-    final bytesA = a.value; // Correctly access bytes using the value property
-    final bytesB = b.value;
-
-    if (bytesA.length != bytesB.length) {
-      throw ArgumentError('PeerIds must have the same length');
-    }
-
-    int distance = 0;
-    for (int i = 0; i < bytesA.length; i++) {
-      distance = distance << 8;
-      distance = distance | (bytesA[i] ^ bytesB[i]);
-    }
-    return distance;
+    return calculateDistance(a, b);
   }
 
-     Future<List<p2p.PeerId>> queryForNode(p2p.PeerId target, [List<p2p.PeerId>? knownNodes]) async {
-        final findNodeMessage = p2p.Message(
-            type: MessageType.findNode,
-            payload: target.value,
-        );
+  Future<List<p2p.PeerId>> queryForNode(p2p.PeerId target,
+      [List<p2p.PeerId>? knownNodes]) async {
+    final findNodeMessage = p2p.Message(
+      type: MessageType.findNode,
+      payload: target.value,
+    );
 
-        final nodesToQuery = knownNodes ?? _getDefaultNodes();
+    final nodesToQuery = knownNodes ?? _getDefaultNodes();
 
-        final responses = await Future.wait(nodesToQuery.map((node) => _sendMessageAndAwaitResponse(node, findNodeMessage)));
+    final responses = await Future.wait(nodesToQuery
+        .map((node) => _sendMessageAndAwaitResponse(node, findNodeMessage)));
 
-        final closerPeers = <p2p.PeerId>[];
-        for (final response in responses) {
-            if (response != null && response is p2p.Message && response.type == MessageType.findNodeResponse) {
-                final peerIds = (response.payload as List<dynamic>?)
-                    ?.map((bytes) => p2p.PeerId(Uint8List.fromList(bytes as List<int>)))
-                    .toList() ?? [];
-                closerPeers.addAll(peerIds);
-            }
-        }
-
-        return closerPeers;
+    final closerPeers = <p2p.PeerId>[];
+    for (final response in responses) {
+      if (response != null &&
+          response is p2p.Message &&
+          response.type == MessageType.findNodeResponse) {
+        final peerIds = (response.payload as List<dynamic>?)
+                ?.map((bytes) =>
+                    p2p.PeerId(Uint8List.fromList(bytes as List<int>)))
+                .toList() ??
+            [];
+        closerPeers.addAll(peerIds);
+      }
     }
 
-    Future<p2p.Message?> _sendMessageAndAwaitResponse(p2p.PeerId peerId, p2p.Message message) async {
-        final completer = Completer<p2p.Message?>();
+    return closerPeers;
+  }
 
-        Timer(const Duration(seconds: 5), () {
-            if (!completer.isCompleted) {
-                completer.complete(null);
-            }
-        });
+  Future<p2p.Message?> _sendMessageAndAwaitResponse(
+      p2p.PeerId peerId, p2p.Message message) async {
+    final completer = Completer<p2p.Message?>();
 
-        try {
-            // TODO: Replace with your actual router's sendMessage method.
-            router.sendMessage(dstPeerId: peerId, message: message); // Assuming your router has this method.
-        } catch (e) {
-            print('Error sending message: $e');
-            return null;
-        }
+    Timer(const Duration(seconds: 5), () {
+      if (!completer.isCompleted) {
+        completer.complete(null);
+      }
+    });
 
-        //TODO: Replace with your actual router's onMessage stream
-        router.onMessage.listen((receivedMessage) {
-            if (receivedMessage.type == MessageType.findNodeResponse && _isMatchingRequest(receivedMessage, message)) {
-                completer.complete(receivedMessage);
-            }
-        });
-
-        return completer.future;
+    try {
+      // TODO: Replace with your actual router's sendMessage method.
+      router.sendMessage(
+          dstPeerId: peerId,
+          message: message); // Assuming your router has this method.
+    } catch (e) {
+      print('Error sending message: $e');
+      return null;
     }
 
+    //TODO: Replace with your actual router's onMessage stream
+    router.onMessage.listen((receivedMessage) {
+      if (receivedMessage.type == MessageType.findNodeResponse &&
+          _isMatchingRequest(receivedMessage, message)) {
+        completer.complete(receivedMessage);
+      }
+    });
 
-    bool _isMatchingRequest(p2p.Message receivedMessage, p2p.Message sentMessage) {
-        // TODO: Implement proper request matching logic.  Add a request ID or similar property to your Message objects
-        return true; // Placeholder
-    }
+    return completer.future;
+  }
 
-    List<p2p.PeerId> _getDefaultNodes() {
-        // TODO: Implement logic to retrieve default/bootstrap nodes.  Read from config or hardcode a list
-        return []; // Placeholder
-    }
+  bool _isMatchingRequest(
+      p2p.Message receivedMessage, p2p.Message sentMessage) {
+    // TODO: Implement proper request matching logic.  Add a request ID or similar property to your Message objects
+    return true; // Placeholder
+  }
 
+  List<p2p.PeerId> _getDefaultNodes() {
+    // TODO: Implement logic to retrieve default/bootstrap nodes.  Read from config or hardcode a list
+    return []; // Placeholder
+  }
 
   // TODO: Add logic to split buckets if needed and manage them properly
   void splitBucket(int bucketIndex) => this.splitBucket(bucketIndex);
@@ -264,9 +260,7 @@ class KademliaTree {
 
   // XOR distance calculation (useful for Kademlia's bucket and peer management)
   int _xorDistance(p2p.PeerId a, p2p.PeerId b) {
-    // TODO: Implement XOR distance calculation between two peer IDs
-    return a.hashCode ^
-        b.hashCode; // Example: Replace with correct implementation
+    return calculateDistance(a, b);
   }
 
   // Clear recent contacts
