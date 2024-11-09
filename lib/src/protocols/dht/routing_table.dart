@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 import 'dht_client.dart';
 import 'kademlia_tree.dart';
@@ -15,7 +14,8 @@ class KademliaRoutingTable {
   late KademliaTree _tree;
   static const int K_BUCKET_SIZE = 20;
 
-  KademliaRoutingTable() : _tree = KademliaTree(p2p.PeerId(value: Uint8List(32)));
+  KademliaRoutingTable()
+      : _tree = KademliaTree(p2p.PeerId(value: Uint8List(32)));
 
   /// Initializes the routing table with a reference to the DHT client
   void initialize(DHTClient client) {
