@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:typed_data';
 import 'dht_handler.dart';
 import 'pubsub_handler.dart';
 import 'bitswap_handler.dart';
@@ -8,7 +7,6 @@ import 'routing_handler.dart';
 import 'network_handler.dart';
 import 'datastore_handler.dart';
 import '../data_structures/pin.dart';
-import 'package:http/http.dart' as http;
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 import '../../proto/generated/core/pin.pb.dart';
