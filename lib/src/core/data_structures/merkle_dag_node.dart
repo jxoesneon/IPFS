@@ -1,10 +1,10 @@
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'dart:typed_data';
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
-import 'package:dart_ipfs/src/proto/generated/dht/merkle_dag_node.pb.dart'
-    as proto_m;
+import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/proto/generated/core/link.pb.dart' as proto_l;
+import 'package:dart_ipfs/src/core/data_structures/node.dart' show IPFSNodeType;
+import 'package:dart_ipfs/src/proto/generated/dht/merkle_dag_node.pb.dart' as proto_m;
 // lib/src/core/data_structures/merkle_dag_node.dart
 
 /// Represents a Merkle DAG node in IPFS.
@@ -17,6 +17,7 @@ class MerkleDAGNode {
   final Map<String, String> metadata;
   final bool isDirectory;
   final CID? parentCid; // Use CID class
+  final IPFSNodeType nodeType;
 
   MerkleDAGNode({
     required this.cid,
@@ -27,7 +28,7 @@ class MerkleDAGNode {
     required this.metadata,
     this.isDirectory = false,
     this.parentCid,
-  });
+  }) : nodeType = isDirectory ? IPFSNodeType.directory : IPFSNodeType.file;
 
   /// Creates a [MerkleDAGNode] from its byte representation.
   static MerkleDAGNode fromBytes(Uint8List bytes) {
