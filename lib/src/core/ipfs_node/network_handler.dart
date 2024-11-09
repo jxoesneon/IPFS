@@ -126,7 +126,8 @@ class NetworkHandler {
           final peerIdBytes = Uint8List.fromList(utf8.encode(peerId));
           final peer = p2p.PeerId(value: peerIdBytes);
           // Using the routing table's addPeer method
-          ipfsNode.dhtHandler.dhtClient.routingTable.addPeer(peer, peer);
+          ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable
+              .addPeer(peer, peer);
         } else if (event.hasPeerDisconnected()) {
           final peerIdStr = event.peerDisconnected.peerId;
           final reason = event.peerDisconnected.reason;
@@ -137,7 +138,7 @@ class NetworkHandler {
           final peerId = p2p.PeerId(value: peerIdBytes);
 
           // Using the routing table's removePeer method
-          ipfsNode.dhtHandler.dhtClient.routingTable.removePeer(peerId);
+          ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable.removePeer(peerId);
         } else if (event.hasMessageReceived()) {
           final messageContent =
               utf8.decode(event.messageReceived.messageContent);
