@@ -53,7 +53,7 @@ class BitswapHandler {
   }
 
   /// Handles incoming Bitswap messages
-  void _handleMessage(message.Message message) {
+  Future<void> _handleMessage(message.Message message) async {
     if (!_running) return;
 
     final fromPeer = message.from;
@@ -75,16 +75,23 @@ class BitswapHandler {
             ),
           ),
         );
-      _handleWantlist(wantlist, fromPeer);
+      await _handleWantlist(wantlist, fromPeer);
     }
 
     if (message.hasBlocks()) {
-      final blocks = message.getBlocks();
+      // Wait for all blocks to be created
+      final blocks =
+          await Future.wait(message.getBlocks().map((b) => Block.fromData(
+                b.data,
+                format: 'dag-pb',
+              )));
+
       _handleBlocks(blocks);
+
       // Update received bytes in ledger
       ledger.addReceivedBytes(blocks
-          .map((Block? b) => b?.data.length ?? 0)
-          .fold<int>(0, (sum, size) => (sum + size).toInt()));
+          .map((b) => b.data.length)
+          .fold<int>(0, (sum, size) => sum + size));
       _updateBandwidthStats();
     }
   }
@@ -242,8 +249,8 @@ class BitswapHandler {
     return InternetAddress(peer.address.ip);
   }
 
-  void _handlePacket(p2p.Packet packet) {
-    _handleMessage(message.Message.fromBytes(packet.datagram));
+  Future<void> _handlePacket(p2p.Packet packet) async {
+    await _handleMessage(await message.Message.fromBytes(packet.datagram));
   }
 
   Future<void> handleWantRequest(String cidStr) async {
