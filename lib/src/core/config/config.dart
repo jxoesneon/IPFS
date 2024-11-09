@@ -1,5 +1,9 @@
 // lib/src/core/config/config.dart
 
+import 'dart:math';
+import 'dart:typed_data';
+import 'package:dart_ipfs/src/utils/base58.dart';
+
 /// Configuration class for the IPFS node.
 class IPFSConfig {
   /// Creates a new IPFSConfig with default values.
@@ -29,10 +33,10 @@ class IPFSConfig {
     this.defaultBandwidthQuota = 1048576, // 1 MB/s
     this.garbageCollectionEnabled = true,
     this.garbageCollectionInterval = const Duration(hours: 24),
-    SecurityConfig?
-        security, // Change to nullable and provide default value below
-  }) : security =
-            security ?? SecurityConfig(); // Assign default in initializer list
+    SecurityConfig? security,
+    String? nodeId,
+  })  : security = security ?? SecurityConfig(),
+        nodeId = nodeId ?? _generateDefaultNodeId();
 
   /// The addresses and ports to listen on.
   final List<String> addresses;
@@ -96,6 +100,16 @@ class IPFSConfig {
 
   /// Security-related configuration options.
   final SecurityConfig security;
+
+  /// The node's unique identifier
+  final String nodeId;
+
+  static String _generateDefaultNodeId() {
+    // Generate a random node ID if none is provided
+    final random = Random.secure();
+    final bytes = List<int>.generate(32, (i) => random.nextInt(256));
+    return Base58().encode(Uint8List.fromList(bytes));
+  }
 }
 
 /// Security-related configuration options.
