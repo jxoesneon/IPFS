@@ -6,7 +6,8 @@ import 'kademlia_tree.dart';
 import 'red_black_tree.dart';
 import 'kademlia_tree/kademlia_node.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
-import '../../core/data_structures/node_stats.dart';
+import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
+import 'package:dart_ipfs/src/protocols/dht/connection_statistics.dart';
 
 // Represents the routing table for the DHT client.
 class KademliaRoutingTable {
@@ -287,6 +288,28 @@ class KademliaRoutingTable {
         bucket.remove(peerId);
         break;
       }
+    }
+  }
+
+  /// Updates peer information in the routing table
+  void updatePeer(V_PeerInfo peer) {
+    final peerId = p2p.PeerId.fromString(peer.peerId);
+
+    // If peer exists, update its information
+    if (containsPeer(peerId)) {
+      final node = _findNode(peerId);
+      if (node != null) {
+        // Update last seen timestamp
+        node.lastSeen = DateTime.now().millisecondsSinceEpoch;
+
+        // Update connection statistics if available
+        if (_connectionStats.containsKey(peerId)) {
+          _connectionStats[peerId]!.updateFromPeerInfo(peer);
+        }
+      }
+    } else {
+      // If peer doesn't exist, add it to the routing table
+      addPeer(peerId, peerId); // Using same ID for associated peer as a default
     }
   }
 }
