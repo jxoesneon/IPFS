@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+
 /// Base class for all network messages
 abstract class BaseMessage {
   final Uint8List data;
