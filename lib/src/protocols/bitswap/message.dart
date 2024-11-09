@@ -71,11 +71,19 @@ class Message {
 
     // Parse blocks using EncodingUtils
     for (var block in pbMessage.blocks) {
-      final cid = CID.fromBytes(Uint8List.fromList(block.prefix), 'dag-pb');
-      message.addBlock(await Block.fromData(
+      final receivedCid =
+          CID.fromBytes(Uint8List.fromList(block.prefix), 'dag-pb');
+      final newBlock = await Block.fromData(
         Uint8List.fromList(block.data),
         format: 'dag-pb',
-      ));
+      );
+
+      // Verify the received CID matches the computed one
+      if (receivedCid.toString() != newBlock.cid.toString()) {
+        throw FormatException('CID mismatch in received block');
+      }
+
+      message.addBlock(newBlock);
     }
 
     // Parse block presences using EncodingUtils
