@@ -1,9 +1,14 @@
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
+    as bitswap;
 // lib/src/protocols/bitswap/ledger.dart
 
 class BitLedger {
   final String peerId;
   int sentBytes = 0;
   int receivedBytes = 0;
+  final Map<String, Uint8List> _blockData = {};
 
   /// Create a new ledger for tracking bitswap exchanges with a specific peer.
   BitLedger(this.peerId);
@@ -26,9 +31,41 @@ class BitLedger {
     return sentBytes - receivedBytes;
   }
 
+  /// Add new methods for block data management
+  void storeBlockData(String cid, Uint8List data) {
+    _blockData[cid] = data;
+  }
+
+  Uint8List getBlockData(String cid) {
+    if (!_blockData.containsKey(cid)) {
+      throw StateError('Block data not found for CID: $cid');
+    }
+    return _blockData[cid]!;
+  }
+
+  bool hasBlock(String cid) {
+    return _blockData.containsKey(cid);
+  }
+
   @override
   String toString() {
     return 'Ledger($peerId): sentBytes=$sentBytes, receivedBytes=$receivedBytes, debt=${getDebt()}';
+  }
+
+  /// Updates the ledger with a received message
+  void receivedMessage(String peerId, bitswap.Message message) {
+    // Update received bytes from blocks
+    for (var block in message.blocks) {
+      addReceivedBytes(block.data.length);
+    }
+
+    // Store any new blocks
+    for (var block in message.blocks) {
+      if (block.data.isNotEmpty) {
+        storeBlockData(
+            base64.encode(block.prefix), Uint8List.fromList(block.data));
+      }
+    }
   }
 }
 
