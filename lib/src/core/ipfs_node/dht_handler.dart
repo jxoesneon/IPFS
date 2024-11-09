@@ -1,14 +1,15 @@
-import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:http/http.dart' as http;
 import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:p2plib/p2plib.dart' show PeerId;
+import 'package:dart_ipfs/src/utils/keystore.dart';
+import 'package:dart_ipfs/src/utils/encoding.dart';
+import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/utils/keystore.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
-import 'package:dart_ipfs/src/utils/encoding.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
-import 'package:p2plib/p2plib.dart' show PeerId;
 // lib/src/core/ipfs_node/dht_handler.dart
 
 /// Handles DHT operations for an IPFS node.
@@ -195,6 +196,34 @@ class DHTHandler implements IDHTHandler {
       print('Added provider ${provider.toString()} for CID ${cid.toString()}');
     } catch (e) {
       print('Error handling provide request for CID ${cid.toString()}: $e');
+    }
+  }
+
+  /// Resolves a DNSLink to its corresponding CID.
+  Future<String?> resolveDNSLink(String domainName) async {
+    try {
+      // First try using the DHT network to resolve the DNSLink
+      final value = await getValue('dnslink:$domainName');
+      if (value != null) {
+        final cid = extractCIDFromResponse(value);
+        if (cid != null) {
+          print('Resolved DNSLink for domain $domainName to CID: $cid');
+          return cid;
+        }
+      }
+
+      // If DHT resolution fails, try using DNSLinkResolver
+      final resolvedCid = await DNSLinkResolver.resolve(domainName);
+      if (resolvedCid != null) {
+        print('Resolved DNSLink using resolver for domain $domainName: $resolvedCid');
+        return resolvedCid;
+      }
+
+      print('Failed to resolve DNSLink for domain: $domainName');
+      return null;
+    } catch (e) {
+      print('Error resolving DNSLink for domain $domainName: $e');
+      return null;
     }
   }
 }
