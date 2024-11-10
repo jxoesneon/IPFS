@@ -7,7 +7,7 @@ import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/helpers.dart'
 
 import 'red_black_tree.dart';
 import 'connection_statistics.dart';
-import 'kademlia_tree/kademlia_node.dart';
+import 'kademlia_tree/kademlia_tree_node.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
 import 'package:dart_ipfs/src/proto/generated/dht_messages.pb.dart';
@@ -23,7 +23,7 @@ import 'kademlia_tree/lru_cache.dart';
 /// Represents a Kademlia tree for efficient peer routing and lookup.
 class KademliaTree {
   // Tree structure
-  KademliaNode? _root;
+  KademliaTreeNode? _root;
 
   // Kademlia protocol constants
   static const int K = 20; // k-bucket size
@@ -33,7 +33,7 @@ class KademliaTree {
   static const Duration NODE_TIMEOUT = Duration(seconds: 5);
 
   // List of k-buckets (256 for IPv6 compatibility)
-  List<RedBlackTree<p2p.PeerId, KademliaNode>> _buckets = [];
+  List<RedBlackTree<p2p.PeerId, KademliaTreeNode>> _buckets = [];
 
   // Peer tracking
   Map<p2p.PeerId, DateTime> _lastSeen = {};
@@ -57,9 +57,9 @@ class KademliaTree {
 
   final Map<int, LRUCache> _bucketCaches = {};
 
-  KademliaTree(this.dhtClient, {KademliaNode? root}) {
+  KademliaTree(this.dhtClient, {KademliaTreeNode? root}) {
     _root = root ??
-        KademliaNode(
+        KademliaTreeNode(
           dhtClient.peerId,
           0,
           dhtClient.peerId,
@@ -90,7 +90,7 @@ class KademliaTree {
 
   void _initializeBuckets() {
     for (int i = 0; i < 256; i++) {
-      _buckets.add(RedBlackTree<p2p.PeerId, KademliaNode>(
+      _buckets.add(RedBlackTree<p2p.PeerId, KademliaTreeNode>(
         compare: (p2p.PeerId a, p2p.PeerId b) {
           final distanceA = helpers.calculateDistance(_root!.peerId, a);
           final distanceB = helpers.calculateDistance(_root!.peerId, b);
@@ -118,8 +118,8 @@ class KademliaTree {
   Map<p2p.PeerId, List<bool>> get lookupSuccessHistory => _lookupSuccessHistory;
   Map<p2p.PeerId, ConnectionStatistics> get connectionStats => _connectionStats;
   Map<p2p.PeerId, NodeStats> get nodeStats => _nodeStats;
-  List<RedBlackTree<p2p.PeerId, KademliaNode>> get buckets => _buckets;
-  KademliaNode? get root => _root;
+  List<RedBlackTree<p2p.PeerId, KademliaTreeNode>> get buckets => _buckets;
+  KademliaTreeNode? get root => _root;
 
   // Implementing iterative node lookup as per Kademlia spec
   Future<List<p2p.PeerId>> nodeLookup(p2p.PeerId target) async {
