@@ -1,5 +1,5 @@
 import 'package:p2plib/p2plib.dart' as p2p;
-import 'kademlia_node.dart';
+import 'kademlia_tree_node.dart';
 
 class LRUCache {
   final int capacity;
@@ -11,7 +11,7 @@ class LRUCache {
     assert(capacity > 0, 'Capacity must be positive');
   }
 
-  void put(p2p.PeerId key, KademliaNode value) {
+  void put(p2p.PeerId key, KademliaTreeNode value) {
     if (_cache.containsKey(key)) {
       _moveToFront(_cache[key]!);
       _cache[key]!.value = value;
@@ -25,7 +25,7 @@ class LRUCache {
     }
   }
 
-  KademliaNode? get(p2p.PeerId key) {
+  KademliaTreeNode? get(p2p.PeerId key) {
     final node = _cache[key];
     if (node != null) {
       _moveToFront(node);
@@ -82,8 +82,8 @@ class LRUCache {
     }
   }
 
-  List<KademliaNode> getLRUNodes(int count) {
-    List<KademliaNode> result = [];
+  List<KademliaTreeNode> getLRUNodes(int count) {
+    List<KademliaTreeNode> result = [];
     var current = _tail;
     while (current != null && result.length < count) {
       result.add(current.value);
@@ -95,7 +95,7 @@ class LRUCache {
 
 class _Node {
   final p2p.PeerId key;
-  KademliaNode value;
+  KademliaTreeNode value;
   _Node? next;
   _Node? prev;
 
