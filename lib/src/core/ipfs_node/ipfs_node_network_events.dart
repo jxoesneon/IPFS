@@ -36,13 +36,13 @@ class IpfsNodeNetworkEvents {
   void _listenForConnectionEvents() {
     _router.connectionEvents.listen((event) {
       final networkEvent = NetworkEvent();
-      switch (event.eventType) {
-        case 'peer_connected':
+      switch (event.type) {
+        case ConnectionEventType.connected:
           networkEvent.peerConnected = PeerConnectedEvent()
             ..peerId = event.peerId
-            ..multiaddress = event.multiaddress;
+            ..multiaddress = event.peerId;
           break;
-        case 'peer_disconnected':
+        case ConnectionEventType.disconnected:
           networkEvent.peerDisconnected = PeerDisconnectedEvent()
             ..peerId = event.peerId;
           break;
@@ -55,18 +55,9 @@ class IpfsNodeNetworkEvents {
   void _listenForMessageEvents() {
     _router.messageEvents.listen((event) {
       final networkEvent = NetworkEvent();
-      switch (event.eventType) {
-        case 'message_received':
-          networkEvent.messageReceived = MessageReceivedEvent()
-            ..peerId = event.peerId
-            ..messageContent = event.messageContent;
-          break;
-        case 'message_sent':
-          networkEvent.messageSent = MessageSentEvent()
-            ..peerId = event.peerId
-            ..messageContent = event.messageContent;
-          break;
-      }
+      networkEvent.messageReceived = MessageReceivedEvent()
+        ..peerId = event.peerId
+        ..messageContent = event.message;
       _networkEventsController.add(networkEvent);
     });
   }
@@ -75,26 +66,17 @@ class IpfsNodeNetworkEvents {
   void _listenForDHTEvents() {
     _router.dhtEvents.listen((event) {
       final networkEvent = NetworkEvent();
-      switch (event.eventType) {
-        case 'dht_value_found':
+      switch (event.type) {
+        case DHTEventType.valueFound:
           networkEvent.dhtValueFound = DHTValueFoundEvent()
-            ..key = event.key
-            ..value = event.value
-            ..peerId = event.peerId; // Added to match the proto
+            ..key = event.data['key']
+            ..value = event.data['value']
+            ..peerId = event.data['peerId'];
           break;
-        case 'dht_value_not_found':
-          networkEvent.dhtValueNotFound = DHTValueNotFoundEvent()
-            ..key = event.key;
-          break;
-        case 'dht_provider_added':
-          networkEvent.dhtProviderAdded = DHTProviderAddedEvent()
-            ..key = event.key
-            ..peerId = event.peerId; // Added to match the proto
-          break;
-        case 'dht_provider_queried':
+        case DHTEventType.providerFound:
           networkEvent.dhtProviderQueried = DHTProviderQueriedEvent()
-            ..key = event.key
-            ..providers.addAll(event.providers); // List of providers
+            ..key = event.data['key']
+            ..providers.addAll(event.data['providers'] as List<String>);
           break;
       }
       _networkEventsController.add(networkEvent);
@@ -109,16 +91,16 @@ class IpfsNodeNetworkEvents {
         case 'pubsub_message_received':
           networkEvent.pubsubMessageReceived = PubsubMessageReceivedEvent()
             ..topic = event.topic
-            ..messageContent = event.messageContent
-            ..peerId = event.peerId; // Added to match the proto
+            ..messageContent = event.message
+            ..peerId = event.publisher;
           break;
         case 'pubsub_subscribed':
-          networkEvent.pubsubSubscriptionCreated = PubsubSubscriptionCreatedEvent()
-            ..topic = event.topic;
+          networkEvent.pubsubSubscriptionCreated =
+              PubsubSubscriptionCreatedEvent()..topic = event.topic;
           break;
         case 'pubsub_unsubscribed':
-          networkEvent.pubsubSubscriptionCancelled = PubsubSubscriptionCancelledEvent()
-            ..topic = event.topic;
+          networkEvent.pubsubSubscriptionCancelled =
+              PubsubSubscriptionCancelledEvent()..topic = event.topic;
           break;
       }
       _networkEventsController.add(networkEvent);
@@ -127,24 +109,20 @@ class IpfsNodeNetworkEvents {
 
   /// Listens for stream-related events.
   void _listenForStreamEvents() {
-    // Assuming there's a StreamEvents class in the router.
     _router.streamEvents.listen((event) {
       final networkEvent = NetworkEvent();
-      switch (event.eventType) {
-        case 'stream_started':
+      switch (event.type) {
+        case StreamEventType.opened:
           networkEvent.streamStarted = StreamStartedEvent()
-            ..streamId = event.streamId
-            ..peerId = event.peerId;
+            ..streamId = event.streamId;
           break;
-        case 'stream_ended':
+        case StreamEventType.closed:
           networkEvent.streamEnded = StreamEndedEvent()
             ..streamId = event.streamId
-            ..peerId = event.peerId
-            ..reason = event.reason;
+            ..reason = 'Stream closed';
           break;
-        case 'peer_discovered':
-          networkEvent.peerDiscovered = PeerDiscoveredEvent()
-            ..peerId = event.peerId;
+        case StreamEventType.data:
+          // Handle data event if needed
           break;
       }
       _networkEventsController.add(networkEvent);
@@ -176,9 +154,10 @@ class IpfsNodeNetworkEvents {
             ..dataSize = event.dataSize;
           break;
         case 'circuit_relay_data_received':
-          networkEvent.circuitRelayDataReceived = CircuitRelayDataReceivedEvent()
-            ..relayAddress = event.relayAddress
-            ..dataSize = event.dataSize;
+          networkEvent.circuitRelayDataReceived =
+              CircuitRelayDataReceivedEvent()
+                ..relayAddress = event.relayAddress
+                ..dataSize = event.dataSize;
           break;
         case 'circuit_relay_data_sent':
           networkEvent.circuitRelayDataSent = CircuitRelayDataSentEvent()
@@ -190,43 +169,42 @@ class IpfsNodeNetworkEvents {
     });
   }
 
-/// Listens for error events and emits corresponding network error events.
-void _listenForErrorEvents() {
-  _router.errorEvents.listen((event) {
-    final networkEvent = NetworkEvent()
-      ..error = NodeErrorEvent(
-        errorType: _mapToProtoErrorType(event.errorType),
-        message: event.message,
-        stackTrace: event.stackTrace,
-        // Add optional fields like source if available in 'event'
-      );
-    _networkEventsController.add(networkEvent);
-  });
-}
+  /// Listens for error events and emits corresponding network error events.
+  void _listenForErrorEvents() {
+    _router.errorEvents.listen((event) {
+      final networkEvent = NetworkEvent()
+        ..error = NodeErrorEvent(
+            errorType: _mapToProtoErrorType(event.type.toString()),
+            message: event.message,
+            stackTrace: '',
+            source: 'router');
+      _networkEventsController.add(networkEvent);
+    });
+  }
 
 // Helper function to map existing error types to the Proto enum
-NodeErrorEvent_ErrorType _mapToProtoErrorType(String errorType) {
-  switch (errorType) {
-    case 'invalidRequest':
-      return NodeErrorEvent_ErrorType.INVALID_REQUEST;
-    case 'notFound':
-      return NodeErrorEvent_ErrorType.NOT_FOUND;
-    case 'methodNotFound':
-      return NodeErrorEvent_ErrorType.METHOD_NOT_FOUND;
-    case 'internalError':
-      return NodeErrorEvent_ErrorType.INTERNAL_ERROR;
-    case 'networkError':
-      return NodeErrorEvent_ErrorType.NETWORK;
-    case 'protocolError':
-      return NodeErrorEvent_ErrorType.PROTOCOL;
-    case 'securityError':
-      return NodeErrorEvent_ErrorType.SECURITY;
-    case 'datastoreError':
-      return NodeErrorEvent_ErrorType.DATASTORE;
-    default:
-      return NodeErrorEvent_ErrorType.UNKNOWN;
+  NodeErrorEvent_ErrorType _mapToProtoErrorType(String errorType) {
+    switch (errorType) {
+      case 'invalidRequest':
+        return NodeErrorEvent_ErrorType.INVALID_REQUEST;
+      case 'notFound':
+        return NodeErrorEvent_ErrorType.NOT_FOUND;
+      case 'methodNotFound':
+        return NodeErrorEvent_ErrorType.METHOD_NOT_FOUND;
+      case 'internalError':
+        return NodeErrorEvent_ErrorType.INTERNAL_ERROR;
+      case 'networkError':
+        return NodeErrorEvent_ErrorType.NETWORK;
+      case 'protocolError':
+        return NodeErrorEvent_ErrorType.PROTOCOL;
+      case 'securityError':
+        return NodeErrorEvent_ErrorType.SECURITY;
+      case 'datastoreError':
+        return NodeErrorEvent_ErrorType.DATASTORE;
+      default:
+        return NodeErrorEvent_ErrorType.UNKNOWN;
+    }
   }
-}
 
   /// Stops listening for network events and closes the stream controller.
   void dispose() {
