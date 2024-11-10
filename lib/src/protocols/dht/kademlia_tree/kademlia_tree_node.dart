@@ -6,13 +6,13 @@ enum KademliaNodeState {
   failed // Node has failed to respond
 }
 
-class KademliaNode {
+class KademliaTreeNode {
   final p2p.PeerId peerId;
 
   /// Distance is calculated as the XOR metric between this node's ID and the target ID
   /// following Kademlia specification
   final int distance;
-  final List<KademliaNode> children;
+  final List<KademliaTreeNode> children;
   final p2p.PeerId _associatedPeerId;
   int _lastSeen;
   int? bucketIndex;
@@ -24,7 +24,7 @@ class KademliaNode {
   static const String PROTOCOL_VERSION = '/ipfs/kad/1.0.0';
   static const int K = 20; // Standard Kademlia k-bucket size
 
-  KademliaNode(
+  KademliaTreeNode(
     this.peerId,
     this.distance,
     this._associatedPeerId, {
