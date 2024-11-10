@@ -3,6 +3,8 @@ import '../red_black_tree.dart';
 import 'helpers.dart' as helpers;
 import 'package:p2plib/p2plib.dart' as p2p;
 import '/../src/protocols/dht/kademlia_tree/kademlia_node.dart';
+import 'lru_cache.dart';
+import 'dart:math' as Math;
 // lib/src/protocols/dht/kademlia_tree/bucket_management.dart
 
 extension BucketManagement on KademliaTree {
@@ -140,100 +142,127 @@ extension BucketManagement on KademliaTree {
     return (255 - (distance.bitLength - 1)).toInt();
   }
 
+  Future<bool> _pingNode(KademliaNode node) async {
+    try {
+      final response = await sendPingRequest(node.peerId);
+      return response != null;
+    } catch (e) {
+      print('Ping failed for node ${node.peerId}: $e');
+      return false;
+    }
+  }
+
+  LRUCache _getOrCreateCache(int bucketIndex) {
+    return this.bucketCaches.putIfAbsent(
+          bucketIndex,
+          () => LRUCache(
+              KademliaTree.K * 2), // Cache size twice the k-bucket size
+        );
+  }
+
   Future<void> _handleBucketFullness(
     int bucketIndex,
     p2p.PeerId peerId,
     p2p.PeerId associatedPeerId,
   ) async {
-    final now = DateTime.now();
-
     if (_canSplitBucket(bucketIndex)) {
       _splitBucket(bucketIndex);
-    } else {
-      KademliaNode? leastRecentlySeenNode =
-          _findLeastRecentlySeenNode(bucketIndex);
-      bool newNodeWasContact = _wasNodeContactInRecentLookup(peerId);
-      final nodeActivityThreshold = Duration(minutes: 10);
-
-      if (newNodeWasContact) {
-        if (leastRecentlySeenNode != null) {
-          //Calculate stability score for the candidate node
-          double candidateNodeStability =
-              calculateConnectionStabilityScore(leastRecentlySeenNode);
-
-          //Compare stability scores.  If the new node is more stable, replace.
-          if (candidateNodeStability <
-              calculateConnectionStabilityScore(KademliaNode(
-                peerId,
-                helpers.calculateDistance(peerId, root!.peerId),
-                associatedPeerId,
-                lastSeen: DateTime.now().millisecondsSinceEpoch,
-              ))) {
-            buckets[bucketIndex].delete(leastRecentlySeenNode.peerId);
-            KademliaNode newNode = KademliaNode(
-              peerId,
-              helpers.calculateDistance(peerId, root!.peerId),
-              associatedPeerId,
-              lastSeen: DateTime.now().millisecondsSinceEpoch,
-            );
-            newNode.bucketIndex = bucketIndex;
-            buckets[bucketIndex].insert(peerId, newNode);
-          }
-        }
-      } else {
-        if (leastRecentlySeenNode != null) {
-          final lastSeenTime = this.lastSeen[leastRecentlySeenNode.peerId];
-
-          if (lastSeenTime == null ||
-              now.difference(lastSeenTime) > nodeActivityThreshold) {
-            //Calculate stability score for the candidate node
-            double candidateNodeStability =
-                calculateConnectionStabilityScore(leastRecentlySeenNode);
-
-            //Compare stability scores.  If the new node is more stable, replace.
-            if (candidateNodeStability <
-                calculateConnectionStabilityScore(KademliaNode(
-                  peerId,
-                  helpers.calculateDistance(peerId, root!.peerId),
-                  associatedPeerId,
-                  lastSeen: DateTime.now().millisecondsSinceEpoch,
-                ))) {
-              buckets[bucketIndex].delete(leastRecentlySeenNode.peerId);
-              KademliaNode newNode = KademliaNode(
-                peerId,
-                helpers.calculateDistance(peerId, root!.peerId),
-                associatedPeerId,
-                lastSeen: DateTime.now().millisecondsSinceEpoch,
-              );
-              newNode.bucketIndex = bucketIndex;
-              buckets[bucketIndex].insert(peerId, newNode);
-            }
-          } else if (!await isNodeActive(leastRecentlySeenNode)) {
-            //Calculate stability score for the candidate node
-            double candidateNodeStability =
-                calculateConnectionStabilityScore(leastRecentlySeenNode);
-
-            //Compare stability scores.  If the new node is more stable, replace.
-            if (candidateNodeStability <
-                calculateConnectionStabilityScore(KademliaNode(
-                  peerId,
-                  helpers.calculateDistance(peerId, root!.peerId),
-                  associatedPeerId,
-                  lastSeen: DateTime.now().millisecondsSinceEpoch,
-                ))) {
-              buckets[bucketIndex].delete(leastRecentlySeenNode.peerId);
-              KademliaNode newNode = KademliaNode(
-                peerId,
-                helpers.calculateDistance(peerId, root!.peerId),
-                associatedPeerId,
-                lastSeen: DateTime.now().millisecondsSinceEpoch,
-              );
-              newNode.bucketIndex = bucketIndex;
-              buckets[bucketIndex].insert(peerId, newNode);
-            }
-          }
-        }
-      }
+      return;
     }
+
+    final cache = _getOrCreateCache(bucketIndex);
+    final leastRecentNode = _findLeastRecentlySeenNode(bucketIndex);
+
+    if (leastRecentNode == null) return;
+
+    // Try pinging the least recently seen node
+    final isAlive = await _pingNode(leastRecentNode);
+
+    if (!isAlive) {
+      // If node is unresponsive, replace it
+      buckets[bucketIndex].delete(leastRecentNode.peerId);
+      final newNode = KademliaNode(
+        peerId,
+        helpers.calculateDistance(peerId, root!.peerId),
+        associatedPeerId,
+        lastSeen: DateTime.now().millisecondsSinceEpoch,
+      );
+      buckets[bucketIndex].insert(peerId, newNode);
+      cache.put(peerId, newNode);
+      return;
+    }
+
+    // Update LRU cache with the successful ping
+    cache.put(leastRecentNode.peerId, leastRecentNode);
+
+    // If the node is alive but we have a better candidate
+    if (_shouldReplaceNode(leastRecentNode, peerId)) {
+      buckets[bucketIndex].delete(leastRecentNode.peerId);
+      final newNode = KademliaNode(
+        peerId,
+        helpers.calculateDistance(peerId, root!.peerId),
+        associatedPeerId,
+        lastSeen: DateTime.now().millisecondsSinceEpoch,
+      );
+      buckets[bucketIndex].insert(peerId, newNode);
+      cache.put(peerId, newNode);
+    }
+  }
+
+  bool _shouldReplaceNode(KademliaNode existingNode, p2p.PeerId newPeerId) {
+    // Check if the new peer was recently active in lookups
+    if (_wasNodeContactInRecentLookup(newPeerId)) {
+      return true;
+    }
+
+    // Check connection stability
+    final existingStability = calculateConnectionStabilityScore(existingNode);
+    final newStability = calculateConnectionStabilityScore(
+      KademliaNode(
+        newPeerId,
+        helpers.calculateDistance(newPeerId, root!.peerId),
+        root!.peerId,
+        lastSeen: DateTime.now().millisecondsSinceEpoch,
+      ),
+    );
+
+    return newStability > existingStability;
+  }
+
+  double calculateConnectionStabilityScore(KademliaNode node) {
+    // Base score starts at 1.0
+    double score = 1.0;
+
+    // Factor 1: Connection state
+    switch (node.state) {
+      case KademliaNodeState.active:
+        score *= 1.0;
+        break;
+      case KademliaNodeState.stale:
+        score *= 0.5;
+        break;
+      case KademliaNodeState.failed:
+        score *= 0.1;
+        break;
+    }
+
+    // Factor 2: Failed requests penalty
+    score *= Math.pow(0.9, node.failedRequests);
+
+    // Factor 3: Recent activity bonus
+    final lastSeenDuration = DateTime.now()
+        .difference(DateTime.fromMillisecondsSinceEpoch(node.lastSeen));
+    if (lastSeenDuration < Duration(minutes: 30)) {
+      score *= 1.2; // 20% bonus for recent activity
+    }
+
+    // Factor 4: RTT (Round Trip Time) consideration
+    if (node.lastRtt > 0) {
+      // Normalize RTT between 0 and 1, assuming 1000ms as high latency
+      final rttScore = 1.0 - (node.lastRtt / 1000.0).clamp(0.0, 1.0);
+      score *= (0.5 + (0.5 * rttScore)); // RTT affects up to 50% of score
+    }
+
+    return score.clamp(0.0, 1.0); // Ensure final score is between 0 and 1
   }
 }
