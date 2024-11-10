@@ -440,11 +440,13 @@ class PubSubEvent {
   final String topic;
   final Uint8List message;
   final String publisher;
+  final String eventType;
 
   PubSubEvent({
     required this.topic,
     required this.message,
     required this.publisher,
+    required this.eventType,
   });
 }
 
