@@ -89,10 +89,14 @@ class NetworkHandler {
   /// Sends a message to a specific peer.
   Future<void> sendMessage(String peerId, String message) async {
     try {
-      Uint8List messageBytes = Uint8List.fromList(
-          utf8.encode(message)); // Convert String to Uint8List
-      await _router.sendMessage(
-          peerId, messageBytes); // Ensure sendMessage accepts Uint8List
+      // Convert String peerId to PeerId object
+      final peerIdBytes = Uint8List.fromList(utf8.encode(peerId));
+      final peer = p2p.PeerId(value: peerIdBytes);
+
+      // Convert String message to Uint8List
+      Uint8List messageBytes = Uint8List.fromList(utf8.encode(message));
+
+      await _router.sendMessage(peer, messageBytes);
       print('Message sent to peer $peerId.');
     } catch (e) {
       print('Error sending message to peer $peerId: $e');
@@ -192,7 +196,7 @@ class NetworkHandler {
       });
 
       // Send the request
-      await _router.sendMessage(peer.toString(), messageWithId);
+      await _router.sendMessage(peer, messageWithId);
 
       // Wait for response with timeout
       return await completer.future.timeout(
