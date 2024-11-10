@@ -1,12 +1,16 @@
-import 'red_black_tree/search.dart' as rb_search;
-import 'red_black_tree/deletion.dart' as deletion;
-import 'red_black_tree/insertion.dart' as insertion;
-import 'red_black_tree/rotations.dart' as rotations;
-import '/../src/proto/dht/common_tree.pb.dart' as common_tree;
-import 'red_black_tree/fix_violations.dart' as fix_violations;
 // lib/src/protocols/dht/red_black_tree.dart
 
+import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
+    as common_tree;
+import 'package:dart_ipfs/src/protocols/dht/red_black_tree/insertion.dart'
+    as insertion;
+import 'package:dart_ipfs/src/protocols/dht/red_black_tree/deletion.dart'
+    as deletion;
+import 'package:dart_ipfs/src/protocols/dht/red_black_tree/search.dart'
+    as rb_search;
+
 // Represents a node in a Red-Black Tree.
+
 class RedBlackTreeNode<K_PeerId, V_PeerInfo> {
   common_tree.K_PeerId key;
   common_tree.V_PeerInfo value;
@@ -32,11 +36,11 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
   final deletion.Deletion<K_PeerId, V_PeerInfo> _deletion;
   final rb_search.Search<K_PeerId, V_PeerInfo> _search;
 
-  var size;
+  var size = 0;
 
-  bool isEmpty;
+  bool isEmpty = true;
 
-  var entries;
+  var entries = <MapEntry<K_PeerId, V_PeerInfo>>[];
 
   RedBlackTree({int Function(K_PeerId, K_PeerId)? compare})
       : _compare = compare ?? ((a, b) => (a as int).compareTo(b as int)),
@@ -81,7 +85,11 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
 
   // Add operator [] getter
   V_PeerInfo? operator [](K_PeerId key) {
-    return search(key);
+    final result = search(key);
+    if (result is common_tree.V_PeerInfo) {
+      return result as V_PeerInfo;
+    }
+    return null;
   }
 
   // Add the remove method
