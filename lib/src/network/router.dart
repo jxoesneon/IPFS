@@ -7,7 +7,6 @@ import '../transport/p2plib_router.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import '../core/data_structures/peer.dart';
 
-
 /// Router handles network communication between IPFS nodes
 class Router {
   final P2plibRouter _router;
@@ -47,7 +46,7 @@ class Router {
         datagram: message,
       );
     } else if (peerId is p2p.PeerId) {
-      await _router.sendMessage(p2p.PeerId, message);
+      await _router.sendMessage(peerId, message);
     } else {
       throw ArgumentError('peerId must be either String or PeerId');
     }
