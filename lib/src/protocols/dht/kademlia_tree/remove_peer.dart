@@ -1,8 +1,8 @@
+import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/bucket_management.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'helpers.dart'; // Import for calculateDistance, getBucketIndex
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart'; // Import the main KademliaTree class
 // lib/src/protocols/dht/kademlia_tree/remove_peer.dart
-
 
 extension RemovePeer on KademliaTree {
   /// Removes a peer from the Kademlia tree.
@@ -18,8 +18,10 @@ extension RemovePeer on KademliaTree {
       // Check if the bucket can be merged with an adjacent bucket
       if (bucketIndex > 0 && bucketIndex < buckets.length - 1) {
         // Try merging with the previous or next bucket
-        this.mergeBuckets(bucketIndex, bucketIndex - 1); // Use through KademliaTree instance
-        this.mergeBuckets(bucketIndex, bucketIndex + 1); // Use through KademliaTree instance
+        this.mergeBuckets(
+            bucketIndex, bucketIndex - 1); // Use through KademliaTree instance
+        this.mergeBuckets(
+            bucketIndex, bucketIndex + 1); // Use through KademliaTree instance
       }
     }
   }
