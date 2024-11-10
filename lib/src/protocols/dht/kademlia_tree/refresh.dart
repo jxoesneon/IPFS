@@ -1,7 +1,7 @@
-import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart'; // Import the main KademliaTree class
+import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
+import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/remove_peer.dart'; // Import the main KademliaTree class
 
 // lib/src/protocols/dht/kademlia_tree/refresh.dart
-
 
 extension Refresh on KademliaTree {
   /// Refreshes the Kademlia tree by periodically checking and updating buckets.
@@ -10,7 +10,8 @@ extension Refresh on KademliaTree {
     for (var bucket in buckets) {
       for (var nodeEntry in bucket.entries) {
         // Check if the peer has been seen recently
-        DateTime? lastSeenTime = lastSeen[nodeEntry.key]; // Use the public getter instead
+        DateTime? lastSeenTime =
+            lastSeen[nodeEntry.key]; // Use the public getter instead
         if (lastSeenTime != null &&
             DateTime.now().difference(lastSeenTime) > refreshTimeout) {
           // 2. Evict stale peers
