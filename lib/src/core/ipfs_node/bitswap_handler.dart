@@ -217,7 +217,9 @@ class BitswapHandler {
 
   /// Broadcasts want request to connected peers
   Future<void> _broadcastWantRequest(message.Message message) async {
-    final connectedPeers = _router.routes.values.map((e) => e.peer).toList();
+    final connectedPeers = _router.routerL0.routes.values
+        .map((route) => p2p.PeerId(value: route.peerId.value))
+        .toList();
 
     if (connectedPeers.isEmpty) {
       throw StateError('No connected peers to broadcast want request to');
@@ -229,12 +231,15 @@ class BitswapHandler {
     for (final peer in connectedPeers) {
       futures.add(Future(() {
         _router.routerL0.sendDatagram(
-          addresses: [peer.address.ip],
+          addresses: [
+            p2p.FullAddress(
+                address: _getPeerAddress(peer.toString()), port: 4001)
+          ],
           datagram: messageBytes,
         );
-        print('Want request sent to peer: ${peer.id}');
+        print('Want request sent to peer: ${peer.toString()}');
       }).catchError((error) {
-        print('Error sending want request to peer ${peer.id}: $error');
+        print('Error sending want request to peer ${peer.toString()}: $error');
       }));
     }
 
@@ -243,10 +248,17 @@ class BitswapHandler {
 
   /// Helper method to get peer address
   InternetAddress _getPeerAddress(String peerId) {
-    final peer = _router.routes.values.map((e) => e.peer).firstWhere(
-        (p) => p.id == peerId,
+    final route = _router.routerL0.routes.values.firstWhere(
+        (r) => r.peerId.toString() == peerId,
         orElse: () => throw StateError('Peer not found: $peerId'));
-    return InternetAddress(peer.address.ip);
+
+    // Get the first address from the resolved addresses
+    final addresses = _router.routerL0.resolvePeerId(route.peerId);
+    if (addresses.isEmpty) {
+      throw StateError('No addresses found for peer: $peerId');
+    }
+
+    return addresses.first.address;
   }
 
   Future<void> _handlePacket(p2p.Packet packet) async {
