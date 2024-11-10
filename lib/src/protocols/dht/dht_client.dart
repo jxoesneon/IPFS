@@ -11,6 +11,9 @@ import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
 import 'package:dart_ipfs/src/proto/generated/dht_messages.pb.dart'
     as dht_messages;
 import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart'
+    as ipfs_node_network_events;
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 // lib/src/protocols/dht/dht_client.dart
 
 /// Implementation of the Kademlia DHT protocol for IPFS
@@ -423,5 +426,126 @@ class DHTClient {
       if (a[i] != b[i]) return false;
     }
     return true;
+  }
+
+  Future<List<String>> getAllStoredKeys() async {
+    try {
+      // Get all keys from the DHT storage
+      final List<String> storedKeys = [];
+
+      // Query the datastore for all DHT keys
+      final datastoreKeys = await node.dhtHandler.storage.getAllKeys();
+
+      // Filter and process DHT keys
+      for (var key in datastoreKeys) {
+        // Only include DHT value keys (exclude provider and peer records)
+        if (key.startsWith('/dht/values/')) {
+          // Remove the prefix to get the actual key
+          final actualKey = key.substring('/dht/values/'.length);
+          storedKeys.add(actualKey);
+        }
+      }
+
+      // Sort keys for consistent ordering
+      storedKeys.sort();
+
+      // Add key metadata to the routing table
+      for (var key in storedKeys) {
+        try {
+          final targetPeerId = p2p.PeerId(value: Base58().base58Decode(key));
+
+          // Update routing table with key information
+          _kademliaRoutingTable.addKeyProvider(
+              targetPeerId, this.peerId, DateTime.now());
+        } catch (e) {
+          print('Error processing key metadata: $e');
+          // Continue processing other keys
+        }
+      }
+
+      return storedKeys;
+    } catch (e) {
+      print('Error retrieving stored keys: $e');
+      return [];
+    }
+  }
+
+  Future<void> updateKeyRepublishTime(String key) async {
+    try {
+      // Create metadata key for storing republish time
+      final metadataKey = '/dht/metadata/$key/last_republish';
+
+      // Store current timestamp
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final timestampData =
+          Uint8List.fromList(utf8.encode(timestamp.toString()));
+
+      // Create a Block from the timestamp data
+      final block = await Block.fromData(timestampData);
+
+      // Update the timestamp in DHT storage
+      await node.dhtHandler.storage.put(metadataKey, block);
+
+      // Update routing table metadata
+      try {
+        final targetPeerId = p2p.PeerId(value: Base58().base58Decode(key));
+
+        // Update the key provider timestamp in routing table
+        _kademliaRoutingTable.updateKeyProviderTimestamp(
+            targetPeerId, this.peerId, DateTime.now());
+      } catch (e) {
+        print('Error updating routing table metadata: $e');
+        // Continue even if routing table update fails
+      }
+
+      // Emit key republish event for monitoring
+      final event = ipfs_node_network_events.DHTValueProvidedEvent()
+        ..key = key
+        ..value = utf8.encode(timestamp.toString());
+
+      node.dhtHandler.router
+          .emitEvent('dht:key:republished', event.writeToBuffer());
+    } catch (e) {
+      print('Error updating republish time for key $key: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> checkValue(p2p.PeerId peer, String key) async {
+    final request = FindValueRequest()..key = utf8.encode(key);
+
+    try {
+      final response = await _sendRequest(
+        peer,
+        PROTOCOL_GET_VALUE,
+        request.writeToBuffer(),
+      );
+
+      final findValueResponse = FindValueResponse.fromBuffer(response);
+      return findValueResponse.hasValue();
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> storeValue(
+      p2p.PeerId peer, Uint8List key, Uint8List value) async {
+    final request = PutValueRequest()
+      ..key = key
+      ..value = value;
+
+    try {
+      final response = await _sendRequest(
+        peer,
+        PROTOCOL_PUT_VALUE,
+        request.writeToBuffer(),
+      );
+
+      final putValueResponse = PutValueResponse.fromBuffer(response);
+      return putValueResponse.success;
+    } catch (e) {
+      print('Error storing value with peer ${Base58().encode(peer.value)}: $e');
+      return false;
+    }
   }
 }
