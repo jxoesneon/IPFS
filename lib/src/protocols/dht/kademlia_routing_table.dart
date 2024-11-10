@@ -6,7 +6,7 @@ import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
 import 'dht_client.dart';
 import 'kademlia_tree.dart';
 import 'red_black_tree.dart';
-import 'kademlia_tree/kademlia_node.dart';
+import 'kademlia_tree/kademlia_tree_node.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
 import 'package:dart_ipfs/src/protocols/dht/connection_statistics.dart';
@@ -28,7 +28,7 @@ class KademliaRoutingTable {
     dhtClient = client;
     _tree = KademliaTree(
       client,
-      root: KademliaNode(
+      root: KademliaTreeNode(
         client.peerId,
         0, // Distance to self is 0
         client.associatedPeerId,
@@ -58,7 +58,7 @@ class KademliaRoutingTable {
       }
     }
 
-    bucket[peerId] = KademliaNode(
+    bucket[peerId] = KademliaTreeNode(
       peerId,
       distance,
       associatedPeerId,
@@ -151,17 +151,17 @@ class KademliaRoutingTable {
           min(a.value.length, b.value.length), (i) => a.value[i] ^ b.value[i])
       .reduce((acc, val) => (acc << 8) | val);
 
-  List<RedBlackTree<p2p.PeerId, KademliaNode>> get buckets => _tree.buckets;
+  List<RedBlackTree<p2p.PeerId, KademliaTreeNode>> get buckets => _tree.buckets;
 
   void splitBucket(int bucketIndex) {
     if (bucketIndex >= buckets.length ||
         buckets[bucketIndex].size <= K_BUCKET_SIZE) return;
 
     final bucket = buckets[bucketIndex];
-    final lowerBucket =
-        RedBlackTree<p2p.PeerId, KademliaNode>(compare: _xorDistanceComparator);
-    final upperBucket =
-        RedBlackTree<p2p.PeerId, KademliaNode>(compare: _xorDistanceComparator);
+    final lowerBucket = RedBlackTree<p2p.PeerId, KademliaTreeNode>(
+        compare: _xorDistanceComparator);
+    final upperBucket = RedBlackTree<p2p.PeerId, KademliaTreeNode>(
+        compare: _xorDistanceComparator);
 
     for (var entry in bucket.entries) {
       final node = entry.value;
@@ -203,9 +203,10 @@ class KademliaRoutingTable {
     }
   }
 
-  RedBlackTree<p2p.PeerId, KademliaNode> _getOrCreateBucket(int bucketIndex) {
+  RedBlackTree<p2p.PeerId, KademliaTreeNode> _getOrCreateBucket(
+      int bucketIndex) {
     while (_tree.buckets.length <= bucketIndex) {
-      _tree.buckets.add(RedBlackTree<p2p.PeerId, KademliaNode>(
+      _tree.buckets.add(RedBlackTree<p2p.PeerId, KademliaTreeNode>(
           compare: _xorDistanceComparator));
     }
     return _tree.buckets[bucketIndex];
@@ -246,7 +247,7 @@ class KademliaRoutingTable {
     return distance.bitLength - 1;
   }
 
-  bool _removeStaleNode(RedBlackTree<p2p.PeerId, KademliaNode> bucket) {
+  bool _removeStaleNode(RedBlackTree<p2p.PeerId, KademliaTreeNode> bucket) {
     for (var entry in bucket.entries.toList()) {
       if (_isStaleNode(entry.key)) {
         bucket.remove(entry.key);
@@ -256,7 +257,7 @@ class KademliaRoutingTable {
     return false; // Return false if no stale node was found
   }
 
-  KademliaNode? _findNode(p2p.PeerId peerId) {
+  KademliaTreeNode? _findNode(p2p.PeerId peerId) {
     for (var bucket in _tree.buckets) {
       if (bucket.containsKey(peerId)) {
         return bucket[peerId];
@@ -284,7 +285,7 @@ class KademliaRoutingTable {
       return;
     }
 
-    bucket[peerId] = KademliaNode(
+    bucket[peerId] = KademliaTreeNode(
       peerId,
       distance,
       associatedPeerId,
@@ -331,7 +332,7 @@ class KademliaRoutingTable {
     final bucket = _getOrCreateBucket(bucketIndex);
 
     // Create or update the key node
-    final keyNode = KademliaNode(
+    final keyNode = KademliaTreeNode(
       key,
       distance,
       provider,
