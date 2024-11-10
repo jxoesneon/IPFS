@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
+import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
 
 import 'dht_handler.dart';
@@ -24,6 +25,7 @@ import 'package:dart_ipfs/src/core/data_structures/directory.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/core/config/config.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 
 // lib/src/core/ipfs_node/ipfs_node.dart
 
@@ -356,10 +358,20 @@ class IPFSNode {
         return [peerID];
       }
 
+      // Convert string CID to CID object
+      final cidObj = CID(
+          version: IPFSCIDVersion.IPFS_CID_VERSION_1,
+          multihash: Uint8List.fromList(cid.codeUnits),
+          codec: 'raw',
+          multibasePrefix: 'base58btc');
+
       // Try finding providers through DHT
-      final dhtProviders = await dhtHandler.findProviders(cid);
+      final dhtProviders = await dhtHandler.findProviders(cidObj);
       if (dhtProviders.isNotEmpty) {
-        return dhtProviders;
+        // Convert V_PeerInfo to String peer IDs
+        return dhtProviders
+            .map((p) => Base58().encode(Uint8List.fromList(p.peerId)))
+            .toList();
       }
 
       // If DHT lookup fails, try finding through routing handler
