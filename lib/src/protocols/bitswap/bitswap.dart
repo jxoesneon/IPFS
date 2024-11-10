@@ -2,6 +2,8 @@ import 'dart:math';
 import 'ledger.dart';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/encoding.dart';
 import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
@@ -9,9 +11,10 @@ import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as proto;
-import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as bitswap_message;
-import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as bitswap_pb;
-
+import 'package:dart_ipfs/src/protocols/bitswap/message.dart'
+    as bitswap_message;
+import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
+    as bitswap_pb;
 // lib/src/protocols/bitswap/bitswap.dart
 
 class Bitswap {
@@ -98,7 +101,7 @@ class Bitswap {
             ..cancel = entry.cancel
             ..wantType = _convertToProtoWantType(entry.wantType)
             ..sendDontHave = entry.sendDontHave;
-          
+
           await handleWantBlock(peerId, protoEntry);
         }
       }
@@ -119,8 +122,7 @@ class Bitswap {
   }
 
   /// Handles received blocks from peers.
-  Future<void> _handleReceivedBlock(
-      String srcPeerId, Block block) async {
+  Future<void> _handleReceivedBlock(String srcPeerId, Block block) async {
     final blockId = block.cid.toString();
     print('Received block with CID $blockId from $srcPeerId.');
 
@@ -221,7 +223,11 @@ class Bitswap {
   // Helper function to send a Bitswap message to a peer
   Future<void> send(String peerId, proto.Message message) async {
     try {
-      await _router.sendMessage(peerId, message.writeToBuffer());
+      // Convert the string peerId to a PeerId object using Base58 decoding
+      final peerIdBytes = Base58().base58Decode(peerId);
+      final peer = p2p.PeerId(value: peerIdBytes);
+
+      await _router.sendMessage(peer, message.writeToBuffer());
     } catch (e) {
       print('Error sending message to $peerId: $e');
     }
