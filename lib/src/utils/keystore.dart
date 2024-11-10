@@ -1,6 +1,8 @@
 // lib/src/utils/keystore.dart
 
 import 'dart:convert';
+import 'dart:typed_data';
+import 'package:p2plib/p2plib.dart' show Crypto;
 
 class KeyPair {
   final String publicKey;
@@ -65,5 +67,34 @@ class Keystore {
       addKeyPair(name, KeyPair(keys['publicKey'], keys['privateKey']));
     });
     print('Keystore deserialized from JSON.');
+  }
+
+  /// Verifies a signature using a public key
+  Future<bool> verifySignature(
+      String publicKey, Uint8List data, Uint8List signature) async {
+    try {
+      // Create crypto instance
+      final crypto = Crypto();
+      await crypto.init(); // Initialize the crypto worker
+
+      // Construct the datagram in the format expected by p2plib
+      // This needs to match the Message format used in p2plib
+      final datagram = Uint8List.fromList([
+        ...data, // Original message
+        ...signature // Signature appended at the end
+      ]);
+
+      try {
+        // Verify the signature
+        await crypto.verify(datagram);
+        return true;
+      } catch (e) {
+        // If verification fails, crypto.verify throws an exception
+        return false;
+      }
+    } catch (e) {
+      print('Error verifying signature: $e');
+      return false;
+    }
   }
 }
