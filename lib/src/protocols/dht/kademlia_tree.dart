@@ -4,8 +4,8 @@ import 'red_black_tree.dart';
 import 'connection_statistics.dart';
 import 'kademlia_tree/kademlia_node.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
-import '/../src/core/data_structures/node_stats.dart';
-import '../../proto/generated/dht/dht_messages.pb.dart';
+import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/dht_messages.pb.dart';
 // lib/src/protocols/dht/kademlia_tree.dart
 
 /// Represents a Kademlia tree for efficient peer routing and lookup.
@@ -25,6 +25,9 @@ class KademliaTree {
   Map<p2p.PeerId, List<bool>> _lookupSuccessHistory = {};
   Map<p2p.PeerId, ConnectionStatistics> _connectionStats = {};
   Map<p2p.PeerId, NodeStats> _nodeStats = {};
+
+  // Add these fields
+  final refreshTimeout = Duration(minutes: 30);
 
   // Constructor
   KademliaTree(p2p.PeerId localPeerId, {KademliaNode? root}) {
