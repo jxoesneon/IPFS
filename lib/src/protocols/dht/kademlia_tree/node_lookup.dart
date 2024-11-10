@@ -30,7 +30,7 @@ extension NodeLookup on KademliaTree {
       for (var peerId in peersToQuery) {
         try {
           List<p2p.PeerId> queriedPeers =
-              await findNode(router.dhtClient, peerId, target);
+              await findNode(dhtClient, peerId, target);
           newClosestPeers.addAll(queriedPeers);
         } catch (e) {
           print('Error querying peer $peerId: $e');
