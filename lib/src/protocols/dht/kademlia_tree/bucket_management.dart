@@ -2,7 +2,7 @@ import '../kademlia_tree.dart';
 import '../red_black_tree.dart';
 import 'helpers.dart' as helpers;
 import 'package:p2plib/p2plib.dart' as p2p;
-import '/../src/protocols/dht/kademlia_tree/kademlia_node.dart';
+import 'kademlia_tree_node.dart';
 import 'lru_cache.dart';
 import 'dart:math' as Math;
 // lib/src/protocols/dht/kademlia_tree/bucket_management.dart
@@ -15,7 +15,7 @@ extension BucketManagement on KademliaTree {
   bool Function(p2p.PeerId) get wasNodeContactInRecentLookup =>
       _wasNodeContactInRecentLookup;
 
-  KademliaNode? Function(int) get findLeastRecentlySeenNode =>
+  KademliaTreeNode? Function(int) get findLeastRecentlySeenNode =>
       _findLeastRecentlySeenNode;
 
   void Function(int) get splitBucket => _splitBucket;
@@ -29,7 +29,7 @@ extension BucketManagement on KademliaTree {
     // 1. Create a new bucket
     buckets.insert(
       bucketIndex + 1,
-      RedBlackTree<p2p.PeerId, KademliaNode>(
+      RedBlackTree<p2p.PeerId, KademliaTreeNode>(
         compare: (p2p.PeerId a, p2p.PeerId b) =>
             a.toString().compareTo(b.toString()),
       ),
@@ -112,12 +112,12 @@ extension BucketManagement on KademliaTree {
     return this.recentContacts.contains(peerId);
   }
 
-  KademliaNode? _findLeastRecentlySeenNode(int bucketIndex) {
+  KademliaTreeNode? _findLeastRecentlySeenNode(int bucketIndex) {
     if (buckets[bucketIndex].isEmpty) {
       return null;
     }
 
-    KademliaNode? leastRecentlySeenNode;
+    KademliaTreeNode? leastRecentlySeenNode;
     DateTime? oldestLastSeenTime;
 
     for (var nodeEntry in buckets[bucketIndex].entries) {
@@ -142,7 +142,7 @@ extension BucketManagement on KademliaTree {
     return (255 - (distance.bitLength - 1)).toInt();
   }
 
-  Future<bool> _pingNode(KademliaNode node) async {
+  Future<bool> _pingNode(KademliaTreeNode node) async {
     try {
       final response = await sendPingRequest(node.peerId);
       return response != null;
@@ -181,7 +181,7 @@ extension BucketManagement on KademliaTree {
     if (!isAlive) {
       // If node is unresponsive, replace it
       buckets[bucketIndex].delete(leastRecentNode.peerId);
-      final newNode = KademliaNode(
+      final newNode = KademliaTreeNode(
         peerId,
         helpers.calculateDistance(peerId, root!.peerId),
         associatedPeerId,
@@ -198,7 +198,7 @@ extension BucketManagement on KademliaTree {
     // If the node is alive but we have a better candidate
     if (_shouldReplaceNode(leastRecentNode, peerId)) {
       buckets[bucketIndex].delete(leastRecentNode.peerId);
-      final newNode = KademliaNode(
+      final newNode = KademliaTreeNode(
         peerId,
         helpers.calculateDistance(peerId, root!.peerId),
         associatedPeerId,
@@ -209,7 +209,7 @@ extension BucketManagement on KademliaTree {
     }
   }
 
-  bool _shouldReplaceNode(KademliaNode existingNode, p2p.PeerId newPeerId) {
+  bool _shouldReplaceNode(KademliaTreeNode existingNode, p2p.PeerId newPeerId) {
     // Check if the new peer was recently active in lookups
     if (_wasNodeContactInRecentLookup(newPeerId)) {
       return true;
@@ -218,7 +218,7 @@ extension BucketManagement on KademliaTree {
     // Check connection stability
     final existingStability = calculateConnectionStabilityScore(existingNode);
     final newStability = calculateConnectionStabilityScore(
-      KademliaNode(
+      KademliaTreeNode(
         newPeerId,
         helpers.calculateDistance(newPeerId, root!.peerId),
         root!.peerId,
@@ -229,7 +229,7 @@ extension BucketManagement on KademliaTree {
     return newStability > existingStability;
   }
 
-  double calculateConnectionStabilityScore(KademliaNode node) {
+  double calculateConnectionStabilityScore(KademliaTreeNode node) {
     // Base score starts at 1.0
     double score = 1.0;
 
