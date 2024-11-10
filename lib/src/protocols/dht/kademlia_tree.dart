@@ -444,6 +444,17 @@ class KademliaTree {
 
   // Add getter to show explicit usage
   Map<int, LRUCache> get bucketCaches => _bucketCaches;
+
+  p2p.PeerId? getAssociatedPeer(p2p.PeerId peerId) {
+    for (var bucket in _buckets) {
+      for (var entry in bucket.entries) {
+        if (entry.key == peerId) {
+          return entry.value.associatedPeerId;
+        }
+      }
+    }
+    return null;
+  }
 }
 
 extension RedBlackTreeGetOperator<K, V> on RedBlackTree<K, V> {
