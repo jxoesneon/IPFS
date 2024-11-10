@@ -1,3 +1,4 @@
+import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'package:http/http.dart' as http;
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:p2plib/p2plib.dart' show PeerId;
@@ -15,11 +16,16 @@ class DHTHandler implements IDHTHandler {
   final DHTClient dhtClient;
   final Keystore _keystore; // Add a reference to the Keystore
   final P2plibRouter _router;
+  final Datastore _storage; // Add storage field
 
   DHTHandler(config, P2plibRouter router, NetworkHandler networkHandler)
       : dhtClient = DHTClient(networkHandler: networkHandler),
         _keystore = Keystore(config),
-        _router = router;
+        _router = router,
+        _storage = Datastore(config.datastorePath) {
+    // Initialize storage in constructor
+    _storage.init();
+  }
 
   /// Starts the DHT client.
   Future<void> start() async {
@@ -241,4 +247,7 @@ class DHTHandler implements IDHTHandler {
       return null;
     }
   }
+
+  // Add getter for storage
+  Datastore get storage => _storage;
 }
