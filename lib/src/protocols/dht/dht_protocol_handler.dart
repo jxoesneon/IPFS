@@ -1,13 +1,20 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/core/messages/message_factory.dart';
 import 'package:dart_ipfs/src/proto/generated/dht_messages.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht
+    show PutValueRequest, PutValueResponse;
+import 'package:dart_ipfs/src/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 
 class DHTProtocolHandler {
   static const String PROTOCOL_ID = '/ipfs/kad/1.0.0';
   final P2plibRouter _router;
+  final Datastore _storage;
 
-  DHTProtocolHandler(this._router) {
+  DHTProtocolHandler(this._router, this._storage) {
     _setupHandlers();
   }
 
@@ -51,9 +58,12 @@ class DHTProtocolHandler {
     final closerPeers = await _findClosestPeers(request.key);
 
     final response = FindNodeResponse()
-      ..closerPeers.addAll(closerPeers.map((peer) => Peer()
-        ..peerId = peer.id.bytes
-        ..addresses.addAll(peer.addresses.map((addr) => addr.toString()))));
+      ..closerPeers.addAll(closerPeers.map((peerId) {
+        final addresses = _router.resolvePeerId(peerId);
+        return Peer()
+          ..peerId = peerId.value
+          ..addresses.addAll(addresses);
+      }));
 
     final responseMessage = DHTMessage()
       ..messageId = message.messageId
@@ -64,14 +74,17 @@ class DHTProtocolHandler {
   }
 
   Future<void> _handlePutValue(DHTMessage message, LibP2PPeerId sender) async {
-    final request = PutValueRequest.fromBuffer(message.record);
-    
-    // Store the key-value pair in local storage
-    // Note: You'll need to implement the actual storage logic
+    final request = dht.PutValueRequest.fromBuffer(message.record);
+
     try {
-      // Create response message
-      final response = PutValueResponse()
-        ..success = true;
+      // Create a Block from the request value
+      final block = await Block.fromData(Uint8List.fromList(request.value));
+
+      // Store the key-value pair in local storage
+      await _storage.put(utf8.decode(request.key), block);
+
+      // Create success response message
+      final response = dht.PutValueResponse()..success = true;
 
       final responseMessage = DHTMessage()
         ..messageId = message.messageId
@@ -83,8 +96,7 @@ class DHTProtocolHandler {
     } catch (e) {
       print('Error handling PUT_VALUE request: $e');
       // Send failure response
-      final response = PutValueResponse()
-        ..success = false;
+      final response = dht.PutValueResponse()..success = false;
 
       final responseMessage = DHTMessage()
         ..messageId = message.messageId
@@ -95,27 +107,29 @@ class DHTProtocolHandler {
     }
   }
 
-  Future<List<LibP2PPeerId>> _findClosestPeers(List<int> key, {int numPeers = 20}) async {
+  Future<List<LibP2PPeerId>> _findClosestPeers(List<int> key,
+      {int numPeers = 20}) async {
     // Get the routing table from the router
     final routingTable = _router.getRoutingTable();
-    
+
     // Find closest peers from the routing table
     final closestPeers = routingTable.getNearestPeers(key, numPeers);
-    
+
     // Convert to List<LibP2PPeerId>
-    return closestPeers.map((peer) => LibP2PPeerId(peer.id.bytes)).toList();
+    return closestPeers.map((peer) => LibP2PPeerId(value: peer.value)).toList();
   }
 
   Future<void> _handleGetValue(DHTMessage message, LibP2PPeerId sender) async {
     final request = GetValueRequest.fromBuffer(message.record);
-    // TODO: Implement value retrieval from local storage
     final value = await _getValue(request.key);
-    
+
     final response = GetValueResponse()
       ..value = value ?? Uint8List(0)
-      ..closerPeers.addAll(value == null 
-        ? await _findClosestPeers(request.key) 
-        : []);
+      ..closerPeers.addAll(value == null
+          ? (await _findClosestPeers(request.key)).map((peerId) => Peer()
+            ..peerId = peerId.value
+            ..addresses.addAll(_router.resolvePeerId(peerId)))
+          : []);
 
     final responseMessage = DHTMessage()
       ..messageId = message.messageId
@@ -125,12 +139,25 @@ class DHTProtocolHandler {
     await _router.sendMessage(sender, responseMessage.writeToBuffer());
   }
 
-  Future<void> _handleAddProvider(DHTMessage message, LibP2PPeerId sender) async {
+  Future<Uint8List?> _getValue(List<int> key) async {
+    try {
+      final stringKey = utf8.decode(key);
+      final block = await _storage.get(stringKey);
+      return block?.data;
+    } catch (e) {
+      print('Error retrieving value from storage: $e');
+      return null;
+    }
+  }
+
+  Future<void> _handleAddProvider(
+      DHTMessage message, LibP2PPeerId sender) async {
     // Implementation similar to _handlePutValue but for provider records
     // This would store provider information in the local DHT store
   }
 
-  Future<void> _handleGetProviders(DHTMessage message, LibP2PPeerId sender) async {
+  Future<void> _handleGetProviders(
+      DHTMessage message, LibP2PPeerId sender) async {
     // Implementation to return list of providers for a given key
     // Similar to _handleFindNode but returns provider information
   }
@@ -140,7 +167,7 @@ class DHTProtocolHandler {
     final responseMessage = DHTMessage()
       ..messageId = message.messageId
       ..type = DHTMessage_MessageType.PING;
-    
+
     await _router.sendMessage(sender, responseMessage.writeToBuffer());
   }
 
