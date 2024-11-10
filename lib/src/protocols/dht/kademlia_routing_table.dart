@@ -18,19 +18,22 @@ class KademliaRoutingTable {
   static const int K_BUCKET_SIZE = 20;
   final Map<p2p.PeerId, ConnectionStatistics> _connectionStats = {};
 
-  KademliaRoutingTable()
-      : _tree = KademliaTree(p2p.PeerId(value: Uint8List(32)));
+  KademliaRoutingTable() {
+    // Don't initialize _tree in the initializer list
+    // It will be properly initialized in the initialize() method
+  }
 
   /// Initializes the routing table with a reference to the DHT client
   void initialize(DHTClient client) {
     dhtClient = client;
-    // Re-initialize the tree with the actual client's peer ID
-    _tree = KademliaTree(client.peerId);
-    _tree.root = KademliaNode(
-      client.peerId,
-      0, // Distance to self is 0
-      client.associatedPeerId,
-      lastSeen: DateTime.now().millisecondsSinceEpoch,
+    _tree = KademliaTree(
+      client,
+      root: KademliaNode(
+        client.peerId,
+        0, // Distance to self is 0
+        client.associatedPeerId,
+        lastSeen: DateTime.now().millisecondsSinceEpoch,
+      ),
     );
   }
 
@@ -317,6 +320,38 @@ class KademliaRoutingTable {
     } else {
       // If peer doesn't exist, add it to the routing table
       addPeer(peerId, peerId); // Using same ID for associated peer as a default
+    }
+  }
+
+  /// Adds a key provider to the routing table
+  void addKeyProvider(p2p.PeerId key, p2p.PeerId provider, DateTime timestamp) {
+    // Calculate distance between key and our node
+    final distance = _calculateXorDistance(key, _tree.root!.peerId);
+    final bucketIndex = _getBucketIndex(distance);
+    final bucket = _getOrCreateBucket(bucketIndex);
+
+    // Create or update the key node
+    final keyNode = KademliaNode(
+      key,
+      distance,
+      provider,
+      lastSeen: timestamp.millisecondsSinceEpoch,
+    );
+
+    bucket[key] = keyNode;
+
+    // Initialize connection stats for provider if needed
+    if (!_connectionStats.containsKey(provider)) {
+      _connectionStats[provider] = ConnectionStatistics();
+    }
+  }
+
+  /// Updates the timestamp for a key provider
+  void updateKeyProviderTimestamp(
+      p2p.PeerId key, p2p.PeerId provider, DateTime timestamp) {
+    final node = _findNode(key);
+    if (node != null && node.associatedPeerId == provider) {
+      node.lastSeen = timestamp.millisecondsSinceEpoch;
     }
   }
 }
