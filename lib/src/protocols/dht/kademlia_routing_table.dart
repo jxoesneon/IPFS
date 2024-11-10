@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
+
 import 'dht_client.dart';
 import 'kademlia_tree.dart';
 import 'red_black_tree.dart';
@@ -14,6 +16,7 @@ class KademliaRoutingTable {
   late final DHTClient dhtClient;
   late KademliaTree _tree;
   static const int K_BUCKET_SIZE = 20;
+  final Map<p2p.PeerId, ConnectionStatistics> _connectionStats = {};
 
   KademliaRoutingTable()
       : _tree = KademliaTree(p2p.PeerId(value: Uint8List(32)));
@@ -58,6 +61,11 @@ class KademliaRoutingTable {
       associatedPeerId,
       lastSeen: DateTime.now().millisecondsSinceEpoch,
     );
+
+    // Initialize connection statistics for new peer
+    if (!_connectionStats.containsKey(peerId)) {
+      _connectionStats[peerId] = ConnectionStatistics();
+    }
   }
 
   bool _isOurBucket(int bucketIndex) =>
@@ -67,12 +75,11 @@ class KademliaRoutingTable {
 
   bool _isStaleNode(p2p.PeerId peerId) {
     final nodeStats = _getNodeStats(); // Fetch current network statistics
-    final staleThreshold = _calculateStaleThreshold(
-        nodeStats); // Calculate threshold based on stats
+    final staleThreshold = _calculateStaleThreshold(nodeStats);
     final node = _findNode(peerId);
     if (node == null) return true;
-    return DateTime.now().difference(
-            DateTime.fromMillisecondsSinceEpoch(node.lastSeen ?? 0)) >
+    return DateTime.now()
+            .difference(DateTime.fromMillisecondsSinceEpoch(node.lastSeen)) >
         staleThreshold;
   }
 
@@ -293,7 +300,7 @@ class KademliaRoutingTable {
 
   /// Updates peer information in the routing table
   void updatePeer(V_PeerInfo peer) {
-    final peerId = p2p.PeerId.fromString(peer.peerId);
+    final peerId = p2p.PeerId(value: Uint8List.fromList(peer.peerId));
 
     // If peer exists, update its information
     if (containsPeer(peerId)) {
