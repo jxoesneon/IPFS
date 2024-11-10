@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import '../utils/logger.dart';
 import 'package:hive/hive.dart';
 import '../core/data_structures/block.dart';
@@ -56,7 +57,7 @@ class Datastore {
       final data = await _blocksBox.get(cid);
       if (data == null) return null;
 
-      return Block.fromData(data);
+      return Block.fromData(Uint8List.fromList(data));
     } catch (e) {
       _logger.error('Failed to retrieve block: $cid', e);
       throw DatastoreError('Failed to retrieve block: $e');
@@ -154,5 +155,17 @@ class Datastore {
       totalSize += data.length;
     }
     return totalSize;
+  }
+
+  /// Returns all keys in the datastore
+  Future<List<String>> getAllKeys() async {
+    try {
+      final keys = _blocksBox.keys.map((key) => key.toString()).toList();
+      _logger.debug('Retrieved ${keys.length} keys from datastore');
+      return keys;
+    } catch (e) {
+      _logger.error('Failed to retrieve all keys', e);
+      throw DatastoreError('Failed to retrieve all keys: $e');
+    }
   }
 }
