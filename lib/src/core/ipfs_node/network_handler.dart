@@ -164,4 +164,61 @@ class NetworkHandler {
   void setIpfsNode(IPFSNode node) {
     ipfsNode = node;
   }
+
+  /// Sends a request to a peer and waits for a response
+  Future<Uint8List> sendRequest(
+    p2p.PeerId peer,
+    String protocolId,
+    Uint8List request,
+  ) async {
+    try {
+      // Create a completer to handle the async response
+      final completer = Completer<Uint8List>();
+
+      // Generate request ID
+      final requestId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      // Add request ID to message
+      final messageWithId =
+          Uint8List.fromList([...request, ...utf8.encode(requestId)]);
+
+      // Set up one-time response handler
+      _router.addMessageHandler(protocolId, (packet) {
+        if (packet.srcPeerId.toString() == peer.toString() &&
+            _extractRequestId(packet.datagram) == requestId) {
+          _router.removeMessageHandler(protocolId);
+          completer.complete(packet.datagram);
+        }
+      });
+
+      // Send the request
+      await _router.sendMessage(peer.toString(), messageWithId);
+
+      // Wait for response with timeout
+      return await completer.future.timeout(
+        Duration(seconds: 30),
+        onTimeout: () {
+          _router.removeMessageHandler(protocolId);
+          throw TimeoutException('Request to peer timed out');
+        },
+      );
+    } catch (e) {
+      print('Error sending request to peer ${peer.toString()}: $e');
+      rethrow;
+    }
+  }
+
+  /// Extracts the request ID from a datagram
+  String _extractRequestId(Uint8List datagram) {
+    try {
+      // The request ID is appended at the end of the datagram
+      // Convert the last portion to UTF-8 string
+      final requestIdBytes =
+          datagram.sublist(datagram.length - 36); // UUID is 36 chars
+      return utf8.decode(requestIdBytes);
+    } catch (e) {
+      print('Error extracting request ID: $e');
+      return ''; // Return empty string on error
+    }
+  }
 }
