@@ -1,9 +1,7 @@
 import 'package:http/http.dart' as http;
-import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:p2plib/p2plib.dart' show PeerId;
 import 'package:dart_ipfs/src/utils/keystore.dart';
-import 'package:dart_ipfs/src/utils/encoding.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
@@ -44,48 +42,61 @@ class DHTHandler implements IDHTHandler {
   }
 
   /// Finds providers for a given CID in the DHT network.
-  Future<List<String>> findProviders(String cid) async {
+  @override
+  Future<List<V_PeerInfo>> findProviders(CID cid) async {
     try {
-      final providers = await dhtClient.findProviders(cid);
+      final providers = await dhtClient.findProviders(cid.toString());
       if (providers.isEmpty) {
         print(
-            'No providers found for CID $cid. Attempting alternative discovery methods...');
-        // Implement alternative provider discovery methods here
+            'No providers found for CID ${cid.toString()}. Attempting alternative discovery methods...');
       } else {
-        print('Found providers for CID $cid: ${providers.length}');
+        print('Found providers for CID ${cid.toString()}: ${providers.length}');
       }
-      // Convert PeerId objects to their string representations using Base58
-      return providers.map((peerId) => _convertPeerIdToBase58(peerId)).toList();
+
+      // Convert PeerId objects to V_PeerInfo objects
+      return providers.map((peerId) {
+        final peerInfo = V_PeerInfo()..peerId = peerId.value;
+        peerInfo.addresses
+            .addAll([]); // Use addAll() instead of direct assignment
+        peerInfo.protocols.addAll([]);
+        return peerInfo;
+      }).toList();
     } catch (e) {
-      print('Error finding providers for CID $cid: $e');
+      print('Error finding providers for CID ${cid.toString()}: $e');
       return [];
     }
   }
 
   /// Publishes a value to the DHT network under a given key.
-  Future<void> putValue(String key, String value) async {
+  @override
+  Future<void> putValue(Key key, Value value) async {
     try {
-      await dhtClient.putValue(key, value);
-      print('Published value under key $key.');
+      // Convert Key and Value objects to strings for the DHT client
+      await dhtClient.putValue(
+        key.toString(), // Base58 encoded string
+        value.toString(), // UTF-8 decoded string
+      );
+      print('Published value under key ${key.toString()}.');
     } catch (e) {
-      print('Error publishing value under key $key: $e');
+      print('Error publishing value under key ${key.toString()}: $e');
     }
   }
 
   /// Retrieves a value from the DHT network by its key.
-  Future<String?> getValue(String key) async {
+  @override
+  Future<Value> getValue(Key key) async {
     try {
-      final value = await dhtClient.getValue(key);
+      final value = await dhtClient.getValue(key.toString());
       if (value != null) {
-        print('Retrieved value for key $key.');
-        return value;
+        print('Retrieved value for key ${key.toString()}.');
+        return Value.fromString(value);
       } else {
-        print('Value for key $key not found.');
-        return null;
+        print('Value for key ${key.toString()} not found.');
+        throw Exception('Value not found');
       }
     } catch (e) {
-      print('Error retrieving value for key $key: $e');
-      return null;
+      print('Error retrieving value for key ${key.toString()}: $e');
+      throw Exception('Failed to get value: $e');
     }
   }
 
@@ -97,7 +108,8 @@ class DHTHandler implements IDHTHandler {
 
     String? resolvedCid;
     try {
-      resolvedCid = await getValue(ipnsName);
+      final value = await getValue(Key.fromString(ipnsName));
+      resolvedCid = value.toString(); // Convert Value to String
     } catch (e) {
       print('Error resolving IPNS name through DHT: $e');
     }
@@ -138,7 +150,10 @@ class DHTHandler implements IDHTHandler {
     }
 
     try {
-      await putValue(keyPair.publicKey, cid);
+      await putValue(
+          Key.fromString(keyPair.publicKey), // Convert String to Key
+          Value.fromString(cid) // Convert String to Value
+          );
       print('Published IPNS record for CID: $cid with key: $keyName');
     } catch (e) {
       print('Error publishing IPNS record: $e');
@@ -203,13 +218,12 @@ class DHTHandler implements IDHTHandler {
   Future<String?> resolveDNSLink(String domainName) async {
     try {
       // First try using the DHT network to resolve the DNSLink
-      final value = await getValue('dnslink:$domainName');
-      if (value != null) {
-        final cid = extractCIDFromResponse(value);
-        if (cid != null) {
-          print('Resolved DNSLink for domain $domainName to CID: $cid');
-          return cid;
-        }
+      final dnsKey = Key.fromString('dnslink:$domainName');
+      final value = await getValue(dnsKey);
+      final cid = extractCIDFromResponse(value.toString());
+      if (cid != null) {
+        print('Resolved DNSLink for domain $domainName to CID: $cid');
+        return cid;
       }
 
       // If DHT resolution fails, try using DNSLinkResolver
@@ -227,10 +241,4 @@ class DHTHandler implements IDHTHandler {
       return null;
     }
   }
-}
-
-/// Encodes PeerId to Base58 string
-String _convertPeerIdToBase58(p2p.PeerId peerId) {
-  // PeerId already contains the value as bytes
-  return EncodingUtils.toBase58(peerId.value);
 }
