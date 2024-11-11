@@ -1,14 +1,14 @@
-// lib/src/protocols/pubsub/pubsub_client.dart
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-// For encoding utilities
-import '../../core/data_structures/node_stats.dart';
-import '/../src/transport/p2plib_router.dart'; // Import your router class
+import '../../utils/base58.dart';
 import 'package:http/http.dart' as http;
 import 'package:p2plib/p2plib.dart' as p2p;
-import '../../utils/base58.dart';
+import '../../core/data_structures/node_stats.dart';
+import '/../src/transport/p2plib_router.dart'; // Import your router class
+// lib/src/protocols/pubsub/pubsub_client.dart
+
+// For encoding utilities
 
 /// Handles PubSub operations for an IPFS node.
 class PubSubClient {
@@ -46,7 +46,6 @@ class PubSubClient {
       }
     });
 
-    _router.registerProtocol('pubsub');
     print(
         'PubSub client started with peer ID: ${Base58().encode(_peerId.value)}');
   }
