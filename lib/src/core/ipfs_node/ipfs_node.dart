@@ -1,33 +1,30 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
-import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
-import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
-
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'pubsub_handler.dart';
-import 'bitswap_handler.dart';
 import 'routing_handler.dart';
 import 'network_handler.dart';
 import 'datastore_handler.dart';
-import 'package:dart_ipfs/src/core/data_structures/pin.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
-import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/network/router.dart';
 import 'package:dart_ipfs/src/storage/datastore.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/data_structures/pin.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/node.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/core/data_structures/directory.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/proto/generated/core/node_type.pbenum.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
 
 // lib/src/core/ipfs_node/ipfs_node.dart
 
@@ -88,12 +85,6 @@ class IPFSNode {
       _peerID = _config.nodeId;
       _logger.debug('Peer ID initialized: $_peerID');
 
-      final router = P2plibRouter(_config);
-      _logger.verbose('Router created with config: ${_config.toString()}');
-
-      router.start();
-      _logger.debug('Router started successfully');
-
       _initializeHandlers();
     } catch (e, stackTrace) {
       _logger.error('Error during IPFS Node initialization', e, stackTrace);
@@ -105,18 +96,20 @@ class IPFSNode {
     _logger.debug('Initializing protocol handlers...');
 
     try {
-      bitswapHandler = BitswapHandler(_config, _blockStore);
+      final router = networkHandler.p2pRouter;
+      _logger.verbose('Router instance obtained');
+
+      bitswapHandler = BitswapHandler(_config, _blockStore, router);
       _logger.debug('BitswapHandler created');
 
-      dhtHandler =
-          DHTHandler(_config, networkHandler.p2pRouter, networkHandler);
+      await networkHandler.initialize();
+      _logger.verbose('NetworkHandler initialized');
+
+      dhtHandler = DHTHandler(_config, router, networkHandler);
       _logger.debug('DHTHandler created');
 
-      pubSubHandler = PubSubHandler(
-          networkHandler.p2pRouter,
-          _config.nodeId,
-          IpfsNodeNetworkEvents(CircuitRelayClient(networkHandler.p2pRouter),
-              networkHandler.p2pRouter));
+      pubSubHandler = PubSubHandler(router, _config.nodeId,
+          IpfsNodeNetworkEvents(networkHandler.circuitRelayClient, router));
       _logger.debug('PubSubHandler created');
 
       datastoreHandler = DatastoreHandler(_config);
@@ -134,6 +127,9 @@ class IPFSNode {
 
   /// Starts the IPFS node.
   Future<void> start() async {
+    if (!networkHandler.p2pRouter.isInitialized) {
+      await networkHandler.p2pRouter.initialize();
+    }
     _logger.debug('Starting IPFS Node...');
 
     await bitswapHandler.start();
