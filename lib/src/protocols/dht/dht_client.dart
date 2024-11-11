@@ -1,28 +1,27 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/core/types/peer_types.dart';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
 import 'package:dart_ipfs/src/proto/generated/dht_messages.pb.dart'
     as dht_messages;
-import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart'
     as ipfs_node_network_events;
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-// lib/src/protocols/dht/dht_client.dart
 
 /// Implementation of the Kademlia DHT protocol for IPFS
 /// Following specs from: https://github.com/libp2p/specs/tree/master/kad-dht
 class DHTClient {
   final IPFSNode node;
   final NetworkHandler networkHandler;
-  final P2plibRouter router;
+  final P2plibRouter _router;
   late final LibP2PPeerId peerId;
   late final LibP2PPeerId associatedPeerId;
   late final KademliaRoutingTable _kademliaRoutingTable;
@@ -39,30 +38,31 @@ class DHTClient {
 
   DHTClient({
     required this.networkHandler,
-    required this.router,
-  }) : node = networkHandler.ipfsNode;
+    required P2plibRouter router,
+  })  : _router = router,
+        node = networkHandler.ipfsNode;
 
   Future<void> initialize() async {
     if (_initialized) return;
 
     // Start the router if it hasn't been started
-    await router.initialize();
-    await router.start();
+    await _router.initialize();
+    await _router.start();
 
     int retries = 0;
     const maxRetries = 5;
 
-    while (router.routes.isEmpty && retries < maxRetries) {
+    while (_router.routes.isEmpty && retries < maxRetries) {
       await Future.delayed(Duration(milliseconds: 100));
       retries++;
     }
 
-    if (router.routes.isEmpty) {
+    if (_router.routes.isEmpty) {
       throw StateError(
           'No routes available to initialize DHT client after $maxRetries retries');
     }
 
-    peerId = router.routerL0.routes.values.first.peerId;
+    peerId = _router.routerL0.routes.values.first.peerId;
     associatedPeerId = peerId;
 
     _kademliaRoutingTable = KademliaRoutingTable();
@@ -86,18 +86,18 @@ class DHTClient {
       PROTOCOL_GET_VALUE,
       PROTOCOL_PUT_VALUE,
     ]) {
-      router.registerProtocol(protocol);
+      _router.registerProtocol(protocol);
     }
   }
 
   void _setupHandlers() {
     // Register handlers for each protocol
-    router.addMessageHandler(PROTOCOL_DHT, _handlePacket);
-    router.addMessageHandler(PROTOCOL_FIND_NODE, _handleFindNode);
-    router.addMessageHandler(PROTOCOL_GET_PROVIDERS, _handleGetProviders);
-    router.addMessageHandler(PROTOCOL_ADD_PROVIDER, _handleAddProvider);
-    router.addMessageHandler(PROTOCOL_GET_VALUE, _handleGetValue);
-    router.addMessageHandler(PROTOCOL_PUT_VALUE, _handlePutValue);
+    _router.addMessageHandler(PROTOCOL_DHT, _handlePacket);
+    _router.addMessageHandler(PROTOCOL_FIND_NODE, _handleFindNode);
+    _router.addMessageHandler(PROTOCOL_GET_PROVIDERS, _handleGetProviders);
+    _router.addMessageHandler(PROTOCOL_ADD_PROVIDER, _handleAddProvider);
+    _router.addMessageHandler(PROTOCOL_GET_VALUE, _handleGetValue);
+    _router.addMessageHandler(PROTOCOL_PUT_VALUE, _handlePutValue);
   }
 
   // Convert protobuf Peer to p2p.PeerId
@@ -266,6 +266,10 @@ class DHTClient {
   /// Starts the DHT client and initializes necessary components
   Future<void> start() async {
     try {
+      // Router should already be initialized by IPFSNode
+      await _router
+          .start(); // This will be safe now with the updated P2plibRouter
+
       // Register protocol handlers
       for (final protocol in [
         PROTOCOL_DHT,
@@ -577,4 +581,6 @@ class DHTClient {
       return false;
     }
   }
+
+  P2plibRouter get router => _router;
 }
