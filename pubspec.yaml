@@ -47,7 +47,7 @@ dependencies:
   archive: ^3.6.1
   murmurhash: ^1.0.1
 
-  cbor: ^5.1.0  # Or the latest version
+  cbor: ^6.3.3  # Or the latest version
 
   lz4: ^0.0.1  # Use the latest stable version
 
