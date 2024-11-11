@@ -1,14 +1,24 @@
+import 'dart:convert';
 import 'dart:typed_data';
-import 'package:mime/mime.dart';
-import '../../core/data_structures/block.dart';
-import '../../core/data_structures/unixfs.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:markdown/markdown.dart' as md;
 
 /// Handles file preview generation for supported file types
 class FilePreviewHandler {
   static const _maxPreviewSize = 5 * 1024 * 1024; // 5MB preview limit
-  static const _supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  static const _supportedTextTypes = ['text/plain', 'text/markdown', 'text/html', 'application/json'];
-  
+  static const _supportedImageTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp'
+  ];
+  static const _supportedTextTypes = [
+    'text/plain',
+    'text/markdown',
+    'text/html',
+    'application/json'
+  ];
+
   /// Generates a preview for the given block if supported
   String? generatePreview(Block block, String contentType, {int? maxSize}) {
     if (block.data.length > (maxSize ?? _maxPreviewSize)) {
@@ -20,7 +30,7 @@ class FilePreviewHandler {
     } else if (_supportedTextTypes.contains(contentType)) {
       return _generateTextPreview(block.data, contentType);
     }
-    
+
     return null;
   }
 
@@ -36,7 +46,7 @@ class FilePreviewHandler {
   String _generateTextPreview(Uint8List data, String contentType) {
     final text = String.fromCharCodes(data);
     final formattedText = _formatTextContent(text, contentType);
-    
+
     return '''
       <div class="preview-container">
         <pre class="preview-text"><code>$formattedText</code></pre>
@@ -58,12 +68,9 @@ class FilePreviewHandler {
   }
 
   String _formatMarkdown(String text) {
-    // Basic markdown formatting
-    final formatted = text
-        .replaceAll(RegExp(r'#{1,6}\s(.+)'), '<h3>$1</h3>')
-        .replaceAll(RegExp(r'\*\*(.+?)\*\*'), '<strong>$1</strong>')
-        .replaceAll(RegExp(r'\*(.+?)\*'), '<em>$1</em>')
-        .replaceAll(RegExp(r'`(.+?)`'), '<code>$1</code>');
+    // Convert markdown to HTML
+    final formatted = md.markdownToHtml(text);
+    // Escape HTML characters in the formatted text
     return _escapeHtml(formatted);
   }
 
@@ -77,11 +84,18 @@ class FilePreviewHandler {
   }
 
   String _escapeHtml(String text) {
+    // Replace special HTML characters with their HTML entity equivalents
     return text
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+        .replaceAll("'", '&#39;');
   }
-} 
+
+  /// Checks if the given content type is supported for preview generation
+  bool isSupportedType(String contentType) {
+    return _supportedImageTypes.contains(contentType) ||
+        _supportedTextTypes.contains(contentType);
+  }
+}
