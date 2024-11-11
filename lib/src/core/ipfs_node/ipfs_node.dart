@@ -26,6 +26,7 @@ import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/core/config/config.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/proto/generated/core/node_type.pbenum.dart';
 
 // lib/src/core/ipfs_node/ipfs_node.dart
 
@@ -56,6 +57,12 @@ class IPFSNode {
   // Add this getter
   String get peerID => _peerID;
 
+  late NodeTypeProto nodeType;
+
+  late CID cid;
+
+  late List<Link> links;
+
   IPFSNode(this._config) {
     networkHandler = NetworkHandler(_config);
     networkHandler.setIpfsNode(this);
@@ -76,6 +83,9 @@ class IPFSNode {
             CircuitRelayClient(P2plibRouter(_config)), P2plibRouter(_config)));
     datastoreHandler = DatastoreHandler(_config);
     routingHandler = RoutingHandler(_config);
+
+    nodeType = NodeTypeProto.NODE_TYPE_UNSPECIFIED;
+    links = [];
   }
 
   /// Starts the IPFS node.
