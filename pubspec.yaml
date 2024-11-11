@@ -1,6 +1,6 @@
 name: dart_ipfs
 description: A Dart implementation of an IPFS server.
-version: 0.0.1 # Initial version
+version: 1.0.0 # Initial version
 homepage: https://github.com/jxoesneon/IPFS
 repository: https://github.com/jxoesneon/IPFS
 issue_tracker: https://github.com/jxoesneon/IPFS/issues
