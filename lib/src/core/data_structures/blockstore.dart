@@ -8,8 +8,9 @@ import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 class BlockStore {
   final Map<String, Block> _blocks = {};
   late final PinManager _pinManager;
+  final String path;
 
-  BlockStore() {
+  BlockStore({required this.path}) {
     _pinManager = PinManager(this);
   }
 
