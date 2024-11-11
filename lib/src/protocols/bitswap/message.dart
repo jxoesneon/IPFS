@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/utils/encoding.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart' show Block;
-import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
-    as bitswap_pb;
+import 'package:dart_ipfs/src/proto/generated/bitswap_messages.pb.dart'
+    as bitswap_messages_pb;
+import 'package:dart_ipfs/src/proto/generated/bitswap_messages.pbenum.dart'
+    show BitSwapMessage_MessageType;
 
 /// Represents a Bitswap protocol message
 class Message {
@@ -16,6 +17,12 @@ class Message {
 
   /// The peer ID of the sender
   String? from;
+
+  /// Message ID for tracking requests
+  String? messageId;
+
+  /// Message type
+  MessageType? type;
 
   /// Block presences for HAVE/DONT_HAVE responses
   final List<BlockPresence> _blockPresences = [];
@@ -55,44 +62,33 @@ class Message {
 
   /// Creates a Message from its protobuf byte representation
   static Future<Message> fromBytes(Uint8List bytes) async {
-    final pbMessage = bitswap_pb.Message.fromBuffer(bytes);
+    final pbMessage = bitswap_messages_pb.BitSwapMessage.fromBuffer(bytes);
     final message = Message();
 
-    // Parse wantlist
-    if (pbMessage.hasWantlist()) {
-      for (var entry in pbMessage.wantlist.entries) {
-        message.addWantlistEntry(base64.encode(entry.block),
-            priority: entry.priority,
-            cancel: entry.cancel,
-            wantType: _convertWantType(entry.wantType),
-            sendDontHave: entry.sendDontHave);
-      }
+    // Set message ID and type if present
+    if (pbMessage.hasMessageId()) {
+      message.messageId = pbMessage.messageId;
+    }
+    if (pbMessage.hasType()) {
+      message.type = _convertFromProtoMessageType(pbMessage.type);
     }
 
-    // Parse blocks using EncodingUtils
+    // Parse wantlist
+    for (var entry in pbMessage.wantList) {
+      message.addWantlistEntry(
+        base64.encode(entry.cid),
+        priority: entry.priority,
+        wantType: WantType.block, // Default to block for now
+      );
+    }
+
+    // Parse blocks
     for (var block in pbMessage.blocks) {
-      final receivedCid =
-          CID.fromBytes(Uint8List.fromList(block.prefix), 'dag-pb');
       final newBlock = await Block.fromData(
         Uint8List.fromList(block.data),
         format: 'dag-pb',
       );
-
-      // Verify the received CID matches the computed one
-      if (receivedCid.toString() != newBlock.cid.toString()) {
-        throw FormatException('CID mismatch in received block');
-      }
-
       message.addBlock(newBlock);
-    }
-
-    // Parse block presences using EncodingUtils
-    for (var presence in pbMessage.blockPresences) {
-      message.addBlockPresence(
-          EncodingUtils.toBase58(Uint8List.fromList(presence.cid)),
-          presence.type == bitswap_pb.BlockPresence_Type.HAVE
-              ? BlockPresenceType.have
-              : BlockPresenceType.dontHave);
     }
 
     return message;
@@ -100,47 +96,87 @@ class Message {
 
   /// Converts the message to its protobuf byte representation
   Uint8List toBytes() {
-    final pbMessage = bitswap_pb.Message();
+    final pbMessage = bitswap_messages_pb.BitSwapMessage();
+
+    // Set message ID if present
+    if (messageId != null) {
+      pbMessage.messageId = messageId!;
+    }
+
+    // Set message type if present
+    if (type != null) {
+      pbMessage.type = _convertMessageType(type!);
+    }
+
+    // Add wantlist entries
+    for (var entry in _wantlist.entries.values) {
+      final wantList = bitswap_messages_pb.WantList()
+        ..cid = Uint8List.fromList(EncodingUtils.fromBase58(entry.cid))
+        ..priority = entry.priority
+        ..wantBlock = true;
+      pbMessage.wantList.add(wantList);
+    }
 
     // Add blocks
     for (var block in _blocks) {
-      pbMessage.blocks.add(bitswap_pb.Block()
-        ..prefix = EncodingUtils.cidToBytes(block.cid)
-        ..data = block.data);
-    }
-
-    // Add block presences
-    for (var presence in _blockPresences) {
-      pbMessage.blockPresences.add(bitswap_pb.BlockPresence()
-        ..cid = Uint8List.fromList(EncodingUtils.fromBase58(presence.cid))
-        ..type = _convertPresenceType(presence.type));
+      final pbBlock = bitswap_messages_pb.Block()
+        ..cid = EncodingUtils.cidToBytes(block.cid)
+        ..data = block.data;
+      pbMessage.blocks.add(pbBlock);
     }
 
     return pbMessage.writeToBuffer();
   }
 
-  static WantType _convertWantType(bitswap_pb.WantType pbType) {
-    switch (pbType) {
-      case bitswap_pb.WantType.WANT_TYPE_BLOCK:
-        return WantType.block;
-      case bitswap_pb.WantType.WANT_TYPE_HAVE:
-        return WantType.have;
+  static BitSwapMessage_MessageType _convertMessageType(MessageType type) {
+    switch (type) {
+      case MessageType.wantBlock:
+        return BitSwapMessage_MessageType.WANT_BLOCK;
+      case MessageType.wantHave:
+        return BitSwapMessage_MessageType.WANT_HAVE;
+      case MessageType.block:
+        return BitSwapMessage_MessageType.BLOCK;
+      case MessageType.have:
+        return BitSwapMessage_MessageType.HAVE;
+      case MessageType.dontHave:
+        return BitSwapMessage_MessageType.DONT_HAVE;
+      case MessageType.unknown:
       default:
-        return WantType.block;
+        return BitSwapMessage_MessageType.UNKNOWN;
     }
   }
 
-  static bitswap_pb.BlockPresence_Type _convertPresenceType(
-      BlockPresenceType type) {
-    return type == BlockPresenceType.have
-        ? bitswap_pb.BlockPresence_Type.HAVE
-        : bitswap_pb.BlockPresence_Type.DONT_HAVE;
+  static MessageType _convertFromProtoMessageType(
+      BitSwapMessage_MessageType type) {
+    switch (type) {
+      case BitSwapMessage_MessageType.WANT_BLOCK:
+        return MessageType.wantBlock;
+      case BitSwapMessage_MessageType.WANT_HAVE:
+        return MessageType.wantHave;
+      case BitSwapMessage_MessageType.BLOCK:
+        return MessageType.block;
+      case BitSwapMessage_MessageType.HAVE:
+        return MessageType.have;
+      case BitSwapMessage_MessageType.DONT_HAVE:
+        return MessageType.dontHave;
+      case BitSwapMessage_MessageType.UNKNOWN:
+      default:
+        return MessageType.unknown;
+    }
   }
+
+  String? getMessageId() => messageId;
+  void setMessageId(String id) => messageId = id;
+
+  MessageType? getType() => type;
+  void setType(MessageType t) => type = t;
 }
 
 enum WantType { block, have }
 
 enum BlockPresenceType { have, dontHave }
+
+enum MessageType { unknown, wantHave, wantBlock, have, dontHave, block }
 
 class WantlistEntry {
   final String cid;
