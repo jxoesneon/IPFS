@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/ledger.dart';
@@ -8,6 +9,7 @@ import 'package:dart_ipfs/src/protocols/bitswap/wantlist.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as message;
+import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Handles Bitswap protocol operations for an IPFS node following the Bitswap 1.2.0 specification
 class BitswapHandler {
@@ -20,21 +22,40 @@ class BitswapHandler {
   bool _running = false;
   int _bandwidthSent = 0;
   int _bandwidthReceived = 0;
+  final Logger _logger;
 
-  BitswapHandler(config, this._blockStore) : _router = P2plibRouter(config) {
+  BitswapHandler(IPFSConfig config, this._blockStore)
+      : _router = P2plibRouter(config),
+        _logger = Logger('BitswapHandler',
+            debug: config.debug, verbose: config.verboseLogging) {
+    _logger.info('Initializing BitswapHandler');
     _setupHandlers();
   }
 
   /// Starts the Bitswap handler
   Future<void> start() async {
-    if (_running) return;
-    _running = true;
+    if (_running) {
+      _logger.warning('BitswapHandler already running');
+      return;
+    }
 
-    await _router.start();
-    _router.addMessageHandler(_protocolId, _handlePacket);
-    // Register protocol identifier
-    _router.registerProtocol(_protocolId);
-    print('Bitswap handler started with protocol: $_protocolId');
+    try {
+      _running = true;
+      _logger.debug('Starting BitswapHandler...');
+
+      await _router.start();
+      _logger.verbose('Router started');
+
+      _router.addMessageHandler(_protocolId, _handlePacket);
+      _logger.debug('Added message handler for protocol: $_protocolId');
+
+      _router.registerProtocol(_protocolId);
+      _logger.info('BitswapHandler started successfully');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to start BitswapHandler', e, stackTrace);
+      _running = false;
+      rethrow;
+    }
   }
 
   /// Stops the Bitswap handler
@@ -279,13 +300,14 @@ class BitswapHandler {
   }
 
   void _setupHandlers() {
-    // First register the protocol
+    _logger.debug('Setting up Bitswap protocol handlers');
     _router.registerProtocol(_protocolId);
+    _logger.debug('Registered protocol: $_protocolId');
 
-    // Then add the message handler
     _router.addMessageHandler(_protocolId, _handlePacket);
+    _logger.debug('Added message handler for protocol: $_protocolId');
 
-    print('Bitswap protocol handlers initialized');
+    _logger.info('Bitswap protocol handlers initialized');
   }
 
   Future<Block?> wantBlock(String cid) async {
