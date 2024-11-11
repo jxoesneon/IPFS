@@ -18,6 +18,7 @@ class MessageHandler {
       StreamController<pb_base.NetworkEvent>.broadcast();
   final PubSubClient? _pubSubClient;
   final IPFSConfig config;
+  late final BlockStore _blockStore;
 
   MessageHandler(this.config, [this._pubSubClient]);
 
@@ -64,8 +65,8 @@ class MessageHandler {
         throw Exception('Block not found for CID: ${cid.encode()}');
       }
 
-      // Create a BlockStore instance
-      final blockStore = BlockStore();
+      // Create a BlockStore instance with path from config
+      final blockStore = BlockStore(path: config.blockStorePath);
 
       // Convert the block to proto format and store it
       final response = await blockStore.addBlock(block.toProto());
@@ -115,7 +116,7 @@ class MessageHandler {
   Future<Block?> getBlock(CID cid) async {
     try {
       // First try to get from local blockstore
-      final blockStore = BlockStore();
+      final blockStore = _blockStore;
       final response = await blockStore.getBlock(cid.encode());
 
       if (response.found) {
@@ -138,7 +139,7 @@ class MessageHandler {
       final block = await Block.fromData(data, format: 'raw');
 
       // Store the block in the datastore
-      final blockStore = BlockStore();
+      final blockStore = _blockStore;
       final storeResponse = await blockStore.addBlock(block.toProto());
 
       if (!storeResponse.success) {
