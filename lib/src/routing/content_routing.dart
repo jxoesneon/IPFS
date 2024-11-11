@@ -1,12 +1,17 @@
 import 'dart:async';
 import '../protocols/dht/dht_client.dart'; // Import DHT client
 import '../utils/dnslink_resolver.dart'; // Import DNSLink resolver
+import '../core/ipfs_node/network_handler.dart';
+import '../utils/base58.dart';
 
 /// Handles content routing operations for an IPFS node.
 class ContentRouting {
   final DHTClient _dhtClient;
 
-  ContentRouting(config) : _dhtClient = DHTClient(config);
+  ContentRouting(config)
+      : _dhtClient = DHTClient(
+          networkHandler: NetworkHandler(config),
+        );
 
   /// Starts the content routing services.
   Future<void> start() async {
@@ -38,7 +43,8 @@ class ContentRouting {
       } else {
         print('Found providers for CID $cid: ${providers.length}');
       }
-      return providers;
+      // Convert PeerId objects to strings using Base58 encoding
+      return providers.map((peerId) => Base58().encode(peerId.value)).toList();
     } catch (e) {
       print('Error finding providers for CID $cid: $e');
       return [];
