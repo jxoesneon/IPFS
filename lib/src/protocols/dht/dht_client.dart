@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/core/types/peer_types.dart';
@@ -21,10 +22,11 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 class DHTClient {
   final IPFSNode node;
   final NetworkHandler networkHandler;
-  late final LibP2PRouterL0 router;
+  final P2plibRouter router;
   late final LibP2PPeerId peerId;
   late final LibP2PPeerId associatedPeerId;
   late final KademliaRoutingTable _kademliaRoutingTable;
+  bool _initialized = false;
 
   // Protocol identifiers as per IPFS spec
   static const String PROTOCOL_DHT = '/ipfs/kad/1.0.0';
@@ -35,20 +37,67 @@ class DHTClient {
   static const String PROTOCOL_GET_VALUE = '/ipfs/kad/get-value/1.0.0';
   static const String PROTOCOL_PUT_VALUE = '/ipfs/kad/put-value/1.0.0';
 
-  DHTClient({required this.networkHandler}) : node = networkHandler.ipfsNode {
-    // Initialize routing table
+  DHTClient({
+    required this.networkHandler,
+    required this.router,
+  }) : node = networkHandler.ipfsNode;
+
+  Future<void> initialize() async {
+    if (_initialized) return;
+
+    // Start the router if it hasn't been started
+    await router.initialize();
+    await router.start();
+
+    int retries = 0;
+    const maxRetries = 5;
+
+    while (router.routes.isEmpty && retries < maxRetries) {
+      await Future.delayed(Duration(milliseconds: 100));
+      retries++;
+    }
+
+    if (router.routes.isEmpty) {
+      throw StateError(
+          'No routes available to initialize DHT client after $maxRetries retries');
+    }
+
+    peerId = router.routerL0.routes.values.first.peerId;
+    associatedPeerId = peerId;
+
     _kademliaRoutingTable = KademliaRoutingTable();
     _kademliaRoutingTable.initialize(this);
-  }
-
-  // Add initialization method to be called after dhtHandler is set
-  void initializeRouter() {
-    router = node.dhtHandler.router.routerL0;
-    peerId = router.routes.values.first.peerId;
-    associatedPeerId = peerId;
 
     // Register protocols and handlers
     _registerProtocols();
+    _setupHandlers();
+
+    _initialized = true;
+  }
+
+  void _registerProtocols() {
+    // Add protocol registration logic here
+    for (final protocol in [
+      PROTOCOL_DHT,
+      PROTOCOL_FIND_NODE,
+      PROTOCOL_FIND_PEERS,
+      PROTOCOL_GET_PROVIDERS,
+      PROTOCOL_ADD_PROVIDER,
+      PROTOCOL_GET_VALUE,
+      PROTOCOL_PUT_VALUE,
+    ]) {
+      router.registerProtocol(protocol);
+    }
+  }
+
+  void _setupHandlers() {
+    // Register handlers for each protocol
+    router.addMessageHandler(PROTOCOL_DHT, _handlePacket);
+    router.addMessageHandler(PROTOCOL_FIND_NODE, _handleFindNode);
+    router.addMessageHandler(PROTOCOL_GET_PROVIDERS, _handleGetProviders);
+    router.addMessageHandler(PROTOCOL_ADD_PROVIDER, _handleAddProvider);
+    router.addMessageHandler(PROTOCOL_GET_VALUE, _handleGetValue);
+    router.addMessageHandler(PROTOCOL_PUT_VALUE, _handlePutValue);
   }
 
   // Convert protobuf Peer to p2p.PeerId
@@ -256,7 +305,7 @@ class DHTClient {
 
   /// Initialize the routing table with bootstrap peers
   Future<void> _initializeRoutingTable() async {
-    final bootstrapPeers = node.config.bootstrapPeers;
+    final bootstrapPeers = node.config.network.bootstrapPeers;
     for (final peerAddr in bootstrapPeers) {
       try {
         final peer = await _connectToPeer(peerAddr);
@@ -526,41 +575,6 @@ class DHTClient {
     } catch (e) {
       print('Error storing value with peer ${Base58().encode(peer.value)}: $e');
       return false;
-    }
-  }
-
-  void _registerProtocols() {
-    // Register protocol handlers for each DHT protocol
-    for (final protocol in [
-      PROTOCOL_DHT,
-      PROTOCOL_FIND_NODE,
-      PROTOCOL_FIND_PEERS,
-      PROTOCOL_GET_PROVIDERS,
-      PROTOCOL_ADD_PROVIDER,
-      PROTOCOL_GET_VALUE,
-      PROTOCOL_PUT_VALUE,
-    ]) {
-      node.dhtHandler.router.addMessageHandler(protocol, (packet) {
-        switch (protocol) {
-          case PROTOCOL_FIND_NODE:
-            _handleFindNode(packet);
-            break;
-          case PROTOCOL_GET_PROVIDERS:
-            _handleGetProviders(packet);
-            break;
-          case PROTOCOL_ADD_PROVIDER:
-            _handleAddProvider(packet);
-            break;
-          case PROTOCOL_GET_VALUE:
-            _handleGetValue(packet);
-            break;
-          case PROTOCOL_PUT_VALUE:
-            _handlePutValue(packet);
-            break;
-          default:
-            _handlePacket(packet);
-        }
-      });
     }
   }
 }
