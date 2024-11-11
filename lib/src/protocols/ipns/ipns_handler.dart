@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/Interface_dht_handler.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
 
 /// Represents an IPNS record with all required fields according to the IPNS spec
