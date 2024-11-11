@@ -1,9 +1,9 @@
-import 'dart:typed_data';
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:shelf/shelf.dart';
-import '../../core/data_structures/cid.dart';
-import '../../core/data_structures/block.dart';
-import '../../core/data_structures/blockstore.dart';
-import '../../services/gateway/content_type_handler.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/services/gateway/content_type_handler.dart';
+import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 
 /// Handles IPFS Gateway HTTP requests following the IPFS Gateway specs
 class GatewayHandler {
@@ -108,12 +108,49 @@ class GatewayHandler {
     }
   }
 
+  /// Handles IPNS resolution requests
+  Future<Response?> handleIPNS(Request request) async {
+    final path = request.url.path;
+
+    // Parse IPNS name
+    if (path.startsWith('ipns/')) {
+      final name = path.substring(5).split('/')[0];
+      try {
+        // Convert IPNS name to CID string
+        final cidProto = IPFSCIDProto()..codec = name;
+        final response = await blockStore.getBlock(cidProto.toString());
+
+        if (response.found) {
+          final block = Block.fromProto(response.block);
+          final contentTypeHandler = ContentTypeHandler();
+          final contentType = contentTypeHandler.detectContentType(block,
+              filename: path.split('/').last);
+          final processedContent =
+              contentTypeHandler.processContent(block, contentType);
+
+          return Response.ok(
+            processedContent,
+            headers: {
+              'Content-Type': contentType,
+              'X-IPFS-Path': '/ipns/$name',
+            },
+          );
+        }
+        return null;
+      } catch (e) {
+        print('Error resolving IPNS name: $e');
+        return null;
+      }
+    }
+    return null;
+  }
+
   // Helper method to get a block by CID string
   Future<Block?> _getBlockByCid(String cidStr) async {
     try {
       // Convert CID string to IPFSCIDProto
-      final IPFSCIDProto = IPFSCIDProto()..codec = cidStr;
-      final response = blockStore.getBlock(IPFSCIDProto);
+      final cidProto = IPFSCIDProto()..codec = cidStr;
+      final response = await blockStore.getBlock(cidProto.toString());
       if (response.found) {
         return Block.fromProto(response.block);
       }
