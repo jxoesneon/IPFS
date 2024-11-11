@@ -75,4 +75,13 @@ class BlockStore {
       return false;
     }
   }
+
+  Future<List<BlockProto>> getAllBlocks() async {
+    try {
+      return _blocks.values.map((block) => block.toProto()).toList();
+    } catch (e) {
+      print('Error getting all blocks: $e');
+      return [];
+    }
+  }
 }
