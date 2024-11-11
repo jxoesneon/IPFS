@@ -1,13 +1,13 @@
 // lib/src/protocols/dht/red_black_tree/rotations.dart
 import '../red_black_tree.dart';
-import '../../../proto/generated/dht/common_red_black_tree.pb.dart' as common_tree;
+import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
+    as common_tree;
 
 class Rotations<K_PeerId, V_PeerInfo> {
-  void rotateLeft<K_PeerId, V_PeerInfo>(
-      RedBlackTree<K_PeerId, V_PeerInfo> tree,
+  void rotateLeft<K_PeerId, V_PeerInfo>(RedBlackTree<K_PeerId, V_PeerInfo> tree,
       RedBlackTreeNode<K_PeerId, V_PeerInfo>? x) {
     if (x == null) return; // Null nodes are treated as black (leaves)
-    
+
     // 1. Get the right child of x, which will become the new parent
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? y = x.right_child;
     if (y == null) return; // Ensure y is not null for the rotation
@@ -23,7 +23,7 @@ class Rotations<K_PeerId, V_PeerInfo> {
 
     // 4. If x was the root, y becomes the new root
     if (x.parent == null) {
-      tree.root = y;  // Root node update
+      tree.root = y; // Root node update
     } else if (x == x.parent?.left_child) {
       x.parent?.left_child = y;
     } else {
@@ -35,7 +35,8 @@ class Rotations<K_PeerId, V_PeerInfo> {
     x.parent = y;
 
     // Verify tree.root update when root node is involved
-    assert(tree.root == y || tree.root != x, "Root node not updated correctly in rotateLeft");
+    assert(tree.root == y || tree.root != x,
+        "Root node not updated correctly in rotateLeft");
   }
 
   void rotateRight<K_PeerId, V_PeerInfo>(
@@ -58,7 +59,7 @@ class Rotations<K_PeerId, V_PeerInfo> {
 
     // 4. If y was the root, x becomes the new root
     if (y.parent == null) {
-      tree.root = x;  // Root node update
+      tree.root = x; // Root node update
     } else if (y == y.parent?.right_child) {
       y.parent?.right_child = x;
     } else {
@@ -70,16 +71,19 @@ class Rotations<K_PeerId, V_PeerInfo> {
     y.parent = x;
 
     // Verify tree.root update when root node is involved
-    assert(tree.root == x || tree.root != y, "Root node not updated correctly in rotateRight");
+    assert(tree.root == x || tree.root != y,
+        "Root node not updated correctly in rotateRight");
   }
 
   // Validation method for node colors (all nodes must be either red or black)
   bool validateNodeColors(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node) {
     if (node == null) return true; // Null nodes (leaves) are treated as black
-    if (node.color != common_tree.NodeColor.RED && node.color != common_tree.NodeColor.BLACK) {
+    if (node.color != common_tree.NodeColor.RED &&
+        node.color != common_tree.NodeColor.BLACK) {
       return false; // Every node must be either red or black
     }
-    return validateNodeColors(node.left_child) && validateNodeColors(node.right_child);
+    return validateNodeColors(node.left_child) &&
+        validateNodeColors(node.right_child);
   }
 
   // Validate the red-black tree properties
@@ -93,12 +97,15 @@ class Rotations<K_PeerId, V_PeerInfo> {
     bool validateRedProperty(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node) {
       if (node == null) return true;
       if (node.color == common_tree.NodeColor.RED) {
-        if ((node.left_child != null && node.left_child!.color == common_tree.NodeColor.RED) ||
-            (node.right_child != null && node.right_child!.color == common_tree.NodeColor.RED)) {
+        if ((node.left_child != null &&
+                node.left_child!.color == common_tree.NodeColor.RED) ||
+            (node.right_child != null &&
+                node.right_child!.color == common_tree.NodeColor.RED)) {
           return false;
         }
       }
-      return validateRedProperty(node.left_child) && validateRedProperty(node.right_child);
+      return validateRedProperty(node.left_child) &&
+          validateRedProperty(node.right_child);
     }
 
     // 3. Every path from root to leaf must have the same number of black nodes (black-height property)
@@ -112,16 +119,60 @@ class Rotations<K_PeerId, V_PeerInfo> {
       return node.color == common_tree.NodeColor.BLACK ? left + 1 : left;
     }
 
+    // 4. Validate parent pointers
+    bool validateParentPointers(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node,
+        RedBlackTreeNode<K_PeerId, V_PeerInfo>? expectedParent) {
+      if (node == null) return true;
+      if (node.parent != expectedParent) return false;
+      return validateParentPointers(node.left_child, node) &&
+          validateParentPointers(node.right_child, node);
+    }
+
+    // 5. Validate binary search tree property
+    bool validateBSTProperty(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node) {
+      if (node == null) return true;
+
+      if (node.left_child != null &&
+          tree.compare(
+                  node.left_child!.key as K_PeerId, node.key as K_PeerId) >=
+              0) {
+        return false;
+      }
+
+      if (node.right_child != null &&
+          tree.compare(
+                  node.right_child!.key as K_PeerId, node.key as K_PeerId) <=
+              0) {
+        return false;
+      }
+
+      return validateBSTProperty(node.left_child) &&
+          validateBSTProperty(node.right_child);
+    }
+
+    // 6. Validate tree size
+    int validateSize(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node) {
+      if (node == null) return 0;
+      return 1 + validateSize(node.left_child) + validateSize(node.right_child);
+    }
+
     try {
-      return validateRedProperty(tree.root) && 
-             countBlackNodes(tree.root) > 0 && 
-             validateNodeColors(tree.root);  // Ensure all nodes are either red or black
+      // Run all validations
+      final bool isValid = validateRedProperty(tree.root) &&
+          countBlackNodes(tree.root) > 0 &&
+          validateNodeColors(tree.root) &&
+          validateParentPointers(tree.root, null) &&
+          validateBSTProperty(tree.root);
+
+      // Verify tree size if size property is maintained
+      if (tree.size != validateSize(tree.root)) {
+        return false;
+      }
+
+      return isValid;
     } catch (e) {
-      print(e);
+      print('Validation error: $e');
       return false;
     }
-    
-    // TODO: Enhance validateTree with additional checks for all Red-Black Tree properties,
-    // including any performance optimizations or more complex cases for tree balancing.
   }
 }
