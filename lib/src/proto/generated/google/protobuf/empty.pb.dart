@@ -13,6 +13,13 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+///  A generic empty message that you can re-use to avoid defining duplicated
+///  empty messages in your APIs. A typical example is to use it as the request
+///  or the response type of an API method. For instance:
+///
+///      service Foo {
+///        rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);
+///      }
 class Empty extends $pb.GeneratedMessage {
   factory Empty() => create();
   Empty._() : super();
