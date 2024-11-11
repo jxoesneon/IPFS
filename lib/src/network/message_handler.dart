@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/config.dart';
@@ -88,8 +89,13 @@ class MessageHandler {
   void notifyListeners(CID cid) {
     try {
       // Create a network event for content update
+      final now = DateTime.now();
+      final timestamp = Timestamp()
+        ..seconds = Int64(now.millisecondsSinceEpoch ~/ 1000)
+        ..nanos = (now.millisecondsSinceEpoch % 1000) * 1000000;
+
       final event = pb_base.NetworkEvent()
-        ..timestamp = Int64(DateTime.now().millisecondsSinceEpoch)
+        ..timestamp = timestamp
         ..eventType = 'CONTENT_UPDATED'
         ..data = utf8.encode(cid.encode());
 
@@ -159,8 +165,13 @@ class MessageHandler {
       }
 
       // Notify subscribers about the new processed content
+      final now = DateTime.now();
+      final timestamp = Timestamp()
+        ..seconds = Int64(now.millisecondsSinceEpoch ~/ 1000)
+        ..nanos = (now.millisecondsSinceEpoch % 1000) * 1000000;
+
       final event = pb_base.NetworkEvent()
-        ..timestamp = Int64(DateTime.now().millisecondsSinceEpoch)
+        ..timestamp = timestamp
         ..eventType = 'CONTENT_PROCESSED'
         ..data = utf8.encode(jsonEncode({
           'cid': cid.encode(),

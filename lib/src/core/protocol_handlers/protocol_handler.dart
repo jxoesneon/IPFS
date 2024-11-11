@@ -1,3 +1,4 @@
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/proto/generated/dht_messages.pb.dart' as pb;
 import 'package:dart_ipfs/src/utils/base58.dart';
@@ -41,12 +42,17 @@ class DHTProtocolHandler extends ProtocolHandler {
 
   Future<void> sendDHTMessage(
       p2p.PeerId targetPeerId, DHTMessage message) async {
+    final now = DateTime.now();
+    final timestamp = Timestamp()
+      ..seconds = Int64(now.millisecondsSinceEpoch ~/ 1000)
+      ..nanos = (now.millisecondsSinceEpoch % 1000) * 1000000;
+
     // Convert our custom DHTMessage to protobuf DHTMessage
     final pbMessage = pb.DHTMessage()
       ..messageId = generateMessageId()
       ..type = _convertMessageType(message.messageType)
       ..record = message.data
-      ..timestamp = Int64(DateTime.now().millisecondsSinceEpoch);
+      ..timestamp = timestamp;
 
     // Now we can use writeToBuffer()
     final bytes = pbMessage.writeToBuffer();

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:fixnum/fixnum.dart';
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart';
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/proto/generated/metrics.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
@@ -9,8 +10,13 @@ class NetworkEventHandler {
       StreamController<NetworkEvent>.broadcast();
 
   void handlePeerEvent(LibP2PPeerId peerId, String eventType) {
+    final now = DateTime.now();
+    final timestamp = Timestamp()
+      ..seconds = Int64(now.millisecondsSinceEpoch ~/ 1000)
+      ..nanos = (now.millisecondsSinceEpoch % 1000) * 1000000;
+
     final event = NetworkEvent()
-      ..timestamp = Int64(DateTime.now().millisecondsSinceEpoch)
+      ..timestamp = timestamp
       ..eventType = eventType
       ..peerId = peerId.toString();
 
@@ -18,25 +24,35 @@ class NetworkEventHandler {
   }
 
   void handleMessageEvent(IPFSMessage message) {
+    final now = DateTime.now();
+    final timestamp = Timestamp()
+      ..seconds = Int64(now.millisecondsSinceEpoch ~/ 1000)
+      ..nanos = (now.millisecondsSinceEpoch % 1000) * 1000000;
+
     final peerMetrics = PeerMetrics()
       ..messagesSent = Int64(1)
       ..bytesReceived = Int64(message.payload.length);
 
     final metrics = NetworkMetrics()
-      ..timestamp = Int64(DateTime.now().millisecondsSinceEpoch)
+      ..timestamp = timestamp
       ..peerMetrics[message.senderId] = peerMetrics;
 
     _updateMetrics(metrics);
     _eventController.add(NetworkEvent()
-      ..timestamp = Int64(DateTime.now().millisecondsSinceEpoch)
+      ..timestamp = timestamp
       ..eventType = 'MESSAGE_RECEIVED'
       ..peerId = message.senderId
       ..data = message.payload);
   }
 
   void _updateMetrics(NetworkMetrics metrics) {
+    final now = DateTime.now();
+    final timestamp = Timestamp()
+      ..seconds = Int64(now.millisecondsSinceEpoch ~/ 1000)
+      ..nanos = (now.millisecondsSinceEpoch % 1000) * 1000000;
+
     final event = NetworkEvent()
-      ..timestamp = Int64(DateTime.now().millisecondsSinceEpoch)
+      ..timestamp = timestamp
       ..eventType = 'METRICS_UPDATED';
 
     _eventController.add(event);

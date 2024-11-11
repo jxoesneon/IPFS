@@ -1,6 +1,8 @@
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 import 'package:dart_ipfs/src/proto/generated/connection.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/metrics.pb.dart';
+import 'package:fixnum/fixnum.dart';
 
 /// Collects and manages metrics about peer connections and network activity
 class MetricsCollector {
@@ -74,8 +76,12 @@ class MetricsCollector {
 
   // Get aggregated network metrics
   NetworkMetrics getNetworkMetrics() {
-    final metrics = NetworkMetrics()
-      ..timestamp = DateTime.now().millisecondsSinceEpoch;
+    final now = DateTime.now();
+    final timestamp = Timestamp()
+      ..seconds = Int64(now.millisecondsSinceEpoch ~/ 1000)
+      ..nanos = (now.millisecondsSinceEpoch % 1000) * 1000000;
+
+    final metrics = NetworkMetrics()..timestamp = timestamp;
 
     // Convert peer stats to protobuf format
     _peerStats.forEach((peerId, stats) {

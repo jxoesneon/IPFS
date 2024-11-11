@@ -1,5 +1,6 @@
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/proto/generated/connection.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:fixnum/fixnum.dart';
 
@@ -10,10 +11,15 @@ class ConnectionManager {
   ConnectionManager(this._metrics);
 
   Future<void> handleNewConnection(LibP2PPeerId peerId) async {
+    final now = DateTime.now();
+    final timestamp = Timestamp()
+      ..seconds = Int64(now.millisecondsSinceEpoch ~/ 1000)
+      ..nanos = (now.millisecondsSinceEpoch % 1000) * 1000000;
+
     final state = ConnectionState()
       ..peerId = peerId.toString()
       ..status = ConnectionState_Status.CONNECTED
-      ..connectedAt = Int64(DateTime.now().millisecondsSinceEpoch)
+      ..connectedAt = timestamp
       ..metadata.addAll({
         'client_version': 'ipfs-dart/1.0.0',
         'protocols': ['dht', 'bitswap'].join(','),
