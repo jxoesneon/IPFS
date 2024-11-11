@@ -1,8 +1,8 @@
 // lib/src/utils/car_reader.dart
 
 import 'dart:typed_data';
-import '../core/data_structures/block.dart';
-import '../core/data_structures/car.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/car.dart';
 
 /// Utility class for reading CAR files.
 class CarReader {
