@@ -20,11 +20,11 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 /// Following specs from: https://github.com/libp2p/specs/tree/master/kad-dht
 class DHTClient {
   final IPFSNode node;
-  final LibP2PRouterL0 router;
-  late final KademliaRoutingTable _kademliaRoutingTable;
   final NetworkHandler networkHandler;
-  final LibP2PPeerId peerId;
-  final LibP2PPeerId associatedPeerId;
+  late final LibP2PRouterL0 router;
+  late final LibP2PPeerId peerId;
+  late final LibP2PPeerId associatedPeerId;
+  late final KademliaRoutingTable _kademliaRoutingTable;
 
   // Protocol identifiers as per IPFS spec
   static const String PROTOCOL_DHT = '/ipfs/kad/1.0.0';
@@ -35,40 +35,20 @@ class DHTClient {
   static const String PROTOCOL_GET_VALUE = '/ipfs/kad/get-value/1.0.0';
   static const String PROTOCOL_PUT_VALUE = '/ipfs/kad/put-value/1.0.0';
 
-  DHTClient({required this.networkHandler})
-      : node = networkHandler.ipfsNode,
-        router = networkHandler.ipfsNode.dhtHandler.router.routerL0,
-        peerId = networkHandler
-            .ipfsNode.dhtHandler.router.routerL0.routes.values.first.peerId,
-        associatedPeerId = networkHandler
-            .ipfsNode.dhtHandler.router.routerL0.routes.values.first.peerId {
-    // Initialize routing table with this instance
+  DHTClient({required this.networkHandler}) : node = networkHandler.ipfsNode {
+    // Initialize routing table
     _kademliaRoutingTable = KademliaRoutingTable();
     _kademliaRoutingTable.initialize(this);
+  }
 
-    // Register DHT protocols
-    node.dhtHandler.router.registerProtocol(PROTOCOL_DHT);
-    node.dhtHandler.router.registerProtocol(PROTOCOL_FIND_NODE);
-    node.dhtHandler.router.registerProtocol(PROTOCOL_FIND_PEERS);
-    node.dhtHandler.router.registerProtocol(PROTOCOL_GET_PROVIDERS);
-    node.dhtHandler.router.registerProtocol(PROTOCOL_ADD_PROVIDER);
-    node.dhtHandler.router.registerProtocol(PROTOCOL_GET_VALUE);
-    node.dhtHandler.router.registerProtocol(PROTOCOL_PUT_VALUE);
+  // Add initialization method to be called after dhtHandler is set
+  void initializeRouter() {
+    router = node.dhtHandler.router.routerL0;
+    peerId = router.routes.values.first.peerId;
+    associatedPeerId = peerId;
 
-    // Register the general packet handler for DHT protocol
-    node.dhtHandler.router.addMessageHandler(PROTOCOL_DHT, _handlePacket);
-
-    // Add message handlers for specific protocols
-    node.dhtHandler.router
-        .addMessageHandler(PROTOCOL_FIND_NODE, _handleFindNode);
-    node.dhtHandler.router
-        .addMessageHandler(PROTOCOL_GET_PROVIDERS, _handleGetProviders);
-    node.dhtHandler.router
-        .addMessageHandler(PROTOCOL_ADD_PROVIDER, _handleAddProvider);
-    node.dhtHandler.router
-        .addMessageHandler(PROTOCOL_GET_VALUE, _handleGetValue);
-    node.dhtHandler.router
-        .addMessageHandler(PROTOCOL_PUT_VALUE, _handlePutValue);
+    // Register protocols and handlers
+    _registerProtocols();
   }
 
   // Convert protobuf Peer to p2p.PeerId
@@ -546,6 +526,41 @@ class DHTClient {
     } catch (e) {
       print('Error storing value with peer ${Base58().encode(peer.value)}: $e');
       return false;
+    }
+  }
+
+  void _registerProtocols() {
+    // Register protocol handlers for each DHT protocol
+    for (final protocol in [
+      PROTOCOL_DHT,
+      PROTOCOL_FIND_NODE,
+      PROTOCOL_FIND_PEERS,
+      PROTOCOL_GET_PROVIDERS,
+      PROTOCOL_ADD_PROVIDER,
+      PROTOCOL_GET_VALUE,
+      PROTOCOL_PUT_VALUE,
+    ]) {
+      node.dhtHandler.router.addMessageHandler(protocol, (packet) {
+        switch (protocol) {
+          case PROTOCOL_FIND_NODE:
+            _handleFindNode(packet);
+            break;
+          case PROTOCOL_GET_PROVIDERS:
+            _handleGetProviders(packet);
+            break;
+          case PROTOCOL_ADD_PROVIDER:
+            _handleAddProvider(packet);
+            break;
+          case PROTOCOL_GET_VALUE:
+            _handleGetValue(packet);
+            break;
+          case PROTOCOL_PUT_VALUE:
+            _handlePutValue(packet);
+            break;
+          default:
+            _handlePacket(packet);
+        }
+      });
     }
   }
 }
