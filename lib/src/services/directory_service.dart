@@ -1,9 +1,14 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/config/config.dart';
 import 'package:dart_ipfs/src/core/data_structures/directory.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/directory.pb.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:dart_ipfs/src/utils/crypto.dart';
+import 'package:dart_ipfs/src/proto/generated/core/node_type.pbenum.dart';
+import 'package:dart_ipfs/src/utils/encoding.dart';
 
 /// Service for managing IPFS directory operations
 class IPFSDirectoryService {
@@ -16,15 +21,17 @@ class IPFSDirectoryService {
   /// Creates a new directory at the specified path
   Future<IPFSNode> createDirectory(String path) async {
     // Create a new directory node
-    final node = IPFSNode.directory(
-      cid: await _generateCID(path),
-      links: [],
-    );
+    final node = IPFSNode(IPFSConfig());
+    node.nodeType = NodeTypeProto.NODE_TYPE_DIRECTORY;
+
+    // Generate and set the CID
+    node.cid = await _generateCID(path);
+    node.links = [];
 
     // Add to directory manager
     _directoryManager.addEntry(IPFSDirectoryEntry(
       name: path.split('/').last,
-      hash: node.cid.bytes,
+      hash: EncodingUtils.cidToBytes(node.cid),
       size: Int64(0),
       isDirectory: true,
     ));
