@@ -44,3 +44,7 @@ class IPFSDirectoryManager {
     // ... rest of the method
   }
 }
+
+// Create a new directory node with a meaningful path
+final directoryManager =
+    IPFSDirectoryManager('/ipfs/${DateTime.now().millisecondsSinceEpoch}');
