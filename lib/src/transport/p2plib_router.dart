@@ -61,6 +61,7 @@ class P2plibRouter {
   final IPFSConfig _config;
   final p2p.RouterL2 _router;
   RoutingTable? _routingTable;
+  final Set<p2p.PeerId> _connectedPeers = {};
 
   late final StreamController<ConnectionEvent> _connectionEventsController;
   late final StreamController<MessageEvent> _messageEventsController;
@@ -127,11 +128,14 @@ class P2plibRouter {
   Future<void> connect(String multiaddress) async {
     try {
       final address = parseMultiaddr(multiaddress);
+      final peerId =
+          p2p.PeerId(value: _extractPeerIdFromMultiaddr(multiaddress));
       _router.addPeerAddress(
-        peerId: p2p.PeerId(value: _extractPeerIdFromMultiaddr(multiaddress)),
+        peerId: peerId,
         address: address,
         properties: p2p.AddressProperties(),
       );
+      _connectedPeers.add(peerId);
       _connectionEventsController.add(
         ConnectionEvent(
           type: ConnectionEventType.connected,
@@ -155,6 +159,7 @@ class P2plibRouter {
       final peerIdBytes = _extractPeerIdFromMultiaddr(multiaddress);
       final peerId = p2p.PeerId(value: peerIdBytes);
       _router.removePeerAddress(peerId);
+      _connectedPeers.remove(peerId);
       _connectionEventsController.add(
         ConnectionEvent(
           type: ConnectionEventType.disconnected,
@@ -392,6 +397,60 @@ class P2plibRouter {
       throw FormatException('No peer ID found in multiaddr: $multiaddr');
     }
     return Base58().base58Decode(parts[peerIdIndex]);
+  }
+
+  // Add to P2plibRouter class
+  bool isConnectedPeer(p2p.PeerId peerId) {
+    // 1. Check if peer is in our connected peers set
+    if (!_connectedPeers.contains(peerId)) {
+      return false;
+    }
+
+    // 2. Check if peer exists in router's routes
+    final route = _router.routes[peerId];
+    if (route == null) {
+      // If peer is in _connectedPeers but not in routes, clean up the inconsistency
+      _connectedPeers.remove(peerId);
+      return false;
+    }
+
+    // 3. Check if we have valid addresses for this peer
+    final addresses = _router.resolvePeerId(peerId);
+    if (addresses.isEmpty) {
+      return false;
+    }
+
+    // 4. Check if the peer has been seen recently (within last 2 minutes)
+    if (DateTime.now()
+            .difference(DateTime.fromMillisecondsSinceEpoch(route.lastSeen)) >
+        const Duration(minutes: 2)) {
+      // Clean up stale connection
+      _connectedPeers.remove(peerId);
+      _router.removePeerAddress(peerId);
+
+      // Emit disconnection event
+      _connectionEventsController.add(
+        ConnectionEvent(
+          type: ConnectionEventType.disconnected,
+          peerId: Base58().encode(peerId.value),
+        ),
+      );
+      return false;
+    }
+
+    // 5. Check if the peer's connection is active by checking if it's reachable
+    try {
+      final isReachable = _router.resolvePeerId(peerId).isNotEmpty;
+      if (!isReachable) {
+        _connectedPeers.remove(peerId);
+        return false;
+      }
+    } catch (e) {
+      _connectedPeers.remove(peerId);
+      return false;
+    }
+
+    return true;
   }
 }
 
