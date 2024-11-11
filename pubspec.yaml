@@ -56,6 +56,7 @@ dependencies:
   intl: ^0.18.0  # Use the latest stable version
 
   markdown: ^7.2.2
+  synchronized: ^3.3.0+3
 
 dev_dependencies:
   test: ^1.21.0 # For unit and integration tests
