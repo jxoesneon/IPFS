@@ -6,7 +6,7 @@ import 'core/ipfs_node/ipfs_node.dart';
 import 'core/data_structures/link.dart';
 import 'core/data_structures/peer.dart';
 import 'core/data_structures/node_stats.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/bitswap_handler.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 
 // lib/src/ipfs.dart
 
