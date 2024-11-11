@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
-import '../core/config/ipfs_config.dart';
 import '../core/types/p2p_types.dart';
+import '../core/config/ipfs_config.dart';
 import '../transport/p2plib_router.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import '../core/data_structures/peer.dart';
@@ -26,6 +26,9 @@ class Router {
 
   /// Currently connected peers
   Set<Peer> get connectedPeers => Set.unmodifiable(_connectedPeers);
+
+  /// Whether the router has been initialized
+  bool get isInitialized => _router.isInitialized;
 
   /// Starts the router
   Future<void> start() async {
