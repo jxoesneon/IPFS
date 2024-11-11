@@ -1,15 +1,15 @@
-import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'package:http/http.dart' as http;
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:p2plib/p2plib.dart' show PeerId;
 import 'package:dart_ipfs/src/utils/keystore.dart';
+import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/protocols/dht/Interface_dht_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/Interface_dht_handler.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 // lib/src/core/ipfs_node/dht_handler.dart
 
 /// Handles DHT operations for an IPFS node.
@@ -32,7 +32,6 @@ class DHTHandler implements IDHTHandler {
   /// Starts the DHT client.
   Future<void> start() async {
     try {
-      await dhtClient.initialize();
       await dhtClient.start();
       print('DHT client started.');
     } catch (e) {
