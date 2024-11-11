@@ -69,6 +69,45 @@ class CAR {
   int? getBlockOffset(String cid) {
     return index?.getOffset(cid);
   }
+
+  /// Creates a CAR from its byte representation
+  static CAR fromBytes(Uint8List bytes) {
+    final carProto = proto.CarProto.fromBuffer(bytes);
+
+    final blocks = carProto.blocks
+        .map((blockProto) => Block.fromProto(blockProto))
+        .toList();
+
+    final header = CarHeader(
+      version: carProto.header.version,
+      characteristics: carProto.header.characteristics,
+      roots: carProto.header.roots.map((r) => CID.fromProto(r)).toList(),
+      pragma: Map.fromEntries(
+        carProto.header.pragma.entries.map(
+          (e) => MapEntry(e.key, String.fromCharCodes(e.value.value)),
+        ),
+      ),
+    );
+
+    CarIndex? index;
+    if (carProto.hasIndex()) {
+      index = CarIndex();
+      for (var entry in carProto.index.entries) {
+        index.addEntry(
+          entry.cid,
+          entry.offset.toInt(),
+          entry.length.toInt(),
+        );
+      }
+    }
+
+    return CAR(
+      blocks: blocks,
+      header: header,
+      index: index,
+      version: carProto.version,
+    );
+  }
 }
 
 /// Represents a CAR file header
