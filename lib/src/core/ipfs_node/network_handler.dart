@@ -4,7 +4,7 @@ import 'ipfs_node.dart';
 import 'dart:typed_data';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/network/router.dart';
-import 'package:dart_ipfs/src/core/config/config.dart';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
@@ -225,4 +225,7 @@ class NetworkHandler {
       return ''; // Return empty string on error
     }
   }
+
+  /// Gets the P2plibRouter instance
+  P2plibRouter get p2pRouter => _router;
 }
