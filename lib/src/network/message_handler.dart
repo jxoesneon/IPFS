@@ -1,27 +1,33 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/bitswap_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart' as pb_cid;
 import 'package:dart_ipfs/src/services/gateway/content_type_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/lazy_preview_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart' as pb_base;
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart';
 
 class MessageHandler {
   final StreamController<pb_base.NetworkEvent> _eventController =
       StreamController<pb_base.NetworkEvent>.broadcast();
   final PubSubClient? _pubSubClient;
   final IPFSConfig config;
+  final P2plibRouter _router;
   late final BlockStore _blockStore;
+  final _logger = Logger('MessageHandler');
 
-  MessageHandler(this.config, [this._pubSubClient]);
+  MessageHandler(this.config, this._router, [this._pubSubClient]) {
+    _blockStore = BlockStore(path: config.blockStorePath);
+  }
 
   Future<void> handleCIDMessage(pb_cid.IPFSCIDProto protoMessage) async {
     final cid = CID.fromProto(protoMessage);
@@ -60,28 +66,28 @@ class MessageHandler {
 
   Future<void> storeCID(CID cid) async {
     try {
-      // Get the block associated with the CID
+      _logger.verbose('Attempting to store CID: ${cid.encode()}');
+      
       final block = await getBlock(cid);
       if (block == null) {
+        _logger.warning('Block not found for CID: ${cid.encode()}');
         throw Exception('Block not found for CID: ${cid.encode()}');
       }
 
-      // Create a BlockStore instance with path from config
+      _logger.debug('Retrieved block for CID: ${cid.encode()}, size: ${block.data.length} bytes');
+      
       final blockStore = BlockStore(path: config.blockStorePath);
-
-      // Convert the block to proto format and store it
       final response = await blockStore.addBlock(block.toProto());
 
       if (!response.success) {
+        _logger.error('Failed to store block: ${response.message}');
         throw Exception('Failed to store block: ${response.message}');
       }
 
-      // Notify any listeners about the new CID
+      _logger.debug('Successfully stored CID: ${cid.encode()}');
       notifyListeners(cid);
-
-      print('Successfully stored CID: ${cid.encode()}');
     } catch (e) {
-      print('Error storing CID ${cid.encode()}: $e');
+      _logger.error('Error storing CID ${cid.encode()}', e);
       rethrow;
     }
   }
@@ -130,7 +136,7 @@ class MessageHandler {
       }
 
       // If not found locally, try to get from network via bitswap
-      final bitswap = BitswapHandler(config, blockStore);
+      final bitswap = BitswapHandler(config, blockStore, _router);
       return await bitswap.wantBlock(cid.encode());
     } catch (e) {
       print('Error retrieving block for CID ${cid.encode()}: $e');
