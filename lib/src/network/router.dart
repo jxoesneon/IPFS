@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
-import '../core/config/config.dart';
+import '../core/config/ipfs_config.dart';
 import '../core/types/p2p_types.dart';
 import '../transport/p2plib_router.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
