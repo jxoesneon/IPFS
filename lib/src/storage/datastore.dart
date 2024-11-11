@@ -43,8 +43,10 @@ class Datastore {
   /// Stores a block
   Future<void> put(String cid, Block block) async {
     try {
+      _logger.verbose('Attempting to store block with CID: $cid');
       await _blocksBox.put(cid, block.data);
-      _logger.debug('Stored block: $cid');
+      _logger.debug(
+          'Successfully stored block: $cid (${block.data.length} bytes)');
     } catch (e) {
       _logger.error('Failed to store block: $cid', e);
       throw DatastoreError('Failed to store block: $e');
@@ -54,9 +56,14 @@ class Datastore {
   /// Retrieves a block by CID
   Future<Block?> get(String cid) async {
     try {
+      _logger.verbose('Attempting to retrieve block: $cid');
       final data = await _blocksBox.get(cid);
-      if (data == null) return null;
-
+      if (data == null) {
+        _logger.debug('Block not found: $cid');
+        return null;
+      }
+      _logger
+          .debug('Successfully retrieved block: $cid (${data.length} bytes)');
       return Block.fromData(Uint8List.fromList(data));
     } catch (e) {
       _logger.error('Failed to retrieve block: $cid', e);
