@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/utils/encoding.dart';
 import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
@@ -11,10 +12,8 @@ import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as proto;
-import 'package:dart_ipfs/src/protocols/bitswap/message.dart'
-    as bitswap_message;
-import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
-    as bitswap_pb;
+import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as bitswap_message;
+import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as bitswap_pb;
 // lib/src/protocols/bitswap/bitswap.dart
 
 class Bitswap {
@@ -23,6 +22,7 @@ class Bitswap {
   final Datastore _datastore;
   final Set<LibP2PPeerId> _peers = {};
   final dynamic config;
+  final _logger = Logger('BitSwap');
 
   static const int maxPrefixLength =
       64; // Or whatever maximum prefix length is appropriate
@@ -169,8 +169,8 @@ class Bitswap {
 
   void addPeer(LibP2PPeerId peerId) {
     _peers.add(peerId);
-    print(
-        'Peer ${EncodingUtils.toBase58(peerId.value)} added to Bitswap network.');
+    _logger.debug('Peer ${EncodingUtils.toBase58(peerId.value)} added to Bitswap network');
+    _logger.verbose('Current peer count: ${_peers.length}');
   }
 
   void removePeer(LibP2PPeerId peerId) {
@@ -184,12 +184,13 @@ class Bitswap {
   /// Handles incoming "have" requests from peers.
   void handleHave(String peerId, proto.WantlistEntry entry) {
     final blockId = base64.encode(entry.block);
+    _logger.verbose('Received have request for block $blockId from $peerId');
 
-    // Check if we have the requested block in our ledger
     if (_ledger.hasBlock(blockId)) {
-      print('Responding to have request for block $blockId from $peerId.');
+      _logger.debug('Responding to have request for block $blockId from $peerId');
       sendHave(peerId, entry);
     } else if (entry.sendDontHave) {
+      _logger.debug('Sending dont-have response for block $blockId to $peerId');
       sendDontHave(peerId, entry);
     }
   }
