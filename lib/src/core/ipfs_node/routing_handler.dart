@@ -1,6 +1,7 @@
 // lib/src/core/ipfs_node/routing_handler.dart
 
 import 'dart:convert';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:http/http.dart' as http;
 import '/../src/routing/content_routing.dart';
 import '/../src/utils/dnslink_resolver.dart'; // Import your DNSLinkResolver utility
@@ -9,7 +10,8 @@ import '/../src/utils/dnslink_resolver.dart'; // Import your DNSLinkResolver uti
 class RoutingHandler {
   final ContentRouting _contentRouting;
 
-  RoutingHandler(config) : _contentRouting = ContentRouting(config);
+  RoutingHandler(config, NetworkHandler networkHandler)
+      : _contentRouting = ContentRouting(config, networkHandler);
 
   /// Starts the routing services.
   Future<void> start() async {
@@ -36,7 +38,8 @@ class RoutingHandler {
     try {
       final providers = await _contentRouting.findProviders(cid);
       if (providers.isEmpty) {
-        print('No providers found for CID $cid. Attempting alternative discovery methods...');
+        print(
+            'No providers found for CID $cid. Attempting alternative discovery methods...');
         // Implement alternative provider discovery methods here
       } else {
         print('Found providers for CID $cid: ${providers.length}');
@@ -51,7 +54,8 @@ class RoutingHandler {
   /// Resolves a DNSLink to its corresponding CID with comprehensive error handling.
   Future<String?> resolveDNSLink(String domainName) async {
     try {
-      final cid = await DNSLinkResolver.resolve(domainName); // Use static access
+      final cid =
+          await DNSLinkResolver.resolve(domainName); // Use static access
       if (cid != null) {
         print('Resolved DNSLink for domain $domainName to CID: $cid');
         return cid;
@@ -63,7 +67,8 @@ class RoutingHandler {
 
       // Attempt alternative resolution methods, such as querying a public DNSLink resolver
       try {
-        final url = Uri.parse('https://dnslink-resolver.example.com/$domainName');
+        final url =
+            Uri.parse('https://dnslink-resolver.example.com/$domainName');
         final response = await http.get(url);
         if (response.statusCode == 200) {
           final resolvedCid = jsonDecode(response.body)['cid'];
@@ -71,7 +76,8 @@ class RoutingHandler {
             print('Resolved DNSLink using public resolver: $resolvedCid');
             return resolvedCid;
           } else {
-            throw Exception('Failed to extract CID from public resolver response.');
+            throw Exception(
+                'Failed to extract CID from public resolver response.');
           }
         } else {
           throw Exception(
