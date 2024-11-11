@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'ipfs_node.dart';
 import 'dart:typed_data';
 import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/network/router.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
@@ -13,41 +14,67 @@ import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.da
 
 /// Handles network operations for an IPFS node.
 class NetworkHandler {
-  final CircuitRelayClient _circuitRelayClient;
+  late final CircuitRelayClient _circuitRelayClient;
   final P2plibRouter _router;
   late final IPFSNode ipfsNode;
-  late final StreamController<NetworkEvent> _networkEventController =
-      StreamController<NetworkEvent>.broadcast();
-
+  late final StreamController<NetworkEvent> _networkEventController;
   final IPFSConfig _config;
+  late final Logger _logger;
 
   NetworkHandler(this._config)
       : _router = P2plibRouter(_config),
-        _circuitRelayClient = CircuitRelayClient(P2plibRouter(_config)) {
-    // Start listening for network events
+        _networkEventController = StreamController<NetworkEvent>.broadcast() {
+    // Initialize logger
+    _logger = Logger('NetworkHandler',
+        debug: _config.debug, verbose: _config.verboseLogging);
+
+    _logger.debug('Initializing NetworkHandler...');
+
+    // Initialize CircuitRelayClient after _router is initialized
+    _logger.verbose('Creating CircuitRelayClient with router instance');
+    _circuitRelayClient = CircuitRelayClient(_router);
+
+    _logger.verbose('Setting up network event listeners');
     _listenForNetworkEvents();
+    _logger.debug('NetworkHandler initialization complete');
   }
 
   /// Starts the network services.
   Future<void> start() async {
     try {
+      _logger.debug('Starting network services...');
+      _logger.verbose('Initializing router...');
       await _router.start();
+      _logger.verbose('Router started successfully');
+
+      _logger.verbose('Initializing circuit relay client...');
       await _circuitRelayClient.start();
-      print('Network services started.');
-    } catch (e) {
-      print('Error starting network services: $e');
+      _logger.verbose('Circuit relay client started successfully');
+
+      _logger.info('Network services started successfully');
+    } catch (e, stackTrace) {
+      _logger.error('Error starting network services', e, stackTrace);
+      rethrow;
     }
   }
 
   /// Stops the network services.
   Future<void> stop() async {
     try {
+      _logger.debug('Stopping network services...');
       await _circuitRelayClient.stop();
+      _logger.verbose('Circuit relay client stopped');
+
       await _router.stop();
-      _networkEventController.close(); // Close the event controller
-      print('Network services stopped.');
-    } catch (e) {
-      print('Error stopping network services: $e');
+      _logger.verbose('Router stopped');
+
+      _networkEventController.close();
+      _logger.verbose('Network event controller closed');
+
+      _logger.info('Network services stopped successfully');
+    } catch (e, stackTrace) {
+      _logger.error('Error stopping network services', e, stackTrace);
+      rethrow;
     }
   }
 
@@ -119,46 +146,43 @@ class NetworkHandler {
 
   /// Listens for network events and handles them appropriately.
   void _listenForNetworkEvents() {
+    _logger.verbose('Setting up network event stream listener');
     _networkEventController.stream.listen((event) {
       try {
         if (event.hasPeerConnected()) {
           final peerId = event.peerConnected.peerId;
           final multiaddress = event.peerConnected.multiaddress;
-          print('Peer joined: $peerId at address: $multiaddress');
+          _logger.info('Peer connected: $peerId at address: $multiaddress');
 
-          // Convert peerId to PeerId object and add to routing table with itself as associated peer
           final peerIdBytes = Uint8List.fromList(utf8.encode(peerId));
           final peer = p2p.PeerId(value: peerIdBytes);
-          // Using the routing table's addPeer method
+          _logger.verbose('Adding peer to routing table: $peerId');
           ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable
               .addPeer(peer, peer);
         } else if (event.hasPeerDisconnected()) {
           final peerIdStr = event.peerDisconnected.peerId;
           final reason = event.peerDisconnected.reason;
-          print('Peer left: $peerIdStr. Reason: $reason');
+          _logger.info('Peer disconnected: $peerIdStr. Reason: $reason');
 
-          // Convert string to PeerId object before removing
           final peerIdBytes = Uint8List.fromList(utf8.encode(peerIdStr));
           final peerId = p2p.PeerId(value: peerIdBytes);
-
-          // Using the routing table's removePeer method
+          _logger.verbose('Removing peer from routing table: $peerIdStr');
           ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable.removePeer(peerId);
         } else if (event.hasMessageReceived()) {
           final messageContent =
               utf8.decode(event.messageReceived.messageContent);
           final senderId = event.messageReceived.peerId;
-          print('Message received from $senderId: $messageContent');
+          _logger.debug('Message received from $senderId: $messageContent');
         } else {
-          print('Unhandled event type: ${event.runtimeType}');
+          _logger.warning('Unhandled event type: ${event.runtimeType}');
         }
       } catch (e, stackTrace) {
-        print('Error processing network event: $e');
-        print(stackTrace);
+        _logger.error('Error processing network event', e, stackTrace);
       }
-    }, onError: (error) {
-      print('Error in network event stream: $error');
+    }, onError: (error, stackTrace) {
+      _logger.error('Error in network event stream', error, stackTrace);
     }, onDone: () {
-      print('Network event stream closed.');
+      _logger.debug('Network event stream closed');
     });
   }
 
@@ -228,4 +252,82 @@ class NetworkHandler {
 
   /// Gets the P2plibRouter instance
   P2plibRouter get p2pRouter => _router;
+
+  CircuitRelayClient get circuitRelayClient => _circuitRelayClient;
+
+  Future<void> initialize() async {
+    _logger.debug('Initializing NetworkHandler...');
+
+    try {
+      await _router.initialize();
+      _logger.verbose('Router initialized successfully');
+
+      _setupEventHandlers();
+      _logger.verbose('Event handlers configured');
+
+      _logger.debug('NetworkHandler initialization complete');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to initialize NetworkHandler', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  void _setupEventHandlers() {
+    _logger.verbose('Setting up network event handlers');
+
+    _router.connectionEvents.listen((event) {
+      _logger.debug('Connection event: ${event.type} - Peer: ${event.peerId}');
+      _handleConnectionEvent(event);
+    });
+
+    _router.messageEvents.listen((event) {
+      _logger.verbose('Message received from: ${event.peerId}');
+      _handleMessageEvent(event);
+    });
+  }
+
+  void _handleConnectionEvent(ConnectionEvent event) {
+    try {
+      final networkEvent = NetworkEvent();
+
+      switch (event.type) {
+        case ConnectionEventType.connected:
+          _logger.debug('Handling peer connected event for: ${event.peerId}');
+          networkEvent.peerConnected = PeerConnectedEvent()
+            ..peerId = event.peerId
+            ..multiaddress = event.peerId;
+          break;
+
+        case ConnectionEventType.disconnected:
+          _logger
+              .debug('Handling peer disconnected event for: ${event.peerId}');
+          networkEvent.peerDisconnected = PeerDisconnectedEvent()
+            ..peerId = event.peerId
+            ..reason = 'Peer disconnected';
+          break;
+      }
+
+      _networkEventController.add(networkEvent);
+      _logger.verbose('Network event dispatched: ${event.type}');
+    } catch (e, stackTrace) {
+      _logger.error('Error handling connection event', e, stackTrace);
+    }
+  }
+
+  void _handleMessageEvent(MessageEvent event) {
+    try {
+      _logger.debug('Handling message from peer: ${event.peerId}');
+
+      final networkEvent = NetworkEvent();
+      networkEvent.messageReceived = MessageReceivedEvent()
+        ..peerId = event.peerId
+        ..messageContent = event.message;
+
+      _networkEventController.add(networkEvent);
+      _logger.verbose(
+          'Message event dispatched, size: ${event.message.length} bytes');
+    } catch (e, stackTrace) {
+      _logger.error('Error handling message event', e, stackTrace);
+    }
+  }
 }
