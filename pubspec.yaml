@@ -49,6 +49,8 @@ dependencies:
 
   cbor: ^5.1.0  # Or the latest version
 
+  lz4: ^0.0.1  # Use the latest stable version
+
 dev_dependencies:
   test: ^1.21.0 # For unit and integration tests
   lints: ^5.0.0 # For code style analysis
