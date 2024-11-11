@@ -1,4 +1,4 @@
-import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_node.dart';
+import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_tree_node.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:collection/collection.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
