@@ -69,7 +69,6 @@ void main() async {
     print('Failed to retrieve file2.txt content.');
   }
 
-
   // 9. Resolve an IPNS name
   // Convert an IPNS name to its current CID mapping
   try {
