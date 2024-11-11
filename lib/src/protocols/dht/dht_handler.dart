@@ -14,28 +14,30 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 
 /// Handles DHT operations for an IPFS node.
 class DHTHandler implements IDHTHandler {
-  final DHTClient dhtClient;
+  late final DHTClient dhtClient;
   final Keystore _keystore;
   final P2plibRouter _router;
   final Datastore _storage;
 
-  DHTHandler(config, P2plibRouter router, NetworkHandler networkHandler)
-      : dhtClient = DHTClient(networkHandler: networkHandler),
-        _keystore = Keystore(config),
-        _router = router,
+  DHTHandler(config, this._router, NetworkHandler networkHandler)
+      : _keystore = Keystore(config),
         _storage = Datastore(config.datastorePath) {
     _storage.init();
+    dhtClient = DHTClient(
+      networkHandler: networkHandler,
+      router: _router,
+    );
   }
 
   /// Starts the DHT client.
   Future<void> start() async {
     try {
-      // Initialize client's router after dhtHandler is fully constructed
-      dhtClient.initializeRouter();
+      await dhtClient.initialize();
       await dhtClient.start();
       print('DHT client started.');
     } catch (e) {
       print('Error starting DHT client: $e');
+      rethrow;
     }
   }
 
