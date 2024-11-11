@@ -1,28 +1,54 @@
 import 'dart:io';
 import 'dart:math';
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-
 import '/../src/utils/base58.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import '../protocols/dht/routing_table.dart';
-import 'dart:convert';
+import 'package:synchronized/synchronized.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 import '../protocols/bitswap/message.dart' show Message;
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+
 // lib/src/transport/p2plib_router.dart
 
 /// A router implementation using the `p2plib` package.
 class P2plibRouter {
-  /// Creates a new [P2plibRouter] with the given [config].
-  P2plibRouter(this._config)
+  static P2plibRouter? _instance;
+  static final p2p.Crypto _sharedCrypto = p2p.Crypto();
+  static final _cryptoInitLock = Lock();
+  bool _isInitialized = false;
+  final Logger _logger;
+
+  final IPFSConfig _config;
+  final p2p.RouterL2 _router;
+  RoutingTable? _routingTable;
+  final Set<p2p.PeerId> _connectedPeers = {};
+
+  factory P2plibRouter(IPFSConfig config) {
+    if (_instance == null) {
+      _instance = P2plibRouter._internal(config);
+    }
+    return _instance!;
+  }
+
+  P2plibRouter._internal(this._config)
       : _router = p2p.RouterL2(
-          crypto: p2p.Crypto(),
+          crypto: _sharedCrypto,
           keepalivePeriod: const Duration(seconds: 30),
         ) {
+    _logger = Logger('P2plibRouter',
+        debug: _config.debug, verbose: _config.verboseLogging);
+
+    _setupRouter();
+  }
+
+  void _setupRouter() {
     // Initialize the router with the provided configuration
-    _router.transports.clear(); // Clear existing transports
+    _router.transports.clear();
     _router.transports.add(p2p.TransportUdp(
       bindAddress: p2p.FullAddress(
         address: InternetAddress.anyIPv4,
@@ -38,49 +64,7 @@ class P2plibRouter {
       ttl: _router.messageTTL.inSeconds,
     ));
     _router.messageTTL = const Duration(minutes: 1);
-
-    // Initialize event controllers
-    _connectionEventsController = StreamController<ConnectionEvent>.broadcast();
-    _messageEventsController = StreamController<MessageEvent>.broadcast();
-    _dhtEventsController = StreamController<DHTEvent>.broadcast();
-    _pubSubEventsController = StreamController<PubSubEvent>.broadcast();
-    _errorEventsController = StreamController<ErrorEvent>.broadcast();
-    _streamEventsController = StreamController<StreamEvent>.broadcast();
   }
-
-  // Modify the initialize method to handle peer ID initialization
-  Future<void> initialize() async {
-    // Generate random peer ID bytes
-    final peerIdBytes = _generateRandomPeerId();
-    // Initialize the router with the peer ID
-    await _router.init(peerIdBytes);
-    // Initialize crypto
-    await _router.crypto.init();
-  }
-
-  final IPFSConfig _config;
-  final p2p.RouterL2 _router;
-  RoutingTable? _routingTable;
-  final Set<p2p.PeerId> _connectedPeers = {};
-
-  late final StreamController<ConnectionEvent> _connectionEventsController;
-  late final StreamController<MessageEvent> _messageEventsController;
-  late final StreamController<DHTEvent> _dhtEventsController;
-  late final StreamController<PubSubEvent> _pubSubEventsController;
-  late final StreamController<ErrorEvent> _errorEventsController;
-  late final StreamController<StreamEvent> _streamEventsController;
-
-  // Getters for event streams
-  Stream<ConnectionEvent> get connectionEvents =>
-      _connectionEventsController.stream;
-  Stream<MessageEvent> get messageEvents => _messageEventsController.stream;
-  Stream<DHTEvent> get dhtEvents => _dhtEventsController.stream;
-  Stream<PubSubEvent> get pubSubEvents => _pubSubEventsController.stream;
-  Stream<ErrorEvent> get errorEvents => _errorEventsController.stream;
-  Stream<StreamEvent> get streamEvents => _streamEventsController.stream;
-
-  // Getter to access the RouterL0 instance
-  p2p.RouterL0 get routerL0 => _router;
 
   /// The peer ID of this node.
   String get peerID => Base58().encode(_router.selfId.value);
@@ -88,18 +72,65 @@ class P2plibRouter {
   /// The connected peers.
   List<p2p.Route> get connectedPeers => _router.routes.values.toList();
 
+  /// Initializes the router with basic configuration
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    try {
+      _logger.debug('Initializing P2plibRouter...');
+      await _cryptoInitLock.synchronized(() async {
+        if (!_isCryptoInitialized) {
+          _logger.verbose('Initializing crypto components');
+          await _sharedCrypto.init();
+          _isCryptoInitialized = true;
+          _logger.verbose('Crypto components initialized successfully');
+        }
+      });
+
+      _logger.verbose('Initializing router with peer ID');
+      final randomBytes =
+          List<int>.generate(32, (i) => Random.secure().nextInt(256));
+      await _router.init(Uint8List.fromList(randomBytes));
+      _logger.verbose(
+          'Router initialized with peer ID: ${Base58().encode(_router.selfId.value)}');
+
+      _isInitialized = true;
+      _logger.debug('P2plibRouter initialization complete');
+    } catch (e, stackTrace) {
+      _logger.error('Error initializing P2plibRouter', e, stackTrace);
+      rethrow;
+    }
+  }
+
   /// Starts the router.
   Future<void> start() async {
-    // Check if router needs initialization by checking if routes are empty
-    if (_router.routes.isEmpty) {
+    if (!_isInitialized) {
+      _logger.debug('Router not initialized, initializing...');
       await initialize();
     }
 
-    await _router.start();
+    // Only start the router and connect to bootstrap peers once
+    if (!_hasStarted) {
+      if (!_router.isRun) {
+        _logger.debug('Starting router...');
+        await _router.start();
+        _logger.verbose('Router started successfully');
+      }
 
-    // Connect to bootstrap peers
+      // Only connect to bootstrap peers once
+      if (_connectedPeers.isEmpty) {
+        await _connectToBootstrapPeers();
+      }
+
+      _hasStarted = true;
+    }
+  }
+
+  Future<void> _connectToBootstrapPeers() async {
+    _logger.debug('Connecting to bootstrap peers...');
     for (final peer in _config.network.bootstrapPeers) {
       try {
+        _logger.verbose('Attempting to connect to bootstrap peer: $peer');
         final peerIdBytes = Base58().base58Decode(peer);
         final peerId = p2p.PeerId(value: peerIdBytes);
 
@@ -111,14 +142,22 @@ class P2plibRouter {
           ),
           properties: p2p.AddressProperties(),
         );
-      } catch (e) {
-        print('Error adding bootstrap peer: $e');
+        _connectedPeers.add(peerId);
+        _connectionEventsController.add(
+          ConnectionEvent(
+            type: ConnectionEventType.connected,
+            peerId: peer,
+          ),
+        );
+      } catch (e, stackTrace) {
+        _logger.error('Error adding bootstrap peer: $peer', e, stackTrace);
       }
     }
   }
 
   /// Stops the router.
   Future<void> stop() async {
+    await _messageController.close();
     _router.stop();
     // Close all event controllers
     await _connectionEventsController.close();
@@ -239,9 +278,6 @@ class P2plibRouter {
     });
   }
 
-  /// Map to store protocol handlers
-  final Map<String, void Function(p2p.Packet)> _protocolHandlers = {};
-
   /// Adds a message handler for a specific protocol
   void addMessageHandler(String protocolId, void Function(p2p.Packet) handler) {
     if (!_registeredProtocols.contains(protocolId)) {
@@ -250,29 +286,31 @@ class P2plibRouter {
 
     _protocolHandlers[protocolId] = handler;
 
-    // Subscribe to the message stream if not already subscribed
-    if (_protocolHandlers.length == 1) {
+    // Use the broadcast controller instead
+    if (!_messageController.hasListener) {
       _router.messageStream.listen((message) {
-        // Create a packet from the message
-        final packet = p2p.Packet(
-          datagram: message.payload ?? Uint8List(0),
-          header: message.header,
-          srcFullAddress: p2p.FullAddress(
-            address: InternetAddress.anyIPv4,
-            port: p2p.TransportUdp.defaultPort,
-          ),
-        );
-
-        // Set the source and destination peer IDs after construction
-        packet.srcPeerId = message.srcPeerId;
-        packet.dstPeerId = message.dstPeerId;
-
-        // Call the appropriate protocol handler
-        for (final handler in _protocolHandlers.values) {
-          handler(packet);
-        }
+        _messageController.add(message);
       });
     }
+
+    _messageController.stream.listen((message) {
+      final packet = p2p.Packet(
+        datagram: message.payload ?? Uint8List(0),
+        header: message.header,
+        srcFullAddress: p2p.FullAddress(
+          address: InternetAddress.anyIPv4,
+          port: p2p.TransportUdp.defaultPort,
+        ),
+      );
+
+      packet.srcPeerId = message.srcPeerId;
+      packet.dstPeerId = message.dstPeerId;
+
+      // Call the appropriate protocol handler
+      if (_protocolHandlers.containsKey(protocolId)) {
+        _protocolHandlers[protocolId]!(packet);
+      }
+    });
   }
 
   /// Removes a message handler for a specific protocol
@@ -302,17 +340,6 @@ class P2plibRouter {
       datagram: datagram,
     );
     return Future.value();
-  }
-
-  // Add a set to track registered protocols
-  final Set<String> _registeredProtocols = {};
-
-  void registerProtocol(String protocolId) {
-    // Add protocol to registered set
-    _registeredProtocols.add(protocolId);
-
-    // Optional: Log registration
-    print('Registered protocol: $protocolId');
   }
 
   /// Gets the routing table for DHT operations
@@ -362,12 +389,6 @@ class P2plibRouter {
     if (_eventHandlers.containsKey(topic)) {
       _eventHandlers[topic]!.remove(handler);
     }
-  }
-
-  // Generates a random peer ID
-  static Uint8List _generateRandomPeerId() {
-    final random = Random.secure();
-    return Uint8List.fromList(List.generate(32, (i) => random.nextInt(256)));
   }
 
   /// Parses a multiaddress string into a FullAddress object
@@ -466,6 +487,42 @@ class P2plibRouter {
 
   /// Gets the routes from the underlying router
   Map<p2p.PeerId, p2p.Route> get routes => _router.routes;
+
+  /// Registers a protocol with the router
+  void registerProtocol(String protocolId) {
+    if (_registeredProtocols.contains(protocolId)) {
+      _logger.verbose('Protocol $protocolId already registered');
+      return;
+    }
+
+    _registeredProtocols.add(protocolId);
+    _logger.debug('Registered protocol: $protocolId');
+  }
+
+  /// Gets the underlying RouterL0 instance
+  p2p.RouterL2 get routerL0 => _router;
+
+  /// Stream of connection events
+  Stream<ConnectionEvent> get connectionEvents =>
+      _connectionEventsController.stream;
+
+  /// Stream of message events
+  Stream<MessageEvent> get messageEvents => _messageEventsController.stream;
+
+  /// Stream of DHT events
+  Stream<DHTEvent> get dhtEvents => _dhtEventsController.stream;
+
+  /// Stream of PubSub events
+  Stream<PubSubEvent> get pubSubEvents => _pubSubEventsController.stream;
+
+  /// Stream of stream events
+  Stream<StreamEvent> get streamEvents => _streamEventsController.stream;
+
+  /// Stream of error events
+  Stream<ErrorEvent> get errorEvents => _errorEventsController.stream;
+
+  /// Whether the router has been initialized
+  bool get isInitialized => _isInitialized;
 }
 
 mixin MultiAddressHandler {
