@@ -1,23 +1,21 @@
 import 'dart:typed_data';
+import 'package:dart_ipfs/src/services/gateway/gateway_lru_cache.dart';
+
 import 'compressed_cache_store.dart';
-import 'package:lru_cache/lru_cache.dart';
-import '../../core/data_structures/cid.dart';
-import '../../core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
 
 /// Manages caching of file previews with multiple strategies
 class PreviewCacheManager {
   final CompressedCacheStore _compressedStore;
-  final LruCache<String, Uint8List> _memoryCache;
-  
+  final GatewayLruCache<String, Uint8List> _memoryCache;
+
   PreviewCacheManager({
     required String cachePath,
     int maxMemoryEntries = 100,
-    CompressionType compression = CompressionType.gzip,
-  }) : _compressedStore = CompressedCacheStore(
-         cachePath: cachePath,
-         defaultCompression: compression,
-       ),
-       _memoryCache = LruCache(maxMemoryEntries);
+  })  : _compressedStore = CompressedCacheStore(
+          cachePath: cachePath,
+        ),
+        _memoryCache = GatewayLruCache(maxMemoryEntries);
 
   Future<Uint8List?> getPreview(CID cid, String contentType) async {
     // Check memory cache first
@@ -25,7 +23,8 @@ class PreviewCacheManager {
     if (memCached != null) return memCached;
 
     // Try compressed cache
-    final compressed = await _compressedStore.getCompressedData(cid, contentType);
+    final compressed =
+        await _compressedStore.getCompressedData(cid, contentType);
     if (compressed != null) {
       _memoryCache.put(_generateCacheKey(cid, contentType), compressed);
       return compressed;
@@ -34,7 +33,8 @@ class PreviewCacheManager {
     return null;
   }
 
-  Future<void> cachePreview(CID cid, String contentType, Uint8List preview) async {
+  Future<void> cachePreview(
+      CID cid, String contentType, Uint8List preview) async {
     _memoryCache.put(_generateCacheKey(cid, contentType), preview);
     await _compressedStore.storeCompressedData(cid, contentType, preview);
   }
@@ -48,7 +48,9 @@ class PreviewCacheManager {
       'hits': _memoryCache.length,
       'misses': 0,
       'entries': _memoryCache.length,
-      'hitRate': _memoryCache.length == 0 ? 0 : (_memoryCache.length / (_memoryCache.length + 0) * 100).round(),
+      'hitRate': _memoryCache.length == 0
+          ? 0
+          : (_memoryCache.length / (_memoryCache.length + 0) * 100).round(),
     };
   }
-} 
+}
