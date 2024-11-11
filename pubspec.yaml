@@ -51,6 +51,12 @@ dependencies:
 
   lz4: ^0.0.1  # Use the latest stable version
 
+  shelf_router: ^1.1.4
+
+  intl: ^0.18.0  # Use the latest stable version
+
+  markdown: ^7.2.2
+
 dev_dependencies:
   test: ^1.21.0 # For unit and integration tests
   lints: ^5.0.0 # For code style analysis
