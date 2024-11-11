@@ -1,5 +1,5 @@
 import 'dart:io';
-import '../core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:logging/logging.dart' as logging;
 
 /// Custom logger for IPFS operations
@@ -7,22 +7,31 @@ class Logger {
   final logging.Logger _logger;
   static bool _initialized = false;
   static final MetricsCollector _metrics = MetricsCollector();
+  final bool _debug;
+  final bool _verbose;
 
   /// Creates a new logger for the specified component
-  Logger(String name) : _logger = logging.Logger(name) {
+  Logger(String name, {bool debug = false, bool verbose = false})
+      : _debug = debug,
+        _verbose = verbose,
+        _logger = logging.Logger(name) {
     _initializeIfNeeded();
   }
 
   static void _initializeIfNeeded() {
     if (!_initialized) {
       logging.hierarchicalLoggingEnabled = true;
-      logging.Logger.root.level = logging.Level.INFO;
-      
+      logging.Logger.root.level = logging.Level.ALL;
+
       logging.Logger.root.onRecord.listen((record) {
-        final message = '${record.time}: ${record.level.name}: ${record.loggerName}: ${record.message}';
-        
+        final timestamp = DateTime.now().toIso8601String();
+        final message =
+            '$timestamp [${record.level.name}] [${record.loggerName}] '
+            '${record.message}';
+
         if (record.error != null) {
-          print('$message\nError: ${record.error}\nStack trace: ${record.stackTrace}');
+          print(
+              '$message\nError: ${record.error}\nStack trace: ${record.stackTrace}');
           _metrics.recordError(
             'system',
             record.loggerName,
@@ -32,8 +41,9 @@ class Logger {
           print(message);
         }
 
-        // Write to log file
-        _writeToLogFile(message);
+        // Write to log file with more detail
+        _writeToLogFile(
+            '$message${record.error != null ? '\nError: ${record.error}\nStack trace: ${record.stackTrace}' : ''}');
       });
 
       _initialized = true;
@@ -51,22 +61,31 @@ class Logger {
 
   /// Log a debug message
   void debug(String message) {
-    _logger.fine(message);
+    if (_debug) {
+      _logger.fine('[DEBUG] $message');
+    }
   }
 
   /// Log an info message
   void info(String message) {
-    _logger.info(message);
+    _logger.info('[INFO] $message');
   }
 
   /// Log a warning message
   void warning(String message) {
-    _logger.warning(message);
+    _logger.warning('[WARNING] $message');
   }
 
   /// Log an error message with optional error object and stack trace
   void error(String message, [Object? error, StackTrace? stackTrace]) {
-    _logger.severe(message, error, stackTrace);
+    _logger.severe('[ERROR] $message', error, stackTrace);
+  }
+
+  /// Log a verbose message
+  void verbose(String message) {
+    if (_verbose) {
+      _logger.fine('[VERBOSE] $message');
+    }
   }
 
   /// Set the log level
@@ -88,4 +107,4 @@ class Logger {
         throw ArgumentError('Invalid log level: $level');
     }
   }
-} 
+}
