@@ -29,6 +29,16 @@ class CompressionConfig {
   };
 }
 
+class CompressionAnalysis {
+  final Map<CompressionType, double> compressionRatios;
+  final CompressionType recommendedType;
+
+  CompressionAnalysis({
+    required this.compressionRatios,
+    required this.recommendedType,
+  });
+}
+
 class AdaptiveCompressionHandler {
   final BlockStore _blockStore;
   final CompressionConfig _config;
@@ -42,7 +52,7 @@ class AdaptiveCompressionHandler {
       return block;
     }
 
-    final compressionType = _getOptimalCompression(contentType, block.size);
+    final compressionType = getOptimalCompression(contentType, block.size);
     if (compressionType == CompressionType.none) {
       return block;
     }
@@ -69,7 +79,7 @@ class AdaptiveCompressionHandler {
     return compressedBlock;
   }
 
-  CompressionType _getOptimalCompression(String contentType, int size) {
+  CompressionType getOptimalCompression(String contentType, int size) {
     for (final entry in _config.contentTypeRules.entries) {
       if (contentType.startsWith(entry.key)) {
         return entry.value;
@@ -96,5 +106,33 @@ class AdaptiveCompressionHandler {
     final metadataFile = File('$_metadataPath/${cid.encode()}.json');
     await metadataFile.parent.create(recursive: true);
     await metadataFile.writeAsString(jsonEncode(metadata));
+  }
+
+  CompressionAnalysis analyzeCompression(
+    Uint8List data,
+    String contentType,
+    Map<CompressionType, int> compressedSizes,
+  ) {
+    final ratios = <CompressionType, double>{};
+
+    for (final entry in compressedSizes.entries) {
+      ratios[entry.key] = entry.value / data.length;
+    }
+
+    // Find the compression type with the best ratio
+    var bestType = CompressionType.none;
+    var bestRatio = 1.0;
+
+    for (final entry in ratios.entries) {
+      if (entry.value < bestRatio) {
+        bestRatio = entry.value;
+        bestType = entry.key;
+      }
+    }
+
+    return CompressionAnalysis(
+      compressionRatios: ratios,
+      recommendedType: bestType,
+    );
   }
 }
