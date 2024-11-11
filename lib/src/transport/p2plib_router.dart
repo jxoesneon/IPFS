@@ -452,6 +452,9 @@ class P2plibRouter {
 
     return true;
   }
+
+  /// The PeerId instance for this node.
+  p2p.PeerId get peerId => _router.selfId;
 }
 
 mixin MultiAddressHandler {
