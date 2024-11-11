@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import '../protocols/dht/dht_client.dart'; // Import DHT client
 import '../utils/dnslink_resolver.dart'; // Import DNSLink resolver
 import '../core/ipfs_node/network_handler.dart';
@@ -8,14 +9,16 @@ import '../utils/base58.dart';
 class ContentRouting {
   final DHTClient _dhtClient;
 
-  ContentRouting(config)
+  ContentRouting(config, NetworkHandler networkHandler)
       : _dhtClient = DHTClient(
-          networkHandler: NetworkHandler(config),
+          networkHandler: networkHandler,
+          router: networkHandler.p2pRouter,
         );
 
   /// Starts the content routing services.
   Future<void> start() async {
     try {
+      await _dhtClient.initialize();
       await _dhtClient.start();
       print('Content routing started.');
     } catch (e) {
