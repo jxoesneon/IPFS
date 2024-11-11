@@ -10,10 +10,10 @@ import 'bitswap_handler.dart';
 import 'routing_handler.dart';
 import 'network_handler.dart';
 import 'datastore_handler.dart';
-import '../data_structures/pin.dart';
+import 'package:dart_ipfs/src/core/data_structures/pin.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
-import '../../proto/generated/core/pin.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/network/router.dart';
 import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
@@ -24,9 +24,10 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/directory.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
-import 'package:dart_ipfs/src/core/config/config.dart';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/proto/generated/core/node_type.pbenum.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 
 // lib/src/core/ipfs_node/ipfs_node.dart
 
@@ -39,6 +40,8 @@ class IPFSNode {
   late final NetworkHandler networkHandler;
   late final PubSubHandler pubSubHandler;
   final IPFSConfig _config;
+  late final BlockStore _blockStore;
+  late final Logger _logger;
 
   final _newContentController = StreamController<String>.broadcast();
 
@@ -63,41 +66,95 @@ class IPFSNode {
 
   late List<Link> links;
 
-  late final BlockStore _blockStore;
-
   IPFSNode(this._config) {
-    networkHandler = NetworkHandler(_config);
-    networkHandler.setIpfsNode(this);
+    _logger = Logger('IPFSNode',
+        debug: _config.debug, verbose: _config.verboseLogging);
 
-    // Initialize the peer ID from config
-    _peerID = _config.nodeId;
+    _logger.debug('Initializing IPFS Node with config: ${_config.toString()}');
 
-    // Create a BlockStore instance with path from config
-    _blockStore = BlockStore(path: _config.blockStorePath);
+    try {
+      // Initialize BlockStore first since other components depend on it
+      _blockStore = BlockStore(path: _config.blockStorePath);
+      _logger
+          .verbose('BlockStore initialized at path: ${_config.blockStorePath}');
 
-    // Initialize handlers with correct parameters
-    bitswapHandler = BitswapHandler(_config, _blockStore);
-    dhtHandler = DHTHandler(_config, P2plibRouter(_config), networkHandler);
-    pubSubHandler = PubSubHandler(
-        P2plibRouter(_config),
-        _config.nodeId,
-        IpfsNodeNetworkEvents(
-            CircuitRelayClient(P2plibRouter(_config)), P2plibRouter(_config)));
-    datastoreHandler = DatastoreHandler(_config);
-    routingHandler = RoutingHandler(_config);
+      networkHandler = NetworkHandler(_config);
+      _logger.verbose(
+          'Network handler created with config: ${_config.network.toString()}');
 
-    nodeType = NodeTypeProto.NODE_TYPE_UNSPECIFIED;
-    links = [];
+      networkHandler.setIpfsNode(this);
+      _logger.verbose('IPFS node reference set in network handler');
+
+      _peerID = _config.nodeId;
+      _logger.debug('Peer ID initialized: $_peerID');
+
+      final router = P2plibRouter(_config);
+      _logger.verbose('Router created with config: ${_config.toString()}');
+
+      router.start();
+      _logger.debug('Router started successfully');
+
+      _initializeHandlers();
+    } catch (e, stackTrace) {
+      _logger.error('Error during IPFS Node initialization', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<void> _initializeHandlers() async {
+    _logger.debug('Initializing protocol handlers...');
+
+    try {
+      bitswapHandler = BitswapHandler(_config, _blockStore);
+      _logger.debug('BitswapHandler created');
+
+      dhtHandler =
+          DHTHandler(_config, networkHandler.p2pRouter, networkHandler);
+      _logger.debug('DHTHandler created');
+
+      pubSubHandler = PubSubHandler(
+          networkHandler.p2pRouter,
+          _config.nodeId,
+          IpfsNodeNetworkEvents(CircuitRelayClient(networkHandler.p2pRouter),
+              networkHandler.p2pRouter));
+      _logger.debug('PubSubHandler created');
+
+      datastoreHandler = DatastoreHandler(_config);
+      _logger.debug('DatastoreHandler created');
+
+      routingHandler = RoutingHandler(_config, networkHandler);
+      _logger.debug('RoutingHandler created');
+
+      _logger.info('All handlers initialized successfully');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to initialize handlers', e, stackTrace);
+      rethrow;
+    }
   }
 
   /// Starts the IPFS node.
   Future<void> start() async {
+    _logger.debug('Starting IPFS Node...');
+
     await bitswapHandler.start();
+    _logger.verbose('BitswapHandler started');
+
     await dhtHandler.start();
+    _logger.verbose('DHTHandler started');
+
     await pubSubHandler.start();
+    _logger.verbose('PubSubHandler started');
+
     await datastoreHandler.start();
+    _logger.verbose('DatastoreHandler started');
+
     await routingHandler.start();
+    _logger.verbose('RoutingHandler started');
+
     await networkHandler.start();
+    _logger.verbose('NetworkHandler started');
+
+    _logger.debug('IPFS Node started successfully');
   }
 
   /// Stops the IPFS node.
