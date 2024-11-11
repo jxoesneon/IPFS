@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'directory_parser.dart';
 import 'package:mime/mime.dart';
 import '../../core/data_structures/block.dart';
+import 'package:markdown/markdown.dart' as md;
 
 /// Handles content type detection and processing for IPFS gateway responses
 class ContentTypeHandler {
@@ -81,16 +83,115 @@ class ContentTypeHandler {
     }
   }
 
-  /// Processes markdown content
+  /// Processes markdown content by converting it to HTML
   Uint8List _processMarkdown(Uint8List data) {
-    // TODO: Implement markdown to HTML conversion
-    return data;
+    try {
+      // Convert bytes to string
+      final markdownText = String.fromCharCodes(data);
+
+      // Convert markdown to HTML using the markdown package
+      final html = '''
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Markdown Preview</title>
+            <style>
+              body {
+                font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                line-height: 1.6;
+                padding: 20px;
+                max-width: 980px;
+                margin: 0 auto;
+              }
+              pre {
+                background: #f5f5f5;
+                padding: 15px;
+                border-radius: 5px;
+                overflow-x: auto;
+              }
+              code {
+                background: #f5f5f5;
+                padding: 2px 5px;
+                border-radius: 3px;
+              }
+              img {
+                max-width: 100%;
+              }
+            </style>
+          </head>
+          <body>
+            ${md.markdownToHtml(markdownText)}
+          </body>
+        </html>
+      ''';
+
+      return Uint8List.fromList(html.codeUnits);
+    } catch (e) {
+      print('Error processing markdown: $e');
+      return data; // Return original data if conversion fails
+    }
   }
 
-  /// Processes CAR archive content
+  /// Processes CAR (Content Addressable aRchive) archive content
   Uint8List _processCarArchive(Uint8List data) {
-    // TODO: Implement CAR archive processing if needed
-    return data;
+    try {
+      // Generate a simple HTML viewer for CAR archive contents
+      final html = '''
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>CAR Archive Preview</title>
+            <style>
+              body {
+                font-family: system-ui, -apple-system, sans-serif;
+                padding: 20px;
+                max-width: 980px;
+                margin: 0 auto;
+              }
+              .car-info {
+                background: #f5f5f5;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+              }
+              .warning {
+                color: #856404;
+                background-color: #fff3cd;
+                border: 1px solid #ffeeba;
+                padding: 12px;
+                border-radius: 4px;
+                margin-bottom: 20px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="car-info">
+              <h2>CAR Archive</h2>
+              <p>Size: ${_formatSize(data.length)}</p>
+            </div>
+            <div class="warning">
+              This is a CAR (Content Addressable aRchive) file. 
+              It contains IPFS blocks and should be processed by an IPFS node.
+            </div>
+          </body>
+        </html>
+      ''';
+
+      return Uint8List.fromList(html.codeUnits);
+    } catch (e) {
+      print('Error processing CAR archive: $e');
+      return data; // Return original data if processing fails
+    }
+  }
+
+  String _formatSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024)
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 
   /// Detects MIME type from content using magic numbers
@@ -147,9 +248,35 @@ class ContentTypeHandler {
     return textChars / sampleSize > 0.8; // 80% text characters threshold
   }
 
+  /// Extracts the path from the current request context
   String? _extractPathFromRequest() {
-    // TODO: Implement path extraction from request context
-    return '/';
+    try {
+      // Get the current zone's request context
+      final context = Zone.current[#requestContext];
+      if (context == null) return '/';
+
+      // Extract path from request URI
+      final uri = context['uri'] as Uri?;
+      if (uri == null) return '/';
+
+      // Clean and normalize the path
+      var path = uri.path;
+
+      // Remove /ipfs/{cid} prefix if present
+      final ipfsPrefix = RegExp(r'^/ipfs/[^/]+/?');
+      path = path.replaceFirst(ipfsPrefix, '/');
+
+      // Ensure path starts with / and remove trailing /
+      path = '/${path.trim()}/'.replaceAll(RegExp(r'/+'), '/');
+      if (path.length > 1) {
+        path = path.substring(0, path.length - 1);
+      }
+
+      return path;
+    } catch (e) {
+      print('Error extracting path from request: $e');
+      return '/';
+    }
   }
 
   /// Caches the content type mapping for a CID
