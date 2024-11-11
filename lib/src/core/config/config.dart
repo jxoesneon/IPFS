@@ -35,6 +35,7 @@ class IPFSConfig {
     this.garbageCollectionInterval = const Duration(hours: 24),
     SecurityConfig? security,
     String? nodeId,
+    this.blockStorePath = 'blocks',
   })  : security = security ?? SecurityConfig(),
         nodeId = nodeId ?? _generateDefaultNodeId();
 
@@ -103,6 +104,9 @@ class IPFSConfig {
 
   /// The node's unique identifier
   final String nodeId;
+
+  /// The path to the block store directory.
+  final String blockStorePath;
 
   static String _generateDefaultNodeId() {
     // Generate a random node ID if none is provided
