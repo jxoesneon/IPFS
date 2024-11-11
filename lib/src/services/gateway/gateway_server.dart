@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'gateway_handler.dart';
 import 'package:shelf/shelf.dart';
-import 'package:shelf_router/shelf_router.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
+import 'package:shelf_router/shelf_router.dart';
 import '../../core/data_structures/blockstore.dart';
 
 /// IPFS Gateway server that handles HTTP requests following the IPFS Gateway specs
@@ -26,10 +26,10 @@ class GatewayServer {
     // Path-based gateway routes
     app.get('/ipfs/<cid>/**', _handleIpfsRequest);
     app.get('/ipns/<name>/**', _handleIpnsRequest);
-    
+
     // Subdomain gateway route
     app.get('/**', _handleSubdomainRequest);
-    
+
     // Trustless gateway route
     app.get('/trustless/ipfs', _handleTrustlessRequest);
 
@@ -57,8 +57,19 @@ class GatewayServer {
 
   /// Handles IPNS path-based requests
   Future<Response> _handleIpnsRequest(Request request, String name) async {
-    // TODO: Implement IPNS resolution
-    return Response.notFound('IPNS resolution not implemented yet');
+    try {
+      // Get the IPNS record from the handler
+      final ipnsRecord = await _handler.handleIPNS(request);
+      if (ipnsRecord != null) {
+        return ipnsRecord;
+      }
+
+      // If no record is found, return a 404
+      return Response.notFound('IPNS name not found');
+    } catch (e) {
+      return Response.internalServerError(
+          body: 'Error resolving IPNS name: $e');
+    }
   }
 
   /// Handles subdomain-based requests
@@ -85,4 +96,4 @@ class GatewayServer {
       },
     );
   }
-} 
+}
