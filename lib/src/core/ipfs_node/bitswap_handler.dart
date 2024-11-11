@@ -279,11 +279,11 @@ class BitswapHandler {
   }
 
   void _setupHandlers() {
-    // Register the Bitswap protocol handler
-    _router.addMessageHandler(_protocolId, _handlePacket);
-
-    // Register the protocol with the router
+    // First register the protocol
     _router.registerProtocol(_protocolId);
+
+    // Then add the message handler
+    _router.addMessageHandler(_protocolId, _handlePacket);
 
     print('Bitswap protocol handlers initialized');
   }
