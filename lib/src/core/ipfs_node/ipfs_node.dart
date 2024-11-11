@@ -4,7 +4,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
 
-import 'dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'pubsub_handler.dart';
 import 'bitswap_handler.dart';
 import 'routing_handler.dart';
