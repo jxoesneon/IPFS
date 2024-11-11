@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'network/router.dart';
 import 'storage/datastore.dart';
-import 'core/config/config.dart';
+import 'core/config/ipfs_config.dart';
 import 'core/ipfs_node/ipfs_node.dart';
 import 'core/data_structures/link.dart';
 import 'core/data_structures/peer.dart';
