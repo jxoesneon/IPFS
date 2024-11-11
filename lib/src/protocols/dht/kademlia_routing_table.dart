@@ -2,6 +2,10 @@ import 'dart:math';
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/dht_messages.pb.dart'
+    as dht_messages;
+import 'package:dart_ipfs/src/proto/generated/dht/common_kademlia.pb.dart'
+    as common_kademlia_pb;
 
 import 'dht_client.dart';
 import 'kademlia_tree.dart';
@@ -37,7 +41,7 @@ class KademliaRoutingTable {
     );
   }
 
-  void addPeer(p2p.PeerId peerId, p2p.PeerId associatedPeerId) {
+  Future<void> addPeer(p2p.PeerId peerId, p2p.PeerId associatedPeerId) async {
     final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
     final bucketIndex = _getBucketIndex(distance);
     final bucket = _getOrCreateBucket(bucketIndex);
@@ -52,7 +56,7 @@ class KademliaRoutingTable {
       if (!_removeStaleNode(bucket)) {
         if (_isOurBucket(bucketIndex)) {
           splitBucket(bucketIndex);
-          addPeer(peerId, associatedPeerId);
+          await addPeer(peerId, associatedPeerId);
         }
         return;
       }
@@ -303,24 +307,40 @@ class KademliaRoutingTable {
   }
 
   /// Updates peer information in the routing table
-  void updatePeer(V_PeerInfo peer) {
+  Future<void> updatePeer(V_PeerInfo peer) async {
     final peerId = p2p.PeerId(value: Uint8List.fromList(peer.peerId));
 
-    // If peer exists, update its information
+    // Verify peer is still alive with a ping
+    if (!await pingPeer(peerId)) {
+      throw Exception('Peer unreachable');
+    }
+
     if (containsPeer(peerId)) {
       final node = _findNode(peerId);
       if (node != null) {
-        // Update last seen timestamp
         node.lastSeen = DateTime.now().millisecondsSinceEpoch;
 
-        // Update connection statistics if available
+        // Update connection stats
         if (_connectionStats.containsKey(peerId)) {
           _connectionStats[peerId]!.updateFromPeerInfo(peer);
         }
+
+        // Find the bucket containing this node and check if it needs splitting
+        final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
+        final bucketIndex = _getBucketIndex(distance);
+        final bucket = _tree.buckets[bucketIndex];
+
+        // Check if bucket needs splitting
+        if (bucket.size >= K_BUCKET_SIZE) {
+          splitBucket(bucketIndex);
+        }
       }
     } else {
-      // If peer doesn't exist, add it to the routing table
-      addPeer(peerId, peerId); // Using same ID for associated peer as a default
+      // Create an associated PeerId from the peer info
+      final kademliaId = common_kademlia_pb.KademliaId()..id = peer.peerId;
+      final associatedPeerId =
+          p2p.PeerId(value: Uint8List.fromList(kademliaId.id));
+      await addPeer(peerId, associatedPeerId);
     }
   }
 
@@ -353,6 +373,30 @@ class KademliaRoutingTable {
     final node = _findNode(key);
     if (node != null && node.associatedPeerId == provider) {
       node.lastSeen = timestamp.millisecondsSinceEpoch;
+    }
+  }
+
+  /// Pings a peer to check if it's still alive
+  Future<bool> pingPeer(p2p.PeerId peerId) async {
+    try {
+      // Create ping request message
+      final kademliaId = common_kademlia_pb.KademliaId()
+        ..id = dhtClient.peerId.value;
+      final request = dht_messages.PingRequest()..peerId = kademliaId;
+
+      // Send request through DHT client's network handler
+      final response = await dhtClient.networkHandler.sendRequest(
+        peerId,
+        '/ipfs/kad/1.0.0',
+        request.writeToBuffer(),
+      );
+
+      // Parse response
+      final pingResponse = dht_messages.PingResponse.fromBuffer(response);
+      return pingResponse.success;
+    } catch (e) {
+      print('Error pinging peer ${peerId.toString()}: $e');
+      return false;
     }
   }
 }
