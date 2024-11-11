@@ -63,6 +63,8 @@ class IPFSNode {
 
   late List<Link> links;
 
+  late final BlockStore _blockStore;
+
   IPFSNode(this._config) {
     networkHandler = NetworkHandler(_config);
     networkHandler.setIpfsNode(this);
@@ -70,11 +72,11 @@ class IPFSNode {
     // Initialize the peer ID from config
     _peerID = _config.nodeId;
 
-    // Create a BlockStore instance
-    final blockStore = BlockStore();
+    // Create a BlockStore instance with path from config
+    _blockStore = BlockStore(path: _config.blockStorePath);
 
     // Initialize handlers with correct parameters
-    bitswapHandler = BitswapHandler(_config, blockStore);
+    bitswapHandler = BitswapHandler(_config, _blockStore);
     dhtHandler = DHTHandler(_config, P2plibRouter(_config), networkHandler);
     pubSubHandler = PubSubHandler(
         P2plibRouter(_config),
@@ -267,7 +269,7 @@ class IPFSNode {
       final pin = Pin(
         cid: CID.fromBytes(Uint8List.fromList(cid.codeUnits), 'raw'),
         type: PinTypeProto.PIN_TYPE_RECURSIVE,
-        blockStore: BlockStore(),
+        blockStore: _blockStore,
       );
 
       // Pin the content
@@ -296,7 +298,7 @@ class IPFSNode {
       final pin = Pin(
         cid: CID.decode(cid),
         type: PinTypeProto.PIN_TYPE_RECURSIVE,
-        blockStore: BlockStore(),
+        blockStore: _blockStore,
       );
 
       // Attempt to unpin
