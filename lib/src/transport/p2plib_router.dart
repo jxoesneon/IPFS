@@ -2,11 +2,11 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 
 import '/../src/utils/base58.dart';
-import '/../src/core/config/config.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import '../protocols/dht/routing_table.dart';
 import 'dart:convert';
@@ -90,11 +90,16 @@ class P2plibRouter {
 
   /// Starts the router.
   Future<void> start() async {
+    // Check if router needs initialization by checking if routes are empty
+    if (_router.routes.isEmpty) {
+      await initialize();
+    }
+
     await _router.start();
+
     // Connect to bootstrap peers
-    for (final peer in _config.bootstrapPeers) {
+    for (final peer in _config.network.bootstrapPeers) {
       try {
-        // Use Base58 to decode the peer ID string to bytes first
         final peerIdBytes = Base58().base58Decode(peer);
         final peerId = p2p.PeerId(value: peerIdBytes);
 
@@ -315,7 +320,10 @@ class P2plibRouter {
     // Create a new routing table if it doesn't exist
     _routingTable ??= RoutingTable(
       _router.selfId,
-      DHTClient(networkHandler: NetworkHandler(_config)),
+      DHTClient(
+        networkHandler: NetworkHandler(_config),
+        router: this,
+      ),
     );
     return _routingTable!;
   }
@@ -455,6 +463,9 @@ class P2plibRouter {
 
   /// The PeerId instance for this node.
   p2p.PeerId get peerId => _router.selfId;
+
+  /// Gets the routes from the underlying router
+  Map<p2p.PeerId, p2p.Route> get routes => _router.routes;
 }
 
 mixin MultiAddressHandler {
