@@ -1,3 +1,5 @@
+// src/protocols/dht/dht_handler.dart
+import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
 import 'package:http/http.dart' as http;
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:p2plib/p2plib.dart' show PeerId;
@@ -10,7 +12,6 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/Interface_dht_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
-// lib/src/core/ipfs_node/dht_handler.dart
 
 /// Handles DHT operations for an IPFS node.
 class DHTHandler implements IDHTHandler {
@@ -18,6 +19,10 @@ class DHTHandler implements IDHTHandler {
   final Keystore _keystore;
   final P2plibRouter _router;
   final Datastore _storage;
+  late final KademliaRoutingTable _routingTable;
+  final Set<String> _activeQueries = {};
+  final Map<String, Set<String>> _providers = {};
+  static const String _protocolVersion = '1.0.0';
 
   DHTHandler(config, this._router, NetworkHandler networkHandler)
       : _keystore = Keystore(config),
@@ -27,6 +32,7 @@ class DHTHandler implements IDHTHandler {
       networkHandler: networkHandler,
       router: _router,
     );
+    _routingTable = dhtClient.kademliaRoutingTable;
   }
 
   /// Starts the DHT client.
@@ -259,4 +265,13 @@ class DHTHandler implements IDHTHandler {
 
   // Add getter for storage
   Datastore get storage => _storage;
+
+  Future<Map<String, dynamic>> getStatus() async {
+    return {
+      'active_queries': _activeQueries.length,
+      'routing_table_size': _routingTable.peerCount,
+      'total_providers': _providers.length,
+      'protocol_version': _protocolVersion,
+    };
+  }
 }
