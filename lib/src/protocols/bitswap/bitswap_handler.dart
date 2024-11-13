@@ -1,3 +1,4 @@
+// src/protocols/bitswap/bitswap_handler.dart
 import 'dart:io';
 import 'dart:async';
 import 'package:p2plib/p2plib.dart' as p2p;
@@ -23,6 +24,10 @@ class BitswapHandler {
   final Logger _logger;
   int _bandwidthSent = 0;
   int _bandwidthReceived = 0;
+  final Set<String> _sessions = {};
+  final Set<String> _connectedPeers = {};
+  int _blocksReceived = 0;
+  int _blocksSent = 0;
 
   BitswapHandler(IPFSConfig config, this._blockStore, this._router)
       : _logger = Logger('BitswapHandler',
@@ -70,6 +75,8 @@ class BitswapHandler {
       completer.completeError('BitswapHandler stopped');
     }
     _pendingBlocks.clear();
+    _sessions.clear();
+    _connectedPeers.clear();
 
     await _router.stop();
     print('Bitswap handler stopped');
@@ -332,5 +339,15 @@ class BitswapHandler {
     final stats = _ledgerManager.getBandwidthStats();
     _bandwidthSent = stats['sent'] ?? 0;
     _bandwidthReceived = stats['received'] ?? 0;
+  }
+
+  Future<Map<String, dynamic>> getStatus() async {
+    return {
+      'active_sessions': _sessions.length,
+      'wanted_blocks': _wantlist.entries.length,
+      'peers': _connectedPeers.length,
+      'blocks_received': _blocksReceived,
+      'blocks_sent': _blocksSent,
+    };
   }
 }
