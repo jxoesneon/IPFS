@@ -57,6 +57,7 @@ dependencies:
 
   markdown: ^7.2.2
   synchronized: ^3.3.0+3
+  multicast_dns: ^0.3.2+7
 
 dev_dependencies:
   test: ^1.21.0 # For unit and integration tests
