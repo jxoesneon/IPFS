@@ -1,7 +1,7 @@
+// src/core/ipfs_node/ipfs_node.dart
 import 'dart:async';
 import 'dart:typed_data';
 import 'pubsub_handler.dart';
-import 'routing_handler.dart';
 import 'network_handler.dart';
 import 'datastore_handler.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -36,7 +36,6 @@ import 'package:dart_ipfs/src/proto/generated/core/node_type.pbenum.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
 // src/core/ipfs_node/ipfs_node.dart
-
 
 // lib/src/core/ipfs_node/ipfs_node.dart
 
@@ -93,8 +92,8 @@ class IPFSNode {
   IPFSNode(IPFSConfig config)
       : _config = config,
         _peerID = config.nodeId {
-    _logger = Logger('IPFSNode',
-        debug: config.debug, verbose: config.verboseLogging);
+    _logger =
+        Logger('IPFSNode', debug: config.debug, verbose: config.verboseLogging);
     _logger.debug('Creating new IPFS Node instance');
 
     try {
@@ -122,7 +121,7 @@ class IPFSNode {
 
     try {
       _logger.verbose('Creating Security Manager');
-      securityManager = SecurityManager(_config.security);
+      securityManager = SecurityManager(_config.security, metricsCollector);
       _logger.debug('Security Manager initialized successfully');
 
       _logger.verbose('Configuring Metrics Collector');
@@ -203,9 +202,9 @@ class IPFSNode {
     _logger.debug('Initializing high-level services...');
 
     try {
-      _logger.verbose('Creating RoutingHandler');
-      routingHandler = RoutingHandler(_config, networkHandler);
-      _logger.debug('RoutingHandler initialized');
+      _logger.verbose('Creating ContentRoutingHandler');
+      routingHandler = ContentRoutingHandler(_config, networkHandler);
+      _logger.debug('ContentRoutingHandler initialized');
 
       _logger.verbose('Creating DNSLinkHandler');
       dnsLinkHandler = DNSLinkHandler(_config);
@@ -220,7 +219,7 @@ class IPFSNode {
       _logger.debug('AutoNATHandler initialized');
 
       _logger.verbose('Creating IPNSHandler');
-      ipnsHandler = IPNSHandler(_config, securityManager);
+      ipnsHandler = IPNSHandler(_config, securityManager, dhtHandler);
       _logger.debug('IPNSHandler initialized');
 
       _logger.debug('High-level services initialization complete');
