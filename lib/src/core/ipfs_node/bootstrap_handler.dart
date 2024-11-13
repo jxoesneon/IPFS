@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 
 /// Handles bootstrap peer connections for an IPFS node.
