@@ -1,3 +1,4 @@
+// src/core/config/network_config.dart
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/utils/base58.dart';
@@ -20,6 +21,7 @@ class NetworkConfig {
   final int maxConnections;
   final Duration connectionTimeout;
   final String nodeId;
+  final String? delegatedRoutingEndpoint;
 
   NetworkConfig({
     this.listenAddresses = defaultListenAddresses,
@@ -27,6 +29,7 @@ class NetworkConfig {
     this.maxConnections = 50,
     this.connectionTimeout = const Duration(seconds: 30),
     String? nodeId,
+    this.delegatedRoutingEndpoint,
   }) : nodeId = nodeId ?? _generateDefaultNodeId();
 
   factory NetworkConfig.withGeneratedId({
@@ -54,6 +57,7 @@ class NetworkConfig {
       connectionTimeout:
           Duration(seconds: json['connectionTimeoutSeconds'] ?? 30),
       nodeId: json['nodeId'],
+      delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'],
     );
   }
 
@@ -63,6 +67,7 @@ class NetworkConfig {
         'maxConnections': maxConnections,
         'connectionTimeoutSeconds': connectionTimeout.inSeconds,
         'nodeId': nodeId,
+        'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
       };
 
   static String _generateDefaultNodeId() {
