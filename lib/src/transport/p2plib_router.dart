@@ -1,3 +1,4 @@
+// src/transport/p2plib_router.dart
 import 'dart:io';
 import 'dart:math';
 import 'dart:async';
@@ -28,6 +29,23 @@ class P2plibRouter {
   RoutingTable? _routingTable;
   final Set<p2p.PeerId> _connectedPeers = {};
 
+  bool _isCryptoInitialized = false;
+  bool _hasStarted = false;
+
+  // Stream controllers
+  final _messageController = StreamController<p2p.Message>.broadcast();
+  final _connectionEventsController =
+      StreamController<ConnectionEvent>.broadcast();
+  final _messageEventsController = StreamController<MessageEvent>.broadcast();
+  final _dhtEventsController = StreamController<DHTEvent>.broadcast();
+  final _pubSubEventsController = StreamController<PubSubEvent>.broadcast();
+  final _errorEventsController = StreamController<ErrorEvent>.broadcast();
+  final _streamEventsController = StreamController<StreamEvent>.broadcast();
+
+  // Protocol handling
+  final Set<String> _registeredProtocols = {};
+  final Map<String, Function(p2p.Packet)> _protocolHandlers = {};
+
   factory P2plibRouter(IPFSConfig config) {
     if (_instance == null) {
       _instance = P2plibRouter._internal(config);
@@ -39,10 +57,9 @@ class P2plibRouter {
       : _router = p2p.RouterL2(
           crypto: _sharedCrypto,
           keepalivePeriod: const Duration(seconds: 30),
-        ) {
-    _logger = Logger('P2plibRouter',
-        debug: _config.debug, verbose: _config.verboseLogging);
-
+        ),
+        _logger = Logger('P2plibRouter',
+            debug: _config.debug, verbose: _config.verboseLogging) {
     _setupRouter();
   }
 
@@ -523,6 +540,63 @@ class P2plibRouter {
 
   /// Whether the router has been initialized
   bool get isInitialized => _isInitialized;
+
+  /// Sends a request to a peer and waits for a response
+  Future<Uint8List> sendRequest(
+    String peerId,
+    String protocolId,
+    Uint8List request,
+  ) async {
+    try {
+      // Convert peerId string to PeerId object
+      final peerIdBytes = _extractPeerIdFromMultiaddr(peerId);
+      final peer = p2p.PeerId(value: peerIdBytes);
+
+      // Create a completer to handle the async response
+      final completer = Completer<Uint8List>();
+      final requestId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      // Add request ID to message
+      final messageWithId =
+          Uint8List.fromList([...request, ...utf8.encode(requestId)]);
+
+      // Set up one-time response handler
+      addMessageHandler(protocolId, (packet) {
+        if (packet.srcPeerId.toString() == peerId &&
+            _extractRequestId(packet.datagram) == requestId) {
+          removeMessageHandler(protocolId);
+          completer.complete(packet.datagram);
+        }
+      });
+
+      // Send the request
+      await sendMessage(peer, messageWithId);
+
+      // Wait for response with timeout
+      return await completer.future.timeout(
+        Duration(seconds: 30),
+        onTimeout: () {
+          removeMessageHandler(protocolId);
+          throw TimeoutException('Request to peer timed out');
+        },
+      );
+    } catch (e, stackTrace) {
+      _logger.error('Error sending request to peer $peerId', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  String _extractRequestId(Uint8List datagram) {
+    try {
+      // The request ID is appended at the end of the datagram
+      final requestIdBytes =
+          datagram.sublist(datagram.length - 13); // Timestamp is 13 chars
+      return utf8.decode(requestIdBytes);
+    } catch (e) {
+      _logger.error('Error extracting request ID', e);
+      return '';
+    }
+  }
 }
 
 mixin MultiAddressHandler {
