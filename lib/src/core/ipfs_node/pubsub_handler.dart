@@ -1,3 +1,4 @@
+// src/core/ipfs_node/pubsub_handler.dart
 import 'dart:convert';
 import 'dart:typed_data';
 import '../../utils/dnslink_resolver.dart';
@@ -8,11 +9,12 @@ import '../data_structures/node_stats.dart'; // Assuming you have a NodeStats cl
 import '/../src/core/ipfs_node/ipfs_node_network_events.dart'; // Import network events
 // lib/src/core/ipfs_node/pubsub_handler.dart
 
-
 /// Handles PubSub operations for an IPFS node.
 class PubSubHandler {
   final PubSubClient _pubSubClient;
   final IpfsNodeNetworkEvents _networkEvents; // Reference to network events
+  final Map<String, Set<Function(String)>> _subscriptions = {};
+  int _messageCount = 0;
 
   /// Constructs a [PubSubHandler] with the provided router, peer ID, and network events.
   PubSubHandler(P2plibRouter router, String peerId, this._networkEvents)
@@ -53,6 +55,7 @@ class PubSubHandler {
   Future<void> subscribe(String topic) async {
     try {
       await _pubSubClient.subscribe(topic);
+      _subscriptions[topic] = <Function(String)>{};
       print('Subscribed to topic: $topic');
     } catch (e) {
       print('Error subscribing to topic $topic: $e');
@@ -63,6 +66,7 @@ class PubSubHandler {
   Future<void> unsubscribe(String topic) async {
     try {
       await _pubSubClient.unsubscribe(topic);
+      _subscriptions.remove(topic);
       print('Unsubscribed from topic: $topic');
     } catch (e) {
       print('Error unsubscribing from topic $topic: $e');
@@ -72,9 +76,10 @@ class PubSubHandler {
   /// Publishes a message to a PubSub topic.
   Future<void> publish(String topic, String message) async {
     try {
-      // Convert message to Uint8List for compliance with IPFS specifications
       final messageBytes = utf8.encode(message);
-      await _pubSubClient.publish(topic, Uint8List.fromList(messageBytes) as String);
+      await _pubSubClient.publish(
+          topic, Uint8List.fromList(messageBytes) as String);
+      _messageCount++;
       print('Published message to topic: $topic');
     } catch (e) {
       print('Error publishing message to topic $topic: $e');
@@ -84,7 +89,7 @@ class PubSubHandler {
   /// Handles incoming messages on a subscribed topic.
   void onMessage(String topic, Function(String) handler) {
     try {
-      _pubSubClient.onMessage.listen((messageBytes) { 
+      _pubSubClient.onMessage.listen((messageBytes) {
         final decodedMessage = utf8.decode(messageBytes as List<int>);
         handler(decodedMessage);
         print('Processed message on topic: $topic');
@@ -97,7 +102,8 @@ class PubSubHandler {
   /// Resolves a DNSLink to its corresponding CID.
   Future<String?> resolveDNSLink(String domainName) async {
     try {
-      final cid = await DNSLinkResolver.resolve(domainName); // Assuming you have a DNSLinkResolver utility
+      final cid = await DNSLinkResolver.resolve(
+          domainName); // Assuming you have a DNSLinkResolver utility
       if (cid != null) {
         print('Resolved DNSLink for domain $domainName to CID: $cid');
         return cid;
@@ -126,8 +132,16 @@ class PubSubHandler {
   void _handlePubsubMessage(PubsubMessageReceivedEvent event) {
     final message = utf8.decode(event.messageContent);
     print('Received message on topic ${event.topic}: $message');
-    
+
     // Further processing of the message can be done here
     // For example, dispatching it to specific handlers based on the topic
+  }
+
+  Future<Map<String, dynamic>> getStatus() async {
+    return {
+      'subscribed_topics': _subscriptions.keys.toList(),
+      'total_subscribers': _subscriptions.length,
+      'messages_published': _messageCount,
+    };
   }
 }
