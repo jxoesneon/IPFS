@@ -1,7 +1,5 @@
 // src/core/ipfs_node/graphsync_handler.dart
 import 'dart:async';
-import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
@@ -131,8 +129,14 @@ class GraphsyncHandler {
       String rootCid, List<String> selector) async {
     final blocks = <Block>[];
     final visited = <String>{};
+    final request = _activeRequests[rootCid];
 
     Future<void> traverse(String cid) async {
+      // Check if request was cancelled
+      if (request?._cancelled == true) {
+        throw StateError('Request cancelled');
+      }
+
       if (visited.contains(cid)) return;
       visited.add(cid);
 
@@ -145,7 +149,7 @@ class GraphsyncHandler {
       if (selector.contains('links')) {
         final node = MerkleDAGNode.fromBytes(block.data);
         for (final link in node.links) {
-          await traverse(link.cid.encode());
+          await traverse(link.cid.toString());
         }
       }
     }
@@ -186,4 +190,32 @@ class _GraphsyncRequest {
     _cancelled = true;
     _timeoutTimer?.cancel();
   }
+}
+
+/// Internal class to track Graphsync responses
+class _GraphsyncResponse {
+  final String requestId;
+  final String rootCid;
+  final List<Block> _blocks = [];
+  bool _cancelled = false;
+
+  _GraphsyncResponse({
+    required this.requestId,
+    required this.rootCid,
+  });
+
+  void addBlocks(List<Block> blocks) {
+    if (!_cancelled) {
+      _blocks.addAll(blocks);
+    }
+  }
+
+  List<Block> get blocks => List.unmodifiable(_blocks);
+
+  Future<void> cancel() async {
+    _cancelled = true;
+    _blocks.clear();
+  }
+
+  bool get isCancelled => _cancelled;
 }
