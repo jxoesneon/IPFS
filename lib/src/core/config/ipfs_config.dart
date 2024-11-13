@@ -186,12 +186,14 @@ class NetworkConfig {
   final List<String> bootstrapPeers;
   final int maxConnections;
   final Duration connectionTimeout;
+  final String? delegatedRoutingEndpoint;
 
   const NetworkConfig({
     this.listenAddresses = const ['/ip4/0.0.0.0/tcp/4001'],
     this.bootstrapPeers = const [],
     this.maxConnections = 50,
     this.connectionTimeout = const Duration(seconds: 30),
+    this.delegatedRoutingEndpoint,
   });
 
   factory NetworkConfig.fromJson(Map<String, dynamic> json) {
@@ -202,6 +204,7 @@ class NetworkConfig {
       connectionTimeout: Duration(
         seconds: json['connectionTimeoutSeconds'] ?? 30,
       ),
+      delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'],
     );
   }
 
@@ -210,6 +213,7 @@ class NetworkConfig {
         'bootstrapPeers': bootstrapPeers,
         'maxConnections': maxConnections,
         'connectionTimeoutSeconds': connectionTimeout.inSeconds,
+        'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
       };
 }
 
