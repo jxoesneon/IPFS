@@ -1,3 +1,4 @@
+// src/core/ipfs_node/datastore_handler.dart
 import 'dart:typed_data';
 import '../data_structures/car.dart';
 import '../data_structures/block.dart';
@@ -165,5 +166,13 @@ class DatastoreHandler {
         }
       }
     }
+  }
+
+  Future<Map<String, dynamic>> getStatus() async {
+    return {
+      'total_blocks': datastore.numBlocks,
+      'total_size': datastore.size,
+      'pinned_blocks': (await datastore.loadPinnedCIDs()).length,
+    };
   }
 }
