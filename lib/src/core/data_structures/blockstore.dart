@@ -1,3 +1,4 @@
+// src/core/data_structures/blockstore.dart
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
@@ -84,5 +85,13 @@ class BlockStore {
       print('Error getting all blocks: $e');
       return [];
     }
+  }
+
+  Future<Map<String, dynamic>> getStatus() async {
+    return {
+      'total_blocks': _blocks.length,
+      'pinned_blocks': _pinManager.pinnedBlockCount,
+      'storage_path': path,
+    };
   }
 }
