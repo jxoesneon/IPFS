@@ -1,4 +1,6 @@
+// src/utils/logger.dart
 import 'dart:io';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:logging/logging.dart' as logging;
 
@@ -6,9 +8,13 @@ import 'package:logging/logging.dart' as logging;
 class Logger {
   final logging.Logger _logger;
   static bool _initialized = false;
-  static final MetricsCollector _metrics = MetricsCollector();
+  static MetricsCollector? _metrics;
   final bool _debug;
   final bool _verbose;
+
+  static void initializeMetrics(IPFSConfig config) {
+    _metrics = MetricsCollector(config);
+  }
 
   /// Creates a new logger for the specified component
   Logger(String name, {bool debug = false, bool verbose = false})
@@ -32,7 +38,7 @@ class Logger {
         if (record.error != null) {
           print(
               '$message\nError: ${record.error}\nStack trace: ${record.stackTrace}');
-          _metrics.recordError(
+          _metrics?.recordError(
             'system',
             record.loggerName,
             record.error.toString(),
@@ -41,7 +47,6 @@ class Logger {
           print(message);
         }
 
-        // Write to log file with more detail
         _writeToLogFile(
             '$message${record.error != null ? '\nError: ${record.error}\nStack trace: ${record.stackTrace}' : ''}');
       });
