@@ -1,3 +1,4 @@
+// src/core/ipfs_node/ipld_handler.dart
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -12,7 +13,7 @@ class IPLDHandler {
   final BlockStore _blockStore;
   final IPFSConfig _config;
   late final Logger _logger;
-  
+
   // Supported IPLD codecs
   static const Map<String, int> CODECS = {
     'raw': 0x55,
@@ -62,13 +63,13 @@ class IPLDHandler {
 
       _logger.verbose('Creating block from data');
       final block = await Block.fromData(data);
-      
+
       _logger.verbose('Creating CID with codec: $codec');
       final cid = CID.fromBytes(block.data, codec);
-      
+
       _logger.verbose('Adding block to blockstore');
       await _blockStore.addBlock(block.toProto());
-      
+
       _logger.debug('Successfully stored data with CID: ${cid.encode()}');
       return cid;
     } catch (e, stackTrace) {
@@ -83,7 +84,7 @@ class IPLDHandler {
     try {
       _logger.verbose('Retrieving block from blockstore');
       final response = await _blockStore.getBlock(cid.encode());
-      
+
       if (!response.found) {
         _logger.warning('Block not found for CID: ${cid.encode()}');
         return null;
@@ -104,21 +105,21 @@ class IPLDHandler {
     try {
       final parts = path.split('/');
       final rootCid = CID.decode(parts[0]);
-      
+
       if (parts.length == 1) {
         return await get(rootCid);
       }
 
       _logger.verbose('Traversing IPLD path');
       var current = await get(rootCid);
-      
+
       for (var i = 1; i < parts.length && current != null; i++) {
-        final node = MerkleDAGNode.fromBytes(current!);
+        final node = MerkleDAGNode.fromBytes(current);
         final link = node.links.firstWhere(
           (l) => l.name == parts[i],
           orElse: () => throw Exception('Path segment not found: ${parts[i]}'),
         );
-        current = await get(link.cid);
+        current = await get(CID.fromBytes(link.cid, 'raw'));
       }
 
       _logger.debug('Successfully resolved IPLD path');
