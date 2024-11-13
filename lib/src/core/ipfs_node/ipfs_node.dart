@@ -17,28 +17,58 @@ import 'package:dart_ipfs/src/core/data_structures/node.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/data_structures/directory.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/graphsync_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/bootstrap_handler.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/proto/generated/core/node_type.pbenum.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
+// src/core/ipfs_node/ipfs_node.dart
+
 
 // lib/src/core/ipfs_node/ipfs_node.dart
 
 /// The main class representing an IPFS node.
 class IPFSNode {
-  late final BitswapHandler bitswapHandler;
-  late final DHTHandler dhtHandler;
-  late final DatastoreHandler datastoreHandler;
-  late final RoutingHandler routingHandler;
-  late final NetworkHandler networkHandler;
-  late final PubSubHandler pubSubHandler;
-  final IPFSConfig _config;
-  late final BlockStore _blockStore;
+  // Core Systems
+  late final SecurityManager securityManager;
   late final Logger _logger;
+  late final MetricsCollector metricsCollector;
+
+  // Storage Layer
+  late final BlockStore _blockStore;
+  late final DatastoreHandler datastoreHandler;
+  late final IPLDHandler ipldHandler;
+
+  // Network Layer
+  late final NetworkHandler networkHandler;
+  late final DHTHandler dhtHandler;
+  late final PubSubHandler pubSubHandler;
+  late final BitswapHandler bitswapHandler;
+  late final MDNSHandler mdnsHandler;
+  late final BootstrapHandler bootstrapHandler;
+
+  // High-level Services
+  late final ContentRoutingHandler routingHandler;
+  late final DNSLinkHandler dnsLinkHandler;
+  late final GraphsyncHandler graphsyncHandler;
+  late final AutoNATHandler autoNatHandler;
+  late final IPNSHandler ipnsHandler;
+
+  final IPFSConfig _config;
+  final String _peerID;
 
   final _newContentController = StreamController<String>.broadcast();
 
@@ -51,9 +81,6 @@ class IPFSNode {
   // Add the onNewContent stream getter
   Stream<String> get onNewContent => _newContentController.stream;
 
-  // Add this field to store the peer ID
-  late final String _peerID;
-
   // Add this getter
   String get peerID => _peerID;
 
@@ -63,105 +90,216 @@ class IPFSNode {
 
   late List<Link> links;
 
-  IPFSNode(this._config) {
+  IPFSNode(IPFSConfig config)
+      : _config = config,
+        _peerID = config.nodeId {
     _logger = Logger('IPFSNode',
-        debug: _config.debug, verbose: _config.verboseLogging);
-
-    _logger.debug('Initializing IPFS Node with config: ${_config.toString()}');
+        debug: config.debug, verbose: config.verboseLogging);
+    _logger.debug('Creating new IPFS Node instance');
 
     try {
-      // Initialize BlockStore first since other components depend on it
-      _blockStore = BlockStore(path: _config.blockStorePath);
-      _logger
-          .verbose('BlockStore initialized at path: ${_config.blockStorePath}');
+      _logger.verbose('Starting core system initialization');
+      _initializeCoreSystem();
 
-      networkHandler = NetworkHandler(_config);
-      _logger.verbose(
-          'Network handler created with config: ${_config.network.toString()}');
+      _logger.verbose('Starting storage layer initialization');
+      _initializeStorageLayer();
 
-      networkHandler.setIpfsNode(this);
-      _logger.verbose('IPFS node reference set in network handler');
+      _logger.verbose('Starting network layer initialization');
+      _initializeNetworkLayer();
 
-      _peerID = _config.nodeId;
-      _logger.debug('Peer ID initialized: $_peerID');
+      _logger.verbose('Starting services initialization');
+      _initializeServices();
 
-      _initializeHandlers();
+      _logger.debug('IPFS Node instance created successfully');
     } catch (e, stackTrace) {
       _logger.error('Error during IPFS Node initialization', e, stackTrace);
       rethrow;
     }
   }
 
-  Future<void> _initializeHandlers() async {
-    _logger.debug('Initializing protocol handlers...');
+  void _initializeCoreSystem() async {
+    _logger.debug('Initializing core systems...');
 
     try {
-      final router = networkHandler.p2pRouter;
-      _logger.verbose('Router instance obtained');
+      _logger.verbose('Creating Security Manager');
+      securityManager = SecurityManager(_config.security);
+      _logger.debug('Security Manager initialized successfully');
 
-      bitswapHandler = BitswapHandler(_config, _blockStore, router);
-      _logger.debug('BitswapHandler created');
+      _logger.verbose('Configuring Metrics Collector');
+      metricsCollector = MetricsCollector(_config);
+      _logger.debug('Metrics Collector initialized successfully');
 
-      await networkHandler.initialize();
-      _logger.verbose('NetworkHandler initialized');
-
-      dhtHandler = DHTHandler(_config, router, networkHandler);
-      _logger.debug('DHTHandler created');
-
-      pubSubHandler = PubSubHandler(router, _config.nodeId,
-          IpfsNodeNetworkEvents(networkHandler.circuitRelayClient, router));
-      _logger.debug('PubSubHandler created');
-
-      datastoreHandler = DatastoreHandler(_config);
-      _logger.debug('DatastoreHandler created');
-
-      routingHandler = RoutingHandler(_config, networkHandler);
-      _logger.debug('RoutingHandler created');
-
-      _logger.info('All handlers initialized successfully');
+      _logger.debug('Core systems initialization complete');
     } catch (e, stackTrace) {
-      _logger.error('Failed to initialize handlers', e, stackTrace);
+      _logger.error('Failed to initialize core systems', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  void _initializeStorageLayer() async {
+    _logger.debug('Initializing storage layer...');
+
+    try {
+      _logger.verbose('Creating BlockStore at path: ${_config.blockStorePath}');
+      _blockStore = BlockStore(path: _config.blockStorePath);
+      _logger.debug('BlockStore initialized successfully');
+
+      _logger.verbose('Creating DatastoreHandler');
+      datastoreHandler = DatastoreHandler(_config);
+      _logger.debug('DatastoreHandler initialized successfully');
+
+      _logger.verbose('Creating IPLDHandler');
+      ipldHandler = IPLDHandler(_blockStore, _config);
+      _logger.debug('IPLDHandler initialized successfully');
+
+      _logger.debug('Storage layer initialization complete');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to initialize storage layer', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  void _initializeNetworkLayer() async {
+    _logger.debug('Initializing network layer...');
+
+    try {
+      _logger.verbose('Creating NetworkHandler');
+      networkHandler = NetworkHandler(_config);
+      _logger.debug('NetworkHandler created successfully');
+
+      _logger.verbose('Initializing peer discovery handlers');
+      mdnsHandler = MDNSHandler(_config);
+      _logger.debug('MDNSHandler initialized');
+
+      bootstrapHandler = BootstrapHandler(_config);
+      _logger.debug('BootstrapHandler initialized');
+
+      _logger.verbose('Initializing core network protocols');
+      dhtHandler =
+          DHTHandler(_config, networkHandler.p2pRouter, networkHandler);
+      _logger.debug('DHTHandler initialized');
+
+      _logger.verbose('Creating PubSubHandler');
+      pubSubHandler = PubSubHandler(
+          networkHandler.p2pRouter,
+          _config.nodeId,
+          IpfsNodeNetworkEvents(
+              networkHandler.circuitRelayClient, networkHandler.p2pRouter));
+      _logger.debug('PubSubHandler initialized');
+
+      _logger.verbose('Creating BitswapHandler');
+      bitswapHandler =
+          BitswapHandler(_config, _blockStore, networkHandler.p2pRouter);
+      _logger.debug('BitswapHandler initialized');
+
+      _logger.debug('Network layer initialization complete');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to initialize network layer', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  void _initializeServices() async {
+    _logger.debug('Initializing high-level services...');
+
+    try {
+      _logger.verbose('Creating RoutingHandler');
+      routingHandler = RoutingHandler(_config, networkHandler);
+      _logger.debug('RoutingHandler initialized');
+
+      _logger.verbose('Creating DNSLinkHandler');
+      dnsLinkHandler = DNSLinkHandler(_config);
+      _logger.debug('DNSLinkHandler initialized');
+
+      _logger.verbose('Creating GraphsyncHandler');
+      graphsyncHandler = GraphsyncHandler(_config, _blockStore);
+      _logger.debug('GraphsyncHandler initialized');
+
+      _logger.verbose('Creating AutoNATHandler');
+      autoNatHandler = AutoNATHandler(_config, networkHandler);
+      _logger.debug('AutoNATHandler initialized');
+
+      _logger.verbose('Creating IPNSHandler');
+      ipnsHandler = IPNSHandler(_config, securityManager);
+      _logger.debug('IPNSHandler initialized');
+
+      _logger.debug('High-level services initialization complete');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to initialize high-level services', e, stackTrace);
       rethrow;
     }
   }
 
   /// Starts the IPFS node.
   Future<void> start() async {
-    if (!networkHandler.p2pRouter.isInitialized) {
-      await networkHandler.p2pRouter.initialize();
-    }
     _logger.debug('Starting IPFS Node...');
 
-    await bitswapHandler.start();
-    _logger.verbose('BitswapHandler started');
+    try {
+      // Start core systems
+      await securityManager.start();
+      await metricsCollector.start();
 
-    await dhtHandler.start();
-    _logger.verbose('DHTHandler started');
+      // Start storage layer
+      await datastoreHandler.start();
+      await ipldHandler.start();
 
-    await pubSubHandler.start();
-    _logger.verbose('PubSubHandler started');
+      // Start network layer in correct order
+      await networkHandler.start();
+      await mdnsHandler.start();
+      await bootstrapHandler.start();
+      await dhtHandler.start();
+      await pubSubHandler.start();
+      await bitswapHandler.start();
 
-    await datastoreHandler.start();
-    _logger.verbose('DatastoreHandler started');
+      // Start high-level services
+      await routingHandler.start();
+      await dnsLinkHandler.start();
+      await graphsyncHandler.start();
+      await autoNatHandler.start();
+      await ipnsHandler.start();
 
-    await routingHandler.start();
-    _logger.verbose('RoutingHandler started');
-
-    await networkHandler.start();
-    _logger.verbose('NetworkHandler started');
-
-    _logger.debug('IPFS Node started successfully');
+      _logger.info('IPFS Node started successfully');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to start IPFS Node', e, stackTrace);
+      rethrow;
+    }
   }
 
   /// Stops the IPFS node.
   Future<void> stop() async {
-    await bitswapHandler.stop();
-    await dhtHandler.stop();
-    await pubSubHandler.stop();
-    await datastoreHandler.stop();
-    await routingHandler.stop();
-    await networkHandler.stop();
-    await _newContentController.close();
+    _logger.debug('Stopping IPFS Node...');
+
+    try {
+      // Stop in reverse order of initialization
+
+      // Stop high-level services
+      await ipnsHandler.stop();
+      await autoNatHandler.stop();
+      await graphsyncHandler.stop();
+      await dnsLinkHandler.stop();
+      await routingHandler.stop();
+
+      // Stop network layer
+      await bitswapHandler.stop();
+      await pubSubHandler.stop();
+      await dhtHandler.stop();
+      await bootstrapHandler.stop();
+      await mdnsHandler.stop();
+      await networkHandler.stop();
+
+      // Stop storage layer
+      await ipldHandler.stop();
+      await datastoreHandler.stop();
+
+      // Stop core systems
+      await metricsCollector.stop();
+      await securityManager.stop();
+
+      _logger.info('IPFS Node stopped successfully');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to stop IPFS Node', e, stackTrace);
+      rethrow;
+    }
   }
 
   Future<String> addFile(Uint8List data) async {
@@ -517,5 +655,33 @@ class IPFSNode {
       print('Error resolving DNSLink for domain $domainName: $e');
       rethrow;
     }
+  }
+
+  Future<Map<String, dynamic>> getHealthStatus() async {
+    return {
+      'core': {
+        'security': await securityManager.getStatus(),
+        'metrics': await metricsCollector.getStatus(),
+      },
+      'storage': {
+        'blockstore': await _blockStore.getStatus(),
+        'datastore': await datastoreHandler.getStatus(),
+        'ipld': await ipldHandler.getStatus(),
+      },
+      'network': {
+        'dht': await dhtHandler.getStatus(),
+        'pubsub': await pubSubHandler.getStatus(),
+        'bitswap': await bitswapHandler.getStatus(),
+        'mdns': await mdnsHandler.getStatus(),
+        'bootstrap': await bootstrapHandler.getStatus(),
+      },
+      'services': {
+        'routing': await routingHandler.getStatus(),
+        'dnslink': await dnsLinkHandler.getStatus(),
+        'graphsync': await graphsyncHandler.getStatus(),
+        'autonat': await autoNatHandler.getStatus(),
+        'ipns': await ipnsHandler.getStatus(),
+      }
+    };
   }
 }

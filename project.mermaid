@@ -1,0 +1,34 @@
+graph TD
+    A[Create IPFS Instance] --> B[Initialize Config]
+    B --> C[Create IPFSNode]
+    
+    %% Security and Core Systems
+    C --> D1[Initialize Security Manager]:::missing
+    C --> D2[Initialize Logger]:::ideal
+    C --> D3[Initialize Metrics Collector]:::missing
+    
+    %% Storage Layer
+    D1 & D2 & D3 --> E1[Initialize BlockStore]:::ideal
+    E1 --> E2[Initialize Datastore]:::ideal
+    E1 --> E3[Initialize IPLD]:::missing
+    
+    %% Network Layer
+    E1 & E2 & E3 --> F1[Initialize NetworkHandler]:::ideal
+    F1 --> F2[Initialize DHT]:::ideal
+    F1 --> F3[Initialize PubSub]:::ideal
+    F1 --> F4[Initialize BitSwap]:::ideal
+    F1 --> F5[Initialize mDNS]:::missing
+    F1 --> F6[Initialize Bootstrap]:::missing
+    
+    %% High-level Services
+    F1 & F2 & F3 & F4 & F5 & F6 --> G1[Initialize ContentRouting]:::ideal
+    F1 & F2 & F3 & F4 & F5 & F6 --> G2[Initialize DNSLink]:::missing
+    F1 & F2 & F3 & F4 & F5 & F6 --> G3[Initialize Graphsync]:::missing
+    F1 & F2 & F3 & F4 & F5 & F6 --> G4[Initialize AutoNAT]:::missing
+    F1 & F2 & F3 & F4 & F5 & F6 --> G5[Initialize IPNS]:::missing
+    
+    %% Start Services
+    G1 & G2 & G3 & G4 & G5 --> H[Start All Services]
+
+    classDef ideal fill:#00ffff,stroke:#333,stroke-width:2px;
+    classDef missing fill:#ff0000,stroke:#333,stroke-width:2px,color:#fff;

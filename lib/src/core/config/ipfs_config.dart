@@ -1,11 +1,13 @@
+// src/core/config/ipfs_config.dart
 import 'dart:io';
-import 'dart:convert';
 import 'dart:math';
+import 'dart:convert';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:yaml/yaml.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/core/config/dht_config.dart';
 import 'package:dart_ipfs/src/core/config/storage_config.dart';
+import 'package:dart_ipfs/src/core/config/metrics_config.dart';
 import 'package:dart_ipfs/src/core/config/security_config.dart';
 
 /// Configuration for the IPFS node
@@ -34,6 +36,7 @@ class IPFSConfig {
   final String nodeId;
   final Duration garbageCollectionInterval;
   final bool garbageCollectionEnabled;
+  final MetricsConfig metrics;
 
   IPFSConfig({
     this.network = const NetworkConfig(),
@@ -60,6 +63,7 @@ class IPFSConfig {
     String? nodeId,
     this.garbageCollectionInterval = const Duration(hours: 24),
     this.garbageCollectionEnabled = true,
+    this.metrics = const MetricsConfig(),
   }) : nodeId = nodeId ?? _generateDefaultNodeId();
 
   factory IPFSConfig.withGeneratedId({
@@ -86,6 +90,7 @@ class IPFSConfig {
     String blockStorePath = 'blocks',
     Duration garbageCollectionInterval = const Duration(hours: 24),
     bool garbageCollectionEnabled = true,
+    MetricsConfig metrics = const MetricsConfig(),
   }) {
     return IPFSConfig(
       network: network,
@@ -112,6 +117,7 @@ class IPFSConfig {
       nodeId: _generateDefaultNodeId(),
       garbageCollectionInterval: garbageCollectionInterval,
       garbageCollectionEnabled: garbageCollectionEnabled,
+      metrics: metrics,
     );
   }
 
