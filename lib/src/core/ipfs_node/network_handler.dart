@@ -1,3 +1,4 @@
+// src/core/ipfs_node/network_handler.dart
 import 'dart:async';
 import 'dart:convert';
 import 'ipfs_node.dart';
@@ -9,6 +10,8 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
+import 'dart:io';
+import 'dart:math';
 
 // lib/src/core/ipfs_node/network_handler.dart
 
@@ -328,6 +331,113 @@ class NetworkHandler {
           'Message event dispatched, size: ${event.message.length} bytes');
     } catch (e, stackTrace) {
       _logger.error('Error handling message event', e, stackTrace);
+    }
+  }
+
+  /// Tests if a direct connection can be established with a peer
+  Future<bool> canConnectDirectly(String peerAddress) async {
+    try {
+      _logger.verbose('Testing direct connection to: $peerAddress');
+
+      // Attempt to establish a direct connection
+      await _router.connect(peerAddress);
+
+      // If connection succeeds, immediately disconnect
+      await _router.disconnect(peerAddress);
+
+      _logger.debug('Successfully tested direct connection to: $peerAddress');
+      return true;
+    } catch (e, stackTrace) {
+      _logger.error('Failed to establish direct connection to: $peerAddress', e,
+          stackTrace);
+      return false;
+    }
+  }
+
+  /// Tests a connection using a specific source port
+  Future<String> testConnection({required int sourcePort}) async {
+    late final p2p.TransportUdp tempTransport;
+
+    try {
+      _logger.verbose('Testing connection from source port: $sourcePort');
+
+      // Initialize the transport
+      tempTransport = p2p.TransportUdp(
+        bindAddress: p2p.FullAddress(
+          address: InternetAddress.anyIPv4,
+          port: sourcePort,
+        ),
+        ttl: _router.routerL0.messageTTL.inSeconds,
+      );
+
+      // Add the transport to the router
+      _router.routerL0.transports.add(tempTransport);
+
+      final bootstrapPeer = _config.network.bootstrapPeers.first;
+      await _router.connect(bootstrapPeer);
+
+      final peerId = _router.routerL0.routes.values
+          .firstWhere((r) => r.peerId.toString() == bootstrapPeer)
+          .peerId;
+
+      final addresses = _router.routerL0.resolvePeerId(peerId);
+      if (addresses.isEmpty) {
+        throw StateError('No addresses found for peer');
+      }
+      final externalPort = addresses.first.port.toString();
+
+      await _router.disconnect(bootstrapPeer);
+
+      _logger.debug('Connection test completed. External port: $externalPort');
+      return externalPort;
+    } catch (e, stackTrace) {
+      _logger.error('Error testing connection', e, stackTrace);
+      return '';
+    } finally {
+      // Now tempTransport is accessible here
+      _router.routerL0.transports.remove(tempTransport);
+    }
+  }
+
+  /// Tests if the node is reachable from the outside network through dialback
+  Future<bool> testDialback() async {
+    try {
+      _logger.verbose('Starting dialback test');
+
+      // Get a random bootstrap peer to test dialback
+      final bootstrapPeer = _config.network.bootstrapPeers[
+          Random().nextInt(_config.network.bootstrapPeers.length)];
+
+      // Try to establish connection
+      await _router.connect(bootstrapPeer);
+
+      // Send dialback request and wait for response
+      final response = await _sendDialbackRequest(bootstrapPeer);
+
+      // Clean up connection
+      await _router.disconnect(bootstrapPeer);
+
+      _logger.debug('Dialback test completed successfully');
+      return response;
+    } catch (e, stackTrace) {
+      _logger.error('Error performing dialback test', e, stackTrace);
+      return false;
+    }
+  }
+
+  /// Sends a dialback request to a peer
+  Future<bool> _sendDialbackRequest(String peerAddr) async {
+    try {
+      final response = await _router.sendRequest(
+        peerAddr,
+        '/ipfs/autonat/1.0.0/dialback',
+        Uint8List(0), // Empty payload for dialback request
+      );
+
+      return response.isNotEmpty;
+    } catch (e) {
+      _logger.error('Error sending dialback request', e);
+      return false;
     }
   }
 }
