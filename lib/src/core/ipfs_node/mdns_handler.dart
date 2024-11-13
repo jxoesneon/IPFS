@@ -1,10 +1,12 @@
 // src/core/ipfs_node/mdns_handler.dart
-import 'dart:io';
 import 'dart:async';
+import 'dart:io';
+import 'package:dart_ipfs/src/network/mdns_client.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:multicast_dns/multicast_dns.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/utils/base58.dart';
 
 /// Handles mDNS (multicast DNS) peer discovery for an IPFS node.
 class MDNSHandler {
@@ -156,10 +158,20 @@ class MDNSHandler {
         return null;
       }
 
-      return Peer(
-        peerId: txt.text.first,
-        address: srv.target,
+      // Create a FullAddress from the SRV record
+      final address = p2p.FullAddress(
+        address: InternetAddress(srv.target),
         port: srv.port,
+      );
+
+      // Create a PeerId from the TXT record
+      final peerId = p2p.PeerId(value: Base58().base58Decode(txt.text.first));
+
+      return Peer(
+        id: peerId,
+        addresses: [address],
+        latency: 0, // Default latency for new peers
+        agentVersion: '', // Empty version since we don't know it yet
       );
     } catch (e, stackTrace) {
       _logger.error('Error resolving peer info', e, stackTrace);
