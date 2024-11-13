@@ -1,11 +1,10 @@
+// src/core/data_structures/peer.dart
 import 'dart:io';
 import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:p2plib/p2plib.dart' as p2p; // Import p2plib for peer management
 import 'package:dart_ipfs/src/proto/generated/core/peer.pb.dart'; // Import the generated Protobuf file
 // lib/src/core/data_structures/peer.dart
-
-
 
 /// Represents a peer in the IPFS network.
 class Peer {
@@ -55,9 +54,41 @@ class Peer {
     return Peer(
       id: p2p.PeerId(value: Base58().base58Decode(peerId)),
       addresses: [], // Empty list since we don't know addresses yet
-      latency: 0,   // Default latency
+      latency: 0, // Default latency
       agentVersion: '', // Empty version since we don't know it yet
     );
+  }
+
+  /// Creates a [Peer] from a multiaddr string
+  static Future<Peer> fromMultiaddr(String multiaddr) async {
+    try {
+      // Parse the multiaddr to extract peer ID and address
+      final parts = multiaddr.split('/');
+
+      // The peer ID is the last component after '/p2p/'
+      final peerIdIndex = parts.indexOf('p2p') + 1;
+      if (peerIdIndex >= parts.length) {
+        throw FormatException('No peer ID found in multiaddr: $multiaddr');
+      }
+
+      final peerId =
+          p2p.PeerId(value: Base58().base58Decode(parts[peerIdIndex]));
+
+      // Parse the address portion
+      final address = parseMultiaddrString(multiaddr);
+      if (address == null) {
+        throw FormatException('Invalid address in multiaddr: $multiaddr');
+      }
+
+      return Peer(
+        id: peerId,
+        addresses: [address],
+        latency: 0, // Default latency for new peers
+        agentVersion: '', // Empty version since we don't know it yet
+      );
+    } catch (e) {
+      throw FormatException('Error parsing multiaddr: $e');
+    }
   }
 }
 
