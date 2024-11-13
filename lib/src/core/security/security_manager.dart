@@ -4,12 +4,17 @@ import 'dart:async';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/core/config/security_config.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/utils/keystore.dart';
+import 'package:dart_ipfs/src/utils/private_key.dart';
 
 /// Manages security aspects of the IPFS node including TLS, key management,
 /// and rate limiting.
 class SecurityManager {
   final SecurityConfig _config;
   late final Logger _logger;
+  late final Keystore _keystore;
+  late final MetricsCollector _metrics;
+  final Map<String, dynamic> _securityMetrics = {};
 
   // Rate limiting
   final Map<String, List<DateTime>> _requestLog = {};
@@ -19,10 +24,14 @@ class SecurityManager {
   Timer? _keyRotationTimer;
   DateTime? _lastKeyRotation;
 
-  SecurityManager(this._config) {
+  SecurityManager(this._config, MetricsCollector metricsCollector) {
     _logger = Logger('SecurityManager');
+    _keystore = Keystore(_config);
+    _metrics = metricsCollector;
     _initializeSecurity();
   }
+
+  Keystore get keystore => _keystore;
 
   void _initializeSecurity() {
     _logger.debug('Initializing SecurityManager');
@@ -86,6 +95,7 @@ class SecurityManager {
     try {
       // Implement key rotation logic here
       _lastKeyRotation = DateTime.now();
+      _recordSecurityMetric('key_rotation');
       _logger.debug('Key rotation completed successfully');
     } catch (e, stackTrace) {
       _logger.error('Failed to rotate keys', e, stackTrace);
@@ -99,26 +109,48 @@ class SecurityManager {
     final now = DateTime.now();
     _requestLog.putIfAbsent(clientId, () => []);
 
-    // Remove requests older than 1 minute
     _requestLog[clientId]!.removeWhere(
         (time) => now.difference(time) > const Duration(minutes: 1));
 
-    // Add current request
     _requestLog[clientId]!.add(now);
 
-    // Check if exceeds rate limit
-    return _requestLog[clientId]!.length > _config.maxRequestsPerMinute;
+    final shouldLimit =
+        _requestLog[clientId]!.length > _config.maxRequestsPerMinute;
+    if (shouldLimit) {
+      _recordSecurityMetric('rate_limit');
+    }
+    return shouldLimit;
   }
 
   /// Tracks authentication attempts
   bool trackAuthAttempt(String clientId, bool success) {
     if (success) {
       _authAttempts.remove(clientId);
+      _recordSecurityMetric('auth_attempt', data: {'success': true});
       return true;
     }
 
     _authAttempts[clientId] = (_authAttempts[clientId] ?? 0) + 1;
+    _recordSecurityMetric('auth_attempt', data: {'success': false});
     return _authAttempts[clientId]! < _config.maxAuthAttempts;
+  }
+
+  /// Retrieves a private key by its name from the keystore
+  Future<PrivateKey?> getPrivateKey(String keyName) async {
+    _logger.debug('Retrieving private key for: $keyName');
+
+    try {
+      if (!_keystore.hasKeyPair(keyName)) {
+        _logger.warning('Key not found: $keyName');
+        return null;
+      }
+
+      final keyPair = _keystore.getKeyPair(keyName);
+      return PrivateKey(keyPair.privateKey, keyPair.publicKey);
+    } catch (e, stackTrace) {
+      _logger.error('Failed to retrieve private key', e, stackTrace);
+      return null;
+    }
   }
 
   /// Gets the current security status
@@ -132,6 +164,7 @@ class SecurityManager {
       'blocked_clients': _authAttempts.entries
           .where((e) => e.value >= _config.maxAuthAttempts)
           .length,
+      'metrics': _securityMetrics,
     };
   }
 
@@ -145,5 +178,35 @@ class SecurityManager {
   Future<void> stop() async {
     _logger.debug('Stopping SecurityManager');
     _keyRotationTimer?.cancel();
+  }
+
+  void _recordSecurityMetric(String metricType, {Map<String, dynamic>? data}) {
+    switch (metricType) {
+      case 'auth_attempt':
+        _securityMetrics['auth_attempts'] =
+            (_securityMetrics['auth_attempts'] ?? 0) + 1;
+        if (data?['success'] == true) {
+          _securityMetrics['successful_auth_attempts'] =
+              (_securityMetrics['successful_auth_attempts'] ?? 0) + 1;
+        } else {
+          _securityMetrics['failed_auth_attempts'] =
+              (_securityMetrics['failed_auth_attempts'] ?? 0) + 1;
+        }
+        break;
+      case 'rate_limit':
+        _securityMetrics['rate_limit_hits'] =
+            (_securityMetrics['rate_limit_hits'] ?? 0) + 1;
+        break;
+      case 'key_rotation':
+        _securityMetrics['key_rotations'] =
+            (_securityMetrics['key_rotations'] ?? 0) + 1;
+        break;
+    }
+
+    // Report metrics to the central collector if needed
+    _metrics.recordProtocolMetrics('security', {
+      'type': metricType,
+      ...?data,
+    });
   }
 }
