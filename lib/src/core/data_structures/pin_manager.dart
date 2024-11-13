@@ -1,3 +1,4 @@
+// src/core/data_structures/pin_manager.dart
 import 'dart:collection';
 import 'dart:typed_data';
 import 'package:cbor/cbor.dart';
@@ -193,5 +194,21 @@ class PinManager {
 
   void removeBlockAccessTime(String cidStr) {
     _accessTimes.remove(cidStr);
+  }
+
+  /// Returns the total number of pinned blocks
+  int get pinnedBlockCount {
+    final directPins = _pins.values
+        .where((type) =>
+            type == PinTypeProto.PIN_TYPE_DIRECT ||
+            type == PinTypeProto.PIN_TYPE_RECURSIVE)
+        .length;
+
+    // Count indirectly pinned blocks from recursive pins
+    final indirectPins = _references.entries
+        .where((entry) => _pins[entry.key] == PinTypeProto.PIN_TYPE_RECURSIVE)
+        .fold<Set<String>>({}, (acc, entry) => acc..addAll(entry.value)).length;
+
+    return directPins + indirectPins;
   }
 }
