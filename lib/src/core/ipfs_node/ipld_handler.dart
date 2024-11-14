@@ -68,7 +68,7 @@ class IPLDHandler {
       final cid = CID.fromBytes(block.data, codec);
 
       _logger.verbose('Adding block to blockstore');
-      await _blockStore.addBlock(block.toProto());
+      await _blockStore.putBlock(Block.fromProto(block.toProto()));
 
       _logger.debug('Successfully stored data with CID: ${cid.encode()}');
       return cid;
@@ -82,17 +82,41 @@ class IPLDHandler {
   Future<Uint8List?> get(CID cid) async {
     _logger.debug('Getting data for CID: ${cid.encode()}');
     try {
-      _logger.verbose('Retrieving block from blockstore');
-      final response = await _blockStore.getBlock(cid.encode());
-
-      if (!response.found) {
-        _logger.warning('Block not found for CID: ${cid.encode()}');
+      // Get the block from the blockstore
+      final response = await _blockStore.getBlock(cid.toString());
+      if (!response.found || !response.hasBlock()) {
+        _logger.debug('Block not found for CID: ${cid.encode()}');
         return null;
       }
 
-      final block = Block.fromProto(response.block);
-      _logger.debug('Successfully retrieved data for CID: ${cid.encode()}');
-      return block.data;
+      // Get the codec from the CID
+      final codec = cid.codec;
+      if (!CODECS.containsKey(codec)) {
+        throw ArgumentError('Unsupported codec: $codec');
+      }
+
+      _logger.verbose('Retrieved block with codec: $codec');
+
+      // For raw codec, return data directly
+      if (codec == 'raw') {
+        return Uint8List.fromList(response.block.data);
+      }
+
+      // For DAG-PB codec, parse as MerkleDAGNode
+      if (codec == 'dag-pb') {
+        final node =
+            MerkleDAGNode.fromBytes(Uint8List.fromList(response.block.data));
+        return node.data;
+      }
+
+      // For DAG-CBOR and DAG-JSON, additional decoding would be implemented here
+      // Currently returning raw data for these codecs
+      if (codec == 'dag-cbor' || codec == 'dag-json') {
+        return Uint8List.fromList(response.block.data);
+      }
+
+      _logger.debug('Successfully retrieved and decoded data');
+      return Uint8List.fromList(response.block.data);
     } catch (e, stackTrace) {
       _logger.error('Failed to get data', e, stackTrace);
       rethrow;
