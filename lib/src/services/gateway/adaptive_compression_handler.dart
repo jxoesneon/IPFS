@@ -1,3 +1,4 @@
+// src/services/gateway/adaptive_compression_handler.dart
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/services/gateway/compressed_cache_store.dart';
@@ -66,7 +67,7 @@ class AdaptiveCompressionHandler {
     final compressedBlock = await Block.fromData(compressedData, format: 'raw');
 
     // Store the compressed block
-    await _blockStore.addBlock(compressedBlock.toProto());
+    await _blockStore.putBlock(compressedBlock);
 
     // Store compression metadata
     await _storeCompressionMetadata(block.cid, {
