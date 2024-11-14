@@ -2,47 +2,54 @@
 syntax = "proto3";
 package bitswap;
 
-// Enum for WantType
-enum WantType {
-  WANT_TYPE_UNSPECIFIED = 0; // Matches the standard's use of UNSPECIFIED
-  WANT_TYPE_BLOCK = 1;       // Want the block
-  WANT_TYPE_HAVE = 2;        // Want a HAVE/DONT_HAVE response
+// Enum for message types
+enum MessageType {
+  MESSAGE_TYPE_UNKNOWN = 0;
+  MESSAGE_TYPE_WANT_BLOCK = 1;
+  MESSAGE_TYPE_WANT_HAVE = 2;
+  MESSAGE_TYPE_BLOCK = 3;
+  MESSAGE_TYPE_HAVE = 4;
+  MESSAGE_TYPE_DONT_HAVE = 5;
 }
 
-// Represents a single entry in the wantlist.
+// Represents a single entry in the wantlist
 message WantlistEntry {
-  bytes block = 1;           // CID of the block (as bytes)
-  int32 priority = 2;        // The priority (normalized), default to 1
-  bool cancel = 3;           // Whether this revokes an entry
-  WantType wantType = 4;     // The type of want (block, have)
-  bool sendDontHave = 5;     // Whether to receive DontHave responses
+  bytes cid = 1;           // CID of the block (as bytes)
+  int32 priority = 2;      // The priority (normalized), default to 1
+  bool cancel = 3;         // Whether this revokes an entry
+  MessageType type = 4;    // The type of want (block, have)
+  bool sendDontHave = 5;   // Whether to receive DontHave responses
 }
 
-// Represents a wantlist message.
+// Represents a wantlist message
 message Wantlist {
-  repeated WantlistEntry entries = 1; // A list of wantlist entries
-  bool full = 2;                      // Whether this is the full wantlist
+  repeated WantlistEntry entries = 1;  // A list of wantlist entries
+  bool full = 2;                       // Whether this is the full wantlist
 }
 
-// Represents a block message.
+// Represents a block
 message Block {
-  bytes prefix = 1;  // CID prefix (optional)
-  bytes data = 2;    // Block data
+  bytes cid = 1;          // CID of the block
+  bytes data = 2;         // Block data
+  bool found = 3;         // Whether the block was found
+  string format = 4;      // Format of the block (e.g., 'raw', 'dag-pb')
 }
 
-// Represents a block presence message.
+// Represents a block presence
 message BlockPresence {
-  bytes cid = 1;        // CID of the block (as bytes)
-  Type type = 2;        // Type of presence (HAVE/DONT_HAVE)
+  bytes cid = 1;          // CID of the block
+  Type type = 2;          // Type of presence
   enum Type {
-    HAVE = 0;          // Node has the block
-    DONT_HAVE = 1;    // Node doesn't have the block
+    HAVE = 0;            // Node has the block
+    DONT_HAVE = 1;       // Node doesn't have the block
   }
 }
 
-// The main Bitswap Message structure.
+// The main Bitswap Message
 message Message {
-  Wantlist wantlist = 1;                      // The wantlist
-  repeated Block blocks = 2;                  // Blocks being sent
-  repeated BlockPresence blockPresences = 3;  // Presence of blocks
+  string message_id = 1;                    // Unique message identifier
+  MessageType type = 2;                     // Message type
+  Wantlist wantlist = 3;                    // The wantlist
+  repeated Block blocks = 4;                // Blocks being sent
+  repeated BlockPresence blockPresences = 5; // Presence of blocks
 }
