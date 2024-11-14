@@ -1,3 +1,4 @@
+// src/network/message_handler.dart
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -67,17 +68,18 @@ class MessageHandler {
   Future<void> storeCID(CID cid) async {
     try {
       _logger.verbose('Attempting to store CID: ${cid.encode()}');
-      
+
       final block = await getBlock(cid);
       if (block == null) {
         _logger.warning('Block not found for CID: ${cid.encode()}');
         throw Exception('Block not found for CID: ${cid.encode()}');
       }
 
-      _logger.debug('Retrieved block for CID: ${cid.encode()}, size: ${block.data.length} bytes');
-      
-      final blockStore = BlockStore(path: config.blockStorePath);
-      final response = await blockStore.addBlock(block.toProto());
+      _logger.debug(
+          'Retrieved block for CID: ${cid.encode()}, size: ${block.data.length} bytes');
+
+      final blockStore = _blockStore;
+      final response = await blockStore.putBlock(block);
 
       if (!response.success) {
         _logger.error('Failed to store block: ${response.message}');
@@ -131,7 +133,7 @@ class MessageHandler {
       final blockStore = _blockStore;
       final response = await blockStore.getBlock(cid.encode());
 
-      if (response.found) {
+      if (response.found && response.hasBlock()) {
         return Block.fromProto(response.block);
       }
 
@@ -139,7 +141,7 @@ class MessageHandler {
       final bitswap = BitswapHandler(config, blockStore, _router);
       return await bitswap.wantBlock(cid.encode());
     } catch (e) {
-      print('Error retrieving block for CID ${cid.encode()}: $e');
+      _logger.error('Error retrieving block for CID ${cid.encode()}', e);
       return null;
     }
   }
@@ -152,7 +154,7 @@ class MessageHandler {
 
       // Store the block in the datastore
       final blockStore = _blockStore;
-      final storeResponse = await blockStore.addBlock(block.toProto());
+      final storeResponse = await blockStore.putBlock(block);
 
       if (!storeResponse.success) {
         throw Exception(
