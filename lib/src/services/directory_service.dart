@@ -1,14 +1,19 @@
+// src/services/directory_service.dart
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/directory.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/directory.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/utils/crypto.dart';
-import 'package:dart_ipfs/src/proto/generated/core/node_type.pbenum.dart';
 import 'package:dart_ipfs/src/utils/encoding.dart';
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 
 /// Service for managing IPFS directory operations
 class IPFSDirectoryService {
@@ -20,23 +25,46 @@ class IPFSDirectoryService {
 
   /// Creates a new directory at the specified path
   Future<IPFSNode> createDirectory(String path) async {
-    // Create a new directory node
-    final node = IPFSNode(IPFSConfig());
-    node.nodeType = NodeTypeProto.NODE_TYPE_DIRECTORY;
+    // Create UnixFS directory node with proper type and metadata
+    final unixFsData = Data()
+      ..type = Data_DataType.Directory
+      ..mode = 0x1ed // 0755 in octal
+      ..mtime = Int64(DateTime.now().millisecondsSinceEpoch ~/ 1000)
+      ..mtimeNsecs = 0
+      ..filesize = Int64(0);
 
-    // Generate and set the CID
-    node.cid = await _generateCID(path);
-    node.links = [];
+    // Clear existing blocksizes and add new ones if needed
+    unixFsData.blocksizes.clear();
 
-    // Add to directory manager
+    // Create DAG-PB node with UnixFS data
+    final node = PBNode();
+    node.data = unixFsData.writeToBuffer();
+    node.links.clear(); // Clear any existing links
+
+    // Generate CIDv1 with dag-pb codec
+    final nodeBytes = node.writeToBuffer();
+    final multihash = await _cryptoUtils.sha256(nodeBytes);
+    final cid = CID(
+      version: IPFSCIDVersion.IPFS_CID_VERSION_1,
+      multihash: multihash,
+      codec: 'dag-pb',
+      multibasePrefix: 'base58btc',
+    );
+
+    // Create IPFS node and store the data
+    final ipfsNode = await IPFSNode.create(IPFSConfig());
+    final block = await Block.fromData(nodeBytes, format: 'dag-pb');
+    await ipfsNode.container.get<DatastoreHandler>().putBlock(block);
+
+    // Add to directory manager with proper UnixFS metadata
     _directoryManager.addEntry(IPFSDirectoryEntry(
       name: path.split('/').last,
-      hash: EncodingUtils.cidToBytes(node.cid),
+      hash: EncodingUtils.cidToBytes(cid),
       size: Int64(0),
       isDirectory: true,
     ));
 
-    return node;
+    return ipfsNode;
   }
 
   /// Adds a file entry to the current directory
@@ -88,13 +116,6 @@ class IPFSDirectoryService {
 
   /// Gets the current directory's metadata
   DirectoryProto get directory => _directoryManager.directory;
-
-  /// Generates a CID for a directory path
-  Future<CID> _generateCID(String path) async {
-    final bytes = Uint8List.fromList(path.codeUnits);
-    final hash = await _cryptoUtils.hashData(bytes);
-    return CID.fromBytes(hash, 'dag-pb');
-  }
 
   /// Internal method to handle directory entry removal
   Future<RemoveDirectoryEntryResponse> _removeDirectoryEntry(
