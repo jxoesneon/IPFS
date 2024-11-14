@@ -1,3 +1,4 @@
+// src/core/data_structures/block.dart
 import 'dart:typed_data';
 import 'base_block.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -59,11 +60,12 @@ class Block extends BaseBlock implements IBlock {
   }
 
   /// Creates a block from its Bitswap protobuf representation
-  static Block fromProtoBlock(proto.Block protoBlock) {
+  static Block fromBitswapProto(proto.Block protoBlock) {
     return Block._(
-        cid: CID.fromBytes(Uint8List.fromList(protoBlock.prefix), 'raw'),
-        data: Uint8List.fromList(protoBlock.data),
-        format: 'raw');
+      cid: CID.fromBytes(Uint8List.fromList(protoBlock.cid), 'raw'),
+      data: Uint8List.fromList(protoBlock.data),
+      format: protoBlock.format,
+    );
   }
 
   /// Validates the block's data against its CID
@@ -73,17 +75,12 @@ class Block extends BaseBlock implements IBlock {
     return computedCid == cid;
   }
 
-  static Block fromBitswapProto(proto.Block protoBlock) {
-    return Block._(
-        cid: CID.fromBytes(Uint8List.fromList(protoBlock.prefix), 'raw'),
-        data: Uint8List.fromList(protoBlock.data),
-        format: 'raw');
-  }
-
   @override
   proto.Block toBitswapProto() {
     return proto.Block()
-      ..prefix = cid.toBytes()
-      ..data = data;
+      ..cid = cid.toBytes()
+      ..data = data
+      ..format = format
+      ..found = true;
   }
 }
