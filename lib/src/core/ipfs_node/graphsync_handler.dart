@@ -141,15 +141,16 @@ class GraphsyncHandler {
       visited.add(cid);
 
       final response = await _blockStore.getBlock(cid);
-      if (!response.found) return;
+      if (response.found && response.hasBlock()) {
+        final blockProto = response.block;
+        final block = Block.fromProto(blockProto);
+        blocks.add(block);
 
-      final block = Block.fromProto(response.block);
-      blocks.add(block);
-
-      if (selector.contains('links')) {
-        final node = MerkleDAGNode.fromBytes(block.data);
-        for (final link in node.links) {
-          await traverse(link.cid.toString());
+        if (selector.contains('links')) {
+          final node = MerkleDAGNode.fromBytes(block.data);
+          for (final link in node.links) {
+            await traverse(link.cid.toString());
+          }
         }
       }
     }
