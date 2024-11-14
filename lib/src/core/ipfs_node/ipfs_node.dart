@@ -32,101 +32,60 @@ import 'package:dart_ipfs/src/core/ipfs_node/graphsync_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/bootstrap_handler.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
-import 'package:dart_ipfs/src/proto/generated/core/node_type.pbenum.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
+import 'package:dart_ipfs/src/core/di/service_container.dart';
+import 'package:dart_ipfs/src/core/builders/ipfs_node_builder.dart';
 // src/core/ipfs_node/ipfs_node.dart
 
 // lib/src/core/ipfs_node/ipfs_node.dart
 
 /// The main class representing an IPFS node.
 class IPFSNode {
-  // Core Systems
-  late final SecurityManager securityManager;
-  late final Logger _logger;
-  late final MetricsCollector metricsCollector;
+  final ServiceContainer _container;
+  final Logger _logger;
+  final StreamController<String> _newContentController =
+      StreamController<String>.broadcast();
 
-  // Storage Layer
-  late final BlockStore _blockStore;
-  late final DatastoreHandler datastoreHandler;
-  late final IPLDHandler ipldHandler;
+  IPFSNode.fromContainer(this._container) : _logger = Logger('IPFSNode') {
+    _logger.debug('Creating IPFS Node from container');
 
-  // Network Layer
-  late final NetworkHandler networkHandler;
-  late final DHTHandler dhtHandler;
-  late final PubSubHandler pubSubHandler;
-  late final BitswapHandler bitswapHandler;
-  late final MDNSHandler mdnsHandler;
-  late final BootstrapHandler bootstrapHandler;
+    // Validate required services
+    _validateRequiredServices();
+  }
 
-  // High-level Services
-  late final ContentRoutingHandler routingHandler;
-  late final DNSLinkHandler dnsLinkHandler;
-  late final GraphsyncHandler graphsyncHandler;
-  late final AutoNATHandler autoNatHandler;
-  late final IPNSHandler ipnsHandler;
+  static Future<IPFSNode> create(IPFSConfig config) async {
+    final builder = IPFSNodeBuilder(config);
+    return await builder.build();
+  }
 
-  final IPFSConfig _config;
-  final String _peerID;
-
-  final _newContentController = StreamController<String>.broadcast();
-
-  // Add getters for the handlers
-  Datastore get datastore => datastoreHandler.datastore;
-  Router get router => networkHandler.router;
-  BitswapHandler get bitswap => bitswapHandler;
-  IPFSConfig get config => _config;
-
-  // Add the onNewContent stream getter
-  Stream<String> get onNewContent => _newContentController.stream;
-
-  // Add this getter
-  String get peerID => _peerID;
-
-  late NodeTypeProto nodeType;
-
-  late CID cid;
-
-  late List<Link> links;
-
-  IPFSNode(IPFSConfig config)
-      : _config = config,
-        _peerID = config.nodeId {
-    _logger =
-        Logger('IPFSNode', debug: config.debug, verbose: config.verboseLogging);
-    _logger.debug('Creating new IPFS Node instance');
+  Future<void> start() async {
+    _logger.debug('Starting IPFS Node...');
 
     try {
-      _logger.verbose('Starting core system initialization');
-      _initializeCoreSystem();
+      // Start systems in dependency order
+      await _startCoreSystem();
+      await _startStorageLayer();
+      await _startNetworkLayer();
+      await _startServices();
 
-      _logger.verbose('Starting storage layer initialization');
-      _initializeStorageLayer();
-
-      _logger.verbose('Starting network layer initialization');
-      _initializeNetworkLayer();
-
-      _logger.verbose('Starting services initialization');
-      _initializeServices();
-
-      _logger.debug('IPFS Node instance created successfully');
+      _logger.info('IPFS Node started successfully');
     } catch (e, stackTrace) {
-      _logger.error('Error during IPFS Node initialization', e, stackTrace);
+      _logger.error('Failed to start IPFS Node', e, stackTrace);
       rethrow;
     }
   }
 
-  void _initializeCoreSystem() async {
-    _logger.debug('Initializing core systems...');
+  Future<void> _startCoreSystem() async {
+    _logger.debug('Starting core systems...');
 
     try {
-      _logger.verbose('Creating Security Manager');
-      securityManager = SecurityManager(_config.security, metricsCollector);
-      _logger.debug('Security Manager initialized successfully');
-
-      _logger.verbose('Configuring Metrics Collector');
-      metricsCollector = MetricsCollector(_config);
+      _logger.verbose('Starting core system initialization');
+      await _container.get<MetricsCollector>().start();
       _logger.debug('Metrics Collector initialized successfully');
+
+      _logger.verbose('Creating Security Manager');
+      await _container.get<SecurityManager>().start();
+      _logger.debug('Security Manager initialized successfully');
 
       _logger.debug('Core systems initialization complete');
     } catch (e, stackTrace) {
@@ -135,20 +94,20 @@ class IPFSNode {
     }
   }
 
-  void _initializeStorageLayer() async {
-    _logger.debug('Initializing storage layer...');
+  Future<void> _startStorageLayer() async {
+    _logger.debug('Starting storage layer...');
 
     try {
-      _logger.verbose('Creating BlockStore at path: ${_config.blockStorePath}');
-      _blockStore = BlockStore(path: _config.blockStorePath);
+      _logger.verbose('Starting storage layer initialization');
+      await _container.get<BlockStore>().start();
       _logger.debug('BlockStore initialized successfully');
 
       _logger.verbose('Creating DatastoreHandler');
-      datastoreHandler = DatastoreHandler(_config);
+      await _container.get<DatastoreHandler>().start();
       _logger.debug('DatastoreHandler initialized successfully');
 
       _logger.verbose('Creating IPLDHandler');
-      ipldHandler = IPLDHandler(_blockStore, _config);
+      await _container.get<IPLDHandler>().start();
       _logger.debug('IPLDHandler initialized successfully');
 
       _logger.debug('Storage layer initialization complete');
@@ -158,37 +117,28 @@ class IPFSNode {
     }
   }
 
-  void _initializeNetworkLayer() async {
-    _logger.debug('Initializing network layer...');
+  Future<void> _startNetworkLayer() async {
+    _logger.debug('Starting network layer...');
 
     try {
-      _logger.verbose('Creating NetworkHandler');
-      networkHandler = NetworkHandler(_config);
+      _logger.verbose('Starting network layer initialization');
+      await _container.get<NetworkHandler>().start();
       _logger.debug('NetworkHandler created successfully');
 
       _logger.verbose('Initializing peer discovery handlers');
-      mdnsHandler = MDNSHandler(_config);
+      await _container.get<MDNSHandler>().start();
       _logger.debug('MDNSHandler initialized');
 
-      bootstrapHandler = BootstrapHandler(_config);
-      _logger.debug('BootstrapHandler initialized');
-
       _logger.verbose('Initializing core network protocols');
-      dhtHandler =
-          DHTHandler(_config, networkHandler.p2pRouter, networkHandler);
+      await _container.get<DHTHandler>().start();
       _logger.debug('DHTHandler initialized');
 
       _logger.verbose('Creating PubSubHandler');
-      pubSubHandler = PubSubHandler(
-          networkHandler.p2pRouter,
-          _config.nodeId,
-          IpfsNodeNetworkEvents(
-              networkHandler.circuitRelayClient, networkHandler.p2pRouter));
+      await _container.get<PubSubHandler>().start();
       _logger.debug('PubSubHandler initialized');
 
       _logger.verbose('Creating BitswapHandler');
-      bitswapHandler =
-          BitswapHandler(_config, _blockStore, networkHandler.p2pRouter);
+      await _container.get<BitswapHandler>().start();
       _logger.debug('BitswapHandler initialized');
 
       _logger.debug('Network layer initialization complete');
@@ -198,28 +148,28 @@ class IPFSNode {
     }
   }
 
-  void _initializeServices() async {
-    _logger.debug('Initializing high-level services...');
+  Future<void> _startServices() async {
+    _logger.debug('Starting high-level services...');
 
     try {
-      _logger.verbose('Creating ContentRoutingHandler');
-      routingHandler = ContentRoutingHandler(_config, networkHandler);
+      _logger.verbose('Starting services initialization');
+      await _container.get<ContentRoutingHandler>().start();
       _logger.debug('ContentRoutingHandler initialized');
 
       _logger.verbose('Creating DNSLinkHandler');
-      dnsLinkHandler = DNSLinkHandler(_config);
+      await _container.get<DNSLinkHandler>().start();
       _logger.debug('DNSLinkHandler initialized');
 
       _logger.verbose('Creating GraphsyncHandler');
-      graphsyncHandler = GraphsyncHandler(_config, _blockStore);
+      await _container.get<GraphsyncHandler>().start();
       _logger.debug('GraphsyncHandler initialized');
 
       _logger.verbose('Creating AutoNATHandler');
-      autoNatHandler = AutoNATHandler(_config, networkHandler);
+      await _container.get<AutoNATHandler>().start();
       _logger.debug('AutoNATHandler initialized');
 
       _logger.verbose('Creating IPNSHandler');
-      ipnsHandler = IPNSHandler(_config, securityManager, dhtHandler);
+      await _container.get<IPNSHandler>().start();
       _logger.debug('IPNSHandler initialized');
 
       _logger.debug('High-level services initialization complete');
@@ -229,42 +179,6 @@ class IPFSNode {
     }
   }
 
-  /// Starts the IPFS node.
-  Future<void> start() async {
-    _logger.debug('Starting IPFS Node...');
-
-    try {
-      // Start core systems
-      await securityManager.start();
-      await metricsCollector.start();
-
-      // Start storage layer
-      await datastoreHandler.start();
-      await ipldHandler.start();
-
-      // Start network layer in correct order
-      await networkHandler.start();
-      await mdnsHandler.start();
-      await bootstrapHandler.start();
-      await dhtHandler.start();
-      await pubSubHandler.start();
-      await bitswapHandler.start();
-
-      // Start high-level services
-      await routingHandler.start();
-      await dnsLinkHandler.start();
-      await graphsyncHandler.start();
-      await autoNatHandler.start();
-      await ipnsHandler.start();
-
-      _logger.info('IPFS Node started successfully');
-    } catch (e, stackTrace) {
-      _logger.error('Failed to start IPFS Node', e, stackTrace);
-      rethrow;
-    }
-  }
-
-  /// Stops the IPFS node.
   Future<void> stop() async {
     _logger.debug('Stopping IPFS Node...');
 
@@ -272,27 +186,27 @@ class IPFSNode {
       // Stop in reverse order of initialization
 
       // Stop high-level services
-      await ipnsHandler.stop();
-      await autoNatHandler.stop();
-      await graphsyncHandler.stop();
-      await dnsLinkHandler.stop();
-      await routingHandler.stop();
+      await _container.get<IPNSHandler>().stop();
+      await _container.get<AutoNATHandler>().stop();
+      await _container.get<GraphsyncHandler>().stop();
+      await _container.get<DNSLinkHandler>().stop();
+      await _container.get<ContentRoutingHandler>().stop();
 
       // Stop network layer
-      await bitswapHandler.stop();
-      await pubSubHandler.stop();
-      await dhtHandler.stop();
-      await bootstrapHandler.stop();
-      await mdnsHandler.stop();
-      await networkHandler.stop();
+      await _container.get<BitswapHandler>().stop();
+      await _container.get<PubSubHandler>().stop();
+      await _container.get<DHTHandler>().stop();
+      await _container.get<BootstrapHandler>().stop();
+      await _container.get<MDNSHandler>().stop();
+      await _container.get<NetworkHandler>().stop();
 
       // Stop storage layer
-      await ipldHandler.stop();
-      await datastoreHandler.stop();
+      await _container.get<IPLDHandler>().stop();
+      await _container.get<DatastoreHandler>().stop();
 
       // Stop core systems
-      await metricsCollector.stop();
-      await securityManager.stop();
+      await _container.get<MetricsCollector>().stop();
+      await _container.get<SecurityManager>().stop();
 
       _logger.info('IPFS Node stopped successfully');
     } catch (e, stackTrace) {
@@ -307,7 +221,7 @@ class IPFSNode {
       final block = await Block.fromData(data);
 
       // Store the block in the datastore
-      await datastoreHandler.putBlock(block);
+      await _container.get<DatastoreHandler>().putBlock(block);
 
       // Notify listeners about the new content
       _newContentController.add(block.cid.toString());
@@ -353,7 +267,7 @@ class IPFSNode {
         await Block.fromData(directoryProto.writeToBuffer(), format: 'dag-pb');
 
     // Store the directory block
-    await datastoreHandler.putBlock(block);
+    await _container.get<DatastoreHandler>().putBlock(block);
 
     // Return the CID of the directory
     return block.cid.toString();
@@ -366,7 +280,7 @@ class IPFSNode {
   Future<Uint8List?> get(String cid, {String path = ''}) async {
     try {
       // First check if we have the block locally
-      final block = await datastoreHandler.getBlock(cid);
+      final block = await _container.get<DatastoreHandler>().getBlock(cid);
 
       if (block != null) {
         if (path.isEmpty) {
@@ -383,7 +297,8 @@ class IPFSNode {
       }
 
       // If not found locally, try to fetch from the network
-      final networkBlock = await bitswapHandler.wantBlock(cid);
+      final networkBlock =
+          await _container.get<BitswapHandler>().wantBlock(cid);
       // Return the block data if found, null otherwise
       return networkBlock?.data;
     } catch (e) {
@@ -398,7 +313,9 @@ class IPFSNode {
 
     for (final link in dirNode.links) {
       if (link.name == pathParts[0]) {
-        final childBlock = await datastoreHandler.getBlock(link.cid.toString());
+        final childBlock = await _container
+            .get<DatastoreHandler>()
+            .getBlock(link.cid.toString());
         if (childBlock == null) return null;
 
         if (pathParts.length == 1) {
@@ -420,10 +337,10 @@ class IPFSNode {
   Future<List<Link>> ls(String cid) async {
     try {
       // Get the directory block
-      var block = await datastoreHandler.getBlock(cid);
+      var block = await _container.get<DatastoreHandler>().getBlock(cid);
       if (block == null) {
         // Try fetching from network if not found locally
-        final data = await bitswapHandler.wantBlock(cid);
+        final data = await _container.get<BitswapHandler>().wantBlock(cid);
         if (data == null) {
           throw Exception('Directory not found: $cid');
         }
@@ -459,7 +376,7 @@ class IPFSNode {
       final pin = Pin(
         cid: CID.fromBytes(Uint8List.fromList(cid.codeUnits), 'raw'),
         type: PinTypeProto.PIN_TYPE_RECURSIVE,
-        blockStore: _blockStore,
+        blockStore: _container.get<BlockStore>(),
       );
 
       // Pin the content
@@ -469,7 +386,7 @@ class IPFSNode {
       }
 
       // Update the datastore to mark the CID as pinned
-      await datastoreHandler.persistPinnedCIDs({cid});
+      await _container.get<DatastoreHandler>().persistPinnedCIDs({cid});
 
       print('Successfully pinned CID: $cid');
     } catch (e) {
@@ -488,7 +405,7 @@ class IPFSNode {
       final pin = Pin(
         cid: CID.decode(cid),
         type: PinTypeProto.PIN_TYPE_RECURSIVE,
-        blockStore: _blockStore,
+        blockStore: _container.get<BlockStore>(),
       );
 
       // Attempt to unpin
@@ -496,7 +413,7 @@ class IPFSNode {
 
       if (success) {
         // Update the datastore
-        await datastoreHandler.datastore.unpin(cid);
+        await _container.get<DatastoreHandler>().datastore.unpin(cid);
         print('Successfully unpinned CID: $cid');
       } else {
         print('Failed to unpin CID: $cid - CID may not be pinned');
@@ -513,12 +430,12 @@ class IPFSNode {
   Future<void> publishIPNS(String cid, {required String keyName}) async {
     try {
       // Validate CID
-      if (!dhtHandler.isValidCID(cid)) {
+      if (!_container.get<DHTHandler>().isValidCID(cid)) {
         throw ArgumentError('Invalid CID: $cid');
       }
 
       // Delegate to DHT handler for IPNS record publishing
-      await dhtHandler.publishIPNS(cid, keyName: keyName);
+      await _container.get<DHTHandler>().publishIPNS(cid, keyName: keyName);
 
       print(
           'Successfully published IPNS record for CID: $cid with key: $keyName');
@@ -530,7 +447,7 @@ class IPFSNode {
 
   Future<void> importCAR(Uint8List carFile) async {
     try {
-      await datastoreHandler.importCAR(carFile);
+      await _container.get<DatastoreHandler>().importCAR(carFile);
     } catch (e) {
       print('Error importing CAR file: $e');
       rethrow;
@@ -541,7 +458,7 @@ class IPFSNode {
   Future<Uint8List> exportCAR(String cid) async {
     try {
       // Delegate to the datastoreHandler which has the CAR export implementation
-      return await datastoreHandler.exportCAR(cid);
+      return await _container.get<DatastoreHandler>().exportCAR(cid);
     } catch (e) {
       print('Error exporting CAR file: $e');
       rethrow;
@@ -554,10 +471,10 @@ class IPFSNode {
   Future<List<String>> findProviders(String cid) async {
     try {
       // First check if we have the content locally
-      final hasLocal = await datastoreHandler.hasBlock(cid);
+      final hasLocal = await _container.get<DatastoreHandler>().hasBlock(cid);
       if (hasLocal) {
         // If we have it locally, return our own peer ID
-        return [peerID];
+        return [_container.get<NetworkHandler>().ipfsNode.peerID];
       }
 
       // Convert string CID to CID object
@@ -568,7 +485,8 @@ class IPFSNode {
           multibasePrefix: 'base58btc');
 
       // Try finding providers through DHT
-      final dhtProviders = await dhtHandler.findProviders(cidObj);
+      final dhtProviders =
+          await _container.get<DHTHandler>().findProviders(cidObj);
       if (dhtProviders.isNotEmpty) {
         // Convert V_PeerInfo to String peer IDs
         return dhtProviders
@@ -577,7 +495,8 @@ class IPFSNode {
       }
 
       // If DHT lookup fails, try finding through routing handler
-      final routingProviders = await routingHandler.findProviders(cid);
+      final routingProviders =
+          await _container.get<ContentRoutingHandler>().findProviders(cid);
       if (routingProviders.isNotEmpty) {
         return routingProviders;
       }
@@ -593,19 +512,19 @@ class IPFSNode {
   Future<void> requestBlock(String cid, Peer peer) async {
     try {
       // Validate CID format
-      if (!dhtHandler.isValidCID(cid)) {
+      if (!_container.get<DHTHandler>().isValidCID(cid)) {
         throw ArgumentError('Invalid CID format: $cid');
       }
 
       // Use bitswap to request the block
-      final block = await bitswapHandler.wantBlock(cid);
+      final block = await _container.get<BitswapHandler>().wantBlock(cid);
 
       if (block == null) {
         throw Exception('Failed to retrieve block from peer');
       }
 
       // Store the block in our datastore
-      await datastoreHandler.putBlock(block);
+      await _container.get<DatastoreHandler>().putBlock(block);
     } catch (e) {
       print('Error requesting block $cid from peer ${peer.toString()}: $e');
       rethrow;
@@ -615,7 +534,7 @@ class IPFSNode {
   /// Subscribes to a PubSub topic.
   Future<void> subscribe(String topic) async {
     try {
-      await pubSubHandler.subscribe(topic);
+      await _container.get<PubSubHandler>().subscribe(topic);
       print('Successfully subscribed to topic: $topic');
     } catch (e) {
       print('Error subscribing to topic $topic: $e');
@@ -626,7 +545,7 @@ class IPFSNode {
   /// Publishes a message to a PubSub topic.
   Future<void> publish(String topic, String message) async {
     try {
-      await pubSubHandler.publish(topic, message);
+      await _container.get<PubSubHandler>().publish(topic, message);
       print('Successfully published message to topic: $topic');
     } catch (e) {
       print('Error publishing message to topic $topic: $e');
@@ -638,13 +557,16 @@ class IPFSNode {
   Future<String> resolveDNSLink(String domainName) async {
     try {
       // First try resolving through the routing handler
-      final cid = await routingHandler.resolveDNSLink(domainName);
+      final cid = await _container
+          .get<ContentRoutingHandler>()
+          .resolveDNSLink(domainName);
       if (cid != null) {
         return cid;
       }
 
       // If routing handler fails, try DHT handler
-      final dhtCid = await dhtHandler.resolveDNSLink(domainName);
+      final dhtCid =
+          await _container.get<DHTHandler>().resolveDNSLink(domainName);
       if (dhtCid != null) {
         return dhtCid;
       }
@@ -659,28 +581,79 @@ class IPFSNode {
   Future<Map<String, dynamic>> getHealthStatus() async {
     return {
       'core': {
-        'security': await securityManager.getStatus(),
-        'metrics': await metricsCollector.getStatus(),
+        'security': await _container.get<SecurityManager>().getStatus(),
+        'metrics': await _container.get<MetricsCollector>().getStatus(),
       },
       'storage': {
-        'blockstore': await _blockStore.getStatus(),
-        'datastore': await datastoreHandler.getStatus(),
-        'ipld': await ipldHandler.getStatus(),
+        'blockstore': await _container.get<BlockStore>().getStatus(),
+        'datastore': await _container.get<DatastoreHandler>().getStatus(),
+        'ipld': await _container.get<IPLDHandler>().getStatus(),
       },
       'network': {
-        'dht': await dhtHandler.getStatus(),
-        'pubsub': await pubSubHandler.getStatus(),
-        'bitswap': await bitswapHandler.getStatus(),
-        'mdns': await mdnsHandler.getStatus(),
-        'bootstrap': await bootstrapHandler.getStatus(),
+        'dht': await _container.get<DHTHandler>().getStatus(),
+        'pubsub': await _container.get<PubSubHandler>().getStatus(),
+        'bitswap': await _container.get<BitswapHandler>().getStatus(),
+        'mdns': await _container.get<MDNSHandler>().getStatus(),
+        'bootstrap': await _container.get<BootstrapHandler>().getStatus(),
       },
       'services': {
-        'routing': await routingHandler.getStatus(),
-        'dnslink': await dnsLinkHandler.getStatus(),
-        'graphsync': await graphsyncHandler.getStatus(),
-        'autonat': await autoNatHandler.getStatus(),
-        'ipns': await ipnsHandler.getStatus(),
+        'routing': await _container.get<ContentRoutingHandler>().getStatus(),
+        'dnslink': await _container.get<DNSLinkHandler>().getStatus(),
+        'graphsync': await _container.get<GraphsyncHandler>().getStatus(),
+        'autonat': await _container.get<AutoNATHandler>().getStatus(),
+        'ipns': await _container.get<IPNSHandler>().getStatus(),
       }
     };
   }
+
+  // Core getters
+  Datastore get datastore => _container.get<DatastoreHandler>().datastore;
+  Router get router => _container.get<NetworkHandler>().router;
+  BitswapHandler get bitswap => _container.get<BitswapHandler>();
+  DHTHandler get dhtHandler => _container.get<DHTHandler>();
+  String get peerID => _container.get<NetworkHandler>().peerID;
+
+  // Event streams
+  Stream<String> get onNewContent => _newContentController.stream;
+
+  /// Validates that all required services are registered in the container
+  void _validateRequiredServices() {
+    final requiredServices = [
+      // Core systems
+      MetricsCollector,
+      SecurityManager,
+
+      // Storage layer
+      BlockStore,
+      DatastoreHandler,
+      IPLDHandler,
+
+      // Network layer
+      NetworkHandler,
+      MDNSHandler,
+      DHTHandler,
+      PubSubHandler,
+      BitswapHandler,
+      BootstrapHandler,
+
+      // Services
+      ContentRoutingHandler,
+      DNSLinkHandler,
+      GraphsyncHandler,
+      AutoNATHandler,
+      IPNSHandler,
+    ];
+
+    for (final service in requiredServices) {
+      if (!_container.isRegistered(service)) {
+        _logger.error('Required service not found: ${service.toString()}');
+        throw StateError('Missing required service: ${service.toString()}');
+      }
+    }
+
+    _logger.debug('All required services validated successfully');
+  }
+
+  // Add this getter to the IPFSNode class
+  ServiceContainer get container => _container;
 }
