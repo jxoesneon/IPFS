@@ -2,31 +2,61 @@
 
 syntax = "proto3";
 
-package ipfs.core.data_structures;
+package ipfs.unixfs.pb;
 
-// Enum representing the different types of UnixFS nodes.
-enum UnixFSTypeProto {
-  // Represents a file in the UnixFS.
-  FILE = 0;
+// Data represents a UnixFS Data object, which can be a file, directory, symlink, etc.
+message Data {
+  enum DataType {
+    // Raw file data
+    Raw = 0;
+    // Directory
+    Directory = 1;
+    // Regular file
+    File = 2;
+    // Metadata
+    Metadata = 3;
+    // Symlink
+    Symlink = 4;
+    // Hard link
+    HAMTShard = 5;
+  }
 
-  // Represents a directory in the UnixFS.
-  DIRECTORY = 1;
+  // The type of UnixFS node
+  DataType Type = 1;
+
+  // The raw data contained within this node (if any)
+  bytes Data = 2;
+
+  // The size of each block of data (when splitting a file)
+  uint64 filesize = 3;
+
+  // Optional blocksizes for each block of data
+  repeated uint64 blocksizes = 4;
+
+  // Optional hash type for symlinks
+  optional uint64 hashType = 5;
+
+  // Optional fanout for HAMT directories
+  optional uint64 fanout = 6;
+
+  // Optional mode (permissions) for this node
+  optional uint32 mode = 7;
+
+  // Optional modification time (in seconds since epoch)
+  optional int64 mtime = 8;
+
+  // Optional mtime nsecs
+  optional uint32 mtime_nsecs = 9;
 }
 
-// Represents a UnixFS node in IPFS.
-message UnixFSProto {
-  // The type of the node (file or directory).
-  UnixFSTypeProto type = 1;
+// Metadata represents metadata about a UnixFS node
+message Metadata {
+  // MimeType is the mime type of the file
+  string MimeType = 1;
 
-  // The raw data of the node (optional).
-  bytes data = 2;
+  // Size is the size of the file in bytes
+  uint64 Size = 2;
 
-  // The size of each block in bytes.
-  int64 block_size = 3;
-
-  // The total size of the file in bytes.
-  int64 file_size = 4;
-
-  // Sizes of each block (for files).
-  repeated int32 blocksizes = 5;
+  // Additional key-value metadata pairs
+  map<string, string> properties = 3;
 }
