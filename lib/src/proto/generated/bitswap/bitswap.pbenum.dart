@@ -13,22 +13,28 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-/// Enum for WantType
-class WantType extends $pb.ProtobufEnum {
-  static const WantType WANT_TYPE_UNSPECIFIED = WantType._(0, _omitEnumNames ? '' : 'WANT_TYPE_UNSPECIFIED');
-  static const WantType WANT_TYPE_BLOCK = WantType._(1, _omitEnumNames ? '' : 'WANT_TYPE_BLOCK');
-  static const WantType WANT_TYPE_HAVE = WantType._(2, _omitEnumNames ? '' : 'WANT_TYPE_HAVE');
+/// Enum for message types
+class MessageType extends $pb.ProtobufEnum {
+  static const MessageType MESSAGE_TYPE_UNKNOWN = MessageType._(0, _omitEnumNames ? '' : 'MESSAGE_TYPE_UNKNOWN');
+  static const MessageType MESSAGE_TYPE_WANT_BLOCK = MessageType._(1, _omitEnumNames ? '' : 'MESSAGE_TYPE_WANT_BLOCK');
+  static const MessageType MESSAGE_TYPE_WANT_HAVE = MessageType._(2, _omitEnumNames ? '' : 'MESSAGE_TYPE_WANT_HAVE');
+  static const MessageType MESSAGE_TYPE_BLOCK = MessageType._(3, _omitEnumNames ? '' : 'MESSAGE_TYPE_BLOCK');
+  static const MessageType MESSAGE_TYPE_HAVE = MessageType._(4, _omitEnumNames ? '' : 'MESSAGE_TYPE_HAVE');
+  static const MessageType MESSAGE_TYPE_DONT_HAVE = MessageType._(5, _omitEnumNames ? '' : 'MESSAGE_TYPE_DONT_HAVE');
 
-  static const $core.List<WantType> values = <WantType> [
-    WANT_TYPE_UNSPECIFIED,
-    WANT_TYPE_BLOCK,
-    WANT_TYPE_HAVE,
+  static const $core.List<MessageType> values = <MessageType> [
+    MESSAGE_TYPE_UNKNOWN,
+    MESSAGE_TYPE_WANT_BLOCK,
+    MESSAGE_TYPE_WANT_HAVE,
+    MESSAGE_TYPE_BLOCK,
+    MESSAGE_TYPE_HAVE,
+    MESSAGE_TYPE_DONT_HAVE,
   ];
 
-  static final $core.Map<$core.int, WantType> _byValue = $pb.ProtobufEnum.initByValue(values);
-  static WantType? valueOf($core.int value) => _byValue[value];
+  static final $core.Map<$core.int, MessageType> _byValue = $pb.ProtobufEnum.initByValue(values);
+  static MessageType? valueOf($core.int value) => _byValue[value];
 
-  const WantType._($core.int v, $core.String n) : super(v, n);
+  const MessageType._($core.int v, $core.String n) : super(v, n);
 }
 
 class BlockPresence_Type extends $pb.ProtobufEnum {
