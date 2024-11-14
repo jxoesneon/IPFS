@@ -440,4 +440,7 @@ class NetworkHandler {
       return false;
     }
   }
+
+  /// Gets the peer ID of this node
+  String get peerID => _router.localPeerId.toString();
 }
