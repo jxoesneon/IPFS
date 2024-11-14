@@ -597,6 +597,8 @@ class P2plibRouter {
       return '';
     }
   }
+
+  p2p.PeerId get localPeerId => _router.selfId;
 }
 
 mixin MultiAddressHandler {
