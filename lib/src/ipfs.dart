@@ -1,3 +1,4 @@
+// src/ipfs.dart
 import 'dart:typed_data';
 import 'network/router.dart';
 import 'storage/datastore.dart';
@@ -7,8 +8,6 @@ import 'core/data_structures/link.dart';
 import 'core/data_structures/peer.dart';
 import 'core/data_structures/node_stats.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-
-// lib/src/ipfs.dart
 
 // Main API class for interacting with the IPFS server
 class IPFS {
@@ -29,7 +28,8 @@ class IPFS {
   /// You can optionally provide an [IPFSConfig] object to customize
   /// the node's configuration.
   static Future<IPFS> create({IPFSConfig? config}) async {
-    final node = IPFSNode(config ?? IPFSConfig());
+    config ??= IPFSConfig();
+    final node = await IPFSNode.create(config);
     return IPFS._(node);
   }
 
