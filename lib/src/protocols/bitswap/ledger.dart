@@ -1,3 +1,4 @@
+// src/protocols/bitswap/ledger.dart
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
@@ -63,7 +64,7 @@ class BitLedger {
     for (var block in message.blocks) {
       if (block.data.isNotEmpty) {
         storeBlockData(
-            base64.encode(block.prefix), Uint8List.fromList(block.data));
+            base64.encode(block.cid), Uint8List.fromList(block.data));
       }
     }
   }
