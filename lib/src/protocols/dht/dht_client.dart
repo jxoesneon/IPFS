@@ -1,6 +1,8 @@
+// src/protocols/dht/dht_client.dart
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
@@ -309,7 +311,8 @@ class DHTClient {
 
   /// Initialize the routing table with bootstrap peers
   Future<void> _initializeRoutingTable() async {
-    final bootstrapPeers = node.config.network.bootstrapPeers;
+    final bootstrapPeers =
+        node.container.get<IPFSConfig>().network.bootstrapPeers;
     for (final peerAddr in bootstrapPeers) {
       try {
         final peer = await _connectToPeer(peerAddr);
