@@ -180,7 +180,7 @@ class BitswapHandler {
         continue;
       }
 
-      _blockStore.addBlock(block.toProto());
+      _blockStore.putBlock(block);
 
       final cidStr = block.cid.encode();
       // Complete pending request if exists
