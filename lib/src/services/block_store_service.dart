@@ -1,3 +1,4 @@
+// src/services/block_store_service.dart
 import 'package:protobuf/protobuf.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
@@ -15,7 +16,7 @@ class BlockStoreService extends BlockStoreServiceBase {
   Future<AddBlockResponse> addBlock(
       ServerContext ctx, BlockProto request) async {
     final block = Block.fromProto(request);
-    return _blockStore.addBlock(block.toProto());
+    return _blockStore.putBlock(block);
   }
 
   @override
@@ -36,6 +37,6 @@ class BlockStoreService extends BlockStoreServiceBase {
     if (blocks.isEmpty) {
       return BlockProto();
     }
-    return blocks.first;
+    return blocks.first.toProto();
   }
 }
