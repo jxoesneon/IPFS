@@ -61,17 +61,25 @@ class PinManager {
 
   Future<Set<String>?> _getBlockReferences(String cidStr) async {
     try {
-      final cidProto = IPFSCIDProto()..multihash = cidStr.codeUnits;
-      final block = await _blockStore.getBlock(cidProto.toString());
-      if (!block.found) return null;
+      final cidProto = IPFSCIDProto()
+        ..codec = 'raw'
+        ..multihash = Uint8List.fromList(cidStr.codeUnits)
+        ..version = IPFSCIDVersion.IPFS_CID_VERSION_1;
+
+      final blockResult = await _blockStore.getBlock(cidProto.toString());
+
+      // Early return if block not found or doesn't have a block
+      if (!blockResult.found || !blockResult.hasBlock()) {
+        return null;
+      }
 
       final references = Set<String>();
-      final format = block.block.format;
+      final format = blockResult.block.format;
 
       switch (format) {
         case 'dag-pb':
-          final dagNode =
-              MerkleDAGNode.fromBytes(Uint8List.fromList(block.block.data));
+          final dagNode = MerkleDAGNode.fromBytes(
+              Uint8List.fromList(blockResult.block.data));
           for (final link in dagNode.links) {
             references.add(link.cid.toString());
           }
@@ -79,7 +87,7 @@ class PinManager {
 
         case 'dag-cbor':
           final decoded =
-              await _decodeCbor(Uint8List.fromList(block.block.data));
+              await _decodeCbor(Uint8List.fromList(blockResult.block.data));
           references.addAll(_extractCborReferences(decoded));
           break;
 
