@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package ipld;
+
+// Main message wrapping all IPLD value types
+message IPLDNode {
+  // The kind of value stored
+  Kind kind = 1;
+  
+  // Only one of these fields will be set based on the kind
+  oneof value {
+    // Basic types
+    bool bool_value = 2;
+    sint64 int_value = 3;
+    double float_value = 4;
+    string string_value = 5;
+    bytes bytes_value = 6;
+    
+    // Complex types
+    IPLDList list_value = 7;
+    IPLDMap map_value = 8;
+    IPLDLink link_value = 9;
+    
+    // Special case: big integers that don't fit in sint64
+    bytes big_int_value = 10;
+  }
+}
+
+// Enumeration of all possible IPLD kinds
+enum Kind {
+  NULL = 0;
+  BOOL = 1;
+  INTEGER = 2;
+  FLOAT = 3;
+  STRING = 4;
+  BYTES = 5;
+  LIST = 6;
+  MAP = 7;
+  LINK = 8;
+  BIG_INT = 9;
+}
+
+// Represents an ordered sequence of IPLD values
+message IPLDList {
+  repeated IPLDNode values = 1;
+}
+
+// Represents key-value associations
+message IPLDMap {
+  repeated MapEntry entries = 1;
+}
+
+// Individual map entry
+message MapEntry {
+  string key = 1;
+  IPLDNode value = 2;
+}
+
+// Represents a CID link
+message IPLDLink {
+  // CID version (0 or 1)
+  uint32 version = 1;
+  
+  // Codec of the target content
+  string codec = 2;
+  
+  // Multihash of the target content
+  bytes multihash = 3;
+} 
