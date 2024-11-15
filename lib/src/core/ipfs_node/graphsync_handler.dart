@@ -5,6 +5,7 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
+import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
 
 /// Handles Graphsync protocol operations for an IPFS node
 class GraphsyncHandler {
@@ -72,7 +73,7 @@ class GraphsyncHandler {
   /// Requests a graph of blocks starting from the given root CID
   Future<List<Block>> requestGraph(
     String rootCid, {
-    List<String> selector = const ['links'],
+    IPLDSelector? selector,
     Duration timeout = const Duration(seconds: 30),
   }) async {
     _logger.debug('Requesting graph for root CID: $rootCid');
@@ -81,14 +82,15 @@ class GraphsyncHandler {
       final request = _GraphsyncRequest(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         rootCid: rootCid,
-        selector: selector,
+        selector: selector ?? IPLDSelector.all(),
         timeout: timeout,
       );
 
       _activeRequests[request.id] = request;
       _logger.verbose('Created request ${request.id} for CID: $rootCid');
 
-      final blocks = await _traverseGraph(rootCid, selector);
+      final blocks =
+          await _traverseGraph(rootCid, selector ?? IPLDSelector.all());
 
       _logger.debug('Retrieved ${blocks.length} blocks for CID: $rootCid');
       return blocks;
@@ -102,7 +104,7 @@ class GraphsyncHandler {
 
   /// Responds to a graph request by providing the requested blocks
   Future<void> respondToRequest(
-      String requestId, String rootCid, List<String> selector) async {
+      String requestId, String rootCid, IPLDSelector selector) async {
     _logger.debug('Responding to request $requestId for CID: $rootCid');
 
     try {
@@ -126,13 +128,12 @@ class GraphsyncHandler {
   }
 
   Future<List<Block>> _traverseGraph(
-      String rootCid, List<String> selector) async {
+      String rootCid, IPLDSelector selector) async {
     final blocks = <Block>[];
     final visited = <String>{};
     final request = _activeRequests[rootCid];
 
     Future<void> traverse(String cid) async {
-      // Check if request was cancelled
       if (request?._cancelled == true) {
         throw StateError('Request cancelled');
       }
@@ -146,17 +147,121 @@ class GraphsyncHandler {
         final block = Block.fromProto(blockProto);
         blocks.add(block);
 
-        if (selector.contains('links')) {
-          final node = MerkleDAGNode.fromBytes(block.data);
-          for (final link in node.links) {
-            await traverse(link.cid.toString());
-          }
+        switch (selector.type) {
+          case SelectorType.all:
+            final node = MerkleDAGNode.fromBytes(block.data);
+            for (final link in node.links) {
+              await traverse(link.cid.toString());
+            }
+            break;
+
+          case SelectorType.none:
+            break;
+
+          case SelectorType.matcher:
+            if (_matchesCriteria(block, selector.criteria)) {
+              final node = MerkleDAGNode.fromBytes(block.data);
+              for (final link in node.links) {
+                await traverse(link.cid.toString());
+              }
+            }
+            break;
+
+          case SelectorType.recursive:
+            if (selector.maxDepth == null ||
+                visited.length <= selector.maxDepth!) {
+              final node = MerkleDAGNode.fromBytes(block.data);
+              if (!selector.stopAtLink!) {
+                for (final link in node.links) {
+                  await traverse(link.cid.toString());
+                }
+              }
+            }
+            break;
+
+          case SelectorType.explore:
+            if (selector.fieldPath != null) {
+              final node = MerkleDAGNode.fromBytes(block.data);
+              final value = _resolveFieldPath(node, selector.fieldPath!);
+              if (value is String && value.startsWith('ipfs://')) {
+                await traverse(value.substring(7));
+              }
+            }
+            break;
+
+          case SelectorType.union:
+            final node = MerkleDAGNode.fromBytes(block.data);
+            for (final subSelector in selector.subSelectors ?? []) {
+              if (_matchesCriteria(block, subSelector.criteria)) {
+                for (final link in node.links) {
+                  await traverse(link.cid.toString());
+                }
+                break;
+              }
+            }
+            break;
+
+          case SelectorType.intersection:
+          case SelectorType.condition:
+            final node = MerkleDAGNode.fromBytes(block.data);
+            if (_matchesCriteria(block, selector.criteria)) {
+              for (final link in node.links) {
+                await traverse(link.cid.toString());
+              }
+            }
+            break;
         }
       }
     }
 
     await traverse(rootCid);
     return blocks;
+  }
+
+  bool _matchesCriteria(Block block, Map<String, dynamic> criteria) {
+    if (criteria.isEmpty) return true;
+
+    try {
+      final node = MerkleDAGNode.fromBytes(block.data);
+      for (final entry in criteria.entries) {
+        final value = _resolveFieldPath(node, entry.key);
+        if (value == null || value != entry.value) {
+          return false;
+        }
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  dynamic _resolveFieldPath(MerkleDAGNode node, String path) {
+    final parts = path.split('.');
+    dynamic current = node;
+
+    for (final part in parts) {
+      if (current == null) return null;
+      if (current is MerkleDAGNode) {
+        switch (part) {
+          case 'cid':
+            current = current.cid;
+            break;
+          case 'links':
+            current = current.links;
+            break;
+          case 'data':
+            current = current.data;
+            break;
+          default:
+            current = null;
+        }
+      } else if (current is Map) {
+        current = current[part];
+      } else {
+        return null;
+      }
+    }
+    return current;
   }
 
   /// Gets the current status of the Graphsync handler
@@ -173,7 +278,7 @@ class GraphsyncHandler {
 class _GraphsyncRequest {
   final String id;
   final String rootCid;
-  final List<String> selector;
+  final IPLDSelector selector;
   final Duration timeout;
   Timer? _timeoutTimer;
   bool _cancelled = false;
