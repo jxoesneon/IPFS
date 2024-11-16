@@ -11,6 +11,8 @@ environment:
   sdk: '>=3.5.4 <4.0.0'
 
 dependencies:
+  catalyst_cose: ^0.3.0
+
   collection: ^1.19.1
   
   http: ^1.2.2
@@ -25,7 +27,7 @@ dependencies:
   p2plib: ^2.2.2 # Or a suitable libp2p implementation for Dart
 
   # Cryptography
-  crypto: ^3.0.2 # For CID calculation and other cryptographic operations
+  crypto: ^3.0.3 # For CID calculation and other cryptographic operations
 
   # Serialization
   protobuf: ^3.1.0 # Efficient serialization format for messages
@@ -47,17 +49,21 @@ dependencies:
   archive: ^3.6.1
   murmurhash: ^1.0.1
 
-  cbor: ^5.1.0  # Or the latest version
+  cbor: ^6.3.3  # Or the latest version
 
   lz4: ^0.0.1  # Use the latest stable version
 
   shelf_router: ^1.1.4
 
-  intl: ^0.18.0  # Use the latest stable version
+  intl: ^0.20.0  # Use the latest stable version
 
   markdown: ^7.2.2
   synchronized: ^3.3.0+3
   multicast_dns: ^0.3.2+7
+
+  pointycastle: ^3.7.3
+
+  jose: ^0.3.4
 
 dev_dependencies:
   test: ^1.21.0 # For unit and integration tests
