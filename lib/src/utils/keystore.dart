@@ -1,7 +1,8 @@
-// lib/src/utils/keystore.dart
+// src/utils/keystore.dart
 
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:dart_ipfs/src/utils/private_key.dart';
 import 'package:p2plib/p2plib.dart' show Crypto;
 
 class KeyPair {
@@ -13,9 +14,10 @@ class KeyPair {
 
 /// A simple in-memory keystore for managing IPNS key pairs.
 class Keystore {
-  final Map<String, KeyPair> _keyPairs = {};
+  final Map<String, KeyPair> _keyPairs = const {};
+  static const String DEFAULT_KEY = 'self';
 
-  Keystore(config);
+  const Keystore();
 
   /// Adds a new key pair to the keystore.
   void addKeyPair(String name, KeyPair keyPair) {
@@ -96,5 +98,21 @@ class Keystore {
       print('Error verifying signature: $e');
       return false;
     }
+  }
+
+  /// Getter for the default private key
+  IPFSPrivateKey get privateKey {
+    final defaultPair = _keyPairs[DEFAULT_KEY];
+    if (defaultPair == null) {
+      throw StateError('No default key pair found in keystore');
+    }
+    return IPFSPrivateKey.fromString(defaultPair.privateKey);
+  }
+
+  // Named constructor for configuration
+  factory Keystore.withConfig(dynamic config) {
+    final keystore = Keystore();
+    // Initialize with config
+    return keystore;
   }
 }
