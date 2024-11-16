@@ -25,7 +25,7 @@ class DHTHandler implements IDHTHandler {
   static const String _protocolVersion = '1.0.0';
 
   DHTHandler(config, this._router, NetworkHandler networkHandler)
-      : _keystore = Keystore(config),
+      : _keystore = Keystore(),
         _storage = Datastore(config.datastorePath) {
     _storage.init();
     dhtClient = DHTClient(
