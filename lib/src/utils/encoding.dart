@@ -200,29 +200,23 @@ class EncodingUtils {
   }
 
   static const _supportedCodecs = {
-    'identity': 0x00,
-    'raw': 0x55,
-    'dag-pb': 0x70,
-    'dag-protobuf': 0x70, // Alias for dag-pb
-    'dag-cbor': 0x71,
-    'libp2p-key': 0x72,
-    'dag-multicodec': 0x72,
-    'ipld-ns': 0xd1,
-    'ipfs-ns': 0xd2,
-    'dag-json': 0x129,
-    'dag-json-binary': 0x0129,
-    'dag-jose': 0x85,
-    'dag-cose': 0x012b,
-    'git-raw': 0x78,
-    'eth-block': 0x90,
-    'eth-block-list': 0x91,
-    'eth-tx-trie': 0x92,
-    'eth-tx': 0x93,
-    'eth-tx-receipt-trie': 0x94,
-    'eth-tx-receipt': 0x95,
-    'eth-state-trie': 0x96,
-    'eth-account-snapshot': 0x97,
-    'eth-storage-trie': 0x98,
+    // Core IPFS codecs
+    'raw': 0x55, // Raw binary
+    'dag-pb': 0x70, // DAG Protocol Buffer
+    'dag-cbor': 0x71, // DAG CBOR
+    'libp2p-key': 0x72, // Libp2p key
+    'dag-json': 0x0129, // DAG JSON
+    'dag-jose': 0x85, // DAG JOSE
+    'dag-cose': 0x012b, // DAG COSE
+    'car': 0x0202, // Content Addressable aRchive
+
+    // IPFS namespace codecs
+    'ipld-ns': 0x300, // IPLD namespace
+    'ipfs-ns': 0x301, // IPFS namespace
+    'ipns-ns': 0x302, // IPNS namespace
+
+    // Identity codec
+    'identity': 0x00, // Raw identity
   };
 
   /// Get codec code from string representation
