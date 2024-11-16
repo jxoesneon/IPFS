@@ -251,22 +251,36 @@ class EnhancedCBORHandler {
 
   static IPLDNode _convertCIDFromBytes(Uint8List bytes) {
     try {
-      // CIDv0 is a raw SHA-256 multihash
+      // CIDv0: 32-byte SHA-256 hash with 0x12 prefix
       if (bytes.length == 34 && bytes[0] == 0x12 && bytes[1] == 0x20) {
         return IPLDNode()
           ..kind = Kind.LINK
           ..linkValue = (IPLDLink()
             ..version = 0
-            ..codec = 'dag-pb'
+            ..codec = 'dag-pb' // CIDv0 is always dag-pb
             ..multihash = bytes);
       }
 
-      // CIDv1+ format
+      // CIDv1+: <version><multicodec><multihash>
       if (bytes.length > 2) {
         final version = bytes[0];
-        if (version >= 1) {
+        if (version == 1) {
           final codec = _getCodecFromCode(bytes[1]);
           final multihash = bytes.sublist(2);
+
+          // Validate multihash format
+          if (multihash.length < 2) {
+            throw IPLDDecodingError('Invalid multihash length');
+          }
+
+          // Check hash function (first byte) and length (second byte)
+          final hashFn = multihash[0];
+          final hashLen = multihash[1];
+
+          // Validate according to IPFS multihash spec
+          if (!_isValidMultihash(hashFn, hashLen, multihash.sublist(2))) {
+            throw IPLDDecodingError('Invalid multihash format');
+          }
 
           return IPLDNode()
             ..kind = Kind.LINK
@@ -277,7 +291,7 @@ class EnhancedCBORHandler {
         }
       }
 
-      throw IPLDDecodingError('Invalid CID format');
+      throw IPLDDecodingError('Unsupported CID version');
     } catch (e) {
       throw IPLDDecodingError('Failed to decode CID: $e');
     }
@@ -303,5 +317,26 @@ class EnhancedCBORHandler {
           'Unsupported codec code: 0x${code.toRadixString(16)}');
     }
     return codec;
+  }
+
+  // Add helper method for multihash validation
+  static bool _isValidMultihash(int hashFn, int hashLen, List<int> digest) {
+    // IPFS supported hash functions
+    const supportedHashFns = {
+      0x12: 32, // sha2-256: 32 bytes
+      0x13: 64, // sha2-512: 64 bytes
+      0x14: 28, // sha3-512: 28 bytes
+      0x16: 32, // blake2b-256: 32 bytes
+      0x17: 64, // blake2b-512: 64 bytes
+      0x56: 32, // dbl-sha2-256: 32 bytes
+    };
+
+    // Check if hash function is supported
+    if (!supportedHashFns.containsKey(hashFn)) {
+      return false;
+    }
+
+    // Validate digest length matches the expected length
+    return hashLen == supportedHashFns[hashFn] && digest.length == hashLen;
   }
 }
