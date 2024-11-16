@@ -1,3 +1,4 @@
+// src/utils/encoding.dart
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -199,11 +200,19 @@ class EncodingUtils {
   }
 
   static const _supportedCodecs = {
+    'identity': 0x00,
     'raw': 0x55,
     'dag-pb': 0x70,
+    'dag-protobuf': 0x70, // Alias for dag-pb
     'dag-cbor': 0x71,
+    'libp2p-key': 0x72,
+    'dag-multicodec': 0x72,
+    'ipld-ns': 0xd1,
+    'ipfs-ns': 0xd2,
     'dag-json': 0x129,
+    'dag-json-binary': 0x0129,
     'dag-jose': 0x85,
+    'dag-cose': 0x012b,
     'git-raw': 0x78,
     'eth-block': 0x90,
     'eth-block-list': 0x91,
@@ -223,4 +232,7 @@ class EncodingUtils {
     }
     return _supportedCodecs[codec]!;
   }
+
+  /// Add public getter
+  static List<String> get supportedCodecs => _supportedCodecs.keys.toList();
 }
