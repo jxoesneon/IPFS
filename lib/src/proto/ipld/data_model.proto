@@ -2,6 +2,11 @@ syntax = "proto3";
 
 package ipld;
 
+option java_multiple_files = true;
+option go_package = "github.com/ipfs/go-ipfs/ipld";
+
+import "google/protobuf/descriptor.proto";
+
 // Main message wrapping all IPLD value types
 message IPLDNode {
   // The kind of value stored
