@@ -2,46 +2,116 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cbor/enhanced_cbor_handler.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart'
-    show MerkleDAGNode;
-import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
-import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
+import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
+import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
+import 'package:dart_ipfs/src/core/ipld/extensions/ipld_node_json.dart';
+import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart';
+import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
+import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
+import 'package:dart_ipfs/src/utils/encoding.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:dart_ipfs/src/core/ipld/jose_cose_handler.dart';
 
-/// Handles IPLD (InterPlanetary Linked Data) operations for an IPFS node.
+/// Handles IPLD (InterPlanetary Linked Data) operations
 class IPLDHandler {
-  final BlockStore _blockStore;
   final IPFSConfig _config;
+  final BlockStore _blockStore;
+  final Map<String, IPLDSchema> _schemas = {};
   late final Logger _logger;
 
-  // Supported IPLD codecs with their multicodec codes
-  static const Map<String, int> CODECS = {
-    'raw': 0x55,
-    'dag-pb': 0x70,
-    'dag-cbor': 0x71,
-    'dag-json': 0x0129,
-  };
-
-  IPLDHandler(this._blockStore, this._config) {
-    _logger = Logger('IPLDHandler');
-    _logger.debug('Creating new IPLDHandler instance');
+  IPLDHandler(this._config, this._blockStore) {
+    _logger = Logger('IPLDHandler',
+        debug: _config.debug, verbose: _config.verboseLogging);
   }
 
-  /// Creates a CID for the given data and codec
-  Future<CID> _createCID(Uint8List data, String codec) async {
-    return CID.computeForData(data, codec: codec);
+  /// Puts a value into the blockstore
+  Future<Block> put(dynamic value,
+      {String codec = 'dag-cbor', String? schemaType}) async {
+    try {
+      final ipldNode = _toIPLDNode(value);
+
+      // Validate against schema if specified
+      if (schemaType != null) {
+        final schema = _schemas[schemaType];
+        if (schema == null) {
+          throw IPLDSchemaError('Schema not found: $schemaType');
+        }
+
+        final isValid = await schema.validate(schemaType, ipldNode);
+        if (!isValid) {
+          throw IPLDSchemaError('Data does not match schema: $schemaType');
+        }
+      }
+
+      final (encoded, cid) = await _encodeData(ipldNode, codec);
+      final block = await Block.fromData(encoded, format: codec);
+      await _blockStore.putBlock(block);
+      return block;
+    } catch (e) {
+      _logger.error('Failed to put IPLD data', e);
+      rethrow;
+    }
+  }
+
+  /// Gets a value from the blockstore
+  Future<dynamic> get(CID cid) async {
+    try {
+      final block = await _blockStore.getBlock(cid.toString());
+      return await _decodeData(Uint8List.fromList(block.block.data), cid.codec);
+    } catch (e) {
+      _logger.error('Failed to get IPLD data', e);
+      rethrow;
+    }
+  }
+
+  /// Resolves a path through IPLD data
+  Future<dynamic> resolve(CID root, String path) async {
+    if (path.isEmpty) return await get(root);
+
+    final segments = path.split('/');
+    var node = await get(root);
+
+    for (final segment in segments) {
+      if (segment.isEmpty) continue;
+
+      if (node is List) {
+        final index = int.tryParse(segment);
+        if (index == null || index < 0 || index >= node.length) {
+          throw IPLDResolutionError('Invalid array index: $segment');
+        }
+        node = node[index];
+        continue;
+      }
+
+      if (node is Map) {
+        if (!node.containsKey(segment)) {
+          throw IPLDResolutionError('Property not found: $segment');
+        }
+        final value = node[segment];
+        if (value is String && value.startsWith('ipfs://')) {
+          return await get(CID.decode(value.substring(7)));
+        }
+        node = value;
+        continue;
+      }
+
+      throw IPLDResolutionError('Cannot traverse: invalid node type');
+    }
+
+    return node;
   }
 
   /// Encodes data using the specified codec
   Future<(Uint8List, CID)> _encodeData(IPLDNode node, String codec) async {
-    late Uint8List encoded;
+    Uint8List encoded;
 
     switch (codec) {
       case 'raw':
@@ -52,16 +122,17 @@ class IPLDHandler {
         break;
 
       case 'dag-pb':
-        if (node.kind != Kind.MAP) {
-          throw IPLDEncodingError('DAG-PB codec requires map data');
+        try {
+          final dagNode = await _convertToMerkleDAGNode(node);
+          encoded = dagNode.toBytes();
+        } catch (e) {
+          throw IPLDEncodingError('Failed to encode DAG-PB: $e');
         }
-        final dagNode = await _convertToMerkleDAGNode(node);
-        encoded = dagNode.toBytes();
         break;
 
       case 'dag-cbor':
         try {
-          encoded = Uint8List.fromList(node.writeToBuffer());
+          encoded = await EnhancedCBORHandler.encodeCbor(node);
         } catch (e) {
           throw IPLDEncodingError('Failed to encode CBOR: $e');
         }
@@ -69,9 +140,17 @@ class IPLDHandler {
 
       case 'dag-json':
         try {
-          encoded = Uint8List.fromList(utf8.encode(node.writeToJson()));
+          encoded = Uint8List.fromList(utf8.encode(node.toJson()));
         } catch (e) {
           throw IPLDEncodingError('Failed to encode JSON: $e');
+        }
+        break;
+
+      case 'dag-jose':
+        try {
+          encoded = await _encodeJose(node);
+        } catch (e) {
+          throw IPLDEncodingError('Failed to encode JOSE: $e');
         }
         break;
 
@@ -79,7 +158,7 @@ class IPLDHandler {
         throw UnsupportedError('Unsupported codec: $codec');
     }
 
-    final cid = await _createCID(encoded, codec);
+    final cid = await CID.computeForData(encoded, codec: codec);
     return (encoded, cid);
   }
 
@@ -94,14 +173,14 @@ class IPLDHandler {
       case 'dag-pb':
         try {
           final dagNode = MerkleDAGNode.fromBytes(data);
-          return _convertFromMerkleDAGNode(dagNode);
+          return EnhancedCBORHandler.convertFromMerkleDAGNode(dagNode);
         } catch (e) {
           throw IPLDDecodingError('Failed to decode DAG-PB: $e');
         }
 
       case 'dag-cbor':
         try {
-          return IPLDNode.fromBuffer(data);
+          return await EnhancedCBORHandler.decodeCborWithTags(data);
         } catch (e) {
           throw IPLDDecodingError('Failed to decode CBOR: $e');
         }
@@ -113,90 +192,50 @@ class IPLDHandler {
           throw IPLDDecodingError('Failed to decode JSON: $e');
         }
 
+      case 'dag-jose':
+        try {
+          return await _decodeJose(data);
+        } catch (e) {
+          throw IPLDDecodingError('Failed to decode JOSE: $e');
+        }
+
       default:
         throw UnsupportedError('Unsupported codec: $codec');
     }
   }
 
-  /// Puts a node into the blockstore with the specified codec
-  Future<Block> put(
-    dynamic value, {
-    String codec = 'dag-cbor',
-    String? hashAlg,
-  }) async {
-    try {
-      // Convert to protobuf IPLDNode
-      final ipldNode = _toIPLDNode(value);
-      final (encoded, cid) = await _encodeData(ipldNode, codec);
-
-      final block = await Block.fromData(encoded, format: codec);
-      await _blockStore.putBlock(block);
-      return block;
-    } catch (e) {
-      _logger.error('Failed to put IPLD data', e);
-      rethrow;
+  Future<MerkleDAGNode> _convertToMerkleDAGNode(IPLDNode node) async {
+    if (node.kind != Kind.MAP) {
+      throw IPLDEncodingError('Cannot convert non-map to MerkleDAGNode');
     }
-  }
 
-  /// Gets and decodes a node from the blockstore
-  Future<dynamic> get(CID cid) async {
-    try {
-      final block = await _blockStore.getBlock(cid.toString());
-      final decoded =
-          await _decodeData(Uint8List.fromList(block.block.data), cid.codec);
-      return _toIPLDNode(decoded);
-    } catch (e) {
-      _logger.error('Failed to get IPLD data', e);
-      rethrow;
-    }
-  }
+    final data = node.mapValue.entries
+        .firstWhere((e) => e.key == 'Data', orElse: () => MapEntry())
+        .value
+        .bytesValue;
 
-  /// Resolves an IPLD path
-  Future<dynamic> resolve(String path) async {
-    _logger.debug('Resolving IPLD path: $path');
+    final linkEntries = node.mapValue.entries
+        .firstWhere((e) => e.key == 'Links', orElse: () => MapEntry())
+        .value
+        .listValue
+        .values;
 
-    try {
-      final segments = path.split('/').where((s) => s.isNotEmpty).toList();
-      if (segments.isEmpty) {
-        throw IPLDResolutionError('Empty path');
+    final List<Link> links = linkEntries.map((linkNode) {
+      if (linkNode.kind != Kind.MAP) {
+        throw IPLDEncodingError('Invalid link format');
       }
+      return EnhancedCBORHandler.convertToMerkleLink(linkNode);
+    }).toList();
 
-      final rootCid = CID.decode(segments[0]);
-      var current = await get(rootCid);
-
-      for (var i = 1; i < segments.length && current != null; i++) {
-        current = await _resolvePathSegment(current, segments[i]);
-      }
-
-      return current;
-    } catch (e, stackTrace) {
-      _logger.error('Failed to resolve path', e, stackTrace);
-      rethrow;
-    }
-  }
-
-  /// Resolves a single path segment within an IPLD node
-  Future<dynamic> _resolvePathSegment(dynamic node, String segment) async {
-    if (node is MerkleDAGNode) {
-      final link = node.links.firstWhere(
-        (l) => l.name == segment,
-        orElse: () => throw IPLDResolutionError('Link not found: $segment'),
-      );
-      return await get(CID.decode(link.cid.toString()));
-    }
-
-    if (node is Map) {
-      if (!node.containsKey(segment)) {
-        throw IPLDResolutionError('Property not found: $segment');
-      }
-      final value = node[segment];
-      if (value is String && value.startsWith('ipfs://')) {
-        return await get(CID.decode(value.substring(7)));
-      }
-      return value;
-    }
-
-    throw IPLDResolutionError('Cannot traverse: invalid node type');
+    return MerkleDAGNode(
+      cid: await CID.computeForData(Uint8List.fromList(data), codec: 'dag-pb'),
+      links: links,
+      data: Uint8List.fromList(data),
+      size: data.length,
+      timestamp: DateTime.now().millisecondsSinceEpoch,
+      metadata: {},
+      isDirectory: false,
+    );
   }
 
   /// Starts the IPLD handler
@@ -228,7 +267,7 @@ class IPLDHandler {
   /// Gets the status of the IPLD handler
   Future<Map<String, dynamic>> getStatus() async {
     return {
-      'supported_codecs': CODECS.keys.toList(),
+      'supported_codecs': EncodingUtils.supportedCodecs,
       'enabled': _config.enableIPLD,
     };
   }
@@ -325,6 +364,79 @@ class IPLDHandler {
             }
           }
           break;
+
+        case SelectorType.exploreRecursive:
+          if (currentSelector.maxDepth != null &&
+              visited.length > currentSelector.maxDepth!) {
+            return;
+          }
+          results.add(node);
+          if (node is Map) {
+            for (final value in node.values) {
+              if (value is String && value.startsWith('ipfs://')) {
+                final linkedCid = CID.decode(value.substring(7));
+                await traverse(linkedCid, currentSelector);
+              }
+            }
+          }
+          break;
+
+        case SelectorType.exploreUnion:
+          for (final subSelector in currentSelector.subSelectors ?? []) {
+            await traverse(cid, subSelector);
+          }
+          break;
+
+        case SelectorType.exploreAll:
+          results.add(node);
+          if (node is Map) {
+            for (final value in node.values) {
+              if (value is String && value.startsWith('ipfs://')) {
+                final linkedCid = CID.decode(value.substring(7));
+                await traverse(linkedCid, currentSelector);
+              }
+            }
+          }
+          break;
+
+        case SelectorType.exploreRange:
+          if (node is List) {
+            final start = currentSelector.startIndex ?? 0;
+            final end = currentSelector.endIndex ?? node.length;
+            for (var i = start; i < end && i < node.length; i++) {
+              final value = node[i];
+              if (value is String && value.startsWith('ipfs://')) {
+                final linkedCid = CID.decode(value.substring(7));
+                await traverse(linkedCid, currentSelector.subSelectors!.first);
+              }
+            }
+          }
+          break;
+
+        case SelectorType.exploreFields:
+          if (node is Map) {
+            for (final field in currentSelector.fields ?? []) {
+              final value = node[field];
+              if (value is String && value.startsWith('ipfs://')) {
+                final linkedCid = CID.decode(value.substring(7));
+                await traverse(linkedCid, currentSelector.subSelectors!.first);
+              }
+            }
+          }
+          break;
+
+        case SelectorType.exploreIndex:
+          if (node is List) {
+            final index = currentSelector.startIndex ?? 0;
+            if (index >= 0 && index < node.length) {
+              final value = node[index];
+              if (value is String && value.startsWith('ipfs://')) {
+                final linkedCid = CID.decode(value.substring(7));
+                await traverse(linkedCid, currentSelector.subSelectors!.first);
+              }
+            }
+          }
+          break;
       }
     }
 
@@ -390,134 +502,6 @@ class IPLDHandler {
     return value == criterion;
   }
 
-  Future<MerkleDAGNode> _convertToMerkleDAGNode(IPLDNode node) async {
-    if (node.kind != Kind.MAP) {
-      throw IPLDEncodingError('Cannot convert non-map to MerkleDAGNode');
-    }
-
-    final data = node.mapValue.entries
-        .firstWhere((e) => e.key == 'Data', orElse: () => MapEntry())
-        .value
-        .bytesValue;
-
-    final linkEntries = node.mapValue.entries
-        .firstWhere((e) => e.key == 'Links', orElse: () => MapEntry())
-        .value
-        .listValue
-        .values;
-
-    final List<Link> links = linkEntries.map((linkNode) {
-      if (linkNode.kind != Kind.MAP) {
-        throw IPLDEncodingError('Invalid link format');
-      }
-      return _convertToMerkleLink(linkNode);
-    }).toList();
-
-    return MerkleDAGNode(
-      cid: await CID.computeForData(Uint8List.fromList(data), codec: 'dag-pb'),
-      links: links,
-      data: Uint8List.fromList(data),
-      size: data.length,
-      timestamp: DateTime.now().millisecondsSinceEpoch,
-      metadata: {},
-      isDirectory: false,
-    );
-  }
-
-  IPLDNode _convertFromMerkleDAGNode(MerkleDAGNode dagNode) {
-    final links = IPLDList()
-      ..values.addAll(
-        dagNode.links.map(_convertFromMerkleLink),
-      );
-
-    return IPLDNode()
-      ..kind = Kind.MAP
-      ..mapValue = (IPLDMap()
-        ..entries.addAll([
-          MapEntry()
-            ..key = 'Data'
-            ..value = (IPLDNode()
-              ..kind = Kind.BYTES
-              ..bytesValue = dagNode.data),
-          MapEntry()
-            ..key = 'Links'
-            ..value = (IPLDNode()
-              ..kind = Kind.LIST
-              ..listValue = links),
-        ]));
-  }
-
-  Link _convertToMerkleLink(IPLDNode node) {
-    if (node.kind != Kind.MAP) {
-      throw IPLDEncodingError('Cannot convert non-map to Link');
-    }
-
-    final map = node.mapValue.entries;
-    return Link(
-      name: map.firstWhere((e) => e.key == 'Name').value.stringValue,
-      cid: Uint8List.fromList(
-          map.firstWhere((e) => e.key == 'Cid').value.bytesValue),
-      hash: Uint8List.fromList(
-          map.firstWhere((e) => e.key == 'Hash').value.bytesValue),
-      size: map.firstWhere((e) => e.key == 'Size').value.intValue.toInt(),
-      metadata: map
-          .firstWhere((e) => e.key == 'Metadata', orElse: () => MapEntry())
-          .value
-          .mapValue
-          .entries
-          .fold<Map<String, String>>(
-              {}, (map, e) => map..[e.key] = e.value.stringValue),
-    );
-  }
-
-  IPLDNode _convertFromMerkleLink(Link link) {
-    final entries = [
-      MapEntry()
-        ..key = 'Name'
-        ..value = (IPLDNode()
-          ..kind = Kind.STRING
-          ..stringValue = link.name),
-      MapEntry()
-        ..key = 'Cid'
-        ..value = (IPLDNode()
-          ..kind = Kind.BYTES
-          ..bytesValue = link.cid),
-      MapEntry()
-        ..key = 'Hash'
-        ..value = (IPLDNode()
-          ..kind = Kind.BYTES
-          ..bytesValue = link.hash),
-      MapEntry()
-        ..key = 'Size'
-        ..value = (IPLDNode()
-          ..kind = Kind.INTEGER
-          ..intValue = link.size),
-    ];
-
-    if (link.metadata != null) {
-      entries.add(
-        MapEntry()
-          ..key = 'Metadata'
-          ..value = (IPLDNode()
-            ..kind = Kind.MAP
-            ..mapValue = (IPLDMap()
-              ..entries.addAll(
-                link.metadata!.entries.map(
-                  (e) => MapEntry()
-                    ..key = e.key
-                    ..value = (IPLDNode()
-                      ..kind = Kind.STRING
-                      ..stringValue = e.value),
-                ),
-              ))),
-      );
-    }
-
-    return IPLDNode()
-      ..kind = Kind.MAP
-      ..mapValue = (IPLDMap()..entries.addAll(entries));
-  }
-
   IPLDNode _toIPLDNode(dynamic value) {
     final node = IPLDNode();
 
@@ -569,7 +553,7 @@ class IPLDHandler {
         ..codec = value.codec
         ..multihash = value.multihash;
     } else if (value is MerkleDAGNode) {
-      return _convertFromMerkleDAGNode(value);
+      return EnhancedCBORHandler.convertFromMerkleDAGNode(value);
     } else {
       throw IPLDEncodingError('Unsupported value type: ${value.runtimeType}');
     }
@@ -589,5 +573,82 @@ class IPLDHandler {
     }
     result[0] = isNegative ? 1 : 0;
     return result;
+  }
+
+  Future<Uint8List> _encodeJose(IPLDNode node) async {
+    if (node.kind != Kind.MAP) {
+      throw IPLDEncodingError('JOSE encoding requires a map structure');
+    }
+
+    final header =
+        node.mapValue.entries.firstWhere((e) => e.key == 'header').value;
+
+    final algorithm = header.mapValue.entries
+        .firstWhere((e) => e.key == 'alg')
+        .value
+        .stringValue;
+
+    switch (algorithm) {
+      case 'JWS':
+        return await JoseCoseHandler.encodeJWS(
+            node, _config.keystore.privateKey);
+      case 'JWE':
+        final recipientKey = await _getRecipientKey(node);
+        return await JoseCoseHandler.encodeJWE(node, recipientKey);
+      case 'COSE':
+        return await JoseCoseHandler.encodeCOSE(
+            node, _config.keystore.privateKey);
+      default:
+        throw IPLDEncodingError('Unsupported JOSE algorithm: $algorithm');
+    }
+  }
+
+  Future<IPLDNode> _decodeJose(Uint8List data) async {
+    final joseData = json.decode(utf8.decode(data));
+
+    final header =
+        json.decode(utf8.decode(base64Url.decode(joseData['protected'])));
+    final payload = base64Url.decode(joseData['payload']);
+
+    return IPLDNode()
+      ..kind = Kind.MAP
+      ..mapValue = (IPLDMap()
+        ..entries.addAll([
+          MapEntry()
+            ..key = 'header'
+            ..value = (IPLDNode()
+              ..kind = Kind.MAP
+              ..mapValue = (IPLDMap()
+                ..entries.addAll([
+                  MapEntry()
+                    ..key = 'alg'
+                    ..value = (IPLDNode()
+                      ..kind = Kind.STRING
+                      ..stringValue = header['alg']),
+                ]))),
+          MapEntry()
+            ..key = 'payload'
+            ..value = (IPLDNode()
+              ..kind = Kind.BYTES
+              ..bytesValue = payload),
+        ]));
+  }
+
+  /// Registers an IPLD schema
+  void registerSchema(String name, Map<String, dynamic> schema) {
+    _schemas[name] = IPLDSchema(name, schema);
+  }
+
+  Future<List<int>> _getRecipientKey(IPLDNode node) async {
+    final header =
+        node.mapValue.entries.firstWhere((e) => e.key == 'header').value;
+    final recipientEntry =
+        header.mapValue.entries.firstWhere((e) => e.key == 'recipient');
+
+    if (recipientEntry.value.kind != Kind.BYTES) {
+      throw IPLDEncodingError('Recipient key must be bytes');
+    }
+
+    return recipientEntry.value.bytesValue.toList();
   }
 }
