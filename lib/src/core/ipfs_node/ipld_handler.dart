@@ -377,15 +377,23 @@ class IPLDHandler {
       switch (currentSelector.type) {
         case SelectorType.all:
           results.add(node);
-          if (node is MerkleDAGNode) {
-            for (final link in node.links) {
-              await traverse(CID.decode(link.cid.toString()), currentSelector);
-            }
-          }
+          await _traverseLinks(node, (link) => traverse(link, currentSelector));
           break;
 
         case SelectorType.none:
-          // None selector explicitly matches nothing
+          break;
+
+        case SelectorType.explore:
+          if (currentSelector.fieldPath != null) {
+            final value = _resolveFieldPath(node, currentSelector.fieldPath!);
+            if (value != null &&
+                currentSelector.subSelectors?.isNotEmpty == true) {
+              if (value is String && _isCIDLink(value)) {
+                final linkedCid = await _resolveCIDLink(value);
+                await traverse(linkedCid, currentSelector.subSelectors!.first);
+              }
+            }
+          }
           break;
 
         case SelectorType.matcher:
@@ -394,37 +402,19 @@ class IPLDHandler {
           }
           break;
 
-        case SelectorType.explore:
-          // Explore selector traverses specific paths
-          if (currentSelector.fieldPath != null) {
-            final value = _resolveFieldPath(node, currentSelector.fieldPath!);
-            if (value != null &&
-                value is String &&
-                value.startsWith('ipfs://')) {
-              final linkedCid = CID.decode(value.substring(7));
-              for (final subSelector in currentSelector.subSelectors ?? []) {
-                await traverse(linkedCid, subSelector);
+        case SelectorType.recursive:
+          if (currentSelector.maxDepth == null ||
+              visited.length <= currentSelector.maxDepth!) {
+            if (currentSelector.subSelectors?.isNotEmpty == true) {
+              final subSelector = currentSelector.subSelectors!.first;
+              if (_matchesCriteria(node, subSelector.criteria)) {
+                results.add(node);
               }
             }
-          }
-          break;
 
-        case SelectorType.recursive:
-          if (currentSelector.maxDepth != null &&
-              visited.length > currentSelector.maxDepth!) {
-            return;
-          }
-
-          if (currentSelector.subSelectors?.isNotEmpty ?? false) {
-            final subSelector = currentSelector.subSelectors!.first;
-            if (_matchesCriteria(node, subSelector.criteria)) {
-              results.add(node);
-            }
-          }
-
-          if (node is MerkleDAGNode && !(currentSelector.stopAtLink ?? false)) {
-            for (final link in node.links) {
-              await traverse(CID.decode(link.cid.toString()), currentSelector);
+            if (!(currentSelector.stopAtLink ?? false)) {
+              await _traverseLinks(
+                  node, (link) => traverse(link, currentSelector));
             }
           }
           break;
@@ -436,94 +426,12 @@ class IPLDHandler {
           break;
 
         case SelectorType.intersection:
-          final matchesAll =
-              (currentSelector.subSelectors ?? []).every((subSelector) {
-            return _matchesCriteria(node, subSelector.criteria);
-          });
-          if (matchesAll) {
+          if (currentSelector.subSelectors?.every(
+                  (selector) => _matchesCriteria(node, selector.criteria)) ??
+              false) {
             results.add(node);
-          }
-          break;
-
-        case SelectorType.condition:
-          // Condition selector evaluates a condition before traversing
-          if (_matchesCriteria(node, currentSelector.criteria)) {
-            for (final subSelector in currentSelector.subSelectors ?? []) {
-              await traverse(cid, subSelector);
-            }
-          }
-          break;
-
-        case SelectorType.exploreRecursive:
-          if (currentSelector.maxDepth != null &&
-              visited.length > currentSelector.maxDepth!) {
-            return;
-          }
-          results.add(node);
-          if (node is Map) {
-            for (final value in node.values) {
-              if (value is String && value.startsWith('ipfs://')) {
-                final linkedCid = CID.decode(value.substring(7));
-                await traverse(linkedCid, currentSelector);
-              }
-            }
-          }
-          break;
-
-        case SelectorType.exploreUnion:
-          for (final subSelector in currentSelector.subSelectors ?? []) {
-            await traverse(cid, subSelector);
-          }
-          break;
-
-        case SelectorType.exploreAll:
-          results.add(node);
-          if (node is Map) {
-            for (final value in node.values) {
-              if (value is String && value.startsWith('ipfs://')) {
-                final linkedCid = CID.decode(value.substring(7));
-                await traverse(linkedCid, currentSelector);
-              }
-            }
-          }
-          break;
-
-        case SelectorType.exploreRange:
-          if (node is List) {
-            final start = currentSelector.startIndex ?? 0;
-            final end = currentSelector.endIndex ?? node.length;
-            for (var i = start; i < end && i < node.length; i++) {
-              final value = node[i];
-              if (value is String && value.startsWith('ipfs://')) {
-                final linkedCid = CID.decode(value.substring(7));
-                await traverse(linkedCid, currentSelector.subSelectors!.first);
-              }
-            }
-          }
-          break;
-
-        case SelectorType.exploreFields:
-          if (node is Map) {
-            for (final field in currentSelector.fields ?? []) {
-              final value = node[field];
-              if (value is String && value.startsWith('ipfs://')) {
-                final linkedCid = CID.decode(value.substring(7));
-                await traverse(linkedCid, currentSelector.subSelectors!.first);
-              }
-            }
-          }
-          break;
-
-        case SelectorType.exploreIndex:
-          if (node is List) {
-            final index = currentSelector.startIndex ?? 0;
-            if (index >= 0 && index < node.length) {
-              final value = node[index];
-              if (value is String && value.startsWith('ipfs://')) {
-                final linkedCid = CID.decode(value.substring(7));
-                await traverse(linkedCid, currentSelector.subSelectors!.first);
-              }
-            }
+            await _traverseLinks(
+                node, (link) => traverse(link, currentSelector));
           }
           break;
       }
@@ -531,6 +439,21 @@ class IPLDHandler {
 
     await traverse(rootCid, selector);
     return results;
+  }
+
+  Future<void> _traverseLinks(
+      dynamic node, Future<void> Function(CID) callback) async {
+    if (node is MerkleDAGNode) {
+      for (final link in node.links) {
+        await callback(CID.decode(link.cid.toString()));
+      }
+    } else if (node is Map) {
+      for (final value in node.values) {
+        if (value is String && _isCIDLink(value)) {
+          await callback(await _resolveCIDLink(value));
+        }
+      }
+    }
   }
 
   bool _matchesCriteria(dynamic node, Map<String, dynamic> criteria) {
