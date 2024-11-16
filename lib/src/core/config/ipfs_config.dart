@@ -9,6 +9,7 @@ import 'package:dart_ipfs/src/core/config/dht_config.dart';
 import 'package:dart_ipfs/src/core/config/storage_config.dart';
 import 'package:dart_ipfs/src/core/config/metrics_config.dart';
 import 'package:dart_ipfs/src/core/config/security_config.dart';
+import 'package:dart_ipfs/src/utils/keystore.dart';
 
 /// Configuration for the IPFS node
 class IPFSConfig {
@@ -37,6 +38,9 @@ class IPFSConfig {
   final Duration garbageCollectionInterval;
   final bool garbageCollectionEnabled;
   final MetricsConfig metrics;
+  final String dataPath;
+  final Keystore keystore;
+  final Map<String, dynamic> customConfig;
 
   IPFSConfig({
     this.network = const NetworkConfig(),
@@ -64,60 +68,15 @@ class IPFSConfig {
     this.garbageCollectionInterval = const Duration(hours: 24),
     this.garbageCollectionEnabled = true,
     this.metrics = const MetricsConfig(),
+    this.dataPath = './ipfs_data',
+    this.keystore = const Keystore(),
+    this.customConfig = const {},
   }) : nodeId = nodeId ?? _generateDefaultNodeId();
 
-  factory IPFSConfig.withGeneratedId({
-    NetworkConfig network = const NetworkConfig(),
-    DHTConfig dht = const DHTConfig(),
-    StorageConfig storage = const StorageConfig(),
-    SecurityConfig security = const SecurityConfig(),
-    bool debug = true,
-    bool verboseLogging = true,
-    bool enablePubSub = true,
-    bool enableDHT = true,
-    bool enableCircuitRelay = true,
-    bool enableContentRouting = true,
-    bool enableDNSLinkResolution = true,
-    bool enableIPLD = true,
-    bool enableGraphsync = true,
-    bool enableMetrics = true,
-    bool enableLogging = true,
-    String logLevel = 'info',
-    bool enableQuotaManagement = true,
-    int defaultBandwidthQuota = 1048576,
-    String datastorePath = './ipfs_data',
-    String keystorePath = './ipfs_keystore',
-    String blockStorePath = 'blocks',
-    Duration garbageCollectionInterval = const Duration(hours: 24),
-    bool garbageCollectionEnabled = true,
-    MetricsConfig metrics = const MetricsConfig(),
-  }) {
+  /// Creates a new IPFSConfig with a generated nodeId
+  factory IPFSConfig.withDefaults() {
     return IPFSConfig(
-      network: network,
-      dht: dht,
-      storage: storage,
-      security: security,
-      debug: debug,
-      verboseLogging: verboseLogging,
-      enablePubSub: enablePubSub,
-      enableDHT: enableDHT,
-      enableCircuitRelay: enableCircuitRelay,
-      enableContentRouting: enableContentRouting,
-      enableDNSLinkResolution: enableDNSLinkResolution,
-      enableIPLD: enableIPLD,
-      enableGraphsync: enableGraphsync,
-      enableMetrics: enableMetrics,
-      enableLogging: enableLogging,
-      logLevel: logLevel,
-      enableQuotaManagement: enableQuotaManagement,
-      defaultBandwidthQuota: defaultBandwidthQuota,
-      datastorePath: datastorePath,
-      keystorePath: keystorePath,
-      blockStorePath: blockStorePath,
       nodeId: _generateDefaultNodeId(),
-      garbageCollectionInterval: garbageCollectionInterval,
-      garbageCollectionEnabled: garbageCollectionEnabled,
-      metrics: metrics,
     );
   }
 
@@ -217,4 +176,11 @@ class NetworkConfig {
       };
 }
 
-// Similar implementations for DHTConfig, StorageConfig, and SecurityConfig... 
+// Similar implementations for DHTConfig, StorageConfig, and SecurityConfig...
+
+class KeyPair {
+  final String publicKey;
+  final String privateKey;
+
+  KeyPair(this.publicKey, this.privateKey);
+}
