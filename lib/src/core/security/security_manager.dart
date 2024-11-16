@@ -26,7 +26,7 @@ class SecurityManager {
 
   SecurityManager(this._config, MetricsCollector metricsCollector) {
     _logger = Logger('SecurityManager');
-    _keystore = Keystore(_config);
+    _keystore = Keystore();
     _metrics = metricsCollector;
     _initializeSecurity();
   }
@@ -136,7 +136,7 @@ class SecurityManager {
   }
 
   /// Retrieves a private key by its name from the keystore
-  Future<PrivateKey?> getPrivateKey(String keyName) async {
+  Future<IPFSPrivateKey?> getPrivateKey(String keyName) async {
     _logger.debug('Retrieving private key for: $keyName');
 
     try {
@@ -146,7 +146,7 @@ class SecurityManager {
       }
 
       final keyPair = _keystore.getKeyPair(keyName);
-      return PrivateKey(keyPair.privateKey, keyPair.publicKey);
+      return IPFSPrivateKey.fromString(keyPair.privateKey);
     } catch (e, stackTrace) {
       _logger.error('Failed to retrieve private key', e, stackTrace);
       return null;
