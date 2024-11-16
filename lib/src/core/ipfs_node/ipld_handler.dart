@@ -72,41 +72,116 @@ class IPLDHandler {
     }
   }
 
-  /// Resolves a path through IPLD data
-  Future<dynamic> resolve(CID root, String path) async {
-    if (path.isEmpty) return await get(root);
+  /// Resolves a path through IPLD data according to IPFS standards
+  Future<(dynamic, String?)> resolveLink(CID root, String path) async {
+    if (path.isEmpty) return (await get(root), null);
 
-    final segments = path.split('/');
-    var node = await get(root);
+    var currentNode = await get(root);
+    var remainingPath = path;
+    var lastCid = root;
 
-    for (final segment in segments) {
-      if (segment.isEmpty) continue;
+    while (remainingPath.isNotEmpty) {
+      final segments = remainingPath.split('/');
+      final segment = segments[0];
 
-      if (node is List) {
-        final index = int.tryParse(segment);
-        if (index == null || index < 0 || index >= node.length) {
-          throw IPLDResolutionError('Invalid array index: $segment');
-        }
-        node = node[index];
+      if (segment.isEmpty) {
+        remainingPath = segments.sublist(1).join('/');
         continue;
       }
 
-      if (node is Map) {
-        if (!node.containsKey(segment)) {
+      // Handle different node types according to IPFS specs
+      if (currentNode is Map) {
+        if (!currentNode.containsKey(segment)) {
           throw IPLDResolutionError('Property not found: $segment');
         }
-        final value = node[segment];
-        if (value is String && value.startsWith('ipfs://')) {
-          return await get(CID.decode(value.substring(7)));
-        }
-        node = value;
-        continue;
-      }
 
-      throw IPLDResolutionError('Cannot traverse: invalid node type');
+        final value = currentNode[segment];
+
+        // Handle CID links in various formats
+        if (value is String && _isCIDLink(value)) {
+          lastCid = await _resolveCIDLink(value);
+          currentNode = await get(lastCid);
+          remainingPath = segments.sublist(1).join('/');
+          continue;
+        } else if (value is Map && _isIPLDLink(value)) {
+          lastCid = await _resolveIPLDLink(value);
+          currentNode = await get(lastCid);
+          remainingPath = segments.sublist(1).join('/');
+          continue;
+        }
+
+        currentNode = value;
+        remainingPath = segments.sublist(1).join('/');
+      } else if (currentNode is List) {
+        final index = int.tryParse(segment);
+        if (index == null || index < 0 || index >= currentNode.length) {
+          throw IPLDResolutionError('Invalid array index: $segment');
+        }
+
+        final value = currentNode[index];
+
+        // Handle CID links in arrays
+        if (value is String && _isCIDLink(value)) {
+          lastCid = await _resolveCIDLink(value);
+          currentNode = await get(lastCid);
+          remainingPath = segments.sublist(1).join('/');
+          continue;
+        }
+
+        currentNode = value;
+        remainingPath = segments.sublist(1).join('/');
+      } else if (currentNode is MerkleDAGNode) {
+        // Handle DAG-PB links
+        for (final link in currentNode.links) {
+          if (link.name == segment) {
+            lastCid = CID.decode(link.cid.toString());
+            currentNode = await get(lastCid);
+            remainingPath = segments.sublist(1).join('/');
+            continue;
+          }
+        }
+        throw IPLDResolutionError('Link not found in DAG node: $segment');
+      } else {
+        throw IPLDResolutionError('Cannot traverse: invalid node type');
+      }
     }
 
-    return node;
+    return (currentNode, remainingPath.isEmpty ? null : remainingPath);
+  }
+
+  // Helper methods for link resolution
+  bool _isCIDLink(String value) {
+    return value.startsWith('ipfs://') ||
+        value.startsWith('/ipfs/') ||
+        value.startsWith('Qm') ||
+        value.startsWith('bafy');
+  }
+
+  bool _isIPLDLink(Map value) {
+    return value.containsKey('/') || // IPLD link format
+        value.containsKey('cid') || // Alternative link format
+        value.containsKey('Link'); // DAG-PB link format
+  }
+
+  Future<CID> _resolveCIDLink(String value) async {
+    if (value.startsWith('ipfs://')) {
+      return CID.decode(value.substring(7));
+    } else if (value.startsWith('/ipfs/')) {
+      return CID.decode(value.substring(6));
+    } else {
+      return CID.decode(value);
+    }
+  }
+
+  Future<CID> _resolveIPLDLink(Map value) async {
+    if (value.containsKey('/')) {
+      return CID.decode(value['/']);
+    } else if (value.containsKey('cid')) {
+      return CID.decode(value['cid']);
+    } else if (value.containsKey('Link')) {
+      return CID.decode(value['Link']);
+    }
+    throw IPLDResolutionError('Invalid IPLD link format');
   }
 
   /// Encodes data using the specified codec
