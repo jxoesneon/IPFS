@@ -3,18 +3,11 @@
 enum SelectorType {
   all,
   none,
-  matcher,
   explore,
+  matcher,
   recursive,
   union,
   intersection,
-  condition,
-  exploreRecursive,
-  exploreUnion,
-  exploreAll,
-  exploreRange,
-  exploreFields,
-  exploreIndex
 }
 
 class IPLDSelector {
@@ -24,9 +17,6 @@ class IPLDSelector {
   final List<IPLDSelector>? subSelectors;
   final String? fieldPath;
   final bool? stopAtLink;
-  final int? startIndex;
-  final int? endIndex;
-  final List<String>? fields;
 
   IPLDSelector({
     required this.type,
@@ -35,23 +25,28 @@ class IPLDSelector {
     this.subSelectors,
     this.fieldPath,
     this.stopAtLink,
-    this.startIndex,
-    this.endIndex,
-    this.fields,
   });
 
   factory IPLDSelector.all() => IPLDSelector(type: SelectorType.all);
 
   factory IPLDSelector.none() => IPLDSelector(type: SelectorType.none);
 
+  factory IPLDSelector.explore({
+    required String path,
+    required IPLDSelector selector,
+  }) =>
+      IPLDSelector(
+        type: SelectorType.explore,
+        fieldPath: path,
+        subSelectors: [selector],
+      );
+
   factory IPLDSelector.matcher({
     required Map<String, dynamic> criteria,
-    String? fieldPath,
   }) =>
       IPLDSelector(
         type: SelectorType.matcher,
         criteria: criteria,
-        fieldPath: fieldPath,
       );
 
   factory IPLDSelector.recursive({
@@ -66,58 +61,14 @@ class IPLDSelector {
         stopAtLink: stopAtLink,
       );
 
-  factory IPLDSelector.exploreRecursive({
-    required IPLDSelector selector,
-    int? maxDepth,
-    bool stopAtLink = false,
-  }) =>
-      IPLDSelector(
-        type: SelectorType.exploreRecursive,
-        subSelectors: [selector],
-        maxDepth: maxDepth,
-        stopAtLink: stopAtLink,
-      );
-
-  factory IPLDSelector.exploreUnion({
-    required List<IPLDSelector> selectors,
-  }) =>
-      IPLDSelector(
-        type: SelectorType.exploreUnion,
+  factory IPLDSelector.union(List<IPLDSelector> selectors) => IPLDSelector(
+        type: SelectorType.union,
         subSelectors: selectors,
       );
 
-  factory IPLDSelector.exploreAll() =>
-      IPLDSelector(type: SelectorType.exploreAll);
-
-  factory IPLDSelector.exploreRange({
-    required int start,
-    required int end,
-    required IPLDSelector selector,
-  }) =>
+  factory IPLDSelector.intersection(List<IPLDSelector> selectors) =>
       IPLDSelector(
-        type: SelectorType.exploreRange,
-        startIndex: start,
-        endIndex: end,
-        subSelectors: [selector],
-      );
-
-  factory IPLDSelector.exploreFields({
-    required List<String> fields,
-    required IPLDSelector selector,
-  }) =>
-      IPLDSelector(
-        type: SelectorType.exploreFields,
-        fields: fields,
-        subSelectors: [selector],
-      );
-
-  factory IPLDSelector.exploreIndex({
-    required int index,
-    required IPLDSelector selector,
-  }) =>
-      IPLDSelector(
-        type: SelectorType.exploreIndex,
-        startIndex: index,
-        subSelectors: [selector],
+        type: SelectorType.intersection,
+        subSelectors: selectors,
       );
 }
