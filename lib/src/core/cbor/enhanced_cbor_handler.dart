@@ -14,22 +14,39 @@ class EnhancedCBORHandler {
   static final _decoder = CborDecoder();
 
   static const cborTags = {
-    42: 'dag-pb',
-    43: 'dag-cbor',
-    44: 'dag-json',
-    45: 'raw',
-    6: 'cid-link',
+    // Core IPLD Codecs
+    0x55: 'raw',
     0x70: 'dag-pb',
     0x71: 'dag-cbor',
     0x0129: 'dag-json',
-    0x55: 'raw',
     0x72: 'libp2p-key',
-    0x85: 'dag-jose',
-    0x012b: 'dag-cose',
-    0x0202: 'car',
+
+    // IPFS-specific tags
+    0x01: 'cidv1',
+    0x02: 'cidv2',
+    0x03: 'cidv3',
+    0x51: 'raw-leaves',
+    0x81: 'unixfs',
+    0x90: 'identity',
+    0x91: 'id-multihash',
+    0x92: 'id-sha2-256',
+    0x93: 'id-sha2-512',
+    0x94: 'id-sha3-512',
+    0xb0: 'multicodec',
+    0xb1: 'multibase',
+    0xb2: 'multihash',
+
+    // IPLD Namespace tags
     0x300: 'ipld-ns',
     0x301: 'ipfs-ns',
     0x302: 'ipns-ns',
+
+    // Legacy tags (for compatibility)
+    42: 'dag-pb', // Legacy tag for dag-pb
+    43: 'dag-cbor', // Legacy tag for dag-cbor
+    44: 'dag-json', // Legacy tag for dag-json
+    45: 'raw', // Legacy tag for raw
+    6: 'cid-link', // Legacy tag for CID links
   };
 
   /// Encodes an IPLD node to CBOR bytes with support for indefinite length
