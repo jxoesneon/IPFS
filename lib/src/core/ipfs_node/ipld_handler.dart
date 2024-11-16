@@ -154,6 +154,20 @@ class IPLDHandler {
         }
         break;
 
+      case 'car':
+        try {
+          encoded = await _encodeCAR(node);
+        } catch (e) {
+          throw IPLDEncodingError('Failed to encode CAR: $e');
+        }
+        break;
+
+      case 'wasm':
+        if (node.kind != Kind.BYTES) {
+          throw IPLDEncodingError('WASM codec requires bytes data');
+        }
+        encoded = Uint8List.fromList(node.bytesValue);
+        break;
       default:
         throw UnsupportedError('Unsupported codec: $codec');
     }
@@ -650,5 +664,69 @@ class IPLDHandler {
     }
 
     return recipientEntry.value.bytesValue.toList();
+  }
+
+  /// Encodes an IPLD node to CAR format
+  Future<Uint8List> _encodeCAR(IPLDNode node) async {
+    final output = BytesBuilder();
+
+    // Write CAR header (version 1)
+    output.addByte(1); // version
+    output.addByte(1); // characteristics
+
+    // Write roots section
+    final rootCid = await CID.computeForData(
+        await EnhancedCBORHandler.encodeCbor(node),
+        codec: 'dag-cbor');
+
+    // Write number of roots (1)
+    output.addByte(1);
+    output.add(rootCid.toBytes());
+
+    // Write the blocks section
+    await _writeCarBlock(node, output);
+
+    return output.toBytes();
+  }
+
+  /// Writes a node and its linked blocks to the CAR output
+  Future<void> _writeCarBlock(IPLDNode node, BytesBuilder output) async {
+    // Encode the node
+    final encoded = await EnhancedCBORHandler.encodeCbor(node);
+    final cid = await CID.computeForData(encoded, codec: 'dag-cbor');
+
+    // Write block header
+    final cidBytes = cid.toBytes();
+    output.add(_encodeVarint(cidBytes.length));
+    output.add(cidBytes);
+
+    // Write block data
+    output.add(_encodeVarint(encoded.length));
+    output.add(encoded);
+
+    // Recursively write linked blocks
+    if (node.kind == Kind.MAP) {
+      for (final entry in node.mapValue.entries) {
+        if (entry.value.kind == Kind.LINK) {
+          final linkedBlock =
+              await _blockStore.getBlock(entry.value.linkValue.toString());
+          final linkedNode = await _decodeData(
+              Uint8List.fromList(linkedBlock.block.data),
+              entry.value.linkValue.codec);
+          await _writeCarBlock(linkedNode, output);
+        }
+      }
+    }
+  }
+
+  /// Encodes an integer as a varint
+  List<int> _encodeVarint(int value) {
+    final bytes = <int>[];
+    while (value >= 0x80) {
+      bytes.add((value & 0x7f) | 0x80);
+      value >>= 7;
+    }
+    bytes.add(value & 0x7f);
+    return bytes;
   }
 }
