@@ -13,6 +13,25 @@ class EnhancedCBORHandler {
   static final _encoder = CborEncoder();
   static final _decoder = CborDecoder();
 
+  static const cborTags = {
+    42: 'dag-pb',
+    43: 'dag-cbor',
+    44: 'dag-json',
+    45: 'raw',
+    6: 'cid-link',
+    0x70: 'dag-pb',
+    0x71: 'dag-cbor',
+    0x0129: 'dag-json',
+    0x55: 'raw',
+    0x72: 'libp2p-key',
+    0x85: 'dag-jose',
+    0x012b: 'dag-cose',
+    0x0202: 'car',
+    0x300: 'ipld-ns',
+    0x301: 'ipfs-ns',
+    0x302: 'ipns-ns',
+  };
+
   /// Encodes an IPLD node to CBOR bytes with support for indefinite length
   static Future<Uint8List> encodeCbor(IPLDNode node) async {
     final value = convertIPLDNodeToCbor(node);
