@@ -52,7 +52,7 @@ class IPFSNodeBuilder {
     _container.registerSingleton(BlockStore(path: _config.blockStorePath));
     _container.registerSingleton(DatastoreHandler(_config));
     _container
-        .registerSingleton(IPLDHandler(_container.get<BlockStore>(), _config));
+        .registerSingleton(IPLDHandler(_config, _container.get<BlockStore>()));
   }
 
   Future<void> _initializeNetworkLayer() async {
