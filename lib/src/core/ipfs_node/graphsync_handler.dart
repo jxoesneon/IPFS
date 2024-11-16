@@ -210,6 +210,65 @@ class GraphsyncHandler {
               }
             }
             break;
+
+          case SelectorType.exploreRecursive:
+            if (selector.maxDepth == null ||
+                visited.length <= selector.maxDepth!) {
+              final node = MerkleDAGNode.fromBytes(block.data);
+              blocks.add(block);
+              for (final link in node.links) {
+                await traverse(link.cid.toString());
+              }
+            }
+            break;
+
+          case SelectorType.exploreUnion:
+            final node = MerkleDAGNode.fromBytes(block.data);
+            for (final subSelector in selector.subSelectors ?? []) {
+              if (_matchesCriteria(block, subSelector.criteria)) {
+                for (final link in node.links) {
+                  await traverse(link.cid.toString());
+                }
+              }
+            }
+            break;
+
+          case SelectorType.exploreAll:
+            final node = MerkleDAGNode.fromBytes(block.data);
+            blocks.add(block);
+            for (final link in node.links) {
+              await traverse(link.cid.toString());
+            }
+            break;
+
+          case SelectorType.exploreRange:
+            final node = MerkleDAGNode.fromBytes(block.data);
+            if (node.links.isNotEmpty) {
+              final start = selector.startIndex ?? 0;
+              final end = selector.endIndex ?? node.links.length;
+              for (var i = start; i < end && i < node.links.length; i++) {
+                await traverse(node.links[i].cid.toString());
+              }
+            }
+            break;
+
+          case SelectorType.exploreFields:
+            final node = MerkleDAGNode.fromBytes(block.data);
+            for (final field in selector.fields ?? []) {
+              final value = _resolveFieldPath(node, field);
+              if (value is String && value.startsWith('ipfs://')) {
+                await traverse(value.substring(7));
+              }
+            }
+            break;
+
+          case SelectorType.exploreIndex:
+            final node = MerkleDAGNode.fromBytes(block.data);
+            final index = selector.startIndex ?? 0;
+            if (index >= 0 && index < node.links.length) {
+              await traverse(node.links[index].cid.toString());
+            }
+            break;
         }
       }
     }
