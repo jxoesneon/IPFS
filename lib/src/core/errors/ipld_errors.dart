@@ -22,3 +22,16 @@ class IPLDResolutionError extends IPLDError {
 class IPLDStorageError extends IPLDError {
   IPLDStorageError(String message) : super('IPLD storage error: $message');
 }
+
+class IPLDValidationError extends IPLDError {
+  IPLDValidationError(String message)
+      : super('IPLD validation error: $message');
+}
+
+class IPLDLinkError extends IPLDError {
+  IPLDLinkError(String message) : super('IPLD link error: $message');
+}
+
+class IPLDSchemaError extends IPLDError {
+  IPLDSchemaError(String message) : super('IPLD schema error: $message');
+}
