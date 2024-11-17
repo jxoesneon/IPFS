@@ -1,3 +1,4 @@
+// src/core/cid.dart
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:dart_ipfs/src/utils/encoding.dart';
@@ -141,6 +142,42 @@ class CID {
       version: version,
       multihash: multihash,
       codec: 'raw', // Default to raw codec
+      multibasePrefix: 'base58btc',
+    );
+  }
+
+  static CID fromString(String cidStr) {
+    // Convert the CID string to bytes using Base58 decoding
+    final bytes = EncodingUtils.fromBase58(cidStr);
+
+    // First byte is the version
+    final versionIndex = bytes[0];
+    IPFSCIDVersion version;
+    switch (versionIndex) {
+      case 0:
+        version = IPFSCIDVersion.IPFS_CID_VERSION_UNSPECIFIED;
+        break;
+      case 1:
+        version = IPFSCIDVersion.IPFS_CID_VERSION_0;
+        break;
+      case 2:
+        version = IPFSCIDVersion.IPFS_CID_VERSION_1;
+        break;
+      default:
+        throw ArgumentError('Invalid CID version index: $versionIndex');
+    }
+
+    // The second byte is the codec type
+    final codecType = bytes[1];
+    final codec = EncodingUtils.getCodecFromCode(codecType);
+
+    // The rest of the bytes are the multihash
+    final multihash = bytes.sublist(2);
+
+    return CID(
+      version: version,
+      multihash: multihash,
+      codec: codec,
       multibasePrefix: 'base58btc',
     );
   }
