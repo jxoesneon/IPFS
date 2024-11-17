@@ -1,5 +1,12 @@
 // src/core/ipld/selectors/ipld_selector.dart
 
+import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cbor/enhanced_cbor_handler.dart';
+import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
+import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
+import 'package:fixnum/fixnum.dart';
+
 enum SelectorType {
   all,
   none,
@@ -71,4 +78,282 @@ class IPLDSelector {
         type: SelectorType.intersection,
         subSelectors: selectors,
       );
+
+  /// Converts the selector to IPLD bytes for Graphsync protocol
+  Future<Uint8List> toBytes() async {
+    final node = IPLDNode()
+      ..kind = Kind.MAP
+      ..mapValue = (IPLDMap()
+        ..entries.addAll([
+          MapEntry()
+            ..key = '.tag'
+            ..value = (IPLDNode()
+              ..kind = Kind.STRING
+              ..stringValue = type.toString()),
+          if (criteria.isNotEmpty)
+            MapEntry()
+              ..key = 'criteria'
+              ..value = _encodeCriteria(criteria),
+          if (maxDepth != null)
+            MapEntry()
+              ..key = 'maxDepth'
+              ..value = (IPLDNode()
+                ..kind = Kind.INTEGER
+                ..intValue = Int64(maxDepth!)),
+          if (subSelectors != null)
+            MapEntry()
+              ..key = 'selectors'
+              ..value = (IPLDNode()
+                ..kind = Kind.LIST
+                ..listValue = (IPLDList()
+                  ..values.addAll(await Future.wait(subSelectors!.map((s) => s
+                      .toBytes()
+                      .then((bytes) =>
+                          EnhancedCBORHandler.decodeCborWithTags(bytes))))))),
+          if (fieldPath != null)
+            MapEntry()
+              ..key = 'path'
+              ..value = (IPLDNode()
+                ..kind = Kind.STRING
+                ..stringValue = fieldPath!),
+          if (stopAtLink != null)
+            MapEntry()
+              ..key = 'stopAtLink'
+              ..value = (IPLDNode()
+                ..kind = Kind.BOOL
+                ..boolValue = stopAtLink!),
+        ]));
+
+    return await EnhancedCBORHandler.encodeCbor(node);
+  }
+
+  IPLDNode _encodeCriteria(Map<String, dynamic> criteria) {
+    final node = IPLDNode()
+      ..kind = Kind.MAP
+      ..mapValue = IPLDMap();
+
+    for (final entry in criteria.entries) {
+      node.mapValue.entries.add(
+        MapEntry()
+          ..key = entry.key
+          ..value = _encodeValue(entry.value),
+      );
+    }
+
+    return node;
+  }
+
+  IPLDNode _encodeValue(dynamic value) {
+    if (value == null) {
+      return IPLDNode()..kind = Kind.NULL;
+    } else if (value is bool) {
+      return IPLDNode()
+        ..kind = Kind.BOOL
+        ..boolValue = value;
+    } else if (value is int) {
+      return IPLDNode()
+        ..kind = Kind.INTEGER
+        ..intValue = Int64(value);
+    } else if (value is String) {
+      return IPLDNode()
+        ..kind = Kind.STRING
+        ..stringValue = value;
+    }
+    // Add other types as needed
+    throw UnsupportedError('Unsupported value type: ${value.runtimeType}');
+  }
+
+  static dynamic _decodeValue(IPLDNode node) {
+    switch (node.kind) {
+      case Kind.NULL:
+        return null;
+      case Kind.BOOL:
+        return node.boolValue;
+      case Kind.INTEGER:
+        return node.intValue.toInt();
+      case Kind.FLOAT:
+        return node.floatValue;
+      case Kind.STRING:
+        return node.stringValue;
+      case Kind.BYTES:
+        return node.bytesValue;
+      case Kind.LIST:
+        return node.listValue.values.map((n) => _decodeValue(n)).toList();
+      case Kind.MAP:
+        final map = <String, dynamic>{};
+        for (final entry in node.mapValue.entries) {
+          map[entry.key] = _decodeValue(entry.value);
+        }
+        return map;
+      case Kind.LINK:
+        return {
+          'version': node.linkValue.version,
+          'codec': node.linkValue.codec,
+          'multihash': node.linkValue.multihash,
+        };
+      case Kind.BIG_INT:
+        return BigInt.parse(String.fromCharCodes(node.bigIntValue));
+      default:
+        throw IPLDDecodingError('Unsupported IPLD kind: ${node.kind}');
+    }
+  }
+
+  /// Decodes CBOR bytes back to an IPLDNode
+  static Future<IPLDNode> _decodeBytes(Uint8List bytes) async {
+    try {
+      return await EnhancedCBORHandler.decodeCborWithTags(bytes);
+    } catch (e) {
+      throw IPLDDecodingError('Failed to decode selector bytes: $e');
+    }
+  }
+
+  /// Creates an IPLDSelector from its CBOR byte representation
+  static Future<IPLDSelector> fromBytesAsync(Uint8List bytes) async {
+    final node = await _decodeBytes(bytes);
+
+    if (node.kind != Kind.MAP) {
+      throw IPLDDecodingError('Invalid selector format: expected MAP');
+    }
+
+    final type = SelectorType.values.firstWhere(
+      (t) =>
+          t.toString() ==
+          node.mapValue.entries
+              .firstWhere((e) => e.key == '.tag')
+              .value
+              .stringValue,
+      orElse: () => throw IPLDDecodingError('Invalid selector type'),
+    );
+
+    final criteria = <String, dynamic>{};
+    final criteriaEntry = node.mapValue.entries.firstWhere(
+      (e) => e.key == 'criteria',
+      orElse: () => MapEntry()
+        ..key = 'criteria'
+        ..value = (IPLDNode()
+          ..kind = Kind.MAP
+          ..mapValue = IPLDMap()),
+    );
+    for (final entry in criteriaEntry.value.mapValue.entries) {
+      criteria[entry.key] = _decodeValue(entry.value);
+    }
+
+    final maxDepth = node.mapValue.entries
+        .firstWhere(
+          (e) => e.key == 'maxDepth',
+          orElse: () => MapEntry()
+            ..key = 'maxDepth'
+            ..value = (IPLDNode()..kind = Kind.NULL),
+        )
+        .value
+        .intValue
+        .toInt();
+
+    final subSelectors = node.mapValue.entries
+        .firstWhere(
+          (e) => e.key == 'selectors',
+          orElse: () => MapEntry()
+            ..key = 'selectors'
+            ..value = (IPLDNode()
+              ..kind = Kind.LIST
+              ..listValue = IPLDList()),
+        )
+        .value
+        .listValue
+        .values
+        .map((n) => IPLDSelector.fromNode(n))
+        .toList();
+
+    final fieldPath = node.mapValue.entries
+        .firstWhere(
+          (e) => e.key == 'path',
+          orElse: () => MapEntry()
+            ..key = 'path'
+            ..value = (IPLDNode()..kind = Kind.NULL),
+        )
+        .value
+        .stringValue;
+
+    final stopAtLink = node.mapValue.entries
+        .firstWhere(
+          (e) => e.key == 'stopAtLink',
+          orElse: () => MapEntry()
+            ..key = 'stopAtLink'
+            ..value = (IPLDNode()..kind = Kind.NULL),
+        )
+        .value
+        .boolValue;
+
+    return IPLDSelector(
+      type: type,
+      criteria: criteria,
+      maxDepth: maxDepth,
+      subSelectors: subSelectors,
+      fieldPath: fieldPath,
+      stopAtLink: stopAtLink,
+    );
+  }
+
+  /// Creates an IPLDSelector from an IPLDNode
+  static IPLDSelector fromNode(IPLDNode node) {
+    if (node.kind != Kind.MAP) {
+      throw IPLDDecodingError('Invalid selector format: expected MAP');
+    }
+
+    final type = SelectorType.values.firstWhere(
+      (t) =>
+          t.toString() ==
+          node.mapValue.entries
+              .firstWhere((e) => e.key == '.tag')
+              .value
+              .stringValue,
+      orElse: () => throw IPLDDecodingError('Invalid selector type'),
+    );
+
+    return IPLDSelector(
+      type: type,
+      criteria: _decodeValue(node.mapValue.entries
+          .firstWhere((e) => e.key == 'criteria',
+              orElse: () => MapEntry()
+                ..key = 'criteria'
+                ..value = (IPLDNode()
+                  ..kind = Kind.MAP
+                  ..mapValue = IPLDMap()))
+          .value) as Map<String, dynamic>,
+      maxDepth: node.mapValue.entries
+          .firstWhere((e) => e.key == 'maxDepth',
+              orElse: () => MapEntry()
+                ..key = 'maxDepth'
+                ..value = (IPLDNode()..kind = Kind.NULL))
+          .value
+          .intValue
+          .toInt(),
+      subSelectors: node.mapValue.entries
+          .firstWhere((e) => e.key == 'selectors',
+              orElse: () => MapEntry()
+                ..key = 'selectors'
+                ..value = (IPLDNode()
+                  ..kind = Kind.LIST
+                  ..listValue = IPLDList()))
+          .value
+          .listValue
+          .values
+          .map((n) => fromNode(n))
+          .toList(),
+      fieldPath: node.mapValue.entries
+          .firstWhere((e) => e.key == 'path',
+              orElse: () => MapEntry()
+                ..key = 'path'
+                ..value = (IPLDNode()..kind = Kind.NULL))
+          .value
+          .stringValue,
+      stopAtLink: node.mapValue.entries
+          .firstWhere((e) => e.key == 'stopAtLink',
+              orElse: () => MapEntry()
+                ..key = 'stopAtLink'
+                ..value = (IPLDNode()..kind = Kind.NULL))
+          .value
+          .boolValue,
+    );
+  }
 }
