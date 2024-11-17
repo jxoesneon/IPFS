@@ -28,13 +28,13 @@ import 'package:dart_ipfs/src/core/data_structures/directory.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/graphsync_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/bootstrap_handler.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
 import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:dart_ipfs/src/core/builders/ipfs_node_builder.dart';
+import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 // src/core/ipfs_node/ipfs_node.dart
 
 // lib/src/core/ipfs_node/ipfs_node.dart
