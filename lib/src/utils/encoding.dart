@@ -227,6 +227,19 @@ class EncodingUtils {
     return _supportedCodecs[codec]!;
   }
 
+  /// Get codec string from code number
+  static String getCodecFromCode(int code) {
+    // Reverse lookup in _supportedCodecs
+    final codec = _supportedCodecs.entries
+        .firstWhere(
+          (entry) => entry.value == code,
+          orElse: () => throw ArgumentError(
+              'Unsupported codec code: 0x${code.toRadixString(16)}'),
+        )
+        .key;
+    return codec;
+  }
+
   /// Add public getter
   static List<String> get supportedCodecs => _supportedCodecs.keys.toList();
 }
