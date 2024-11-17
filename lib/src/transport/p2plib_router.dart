@@ -599,6 +599,36 @@ class P2plibRouter {
   }
 
   p2p.PeerId get localPeerId => _router.selfId;
+
+  Future<void> broadcastMessage(String protocolId, Uint8List message) async {
+    if (!_registeredProtocols.contains(protocolId)) {
+      throw Exception('Protocol $protocolId not registered');
+    }
+
+    final failures = <String>[];
+
+    // Broadcast to all connected peers
+    for (final peerId in _connectedPeers) {
+      if (!isConnectedPeer(peerId)) continue;
+
+      try {
+        await sendMessage(peerId, message);
+      } catch (e, stackTrace) {
+        _logger.error('Failed to send message to peer ${peerId.toString()}', e,
+            stackTrace);
+        failures.add(peerId.toString());
+      }
+    }
+
+    if (failures.isNotEmpty) {
+      _errorEventsController.add(
+        ErrorEvent(
+          type: ErrorEventType.messageError,
+          message: 'Failed to broadcast to peers: ${failures.join(", ")}',
+        ),
+      );
+    }
+  }
 }
 
 mixin MultiAddressHandler {
