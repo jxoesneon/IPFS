@@ -15,8 +15,8 @@ import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/bootstrap_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/graphsync_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
+import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
 
@@ -89,13 +89,28 @@ class IPFSNodeBuilder {
     _container
         .registerSingleton(ContentRoutingHandler(_config, networkHandler));
     _container.registerSingleton(DNSLinkHandler(_config));
-    _container.registerSingleton(
-        GraphsyncHandler(_config, _container.get<BlockStore>()));
+    _container.registerSingleton(GraphsyncHandler(
+      _config,
+      networkHandler.p2pRouter,
+      _container.get<BitswapHandler>(),
+      _container.get<IPLDHandler>(),
+      _container.get<BlockStore>(),
+    ));
     _container.registerSingleton(AutoNATHandler(_config, networkHandler));
     _container.registerSingleton(IPNSHandler(
       _config,
       _container.get<SecurityManager>(),
       _container.get<DHTHandler>(),
+    ));
+  }
+
+  void registerGraphsyncServices(ServiceContainer container) {
+    container.registerSingleton(GraphsyncHandler(
+      _config,
+      _container.get<NetworkHandler>().p2pRouter,
+      _container.get<BitswapHandler>(),
+      _container.get<IPLDHandler>(),
+      _container.get<BlockStore>(),
     ));
   }
 }
