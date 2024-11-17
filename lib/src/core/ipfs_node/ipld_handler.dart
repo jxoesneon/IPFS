@@ -10,6 +10,7 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
+import 'package:dart_ipfs/src/core/data_structures/metadata.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/core/ipld/extensions/ipld_node_json.dart';
 import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart';
@@ -19,6 +20,8 @@ import 'package:dart_ipfs/src/utils/encoding.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/core/ipld/jose_cose_handler.dart';
+import 'package:dart_ipfs/src/core/ipld/path/ipld_path_handler.dart';
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 
 /// Handles IPLD (InterPlanetary Linked Data) operations
 class IPLDHandler {
@@ -74,10 +77,10 @@ class IPLDHandler {
 
   /// Resolves a path through IPLD data according to IPFS standards
   Future<(dynamic, String?)> resolveLink(CID root, String path) async {
-    if (path.isEmpty) return (await get(root), null);
+    if (path.isEmpty) return (await get(root), root.toString());
 
     var currentNode = await get(root);
-    var remainingPath = path;
+    var remainingPath = IPLDPathHandler.normalizePath(path);
     var lastCid = root;
 
     while (remainingPath.isNotEmpty) {
@@ -89,64 +92,19 @@ class IPLDHandler {
         continue;
       }
 
-      // Handle different node types according to IPFS specs
-      if (currentNode is Map) {
-        if (!currentNode.containsKey(segment)) {
-          throw IPLDResolutionError('Property not found: $segment');
-        }
-
-        final value = currentNode[segment];
-
-        // Handle CID links in various formats
-        if (value is String && _isCIDLink(value)) {
-          lastCid = await _resolveCIDLink(value);
-          currentNode = await get(lastCid);
-          remainingPath = segments.sublist(1).join('/');
-          continue;
-        } else if (value is Map && _isIPLDLink(value)) {
-          lastCid = await _resolveIPLDLink(value);
-          currentNode = await get(lastCid);
-          remainingPath = segments.sublist(1).join('/');
-          continue;
-        }
-
-        currentNode = value;
-        remainingPath = segments.sublist(1).join('/');
-      } else if (currentNode is List) {
-        final index = int.tryParse(segment);
-        if (index == null || index < 0 || index >= currentNode.length) {
-          throw IPLDResolutionError('Invalid array index: $segment');
-        }
-
-        final value = currentNode[index];
-
-        // Handle CID links in arrays
-        if (value is String && _isCIDLink(value)) {
-          lastCid = await _resolveCIDLink(value);
-          currentNode = await get(lastCid);
-          remainingPath = segments.sublist(1).join('/');
-          continue;
-        }
-
-        currentNode = value;
-        remainingPath = segments.sublist(1).join('/');
-      } else if (currentNode is MerkleDAGNode) {
-        // Handle DAG-PB links
-        for (final link in currentNode.links) {
-          if (link.name == segment) {
-            lastCid = CID.decode(link.cid.toString());
-            currentNode = await get(lastCid);
-            remainingPath = segments.sublist(1).join('/');
-            continue;
-          }
-        }
-        throw IPLDResolutionError('Link not found in DAG node: $segment');
-      } else {
-        throw IPLDResolutionError('Cannot traverse: invalid node type');
+      final result = await _resolveSegment(currentNode, segment);
+      if (result == null) {
+        throw IPLDResolutionError('Unable to resolve segment: $segment');
       }
+
+      final (resolvedNode, cid) = result;
+      currentNode = resolvedNode;
+      lastCid = cid;
+
+      remainingPath = segments.sublist(1).join('/');
     }
 
-    return (currentNode, remainingPath.isEmpty ? null : remainingPath);
+    return (currentNode, lastCid.toString());
   }
 
   // Helper methods for link resolution
@@ -726,5 +684,290 @@ class IPLDHandler {
     }
     bytes.add(value & 0x7f);
     return bytes;
+  }
+
+  Future<dynamic> resolvePath(String path) async {
+    path = IPLDPathHandler.normalizePath(path);
+    final (namespace, rootCid, remainingPath) = IPLDPathHandler.parsePath(path);
+
+    switch (namespace) {
+      case 'ipfs':
+        return await _resolveIPFSPath(rootCid, remainingPath);
+      case 'ipld':
+        return await _resolveIPLDPath(rootCid, remainingPath);
+      case 'ipns':
+        throw UnimplementedError('IPNS resolution not yet implemented');
+      default:
+        throw IPLDPathError('Unsupported namespace: $namespace');
+    }
+  }
+
+  Future<dynamic> _resolveIPFSPath(CID rootCid, String? remainingPath) async {
+    final rootNode = await get(rootCid);
+    if (remainingPath == null) return rootNode;
+
+    if (rootNode is MerkleDAGNode) {
+      // Check if this is a UnixFS node
+      if (_isUnixFSNode(rootNode)) {
+        return _resolveUnixFSPath(rootNode, remainingPath);
+      }
+      return _resolvePathInDAGNode(rootNode, remainingPath);
+    } else {
+      final (result, remaining) = await resolveLink(rootCid, remainingPath);
+      if (remaining != null) {
+        throw IPLDPathError('Unable to fully resolve path: $remaining');
+      }
+      return result;
+    }
+  }
+
+  bool _isUnixFSNode(MerkleDAGNode node) {
+    try {
+      // Check for UnixFS protobuf data
+      final data = node.data;
+      if (data.isEmpty) return false;
+
+      // Parse UnixFS Data message
+      final unixFsData = Data.fromBuffer(data);
+      return unixFsData.hasType(); // Check if type field is set
+    } catch (e) {
+      _logger.debug('Not a UnixFS node: $e');
+      return false;
+    }
+  }
+
+  Future<dynamic> _resolvePathInDAGNode(MerkleDAGNode node, String path) async {
+    final parts = path.split('/');
+    var current = node;
+
+    for (final part in parts) {
+      if (part.isEmpty) continue;
+
+      var found = false;
+      for (final link in current.links) {
+        if (link.name == part) {
+          final block = await _blockStore.getBlock(link.cid.toString());
+
+          current =
+              MerkleDAGNode.fromBytes(Uint8List.fromList(block.block.data));
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        throw IPLDPathError('Path segment not found: $part');
+      }
+    }
+
+    return current;
+  }
+
+  Future<dynamic> _resolveUnixFSPath(MerkleDAGNode node, String path) async {
+    // Parse UnixFS data
+    final unixFsData = Data.fromBuffer(node.data);
+
+    // Verify it's a directory
+    if (unixFsData.type != Data_DataType.Directory &&
+        unixFsData.type != Data_DataType.HAMTShard) {
+      throw IPLDPathError('Not a directory');
+    }
+
+    final parts = path.split('/').where((p) => p.isNotEmpty).toList();
+    var current = node;
+
+    for (final part in parts) {
+      var found = false;
+      for (final link in current.links) {
+        if (link.name == part) {
+          final block = await _blockStore.getBlock(link.cid.toString());
+
+          current =
+              MerkleDAGNode.fromBytes(Uint8List.fromList(block.block.data));
+
+          // Verify child node
+          if (_isUnixFSNode(current)) {
+            final childData = Data.fromBuffer(current.data);
+            if (childData.type == Data_DataType.File) {
+              // Return file data if this is the last path component
+              if (part == parts.last) {
+                return childData.data;
+              }
+              throw IPLDPathError('Cannot traverse through file: $part');
+            }
+          }
+
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        throw IPLDPathError('Path not found: $part');
+      }
+    }
+
+    return current;
+  }
+
+  /// Resolves a single path segment
+  Future<(dynamic, CID)?> _resolveSegment(dynamic node, String segment) async {
+    if (node is Map) {
+      if (!node.containsKey(segment)) {
+        return null;
+      }
+
+      final value = node[segment];
+      if (value is String && _isCIDLink(value)) {
+        final cid = await _resolveCIDLink(value);
+        final resolvedNode = await get(cid);
+        return (resolvedNode, cid);
+      } else if (value is Map && _isIPLDLink(value)) {
+        final cid = await _resolveIPLDLink(value);
+        final resolvedNode = await get(cid);
+        return (resolvedNode, cid);
+      }
+      // For non-link values, create a dummy CID
+      return (
+        value,
+        await CID.computeForData(utf8.encode(value.toString()), codec: 'raw')
+      );
+    }
+
+    if (node is List) {
+      final index = int.tryParse(segment);
+      if (index == null || index < 0 || index >= node.length) {
+        return null;
+      }
+
+      final value = node[index];
+      if (value is String && _isCIDLink(value)) {
+        final cid = await _resolveCIDLink(value);
+        final resolvedNode = await get(cid);
+        return (resolvedNode, cid);
+      }
+      // For non-link array values, create a dummy CID
+      return (
+        value,
+        await CID.computeForData(utf8.encode(value.toString()), codec: 'raw')
+      );
+    }
+
+    if (node is MerkleDAGNode) {
+      for (final link in node.links) {
+        if (link.name == segment) {
+          final cid = CID.decode(link.cid.toString());
+          final resolvedNode = await get(cid);
+          return (resolvedNode, cid);
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /// Resolves an IPLD path starting from a root CID
+  Future<dynamic> _resolveIPLDPath(CID rootCid, String? remainingPath) async {
+    final rootNode = await get(rootCid);
+    if (remainingPath == null) return rootNode;
+
+    var current = rootNode;
+    final parts = remainingPath.split('/').where((p) => p.isNotEmpty).toList();
+
+    for (final part in parts) {
+      if (current is Map) {
+        if (!current.containsKey(part)) {
+          throw IPLDPathError('Property not found: $part');
+        }
+        current = current[part];
+
+        if (current is String && _isCIDLink(current)) {
+          final cid = await _resolveCIDLink(current);
+          current = await get(cid);
+        } else if (current is Map && _isIPLDLink(current)) {
+          final cid = await _resolveIPLDLink(current);
+          current = await get(cid);
+        }
+      } else if (current is List) {
+        final index = int.tryParse(part);
+        if (index == null || index < 0 || index >= current.length) {
+          throw IPLDPathError('Invalid array index: $part');
+        }
+        current = current[index];
+      } else if (current is MerkleDAGNode) {
+        final result = await _resolveSegment(current, part);
+        if (result == null) {
+          throw IPLDPathError('Path segment not found: $part');
+        }
+        current = result.$1;
+      } else {
+        throw IPLDPathError('Cannot traverse: invalid node type');
+      }
+    }
+
+    return current;
+  }
+
+  Future<IPLDMetadata> _extractMetadata(MerkleDAGNode node) async {
+    if (!_isUnixFSNode(node)) {
+      throw IPLDPathError('Not a UnixFS node');
+    }
+
+    final unixFsData = Data.fromBuffer(node.data);
+
+    // Create properties map
+    final properties = <String, String>{};
+
+    // Add file mode if present
+    if (unixFsData.hasMode()) {
+      properties['mode'] = unixFsData.mode.toString();
+    }
+
+    // Calculate mtime if present
+    DateTime? lastModified;
+    if (unixFsData.hasMtime()) {
+      lastModified = DateTime.fromMillisecondsSinceEpoch(
+          unixFsData.mtime.toInt() * 1000 + (unixFsData.mtimeNsecs ~/ 1000000));
+      properties['mtime'] = lastModified.toIso8601String();
+    }
+
+    return IPLDMetadata(
+        size: unixFsData.filesize.toInt(),
+        properties: properties,
+        lastModified: lastModified,
+        contentType: 'application/ipfs-unixfs');
+  }
+
+  Future<IPLDMetadata> getMetadata(CID cid) async {
+    final node = await get(cid);
+
+    if (node is MerkleDAGNode) {
+      return _extractMetadata(node);
+    }
+
+    // For non-MerkleDAG nodes, return basic metadata
+    return IPLDMetadata(
+      size: node.toString().length,
+      contentType: _inferContentType(node),
+    );
+  }
+
+  String? _inferContentType(dynamic node) {
+    if (node is MerkleDAGNode) {
+      return _isUnixFSNode(node)
+          ? 'application/ipfs-unixfs'
+          : 'application/dag-pb';
+    } else if (node is Map) {
+      return 'application/dag-cbor';
+    }
+    return null;
+  }
+
+  Future<(dynamic, IPLDMetadata)> resolveWithMetadata(String path) async {
+    final resolved = await resolvePath(path);
+    final metadata = await getMetadata(resolved is MerkleDAGNode
+        ? resolved.cid
+        : await CID.computeForData(utf8.encode(resolved.toString())));
+    return (resolved, metadata);
   }
 }
