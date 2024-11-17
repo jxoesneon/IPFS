@@ -40,13 +40,15 @@ class EnhancedCBORHandler {
     0x300: 'ipld-ns',
     0x301: 'ipfs-ns',
     0x302: 'ipns-ns',
+    0x303: 'swarm-ns',
+    0x304: 'dnslink-ns',
 
     // Legacy tags (for compatibility)
-    42: 'dag-pb', // Legacy tag for dag-pb
-    43: 'dag-cbor', // Legacy tag for dag-cbor
-    44: 'dag-json', // Legacy tag for dag-json
-    45: 'raw', // Legacy tag for raw
-    6: 'cid-link', // Legacy tag for CID links
+    42: 'dag-pb',
+    43: 'dag-cbor',
+    44: 'dag-json',
+    45: 'raw',
+    6: 'cid-link',
   };
 
   /// Encodes an IPLD node to CBOR bytes with support for indefinite length
