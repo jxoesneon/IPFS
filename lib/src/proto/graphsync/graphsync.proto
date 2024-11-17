@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package ipfs.graphsync;
+
+// Main Graphsync Message
+message GraphsyncMessage {
+  repeated GraphsyncRequest requests = 1;
+  repeated GraphsyncResponse responses = 2;
+  repeated Block blocks = 3;
+  map<string, bytes> extensions = 4;
+}
+
+// Request for graph traversal
+message GraphsyncRequest {
+  int32 id = 1;                      // Unique request identifier
+  bytes root = 2;                    // Root CID (as bytes)
+  bytes selector = 3;                // IPLD selector serialized
+  int32 priority = 4;                // Request priority (1-4)
+  map<string, bytes> extensions = 5; // Request extensions
+  bool cancel = 6;                   // Cancel request flag
+  bool pause = 7;                    // Pause request flag
+  bool unpause = 8;                  // Unpause request flag
+}
+
+// Response to graph request
+message GraphsyncResponse {
+  int32 id = 1;                      // Request identifier
+  ResponseStatus status = 2;         // Response status
+  map<string, bytes> extensions = 3; // Response extensions
+  map<string, string> metadata = 4;  // Response metadata
+}
+
+// Block data with prefix
+message Block {
+  bytes prefix = 1;                  // CID prefix
+  bytes data = 2;                    // Block data
+}
+
+// Standard response status codes
+enum ResponseStatus {
+  // Request is being processed
+  RS_IN_PROGRESS = 0;
+  // Request completed successfully
+  RS_COMPLETED = 1;
+  // Request failed with error
+  RS_REJECTED = 2;
+  // Request was cancelled
+  RS_CANCELLED = 3;
+  // Request is paused
+  RS_PAUSED = 4;
+  // Request error occurred
+  RS_ERROR = 5;
+  // Request is paused pending local resources
+  RS_PAUSED_PENDING_RESOURCES = 6;
+} 
