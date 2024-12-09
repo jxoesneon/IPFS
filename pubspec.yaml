@@ -46,7 +46,7 @@ dependencies:
   multibase: ^1.0.0
 
   dart_multihash: ^1.0.1
-  archive: ^3.6.1
+  archive: ^4.0.1
   murmurhash: ^1.0.1
 
   cbor: ^6.3.3  # Or the latest version
