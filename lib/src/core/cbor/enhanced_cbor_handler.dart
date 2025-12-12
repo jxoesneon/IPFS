@@ -1,7 +1,7 @@
-// src/core/cbor/enhanced_cbor_handler.dart
 import 'dart:typed_data';
 
 import 'package:cbor/cbor.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
@@ -204,18 +204,9 @@ class EnhancedCBORHandler {
     final map = node.mapValue.entries;
     return Link(
       name: map.firstWhere((e) => e.key == 'Name').value.stringValue,
-      cid: Uint8List.fromList(
-          map.firstWhere((e) => e.key == 'Cid').value.bytesValue),
-      hash: Uint8List.fromList(
-          map.firstWhere((e) => e.key == 'Hash').value.bytesValue),
+      cid: CID.fromBytes(Uint8List.fromList(
+          map.firstWhere((e) => e.key == 'Cid').value.bytesValue)),
       size: map.firstWhere((e) => e.key == 'Size').value.intValue.toInt(),
-      metadata: map
-          .firstWhere((e) => e.key == 'Metadata', orElse: () => MapEntry())
-          .value
-          .mapValue
-          .entries
-          .fold<Map<String, String>>(
-              {}, (map, e) => map..[e.key] = e.value.stringValue),
     );
   }
 
@@ -242,7 +233,7 @@ class EnhancedCBORHandler {
                 ..key = 'hash'
                 ..value = (IPLDNode()
                   ..kind = Kind.BYTES
-                  ..bytesValue = link.hash),
+                  ..bytesValue = link.cid.multihash.toBytes()),
             ]))),
     ];
 
