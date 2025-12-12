@@ -1,6 +1,6 @@
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/proto/generated/connection.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart';
+import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:fixnum/fixnum.dart';
 
