@@ -4,6 +4,7 @@ syntax = "proto3";
 
 package ipfs.core.data_structures;
 
+import "core/dag.proto";
 import "core/link.proto";
 import "core/cid.proto";
 import "core/node_type.proto";
