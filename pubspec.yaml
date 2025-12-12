@@ -11,7 +11,7 @@ environment:
   sdk: '>=3.5.4 <4.0.0'
 
 dependencies:
-  catalyst_cose: ^0.3.0
+  catalyst_cose: ^1.0.0
 
   collection: ^1.19.1
   
@@ -30,7 +30,7 @@ dependencies:
   crypto: ^3.0.3 # For CID calculation and other cryptographic operations
 
   # Serialization
-  protobuf: ^3.1.0 # Efficient serialization format for messages
+  protobuf: ^6.0.0 # Compatible with protoc_plugin 25.x
 
   # Data Storage
   hive: ^2.2.3 # Local database for persistent storage
@@ -46,12 +46,12 @@ dependencies:
   multibase: ^1.0.0
 
   dart_multihash: ^1.0.1
-  archive: ^3.6.1
+  archive: ^4.0.7
   murmurhash: ^1.0.1
 
   cbor: ^6.3.3  # Or the latest version
 
-  lz4: ^0.0.1  # Use the latest stable version
+  # lz4: ^0.0.1  # Package not available on pub.dev
 
   shelf_router: ^1.1.4
 
@@ -61,13 +61,20 @@ dependencies:
   synchronized: ^3.3.0+3
   multicast_dns: ^0.3.2+7
 
-  pointycastle: ^3.7.3
+  pointycastle: ^4.0.0
 
   jose: ^0.3.4
+  
+  mime: ^2.0.0 # For content-type detection in gateway
 
+  yaml: any
+  meta: any
+  shelf: any
+  path: any
+  grpc: any
 dev_dependencies:
   test: ^1.21.0 # For unit and integration tests
-  lints: ^5.0.0 # For code style analysis
+  lints: ^6.0.0 # For code style analysis
 
 # Assets used in the project, such as images or other static files.
 assets:
