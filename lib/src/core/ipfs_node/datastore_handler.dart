@@ -48,12 +48,12 @@ class DatastoreHandler {
   }
 
   /// Retrieves a block from the datastore by its CID.
-  Future<MerkleDAGNode?> getBlock(String cid) async {
+  Future<Block?> getBlock(String cid) async {
     try {
       final block = await _datastore.get(cid);
       if (block != null) {
         print('Retrieved block with CID: $cid');
-        return MerkleDAGNode.fromBytes(block.data); // Use MerkleDAGNode
+        return block;
       } else {
         print('Block with CID $cid not found.');
         return null;
@@ -131,10 +131,12 @@ class DatastoreHandler {
         throw ArgumentError('Root block not found for CID: $cid');
       }
 
-      blocks.add(rootBlock as Block);
+      blocks.add(rootBlock);
 
       // Recursively retrieve linked blocks
-      await _recursiveGetBlocks(rootBlock, blocks);
+      // We need to parse the block to get links
+      final rootNode = MerkleDAGNode.fromBytes(rootBlock.data);
+      await _recursiveGetBlocks(rootNode, blocks);
 
       // Create a CAR object using the blocks list
       final car = CAR(
@@ -160,7 +162,7 @@ class DatastoreHandler {
       for (var link in node.links) {
         final childBlock = await getBlock(link.cid.toString());
         if (childBlock != null && !blocks.contains(childBlock)) {
-          blocks.add(childBlock as Block);
+          blocks.add(childBlock);
           await _recursiveGetBlocks(MerkleDAGNode.fromBytes(childBlock.data),
               blocks); // Recursive call
         }
