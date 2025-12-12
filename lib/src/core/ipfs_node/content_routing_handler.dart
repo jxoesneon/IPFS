@@ -1,7 +1,5 @@
 // src/core/ipfs_node/content_routing_handler.dart
 import 'dart:async';
-import 'dart:typed_data';
-import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -76,11 +74,7 @@ class ContentRoutingHandler {
       // If DHT fails, try delegated routing
       _logger.verbose('DHT lookup failed, trying delegated routing');
       // Convert string CID to CID object
-      final cidObj = CID(
-          version: IPFSCIDVersion.IPFS_CID_VERSION_1,
-          multihash: Uint8List.fromList(cid.codeUnits),
-          codec: 'raw',
-          multibasePrefix: 'base58btc');
+      final cidObj = CID.decode(cid);
 
       final delegatedResponse = await _delegatedRouting.findProviders(cidObj);
 
