@@ -38,7 +38,7 @@ abstract class BaseBlock {
       }
 
       final blockData = bytes.sublist(cidLength + 1);
-      final cid = CID.fromBytes(cidBytes, 'dag-pb');
+      final cid = CID.fromBytes(cidBytes); // Changed to single argument
 
       return factory(blockData, cid);
     } catch (e) {
