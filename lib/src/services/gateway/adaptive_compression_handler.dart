@@ -5,9 +5,8 @@ import 'package:dart_ipfs/src/services/gateway/compressed_cache_store.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'dart:convert';
-import 'package:archive/archive.dart';
 import 'dart:io';
-import 'package:lz4/lz4.dart';
+// import 'package:lz4/lz4.dart'; // Package not available
 
 class CompressionConfig {
   final bool enabled;
@@ -86,7 +85,7 @@ class AdaptiveCompressionHandler {
         return entry.value;
       }
     }
-    return CompressionType.lz4; // Default to fast compression
+    return CompressionType.gzip; // Default to gzip (lz4 not available)
   }
 
   Future<Uint8List> _compressData(Uint8List data, CompressionType type) async {
@@ -94,11 +93,11 @@ class AdaptiveCompressionHandler {
       case CompressionType.none:
         return data;
       case CompressionType.gzip:
-        return Uint8List.fromList(GZipEncoder().encode(data)!);
+        return Uint8List.fromList(gzip.encode(data));
       case CompressionType.zlib:
-        return Uint8List.fromList(ZLibEncoder().encode(data));
+        return Uint8List.fromList(zlib.encode(data));
       case CompressionType.lz4:
-        return Uint8List.fromList(Lz4Encoder().convert(data));
+        throw UnimplementedError('LZ4 compression not available');
     }
   }
 

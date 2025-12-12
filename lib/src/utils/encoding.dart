@@ -73,25 +73,8 @@ class EncodingUtils {
 
   /// Convert CID to bytes representation
   static Uint8List cidToBytes(CID cid) {
-    final bytes = BytesBuilder();
-    bytes.addByte(_cidVersionToIndex(cid.version));
-    bytes.addByte(_getCodecCode(cid.codec)); // Add multicodec prefix
-    bytes.add(cid.multihash);
-    return bytes.toBytes();
-  }
-
-  /// Convert version enum to index
-  static int _cidVersionToIndex(IPFSCIDVersion version) {
-    switch (version) {
-      case IPFSCIDVersion.IPFS_CID_VERSION_UNSPECIFIED:
-        return 0;
-      case IPFSCIDVersion.IPFS_CID_VERSION_0:
-        return 1;
-      case IPFSCIDVersion.IPFS_CID_VERSION_1:
-        return 2;
-      default:
-        throw UnsupportedError('Unsupported CID version: $version');
-    }
+    // Use the CID class's built-in toBytes method
+    return cid.toBytes();
   }
 
   /// Validate CID bytes according to IPFS spec
@@ -174,18 +157,6 @@ class EncodingUtils {
     }
   }
 
-  /// Convert CID version to string representation
-  static String cidVersionToString(IPFSCIDVersion version) {
-    switch (version) {
-      case IPFSCIDVersion.IPFS_CID_VERSION_0:
-        return 'CIDv0';
-      case IPFSCIDVersion.IPFS_CID_VERSION_1:
-        return 'CIDv1';
-      default:
-        return 'Unknown';
-    }
-  }
-
   /// Validates if a multibase prefix is supported according to the multibase spec
   static bool isValidMultibasePrefix(String prefix) {
     return _supportedMultibasePrefixes.containsValue(prefix);
@@ -219,13 +190,7 @@ class EncodingUtils {
     'identity': 0x00, // Raw identity
   };
 
-  /// Get codec code from string representation
-  static int _getCodecCode(String codec) {
-    if (!_supportedCodecs.containsKey(codec)) {
-      throw ArgumentError('Unsupported codec: $codec');
-    }
-    return _supportedCodecs[codec]!;
-  }
+
 
   /// Get codec string from code number
   static String getCodecFromCode(int code) {

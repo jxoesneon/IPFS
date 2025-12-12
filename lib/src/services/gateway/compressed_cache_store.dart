@@ -6,7 +6,7 @@ import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'adaptive_compression_handler.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:lz4/lz4.dart';
+// import 'package:lz4/lz4.dart'; // Package not available, lz4 disabled
 
 /// Manages compressed cache storage with multiple compression algorithms
 class CompressedCacheStore {
@@ -85,11 +85,11 @@ class CompressedCacheStore {
       case CompressionType.none:
         return data;
       case CompressionType.gzip:
-        return Uint8List.fromList(GZipEncoder().encode(data)!);
+        return Uint8List.fromList(GZipEncoder().encode(data));
       case CompressionType.zlib:
         return Uint8List.fromList(ZLibEncoder().encode(data));
       case CompressionType.lz4:
-        return Uint8List.fromList(Lz4Encoder().convert(data));
+        throw UnimplementedError('LZ4 compression not available');
     }
   }
 
@@ -102,7 +102,7 @@ class CompressedCacheStore {
       case CompressionType.zlib:
         return Uint8List.fromList(ZLibDecoder().decodeBytes(data));
       case CompressionType.lz4:
-        return Uint8List.fromList(Lz4Decoder().convert(data));
+        throw UnimplementedError('LZ4 decompression not available');
     }
   }
 

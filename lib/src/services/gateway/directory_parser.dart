@@ -2,7 +2,8 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/services/gateway/file_preview_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/lazy_preview_handler.dart';
 import 'package:intl/intl.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/directory.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 
 /// Handles directory operations and metadata for IPFS directory listings
 class DirectoryHandler {
@@ -54,8 +55,56 @@ class DirectoryParser {
     }
 
     _currentBlock = block;
-    final directory = DirectoryProto.fromBuffer(block.data);
-    return DirectoryHandler(directory.path);
+    
+    // Parse standard UnixFS Directory
+    try {
+        final pbNode = PBNode.fromBuffer(block.data);
+        
+        // Check UnixFS Data
+        if (pbNode.hasData()) {
+            try {
+                final unixFsData = Data.fromBuffer(pbNode.data);
+                if (unixFsData.type != Data_DataType.Directory && unixFsData.type != Data_DataType.HAMTShard) {
+                    throw FormatException('Block is not a UnixFS Directory (Type: ${unixFsData.type})');
+                }
+            } catch (e) {
+                 // If data fails to parse as UnixFS, it might not be a UnixFS directory
+                 throw FormatException('Failed to parse UnixFS data: $e');
+            }
+        }
+        
+        // Create Handler (Path is unknown from the block itself, defaults to root or empty)
+        final handler = DirectoryHandler('/${block.cid.encode()}'); // Use CID as placeholder path
+        
+        for (final link in pbNode.links) {
+            // Determine if link is directory? 
+            // In standard MerkleDAG, the link doesn't strictly say if target is directory without fetching it.
+            // However, typical listings might guess or we fetch? 
+            // For now, let's assume unknown or use Tsize.
+            // But strict Gateway usually fetches metadata or just lists them.
+            // The old code assumed `isDirectory` was in the link metadata? 
+            // PBLink doesn't have metadata in standard spec (except Name, Hash, Tsize).
+            // We will default isDirectory to false or try to infer.
+            
+            // Standard generic ls usually requires resolving the link to know type, 
+            // OR assuming everything is a file/dir based on context.
+            // For a simple list, we treat everything as a generic entry.
+            // But the UI wants icons.
+            
+            handler.addEntry(DirectoryEntry(
+                name: link.name,
+                size: link.size.toInt(),
+                isDirectory: false, // Cannot know without fetching child block in standard IPFS
+                timestamp: 0, // Not stored in standard link
+                metadata: {},
+            ));
+        }
+        
+        return handler;
+
+    } catch (e) {
+        throw FormatException('Failed to parse PBNode: $e');
+    }
   }
 
   /// Generates an HTML representation of the directory listing with enhanced metadata

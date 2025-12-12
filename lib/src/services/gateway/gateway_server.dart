@@ -1,99 +1,154 @@
+// lib/src/services/gateway/gateway_server.dart
 import 'dart:io';
-import 'gateway_handler.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
-import '../../core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 
-/// IPFS Gateway server that handles HTTP requests following the IPFS Gateway specs
+/// IPFS HTTP Gateway Server
+/// 
+/// Provides standard IPFS Gateway endpoints for accessing content via HTTP.
+/// Compliant with IPFS Gateway specifications.
 class GatewayServer {
-  final String host;
-  final int port;
   final BlockStore blockStore;
-  final GatewayHandler _handler;
+  final String address;
+  final int port;
+  final List<String> corsOrigins;
+  
   HttpServer? _server;
+  late final GatewayHandler _handler;
+  late final Router _router;
 
   GatewayServer({
-    this.host = 'localhost',
-    this.port = 8080,
     required this.blockStore,
-  }) : _handler = GatewayHandler(blockStore);
+    this.address = 'localhost',
+    this.port = 8080,
+    this.corsOrigins = const ['*'],
+  }) {
+    _handler = GatewayHandler(blockStore);
+    _setupRouter();
+  }
+
+  void _setupRouter() {
+    _router = Router();
+
+    // Path-based gateway
+    _router.get('/ipfs/<path|.*>', (Request request, String path) async {
+      return await _handler.handlePath(request);
+    });
+
+    _router.get('/ipns/<path|.*>', (Request request, String path) async {
+      return await _handler.handlePath(request);
+    });
+
+    // HEAD requests for metadata
+    _router.head('/ipfs/<path|.*>', (Request request, String path) async {
+      final response = await _handler.handlePath(request);
+      // Return headers only, no body
+      return Response(
+        response.statusCode,
+        headers: response.headers,
+      );
+    });
+
+    // Version endpoint
+    _router.get('/api/v0/version', (Request request) {
+      return Response.ok(
+        '{"Version":"dart_ipfs/0.1.0","Commit":"phase3","Repo":"1"}',
+        headers: {'Content-Type': 'application/json'},
+      );
+    });
+
+    // Health check
+    _router.get('/health', (Request request) {
+      return Response.ok('OK');
+    });
+  }
 
   /// Starts the gateway server
   Future<void> start() async {
-    final app = Router();
+    if (_server != null) {
+      throw StateError('Server is already running');
+    }
 
-    // Path-based gateway routes
-    app.get('/ipfs/<cid>/**', _handleIpfsRequest);
-    app.get('/ipns/<name>/**', _handleIpnsRequest);
-
-    // Subdomain gateway route
-    app.get('/**', _handleSubdomainRequest);
-
-    // Trustless gateway route
-    app.get('/trustless/ipfs', _handleTrustlessRequest);
-
-    // Create a handler pipeline
+    // Build middleware pipeline
     final handler = Pipeline()
-        .addMiddleware(logRequests())
         .addMiddleware(_corsMiddleware())
-        .addHandler(app);
+        .addMiddleware(_loggingMiddleware())
+        .addHandler(_router);
 
-    // Start the server
-    _server = await shelf_io.serve(handler, host, port);
-    print('IPFS Gateway server running on http://$host:$port/');
+    try {
+      _server = await shelf_io.serve(
+        handler,
+        address,
+        port,
+      );
+      print('✅ Gateway server listening on http://${_server!.address.host}:${_server!.port}');
+    } catch (e) {
+      print('❌ Failed to start gateway server: $e');
+      rethrow;
+    }
   }
 
   /// Stops the gateway server
   Future<void> stop() async {
-    await _server?.close();
-    _server = null;
-  }
-
-  /// Handles IPFS path-based requests
-  Future<Response> _handleIpfsRequest(Request request, String cid) async {
-    return _handler.handlePath(request);
-  }
-
-  /// Handles IPNS path-based requests
-  Future<Response> _handleIpnsRequest(Request request, String name) async {
-    try {
-      // Get the IPNS record from the handler
-      final ipnsRecord = await _handler.handleIPNS(request);
-      if (ipnsRecord != null) {
-        return ipnsRecord;
-      }
-
-      // If no record is found, return a 404
-      return Response.notFound('IPNS name not found');
-    } catch (e) {
-      return Response.internalServerError(
-          body: 'Error resolving IPNS name: $e');
+    if (_server == null) {
+      return;
     }
+
+    await _server!.close(force: true);
+    _server = null;
+    print('Gateway server stopped');
   }
 
-  /// Handles subdomain-based requests
-  Future<Response> _handleSubdomainRequest(Request request) async {
-    return _handler.handleSubdomain(request);
-  }
-
-  /// Handles trustless gateway requests
-  Future<Response> _handleTrustlessRequest(Request request) async {
-    return _handler.handleTrustless(request);
-  }
-
-  /// CORS middleware for handling cross-origin requests
+  /// CORS middleware
   Middleware _corsMiddleware() {
-    return createMiddleware(
-      requestHandler: (request) => null,
-      responseHandler: (response) {
-        return response.change(headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-          'Access-Control-Allow-Headers': 'X-IPFS-Path, X-IPFS-Roots',
-          'Access-Control-Expose-Headers': 'X-IPFS-Path, X-IPFS-Roots',
-        });
-      },
-    );
+    return (Handler handler) {
+      return (Request request) async {
+        // Handle preflight OPTIONS request
+        if (request.method == 'OPTIONS') {
+          return Response.ok('', headers: _corsHeaders());
+        }
+
+        // Process request and add CORS headers to response
+        final response = await handler(request);
+        return response.change(headers: _corsHeaders());
+      };
+    };
   }
+
+  /// CORS headers
+  Map<String, String> _corsHeaders() {
+    return {
+      'Access-Control-Allow-Origin': corsOrigins.join(','),
+      'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Range',
+      'Access-Control-Expose-Headers': 'Content-Range, X-IPFS-Path, X-IPFS-Roots',
+      'Access-Control-Max-Age': '86400',
+    };
+  }
+
+  /// Logging middleware
+  Middleware _loggingMiddleware() {
+    return (Handler handler) {
+      return (Request request) async {
+        final start = DateTime.now();
+        final response = await handler(request);
+        final duration = DateTime.now().difference(start);
+        
+        print('[${request.method}] ${request.url.path} - ${response.statusCode} (${duration.inMilliseconds}ms)');
+        
+        return response;
+      };
+    };
+  }
+
+  /// Returns true if the server is running
+  bool get isRunning => _server != null;
+
+  /// Returns the server URL
+  String get url => _server != null 
+      ? 'http://${_server!.address.host}:${_server!.port}'
+      : 'http://$address:$port (not started)';
 }

@@ -1,11 +1,15 @@
-import 'package:dart_ipfs/src/core/cid.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:shelf/shelf.dart';
+import 'package:mime/mime.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/services/gateway/content_type_handler.dart';
-import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
 
 /// Handles IPFS Gateway HTTP requests following the IPFS Gateway specs
+/// See: https://specs.ipfs.tech/http-gateways/
 class GatewayHandler {
   final BlockStore blockStore;
 
@@ -17,31 +21,185 @@ class GatewayHandler {
 
     // Parse IPFS path
     if (path.startsWith('ipfs/')) {
-      final cidStr = path.substring(5).split('/')[0];
+      final parts = path.substring(5).split('/');
+      final cidStr = parts[0];
+      final subPath = parts.length > 1 ? parts.sublist(1).join('/') : '';
+      
       try {
-        final block = await _getBlockByCid(cidStr);
-        if (block != null) {
-          final contentTypeHandler = ContentTypeHandler();
-          final contentType = contentTypeHandler.detectContentType(block,
-              filename: path.split('/').last);
-          final processedContent =
-              contentTypeHandler.processContent(block, contentType);
-
-          return Response.ok(
-            processedContent,
-            headers: {
-              'Content-Type': contentType,
-              'X-IPFS-Path': '/ipfs/$cidStr',
-            },
-          );
-        }
-        return Response.notFound('Block not found');
+        return await _serveContent(cidStr, subPath, request);
       } catch (e) {
         return Response.internalServerError(body: 'Error: $e');
       }
     }
 
+    if (path.startsWith('ipns/')) {
+      // TODO: Implement IPNS resolution
+      return Response(501, body: 'IPNS resolution not yet implemented');
+    }
+
     return Response.notFound('Invalid IPFS path');
+  }
+
+  /// Serves content for a given CID and optional sub-path
+  Future<Response> _serveContent(String cidStr, String subPath, Request request) async {
+    final block = await _getBlockByCid(cidStr);
+    if (block == null) {
+      return Response.notFound('Block not found');
+    }
+
+    // Try to parse as UnixFS
+    try {
+      final pbNode = PBNode.fromBuffer(block.data);
+      if (pbNode.hasData()) {
+        final unixfsData = Data.fromBuffer(pbNode.data);
+        
+        // Handle directories
+        if (unixfsData.type == Data_DataType.Directory) {
+          if (subPath.isEmpty) {
+            return _renderDirectory(cidStr, pbNode, request);
+          } else {
+            // Navigate to sub-path
+            return await _navigateDirectory(cidStr, pbNode, subPath, request);
+          }
+        }
+        
+        // Handle files
+        if (unixfsData.type == Data_DataType.File) {
+          return _serveFile(unixfsData, pbNode, cidStr, request);
+        }
+      }
+    } catch (e) {
+      // Not UnixFS, serve as raw block
+    }
+
+    // Serve raw block
+    return _serveRaw(block, cidStr, request);
+  }
+
+  /// Serves a UnixFS file
+  Response _serveFile(Data unixfsData, PBNode pbNode, String cidStr, Request request) {
+    final data = Uint8List.fromList(unixfsData.data);
+    final contentType = _detectContentType(data);
+    
+    final headers = {
+      'Content-Type': contentType,
+      'Content-Length': data.length.toString(),
+      'X-IPFS-Path': '/ipfs/$cidStr',
+      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': 'public, max-age=29030400, immutable',
+    };
+
+    // Handle range requests
+    final rangeHeader = request.headers['range'];
+    if (rangeHeader != null) {
+      return _serveRange(data, rangeHeader, headers);
+    }
+
+    return Response.ok(data, headers: headers);
+  }
+
+  /// Serves raw block data
+  Response _serveRaw(Block block, String cidStr, Request request) {
+    final headers = {
+      'Content-Type': 'application/octet-stream',
+      'Content-Length': block.data.length.toString(),
+      'X-IPFS-Path': '/ipfs/$cidStr',
+      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': 'public, max-age=29030400, immutable',
+    };
+
+    return Response.ok(block.data, headers: headers);
+  }
+
+  /// Renders a directory as HTML
+  Response _renderDirectory(String cidStr, PBNode pbNode, Request request) {
+    final html = StringBuffer();
+    html.writeln('<!DOCTYPE html>');
+    html.writeln('<html><head><meta charset="utf-8">');
+    html.writeln('<title>Index of /ipfs/$cidStr</title>');
+    html.writeln('<style>');
+    html.writeln('body { font-family: monospace; margin: 2em; }');
+    html.writeln('h1 { font-size: 1.5em; }');
+    html.writeln('table { border-collapse: collapse; width: 100%; }');
+    html.writeln('td, th { padding: 0.5em; text-align: left; border-bottom: 1px solid #ddd; }');
+    html.writeln('a { color: #0066cc; text-decoration: none; }');
+    html.writeln('a:hover { text-decoration: underline; }');
+    html.writeln('</style></head><body>');
+    html.writeln('<h1>Index of /ipfs/$cidStr</h1>');
+    html.writeln('<table>');
+    html.writeln('<thead><tr><th>Name</th><th>Size</th><th>Type</th></tr></thead>');
+    html.writeln('<tbody>');
+
+    for (final link in pbNode.links) {
+      final name = link.name;
+      final size = link.size.toInt();
+      final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+      html.writeln('<tr>');
+      html.writeln('  <td><a href="/ipfs/${linkCid.encode()}">$name</a></td>');
+      html.writeln('  <td>${_formatSize(size.toInt())}</td>');
+      html.writeln('  <td>-</td>');
+      html.writeln('</tr>');
+    }
+
+    html.writeln('</tbody></table></body></html>');
+
+    return Response.ok(
+      html.toString(),
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'X-IPFS-Path': '/ipfs/$cidStr',
+        'Cache-Control': 'public, max-age=29030400, immutable',
+      },
+    );
+  }
+
+  /// Navigates to a sub-path within a directory
+  Future<Response> _navigateDirectory(
+    String rootCid,
+    PBNode directory,
+    String subPath,
+    Request request,
+  ) async {
+    final pathParts = subPath.split('/');
+    final targetName = pathParts[0];
+    final remainingPath = pathParts.length > 1 ? pathParts.sublist(1).join('/') : '';
+
+    // Find the link with matching name
+    for (final link in directory.links) {
+      final linkName = link.name;
+      if (linkName == targetName) {
+        final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+        return await _serveContent(linkCid.encode(), remainingPath, request);
+      }
+    }
+
+    return Response.notFound('Path not found: $subPath');
+  }
+
+  /// Serves a byte range from data
+  Response _serveRange(List<int> data, String rangeHeader, Map<String, String> baseHeaders) {
+    // Parse range header: "bytes=start-end"
+    final rangeMatch = RegExp(r'bytes=(\d+)-(\d*)').firstMatch(rangeHeader);
+    if (rangeMatch == null) {
+      return Response(416, body: 'Invalid range'); // Range Not Satisfiable
+    }
+
+    final start = int.parse(rangeMatch.group(1)!);
+    final endStr = rangeMatch.group(2);
+    final end = endStr != null && endStr.isNotEmpty 
+        ? int.parse(endStr) 
+        : data.length - 1;
+
+    if (start >= data.length || end >= data.length || start > end) {
+      return Response(416, body: 'Range not satisfiable');
+    }
+
+    final rangeData = data.sublist(start, end + 1);
+    final headers = Map<String, String>.from(baseHeaders);
+    headers['Content-Length'] = rangeData.length.toString();
+    headers['Content-Range'] = 'bytes $start-$end/${data.length}';
+
+    return Response(206, body: rangeData, headers: headers); // Partial Content
   }
 
   /// Handles subdomain-based gateway requests (CID.ipfs.localhost)
@@ -53,18 +211,10 @@ class GatewayHandler {
     final parts = host.split('.');
     if (parts.length >= 3 && parts[parts.length - 2] == 'ipfs') {
       final cidStr = parts[0];
+      final path = request.url.path;
+      
       try {
-        final block = await _getBlockByCid(cidStr);
-        if (block != null) {
-          return Response.ok(
-            block.data,
-            headers: {
-              'Content-Type': 'application/octet-stream',
-              'X-IPFS-Path': '/ipfs/$cidStr',
-            },
-          );
-        }
-        return Response.notFound('Block not found');
+        return await _serveContent(cidStr, path, request);
       } catch (e) {
         return Response.internalServerError(body: 'Error: $e');
       }
@@ -73,84 +223,37 @@ class GatewayHandler {
     return Response.badRequest(body: 'Invalid IPFS subdomain');
   }
 
-  /// Handles trustless gateway requests with response verification
-  Future<Response> handleTrustless(Request request) async {
-    final trustlessHeader = request.headers['x-ipfs-trustless'];
-    if (trustlessHeader != 'true') {
-      return Response.badRequest(body: 'Missing trustless header');
+  /// Detects content type from file data
+  String _detectContentType(List<int> data) {
+    // Try MIME type detection
+    final mimeType = lookupMimeType('', headerBytes: data);
+    if (mimeType != null) {
+      return mimeType;
     }
 
-    // Get the requested CID
-    final cidStr = request.url.queryParameters['cid'];
-    if (cidStr == null) {
-      return Response.badRequest(body: 'Missing CID parameter');
-    }
-
+    // Check for text
     try {
-      final block = await _getBlockByCid(cidStr);
-      if (block != null) {
-        // Verify the block's integrity
-        if (_verifyBlock(block)) {
-          return Response.ok(
-            block.data,
-            headers: {
-              'Content-Type': 'application/octet-stream',
-              'X-IPFS-Path': '/ipfs/$cidStr',
-              'X-IPFS-Roots': block.cid.encode(),
-            },
-          );
-        }
-        return Response.internalServerError(body: 'Block verification failed');
-      }
-      return Response.notFound('Block not found');
+      utf8.decode(data);
+      return 'text/plain; charset=utf-8';
     } catch (e) {
-      return Response.internalServerError(body: 'Error: $e');
+      return 'application/octet-stream';
     }
   }
 
-  /// Handles IPNS resolution requests
-  Future<Response?> handleIPNS(Request request) async {
-    final path = request.url.path;
-
-    // Parse IPNS name
-    if (path.startsWith('ipns/')) {
-      final name = path.substring(5).split('/')[0];
-      try {
-        // Convert IPNS name to CID string
-        final cidProto = IPFSCIDProto()..codec = name;
-        final response = await blockStore.getBlock(cidProto.toString());
-
-        if (response.found) {
-          final block = Block.fromProto(response.block);
-          final contentTypeHandler = ContentTypeHandler();
-          final contentType = contentTypeHandler.detectContentType(block,
-              filename: path.split('/').last);
-          final processedContent =
-              contentTypeHandler.processContent(block, contentType);
-
-          return Response.ok(
-            processedContent,
-            headers: {
-              'Content-Type': contentType,
-              'X-IPFS-Path': '/ipns/$name',
-            },
-          );
-        }
-        return null;
-      } catch (e) {
-        print('Error resolving IPNS name: $e');
-        return null;
-      }
+  /// Formats file size for display
+  String _formatSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     }
-    return null;
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 
-  // Helper method to get a block by CID string
+  /// Helper method to get a block by CID string
   Future<Block?> _getBlockByCid(String cidStr) async {
     try {
-      // Convert CID string to IPFSCIDProto
-      final cidProto = IPFSCIDProto()..codec = cidStr;
-      final response = await blockStore.getBlock(cidProto.toString());
+      final response = await blockStore.getBlock(cidStr);
       if (response.found) {
         return Block.fromProto(response.block);
       }
@@ -158,20 +261,5 @@ class GatewayHandler {
       print('Error getting block: $e');
     }
     return null;
-  }
-
-  // Helper method to verify block integrity
-  bool _verifyBlock(Block block) {
-    try {
-      // Verify that the block's CID matches its content
-      final computedCid = CID.fromContent(
-        'raw',
-        content: block.data,
-      );
-      return computedCid.encode() == block.cid.encode();
-    } catch (e) {
-      print('Block verification error: $e');
-      return false;
-    }
   }
 }
