@@ -13,13 +13,14 @@ import '../protocols/bitswap/message.dart' show Message;
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/transport/local_crypto.dart';
 
 // lib/src/transport/p2plib_router.dart
 
 /// A router implementation using the `p2plib` package.
 class P2plibRouter {
   static P2plibRouter? _instance;
-  static final p2p.Crypto _sharedCrypto = p2p.Crypto();
+  static final p2p.Crypto _sharedCrypto = LocalCrypto();
   static final _cryptoInitLock = Lock();
   bool _isInitialized = false;
   final Logger _logger;
@@ -98,7 +99,9 @@ class P2plibRouter {
       await _cryptoInitLock.synchronized(() async {
         if (!_isCryptoInitialized) {
           _logger.verbose('Initializing crypto components');
-          await _sharedCrypto.init();
+          final seed = Uint8List.fromList(
+              List<int>.generate(32, (_) => Random().nextInt(256)));
+          await _sharedCrypto.init(seed);
           _isCryptoInitialized = true;
           _logger.verbose('Crypto components initialized successfully');
         }
@@ -106,7 +109,7 @@ class P2plibRouter {
 
       _logger.verbose('Initializing router with peer ID');
       final randomBytes =
-          List<int>.generate(32, (i) => Random.secure().nextInt(256));
+          List<int>.generate(32, (i) => Random().nextInt(256));
       await _router.init(Uint8List.fromList(randomBytes));
       _logger.verbose(
           'Router initialized with peer ID: ${Base58().encode(_router.selfId.value)}');
@@ -128,11 +131,9 @@ class P2plibRouter {
 
     // Only start the router and connect to bootstrap peers once
     if (!_hasStarted) {
-      if (!_router.isRun) {
-        _logger.debug('Starting router...');
-        await _router.start();
-        _logger.verbose('Router started successfully');
-      }
+      _logger.debug('Starting router...');
+      await _router.start();
+      _logger.verbose('Router started successfully');
 
       // Only connect to bootstrap peers once
       if (_connectedPeers.isEmpty) {
