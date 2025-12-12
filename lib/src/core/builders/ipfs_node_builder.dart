@@ -56,11 +56,15 @@ class IPFSNodeBuilder {
   }
 
   Future<void> _initializeNetworkLayer() async {
+    // Skip network initialization if offline
+    if (_config.offline) return;
+
     // First register NetworkHandler
     _container.registerSingleton(NetworkHandler(_config));
 
     // Get the router from NetworkHandler for other handlers
     final networkHandler = _container.get<NetworkHandler>();
+    await networkHandler.initialize();
 
     _container.registerSingleton(MDNSHandler(_config));
 
@@ -84,6 +88,9 @@ class IPFSNodeBuilder {
   }
 
   Future<void> _initializeServices() async {
+    // Skip services requiring network if offline
+    if (_config.offline) return;
+
     final networkHandler = _container.get<NetworkHandler>();
 
     _container
