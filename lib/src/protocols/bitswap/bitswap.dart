@@ -1,5 +1,5 @@
 // src/protocols/bitswap/bitswap.dart
-import 'dart:math';
+
 import 'ledger.dart';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -17,7 +17,7 @@ import 'package:dart_ipfs/src/protocols/bitswap/message.dart'
     as bitswap_message;
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
     as bitswap_pb;
-import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pbenum.dart';
+ // Import for WantlistEntry, Wantlist, BlockPresence
 // lib/src/protocols/bitswap/bitswap.dart
 
 class Bitswap {
@@ -53,11 +53,11 @@ class Bitswap {
     print('Requesting block with CID: $cid');
 
     // Create a Wantlist entry for the requested block
-    final wantlistEntry = proto.WantlistEntry()
-      ..cid = Uint8List.fromList(utf8.encode(cid))
+    final wantlistEntry = proto.Message_Wantlist_Entry()
+      ..block = Uint8List.fromList(utf8.encode(cid)) // Entry uses 'block' for cid bytes? Proto says 'block' field 1.
       ..priority = 1
       ..cancel = false
-      ..type = proto.MessageType.MESSAGE_TYPE_WANT_BLOCK
+      ..wantType = proto.Message_Wantlist_WantType.Block
       ..sendDontHave = true;
 
     // Send the wantlist to peers
@@ -102,11 +102,11 @@ class Bitswap {
         final wantlist = message.getWantlist();
         for (final entry in wantlist.entries.values) {
           // Convert the custom WantlistEntry to protobuf WantlistEntry
-          final protoEntry = bitswap_pb.WantlistEntry()
-            ..cid = Uint8List.fromList(utf8.encode(entry.cid))
+          final protoEntry = bitswap_pb.Message_Wantlist_Entry()
+            ..block = Uint8List.fromList(utf8.encode(entry.cid))
             ..priority = entry.priority
             ..cancel = entry.cancel
-            ..type = _convertToProtoWantType(entry.wantType)
+            ..wantType = _convertToProtoWantType(entry.wantType)
             ..sendDontHave = entry.sendDontHave;
 
           await handleWantBlock(peerId, protoEntry);
@@ -143,8 +143,8 @@ class Bitswap {
 
   /// Handles requests for blocks from peers.
   Future<void> handleWantBlock(
-      String peerId, bitswap_pb.WantlistEntry entry) async {
-    final blockId = base64.encode(entry.cid);
+      String peerId, bitswap_pb.Message_Wantlist_Entry entry) async {
+    final blockId = base64.encode(entry.block);
 
     // Check if we have the requested block locally
     final block = await _datastore.get(blockId);
@@ -158,15 +158,12 @@ class Bitswap {
 
   Future<void> sendBlock(String peerId, Uint8List data) async {
     final message = proto.Message()
-      ..blocks.add(proto.Block()
-        ..cid = Uint8List.fromList(utf8.encode(
-            data.sublist(0, min(data.length, maxPrefixLength)).toString()))
-        ..data = data);
+      ..blocks.add(data);
     await send(peerId, message);
   }
 
-  Future<void> sendWantlist(String peerId, proto.WantlistEntry entry) async {
-    final wantlist = proto.Wantlist();
+  Future<void> sendWantlist(String peerId, proto.Message_Wantlist_Entry entry) async {
+    final wantlist = proto.Message_Wantlist();
     wantlist.entries.add(entry);
 
     final message = proto.Message()..wantlist = wantlist;
@@ -190,8 +187,8 @@ class Bitswap {
   // --- Handlers for other message types ---
 
   /// Handles incoming "have" requests from peers.
-  void handleHave(String peerId, proto.WantlistEntry entry) {
-    final blockId = base64.encode(entry.cid);
+  void handleHave(String peerId, proto.Message_Wantlist_Entry entry) {
+    final blockId = base64.encode(entry.block);
     _logger.verbose('Received have request for block $blockId from $peerId');
 
     if (_ledger.hasBlock(blockId)) {
@@ -205,8 +202,8 @@ class Bitswap {
   }
 
   /// Handles cancel requests from peers.
-  void handleCancel(String peerId, proto.WantlistEntry entry) {
-    final blockId = base64.encode(entry.cid);
+  void handleCancel(String peerId, proto.Message_Wantlist_Entry entry) {
+    final blockId = base64.encode(entry.block);
 
     // Log the cancellation
     print('Received cancel request for block $blockId from $peerId.');
@@ -246,42 +243,40 @@ class Bitswap {
   /// Sends a HAVE message to a peer for a specific block
   Future<void> _sendHave(String peerId, String cid) async {
     final message = proto.Message()
-      ..blockPresences.add(proto.BlockPresence()
+      ..blockPresences.add(proto.Message_BlockPresence()
         ..cid = Uint8List.fromList(utf8.encode(cid))
-        ..type = proto.BlockPresence_Type.HAVE);
+        ..type = proto.Message_BlockPresence_Type.Have);
 
     await send(peerId, message);
   }
 
   /// Sends a DONT_HAVE message to a peer for a specific wantlist entry
-  Future<void> sendDontHave(String peerId, proto.WantlistEntry entry) async {
+  Future<void> sendDontHave(String peerId, proto.Message_Wantlist_Entry entry) async {
     final message = proto.Message()
-      ..blockPresences.add(proto.BlockPresence()
-        ..cid = entry.cid
-        ..type = proto.BlockPresence_Type.DONT_HAVE);
+      ..blockPresences.add(proto.Message_BlockPresence()
+        ..cid = entry.block
+        ..type = proto.Message_BlockPresence_Type.DontHave);
 
     await send(peerId, message);
   }
 
   /// Sends a HAVE message to a peer for a specific wantlist entry
-  Future<void> sendHave(String peerId, proto.WantlistEntry entry) async {
+  Future<void> sendHave(String peerId, proto.Message_Wantlist_Entry entry) async {
     final message = proto.Message()
-      ..blockPresences.add(proto.BlockPresence()
-        ..cid = entry.cid
-        ..type = proto.BlockPresence_Type.HAVE);
+      ..blockPresences.add(proto.Message_BlockPresence()
+        ..cid = entry.block
+        ..type = proto.Message_BlockPresence_Type.Have);
 
     await send(peerId, message);
   }
 
   // Add this helper method to convert between WantType enums
-  MessageType _convertToProtoWantType(bitswap_message.WantType type) {
+  proto.Message_Wantlist_WantType _convertToProtoWantType(bitswap_message.WantType type) {
     switch (type) {
       case bitswap_message.WantType.block:
-        return MessageType.MESSAGE_TYPE_WANT_BLOCK;
+        return proto.Message_Wantlist_WantType.Block;
       case bitswap_message.WantType.have:
-        return MessageType.MESSAGE_TYPE_WANT_HAVE;
-      default:
-        return MessageType.MESSAGE_TYPE_UNKNOWN;
+        return proto.Message_Wantlist_WantType.Have;
     }
   }
 }

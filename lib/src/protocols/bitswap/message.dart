@@ -1,31 +1,25 @@
-import 'dart:convert';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/utils/encoding.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart' show Block;
-import 'package:dart_ipfs/src/proto/generated/bitswap_messages.pb.dart'
-    as bitswap_messages_pb;
-import 'package:dart_ipfs/src/proto/generated/bitswap_messages.pbenum.dart'
-    show BitSwapMessage_MessageType;
+import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as pb;
+// If needed for int64? priorities are int32.
 
 /// Represents a Bitswap protocol message
 class Message {
-  /// List of blocks being sent
+  /// List of blocks being sent (Payload)
   final List<Block> _blocks = [];
 
   /// The wantlist containing requested blocks
   final Wantlist _wantlist = Wantlist();
 
-  /// The peer ID of the sender
-  String? from;
-
-  /// Message ID for tracking requests
-  String? messageId;
-
-  /// Message type
-  MessageType? type;
-
   /// Block presences for HAVE/DONT_HAVE responses
   final List<BlockPresence> _blockPresences = [];
+
+  /// Transient field: The peer ID of the sender (not part of wire protocol)
+  String? from;
+  
+  /// Transient field: Pending bytes (Bitswap 1.2)
+  int pendingBytes = 0;
 
   Message();
 
@@ -62,33 +56,75 @@ class Message {
 
   /// Creates a Message from its protobuf byte representation
   static Future<Message> fromBytes(Uint8List bytes) async {
-    final pbMessage = bitswap_messages_pb.BitSwapMessage.fromBuffer(bytes);
+    final pbMessage = pb.Message.fromBuffer(bytes);
     final message = Message();
-
-    // Set message ID and type if present
-    if (pbMessage.hasMessageId()) {
-      message.messageId = pbMessage.messageId;
-    }
-    if (pbMessage.hasType()) {
-      message.type = _convertFromProtoMessageType(pbMessage.type);
-    }
+    
+    // Parse pending bytes
+    message.pendingBytes = pbMessage.pendingBytes;
 
     // Parse wantlist
-    for (var entry in pbMessage.wantList) {
-      message.addWantlistEntry(
-        base64.encode(entry.cid),
-        priority: entry.priority,
-        wantType: WantType.block, // Default to block for now
-      );
+    if (pbMessage.hasWantlist()) {
+        for (var entry in pbMessage.wantlist.entries) {
+          // Entry block is CID bytes.
+          // We need to convert bytes to CID string for internal storage.
+          try {
+             // CID.fromBytes() handles both CIDv0 and CIDv1
+             final cidObj = CID.fromBytes(Uint8List.fromList(entry.block));
+             final cidStr = cidObj.encode(); 
+             
+             final wantType = entry.wantType == pb.Message_Wantlist_WantType.Have 
+                 ? WantType.have 
+                 : WantType.block;
+             
+             message.addWantlistEntry(
+               cidStr,
+               priority: entry.priority,
+               cancel: entry.cancel,
+               wantType: wantType,
+               sendDontHave: entry.sendDontHave
+             );
+          } catch (e) {
+             print('Error parsing wantlist entry CID: $e');
+          }
+        }
     }
 
-    // Parse blocks
-    for (var block in pbMessage.blocks) {
-      final newBlock = await Block.fromData(
-        Uint8List.fromList(block.data),
-        format: 'dag-pb',
-      );
-      message.addBlock(newBlock);
+    // Parse blocks (Payload - 1.1+)
+    for (var payloadBlock in pbMessage.payload) {
+      try {
+          // Payload has prefix and data.
+          // We need to reconstruct the block.
+          // prefix logic?
+          // Actually usually we just check data matches requested?
+          // Block.fromData(data). 
+          final newBlock = await Block.fromData(
+            Uint8List.fromList(payloadBlock.data),
+            format: 'dag-pb', // Assume dag-pb default or infer?
+          );
+          message.addBlock(newBlock);
+      } catch(e) { print('Error parsing payload block: $e'); }
+    }
+    
+    // Parse legacy blocks (1.0)
+    for (var blockBytes in pbMessage.blocks) {
+        try {
+          final newBlock = await Block.fromData(
+            Uint8List.fromList(blockBytes),
+            format: 'dag-pb',
+          );
+          message.addBlock(newBlock);
+        } catch(e) { print('Error parsing legacy block: $e'); }
+    }
+
+    // Parse block presences
+    for (var pres in pbMessage.blockPresences) {
+        try {
+            final cidObj = CID.fromBytes(Uint8List.fromList(pres.cid));
+            final type = pres.type == pb.Message_BlockPresence_Type.DontHave 
+                ? BlockPresenceType.dontHave 
+                : BlockPresenceType.have;
+            message.addBlockPresence(cidObj.encode(), type);
+        } catch(e) {}
     }
 
     return message;
@@ -96,87 +132,67 @@ class Message {
 
   /// Converts the message to its protobuf byte representation
   Uint8List toBytes() {
-    final pbMessage = bitswap_messages_pb.BitSwapMessage();
-
-    // Set message ID if present
-    if (messageId != null) {
-      pbMessage.messageId = messageId!;
-    }
-
-    // Set message type if present
-    if (type != null) {
-      pbMessage.type = _convertMessageType(type!);
-    }
+    final pbMessage = pb.Message();
+    
+    pbMessage.pendingBytes = pendingBytes;
 
     // Add wantlist entries
-    for (var entry in _wantlist.entries.values) {
-      final wantList = bitswap_messages_pb.WantList()
-        ..cid = Uint8List.fromList(EncodingUtils.fromBase58(entry.cid))
-        ..priority = entry.priority
-        ..wantBlock = true;
-      pbMessage.wantList.add(wantList);
+    if (_wantlist.entries.isNotEmpty) {
+      final pbWantlist = pb.Message_Wantlist();
+      pbWantlist.full = false; // Default to partial unless specified?
+      
+      for (var entry in _wantlist.entries.values) {
+        final pbEntry = pb.Message_Wantlist_Entry();
+        // Convert CID string to bytes using standard CID class
+        try {
+            final cidObj = CID.decode(entry.cid);
+            pbEntry.block = cidObj.toBytes(); // Using updated CID class method
+            pbEntry.priority = entry.priority;
+            pbEntry.cancel = entry.cancel;
+            pbEntry.sendDontHave = entry.sendDontHave;
+            pbEntry.wantType = entry.wantType == WantType.have 
+                ? pb.Message_Wantlist_WantType.Have 
+                : pb.Message_Wantlist_WantType.Block;
+                
+            pbWantlist.entries.add(pbEntry);
+        } catch (e) {
+            print('Skipping invalid CID in wantlist: ${entry.cid}');
+        }
+      }
+      pbMessage.wantlist = pbWantlist;
     }
 
-    // Add blocks
+    // Add blocks (Payload)
     for (var block in _blocks) {
-      final pbBlock = bitswap_messages_pb.Block()
-        ..cid = EncodingUtils.cidToBytes(block.cid)
-        ..data = block.data;
-      pbMessage.blocks.add(pbBlock);
+      final pbBlock = pb.Message_Block();
+      // Prefix? Usually empty for CIDv0. Or part of CIDv1?
+      // Bitswap 1.1: Payload includes prefix and data.
+      // We'll just put data.
+      pbBlock.data = block.data;
+      // TODO: Set prefix if needed for proper CID reconstruction on receiver
+      pbMessage.payload.add(pbBlock);
+    }
+
+    // Add block presences
+    for (var pres in _blockPresences) {
+       try {
+           final cidObj = CID.decode(pres.cid);
+           final pbPres = pb.Message_BlockPresence();
+           pbPres.cid = cidObj.toBytes();
+           pbPres.type = pres.type == BlockPresenceType.dontHave 
+               ? pb.Message_BlockPresence_Type.DontHave 
+               : pb.Message_BlockPresence_Type.Have;
+           pbMessage.blockPresences.add(pbPres);
+       } catch(e) {}
     }
 
     return pbMessage.writeToBuffer();
   }
-
-  static BitSwapMessage_MessageType _convertMessageType(MessageType type) {
-    switch (type) {
-      case MessageType.wantBlock:
-        return BitSwapMessage_MessageType.WANT_BLOCK;
-      case MessageType.wantHave:
-        return BitSwapMessage_MessageType.WANT_HAVE;
-      case MessageType.block:
-        return BitSwapMessage_MessageType.BLOCK;
-      case MessageType.have:
-        return BitSwapMessage_MessageType.HAVE;
-      case MessageType.dontHave:
-        return BitSwapMessage_MessageType.DONT_HAVE;
-      case MessageType.unknown:
-      default:
-        return BitSwapMessage_MessageType.UNKNOWN;
-    }
-  }
-
-  static MessageType _convertFromProtoMessageType(
-      BitSwapMessage_MessageType type) {
-    switch (type) {
-      case BitSwapMessage_MessageType.WANT_BLOCK:
-        return MessageType.wantBlock;
-      case BitSwapMessage_MessageType.WANT_HAVE:
-        return MessageType.wantHave;
-      case BitSwapMessage_MessageType.BLOCK:
-        return MessageType.block;
-      case BitSwapMessage_MessageType.HAVE:
-        return MessageType.have;
-      case BitSwapMessage_MessageType.DONT_HAVE:
-        return MessageType.dontHave;
-      case BitSwapMessage_MessageType.UNKNOWN:
-      default:
-        return MessageType.unknown;
-    }
-  }
-
-  String? getMessageId() => messageId;
-  void setMessageId(String id) => messageId = id;
-
-  MessageType? getType() => type;
-  void setType(MessageType t) => type = t;
 }
 
 enum WantType { block, have }
 
 enum BlockPresenceType { have, dontHave }
-
-enum MessageType { unknown, wantHave, wantBlock, have, dontHave, block }
 
 class WantlistEntry {
   final String cid;

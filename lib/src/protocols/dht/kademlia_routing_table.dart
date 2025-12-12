@@ -1,11 +1,8 @@
 import 'dart:math';
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/dht_messages.pb.dart'
-    as dht_messages;
-import 'package:dart_ipfs/src/proto/generated/dht/common_kademlia.pb.dart'
-    as common_kademlia_pb;
+import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'; // V_PeerInfo
+import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 
 import 'dht_client.dart';
 import 'kademlia_tree.dart';
@@ -337,9 +334,8 @@ class KademliaRoutingTable {
       }
     } else {
       // Create an associated PeerId from the peer info
-      final kademliaId = common_kademlia_pb.KademliaId()..id = peer.peerId;
       final associatedPeerId =
-          p2p.PeerId(value: Uint8List.fromList(kademliaId.id));
+          p2p.PeerId(value: Uint8List.fromList(peer.peerId));
       await addPeer(peerId, associatedPeerId);
     }
   }
@@ -380,20 +376,18 @@ class KademliaRoutingTable {
   Future<bool> pingPeer(p2p.PeerId peerId) async {
     try {
       // Create ping request message
-      final kademliaId = common_kademlia_pb.KademliaId()
-        ..id = dhtClient.peerId.value;
-      final request = dht_messages.PingRequest()..peerId = kademliaId;
+      final msg = kad.Message()..type = kad.Message_MessageType.PING;
 
       // Send request through DHT client's network handler
       final response = await dhtClient.networkHandler.sendRequest(
         peerId,
-        '/ipfs/kad/1.0.0',
-        request.writeToBuffer(),
+        DHTClient.PROTOCOL_DHT,
+        msg.writeToBuffer(),
       );
 
       // Parse response
-      final pingResponse = dht_messages.PingResponse.fromBuffer(response);
-      return pingResponse.success;
+      final pingResponse = kad.Message.fromBuffer(response);
+      return pingResponse.type == kad.Message_MessageType.PING;
     } catch (e) {
       print('Error pinging peer ${peerId.toString()}: $e');
       return false;

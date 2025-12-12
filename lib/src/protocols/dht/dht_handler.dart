@@ -1,9 +1,12 @@
 // src/protocols/dht/dht_handler.dart
-import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:http/http.dart' as http;
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:p2plib/p2plib.dart' show PeerId;
 import 'package:dart_ipfs/src/utils/keystore.dart';
+import 'package:dart_ipfs/src/utils/private_key.dart';
 import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
@@ -12,6 +15,8 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/Interface_dht_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/ipns/ipns.pb.dart';
+import 'package:fixnum/fixnum.dart';
 
 /// Handles DHT operations for an IPFS node.
 class DHTHandler implements IDHTHandler {
@@ -19,7 +24,7 @@ class DHTHandler implements IDHTHandler {
   final Keystore _keystore;
   final P2plibRouter _router;
   final Datastore _storage;
-  late final KademliaRoutingTable _routingTable;
+
   final Set<String> _activeQueries = {};
   final Map<String, Set<String>> _providers = {};
   static const String _protocolVersion = '1.0.0';
@@ -32,7 +37,6 @@ class DHTHandler implements IDHTHandler {
       networkHandler: networkHandler,
       router: _router,
     );
-    _routingTable = dhtClient.kademliaRoutingTable;
   }
 
   /// Starts the DHT client.
@@ -152,16 +156,53 @@ class DHTHandler implements IDHTHandler {
   Future<void> publishIPNS(String cid, {required String keyName}) async {
     // Get the IPNS key pair from the keystore
     final keyPair = _keystore.getKeyPair(keyName);
+    
+    // Parse private key for signing
+    final privateKey = IPFSPrivateKey.fromString(keyPair.privateKey);
 
     if (!isValidCID(cid)) {
       throw ArgumentError('Invalid CID: $cid');
     }
 
     try {
+      // Create IPNS Entry
+      final valuePath = utf8.encode('/ipfs/$cid');
+      
+      // Validity: RFC3339 format, 24 hours from now
+      final validityDate = DateTime.now().add(Duration(hours: 24)).toUtc();
+      final validity = utf8.encode(validityDate.toIso8601String());
+      final validityType = IpnsEntry_ValidityType.EOL;
+      
+      // Sequence: 1 (TODO: fetch existing record and increment)
+      final sequence = Int64(1);
+      final ttl = Int64(3600); // 1 hour
+
+      // Create data to sign (V1: value + validity + validityTypeString)
+      // ValidityType is 'EOL' for EOL type.
+      final dataToSign = BytesBuilder();
+      dataToSign.add(valuePath);
+      dataToSign.add(validity);
+      dataToSign.add(utf8.encode('EOL'));
+
+      final signature = privateKey.sign(dataToSign.toBytes());
+
+      final entry = IpnsEntry()
+        ..value = valuePath
+        ..validity = validity
+        ..validityType = validityType
+        ..sequence = sequence
+        ..ttl = ttl
+        ..signature = signature;
+        // ..pubKey = ... (Include public key if PeerID is hashed)
+
+      // Serialize entry
+      final entryBytes = entry.writeToBuffer();
+
       await putValue(
-          Key.fromString(keyPair.publicKey), // Convert String to Key
-          Value.fromString(cid) // Convert String to Value
-          );
+          Key.fromString(keyPair.publicKey), 
+          Value(entryBytes) 
+      );
+      
       print('Published IPNS record for CID: $cid with key: $keyName');
     } catch (e) {
       print('Error publishing IPNS record: $e');
@@ -269,7 +310,7 @@ class DHTHandler implements IDHTHandler {
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'active_queries': _activeQueries.length,
-      'routing_table_size': _routingTable.peerCount,
+      'routing_table_size': dhtClient.kademliaRoutingTable.peerCount,
       'total_providers': _providers.length,
       'protocol_version': _protocolVersion,
     };

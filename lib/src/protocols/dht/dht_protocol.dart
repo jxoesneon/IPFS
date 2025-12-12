@@ -64,7 +64,9 @@ class DHTProtocol {
     }).toList();
 
     return FindNodeResponse()
-      ..closerPeers.addAll(ipfsPeers.map((p) => p.toDHTPeer()));
+      ..closerPeers.addAll(ipfsPeers.map((p) => DHTPeer()
+        ..id = p.id.value
+        ..addrs.addAll(p.addresses.map((a) => a.toString()))));
   }
 
   /// Queries a peer for nodes closer to the target key

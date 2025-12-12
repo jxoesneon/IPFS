@@ -10,7 +10,7 @@ import 'connection_statistics.dart';
 import 'kademlia_tree/kademlia_tree_node.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
-import 'package:dart_ipfs/src/proto/generated/dht_messages.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'kademlia_tree/refresh.dart';
 import 'kademlia_tree/find_closest_peers.dart';
 import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
@@ -38,7 +38,7 @@ class KademliaTree {
   // Peer tracking
   Map<p2p.PeerId, DateTime> _lastSeen = {};
   Set<p2p.PeerId> _recentContacts = {};
-  Map<int, Completer<DHTMessage>> _pendingRequests = {};
+  Map<int, Completer<kad.Message>> _pendingRequests = {};
 
   // Statistics
   Map<p2p.PeerId, List<bool>> _lookupSuccessHistory = {};
@@ -244,7 +244,7 @@ class KademliaTree {
             .toDHTMessage();
 
     try {
-      final response = await _sendMessageWithTimeout(peer, message);
+      final response = await _sendMessageWithTimeout(peer, message, requestId);
       return _processFindNodeResponse(response);
     } catch (e) {
       print('Error in find node request to $peer: $e');
@@ -255,10 +255,10 @@ class KademliaTree {
   int _generateRequestId() =>
       DateTime.now().millisecondsSinceEpoch + Random().nextInt(1000000);
 
-  Future<DHTMessage> _sendMessageWithTimeout(
-      p2p.PeerId peer, DHTMessage message) {
-    final completer = Completer<DHTMessage>();
-    _pendingRequests[int.parse(message.messageId)] = completer;
+  Future<kad.Message> _sendMessageWithTimeout(
+      p2p.PeerId peer, kad.Message message, int requestId) {
+    final completer = Completer<kad.Message>();
+    _pendingRequests[requestId] = completer;
 
     // Convert to IPFSMessage protobuf using MessageFactory
     final ipfsMessage = MessageFactory.createBaseMessage(
@@ -267,6 +267,7 @@ class KademliaTree {
       senderId: _root!.peerId.toString(),
       type: IPFSMessage_MessageType.DHT,
     );
+    ipfsMessage.requestId = requestId.toString();
 
     final messageBytes = ipfsMessage.writeToBuffer();
 
@@ -277,17 +278,17 @@ class KademliaTree {
     );
 
     return completer.future.timeout(NODE_TIMEOUT, onTimeout: () {
-      _pendingRequests.remove(int.parse(message.messageId));
+      _pendingRequests.remove(requestId);
       throw TimeoutException('Request timed out');
     });
   }
 
-  List<p2p.PeerId> _processFindNodeResponse(DHTMessage response) {
+  List<p2p.PeerId> _processFindNodeResponse(kad.Message response) {
     try {
-      if (response.type != DHTMessage_MessageType.FIND_NODE) return [];
+      if (response.type != kad.Message_MessageType.FIND_NODE) return [];
 
       return response.closerPeers
-          .map((peer) => p2p.PeerId(value: Uint8List.fromList(peer.peerId)))
+          .map((peer) => p2p.PeerId(value: Uint8List.fromList(peer.id)))
           .toList();
     } catch (e) {
       print('Error processing find node response: $e');
@@ -298,8 +299,10 @@ class KademliaTree {
   // Message handling
   void handleIncomingMessage(p2p.Message message) {
     try {
-      final dhtMessage = DHTMessage.fromBuffer(message.payload!);
-      final requestId = int.parse(dhtMessage.messageId);
+      final ipfsMessage = IPFSMessage.fromBuffer(message.payload!);
+      final requestId = int.tryParse(ipfsMessage.requestId) ?? 0;
+      
+      final dhtMessage = kad.Message.fromBuffer(ipfsMessage.payload);
 
       if (_pendingRequests.containsKey(requestId)) {
         _pendingRequests[requestId]!.complete(dhtMessage);
@@ -348,14 +351,14 @@ class KademliaTree {
         PingMessage(requestId.toString(), _root!.peerId, peer).toDHTMessage();
 
     try {
-      final response = await _sendMessageWithTimeout(peer, pingMessage);
+      final response = await _sendMessageWithTimeout(peer, pingMessage, requestId);
 
       // Convert DHTMessage to p2p.Message
       return p2p.Message(
         srcPeerId: peer,
         dstPeerId: _root!.peerId,
         header: p2p.PacketHeader(
-          id: int.parse(response.messageId),
+          id: int.parse(requestId.toString()), // Use local requestId since response ID is in IPFSMessage wrapper, not DHTMessage
           issuedAt: DateTime.now().millisecondsSinceEpoch,
         ),
         payload: response.writeToBuffer(),
@@ -372,8 +375,8 @@ class KademliaTree {
         PingMessage(requestId.toString(), _root!.peerId, peer).toDHTMessage();
 
     try {
-      final response = await _sendMessageWithTimeout(peer, message);
-      return response.type == DHTMessage_MessageType.PING;
+      final response = await _sendMessageWithTimeout(peer, message, requestId);
+      return response.type == kad.Message_MessageType.PING;
     } catch (e) {
       print('Ping failed for peer $peer: $e');
       return false;
@@ -391,8 +394,8 @@ class KademliaTree {
               .toDHTMessage();
 
       try {
-        final response = await _sendMessageWithTimeout(peer, message);
-        return response.type == DHTMessage_MessageType.PUT_VALUE;
+        final response = await _sendMessageWithTimeout(peer, message, requestId);
+        return response.type == kad.Message_MessageType.PUT_VALUE;
       } catch (e) {
         print('Store value failed for peer $peer: $e');
         return false;
@@ -416,10 +419,13 @@ class KademliaTree {
                 .toDHTMessage();
 
         try {
-          final response = await _sendMessageWithTimeout(peer, message);
-          if (response.type == DHTMessage_MessageType.GET_VALUE &&
-              response.record.isNotEmpty) {
-            return (Uint8List.fromList(response.record), <p2p.PeerId>[]);
+          final response = await _sendMessageWithTimeout(peer, message, requestId);
+          if (response.type == kad.Message_MessageType.GET_VALUE &&
+              (response.hasRecord() || response.providerPeers.isNotEmpty)) { // Check record or providers (GET_VALUE might return providers too?)
+            // Assuming record field is populated for value
+             if (response.hasRecord()) {
+                return (Uint8List.fromList(response.record.value), <p2p.PeerId>[]);
+             }
           }
           // If value not found, return closer peers
           final closerPeers = _processFindNodeResponse(response);

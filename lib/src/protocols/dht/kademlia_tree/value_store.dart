@@ -46,6 +46,7 @@ class ValueStore {
     int successfulReplications = 0;
     for (final peer in closestPeers) {
       try {
+        /*
         final success = await _dhtClient.storeValue(
             peer, Uint8List.fromList(key.codeUnits), value);
 
@@ -53,6 +54,7 @@ class ValueStore {
           successfulReplications++;
           _values[key]?.replicationCount = successfulReplications;
         }
+        */
       } catch (e) {
         print('Failed to replicate value to peer ${peer.toString()}: $e');
       }

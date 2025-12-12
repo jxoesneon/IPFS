@@ -3,7 +3,8 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/proto/generated/dht_messages.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
+import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
 import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 
@@ -21,37 +22,39 @@ class DHTProtocolHandler {
   }
 
   Future<void> _handleDHTMessage(LibP2PPacket packet) async {
-    final message = DHTMessage.fromBuffer(packet.datagram);
-    final response = DHTMessage()..messageId = message.messageId;
+    final message = kad.Message.fromBuffer(packet.datagram);
+    final response = kad.Message();
 
     switch (message.type) {
-      case DHTMessage_MessageType.PING:
-        response..type = DHTMessage_MessageType.PING;
+      case kad.Message_MessageType.PING:
+        response..type = kad.Message_MessageType.PING;
         break;
 
-      case DHTMessage_MessageType.FIND_NODE:
+      case kad.Message_MessageType.FIND_NODE:
         final closerPeers = await _findClosestPeers(message.key);
         response
-          ..type = DHTMessage_MessageType.FIND_NODE
+          ..type = kad.Message_MessageType.FIND_NODE
           ..closerPeers.addAll(closerPeers);
         break;
 
-      case DHTMessage_MessageType.FIND_VALUE:
+      case kad.Message_MessageType.GET_VALUE:
         final value = await _storage.get(utf8.decode(message.key));
-        response..type = DHTMessage_MessageType.GET_VALUE;
+        response..type = kad.Message_MessageType.GET_VALUE;
         if (value != null) {
-          response.record = value.data;
+          response.record = (dht_pb.Record()..value = value.data);
         } else {
           final closerPeers = await _findClosestPeers(message.key);
           response.closerPeers.addAll(closerPeers);
         }
         break;
 
-      case DHTMessage_MessageType.PUT_VALUE:
-        final block = await Block.fromData(Uint8List.fromList(message.record),
-            format: 'raw');
-        await _storage.put(utf8.decode(message.key), block);
-        response..type = DHTMessage_MessageType.PUT_VALUE;
+      case kad.Message_MessageType.PUT_VALUE:
+        if (message.hasRecord()) {
+             final block = await Block.fromData(Uint8List.fromList(message.record.value),
+                format: 'raw');
+             await _storage.put(utf8.decode(message.key), block);
+        }
+        response..type = kad.Message_MessageType.PUT_VALUE;
         break;
 
       default:
@@ -62,7 +65,7 @@ class DHTProtocolHandler {
     await _router.sendMessage(packet.srcPeerId, response.writeToBuffer());
   }
 
-  Future<List<Peer>> _findClosestPeers(List<int> key,
+  Future<List<kad.Peer>> _findClosestPeers(List<int> key,
       {int numPeers = 20}) async {
     // Get the routing table from the router
     final routingTable = _router.getRoutingTable();
@@ -70,12 +73,12 @@ class DHTProtocolHandler {
     // Find closest peers from the routing table
     final closestPeers = routingTable.getNearestPeers(key, numPeers);
 
-    // Convert to List<Peer>
+    // Convert to List<kad.Peer>
     return closestPeers
-        .map((peer) => Peer(
-              peerId: peer.value,
-              addresses: [], // Add actual addresses if available
-            ))
+        .map((peer) => kad.Peer()
+              ..id = peer.value
+              //..addrs = [] // Add actual addresses if available
+            )
         .toList();
   }
 }

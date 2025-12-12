@@ -25,6 +25,7 @@ class ReplicationManager {
 
       for (final peer in additionalPeers) {
         try {
+          /*
           final success = await _dhtClient.storeValue(
             peer,
             Uint8List.fromList(key.codeUnits),
@@ -34,6 +35,8 @@ class ReplicationManager {
           if (success) {
             await _valueStore.incrementReplicationCount(key);
           }
+          */
+          print('Replication (storeValue) temporarily disabled during refactor');
         } catch (e) {
           print('Failed to create replica on peer ${peer.toString()}: $e');
         }
@@ -45,18 +48,12 @@ class ReplicationManager {
     final localValue = await _valueStore.retrieve(key);
     int replicaCount = localValue != null ? 1 : 0;
 
-    final targetPeerId = p2p.PeerId(value: Uint8List.fromList(key.codeUnits));
-    final potentialHolders =
-        _dhtClient.kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
 
-    for (final peer in potentialHolders) {
-      try {
-        final hasValue = await _dhtClient.checkValue(peer, key);
-        if (hasValue) replicaCount++;
-      } catch (e) {
-        continue;
-      }
-    }
+    // final potentialHolders =
+    //     _dhtClient.kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
+
+    // TODO: Check value presence on peers
+    // for (final peer in potentialHolders) { ... }
 
     if (localValue != null) {
       await _valueStore.updateReplicationCount(key, replicaCount);

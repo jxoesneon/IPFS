@@ -1,5 +1,4 @@
 // src/protocols/bitswap/ledger.dart
-import 'dart:convert';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
     as bitswap;
@@ -55,17 +54,14 @@ class BitLedger {
 
   /// Updates the ledger with a received message
   void receivedMessage(String peerId, bitswap.Message message) {
-    // Update received bytes from blocks
-    for (var block in message.blocks) {
-      addReceivedBytes(block.data.length);
+    // Update received bytes from blocks (Bitswap 1.0)
+    for (var blockBytes in message.blocks) {
+      addReceivedBytes(blockBytes.length);
     }
-
-    // Store any new blocks
-    for (var block in message.blocks) {
-      if (block.data.isNotEmpty) {
-        storeBlockData(
-            base64.encode(block.cid), Uint8List.fromList(block.data));
-      }
+    
+    // Update received bytes from payload (Bitswap 1.1)
+    for (var block in message.payload) {
+      addReceivedBytes(block.data.length);
     }
   }
 }

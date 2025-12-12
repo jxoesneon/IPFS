@@ -195,7 +195,7 @@ class GraphsyncHandler {
         final selectorBytes = Uint8List.fromList(request.selector);
 
         // First try to get the root block using Bitswap
-        final rootCID = CID.fromBytes(rootBytes, 'dag-cbor');
+        final rootCID = CID.fromBytes(rootBytes);
         final rootBlock = await _bitswap.wantBlock(rootCID.toString());
         if (rootBlock == null) {
           throw GraphTraversalError('Root block not found');
@@ -282,7 +282,7 @@ class GraphsyncHandler {
     _logger.debug('Requesting graph for CID: $cidStr with selector');
 
     try {
-      final cid = CID.fromString(cidStr);
+      final cid = CID.decode(cidStr);
       final rootBytes = cid.toBytes();
       final selectorBytes = await selector.toBytes();
       final requestId = DateTime.now().microsecondsSinceEpoch;
@@ -315,7 +315,7 @@ class GraphsyncHandler {
 
   Block _convertToGraphsyncBlock(core.Block bitswapBlock) {
     return Block(
-      prefix: bitswapBlock.toBytes().sublist(0, 1), // Get the prefix byte
+      prefix: bitswapBlock.cid.toBytes().sublist(0, 1),
       data: bitswapBlock.data,
     );
   }
