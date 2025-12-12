@@ -441,6 +441,9 @@ class NetworkHandler {
     }
   }
 
+  /// Gets the IPFS configuration
+  IPFSConfig get config => _config;
+
   /// Gets the peer ID of this node
-  String get peerID => _router.localPeerId.toString();
+  String get peerID => _router.peerID;
 }
