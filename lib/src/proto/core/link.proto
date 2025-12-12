@@ -3,6 +3,9 @@ syntax = "proto3";
 
 package ipfs.core.data_structures;
 
+// Import the standard PBLink from dag.proto
+import "core/dag.proto";
+
 // Link types for different DAG structures
 enum LinkType {
   LINK_TYPE_UNSPECIFIED = 0;
@@ -11,35 +14,23 @@ enum LinkType {
   LINK_TYPE_TRICKLE = 3;
 }
 
-// A message representing a link between nodes or objects in IPFS.
-message PBLink {
-  // The name of the link (optional, could be a human-readable identifier).
-  string name = 1;
-
-  // The CID (Content Identifier) that the link points to.
-  bytes cid = 2;
-
-  // The hash of the linked object or node.
-  bytes hash = 3;
-
-  // The size of the linked object or node (in bytes).
-  uint64 size = 4;
-
-  // Unix timestamp of when the link was created.
-  int64 timestamp = 5;
-
-  // A flag indicating whether the linked object is a directory.
-  bool is_directory = 6;
-
-  // Custom metadata or additional fields for the link.
-  map<string, string> metadata = 7;
-
+// Extended link with additional metadata (uses standard PBLink)
+message LinkMetadata {
+  // Reference to the standard PBLink
+  PBLink link = 1;
+  
+  // Unix timestamp of when the link was created
+  int64 timestamp = 2;
+  
+  // Custom metadata or additional fields
+  map<string, string> metadata = 3;
+  
   // Link type for different DAG structures
-  LinkType type = 8;
-
+  LinkType type = 4;
+  
   // For HAMT links
-  int32 bucket_index = 9;
-
+  int32 bucket_index = 5;
+  
   // For trickle-dag links
-  int32 depth = 10;
+  int32 depth = 6;
 }
