@@ -9,11 +9,89 @@ build/
 # Lockfile (consider committing if it's an application)
 pubspec.lock
 
-# Generated documentation
-doc/api/
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
 
-# Environment variables
-.env*
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code related
+.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# IPFS Data Directories (Runtime generated)
+# Example data directories
+blog_data/
+online_data/
+gateway_data/
+p2p_data/
+chat_data*/
+fileshare_data/
+cdn_data/
+ipfs_data/
+*_data/
+
+# IPFS Storage
+*.hive
+*.hive.lock
+*.lock
+blocks/
+datastore/
+keystore/
+pins/
+
+# Test data
+test_data/
+tmp/
+temp/
+.tmp/
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Coverage
+coverage/
+.test_coverage.dart
+
+# Environment
+.env
+.env.local
+.env.*.local
 
 # Javascript artifacts from Dart compilation
 *.dart.js
@@ -23,15 +101,9 @@ doc/api/
 *.js.deps
 *.js.map
 
-# Flutter plugins
-.flutter-plugins
-.flutter-plugins-dependencies
-
 
 # Visual Studio Code settings
 ###########################
-
-.vscode/
 
 
 # Visual Studio temporary files, build results
