@@ -15,7 +15,7 @@ import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart' as pb_cid;
 import 'package:dart_ipfs/src/services/gateway/content_type_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/lazy_preview_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart' as pb_base;
-import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart';
+import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 
 class MessageHandler {
   final StreamController<pb_base.NetworkEvent> _eventController =
