@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package ipfs.ipns;
+
+message IpnsEntry {
+	enum ValidityType {
+		// EOL specifies that the record is valid until a specific time.
+		EOL = 0;
+	}
+	bytes value = 1;
+	bytes signature = 2;
+	ValidityType validityType = 3;
+	bytes validity = 4;
+	uint64 sequence = 5;
+	uint64 ttl = 6;
+	bytes pubKey = 7;
+    // data field is sometimes used? No, spec says value.
+}
