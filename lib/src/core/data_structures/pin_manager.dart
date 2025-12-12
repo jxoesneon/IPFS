@@ -185,7 +185,7 @@ class PinManager {
 
   IPFSCIDProto _stringToIPFSCIDProto(String cidStr) {
     try {
-      final cid = CID.fromBytes(Uint8List.fromList(cidStr.codeUnits), 'raw');
+      final cid = CID.decode(cidStr);
       return cid.toProto();
     } catch (e) {
       throw FormatException('Invalid CID string format: $cidStr');
