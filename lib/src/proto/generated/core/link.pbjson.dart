@@ -1,13 +1,15 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: core/link.proto
-//
-// @dart = 2.12
+// Generated from core/link.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -29,26 +31,43 @@ final $typed_data.Uint8List linkTypeDescriptor = $convert.base64Decode(
     'CghMaW5rVHlwZRIZChVMSU5LX1RZUEVfVU5TUEVDSUZJRUQQABIUChBMSU5LX1RZUEVfRElSRU'
     'NUEAESEgoOTElOS19UWVBFX0hBTVQQAhIVChFMSU5LX1RZUEVfVFJJQ0tMRRAD');
 
-@$core.Deprecated('Use pBLinkDescriptor instead')
-const PBLink$json = {
-  '1': 'PBLink',
+@$core.Deprecated('Use linkMetadataDescriptor instead')
+const LinkMetadata$json = {
+  '1': 'LinkMetadata',
   '2': [
-    {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'cid', '3': 2, '4': 1, '5': 12, '10': 'cid'},
-    {'1': 'hash', '3': 3, '4': 1, '5': 12, '10': 'hash'},
-    {'1': 'size', '3': 4, '4': 1, '5': 4, '10': 'size'},
-    {'1': 'timestamp', '3': 5, '4': 1, '5': 3, '10': 'timestamp'},
-    {'1': 'is_directory', '3': 6, '4': 1, '5': 8, '10': 'isDirectory'},
-    {'1': 'metadata', '3': 7, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.PBLink.MetadataEntry', '10': 'metadata'},
-    {'1': 'type', '3': 8, '4': 1, '5': 14, '6': '.ipfs.core.data_structures.LinkType', '10': 'type'},
-    {'1': 'bucket_index', '3': 9, '4': 1, '5': 5, '10': 'bucketIndex'},
-    {'1': 'depth', '3': 10, '4': 1, '5': 5, '10': 'depth'},
+    {
+      '1': 'link',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.data_structures.PBLink',
+      '10': 'link'
+    },
+    {'1': 'timestamp', '3': 2, '4': 1, '5': 3, '10': 'timestamp'},
+    {
+      '1': 'metadata',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.core.data_structures.LinkMetadata.MetadataEntry',
+      '10': 'metadata'
+    },
+    {
+      '1': 'type',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.core.data_structures.LinkType',
+      '10': 'type'
+    },
+    {'1': 'bucket_index', '3': 5, '4': 1, '5': 5, '10': 'bucketIndex'},
+    {'1': 'depth', '3': 6, '4': 1, '5': 5, '10': 'depth'},
   ],
-  '3': [PBLink_MetadataEntry$json],
+  '3': [LinkMetadata_MetadataEntry$json],
 };
 
-@$core.Deprecated('Use pBLinkDescriptor instead')
-const PBLink_MetadataEntry$json = {
+@$core.Deprecated('Use linkMetadataDescriptor instead')
+const LinkMetadata_MetadataEntry$json = {
   '1': 'MetadataEntry',
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
@@ -57,14 +76,12 @@ const PBLink_MetadataEntry$json = {
   '7': {'7': true},
 };
 
-/// Descriptor for `PBLink`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List pBLinkDescriptor = $convert.base64Decode(
-    'CgZQQkxpbmsSEgoEbmFtZRgBIAEoCVIEbmFtZRIQCgNjaWQYAiABKAxSA2NpZBISCgRoYXNoGA'
-    'MgASgMUgRoYXNoEhIKBHNpemUYBCABKARSBHNpemUSHAoJdGltZXN0YW1wGAUgASgDUgl0aW1l'
-    'c3RhbXASIQoMaXNfZGlyZWN0b3J5GAYgASgIUgtpc0RpcmVjdG9yeRJLCghtZXRhZGF0YRgHIA'
-    'MoCzIvLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuUEJMaW5rLk1ldGFkYXRhRW50cnlSCG1l'
-    'dGFkYXRhEjcKBHR5cGUYCCABKA4yIy5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLkxpbmtUeX'
-    'BlUgR0eXBlEiEKDGJ1Y2tldF9pbmRleBgJIAEoBVILYnVja2V0SW5kZXgSFAoFZGVwdGgYCiAB'
-    'KAVSBWRlcHRoGjsKDU1ldGFkYXRhRW50cnkSEAoDa2V5GAEgASgJUgNrZXkSFAoFdmFsdWUYAi'
-    'ABKAlSBXZhbHVlOgI4AQ==');
-
+/// Descriptor for `LinkMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List linkMetadataDescriptor = $convert.base64Decode(
+    'CgxMaW5rTWV0YWRhdGESNQoEbGluaxgBIAEoCzIhLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZX'
+    'MuUEJMaW5rUgRsaW5rEhwKCXRpbWVzdGFtcBgCIAEoA1IJdGltZXN0YW1wElEKCG1ldGFkYXRh'
+    'GAMgAygLMjUuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy5MaW5rTWV0YWRhdGEuTWV0YWRhdG'
+    'FFbnRyeVIIbWV0YWRhdGESNwoEdHlwZRgEIAEoDjIjLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVy'
+    'ZXMuTGlua1R5cGVSBHR5cGUSIQoMYnVja2V0X2luZGV4GAUgASgFUgtidWNrZXRJbmRleBIUCg'
+    'VkZXB0aBgGIAEoBVIFZGVwdGgaOwoNTWV0YWRhdGFFbnRyeRIQCgNrZXkYASABKAlSA2tleRIU'
+    'CgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');

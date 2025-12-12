@@ -1,56 +1,58 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: bitswap/bitswap.proto
-//
-// @dart = 2.12
+// Generated from bitswap/bitswap.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-/// Enum for message types
-class MessageType extends $pb.ProtobufEnum {
-  static const MessageType MESSAGE_TYPE_UNKNOWN = MessageType._(0, _omitEnumNames ? '' : 'MESSAGE_TYPE_UNKNOWN');
-  static const MessageType MESSAGE_TYPE_WANT_BLOCK = MessageType._(1, _omitEnumNames ? '' : 'MESSAGE_TYPE_WANT_BLOCK');
-  static const MessageType MESSAGE_TYPE_WANT_HAVE = MessageType._(2, _omitEnumNames ? '' : 'MESSAGE_TYPE_WANT_HAVE');
-  static const MessageType MESSAGE_TYPE_BLOCK = MessageType._(3, _omitEnumNames ? '' : 'MESSAGE_TYPE_BLOCK');
-  static const MessageType MESSAGE_TYPE_HAVE = MessageType._(4, _omitEnumNames ? '' : 'MESSAGE_TYPE_HAVE');
-  static const MessageType MESSAGE_TYPE_DONT_HAVE = MessageType._(5, _omitEnumNames ? '' : 'MESSAGE_TYPE_DONT_HAVE');
+class Message_Wantlist_WantType extends $pb.ProtobufEnum {
+  static const Message_Wantlist_WantType Block =
+      Message_Wantlist_WantType._(0, _omitEnumNames ? '' : 'Block');
+  static const Message_Wantlist_WantType Have =
+      Message_Wantlist_WantType._(1, _omitEnumNames ? '' : 'Have');
 
-  static const $core.List<MessageType> values = <MessageType> [
-    MESSAGE_TYPE_UNKNOWN,
-    MESSAGE_TYPE_WANT_BLOCK,
-    MESSAGE_TYPE_WANT_HAVE,
-    MESSAGE_TYPE_BLOCK,
-    MESSAGE_TYPE_HAVE,
-    MESSAGE_TYPE_DONT_HAVE,
+  static const $core.List<Message_Wantlist_WantType> values =
+      <Message_Wantlist_WantType>[
+    Block,
+    Have,
   ];
 
-  static final $core.Map<$core.int, MessageType> _byValue = $pb.ProtobufEnum.initByValue(values);
-  static MessageType? valueOf($core.int value) => _byValue[value];
+  static final $core.List<Message_Wantlist_WantType?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 1);
+  static Message_Wantlist_WantType? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
 
-  const MessageType._($core.int v, $core.String n) : super(v, n);
+  const Message_Wantlist_WantType._(super.value, super.name);
 }
 
-class BlockPresence_Type extends $pb.ProtobufEnum {
-  static const BlockPresence_Type HAVE = BlockPresence_Type._(0, _omitEnumNames ? '' : 'HAVE');
-  static const BlockPresence_Type DONT_HAVE = BlockPresence_Type._(1, _omitEnumNames ? '' : 'DONT_HAVE');
+class Message_BlockPresence_Type extends $pb.ProtobufEnum {
+  static const Message_BlockPresence_Type Have =
+      Message_BlockPresence_Type._(0, _omitEnumNames ? '' : 'Have');
+  static const Message_BlockPresence_Type DontHave =
+      Message_BlockPresence_Type._(1, _omitEnumNames ? '' : 'DontHave');
 
-  static const $core.List<BlockPresence_Type> values = <BlockPresence_Type> [
-    HAVE,
-    DONT_HAVE,
+  static const $core.List<Message_BlockPresence_Type> values =
+      <Message_BlockPresence_Type>[
+    Have,
+    DontHave,
   ];
 
-  static final $core.Map<$core.int, BlockPresence_Type> _byValue = $pb.ProtobufEnum.initByValue(values);
-  static BlockPresence_Type? valueOf($core.int value) => _byValue[value];
+  static final $core.List<Message_BlockPresence_Type?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 1);
+  static Message_BlockPresence_Type? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
 
-  const BlockPresence_Type._($core.int v, $core.String n) : super(v, n);
+  const Message_BlockPresence_Type._(super.value, super.name);
 }
 
-
-const _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames =
+    $core.bool.fromEnvironment('protobuf.omit_enum_names');
