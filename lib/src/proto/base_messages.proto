@@ -11,6 +11,7 @@ message IPFSMessage {
   google.protobuf.Timestamp timestamp = 3;
   string sender_id = 4;
   MessageType type = 5;
+  string request_id = 6;
   
   enum MessageType {
     UNKNOWN = 0;
