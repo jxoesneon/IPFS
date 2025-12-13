@@ -139,8 +139,6 @@ void main() {
     test('wantBlock request and receive', () async {
       await handler.start();
 
-      final cidStr = 'QmTestHash';
-
       Future.delayed(Duration(milliseconds: 10), () {
         final responseMsg = msg.Message();
         final data = Uint8List.fromList([1, 2, 3, 4]);
