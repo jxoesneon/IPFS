@@ -1,7 +1,16 @@
 // src/core/errors/ipld_errors.dart
+
+/// Base class for IPLD (InterPlanetary Linked Data) errors.
+///
+/// IPLD errors occur during encoding, decoding, resolution, and
+/// validation of content-addressed data structures.
 abstract class IPLDError implements Exception {
+  /// The error message describing what went wrong.
   final String message;
+
+  /// Creates a new IPLD error with the given [message].
   IPLDError(this.message);
+
   @override
   String toString() => message;
 }
