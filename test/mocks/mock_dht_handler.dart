@@ -221,7 +221,8 @@ class MockDHTHandler implements IDHTHandler {
   }
 
   V_PeerInfo _createMockPeerInfo() {
-    return V_PeerInfo()..peerId = 'mock-peer-id';
-    // Note: addresses field uses List<int>, skipping for mock simplicity
+    return V_PeerInfo()
+      ..peerId = [1, 2, 3, 4, 5]; // List<int> for peer ID bytes
+    // Note: addresses field also uses List<int>, skipping for mock simplicity
   }
 }
