@@ -1,12 +1,18 @@
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'kademlia_tree_node.dart';
 
+/// LRU cache for Kademlia tree nodes.
+///
+/// Uses a doubly-linked list for O(1) access and eviction.
 class LRUCache {
+  /// Maximum number of cached nodes.
   final int capacity;
+
   final Map<p2p.PeerId, _Node> _cache = {};
   _Node? _head;
   _Node? _tail;
 
+  /// Creates a cache with the given [capacity].
   LRUCache(this.capacity) {
     assert(capacity > 0, 'Capacity must be positive');
   }

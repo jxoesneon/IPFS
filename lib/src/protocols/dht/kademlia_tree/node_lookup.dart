@@ -1,17 +1,21 @@
 import 'dart:async';
 import 'package:p2plib/p2plib.dart' as p2p;
-import 'helpers.dart'; // Import for _calculateDistance, _findNode
-import 'package:collection/collection.dart'; // Import for equality check
-import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart'; // Import the main KademliaTree class
-// lib/src/protocols/dht/kademlia_tree/node_lookup.dart
+import 'helpers.dart';
+import 'package:collection/collection.dart';
+import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
 
+/// Extension for iterative node lookup in Kademlia DHT.
 extension NodeLookup on KademliaTree {
-  // Constants moved to extension level
-  static const int ALPHA = 3; // Number of concurrent queries
-  static const int MAX_ITERATIONS = 20;
-  static const int K = 20; // Number of closest peers to consider
+  /// Concurrent query parallelism.
+  static const int ALPHA = 3;
 
-  /// Performs an iterative node lookup for a target peer ID.
+  /// Maximum lookup iterations.
+  static const int MAX_ITERATIONS = 20;
+
+  /// Number of closest peers to track.
+  static const int K = 20;
+
+  /// Performs iterative node lookup for [target].
   Future<List<p2p.PeerId>> nodeLookup(p2p.PeerId target) async {
     int iterations = 0;
 

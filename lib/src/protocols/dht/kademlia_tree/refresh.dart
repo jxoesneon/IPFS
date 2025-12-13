@@ -1,10 +1,9 @@
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
-import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/remove_peer.dart'; // Import the main KademliaTree class
+import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/remove_peer.dart';
 
-// lib/src/protocols/dht/kademlia_tree/refresh.dart
-
+/// Extension for periodic refresh of Kademlia tree buckets.
 extension Refresh on KademliaTree {
-  /// Refreshes the Kademlia tree by periodically checking and updating buckets.
+  /// Refreshes buckets by evicting stale peers.
   void refresh() {
     // 1. Iterate through buckets and check the last seen time of each peer
     for (var bucket in buckets) {
