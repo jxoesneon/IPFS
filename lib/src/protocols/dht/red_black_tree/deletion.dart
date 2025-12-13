@@ -1,13 +1,20 @@
 // lib/src/protocols/dht/red_black_tree/deletion.dart
 import '../red_black_tree.dart';
 import 'fix_violations.dart';
-import '../../../proto/generated/dht/common_red_black_tree.pb.dart' as common_tree;
+import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
+    as common_tree;
 
+/// Handles deletion operations for Red-Black trees.
+///
+/// Removes nodes while maintaining Red-Black tree properties
+/// through transplanting and fix-up operations.
 class Deletion<K_PeerId, V_PeerInfo> {
+  /// Deletes the node with [key] from [tree].
   void delete(RedBlackTree<K_PeerId, V_PeerInfo> tree, K_PeerId key) {
     deleteNode(tree, key);
   }
 
+  /// Internal deletion with tree balancing.
   void deleteNode(RedBlackTree<K_PeerId, V_PeerInfo> tree, K_PeerId key) {
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? z = searchNode(tree, key);
 
@@ -52,7 +59,8 @@ class Deletion<K_PeerId, V_PeerInfo> {
     }
   }
 
-  void transplant(RedBlackTree<K_PeerId, V_PeerInfo> tree,
+  void transplant(
+      RedBlackTree<K_PeerId, V_PeerInfo> tree,
       RedBlackTreeNode<K_PeerId, V_PeerInfo> u,
       RedBlackTreeNode<K_PeerId, V_PeerInfo>? v) {
     if (u.parent == null) {

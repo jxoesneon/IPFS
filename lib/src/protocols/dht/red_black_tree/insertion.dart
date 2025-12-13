@@ -1,19 +1,17 @@
 // lib/src/protocols/dht/red_black_tree/insertion.dart
 
-// This file handles the insertion of nodes into the Red-Black Tree used in the DHT.
-
 import '../red_black_tree.dart';
 import 'fix_violations.dart';
-import '../../../proto/generated/dht/common_red_black_tree.pb.dart' as common_tree;
+import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
+    as common_tree;
 
-// The Insertion class provides methods to insert nodes while maintaining Red-Black Tree properties.
+/// Handles insertion operations for Red-Black trees.
+///
+/// Inserts nodes while maintaining Red-Black tree properties
+/// through recoloring and rotations.
 class Insertion<K_PeerId, V_PeerInfo> {
-  // Inserts a new node into the Red-Black Tree.
-  //
-  // `tree`: The Red-Black Tree instance.
-  // `node`: The node to be inserted.
-  void insertNode<K_PeerId, V_PeerInfo>(
-      RedBlackTree<K_PeerId, V_PeerInfo> tree,
+  /// Inserts [node] into [tree] while maintaining balance.
+  void insertNode<K_PeerId, V_PeerInfo>(RedBlackTree<K_PeerId, V_PeerInfo> tree,
       RedBlackTreeNode<K_PeerId, V_PeerInfo> node) {
     // `y` will eventually store the parent of the new node.
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? y = null;
@@ -38,7 +36,7 @@ class Insertion<K_PeerId, V_PeerInfo> {
     node.parent = y;
     if (y == null) {
       // If `y` is null, the tree was empty, and the new node becomes the root.
-      tree.root = node; 
+      tree.root = node;
     } else if (tree.compare(node.key as K_PeerId, y.key as K_PeerId) < 0) {
       // If the new node's key is smaller than its parent's, it becomes the left child.
       y.left_child = node;
@@ -48,14 +46,15 @@ class Insertion<K_PeerId, V_PeerInfo> {
     }
 
     // New nodes are always inserted as RED to maintain Red-Black Tree properties.
-    node.color = common_tree.NodeColor.RED; 
+    node.color = common_tree.NodeColor.RED;
     // Ensure the root node remains black after insertion.
     if (tree.root != null && tree.root!.color == common_tree.NodeColor.RED) {
       tree.root!.color = common_tree.NodeColor.BLACK;
     }
-    
+
     // Create an instance of FixViolations to handle potential Red-Black Tree violations.
-    FixViolations<K_PeerId, V_PeerInfo> fixViolationsInstance = FixViolations<K_PeerId, V_PeerInfo>();
+    FixViolations<K_PeerId, V_PeerInfo> fixViolationsInstance =
+        FixViolations<K_PeerId, V_PeerInfo>();
     // Call fixInsertion to restore Red-Black Tree properties if necessary.
     fixViolationsInstance.fixInsertion(tree, node);
   }

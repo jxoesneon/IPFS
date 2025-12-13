@@ -3,7 +3,11 @@ import '../red_black_tree.dart';
 import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
     as common_tree;
 
+/// Handles rotation operations for Red-Black tree balancing.
+///
+/// Provides left and right rotations, plus tree validation.
 class Rotations<K_PeerId, V_PeerInfo> {
+  /// Performs a left rotation around [x].
   void rotateLeft<K_PeerId, V_PeerInfo>(RedBlackTree<K_PeerId, V_PeerInfo> tree,
       RedBlackTreeNode<K_PeerId, V_PeerInfo>? x) {
     if (x == null) return; // Null nodes are treated as black (leaves)

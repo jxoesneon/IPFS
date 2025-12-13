@@ -2,14 +2,18 @@
 
 import '../red_black_tree.dart';
 import 'rotations.dart';
-import '../../../proto/generated/dht/common_red_black_tree.pb.dart' as common_tree;
+import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
+    as common_tree;
 
+/// Fixes Red-Black tree violations after insertions and deletions.
+///
+/// Restores tree balance through recoloring and rotations.
 class FixViolations<K_PeerId, V_PeerInfo> {
-  void fixInsertion(
-    RedBlackTree<K_PeerId, V_PeerInfo> tree,
-    RedBlackTreeNode<K_PeerId, V_PeerInfo> z
-  ) {
-    Rotations<K_PeerId, V_PeerInfo> rotationsInstance = Rotations<K_PeerId, V_PeerInfo>();
+  /// Fixes violations after inserting [z] into [tree].
+  void fixInsertion(RedBlackTree<K_PeerId, V_PeerInfo> tree,
+      RedBlackTreeNode<K_PeerId, V_PeerInfo> z) {
+    Rotations<K_PeerId, V_PeerInfo> rotationsInstance =
+        Rotations<K_PeerId, V_PeerInfo>();
 
     if (z.color != common_tree.NodeColor.RED) {
       z.color = common_tree.NodeColor.RED;
@@ -17,18 +21,17 @@ class FixViolations<K_PeerId, V_PeerInfo> {
 
     while (z.parent != null && z.parent!.color == common_tree.NodeColor.RED) {
       fixInsertionHelper(tree, z, rotationsInstance,
-        z.parent == z.parent!.parent!.right_child);
+          z.parent == z.parent!.parent!.right_child);
     }
 
     tree.root?.color = common_tree.NodeColor.BLACK;
   }
 
   void fixInsertionHelper(
-    RedBlackTree<K_PeerId, V_PeerInfo> tree,
-    RedBlackTreeNode<K_PeerId, V_PeerInfo> z,
-    Rotations<K_PeerId, V_PeerInfo> rotationsInstance,
-    bool isMirrorCase
-  ) {
+      RedBlackTree<K_PeerId, V_PeerInfo> tree,
+      RedBlackTreeNode<K_PeerId, V_PeerInfo> z,
+      Rotations<K_PeerId, V_PeerInfo> rotationsInstance,
+      bool isMirrorCase) {
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? y;
 
     if (isMirrorCase) {
@@ -64,11 +67,11 @@ class FixViolations<K_PeerId, V_PeerInfo> {
   }
 
   void fixDeletion(
-    RedBlackTree<K_PeerId, V_PeerInfo> tree,
-    RedBlackTreeNode<K_PeerId, V_PeerInfo>? x,
-    RedBlackTreeNode<K_PeerId, V_PeerInfo>? parent
-  ) {
-    Rotations<K_PeerId, V_PeerInfo> rotationsInstance = Rotations<K_PeerId, V_PeerInfo>();
+      RedBlackTree<K_PeerId, V_PeerInfo> tree,
+      RedBlackTreeNode<K_PeerId, V_PeerInfo>? x,
+      RedBlackTreeNode<K_PeerId, V_PeerInfo>? parent) {
+    Rotations<K_PeerId, V_PeerInfo> rotationsInstance =
+        Rotations<K_PeerId, V_PeerInfo>();
 
     if (x == null || x.color == common_tree.NodeColor.RED) {
       return; // No need to fix violations if the node is red or null
@@ -83,12 +86,15 @@ class FixViolations<K_PeerId, V_PeerInfo> {
           rotationsInstance.rotateLeft(tree, parent!);
           w = parent.right_child;
         }
-        if ((w?.left_child == null || w?.left_child!.color == common_tree.NodeColor.BLACK) &&
-            (w?.right_child == null || w?.right_child!.color == common_tree.NodeColor.BLACK)) {
+        if ((w?.left_child == null ||
+                w?.left_child!.color == common_tree.NodeColor.BLACK) &&
+            (w?.right_child == null ||
+                w?.right_child!.color == common_tree.NodeColor.BLACK)) {
           w?.color = common_tree.NodeColor.RED;
           x = parent!;
         } else {
-          if (w?.right_child == null || w?.right_child!.color == common_tree.NodeColor.BLACK) {
+          if (w?.right_child == null ||
+              w?.right_child!.color == common_tree.NodeColor.BLACK) {
             w?.left_child?.color = common_tree.NodeColor.BLACK;
             w?.color = common_tree.NodeColor.RED;
             rotationsInstance.rotateRight(tree, w!);
@@ -109,12 +115,15 @@ class FixViolations<K_PeerId, V_PeerInfo> {
           rotationsInstance.rotateRight(tree, parent!);
           w = parent.left_child;
         }
-        if ((w?.right_child == null || w?.right_child!.color == common_tree.NodeColor.BLACK) &&
-            (w?.left_child == null || w?.left_child!.color == common_tree.NodeColor.BLACK)) {
+        if ((w?.right_child == null ||
+                w?.right_child!.color == common_tree.NodeColor.BLACK) &&
+            (w?.left_child == null ||
+                w?.left_child!.color == common_tree.NodeColor.BLACK)) {
           w?.color = common_tree.NodeColor.RED;
           x = parent!;
         } else {
-          if (w?.left_child == null || w?.left_child!.color == common_tree.NodeColor.BLACK) {
+          if (w?.left_child == null ||
+              w?.left_child!.color == common_tree.NodeColor.BLACK) {
             w?.right_child?.color = common_tree.NodeColor.BLACK;
             w?.color = common_tree.NodeColor.RED;
             rotationsInstance.rotateLeft(tree, w!);
