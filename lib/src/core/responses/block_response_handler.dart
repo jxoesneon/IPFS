@@ -1,6 +1,7 @@
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 
+/// Factory methods for creating block operation responses.
 class BlockResponseHandler {
   static AddBlockResponse success(String message) {
     return AddBlockResponse()

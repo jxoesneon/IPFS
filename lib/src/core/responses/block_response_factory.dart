@@ -1,8 +1,9 @@
 import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 
+/// Factory for creating standard block operation responses.
 class BlockResponseFactory {
-  // Add Block Responses
+  /// Creates a successful add block response.
   static AddBlockResponse successAdd(String message) {
     return AddBlockResponse()
       ..success = true
@@ -23,8 +24,7 @@ class BlockResponseFactory {
   }
 
   static GetBlockResponse notFound() {
-    return GetBlockResponse()
-      ..found = false;
+    return GetBlockResponse()..found = false;
   }
 
   // Remove Block Responses
