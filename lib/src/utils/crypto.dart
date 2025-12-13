@@ -1,11 +1,15 @@
 // src/utils/crypto.dart
 
-import 'dart:convert'; // Import dart:convert for utf8
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart' as crypto;
 
+/// Cryptographic utility functions for IPFS operations.
+///
+/// Provides SHA-256 hashing, nonce generation, and hash verification
+/// with constant-time comparison to prevent timing attacks.
 class CryptoUtils {
-  /// Hashes data using SHA-256 and returns the digest bytes
+  /// Hashes data using SHA-256 and returns the digest bytes.
   Future<Uint8List> hashData(Uint8List data) async {
     final digest = crypto.sha256.convert(data);
     return Uint8List.fromList(digest.bytes);

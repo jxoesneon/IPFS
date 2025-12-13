@@ -4,7 +4,28 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:logging/logging.dart' as logging;
 
-/// Custom logger for IPFS operations
+/// A hierarchical logging system for IPFS operations.
+///
+/// Logger provides structured logging with multiple severity levels,
+/// automatic file output, and metrics integration. Each component
+/// creates its own named logger instance for easy filtering.
+///
+/// **Log Levels:**
+/// - `debug`: Detailed debugging information (disabled by default)
+/// - `verbose`: Extended debugging (disabled by default)
+/// - `info`: General operational information
+/// - `warning`: Potential issues that don't prevent operation
+/// - `error`: Errors with optional exception and stack trace
+///
+/// Example:
+/// ```dart
+/// final logger = Logger('BlockStore', debug: true);
+/// logger.info('Starting block store...');
+/// logger.debug('Processing block: $cid');
+/// logger.error('Failed to store block', exception, stackTrace);
+/// ```
+///
+/// Logs are written to both console and `ipfs.log` file.
 class Logger {
   final logging.Logger _logger;
   static bool _initialized = false;

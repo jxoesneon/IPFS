@@ -2,11 +2,35 @@
 
 import 'dart:typed_data';
 
+/// The Bitcoin/IPFS Base58 alphabet (excludes 0, O, I, l).
 const String _base58Alphabet =
     '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
+/// Base58 encoding/decoding for IPFS identifiers.
+///
+/// Base58 is a binary-to-text encoding scheme used in Bitcoin and IPFS
+/// for representing large integers (like peer IDs and keys) as
+/// human-readable strings. It excludes visually ambiguous characters
+/// (0, O, I, l) to reduce transcription errors.
+///
+/// Example:
+/// ```dart
+/// final base58 = Base58();
+///
+/// // Encode bytes to Base58
+/// final encoded = base58.encode(peerIdBytes);
+/// print('Peer ID: $encoded');
+///
+/// // Decode Base58 back to bytes
+/// final decoded = base58.base58Decode(encoded);
+/// ```
+///
+/// See also:
+/// - [CID] which uses multibase encoding including Base58
 class Base58 {
-  /// Encodes a Uint8List to a Base58 string.
+  /// Encodes a [bytes] array to a Base58 string.
+  ///
+  /// Preserves leading zeros as '1' characters.
   String encode(Uint8List bytes) {
     if (bytes.isEmpty) {
       return '';
@@ -36,6 +60,9 @@ class Base58 {
     return encoded;
   }
 
+  /// Decodes a Base58 [input] string back to bytes.
+  ///
+  /// Throws [ArgumentError] for invalid Base58 characters.
   Uint8List base58Decode(String input) {
     final BigInt base = BigInt.from(58);
     BigInt result = BigInt.zero;

@@ -2,7 +2,10 @@
 
 import 'dart:typed_data';
 
-/// Encodes an integer as an unsigned varint.
+/// Encodes an integer as an unsigned variable-length integer (varint).
+///
+/// Varints use 7 bits per byte with the MSB indicating continuation.
+/// Used in IPFS for compact encoding of lengths and identifiers.
 Uint8List encodeVarint(int value) {
   final bytes = <int>[];
   do {
