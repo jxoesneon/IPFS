@@ -8,11 +8,16 @@ import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 
+/// Coordinates data retrieval across multiple protocols.
+///
+/// Orchestrates Bitswap, Graphsync, and IPLD handlers for
+/// efficient content fetching with fallback strategies.
 class ProtocolCoordinator {
   final BitswapHandler _bitswap;
   final GraphsyncHandler _graphsync;
   final IPLDHandler _ipld;
 
+  /// Creates a coordinator for the given protocol handlers.
   ProtocolCoordinator(this._bitswap, this._graphsync, this._ipld);
 
   Future<void> initialize() async {

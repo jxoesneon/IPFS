@@ -16,6 +16,10 @@ import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/core/data_structures/block.dart' as core;
 
+/// Graphsync protocol handler for efficient DAG transfer.
+///
+/// Handles requests, responses, and coordinates with Bitswap and
+/// IPLD for graph traversal and block fetching.
 class GraphsyncHandler {
   final BitswapHandler _bitswap;
   final IPLDHandler _ipld;
@@ -25,6 +29,7 @@ class GraphsyncHandler {
   final GraphsyncProtocol _protocol;
   final IPFSConfig _config;
 
+  /// Creates a Graphsync handler.
   GraphsyncHandler(
     IPFSConfig config,
     this._router,
