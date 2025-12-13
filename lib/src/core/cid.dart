@@ -5,15 +5,53 @@ import 'package:multibase/multibase.dart';
 import 'package:dart_multihash/dart_multihash.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 
-/// Represents a Content Identifier (CID).
+/// A Content Identifier (CID) for content-addressed data in IPFS.
 ///
-/// Follows the IPFS CID specification: https://github.com/multiformats/cid
+/// CIDs are self-describing content addresses used to uniquely identify
+/// data in IPFS and other distributed systems. They combine a cryptographic
+/// hash of the content with metadata about the hashing algorithm and
+/// data encoding format.
+///
+/// IPFS supports two CID versions:
+/// - **CIDv0**: Legacy format, always SHA2-256 + DAG-PB, base58btc encoded
+/// - **CIDv1**: Modern format with flexible codecs and multibase encoding
+///
+/// Example:
+/// ```dart
+/// // Create CID from content
+/// final data = Uint8List.fromList(utf8.encode('Hello IPFS'));
+/// final cid = await CID.fromContent(data);
+/// print('CID: ${cid.encode()}');  // bafkreif...
+///
+/// // Decode existing CID
+/// final decoded = CID.decode('QmYwAPJzv5CZsnA...');
+/// print('Version: ${decoded.version}');
+/// ```
+///
+/// See also:
+/// - [IPFS CID Specification](https://github.com/multiformats/cid)
+/// - [Block] for content-addressed data storage
 class CID {
+  /// The CID version (0 or 1).
   final int version;
-  final MultihashInfo multihash;
-  final String? codec; // Codec name or identifier (e.g. 'dag-pb', 'raw')
-  final Multibase? multibaseType; // e.g. Multibase.base58btc, Multibase.base32
 
+  /// The multihash containing the hash algorithm and digest.
+  final MultihashInfo multihash;
+
+  /// The content codec (e.g., 'dag-pb', 'raw', 'dag-cbor').
+  ///
+  /// Identifies how the content should be interpreted.
+  final String? codec;
+
+  /// The multibase encoding type for string representation.
+  ///
+  /// Common values: [Multibase.base58btc] (CIDv0), [Multibase.base32] (CIDv1).
+  final Multibase? multibaseType;
+
+  /// Creates a CID with the specified components.
+  ///
+  /// Prefer using factory constructors [CID.v0], [CID.v1], or [CID.fromContent]
+  /// for creating CIDs with proper validation.
   const CID({
     required this.version,
     required this.multihash,

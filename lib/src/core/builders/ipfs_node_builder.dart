@@ -20,12 +20,40 @@ import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
 
+/// Builder for constructing fully-configured [IPFSNode] instances.
+///
+/// This builder implements dependency injection and layered initialization
+/// to create IPFS nodes with all required components properly wired together.
+///
+/// The build process initializes components in the following order:
+/// 1. **Core systems**: Metrics, security
+/// 2. **Storage layer**: BlockStore, datastore, IPLD handler
+/// 3. **Network layer**: P2P router, DHT, PubSub, Bitswap (if not offline)
+/// 4. **Services**: Content routing, IPNS, GraphSync, AutoNAT (if not offline)
+///
+/// Example:
+/// ```dart
+/// final config = IPFSConfig(offline: false);
+/// final builder = IPFSNodeBuilder(config);
+/// final node = await builder.build();
+/// await node.start();
+/// ```
+///
+/// See also:
+/// - [IPFSNode] for the main node interface
+/// - [IPFSConfig] for configuration options
+/// - [ServiceContainer] for dependency injection
 class IPFSNodeBuilder {
   final ServiceContainer _container;
   final IPFSConfig _config;
 
+  /// Creates a new builder with the given [config].
   IPFSNodeBuilder(this._config) : _container = ServiceContainer();
 
+  /// Builds and returns a fully-configured [IPFSNode].
+  ///
+  /// This method initializes all layers in order and wires up dependencies.
+  /// The returned node is ready to be started with [IPFSNode.start].
   Future<IPFSNode> build() async {
     // Register core systems
     await _initializeCoreSystem();

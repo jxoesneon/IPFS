@@ -8,7 +8,29 @@ import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:fixnum/fixnum.dart';
 
-/// Handles CBOR encoding/decoding operations for IPLD using the cbor package
+/// CBOR encoding/decoding for IPLD data structures.
+///
+/// This handler provides bidirectional conversion between IPLD nodes
+/// and CBOR binary format, supporting DAG-CBOR, DAG-PB, and CID links.
+///
+/// **Supported CBOR Tags:**
+/// - `42`: DAG-PB (protobuf encoded)
+/// - `43`: DAG-CBOR
+/// - `6`: CID link
+/// - `45`: Raw binary data
+///
+/// Example:
+/// ```dart
+/// // Encode an IPLD node to CBOR
+/// final bytes = await EnhancedCBORHandler.encodeCbor(ipldNode);
+///
+/// // Decode CBOR back to IPLD
+/// final node = await EnhancedCBORHandler.decodeCborWithTags(bytes);
+/// ```
+///
+/// See also:
+/// - [IPLDNode] for the IPLD data model
+/// - [MerkleDAGNode] for DAG-PB nodes
 class EnhancedCBORHandler {
   static final _encoder = CborEncoder();
   static final _decoder = CborDecoder();
