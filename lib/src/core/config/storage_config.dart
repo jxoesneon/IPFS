@@ -1,4 +1,15 @@
-/// Configuration options for IPFS storage
+/// Configuration options for IPFS storage.
+///
+/// Controls storage paths, size limits, and garbage collection settings.
+///
+/// Example:
+/// ```dart
+/// final config = StorageConfig(
+///   baseDir: '/var/ipfs',
+///   maxStorageSize: 50 * 1024 * 1024 * 1024, // 50GB
+///   enableGC: true,
+/// );
+/// ```
 class StorageConfig {
   /// Base directory for all IPFS data
   final String baseDir;

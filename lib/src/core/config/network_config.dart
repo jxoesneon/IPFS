@@ -3,12 +3,26 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/utils/base58.dart';
 
+/// Network configuration for the IPFS node.
+///
+/// Defines listen addresses, bootstrap peers, connection limits,
+/// and other networking parameters.
+///
+/// Example:
+/// ```dart
+/// final config = NetworkConfig(
+///   listenAddresses: ['/ip4/0.0.0.0/tcp/4001'],
+///   maxConnections: 100,
+/// );
+/// ```
 class NetworkConfig {
+  /// Default multiaddr listen addresses for TCP.
   static const defaultListenAddresses = [
     '/ip4/0.0.0.0/tcp/4001',
     '/ip6/::/tcp/4001'
   ];
 
+  /// Default IPFS bootstrap peers.
   static const defaultBootstrapPeers = [
     '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
     '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
@@ -16,13 +30,25 @@ class NetworkConfig {
     '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
   ];
 
+  /// Addresses to listen on for incoming connections.
   final List<String> listenAddresses;
+
+  /// Peers to connect to on startup.
   final List<String> bootstrapPeers;
+
+  /// Maximum number of concurrent connections.
   final int maxConnections;
+
+  /// Timeout for connection attempts.
   final Duration connectionTimeout;
+
+  /// Unique identifier for this node.
   final String nodeId;
+
+  /// Optional HTTP endpoint for delegated routing.
   final String? delegatedRoutingEndpoint;
 
+  /// Creates a network configuration with the given options.
   NetworkConfig({
     this.listenAddresses = defaultListenAddresses,
     this.bootstrapPeers = defaultBootstrapPeers,
