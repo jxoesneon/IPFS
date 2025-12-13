@@ -7,9 +7,10 @@ import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:p2plib/p2plib.dart' show PeerId;
 import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 
 /// Handlers for IPFS RPC API endpoints
-/// 
+///
 /// Implements Kubo-compatible RPC methods
 class RPCHandlers {
   final IPFSNode node;
@@ -55,11 +56,12 @@ class RPCHandlers {
     try {
       // TODO: Parse multipart/form-data
       // For now, return not implemented
-      return Response(501, body: json.encode({
-        'Message': 'File upload not yet implemented',
-        'Code': 0,
-        'Type': 'error'
-      }));
+      return Response(501,
+          body: json.encode({
+            'Message': 'File upload not yet implemented',
+            'Code': 0,
+            'Type': 'error'
+          }));
     } catch (e) {
       return _errorResponse('Add failed: $e');
     }
@@ -95,12 +97,14 @@ class RPCHandlers {
       }
 
       final entries = await node.ls(path);
-      final objects = entries.map((e) => {
-        'Name': e.name,
-        'Hash': e.cid.encode(),
-        'Size': e.size.toInt(),
-        'Type': 'file', // Default as Link doesn't carry type
-      }).toList();
+      final objects = entries
+          .map((e) => {
+                'Name': e.name,
+                'Hash': e.cid.encode(),
+                'Size': e.size.toInt(),
+                'Type': 'file', // Default as Link doesn't carry type
+              })
+          .toList();
 
       final response = {
         'Objects': [
@@ -152,15 +156,19 @@ class RPCHandlers {
 
     try {
       final providers = await node.dhtClient.findProviders(cid);
-      
+
       // Stream response (ndjson format)
-      final responses = providers.map((p) => json.encode({
-        'Type': 4, // Provider type
-        'Responses': [{
-          'ID': p.toString(),
-          'Addrs': [], // TODO: Get addresses
-        }]
-      })).join('\n');
+      final responses = providers
+          .map((p) => json.encode({
+                'Type': 4, // Provider type
+                'Responses': [
+                  {
+                    'ID': p.toString(),
+                    'Addrs': [], // TODO: Get addresses
+                  }
+                ]
+              }))
+          .join('\n');
 
       return Response.ok(responses, headers: {
         'Content-Type': 'application/json',
@@ -179,14 +187,17 @@ class RPCHandlers {
     }
 
     try {
-      final found = await node.dhtClient.findPeer(PeerId(value: Base58().base58Decode(peerId)));
+      final found = await node.dhtClient
+          .findPeer(PeerId(value: Base58().base58Decode(peerId)));
       if (found != null) {
         return _jsonResponse({
           'Type': 2,
-          'Responses': [{
-            'ID': found.toString(),
-            'Addrs': [], // TODO
-          }]
+          'Responses': [
+            {
+              'ID': found.toString(),
+              'Addrs': [], // TODO
+            }
+          ]
         });
       } else {
         return _errorResponse('Peer not found');
@@ -250,10 +261,12 @@ class RPCHandlers {
   Future<Response> handleSwarmPeers(Request request) async {
     try {
       final peers = node.connectedPeers;
-      final peerList = peers.map((p) => {
-        'Peer': p,
-        'Addr': '',
-      }).toList();
+      final peerList = peers
+          .map((p) => {
+                'Peer': p,
+                'Addr': '',
+              })
+          .toList();
 
       return _jsonResponse({'Peers': peerList});
     } catch (e) {
@@ -319,10 +332,14 @@ class RPCHandlers {
     try {
       final data = await request.read().toList();
       final bytes = data.expand((x) => x).toList();
-      
-      final cid = await CID.fromContent(Uint8List.fromList(bytes));
-      // TODO: Store block
-      
+      final uint8Bytes = Uint8List.fromList(bytes);
+
+      final cid = await CID.fromContent(uint8Bytes);
+
+      // Create and store the block
+      final block = Block(cid: cid, data: uint8Bytes);
+      await node.blockStore.putBlock(block);
+
       return _jsonResponse({
         'Key': cid.encode(),
         'Size': bytes.length,
@@ -364,12 +381,9 @@ class RPCHandlers {
   }
 
   Response _errorResponse(String message, {int code = 500}) {
-    return Response(code, 
-      body: json.encode({
-        'Message': message,
-        'Code': 0,
-        'Type': 'error'
-      }),
+    return Response(
+      code,
+      body: json.encode({'Message': message, 'Code': 0, 'Type': 'error'}),
       headers: {'Content-Type': 'application/json'},
     );
   }
