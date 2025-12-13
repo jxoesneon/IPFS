@@ -24,8 +24,8 @@ class NetworkHandler {
   final IPFSConfig _config;
   late final Logger _logger;
 
-  NetworkHandler(this._config)
-      : _router = P2plibRouter(_config),
+  NetworkHandler(this._config, {P2plibRouter? router})
+      : _router = router ?? P2plibRouter(_config),
         _networkEventController = StreamController<NetworkEvent>.broadcast() {
     // Initialize logger
     _logger = Logger('NetworkHandler',

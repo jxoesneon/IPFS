@@ -118,27 +118,23 @@ class Peer {
 /// Helper function to parse a multiaddr string into a FullAddress.
 p2p.FullAddress? parseMultiaddrString(String multiaddrString) {
   try {
-    final uri = Uri.parse(multiaddrString);
-    final protocol = uri.scheme;
-    final host = uri.host;
-    final port = uri.port;
+    // Basic support for /ip4/<ip>/tcp/<port> format
+    final parts = multiaddrString.split('/');
+    if (parts.length < 5) return null;
 
-    // Validate the protocol and port
-    if (protocol != 'ip4' && protocol != 'ip6') {
-      return null; // or throw an exception for invalid protocol
-    }
-    if (port == 0) {
-      return null; // or throw an exception for invalid port
-    }
+    final protocol = parts[1];
+    final host = parts[2];
+    // parts[3] should be 'tcp' or 'udp'
+    final portStr = parts[4];
+    final port = int.tryParse(portStr);
 
-    // Create the InternetAddress object
+    if (protocol != 'ip4' && protocol != 'ip6') return null;
+    if (port == null || port == 0) return null;
+
     final ipAddress = InternetAddress(host);
-
-    // Create the FullAddress object
     return p2p.FullAddress(address: ipAddress, port: port);
   } catch (e) {
-    // Handle any parsing errors
     print('Error parsing multiaddr string: $e');
-    return null; // or throw an exception
+    return null;
   }
 }

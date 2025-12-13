@@ -76,12 +76,12 @@ class P2plibRouter {
   /// Returns a singleton instance of the router for the given [config].
   factory P2plibRouter(IPFSConfig config) {
     if (_instance == null) {
-      _instance = P2plibRouter._internal(config);
+      _instance = P2plibRouter.internal(config);
     }
     return _instance!;
   }
 
-  P2plibRouter._internal(this._config)
+  P2plibRouter.internal(this._config)
       : _router = p2p.RouterL2(
           crypto: _sharedCrypto,
           keepalivePeriod: const Duration(seconds: 30),
@@ -135,8 +135,7 @@ class P2plibRouter {
       });
 
       _logger.verbose('Initializing router with peer ID');
-      final randomBytes =
-          List<int>.generate(32, (i) => Random().nextInt(256));
+      final randomBytes = List<int>.generate(32, (i) => Random().nextInt(256));
       await _router.init(Uint8List.fromList(randomBytes));
       _logger.verbose(
           'Router initialized with peer ID: ${Base58().encode(_router.selfId.value)}');

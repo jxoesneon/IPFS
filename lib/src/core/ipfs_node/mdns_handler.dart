@@ -23,10 +23,10 @@ class MDNSHandler {
   Timer? _advertisementTimer;
   Timer? _discoveryTimer;
 
-  MDNSHandler(this._config) {
+  MDNSHandler(this._config, {MDnsClient? mdnsClient}) {
     _logger = Logger('MDNSHandler',
         debug: _config.debug, verbose: _config.verboseLogging);
-    _mdnsClient = MDnsClient();
+    _mdnsClient = mdnsClient ?? MDnsClient();
     _logger.debug('MDNSHandler instance created');
   }
 

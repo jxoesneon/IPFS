@@ -10,8 +10,10 @@ import '/../src/utils/dnslink_resolver.dart'; // Import your DNSLinkResolver uti
 class RoutingHandler {
   final ContentRouting _contentRouting;
 
-  RoutingHandler(config, NetworkHandler networkHandler)
-      : _contentRouting = ContentRouting(config, networkHandler);
+  RoutingHandler(config, NetworkHandler networkHandler,
+      {ContentRouting? contentRouting})
+      : _contentRouting =
+            contentRouting ?? ContentRouting(config, networkHandler);
 
   /// Starts the routing services.
   Future<void> start() async {

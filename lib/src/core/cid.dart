@@ -62,6 +62,7 @@ class CID {
   /// 0x12 is sha2-256
   /// 0x70 is dag-pb
   static const int _dag_pb = 0x70;
+
   /// 0x55 is raw
   static const int _raw = 0x55;
 
@@ -73,17 +74,18 @@ class CID {
     }
     // Encode as multihash using correct API
     final mhInfo = Multihash.encode('sha2-256', hashBytes);
-    
+
     return CID(
       version: 0,
       multihash: mhInfo,
-      codec: 'dag-pb', 
+      codec: 'dag-pb',
       multibaseType: Multibase.base58btc,
     );
   }
 
   /// Creates a CIDv1.
-  factory CID.v1(String codec, MultihashInfo multihash, {Multibase base = Multibase.base32}) {
+  factory CID.v1(String codec, MultihashInfo multihash,
+      {Multibase base = Multibase.base32}) {
     return CID(
       version: 1,
       codec: codec,
@@ -95,7 +97,7 @@ class CID {
   /// Parses a CID from its raw binary representation.
   static CID fromBytes(Uint8List bytes) {
     if (bytes.isEmpty) throw ArgumentError('Empty bytes');
-    
+
     // CIDv0 check (SHA2-256)
     // 0x12 0x20 ... (34 bytes total)
     if (bytes.length == 34 && bytes[0] == 0x12 && bytes[1] == 0x20) {
@@ -106,34 +108,34 @@ class CID {
         multibaseType: Multibase.base58btc,
       );
     }
-    
+
     // CIDv1 check
     if (bytes[0] == 0x01) {
-       int index = 1;
-       int codecCode = 0;
-       int shift = 0;
-       while (true) {
-         if (index >= bytes.length) throw FormatException('Invalid CID bytes');
-         int byte = bytes[index++];
-         codecCode |= (byte & 0x7f) << shift;
-         if ((byte & 0x80) == 0) break;
-         shift += 7;
-       }
-       
-       final mh = Multihash.decode(bytes.sublist(index));
-       
-       String codecStr = 'unknown';
-       if (codecCode == _dag_pb) codecStr = 'dag-pb';
-       if (codecCode == _raw) codecStr = 'raw';
-       
-       return CID(
-         version: 1,
-         multihash: mh,
-         codec: codecStr,
-         multibaseType: Multibase.base32, 
-       );
+      int index = 1;
+      int codecCode = 0;
+      int shift = 0;
+      while (true) {
+        if (index >= bytes.length) throw FormatException('Invalid CID bytes');
+        int byte = bytes[index++];
+        codecCode |= (byte & 0x7f) << shift;
+        if ((byte & 0x80) == 0) break;
+        shift += 7;
+      }
+
+      final mh = Multihash.decode(bytes.sublist(index));
+
+      String codecStr = 'unknown';
+      if (codecCode == _dag_pb) codecStr = 'dag-pb';
+      if (codecCode == _raw) codecStr = 'raw';
+
+      return CID(
+        version: 1,
+        multihash: mh,
+        codec: codecStr,
+        multibaseType: Multibase.base32,
+      );
     }
-    
+
     throw FormatException('Invalid CID version');
   }
 
@@ -144,9 +146,10 @@ class CID {
     }
 
     // Check if it's a CIDv0 (base58, starts with 'Qm')
-   if (cidStr.startsWith('Qm')) {
+    if (cidStr.startsWith('Qm')) {
       // Decode base58
-      final decoded = multibaseDecode('z$cidStr'); // Add 'z' prefix for base58btc
+      final decoded =
+          multibaseDecode('z$cidStr'); // Add 'z' prefix for base58btc
       return fromBytes(decoded);
     }
 
@@ -181,15 +184,15 @@ class CID {
     // CIDv1: <version><codec><multihash>
     final buffer = BytesBuilder();
     buffer.addByte(0x01); // version 1
-    
+
     // Encode codec as varint
     int codecCode = _raw; // default
     if (codec == 'dag-pb') codecCode = _dag_pb;
     buffer.add(_encodeVarint(codecCode));
-    
+
     // Add multihash
     buffer.add(multihash.toBytes());
-    
+
     return buffer.toBytes();
   }
 
@@ -214,7 +217,7 @@ class CID {
   }
 
   @override
-  int get hashCode => 
+  int get hashCode =>
       version.hashCode ^ codec.hashCode ^ multihash.toBytes().hashCode;
 
   bool _bytesEqual(Uint8List a, Uint8List b) {
@@ -235,9 +238,12 @@ class CID {
     bytes.add(value & 0x7f);
     return Uint8List.fromList(bytes);
   }
+
   IPFSCIDProto toProto() {
     return IPFSCIDProto()
-      ..version = version == 0 ? IPFSCIDVersion.IPFS_CID_VERSION_0 : IPFSCIDVersion.IPFS_CID_VERSION_1
+      ..version = version == 0
+          ? IPFSCIDVersion.IPFS_CID_VERSION_0
+          : IPFSCIDVersion.IPFS_CID_VERSION_1
       ..multihash = multihash.toBytes()
       ..codec = codec ?? ''
       ..multibasePrefix = version == 0 ? '' : 'base32';
@@ -245,14 +251,17 @@ class CID {
 
   static CID fromProto(IPFSCIDProto proto) {
     if (proto.version == IPFSCIDVersion.IPFS_CID_VERSION_0) {
-      return CID.v0(Uint8List.fromList(proto.multihash));
+      final mh = Multihash.decode(Uint8List.fromList(proto.multihash));
+      return CID.v0(Uint8List.fromList(mh.digest));
     }
     return CID.v1(
       proto.codec,
       Multihash.decode(Uint8List.fromList(proto.multihash)),
     );
   }
-  static Future<CID> fromContent(Uint8List content, {
+
+  static Future<CID> fromContent(
+    Uint8List content, {
     String codec = 'raw',
     String hashType = 'sha2-256',
     int version = 1,
@@ -274,16 +283,16 @@ class CID {
   }
 
   /// Computes CID for data (async version for compatibility).
-  static Future<CID> computeForData(Uint8List data, {String format = 'raw'}) async {
+  static Future<CID> computeForData(Uint8List data,
+      {String format = 'raw'}) async {
     return await fromContent(data, codec: format);
   }
 
   /// Computes CID for data (sync version).
   static CID computeForDataSync(Uint8List data, {String codec = 'raw'}) {
     final digest = sha256.convert(data);
-    final mhInfo = Multihash.encode('sha2-256', Uint8List.fromList(digest.bytes));
+    final mhInfo =
+        Multihash.encode('sha2-256', Uint8List.fromList(digest.bytes));
     return CID.v1(codec, mhInfo);
   }
-
-
 }

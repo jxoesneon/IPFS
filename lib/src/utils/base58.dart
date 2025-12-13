@@ -86,13 +86,15 @@ class Base58 {
     return decoded;
   }
 
-  /// Converts a BigInt to a Uint8List.
+  /// Converts a BigInt to a Uint8List (Big Endian).
   Uint8List bigIntToUint8List(BigInt bigInt) {
-    final data = ByteData((bigInt.bitLength / 8).ceil());
-    for (int i = 0; i < data.lengthInBytes; i++) {
-      data.setUint8(i, bigInt.toUnsigned(8).toInt());
+    if (bigInt == BigInt.zero) return Uint8List(0);
+    final length = (bigInt.bitLength + 7) ~/ 8;
+    final data = Uint8List(length);
+    for (int i = length - 1; i >= 0; i--) {
+      data[i] = bigInt.toUnsigned(8).toInt();
       bigInt = bigInt >> 8;
     }
-    return data.buffer.asUint8List();
+    return data;
   }
 }

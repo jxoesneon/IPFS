@@ -110,6 +110,16 @@ class DHTClient {
       ..addrs.addAll([]); // TODO: Add multiaddr bytes
   }
 
+  // Helper: Create valid PeerId from key bytes (pad to 64 bytes)
+  p2p.PeerId _createPeerIdFromKey(List<int> keyBytes) {
+    if (keyBytes.length >= 64) {
+      return p2p.PeerId(value: Uint8List.fromList(keyBytes.sublist(0, 64)));
+    }
+    final padded = Uint8List(64);
+    padded.setAll(0, keyBytes);
+    return p2p.PeerId(value: padded);
+  }
+
   // Content Routing API: Find Providers (GET_PROVIDERS)
   Future<List<p2p.PeerId>> findProviders(String cid) async {
     final msg = kad.Message()
@@ -117,8 +127,7 @@ class DHTClient {
       ..key = utf8.encode(cid)
       ..clusterLevelRaw = 0; // Standard compatibility padding?
 
-    final targetPeerId =
-        p2p.PeerId(value: Uint8List.fromList(utf8.encode(cid)));
+    final targetPeerId = _createPeerIdFromKey(utf8.encode(cid));
     final closestPeers =
         _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
     final providers = <p2p.PeerId>[];

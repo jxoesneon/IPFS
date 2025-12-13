@@ -69,9 +69,11 @@ class BlockGetResponse extends BaseResponse {
   }
 
   GetBlockResponse toProto() {
-    return GetBlockResponse()
-      ..found = success
-      ..block = block!;
+    final response = GetBlockResponse()..found = success;
+    if (block != null) {
+      response.block = block!;
+    }
+    return response;
   }
 
   @override

@@ -98,7 +98,7 @@ class IPFSNode {
   }
 
   // Public API Getters for external access
-  
+
   /// Get the peer ID of this node
   String get peerId {
     try {
@@ -110,7 +110,7 @@ class IPFSNode {
       return 'unknown';
     }
   }
-  
+
   /// Get the addresses this node is listening on
   List<String> get addresses {
     try {
@@ -121,12 +121,12 @@ class IPFSNode {
       return [];
     }
   }
-  
+
   /// Get the block store
   BlockStore get blockStore {
     return _container.get<BlockStore>();
   }
-  
+
   /// Get the DHT client
   DHTClient get dhtClient {
     if (!_container.isRegistered(DHTHandler)) {
@@ -139,7 +139,7 @@ class IPFSNode {
       throw StateError('DHT client not available: $e');
     }
   }
-  
+
   /// Get list of connected peers
   List<String> get connectedPeers {
     try {
@@ -152,12 +152,12 @@ class IPFSNode {
   }
 
   // Convenience API Methods
-  
+
   /// Get content by CID (alias for get method)
   Future<Uint8List?> cat(String cid) async {
     return await get(cid);
   }
-  
+
   /// Connect to a peer by multiaddr
   Future<void> connectToPeer(String multiaddr) async {
     try {
@@ -169,7 +169,7 @@ class IPFSNode {
       throw Exception('Failed to connect to peer: $e');
     }
   }
-  
+
   /// Disconnect from a peer
   Future<void> disconnectFromPeer(String peerId) async {
     try {
@@ -179,7 +179,7 @@ class IPFSNode {
       _logger.error('Failed to disconnect from peer: $e');
     }
   }
-  
+
   /// Resolve IPNS name to CID
   Future<String> resolveIPNS(String name) async {
     try {
@@ -256,7 +256,7 @@ class IPFSNode {
 
     try {
       _logger.verbose('Starting network layer initialization');
-      
+
       if (_container.isRegistered(NetworkHandler)) {
         // CRITICAL: Set ipfsNode reference before starting any network services
         _container.get<NetworkHandler>().setIpfsNode(this);
@@ -300,7 +300,7 @@ class IPFSNode {
 
     try {
       _logger.verbose('Starting services initialization');
-      
+
       if (_container.isRegistered(ContentRoutingHandler)) {
         await _container.get<ContentRoutingHandler>().start();
         _logger.debug('ContentRoutingHandler initialized');
@@ -340,19 +340,30 @@ class IPFSNode {
       // Stop in reverse order of initialization
 
       // Stop high-level services
-      if (_container.isRegistered(IPNSHandler)) await _container.get<IPNSHandler>().stop();
-      if (_container.isRegistered(AutoNATHandler)) await _container.get<AutoNATHandler>().stop();
-      if (_container.isRegistered(GraphsyncHandler)) await _container.get<GraphsyncHandler>().stop();
-      if (_container.isRegistered(DNSLinkHandler)) await _container.get<DNSLinkHandler>().stop();
-      if (_container.isRegistered(ContentRoutingHandler)) await _container.get<ContentRoutingHandler>().stop();
+      if (_container.isRegistered(IPNSHandler))
+        await _container.get<IPNSHandler>().stop();
+      if (_container.isRegistered(AutoNATHandler))
+        await _container.get<AutoNATHandler>().stop();
+      if (_container.isRegistered(GraphsyncHandler))
+        await _container.get<GraphsyncHandler>().stop();
+      if (_container.isRegistered(DNSLinkHandler))
+        await _container.get<DNSLinkHandler>().stop();
+      if (_container.isRegistered(ContentRoutingHandler))
+        await _container.get<ContentRoutingHandler>().stop();
 
       // Stop network layer
-      if (_container.isRegistered(BitswapHandler)) await _container.get<BitswapHandler>().stop();
-      if (_container.isRegistered(PubSubHandler)) await _container.get<PubSubHandler>().stop();
-      if (_container.isRegistered(DHTHandler)) await _container.get<DHTHandler>().stop();
-      if (_container.isRegistered(BootstrapHandler)) await _container.get<BootstrapHandler>().stop();
-      if (_container.isRegistered(MDNSHandler)) await _container.get<MDNSHandler>().stop();
-      if (_container.isRegistered(NetworkHandler)) await _container.get<NetworkHandler>().stop();
+      if (_container.isRegistered(BitswapHandler))
+        await _container.get<BitswapHandler>().stop();
+      if (_container.isRegistered(PubSubHandler))
+        await _container.get<PubSubHandler>().stop();
+      if (_container.isRegistered(DHTHandler))
+        await _container.get<DHTHandler>().stop();
+      if (_container.isRegistered(BootstrapHandler))
+        await _container.get<BootstrapHandler>().stop();
+      if (_container.isRegistered(MDNSHandler))
+        await _container.get<MDNSHandler>().stop();
+      if (_container.isRegistered(NetworkHandler))
+        await _container.get<NetworkHandler>().stop();
 
       // Stop storage layer
       await _container.get<IPLDHandler>().stop();
@@ -399,7 +410,10 @@ class IPFSNode {
         final cid = await addFile(entry.value as Uint8List);
         directoryManager.addEntry(IPFSDirectoryEntry(
           name: entry.key,
-          hash: CID.decode(cid).multihash.toBytes(), // Decode CID to multihash bytes for the link
+          hash: CID
+              .decode(cid)
+              .multihash
+              .toBytes(), // Decode CID to multihash bytes for the link
           size: fixnum.Int64(entry.value.length),
           isDirectory: false,
         ));
@@ -410,7 +424,8 @@ class IPFSNode {
         directoryManager.addEntry(IPFSDirectoryEntry(
           name: entry.key,
           hash: CID.decode(subDirCid).multihash.toBytes(),
-          size: fixnum.Int64(0), // Tsize should ideally be known, but 0 is acceptable if unknown for now
+          size: fixnum.Int64(
+              0), // Tsize should ideally be known, but 0 is acceptable if unknown for now
           isDirectory: true,
         ));
       }
@@ -722,29 +737,40 @@ class IPFSNode {
   Future<Map<String, dynamic>> getHealthStatus() async {
     return {
       'core': {
-        'security': await _container.get<SecurityManager>().getStatus(),
-        'metrics': await _container.get<MetricsCollector>().getStatus(),
+        'security': await _getServiceStatus<SecurityManager>(),
+        'metrics': await _getServiceStatus<MetricsCollector>(),
       },
       'storage': {
-        'blockstore': await _container.get<BlockStore>().getStatus(),
-        'datastore': await _container.get<DatastoreHandler>().getStatus(),
-        'ipld': await _container.get<IPLDHandler>().getStatus(),
+        'blockstore': await _getServiceStatus<BlockStore>(),
+        'datastore': await _getServiceStatus<DatastoreHandler>(),
+        'ipld': await _getServiceStatus<IPLDHandler>(),
       },
       'network': {
-        'dht': await _container.get<DHTHandler>().getStatus(),
-        'pubsub': await _container.get<PubSubHandler>().getStatus(),
-        'bitswap': await _container.get<BitswapHandler>().getStatus(),
-        'mdns': await _container.get<MDNSHandler>().getStatus(),
-        'bootstrap': await _container.get<BootstrapHandler>().getStatus(),
+        'dht': await _getServiceStatus<DHTHandler>(),
+        'pubsub': await _getServiceStatus<PubSubHandler>(),
+        'bitswap': await _getServiceStatus<BitswapHandler>(),
+        'mdns': await _getServiceStatus<MDNSHandler>(),
+        'bootstrap': await _getServiceStatus<BootstrapHandler>(),
       },
       'services': {
-        'routing': await _container.get<ContentRoutingHandler>().getStatus(),
-        'dnslink': await _container.get<DNSLinkHandler>().getStatus(),
-        'graphsync': await _container.get<GraphsyncHandler>().getStatus(),
-        'autonat': await _container.get<AutoNATHandler>().getStatus(),
-        'ipns': await _container.get<IPNSHandler>().getStatus(),
+        'routing': await _getServiceStatus<ContentRoutingHandler>(),
+        'dnslink': await _getServiceStatus<DNSLinkHandler>(),
+        'graphsync': await _getServiceStatus<GraphsyncHandler>(),
+        'autonat': await _getServiceStatus<AutoNATHandler>(),
+        'ipns': await _getServiceStatus<IPNSHandler>(),
       }
     };
+  }
+
+  Future<Map<String, dynamic>> _getServiceStatus<T>() async {
+    if (_container.isRegistered(T)) {
+      try {
+        return await (_container.get<T>() as dynamic).getStatus();
+      } catch (e) {
+        return {'status': 'error', 'message': e.toString()};
+      }
+    }
+    return {'status': 'disabled'};
   }
 
   // Core getters
