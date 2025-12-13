@@ -5,17 +5,55 @@ import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_proto;
 
 // lib/src/core/data_structures/link.dart
 
-/// Represents a link to another node in the IPFS Merkle DAG.
-/// Strictly follows the standard IPFS PBLink structure: Name, Hash (CID), Size (Tsize).
+/// A directed link between nodes in the IPFS Merkle DAG.
+///
+/// Links are the edges in IPFS's content-addressed graph structure,
+/// connecting parent nodes to their children. Each link contains:
+/// - A [name] identifying the link within its parent
+/// - A [cid] pointing to the target node's content
+/// - A [size] representing the cumulative size of the linked subgraph
+///
+/// This class strictly follows the IPFS PBLink protobuf specification.
+/// Note that metadata like timestamps or directory flags must be resolved
+/// by fetching the target node.
+///
+/// Example:
+/// ```dart
+/// final link = Link(
+///   name: 'readme.md',
+///   cid: fileCid,
+///   size: 1024,
+/// );
+///
+/// // Links in a directory listing
+/// for (final link in node.links) {
+///   print('${link.name}: ${link.cid}');
+/// }
+/// ```
+///
+/// See also:
+/// - [MerkleDAGNode] for the node structure containing links
+/// - [CID] for content identifiers
 class Link {
+  /// The name of this link within its parent node.
+  ///
+  /// For UnixFS directories, this is the filename or subdirectory name.
   final String name;
-  final CID cid; 
+
+  /// The content identifier of the linked target node.
+  final CID cid;
+
+  /// The cumulative size of the linked subgraph in bytes.
+  ///
+  /// For files, this is the file size. For directories, this includes
+  /// all descendant nodes recursively.
   final fixnum.Int64 size;
-  
+
   // Standard IPFS Link does not carry metadata, timestamp, or explicit isDirectory flags.
   // These must be resolved by fetching the target node.
   // We keep the class simple to match the spec.
 
+  /// Creates a new link with the given [name], [cid], and [size].
   Link({
     required this.name,
     required this.cid,

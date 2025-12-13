@@ -3,17 +3,29 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 import '../../proto/generated/core/cid.pb.dart';
-import '../../proto/generated/core/operation_log.pb.dart'; // Import the generated Protobuf file
-import '../../proto/generated/core/node_type.pbenum.dart'; // Import the NodeTypeProto enum directly
-// lib/src/core/data_structures/operation_log.dart
+import '../../proto/generated/core/operation_log.pb.dart';
+import '../../proto/generated/core/node_type.pbenum.dart';
 
+/// A single entry in the operation log.
+///
+/// Records an operation with timestamp, details, and optional CID/node type.
 class OperationLogEntry {
+  /// When the operation occurred.
   final DateTime timestamp;
-  final String operation;
-  final String details;
-  final CID? cid; // Optional CID involved in the operation
-  final NodeTypeProto? nodeType; // Optional NodeType involved in the operation
 
+  /// The operation type (e.g., 'add', 'remove', 'pin').
+  final String operation;
+
+  /// Human-readable details about the operation.
+  final String details;
+
+  /// The CID involved, if any.
+  final CID? cid;
+
+  /// The node type involved, if any.
+  final NodeTypeProto? nodeType;
+
+  /// Creates an operation log entry.
   OperationLogEntry({
     required this.timestamp,
     required this.operation,

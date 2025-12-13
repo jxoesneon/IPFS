@@ -1,26 +1,58 @@
 import 'package:fixnum/fixnum.dart' as fixnum;
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/cid.dart'; // Import CID class for handling CIDs
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
-// lib/src/core/data_structures/pin.dart
 
-/// Represents a pin in the IPFS network.
+/// A pin that prevents content from being garbage collected.
+///
+/// Pins mark content as important in IPFS, ensuring it remains available
+/// locally and is not removed during garbage collection. There are several
+/// pin types for different use cases.
+///
+/// **Pin Types:**
+/// - Direct: Pins only the specified block
+/// - Recursive: Pins the block and all linked content
+/// - Indirect: Automatically pinned as part of a recursive pin
+///
+/// Example:
+/// ```dart
+/// final pin = Pin(
+///   cid: contentCid,
+///   type: PinTypeProto.PIN_TYPE_RECURSIVE,
+///   blockStore: store,
+/// );
+///
+/// await pin.pin();
+/// print('Content is pinned: ${pin.isPinned()}');
+/// ```
+///
+/// See also:
+/// - [PinManager] for bulk pin operations
+/// - [BlockStore] for storage that respects pins
 class Pin {
-  final CID cid; // The CID of the content to be pinned
-  final PinTypeProto type; // The type of pin (direct, recursive, etc.)
-  final DateTime timestamp; // The timestamp when the pin was created
-  final BlockStore blockStore;
-  final PinManager _pinManager; // Add PinManager instance
+  /// The content identifier being pinned.
+  final CID cid;
 
+  /// The type of pin (direct, recursive, indirect).
+  final PinTypeProto type;
+
+  /// When this pin was created.
+  final DateTime timestamp;
+
+  /// The block store for storage operations.
+  final BlockStore blockStore;
+
+  final PinManager _pinManager;
+
+  /// Creates a new pin for the given [cid] with the specified [type].
   Pin({
     required this.cid,
     required this.type,
     DateTime? timestamp,
     required this.blockStore,
   })  : timestamp = timestamp ?? DateTime.now(),
-        _pinManager =
-            PinManager(blockStore); // Initialize PinManager with BlockStore
+        _pinManager = PinManager(blockStore);
 
   /// Creates a [Pin] from its Protobuf representation.
   factory Pin.fromProto(PinProto pbPin, BlockStore blockStore) {

@@ -1,10 +1,22 @@
 // src/core/data_structures/metadata.dart
+
+/// Metadata associated with IPLD nodes.
+///
+/// Contains size, content type, modification time, and custom properties.
 class IPLDMetadata {
+  /// Size of the content in bytes.
   final int size;
+
+  /// Custom key-value properties.
   final Map<String, String> properties;
+
+  /// When the content was last modified.
   final DateTime? lastModified;
+
+  /// MIME type of the content.
   final String? contentType;
 
+  /// Creates metadata with the given parameters.
   IPLDMetadata({
     required this.size,
     this.properties = const {},

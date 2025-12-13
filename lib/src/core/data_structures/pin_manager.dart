@@ -8,13 +8,23 @@ import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 
-/// Manages pin operations in the IPFS network
+/// Manages pinning operations to prevent content from garbage collection.
+///
+/// Supports direct pins (single block) and recursive pins (block + all refs).
+/// Tracks access times for cache eviction policies.
+///
+/// Example:
+/// ```dart
+/// final manager = PinManager(blockStore);
+/// await manager.pinBlock(cidProto, PinTypeProto.PIN_TYPE_RECURSIVE);
+/// ```
 class PinManager {
   final Map<String, PinTypeProto> _pins = {};
-  final Map<String, Set<String>> _references = {}; // Track block references
-  final Map<String, DateTime> _accessTimes = {}; // Track access times
+  final Map<String, Set<String>> _references = {};
+  final Map<String, DateTime> _accessTimes = {};
   final BlockStore _blockStore;
 
+  /// Creates a pin manager backed by [_blockStore].
   PinManager(this._blockStore);
 
   Future<bool> pinBlock(IPFSCIDProto cidProto, PinTypeProto type) async {

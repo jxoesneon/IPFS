@@ -2,17 +2,40 @@
 import 'dart:io';
 import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:p2plib/p2plib.dart' as p2p; // Import p2plib for peer management
-import 'package:dart_ipfs/src/proto/generated/core/peer.pb.dart'; // Import the generated Protobuf file
-// lib/src/core/data_structures/peer.dart
+import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/proto/generated/core/peer.pb.dart';
 
-/// Represents a peer in the IPFS network.
+/// Represents a peer node in the IPFS network.
+///
+/// A Peer encapsulates information about a remote IPFS node, including
+/// its cryptographic identity, network addresses, latency metrics, and
+/// client version information.
+///
+/// Example:
+/// ```dart
+/// // Create from multiaddr
+/// final peer = await Peer.fromMultiaddr('/ip4/127.0.0.1/tcp/4001/p2p/Qm...');
+/// print('Peer ID: ${peer.id}');
+/// print('Addresses: ${peer.addresses}');
+/// ```
+///
+/// See also:
+/// - [PeerProto] for protobuf serialization
+/// - [P2plibRouter] for peer communication
 class Peer {
+  /// The unique cryptographic identifier for this peer.
   final p2p.PeerId id;
+
+  /// Network addresses where this peer can be reached.
   final List<p2p.FullAddress> addresses;
+
+  /// Network latency to this peer in milliseconds.
   final int latency;
+
+  /// The IPFS client version string reported by this peer.
   final String agentVersion;
 
+  /// Creates a new Peer with the given properties.
   Peer({
     required this.id,
     required this.addresses,

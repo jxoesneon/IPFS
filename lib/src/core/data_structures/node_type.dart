@@ -1,7 +1,9 @@
 // lib/src/core/data_structures/node_type.dart
 
+/// Types of nodes in the UnixFS data model.
 enum NodeType { unknown, file, directory, symlink, raw }
 
+/// Extension for protobuf conversion of [NodeType].
 extension NodeTypeExtension on NodeType {
   int toProto() {
     switch (this) {

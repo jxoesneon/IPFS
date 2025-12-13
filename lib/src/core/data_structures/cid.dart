@@ -4,10 +4,35 @@ import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart'; // Import the g
 
 // lib/src/core/data_structures/cid.dart
 
-/// Represents a Content Identifier (CID) in IPFS.
+/// A protobuf-backed Content Identifier (CID) for storage operations.
+///
+/// This class wraps an [IPFSCIDProto] to provide a Dart-friendly API
+/// for working with CIDs in storage contexts. It supports CIDv1 format
+/// with various IPLD codecs.
+///
+/// Unlike the core [CID] class which handles encoding/decoding,
+/// [StorageCID] is optimized for serialization and storage operations.
+///
+/// Supported codecs:
+/// - `raw` (0x55): Raw binary data
+/// - `dag-pb` (0x70): DAG-PB (Protocol Buffers)
+/// - `dag-cbor` (0x71): DAG-CBOR
+/// - `dag-json` (0x129): DAG-JSON
+///
+/// Example:
+/// ```dart
+/// final multihash = Uint8List.fromList([...]);
+/// final storageCid = StorageCID.fromBytes(multihash, 'dag-pb');
+/// final proto = storageCid.toProto();  // For serialization
+/// ```
+///
+/// See also:
+/// - [CID] for the main CID implementation
+/// - [IPFSCIDProto] for the underlying protobuf message
 class StorageCID {
   final IPFSCIDProto _proto;
 
+  /// Creates a StorageCID wrapping the given protobuf message.
   StorageCID(this._proto);
 
   static const _supportedCodecs = {

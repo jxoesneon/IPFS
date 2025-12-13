@@ -6,14 +6,54 @@ import 'package:dart_ipfs/src/core/cid.dart';
 
 // lib/src/core/data_structures/merkle_dag_node.dart
 
-/// Represents a Merkle DAG node in IPFS (DAG-PB + UnixFS).
-/// This wrapper handles the serialization/deserialization of the standard Protobuf formats.
+/// A node in the IPFS Merkle DAG (Directed Acyclic Graph).
+///
+/// The Merkle DAG is the fundamental data structure in IPFS, where each
+/// node is identified by its content hash ([cid]) and can link to other
+/// nodes via [links]. This enables:
+/// - Content-addressable storage
+/// - Deduplication across the network
+/// - Cryptographic verification of data integrity
+///
+/// This class handles DAG-PB (protobuf) format with UnixFS data interpretation,
+/// automatically detecting directories and extracting metadata.
+///
+/// Example:
+/// ```dart
+/// // Parse a node from bytes
+/// final node = MerkleDAGNode.fromBytes(rawBytes);
+/// print('Is directory: ${node.isDirectory}');
+/// print('Has ${node.links.length} children');
+///
+/// // Access linked content
+/// for (final link in node.links) {
+///   print('  ${link.name}: ${link.cid}');
+/// }
+/// ```
+///
+/// See also:
+/// - [Link] for the edge structure
+/// - [CID] for content identifiers
+/// - [UnixFS spec](https://github.com/ipfs/specs/blob/main/UNIXFS.md)
 class MerkleDAGNode {
+  /// The list of links (edges) to child nodes.
   final List<Link> links;
-  final Uint8List data;
-  final bool isDirectory;
-  final int? mtime; // UnixFS modification time
 
+  /// The raw data payload of this node.
+  ///
+  /// For UnixFS nodes, this contains serialized UnixFS metadata.
+  /// For raw nodes, this contains the actual file content.
+  final Uint8List data;
+
+  /// Whether this node represents a directory.
+  ///
+  /// Determined by parsing the UnixFS data type.
+  final bool isDirectory;
+
+  /// Unix modification time in seconds, if available.
+  final int? mtime;
+
+  /// Creates a new MerkleDAGNode with the given components.
   MerkleDAGNode({
     required this.links,
     required this.data,
@@ -21,6 +61,9 @@ class MerkleDAGNode {
     this.mtime,
   });
 
+  /// The content identifier for this node.
+  ///
+  /// Computed from the DAG-PB serialized form of this node.
   CID get cid => CID.computeForDataSync(toBytes(), codec: 'dag-pb');
 
   /// Creates a [MerkleDAGNode] from its byte representation (DAG-PB).
