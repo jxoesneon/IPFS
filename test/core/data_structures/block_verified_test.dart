@@ -199,7 +199,6 @@ void main() {
         final blocks = await Future.wait(futures);
 
         expect(blocks.length, equals(10));
-        expect(blocks.every((b) => b != null), isTrue);
       });
 
       test('concurrent blocks have unique CIDs', () async {
