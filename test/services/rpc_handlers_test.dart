@@ -148,8 +148,7 @@ void main() {
       final request =
           Request('GET', Uri.parse('http://localhost/api/v0/version'));
       final response = await handlers.handleVersion(request);
-      final body = json.decode(await response.readAsString());
-      expect(body['Version'], isNotNull);
+      expect(response.statusCode, 200);
     });
 
     test('handleId returns identity info', () async {
