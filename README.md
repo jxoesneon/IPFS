@@ -4,6 +4,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 
 [![Dart](https://img.shields.io/badge/dart-%3E%3D3.0.0-blue.svg)](https://dart.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://github.com/jxoesneon/IPFS/actions/workflows/test.yml/badge.svg)](https://github.com/jxoesneon/IPFS/actions/workflows/test.yml)
 
 ## Features
 
