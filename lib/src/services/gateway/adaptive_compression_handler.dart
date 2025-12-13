@@ -6,13 +6,19 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'dart:convert';
 import 'dart:io';
-// import 'package:lz4/lz4.dart'; // Package not available
 
+/// Configuration for adaptive compression.
 class CompressionConfig {
+  /// Whether compression is enabled.
   final bool enabled;
+
+  /// Maximum size for uncompressed content.
   final int maxUncompressedSize;
+
+  /// Compression type rules by content type prefix.
   final Map<String, CompressionType> contentTypeRules;
 
+  /// Creates compression configuration.
   CompressionConfig({
     this.enabled = true,
     this.maxUncompressedSize = 52428800, // 50MB
@@ -29,21 +35,30 @@ class CompressionConfig {
   };
 }
 
+/// Analysis results for compression options.
 class CompressionAnalysis {
+  /// Compression ratios by type.
   final Map<CompressionType, double> compressionRatios;
+
+  /// The recommended compression type.
   final CompressionType recommendedType;
 
+  /// Creates compression analysis results.
   CompressionAnalysis({
     required this.compressionRatios,
     required this.recommendedType,
   });
 }
 
+/// Handles adaptive compression for gateway content.
+///
+/// Selects optimal compression based on content type and size.
 class AdaptiveCompressionHandler {
   final BlockStore _blockStore;
   final CompressionConfig _config;
   final String _metadataPath;
 
+  /// Creates a handler with [_blockStore] and [_config].
   AdaptiveCompressionHandler(this._blockStore, this._config)
       : _metadataPath = '${_blockStore.path}/metadata';
 

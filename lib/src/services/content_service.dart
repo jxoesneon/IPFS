@@ -6,10 +6,32 @@ import '../core/cid.dart';
 import '../core/data_structures/block.dart';
 import '../storage/datastore.dart';
 
-/// Service for handling IPFS content operations
+/// High-level service for content storage and retrieval.
+///
+/// ContentService provides a simplified API for IPFS content operations,
+/// handling CID generation, block creation, and pin management.
+///
+/// Example:
+/// ```dart
+/// final service = ContentService(datastore);
+///
+/// // Store content
+/// final cid = await service.storeContent(fileBytes);
+///
+/// // Retrieve content
+/// final data = await service.getContent(cid);
+///
+/// // Pin for persistence
+/// await service.pinContent(cid);
+/// ```
+///
+/// See also:
+/// - [Datastore] for low-level storage
+/// - [CID] for content addressing
 class ContentService {
   final Datastore _datastore;
 
+  /// Creates a content service backed by [_datastore].
   ContentService(this._datastore);
 
   /// Stores content and returns its CID

@@ -6,11 +6,15 @@ import 'package:dart_ipfs/src/services/gateway/content_type_handler.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
+/// HTTP API handler for preview requests.
+///
+/// Serves generated previews via the gateway API.
 class PreviewApiHandler {
   final CachedPreviewGenerator _previewGenerator;
   final LazyPreviewHandler _lazyPreviewHandler;
   final ContentTypeHandler _contentTypeHandler = ContentTypeHandler();
 
+  /// Creates a handler with [_previewGenerator] and [_lazyPreviewHandler].
   PreviewApiHandler(this._previewGenerator, this._lazyPreviewHandler);
 
   String _detectContentType(Block block) {
