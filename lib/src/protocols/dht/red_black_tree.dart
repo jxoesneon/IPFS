@@ -12,10 +12,10 @@ import 'package:dart_ipfs/src/protocols/dht/red_black_tree/search.dart'
 /// A node in the Red-Black tree.
 class RedBlackTreeNode<K_PeerId, V_PeerInfo> {
   /// The key (peer ID).
-  common_tree.K_PeerId key;
+  K_PeerId key;
 
   /// The value (peer info).
-  common_tree.V_PeerInfo value;
+  V_PeerInfo value;
 
   /// Node color (RED or BLACK).
   common_tree.NodeColor color;
@@ -66,8 +66,7 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
 
   // Insert a new node with the given key and value into the tree.
   void insert(K_PeerId key_insert, V_PeerInfo value_insert) {
-    final newNode = RedBlackTreeNode(key_insert as common_tree.K_PeerId,
-        value_insert as common_tree.V_PeerInfo);
+    final newNode = RedBlackTreeNode(key_insert, value_insert);
     _insertion.insertNode(this, newNode); // Use _insertion instance
   }
 
@@ -77,7 +76,7 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
   }
 
   // Search for a node with the given key in the tree.
-  common_tree.V_PeerInfo? search(K_PeerId key) {
+  V_PeerInfo? search(K_PeerId key) {
     final node = _search.searchNode(this, key); // Use _search instance
     return node?.value;
   }
@@ -92,7 +91,12 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
 
   int compare(K_PeerId a, K_PeerId b) => _compare(a, b);
 
-  clear() {}
+  void clear() {
+    _root = null;
+    size = 0;
+    isEmpty = true;
+    entries.clear();
+  }
 
   // Add this operator definition
   void operator []=(K_PeerId key, V_PeerInfo value) {

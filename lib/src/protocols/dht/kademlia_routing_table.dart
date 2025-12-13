@@ -154,9 +154,7 @@ class KademliaRoutingTable {
 
   void clear() => _tree.buckets.forEach((bucket) => bucket.clear());
 
-  int distance(p2p.PeerId a, p2p.PeerId b) => List<int>.generate(
-          min(a.value.length, b.value.length), (i) => a.value[i] ^ b.value[i])
-      .reduce((acc, val) => (acc << 8) | val);
+  int distance(p2p.PeerId a, p2p.PeerId b) => _calculateXorDistance(a, b);
 
   List<RedBlackTree<p2p.PeerId, KademliaTreeNode>> get buckets => _tree.buckets;
 
@@ -242,16 +240,32 @@ class KademliaRoutingTable {
 
   int _calculateXorDistance(p2p.PeerId a, p2p.PeerId b) {
     final length = min(a.value.length, b.value.length);
-    int distance = 0;
+
+    // Find the first differing byte and calculate distance from there
+    // This prevents integer overflow for large PeerIds
     for (int i = 0; i < length; i++) {
-      distance = (distance << 8) | (a.value[i] ^ b.value[i]);
+      int xorByte = a.value[i] ^ b.value[i];
+      if (xorByte != 0) {
+        // Convert position and XOR value to distance
+        // Distance represents the bit position of the first difference
+        int leadingZeros = 0;
+        int mask = 0x80;
+        while ((xorByte & mask) == 0 && mask > 0) {
+          leadingZeros++;
+          mask >>= 1;
+        }
+        return (i * 8) + leadingZeros;
+      }
     }
-    return distance;
+    // If all bytes are the same, distance is 0 (same peer)
+    return 0;
   }
 
   int _getBucketIndex(int distance) {
-    // Assuming the bucket index is determined by the number of leading zeros in the distance
-    return distance.bitLength - 1;
+    // Distance 0 means same peer - use bucket 0
+    // Otherwise distance represents the bit position, which is the bucket index
+    if (distance == 0) return 0;
+    return distance.clamp(0, 255); // Ensure we don't exceed bucket array bounds
   }
 
   bool _removeStaleNode(RedBlackTree<p2p.PeerId, KademliaTreeNode> bucket) {

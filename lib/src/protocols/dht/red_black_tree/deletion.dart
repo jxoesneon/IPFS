@@ -54,8 +54,14 @@ class Deletion<K_PeerId, V_PeerInfo> {
     FixViolations<K_PeerId, V_PeerInfo> fixViolations =
         FixViolations<K_PeerId, V_PeerInfo>();
 
-    if (yOriginalColor == common_tree.NodeColor.BLACK) {
-      fixViolations.fixDeletion(tree, x!, x.parent); // Fix any violations
+    if (yOriginalColor == common_tree.NodeColor.BLACK && x != null) {
+      fixViolations.fixDeletion(tree, x, x.parent); // Fix any violations
+    }
+
+    // Update tree size and entries
+    tree.size--;
+    if (tree.size == 0) {
+      tree.isEmpty = true;
     }
   }
 
@@ -86,7 +92,7 @@ class Deletion<K_PeerId, V_PeerInfo> {
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? node = tree.root;
 
     while (node != null) {
-      final comparison = tree.compare(key, node.key as K_PeerId);
+      final comparison = tree.compare(key, node.key);
 
       if (comparison == 0) {
         return node; // Key found

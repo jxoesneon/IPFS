@@ -11,7 +11,7 @@ import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
 /// through recoloring and rotations.
 class Insertion<K_PeerId, V_PeerInfo> {
   /// Inserts [node] into [tree] while maintaining balance.
-  void insertNode<K_PeerId, V_PeerInfo>(RedBlackTree<K_PeerId, V_PeerInfo> tree,
+  void insertNode(RedBlackTree<K_PeerId, V_PeerInfo> tree,
       RedBlackTreeNode<K_PeerId, V_PeerInfo> node) {
     // `y` will eventually store the parent of the new node.
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? y = null;
@@ -22,7 +22,7 @@ class Insertion<K_PeerId, V_PeerInfo> {
     while (x != null) {
       y = x; // Update `y` to the current node.
       // Compare the key of the new node with the key of the current node.
-      final comparison = tree.compare(node.key as K_PeerId, x.key as K_PeerId);
+      final comparison = tree.compare(node.key, x.key);
       if (comparison < 0) {
         // If the new node's key is smaller, move to the left subtree.
         x = x.left_child;
@@ -37,7 +37,7 @@ class Insertion<K_PeerId, V_PeerInfo> {
     if (y == null) {
       // If `y` is null, the tree was empty, and the new node becomes the root.
       tree.root = node;
-    } else if (tree.compare(node.key as K_PeerId, y.key as K_PeerId) < 0) {
+    } else if (tree.compare(node.key, y.key) < 0) {
       // If the new node's key is smaller than its parent's, it becomes the left child.
       y.left_child = node;
     } else {
@@ -57,5 +57,10 @@ class Insertion<K_PeerId, V_PeerInfo> {
         FixViolations<K_PeerId, V_PeerInfo>();
     // Call fixInsertion to restore Red-Black Tree properties if necessary.
     fixViolationsInstance.fixInsertion(tree, node);
+
+    // Update tree size, entries, and isEmpty flag
+    tree.size++;
+    tree.entries.add(MapEntry(node.key, node.value));
+    tree.isEmpty = false;
   }
 }
