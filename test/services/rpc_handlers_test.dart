@@ -214,7 +214,6 @@ void main() {
       final response = await handlers.handleDhtFindProviders(request);
       // Should trigger internal error? dhtClient.findProviders returns dummy.
       // Response is ndjson.
-      final body = await response.readAsString();
       // Expect success (empty response for no providers)
       expect(response.statusCode, 200);
       // expect(body, contains('"Type":4')); // No providers returned
