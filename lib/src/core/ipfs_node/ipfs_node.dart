@@ -34,11 +34,51 @@ import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
 import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:dart_ipfs/src/core/builders/ipfs_node_builder.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
-// src/core/ipfs_node/ipfs_node.dart
 
-// lib/src/core/ipfs_node/ipfs_node.dart
-
-/// The main class representing an IPFS node.
+/// The central node orchestrating all IPFS operations.
+///
+/// [IPFSNode] is the main class for interacting with the IPFS network.
+/// It manages storage, networking, and protocol handlers, providing
+/// a high-level API for content operations.
+///
+/// **Creating a Node:**
+/// ```dart
+/// // Offline mode (local storage only)
+/// final node = await IPFSNode.create(IPFSConfig(offline: true));
+/// await node.start();
+///
+/// // P2P mode (full network participation)
+/// final node = await IPFSNode.create(IPFSConfig(offline: false));
+/// await node.start();
+/// print('Peer ID: ${node.peerID}');
+/// ```
+///
+/// **Adding Content:**
+/// ```dart
+/// final cid = await node.addFile(fileBytes);
+/// print('Added content: $cid');
+/// ```
+///
+/// **Retrieving Content:**
+/// ```dart
+/// final data = await node.get(cid);
+/// ```
+///
+/// **Lifecycle:**
+/// Always call [start] before using the node and [stop] when done:
+/// ```dart
+/// await node.start();
+/// try {
+///   // Use the node...
+/// } finally {
+///   await node.stop();
+/// }
+/// ```
+///
+/// See also:
+/// - [IPFS] for a simpler high-level wrapper
+/// - [IPFSConfig] for configuration options
+/// - [IPFSNodeBuilder] for advanced node construction
 class IPFSNode {
   final ServiceContainer _container;
   final Logger _logger;
