@@ -3,19 +3,53 @@ import 'dart:typed_data';
 import '../utils/logger.dart';
 import 'package:hive/hive.dart';
 import '../core/data_structures/block.dart';
-// lib/src/storage/datastore.dart
 
+/// Error thrown when a datastore operation fails.
 class DatastoreError extends Error {
+  /// The error message describing what went wrong.
   final String message;
+
+  /// Creates a new datastore error with the given [message].
   DatastoreError(this.message);
 
   @override
   String toString() => 'DatastoreError: $message';
 }
 
-/// Persistent datastore implementation using Hive
+/// Persistent key-value storage for IPFS blocks using Hive.
+///
+/// The Datastore provides the primary persistence layer for IPFS blocks,
+/// using [Hive](https://pub.dev/packages/hive) as the underlying database.
+/// It supports block storage, retrieval, and pinning operations.
+///
+/// **Key Features:**
+/// - Block storage and retrieval by CID
+/// - Pin management to prevent garbage collection
+/// - Atomic operations with error handling
+///
+/// Example:
+/// ```dart
+/// final datastore = Datastore('./ipfs_data');
+/// await datastore.init();
+///
+/// // Store a block
+/// await datastore.put(cid, block);
+///
+/// // Retrieve a block
+/// final block = await datastore.get(cid);
+///
+/// // Pin to prevent garbage collection
+/// await datastore.pin(cid);
+/// ```
+///
+/// See also:
+/// - [DatastoreHandler] for higher-level operations
+/// - [BlockStore] for the block store interface
 class Datastore {
+  /// Hive box name for block data.
   static const String BLOCKS_BOX = 'blocks';
+
+  /// Hive box name for pin data.
   static const String PINS_BOX = 'pins';
 
   final String _basePath;
@@ -23,6 +57,7 @@ class Datastore {
   late final Box<bool> _pinsBox;
   final _logger = Logger('Datastore');
 
+  /// Creates a new datastore at the given [_basePath].
   Datastore(this._basePath);
 
   /// Initializes the datastore

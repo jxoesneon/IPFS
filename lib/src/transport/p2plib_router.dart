@@ -15,9 +15,35 @@ import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/transport/local_crypto.dart';
 
-// lib/src/transport/p2plib_router.dart
-
-/// A router implementation using the `p2plib` package.
+/// Low-level P2P networking router using the p2plib package.
+///
+/// P2plibRouter provides the transport layer for IPFS networking,
+/// handling peer connections, message routing, and protocol dispatch.
+/// It wraps the [p2plib](https://pub.dev/packages/p2plib) library
+/// to provide IPFS-specific networking functionality.
+///
+/// **Key Features:**
+/// - UDP transport with IPv4/IPv6 support
+/// - Peer discovery and connection management
+/// - Protocol-based message routing
+/// - Event streams for connection and message monitoring
+///
+/// Example:
+/// ```dart
+/// final router = P2plibRouter(config);
+/// await router.initialize();
+/// await router.start();
+///
+/// // Connect to a peer
+/// await router.connect('/ip4/127.0.0.1/tcp/4001/p2p/Qm...');
+///
+/// // Send a message
+/// await router.sendMessage(peerId, messageBytes);
+/// ```
+///
+/// See also:
+/// - [NetworkHandler] for higher-level network operations
+/// - [DHTClient] for DHT protocol integration
 class P2plibRouter {
   static P2plibRouter? _instance;
   static final p2p.Crypto _sharedCrypto = LocalCrypto();
@@ -47,6 +73,7 @@ class P2plibRouter {
   final Set<String> _registeredProtocols = {};
   final Map<String, Function(p2p.Packet)> _protocolHandlers = {};
 
+  /// Returns a singleton instance of the router for the given [config].
   factory P2plibRouter(IPFSConfig config) {
     if (_instance == null) {
       _instance = P2plibRouter._internal(config);
