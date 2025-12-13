@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-12-12
+
+### Documentation
+- Added comprehensive Effective Dart documentation to 166 Dart files
+- Documented all core library classes, interfaces, and data structures
+- Documented protocol implementations (Bitswap, DHT, Graphsync)
+- Documented network layer, services, and utilities
+- All code passes `dart analyze` with zero warnings
+
 ## [1.0.0] - 2025-12-12
 
 ### Added
