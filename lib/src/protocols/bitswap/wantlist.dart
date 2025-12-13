@@ -1,9 +1,21 @@
-/// Represents a list of blocks that a peer wants to receive
+/// A priority-ordered list of blocks that a peer wants to receive.
+///
+/// Each CID in the wantlist has an associated priority (higher = more urgent).
+/// Used in the Bitswap protocol to communicate block requests to peers.
+///
+/// Example:
+/// ```dart
+/// final wantlist = Wantlist();
+/// wantlist.add(cid, priority: 10);
+/// if (wantlist.contains(otherCid)) {
+///   print('Priority: ${wantlist.getPriority(otherCid)}');
+/// }
+/// ```
 class Wantlist {
-  /// Map of CIDs to their priority level
+  /// Map of CIDs to their priority levels.
   final Map<String, int> _entries = {};
 
-  /// Creates a new empty Wantlist
+  /// Creates a new empty Wantlist.
   Wantlist();
 
   /// Adds a CID to the wantlist with optional priority

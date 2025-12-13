@@ -17,9 +17,34 @@ import 'package:dart_ipfs/src/protocols/bitswap/message.dart'
     as bitswap_message;
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
     as bitswap_pb;
- // Import for WantlistEntry, Wantlist, BlockPresence
-// lib/src/protocols/bitswap/bitswap.dart
 
+/// Bitswap 1.2.0 block exchange protocol implementation.
+///
+/// Bitswap is IPFS's data trading module that manages requesting and
+/// receiving blocks from peers. It implements a credit-based system
+/// using a [BitLedger] to track exchanges with each peer.
+///
+/// **Key Features:**
+/// - Wantlist management for requesting blocks
+/// - Block presence notifications (HAVE/DONT_HAVE)
+/// - Credit-based peer prioritization via ledger
+///
+/// Example:
+/// ```dart
+/// final bitswap = Bitswap(router, ledger, datastore);
+/// await bitswap.start();
+///
+/// // Request a block from the network
+/// final block = await bitswap.wantBlock(cidString);
+///
+/// // Provide a block to other peers
+/// bitswap.provide(cidString);
+/// ```
+///
+/// See also:
+/// - [BitLedger] for peer credit tracking
+/// - [BitswapHandler] for higher-level integration
+/// - [IPFS Bitswap Spec](https://specs.ipfs.tech/bitswap-protocol/)
 class Bitswap {
   final P2plibRouter _router;
   final BitLedger _ledger;
@@ -28,9 +53,11 @@ class Bitswap {
   final dynamic config;
   final _logger = Logger('BitSwap');
 
+  /// Maximum length for block prefixes in messages.
   static const int maxPrefixLength =
-      64; // Or whatever maximum prefix length is appropriate
+      64;
 
+  /// Creates a Bitswap instance with the given dependencies.
   Bitswap(this._router, this._ledger, this._datastore, [this.config]);
 
   /// Starts the Bitswap protocol.

@@ -2,15 +2,28 @@
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
     as bitswap;
-// lib/src/protocols/bitswap/ledger.dart
 
+/// Tracks bandwidth exchange (sent vs received bytes) with a peer.
+///
+/// BitLedger implements Bitswap's debt-based exchange strategy,
+/// where nodes preferentially serve peers who have served them.
+/// A positive debt means the local node owes bytes to the peer.
+///
+/// See also:
+/// - [LedgerManager] for managing ledgers across multiple peers
 class BitLedger {
+  /// The peer this ledger tracks.
   final String peerId;
+
+  /// Total bytes sent to this peer.
   int sentBytes = 0;
+
+  /// Total bytes received from this peer.
   int receivedBytes = 0;
+
   final Map<String, Uint8List> _blockData = {};
 
-  /// Create a new ledger for tracking bitswap exchanges with a specific peer.
+  /// Creates a new ledger for tracking bitswap exchanges with a specific peer.
   BitLedger(this.peerId);
 
   /// Record bytes sent to the peer.
@@ -58,7 +71,7 @@ class BitLedger {
     for (var blockBytes in message.blocks) {
       addReceivedBytes(blockBytes.length);
     }
-    
+
     // Update received bytes from payload (Bitswap 1.1)
     for (var block in message.payload) {
       addReceivedBytes(block.data.length);
