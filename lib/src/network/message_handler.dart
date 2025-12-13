@@ -17,6 +17,10 @@ import 'package:dart_ipfs/src/services/gateway/lazy_preview_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart' as pb_base;
 import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 
+/// Handles IPFS message processing and content operations.
+///
+/// Processes CID messages, stores content, notifies listeners,
+/// and coordinates with Bitswap for block retrieval.
 class MessageHandler {
   final StreamController<pb_base.NetworkEvent> _eventController =
       StreamController<pb_base.NetworkEvent>.broadcast();
@@ -26,6 +30,7 @@ class MessageHandler {
   late final BlockStore _blockStore;
   final _logger = Logger('MessageHandler');
 
+  /// Creates a handler with config, router, and optional PubSub.
   MessageHandler(this.config, this._router, [this._pubSubClient]) {
     _blockStore = BlockStore(path: config.blockStorePath);
   }

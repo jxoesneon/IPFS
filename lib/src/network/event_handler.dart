@@ -5,6 +5,10 @@ import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/proto/generated/metrics.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
 
+/// Handles network events and broadcasts them to listeners.
+///
+/// Processes peer connection events and message events, updating
+/// metrics and emitting events via stream.
 class NetworkEventHandler {
   final StreamController<NetworkEvent> _eventController =
       StreamController<NetworkEvent>.broadcast();
