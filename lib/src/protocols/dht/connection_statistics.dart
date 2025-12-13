@@ -1,17 +1,38 @@
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
     show V_PeerInfo;
-// lib/src/protocols/dht/connection_statistics.dart
 
+/// Statistics for a peer connection in the DHT.
+///
+/// Tracks connection count, duration, bandwidth, latency, and
+/// success/failure rates for data transfers.
 class ConnectionStatistics {
+  /// Total number of connections established.
   int totalConnections = 0;
+
+  /// Number of disconnections.
   int disconnections = 0;
+
+  /// Moving average of connection duration in milliseconds.
   double averageConnectionDuration = 0;
+
+  /// When the peer last disconnected.
   DateTime? lastDisconnectionTime;
+
+  /// Total bytes sent to this peer.
   int bytesSent = 0;
+
+  /// Total bytes received from this peer.
   int bytesReceived = 0;
+
+  /// Number of successful data transfers.
   int successfulDataTransfers = 0;
+
+  /// Number of failed data transfers.
   int failedDataTransfers = 0;
+
+  /// Exponential moving average of latency in milliseconds.
   double averageLatency = 0;
+
   final List<int> _connectionDurations = [];
   bool isConnected = false;
   bool wasConnected = false;

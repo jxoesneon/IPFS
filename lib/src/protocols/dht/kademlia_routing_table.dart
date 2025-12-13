@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'; // V_PeerInfo
+import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 
 import 'dht_client.dart';
@@ -12,17 +12,23 @@ import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
 import 'package:dart_ipfs/src/protocols/dht/connection_statistics.dart';
 
-// Represents the routing table for the DHT client.
+/// Kademlia DHT routing table with k-buckets.
+///
+/// Organizes peers by XOR distance from the local node. Each bucket
+/// holds up to [K_BUCKET_SIZE] peers. Supports bucket splitting,
+/// stale node eviction, and periodic refresh.
 class KademliaRoutingTable {
   late final DHTClient dhtClient;
   late KademliaTree _tree;
+
+  /// Maximum peers per bucket.
   static const int K_BUCKET_SIZE = 20;
+
   final Map<p2p.PeerId, ConnectionStatistics> _connectionStats = {};
 
-  KademliaRoutingTable() {
-    // Don't initialize _tree in the initializer list
-    // It will be properly initialized in the initialize() method
-  }
+  /// Creates an uninitialized routing table.
+  /// Call [initialize] before use.
+  KademliaRoutingTable() {}
 
   /// Initializes the routing table with a reference to the DHT client
   void initialize(DHTClient client) {

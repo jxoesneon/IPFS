@@ -8,11 +8,18 @@ import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
 import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 
+/// Kademlia DHT protocol message handler.
+///
+/// Handles PING, FIND_NODE, GET_VALUE, and PUT_VALUE messages
+/// according to the Kademlia protocol specification.
 class DHTProtocolHandler {
+  /// Kademlia protocol ID.
   static const String PROTOCOL_ID = '/ipfs/kad/1.0.0';
+
   final P2plibRouter _router;
   final Datastore _storage;
 
+  /// Creates a handler with [_router] and [_storage].
   DHTProtocolHandler(this._router, this._storage) {
     _setupHandlers();
   }
@@ -50,9 +57,10 @@ class DHTProtocolHandler {
 
       case kad.Message_MessageType.PUT_VALUE:
         if (message.hasRecord()) {
-             final block = await Block.fromData(Uint8List.fromList(message.record.value),
-                format: 'raw');
-             await _storage.put(utf8.decode(message.key), block);
+          final block = await Block.fromData(
+              Uint8List.fromList(message.record.value),
+              format: 'raw');
+          await _storage.put(utf8.decode(message.key), block);
         }
         response..type = kad.Message_MessageType.PUT_VALUE;
         break;
@@ -75,9 +83,8 @@ class DHTProtocolHandler {
 
     // Convert to List<kad.Peer>
     return closestPeers
-        .map((peer) => kad.Peer()
-              ..id = peer.value
-              //..addrs = [] // Add actual addresses if available
+        .map((peer) => kad.Peer()..id = peer.value
+            //..addrs = [] // Add actual addresses if available
             )
         .toList();
   }

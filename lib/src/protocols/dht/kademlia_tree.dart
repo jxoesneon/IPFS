@@ -20,16 +20,52 @@ import 'rate_limiter.dart';
 import 'kademlia_tree/value_store.dart';
 import 'kademlia_tree/lru_cache.dart';
 
-/// Represents a Kademlia tree for efficient peer routing and lookup.
+/// Kademlia DHT routing table implementation using a tree structure.
+///
+/// The Kademlia tree organizes peers into k-buckets based on XOR distance
+/// from the local node. This enables efficient O(log n) lookups across
+/// a distributed network.
+///
+/// **Key Kademlia Parameters:**
+/// - `K = 20`: Maximum peers per bucket (replication factor)
+/// - `ALPHA = 3`: Concurrent lookup parallelism
+///
+/// **Core Operations:**
+/// - [nodeLookup]: Find the K closest peers to a target
+/// - [findClosestPeers]: Query local buckets for nearest peers
+/// - [storeValue] / [findValue]: DHT key-value operations
+///
+/// Example:
+/// ```dart
+/// final tree = KademliaTree(dhtClient);
+///
+/// // Find peers close to a target
+/// final peers = await tree.nodeLookup(targetPeerId);
+///
+/// // Store a value in the DHT
+/// await tree.storeLocalValue(key, valueBytes);
+/// ```
+///
+/// See also:
+/// - [DHTClient] for the DHT protocol handler
+/// - [Kademlia paper](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf)
 class KademliaTree {
   // Tree structure
   KademliaTreeNode? _root;
 
-  // Kademlia protocol constants
-  static const int K = 20; // k-bucket size
-  static const int ALPHA = 3; // Number of concurrent lookups
+  /// Maximum peers per k-bucket (replication factor).
+  static const int K = 20;
+
+  /// Number of concurrent lookups for parallel queries.
+  static const int ALPHA = 3;
+
+  /// Interval between periodic bucket refresh operations.
   static const Duration REFRESH_INTERVAL = Duration(hours: 1);
+
+  /// Interval between key republishing.
   static const Duration REPUBLISH_INTERVAL = Duration(hours: 24);
+
+  /// Timeout for individual node requests.
   static const Duration NODE_TIMEOUT = Duration(seconds: 5);
 
   // List of k-buckets (256 for IPv6 compatibility)
@@ -46,6 +82,8 @@ class KademliaTree {
   Map<p2p.PeerId, NodeStats> _nodeStats = {};
 
   final refreshTimeout = Duration(minutes: 30);
+
+  /// The underlying DHT client for network operations.
   final DHTClient dhtClient;
 
   late final ValueStore _valueStore;
@@ -57,6 +95,9 @@ class KademliaTree {
 
   final Map<int, LRUCache> _bucketCaches = {};
 
+  /// Creates a new Kademlia tree with the given [dhtClient].
+  ///
+  /// Optionally accepts a [root] node for custom initialization.
   KademliaTree(this.dhtClient, {KademliaTreeNode? root}) {
     _root = root ??
         KademliaTreeNode(

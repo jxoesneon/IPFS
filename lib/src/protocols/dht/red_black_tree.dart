@@ -9,17 +9,27 @@ import 'package:dart_ipfs/src/protocols/dht/red_black_tree/deletion.dart'
 import 'package:dart_ipfs/src/protocols/dht/red_black_tree/search.dart'
     as rb_search;
 
-// Represents a node in a Red-Black Tree.
-
+/// A node in the Red-Black tree.
 class RedBlackTreeNode<K_PeerId, V_PeerInfo> {
+  /// The key (peer ID).
   common_tree.K_PeerId key;
+
+  /// The value (peer info).
   common_tree.V_PeerInfo value;
+
+  /// Node color (RED or BLACK).
   common_tree.NodeColor color;
-  RedBlackTreeNode<K_PeerId, V_PeerInfo>? left_child; // Renamed from 'left'
-  RedBlackTreeNode<K_PeerId, V_PeerInfo>? right_child; // Renamed from 'right'
+
+  /// Left child.
+  RedBlackTreeNode<K_PeerId, V_PeerInfo>? left_child;
+
+  /// Right child.
+  RedBlackTreeNode<K_PeerId, V_PeerInfo>? right_child;
+
+  /// Parent node.
   RedBlackTreeNode<K_PeerId, V_PeerInfo>? parent;
 
-  // Constructor
+  /// Creates a tree node.
   RedBlackTreeNode(this.key, this.value,
       {this.color = common_tree.NodeColor.RED,
       this.left_child,
@@ -27,21 +37,27 @@ class RedBlackTreeNode<K_PeerId, V_PeerInfo> {
       this.parent});
 }
 
+/// Self-balancing Red-Black tree for efficient peer lookup.
+///
+/// Used in Kademlia k-buckets for O(log n) peer operations.
 class RedBlackTree<K_PeerId, V_PeerInfo> {
-  RedBlackTreeNode<K_PeerId, V_PeerInfo>? _root; // Private root node
+  RedBlackTreeNode<K_PeerId, V_PeerInfo>? _root;
   int Function(K_PeerId, K_PeerId) _compare;
 
-  // Instances of insertion, deletion, and search classes
   final insertion.Insertion<K_PeerId, V_PeerInfo> _insertion;
   final deletion.Deletion<K_PeerId, V_PeerInfo> _deletion;
   final rb_search.Search<K_PeerId, V_PeerInfo> _search;
 
+  /// Number of nodes in the tree.
   var size = 0;
 
+  /// Whether the tree is empty.
   bool isEmpty = true;
 
+  /// All entries as key-value pairs.
   var entries = <MapEntry<K_PeerId, V_PeerInfo>>[];
 
+  /// Creates a Red-Black tree with optional comparator.
   RedBlackTree({int Function(K_PeerId, K_PeerId)? compare})
       : _compare = compare ?? ((a, b) => (a as int).compareTo(b as int)),
         _insertion = insertion.Insertion<K_PeerId, V_PeerInfo>(),

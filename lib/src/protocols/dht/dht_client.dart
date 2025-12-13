@@ -15,24 +15,45 @@ import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart'
     as ipfs_node_network_events;
 
-/// Implementation of the Kademlia DHT protocol for IPFS
-/// Following specs from: https://github.com/libp2p/specs/tree/master/kad-dht
+/// Kademlia DHT client implementation for IPFS.
+///
+/// Implements the [IPFS Kademlia DHT specification](https://github.com/libp2p/specs/tree/master/kad-dht)
+/// for distributed peer discovery and content routing.
+///
+/// **Core Operations:**
+/// - [findProviders]: Locate peers providing content
+/// - [findPeer]: Discover peer addresses
+/// - [addProvider]: Announce content availability
+///
+/// Example:
+/// ```dart
+/// final dht = DHTClient(networkHandler: handler, router: router);
+/// await dht.initialize();
+///
+/// // Find providers for a CID
+/// final providers = await dht.findProviders(cid);
+/// ```
 class DHTClient {
+  /// The IPFS node this client belongs to.
   IPFSNode get node => networkHandler.ipfsNode;
+
+  /// Handler for network operations.
   final NetworkHandler networkHandler;
+
   final P2plibRouter _router;
   late final LibP2PPeerId peerId;
   late final LibP2PPeerId associatedPeerId;
   late final KademliaRoutingTable _kademliaRoutingTable;
   bool _initialized = false;
 
-  // Protocol identifier
+  /// Protocol identifier for Kademlia DHT.
   static const String PROTOCOL_DHT = '/ipfs/kad/1.0.0';
 
+  /// Creates a new DHT client.
   DHTClient({
     required this.networkHandler,
     required P2plibRouter router,
-  })  : _router = router;
+  }) : _router = router;
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -104,8 +125,8 @@ class DHTClient {
 
     for (final peer in closestPeers) {
       try {
-        final responseBytes = await _sendRequest(
-            peer, PROTOCOL_DHT, msg.writeToBuffer());
+        final responseBytes =
+            await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
         final response = kad.Message.fromBuffer(responseBytes);
 
         // Extract providers
@@ -132,15 +153,15 @@ class DHTClient {
 
     for (final peer in closestPeers) {
       try {
-        final responseBytes = await _sendRequest(
-            peer, PROTOCOL_DHT, msg.writeToBuffer());
+        final responseBytes =
+            await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
         final response = kad.Message.fromBuffer(responseBytes);
 
         // Check if target is in closerPeers
-        final found = response.closerPeers.any(
-            (p) => listsEqual(p.id, id.value));
+        final found =
+            response.closerPeers.any((p) => listsEqual(p.id, id.value));
         if (found) {
-            return id;
+          return id;
         }
         // Iterate...
       } catch (e) {
@@ -185,7 +206,7 @@ class DHTClient {
     }
   }
   */
-  
+
   /*
   // Value Store API: Get Value (GET_VALUE)
   Future<String?> getValue(String key) async {
@@ -227,7 +248,9 @@ class DHTClient {
     final msg = kad.Message()
       ..type = kad.Message_MessageType.ADD_PROVIDER
       ..key = utf8.encode(cid)
-      ..providerPeers.add(_convertPeerIdToKadPeer(p2p.PeerId(value: utf8.encode(providerId)))); // Actually providerId should be bytes
+      ..providerPeers.add(_convertPeerIdToKadPeer(p2p.PeerId(
+          value:
+              utf8.encode(providerId)))); // Actually providerId should be bytes
 
     final targetPeerId =
         p2p.PeerId(value: Uint8List.fromList(utf8.encode(cid)));
@@ -290,20 +313,21 @@ class DHTClient {
       switch (message.type) {
         case kad.Message_MessageType.FIND_NODE:
           // Reply with closer peers
-          final closer = _kademliaRoutingTable.findClosestPeers(p2p.PeerId(value: Uint8List.fromList(message.key)), 20);
+          final closer = _kademliaRoutingTable.findClosestPeers(
+              p2p.PeerId(value: Uint8List.fromList(message.key)), 20);
           final response = kad.Message()
-             ..type = kad.Message_MessageType.FIND_NODE
-             ..closerPeers.addAll(closer.map((p) => _convertPeerIdToKadPeer(p)));
+            ..type = kad.Message_MessageType.FIND_NODE
+            ..closerPeers.addAll(closer.map((p) => _convertPeerIdToKadPeer(p)));
           _sendResponse(peerId, response);
           break;
         case kad.Message_MessageType.GET_VALUE:
-             // Check local storage for record
-             // For now return empty or closer peers
-             break;
+          // Check local storage for record
+          // For now return empty or closer peers
+          break;
         case kad.Message_MessageType.PING:
-             final response = kad.Message()..type = kad.Message_MessageType.PING;
-             _sendResponse(peerId, response);
-             break;
+          final response = kad.Message()..type = kad.Message_MessageType.PING;
+          _sendResponse(peerId, response);
+          break;
         default:
           print('Unhandled DHT message type: ${message.type}');
       }
@@ -311,12 +335,12 @@ class DHTClient {
       print('Error handling DHT packet: $e');
     }
   }
-  
+
   void _sendResponse(p2p.PeerId peer, kad.Message msg) {
-      node.dhtHandler.router.sendDatagram(
-        addresses: node.dhtHandler.router.resolvePeerId(peer),
-        datagram: msg.writeToBuffer(),
-      );
+    node.dhtHandler.router.sendDatagram(
+      addresses: node.dhtHandler.router.resolvePeerId(peer),
+      datagram: msg.writeToBuffer(),
+    );
   }
 
   /// Starts the DHT client and initializes necessary components
@@ -355,8 +379,7 @@ class DHTClient {
 
   /// Initialize the routing table with bootstrap peers
   Future<void> _initializeRoutingTable() async {
-    final bootstrapPeers =
-        networkHandler.config.network.bootstrapPeers;
+    final bootstrapPeers = networkHandler.config.network.bootstrapPeers;
     for (final peerAddr in bootstrapPeers) {
       try {
         final peer = await _connectToPeer(peerAddr);
@@ -383,7 +406,7 @@ class DHTClient {
 
   // Add a getter for the routing table
   KademliaRoutingTable get kademliaRoutingTable => _kademliaRoutingTable;
-  
+
   /// Helper method to compare two lists for equality
   bool listsEqual(List<int> a, List<int> b) {
     if (a.length != b.length) return false;
