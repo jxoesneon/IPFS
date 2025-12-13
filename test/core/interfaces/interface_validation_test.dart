@@ -14,6 +14,11 @@ void main() {
       expect(BlockData, isNotNull);
     });
 
+    test('IDHTHandler interface exists', () {
+      // Added new test case
+      expect(IDHTHandler, isNotNull);
+    });
+
     test('IBlockStore interface is defined', () {
       expect(IBlockStore, isNotNull);
     });
@@ -23,6 +28,7 @@ void main() {
         BlockStoreOperations,
         BlockData,
         IBlockStore,
+        IDHTHandler, // Added to the list
       ];
 
       expect(interfaces.every((i) => i != null), isTrue);
