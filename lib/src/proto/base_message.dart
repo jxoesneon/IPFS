@@ -1,6 +1,9 @@
 import 'dart:typed_data';
 import 'package:protobuf/protobuf.dart';
 
+/// Base class for protobuf message types with serialization helpers.
+///
+/// Provides common toBytes/fromBytes conversions and cloning.
 abstract class BaseProtoMessage extends GeneratedMessage {
   /// Convert message to bytes
   Uint8List toBytes() {
