@@ -1,17 +1,13 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/services/block_store_service.dart';
 import 'package:dart_ipfs/src/services/content_service.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
-import 'package:dart_ipfs/src/services/rpc/rpc_server.dart';
 import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 import 'package:grpc/grpc.dart';
 import 'package:test/test.dart';
 

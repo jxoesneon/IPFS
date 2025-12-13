@@ -1,8 +1,6 @@
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 import 'package:test/test.dart';
 
 void main() {

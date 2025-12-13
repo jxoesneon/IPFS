@@ -1,8 +1,5 @@
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:test/test.dart';
-import 'dart:convert';
 
 void main() {
   group('DNSLinkResolver', () {
