@@ -3,15 +3,15 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:cbor/cbor.dart';
 import 'package:jose/jose.dart';
-import 'package:convert/convert.dart'; // Added import
+import 'package:convert/convert.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
 
-
+/// Handler for JOSE (JWS/JWE) and COSE encoding of IPLD data.
+///
+/// Provides signing, encryption, and verification for IPLD nodes.
 class JoseCoseHandler {
-
-
   static Future<Uint8List> encodeJWS(
     IPLDNode node,
     IPFSPrivateKey privateKey,
@@ -161,7 +161,6 @@ class JoseCoseHandler {
     // ignore: unused_local_variable
     final isValid = false;
     throw UnimplementedError('CatalystCose not available');
-
   }
 
   static Uint8List _extractPayload(IPLDNode node) {

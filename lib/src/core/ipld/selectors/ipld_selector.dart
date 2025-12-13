@@ -7,6 +7,7 @@ import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:fixnum/fixnum.dart';
 
+/// Types of IPLD selectors for DAG traversal.
 enum SelectorType {
   all,
   none,
@@ -17,14 +18,30 @@ enum SelectorType {
   intersection,
 }
 
+/// IPLD Selector for querying and traversing DAG structures.
+///
+/// Selectors define patterns for matching and extracting subsets
+/// of IPLD DAGs, used in Graphsync for efficient data transfer.
 class IPLDSelector {
+  /// The selector type.
   final SelectorType type;
+
+  /// Matching criteria for this selector.
   final Map<String, dynamic> criteria;
+
+  /// Maximum depth for recursive selectors.
   final int? maxDepth;
+
+  /// Child selectors for composite selectors.
   final List<IPLDSelector>? subSelectors;
+
+  /// Field path for explore selectors.
   final String? fieldPath;
+
+  /// Whether to stop traversal at links.
   final bool? stopAtLink;
 
+  /// Creates a selector with the given parameters.
   IPLDSelector({
     required this.type,
     this.criteria = const {},
