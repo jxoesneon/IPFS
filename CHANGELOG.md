@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-12-13
+
+### Added
+- **Comprehensive test coverage expansion (+106 tests)**
+  - CID tests (30): Complete API coverage for CID creation, encoding, properties, codecs
+  - Block tests (20): Data structure validation and concurrent operations
+  - Error class tests (17): IPLD, Graphsync, and Datastore exception instantiation
+  - Message ID tests (5): UUID generation and uniqueness validation
+  - ByteReader tests (34): Complete CBOR utility coverage
+  
+### Improved
+- **Test quality and coverage**
+  - Total tests: 358 (previously 252)
+  - Coverage increase: ~10-15% (from ~35-40% to ~45-50%)
+  - 100% pass rate on all committed tests
+  - Systematic API verification approach established
+
+### Fixed
+- Removed all lint warnings for zero-lint codebase
+- Fixed always-true null checks
+- Removed unused variables
+- Maintains professional code quality standards
+
 ## [1.0.2] - 2025-12-12
 
 ### Fixed
