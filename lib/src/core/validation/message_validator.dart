@@ -2,6 +2,7 @@ import 'package:dart_ipfs/src/proto/generated/validation.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/config.pb.dart';
 
+/// Validates IPFS protocol messages against configuration constraints.
 class MessageValidator {
   static ValidationResult validateMessage(
       IPFSMessage message, ProtocolConfig config) {

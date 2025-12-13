@@ -4,6 +4,10 @@ import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
 
+/// Factory for creating IPFS protocol messages.
+///
+/// Provides convenience methods for constructing [IPFSMessage] instances
+/// with proper timestamps and metadata.
 class MessageFactory {
   static IPFSMessage createBaseMessage({
     required String protocolId,
