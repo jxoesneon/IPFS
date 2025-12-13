@@ -1,6 +1,6 @@
 // test/mocks/in_memory_datastore_test.dart
 import 'package:test/test.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'in_memory_datastore.dart';
 import 'test_helpers.dart';
 
@@ -56,7 +56,7 @@ void main() {
     });
 
     test('pin() prevents deletion', () async {
-      final block = createTestBlock('pinned');
+      final block = await createTestBlock('pinned');
       final cid = block.cid.toString();
 
       await datastore.put(cid, block);
@@ -64,12 +64,12 @@ void main() {
 
       expect(
         () async => await datastore.delete(cid),
-        throwsA(isA<Exception>()),
+        throwsA(isA<DatastoreError>()),
       );
     });
 
     test('unpin() allows deletion after pinning', () async {
-      final block = createTestBlock('unpinned');
+      final block = await createTestBlock('unpinned');
       final cid = block.cid.toString();
 
       await datastore.put(cid, block);
@@ -81,7 +81,7 @@ void main() {
     });
 
     test('isPinned() returns correct status', () async {
-      final block = createTestBlock('check pin');
+      final block = await createTestBlock('check pin');
       final cid = block.cid.toString();
 
       await datastore.put(cid, block);
@@ -92,7 +92,7 @@ void main() {
     });
 
     test('getAllKeys() returns all stored CIDs', () async {
-      final blocks = createTestBlocks(3);
+      final blocks = await createTestBlocks(3);
 
       for (final block in blocks) {
         await datastore.put(block.cid.toString(), block);
@@ -105,7 +105,7 @@ void main() {
     test('size property returns correct count', () async {
       expect(datastore.numBlocks, equals(0));
 
-      final blocks = createTestBlocks(5);
+      final blocks = await createTestBlocks(5);
       for (final block in blocks) {
         await datastore.put(block.cid.toString(), block);
       }
@@ -114,7 +114,7 @@ void main() {
     });
 
     test('loadPinnedCIDs() and persistPinnedCIDs() work correctly', () async {
-      final blocks = createTestBlocks(2);
+      final blocks = await createTestBlocks(2);
       final cid1 = blocks[0].cid.toString();
       final cid2 = blocks[1].cid.toString();
 
@@ -133,7 +133,7 @@ void main() {
       await datastore.close();
 
       expect(
-        () async => await datastore.put('cid', createTestBlock('test')),
+        () async => await datastore.put('cid', await createTestBlock('test')),
         throwsA(isA<StateError>()),
       );
     });
