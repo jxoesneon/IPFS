@@ -16,13 +16,23 @@ Future<void> main() async {
 
   // Step 1: Create configuration
   print('📝 Creating IPFS configuration...');
-  final config = IPFSConfig();
+  // Use port 4002 to avoid conflict with Dashboard app (4001)
+  final config = IPFSConfig(
+    network: NetworkConfig(
+      listenAddresses: ['/ip4/0.0.0.0/tcp/4002'],
+    ),
+  );
 
   // Step 2: Initialize IPFS node
   print('🔧 Initializing IPFS node...');
   final node = await IPFSNode.create(config);
   await node.start();
-  print('✅ Node started with Peer ID: ${node.peerId}\n');
+  print('✅ Node started with Peer ID: ${node.peerId}');
+  print('📡 Listening on addresses:');
+  for (final addr in node.addresses) {
+    print('   $addr');
+  }
+  print('\n');
 
   // Step 3: Start HTTP Gateway
   print('🌐 Starting HTTP Gateway...');
