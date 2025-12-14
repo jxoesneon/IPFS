@@ -222,5 +222,44 @@ void main() {
       expect(response.statusCode, 200);
       expect(await response.readAsString(), 'SubContent');
     });
+
+    test('handlePath resolves IPNS name', () async {
+      // Mock resolver function
+      Future<String> mockResolver(String name) async {
+        if (name == 'k51qzi5uqu5dlvj2baxnqnds23059p5483n5m8t4s6p7j7j2j') {
+          // Resolve to a CID that exists in our mock store
+          final data = utf8.encode('Resolved Content');
+          final cid = CID.computeForDataSync(data);
+
+          await blockStore
+              .putBlock(Block(cid: cid, data: Uint8List.fromList(data)));
+          return cid.encode();
+        }
+        throw Exception('Not found');
+      }
+
+      // Re-create handler with resolver
+      handler = GatewayHandler(blockStore, ipnsResolver: mockResolver);
+
+      final validName = 'k51qzi5uqu5dlvj2baxnqnds23059p5483n5m8t4s6p7j7j2j';
+      final request =
+          Request('GET', Uri.parse('http://localhost:8080/ipns/$validName'));
+
+      final response = await handler.handlePath(request);
+
+      expect(response.statusCode, 200);
+      expect(await response.readAsString(), 'Resolved Content');
+    });
+
+    test('handlePath returns 404 for unknown IPNS name', () async {
+      handler = GatewayHandler(blockStore,
+          ipnsResolver: (name) async => throw Exception('Failed'));
+
+      final request =
+          Request('GET', Uri.parse('http://localhost:8080/ipns/unknown'));
+
+      final response = await handler.handlePath(request);
+      expect(response.statusCode, 404);
+    });
   });
 }

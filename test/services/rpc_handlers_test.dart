@@ -116,7 +116,7 @@ class MockIPFSNode implements IPFSNode {
   }
 
   @override
-  List<String> get connectedPeers => ['QmPeer1'];
+  Future<List<String>> get connectedPeers => Future.value(['QmPeer1']);
 
   @override
   Future<void> connectToPeer(String multiaddr) async {}
@@ -129,6 +129,19 @@ class MockIPFSNode implements IPFSNode {
 
   @override
   Future<String> resolveIPNS(String name) async => '/ipfs/QmResolved';
+
+  @override
+  Future<String> get publicKey => Future.value('CAESIQ...');
+
+  @override
+  List<String> resolvePeerId(String peerIdStr) => ['/ip4/127.0.0.1/tcp/4001'];
+
+  @override
+  Future<String> addFile(Uint8List data) async {
+    final cid = CID.computeForDataSync(data);
+    await _blockStore.putBlock(Block(cid: cid, data: data));
+    return cid.encode();
+  }
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -217,6 +230,42 @@ void main() {
       // Expect success (empty response for no providers)
       expect(response.statusCode, 200);
       // expect(body, contains('"Type":4')); // No providers returned
+    });
+
+    test('handleAdd accepts multipart upload', () async {
+      final boundary = 'boundary';
+      final fileContent = 'Hello IPFS';
+      final body = '--$boundary\r\n'
+          'Content-Disposition: form-data; name="file"; filename="test.txt"\r\n'
+          'Content-Type: text/plain\r\n'
+          '\r\n'
+          '$fileContent\r\n'
+          '--$boundary--\r\n';
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/add'),
+        headers: {
+          'content-type': 'multipart/form-data; boundary=$boundary',
+        },
+        body: body,
+      );
+
+      final response = await handlers.handleAdd(request);
+      expect(response.statusCode, 200);
+
+      final responseBody = await response.readAsString();
+      final jsonResponse = json.decode(responseBody);
+
+      expect(jsonResponse['Name'], 'test.txt');
+      expect(jsonResponse['Hash'], isNotEmpty);
+      expect(jsonResponse['Size'], isNotEmpty);
+
+      // Verify content was added to store
+      final cid = jsonResponse['Hash'];
+      final storedBlock = await node.blockStore.getBlock(cid);
+      expect(storedBlock.found, isTrue);
+      expect(utf8.decode(storedBlock.block.data), fileContent);
     });
 
     test('handleSwarmPeers', () async {

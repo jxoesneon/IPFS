@@ -137,5 +137,51 @@ void main() {
         throwsA(isA<StateError>()),
       );
     });
+    test('get() on non-existent key returns null', () async {
+      expect(await datastore.get('non-existent'), isNull);
+    });
+
+    test('put() with same CID overwrites or ignores duplicates', () async {
+      final block = await createTestBlock('data');
+      final cid = block.cid.toString();
+      await datastore.put(cid, block);
+
+      // Put again
+      await datastore.put(cid, block);
+      expect(datastore.numBlocks, 1);
+    });
+
+    test('pin() idempotent', () async {
+      final block = await createTestBlock('pin');
+      final cid = block.cid.toString();
+      await datastore.put(cid, block);
+
+      await datastore.pin(cid);
+      await datastore.pin(cid); // Double pin
+
+      expect(await datastore.isPinned(cid), isTrue);
+      // Pinned set matches 1
+      expect((await datastore.loadPinnedCIDs()).length, 1);
+    });
+
+    test('handles long keys', () async {
+      final block = await createTestBlock('long_key_data');
+      // Create a fake long CID string (InMemoryDatastore uses string keys)
+      final longKey = 'z' + 'a' * 200;
+      // Note: put() usually takes cid string.
+      // If we use raw strings as keys in InMemoryDatastore, it works.
+      // But verify if `put` checks validity? `InMemoryDatastore` uses `Map<String, Block>`.
+      // It does NOT validate CID string format in `put`.
+
+      await datastore.put(longKey, block);
+      expect(await datastore.get(longKey), equals(block));
+    });
+
+    test('handles special characters in keys', () async {
+      final block = await createTestBlock('special');
+      final funnyKey = 'cid-with-\$pecial-ch@rs!';
+      await datastore.put(funnyKey, block);
+      expect(await datastore.get(funnyKey), isNotNull);
+    });
   });
 }

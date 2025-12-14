@@ -100,8 +100,10 @@ class MockP2plibRouter implements P2plibRouter {
     messageHandler = handler;
   }
 
-  void simulatePacket(p2p.Packet packet) {
-    messageHandler?.call(packet);
+  Future<void> simulatePacket(p2p.Packet packet) async {
+    if (messageHandler != null) {
+      await messageHandler!(packet);
+    }
   }
 
   @override
@@ -132,38 +134,21 @@ void main() {
 
     test('start/stop', () async {
       await handler.start();
-      verifyRunning(handler);
       await handler.stop();
     });
 
     test('wantBlock request and receive', () async {
       await handler.start();
 
-      Future.delayed(Duration(milliseconds: 10), () {
-        final responseMsg = msg.Message();
-        final data = Uint8List.fromList([1, 2, 3, 4]);
-        final block = Block(
-            cid: CID.computeForDataSync(data, codec: 'dag-pb'), data: data);
-        responseMsg.addBlock(block);
-
-        final packet = p2p.Packet(
-          datagram: responseMsg.toBytes(),
-          header: p2p.PacketHeader(id: 1234, issuedAt: 0),
-          srcFullAddress: p2p.FullAddress(
-              address: InternetAddress.loopbackIPv4, port: 1234),
-        );
-        packet.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
-
-        try {
-          mockRouter.simulatePacket(packet);
-        } catch (e) {
-          print('Simulate packet failed: $e');
-        }
-      });
-
       final targetData = Uint8List.fromList([1, 2, 3, 4]);
       final targetCid =
           CID.computeForDataSync(targetData, codec: 'dag-pb').encode();
+
+      // Simulate response slightly later
+      scheduleMicrotask(() async {
+        await Future.delayed(Duration(milliseconds: 50));
+        _simulateBlockArrival(mockRouter, targetData);
+      });
 
       final block = await handler.wantBlock(targetCid);
 
@@ -173,7 +158,58 @@ void main() {
 
       await handler.stop();
     });
+
+    test('concurrent wantBlock requests', () async {
+      await handler.start();
+
+      final data1 = Uint8List.fromList([1]);
+      final data2 = Uint8List.fromList([2]);
+      final cid1 = CID.computeForDataSync(data1, codec: 'dag-pb').encode();
+      final cid2 = CID.computeForDataSync(data2, codec: 'dag-pb').encode();
+
+      // Want both concurrently
+      final future1 = handler.wantBlock(cid1);
+      final future2 = handler.wantBlock(cid2);
+
+      // Fulfill 2 then 1 with slight delays
+      await Future.delayed(Duration(milliseconds: 20));
+      await _simulateBlockArrival(mockRouter, data2, codec: 'dag-pb');
+
+      await Future.delayed(Duration(milliseconds: 20));
+      await _simulateBlockArrival(mockRouter, data1, codec: 'dag-pb');
+
+      final b1 = await future1;
+      final b2 = await future2;
+
+      expect(b1, isNotNull);
+      expect(b1!.data, equals(data1));
+      expect(b2, isNotNull);
+      expect(b2!.data, equals(data2));
+
+      await handler.stop();
+    });
   });
 }
 
-void verifyRunning(BitswapHandler h) {}
+Future<void> _simulateBlockArrival(MockP2plibRouter router, Uint8List data,
+    {String codec = 'dag-pb'}) async {
+  final responseMsg = msg.Message();
+  final block =
+      Block(cid: CID.computeForDataSync(data, codec: codec), data: data);
+
+  responseMsg.addBlock(block);
+
+  final packet = p2p.Packet(
+    datagram: responseMsg.toBytes(),
+    header: p2p.PacketHeader(id: 1234, issuedAt: 0),
+    srcFullAddress:
+        p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 1234),
+  );
+  packet.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
+
+  try {
+    await router.simulatePacket(packet);
+  } catch (e) {
+    print('Simulate packet failed: $e');
+  }
+}

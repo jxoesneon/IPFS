@@ -1,24 +1,51 @@
 // test/mocks/mock_security_manager.dart
 import 'dart:async';
 import 'package:dart_ipfs/src/utils/private_key.dart';
+import 'package:dart_ipfs/src/core/security/security_manager.dart';
+import 'package:dart_ipfs/src/utils/keystore.dart';
 
 /// Mock implementation of key management for testing.
-///
-/// Provides simple key storage and retrieval without actual
-/// cryptographic operations or SecurityManager dependencies.
-/// Perfect for testing IPNS and other components that require key management.
-///
-/// This is a standalone mock, not extending SecurityManager to avoid
-/// complex constructor requirements (SecurityConfig, MetricsCollector).
-class MockSecurityManager {
+class MockSecurityManager implements SecurityManager {
   final Map<String, IPFSPrivateKey> _keys = {};
   final List<String> _calls = [];
 
-  /// Retrieves a private key by its name
+  // Implement SecurityManager interface members
+  @override
+  Keystore get keystore =>
+      Keystore(); // Return a dummy or mock keystore if needed
+
+  @override
   Future<IPFSPrivateKey?> getPrivateKey(String keyName) async {
     _recordCall('getPrivateKey:$keyName');
     return _keys[keyName];
   }
+
+  @override
+  Future<void> start() async {
+    _recordCall('start');
+  }
+
+  @override
+  Future<void> stop() async {
+    _recordCall('stop');
+  }
+
+  @override
+  Future<Map<String, dynamic>> getStatus() async {
+    _recordCall('getStatus');
+    return {
+      'keyCount': _keys.length,
+      'keyNames': _keys.keys.toList(),
+    };
+  }
+
+  @override
+  bool shouldRateLimit(String clientId) => false;
+
+  @override
+  bool trackAuthAttempt(String clientId, bool success) => true;
+
+  // Test helper methods (not part of SecurityManager interface)
 
   /// Stores a private key with the given name
   Future<void> storePrivateKey(String keyName, IPFSPrivateKey key) async {
@@ -43,17 +70,6 @@ class MockSecurityManager {
     _recordCall('deletePrivateKey:$keyName');
     _keys.remove(keyName);
   }
-
-  /// Gets mock security status
-  Future<Map<String, dynamic>> getStatus() async {
-    _recordCall('getStatus');
-    return {
-      'keyCount': _keys.length,
-      'keyNames': _keys.keys.toList(),
-    };
-  }
-
-  // ===== Test Helper Methods =====
 
   /// Set up a key for testing
   void setupKey(String keyName, IPFSPrivateKey key) {
