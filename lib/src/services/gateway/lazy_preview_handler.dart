@@ -1,10 +1,13 @@
+// lib/src/services/gateway/lazy_preview_handler.dart
 import 'dart:convert';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import '../../utils/logger.dart';
 
 /// Handles lazy loading of file previews in the directory listing
 class LazyPreviewHandler {
   final Map<String, Block> _previewCache = {};
+  final _logger = Logger('LazyPreviewHandler');
 
   /// Generates a lazy loading placeholder for a preview
   String generateLazyPreview(Block block, String contentType) {
@@ -121,7 +124,7 @@ class LazyPreviewHandler {
     try {
       // Check if block exists in cache
       if (!_previewCache.containsKey(previewId)) {
-        print('Preview block not found for ID: $previewId');
+        _logger.warning('Preview block not found for ID: $previewId');
         return null;
       }
 
@@ -129,7 +132,8 @@ class LazyPreviewHandler {
 
       // Validate block integrity
       if (block == null || !_isValidBlock(block)) {
-        print('Retrieved block is null or invalid for ID: $previewId');
+        _logger
+            .warning('Retrieved block is null or invalid for ID: $previewId');
         _previewCache.remove(previewId); // Remove invalid entry
         return null;
       }
@@ -143,9 +147,7 @@ class LazyPreviewHandler {
 
       return block;
     } catch (e, stackTrace) {
-      print('Error retrieving preview block: $e');
-      print('Stack trace: $stackTrace');
-      _logError('getPreviewBlock', previewId, e, stackTrace);
+      _logger.error('Error retrieving preview block', e, stackTrace);
       return null;
     }
   }
@@ -172,32 +174,15 @@ class LazyPreviewHandler {
       }
 
       return true;
-    } catch (e) {
-      print('Block validation error: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Block validation error', e, stackTrace);
       return false;
     }
   }
 
   /// Logs cache access for monitoring purposes
   void _logCacheAccess(String previewId, bool isHit) {
-    final timestamp = DateTime.now().toIso8601String();
-    print(
-        'Cache ${isHit ? 'HIT' : 'MISS'} at $timestamp for preview ID: $previewId');
-    print('Current cache size: ${_previewCache.length}');
-  }
-
-  /// Logs errors with detailed information for debugging
-  void _logError(
-      String operation, String previewId, Object error, StackTrace stackTrace) {
-    final timestamp = DateTime.now().toIso8601String();
-    print('''
-Error in LazyPreviewHandler.$operation
-Timestamp: $timestamp
-Preview ID: $previewId
-Error: $error
-Stack trace:
-$stackTrace
-Current cache size: ${_previewCache.length}
-''');
+    _logger.debug('Cache ${isHit ? 'HIT' : 'MISS'} for preview ID: $previewId');
+    _logger.verbose('Current cache size: ${_previewCache.length}');
   }
 }

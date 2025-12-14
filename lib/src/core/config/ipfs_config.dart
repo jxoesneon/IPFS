@@ -122,9 +122,10 @@ class IPFSConfig {
     this.garbageCollectionEnabled = true,
     this.metrics = const MetricsConfig(),
     this.dataPath = './ipfs_data',
-    this.keystore = const Keystore(),
+    Keystore? keystore,
     this.customConfig = const {},
-  }) : nodeId = nodeId ?? _generateDefaultNodeId();
+  })  : nodeId = nodeId ?? _generateDefaultNodeId(),
+        keystore = keystore ?? Keystore();
 
   /// Creates a new IPFSConfig with a generated nodeId
   factory IPFSConfig.withDefaults() {

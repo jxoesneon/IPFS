@@ -1,3 +1,4 @@
+// lib/src/services/gateway/gateway_handler.dart
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:shelf/shelf.dart';
@@ -7,13 +8,19 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+
+/// Resolver function for IPNS names (returns CID)
+typedef IpnsResolver = Future<String> Function(String name);
 
 /// Handles IPFS Gateway HTTP requests following the IPFS Gateway specs
 /// See: https://specs.ipfs.tech/http-gateways/
 class GatewayHandler {
   final BlockStore blockStore;
+  final IpnsResolver? ipnsResolver;
+  final _logger = Logger('GatewayHandler');
 
-  GatewayHandler(this.blockStore);
+  GatewayHandler(this.blockStore, {this.ipnsResolver});
 
   /// Handles path-based gateway requests (/ipfs/ and /ipns/)
   Future<Response> handlePath(Request request) async {
@@ -24,24 +31,43 @@ class GatewayHandler {
       final parts = path.substring(5).split('/');
       final cidStr = parts[0];
       final subPath = parts.length > 1 ? parts.sublist(1).join('/') : '';
-      
+
       try {
         return await _serveContent(cidStr, subPath, request);
-      } catch (e) {
+      } catch (e, stackTrace) {
+        _logger.error('Error serving content for $cidStr', e, stackTrace);
         return Response.internalServerError(body: 'Error: $e');
       }
     }
 
     if (path.startsWith('ipns/')) {
-      // TODO: Implement IPNS resolution
-      return Response(501, body: 'IPNS resolution not yet implemented');
+      if (ipnsResolver == null) {
+        return Response(501, body: 'IPNS resolution disabled');
+      }
+
+      final parts = path.substring(5).split('/');
+      final name = parts[0];
+      final subPath = parts.length > 1 ? parts.sublist(1).join('/') : '';
+
+      try {
+        final cid = await ipnsResolver!(name);
+        // Redirect to /ipfs/<custom resolved cid>/<subPath> ?
+        // Or serve content directly.
+        // Usually Gateways redirect /ipns/ to /ipfs/ or serve content transparently.
+        // Serving transparently:
+        return await _serveContent(cid, subPath, request);
+      } catch (e) {
+        _logger.warning('Failed to resolve IPNS name $name: $e');
+        return Response.notFound('IPNS name not found: $name');
+      }
     }
 
     return Response.notFound('Invalid IPFS path');
   }
 
   /// Serves content for a given CID and optional sub-path
-  Future<Response> _serveContent(String cidStr, String subPath, Request request) async {
+  Future<Response> _serveContent(
+      String cidStr, String subPath, Request request) async {
     final block = await _getBlockByCid(cidStr);
     if (block == null) {
       return Response.notFound('Block not found');
@@ -52,7 +78,7 @@ class GatewayHandler {
       final pbNode = PBNode.fromBuffer(block.data);
       if (pbNode.hasData()) {
         final unixfsData = Data.fromBuffer(pbNode.data);
-        
+
         // Handle directories
         if (unixfsData.type == Data_DataType.Directory) {
           if (subPath.isEmpty) {
@@ -62,7 +88,7 @@ class GatewayHandler {
             return await _navigateDirectory(cidStr, pbNode, subPath, request);
           }
         }
-        
+
         // Handle files
         if (unixfsData.type == Data_DataType.File) {
           return _serveFile(unixfsData, pbNode, cidStr, request);
@@ -77,10 +103,11 @@ class GatewayHandler {
   }
 
   /// Serves a UnixFS file
-  Response _serveFile(Data unixfsData, PBNode pbNode, String cidStr, Request request) {
+  Response _serveFile(
+      Data unixfsData, PBNode pbNode, String cidStr, Request request) {
     final data = Uint8List.fromList(unixfsData.data);
     final contentType = _detectContentType(data);
-    
+
     final headers = {
       'Content-Type': contentType,
       'Content-Length': data.length.toString(),
@@ -121,13 +148,15 @@ class GatewayHandler {
     html.writeln('body { font-family: monospace; margin: 2em; }');
     html.writeln('h1 { font-size: 1.5em; }');
     html.writeln('table { border-collapse: collapse; width: 100%; }');
-    html.writeln('td, th { padding: 0.5em; text-align: left; border-bottom: 1px solid #ddd; }');
+    html.writeln(
+        'td, th { padding: 0.5em; text-align: left; border-bottom: 1px solid #ddd; }');
     html.writeln('a { color: #0066cc; text-decoration: none; }');
     html.writeln('a:hover { text-decoration: underline; }');
     html.writeln('</style></head><body>');
     html.writeln('<h1>Index of /ipfs/$cidStr</h1>');
     html.writeln('<table>');
-    html.writeln('<thead><tr><th>Name</th><th>Size</th><th>Type</th></tr></thead>');
+    html.writeln(
+        '<thead><tr><th>Name</th><th>Size</th><th>Type</th></tr></thead>');
     html.writeln('<tbody>');
 
     for (final link in pbNode.links) {
@@ -162,7 +191,8 @@ class GatewayHandler {
   ) async {
     final pathParts = subPath.split('/');
     final targetName = pathParts[0];
-    final remainingPath = pathParts.length > 1 ? pathParts.sublist(1).join('/') : '';
+    final remainingPath =
+        pathParts.length > 1 ? pathParts.sublist(1).join('/') : '';
 
     // Find the link with matching name
     for (final link in directory.links) {
@@ -177,7 +207,8 @@ class GatewayHandler {
   }
 
   /// Serves a byte range from data
-  Response _serveRange(List<int> data, String rangeHeader, Map<String, String> baseHeaders) {
+  Response _serveRange(
+      List<int> data, String rangeHeader, Map<String, String> baseHeaders) {
     // Parse range header: "bytes=start-end"
     final rangeMatch = RegExp(r'bytes=(\d+)-(\d*)').firstMatch(rangeHeader);
     if (rangeMatch == null) {
@@ -186,8 +217,8 @@ class GatewayHandler {
 
     final start = int.parse(rangeMatch.group(1)!);
     final endStr = rangeMatch.group(2);
-    final end = endStr != null && endStr.isNotEmpty 
-        ? int.parse(endStr) 
+    final end = endStr != null && endStr.isNotEmpty
+        ? int.parse(endStr)
         : data.length - 1;
 
     if (start >= data.length || end >= data.length || start > end) {
@@ -212,7 +243,7 @@ class GatewayHandler {
     if (parts.length >= 3 && parts[parts.length - 2] == 'ipfs') {
       final cidStr = parts[0];
       final path = request.url.path;
-      
+
       try {
         return await _serveContent(cidStr, path, request);
       } catch (e) {
@@ -257,8 +288,8 @@ class GatewayHandler {
       if (response.found) {
         return Block.fromProto(response.block);
       }
-    } catch (e) {
-      print('Error getting block: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error getting block $cidStr', e, stackTrace);
     }
     return null;
   }

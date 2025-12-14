@@ -290,7 +290,7 @@ class GraphsyncHandler {
       final cid = CID.decode(cidStr);
       final rootBytes = cid.toBytes();
       final selectorBytes = await selector.toBytes();
-      final requestId = DateTime.now().microsecondsSinceEpoch;
+      final requestId = (DateTime.now().millisecondsSinceEpoch % 2147483647);
 
       final request = _protocol.createRequest(
         id: requestId,

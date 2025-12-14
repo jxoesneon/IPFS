@@ -5,9 +5,10 @@ import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// IPFS HTTP Gateway Server
-/// 
+///
 /// Provides standard IPFS Gateway endpoints for accessing content via HTTP.
 /// Compliant with IPFS Gateway specifications.
 class GatewayServer {
@@ -15,7 +16,9 @@ class GatewayServer {
   final String address;
   final int port;
   final List<String> corsOrigins;
-  
+  final IpnsResolver? ipnsResolver;
+  final _logger = Logger('GatewayServer');
+
   HttpServer? _server;
   late final GatewayHandler _handler;
   late final Router _router;
@@ -25,8 +28,9 @@ class GatewayServer {
     this.address = 'localhost',
     this.port = 8080,
     this.corsOrigins = const ['*'],
+    this.ipnsResolver,
   }) {
-    _handler = GatewayHandler(blockStore);
+    _handler = GatewayHandler(blockStore, ipnsResolver: ipnsResolver);
     _setupRouter();
   }
 
@@ -84,9 +88,10 @@ class GatewayServer {
         address,
         port,
       );
-      print('✅ Gateway server listening on http://${_server!.address.host}:${_server!.port}');
-    } catch (e) {
-      print('❌ Failed to start gateway server: $e');
+      _logger.info(
+          'Gateway server listening on http://${_server!.address.host}:${_server!.port}');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to start gateway server', e, stackTrace);
       rethrow;
     }
   }
@@ -99,7 +104,7 @@ class GatewayServer {
 
     await _server!.close(force: true);
     _server = null;
-    print('Gateway server stopped');
+    _logger.info('Gateway server stopped');
   }
 
   /// CORS middleware
@@ -124,7 +129,8 @@ class GatewayServer {
       'Access-Control-Allow-Origin': corsOrigins.join(','),
       'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Range',
-      'Access-Control-Expose-Headers': 'Content-Range, X-IPFS-Path, X-IPFS-Roots',
+      'Access-Control-Expose-Headers':
+          'Content-Range, X-IPFS-Path, X-IPFS-Roots',
       'Access-Control-Max-Age': '86400',
     };
   }
@@ -136,9 +142,10 @@ class GatewayServer {
         final start = DateTime.now();
         final response = await handler(request);
         final duration = DateTime.now().difference(start);
-        
-        print('[${request.method}] ${request.url.path} - ${response.statusCode} (${duration.inMilliseconds}ms)');
-        
+
+        _logger.info(
+            '[${request.method}] ${request.url.path} - ${response.statusCode} (${duration.inMilliseconds}ms)');
+
         return response;
       };
     };
@@ -148,7 +155,7 @@ class GatewayServer {
   bool get isRunning => _server != null;
 
   /// Returns the server URL
-  String get url => _server != null 
+  String get url => _server != null
       ? 'http://${_server!.address.host}:${_server!.port}'
       : 'http://$address:$port (not started)';
 }

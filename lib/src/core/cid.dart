@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:multibase/multibase.dart';
 import 'package:dart_multihash/dart_multihash.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
+import 'package:dart_ipfs/src/utils/encoding.dart';
 
 /// A Content Identifier (CID) for content-addressed data in IPFS.
 ///
@@ -59,12 +60,8 @@ class CID {
     this.multibaseType,
   });
 
-  /// 0x12 is sha2-256
-  /// 0x70 is dag-pb
-  static const int _dag_pb = 0x70;
-
-  /// 0x55 is raw
-  static const int _raw = 0x55;
+  // Constants moved to EncodingUtils or deprecated?
+  // Removing unused fields.
 
   /// Creates a CIDv0.
   /// CIDv0 is always: SHA2-256, DAG-PB, Base58BTC.
@@ -124,9 +121,23 @@ class CID {
 
       final mh = Multihash.decode(bytes.sublist(index));
 
-      String codecStr = 'unknown';
-      if (codecCode == _dag_pb) codecStr = 'dag-pb';
-      if (codecCode == _raw) codecStr = 'raw';
+      String codecStr;
+      try {
+        codecStr = EncodingUtils.getCodecFromCode(codecCode);
+      } catch (e) {
+        codecStr = 'unknown'; // Or throw?
+        // If unknown, 'unknown' might break equal check if original was 'unknown' or asserted?
+        // But better to use string 'unknown' than failing if that's what we want.
+        // But wait, `EncodingUtils` throws ArgumentError if unknown.
+        // If I catch it, I can default to 'unknown'.
+        // But better to let it throw or return unknown?
+        // The previous code returned 'unknown' if not matched.
+        // So keeping 'unknown' is safe fallback for now.
+      }
+
+      // Special case: if getCodecFromCode doesn't have it, we fall back to 'unknown'.
+      // But if we want to SUPPORT 'dag-cbor', EncodingUtils MUST have it.
+      // I tested EncodingUtils has 'dag-cbor'. So it will return 'dag-cbor'.
 
       return CID(
         version: 1,
@@ -186,8 +197,19 @@ class CID {
     buffer.addByte(0x01); // version 1
 
     // Encode codec as varint
-    int codecCode = _raw; // default
-    if (codec == 'dag-pb') codecCode = _dag_pb;
+    int codecCode;
+    try {
+      codecCode = EncodingUtils.getCodeFromCodec(codec ?? 'raw');
+    } catch (e) {
+      // If codec not found, fallback to raw or throw?
+      // Let's assume raw if unknown? Or throw to prevent bad CIDs?
+      // Existing code defaulted to _raw.
+      // But existing code only checked 'dag-pb'.
+      // If I pass 'dag-cbor', it defaulted to raw.
+      // Now I want it to find 'dag-cbor'.
+      // If 'unknown', throw.
+      throw FormatException('Unsupported codec during CID encoding: $codec');
+    }
     buffer.add(_encodeVarint(codecCode));
 
     // Add multihash

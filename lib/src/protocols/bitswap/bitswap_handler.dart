@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/ledger.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
@@ -85,13 +86,14 @@ class BitswapHandler {
   Future<void> _handleMessage(message.Message message) async {
     if (!_running) return;
 
-    final fromPeer = message.from; // Note: 'from' field is transient and set by packet handler if passed? 
+    final fromPeer = message
+        .from; // Note: 'from' field is transient and set by packet handler if passed?
     // Actually packet handler didn't set it in my previous `message.dart`.
     // I should check `_handlePacket`.
-    
+
     // Update peer ledger if peer known
     if (fromPeer != null) {
-        // final ledger = _ledgerManager.getLedger(fromPeer); // Removed unused variable
+      // final ledger = _ledgerManager.getLedger(fromPeer); // Removed unused variable
     }
     // Optimization: If fromPeer is null, we can't update ledger but can still process blocks.
 
@@ -107,7 +109,7 @@ class BitswapHandler {
         );
       // We need 'fromPeer' to reply. If it's missing, we can't reply.
       if (fromPeer != null) {
-          await _handleWantlist(wantlist, fromPeer);
+        await _handleWantlist(wantlist, fromPeer);
       }
     }
 
@@ -116,12 +118,13 @@ class BitswapHandler {
       _handleBlocks(message.getBlocks());
 
       if (fromPeer != null) {
-          final ledger = _ledgerManager.getLedger(fromPeer);
-          // Update received bytes in ledger
-          ledger.addReceivedBytes(message.getBlocks()
-              .map((b) => b.data.length)
-              .fold<int>(0, (sum, size) => sum + size));
-          _updateBandwidthStats();
+        final ledger = _ledgerManager.getLedger(fromPeer);
+        // Update received bytes in ledger
+        ledger.addReceivedBytes(message
+            .getBlocks()
+            .map((b) => b.data.length)
+            .fold<int>(0, (sum, size) => sum + size));
+        _updateBandwidthStats();
       }
     }
   }
@@ -257,7 +260,8 @@ class BitswapHandler {
         _router.routerL0.sendDatagram(
           addresses: [
             p2p.FullAddress(
-                address: _getPeerAddress(peer.toString()), port: 4001)
+                address: _getPeerAddress(Base58().encode(peer.value)),
+                port: 4001)
           ],
           datagram: messageBytes,
         );
@@ -271,37 +275,31 @@ class BitswapHandler {
   }
 
   /// Helper method to get peer address
-  InternetAddress _getPeerAddress(String peerId) {
-    // Logic to resolve peer address. If we have routes, we can assume we have address.
-    // However, _router.routerL0.routes uses PeerId object as key? No, value has PeerId.
-    // _router.resolvPeerId returns FullAddresses.
-    
-    // TODO: Optimize lookup
+  InternetAddress _getPeerAddress(String peerIdStr) {
     try {
-        final routes = _router.routerL0.routes;
-        // route key is different?
-        // Let's assume we can lookup by string if needed or iterate.
-        final route = routes.values.firstWhere(
-            (r) => r.peerId.toString() == peerId,
-            orElse: () => throw StateError('Peer not found: $peerId'));
-    
-        final addresses = _router.routerL0.resolvePeerId(route.peerId);
-        if (addresses.isEmpty) {
-          throw StateError('No addresses found for peer: $peerId');
+      final peerId = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
+      final routes = _router.routerL0.routes;
+
+      // Optimized lookup
+      if (routes.containsKey(peerId)) {
+        final addresses = _router.routerL0.resolvePeerId(peerId);
+        if (addresses.isNotEmpty) {
+          return addresses.first.address;
         }
-    
-        return addresses.first.address;
-    } catch(e) {
-        // Fallback or rethrow
-        throw StateError('Could not resolve address for $peerId: $e');
+        throw StateError('No addresses found for peer: $peerIdStr');
+      }
+
+      throw StateError('Peer not found: $peerIdStr');
+    } catch (e) {
+      throw StateError('Could not resolve address for $peerIdStr: $e');
     }
   }
 
   Future<void> _handlePacket(p2p.Packet packet) async {
     final msg = await message.Message.fromBytes(packet.datagram);
     // Annotate message with sender
-    msg.from = packet.srcPeerId.toString();
-    
+    msg.from = Base58().encode(packet.srcPeerId.value);
+
     await _handleMessage(msg);
   }
 

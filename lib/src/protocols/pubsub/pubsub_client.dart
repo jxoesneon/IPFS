@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import '../../utils/base58.dart';
+import '../../utils/logger.dart';
 import 'package:http/http.dart' as http;
 import 'package:p2plib/p2plib.dart' as p2p;
 import '../../core/data_structures/node_stats.dart';
-import '/../src/transport/p2plib_router.dart'; // Import your router class
-// lib/src/protocols/pubsub/pubsub_client.dart
+import '../../transport/p2plib_router.dart'; // Import your router class
 
 // For encoding utilities
 
@@ -16,6 +16,7 @@ class PubSubClient {
   final StreamController<String> _messageController =
       StreamController<String>.broadcast();
   final p2p.PeerId _peerId;
+  final _logger = Logger('PubSubClient');
 
   PubSubClient(this._router, String peerIdStr)
       : _peerId = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
@@ -40,20 +41,20 @@ class PubSubClient {
           if (_router.isConnectedPeer(senderPeerId)) {
             _messageController.add(decodedJson['content']);
           }
-        } catch (e) {
-          print('Error processing message: $e');
+        } catch (e, stackTrace) {
+          _logger.error('Error processing message', e, stackTrace);
         }
       }
     });
 
-    print(
+    _logger.info(
         'PubSub client started with peer ID: ${Base58().encode(_peerId.value)}');
   }
 
   /// Stops the PubSub client.
   Future<void> stop() async {
     await _messageController.close();
-    print('PubSub client stopped.');
+    _logger.info('PubSub client stopped.');
   }
 
   /// Subscribes to a PubSub topic.
@@ -67,9 +68,9 @@ class PubSubClient {
       final peerIdObj = p2p.PeerId(value: Base58().base58Decode(topic));
       await _router.sendMessage(peerIdObj,
           Uint8List.fromList(utf8.encode(jsonEncode(subscribeData))));
-      print('Subscribed to topic: $topic');
-    } catch (e) {
-      print('Error subscribing to topic $topic: $e');
+      _logger.info('Subscribed to topic: $topic');
+    } catch (e, stackTrace) {
+      _logger.error('Error subscribing to topic $topic', e, stackTrace);
     }
   }
 
@@ -79,9 +80,9 @@ class PubSubClient {
       // Convert string to PeerId object
       final peerIdObj = p2p.PeerId(value: Base58().base58Decode(topic));
       await _router.sendMessage(peerIdObj, encodeUnsubscribeRequest(topic));
-      print('Unsubscribed from topic: $topic');
-    } catch (e) {
-      print('Error unsubscribing from topic $topic: $e');
+      _logger.info('Unsubscribed from topic: $topic');
+    } catch (e, stackTrace) {
+      _logger.error('Error unsubscribing from topic $topic', e, stackTrace);
     }
   }
 
@@ -92,9 +93,9 @@ class PubSubClient {
       final peerIdObj = p2p.PeerId(value: Base58().base58Decode(topic));
       final encodedMessage = encodePublishRequest(topic, message);
       await _router.sendMessage(peerIdObj, encodedMessage);
-      print('Published message to topic: $topic');
-    } catch (e) {
-      print('Error publishing message to topic $topic: $e');
+      _logger.info('Published message to topic: $topic');
+    } catch (e, stackTrace) {
+      _logger.error('Error publishing message to topic $topic', e, stackTrace);
     }
   }
 
@@ -139,8 +140,8 @@ class PubSubClient {
       } else {
         throw Exception('Failed to load node stats');
       }
-    } catch (e) {
-      print('Error retrieving node stats: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error retrieving node stats', e, stackTrace);
       throw e; // Rethrow the error for handling upstream
     }
   }

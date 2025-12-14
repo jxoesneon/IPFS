@@ -1,5 +1,6 @@
 // src/core/data_structures/peer.dart
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
@@ -137,4 +138,78 @@ p2p.FullAddress? parseMultiaddrString(String multiaddrString) {
     print('Error parsing multiaddr string: $e');
     return null;
   }
+}
+
+/// Helper to decode binary multiaddr to FullAddress
+p2p.FullAddress? multiaddrFromBytes(Uint8List bytes) {
+  try {
+    var offset = 0;
+    // Protocol code 1
+    final p1 = bytes[offset++];
+
+    InternetAddress? ip;
+    int? port;
+
+    if (p1 == 4) {
+      // ip4
+      if (bytes.length < offset + 4) return null;
+      final ipBytes = bytes.sublist(offset, offset + 4);
+      ip = InternetAddress.fromRawAddress(ipBytes);
+      offset += 4;
+    } else if (p1 == 41) {
+      // ip6
+      if (bytes.length < offset + 16) return null;
+      final ipBytes = bytes.sublist(offset, offset + 16);
+      ip = InternetAddress.fromRawAddress(ipBytes);
+      offset += 16;
+    } else {
+      return null; // Unsupported transport
+    }
+
+    if (offset >= bytes.length) return null;
+    final p2 = bytes[offset++];
+
+    if (p2 == 6) {
+      // tcp
+      if (bytes.length < offset + 2) return null;
+      final portBytes = bytes.sublist(offset, offset + 2);
+      port = (portBytes[0] << 8) | portBytes[1];
+      offset += 2;
+    } else if (p2 == 17) {
+      // udp
+      if (bytes.length < offset + 2) return null;
+      final portBytes = bytes.sublist(offset, offset + 2);
+      port = (portBytes[0] << 8) | portBytes[1];
+      offset += 2;
+    }
+    // Ignoring p2p ID part if present for now
+
+    if (port != null) {
+      return p2p.FullAddress(address: ip, port: port);
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/// Helper to encode FullAddress to binary multiaddr
+Uint8List multiaddrToBytes(p2p.FullAddress address) {
+  final buffer = BytesBuilder();
+  if (address.address.type == InternetAddressType.IPv4) {
+    buffer.addByte(4); // ip4
+    buffer.add(address.address.rawAddress);
+  } else if (address.address.type == InternetAddressType.IPv6) {
+    buffer.addByte(41); // ip6
+    buffer.add(address.address.rawAddress);
+  } else {
+    return Uint8List(0); // Unsupported
+  }
+
+  // Assuming TCP (6) by default for FullAddress as we don't have protocol field
+  buffer.addByte(6); // tcp
+  buffer.addByte((address.port >> 8) & 0xFF);
+  buffer.addByte(address.port & 0xFF);
+
+  return buffer.toBytes();
 }

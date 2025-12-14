@@ -1,6 +1,7 @@
 // src/utils/private_key.dart
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:math';
 import 'package:pointycastle/export.dart';
 import 'package:convert/convert.dart';
 
@@ -23,12 +24,32 @@ class IPFSPrivateKey implements PrivateKey {
   /// The private key component.
   ECPrivateKey get privateKey => _keyPair.privateKey;
 
+  /// Returns the compressed public key bytes (SEC1)
+  Uint8List get publicKeyBytes {
+    if (algorithm == 'ECDSA') {
+      // Compressed EC point: 0x02/0x03 + X (32 bytes)
+      return _keyPair.publicKey.Q!.getEncoded(true); // true = compressed
+    }
+    // Fallback or other algos
+    return Uint8List(0);
+  }
+
   /// Signs the given data using the private key
   Uint8List sign(Uint8List data) {
-    final signer = Signer('${algorithm}/PSS');
+    // ECDSA with SHA-256
+    final signer = Signer('SHA-256/ECDSA');
+
+    // Create and seed a secure random source
+    final random = SecureRandom('Fortuna');
+    final seedSource = Random.secure();
+    random.seed(KeyParameter(
+      Uint8List.fromList(
+          List<int>.generate(32, (_) => seedSource.nextInt(256))),
+    ));
+
     final params = ParametersWithRandom(
       PrivateKeyParameter(_keyPair.privateKey),
-      SecureRandom('Fortuna'),
+      random,
     );
 
     signer.init(true, params);
@@ -41,7 +62,7 @@ class IPFSPrivateKey implements PrivateKey {
 
   /// Verifies a signature using the corresponding public key
   bool verify(Uint8List data, Uint8List signature, {String? algorithm}) {
-    final verifier = Signer('${algorithm ?? this.algorithm}/PSS');
+    final verifier = Signer('SHA-256/ECDSA');
     final params = PublicKeyParameter(_keyPair.publicKey);
 
     verifier.init(false, params);
@@ -60,8 +81,10 @@ class IPFSPrivateKey implements PrivateKey {
     final params = ECKeyGeneratorParameters(ECCurve_secp256k1());
 
     final random = SecureRandom('Fortuna');
+    final seedSource = Random.secure();
     random.seed(KeyParameter(
-      Uint8List.fromList(List<int>.generate(32, (_) => random.nextUint8())),
+      Uint8List.fromList(
+          List<int>.generate(32, (_) => seedSource.nextInt(256))),
     ));
 
     keyGen.init(ParametersWithRandom(params, random));

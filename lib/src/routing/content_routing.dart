@@ -4,10 +4,12 @@ import '../protocols/dht/dht_client.dart'; // Import DHT client
 import '../utils/dnslink_resolver.dart'; // Import DNSLink resolver
 import '../core/ipfs_node/network_handler.dart';
 import '../utils/base58.dart';
+import '../utils/logger.dart';
 
 /// Handles content routing operations for an IPFS node.
 class ContentRouting {
   final DHTClient _dhtClient;
+  final _logger = Logger('ContentRouting');
 
   ContentRouting(config, NetworkHandler networkHandler)
       : _dhtClient = DHTClient(
@@ -20,9 +22,9 @@ class ContentRouting {
     try {
       await _dhtClient.initialize();
       await _dhtClient.start();
-      print('Content routing started.');
-    } catch (e) {
-      print('Error starting content routing: $e');
+      _logger.info('Content routing started.');
+    } catch (e, stackTrace) {
+      _logger.error('Error starting content routing', e, stackTrace);
     }
   }
 
@@ -30,9 +32,9 @@ class ContentRouting {
   Future<void> stop() async {
     try {
       await _dhtClient.stop();
-      print('Content routing stopped.');
-    } catch (e) {
-      print('Error stopping content routing: $e');
+      _logger.info('Content routing stopped.');
+    } catch (e, stackTrace) {
+      _logger.error('Error stopping content routing', e, stackTrace);
     }
   }
 
@@ -41,15 +43,15 @@ class ContentRouting {
     try {
       final providers = await _dhtClient.findProviders(cid);
       if (providers.isEmpty) {
-        print('No providers found for CID $cid.');
+        _logger.info('No providers found for CID $cid.');
         // Implement alternative discovery methods if necessary
       } else {
-        print('Found providers for CID $cid: ${providers.length}');
+        _logger.info('Found providers for CID $cid: ${providers.length}');
       }
       // Convert PeerId objects to strings using Base58 encoding
       return providers.map((peerId) => Base58().encode(peerId.value)).toList();
-    } catch (e) {
-      print('Error finding providers for CID $cid: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error finding providers for CID $cid', e, stackTrace);
       return [];
     }
   }
@@ -59,13 +61,14 @@ class ContentRouting {
     try {
       final cid = await DNSLinkResolver.resolve(domainName);
       if (cid != null) {
-        print('Resolved DNSLink for domain $domainName to CID: $cid');
+        _logger.info('Resolved DNSLink for domain $domainName to CID: $cid');
         return cid;
       } else {
         throw Exception('DNSLink for domain $domainName not found.');
       }
-    } catch (e) {
-      print('Error resolving DNSLink for domain $domainName: $e');
+    } catch (e, stackTrace) {
+      _logger.error(
+          'Error resolving DNSLink for domain $domainName', e, stackTrace);
       return null;
     }
   }

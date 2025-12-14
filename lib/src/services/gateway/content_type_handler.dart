@@ -1,5 +1,7 @@
+// lib/src/services/gateway/content_type_handler.dart
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:dart_ipfs/src/utils/logger.dart';
 import 'directory_parser.dart';
 import 'package:mime/mime.dart';
 import '../../core/data_structures/block.dart';
@@ -14,6 +16,7 @@ class ContentTypeHandler {
     ..addExtension('car', 'application/vnd.ipfs.car');
 
   final _directoryParser = DirectoryParser();
+  final _logger = Logger('ContentTypeHandler');
 
   final Map<String, String> _contentTypeCache = {};
 
@@ -76,8 +79,8 @@ class ContentTypeHandler {
       final path = _extractPathFromRequest() ?? '/';
       final html = _directoryParser.generateHtmlListing(directory, path);
       return Uint8List.fromList(html.codeUnits);
-    } catch (e) {
-      print('Error generating directory listing: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error generating directory listing', e, stackTrace);
       return Uint8List.fromList(
           'Error: Failed to generate directory listing'.codeUnits);
     }
@@ -127,8 +130,8 @@ class ContentTypeHandler {
       ''';
 
       return Uint8List.fromList(html.codeUnits);
-    } catch (e) {
-      print('Error processing markdown: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error processing markdown', e, stackTrace);
       return data; // Return original data if conversion fails
     }
   }
@@ -180,8 +183,8 @@ class ContentTypeHandler {
       ''';
 
       return Uint8List.fromList(html.codeUnits);
-    } catch (e) {
-      print('Error processing CAR archive: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error processing CAR archive', e, stackTrace);
       return data; // Return original data if processing fails
     }
   }
@@ -273,8 +276,8 @@ class ContentTypeHandler {
       }
 
       return path;
-    } catch (e) {
-      print('Error extracting path from request: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error extracting path from request', e, stackTrace);
       return '/';
     }
   }
@@ -285,8 +288,9 @@ class ContentTypeHandler {
       // Create a simple in-memory cache or use a persistent storage solution
       // For now, we'll just store in memory since the cache would be cleared on restart anyway
       _contentTypeCache[cidStr] = contentType;
-    } catch (e) {
-      print('Error caching content type for CID $cidStr: $e');
+    } catch (e, stackTrace) {
+      _logger.error(
+          'Error caching content type for CID $cidStr', e, stackTrace);
     }
   }
 }

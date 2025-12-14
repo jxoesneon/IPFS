@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/utils/private_key.dart';
 import 'package:p2plib/p2plib.dart' show Crypto;
+import 'logger.dart';
 
 /// Represents a public/private key pair for cryptographic operations.
 class KeyPair {
@@ -33,17 +34,18 @@ class KeyPair {
 /// ```
 class Keystore {
   final Map<String, KeyPair> _keyPairs = const {};
+  final _logger = Logger('Keystore');
 
   /// The default key name used for node identity.
   static const String DEFAULT_KEY = 'self';
 
   /// Creates an empty keystore.
-  const Keystore();
+  Keystore();
 
   /// Adds a new key pair to the keystore.
   void addKeyPair(String name, KeyPair keyPair) {
     _keyPairs[name] = keyPair;
-    print('Added key pair for $name.');
+    _logger.info('Added key pair for $name.');
   }
 
   /// Retrieves a key pair by its name.
@@ -63,9 +65,9 @@ class Keystore {
   /// Removes a key pair from the keystore.
   void removeKeyPair(String name) {
     if (_keyPairs.remove(name) != null) {
-      print('Removed key pair for $name.');
+      _logger.info('Removed key pair for $name.');
     } else {
-      print('No key pair found for $name to remove.');
+      _logger.warning('No key pair found for $name to remove.');
     }
   }
 
@@ -89,7 +91,7 @@ class Keystore {
     jsonMap.forEach((name, keys) {
       addKeyPair(name, KeyPair(keys['publicKey'], keys['privateKey']));
     });
-    print('Keystore deserialized from JSON.');
+    _logger.info('Keystore deserialized from JSON.');
   }
 
   /// Verifies a signature using a public key
@@ -115,8 +117,8 @@ class Keystore {
         // If verification fails, crypto.verify throws an exception
         return false;
       }
-    } catch (e) {
-      print('Error verifying signature: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error verifying signature', e, stackTrace);
       return false;
     }
   }

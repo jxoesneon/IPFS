@@ -16,13 +16,20 @@ class ContentRoutingHandler {
   late final ContentRouting _contentRouting;
   late final DelegatedRoutingHandler _delegatedRouting;
 
-  ContentRoutingHandler(this._config, this._networkHandler) {
+  ContentRoutingHandler(
+    this._config,
+    this._networkHandler, {
+    ContentRouting? contentRouting,
+    DelegatedRoutingHandler? delegatedRouting,
+  }) {
     _logger = Logger('ContentRoutingHandler',
         debug: _config.debug, verbose: _config.verboseLogging);
 
-    _contentRouting = ContentRouting(_config, _networkHandler);
-    _delegatedRouting = DelegatedRoutingHandler(
-        delegateEndpoint: _config.network.delegatedRoutingEndpoint);
+    _contentRouting =
+        contentRouting ?? ContentRouting(_config, _networkHandler);
+    _delegatedRouting = delegatedRouting ??
+        DelegatedRoutingHandler(
+            delegateEndpoint: _config.network.delegatedRoutingEndpoint);
 
     _logger.debug('ContentRoutingHandler instance created');
   }

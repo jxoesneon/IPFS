@@ -83,60 +83,49 @@ class EncodingUtils {
     if (bytes.isEmpty) return false;
 
     try {
-      // Check multibase prefix
-      final prefix = String.fromCharCode(bytes[0]);
-      if (!isValidMultibasePrefix(prefix)) {
-        return false;
+      // CIDv0 check (SHA2-256)
+      // Starts with 0x12 0x20 (SHA2-256, 32 bytes digest)
+      if (bytes.length == 34 && bytes[0] == 0x12 && bytes[1] == 0x20) {
+        return _isValidCIDv0(bytes);
       }
 
-      // Skip multibase prefix for remaining validation
-      final cidBytes = bytes.sublist(1);
-      if (cidBytes.length < 2) return false;
+      // CIDv1 check
+      // Starts with version 1 (0x01)
+      if (bytes[0] == 0x01) {
+        // Parse Codec (varint)
+        var offset = 1; // Skip version byte
+        if (bytes.length <= offset) return false;
 
-      final version = cidBytes[0];
-      if (version > 2) return false;
+        final codecInfo = decodeVarint(bytes.sublist(offset));
+        offset += codecInfo.$2;
 
-      // For CIDv0, validate specific format
-      if (version == 0) {
-        return _isValidCIDv0(cidBytes);
+        // Parse Multihash
+        if (bytes.length <= offset) return false;
+
+        // Parse Multihash Code (varint)
+        final hashFunctionInfo = decodeVarint(bytes.sublist(offset));
+        final hashFunction = hashFunctionInfo.$1;
+        offset += hashFunctionInfo.$2;
+
+        // Parse Multihash Length (varint)
+        if (bytes.length <= offset) return false;
+        final hashLengthInfo = decodeVarint(bytes.sublist(offset));
+        final hashLength = hashLengthInfo.$1;
+        offset += hashLengthInfo.$2;
+
+        // Validate hash function support
+        if (!_isSupportedHashFunction(hashFunction)) return false;
+
+        // Validate hash length matches the expected length for the hash function
+        if (!_isValidHashLength(hashFunction, hashLength)) return false;
+
+        // Check if remaining bytes match hash length
+        if (bytes.length - offset != hashLength) return false;
+
+        return true;
       }
 
-      // For CIDv1, validate multicodec format
-      var offset = 1; // Skip version byte
-
-      // Parse Codec (varint)
-      if (cidBytes.length <= offset) return false;
-      final codecInfo = decodeVarint(cidBytes.sublist(offset));
-      offset += codecInfo.$2;
-
-      // Parse Multihash
-      if (cidBytes.length <= offset) return false;
-
-      // Parse Multihash Code (varint)
-      final hashFunctionInfo = decodeVarint(cidBytes.sublist(offset));
-      final hashFunction = hashFunctionInfo.$1;
-      offset += hashFunctionInfo.$2;
-
-      // Parse Multihash Length (varint)
-      if (cidBytes.length <= offset) return false;
-      final hashLengthInfo = decodeVarint(cidBytes.sublist(offset));
-      final hashLength = hashLengthInfo.$1;
-      offset += hashLengthInfo.$2;
-
-      // Validate hash function support
-      if (!_isSupportedHashFunction(hashFunction)) return false;
-
-      // Validate hash length matches the expected length for the hash function
-      if (!_isValidHashLength(hashFunction, hashLength)) return false;
-
-      // Check if remaining bytes match hash length
-      if (cidBytes.length - offset != hashLength) return false;
-
-      if (version == 2 && cidBytes.length < 4) {
-        return false;
-      }
-
-      return true;
+      return false;
     } catch (e) {
       return false;
     }
@@ -219,6 +208,15 @@ class EncodingUtils {
         )
         .key;
     return codec;
+  }
+
+  /// Get code number from codec string
+  static int getCodeFromCodec(String codec) {
+    final code = _supportedCodecs[codec];
+    if (code == null) {
+      throw ArgumentError('Unsupported codec: $codec');
+    }
+    return code;
   }
 
   /// Add public getter

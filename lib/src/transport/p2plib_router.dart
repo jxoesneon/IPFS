@@ -117,6 +117,24 @@ class P2plibRouter {
   /// The connected peers.
   List<p2p.Route> get connectedPeers => _router.routes.values.toList();
 
+  /// Get the addresses this router is listening on
+  List<String> get listeningAddresses {
+    // Current p2plib doesn't expose bound addresses easily via public API of RouterL2
+    // But since we created the transports, we know what we bound to.
+    // However, if port was 0, we'd need the actual port.
+    // Assuming defaultPort for now or reconstruction.
+
+    // A proper implementation would query the transports.
+    // Since RouterL2 exposes 'transports', we can iterate them.
+    return _router.transports.map((t) {
+      final addr = t.bindAddress.address;
+      final port = t.bindAddress.port;
+      final protocol = addr.type == InternetAddressType.IPv4 ? 'ip4' : 'ip6';
+      // p2plib uses UDP by default in our setup
+      return '/$protocol/${addr.address}/udp/$port/p2p/$peerID';
+    }).toList();
+  }
+
   /// Initializes the router with basic configuration
   Future<void> initialize() async {
     if (_isInitialized) return;

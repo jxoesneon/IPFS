@@ -2,11 +2,13 @@
 import 'dart:async';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 
 /// Handles bootstrap peer connections for an IPFS node.
 class BootstrapHandler {
   final IPFSConfig _config;
+  final NetworkHandler _networkHandler;
   late final Logger _logger;
   final Set<Peer> _connectedBootstrapPeers = {};
   Timer? _reconnectionTimer;
@@ -15,7 +17,7 @@ class BootstrapHandler {
   // Default reconnection interval
   static const Duration _reconnectionInterval = Duration(minutes: 5);
 
-  BootstrapHandler(this._config) {
+  BootstrapHandler(this._config, this._networkHandler) {
     _logger = Logger('BootstrapHandler',
         debug: _config.debug, verbose: _config.verboseLogging);
     _logger.debug('Creating new BootstrapHandler instance');
@@ -95,7 +97,9 @@ class BootstrapHandler {
           continue;
         }
 
-        // Connection logic will be handled by NetworkHandler
+        // Connection logic handled by NetworkHandler
+        await _networkHandler.connectToPeer(peerAddress);
+
         // We just track the successful connections here
         _connectedBootstrapPeers.add(peer);
         _logger.debug('Successfully connected to bootstrap peer: $peerAddress');

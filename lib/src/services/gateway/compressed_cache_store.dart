@@ -1,3 +1,4 @@
+// lib/src/services/gateway/compressed_cache_store.dart
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:archive/archive.dart';
@@ -6,12 +7,14 @@ import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'adaptive_compression_handler.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import '../../utils/logger.dart';
 // import 'package:lz4/lz4.dart'; // Package not available, lz4 disabled
 
 /// Manages compressed cache storage with multiple compression algorithms
 class CompressedCacheStore {
   final Directory _cacheDir;
   final AdaptiveCompressionHandler _compressionHandler;
+  final _logger = Logger('CompressedCacheStore');
 
   CompressedCacheStore({
     required String cachePath,
@@ -42,8 +45,8 @@ class CompressedCacheStore {
           _parseCompressionType(metadata['compression'] ?? 'gzip');
 
       return _decompress(compressedData, compressionType);
-    } catch (e) {
-      print('Error reading compressed cache: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error reading compressed cache', e, stackTrace);
       return null;
     }
   }
@@ -138,8 +141,8 @@ class CompressedCacheStore {
     try {
       final content = await metadataFile.readAsString();
       return Map<String, String>.from(json.decode(content));
-    } catch (e) {
-      print('Error reading metadata file: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error reading metadata file', e, stackTrace);
       return {};
     }
   }
@@ -153,8 +156,8 @@ class CompressedCacheStore {
     try {
       final content = metadataFile.readAsStringSync();
       return Map<String, String>.from(json.decode(content));
-    } catch (e) {
-      print('Error reading metadata file: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error reading metadata file', e, stackTrace);
       return {};
     }
   }

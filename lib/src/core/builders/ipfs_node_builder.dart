@@ -112,7 +112,7 @@ class IPFSNodeBuilder {
     _container.registerSingleton(BitswapHandler(
         _config, _container.get<BlockStore>(), networkHandler.p2pRouter));
 
-    _container.registerSingleton(BootstrapHandler(_config));
+    _container.registerSingleton(BootstrapHandler(_config, networkHandler));
   }
 
   Future<void> _initializeServices() async {

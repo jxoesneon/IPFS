@@ -38,7 +38,10 @@ class IPFSPeer {
   factory IPFSPeer.fromKadPeer(kad.Peer peer) {
     return IPFSPeer(
       id: p2p.PeerId(value: Uint8List.fromList(peer.id)),
-      addresses: [], // TODO: Parse binary multiaddrs from peer.addrs
+      addresses: peer.addrs
+          .map((addr) => multiaddrFromBytes(Uint8List.fromList(addr)))
+          .whereType<p2p.FullAddress>()
+          .toList(),
       latency: 0, // DHT peers don't track latency
       agentVersion: '', // DHT peers don't track version
     );
@@ -55,7 +58,6 @@ class IPFSPeer {
   kad.Peer toKadPeer() {
     return kad.Peer()
       ..id = id.value
-      // ..addrs.addAll(...) // TODO: Convert addresses to binary
-      ;
+      ..addrs.addAll(addresses.map((addr) => multiaddrToBytes(addr)));
   }
 }

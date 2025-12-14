@@ -5,6 +5,7 @@ import '../proto/generated/core/cid.pb.dart' as pb_cid;
 import '../core/cid.dart';
 import '../core/data_structures/block.dart';
 import '../storage/datastore.dart';
+import '../utils/logger.dart';
 
 /// High-level service for content storage and retrieval.
 ///
@@ -30,22 +31,24 @@ import '../storage/datastore.dart';
 /// - [CID] for content addressing
 class ContentService {
   final Datastore _datastore;
+  final _logger = Logger('ContentService');
 
   /// Creates a content service backed by [_datastore].
   ContentService(this._datastore);
 
   /// Stores content and returns its CID
-  Future<CID> storeContent(List<int> content) async {
+  Future<CID> storeContent(List<int> content, {String codec = 'raw'}) async {
     final proto = pb_cid.IPFSCIDProto()
       ..version = pb_cid.IPFSCIDVersion.IPFS_CID_VERSION_1
       ..multihash = await computeHash(content)
-      ..codec = 'raw'
+      ..codec = codec
       ..multibasePrefix = 'base58btc';
 
     final cid = CID.fromProto(proto);
 
     // Create and store block
-    final block = await Block.fromData(Uint8List.fromList(content));
+    final block =
+        await Block.fromData(Uint8List.fromList(content), format: codec);
     await _datastore.put(cid.encode(), block);
 
     return cid;
@@ -56,8 +59,9 @@ class ContentService {
     try {
       final block = await _datastore.get(cid.encode());
       return block?.data;
-    } catch (e) {
-      print('Error retrieving content for CID ${cid.encode()}: $e');
+    } catch (e, stackTrace) {
+      _logger.error(
+          'Error retrieving content for CID ${cid.encode()}', e, stackTrace);
       return null;
     }
   }
@@ -72,8 +76,9 @@ class ContentService {
 
       await _datastore.delete(cid.encode());
       return true;
-    } catch (e) {
-      print('Error removing content for CID ${cid.encode()}: $e');
+    } catch (e, stackTrace) {
+      _logger.error(
+          'Error removing content for CID ${cid.encode()}', e, stackTrace);
       return false;
     }
   }
@@ -88,8 +93,9 @@ class ContentService {
 
       await _datastore.pin(cid.encode());
       return true;
-    } catch (e) {
-      print('Error pinning content for CID ${cid.encode()}: $e');
+    } catch (e, stackTrace) {
+      _logger.error(
+          'Error pinning content for CID ${cid.encode()}', e, stackTrace);
       return false;
     }
   }
@@ -99,8 +105,9 @@ class ContentService {
     try {
       await _datastore.unpin(cid.encode());
       return true;
-    } catch (e) {
-      print('Error unpinning content for CID ${cid.encode()}: $e');
+    } catch (e, stackTrace) {
+      _logger.error(
+          'Error unpinning content for CID ${cid.encode()}', e, stackTrace);
       return false;
     }
   }
