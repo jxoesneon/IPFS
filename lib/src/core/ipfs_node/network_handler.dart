@@ -159,9 +159,13 @@ class NetworkHandler {
 
           final peerIdBytes = Uint8List.fromList(utf8.encode(peerId));
           final peer = p2p.PeerId(value: peerIdBytes);
-          _logger.verbose('Adding peer to routing table: $peerId');
-          ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable
-              .addPeer(peer, peer);
+          try {
+            _logger.verbose('Adding peer to routing table: $peerId');
+            ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable
+                .addPeer(peer, peer);
+          } catch (e) {
+            _logger.debug('DHT not ready yet, skipping routing table update');
+          }
         } else if (event.hasPeerDisconnected()) {
           final peerIdStr = event.peerDisconnected.peerId;
           final reason = event.peerDisconnected.reason;
@@ -169,8 +173,13 @@ class NetworkHandler {
 
           final peerIdBytes = Uint8List.fromList(utf8.encode(peerIdStr));
           final peerId = p2p.PeerId(value: peerIdBytes);
-          _logger.verbose('Removing peer from routing table: $peerIdStr');
-          ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable.removePeer(peerId);
+          try {
+            _logger.verbose('Removing peer from routing table: $peerIdStr');
+            ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable
+                .removePeer(peerId);
+          } catch (e) {
+            _logger.debug('DHT not ready yet, skipping routing table update');
+          }
         } else if (event.hasMessageReceived()) {
           final messageContent =
               utf8.decode(event.messageReceived.messageContent);
@@ -405,6 +414,10 @@ class NetworkHandler {
       _logger.verbose('Starting dialback test');
 
       // Get a random bootstrap peer to test dialback
+      if (_config.network.bootstrapPeers.isEmpty) {
+        _logger.debug('No bootstrap peers available for dialback test');
+        return false;
+      }
       final bootstrapPeer = _config.network.bootstrapPeers[
           Random().nextInt(_config.network.bootstrapPeers.length)];
 

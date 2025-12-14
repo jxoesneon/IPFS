@@ -43,6 +43,11 @@ class MetricsCollector {
   final Map<String, Map<String, int>> _messageMetrics = {};
   final Map<String, Map<String, int>> _byteMetrics = {};
   final Map<String, List<Duration>> _latencyMetrics = {};
+  final StreamController<Map<String, dynamic>> _metricsStreamController =
+      StreamController.broadcast();
+
+  Stream<Map<String, dynamic>> get metricsStream =>
+      _metricsStreamController.stream;
 
   /// Creates a new metrics collector with the given [_config].
   MetricsCollector(this._config) {
@@ -85,6 +90,24 @@ class MetricsCollector {
       if (_config.metrics.collectStorageMetrics) {
         await _collectStorageMetrics();
       }
+      if (_config.metrics.collectStorageMetrics) {
+        await _collectStorageMetrics();
+      }
+
+      // Calculate totals
+      int totalSent = 0;
+      int totalReceived = 0;
+      for (final peerMetrics in _byteMetrics.values) {
+        totalSent += peerMetrics['sent'] ?? 0;
+        totalReceived += peerMetrics['received'] ?? 0;
+      }
+
+      _metricsStreamController.add({
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+        'totalSent': totalSent,
+        'totalReceived': totalReceived,
+        'peers': _byteMetrics.length,
+      });
     } catch (e, stackTrace) {
       _logger.error('Error collecting metrics', e, stackTrace);
     }
@@ -94,6 +117,7 @@ class MetricsCollector {
     _logger.debug('Stopping metrics collection');
     _collectionTimer?.cancel();
     _collectionTimer = null;
+    await _metricsStreamController.close();
   }
 
   Future<Map<String, dynamic>> getStatus() async {

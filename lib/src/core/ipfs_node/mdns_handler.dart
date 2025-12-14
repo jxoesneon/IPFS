@@ -43,6 +43,15 @@ class MDNSHandler {
       await _mdnsClient.start();
       _logger.verbose('MDNS client started');
 
+      // Start the responder
+      final port = _getPort();
+      await _mdnsClient.startServer(
+        serviceType: _serviceType,
+        instanceName: _config.nodeId,
+        port: port,
+        txt: [_config.nodeId],
+      );
+
       // Start periodic peer discovery
       _startDiscovery();
 
@@ -105,6 +114,22 @@ class MDNSHandler {
     _advertiseService();
   }
 
+  // Helper to extract port
+  int _getPort() {
+    try {
+      if (_config.network.listenAddresses.isEmpty) return 4001;
+      final addr = _config.network.listenAddresses.first;
+      // Example: /ip4/0.0.0.0/tcp/4001
+      final parts = addr.split('/');
+      if (parts.length >= 5) {
+        return int.parse(parts[4]);
+      }
+    } catch (e) {
+      _logger.warning('Failed to parse port from listen address: $e');
+    }
+    return 4001;
+  }
+
   Future<void> _discoverPeers() async {
     try {
       _logger.verbose('Performing peer discovery');
@@ -131,9 +156,13 @@ class MDNSHandler {
     try {
       _logger.verbose('Advertising IPFS service');
 
-      final name = '${_config.nodeId}.$_serviceType.local';
-      await _mdnsClient
-          .lookup<SrvResourceRecord>(ResourceRecordQuery.service(name));
+      final port = _getPort();
+      await _mdnsClient.announce(
+        _serviceType,
+        _config.nodeId,
+        port,
+        [_config.nodeId],
+      );
 
       _logger.debug('Service advertised successfully');
     } catch (e, stackTrace) {

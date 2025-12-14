@@ -1,4 +1,5 @@
 // src/core/ipfs_node/pubsub_handler.dart
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import '../../utils/dnslink_resolver.dart';
@@ -9,12 +10,25 @@ import '../data_structures/node_stats.dart'; // Assuming you have a NodeStats cl
 import '/../src/core/ipfs_node/ipfs_node_network_events.dart'; // Import network events
 // lib/src/core/ipfs_node/pubsub_handler.dart
 
+class PubSubMessage {
+  final String topic;
+  final String from;
+  final String content;
+
+  PubSubMessage(
+      {required this.topic, required this.from, required this.content});
+}
+
 /// Handles PubSub operations for an IPFS node.
 class PubSubHandler {
   final PubSubClient _pubSubClient;
   final IpfsNodeNetworkEvents _networkEvents; // Reference to network events
   final Map<String, Set<Function(String)>> _subscriptions = {};
+  final StreamController<PubSubMessage> _messageController =
+      StreamController<PubSubMessage>.broadcast();
   int _messageCount = 0;
+
+  Stream<PubSubMessage> get messages => _messageController.stream;
 
   /// Constructs a [PubSubHandler] with the provided router, peer ID, and network events.
   PubSubHandler(P2plibRouter router, String peerId, this._networkEvents)
@@ -45,6 +59,7 @@ class PubSubHandler {
   Future<void> stop() async {
     try {
       await _pubSubClient.stop();
+      await _messageController.close();
       print('PubSub client stopped.');
     } catch (e) {
       print('Error stopping PubSub client: $e');
@@ -135,6 +150,12 @@ class PubSubHandler {
 
     // Further processing of the message can be done here
     // For example, dispatching it to specific handlers based on the topic
+
+    _messageController.add(PubSubMessage(
+      topic: event.topic,
+      from: event.peerId,
+      content: message,
+    ));
   }
 
   Future<Map<String, dynamic>> getStatus() async {

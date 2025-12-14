@@ -203,9 +203,20 @@ class NetworkConfig {
   final Duration connectionTimeout;
   final String? delegatedRoutingEndpoint;
 
+  static const List<String> defaultBootstrapPeers = [
+    // Public IPFS Bootstrap Nodes (Direct IPs to bypass DNS resolution issues in p2plib)
+    '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ', // mars.i.ipfs.io
+    '/ip4/104.236.179.241/tcp/4001/p2p/QmSoLPppuBtQSGwKDZT2M73ULpjvfd3aZ6ha4oFGL1KrGM', // pluto.i.ipfs.io
+    '/ip4/128.199.219.111/tcp/4001/p2p/QmSoLSafTMBsPKadTEgaXctDQVcqN88CNLHXMkTNwMKPnu', // saturn.i.ipfs.io
+    '/ip4/104.236.76.40/tcp/4001/p2p/QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64', // earth.i.ipfs.io
+
+    // Cloudflare
+    '/ip4/172.65.0.13/tcp/4009/p2p/QmcfgsJsMtx6qJb74akCw1M24X1zFwgGo11h1cuhwQjtJP',
+  ];
+
   const NetworkConfig({
     this.listenAddresses = const ['/ip4/0.0.0.0/tcp/4001'],
-    this.bootstrapPeers = const [],
+    this.bootstrapPeers = defaultBootstrapPeers,
     this.maxConnections = 50,
     this.connectionTimeout = const Duration(seconds: 30),
     this.delegatedRoutingEndpoint,
