@@ -105,11 +105,7 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
 
   // Add operator [] getter
   V_PeerInfo? operator [](K_PeerId key) {
-    final result = search(key);
-    if (result is common_tree.V_PeerInfo) {
-      return result as V_PeerInfo;
-    }
-    return null;
+    return search(key);
   }
 
   // Add the remove method
