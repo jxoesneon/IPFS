@@ -221,3 +221,6 @@ paket-files/
 
 # IDX-specific ignores
 .idx/
+
+# Agent Rules
+.agent/
