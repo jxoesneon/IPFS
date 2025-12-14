@@ -1,7 +1,8 @@
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_proto;
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs_proto;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
+    as unixfs_proto;
 import 'package:dart_ipfs/src/core/cid.dart';
 
 // lib/src/core/data_structures/merkle_dag_node.dart
@@ -74,25 +75,23 @@ class MerkleDAGNode {
 
       bool isDir = false;
       int? mtime;
-      
+
       // Try parsing UnixFS Data
       if (pbNode.hasData()) {
-          try {
-              final unixData = unixfs_proto.Data.fromBuffer(pbNode.data);
-              isDir = (unixData.type == unixfs_proto.Data_DataType.Directory || 
-                       unixData.type == unixfs_proto.Data_DataType.HAMTShard);
-              if (unixData.hasMtime()) {
-                  mtime = unixData.mtime.toInt();
-              }
-          } catch (_) {
-              // Not UnixFS or failed to parse, treat as raw DAG-PB
+        try {
+          final unixData = unixfs_proto.Data.fromBuffer(pbNode.data);
+          isDir = (unixData.type == unixfs_proto.Data_DataType.Directory ||
+              unixData.type == unixfs_proto.Data_DataType.HAMTShard);
+          if (unixData.hasMtime()) {
+            mtime = unixData.mtime.toInt();
           }
+        } catch (_) {
+          // Not UnixFS or failed to parse, treat as raw DAG-PB
+        }
       }
 
       return MerkleDAGNode(
-        links: pbNode.links
-            .map((link) => Link.fromProto(link))
-            .toList(),
+        links: pbNode.links.map((link) => Link.fromProto(link)).toList(),
         data: Uint8List.fromList(pbNode.data),
         isDirectory: isDir,
         mtime: mtime,
@@ -106,9 +105,8 @@ class MerkleDAGNode {
   /// Note: This assumes `data` is already strictly formatted (e.g. valid UnixFS Data proto bytes).
   /// If you are building a node, ensure `data` is correct.
   Uint8List toBytes() {
-    final pbNode = dag_proto.PBNode()
-      ..data = data;
-    
+    final pbNode = dag_proto.PBNode()..data = data;
+
     pbNode.links.addAll(links.map((link) => link.toProto()));
 
     return pbNode.writeToBuffer();

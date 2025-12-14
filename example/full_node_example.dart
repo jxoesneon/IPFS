@@ -5,7 +5,7 @@ import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
 import 'package:dart_ipfs/src/services/rpc/rpc_server.dart';
 
 /// Complete IPFS Node Example
-/// 
+///
 /// Demonstrates a fully functional IPFS node with:
 /// - DHT (Kademlia) for peer discovery
 /// - Bitswap for block exchange
@@ -17,7 +17,7 @@ Future<void> main() async {
   // Step 1: Create configuration
   print('📝 Creating IPFS configuration...');
   final config = IPFSConfig();
-  
+
   // Step 2: Initialize IPFS node
   print('🔧 Initializing IPFS node...');
   final node = await IPFSNode.create(config);
@@ -62,12 +62,12 @@ void _printUsageInfo(String gatewayUrl, String rpcUrl, String peerId) {
   print('   Peer ID: $peerId');
   print('   Gateway: $gatewayUrl');
   print('   RPC API: $rpcUrl');
-  
+
   print('\n🌐 Gateway Endpoints (Browser):');
   print('   $gatewayUrl/ipfs/{cid}');
   print('   $gatewayUrl/ipns/{name}');
   print('   $gatewayUrl/health');
-  
+
   print('\n🔌 RPC API Examples:');
   print('   # Get node info');
   print('   curl -X POST $rpcUrl/api/v0/id');
@@ -86,7 +86,7 @@ void _printUsageInfo(String gatewayUrl, String rpcUrl, String peerId) {
   print('');
   print('   # Find providers for CID');
   print('   curl -X POST "$rpcUrl/api/v0/dht/findprovs?arg=QmYourCID"');
-  
+
   print('\n📚 Protocol Support:');
   print('   ✅ Kademlia DHT (peer discovery & routing)');
   print('   ✅ Bitswap 1.2.0 (block exchange)');
@@ -94,10 +94,10 @@ void _printUsageInfo(String gatewayUrl, String rpcUrl, String peerId) {
   print('   ✅ UnixFS (file system)');
   print('   ✅ HTTP Gateway (browser access)');
   print('   ✅ RPC API (programmatic control)');
-  
+
   print('\n🔗 Interoperability:');
   print('   Compatible with go-ipfs, js-ipfs, and other IPFS implementations');
   print('   Uses standard IPFS protocols and wire formats');
-  
+
   print('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }

@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 /// A class representing a simple bit field, used to manage binary flags efficiently.
 class BitField {
-  final Uint8List _bits;  // Using Uint8List for memory efficiency
+  final Uint8List _bits; // Using Uint8List for memory efficiency
 
   /// Constructs a BitField of a given size, initializing all bits to false (0).
   BitField(int size) : _bits = Uint8List((size + 7) ~/ 8); // Efficient storage
@@ -38,14 +38,14 @@ class BitField {
   BitFieldProto toProto() {
     final proto = BitFieldProto()
       ..size = _bits.length * 8
-      ..bits = _bits;  // Uint8List is directly supported
+      ..bits = _bits; // Uint8List is directly supported
     return proto;
   }
 
   /// Deserializes a BitField from a protobuf message.
   static BitField fromProto(BitFieldProto proto) {
     final bitField = BitField(proto.size);
-    bitField._bits.setAll(0, proto.bits);  // Setting all bits from proto
+    bitField._bits.setAll(0, proto.bits); // Setting all bits from proto
     return bitField;
   }
 

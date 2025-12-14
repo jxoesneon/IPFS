@@ -16,11 +16,13 @@ class LocalCrypto implements p2p.Crypto {
   Uint8List? _currentSeed;
 
   @override
-  Future<({Uint8List encPubKey, Uint8List seed, Uint8List signPubKey})> init([Uint8List? seed]) async {
+  Future<({Uint8List encPubKey, Uint8List seed, Uint8List signPubKey})> init(
+      [Uint8List? seed]) async {
     // Use provided seed or generate a cryptographically secure one
     if (seed == null) {
       final secureRandom = Random.secure();
-      seed = Uint8List.fromList(List.generate(32, (_) => secureRandom.nextInt(256)));
+      seed = Uint8List.fromList(
+          List.generate(32, (_) => secureRandom.nextInt(256)));
     }
     _currentSeed = seed;
 
@@ -39,12 +41,12 @@ class LocalCrypto implements p2p.Crypto {
 
     // Extract public key as bytes (65 bytes with 0x04 prefix for secp256k1)
     final pubKeyBytes = _keyPair!.publicKey.Q!.getEncoded(false);
-    
+
     // p2plib requires exactly 32-byte keys
     // Extract X-coordinate (skip 0x04 prefix, take next 32 bytes)
     // Format: [0x04][32-byte X][32-byte Y] -> we take X
     final xCoordinate = pubKeyBytes.sublist(1, 33);
-    
+
     // For both signPubKey and encPubKey, use the X-coordinate
     // This provides 128-bit security and is compatible with ECDH
     final pubKey = Uint8List.fromList(xCoordinate);
@@ -59,7 +61,7 @@ class LocalCrypto implements p2p.Crypto {
   @override
   Future<Uint8List> seal(Uint8List data) async {
     // Encrypt data using ChaCha20-Poly1305 AEAD
-    
+
     if (_currentSeed == null) {
       throw StateError('LocalCrypto not initialized. Call init() first.');
     }
@@ -67,27 +69,28 @@ class LocalCrypto implements p2p.Crypto {
     try {
       // Use ChaCha20-Poly1305 for authenticated encryption
       final cipher = ChaCha20Poly1305(ChaCha7539Engine(), Poly1305());
-      
+
       // Generate a random nonce (12 bytes for ChaCha20-Poly1305)
       final rnd = Random.secure();
-      final nonce = Uint8List.fromList(List.generate(12, (_) => rnd.nextInt(256)));
-      
+      final nonce =
+          Uint8List.fromList(List.generate(12, (_) => rnd.nextInt(256)));
+
       // Derive encryption key from seed using SHA-256
       final digest = crypto.sha256.convert(_currentSeed!);
       final key = Uint8List.fromList(digest.bytes);
-      
+
       final params = AEADParameters(
         KeyParameter(key),
         128, // MAC size in bits
         nonce,
         Uint8List(0), // No associated data
       );
-      
+
       cipher.init(true, params); // true = encrypt
-      
+
       // Encrypt the data
       final ciphertext = cipher.process(data);
-      
+
       // Prepend nonce to ciphertext for later decryption
       return Uint8List.fromList([...nonce, ...ciphertext]);
     } catch (e) {
@@ -99,7 +102,7 @@ class LocalCrypto implements p2p.Crypto {
   @override
   Future<Uint8List> unseal(Uint8List data) async {
     // Decrypt data using ChaCha20-Poly1305 AEAD
-    
+
     if (_currentSeed == null) {
       throw StateError('LocalCrypto not initialized. Call init() first.');
     }
@@ -110,28 +113,28 @@ class LocalCrypto implements p2p.Crypto {
         // Data too short, might not be encrypted
         return data;
       }
-      
+
       final nonce = data.sublist(0, 12);
       final ciphertext = data.sublist(12);
-      
+
       final cipher = ChaCha20Poly1305(ChaCha7539Engine(), Poly1305());
-      
+
       // Derive decryption key from seed using SHA-256
       final digest = crypto.sha256.convert(_currentSeed!);
       final key = Uint8List.fromList(digest.bytes);
-      
+
       final params = AEADParameters(
         KeyParameter(key),
         128, // MAC size in bits
         nonce,
         Uint8List(0), // No associated data
       );
-      
+
       cipher.init(false, params); // false = decrypt
-      
+
       // Decrypt the data
       final plaintext = cipher.process(ciphertext);
-      
+
       return plaintext;
     } catch (e) {
       // Fallback to pass-through if decryption fails
@@ -143,7 +146,7 @@ class LocalCrypto implements p2p.Crypto {
   Future<Uint8List> verify(Uint8List data) async {
     // The p2p.Crypto interface's verify method doesn't have enough context
     // for proper signature verification (no signature parameter, no public key)
-    // 
+    //
     // This method appears to be a pass-through in the p2plib design.
     // For actual signature verification, implement a separate method
     // or use a dedicated Ed25519 library like 'ed25519_dart'.

@@ -32,8 +32,7 @@ class IPFSDirectoryManager {
   final Data _unixFsData;
   final List<IPFSDirectoryEntry> _entries = [];
 
-  IPFSDirectoryManager() 
-      : _unixFsData = Data()..type = Data_DataType.Directory;
+  IPFSDirectoryManager() : _unixFsData = Data()..type = Data_DataType.Directory;
 
   /// Adds an entry to the directory.
   /// Note: Entries should ideally be added in sorted order by name for canonicalization,
@@ -47,21 +46,21 @@ class IPFSDirectoryManager {
     // 1. Prepare UnixFS Data
     // For a basic directory, data is minimal (Type=Directory).
     // Filesize/Blocksizes usually apply to files or hamt shards.
-    
+
     // 2. Create PBNode
     final node = PBNode();
-    
+
     // 3. Set Data (serialized UnixFS Data)
     node.data = _unixFsData.writeToBuffer();
-    
+
     // 4. Add Links
     // IPFS requires links to be sorted by name for deterministic DAG generation.
     _entries.sort((a, b) => a.name.compareTo(b.name));
-    
+
     for (final entry in _entries) {
       node.links.add(entry.toLink());
     }
-    
+
     return node;
   }
 }

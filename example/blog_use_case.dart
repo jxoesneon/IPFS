@@ -32,7 +32,7 @@ void main() async {
   try {
     // 2. Create Blog Content
     print('\n🔹 Creating Blog Assets...');
-    
+
     final indexHtml = '''
     <!DOCTYPE html>
     <html>
@@ -54,23 +54,25 @@ void main() async {
 
     // 3. Add files to IPFS
     print('🔹 Adding files to IPFS...');
-    
-    final indexCid = await node.addFile(Uint8List.fromList(utf8.encode(indexHtml)));
+
+    final indexCid =
+        await node.addFile(Uint8List.fromList(utf8.encode(indexHtml)));
     print('   📝 index.html CID: $indexCid');
 
-    final cssCid = await node.addFile(Uint8List.fromList(utf8.encode(styleCss)));
+    final cssCid =
+        await node.addFile(Uint8List.fromList(utf8.encode(styleCss)));
     print('   🎨 style.css  CID: $cssCid');
 
     // 4. Create Directory (The "Blog" root)
     print('🔹 Creating Blog Directory...');
-    
+
     // Note: In a real app, we'd use MFS (Mutable File System), but here we manually construct the DAG.
     // We demonstrate adding a directory structure.
     final directoryCid = await node.addDirectory({
       'index.html': Uint8List.fromList(utf8.encode(indexHtml)),
       'style.css': Uint8List.fromList(utf8.encode(styleCss)),
     });
-    
+
     print('   📂 Blog Root CID: $directoryCid');
 
     // 5. Verification: Retrieve Content
@@ -78,7 +80,7 @@ void main() async {
 
     final retrievedIndex = await node.get(indexCid);
     final retrievedIndexStr = utf8.decode(retrievedIndex!);
-    
+
     if (retrievedIndexStr == indexHtml) {
       print('   ✅ index.html verified successfully!');
     } else {
@@ -92,7 +94,6 @@ void main() async {
     if (dirBlock != null) {
       print('   ✅ Directory block verified successfully!');
     }
-
   } catch (e, stack) {
     print('❌ Error occurred: $e');
     print(stack);

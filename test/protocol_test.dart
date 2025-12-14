@@ -1,10 +1,11 @@
-// test/protocol_test.dart  
+// test/protocol_test.dart
 /// Test for Core IPFS Protocol Compliance
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
-import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as bitswap;
+import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
+    as bitswap;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs;
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag;
 
@@ -12,10 +13,10 @@ Future<void> main() async {
   print('🧪 IPFS Protocol Compliance Test\n');
   print('Testing: CID, Kademlia DHT, Bitswap, UnixFS, DAG-PB');
   print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-  
+
   var passCount = 0;
   var failCount = 0;
-  
+
   // Test 1: CID v0
   print('Test 1: CID v0...');
   try {
@@ -33,7 +34,7 @@ Future<void> main() async {
     print('  ❌ FAIL: $e\n');
     failCount++;
   }
-  
+
   // Test 2: CID v1
   print('Test 2: CID v1...');
   try {
@@ -49,7 +50,7 @@ Future<void> main() async {
     print('  ❌ FAIL: $e\n');
     failCount++;
   }
-  
+
   // Test 3: Kademlia Message
   print('Test 3: Kademlia DHT message...');
   try {
@@ -65,7 +66,7 @@ Future<void> main() async {
     print('  ❌ FAIL: $e\n');
     failCount++;
   }
-  
+
   // Test 4: Bitswap Message
   print('Test 4: Bitswap 1.2.0 message...');
   try {
@@ -83,7 +84,7 @@ Future<void> main() async {
     print('  ❌ FAIL: $e\n');
     failCount++;
   }
-  
+
   // Test 5: UnixFS
   print('Test 5: UnixFS data structure...');
   try {
@@ -99,7 +100,7 @@ Future<void> main() async {
     print('  ❌ FAIL: $e\n');
     failCount++;
   }
-  
+
   // Test 6: DAG-PB
   print('Test 6: DAG-PB (MerkleDAG)...');
   try {
@@ -118,11 +119,11 @@ Future<void> main() async {
     print('  ❌ FAIL: $e\n');
     failCount++;
   }
-  
+
   // Results
   print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   print('Results: $passCount passed, $failCount failed');
-  
+
   if (failCount == 0) {
     print('\n🎉 ALL TESTS PASSED!');
     print('✅ IPFS Protocol Standardization Verified!\n');

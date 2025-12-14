@@ -41,8 +41,9 @@ class Block implements IBlock {
   /// Validates the block's data against its CID
   bool validate() {
     // Simplified validation (hashing not implemented here to avoid circular dep or heavy computation)
-    return true; 
+    return true;
   }
+
   /// Converts the block to its protobuf representation
   BlockProto toProto() {
     return BlockProto()
@@ -64,7 +65,7 @@ class Block implements IBlock {
   static Future<Block> fromBitswapProto(proto.Message_Block protoBlock) async {
     return Block.fromData(Uint8List.fromList(protoBlock.data));
   }
-  
+
   @override
   proto.Message_Block toBitswapProto() {
     return proto.Message_Block()

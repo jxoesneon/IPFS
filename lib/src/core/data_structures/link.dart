@@ -65,10 +65,10 @@ class Link {
     // Hash in PBLink is strictly a CID (multihash or multibase bytes)
     CID cid;
     try {
-        cid = CID.fromBytes(Uint8List.fromList(proto.hash));
+      cid = CID.fromBytes(Uint8List.fromList(proto.hash));
     } catch (_) {
-       // Fallback for empty or invalid hashes
-       cid = CID.v0(Uint8List(32)); 
+      // Fallback for empty or invalid hashes
+      cid = CID.v0(Uint8List(32));
     }
 
     return Link(

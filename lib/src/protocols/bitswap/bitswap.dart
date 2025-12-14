@@ -54,8 +54,7 @@ class Bitswap {
   final _logger = Logger('BitSwap');
 
   /// Maximum length for block prefixes in messages.
-  static const int maxPrefixLength =
-      64;
+  static const int maxPrefixLength = 64;
 
   /// Creates a Bitswap instance with the given dependencies.
   Bitswap(this._router, this._ledger, this._datastore, [this.config]);
@@ -81,7 +80,8 @@ class Bitswap {
 
     // Create a Wantlist entry for the requested block
     final wantlistEntry = proto.Message_Wantlist_Entry()
-      ..block = Uint8List.fromList(utf8.encode(cid)) // Entry uses 'block' for cid bytes? Proto says 'block' field 1.
+      ..block = Uint8List.fromList(utf8.encode(
+          cid)) // Entry uses 'block' for cid bytes? Proto says 'block' field 1.
       ..priority = 1
       ..cancel = false
       ..wantType = proto.Message_Wantlist_WantType.Block
@@ -184,12 +184,12 @@ class Bitswap {
   }
 
   Future<void> sendBlock(String peerId, Uint8List data) async {
-    final message = proto.Message()
-      ..blocks.add(data);
+    final message = proto.Message()..blocks.add(data);
     await send(peerId, message);
   }
 
-  Future<void> sendWantlist(String peerId, proto.Message_Wantlist_Entry entry) async {
+  Future<void> sendWantlist(
+      String peerId, proto.Message_Wantlist_Entry entry) async {
     final wantlist = proto.Message_Wantlist();
     wantlist.entries.add(entry);
 
@@ -278,7 +278,8 @@ class Bitswap {
   }
 
   /// Sends a DONT_HAVE message to a peer for a specific wantlist entry
-  Future<void> sendDontHave(String peerId, proto.Message_Wantlist_Entry entry) async {
+  Future<void> sendDontHave(
+      String peerId, proto.Message_Wantlist_Entry entry) async {
     final message = proto.Message()
       ..blockPresences.add(proto.Message_BlockPresence()
         ..cid = entry.block
@@ -288,7 +289,8 @@ class Bitswap {
   }
 
   /// Sends a HAVE message to a peer for a specific wantlist entry
-  Future<void> sendHave(String peerId, proto.Message_Wantlist_Entry entry) async {
+  Future<void> sendHave(
+      String peerId, proto.Message_Wantlist_Entry entry) async {
     final message = proto.Message()
       ..blockPresences.add(proto.Message_BlockPresence()
         ..cid = entry.block
@@ -298,7 +300,8 @@ class Bitswap {
   }
 
   // Add this helper method to convert between WantType enums
-  proto.Message_Wantlist_WantType _convertToProtoWantType(bitswap_message.WantType type) {
+  proto.Message_Wantlist_WantType _convertToProtoWantType(
+      bitswap_message.WantType type) {
     switch (type) {
       case bitswap_message.WantType.block:
         return proto.Message_Wantlist_WantType.Block;

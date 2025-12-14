@@ -342,7 +342,7 @@ class KademliaTree {
     try {
       final ipfsMessage = IPFSMessage.fromBuffer(message.payload!);
       final requestId = int.tryParse(ipfsMessage.requestId) ?? 0;
-      
+
       final dhtMessage = kad.Message.fromBuffer(ipfsMessage.payload);
 
       if (_pendingRequests.containsKey(requestId)) {
@@ -392,14 +392,16 @@ class KademliaTree {
         PingMessage(requestId.toString(), _root!.peerId, peer).toDHTMessage();
 
     try {
-      final response = await _sendMessageWithTimeout(peer, pingMessage, requestId);
+      final response =
+          await _sendMessageWithTimeout(peer, pingMessage, requestId);
 
       // Convert DHTMessage to p2p.Message
       return p2p.Message(
         srcPeerId: peer,
         dstPeerId: _root!.peerId,
         header: p2p.PacketHeader(
-          id: int.parse(requestId.toString()), // Use local requestId since response ID is in IPFSMessage wrapper, not DHTMessage
+          id: int.parse(requestId
+              .toString()), // Use local requestId since response ID is in IPFSMessage wrapper, not DHTMessage
           issuedAt: DateTime.now().millisecondsSinceEpoch,
         ),
         payload: response.writeToBuffer(),
@@ -435,7 +437,8 @@ class KademliaTree {
               .toDHTMessage();
 
       try {
-        final response = await _sendMessageWithTimeout(peer, message, requestId);
+        final response =
+            await _sendMessageWithTimeout(peer, message, requestId);
         return response.type == kad.Message_MessageType.PUT_VALUE;
       } catch (e) {
         print('Store value failed for peer $peer: $e');
@@ -460,13 +463,18 @@ class KademliaTree {
                 .toDHTMessage();
 
         try {
-          final response = await _sendMessageWithTimeout(peer, message, requestId);
+          final response =
+              await _sendMessageWithTimeout(peer, message, requestId);
           if (response.type == kad.Message_MessageType.GET_VALUE &&
-              (response.hasRecord() || response.providerPeers.isNotEmpty)) { // Check record or providers (GET_VALUE might return providers too?)
+              (response.hasRecord() || response.providerPeers.isNotEmpty)) {
+            // Check record or providers (GET_VALUE might return providers too?)
             // Assuming record field is populated for value
-             if (response.hasRecord()) {
-                return (Uint8List.fromList(response.record.value), <p2p.PeerId>[]);
-             }
+            if (response.hasRecord()) {
+              return (
+                Uint8List.fromList(response.record.value),
+                <p2p.PeerId>[]
+              );
+            }
           }
           // If value not found, return closer peers
           final closerPeers = _processFindNodeResponse(response);

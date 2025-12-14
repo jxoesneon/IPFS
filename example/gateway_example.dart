@@ -3,7 +3,7 @@ import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 
 /// Example of running the IPFS HTTP Gateway
-/// 
+///
 /// This demonstrates how to start an IPFS gateway server that serves
 /// content via standard HTTP endpoints.
 void main() async {

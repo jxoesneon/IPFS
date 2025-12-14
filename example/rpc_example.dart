@@ -4,7 +4,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 
 /// Example of running the IPFS RPC API server
-/// 
+///
 /// This demonstrates the HTTP RPC API for programmatic control
 void main() async {
   print('🚀 Starting IPFS RPC API Example...\n');

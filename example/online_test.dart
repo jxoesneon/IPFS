@@ -24,7 +24,7 @@ void main() async {
   print('🔹 Initializing IPFS Node (Online Mode)...');
   // This step previously hung due to p2plib crypto initialization
   final node = await IPFSNode.create(config);
-  
+
   print('🔹 Starting Node...');
   await node.start();
   print('✅ IPFS Node started with PeerID: ${node.peerID}');
@@ -32,9 +32,9 @@ void main() async {
 
   try {
     print('\n🔹 Creating Blog Assets...');
-    
+
     final indexHtml = '<h1>Hello from the P2P World!</h1>';
-    
+
     // 2. Add file to IPFS
     print('🔹 Adding file...');
     final cid = await node.addFile(Uint8List.fromList(utf8.encode(indexHtml)));
@@ -43,7 +43,7 @@ void main() async {
     // 3. Retrieve Content
     print('🔹 Retrieving content...');
     final retrieved = await node.get(cid);
-    
+
     if (retrieved != null && utf8.decode(retrieved) == indexHtml) {
       print('   ✅ Content verified!');
     } else {
@@ -54,7 +54,6 @@ void main() async {
     print('\n🔹 Finding providers for CID...');
     final providers = await node.findProviders(cid);
     print('   Found ${providers.length} providers (expected at least self)');
-
   } catch (e, stack) {
     print('❌ Error occurred: $e');
     print(stack);
