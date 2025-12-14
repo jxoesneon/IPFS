@@ -2,6 +2,9 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/utils/encoding.dart';
 
+/// Abstract interface for block data access.
+///
+/// Provides common properties and serialization for block types.
 abstract class BlockData {
   Uint8List get data;
   CID get cid;

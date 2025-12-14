@@ -4,13 +4,23 @@ import 'dart:typed_data';
 import 'package:pointycastle/export.dart';
 import 'package:convert/convert.dart';
 
+/// ECDSA private key for IPFS cryptographic operations.
+///
+/// Wraps an elliptic curve key pair for signing and verification.
+/// Uses secp256k1 curve compatible with Bitcoin/Ethereum.
 class IPFSPrivateKey implements PrivateKey {
   final AsymmetricKeyPair<ECPublicKey, ECPrivateKey> _keyPair;
+
+  /// The signing algorithm (e.g., 'ECDSA').
   final String algorithm;
 
+  /// Creates a key from an existing [_keyPair].
   IPFSPrivateKey(this._keyPair, this.algorithm);
 
+  /// The public key component.
   ECPublicKey get publicKey => _keyPair.publicKey;
+
+  /// The private key component.
   ECPrivateKey get privateKey => _keyPair.privateKey;
 
   /// Signs the given data using the private key

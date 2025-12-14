@@ -1,10 +1,14 @@
 import 'package:dart_ipfs/src/core/protocol_handlers/protocol_handler.dart';
 
+/// libp2p node abstraction for protocol, transport, and security configuration.
+///
+/// Manages registered protocols and provides methods to enable
+/// transports (TCP, QUIC), security (Noise, TLS), and muxers (yamux, mplex).
 class Libp2pNode {
-  // Required protocols
+  /// Registered protocol handlers by protocol ID.
   final Map<String, ProtocolHandler> protocols;
 
-  // Constructor to initialize protocols
+  /// Creates a node with the given [protocols].
   Libp2pNode({required this.protocols});
 
   // Transport requirements

@@ -7,8 +7,37 @@ import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
 
-/// Manages security aspects of the IPFS node including TLS, key management,
-/// and rate limiting.
+/// Manages security aspects of the IPFS node.
+///
+/// SecurityManager handles TLS configuration, key management,
+/// rate limiting, and authentication tracking. It integrates with
+/// [MetricsCollector] to record security-related events.
+///
+/// **Features:**
+/// - TLS certificate management
+/// - Automatic key rotation
+/// - Request rate limiting per client
+/// - Failed authentication tracking and lockout
+///
+/// Example:
+/// ```dart
+/// final manager = SecurityManager(securityConfig, metricsCollector);
+/// await manager.start();
+///
+/// // Check rate limiting before processing
+/// if (manager.shouldRateLimit(clientId)) {
+///   throw RateLimitException();
+/// }
+///
+/// // Track authentication
+/// if (!manager.trackAuthAttempt(clientId, success)) {
+///   throw AuthLockoutException();
+/// }
+/// ```
+///
+/// See also:
+/// - [SecurityConfig] for configuration options
+/// - [Keystore] for key pair management
 class SecurityManager {
   final SecurityConfig _config;
   late final Logger _logger;
@@ -24,6 +53,7 @@ class SecurityManager {
   Timer? _keyRotationTimer;
   DateTime? _lastKeyRotation;
 
+  /// Creates a new security manager with the given [_config].
   SecurityManager(this._config, MetricsCollector metricsCollector) {
     _logger = Logger('SecurityManager');
     _keystore = Keystore();
@@ -31,6 +61,7 @@ class SecurityManager {
     _initializeSecurity();
   }
 
+  /// Returns the keystore for key pair operations.
   Keystore get keystore => _keystore;
 
   void _initializeSecurity() {

@@ -1,9 +1,16 @@
 import 'dart:collection';
 
+/// LRU (Least Recently Used) cache for gateway responses.
+///
+/// Evicts oldest entries when capacity is exceeded. Thread-safe
+/// for single-threaded Dart isolates.
 class GatewayLruCache<K, V> {
+  /// Maximum number of entries.
   final int capacity;
+
   final LinkedHashMap<K, V> _cache;
 
+  /// Creates a cache with the given [capacity].
   GatewayLruCache(this.capacity)
       : assert(capacity > 0, 'Capacity must be positive'),
         _cache = LinkedHashMap();

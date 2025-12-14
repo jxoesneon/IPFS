@@ -3,13 +3,14 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:cbor/cbor.dart';
 import 'package:jose/jose.dart';
-import 'package:catalyst_cose/catalyst_cose.dart';
+import 'package:convert/convert.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
-import 'package:pointycastle/pointycastle.dart';
-import 'package:convert/convert.dart';
 
+/// Handler for JOSE (JWS/JWE) and COSE encoding of IPLD data.
+///
+/// Provides signing, encryption, and verification for IPLD nodes.
 class JoseCoseHandler {
   static Future<Uint8List> encodeJWS(
     IPLDNode node,
@@ -74,16 +75,17 @@ class JoseCoseHandler {
       throw IPLDEncodingError('COSE encoding requires a map structure');
     }
 
-    final payload = _extractPayload(node);
+    // final payload = _extractPayload(node);
 
     // Create COSE Sign1 message using CatalystCose
+    /*
     final coseValue = await CatalystCose.sign1(
       privateKey: _privateKeyToBytes(privateKey),
       payload: payload,
       kid: CborString('ipfs-key'),
     );
-
-    return Uint8List.fromList(cbor.encode(coseValue));
+    */
+    throw UnimplementedError('CatalystCose not available');
   }
 
   static Future<Uint8List> decodeJWS(
@@ -146,21 +148,19 @@ class JoseCoseHandler {
     }
 
     final coseData = _extractPayload(node);
+    // ignore: unused_local_variable
     final coseValue = cbor.decode(coseData);
 
+    /*
     final isValid = await CatalystCose.verifyCoseSign1(
       coseSign1: coseValue,
       publicKey: _publicKeyToBytes(privateKey.publicKey),
     );
-
-    if (!isValid) {
-      throw IPLDDecodingError('COSE signature verification failed');
-    }
-
-    if (coseValue is CborList && coseValue.length >= 3) {
-      return coseValue[2] as Uint8List; // payload is at index 2
-    }
-    throw IPLDDecodingError('Invalid COSE_Sign1 structure');
+    */
+    // Stubbed validation
+    // ignore: unused_local_variable
+    final isValid = false;
+    throw UnimplementedError('CatalystCose not available');
   }
 
   static Uint8List _extractPayload(IPLDNode node) {
@@ -175,19 +175,6 @@ class JoseCoseHandler {
       throw IPLDEncodingError('Invalid EC key parameters');
     }
     final bytes = value.toRadixString(16).padLeft(64, '0');
-    return Uint8List.fromList(List<int>.from(hex.decode(bytes)));
-  }
-
-  static List<int> _privateKeyToBytes(IPFSPrivateKey privateKey) {
-    final privKey = privateKey.privateKey;
-    return privKey.d!.toRadixString(16).padLeft(64, '0').codeUnits;
-  }
-
-  static List<int> _publicKeyToBytes(ECPublicKey publicKey) {
-    final x =
-        publicKey.Q!.x!.toBigInteger()!.toRadixString(16).padLeft(64, '0');
-    final y =
-        publicKey.Q!.y!.toBigInteger()!.toRadixString(16).padLeft(64, '0');
-    return hex.decode(x + y);
+    return Uint8List.fromList(hex.decode(bytes));
   }
 }

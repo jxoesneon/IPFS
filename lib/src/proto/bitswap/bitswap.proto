@@ -1,55 +1,43 @@
-// lib/src/proto/bitswap/bitswap.proto
 syntax = "proto3";
-package bitswap;
 
-// Enum for message types
-enum MessageType {
-  MESSAGE_TYPE_UNKNOWN = 0;
-  MESSAGE_TYPE_WANT_BLOCK = 1;
-  MESSAGE_TYPE_WANT_HAVE = 2;
-  MESSAGE_TYPE_BLOCK = 3;
-  MESSAGE_TYPE_HAVE = 4;
-  MESSAGE_TYPE_DONT_HAVE = 5;
-}
+package ipfs.bitswap;
 
-// Represents a single entry in the wantlist
-message WantlistEntry {
-  bytes cid = 1;           // CID of the block (as bytes)
-  int32 priority = 2;      // The priority (normalized), default to 1
-  bool cancel = 3;         // Whether this revokes an entry
-  MessageType type = 4;    // The type of want (block, have)
-  bool sendDontHave = 5;   // Whether to receive DontHave responses
-}
-
-// Represents a wantlist message
-message Wantlist {
-  repeated WantlistEntry entries = 1;  // A list of wantlist entries
-  bool full = 2;                       // Whether this is the full wantlist
-}
-
-// Represents a block
-message Block {
-  bytes cid = 1;          // CID of the block
-  bytes data = 2;         // Block data
-  bool found = 3;         // Whether the block was found
-  string format = 4;      // Format of the block (e.g., 'raw', 'dag-pb')
-}
-
-// Represents a block presence
-message BlockPresence {
-  bytes cid = 1;          // CID of the block
-  Type type = 2;          // Type of presence
-  enum Type {
-    HAVE = 0;            // Node has the block
-    DONT_HAVE = 1;       // Node doesn't have the block
-  }
-}
-
-// The main Bitswap Message
 message Message {
-  string message_id = 1;                    // Unique message identifier
-  MessageType type = 2;                     // Message type
-  Wantlist wantlist = 3;                    // The wantlist
-  repeated Block blocks = 4;                // Blocks being sent
-  repeated BlockPresence blockPresences = 5; // Presence of blocks
+  message Wantlist {
+    enum WantType {
+      Block = 0;
+      Have = 1;
+    }
+    
+    message Entry {
+      bytes block = 1;       // The block CID
+      int32 priority = 2;    // Priority (normalized), default to 1
+      bool cancel = 3;       // Whether this revokes an entry
+      WantType wantType = 4; // Note: defaults to Block
+      bool sendDontHave = 5; // Note: defaults to false
+    }
+
+    repeated Entry entries = 1;
+    bool full = 2;
+  }
+
+  message Block {
+    bytes prefix = 1; // CID prefix (for CIDv1, 0 for CIDv0)
+    bytes data = 2;
+  }
+
+  message BlockPresence {
+    enum Type {
+      Have = 0;
+      DontHave = 1;
+    }
+    bytes cid = 1;
+    Type type = 2;
+  }
+
+  Wantlist wantlist = 1;
+  repeated bytes blocks = 2;            // Used to send blocks in Bitswap 1.0.0
+  repeated Block payload = 3;           // Used to send blocks in Bitswap 1.1.0+
+  repeated BlockPresence blockPresences = 4;
+  int32 pendingBytes = 5;
 }

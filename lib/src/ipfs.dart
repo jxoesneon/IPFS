@@ -9,7 +9,30 @@ import 'core/data_structures/peer.dart';
 import 'core/data_structures/node_stats.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 
-// Main API class for interacting with the IPFS server
+/// Main entry point for the IPFS (InterPlanetary File System) implementation.
+///
+/// This class provides a high-level interface for interacting with IPFS,
+/// including content storage, retrieval, pinning, and networking operations.
+///
+/// **Example Usage:**
+/// ```dart
+/// final ipfs = IPFS();
+///
+/// // Add content
+/// final block = await Block.fromData(utf8.encode('Hello IPFS'));
+/// await ipfs.store(block);
+///
+/// // Retrieve content
+/// final retrieved = await ipfs.retrieve(block.cid.toString());
+/// ```
+///
+/// For more advanced usage, consider using [IPFSNode] directly which provides
+/// full control over configuration, networking, and services.
+///
+/// See also:
+/// - [IPFSNode] for full-featured node operations
+/// - [Block] for content-addressed data storage
+/// - [CID] for content identifier operations
 class IPFS {
   // Private constructor to enforce factory pattern
   IPFS._(this._node)

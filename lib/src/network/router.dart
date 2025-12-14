@@ -7,12 +7,23 @@ import '../transport/p2plib_router.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import '../core/data_structures/peer.dart';
 
-/// Router handles network communication between IPFS nodes
+/// High-level network router for IPFS peer communication.
+///
+/// Provides an abstraction over [P2plibRouter] for message sending,
+/// peer discovery, and connection management.
+///
+/// Example:
+/// ```dart
+/// final router = Router(config);
+/// await router.start();
+/// await router.sendMessage(peerId, messageBytes);
+/// ```
 class Router {
   final P2plibRouter _router;
   final StreamController<Peer> _peerDiscoveryController;
   final Set<Peer> _connectedPeers;
 
+  /// Creates a router with the given [config].
   Router(IPFSConfig config)
       : _router = P2plibRouter(config),
         _peerDiscoveryController = StreamController<Peer>.broadcast(),

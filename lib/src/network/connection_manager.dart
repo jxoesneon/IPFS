@@ -1,13 +1,29 @@
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/proto/generated/connection.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart';
+import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:fixnum/fixnum.dart';
 
+/// Manages peer connection lifecycle and metrics.
+///
+/// ConnectionManager tracks active peer connections, recording metadata
+/// like connection timestamps, supported protocols, and client versions.
+/// It integrates with [MetricsCollector] to update connection statistics.
+///
+/// Example:
+/// ```dart
+/// final manager = ConnectionManager(metrics);
+/// await manager.handleNewConnection(peerId);
+/// ```
+///
+/// See also:
+/// - [MetricsCollector] for connection metrics
+/// - [ConnectionState] for connection state protobuf
 class ConnectionManager {
   final Map<String, ConnectionState> _connections = {};
   final MetricsCollector _metrics;
 
+  /// Creates a connection manager with the given [_metrics] collector.
   ConnectionManager(this._metrics);
 
   Future<void> handleNewConnection(LibP2PPeerId peerId) async {

@@ -8,7 +8,6 @@ import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/ledger.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/wantlist.dart';
-import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as message;
 
@@ -86,14 +85,15 @@ class BitswapHandler {
   Future<void> _handleMessage(message.Message message) async {
     if (!_running) return;
 
-    final fromPeer = message.from;
-    if (fromPeer == null) {
-      print('Received message without peer ID');
-      return;
+    final fromPeer = message.from; // Note: 'from' field is transient and set by packet handler if passed? 
+    // Actually packet handler didn't set it in my previous `message.dart`.
+    // I should check `_handlePacket`.
+    
+    // Update peer ledger if peer known
+    if (fromPeer != null) {
+        // final ledger = _ledgerManager.getLedger(fromPeer); // Removed unused variable
     }
-
-    // Update peer ledger
-    final ledger = _ledgerManager.getLedger(fromPeer);
+    // Optimization: If fromPeer is null, we can't update ledger but can still process blocks.
 
     if (message.hasWantlist()) {
       final messageWantlist = message.getWantlist();
@@ -105,24 +105,24 @@ class BitswapHandler {
             ),
           ),
         );
-      await _handleWantlist(wantlist, fromPeer);
+      // We need 'fromPeer' to reply. If it's missing, we can't reply.
+      if (fromPeer != null) {
+          await _handleWantlist(wantlist, fromPeer);
+      }
     }
 
     if (message.hasBlocks()) {
-      // Wait for all blocks to be created
-      final blocks =
-          await Future.wait(message.getBlocks().map((b) => Block.fromData(
-                b.data,
-                format: 'dag-pb',
-              )));
+      // Blocks don't strictly require 'fromPeer' to be useful (we verified content hash).
+      _handleBlocks(message.getBlocks());
 
-      _handleBlocks(blocks);
-
-      // Update received bytes in ledger
-      ledger.addReceivedBytes(blocks
-          .map((b) => b.data.length)
-          .fold<int>(0, (sum, size) => sum + size));
-      _updateBandwidthStats();
+      if (fromPeer != null) {
+          final ledger = _ledgerManager.getLedger(fromPeer);
+          // Update received bytes in ledger
+          ledger.addReceivedBytes(message.getBlocks()
+              .map((b) => b.data.length)
+              .fold<int>(0, (sum, size) => sum + size));
+          _updateBandwidthStats();
+      }
     }
   }
 
@@ -139,16 +139,12 @@ class BitswapHandler {
       // Add to our local wantlist with the received priority
       _wantlist.add(cidStr, priority: priority);
 
-      // Convert string CID to proto
-      final proto = IPFSCIDProto()
-        ..version = IPFSCIDVersion.IPFS_CID_VERSION_1
-        ..codec = cidStr;
-
-      final response = await _blockStore.getBlock(proto.toString());
+      // Check if we have the block
+      final response = await _blockStore.getBlock(cidStr);
       if (response.found) {
         final msg = message.Message()
           ..addBlock(Block.fromProto(response.block))
-          ..from = _router.peerID;
+          ..from = _router.peerID.toString();
 
         final messageBytes = msg.toBytes();
 
@@ -212,9 +208,8 @@ class BitswapHandler {
       }
     }
 
-    final msg = message.Message()
-      ..setMessageId(DateTime.now().toIso8601String())
-      ..setType(message.MessageType.wantBlock);
+    final msg = message.Message();
+    // No messageId or Type in Bitswap 1.2+
 
     for (final cid in cids) {
       msg.addWantlistEntry(cid,
@@ -277,21 +272,37 @@ class BitswapHandler {
 
   /// Helper method to get peer address
   InternetAddress _getPeerAddress(String peerId) {
-    final route = _router.routerL0.routes.values.firstWhere(
-        (r) => r.peerId.toString() == peerId,
-        orElse: () => throw StateError('Peer not found: $peerId'));
-
-    // Get the first address from the resolved addresses
-    final addresses = _router.routerL0.resolvePeerId(route.peerId);
-    if (addresses.isEmpty) {
-      throw StateError('No addresses found for peer: $peerId');
+    // Logic to resolve peer address. If we have routes, we can assume we have address.
+    // However, _router.routerL0.routes uses PeerId object as key? No, value has PeerId.
+    // _router.resolvPeerId returns FullAddresses.
+    
+    // TODO: Optimize lookup
+    try {
+        final routes = _router.routerL0.routes;
+        // route key is different?
+        // Let's assume we can lookup by string if needed or iterate.
+        final route = routes.values.firstWhere(
+            (r) => r.peerId.toString() == peerId,
+            orElse: () => throw StateError('Peer not found: $peerId'));
+    
+        final addresses = _router.routerL0.resolvePeerId(route.peerId);
+        if (addresses.isEmpty) {
+          throw StateError('No addresses found for peer: $peerId');
+        }
+    
+        return addresses.first.address;
+    } catch(e) {
+        // Fallback or rethrow
+        throw StateError('Could not resolve address for $peerId: $e');
     }
-
-    return addresses.first.address;
   }
 
   Future<void> _handlePacket(p2p.Packet packet) async {
-    await _handleMessage(await message.Message.fromBytes(packet.datagram));
+    final msg = await message.Message.fromBytes(packet.datagram);
+    // Annotate message with sender
+    msg.from = packet.srcPeerId.toString();
+    
+    await _handleMessage(msg);
   }
 
   Future<void> handleWantRequest(String cidStr) async {

@@ -3,10 +3,17 @@ import 'package:dart_ipfs/src/core/cid.dart';
 
 import '../../utils/encoding.dart';
 
+/// Abstract base class for content-addressed blocks.
+///
+/// Provides common serialization/deserialization for block types.
 abstract class BaseBlock {
+  /// The raw data payload.
   final Uint8List data;
+
+  /// The content identifier.
   final CID cid;
 
+  /// Creates a block with the given [data] and [cid].
   const BaseBlock(this.data, this.cid);
 
   Uint8List toBytes() {
@@ -38,7 +45,7 @@ abstract class BaseBlock {
       }
 
       final blockData = bytes.sublist(cidLength + 1);
-      final cid = CID.fromBytes(cidBytes, 'dag-pb');
+      final cid = CID.fromBytes(cidBytes); // Changed to single argument
 
       return factory(blockData, cid);
     } catch (e) {

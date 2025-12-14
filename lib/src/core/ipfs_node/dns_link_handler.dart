@@ -21,7 +21,10 @@ class DNSLinkHandler {
     'https://ipfs.io/api/v0/dns/'
   ];
 
-  DNSLinkHandler(this._config) {
+  final http.Client _client;
+
+  DNSLinkHandler(this._config, {http.Client? client})
+      : _client = client ?? http.Client() {
     _logger = Logger('DNSLinkHandler',
         debug: _config.debug, verbose: _config.verboseLogging);
     _logger.debug('DNSLinkHandler instance created');
@@ -99,7 +102,7 @@ class DNSLinkHandler {
     _logger.verbose('Querying resolver: $resolver');
 
     final url = Uri.parse('$resolver$domainName');
-    final response = await http.get(url);
+    final response = await _client.get(url);
 
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);

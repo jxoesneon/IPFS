@@ -1,5 +1,6 @@
 import 'package:protobuf/protobuf.dart';
 
+/// Base class for protobuf block responses with validation.
 abstract class BaseBlockResponse extends GeneratedMessage {
   bool get success;
   set success(bool value);

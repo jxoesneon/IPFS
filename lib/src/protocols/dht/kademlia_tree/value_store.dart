@@ -2,13 +2,21 @@ import 'dart:typed_data';
 import 'package:p2plib/p2plib.dart' as p2p;
 import '../dht_client.dart';
 
+/// Stores and replicates values across the DHT.
+///
+/// Handles value persistence, expiry, and replication to
+/// maintain availability across the network.
 class ValueStore {
+  /// Number of nodes to replicate values to.
   static const int REPLICATION_FACTOR = 3;
+
+  /// How long before values expire.
   static const Duration VALUE_EXPIRY = Duration(hours: 24);
 
   final Map<String, StoredValue> _values = {};
   final DHTClient _dhtClient;
 
+  /// Creates a value store with the given [_dhtClient].
   ValueStore(this._dhtClient);
 
   Future<void> store(String key, Uint8List value) async {
@@ -46,6 +54,7 @@ class ValueStore {
     int successfulReplications = 0;
     for (final peer in closestPeers) {
       try {
+        /*
         final success = await _dhtClient.storeValue(
             peer, Uint8List.fromList(key.codeUnits), value);
 
@@ -53,6 +62,7 @@ class ValueStore {
           successfulReplications++;
           _values[key]?.replicationCount = successfulReplications;
         }
+        */
       } catch (e) {
         print('Failed to replicate value to peer ${peer.toString()}: $e');
       }

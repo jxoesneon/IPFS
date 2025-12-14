@@ -2,6 +2,7 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/core/responses/block_operation_response.dart';
 
+/// Converts between internal responses and protobuf messages.
 class ResponseHandler {
   static AddBlockResponse toAddBlockResponse(BlockOperationResponse response) {
     return AddBlockResponse()

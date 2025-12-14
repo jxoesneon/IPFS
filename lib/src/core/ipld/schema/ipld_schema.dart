@@ -2,11 +2,15 @@
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 
+/// IPLD schema validator for structured data validation.
+///
+/// Validates IPLD nodes against type schemas including structs,
+/// unions, and basic types with optional constraints.
 class IPLDSchema {
   final Map<String, dynamic> _schema;
-  final String name;
 
-  // Advanced type definitions according to IPLD spec
+  /// Schema name.
+  final String name;
   static const _advancedTypes = {
     'link': Kind.LINK,
     'bytes': Kind.BYTES,

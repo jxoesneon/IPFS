@@ -4,10 +4,10 @@ import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_tree_node.dar
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/bucket_management.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/helpers.dart'
     as helpers;
-// lib/src/protocols/dht/kademlia_tree/add_peer.dart
 
+/// Extension for adding peers to a Kademlia tree.
 extension AddPeer on KademliaTree {
-  // Add a peer to the Kademlia tree
+  /// Adds [peerId] with [associatedPeerId] to the tree.
   void addPeer(p2p.PeerId peerId, p2p.PeerId associatedPeerId) {
     // Calculate the distance and bucket index
     int distance = helpers.calculateDistance(peerId, this.root!.peerId);

@@ -1,13 +1,15 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: validation.proto
-//
-// @dart = 2.12
+// Generated from validation.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -19,7 +21,14 @@ const ValidationResult$json = {
   '2': [
     {'1': 'is_valid', '3': 1, '4': 1, '5': 8, '10': 'isValid'},
     {'1': 'error_message', '3': 2, '4': 1, '5': 9, '10': 'errorMessage'},
-    {'1': 'code', '3': 3, '4': 1, '5': 14, '6': '.ipfs.validation.ValidationResult.ValidationCode', '10': 'code'},
+    {
+      '1': 'code',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.validation.ValidationResult.ValidationCode',
+      '10': 'code'
+    },
   ],
   '4': [ValidationResult_ValidationCode$json],
 };
@@ -44,4 +53,3 @@ final $typed_data.Uint8List validationResultDescriptor = $convert.base64Decode(
     'aW9uLlZhbGlkYXRpb25SZXN1bHQuVmFsaWRhdGlvbkNvZGVSBGNvZGUieAoOVmFsaWRhdGlvbk'
     'NvZGUSCwoHVU5LTk9XThAAEgsKB1NVQ0NFU1MQARIQCgxJTlZBTElEX1NJWkUQAhIUChBJTlZB'
     'TElEX1BST1RPQ09MEAMSEgoOSU5WQUxJRF9GT1JNQVQQBBIQCgxSQVRFX0xJTUlURUQQBQ==');
-

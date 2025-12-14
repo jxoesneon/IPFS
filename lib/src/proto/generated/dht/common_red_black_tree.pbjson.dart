@@ -1,13 +1,15 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: dht/common_red_black_tree.proto
-//
-// @dart = 2.12
+// Generated from dht/common_red_black_tree.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -23,8 +25,8 @@ const NodeColor$json = {
 };
 
 /// Descriptor for `NodeColor`. Decode as a `google.protobuf.EnumDescriptorProto`.
-final $typed_data.Uint8List nodeColorDescriptor = $convert.base64Decode(
-    'CglOb2RlQ29sb3ISBwoDUkVEEAASCQoFQkxBQ0sQAQ==');
+final $typed_data.Uint8List nodeColorDescriptor =
+    $convert.base64Decode('CglOb2RlQ29sb3ISBwoDUkVEEAASCQoFQkxBQ0sQAQ==');
 
 @$core.Deprecated('Use rBTreePeerIdDescriptor instead')
 const RBTreePeerId$json = {
@@ -35,14 +37,21 @@ const RBTreePeerId$json = {
 };
 
 /// Descriptor for `RBTreePeerId`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List rBTreePeerIdDescriptor = $convert.base64Decode(
-    'CgxSQlRyZWVQZWVySWQSDgoCaWQYASABKAlSAmlk');
+final $typed_data.Uint8List rBTreePeerIdDescriptor =
+    $convert.base64Decode('CgxSQlRyZWVQZWVySWQSDgoCaWQYASABKAlSAmlk');
 
 @$core.Deprecated('Use nodeDescriptor instead')
 const Node$json = {
   '1': 'Node',
   '2': [
-    {'1': 'peer_id', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_red_black_tree.RBTreePeerId', '10': 'peerId'},
+    {
+      '1': 'peer_id',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.common_red_black_tree.RBTreePeerId',
+      '10': 'peerId'
+    },
     {'1': 'data', '3': 2, '4': 1, '5': 12, '10': 'data'},
   ],
 };
@@ -61,8 +70,8 @@ const K_PeerId$json = {
 };
 
 /// Descriptor for `K_PeerId`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List k_PeerIdDescriptor = $convert.base64Decode(
-    'CghLX1BlZXJJZBIOCgJpZBgBIAEoDFICaWQ=');
+final $typed_data.Uint8List k_PeerIdDescriptor =
+    $convert.base64Decode('CghLX1BlZXJJZBIOCgJpZBgBIAEoDFICaWQ=');
 
 @$core.Deprecated('Use v_PeerInfoDescriptor instead')
 const V_PeerInfo$json = {
@@ -73,8 +82,22 @@ const V_PeerInfo$json = {
     {'1': 'port', '3': 3, '4': 1, '5': 5, '10': 'port'},
     {'1': 'protocols', '3': 4, '4': 3, '5': 9, '10': 'protocols'},
     {'1': 'latency', '3': 5, '4': 1, '5': 5, '10': 'latency'},
-    {'1': 'connection_status', '3': 6, '4': 1, '5': 14, '6': '.ipfs.dht.common_red_black_tree.V_PeerInfo.ConnectionStatus', '10': 'connectionStatus'},
-    {'1': 'last_seen', '3': 7, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'lastSeen'},
+    {
+      '1': 'connection_status',
+      '3': 6,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.dht.common_red_black_tree.V_PeerInfo.ConnectionStatus',
+      '10': 'connectionStatus'
+    },
+    {
+      '1': 'last_seen',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'lastSeen'
+    },
     {'1': 'agent_version', '3': 8, '4': 1, '5': 9, '10': 'agentVersion'},
     {'1': 'public_key', '3': 9, '4': 1, '5': 12, '10': 'publicKey'},
     {'1': 'addresses', '3': 10, '4': 3, '5': 9, '10': 'addresses'},
@@ -105,4 +128,3 @@ final $typed_data.Uint8List v_PeerInfoDescriptor = $convert.base64Decode(
     'gKIAMoCVIJYWRkcmVzc2VzEiMKDW9ic2VydmVkX2FkZHIYCyABKAlSDG9ic2VydmVkQWRkciJD'
     'ChBDb25uZWN0aW9uU3RhdHVzEhAKDERJU0NPTk5FQ1RFRBAAEg4KCkNPTk5FQ1RJTkcQARINCg'
     'lDT05ORUNURUQQAg==');
-

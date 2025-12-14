@@ -1,14 +1,37 @@
-// src/core/cbor/enhanced_cbor_handler.dart
 import 'dart:typed_data';
 
 import 'package:cbor/cbor.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:dart_multihash/dart_multihash.dart';
 
-/// Handles CBOR encoding/decoding operations for IPLD using the cbor package
+/// CBOR encoding/decoding for IPLD data structures.
+///
+/// This handler provides bidirectional conversion between IPLD nodes
+/// and CBOR binary format, supporting DAG-CBOR, DAG-PB, and CID links.
+///
+/// **Supported CBOR Tags:**
+/// - `42`: DAG-PB (protobuf encoded)
+/// - `43`: DAG-CBOR
+/// - `6`: CID link
+/// - `45`: Raw binary data
+///
+/// Example:
+/// ```dart
+/// // Encode an IPLD node to CBOR
+/// final bytes = await EnhancedCBORHandler.encodeCbor(ipldNode);
+///
+/// // Decode CBOR back to IPLD
+/// final node = await EnhancedCBORHandler.decodeCborWithTags(bytes);
+/// ```
+///
+/// See also:
+/// - [IPLDNode] for the IPLD data model
+/// - [MerkleDAGNode] for DAG-PB nodes
 class EnhancedCBORHandler {
   static final _encoder = CborEncoder();
   static final _decoder = CborDecoder();
@@ -77,9 +100,7 @@ class EnhancedCBORHandler {
       case Kind.STRING:
         return CborString(node.stringValue);
       case Kind.BYTES:
-        final bytes = CborBytes(node.bytesValue);
-        bytes.tags.add(45); // Raw tag
-        return bytes;
+        return CborBytes(node.bytesValue, tags: [45]); // Raw tag
       case Kind.LIST:
         final list =
             node.listValue.values.map((e) => convertIPLDNodeToCbor(e)).toList();
@@ -89,14 +110,10 @@ class EnhancedCBORHandler {
         for (final entry in node.mapValue.entries) {
           map[CborString(entry.key)] = convertIPLDNodeToCbor(entry.value);
         }
-        final cborMap = CborMap(map);
-        cborMap.tags.add(43); // DAG-CBOR tag
-        return cborMap;
+        return CborMap(map, tags: [43]); // DAG-CBOR tag
       case Kind.LINK:
-        final linkMap =
-            CborMap({CborString('/'): CborBytes(node.linkValue.multihash)});
-        linkMap.tags.add(42); // DAG-PB tag for links
-        return linkMap;
+        final linkMap = {CborString('/'): CborBytes(node.linkValue.multihash)};
+        return CborMap(linkMap, tags: [42]); // DAG-PB tag for links
       case Kind.BIG_INT:
         return CborBigInt.fromBytes(node.bigIntValue);
       default:
@@ -157,11 +174,10 @@ class EnhancedCBORHandler {
         ..listValue = list;
     } else if (value is CborMap) {
       final map = IPLDMap();
-      final mapObj = value.toObject() as Map;
-      for (final entry in mapObj.entries) {
+      for (final entry in value.entries) {
         map.entries.add(MapEntry()
           ..key = entry.key.toString()
-          ..value = convertCborValueToIPLDNode(entry.value as CborValue));
+          ..value = convertCborValueToIPLDNode(entry.value));
       }
       return IPLDNode()
         ..kind = Kind.MAP
@@ -202,53 +218,78 @@ class EnhancedCBORHandler {
     }
 
     final map = node.mapValue.entries;
+
+    // Support both standard names (Hash, Tsize) and internal names (Cid, Size) for compatibility
+    final nameEntry = map.firstWhere((e) => e.key == 'Name',
+        orElse: () => MapEntry()
+          ..key = 'Name'
+          ..value = (IPLDNode()
+            ..kind = Kind.STRING
+            ..stringValue = ''));
+
+    final cidEntry = map.firstWhere((e) => e.key == 'Hash',
+        orElse: () => map.firstWhere((e) => e.key == 'Cid',
+            orElse: () => MapEntry()
+              ..key = 'Hash'
+              ..value = (IPLDNode()
+                ..kind = Kind.BYTES
+                ..bytesValue = Uint8List(0))));
+
+    final sizeEntry = map.firstWhere((e) => e.key == 'Tsize',
+        orElse: () => map.firstWhere((e) => e.key == 'Size',
+            orElse: () => MapEntry()
+              ..key = 'Tsize'
+              ..value = (IPLDNode()
+                ..kind = Kind.INTEGER
+                ..intValue = Int64(0))));
+
+    CID cid;
+    if (cidEntry.value.kind == Kind.LINK) {
+      // Extract CID from Link
+      final link = cidEntry.value.linkValue;
+      cid = CID.v1(
+          link.codec,
+          Multihash.decode(Uint8List.fromList(
+              link.multihash))); // Assuming multihash bytes are valid
+      // Ideally reuse CID constructor from components
+    } else {
+      // Assume bytes
+      cid = CID.fromBytes(Uint8List.fromList(cidEntry.value.bytesValue));
+    }
+
     return Link(
-      name: map.firstWhere((e) => e.key == 'Name').value.stringValue,
-      cid: Uint8List.fromList(
-          map.firstWhere((e) => e.key == 'Cid').value.bytesValue),
-      hash: Uint8List.fromList(
-          map.firstWhere((e) => e.key == 'Hash').value.bytesValue),
-      size: map.firstWhere((e) => e.key == 'Size').value.intValue.toInt(),
-      metadata: map
-          .firstWhere((e) => e.key == 'Metadata', orElse: () => MapEntry())
-          .value
-          .mapValue
-          .entries
-          .fold<Map<String, String>>(
-              {}, (map, e) => map..[e.key] = e.value.stringValue),
+      name: nameEntry.value.stringValue,
+      cid: cid,
+      size: sizeEntry.value.intValue.toInt(),
     );
   }
 
   /// Converts a Link to an IPLDNode
   static IPLDNode _convertFromMerkleLink(Link link) {
-    final entries = [
-      MapEntry()
-        ..key = '/'
-        ..value = (IPLDNode()
-          ..kind = Kind.MAP
-          ..mapValue = (IPLDMap()
-            ..entries.addAll([
-              MapEntry()
-                ..key = 'version'
-                ..value = (IPLDNode()
-                  ..kind = Kind.INTEGER
-                  ..intValue = Int64(1)),
-              MapEntry()
-                ..key = 'codec'
-                ..value = (IPLDNode()
-                  ..kind = Kind.STRING
-                  ..stringValue = 'dag-pb'),
-              MapEntry()
-                ..key = 'hash'
-                ..value = (IPLDNode()
-                  ..kind = Kind.BYTES
-                  ..bytesValue = link.hash),
-            ]))),
-    ];
-
     return IPLDNode()
       ..kind = Kind.MAP
-      ..mapValue = (IPLDMap()..entries.addAll(entries));
+      ..mapValue = (IPLDMap()
+        ..entries.addAll([
+          MapEntry()
+            ..key = 'Name'
+            ..value = (IPLDNode()
+              ..kind = Kind.STRING
+              ..stringValue = link.name),
+          MapEntry()
+            ..key = 'Hash'
+            ..value = (IPLDNode()
+              ..kind = Kind.LINK
+              ..linkValue = (IPLDLink()
+                ..version = link.cid.version
+                ..codec = link.cid.codec ?? 'dag-pb'
+                ..multihash =
+                    link.cid.multihash.toBytes())), // Encode CID as Link
+          MapEntry()
+            ..key = 'Tsize'
+            ..value = (IPLDNode()
+              ..kind = Kind.INTEGER
+              ..intValue = link.size),
+        ]));
   }
 
   static IPLDNode _convertCIDFromBytes(Uint8List bytes) {

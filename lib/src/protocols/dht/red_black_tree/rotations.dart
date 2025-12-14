@@ -3,8 +3,12 @@ import '../red_black_tree.dart';
 import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
     as common_tree;
 
+/// Handles rotation operations for Red-Black tree balancing.
+///
+/// Provides left and right rotations, plus tree validation.
 class Rotations<K_PeerId, V_PeerInfo> {
-  void rotateLeft<K_PeerId, V_PeerInfo>(RedBlackTree<K_PeerId, V_PeerInfo> tree,
+  /// Performs a left rotation around [x].
+  void rotateLeft(RedBlackTree<K_PeerId, V_PeerInfo> tree,
       RedBlackTreeNode<K_PeerId, V_PeerInfo>? x) {
     if (x == null) return; // Null nodes are treated as black (leaves)
 
@@ -39,8 +43,7 @@ class Rotations<K_PeerId, V_PeerInfo> {
         "Root node not updated correctly in rotateLeft");
   }
 
-  void rotateRight<K_PeerId, V_PeerInfo>(
-      RedBlackTree<K_PeerId, V_PeerInfo> tree,
+  void rotateRight(RedBlackTree<K_PeerId, V_PeerInfo> tree,
       RedBlackTreeNode<K_PeerId, V_PeerInfo>? y) {
     if (y == null) return; // Null nodes are treated as black (leaves)
 
@@ -133,16 +136,12 @@ class Rotations<K_PeerId, V_PeerInfo> {
       if (node == null) return true;
 
       if (node.left_child != null &&
-          tree.compare(
-                  node.left_child!.key as K_PeerId, node.key as K_PeerId) >=
-              0) {
+          tree.compare(node.left_child!.key, node.key) >= 0) {
         return false;
       }
 
       if (node.right_child != null &&
-          tree.compare(
-                  node.right_child!.key as K_PeerId, node.key as K_PeerId) <=
-              0) {
+          tree.compare(node.right_child!.key, node.key) <= 0) {
         return false;
       }
 

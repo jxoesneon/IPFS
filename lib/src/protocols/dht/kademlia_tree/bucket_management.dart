@@ -5,10 +5,12 @@ import 'package:p2plib/p2plib.dart' as p2p;
 import 'kademlia_tree_node.dart';
 import 'lru_cache.dart';
 import 'dart:math' as Math;
-// lib/src/protocols/dht/kademlia_tree/bucket_management.dart
 
+/// Extension for managing k-bucket operations in a Kademlia tree.
+///
+/// Handles bucket splitting, merging, and peer replacement strategies.
 extension BucketManagement on KademliaTree {
-  // Getters for private methods
+  /// Handler for full bucket situations.
   Future<void> Function(int, p2p.PeerId, p2p.PeerId) get handleBucketFullness =>
       _handleBucketFullness;
 

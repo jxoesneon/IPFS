@@ -1,8 +1,10 @@
 import 'package:fixnum/fixnum.dart';
-import '../../proto/generated/dht/directory.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
+
 // lib/src/core/data_structures/directory.dart
 
-/// Represents a single entry within an IPFS directory
+/// Represents a single entry within an IPFS directory for construction purposes
 class IPFSDirectoryEntry {
   final String name;
   final List<int> hash;
@@ -16,35 +18,50 @@ class IPFSDirectoryEntry {
     required this.isDirectory,
   });
 
-  DirectoryEntryProto toProto() {
-    return DirectoryEntryProto()
+  /// Converts this entry to a PBLink for inclusion in a MerkleDAG node
+  PBLink toLink() {
+    return PBLink()
       ..name = name
       ..hash = hash
-      ..size = size
-      ..isDirectory = isDirectory;
+      ..size = size; // Tsize: cumulative size
   }
 }
 
-/// Manages IPFS directory operations and metadata
+/// Manages IPFS directory creation using standard UnixFS Data and DAG nodes
 class IPFSDirectoryManager {
-  DirectoryProto _directory = DirectoryProto();
+  final Data _unixFsData;
+  final List<IPFSDirectoryEntry> _entries = [];
 
-  IPFSDirectoryManager(String path) {
-    _directory
-      ..path = path
-      ..totalSize = Int64(0)
-      ..numberOfFiles = 0
-      ..numberOfDirectories = 0;
+  IPFSDirectoryManager() 
+      : _unixFsData = Data()..type = Data_DataType.Directory;
+
+  /// Adds an entry to the directory.
+  /// Note: Entries should ideally be added in sorted order by name for canonicalization,
+  /// but basic IPFS implementations often sort them at serialization time.
+  void addEntry(IPFSDirectoryEntry entry) {
+    _entries.add(entry);
   }
 
-  DirectoryProto get directory => _directory;
-
-  void addEntry(IPFSDirectoryEntry entry) {
-    _directory.entries.add(entry.toProto());
-    // ... rest of the method
+  /// Builds the MerkleDAG node (PBNode) representing this directory.
+  PBNode build() {
+    // 1. Prepare UnixFS Data
+    // For a basic directory, data is minimal (Type=Directory).
+    // Filesize/Blocksizes usually apply to files or hamt shards.
+    
+    // 2. Create PBNode
+    final node = PBNode();
+    
+    // 3. Set Data (serialized UnixFS Data)
+    node.data = _unixFsData.writeToBuffer();
+    
+    // 4. Add Links
+    // IPFS requires links to be sorted by name for deterministic DAG generation.
+    _entries.sort((a, b) => a.name.compareTo(b.name));
+    
+    for (final entry in _entries) {
+      node.links.add(entry.toLink());
+    }
+    
+    return node;
   }
 }
-
-// Create a new directory node with a meaningful path
-final directoryManager =
-    IPFSDirectoryManager('/ipfs/${DateTime.now().millisecondsSinceEpoch}');

@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
 
+/// Mixin providing clone and copyWith functionality for blocks.
 mixin BlockCloneable<T extends BlockCloneable<T>> {
   T clone();
   T copyWith(void Function(T) updates);

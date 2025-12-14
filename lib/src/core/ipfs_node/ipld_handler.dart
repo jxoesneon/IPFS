@@ -16,6 +16,7 @@ import 'package:dart_ipfs/src/core/ipld/extensions/ipld_node_json.dart';
 import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart';
 import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
+import 'package:dart_multihash/dart_multihash.dart' as multihash_lib;
 import 'package:dart_ipfs/src/utils/encoding.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart';
@@ -68,7 +69,8 @@ class IPLDHandler {
   Future<dynamic> get(CID cid) async {
     try {
       final block = await _blockStore.getBlock(cid.toString());
-      return await _decodeData(Uint8List.fromList(block.block.data), cid.codec);
+      return await _decodeData(
+          Uint8List.fromList(block.block.data), cid.codec ?? 'raw');
     } catch (e) {
       _logger.error('Failed to get IPLD data', e);
       rethrow;
@@ -205,7 +207,7 @@ class IPLDHandler {
         throw UnsupportedError('Unsupported codec: $codec');
     }
 
-    final cid = await CID.computeForData(encoded, codec: codec);
+    final cid = await CID.computeForData(encoded, format: codec);
     return (encoded, cid);
   }
 
@@ -275,12 +277,9 @@ class IPLDHandler {
     }).toList();
 
     return MerkleDAGNode(
-      cid: await CID.computeForData(Uint8List.fromList(data), codec: 'dag-pb'),
       links: links,
       data: Uint8List.fromList(data),
-      size: data.length,
-      timestamp: DateTime.now().millisecondsSinceEpoch,
-      metadata: {},
+      mtime: DateTime.now().millisecondsSinceEpoch,
       isDirectory: false,
     );
   }
@@ -519,9 +518,9 @@ class IPLDHandler {
     } else if (value is CID) {
       node.kind = Kind.LINK;
       node.linkValue = IPLDLink()
-        ..version = value.version.value
-        ..codec = value.codec
-        ..multihash = value.multihash;
+        ..version = value.version
+        ..codec = value.codec ?? ''
+        ..multihash = value.multihash.toBytes();
     } else if (value is MerkleDAGNode) {
       return EnhancedCBORHandler.convertFromMerkleDAGNode(value);
     } else {
@@ -633,7 +632,7 @@ class IPLDHandler {
     // Write roots section
     final rootCid = await CID.computeForData(
         await EnhancedCBORHandler.encodeCbor(node),
-        codec: 'dag-cbor');
+        format: 'dag-cbor');
 
     // Write number of roots (1)
     output.addByte(1);
@@ -649,7 +648,7 @@ class IPLDHandler {
   Future<void> _writeCarBlock(IPLDNode node, BytesBuilder output) async {
     // Encode the node
     final encoded = await EnhancedCBORHandler.encodeCbor(node);
-    final cid = await CID.computeForData(encoded, codec: 'dag-cbor');
+    final cid = await CID.computeForData(encoded, format: 'dag-cbor');
 
     // Write block header
     final cidBytes = cid.toBytes();
@@ -811,7 +810,105 @@ class IPLDHandler {
   }
 
   /// Resolves a single path segment
+  /// Resolves a single path segment
   Future<(dynamic, CID)?> _resolveSegment(dynamic node, String segment) async {
+    // Handle standard IPLDNode wrapper
+    if (node is IPLDNode) {
+      if (node.kind == Kind.MAP) {
+        // 1. Direct property access
+        final entry = node.mapValue.entries
+            .firstWhere((e) => e.key == segment, orElse: () => MapEntry());
+
+        if (entry.key == segment) {
+          final value = entry.value;
+          // If value is a Link (native IPLD Link), resolve it?
+          // For now return value. Logic in _resolveIPLDPath handles traversal if needed.
+          // Check if value is a Link (CID)
+          if (value.kind == Kind.LINK) {
+            final link = value.linkValue;
+            // Construct CID
+            final cid = CID.v1(
+                link.codec,
+                multihash_lib.Multihash.decode(
+                    Uint8List.fromList(link.multihash)));
+            final resolvedNode = await get(cid);
+            return (resolvedNode, cid);
+          }
+
+          // For non-link values, create dummy/raw CID for path tracking?
+          // Returning (value, rootCid) or similar.
+          // _resolveIPLDPath handles null CID? No it expects CID.
+          // Computed CID for the value node.
+          final cid = await CID.computeForData(
+              Uint8List.fromList(utf8.encode(value.toString())));
+          return (value, cid);
+        }
+
+        // 2. DAG-PB Named Link Resolution (via "Links" array)
+        // If "Links" exists and is a List
+        final linksEntry = node.mapValue.entries
+            .firstWhere((e) => e.key == 'Links', orElse: () => MapEntry());
+
+        if (linksEntry.key == 'Links' && linksEntry.value.kind == Kind.LIST) {
+          for (final linkNode in linksEntry.value.listValue.values) {
+            if (linkNode.kind == Kind.MAP) {
+              final nameEntry = linkNode.mapValue.entries
+                  .firstWhere((e) => e.key == 'Name', orElse: () => MapEntry());
+
+              if (nameEntry.key == 'Name' &&
+                  nameEntry.value.stringValue == segment) {
+                // Match found! Get Hash/Cid
+                final hashEntry = linkNode.mapValue.entries.firstWhere(
+                    (e) => e.key == 'Hash',
+                    orElse: () => linkNode.mapValue.entries.firstWhere(
+                        (e) => e.key == 'Cid',
+                        orElse: () => MapEntry()));
+
+                if (hashEntry.hasValue()) {
+                  CID cid;
+                  if (hashEntry.value.kind == Kind.LINK) {
+                    final l = hashEntry.value.linkValue;
+                    cid = CID.v1(
+                        l.codec,
+                        multihash_lib.Multihash.decode(
+                            Uint8List.fromList(l.multihash)));
+                  } else if (hashEntry.value.kind == Kind.BYTES) {
+                    cid = CID.fromBytes(
+                        Uint8List.fromList(hashEntry.value.bytesValue));
+                  } else {
+                    continue;
+                  }
+
+                  final resolvedNode = await get(cid);
+                  return (resolvedNode, cid);
+                }
+              }
+            }
+          }
+        }
+      } else if (node.kind == Kind.LIST) {
+        final index = int.tryParse(segment);
+        if (index != null &&
+            index >= 0 &&
+            index < node.listValue.values.length) {
+          final value = node.listValue.values[index];
+          if (value.kind == Kind.LINK) {
+            final link = value.linkValue;
+            final cid = CID.v1(
+                link.codec,
+                multihash_lib.Multihash.decode(
+                    Uint8List.fromList(link.multihash)));
+            final resolvedNode = await get(cid);
+            return (resolvedNode, cid);
+          }
+          final cid = await CID.computeForData(
+              Uint8List.fromList(utf8.encode(value.toString())));
+          return (value, cid);
+        }
+      }
+    }
+
+    // Fallback for legacy Map/List/MerkleDAGNode (if ever used directly)
     if (node is Map) {
       if (!node.containsKey(segment)) {
         return null;
@@ -830,7 +927,7 @@ class IPLDHandler {
       // For non-link values, create a dummy CID
       return (
         value,
-        await CID.computeForData(utf8.encode(value.toString()), codec: 'raw')
+        await CID.computeForData(utf8.encode(value.toString()), format: 'raw')
       );
     }
 
@@ -849,7 +946,7 @@ class IPLDHandler {
       // For non-link array values, create a dummy CID
       return (
         value,
-        await CID.computeForData(utf8.encode(value.toString()), codec: 'raw')
+        await CID.computeForData(utf8.encode(value.toString()), format: 'raw')
       );
     }
 

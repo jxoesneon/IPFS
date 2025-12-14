@@ -1,55 +1,101 @@
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:fixnum/fixnum.dart' as fixnum;
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
-import 'package:dart_ipfs/src/proto/generated/core/link.pb.dart' as proto_l;
-import 'package:dart_ipfs/src/core/data_structures/node.dart' show IPFSNodeType;
-import 'package:dart_ipfs/src/proto/generated/dht/merkle_dag_node.pb.dart' as proto_m;
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_proto;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs_proto;
+import 'package:dart_ipfs/src/core/cid.dart';
+
 // lib/src/core/data_structures/merkle_dag_node.dart
 
-/// Represents a Merkle DAG node in IPFS.
+/// A node in the IPFS Merkle DAG (Directed Acyclic Graph).
+///
+/// The Merkle DAG is the fundamental data structure in IPFS, where each
+/// node is identified by its content hash ([cid]) and can link to other
+/// nodes via [links]. This enables:
+/// - Content-addressable storage
+/// - Deduplication across the network
+/// - Cryptographic verification of data integrity
+///
+/// This class handles DAG-PB (protobuf) format with UnixFS data interpretation,
+/// automatically detecting directories and extracting metadata.
+///
+/// Example:
+/// ```dart
+/// // Parse a node from bytes
+/// final node = MerkleDAGNode.fromBytes(rawBytes);
+/// print('Is directory: ${node.isDirectory}');
+/// print('Has ${node.links.length} children');
+///
+/// // Access linked content
+/// for (final link in node.links) {
+///   print('  ${link.name}: ${link.cid}');
+/// }
+/// ```
+///
+/// See also:
+/// - [Link] for the edge structure
+/// - [CID] for content identifiers
+/// - [UnixFS spec](https://github.com/ipfs/specs/blob/main/UNIXFS.md)
 class MerkleDAGNode {
-  final CID cid; // Use CID class
+  /// The list of links (edges) to child nodes.
   final List<Link> links;
-  final Uint8List data;
-  final int size;
-  final int timestamp;
-  final Map<String, String> metadata;
-  final bool isDirectory;
-  final CID? parentCid; // Use CID class
-  final IPFSNodeType nodeType;
 
+  /// The raw data payload of this node.
+  ///
+  /// For UnixFS nodes, this contains serialized UnixFS metadata.
+  /// For raw nodes, this contains the actual file content.
+  final Uint8List data;
+
+  /// Whether this node represents a directory.
+  ///
+  /// Determined by parsing the UnixFS data type.
+  final bool isDirectory;
+
+  /// Unix modification time in seconds, if available.
+  final int? mtime;
+
+  /// Creates a new MerkleDAGNode with the given components.
   MerkleDAGNode({
-    required this.cid,
     required this.links,
     required this.data,
-    required this.size,
-    required this.timestamp,
-    required this.metadata,
     this.isDirectory = false,
-    this.parentCid,
-  }) : nodeType = isDirectory ? IPFSNodeType.directory : IPFSNodeType.file;
+    this.mtime,
+  });
 
-  /// Creates a [MerkleDAGNode] from its byte representation.
+  /// The content identifier for this node.
+  ///
+  /// Computed from the DAG-PB serialized form of this node.
+  CID get cid => CID.computeForDataSync(toBytes(), codec: 'dag-pb');
+
+  /// Creates a [MerkleDAGNode] from its byte representation (DAG-PB).
+  /// Automatically inspects inner data to determine if it's a UnixFS Directory.
   static MerkleDAGNode fromBytes(Uint8List bytes) {
     try {
-      final pbNode = proto_m.MerkleDAGNode.fromBuffer(bytes);
+      final pbNode = dag_proto.PBNode.fromBuffer(bytes);
+
+      bool isDir = false;
+      int? mtime;
+      
+      // Try parsing UnixFS Data
+      if (pbNode.hasData()) {
+          try {
+              final unixData = unixfs_proto.Data.fromBuffer(pbNode.data);
+              isDir = (unixData.type == unixfs_proto.Data_DataType.Directory || 
+                       unixData.type == unixfs_proto.Data_DataType.HAMTShard);
+              if (unixData.hasMtime()) {
+                  mtime = unixData.mtime.toInt();
+              }
+          } catch (_) {
+              // Not UnixFS or failed to parse, treat as raw DAG-PB
+          }
+      }
 
       return MerkleDAGNode(
-        cid: CID.fromProto(pbNode.cid),
         links: pbNode.links
-            .whereType<
-                proto_l.PBLink>() // Filter to only include PBLink objects
             .map((link) => Link.fromProto(link))
             .toList(),
-
-        data: Uint8List.fromList(pbNode.data), // Ensure data is copied
-        size: pbNode.size.toInt(),
-        timestamp: pbNode.timestamp.toInt(),
-        metadata: Map<String, String>.from(pbNode.metadata),
-        isDirectory: pbNode.isDirectory,
-        parentCid:
-            pbNode.hasParentCid() ? CID.fromProto(pbNode.parentCid) : null,
+        data: Uint8List.fromList(pbNode.data),
+        isDirectory: isDir,
+        mtime: mtime,
       );
     } catch (e) {
       throw FormatException('Failed to parse MerkleDAGNode from bytes: $e');
@@ -57,26 +103,19 @@ class MerkleDAGNode {
   }
 
   /// Converts the [MerkleDAGNode] to its byte representation.
+  /// Note: This assumes `data` is already strictly formatted (e.g. valid UnixFS Data proto bytes).
+  /// If you are building a node, ensure `data` is correct.
   Uint8List toBytes() {
-    final pbNode = proto_m.MerkleDAGNode()
-      ..cid = cid.toProto()
-      ..data = data
-      ..size = fixnum.Int64(size)
-      ..timestamp = fixnum.Int64(timestamp)
-      ..isDirectory = isDirectory;
-
-    if (parentCid != null) {
-      pbNode.parentCid = parentCid!.toProto();
-    }
-
+    final pbNode = dag_proto.PBNode()
+      ..data = data;
+    
     pbNode.links.addAll(links.map((link) => link.toProto()));
-    pbNode.metadata.addAll(metadata);
 
     return pbNode.writeToBuffer();
   }
 
   @override
   String toString() {
-    return 'MerkleDAGNode(cid: $cid, size: $size, timestamp: $timestamp, isDirectory: $isDirectory, metadata: $metadata)';
+    return 'MerkleDAGNode(links: ${links.length}, len(data): ${data.length}, isDirectory: $isDirectory)';
   }
 }

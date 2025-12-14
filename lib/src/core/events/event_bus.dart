@@ -1,7 +1,28 @@
 import 'dart:async';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
-/// Type-safe event bus for IPFS network events
+/// A type-safe publish-subscribe event bus for IPFS network events.
+///
+/// EventBus enables decoupled communication between components by allowing
+/// publishers to emit events without knowing their subscribers. Each event
+/// type has its own broadcast stream, enabling multiple listeners.
+///
+/// Example:
+/// ```dart
+/// final bus = EventBus();
+///
+/// // Subscribe to peer connections
+/// bus.subscribe<PeerConnectedEvent>().listen((event) {
+///   print('Peer connected: ${event.peerId}');
+/// });
+///
+/// // Publish an event
+/// bus.publish(PeerConnectedEvent(peerId: 'Qm...', address: '/ip4/...'));
+/// ```
+///
+/// See also:
+/// - [NetworkEvent] for the base event class
+/// - [PeerConnectedEvent], [BlockTransferEvent] for specific event types
 class EventBus {
   final _logger = Logger('EventBus');
   final _controllers = <Type, StreamController>{};

@@ -13,13 +13,40 @@ import '../protocols/bitswap/message.dart' show Message;
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/transport/local_crypto.dart';
 
-// lib/src/transport/p2plib_router.dart
-
-/// A router implementation using the `p2plib` package.
+/// Low-level P2P networking router using the p2plib package.
+///
+/// P2plibRouter provides the transport layer for IPFS networking,
+/// handling peer connections, message routing, and protocol dispatch.
+/// It wraps the [p2plib](https://pub.dev/packages/p2plib) library
+/// to provide IPFS-specific networking functionality.
+///
+/// **Key Features:**
+/// - UDP transport with IPv4/IPv6 support
+/// - Peer discovery and connection management
+/// - Protocol-based message routing
+/// - Event streams for connection and message monitoring
+///
+/// Example:
+/// ```dart
+/// final router = P2plibRouter(config);
+/// await router.initialize();
+/// await router.start();
+///
+/// // Connect to a peer
+/// await router.connect('/ip4/127.0.0.1/tcp/4001/p2p/Qm...');
+///
+/// // Send a message
+/// await router.sendMessage(peerId, messageBytes);
+/// ```
+///
+/// See also:
+/// - [NetworkHandler] for higher-level network operations
+/// - [DHTClient] for DHT protocol integration
 class P2plibRouter {
   static P2plibRouter? _instance;
-  static final p2p.Crypto _sharedCrypto = p2p.Crypto();
+  static final p2p.Crypto _sharedCrypto = LocalCrypto();
   static final _cryptoInitLock = Lock();
   bool _isInitialized = false;
   final Logger _logger;
@@ -46,14 +73,15 @@ class P2plibRouter {
   final Set<String> _registeredProtocols = {};
   final Map<String, Function(p2p.Packet)> _protocolHandlers = {};
 
+  /// Returns a singleton instance of the router for the given [config].
   factory P2plibRouter(IPFSConfig config) {
     if (_instance == null) {
-      _instance = P2plibRouter._internal(config);
+      _instance = P2plibRouter.internal(config);
     }
     return _instance!;
   }
 
-  P2plibRouter._internal(this._config)
+  P2plibRouter.internal(this._config)
       : _router = p2p.RouterL2(
           crypto: _sharedCrypto,
           keepalivePeriod: const Duration(seconds: 30),
@@ -98,15 +126,16 @@ class P2plibRouter {
       await _cryptoInitLock.synchronized(() async {
         if (!_isCryptoInitialized) {
           _logger.verbose('Initializing crypto components');
-          await _sharedCrypto.init();
+          final seed = Uint8List.fromList(
+              List<int>.generate(32, (_) => Random().nextInt(256)));
+          await _sharedCrypto.init(seed);
           _isCryptoInitialized = true;
           _logger.verbose('Crypto components initialized successfully');
         }
       });
 
       _logger.verbose('Initializing router with peer ID');
-      final randomBytes =
-          List<int>.generate(32, (i) => Random.secure().nextInt(256));
+      final randomBytes = List<int>.generate(32, (i) => Random().nextInt(256));
       await _router.init(Uint8List.fromList(randomBytes));
       _logger.verbose(
           'Router initialized with peer ID: ${Base58().encode(_router.selfId.value)}');
@@ -128,11 +157,9 @@ class P2plibRouter {
 
     // Only start the router and connect to bootstrap peers once
     if (!_hasStarted) {
-      if (!_router.isRun) {
-        _logger.debug('Starting router...');
-        await _router.start();
-        _logger.verbose('Router started successfully');
-      }
+      _logger.debug('Starting router...');
+      await _router.start();
+      _logger.verbose('Router started successfully');
 
       // Only connect to bootstrap peers once
       if (_connectedPeers.isEmpty) {

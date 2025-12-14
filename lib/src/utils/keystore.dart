@@ -5,18 +5,39 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/utils/private_key.dart';
 import 'package:p2plib/p2plib.dart' show Crypto;
 
+/// Represents a public/private key pair for cryptographic operations.
 class KeyPair {
+  /// The public key in string format.
   final String publicKey;
+
+  /// The private key in string format.
   final String privateKey;
 
+  /// Creates a new key pair.
   KeyPair(this.publicKey, this.privateKey);
 }
 
-/// A simple in-memory keystore for managing IPNS key pairs.
+/// In-memory keystore for managing IPNS keys and cryptographic identities.
+///
+/// The Keystore stores named key pairs used for signing IPNS records,
+/// peer identity, and other cryptographic operations.
+///
+/// Example:
+/// ```dart
+/// final keystore = Keystore();
+/// keystore.addKeyPair('mykey', KeyPair(pubKey, privKey));
+///
+/// if (keystore.hasKeyPair('mykey')) {
+///   final pair = keystore.getKeyPair('mykey');
+/// }
+/// ```
 class Keystore {
   final Map<String, KeyPair> _keyPairs = const {};
+
+  /// The default key name used for node identity.
   static const String DEFAULT_KEY = 'self';
 
+  /// Creates an empty keystore.
   const Keystore();
 
   /// Adds a new key pair to the keystore.

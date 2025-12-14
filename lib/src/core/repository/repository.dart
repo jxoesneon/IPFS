@@ -30,10 +30,10 @@ class Repository {
   }
 
   /// Processes a protobuf block and stores it in the repository
-  Future<void> processProtoBlock(proto.Block protoBlock) async {
+  Future<void> processProtoBlock(proto.Message_Block protoBlock) async {
     try {
       // Convert protobuf block to our Block type
-      final block = Block.fromBitswapProto(protoBlock);
+      final block = await Block.fromBitswapProto(protoBlock);
 
       // Store the block
       await _datastore.put(block.cid.toString(), block);

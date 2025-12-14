@@ -11,7 +11,58 @@ import 'package:dart_ipfs/src/core/config/metrics_config.dart';
 import 'package:dart_ipfs/src/core/config/security_config.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
 
-/// Configuration for the IPFS node
+/// Configuration for an IPFS node.
+///
+/// This class defines all configuration options for initializing and running
+/// an IPFS node, including storage paths, networking parameters, security
+/// settings, and service configurations.
+///
+/// **Basic Configuration:**
+/// ```dart
+/// final config = IPFSConfig(
+///   offline: false,  // Enable P2P networking
+///   blockStorePath: './ipfs/blocks',
+///   datastorePath: './ipfs/datastore',
+/// );
+/// ```
+///
+/// **Advanced Configuration:**
+/// ```dart
+/// final config = IPFSConfig(
+///   offline: false,
+///   network: NetworkConfig(
+///     bootstrapPeers: ['<multiaddr>', ...],
+///     listenAddresses: ['/ip4/0.0.0.0/tcp/4001'],
+///   ),
+///   dht: DHTConfig(
+///     mode: DHTMode.server,  // Participate as DHT server
+///     bucketSize: 20,
+///   ),
+///   security: SecurityConfig(
+///     enableEncryption: true,
+///   ),
+/// );
+/// ```
+///
+/// **Deployment Modes:**
+///
+/// **Offline Mode** (Local storage only):
+/// ```dart
+/// IPFSConfig(offline: true)
+/// ```
+///
+/// **Gateway Mode** (HTTP serving):
+/// ```dart
+/// IPFSConfig(
+///   offline: true,
+///   gateway: GatewayConfig(enabled: true, port: 8080),
+/// )
+/// ```
+///
+/// **Full P2P Mode** (Network participation):
+/// ```dart
+/// IPFSConfig(offline: false)
+/// ```
 class IPFSConfig {
   final NetworkConfig network;
   final DHTConfig dht;
@@ -40,9 +91,11 @@ class IPFSConfig {
   final MetricsConfig metrics;
   final String dataPath;
   final Keystore keystore;
+  final bool offline;
   final Map<String, dynamic> customConfig;
 
   IPFSConfig({
+    this.offline = false,
     this.network = const NetworkConfig(),
     this.dht = const DHTConfig(),
     this.storage = const StorageConfig(),
@@ -96,6 +149,7 @@ class IPFSConfig {
   /// Creates configuration from JSON
   factory IPFSConfig.fromJson(Map<String, dynamic> json) {
     return IPFSConfig(
+      offline: json['offline'] ?? false,
       network: NetworkConfig.fromJson(json['network'] ?? {}),
       dht: DHTConfig.fromJson(json['dht'] ?? {}),
       storage: StorageConfig.fromJson(json['storage'] ?? {}),
@@ -118,6 +172,7 @@ class IPFSConfig {
   }
 
   Map<String, dynamic> toJson() => {
+        'offline': offline,
         'network': network.toJson(),
         'dht': dht.toJson(),
         'storage': storage.toJson(),

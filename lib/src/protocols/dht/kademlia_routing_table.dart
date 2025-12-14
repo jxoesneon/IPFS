@@ -2,10 +2,7 @@ import 'dart:math';
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/dht_messages.pb.dart'
-    as dht_messages;
-import 'package:dart_ipfs/src/proto/generated/dht/common_kademlia.pb.dart'
-    as common_kademlia_pb;
+import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 
 import 'dht_client.dart';
 import 'kademlia_tree.dart';
@@ -15,17 +12,23 @@ import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
 import 'package:dart_ipfs/src/protocols/dht/connection_statistics.dart';
 
-// Represents the routing table for the DHT client.
+/// Kademlia DHT routing table with k-buckets.
+///
+/// Organizes peers by XOR distance from the local node. Each bucket
+/// holds up to [K_BUCKET_SIZE] peers. Supports bucket splitting,
+/// stale node eviction, and periodic refresh.
 class KademliaRoutingTable {
   late final DHTClient dhtClient;
   late KademliaTree _tree;
+
+  /// Maximum peers per bucket.
   static const int K_BUCKET_SIZE = 20;
+
   final Map<p2p.PeerId, ConnectionStatistics> _connectionStats = {};
 
-  KademliaRoutingTable() {
-    // Don't initialize _tree in the initializer list
-    // It will be properly initialized in the initialize() method
-  }
+  /// Creates an uninitialized routing table.
+  /// Call [initialize] before use.
+  KademliaRoutingTable() {}
 
   /// Initializes the routing table with a reference to the DHT client
   void initialize(DHTClient client) {
@@ -151,9 +154,7 @@ class KademliaRoutingTable {
 
   void clear() => _tree.buckets.forEach((bucket) => bucket.clear());
 
-  int distance(p2p.PeerId a, p2p.PeerId b) => List<int>.generate(
-          min(a.value.length, b.value.length), (i) => a.value[i] ^ b.value[i])
-      .reduce((acc, val) => (acc << 8) | val);
+  int distance(p2p.PeerId a, p2p.PeerId b) => _calculateXorDistance(a, b);
 
   List<RedBlackTree<p2p.PeerId, KademliaTreeNode>> get buckets => _tree.buckets;
 
@@ -239,16 +240,32 @@ class KademliaRoutingTable {
 
   int _calculateXorDistance(p2p.PeerId a, p2p.PeerId b) {
     final length = min(a.value.length, b.value.length);
-    int distance = 0;
+
+    // Find the first differing byte and calculate distance from there
+    // This prevents integer overflow for large PeerIds
     for (int i = 0; i < length; i++) {
-      distance = (distance << 8) | (a.value[i] ^ b.value[i]);
+      int xorByte = a.value[i] ^ b.value[i];
+      if (xorByte != 0) {
+        // Convert position and XOR value to distance
+        // Distance represents the bit position of the first difference
+        int leadingZeros = 0;
+        int mask = 0x80;
+        while ((xorByte & mask) == 0 && mask > 0) {
+          leadingZeros++;
+          mask >>= 1;
+        }
+        return (i * 8) + leadingZeros;
+      }
     }
-    return distance;
+    // If all bytes are the same, distance is 0 (same peer)
+    return 0;
   }
 
   int _getBucketIndex(int distance) {
-    // Assuming the bucket index is determined by the number of leading zeros in the distance
-    return distance.bitLength - 1;
+    // Distance 0 means same peer - use bucket 0
+    // Otherwise distance represents the bit position, which is the bucket index
+    if (distance == 0) return 0;
+    return distance.clamp(0, 255); // Ensure we don't exceed bucket array bounds
   }
 
   bool _removeStaleNode(RedBlackTree<p2p.PeerId, KademliaTreeNode> bucket) {
@@ -337,9 +354,8 @@ class KademliaRoutingTable {
       }
     } else {
       // Create an associated PeerId from the peer info
-      final kademliaId = common_kademlia_pb.KademliaId()..id = peer.peerId;
       final associatedPeerId =
-          p2p.PeerId(value: Uint8List.fromList(kademliaId.id));
+          p2p.PeerId(value: Uint8List.fromList(peer.peerId));
       await addPeer(peerId, associatedPeerId);
     }
   }
@@ -380,20 +396,18 @@ class KademliaRoutingTable {
   Future<bool> pingPeer(p2p.PeerId peerId) async {
     try {
       // Create ping request message
-      final kademliaId = common_kademlia_pb.KademliaId()
-        ..id = dhtClient.peerId.value;
-      final request = dht_messages.PingRequest()..peerId = kademliaId;
+      final msg = kad.Message()..type = kad.Message_MessageType.PING;
 
       // Send request through DHT client's network handler
       final response = await dhtClient.networkHandler.sendRequest(
         peerId,
-        '/ipfs/kad/1.0.0',
-        request.writeToBuffer(),
+        DHTClient.PROTOCOL_DHT,
+        msg.writeToBuffer(),
       );
 
       // Parse response
-      final pingResponse = dht_messages.PingResponse.fromBuffer(response);
-      return pingResponse.success;
+      final pingResponse = kad.Message.fromBuffer(response);
+      return pingResponse.type == kad.Message_MessageType.PING;
     } catch (e) {
       print('Error pinging peer ${peerId.toString()}: $e');
       return false;

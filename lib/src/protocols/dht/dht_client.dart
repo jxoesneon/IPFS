@@ -2,47 +2,58 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
-import 'package:dart_ipfs/src/core/types/peer_types.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart';
+
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
-import 'package:dart_ipfs/src/proto/generated/dht_messages.pb.dart'
-    as dht_messages;
+import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart'
     as ipfs_node_network_events;
 
-/// Implementation of the Kademlia DHT protocol for IPFS
-/// Following specs from: https://github.com/libp2p/specs/tree/master/kad-dht
+/// Kademlia DHT client implementation for IPFS.
+///
+/// Implements the [IPFS Kademlia DHT specification](https://github.com/libp2p/specs/tree/master/kad-dht)
+/// for distributed peer discovery and content routing.
+///
+/// **Core Operations:**
+/// - [findProviders]: Locate peers providing content
+/// - [findPeer]: Discover peer addresses
+/// - [addProvider]: Announce content availability
+///
+/// Example:
+/// ```dart
+/// final dht = DHTClient(networkHandler: handler, router: router);
+/// await dht.initialize();
+///
+/// // Find providers for a CID
+/// final providers = await dht.findProviders(cid);
+/// ```
 class DHTClient {
-  final IPFSNode node;
+  /// The IPFS node this client belongs to.
+  IPFSNode get node => networkHandler.ipfsNode;
+
+  /// Handler for network operations.
   final NetworkHandler networkHandler;
+
   final P2plibRouter _router;
   late final LibP2PPeerId peerId;
   late final LibP2PPeerId associatedPeerId;
   late final KademliaRoutingTable _kademliaRoutingTable;
   bool _initialized = false;
 
-  // Protocol identifiers as per IPFS spec
+  /// Protocol identifier for Kademlia DHT.
   static const String PROTOCOL_DHT = '/ipfs/kad/1.0.0';
-  static const String PROTOCOL_FIND_NODE = '/ipfs/kad/find-node/1.0.0';
-  static const String PROTOCOL_FIND_PEERS = '/ipfs/kad/find-peers/1.0.0';
-  static const String PROTOCOL_GET_PROVIDERS = '/ipfs/kad/get-providers/1.0.0';
-  static const String PROTOCOL_ADD_PROVIDER = '/ipfs/kad/add-provider/1.0.0';
-  static const String PROTOCOL_GET_VALUE = '/ipfs/kad/get-value/1.0.0';
-  static const String PROTOCOL_PUT_VALUE = '/ipfs/kad/put-value/1.0.0';
 
+  /// Creates a new DHT client.
   DHTClient({
     required this.networkHandler,
     required P2plibRouter router,
-  })  : _router = router,
-        node = networkHandler.ipfsNode;
+  }) : _router = router;
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -79,63 +90,59 @@ class DHTClient {
 
   void _registerProtocols() {
     // Add protocol registration logic here
-    for (final protocol in [
-      PROTOCOL_DHT,
-      PROTOCOL_FIND_NODE,
-      PROTOCOL_FIND_PEERS,
-      PROTOCOL_GET_PROVIDERS,
-      PROTOCOL_ADD_PROVIDER,
-      PROTOCOL_GET_VALUE,
-      PROTOCOL_PUT_VALUE,
-    ]) {
-      _router.registerProtocol(protocol);
-    }
+    _router.registerProtocol(PROTOCOL_DHT);
   }
 
   void _setupHandlers() {
     // Register handlers for each protocol
     _router.addMessageHandler(PROTOCOL_DHT, _handlePacket);
-    _router.addMessageHandler(PROTOCOL_FIND_NODE, _handleFindNode);
-    _router.addMessageHandler(PROTOCOL_GET_PROVIDERS, _handleGetProviders);
-    _router.addMessageHandler(PROTOCOL_ADD_PROVIDER, _handleAddProvider);
-    _router.addMessageHandler(PROTOCOL_GET_VALUE, _handleGetValue);
-    _router.addMessageHandler(PROTOCOL_PUT_VALUE, _handlePutValue);
   }
 
-  // Convert protobuf Peer to p2p.PeerId
-  p2p.PeerId _convertProtoPeerToPeerId(dht_messages.Peer protoPeer) {
-    return p2p.PeerId(value: Uint8List.fromList(protoPeer.peerId));
+  // Helper: Convert kad.Peer to p2p.PeerId
+  p2p.PeerId _convertKadPeerToPeerId(kad.Peer kadPeer) {
+    return p2p.PeerId(value: Uint8List.fromList(kadPeer.id));
   }
 
-  // Convert p2p.PeerId to protobuf Peer
-  dht_messages.Peer _convertPeerIdToProtoPeer(p2p.PeerId peerId) {
-    return dht_messages.Peer()
-      ..peerId = peerId.value
-      ..addresses.addAll([]); // Add addresses if needed
+  // Helper: Convert p2p.PeerId to kad.Peer
+  kad.Peer _convertPeerIdToKadPeer(p2p.PeerId peerId) {
+    return kad.Peer()
+      ..id = peerId.value
+      ..addrs.addAll([]); // TODO: Add multiaddr bytes
   }
 
-  // Content Routing API
+  // Helper: Create valid PeerId from key bytes (pad to 64 bytes)
+  p2p.PeerId _createPeerIdFromKey(List<int> keyBytes) {
+    if (keyBytes.length >= 64) {
+      return p2p.PeerId(value: Uint8List.fromList(keyBytes.sublist(0, 64)));
+    }
+    final padded = Uint8List(64);
+    padded.setAll(0, keyBytes);
+    return p2p.PeerId(value: padded);
+  }
+
+  // Content Routing API: Find Providers (GET_PROVIDERS)
   Future<List<p2p.PeerId>> findProviders(String cid) async {
-    final request = FindProvidersRequest()
+    final msg = kad.Message()
+      ..type = kad.Message_MessageType.GET_PROVIDERS
       ..key = utf8.encode(cid)
-      ..count = 20;
+      ..clusterLevelRaw = 0; // Standard compatibility padding?
 
-    final targetPeerId =
-        p2p.PeerId(value: Uint8List.fromList(utf8.encode(cid)));
+    final targetPeerId = _createPeerIdFromKey(utf8.encode(cid));
     final closestPeers =
         _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
     final providers = <p2p.PeerId>[];
 
     for (final peer in closestPeers) {
       try {
-        final response = await _sendRequest(
-            peer, PROTOCOL_GET_PROVIDERS, request.writeToBuffer());
-        final providerResponse = FindProvidersResponse.fromBuffer(response);
+        final responseBytes =
+            await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
+        final response = kad.Message.fromBuffer(responseBytes);
 
-        // Convert DHTPeer to PeerId - Updated to use id instead of peerId
-        for (final provider in providerResponse.providers) {
-          providers.add(p2p.PeerId(value: Uint8List.fromList(provider.id)));
+        // Extract providers
+        for (final provider in response.providerPeers) {
+          providers.add(_convertKadPeerToPeerId(provider));
         }
+        // Also checks closerPeers for iterative query (not implemented loop here yet)
       } catch (e) {
         print(
             'Error querying peer ${Base58().encode(peer.value)} for providers: $e');
@@ -145,23 +152,27 @@ class DHTClient {
     return providers;
   }
 
-  // Peer Routing API
+  // Peer Routing API: Find Peer (FIND_NODE)
   Future<p2p.PeerId?> findPeer(p2p.PeerId id) async {
-    final protoPeer = _convertPeerIdToProtoPeer(id);
-    final request = FindNodeRequest()..peerId = protoPeer.peerId;
+    final msg = kad.Message()
+      ..type = kad.Message_MessageType.FIND_NODE
+      ..key = id.value;
+
     final closestPeers = _kademliaRoutingTable.findClosestPeers(id, 20);
 
     for (final peer in closestPeers) {
       try {
-        final response = await _sendRequest(
-            peer, PROTOCOL_FIND_NODE, request.writeToBuffer());
-        final nodeResponse = FindNodeResponse.fromBuffer(response);
+        final responseBytes =
+            await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
+        final response = kad.Message.fromBuffer(responseBytes);
 
-        final foundPeer = nodeResponse.closerPeers.firstWhere(
-            (p) => listsEqual(p.id, id.value),
-            orElse: () => throw StateError('Not found'));
-
-        return p2p.PeerId(value: Uint8List.fromList(foundPeer.id));
+        // Check if target is in closerPeers
+        final found =
+            response.closerPeers.any((p) => listsEqual(p.id, id.value));
+        if (found) {
+          return id;
+        }
+        // Iterate...
       } catch (e) {
         print(
             'Error querying peer ${Base58().encode(peer.value)} for peer lookup: $e');
@@ -170,22 +181,101 @@ class DHTClient {
     return null;
   }
 
-  // Value Store API
+  /*
+  // Value Store API: Put Value (PUT_VALUE)
   Future<void> putValue(String key, String value) async {
-    final request = PutValueRequest()
-      ..key = utf8.encode(key)
-      ..value = utf8.encode(value);
+    // Key should be bytes. If key is string multihash/path, use it.
+    // Standard IPFS keys: /pk/..., /ipns/...
+    // Here we use utf8 encoded key string mostly.
+    final keyBytes = utf8.encode(key);
+    
+    final record = kad.Record()
+      ..key = keyBytes
+      ..value = utf8.encode(value)
+      ..timeReceived = DateTime.now().toIso8601String();
 
-    final targetPeerId = p2p.PeerId(value: Base58().base58Decode(key));
+    final msg = kad.Message()
+      ..type = kad.Message_MessageType.PUT_VALUE
+      ..key = keyBytes
+      ..record = record; // Error: record expects Record
+
+    final targetPeerId = p2p.PeerId(value: Base58().base58Decode(key)); // Assuming key matches ID space? Or hash of key.
+    // If key is /ipns/Qm..., target is Qm...
+    // Simplification for now:
+    final closestPeers =
+        _kademliaRoutingTable.findClosestPeers(targetPeerId, 20); // TODO: Fix target ID derivation from key
+
+    for (final peer in closestPeers) {
+      try {
+        await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
+      } catch (e) {
+        print(
+            'Error storing value with peer ${Base58().encode(peer.value)}: $e');
+      }
+    }
+  }
+  */
+
+  /*
+  // Value Store API: Get Value (GET_VALUE)
+  Future<String?> getValue(String key) async {
+    final msg = kad.Message()
+      ..type = kad.Message_MessageType.GET_VALUE
+      ..key = utf8.encode(key);
+
+    final keyBytes = utf8.encode(key);
+    // TODO: Hash key to find target peers?
+    // Using dummy target for now or closest to hash(key)
+    final targetPeerId = p2p.PeerId(value: Uint8List.fromList(keyBytes.length >= 32 ? keyBytes.sublist(0,32) : keyBytes)); 
+    
     final closestPeers =
         _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
 
     for (final peer in closestPeers) {
       try {
-        await _sendRequest(peer, PROTOCOL_PUT_VALUE, request.writeToBuffer());
+        final responseBytes = await _sendRequest(
+          peer,
+          PROTOCOL_DHT,
+          msg.writeToBuffer(),
+        );
+
+        final response = kad.Message.fromBuffer(responseBytes);
+        if (response.hasRecord()) {
+          return utf8.decode(response.record.value);
+        }
       } catch (e) {
         print(
-            'Error storing value with peer ${Base58().encode(peer.value)}: $e');
+            'Error retrieving value from peer ${Base58().encode(peer.value)}: $e');
+      }
+    }
+    return null;
+  }
+  */
+
+  /// Adds a provider (ADD_PROVIDER)
+  Future<void> addProvider(String cid, String providerId) async {
+    final msg = kad.Message()
+      ..type = kad.Message_MessageType.ADD_PROVIDER
+      ..key = utf8.encode(cid)
+      ..providerPeers.add(_convertPeerIdToKadPeer(p2p.PeerId(
+          value:
+              utf8.encode(providerId)))); // Actually providerId should be bytes
+
+    final targetPeerId =
+        p2p.PeerId(value: Uint8List.fromList(utf8.encode(cid)));
+    final closestPeers =
+        _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
+
+    for (final peer in closestPeers) {
+      try {
+        await _sendRequest(
+          peer,
+          PROTOCOL_DHT,
+          msg.writeToBuffer(),
+        );
+      } catch (e) {
+        print(
+            'Error adding provider to peer ${Base58().encode(peer.value)}: $e');
       }
     }
   }
@@ -220,49 +310,46 @@ class DHTClient {
     }
   }
 
-  // Protocol message handlers
-  void _handleFindNode(p2p.Packet packet) {
+  // Main Handle Packet
+  void _handlePacket(LibP2PPacket packet) async {
     try {
-      final request = FindNodeRequest.fromBuffer(packet.datagram);
-      final targetPeerId = _convertProtoPeerToPeerId(
-          dht_messages.Peer()..peerId = request.peerId);
+      final message = kad.Message.fromBuffer(packet.datagram);
+      final peerId = packet.srcPeerId;
 
-      final closestPeers =
-          _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
+      // Update routing table
+      _kademliaRoutingTable.addPeer(peerId, peerId);
 
-      // Convert IPFSPeer to DHTPeer before sending
-      final response = FindNodeResponse()
-        ..closerPeers.addAll(
-            closestPeers.map((peer) => _convertIPFSPeerToDHTPeer(IPFSPeer(
-                id: peer,
-                addresses: [], // Add addresses if available
-                latency: 0,
-                agentVersion: ''))));
-
-      // Send response back using router's resolvePeerId
-      node.dhtHandler.router.sendDatagram(
-        addresses: node.dhtHandler.router.resolvePeerId(packet.srcPeerId),
-        datagram: response.writeToBuffer(),
-      );
+      switch (message.type) {
+        case kad.Message_MessageType.FIND_NODE:
+          // Reply with closer peers
+          final closer = _kademliaRoutingTable.findClosestPeers(
+              p2p.PeerId(value: Uint8List.fromList(message.key)), 20);
+          final response = kad.Message()
+            ..type = kad.Message_MessageType.FIND_NODE
+            ..closerPeers.addAll(closer.map((p) => _convertPeerIdToKadPeer(p)));
+          _sendResponse(peerId, response);
+          break;
+        case kad.Message_MessageType.GET_VALUE:
+          // Check local storage for record
+          // For now return empty or closer peers
+          break;
+        case kad.Message_MessageType.PING:
+          final response = kad.Message()..type = kad.Message_MessageType.PING;
+          _sendResponse(peerId, response);
+          break;
+        default:
+          print('Unhandled DHT message type: ${message.type}');
+      }
     } catch (e) {
-      print('Error handling find node request: $e');
+      print('Error handling DHT packet: $e');
     }
   }
 
-  void _handleGetProviders(p2p.Packet packet) {
-    // Implementation
-  }
-
-  void _handleAddProvider(p2p.Packet packet) {
-    // Implementation
-  }
-
-  void _handleGetValue(p2p.Packet packet) {
-    // Implementation
-  }
-
-  void _handlePutValue(p2p.Packet packet) {
-    // Implementation
+  void _sendResponse(p2p.PeerId peer, kad.Message msg) {
+    node.dhtHandler.router.sendDatagram(
+      addresses: node.dhtHandler.router.resolvePeerId(peer),
+      datagram: msg.writeToBuffer(),
+    );
   }
 
   /// Starts the DHT client and initializes necessary components
@@ -273,22 +360,12 @@ class DHTClient {
           .start(); // This will be safe now with the updated P2plibRouter
 
       // Register protocol handlers
-      for (final protocol in [
-        PROTOCOL_DHT,
-        PROTOCOL_FIND_NODE,
-        PROTOCOL_FIND_PEERS,
-        PROTOCOL_GET_PROVIDERS,
-        PROTOCOL_ADD_PROVIDER,
-        PROTOCOL_GET_VALUE,
-        PROTOCOL_PUT_VALUE,
-      ]) {
-        node.dhtHandler.router.registerProtocol(protocol);
-      }
+      node.dhtHandler.router.registerProtocol(PROTOCOL_DHT);
 
       // Initialize routing table
       await _initializeRoutingTable();
 
-      print('DHT client started successfully');
+      print('DHT client started successfully (Standard Kademlia)');
     } catch (e) {
       print('Error starting DHT client: $e');
       rethrow;
@@ -311,8 +388,7 @@ class DHTClient {
 
   /// Initialize the routing table with bootstrap peers
   Future<void> _initializeRoutingTable() async {
-    final bootstrapPeers =
-        node.container.get<IPFSConfig>().network.bootstrapPeers;
+    final bootstrapPeers = networkHandler.config.network.bootstrapPeers;
     for (final peerAddr in bootstrapPeers) {
       try {
         final peer = await _connectToPeer(peerAddr);
@@ -337,126 +413,11 @@ class DHTClient {
     }
   }
 
-  /// Retrieves a value from the DHT network by its key
-  Future<String?> getValue(String key) async {
-    final request = FindValueRequest()..key = utf8.encode(key);
-    final targetPeerId = p2p.PeerId(value: Base58().base58Decode(key));
-    final closestPeers =
-        _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
-
-    for (final peer in closestPeers) {
-      try {
-        final response = await _sendRequest(
-          peer,
-          PROTOCOL_GET_VALUE,
-          request.writeToBuffer(),
-        );
-
-        final findValueResponse = FindValueResponse.fromBuffer(response);
-        if (findValueResponse.hasValue()) {
-          return utf8.decode(findValueResponse.value);
-        }
-      } catch (e) {
-        print(
-            'Error retrieving value from peer ${Base58().encode(peer.value)}: $e');
-      }
-    }
-    return null;
-  }
-
   // Add a getter for the routing table
   KademliaRoutingTable get kademliaRoutingTable => _kademliaRoutingTable;
 
-  // Update method signatures to use IPFSPeer
-  IPFSPeer _convertDHTPeerToIPFSPeer(DHTPeer protoPeer) {
-    return IPFSPeer.fromDHTPeer(protoPeer);
-  }
-
-  DHTPeer _convertIPFSPeerToDHTPeer(IPFSPeer peer) {
-    return peer.toDHTPeer();
-  }
-
-  /// Handles incoming packets from peers.
-  void _handlePacket(LibP2PPacket packet) async {
-    try {
-      final message = dht_messages.DHTMessage.fromBuffer(packet.datagram);
-      final peerId = packet.srcPeerId;
-
-      // Convert DHTPeer to IPFSPeer for internal use
-      final dhtPeer = DHTPeer()
-        ..id = peerId.value
-        ..addrs.addAll([]); // Add addresses if available
-      final ipfsPeer = _convertDHTPeerToIPFSPeer(dhtPeer);
-
-      // Update routing table with the converted peer
-      _kademliaRoutingTable.addPeer(ipfsPeer.id, ipfsPeer.id);
-
-      // Handle the message based on its type
-      switch (message.type) {
-        case dht_messages.DHTMessage_MessageType.FIND_NODE:
-          await _handleFindNodeResponse(message, peerId);
-          break;
-        case dht_messages.DHTMessage_MessageType.GET_VALUE:
-          await _handleGetValueResponse(message, peerId);
-          break;
-        case dht_messages.DHTMessage_MessageType.PUT_VALUE:
-          await _handlePutValueResponse(message, peerId);
-          break;
-        default:
-          print('Unhandled DHT message type: ${message.type}');
-      }
-    } catch (e) {
-      print('Error handling DHT packet: $e');
-    }
-  }
-
-  Future<void> _handleFindNodeResponse(
-      dht_messages.DHTMessage message, LibP2PPeerId sourcePeer) async {
-    // Implementation using sourcePeer
-  }
-
-  Future<void> _handleGetValueResponse(
-      dht_messages.DHTMessage message, LibP2PPeerId sourcePeer) async {
-    // Implementation using sourcePeer
-  }
-
-  Future<void> _handlePutValueResponse(
-      dht_messages.DHTMessage message, LibP2PPeerId sourcePeer) async {
-    // Implementation using sourcePeer
-  }
-
-  /// Adds a provider for a given CID to the DHT network
-  Future<void> addProvider(String cid, String providerId) async {
-    final dhtPeer = DHTPeer()
-      ..id = utf8.encode(providerId)
-      ..addrs.addAll([]); // Optional: Add provider addresses if needed
-
-    final request = ProvideRequest()
-      ..key = utf8.encode(cid)
-      ..provider = dhtPeer;
-
-    final targetPeerId =
-        p2p.PeerId(value: Uint8List.fromList(utf8.encode(cid)));
-    final closestPeers =
-        _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
-
-    for (final peer in closestPeers) {
-      try {
-        await _sendRequest(
-          peer,
-          PROTOCOL_ADD_PROVIDER,
-          request.writeToBuffer(),
-        );
-      } catch (e) {
-        print(
-            'Error adding provider to peer ${Base58().encode(peer.value)}: $e');
-      }
-    }
-  }
-
-  // Add this helper method to compare Lists<int>
+  /// Helper method to compare two lists for equality
   bool listsEqual(List<int> a, List<int> b) {
-    if (identical(a, b)) return true;
     if (a.length != b.length) return false;
     for (int i = 0; i < a.length; i++) {
       if (a[i] != b[i]) return false;
@@ -547,6 +508,7 @@ class DHTClient {
     }
   }
 
+  /*
   Future<bool> checkValue(p2p.PeerId peer, String key) async {
     final request = FindValueRequest()..key = utf8.encode(key);
 
@@ -584,6 +546,7 @@ class DHTClient {
       return false;
     }
   }
+  */
 
   P2plibRouter get router => _router;
 }

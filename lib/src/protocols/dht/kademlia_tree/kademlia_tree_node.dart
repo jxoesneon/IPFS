@@ -1,29 +1,48 @@
 import 'package:p2plib/p2plib.dart' as p2p;
 
+/// State of a node in the Kademlia DHT.
 enum KademliaNodeState {
-  active, // Node is responsive
-  stale, // Node hasn't responded recently
-  failed // Node has failed to respond
+  /// Node is responsive.
+  active,
+
+  /// Node hasn't responded recently.
+  stale,
+
+  /// Node has failed to respond.
+  failed
 }
 
+/// A node in the Kademlia tree representing a peer.
+///
+/// Tracks distance from the local node, connection state,
+/// latency, and failure count for eviction decisions.
 class KademliaTreeNode {
+  /// The peer identifier.
   final p2p.PeerId peerId;
 
-  /// Distance is calculated as the XOR metric between this node's ID and the target ID
-  /// following Kademlia specification
+  /// XOR distance from this node to the routing table's owner.
   final int distance;
+
+  /// Child nodes in the tree structure.
   final List<KademliaTreeNode> children;
+
   final p2p.PeerId _associatedPeerId;
   int _lastSeen;
   int? bucketIndex;
   KademliaNodeState _state = KademliaNodeState.active;
-  int _lastRtt = 0; // Initialize with default value
+  int _lastRtt = 0;
   int _failedRequests = 0;
-  static const int MAX_FAILURES = 5; // Max failures before marking as failed
 
+  /// Maximum failures before marking as failed.
+  static const int MAX_FAILURES = 5;
+
+  /// Kademlia protocol version.
   static const String PROTOCOL_VERSION = '/ipfs/kad/1.0.0';
-  static const int K = 20; // Standard Kademlia k-bucket size
 
+  /// Standard k-bucket size.
+  static const int K = 20;
+
+  /// Creates a Kademlia tree node.
   KademliaTreeNode(
     this.peerId,
     this.distance,

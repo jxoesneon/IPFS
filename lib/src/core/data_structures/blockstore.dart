@@ -6,12 +6,51 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 
+/// Persistent storage for content-addressed blocks in IPFS.
+///
+/// BlockStore provides the primary storage layer for IPFS blocks,
+/// implementing the [IBlockStore] interface. It manages block persistence,
+/// retrieval, and lifecycle with support for pinning to prevent
+/// garbage collection.
+///
+/// Blocks are stored by their CID (Content Identifier), ensuring
+/// content-addressable lookups. The store supports:
+/// - Adding, retrieving, and removing blocks
+/// - Checking block existence
+/// - Block pinning for persistence
+/// - Storage statistics
+///
+/// Example:
+/// ```dart
+/// final store = BlockStore(path: './ipfs/blocks');
+/// await store.start();
+///
+/// // Store a block
+/// await store.putBlock(block);
+///
+/// // Retrieve by CID
+/// final response = await store.getBlock(cid.toString());
+/// if (response.success) {
+///   print('Found block: ${response.block}');
+/// }
+///
+/// await store.stop();
+/// ```
+///
+/// See also:
+/// - [Block] for the block data structure
+/// - [PinManager] for pinning operations
+/// - [IBlockStore] for the interface contract
 class BlockStore implements IBlockStore {
   final Map<String, Block> _blocks = {};
   late final PinManager _pinManager;
+
+  /// The filesystem path where blocks are stored.
   final String path;
+
   final Logger _logger;
 
+  /// Creates a new BlockStore at the given [path].
   BlockStore({required this.path}) : _logger = Logger('BlockStore') {
     _pinManager = PinManager(this);
   }

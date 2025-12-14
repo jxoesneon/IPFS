@@ -9,17 +9,27 @@ import 'package:dart_ipfs/src/protocols/dht/red_black_tree/deletion.dart'
 import 'package:dart_ipfs/src/protocols/dht/red_black_tree/search.dart'
     as rb_search;
 
-// Represents a node in a Red-Black Tree.
-
+/// A node in the Red-Black tree.
 class RedBlackTreeNode<K_PeerId, V_PeerInfo> {
-  common_tree.K_PeerId key;
-  common_tree.V_PeerInfo value;
+  /// The key (peer ID).
+  K_PeerId key;
+
+  /// The value (peer info).
+  V_PeerInfo value;
+
+  /// Node color (RED or BLACK).
   common_tree.NodeColor color;
-  RedBlackTreeNode<K_PeerId, V_PeerInfo>? left_child; // Renamed from 'left'
-  RedBlackTreeNode<K_PeerId, V_PeerInfo>? right_child; // Renamed from 'right'
+
+  /// Left child.
+  RedBlackTreeNode<K_PeerId, V_PeerInfo>? left_child;
+
+  /// Right child.
+  RedBlackTreeNode<K_PeerId, V_PeerInfo>? right_child;
+
+  /// Parent node.
   RedBlackTreeNode<K_PeerId, V_PeerInfo>? parent;
 
-  // Constructor
+  /// Creates a tree node.
   RedBlackTreeNode(this.key, this.value,
       {this.color = common_tree.NodeColor.RED,
       this.left_child,
@@ -27,21 +37,27 @@ class RedBlackTreeNode<K_PeerId, V_PeerInfo> {
       this.parent});
 }
 
+/// Self-balancing Red-Black tree for efficient peer lookup.
+///
+/// Used in Kademlia k-buckets for O(log n) peer operations.
 class RedBlackTree<K_PeerId, V_PeerInfo> {
-  RedBlackTreeNode<K_PeerId, V_PeerInfo>? _root; // Private root node
+  RedBlackTreeNode<K_PeerId, V_PeerInfo>? _root;
   int Function(K_PeerId, K_PeerId) _compare;
 
-  // Instances of insertion, deletion, and search classes
   final insertion.Insertion<K_PeerId, V_PeerInfo> _insertion;
   final deletion.Deletion<K_PeerId, V_PeerInfo> _deletion;
   final rb_search.Search<K_PeerId, V_PeerInfo> _search;
 
+  /// Number of nodes in the tree.
   var size = 0;
 
+  /// Whether the tree is empty.
   bool isEmpty = true;
 
+  /// All entries as key-value pairs.
   var entries = <MapEntry<K_PeerId, V_PeerInfo>>[];
 
+  /// Creates a Red-Black tree with optional comparator.
   RedBlackTree({int Function(K_PeerId, K_PeerId)? compare})
       : _compare = compare ?? ((a, b) => (a as int).compareTo(b as int)),
         _insertion = insertion.Insertion<K_PeerId, V_PeerInfo>(),
@@ -50,8 +66,7 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
 
   // Insert a new node with the given key and value into the tree.
   void insert(K_PeerId key_insert, V_PeerInfo value_insert) {
-    final newNode = RedBlackTreeNode(key_insert as common_tree.K_PeerId,
-        value_insert as common_tree.V_PeerInfo);
+    final newNode = RedBlackTreeNode(key_insert, value_insert);
     _insertion.insertNode(this, newNode); // Use _insertion instance
   }
 
@@ -61,7 +76,7 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
   }
 
   // Search for a node with the given key in the tree.
-  common_tree.V_PeerInfo? search(K_PeerId key) {
+  V_PeerInfo? search(K_PeerId key) {
     final node = _search.searchNode(this, key); // Use _search instance
     return node?.value;
   }
@@ -76,7 +91,12 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
 
   int compare(K_PeerId a, K_PeerId b) => _compare(a, b);
 
-  clear() {}
+  void clear() {
+    _root = null;
+    size = 0;
+    isEmpty = true;
+    entries.clear();
+  }
 
   // Add this operator definition
   void operator []=(K_PeerId key, V_PeerInfo value) {

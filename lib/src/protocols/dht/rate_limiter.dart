@@ -1,13 +1,22 @@
 import 'dart:async';
 import 'package:dart_ipfs/src/proto/generated/config.pb.dart';
 
+/// Token bucket rate limiter for controlling request throughput.
+///
+/// Limits operations to [maxOperations] per [interval]. Queues
+/// excess requests and processes them when capacity is available.
 class RateLimiter {
+  /// Maximum operations allowed per time window.
   final int maxOperations;
+
+  /// Duration of the time window.
   final Duration interval;
+
   int _currentOperations = 0;
   DateTime _windowStart = DateTime.now();
   final _queue = <Completer>[];
 
+  /// Creates a rate limiter with given limits.
   RateLimiter({
     required this.maxOperations,
     required this.interval,

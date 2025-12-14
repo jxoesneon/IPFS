@@ -3,10 +3,10 @@ import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:collection/collection.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/helpers.dart';
-// lib/src/protocols/dht/kademlia_tree/find_closest_peers.dart
 
+/// Extension for finding closest peers in Kademlia tree.
 extension FindClosestPeers on KademliaTree {
-  /// Finds the k closest peers to a target peer ID.
+  /// Finds the [k] closest peers to [target] by XOR distance.
   List<p2p.PeerId> findClosestPeers(p2p.PeerId target, int k) {
     // Create a priority queue to store peers based on distance
     PriorityQueue<KademliaTreeNode> queue = PriorityQueue<KademliaTreeNode>(

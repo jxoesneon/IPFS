@@ -24,8 +24,8 @@ class NetworkHandler {
   final IPFSConfig _config;
   late final Logger _logger;
 
-  NetworkHandler(this._config)
-      : _router = P2plibRouter(_config),
+  NetworkHandler(this._config, {P2plibRouter? router})
+      : _router = router ?? P2plibRouter(_config),
         _networkEventController = StreamController<NetworkEvent>.broadcast() {
     // Initialize logger
     _logger = Logger('NetworkHandler',
@@ -441,6 +441,9 @@ class NetworkHandler {
     }
   }
 
+  /// Gets the IPFS configuration
+  IPFSConfig get config => _config;
+
   /// Gets the peer ID of this node
-  String get peerID => _router.localPeerId.toString();
+  String get peerID => _router.peerID;
 }

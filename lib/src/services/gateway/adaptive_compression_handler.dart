@@ -5,15 +5,20 @@ import 'package:dart_ipfs/src/services/gateway/compressed_cache_store.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'dart:convert';
-import 'package:archive/archive.dart';
 import 'dart:io';
-import 'package:lz4/lz4.dart';
 
+/// Configuration for adaptive compression.
 class CompressionConfig {
+  /// Whether compression is enabled.
   final bool enabled;
+
+  /// Maximum size for uncompressed content.
   final int maxUncompressedSize;
+
+  /// Compression type rules by content type prefix.
   final Map<String, CompressionType> contentTypeRules;
 
+  /// Creates compression configuration.
   CompressionConfig({
     this.enabled = true,
     this.maxUncompressedSize = 52428800, // 50MB
@@ -30,21 +35,30 @@ class CompressionConfig {
   };
 }
 
+/// Analysis results for compression options.
 class CompressionAnalysis {
+  /// Compression ratios by type.
   final Map<CompressionType, double> compressionRatios;
+
+  /// The recommended compression type.
   final CompressionType recommendedType;
 
+  /// Creates compression analysis results.
   CompressionAnalysis({
     required this.compressionRatios,
     required this.recommendedType,
   });
 }
 
+/// Handles adaptive compression for gateway content.
+///
+/// Selects optimal compression based on content type and size.
 class AdaptiveCompressionHandler {
   final BlockStore _blockStore;
   final CompressionConfig _config;
   final String _metadataPath;
 
+  /// Creates a handler with [_blockStore] and [_config].
   AdaptiveCompressionHandler(this._blockStore, this._config)
       : _metadataPath = '${_blockStore.path}/metadata';
 
@@ -86,7 +100,7 @@ class AdaptiveCompressionHandler {
         return entry.value;
       }
     }
-    return CompressionType.lz4; // Default to fast compression
+    return CompressionType.gzip; // Default to gzip (lz4 not available)
   }
 
   Future<Uint8List> _compressData(Uint8List data, CompressionType type) async {
@@ -94,11 +108,11 @@ class AdaptiveCompressionHandler {
       case CompressionType.none:
         return data;
       case CompressionType.gzip:
-        return Uint8List.fromList(GZipEncoder().encode(data)!);
+        return Uint8List.fromList(gzip.encode(data));
       case CompressionType.zlib:
-        return Uint8List.fromList(ZLibEncoder().encode(data));
+        return Uint8List.fromList(zlib.encode(data));
       case CompressionType.lz4:
-        return Uint8List.fromList(Lz4Encoder().convert(data));
+        throw UnimplementedError('LZ4 compression not available');
     }
   }
 

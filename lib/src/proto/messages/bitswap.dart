@@ -2,7 +2,9 @@ import 'dart:typed_data';
 import 'package:protobuf/protobuf.dart';
 import 'package:dart_ipfs/src/proto/base_message.dart';
 
+/// Bitswap protocol message for block exchange.
 class BitswapMessage extends BaseProtoMessage {
+  /// Creates an empty Bitswap message.
   BitswapMessage() : super();
 
   @override

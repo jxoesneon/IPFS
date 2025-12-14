@@ -6,7 +6,35 @@ import 'package:dart_ipfs/src/proto/generated/metrics.pb.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 import 'package:dart_ipfs/src/proto/generated/connection.pb.dart';
 
-/// Collects and manages metrics about peer connections and network activity
+/// Collects and manages metrics about IPFS node operations.
+///
+/// MetricsCollector gathers telemetry data including:
+/// - System metrics (CPU, memory usage)
+/// - Network metrics (bandwidth, peer connections)
+/// - Storage metrics (disk usage, block counts)
+/// - Protocol-specific metrics (message counts, errors)
+///
+/// Collection is configurable via [IPFSConfig.metrics] and runs
+/// periodically when enabled.
+///
+/// Example:
+/// ```dart
+/// final collector = MetricsCollector(config);
+/// await collector.start();
+///
+/// // Record protocol activity
+/// collector.recordProtocolMetrics('bitswap', {
+///   'messages_sent': 10,
+///   'messages_received': 5,
+/// });
+///
+/// // Get status
+/// final status = await collector.getStatus();
+/// ```
+///
+/// See also:
+/// - [MetricsConfig] for configuration options
+/// - [ConnectionMetrics] for per-peer statistics
 class MetricsCollector {
   final IPFSConfig _config;
   late final Logger _logger;
@@ -16,6 +44,7 @@ class MetricsCollector {
   final Map<String, Map<String, int>> _byteMetrics = {};
   final Map<String, List<Duration>> _latencyMetrics = {};
 
+  /// Creates a new metrics collector with the given [_config].
   MetricsCollector(this._config) {
     _logger = Logger('MetricsCollector',
         debug: _config.debug, verbose: _config.verboseLogging);

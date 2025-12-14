@@ -4,7 +4,7 @@ import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
-import '../../proto/generated/dht/dht.pb.dart';
+import '../../proto/generated/dht/kademlia.pb.dart' as kad;
 import '../../proto/generated/core/peer.pb.dart';
 
 /// Core peer representation used throughout the application
@@ -34,14 +34,11 @@ class IPFSPeer {
     );
   }
 
-  /// Converts from DHTPeer (DHT proto message)
-  factory IPFSPeer.fromDHTPeer(DHTPeer peer) {
+  /// Converts from Kad Peer (DHT proto message)
+  factory IPFSPeer.fromKadPeer(kad.Peer peer) {
     return IPFSPeer(
       id: p2p.PeerId(value: Uint8List.fromList(peer.id)),
-      addresses: peer.addrs
-          .map((addr) => parseMultiaddrString(addr))
-          .whereType<p2p.FullAddress>()
-          .toList(),
+      addresses: [], // TODO: Parse binary multiaddrs from peer.addrs
       latency: 0, // DHT peers don't track latency
       agentVersion: '', // DHT peers don't track version
     );
@@ -55,9 +52,10 @@ class IPFSPeer {
       ..agentVersion = agentVersion;
   }
 
-  DHTPeer toDHTPeer() {
-    return DHTPeer()
+  kad.Peer toKadPeer() {
+    return kad.Peer()
       ..id = id.value
-      ..addrs.addAll(addresses.map((addr) => addr.toString()));
+      // ..addrs.addAll(...) // TODO: Convert addresses to binary
+      ;
   }
 }

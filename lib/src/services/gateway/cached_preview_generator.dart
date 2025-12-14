@@ -5,11 +5,15 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'dart:convert';
 import 'package:dart_ipfs/src/services/gateway/content_type_handler.dart';
 
+/// Generates and caches content previews for gateway responses.
+///
+/// Combines caching with preview generation for efficient serving.
 class CachedPreviewGenerator {
   final PreviewCacheManager _cacheManager;
   final FilePreviewHandler _previewHandler;
   final ContentTypeHandler _contentTypeHandler = ContentTypeHandler();
 
+  /// Creates a generator with [_cacheManager] and [_previewHandler].
   CachedPreviewGenerator(this._cacheManager, this._previewHandler);
 
   Future<Uint8List?> generatePreview(Block block, String contentType) async {

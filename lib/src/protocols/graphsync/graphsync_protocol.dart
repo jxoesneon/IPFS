@@ -3,10 +3,17 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_types.dart';
 
+/// Graphsync protocol message factory.
+///
+/// Creates request and response messages for the Graphsync protocol.
 class GraphsyncProtocol {
+  /// Protocol identifier.
   static const protocolID = '/ipfs/graphsync/1.0.0';
+
+  /// Default request timeout.
   static const defaultTimeout = Duration(seconds: 60);
 
+  /// Creates a Graphsync request message.
   GraphsyncMessage createRequest({
     required int id,
     required Uint8List root,

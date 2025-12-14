@@ -1,21 +1,30 @@
 import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 
+/// Base class for block operation responses.
+///
+/// Contains success status and message for all block operations.
 abstract class BaseResponse {
+  /// Whether the operation succeeded.
   final bool success;
+
+  /// Human-readable result message.
   final String message;
 
+  /// Creates a response with [success] status and [message].
   const BaseResponse({
     required this.success,
     required this.message,
   });
 
+  /// Converts to JSON representation.
   Map<String, dynamic> toJson();
 
   @override
   String toString() => '${runtimeType}(success: $success, message: $message)';
 }
 
+/// Response for block add operations.
 class BlockAddResponse extends BaseResponse {
   const BlockAddResponse({
     required super.success,
@@ -60,9 +69,11 @@ class BlockGetResponse extends BaseResponse {
   }
 
   GetBlockResponse toProto() {
-    return GetBlockResponse()
-      ..found = success
-      ..block = block!;
+    final response = GetBlockResponse()..found = success;
+    if (block != null) {
+      response.block = block!;
+    }
+    return response;
   }
 
   @override
