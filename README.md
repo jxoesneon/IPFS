@@ -44,6 +44,13 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
+  dart_ipfs: ^1.2.0
+```
+
+Or from Git for latest development:
+
+```yaml
+dependencies:
   dart_ipfs:
     git:
       url: https://github.com/jxoesneon/IPFS.git
@@ -469,7 +476,7 @@ dart analyze
 Expected results:
 - ✅ 0 errors
 - ✅ 0 warnings
-- ✅ All protocol tests pass
+- ✅ 423 tests pass (0 skipped)
 
 ---
 

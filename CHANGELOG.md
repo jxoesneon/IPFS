@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-12-14
+
+### Added
+- **DHT Value Operations**
+  - `DHTClient.storeValue()`: Store values in DHT via PUT_VALUE to K closest peers
+  - `DHTClient.getValue()`: Retrieve values from DHT via GET_VALUE queries
+  - `DHTClient.checkValueOnPeer()`: Check if value exists on specific peer for replica health
+  
+- **IPFSNode Stream Upload**
+  - `IPFSNode.addFileStream()`: Memory-efficient large file uploads via streams
+  
+- **Enhanced Test Infrastructure**
+  - `MockP2plibRouter.responseGenerator`: Auto-response callback for network testing
+  - Comprehensive RedBlack Tree test suite (8 tests)
+  - DHT value operations tests
+  - addFileStream test for stream-based uploads
+  - Total: 423 tests passing, 0 skipped
+
+### Fixed
+- **RedBlack Tree XOR Distance Comparator**
+  - Now compares distances to root node instead of between peers
+  - Added byte-by-byte comparison as tiebreaker for peers at same distance
+  - Returns 0 only for identical peer IDs (proper duplicate detection)
+  
+- **RedBlack Tree operator[] Type Check**
+  - Removed incorrect `common_tree.V_PeerInfo` type check
+  - Now returns search result directly
+  
+- **RedBlack Tree Duplicate Handling**
+  - Insertion now updates existing nodes instead of adding duplicates
+  - Entries list properly synchronized on updates
+  
+- **ReplicationManager Integration**
+  - Now uses `DHTClient.storeValue()` for replication
+  - Implements `checkValueOnPeer()` for replica health checks
+
+### Dependencies
+- Added `http_parser: ^4.1.0` (required for pub.dev publish)
+
 ## [1.1.1] - 2025-12-13
 
 ### Added
