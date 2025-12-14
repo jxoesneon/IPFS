@@ -1,0 +1,44 @@
+# CodeQL Code Scanning for dart_ipfs
+# Analyzes code for security vulnerabilities and code quality issues
+
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    # Run weekly on Sundays at 00:00 UTC
+    - cron: '0 0 * * 0'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        # CodeQL doesn't have native Dart support, but we can still scan
+        # for common patterns. For Dart-specific analysis, we rely on
+        # dart analyze which runs in the test workflow.
+        languages: javascript
+        # If you have JS/TS in your project, this will catch issues there
+        # Dart analysis is handled by 'dart analyze' in test.yml
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:javascript"
