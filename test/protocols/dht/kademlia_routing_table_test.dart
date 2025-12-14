@@ -170,21 +170,28 @@ void main() {
       expect(routingTable.containsPeer(peer3), isTrue);
     });
 
-    // Note: This test is skipped as it relies on RedBlackTree internals
-    // that use a custom comparator which may not work as expected with
-    // duplicate key detection
+    // The addPeer method has duplicate detection - adding the same peer twice
+    // should update the existing entry, not add a new one.
+    //
+    // BUG: Currently fails due to RedBlack Tree containsKey/operator[] inconsistency.
+    // The containsKey() method returns true but operator[] returns null because
+    // the XOR distance comparator can return 0 for different peers with the same
+    // distance to root. This is a deeper bug requiring RedBlack Tree refactoring.
     test('addPeer handles duplicate peers gracefully', () async {
       final peerId = p2p.PeerId(value: validPeerIdBytes(fillValue: 2));
 
       await routingTable.addPeer(peerId, peerId);
       final countAfterFirst = routingTable.peerCount;
-
-      // Skip duplicate add test due to RedBlackTree comparator issues
-      // await routingTable.addPeer(peerId, peerId);
-
-      // Just verify we successfully added the peer once
       expect(countAfterFirst, equals(1));
-    }, skip: 'RedBlack Tree comparator prevents reliable duplicate detection');
+
+      // Adding the same peer again should update, not add
+      await routingTable.addPeer(peerId, peerId);
+      final countAfterSecond = routingTable.peerCount;
+
+      // Count should remain 1 (duplicate was handled)
+      expect(countAfterSecond, equals(1));
+      expect(routingTable.containsPeer(peerId), isTrue);
+    });
 
     // Note: removePeer relies on RedBlackTree deletion which needs entries maintenance
     test('removePeer can be called without error', () async {
