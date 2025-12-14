@@ -22,6 +22,9 @@ jobs:
       - name: Generate API Docs
         run: dart doc .
 
+      - name: Copy config
+        run: cp _config.yml doc/api/
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
