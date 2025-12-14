@@ -1,0 +1,38 @@
+name: ipfs_dashboard
+description: "A premium UI/UX dashboard for dart_ipfs."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.5.4 <4.0.0'
+  flutter: ">=3.16.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Core Logic
+  dart_ipfs:
+    path: ../../
+  provider: ^6.1.2
+  path_provider: ^2.1.2
+  file_picker: ^8.0.0
+
+  # Premium UI
+  google_fonts: ^6.2.1
+  flutter_animate: ^4.5.0
+  glassmorphism: ^3.0.0
+  cupertino_icons: ^1.0.8
+  lucide_icons: ^0.257.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+dependency_overrides:
+  p2plib:
+    path: ../../packages/p2plib
+
+flutter:
+  uses-material-design: true
