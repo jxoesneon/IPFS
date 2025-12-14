@@ -9,6 +9,8 @@ import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
+import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_proto;
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:test/test.dart';
 
 // Helper for valid PeerId (64 bytes)
@@ -40,6 +42,10 @@ class MockP2plibRouter implements P2plibRouter {
   final MockRouterL2 _mockL2 = MockRouterL2();
   Function(p2p.Packet)? _handler;
   Function(Uint8List)? onSendDatagram;
+
+  /// Optional: Function that takes request bytes and returns response bytes
+  /// Used to auto-respond to network requests for testing
+  Uint8List Function(Uint8List request)? responseGenerator;
 
   @override
   p2p.RouterL2 get routerL0 => _mockL2;
@@ -76,6 +82,19 @@ class MockP2plibRouter implements P2plibRouter {
   Future<void> sendDatagram(
       {required List<String> addresses, required Uint8List datagram}) async {
     onSendDatagram?.call(datagram);
+
+    // If responseGenerator is set, auto-generate and inject response
+    if (responseGenerator != null && _handler != null) {
+      final responseBytes = responseGenerator!(datagram);
+      final responsePacket = p2p.Packet(
+          datagram: responseBytes,
+          header: p2p.PacketHeader(id: 0, issuedAt: 0),
+          srcFullAddress: p2p.FullAddress(
+              address: InternetAddress.loopbackIPv4, port: 4001));
+      responsePacket.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
+      // Inject response asynchronously to simulate network
+      Future.microtask(() => _handler?.call(responsePacket));
+    }
   }
 
   @override
@@ -161,7 +180,10 @@ void main() {
     test('findProviders', () async {
       await client.initialize();
 
-      final cid = 'QmTestHash';
+      // Create a valid CID
+      final data = Uint8List.fromList([1, 2, 3, 4]);
+      final cidObj = await CID.fromContent(data);
+      final cid = cidObj.encode();
 
       mockRouter.onSendDatagram = (data) {
         try {
@@ -196,6 +218,70 @@ void main() {
 
       expect(providers, isNotEmpty);
       expect(providers.first.value, equals(validPeerIdBytes));
+    });
+
+    test('storeValue method exists with correct signature', () async {
+      await client.initialize();
+
+      // Verify method exists and returns Future<bool>
+      final key = Uint8List.fromList([1, 2, 3, 4]);
+      final value = Uint8List.fromList([5, 6, 7, 8]);
+
+      // Don't add peers to routing table - method should return false immediately
+      final result = await client.storeValue(key, value);
+      expect(result, isFalse); // No peers = false
+    });
+
+    test('getValue method exists with correct signature', () async {
+      await client.initialize();
+
+      final key = Uint8List.fromList([1, 2, 3, 4]);
+
+      // Don't add peers to routing table - method should return null immediately
+      final result = await client.getValue(key);
+      expect(result, isNull); // No peers = null
+    });
+
+    test('checkValueOnPeer returns true when peer has value', () async {
+      await client.initialize();
+
+      final key = Uint8List.fromList([1, 2, 3, 4]);
+      final value = Uint8List.fromList([5, 6, 7, 8]);
+
+      // Set up auto-response: respond with a record containing the value
+      mockRouter.responseGenerator = (requestBytes) {
+        final record = dht_proto.Record()
+          ..key = key
+          ..value = value;
+        final response = kad.Message()
+          ..type = kad.Message_MessageType.GET_VALUE
+          ..record = record;
+        return response.writeToBuffer();
+      };
+
+      final peer = p2p.PeerId(value: Uint8List.fromList(List.filled(64, 5)));
+
+      final hasValue = await client.checkValueOnPeer(peer, key);
+      expect(hasValue, isTrue);
+    });
+
+    test('checkValueOnPeer returns false when peer has no value', () async {
+      await client.initialize();
+
+      final key = Uint8List.fromList([1, 2, 3, 4]);
+
+      // Set up auto-response: respond with empty record (no value)
+      mockRouter.responseGenerator = (requestBytes) {
+        final response = kad.Message()
+          ..type = kad.Message_MessageType.GET_VALUE;
+        // No record set
+        return response.writeToBuffer();
+      };
+
+      final peer = p2p.PeerId(value: Uint8List.fromList(List.filled(64, 5)));
+
+      final hasValue = await client.checkValueOnPeer(peer, key);
+      expect(hasValue, isFalse);
     });
   });
 }
