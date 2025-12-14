@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:p2plib/p2plib.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 
@@ -34,7 +33,7 @@ void main() {
     final bytes = Uint8List(32);
     for (int i = 0; i < 32; i++) bytes[i] = i;
     final pid = PeerId(value: bytes);
-    print('Raw 32 bytes PeerId created successfully');
+    print('Raw 32 bytes PeerId created successfully: $pid');
   } catch (e) {
     print('Raw 32 bytes Failed: $e');
   }

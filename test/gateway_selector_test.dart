@@ -1,10 +1,7 @@
-import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:dart_ipfs/dart_ipfs.dart';
 import 'package:test/test.dart';
-import 'package:dart_ipfs/src/core/di/service_container.dart';
 
 void main() {
   group('Gateway Selector Integration', () {

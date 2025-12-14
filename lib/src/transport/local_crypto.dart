@@ -2,9 +2,8 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:pointycastle/export.dart';
-import 'package:cryptography/cryptography.dart' hide Poly1305, ChaCha20;
+import 'package:cryptography/cryptography.dart' hide Poly1305;
 import 'package:crypto/crypto.dart' as crypto;
-import 'package:convert/convert.dart';
 
 /// Production-grade cryptography implementation for P2P networking.
 /// Uses secp256k1 for key exchange and ChaCha20-Poly1305 for authenticated encryption.

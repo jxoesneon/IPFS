@@ -561,7 +561,7 @@ class _FileItem extends StatelessWidget {
       // "If [bytes] is provided, the file will be saved with the provided bytes (Web only)."
       // On desktop we must write it ourselves.
 
-      final file = File(savePath!);
+      final file = File(savePath);
       await file.writeAsBytes(bytes);
 
       if (context.mounted) {
@@ -641,11 +641,16 @@ class _MainContentPanelState extends State<_MainContentPanel>
                   ],
                 ),
               ),
-                    children: [
-                      Icon(LucideIcons.messageCircle, size: 16),
-                      SizedBox(width: 8),
-                      Text('CHAT'),
-                    ],
+              Tab(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(LucideIcons.messageCircle, size: 16),
+                    SizedBox(width: 8),
+                    Text('CHAT'),
+                  ],
+                ),
+              ),
               Tab(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,

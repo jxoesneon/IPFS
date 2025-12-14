@@ -75,7 +75,6 @@ class Crypto {
     return (id: id, completer: completer);
   }
 
-  // ignore: switch_on_type //
   void _onData(dynamic taskResult) => switch (taskResult) {
     final TaskResult r => _completers.remove(r.id)?.complete(r.datagram),
     final TaskError r => _completers.remove(r.id)?.completeError(r.error),
