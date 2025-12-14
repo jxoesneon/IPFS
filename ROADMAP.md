@@ -403,7 +403,7 @@ This roadmap is a living document. We welcome:
 
 ---
 
-**Last Updated**: 2025-12-14  
+**Last Updated: 2025-12-14 (v1.2.2)**
 **Status**: Active Development  
-**Current Version**: 1.2.1 (Production Ready)  
-**Next Release**: v1.3 (Q1 2026)
+**Current Version:** 1.2.2
+**Target for Next Release:** 1.3.0 (Q1 2026)
