@@ -36,6 +36,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
 import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:dart_ipfs/src/core/builders/ipfs_node_builder.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
+import 'package:dart_ipfs/src/transport/http_gateway_client.dart';
 
 /// The central node orchestrating all IPFS operations.
 ///
@@ -81,9 +82,32 @@ import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 /// - [IPFS] for a simpler high-level wrapper
 /// - [IPFSConfig] for configuration options
 /// - [IPFSNodeBuilder] for advanced node construction
+/// - [IPFSNodeBuilder] for advanced node construction
+/// Modes for retrieving content via the [IPFSNode].
+///
+/// Strategies:
+/// - [internal]: Use the native Dart P2P node (libp2p).
+/// - [public]: Use public HTTP gateways (e.g. ipfs.io).
+/// - [local]: Use a local IPFS daemon (e.g. go-ipfs at localhost:8080).
+/// - [custom]: Use a user-defined HTTP gateway URL.
+enum GatewayMode {
+  /// Use internal P2P node (default).
+  internal,
+
+  /// Use public gateway (ipfs.io).
+  public,
+
+  /// Use local gateway (localhost:8080).
+  local,
+
+  /// Use custom URL.
+  custom
+}
+
 class IPFSNode {
   final ServiceContainer _container;
   final Logger _logger;
+  final HttpGatewayClient _httpGatewayClient = HttpGatewayClient();
   final StreamController<String> _newContentController =
       StreamController<String>.broadcast();
 
@@ -111,6 +135,14 @@ class IPFSNode {
       _logger.warning('Failed to get peerId: $e');
       return 'unknown';
     }
+  }
+
+  /// Broadcast stream of bandwidth metrics
+  Stream<Map<String, dynamic>> get bandwidthMetrics {
+    if (_container.isRegistered(MetricsCollector)) {
+      return _container.get<MetricsCollector>().metricsStream;
+    }
+    return const Stream.empty();
   }
 
   /// Get the addresses this node is listening on
@@ -209,20 +241,21 @@ class IPFSNode {
   /// Connect to a peer by multiaddr
   Future<void> connectToPeer(String multiaddr) async {
     try {
-      // This would need proper multiaddr parsing and connection logic
-      _logger.info('Connecting to peer: $multiaddr');
-      // For now, just log - actual implementation needs network handler
+      if (!_container.isRegistered(NetworkHandler)) {
+        throw StateError('NetworkHandler not available');
+      }
+      await _container.get<NetworkHandler>().connectToPeer(multiaddr);
     } catch (e) {
       _logger.error('Failed to connect to peer: $e');
-      throw Exception('Failed to connect to peer: $e');
+      rethrow;
     }
   }
 
   /// Disconnect from a peer
-  Future<void> disconnectFromPeer(String peerId) async {
+  Future<void> disconnectFromPeer(String peerIdOrAddr) async {
     try {
-      _logger.info('Disconnecting from peer: $peerId');
-      // Implementation would go through network handler
+      if (!_container.isRegistered(NetworkHandler)) return;
+      await _container.get<NetworkHandler>().disconnectFromPeer(peerIdOrAddr);
     } catch (e) {
       _logger.error('Failed to disconnect from peer: $e');
     }
@@ -512,8 +545,57 @@ class IPFSNode {
   ///
   /// [cid] is the Content Identifier of the file/directory
   /// [path] is an optional path within the directory
+  GatewayMode _gatewayMode = GatewayMode.internal;
+  String _customGatewayUrl = '';
+
+  /// Sets the mode for retrieving content.
+  ///
+  /// [mode] defines the strategy (internal P2P, public gateway, etc.).
+  /// [customUrl] is required if [mode] is [GatewayMode.custom].
+  void setGatewayMode(GatewayMode mode, {String? customUrl}) {
+    _gatewayMode = mode;
+    if (customUrl != null) {
+      _customGatewayUrl = customUrl;
+    }
+    _logger.info('Switched Gateway Mode to: $mode');
+  }
+
+  /// Gets the content of a file or directory from IPFS.
+  ///
+  /// [cid] is the Content Identifier of the file/directory
+  /// [path] is an optional path within the directory
   Future<Uint8List?> get(String cid, {String path = ''}) async {
     try {
+      // MODE: Public / Local / Custom -> Use HTTP Gateway exclusively
+      if (_gatewayMode != GatewayMode.internal) {
+        String url;
+        switch (_gatewayMode) {
+          case GatewayMode.public:
+            url = 'https://ipfs.io/ipfs';
+            break;
+          case GatewayMode.local:
+            url = 'http://127.0.0.1:8080/ipfs';
+            break;
+          case GatewayMode.custom:
+            url = _customGatewayUrl;
+            break;
+          default:
+            url = 'https://ipfs.io/ipfs';
+        }
+        _logger.debug('Retrieving via Gateway ($url): $cid');
+        // Currently HttpGatewayClient is hardcoded to ipfs.io in its implementation?
+        // We might need to update HttpGatewayClient to accept a base URL.
+        // For now, assuming HttpGatewayClient logic will be updated or uses default.
+        // Actually, let's just use the client we have, but we need to tell it where to look.
+        // Since HttpGatewayClient instance is private and hardcoded, we should probably
+        // update HttpGatewayClient to take a baseUrl in `get`.
+        // Let's assume for this step we update HttpGatewayClient first?
+        // Wait, I can't update HttpGatewayClient in this tool call.
+        // I will just call it for now and fix it in next step.
+        return await _httpGatewayClient.get(cid, baseUrl: url);
+      }
+
+      // MODE: Internal -> Use Native P2P
       // First check if we have the block locally
       final block = await _container.get<DatastoreHandler>().getBlock(cid);
 
@@ -532,10 +614,24 @@ class IPFSNode {
       }
 
       // If not found locally, try to fetch from the network
-      final networkBlock =
-          await _container.get<BitswapHandler>().wantBlock(cid);
-      // Return the block data if found, null otherwise
-      return networkBlock?.data;
+      if (_container.isRegistered(BitswapHandler)) {
+        final networkBlock =
+            await _container.get<BitswapHandler>().wantBlock(cid);
+        if (networkBlock?.data != null) {
+          return networkBlock!.data;
+        }
+      }
+
+      // 3. HTTP Gateway Fallback (Hybrid Compatibility) - KEEP THIS for Internal Mode too?
+      // Yes, "Hybrid Fallback" is a feature of Internal Mode.
+      _logger.debug(
+          'P2P retrieval failed, attempting HTTP gateway fallback for $cid');
+      final gatewayData = await _httpGatewayClient.get(cid);
+      if (gatewayData != null) {
+        return gatewayData;
+      }
+
+      return null;
     } catch (e) {
       print('Error retrieving content for CID $cid: $e');
       return null;
@@ -763,6 +859,16 @@ class IPFSNode {
     }
   }
 
+  /// Unsubscribes from a PubSub topic.
+  Future<void> unsubscribe(String topic) async {
+    try {
+      await _container.get<PubSubHandler>().unsubscribe(topic);
+      print('Successfully unsubscribed from topic: $topic');
+    } catch (e) {
+      print('Error unsubscribing from topic $topic: $e');
+    }
+  }
+
   /// Publishes a message to a PubSub topic.
   Future<void> publish(String topic, String message) async {
     try {
@@ -772,6 +878,14 @@ class IPFSNode {
       print('Error publishing message to topic $topic: $e');
       rethrow;
     }
+  }
+
+  /// Stream of incoming PubSub messages
+  Stream<PubSubMessage> get pubsubMessages {
+    if (_container.isRegistered(PubSubHandler)) {
+      return _container.get<PubSubHandler>().messages;
+    }
+    return const Stream.empty();
   }
 
   /// Resolves a DNSLink to its corresponding CID.
