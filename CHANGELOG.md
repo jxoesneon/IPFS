@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2025-12-14
 
 ### Added
+- **Gateway Selector (User Request)**
+  - **Core**: Added `GatewayMode` (Internal, Public, Local, Custom) to `IPFSNode`
+  - **Flutter App**: Added Gateway Dropdown to AppBar
+  - **CLI Dashboard**: Added `M` key to toggle modes and Custom URL input
+  
 - **DHT Value Operations**
   - `DHTClient.storeValue()`: Store values in DHT via PUT_VALUE to K closest peers
   - `DHTClient.getValue()`: Retrieve values from DHT via GET_VALUE queries

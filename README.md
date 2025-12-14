@@ -149,6 +149,13 @@ void main() async {
 }
 ```
 
+### Gateway Selector (New in 1.2.0)
+You can dynamically switch between gateway modes in both the Flutter Dashboard and CLI:
+- **Internal**: Uses the native Dart P2P node (libp2p).
+- **Public**: Fetches content via `ipfs.io` (HTTP).
+- **Local**: Fetches via local Go-IPFS daemon (`localhost:8080`).
+- **Custom**: User-defined gateway URL.
+
 ---
 
 ## Use Cases
@@ -300,12 +307,17 @@ final resolved = await node.resolveIPNS(ipnsKey);
 
 ## Examples
 
-See the `example/` directory for complete examples:
+See the `example/` directory for full applications:
 
-- **`blog_use_case.dart`**: Offline content publishing
-- **`online_test.dart`**: P2P networking demo
-- **`gateway_example.dart`**: HTTP gateway server
-- **`full_node_example.dart`**: Complete node with all features
+- **[📱 Premium Dashboard](example/ipfs_dashboard)**: A Flutter desktop app with glassmorphism UI.
+- **[📟 CLI Dashboard](example/cli_dashboard)**: A Matrix-style terminal interface (runs everywhere).
+
+Other examples:
+- [Basic Usage](example/example.dart)
+- [Offline content publishing](example/blog_use_case.dart)
+- [P2P networking](example/online_test.dart)
+- [HTTP gateway](example/gateway_example.dart)
+- [Complete node with all features](example/full_node_example.dart)
 
 Run examples:
 ```bash
