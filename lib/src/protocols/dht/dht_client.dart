@@ -7,11 +7,15 @@ import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 
+import 'package:crypto/crypto.dart'; // For SHA256
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
+import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_proto;
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart'
     as ipfs_node_network_events;
 
@@ -105,29 +109,51 @@ class DHTClient {
 
   // Helper: Convert p2p.PeerId to kad.Peer
   kad.Peer _convertPeerIdToKadPeer(p2p.PeerId peerId) {
+    var addresses = <p2p.FullAddress>[];
+    try {
+      addresses = _router.routerL0.resolvePeerId(peerId).toList();
+    } catch (_) {
+      // Ignore if peer not found in router
+    }
     return kad.Peer()
       ..id = peerId.value
-      ..addrs.addAll([]); // TODO: Add multiaddr bytes
+      ..addrs.addAll(addresses.map(multiaddrToBytes));
   }
 
-  // Helper: Create valid PeerId from key bytes (pad to 64 bytes)
-  p2p.PeerId _createPeerIdFromKey(List<int> keyBytes) {
-    if (keyBytes.length >= 64) {
-      return p2p.PeerId(value: Uint8List.fromList(keyBytes.sublist(0, 64)));
+  // Helper: Get Routing Key (SHA-256 of Multihash)
+  p2p.PeerId getRoutingKey(String cidStr) {
+    Uint8List hashBytes;
+    try {
+      final cid = CID.decode(cidStr);
+      // The Kademlia key for a CID is the SHA-256 hash of its Multihash bytes
+      final multihashBytes = cid.multihash.toBytes();
+      hashBytes = Uint8List.fromList(sha256.convert(multihashBytes).bytes);
+    } catch (e) {
+      // Fallback for non-CID keys (e.g. raw strings) - use SHA-256 of UTF8
+      hashBytes = Uint8List.fromList(sha256.convert(utf8.encode(cidStr)).bytes);
     }
-    final padded = Uint8List(64);
-    padded.setAll(0, keyBytes);
-    return p2p.PeerId(value: padded);
+
+    // PeerId in p2plib requires 64 bytes (likely due to internal assumptions or crypto size)
+    // Pad the 32-byte SHA-256 hash to 64 bytes with trailing zeros
+    if (hashBytes.length < 64) {
+      final padded = Uint8List(64);
+      padded.setAll(0, hashBytes);
+      return p2p.PeerId(value: padded);
+    }
+    return p2p.PeerId(value: hashBytes);
   }
 
   // Content Routing API: Find Providers (GET_PROVIDERS)
   Future<List<p2p.PeerId>> findProviders(String cid) async {
     final msg = kad.Message()
       ..type = kad.Message_MessageType.GET_PROVIDERS
-      ..key = utf8.encode(cid)
-      ..clusterLevelRaw = 0; // Standard compatibility padding?
+      // The key sent on wire is the raw Multihash bytes for GET_PROVIDERS
+      ..key = CID.decode(cid).multihash.toBytes()
+      ..clusterLevelRaw = 0;
 
-    final targetPeerId = _createPeerIdFromKey(utf8.encode(cid));
+    // Used for routing in Kademlia table (XOR distance)
+    final targetPeerId = getRoutingKey(cid);
+
     final closestPeers =
         _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
     final providers = <p2p.PeerId>[];
@@ -140,7 +166,28 @@ class DHTClient {
 
         // Extract providers
         for (final provider in response.providerPeers) {
-          providers.add(_convertKadPeerToPeerId(provider));
+          final peerId = _convertKadPeerToPeerId(provider);
+
+          // Register addresses in router if present
+          if (provider.addrs.isNotEmpty) {
+            for (final addrBytes in provider.addrs) {
+              try {
+                final fullAddr =
+                    multiaddrFromBytes(Uint8List.fromList(addrBytes));
+                if (fullAddr != null) {
+                  _router.routerL0.addPeerAddress(
+                    peerId: peerId,
+                    address: fullAddr,
+                    properties: p2p.AddressProperties(),
+                  );
+                }
+              } catch (e) {
+                // Ignore invalid addresses
+              }
+            }
+          }
+
+          providers.add(peerId);
         }
         // Also checks closerPeers for iterative query (not implemented loop here yet)
       } catch (e) {
@@ -156,7 +203,7 @@ class DHTClient {
   Future<p2p.PeerId?> findPeer(p2p.PeerId id) async {
     final msg = kad.Message()
       ..type = kad.Message_MessageType.FIND_NODE
-      ..key = id.value;
+      ..key = id.value; // PeerId is already the key
 
     final closestPeers = _kademliaRoutingTable.findClosestPeers(id, 20);
 
@@ -181,88 +228,15 @@ class DHTClient {
     return null;
   }
 
-  /*
-  // Value Store API: Put Value (PUT_VALUE)
-  Future<void> putValue(String key, String value) async {
-    // Key should be bytes. If key is string multihash/path, use it.
-    // Standard IPFS keys: /pk/..., /ipns/...
-    // Here we use utf8 encoded key string mostly.
-    final keyBytes = utf8.encode(key);
-    
-    final record = kad.Record()
-      ..key = keyBytes
-      ..value = utf8.encode(value)
-      ..timeReceived = DateTime.now().toIso8601String();
-
-    final msg = kad.Message()
-      ..type = kad.Message_MessageType.PUT_VALUE
-      ..key = keyBytes
-      ..record = record; // Error: record expects Record
-
-    final targetPeerId = p2p.PeerId(value: Base58().base58Decode(key)); // Assuming key matches ID space? Or hash of key.
-    // If key is /ipns/Qm..., target is Qm...
-    // Simplification for now:
-    final closestPeers =
-        _kademliaRoutingTable.findClosestPeers(targetPeerId, 20); // TODO: Fix target ID derivation from key
-
-    for (final peer in closestPeers) {
-      try {
-        await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
-      } catch (e) {
-        print(
-            'Error storing value with peer ${Base58().encode(peer.value)}: $e');
-      }
-    }
-  }
-  */
-
-  /*
-  // Value Store API: Get Value (GET_VALUE)
-  Future<String?> getValue(String key) async {
-    final msg = kad.Message()
-      ..type = kad.Message_MessageType.GET_VALUE
-      ..key = utf8.encode(key);
-
-    final keyBytes = utf8.encode(key);
-    // TODO: Hash key to find target peers?
-    // Using dummy target for now or closest to hash(key)
-    final targetPeerId = p2p.PeerId(value: Uint8List.fromList(keyBytes.length >= 32 ? keyBytes.sublist(0,32) : keyBytes)); 
-    
-    final closestPeers =
-        _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
-
-    for (final peer in closestPeers) {
-      try {
-        final responseBytes = await _sendRequest(
-          peer,
-          PROTOCOL_DHT,
-          msg.writeToBuffer(),
-        );
-
-        final response = kad.Message.fromBuffer(responseBytes);
-        if (response.hasRecord()) {
-          return utf8.decode(response.record.value);
-        }
-      } catch (e) {
-        print(
-            'Error retrieving value from peer ${Base58().encode(peer.value)}: $e');
-      }
-    }
-    return null;
-  }
-  */
-
   /// Adds a provider (ADD_PROVIDER)
   Future<void> addProvider(String cid, String providerId) async {
     final msg = kad.Message()
       ..type = kad.Message_MessageType.ADD_PROVIDER
-      ..key = utf8.encode(cid)
-      ..providerPeers.add(_convertPeerIdToKadPeer(p2p.PeerId(
-          value:
-              utf8.encode(providerId)))); // Actually providerId should be bytes
+      ..key = CID.decode(cid).multihash.toBytes() // Raw multihash bytes
+      ..providerPeers.add(_convertPeerIdToKadPeer(
+          p2p.PeerId(value: Base58().base58Decode(providerId))));
 
-    final targetPeerId =
-        p2p.PeerId(value: Uint8List.fromList(utf8.encode(cid)));
+    final targetPeerId = getRoutingKey(cid);
     final closestPeers =
         _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
 
@@ -277,6 +251,85 @@ class DHTClient {
         print(
             'Error adding provider to peer ${Base58().encode(peer.value)}: $e');
       }
+    }
+  }
+
+  /// Stores a value in the DHT (PUT_VALUE)
+  ///
+  /// Sends the value to the K closest peers to the key.
+  /// Returns true if at least one peer successfully stored the value.
+  Future<bool> storeValue(Uint8List key, Uint8List value) async {
+    final record = dht_proto.Record()
+      ..key = key
+      ..value = value;
+
+    final msg = kad.Message()
+      ..type = kad.Message_MessageType.PUT_VALUE
+      ..key = key
+      ..record = record;
+
+    final targetPeerId = getRoutingKey(Base58().encode(key));
+    final closestPeers =
+        _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
+
+    int successCount = 0;
+    for (final peer in closestPeers) {
+      try {
+        await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
+        successCount++;
+      } catch (e) {
+        print('Error storing value on peer ${Base58().encode(peer.value)}: $e');
+      }
+    }
+
+    return successCount > 0;
+  }
+
+  /// Retrieves a value from the DHT (GET_VALUE)
+  ///
+  /// Queries the K closest peers to the key and returns the first value found.
+  Future<Uint8List?> getValue(Uint8List key) async {
+    final msg = kad.Message()
+      ..type = kad.Message_MessageType.GET_VALUE
+      ..key = key;
+
+    final targetPeerId = getRoutingKey(Base58().encode(key));
+    final closestPeers =
+        _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
+
+    for (final peer in closestPeers) {
+      try {
+        final responseBytes =
+            await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
+        final response = kad.Message.fromBuffer(responseBytes);
+
+        if (response.hasRecord() && response.record.value.isNotEmpty) {
+          return Uint8List.fromList(response.record.value);
+        }
+      } catch (e) {
+        print(
+            'Error getting value from peer ${Base58().encode(peer.value)}: $e');
+      }
+    }
+
+    return null;
+  }
+
+  /// Checks if a value exists on a specific peer
+  ///
+  /// Used for replica health checks.
+  Future<bool> checkValueOnPeer(p2p.PeerId peer, Uint8List key) async {
+    final msg = kad.Message()
+      ..type = kad.Message_MessageType.GET_VALUE
+      ..key = key;
+
+    try {
+      final responseBytes =
+          await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
+      final response = kad.Message.fromBuffer(responseBytes);
+      return response.hasRecord() && response.record.value.isNotEmpty;
+    } catch (e) {
+      return false;
     }
   }
 
