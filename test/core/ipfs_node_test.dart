@@ -117,5 +117,30 @@ void main() {
 
       await node.stop();
     });
+
+    test('should add file from stream', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      final data = Uint8List.fromList([10, 20, 30, 40, 50]);
+
+      // Create a stream from the data (simulating chunked upload)
+      Stream<List<int>> dataStream() async* {
+        yield data.sublist(0, 2); // [10, 20]
+        yield data.sublist(2, 4); // [30, 40]
+        yield data.sublist(4); // [50]
+      }
+
+      final cid = await node.addFileStream(dataStream());
+
+      expect(cid, isNotNull);
+      expect(cid, isNotEmpty);
+
+      // Verify the data was stored correctly
+      final retrievedData = await node.get(cid);
+      expect(retrievedData, equals(data));
+
+      await node.stop();
+    });
   });
 }
