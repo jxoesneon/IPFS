@@ -26,9 +26,20 @@ class Insertion<K_PeerId, V_PeerInfo> {
       if (comparison < 0) {
         // If the new node's key is smaller, move to the left subtree.
         x = x.left_child;
-      } else {
-        // If the new node's key is larger or equal, move to the right subtree.
+      } else if (comparison > 0) {
+        // If the new node's key is larger, move to the right subtree.
         x = x.right_child;
+      } else {
+        // Keys are equal - update existing node's value instead of adding duplicate
+        x.value = node.value;
+        // Update the corresponding entry in the entries list
+        for (int i = 0; i < tree.entries.length; i++) {
+          if (tree.compare(tree.entries[i].key, node.key) == 0) {
+            tree.entries[i] = MapEntry(node.key, node.value);
+            break;
+          }
+        }
+        return; // Don't insert a new node
       }
     }
 
