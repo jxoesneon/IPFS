@@ -224,3 +224,4 @@ paket-files/
 
 # Agent Rules
 .agent/
+.windsurf/
