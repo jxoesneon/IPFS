@@ -229,8 +229,42 @@ class KademliaRoutingTable {
     return removedCount;
   }
 
-  Comparator<p2p.PeerId> get _xorDistanceComparator =>
-      (a, b) => _calculateXorDistance(a, b).compareTo(0);
+  /// Compares two PeerIds for RedBlack Tree ordering.
+  ///
+  /// Primary comparison: XOR distance to root node (ascending order).
+  /// Secondary comparison: byte-by-byte comparison when distances are equal.
+  /// Returns 0 only when both PeerIds are identical (for duplicate detection).
+  Comparator<p2p.PeerId> get _xorDistanceComparator => (a, b) {
+        // First, check if they're the exact same peer
+        if (_peersEqual(a, b)) return 0;
+
+        // Compare distances to root node
+        final distA = _calculateXorDistance(a, _tree.root!.peerId);
+        final distB = _calculateXorDistance(b, _tree.root!.peerId);
+
+        if (distA != distB) {
+          return distA.compareTo(distB);
+        }
+
+        // Same distance - use byte comparison as tiebreaker
+        final length = min(a.value.length, b.value.length);
+        for (int i = 0; i < length; i++) {
+          if (a.value[i] != b.value[i]) {
+            return a.value[i].compareTo(b.value[i]);
+          }
+        }
+        // If all compared bytes are equal, shorter one comes first
+        return a.value.length.compareTo(b.value.length);
+      };
+
+  /// Checks if two PeerIds are identical (same bytes).
+  bool _peersEqual(p2p.PeerId a, p2p.PeerId b) {
+    if (a.value.length != b.value.length) return false;
+    for (int i = 0; i < a.value.length; i++) {
+      if (a.value[i] != b.value[i]) return false;
+    }
+    return true;
+  }
 
   p2p.PeerId _generateRandomKeyInBucket(int bucketIndex) {
     final random = Random.secure();
