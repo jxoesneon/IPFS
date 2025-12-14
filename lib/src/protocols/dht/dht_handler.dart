@@ -156,7 +156,7 @@ class DHTHandler implements IDHTHandler {
   Future<void> publishIPNS(String cid, {required String keyName}) async {
     // Get the IPNS key pair from the keystore
     final keyPair = _keystore.getKeyPair(keyName);
-    
+
     // Parse private key for signing
     final privateKey = IPFSPrivateKey.fromString(keyPair.privateKey);
 
@@ -167,14 +167,23 @@ class DHTHandler implements IDHTHandler {
     try {
       // Create IPNS Entry
       final valuePath = utf8.encode('/ipfs/$cid');
-      
+
       // Validity: RFC3339 format, 24 hours from now
       final validityDate = DateTime.now().add(Duration(hours: 24)).toUtc();
       final validity = utf8.encode(validityDate.toIso8601String());
       final validityType = IpnsEntry_ValidityType.EOL;
-      
-      // Sequence: 1 (TODO: fetch existing record and increment)
-      final sequence = Int64(1);
+
+      // Sequence: fetch existing record and increment
+      var sequence = Int64(0);
+      try {
+        final existingValue = await getValue(Key.fromString(keyPair.publicKey));
+        final existingEntry = IpnsEntry.fromBuffer(existingValue.bytes);
+        sequence = existingEntry.sequence + 1;
+      } catch (e) {
+        // Record doesn't exist yet, start with sequence 0 (or 1 depending on preference, using 0 as base)
+        sequence = Int64(1);
+      }
+
       final ttl = Int64(3600); // 1 hour
 
       // Create data to sign (V1: value + validity + validityTypeString)
@@ -193,16 +202,13 @@ class DHTHandler implements IDHTHandler {
         ..sequence = sequence
         ..ttl = ttl
         ..signature = signature;
-        // ..pubKey = ... (Include public key if PeerID is hashed)
+      // ..pubKey = ... (Include public key if PeerID is hashed)
 
       // Serialize entry
       final entryBytes = entry.writeToBuffer();
 
-      await putValue(
-          Key.fromString(keyPair.publicKey), 
-          Value(entryBytes) 
-      );
-      
+      await putValue(Key.fromString(keyPair.publicKey), Value(entryBytes));
+
       print('Published IPNS record for CID: $cid with key: $keyName');
     } catch (e) {
       print('Error publishing IPNS record: $e');

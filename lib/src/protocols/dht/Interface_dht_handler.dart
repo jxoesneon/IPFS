@@ -18,6 +18,10 @@ abstract class IDHTHandler {
   // Required behaviors
   Future<void> handleRoutingTableUpdate(V_PeerInfo peer);
   Future<void> handleProvideRequest(CID cid, p2p.PeerId provider);
+
+  // Lifecycle
+  Future<void> start() async {}
+  Future<void> stop() async {}
 }
 
 /// Represents a key in the DHT
