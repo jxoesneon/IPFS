@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:shelf/shelf.dart';
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart'; // For MediaType
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:p2plib/p2plib.dart' show PeerId;
@@ -38,7 +40,7 @@ class RPCHandlers {
 
       final response = {
         'ID': peerId,
-        'PublicKey': '', // TODO: Get from keystore
+        'PublicKey': await node.publicKey,
         'Addresses': addresses,
         'AgentVersion': 'dart_ipfs/0.1.0',
         'ProtocolVersion': 'ipfs/0.1.0',
@@ -54,17 +56,77 @@ class RPCHandlers {
   /// POST /api/v0/add - Add file(s)
   Future<Response> handleAdd(Request request) async {
     try {
-      // TODO: Parse multipart/form-data
-      // For now, return not implemented
-      return Response(501,
-          body: json.encode({
-            'Message': 'File upload not yet implemented',
-            'Code': 0,
-            'Type': 'error'
-          }));
+      if (!request.headers.containsKey('content-type')) {
+        return _errorResponse('Missing Content-Type header');
+      }
+
+      final contentType = request.headers['content-type']!;
+      final boundary = _getBoundary(contentType);
+
+      if (boundary == null) {
+        return _errorResponse('Invalid Content-Type: missing boundary');
+      }
+
+      // Transform the request stream into multipart parts
+      final transformer = MimeMultipartTransformer(boundary);
+      final parts = transformer.bind(request.read());
+
+      final results = <Map<String, dynamic>>[];
+
+      await for (final part in parts) {
+        // We only care about file content parts
+        // Real IPFS add supports ignoring some parts, wrapping directories, etc.
+        // For basic functionality, we treat every part as a file to add.
+
+        // Collect bytes in memory - for truly large files, consider chunking
+        // into multiple blocks using UnixFS chunking strategy
+        final content = await part.fold<BytesBuilder>(
+          BytesBuilder(),
+          (builder, chunk) => builder..add(chunk),
+        );
+
+        // Add to IPFS node
+        final cid = await node.addFile(content.takeBytes());
+
+        // Extract filename if available
+        final contentDisposition = part.headers['content-disposition'];
+        String name = cid; // Fallback name
+        if (contentDisposition != null) {
+          final nameMatch =
+              RegExp(r'filename="([^"]+)"').firstMatch(contentDisposition);
+          if (nameMatch != null) {
+            name = nameMatch.group(1)!;
+          }
+        }
+
+        results.add({
+          'Name': name,
+          'Hash': cid,
+          'Size': content.length.toString(),
+        });
+      }
+
+      if (results.isEmpty) {
+        return _errorResponse('No files found in request');
+      }
+
+      // IPFS `add` can result in multiple JSON objects (NDJSON) or a single one.
+      // Typical HTTP API response is NDJSON.
+      // For simplicity/compatibility, we'll join them with newlines.
+      final responseBody = results.map((r) => json.encode(r)).join('\n');
+
+      return Response.ok(responseBody, headers: {
+        'Content-Type': 'application/json',
+        // 'X-Stream-Output': '1', // Optional
+      });
     } catch (e) {
       return _errorResponse('Add failed: $e');
     }
+  }
+
+  String? _getBoundary(String contentType) {
+    final parameters = MediaType.parse(contentType).parameters;
+    return parameters['boundary'];
   }
 
   /// POST /api/v0/cat - Get file content
@@ -164,7 +226,7 @@ class RPCHandlers {
                 'Responses': [
                   {
                     'ID': p.toString(),
-                    'Addrs': [], // TODO: Get addresses
+                    'Addrs': node.resolvePeerId(p.toString()),
                   }
                 ]
               }))
@@ -195,7 +257,7 @@ class RPCHandlers {
           'Responses': [
             {
               'ID': found.toString(),
-              'Addrs': [], // TODO
+              'Addrs': node.resolvePeerId(found.toString()),
             }
           ]
         });
@@ -260,7 +322,7 @@ class RPCHandlers {
   /// POST /api/v0/swarm/peers - List connected peers
   Future<Response> handleSwarmPeers(Request request) async {
     try {
-      final peers = node.connectedPeers;
+      final peers = await node.connectedPeers;
       final peerList = peers
           .map((p) => {
                 'Peer': p,
