@@ -1,6 +1,8 @@
 // src/core/ipfs_node/ipfs_node.dart
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
+import 'package:p2plib/p2plib.dart' as p2p;
 import 'pubsub_handler.dart';
 import 'network_handler.dart';
 import 'datastore_handler.dart';
@@ -114,8 +116,9 @@ class IPFSNode {
   /// Get the addresses this node is listening on
   List<String> get addresses {
     try {
-      // Return multiaddrs as strings
-      return ['/ip4/127.0.0.1/tcp/4001/p2p/$peerId'];
+      if (!_container.isRegistered(NetworkHandler)) return [];
+      final networkHandler = _container.get<NetworkHandler>();
+      return networkHandler.p2pRouter.listeningAddresses;
     } catch (e) {
       _logger.warning('Failed to get addresses: $e');
       return [];
@@ -141,12 +144,57 @@ class IPFSNode {
   }
 
   /// Get list of connected peers
-  List<String> get connectedPeers {
+  Future<List<String>> get connectedPeers async {
     try {
-      // Return empty list for now, would need to track in NetworkHandler
+      if (_container.isRegistered(NetworkHandler)) {
+        return await _container.get<NetworkHandler>().listConnectedPeers();
+      }
       return [];
     } catch (e) {
       _logger.warning('Failed to get connected peers: $e');
+      return [];
+    }
+  }
+
+  /// Get the public key of this node (base64 encoded)
+  Future<String> get publicKey async {
+    try {
+      if (!_container.isRegistered(SecurityManager)) return '';
+      final key = await _container.get<SecurityManager>().getPrivateKey('self');
+      if (key != null) {
+        final keyBytes = key.publicKeyBytes;
+        if (keyBytes.isEmpty) return '';
+
+        // Manually construct Protobuf: PublicKey { required KeyType Type = 1; required bytes Data = 2; }
+        // Type 2 = Secp256k1
+        // Tag 1 (Type) = (1 << 3) | 0 = 8. Value = 2. -> [0x08, 0x02]
+        // Tag 2 (Data) = (2 << 3) | 2 = 18 (0x12). Value = length + bytes.
+        // Compressed Secp256k1 is 33 bytes, fits in 1 byte varint.
+
+        final protoBytes = <int>[
+          0x08, 0x02, // Type: Secp256k1
+          0x12, keyBytes.length, // Data tag + length
+          ...keyBytes
+        ];
+
+        return base64.encode(protoBytes);
+      }
+      return '';
+    } catch (e) {
+      _logger.warning('Failed to get public key: $e');
+      return '';
+    }
+  }
+
+  /// Resolve a peer ID to its known addresses (from Routing Table)
+  List<String> resolvePeerId(String peerIdStr) {
+    try {
+      if (!_container.isRegistered(NetworkHandler)) return [];
+      final router = _container.get<NetworkHandler>().p2pRouter;
+      final peerId = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
+      return router.resolvePeerId(peerId);
+    } catch (e) {
+      _logger.warning('Failed to resolve peer ID $peerIdStr: $e');
       return [];
     }
   }
@@ -394,6 +442,23 @@ class IPFSNode {
       return block.cid.toString();
     } catch (e) {
       print('Error adding file: $e');
+      rethrow;
+    }
+  }
+
+  /// Adds file content from a stream (memory-efficient for large files)
+  ///
+  /// Collects chunks into a BytesBuilder and then creates a block.
+  /// For truly large files, consider chunking into multiple blocks.
+  Future<String> addFileStream(Stream<List<int>> dataStream) async {
+    try {
+      final builder = BytesBuilder();
+      await for (final chunk in dataStream) {
+        builder.add(chunk);
+      }
+      return addFile(builder.takeBytes());
+    } catch (e) {
+      _logger.error('Error adding file from stream: $e');
       rethrow;
     }
   }
