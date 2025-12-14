@@ -7,6 +7,11 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://github.com/jxoesneon/IPFS/actions/workflows/test.yml/badge.svg)](https://github.com/jxoesneon/IPFS/actions/workflows/test.yml)
 [![Tests](https://img.shields.io/badge/tests-423%20passing-brightgreen.svg)](https://github.com/jxoesneon/IPFS/actions)
+[![Ko-Fi](https://img.shields.io/badge/Ko--fi-F16061?style=flat&logo=ko-fi&logoColor=white)](https://ko-fi.com/jxoesneon)
+
+## 📚 Documentation
+- **[Wiki](https://github.com/jxoesneon/IPFS/wiki)** (Guides, Installation, Architecture)
+- **[API Reference](https://jxoesneon.github.io/IPFS/)** (Auto-generated Dart docs)
 
 ## Features
 
