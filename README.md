@@ -149,7 +149,7 @@ void main() async {
 }
 ```
 
-### Gateway Selector (New in 1.2.0)
+### Gateway Selector (New in 1.2.1)
 You can dynamically switch between gateway modes in both the Flutter Dashboard and CLI:
 - **Internal**: Uses the native Dart P2P node (libp2p).
 - **Public**: Fetches content via `ipfs.io` (HTTP).

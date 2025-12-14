@@ -1,13 +1,13 @@
 # dart_ipfs Roadmap
 
-**Current Version**: 1.2.0 (Production Ready)  
+**Current Version**: 1.2.1 (Production Ready)  
 **Last Updated**: 2025-12-14
 
 ---
 
 ## 📍 Current Status
 
-dart_ipfs **v1.2.0** is **100% production ready** with:
+dart_ipfs **v1.2.1** is **100% production ready** with:
 - ✅ Full IPFS protocol implementation
 - ✅ P2P networking with production cryptography
 - ✅ Gateway (Internal/Public/Local/Custom modes)
@@ -159,7 +159,7 @@ This roadmap outlines future enhancements beyond the current production-ready st
 #### 1. Cryptography Enhancement
 - **v1.2**: Native Ed25519/X25519 implementation
 - **Why**: Better libp2p compatibility, faster crypto operations
-- **Status**: ✅ Completed (v1.2.0)
+- **Status**: ✅ Completed (v1.2.1)
 
 #### 2. Transport Improvements
 - **v1.2**: WebRTC transport for browser compatibility
@@ -405,5 +405,5 @@ This roadmap is a living document. We welcome:
 
 **Last Updated**: 2025-12-14  
 **Status**: Active Development  
-**Current Version**: 1.2.0 (Production Ready)  
+**Current Version**: 1.2.1 (Production Ready)  
 **Next Release**: v1.3 (Q1 2026)
