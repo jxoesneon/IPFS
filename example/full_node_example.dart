@@ -18,9 +18,7 @@ Future<void> main() async {
   print('📝 Creating IPFS configuration...');
   // Use port 4002 to avoid conflict with Dashboard app (4001)
   final config = IPFSConfig(
-    network: NetworkConfig(
-      listenAddresses: ['/ip4/0.0.0.0/tcp/4002'],
-    ),
+    network: NetworkConfig(listenAddresses: ['/ip4/0.0.0.0/tcp/4002']),
   );
 
   // Step 2: Initialize IPFS node
@@ -38,7 +36,7 @@ Future<void> main() async {
   print('🌐 Starting HTTP Gateway...');
   final gateway = GatewayServer(
     blockStore: node.blockStore,
-    address: 'localhost',
+    address: '0.0.0.0',
     port: 8080,
     corsOrigins: ['*'],
   );
@@ -49,7 +47,7 @@ Future<void> main() async {
   print('🔌 Starting RPC API...');
   final rpc = RPCServer(
     node: node,
-    address: 'localhost',
+    address: '0.0.0.0',
     port: 5001,
     corsOrigins: ['*'],
   );

@@ -16,7 +16,7 @@ import 'package:dart_ipfs/src/protocols/dht/connection_statistics.dart';
 ///
 /// Organizes peers by XOR distance from the local node. Each bucket
 /// holds up to [K_BUCKET_SIZE] peers. Supports bucket splitting,
-/// stale node eviction, and periodic refresh.
+/// stale node eviction, periodic refresh, and IP diversity checks.
 class KademliaRoutingTable {
   late final DHTClient dhtClient;
   late KademliaTree _tree;
@@ -24,7 +24,17 @@ class KademliaRoutingTable {
   /// Maximum peers per bucket.
   static const int K_BUCKET_SIZE = 20;
 
+  /// Maximum number of peers allowed from a single IP address.
+  /// Prevents Sybil/Eclipse attacks where one attacker fills the table.
+  static const int MAX_PEERS_PER_IP = 2;
+
   final Map<p2p.PeerId, ConnectionStatistics> _connectionStats = {};
+
+  /// Tracks number of peers per IP address.
+  final Map<String, int> _ipCounts = {};
+
+  /// Maps a PeerId to its IP address for quick lookup during removal.
+  final Map<p2p.PeerId, String> _peerIps = {};
 
   /// Creates an uninitialized routing table.
   /// Call [initialize] before use.
@@ -44,7 +54,31 @@ class KademliaRoutingTable {
     );
   }
 
-  Future<void> addPeer(p2p.PeerId peerId, p2p.PeerId associatedPeerId) async {
+  Future<void> addPeer(
+    p2p.PeerId peerId,
+    p2p.PeerId associatedPeerId, {
+    p2p.FullAddress? address,
+  }) async {
+    // 1. IP Diversity Check
+    if (address != null) {
+      final ip = address.address.address;
+      final currentCount = _ipCounts[ip] ?? 0;
+
+      // If peer is not already in the table (check _peerIps map) but limit exceeded
+      if (!_peerIps.containsKey(peerId) && currentCount >= MAX_PEERS_PER_IP) {
+        print(
+          '[Security] Rejected peer $peerId from $ip (Limit: $MAX_PEERS_PER_IP)',
+        );
+        return;
+      }
+
+      // Track IP
+      if (!_peerIps.containsKey(peerId)) {
+        _ipCounts[ip] = currentCount + 1;
+        _peerIps[peerId] = ip;
+      }
+    }
+
     final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
     final bucketIndex = _getBucketIndex(distance);
     final bucket = _getOrCreateBucket(bucketIndex);
@@ -59,7 +93,7 @@ class KademliaRoutingTable {
       if (!_removeStaleNode(bucket)) {
         if (_isOurBucket(bucketIndex)) {
           splitBucket(bucketIndex);
-          await addPeer(peerId, associatedPeerId);
+          await addPeer(peerId, associatedPeerId, address: address);
         }
         return;
       }
@@ -122,6 +156,17 @@ class KademliaRoutingTable {
 
     if (bucket.containsKey(peerId)) {
       bucket.remove(peerId);
+
+      // Decrement IP count
+      if (_peerIps.containsKey(peerId)) {
+        final ip = _peerIps[peerId]!;
+        final count = _ipCounts[ip] ?? 0;
+        if (count > 0) {
+          _ipCounts[ip] = count - 1;
+          if (_ipCounts[ip] == 0) _ipCounts.remove(ip);
+        }
+        _peerIps.remove(peerId);
+      }
 
       // Check if bucket needs to be merged after removal
       if (bucket.isEmpty && bucketIndex > 0) {

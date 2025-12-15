@@ -87,7 +87,7 @@ class CompressedCacheStore {
       case CompressionType.none:
         return data;
       case CompressionType.gzip:
-        return Uint8List.fromList(GZipEncoder().encode(data));
+        return Uint8List.fromList(GZipEncoder().encode(data) ?? []);
       case CompressionType.zlib:
         return Uint8List.fromList(ZLibEncoder().encode(data));
       case CompressionType.lz4:

@@ -215,6 +215,49 @@ class NodeService extends ChangeNotifier {
     }
   }
 
+  Future<void> pin(String cid) async {
+    if (!isOnline) return;
+    try {
+      _log('Pinning CID: $cid...');
+      await _impl.pin(cid);
+      _log('Pinned: $cid');
+    } catch (e) {
+      _log('Error pinning: $e');
+    }
+  }
+
+  Future<void> unpin(String cid) async {
+    if (!isOnline) return;
+    try {
+      _log('Unpinning CID: $cid...');
+      await _impl.unpin(cid);
+      _log('Unpinned: $cid');
+    } catch (e) {
+      _log('Error unpinning: $e');
+    }
+  }
+
+  Future<List<String>> getPinnedCids() async {
+    if (!isOnline) return [];
+    try {
+      return await _impl.getPinnedCids();
+    } catch (e) {
+      _log('Error listing pins: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> ls(String cid) async {
+    if (!isOnline) return [];
+    try {
+      _log('Listing directory: $cid');
+      return await _impl.ls(cid);
+    } catch (e) {
+      _log('Error listing CID $cid: $e');
+      return [];
+    }
+  }
+
   void _log(String msg) {
     if (kDebugMode) print(msg);
     final time = DateTime.now().toIso8601String().split('T')[1].substring(0, 8);

@@ -399,8 +399,12 @@ class DHTClient {
       final message = kad.Message.fromBuffer(packet.datagram);
       final peerId = packet.srcPeerId;
 
-      // Update routing table
-      _kademliaRoutingTable.addPeer(peerId, peerId);
+      // Update routing table with IP diversity check
+      _kademliaRoutingTable.addPeer(
+        peerId,
+        peerId,
+        address: packet.srcFullAddress,
+      );
 
       switch (message.type) {
         case kad.Message_MessageType.FIND_NODE:

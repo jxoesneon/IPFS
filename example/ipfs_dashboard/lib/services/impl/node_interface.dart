@@ -15,4 +15,8 @@ abstract class INodeImplementation {
   Stream<Map<String, dynamic>> get bandwidthMetrics;
   Future<List<String>> getAddresses();
   void setGatewayMode(int modeIndex, String? customUrl);
+  Future<void> pin(String cid);
+  Future<bool> unpin(String cid);
+  Future<List<String>> getPinnedCids();
+  Future<List<Map<String, dynamic>>> ls(String cid);
 }

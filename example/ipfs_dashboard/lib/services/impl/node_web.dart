@@ -109,6 +109,33 @@ class NodeImplementation implements INodeImplementation {
   Stream<dynamic> get pubsubEvents => _mockPubSubController.stream;
   @override
   void setGatewayMode(int modeIndex, String? customUrl) {}
+
+  @override
+  Future<void> pin(String cid) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+  }
+
+  @override
+  Future<bool> unpin(String cid) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return true;
+  }
+
+  @override
+  Future<List<String>> getPinnedCids() async {
+    return _mockStore.keys.toList();
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> ls(String cid) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    // Hacky mock: if we have the content in store, assume it's just a file (no links)
+    // or return some dummy links
+    return [
+      {'name': 'link1', 'cid': 'QmMockChild1', 'size': 123},
+      {'name': 'link2', 'cid': 'QmMockChild2', 'size': 456},
+    ];
+  }
 }
 
 INodeImplementation getImplementation() => NodeImplementation();

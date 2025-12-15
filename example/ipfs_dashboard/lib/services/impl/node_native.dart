@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:dart_ipfs/dart_ipfs.dart';
 import 'node_interface.dart';
-import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 
 class NodeImplementation implements INodeImplementation {
   IPFSNode? _node;
@@ -115,6 +116,51 @@ class NodeImplementation implements INodeImplementation {
             customUrl: customUrl);
       }
     }
+  }
+
+  @override
+  Future<void> pin(String cid) async {
+    if (_node != null) {
+      await _node!.pin(cid);
+    }
+  }
+
+  @override
+  Future<bool> unpin(String cid) async {
+    if (_node != null) {
+      return await _node!.unpin(cid);
+    }
+    return false;
+  }
+
+  @override
+  Future<List<String>> getPinnedCids() async {
+    if (_node != null) {
+      return await _node!.pinnedCids;
+    }
+    return [];
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> ls(String cid) async {
+    if (_node != null) {
+      // IPFSNode.ls returns List<Link>
+      // Link class has name, size, cid
+      try {
+        final links = await _node!.ls(cid);
+        return links
+            .map((link) => {
+                  'name': link.name,
+                  'cid': link.cid.toString(),
+                  'size': link.size.toInt(),
+                })
+            .toList();
+      } catch (e) {
+        debugPrint('NodeNative ls error: $e');
+        return [];
+      }
+    }
+    return [];
   }
 }
 

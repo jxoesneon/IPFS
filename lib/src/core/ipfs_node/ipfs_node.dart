@@ -231,6 +231,18 @@ class IPFSNode {
     }
   }
 
+  /// Get list of pinned CIDs
+  Future<List<String>> get pinnedCids async {
+    try {
+      if (!_container.isRegistered(DatastoreHandler)) return [];
+      final pins = await _container.get<DatastoreHandler>().loadPinnedCIDs();
+      return pins.toList();
+    } catch (e) {
+      _logger.warning('Failed to load pinned CIDs: $e');
+      return [];
+    }
+  }
+
   // Convenience API Methods
 
   /// Get content by CID (alias for get method)
@@ -271,6 +283,49 @@ class IPFSNode {
       _logger.error('Failed to resolve IPNS: $e');
       rethrow;
     }
+  }
+
+  // PubSub API
+
+  /// Subscribe to a topic
+  Future<void> subscribe(String topic) async {
+    try {
+      if (!_container.isRegistered(PubSubHandler)) return;
+      await _container.get<PubSubHandler>().subscribe(topic);
+    } catch (e) {
+      _logger.error('Failed to subscribe: $e');
+    }
+  }
+
+  /// Unsubscribe from a topic
+  Future<void> unsubscribe(String topic) async {
+    try {
+      if (!_container.isRegistered(PubSubHandler)) return;
+      await _container.get<PubSubHandler>().unsubscribe(topic);
+    } catch (e) {
+      _logger.error('Failed to unsubscribe: $e');
+    }
+  }
+
+  /// Publish a message
+  Future<void> publish(String topic, String message) async {
+    try {
+      if (!_container.isRegistered(PubSubHandler)) {
+        throw StateError('PubSubHandler not available');
+      }
+      await _container.get<PubSubHandler>().publish(topic, message);
+    } catch (e) {
+      _logger.error('Failed to publish: $e');
+      rethrow;
+    }
+  }
+
+  /// Stream of incoming PubSub messages
+  Stream<PubSubMessage> get pubsubMessages {
+    if (_container.isRegistered(PubSubHandler)) {
+      return _container.get<PubSubHandler>().messages;
+    }
+    return const Stream.empty();
   }
 
   Future<void> start() async {
@@ -863,46 +918,6 @@ class IPFSNode {
       print('Error requesting block $cid from peer ${peer.toString()}: $e');
       rethrow;
     }
-  }
-
-  /// Subscribes to a PubSub topic.
-  Future<void> subscribe(String topic) async {
-    try {
-      await _container.get<PubSubHandler>().subscribe(topic);
-      print('Successfully subscribed to topic: $topic');
-    } catch (e) {
-      print('Error subscribing to topic $topic: $e');
-      rethrow;
-    }
-  }
-
-  /// Unsubscribes from a PubSub topic.
-  Future<void> unsubscribe(String topic) async {
-    try {
-      await _container.get<PubSubHandler>().unsubscribe(topic);
-      print('Successfully unsubscribed from topic: $topic');
-    } catch (e) {
-      print('Error unsubscribing from topic $topic: $e');
-    }
-  }
-
-  /// Publishes a message to a PubSub topic.
-  Future<void> publish(String topic, String message) async {
-    try {
-      await _container.get<PubSubHandler>().publish(topic, message);
-      print('Successfully published message to topic: $topic');
-    } catch (e) {
-      print('Error publishing message to topic $topic: $e');
-      rethrow;
-    }
-  }
-
-  /// Stream of incoming PubSub messages
-  Stream<PubSubMessage> get pubsubMessages {
-    if (_container.isRegistered(PubSubHandler)) {
-      return _container.get<PubSubHandler>().messages;
-    }
-    return const Stream.empty();
   }
 
   /// Resolves a DNSLink to its corresponding CID.
