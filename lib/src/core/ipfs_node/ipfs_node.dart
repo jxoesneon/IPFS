@@ -68,7 +68,7 @@ import 'package:dart_ipfs/src/transport/http_gateway_client.dart';
 /// ```
 ///
 /// **Lifecycle:**
-/// Always call [start] before using the node and [stop] when done:
+/// Always call `start` before using the node and `stop` when done:
 /// ```dart
 /// await node.start();
 /// try {

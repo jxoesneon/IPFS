@@ -513,15 +513,15 @@ Contributions welcome! Please:
 
 ## Roadmap
 
-- [x] Core IPFS protocols
-- [x] Offline mode
-- [x] HTTP Gateway
-- [x] P2P networking
-- [x] Production cryptography
-- [ ] Mobile optimization (Flutter)
-- [ ] Web platform support
-- [ ] QUIC transport
-- [ ] Full Ed25519/X25519 support
+- Done: Core IPFS protocols
+- Done: Offline mode
+- Done: HTTP Gateway
+- Done: P2P networking
+- Done: Production cryptography
+- Planned: Mobile optimization (Flutter)
+- Planned: Web platform support
+- Planned: QUIC transport
+- Planned: Full Ed25519/X25519 support
 
 ---
 

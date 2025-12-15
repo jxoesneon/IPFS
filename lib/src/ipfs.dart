@@ -31,7 +31,7 @@ import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 ///
 /// See also:
 /// - [IPFSNode] for full-featured node operations
-/// - [Block] for content-addressed data storage
+/// - `Block` for content-addressed data storage
 /// - [CID] for content identifier operations
 class IPFS {
   // Private constructor to enforce factory pattern

@@ -31,7 +31,7 @@ import 'package:dart_ipfs/src/utils/encoding.dart';
 ///
 /// See also:
 /// - [IPFS CID Specification](https://github.com/multiformats/cid)
-/// - [Block] for content-addressed data storage
+/// - `Block` for content-addressed data storage
 class CID {
   /// The CID version (0 or 1).
   final int version;
