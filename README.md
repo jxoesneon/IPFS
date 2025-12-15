@@ -51,7 +51,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_ipfs: ^1.2.0
+  dart_ipfs: ^1.2.3
 ```
 
 Or from Git for latest development:
@@ -190,10 +190,10 @@ final config = IPFSConfig(
 ```dart
 // Pub/Sub messaging
 await node.pubsub.subscribe('my-topic', (message) {
-  print('Received: ${String.fromCharCodes(message)}');
+  print('Received: $message');
 });
 
-await node.pubsub.publish('my-topic', 'Hello, peers!'.codeUnits);
+await node.pubsub.publish('my-topic', 'Hello, peers!');
 ```
 
 ### 4. Decentralized Websites
