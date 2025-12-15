@@ -19,7 +19,7 @@ class PubSubClient {
   final _logger = Logger('PubSubClient');
 
   PubSubClient(this._router, String peerIdStr)
-      : _peerId = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
+    : _peerId = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
 
   /// Starts the PubSub client.
   Future<void> start() async {
@@ -34,8 +34,9 @@ class PubSubClient {
           }
 
           // Validate sender is a known peer
-          final senderPeerId =
-              p2p.PeerId(value: Base58().base58Decode(decodedJson['sender']));
+          final senderPeerId = p2p.PeerId(
+            value: Base58().base58Decode(decodedJson['sender']),
+          );
 
           // Only process messages from valid peers
           if (_router.isConnectedPeer(senderPeerId)) {
@@ -48,7 +49,8 @@ class PubSubClient {
     });
 
     _logger.info(
-        'PubSub client started with peer ID: ${Base58().encode(_peerId.value)}');
+      'PubSub client started with peer ID: ${Base58().encode(_peerId.value)}',
+    );
   }
 
   /// Stops the PubSub client.
@@ -63,11 +65,13 @@ class PubSubClient {
       final subscribeData = {
         'action': 'subscribe',
         'topic': topic,
-        'subscriberId': Base58().encode(_peerId.value)
+        'subscriberId': Base58().encode(_peerId.value),
       };
       final peerIdObj = p2p.PeerId(value: Base58().base58Decode(topic));
-      await _router.sendMessage(peerIdObj,
-          Uint8List.fromList(utf8.encode(jsonEncode(subscribeData))));
+      await _router.sendMessage(
+        peerIdObj,
+        Uint8List.fromList(utf8.encode(jsonEncode(subscribeData))),
+      );
       _logger.info('Subscribed to topic: $topic');
     } catch (e, stackTrace) {
       _logger.error('Error subscribing to topic $topic', e, stackTrace);
@@ -120,7 +124,7 @@ class PubSubClient {
     final messageWithSender = {
       'sender': Base58().encode(_peerId.value),
       'topic': topic,
-      'content': message
+      'content': message,
     };
     return Uint8List.fromList(utf8.encode(jsonEncode(messageWithSender)));
   }

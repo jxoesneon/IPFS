@@ -38,8 +38,9 @@ extension BucketManagement on KademliaTree {
     );
 
     // 2. Move peers
-    var nodesToMove =
-        buckets[bucketIndex].entries.map((entry) => entry.value).toList();
+    var nodesToMove = buckets[bucketIndex].entries
+        .map((entry) => entry.value)
+        .toList();
     for (var node in nodesToMove) {
       if (_getBucketIndex(node.distance) == bucketIndex + 1) {
         buckets[bucketIndex].delete(node.peerId);
@@ -77,8 +78,9 @@ extension BucketManagement on KademliaTree {
     }
 
     // Move peers
-    var nodesToMove =
-        buckets[bucketIndex2].entries.map((entry) => entry.value).toList();
+    var nodesToMove = buckets[bucketIndex2].entries
+        .map((entry) => entry.value)
+        .toList();
     for (var node in nodesToMove) {
       buckets[bucketIndex1].insert(node.peerId, node);
       node.bucketIndex = bucketIndex1;
@@ -156,10 +158,9 @@ extension BucketManagement on KademliaTree {
 
   LRUCache _getOrCreateCache(int bucketIndex) {
     return this.bucketCaches.putIfAbsent(
-          bucketIndex,
-          () => LRUCache(
-              KademliaTree.K * 2), // Cache size twice the k-bucket size
-        );
+      bucketIndex,
+      () => LRUCache(KademliaTree.K * 2), // Cache size twice the k-bucket size
+    );
   }
 
   Future<void> _handleBucketFullness(
@@ -252,8 +253,9 @@ extension BucketManagement on KademliaTree {
     score *= Math.pow(0.9, node.failedRequests);
 
     // Factor 3: Recent activity bonus
-    final lastSeenDuration = DateTime.now()
-        .difference(DateTime.fromMillisecondsSinceEpoch(node.lastSeen));
+    final lastSeenDuration = DateTime.now().difference(
+      DateTime.fromMillisecondsSinceEpoch(node.lastSeen),
+    );
     if (lastSeenDuration < Duration(minutes: 30)) {
       score *= 1.2; // 20% bonus for recent activity
     }

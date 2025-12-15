@@ -45,8 +45,10 @@ void main() {
         priority: GraphsyncPriority.high,
       );
 
-      expect(message.requests.first.priority,
-          equals(GraphsyncPriority.high.value));
+      expect(
+        message.requests.first.priority,
+        equals(GraphsyncPriority.high.value),
+      );
     });
 
     test('createRequest with extensions includes extensions', () {
@@ -62,8 +64,10 @@ void main() {
       );
 
       expect(message.requests.first.extensions, isNotEmpty);
-      expect(message.requests.first.extensions.containsKey('test-extension'),
-          isTrue);
+      expect(
+        message.requests.first.extensions.containsKey('test-extension'),
+        isTrue,
+      );
     });
 
     test('createCancelRequest creates cancel message', () {
@@ -100,14 +104,13 @@ void main() {
       expect(message.responses, hasLength(1));
       expect(message.responses.first.id, equals(1));
       expect(
-          message.responses.first.status, equals(ResponseStatus.RS_COMPLETED));
+        message.responses.first.status,
+        equals(ResponseStatus.RS_COMPLETED),
+      );
     });
 
     test('createResponse with metadata includes metadata', () {
-      final metadata = {
-        'key1': 'value1',
-        'key2': 'value2',
-      };
+      final metadata = {'key1': 'value1', 'key2': 'value2'};
 
       final message = protocol.createResponse(
         requestId: 5,
@@ -155,8 +158,10 @@ void main() {
         totalBlocks: 100,
       );
 
-      expect(message.responses.first.status,
-          equals(ResponseStatus.RS_IN_PROGRESS));
+      expect(
+        message.responses.first.status,
+        equals(ResponseStatus.RS_IN_PROGRESS),
+      );
       expect(message.responses.first.metadata['blocksProcessed'], equals('50'));
       expect(message.responses.first.metadata['totalBlocks'], equals('100'));
     });
@@ -209,15 +214,25 @@ void main() {
 
     test('GraphsyncMessageType enum has all standard types', () {
       expect(
-          GraphsyncMessageType.values, contains(GraphsyncMessageType.request));
+        GraphsyncMessageType.values,
+        contains(GraphsyncMessageType.request),
+      );
       expect(
-          GraphsyncMessageType.values, contains(GraphsyncMessageType.response));
+        GraphsyncMessageType.values,
+        contains(GraphsyncMessageType.response),
+      );
       expect(
-          GraphsyncMessageType.values, contains(GraphsyncMessageType.complete));
+        GraphsyncMessageType.values,
+        contains(GraphsyncMessageType.complete),
+      );
       expect(
-          GraphsyncMessageType.values, contains(GraphsyncMessageType.cancel));
+        GraphsyncMessageType.values,
+        contains(GraphsyncMessageType.cancel),
+      );
       expect(
-          GraphsyncMessageType.values, contains(GraphsyncMessageType.progress));
+        GraphsyncMessageType.values,
+        contains(GraphsyncMessageType.progress),
+      );
       expect(GraphsyncMessageType.values, contains(GraphsyncMessageType.error));
     });
   });

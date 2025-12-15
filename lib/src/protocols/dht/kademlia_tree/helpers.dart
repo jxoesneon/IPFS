@@ -64,8 +64,9 @@ KademliaNode? findClosestNode(KademliaNode? root, p2p.PeerId target) {
     var childClosest = findClosestNode(child, target);
     if (childClosest != null) {
       // Convert KademliaId to PeerId for closest child
-      final closestPeerId =
-          p2p.PeerId(value: Uint8List.fromList(childClosest.peerId.id));
+      final closestPeerId = p2p.PeerId(
+        value: Uint8List.fromList(childClosest.peerId.id),
+      );
       int closestDistance = calculateDistance(closestPeerId, target);
       if (closestDistance < minDistance) {
         closest = childClosest;
@@ -95,8 +96,9 @@ void splitNode(KademliaNode node) {
   final rightChild = KademliaNode(
     peerId: rightKademliaId,
     distance: calculateDistance(
-        p2p.PeerId(value: Uint8List.fromList(rightKademliaId.id)),
-        p2p.PeerId(value: Uint8List.fromList(leftKademliaId.id))),
+      p2p.PeerId(value: Uint8List.fromList(rightKademliaId.id)),
+      p2p.PeerId(value: Uint8List.fromList(leftKademliaId.id)),
+    ),
     associatedPeerId: leftKademliaId,
     lastSeen: Int64(DateTime.now().millisecondsSinceEpoch),
   );
@@ -114,8 +116,11 @@ void mergeNodes(KademliaNode parent) {
 }
 
 /// Sends a DHT request to a peer and returns the response
-Future<dht_pb.FindNodeResponse> sendRequest(DHTClient dhtClient,
-    p2p.PeerId peer, dht_pb.FindNodeRequest request) async {
+Future<dht_pb.FindNodeResponse> sendRequest(
+  DHTClient dhtClient,
+  p2p.PeerId peer,
+  dht_pb.FindNodeRequest request,
+) async {
   try {
     // Use the public findPeer method instead of trying to access private _sendRequest
     final foundPeer = await dhtClient.findPeer(peer);
@@ -134,7 +139,10 @@ Future<dht_pb.FindNodeResponse> sendRequest(DHTClient dhtClient,
 
 /// Sends a FIND_NODE request to a peer and returns closer peers to the target.
 Future<List<p2p.PeerId>> findNode(
-    DHTClient dhtClient, p2p.PeerId peer, p2p.PeerId target) async {
+  DHTClient dhtClient,
+  p2p.PeerId peer,
+  p2p.PeerId target,
+) async {
   final request = dht_pb.FindNodeRequest()..peerId = target.value;
 
   try {

@@ -172,8 +172,10 @@ class EncodingUtils {
   /// Gets the encoding name from a multibase prefix
   static String? getEncodingFromPrefix(String prefix) {
     return _supportedMultibasePrefixes.entries
-        .firstWhere((entry) => entry.value == prefix,
-            orElse: () => const MapEntry('', ''))
+        .firstWhere(
+          (entry) => entry.value == prefix,
+          orElse: () => const MapEntry('', ''),
+        )
         .key;
   }
 
@@ -187,12 +189,10 @@ class EncodingUtils {
     'dag-jose': 0x85, // DAG JOSE
     'dag-cose': 0x012b, // DAG COSE
     'car': 0x0202, // Content Addressable aRchive
-
     // IPFS namespace codecs
     'ipld-ns': 0x300, // IPLD namespace
     'ipfs-ns': 0x301, // IPFS namespace
     'ipns-ns': 0x302, // IPNS namespace
-
     // Identity codec
     'identity': 0x00, // Raw identity
   };
@@ -204,7 +204,8 @@ class EncodingUtils {
         .firstWhere(
           (entry) => entry.value == code,
           orElse: () => throw ArgumentError(
-              'Unsupported codec code: 0x${code.toRadixString(16)}'),
+            'Unsupported codec code: 0x${code.toRadixString(16)}',
+          ),
         )
         .key;
     return codec;

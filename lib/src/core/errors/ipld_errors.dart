@@ -25,7 +25,7 @@ class IPLDDecodingError extends IPLDError {
 
 class IPLDResolutionError extends IPLDError {
   IPLDResolutionError(String message)
-      : super('IPLD resolution error: $message');
+    : super('IPLD resolution error: $message');
 }
 
 class IPLDStorageError extends IPLDError {
@@ -34,7 +34,7 @@ class IPLDStorageError extends IPLDError {
 
 class IPLDValidationError extends IPLDError {
   IPLDValidationError(String message)
-      : super('IPLD validation error: $message');
+    : super('IPLD validation error: $message');
 }
 
 class IPLDLinkError extends IPLDError {

@@ -12,8 +12,9 @@ void main() {
     test('resolve returns null on HTTP error', () async {
       // Would need HTTP mocking to properly test
       // Testing that the method exists and has correct signature
-      final result =
-          await DNSLinkResolver.resolve('nonexistent-domain-12345.test');
+      final result = await DNSLinkResolver.resolve(
+        'nonexistent-domain-12345.test',
+      );
       // Expect null or exception due to network error
       expect(result, anyOf(isNull, isA<String>()));
     });

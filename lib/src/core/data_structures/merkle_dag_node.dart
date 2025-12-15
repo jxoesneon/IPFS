@@ -80,7 +80,8 @@ class MerkleDAGNode {
       if (pbNode.hasData()) {
         try {
           final unixData = unixfs_proto.Data.fromBuffer(pbNode.data);
-          isDir = (unixData.type == unixfs_proto.Data_DataType.Directory ||
+          isDir =
+              (unixData.type == unixfs_proto.Data_DataType.Directory ||
               unixData.type == unixfs_proto.Data_DataType.HAMTShard);
           if (unixData.hasMtime()) {
             mtime = unixData.mtime.toInt();

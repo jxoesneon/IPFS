@@ -72,9 +72,11 @@ Future<void> main() async {
   try {
     final msg = bitswap.Message()
       ..wantlist = (bitswap.Message_Wantlist()
-        ..entries.add(bitswap.Message_Wantlist_Entry()
-          ..block = Uint8List.fromList('cid'.codeUnits)
-          ..priority = 1));
+        ..entries.add(
+          bitswap.Message_Wantlist_Entry()
+            ..block = Uint8List.fromList('cid'.codeUnits)
+            ..priority = 1,
+        ));
     final bytes = msg.writeToBuffer();
     final decoded = bitswap.Message.fromBuffer(bytes);
     assert(decoded.wantlist.entries.isNotEmpty);
@@ -106,10 +108,12 @@ Future<void> main() async {
   try {
     final node = dag.PBNode()
       ..data = Uint8List.fromList('data'.codeUnits)
-      ..links.add(dag.PBLink()
-        ..hash = Uint8List.fromList(List.filled(32, 1))
-        ..name = 'link1'
-        ..size = Int64(100));
+      ..links.add(
+        dag.PBLink()
+          ..hash = Uint8List.fromList(List.filled(32, 1))
+          ..name = 'link1'
+          ..size = Int64(100),
+      );
     final bytes = node.writeToBuffer();
     final decoded = dag.PBNode.fromBuffer(bytes);
     assert(decoded.links.length == 1);

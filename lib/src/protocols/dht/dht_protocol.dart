@@ -23,13 +23,15 @@ class DHTProtocol {
     required RoutingTable routingTable,
     required PeerStore peerStore,
     required NetworkHandler network,
-  })  : _routingTable = routingTable,
-        _peerStore = peerStore,
-        _network = network;
+  }) : _routingTable = routingTable,
+       _peerStore = peerStore,
+       _network = network;
 
   /// Finds the closest peers to a given key
-  Future<List<PeerId>> findClosestPeers(List<int> key,
-      {int numPeers = K}) async {
+  Future<List<PeerId>> findClosestPeers(
+    List<int> key, {
+    int numPeers = K,
+  }) async {
     final closest = _routingTable.getNearestPeers(key, numPeers);
     final results = <PeerId>[];
 
@@ -64,9 +66,13 @@ class DHTProtocol {
     }).toList();
 
     return FindNodeResponse()
-      ..closerPeers.addAll(ipfsPeers.map((p) => DHTPeer()
-        ..id = p.id.value
-        ..addrs.addAll(p.addresses.map((a) => a.toString()))));
+      ..closerPeers.addAll(
+        ipfsPeers.map(
+          (p) => DHTPeer()
+            ..id = p.id.value
+            ..addrs.addAll(p.addresses.map((a) => a.toString())),
+        ),
+      );
   }
 
   /// Queries a peer for nodes closer to the target key

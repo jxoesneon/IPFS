@@ -73,14 +73,16 @@ class IPFSNodeBuilder {
   Future<void> _initializeCoreSystem() async {
     _container.registerSingleton(MetricsCollector(_config));
     _container.registerSingleton(
-        SecurityManager(_config.security, _container.get<MetricsCollector>()));
+      SecurityManager(_config.security, _container.get<MetricsCollector>()),
+    );
   }
 
   Future<void> _initializeStorageLayer() async {
     _container.registerSingleton(BlockStore(path: _config.blockStorePath));
     _container.registerSingleton(DatastoreHandler(_config));
-    _container
-        .registerSingleton(IPLDHandler(_config, _container.get<BlockStore>()));
+    _container.registerSingleton(
+      IPLDHandler(_config, _container.get<BlockStore>()),
+    );
   }
 
   Future<void> _initializeNetworkLayer() async {
@@ -97,20 +99,30 @@ class IPFSNodeBuilder {
     _container.registerSingleton(MDNSHandler(_config));
 
     _container.registerSingleton(
-        DHTHandler(_config, networkHandler.p2pRouter, networkHandler));
+      DHTHandler(_config, networkHandler.p2pRouter, networkHandler),
+    );
 
     // Create IpfsNodeNetworkEvents instance
     final networkEvents = IpfsNodeNetworkEvents(
-        networkHandler.circuitRelayClient, networkHandler.p2pRouter);
-
-    _container.registerSingleton(PubSubHandler(
+      networkHandler.circuitRelayClient,
       networkHandler.p2pRouter,
-      networkHandler.peerID,
-      networkEvents, // Pass the IpfsNodeNetworkEvents instance
-    ));
+    );
 
-    _container.registerSingleton(BitswapHandler(
-        _config, _container.get<BlockStore>(), networkHandler.p2pRouter));
+    _container.registerSingleton(
+      PubSubHandler(
+        networkHandler.p2pRouter,
+        networkHandler.peerID,
+        networkEvents, // Pass the IpfsNodeNetworkEvents instance
+      ),
+    );
+
+    _container.registerSingleton(
+      BitswapHandler(
+        _config,
+        _container.get<BlockStore>(),
+        networkHandler.p2pRouter,
+      ),
+    );
 
     _container.registerSingleton(BootstrapHandler(_config, networkHandler));
   }
@@ -121,31 +133,38 @@ class IPFSNodeBuilder {
 
     final networkHandler = _container.get<NetworkHandler>();
 
-    _container
-        .registerSingleton(ContentRoutingHandler(_config, networkHandler));
+    _container.registerSingleton(
+      ContentRoutingHandler(_config, networkHandler),
+    );
     _container.registerSingleton(DNSLinkHandler(_config));
-    _container.registerSingleton(GraphsyncHandler(
-      _config,
-      networkHandler.p2pRouter,
-      _container.get<BitswapHandler>(),
-      _container.get<IPLDHandler>(),
-      _container.get<BlockStore>(),
-    ));
+    _container.registerSingleton(
+      GraphsyncHandler(
+        _config,
+        networkHandler.p2pRouter,
+        _container.get<BitswapHandler>(),
+        _container.get<IPLDHandler>(),
+        _container.get<BlockStore>(),
+      ),
+    );
     _container.registerSingleton(AutoNATHandler(_config, networkHandler));
-    _container.registerSingleton(IPNSHandler(
-      _config,
-      _container.get<SecurityManager>(),
-      _container.get<DHTHandler>(),
-    ));
+    _container.registerSingleton(
+      IPNSHandler(
+        _config,
+        _container.get<SecurityManager>(),
+        _container.get<DHTHandler>(),
+      ),
+    );
   }
 
   void registerGraphsyncServices(ServiceContainer container) {
-    container.registerSingleton(GraphsyncHandler(
-      _config,
-      _container.get<NetworkHandler>().p2pRouter,
-      _container.get<BitswapHandler>(),
-      _container.get<IPLDHandler>(),
-      _container.get<BlockStore>(),
-    ));
+    container.registerSingleton(
+      GraphsyncHandler(
+        _config,
+        _container.get<NetworkHandler>().p2pRouter,
+        _container.get<BitswapHandler>(),
+        _container.get<IPLDHandler>(),
+        _container.get<BlockStore>(),
+      ),
+    );
   }
 }

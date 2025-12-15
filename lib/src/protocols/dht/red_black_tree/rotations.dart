@@ -8,8 +8,10 @@ import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
 /// Provides left and right rotations, plus tree validation.
 class Rotations<K_PeerId, V_PeerInfo> {
   /// Performs a left rotation around [x].
-  void rotateLeft(RedBlackTree<K_PeerId, V_PeerInfo> tree,
-      RedBlackTreeNode<K_PeerId, V_PeerInfo>? x) {
+  void rotateLeft(
+    RedBlackTree<K_PeerId, V_PeerInfo> tree,
+    RedBlackTreeNode<K_PeerId, V_PeerInfo>? x,
+  ) {
     if (x == null) return; // Null nodes are treated as black (leaves)
 
     // 1. Get the right child of x, which will become the new parent
@@ -39,12 +41,16 @@ class Rotations<K_PeerId, V_PeerInfo> {
     x.parent = y;
 
     // Verify tree.root update when root node is involved
-    assert(tree.root == y || tree.root != x,
-        "Root node not updated correctly in rotateLeft");
+    assert(
+      tree.root == y || tree.root != x,
+      "Root node not updated correctly in rotateLeft",
+    );
   }
 
-  void rotateRight(RedBlackTree<K_PeerId, V_PeerInfo> tree,
-      RedBlackTreeNode<K_PeerId, V_PeerInfo>? y) {
+  void rotateRight(
+    RedBlackTree<K_PeerId, V_PeerInfo> tree,
+    RedBlackTreeNode<K_PeerId, V_PeerInfo>? y,
+  ) {
     if (y == null) return; // Null nodes are treated as black (leaves)
 
     // 1. Get the left child of y, which will become the new parent
@@ -74,8 +80,10 @@ class Rotations<K_PeerId, V_PeerInfo> {
     y.parent = x;
 
     // Verify tree.root update when root node is involved
-    assert(tree.root == x || tree.root != y,
-        "Root node not updated correctly in rotateRight");
+    assert(
+      tree.root == x || tree.root != y,
+      "Root node not updated correctly in rotateRight",
+    );
   }
 
   // Validation method for node colors (all nodes must be either red or black)
@@ -123,8 +131,10 @@ class Rotations<K_PeerId, V_PeerInfo> {
     }
 
     // 4. Validate parent pointers
-    bool validateParentPointers(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node,
-        RedBlackTreeNode<K_PeerId, V_PeerInfo>? expectedParent) {
+    bool validateParentPointers(
+      RedBlackTreeNode<K_PeerId, V_PeerInfo>? node,
+      RedBlackTreeNode<K_PeerId, V_PeerInfo>? expectedParent,
+    ) {
       if (node == null) return true;
       if (node.parent != expectedParent) return false;
       return validateParentPointers(node.left_child, node) &&
@@ -157,7 +167,8 @@ class Rotations<K_PeerId, V_PeerInfo> {
 
     try {
       // Run all validations
-      final bool isValid = validateRedProperty(tree.root) &&
+      final bool isValid =
+          validateRedProperty(tree.root) &&
           countBlackNodes(tree.root) > 0 &&
           validateNodeColors(tree.root) &&
           validateParentPointers(tree.root, null) &&

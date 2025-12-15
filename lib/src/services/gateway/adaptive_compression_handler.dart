@@ -60,7 +60,7 @@ class AdaptiveCompressionHandler {
 
   /// Creates a handler with [_blockStore] and [_config].
   AdaptiveCompressionHandler(this._blockStore, this._config)
-      : _metadataPath = '${_blockStore.path}/metadata';
+    : _metadataPath = '${_blockStore.path}/metadata';
 
   Future<Block> compressBlock(Block block, String contentType) async {
     if (!_config.enabled || block.size > _config.maxUncompressedSize) {
@@ -117,7 +117,9 @@ class AdaptiveCompressionHandler {
   }
 
   Future<void> _storeCompressionMetadata(
-      CID cid, Map<String, String> metadata) async {
+    CID cid,
+    Map<String, String> metadata,
+  ) async {
     final metadataFile = File('$_metadataPath/${cid.encode()}.json');
     await metadataFile.parent.create(recursive: true);
     await metadataFile.writeAsString(jsonEncode(metadata));

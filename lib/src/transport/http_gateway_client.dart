@@ -30,8 +30,9 @@ class HttpGatewayClient {
         final url = Uri.parse('$cleanBase$cid');
         _logger.debug('Fetching from specific gateway: $url');
 
-        final response =
-            await http.get(url).timeout(const Duration(seconds: 5));
+        final response = await http
+            .get(url)
+            .timeout(const Duration(seconds: 5));
 
         if (response.statusCode == 200) {
           return response.bodyBytes;
@@ -51,8 +52,9 @@ class HttpGatewayClient {
         final url = Uri.parse('$gateway$cid');
         _logger.debug('Trying gateway: $url');
 
-        final response =
-            await http.get(url).timeout(const Duration(seconds: 5));
+        final response = await http
+            .get(url)
+            .timeout(const Duration(seconds: 5));
 
         if (response.statusCode == 200) {
           _logger.info('Successfully retrieved CID $cid from $gateway');
@@ -77,8 +79,11 @@ class HttpGatewayClient {
       // Use QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn (empty dir) - might be safer
 
       final response = await http
-          .head(Uri.parse(
-              'https://ipfs.io/ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'))
+          .head(
+            Uri.parse(
+              'https://ipfs.io/ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+            ),
+          )
           .timeout(const Duration(seconds: 3));
       return response.statusCode == 200;
     } catch (e) {

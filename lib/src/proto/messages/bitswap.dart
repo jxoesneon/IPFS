@@ -11,10 +11,7 @@ class BitswapMessage extends BaseProtoMessage {
   GeneratedMessage clone() => super.clone();
 
   factory BitswapMessage.fromBytes(Uint8List bytes) {
-    return BaseProtoMessage.fromBytes(
-      bytes,
-      () => BitswapMessage(),
-    );
+    return BaseProtoMessage.fromBytes(bytes, () => BitswapMessage());
   }
 
   @override

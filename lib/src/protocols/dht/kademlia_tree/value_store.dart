@@ -48,8 +48,10 @@ class ValueStore {
 
   Future<void> _replicateValue(String key, Uint8List value) async {
     final targetPeerId = p2p.PeerId(value: Uint8List.fromList(key.codeUnits));
-    final closestPeers = _dhtClient.kademliaRoutingTable
-        .findClosestPeers(targetPeerId, REPLICATION_FACTOR);
+    final closestPeers = _dhtClient.kademliaRoutingTable.findClosestPeers(
+      targetPeerId,
+      REPLICATION_FACTOR,
+    );
 
     int successfulReplications = 0;
     for (final peer in closestPeers) {
@@ -71,7 +73,8 @@ class ValueStore {
     // Verify minimum replication factor
     if (successfulReplications < REPLICATION_FACTOR ~/ 2) {
       print(
-          'Warning: Failed to achieve minimum replication factor for key $key');
+        'Warning: Failed to achieve minimum replication factor for key $key',
+      );
     }
   }
 
@@ -111,7 +114,8 @@ class ValueStore {
     // Remove expired values before returning keys
     final now = DateTime.now();
     _values.removeWhere(
-        (key, value) => now.difference(value.timestamp) > VALUE_EXPIRY);
+      (key, value) => now.difference(value.timestamp) > VALUE_EXPIRY,
+    );
 
     return _values.keys.toList();
   }

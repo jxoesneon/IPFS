@@ -12,11 +12,7 @@ class Peer {
   final Map<String, dynamic>? metadata;
 
   /// Creates a new Peer instance
-  Peer({
-    required this.id,
-    required this.address,
-    this.metadata,
-  });
+  Peer({required this.id, required this.address, this.metadata});
 
   /// Creates a string representation of the peer
   @override

@@ -54,11 +54,8 @@ class Link {
   // We keep the class simple to match the spec.
 
   /// Creates a new link with the given [name], [cid], and [size].
-  Link({
-    required this.name,
-    required this.cid,
-    required int size,
-  }) : size = fixnum.Int64(size);
+  Link({required this.name, required this.cid, required int size})
+    : size = fixnum.Int64(size);
 
   /// Creates a Link from a standard PBLink proto.
   factory Link.fromProto(dag_proto.PBLink proto) {
@@ -71,17 +68,14 @@ class Link {
       cid = CID.v0(Uint8List(32));
     }
 
-    return Link(
-      name: proto.name,
-      cid: cid,
-      size: proto.size.toInt(),
-    );
+    return Link(name: proto.name, cid: cid, size: proto.size.toInt());
   }
 
   dag_proto.PBLink toProto() {
     return dag_proto.PBLink()
       ..name = name
-      ..hash = cid.toBytes() // Assuming CID has toBytes()
+      ..hash = cid
+          .toBytes() // Assuming CID has toBytes()
       ..size = size;
   }
 }

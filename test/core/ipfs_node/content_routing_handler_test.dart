@@ -48,7 +48,7 @@ class MockDelegatedRouting extends DelegatedRoutingHandler {
   final bool success;
 
   MockDelegatedRouting({this.providers = const [], this.success = true})
-      : super(delegateEndpoint: 'http://mock');
+    : super(delegateEndpoint: 'http://mock');
 
   @override
   Future<RoutingResponse> findProviders(CID cid) async {
@@ -86,25 +86,28 @@ void main() {
       expect(providers, contains('PeerA'));
     });
 
-    test('findProviders falls back to Delegated Routing if DHT fails',
-        () async {
-      final mockContent = MockContentRouting(providers: []); // Empty DHT
-      final mockDelegated =
-          MockDelegatedRouting(providers: ['PeerC']); // Delegated has it
+    test(
+      'findProviders falls back to Delegated Routing if DHT fails',
+      () async {
+        final mockContent = MockContentRouting(providers: []); // Empty DHT
+        final mockDelegated = MockDelegatedRouting(
+          providers: ['PeerC'],
+        ); // Delegated has it
 
-      handler = ContentRoutingHandler(
-        config,
-        networkHandler,
-        contentRouting: mockContent,
-        delegatedRouting: mockDelegated,
-      );
+        handler = ContentRoutingHandler(
+          config,
+          networkHandler,
+          contentRouting: mockContent,
+          delegatedRouting: mockDelegated,
+        );
 
-      final validCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
+        final validCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
 
-      final result = await handler.findProviders(validCid);
-      expect(result, hasLength(1));
-      expect(result.first, 'PeerC');
-    });
+        final result = await handler.findProviders(validCid);
+        expect(result, hasLength(1));
+        expect(result.first, 'PeerC');
+      },
+    );
 
     test('resolveDNSLink falls back to DHT if DNS fails', () async {
       // Assuming DNSLinkResolver.resolve returns null for this domain

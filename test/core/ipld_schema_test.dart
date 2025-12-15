@@ -15,30 +15,30 @@ void main() {
           'fields': {
             'name': {
               'kind': 'string',
-              'valueConstraint': {'minLength': 2}
+              'valueConstraint': {'minLength': 2},
             },
             'age': {
               'kind': 'int',
-              'valueConstraint': {'min': 0, 'max': 150}
+              'valueConstraint': {'min': 0, 'max': 150},
             },
             'tags': {
               'kind': 'list',
-              'valueType': 'string'
-            } // Note: list handling in code might be missing?
+              'valueType': 'string',
+            }, // Note: list handling in code might be missing?
           },
-          'required': ['name', 'age']
+          'required': ['name', 'age'],
         },
         'MyInt': {
           'kind': 'int',
-          'valueConstraint': {'min': 10}
+          'valueConstraint': {'min': 10},
         },
         'MyUnion': {
           'kind': 'union',
           'representation': {
             't1': {'kind': 'int'},
-            't2': {'kind': 'string'}
-          }
-        }
+            't2': {'kind': 'string'},
+          },
+        },
       };
       schema = IPLDSchema('TestSchema', schemaMap);
     });
@@ -57,7 +57,7 @@ void main() {
             ..key = 'age'
             ..value = (IPLDNode()
               ..kind = Kind.INTEGER
-              ..intValue = Int64(30))
+              ..intValue = Int64(30)),
         ]);
 
       expect(await schema.validate('MyStruct', node), isTrue);
@@ -72,7 +72,7 @@ void main() {
             ..key = 'name'
             ..value = (IPLDNode()
               ..kind = Kind.STRING
-              ..stringValue = 'Alice')
+              ..stringValue = 'Alice'),
         ]); // Missing age
 
       expect(await schema.validate('MyStruct', node), isFalse);
@@ -99,8 +99,8 @@ void main() {
       final customSchema = IPLDSchema('StringSchema', {
         'MyStr': {
           'kind': 'string',
-          'valueConstraint': {'minLength': 3}
-        }
+          'valueConstraint': {'minLength': 3},
+        },
       });
 
       final valid = IPLDNode()
@@ -116,8 +116,10 @@ void main() {
 
     test('throws on unknown type', () async {
       final node = IPLDNode()..kind = Kind.NULL;
-      expect(() => schema.validate('UnknownType', node),
-          throwsA(isA<IPLDSchemaError>()));
+      expect(
+        () => schema.validate('UnknownType', node),
+        throwsA(isA<IPLDSchemaError>()),
+      );
     });
   });
 }

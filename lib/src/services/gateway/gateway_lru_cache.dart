@@ -12,8 +12,8 @@ class GatewayLruCache<K, V> {
 
   /// Creates a cache with the given [capacity].
   GatewayLruCache(this.capacity)
-      : assert(capacity > 0, 'Capacity must be positive'),
-        _cache = LinkedHashMap();
+    : assert(capacity > 0, 'Capacity must be positive'),
+      _cache = LinkedHashMap();
 
   V? get(K key) {
     if (!_cache.containsKey(key)) return null;

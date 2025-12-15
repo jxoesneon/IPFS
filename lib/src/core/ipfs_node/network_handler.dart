@@ -25,11 +25,14 @@ class NetworkHandler {
   late final Logger _logger;
 
   NetworkHandler(this._config, {P2plibRouter? router})
-      : _router = router ?? P2plibRouter(_config),
-        _networkEventController = StreamController<NetworkEvent>.broadcast() {
+    : _router = router ?? P2plibRouter(_config),
+      _networkEventController = StreamController<NetworkEvent>.broadcast() {
     // Initialize logger
-    _logger = Logger('NetworkHandler',
-        debug: _config.debug, verbose: _config.verboseLogging);
+    _logger = Logger(
+      'NetworkHandler',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
 
     _logger.debug('Initializing NetworkHandler...');
 
@@ -150,52 +153,60 @@ class NetworkHandler {
   /// Listens for network events and handles them appropriately.
   void _listenForNetworkEvents() {
     _logger.verbose('Setting up network event stream listener');
-    _networkEventController.stream.listen((event) {
-      try {
-        if (event.hasPeerConnected()) {
-          final peerId = event.peerConnected.peerId;
-          final multiaddress = event.peerConnected.multiaddress;
-          _logger.info('Peer connected: $peerId at address: $multiaddress');
+    _networkEventController.stream.listen(
+      (event) {
+        try {
+          if (event.hasPeerConnected()) {
+            final peerId = event.peerConnected.peerId;
+            final multiaddress = event.peerConnected.multiaddress;
+            _logger.info('Peer connected: $peerId at address: $multiaddress');
 
-          final peerIdBytes = Uint8List.fromList(utf8.encode(peerId));
-          final peer = p2p.PeerId(value: peerIdBytes);
-          try {
-            _logger.verbose('Adding peer to routing table: $peerId');
-            ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable
-                .addPeer(peer, peer);
-          } catch (e) {
-            _logger.debug('DHT not ready yet, skipping routing table update');
-          }
-        } else if (event.hasPeerDisconnected()) {
-          final peerIdStr = event.peerDisconnected.peerId;
-          final reason = event.peerDisconnected.reason;
-          _logger.info('Peer disconnected: $peerIdStr. Reason: $reason');
+            final peerIdBytes = Uint8List.fromList(utf8.encode(peerId));
+            final peer = p2p.PeerId(value: peerIdBytes);
+            try {
+              _logger.verbose('Adding peer to routing table: $peerId');
+              ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable.addPeer(
+                peer,
+                peer,
+              );
+            } catch (e) {
+              _logger.debug('DHT not ready yet, skipping routing table update');
+            }
+          } else if (event.hasPeerDisconnected()) {
+            final peerIdStr = event.peerDisconnected.peerId;
+            final reason = event.peerDisconnected.reason;
+            _logger.info('Peer disconnected: $peerIdStr. Reason: $reason');
 
-          final peerIdBytes = Uint8List.fromList(utf8.encode(peerIdStr));
-          final peerId = p2p.PeerId(value: peerIdBytes);
-          try {
-            _logger.verbose('Removing peer from routing table: $peerIdStr');
-            ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable
-                .removePeer(peerId);
-          } catch (e) {
-            _logger.debug('DHT not ready yet, skipping routing table update');
+            final peerIdBytes = Uint8List.fromList(utf8.encode(peerIdStr));
+            final peerId = p2p.PeerId(value: peerIdBytes);
+            try {
+              _logger.verbose('Removing peer from routing table: $peerIdStr');
+              ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable.removePeer(
+                peerId,
+              );
+            } catch (e) {
+              _logger.debug('DHT not ready yet, skipping routing table update');
+            }
+          } else if (event.hasMessageReceived()) {
+            final messageContent = utf8.decode(
+              event.messageReceived.messageContent,
+            );
+            final senderId = event.messageReceived.peerId;
+            _logger.debug('Message received from $senderId: $messageContent');
+          } else {
+            _logger.warning('Unhandled event type: ${event.runtimeType}');
           }
-        } else if (event.hasMessageReceived()) {
-          final messageContent =
-              utf8.decode(event.messageReceived.messageContent);
-          final senderId = event.messageReceived.peerId;
-          _logger.debug('Message received from $senderId: $messageContent');
-        } else {
-          _logger.warning('Unhandled event type: ${event.runtimeType}');
+        } catch (e, stackTrace) {
+          _logger.error('Error processing network event', e, stackTrace);
         }
-      } catch (e, stackTrace) {
-        _logger.error('Error processing network event', e, stackTrace);
-      }
-    }, onError: (error, stackTrace) {
-      _logger.error('Error in network event stream', error, stackTrace);
-    }, onDone: () {
-      _logger.debug('Network event stream closed');
-    });
+      },
+      onError: (error, stackTrace) {
+        _logger.error('Error in network event stream', error, stackTrace);
+      },
+      onDone: () {
+        _logger.debug('Network event stream closed');
+      },
+    );
   }
 
   // Create Router instance with the config
@@ -219,8 +230,10 @@ class NetworkHandler {
       final requestId = DateTime.now().millisecondsSinceEpoch.toString();
 
       // Add request ID to message
-      final messageWithId =
-          Uint8List.fromList([...request, ...utf8.encode(requestId)]);
+      final messageWithId = Uint8List.fromList([
+        ...request,
+        ...utf8.encode(requestId),
+      ]);
 
       // Set up one-time response handler
       _router.addMessageHandler(protocolId, (packet) {
@@ -253,8 +266,9 @@ class NetworkHandler {
     try {
       // The request ID is appended at the end of the datagram
       // Convert the last portion to UTF-8 string
-      final requestIdBytes =
-          datagram.sublist(datagram.length - 36); // UUID is 36 chars
+      final requestIdBytes = datagram.sublist(
+        datagram.length - 36,
+      ); // UUID is 36 chars
       return utf8.decode(requestIdBytes);
     } catch (e) {
       print('Error extracting request ID: $e');
@@ -311,8 +325,9 @@ class NetworkHandler {
           break;
 
         case ConnectionEventType.disconnected:
-          _logger
-              .debug('Handling peer disconnected event for: ${event.peerId}');
+          _logger.debug(
+            'Handling peer disconnected event for: ${event.peerId}',
+          );
           networkEvent.peerDisconnected = PeerDisconnectedEvent()
             ..peerId = event.peerId
             ..reason = 'Peer disconnected';
@@ -337,7 +352,8 @@ class NetworkHandler {
 
       _networkEventController.add(networkEvent);
       _logger.verbose(
-          'Message event dispatched, size: ${event.message.length} bytes');
+        'Message event dispatched, size: ${event.message.length} bytes',
+      );
     } catch (e, stackTrace) {
       _logger.error('Error handling message event', e, stackTrace);
     }
@@ -357,8 +373,11 @@ class NetworkHandler {
       _logger.debug('Successfully tested direct connection to: $peerAddress');
       return true;
     } catch (e, stackTrace) {
-      _logger.error('Failed to establish direct connection to: $peerAddress', e,
-          stackTrace);
+      _logger.error(
+        'Failed to establish direct connection to: $peerAddress',
+        e,
+        stackTrace,
+      );
       return false;
     }
   }
@@ -418,8 +437,10 @@ class NetworkHandler {
         _logger.debug('No bootstrap peers available for dialback test');
         return false;
       }
-      final bootstrapPeer = _config.network.bootstrapPeers[
-          Random().nextInt(_config.network.bootstrapPeers.length)];
+      final bootstrapPeer =
+          _config.network.bootstrapPeers[Random().nextInt(
+            _config.network.bootstrapPeers.length,
+          )];
 
       // Try to establish connection
       await _router.connect(bootstrapPeer);

@@ -28,8 +28,10 @@ class ReplicationManager {
 
     if (storedReplicas < MIN_REPLICAS) {
       final peersNeeded = MIN_REPLICAS - storedReplicas;
-      final additionalPeers = _dhtClient.kademliaRoutingTable
-          .findClosestPeers(targetPeerId, peersNeeded);
+      final additionalPeers = _dhtClient.kademliaRoutingTable.findClosestPeers(
+        targetPeerId,
+        peersNeeded,
+      );
 
       for (final peer in additionalPeers) {
         try {
@@ -53,8 +55,10 @@ class ReplicationManager {
     int replicaCount = localValue != null ? 1 : 0;
 
     final targetPeerId = p2p.PeerId(value: Uint8List.fromList(key.codeUnits));
-    final potentialHolders =
-        _dhtClient.kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
+    final potentialHolders = _dhtClient.kademliaRoutingTable.findClosestPeers(
+      targetPeerId,
+      20,
+    );
 
     final keyBytes = Uint8List.fromList(key.codeUnits);
     for (final peer in potentialHolders) {

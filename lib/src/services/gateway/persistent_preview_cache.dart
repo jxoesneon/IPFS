@@ -14,8 +14,8 @@ class PersistentPreviewCache {
   PersistentPreviewCache({
     required String cachePath,
     int maxCacheSize = 1024 * 1024 * 1024, // 1GB default
-  })  : _cacheDir = Directory(cachePath),
-        _maxCacheSize = maxCacheSize {
+  }) : _cacheDir = Directory(cachePath),
+       _maxCacheSize = maxCacheSize {
     _initializeCache();
   }
 
@@ -36,8 +36,9 @@ class PersistentPreviewCache {
   }
 
   Future<Uint8List?> getPreview(CID cid, String contentType) async {
-    final cacheFile =
-        File(path.join(_cacheDir.path, _getCacheFileName(cid, contentType)));
+    final cacheFile = File(
+      path.join(_cacheDir.path, _getCacheFileName(cid, contentType)),
+    );
 
     if (await cacheFile.exists()) {
       try {
@@ -51,11 +52,15 @@ class PersistentPreviewCache {
   }
 
   Future<void> cachePreview(
-      CID cid, String contentType, Uint8List preview) async {
+    CID cid,
+    String contentType,
+    Uint8List preview,
+  ) async {
     if (preview.length > _maxCacheSize) return;
 
-    final cacheFile =
-        File(path.join(_cacheDir.path, _getCacheFileName(cid, contentType)));
+    final cacheFile = File(
+      path.join(_cacheDir.path, _getCacheFileName(cid, contentType)),
+    );
 
     // Check if we need to free up space
     if (_currentCacheSize + preview.length > _maxCacheSize) {
@@ -82,10 +87,12 @@ class PersistentPreviewCache {
     final entries = await _getCacheEntries();
 
     // Get last modified times for sorting
-    final entriesWithTimes = await Future.wait(entries.map((entry) async {
-      final stat = await entry.stat();
-      return MapEntry(entry, stat.modified);
-    }));
+    final entriesWithTimes = await Future.wait(
+      entries.map((entry) async {
+        final stat = await entry.stat();
+        return MapEntry(entry, stat.modified);
+      }),
+    );
 
     // Sort by modified time
     entriesWithTimes.sort((a, b) => a.value.compareTo(b.value));
@@ -106,13 +113,16 @@ class PersistentPreviewCache {
   }
 
   String _getCacheFileName(CID cid, String contentType) {
-    final hash =
-        sha256.convert(utf8.encode('${cid.encode()}_$contentType')).toString();
+    final hash = sha256
+        .convert(utf8.encode('${cid.encode()}_$contentType'))
+        .toString();
     return '$hash.cache';
   }
 
   Future<void> _writeCacheMetadata(
-      String cachePath, Map<String, String> metadata) async {
+    String cachePath,
+    Map<String, String> metadata,
+  ) async {
     final metadataFile = File('$cachePath.meta');
     await metadataFile.writeAsString(json.encode(metadata));
   }

@@ -58,43 +58,31 @@ class IPLDSelector {
   factory IPLDSelector.explore({
     required String path,
     required IPLDSelector selector,
-  }) =>
-      IPLDSelector(
-        type: SelectorType.explore,
-        fieldPath: path,
-        subSelectors: [selector],
-      );
+  }) => IPLDSelector(
+    type: SelectorType.explore,
+    fieldPath: path,
+    subSelectors: [selector],
+  );
 
-  factory IPLDSelector.matcher({
-    required Map<String, dynamic> criteria,
-  }) =>
-      IPLDSelector(
-        type: SelectorType.matcher,
-        criteria: criteria,
-      );
+  factory IPLDSelector.matcher({required Map<String, dynamic> criteria}) =>
+      IPLDSelector(type: SelectorType.matcher, criteria: criteria);
 
   factory IPLDSelector.recursive({
     required IPLDSelector selector,
     int? maxDepth,
     bool stopAtLink = false,
-  }) =>
-      IPLDSelector(
-        type: SelectorType.recursive,
-        subSelectors: [selector],
-        maxDepth: maxDepth,
-        stopAtLink: stopAtLink,
-      );
+  }) => IPLDSelector(
+    type: SelectorType.recursive,
+    subSelectors: [selector],
+    maxDepth: maxDepth,
+    stopAtLink: stopAtLink,
+  );
 
-  factory IPLDSelector.union(List<IPLDSelector> selectors) => IPLDSelector(
-        type: SelectorType.union,
-        subSelectors: selectors,
-      );
+  factory IPLDSelector.union(List<IPLDSelector> selectors) =>
+      IPLDSelector(type: SelectorType.union, subSelectors: selectors);
 
   factory IPLDSelector.intersection(List<IPLDSelector> selectors) =>
-      IPLDSelector(
-        type: SelectorType.intersection,
-        subSelectors: selectors,
-      );
+      IPLDSelector(type: SelectorType.intersection, subSelectors: selectors);
 
   /// Converts the selector to IPLD bytes for Graphsync protocol
   Future<Uint8List> toBytes() async {
@@ -123,10 +111,16 @@ class IPLDSelector {
               ..value = (IPLDNode()
                 ..kind = Kind.LIST
                 ..listValue = (IPLDList()
-                  ..values.addAll(await Future.wait(subSelectors!.map((s) => s
-                      .toBytes()
-                      .then((bytes) =>
-                          EnhancedCBORHandler.decodeCborWithTags(bytes))))))),
+                  ..values.addAll(
+                    await Future.wait(
+                      subSelectors!.map(
+                        (s) => s.toBytes().then(
+                          (bytes) =>
+                              EnhancedCBORHandler.decodeCborWithTags(bytes),
+                        ),
+                      ),
+                    ),
+                  ))),
           if (fieldPath != null)
             MapEntry()
               ..key = 'path'
@@ -329,46 +323,60 @@ class IPLDSelector {
 
     return IPLDSelector(
       type: type,
-      criteria: _decodeValue(node.mapValue.entries
-          .firstWhere((e) => e.key == 'criteria',
-              orElse: () => MapEntry()
-                ..key = 'criteria'
-                ..value = (IPLDNode()
-                  ..kind = Kind.MAP
-                  ..mapValue = IPLDMap()))
-          .value) as Map<String, dynamic>,
+      criteria:
+          _decodeValue(
+                node.mapValue.entries
+                    .firstWhere(
+                      (e) => e.key == 'criteria',
+                      orElse: () => MapEntry()
+                        ..key = 'criteria'
+                        ..value = (IPLDNode()
+                          ..kind = Kind.MAP
+                          ..mapValue = IPLDMap()),
+                    )
+                    .value,
+              )
+              as Map<String, dynamic>,
       maxDepth: node.mapValue.entries
-          .firstWhere((e) => e.key == 'maxDepth',
-              orElse: () => MapEntry()
-                ..key = 'maxDepth'
-                ..value = (IPLDNode()..kind = Kind.NULL))
+          .firstWhere(
+            (e) => e.key == 'maxDepth',
+            orElse: () => MapEntry()
+              ..key = 'maxDepth'
+              ..value = (IPLDNode()..kind = Kind.NULL),
+          )
           .value
           .intValue
           .toInt(),
       subSelectors: node.mapValue.entries
-          .firstWhere((e) => e.key == 'selectors',
-              orElse: () => MapEntry()
-                ..key = 'selectors'
-                ..value = (IPLDNode()
-                  ..kind = Kind.LIST
-                  ..listValue = IPLDList()))
+          .firstWhere(
+            (e) => e.key == 'selectors',
+            orElse: () => MapEntry()
+              ..key = 'selectors'
+              ..value = (IPLDNode()
+                ..kind = Kind.LIST
+                ..listValue = IPLDList()),
+          )
           .value
           .listValue
           .values
           .map((n) => fromNode(n))
           .toList(),
       fieldPath: node.mapValue.entries
-          .firstWhere((e) => e.key == 'path',
-              orElse: () => MapEntry()
-                ..key = 'path'
-                ..value = (IPLDNode()..kind = Kind.NULL))
+          .firstWhere(
+            (e) => e.key == 'path',
+            orElse: () => MapEntry()
+              ..key = 'path'
+              ..value = (IPLDNode()..kind = Kind.NULL),
+          )
           .value
           .stringValue,
       stopAtLink: node.mapValue.entries
-          .firstWhere((e) => e.key == 'stopAtLink',
-              orElse: () => MapEntry()
-                ..key = 'stopAtLink'
-                ..value = (IPLDNode()..kind = Kind.NULL))
+          .firstWhere(
+            (e) => e.key == 'stopAtLink',
+            orElse: () => MapEntry()
+              ..key = 'stopAtLink'
+              ..value = (IPLDNode()..kind = Kind.NULL),
+          )
           .value
           .boolValue,
     );

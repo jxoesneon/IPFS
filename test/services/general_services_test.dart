@@ -154,7 +154,9 @@ void main() {
     test('start/stop', () async {
       final store = MockBlockStore();
       final server = GatewayServer(
-          blockStore: store, port: 0); // Port 0 usually picks random
+        blockStore: store,
+        port: 0,
+      ); // Port 0 usually picks random
 
       expect(server.isRunning, isFalse);
 

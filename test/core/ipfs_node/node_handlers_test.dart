@@ -14,10 +14,11 @@ import 'package:test/test.dart';
 // Mocks
 class MockConfig extends IPFSConfig {
   MockConfig()
-      : super(
-            network: NetworkConfig(bootstrapPeers: []),
-            debug: false,
-            verboseLogging: false);
+    : super(
+        network: NetworkConfig(bootstrapPeers: []),
+        debug: false,
+        verboseLogging: false,
+      );
 }
 
 class MockNetworkHandler implements NetworkHandler {
@@ -73,10 +74,15 @@ class MockContentRouting implements ContentRouting {
 class MockMDnsClient implements MDnsClient {
   bool started = false;
   @override
-  Future<void> start(
-      {InternetAddress? address, NetworkInterface? interface}) async {
+  Future<void> start({
+    InternetAddress? address,
+    NetworkInterface? interface,
+  }) async {
     started = true;
   }
+
+  @override
+  bool get isRunning => started;
 
   @override
   Future<void> stop() async {
@@ -84,8 +90,26 @@ class MockMDnsClient implements MDnsClient {
   }
 
   @override
-  Stream<T> lookup<T extends ResourceRecord>(ResourceRecordQuery query,
-      {Duration? timeout}) {
+  Future<void> startServer({
+    required String serviceType,
+    required String instanceName,
+    required int port,
+    required List<String> txt,
+  }) async {}
+
+  @override
+  Future<void> announce(
+    String serviceType,
+    String instanceName,
+    int port,
+    List<String> txt,
+  ) async {}
+
+  @override
+  Stream<T> lookup<T extends ResourceRecord>(
+    ResourceRecordQuery query, {
+    Duration? timeout,
+  }) {
     return Stream.empty();
   }
 
@@ -100,8 +124,11 @@ void main() {
 
     setUp(() {
       mockContentRouting = MockContentRouting();
-      handler = RoutingHandler(MockConfig(), MockNetworkHandler(),
-          contentRouting: mockContentRouting);
+      handler = RoutingHandler(
+        MockConfig(),
+        MockNetworkHandler(),
+        contentRouting: mockContentRouting,
+      );
     });
 
     test('start/stop delegates to ContentRouting', () async {

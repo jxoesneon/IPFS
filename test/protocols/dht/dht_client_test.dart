@@ -30,9 +30,10 @@ class MockRouterL2 implements p2p.RouterL2 {
   }
 
   @override
-  void sendDatagram(
-      {required Iterable<p2p.FullAddress> addresses,
-      required Uint8List datagram}) {}
+  void sendDatagram({
+    required Iterable<p2p.FullAddress> addresses,
+    required Uint8List datagram,
+  }) {}
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -79,18 +80,23 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  Future<void> sendDatagram(
-      {required List<String> addresses, required Uint8List datagram}) async {
+  Future<void> sendDatagram({
+    required List<String> addresses,
+    required Uint8List datagram,
+  }) async {
     onSendDatagram?.call(datagram);
 
     // If responseGenerator is set, auto-generate and inject response
     if (responseGenerator != null && _handler != null) {
       final responseBytes = responseGenerator!(datagram);
       final responsePacket = p2p.Packet(
-          datagram: responseBytes,
-          header: p2p.PacketHeader(id: 0, issuedAt: 0),
-          srcFullAddress: p2p.FullAddress(
-              address: InternetAddress.loopbackIPv4, port: 4001));
+        datagram: responseBytes,
+        header: p2p.PacketHeader(id: 0, issuedAt: 0),
+        srcFullAddress: p2p.FullAddress(
+          address: InternetAddress.loopbackIPv4,
+          port: 4001,
+        ),
+      );
       responsePacket.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
       // Inject response asynchronously to simulate network
       Future.microtask(() => _handler?.call(responsePacket));
@@ -168,8 +174,10 @@ void main() {
       mockRouter._mockL2.routes[p2p.PeerId(value: validPeerIdBytes)] =
           p2p.Route(peerId: p2p.PeerId(value: validPeerIdBytes));
 
-      client =
-          DHTClient(networkHandler: mockNetworkHandler, router: mockRouter);
+      client = DHTClient(
+        networkHandler: mockNetworkHandler,
+        router: mockRouter,
+      );
     });
 
     test('initialize', () async {
@@ -195,10 +203,13 @@ void main() {
               ..providerPeers.add(kad.Peer()..id = validPeerIdBytes);
 
             final responsePacket = p2p.Packet(
-                datagram: response.writeToBuffer(),
-                header: p2p.PacketHeader(id: 0, issuedAt: 0),
-                srcFullAddress: p2p.FullAddress(
-                    address: InternetAddress.loopbackIPv4, port: 4001));
+              datagram: response.writeToBuffer(),
+              header: p2p.PacketHeader(id: 0, issuedAt: 0),
+              srcFullAddress: p2p.FullAddress(
+                address: InternetAddress.loopbackIPv4,
+                port: 4001,
+              ),
+            );
             responsePacket.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
 
             // Inject response

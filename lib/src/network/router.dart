@@ -25,9 +25,9 @@ class Router {
 
   /// Creates a router with the given [config].
   Router(IPFSConfig config)
-      : _router = P2plibRouter(config),
-        _peerDiscoveryController = StreamController<Peer>.broadcast(),
-        _connectedPeers = {};
+    : _router = P2plibRouter(config),
+      _peerDiscoveryController = StreamController<Peer>.broadcast(),
+      _connectedPeers = {};
 
   /// The peer ID of this node
   String get peerID => _router.peerID;

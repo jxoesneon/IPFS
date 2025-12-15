@@ -42,9 +42,7 @@ class DHTConfig {
       alpha: json['alpha'] ?? 3,
       bucketSize: json['bucketSize'] ?? 20,
       maxProvidersPerKey: json['maxProvidersPerKey'] ?? 20,
-      requestTimeout: Duration(
-        seconds: json['requestTimeoutSeconds'] ?? 30,
-      ),
+      requestTimeout: Duration(seconds: json['requestTimeoutSeconds'] ?? 30),
       maxRecordsPerQuery: json['maxRecordsPerQuery'] ?? 20,
       enableProviderRecording: json['enableProviderRecording'] ?? true,
       enableValueStorage: json['enableValueStorage'] ?? true,
@@ -53,13 +51,13 @@ class DHTConfig {
 
   /// Converts the config to JSON
   Map<String, dynamic> toJson() => {
-        'protocolId': protocolId,
-        'alpha': alpha,
-        'bucketSize': bucketSize,
-        'maxProvidersPerKey': maxProvidersPerKey,
-        'requestTimeoutSeconds': requestTimeout.inSeconds,
-        'maxRecordsPerQuery': maxRecordsPerQuery,
-        'enableProviderRecording': enableProviderRecording,
-        'enableValueStorage': enableValueStorage,
-      };
+    'protocolId': protocolId,
+    'alpha': alpha,
+    'bucketSize': bucketSize,
+    'maxProvidersPerKey': maxProvidersPerKey,
+    'requestTimeoutSeconds': requestTimeout.inSeconds,
+    'maxRecordsPerQuery': maxRecordsPerQuery,
+    'enableProviderRecording': enableProviderRecording,
+    'enableValueStorage': enableValueStorage,
+  };
 }

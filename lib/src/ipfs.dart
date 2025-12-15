@@ -36,9 +36,9 @@ import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 class IPFS {
   // Private constructor to enforce factory pattern
   IPFS._(this._node)
-      : _datastore = _node.datastore,
-        _router = _node.router,
-        _bitswap = _node.bitswap;
+    : _datastore = _node.datastore,
+      _router = _node.router,
+      _bitswap = _node.bitswap;
 
   // The underlying IPFSNode instance
   final IPFSNode _node;

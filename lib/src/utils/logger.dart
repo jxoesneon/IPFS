@@ -39,9 +39,9 @@ class Logger {
 
   /// Creates a new logger for the specified component
   Logger(String name, {bool debug = false, bool verbose = false})
-      : _debug = debug,
-        _verbose = verbose,
-        _logger = logging.Logger(name) {
+    : _debug = debug,
+      _verbose = verbose,
+      _logger = logging.Logger(name) {
     _initializeIfNeeded();
   }
 
@@ -58,7 +58,8 @@ class Logger {
 
         if (record.error != null) {
           print(
-              '$message\nError: ${record.error}\nStack trace: ${record.stackTrace}');
+            '$message\nError: ${record.error}\nStack trace: ${record.stackTrace}',
+          );
           _metrics?.recordError(
             'system',
             record.loggerName,
@@ -69,7 +70,8 @@ class Logger {
         }
 
         _writeToLogFile(
-            '$message${record.error != null ? '\nError: ${record.error}\nStack trace: ${record.stackTrace}' : ''}');
+          '$message${record.error != null ? '\nError: ${record.error}\nStack trace: ${record.stackTrace}' : ''}',
+        );
       });
 
       _initialized = true;

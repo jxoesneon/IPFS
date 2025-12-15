@@ -89,15 +89,17 @@ class PinManager {
       switch (format) {
         case 'dag-pb':
           final dagNode = MerkleDAGNode.fromBytes(
-              Uint8List.fromList(blockResult.block.data));
+            Uint8List.fromList(blockResult.block.data),
+          );
           for (final link in dagNode.links) {
             references.add(link.cid.toString());
           }
           break;
 
         case 'dag-cbor':
-          final decoded =
-              await _decodeCbor(Uint8List.fromList(blockResult.block.data));
+          final decoded = await _decodeCbor(
+            Uint8List.fromList(blockResult.block.data),
+          );
           references.addAll(_extractCborReferences(decoded));
           break;
 
@@ -217,15 +219,18 @@ class PinManager {
   /// Returns the total number of pinned blocks
   int get pinnedBlockCount {
     final directPins = _pins.values
-        .where((type) =>
-            type == PinTypeProto.PIN_TYPE_DIRECT ||
-            type == PinTypeProto.PIN_TYPE_RECURSIVE)
+        .where(
+          (type) =>
+              type == PinTypeProto.PIN_TYPE_DIRECT ||
+              type == PinTypeProto.PIN_TYPE_RECURSIVE,
+        )
         .length;
 
     // Count indirectly pinned blocks from recursive pins
     final indirectPins = _references.entries
         .where((entry) => _pins[entry.key] == PinTypeProto.PIN_TYPE_RECURSIVE)
-        .fold<Set<String>>({}, (acc, entry) => acc..addAll(entry.value)).length;
+        .fold<Set<String>>({}, (acc, entry) => acc..addAll(entry.value))
+        .length;
 
     return directPins + indirectPins;
   }

@@ -80,7 +80,8 @@ class KademliaRoutingTable {
 
   bool _isOurBucket(int bucketIndex) =>
       _getBucketIndex(
-          _calculateXorDistance(_tree.root!.peerId, _tree.root!.peerId)) ==
+        _calculateXorDistance(_tree.root!.peerId, _tree.root!.peerId),
+      ) ==
       bucketIndex;
 
   bool _isStaleNode(p2p.PeerId peerId) {
@@ -88,8 +89,9 @@ class KademliaRoutingTable {
     final staleThreshold = _calculateStaleThreshold(nodeStats);
     final node = _findNode(peerId);
     if (node == null) return true;
-    return DateTime.now()
-            .difference(DateTime.fromMillisecondsSinceEpoch(node.lastSeen)) >
+    return DateTime.now().difference(
+          DateTime.fromMillisecondsSinceEpoch(node.lastSeen),
+        ) >
         staleThreshold;
   }
 
@@ -149,8 +151,10 @@ class KademliaRoutingTable {
   bool containsPeer(p2p.PeerId peerId) =>
       _tree.buckets.any((bucket) => bucket.containsKey(peerId));
 
-  int get peerCount => _tree.buckets
-      .fold(0, (sum, bucket) => (sum + bucket.entries.length).toInt());
+  int get peerCount => _tree.buckets.fold(
+    0,
+    (sum, bucket) => (sum + bucket.entries.length).toInt(),
+  );
 
   void clear() => _tree.buckets.forEach((bucket) => bucket.clear());
 
@@ -160,13 +164,16 @@ class KademliaRoutingTable {
 
   void splitBucket(int bucketIndex) {
     if (bucketIndex >= buckets.length ||
-        buckets[bucketIndex].size <= K_BUCKET_SIZE) return;
+        buckets[bucketIndex].size <= K_BUCKET_SIZE)
+      return;
 
     final bucket = buckets[bucketIndex];
     final lowerBucket = RedBlackTree<p2p.PeerId, KademliaTreeNode>(
-        compare: _xorDistanceComparator);
+      compare: _xorDistanceComparator,
+    );
     final upperBucket = RedBlackTree<p2p.PeerId, KademliaTreeNode>(
-        compare: _xorDistanceComparator);
+      compare: _xorDistanceComparator,
+    );
 
     for (var entry in bucket.entries) {
       final node = entry.value;
@@ -209,10 +216,14 @@ class KademliaRoutingTable {
   }
 
   RedBlackTree<p2p.PeerId, KademliaTreeNode> _getOrCreateBucket(
-      int bucketIndex) {
+    int bucketIndex,
+  ) {
     while (_tree.buckets.length <= bucketIndex) {
-      _tree.buckets.add(RedBlackTree<p2p.PeerId, KademliaTreeNode>(
-          compare: _xorDistanceComparator));
+      _tree.buckets.add(
+        RedBlackTree<p2p.PeerId, KademliaTreeNode>(
+          compare: _xorDistanceComparator,
+        ),
+      );
     }
     return _tree.buckets[bucketIndex];
   }
@@ -235,27 +246,27 @@ class KademliaRoutingTable {
   /// Secondary comparison: byte-by-byte comparison when distances are equal.
   /// Returns 0 only when both PeerIds are identical (for duplicate detection).
   Comparator<p2p.PeerId> get _xorDistanceComparator => (a, b) {
-        // First, check if they're the exact same peer
-        if (_peersEqual(a, b)) return 0;
+    // First, check if they're the exact same peer
+    if (_peersEqual(a, b)) return 0;
 
-        // Compare distances to root node
-        final distA = _calculateXorDistance(a, _tree.root!.peerId);
-        final distB = _calculateXorDistance(b, _tree.root!.peerId);
+    // Compare distances to root node
+    final distA = _calculateXorDistance(a, _tree.root!.peerId);
+    final distB = _calculateXorDistance(b, _tree.root!.peerId);
 
-        if (distA != distB) {
-          return distA.compareTo(distB);
-        }
+    if (distA != distB) {
+      return distA.compareTo(distB);
+    }
 
-        // Same distance - use byte comparison as tiebreaker
-        final length = min(a.value.length, b.value.length);
-        for (int i = 0; i < length; i++) {
-          if (a.value[i] != b.value[i]) {
-            return a.value[i].compareTo(b.value[i]);
-          }
-        }
-        // If all compared bytes are equal, shorter one comes first
-        return a.value.length.compareTo(b.value.length);
-      };
+    // Same distance - use byte comparison as tiebreaker
+    final length = min(a.value.length, b.value.length);
+    for (int i = 0; i < length; i++) {
+      if (a.value[i] != b.value[i]) {
+        return a.value[i].compareTo(b.value[i]);
+      }
+    }
+    // If all compared bytes are equal, shorter one comes first
+    return a.value.length.compareTo(b.value.length);
+  };
 
   /// Checks if two PeerIds are identical (same bytes).
   bool _peersEqual(p2p.PeerId a, p2p.PeerId b) {
@@ -388,8 +399,9 @@ class KademliaRoutingTable {
       }
     } else {
       // Create an associated PeerId from the peer info
-      final associatedPeerId =
-          p2p.PeerId(value: Uint8List.fromList(peer.peerId));
+      final associatedPeerId = p2p.PeerId(
+        value: Uint8List.fromList(peer.peerId),
+      );
       await addPeer(peerId, associatedPeerId);
     }
   }
@@ -419,7 +431,10 @@ class KademliaRoutingTable {
 
   /// Updates the timestamp for a key provider
   void updateKeyProviderTimestamp(
-      p2p.PeerId key, p2p.PeerId provider, DateTime timestamp) {
+    p2p.PeerId key,
+    p2p.PeerId provider,
+    DateTime timestamp,
+  ) {
     final node = _findNode(key);
     if (node != null && node.associatedPeerId == provider) {
       node.lastSeen = timestamp.millisecondsSinceEpoch;

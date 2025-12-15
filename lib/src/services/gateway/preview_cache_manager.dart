@@ -9,13 +9,9 @@ class PreviewCacheManager {
   final CompressedCacheStore _compressedStore;
   final GatewayLruCache<String, Uint8List> _memoryCache;
 
-  PreviewCacheManager({
-    required String cachePath,
-    int maxMemoryEntries = 100,
-  })  : _compressedStore = CompressedCacheStore(
-          cachePath: cachePath,
-        ),
-        _memoryCache = GatewayLruCache(maxMemoryEntries);
+  PreviewCacheManager({required String cachePath, int maxMemoryEntries = 100})
+    : _compressedStore = CompressedCacheStore(cachePath: cachePath),
+      _memoryCache = GatewayLruCache(maxMemoryEntries);
 
   Future<Uint8List?> getPreview(CID cid, String contentType) async {
     // Check memory cache first
@@ -23,8 +19,10 @@ class PreviewCacheManager {
     if (memCached != null) return memCached;
 
     // Try compressed cache
-    final compressed =
-        await _compressedStore.getCompressedData(cid, contentType);
+    final compressed = await _compressedStore.getCompressedData(
+      cid,
+      contentType,
+    );
     if (compressed != null) {
       _memoryCache.put(_generateCacheKey(cid, contentType), compressed);
       return compressed;
@@ -34,7 +32,10 @@ class PreviewCacheManager {
   }
 
   Future<void> cachePreview(
-      CID cid, String contentType, Uint8List preview) async {
+    CID cid,
+    String contentType,
+    Uint8List preview,
+  ) async {
     _memoryCache.put(_generateCacheKey(cid, contentType), preview);
     await _compressedStore.storeCompressedData(cid, contentType, preview);
   }

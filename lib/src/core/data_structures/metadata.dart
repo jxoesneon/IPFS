@@ -25,9 +25,9 @@ class IPLDMetadata {
   });
 
   Map<String, dynamic> toJson() => {
-        'size': size,
-        'lastModified': lastModified?.toIso8601String(),
-        'contentType': contentType,
-        'properties': properties,
-      };
+    'size': size,
+    'lastModified': lastModified?.toIso8601String(),
+    'contentType': contentType,
+    'properties': properties,
+  };
 }

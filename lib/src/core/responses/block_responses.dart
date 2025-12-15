@@ -12,10 +12,7 @@ abstract class BaseResponse {
   final String message;
 
   /// Creates a response with [success] status and [message].
-  const BaseResponse({
-    required this.success,
-    required this.message,
-  });
+  const BaseResponse({required this.success, required this.message});
 
   /// Converts to JSON representation.
   Map<String, dynamic> toJson();
@@ -26,16 +23,10 @@ abstract class BaseResponse {
 
 /// Response for block add operations.
 class BlockAddResponse extends BaseResponse {
-  const BlockAddResponse({
-    required super.success,
-    required super.message,
-  });
+  const BlockAddResponse({required super.success, required super.message});
 
   factory BlockAddResponse.fromProto(AddBlockResponse proto) {
-    return BlockAddResponse(
-      success: proto.success,
-      message: proto.message,
-    );
+    return BlockAddResponse(success: proto.success, message: proto.message);
   }
 
   AddBlockResponse toProto() {
@@ -45,10 +36,7 @@ class BlockAddResponse extends BaseResponse {
   }
 
   @override
-  Map<String, dynamic> toJson() => {
-        'success': success,
-        'message': message,
-      };
+  Map<String, dynamic> toJson() => {'success': success, 'message': message};
 }
 
 class BlockGetResponse extends BaseResponse {
@@ -78,23 +66,17 @@ class BlockGetResponse extends BaseResponse {
 
   @override
   Map<String, dynamic> toJson() => {
-        'success': success,
-        'message': message,
-        'block': block?.toString(),
-      };
+    'success': success,
+    'message': message,
+    'block': block?.toString(),
+  };
 }
 
 class BlockRemoveResponse extends BaseResponse {
-  const BlockRemoveResponse({
-    required super.success,
-    required super.message,
-  });
+  const BlockRemoveResponse({required super.success, required super.message});
 
   factory BlockRemoveResponse.fromProto(RemoveBlockResponse proto) {
-    return BlockRemoveResponse(
-      success: proto.success,
-      message: proto.message,
-    );
+    return BlockRemoveResponse(success: proto.success, message: proto.message);
   }
 
   RemoveBlockResponse toProto() {
@@ -104,8 +86,5 @@ class BlockRemoveResponse extends BaseResponse {
   }
 
   @override
-  Map<String, dynamic> toJson() => {
-        'success': success,
-        'message': message,
-      };
+  Map<String, dynamic> toJson() => {'success': success, 'message': message};
 }

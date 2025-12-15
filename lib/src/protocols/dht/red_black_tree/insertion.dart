@@ -11,8 +11,10 @@ import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
 /// through recoloring and rotations.
 class Insertion<K_PeerId, V_PeerInfo> {
   /// Inserts [node] into [tree] while maintaining balance.
-  void insertNode(RedBlackTree<K_PeerId, V_PeerInfo> tree,
-      RedBlackTreeNode<K_PeerId, V_PeerInfo> node) {
+  void insertNode(
+    RedBlackTree<K_PeerId, V_PeerInfo> tree,
+    RedBlackTreeNode<K_PeerId, V_PeerInfo> node,
+  ) {
     // `y` will eventually store the parent of the new node.
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? y = null;
     // `x` is used to traverse the tree to find the correct insertion point.

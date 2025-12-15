@@ -50,10 +50,7 @@ class GatewayServer {
     _router.head('/ipfs/<path|.*>', (Request request, String path) async {
       final response = await _handler.handlePath(request);
       // Return headers only, no body
-      return Response(
-        response.statusCode,
-        headers: response.headers,
-      );
+      return Response(response.statusCode, headers: response.headers);
     });
 
     // Version endpoint
@@ -83,13 +80,10 @@ class GatewayServer {
         .addHandler(_router);
 
     try {
-      _server = await shelf_io.serve(
-        handler,
-        address,
-        port,
-      );
+      _server = await shelf_io.serve(handler, address, port);
       _logger.info(
-          'Gateway server listening on http://${_server!.address.host}:${_server!.port}');
+        'Gateway server listening on http://${_server!.address.host}:${_server!.port}',
+      );
     } catch (e, stackTrace) {
       _logger.error('Failed to start gateway server', e, stackTrace);
       rethrow;
@@ -144,7 +138,8 @@ class GatewayServer {
         final duration = DateTime.now().difference(start);
 
         _logger.info(
-            '[${request.method}] ${request.url.path} - ${response.statusCode} (${duration.inMilliseconds}ms)');
+          '[${request.method}] ${request.url.path} - ${response.statusCode} (${duration.inMilliseconds}ms)',
+        );
 
         return response;
       };

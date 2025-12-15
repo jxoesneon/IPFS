@@ -35,8 +35,10 @@ class ProtocolCoordinator {
       if (useGraphsync && selector != null) {
         final graphsyncBlock = await _graphsync.requestGraph(cid, selector);
         return graphsyncBlock != null
-            ? Block.fromData(Uint8List.fromList(graphsyncBlock.data),
-                format: 'dag-cbor')
+            ? Block.fromData(
+                Uint8List.fromList(graphsyncBlock.data),
+                format: 'dag-cbor',
+              )
             : null;
       } else {
         return _bitswap.wantBlock(cid);

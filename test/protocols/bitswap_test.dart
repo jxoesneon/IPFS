@@ -62,9 +62,10 @@ class MockRouterL2 implements p2p.RouterL2 {
   }
 
   @override
-  void sendDatagram(
-      {required Iterable<p2p.FullAddress> addresses,
-      required Uint8List datagram}) {}
+  void sendDatagram({
+    required Iterable<p2p.FullAddress> addresses,
+    required Uint8List datagram,
+  }) {}
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -141,8 +142,9 @@ void main() {
       await handler.start();
 
       final targetData = Uint8List.fromList([1, 2, 3, 4]);
-      final targetCid =
-          CID.computeForDataSync(targetData, codec: 'dag-pb').encode();
+      final targetCid = CID
+          .computeForDataSync(targetData, codec: 'dag-pb')
+          .encode();
 
       // Simulate response slightly later
       scheduleMicrotask(() async {
@@ -191,19 +193,26 @@ void main() {
   });
 }
 
-Future<void> _simulateBlockArrival(MockP2plibRouter router, Uint8List data,
-    {String codec = 'dag-pb'}) async {
+Future<void> _simulateBlockArrival(
+  MockP2plibRouter router,
+  Uint8List data, {
+  String codec = 'dag-pb',
+}) async {
   final responseMsg = msg.Message();
-  final block =
-      Block(cid: CID.computeForDataSync(data, codec: codec), data: data);
+  final block = Block(
+    cid: CID.computeForDataSync(data, codec: codec),
+    data: data,
+  );
 
   responseMsg.addBlock(block);
 
   final packet = p2p.Packet(
     datagram: responseMsg.toBytes(),
     header: p2p.PacketHeader(id: 1234, issuedAt: 0),
-    srcFullAddress:
-        p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 1234),
+    srcFullAddress: p2p.FullAddress(
+      address: InternetAddress.loopbackIPv4,
+      port: 1234,
+    ),
   );
   packet.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
 

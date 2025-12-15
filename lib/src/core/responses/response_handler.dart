@@ -11,7 +11,8 @@ class ResponseHandler {
   }
 
   static GetBlockResponse toGetBlockResponse(
-      BlockOperationResponse<Block> response) {
+    BlockOperationResponse<Block> response,
+  ) {
     final getBlockResponse = GetBlockResponse()..found = response.success;
     if (response.data != null) {
       getBlockResponse.block = response.data!.toProto();
@@ -20,7 +21,8 @@ class ResponseHandler {
   }
 
   static RemoveBlockResponse toRemoveBlockResponse(
-      BlockOperationResponse response) {
+    BlockOperationResponse response,
+  ) {
     return RemoveBlockResponse()
       ..success = response.success
       ..message = response.message;

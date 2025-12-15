@@ -2,8 +2,8 @@
 
 import 'dart:async';
 import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
-import '/../src/transport/circuit_relay_client.dart';
-import '/../src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 
 /// Handles network events for an IPFS node.
 class IpfsNodeNetworkEvents {
@@ -174,15 +174,16 @@ class IpfsNodeNetworkEvents {
     _router.errorEvents.listen((event) {
       final networkEvent = NetworkEvent()
         ..error = NodeErrorEvent(
-            errorType: _mapToProtoErrorType(event.type.toString()),
-            message: event.message,
-            stackTrace: '',
-            source: 'router');
+          errorType: _mapToProtoErrorType(event.type.toString()),
+          message: event.message,
+          stackTrace: '',
+          source: 'router',
+        );
       _networkEventsController.add(networkEvent);
     });
   }
 
-// Helper function to map existing error types to the Proto enum
+  // Helper function to map existing error types to the Proto enum
   NodeErrorEvent_ErrorType _mapToProtoErrorType(String errorType) {
     switch (errorType) {
       case 'invalidRequest':

@@ -10,13 +10,13 @@ class FilePreviewHandler {
     'image/jpeg',
     'image/png',
     'image/gif',
-    'image/webp'
+    'image/webp',
   ];
   static const _supportedTextTypes = [
     'text/plain',
     'text/markdown',
     'text/html',
-    'application/json'
+    'application/json',
   ];
 
   /// Generates a preview for the given block if supported

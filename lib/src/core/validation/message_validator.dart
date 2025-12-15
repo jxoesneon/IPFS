@@ -5,7 +5,9 @@ import 'package:dart_ipfs/src/proto/generated/config.pb.dart';
 /// Validates IPFS protocol messages against configuration constraints.
 class MessageValidator {
   static ValidationResult validateMessage(
-      IPFSMessage message, ProtocolConfig config) {
+    IPFSMessage message,
+    ProtocolConfig config,
+  ) {
     final maxSize = config.maxMessageSize;
 
     if (message.payload.length > maxSize) {

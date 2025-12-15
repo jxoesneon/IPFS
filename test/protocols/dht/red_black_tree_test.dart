@@ -104,8 +104,9 @@ void main() {
     }
 
     setUp(() {
-      peerTree =
-          RedBlackTree<p2p.PeerId, KademliaTreeNode>(compare: peerIdComparator);
+      peerTree = RedBlackTree<p2p.PeerId, KademliaTreeNode>(
+        compare: peerIdComparator,
+      );
     });
 
     p2p.PeerId makePeerId(int fillValue) =>

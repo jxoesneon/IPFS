@@ -10,8 +10,10 @@ void main() {
     });
 
     test('encodeVarint multiple bytes', () {
-      expect(encodeVarint(128),
-          equals([0x80, 0x01])); // 1000 0000 0000 0001 (LE 7-bit chunks)
+      expect(
+        encodeVarint(128),
+        equals([0x80, 0x01]),
+      ); // 1000 0000 0000 0001 (LE 7-bit chunks)
       // 128 = 1000 0000.
       // 1st byte: lower 7 bits (000 0000) | 0x80 -> 0x80.
       // Remaining: 1.

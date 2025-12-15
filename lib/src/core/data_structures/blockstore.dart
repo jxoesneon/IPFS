@@ -167,11 +167,7 @@ class BlockStore implements IBlockStore {
       };
     } catch (e) {
       _logger.error('Failed to get status', e);
-      return {
-        'total_blocks': 0,
-        'total_size': 0,
-        'pinned_blocks': 0,
-      };
+      return {'total_blocks': 0, 'total_size': 0, 'pinned_blocks': 0};
     }
   }
 

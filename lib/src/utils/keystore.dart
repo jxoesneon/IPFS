@@ -78,10 +78,12 @@ class Keystore {
 
   /// Serializes the keystore to JSON format (optional).
   String serialize() {
-    final jsonMap = _keyPairs.map((name, keyPair) => MapEntry(name, {
-          'publicKey': keyPair.publicKey,
-          'privateKey': keyPair.privateKey,
-        }));
+    final jsonMap = _keyPairs.map(
+      (name, keyPair) => MapEntry(name, {
+        'publicKey': keyPair.publicKey,
+        'privateKey': keyPair.privateKey,
+      }),
+    );
     return jsonEncode(jsonMap);
   }
 
@@ -96,7 +98,10 @@ class Keystore {
 
   /// Verifies a signature using a public key
   Future<bool> verifySignature(
-      String publicKey, Uint8List data, Uint8List signature) async {
+    String publicKey,
+    Uint8List data,
+    Uint8List signature,
+  ) async {
     try {
       // Create crypto instance
       final crypto = Crypto();
@@ -106,7 +111,7 @@ class Keystore {
       // This needs to match the Message format used in p2plib
       final datagram = Uint8List.fromList([
         ...data, // Original message
-        ...signature // Signature appended at the end
+        ...signature, // Signature appended at the end
       ]);
 
       try {

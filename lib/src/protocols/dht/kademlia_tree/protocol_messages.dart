@@ -24,7 +24,7 @@ abstract class KademliaMessage {
 /// PING message for liveness checks.
 class PingMessage extends KademliaMessage {
   PingMessage(String messageId, p2p.PeerId sender, p2p.PeerId recipient)
-      : super(messageId, sender, recipient);
+    : super(messageId, sender, recipient);
 
   @override
   kad.Message toDHTMessage() {
@@ -36,9 +36,13 @@ class StoreMessage extends KademliaMessage {
   final Uint8List key;
   final Uint8List value;
 
-  StoreMessage(String messageId, p2p.PeerId sender, p2p.PeerId recipient,
-      this.key, this.value)
-      : super(messageId, sender, recipient);
+  StoreMessage(
+    String messageId,
+    p2p.PeerId sender,
+    p2p.PeerId recipient,
+    this.key,
+    this.value,
+  ) : super(messageId, sender, recipient);
 
   @override
   kad.Message toDHTMessage() {
@@ -55,8 +59,11 @@ class FindNodeMessage extends KademliaMessage {
   final p2p.PeerId targetId;
 
   FindNodeMessage(
-      String messageId, p2p.PeerId sender, p2p.PeerId recipient, this.targetId)
-      : super(messageId, sender, recipient);
+    String messageId,
+    p2p.PeerId sender,
+    p2p.PeerId recipient,
+    this.targetId,
+  ) : super(messageId, sender, recipient);
 
   @override
   kad.Message toDHTMessage() {
@@ -70,8 +77,11 @@ class FindValueMessage extends KademliaMessage {
   final Uint8List key;
 
   FindValueMessage(
-      String messageId, p2p.PeerId sender, p2p.PeerId recipient, this.key)
-      : super(messageId, sender, recipient);
+    String messageId,
+    p2p.PeerId sender,
+    p2p.PeerId recipient,
+    this.key,
+  ) : super(messageId, sender, recipient);
 
   @override
   kad.Message toDHTMessage() {

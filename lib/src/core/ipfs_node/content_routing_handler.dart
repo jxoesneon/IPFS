@@ -22,14 +22,19 @@ class ContentRoutingHandler {
     ContentRouting? contentRouting,
     DelegatedRoutingHandler? delegatedRouting,
   }) {
-    _logger = Logger('ContentRoutingHandler',
-        debug: _config.debug, verbose: _config.verboseLogging);
+    _logger = Logger(
+      'ContentRoutingHandler',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
 
     _contentRouting =
         contentRouting ?? ContentRouting(_config, _networkHandler);
-    _delegatedRouting = delegatedRouting ??
+    _delegatedRouting =
+        delegatedRouting ??
         DelegatedRoutingHandler(
-            delegateEndpoint: _config.network.delegatedRoutingEndpoint);
+          delegateEndpoint: _config.network.delegatedRoutingEndpoint,
+        );
 
     _logger.debug('ContentRoutingHandler instance created');
   }
@@ -88,7 +93,8 @@ class ContentRoutingHandler {
       if (delegatedResponse.isSuccess &&
           delegatedResponse.providers.isNotEmpty) {
         _logger.debug(
-            'Found ${delegatedResponse.providers.length} providers via delegated routing');
+          'Found ${delegatedResponse.providers.length} providers via delegated routing',
+        );
         return delegatedResponse.providers;
       }
 

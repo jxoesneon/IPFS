@@ -132,8 +132,9 @@ class LazyPreviewHandler {
 
       // Validate block integrity
       if (block == null || !_isValidBlock(block)) {
-        _logger
-            .warning('Retrieved block is null or invalid for ID: $previewId');
+        _logger.warning(
+          'Retrieved block is null or invalid for ID: $previewId',
+        );
         _previewCache.remove(previewId); // Remove invalid entry
         return null;
       }
@@ -161,8 +162,10 @@ class LazyPreviewHandler {
       }
 
       // Verify block integrity by checking CID matches content
-      final computedCid =
-          CID.computeForDataSync(block.data, codec: block.format);
+      final computedCid = CID.computeForDataSync(
+        block.data,
+        codec: block.format,
+      );
       if (computedCid != block.cid) {
         return false;
       }

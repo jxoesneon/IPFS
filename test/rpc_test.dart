@@ -42,8 +42,11 @@ void main() {
 
       // Verify block is stored
       final block = await node.blockStore.getBlock(key);
-      expect(block.found, isTrue,
-          reason: 'Block should be found in store after put');
+      expect(
+        block.found,
+        isTrue,
+        reason: 'Block should be found in store after put',
+      );
       expect(block.block.data, equals(content));
     });
   });

@@ -56,7 +56,8 @@ class ConnectionStatistics {
       _connectionDurations.removeAt(0);
     }
 
-    averageConnectionDuration = _connectionDurations.reduce((a, b) => a + b) /
+    averageConnectionDuration =
+        _connectionDurations.reduce((a, b) => a + b) /
         _connectionDurations.length;
   }
 

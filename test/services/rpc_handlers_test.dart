@@ -107,9 +107,10 @@ class MockIPFSNode implements IPFSNode {
     if (cid == 'QmDir') {
       return [
         Link(
-            name: 'file.txt',
-            cid: CID.computeForDataSync(utf8.encode('content')),
-            size: 100)
+          name: 'file.txt',
+          cid: CID.computeForDataSync(utf8.encode('content')),
+          size: 100,
+        ),
       ];
     }
     return [];
@@ -158,8 +159,10 @@ void main() {
     });
 
     test('handleVersion returns version info', () async {
-      final request =
-          Request('GET', Uri.parse('http://localhost/api/v0/version'));
+      final request = Request(
+        'GET',
+        Uri.parse('http://localhost/api/v0/version'),
+      );
       final response = await handlers.handleVersion(request);
       expect(response.statusCode, 200);
     });
@@ -179,16 +182,20 @@ void main() {
 
       await node.blockStore.putBlock(Block(cid: cid, data: data));
 
-      final request =
-          Request('POST', Uri.parse('http://localhost/api/v0/cat?arg=$cidStr'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/cat?arg=$cidStr'),
+      );
       final response = await handlers.handleCat(request);
       expect(response.statusCode, 200);
       expect(await response.readAsString(), 'Hello Cat');
     });
 
     test('handleLs lists directory', () async {
-      final request =
-          Request('POST', Uri.parse('http://localhost/api/v0/ls?arg=QmDir'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/ls?arg=QmDir'),
+      );
       final response = await handlers.handleLs(request);
       final body = json.decode(await response.readAsString());
       expect(body['Objects'], isNotEmpty);
@@ -198,8 +205,10 @@ void main() {
     test('handleBlockPut stores block', () async {
       final data = utf8.encode('Block Data');
       final request = Request(
-          'POST', Uri.parse('http://localhost/api/v0/block/put'),
-          body: data);
+        'POST',
+        Uri.parse('http://localhost/api/v0/block/put'),
+        body: data,
+      );
       final response = await handlers.handleBlockPut(request);
       final body = json.decode(await response.readAsString());
 
@@ -216,14 +225,18 @@ void main() {
       await node.blockStore.putBlock(Block(cid: cid, data: data));
 
       final request = Request(
-          'POST', Uri.parse('http://localhost/api/v0/block/get?arg=$cidStr'));
+        'POST',
+        Uri.parse('http://localhost/api/v0/block/get?arg=$cidStr'),
+      );
       final response = await handlers.handleBlockGet(request);
       expect(await response.readAsString(), 'Block Content');
     });
 
     test('handleDhtFindProviders', () async {
       final request = Request(
-          'POST', Uri.parse('http://localhost/api/v0/dht/findprovs?arg=QmCid'));
+        'POST',
+        Uri.parse('http://localhost/api/v0/dht/findprovs?arg=QmCid'),
+      );
       final response = await handlers.handleDhtFindProviders(request);
       // Should trigger internal error? dhtClient.findProviders returns dummy.
       // Response is ndjson.
@@ -235,7 +248,8 @@ void main() {
     test('handleAdd accepts multipart upload', () async {
       final boundary = 'boundary';
       final fileContent = 'Hello IPFS';
-      final body = '--$boundary\r\n'
+      final body =
+          '--$boundary\r\n'
           'Content-Disposition: form-data; name="file"; filename="test.txt"\r\n'
           'Content-Type: text/plain\r\n'
           '\r\n'
@@ -245,9 +259,7 @@ void main() {
       final request = Request(
         'POST',
         Uri.parse('http://localhost/api/v0/add'),
-        headers: {
-          'content-type': 'multipart/form-data; boundary=$boundary',
-        },
+        headers: {'content-type': 'multipart/form-data; boundary=$boundary'},
         body: body,
       );
 
@@ -269,8 +281,10 @@ void main() {
     });
 
     test('handleSwarmPeers', () async {
-      final request =
-          Request('POST', Uri.parse('http://localhost/api/v0/swarm/peers'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/swarm/peers'),
+      );
       final response = await handlers.handleSwarmPeers(request);
       final body = json.decode(await response.readAsString());
       expect(body['Peers'], isNotEmpty);

@@ -18,8 +18,11 @@ class BootstrapHandler {
   static const Duration _reconnectionInterval = Duration(minutes: 5);
 
   BootstrapHandler(this._config, this._networkHandler) {
-    _logger = Logger('BootstrapHandler',
-        debug: _config.debug, verbose: _config.verboseLogging);
+    _logger = Logger(
+      'BootstrapHandler',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
     _logger.debug('Creating new BootstrapHandler instance');
   }
 
@@ -86,8 +89,9 @@ class BootstrapHandler {
 
     for (final peerAddress in _config.network.bootstrapPeers) {
       try {
-        _logger
-            .verbose('Attempting to connect to bootstrap peer: $peerAddress');
+        _logger.verbose(
+          'Attempting to connect to bootstrap peer: $peerAddress',
+        );
 
         // Create peer instance from multiaddr
         final peer = await Peer.fromMultiaddr(peerAddress);
@@ -105,7 +109,10 @@ class BootstrapHandler {
         _logger.debug('Successfully connected to bootstrap peer: $peerAddress');
       } catch (e, stackTrace) {
         _logger.error(
-            'Failed to connect to bootstrap peer: $peerAddress', e, stackTrace);
+          'Failed to connect to bootstrap peer: $peerAddress',
+          e,
+          stackTrace,
+        );
       }
     }
   }

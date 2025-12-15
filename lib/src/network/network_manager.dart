@@ -39,7 +39,9 @@ class NetworkManager {
       try {
         final blocks = message.getBlocks();
         final baseMessage = BitSwapMessage(
-            blocks.isNotEmpty ? blocks.first.data : Uint8List(0), 'receive');
+          blocks.isNotEmpty ? blocks.first.data : Uint8List(0),
+          'receive',
+        );
 
         final handler = _protocolHandlers[baseMessage.protocol];
         if (handler != null) {

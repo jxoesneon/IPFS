@@ -51,7 +51,8 @@ class DirectoryParser {
   DirectoryHandler parseDirectoryBlock(Block block) {
     if (block.cid.codec != 'dag-pb') {
       throw FormatException(
-          'Invalid directory block codec: ${block.cid.codec}');
+        'Invalid directory block codec: ${block.cid.codec}',
+      );
     }
 
     _currentBlock = block;
@@ -67,7 +68,8 @@ class DirectoryParser {
           if (unixFsData.type != Data_DataType.Directory &&
               unixFsData.type != Data_DataType.HAMTShard) {
             throw FormatException(
-                'Block is not a UnixFS Directory (Type: ${unixFsData.type})');
+              'Block is not a UnixFS Directory (Type: ${unixFsData.type})',
+            );
           }
         } catch (e) {
           // If data fails to parse as UnixFS, it might not be a UnixFS directory
@@ -77,7 +79,8 @@ class DirectoryParser {
 
       // Create Handler (Path is unknown from the block itself, defaults to root or empty)
       final handler = DirectoryHandler(
-          '/${block.cid.encode()}'); // Use CID as placeholder path
+        '/${block.cid.encode()}',
+      ); // Use CID as placeholder path
 
       for (final link in pbNode.links) {
         // Determine if link is directory?
@@ -94,14 +97,16 @@ class DirectoryParser {
         // For a simple list, we treat everything as a generic entry.
         // But the UI wants icons.
 
-        handler.addEntry(DirectoryEntry(
-          name: link.name,
-          size: link.size.toInt(),
-          isDirectory:
-              false, // Cannot know without fetching child block in standard IPFS
-          timestamp: 0, // Not stored in standard link
-          metadata: {},
-        ));
+        handler.addEntry(
+          DirectoryEntry(
+            name: link.name,
+            size: link.size.toInt(),
+            isDirectory:
+                false, // Cannot know without fetching child block in standard IPFS
+            timestamp: 0, // Not stored in standard link
+            metadata: {},
+          ),
+        );
       }
 
       return handler;
@@ -136,14 +141,16 @@ class DirectoryParser {
 
     // Add parent directory link if not at root
     if (currentPath != '/') {
-      buffer.writeln(_createEntryHtml(
-        name: '..',
-        size: '',
-        type: 'directory',
-        timestamp: 0,
-        metadata: {},
-        isParent: true,
-      ));
+      buffer.writeln(
+        _createEntryHtml(
+          name: '..',
+          size: '',
+          type: 'directory',
+          timestamp: 0,
+          metadata: {},
+          isParent: true,
+        ),
+      );
     }
 
     // Get and sort entries
@@ -157,14 +164,16 @@ class DirectoryParser {
 
     // Add entries to the listing
     for (final entry in entries) {
-      buffer.writeln(_createEntryHtml(
-        name: entry.name,
-        size: _formatSize(entry.size.toInt()),
-        type: entry.isDirectory ? 'directory' : _getFileType(entry),
-        timestamp: entry.timestamp,
-        metadata: entry.metadata ?? {},
-        isParent: false,
-      ));
+      buffer.writeln(
+        _createEntryHtml(
+          name: entry.name,
+          size: _formatSize(entry.size.toInt()),
+          type: entry.isDirectory ? 'directory' : _getFileType(entry),
+          timestamp: entry.timestamp,
+          metadata: entry.metadata ?? {},
+          isParent: false,
+        ),
+      );
     }
 
     buffer
@@ -285,9 +294,10 @@ class DirectoryParser {
 
     try {
       final preview = _previewHandler.generatePreview(
-          _getCurrentBlock(), contentType,
-          maxSize: 1024 * 1024 // 1MB limit for directory listing previews
-          );
+        _getCurrentBlock(),
+        contentType,
+        maxSize: 1024 * 1024, // 1MB limit for directory listing previews
+      );
       return preview ?? '';
     } catch (e) {
       print('Error generating preview for $name: $e');

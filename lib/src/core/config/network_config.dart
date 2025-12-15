@@ -19,7 +19,7 @@ class NetworkConfig {
   /// Default multiaddr listen addresses for TCP.
   static const defaultListenAddresses = [
     '/ip4/0.0.0.0/tcp/4001',
-    '/ip6/::/tcp/4001'
+    '/ip6/::/tcp/4001',
   ];
 
   /// Default IPFS bootstrap peers.
@@ -27,7 +27,7 @@ class NetworkConfig {
     '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
     '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
     '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-    '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
+    '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
   ];
 
   /// Addresses to listen on for incoming connections.
@@ -75,26 +75,29 @@ class NetworkConfig {
 
   factory NetworkConfig.fromJson(Map<String, dynamic> json) {
     return NetworkConfig(
-      listenAddresses:
-          List<String>.from(json['listenAddresses'] ?? defaultListenAddresses),
-      bootstrapPeers:
-          List<String>.from(json['bootstrapPeers'] ?? defaultBootstrapPeers),
+      listenAddresses: List<String>.from(
+        json['listenAddresses'] ?? defaultListenAddresses,
+      ),
+      bootstrapPeers: List<String>.from(
+        json['bootstrapPeers'] ?? defaultBootstrapPeers,
+      ),
       maxConnections: json['maxConnections'] ?? 50,
-      connectionTimeout:
-          Duration(seconds: json['connectionTimeoutSeconds'] ?? 30),
+      connectionTimeout: Duration(
+        seconds: json['connectionTimeoutSeconds'] ?? 30,
+      ),
       nodeId: json['nodeId'],
       delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'],
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'listenAddresses': listenAddresses,
-        'bootstrapPeers': bootstrapPeers,
-        'maxConnections': maxConnections,
-        'connectionTimeoutSeconds': connectionTimeout.inSeconds,
-        'nodeId': nodeId,
-        'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
-      };
+    'listenAddresses': listenAddresses,
+    'bootstrapPeers': bootstrapPeers,
+    'maxConnections': maxConnections,
+    'connectionTimeoutSeconds': connectionTimeout.inSeconds,
+    'nodeId': nodeId,
+    'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
+  };
 
   static String _generateDefaultNodeId() {
     final random = Random.secure();

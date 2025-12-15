@@ -37,8 +37,11 @@ class CAR {
     final carProto = proto.CarProto()
       ..version = version
       ..characteristics.addAll(header.characteristics)
-      ..pragma.addAll(header.pragma
-          .map((k, v) => MapEntry(k, Any()..value = v.toString().codeUnits)))
+      ..pragma.addAll(
+        header.pragma.map(
+          (k, v) => MapEntry(k, Any()..value = v.toString().codeUnits),
+        ),
+      )
       ..blocks.addAll(blocks.map((b) => b.toProto()));
 
     if (index != null) {
@@ -54,8 +57,9 @@ class CAR {
       throw UnsupportedError('Selective loading requires an index');
     }
 
-    final selectedBlocks =
-        blocks.where((block) => cids.contains(block.cid.toString())).toList();
+    final selectedBlocks = blocks
+        .where((block) => cids.contains(block.cid.toString()))
+        .toList();
 
     return CAR(
       blocks: selectedBlocks,
@@ -93,11 +97,7 @@ class CAR {
     if (carProto.hasIndex()) {
       index = CarIndex();
       for (var entry in carProto.index.entries) {
-        index.addEntry(
-          entry.cid,
-          entry.offset.toInt(),
-          entry.length.toInt(),
-        );
+        index.addEntry(entry.cid, entry.offset.toInt(), entry.length.toInt());
       }
     }
 
@@ -129,8 +129,11 @@ class CarHeader {
       ..version = version
       ..characteristics.addAll(characteristics)
       ..roots.addAll(roots.map((r) => r.toProto()))
-      ..pragma.addAll(pragma
-          .map((k, v) => MapEntry(k, Any()..value = v.toString().codeUnits)));
+      ..pragma.addAll(
+        pragma.map(
+          (k, v) => MapEntry(k, Any()..value = v.toString().codeUnits),
+        ),
+      );
   }
 }
 
@@ -165,10 +168,12 @@ class CarIndex {
   proto.CarIndex toProto() {
     final pbIndex = proto.CarIndex();
     _offsets.forEach((cid, offset) {
-      pbIndex.entries.add(proto.IndexEntry()
-        ..cid = cid
-        ..offset = Int64(offset)
-        ..length = Int64(_lengths[cid]!));
+      pbIndex.entries.add(
+        proto.IndexEntry()
+          ..cid = cid
+          ..offset = Int64(offset)
+          ..length = Int64(_lengths[cid]!),
+      );
     });
     return pbIndex;
   }

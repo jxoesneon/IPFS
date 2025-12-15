@@ -11,8 +11,12 @@ class MockHTTPClientBuilder {
   final List<http.Request> _requests = [];
 
   /// Set up a response for a specific URL
-  void setupResponse(String url, int statusCode, String body,
-      {Map<String, String>? headers}) {
+  void setupResponse(
+    String url,
+    int statusCode,
+    String body, {
+    Map<String, String>? headers,
+  }) {
     _responses[Uri.parse(url)] = http.Response(
       body,
       statusCode,

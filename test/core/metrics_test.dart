@@ -75,16 +75,14 @@ void main() {
       final peerId = 'peer2';
 
       // 1st update
-      await collector.updateConnectionMetrics(ConnectionMetrics(
-        peerId: peerId,
-        averageLatencyMs: 100,
-      ));
+      await collector.updateConnectionMetrics(
+        ConnectionMetrics(peerId: peerId, averageLatencyMs: 100),
+      );
 
       // 2nd update
-      await collector.updateConnectionMetrics(ConnectionMetrics(
-        peerId: peerId,
-        averageLatencyMs: 200,
-      ));
+      await collector.updateConnectionMetrics(
+        ConnectionMetrics(peerId: peerId, averageLatencyMs: 200),
+      );
 
       final latency = collector.getAverageLatency(peerId);
       // (100 + 200) / 2 = 150
@@ -105,8 +103,9 @@ void main() {
       disabledCollector.recordError('test', 'source', 'msg');
       disabledCollector.recordProtocolMetrics('proto', {});
 
-      await disabledCollector
-          .updateConnectionMetrics(ConnectionMetrics(peerId: 'p1'));
+      await disabledCollector.updateConnectionMetrics(
+        ConnectionMetrics(peerId: 'p1'),
+      );
       // Should result in zero stats
       expect(disabledCollector.getMessagesSent('p1').toInt(), 0);
 

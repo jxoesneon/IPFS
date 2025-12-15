@@ -5,13 +5,7 @@ import 'package:multicast_dns/multicast_dns.dart' as mdns;
 import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Resource record types for mDNS queries
-enum ResourceRecordType {
-  PTR,
-  SRV,
-  TXT,
-  A,
-  AAAA,
-}
+enum ResourceRecordType { PTR, SRV, TXT, A, AAAA }
 
 /// Query class for mDNS resource records
 class ResourceRecordQuery {
@@ -49,7 +43,7 @@ class PtrResourceRecord extends ResourceRecord {
   final String domainName;
 
   PtrResourceRecord(String name, Duration ttl, this.domainName)
-      : super(name, ttl);
+    : super(name, ttl);
 }
 
 /// SRV record containing service location information
@@ -121,18 +115,20 @@ class MDnsClient {
   }
 
   /// Performs an mDNS lookup for the specified record type
-  Stream<T> lookup<T extends ResourceRecord>(ResourceRecordQuery query,
-      {Duration timeout = const Duration(seconds: 5)}) async* {
+  Stream<T> lookup<T extends ResourceRecord>(
+    ResourceRecordQuery query, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async* {
     if (!_isRunning || _client == null) {
       throw StateError('MDnsClient not running');
     }
 
     try {
       final queryParameters = mdns.ResourceRecordQuery(
-          _getResourceRecordType(query.type),
-          query.name,
-          0x8000 // This is the constant for multicast questions in mDNS
-          );
+        _getResourceRecordType(query.type),
+        query.name,
+        0x8000, // This is the constant for multicast questions in mDNS
+      );
 
       await for (final record
           in _client!.lookup(queryParameters).timeout(timeout)) {
@@ -154,25 +150,28 @@ class MDnsClient {
     try {
       if (T == PtrResourceRecord && raw is mdns.PtrResourceRecord) {
         return PtrResourceRecord(
-          raw.name,
-          Duration(milliseconds: raw.validUntil),
-          raw.domainName,
-        ) as T;
+              raw.name,
+              Duration(milliseconds: raw.validUntil),
+              raw.domainName,
+            )
+            as T;
       } else if (T == SrvResourceRecord && raw is mdns.SrvResourceRecord) {
         return SrvResourceRecord(
-          raw.name,
-          Duration(milliseconds: raw.validUntil),
-          raw.target,
-          raw.port,
-          priority: raw.priority,
-          weight: raw.weight,
-        ) as T;
+              raw.name,
+              Duration(milliseconds: raw.validUntil),
+              raw.target,
+              raw.port,
+              priority: raw.priority,
+              weight: raw.weight,
+            )
+            as T;
       } else if (T == TxtResourceRecord && raw is mdns.TxtResourceRecord) {
         return TxtResourceRecord(
-          raw.name,
-          Duration(milliseconds: raw.validUntil),
-          [raw.text],
-        ) as T;
+              raw.name,
+              Duration(milliseconds: raw.validUntil),
+              [raw.text],
+            )
+            as T;
       }
       return null;
     } catch (e) {
@@ -234,8 +233,12 @@ class MDnsClient {
   }
 
   /// Sends an unsolicited announcement (response)
-  Future<void> announce(String serviceType, String instanceName, int port,
-      List<String> txt) async {
+  Future<void> announce(
+    String serviceType,
+    String instanceName,
+    int port,
+    List<String> txt,
+  ) async {
     if (_serverSocket == null) return;
     try {
       _sendResponse(serviceType, instanceName, port, txt);
@@ -244,8 +247,13 @@ class MDnsClient {
     }
   }
 
-  void _handlePacket(Datagram packet, String serviceType, String instanceName,
-      int port, List<String> txt) {
+  void _handlePacket(
+    Datagram packet,
+    String serviceType,
+    String instanceName,
+    int port,
+    List<String> txt,
+  ) {
     // Basic DNS Packet Parsing
     final data = packet.data;
     if (data.length < 12) return;
@@ -280,8 +288,12 @@ class MDnsClient {
     }
   }
 
-  void _sendResponse(String serviceType, String instanceName, int port,
-      List<String> txtRecords) {
+  void _sendResponse(
+    String serviceType,
+    String instanceName,
+    int port,
+    List<String> txtRecords,
+  ) {
     // Construct DNS Response Packet
     final response = BytesBuilder();
 

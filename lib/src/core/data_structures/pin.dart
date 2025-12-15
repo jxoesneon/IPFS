@@ -51,8 +51,8 @@ class Pin {
     required this.type,
     DateTime? timestamp,
     required this.blockStore,
-  })  : timestamp = timestamp ?? DateTime.now(),
-        _pinManager = PinManager(blockStore);
+  }) : timestamp = timestamp ?? DateTime.now(),
+       _pinManager = PinManager(blockStore);
 
   /// Creates a [Pin] from its Protobuf representation.
   factory Pin.fromProto(PinProto pbPin, BlockStore blockStore) {

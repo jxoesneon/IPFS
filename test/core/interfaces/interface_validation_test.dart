@@ -19,11 +19,7 @@ void main() {
     });
 
     test('All interfaces are accessible', () {
-      final interfaces = [
-        BlockStoreOperations,
-        BlockData,
-        IBlockStore,
-      ];
+      final interfaces = [BlockStoreOperations, BlockData, IBlockStore];
 
       // All types are non-nullable, so just verify list is not empty
       expect(interfaces, isNotEmpty);
