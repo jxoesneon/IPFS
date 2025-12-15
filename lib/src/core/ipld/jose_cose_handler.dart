@@ -102,10 +102,12 @@ class JoseCoseHandler {
     final jwk = JsonWebKey.fromJson({
       'kty': 'EC',
       'crv': 'P-256',
-      'x': base64Url
-          .encode(_bigIntToBytes(privateKey.publicKey.Q!.x!.toBigInteger())),
-      'y': base64Url
-          .encode(_bigIntToBytes(privateKey.publicKey.Q!.y!.toBigInteger())),
+      'x': base64Url.encode(
+        _bigIntToBytes(privateKey.publicKey.Q!.x!.toBigInteger()),
+      ),
+      'y': base64Url.encode(
+        _bigIntToBytes(privateKey.publicKey.Q!.y!.toBigInteger()),
+      ),
     });
 
     // Create a key store and add the key
@@ -164,8 +166,9 @@ class JoseCoseHandler {
   }
 
   static Uint8List _extractPayload(IPLDNode node) {
-    final payloadEntry =
-        node.mapValue.entries.firstWhere((e) => e.key == 'payload');
+    final payloadEntry = node.mapValue.entries.firstWhere(
+      (e) => e.key == 'payload',
+    );
     return Uint8List.fromList(utf8.encode(payloadEntry.value.stringValue));
   }
 

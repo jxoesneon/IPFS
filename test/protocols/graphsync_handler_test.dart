@@ -85,7 +85,9 @@ class MockIPLD extends IPLDHandler {
 
   @override
   Future<List<IPLDNode>> executeSelector(
-      CID root, IPLDSelector selector) async {
+    CID root,
+    IPLDSelector selector,
+  ) async {
     return []; // Empty results by default
   }
 }
@@ -126,18 +128,24 @@ void main() {
     });
 
     test('start registers protocol handler', () {
-      expect(mockRouter.handlers.containsKey(GraphsyncProtocol.protocolID),
-          isTrue);
+      expect(
+        mockRouter.handlers.containsKey(GraphsyncProtocol.protocolID),
+        isTrue,
+      );
     });
 
     test('requestGraph sends request and calls bitswap', () async {
-      final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]),
-          codec: 'dag-pb');
+      final cid = CID.computeForDataSync(
+        Uint8List.fromList([1, 2, 3]),
+        codec: 'dag-pb',
+      );
       final selector = IPLDSelector(type: SelectorType.all);
 
       // Setup bitswap response
-      final block =
-          core_block.Block(cid: cid, data: Uint8List.fromList([1, 2, 3]));
+      final block = core_block.Block(
+        cid: cid,
+        data: Uint8List.fromList([1, 2, 3]),
+      );
       mockBitswap.blocks[cid.toString()] = block;
 
       final result = await handler.requestGraph(cid.toString(), selector);
@@ -149,23 +157,28 @@ void main() {
       expect(mockRouter.sentMessages, isNotEmpty);
 
       // Parse sent message to verify it's a Request
-      final msg =
-          proto.GraphsyncMessage.fromBuffer(mockRouter.sentMessages.first);
+      final msg = proto.GraphsyncMessage.fromBuffer(
+        mockRouter.sentMessages.first,
+      );
       expect(msg.requests, isNotEmpty);
       expect(msg.requests.first.root, equals(cid.toBytes()));
     });
 
     test('handles cancel request by sending response', () async {
       final requestMsg = proto.GraphsyncMessage();
-      requestMsg.requests.add(proto.GraphsyncRequest()
-        ..id = 123
-        ..cancel = true);
+      requestMsg.requests.add(
+        proto.GraphsyncRequest()
+          ..id = 123
+          ..cancel = true,
+      );
 
       final packet = p2p.Packet(
         datagram: requestMsg.writeToBuffer(),
         header: p2p.PacketHeader(id: 1, issuedAt: 0),
-        srcFullAddress:
-            p2p.FullAddress(address: InternetAddress.anyIPv4, port: 0),
+        srcFullAddress: p2p.FullAddress(
+          address: InternetAddress.anyIPv4,
+          port: 0,
+        ),
       )..srcPeerId = p2p.PeerId(value: Uint8List.fromList(List.filled(64, 1)));
 
       // Manually trigger handler
@@ -173,8 +186,9 @@ void main() {
 
       // Expect response
       expect(mockRouter.sentMessages, isNotEmpty);
-      final respMsg =
-          proto.GraphsyncMessage.fromBuffer(mockRouter.sentMessages.last);
+      final respMsg = proto.GraphsyncMessage.fromBuffer(
+        mockRouter.sentMessages.last,
+      );
       expect(respMsg.responses.first.id, 123);
       expect(respMsg.responses.first.status, proto.ResponseStatus.RS_CANCELLED);
     });

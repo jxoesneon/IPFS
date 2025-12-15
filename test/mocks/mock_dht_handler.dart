@@ -101,7 +101,8 @@ class MockDHTHandler implements IDHTHandler {
     await _simulateDelay();
 
     _recordCall(
-        'handleProvideRequest:${cid.toString()}:${provider.toString()}');
+      'handleProvideRequest:${cid.toString()}:${provider.toString()}',
+    );
     // Just track the call
   }
 

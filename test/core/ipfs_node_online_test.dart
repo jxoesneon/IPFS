@@ -87,7 +87,7 @@ class MockNetworkHandler extends NetworkHandler {
   final P2plibRouter _mockRouter;
 
   MockNetworkHandler(IPFSConfig config, this._nodeReceiver, this._mockRouter)
-      : super(config);
+    : super(config);
 
   @override
   IPFSNode get ipfsNode => _nodeReceiver;
@@ -111,7 +111,7 @@ class MockNetworkHandler extends NetworkHandler {
 
 class MockDHTHandler extends DHTHandler {
   MockDHTHandler(IPFSConfig config, NetworkHandler networkHandler)
-      : super(config, networkHandler.p2pRouter, networkHandler);
+    : super(config, networkHandler.p2pRouter, networkHandler);
 
   @override
   Future<void> start() async {}
@@ -121,7 +121,7 @@ class MockDHTHandler extends DHTHandler {
   @override
   Future<List<V_PeerInfo>> findProviders(CID cid) async {
     return [
-      V_PeerInfo()..peerId = Uint8List.fromList([1, 2, 3])
+      V_PeerInfo()..peerId = Uint8List.fromList([1, 2, 3]),
     ];
   }
 
@@ -136,8 +136,10 @@ class MockDHTHandler extends DHTHandler {
 
 class MockBitswapHandler extends BitswapHandler {
   MockBitswapHandler(
-      IPFSConfig config, BlockStore store, NetworkHandler networkHandler)
-      : super(config, store, networkHandler.p2pRouter);
+    IPFSConfig config,
+    BlockStore store,
+    NetworkHandler networkHandler,
+  ) : super(config, store, networkHandler.p2pRouter);
 
   @override
   Future<void> start() async {}
@@ -149,15 +151,16 @@ class MockBitswapHandler extends BitswapHandler {
   @override
   Future<Block?> wantBlock(String cid) async {
     return Block(
-        cid: CID.decode(cid),
-        data: Uint8List.fromList([10, 20, 30]),
-        format: 'raw');
+      cid: CID.decode(cid),
+      data: Uint8List.fromList([10, 20, 30]),
+      format: 'raw',
+    );
   }
 }
 
 class MockIpfsNodeNetworkEvents extends IpfsNodeNetworkEvents {
   MockIpfsNodeNetworkEvents(CircuitRelayClient relay, P2plibRouter router)
-      : super(relay, router);
+    : super(relay, router);
 
   final StreamController<NetworkEvent> _controller =
       StreamController.broadcast();
@@ -167,8 +170,10 @@ class MockIpfsNodeNetworkEvents extends IpfsNodeNetworkEvents {
 
 class MockPubSubHandler extends PubSubHandler {
   MockPubSubHandler(
-      P2plibRouter router, String peerId, IpfsNodeNetworkEvents events)
-      : super(router, peerId, events);
+    P2plibRouter router,
+    String peerId,
+    IpfsNodeNetworkEvents events,
+  ) : super(router, peerId, events);
 
   @override
   Future<void> start() async {}
@@ -207,7 +212,8 @@ void main() {
       container.registerSingleton<BlockStore>(mockBlockStore);
       container.registerSingleton<DatastoreHandler>(mockDatastore);
       container.registerSingleton<IPLDHandler>(
-          MockIPLDHandler(config, mockBlockStore));
+        MockIPLDHandler(config, mockBlockStore),
+      );
 
       // Mocks for Network
       final mockRouter = MockP2plibRouter(config);
@@ -216,18 +222,24 @@ void main() {
 
       final ipfsNodeForMocks = IPFSNode.fromContainer(container);
 
-      final mockNetworkHandler =
-          MockNetworkHandler(config, ipfsNodeForMocks, mockRouter);
+      final mockNetworkHandler = MockNetworkHandler(
+        config,
+        ipfsNodeForMocks,
+        mockRouter,
+      );
       container.registerSingleton<NetworkHandler>(mockNetworkHandler);
 
       container.registerSingleton<DHTHandler>(
-          MockDHTHandler(config, mockNetworkHandler));
+        MockDHTHandler(config, mockNetworkHandler),
+      );
 
       container.registerSingleton<BitswapHandler>(
-          MockBitswapHandler(config, mockBlockStore, mockNetworkHandler));
+        MockBitswapHandler(config, mockBlockStore, mockNetworkHandler),
+      );
 
       container.registerSingleton<PubSubHandler>(
-          MockPubSubHandler(mockRouter, validMockPeerId, mockEvents));
+        MockPubSubHandler(mockRouter, validMockPeerId, mockEvents),
+      );
     });
 
     test('should initialize and start in online mode', () async {

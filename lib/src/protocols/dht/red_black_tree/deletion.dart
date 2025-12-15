@@ -66,9 +66,10 @@ class Deletion<K_PeerId, V_PeerInfo> {
   }
 
   void transplant(
-      RedBlackTree<K_PeerId, V_PeerInfo> tree,
-      RedBlackTreeNode<K_PeerId, V_PeerInfo> u,
-      RedBlackTreeNode<K_PeerId, V_PeerInfo>? v) {
+    RedBlackTree<K_PeerId, V_PeerInfo> tree,
+    RedBlackTreeNode<K_PeerId, V_PeerInfo> u,
+    RedBlackTreeNode<K_PeerId, V_PeerInfo>? v,
+  ) {
     if (u.parent == null) {
       tree.root = v;
     } else if (u == u.parent!.left_child) {
@@ -80,7 +81,8 @@ class Deletion<K_PeerId, V_PeerInfo> {
   }
 
   RedBlackTreeNode<K_PeerId, V_PeerInfo>? minimum(
-      RedBlackTreeNode<K_PeerId, V_PeerInfo> node) {
+    RedBlackTreeNode<K_PeerId, V_PeerInfo> node,
+  ) {
     while (node.left_child != null) {
       node = node.left_child!;
     }
@@ -88,7 +90,9 @@ class Deletion<K_PeerId, V_PeerInfo> {
   }
 
   RedBlackTreeNode<K_PeerId, V_PeerInfo>? searchNode(
-      RedBlackTree<K_PeerId, V_PeerInfo> tree, K_PeerId key) {
+    RedBlackTree<K_PeerId, V_PeerInfo> tree,
+    K_PeerId key,
+  ) {
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? node = tree.root;
 
     while (node != null) {

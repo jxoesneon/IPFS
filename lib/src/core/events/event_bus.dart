@@ -63,10 +63,7 @@ class PeerConnectedEvent extends NetworkEvent {
   final String peerId;
   final String address;
 
-  PeerConnectedEvent({
-    required this.peerId,
-    required this.address,
-  });
+  PeerConnectedEvent({required this.peerId, required this.address});
 }
 
 /// Event for block transfers

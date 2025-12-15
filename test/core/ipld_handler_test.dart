@@ -78,12 +78,14 @@ void main() {
       final retrieved = await handler.get(block.cid);
       expect(retrieved.kind, Kind.MAP);
 
-      final nameEntry =
-          retrieved.mapValue.entries.firstWhere((e) => e.key == 'name');
+      final nameEntry = retrieved.mapValue.entries.firstWhere(
+        (e) => e.key == 'name',
+      );
       expect(nameEntry.value.stringValue, 'test');
 
-      final valueEntry =
-          retrieved.mapValue.entries.firstWhere((e) => e.key == 'value');
+      final valueEntry = retrieved.mapValue.entries.firstWhere(
+        (e) => e.key == 'value',
+      );
       expect(valueEntry.value.intValue.toInt(), 123);
     });
 
@@ -94,8 +96,10 @@ void main() {
       expect(block.cid.codec, 'raw');
 
       final retrieved = await handler.get(block.cid);
-      expect(retrieved.kind.toString(),
-          contains('BYTES')); // raw decodes to IPLDNode with BYTES
+      expect(
+        retrieved.kind.toString(),
+        contains('BYTES'),
+      ); // raw decodes to IPLDNode with BYTES
       expect(retrieved.bytesValue, data);
     });
 
@@ -136,12 +140,12 @@ void main() {
       final linkData = {
         'Name': 'child',
         'Cid': parentLink.toBytes(), // Expects bytes for 'Cid' key in handler
-        'Size': 100
+        'Size': 100,
       };
 
       final parentMap = {
         'Data': Uint8List.fromList([1, 2, 3]),
-        'Links': [linkData]
+        'Links': [linkData],
       };
 
       // To make handler accept this as a Link in the list,
@@ -158,8 +162,10 @@ void main() {
       // However, DAG-PB resolution logic involves _resolveSegment.
       // For MerkleDAGNode, it iterates links and matches name.
 
-      final (resolvedNode, lastCid) =
-          await handler.resolveLink(parentBlock.cid, 'child');
+      final (resolvedNode, lastCid) = await handler.resolveLink(
+        parentBlock.cid,
+        'child',
+      );
 
       expect(lastCid, leafCid.toString());
       // resolvedNode should be the content of the leaf.

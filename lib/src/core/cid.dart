@@ -81,8 +81,11 @@ class CID {
   }
 
   /// Creates a CIDv1.
-  factory CID.v1(String codec, MultihashInfo multihash,
-      {Multibase base = Multibase.base32}) {
+  factory CID.v1(
+    String codec,
+    MultihashInfo multihash, {
+    Multibase base = Multibase.base32,
+  }) {
     return CID(
       version: 1,
       codec: codec,
@@ -159,8 +162,9 @@ class CID {
     // Check if it's a CIDv0 (base58, starts with 'Qm')
     if (cidStr.startsWith('Qm')) {
       // Decode base58
-      final decoded =
-          multibaseDecode('z$cidStr'); // Add 'z' prefix for base58btc
+      final decoded = multibaseDecode(
+        'z$cidStr',
+      ); // Add 'z' prefix for base58btc
       return fromBytes(decoded);
     }
 
@@ -305,16 +309,20 @@ class CID {
   }
 
   /// Computes CID for data (async version for compatibility).
-  static Future<CID> computeForData(Uint8List data,
-      {String format = 'raw'}) async {
+  static Future<CID> computeForData(
+    Uint8List data, {
+    String format = 'raw',
+  }) async {
     return await fromContent(data, codec: format);
   }
 
   /// Computes CID for data (sync version).
   static CID computeForDataSync(Uint8List data, {String codec = 'raw'}) {
     final digest = sha256.convert(data);
-    final mhInfo =
-        Multihash.encode('sha2-256', Uint8List.fromList(digest.bytes));
+    final mhInfo = Multihash.encode(
+      'sha2-256',
+      Uint8List.fromList(digest.bytes),
+    );
     return CID.v1(codec, mhInfo);
   }
 }

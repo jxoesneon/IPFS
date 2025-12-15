@@ -13,7 +13,11 @@ class PubSubMessage {
   final String from;
   final String content;
 
-  PubSubMessage({required this.topic, required this.from, required this.content});
+  PubSubMessage({
+    required this.topic,
+    required this.from,
+    required this.content,
+  });
 }
 
 /// Handles PubSub operations for an IPFS node.
@@ -29,7 +33,7 @@ class PubSubHandler {
 
   /// Constructs a [PubSubHandler] with the provided router, peer ID, and network events.
   PubSubHandler(P2plibRouter router, String peerId, this._networkEvents)
-      : _pubSubClient = PubSubClient(router, peerId) {
+    : _pubSubClient = PubSubClient(router, peerId) {
     // Register the pubsub protocol immediately upon construction
     router.registerProtocol('pubsub');
   }
@@ -112,7 +116,8 @@ class PubSubHandler {
   Future<String?> resolveDNSLink(String domainName) async {
     try {
       final cid = await DNSLinkResolver.resolve(
-          domainName); // Assuming you have a DNSLinkResolver utility
+        domainName,
+      ); // Assuming you have a DNSLinkResolver utility
       if (cid != null) {
         print('Resolved DNSLink for domain $domainName to CID: $cid');
         return cid;
@@ -145,11 +150,9 @@ class PubSubHandler {
     // Further processing of the message can be done here
     // For example, dispatching it to specific handlers based on the topic
 
-    _messageController.add(PubSubMessage(
-      topic: event.topic,
-      from: event.peerId,
-      content: message,
-    ));
+    _messageController.add(
+      PubSubMessage(topic: event.topic, from: event.peerId, content: message),
+    );
   }
 
   Future<Map<String, dynamic>> getStatus() async {

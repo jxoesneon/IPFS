@@ -89,22 +89,28 @@ class SecurityManager {
     if (_config.tlsCertificatePath == null ||
         _config.tlsPrivateKeyPath == null) {
       throw StateError(
-          'TLS enabled but certificate or private key path not provided');
+        'TLS enabled but certificate or private key path not provided',
+      );
     }
 
     // Verify certificate and key files exist
     if (!File(_config.tlsCertificatePath!).existsSync()) {
       throw FileSystemException(
-          'TLS certificate file not found', _config.tlsCertificatePath);
+        'TLS certificate file not found',
+        _config.tlsCertificatePath,
+      );
     }
 
     if (!File(_config.tlsPrivateKeyPath!).existsSync()) {
       throw FileSystemException(
-          'TLS private key file not found', _config.tlsPrivateKeyPath);
+        'TLS private key file not found',
+        _config.tlsPrivateKeyPath,
+      );
     }
 
     _logger.debug(
-        'TLS initialized with certificate: ${_config.tlsCertificatePath}');
+      'TLS initialized with certificate: ${_config.tlsCertificatePath}',
+    );
   }
 
   void _setupKeyRotation() {
@@ -117,7 +123,8 @@ class SecurityManager {
 
     _lastKeyRotation = DateTime.now();
     _logger.debug(
-        'Key rotation scheduled for interval: ${_config.keyRotationInterval}');
+      'Key rotation scheduled for interval: ${_config.keyRotationInterval}',
+    );
   }
 
   Future<void> _rotateKeys() async {
@@ -141,7 +148,8 @@ class SecurityManager {
     _requestLog.putIfAbsent(clientId, () => []);
 
     _requestLog[clientId]!.removeWhere(
-        (time) => now.difference(time) > const Duration(minutes: 1));
+      (time) => now.difference(time) > const Duration(minutes: 1),
+    );
 
     _requestLog[clientId]!.add(now);
 
@@ -235,9 +243,6 @@ class SecurityManager {
     }
 
     // Report metrics to the central collector if needed
-    _metrics.recordProtocolMetrics('security', {
-      'type': metricType,
-      ...?data,
-    });
+    _metrics.recordProtocolMetrics('security', {'type': metricType, ...?data});
   }
 }

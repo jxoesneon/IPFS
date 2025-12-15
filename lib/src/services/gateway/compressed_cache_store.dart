@@ -16,13 +16,12 @@ class CompressedCacheStore {
   final AdaptiveCompressionHandler _compressionHandler;
   final _logger = Logger('CompressedCacheStore');
 
-  CompressedCacheStore({
-    required String cachePath,
-  })  : _cacheDir = Directory(cachePath),
-        _compressionHandler = AdaptiveCompressionHandler(
-          BlockStore(path: cachePath),
-          CompressionConfig(),
-        ) {
+  CompressedCacheStore({required String cachePath})
+    : _cacheDir = Directory(cachePath),
+      _compressionHandler = AdaptiveCompressionHandler(
+        BlockStore(path: cachePath),
+        CompressionConfig(),
+      ) {
     _initializeStore();
   }
 
@@ -33,16 +32,18 @@ class CompressedCacheStore {
   }
 
   Future<Uint8List?> getCompressedData(CID cid, String contentType) async {
-    final cacheFile =
-        File('${_cacheDir.path}/${_getCacheFileName(cid, contentType)}');
+    final cacheFile = File(
+      '${_cacheDir.path}/${_getCacheFileName(cid, contentType)}',
+    );
 
     if (!await cacheFile.exists()) return null;
 
     try {
       final compressedData = await cacheFile.readAsBytes();
       final metadata = await _readMetadata(cacheFile.path);
-      final compressionType =
-          _parseCompressionType(metadata['compression'] ?? 'gzip');
+      final compressionType = _parseCompressionType(
+        metadata['compression'] ?? 'gzip',
+      );
 
       return _decompress(compressedData, compressionType);
     } catch (e, stackTrace) {
@@ -67,18 +68,16 @@ class CompressedCacheStore {
     }
 
     final compressedData = _compress(data, compressionType);
-    final analysis = _compressionHandler.analyzeCompression(
-      data,
-      contentType,
-      {compressionType: compressedData.length},
-    );
+    final analysis = _compressionHandler.analyzeCompression(data, contentType, {
+      compressionType: compressedData.length,
+    });
 
     await _storeWithMetadata(cid, contentType, compressedData, {
       'compression': compressionType.name,
       'originalSize': data.length.toString(),
       'compressedSize': compressedData.length.toString(),
-      'compressionRatio':
-          analysis.compressionRatios[compressionType].toString(),
+      'compressionRatio': analysis.compressionRatios[compressionType]
+          .toString(),
       'timestamp': DateTime.now().toIso8601String(),
     });
   }
@@ -127,8 +126,9 @@ class CompressedCacheStore {
   }
 
   String _getCacheFileName(CID cid, String contentType) {
-    final hash =
-        sha256.convert(utf8.encode('${cid.encode()}_$contentType')).toString();
+    final hash = sha256
+        .convert(utf8.encode('${cid.encode()}_$contentType'))
+        .toString();
     return '$hash.cache';
   }
 
@@ -168,8 +168,9 @@ class CompressedCacheStore {
     Uint8List data,
     Map<String, String> metadata,
   ) async {
-    final cacheFile =
-        File('${_cacheDir.path}/${_getCacheFileName(cid, contentType)}');
+    final cacheFile = File(
+      '${_cacheDir.path}/${_getCacheFileName(cid, contentType)}',
+    );
     await cacheFile.writeAsBytes(data);
 
     final metadataFile = File('${cacheFile.path}.meta');
@@ -184,7 +185,10 @@ class CompressedCacheStore {
   }
 
   Future<void> _storeUncompressed(
-      CID cid, String contentType, Uint8List data) async {
+    CID cid,
+    String contentType,
+    Uint8List data,
+  ) async {
     await _storeWithMetadata(cid, contentType, data, {
       'compression': CompressionType.none.name,
       'originalSize': data.length.toString(),
@@ -195,12 +199,7 @@ class CompressedCacheStore {
   }
 }
 
-enum CompressionType {
-  none,
-  gzip,
-  zlib,
-  lz4,
-}
+enum CompressionType { none, gzip, zlib, lz4 }
 
 class CompressionStats {
   int totalOriginalSize = 0;

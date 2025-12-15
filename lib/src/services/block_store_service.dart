@@ -25,13 +25,17 @@ class BlockStoreService extends BlockStoreServiceBase {
 
   @override
   Future<GetBlockResponse> getBlock(
-      ServiceCall ctx, IPFSCIDProto request) async {
+    ServiceCall ctx,
+    IPFSCIDProto request,
+  ) async {
     return _blockStore.getBlock(request.toString());
   }
 
   @override
   Future<RemoveBlockResponse> removeBlock(
-      ServiceCall ctx, IPFSCIDProto request) async {
+    ServiceCall ctx,
+    IPFSCIDProto request,
+  ) async {
     return _blockStore.removeBlock(request.toString());
   }
 

@@ -67,7 +67,10 @@ class GatewayHandler {
 
   /// Serves content for a given CID and optional sub-path
   Future<Response> _serveContent(
-      String cidStr, String subPath, Request request) async {
+    String cidStr,
+    String subPath,
+    Request request,
+  ) async {
     final block = await _getBlockByCid(cidStr);
     if (block == null) {
       return Response.notFound('Block not found');
@@ -104,7 +107,11 @@ class GatewayHandler {
 
   /// Serves a UnixFS file
   Response _serveFile(
-      Data unixfsData, PBNode pbNode, String cidStr, Request request) {
+    Data unixfsData,
+    PBNode pbNode,
+    String cidStr,
+    Request request,
+  ) {
     final data = Uint8List.fromList(unixfsData.data);
     final contentType = _detectContentType(data);
 
@@ -149,14 +156,16 @@ class GatewayHandler {
     html.writeln('h1 { font-size: 1.5em; }');
     html.writeln('table { border-collapse: collapse; width: 100%; }');
     html.writeln(
-        'td, th { padding: 0.5em; text-align: left; border-bottom: 1px solid #ddd; }');
+      'td, th { padding: 0.5em; text-align: left; border-bottom: 1px solid #ddd; }',
+    );
     html.writeln('a { color: #0066cc; text-decoration: none; }');
     html.writeln('a:hover { text-decoration: underline; }');
     html.writeln('</style></head><body>');
     html.writeln('<h1>Index of /ipfs/$cidStr</h1>');
     html.writeln('<table>');
     html.writeln(
-        '<thead><tr><th>Name</th><th>Size</th><th>Type</th></tr></thead>');
+      '<thead><tr><th>Name</th><th>Size</th><th>Type</th></tr></thead>',
+    );
     html.writeln('<tbody>');
 
     for (final link in pbNode.links) {
@@ -191,8 +200,9 @@ class GatewayHandler {
   ) async {
     final pathParts = subPath.split('/');
     final targetName = pathParts[0];
-    final remainingPath =
-        pathParts.length > 1 ? pathParts.sublist(1).join('/') : '';
+    final remainingPath = pathParts.length > 1
+        ? pathParts.sublist(1).join('/')
+        : '';
 
     // Find the link with matching name
     for (final link in directory.links) {
@@ -208,7 +218,10 @@ class GatewayHandler {
 
   /// Serves a byte range from data
   Response _serveRange(
-      List<int> data, String rangeHeader, Map<String, String> baseHeaders) {
+    List<int> data,
+    String rangeHeader,
+    Map<String, String> baseHeaders,
+  ) {
     // Parse range header: "bytes=start-end"
     final rangeMatch = RegExp(r'bytes=(\d+)-(\d*)').firstMatch(rangeHeader);
     if (rangeMatch == null) {

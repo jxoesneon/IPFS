@@ -18,15 +18,18 @@ class DNSLinkHandler {
   static const List<String> _publicResolvers = [
     'https://dnslink.io/',
     'https://dnslink-resolver.example.com/',
-    'https://ipfs.io/api/v0/dns/'
+    'https://ipfs.io/api/v0/dns/',
   ];
 
   final http.Client _client;
 
   DNSLinkHandler(this._config, {http.Client? client})
-      : _client = client ?? http.Client() {
-    _logger = Logger('DNSLinkHandler',
-        debug: _config.debug, verbose: _config.verboseLogging);
+    : _client = client ?? http.Client() {
+    _logger = Logger(
+      'DNSLinkHandler',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
     _logger.debug('DNSLinkHandler instance created');
   }
 
@@ -98,7 +101,9 @@ class DNSLinkHandler {
   }
 
   Future<String?> _resolveWithPublicResolver(
-      String domainName, String resolver) async {
+    String domainName,
+    String resolver,
+  ) async {
     _logger.verbose('Querying resolver: $resolver');
 
     final url = Uri.parse('$resolver$domainName');
@@ -125,10 +130,7 @@ class DNSLinkHandler {
 
   void _cacheResult(String domainName, String cid) {
     _logger.verbose('Caching DNSLink result for: $domainName');
-    _cache[domainName] = _CachedDNSLink(
-      cid: cid,
-      timestamp: DateTime.now(),
-    );
+    _cache[domainName] = _CachedDNSLink(cid: cid, timestamp: DateTime.now());
   }
 
   /// Gets the current status of the DNSLink handler
@@ -146,10 +148,7 @@ class _CachedDNSLink {
   final String cid;
   final DateTime timestamp;
 
-  _CachedDNSLink({
-    required this.cid,
-    required this.timestamp,
-  });
+  _CachedDNSLink({required this.cid, required this.timestamp});
 
   bool get isExpired =>
       DateTime.now().difference(timestamp) > DNSLinkHandler._cacheDuration;

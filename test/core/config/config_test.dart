@@ -77,7 +77,7 @@ void main() {
         'bootstrapPeers': ['/ip4/1.2.3.4/tcp/4001/p2p/QmPeer'],
         'maxConnections': 100,
         'connectionTimeoutSeconds': 10,
-        'delegatedRoutingEndpoint': 'https://example.com'
+        'delegatedRoutingEndpoint': 'https://example.com',
       };
       final config = NetworkConfig.fromJson(json);
       expect(config.maxConnections, 100);
@@ -128,8 +128,10 @@ void main() {
       final config = IPFSConfig.fromJson(json);
       expect(config.offline, isTrue);
       expect(config.debug, isFalse);
-      expect(config.metrics.enabled,
-          isTrue); // Default of nested if empty map passed
+      expect(
+        config.metrics.enabled,
+        isTrue,
+      ); // Default of nested if empty map passed
 
       final output = config.toJson();
       expect(output['offline'], isTrue);

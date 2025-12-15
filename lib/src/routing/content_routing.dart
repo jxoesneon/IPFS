@@ -12,10 +12,10 @@ class ContentRouting {
   final _logger = Logger('ContentRouting');
 
   ContentRouting(config, NetworkHandler networkHandler)
-      : _dhtClient = DHTClient(
-          networkHandler: networkHandler,
-          router: networkHandler.p2pRouter,
-        );
+    : _dhtClient = DHTClient(
+        networkHandler: networkHandler,
+        router: networkHandler.p2pRouter,
+      );
 
   /// Starts the content routing services.
   Future<void> start() async {
@@ -68,7 +68,10 @@ class ContentRouting {
       }
     } catch (e, stackTrace) {
       _logger.error(
-          'Error resolving DNSLink for domain $domainName', e, stackTrace);
+        'Error resolving DNSLink for domain $domainName',
+        e,
+        stackTrace,
+      );
       return null;
     }
   }

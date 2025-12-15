@@ -33,16 +33,23 @@ extension NodeLookup on KademliaTree {
       List<p2p.PeerId> newClosestPeers = [];
       for (var peerId in peersToQuery) {
         try {
-          List<p2p.PeerId> queriedPeers =
-              await findNode(dhtClient, peerId, target);
+          List<p2p.PeerId> queriedPeers = await findNode(
+            dhtClient,
+            peerId,
+            target,
+          );
           newClosestPeers.addAll(queriedPeers);
         } catch (e) {
           print('Error querying peer $peerId: $e');
         }
       }
 
-      newClosestPeers.sort((a, b) =>
-          calculateDistance(target, a).compareTo(calculateDistance(target, b)));
+      newClosestPeers.sort(
+        (a, b) => calculateDistance(
+          target,
+          a,
+        ).compareTo(calculateDistance(target, b)),
+      );
       newClosestPeers = newClosestPeers.take(K).toList();
 
       if (newClosestPeers.equals(closestPeers) ||

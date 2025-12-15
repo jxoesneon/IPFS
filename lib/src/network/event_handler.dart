@@ -42,11 +42,13 @@ class NetworkEventHandler {
       ..peerMetrics[message.senderId] = peerMetrics;
 
     _updateMetrics(metrics);
-    _eventController.add(NetworkEvent()
-      ..timestamp = timestamp
-      ..eventType = 'MESSAGE_RECEIVED'
-      ..peerId = message.senderId
-      ..data = message.payload);
+    _eventController.add(
+      NetworkEvent()
+        ..timestamp = timestamp
+        ..eventType = 'MESSAGE_RECEIVED'
+        ..peerId = message.senderId
+        ..data = message.payload,
+    );
   }
 
   void _updateMetrics(NetworkMetrics metrics) {

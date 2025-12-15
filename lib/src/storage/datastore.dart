@@ -81,7 +81,8 @@ class Datastore {
       _logger.verbose('Attempting to store block with CID: $cid');
       await _blocksBox.put(cid, block.data);
       _logger.debug(
-          'Successfully stored block: $cid (${block.data.length} bytes)');
+        'Successfully stored block: $cid (${block.data.length} bytes)',
+      );
     } catch (e) {
       _logger.error('Failed to store block: $cid', e);
       throw DatastoreError('Failed to store block: $e');
@@ -97,8 +98,9 @@ class Datastore {
         _logger.debug('Block not found: $cid');
         return null;
       }
-      _logger
-          .debug('Successfully retrieved block: $cid (${data.length} bytes)');
+      _logger.debug(
+        'Successfully retrieved block: $cid (${data.length} bytes)',
+      );
       return Block.fromData(Uint8List.fromList(data));
     } catch (e) {
       _logger.error('Failed to retrieve block: $cid', e);
@@ -145,8 +147,9 @@ class Datastore {
   /// Loads all pinned CIDs from storage
   Future<Set<String>> loadPinnedCIDs() async {
     try {
-      final pinnedCIDs =
-          await _pinsBox.keys.map((key) => key.toString()).toSet();
+      final pinnedCIDs = await _pinsBox.keys
+          .map((key) => key.toString())
+          .toSet();
       _logger.debug('Loaded ${pinnedCIDs.length} pinned CIDs');
       return pinnedCIDs;
     } catch (e) {

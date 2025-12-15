@@ -81,7 +81,8 @@ class MessageHandler {
       }
 
       _logger.debug(
-          'Retrieved block for CID: ${cid.encode()}, size: ${block.data.length} bytes');
+        'Retrieved block for CID: ${cid.encode()}, size: ${block.data.length} bytes',
+      );
 
       final blockStore = _blockStore;
       final response = await blockStore.putBlock(block);
@@ -152,7 +153,10 @@ class MessageHandler {
   }
 
   Future<void> handleProcessedData(
-      CID cid, Uint8List data, String contentType) async {
+    CID cid,
+    Uint8List data,
+    String contentType,
+  ) async {
     try {
       // Create a new block with the processed data
       final block = await Block.fromData(data, format: 'raw');
@@ -163,7 +167,8 @@ class MessageHandler {
 
       if (!storeResponse.success) {
         throw Exception(
-            'Failed to store processed data: ${storeResponse.message}');
+          'Failed to store processed data: ${storeResponse.message}',
+        );
       }
 
       // Cache the content type mapping for future reference
@@ -186,26 +191,29 @@ class MessageHandler {
       final event = pb_base.NetworkEvent()
         ..timestamp = timestamp
         ..eventType = 'CONTENT_PROCESSED'
-        ..data = utf8.encode(jsonEncode({
-          'cid': cid.encode(),
-          'contentType': contentType,
-          'size': data.length,
-          'timestamp': DateTime.now().toIso8601String(),
-        }));
+        ..data = utf8.encode(
+          jsonEncode({
+            'cid': cid.encode(),
+            'contentType': contentType,
+            'size': data.length,
+            'timestamp': DateTime.now().toIso8601String(),
+          }),
+        );
 
       _eventController.add(event);
 
       // If using PubSub, publish to content updates topic
       if (_pubSubClient != null) {
         await _pubSubClient.publish(
-            'content_updates',
-            jsonEncode({
-              'type': 'content_processed',
-              'cid': cid.encode(),
-              'contentType': contentType,
-              'size': data.length,
-              'timestamp': DateTime.now().toIso8601String(),
-            }));
+          'content_updates',
+          jsonEncode({
+            'type': 'content_processed',
+            'cid': cid.encode(),
+            'contentType': contentType,
+            'size': data.length,
+            'timestamp': DateTime.now().toIso8601String(),
+          }),
+        );
       }
 
       print('Successfully handled processed data for CID: ${cid.encode()}');

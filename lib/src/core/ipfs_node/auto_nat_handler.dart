@@ -20,8 +20,11 @@ class AutoNATHandler {
   static const Duration _dialbackInterval = Duration(minutes: 30);
 
   AutoNATHandler(this._config, this._networkHandler) {
-    _logger = Logger('AutoNATHandler',
-        debug: _config.debug, verbose: _config.verboseLogging);
+    _logger = Logger(
+      'AutoNATHandler',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
     _logger.debug('AutoNATHandler instance created');
   }
 
@@ -170,9 +173,4 @@ class AutoNATHandler {
 }
 
 /// Represents different types of NAT configurations
-enum NATType {
-  unknown,
-  none,
-  restricted,
-  symmetric,
-}
+enum NATType { unknown, none, restricted, symmetric }

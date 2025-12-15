@@ -47,20 +47,14 @@ class Block with BlockCloneable<Block> implements BlockData {
   ///
   /// The caller is responsible for ensuring the [cid] correctly
   /// corresponds to the hash of [data].
-  const Block({
-    required this.data,
-    required CID cid,
-  }) : _cid = cid;
+  const Block({required this.data, required CID cid}) : _cid = cid;
 
   /// Creates a deep copy of this block.
   ///
   /// The returned block has its own copy of the data buffer,
   /// so modifications to the original will not affect the clone.
   @override
-  Block clone() => Block(
-        data: Uint8List.fromList(data),
-        cid: cid,
-      );
+  Block clone() => Block(data: Uint8List.fromList(data), cid: cid);
 
   /// Creates a copy of this block and applies [updates] to it.
   ///
@@ -68,10 +62,7 @@ class Block with BlockCloneable<Block> implements BlockData {
   /// require recomputing the CID to maintain consistency.
   @override
   Block copyWith(void Function(Block) updates) {
-    final clone = Block(
-      data: data,
-      cid: cid,
-    );
+    final clone = Block(data: data, cid: cid);
     updates(clone);
     return clone;
   }

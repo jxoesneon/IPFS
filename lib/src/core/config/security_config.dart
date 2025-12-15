@@ -41,9 +41,7 @@ class SecurityConfig {
       tlsCertificatePath: json['tlsCertificatePath'],
       tlsPrivateKeyPath: json['tlsPrivateKeyPath'],
       enableKeyRotation: json['enableKeyRotation'] ?? true,
-      keyRotationInterval: Duration(
-        days: json['keyRotationDays'] ?? 30,
-      ),
+      keyRotationInterval: Duration(days: json['keyRotationDays'] ?? 30),
       maxAuthAttempts: json['maxAuthAttempts'] ?? 3,
       enableRateLimiting: json['enableRateLimiting'] ?? true,
       maxRequestsPerMinute: json['maxRequestsPerMinute'] ?? 100,
@@ -51,13 +49,13 @@ class SecurityConfig {
   }
 
   Map<String, dynamic> toJson() => {
-        'enableTLS': enableTLS,
-        'tlsCertificatePath': tlsCertificatePath,
-        'tlsPrivateKeyPath': tlsPrivateKeyPath,
-        'enableKeyRotation': enableKeyRotation,
-        'keyRotationDays': keyRotationInterval.inDays,
-        'maxAuthAttempts': maxAuthAttempts,
-        'enableRateLimiting': enableRateLimiting,
-        'maxRequestsPerMinute': maxRequestsPerMinute,
-      };
+    'enableTLS': enableTLS,
+    'tlsCertificatePath': tlsCertificatePath,
+    'tlsPrivateKeyPath': tlsPrivateKeyPath,
+    'enableKeyRotation': enableKeyRotation,
+    'keyRotationDays': keyRotationInterval.inDays,
+    'maxAuthAttempts': maxAuthAttempts,
+    'enableRateLimiting': enableRateLimiting,
+    'maxRequestsPerMinute': maxRequestsPerMinute,
+  };
 }

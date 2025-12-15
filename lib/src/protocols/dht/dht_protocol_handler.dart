@@ -58,8 +58,9 @@ class DHTProtocolHandler {
       case kad.Message_MessageType.PUT_VALUE:
         if (message.hasRecord()) {
           final block = await Block.fromData(
-              Uint8List.fromList(message.record.value),
-              format: 'raw');
+            Uint8List.fromList(message.record.value),
+            format: 'raw',
+          );
           await _storage.put(utf8.decode(message.key), block);
         }
         response..type = kad.Message_MessageType.PUT_VALUE;
@@ -73,8 +74,10 @@ class DHTProtocolHandler {
     await _router.sendMessage(packet.srcPeerId, response.writeToBuffer());
   }
 
-  Future<List<kad.Peer>> _findClosestPeers(List<int> key,
-      {int numPeers = 20}) async {
+  Future<List<kad.Peer>> _findClosestPeers(
+    List<int> key, {
+    int numPeers = 20,
+  }) async {
     // Get the routing table from the router
     final routingTable = _router.getRoutingTable();
 
@@ -83,9 +86,10 @@ class DHTProtocolHandler {
 
     // Convert to List<kad.Peer>
     return closestPeers
-        .map((peer) => kad.Peer()..id = peer.value
-            //..addrs = [] // Add actual addresses if available
-            )
+        .map(
+          (peer) => kad.Peer()..id = peer.value,
+          //..addrs = [] // Add actual addresses if available
+        )
         .toList();
   }
 }

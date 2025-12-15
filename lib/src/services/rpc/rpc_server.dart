@@ -80,13 +80,10 @@ class RPCServer {
         .addHandler(_router);
 
     try {
-      _server = await shelf_io.serve(
-        handler,
-        address,
-        port,
-      );
+      _server = await shelf_io.serve(handler, address, port);
       print(
-          '✅ RPC server listening on http://${_server!.address.host}:${_server!.port}');
+        '✅ RPC server listening on http://${_server!.address.host}:${_server!.port}',
+      );
     } catch (e) {
       print('❌ Failed to start RPC server: $e');
       rethrow;
@@ -137,7 +134,8 @@ class RPCServer {
         final duration = DateTime.now().difference(start);
 
         print(
-            '[RPC ${request.method}] ${request.url.path} - ${response.statusCode} (${duration.inMilliseconds}ms)');
+          '[RPC ${request.method}] ${request.url.path} - ${response.statusCode} (${duration.inMilliseconds}ms)',
+        );
 
         return response;
       };

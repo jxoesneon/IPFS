@@ -17,10 +17,7 @@ class RateLimiter {
   final _queue = <Completer>[];
 
   /// Creates a rate limiter with given limits.
-  RateLimiter({
-    required this.maxOperations,
-    required this.interval,
-  });
+  RateLimiter({required this.maxOperations, required this.interval});
 
   Future<void> acquire() async {
     final now = DateTime.now();

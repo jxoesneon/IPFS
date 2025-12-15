@@ -59,8 +59,10 @@ void main() {
         final match = qmCIDPattern.firstMatch(json);
 
         expect(match, isNotNull);
-        expect(match!.group(0),
-            equals('QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojGiKDPq'));
+        expect(
+          match!.group(0),
+          equals('QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojGiKDPq'),
+        );
       });
 
       test('returns null when no CID present', () {
@@ -76,8 +78,10 @@ void main() {
         final match = qmCIDPattern.firstMatch(text);
 
         expect(match, isNotNull);
-        expect(match!.group(0),
-            equals('QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojGiKDPq'));
+        expect(
+          match!.group(0),
+          equals('QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojGiKDPq'),
+        );
       });
     });
 
@@ -85,41 +89,51 @@ void main() {
       test('validates typical CID formats work with alphanumeric pattern', () {
         // CIDv0 (Qm-based)
         expect(
-            'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojGiKDPq'.isNotEmpty &&
-                alphanumericPattern
-                    .hasMatch('QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojGiKDPq'),
-            isTrue);
+          'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojGiKDPq'.isNotEmpty &&
+              alphanumericPattern.hasMatch(
+                'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojGiKDPq',
+              ),
+          isTrue,
+        );
 
         // CIDv1 (bafy-based)
         expect(
-            'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi'
-                    .isNotEmpty &&
-                alphanumericPattern.hasMatch(
-                    'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi'),
-            isTrue);
+          'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi'
+                  .isNotEmpty &&
+              alphanumericPattern.hasMatch(
+                'bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi',
+              ),
+          isTrue,
+        );
       });
 
-      test('validates typical PeerID formats work with alphanumeric pattern',
-          () {
-        // Qm-style peer ID
-        expect(
+      test(
+        'validates typical PeerID formats work with alphanumeric pattern',
+        () {
+          // Qm-style peer ID
+          expect(
             'QmPeer123ABC'.isNotEmpty &&
                 alphanumericPattern.hasMatch('QmPeer123ABC'),
-            isTrue);
+            isTrue,
+          );
 
-        // 12D3-style peer ID
-        expect(
+          // 12D3-style peer ID
+          expect(
             '12D3KooWTest'.isNotEmpty &&
                 alphanumericPattern.hasMatch('12D3KooWTest'),
-            isTrue);
-      });
+            isTrue,
+          );
+        },
+      );
 
       test('rejects invalid CID/PeerID formats', () {
         expect(''.isNotEmpty, isFalse); // Empty fails isEmpty check
         expect(alphanumericPattern.hasMatch('invalid!@#'), isFalse);
         expect(alphanumericPattern.hasMatch('has spaces'), isFalse);
-        expect(alphanumericPattern.hasMatch('/ipfs/QmTest'),
-            isFalse); // Has slashes
+        expect(
+          alphanumericPattern.hasMatch('/ipfs/QmTest'),
+          isFalse,
+        ); // Has slashes
       });
     });
   });

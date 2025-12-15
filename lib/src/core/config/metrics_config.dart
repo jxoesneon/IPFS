@@ -59,12 +59,12 @@ class MetricsConfig {
   }
 
   Map<String, dynamic> toJson() => {
-        'enabled': enabled,
-        'collectionIntervalSeconds': collectionIntervalSeconds,
-        'collectSystemMetrics': collectSystemMetrics,
-        'collectNetworkMetrics': collectNetworkMetrics,
-        'collectStorageMetrics': collectStorageMetrics,
-        'enablePrometheusExport': enablePrometheusExport,
-        'prometheusEndpoint': prometheusEndpoint,
-      };
+    'enabled': enabled,
+    'collectionIntervalSeconds': collectionIntervalSeconds,
+    'collectSystemMetrics': collectSystemMetrics,
+    'collectNetworkMetrics': collectNetworkMetrics,
+    'collectStorageMetrics': collectStorageMetrics,
+    'enablePrometheusExport': enablePrometheusExport,
+    'prometheusEndpoint': prometheusEndpoint,
+  };
 }

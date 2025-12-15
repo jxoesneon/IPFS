@@ -124,14 +124,12 @@ class IPFSConfig {
     this.dataPath = './ipfs_data',
     Keystore? keystore,
     this.customConfig = const {},
-  })  : nodeId = nodeId ?? _generateDefaultNodeId(),
-        keystore = keystore ?? Keystore();
+  }) : nodeId = nodeId ?? _generateDefaultNodeId(),
+       keystore = keystore ?? Keystore();
 
   /// Creates a new IPFSConfig with a generated nodeId
   factory IPFSConfig.withDefaults() {
-    return IPFSConfig(
-      nodeId: _generateDefaultNodeId(),
-    );
+    return IPFSConfig(nodeId: _generateDefaultNodeId());
   }
 
   static String _generateDefaultNodeId() {
@@ -173,26 +171,26 @@ class IPFSConfig {
   }
 
   Map<String, dynamic> toJson() => {
-        'offline': offline,
-        'network': network.toJson(),
-        'dht': dht.toJson(),
-        'storage': storage.toJson(),
-        'security': security.toJson(),
-        'debug': debug,
-        'verboseLogging': verboseLogging,
-        'enablePubSub': enablePubSub,
-        'enableDHT': enableDHT,
-        'enableCircuitRelay': enableCircuitRelay,
-        'enableContentRouting': enableContentRouting,
-        'enableDNSLinkResolution': enableDNSLinkResolution,
-        'enableIPLD': enableIPLD,
-        'enableGraphsync': enableGraphsync,
-        'enableMetrics': enableMetrics,
-        'enableLogging': enableLogging,
-        'logLevel': logLevel,
-        'enableQuotaManagement': enableQuotaManagement,
-        'defaultBandwidthQuota': defaultBandwidthQuota,
-      };
+    'offline': offline,
+    'network': network.toJson(),
+    'dht': dht.toJson(),
+    'storage': storage.toJson(),
+    'security': security.toJson(),
+    'debug': debug,
+    'verboseLogging': verboseLogging,
+    'enablePubSub': enablePubSub,
+    'enableDHT': enableDHT,
+    'enableCircuitRelay': enableCircuitRelay,
+    'enableContentRouting': enableContentRouting,
+    'enableDNSLinkResolution': enableDNSLinkResolution,
+    'enableIPLD': enableIPLD,
+    'enableGraphsync': enableGraphsync,
+    'enableMetrics': enableMetrics,
+    'enableLogging': enableLogging,
+    'logLevel': logLevel,
+    'enableQuotaManagement': enableQuotaManagement,
+    'defaultBandwidthQuota': defaultBandwidthQuota,
+  };
 }
 
 /// Network-specific configuration
@@ -209,7 +207,6 @@ class NetworkConfig {
     '/ip4/104.236.179.241/tcp/4001/p2p/QmSoLPppuBtQSGwKDZT2M73ULpjvfd3aZ6ha4oFGL1KrGM', // pluto.i.ipfs.io
     '/ip4/128.199.219.111/tcp/4001/p2p/QmSoLSafTMBsPKadTEgaXctDQVcqN88CNLHXMkTNwMKPnu', // saturn.i.ipfs.io
     '/ip4/104.236.76.40/tcp/4001/p2p/QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64', // earth.i.ipfs.io
-
     // Cloudflare
     '/ip4/172.65.0.13/tcp/4009/p2p/QmcfgsJsMtx6qJb74akCw1M24X1zFwgGo11h1cuhwQjtJP',
   ];
@@ -235,12 +232,12 @@ class NetworkConfig {
   }
 
   Map<String, dynamic> toJson() => {
-        'listenAddresses': listenAddresses,
-        'bootstrapPeers': bootstrapPeers,
-        'maxConnections': maxConnections,
-        'connectionTimeoutSeconds': connectionTimeout.inSeconds,
-        'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
-      };
+    'listenAddresses': listenAddresses,
+    'bootstrapPeers': bootstrapPeers,
+    'maxConnections': maxConnections,
+    'connectionTimeoutSeconds': connectionTimeout.inSeconds,
+    'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
+  };
 }
 
 // Similar implementations for DHTConfig, StorageConfig, and SecurityConfig...

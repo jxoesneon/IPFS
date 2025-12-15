@@ -80,10 +80,7 @@ void main() {
       final cidStr = cid.encode();
 
       // Setup mock DHT with the value
-      dhtHandler.setupValue(
-        Key.fromString(name),
-        Value(cid.toBytes()),
-      );
+      dhtHandler.setupValue(Key.fromString(name), Value(cid.toBytes()));
 
       final resolved = await ipnsHandler.resolve(name);
       expect(resolved, cidStr);
@@ -100,10 +97,7 @@ void main() {
       final cid = CID.computeForDataSync(data);
       final cidStr = cid.encode();
 
-      dhtHandler.setupValue(
-        Key.fromString(name),
-        Value(cid.toBytes()),
-      );
+      dhtHandler.setupValue(Key.fromString(name), Value(cid.toBytes()));
 
       // First call -> hits DHT
       final result1 = await ipnsHandler.resolve(name);
@@ -119,8 +113,10 @@ void main() {
     test('validates CID format', () async {
       await ipnsHandler.start();
       // Should throw ArgumentError for invalid CID
-      expect(() => ipnsHandler.publish('Invalid CID!', keyName: 'self'),
-          throwsArgumentError);
+      expect(
+        () => ipnsHandler.publish('Invalid CID!', keyName: 'self'),
+        throwsArgumentError,
+      );
     });
   });
 }

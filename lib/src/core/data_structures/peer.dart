@@ -48,8 +48,8 @@ class Peer {
   factory Peer.fromProto(PeerProto proto) {
     return Peer(
       id: p2p.PeerId(
-          value: Base58()
-              .base58Decode(proto.id)), // Convert base58 string back to PeerId
+        value: Base58().base58Decode(proto.id),
+      ), // Convert base58 string back to PeerId
       addresses: proto.addresses
           .map((addr) => parseMultiaddrString(addr))
           .whereType<p2p.FullAddress>()
@@ -62,9 +62,11 @@ class Peer {
   /// Converts the [Peer] to its Protobuf representation.
   PeerProto toProto() {
     return PeerProto()
-      ..id = Base58().encode(id.value) // Convert PeerId back to base58 string
-      ..addresses.addAll(addresses
-          .map((addr) => addr.toString())) // Convert FullAddress back to string
+      ..id = Base58()
+          .encode(id.value) // Convert PeerId back to base58 string
+      ..addresses.addAll(
+        addresses.map((addr) => addr.toString()),
+      ) // Convert FullAddress back to string
       ..latency = Int64(latency)
       ..agentVersion = agentVersion;
   }
@@ -95,8 +97,9 @@ class Peer {
         throw FormatException('No peer ID found in multiaddr: $multiaddr');
       }
 
-      final peerId =
-          p2p.PeerId(value: Base58().base58Decode(parts[peerIdIndex]));
+      final peerId = p2p.PeerId(
+        value: Base58().base58Decode(parts[peerIdIndex]),
+      );
 
       // Parse the address portion
       final address = parseMultiaddrString(multiaddr);

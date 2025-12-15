@@ -42,10 +42,13 @@ class IPFSPrivateKey implements PrivateKey {
     // Create and seed a secure random source
     final random = SecureRandom('Fortuna');
     final seedSource = Random.secure();
-    random.seed(KeyParameter(
-      Uint8List.fromList(
-          List<int>.generate(32, (_) => seedSource.nextInt(256))),
-    ));
+    random.seed(
+      KeyParameter(
+        Uint8List.fromList(
+          List<int>.generate(32, (_) => seedSource.nextInt(256)),
+        ),
+      ),
+    );
 
     final params = ParametersWithRandom(
       PrivateKeyParameter(_keyPair.privateKey),
@@ -82,10 +85,13 @@ class IPFSPrivateKey implements PrivateKey {
 
     final random = SecureRandom('Fortuna');
     final seedSource = Random.secure();
-    random.seed(KeyParameter(
-      Uint8List.fromList(
-          List<int>.generate(32, (_) => seedSource.nextInt(256))),
-    ));
+    random.seed(
+      KeyParameter(
+        Uint8List.fromList(
+          List<int>.generate(32, (_) => seedSource.nextInt(256)),
+        ),
+      ),
+    );
 
     keyGen.init(ParametersWithRandom(params, random));
     final pair = keyGen.generateKeyPair();
@@ -114,7 +120,8 @@ class IPFSPrivateKey implements PrivateKey {
     final privateKey = ECPrivateKey(d, curve);
 
     return IPFSPrivateKey(
-        AsymmetricKeyPair<ECPublicKey, ECPrivateKey>(publicKey, privateKey),
-        'ECDSA');
+      AsymmetricKeyPair<ECPublicKey, ECPrivateKey>(publicKey, privateKey),
+      'ECDSA',
+    );
   }
 }

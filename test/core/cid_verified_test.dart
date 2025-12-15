@@ -87,10 +87,7 @@ void main() {
       });
 
       test('decode throws on empty string', () {
-        expect(
-          () => CID.decode(''),
-          throwsArgumentError,
-        );
+        expect(() => CID.decode(''), throwsArgumentError);
       });
 
       test('toBytes returns Uint8List', () {
@@ -114,10 +111,7 @@ void main() {
       });
 
       test('fromBytes throws on empty bytes', () {
-        expect(
-          () => CID.fromBytes(Uint8List(0)),
-          throwsArgumentError,
-        );
+        expect(() => CID.fromBytes(Uint8List(0)), throwsArgumentError);
       });
     });
 
@@ -129,10 +123,7 @@ void main() {
       });
 
       test('codec property is accessible', () {
-        final cid = CID.computeForDataSync(
-          utf8.encode('test'),
-          codec: 'raw',
-        );
+        final cid = CID.computeForDataSync(utf8.encode('test'), codec: 'raw');
 
         expect(cid.codec, equals('raw'));
       });
@@ -213,10 +204,7 @@ void main() {
 
     group('Codec Variations', () {
       test('raw codec', () {
-        final cid = CID.computeForDataSync(
-          utf8.encode('raw'),
-          codec: 'raw',
-        );
+        final cid = CID.computeForDataSync(utf8.encode('raw'), codec: 'raw');
 
         expect(cid.codec, equals('raw'));
       });
@@ -261,10 +249,7 @@ void main() {
       test('fromContent with custom hash', () async {
         final content = utf8.encode('custom hash');
 
-        final cid = await CID.fromContent(
-          content,
-          hashType: 'sha2-256',
-        );
+        final cid = await CID.fromContent(content, hashType: 'sha2-256');
 
         expect(cid, isNotNull);
       });

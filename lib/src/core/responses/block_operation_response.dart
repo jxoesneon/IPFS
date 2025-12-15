@@ -23,18 +23,11 @@ class BlockOperationResponse<T> {
   });
 
   factory BlockOperationResponse.success(String message, [T? data]) {
-    return BlockOperationResponse(
-      success: true,
-      message: message,
-      data: data,
-    );
+    return BlockOperationResponse(success: true, message: message, data: data);
   }
 
   factory BlockOperationResponse.failure(String message) {
-    return BlockOperationResponse(
-      success: false,
-      message: message,
-    );
+    return BlockOperationResponse(success: false, message: message);
   }
 
   factory BlockOperationResponse.fromProto(dynamic proto) {

@@ -82,8 +82,10 @@ void main() {
       await dht.putValue(key, value);
 
       stopwatch.stop();
-      expect(stopwatch.elapsedMilliseconds,
-          greaterThanOrEqualTo(40)); // allow some buffer
+      expect(
+        stopwatch.elapsedMilliseconds,
+        greaterThanOrEqualTo(40),
+      ); // allow some buffer
     });
 
     test('simulates errors on next call', () async {

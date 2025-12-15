@@ -10,8 +10,10 @@ import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
 /// Restores tree balance through recoloring and rotations.
 class FixViolations<K_PeerId, V_PeerInfo> {
   /// Fixes violations after inserting [z] into [tree].
-  void fixInsertion(RedBlackTree<K_PeerId, V_PeerInfo> tree,
-      RedBlackTreeNode<K_PeerId, V_PeerInfo> z) {
+  void fixInsertion(
+    RedBlackTree<K_PeerId, V_PeerInfo> tree,
+    RedBlackTreeNode<K_PeerId, V_PeerInfo> z,
+  ) {
     Rotations<K_PeerId, V_PeerInfo> rotationsInstance =
         Rotations<K_PeerId, V_PeerInfo>();
 
@@ -20,18 +22,23 @@ class FixViolations<K_PeerId, V_PeerInfo> {
     }
 
     while (z.parent != null && z.parent!.color == common_tree.NodeColor.RED) {
-      fixInsertionHelper(tree, z, rotationsInstance,
-          z.parent == z.parent!.parent!.right_child);
+      fixInsertionHelper(
+        tree,
+        z,
+        rotationsInstance,
+        z.parent == z.parent!.parent!.right_child,
+      );
     }
 
     tree.root?.color = common_tree.NodeColor.BLACK;
   }
 
   void fixInsertionHelper(
-      RedBlackTree<K_PeerId, V_PeerInfo> tree,
-      RedBlackTreeNode<K_PeerId, V_PeerInfo> z,
-      Rotations<K_PeerId, V_PeerInfo> rotationsInstance,
-      bool isMirrorCase) {
+    RedBlackTree<K_PeerId, V_PeerInfo> tree,
+    RedBlackTreeNode<K_PeerId, V_PeerInfo> z,
+    Rotations<K_PeerId, V_PeerInfo> rotationsInstance,
+    bool isMirrorCase,
+  ) {
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? y;
 
     if (isMirrorCase) {
@@ -67,9 +74,10 @@ class FixViolations<K_PeerId, V_PeerInfo> {
   }
 
   void fixDeletion(
-      RedBlackTree<K_PeerId, V_PeerInfo> tree,
-      RedBlackTreeNode<K_PeerId, V_PeerInfo>? x,
-      RedBlackTreeNode<K_PeerId, V_PeerInfo>? parent) {
+    RedBlackTree<K_PeerId, V_PeerInfo> tree,
+    RedBlackTreeNode<K_PeerId, V_PeerInfo>? x,
+    RedBlackTreeNode<K_PeerId, V_PeerInfo>? parent,
+  ) {
     Rotations<K_PeerId, V_PeerInfo> rotationsInstance =
         Rotations<K_PeerId, V_PeerInfo>();
 

@@ -54,23 +54,21 @@ class StorageConfig {
       datastoreDir: json['datastoreDir'] ?? 'datastore',
       keysDir: json['keysDir'] ?? 'keys',
       enableGC: json['enableGC'] ?? true,
-      gcInterval: Duration(
-        seconds: json['gcIntervalSeconds'] ?? 3600,
-      ),
+      gcInterval: Duration(seconds: json['gcIntervalSeconds'] ?? 3600),
       maxBlockSize: json['maxBlockSize'] ?? 1024 * 1024 * 2,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'baseDir': baseDir,
-        'maxStorageSize': maxStorageSize,
-        'blocksDir': blocksDir,
-        'datastoreDir': datastoreDir,
-        'keysDir': keysDir,
-        'enableGC': enableGC,
-        'gcIntervalSeconds': gcInterval.inSeconds,
-        'maxBlockSize': maxBlockSize,
-      };
+    'baseDir': baseDir,
+    'maxStorageSize': maxStorageSize,
+    'blocksDir': blocksDir,
+    'datastoreDir': datastoreDir,
+    'keysDir': keysDir,
+    'enableGC': enableGC,
+    'gcIntervalSeconds': gcInterval.inSeconds,
+    'maxBlockSize': maxBlockSize,
+  };
 
   String get blockPath => '$baseDir/$blocksDir';
   String get datastorePath => '$baseDir/$datastoreDir';

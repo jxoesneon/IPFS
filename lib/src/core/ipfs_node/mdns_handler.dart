@@ -24,8 +24,11 @@ class MDNSHandler {
   Timer? _discoveryTimer;
 
   MDNSHandler(this._config, {MDnsClient? mdnsClient}) {
-    _logger = Logger('MDNSHandler',
-        debug: _config.debug, verbose: _config.verboseLogging);
+    _logger = Logger(
+      'MDNSHandler',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
     _mdnsClient = mdnsClient ?? MDnsClient();
     _logger.debug('MDNSHandler instance created');
   }
@@ -136,7 +139,8 @@ class MDNSHandler {
 
       await for (final PtrResourceRecord ptr
           in _mdnsClient.lookup<PtrResourceRecord>(
-              ResourceRecordQuery.serverPointer(_serviceType))) {
+            ResourceRecordQuery.serverPointer(_serviceType),
+          )) {
         if (!_discoveredPeers.contains(ptr.domainName)) {
           _logger.debug('New peer discovered: ${ptr.domainName}');
 
@@ -157,12 +161,9 @@ class MDNSHandler {
       _logger.verbose('Advertising IPFS service');
 
       final port = _getPort();
-      await _mdnsClient.announce(
-        _serviceType,
+      await _mdnsClient.announce(_serviceType, _config.nodeId, port, [
         _config.nodeId,
-        port,
-        [_config.nodeId],
-      );
+      ]);
 
       _logger.debug('Service advertised successfully');
     } catch (e, stackTrace) {

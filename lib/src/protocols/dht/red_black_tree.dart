@@ -30,11 +30,14 @@ class RedBlackTreeNode<K_PeerId, V_PeerInfo> {
   RedBlackTreeNode<K_PeerId, V_PeerInfo>? parent;
 
   /// Creates a tree node.
-  RedBlackTreeNode(this.key, this.value,
-      {this.color = common_tree.NodeColor.RED,
-      this.left_child,
-      this.right_child,
-      this.parent});
+  RedBlackTreeNode(
+    this.key,
+    this.value, {
+    this.color = common_tree.NodeColor.RED,
+    this.left_child,
+    this.right_child,
+    this.parent,
+  });
 }
 
 /// Self-balancing Red-Black tree for efficient peer lookup.
@@ -59,10 +62,10 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
 
   /// Creates a Red-Black tree with optional comparator.
   RedBlackTree({int Function(K_PeerId, K_PeerId)? compare})
-      : _compare = compare ?? ((a, b) => (a as int).compareTo(b as int)),
-        _insertion = insertion.Insertion<K_PeerId, V_PeerInfo>(),
-        _deletion = deletion.Deletion<K_PeerId, V_PeerInfo>(),
-        _search = rb_search.Search<K_PeerId, V_PeerInfo>();
+    : _compare = compare ?? ((a, b) => (a as int).compareTo(b as int)),
+      _insertion = insertion.Insertion<K_PeerId, V_PeerInfo>(),
+      _deletion = deletion.Deletion<K_PeerId, V_PeerInfo>(),
+      _search = rb_search.Search<K_PeerId, V_PeerInfo>();
 
   // Insert a new node with the given key and value into the tree.
   void insert(K_PeerId key_insert, V_PeerInfo value_insert) {

@@ -174,15 +174,16 @@ class IpfsNodeNetworkEvents {
     _router.errorEvents.listen((event) {
       final networkEvent = NetworkEvent()
         ..error = NodeErrorEvent(
-            errorType: _mapToProtoErrorType(event.type.toString()),
-            message: event.message,
-            stackTrace: '',
-            source: 'router');
+          errorType: _mapToProtoErrorType(event.type.toString()),
+          message: event.message,
+          stackTrace: '',
+          source: 'router',
+        );
       _networkEventsController.add(networkEvent);
     });
   }
 
-// Helper function to map existing error types to the Proto enum
+  // Helper function to map existing error types to the Proto enum
   NodeErrorEvent_ErrorType _mapToProtoErrorType(String errorType) {
     switch (errorType) {
       case 'invalidRequest':

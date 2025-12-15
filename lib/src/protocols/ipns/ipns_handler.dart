@@ -24,8 +24,11 @@ class IPNSHandler {
   static const Duration _cacheDuration = Duration(minutes: 30);
 
   IPNSHandler(this._config, this._securityManager, this._dhtHandler) {
-    _logger = Logger('IPNSHandler',
-        debug: _config.debug, verbose: _config.verboseLogging);
+    _logger = Logger(
+      'IPNSHandler',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
     _logger.debug('IPNSHandler instance created');
   }
 
@@ -153,14 +156,16 @@ class IPNSHandler {
       // I will add Base58 import in next step. For now fixing syntax error in publish.
 
       final record = await resolveRecord(name);
-      final decodedCid =
-          CID.fromBytes(Uint8List.fromList(record.value)).encode();
+      final decodedCid = CID
+          .fromBytes(Uint8List.fromList(record.value))
+          .encode();
 
       // Cache the result
       _cacheResolution(name, decodedCid);
 
-      _logger
-          .info('Successfully resolved IPNS name: $name to CID: $decodedCid');
+      _logger.info(
+        'Successfully resolved IPNS name: $name to CID: $decodedCid',
+      );
       return decodedCid;
     } catch (e, stackTrace) {
       _logger.error('Failed to resolve IPNS name', e, stackTrace);
@@ -195,10 +200,7 @@ class _CachedResolution {
   final String cid;
   final DateTime timestamp;
 
-  _CachedResolution({
-    required this.cid,
-    required this.timestamp,
-  });
+  _CachedResolution({required this.cid, required this.timestamp});
 
   bool get isExpired =>
       DateTime.now().difference(timestamp) > IPNSHandler._cacheDuration;

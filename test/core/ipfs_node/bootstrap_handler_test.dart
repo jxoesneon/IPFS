@@ -7,10 +7,7 @@ import 'package:test/test.dart';
 // Mocks
 class MockConfig extends IPFSConfig {
   MockConfig({List<String> peers = const []})
-      : super(
-          offline: false,
-          network: NetworkConfig(bootstrapPeers: peers),
-        );
+    : super(offline: false, network: NetworkConfig(bootstrapPeers: peers));
 }
 
 class MockNetworkHandler extends NetworkHandler {

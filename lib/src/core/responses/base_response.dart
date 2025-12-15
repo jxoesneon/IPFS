@@ -9,10 +9,7 @@ abstract class BaseResponse {
   final String message;
 
   /// Creates a response with [success] status and [message].
-  const BaseResponse({
-    required this.success,
-    required this.message,
-  });
+  const BaseResponse({required this.success, required this.message});
 
   /// Converts to JSON representation.
   Map<String, dynamic> toJson();

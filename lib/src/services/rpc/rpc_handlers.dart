@@ -92,8 +92,9 @@ class RPCHandlers {
         final contentDisposition = part.headers['content-disposition'];
         String name = cid; // Fallback name
         if (contentDisposition != null) {
-          final nameMatch =
-              RegExp(r'filename="([^"]+)"').firstMatch(contentDisposition);
+          final nameMatch = RegExp(
+            r'filename="([^"]+)"',
+          ).firstMatch(contentDisposition);
           if (nameMatch != null) {
             name = nameMatch.group(1)!;
           }
@@ -115,10 +116,13 @@ class RPCHandlers {
       // For simplicity/compatibility, we'll join them with newlines.
       final responseBody = results.map((r) => json.encode(r)).join('\n');
 
-      return Response.ok(responseBody, headers: {
-        'Content-Type': 'application/json',
-        // 'X-Stream-Output': '1', // Optional
-      });
+      return Response.ok(
+        responseBody,
+        headers: {
+          'Content-Type': 'application/json',
+          // 'X-Stream-Output': '1', // Optional
+        },
+      );
     } catch (e) {
       return _errorResponse('Add failed: $e');
     }
@@ -160,21 +164,20 @@ class RPCHandlers {
 
       final entries = await node.ls(path);
       final objects = entries
-          .map((e) => {
-                'Name': e.name,
-                'Hash': e.cid.encode(),
-                'Size': e.size.toInt(),
-                'Type': 'file', // Default as Link doesn't carry type
-              })
+          .map(
+            (e) => {
+              'Name': e.name,
+              'Hash': e.cid.encode(),
+              'Size': e.size.toInt(),
+              'Type': 'file', // Default as Link doesn't carry type
+            },
+          )
           .toList();
 
       final response = {
         'Objects': [
-          {
-            'Hash': path,
-            'Links': objects,
-          }
-        ]
+          {'Hash': path, 'Links': objects},
+        ],
       };
 
       return _jsonResponse(response);
@@ -221,21 +224,20 @@ class RPCHandlers {
 
       // Stream response (ndjson format)
       final responses = providers
-          .map((p) => json.encode({
-                'Type': 4, // Provider type
-                'Responses': [
-                  {
-                    'ID': p.toString(),
-                    'Addrs': node.resolvePeerId(p.toString()),
-                  }
-                ]
-              }))
+          .map(
+            (p) => json.encode({
+              'Type': 4, // Provider type
+              'Responses': [
+                {'ID': p.toString(), 'Addrs': node.resolvePeerId(p.toString())},
+              ],
+            }),
+          )
           .join('\n');
 
-      return Response.ok(responses, headers: {
-        'Content-Type': 'application/json',
-        'X-Stream-Output': '1',
-      });
+      return Response.ok(
+        responses,
+        headers: {'Content-Type': 'application/json', 'X-Stream-Output': '1'},
+      );
     } catch (e) {
       return _errorResponse('DHT findprovs failed: $e');
     }
@@ -249,8 +251,9 @@ class RPCHandlers {
     }
 
     try {
-      final found = await node.dhtClient
-          .findPeer(PeerId(value: Base58().base58Decode(peerId)));
+      final found = await node.dhtClient.findPeer(
+        PeerId(value: Base58().base58Decode(peerId)),
+      );
       if (found != null) {
         return _jsonResponse({
           'Type': 2,
@@ -258,8 +261,8 @@ class RPCHandlers {
             {
               'ID': found.toString(),
               'Addrs': node.resolvePeerId(found.toString()),
-            }
-          ]
+            },
+          ],
         });
       } else {
         return _errorResponse('Peer not found');
@@ -293,10 +296,7 @@ class RPCHandlers {
 
     try {
       await node.publishIPNS(path, keyName: 'self');
-      return _jsonResponse({
-        'Name': 'self',
-        'Value': path,
-      });
+      return _jsonResponse({'Name': 'self', 'Value': path});
     } catch (e) {
       return _errorResponse('Name publish failed: $e');
     }
@@ -311,9 +311,7 @@ class RPCHandlers {
 
     try {
       final path = await node.resolveIPNS(name);
-      return _jsonResponse({
-        'Path': path,
-      });
+      return _jsonResponse({'Path': path});
     } catch (e) {
       return _errorResponse('Name resolve failed: $e');
     }
@@ -323,12 +321,7 @@ class RPCHandlers {
   Future<Response> handleSwarmPeers(Request request) async {
     try {
       final peers = await node.connectedPeers;
-      final peerList = peers
-          .map((p) => {
-                'Peer': p,
-                'Addr': '',
-              })
-          .toList();
+      final peerList = peers.map((p) => {'Peer': p, 'Addr': ''}).toList();
 
       return _jsonResponse({'Peers': peerList});
     } catch (e) {
@@ -346,7 +339,7 @@ class RPCHandlers {
     try {
       await node.connectToPeer(addr);
       return _jsonResponse({
-        'Strings': ['connect $addr success']
+        'Strings': ['connect $addr success'],
       });
     } catch (e) {
       return _errorResponse('Swarm connect failed: $e');
@@ -363,7 +356,7 @@ class RPCHandlers {
     try {
       await node.disconnectFromPeer(addr);
       return _jsonResponse({
-        'Strings': ['disconnect $addr success']
+        'Strings': ['disconnect $addr success'],
       });
     } catch (e) {
       return _errorResponse('Swarm disconnect failed: $e');
@@ -402,10 +395,7 @@ class RPCHandlers {
       final block = Block(cid: cid, data: uint8Bytes);
       await node.blockStore.putBlock(block);
 
-      return _jsonResponse({
-        'Key': cid.encode(),
-        'Size': bytes.length,
-      });
+      return _jsonResponse({'Key': cid.encode(), 'Size': bytes.length});
     } catch (e) {
       return _errorResponse('Block put failed: $e');
     }
@@ -424,10 +414,7 @@ class RPCHandlers {
         return _errorResponse('Block not found', code: 404);
       }
 
-      return _jsonResponse({
-        'Key': cid,
-        'Size': block.block.data.length,
-      });
+      return _jsonResponse({'Key': cid, 'Size': block.block.data.length});
     } catch (e) {
       return _errorResponse('Block stat failed: $e');
     }

@@ -30,8 +30,11 @@ class BitswapHandler {
   int _blocksSent = 0;
 
   BitswapHandler(IPFSConfig config, this._blockStore, this._router)
-      : _logger = Logger('BitswapHandler',
-            debug: config.debug, verbose: config.verboseLogging) {
+    : _logger = Logger(
+        'BitswapHandler',
+        debug: config.debug,
+        verbose: config.verboseLogging,
+      ) {
     _logger.info('Initializing BitswapHandler');
     _setupHandlers();
   }
@@ -120,10 +123,12 @@ class BitswapHandler {
       if (fromPeer != null) {
         final ledger = _ledgerManager.getLedger(fromPeer);
         // Update received bytes in ledger
-        ledger.addReceivedBytes(message
-            .getBlocks()
-            .map((b) => b.data.length)
-            .fold<int>(0, (sum, size) => sum + size));
+        ledger.addReceivedBytes(
+          message
+              .getBlocks()
+              .map((b) => b.data.length)
+              .fold<int>(0, (sum, size) => sum + size),
+        );
         _updateBandwidthStats();
       }
     }
@@ -155,7 +160,7 @@ class BitswapHandler {
           // Send block to requesting peer
           _router.routerL0.sendDatagram(
             addresses: [
-              p2p.FullAddress(port: 4001, address: _getPeerAddress(fromPeer))
+              p2p.FullAddress(port: 4001, address: _getPeerAddress(fromPeer)),
             ],
             datagram: messageBytes,
           );
@@ -194,9 +199,11 @@ class BitswapHandler {
   }
 
   /// Requests blocks from the network with proper Bitswap session handling
-  Future<List<Block>> want(List<String> cids,
-      {int priority = 1,
-      Duration timeout = const Duration(seconds: 30)}) async {
+  Future<List<Block>> want(
+    List<String> cids, {
+    int priority = 1,
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
     if (!_running) {
       throw StateError('BitswapHandler is not running');
     }
@@ -215,19 +222,25 @@ class BitswapHandler {
     // No messageId or Type in Bitswap 1.2+
 
     for (final cid in cids) {
-      msg.addWantlistEntry(cid,
-          priority: priority,
-          wantType: message.WantType.block,
-          sendDontHave: true);
+      msg.addWantlistEntry(
+        cid,
+        priority: priority,
+        wantType: message.WantType.block,
+        sendDontHave: true,
+      );
     }
 
     await _broadcastWantRequest(msg);
 
     try {
       final futures = completers.values
-          .map((completer) => completer.future.timeout(timeout,
+          .map(
+            (completer) => completer.future.timeout(
+              timeout,
               onTimeout: () =>
-                  throw TimeoutException('Block request timed out')))
+                  throw TimeoutException('Block request timed out'),
+            ),
+          )
           .toList();
 
       final blocks = await Future.wait(futures);
@@ -256,19 +269,24 @@ class BitswapHandler {
     final futures = <Future<void>>[];
 
     for (final peer in connectedPeers) {
-      futures.add(Future(() {
-        _router.routerL0.sendDatagram(
-          addresses: [
-            p2p.FullAddress(
+      futures.add(
+        Future(() {
+          _router.routerL0.sendDatagram(
+            addresses: [
+              p2p.FullAddress(
                 address: _getPeerAddress(Base58().encode(peer.value)),
-                port: 4001)
-          ],
-          datagram: messageBytes,
-        );
-        print('Want request sent to peer: ${peer.toString()}');
-      }).catchError((error) {
-        print('Error sending want request to peer ${peer.toString()}: $error');
-      }));
+                port: 4001,
+              ),
+            ],
+            datagram: messageBytes,
+          );
+          print('Want request sent to peer: ${peer.toString()}');
+        }).catchError((error) {
+          print(
+            'Error sending want request to peer ${peer.toString()}: $error',
+          );
+        }),
+      );
     }
 
     await Future.wait(futures);
@@ -306,8 +324,12 @@ class BitswapHandler {
   Future<void> handleWantRequest(String cidStr) async {
     try {
       final customMessage = message.Message();
-      customMessage.addWantlistEntry(cidStr,
-          priority: 1, wantType: message.WantType.block, sendDontHave: true);
+      customMessage.addWantlistEntry(
+        cidStr,
+        priority: 1,
+        wantType: message.WantType.block,
+        sendDontHave: true,
+      );
 
       await _broadcastWantRequest(customMessage);
     } catch (e) {

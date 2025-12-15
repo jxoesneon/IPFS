@@ -78,7 +78,8 @@ void main() {
       container.registerSingleton<BlockStore>(mockBlockStore);
       container.registerSingleton<DatastoreHandler>(mockDatastore);
       container.registerSingleton<IPLDHandler>(
-          MockIPLDHandler(config, mockBlockStore));
+        MockIPLDHandler(config, mockBlockStore),
+      );
 
       // No Network/Services for offline
     });

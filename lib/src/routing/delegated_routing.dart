@@ -8,10 +8,7 @@ class RoutingResponse {
   final List<String> providers;
   final String? error;
 
-  RoutingResponse({
-    this.providers = const [],
-    this.error,
-  });
+  RoutingResponse({this.providers = const [], this.error});
 
   factory RoutingResponse.success(List<String> providers) {
     return RoutingResponse(providers: providers);
@@ -30,11 +27,9 @@ class DelegatedRoutingHandler {
   final String _delegateEndpoint;
   final http.Client _httpClient;
 
-  DelegatedRoutingHandler({
-    String? delegateEndpoint,
-    http.Client? httpClient,
-  })  : _delegateEndpoint = delegateEndpoint ?? _defaultDelegateEndpoint,
-        _httpClient = httpClient ?? http.Client();
+  DelegatedRoutingHandler({String? delegateEndpoint, http.Client? httpClient})
+    : _delegateEndpoint = delegateEndpoint ?? _defaultDelegateEndpoint,
+      _httpClient = httpClient ?? http.Client();
 
   /// Finds providers for a given CID using the delegated routing API
   Future<RoutingResponse> findProviders(CID cid) async {
@@ -50,9 +45,7 @@ class DelegatedRoutingHandler {
       // Make the HTTP request
       final response = await _httpClient.get(
         url,
-        headers: {
-          'Accept': 'application/json',
-        },
+        headers: {'Accept': 'application/json'},
       );
 
       if (response.statusCode == 200) {

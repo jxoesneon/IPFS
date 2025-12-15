@@ -101,7 +101,7 @@ enum GatewayMode {
   local,
 
   /// Use custom URL.
-  custom
+  custom,
 }
 
 class IPFSNode {
@@ -206,7 +206,7 @@ class IPFSNode {
         final protoBytes = <int>[
           0x08, 0x02, // Type: Secp256k1
           0x12, keyBytes.length, // Data tag + length
-          ...keyBytes
+          ...keyBytes,
         ];
 
         return base64.encode(protoBytes);
@@ -506,33 +506,41 @@ class IPFSNode {
       if (entry.value is Uint8List) {
         // Handle file
         final cid = await addFile(entry.value as Uint8List);
-        directoryManager.addEntry(IPFSDirectoryEntry(
-          name: entry.key,
-          hash: CID
-              .decode(cid)
-              .multihash
-              .toBytes(), // Decode CID to multihash bytes for the link
-          size: fixnum.Int64(entry.value.length),
-          isDirectory: false,
-        ));
+        directoryManager.addEntry(
+          IPFSDirectoryEntry(
+            name: entry.key,
+            hash: CID
+                .decode(cid)
+                .multihash
+                .toBytes(), // Decode CID to multihash bytes for the link
+            size: fixnum.Int64(entry.value.length),
+            isDirectory: false,
+          ),
+        );
       } else if (entry.value is Map) {
         // Handle subdirectory recursively
-        final subDirCid =
-            await addDirectory(entry.value as Map<String, dynamic>);
-        directoryManager.addEntry(IPFSDirectoryEntry(
-          name: entry.key,
-          hash: CID.decode(subDirCid).multihash.toBytes(),
-          size: fixnum.Int64(
-              0), // Tsize should ideally be known, but 0 is acceptable if unknown for now
-          isDirectory: true,
-        ));
+        final subDirCid = await addDirectory(
+          entry.value as Map<String, dynamic>,
+        );
+        directoryManager.addEntry(
+          IPFSDirectoryEntry(
+            name: entry.key,
+            hash: CID.decode(subDirCid).multihash.toBytes(),
+            size: fixnum.Int64(
+              0,
+            ), // Tsize should ideally be known, but 0 is acceptable if unknown for now
+            isDirectory: true,
+          ),
+        );
       }
     }
 
     // Create a block from the directory data
     final pbNode = directoryManager.build();
-    final block =
-        await Block.fromData(pbNode.writeToBuffer(), format: 'dag-pb');
+    final block = await Block.fromData(
+      pbNode.writeToBuffer(),
+      format: 'dag-pb',
+    );
 
     // Store the directory block
     await _container.get<DatastoreHandler>().putBlock(block);
@@ -615,8 +623,9 @@ class IPFSNode {
 
       // If not found locally, try to fetch from the network
       if (_container.isRegistered(BitswapHandler)) {
-        final networkBlock =
-            await _container.get<BitswapHandler>().wantBlock(cid);
+        final networkBlock = await _container.get<BitswapHandler>().wantBlock(
+          cid,
+        );
         if (networkBlock?.data != null) {
           return networkBlock!.data;
         }
@@ -625,7 +634,8 @@ class IPFSNode {
       // 3. HTTP Gateway Fallback (Hybrid Compatibility) - KEEP THIS for Internal Mode too?
       // Yes, "Hybrid Fallback" is a feature of Internal Mode.
       _logger.debug(
-          'P2P retrieval failed, attempting HTTP gateway fallback for $cid');
+        'P2P retrieval failed, attempting HTTP gateway fallback for $cid',
+      );
       final gatewayData = await _httpGatewayClient.get(cid);
       if (gatewayData != null) {
         return gatewayData;
@@ -639,14 +649,16 @@ class IPFSNode {
   }
 
   Future<Uint8List?> _resolvePathInDirectory(
-      MerkleDAGNode dirNode, String path) async {
+    MerkleDAGNode dirNode,
+    String path,
+  ) async {
     final pathParts = path.split('/').where((part) => part.isNotEmpty).toList();
 
     for (final link in dirNode.links) {
       if (link.name == pathParts[0]) {
-        final childBlock = await _container
-            .get<DatastoreHandler>()
-            .getBlock(link.cid.toString());
+        final childBlock = await _container.get<DatastoreHandler>().getBlock(
+          link.cid.toString(),
+        );
         if (childBlock == null) return null;
 
         if (pathParts.length == 1) {
@@ -654,7 +666,9 @@ class IPFSNode {
         } else {
           final childNode = MerkleDAGNode.fromBytes(childBlock.data);
           return await _resolvePathInDirectory(
-              childNode, pathParts.sublist(1).join('/'));
+            childNode,
+            pathParts.sublist(1).join('/'),
+          );
         }
       }
     }
@@ -759,7 +773,8 @@ class IPFSNode {
       await _container.get<DHTHandler>().publishIPNS(cid, keyName: keyName);
 
       print(
-          'Successfully published IPNS record for CID: $cid with key: $keyName');
+        'Successfully published IPNS record for CID: $cid with key: $keyName',
+      );
     } catch (e) {
       print('Error publishing IPNS record: $e');
       rethrow;
@@ -802,8 +817,9 @@ class IPFSNode {
       final cidObj = CID.decode(cid);
 
       // Try finding providers through DHT
-      final dhtProviders =
-          await _container.get<DHTHandler>().findProviders(cidObj);
+      final dhtProviders = await _container.get<DHTHandler>().findProviders(
+        cidObj,
+      );
       if (dhtProviders.isNotEmpty) {
         // Convert V_PeerInfo to String peer IDs
         return dhtProviders
@@ -812,8 +828,9 @@ class IPFSNode {
       }
 
       // If DHT lookup fails, try finding through routing handler
-      final routingProviders =
-          await _container.get<ContentRoutingHandler>().findProviders(cid);
+      final routingProviders = await _container
+          .get<ContentRoutingHandler>()
+          .findProviders(cid);
       if (routingProviders.isNotEmpty) {
         return routingProviders;
       }
@@ -892,16 +909,17 @@ class IPFSNode {
   Future<String> resolveDNSLink(String domainName) async {
     try {
       // First try resolving through the routing handler
-      final cid = await _container
-          .get<ContentRoutingHandler>()
-          .resolveDNSLink(domainName);
+      final cid = await _container.get<ContentRoutingHandler>().resolveDNSLink(
+        domainName,
+      );
       if (cid != null) {
         return cid;
       }
 
       // If routing handler fails, try DHT handler
-      final dhtCid =
-          await _container.get<DHTHandler>().resolveDNSLink(domainName);
+      final dhtCid = await _container.get<DHTHandler>().resolveDNSLink(
+        domainName,
+      );
       if (dhtCid != null) {
         return dhtCid;
       }
@@ -937,7 +955,7 @@ class IPFSNode {
         'graphsync': await _getServiceStatus<GraphsyncHandler>(),
         'autonat': await _getServiceStatus<AutoNATHandler>(),
         'ipns': await _getServiceStatus<IPNSHandler>(),
-      }
+      },
     };
   }
 

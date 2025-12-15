@@ -54,10 +54,8 @@ class DHTClient {
   static const String PROTOCOL_DHT = '/ipfs/kad/1.0.0';
 
   /// Creates a new DHT client.
-  DHTClient({
-    required this.networkHandler,
-    required P2plibRouter router,
-  }) : _router = router;
+  DHTClient({required this.networkHandler, required P2plibRouter router})
+    : _router = router;
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -76,7 +74,8 @@ class DHTClient {
 
     if (_router.routes.isEmpty) {
       throw StateError(
-          'No routes available to initialize DHT client after $maxRetries retries');
+        'No routes available to initialize DHT client after $maxRetries retries',
+      );
     }
 
     peerId = _router.routerL0.routes.values.first.peerId;
@@ -154,14 +153,19 @@ class DHTClient {
     // Used for routing in Kademlia table (XOR distance)
     final targetPeerId = getRoutingKey(cid);
 
-    final closestPeers =
-        _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
+    final closestPeers = _kademliaRoutingTable.findClosestPeers(
+      targetPeerId,
+      20,
+    );
     final providers = <p2p.PeerId>[];
 
     for (final peer in closestPeers) {
       try {
-        final responseBytes =
-            await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
+        final responseBytes = await _sendRequest(
+          peer,
+          PROTOCOL_DHT,
+          msg.writeToBuffer(),
+        );
         final response = kad.Message.fromBuffer(responseBytes);
 
         // Extract providers
@@ -172,8 +176,9 @@ class DHTClient {
           if (provider.addrs.isNotEmpty) {
             for (final addrBytes in provider.addrs) {
               try {
-                final fullAddr =
-                    multiaddrFromBytes(Uint8List.fromList(addrBytes));
+                final fullAddr = multiaddrFromBytes(
+                  Uint8List.fromList(addrBytes),
+                );
                 if (fullAddr != null) {
                   _router.routerL0.addPeerAddress(
                     peerId: peerId,
@@ -192,7 +197,8 @@ class DHTClient {
         // Also checks closerPeers for iterative query (not implemented loop here yet)
       } catch (e) {
         print(
-            'Error querying peer ${Base58().encode(peer.value)} for providers: $e');
+          'Error querying peer ${Base58().encode(peer.value)} for providers: $e',
+        );
       }
     }
 
@@ -209,20 +215,25 @@ class DHTClient {
 
     for (final peer in closestPeers) {
       try {
-        final responseBytes =
-            await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
+        final responseBytes = await _sendRequest(
+          peer,
+          PROTOCOL_DHT,
+          msg.writeToBuffer(),
+        );
         final response = kad.Message.fromBuffer(responseBytes);
 
         // Check if target is in closerPeers
-        final found =
-            response.closerPeers.any((p) => listsEqual(p.id, id.value));
+        final found = response.closerPeers.any(
+          (p) => listsEqual(p.id, id.value),
+        );
         if (found) {
           return id;
         }
         // Iterate...
       } catch (e) {
         print(
-            'Error querying peer ${Base58().encode(peer.value)} for peer lookup: $e');
+          'Error querying peer ${Base58().encode(peer.value)} for peer lookup: $e',
+        );
       }
     }
     return null;
@@ -232,24 +243,29 @@ class DHTClient {
   Future<void> addProvider(String cid, String providerId) async {
     final msg = kad.Message()
       ..type = kad.Message_MessageType.ADD_PROVIDER
-      ..key = CID.decode(cid).multihash.toBytes() // Raw multihash bytes
-      ..providerPeers.add(_convertPeerIdToKadPeer(
-          p2p.PeerId(value: Base58().base58Decode(providerId))));
+      ..key = CID
+          .decode(cid)
+          .multihash
+          .toBytes() // Raw multihash bytes
+      ..providerPeers.add(
+        _convertPeerIdToKadPeer(
+          p2p.PeerId(value: Base58().base58Decode(providerId)),
+        ),
+      );
 
     final targetPeerId = getRoutingKey(cid);
-    final closestPeers =
-        _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
+    final closestPeers = _kademliaRoutingTable.findClosestPeers(
+      targetPeerId,
+      20,
+    );
 
     for (final peer in closestPeers) {
       try {
-        await _sendRequest(
-          peer,
-          PROTOCOL_DHT,
-          msg.writeToBuffer(),
-        );
+        await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
       } catch (e) {
         print(
-            'Error adding provider to peer ${Base58().encode(peer.value)}: $e');
+          'Error adding provider to peer ${Base58().encode(peer.value)}: $e',
+        );
       }
     }
   }
@@ -269,8 +285,10 @@ class DHTClient {
       ..record = record;
 
     final targetPeerId = getRoutingKey(Base58().encode(key));
-    final closestPeers =
-        _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
+    final closestPeers = _kademliaRoutingTable.findClosestPeers(
+      targetPeerId,
+      20,
+    );
 
     int successCount = 0;
     for (final peer in closestPeers) {
@@ -294,13 +312,18 @@ class DHTClient {
       ..key = key;
 
     final targetPeerId = getRoutingKey(Base58().encode(key));
-    final closestPeers =
-        _kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
+    final closestPeers = _kademliaRoutingTable.findClosestPeers(
+      targetPeerId,
+      20,
+    );
 
     for (final peer in closestPeers) {
       try {
-        final responseBytes =
-            await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
+        final responseBytes = await _sendRequest(
+          peer,
+          PROTOCOL_DHT,
+          msg.writeToBuffer(),
+        );
         final response = kad.Message.fromBuffer(responseBytes);
 
         if (response.hasRecord() && response.record.value.isNotEmpty) {
@@ -308,7 +331,8 @@ class DHTClient {
         }
       } catch (e) {
         print(
-            'Error getting value from peer ${Base58().encode(peer.value)}: $e');
+          'Error getting value from peer ${Base58().encode(peer.value)}: $e',
+        );
       }
     }
 
@@ -324,8 +348,11 @@ class DHTClient {
       ..key = key;
 
     try {
-      final responseBytes =
-          await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
+      final responseBytes = await _sendRequest(
+        peer,
+        PROTOCOL_DHT,
+        msg.writeToBuffer(),
+      );
       final response = kad.Message.fromBuffer(responseBytes);
       return response.hasRecord() && response.record.value.isNotEmpty;
     } catch (e) {
@@ -335,7 +362,10 @@ class DHTClient {
 
   // Helper method for sending protocol requests
   Future<Uint8List> _sendRequest(
-      p2p.PeerId peer, String protocol, Uint8List data) async {
+    p2p.PeerId peer,
+    String protocol,
+    Uint8List data,
+  ) async {
     final completer = Completer<Uint8List>();
 
     // Use the node's dhtHandler router instead of the raw RouterL0
@@ -376,7 +406,9 @@ class DHTClient {
         case kad.Message_MessageType.FIND_NODE:
           // Reply with closer peers
           final closer = _kademliaRoutingTable.findClosestPeers(
-              p2p.PeerId(value: Uint8List.fromList(message.key)), 20);
+            p2p.PeerId(value: Uint8List.fromList(message.key)),
+            20,
+          );
           final response = kad.Message()
             ..type = kad.Message_MessageType.FIND_NODE
             ..closerPeers.addAll(closer.map((p) => _convertPeerIdToKadPeer(p)));
@@ -506,7 +538,10 @@ class DHTClient {
 
           // Update routing table with key information
           _kademliaRoutingTable.addKeyProvider(
-              targetPeerId, this.peerId, DateTime.now());
+            targetPeerId,
+            this.peerId,
+            DateTime.now(),
+          );
         } catch (e) {
           print('Error processing key metadata: $e');
           // Continue processing other keys
@@ -527,8 +562,9 @@ class DHTClient {
 
       // Store current timestamp
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final timestampData =
-          Uint8List.fromList(utf8.encode(timestamp.toString()));
+      final timestampData = Uint8List.fromList(
+        utf8.encode(timestamp.toString()),
+      );
 
       // Create a Block from the timestamp data
       final block = await Block.fromData(timestampData);
@@ -542,7 +578,10 @@ class DHTClient {
 
         // Update the key provider timestamp in routing table
         _kademliaRoutingTable.updateKeyProviderTimestamp(
-            targetPeerId, this.peerId, DateTime.now());
+          targetPeerId,
+          this.peerId,
+          DateTime.now(),
+        );
       } catch (e) {
         print('Error updating routing table metadata: $e');
         // Continue even if routing table update fails
@@ -553,8 +592,10 @@ class DHTClient {
         ..key = key
         ..value = utf8.encode(timestamp.toString());
 
-      node.dhtHandler.router
-          .emitEvent('dht:key:republished', event.writeToBuffer());
+      node.dhtHandler.router.emitEvent(
+        'dht:key:republished',
+        event.writeToBuffer(),
+      );
     } catch (e) {
       print('Error updating republish time for key $key: $e');
       rethrow;

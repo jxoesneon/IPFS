@@ -11,8 +11,7 @@ class MockSecurityManager implements SecurityManager {
 
   // Implement SecurityManager interface members
   @override
-  Keystore get keystore =>
-      Keystore(); // Return a dummy or mock keystore if needed
+  Keystore get keystore => Keystore(); // Return a dummy or mock keystore if needed
 
   @override
   Future<IPFSPrivateKey?> getPrivateKey(String keyName) async {
@@ -33,10 +32,7 @@ class MockSecurityManager implements SecurityManager {
   @override
   Future<Map<String, dynamic>> getStatus() async {
     _recordCall('getStatus');
-    return {
-      'keyCount': _keys.length,
-      'keyNames': _keys.keys.toList(),
-    };
+    return {'keyCount': _keys.length, 'keyNames': _keys.keys.toList()};
   }
 
   @override

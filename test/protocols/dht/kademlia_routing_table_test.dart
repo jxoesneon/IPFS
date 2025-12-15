@@ -28,9 +28,10 @@ class MockRouterL2 implements p2p.RouterL2 {
   }
 
   @override
-  void sendDatagram(
-      {required Iterable<p2p.FullAddress> addresses,
-      required Uint8List datagram}) {}
+  void sendDatagram({
+    required Iterable<p2p.FullAddress> addresses,
+    required Uint8List datagram,
+  }) {}
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -67,8 +68,10 @@ class MockP2plibRouter implements P2plibRouter {
   void removeMessageHandler(String protocolId) {}
 
   @override
-  Future<void> sendDatagram(
-      {required List<String> addresses, required Uint8List datagram}) async {}
+  Future<void> sendDatagram({
+    required List<String> addresses,
+    required Uint8List datagram,
+  }) async {}
 
   @override
   List<String> resolvePeerId(p2p.PeerId peerId) => ['127.0.0.1:4001'];
@@ -133,8 +136,10 @@ void main() {
       mockRouter._mockL2.routes[p2p.PeerId(value: validPeerIdBytes())] =
           p2p.Route(peerId: p2p.PeerId(value: validPeerIdBytes()));
 
-      dhtClient =
-          DHTClient(networkHandler: mockNetworkHandler, router: mockRouter);
+      dhtClient = DHTClient(
+        networkHandler: mockNetworkHandler,
+        router: mockRouter,
+      );
       await dhtClient.initialize();
 
       routingTable = dhtClient.kademliaRoutingTable;
@@ -235,8 +240,9 @@ void main() {
 
     test('getAssociatedPeer returns correct associated peer', () async {
       final peerId = p2p.PeerId(value: validPeerIdBytes(fillValue: 2));
-      final associatedPeerId =
-          p2p.PeerId(value: validPeerIdBytes(fillValue: 10));
+      final associatedPeerId = p2p.PeerId(
+        value: validPeerIdBytes(fillValue: 10),
+      );
 
       await routingTable.addPeer(peerId, associatedPeerId);
 

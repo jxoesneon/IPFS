@@ -82,7 +82,8 @@ class ContentTypeHandler {
     } catch (e, stackTrace) {
       _logger.error('Error generating directory listing', e, stackTrace);
       return Uint8List.fromList(
-          'Error: Failed to generate directory listing'.codeUnits);
+        'Error: Failed to generate directory listing'.codeUnits,
+      );
     }
   }
 
@@ -93,7 +94,8 @@ class ContentTypeHandler {
       final markdownText = String.fromCharCodes(data);
 
       // Convert markdown to HTML using the markdown package
-      final html = '''
+      final html =
+          '''
         <!DOCTYPE html>
         <html>
           <head>
@@ -140,7 +142,8 @@ class ContentTypeHandler {
   Uint8List _processCarArchive(Uint8List data) {
     try {
       // Generate a simple HTML viewer for CAR archive contents
-      final html = '''
+      final html =
+          '''
         <!DOCTYPE html>
         <html>
           <head>
@@ -290,7 +293,10 @@ class ContentTypeHandler {
       _contentTypeCache[cidStr] = contentType;
     } catch (e, stackTrace) {
       _logger.error(
-          'Error caching content type for CID $cidStr', e, stackTrace);
+        'Error caching content type for CID $cidStr',
+        e,
+        stackTrace,
+      );
     }
   }
 }

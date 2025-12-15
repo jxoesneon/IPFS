@@ -76,10 +76,13 @@ class Base58 {
     }
 
     // Add leading zeros
-    final leadingZeros =
-        input.split('').takeWhile((c) => c == _base58Alphabet[0]).length;
+    final leadingZeros = input
+        .split('')
+        .takeWhile((c) => c == _base58Alphabet[0])
+        .length;
     final bytes = bigIntToUint8List(
-        result); // Use the helper function to convert BigInt to Uint8List
+      result,
+    ); // Use the helper function to convert BigInt to Uint8List
     final decoded = Uint8List(leadingZeros + bytes.length)
       ..setAll(leadingZeros, bytes);
 

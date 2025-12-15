@@ -140,8 +140,9 @@ class DatastoreHandler {
 
       // Create a CAR object using the blocks list
       final car = CAR(
-          blocks: blocks,
-          header: CarHeader(version: 1, roots: [blocks.first.cid]));
+        blocks: blocks,
+        header: CarHeader(version: 1, roots: [blocks.first.cid]),
+      );
 
       // Pass the CAR object to writeCar
       final carData = await CarWriter.writeCar(car);
@@ -157,14 +158,18 @@ class DatastoreHandler {
 
   // Helper function to recursively retrieve blocks of linked nodes
   Future<void> _recursiveGetBlocks(
-      MerkleDAGNode node, List<Block> blocks) async {
+    MerkleDAGNode node,
+    List<Block> blocks,
+  ) async {
     if (node.isDirectory) {
       for (var link in node.links) {
         final childBlock = await getBlock(link.cid.toString());
         if (childBlock != null && !blocks.contains(childBlock)) {
           blocks.add(childBlock);
-          await _recursiveGetBlocks(MerkleDAGNode.fromBytes(childBlock.data),
-              blocks); // Recursive call
+          await _recursiveGetBlocks(
+            MerkleDAGNode.fromBytes(childBlock.data),
+            blocks,
+          ); // Recursive call
         }
       }
     }

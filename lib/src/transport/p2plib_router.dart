@@ -82,32 +82,39 @@ class P2plibRouter {
   }
 
   P2plibRouter.internal(this._config)
-      : _router = p2p.RouterL2(
-          crypto: _sharedCrypto,
-          keepalivePeriod: const Duration(seconds: 30),
-        ),
-        _logger = Logger('P2plibRouter',
-            debug: _config.debug, verbose: _config.verboseLogging) {
+    : _router = p2p.RouterL2(
+        crypto: _sharedCrypto,
+        keepalivePeriod: const Duration(seconds: 30),
+      ),
+      _logger = Logger(
+        'P2plibRouter',
+        debug: _config.debug,
+        verbose: _config.verboseLogging,
+      ) {
     _setupRouter();
   }
 
   void _setupRouter() {
     // Initialize the router with the provided configuration
     _router.transports.clear();
-    _router.transports.add(p2p.TransportUdp(
-      bindAddress: p2p.FullAddress(
-        address: InternetAddress.anyIPv4,
-        port: p2p.TransportUdp.defaultPort,
+    _router.transports.add(
+      p2p.TransportUdp(
+        bindAddress: p2p.FullAddress(
+          address: InternetAddress.anyIPv4,
+          port: p2p.TransportUdp.defaultPort,
+        ),
+        ttl: _router.messageTTL.inSeconds,
       ),
-      ttl: _router.messageTTL.inSeconds,
-    ));
-    _router.transports.add(p2p.TransportUdp(
-      bindAddress: p2p.FullAddress(
-        address: InternetAddress.anyIPv6,
-        port: p2p.TransportUdp.defaultPort,
+    );
+    _router.transports.add(
+      p2p.TransportUdp(
+        bindAddress: p2p.FullAddress(
+          address: InternetAddress.anyIPv6,
+          port: p2p.TransportUdp.defaultPort,
+        ),
+        ttl: _router.messageTTL.inSeconds,
       ),
-      ttl: _router.messageTTL.inSeconds,
-    ));
+    );
     _router.messageTTL = const Duration(minutes: 1);
   }
 
@@ -145,7 +152,8 @@ class P2plibRouter {
         if (!_isCryptoInitialized) {
           _logger.verbose('Initializing crypto components');
           final seed = Uint8List.fromList(
-              List<int>.generate(32, (_) => Random().nextInt(256)));
+            List<int>.generate(32, (_) => Random().nextInt(256)),
+          );
           await _sharedCrypto.init(seed);
           _isCryptoInitialized = true;
           _logger.verbose('Crypto components initialized successfully');
@@ -156,7 +164,8 @@ class P2plibRouter {
       final randomBytes = List<int>.generate(32, (i) => Random().nextInt(256));
       await _router.init(Uint8List.fromList(randomBytes));
       _logger.verbose(
-          'Router initialized with peer ID: ${Base58().encode(_router.selfId.value)}');
+        'Router initialized with peer ID: ${Base58().encode(_router.selfId.value)}',
+      );
 
       _isInitialized = true;
       _logger.debug('P2plibRouter initialization complete');
@@ -206,10 +215,7 @@ class P2plibRouter {
         );
         _connectedPeers.add(peerId);
         _connectionEventsController.add(
-          ConnectionEvent(
-            type: ConnectionEventType.connected,
-            peerId: peer,
-          ),
+          ConnectionEvent(type: ConnectionEventType.connected, peerId: peer),
         );
       } catch (e, stackTrace) {
         _logger.error('Error adding bootstrap peer: $peer', e, stackTrace);
@@ -234,8 +240,9 @@ class P2plibRouter {
   Future<void> connect(String multiaddress) async {
     try {
       final address = parseMultiaddr(multiaddress);
-      final peerId =
-          p2p.PeerId(value: _extractPeerIdFromMultiaddr(multiaddress));
+      final peerId = p2p.PeerId(
+        value: _extractPeerIdFromMultiaddr(multiaddress),
+      );
       _router.addPeerAddress(
         peerId: peerId,
         address: address,
@@ -295,10 +302,7 @@ class P2plibRouter {
       throw Exception('No addresses found for peer ${peer.toString()}');
     }
 
-    _router.sendDatagram(
-      addresses: addresses,
-      datagram: message,
-    );
+    _router.sendDatagram(addresses: addresses, datagram: message);
     return Future.value();
   }
 
@@ -397,10 +401,7 @@ class P2plibRouter {
       );
     });
 
-    _router.sendDatagram(
-      addresses: fullAddresses,
-      datagram: datagram,
-    );
+    _router.sendDatagram(addresses: fullAddresses, datagram: datagram);
     return Future.value();
   }
 
@@ -409,10 +410,7 @@ class P2plibRouter {
     // Create a new routing table if it doesn't exist
     _routingTable ??= RoutingTable(
       _router.selfId,
-      DHTClient(
-        networkHandler: NetworkHandler(_config),
-        router: this,
-      ),
+      DHTClient(networkHandler: NetworkHandler(_config), router: this),
     );
     return _routingTable!;
   }
@@ -474,10 +472,7 @@ class P2plibRouter {
       throw FormatException('Invalid multiaddr format: $multiaddr');
     }
 
-    return p2p.FullAddress(
-      address: InternetAddress(ipAddress),
-      port: port,
-    );
+    return p2p.FullAddress(address: InternetAddress(ipAddress), port: port);
   }
 
   /// Extracts the peer ID from a multiaddress string
@@ -512,8 +507,9 @@ class P2plibRouter {
     }
 
     // 4. Check if the peer has been seen recently (within last 2 minutes)
-    if (DateTime.now()
-            .difference(DateTime.fromMillisecondsSinceEpoch(route.lastSeen)) >
+    if (DateTime.now().difference(
+          DateTime.fromMillisecondsSinceEpoch(route.lastSeen),
+        ) >
         const Duration(minutes: 2)) {
       // Clean up stale connection
       _connectedPeers.remove(peerId);
@@ -602,8 +598,10 @@ class P2plibRouter {
       final requestId = DateTime.now().millisecondsSinceEpoch.toString();
 
       // Add request ID to message
-      final messageWithId =
-          Uint8List.fromList([...request, ...utf8.encode(requestId)]);
+      final messageWithId = Uint8List.fromList([
+        ...request,
+        ...utf8.encode(requestId),
+      ]);
 
       // Set up one-time response handler
       addMessageHandler(protocolId, (packet) {
@@ -634,8 +632,9 @@ class P2plibRouter {
   String _extractRequestId(Uint8List datagram) {
     try {
       // The request ID is appended at the end of the datagram
-      final requestIdBytes =
-          datagram.sublist(datagram.length - 13); // Timestamp is 13 chars
+      final requestIdBytes = datagram.sublist(
+        datagram.length - 13,
+      ); // Timestamp is 13 chars
       return utf8.decode(requestIdBytes);
     } catch (e) {
       _logger.error('Error extracting request ID', e);
@@ -659,8 +658,11 @@ class P2plibRouter {
       try {
         await sendMessage(peerId, message);
       } catch (e, stackTrace) {
-        _logger.error('Failed to send message to peer ${peerId.toString()}', e,
-            stackTrace);
+        _logger.error(
+          'Failed to send message to peer ${peerId.toString()}',
+          e,
+          stackTrace,
+        );
         failures.add(peerId.toString());
       }
     }

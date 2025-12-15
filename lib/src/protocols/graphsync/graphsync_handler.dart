@@ -36,10 +36,13 @@ class GraphsyncHandler {
     this._bitswap,
     this._ipld,
     this._blockStore,
-  )   : _logger = Logger('GraphsyncHandler',
-            debug: config.debug, verbose: config.verboseLogging),
-        _protocol = GraphsyncProtocol(),
-        _config = config;
+  ) : _logger = Logger(
+        'GraphsyncHandler',
+        debug: config.debug,
+        verbose: config.verboseLogging,
+      ),
+      _protocol = GraphsyncProtocol(),
+      _config = config;
 
   Future<void> start() async {
     _router.registerProtocol(GraphsyncProtocol.protocolID);
@@ -102,9 +105,7 @@ class GraphsyncHandler {
       final response = _protocol.createResponse(
         requestId: requestId,
         status: ResponseStatus.RS_CANCELLED,
-        metadata: {
-          'message': 'Request cancelled by peer',
-        },
+        metadata: {'message': 'Request cancelled by peer'},
       );
 
       // Convert to bytes and send response
@@ -127,9 +128,7 @@ class GraphsyncHandler {
       final response = _protocol.createResponse(
         requestId: requestId,
         status: ResponseStatus.RS_PAUSED,
-        metadata: {
-          'message': 'Request paused by peer',
-        },
+        metadata: {'message': 'Request paused by peer'},
       );
 
       final responseBytes = response.writeToBuffer();
@@ -151,9 +150,7 @@ class GraphsyncHandler {
       final response = _protocol.createResponse(
         requestId: requestId,
         status: ResponseStatus.RS_IN_PROGRESS,
-        metadata: {
-          'message': 'Request resumed',
-        },
+        metadata: {'message': 'Request resumed'},
       );
 
       final responseBytes = response.writeToBuffer();
@@ -170,7 +167,9 @@ class GraphsyncHandler {
   }
 
   Future<void> _handleNewRequest(
-      p2p.PeerId peer, GraphsyncRequest request) async {
+    p2p.PeerId peer,
+    GraphsyncRequest request,
+  ) async {
     _logger.debug('Handling new request ${request.id} from ${peer.toString()}');
 
     try {
@@ -183,9 +182,7 @@ class GraphsyncHandler {
       final response = _protocol.createResponse(
         requestId: request.id,
         status: ResponseStatus.RS_IN_PROGRESS,
-        metadata: {
-          'message': 'Request accepted',
-        },
+        metadata: {'message': 'Request accepted'},
       );
 
       // Send initial response
@@ -266,9 +263,7 @@ class GraphsyncHandler {
         final errorResponse = _protocol.createResponse(
           requestId: request.id,
           status: ResponseStatus.RS_ERROR,
-          metadata: {
-            'error': e.toString(),
-          },
+          metadata: {'error': e.toString()},
         );
 
         await _router.broadcastMessage(

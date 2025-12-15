@@ -51,8 +51,11 @@ class MetricsCollector {
 
   /// Creates a new metrics collector with the given [_config].
   MetricsCollector(this._config) {
-    _logger = Logger('MetricsCollector',
-        debug: _config.debug, verbose: _config.verboseLogging);
+    _logger = Logger(
+      'MetricsCollector',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
     _logger.debug('MetricsCollector instance created');
   }
 
@@ -75,8 +78,9 @@ class MetricsCollector {
   void _startCollection() {
     _collectionTimer?.cancel();
     _collectionTimer = Timer.periodic(
-        Duration(seconds: _config.metrics.collectionIntervalSeconds),
-        (_) => _collectMetrics());
+      Duration(seconds: _config.metrics.collectionIntervalSeconds),
+      (_) => _collectMetrics(),
+    );
   }
 
   Future<void> _collectMetrics() async {
@@ -176,8 +180,9 @@ class MetricsCollector {
         metrics.messagesSent += fixnum.Int64(data['messages_sent'] as int);
       }
       if (data['messages_received'] != null) {
-        metrics.messagesReceived +=
-            fixnum.Int64(data['messages_received'] as int);
+        metrics.messagesReceived += fixnum.Int64(
+          data['messages_received'] as int,
+        );
       }
 
       // Update active connections if provided
@@ -226,7 +231,9 @@ class MetricsCollector {
       return Duration.zero;
     }
     final totalMs = latencies.fold<int>(
-        0, (sum, duration) => sum + duration.inMilliseconds);
+      0,
+      (sum, duration) => sum + duration.inMilliseconds,
+    );
     return Duration(milliseconds: totalMs ~/ latencies.length);
   }
 
@@ -248,8 +255,9 @@ class MetricsCollector {
 
     // Update latency metrics
     _latencyMetrics[peerId] ??= [];
-    _latencyMetrics[peerId]
-        ?.add(Duration(milliseconds: metrics.averageLatencyMs));
+    _latencyMetrics[peerId]?.add(
+      Duration(milliseconds: metrics.averageLatencyMs),
+    );
 
     // Keep only last 100 latency measurements
     if (_latencyMetrics[peerId]!.length > 100) {

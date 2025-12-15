@@ -7,7 +7,7 @@ import 'p2plib_router.dart'; // Import the P2P library for peer-to-peer communic
 class CircuitRelayClient {
   final P2plibRouter _router; // Router instance for handling connections
   final StreamController<CircuitRelayConnectionEvent>
-      _circuitRelayEventsController =
+  _circuitRelayEventsController =
       StreamController<CircuitRelayConnectionEvent>.broadcast();
 
   CircuitRelayClient(this._router);

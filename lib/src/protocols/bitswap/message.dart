@@ -29,17 +29,22 @@ class Message {
 
   List<Block> getBlocks() => List.unmodifiable(_blocks);
 
-  void addWantlistEntry(String cid,
-      {int priority = 1,
-      bool cancel = false,
-      WantType wantType = WantType.block,
-      bool sendDontHave = false}) {
-    _wantlist.addEntry(WantlistEntry(
+  void addWantlistEntry(
+    String cid, {
+    int priority = 1,
+    bool cancel = false,
+    WantType wantType = WantType.block,
+    bool sendDontHave = false,
+  }) {
+    _wantlist.addEntry(
+      WantlistEntry(
         cid: cid,
         priority: priority,
         cancel: cancel,
         wantType: wantType,
-        sendDontHave: sendDontHave));
+        sendDontHave: sendDontHave,
+      ),
+    );
   }
 
   Wantlist getWantlist() => _wantlist;
@@ -76,11 +81,13 @@ class Message {
               ? WantType.have
               : WantType.block;
 
-          message.addWantlistEntry(cidStr,
-              priority: entry.priority,
-              cancel: entry.cancel,
-              wantType: wantType,
-              sendDontHave: entry.sendDontHave);
+          message.addWantlistEntry(
+            cidStr,
+            priority: entry.priority,
+            cancel: entry.cancel,
+            wantType: wantType,
+            sendDontHave: entry.sendDontHave,
+          );
         } catch (e) {
           print('Error parsing wantlist entry CID: $e');
         }

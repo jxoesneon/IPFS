@@ -22,33 +22,41 @@ class GraphsyncProtocol {
     Map<String, Uint8List>? extensions,
   }) {
     return GraphsyncMessage()
-      ..requests.add(GraphsyncRequest()
-        ..id = id
-        ..root = root
-        ..selector = selector
-        ..priority = priority.value
-        ..extensions.addAll(extensions ?? {}));
+      ..requests.add(
+        GraphsyncRequest()
+          ..id = id
+          ..root = root
+          ..selector = selector
+          ..priority = priority.value
+          ..extensions.addAll(extensions ?? {}),
+      );
   }
 
   GraphsyncMessage createCancelRequest(int requestId) {
     return GraphsyncMessage()
-      ..requests.add(GraphsyncRequest()
-        ..id = requestId
-        ..cancel = true);
+      ..requests.add(
+        GraphsyncRequest()
+          ..id = requestId
+          ..cancel = true,
+      );
   }
 
   GraphsyncMessage createPauseRequest(int requestId) {
     return GraphsyncMessage()
-      ..requests.add(GraphsyncRequest()
-        ..id = requestId
-        ..pause = true);
+      ..requests.add(
+        GraphsyncRequest()
+          ..id = requestId
+          ..pause = true,
+      );
   }
 
   GraphsyncMessage createUnpauseRequest(int requestId) {
     return GraphsyncMessage()
-      ..requests.add(GraphsyncRequest()
-        ..id = requestId
-        ..unpause = true);
+      ..requests.add(
+        GraphsyncRequest()
+          ..id = requestId
+          ..unpause = true,
+      );
   }
 
   GraphsyncMessage createResponse({
@@ -59,11 +67,13 @@ class GraphsyncProtocol {
     List<Block>? blocks,
   }) {
     final message = GraphsyncMessage()
-      ..responses.add(GraphsyncResponse()
-        ..id = requestId
-        ..status = status
-        ..extensions.addAll(extensions ?? {})
-        ..metadata.addAll(metadata ?? {}));
+      ..responses.add(
+        GraphsyncResponse()
+          ..id = requestId
+          ..status = status
+          ..extensions.addAll(extensions ?? {})
+          ..metadata.addAll(metadata ?? {}),
+      );
 
     if (blocks != null) {
       message.blocks.addAll(blocks);

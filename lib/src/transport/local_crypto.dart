@@ -19,13 +19,15 @@ class LocalCrypto implements p2p.Crypto {
   final _algorithm = Ed25519();
 
   @override
-  Future<({Uint8List encPubKey, Uint8List seed, Uint8List signPubKey})> init(
-      [Uint8List? seed]) async {
+  Future<({Uint8List encPubKey, Uint8List seed, Uint8List signPubKey})> init([
+    Uint8List? seed,
+  ]) async {
     // Use provided seed or generate a cryptographically secure one
     if (seed == null) {
       final secureRandom = Random.secure();
       seed = Uint8List.fromList(
-          List.generate(32, (_) => secureRandom.nextInt(256)));
+        List.generate(32, (_) => secureRandom.nextInt(256)),
+      );
     }
     _currentSeed = seed;
 
@@ -64,12 +66,17 @@ class LocalCrypto implements p2p.Crypto {
     try {
       final cipher = ChaCha20Poly1305(ChaCha7539Engine(), Poly1305());
       final rnd = Random.secure();
-      final nonce =
-          Uint8List.fromList(List.generate(12, (_) => rnd.nextInt(256)));
+      final nonce = Uint8List.fromList(
+        List.generate(12, (_) => rnd.nextInt(256)),
+      );
       final digest = crypto.sha256.convert(_currentSeed!);
       final key = Uint8List.fromList(digest.bytes);
-      final params =
-          AEADParameters(KeyParameter(key), 128, nonce, Uint8List(0));
+      final params = AEADParameters(
+        KeyParameter(key),
+        128,
+        nonce,
+        Uint8List(0),
+      );
 
       cipher.init(true, params);
       final ciphertext = cipher.process(data);
@@ -94,8 +101,12 @@ class LocalCrypto implements p2p.Crypto {
       final cipher = ChaCha20Poly1305(ChaCha7539Engine(), Poly1305());
       final digest = crypto.sha256.convert(_currentSeed!);
       final key = Uint8List.fromList(digest.bytes);
-      final params =
-          AEADParameters(KeyParameter(key), 128, nonce, Uint8List(0));
+      final params = AEADParameters(
+        KeyParameter(key),
+        128,
+        nonce,
+        Uint8List(0),
+      );
 
       cipher.init(false, params);
       return cipher.process(ciphertext);

@@ -47,8 +47,10 @@ class ContentService {
     final cid = CID.fromProto(proto);
 
     // Create and store block
-    final block =
-        await Block.fromData(Uint8List.fromList(content), format: codec);
+    final block = await Block.fromData(
+      Uint8List.fromList(content),
+      format: codec,
+    );
     await _datastore.put(cid.encode(), block);
 
     return cid;
@@ -61,7 +63,10 @@ class ContentService {
       return block?.data;
     } catch (e, stackTrace) {
       _logger.error(
-          'Error retrieving content for CID ${cid.encode()}', e, stackTrace);
+        'Error retrieving content for CID ${cid.encode()}',
+        e,
+        stackTrace,
+      );
       return null;
     }
   }
@@ -78,7 +83,10 @@ class ContentService {
       return true;
     } catch (e, stackTrace) {
       _logger.error(
-          'Error removing content for CID ${cid.encode()}', e, stackTrace);
+        'Error removing content for CID ${cid.encode()}',
+        e,
+        stackTrace,
+      );
       return false;
     }
   }
@@ -95,7 +103,10 @@ class ContentService {
       return true;
     } catch (e, stackTrace) {
       _logger.error(
-          'Error pinning content for CID ${cid.encode()}', e, stackTrace);
+        'Error pinning content for CID ${cid.encode()}',
+        e,
+        stackTrace,
+      );
       return false;
     }
   }
@@ -107,7 +118,10 @@ class ContentService {
       return true;
     } catch (e, stackTrace) {
       _logger.error(
-          'Error unpinning content for CID ${cid.encode()}', e, stackTrace);
+        'Error unpinning content for CID ${cid.encode()}',
+        e,
+        stackTrace,
+      );
       return false;
     }
   }
@@ -118,7 +132,7 @@ class ContentService {
     return [
       0x12, // SHA2-256 identifier
       hash.bytes.length,
-      ...hash.bytes
+      ...hash.bytes,
     ];
   }
 

@@ -15,7 +15,8 @@ class IPLDPathHandler {
 
   /// Parses and validates an IPFS path
   static (String namespace, CID rootCid, String? remainingPath) parsePath(
-      String path) {
+    String path,
+  ) {
     if (!path.startsWith('/')) {
       throw IPLDPathError('Path must start with /');
     }
@@ -34,8 +35,9 @@ class IPLDPathHandler {
     // Parse CID
     try {
       final cid = CID.decode(parts[1]);
-      final remainingPath =
-          parts.length > 2 ? parts.sublist(2).join('/') : null;
+      final remainingPath = parts.length > 2
+          ? parts.sublist(2).join('/')
+          : null;
       return (namespace, cid, remainingPath);
     } catch (e) {
       throw IPLDPathError('Invalid CID in path: ${parts[1]}');

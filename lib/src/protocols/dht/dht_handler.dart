@@ -30,13 +30,10 @@ class DHTHandler implements IDHTHandler {
   static const String _protocolVersion = '1.0.0';
 
   DHTHandler(config, this._router, NetworkHandler networkHandler)
-      : _keystore = Keystore(),
-        _storage = Datastore(config.datastorePath) {
+    : _keystore = Keystore(),
+      _storage = Datastore(config.datastorePath) {
     _storage.init();
-    dhtClient = DHTClient(
-      networkHandler: networkHandler,
-      router: _router,
-    );
+    dhtClient = DHTClient(networkHandler: networkHandler, router: _router);
   }
 
   /// Starts the DHT client.
@@ -81,9 +78,10 @@ class DHTHandler implements IDHTHandler {
       final storageKey = '/dht/values/${key.toString()}';
 
       // Create a Block instance from the value bytes
-      final block = await Block.fromData(value.bytes,
-          format: 'raw' // Using raw format since this is DHT value data
-          );
+      final block = await Block.fromData(
+        value.bytes,
+        format: 'raw', // Using raw format since this is DHT value data
+      );
 
       // Store the block
       await _storage.put(storageKey, block);
@@ -137,11 +135,13 @@ class DHTHandler implements IDHTHandler {
             print('Resolved IPNS name using public resolver: $resolvedCid');
           } else {
             throw Exception(
-                'Failed to extract CID from public resolver response.');
+              'Failed to extract CID from public resolver response.',
+            );
           }
         } else {
           throw Exception(
-              'Public resolver returned status code ${response.statusCode}');
+            'Public resolver returned status code ${response.statusCode}',
+          );
         }
       } catch (e) {
         print('Error resolving IPNS name using public resolver: $e');
@@ -227,8 +227,9 @@ class DHTHandler implements IDHTHandler {
   String? extractCIDFromResponse(String responseBody) {
     // Placeholder logic to extract CID from response body
     // Implement actual extraction logic based on response format
-    final match =
-        RegExp(r'Qm[1-9A-HJ-NP-Za-km-z]{44}').firstMatch(responseBody);
+    final match = RegExp(
+      r'Qm[1-9A-HJ-NP-Za-km-z]{44}',
+    ).firstMatch(responseBody);
     return match?.group(0);
   }
 
@@ -298,7 +299,8 @@ class DHTHandler implements IDHTHandler {
       final resolvedCid = await DNSLinkResolver.resolve(domainName);
       if (resolvedCid != null) {
         print(
-            'Resolved DNSLink using resolver for domain $domainName: $resolvedCid');
+          'Resolved DNSLink using resolver for domain $domainName: $resolvedCid',
+        );
         return resolvedCid;
       }
 
