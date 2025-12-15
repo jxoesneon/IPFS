@@ -51,7 +51,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_ipfs: ^1.2.3
+  dart_ipfs: ^1.2.4
 ```
 
 Or from Git for latest development:

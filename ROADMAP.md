@@ -1,13 +1,13 @@
 # dart_ipfs Roadmap
 
-**Current Version**: 1.2.3 (Production Ready)  
+**Current Version**: 1.2.4 (Production Ready)  
 **Last Updated**: 2025-12-15
 
 ---
 
 ## 📍 Current Status
 
-dart_ipfs **v1.2.3** is **100% production ready** with:
+dart_ipfs **v1.2.4** is **100% production ready** with:
 - ✅ Full IPFS protocol implementation
 - ✅ P2P networking with production cryptography
 - ✅ Gateway (Internal/Public/Local/Custom modes)
@@ -403,7 +403,7 @@ This roadmap is a living document. We welcome:
 
 ---
 
-**Last Updated: 2025-12-15 (v1.2.3)**
+**Last Updated: 2025-12-15 (v1.2.4)**
 **Status**: Active Development  
-**Current Version:** 1.2.3
+**Current Version:** 1.2.4
 **Target for Next Release:** 1.3.0 (Q1 2026)
