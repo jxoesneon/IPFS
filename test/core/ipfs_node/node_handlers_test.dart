@@ -79,9 +79,24 @@ class MockMDnsClient implements MDnsClient {
   }
 
   @override
+  bool get isRunning => started;
+
+  @override
   Future<void> stop() async {
     started = false;
   }
+
+  @override
+  Future<void> startServer({
+    required String serviceType,
+    required String instanceName,
+    required int port,
+    required List<String> txt,
+  }) async {}
+
+  @override
+  Future<void> announce(
+      String serviceType, String instanceName, int port, List<String> txt) async {}
 
   @override
   Stream<T> lookup<T extends ResourceRecord>(ResourceRecordQuery query,

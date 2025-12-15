@@ -1,12 +1,14 @@
 import 'dart:async';
+import 'package:fixnum/fixnum.dart' as fixnum;
 
 import 'p2plib_router.dart'; // Import the P2P library for peer-to-peer communication
 
 /// Handles circuit relay operations for an IPFS node.
 class CircuitRelayClient {
   final P2plibRouter _router; // Router instance for handling connections
-  final StreamController<CircuitRelayEvent> _circuitRelayEventsController =
-      StreamController<CircuitRelayEvent>.broadcast();
+  final StreamController<CircuitRelayConnectionEvent>
+      _circuitRelayEventsController =
+      StreamController<CircuitRelayConnectionEvent>.broadcast();
 
   CircuitRelayClient(this._router);
 
@@ -37,8 +39,21 @@ class CircuitRelayClient {
   Future<void> connect(String peerId) async {
     try {
       await _router.connect(peerId);
+      _circuitRelayEventsController.add(
+        CircuitRelayConnectionEvent(
+          eventType: 'circuit_relay_created',
+          relayAddress: peerId,
+        ),
+      );
       print('Connected to peer via circuit relay: $peerId');
     } catch (e) {
+      _circuitRelayEventsController.add(
+        CircuitRelayConnectionEvent(
+          eventType: 'circuit_relay_failed',
+          relayAddress: peerId,
+          errorMessage: e.toString(),
+        ),
+      );
       print('Error connecting to peer via circuit relay: $e');
     }
   }
@@ -47,28 +62,52 @@ class CircuitRelayClient {
   Future<void> disconnect(String peerId) async {
     try {
       await _router.disconnect(peerId);
+      _circuitRelayEventsController.add(
+        CircuitRelayConnectionEvent(
+          eventType: 'circuit_relay_closed',
+          relayAddress: peerId,
+          reason: 'disconnected',
+        ),
+      );
       print('Disconnected from peer via circuit relay: $peerId');
     } catch (e) {
+      _circuitRelayEventsController.add(
+        CircuitRelayConnectionEvent(
+          eventType: 'circuit_relay_failed',
+          relayAddress: peerId,
+          errorMessage: e.toString(),
+        ),
+      );
       print('Error disconnecting from peer via circuit relay: $e');
     }
   }
 
   /// Listens for incoming circuit relay events.
-  Stream<CircuitRelayEvent> get onCircuitRelayEvents =>
+  Stream<CircuitRelayConnectionEvent> get onCircuitRelayEvents =>
       _circuitRelayEventsController.stream;
 
-  get connectionEvents => null;
+  Stream<CircuitRelayConnectionEvent> get connectionEvents =>
+      _circuitRelayEventsController.stream;
 
   /// Emits a new circuit relay event.
-  void emitCircuitRelayEvent(CircuitRelayEvent event) {
+  void emitCircuitRelayEvent(CircuitRelayConnectionEvent event) {
     _circuitRelayEventsController.add(event);
   }
 }
 
 /// Represents a circuit relay event.
-class CircuitRelayEvent {
-  final String type; // Type of the event (e.g., 'connected', 'disconnected')
-  final String peerId; // ID of the peer involved in the event
+class CircuitRelayConnectionEvent {
+  final String eventType;
+  final String relayAddress;
+  final String errorMessage;
+  final String reason;
+  final fixnum.Int64 dataSize;
 
-  CircuitRelayEvent(this.type, this.peerId);
+  CircuitRelayConnectionEvent({
+    required this.eventType,
+    required this.relayAddress,
+    this.errorMessage = '',
+    this.reason = '',
+    fixnum.Int64? dataSize,
+  }) : dataSize = dataSize ?? fixnum.Int64.ZERO;
 }

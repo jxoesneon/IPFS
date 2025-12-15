@@ -2,10 +2,10 @@
 import 'dart:typed_data';
 import '../data_structures/car.dart';
 import '../data_structures/block.dart';
-import '/../src/storage/datastore.dart';
+import 'package:dart_ipfs/src/storage/datastore.dart';
 import '../data_structures/merkle_dag_node.dart'; // Import MerkleDAGNode
-import '/../src/utils/car_reader.dart'; // Assuming you have a CarReader utility
-import '/../src/utils/car_writer.dart'; // Assuming you have a CarWriter utility
+import 'package:dart_ipfs/src/utils/car_reader.dart'; // Assuming you have a CarReader utility
+import 'package:dart_ipfs/src/utils/car_writer.dart'; // Assuming you have a CarWriter utility
 // lib/src/core/ipfs_node/datastore_handler.dart
 
 /// Handles datastore operations for an IPFS node.

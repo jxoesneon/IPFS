@@ -3,8 +3,8 @@
 import 'dart:convert';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:http/http.dart' as http;
-import '/../src/routing/content_routing.dart';
-import '/../src/utils/dnslink_resolver.dart'; // Import your DNSLinkResolver utility
+import 'package:dart_ipfs/src/routing/content_routing.dart';
+import 'package:dart_ipfs/src/utils/dnslink_resolver.dart'; // Import your DNSLinkResolver utility
 
 /// Handles routing operations for an IPFS node.
 class RoutingHandler {

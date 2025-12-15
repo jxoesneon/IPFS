@@ -1,22 +1,19 @@
 // src/core/ipfs_node/pubsub_handler.dart
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
-import '../../utils/dnslink_resolver.dart';
-import '/../src/protocols/pubsub/pubsub_client.dart';
+import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
-import '../data_structures/node_stats.dart'; // Assuming you have a NodeStats class
-import '/../src/core/ipfs_node/ipfs_node_network_events.dart'; // Import network events
-// lib/src/core/ipfs_node/pubsub_handler.dart
+import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
+import '../data_structures/node_stats.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
 
 class PubSubMessage {
   final String topic;
   final String from;
   final String content;
 
-  PubSubMessage(
-      {required this.topic, required this.from, required this.content});
+  PubSubMessage({required this.topic, required this.from, required this.content});
 }
 
 /// Handles PubSub operations for an IPFS node.
@@ -91,9 +88,7 @@ class PubSubHandler {
   /// Publishes a message to a PubSub topic.
   Future<void> publish(String topic, String message) async {
     try {
-      final messageBytes = utf8.encode(message);
-      await _pubSubClient.publish(
-          topic, Uint8List.fromList(messageBytes) as String);
+      await _pubSubClient.publish(topic, message);
       _messageCount++;
       print('Published message to topic: $topic');
     } catch (e) {
@@ -104,9 +99,8 @@ class PubSubHandler {
   /// Handles incoming messages on a subscribed topic.
   void onMessage(String topic, Function(String) handler) {
     try {
-      _pubSubClient.onMessage.listen((messageBytes) {
-        final decodedMessage = utf8.decode(messageBytes as List<int>);
-        handler(decodedMessage);
+      _pubSubClient.onMessage.listen((message) {
+        handler(message);
         print('Processed message on topic: $topic');
       });
     } catch (e) {

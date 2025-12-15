@@ -4,7 +4,7 @@ import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import '/../src/utils/base58.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import '../protocols/dht/routing_table.dart';
 import 'package:synchronized/synchronized.dart';
