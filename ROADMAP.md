@@ -20,27 +20,21 @@ This roadmap outlines future enhancements beyond the current production-ready st
 
 ## 🗓️ Version Timeline
 
-### v1.1 - Q1 2026 (Foundation)
-**Focus**: Quick wins and developer experience
+### v1.4 - Q1 2026 (Foundation & Devops)
+**Focus**: Deployment, stability, and observability
 
 #### Features
-- [ ] Docker images (official builds)
+- [ ] Docker Ecosystem (Gateway, Node, Dev variants)
 - [ ] Health check endpoints (Kubernetes-ready)
-- [ ] Structured JSON logging
+- [ ] Structured JSON logging (Logstash/Datadog ready)
 - [ ] Project template library
 - [ ] Automated benchmark suite
-- [ ] Enhanced CLI tool
 
-#### Improvements
-- [ ] Performance profiling tools
-- [ ] Better error messages
-- [ ] Configuration validation
-
-**Estimated Release**: March 2026
+**Estimated Release**: January 2026
 
 ---
 
-### v1.2 - Q2 2026 (Platform Expansion)
+### v1.5 - Q2 2026 (Platform Expansion)
 **Focus**: Cross-platform and mobile
 
 #### Features
