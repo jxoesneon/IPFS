@@ -6,6 +6,8 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'package:es_compression/lz4.dart' as es;
+import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Configuration for adaptive compression.
 class CompressionConfig {
@@ -62,6 +64,24 @@ class AdaptiveCompressionHandler {
   AdaptiveCompressionHandler(this._blockStore, this._config)
     : _metadataPath = '${_blockStore.path}/metadata';
 
+  static bool? _lz4Available;
+  final _logger = Logger('AdaptiveCompressionHandler');
+
+  bool get _isLz4Available {
+    if (_lz4Available != null) return _lz4Available!;
+    try {
+      // Try to instantiate AND use to trigger FFI load
+      es.Lz4Encoder().convert([]);
+      _lz4Available = true;
+    } catch (e) {
+      _logger.warning(
+        'LZ4 compression unavailable (native binary missing). Falling back to GZIP.',
+      );
+      _lz4Available = false;
+    }
+    return _lz4Available!;
+  }
+
   Future<Block> compressBlock(Block block, String contentType) async {
     if (!_config.enabled || block.size > _config.maxUncompressedSize) {
       return block;
@@ -97,10 +117,15 @@ class AdaptiveCompressionHandler {
   CompressionType getOptimalCompression(String contentType, int size) {
     for (final entry in _config.contentTypeRules.entries) {
       if (contentType.startsWith(entry.key)) {
-        return entry.value;
+        final type = entry.value;
+        // Fallback checks
+        if (type == CompressionType.lz4 && !_isLz4Available) {
+          return CompressionType.gzip;
+        }
+        return type;
       }
     }
-    return CompressionType.gzip; // Default to gzip (lz4 not available)
+    return CompressionType.gzip;
   }
 
   Future<Uint8List> _compressData(Uint8List data, CompressionType type) async {
@@ -111,8 +136,9 @@ class AdaptiveCompressionHandler {
         return Uint8List.fromList(gzip.encode(data));
       case CompressionType.zlib:
         return Uint8List.fromList(zlib.encode(data));
+
       case CompressionType.lz4:
-        throw UnimplementedError('LZ4 compression not available');
+        return Uint8List.fromList(es.Lz4Encoder().convert(data));
     }
   }
 

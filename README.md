@@ -480,7 +480,7 @@ To mitigate potential risks, we strictly recommend running `dart_ipfs` in a sand
 ## Known Limitations
 
 1. **p2plib Integration**: Uses X-coordinate extraction from secp256k1 for 32-byte key compatibility
-2. **LZ4 Compression**: Not available (package limitation)
+2. **LZ4 Compression**: High-speed compression (via `es_compression`). *Note: Automatically falls back to GZIP on platforms where native LZ4 binaries are unavailable (e.g., Apple Silicon).*
 3. **COSE Encoding**: Stub implementation (catalyst_cose unavailable)
 
 These limitations do not affect core functionality.

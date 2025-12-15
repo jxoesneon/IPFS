@@ -8,7 +8,7 @@ import 'adaptive_compression_handler.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import '../../utils/logger.dart';
-// import 'package:lz4/lz4.dart'; // Package not available, lz4 disabled
+import 'package:es_compression/lz4.dart' as es;
 
 /// Manages compressed cache storage with multiple compression algorithms
 class CompressedCacheStore {
@@ -16,12 +16,14 @@ class CompressedCacheStore {
   final AdaptiveCompressionHandler _compressionHandler;
   final _logger = Logger('CompressedCacheStore');
 
-  CompressedCacheStore({required String cachePath})
-    : _cacheDir = Directory(cachePath),
-      _compressionHandler = AdaptiveCompressionHandler(
-        BlockStore(path: cachePath),
-        CompressionConfig(),
-      ) {
+  CompressedCacheStore({
+    required String cachePath,
+    CompressionConfig? compressionConfig,
+  }) : _cacheDir = Directory(cachePath),
+       _compressionHandler = AdaptiveCompressionHandler(
+         BlockStore(path: cachePath),
+         compressionConfig ?? CompressionConfig(),
+       ) {
     _initializeStore();
   }
 
@@ -83,28 +85,45 @@ class CompressedCacheStore {
   }
 
   Uint8List _compress(Uint8List data, CompressionType type) {
-    switch (type) {
-      case CompressionType.none:
-        return data;
-      case CompressionType.gzip:
+    try {
+      switch (type) {
+        case CompressionType.none:
+          return data;
+        case CompressionType.gzip:
+          return Uint8List.fromList(GZipEncoder().encode(data) ?? []);
+        case CompressionType.zlib:
+          return Uint8List.fromList(ZLibEncoder().encode(data));
+        case CompressionType.lz4:
+          return Uint8List.fromList(es.Lz4Encoder().convert(data));
+      }
+    } catch (e) {
+      if (type == CompressionType.lz4) {
+        _logger.warning('LZ4 compression failed ($e). Falling back to GZIP.');
         return Uint8List.fromList(GZipEncoder().encode(data) ?? []);
-      case CompressionType.zlib:
-        return Uint8List.fromList(ZLibEncoder().encode(data));
-      case CompressionType.lz4:
-        throw UnimplementedError('LZ4 compression not available');
+      }
+      rethrow;
     }
   }
 
   Uint8List _decompress(Uint8List data, CompressionType type) {
-    switch (type) {
-      case CompressionType.none:
-        return data;
-      case CompressionType.gzip:
-        return Uint8List.fromList(GZipDecoder().decodeBytes(data));
-      case CompressionType.zlib:
-        return Uint8List.fromList(ZLibDecoder().decodeBytes(data));
-      case CompressionType.lz4:
-        throw UnimplementedError('LZ4 decompression not available');
+    try {
+      switch (type) {
+        case CompressionType.none:
+          return data;
+        case CompressionType.gzip:
+          return Uint8List.fromList(GZipDecoder().decodeBytes(data));
+        case CompressionType.zlib:
+          return Uint8List.fromList(ZLibDecoder().decodeBytes(data));
+        case CompressionType.lz4:
+          return Uint8List.fromList(es.Lz4Decoder().convert(data));
+      }
+    } catch (e) {
+      // If decompression fails (especially LZ4), we can't really fallback
+      // because the data IS compressed with that algorithm.
+      // But we should catch the FFI error to prevent a hard crash.
+      // But we should catch the FFI error to prevent a hard crash.
+      _logger.error('Decompression failed for type: ${type.name}', e);
+      throw FormatException('Failed to decompress data: ${e.toString()}');
     }
   }
 

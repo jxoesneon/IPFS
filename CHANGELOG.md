@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2025-12-15
+
+### Fixed
+- **Cross-Platform Compatibility**: Implemented robust fallback for LZ4 compression. On systems where native binaries are missing (e.g., Apple Silicon), the node now detects the failure and gracefully falls back to GZIP, ensuring safe execution on all architectures.
+
 ## [1.3.0] - 2025-12-15
 
 ### Added
@@ -177,7 +182,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Technical Details
 - **Language**: Dart >=3.5.4 <4.0.0
 - **Platform Support**: Mobile (Flutter), Web, Desktop
-- **Security**: 128-bit security level (production-grade)
+- **Security**: Added `p2plib` Sybil protection (Max 5 peers/IP).
+- **Core**: Enabled LZ4 compression for Gateway cache (via `es_compression`).
 - **Storage**: Hive-based local datastore
 - **Network**: p2plib for P2P communications
 - **Crypto**: pointycastle + crypto package
