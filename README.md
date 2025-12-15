@@ -51,7 +51,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_ipfs: ^1.2.4
+  dart_ipfs: ^1.3.0
 ```
 
 Or from Git for latest development:
@@ -445,7 +445,19 @@ dart run example/online_test.dart
 
 ---
 
-## Security Considerations
+## Security Considerations & Guidelines
+
+> [!IMPORTANT]
+> **Use in Production requires strict sandboxing.**
+> See `docker-compose.yml` for a secure reference implementation.
+
+### 🛡️ Recommended Security Configuration (Remediation 8.2)
+To mitigate potential risks, we strictly recommend running `dart_ipfs` in a sandboxed environment:
+
+1.  **Immutable Filesystem**: Run with a read-only root.
+2.  **Non-Root Execution**: Use UID > 1000 (e.g., `10001`).
+3.  **Network Isolation**: Bind ports to localhost (`127.0.0.1`) only.
+4.  **Eclipse/Sybil Protection**: `RouterL2` enforces IP diversity limits (Max 5 peers/IP) to prevent routing table poisoning.
 
 ### Production Cryptography
 - **Key Exchange**: secp256k1 (128-bit security)

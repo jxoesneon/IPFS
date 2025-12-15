@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-12-15
+
+### Added
+- **CLI Dashboard Completeness** (Parity with Flutter App)
+  - **Peer Manager**: Full TUI for listing, adding, and disconnecting peers.
+  - **PubSub Chat**: Asynchronous chat interface with dedicated drawing loop.
+  - **Files & Pinning**: Pin/Unpin CIDs directly from terminal.
+  - **IPLD Explorer**: Navigate DAG nodes by CID.
+  - **Bandwidth Stats**: Real-time header metrics.
+
+- **Security Hardening (Red Team Findings)**
+  - **DHT Sybil Protection**: Implemented IP diversity checks in `RouterL2` (Limit: 5 peers per IP).
+  - **Exploit Sanitization**: Removed all raw exploit scripts (`scripts/red_team/`).
+  - **Regression Testing**: Added `dht_security_test.dart` to enforce Sybil protection.
+
+### Fixed
+- **Code Quality**: Resolved all lints in `node_native.dart` and `cli_dashboard`.
+- **Stability**: Refactored CLI input/drawing loops to remove duplicate logic.
+
 ## [1.2.4] - 2025-12-15
 
 ### Fixed
