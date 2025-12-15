@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine-slim
+    container_name: dart_ipfs_proxy
+    ports:
+      # Public/Host access now goes through Nginx
+      # Swarm (4001) is handled directly by default for P2P
+      - "127.0.0.1:5001:5001" # API
+      - "127.0.0.1:8080:8080" # Gateway
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - dart_ipfs
+    networks:
+      - ipfs_net
+
+  dart_ipfs:
+    build: .
+    image: dart_ipfs:1.2.4-secure
+    container_name: dart_ipfs_sandbox
+
+    # 8.2.3 Network Segmentation: Internal Network Only
+    # Ports are NOT exposed to host, only to ipfs_net
+    # 8.2.3 Network Segmentation: Internal Network Only
+    # Ports are NOT exposed to host, only to ipfs_net
+    ports:
+      - "4001:4001" #/tcp
+      - "4001:4001/udp" #/udp (Swarm)
+    expose:
+      - "5001"
+      - "8080"
+
+    # 8.2.2 Runtime Sandboxing
+    read_only: true # Immutable Filesystem
+    user: "10001:10001" # Non-root user
+
+    volumes:
+      # Isolate data directory (writeable)
+      - ./ipfs_data:/data/ipfs
+      # Prevent writing to tmp
+      - /tmp
+
+    # Resource Limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+
+    # Drop all capabilities
+    cap_drop:
+      - ALL
+
+    networks:
+      - ipfs_net
+
+networks:
+  ipfs_net:
+    driver: bridge

@@ -1,0 +1,6 @@
+.git
+.dart_tool
+.idea
+build/
+coverage/
+pubspec.lock
