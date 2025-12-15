@@ -10,6 +10,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:dart_ipfs/dart_ipfs.dart';
 import '../services/node_service.dart';
+import 'ipld_explorer_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -510,6 +511,7 @@ class _FileItem extends StatelessWidget {
               );
             },
           ),
+          _PinButton(cid: cid),
         ],
       ),
     ).animate().fadeIn().slideX();
@@ -540,10 +542,6 @@ class _FileItem extends StatelessWidget {
       }
 
       String? savePath;
-
-      // On Web, handle download differently (not implemented for demo).
-      // On Desktop/Mobile, use FilePicker or save to Downloads.
-
       final result = await FilePicker.platform.saveFile(
         dialogTitle: 'Save File',
         fileName: '$cid.bin',
@@ -553,13 +551,8 @@ class _FileItem extends StatelessWidget {
       if (result != null) {
         savePath = result;
       } else {
-        // User canceled
         return;
       }
-
-      // FilePicker.saveFile returns path on Desktop but doesn't write bytes automatically?
-      // "If [bytes] is provided, the file will be saved with the provided bytes (Web only)."
-      // On desktop we must write it ourselves.
 
       final file = File(savePath);
       await file.writeAsBytes(bytes);
@@ -576,6 +569,58 @@ class _FileItem extends StatelessWidget {
         );
       }
     }
+  }
+}
+
+class _PinButton extends StatefulWidget {
+  final String cid;
+  const _PinButton({required this.cid});
+
+  @override
+  State<_PinButton> createState() => _PinButtonState();
+}
+
+class _PinButtonState extends State<_PinButton> {
+  bool _isPinned = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPinStatus();
+  }
+
+  Future<void> _checkPinStatus() async {
+    final node = context.read<NodeService>();
+    if (!node.isOnline) return;
+    final pins = await node.getPinnedCids();
+    if (mounted) {
+      setState(() => _isPinned = pins.contains(widget.cid));
+    }
+  }
+
+  Future<void> _togglePin() async {
+    final node = context.read<NodeService>();
+    if (!node.isOnline) return;
+
+    if (_isPinned) {
+      await node.unpin(widget.cid);
+    } else {
+      await node.pin(widget.cid);
+    }
+    await _checkPinStatus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: Icon(
+        LucideIcons.pin,
+        size: 16,
+        color: _isPinned ? Colors.greenAccent : Colors.white24,
+      ),
+      tooltip: _isPinned ? 'Unpin' : 'Pin',
+      onPressed: _togglePin,
+    );
   }
 }
 // ... _FileItem code ...
@@ -1248,7 +1293,13 @@ class _ToolsViewState extends State<_ToolsView> {
       return;
     }
 
+    // Launch IPLD Explorer if requested (or maybe just a distinct button?)
+    // For now, let's keep this as "Check Retrieval" logic,
+    // but add a separate UI element for the Explorer in build().
+
     try {
+      // ... existing retrieval logic ...
+
       _log('Step 1: Parsing CID...');
       // Simple validation (real parsing would happen in node)
       if (!input.startsWith('Qm') && !input.startsWith('bafy')) {
@@ -1456,6 +1507,58 @@ class _ToolsViewState extends State<_ToolsView> {
               ),
             ],
 
+            const SizedBox(height: 16),
+            // IPLD Explorer Button
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.cyanAccent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(LucideIcons.gitBranch,
+                        color: Colors.cyanAccent),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('IPLD Explorer',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text('Visualize and traverse Merkle DAG nodes',
+                            style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.5),
+                                fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => const IPLDExplorerScreen()));
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.cyanAccent,
+                      foregroundColor: Colors.black,
+                    ),
+                    child: const Text('Open'),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
             // Input Area
             Container(
