@@ -100,6 +100,20 @@ class RouterL2 extends RouterL1 {
         canForward: canForward,
       );
     } else {
+      // Check for Sybil attack (max 5 peers per IP)
+      var peersFromSameIp = 0;
+      for (final route in routes.values) {
+        for (final addr in route.addresses.keys) {
+          if (addr.address == address.address) {
+            peersFromSameIp++;
+            break;
+          }
+        }
+      }
+      if (peersFromSameIp >= 5) {
+        return;
+      }
+
       // Create a new route for the peer.
       routes[peerId] = Route(
         peerId: peerId,
