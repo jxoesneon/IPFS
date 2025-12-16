@@ -141,6 +141,35 @@ class Keystore {
     return IPFSPrivateKey.fromString(defaultPair.privateKey);
   }
 
+  /// Returns all key pairs for migration to encrypted storage.
+  ///
+  /// **Security Note:** This method is intended for one-time migration
+  /// to `EncryptedKeystore`. After migration, keys should be removed
+  /// from this plaintext store.
+  ///
+  /// Returns a map of key names to their private key bytes.
+  Map<String, Uint8List> exportKeysForMigration() {
+    _logger.warning(
+      'Exporting plaintext keys for migration - ensure they are encrypted!',
+    );
+    final result = <String, Uint8List>{};
+    for (final entry in _keyPairs.entries) {
+      result[entry.key] = Uint8List.fromList(
+        utf8.encode(entry.value.privateKey),
+      );
+    }
+    return result;
+  }
+
+  /// Clears all keys from the plaintext store.
+  ///
+  /// **Security Note:** Call this after successfully migrating keys
+  /// to `EncryptedKeystore` to remove plaintext key material.
+  void clearAfterMigration() {
+    _keyPairs.clear();
+    _logger.info('Plaintext keystore cleared after migration');
+  }
+
   // Named constructor for configuration
   factory Keystore.withConfig(dynamic config) {
     final keystore = Keystore();

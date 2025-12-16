@@ -61,6 +61,12 @@ class MockSecurityManager implements SecurityManager {
   }
 
   @override
+  Future<int> migrateKeysFromPlaintext() async {
+    _recordCall('migrateKeysFromPlaintext');
+    return 0;
+  }
+
+  @override
   Future<IPFSPrivateKey?> getPrivateKey(String keyName) async {
     _recordCall('getPrivateKey:$keyName');
     return _keys[keyName];

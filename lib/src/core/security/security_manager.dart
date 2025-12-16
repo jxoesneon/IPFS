@@ -126,6 +126,61 @@ class SecurityManager {
   Uint8List? getSecurePublicKey(String keyName) =>
       _encryptedKeystore.getPublicKey(keyName);
 
+  /// Migrates keys from plaintext Keystore to EncryptedKeystore.
+  ///
+  /// **Security Note:** This method should be called once during the
+  /// transition from plaintext to encrypted storage. After successful
+  /// migration, plaintext keys are cleared from memory.
+  ///
+  /// Requires the keystore to be unlocked first.
+  Future<int> migrateKeysFromPlaintext() async {
+    if (!_encryptedKeystore.isUnlocked) {
+      throw StateError('Keystore must be unlocked before migration.');
+    }
+
+    final plaintextKeys = _keystore.exportKeysForMigration();
+    if (plaintextKeys.isEmpty) {
+      _logger.info('No plaintext keys to migrate');
+      return 0;
+    }
+
+    _logger.info('Migrating ${plaintextKeys.length} keys to encrypted storage');
+    var migratedCount = 0;
+
+    for (final entry in plaintextKeys.entries) {
+      final keyName = entry.key;
+      final keyBytes = entry.value;
+
+      // Skip if already exists in encrypted store
+      if (_encryptedKeystore.hasKey(keyName)) {
+        _logger.verbose('Key $keyName already in encrypted store, skipping');
+        continue;
+      }
+
+      try {
+        // Import the key into encrypted storage
+        await _encryptedKeystore.importSeed(
+          keyName,
+          keyBytes,
+          label: 'Migrated from plaintext',
+        );
+        migratedCount++;
+        _logger.debug('Migrated key: $keyName');
+      } catch (e) {
+        _logger.error('Failed to migrate key $keyName', e);
+      }
+    }
+
+    // Clear plaintext keys after successful migration
+    if (migratedCount > 0) {
+      _keystore.clearAfterMigration();
+      _recordSecurityMetric('keys_migrated', data: {'count': migratedCount});
+      _logger.info('Successfully migrated $migratedCount keys');
+    }
+
+    return migratedCount;
+  }
+
   void _initializeSecurity() {
     _logger.debug('Initializing SecurityManager');
 
