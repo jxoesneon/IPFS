@@ -11,7 +11,7 @@
 /// final reader = ByteReader([0x01, 0x02, 0x03, 0x04]);
 /// final first = reader.readByte();      // 0x01
 /// final next = reader.readBytes(2);     // [0x02, 0x03]
-/// print(reader.hasRemaining);           // true
+/// // print(reader.hasRemaining);           // true
 /// ```
 ///
 /// See also:

@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:io';
@@ -41,8 +42,8 @@ class MockRouterL2 implements p2p.RouterL2 {
 
 class MockP2plibRouter implements P2plibRouter {
   final MockRouterL2 _mockL2 = MockRouterL2();
-  Function(p2p.Packet)? _handler;
-  Function(Uint8List)? onSendDatagram;
+  void Function(p2p.Packet)? _handler;
+  void Function(Uint8List)? onSendDatagram;
 
   /// Optional: Function that takes request bytes and returns response bytes
   /// Used to auto-respond to network requests for testing
@@ -70,7 +71,7 @@ class MockP2plibRouter implements P2plibRouter {
   void registerProtocol(String protocolId) {}
 
   @override
-  void addMessageHandler(String protocolId, Function(p2p.Packet) handler) {
+  void addMessageHandler(String protocolId, void Function(p2p.Packet) handler) {
     _handler = handler;
   }
 
@@ -99,6 +100,7 @@ class MockP2plibRouter implements P2plibRouter {
       );
       responsePacket.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
       // Inject response asynchronously to simulate network
+      // ignore: unawaited_futures
       Future.microtask(() => _handler?.call(responsePacket));
     }
   }

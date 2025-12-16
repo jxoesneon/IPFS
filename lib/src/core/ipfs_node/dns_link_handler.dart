@@ -110,7 +110,7 @@ class DNSLinkHandler {
     final response = await _client.get(url);
 
     if (response.statusCode == 200) {
-      final jsonResponse = jsonDecode(response.body);
+      final jsonResponse = jsonDecode(response.body) as Map<String, dynamic>;
       final cid = _extractCIDFromResponse(jsonResponse);
       if (cid != null) {
         _logger.debug('Successfully resolved DNSLink using $resolver');

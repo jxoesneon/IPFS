@@ -7,8 +7,6 @@ class BitswapMessage extends BaseProtoMessage {
   /// Creates an empty Bitswap message.
   BitswapMessage() : super();
 
-  @override
-  GeneratedMessage clone() => super.clone();
 
   factory BitswapMessage.fromBytes(Uint8List bytes) {
     return BaseProtoMessage.fromBytes(bytes, () => BitswapMessage());

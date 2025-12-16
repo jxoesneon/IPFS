@@ -67,7 +67,7 @@ class DHTProtocolHandler {
         break;
 
       default:
-        print('Unhandled message type: ${message.type}');
+        // print('Unhandled message type: ${message.type}');
         return;
     }
 

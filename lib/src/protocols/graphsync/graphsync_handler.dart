@@ -223,7 +223,7 @@ class GraphsyncHandler {
           processed++;
 
           // Try to get block via Bitswap if not in local store
-          if (!await _blockStore.hasBlock(result.cid)) {
+          if (!await _blockStore.hasBlock(result.cid.toString())) {
             final block = await _bitswap.wantBlock(result.cid.toString());
             if (block != null) {
               await _blockStore.putBlock(block);

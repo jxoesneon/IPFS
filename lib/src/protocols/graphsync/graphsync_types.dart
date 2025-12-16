@@ -32,11 +32,11 @@ enum GraphsyncMessageType {
 
 /// Standard Graphsync extension keys according to IPFS spec
 class GraphsyncExtensions {
-  static const doNotSendCids = "graphsync/do-not-send-cids";
-  static const responseMetadata = "graphsync/response-metadata";
-  static const requestPriority = "graphsync/request-priority";
-  static const blockHolesPresent = "graphsync/block-holes-present";
-  static const partialResponse = "graphsync/partial-response";
+  static const doNotSendCids = 'graphsync/do-not-send-cids';
+  static const responseMetadata = 'graphsync/response-metadata';
+  static const requestPriority = 'graphsync/request-priority';
+  static const blockHolesPresent = 'graphsync/block-holes-present';
+  static const partialResponse = 'graphsync/partial-response';
 }
 
 /// Standard Graphsync metadata keys

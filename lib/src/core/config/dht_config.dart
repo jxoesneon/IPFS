@@ -38,14 +38,17 @@ class DHTConfig {
   /// Creates a DHTConfig from JSON
   factory DHTConfig.fromJson(Map<String, dynamic> json) {
     return DHTConfig(
-      protocolId: json['protocolId'] ?? '/ipfs/kad/1.0.0',
-      alpha: json['alpha'] ?? 3,
-      bucketSize: json['bucketSize'] ?? 20,
-      maxProvidersPerKey: json['maxProvidersPerKey'] ?? 20,
-      requestTimeout: Duration(seconds: json['requestTimeoutSeconds'] ?? 30),
-      maxRecordsPerQuery: json['maxRecordsPerQuery'] ?? 20,
-      enableProviderRecording: json['enableProviderRecording'] ?? true,
-      enableValueStorage: json['enableValueStorage'] ?? true,
+      protocolId: (json['protocolId'] as String?) ?? '/ipfs/kad/1.0.0',
+      alpha: (json['alpha'] as int?) ?? 3,
+      bucketSize: (json['bucketSize'] as int?) ?? 20,
+      maxProvidersPerKey: (json['maxProvidersPerKey'] as int?) ?? 20,
+      requestTimeout: Duration(
+        seconds: (json['requestTimeoutSeconds'] as int?) ?? 30,
+      ),
+      maxRecordsPerQuery: (json['maxRecordsPerQuery'] as int?) ?? 20,
+      enableProviderRecording:
+          (json['enableProviderRecording'] as bool?) ?? true,
+      enableValueStorage: (json['enableValueStorage'] as bool?) ?? true,
     );
   }
 

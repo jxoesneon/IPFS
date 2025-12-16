@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:dart_ipfs/src/protocols/dht/Interface_dht_handler.dart'; // For Key/Value
+import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart'; // For Key/Value
 import 'mock_dht_handler.dart';
 
 // Helper aliases if needed

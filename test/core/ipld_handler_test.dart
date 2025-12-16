@@ -79,12 +79,12 @@ void main() {
       expect(retrieved.kind, Kind.MAP);
 
       final nameEntry = retrieved.mapValue.entries.firstWhere(
-        (e) => e.key == 'name',
+        (dynamic e) => e.key == 'name',
       );
       expect(nameEntry.value.stringValue, 'test');
 
       final valueEntry = retrieved.mapValue.entries.firstWhere(
-        (e) => e.key == 'value',
+        (dynamic e) => e.key == 'value',
       );
       expect(valueEntry.value.intValue.toInt(), 123);
     });

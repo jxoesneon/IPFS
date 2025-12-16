@@ -26,7 +26,7 @@ class FixViolations<K_PeerId, V_PeerInfo> {
         tree,
         z,
         rotationsInstance,
-        z.parent == z.parent!.parent!.right_child,
+        z.parent == z.parent!.parent!.rightChild,
       );
     }
 
@@ -42,9 +42,9 @@ class FixViolations<K_PeerId, V_PeerInfo> {
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? y;
 
     if (isMirrorCase) {
-      y = z.parent!.parent!.left_child;
+      y = z.parent!.parent!.leftChild;
     } else {
-      y = z.parent!.parent!.right_child;
+      y = z.parent!.parent!.rightChild;
     }
 
     if (y != null && y.color == common_tree.NodeColor.RED) {
@@ -54,7 +54,7 @@ class FixViolations<K_PeerId, V_PeerInfo> {
       z = z.parent!.parent!;
     } else {
       if (isMirrorCase) {
-        if (z == z.parent!.left_child) {
+        if (z == z.parent!.leftChild) {
           z = z.parent!;
           rotationsInstance.rotateRight(tree, z);
         }
@@ -62,7 +62,7 @@ class FixViolations<K_PeerId, V_PeerInfo> {
         z.parent!.parent!.color = common_tree.NodeColor.RED;
         rotationsInstance.rotateLeft(tree, z.parent!.parent!);
       } else {
-        if (z == z.parent!.right_child) {
+        if (z == z.parent!.rightChild) {
           z = z.parent!;
           rotationsInstance.rotateLeft(tree, z);
         }
@@ -86,60 +86,60 @@ class FixViolations<K_PeerId, V_PeerInfo> {
     }
 
     while (x != tree.root && x?.color == common_tree.NodeColor.BLACK) {
-      if (x == parent?.left_child) {
-        var w = parent?.right_child;
+      if (x == parent?.leftChild) {
+        var w = parent?.rightChild;
         if (w?.color == common_tree.NodeColor.RED) {
           w?.color = common_tree.NodeColor.BLACK;
           parent?.color = common_tree.NodeColor.RED;
           rotationsInstance.rotateLeft(tree, parent!);
-          w = parent.right_child;
+          w = parent.rightChild;
         }
-        if ((w?.left_child == null ||
-                w?.left_child!.color == common_tree.NodeColor.BLACK) &&
-            (w?.right_child == null ||
-                w?.right_child!.color == common_tree.NodeColor.BLACK)) {
+        if ((w?.leftChild == null ||
+                w?.leftChild!.color == common_tree.NodeColor.BLACK) &&
+            (w?.rightChild == null ||
+                w?.rightChild!.color == common_tree.NodeColor.BLACK)) {
           w?.color = common_tree.NodeColor.RED;
           x = parent!;
         } else {
-          if (w?.right_child == null ||
-              w?.right_child!.color == common_tree.NodeColor.BLACK) {
-            w?.left_child?.color = common_tree.NodeColor.BLACK;
+          if (w?.rightChild == null ||
+              w?.rightChild!.color == common_tree.NodeColor.BLACK) {
+            w?.leftChild?.color = common_tree.NodeColor.BLACK;
             w?.color = common_tree.NodeColor.RED;
             rotationsInstance.rotateRight(tree, w!);
-            w = parent?.right_child;
+            w = parent?.rightChild;
           }
           w?.color = parent!.color;
           parent?.color = common_tree.NodeColor.BLACK;
-          w?.right_child?.color = common_tree.NodeColor.BLACK;
+          w?.rightChild?.color = common_tree.NodeColor.BLACK;
           rotationsInstance.rotateLeft(tree, parent!);
           x = tree.root!;
         }
       } else {
         // Mirror case for right child
-        var w = parent?.left_child;
+        var w = parent?.leftChild;
         if (w?.color == common_tree.NodeColor.RED) {
           w?.color = common_tree.NodeColor.BLACK;
           parent?.color = common_tree.NodeColor.RED;
           rotationsInstance.rotateRight(tree, parent!);
-          w = parent.left_child;
+          w = parent.leftChild;
         }
-        if ((w?.right_child == null ||
-                w?.right_child!.color == common_tree.NodeColor.BLACK) &&
-            (w?.left_child == null ||
-                w?.left_child!.color == common_tree.NodeColor.BLACK)) {
+        if ((w?.rightChild == null ||
+                w?.rightChild!.color == common_tree.NodeColor.BLACK) &&
+            (w?.leftChild == null ||
+                w?.leftChild!.color == common_tree.NodeColor.BLACK)) {
           w?.color = common_tree.NodeColor.RED;
           x = parent!;
         } else {
-          if (w?.left_child == null ||
-              w?.left_child!.color == common_tree.NodeColor.BLACK) {
-            w?.right_child?.color = common_tree.NodeColor.BLACK;
+          if (w?.leftChild == null ||
+              w?.leftChild!.color == common_tree.NodeColor.BLACK) {
+            w?.rightChild?.color = common_tree.NodeColor.BLACK;
             w?.color = common_tree.NodeColor.RED;
             rotationsInstance.rotateLeft(tree, w!);
-            w = parent?.left_child;
+            w = parent?.leftChild;
           }
           w?.color = parent!.color;
           parent?.color = common_tree.NodeColor.BLACK;
-          w?.left_child?.color = common_tree.NodeColor.BLACK;
+          w?.leftChild?.color = common_tree.NodeColor.BLACK;
           rotationsInstance.rotateRight(tree, parent!);
           x = tree.root!;
         }

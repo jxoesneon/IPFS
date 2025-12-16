@@ -1,5 +1,7 @@
 // lib/src/protocols/dht/common_tree.dart
 /// Common tree structures and enums for DHT implementations
+library;
+
 
 /// Node color for red-black tree implementation
 enum NodeColor { RED, BLACK }

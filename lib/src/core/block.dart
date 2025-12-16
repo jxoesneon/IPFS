@@ -19,8 +19,8 @@ import 'package:dart_ipfs/src/core/cid.dart';
 /// final cid = await CID.fromContent(data);
 /// final block = Block(data: data, cid: cid);
 ///
-/// print('Block CID: ${block.cid}');
-/// print('Block size: ${block.size} bytes');
+/// // print('Block CID: ${block.cid}');
+/// // print('Block size: ${block.size} bytes');
 /// ```
 ///
 /// See also:

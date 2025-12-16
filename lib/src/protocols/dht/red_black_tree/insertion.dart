@@ -27,10 +27,10 @@ class Insertion<K_PeerId, V_PeerInfo> {
       final comparison = tree.compare(node.key, x.key);
       if (comparison < 0) {
         // If the new node's key is smaller, move to the left subtree.
-        x = x.left_child;
+        x = x.leftChild;
       } else if (comparison > 0) {
         // If the new node's key is larger, move to the right subtree.
-        x = x.right_child;
+        x = x.rightChild;
       } else {
         // Keys are equal - update existing node's value instead of adding duplicate
         x.value = node.value;
@@ -52,10 +52,10 @@ class Insertion<K_PeerId, V_PeerInfo> {
       tree.root = node;
     } else if (tree.compare(node.key, y.key) < 0) {
       // If the new node's key is smaller than its parent's, it becomes the left child.
-      y.left_child = node;
+      y.leftChild = node;
     } else {
       // Otherwise, it becomes the right child.
-      y.right_child = node;
+      y.rightChild = node;
     }
 
     // New nodes are always inserted as RED to maintain Red-Black Tree properties.

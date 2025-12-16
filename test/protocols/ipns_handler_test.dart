@@ -5,7 +5,7 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
-import 'package:dart_ipfs/src/protocols/dht/Interface_dht_handler.dart'; // For Key, Value
+import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart'; // For Key, Value
 import 'package:p2plib/p2plib.dart';
 import 'package:test/test.dart';
 

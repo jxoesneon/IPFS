@@ -54,7 +54,7 @@ class ValueStore {
     );
 
     int successfulReplications = 0;
-    for (final peer in closestPeers) {
+    for (final _ in closestPeers) {
       try {
         /*
         final success = await _dhtClient.storeValue(
@@ -66,15 +66,15 @@ class ValueStore {
         }
         */
       } catch (e) {
-        print('Failed to replicate value to peer ${peer.toString()}: $e');
+        // print('Failed to replicate value to peer ${peer.toString()}: $e');
       }
     }
 
     // Verify minimum replication factor
     if (successfulReplications < REPLICATION_FACTOR ~/ 2) {
-      print(
-        'Warning: Failed to achieve minimum replication factor for key $key',
-      );
+      // print(
+      //   'Warning: Failed to achieve minimum replication factor for key $key',
+      // );
     }
   }
 

@@ -12,14 +12,15 @@ class DNSLinkResolver {
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(response.body);
-        return jsonResponse['cid']; // Adjust based on actual response structure
+        final jsonResponse = jsonDecode(response.body) as Map<String, dynamic>;
+        return jsonResponse['cid']
+            as String?; // Adjust based on actual response structure
       } else {
-        print('Failed to resolve DNSLink: ${response.statusCode}');
+        // print('Failed to resolve DNSLink: ${response.statusCode}');
         return null;
       }
     } catch (e) {
-      print('Error resolving DNSLink for $domainName: $e');
+      // print('Error resolving DNSLink for $domainName: $e');
       return null;
     }
   }

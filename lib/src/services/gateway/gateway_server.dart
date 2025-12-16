@@ -77,7 +77,7 @@ class GatewayServer {
     final handler = Pipeline()
         .addMiddleware(_corsMiddleware())
         .addMiddleware(_loggingMiddleware())
-        .addHandler(_router);
+        .addHandler(_router.call);
 
     try {
       _server = await shelf_io.serve(handler, address, port);

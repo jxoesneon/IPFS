@@ -69,14 +69,16 @@ class IpfsNodeNetworkEvents {
       switch (event.type) {
         case DHTEventType.valueFound:
           networkEvent.dhtValueFound = DHTValueFoundEvent()
-            ..key = event.data['key']
-            ..value = event.data['value']
-            ..peerId = event.data['peerId'];
+            ..key = event.data['key'] as String
+            ..value = event.data['value'] as List<int>
+            ..peerId = event.data['peerId'] as String;
           break;
         case DHTEventType.providerFound:
           networkEvent.dhtProviderQueried = DHTProviderQueriedEvent()
-            ..key = event.data['key']
-            ..providers.addAll(event.data['providers'] as List<String>);
+            ..key = event.data['key'] as String
+            ..providers.addAll(
+              (event.data['providers'] as List).cast<String>(),
+            );
           break;
       }
       _networkEventsController.add(networkEvent);

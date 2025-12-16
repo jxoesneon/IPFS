@@ -50,10 +50,12 @@ class DelegatedRoutingHandler {
 
       if (response.statusCode == 200) {
         // Parse the response
-        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> data =
+            json.decode(response.body) as Map<String, dynamic>;
 
         if (data.containsKey('Providers')) {
-          final List<dynamic> providersList = data['Providers'];
+          final List<dynamic> providersList =
+              data['Providers'] as List<dynamic>;
           final providers = providersList
               .map((provider) => provider['ID'] as String)
               .where((id) => id.isNotEmpty)

@@ -24,7 +24,7 @@ class PubSubMessage {
 class PubSubHandler {
   final PubSubClient _pubSubClient;
   final IpfsNodeNetworkEvents _networkEvents; // Reference to network events
-  final Map<String, Set<Function(String)>> _subscriptions = {};
+  final Map<String, Set<void Function(String)>> _subscriptions = {};
   final StreamController<PubSubMessage> _messageController =
       StreamController<PubSubMessage>.broadcast();
   int _messageCount = 0;
@@ -42,7 +42,7 @@ class PubSubHandler {
   Future<void> start() async {
     try {
       await _pubSubClient.start();
-      print('PubSub client started.');
+      // print('PubSub client started.');
 
       // Listen for various network events
       _networkEvents.networkEvents.listen((event) {
@@ -52,7 +52,7 @@ class PubSubHandler {
         // Add more event handlers as needed
       });
     } catch (e) {
-      print('Error starting PubSub client: $e');
+      // print('Error starting PubSub client: $e');
     }
   }
 
@@ -61,9 +61,9 @@ class PubSubHandler {
     try {
       await _pubSubClient.stop();
       await _messageController.close();
-      print('PubSub client stopped.');
+      // print('PubSub client stopped.');
     } catch (e) {
-      print('Error stopping PubSub client: $e');
+      // print('Error stopping PubSub client: $e');
     }
   }
 
@@ -71,10 +71,10 @@ class PubSubHandler {
   Future<void> subscribe(String topic) async {
     try {
       await _pubSubClient.subscribe(topic);
-      _subscriptions[topic] = <Function(String)>{};
-      print('Subscribed to topic: $topic');
+      _subscriptions[topic] = <void Function(String)>{};
+      // print('Subscribed to topic: $topic');
     } catch (e) {
-      print('Error subscribing to topic $topic: $e');
+      // print('Error subscribing to topic $topic: $e');
     }
   }
 
@@ -83,9 +83,9 @@ class PubSubHandler {
     try {
       await _pubSubClient.unsubscribe(topic);
       _subscriptions.remove(topic);
-      print('Unsubscribed from topic: $topic');
+      // print('Unsubscribed from topic: $topic');
     } catch (e) {
-      print('Error unsubscribing from topic $topic: $e');
+      // print('Error unsubscribing from topic $topic: $e');
     }
   }
 
@@ -94,21 +94,21 @@ class PubSubHandler {
     try {
       await _pubSubClient.publish(topic, message);
       _messageCount++;
-      print('Published message to topic: $topic');
+      // print('Published message to topic: $topic');
     } catch (e) {
-      print('Error publishing message to topic $topic: $e');
+      // print('Error publishing message to topic $topic: $e');
     }
   }
 
   /// Handles incoming messages on a subscribed topic.
-  void onMessage(String topic, Function(String) handler) {
+  void onMessage(String topic, void Function(String) handler) {
     try {
       _pubSubClient.onMessage.listen((message) {
         handler(message);
-        print('Processed message on topic: $topic');
+        // print('Processed message on topic: $topic');
       });
     } catch (e) {
-      print('Error setting handler for messages on topic $topic: $e');
+      // print('Error setting handler for messages on topic $topic: $e');
     }
   }
 
@@ -119,13 +119,13 @@ class PubSubHandler {
         domainName,
       ); // Assuming you have a DNSLinkResolver utility
       if (cid != null) {
-        print('Resolved DNSLink for domain $domainName to CID: $cid');
+        // print('Resolved DNSLink for domain $domainName to CID: $cid');
         return cid;
       } else {
         throw Exception('DNSLink for domain $domainName not found.');
       }
     } catch (e) {
-      print('Error resolving DNSLink for domain $domainName: $e');
+      // print('Error resolving DNSLink for domain $domainName: $e');
       return null;
     }
   }
@@ -134,10 +134,10 @@ class PubSubHandler {
   Future<NodeStats> stats() async {
     try {
       final stats = await _pubSubClient.getNodeStats();
-      print('Retrieved node statistics.');
+      // print('Retrieved node statistics.');
       return stats;
     } catch (e) {
-      print('Error retrieving node statistics: $e');
+      // print('Error retrieving node statistics: $e');
       throw Exception('Failed to retrieve node statistics.');
     }
   }
@@ -145,7 +145,7 @@ class PubSubHandler {
   /// Handles a received Pubsub message event.
   void _handlePubsubMessage(PubsubMessageReceivedEvent event) {
     final message = utf8.decode(event.messageContent);
-    print('Received message on topic ${event.topic}: $message');
+    // print('Received message on topic ${event.topic}: $message');
 
     // Further processing of the message can be done here
     // For example, dispatching it to specific handlers based on the topic

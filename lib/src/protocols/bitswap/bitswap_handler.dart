@@ -82,7 +82,7 @@ class BitswapHandler {
     _connectedPeers.clear();
 
     await _router.stop();
-    print('Bitswap handler stopped');
+    // print('Bitswap handler stopped');
   }
 
   /// Handles incoming Bitswap messages
@@ -169,7 +169,7 @@ class BitswapHandler {
           ledger.addSentBytes(response.block.data.length);
           _updateBandwidthStats();
         } catch (error) {
-          print('Error sending block to peer $fromPeer: $error');
+          // print('Error sending block to peer $fromPeer: $error');
         }
       }
     }
@@ -180,7 +180,7 @@ class BitswapHandler {
     for (final block in blocks) {
       // Validate block before storing
       if (!block.validate()) {
-        print('Received invalid block: ${block.cid}');
+        // print('Received invalid block: ${block.cid}');
         continue;
       }
 
@@ -280,11 +280,11 @@ class BitswapHandler {
             ],
             datagram: messageBytes,
           );
-          print('Want request sent to peer: ${peer.toString()}');
+          // print('Want request sent to peer: ${peer.toString()}');
         }).catchError((error) {
-          print(
-            'Error sending want request to peer ${peer.toString()}: $error',
-          );
+          // print(
+          //   'Error sending want request to peer ${peer.toString()}: $error',
+          // );
         }),
       );
     }
@@ -333,7 +333,7 @@ class BitswapHandler {
 
       await _broadcastWantRequest(customMessage);
     } catch (e) {
-      print('Error handling want request: $e');
+      // print('Error handling want request: $e');
       rethrow;
     }
   }
@@ -358,7 +358,7 @@ class BitswapHandler {
       final blocks = await want([cid]);
       return blocks.isNotEmpty ? blocks.first : null;
     } catch (e) {
-      print('Error requesting block $cid: $e');
+      // print('Error requesting block $cid: $e');
       return null;
     }
   }

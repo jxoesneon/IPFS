@@ -65,18 +65,18 @@ class Bitswap {
       _handlePacket(packet);
     });
     await _router.start();
-    print('Bitswap started.');
+    // print('Bitswap started.');
   }
 
   /// Stops the Bitswap protocol.
   Future<void> stop() async {
     await _router.stop();
-    print('Bitswap stopped.');
+    // print('Bitswap stopped.');
   }
 
   /// Requests a block from the network.
   Future<Block?> wantBlock(String cid) async {
-    print('Requesting block with CID: $cid');
+    // print('Requesting block with CID: $cid');
 
     // Create a Wantlist entry for the requested block
     final wantlistEntry = proto.Message_Wantlist_Entry()
@@ -100,7 +100,7 @@ class Bitswap {
 
   /// Provides a block to the network.
   void provide(String cid) {
-    print('Providing block with CID: $cid');
+    // print('Providing block with CID: $cid');
 
     // Notify peers about the available block
     for (var peer in _peers) {
@@ -146,21 +146,21 @@ class Bitswap {
       if (message.hasBlockPresences()) {
         for (final presence in message.getBlockPresences()) {
           if (presence.type == bitswap_message.BlockPresenceType.have) {
-            print('Peer $peerId has block ${presence.cid}');
+            // print('Peer $peerId has block ${presence.cid}');
           } else {
-            print('Peer $peerId does not have block ${presence.cid}');
+            // print('Peer $peerId does not have block ${presence.cid}');
           }
         }
       }
     } catch (e) {
-      print('Error handling BitSwap packet: $e');
+      // print('Error handling BitSwap packet: $e');
     }
   }
 
   /// Handles received blocks from peers.
   Future<void> _handleReceivedBlock(String srcPeerId, Block block) async {
     final blockId = block.cid.toString();
-    print('Received block with CID $blockId from $srcPeerId.');
+    // print('Received block with CID $blockId from $srcPeerId.');
 
     // Store received block in datastore
     await _datastore.put(blockId, block);
@@ -180,7 +180,7 @@ class Bitswap {
     // Check if we have the requested block locally
     final block = await _datastore.get(blockId);
     if (block != null) {
-      print('Sending requested block $blockId to $peerId.');
+      // print('Sending requested block $blockId to $peerId.');
       await sendBlock(peerId, block.data);
     } else if (entry.sendDontHave) {
       await sendDontHave(peerId, entry);
@@ -214,9 +214,9 @@ class Bitswap {
 
   void removePeer(LibP2PPeerId peerId) {
     _peers.remove(peerId);
-    print(
-      'Peer ${EncodingUtils.toBase58(peerId.value)} removed from Bitswap network.',
-    );
+    // print(
+    //   'Peer ${EncodingUtils.toBase58(peerId.value)} removed from Bitswap network.',
+    // );
   }
 
   // --- Handlers for other message types ---
@@ -242,7 +242,7 @@ class Bitswap {
     final blockId = base64.encode(entry.block);
 
     // Log the cancellation
-    print('Received cancel request for block $blockId from $peerId.');
+    // print('Received cancel request for block $blockId from $peerId.');
 
     // Remove the block from our wantlist or any pending requests
     _removeFromWantlist(blockId, peerId);
@@ -253,13 +253,13 @@ class Bitswap {
     try {
       final peer = Peer.fromId(peerId);
       if (_peers.contains(peer.id)) {
-        print('Removing block $blockId from wantlist for peer $peerId.');
+        // print('Removing block $blockId from wantlist for peer $peerId.');
         // Implement actual removal logic based on your data structures here
       } else {
-        print('Peer $peerId not found in local peers list.');
+        // print('Peer $peerId not found in local peers list.');
       }
     } catch (e) {
-      print('Error creating peer from ID: $e');
+      // print('Error creating peer from ID: $e');
     }
   }
 
@@ -272,7 +272,7 @@ class Bitswap {
 
       await _router.sendMessage(peer, message.writeToBuffer());
     } catch (e) {
-      print('Error sending message to $peerId: $e');
+      // print('Error sending message to $peerId: $e');
     }
   }
 

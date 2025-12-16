@@ -9,7 +9,7 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:dart_ipfs/src/protocols/dht/Interface_dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 
 /// Handles IPNS operations, combining both node-level coordination and protocol-level operations
 class IPNSHandler {

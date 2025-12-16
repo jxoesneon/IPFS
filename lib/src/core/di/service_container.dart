@@ -30,7 +30,7 @@ typedef Factory<T> = T Function();
 /// - [IPFSNodeBuilder] which uses this container for node construction
 class ServiceContainer {
   final Map<Type, dynamic> _services = {};
-  final Map<Type, Factory> _factories = {};
+  final Map<Type, Factory<dynamic>> _factories = {};
 
   /// Registers a singleton instance of type [T].
   ///

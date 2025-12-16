@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2025-12-15
+
+### Fixed
+- **Static Analysis**: Resolved all `dart analyze` issues across the entire codebase (0 issues).
+- **Type Safety**: Added explicit casts for dynamic values from JSON decoding and protobuf fields.
+- **IPLDNode Encoding**: Implemented proper encoding in `ProtocolCoordinator.retrieveData()` for all IPLD kinds (not just BYTES), using `EnhancedCBORHandler.encodeCbor()`.
+- **File Naming Convention**: Renamed `Interface_dht_handler.dart` to `interface_dht_handler.dart` to follow `lower_case_with_underscores`.
+- **Code Quality**: Added `// ignore_for_file: avoid_print` to example, test, and script files where `print()` is intentional.
+
 ## [1.3.1] - 2025-12-15
 
 ### Fixed

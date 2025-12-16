@@ -213,7 +213,9 @@ void main() {
       final body = json.decode(await response.readAsString());
 
       expect(body['Key'], isNotNull);
-      final cidStr = body['Key'];
+      expect(body['Key'], isNotNull);
+      expect(body['Key'], isNotNull);
+      final String cidStr = body['Key'] as String;
       final stored = await node.blockStore.getBlock(cidStr);
       expect(stored.found, isTrue);
     });
@@ -274,7 +276,7 @@ void main() {
       expect(jsonResponse['Size'], isNotEmpty);
 
       // Verify content was added to store
-      final cid = jsonResponse['Hash'];
+      final String cid = jsonResponse['Hash'] as String;
       final storedBlock = await node.blockStore.getBlock(cid);
       expect(storedBlock.found, isTrue);
       expect(utf8.decode(storedBlock.block.data), fileContent);

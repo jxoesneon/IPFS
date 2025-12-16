@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:p2plib/p2plib.dart';
 
 void main() {

@@ -89,9 +89,13 @@ class Keystore {
 
   /// Deserializes the keystore from JSON format (optional).
   void deserialize(String jsonString) {
-    final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
+    final Map<String, dynamic> jsonMap =
+        jsonDecode(jsonString) as Map<String, dynamic>;
     jsonMap.forEach((name, keys) {
-      addKeyPair(name, KeyPair(keys['publicKey'], keys['privateKey']));
+      addKeyPair(
+        name,
+        KeyPair(keys['publicKey'] as String, keys['privateKey'] as String),
+      );
     });
     _logger.info('Keystore deserialized from JSON.');
   }

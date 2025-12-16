@@ -1,7 +1,7 @@
 // test/mocks/mock_dht_handler.dart
 import 'dart:async';
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/protocols/dht/Interface_dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
     show V_PeerInfo;
 import 'package:p2plib/p2plib.dart' as p2p;
@@ -208,7 +208,7 @@ class MockDHTHandler implements IDHTHandler {
 
   Future<void> _simulateDelay() async {
     if (simulatedDelay != null) {
-      await Future.delayed(simulatedDelay!);
+      await Future<void>.delayed(simulatedDelay!);
     }
   }
 

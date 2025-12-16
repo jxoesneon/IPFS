@@ -14,7 +14,7 @@ class RateLimiter {
 
   int _currentOperations = 0;
   DateTime _windowStart = DateTime.now();
-  final _queue = <Completer>[];
+  final _queue = <Completer<void>>[];
 
   /// Creates a rate limiter with given limits.
   RateLimiter({required this.maxOperations, required this.interval});
@@ -38,7 +38,7 @@ class RateLimiter {
     }
 
     // Queue the operation
-    final completer = Completer();
+    final completer = Completer<void>();
     _queue.add(completer);
     return completer.future;
   }

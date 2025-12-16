@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:convert';
 import 'package:dart_ipfs/dart_ipfs.dart';
 import 'package:dart_ipfs/src/services/rpc/rpc_handlers.dart';
@@ -41,7 +42,7 @@ void main() {
       print('Put block with Key: $key');
 
       // Verify block is stored
-      final block = await node.blockStore.getBlock(key);
+      final block = await node.blockStore.getBlock(key as String);
       expect(
         block.found,
         isTrue,

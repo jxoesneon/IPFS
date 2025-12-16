@@ -21,10 +21,10 @@ class RedBlackTreeNode<K_PeerId, V_PeerInfo> {
   common_tree.NodeColor color;
 
   /// Left child.
-  RedBlackTreeNode<K_PeerId, V_PeerInfo>? left_child;
+  RedBlackTreeNode<K_PeerId, V_PeerInfo>? leftChild;
 
   /// Right child.
-  RedBlackTreeNode<K_PeerId, V_PeerInfo>? right_child;
+  RedBlackTreeNode<K_PeerId, V_PeerInfo>? rightChild;
 
   /// Parent node.
   RedBlackTreeNode<K_PeerId, V_PeerInfo>? parent;
@@ -34,8 +34,8 @@ class RedBlackTreeNode<K_PeerId, V_PeerInfo> {
     this.key,
     this.value, {
     this.color = common_tree.NodeColor.RED,
-    this.left_child,
-    this.right_child,
+    this.leftChild,
+    this.rightChild,
     this.parent,
   });
 }
@@ -68,8 +68,8 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
       _search = rb_search.Search<K_PeerId, V_PeerInfo>();
 
   // Insert a new node with the given key and value into the tree.
-  void insert(K_PeerId key_insert, V_PeerInfo value_insert) {
-    final newNode = RedBlackTreeNode(key_insert, value_insert);
+  void insert(K_PeerId keyInsert, V_PeerInfo valueInsert) {
+    final newNode = RedBlackTreeNode(keyInsert, valueInsert);
     _insertion.insertNode(this, newNode); // Use _insertion instance
   }
 

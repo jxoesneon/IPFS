@@ -89,7 +89,7 @@ class Message {
             sendDontHave: entry.sendDontHave,
           );
         } catch (e) {
-          print('Error parsing wantlist entry CID: $e');
+          // print('Error parsing wantlist entry CID: $e');
         }
       }
     }
@@ -108,7 +108,7 @@ class Message {
         );
         message.addBlock(newBlock);
       } catch (e) {
-        print('Error parsing payload block: $e');
+        // print('Error parsing payload block: $e');
       }
     }
 
@@ -121,7 +121,7 @@ class Message {
         );
         message.addBlock(newBlock);
       } catch (e) {
-        print('Error parsing legacy block: $e');
+        // print('Error parsing legacy block: $e');
       }
     }
 
@@ -133,7 +133,9 @@ class Message {
             ? BlockPresenceType.dontHave
             : BlockPresenceType.have;
         message.addBlockPresence(cidObj.encode(), type);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore invalid block presence
+      }
     }
 
     return message;
@@ -165,7 +167,7 @@ class Message {
 
           pbWantlist.entries.add(pbEntry);
         } catch (e) {
-          print('Skipping invalid CID in wantlist: ${entry.cid}');
+          // print('Skipping invalid CID in wantlist: ${entry.cid}');
         }
       }
       pbMessage.wantlist = pbWantlist;
@@ -202,7 +204,9 @@ class Message {
             ? pb.Message_BlockPresence_Type.DontHave
             : pb.Message_BlockPresence_Type.Have;
         pbMessage.blockPresences.add(pbPres);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore invalid block presence
+      }
     }
 
     return pbMessage.writeToBuffer();

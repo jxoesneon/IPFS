@@ -31,7 +31,7 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 /// // Retrieve by CID
 /// final response = await store.getBlock(cid.toString());
 /// if (response.success) {
-///   print('Found block: ${response.block}');
+///   // print('Found block: ${response.block}');
 /// }
 ///
 /// await store.stop();

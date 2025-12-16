@@ -22,11 +22,11 @@ import 'package:dart_ipfs/src/utils/encoding.dart';
 /// // Create CID from content
 /// final data = Uint8List.fromList(utf8.encode('Hello IPFS'));
 /// final cid = await CID.fromContent(data);
-/// print('CID: ${cid.encode()}');  // bafkreif...
+/// // print('CID: ${cid.encode()}');  // bafkreif...
 ///
 /// // Decode existing CID
 /// final decoded = CID.decode('QmYwAPJzv5CZsnA...');
-/// print('Version: ${decoded.version}');
+/// // print('Version: ${decoded.version}');
 /// ```
 ///
 /// See also:

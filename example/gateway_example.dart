@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 // example/gateway_example.dart
 import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
@@ -36,5 +37,5 @@ void main() async {
   print('\n⏹️  Press Ctrl+C to stop the server\n');
 
   // Keep the server running
-  await Future.delayed(Duration(days: 1));
+  await Future<void>.delayed(Duration(days: 1));
 }

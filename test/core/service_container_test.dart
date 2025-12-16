@@ -51,10 +51,10 @@ void main() {
     });
 
     test('should distinguish between different types', () {
-      container.registerSingleton<String>("test");
+      container.registerSingleton<String>('test');
       container.registerSingleton<int>(123);
 
-      expect(container.get<String>(), "test");
+      expect(container.get<String>(), 'test');
       expect(container.get<int>(), 123);
     });
   });

@@ -93,7 +93,7 @@ class Datastore {
   Future<Block?> get(String cid) async {
     try {
       _logger.verbose('Attempting to retrieve block: $cid');
-      final data = await _blocksBox.get(cid);
+      final data = _blocksBox.get(cid);
       if (data == null) {
         _logger.debug('Block not found: $cid');
         return null;
@@ -122,13 +122,13 @@ class Datastore {
 
   /// Checks if a block is pinned
   Future<bool> isPinned(String cid) async {
-    return await _pinsBox.get(cid) ?? false;
+    return _pinsBox.get(cid) ?? false;
   }
 
   /// Checks if a block exists in the datastore
   Future<bool> has(String cid) async {
     try {
-      final exists = await _blocksBox.containsKey(cid);
+      final exists = _blocksBox.containsKey(cid);
       _logger.debug('Block existence check: $cid = $exists');
       return exists;
     } catch (e) {
@@ -147,7 +147,7 @@ class Datastore {
   /// Loads all pinned CIDs from storage
   Future<Set<String>> loadPinnedCIDs() async {
     try {
-      final pinnedCIDs = await _pinsBox.keys
+      final pinnedCIDs = _pinsBox.keys
           .map((key) => key.toString())
           .toSet();
       _logger.debug('Loaded ${pinnedCIDs.length} pinned CIDs');

@@ -48,14 +48,14 @@ class StorageConfig {
 
   factory StorageConfig.fromJson(Map<String, dynamic> json) {
     return StorageConfig(
-      baseDir: json['baseDir'] ?? '.ipfs',
-      maxStorageSize: json['maxStorageSize'] ?? 10 * 1024 * 1024 * 1024,
-      blocksDir: json['blocksDir'] ?? 'blocks',
-      datastoreDir: json['datastoreDir'] ?? 'datastore',
-      keysDir: json['keysDir'] ?? 'keys',
-      enableGC: json['enableGC'] ?? true,
-      gcInterval: Duration(seconds: json['gcIntervalSeconds'] ?? 3600),
-      maxBlockSize: json['maxBlockSize'] ?? 1024 * 1024 * 2,
+      baseDir: json['baseDir'] as String? ?? '.ipfs',
+      maxStorageSize: json['maxStorageSize'] as int? ?? 10 * 1024 * 1024 * 1024,
+      blocksDir: json['blocksDir'] as String? ?? 'blocks',
+      datastoreDir: json['datastoreDir'] as String? ?? 'datastore',
+      keysDir: json['keysDir'] as String? ?? 'keys',
+      enableGC: json['enableGC'] as bool? ?? true,
+      gcInterval: Duration(seconds: json['gcIntervalSeconds'] as int? ?? 3600),
+      maxBlockSize: json['maxBlockSize'] as int? ?? 1024 * 1024 * 2,
     );
   }
 

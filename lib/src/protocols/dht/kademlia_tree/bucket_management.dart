@@ -151,7 +151,7 @@ extension BucketManagement on KademliaTree {
       final response = await sendPingRequest(node.peerId);
       return response != null;
     } catch (e) {
-      print('Ping failed for node ${node.peerId}: $e');
+      // print('Ping failed for node ${node.peerId}: $e');
       return false;
     }
   }

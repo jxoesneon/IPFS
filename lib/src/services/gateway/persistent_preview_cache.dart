@@ -44,7 +44,7 @@ class PersistentPreviewCache {
       try {
         return await cacheFile.readAsBytes();
       } catch (e) {
-        print('Error reading cached preview: $e');
+        // print('Error reading cached preview: $e');
         return null;
       }
     }
@@ -79,7 +79,7 @@ class PersistentPreviewCache {
         'timestamp': DateTime.now().toIso8601String(),
       });
     } catch (e) {
-      print('Error caching preview: $e');
+      // print('Error caching preview: $e');
     }
   }
 

@@ -39,10 +39,13 @@ class MetricsCollector {
   final IPFSConfig _config;
   late final Logger _logger;
   Timer? _collectionTimer;
-  final Map<String, dynamic> _metrics = {};
-  final Map<String, Map<String, int>> _messageMetrics = {};
-  final Map<String, Map<String, int>> _byteMetrics = {};
-  final Map<String, List<Duration>> _latencyMetrics = {};
+  final Map<String, dynamic> _metrics = <String, dynamic>{};
+  final Map<String, Map<String, int>> _messageMetrics =
+      <String, Map<String, int>>{};
+  final Map<String, Map<String, int>> _byteMetrics =
+      <String, Map<String, int>>{};
+  final Map<String, List<Duration>> _latencyMetrics =
+      <String, List<Duration>>{};
   final StreamController<Map<String, dynamic>> _metricsStreamController =
       StreamController.broadcast();
 
@@ -125,7 +128,7 @@ class MetricsCollector {
   }
 
   Future<Map<String, dynamic>> getStatus() async {
-    return {
+    return <String, dynamic>{
       'enabled': _config.metrics.enabled,
       'collection_interval': _config.metrics.collectionIntervalSeconds,
       'system_metrics_enabled': _config.metrics.collectSystemMetrics,
@@ -152,7 +155,8 @@ class MetricsCollector {
     if (!_config.metrics.enabled) return;
 
     try {
-      final protocolMetrics = _metrics['protocol_metrics'] ??= {};
+      final protocolMetrics = _metrics['protocol_metrics'] ??=
+          <String, ProtocolMetrics>{};
       final metrics = protocolMetrics[source] ?? ProtocolMetrics();
 
       // Update error counts map
@@ -172,7 +176,8 @@ class MetricsCollector {
     if (!_config.metrics.enabled) return;
 
     try {
-      final protocolMetrics = _metrics['protocol_metrics'] ??= {};
+      final protocolMetrics = _metrics['protocol_metrics'] ??=
+          <String, ProtocolMetrics>{};
       final metrics = protocolMetrics[protocol] ?? ProtocolMetrics();
 
       // Update message counts if provided
@@ -242,8 +247,8 @@ class MetricsCollector {
     final peerId = metrics.peerId;
 
     // Initialize maps if they don't exist
-    _messageMetrics[peerId] ??= {};
-    _byteMetrics[peerId] ??= {};
+    _messageMetrics[peerId] ??= <String, int>{};
+    _byteMetrics[peerId] ??= <String, int>{};
 
     // Update message metrics
     _messageMetrics[peerId]?['sent'] = metrics.messagesSent.toInt();

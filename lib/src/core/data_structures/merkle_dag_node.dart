@@ -23,12 +23,12 @@ import 'package:dart_ipfs/src/core/cid.dart';
 /// ```dart
 /// // Parse a node from bytes
 /// final node = MerkleDAGNode.fromBytes(rawBytes);
-/// print('Is directory: ${node.isDirectory}');
-/// print('Has ${node.links.length} children');
+/// // print('Is directory: ${node.isDirectory}');
+/// // print('Has ${node.links.length} children');
 ///
 /// // Access linked content
 /// for (final link in node.links) {
-///   print('  ${link.name}: ${link.cid}');
+///   // print('  ${link.name}: ${link.cid}');
 /// }
 /// ```
 ///

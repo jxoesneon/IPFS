@@ -33,8 +33,8 @@ class BlockOperationResponse<T> {
   factory BlockOperationResponse.fromProto(dynamic proto) {
     if (proto is AddBlockResponse || proto is RemoveBlockResponse) {
       return BlockOperationResponse<T>(
-        success: proto.success,
-        message: proto.message,
+        success: proto.success as bool,
+        message: proto.message as String,
       );
     } else if (proto is GetBlockResponse) {
       if (T != BlockProto) {

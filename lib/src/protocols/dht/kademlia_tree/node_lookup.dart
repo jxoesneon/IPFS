@@ -40,7 +40,7 @@ extension NodeLookup on KademliaTree {
           );
           newClosestPeers.addAll(queriedPeers);
         } catch (e) {
-          print('Error querying peer $peerId: $e');
+          // print('Error querying peer $peerId: $e');
         }
       }
 

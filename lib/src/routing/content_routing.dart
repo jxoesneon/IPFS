@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 
 import '../protocols/dht/dht_client.dart'; // Import DHT client
 import '../utils/dnslink_resolver.dart'; // Import DNSLink resolver
@@ -11,7 +12,7 @@ class ContentRouting {
   final DHTClient _dhtClient;
   final _logger = Logger('ContentRouting');
 
-  ContentRouting(config, NetworkHandler networkHandler)
+  ContentRouting(IPFSConfig config, NetworkHandler networkHandler)
     : _dhtClient = DHTClient(
         networkHandler: networkHandler,
         router: networkHandler.p2pRouter,

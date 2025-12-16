@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 // example/simple_test.dart
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';

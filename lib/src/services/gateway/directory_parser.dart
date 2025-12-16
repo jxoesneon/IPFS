@@ -300,7 +300,7 @@ class DirectoryParser {
       );
       return preview ?? '';
     } catch (e) {
-      print('Error generating preview for $name: $e');
+      // print('Error generating preview for $name: $e');
       return '';
     }
   }

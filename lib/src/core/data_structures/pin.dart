@@ -24,7 +24,7 @@ import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 /// );
 ///
 /// await pin.pin();
-/// print('Content is pinned: ${pin.isPinned()}');
+/// // print('Content is pinned: ${pin.isPinned()}');
 /// ```
 ///
 /// See also:

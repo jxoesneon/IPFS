@@ -1,5 +1,8 @@
 // test/protocol_test.dart
+// ignore_for_file: avoid_print
 /// Test for Core IPFS Protocol Compliance
+library protocol_test;
+
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/core/cid.dart';

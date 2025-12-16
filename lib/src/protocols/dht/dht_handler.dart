@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:http/http.dart' as http;
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:p2plib/p2plib.dart' show PeerId;
@@ -13,7 +14,7 @@ import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/Interface_dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/ipns/ipns.pb.dart';
 import 'package:fixnum/fixnum.dart';
@@ -29,7 +30,7 @@ class DHTHandler implements IDHTHandler {
   final Map<String, Set<String>> _providers = {};
   static const String _protocolVersion = '1.0.0';
 
-  DHTHandler(config, this._router, NetworkHandler networkHandler)
+  DHTHandler(IPFSConfig config, this._router, NetworkHandler networkHandler)
     : _keystore = Keystore(),
       _storage = Datastore(config.datastorePath) {
     _storage.init();
@@ -40,9 +41,9 @@ class DHTHandler implements IDHTHandler {
   Future<void> start() async {
     try {
       await dhtClient.start();
-      print('DHT client started.');
+      // print('DHT client started.');
     } catch (e) {
-      print('Error starting DHT client: $e');
+      // print('Error starting DHT client: $e');
       rethrow;
     }
   }
@@ -51,9 +52,9 @@ class DHTHandler implements IDHTHandler {
   Future<void> stop() async {
     try {
       await dhtClient.stop();
-      print('DHT client stopped.');
+      // print('DHT client stopped.');
     } catch (e) {
-      print('Error stopping DHT client: $e');
+      // print('Error stopping DHT client: $e');
     }
   }
 
@@ -66,7 +67,7 @@ class DHTHandler implements IDHTHandler {
           .map((peer) => V_PeerInfo()..peerId = peer.value)
           .toList();
     } catch (e) {
-      print('Error finding providers: $e');
+      // print('Error finding providers: $e');
       return [];
     }
   }
@@ -90,7 +91,7 @@ class DHTHandler implements IDHTHandler {
       final targetPeerId = PeerId(value: key.bytes);
       await handleRoutingTableUpdate(V_PeerInfo()..peerId = targetPeerId.value);
     } catch (e) {
-      print('Error putting value: $e');
+      // print('Error putting value: $e');
     }
   }
 
@@ -105,7 +106,7 @@ class DHTHandler implements IDHTHandler {
       }
       throw Exception('Value not found');
     } catch (e) {
-      print('Error getting value: $e');
+      // print('Error getting value: $e');
       rethrow;
     }
   }
@@ -121,7 +122,7 @@ class DHTHandler implements IDHTHandler {
       final value = await getValue(Key.fromString(ipnsName));
       resolvedCid = value.toString(); // Convert Value to String
     } catch (e) {
-      print('Error resolving IPNS name through DHT: $e');
+      // print('Error resolving IPNS name through DHT: $e');
     }
 
     // If resolution via DHT fails, use a public IPNS resolver
@@ -132,7 +133,7 @@ class DHTHandler implements IDHTHandler {
         if (response.statusCode == 200) {
           resolvedCid = extractCIDFromResponse(response.body);
           if (resolvedCid != null) {
-            print('Resolved IPNS name using public resolver: $resolvedCid');
+            // print('Resolved IPNS name using public resolver: $resolvedCid');
           } else {
             throw Exception(
               'Failed to extract CID from public resolver response.',
@@ -144,7 +145,7 @@ class DHTHandler implements IDHTHandler {
           );
         }
       } catch (e) {
-        print('Error resolving IPNS name using public resolver: $e');
+        // print('Error resolving IPNS name using public resolver: $e');
         throw Exception('Failed to resolve IPNS name using all methods.');
       }
     }
@@ -209,9 +210,9 @@ class DHTHandler implements IDHTHandler {
 
       await putValue(Key.fromString(keyPair.publicKey), Value(entryBytes));
 
-      print('Published IPNS record for CID: $cid with key: $keyName');
+      // print('Published IPNS record for CID: $cid with key: $keyName');
     } catch (e) {
-      print('Error publishing IPNS record: $e');
+      // print('Error publishing IPNS record: $e');
     }
   }
 
@@ -244,7 +245,7 @@ class DHTHandler implements IDHTHandler {
       }
       return [];
     } catch (e) {
-      print('Error finding peer: $e');
+      // print('Error finding peer: $e');
       return [];
     }
   }
@@ -254,7 +255,7 @@ class DHTHandler implements IDHTHandler {
     try {
       await dhtClient.addProvider(cid.toString(), _router.peerId.toString());
     } catch (e) {
-      print('Error providing CID: $e');
+      // print('Error providing CID: $e');
     }
   }
 
@@ -265,9 +266,9 @@ class DHTHandler implements IDHTHandler {
       // updatePeer should return Future<void> to handle async operations
       await dhtClient.kademliaRoutingTable.updatePeer(peer);
 
-      print('Updated routing table entry for peer: ${peer.peerId}');
+      // print('Updated routing table entry for peer: ${peer.peerId}');
     } catch (e) {
-      print('Error updating routing table: $e');
+      // print('Error updating routing table: $e');
       rethrow; // Propagate error to allow caller to handle it
     }
   }
@@ -277,9 +278,9 @@ class DHTHandler implements IDHTHandler {
   Future<void> handleProvideRequest(CID cid, PeerId provider) async {
     try {
       await dhtClient.addProvider(cid.toString(), provider.toString());
-      print('Added provider ${provider.toString()} for CID ${cid.toString()}');
+      // print('Added provider ${provider.toString()} for CID ${cid.toString()}');
     } catch (e) {
-      print('Error handling provide request: $e');
+      // print('Error handling provide request: $e');
     }
   }
 
@@ -291,23 +292,23 @@ class DHTHandler implements IDHTHandler {
       final value = await getValue(dnsKey);
       final cid = extractCIDFromResponse(value.toString());
       if (cid != null) {
-        print('Resolved DNSLink for domain $domainName to CID: $cid');
+        // print('Resolved DNSLink for domain $domainName to CID: $cid');
         return cid;
       }
 
       // If DHT resolution fails, try using DNSLinkResolver
       final resolvedCid = await DNSLinkResolver.resolve(domainName);
       if (resolvedCid != null) {
-        print(
-          'Resolved DNSLink using resolver for domain $domainName: $resolvedCid',
-        );
+        // print(
+        //   'Resolved DNSLink using resolver for domain $domainName: $resolvedCid',
+        // );
         return resolvedCid;
       }
 
-      print('Failed to resolve DNSLink for domain: $domainName');
+      // print('Failed to resolve DNSLink for domain: $domainName');
       return null;
     } catch (e) {
-      print('Error resolving DNSLink for domain $domainName: $e');
+      // print('Error resolving DNSLink for domain $domainName: $e');
       return null;
     }
   }

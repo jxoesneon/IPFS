@@ -18,9 +18,9 @@ class Search<K_PeerId, V_PeerInfo> {
       if (comparison == 0) {
         return node; // Key found
       } else if (comparison < 0) {
-        node = node.left_child; // Search in the left subtree
+        node = node.leftChild; // Search in the left subtree
       } else {
-        node = node.right_child; // Search in the right subtree
+        node = node.rightChild; // Search in the right subtree
       }
     }
 

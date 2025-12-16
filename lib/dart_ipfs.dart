@@ -21,7 +21,7 @@
 ///
 ///   // Add content
 ///   final cid = await node.addFile(data);
-///   print('Added: $cid');
+///   // print('Added: $cid');
 ///
 ///   // Retrieve content
 ///   final content = await node.get(cid);
@@ -51,7 +51,7 @@
 ///   IPFSConfig(offline: false),
 /// );
 /// await node.start();
-/// print('Peer ID: ${node.peerID}');
+/// // print('Peer ID: ${node.peerID}');
 /// ```
 ///
 /// ## Features

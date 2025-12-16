@@ -1,4 +1,5 @@
 // src/core/ipfs_node/datastore_handler.dart
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'dart:typed_data';
 import '../data_structures/car.dart';
 import '../data_structures/block.dart';
@@ -15,15 +16,16 @@ class DatastoreHandler {
   // Add public getter for datastore
   Datastore get datastore => _datastore;
 
-  DatastoreHandler(config) : _datastore = Datastore(config.datastorePath);
+  DatastoreHandler(IPFSConfig config)
+    : _datastore = Datastore(config.datastorePath);
 
   /// Initializes and starts the datastore.
   Future<void> start() async {
     try {
       await _datastore.init();
-      print('Datastore initialized.');
+      // print('Datastore initialized.');
     } catch (e) {
-      print('Error initializing datastore: $e');
+      // print('Error initializing datastore: $e');
     }
   }
 
@@ -31,9 +33,9 @@ class DatastoreHandler {
   Future<void> stop() async {
     try {
       await _datastore.close();
-      print('Datastore closed.');
+      // print('Datastore closed.');
     } catch (e) {
-      print('Error closing datastore: $e');
+      // print('Error closing datastore: $e');
     }
   }
 
@@ -41,9 +43,9 @@ class DatastoreHandler {
   Future<void> putBlock(Block block) async {
     try {
       await _datastore.put(block.cid.encode(), block);
-      print('Stored block with CID: ${block.cid.encode()}');
+      // print('Stored block with CID: ${block.cid.encode()}');
     } catch (e) {
-      print('Error storing block with CID ${block.cid.encode()}: $e');
+      // print('Error storing block with CID ${block.cid.encode()}: $e');
     }
   }
 
@@ -52,14 +54,14 @@ class DatastoreHandler {
     try {
       final block = await _datastore.get(cid);
       if (block != null) {
-        print('Retrieved block with CID: $cid');
+        // print('Retrieved block with CID: $cid');
         return block;
       } else {
-        print('Block with CID $cid not found.');
+        // print('Block with CID $cid not found.');
         return null;
       }
     } catch (e) {
-      print('Error retrieving block with CID $cid: $e');
+      // print('Error retrieving block with CID $cid: $e');
       return null;
     }
   }
@@ -68,10 +70,10 @@ class DatastoreHandler {
   Future<bool> hasBlock(String cid) async {
     try {
       final exists = await _datastore.has(cid);
-      print('Block with CID $cid exists: $exists');
+      // print('Block with CID $cid exists: $exists');
       return exists;
     } catch (e) {
-      print('Error checking existence of block with CID $cid: $e');
+      // print('Error checking existence of block with CID $cid: $e');
       return false;
     }
   }
@@ -80,10 +82,10 @@ class DatastoreHandler {
   Future<Set<String>> loadPinnedCIDs() async {
     try {
       final pinnedCIDs = await _datastore.loadPinnedCIDs();
-      print('Loaded pinned CIDs: ${pinnedCIDs.length}');
+      // print('Loaded pinned CIDs: ${pinnedCIDs.length}');
       return pinnedCIDs;
     } catch (e) {
-      print('Error loading pinned CIDs: $e');
+      // print('Error loading pinned CIDs: $e');
       return {};
     }
   }
@@ -92,9 +94,9 @@ class DatastoreHandler {
   Future<void> persistPinnedCIDs(Set<String> pinnedCIDs) async {
     try {
       await _datastore.persistPinnedCIDs(pinnedCIDs);
-      print('Persisted pinned CIDs.');
+      // print('Persisted pinned CIDs.');
     } catch (e) {
-      print('Error persisting pinned CIDs: $e');
+      // print('Error persisting pinned CIDs: $e');
     }
   }
 
@@ -105,7 +107,7 @@ class DatastoreHandler {
 
       for (var block in car.blocks) {
         await putBlock(block);
-        print('Imported block with CID: ${block.cid.encode()}');
+        // print('Imported block with CID: ${block.cid.encode()}');
 
         // Optionally announce blocks to network
         // For example, using Bitswap or another protocol
@@ -115,7 +117,7 @@ class DatastoreHandler {
         // or notifying other components of the new data
       }
     } catch (e) {
-      print('Error importing CAR file: $e');
+      // print('Error importing CAR file: $e');
     }
   }
 
@@ -147,11 +149,11 @@ class DatastoreHandler {
       // Pass the CAR object to writeCar
       final carData = await CarWriter.writeCar(car);
 
-      print('Exported CAR file for root CID: $cid');
+      // print('Exported CAR file for root CID: $cid');
 
       return carData;
     } catch (e) {
-      print('Error exporting CAR file for CID $cid: $e');
+      // print('Error exporting CAR file for CID $cid: $e');
       return Uint8List(0);
     }
   }

@@ -1,7 +1,7 @@
 import 'package:fixnum/fixnum.dart';
 import 'dart:typed_data' show Uint8List;
 import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:dart_ipfs/src/utils/base58.dart';
+
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia_node.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
@@ -132,7 +132,7 @@ Future<dht_pb.FindNodeResponse> sendRequest(
     return dht_pb.FindNodeResponse()
       ..closerPeers.add(dht_pb.DHTPeer()..id = foundPeer.value);
   } catch (e) {
-    print('Error sending request to peer ${Base58().encode(peer.value)}: $e');
+    // print('Error sending request to peer ${Base58().encode(peer.value)}: $e');
     throw e;
   }
 }
@@ -151,7 +151,7 @@ Future<List<p2p.PeerId>> findNode(
         .map((peer) => p2p.PeerId(value: Uint8List.fromList(peer.id)))
         .toList();
   } catch (e) {
-    print('Error in findNode request: $e');
+    // print('Error in findNode request: $e');
     return [];
   }
 }

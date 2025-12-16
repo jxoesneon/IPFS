@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print, prefer_single_quotes, unawaited_futures
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';

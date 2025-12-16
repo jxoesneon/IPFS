@@ -68,7 +68,7 @@ class DHTClient {
     const maxRetries = 5;
 
     while (_router.routes.isEmpty && retries < maxRetries) {
-      await Future.delayed(Duration(milliseconds: 100));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
       retries++;
     }
 
@@ -196,9 +196,9 @@ class DHTClient {
         }
         // Also checks closerPeers for iterative query (not implemented loop here yet)
       } catch (e) {
-        print(
-          'Error querying peer ${Base58().encode(peer.value)} for providers: $e',
-        );
+        // print(
+        //   'Error querying peer ${Base58().encode(peer.value)} for providers: $e',
+        // );
       }
     }
 
@@ -231,9 +231,9 @@ class DHTClient {
         }
         // Iterate...
       } catch (e) {
-        print(
-          'Error querying peer ${Base58().encode(peer.value)} for peer lookup: $e',
-        );
+        // print(
+        //   'Error querying peer ${Base58().encode(peer.value)} for peer lookup: $e',
+        // );
       }
     }
     return null;
@@ -263,9 +263,9 @@ class DHTClient {
       try {
         await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
       } catch (e) {
-        print(
-          'Error adding provider to peer ${Base58().encode(peer.value)}: $e',
-        );
+        // print(
+        //   'Error adding provider to peer ${Base58().encode(peer.value)}: $e',
+        // );
       }
     }
   }
@@ -296,7 +296,7 @@ class DHTClient {
         await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
         successCount++;
       } catch (e) {
-        print('Error storing value on peer ${Base58().encode(peer.value)}: $e');
+        // print('Error storing value on peer ${Base58().encode(peer.value)}: $e');
       }
     }
 
@@ -330,9 +330,9 @@ class DHTClient {
           return Uint8List.fromList(response.record.value);
         }
       } catch (e) {
-        print(
-          'Error getting value from peer ${Base58().encode(peer.value)}: $e',
-        );
+        // print(
+        //   'Error getting value from peer ${Base58().encode(peer.value)}: $e',
+        // );
       }
     }
 
@@ -400,7 +400,7 @@ class DHTClient {
       final peerId = packet.srcPeerId;
 
       // Update routing table with IP diversity check
-      _kademliaRoutingTable.addPeer(
+      await _kademliaRoutingTable.addPeer(
         peerId,
         peerId,
         address: packet.srcFullAddress,
@@ -427,10 +427,10 @@ class DHTClient {
           _sendResponse(peerId, response);
           break;
         default:
-          print('Unhandled DHT message type: ${message.type}');
+        // print('Unhandled DHT message type: ${message.type}');
       }
     } catch (e) {
-      print('Error handling DHT packet: $e');
+      // print('Error handling DHT packet: $e');
     }
   }
 
@@ -454,9 +454,9 @@ class DHTClient {
       // Initialize routing table
       await _initializeRoutingTable();
 
-      print('DHT client started successfully (Standard Kademlia)');
+      // print('DHT client started successfully (Standard Kademlia)');
     } catch (e) {
-      print('Error starting DHT client: $e');
+      // print('Error starting DHT client: $e');
       rethrow;
     }
   }
@@ -468,9 +468,9 @@ class DHTClient {
       // Clear routing table
       _kademliaRoutingTable.clear();
 
-      print('DHT client stopped successfully');
+      // print('DHT client stopped successfully');
     } catch (e) {
-      print('Error stopping DHT client: $e');
+      // print('Error stopping DHT client: $e');
       rethrow;
     }
   }
@@ -482,10 +482,10 @@ class DHTClient {
       try {
         final peer = await _connectToPeer(peerAddr);
         if (peer != null) {
-          _kademliaRoutingTable.addPeer(peer, peer);
+          await _kademliaRoutingTable.addPeer(peer, peer);
         }
       } catch (e) {
-        print('Error connecting to bootstrap peer $peerAddr: $e');
+        // print('Error connecting to bootstrap peer $peerAddr: $e');
       }
     }
   }
@@ -497,7 +497,7 @@ class DHTClient {
       // This would use the router to establish connection
       return null; // Replace with actual peer connection logic
     } catch (e) {
-      print('Error connecting to peer $multiaddr: $e');
+      // print('Error connecting to peer $multiaddr: $e');
       return null;
     }
   }
@@ -547,14 +547,14 @@ class DHTClient {
             DateTime.now(),
           );
         } catch (e) {
-          print('Error processing key metadata: $e');
+          // print('Error processing key metadata: $e');
           // Continue processing other keys
         }
       }
 
       return storedKeys;
     } catch (e) {
-      print('Error retrieving stored keys: $e');
+      // print('Error retrieving stored keys: $e');
       return [];
     }
   }
@@ -587,7 +587,7 @@ class DHTClient {
           DateTime.now(),
         );
       } catch (e) {
-        print('Error updating routing table metadata: $e');
+        // print('Error updating routing table metadata: $e');
         // Continue even if routing table update fails
       }
 
@@ -596,12 +596,12 @@ class DHTClient {
         ..key = key
         ..value = utf8.encode(timestamp.toString());
 
-      node.dhtHandler.router.emitEvent(
+      await node.dhtHandler.router.emitEvent(
         'dht:key:republished',
         event.writeToBuffer(),
       );
     } catch (e) {
-      print('Error updating republish time for key $key: $e');
+      // print('Error updating republish time for key $key: $e');
       rethrow;
     }
   }
@@ -640,7 +640,7 @@ class DHTClient {
       final putValueResponse = PutValueResponse.fromBuffer(response);
       return putValueResponse.success;
     } catch (e) {
-      print('Error storing value with peer ${Base58().encode(peer.value)}: $e');
+      // print('Error storing value with peer ${Base58().encode(peer.value)}: $e');
       return false;
     }
   }

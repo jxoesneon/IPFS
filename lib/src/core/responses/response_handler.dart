@@ -4,7 +4,9 @@ import 'package:dart_ipfs/src/core/responses/block_operation_response.dart';
 
 /// Converts between internal responses and protobuf messages.
 class ResponseHandler {
-  static AddBlockResponse toAddBlockResponse(BlockOperationResponse response) {
+  static AddBlockResponse toAddBlockResponse(
+    BlockOperationResponse<dynamic> response,
+  ) {
     return AddBlockResponse()
       ..success = response.success
       ..message = response.message;
@@ -21,19 +23,21 @@ class ResponseHandler {
   }
 
   static RemoveBlockResponse toRemoveBlockResponse(
-    BlockOperationResponse response,
+    BlockOperationResponse<dynamic> response,
   ) {
     return RemoveBlockResponse()
       ..success = response.success
       ..message = response.message;
   }
 
-  static BlockOperationResponse fromProtoResponse(dynamic protoResponse) {
+  static BlockOperationResponse<dynamic> fromProtoResponse(
+    dynamic protoResponse,
+  ) {
     if (protoResponse is AddBlockResponse ||
         protoResponse is RemoveBlockResponse) {
       return BlockOperationResponse(
-        success: protoResponse.success,
-        message: protoResponse.message,
+        success: protoResponse.success as bool,
+        message: protoResponse.message as String,
       );
     } else if (protoResponse is GetBlockResponse) {
       return BlockOperationResponse(

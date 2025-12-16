@@ -19,7 +19,10 @@ CID get dagPbCid {
 void main() {
   group('GatewayLruCache', () {
     test('capacity check', () {
-      expect(() => GatewayLruCache(0), throwsA(isA<AssertionError>()));
+      expect(
+        () => GatewayLruCache<String, int>(0),
+        throwsA(isA<AssertionError>()),
+      );
     });
 
     test('put/get/eviction', () {

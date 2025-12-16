@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:mirrors';
 import 'package:p2plib/p2plib.dart' as p2p;
 
@@ -14,7 +15,8 @@ void main() {
       print('  Parameters: ${decl.parameters.length}');
       for (var p in decl.parameters) {
         print(
-            '    - ${MirrorSystem.getName(p.simpleName)}: ${MirrorSystem.getName(p.type.simpleName)}');
+          '    - ${MirrorSystem.getName(p.simpleName)}: ${MirrorSystem.getName(p.type.simpleName)}',
+        );
       }
     }
   }
@@ -27,7 +29,8 @@ void main() {
       print('  Parameters: ${decl.parameters.length}');
       for (var p in decl.parameters) {
         print(
-            '    - ${MirrorSystem.getName(p.simpleName)}: ${MirrorSystem.getName(p.type.simpleName)}');
+          '    - ${MirrorSystem.getName(p.simpleName)}: ${MirrorSystem.getName(p.type.simpleName)}',
+        );
       }
     }
   }
@@ -38,7 +41,8 @@ void main() {
     if (decl is VariableMirror) {
       // Fields
       print(
-          '- Field: ${MirrorSystem.getName(decl.simpleName)} (Type: ${decl.type.simpleName})');
+        '- Field: ${MirrorSystem.getName(decl.simpleName)} (Type: ${decl.type.simpleName})',
+      );
     }
   }
 }

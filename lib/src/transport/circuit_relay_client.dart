@@ -17,9 +17,8 @@ class CircuitRelayClient {
     try {
       // Initialize any necessary resources or connections
       await _router.start();
-      print('Circuit Relay Client started.');
     } catch (e) {
-      print('Error starting Circuit Relay Client: $e');
+      // ignore: empty_catches
     }
   }
 
@@ -28,10 +27,10 @@ class CircuitRelayClient {
     try {
       // Clean up resources and close connections
       await _router.stop();
-      _circuitRelayEventsController.close(); // Close the event stream
-      print('Circuit Relay Client stopped.');
+      await _circuitRelayEventsController.close(); // Close the event stream
+      // print('Circuit Relay Client stopped.');
     } catch (e) {
-      print('Error stopping Circuit Relay Client: $e');
+      // ignore: empty_catches
     }
   }
 
@@ -45,7 +44,6 @@ class CircuitRelayClient {
           relayAddress: peerId,
         ),
       );
-      print('Connected to peer via circuit relay: $peerId');
     } catch (e) {
       _circuitRelayEventsController.add(
         CircuitRelayConnectionEvent(
@@ -54,7 +52,6 @@ class CircuitRelayClient {
           errorMessage: e.toString(),
         ),
       );
-      print('Error connecting to peer via circuit relay: $e');
     }
   }
 
@@ -69,7 +66,6 @@ class CircuitRelayClient {
           reason: 'disconnected',
         ),
       );
-      print('Disconnected from peer via circuit relay: $peerId');
     } catch (e) {
       _circuitRelayEventsController.add(
         CircuitRelayConnectionEvent(
@@ -78,7 +74,6 @@ class CircuitRelayClient {
           errorMessage: e.toString(),
         ),
       );
-      print('Error disconnecting from peer via circuit relay: $e');
     }
   }
 

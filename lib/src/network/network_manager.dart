@@ -16,7 +16,7 @@ import 'package:dart_ipfs/src/protocols/bitswap/message.dart' show Message;
 /// ```dart
 /// final manager = NetworkManager(router);
 /// manager.events.listen((event) {
-///   print('Network event: $event');
+///   // print('Network event: $event');
 /// });
 /// ```
 ///
@@ -48,7 +48,7 @@ class NetworkManager {
           await handler.handleMessage(baseMessage);
         }
       } catch (e) {
-        print('Error handling message: $e');
+        // print('Error handling message: $e');
       }
     });
   }

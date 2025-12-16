@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 // ipfs/example/main.dart
 
 import 'dart:convert';
@@ -20,8 +21,9 @@ void main() async {
 
   // 1. Add a file
   // Convert a string to bytes and add it to IPFS, receiving a CID (Content Identifier)
-  final cid =
-      await ipfs.addFile(Uint8List.fromList(utf8.encode('Hello IPFS!')));
+  final cid = await ipfs.addFile(
+    Uint8List.fromList(utf8.encode('Hello IPFS!')),
+  );
   print('Added file with CID: $cid');
 
   // 2. Retrieve the file content
@@ -75,8 +77,9 @@ void main() async {
   // 7. Resolve an IPNS name
   // Convert an IPNS name to its current CID mapping
   try {
-    final resolvedCid = await ipfs
-        .resolveIPNS('your-ipns-name'); // Replace with an actual IPNS name
+    final resolvedCid = await ipfs.resolveIPNS(
+      'your-ipns-name',
+    ); // Replace with an actual IPNS name
     print('Resolved IPNS name to CID: $resolvedCid');
   } catch (e) {
     print('Failed to resolve IPNS name: $e');

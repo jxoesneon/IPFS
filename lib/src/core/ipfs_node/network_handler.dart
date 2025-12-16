@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'ipfs_node.dart';
+
 import 'dart:typed_data';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/utils/logger.dart';
@@ -74,7 +75,7 @@ class NetworkHandler {
       await _router.stop();
       _logger.verbose('Router stopped');
 
-      _networkEventController.close();
+      await _networkEventController.close();
       _logger.verbose('Network event controller closed');
 
       _logger.info('Network services stopped successfully');
@@ -91,9 +92,9 @@ class NetworkHandler {
   Future<void> connectToPeer(String multiaddress) async {
     try {
       await _router.connect(multiaddress);
-      print('Connected to peer at $multiaddress.');
+      // print('Connected to peer at $multiaddress.');
     } catch (e) {
-      print('Error connecting to peer at $multiaddress: $e');
+      // print('Error connecting to peer at $multiaddress: $e');
     }
   }
 
@@ -101,20 +102,20 @@ class NetworkHandler {
   Future<void> disconnectFromPeer(String multiaddress) async {
     try {
       await _router.disconnect(multiaddress);
-      print('Disconnected from peer at $multiaddress.');
+      // print('Disconnected from peer at $multiaddress.');
     } catch (e) {
-      print('Error disconnecting from peer at $multiaddress: $e');
+      // print('Error disconnecting from peer at $multiaddress: $e');
     }
   }
 
   /// Lists all connected peers.
   Future<List<String>> listConnectedPeers() async {
     try {
-      final peers = await _router.listConnectedPeers();
-      print('Connected peers: ${peers.length}');
+      final peers = _router.listConnectedPeers();
+      // print('Connected peers: ${peers.length}');
       return peers;
     } catch (e) {
-      print('Error listing connected peers: $e');
+      // print('Error listing connected peers: $e');
       return [];
     }
   }
@@ -130,9 +131,9 @@ class NetworkHandler {
       Uint8List messageBytes = Uint8List.fromList(utf8.encode(message));
 
       await _router.sendMessage(peer, messageBytes);
-      print('Message sent to peer $peerId.');
+      // print('Message sent to peer $peerId.');
     } catch (e) {
-      print('Error sending message to peer $peerId: $e');
+      // print('Error sending message to peer $peerId: $e');
     }
   }
 
@@ -145,7 +146,7 @@ class NetworkHandler {
         return utf8.decode(messageBytes as List<int>);
       });
     } catch (e) {
-      print('Error receiving messages from peer $peerId: $e');
+      // print('Error receiving messages from peer $peerId: $e');
       return Stream.empty();
     }
   }
@@ -200,7 +201,7 @@ class NetworkHandler {
           _logger.error('Error processing network event', e, stackTrace);
         }
       },
-      onError: (error, stackTrace) {
+      onError: (Object error, StackTrace stackTrace) {
         _logger.error('Error in network event stream', error, stackTrace);
       },
       onDone: () {
@@ -256,7 +257,7 @@ class NetworkHandler {
         },
       );
     } catch (e) {
-      print('Error sending request to peer ${peer.toString()}: $e');
+      // print('Error sending request to peer ${peer.toString()}: $e');
       rethrow;
     }
   }
@@ -271,7 +272,7 @@ class NetworkHandler {
       ); // UUID is 36 chars
       return utf8.decode(requestIdBytes);
     } catch (e) {
-      print('Error extracting request ID: $e');
+      // print('Error extracting request ID: $e');
       return ''; // Return empty string on error
     }
   }
@@ -367,7 +368,7 @@ class NetworkHandler {
       // Attempt to establish a direct connection
       await _router.connect(peerAddress);
 
-      // If connection succeeds, immediately disconnect
+      //    unawaited(connection.close());ucceeds, immediately disconnect
       await _router.disconnect(peerAddress);
 
       _logger.debug('Successfully tested direct connection to: $peerAddress');

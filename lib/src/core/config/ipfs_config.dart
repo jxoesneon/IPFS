@@ -142,31 +142,49 @@ class IPFSConfig {
   static Future<IPFSConfig> fromFile(String path) async {
     final file = File(path);
     final yaml = loadYaml(await file.readAsString());
-    return IPFSConfig.fromJson(json.decode(json.encode(yaml)));
+    return IPFSConfig.fromJson(
+      json.decode(json.encode(yaml)) as Map<String, dynamic>,
+    );
   }
 
   /// Creates configuration from JSON
   factory IPFSConfig.fromJson(Map<String, dynamic> json) {
     return IPFSConfig(
-      offline: json['offline'] ?? false,
-      network: NetworkConfig.fromJson(json['network'] ?? {}),
-      dht: DHTConfig.fromJson(json['dht'] ?? {}),
-      storage: StorageConfig.fromJson(json['storage'] ?? {}),
-      security: SecurityConfig.fromJson(json['security'] ?? {}),
-      debug: json['debug'] ?? false,
-      verboseLogging: json['verboseLogging'] ?? false,
-      enablePubSub: json['enablePubSub'] ?? true,
-      enableDHT: json['enableDHT'] ?? true,
-      enableCircuitRelay: json['enableCircuitRelay'] ?? true,
-      enableContentRouting: json['enableContentRouting'] ?? true,
-      enableDNSLinkResolution: json['enableDNSLinkResolution'] ?? true,
-      enableIPLD: json['enableIPLD'] ?? true,
-      enableGraphsync: json['enableGraphsync'] ?? true,
-      enableMetrics: json['enableMetrics'] ?? true,
-      enableLogging: json['enableLogging'] ?? true,
-      logLevel: json['logLevel'] ?? 'info',
-      enableQuotaManagement: json['enableQuotaManagement'] ?? true,
-      defaultBandwidthQuota: json['defaultBandwidthQuota'] ?? 1048576,
+      offline: json['offline'] as bool? ?? false,
+      network: NetworkConfig.fromJson(
+        json['network'] != null
+            ? Map<String, dynamic>.from(json['network'] as Map)
+            : {},
+      ),
+      dht: DHTConfig.fromJson(
+        json['dht'] != null
+            ? Map<String, dynamic>.from(json['dht'] as Map)
+            : {},
+      ),
+      storage: StorageConfig.fromJson(
+        json['storage'] != null
+            ? Map<String, dynamic>.from(json['storage'] as Map)
+            : {},
+      ),
+      security: SecurityConfig.fromJson(
+        json['security'] != null
+            ? Map<String, dynamic>.from(json['security'] as Map)
+            : {},
+      ),
+      debug: json['debug'] as bool? ?? false,
+      verboseLogging: json['verboseLogging'] as bool? ?? false,
+      enablePubSub: json['enablePubSub'] as bool? ?? true,
+      enableDHT: json['enableDHT'] as bool? ?? true,
+      enableCircuitRelay: json['enableCircuitRelay'] as bool? ?? true,
+      enableContentRouting: json['enableContentRouting'] as bool? ?? true,
+      enableDNSLinkResolution: json['enableDNSLinkResolution'] as bool? ?? true,
+      enableIPLD: json['enableIPLD'] as bool? ?? true,
+      enableGraphsync: json['enableGraphsync'] as bool? ?? true,
+      enableMetrics: json['enableMetrics'] as bool? ?? true,
+      enableLogging: json['enableLogging'] as bool? ?? true,
+      logLevel: json['logLevel'] as String? ?? 'info',
+      enableQuotaManagement: json['enableQuotaManagement'] as bool? ?? true,
+      defaultBandwidthQuota: json['defaultBandwidthQuota'] as int? ?? 1048576,
     );
   }
 
@@ -221,13 +239,17 @@ class NetworkConfig {
 
   factory NetworkConfig.fromJson(Map<String, dynamic> json) {
     return NetworkConfig(
-      listenAddresses: List<String>.from(json['listenAddresses'] ?? []),
-      bootstrapPeers: List<String>.from(json['bootstrapPeers'] ?? []),
-      maxConnections: json['maxConnections'] ?? 50,
-      connectionTimeout: Duration(
-        seconds: json['connectionTimeoutSeconds'] ?? 30,
+      listenAddresses: List<String>.from(
+        (json['listenAddresses'] as List?) ?? [],
       ),
-      delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'],
+      bootstrapPeers: List<String>.from(
+        (json['bootstrapPeers'] as List?) ?? [],
+      ),
+      maxConnections: json['maxConnections'] as int? ?? 50,
+      connectionTimeout: Duration(
+        seconds: json['connectionTimeoutSeconds'] as int? ?? 30,
+      ),
+      delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'] as String?,
     );
   }
 

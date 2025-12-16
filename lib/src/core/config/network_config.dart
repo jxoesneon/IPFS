@@ -75,18 +75,14 @@ class NetworkConfig {
 
   factory NetworkConfig.fromJson(Map<String, dynamic> json) {
     return NetworkConfig(
-      listenAddresses: List<String>.from(
-        json['listenAddresses'] ?? defaultListenAddresses,
-      ),
-      bootstrapPeers: List<String>.from(
-        json['bootstrapPeers'] ?? defaultBootstrapPeers,
-      ),
-      maxConnections: json['maxConnections'] ?? 50,
+      listenAddresses: (json['listenAddresses'] as List?)?.cast<String>() ?? [],
+      bootstrapPeers: (json['bootstrapPeers'] as List?)?.cast<String>() ?? [],
+      maxConnections: json['maxConnections'] as int? ?? 50,
       connectionTimeout: Duration(
-        seconds: json['connectionTimeoutSeconds'] ?? 30,
+        seconds: json['connectionTimeoutSeconds'] as int? ?? 30,
       ),
-      nodeId: json['nodeId'],
-      delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'],
+      nodeId: json['nodeId'] as String?,
+      delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'] as String?,
     );
   }
 

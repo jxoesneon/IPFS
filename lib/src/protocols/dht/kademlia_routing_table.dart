@@ -66,9 +66,9 @@ class KademliaRoutingTable {
 
       // If peer is not already in the table (check _peerIps map) but limit exceeded
       if (!_peerIps.containsKey(peerId) && currentCount >= MAX_PEERS_PER_IP) {
-        print(
-          '[Security] Rejected peer $peerId from $ip (Limit: $MAX_PEERS_PER_IP)',
-        );
+        // print(
+        //   '[Security] Rejected peer $peerId from $ip (Limit: $MAX_PEERS_PER_IP)',
+        // );
         return;
       }
 
@@ -209,8 +209,9 @@ class KademliaRoutingTable {
 
   void splitBucket(int bucketIndex) {
     if (bucketIndex >= buckets.length ||
-        buckets[bucketIndex].size <= K_BUCKET_SIZE)
+        buckets[bucketIndex].size <= K_BUCKET_SIZE) {
       return;
+    }
 
     final bucket = buckets[bucketIndex];
     final lowerBucket = RedBlackTree<p2p.PeerId, KademliaTreeNode>(
@@ -503,7 +504,7 @@ class KademliaRoutingTable {
       final pingResponse = kad.Message.fromBuffer(response);
       return pingResponse.type == kad.Message_MessageType.PING;
     } catch (e) {
-      print('Error pinging peer ${peerId.toString()}: $e');
+      // print('Error pinging peer ${peerId.toString()}: $e');
       return false;
     }
   }

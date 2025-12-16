@@ -20,7 +20,7 @@ class GatewayLruCache<K, V> {
 
     // Move to front by removing and re-inserting
     final value = _cache.remove(key);
-    _cache[key] = value!;
+    _cache[key] = value as V;
     return value;
   }
 

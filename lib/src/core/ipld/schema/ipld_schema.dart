@@ -32,7 +32,7 @@ class IPLDSchema {
     }
 
     try {
-      return _validateNode(node, typeSchema);
+      return _validateNode(node, typeSchema as Map<String, dynamic>);
     } catch (e) {
       throw IPLDSchemaError('Validation error: $e');
     }
@@ -54,7 +54,7 @@ class IPLDSchema {
       if (refSchema == null) {
         throw IPLDSchemaError('Referenced type not found: $ref');
       }
-      return _validateNode(node, refSchema);
+      return _validateNode(node, refSchema as Map<String, dynamic>);
     }
 
     // Handle unions
@@ -128,20 +128,24 @@ class IPLDSchema {
           }
           final minLength = constraint['minLength'] as int?;
           final maxLength = constraint['maxLength'] as int?;
-          if (minLength != null && node.stringValue.length < minLength)
+          if (minLength != null && node.stringValue.length < minLength) {
             return false;
-          if (maxLength != null && node.stringValue.length > maxLength)
+          }
+          if (maxLength != null && node.stringValue.length > maxLength) {
             return false;
+          }
         }
         break;
       case Kind.BYTES:
         if (constraint is Map) {
           final minLength = constraint['minLength'] as int?;
           final maxLength = constraint['maxLength'] as int?;
-          if (minLength != null && node.bytesValue.length < minLength)
+          if (minLength != null && node.bytesValue.length < minLength) {
             return false;
-          if (maxLength != null && node.bytesValue.length > maxLength)
+          }
+          if (maxLength != null && node.bytesValue.length > maxLength) {
             return false;
+          }
         }
         break;
       default:

@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:io';
@@ -73,7 +74,7 @@ class MockRouterL2 implements p2p.RouterL2 {
 
 class MockP2plibRouter implements P2plibRouter {
   final MockRouterL2 _mockL2 = MockRouterL2();
-  Function(p2p.Packet)? messageHandler;
+  void Function(p2p.Packet)? messageHandler;
 
   @override
   p2p.RouterL2 get routerL0 => _mockL2;
@@ -103,7 +104,7 @@ class MockP2plibRouter implements P2plibRouter {
 
   Future<void> simulatePacket(p2p.Packet packet) async {
     if (messageHandler != null) {
-      await messageHandler!(packet);
+      messageHandler!(packet);
     }
   }
 
@@ -148,8 +149,8 @@ void main() {
 
       // Simulate response slightly later
       scheduleMicrotask(() async {
-        await Future.delayed(Duration(milliseconds: 50));
-        _simulateBlockArrival(mockRouter, targetData);
+        await Future<void>.delayed(Duration(milliseconds: 50));
+        await _simulateBlockArrival(mockRouter, targetData);
       });
 
       final block = await handler.wantBlock(targetCid);
@@ -174,10 +175,10 @@ void main() {
       final future2 = handler.wantBlock(cid2);
 
       // Fulfill 2 then 1 with slight delays
-      await Future.delayed(Duration(milliseconds: 20));
+      await Future<void>.delayed(Duration(milliseconds: 20));
       await _simulateBlockArrival(mockRouter, data2, codec: 'dag-pb');
 
-      await Future.delayed(Duration(milliseconds: 20));
+      await Future<void>.delayed(Duration(milliseconds: 20));
       await _simulateBlockArrival(mockRouter, data1, codec: 'dag-pb');
 
       final b1 = await future1;

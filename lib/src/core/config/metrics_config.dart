@@ -48,13 +48,14 @@ class MetricsConfig {
 
   factory MetricsConfig.fromJson(Map<String, dynamic> json) {
     return MetricsConfig(
-      enabled: json['enabled'] ?? true,
-      collectionIntervalSeconds: json['collectionIntervalSeconds'] ?? 60,
-      collectSystemMetrics: json['collectSystemMetrics'] ?? true,
-      collectNetworkMetrics: json['collectNetworkMetrics'] ?? true,
-      collectStorageMetrics: json['collectStorageMetrics'] ?? true,
-      enablePrometheusExport: json['enablePrometheusExport'] ?? false,
-      prometheusEndpoint: json['prometheusEndpoint'] ?? '/metrics',
+      enabled: json['enabled'] as bool? ?? true,
+      collectionIntervalSeconds:
+          json['collectionIntervalSeconds'] as int? ?? 60,
+      collectSystemMetrics: json['collectSystemMetrics'] as bool? ?? true,
+      collectNetworkMetrics: json['collectNetworkMetrics'] as bool? ?? true,
+      collectStorageMetrics: json['collectStorageMetrics'] as bool? ?? true,
+      enablePrometheusExport: json['enablePrometheusExport'] as bool? ?? false,
+      prometheusEndpoint: json['prometheusEndpoint'] as String? ?? '/metrics',
     );
   }
 

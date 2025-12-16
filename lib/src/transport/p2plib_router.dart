@@ -71,7 +71,7 @@ class P2plibRouter {
 
   // Protocol handling
   final Set<String> _registeredProtocols = {};
-  final Map<String, Function(p2p.Packet)> _protocolHandlers = {};
+  final Map<String, void Function(p2p.Packet)> _protocolHandlers = {};
 
   /// Returns a singleton instance of the router for the given [config].
   factory P2plibRouter(IPFSConfig config) {
@@ -336,10 +336,10 @@ class P2plibRouter {
           final bitswapMessage = await Message.fromBytes(message.payload!);
           handler(bitswapMessage);
         } catch (e) {
-          print('Error converting message payload: $e');
+          // print('Error converting message payload: $e');
         }
       } else {
-        print('Received message with null payload, skipping...');
+        // print('Received message with null payload, skipping...');
       }
     });
   }
@@ -425,7 +425,7 @@ class P2plibRouter {
       try {
         await sendMessage(route.peerId, data);
       } catch (e) {
-        print('Error sending event to peer ${route.peerId}: $e');
+        // print('Error sending event to peer ${route.peerId}: $e');
       }
     }
 
@@ -437,15 +437,16 @@ class P2plibRouter {
     }
   }
 
-  final Map<String, List<Function(NetworkMessage)>> _eventHandlers = {};
+  final Map<String, List<void Function(NetworkMessage)>> _eventHandlers =
+      <String, List<void Function(NetworkMessage)>>{};
 
   /// Registers an event handler for a specific topic
-  void onEvent(String topic, Function(NetworkMessage) handler) {
+  void onEvent(String topic, void Function(NetworkMessage) handler) {
     _eventHandlers.putIfAbsent(topic, () => []).add(handler);
   }
 
   /// Removes an event handler for a specific topic
-  void offEvent(String topic, Function(NetworkMessage) handler) {
+  void offEvent(String topic, void Function(NetworkMessage) handler) {
     if (_eventHandlers.containsKey(topic)) {
       _eventHandlers[topic]!.remove(handler);
     }

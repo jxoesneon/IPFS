@@ -8,7 +8,7 @@
 /// final wantlist = Wantlist();
 /// wantlist.add(cid, priority: 10);
 /// if (wantlist.contains(otherCid)) {
-///   print('Priority: ${wantlist.getPriority(otherCid)}');
+///   // print('Priority: ${wantlist.getPriority(otherCid)}');
 /// }
 /// ```
 class Wantlist {

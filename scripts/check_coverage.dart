@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:io';
 
 void main() async {
@@ -42,13 +43,15 @@ void main() async {
     totalLines += cov.totalLines;
     totalCovered += cov.coveredLines;
     print(
-        '${cov.percent.toStringAsFixed(1)}% - $file (${cov.coveredLines}/${cov.totalLines})');
+      '${cov.percent.toStringAsFixed(1)}% - $file (${cov.coveredLines}/${cov.totalLines})',
+    );
   }
 
   print('----------------------------------------');
   final totalPercent = (totalCovered / totalLines) * 100;
   print(
-      'Total Coverage: ${totalPercent.toStringAsFixed(1)}% ($totalCovered/$totalLines)');
+    'Total Coverage: ${totalPercent.toStringAsFixed(1)}% ($totalCovered/$totalLines)',
+  );
 }
 
 class _FileCoverage {

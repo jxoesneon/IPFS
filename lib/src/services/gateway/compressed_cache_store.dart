@@ -90,7 +90,9 @@ class CompressedCacheStore {
         case CompressionType.none:
           return data;
         case CompressionType.gzip:
-          return Uint8List.fromList(GZipEncoder().encode(data) ?? []);
+          final encoded = GZipEncoder().encode(data);
+          if (encoded == null) throw FormatException('GZIP encoding failed');
+          return Uint8List.fromList(encoded);
         case CompressionType.zlib:
           return Uint8List.fromList(ZLibEncoder().encode(data));
         case CompressionType.lz4:
@@ -99,7 +101,9 @@ class CompressedCacheStore {
     } catch (e) {
       if (type == CompressionType.lz4) {
         _logger.warning('LZ4 compression failed ($e). Falling back to GZIP.');
-        return Uint8List.fromList(GZipEncoder().encode(data) ?? []);
+        final encoded = GZipEncoder().encode(data);
+        if (encoded == null) throw FormatException('GZIP encoding failed');
+        return Uint8List.fromList(encoded);
       }
       rethrow;
     }
@@ -159,7 +163,9 @@ class CompressedCacheStore {
 
     try {
       final content = await metadataFile.readAsString();
-      return Map<String, String>.from(json.decode(content));
+      return Map<String, String>.from(
+        json.decode(content) as Map<dynamic, dynamic>,
+      );
     } catch (e, stackTrace) {
       _logger.error('Error reading metadata file', e, stackTrace);
       return {};
@@ -174,7 +180,9 @@ class CompressedCacheStore {
 
     try {
       final content = metadataFile.readAsStringSync();
-      return Map<String, String>.from(json.decode(content));
+      return Map<String, String>.from(
+        json.decode(content) as Map<dynamic, dynamic>,
+      );
     } catch (e, stackTrace) {
       _logger.error('Error reading metadata file', e, stackTrace);
       return {};

@@ -15,13 +15,13 @@ class Rotations<K_PeerId, V_PeerInfo> {
     if (x == null) return; // Null nodes are treated as black (leaves)
 
     // 1. Get the right child of x, which will become the new parent
-    RedBlackTreeNode<K_PeerId, V_PeerInfo>? y = x.right_child;
+    RedBlackTreeNode<K_PeerId, V_PeerInfo>? y = x.rightChild;
     if (y == null) return; // Ensure y is not null for the rotation
 
     // 2. Update x's right child to be y's left child (transfer y's left subtree)
-    x.right_child = y.left_child;
-    if (y.left_child != null) {
-      y.left_child?.parent = x;
+    x.rightChild = y.leftChild;
+    if (y.leftChild != null) {
+      y.leftChild?.parent = x;
     }
 
     // 3. Update y's parent to be x's parent
@@ -30,20 +30,20 @@ class Rotations<K_PeerId, V_PeerInfo> {
     // 4. If x was the root, y becomes the new root
     if (x.parent == null) {
       tree.root = y; // Root node update
-    } else if (x == x.parent?.left_child) {
-      x.parent?.left_child = y;
+    } else if (x == x.parent?.leftChild) {
+      x.parent?.leftChild = y;
     } else {
-      x.parent?.right_child = y;
+      x.parent?.rightChild = y;
     }
 
     // 5. Make x the left child of y
-    y.left_child = x;
+    y.leftChild = x;
     x.parent = y;
 
     // Verify tree.root update when root node is involved
     assert(
       tree.root == y || tree.root != x,
-      "Root node not updated correctly in rotateLeft",
+      'Root node not updated correctly in rotateLeft',
     );
   }
 
@@ -54,13 +54,13 @@ class Rotations<K_PeerId, V_PeerInfo> {
     if (y == null) return; // Null nodes are treated as black (leaves)
 
     // 1. Get the left child of y, which will become the new parent
-    RedBlackTreeNode<K_PeerId, V_PeerInfo>? x = y.left_child;
+    RedBlackTreeNode<K_PeerId, V_PeerInfo>? x = y.leftChild;
     if (x == null) return; // Ensure x is not null for the rotation
 
     // 2. Update y's left child to be x's right child (transfer x's right subtree)
-    y.left_child = x.right_child;
-    if (x.right_child != null) {
-      x.right_child?.parent = y;
+    y.leftChild = x.rightChild;
+    if (x.rightChild != null) {
+      x.rightChild?.parent = y;
     }
 
     // 3. Update x's parent to be y's parent
@@ -69,20 +69,20 @@ class Rotations<K_PeerId, V_PeerInfo> {
     // 4. If y was the root, x becomes the new root
     if (y.parent == null) {
       tree.root = x; // Root node update
-    } else if (y == y.parent?.right_child) {
-      y.parent?.right_child = x;
+    } else if (y == y.parent?.rightChild) {
+      y.parent?.rightChild = x;
     } else {
-      y.parent?.left_child = x;
+      y.parent?.leftChild = x;
     }
 
     // 5. Make y the right child of x
-    x.right_child = y;
+    x.rightChild = y;
     y.parent = x;
 
     // Verify tree.root update when root node is involved
     assert(
       tree.root == x || tree.root != y,
-      "Root node not updated correctly in rotateRight",
+      'Root node not updated correctly in rotateRight',
     );
   }
 
@@ -93,8 +93,8 @@ class Rotations<K_PeerId, V_PeerInfo> {
         node.color != common_tree.NodeColor.BLACK) {
       return false; // Every node must be either red or black
     }
-    return validateNodeColors(node.left_child) &&
-        validateNodeColors(node.right_child);
+    return validateNodeColors(node.leftChild) &&
+        validateNodeColors(node.rightChild);
   }
 
   // Validate the red-black tree properties
@@ -108,22 +108,22 @@ class Rotations<K_PeerId, V_PeerInfo> {
     bool validateRedProperty(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node) {
       if (node == null) return true;
       if (node.color == common_tree.NodeColor.RED) {
-        if ((node.left_child != null &&
-                node.left_child!.color == common_tree.NodeColor.RED) ||
-            (node.right_child != null &&
-                node.right_child!.color == common_tree.NodeColor.RED)) {
+        if ((node.leftChild != null &&
+                node.leftChild!.color == common_tree.NodeColor.RED) ||
+            (node.rightChild != null &&
+                node.rightChild!.color == common_tree.NodeColor.RED)) {
           return false;
         }
       }
-      return validateRedProperty(node.left_child) &&
-          validateRedProperty(node.right_child);
+      return validateRedProperty(node.leftChild) &&
+          validateRedProperty(node.rightChild);
     }
 
     // 3. Every path from root to leaf must have the same number of black nodes (black-height property)
     int countBlackNodes(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node) {
       if (node == null) return 1; // Null nodes (leaves) count as black
-      int left = countBlackNodes(node.left_child);
-      int right = countBlackNodes(node.right_child);
+      int left = countBlackNodes(node.leftChild);
+      int right = countBlackNodes(node.rightChild);
       if (left != right) {
         throw StateError('Black height property violated');
       }
@@ -137,32 +137,32 @@ class Rotations<K_PeerId, V_PeerInfo> {
     ) {
       if (node == null) return true;
       if (node.parent != expectedParent) return false;
-      return validateParentPointers(node.left_child, node) &&
-          validateParentPointers(node.right_child, node);
+      return validateParentPointers(node.leftChild, node) &&
+          validateParentPointers(node.rightChild, node);
     }
 
     // 5. Validate binary search tree property
     bool validateBSTProperty(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node) {
       if (node == null) return true;
 
-      if (node.left_child != null &&
-          tree.compare(node.left_child!.key, node.key) >= 0) {
+      if (node.leftChild != null &&
+          tree.compare(node.leftChild!.key, node.key) >= 0) {
         return false;
       }
 
-      if (node.right_child != null &&
-          tree.compare(node.right_child!.key, node.key) <= 0) {
+      if (node.rightChild != null &&
+          tree.compare(node.rightChild!.key, node.key) <= 0) {
         return false;
       }
 
-      return validateBSTProperty(node.left_child) &&
-          validateBSTProperty(node.right_child);
+      return validateBSTProperty(node.leftChild) &&
+          validateBSTProperty(node.rightChild);
     }
 
     // 6. Validate tree size
     int validateSize(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node) {
       if (node == null) return 0;
-      return 1 + validateSize(node.left_child) + validateSize(node.right_child);
+      return 1 + validateSize(node.leftChild) + validateSize(node.rightChild);
     }
 
     try {
@@ -181,7 +181,7 @@ class Rotations<K_PeerId, V_PeerInfo> {
 
       return isValid;
     } catch (e) {
-      print('Validation error: $e');
+      // print('Validation error: $e');
       return false;
     }
   }

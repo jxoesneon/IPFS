@@ -37,14 +37,16 @@ class SecurityConfig {
 
   factory SecurityConfig.fromJson(Map<String, dynamic> json) {
     return SecurityConfig(
-      enableTLS: json['enableTLS'] ?? false,
-      tlsCertificatePath: json['tlsCertificatePath'],
-      tlsPrivateKeyPath: json['tlsPrivateKeyPath'],
-      enableKeyRotation: json['enableKeyRotation'] ?? true,
-      keyRotationInterval: Duration(days: json['keyRotationDays'] ?? 30),
-      maxAuthAttempts: json['maxAuthAttempts'] ?? 3,
-      enableRateLimiting: json['enableRateLimiting'] ?? true,
-      maxRequestsPerMinute: json['maxRequestsPerMinute'] ?? 100,
+      enableTLS: json['enableTLS'] as bool? ?? false,
+      tlsCertificatePath: json['tlsCertificatePath'] as String?,
+      tlsPrivateKeyPath: json['tlsPrivateKeyPath'] as String?,
+      enableKeyRotation: json['enableKeyRotation'] as bool? ?? true,
+      keyRotationInterval: Duration(
+        days: json['keyRotationDays'] as int? ?? 30,
+      ),
+      maxAuthAttempts: json['maxAuthAttempts'] as int? ?? 3,
+      enableRateLimiting: json['enableRateLimiting'] as bool? ?? true,
+      maxRequestsPerMinute: json['maxRequestsPerMinute'] as int? ?? 100,
     );
   }
 

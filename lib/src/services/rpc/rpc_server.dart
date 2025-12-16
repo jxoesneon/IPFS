@@ -77,15 +77,15 @@ class RPCServer {
     final handler = Pipeline()
         .addMiddleware(_corsMiddleware())
         .addMiddleware(_loggingMiddleware())
-        .addHandler(_router);
+        .addHandler(_router.call);
 
     try {
       _server = await shelf_io.serve(handler, address, port);
-      print(
-        '✅ RPC server listening on http://${_server!.address.host}:${_server!.port}',
-      );
+      // print(
+      //   '✅ RPC server listening on http://${_server!.address.host}:${_server!.port}',
+      // );
     } catch (e) {
-      print('❌ Failed to start RPC server: $e');
+      // print('❌ Failed to start RPC server: $e');
       rethrow;
     }
   }
@@ -98,7 +98,7 @@ class RPCServer {
 
     await _server!.close(force: true);
     _server = null;
-    print('RPC server stopped');
+    // print('RPC server stopped');
   }
 
   /// CORS middleware
@@ -129,13 +129,13 @@ class RPCServer {
   Middleware _loggingMiddleware() {
     return (Handler handler) {
       return (Request request) async {
-        final start = DateTime.now();
+        // final start = DateTime.now();
         final response = await handler(request);
-        final duration = DateTime.now().difference(start);
+        // final duration = DateTime.now().difference(start);
 
-        print(
-          '[RPC ${request.method}] ${request.url.path} - ${response.statusCode} (${duration.inMilliseconds}ms)',
-        );
+        // print(
+        //   '[RPC ${request.method}] ${request.url.path} - ${response.statusCode} (${duration.inMilliseconds}ms)',
+        // );
 
         return response;
       };

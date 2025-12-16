@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 // example/full_node_example.dart
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -59,7 +60,7 @@ Future<void> main() async {
 
   // Keep the node running
   print('\n⏹️  Press Ctrl+C to stop the node\n');
-  await Future.delayed(Duration(days: 365));
+  await Future<void>.delayed(Duration(days: 365));
 }
 
 void _printUsageInfo(String gatewayUrl, String rpcUrl, String peerId) {

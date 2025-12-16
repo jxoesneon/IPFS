@@ -1,6 +1,6 @@
 // test/mocks/mock_integration_test.dart
 import 'package:test/test.dart';
-import 'package:dart_ipfs/src/protocols/dht/Interface_dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'in_memory_datastore.dart';
 import 'mock_dht_handler.dart';

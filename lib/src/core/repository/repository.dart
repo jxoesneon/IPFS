@@ -24,7 +24,7 @@ class Repository {
         cid: block.cid,
       );
     } catch (e) {
-      print('Error adding file to repository: $e');
+      // print('Error adding file to repository: $e');
       rethrow;
     }
   }
@@ -38,7 +38,7 @@ class Repository {
       // Store the block
       await _datastore.put(block.cid.toString(), block);
     } catch (e) {
-      print('Error processing protobuf block: $e');
+      // print('Error processing protobuf block: $e');
       rethrow;
     }
   }
@@ -48,7 +48,7 @@ class Repository {
     try {
       return await _datastore.get(cid);
     } catch (e) {
-      print('Error retrieving block from repository: $e');
+      // print('Error retrieving block from repository: $e');
       return null;
     }
   }
@@ -58,7 +58,7 @@ class Repository {
     try {
       return await _datastore.has(cid);
     } catch (e) {
-      print('Error checking block existence in repository: $e');
+      // print('Error checking block existence in repository: $e');
       return false;
     }
   }
@@ -75,7 +75,7 @@ class Repository {
       await _datastore.delete(cid);
       return true;
     } catch (e) {
-      print('Error removing block from repository: $e');
+      // print('Error removing block from repository: $e');
       return false;
     }
   }
@@ -85,7 +85,7 @@ class Repository {
     try {
       return MerkleDAGNode.fromBytes(block.data);
     } catch (e) {
-      print('Error creating node from block: $e');
+      // print('Error creating node from block: $e');
       return null;
     }
   }

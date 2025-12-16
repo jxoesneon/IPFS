@@ -65,7 +65,7 @@ class MessageHandler {
       // Handle the processed data (e.g., store it, send it, etc.)
       await handleProcessedData(cid, processedData, contentType);
     } catch (e) {
-      print('Error processing content for CID ${cid.encode()}: $e');
+      // print('Error processing content for CID ${cid.encode()}: $e');
       rethrow;
     }
   }
@@ -127,9 +127,9 @@ class MessageHandler {
       final messageJson = jsonEncode(message);
       _pubSubClient?.publish('content_updates', messageJson);
 
-      print('Notified listeners about new content: ${cid.encode()}');
+      // print('Notified listeners about new content: ${cid.encode()}');
     } catch (e) {
-      print('Error notifying listeners about CID ${cid.encode()}: $e');
+      // print('Error notifying listeners about CID ${cid.encode()}: $e');
     }
   }
 
@@ -216,9 +216,9 @@ class MessageHandler {
         );
       }
 
-      print('Successfully handled processed data for CID: ${cid.encode()}');
+      // print('Successfully handled processed data for CID: ${cid.encode()}');
     } catch (e) {
-      print('Error handling processed data for CID ${cid.encode()}: $e');
+      // print('Error handling processed data for CID ${cid.encode()}: $e');
       rethrow;
     }
   }

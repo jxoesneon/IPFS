@@ -38,7 +38,7 @@ class JoseCoseHandler {
       ..jsonContent = utf8.decode(payload)
       ..addRecipient(jwk, algorithm: 'ES256');
 
-    final jws = await builder.build();
+    final jws = builder.build();
     return Uint8List.fromList(utf8.encode(jws.toCompactSerialization()));
   }
 
@@ -63,7 +63,7 @@ class JoseCoseHandler {
       ..addRecipient(recipientJwk, algorithm: 'ECDH-ES+A256KW')
       ..encryptionAlgorithm = 'A256GCM';
 
-    final jwe = await builder.build();
+    final jwe = builder.build();
     return Uint8List.fromList(utf8.encode(jwe.toCompactSerialization()));
   }
 

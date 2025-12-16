@@ -33,7 +33,7 @@ class ReplicationManager {
         peersNeeded,
       );
 
-      for (final peer in additionalPeers) {
+      for (final _ in additionalPeers) {
         try {
           final success = await _dhtClient.storeValue(
             Uint8List.fromList(key.codeUnits),
@@ -44,7 +44,7 @@ class ReplicationManager {
             await _valueStore.incrementReplicationCount(key);
           }
         } catch (e) {
-          print('Failed to create replica on peer ${peer.toString()}: $e');
+          // print('Failed to create replica on peer ${peer.toString()}: $e');
         }
       }
     }
@@ -84,7 +84,7 @@ class ReplicationManager {
           await ensureReplication(key, value);
         }
       }
-      await Future.delayed(RECHECK_INTERVAL);
+      await Future<void>.delayed(RECHECK_INTERVAL);
       return true;
     });
   }

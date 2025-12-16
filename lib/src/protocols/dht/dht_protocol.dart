@@ -36,7 +36,7 @@ class DHTProtocol {
     final results = <PeerId>[];
 
     // Parallel lookups following Kademlia spec
-    final futures = <Future>[];
+    final futures = <Future<void>>[];
     for (var i = 0; i < ALPHA && i < closest.length; i++) {
       futures.add(_queryPeer(closest[i], key));
     }
@@ -110,7 +110,7 @@ class DHTProtocol {
         _peerStore.addPeer(ipfsPeer);
       }
     } catch (e) {
-      print('Error querying peer ${peer.toString()}: $e');
+      // print('Error querying peer ${peer.toString()}: $e');
     }
   }
 

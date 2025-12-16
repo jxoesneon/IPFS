@@ -27,14 +27,14 @@ class MockConfig extends IPFSConfig {
 }
 
 class MockRouter implements P2plibRouter {
-  final Map<String, Function(p2p.Packet)> handlers = {};
+  final Map<String, void Function(p2p.Packet)> handlers = {};
   final List<List<int>> sentMessages = [];
 
   @override
   void registerProtocol(String protocolId) {}
 
   @override
-  void addMessageHandler(String protocolId, Function(p2p.Packet) handler) {
+  void addMessageHandler(String protocolId, void Function(p2p.Packet) handler) {
     handlers[protocolId] = handler;
   }
 
@@ -80,7 +80,7 @@ class MockIPLD extends IPLDHandler {
 
   @override
   Future<dynamic> get(CID cid) async {
-    return "RootNodeData"; // Helper to avoid null Check
+    return 'RootNodeData'; // Helper to avoid null Check
   }
 
   @override
@@ -182,7 +182,7 @@ void main() {
       )..srcPeerId = p2p.PeerId(value: Uint8List.fromList(List.filled(64, 1)));
 
       // Manually trigger handler
-      await mockRouter.handlers[GraphsyncProtocol.protocolID]!(packet);
+      mockRouter.handlers[GraphsyncProtocol.protocolID]!(packet);
 
       // Expect response
       expect(mockRouter.sentMessages, isNotEmpty);

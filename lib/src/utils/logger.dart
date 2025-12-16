@@ -57,6 +57,7 @@ class Logger {
             '${record.message}';
 
         if (record.error != null) {
+          // ignore: avoid_print
           print(
             '$message\nError: ${record.error}\nStack trace: ${record.stackTrace}',
           );
@@ -66,6 +67,7 @@ class Logger {
             record.error.toString(),
           );
         } else {
+          // ignore: avoid_print
           print(message);
         }
 
@@ -83,6 +85,7 @@ class Logger {
       final logFile = File('ipfs.log');
       logFile.writeAsStringSync('$message\n', mode: FileMode.append);
     } catch (e) {
+      // ignore: avoid_print
       print('Failed to write to log file: $e');
     }
   }

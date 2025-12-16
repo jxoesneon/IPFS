@@ -27,7 +27,7 @@ import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_proto;
 ///
 /// // Links in a directory listing
 /// for (final link in node.links) {
-///   print('${link.name}: ${link.cid}');
+///   // print('${link.name}: ${link.cid}');
 /// }
 /// ```
 ///

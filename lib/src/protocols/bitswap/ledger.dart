@@ -91,7 +91,7 @@ class LedgerManager {
   /// Print all ledgers for debugging purposes.
   void printLedgers() {
     _ledgers.forEach((peerId, ledger) {
-      print(ledger);
+      // print(ledger);
     });
   }
 

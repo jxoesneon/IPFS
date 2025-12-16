@@ -27,26 +27,26 @@ class Deletion<K_PeerId, V_PeerInfo> {
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? x;
     var yOriginalColor = y.color;
 
-    if (z.left_child == null) {
-      x = z.right_child;
-      transplant(tree, z, z.right_child);
-    } else if (z.right_child == null) {
-      x = z.left_child;
-      transplant(tree, z, z.left_child);
+    if (z.leftChild == null) {
+      x = z.rightChild;
+      transplant(tree, z, z.rightChild);
+    } else if (z.rightChild == null) {
+      x = z.leftChild;
+      transplant(tree, z, z.leftChild);
     } else {
-      y = minimum(z.right_child!);
+      y = minimum(z.rightChild!);
       yOriginalColor = y!.color;
-      x = y.right_child;
+      x = y.rightChild;
       if (y.parent == z) {
         x?.parent = y;
       } else {
-        transplant(tree, y, y.right_child);
-        y.right_child = z.right_child;
-        y.right_child?.parent = y;
+        transplant(tree, y, y.rightChild);
+        y.rightChild = z.rightChild;
+        y.rightChild?.parent = y;
       }
       transplant(tree, z, y);
-      y.left_child = z.left_child;
-      y.left_child?.parent = y;
+      y.leftChild = z.leftChild;
+      y.leftChild?.parent = y;
       y.color = z.color;
     }
 
@@ -72,10 +72,10 @@ class Deletion<K_PeerId, V_PeerInfo> {
   ) {
     if (u.parent == null) {
       tree.root = v;
-    } else if (u == u.parent!.left_child) {
-      u.parent!.left_child = v;
+    } else if (u == u.parent!.leftChild) {
+      u.parent!.leftChild = v;
     } else {
-      u.parent!.right_child = v;
+      u.parent!.rightChild = v;
     }
     v?.parent = u.parent;
   }
@@ -83,8 +83,8 @@ class Deletion<K_PeerId, V_PeerInfo> {
   RedBlackTreeNode<K_PeerId, V_PeerInfo>? minimum(
     RedBlackTreeNode<K_PeerId, V_PeerInfo> node,
   ) {
-    while (node.left_child != null) {
-      node = node.left_child!;
+    while (node.leftChild != null) {
+      node = node.leftChild!;
     }
     return node;
   }
@@ -101,9 +101,9 @@ class Deletion<K_PeerId, V_PeerInfo> {
       if (comparison == 0) {
         return node; // Key found
       } else if (comparison < 0) {
-        node = node.left_child; // Search in the left_child subtree
+        node = node.leftChild; // Search in the leftChild subtree
       } else {
-        node = node.right_child; // Search in the right_child subtree
+        node = node.rightChild; // Search in the rightChild subtree
       }
     }
 

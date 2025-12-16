@@ -35,12 +35,12 @@ class PubSubClient {
 
           // Validate sender is a known peer
           final senderPeerId = p2p.PeerId(
-            value: Base58().base58Decode(decodedJson['sender']),
+            value: Base58().base58Decode(decodedJson['sender'] as String),
           );
 
           // Only process messages from valid peers
           if (_router.isConnectedPeer(senderPeerId)) {
-            _messageController.add(decodedJson['content']);
+            _messageController.add(decodedJson['content'] as String);
           }
         } catch (e, stackTrace) {
           _logger.error('Error processing message', e, stackTrace);
@@ -140,7 +140,9 @@ class PubSubClient {
       final response = await http.get(Uri.parse('http://localhost:5001/stats'));
       if (response.statusCode == 200) {
         // Assuming response body contains JSON data for NodeStats
-        return NodeStats.fromJson(jsonDecode(response.body));
+        return NodeStats.fromJson(
+          jsonDecode(response.body) as Map<String, dynamic>,
+        );
       } else {
         throw Exception('Failed to load node stats');
       }

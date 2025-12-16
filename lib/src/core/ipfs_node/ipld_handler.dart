@@ -125,7 +125,7 @@ class IPLDHandler {
         value.startsWith('bafy');
   }
 
-  bool _isIPLDLink(Map value) {
+  bool _isIPLDLink(Map<dynamic, dynamic> value) {
     return value.containsKey('/') || // IPLD link format
         value.containsKey('cid') || // Alternative link format
         value.containsKey('Link'); // DAG-PB link format
@@ -141,13 +141,13 @@ class IPLDHandler {
     }
   }
 
-  Future<CID> _resolveIPLDLink(Map value) async {
+  Future<CID> _resolveIPLDLink(Map<dynamic, dynamic> value) async {
     if (value.containsKey('/')) {
-      return CID.decode(value['/']);
+      return CID.decode(value['/'] as String);
     } else if (value.containsKey('cid')) {
-      return CID.decode(value['cid']);
+      return CID.decode(value['cid'] as String);
     } else if (value.containsKey('Link')) {
-      return CID.decode(value['Link']);
+      return CID.decode(value['Link'] as String);
     }
     throw IPLDResolutionError('Invalid IPLD link format');
   }
@@ -390,7 +390,7 @@ class IPLDHandler {
 
         case SelectorType.union:
           for (final subSelector in currentSelector.subSelectors ?? []) {
-            await traverse(cid, subSelector);
+            await traverse(cid, subSelector as IPLDSelector);
           }
           break;
 
@@ -473,16 +473,16 @@ class IPLDHandler {
 
   bool _matchesValue(dynamic value, dynamic criterion) {
     if (criterion is Map && criterion.containsKey('\$regex')) {
-      final pattern = RegExp(criterion['\$regex']);
+      final pattern = RegExp(criterion['\$regex'] as String);
       return value is String && pattern.hasMatch(value);
     }
 
     if (criterion is Map && criterion.containsKey('\$gt')) {
-      return value is num && value > criterion['\$gt'];
+      return value is num && value > (criterion['\$gt'] as num);
     }
 
     if (criterion is Map && criterion.containsKey('\$lt')) {
-      return value is num && value < criterion['\$lt'];
+      return value is num && value < (criterion['\$lt'] as num);
     }
 
     return value == criterion;
@@ -596,9 +596,9 @@ class IPLDHandler {
     final joseData = json.decode(utf8.decode(data));
 
     final header = json.decode(
-      utf8.decode(base64Url.decode(joseData['protected'])),
+      utf8.decode(base64Url.decode(joseData['protected'] as String)),
     );
-    final payload = base64Url.decode(joseData['payload']);
+    final payload = base64Url.decode(joseData['payload'] as String);
 
     return IPLDNode()
       ..kind = Kind.MAP
@@ -614,7 +614,7 @@ class IPLDHandler {
                     ..key = 'alg'
                     ..value = (IPLDNode()
                       ..kind = Kind.STRING
-                      ..stringValue = header['alg']),
+                      ..stringValue = header['alg'] as String),
                 ]))),
           MapEntry()
             ..key = 'payload'

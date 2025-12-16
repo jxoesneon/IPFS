@@ -53,13 +53,13 @@ import 'package:dart_ipfs/src/transport/http_gateway_client.dart';
 /// // P2P mode (full network participation)
 /// final node = await IPFSNode.create(IPFSConfig(offline: false));
 /// await node.start();
-/// print('Peer ID: ${node.peerID}');
+/// // print('Peer ID: ${node.peerID}');
 /// ```
 ///
 /// **Adding Content:**
 /// ```dart
 /// final cid = await node.addFile(fileBytes);
-/// print('Added content: $cid');
+/// // print('Added content: $cid');
 /// ```
 ///
 /// **Retrieving Content:**
@@ -476,30 +476,41 @@ class IPFSNode {
       // Stop in reverse order of initialization
 
       // Stop high-level services
-      if (_container.isRegistered(IPNSHandler))
+      if (_container.isRegistered(IPNSHandler)) {
         await _container.get<IPNSHandler>().stop();
-      if (_container.isRegistered(AutoNATHandler))
+      }
+      if (_container.isRegistered(AutoNATHandler)) {
         await _container.get<AutoNATHandler>().stop();
-      if (_container.isRegistered(GraphsyncHandler))
+      }
+      if (_container.isRegistered(GraphsyncHandler)) {
         await _container.get<GraphsyncHandler>().stop();
-      if (_container.isRegistered(DNSLinkHandler))
+      }
+      if (_container.isRegistered(DNSLinkHandler)) {
         await _container.get<DNSLinkHandler>().stop();
-      if (_container.isRegistered(ContentRoutingHandler))
+      }
+      if (_container.isRegistered(ContentRoutingHandler)) {
         await _container.get<ContentRoutingHandler>().stop();
+      }
 
       // Stop network layer
-      if (_container.isRegistered(BitswapHandler))
+      if (_container.isRegistered(BitswapHandler)) {
         await _container.get<BitswapHandler>().stop();
-      if (_container.isRegistered(PubSubHandler))
+      }
+      if (_container.isRegistered(PubSubHandler)) {
         await _container.get<PubSubHandler>().stop();
-      if (_container.isRegistered(DHTHandler))
+      }
+      if (_container.isRegistered(DHTHandler)) {
         await _container.get<DHTHandler>().stop();
-      if (_container.isRegistered(BootstrapHandler))
+      }
+      if (_container.isRegistered(BootstrapHandler)) {
         await _container.get<BootstrapHandler>().stop();
-      if (_container.isRegistered(MDNSHandler))
+      }
+      if (_container.isRegistered(MDNSHandler)) {
         await _container.get<MDNSHandler>().stop();
-      if (_container.isRegistered(NetworkHandler))
+      }
+      if (_container.isRegistered(NetworkHandler)) {
         await _container.get<NetworkHandler>().stop();
+      }
 
       // Stop storage layer
       await _container.get<IPLDHandler>().stop();
@@ -529,7 +540,7 @@ class IPFSNode {
 
       return block.cid.toString();
     } catch (e) {
-      print('Error adding file: $e');
+      // print('Error adding file: $e');
       rethrow;
     }
   }
@@ -568,7 +579,7 @@ class IPFSNode {
                 .decode(cid)
                 .multihash
                 .toBytes(), // Decode CID to multihash bytes for the link
-            size: fixnum.Int64(entry.value.length),
+            size: fixnum.Int64((entry.value as Uint8List).length),
             isDirectory: false,
           ),
         );
@@ -698,7 +709,7 @@ class IPFSNode {
 
       return null;
     } catch (e) {
-      print('Error retrieving content for CID $cid: $e');
+      // print('Error retrieving content for CID $cid: $e');
       return null;
     }
   }
@@ -754,7 +765,7 @@ class IPFSNode {
       // Convert directory links to Link objects
       return node.links;
     } catch (e) {
-      print('Error listing directory $cid: $e');
+      // print('Error listing directory $cid: $e');
       return [];
     }
   }
@@ -778,9 +789,9 @@ class IPFSNode {
       // Update the datastore to mark the CID as pinned
       await _container.get<DatastoreHandler>().persistPinnedCIDs({cid});
 
-      print('Successfully pinned CID: $cid');
+      // print('Successfully pinned CID: $cid');
     } catch (e) {
-      print('Error pinning CID $cid: $e');
+      // print('Error pinning CID $cid: $e');
       rethrow;
     }
   }
@@ -804,14 +815,14 @@ class IPFSNode {
       if (success) {
         // Update the datastore
         await _container.get<DatastoreHandler>().datastore.unpin(cid);
-        print('Successfully unpinned CID: $cid');
+        // print('Successfully unpinned CID: $cid');
       } else {
-        print('Failed to unpin CID: $cid - CID may not be pinned');
+        // print('Failed to unpin CID: $cid - CID may not be pinned');
       }
 
       return success;
     } catch (e) {
-      print('Error while unpinning CID $cid: $e');
+      // print('Error while unpinning CID $cid: $e');
       return false;
     }
   }
@@ -827,11 +838,11 @@ class IPFSNode {
       // Delegate to DHT handler for IPNS record publishing
       await _container.get<DHTHandler>().publishIPNS(cid, keyName: keyName);
 
-      print(
-        'Successfully published IPNS record for CID: $cid with key: $keyName',
-      );
+      // print(
+      //   'Successfully published IPNS record for CID: $cid with key: $keyName',
+      // );
     } catch (e) {
-      print('Error publishing IPNS record: $e');
+      // print('Error publishing IPNS record: $e');
       rethrow;
     }
   }
@@ -840,7 +851,7 @@ class IPFSNode {
     try {
       await _container.get<DatastoreHandler>().importCAR(carFile);
     } catch (e) {
-      print('Error importing CAR file: $e');
+      // print('Error importing CAR file: $e');
       rethrow;
     }
   }
@@ -851,7 +862,7 @@ class IPFSNode {
       // Delegate to the datastoreHandler which has the CAR export implementation
       return await _container.get<DatastoreHandler>().exportCAR(cid);
     } catch (e) {
-      print('Error exporting CAR file: $e');
+      // print('Error exporting CAR file: $e');
       rethrow;
     }
   }
@@ -893,7 +904,7 @@ class IPFSNode {
       // No providers found
       return [];
     } catch (e) {
-      print('Error finding providers for CID $cid: $e');
+      // print('Error finding providers for CID $cid: $e');
       return [];
     }
   }
@@ -915,7 +926,7 @@ class IPFSNode {
       // Store the block in our datastore
       await _container.get<DatastoreHandler>().putBlock(block);
     } catch (e) {
-      print('Error requesting block $cid from peer ${peer.toString()}: $e');
+      // print('Error requesting block $cid from peer ${peer.toString()}: $e');
       rethrow;
     }
   }
@@ -941,7 +952,7 @@ class IPFSNode {
 
       throw Exception('Failed to resolve DNSLink for domain: $domainName');
     } catch (e) {
-      print('Error resolving DNSLink for domain $domainName: $e');
+      // print('Error resolving DNSLink for domain $domainName: $e');
       rethrow;
     }
   }
@@ -977,7 +988,8 @@ class IPFSNode {
   Future<Map<String, dynamic>> _getServiceStatus<T>() async {
     if (_container.isRegistered(T)) {
       try {
-        return await (_container.get<T>() as dynamic).getStatus();
+        return await (_container.get<T>() as dynamic).getStatus()
+            as Map<String, dynamic>;
       } catch (e) {
         return {'status': 'error', 'message': e.toString()};
       }

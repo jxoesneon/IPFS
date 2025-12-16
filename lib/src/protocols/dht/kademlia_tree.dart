@@ -216,7 +216,7 @@ class KademliaTree {
             try {
               // Apply exponential backoff if there were failures
               if (consecutiveFailedAttempts > 0) {
-                await Future.delayed(backoffDuration);
+                await Future<void>.delayed(backoffDuration);
               }
               return await _sendFindNodeRequest(peer, target);
             } catch (e) {
@@ -238,7 +238,7 @@ class KademliaTree {
           // Reset backoff on successful queries
           if (results.isNotEmpty) {
             consecutiveFailedAttempts = 0;
-            backoffDuration = Duration(milliseconds: 100);
+            await Future<void>.delayed(Duration(milliseconds: 10));
           }
 
           Set<p2p.PeerId> newPeers = {};
@@ -273,7 +273,7 @@ class KademliaTree {
 
           closestPeers = newClosestPeers;
         } catch (e) {
-          print('Error in lookup iteration $iteration: $e');
+          // print('Error in lookup iteration $iteration: $e');
           // Don't break on errors, let the backoff mechanism handle it
           continue;
         }
@@ -301,7 +301,7 @@ class KademliaTree {
       final response = await _sendMessageWithTimeout(peer, message, requestId);
       return _processFindNodeResponse(response);
     } catch (e) {
-      print('Error in find node request to $peer: $e');
+      // print('Error in find node request to $peer: $e');
       return [];
     }
   }
@@ -351,7 +351,7 @@ class KademliaTree {
           .map((peer) => p2p.PeerId(value: Uint8List.fromList(peer.id)))
           .toList();
     } catch (e) {
-      print('Error processing find node response: $e');
+      // print('Error processing find node response: $e');
       return [];
     }
   }
@@ -371,7 +371,7 @@ class KademliaTree {
 
       _updateLastSeen(message.srcPeerId);
     } catch (e) {
-      print('Error handling incoming message: $e');
+      // print('Error handling incoming message: $e');
     }
   }
 
@@ -392,7 +392,7 @@ class KademliaTree {
     try {
       await _valueStore.republishValues();
     } catch (e) {
-      print('Error in _republishKeys: $e');
+      // print('Error in _republishKeys: $e');
     }
   }
 
@@ -433,7 +433,7 @@ class KademliaTree {
         payload: response.writeToBuffer(),
       );
     } catch (e) {
-      print('Ping request failed: $e');
+      // print('Ping request failed: $e');
       return null;
     }
   }
@@ -450,7 +450,7 @@ class KademliaTree {
       final response = await _sendMessageWithTimeout(peer, message, requestId);
       return response.type == kad.Message_MessageType.PING;
     } catch (e) {
-      print('Ping failed for peer $peer: $e');
+      // print('Ping failed for peer $peer: $e');
       return false;
     }
   }
@@ -480,7 +480,7 @@ class KademliaTree {
         );
         return response.type == kad.Message_MessageType.PUT_VALUE;
       } catch (e) {
-        print('Store value failed for peer $peer: $e');
+        // print('Store value failed for peer $peer: $e');
         return false;
       }
     } finally {
@@ -525,7 +525,7 @@ class KademliaTree {
           final closerPeers = _processFindNodeResponse(response);
           return (null, closerPeers);
         } catch (e) {
-          print('Find value failed for peer $peer: $e');
+          // print('Find value failed for peer $peer: $e');
         }
       }
       return (null, <p2p.PeerId>[]);

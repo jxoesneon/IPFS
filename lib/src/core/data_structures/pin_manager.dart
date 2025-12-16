@@ -112,7 +112,7 @@ class PinManager {
 
       return references;
     } catch (e) {
-      print('Error getting block references: $e');
+      // print('Error getting block references: $e');
       return null;
     }
   }
@@ -131,7 +131,7 @@ class PinManager {
     if (decoded is Map) {
       for (final value in decoded.values) {
         if (value is Map && value.containsKey('/')) {
-          references.add(value['/']);
+          references.add(value['/'] as String);
         } else {
           references.addAll(_extractCborReferences(value));
         }
@@ -186,7 +186,7 @@ class PinManager {
         try {
           pinnedBlocks.add(_stringToIPFSCIDProto(entry.key));
         } catch (e) {
-          print('Warning: Skipping invalid CID: ${entry.key}');
+          // print('Warning: Skipping invalid CID: ${entry.key}');
           continue;
         }
       }

@@ -7,6 +7,8 @@ import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
+import 'package:dart_ipfs/src/core/cbor/enhanced_cbor_handler.dart';
+import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 
 /// Coordinates data retrieval across multiple protocols.
 ///
@@ -48,7 +50,20 @@ class ProtocolCoordinator {
       try {
         final resolvedData = await _ipld.get(CID.decode(cid));
         if (resolvedData != null) {
-          return Block.fromData(resolvedData, format: 'dag-cbor');
+          // Encode IPLDNode to bytes based on its kind
+          final Uint8List encodedData;
+          if (resolvedData.kind == Kind.BYTES) {
+            // Direct bytes value
+            encodedData = Uint8List.fromList(
+              resolvedData.bytesValue as List<int>,
+            );
+          } else {
+            // Encode other kinds as dag-cbor
+            encodedData = await EnhancedCBORHandler.encodeCbor(
+              resolvedData as IPLDNode,
+            );
+          }
+          return Block.fromData(encodedData, format: 'dag-cbor');
         }
       } catch (_) {
         // If IPLD resolution also fails, return null

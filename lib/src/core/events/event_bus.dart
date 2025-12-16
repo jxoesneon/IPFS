@@ -13,7 +13,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 ///
 /// // Subscribe to peer connections
 /// bus.subscribe<PeerConnectedEvent>().listen((event) {
-///   print('Peer connected: ${event.peerId}');
+///   // print('Peer connected: ${event.peerId}');
 /// });
 ///
 /// // Publish an event
@@ -25,7 +25,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 /// - [PeerConnectedEvent], [BlockTransferEvent] for specific event types
 class EventBus {
   final _logger = Logger('EventBus');
-  final _controllers = <Type, StreamController>{};
+  final _controllers = <Type, StreamController<dynamic>>{};
 
   /// Publishes an event to all subscribers
   void publish<T>(T event) {

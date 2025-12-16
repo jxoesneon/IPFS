@@ -49,7 +49,7 @@ void main() {
 
       reader.readBytes(2);
       expect(reader.hasRemaining, isFalse);
-      expect(reader.remaining, []);
+      expect(reader.remaining, <int>[]);
     });
   });
 }

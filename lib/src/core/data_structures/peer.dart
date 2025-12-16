@@ -16,8 +16,8 @@ import 'package:dart_ipfs/src/proto/generated/core/peer.pb.dart';
 /// ```dart
 /// // Create from multiaddr
 /// final peer = await Peer.fromMultiaddr('/ip4/127.0.0.1/tcp/4001/p2p/Qm...');
-/// print('Peer ID: ${peer.id}');
-/// print('Addresses: ${peer.addresses}');
+/// // print('Peer ID: ${peer.id}');
+/// // print('Addresses: ${peer.addresses}');
 /// ```
 ///
 /// See also:
@@ -138,7 +138,7 @@ p2p.FullAddress? parseMultiaddrString(String multiaddrString) {
     final ipAddress = InternetAddress(host);
     return p2p.FullAddress(address: ipAddress, port: port);
   } catch (e) {
-    print('Error parsing multiaddr string: $e');
+    // print('Error parsing multiaddr string: $e');
     return null;
   }
 }

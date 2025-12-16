@@ -19,7 +19,7 @@ const String _base58Alphabet =
 ///
 /// // Encode bytes to Base58
 /// final encoded = base58.encode(peerIdBytes);
-/// print('Peer ID: $encoded');
+/// // print('Peer ID: $encoded');
 ///
 /// // Decode Base58 back to bytes
 /// final decoded = base58.base58Decode(encoded);

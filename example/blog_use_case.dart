@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 // example/blog_use_case.dart
 import 'dart:convert';
 import 'dart:typed_data';
@@ -55,12 +56,14 @@ void main() async {
     // 3. Add files to IPFS
     print('🔹 Adding files to IPFS...');
 
-    final indexCid =
-        await node.addFile(Uint8List.fromList(utf8.encode(indexHtml)));
+    final indexCid = await node.addFile(
+      Uint8List.fromList(utf8.encode(indexHtml)),
+    );
     print('   📝 index.html CID: $indexCid');
 
-    final cssCid =
-        await node.addFile(Uint8List.fromList(utf8.encode(styleCss)));
+    final cssCid = await node.addFile(
+      Uint8List.fromList(utf8.encode(styleCss)),
+    );
     print('   🎨 style.css  CID: $cssCid');
 
     // 4. Create Directory (The "Blog" root)

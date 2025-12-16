@@ -62,7 +62,10 @@ class MockP2plibRouter implements P2plibRouter {
   void registerProtocol(String protocolId) {}
 
   @override
-  void addMessageHandler(String protocolId, Function(p2p.Packet) handler) {}
+  void addMessageHandler(
+    String protocolId,
+    void Function(p2p.Packet) handler,
+  ) {}
 
   @override
   void removeMessageHandler(String protocolId) {}

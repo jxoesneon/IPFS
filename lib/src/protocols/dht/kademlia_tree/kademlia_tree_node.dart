@@ -48,7 +48,7 @@ class KademliaTreeNode {
     this.distance,
     this._associatedPeerId, {
     required int lastSeen,
-  }) : assert(peerId.value.length > 0, 'PeerId cannot be empty'),
+  }) : assert(peerId.value.isNotEmpty, 'PeerId cannot be empty'),
        assert(distance >= 0, 'Distance must be non-negative'),
        _lastSeen = lastSeen,
        children = [];
