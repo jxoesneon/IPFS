@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package circuit_relay;
+
+enum Status {
+  OK = 0;
+  FAILED = 1;
+  HOP_SRC_ADDR_TOO_LONG = 220;
+  HOP_DST_ADDR_TOO_LONG = 221;
+  HOP_SRC_MULTIADDR_INVALID = 222;
+  HOP_DST_MULTIADDR_INVALID = 223;
+  HOP_NO_CONN_TO_DST = 260;
+  HOP_CANT_DIAL_DST = 261;
+  HOP_CANT_OPEN_DST_STREAM = 262;
+  HOP_CANT_SPEAK_RELAY = 270;
+  HOP_CANT_RELAY_TO_SELF = 280;
+  STOP_SRC_ADDR_TOO_LONG = 320;
+  STOP_DST_ADDR_TOO_LONG = 321;
+  STOP_SRC_MULTIADDR_INVALID = 322;
+  STOP_DST_MULTIADDR_INVALID = 323;
+}
+
+message HopMessage {
+  enum Type {
+    RESERVE = 0;
+    CONNECT = 1;
+    STATUS = 2;
+  }
+
+  Type type = 1;
+  Peer peer = 2; // For CONNECT
+  Reservation reservation = 3; // For STATUS response to RESERVE
+  Limit limit = 4; // For STATUS response, limits
+  Status status = 5;
+}
+
+message StopMessage {
+  enum Type {
+    CONNECT = 0;
+    STATUS = 1;
+  }
+
+  Type type = 1;
+  Peer peer = 2;
+  Limit limit = 3;
+  Status status = 4;
+}
+
+message Peer {
+  bytes id = 1;
+  repeated bytes addrs = 2;
+}
+
+message Reservation {
+  uint64 expire = 1; // Unix timestamp
+  uint64 limit_duration = 2; // Seconds
+  uint64 limit_data = 3; // Bytes
+  repeated bytes addrs = 4; // Relay addresses
+}
+
+message Limit {
+  uint64 duration = 1;
+  uint64 data = 2;
+}

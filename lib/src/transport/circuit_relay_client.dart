@@ -1,14 +1,21 @@
 import 'dart:async';
-import 'package:fixnum/fixnum.dart' as fixnum;
 
+import 'package:fixnum/fixnum.dart' as fixnum;
+import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart' as pb;
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'p2plib_router.dart'; // Import the P2P library for peer-to-peer communication
 
 /// Handles circuit relay operations for an IPFS node.
 class CircuitRelayClient {
+  static const String _protocolId = '/libp2p/circuit/relay/0.2.0/hop';
   final P2plibRouter _router; // Router instance for handling connections
   final StreamController<CircuitRelayConnectionEvent>
   _circuitRelayEventsController =
       StreamController<CircuitRelayConnectionEvent>.broadcast();
+
+  // Pending reservations keyed by Relay Peer ID
+  final Map<String, Completer<Reservation>> _pendingReservations = {};
 
   CircuitRelayClient(this._router);
 
@@ -17,6 +24,8 @@ class CircuitRelayClient {
     try {
       // Initialize any necessary resources or connections
       await _router.start();
+      _router.registerProtocol(_protocolId);
+      _router.addMessageHandler(_protocolId, _handlePacket);
     } catch (e) {
       // ignore: empty_catches
     }
@@ -44,26 +53,54 @@ class CircuitRelayClient {
     int limitDuration = 7200, // 2 hours
   }) async {
     try {
-      // TODO: Implement actual HOP protocol message via router
-      // For now, we simulate reservation negotiation
-      // await _router.negotiateReservation(relayPeerId);
+      final msg = pb.HopMessage()
+        ..type = pb.HopMessage_Type.RESERVE
+        ..limit = (pb.Limit()
+          ..duration = fixnum.Int64(limitDuration)
+          ..data = fixnum.Int64(limitData));
 
-      final reservation = Reservation(
-        relayPeerId: relayPeerId,
-        expireTime: DateTime.now().add(duration),
-        limitData: fixnum.Int64(limitData),
-        limitDuration: fixnum.Int64(limitDuration),
+      // Create completer for response
+      final completer = Completer<Reservation>();
+      _pendingReservations[relayPeerId] = completer;
+
+      // Send message
+      final peerIdBytes = Base58().base58Decode(relayPeerId);
+      final addresses = _router.routerL0.resolvePeerId(
+        p2p.PeerId(value: peerIdBytes),
       );
 
-      _circuitRelayEventsController.add(
-        CircuitRelayConnectionEvent(
-          eventType: 'circuit_relay_reservation',
-          relayAddress: relayPeerId,
-          reason: 'Reservation acquired',
-        ),
+      if (addresses.isEmpty) {
+        throw StateError(
+          'Could not resolve address for relay peer: $relayPeerId',
+        );
+      }
+
+      _router.routerL0.sendDatagram(
+        addresses: addresses,
+        datagram: msg.writeToBuffer(),
       );
-      return reservation;
+
+      // Wait for response or timeout
+      return await completer.future
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              _pendingReservations.remove(relayPeerId);
+              throw TimeoutException('Reservation request timed out');
+            },
+          )
+          .then((res) {
+            _circuitRelayEventsController.add(
+              CircuitRelayConnectionEvent(
+                eventType: 'circuit_relay_reservation',
+                relayAddress: relayPeerId,
+                reason: 'Reservation acquired',
+              ),
+            );
+            return res;
+          });
     } catch (e) {
+      _pendingReservations.remove(relayPeerId);
       _circuitRelayEventsController.add(
         CircuitRelayConnectionEvent(
           eventType: 'circuit_relay_failed',
@@ -72,6 +109,38 @@ class CircuitRelayClient {
         ),
       );
       return null;
+    }
+  }
+
+  /// Handles incoming HOP messages
+  void _handlePacket(p2p.Packet packet) {
+    try {
+      final msg = pb.HopMessage.fromBuffer(packet.datagram);
+      final fromPeer = Base58().encode(packet.srcPeerId.value);
+
+      if (msg.type == pb.HopMessage_Type.STATUS) {
+        if (_pendingReservations.containsKey(fromPeer)) {
+          final completer = _pendingReservations.remove(fromPeer)!;
+
+          if (msg.status == pb.Status.OK) {
+            final res = Reservation(
+              relayPeerId: fromPeer,
+              expireTime: DateTime.fromMillisecondsSinceEpoch(
+                msg.reservation.expire.toInt() * 1000,
+              ),
+              limitData: msg.reservation.limitData,
+              limitDuration: msg.reservation.limitDuration,
+            );
+            completer.complete(res);
+          } else {
+            completer.completeError('Reservation rejected: ${msg.status}');
+          }
+        }
+      }
+      // Handle other types (CONNECT, etc.) if needed in future
+    } catch (e) {
+      // ignore: avoid_print
+      // print('Error handling HOP message: $e');
     }
   }
 
