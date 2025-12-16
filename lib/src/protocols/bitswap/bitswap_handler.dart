@@ -118,7 +118,7 @@ class BitswapHandler {
 
     if (message.hasBlocks()) {
       // Blocks don't strictly require 'fromPeer' to be useful (we verified content hash).
-      _handleBlocks(message.getBlocks());
+      await _handleBlocks(message.getBlocks());
 
       if (fromPeer != null) {
         final ledger = _ledgerManager.getLedger(fromPeer);
@@ -176,15 +176,19 @@ class BitswapHandler {
   }
 
   /// Handles incoming blocks according to Bitswap spec
-  void _handleBlocks(List<Block> blocks) {
+  Future<void> _handleBlocks(List<Block> blocks) async {
     for (final block in blocks) {
-      // Validate block before storing
-      if (!block.validate()) {
-        // print('Received invalid block: ${block.cid}');
+      // Validate block hash before storing (SEC-002 security fix)
+      final isValid = await block.validate();
+      if (!isValid) {
+        _logger.warning(
+          'Rejected invalid block: ${block.cid.encode()} - hash mismatch',
+        );
         continue;
       }
 
-      _blockStore.putBlock(block);
+      await _blockStore.putBlock(block);
+      _blocksReceived++;
 
       final cidStr = block.cid.encode();
       // Complete pending request if exists

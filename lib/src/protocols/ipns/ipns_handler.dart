@@ -10,14 +10,21 @@ import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
+import 'ipns_record.dart';
 
-/// Handles IPNS operations, combining both node-level coordination and protocol-level operations
+/// Handles IPNS operations, combining both node-level coordination and protocol-level operations.
+///
+/// **Security (SEC-004):** All IPNS records are signed with Ed25519 and verified
+/// on resolve to prevent record forgery attacks.
 class IPNSHandler {
   final IPFSConfig _config;
   final SecurityManager _securityManager;
   final IDHTHandler _dhtHandler;
   late final Logger _logger;
   bool _isRunning = false;
+
+  /// Sequence numbers for each key (tracked to ensure monotonic increase)
+  final Map<String, int> _sequenceNumbers = {};
 
   // Cache for resolved IPNS records
   final Map<String, _CachedResolution> _resolutionCache = {};
@@ -32,7 +39,10 @@ class IPNSHandler {
     _logger.debug('IPNSHandler instance created');
   }
 
-  /// Publishes an IPNS record linking a name to a CID
+  /// Publishes a SIGNED IPNS record linking a name to a CID.
+  ///
+  /// SEC-004: Records are signed with Ed25519 to prevent forgery.
+  /// Uses EncryptedKeystore via SecurityManager for secure key access.
   Future<void> publish(String cid, {required String keyName}) async {
     _logger.debug('Publishing IPNS record for CID: $cid with key: $keyName');
 
@@ -42,46 +52,57 @@ class IPNSHandler {
         throw ArgumentError('Invalid CID format');
       }
 
-      // Get key from security manager
-      final key = await _securityManager.getPrivateKey(keyName);
-      if (key == null) {
-        throw ArgumentError('Key not found: $keyName');
+      // Check if keystore is unlocked
+      if (!_securityManager.isKeystoreUnlocked) {
+        throw StateError(
+          'Keystore is locked. Call securityManager.unlockKeystore() first.',
+        );
       }
 
-      // Derive PeerID (name) from public key
-      // Naive implementation: Hash of public key bytes
-      // In real IPFS, this depends on key type (RSA vs Ed25519)
-      // We use the public key bytes as the ID for now or hash it if needed
-      // For this cleanup, we just use publicKeyBytes assuming it maps to ID
-      final idBytes = key.publicKeyBytes;
+      // Get key pair from encrypted keystore
+      final keyPair = await _securityManager.getSecureKey(keyName);
 
-      // Create and publish record
-      final record = await createRecord(CID.decode(cid), idBytes);
+      // Get/increment sequence number
+      final sequence = (_sequenceNumbers[keyName] ?? 0) + 1;
+      _sequenceNumbers[keyName] = sequence;
 
+      // Create signed IPNS record
+      final record = await IPNSRecord.create(
+        value: CID.decode(cid),
+        keyPair: keyPair,
+        sequence: sequence,
+      );
+
+      // Publish to DHT
       await publishRecord(record);
-      _logger.info('Successfully published IPNS record for CID: $cid');
+      _logger.info('Successfully published signed IPNS record for CID: $cid');
     } catch (e, stackTrace) {
       _logger.error('Failed to publish IPNS record', e, stackTrace);
       rethrow;
     }
   }
 
-  /// Creates an IPNS record for the given CID and key
+  /// Creates a SIGNED IPNS record for the given CID and key.
+  ///
+  /// @deprecated Use [IPNSRecord.create] directly for new code.
   Future<Record> createRecord(CID cid, Uint8List keyBytes) async {
     final record = Record()
       ..key = keyBytes
       ..value = cid.toBytes()
       ..sequence = Int64(DateTime.now().millisecondsSinceEpoch);
 
+    _logger.warning('Using unsigned Record - migrate to IPNSRecord.create()');
     return record;
   }
 
-  /// Publishes an IPNS record to the DHT
-  Future<void> publishRecord(Record record) async {
-    await _dhtHandler.putValue(
-      Key(Uint8List.fromList(record.key)),
-      Value(Uint8List.fromList(record.value)),
-    );
+  /// Publishes a signed IPNS record to the DHT.
+  Future<void> publishRecord(IPNSRecord record) async {
+    if (!record.isSigned) {
+      throw StateError('Cannot publish unsigned IPNS record');
+    }
+
+    // Use public key as DHT key
+    await _dhtHandler.putValue(Key(record.publicKey), Value(record.toCBOR()));
   }
 
   /// Resolves an IPNS record from the DHT

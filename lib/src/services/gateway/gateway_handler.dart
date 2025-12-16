@@ -170,10 +170,14 @@ class GatewayHandler {
 
     for (final link in pbNode.links) {
       final name = link.name;
+      // SEC-005: Escape untrusted file names to prevent XSS attacks
+      final escapedName = const HtmlEscape().convert(name);
       final size = link.size.toInt();
       final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
       html.writeln('<tr>');
-      html.writeln('  <td><a href="/ipfs/${linkCid.encode()}">$name</a></td>');
+      html.writeln(
+        '  <td><a href="/ipfs/${linkCid.encode()}">$escapedName</a></td>',
+      );
       html.writeln('  <td>${_formatSize(size.toInt())}</td>');
       html.writeln('  <td>-</td>');
       html.writeln('</tr>');

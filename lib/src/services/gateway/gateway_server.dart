@@ -11,24 +11,41 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 ///
 /// Provides standard IPFS Gateway endpoints for accessing content via HTTP.
 /// Compliant with IPFS Gateway specifications.
+///
+/// **Security (SEC-007):** Rate limiting is enabled by default to prevent DoS.
 class GatewayServer {
   final BlockStore blockStore;
   final String address;
   final int port;
   final List<String> corsOrigins;
   final IpnsResolver? ipnsResolver;
+
+  /// Maximum requests per IP per time window (SEC-007)
+  final int maxRequestsPerIp;
+
+  /// Time window for rate limiting in seconds
+  final int rateLimitWindowSeconds;
+
   final _logger = Logger('GatewayServer');
 
   HttpServer? _server;
   late final GatewayHandler _handler;
   late final Router _router;
 
+  /// Tracks request counts per IP for rate limiting
+  final Map<String, List<DateTime>> _requestLog = {};
+
   GatewayServer({
     required this.blockStore,
     this.address = 'localhost',
     this.port = 8080,
-    this.corsOrigins = const ['*'],
+    this.corsOrigins = const [
+      'http://localhost',
+      'http://127.0.0.1',
+    ], // SEC-006: Restrict CORS
     this.ipnsResolver,
+    this.maxRequestsPerIp = 100,
+    this.rateLimitWindowSeconds = 60,
   }) {
     _handler = GatewayHandler(blockStore, ipnsResolver: ipnsResolver);
     _setupRouter();
@@ -73,9 +90,10 @@ class GatewayServer {
       throw StateError('Server is already running');
     }
 
-    // Build middleware pipeline
+    // Build middleware pipeline with rate limiting (SEC-007)
     final handler = Pipeline()
         .addMiddleware(_corsMiddleware())
+        .addMiddleware(_rateLimitMiddleware())
         .addMiddleware(_loggingMiddleware())
         .addHandler(_router.call);
 
@@ -98,7 +116,51 @@ class GatewayServer {
 
     await _server!.close(force: true);
     _server = null;
+    _requestLog.clear();
     _logger.info('Gateway server stopped');
+  }
+
+  /// Rate limiting middleware (SEC-007 security fix)
+  ///
+  /// Limits requests per IP to [maxRequestsPerIp] per [rateLimitWindowSeconds].
+  Middleware _rateLimitMiddleware() {
+    return (Handler handler) {
+      return (Request request) async {
+        // Extract client IP
+        final clientIp =
+            request.headers['x-forwarded-for']?.split(',').first ??
+            request.headers['x-real-ip'] ??
+            'unknown';
+
+        final now = DateTime.now();
+        final windowStart = now.subtract(
+          Duration(seconds: rateLimitWindowSeconds),
+        );
+
+        // Clean old entries and get recent requests
+        _requestLog[clientIp] = (_requestLog[clientIp] ?? [])
+            .where((t) => t.isAfter(windowStart))
+            .toList();
+
+        // Check rate limit
+        if (_requestLog[clientIp]!.length >= maxRequestsPerIp) {
+          _logger.warning('Rate limit exceeded for $clientIp');
+          return Response(
+            429,
+            body: '{"error": "Rate limit exceeded. Try again later."}',
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': rateLimitWindowSeconds.toString(),
+            },
+          );
+        }
+
+        // Record request
+        _requestLog[clientIp]!.add(now);
+
+        return handler(request);
+      };
+    };
   }
 
   /// CORS middleware

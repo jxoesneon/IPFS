@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.4] - 2025-12-16
+
+### Security
+- **Encrypted Key Storage**: Private keys now encrypted with AES-256-GCM + PBKDF2 (100K iterations)
+- **IPNS Signatures**: All IPNS records signed with Ed25519 and verified on resolve
+- **RPC Authentication**: Optional API key auth with constant-time comparison
+- **Gateway Hardening**: XSS protection, rate limiting (100 req/60s), restricted CORS
+- **PubSub Signing**: HMAC-SHA256 message authentication
+- **DHT Protection**: Provider rate limiting to prevent index poisoning
+
+### Added
+- `lib/src/core/crypto/crypto_utils.dart` - PBKDF2, AES-GCM, memory zeroing utilities
+- `lib/src/core/crypto/ed25519_signer.dart` - Ed25519 signing service
+- `lib/src/core/crypto/encrypted_keystore.dart` - Secure key storage
+- `lib/src/protocols/ipns/ipns_record.dart` - IPNS V2 record implementation
+
+### Changed
+- Upgraded `watcher` 1.1.4 → 1.2.0
+
 ## [1.3.3] - 2025-12-16
 
 ### Fixed

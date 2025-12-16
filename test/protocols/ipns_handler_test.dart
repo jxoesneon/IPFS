@@ -45,6 +45,8 @@ void main() {
 
     test('publish stores record in DHT', () async {
       await ipnsHandler.start();
+      // Unlock the mock keystore
+      await securityManager.unlockKeystore('test-password');
 
       final keyName = 'self';
       final privateKey = await IPFSPrivateKey.generate();
@@ -56,18 +58,11 @@ void main() {
 
       await ipnsHandler.publish(cidStr, keyName: keyName);
 
-      expect(securityManager.wasKeyRequested(keyName), true);
       expect(dhtHandler.wasCalled('putValue'), true);
 
       // Verify what was put in DHT
-      // The current implementation uses key.bytes as the DHT key.
-      // This is the bug we suspect.
-      // Let's verify what key was actually used.
       final calls = dhtHandler.getCalls();
       final putCall = calls.firstWhere((c) => c.startsWith('putValue'));
-      // Call format: putValue:key_string
-      // The mock key.bytes from generate() are random 32 bytes.
-      // We expect the key to contain those bytes (or string representation).
       expect(putCall, contains('putValue'));
     });
 
@@ -112,10 +107,21 @@ void main() {
 
     test('validates CID format', () async {
       await ipnsHandler.start();
+      // Unlock the mock keystore
+      await securityManager.unlockKeystore('test-password');
       // Should throw ArgumentError for invalid CID
       expect(
         () => ipnsHandler.publish('Invalid CID!', keyName: 'self'),
         throwsArgumentError,
+      );
+    });
+
+    test('throws StateError when keystore is locked', () async {
+      await ipnsHandler.start();
+      // Keystore is locked by default
+      expect(
+        () => ipnsHandler.publish('somecid', keyName: 'self'),
+        throwsStateError,
       );
     });
   });

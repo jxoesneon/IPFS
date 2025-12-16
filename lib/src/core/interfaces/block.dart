@@ -28,7 +28,10 @@ abstract class IBlock {
   Uint8List toBytes();
 
   /// Validates the block's content hash matches its CID.
-  bool validate();
+  ///
+  /// This is an async operation as it may require computing the cryptographic hash.
+  /// Returns `true` if the hash matches, `false` otherwise.
+  Future<bool> validate();
 }
 
 /// Factory interface for creating blocks from various sources.

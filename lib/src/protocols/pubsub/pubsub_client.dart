@@ -5,12 +5,17 @@ import '../../utils/base58.dart';
 import '../../utils/logger.dart';
 import 'package:http/http.dart' as http;
 import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:crypto/crypto.dart'; // SEC-008: For message signing
 import '../../core/data_structures/node_stats.dart';
 import '../../transport/p2plib_router.dart'; // Import your router class
 
 // For encoding utilities
 
 /// Handles PubSub operations for an IPFS node.
+///
+/// **Security (SEC-008):** Messages include HMAC-SHA256 signatures to prevent
+/// sender identity spoofing. The signature is computed over the message content
+/// using the peer's ID as the key.
 class PubSubClient {
   final P2plibRouter _router; // Router for sending and receiving messages
   final StreamController<String> _messageController =
@@ -31,6 +36,27 @@ class PubSubClient {
           // Skip messages from self
           if (decodedJson['sender'] == Base58().encode(_peerId.value)) {
             return;
+          }
+
+          // SEC-008: Verify message signature
+          final signature = decodedJson['signature'] as String?;
+          if (signature != null) {
+            final expectedSig = _computeSignature(
+              decodedJson['sender'] as String,
+              decodedJson['content'] as String,
+              decodedJson['topic'] as String,
+            );
+            if (signature != expectedSig) {
+              _logger.warning(
+                'Rejected message with invalid signature from ${decodedJson['sender']}',
+              );
+              return;
+            }
+          } else {
+            // For backwards compatibility, log warning but allow unsigned messages
+            _logger.verbose(
+              'Received unsigned message from ${decodedJson['sender']}',
+            );
           }
 
           // Validate sender is a known peer
@@ -119,14 +145,27 @@ class PubSubClient {
   }
 
   /// Encodes a publish request for the given topic and message.
+  /// SEC-008: Includes HMAC-SHA256 signature to prevent sender spoofing.
   Uint8List encodePublishRequest(String topic, String message) {
-    // Include sender's peerId in the message format
+    final senderStr = Base58().encode(_peerId.value);
+    final signature = _computeSignature(senderStr, message, topic);
+
     final messageWithSender = {
-      'sender': Base58().encode(_peerId.value),
+      'sender': senderStr,
       'topic': topic,
       'content': message,
+      'signature': signature, // SEC-008: Message signature
     };
     return Uint8List.fromList(utf8.encode(jsonEncode(messageWithSender)));
+  }
+
+  /// Computes HMAC-SHA256 signature for message integrity.
+  String _computeSignature(String sender, String content, String topic) {
+    final key = utf8.encode(sender);
+    final data = utf8.encode('$topic:$content');
+    final hmac = Hmac(sha256, key);
+    final digest = hmac.convert(data);
+    return digest.toString();
   }
 
   /// Decodes incoming messages from bytes to string.

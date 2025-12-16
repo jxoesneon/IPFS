@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:p2plib/p2plib.dart' show PeerId;
 import 'package:dart_ipfs/src/utils/keystore.dart';
-import 'package:dart_ipfs/src/utils/private_key.dart';
 import 'package:dart_ipfs/src/storage/datastore.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
@@ -18,21 +17,38 @@ import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/ipns/ipns.pb.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:dart_ipfs/src/utils/private_key.dart';
 
 /// Handles DHT operations for an IPFS node.
+///
+/// **Security (SEC-010):** Provider records are verified before storage
+/// to prevent DHT index poisoning attacks.
 class DHTHandler implements IDHTHandler {
   late final DHTClient dhtClient;
   final Keystore _keystore;
   final P2plibRouter _router;
   final Datastore _storage;
+  late final Logger _logger;
 
   final Set<String> _activeQueries = {};
   final Map<String, Set<String>> _providers = {};
   static const String _protocolVersion = '1.0.0';
 
+  // SEC-010: Provider verification constants
+  /// Maximum providers to store per CID (prevents flooding)
+  static const int maxProvidersPerCid = 20;
+
+  /// Rate limit: max provider announcements per peer per minute
+  static const int maxProviderAnnouncementsPerMinute = 10;
+
+  /// Track provider announcements per peer for rate limiting
+  final Map<String, List<DateTime>> _providerAnnouncements = {};
+
   DHTHandler(IPFSConfig config, this._router, NetworkHandler networkHandler)
     : _keystore = Keystore(),
       _storage = Datastore(config.datastorePath) {
+    _logger = Logger('DHTHandler', debug: config.debug);
     _storage.init();
     dhtClient = DHTClient(networkHandler: networkHandler, router: _router);
   }
@@ -273,14 +289,56 @@ class DHTHandler implements IDHTHandler {
     }
   }
 
-  /// Handles requests from peers to provide content
+  /// Handles requests from peers to provide content.
+  ///
+  /// **Security (SEC-010):** Verifies provider requests before storage:
+  /// - Rate limits provider announcements per peer
+  /// - Limits max providers per CID
+  /// - Logs suspicious activity
   @override
   Future<void> handleProvideRequest(CID cid, PeerId provider) async {
+    final providerStr = provider.toString();
+    final cidStr = cid.toString();
+
     try {
-      await dhtClient.addProvider(cid.toString(), provider.toString());
-      // print('Added provider ${provider.toString()} for CID ${cid.toString()}');
+      // SEC-010: Rate limit check
+      final now = DateTime.now();
+      final announcements = _providerAnnouncements[providerStr] ?? [];
+
+      // Remove old announcements (older than 1 minute)
+      announcements.removeWhere((time) => now.difference(time).inSeconds > 60);
+
+      if (announcements.length >= maxProviderAnnouncementsPerMinute) {
+        _logger.warning(
+          'SEC-010: Rate limit exceeded for provider $providerStr '
+          '(${announcements.length} announcements/min)',
+        );
+        return; // Reject - rate limit exceeded
+      }
+
+      // SEC-010: Max providers per CID check
+      final existingProviders = _providers[cidStr] ?? <String>{};
+      if (existingProviders.length >= maxProvidersPerCid &&
+          !existingProviders.contains(providerStr)) {
+        _logger.warning(
+          'SEC-010: Max providers ($maxProvidersPerCid) reached for CID $cidStr',
+        );
+        return; // Reject - too many providers
+      }
+
+      // Track this announcement
+      announcements.add(now);
+      _providerAnnouncements[providerStr] = announcements;
+
+      // Track provider locally
+      existingProviders.add(providerStr);
+      _providers[cidStr] = existingProviders;
+
+      // Add to DHT
+      await dhtClient.addProvider(cidStr, providerStr);
+      _logger.verbose('Added verified provider $providerStr for CID $cidStr');
     } catch (e) {
-      // print('Error handling provide request: $e');
+      _logger.error('Error handling provide request', e, StackTrace.current);
     }
   }
 

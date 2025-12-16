@@ -1,17 +1,64 @@
 // test/mocks/mock_security_manager.dart
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:dart_ipfs/src/utils/private_key.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
+import 'package:dart_ipfs/src/core/crypto/encrypted_keystore.dart';
+import 'package:cryptography/cryptography.dart';
 
 /// Mock implementation of key management for testing.
 class MockSecurityManager implements SecurityManager {
   final Map<String, IPFSPrivateKey> _keys = {};
   final List<String> _calls = [];
+  bool _isUnlocked = false;
 
   // Implement SecurityManager interface members
   @override
-  Keystore get keystore => Keystore(); // Return a dummy or mock keystore if needed
+  Keystore get keystore => Keystore();
+
+  @override
+  EncryptedKeystore get secureKeystore => EncryptedKeystore();
+
+  @override
+  bool get isKeystoreUnlocked => _isUnlocked;
+
+  @override
+  Future<void> unlockKeystore(String password, {Uint8List? salt}) async {
+    _recordCall('unlockKeystore');
+    _isUnlocked = true;
+  }
+
+  @override
+  void lockKeystore() {
+    _recordCall('lockKeystore');
+    _isUnlocked = false;
+  }
+
+  @override
+  Future<SimpleKeyPair> getSecureKey(String keyName) async {
+    _recordCall('getSecureKey:$keyName');
+    final algorithm = Ed25519();
+    return await algorithm.newKeyPair();
+  }
+
+  @override
+  Future<Uint8List> generateSecureKey(String keyName, {String? label}) async {
+    _recordCall('generateSecureKey:$keyName');
+    return Uint8List(32);
+  }
+
+  @override
+  bool hasSecureKey(String keyName) {
+    _recordCall('hasSecureKey:$keyName');
+    return _keys.containsKey(keyName);
+  }
+
+  @override
+  Uint8List? getSecurePublicKey(String keyName) {
+    _recordCall('getSecurePublicKey:$keyName');
+    return null;
+  }
 
   @override
   Future<IPFSPrivateKey?> getPrivateKey(String keyName) async {
@@ -94,6 +141,7 @@ class MockSecurityManager implements SecurityManager {
   void reset() {
     _keys.clear();
     _calls.clear();
+    _isUnlocked = false;
   }
 
   void _recordCall(String call) {

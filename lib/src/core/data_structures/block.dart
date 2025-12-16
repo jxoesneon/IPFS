@@ -38,10 +38,30 @@ class Block implements IBlock {
 
   int get size => data.length;
 
-  /// Validates the block's data against its CID
-  bool validate() {
-    // Simplified validation (hashing not implemented here to avoid circular dep or heavy computation)
-    return true;
+  /// Validates the block's data against its CID.
+  ///
+  /// Computes the CID from the block's data and compares it to the stored CID.
+  /// Returns `true` only if the content hash matches the CID.
+  ///
+  /// **Security Note:** This method MUST be called on all blocks received from
+  /// untrusted peers to prevent malicious block injection attacks (SEC-002).
+  Future<bool> validate() async {
+    try {
+      final computedCid = await CID.fromContent(data, codec: format);
+      return computedCid.encode() == cid.encode();
+    } catch (e) {
+      // If we can't compute the CID, validation fails
+      return false;
+    }
+  }
+
+  /// Synchronous validation check (less secure, for performance-critical paths).
+  /// Performs basic structural checks only. Use [validate] for full verification.
+  bool validateSync() {
+    // Basic checks: non-empty data and valid CID structure
+    if (data.isEmpty) return false;
+    if (cid.encode().isEmpty) return false;
+    return true; // Structural check only - use validate() for hash verification
   }
 
   /// Converts the block to its protobuf representation
