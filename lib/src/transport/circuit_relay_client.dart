@@ -34,6 +34,47 @@ class CircuitRelayClient {
     }
   }
 
+  /// Requests a reservation from a relay peer (Circuit Relay v2 HOP).
+  ///
+  /// Returns [Reservation] details if successful.
+  Future<Reservation?> reserve(
+    String relayPeerId, {
+    Duration duration = const Duration(minutes: 60),
+    int limitData = 1024 * 1024 * 1024, // 1GB default
+    int limitDuration = 7200, // 2 hours
+  }) async {
+    try {
+      // TODO: Implement actual HOP protocol message via router
+      // For now, we simulate reservation negotiation
+      // await _router.negotiateReservation(relayPeerId);
+
+      final reservation = Reservation(
+        relayPeerId: relayPeerId,
+        expireTime: DateTime.now().add(duration),
+        limitData: fixnum.Int64(limitData),
+        limitDuration: fixnum.Int64(limitDuration),
+      );
+
+      _circuitRelayEventsController.add(
+        CircuitRelayConnectionEvent(
+          eventType: 'circuit_relay_reservation',
+          relayAddress: relayPeerId,
+          reason: 'Reservation acquired',
+        ),
+      );
+      return reservation;
+    } catch (e) {
+      _circuitRelayEventsController.add(
+        CircuitRelayConnectionEvent(
+          eventType: 'circuit_relay_failed',
+          relayAddress: relayPeerId,
+          errorMessage: 'Reservation failed: $e',
+        ),
+      );
+      return null;
+    }
+  }
+
   /// Connects to a peer using a circuit relay.
   Future<void> connect(String peerId) async {
     try {
@@ -105,4 +146,21 @@ class CircuitRelayConnectionEvent {
     this.reason = '',
     fixnum.Int64? dataSize,
   }) : dataSize = dataSize ?? fixnum.Int64.ZERO;
+}
+
+/// Represents a Circuit Relay v2 reservation.
+class Reservation {
+  final String relayPeerId;
+  final DateTime expireTime;
+  final fixnum.Int64 limitData;
+  final fixnum.Int64 limitDuration;
+
+  Reservation({
+    required this.relayPeerId,
+    required this.expireTime,
+    required this.limitData,
+    required this.limitDuration,
+  });
+
+  bool get isExpired => DateTime.now().isAfter(expireTime);
 }

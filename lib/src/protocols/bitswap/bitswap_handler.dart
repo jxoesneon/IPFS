@@ -102,14 +102,17 @@ class BitswapHandler {
 
     if (message.hasWantlist()) {
       final messageWantlist = message.getWantlist();
-      final wantlist = Wantlist()
-        ..entries.addAll(
-          Map.fromEntries(
-            messageWantlist.entries.entries.map(
-              (e) => MapEntry(e.key, e.value.priority),
-            ),
-          ),
+      final wantlist = Wantlist();
+
+      for (final entry in messageWantlist.entries.values) {
+        wantlist.add(
+          entry.cid,
+          priority: entry.priority,
+          wantType: entry.wantType,
+          sendDontHave: entry.sendDontHave,
         );
+      }
+
       // We need 'fromPeer' to reply. If it's missing, we can't reply.
       if (fromPeer != null) {
         await _handleWantlist(wantlist, fromPeer);
@@ -132,45 +135,110 @@ class BitswapHandler {
         _updateBandwidthStats();
       }
     }
+
+    // Handle Bitswap 1.2+ Block Presences (HAVE/DONT_HAVE)
+    if (message.hasBlockPresences()) {
+      _handleBlockPresences(message.getBlockPresences(), fromPeer);
+    }
   }
 
   /// Handles incoming wantlist entries according to Bitswap spec
   Future<void> _handleWantlist(Wantlist wantlist, String fromPeer) async {
     // Sort entries by priority before processing
     final sortedEntries = wantlist.entries.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value)); // Higher priority first
+      ..sort(
+        (a, b) => b.value.priority.compareTo(a.value.priority),
+      ); // Higher priority first
+
+    final outgoingMessage = message.Message();
+    outgoingMessage.from = _router.peerID.toString();
+    bool hasContent = false;
 
     for (final entry in sortedEntries) {
       final cidStr = entry.key;
-      final priority = entry.value;
+      final wantEntry = entry.value;
 
       // Add to our local wantlist with the received priority
-      _wantlist.add(cidStr, priority: priority);
+      _wantlist.add(cidStr, priority: wantEntry.priority);
 
       // Check if we have the block
       final response = await _blockStore.getBlock(cidStr);
-      if (response.found) {
-        final msg = message.Message()
-          ..addBlock(Block.fromProto(response.block))
-          ..from = _router.peerID.toString();
+      final found = response.found;
 
-        final messageBytes = msg.toBytes();
-
-        try {
-          // Send block to requesting peer
-          _router.routerL0.sendDatagram(
-            addresses: [
-              p2p.FullAddress(port: 4001, address: _getPeerAddress(fromPeer)),
-            ],
-            datagram: messageBytes,
+      // Bitswap 1.2: Check if peer wants just 'HAVE' or supports 'sendDontHave'
+      if (wantEntry.wantType == message.WantType.have) {
+        if (found) {
+          // They only want to know if we have it
+          outgoingMessage.addBlockPresence(
+            cidStr,
+            message.BlockPresenceType.have,
           );
-          // Update sent bytes in ledger
-          final ledger = _ledgerManager.getLedger(fromPeer);
-          ledger.addSentBytes(response.block.data.length);
-          _updateBandwidthStats();
-        } catch (error) {
-          // print('Error sending block to peer $fromPeer: $error');
+          hasContent = true;
+        } else if (wantEntry.sendDontHave) {
+          // They want to know if we DON'T have it
+          outgoingMessage.addBlockPresence(
+            cidStr,
+            message.BlockPresenceType.dontHave,
+          );
+          hasContent = true;
         }
+      } else {
+        // Standard 'Block' request
+        if (found) {
+          outgoingMessage.addBlock(Block.fromProto(response.block));
+          hasContent = true;
+          // Update ledger for sent bytes (approximate here, real update on send)
+        } else if (wantEntry.sendDontHave) {
+          // If they support 1.2 and asked for blocks but we don't have it, tell them
+          outgoingMessage.addBlockPresence(
+            cidStr,
+            message.BlockPresenceType.dontHave,
+          );
+          hasContent = true;
+        }
+      }
+    }
+
+    if (hasContent) {
+      try {
+        final messageBytes = outgoingMessage.toBytes();
+        _router.routerL0.sendDatagram(
+          addresses: [
+            p2p.FullAddress(port: 4001, address: _getPeerAddress(fromPeer)),
+          ],
+          datagram: messageBytes,
+        );
+
+        // Update ledger stats
+        final ledger = _ledgerManager.getLedger(fromPeer);
+        for (final block in outgoingMessage.getBlocks()) {
+          ledger.addSentBytes(block.data.length);
+        }
+        _updateBandwidthStats();
+      } catch (error) {
+        // print('Error sending response to peer $fromPeer: $error');
+      }
+    }
+  }
+
+  /// Handles incoming block presences (HAVE/DONT_HAVE)
+  void _handleBlockPresences(
+    List<message.BlockPresence> presences,
+    String? fromPeer,
+  ) {
+    if (fromPeer == null) return;
+
+    for (final presence in presences) {
+      final cid = presence.cid;
+      if (presence.type == message.BlockPresenceType.have) {
+        // Peer has the block.
+        // If we want it, we could prioritize asking them?
+        // For now, logging.
+        _logger.verbose('Peer $fromPeer HAVE $cid');
+      } else {
+        // Peer DOES NOT have the block.
+        // We should avoid asking them again soon.
+        _logger.verbose('Peer $fromPeer DONT_HAVE $cid');
       }
     }
   }
@@ -230,7 +298,7 @@ class BitswapHandler {
         cid,
         priority: priority,
         wantType: message.WantType.block,
-        sendDontHave: true,
+        sendDontHave: true, // Enable Bitswap 1.2 optimization
       );
     }
 

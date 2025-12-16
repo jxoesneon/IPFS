@@ -73,11 +73,13 @@ class MockRouterL2 implements p2p.RouterL2 {
 }
 
 class MockP2plibRouter implements P2plibRouter {
-  final MockRouterL2 _mockL2 = MockRouterL2();
+  p2p.RouterL2 _mockL2 = MockRouterL2();
   void Function(p2p.Packet)? messageHandler;
 
   @override
   p2p.RouterL2 get routerL0 => _mockL2;
+
+  set routerL0(p2p.RouterL2 router) => _mockL2 = router;
 
   @override
   p2p.PeerId get peerId => _mockL2.selfId;
@@ -191,7 +193,90 @@ void main() {
 
       await handler.stop();
     });
+
+    test('verifies Bitswap 1.2 features (sendDontHave)', () async {
+      await handler.start();
+      final data = Uint8List.fromList([9, 9, 9]);
+      final cid = CID.computeForDataSync(data).encode();
+
+      // We need to capture the outgoing message to verify 1.2 flags
+      Completer<msg.Message>? outgoingMsgCompleter;
+      mockRouter.routerL0 = MockRouterL2Capture((datagram) async {
+        final message = await msg.Message.fromBytes(datagram);
+        outgoingMsgCompleter!.complete(message);
+      });
+
+      outgoingMsgCompleter = Completer();
+      // Start want request in background
+      handler.wantBlock(cid);
+
+      // Verify outgoing message
+      final message = await outgoingMsgCompleter.future;
+      expect(message.hasWantlist(), isTrue);
+      // message.Wantlist exposes entries directly
+      final entry = message.getWantlist().entries[cid];
+      expect(entry, isNotNull);
+      // Verify 1.2 flags
+      expect(entry!.sendDontHave, isTrue); // Should be true for 1.2
+      expect(entry.wantType, msg.WantType.block);
+
+      await handler.stop();
+    });
+
+    test('handles incoming HAVE/DONT_HAVE messages', () async {
+      await handler.start();
+      final data = Uint8List.fromList([5, 5, 5]);
+      final cid = CID.computeForDataSync(data).encode();
+
+      // Simulate DONT_HAVE message
+      final dontHaveMsg = msg.Message();
+      dontHaveMsg.addBlockPresence(cid, msg.BlockPresenceType.dontHave);
+      // Need fromPeer to log correctly
+      final packet = p2p.Packet(
+        datagram: dontHaveMsg.toBytes(),
+        header: p2p.PacketHeader(id: 111, issuedAt: 0),
+        srcFullAddress: p2p.FullAddress(
+          address: InternetAddress.loopbackIPv4,
+          port: 111,
+        ),
+      );
+      packet.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
+
+      // This shouldn't crash
+      await mockRouter.simulatePacket(packet);
+
+      // Simulate HAVE message
+      final haveMsg = msg.Message();
+      haveMsg.addBlockPresence(cid, msg.BlockPresenceType.have);
+      final packet2 = p2p.Packet(
+        datagram: haveMsg.toBytes(),
+        header: p2p.PacketHeader(id: 112, issuedAt: 0),
+        srcFullAddress: p2p.FullAddress(
+          address: InternetAddress.loopbackIPv4,
+          port: 111,
+        ),
+      );
+      packet2.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
+
+      await mockRouter.simulatePacket(packet2);
+
+      await handler.stop();
+    });
   });
+}
+
+// Helper mock to capture outgoing messages
+class MockRouterL2Capture extends MockRouterL2 {
+  final Future<void> Function(Uint8List) onSend;
+  MockRouterL2Capture(this.onSend);
+
+  @override
+  void sendDatagram({
+    required Iterable<p2p.FullAddress> addresses,
+    required Uint8List datagram,
+  }) {
+    onSend(datagram);
+  }
 }
 
 Future<void> _simulateBlockArrival(

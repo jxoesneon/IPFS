@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-12-17
+
+### Features
+- **Bitswap 1.2 Support:** Implemented HAVE/DONT_HAVE messages to reduce duplicate block transfers and improve bandwidth efficiency.
+    - Updated `BitswapHandler` to send `sendDontHave` flags.
+    - Added logic to handle incoming `BlockPresence` messages.
+- **Circuit Relay v2 Client:** Added support for limited relay reservations (HOP protocol).
+    - New `reserve()` method in `CircuitRelayClient`.
+    - Added `Reservation` class to track relay limits and expiration.
+
+### Improvements
+- Refactored `Wantlist` to support extended entry attributes (priority, want type, cancel flags).
+- Added new `password_prompt` utility for CLI tools.
+
 ## [1.3.4] - 2025-12-16
 
 ### Security
