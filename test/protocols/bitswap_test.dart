@@ -208,6 +208,7 @@ void main() {
 
       outgoingMsgCompleter = Completer();
       // Start want request in background
+      // ignore: unawaited_futures
       handler.wantBlock(cid);
 
       // Verify outgoing message

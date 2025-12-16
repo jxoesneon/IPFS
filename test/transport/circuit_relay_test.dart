@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
 
 // Mock P2plibRouter
