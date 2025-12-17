@@ -1,7 +1,7 @@
 // src/ipfs.dart
 import 'dart:typed_data';
 import 'network/router.dart';
-import 'storage/datastore.dart';
+import 'core/storage/datastore.dart';
 import 'core/config/ipfs_config.dart';
 import 'core/ipfs_node/ipfs_node.dart';
 import 'core/data_structures/link.dart';
@@ -75,9 +75,16 @@ class IPFS {
   Future<NodeStats> stats() async {
     // Gather the actual statistics from the node's components
 
-    // 1. Get datastore stats
-    final numBlocks = _datastore.numBlocks;
-    final datastoreSize = _datastore.size;
+    // 1. Compute datastore stats by querying all blocks
+    int numBlocks = 0;
+    int datastoreSize = 0;
+
+    await for (final entry in _datastore.query(Query(prefix: '/blocks/'))) {
+      numBlocks++;
+      if (entry.value != null) {
+        datastoreSize += entry.value!.length;
+      }
+    }
 
     // 2. Get router stats
     final numConnectedPeers = _router.connectedPeers.length;

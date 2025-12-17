@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:async';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:dart_ipfs/src/utils/generic_lru_cache.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
@@ -28,6 +29,13 @@ class BitswapHandler {
   final Set<String> _connectedPeers = {};
   int _blocksReceived = 0;
   int _blocksSent = 0;
+
+  /// Cache for block presence checks to avoid repeated blockstore lookups.
+  /// Entries expire after 30 seconds to handle block additions/removals.
+  final TimedLRUCache<String, bool> _blockPresenceCache = TimedLRUCache(
+    capacity: 1000,
+    ttl: Duration(seconds: 30),
+  );
 
   BitswapHandler(IPFSConfig config, this._blockStore, this._router)
     : _logger = Logger(
@@ -56,7 +64,7 @@ class BitswapHandler {
       await _router.start();
       _logger.verbose('Router started');
 
-      _router.addMessageHandler(_protocolId, _handlePacket);
+      _router.registerProtocolHandler(_protocolId, _handlePacket);
       _logger.debug('Added message handler for protocol: $_protocolId');
 
       _router.registerProtocol(_protocolId);
@@ -161,21 +169,21 @@ class BitswapHandler {
       // Add to our local wantlist with the received priority
       _wantlist.add(cidStr, priority: wantEntry.priority);
 
-      // Check if we have the block
-      final response = await _blockStore.getBlock(cidStr);
-      final found = response.found;
-
-      // Bitswap 1.2: Check if peer wants just 'HAVE' or supports 'sendDontHave'
+      // Bitswap 1.2: Check if peer wants just 'HAVE' or full block
       if (wantEntry.wantType == message.WantType.have) {
+        // Use cache for presence checks (HAVE mode)
+        final found = await _blockPresenceCache.getOrCompute(cidStr, () async {
+          final response = await _blockStore.getBlock(cidStr);
+          return response.found;
+        });
+
         if (found) {
-          // They only want to know if we have it
           outgoingMessage.addBlockPresence(
             cidStr,
             message.BlockPresenceType.have,
           );
           hasContent = true;
         } else if (wantEntry.sendDontHave) {
-          // They want to know if we DON'T have it
           outgoingMessage.addBlockPresence(
             cidStr,
             message.BlockPresenceType.dontHave,
@@ -183,13 +191,14 @@ class BitswapHandler {
           hasContent = true;
         }
       } else {
-        // Standard 'Block' request
-        if (found) {
+        // Standard 'Block' request - need full response for block data
+        final response = await _blockStore.getBlock(cidStr);
+        _blockPresenceCache.put(cidStr, response.found); // Update cache
+
+        if (response.found) {
           outgoingMessage.addBlock(Block.fromProto(response.block));
           hasContent = true;
-          // Update ledger for sent bytes (approximate here, real update on send)
         } else if (wantEntry.sendDontHave) {
-          // If they support 1.2 and asked for blocks but we don't have it, tell them
           outgoingMessage.addBlockPresence(
             cidStr,
             message.BlockPresenceType.dontHave,
@@ -415,7 +424,7 @@ class BitswapHandler {
     _router.registerProtocol(_protocolId);
     _logger.debug('Registered protocol: $_protocolId');
 
-    _router.addMessageHandler(_protocolId, _handlePacket);
+    _router.registerProtocolHandler(_protocolId, _handlePacket);
     _logger.debug('Added message handler for protocol: $_protocolId');
 
     _logger.info('Bitswap protocol handlers initialized');

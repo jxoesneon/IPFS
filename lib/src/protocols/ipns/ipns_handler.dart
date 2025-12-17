@@ -11,6 +11,8 @@ import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'ipns_record.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 
 /// Handles IPNS operations, combining both node-level coordination and protocol-level operations.
 ///
@@ -20,6 +22,7 @@ class IPNSHandler {
   final IPFSConfig _config;
   final SecurityManager _securityManager;
   final IDHTHandler _dhtHandler;
+  final PubSubHandler? _pubSubHandler; // Optional: May be null if offline
   late final Logger _logger;
   bool _isRunning = false;
 
@@ -30,7 +33,14 @@ class IPNSHandler {
   final Map<String, _CachedResolution> _resolutionCache = {};
   static const Duration _cacheDuration = Duration(minutes: 30);
 
-  IPNSHandler(this._config, this._securityManager, this._dhtHandler) {
+  static const String _pubSubTopic = '/ipfs/ipns-1.0.0'; // Standard topic
+
+  IPNSHandler(
+    this._config,
+    this._securityManager,
+    this._dhtHandler, [
+    this._pubSubHandler,
+  ]) {
     _logger = Logger(
       'IPNSHandler',
       debug: _config.debug,
@@ -43,6 +53,40 @@ class IPNSHandler {
   ///
   /// SEC-004: Records are signed with Ed25519 to prevent forgery.
   /// Uses EncryptedKeystore via SecurityManager for secure key access.
+  /// Derives the PubSub topic from the PeerID string (name).
+  /// Decodes Base58 to get raw ID bytes, then key-specific formatting.
+  String _getRecordTopic(String name) {
+    try {
+      // Decode Base58 string to bytes (Key ID)
+      final bytes = Base58().base58Decode(name);
+      return _getTopicFromBytes(Uint8List.fromList(bytes));
+    } catch (e) {
+      // Fallback if not Base58 (e.g. testing with simple strings)
+      // Though technically spec requires Multihash/PeerID.
+      final bytes = utf8.encode(name);
+      return _getTopicFromBytes(Uint8List.fromList(bytes));
+    }
+  }
+
+  /// Derives the PubSub topic from raw Key ID bytes.
+  /// Format: /record/base64url-unpadded(key-id-bytes)
+  String _getTopicFromBytes(Uint8List keyIdBytes) {
+    final b64 = base64Url.encode(keyIdBytes).replaceAll('=', '');
+    return '/record/$b64';
+  }
+
+  /// Derives the Key ID bytes for an Ed25519 public key.
+  /// (Identity Multihash: 0x00 + len + pubKey)
+  Uint8List _getEd25519KeyId(Uint8List publicKey) {
+    if (publicKey.length != 32) return publicKey; // Should be 32 for Ed25519
+
+    final builder = BytesBuilder();
+    builder.addByte(0x00); // Identity code
+    builder.addByte(32); // Length
+    builder.add(publicKey);
+    return builder.toBytes();
+  }
+
   Future<void> publish(String cid, {required String keyName}) async {
     _logger.debug('Publishing IPNS record for CID: $cid with key: $keyName');
 
@@ -75,6 +119,32 @@ class IPNSHandler {
 
       // Publish to DHT
       await publishRecord(record);
+
+      // Publish to PubSub (IPNS over PubSub)
+      if (_pubSubHandler != null) {
+        try {
+          final payload = base64Encode(record.toCBOR());
+
+          // 1. Floodsub Topic (Global)
+          await _pubSubHandler.publish(_pubSubTopic, payload);
+
+          // 2. Key-Specific Topic
+          // Construct Key ID from Public Key (Ed25519 Identity Multihash)
+          // Note: In a real PeerID impl, we'd handle other key types.
+          // ipns_record.dart uses Ed25519Signer, so we handle Ed25519.
+          final keyId = _getEd25519KeyId(record.publicKey);
+          final specificTopic = _getTopicFromBytes(keyId);
+
+          await _pubSubHandler.publish(specificTopic, payload);
+
+          _logger.verbose(
+            'Published IPNS record to topics: $_pubSubTopic, $specificTopic',
+          );
+        } catch (e) {
+          _logger.warning('Failed to publish IPNS record to PubSub: $e');
+        }
+      }
+
       _logger.info('Successfully published signed IPNS record for CID: $cid');
     } catch (e, stackTrace) {
       _logger.error('Failed to publish IPNS record', e, stackTrace);
@@ -127,6 +197,13 @@ class IPNSHandler {
       _logger.verbose('Starting DHT handler...');
       await _dhtHandler.start();
 
+      if (_pubSubHandler != null) {
+        _logger.verbose('Subscribing to IPNS PubSub topic $_pubSubTopic...');
+        await _pubSubHandler.subscribe(_pubSubTopic);
+        // Listen for incoming IPNS records
+        _pubSubHandler.onMessage(_pubSubTopic, _handlePubSubMessage);
+      }
+
       _logger.info('IPNS handler started successfully');
     } catch (e, stackTrace) {
       _logger.error('Failed to start IPNS handler', e, stackTrace);
@@ -144,6 +221,13 @@ class IPNSHandler {
 
     try {
       _isRunning = false;
+
+      if (_pubSubHandler != null) {
+        try {
+          await _pubSubHandler.unsubscribe(_pubSubTopic);
+        } catch (_) {}
+      }
+
       _resolutionCache.clear();
       _logger.info('IPNS handler stopped successfully');
     } catch (e, stackTrace) {
@@ -157,6 +241,17 @@ class IPNSHandler {
     _logger.debug('Resolving IPNS name: $name');
 
     try {
+      // Subscribe to key-specific PubSub topic for updates
+      if (_pubSubHandler != null) {
+        final topic = _getRecordTopic(name);
+        // Subscribe if not already subscribed (PubSubHandler handles idempotency ideally,
+        // but we adding a listener requires care not to add duplicates?
+        // onMessage usually adds a stream listener.
+        // We'll just do it; overhead is acceptable for now.)
+        await _pubSubHandler.subscribe(topic);
+        _pubSubHandler.onMessage(topic, _handlePubSubMessage);
+      }
+
       // Check cache first
       if (_resolutionCache.containsKey(name)) {
         final cached = _resolutionCache[name]!;
@@ -168,14 +263,6 @@ class IPNSHandler {
       }
 
       // Resolve through protocol handler
-      // We need to match valid publish key.
-      // If publish uses ID bytes, resolve must assume name is Base58 encoded ID bytes.
-      // But we lack Base58 decoder in this file imports (checked previously, only logger, config, etc)
-      // Interface_dht_handler imports Base58.
-      // ipns_handler.dart imports dht_handler...
-
-      // I will add Base58 import in next step. For now fixing syntax error in publish.
-
       final record = await resolveRecord(name);
       final decodedCid = CID
           .fromBytes(Uint8List.fromList(record.value))
@@ -213,6 +300,28 @@ class IPNSHandler {
       cid: cid,
       timestamp: DateTime.now(),
     );
+  }
+
+  void _handlePubSubMessage(String messageContent) async {
+    try {
+      // Decode the message (Base64 -> CBOR Bytes)
+      final recordBytes = base64Decode(messageContent);
+
+      // Parse and Verify Record
+      final record = IPNSRecord.fromCBOR(recordBytes);
+      if (!await record.verify()) {
+        _logger.warning(
+          'Received invalid IPNS record via PubSub (signature check failed)',
+        );
+        return;
+      }
+
+      _logger.verbose(
+        'Received valid IPNS record via PubSub (Validity: ${record.validity})',
+      );
+    } catch (e) {
+      _logger.verbose('Failed to process IPNS PubSub message: $e');
+    }
   }
 }
 

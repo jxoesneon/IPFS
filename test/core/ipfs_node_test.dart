@@ -8,6 +8,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:test/test.dart';
 
 // Manual Mocks
@@ -25,7 +26,7 @@ class MockBlockStore extends BlockStore {
 class MockDatastoreHandler extends DatastoreHandler {
   final Map<String, Block> blocks = {};
 
-  MockDatastoreHandler(IPFSConfig config) : super(config);
+  MockDatastoreHandler() : super(_MockDatastore());
 
   @override
   Future<void> start() async {}
@@ -43,6 +44,23 @@ class MockDatastoreHandler extends DatastoreHandler {
   Future<Block?> getBlock(String cid) async {
     return blocks[cid];
   }
+}
+
+class _MockDatastore implements Datastore {
+  @override
+  Future<void> init() async {}
+  @override
+  Future<void> put(Key key, Uint8List value) async {}
+  @override
+  Future<Uint8List?> get(Key key) async => null;
+  @override
+  Future<bool> has(Key key) async => false;
+  @override
+  Future<void> delete(Key key) async {}
+  @override
+  Stream<QueryEntry> query(Query q) async* {}
+  @override
+  Future<void> close() async {}
 }
 
 class MockIPLDHandler extends IPLDHandler {
@@ -67,7 +85,7 @@ void main() {
       container = ServiceContainer();
       config = IPFSConfig(offline: true, dataPath: '/tmp/test_repo');
       mockBlockStore = MockBlockStore();
-      mockDatastore = MockDatastoreHandler(config);
+      mockDatastore = MockDatastoreHandler();
 
       // Register Core
       final metrics = MetricsCollector(config);

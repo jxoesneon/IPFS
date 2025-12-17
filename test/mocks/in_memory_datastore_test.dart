@@ -1,6 +1,7 @@
 // test/mocks/in_memory_datastore_test.dart
+import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:dart_ipfs/src/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'in_memory_datastore.dart';
 import 'test_helpers.dart';
 
@@ -23,165 +24,139 @@ void main() {
       expect(datastore.isOpen, isFalse);
     });
 
-    test('stores and retrieves blocks', () async {
+    test('stores and retrieves data', () async {
       final block = await createTestBlock('test data');
-      final cid = block.cid.toString();
+      final cidStr = block.cid.toString();
+      final key = Key('/blocks/$cidStr');
 
-      await datastore.put(cid, block);
-      final retrieved = await datastore.get(cid);
+      await datastore.put(key, block.data);
+      final retrieved = await datastore.get(key);
 
       expect(retrieved, isNotNull);
-      expect(retrieved!.cid.toString(), equals(cid));
+      expect(retrieved, equals(block.data));
     });
 
     test('has() returns correct existence status', () async {
       final block = await createTestBlock('test');
-      final cid = block.cid.toString();
+      final key = Key('/blocks/${block.cid.toString()}');
 
-      expect(await datastore.has(cid), isFalse);
+      expect(await datastore.has(key), isFalse);
 
-      await datastore.put(cid, block);
-      expect(await datastore.has(cid), isTrue);
+      await datastore.put(key, block.data);
+      expect(await datastore.has(key), isTrue);
     });
 
-    test('deletes blocks', () async {
+    test('deletes data', () async {
       final block = await createTestBlock('test');
-      final cid = block.cid.toString();
+      final key = Key('/blocks/${block.cid.toString()}');
 
-      await datastore.put(cid, block);
-      expect(await datastore.has(cid), isTrue);
+      await datastore.put(key, block.data);
+      expect(await datastore.has(key), isTrue);
 
-      await datastore.delete(cid);
-      expect(await datastore.has(cid), isFalse);
+      await datastore.delete(key);
+      expect(await datastore.has(key), isFalse);
     });
 
-    test('pin() prevents deletion', () async {
-      final block = await createTestBlock('pinned');
-      final cid = block.cid.toString();
-
-      await datastore.put(cid, block);
-      await datastore.pin(cid);
-
-      expect(
-        () async => await datastore.delete(cid),
-        throwsA(isA<DatastoreError>()),
-      );
-    });
-
-    test('unpin() allows deletion after pinning', () async {
-      final block = await createTestBlock('unpinned');
-      final cid = block.cid.toString();
-
-      await datastore.put(cid, block);
-      await datastore.pin(cid);
-      await datastore.unpin(cid);
-
-      await datastore.delete(cid);
-      expect(await datastore.has(cid), isFalse);
-    });
-
-    test('isPinned() returns correct status', () async {
-      final block = await createTestBlock('check pin');
-      final cid = block.cid.toString();
-
-      await datastore.put(cid, block);
-      expect(await datastore.isPinned(cid), isFalse);
-
-      await datastore.pin(cid);
-      expect(await datastore.isPinned(cid), isTrue);
-    });
-
-    test('getAllKeys() returns all stored CIDs', () async {
+    test('query() returns matching entries', () async {
       final blocks = await createTestBlocks(3);
 
       for (final block in blocks) {
-        await datastore.put(block.cid.toString(), block);
+        final key = Key('/blocks/${block.cid.toString()}');
+        await datastore.put(key, block.data);
       }
 
-      final keys = await datastore.getAllKeys();
-      expect(keys.length, equals(3));
-    });
-
-    test('size property returns correct count', () async {
-      expect(datastore.numBlocks, equals(0));
-
-      final blocks = await createTestBlocks(5);
-      for (final block in blocks) {
-        await datastore.put(block.cid.toString(), block);
+      int count = 0;
+      await for (final _ in datastore.query(
+        Query(prefix: '/blocks/', keysOnly: true),
+      )) {
+        count++;
       }
-
-      expect(datastore.numBlocks, equals(5));
+      expect(count, equals(3));
     });
 
-    test('loadPinnedCIDs() and persistPinnedCIDs() work correctly', () async {
-      final blocks = await createTestBlocks(2);
-      final cid1 = blocks[0].cid.toString();
-      final cid2 = blocks[1].cid.toString();
+    test('query with keysOnly returns null values', () async {
+      final block = await createTestBlock('test');
+      final key = Key('/blocks/${block.cid.toString()}');
+      await datastore.put(key, block.data);
 
-      await datastore.put(cid1, blocks[0]);
-      await datastore.put(cid2, blocks[1]);
-      await datastore.pin(cid1);
-      await datastore.pin(cid2);
+      await for (final entry in datastore.query(
+        Query(prefix: '/blocks/', keysOnly: true),
+      )) {
+        expect(entry.value, isNull);
+        expect(entry.key.toString(), startsWith('/blocks/'));
+      }
+    });
 
-      final pinned = await datastore.loadPinnedCIDs();
-      expect(pinned.length, equals(2));
-      expect(pinned.contains(cid1), isTrue);
-      expect(pinned.contains(cid2), isTrue);
+    test('query without keysOnly returns values', () async {
+      final block = await createTestBlock('test');
+      final key = Key('/blocks/${block.cid.toString()}');
+      await datastore.put(key, block.data);
+
+      await for (final entry in datastore.query(
+        Query(prefix: '/blocks/', keysOnly: false),
+      )) {
+        expect(entry.value, isNotNull);
+        expect(entry.value, equals(block.data));
+      }
     });
 
     test('throws error when operating on closed datastore', () async {
       await datastore.close();
+      final key = Key('/test');
 
       expect(
-        () async => await datastore.put('cid', await createTestBlock('test')),
+        () async => await datastore.put(key, Uint8List.fromList([1, 2, 3])),
         throwsA(isA<StateError>()),
       );
     });
+
     test('get() on non-existent key returns null', () async {
-      expect(await datastore.get('non-existent'), isNull);
+      final key = Key('/non-existent');
+      expect(await datastore.get(key), isNull);
     });
 
-    test('put() with same CID overwrites or ignores duplicates', () async {
-      final block = await createTestBlock('data');
-      final cid = block.cid.toString();
-      await datastore.put(cid, block);
+    test('put() with same key overwrites', () async {
+      final key = Key('/test/item');
+      await datastore.put(key, Uint8List.fromList([1]));
+      await datastore.put(key, Uint8List.fromList([2]));
 
-      // Put again
-      await datastore.put(cid, block);
-      expect(datastore.numBlocks, 1);
-    });
-
-    test('pin() idempotent', () async {
-      final block = await createTestBlock('pin');
-      final cid = block.cid.toString();
-      await datastore.put(cid, block);
-
-      await datastore.pin(cid);
-      await datastore.pin(cid); // Double pin
-
-      expect(await datastore.isPinned(cid), isTrue);
-      // Pinned set matches 1
-      expect((await datastore.loadPinnedCIDs()).length, 1);
+      final retrieved = await datastore.get(key);
+      expect(retrieved, equals(Uint8List.fromList([2])));
     });
 
     test('handles long keys', () async {
-      final block = await createTestBlock('long_key_data');
-      // Create a fake long CID string (InMemoryDatastore uses string keys)
-      final longKey = 'z' + 'a' * 200;
-      // Note: put() usually takes cid string.
-      // If we use raw strings as keys in InMemoryDatastore, it works.
-      // But verify if `put` checks validity? `InMemoryDatastore` uses `Map<String, Block>`.
-      // It does NOT validate CID string format in `put`.
+      final longKey = Key('/' + 'a' * 200);
+      final data = Uint8List.fromList([1, 2, 3]);
 
-      await datastore.put(longKey, block);
-      expect(await datastore.get(longKey), equals(block));
+      await datastore.put(longKey, data);
+      expect(await datastore.get(longKey), equals(data));
     });
 
     test('handles special characters in keys', () async {
-      final block = await createTestBlock('special');
-      final funnyKey = 'cid-with-\$pecial-ch@rs!';
-      await datastore.put(funnyKey, block);
-      expect(await datastore.get(funnyKey), isNotNull);
+      // Note: Keys with special chars should be cleaned by Key class
+      final key = Key('/cid-with-special-chars');
+      final data = Uint8List.fromList([4, 5, 6]);
+
+      await datastore.put(key, data);
+      expect(await datastore.get(key), isNotNull);
+    });
+
+    test('prefix filtering works correctly', () async {
+      await datastore.put(Key('/blocks/qm1'), Uint8List.fromList([1]));
+      await datastore.put(Key('/blocks/qm2'), Uint8List.fromList([2]));
+      await datastore.put(Key('/pins/qm1'), Uint8List.fromList([1]));
+
+      int blockCount = 0;
+      await for (final _ in datastore.query(Query(prefix: '/blocks/'))) {
+        blockCount++;
+      }
+      expect(blockCount, equals(2));
+
+      int pinCount = 0;
+      await for (final _ in datastore.query(Query(prefix: '/pins/'))) {
+        pinCount++;
+      }
+      expect(pinCount, equals(1));
     });
   });
 }

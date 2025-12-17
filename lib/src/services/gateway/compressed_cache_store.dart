@@ -91,7 +91,6 @@ class CompressedCacheStore {
           return data;
         case CompressionType.gzip:
           final encoded = GZipEncoder().encode(data);
-          if (encoded == null) throw FormatException('GZIP encoding failed');
           return Uint8List.fromList(encoded);
         case CompressionType.zlib:
           return Uint8List.fromList(ZLibEncoder().encode(data));
@@ -102,7 +101,6 @@ class CompressedCacheStore {
       if (type == CompressionType.lz4) {
         _logger.warning('LZ4 compression failed ($e). Falling back to GZIP.');
         final encoded = GZipEncoder().encode(data);
-        if (encoded == null) throw FormatException('GZIP encoding failed');
         return Uint8List.fromList(encoded);
       }
       rethrow;

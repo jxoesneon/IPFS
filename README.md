@@ -6,16 +6,18 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 [![Dart](https://img.shields.io/badge/dart-%3E%3D3.0.0-blue.svg)](https://dart.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://github.com/jxoesneon/IPFS/actions/workflows/test.yml/badge.svg)](https://github.com/jxoesneon/IPFS/actions/workflows/test.yml)
-[![Tests](https://img.shields.io/badge/tests-423%20passing-brightgreen.svg)](https://github.com/jxoesneon/IPFS/actions)
+[![Tests](https://img.shields.io/badge/tests-510%20passing-brightgreen.svg)](https://github.com/jxoesneon/IPFS/actions)
 [![Ko-Fi](https://img.shields.io/badge/Ko--fi-F16061?style=flat&logo=ko-fi&logoColor=white)](https://ko-fi.com/jxoesneon)
 
 ## 📚 Documentation
+
 - **[Wiki](https://github.com/jxoesneon/IPFS/wiki)** (Guides, Installation, Architecture)
 - **[API Reference](https://jxoesneon.github.io/IPFS/)** (Auto-generated Dart docs)
 
 ## Features
 
 ### ✅ Core IPFS Functionality
+
 - **Content-Addressable Storage**: CID v0 and v1 support
 - **UnixFS**: Full file system implementation with chunking
 - **DAG-PB**: MerkleDAG operations and IPLD traversal
@@ -23,6 +25,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 - **Pinning**: Content persistence management
 
 ### ✅ Networking & Protocols
+
 - **Bitswap 1.2.0**: Efficient block exchange
 - **Kademlia DHT**: Distributed hash table for routing
 - **PubSub**: Real-time messaging
@@ -30,6 +33,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 - **Bootstrap Peers**: Network connectivity
 
 ### ✅ Services
+
 - **HTTP Gateway**: Read-only and writable modes
 - **RPC API**: Compatible with go-ipfs API
 - **IPNS**: Mutable naming system
@@ -37,9 +41,12 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 - **Metrics**: Prometheus-compatible monitoring
 
 ### ✅ Security
+
 - **Production-Grade Cryptography**: secp256k1 + ChaCha20-Poly1305 AEAD
+- **Encrypted Key Storage (SEC-001)**: AES-256-GCM with PBKDF2
 - **Content Verification**: Automatic CID validation
-- **IPNS Signatures**: Cryptographic name verification
+- **IPNS Signatures (SEC-004)**: Ed25519 cryptographic verification
+- **Memory Security**: Key zeroing on lock
 
 ---
 
@@ -64,6 +71,7 @@ dependencies:
 ```
 
 Then run:
+
 ```bash
 dart pub get
 ```
@@ -118,7 +126,7 @@ void main() async {
 
   await node.start();
   print('Gateway running at http://localhost:8080');
-  
+
   // Content accessible at:
   // http://localhost:8080/ipfs/<CID>
 }
@@ -150,7 +158,9 @@ void main() async {
 ```
 
 ### Gateway Selector (New in 1.2.1)
+
 You can dynamically switch between gateway modes in both the Flutter Dashboard and CLI:
+
 - **Internal**: Uses the native Dart P2P node (libp2p).
 - **Public**: Fetches content via `ipfs.io` (HTTP).
 - **Local**: Fetches via local Go-IPFS daemon (`localhost:8080`).
@@ -216,7 +226,7 @@ final rootCID = await node.addDirectory(websiteDir);
 IPFSConfig(
   // Storage
   dataDir: './ipfs_data',           // Data directory
-  
+
   // Networking
   offline: false,                    // Disable P2P if true
   network: NetworkConfig(
@@ -225,26 +235,26 @@ IPFSConfig(
       '/ip4/0.0.0.0/tcp/4001',
     ],
   ),
-  
+
   // Gateway
   gateway: GatewayConfig(
     enabled: true,
     port: 8080,
     writable: false,                 // Read-only by default
   ),
-  
+
   // RPC API
   rpc: RPCConfig(
     enabled: true,
     port: 5001,
   ),
-  
+
   // DHT
   dht: DHTConfig(
     mode: DHTMode.server,            // client, server, or auto
     bucketSize: 20,
   ),
-  
+
   // Logging
   debug: false,
   verboseLogging: false,
@@ -313,6 +323,7 @@ See the `example/` directory for full applications:
 - **[📟 CLI Dashboard](example/cli_dashboard)**: A Matrix-style terminal interface (runs everywhere).
 
 Other examples:
+
 - [Basic Usage](example/example.dart)
 - [Offline content publishing](example/blog_use_case.dart)
 - [P2P networking](example/online_test.dart)
@@ -320,6 +331,7 @@ Other examples:
 - [Complete node with all features](example/full_node_example.dart)
 
 Run examples:
+
 ```bash
 dart run example/blog_use_case.dart
 dart run example/online_test.dart
@@ -330,28 +342,34 @@ dart run example/online_test.dart
 ## Deployment Modes
 
 ### Offline Mode (0 External Dependencies)
+
 **Perfect for:**
+
 - Edge computing
 - Embedded systems
 - Local-first applications
 - Testing
 
 **Features:**
+
 - ✅ Content storage
-- ✅ CID operations  
+- ✅ CID operations
 - ✅ File system
 - ✅ Pinning
 - ❌ P2P networking (disabled by design)
 - ❌ DHT queries (requires P2P)
 
 ### Gateway Mode (HTTP + Optional P2P)
+
 **Perfect for:**
+
 - Content delivery networks
 - API services
 - Web hosting
 - Public gateways
 
 **Features:**
+
 - ✅ HTTP API
 - ✅ Content caching
 - ✅ Compression
@@ -359,13 +377,16 @@ dart run example/online_test.dart
 - ✅ Content routing (when P2P enabled)
 
 ### P2P Mode (Full Node)
+
 **Perfect for:**
+
 - Public IPFS network
 - DHT participation
 - Content distribution
 - Decentralized apps
 
 **Features:**
+
 - ✅ All of the above
 - ✅ P2P networking (fully functional)
 - ✅ DHT server
@@ -415,23 +436,23 @@ dart run example/online_test.dart
 
 ## Comparison with go-ipfs
 
-| Feature | dart_ipfs | go-ipfs (Kubo) |
-|---------|-----------|----------------|
-| **Content Storage** | ✅ | ✅ |
-| **UnixFS** | ✅ | ✅ |
-| **CID v0/v1** | ✅ | ✅ |
-| **Bitswap 1.2.0** | ✅ | ✅ |
-| **Kademlia DHT** | ✅ | ✅ |
-| **HTTP Gateway** | ✅ | ✅ |
-| **RPC API** | ✅ | ✅ |
-| **PubSub** | ✅ | ✅ |
-| **IPNS** | ✅ | ✅ |
-| **P2P Networking** | ✅ | ✅ |
-| **Graphsync** | ✅ | ✅ |
-| **Offline Mode** | ✅ | ✅ |
-| **Language** | Dart | Go |
-| **Mobile Support** | ✅ Flutter | ❌ |
-| **Web Support** | ✅ Dart Web | ❌ |
+| Feature             | dart_ipfs   | go-ipfs (Kubo) |
+| ------------------- | ----------- | -------------- |
+| **Content Storage** | ✅          | ✅             |
+| **UnixFS**          | ✅          | ✅             |
+| **CID v0/v1**       | ✅          | ✅             |
+| **Bitswap 1.2.0**   | ✅          | ✅             |
+| **Kademlia DHT**    | ✅          | ✅             |
+| **HTTP Gateway**    | ✅          | ✅             |
+| **RPC API**         | ✅          | ✅             |
+| **PubSub**          | ✅          | ✅             |
+| **IPNS**            | ✅          | ✅             |
+| **P2P Networking**  | ✅          | ✅             |
+| **Graphsync**       | ✅          | ✅             |
+| **Offline Mode**    | ✅          | ✅             |
+| **Language**        | Dart        | Go             |
+| **Mobile Support**  | ✅ Flutter  | ❌             |
+| **Web Support**     | ✅ Dart Web | ❌             |
 
 ---
 
@@ -447,11 +468,11 @@ dart run example/online_test.dart
 
 ## Security Considerations & Guidelines
 
-> [!IMPORTANT]
-> **Use in Production requires strict sandboxing.**
+> [!IMPORTANT] > **Use in Production requires strict sandboxing.**
 > See `docker-compose.yml` for a secure reference implementation.
 
 ### 🛡️ Recommended Security Configuration (Remediation 8.2)
+
 To mitigate potential risks, we strictly recommend running `dart_ipfs` in a sandboxed environment:
 
 1.  **Immutable Filesystem**: Run with a read-only root.
@@ -460,17 +481,20 @@ To mitigate potential risks, we strictly recommend running `dart_ipfs` in a sand
 4.  **Eclipse/Sybil Protection**: `RouterL2` enforces IP diversity limits (Max 5 peers/IP) to prevent routing table poisoning.
 
 ### Production Cryptography
+
 - **Key Exchange**: secp256k1 (128-bit security)
 - **Encryption**: ChaCha20-Poly1305 AEAD
 - **Hashing**: SHA-256 (Bitcoin-grade)
 - **Signatures**: IPNS Ed25519 signatures
 
 ### Content Verification
+
 - All content is verified via CID
 - Automatic integrity checks
 - Merkle tree validation
 
 ### Network Security
+
 - Encrypted P2P connections
 - Peer authentication
 - DHT security hardening
@@ -480,7 +504,7 @@ To mitigate potential risks, we strictly recommend running `dart_ipfs` in a sand
 ## Known Limitations
 
 1. **p2plib Integration**: Uses X-coordinate extraction from secp256k1 for 32-byte key compatibility
-2. **LZ4 Compression**: High-speed compression (via `es_compression`). *Note: Automatically falls back to GZIP on platforms where native LZ4 binaries are unavailable (e.g., Apple Silicon).*
+2. **LZ4 Compression**: High-speed compression (via `es_compression`). _Note: Automatically falls back to GZIP on platforms where native LZ4 binaries are unavailable (e.g., Apple Silicon)._
 3. **COSE Encoding**: Stub implementation (catalyst_cose unavailable)
 
 These limitations do not affect core functionality.
@@ -490,24 +514,28 @@ These limitations do not affect core functionality.
 ## Testing
 
 Run the protocol conformance tests:
+
 ```bash
 dart test test/protocol_test.dart
 ```
 
 Run all tests:
+
 ```bash
 dart test
 ```
 
 Static analysis:
+
 ```bash
 dart analyze
 ```
 
 Expected results:
+
 - ✅ 0 errors
 - ✅ 0 warnings
-- ✅ 423 tests pass (0 skipped)
+- ✅ 510 tests pass (1 skipped)
 
 ---
 
@@ -546,12 +574,14 @@ MIT License - see [LICENSE](LICENSE) file for details
 ## Credits
 
 Built with:
+
 - [p2plib-dart](https://pub.dev/packages/p2plib) - P2P networking
 - [pointycastle](https://pub.dev/packages/pointycastle) - Cryptography
 - [hive](https://pub.dev/packages/hive) - Storage
 - [protobuf](https://pub.dev/packages/protobuf) - Protocol buffers
 
 Inspired by:
+
 - [go-ipfs (Kubo)](https://github.com/ipfs/kubo) - Reference implementation
 - [js-ipfs](https://github.com/ipfs/js-ipfs) - JavaScript implementation
 

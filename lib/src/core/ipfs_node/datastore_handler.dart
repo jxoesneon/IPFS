@@ -1,31 +1,30 @@
 // src/core/ipfs_node/datastore_handler.dart
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'dart:typed_data';
 import '../data_structures/car.dart';
 import '../data_structures/block.dart';
-import 'package:dart_ipfs/src/storage/datastore.dart';
-import '../data_structures/merkle_dag_node.dart'; // Import MerkleDAGNode
-import 'package:dart_ipfs/src/utils/car_reader.dart'; // Assuming you have a CarReader utility
-import 'package:dart_ipfs/src/utils/car_writer.dart'; // Assuming you have a CarWriter utility
-// lib/src/core/ipfs_node/datastore_handler.dart
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import '../data_structures/merkle_dag_node.dart';
+import 'package:dart_ipfs/src/utils/car_reader.dart';
+import 'package:dart_ipfs/src/utils/car_writer.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Handles datastore operations for an IPFS node.
 class DatastoreHandler {
   final Datastore _datastore;
+  final Logger _logger = Logger('DatastoreHandler');
 
   // Add public getter for datastore
   Datastore get datastore => _datastore;
 
-  DatastoreHandler(IPFSConfig config)
-    : _datastore = Datastore(config.datastorePath);
+  DatastoreHandler(this._datastore);
 
   /// Initializes and starts the datastore.
   Future<void> start() async {
     try {
       await _datastore.init();
-      // print('Datastore initialized.');
+      _logger.debug('Datastore initialized.');
     } catch (e) {
-      // print('Error initializing datastore: $e');
+      _logger.error('Error initializing datastore: $e');
     }
   }
 
@@ -33,35 +32,37 @@ class DatastoreHandler {
   Future<void> stop() async {
     try {
       await _datastore.close();
-      // print('Datastore closed.');
+      _logger.debug('Datastore closed.');
     } catch (e) {
-      // print('Error closing datastore: $e');
+      _logger.error('Error closing datastore: $e');
     }
   }
 
   /// Stores a block in the datastore.
   Future<void> putBlock(Block block) async {
     try {
-      await _datastore.put(block.cid.encode(), block);
-      // print('Stored block with CID: ${block.cid.encode()}');
+      final key = Key('/blocks/${block.cid.encode()}');
+      await _datastore.put(key, block.data);
+      _logger.verbose('Stored block with CID: ${block.cid.encode()}');
     } catch (e) {
-      // print('Error storing block with CID ${block.cid.encode()}: $e');
+      _logger.error('Error storing block with CID ${block.cid.encode()}: $e');
     }
   }
 
   /// Retrieves a block from the datastore by its CID.
   Future<Block?> getBlock(String cid) async {
     try {
-      final block = await _datastore.get(cid);
-      if (block != null) {
-        // print('Retrieved block with CID: $cid');
-        return block;
+      final key = Key('/blocks/$cid');
+      final data = await _datastore.get(key);
+      if (data != null) {
+        _logger.verbose('Retrieved block with CID: $cid');
+        return Block.fromData(data);
       } else {
-        // print('Block with CID $cid not found.');
+        _logger.verbose('Block with CID $cid not found.');
         return null;
       }
     } catch (e) {
-      // print('Error retrieving block with CID $cid: $e');
+      _logger.error('Error retrieving block with CID $cid: $e');
       return null;
     }
   }
@@ -69,11 +70,11 @@ class DatastoreHandler {
   /// Checks if a block exists in the datastore by its CID.
   Future<bool> hasBlock(String cid) async {
     try {
-      final exists = await _datastore.has(cid);
-      // print('Block with CID $cid exists: $exists');
+      final key = Key('/blocks/$cid');
+      final exists = await _datastore.has(key);
       return exists;
     } catch (e) {
-      // print('Error checking existence of block with CID $cid: $e');
+      _logger.error('Error checking existence of block with CID $cid: $e');
       return false;
     }
   }
@@ -81,11 +82,19 @@ class DatastoreHandler {
   /// Loads pinned CIDs from the datastore.
   Future<Set<String>> loadPinnedCIDs() async {
     try {
-      final pinnedCIDs = await _datastore.loadPinnedCIDs();
-      // print('Loaded pinned CIDs: ${pinnedCIDs.length}');
+      final pinnedCIDs = <String>{};
+      final q = Query(prefix: '/pins/', keysOnly: true);
+
+      await for (final entry in _datastore.query(q)) {
+        // Key is /pins/<cid>
+        final cid = entry.key.toString().substring('/pins/'.length);
+        pinnedCIDs.add(cid);
+      }
+
+      _logger.debug('Loaded ${pinnedCIDs.length} pinned CIDs');
       return pinnedCIDs;
     } catch (e) {
-      // print('Error loading pinned CIDs: $e');
+      _logger.error('Error loading pinned CIDs: $e');
       return {};
     }
   }
@@ -93,10 +102,25 @@ class DatastoreHandler {
   /// Persists pinned CIDs to the datastore.
   Future<void> persistPinnedCIDs(Set<String> pinnedCIDs) async {
     try {
-      await _datastore.persistPinnedCIDs(pinnedCIDs);
-      // print('Persisted pinned CIDs.');
+      // For this method, the previous implementation cleared and re-added.
+      // We should mirror that or implement add/remove pin methods?
+      // Since strict replacement is requested:
+
+      // 1. Delete all existing pins?
+      // Query all pins and delete.
+      final q = Query(prefix: '/pins/', keysOnly: true);
+      await for (final entry in _datastore.query(q)) {
+        await _datastore.delete(entry.key);
+      }
+
+      // 2. Add new pins
+      for (final cid in pinnedCIDs) {
+        final key = Key('/pins/$cid');
+        await _datastore.put(key, Uint8List.fromList([1])); // Store dummy value
+      }
+      _logger.debug('Persisted pinned CIDs.');
     } catch (e) {
-      // print('Error persisting pinned CIDs: $e');
+      _logger.error('Error persisting pinned CIDs: $e');
     }
   }
 
@@ -107,17 +131,12 @@ class DatastoreHandler {
 
       for (var block in car.blocks) {
         await putBlock(block);
-        // print('Imported block with CID: ${block.cid.encode()}');
+        _logger.verbose('Imported block with CID: ${block.cid.encode()}');
 
         // Optionally announce blocks to network
-        // For example, using Bitswap or another protocol
-        // bitswap.provide(block.cid.encode());
-
-        // You can also handle additional logic here, such as updating metrics
-        // or notifying other components of the new data
       }
     } catch (e) {
-      // print('Error importing CAR file: $e');
+      _logger.error('Error importing CAR file: $e');
     }
   }
 
@@ -149,11 +168,11 @@ class DatastoreHandler {
       // Pass the CAR object to writeCar
       final carData = await CarWriter.writeCar(car);
 
-      // print('Exported CAR file for root CID: $cid');
+      _logger.verbose('Exported CAR file for root CID: $cid');
 
       return carData;
     } catch (e) {
-      // print('Error exporting CAR file for CID $cid: $e');
+      _logger.error('Error exporting CAR file for CID $cid: $e');
       return Uint8List(0);
     }
   }
@@ -178,10 +197,14 @@ class DatastoreHandler {
   }
 
   Future<Map<String, dynamic>> getStatus() async {
+    // Datastore interface doesn't expose size/count cleanly.
+    // We'd have to query all to count.
+    // Or we skip generic counts for now or implement stat in interface.
+    // For MVP, we can return 0 or implement a count query.
     return {
-      'total_blocks': datastore.numBlocks,
-      'total_size': datastore.size,
-      'pinned_blocks': (await datastore.loadPinnedCIDs()).length,
+      'total_blocks': 0, // Not supported in generic interface
+      'total_size': 0,
+      'pinned_blocks': (await loadPinnedCIDs()).length,
     };
   }
 }

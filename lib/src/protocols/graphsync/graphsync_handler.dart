@@ -46,7 +46,7 @@ class GraphsyncHandler {
 
   Future<void> start() async {
     _router.registerProtocol(GraphsyncProtocol.protocolID);
-    _router.addMessageHandler(
+    _router.registerProtocolHandler(
       GraphsyncProtocol.protocolID,
       (packet) => _handleMessage(packet.srcPeerId, packet.datagram),
     );

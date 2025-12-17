@@ -1,25 +1,16 @@
 // test/mocks/in_memory_datastore.dart
 import 'dart:async';
-import 'package:dart_ipfs/src/storage/datastore.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'dart:typed_data';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
 
 /// In-memory implementation of Datastore for testing.
 ///
 /// Provides a lightweight, fast, and fully functional datastore
 /// without requiring file system operations. Perfect for unit tests
 /// and mocking complex integrations.
-///
-/// Unlike Hive-based datastore, this:
-/// - Requires no temp directory setup
-/// - Has instant cleanup (no file deletion)
-/// - Is completely deterministic
-/// - Supports concurrent operations safely
-class InMemoryDatastore extends Datastore {
-  final Map<String, Block> _blocks = {};
-  final Set<String> _pinnedCIDs = {};
+class InMemoryDatastore implements Datastore {
+  final Map<Key, Uint8List> _data = {};
   bool _isOpen = false;
-
-  InMemoryDatastore() : super('in-memory');
 
   @override
   Future<void> init() async {
@@ -27,91 +18,84 @@ class InMemoryDatastore extends Datastore {
   }
 
   @override
-  Future<void> put(String cid, Block block) async {
+  Future<void> put(Key key, Uint8List value) async {
     _ensureOpen();
-    _blocks[cid] = block;
+    _data[key] = value;
   }
 
   @override
-  Future<Block?> get(String cid) async {
+  Future<Uint8List?> get(Key key) async {
     _ensureOpen();
-    return _blocks[cid];
+    return _data[key];
   }
 
   @override
-  Future<void> delete(String cid) async {
+  Future<bool> has(Key key) async {
     _ensureOpen();
-    if (await isPinned(cid)) {
-      throw DatastoreError('Cannot delete pinned block');
+    return _data.containsKey(key);
+  }
+
+  @override
+  Future<void> delete(Key key) async {
+    _ensureOpen();
+    _data.remove(key);
+  }
+
+  @override
+  Stream<QueryEntry> query(Query q) async* {
+    _ensureOpen();
+    var entries = _data.entries.toList();
+
+    // 1. Filtering by prefix
+    if (q.prefix != null) {
+      entries = entries
+          .where((e) => e.key.toString().startsWith(q.prefix!))
+          .toList();
     }
-    _blocks.remove(cid);
-  }
 
-  @override
-  Future<bool> has(String cid) async {
-    _ensureOpen();
-    return _blocks.containsKey(cid);
-  }
+    // 2. Filtering
+    if (q.filters != null) {
+      for (final filter in q.filters!) {
+        entries = entries.where((e) => filter.filter(e)).toList();
+      }
+    }
 
-  @override
-  Future<void> pin(String cid) async {
-    _ensureOpen();
-    _pinnedCIDs.add(cid);
-  }
+    // 3. Sorting
+    if (q.orders != null) {
+      for (final order in q.orders!) {
+        entries.sort((a, b) => order.compare(a, b));
+      }
+    }
 
-  @override
-  Future<void> unpin(String cid) async {
-    _ensureOpen();
-    _pinnedCIDs.remove(cid);
-  }
+    // 4. Offset
+    if (q.offset != null) {
+      entries = entries.skip(q.offset!).toList();
+    }
 
-  @override
-  Future<bool> isPinned(String cid) async {
-    _ensureOpen();
-    return _pinnedCIDs.contains(cid);
-  }
+    // 5. Limit
+    if (q.limit != null) {
+      entries = entries.take(q.limit!).toList();
+    }
 
-  @override
-  Future<Set<String>> loadPinnedCIDs() async {
-    _ensureOpen();
-    return Set.from(_pinnedCIDs);
-  }
-
-  @override
-  Future<void> persistPinnedCIDs(Set<String> pinnedCIDs) async {
-    _ensureOpen();
-    _pinnedCIDs.clear();
-    _pinnedCIDs.addAll(pinnedCIDs);
-  }
-
-  @override
-  Future<List<String>> getAllKeys() async {
-    _ensureOpen();
-    return _blocks.keys.toList();
+    // Yield
+    for (final entry in entries) {
+      yield QueryEntry(entry.key, q.keysOnly ? null : entry.value);
+    }
   }
 
   @override
   Future<void> close() async {
     if (!_isOpen) return;
     _isOpen = false;
-    _blocks.clear();
-    _pinnedCIDs.clear();
-  }
-
-  @override
-  int get numBlocks => _blocks.length;
-
-  @override
-  int get size {
-    return _blocks.values.fold<int>(0, (sum, block) => sum + block.data.length);
+    _data.clear();
   }
 
   /// Test helper: Check if datastore is open
   bool get isOpen => _isOpen;
 
-  /// Test helper: Get all blocks (for verification)
-  Map<String, Block> getAllBlocks() {
-    return Map.unmodifiable(_blocks);
+  /// Test helper: Get all data (for verification)
+  Map<Key, Uint8List> getAllData() {
+    return Map.unmodifiable(_data);
   }
 
   void _ensureOpen() {

@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/services/block_store_service.dart';
-import 'package:dart_ipfs/src/services/content_service.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
-import 'package:dart_ipfs/src/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:grpc/grpc.dart';
 import 'package:test/test.dart';
@@ -47,50 +45,48 @@ class MockBlockStore implements BlockStore {
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// MockDatastore implementing the new Datastore interface
 class MockDatastore implements Datastore {
-  final Map<String, Uint8List> data = {};
-  final Set<String> pinned = {};
+  final Map<Key, Uint8List> data = {};
 
   @override
-  Future<void> put(String key, Block value) async {
-    data[key] = value.data;
+  Future<void> init() async {}
+
+  @override
+  Future<void> put(Key key, Uint8List value) async {
+    data[key] = value;
   }
 
   @override
-  Future<Block?> get(String key) async {
-    if (!data.containsKey(key)) return null;
-    return Block(cid: CID.decode(key), data: data[key]!);
+  Future<Uint8List?> get(Key key) async {
+    return data[key];
   }
 
   @override
-  Future<void> delete(String key) async {
+  Future<void> delete(Key key) async {
     data.remove(key);
   }
 
   @override
-  Future<void> pin(String key) async {
-    pinned.add(key);
+  Future<bool> has(Key key) async => data.containsKey(key);
+
+  @override
+  Stream<QueryEntry> query(Query q) async* {
+    for (final entry in data.entries) {
+      if (q.prefix != null && !entry.key.toString().startsWith(q.prefix!)) {
+        continue;
+      }
+      yield QueryEntry(entry.key, q.keysOnly ? null : entry.value);
+    }
   }
 
   @override
-  Future<void> unpin(String key) async {
-    pinned.remove(key);
+  Future<void> close() async {
+    data.clear();
   }
-
-  @override
-  Future<bool> isPinned(String key) async => pinned.contains(key);
-
-  @override
-  Future<bool> has(String key) async => data.containsKey(key);
-
-  @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockIPFSNode implements IPFSNode {
-  // implements IPFSNode means we don't call super
-  // But we need to define all members that might be called or use noSuchMethod.
-
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -110,42 +106,43 @@ void main() {
     // Let's create a dummy class.
   });
 
-  group('ContentService', () {
-    late ContentService service;
+  group('ContentService with MockDatastore', () {
     late MockDatastore mockDatastore;
 
     setUp(() {
       mockDatastore = MockDatastore();
-      service = ContentService(mockDatastore);
     });
 
-    test('store and get content', () async {
+    test('store and get content via datastore', () async {
       final data = Uint8List.fromList([1, 2, 3]);
-      final cid = await service.storeContent(data);
+      final key = Key('/blocks/test-cid');
 
+      await mockDatastore.put(key, data);
       expect(mockDatastore.data, isNotEmpty);
 
-      final retrieved = await service.getContent(cid);
+      final retrieved = await mockDatastore.get(key);
       expect(retrieved, equals(data));
 
-      final has = await service.hasContent(cid);
+      final has = await mockDatastore.has(key);
       expect(has, isTrue);
     });
 
-    test('pin content', () async {
+    test('pin content via key prefix', () async {
       final data = Uint8List.fromList([1]);
-      final cid = await service.storeContent(data);
+      final blockKey = Key('/blocks/test-cid');
+      final pinKey = Key('/pins/test-cid');
 
-      await service.pinContent(cid);
-      expect(mockDatastore.pinned, contains(cid.encode()));
+      await mockDatastore.put(blockKey, data);
+      await mockDatastore.put(pinKey, Uint8List.fromList([1])); // Pin
 
-      final removed = await service.removeContent(cid);
-      expect(removed, isFalse); // Can't remove pinned
+      expect(await mockDatastore.has(pinKey), isTrue);
 
-      await service.unpinContent(cid);
-      expect(mockDatastore.pinned, isEmpty);
+      // Unpin
+      await mockDatastore.delete(pinKey);
+      expect(await mockDatastore.has(pinKey), isFalse);
 
-      await service.removeContent(cid);
+      // Remove data
+      await mockDatastore.delete(blockKey);
       expect(mockDatastore.data, isEmpty);
     });
   });
@@ -163,22 +160,11 @@ void main() {
       // Start might fail if port binding fails, but 0 should work.
       await server.start();
       expect(server.isRunning, isTrue);
-      // print(server.url);
 
       await server.stop();
       expect(server.isRunning, isFalse);
     });
   });
-
-  /*
-  group('RPCServer', () {
-     // Mocking IPFSNode for RPCHandlers is complex because handlers access many fields.
-     // We might skip deep unit testing of RPCServer logic and focus on start/stop.
-     // But RPCHandlers constructor will try to access node fields? 
-     // RPCHandlers(node).
-     // I'll skip if it requires huge mock setup.
-  });
-  */
 }
 
 class DummyServiceCall extends ServiceCall {

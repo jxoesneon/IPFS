@@ -7,11 +7,11 @@ import 'package:http/http.dart' as http;
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:p2plib/p2plib.dart' show PeerId;
 import 'package:dart_ipfs/src/utils/keystore.dart';
-import 'package:dart_ipfs/src/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
+import 'package:dart_ipfs/src/storage/hive_datastore.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
@@ -28,7 +28,7 @@ class DHTHandler implements IDHTHandler {
   late final DHTClient dhtClient;
   final Keystore _keystore;
   final P2plibRouter _router;
-  final Datastore _storage;
+  final ds.Datastore _storage;
   late final Logger _logger;
 
   final Set<String> _activeQueries = {};
@@ -47,7 +47,7 @@ class DHTHandler implements IDHTHandler {
 
   DHTHandler(IPFSConfig config, this._router, NetworkHandler networkHandler)
     : _keystore = Keystore(),
-      _storage = Datastore(config.datastorePath) {
+      _storage = HiveDatastore(config.datastorePath) {
     _logger = Logger('DHTHandler', debug: config.debug);
     _storage.init();
     dhtClient = DHTClient(networkHandler: networkHandler, router: _router);
@@ -92,22 +92,16 @@ class DHTHandler implements IDHTHandler {
   @override
   Future<void> putValue(Key key, Value value) async {
     try {
-      final storageKey = '/dht/values/${key.toString()}';
+      final storageKey = ds.Key('/dht/values/${key.toString()}');
 
-      // Create a Block instance from the value bytes
-      final block = await Block.fromData(
-        value.bytes,
-        format: 'raw', // Using raw format since this is DHT value data
-      );
-
-      // Store the block
-      await _storage.put(storageKey, block);
+      // Store the value bytes directly
+      await _storage.put(storageKey, Uint8List.fromList(value.bytes));
 
       // Update routing table with key information
       final targetPeerId = PeerId(value: key.bytes);
       await handleRoutingTableUpdate(V_PeerInfo()..peerId = targetPeerId.value);
     } catch (e) {
-      // print('Error putting value: $e');
+      // Error putting value
     }
   }
 
@@ -115,14 +109,13 @@ class DHTHandler implements IDHTHandler {
   @override
   Future<Value> getValue(Key key) async {
     try {
-      final storageKey = '/dht/values/${key.toString()}';
-      final block = await _storage.get(storageKey);
-      if (block != null) {
-        return Value(block.data);
+      final storageKey = ds.Key('/dht/values/${key.toString()}');
+      final data = await _storage.get(storageKey);
+      if (data != null) {
+        return Value(data);
       }
       throw Exception('Value not found');
     } catch (e) {
-      // print('Error getting value: $e');
       rethrow;
     }
   }
@@ -372,7 +365,7 @@ class DHTHandler implements IDHTHandler {
   }
 
   // Add getter for storage
-  Datastore get storage => _storage;
+  ds.Datastore get storage => _storage;
 
   Future<Map<String, dynamic>> getStatus() async {
     return {

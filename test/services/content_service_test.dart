@@ -1,27 +1,22 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:dart_ipfs/src/services/content_service.dart';
-import 'package:dart_ipfs/src/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import '../mocks/in_memory_datastore.dart';
 
 void main() {
   group('ContentService', () {
-    late Directory tempDir;
-    late Datastore datastore;
+    late InMemoryDatastore datastore;
     late ContentService contentService;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('ipfs_content_test');
-      datastore = Datastore(tempDir.path);
+      datastore = InMemoryDatastore();
       await datastore.init();
       contentService = ContentService(datastore);
     });
 
     tearDown(() async {
       await datastore.close();
-      if (await tempDir.exists()) {
-        await tempDir.delete(recursive: true);
-      }
     });
 
     test('computeHash returns correct SHA-256 multihash', () async {
@@ -42,8 +37,9 @@ void main() {
       expect(cid.version, 1);
       expect(cid.codec, 'raw'); // Default
 
-      // Verify data is in datastore
-      final hasIt = await datastore.has(cid.encode());
+      // Verify data is in datastore via key
+      final key = Key('/blocks/${cid.encode()}');
+      final hasIt = await datastore.has(key);
       expect(hasIt, isTrue);
 
       // Retrieve via service
@@ -58,7 +54,8 @@ void main() {
       expect(cid.codec, 'dag-pb');
 
       // Verify it's stored
-      expect(await datastore.has(cid.encode()), isTrue);
+      final key = Key('/blocks/${cid.encode()}');
+      expect(await datastore.has(key), isTrue);
     });
 
     test('removeContent removes data', () async {
@@ -79,7 +76,10 @@ void main() {
       // Pin
       final pinned = await contentService.pinContent(cid);
       expect(pinned, isTrue);
-      expect(await datastore.isPinned(cid.encode()), isTrue);
+
+      // Verify pin key exists
+      final pinKey = Key('/pins/${cid.encode()}');
+      expect(await datastore.has(pinKey), isTrue);
 
       // Try to remove pinned content (should fail)
       final removed = await contentService.removeContent(cid);
@@ -88,10 +88,25 @@ void main() {
       // Unpin
       final unpinned = await contentService.unpinContent(cid);
       expect(unpinned, isTrue);
-      expect(await datastore.isPinned(cid.encode()), isFalse);
+      expect(await datastore.has(pinKey), isFalse);
 
       // Now remove should succeed
       expect(await contentService.removeContent(cid), isTrue);
+    });
+
+    test('listPinnedContent returns pinned CIDs', () async {
+      final input1 = Uint8List.fromList([1]);
+      final input2 = Uint8List.fromList([2]);
+      final cid1 = await contentService.storeContent(input1);
+      final cid2 = await contentService.storeContent(input2);
+
+      await contentService.pinContent(cid1);
+      await contentService.pinContent(cid2);
+
+      final pinned = await contentService.listPinnedContent();
+      expect(pinned.length, equals(2));
+      expect(pinned.contains(cid1.encode()), isTrue);
+      expect(pinned.contains(cid2.encode()), isTrue);
     });
   });
 }

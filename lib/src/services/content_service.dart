@@ -4,7 +4,7 @@ import 'package:crypto/crypto.dart';
 import '../proto/generated/core/cid.pb.dart' as pb_cid;
 import '../core/cid.dart';
 import '../core/data_structures/block.dart';
-import '../storage/datastore.dart';
+import '../core/storage/datastore.dart';
 import '../utils/logger.dart';
 
 /// High-level service for content storage and retrieval.
@@ -46,12 +46,13 @@ class ContentService {
 
     final cid = CID.fromProto(proto);
 
-    // Create and store block
+    // Create block and store raw data
     final block = await Block.fromData(
       Uint8List.fromList(content),
       format: codec,
     );
-    await _datastore.put(cid.encode(), block);
+    final key = Key('/blocks/${cid.encode()}');
+    await _datastore.put(key, block.data);
 
     return cid;
   }
@@ -59,8 +60,9 @@ class ContentService {
   /// Retrieves content by CID
   Future<Uint8List?> getContent(CID cid) async {
     try {
-      final block = await _datastore.get(cid.encode());
-      return block?.data;
+      final key = Key('/blocks/${cid.encode()}');
+      final data = await _datastore.get(key);
+      return data;
     } catch (e, stackTrace) {
       _logger.error(
         'Error retrieving content for CID ${cid.encode()}',
@@ -75,11 +77,13 @@ class ContentService {
   Future<bool> removeContent(CID cid) async {
     try {
       // Check if content is pinned
-      if (await _datastore.isPinned(cid.encode())) {
-        return false;
+      final pinKey = Key('/pins/${cid.encode()}');
+      if (await _datastore.has(pinKey)) {
+        return false; // Cannot remove pinned content
       }
 
-      await _datastore.delete(cid.encode());
+      final blockKey = Key('/blocks/${cid.encode()}');
+      await _datastore.delete(blockKey);
       return true;
     } catch (e, stackTrace) {
       _logger.error(
@@ -95,11 +99,13 @@ class ContentService {
   Future<bool> pinContent(CID cid) async {
     try {
       // Verify content exists
-      if (!await _datastore.has(cid.encode())) {
+      final blockKey = Key('/blocks/${cid.encode()}');
+      if (!await _datastore.has(blockKey)) {
         return false;
       }
 
-      await _datastore.pin(cid.encode());
+      final pinKey = Key('/pins/${cid.encode()}');
+      await _datastore.put(pinKey, Uint8List.fromList([1]));
       return true;
     } catch (e, stackTrace) {
       _logger.error(
@@ -114,7 +120,8 @@ class ContentService {
   /// Unpins content, making it eligible for garbage collection
   Future<bool> unpinContent(CID cid) async {
     try {
-      await _datastore.unpin(cid.encode());
+      final pinKey = Key('/pins/${cid.encode()}');
+      await _datastore.delete(pinKey);
       return true;
     } catch (e, stackTrace) {
       _logger.error(
@@ -138,12 +145,21 @@ class ContentService {
 
   /// Checks if content exists
   Future<bool> hasContent(CID cid) async {
-    return await _datastore.has(cid.encode());
+    final key = Key('/blocks/${cid.encode()}');
+    return await _datastore.has(key);
   }
 
   /// Lists all pinned content CIDs
   Future<Set<String>> listPinnedContent() async {
-    return await _datastore.loadPinnedCIDs();
+    final pinnedCIDs = <String>{};
+    final q = Query(prefix: '/pins/', keysOnly: true);
+
+    await for (final entry in _datastore.query(q)) {
+      final cidStr = entry.key.toString().substring('/pins/'.length);
+      pinnedCIDs.add(cidStr);
+    }
+
+    return pinnedCIDs;
   }
 
   /// Gets the size of stored content

@@ -7,7 +7,7 @@ import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/utils/encoding.dart';
-import 'package:dart_ipfs/src/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
@@ -61,7 +61,7 @@ class Bitswap {
 
   /// Starts the Bitswap protocol.
   Future<void> start() async {
-    _router.addMessageHandler('/ipfs/bitswap/1.2.0', (LibP2PPacket packet) {
+    _router.registerProtocolHandler('/ipfs/bitswap/1.2.0', (p2p.Packet packet) {
       _handlePacket(packet);
     });
     await _router.start();
@@ -160,10 +160,10 @@ class Bitswap {
   /// Handles received blocks from peers.
   Future<void> _handleReceivedBlock(String srcPeerId, Block block) async {
     final blockId = block.cid.toString();
-    // print('Received block with CID $blockId from $srcPeerId.');
 
-    // Store received block in datastore
-    await _datastore.put(blockId, block);
+    // Store received block in datastore using Key
+    final key = Key('/blocks/$blockId');
+    await _datastore.put(key, block.data);
 
     // Store block data in ledger and update received bytes
     _ledger.storeBlockData(blockId, block.data);
@@ -178,10 +178,10 @@ class Bitswap {
     final blockId = base64.encode(entry.block);
 
     // Check if we have the requested block locally
-    final block = await _datastore.get(blockId);
-    if (block != null) {
-      // print('Sending requested block $blockId to $peerId.');
-      await sendBlock(peerId, block.data);
+    final key = Key('/blocks/$blockId');
+    final data = await _datastore.get(key);
+    if (data != null) {
+      await sendBlock(peerId, data);
     } else if (entry.sendDontHave) {
       await sendDontHave(peerId, entry);
     }

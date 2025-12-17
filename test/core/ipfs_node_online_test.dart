@@ -12,6 +12,7 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
@@ -38,8 +39,14 @@ class MockBlockStore extends BlockStore {
   Future<Map<String, dynamic>> getStatus() async => {'status': 'mock_ok'};
 }
 
+// Mock Datastore for MockDatastoreHandler - uses noSuchMethod for all interface methods
+class _MockDatastore implements Datastore {
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class MockDatastoreHandler extends DatastoreHandler {
-  MockDatastoreHandler(IPFSConfig config) : super(config);
+  MockDatastoreHandler() : super(_MockDatastore());
 
   @override
   Future<bool> hasBlock(String cid) async => false;
@@ -201,7 +208,7 @@ void main() {
       container = ServiceContainer();
       config = IPFSConfig(offline: false);
       mockBlockStore = MockBlockStore();
-      mockDatastore = MockDatastoreHandler(config);
+      mockDatastore = MockDatastoreHandler();
 
       // Register Core
       final metrics = MetricsCollector(config);

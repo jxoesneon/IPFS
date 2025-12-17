@@ -3,22 +3,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
 import '../data_structures/node_stats.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
-
-class PubSubMessage {
-  final String topic;
-  final String from;
-  final String content;
-
-  PubSubMessage({
-    required this.topic,
-    required this.from,
-    required this.content,
-  });
-}
 
 /// Handles PubSub operations for an IPFS node.
 class PubSubHandler {
@@ -104,8 +93,10 @@ class PubSubHandler {
   void onMessage(String topic, void Function(String) handler) {
     try {
       _pubSubClient.onMessage.listen((message) {
-        handler(message);
-        // print('Processed message on topic: $topic');
+        if (message.topic == topic) {
+          handler(message.content);
+          // print('Processed message on topic: $topic');
+        }
       });
     } catch (e) {
       // print('Error setting handler for messages on topic $topic: $e');
@@ -151,7 +142,7 @@ class PubSubHandler {
     // For example, dispatching it to specific handlers based on the topic
 
     _messageController.add(
-      PubSubMessage(topic: event.topic, from: event.peerId, content: message),
+      PubSubMessage(topic: event.topic, sender: event.peerId, content: message),
     );
   }
 

@@ -9,7 +9,7 @@ import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 
 import 'package:crypto/crypto.dart'; // For SHA256
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
@@ -98,7 +98,7 @@ class DHTClient {
 
   void _setupHandlers() {
     // Register handlers for each protocol
-    _router.addMessageHandler(PROTOCOL_DHT, _handlePacket);
+    _router.registerProtocolHandler(PROTOCOL_DHT, _handlePacket);
   }
 
   // Helper: Convert kad.Peer to p2p.PeerId
@@ -372,7 +372,7 @@ class DHTClient {
     final p2plibRouter = node.dhtHandler.router;
 
     // Register a one-time message handler for the response
-    p2plibRouter.addMessageHandler(protocol, (packet) {
+    p2plibRouter.registerProtocolHandler(protocol, (packet) {
       if (!completer.isCompleted) {
         completer.complete(packet.datagram);
       }
@@ -519,17 +519,13 @@ class DHTClient {
       // Get all keys from the DHT storage
       final List<String> storedKeys = [];
 
-      // Query the datastore for all DHT keys
-      final datastoreKeys = await node.dhtHandler.storage.getAllKeys();
-
-      // Filter and process DHT keys
-      for (var key in datastoreKeys) {
-        // Only include DHT value keys (exclude provider and peer records)
-        if (key.startsWith('/dht/values/')) {
-          // Remove the prefix to get the actual key
-          final actualKey = key.substring('/dht/values/'.length);
-          storedKeys.add(actualKey);
-        }
+      // Query the datastore for all DHT keys using query
+      final query = ds.Query(prefix: '/dht/values/', keysOnly: true);
+      await for (final entry in node.dhtHandler.storage.query(query)) {
+        final key = entry.key.toString();
+        // Remove the prefix to get the actual key
+        final actualKey = key.substring('/dht/values/'.length);
+        storedKeys.add(actualKey);
       }
 
       // Sort keys for consistent ordering
@@ -547,14 +543,12 @@ class DHTClient {
             DateTime.now(),
           );
         } catch (e) {
-          // print('Error processing key metadata: $e');
           // Continue processing other keys
         }
       }
 
       return storedKeys;
     } catch (e) {
-      // print('Error retrieving stored keys: $e');
       return [];
     }
   }
@@ -562,7 +556,7 @@ class DHTClient {
   Future<void> updateKeyRepublishTime(String key) async {
     try {
       // Create metadata key for storing republish time
-      final metadataKey = '/dht/metadata/$key/last_republish';
+      final metadataKey = ds.Key('/dht/metadata/$key/last_republish');
 
       // Store current timestamp
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -570,11 +564,8 @@ class DHTClient {
         utf8.encode(timestamp.toString()),
       );
 
-      // Create a Block from the timestamp data
-      final block = await Block.fromData(timestampData);
-
       // Update the timestamp in DHT storage
-      await node.dhtHandler.storage.put(metadataKey, block);
+      await node.dhtHandler.storage.put(metadataKey, timestampData);
 
       // Update routing table metadata
       try {
@@ -587,7 +578,6 @@ class DHTClient {
           DateTime.now(),
         );
       } catch (e) {
-        // print('Error updating routing table metadata: $e');
         // Continue even if routing table update fails
       }
 
@@ -601,7 +591,6 @@ class DHTClient {
         event.writeToBuffer(),
       );
     } catch (e) {
-      // print('Error updating republish time for key $key: $e');
       rethrow;
     }
   }

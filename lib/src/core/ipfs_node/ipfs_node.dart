@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'pubsub_handler.dart';
 import 'network_handler.dart';
 import 'datastore_handler.dart';
@@ -11,7 +12,7 @@ import 'package:fixnum/fixnum.dart' as fixnum;
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/network/router.dart';
-import 'package:dart_ipfs/src/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
@@ -813,16 +814,13 @@ class IPFSNode {
       final success = await pin.unpin();
 
       if (success) {
-        // Update the datastore
-        await _container.get<DatastoreHandler>().datastore.unpin(cid);
-        // print('Successfully unpinned CID: $cid');
-      } else {
-        // print('Failed to unpin CID: $cid - CID may not be pinned');
+        // Remove from pins in datastore using /pins/ key prefix
+        final pinKey = Key('/pins/$cid');
+        await _container.get<DatastoreHandler>().datastore.delete(pinKey);
       }
 
       return success;
     } catch (e) {
-      // print('Error while unpinning CID $cid: $e');
       return false;
     }
   }

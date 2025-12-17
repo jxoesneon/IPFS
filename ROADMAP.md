@@ -1,17 +1,20 @@
 # dart_ipfs Roadmap
 
-**Current Version**: 1.3.1 (Production Ready)  
-**Last Updated**: 2025-12-15
+**Current Version**: 1.4.1 (Production Ready)  
+**Last Updated**: 2025-12-17
 
 ---
 
 ## 📍 Current Status
 
-dart_ipfs **v1.3.0** is **100% production ready** with:
+dart_ipfs **v1.4.1** is **100% production ready** with:
+
 - ✅ Full IPFS protocol implementation
 - ✅ P2P networking with production cryptography
 - ✅ Gateway (Internal/Public/Local/Custom modes)
-- ✅ Zero errors, zero warnings
+- ✅ Encrypted Key Storage (SEC-001)
+- ✅ IPNS Signatures (SEC-004)
+- ✅ 526 tests passing
 - ✅ Complete documentation
 
 This roadmap outlines future enhancements beyond the current production-ready state.
@@ -21,9 +24,11 @@ This roadmap outlines future enhancements beyond the current production-ready st
 ## 🗓️ Version Timeline
 
 ### v1.4 - Q1 2026 (Foundation & Devops)
+
 **Focus**: Deployment, stability, and observability
 
 #### Features
+
 - [ ] Docker Ecosystem (Gateway, Node, Dev variants)
 - [ ] Health check endpoints (Kubernetes-ready)
 - [ ] Structured JSON logging (Logstash/Datadog ready)
@@ -35,9 +40,11 @@ This roadmap outlines future enhancements beyond the current production-ready st
 ---
 
 ### v1.5 - Q2 2026 (Platform Expansion)
+
 **Focus**: Cross-platform and mobile
 
 #### Features
+
 - [ ] Flutter widget library
 - [ ] WebRTC transport (browser P2P)
 - [ ] iOS-specific optimizations
@@ -45,6 +52,7 @@ This roadmap outlines future enhancements beyond the current production-ready st
 - [ ] API documentation site
 
 #### Improvements
+
 - [ ] Mobile battery optimization
 - [ ] Background task support
 - [ ] Native platform integrations
@@ -54,9 +62,11 @@ This roadmap outlines future enhancements beyond the current production-ready st
 ---
 
 ### v1.3 - Q3 2026 (Performance & Scale)
+
 **Focus**: Speed and efficiency
 
 #### Features
+
 - [ ] MFS (Mutable File System)
 - [ ] Parallel block fetching
 - [ ] Smart caching with ML
@@ -64,6 +74,7 @@ This roadmap outlines future enhancements beyond the current production-ready st
 - [ ] Bandwidth shaping
 
 #### Improvements
+
 - [ ] Content routing optimization
 - [ ] Multi-algorithm compression
 - [ ] Binary size optimization
@@ -74,9 +85,11 @@ This roadmap outlines future enhancements beyond the current production-ready st
 ---
 
 ### v2.0 - Q4 2026 (Advanced Features)
+
 **Focus**: Ecosystem and extensibility
 
 #### Major Features
+
 - [ ] Plugin system architecture
 - [ ] QUIC transport
 - [ ] Native Ed25519/X25519 crypto
@@ -84,6 +97,7 @@ This roadmap outlines future enhancements beyond the current production-ready st
 - [ ] Chaos engineering framework
 
 #### Breaking Changes
+
 - Improved configuration API (more structured)
 - Plugin-based architecture (optional)
 - Enhanced type safety
@@ -93,9 +107,11 @@ This roadmap outlines future enhancements beyond the current production-ready st
 ---
 
 ### v2.1 - Q1 2027 (Security & Privacy)
+
 **Focus**: Enterprise and privacy features
 
 #### Features
+
 - [ ] HSM (Hardware Security Module) support
 - [ ] Content policy engine
 - [ ] Multi-signature IPNS
@@ -103,6 +119,7 @@ This roadmap outlines future enhancements beyond the current production-ready st
 - [ ] Enhanced audit logging
 
 #### Improvements
+
 - [ ] Enterprise compliance features
 - [ ] Advanced access control
 - [ ] Privacy-preserving routing
@@ -112,9 +129,11 @@ This roadmap outlines future enhancements beyond the current production-ready st
 ---
 
 ### v2.2 - Q2 2027 (Developer Tools)
+
 **Focus**: Developer experience
 
 #### Features
+
 - [ ] VS Code extension
 - [ ] IntelliJ plugin
 - [ ] Code generation tools
@@ -122,6 +141,7 @@ This roadmap outlines future enhancements beyond the current production-ready st
 - [ ] Web dashboard UI
 
 #### Improvements
+
 - [ ] Hot reload support
 - [ ] Better debugging tools
 - [ ] Integration examples
@@ -132,9 +152,11 @@ This roadmap outlines future enhancements beyond the current production-ready st
 ---
 
 ### v3.0 - Q3 2027+ (Innovation)
+
 **Focus**: Next-generation features
 
 #### Experimental
+
 - [ ] Web Assembly build
 - [ ] Marketplace integration
 - [ ] Desktop native app
@@ -151,11 +173,13 @@ This roadmap outlines future enhancements beyond the current production-ready st
 ### High Priority (Next 3 Versions)
 
 #### 1. Cryptography Enhancement
+
 - **v1.2**: Native Ed25519/X25519 implementation
 - **Why**: Better libp2p compatibility, faster crypto operations
 - **Status**: ✅ Completed (v1.2.1)
 
 #### 2. Transport Improvements
+
 - **v1.2**: WebRTC transport for browser compatibility
 - **v2.0**: QUIC transport for better performance
 - **Why**: Broader platform support, faster connections
@@ -163,12 +187,14 @@ This roadmap outlines future enhancements beyond the current production-ready st
 - **Status**: Planned
 
 #### 3. Mutable File System (MFS)
+
 - **v1.3**: Full MFS implementation
 - **Why**: Familiar file system interface, better DX
 - **Effort**: 6-8 weeks
 - **Status**: Planned
 
 #### 4. Plugin System
+
 - **v2.0**: Extensible plugin architecture
 - **Why**: Community contributions, custom protocols
 - **Effort**: 8-10 weeks
@@ -177,24 +203,28 @@ This roadmap outlines future enhancements beyond the current production-ready st
 ### Medium Priority (Future Versions)
 
 #### 5. Performance Optimization
+
 - Parallel block fetching
 - Smart caching
 - Connection pooling
 - Compression improvements
 
 #### 6. Developer Experience
+
 - CLI enhancements
 - Flutter widgets
 - IDE plugins
 - Code generators
 
 #### 7. Security Features
+
 - HSM support
 - Content policies
 - Multi-sig IPNS
 - ZK proofs
 
 #### 8. Platform-Specific
+
 - Mobile optimizations
 - Web Assembly
 - Desktop app
@@ -203,6 +233,7 @@ This roadmap outlines future enhancements beyond the current production-ready st
 ### Low Priority (Long-term)
 
 #### 9. Experimental Features
+
 - Bluetooth transport
 - AI content discovery
 - Quantum-safe crypto
@@ -215,15 +246,17 @@ This roadmap outlines future enhancements beyond the current production-ready st
 These can be implemented quickly with high impact:
 
 ### Immediate (Next Release)
+
 1. **Docker Images** (1 week)
    - Official Docker Hub images
    - Multiple variants (gateway, full-node, dev)
-   
 2. **Health Checks** (1 week)
+
    - Kubernetes-ready endpoints
    - Load balancer integration
 
 3. **Structured Logging** (1 week)
+
    - JSON log format
    - Better log aggregation
 
@@ -232,11 +265,14 @@ These can be implemented quickly with high impact:
    - Common use cases
 
 ### Short-term (Next Quarter)
+
 1. **Enhanced CLI** (2-3 weeks)
+
    - Full feature parity with API
    - Better UX
 
 2. **Flutter Widgets** (3-4 weeks)
+
    - Pre-built UI components
    - Mobile app acceleration
 
@@ -250,17 +286,17 @@ These can be implemented quickly with high impact:
 
 ### Development Time by Category
 
-| Category | Total Effort | Priority | Timeline |
-|----------|--------------|----------|----------|
-| **Crypto Enhancement** | 2-3 weeks | High | v1.2 |
-| **Transport Layers** | 8-12 weeks | High | v1.2, v2.0 |
-| **MFS** | 6-8 weeks | High | v1.3 |
-| **Plugin System** | 8-10 weeks | High | v2.0 |
-| **Performance** | 12-16 weeks | Medium | v1.3 |
-| **Developer Tools** | 10-14 weeks | Medium | v2.2 |
-| **Security** | 12-16 weeks | Medium | v2.1 |
-| **Platform-Specific** | 16-20 weeks | Low | v2.0+ |
-| **Experimental** | Ongoing | Low | v3.0+ |
+| Category               | Total Effort | Priority | Timeline   |
+| ---------------------- | ------------ | -------- | ---------- |
+| **Crypto Enhancement** | 2-3 weeks    | High     | v1.2       |
+| **Transport Layers**   | 8-12 weeks   | High     | v1.2, v2.0 |
+| **MFS**                | 6-8 weeks    | High     | v1.3       |
+| **Plugin System**      | 8-10 weeks   | High     | v2.0       |
+| **Performance**        | 12-16 weeks  | Medium   | v1.3       |
+| **Developer Tools**    | 10-14 weeks  | Medium   | v2.2       |
+| **Security**           | 12-16 weeks  | Medium   | v2.1       |
+| **Platform-Specific**  | 16-20 weeks  | Low      | v2.0+      |
+| **Experimental**       | Ongoing      | Low      | v3.0+      |
 
 ---
 
@@ -269,6 +305,7 @@ These can be implemented quickly with high impact:
 We welcome contributions in these areas:
 
 ### Good First Issues
+
 - Documentation improvements
 - Example applications
 - Bug fixes
@@ -276,12 +313,14 @@ We welcome contributions in these areas:
 - Performance benchmarks
 
 ### Help Wanted
+
 - Mobile platform optimizations
 - Browser compatibility testing
 - Integration examples
 - Translation/i18n
 
 ### Advanced
+
 - Protocol implementations
 - Transport layers
 - Cryptography improvements
@@ -292,18 +331,21 @@ We welcome contributions in these areas:
 ## 📈 Success Metrics
 
 ### v1.x Goals
+
 - [ ] 1000+ stars on GitHub
 - [ ] 50+ production deployments
 - [ ] 10+ community contributors
 - [ ] 95%+ test coverage maintained
 
 ### v2.x Goals
+
 - [ ] 5000+ downloads per month
 - [ ] 100+ production deployments
 - [ ] 50+ community contributors
 - [ ] 20+ plugins available
 
 ### v3.x Goals
+
 - [ ] 10,000+ active users
 - [ ] Feature parity with go-ipfs
 - [ ] Official IPFS implementation status
@@ -316,18 +358,21 @@ We welcome contributions in these areas:
 ### Areas We Need Help
 
 1. **Documentation**
+
    - Tutorial writing
    - API documentation
    - Example applications
    - Translation
 
 2. **Testing**
+
    - Integration tests
    - Platform testing
    - Performance benchmarks
    - Protocol compliance
 
 3. **Features**
+
    - See "Good First Issues" label
    - Check roadmap for planned features
    - Propose new features via discussions
@@ -339,6 +384,7 @@ We welcome contributions in these areas:
    - Share projects
 
 ### Process
+
 1. Check existing issues and discussions
 2. Propose changes via issue or discussion
 3. Get feedback from maintainers
@@ -350,6 +396,7 @@ We welcome contributions in these areas:
 ## 🔮 Long-term Vision
 
 ### dart_ipfs in 2027
+
 - **Primary IPFS implementation for Dart/Flutter**
 - **100% feature parity with go-ipfs**
 - **Thriving plugin ecosystem**
@@ -358,6 +405,7 @@ We welcome contributions in these areas:
 - **Leading in performance and DX**
 
 ### Strategic Goals
+
 1. **Become official IPFS implementation**
 2. **Power 1000+ production apps**
 3. **Enable IPFS on mobile at scale**
@@ -377,19 +425,24 @@ We welcome contributions in these areas:
 ## 📝 Notes
 
 ### Version Numbering
+
 - **Major (x.0.0)**: Breaking changes, major features
 - **Minor (1.x.0)**: New features, no breaking changes
 - **Patch (1.0.x)**: Bug fixes, minor improvements
 
 ### Timeline Flexibility
+
 Dates are estimates and may change based on:
+
 - Community contributions
 - Priority shifts
 - Resource availability
 - Feedback and needs
 
 ### Feedback Welcome
+
 This roadmap is a living document. We welcome:
+
 - Feature suggestions
 - Priority feedback
 - Timeline input
@@ -397,7 +450,7 @@ This roadmap is a living document. We welcome:
 
 ---
 
-**Last Updated: 2025-12-15 (v1.2.4)**
+**Last Updated: 2025-12-17 (v1.4.1)**
 **Status**: Active Development  
-**Current Version:** 1.2.4
-**Target for Next Release:** 1.3.0 (Q1 2026)
+**Current Version:** 1.4.1
+**Target for Next Release:** 1.5.0 (Q1 2026)

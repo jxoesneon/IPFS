@@ -6,7 +6,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:test/test.dart';
 import 'dart:io';
 
@@ -62,7 +62,7 @@ class MockP2plibRouter implements P2plibRouter {
   void registerProtocol(String protocolId) {}
 
   @override
-  void addMessageHandler(
+  void registerProtocolHandler(
     String protocolId,
     void Function(p2p.Packet) handler,
   ) {}
@@ -85,10 +85,25 @@ class MockP2plibRouter implements P2plibRouter {
 
 class MockDatastore implements Datastore {
   @override
-  Future<List<String>> getAllKeys() async => [];
+  Future<void> init() async {}
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  Future<void> put(Key key, Uint8List value) async {}
+
+  @override
+  Future<Uint8List?> get(Key key) async => null;
+
+  @override
+  Future<bool> has(Key key) async => false;
+
+  @override
+  Future<void> delete(Key key) async {}
+
+  @override
+  Stream<QueryEntry> query(Query q) async* {}
+
+  @override
+  Future<void> close() async {}
 }
 
 class MockDHTHandler implements DHTHandler {

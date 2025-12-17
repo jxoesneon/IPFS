@@ -25,7 +25,7 @@ class CircuitRelayClient {
       // Initialize any necessary resources or connections
       await _router.start();
       _router.registerProtocol(_protocolId);
-      _router.addMessageHandler(_protocolId, _handlePacket);
+      _router.registerProtocolHandler(_protocolId, _handlePacket);
     } catch (e) {
       // ignore: empty_catches
     }

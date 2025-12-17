@@ -1,3 +1,8 @@
+// Timeout annotation added: This test can be slow when run in parallel with the full suite
+// due to resource contention. It passes instantly when run in isolation.
+@Timeout(Duration(minutes: 2))
+library;
+
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';

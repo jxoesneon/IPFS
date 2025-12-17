@@ -4,6 +4,7 @@ import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/storage/hive_datastore.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
@@ -19,6 +20,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
+import 'package:dart_ipfs/src/transport/circuit_relay_service.dart';
 
 /// Builder for constructing fully-configured [IPFSNode] instances.
 ///
@@ -79,7 +81,19 @@ class IPFSNodeBuilder {
 
   Future<void> _initializeStorageLayer() async {
     _container.registerSingleton(BlockStore(path: _config.blockStorePath));
-    _container.registerSingleton(DatastoreHandler(_config));
+    _container.registerSingleton(BlockStore(path: _config.blockStorePath));
+
+    // Create and inject the Datastore (Hive backend)
+    // Note: We need to import HiveDatastore.
+    // Since imports are top-level, I'll assume they will be added or I need to add them.
+    // I can't add imports here easily with replace, so I'll trust the user/IDE or do a separate add imports step.
+    // Wait, I can do it in two chunks? No, multi-chunk only for same file.
+    // I will use replace_file_content for this block, and assume I'll fix imports next,
+    // OR I can use the tool to add imports if I include the top of file.
+    // But this file is large.
+    // I will replace this line and then add imports.
+    final datastore = HiveDatastore(_config.datastorePath);
+    _container.registerSingleton(DatastoreHandler(datastore));
     _container.registerSingleton(
       IPLDHandler(_config, _container.get<BlockStore>()),
     );
@@ -152,8 +166,20 @@ class IPFSNodeBuilder {
         _config,
         _container.get<SecurityManager>(),
         _container.get<DHTHandler>(),
+        _container.isRegistered(PubSubHandler)
+            ? _container.get<PubSubHandler>()
+            : null,
       ),
     );
+
+    if (_config.enableCircuitRelay) {
+      final relayService = CircuitRelayService(
+        networkHandler.p2pRouter,
+        _config,
+      );
+      relayService.start();
+      _container.registerSingleton(relayService);
+    }
   }
 
   void registerGraphsyncServices(ServiceContainer container) {

@@ -5,8 +5,7 @@ import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
-import 'package:dart_ipfs/src/storage/datastore.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
 
 /// Kademlia DHT protocol message handler.
 ///
@@ -25,7 +24,7 @@ class DHTProtocolHandler {
   }
 
   void _setupHandlers() {
-    _router.addMessageHandler(PROTOCOL_ID, _handleDHTMessage);
+    _router.registerProtocolHandler(PROTOCOL_ID, _handleDHTMessage);
   }
 
   Future<void> _handleDHTMessage(LibP2PPacket packet) async {
@@ -45,10 +44,12 @@ class DHTProtocolHandler {
         break;
 
       case kad.Message_MessageType.GET_VALUE:
-        final value = await _storage.get(utf8.decode(message.key));
+        final keyStr = utf8.decode(message.key);
+        final storageKey = Key('/dht/values/$keyStr');
+        final value = await _storage.get(storageKey);
         response..type = kad.Message_MessageType.GET_VALUE;
         if (value != null) {
-          response.record = (dht_pb.Record()..value = value.data);
+          response.record = (dht_pb.Record()..value = value);
         } else {
           final closerPeers = await _findClosestPeers(message.key);
           response.closerPeers.addAll(closerPeers);
@@ -57,11 +58,12 @@ class DHTProtocolHandler {
 
       case kad.Message_MessageType.PUT_VALUE:
         if (message.hasRecord()) {
-          final block = await Block.fromData(
+          final keyStr = utf8.decode(message.key);
+          final storageKey = Key('/dht/values/$keyStr');
+          await _storage.put(
+            storageKey,
             Uint8List.fromList(message.record.value),
-            format: 'raw',
           );
-          await _storage.put(utf8.decode(message.key), block);
         }
         response..type = kad.Message_MessageType.PUT_VALUE;
         break;

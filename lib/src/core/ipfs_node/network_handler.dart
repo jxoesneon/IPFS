@@ -237,7 +237,7 @@ class NetworkHandler {
       ]);
 
       // Set up one-time response handler
-      _router.addMessageHandler(protocolId, (packet) {
+      _router.registerProtocolHandler(protocolId, (packet) {
         if (packet.srcPeerId.toString() == peer.toString() &&
             _extractRequestId(packet.datagram) == requestId) {
           _router.removeMessageHandler(protocolId);

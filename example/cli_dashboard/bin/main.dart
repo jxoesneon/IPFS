@@ -681,7 +681,7 @@ class Dashboard {
           // Actually, usually pubsub doesn't echo to self by default in some implementations.
           // Let's stick to: "Received from ${msg.from}"
           final display =
-              "[$time] [${msg.from.substring(0, 8)}..] ${msg.content}";
+              "[$time] [${msg.sender.substring(0, 8)}..] ${msg.content}";
           _chatMessages.add(display);
           if (_chatMessages.length > 50) _chatMessages.removeAt(0);
           // Force refresh if we weren't polling? We are polling.

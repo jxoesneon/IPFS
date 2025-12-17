@@ -8,7 +8,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_proto;
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -71,7 +71,10 @@ class MockP2plibRouter implements P2plibRouter {
   void registerProtocol(String protocolId) {}
 
   @override
-  void addMessageHandler(String protocolId, void Function(p2p.Packet) handler) {
+  void registerProtocolHandler(
+    String protocolId,
+    void Function(p2p.Packet) handler,
+  ) {
     _handler = handler;
   }
 
@@ -119,9 +122,6 @@ class MockP2plibRouter implements P2plibRouter {
 }
 
 class MockDatastore implements Datastore {
-  @override
-  Future<List<String>> getAllKeys() async => [];
-
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

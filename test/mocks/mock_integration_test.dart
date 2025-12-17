@@ -1,7 +1,8 @@
 // test/mocks/mock_integration_test.dart
+import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
-import 'package:dart_ipfs/src/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
 import 'in_memory_datastore.dart';
 import 'mock_dht_handler.dart';
 import 'test_helpers.dart';
@@ -32,19 +33,19 @@ void main() {
 
     test('InMemoryDatastore works as expected', () async {
       final block = await createTestBlock('test data');
-      final cid = block.cid.toString();
+      final cidStr = block.cid.toString();
+      final key = ds.Key('/blocks/$cidStr');
 
-      // Store block
-      await datastore.put(cid, block);
+      // Store block data
+      await datastore.put(key, block.data);
 
       // Verify storage
-      expect(await datastore.has(cid), isTrue);
-      expect(datastore.numBlocks, equals(1));
+      expect(await datastore.has(key), isTrue);
 
-      // Retrieve block
-      final retrieved = await datastore.get(cid);
+      // Retrieve block data
+      final retrieved = await datastore.get(key);
       expect(retrieved, isNotNull);
-      expect(retrieved!.cid.toString(), equals(cid));
+      expect(retrieved, equals(block.data));
     });
 
     test('MockDHTHandler implements IDHTHandler', () {
@@ -116,53 +117,65 @@ void main() {
     test('Mock infrastructure works together', () async {
       // Use both mocks in combination
       final block = await createTestBlock('integration test');
-      final cid = block.cid.toString();
+      final cidStr = block.cid.toString();
+      final dsKey = ds.Key('/blocks/$cidStr');
 
       // Store in datastore
-      await datastore.put(cid, block);
+      await datastore.put(dsKey, block.data);
 
-      // Use DHT handler
-      final key = Key.fromString('integration-key');
-      final value = Value.fromString(cid);
-      await dhtHandler.putValue(key, value);
+      // Use DHT handler (uses DHT Key, not ds.Key)
+      final dhtKey = Key.fromString('integration-key');
+      final value = Value.fromString(cidStr);
+      await dhtHandler.putValue(dhtKey, value);
 
       // Verify both worked
-      expect(await datastore.has(cid), isTrue);
-      expect(dhtHandler.hasStoredValue(key), isTrue);
+      expect(await datastore.has(dsKey), isTrue);
+      expect(dhtHandler.hasStoredValue(dhtKey), isTrue);
     });
 
     test('Multiple test blocks can be created and stored', () async {
       final blocks = await createTestBlocks(5);
 
       for (final block in blocks) {
-        await datastore.put(block.cid.toString(), block);
+        final key = ds.Key('/blocks/${block.cid.toString()}');
+        await datastore.put(key, block.data);
       }
 
-      expect(datastore.numBlocks, equals(5));
-
-      final keys = await datastore.getAllKeys();
-      expect(keys.length, equals(5));
+      // Count stored blocks via query
+      int count = 0;
+      await for (final _ in datastore.query(
+        ds.Query(prefix: '/blocks/', keysOnly: true),
+      )) {
+        count++;
+      }
+      expect(count, equals(5));
     });
 
-    test('InMemoryDatastore pin functionality works', () async {
+    test('InMemoryDatastore pin functionality via key prefix', () async {
       final block = await createTestBlock('pinned block');
-      final cid = block.cid.toString();
+      final cidStr = block.cid.toString();
+      final blockKey = ds.Key('/blocks/$cidStr');
+      final pinKey = ds.Key('/pins/$cidStr');
 
-      await datastore.put(cid, block);
-      await datastore.pin(cid);
+      // Store block
+      await datastore.put(blockKey, block.data);
 
-      expect(await datastore.isPinned(cid), isTrue);
+      // Pin by storing in /pins/ prefix
+      await datastore.put(pinKey, Uint8List.fromList([1]));
 
-      // Cannot delete pinned block
-      expect(
-        () async => await datastore.delete(cid),
-        throwsA(isA<DatastoreError>()),
-      );
+      // Check pin exists
+      expect(await datastore.has(pinKey), isTrue);
 
-      // Can delete after unpinning
-      await datastore.unpin(cid);
-      await datastore.delete(cid);
-      expect(await datastore.has(cid), isFalse);
+      // Unpin
+      await datastore.delete(pinKey);
+      expect(await datastore.has(pinKey), isFalse);
+
+      // Block should still exist
+      expect(await datastore.has(blockKey), isTrue);
+
+      // Delete block
+      await datastore.delete(blockKey);
+      expect(await datastore.has(blockKey), isFalse);
     });
   });
 
