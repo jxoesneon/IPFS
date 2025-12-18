@@ -15,7 +15,7 @@ class IPLDExplorerScreen extends StatefulWidget {
 
 class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
   final TextEditingController _cidController = TextEditingController();
-  final List<String> _history = [];
+  final List<Map<String, String>> _breadcrumbs = [];
   String _currentCid = '';
   bool _isLoading = false;
   List<Map<String, dynamic>> _links = [];
@@ -27,8 +27,15 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
     super.initState();
   }
 
-  Future<void> _explore(String cid) async {
+  Future<void> _explore(String cid, {String? label}) async {
     if (cid.isEmpty) return;
+
+    // Handle path resolution CID/path/to/item
+    if (cid.contains('/')) {
+      await _explorePath(cid);
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _currentCid = cid;
@@ -40,15 +47,10 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
     try {
       final node = context.read<NodeService>();
 
-      // parallel fetch: ls (links) and cat (data)
-      // Note: ls might fail if it's a leaf node (file), cat might be huge
-
       // 1. Try ls (treat as directory/node with links)
       final links = await node.ls(cid);
 
-      // 2. Try cat (get data) - limit size?
-      // Native node.cat returns complete bytes.
-      // For large files this might be slow, but for explorer we assume small blocks or text
+      // 2. Try cat (get data)
       Uint8List? data;
       try {
         data = await node.cat(cid);
@@ -59,17 +61,33 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
           _links = links;
           if (data != null) {
             try {
-              // Try decode as utf8 string
-              _dataPreview = utf8.decode(data);
+              final rawStr = utf8.decode(data);
+              try {
+                // Try pretty-print if JSON
+                final decoded = json.decode(rawStr);
+                _dataPreview =
+                    const JsonEncoder.withIndent('  ').convert(decoded);
+              } catch (_) {
+                _dataPreview = rawStr;
+              }
             } catch (_) {
               _dataPreview = '<Binary Data: ${data.length} bytes>';
             }
           }
+
           if (links.isEmpty && data == null) {
             _error = 'Could not resolve CID or empty node.';
           } else {
-            if (_history.isEmpty || _history.last != cid) {
-              _history.add(cid);
+            // Manage breadcrumbs
+            if (label == null) {
+              // Manual jump or root
+              _breadcrumbs.clear();
+              _breadcrumbs.add({'name': 'Root', 'cid': cid});
+            } else {
+              // Only add if not already the last one (prevents loops)
+              if (_breadcrumbs.isEmpty || _breadcrumbs.last['cid'] != cid) {
+                _breadcrumbs.add({'name': label, 'cid': cid});
+              }
             }
           }
           _isLoading = false;
@@ -85,11 +103,70 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
     }
   }
 
-  void _navigateBack() {
-    if (_history.length > 1) {
-      _history.removeLast(); // pop current
-      _explore(_history.last);
+  Future<void> _explorePath(String path) async {
+    final parts = path.split('/').where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return;
+
+    String currentCid = parts[0];
+    _breadcrumbs.clear();
+    _breadcrumbs.add({'name': 'Root', 'cid': currentCid});
+
+    final node = context.read<NodeService>();
+
+    for (int i = 1; i < parts.length; i++) {
+      final target = parts[i];
+      // node already retrieved
+      final links = await node.ls(currentCid);
+
+      final link = links.firstWhere(
+        (l) => l['name'] == target,
+        orElse: () => {},
+      );
+
+      if (link.isEmpty || link['cid'] == null) {
+        setState(() => _error =
+            'Could not resolve path: $target not found in $currentCid');
+        return;
+      }
+
+      currentCid = link['cid'];
+      _breadcrumbs.add({'name': target, 'cid': currentCid});
     }
+
+    _explore(currentCid, label: parts.last);
+  }
+
+  void _navigateToBreadcrumb(int index) {
+    final target = _breadcrumbs[index];
+    final cid = target['cid']!;
+    _breadcrumbs.removeRange(index + 1, _breadcrumbs.length);
+    _explore(cid, label: target['name']);
+  }
+
+  Widget _buildMetaTile(String label, String value, {Color? color}) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: TextStyle(color: Colors.white24, fontSize: 10)),
+            const SizedBox(height: 2),
+            Text(value,
+                style: GoogleFonts.firaCode(
+                    color: color ?? Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -116,7 +193,9 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
                 IconButton(
                   icon: const Icon(LucideIcons.arrowLeftCircle,
                       color: Colors.cyanAccent),
-                  onPressed: _history.length > 1 ? _navigateBack : null,
+                  onPressed: _breadcrumbs.length > 1
+                      ? () => _navigateToBreadcrumb(_breadcrumbs.length - 2)
+                      : null,
                 ),
                 Expanded(
                   child: TextField(
@@ -153,6 +232,39 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            // Breadcrumbs
+            if (_breadcrumbs.isNotEmpty)
+              SizedBox(
+                height: 32,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _breadcrumbs.length,
+                  separatorBuilder: (context, index) => Icon(
+                      LucideIcons.chevronRight,
+                      size: 14,
+                      color: Colors.white24),
+                  itemBuilder: (context, index) {
+                    final b = _breadcrumbs[index];
+                    final isLast = index == _breadcrumbs.length - 1;
+                    return GestureDetector(
+                      onTap: isLast ? null : () => _navigateToBreadcrumb(index),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          b['name']!,
+                          style: TextStyle(
+                            color: isLast ? Colors.cyanAccent : Colors.white54,
+                            fontSize: 12,
+                            fontWeight:
+                                isLast ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             const SizedBox(height: 24),
 
             // Content Area
@@ -228,9 +340,32 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+
+          // Metadata Pane
+          Row(
+            children: [
+              _buildMetaTile('Links', _links.length.toString()),
+              const SizedBox(width: 12),
+              _buildMetaTile(
+                  'Size',
+                  _dataPreview?.length != null
+                      ? '${(_dataPreview!.length / 1024).toStringAsFixed(1)} KB'
+                      : 'N/A'),
+              const SizedBox(width: 12),
+              FutureBuilder<List<String>>(
+                  future: context.read<NodeService>().getPinnedCids(),
+                  builder: (context, snapshot) {
+                    final isPinned =
+                        snapshot.data?.contains(_currentCid) ?? false;
+                    return _buildMetaTile('Pinned', isPinned ? 'Yes' : 'No',
+                        color: isPinned ? Colors.greenAccent : Colors.white24);
+                  }),
+            ],
+          ),
           const SizedBox(height: 24),
 
-          // Pinned Status
+          // Pinned Actions
           FutureBuilder<List<String>>(
               future: context.read<NodeService>().getPinnedCids(),
               builder: (context, snapshot) {
@@ -322,7 +457,7 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
                         color: Colors.white24),
                     onTap: () {
                       _cidController.text = link['cid'];
-                      _explore(link['cid']);
+                      _explore(link['cid'], label: link['name']);
                     },
                   ),
                 );

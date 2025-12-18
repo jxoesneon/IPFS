@@ -15,7 +15,6 @@ import 'package:dart_ipfs/src/protocols/graphsync/graphsync_protocol.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_types.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Graphsync protocol handler for efficient DAG transfer.
 ///
@@ -62,7 +61,7 @@ class GraphsyncHandler {
     }
   }
 
-  Future<void> _handleMessage(p2p.PeerId peer, Uint8List data) async {
+  Future<void> _handleMessage(String peer, Uint8List data) async {
     final message = GraphsyncMessage.fromBuffer(data);
 
     for (final request in message.requests) {
@@ -169,10 +168,7 @@ class GraphsyncHandler {
     }
   }
 
-  Future<void> _handleNewRequest(
-    p2p.PeerId peer,
-    GraphsyncRequest request,
-  ) async {
+  Future<void> _handleNewRequest(String peer, GraphsyncRequest request) async {
     _logger.debug('Handling new request ${request.id} from ${peer.toString()}');
 
     try {

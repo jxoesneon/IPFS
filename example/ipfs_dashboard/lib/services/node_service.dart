@@ -17,8 +17,54 @@ class NodeService extends ChangeNotifier {
   final List<String> _logs = [];
   GatewayMode _gatewayMode = GatewayMode.internal;
 
+  // Bandwidth Tracking
+  double _uploadRate = 0;
+  double _downloadRate = 0;
+  int _lastSent = 0;
+  int _lastReceived = 0;
+  DateTime _lastMetricTime = DateTime.now();
+
+  String _username = '';
+
   NodeService() {
+    _username =
+        'Peer_${peerId.length > 6 ? peerId.substring(peerId.length - 6) : "User"}';
+    _setupMetricsListener();
     startNode();
+  }
+
+  double get uploadRate => _uploadRate;
+  double get downloadRate => _downloadRate;
+  String get username => _username;
+
+  void setUsername(String name) {
+    if (name.isNotEmpty) {
+      _username = name;
+      notifyListeners();
+    }
+  }
+
+  void _setupMetricsListener() {
+    bandwidthMetrics.listen((data) {
+      if (!isOnline) return;
+
+      final now = DateTime.now();
+      final duration = now.difference(_lastMetricTime).inMilliseconds / 1000.0;
+      if (duration < 0.5) return; // Ignore too frequent updates
+
+      final sent = (data['totalSent'] as num?)?.toInt() ?? 0;
+      final received = (data['totalReceived'] as num?)?.toInt() ?? 0;
+
+      if (_lastSent > 0) {
+        _uploadRate = (sent - _lastSent) / duration;
+        _downloadRate = (received - _lastReceived) / duration;
+      }
+
+      _lastSent = sent;
+      _lastReceived = received;
+      _lastMetricTime = now;
+      notifyListeners();
+    });
   }
 
   /// Whether the node is currently running (`online`).

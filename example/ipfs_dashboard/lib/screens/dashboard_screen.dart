@@ -98,6 +98,53 @@ class _Header extends StatelessWidget {
           ),
         ),
         const Spacer(),
+        // Bandwidth Monitor
+        Consumer<NodeService>(
+          builder: (context, node, _) => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+            child: Row(
+              children: [
+                _BandwidthIcon(
+                  icon: LucideIcons.arrowDown,
+                  rate: node.downloadRate,
+                  color: Colors.greenAccent,
+                ),
+                const SizedBox(width: 12),
+                _BandwidthIcon(
+                  icon: LucideIcons.arrowUp,
+                  rate: node.uploadRate,
+                  color: Colors.orangeAccent,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        // Multiaddr Copy
+        Consumer<NodeService>(
+          builder: (context, node, _) => IconButton(
+            icon:
+                const Icon(LucideIcons.share, color: Colors.white54, size: 20),
+            tooltip: 'Copy My Multiaddr',
+            onPressed: () async {
+              final addrs = await node.getAddresses();
+              if (addrs.isNotEmpty) {
+                Clipboard.setData(ClipboardData(text: addrs.first));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Multiaddr copied!')),
+                  );
+                }
+              }
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
         // Gateway Selector
         Consumer<NodeService>(
           builder: (context, node, _) => Container(
@@ -204,6 +251,38 @@ class _Header extends StatelessWidget {
     if (url != null && url.isNotEmpty) {
       node.setGatewayMode(GatewayMode.custom, customUrl: url);
     }
+  }
+}
+
+class _BandwidthIcon extends StatelessWidget {
+  final IconData icon;
+  final double rate;
+  final Color color;
+
+  const _BandwidthIcon({
+    required this.icon,
+    required this.rate,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    String speed = '${(rate / 1024).toStringAsFixed(1)} KB/s';
+    if (rate > 1024 * 1024) {
+      speed = '${(rate / (1024 * 1024)).toStringAsFixed(1)} MB/s';
+    }
+
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Text(
+          speed,
+          style: GoogleFonts.firaCode(
+              color: Colors.white.withValues(alpha: 0.8), fontSize: 10),
+        ),
+      ],
+    );
   }
 }
 
@@ -735,18 +814,28 @@ class _NetworkView extends StatefulWidget {
 class _NetworkViewState extends State<_NetworkView> {
   List<String> _peers = [];
   bool _isLoading = false;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _refreshPeers();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted) _refreshPeers();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _refreshPeers() async {
     final node = context.read<NodeService>();
     if (!node.isOnline) return;
 
-    setState(() => _isLoading = true);
+    if (_peers.isEmpty) setState(() => _isLoading = true);
     final peers = await node.getPeers();
     if (mounted) {
       setState(() {
@@ -927,7 +1016,12 @@ class _NetworkViewState extends State<_NetworkView> {
                               IconButton(
                                 icon: const Icon(LucideIcons.x,
                                     size: 14, color: Colors.redAccent),
-                                onPressed: () async {},
+                                onPressed: () async {
+                                  await context
+                                      .read<NodeService>()
+                                      .disconnectPeer(peer);
+                                  _refreshPeers();
+                                },
                               ),
                             ],
                           ),
@@ -951,8 +1045,10 @@ class _ChatView extends StatefulWidget {
 
 class _ChatViewState extends State<_ChatView> {
   final TextEditingController _msgController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final List<Map<String, String>> _messages = [];
-  final String _topic = 'dart_ipfs_general';
+  String _topic = 'dart_ipfs_general';
+  StreamSubscription? _subscription;
 
   @override
   void initState() {
@@ -960,47 +1056,131 @@ class _ChatViewState extends State<_ChatView> {
     _subscribe();
   }
 
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    _scrollController.dispose();
+    _msgController.dispose();
+    super.dispose();
+  }
+
   void _subscribe() {
+    _subscription?.cancel();
     final node = context.read<NodeService>();
     if (node.isOnline) {
       node.subscribe(_topic);
-      node.pubsubEvents.listen((event) {
+      _subscription = node.pubsubEvents.listen((event) {
         if (!mounted) return;
-        // Event can be PubSubMessage (native) or Map (web mock)
+
         String from = 'Unknown';
         String content = '';
+        String topic = '';
 
-        // Reflection/Dynamic Check
         try {
-          // Native
-          from = event.from;
-          content = event.content;
+          // Native (PubSubMessage)
+          from = (event as dynamic).sender;
+          content = (event as dynamic).content;
+          topic = (event as dynamic).topic;
         } catch (_) {
-          // Map (Web Mock)
+          // Web/Mock (Map)
           if (event is Map) {
             from = event['from'] ?? 'Unknown';
             content = event['content'] ?? '';
+            topic = event['topic'] ?? _topic;
           }
+        }
+
+        // Only show messages for current topic
+        if (topic != _topic) return;
+
+        // Try to extract username from prefix <handle>
+        String displayFrom = from;
+        String displayContent = content;
+        final handleMatch = RegExp(r'^<(.+?)> (.*)$').firstMatch(content);
+        if (handleMatch != null) {
+          displayFrom = handleMatch.group(1)!;
+          displayContent = handleMatch.group(2)!;
         }
 
         setState(() {
           _messages.add({
-            'from': from,
-            'content': content,
+            'from': displayFrom,
+            'peerId': from,
+            'content': displayContent,
             'time':
                 DateTime.now().toIso8601String().split('T')[1].substring(0, 5)
           });
         });
+
+        _scrollToBottom();
       });
     }
+  }
+
+  void _scrollToBottom() {
+    Future.microtask(() {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   void _sendMessage() {
     final text = _msgController.text.trim();
     if (text.isEmpty) return;
 
-    context.read<NodeService>().publish(_topic, text);
+    final node = context.read<NodeService>();
+    // Prefix message with username so others can see it
+    final payload = '<${node.username}> $text';
+
+    node.publish(_topic, payload);
     _msgController.clear();
+  }
+
+  void _changeTopic() async {
+    final controller = TextEditingController(text: _topic);
+    final newTopic = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        title:
+            const Text('Change Topic', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            labelText: 'Topic Name',
+            labelStyle: TextStyle(color: Colors.white54),
+            enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white24)),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
+            child: const Text('Join', style: TextStyle(color: Colors.black)),
+          ),
+        ],
+      ),
+    );
+
+    if (newTopic != null && newTopic.isNotEmpty && newTopic != _topic) {
+      if (mounted) {
+        setState(() {
+          _topic = newTopic;
+          _messages.clear();
+        });
+        _subscribe();
+      }
+    }
   }
 
   @override
@@ -1035,13 +1215,35 @@ class _ChatViewState extends State<_ChatView> {
           children: [
             // Header
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(LucideIcons.hash,
-                    color: Colors.cyanAccent, size: 16),
-                const SizedBox(width: 8),
-                Text(_topic,
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    const Icon(LucideIcons.hash,
+                        color: Colors.cyanAccent, size: 16),
+                    const SizedBox(width: 8),
+                    Text(_topic,
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Consumer<NodeService>(
+                      builder: (context, node, _) => Text(
+                        'as ${node.username}',
+                        style: TextStyle(color: Colors.white54, fontSize: 12),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(LucideIcons.settings,
+                          size: 16, color: Colors.white54),
+                      onPressed: _changeTopic,
+                      tooltip: 'Change Topic',
+                    ),
+                  ],
+                ),
               ],
             ),
             const Divider(color: Colors.white24, height: 32),
@@ -1049,11 +1251,12 @@ class _ChatViewState extends State<_ChatView> {
             // Messages
             Expanded(
               child: ListView.builder(
+                controller: _scrollController,
                 itemCount: _messages.length,
                 itemBuilder: (context, index) {
                   final msg = _messages[index];
                   final isMe =
-                      msg['from'] == context.read<NodeService>().peerId;
+                      msg['peerId'] == context.read<NodeService>().peerId;
                   return Align(
                     alignment:
                         isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -1069,18 +1272,26 @@ class _ChatViewState extends State<_ChatView> {
                             color: Colors.white.withValues(alpha: 0.05)),
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: isMe
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
                         children: [
                           Text(msg['from']!,
                               style: TextStyle(
-                                  color: Colors.cyanAccent, fontSize: 10)),
+                                  color: Colors.cyanAccent,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold)),
                           const SizedBox(height: 4),
                           Text(msg['content']!,
                               style: const TextStyle(color: Colors.white)),
+                          const SizedBox(height: 4),
+                          Text(msg['time']!,
+                              style: TextStyle(
+                                  color: Colors.white54, fontSize: 8)),
                         ],
                       ),
                     ),
-                  );
+                  ).animate().fadeIn().slideX(begin: isMe ? 0.2 : -0.2);
                 },
               ),
             ),
@@ -1092,6 +1303,7 @@ class _ChatViewState extends State<_ChatView> {
                 Expanded(
                   child: TextField(
                     controller: _msgController,
+                    onSubmitted: (_) => _sendMessage(),
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
@@ -1103,16 +1315,22 @@ class _ChatViewState extends State<_ChatView> {
                         borderRadius: BorderRadius.circular(20),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
                     ),
-                    onSubmitted: (_) => _sendMessage(),
                   ),
                 ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: _sendMessage,
-                  icon: const Icon(LucideIcons.send, color: Colors.cyanAccent),
+                const SizedBox(width: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.cyanAccent,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(LucideIcons.send,
+                        color: Colors.black, size: 20),
+                    onPressed: _sendMessage,
+                  ),
                 ),
               ],
             ),

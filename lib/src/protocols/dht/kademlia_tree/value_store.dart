@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import '../dht_client.dart';
 
 /// Stores and replicates values across the DHT.
@@ -49,7 +49,7 @@ class ValueStore {
   }
 
   Future<void> _replicateValue(String key, Uint8List value) async {
-    final targetPeerId = p2p.PeerId(value: Uint8List.fromList(key.codeUnits));
+    final targetPeerId = PeerId(value: Uint8List.fromList(key.codeUnits));
     final closestPeers = _dhtClient.kademliaRoutingTable.findClosestPeers(
       targetPeerId,
       replicationFactor,

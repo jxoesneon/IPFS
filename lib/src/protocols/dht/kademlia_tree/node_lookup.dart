@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 
 import 'helpers.dart';
 
@@ -18,28 +18,24 @@ extension NodeLookup on KademliaTree {
   static const int K = 20;
 
   /// Performs iterative node lookup for [target].
-  Future<List<p2p.PeerId>> nodeLookup(p2p.PeerId target) async {
+  Future<List<PeerId>> nodeLookup(PeerId target) async {
     int iterations = 0;
 
-    Set<p2p.PeerId> queriedPeers = {};
-    List<p2p.PeerId> closestPeers = findClosestPeers(target, K);
+    Set<PeerId> queriedPeers = {};
+    List<PeerId> closestPeers = findClosestPeers(target, K);
 
     while (iterations++ < maxIterations) {
-      List<p2p.PeerId> peersToQuery = closestPeers
+      List<PeerId> peersToQuery = closestPeers
           .where((p) => !queriedPeers.contains(p))
           .take(alpha)
           .toList();
 
       if (peersToQuery.isEmpty) break;
 
-      List<p2p.PeerId> newClosestPeers = [];
+      List<PeerId> newClosestPeers = [];
       for (var peerId in peersToQuery) {
         try {
-          List<p2p.PeerId> queriedPeers = await findNode(
-            dhtClient,
-            peerId,
-            target,
-          );
+          List<PeerId> queriedPeers = await findNode(dhtClient, peerId, target);
           newClosestPeers.addAll(queriedPeers);
         } catch (e) {
           // print('Error querying peer $peerId: $e');

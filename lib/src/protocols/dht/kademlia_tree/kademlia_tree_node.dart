@@ -1,4 +1,4 @@
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 
 /// State of a node in the Kademlia DHT.
 enum KademliaNodeState {
@@ -28,7 +28,7 @@ class KademliaTreeNode {
        children = [];
 
   /// The peer identifier.
-  final p2p.PeerId peerId;
+  final PeerId peerId;
 
   /// XOR distance from this node to the routing table's owner.
   final int distance;
@@ -37,7 +37,7 @@ class KademliaTreeNode {
   final List<KademliaTreeNode> children;
 
   /// The associated peer ID.
-  final p2p.PeerId associatedPeerId;
+  final PeerId associatedPeerId;
 
   /// When this node was last seen (milliseconds since epoch).
   int lastSeen;

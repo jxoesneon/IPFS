@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/core/types/peer_types.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/peer_store.dart';
 import 'package:dart_ipfs/src/protocols/dht/routing_table.dart';
-import 'package:p2plib/p2plib.dart' show PeerId;
 import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Implementation of the Kademlia DHT protocol following IPFS specs.
@@ -89,7 +89,7 @@ class DHTProtocol {
 
       // Send request to peer
       final response = await _network.sendRequest(
-        peer,
+        peer.toString(),
         protocolId,
         request.writeToBuffer(),
       );

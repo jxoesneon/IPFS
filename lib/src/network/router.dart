@@ -1,13 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:typed_data';
-
-import 'package:p2plib/p2plib.dart' as p2p;
 
 import '../core/config/ipfs_config.dart';
 import '../core/data_structures/peer.dart';
-import '../core/types/p2p_types.dart';
 import '../transport/p2plib_router.dart';
+import '../utils/base58.dart';
 
 /// High-level network router for IPFS peer communication.
 ///
@@ -44,52 +41,34 @@ class Router {
 
   /// Starts the router
   Future<void> start() async {
-    await _router.routerL0.start();
+    await _router.start();
   }
 
   /// Stops the router
   Future<void> stop() async {
-    _router.routerL0.stop();
+    await _router.stop();
     await _peerDiscoveryController.close();
   }
 
   /// Sends a message to a specific peer
-  Future<void> sendMessage(dynamic peerId, Uint8List message) async {
-    if (peerId is String) {
-      _router.routerL0.sendDatagram(
-        addresses: [_getPeerAddress(peerId)],
-        datagram: message,
-      );
-    } else if (peerId is p2p.PeerId) {
-      await _router.sendMessage(peerId, message);
-    } else {
-      throw ArgumentError('peerId must be either String or PeerId');
-    }
+  Future<void> sendMessage(String peerId, Uint8List message) async {
+    await _router.sendMessage(peerId, message);
   }
 
   /// Broadcasts a message to all connected peers
   Future<void> broadcast(Uint8List message) async {
     for (final peer in _connectedPeers) {
-      await sendMessage(peer.id, message);
+      await sendMessage(Base58().encode(peer.id.value), message);
     }
   }
 
   /// Connects to a peer
   Future<void> connectToPeer(String multiaddr) async {
-    // Implementation depends on p2plib connection handling
-    throw UnimplementedError();
+    await _router.connect(multiaddr);
   }
 
   /// Disconnects from a peer
-  Future<void> disconnectFromPeer(String peerId) async {
-    // Implementation depends on p2plib connection handling
-    throw UnimplementedError();
-  }
-
-  /// Gets the address for a peer ID
-  LibP2PFullAddress _getPeerAddress(String peerId) {
-    // This is a placeholder - actual implementation would need to look up
-    // the peer's address from a DHT or routing table
-    return LibP2PFullAddress(address: InternetAddress('127.0.0.1'), port: 4001);
+  Future<void> disconnectFromPeer(String multiaddr) async {
+    await _router.disconnect(multiaddr);
   }
 }

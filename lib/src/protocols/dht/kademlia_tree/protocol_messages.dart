@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
-import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Base class for Kademlia DHT protocol messages.
 abstract class KademliaMessage {
@@ -13,10 +13,10 @@ abstract class KademliaMessage {
   final String messageId;
 
   /// Sender peer ID.
-  final p2p.PeerId sender;
+  final PeerId sender;
 
   /// Optional recipient peer ID.
-  final p2p.PeerId? recipient;
+  final PeerId? recipient;
 
   /// Converts to protobuf DHT message.
   kad.Message toDHTMessage();
@@ -25,7 +25,7 @@ abstract class KademliaMessage {
 /// PING message for liveness checks.
 class PingMessage extends KademliaMessage {
   /// Creates a ping message.
-  PingMessage(super.messageId, super.sender, p2p.PeerId super.recipient);
+  PingMessage(super.messageId, super.sender, PeerId super.recipient);
 
   @override
   kad.Message toDHTMessage() {
@@ -39,7 +39,7 @@ class StoreMessage extends KademliaMessage {
   StoreMessage(
     super.messageId,
     super.sender,
-    p2p.PeerId super.recipient,
+    PeerId super.recipient,
     this.key,
     this.value,
   );
@@ -67,12 +67,12 @@ class FindNodeMessage extends KademliaMessage {
   FindNodeMessage(
     super.messageId,
     super.sender,
-    p2p.PeerId super.recipient,
+    PeerId super.recipient,
     this.targetId,
   );
 
   /// The target peer to find.
-  final p2p.PeerId targetId;
+  final PeerId targetId;
 
   @override
   kad.Message toDHTMessage() {
@@ -88,7 +88,7 @@ class FindValueMessage extends KademliaMessage {
   FindValueMessage(
     super.messageId,
     super.sender,
-    p2p.PeerId super.recipient,
+    PeerId super.recipient,
     this.key,
   );
 

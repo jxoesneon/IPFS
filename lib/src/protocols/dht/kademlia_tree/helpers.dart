@@ -1,16 +1,16 @@
 import 'dart:typed_data' show Uint8List;
 
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_kademlia.pb.dart'
     as common_kademlia_pb;
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia_node.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 // lib/src/protocols/dht/kademlia_tree/helpers.dart
 
 /// Calculates the XOR distance between two Peer IDs.
-int calculateDistance(p2p.PeerId a, p2p.PeerId b) {
+int calculateDistance(PeerId a, PeerId b) {
   // Get the byte representations of the Peer IDs
   List<int> bytesA = a.value;
   List<int> bytesB = b.value;
@@ -36,11 +36,11 @@ int getBucketIndex(int distance) {
 }
 
 /// Finds the closest node to a target peer ID in a given subtree.
-KademliaNode? findClosestNode(KademliaNode? root, p2p.PeerId target) {
+KademliaNode? findClosestNode(KademliaNode? root, PeerId target) {
   if (root == null) return null;
 
   // Convert KademliaId to PeerId for root
-  final rootPeerId = p2p.PeerId(value: Uint8List.fromList(root.peerId.id));
+  final rootPeerId = PeerId(value: Uint8List.fromList(root.peerId.id));
 
   // Calculate distances
   int rootDistance = calculateDistance(rootPeerId, target);
@@ -52,7 +52,7 @@ KademliaNode? findClosestNode(KademliaNode? root, p2p.PeerId target) {
   // Check children recursively
   for (var child in root.children) {
     // Convert KademliaId to PeerId for child
-    final childPeerId = p2p.PeerId(value: Uint8List.fromList(child.peerId.id));
+    final childPeerId = PeerId(value: Uint8List.fromList(child.peerId.id));
 
     int childDistance = calculateDistance(childPeerId, target);
     if (childDistance < minDistance) {
@@ -64,7 +64,7 @@ KademliaNode? findClosestNode(KademliaNode? root, p2p.PeerId target) {
     var childClosest = findClosestNode(child, target);
     if (childClosest != null) {
       // Convert KademliaId to PeerId for closest child
-      final closestPeerId = p2p.PeerId(
+      final closestPeerId = PeerId(
         value: Uint8List.fromList(childClosest.peerId.id),
       );
       int closestDistance = calculateDistance(closestPeerId, target);
@@ -96,8 +96,8 @@ void splitNode(KademliaNode node) {
   final rightChild = KademliaNode(
     peerId: rightKademliaId,
     distance: calculateDistance(
-      p2p.PeerId(value: Uint8List.fromList(rightKademliaId.id)),
-      p2p.PeerId(value: Uint8List.fromList(leftKademliaId.id)),
+      PeerId(value: Uint8List.fromList(rightKademliaId.id)),
+      PeerId(value: Uint8List.fromList(leftKademliaId.id)),
     ),
     associatedPeerId: leftKademliaId,
     lastSeen: Int64(DateTime.now().millisecondsSinceEpoch),
@@ -118,7 +118,7 @@ void mergeNodes(KademliaNode parent) {
 /// Sends a DHT request to a peer and returns the response
 Future<dht_pb.FindNodeResponse> sendRequest(
   DHTClient dhtClient,
-  p2p.PeerId peer,
+  PeerId peer,
   dht_pb.FindNodeRequest request,
 ) async {
   try {
@@ -138,17 +138,17 @@ Future<dht_pb.FindNodeResponse> sendRequest(
 }
 
 /// Sends a FIND_NODE request to a peer and returns closer peers to the target.
-Future<List<p2p.PeerId>> findNode(
+Future<List<PeerId>> findNode(
   DHTClient dhtClient,
-  p2p.PeerId peer,
-  p2p.PeerId target,
+  PeerId peer,
+  PeerId target,
 ) async {
   final request = dht_pb.FindNodeRequest()..peerId = target.value;
 
   try {
     final response = await sendRequest(dhtClient, peer, request);
     return response.closerPeers
-        .map((peer) => p2p.PeerId(value: Uint8List.fromList(peer.id)))
+        .map((peer) => PeerId(value: Uint8List.fromList(peer.id)))
         .toList();
   } catch (e) {
     // print('Error in findNode request: $e');

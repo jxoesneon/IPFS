@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
@@ -21,7 +22,7 @@ class IPFSPeer {
   /// Converts from PeerProto (core proto message)
   factory IPFSPeer.fromProto(PeerProto proto) {
     return IPFSPeer(
-      id: p2p.PeerId(value: Base58().base58Decode(proto.id)),
+      id: PeerId(value: Base58().base58Decode(proto.id)),
       addresses: proto.addresses
           .map((addr) => parseMultiaddrString(addr))
           .whereType<p2p.FullAddress>()
@@ -34,7 +35,7 @@ class IPFSPeer {
   /// Converts from Kad Peer (DHT proto message)
   factory IPFSPeer.fromKadPeer(kad.Peer peer) {
     return IPFSPeer(
-      id: p2p.PeerId(value: Uint8List.fromList(peer.id)),
+      id: PeerId(value: Uint8List.fromList(peer.id)),
       addresses: peer.addrs
           .map((addr) => multiaddrFromBytes(Uint8List.fromList(addr)))
           .whereType<p2p.FullAddress>()
@@ -45,7 +46,7 @@ class IPFSPeer {
   }
 
   /// The peer ID.
-  final p2p.PeerId id;
+  final PeerId id;
 
   /// Known addresses for this peer.
   final List<p2p.FullAddress> addresses;

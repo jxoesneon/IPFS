@@ -1,13 +1,13 @@
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/bucket_management.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 
 import 'helpers.dart';
 
 /// Extension for removing peers from a Kademlia tree.
 extension RemovePeer on KademliaTree {
   /// Removes [peerId] from the tree and handles bucket merging.
-  void removePeer(p2p.PeerId peerId) {
+  void removePeer(PeerId peerId) {
     int distance = calculateDistance(peerId, root!.peerId);
     int bucketIndex = getBucketIndex(distance);
 

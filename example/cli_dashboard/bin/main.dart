@@ -237,37 +237,71 @@ class Dashboard {
       console.write("Enter CID to Explore: ");
       final input = console.readLine();
       if (input != null && input.isNotEmpty) {
-        _explorerCid = input;
-        _log("Exploring $input...");
-        try {
-          // Fetch data
-          final data = await node?.cat(_explorerCid);
-          _explorerData = data != null
-              ? "${String.fromCharCodes(data.take(100))}..."
-              : "No Data";
-          // Fetch links
-          _explorerLinks = await node?.ls(_explorerCid) ?? [];
-        } catch (e) {
-          _explorerData = "Error: $e";
-          _explorerLinks = [];
-        }
+        _exploreCidInCli(input);
       }
       console.hideCursor();
-      _refreshTimer =
-          Timer.periodic(const Duration(milliseconds: 100), (timer) {
-        _draw();
-        _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
-      });
+      _restartDrawLoop();
     }
     if (key.char == 'b') {
-      // Back not implemented yet (needs stack)
-      _log("History not implemented");
+      if (_explorerHistory.length > 1) {
+        _explorerHistory.removeLast(); // pop current
+        _exploreCidInCli(_explorerHistory.last, addToHistory: false);
+      } else {
+        _log("At root, nowhere to go back.");
+      }
     }
+
+    // Numeric Selection for links
+    final index = int.tryParse(key.char);
+    if (index != null && index > 0 && index <= _explorerLinks.length) {
+      final target = _explorerLinks[index - 1];
+      // assuming target is Link from dart_ipfs which has cid and name
+      _exploreCidInCli(target.cid.toString());
+    }
+  }
+
+  Future<void> _exploreCidInCli(String cid, {bool addToHistory = true}) async {
+    _explorerCid = cid;
+    if (addToHistory) {
+      if (_explorerHistory.isEmpty || _explorerHistory.last != cid) {
+        _explorerHistory.add(cid);
+      }
+    }
+
+    _log("Exploring $cid...");
+    try {
+      final data = await node?.cat(cid);
+      if (data != null) {
+        final raw = String.fromCharCodes(data.take(200));
+        _explorerData = raw.length >= 200 ? "$raw..." : raw;
+      } else {
+        _explorerData = "No Data";
+      }
+      _explorerLinks = await node?.ls(cid) ?? [];
+    } catch (e) {
+      _explorerData = "Error: $e";
+      _explorerLinks = [];
+    }
+  }
+
+  void _restartDrawLoop() {
+    _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      _draw();
+      _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
+    });
+  }
+
+  String _formatRate(double kbps) {
+    if (kbps > 1024) {
+      return "${(kbps / 1024).toStringAsFixed(1)} MB/s";
+    }
+    return "${kbps.toStringAsFixed(1)} KB/s";
   }
 
   String _explorerCid = "";
   String _explorerData = "";
   List<dynamic> _explorerLinks = []; // List<Link>
+  final List<String> _explorerHistory = [];
 
   void _drawFiles(int height) {
     console.cursorPosition = const Coordinate(3, 2);
@@ -330,15 +364,13 @@ class Dashboard {
     console.cursorPosition = const Coordinate(7, 2);
     console.write("Data Preview: $_explorerData");
 
-    console.cursorPosition = const Coordinate(9, 2);
     console.write("Links:");
     int row = 10;
-    for (var l in _explorerLinks) {
+    for (int i = 0; i < _explorerLinks.length; i++) {
       if (row >= height - 2) break;
-      // assuming l has name, cid, size
-      // If l is Link object from dart_ipfs
+      final l = _explorerLinks[i];
       console.cursorPosition = Coordinate(row, 2);
-      console.write("> ${l.toString()}");
+      console.write("[${i + 1}] $l");
       row++;
     }
   }
@@ -479,7 +511,7 @@ class Dashboard {
     String headerTitle =
         " dart_ipfs CLI [${_mode.name.toUpperCase()}] ".padRight(width - 40);
     String stats =
-        " IN: ${_inRate.toStringAsFixed(1)} KB/s | OUT: ${_outRate.toStringAsFixed(1)} KB/s ";
+        " IN: ${_formatRate(_inRate)} | OUT: ${_formatRate(_outRate)} ";
     console.write(headerTitle + stats.padLeft(40));
     console.resetColorAttributes();
 
@@ -627,12 +659,15 @@ class Dashboard {
           // Add to own UI locally for immediate feedback (optional, or wait for stream?)
           // Usually pubsub echoes back. If not, we add manual echo.
           // Let's assume we want to see it immediately.
+          // Prefix message with username/handle
+          final payload = "<CLI_User> $msg";
+
           final time =
               DateTime.now().toIso8601String().split('T')[1].substring(0, 5);
           _chatMessages.add("[$time] [ME] $msg");
           if (_chatMessages.length > 50) _chatMessages.removeAt(0);
 
-          await node?.publish(_activeTopic, msg);
+          await node?.publish(_activeTopic, payload);
         } catch (e) {
           _log("Failed to send: $e");
         }
@@ -685,8 +720,16 @@ class Dashboard {
           // Let's NOT manually add in handleInput if we suspect echo.
           // Actually, usually pubsub doesn't echo to self by default in some implementations.
           // Let's stick to: "Received from ${msg.from}"
-          final display =
-              "[$time] [${msg.sender.substring(0, 8)}..] ${msg.content}";
+          // Try to extract handle
+          String displayMsg = msg.content;
+          String handle = msg.sender.substring(0, 8);
+          final handleMatch = RegExp(r'^<(.+?)> (.*)$').firstMatch(msg.content);
+          if (handleMatch != null) {
+            handle = handleMatch.group(1)!;
+            displayMsg = handleMatch.group(2)!;
+          }
+
+          final display = "[$time] [$handle] $displayMsg";
           _chatMessages.add(display);
           if (_chatMessages.length > 50) _chatMessages.removeAt(0);
           // Force refresh if we weren't polling? We are polling.

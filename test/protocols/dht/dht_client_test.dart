@@ -12,6 +12,9 @@ import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_events.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
 
@@ -44,7 +47,7 @@ class MockRouterL2 implements p2p.RouterL2 {
 
 class MockP2plibRouter implements P2plibRouter {
   final MockRouterL2 _mockL2 = MockRouterL2();
-  void Function(p2p.Packet)? _handler;
+  void Function(NetworkPacket)? _handler;
   void Function(Uint8List)? onSendDatagram;
 
   /// Optional: Function that takes request bytes and returns response bytes
@@ -56,6 +59,9 @@ class MockP2plibRouter implements P2plibRouter {
 
   @override
   p2p.PeerId get peerId => _mockL2.selfId;
+
+  @override
+  String get peerID => Base58().encode(_mockL2.selfId.value);
 
   @override
   Map<p2p.PeerId, p2p.Route> get routes => _mockL2.routes;
@@ -75,7 +81,7 @@ class MockP2plibRouter implements P2plibRouter {
   @override
   void registerProtocolHandler(
     String protocolId,
-    void Function(p2p.Packet) handler,
+    void Function(NetworkPacket) handler,
   ) {
     _handler = handler;
   }
@@ -86,24 +92,17 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  Future<void> sendDatagram({
-    required List<String> addresses,
-    required Uint8List datagram,
-  }) async {
-    onSendDatagram?.call(datagram);
+  Future<void> sendMessage(String peerId, Uint8List message) async {
+    // In mock, we can just trigger onSendDatagram directly
+    onSendDatagram?.call(message);
 
     // If responseGenerator is set, auto-generate and inject response
     if (responseGenerator != null && _handler != null) {
-      final responseBytes = responseGenerator!(datagram);
-      final responsePacket = p2p.Packet(
+      final responseBytes = responseGenerator!(message);
+      final responsePacket = NetworkPacket(
+        srcPeerId: peerId, // Use the proper peerId we sent to
         datagram: responseBytes,
-        header: const p2p.PacketHeader(id: 0, issuedAt: 0),
-        srcFullAddress: p2p.FullAddress(
-          address: InternetAddress.loopbackIPv4,
-          port: 4001,
-        ),
       );
-      responsePacket.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
       // Inject response asynchronously to simulate network
       // ignore: unawaited_futures
       Future.microtask(() => _handler?.call(responsePacket));
@@ -111,12 +110,26 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  List<String> resolvePeerId(p2p.PeerId peerId) {
+  Future<void> sendDatagram({
+    required List<String> addresses,
+    required Uint8List datagram,
+  }) async {
+    // Logic moved to sendMessage or similar
+    onSendDatagram?.call(datagram);
+  }
+
+  @override
+  List<String> resolvePeerId(String peerIdStr) {
     return ['127.0.0.1:4001'];
   }
 
   void simulatePacket(p2p.Packet packet) {
-    _handler?.call(packet);
+    // Convert p2p.Packet to NetworkPacket
+    final networkPacket = NetworkPacket(
+      srcPeerId: Base58().encode(packet.srcPeerId.value),
+      datagram: packet.datagram,
+    );
+    _handler?.call(networkPacket);
   }
 
   @override
@@ -214,7 +227,8 @@ void main() {
                 port: 4001,
               ),
             );
-            responsePacket.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
+            responsePacket.srcPeerId =
+                p2p.PeerId(value: Uint8List.fromList(List.filled(64, 2)));
 
             // Inject response
             mockRouter.simulatePacket(responsePacket);
@@ -226,7 +240,7 @@ void main() {
 
       // Add a peer to routing table so we have someone to query
       final otherPeerIdBytes = Uint8List.fromList(List.filled(64, 2));
-      final otherPeerId = p2p.PeerId(value: otherPeerIdBytes);
+      final otherPeerId = PeerId(value: otherPeerIdBytes);
       await client.kademliaRoutingTable.addPeer(otherPeerId, otherPeerId);
 
       final providers = await client.findProviders(cid);
@@ -274,7 +288,7 @@ void main() {
         return response.writeToBuffer();
       };
 
-      final peer = p2p.PeerId(value: Uint8List.fromList(List.filled(64, 5)));
+      final peer = PeerId(value: Uint8List.fromList(List.filled(64, 5)));
 
       final hasValue = await client.checkValueOnPeer(peer, key);
       expect(hasValue, isTrue);
@@ -293,7 +307,7 @@ void main() {
         return response.writeToBuffer();
       };
 
-      final peer = p2p.PeerId(value: Uint8List.fromList(List.filled(64, 5)));
+      final peer = PeerId(value: Uint8List.fromList(List.filled(64, 5)));
 
       final hasValue = await client.checkValueOnPeer(peer, key);
       expect(hasValue, isFalse);

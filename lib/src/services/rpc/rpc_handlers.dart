@@ -6,10 +6,10 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:http_parser/http_parser.dart'; // For MediaType
 import 'package:mime/mime.dart';
-import 'package:p2plib/p2plib.dart' show PeerId;
 import 'package:shelf/shelf.dart';
 
 /// Handlers for IPFS RPC API endpoints

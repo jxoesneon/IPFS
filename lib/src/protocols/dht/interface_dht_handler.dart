@@ -2,15 +2,15 @@ import 'dart:convert' show utf8;
 import 'dart:typed_data' show Uint8List;
 
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
     show V_PeerInfo;
 import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Interface for DHT handler implementations.
 abstract class IDHTHandler {
   /// Finds peer information for a given peer ID.
-  Future<List<V_PeerInfo>> findPeer(p2p.PeerId id);
+  Future<List<V_PeerInfo>> findPeer(PeerId id);
 
   /// Announces that this node provides content for a CID.
   Future<void> provide(CID cid);
@@ -28,7 +28,7 @@ abstract class IDHTHandler {
   Future<void> handleRoutingTableUpdate(V_PeerInfo peer);
 
   /// Handles a request to provide content.
-  Future<void> handleProvideRequest(CID cid, p2p.PeerId provider);
+  Future<void> handleProvideRequest(CID cid, PeerId provider);
 
   /// Starts the DHT handler.
   Future<void> start() async {}

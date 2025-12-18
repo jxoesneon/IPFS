@@ -6,6 +6,7 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/ipns/ipns.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
@@ -18,7 +19,6 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:http/http.dart' as http;
-import 'package:p2plib/p2plib.dart' show PeerId;
 
 /// Handles DHT operations for an IPFS node.
 ///

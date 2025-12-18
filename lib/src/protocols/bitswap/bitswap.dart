@@ -13,10 +13,7 @@ import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as proto;
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart'
     as bitswap_message;
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/utils/encoding.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 
 import 'ledger.dart';
 
@@ -65,7 +62,9 @@ class Bitswap {
 
   /// Starts the Bitswap protocol.
   Future<void> start() async {
-    _router.registerProtocolHandler('/ipfs/bitswap/1.2.0', (p2p.Packet packet) {
+    _router.registerProtocolHandler('/ipfs/bitswap/1.2.0', (
+      NetworkPacket packet,
+    ) {
       _handlePacket(packet);
     });
     await _router.start();
@@ -95,7 +94,7 @@ class Bitswap {
 
     // Send the wantlist to peers
     for (var peer in _peers) {
-      await sendWantlist(EncodingUtils.toBase58(peer.value), wantlistEntry);
+      await sendWantlist(peer, wantlistEntry);
     }
 
     // Placeholder for actual block retrieval logic
@@ -108,7 +107,7 @@ class Bitswap {
 
     // Notify peers about the available block
     for (var peer in _peers) {
-      _sendHave(EncodingUtils.toBase58(peer.value), cid);
+      _sendHave(peer, cid);
     }
   }
 
@@ -118,10 +117,10 @@ class Bitswap {
   }
 
   /// Handles incoming packets from peers.
-  void _handlePacket(LibP2PPacket packet) async {
+  void _handlePacket(NetworkPacket packet) async {
     try {
       final message = await bitswap_message.Message.fromBytes(packet.datagram);
-      final peerId = EncodingUtils.toBase58(packet.srcPeerId.value);
+      final peerId = packet.srcPeerId;
 
       // Handle blocks if present
       if (message.hasBlocks()) {
@@ -213,9 +212,7 @@ class Bitswap {
   /// Adds a peer to the Bitswap network.
   void addPeer(LibP2PPeerId peerId) {
     _peers.add(peerId);
-    _logger.debug(
-      'Peer ${EncodingUtils.toBase58(peerId.value)} added to Bitswap network',
-    );
+    _logger.debug('Peer $peerId added to Bitswap network');
     _logger.verbose('Current peer count: ${_peers.length}');
   }
 
@@ -223,7 +220,7 @@ class Bitswap {
   void removePeer(LibP2PPeerId peerId) {
     _peers.remove(peerId);
     // print(
-    //   'Peer ${EncodingUtils.toBase58(peerId.value)} removed from Bitswap network.',
+    //   'Peer $peerId removed from Bitswap network.',
     // );
   }
 
@@ -260,7 +257,7 @@ class Bitswap {
   void _removeFromWantlist(String blockId, String peerId) {
     try {
       final peer = Peer.fromId(peerId);
-      if (_peers.contains(peer.id)) {
+      if (_peers.contains(peer.id.toString())) {
         // print('Removing block $blockId from wantlist for peer $peerId.');
         // Implement actual removal logic based on your data structures here
       } else {
@@ -274,11 +271,7 @@ class Bitswap {
   /// Sends a Bitswap message to a peer.
   Future<void> send(String peerId, proto.Message message) async {
     try {
-      // Convert the string peerId to a PeerId object using Base58 decoding
-      final peerIdBytes = Base58().base58Decode(peerId);
-      final peer = p2p.PeerId(value: peerIdBytes);
-
-      await _router.sendMessage(peer, message.writeToBuffer());
+      await _router.sendMessage(peerId, message.writeToBuffer());
     } catch (e) {
       // print('Error sending message to $peerId: $e');
     }

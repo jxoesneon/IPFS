@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 
 import '../kademlia_tree.dart';
 import '../red_black_tree.dart';
@@ -13,11 +13,11 @@ import 'lru_cache.dart';
 /// Handles bucket splitting, merging, and peer replacement strategies.
 extension BucketManagement on KademliaTree {
   /// Handler for full bucket situations.
-  Future<void> Function(int, p2p.PeerId, p2p.PeerId) get handleBucketFullness =>
+  Future<void> Function(int, PeerId, PeerId) get handleBucketFullness =>
       _handleBucketFullness;
 
   /// Checks if a node was in a recent lookup.
-  bool Function(p2p.PeerId) get wasNodeContactInRecentLookup =>
+  bool Function(PeerId) get wasNodeContactInRecentLookup =>
       _wasNodeContactInRecentLookup;
 
   /// Finds the least recently seen node in a bucket.
@@ -44,9 +44,8 @@ extension BucketManagement on KademliaTree {
     // 1. Create a new bucket
     buckets.insert(
       bucketIndex + 1,
-      RedBlackTree<p2p.PeerId, KademliaTreeNode>(
-        compare: (p2p.PeerId a, p2p.PeerId b) =>
-            a.toString().compareTo(b.toString()),
+      RedBlackTree<PeerId, KademliaTreeNode>(
+        compare: (PeerId a, PeerId b) => a.toString().compareTo(b.toString()),
       ),
     );
 
@@ -125,7 +124,7 @@ extension BucketManagement on KademliaTree {
     return true; // Placeholder
   }
 
-  bool _wasNodeContactInRecentLookup(p2p.PeerId peerId) {
+  bool _wasNodeContactInRecentLookup(PeerId peerId) {
     return recentContacts.contains(peerId);
   }
 
@@ -161,8 +160,10 @@ extension BucketManagement on KademliaTree {
 
   Future<bool> _pingNode(KademliaTreeNode node) async {
     try {
-      final response = await sendPingRequest(node.peerId);
-      return response != null;
+      final isAlive = await sendPing(
+        node.peerId,
+      ); // Uses sendPing returning bool
+      return isAlive;
     } catch (e) {
       // print('Ping failed for node ${node.peerId}: $e');
       return false;
@@ -178,8 +179,8 @@ extension BucketManagement on KademliaTree {
 
   Future<void> _handleBucketFullness(
     int bucketIndex,
-    p2p.PeerId peerId,
-    p2p.PeerId associatedPeerId,
+    PeerId peerId,
+    PeerId associatedPeerId,
   ) async {
     if (_canSplitBucket(bucketIndex)) {
       _splitBucket(bucketIndex);
@@ -225,7 +226,7 @@ extension BucketManagement on KademliaTree {
     }
   }
 
-  bool _shouldReplaceNode(KademliaTreeNode existingNode, p2p.PeerId newPeerId) {
+  bool _shouldReplaceNode(KademliaTreeNode existingNode, PeerId newPeerId) {
     // Check if the new peer was recently active in lookups
     if (_wasNodeContactInRecentLookup(newPeerId)) {
       return true;

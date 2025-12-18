@@ -1,6 +1,4 @@
-// src/protocols/bitswap/bitswap_handler.dart
 import 'dart:async';
-import 'dart:io';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
@@ -9,10 +7,8 @@ import 'package:dart_ipfs/src/protocols/bitswap/ledger.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as message;
 import 'package:dart_ipfs/src/protocols/bitswap/wantlist.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/generic_lru_cache.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Handles Bitswap protocol operations for an IPFS node following the Bitswap 1.2.0 specification
 class BitswapHandler {
@@ -212,12 +208,7 @@ class BitswapHandler {
     if (hasContent) {
       try {
         final messageBytes = outgoingMessage.toBytes();
-        _router.routerL0.sendDatagram(
-          addresses: [
-            p2p.FullAddress(port: 4001, address: _getPeerAddress(fromPeer)),
-          ],
-          datagram: messageBytes,
-        );
+        await _router.sendMessage(fromPeer, messageBytes);
 
         // Update ledger stats
         final ledger = _ledgerManager.getLedger(fromPeer);
@@ -339,9 +330,7 @@ class BitswapHandler {
 
   /// Broadcasts want request to connected peers
   Future<void> _broadcastWantRequest(message.Message message) async {
-    final connectedPeers = _router.routerL0.routes.values
-        .map((route) => p2p.PeerId(value: route.peerId.value))
-        .toList();
+    final connectedPeers = _router.connectedPeers;
 
     if (connectedPeers.isEmpty) {
       throw StateError('No connected peers to broadcast want request to');
@@ -350,18 +339,10 @@ class BitswapHandler {
     final messageBytes = message.toBytes();
     final futures = <Future<void>>[];
 
-    for (final peer in connectedPeers) {
+    for (final peerId in connectedPeers) {
       futures.add(
         Future(() {
-          _router.routerL0.sendDatagram(
-            addresses: [
-              p2p.FullAddress(
-                address: _getPeerAddress(Base58().encode(peer.value)),
-                port: 4001,
-              ),
-            ],
-            datagram: messageBytes,
-          );
+          _router.sendMessage(peerId, messageBytes);
           // print('Want request sent to peer: ${peer.toString()}');
         }).catchError((error) {
           // print(
@@ -374,31 +355,12 @@ class BitswapHandler {
     await Future.wait(futures);
   }
 
-  /// Helper method to get peer address
-  InternetAddress _getPeerAddress(String peerIdStr) {
-    try {
-      final peerId = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
-      final routes = _router.routerL0.routes;
+  // Removed _getPeerAddress as it's no longer needed with new Router API
 
-      // Optimized lookup
-      if (routes.containsKey(peerId)) {
-        final addresses = _router.routerL0.resolvePeerId(peerId);
-        if (addresses.isNotEmpty) {
-          return addresses.first.address;
-        }
-        throw StateError('No addresses found for peer: $peerIdStr');
-      }
-
-      throw StateError('Peer not found: $peerIdStr');
-    } catch (e) {
-      throw StateError('Could not resolve address for $peerIdStr: $e');
-    }
-  }
-
-  Future<void> _handlePacket(p2p.Packet packet) async {
+  Future<void> _handlePacket(NetworkPacket packet) async {
     final msg = await message.Message.fromBytes(packet.datagram);
     // Annotate message with sender
-    msg.from = Base58().encode(packet.srcPeerId.value);
+    msg.from = packet.srcPeerId;
 
     await _handleMessage(msg);
   }

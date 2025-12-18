@@ -3,9 +3,9 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Implements the Circuit Relay v2 Server (Relay Service).
 ///
@@ -62,8 +62,8 @@ class CircuitRelayService {
   }
 
   /// Handles relayed traffic packets.
-  void _handleTransport(p2p.Packet packet) {
-    final senderId = packet.srcPeerId.toString();
+  void _handleTransport(NetworkPacket packet) {
+    final senderId = packet.srcPeerId;
 
     // Check if this sender is a Source in an active circuit
     if (_activeCircuits.containsKey(senderId)) {
@@ -93,7 +93,7 @@ class CircuitRelayService {
 
   /// Forwards a packet to the target peer.
   void _forwardPacket(
-    p2p.PeerId targetPeerId,
+    String targetPeerId,
     Uint8List payload,
     _CircuitContext context,
   ) {
@@ -136,7 +136,7 @@ class CircuitRelayService {
   }
 
   /// Handles incoming HOP messages (RESERVE, CONNECT).
-  void _handleHop(p2p.Packet packet) {
+  void _handleHop(NetworkPacket packet) {
     try {
       final message = HopMessage.fromBuffer(packet.datagram);
 
@@ -160,7 +160,7 @@ class CircuitRelayService {
   }
 
   /// Handles incoming STOP messages (CONNECT).
-  void _handleStop(p2p.Packet packet) {
+  void _handleStop(NetworkPacket packet) {
     try {
       final message = StopMessage.fromBuffer(packet.datagram);
 
@@ -186,7 +186,7 @@ class CircuitRelayService {
   }
 
   /// Handles a RESERVE request.
-  void _handleReserve(p2p.PeerId srcPeerId, HopMessage request) {
+  void _handleReserve(String srcPeerId, HopMessage request) {
     // 1. Create Reservation
     final now = DateTime.now().toUtc();
     final expireTime = now.add(const Duration(hours: 2)); // Default 2h
@@ -207,8 +207,7 @@ class CircuitRelayService {
 
     // Store it
     // Use base58 encoded peerId as key
-    // Using srcPeerId.toString() assuming it returns the base58 representation.
-    final srcIdStr = srcPeerId.toString();
+    final srcIdStr = srcPeerId;
     _reservations[srcIdStr] = reservation;
 
     // Send Response
@@ -225,7 +224,7 @@ class CircuitRelayService {
     _logger.verbose('Granted reservation to $srcIdStr');
   }
 
-  Future<void> _handleConnect(p2p.PeerId srcPeerId, HopMessage request) async {
+  Future<void> _handleConnect(String srcPeerId, HopMessage request) async {
     // 1. Validate Destination
     if (!request.hasPeer() || request.peer.id.isEmpty) {
       _sendHopStatus(srcPeerId, Status.HOP_SRC_MULTIADDR_INVALID);
@@ -234,8 +233,7 @@ class CircuitRelayService {
 
     // Convert Dest Peer ID to string for lookup
     // Assuming request.peer.id is the raw bytes of the PeerId
-    final destPeerId = p2p.PeerId(value: Uint8List.fromList(request.peer.id));
-    final destPeerIdStr = destPeerId.toString();
+    final destPeerIdStr = Base58().encode(Uint8List.fromList(request.peer.id));
 
     // 2. Check Reservation
     if (!_reservations.containsKey(destPeerIdStr)) {
@@ -260,7 +258,7 @@ class CircuitRelayService {
       final stopMsg = StopMessage()
         ..type = StopMessage_Type.CONNECT
         ..peer =
-            (Peer()..id = srcPeerId.value
+            (Peer()..id = Base58().base58Decode(srcPeerId)
             // addrs is repeated, so it's initialized as empty list in new Peer()
             )
         ..limit = (Limit()
@@ -281,7 +279,7 @@ class CircuitRelayService {
         );
 
         // 4. Register Active Circuit
-        final srcIdStr = srcPeerId.toString();
+        final srcIdStr = srcPeerId;
         final currentNow = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
         // Use the reservation limits or default
@@ -292,7 +290,7 @@ class CircuitRelayService {
           source: srcIdStr,
           sourcePeerId: srcPeerId,
           destination: destPeerIdStr,
-          destinationPeerId: destPeerId,
+          destinationPeerId: destPeerIdStr,
           expire: currentNow + durationLimit,
           limitData: dataLimit,
         );
@@ -314,7 +312,7 @@ class CircuitRelayService {
     }
   }
 
-  void _sendHopStatus(p2p.PeerId dest, Status status) {
+  void _sendHopStatus(String dest, Status status) {
     final response = HopMessage()
       ..type = HopMessage_Type.STATUS
       ..status = status;
@@ -334,9 +332,9 @@ class _CircuitContext {
     required this.limitData,
   });
   final String source;
-  final p2p.PeerId sourcePeerId;
+  final String sourcePeerId;
   final String destination;
-  final p2p.PeerId destinationPeerId;
+  final String destinationPeerId;
   final int expire;
   final int limitData;
   int bytesTransferred = 0;

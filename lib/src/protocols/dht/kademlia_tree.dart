@@ -4,12 +4,12 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
 import 'package:dart_ipfs/src/core/messages/message_factory.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/helpers.dart'
     as helpers;
-import 'package:p2plib/p2plib.dart' as p2p;
 
 import 'connection_statistics.dart';
 import 'kademlia_tree/find_closest_peers.dart';
@@ -104,17 +104,17 @@ class KademliaTree {
   static const Duration nodeTimeout = Duration(seconds: 5);
 
   // List of k-buckets (256 for IPv6 compatibility)
-  final List<RedBlackTree<p2p.PeerId, KademliaTreeNode>> _buckets = [];
+  final List<RedBlackTree<PeerId, KademliaTreeNode>> _buckets = [];
 
   // Peer tracking
-  final Map<p2p.PeerId, DateTime> _lastSeen = {};
-  final Set<p2p.PeerId> _recentContacts = {};
+  final Map<PeerId, DateTime> _lastSeen = {};
+  final Set<PeerId> _recentContacts = {};
   final Map<int, Completer<kad.Message>> _pendingRequests = {};
 
   // Statistics
-  final Map<p2p.PeerId, List<bool>> _lookupSuccessHistory = {};
-  final Map<p2p.PeerId, ConnectionStatistics> _connectionStats = {};
-  final Map<p2p.PeerId, NodeStats> _nodeStats = {};
+  final Map<PeerId, List<bool>> _lookupSuccessHistory = {};
+  final Map<PeerId, ConnectionStatistics> _connectionStats = {};
+  final Map<PeerId, NodeStats> _nodeStats = {};
 
   /// Timeout duration for bucket refreshes.
   final refreshTimeout = const Duration(minutes: 30);
@@ -134,8 +134,8 @@ class KademliaTree {
   void _initializeBuckets() {
     for (int i = 0; i < 256; i++) {
       _buckets.add(
-        RedBlackTree<p2p.PeerId, KademliaTreeNode>(
-          compare: (p2p.PeerId a, p2p.PeerId b) {
+        RedBlackTree<PeerId, KademliaTreeNode>(
+          compare: (PeerId a, PeerId b) {
             final distanceA = helpers.calculateDistance(_root!.peerId, a);
             final distanceB = helpers.calculateDistance(_root!.peerId, b);
             return distanceA.compareTo(distanceB);
@@ -158,33 +158,33 @@ class KademliaTree {
   }
 
   /// Map of last seen timestamps for peers.
-  Map<p2p.PeerId, DateTime> get lastSeen => _lastSeen;
+  Map<PeerId, DateTime> get lastSeen => _lastSeen;
 
   /// Set of recently contacted peers.
-  Set<p2p.PeerId> get recentContacts => _recentContacts;
+  Set<PeerId> get recentContacts => _recentContacts;
 
   /// Lookup success history by peer.
-  Map<p2p.PeerId, List<bool>> get lookupSuccessHistory => _lookupSuccessHistory;
+  Map<PeerId, List<bool>> get lookupSuccessHistory => _lookupSuccessHistory;
 
   /// Connection statistics by peer.
-  Map<p2p.PeerId, ConnectionStatistics> get connectionStats => _connectionStats;
+  Map<PeerId, ConnectionStatistics> get connectionStats => _connectionStats;
 
   /// Node statistics by peer.
-  Map<p2p.PeerId, NodeStats> get nodeStats => _nodeStats;
+  Map<PeerId, NodeStats> get nodeStats => _nodeStats;
 
   /// The list of k-buckets.
-  List<RedBlackTree<p2p.PeerId, KademliaTreeNode>> get buckets => _buckets;
+  List<RedBlackTree<PeerId, KademliaTreeNode>> get buckets => _buckets;
 
   /// The root node of the tree.
   KademliaTreeNode? get root => _root;
 
   /// Performs an iterative node lookup to find the K closest peers to [target].
-  Future<List<p2p.PeerId>> nodeLookup(p2p.PeerId target) async {
+  Future<List<PeerId>> nodeLookup(PeerId target) async {
     try {
       await _lookupLimiter.acquire();
 
-      Set<p2p.PeerId> queriedPeers = {};
-      List<p2p.PeerId> closestPeers = findClosestPeers(target, K);
+      Set<PeerId> queriedPeers = {};
+      List<PeerId> closestPeers = findClosestPeers(target, K);
       int consecutiveFailedAttempts = 0;
       Duration backoffDuration = const Duration(
         milliseconds: 100,
@@ -197,7 +197,7 @@ class KademliaTree {
       final maxStagnantRounds = 3;
 
       for (int iteration = 0; iteration < 20; iteration++) {
-        List<p2p.PeerId> peersToQuery = closestPeers
+        List<PeerId> peersToQuery = closestPeers
             .where((p) => !queriedPeers.contains(p))
             .take(alpha)
             .toList();
@@ -225,9 +225,7 @@ class KademliaTree {
         }
 
         try {
-          List<Future<List<p2p.PeerId>>> queries = peersToQuery.map((
-            peer,
-          ) async {
+          List<Future<List<PeerId>>> queries = peersToQuery.map((peer) async {
             try {
               // Apply exponential backoff if there were failures
               if (consecutiveFailedAttempts > 0) {
@@ -245,7 +243,7 @@ class KademliaTree {
             }
           }).toList();
 
-          List<List<p2p.PeerId>> results = await Future.wait(
+          List<List<PeerId>> results = await Future.wait(
             queries,
             eagerError: false,
           ).timeout(const Duration(seconds: 30), onTimeout: () => []);
@@ -256,7 +254,7 @@ class KademliaTree {
             await Future<void>.delayed(const Duration(milliseconds: 10));
           }
 
-          Set<p2p.PeerId> newPeers = {};
+          Set<PeerId> newPeers = {};
           for (var peerList in results) {
             newPeers.addAll(peerList);
           }
@@ -270,14 +268,14 @@ class KademliaTree {
                 lookupSuccessHistory[peer]!.length >= 3,
           );
 
-          List<p2p.PeerId> allPeers = [...closestPeers, ...newPeers];
+          List<PeerId> allPeers = [...closestPeers, ...newPeers];
           allPeers.sort(
             (a, b) => helpers
                 .calculateDistance(target, a)
                 .compareTo(helpers.calculateDistance(target, b)),
           );
 
-          List<p2p.PeerId> newClosestPeers = allPeers.take(K).toList();
+          List<PeerId> newClosestPeers = allPeers.take(K).toList();
 
           // Enhanced termination condition
           if (_areListsEqual(closestPeers, newClosestPeers) &&
@@ -300,10 +298,7 @@ class KademliaTree {
     }
   }
 
-  Future<List<p2p.PeerId>> _sendFindNodeRequest(
-    p2p.PeerId peer,
-    p2p.PeerId target,
-  ) async {
+  Future<List<PeerId>> _sendFindNodeRequest(PeerId peer, PeerId target) async {
     final requestId = _generateRequestId();
     final message = FindNodeMessage(
       requestId.toString(),
@@ -325,7 +320,7 @@ class KademliaTree {
       DateTime.now().millisecondsSinceEpoch + Random().nextInt(1000000);
 
   Future<kad.Message> _sendMessageWithTimeout(
-    p2p.PeerId peer,
+    PeerId peer,
     kad.Message message,
     int requestId,
   ) {
@@ -336,7 +331,7 @@ class KademliaTree {
     final ipfsMessage = MessageFactory.createBaseMessage(
       protocolId: '/ipfs/kad/1.0.0',
       payload: message.writeToBuffer(),
-      senderId: _root!.peerId.toString(),
+      senderId: _root!.peerId.toBase58(),
       type: IPFSMessage_MessageType.DHT,
     );
     ipfsMessage.requestId = requestId.toString();
@@ -344,10 +339,7 @@ class KademliaTree {
     final messageBytes = ipfsMessage.writeToBuffer();
 
     // Use sendDatagram directly from dhtClient's router
-    dhtClient.router.sendDatagram(
-      addresses: dhtClient.router.resolvePeerId(peer),
-      datagram: messageBytes,
-    );
+    dhtClient.router.sendMessage(peer.toBase58(), messageBytes);
 
     return completer.future.timeout(
       nodeTimeout,
@@ -358,12 +350,12 @@ class KademliaTree {
     );
   }
 
-  List<p2p.PeerId> _processFindNodeResponse(kad.Message response) {
+  List<PeerId> _processFindNodeResponse(kad.Message response) {
     try {
       if (response.type != kad.Message_MessageType.FIND_NODE) return [];
 
       return response.closerPeers
-          .map((peer) => p2p.PeerId(value: Uint8List.fromList(peer.id)))
+          .map((peer) => PeerId(value: Uint8List.fromList(peer.id)))
           .toList();
     } catch (e) {
       // print('Error processing find node response: $e');
@@ -373,30 +365,12 @@ class KademliaTree {
 
   // Message handling
   /// Handles an incoming DHT message.
-  void handleIncomingMessage(p2p.Message message) {
-    try {
-      final ipfsMessage = IPFSMessage.fromBuffer(message.payload!);
-      final requestId = int.tryParse(ipfsMessage.requestId) ?? 0;
-
-      final dhtMessage = kad.Message.fromBuffer(ipfsMessage.payload);
-
-      if (_pendingRequests.containsKey(requestId)) {
-        _pendingRequests[requestId]!.complete(dhtMessage);
-        _pendingRequests.remove(requestId);
-      }
-
-      _updateLastSeen(message.srcPeerId);
-    } catch (e) {
-      // print('Error handling incoming message: $e');
-    }
-  }
-
-  void _updateLastSeen(p2p.PeerId peerId) {
-    _lastSeen[peerId] = DateTime.now();
+  void handleIncomingMessage(kad.Message message) {
+    // TODO: Implement direct handling or delegation
   }
 
   // Helper methods
-  bool _areListsEqual(List<p2p.PeerId> a, List<p2p.PeerId> b) {
+  bool _areListsEqual(List<PeerId> a, List<PeerId> b) {
     if (a.length != b.length) return false;
     for (int i = 0; i < a.length; i++) {
       if (a[i].toString() != b[i].toString()) return false;
@@ -419,10 +393,11 @@ class KademliaTree {
   }
 
   /// Finds the k closest peers to the target.
-  List<p2p.PeerId> findClosestPeers(p2p.PeerId target, int k) {
+  List<PeerId> findClosestPeers(PeerId target, int k) {
     return FindClosestPeers(this).findClosestPeers(target, k);
   }
 
+  /*
   /// Sends a ping request to a peer.
   Future<p2p.Message?> sendPingRequest(p2p.PeerId peer) async {
     final requestId = _generateRequestId();
@@ -456,9 +431,10 @@ class KademliaTree {
       return null;
     }
   }
+  */
 
   /// Sends a ping and returns true if the peer responds.
-  Future<bool> sendPing(p2p.PeerId peer) async {
+  Future<bool> sendPing(PeerId peer) async {
     final requestId = _generateRequestId();
     final message = PingMessage(
       requestId.toString(),
@@ -476,11 +452,7 @@ class KademliaTree {
   }
 
   /// Stores a value at a remote peer.
-  Future<bool> storeValue(
-    p2p.PeerId peer,
-    Uint8List key,
-    Uint8List value,
-  ) async {
+  Future<bool> storeValue(PeerId peer, Uint8List key, Uint8List value) async {
     try {
       await _storeLimiter.acquire();
 
@@ -510,11 +482,11 @@ class KademliaTree {
   }
 
   /// Finds a value by key in the DHT.
-  Future<(Uint8List?, List<p2p.PeerId>)> findValue(Uint8List key) async {
+  Future<(Uint8List?, List<PeerId>)> findValue(Uint8List key) async {
     try {
       await _findValueLimiter.acquire();
 
-      final targetPeerId = p2p.PeerId(value: key);
+      final targetPeerId = PeerId(value: key);
       final closestPeers = findClosestPeers(targetPeerId, K);
 
       for (final peer in closestPeers) {
@@ -537,10 +509,7 @@ class KademliaTree {
             // Check record or providers (GET_VALUE might return providers too?)
             // Assuming record field is populated for value
             if (response.hasRecord()) {
-              return (
-                Uint8List.fromList(response.record.value),
-                <p2p.PeerId>[],
-              );
+              return (Uint8List.fromList(response.record.value), <PeerId>[]);
             }
           }
           // If value not found, return closer peers
@@ -550,7 +519,7 @@ class KademliaTree {
           // print('Find value failed for peer $peer: $e');
         }
       }
-      return (null, <p2p.PeerId>[]);
+      return (null, <PeerId>[]);
     } finally {
       _findValueLimiter.release();
     }
@@ -570,7 +539,7 @@ class KademliaTree {
   Map<int, LRUCache> get bucketCaches => _bucketCaches;
 
   /// Gets the associated peer for a given peer ID.
-  p2p.PeerId? getAssociatedPeer(p2p.PeerId peerId) {
+  PeerId? getAssociatedPeer(PeerId peerId) {
     for (var bucket in _buckets) {
       for (var entry in bucket.entries) {
         if (entry.key == peerId) {

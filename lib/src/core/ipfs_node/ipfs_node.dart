@@ -35,7 +35,6 @@ import 'package:dart_ipfs/src/transport/http_gateway_client.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
-import 'package:p2plib/p2plib.dart' as p2p;
 
 import 'datastore_handler.dart';
 import 'network_handler.dart';
@@ -231,8 +230,7 @@ class IPFSNode {
     try {
       if (!_container.isRegistered(NetworkHandler)) return [];
       final router = _container.get<NetworkHandler>().p2pRouter;
-      final peerId = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
-      return router.resolvePeerId(peerId);
+      return router.resolvePeerId(peerIdStr);
     } catch (e) {
       _logger.warning('Failed to resolve peer ID $peerIdStr: $e');
       return [];

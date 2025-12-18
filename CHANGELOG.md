@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.3] - 2025-12-18
+
+### Web Platform Support
+
+- **Modern Web APIs**: Migrated from deprecated `dart:html` to `package:web` and `dart:js_interop`.
+- **Platform Abstraction**: Added HTTP server adapters for platform-specific implementations.
+- **WebSocket Transport**: Implemented WebSocket-based router for web platforms.
+
+### Code Quality
+
+- **Import Ordering**: Fixed import ordering across 20+ files for consistent codebase.
+- **PeerId Consolidation**: Merged duplicate `PeerId` class definitions into single canonical type.
+- **Lint Resolution**: Resolved all remaining lint warnings (dart analyze 0 issues).
+- **Async/Await Fixes**: Added missing `await` for Future expressions.
+
+### Dependencies
+
+- Added `web: ^1.1.0` for modern web platform support.
+
 ## [1.4.2] - 2025-12-18
 
 ### Documentation & Code Quality

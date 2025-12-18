@@ -1,11 +1,9 @@
 // lib/src/services/gateway/gateway_server.dart
-import 'dart:io';
-
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/platform/http_server.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:shelf/shelf.dart';
-import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
 
 /// IPFS HTTP Gateway Server
@@ -55,7 +53,7 @@ class GatewayServer {
 
   final _logger = Logger('GatewayServer');
 
-  HttpServer? _server;
+  IpfsHttpServerInstance? _server;
   late final GatewayHandler _handler;
   late final Router _router;
 
@@ -109,9 +107,10 @@ class GatewayServer {
         .addHandler(_router.call);
 
     try {
-      _server = await shelf_io.serve(handler, address, port);
+      final adapter = createHttpServerAdapter();
+      _server = await adapter.serve(handler, address, port);
       _logger.info(
-        'Gateway server listening on http://${_server!.address.host}:${_server!.port}',
+        'Gateway server listening on http://${_server!.host}:${_server!.port}',
       );
     } catch (e, stackTrace) {
       _logger.error('Failed to start gateway server', e, stackTrace);
@@ -224,6 +223,6 @@ class GatewayServer {
 
   /// Returns the server URL
   String get url => _server != null
-      ? 'http://${_server!.address.host}:${_server!.port}'
+      ? 'http://${_server!.host}:${_server!.port}'
       : 'http://$address:$port (not started)';
 }

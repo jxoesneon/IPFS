@@ -1,10 +1,11 @@
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/core/types/peer_types.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Stores and manages peer information for the DHT protocol
 class PeerStore {
   // Internal storage of peers using PeerId as key
-  final Map<p2p.PeerId, IPFSPeer> _peers = {};
+  final Map<PeerId, IPFSPeer> _peers = {};
 
   /// Adds or updates a peer in the store
   void addPeer(IPFSPeer peer) {
@@ -12,12 +13,12 @@ class PeerStore {
   }
 
   /// Removes a peer from the store
-  void removePeer(p2p.PeerId peerId) {
+  void removePeer(PeerId peerId) {
     _peers.remove(peerId);
   }
 
   /// Gets a peer by their ID
-  IPFSPeer? getPeer(p2p.PeerId peerId) {
+  IPFSPeer? getPeer(PeerId peerId) {
     return _peers[peerId];
   }
 
@@ -27,13 +28,13 @@ class PeerStore {
   }
 
   /// Checks if a peer exists in the store
-  bool hasPeer(p2p.PeerId peerId) {
+  bool hasPeer(PeerId peerId) {
     return _peers.containsKey(peerId);
   }
 
   /// Updates peer information if the peer exists
   void updatePeer(
-    p2p.PeerId peerId, {
+    PeerId peerId, {
     List<p2p.FullAddress>? addresses,
     int? latency,
     String? agentVersion,

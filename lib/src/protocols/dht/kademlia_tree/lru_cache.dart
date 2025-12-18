@@ -1,4 +1,4 @@
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'kademlia_tree_node.dart';
 
 /// LRU cache for Kademlia tree nodes.
@@ -13,12 +13,12 @@ class LRUCache {
   /// Maximum number of cached nodes.
   final int capacity;
 
-  final Map<p2p.PeerId, _Node> _cache = {};
+  final Map<PeerId, _Node> _cache = {};
   _Node? _head;
   _Node? _tail;
 
   /// Adds or updates a node in the cache.
-  void put(p2p.PeerId key, KademliaTreeNode value) {
+  void put(PeerId key, KademliaTreeNode value) {
     if (_cache.containsKey(key)) {
       _moveToFront(_cache[key]!);
       _cache[key]!.value = value;
@@ -33,7 +33,7 @@ class LRUCache {
   }
 
   /// Gets a node from the cache, returning null if not found.
-  KademliaTreeNode? get(p2p.PeerId key) {
+  KademliaTreeNode? get(PeerId key) {
     final node = _cache[key];
     if (node != null) {
       _moveToFront(node);
@@ -100,7 +100,7 @@ class LRUCache {
 
 class _Node {
   _Node(this.key, this.value);
-  final p2p.PeerId key;
+  final PeerId key;
   KademliaTreeNode value;
   _Node? next;
   _Node? prev;

@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import '../dht_client.dart';
 import 'value_store.dart';
 
@@ -23,7 +23,7 @@ class ReplicationManager {
   Future<void> ensureReplication(String key, Uint8List value) async {
     await _valueStore.store(key, value);
 
-    final targetPeerId = p2p.PeerId(value: Uint8List.fromList(key.codeUnits));
+    final targetPeerId = PeerId(value: Uint8List.fromList(key.codeUnits));
     final storedReplicas = await _checkReplicas(key);
 
     if (storedReplicas < minReplicas) {
@@ -54,7 +54,7 @@ class ReplicationManager {
     final localValue = await _valueStore.retrieve(key);
     int replicaCount = localValue != null ? 1 : 0;
 
-    final targetPeerId = p2p.PeerId(value: Uint8List.fromList(key.codeUnits));
+    final targetPeerId = PeerId(value: Uint8List.fromList(key.codeUnits));
     final potentialHolders = _dhtClient.kademliaRoutingTable.findClosestPeers(
       targetPeerId,
       20,

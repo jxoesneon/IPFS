@@ -101,13 +101,8 @@ class PubSubClient {
             );
           }
 
-          // Validate sender is a known peer
-          final senderPeerId = p2p.PeerId(
-            value: Base58().base58Decode(decodedJson['sender'] as String),
-          );
-
           // Update mesh/scores on valid message
-          if (_router.isConnectedPeer(senderPeerId)) {
+          if (_router.isConnectedPeer(decodedJson['sender'] as String)) {
             _scores[decodedJson['sender'] as String] =
                 (_scores[decodedJson['sender'] as String] ?? 0.0) + 1.0;
 
@@ -166,8 +161,7 @@ class PubSubClient {
 
     for (final peerIdStr in _mesh) {
       try {
-        final peerIdObj = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
-        await _router.sendMessage(peerIdObj, encoded);
+        await _router.sendMessage(peerIdStr, encoded);
       } catch (_) {}
     }
   }
@@ -180,8 +174,7 @@ class PubSubClient {
       final unsubscribeMsg = encodeUnsubscribeRequest(topic);
       for (final peerIdStr in _mesh) {
         try {
-          final peerIdObj = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
-          await _router.sendMessage(peerIdObj, unsubscribeMsg);
+          await _router.sendMessage(peerIdStr, unsubscribeMsg);
         } catch (_) {}
       }
     } catch (e, stackTrace) {
@@ -200,8 +193,7 @@ class PubSubClient {
 
       for (final peerIdStr in _mesh) {
         try {
-          final peerIdObj = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
-          await _router.sendMessage(peerIdObj, encodedMessage);
+          await _router.sendMessage(peerIdStr, encodedMessage);
         } catch (_) {}
       }
       _logger.info('Published message to topic: $topic');
@@ -329,11 +321,8 @@ class PubSubClient {
       };
 
       try {
-        final peerIdObj = p2p.PeerId(
-          value: Base58().base58Decode(msg['sender'] as String),
-        );
         _router.sendMessage(
-          peerIdObj,
+          msg['sender'] as String,
           Uint8List.fromList(utf8.encode(jsonEncode(iwant))),
         );
       } catch (e) {
@@ -348,14 +337,12 @@ class PubSubClient {
     final senderStr = msg['sender'] as String;
 
     try {
-      final peerIdObj = p2p.PeerId(value: Base58().base58Decode(senderStr));
-
       for (final id in msgIds) {
         if (_messageCache.containsKey(topic) &&
             _messageCache[topic]!.containsKey(id)) {
           final content = _messageCache[topic]![id]!;
           final encoded = encodePublishRequest(topic, content);
-          _router.sendMessage(peerIdObj, encoded);
+          _router.sendMessage(senderStr, encoded);
         }
       }
     } catch (e) {

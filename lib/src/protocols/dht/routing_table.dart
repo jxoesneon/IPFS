@@ -1,12 +1,11 @@
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
+import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/add_peer.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_tree_node.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/remove_peer.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
-
-import 'kademlia_tree.dart';
 
 /// Kademlia-based routing table for DHT peer management.
 ///
@@ -25,7 +24,7 @@ class RoutingTable {
       ),
     );
   }
-  final p2p.PeerId _localPeerId;
+  final PeerId _localPeerId;
   late final KademliaTree _kademliaTree;
 
   /// Standard k-bucket size.
@@ -34,18 +33,18 @@ class RoutingTable {
   late final DHTClient _dhtClient;
 
   /// Returns the nearest peers to a key.
-  List<p2p.PeerId> getNearestPeers(List<int> key, [int count = K]) {
-    final targetPeerId = p2p.PeerId(value: Uint8List.fromList(key));
+  List<PeerId> getNearestPeers(List<int> key, [int count = K]) {
+    final targetPeerId = PeerId(value: Uint8List.fromList(key));
     return _kademliaTree.findClosestPeers(targetPeerId, count);
   }
 
   /// Adds a peer to the routing table.
-  void addPeer(p2p.PeerId peerId, p2p.PeerId associatedPeerId) {
+  void addPeer(PeerId peerId, PeerId associatedPeerId) {
     _kademliaTree.addPeer(peerId, associatedPeerId);
   }
 
   /// Removes a peer from the routing table.
-  void removePeer(p2p.PeerId peerId) {
+  void removePeer(PeerId peerId) {
     _kademliaTree.removePeer(peerId);
   }
 }
