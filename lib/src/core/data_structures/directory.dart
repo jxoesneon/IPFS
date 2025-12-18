@@ -9,7 +9,7 @@ import 'package:fixnum/fixnum.dart';
 /// **UnixFS v1.5:** Supports optional `mode` (Unix permissions) and `mtime`
 /// (modification time) for file system preservation.
 class IPFSDirectoryEntry {
-
+  /// Creates a new [IPFSDirectoryEntry].
   IPFSDirectoryEntry({
     required this.name,
     required this.hash,
@@ -18,6 +18,7 @@ class IPFSDirectoryEntry {
     this.mode,
     this.mtime,
   });
+
   /// The name of this entry (file or subdirectory name).
   final String name;
 
@@ -52,7 +53,7 @@ class IPFSDirectoryEntry {
 
 /// Manages IPFS directory creation using standard UnixFS Data and DAG nodes
 class IPFSDirectoryManager {
-
+  /// Creates a new [IPFSDirectoryManager] with optional [mode] and [mtime].
   IPFSDirectoryManager({int? mode, DateTime? mtime})
     : _unixFsData = Data()..type = Data_DataType.Directory {
     if (mode != null) {

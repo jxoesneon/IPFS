@@ -31,7 +31,6 @@ import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
 /// final isValid = await record.verify();
 /// ```
 class IPNSRecord {
-
   IPNSRecord._({
     required this.value,
     required this.validity,
@@ -40,6 +39,7 @@ class IPNSRecord {
     required this.publicKey,
     Uint8List? signature,
   }) : _signature = signature;
+
   /// The value this IPNS name points to (typically /ipfs/CID).
   final Uint8List value;
 

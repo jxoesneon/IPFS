@@ -6,9 +6,9 @@ import 'package:p2plib/p2plib.dart' as p2p;
 /// Each protocol (Bitswap, DHT, etc.) implements this to handle
 /// incoming messages and send responses.
 abstract class ProtocolHandler {
-
   /// Creates a handler for [protocolId].
   ProtocolHandler(this.protocolId, this.peerId);
+
   /// The protocol identifier (e.g., '/ipfs/bitswap/1.2.0').
   final String protocolId;
 

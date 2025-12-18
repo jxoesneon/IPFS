@@ -34,7 +34,6 @@ import 'package:multibase/multibase.dart';
 /// - [IPFS CID Specification](https://github.com/multiformats/cid)
 /// - `Block` for content-addressed data storage
 class CID {
-
   /// Creates a CID with the specified components.
   ///
   /// Prefer using factory constructors [CID.v0], [CID.v1], or [CID.fromContent]
@@ -79,6 +78,7 @@ class CID {
       multibaseType: base,
     );
   }
+
   /// The CID version (0 or 1).
   final int version;
 
@@ -116,7 +116,9 @@ class CID {
       int codecCode = 0;
       int shift = 0;
       while (true) {
-        if (index >= bytes.length) throw const FormatException('Invalid CID bytes');
+        if (index >= bytes.length) {
+          throw const FormatException('Invalid CID bytes');
+        }
         int byte = bytes[index++];
         codecCode |= (byte & 0x7f) << shift;
         if ((byte & 0x80) == 0) break;
@@ -266,6 +268,7 @@ class CID {
     return Uint8List.fromList(bytes);
   }
 
+  /// Converts the CID to a Protobuf representation.
   IPFSCIDProto toProto() {
     return IPFSCIDProto()
       ..version = version == 0
@@ -276,6 +279,7 @@ class CID {
       ..multibasePrefix = version == 0 ? '' : 'base32';
   }
 
+  /// Creates a [CID] from a Protobuf representation.
   static CID fromProto(IPFSCIDProto proto) {
     if (proto.version == IPFSCIDVersion.IPFS_CID_VERSION_0) {
       final mh = Multihash.decode(Uint8List.fromList(proto.multihash));
@@ -287,6 +291,9 @@ class CID {
     );
   }
 
+  /// Creates a [CID] from raw content.
+  ///
+  /// Specify [codec], [hashType], and [version] if they differ from defaults.
   static Future<CID> fromContent(
     Uint8List content, {
     String codec = 'raw',

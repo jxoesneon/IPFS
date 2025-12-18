@@ -45,8 +45,12 @@ import 'package:dart_ipfs/src/transport/circuit_relay_service.dart';
 /// - [IPFSNode] for the main node interface
 /// - [IPFSConfig] for configuration options
 /// - [ServiceContainer] for dependency injection
+/// Builder for creating and configuring an [IPFSNode].
+///
+/// This class handles the complex orchestration of initializing
+/// and registering all required services (networking, storage,
+/// protocol handlers) in the correct order.
 class IPFSNodeBuilder {
-
   /// Creates a new builder with the given [config].
   IPFSNodeBuilder(this._config) : _container = ServiceContainer();
   final ServiceContainer _container;
@@ -182,6 +186,7 @@ class IPFSNodeBuilder {
     }
   }
 
+  /// Registers Graphsync related services in the provided container.
   void registerGraphsyncServices(ServiceContainer container) {
     container.registerSingleton(
       GraphsyncHandler(

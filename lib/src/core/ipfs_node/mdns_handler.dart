@@ -11,7 +11,7 @@ import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Handles mDNS (multicast DNS) peer discovery for an IPFS node.
 class MDNSHandler {
-
+  /// Creates an mDNS handler with config and optional mDNS client.
   MDNSHandler(this._config, {MDnsClient? mdnsClient}) {
     _logger = Logger(
       'MDNSHandler',

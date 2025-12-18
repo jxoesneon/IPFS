@@ -25,7 +25,7 @@ import 'package:p2plib/p2plib.dart' show PeerId;
 /// **Security (SEC-010):** Provider records are verified before storage
 /// to prevent DHT index poisoning attacks.
 class DHTHandler implements IDHTHandler {
-
+  /// Creates a new [DHTHandler] with the given [config], [_router], and [networkHandler].
   DHTHandler(IPFSConfig config, this._router, NetworkHandler networkHandler)
     : _keystore = Keystore(),
       _storage = HiveDatastore(config.datastorePath) {
@@ -33,6 +33,8 @@ class DHTHandler implements IDHTHandler {
     _storage.init();
     dhtClient = DHTClient(networkHandler: networkHandler, router: _router);
   }
+
+  /// The underlying DHT client for network operations.
   late final DHTClient dhtClient;
   final Keystore _keystore;
   final P2plibRouter _router;
@@ -181,7 +183,9 @@ class DHTHandler implements IDHTHandler {
       final valuePath = utf8.encode('/ipfs/$cid');
 
       // Validity: RFC3339 format, 24 hours from now
-      final validityDate = DateTime.now().add(const Duration(hours: 24)).toUtc();
+      final validityDate = DateTime.now()
+          .add(const Duration(hours: 24))
+          .toUtc();
       final validity = utf8.encode(validityDate.toIso8601String());
       final validityType = IpnsEntry_ValidityType.EOL;
 
@@ -245,6 +249,7 @@ class DHTHandler implements IDHTHandler {
     return match?.group(0);
   }
 
+  /// Returns the underlying P2P router.
   P2plibRouter get router => _router;
 
   @override
@@ -366,9 +371,10 @@ class DHTHandler implements IDHTHandler {
     }
   }
 
-  // Add getter for storage
+  /// Returns the underlying datastore.
   ds.Datastore get storage => _storage;
 
+  /// Returns the current status of the DHT handler.
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'active_queries': _activeQueries.length,

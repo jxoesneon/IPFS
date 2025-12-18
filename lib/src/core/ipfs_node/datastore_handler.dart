@@ -12,12 +12,13 @@ import '../data_structures/merkle_dag_node.dart';
 
 /// Handles datastore operations for an IPFS node.
 class DatastoreHandler {
-
+  /// Creates a datastore handler backed by [_datastore].
   DatastoreHandler(this._datastore);
+
   final Datastore _datastore;
   final Logger _logger = Logger('DatastoreHandler');
 
-  // Add public getter for datastore
+  /// Provides access to the underlying datastore.
   Datastore get datastore => _datastore;
 
   /// Initializes and starts the datastore.
@@ -198,6 +199,7 @@ class DatastoreHandler {
     }
   }
 
+  /// Returns the current status of the datastore.
   Future<Map<String, dynamic>> getStatus() async {
     // Datastore interface doesn't expose size/count cleanly.
     // We'd have to query all to count.

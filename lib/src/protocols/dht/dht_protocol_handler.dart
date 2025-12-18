@@ -12,19 +12,19 @@ import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 /// Handles PING, FIND_NODE, GET_VALUE, and PUT_VALUE messages
 /// according to the Kademlia protocol specification.
 class DHTProtocolHandler {
-
   /// Creates a handler with [_router] and [_storage].
   DHTProtocolHandler(this._router, this._storage) {
     _setupHandlers();
   }
+
   /// Kademlia protocol ID.
-  static const String PROTOCOL_ID = '/ipfs/kad/1.0.0';
+  static const String protocolId = '/ipfs/kad/1.0.0';
 
   final P2plibRouter _router;
   final Datastore _storage;
 
   void _setupHandlers() {
-    _router.registerProtocolHandler(PROTOCOL_ID, _handleDHTMessage);
+    _router.registerProtocolHandler(protocolId, _handleDHTMessage);
   }
 
   Future<void> _handleDHTMessage(LibP2PPacket packet) async {

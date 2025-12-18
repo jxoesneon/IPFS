@@ -11,7 +11,7 @@
 /// );
 /// ```
 class StorageConfig {
-
+  /// Creates a new [StorageConfig] with default paths and limits.
   const StorageConfig({
     this.baseDir = '.ipfs',
     this.maxStorageSize = 10 * 1024 * 1024 * 1024, // 10GB default
@@ -23,6 +23,7 @@ class StorageConfig {
     this.maxBlockSize = 1024 * 1024 * 2, // 2MB default
   });
 
+  /// Creates a [StorageConfig] from a JSON map.
   factory StorageConfig.fromJson(Map<String, dynamic> json) {
     return StorageConfig(
       baseDir: json['baseDir'] as String? ?? '.ipfs',
@@ -35,6 +36,7 @@ class StorageConfig {
       maxBlockSize: json['maxBlockSize'] as int? ?? 1024 * 1024 * 2,
     );
   }
+
   /// Base directory for all IPFS data
   final String baseDir;
 
@@ -59,6 +61,7 @@ class StorageConfig {
   /// Maximum size for a single block
   final int maxBlockSize;
 
+  /// Converts this configuration to a JSON map.
   Map<String, dynamic> toJson() => {
     'baseDir': baseDir,
     'maxStorageSize': maxStorageSize,
@@ -70,7 +73,12 @@ class StorageConfig {
     'maxBlockSize': maxBlockSize,
   };
 
+  /// Computed path to the block storage directory.
   String get blockPath => '$baseDir/$blocksDir';
+
+  /// Computed path to the datastore directory.
   String get datastorePath => '$baseDir/$datastoreDir';
+
+  /// Computed path to the keys directory.
   String get keysPath => '$baseDir/$keysDir';
 }

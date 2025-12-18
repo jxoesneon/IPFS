@@ -47,6 +47,7 @@ class Rotations<K_PeerId, V_PeerInfo> {
     );
   }
 
+  /// Performs a right rotation around [y].
   void rotateRight(
     RedBlackTree<K_PeerId, V_PeerInfo> tree,
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? y,
@@ -87,6 +88,7 @@ class Rotations<K_PeerId, V_PeerInfo> {
   }
 
   // Validation method for node colors (all nodes must be either red or black)
+  /// Validates all node colors in the tree.
   bool validateNodeColors(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node) {
     if (node == null) return true; // Null nodes (leaves) are treated as black
     if (node.color != common_tree.NodeColor.RED &&
@@ -98,6 +100,7 @@ class Rotations<K_PeerId, V_PeerInfo> {
   }
 
   // Validate the red-black tree properties
+  /// Validates all red-black tree properties.
   bool validateTree(RedBlackTree<K_PeerId, V_PeerInfo> tree) {
     // 1. The root must be black
     if (tree.root == null || tree.root!.color != common_tree.NodeColor.BLACK) {

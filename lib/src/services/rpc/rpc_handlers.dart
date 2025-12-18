@@ -16,8 +16,10 @@ import 'package:shelf/shelf.dart';
 ///
 /// Implements Kubo-compatible RPC methods
 class RPCHandlers {
-
+  /// Creates a new [RPCHandlers] with the given [node].
   RPCHandlers(this.node);
+
+  /// The IPFS node to control via RPC.
   final IPFSNode node;
 
   /// GET /api/v0/version - Get IPFS version

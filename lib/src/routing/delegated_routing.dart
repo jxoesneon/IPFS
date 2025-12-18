@@ -3,30 +3,38 @@ import 'dart:convert';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:http/http.dart' as http;
 
-/// Response from a routing request
+/// Response from a routing request.
 class RoutingResponse {
-
+  /// Creates a routing response.
   RoutingResponse({this.providers = const [], this.error});
 
+  /// Creates a successful response with providers.
   factory RoutingResponse.success(List<String> providers) {
     return RoutingResponse(providers: providers);
   }
 
+  /// Creates an error response.
   factory RoutingResponse.error(String message) {
     return RoutingResponse(error: message);
   }
+
+  /// List of provider peer IDs.
   final List<String> providers;
+
+  /// Error message if the request failed.
   final String? error;
 
+  /// Returns true if the request succeeded.
   bool get isSuccess => error == null;
 }
 
-/// Handles delegated routing operations following the IPFS Delegated Routing V1 HTTP API spec
+/// Handles delegated routing operations following the IPFS Delegated Routing V1 HTTP API spec.
 class DelegatedRoutingHandler {
-
+  /// Creates a handler with optional custom endpoint and HTTP client.
   DelegatedRoutingHandler({String? delegateEndpoint, http.Client? httpClient})
     : _delegateEndpoint = delegateEndpoint ?? _defaultDelegateEndpoint,
       _httpClient = httpClient ?? http.Client();
+
   static const String _defaultDelegateEndpoint = 'https://delegated-ipfs.dev';
   final String _delegateEndpoint;
   final http.Client _httpClient;

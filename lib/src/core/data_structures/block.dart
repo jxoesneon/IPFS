@@ -7,8 +7,10 @@ import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as proto;
 import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 
 /// Represents an IPFS block.
-class Block implements IBlock { // Keep format for existing methods
+class Block implements IBlock {
+  // Keep format for existing methods
 
+  /// Creates a new [Block] with the specific [cid], [data], and [format].
   Block({
     required this.cid,
     required this.data,
@@ -18,9 +20,11 @@ class Block implements IBlock { // Keep format for existing methods
   final CID cid;
   @override
   final Uint8List data;
+
+  /// The codec format used by this block (e.g., 'raw', 'dag-pb').
   final String format;
 
-  /// Creates a Block from raw data
+  /// Creates a [Block] from raw data, automatically computing the CID.
   static Future<Block> fromData(Uint8List data, {String format = 'raw'}) async {
     final cid = await CID.fromContent(data, codec: format);
     return Block(cid: cid, data: data, format: format);

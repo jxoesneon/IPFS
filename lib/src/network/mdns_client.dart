@@ -6,49 +6,74 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:multicast_dns/multicast_dns.dart' as mdns;
 
 /// Resource record types for mDNS queries
-enum ResourceRecordType { PTR, SRV, TXT, A, AAAA }
+enum ResourceRecordType {
+  /// Pointer record
+  ptr,
 
-/// Query class for mDNS resource records
+  /// Service record
+  srv,
+
+  /// Text record
+  txt,
+
+  /// IPv4 address record
+  a,
+
+  /// IPv6 address record
+  aaaa,
+}
+
+/// Query class for mDNS resource records.
 class ResourceRecordQuery {
-
+  /// Creates a query with the given [name] and [type].
   const ResourceRecordQuery(this.name, this.type);
+
+  /// The domain name to query.
   final String name;
+
+  /// The record type to query.
   final ResourceRecordType type;
 
   /// Creates a PTR query for service discovery
   static ResourceRecordQuery serverPointer(String service) {
-    return ResourceRecordQuery('$service.local', ResourceRecordType.PTR);
+    return ResourceRecordQuery('$service.local', ResourceRecordType.ptr);
   }
 
   /// Creates an SRV query for service details
   static ResourceRecordQuery service(String name) {
-    return ResourceRecordQuery(name, ResourceRecordType.SRV);
+    return ResourceRecordQuery(name, ResourceRecordType.srv);
   }
 
   /// Creates a TXT query for service metadata
   static ResourceRecordQuery text(String name) {
-    return ResourceRecordQuery(name, ResourceRecordType.TXT);
+    return ResourceRecordQuery(name, ResourceRecordType.txt);
   }
 }
 
-/// Base class for mDNS resource records
+/// Base class for mDNS resource records.
 abstract class ResourceRecord {
-
+  /// Creates a resource record with [name] and time-to-live [ttl].
   ResourceRecord(this.name, this.ttl);
+
+  /// The domain name of this record.
   final String name;
+
+  /// Time-to-live for this record.
   final Duration ttl;
 }
 
-/// PTR record containing service instance name
+/// PTR record containing service instance name.
 class PtrResourceRecord extends ResourceRecord {
-
+  /// Creates a PTR record.
   PtrResourceRecord(super.name, super.ttl, this.domainName);
+
+  /// The domain name this pointer resolves to.
   final String domainName;
 }
 
-/// SRV record containing service location information
+/// SRV record containing service location information.
 class SrvResourceRecord extends ResourceRecord {
-
+  /// Creates an SRV record.
   SrvResourceRecord(
     super.name,
     super.ttl,
@@ -57,16 +82,26 @@ class SrvResourceRecord extends ResourceRecord {
     this.priority = 0,
     this.weight = 0,
   });
+
+  /// The target hostname.
   final String target;
+
+  /// The port number.
   final int port;
+
+  /// Service priority (lower is higher priority).
   final int priority;
+
+  /// Server weight for load balancing.
   final int weight;
 }
 
-/// TXT record containing service metadata
+/// TXT record containing service metadata.
 class TxtResourceRecord extends ResourceRecord {
-
+  /// Creates a TXT record.
   TxtResourceRecord(super.name, super.ttl, this.text);
+
+  /// The text entries in this record.
   final List<String> text;
 }
 
@@ -183,15 +218,15 @@ class MDnsClient {
   /// Gets the corresponding mDNS record type for our enum
   int _getResourceRecordType(ResourceRecordType type) {
     switch (type) {
-      case ResourceRecordType.PTR:
+      case ResourceRecordType.ptr:
         return 12; // RFC 1035 PTR record type
-      case ResourceRecordType.SRV:
+      case ResourceRecordType.srv:
         return 33; // RFC 2782 SRV record type
-      case ResourceRecordType.TXT:
+      case ResourceRecordType.txt:
         return 16; // RFC 1035 TXT record type
-      case ResourceRecordType.A:
+      case ResourceRecordType.a:
         return 1; // RFC 1035 A record type
-      case ResourceRecordType.AAAA:
+      case ResourceRecordType.aaaa:
         return 28; // RFC 3596 AAAA record type
     }
   }
@@ -200,6 +235,7 @@ class MDnsClient {
   final InternetAddress _mdnsGroup = InternetAddress('224.0.0.251');
   final int _mdnsPort = 5353;
 
+  /// Whether the mDNS client is currently running.
   bool get isRunning => _isRunning;
 
   /// Starts the mDNS server for advertising

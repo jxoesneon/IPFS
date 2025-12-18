@@ -6,9 +6,9 @@ import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Base class for Kademlia DHT protocol messages.
 abstract class KademliaMessage {
-
   /// Creates a message with [messageId], [sender], and optional [recipient].
   KademliaMessage(this.messageId, this.sender, this.recipient);
+
   /// Unique message identifier.
   final String messageId;
 
@@ -24,6 +24,7 @@ abstract class KademliaMessage {
 
 /// PING message for liveness checks.
 class PingMessage extends KademliaMessage {
+  /// Creates a ping message.
   PingMessage(super.messageId, super.sender, p2p.PeerId super.recipient);
 
   @override
@@ -32,8 +33,9 @@ class PingMessage extends KademliaMessage {
   }
 }
 
+/// STORE message for putting values in the DHT.
 class StoreMessage extends KademliaMessage {
-
+  /// Creates a store message with [key] and [value].
   StoreMessage(
     super.messageId,
     super.sender,
@@ -41,7 +43,11 @@ class StoreMessage extends KademliaMessage {
     this.key,
     this.value,
   );
+
+  /// The key to store.
   final Uint8List key;
+
+  /// The value to store.
   final Uint8List value;
 
   @override
@@ -55,14 +61,17 @@ class StoreMessage extends KademliaMessage {
   }
 }
 
+/// FIND_NODE message for locating peers.
 class FindNodeMessage extends KademliaMessage {
-
+  /// Creates a find node message for [targetId].
   FindNodeMessage(
     super.messageId,
     super.sender,
     p2p.PeerId super.recipient,
     this.targetId,
   );
+
+  /// The target peer to find.
   final p2p.PeerId targetId;
 
   @override
@@ -73,14 +82,17 @@ class FindNodeMessage extends KademliaMessage {
   }
 }
 
+/// GET_VALUE message for retrieving values.
 class FindValueMessage extends KademliaMessage {
-
+  /// Creates a find value message for [key].
   FindValueMessage(
     super.messageId,
     super.sender,
     p2p.PeerId super.recipient,
     this.key,
   );
+
+  /// The key to look up.
   final Uint8List key;
 
   @override

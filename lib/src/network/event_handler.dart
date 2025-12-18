@@ -14,6 +14,7 @@ class NetworkEventHandler {
   final StreamController<NetworkEvent> _eventController =
       StreamController<NetworkEvent>.broadcast();
 
+  /// Handles a peer connection event.
   void handlePeerEvent(LibP2PPeerId peerId, String eventType) {
     final now = DateTime.now();
     final timestamp = Timestamp()
@@ -28,6 +29,7 @@ class NetworkEventHandler {
     _eventController.add(event);
   }
 
+  /// Handles an incoming network message event.
   void handleMessageEvent(IPFSMessage message) {
     final now = DateTime.now();
     final timestamp = Timestamp()
@@ -65,5 +67,6 @@ class NetworkEventHandler {
     _eventController.add(event);
   }
 
+  /// Stream of network events for listeners.
   Stream<NetworkEvent> get events => _eventController.stream;
 }

@@ -17,7 +17,6 @@
 /// See also:
 /// - [EnhancedCBORHandler] for CBOR encoding/decoding
 class ByteReader {
-
   /// Creates a reader for the given byte list.
   ByteReader(this._bytes);
   final List<int> _bytes;

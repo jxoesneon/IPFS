@@ -1,4 +1,4 @@
-import 'dart:math' as Math;
+import 'dart:math' as math;
 
 import 'package:p2plib/p2plib.dart' as p2p;
 
@@ -16,16 +16,27 @@ extension BucketManagement on KademliaTree {
   Future<void> Function(int, p2p.PeerId, p2p.PeerId) get handleBucketFullness =>
       _handleBucketFullness;
 
+  /// Checks if a node was in a recent lookup.
   bool Function(p2p.PeerId) get wasNodeContactInRecentLookup =>
       _wasNodeContactInRecentLookup;
 
+  /// Finds the least recently seen node in a bucket.
   KademliaTreeNode? Function(int) get findLeastRecentlySeenNode =>
       _findLeastRecentlySeenNode;
 
+  /// Splits a bucket into two.
   void Function(int) get splitBucket => _splitBucket;
+
+  /// Merges two adjacent buckets.
   void Function(int, int) get mergeBuckets => _mergeBuckets;
+
+  /// Checks if a bucket can be split.
   bool Function(int) get canSplitBucket => _canSplitBucket;
+
+  /// Checks if two buckets can be merged.
   bool Function(int, int) get canMergeBuckets => _canMergeBuckets;
+
+  /// Gets the bucket index for a distance.
   int Function(int) get getBucketIndex => _getBucketIndex;
 
   // Bucket splitting logic
@@ -234,6 +245,7 @@ extension BucketManagement on KademliaTree {
     return newStability > existingStability;
   }
 
+  /// Calculates a stability score for a node.
   double calculateConnectionStabilityScore(KademliaTreeNode node) {
     // Base score starts at 1.0
     double score = 1.0;
@@ -252,7 +264,7 @@ extension BucketManagement on KademliaTree {
     }
 
     // Factor 2: Failed requests penalty
-    score *= Math.pow(0.9, node.failedRequests);
+    score *= math.pow(0.9, node.failedRequests);
 
     // Factor 3: Recent activity bonus
     final lastSeenDuration = DateTime.now().difference(

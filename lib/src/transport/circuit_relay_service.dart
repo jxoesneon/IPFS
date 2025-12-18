@@ -14,15 +14,20 @@ import 'package:p2plib/p2plib.dart' as p2p;
 /// - HOP protocol: Handling RESERVE requests from peers wanting to serve traffic.
 /// - STOP protocol: Handling CONNECT requests destined for this node.
 class CircuitRelayService {
-
+  /// Creates a new [CircuitRelayService] with the given [_router] and [_config].
   CircuitRelayService(this._router, this._config);
   final P2plibRouter _router;
   final IPFSConfig _config;
   final _logger = Logger('CircuitRelayService');
 
   // Protocol constants
+  /// The HOP protocol ID for relay reservations.
   static const hopProtocolId = '/libp2p/circuit/relay/0.2.0/hop';
+
+  /// The STOP protocol ID for incoming connections.
   static const stopProtocolId = '/libp2p/circuit/relay/0.2.0/stop';
+
+  /// The transport protocol ID for relayed data.
   static const transportProtocolId = '/libp2p/circuit/relay/0.2.0/transport';
 
   // State
@@ -319,7 +324,7 @@ class CircuitRelayService {
 }
 
 class _CircuitContext {
-
+  /// Creates a [_CircuitContext].
   _CircuitContext({
     required this.source,
     required this.sourcePeerId,

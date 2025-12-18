@@ -9,7 +9,7 @@ import 'package:protobuf/well_known_types/google/protobuf/any.pb.dart';
 
 /// Represents a Content Addressable Archive (CAR) with v1 and v2 support.
 class CAR {
-
+  /// Creates a new [CAR] archive with the given [blocks] and [header].
   CAR({
     required this.blocks,
     required this.header,
@@ -28,9 +28,17 @@ class CAR {
 
     return CAR(blocks: blocks, header: header, index: index, version: 2);
   }
+
+  /// The blocks contained within the archive.
   final List<Block> blocks;
+
+  /// The archive header containing metadata and roots.
   final CarHeader header;
+
+  /// Optional index for fast block retrieval.
   final CarIndex? index;
+
+  /// The CAR format version (1 or 2).
   final int version;
 
   /// Serializes the CAR to bytes for storage or transmission.
@@ -113,18 +121,27 @@ class CAR {
 
 /// Represents a CAR file header
 class CarHeader {
-
+  /// Creates a new [CarHeader] with the specified attributes.
   CarHeader({
     required this.version,
     this.characteristics = const [],
     this.roots = const [],
     this.pragma = const {},
   });
+
+  /// The CAR format version.
   final int version;
+
+  /// A list of characteristics of the archive.
   final List<String> characteristics;
+
+  /// The root CIDs for the archive.
   final List<CID> roots;
+
+  /// Optional pragmas for archive processing.
   final Map<String, dynamic> pragma;
 
+  /// Converts this header to its protobuf representation.
   proto.CarHeader toProto() {
     return proto.CarHeader()
       ..version = version
@@ -140,15 +157,22 @@ class CarHeader {
 
 /// Represents a CAR file index for fast block lookup
 class CarIndex {
+  /// Map of CID strings to their byte offsets within the CAR.
   final Map<String, int> _offsets = {};
+
+  /// Map of CID strings to their block lengths.
   final Map<String, int> _lengths = {};
 
+  /// Adds a block entry to the index.
   void addEntry(String cid, int offset, int length) {
     _offsets[cid] = offset;
     _lengths[cid] = length;
   }
 
+  /// Returns the byte offset for a block, if indexed.
   int? getOffset(String cid) => _offsets[cid];
+
+  /// Returns the block length for a CID, if indexed.
   int? getLength(String cid) => _lengths[cid];
 
   /// Generates an index from a list of blocks
@@ -166,6 +190,7 @@ class CarIndex {
     return index;
   }
 
+  /// Converts this index to its protobuf representation.
   proto.CarIndex toProto() {
     final pbIndex = proto.CarIndex();
     _offsets.forEach((cid, offset) {

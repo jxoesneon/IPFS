@@ -25,7 +25,6 @@ import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 /// - [P2plibRouter] for the underlying transport
 /// - [ProtocolHandler] for message handling interface
 class NetworkManager {
-
   /// Creates a network manager with the given [_router].
   NetworkManager(this._router) {
     _setupMessageHandling();
@@ -54,5 +53,6 @@ class NetworkManager {
     });
   }
 
+  /// Stream of network events.
   Stream<NetworkEvent> get events => _eventController.stream;
 }

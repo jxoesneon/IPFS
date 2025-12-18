@@ -14,13 +14,18 @@ import 'package:shelf/shelf.dart';
 /// Resolver function for IPNS names (returns CID)
 typedef IpnsResolver = Future<String> Function(String name);
 
-/// Handles IPFS Gateway HTTP requests following the IPFS Gateway specs
+/// Handles IPFS Gateway HTTP requests following the IPFS Gateway specs.
 /// See: https://specs.ipfs.tech/http-gateways/
 class GatewayHandler {
-
+  /// Creates a gateway handler with a blockstore and optional IPNS resolver.
   GatewayHandler(this.blockStore, {this.ipnsResolver});
+
+  /// The block store for retrieving content.
   final BlockStore blockStore;
+
+  /// Optional resolver for IPNS names.
   final IpnsResolver? ipnsResolver;
+
   final _logger = Logger('GatewayHandler');
 
   /// Handles path-based gateway requests (/ipfs/ and /ipns/)

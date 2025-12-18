@@ -6,8 +6,10 @@ import 'datastore.dart';
 
 /// A file-system based implementation of [Datastore].
 class FlatFileDatastore implements Datastore {
-
+  /// Creates a datastore backed by files in [path].
   FlatFileDatastore(this.path);
+
+  /// The root directory for stored data files.
   final String path;
 
   @override

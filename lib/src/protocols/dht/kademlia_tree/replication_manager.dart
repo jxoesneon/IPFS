@@ -8,26 +8,26 @@ import 'value_store.dart';
 /// Ensures minimum replica count and periodically checks
 /// replica health across the network.
 class ReplicationManager {
-
   /// Creates a manager with [_dhtClient] and [_valueStore].
   ReplicationManager(this._dhtClient, this._valueStore);
   final DHTClient _dhtClient;
   final ValueStore _valueStore;
 
   /// Minimum number of replicas to maintain.
-  static const int MIN_REPLICAS = 3;
+  static const int minReplicas = 3;
 
   /// Interval between replication checks.
-  static const Duration RECHECK_INTERVAL = Duration(hours: 1);
+  static const Duration recheckInterval = Duration(hours: 1);
 
+  /// Ensures minimum replicas exist for a key-value pair.
   Future<void> ensureReplication(String key, Uint8List value) async {
     await _valueStore.store(key, value);
 
     final targetPeerId = p2p.PeerId(value: Uint8List.fromList(key.codeUnits));
     final storedReplicas = await _checkReplicas(key);
 
-    if (storedReplicas < MIN_REPLICAS) {
-      final peersNeeded = MIN_REPLICAS - storedReplicas;
+    if (storedReplicas < minReplicas) {
+      final peersNeeded = minReplicas - storedReplicas;
       final additionalPeers = _dhtClient.kademliaRoutingTable.findClosestPeers(
         targetPeerId,
         peersNeeded,
@@ -75,6 +75,7 @@ class ReplicationManager {
     return replicaCount;
   }
 
+  /// Starts periodic background replication checks.
   void startPeriodicReplicationCheck() {
     Future.doWhile(() async {
       final keys = await _valueStore.getAllKeys();
@@ -84,7 +85,7 @@ class ReplicationManager {
           await ensureReplication(key, value);
         }
       }
-      await Future<void>.delayed(RECHECK_INTERVAL);
+      await Future<void>.delayed(recheckInterval);
       return true;
     });
   }

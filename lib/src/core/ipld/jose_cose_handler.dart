@@ -13,6 +13,7 @@ import 'package:jose/jose.dart';
 ///
 /// Provides signing, encryption, and verification for IPLD nodes.
 class JoseCoseHandler {
+  /// Encodes an IPLD node as a JWS (JSON Web Signature).
   static Future<Uint8List> encodeJWS(
     IPLDNode node,
     IPFSPrivateKey privateKey,
@@ -43,6 +44,7 @@ class JoseCoseHandler {
     return Uint8List.fromList(utf8.encode(jws.toCompactSerialization()));
   }
 
+  /// Encodes an IPLD node as a JWE (JSON Web Encryption).
   static Future<Uint8List> encodeJWE(
     IPLDNode node,
     List<int> recipientPublicKey,
@@ -68,6 +70,7 @@ class JoseCoseHandler {
     return Uint8List.fromList(utf8.encode(jwe.toCompactSerialization()));
   }
 
+  /// Encodes an IPLD node as COSE (CBOR Object Signing and Encryption).
   static Future<Uint8List> encodeCOSE(
     IPLDNode node,
     IPFSPrivateKey privateKey,
@@ -89,6 +92,7 @@ class JoseCoseHandler {
     throw UnimplementedError('CatalystCose not available');
   }
 
+  /// Decodes and verifies a JWS-encoded IPLD node.
   static Future<Uint8List> decodeJWS(
     IPLDNode node,
     IPFSPrivateKey privateKey,
@@ -118,6 +122,7 @@ class JoseCoseHandler {
     return Uint8List.fromList(utf8.encode(payload.stringContent));
   }
 
+  /// Decrypts a JWE-encoded IPLD node.
   static Future<Uint8List> decodeJWE(
     IPLDNode node,
     List<int> recipientPrivateKey,
@@ -142,6 +147,7 @@ class JoseCoseHandler {
     return Uint8List.fromList(payload.data);
   }
 
+  /// Decodes and verifies a COSE-encoded IPLD node.
   static Future<Uint8List> decodeCOSE(
     IPLDNode node,
     IPFSPrivateKey privateKey,

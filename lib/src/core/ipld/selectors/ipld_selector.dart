@@ -9,12 +9,25 @@ import 'package:fixnum/fixnum.dart';
 
 /// Types of IPLD selectors for DAG traversal.
 enum SelectorType {
+  /// Select all nodes.
   all,
+
+  /// Select no nodes.
   none,
+
+  /// Explore a specific path.
   explore,
+
+  /// Match nodes by criteria.
   matcher,
+
+  /// Recursively traverse the DAG.
   recursive,
+
+  /// Union of multiple selectors.
   union,
+
+  /// Intersection of multiple selectors.
   intersection,
 }
 
@@ -23,7 +36,6 @@ enum SelectorType {
 /// Selectors define patterns for matching and extracting subsets
 /// of IPLD DAGs, used in Graphsync for efficient data transfer.
 class IPLDSelector {
-
   /// Creates a selector with the given parameters.
   IPLDSelector({
     required this.type,
@@ -34,10 +46,13 @@ class IPLDSelector {
     this.stopAtLink,
   });
 
+  /// Creates a selector that matches all nodes.
   factory IPLDSelector.all() => IPLDSelector(type: SelectorType.all);
 
+  /// Creates a selector that matches no nodes.
   factory IPLDSelector.none() => IPLDSelector(type: SelectorType.none);
 
+  /// Creates an explore selector for traversing a specific path.
   factory IPLDSelector.explore({
     required String path,
     required IPLDSelector selector,
@@ -47,9 +62,11 @@ class IPLDSelector {
     subSelectors: [selector],
   );
 
+  /// Creates a matcher selector with the given criteria.
   factory IPLDSelector.matcher({required Map<String, dynamic> criteria}) =>
       IPLDSelector(type: SelectorType.matcher, criteria: criteria);
 
+  /// Creates a recursive traversal selector.
   factory IPLDSelector.recursive({
     required IPLDSelector selector,
     int? maxDepth,
@@ -61,11 +78,14 @@ class IPLDSelector {
     stopAtLink: stopAtLink,
   );
 
+  /// Creates a union of multiple selectors.
   factory IPLDSelector.union(List<IPLDSelector> selectors) =>
       IPLDSelector(type: SelectorType.union, subSelectors: selectors);
 
+  /// Creates an intersection of multiple selectors.
   factory IPLDSelector.intersection(List<IPLDSelector> selectors) =>
       IPLDSelector(type: SelectorType.intersection, subSelectors: selectors);
+
   /// The selector type.
   final SelectorType type;
 

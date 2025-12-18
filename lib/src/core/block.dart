@@ -29,12 +29,12 @@ import 'package:dart_ipfs/src/core/interfaces/block_data.dart';
 /// - [BlockStore] for persisting blocks
 /// - [BlockData] for the interface contract
 class Block with BlockCloneable<Block> implements BlockData {
-
   /// Creates a new block with the given [data] and [cid].
   ///
   /// The caller is responsible for ensuring the [cid] correctly
   /// corresponds to the hash of [data].
   const Block({required this.data, required CID cid}) : _cid = cid;
+
   /// The raw binary content of this block.
   ///
   /// This data is immutable and its hash determines the block's [cid].

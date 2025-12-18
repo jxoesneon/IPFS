@@ -15,19 +15,20 @@ import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 /// Orchestrates Bitswap, Graphsync, and IPLD handlers for
 /// efficient content fetching with fallback strategies.
 class ProtocolCoordinator {
-
   /// Creates a coordinator for the given protocol handlers.
   ProtocolCoordinator(this._bitswap, this._graphsync, this._ipld);
   final BitswapHandler _bitswap;
   final GraphsyncHandler _graphsync;
   final IPLDHandler _ipld;
 
+  /// Initializes all protocol handlers.
   Future<void> initialize() async {
     await _ipld.start();
     await _bitswap.start();
     await _graphsync.start();
   }
 
+  /// Retrieves data by CID using available protocols.
   Future<Block?> retrieveData(
     String cid, {
     bool useGraphsync = true,
@@ -72,6 +73,7 @@ class ProtocolCoordinator {
     }
   }
 
+  /// Returns the status of all protocol handlers.
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'bitswap': await _bitswap.getStatus(),
@@ -80,6 +82,7 @@ class ProtocolCoordinator {
     };
   }
 
+  /// Stops all protocol handlers.
   Future<void> stop() async {
     await _graphsync.stop();
     await _bitswap.stop();

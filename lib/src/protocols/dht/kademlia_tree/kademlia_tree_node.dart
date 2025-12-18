@@ -17,17 +17,16 @@ enum KademliaNodeState {
 /// Tracks distance from the local node, connection state,
 /// latency, and failure count for eviction decisions.
 class KademliaTreeNode {
-
   /// Creates a Kademlia tree node.
   KademliaTreeNode(
     this.peerId,
     this.distance,
-    this._associatedPeerId, {
-    required int lastSeen,
+    this.associatedPeerId, {
+    required this.lastSeen,
   }) : assert(peerId.value.isNotEmpty, 'PeerId cannot be empty'),
        assert(distance >= 0, 'Distance must be non-negative'),
-       _lastSeen = lastSeen,
        children = [];
+
   /// The peer identifier.
   final p2p.PeerId peerId;
 
@@ -37,55 +36,48 @@ class KademliaTreeNode {
   /// Child nodes in the tree structure.
   final List<KademliaTreeNode> children;
 
-  final p2p.PeerId _associatedPeerId;
-  int _lastSeen;
+  /// The associated peer ID.
+  final p2p.PeerId associatedPeerId;
+
+  /// When this node was last seen (milliseconds since epoch).
+  int lastSeen;
+
+  /// The k-bucket index for this node.
   int? bucketIndex;
-  KademliaNodeState _state = KademliaNodeState.active;
-  int _lastRtt = 0;
+
+  /// Current state of this node.
+  KademliaNodeState state = KademliaNodeState.active;
+
+  /// Last round-trip time in milliseconds.
+  int lastRtt = 0;
+
   int _failedRequests = 0;
 
   /// Maximum failures before marking as failed.
-  static const int MAX_FAILURES = 5;
+  static const int maxFailures = 5;
 
   /// Kademlia protocol version.
-  static const String PROTOCOL_VERSION = '/ipfs/kad/1.0.0';
+  static const String protocolVersion = '/ipfs/kad/1.0.0';
 
   /// Standard k-bucket size.
   static const int K = 20;
 
-  int get lastSeen => _lastSeen;
-
-  set lastSeen(int value) {
-    _lastSeen = value;
-  }
-
-  p2p.PeerId get associatedPeerId => _associatedPeerId;
-
-  KademliaNodeState get state => _state;
-
-  set state(KademliaNodeState value) {
-    _state = value;
-  }
-
-  int get lastRtt => _lastRtt;
-
-  set lastRtt(int value) {
-    _lastRtt = value;
-  }
-
+  /// Increments the failed request count and updates state.
   void incrementFailedRequests() {
     _failedRequests++;
-    if (_failedRequests >= MAX_FAILURES) {
-      _state = KademliaNodeState.failed;
-    } else if (_failedRequests >= MAX_FAILURES / 2) {
-      _state = KademliaNodeState.stale;
+    if (_failedRequests >= maxFailures) {
+      state = KademliaNodeState.failed;
+    } else if (_failedRequests >= maxFailures / 2) {
+      state = KademliaNodeState.stale;
     }
   }
 
+  /// Resets the failed request count and marks as active.
   void resetFailedRequests() {
     _failedRequests = 0;
-    _state = KademliaNodeState.active;
+    state = KademliaNodeState.active;
   }
 
+  /// Number of failed requests for this node.
   int get failedRequests => _failedRequests;
 }

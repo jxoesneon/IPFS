@@ -8,7 +8,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Handles bootstrap peer connections for an IPFS node.
 class BootstrapHandler {
-
+  /// Creates a bootstrap handler with the given config and network handler.
   BootstrapHandler(this._config, this._networkHandler) {
     _logger = Logger(
       'BootstrapHandler',

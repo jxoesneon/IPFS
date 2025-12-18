@@ -38,7 +38,6 @@ import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
 /// - [CID] for content identifiers
 /// - [UnixFS spec](https://github.com/ipfs/specs/blob/main/UNIXFS.md)
 class MerkleDAGNode {
-
   /// Creates a new MerkleDAGNode with the given components.
   MerkleDAGNode({
     required this.links,
@@ -46,6 +45,7 @@ class MerkleDAGNode {
     this.isDirectory = false,
     this.mtime,
   });
+
   /// The list of links (edges) to child nodes.
   final List<Link> links;
 

@@ -9,7 +9,7 @@ import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
 
 /// Handles network events for an IPFS node.
 class IpfsNodeNetworkEvents {
-
+  /// Creates a network events handler with relay client and router.
   IpfsNodeNetworkEvents(this._circuitRelayClient, this._router);
   final CircuitRelayClient _circuitRelayClient;
   final P2plibRouter _router;

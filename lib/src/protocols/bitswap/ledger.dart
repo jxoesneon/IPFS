@@ -12,9 +12,9 @@ import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
 /// See also:
 /// - [LedgerManager] for managing ledgers across multiple peers
 class BitLedger {
-
   /// Creates a new ledger for tracking bitswap exchanges with a specific peer.
   BitLedger(this.peerId);
+
   /// The peer this ledger tracks.
   final String peerId;
 
@@ -45,10 +45,14 @@ class BitLedger {
   }
 
   /// Add new methods for block data management
+  /// Stores block data for a CID.
   void storeBlockData(String cid, Uint8List data) {
     _blockData[cid] = data;
   }
 
+  /// Retrieves block data for a CID.
+  ///
+  /// Throws [StateError] if the block is not found.
   Uint8List getBlockData(String cid) {
     if (!_blockData.containsKey(cid)) {
       throw StateError('Block data not found for CID: $cid');
@@ -56,6 +60,7 @@ class BitLedger {
     return _blockData[cid]!;
   }
 
+  /// Returns whether a block is stored for the given CID.
   bool hasBlock(String cid) {
     return _blockData.containsKey(cid);
   }
@@ -79,7 +84,7 @@ class BitLedger {
   }
 }
 
-/// Class for managing multiple ledgers
+/// Manages multiple [BitLedger] instances for different peers.
 class LedgerManager {
   final Map<String, BitLedger> _ledgers = {};
 

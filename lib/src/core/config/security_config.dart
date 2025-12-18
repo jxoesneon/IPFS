@@ -1,6 +1,6 @@
 /// Security-related configuration options for IPFS node
 class SecurityConfig {
-
+  /// Creates a new [SecurityConfig] with default encryption and rotation settings.
   const SecurityConfig({
     this.enableTLS = false,
     this.tlsCertificatePath,
@@ -12,6 +12,7 @@ class SecurityConfig {
     this.maxRequestsPerMinute = 100,
   });
 
+  /// Creates a [SecurityConfig] from a JSON map.
   factory SecurityConfig.fromJson(Map<String, dynamic> json) {
     return SecurityConfig(
       enableTLS: json['enableTLS'] as bool? ?? false,
@@ -26,6 +27,7 @@ class SecurityConfig {
       maxRequestsPerMinute: json['maxRequestsPerMinute'] as int? ?? 100,
     );
   }
+
   /// Whether to enable TLS for secure communication
   final bool enableTLS;
 
@@ -50,6 +52,7 @@ class SecurityConfig {
   /// Maximum requests per minute
   final int maxRequestsPerMinute;
 
+  /// Converts this configuration to a JSON map.
   Map<String, dynamic> toJson() => {
     'enableTLS': enableTLS,
     'tlsCertificatePath': tlsCertificatePath,

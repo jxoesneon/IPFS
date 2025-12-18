@@ -6,7 +6,6 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 /// Contains success status, message, and optional data payload.
 /// Used by [BlockStoreOperations] for type-safe results.
 class BlockOperationResponse<T> {
-
   /// Creates a response with status, message, and optional data.
   const BlockOperationResponse({
     required this.success,
@@ -14,14 +13,17 @@ class BlockOperationResponse<T> {
     this.data,
   });
 
+  /// Creates a success response with optional data.
   factory BlockOperationResponse.success(String message, [T? data]) {
     return BlockOperationResponse(success: true, message: message, data: data);
   }
 
+  /// Creates a failure response.
   factory BlockOperationResponse.failure(String message) {
     return BlockOperationResponse(success: false, message: message);
   }
 
+  /// Creates a response from a protobuf message.
   factory BlockOperationResponse.fromProto(dynamic proto) {
     if (proto is AddBlockResponse || proto is RemoveBlockResponse) {
       return BlockOperationResponse<T>(
@@ -40,6 +42,7 @@ class BlockOperationResponse<T> {
     }
     throw ArgumentError('Unsupported proto type');
   }
+
   /// Whether the operation succeeded.
   final bool success;
 

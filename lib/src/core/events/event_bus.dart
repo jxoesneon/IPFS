@@ -53,32 +53,52 @@ class EventBus {
   }
 }
 
-/// Base class for all network events
+/// Base class for all network events.
 abstract class NetworkEvent {
+  /// The timestamp when the event occurred.
   final DateTime timestamp = DateTime.now();
 }
 
-/// Event for peer connections
+/// Event emitted when a peer connects.
 class PeerConnectedEvent extends NetworkEvent {
-
+  /// Creates a peer connected event.
   PeerConnectedEvent({required this.peerId, required this.address});
+
+  /// The newly connected peer's ID.
   final String peerId;
+
+  /// The multiaddr of the peer.
   final String address;
 }
 
-/// Event for block transfers
+/// Event emitted when a block is transferred.
 class BlockTransferEvent extends NetworkEvent {
-
+  /// Creates a block transfer event.
   BlockTransferEvent({
     required this.cid,
     required this.peerId,
     required this.type,
     required this.size,
   });
+
+  /// The CID of the transferred block.
   final String cid;
+
+  /// The peer involved in the transfer.
   final String peerId;
+
+  /// Whether this was a send or receive.
   final TransferType type;
+
+  /// The size of the block in bytes.
   final int size;
 }
 
-enum TransferType { received, sent }
+/// Direction of a block transfer.
+enum TransferType {
+  /// Block was received from a peer.
+  received,
+
+  /// Block was sent to a peer.
+  sent,
+}

@@ -8,9 +8,9 @@ import 'package:p2plib/p2plib.dart' as p2p;
 import '../../proto/generated/core/peer.pb.dart';
 import '../../proto/generated/dht/kademlia.pb.dart' as kad;
 
-/// Core peer representation used throughout the application
+/// Core peer representation used throughout the application.
 class IPFSPeer {
-
+  /// Creates an IPFS peer.
   IPFSPeer({
     required this.id,
     required this.addresses,
@@ -43,11 +43,20 @@ class IPFSPeer {
       agentVersion: '', // DHT peers don't track version
     );
   }
+
+  /// The peer ID.
   final p2p.PeerId id;
+
+  /// Known addresses for this peer.
   final List<p2p.FullAddress> addresses;
+
+  /// Network latency in milliseconds.
   final int latency;
+
+  /// The peer's agent version string.
   final String agentVersion;
 
+  /// Converts to PeerProto.
   PeerProto toProto() {
     return PeerProto()
       ..id = Base58().encode(id.value)
@@ -56,6 +65,7 @@ class IPFSPeer {
       ..agentVersion = agentVersion;
   }
 
+  /// Converts to Kad Peer for DHT operations.
   kad.Peer toKadPeer() {
     return kad.Peer()
       ..id = id.value

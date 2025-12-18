@@ -20,7 +20,6 @@ import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 /// await manager.pinBlock(cidProto, PinTypeProto.PIN_TYPE_RECURSIVE);
 /// ```
 class PinManager {
-
   /// Creates a pin manager backed by [_blockStore].
   PinManager(this._blockStore);
   final Map<String, PinTypeProto> _pins = {};
@@ -28,6 +27,9 @@ class PinManager {
   final Map<String, DateTime> _accessTimes = {};
   final BlockStore _blockStore;
 
+  /// Pins a block with the specified type (direct or recursive).
+  ///
+  /// Returns true if pinning succeeded.
   Future<bool> pinBlock(IPFSCIDProto cidProto, PinTypeProto type) async {
     if (type == PinTypeProto.PIN_TYPE_RECURSIVE) {
       return await _pinRecursive(cidProto);
@@ -146,6 +148,7 @@ class PinManager {
     return references;
   }
 
+  /// Returns whether the block is pinned (directly or indirectly).
   bool isBlockPinned(IPFSCIDProto cid) {
     final cidStr = cid.toString();
     return _pins.containsKey(cidStr) || _isIndirectlyPinned(cidStr);
@@ -157,6 +160,9 @@ class PinManager {
         .any((entry) => entry.value.contains(cidStr));
   }
 
+  /// Unpins a block and its recursively pinned references.
+  ///
+  /// Returns true if the block was unpinned.
   Future<bool> unpinBlock(IPFSCIDProto cid) async {
     final cidStr = cid.toString();
     if (!_pins.containsKey(cidStr)) {
@@ -178,6 +184,7 @@ class PinManager {
     return true;
   }
 
+  /// Returns a list of all directly and recursively pinned blocks.
   List<IPFSCIDProto> getPinnedBlocks() {
     final pinnedBlocks = <IPFSCIDProto>[];
 
@@ -205,14 +212,17 @@ class PinManager {
     }
   }
 
+  /// Returns the last access time for a block, if tracked.
   DateTime? getBlockAccessTime(String cidStr) {
     return _accessTimes[cidStr];
   }
 
+  /// Records the access time for a block.
   void setBlockAccessTime(String cidStr, DateTime time) {
     _accessTimes[cidStr] = time;
   }
 
+  /// Removes the access time record for a block.
   void removeBlockAccessTime(String cidStr) {
     _accessTimes.remove(cidStr);
   }

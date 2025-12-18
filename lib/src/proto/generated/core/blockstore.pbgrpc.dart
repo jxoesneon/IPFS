@@ -26,8 +26,8 @@ export 'blockstore.pb.dart';
 /// The BlockStore service definition
 @$pb.GrpcServiceName('ipfs.core.data_structures.BlockStoreService')
 class BlockStoreServiceClient extends $grpc.Client {
-
   BlockStoreServiceClient(super.channel, {super.options, super.interceptors});
+
   /// The hostname for this service.
   static const $core.String defaultHost = '';
 
@@ -91,7 +91,6 @@ class BlockStoreServiceClient extends $grpc.Client {
 
 @$pb.GrpcServiceName('ipfs.core.data_structures.BlockStoreService')
 abstract class BlockStoreServiceBase extends $grpc.Service {
-
   BlockStoreServiceBase() {
     $addMethod($grpc.ServiceMethod<$0.BlockProto, $1.AddBlockResponse>(
         'AddBlock',

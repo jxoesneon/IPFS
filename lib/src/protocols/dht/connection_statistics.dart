@@ -34,19 +34,28 @@ class ConnectionStatistics {
   double averageLatency = 0;
 
   final List<int> _connectionDurations = [];
+
+  /// Whether the peer is currently connected.
   bool isConnected = false;
+
+  /// Whether the peer was previously connected.
   bool wasConnected = false;
+
+  /// When this peer was last seen.
   DateTime? lastSeen;
 
+  /// Increments the total connection count.
   void incrementTotalConnections() {
     totalConnections++;
   }
 
+  /// Increments disconnection count and records the time.
   void incrementDisconnections() {
     disconnections++;
     lastDisconnectionTime = DateTime.now();
   }
 
+  /// Updates average connection duration with a new sample.
   void updateConnectionDuration(Duration duration) {
     // Simple moving average
     const int windowSize = 10; // Adjust the window size as needed
@@ -61,28 +70,34 @@ class ConnectionStatistics {
         _connectionDurations.length;
   }
 
+  /// Adds to the bytes sent counter.
   void incrementBytesSent(int bytes) {
     bytesSent += bytes;
   }
 
+  /// Adds to the bytes received counter.
   void incrementBytesReceived(int bytes) {
     bytesReceived += bytes;
   }
 
+  /// Increments the successful transfer count.
   void incrementSuccessfulDataTransfers() {
     successfulDataTransfers++;
   }
 
+  /// Increments the failed transfer count.
   void incrementFailedDataTransfers() {
     failedDataTransfers++;
   }
 
+  /// Updates average latency using exponential moving average.
   void updateLatency(double latency) {
     // Exponential moving average
     const double alpha = 0.1; // Adjust the smoothing factor (alpha) as needed
     averageLatency = alpha * latency + (1 - alpha) * averageLatency;
   }
 
+  /// Updates statistics based on peer info.
   void updateFromPeerInfo(V_PeerInfo peerInfo) {
     // Update relevant statistics based on peer info
     lastSeen = DateTime.now();

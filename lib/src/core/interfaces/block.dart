@@ -39,7 +39,13 @@ abstract class IBlock {
 abstract class IBlockFactory<T extends IBlock> {
   /// Creates a block from protobuf format.
   T fromProto(BlockProto proto);
+
+  /// Creates a block from Bitswap protocol format.
   T fromBitswapProto(bitswap_pb.Message_Block proto);
+
+  /// Creates a block from serialized bytes.
   T fromBytes(Uint8List bytes);
+
+  /// Creates a block from raw data and its CID.
   T fromData(Uint8List data, CID cid);
 }

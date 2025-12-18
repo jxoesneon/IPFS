@@ -109,7 +109,6 @@ class MockDatastore implements Datastore {
 }
 
 class MockDHTHandler implements DHTHandler {
-
   MockDHTHandler(this.router);
   @override
   final P2plibRouter router;

@@ -11,7 +11,7 @@ import 'ed25519_signer.dart';
 
 /// Entry for an encrypted key in the keystore.
 class EncryptedKeyEntry {
-
+  /// Creates an encrypted key entry with the given values.
   EncryptedKeyEntry({
     required this.encryptedSeed,
     required this.nonce,
@@ -19,6 +19,7 @@ class EncryptedKeyEntry {
     required this.createdAt,
     this.label,
   });
+
   /// The encrypted private key seed (AES-256-GCM ciphertext).
   final Uint8List encryptedSeed;
 
@@ -34,6 +35,7 @@ class EncryptedKeyEntry {
   /// Optional human-readable name/label.
   final String? label;
 
+  /// Serializes this entry to a JSON map.
   Map<String, dynamic> toJson() => {
     'encryptedSeed': base64Encode(encryptedSeed),
     'nonce': base64Encode(nonce),
@@ -42,6 +44,7 @@ class EncryptedKeyEntry {
     if (label != null) 'label': label,
   };
 
+  /// Creates an [EncryptedKeyEntry] from a JSON map.
   static EncryptedKeyEntry fromJson(Map<String, dynamic> json) {
     return EncryptedKeyEntry(
       encryptedSeed: base64Decode(json['encryptedSeed'] as String),

@@ -19,7 +19,7 @@ import 'ipfs_node.dart';
 
 /// Handles network operations for an IPFS node.
 class NetworkHandler {
-
+  /// Creates a network handler with config and optional router.
   NetworkHandler(this._config, {P2plibRouter? router})
     : _router = router ?? P2plibRouter(_config),
       _networkEventController = StreamController<NetworkEvent>.broadcast() {
@@ -42,6 +42,8 @@ class NetworkHandler {
   }
   late final CircuitRelayClient _circuitRelayClient;
   final P2plibRouter _router;
+
+  /// Reference to the parent IPFS node.
   late final IPFSNode ipfsNode;
   late final StreamController<NetworkEvent> _networkEventController;
   final IPFSConfig _config;
@@ -211,9 +213,10 @@ class NetworkHandler {
     );
   }
 
-  // Create Router instance with the config
+  /// Returns a Router instance.
   Router get router => Router(_config);
 
+  /// Sets the parent IPFS node reference.
   void setIpfsNode(IPFSNode node) {
     ipfsNode = node;
   }
@@ -281,8 +284,10 @@ class NetworkHandler {
   /// Gets the P2plibRouter instance
   P2plibRouter get p2pRouter => _router;
 
+  /// Returns the circuit relay client.
   CircuitRelayClient get circuitRelayClient => _circuitRelayClient;
 
+  /// Initializes the network handler.
   Future<void> initialize() async {
     _logger.debug('Initializing NetworkHandler...');
 

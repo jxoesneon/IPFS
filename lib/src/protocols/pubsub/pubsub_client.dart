@@ -20,7 +20,7 @@ import 'pubsub_message.dart';
 /// sender identity spoofing. The signature is computed over the message content
 /// using the peer's ID as the key.
 class PubSubClient {
-
+  /// Creates a PubSub client with [_router] and peer ID.
   PubSubClient(this._router, String peerIdStr)
     : _peerId = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
   final P2plibRouter _router; // Router for sending and receiving messages

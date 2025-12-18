@@ -11,7 +11,6 @@ import 'package:shelf_router/shelf_router.dart';
 ///
 /// Serves generated previews via the gateway API.
 class PreviewApiHandler {
-
   /// Creates a handler with [_previewGenerator] and [_lazyPreviewHandler].
   PreviewApiHandler(this._previewGenerator, this._lazyPreviewHandler);
   final CachedPreviewGenerator _previewGenerator;
@@ -22,6 +21,7 @@ class PreviewApiHandler {
     return _contentTypeHandler.detectContentType(block);
   }
 
+  /// Handles an HTTP request to generate a preview.
   Future<Response> handlePreviewRequest(Request request) async {
     final previewId = request.params['previewId'];
     if (previewId == null) {

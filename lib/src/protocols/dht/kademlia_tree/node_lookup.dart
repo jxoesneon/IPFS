@@ -9,10 +9,10 @@ import 'helpers.dart';
 /// Extension for iterative node lookup in Kademlia DHT.
 extension NodeLookup on KademliaTree {
   /// Concurrent query parallelism.
-  static const int ALPHA = 3;
+  static const int alpha = 3;
 
   /// Maximum lookup iterations.
-  static const int MAX_ITERATIONS = 20;
+  static const int maxIterations = 20;
 
   /// Number of closest peers to track.
   static const int K = 20;
@@ -24,10 +24,10 @@ extension NodeLookup on KademliaTree {
     Set<p2p.PeerId> queriedPeers = {};
     List<p2p.PeerId> closestPeers = findClosestPeers(target, K);
 
-    while (iterations++ < MAX_ITERATIONS) {
+    while (iterations++ < maxIterations) {
       List<p2p.PeerId> peersToQuery = closestPeers
           .where((p) => !queriedPeers.contains(p))
-          .take(ALPHA)
+          .take(alpha)
           .toList();
 
       if (peersToQuery.isEmpty) break;

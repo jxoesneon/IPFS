@@ -12,7 +12,6 @@ import '../../proto/generated/core/operation_log.pb.dart';
 ///
 /// Records an operation with timestamp, details, and optional CID/node type.
 class OperationLogEntry {
-
   /// Creates an operation log entry.
   OperationLogEntry({
     required this.timestamp,
@@ -22,6 +21,7 @@ class OperationLogEntry {
     this.nodeType,
   });
 
+  /// Creates an [OperationLogEntry] from its protobuf representation.
   factory OperationLogEntry.fromProto(OperationLogEntryProto pbEntry) {
     return OperationLogEntry(
       timestamp: DateTime.fromMillisecondsSinceEpoch(pbEntry.timestamp.toInt()),
@@ -31,6 +31,7 @@ class OperationLogEntry {
       nodeType: pbEntry.hasNodeType() ? pbEntry.nodeType : null,
     );
   }
+
   /// When the operation occurred.
   final DateTime timestamp;
 
@@ -46,6 +47,7 @@ class OperationLogEntry {
   /// The node type involved, if any.
   final NodeTypeProto? nodeType;
 
+  /// Converts this entry to its protobuf representation.
   OperationLogEntryProto toProto() {
     final pbEntry = OperationLogEntryProto();
     return pbEntry
@@ -62,9 +64,11 @@ class OperationLogEntry {
   }
 }
 
+/// A circular log of operations performed on the datastore.
 class OperationLog {
   final Queue<OperationLogEntry> _logEntries = Queue();
 
+  /// Records a new operation in the log.
   void addEntry({
     required String operation,
     required String details,
@@ -81,20 +85,24 @@ class OperationLog {
     _logEntries.add(entry);
   }
 
+  /// Returns an immutable list of all log entries.
   List<OperationLogEntry> getEntries() {
     return List.unmodifiable(_logEntries);
   }
 
+  /// Clears all entries from the log.
   void clear() {
     _logEntries.clear();
   }
 
+  /// Serializes the entire log to a byte array.
   Uint8List serialize() {
     final protoLog = OperationLogProto()
       ..entries.addAll(_logEntries.map((entry) => entry.toProto()));
     return protoLog.writeToBuffer();
   }
 
+  /// Deserializes a log from a byte array, replacing all entries.
   void deserialize(Uint8List data) {
     final protoLog = OperationLogProto.fromBuffer(data);
     _logEntries.clear();

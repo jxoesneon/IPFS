@@ -4,10 +4,11 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart' show Block;
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as pb;
 // If needed for int64? priorities are int32.
 
-/// Represents a Bitswap protocol message
+/// Represents a Bitswap protocol message.
 class Message {
-
+  /// Creates an empty message.
   Message();
+
   /// List of blocks being sent (Payload)
   final List<Block> _blocks = [];
 
@@ -23,12 +24,15 @@ class Message {
   /// Transient field: Pending bytes (Bitswap 1.2)
   int pendingBytes = 0;
 
+  /// Adds a block to the message payload.
   void addBlock(Block block) {
     _blocks.add(block);
   }
 
+  /// Returns an unmodifiable list of blocks.
   List<Block> getBlocks() => List.unmodifiable(_blocks);
 
+  /// Adds a wantlist entry for a CID.
   void addWantlistEntry(
     String cid, {
     int priority = 1,
@@ -47,16 +51,24 @@ class Message {
     );
   }
 
+  /// Returns the message wantlist.
   Wantlist getWantlist() => _wantlist;
 
+  /// Adds a block presence notification.
   void addBlockPresence(String cid, BlockPresenceType type) {
     _blockPresences.add(BlockPresence(cid: cid, type: type));
   }
 
+  /// Returns an unmodifiable list of block presences.
   List<BlockPresence> getBlockPresences() => List.unmodifiable(_blockPresences);
 
+  /// Returns true if this message contains blocks.
   bool hasBlocks() => _blocks.isNotEmpty;
+
+  /// Returns true if this message has wantlist entries.
   bool hasWantlist() => _wantlist.entries.isNotEmpty;
+
+  /// Returns true if this message has block presence notifications.
   bool hasBlockPresences() => _blockPresences.isNotEmpty;
 
   /// Creates a Message from its protobuf byte representation
@@ -213,12 +225,27 @@ class Message {
   }
 }
 
-enum WantType { block, have }
+/// The type of block request.
+enum WantType {
+  /// Request the full block data.
+  block,
 
-enum BlockPresenceType { have, dontHave }
+  /// Request only whether the peer has the block.
+  have,
+}
 
+/// Block presence response type.
+enum BlockPresenceType {
+  /// Peer has the block.
+  have,
+
+  /// Peer does not have the block.
+  dontHave,
+}
+
+/// An entry in a Bitswap wantlist.
 class WantlistEntry {
-
+  /// Creates a wantlist entry.
   WantlistEntry({
     required this.cid,
     this.priority = 1,
@@ -226,30 +253,50 @@ class WantlistEntry {
     this.wantType = WantType.block,
     this.sendDontHave = false,
   });
+
+  /// The CID being requested.
   final String cid;
+
+  /// Priority for this request (higher = more urgent).
   final int priority;
+
+  /// Whether this cancels a previous request.
   final bool cancel;
+
+  /// The type of request (block or have).
   final WantType wantType;
+
+  /// Whether to send DONT_HAVE if the peer lacks the block.
   final bool sendDontHave;
 }
 
+/// Manages a set of wantlist entries by CID.
 class Wantlist {
+  /// Map of CID to wantlist entry.
   final Map<String, WantlistEntry> entries = {};
 
+  /// Adds or updates an entry.
   void addEntry(WantlistEntry entry) {
     entries[entry.cid] = entry;
   }
 
+  /// Removes an entry by CID.
   void removeEntry(String cid) {
     entries.remove(cid);
   }
 
+  /// Returns whether the wantlist contains a CID.
   bool contains(String cid) => entries.containsKey(cid);
 }
 
+/// A block presence notification (HAVE or DONT_HAVE).
 class BlockPresence {
-
+  /// Creates a block presence.
   BlockPresence({required this.cid, required this.type});
+
+  /// The CID this presence is for.
   final String cid;
+
+  /// The presence type.
   final BlockPresenceType type;
 }

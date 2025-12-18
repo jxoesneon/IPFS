@@ -11,8 +11,9 @@ import 'package:pointycastle/export.dart';
 
 /// Result of AES-GCM encryption containing ciphertext, nonce, and auth tag.
 class EncryptedData {
-
+  /// Creates an [EncryptedData] with the ciphertext and nonce.
   const EncryptedData({required this.ciphertext, required this.nonce});
+
   /// The encrypted ciphertext (includes auth tag at end for AES-GCM).
   final Uint8List ciphertext;
 

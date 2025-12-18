@@ -14,7 +14,6 @@ void main() {
 enum DashboardMode { home, peers, chat, files, explorer }
 
 class Dashboard {
-
   Dashboard() {
     // console.rawMode = true;
   }
@@ -150,7 +149,8 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      _refreshTimer =
+          Timer.periodic(const Duration(milliseconds: 100), (timer) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -171,7 +171,8 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      _refreshTimer =
+          Timer.periodic(const Duration(milliseconds: 100), (timer) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -194,7 +195,8 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      _refreshTimer =
+          Timer.periodic(const Duration(milliseconds: 100), (timer) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -214,7 +216,8 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      _refreshTimer =
+          Timer.periodic(const Duration(milliseconds: 100), (timer) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -250,7 +253,8 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      _refreshTimer =
+          Timer.periodic(const Duration(milliseconds: 100), (timer) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -428,7 +432,8 @@ class Dashboard {
       }
       console.hideCursor();
       // Restart loop
-      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      _refreshTimer =
+          Timer.periodic(const Duration(milliseconds: 100), (timer) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });

@@ -5,10 +5,12 @@ import 'package:dart_ipfs/src/services/gateway/file_preview_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/lazy_preview_handler.dart';
 import 'package:intl/intl.dart';
 
-/// Handles directory operations and metadata for IPFS directory listings
+/// Handles directory operations and metadata for IPFS directory listings.
 class DirectoryHandler {
-
+  /// Creates a directory handler for the given [path].
   DirectoryHandler(this.path);
+
+  /// The directory path.
   final String path;
   final List<DirectoryEntry> _entries = [];
 
@@ -23,9 +25,9 @@ class DirectoryHandler {
   }
 }
 
-/// Represents a single directory entry with metadata
+/// Represents a single directory entry with metadata.
 class DirectoryEntry {
-
+  /// Creates a directory entry.
   DirectoryEntry({
     required this.name,
     required this.size,
@@ -33,10 +35,20 @@ class DirectoryEntry {
     required this.timestamp,
     this.metadata,
   });
+
+  /// The name of the entry.
   final String name;
+
+  /// The size in bytes.
   final int size;
+
+  /// Whether this entry is a directory.
   final bool isDirectory;
+
+  /// Modification timestamp as milliseconds since epoch.
   final int timestamp;
+
+  /// Optional additional metadata.
   final Map<String, String>? metadata;
 }
 

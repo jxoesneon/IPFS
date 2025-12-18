@@ -17,7 +17,7 @@ import 'package:shelf_router/shelf_router.dart';
 /// require the `X-API-Key` header to match. Read-only operations like
 /// `version`, `id`, and `cat` are allowed without authentication.
 class RPCServer {
-
+  /// Creates a new [RPCServer] for the given [node].
   RPCServer({
     required this.node,
     this.address = 'localhost',
@@ -38,9 +38,17 @@ class RPCServer {
       );
     }
   }
+
+  /// The IPFS node to control via RPC.
   final IPFSNode node;
+
+  /// The address to listen on.
   final String address;
+
+  /// The port to listen on.
   final int port;
+
+  /// List of allowed CORS origins.
   final List<String> corsOrigins;
 
   /// Optional API key for authentication.

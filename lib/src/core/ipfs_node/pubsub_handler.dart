@@ -13,7 +13,6 @@ import '../data_structures/node_stats.dart';
 
 /// Handles PubSub operations for an IPFS node.
 class PubSubHandler {
-
   /// Constructs a [PubSubHandler] with the provided router, peer ID, and network events.
   PubSubHandler(P2plibRouter router, String peerId, this._networkEvents)
     : _pubSubClient = PubSubClient(router, peerId) {
@@ -27,6 +26,7 @@ class PubSubHandler {
       StreamController<PubSubMessage>.broadcast();
   int _messageCount = 0;
 
+  /// Stream of incoming PubSub messages.
   Stream<PubSubMessage> get messages => _messageController.stream;
 
   /// Starts the PubSub client and listens for incoming messages.
@@ -148,6 +148,7 @@ class PubSubHandler {
     );
   }
 
+  /// Returns the current status of the PubSub handler.
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'subscribed_topics': _subscriptions.keys.toList(),

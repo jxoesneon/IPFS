@@ -53,6 +53,7 @@ class P2plibRouter {
     return _instance!;
   }
 
+  /// Internal constructor for creating a P2plibRouter instance.
   P2plibRouter.internal(this._config)
     : _router = p2p.RouterL2(
         crypto: _sharedCrypto,
@@ -503,6 +504,7 @@ class P2plibRouter {
   }
 
   // Add to P2plibRouter class
+  /// Checks if a peer is currently connected and active.
   bool isConnectedPeer(p2p.PeerId peerId) {
     // 1. Check if peer is in our connected peers set
     if (!_connectedPeers.contains(peerId)) {
@@ -659,8 +661,10 @@ class P2plibRouter {
     }
   }
 
+  /// The local node's PeerID.
   p2p.PeerId get localPeerId => _router.selfId;
 
+  /// Broadcasts a [message] to all connected peers using the given [protocolId].
   Future<void> broadcastMessage(String protocolId, Uint8List message) async {
     if (!_registeredProtocols.contains(protocolId)) {
       throw Exception('Protocol $protocolId not registered');

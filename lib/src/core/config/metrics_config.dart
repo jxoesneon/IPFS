@@ -14,8 +14,8 @@
 /// );
 /// ```
 class MetricsConfig {
-
   /// Creates a metrics configuration with the given options.
+  /// Creates a new [MetricsConfig] with the given collection options.
   const MetricsConfig({
     this.enabled = true,
     this.collectionIntervalSeconds = 60,
@@ -26,6 +26,7 @@ class MetricsConfig {
     this.prometheusEndpoint = '/metrics',
   });
 
+  /// Creates a [MetricsConfig] from a JSON map.
   factory MetricsConfig.fromJson(Map<String, dynamic> json) {
     return MetricsConfig(
       enabled: json['enabled'] as bool? ?? true,
@@ -38,6 +39,7 @@ class MetricsConfig {
       prometheusEndpoint: json['prometheusEndpoint'] as String? ?? '/metrics',
     );
   }
+
   /// Whether metrics collection is enabled.
   final bool enabled;
 
@@ -59,6 +61,7 @@ class MetricsConfig {
   /// The HTTP path for Prometheus metrics.
   final String prometheusEndpoint;
 
+  /// Converts this configuration to a JSON map.
   Map<String, dynamic> toJson() => {
     'enabled': enabled,
     'collectionIntervalSeconds': collectionIntervalSeconds,

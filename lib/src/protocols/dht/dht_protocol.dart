@@ -9,9 +9,9 @@ import 'package:dart_ipfs/src/protocols/dht/routing_table.dart';
 import 'package:p2plib/p2plib.dart' show PeerId;
 import 'package:p2plib/p2plib.dart' as p2p;
 
-/// Implementation of the Kademlia DHT protocol following IPFS specs
+/// Implementation of the Kademlia DHT protocol following IPFS specs.
 class DHTProtocol {
-
+  /// Creates a DHT protocol handler with routing table and peer store.
   DHTProtocol({
     required RoutingTable routingTable,
     required PeerStore peerStore,
@@ -19,9 +19,15 @@ class DHTProtocol {
   }) : _routingTable = routingTable,
        _peerStore = peerStore,
        _network = network;
-  static const String PROTOCOL_ID = '/ipfs/kad/1.0.0';
-  static const int ALPHA = 3; // Number of parallel lookups
-  static const int K = 20; // Size of k-buckets
+
+  /// Protocol identifier for Kademlia DHT.
+  static const String protocolId = '/ipfs/kad/1.0.0';
+
+  /// Number of parallel lookups per query.
+  static const int alpha = 3;
+
+  /// Size of k-buckets.
+  static const int K = 20;
 
   final RoutingTable _routingTable;
   final PeerStore _peerStore;
@@ -37,7 +43,7 @@ class DHTProtocol {
 
     // Parallel lookups following Kademlia spec
     final futures = <Future<void>>[];
-    for (var i = 0; i < ALPHA && i < closest.length; i++) {
+    for (var i = 0; i < alpha && i < closest.length; i++) {
       futures.add(_queryPeer(closest[i], key));
     }
 
@@ -84,7 +90,7 @@ class DHTProtocol {
       // Send request to peer
       final response = await _network.sendRequest(
         peer,
-        PROTOCOL_ID,
+        protocolId,
         request.writeToBuffer(),
       );
 

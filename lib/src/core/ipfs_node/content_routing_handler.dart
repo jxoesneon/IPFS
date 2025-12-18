@@ -9,9 +9,9 @@ import 'package:dart_ipfs/src/routing/delegated_routing.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
-/// Handles content routing operations with fallback strategies
+/// Handles content routing operations with fallback strategies.
 class ContentRoutingHandler {
-
+  /// Creates a content routing handler with config and network handler.
   ContentRoutingHandler(
     this._config,
     this._networkHandler, {

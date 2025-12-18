@@ -5,9 +5,9 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
-/// Handles NAT detection and traversal for an IPFS node
+/// Handles NAT detection and traversal for an IPFS node.
 class AutoNATHandler {
-
+  /// Creates an AutoNATHandler with the given config and network handler.
   AutoNATHandler(this._config, this._networkHandler) {
     _logger = Logger(
       'AutoNATHandler',
@@ -173,5 +173,17 @@ class AutoNATHandler {
   }
 }
 
-/// Represents different types of NAT configurations
-enum NATType { unknown, none, restricted, symmetric }
+/// Represents different types of NAT configurations.
+enum NATType {
+  /// NAT type not yet determined.
+  unknown,
+
+  /// No NAT (directly reachable).
+  none,
+
+  /// Port-restricted or address-restricted NAT.
+  restricted,
+
+  /// Symmetric NAT (hardest to traverse).
+  symmetric,
+}

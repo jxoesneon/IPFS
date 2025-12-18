@@ -44,7 +44,6 @@ import 'package:dart_ipfs/src/utils/private_key.dart';
 /// - [EncryptedKeystore] for secure key storage
 /// - [Keystore] for legacy key pair management
 class SecurityManager {
-
   /// Creates a new security manager with the given [_config].
   SecurityManager(this._config, MetricsCollector metricsCollector) {
     _logger = Logger('SecurityManager');

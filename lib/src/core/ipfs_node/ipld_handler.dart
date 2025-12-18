@@ -24,9 +24,9 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_multihash/dart_multihash.dart' as multihash_lib;
 import 'package:fixnum/fixnum.dart';
 
-/// Handles IPLD (InterPlanetary Linked Data) operations
+/// Handles IPLD (InterPlanetary Linked Data) operations.
 class IPLDHandler {
-
+  /// Creates an IPLD handler with config and blockstore.
   IPLDHandler(this._config, this._blockStore) {
     _logger = Logger(
       'IPLDHandler',
@@ -711,6 +711,7 @@ class IPLDHandler {
     return bytes;
   }
 
+  /// Resolves an IPFS/IPLD/IPNS path.
   Future<dynamic> resolvePath(String path) async {
     path = IPLDPathHandler.normalizePath(path);
     final (namespace, rootCid, remainingPath) = IPLDPathHandler.parsePath(path);
@@ -1082,6 +1083,7 @@ class IPLDHandler {
     );
   }
 
+  /// Returns metadata for a CID.
   Future<IPLDMetadata> getMetadata(CID cid) async {
     final node = await get(cid);
 
@@ -1107,6 +1109,7 @@ class IPLDHandler {
     return null;
   }
 
+  /// Resolves a path and returns both the content and metadata.
   Future<(dynamic, IPLDMetadata)> resolveWithMetadata(String path) async {
     final resolved = await resolvePath(path);
     final metadata = await getMetadata(

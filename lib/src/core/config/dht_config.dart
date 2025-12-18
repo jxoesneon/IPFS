@@ -1,6 +1,6 @@
 /// Configuration options for the DHT (Distributed Hash Table)
 class DHTConfig {
-
+  /// Creates a new [DHTConfig] with default Kademlia settings.
   const DHTConfig({
     this.protocolId = '/ipfs/kad/1.0.0',
     this.alpha = 3,
@@ -28,6 +28,7 @@ class DHTConfig {
       enableValueStorage: (json['enableValueStorage'] as bool?) ?? true,
     );
   }
+
   /// Protocol identifier for DHT
   final String protocolId;
 

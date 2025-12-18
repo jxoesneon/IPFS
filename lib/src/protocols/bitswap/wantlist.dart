@@ -5,9 +5,9 @@ import 'package:dart_ipfs/src/protocols/bitswap/message.dart';
 /// Each CID in the wantlist has an associated priority and want type.
 /// Used in the Bitswap protocol to communicate block requests to peers.
 class Wantlist {
-
   /// Creates a new empty Wantlist.
   Wantlist();
+
   /// Map of CIDs to their entries.
   final Map<String, WantlistEntry> _entries = {};
 

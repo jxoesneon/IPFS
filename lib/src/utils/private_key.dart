@@ -11,7 +11,6 @@ import 'package:pointycastle/export.dart';
 /// Wraps an elliptic curve key pair for signing and verification.
 /// Uses secp256k1 curve compatible with Bitcoin/Ethereum.
 class IPFSPrivateKey implements PrivateKey {
-
   /// Creates a key from an existing [_keyPair].
   IPFSPrivateKey(this._keyPair, this.algorithm);
   final AsymmetricKeyPair<ECPublicKey, ECPrivateKey> _keyPair;

@@ -12,7 +12,6 @@ import 'package:protobuf/well_known_types/google/protobuf/empty.pb.dart';
 ///
 /// Exposes [BlockStore] operations over gRPC for remote clients.
 class BlockStoreService extends BlockStoreServiceBase {
-
   /// Creates a service backed by [_blockStore].
   BlockStoreService(this._blockStore);
   final BlockStore _blockStore;

@@ -2,7 +2,10 @@ import 'dart:typed_data';
 
 /// Error thrown when a datastore operation fails.
 class DatastoreError extends Error {
+  /// Creates a datastore error with the given message.
   DatastoreError(this.message);
+
+  /// The error message.
   final String message;
   @override
   String toString() => 'DatastoreError: $message';
@@ -11,10 +14,12 @@ class DatastoreError extends Error {
 /// Represents a key in the datastore.
 /// Keys are hierarchical path-like strings, e.g., /local/peers/Qm...
 class Key {
-
+  /// Creates a key from a path string, cleaning it if needed.
   Key(String s) : _string = _clean(s);
+
   final String _string;
 
+  /// Returns the cleaned string representation.
   String get string => _string;
 
   static String _clean(String s) {
@@ -24,11 +29,13 @@ class Key {
     return s;
   }
 
+  /// Creates a child key under this key.
   Key child(Key child) {
     if (_string == '/') return child;
     return Key('$_string${child._string}');
   }
 
+  /// Returns the parent key.
   Key parent() {
     if (_string == '/') return this;
     final lastSlash = _string.lastIndexOf('/');
@@ -48,7 +55,7 @@ class Key {
 
 /// A Query object for the datastore.
 class Query {
-
+  /// Creates a new query with optional filters.
   Query({
     this.prefix,
     this.filters,
@@ -57,27 +64,47 @@ class Query {
     this.offset,
     this.keysOnly = false,
   });
+
+  /// Optional key prefix to filter by.
   final String? prefix;
+
+  /// Optional list of filters to apply.
   final List<QueryFilter>? filters;
+
+  /// Optional ordering for results.
   final List<QueryOrder>? orders;
+
+  /// Maximum number of results.
   final int? limit;
+
+  /// Number of results to skip.
   final int? offset;
+
+  /// If true, only return keys without values.
   final bool keysOnly;
 }
 
+/// Interface for filtering query results.
 abstract class QueryFilter {
+  /// Returns true if the entry should be included.
   bool filter(MapEntry<Key, Uint8List> entry);
 }
 
+/// Interface for ordering query results.
 abstract class QueryOrder {
+  /// Compares two entries for ordering.
   int compare(MapEntry<Key, Uint8List> a, MapEntry<Key, Uint8List> b);
 }
 
 /// The entry returned by a query.
-class QueryEntry { // Null if keysOnly
-
+class QueryEntry {
+  /// Creates a query entry with a key and optional value.
   QueryEntry(this.key, this.value);
+
+  /// The key of this entry.
   final Key key;
+
+  /// The value, null if keysOnly was true.
   final Uint8List? value;
 }
 

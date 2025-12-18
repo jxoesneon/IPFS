@@ -9,7 +9,7 @@ import 'package:fixnum/fixnum.dart' as fixnum;
 
 /// Repository handles the storage and retrieval of IPFS data structures
 class Repository {
-
+  /// Creates a repository with the given [_datastore].
   Repository(this._datastore);
   final Datastore _datastore;
 

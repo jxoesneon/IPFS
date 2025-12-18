@@ -22,7 +22,6 @@ import 'package:p2plib/p2plib.dart' as p2p;
 /// Handles requests, responses, and coordinates with Bitswap and
 /// IPLD for graph traversal and block fetching.
 class GraphsyncHandler {
-
   /// Creates a Graphsync handler.
   GraphsyncHandler(
     IPFSConfig config,
@@ -45,6 +44,7 @@ class GraphsyncHandler {
   final GraphsyncProtocol _protocol;
   final IPFSConfig _config;
 
+  /// Starts the Graphsync protocol handler.
   Future<void> start() async {
     _router.registerProtocol(GraphsyncProtocol.protocolID);
     _router.registerProtocolHandler(
@@ -78,6 +78,7 @@ class GraphsyncHandler {
     }
   }
 
+  /// Stops the Graphsync handler.
   Future<void> stop() async {
     _logger.debug('Stopping GraphsyncHandler...');
     try {
@@ -89,6 +90,7 @@ class GraphsyncHandler {
     }
   }
 
+  /// Returns the current status of the Graphsync handler.
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'enabled': _config.enableGraphsync,
@@ -279,6 +281,7 @@ class GraphsyncHandler {
     }
   }
 
+  /// Requests a graph by CID with the given selector.
   Future<Block?> requestGraph(String cidStr, IPLDSelector selector) async {
     _logger.debug('Requesting graph for CID: $cidStr with selector');
 

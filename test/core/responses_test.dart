@@ -39,7 +39,10 @@ void main() {
 
   group('ResponseHandler', () {
     test('toAddBlockResponse', () {
-      final op = const BlockOperationResponse<dynamic>(success: true, message: 'OK');
+      final op = const BlockOperationResponse<dynamic>(
+        success: true,
+        message: 'OK',
+      );
       final proto = ResponseHandler.toAddBlockResponse(op);
       expect(proto.success, isTrue);
       expect(proto.message, 'OK');

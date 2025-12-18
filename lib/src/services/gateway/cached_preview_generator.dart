@@ -10,13 +10,13 @@ import 'package:dart_ipfs/src/services/gateway/preview_cache_manager.dart';
 ///
 /// Combines caching with preview generation for efficient serving.
 class CachedPreviewGenerator {
-
   /// Creates a generator with [_cacheManager] and [_previewHandler].
   CachedPreviewGenerator(this._cacheManager, this._previewHandler);
   final PreviewCacheManager _cacheManager;
   final FilePreviewHandler _previewHandler;
   final ContentTypeHandler _contentTypeHandler = ContentTypeHandler();
 
+  /// Generates or retrieves a cached preview for a block.
   Future<Uint8List?> generatePreview(Block block, String contentType) async {
     // Try to get from cache first
     final cached = await _cacheManager.getPreview(block.cid, contentType);
@@ -35,6 +35,7 @@ class CachedPreviewGenerator {
     return null;
   }
 
+  /// Preloads previews for multiple blocks.
   Future<void> preloadPreviews(List<Block> blocks) async {
     for (final block in blocks) {
       final contentType = _detectContentType(block);

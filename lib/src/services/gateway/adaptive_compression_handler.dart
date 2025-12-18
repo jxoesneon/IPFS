@@ -12,13 +12,13 @@ import 'package:es_compression/lz4.dart' as es;
 
 /// Configuration for adaptive compression.
 class CompressionConfig {
-
   /// Creates compression configuration.
   CompressionConfig({
     this.enabled = true,
     this.maxUncompressedSize = 52428800, // 50MB
     Map<String, CompressionType>? contentTypeRules,
   }) : contentTypeRules = contentTypeRules ?? _defaultCompressionRules;
+
   /// Whether compression is enabled.
   final bool enabled;
 
@@ -40,12 +40,12 @@ class CompressionConfig {
 
 /// Analysis results for compression options.
 class CompressionAnalysis {
-
   /// Creates compression analysis results.
   CompressionAnalysis({
     required this.compressionRatios,
     required this.recommendedType,
   });
+
   /// Compression ratios by type.
   final Map<CompressionType, double> compressionRatios;
 
@@ -57,7 +57,6 @@ class CompressionAnalysis {
 ///
 /// Selects optimal compression based on content type and size.
 class AdaptiveCompressionHandler {
-
   /// Creates a handler with [_blockStore] and [_config].
   AdaptiveCompressionHandler(this._blockStore, this._config)
     : _metadataPath = '${_blockStore.path}/metadata';
@@ -83,6 +82,7 @@ class AdaptiveCompressionHandler {
     return _lz4Available!;
   }
 
+  /// Compresses a block based on its content type.
   Future<Block> compressBlock(Block block, String contentType) async {
     if (!_config.enabled || block.size > _config.maxUncompressedSize) {
       return block;
@@ -115,6 +115,7 @@ class AdaptiveCompressionHandler {
     return compressedBlock;
   }
 
+  /// Determines optimal compression for content type and size.
   CompressionType getOptimalCompression(String contentType, int size) {
     for (final entry in _config.contentTypeRules.entries) {
       if (contentType.startsWith(entry.key)) {
@@ -152,6 +153,7 @@ class AdaptiveCompressionHandler {
     await metadataFile.writeAsString(jsonEncode(metadata));
   }
 
+  /// Analyzes compression efficiency across algorithms.
   CompressionAnalysis analyzeCompression(
     Uint8List data,
     String contentType,

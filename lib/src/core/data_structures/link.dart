@@ -36,7 +36,6 @@ import 'package:fixnum/fixnum.dart' as fixnum;
 /// - [MerkleDAGNode] for the node structure containing links
 /// - [CID] for content identifiers
 class Link {
-
   // Standard IPFS Link does not carry metadata, timestamp, or explicit isDirectory flags.
   // These must be resolved by fetching the target node.
   // We keep the class simple to match the spec.
@@ -58,6 +57,7 @@ class Link {
 
     return Link(name: proto.name, cid: cid, size: proto.size.toInt());
   }
+
   /// The name of this link within its parent node.
   ///
   /// For UnixFS directories, this is the filename or subdirectory name.
@@ -72,6 +72,7 @@ class Link {
   /// all descendant nodes recursively.
   final fixnum.Int64 size;
 
+  /// Converts the link to its protobuf representation.
   dag_proto.PBLink toProto() {
     return dag_proto.PBLink()
       ..name = name

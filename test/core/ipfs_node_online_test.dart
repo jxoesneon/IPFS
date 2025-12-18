@@ -91,7 +91,6 @@ class MockCircuitRelayClient extends CircuitRelayClient {
 }
 
 class MockNetworkHandler extends NetworkHandler {
-
   MockNetworkHandler(super.config, this._nodeReceiver, this._mockRouter);
   final IPFSNode _nodeReceiver;
   final P2plibRouter _mockRouter;
@@ -175,11 +174,7 @@ class MockIpfsNodeNetworkEvents extends IpfsNodeNetworkEvents {
 }
 
 class MockPubSubHandler extends PubSubHandler {
-  MockPubSubHandler(
-    super.router,
-    super.peerId,
-    super.events,
-  );
+  MockPubSubHandler(super.router, super.peerId, super.events);
 
   @override
   Future<void> start() async {}

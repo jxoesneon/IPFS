@@ -4,6 +4,7 @@ import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 
 /// Error for invalid IPLD/IPFS paths.
 class IPLDPathError extends IPLDError {
+  /// Creates a path error with [message].
   IPLDPathError(String message) : super('IPLD path error: $message');
 }
 
@@ -11,9 +12,10 @@ class IPLDPathError extends IPLDError {
 ///
 /// Handles paths like `/ipfs/<cid>/path/to/file`.
 class IPLDPathHandler {
+  /// Valid path namespaces.
   static const validNamespaces = {'ipfs', 'ipld', 'ipns'};
 
-  /// Parses and validates an IPFS path
+  /// Parses and validates an IPFS path.
   static (String namespace, CID rootCid, String? remainingPath) parsePath(
     String path,
   ) {

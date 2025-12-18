@@ -25,7 +25,6 @@ class MockBlockStore extends BlockStore {
 }
 
 class MockDatastoreHandler extends DatastoreHandler {
-
   MockDatastoreHandler() : super(_MockDatastore());
   final Map<String, Block> blocks = {};
 

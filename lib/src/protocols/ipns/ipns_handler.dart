@@ -19,8 +19,10 @@ import 'ipns_record.dart';
 ///
 /// **Security (SEC-004):** All IPNS records are signed with Ed25519 and verified
 /// on resolve to prevent record forgery attacks.
-class IPNSHandler { // Standard topic
+class IPNSHandler {
+  // Standard topic
 
+  /// Creates a new [IPNSHandler].
   IPNSHandler(
     this._config,
     this._securityManager,
@@ -88,6 +90,7 @@ class IPNSHandler { // Standard topic
     return builder.toBytes();
   }
 
+  /// Publishes an IPNS record for a CID.
   Future<void> publish(String cid, {required String keyName}) async {
     _logger.debug('Publishing IPNS record for CID: $cid with key: $keyName');
 
@@ -328,7 +331,6 @@ class IPNSHandler { // Standard topic
 
 /// Helper class for caching IPNS resolutions
 class _CachedResolution {
-
   _CachedResolution({required this.cid, required this.timestamp});
   final String cid;
   final DateTime timestamp;

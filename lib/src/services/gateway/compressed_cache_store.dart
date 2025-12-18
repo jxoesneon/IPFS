@@ -12,9 +12,9 @@ import 'package:es_compression/lz4.dart' as es;
 import '../../utils/logger.dart';
 import 'adaptive_compression_handler.dart';
 
-/// Manages compressed cache storage with multiple compression algorithms
+/// Manages compressed cache storage with multiple compression algorithms.
 class CompressedCacheStore {
-
+  /// Creates a compressed cache store at [cachePath].
   CompressedCacheStore({
     required String cachePath,
     CompressionConfig? compressionConfig,
@@ -25,6 +25,7 @@ class CompressedCacheStore {
        ) {
     _initializeStore();
   }
+
   final Directory _cacheDir;
   final AdaptiveCompressionHandler _compressionHandler;
   final _logger = Logger('CompressedCacheStore');
@@ -35,6 +36,7 @@ class CompressedCacheStore {
     }
   }
 
+  /// Gets compressed data for a CID, decompressing before returning.
   Future<Uint8List?> getCompressedData(CID cid, String contentType) async {
     final cacheFile = File(
       '${_cacheDir.path}/${_getCacheFileName(cid, contentType)}',
@@ -56,6 +58,7 @@ class CompressedCacheStore {
     }
   }
 
+  /// Stores data with optimal compression for the content type.
   Future<void> storeCompressedData(
     CID cid,
     String contentType,
@@ -131,6 +134,7 @@ class CompressedCacheStore {
     }
   }
 
+  /// Returns compression statistics for the cache.
   CompressionStats getCompressionStats(String cachePath) {
     final stats = CompressionStats();
     final dir = Directory(cachePath);
@@ -226,19 +230,40 @@ class CompressedCacheStore {
   }
 }
 
-enum CompressionType { none, gzip, zlib, lz4 }
+/// Compression algorithm types.
+enum CompressionType {
+  /// No compression.
+  none,
 
+  /// GZIP compression.
+  gzip,
+
+  /// ZLIB compression.
+  zlib,
+
+  /// LZ4 compression.
+  lz4,
+}
+
+/// Tracks compression statistics across multiple entries.
 class CompressionStats {
+  /// Total original (uncompressed) size in bytes.
   int totalOriginalSize = 0;
+
+  /// Total compressed size in bytes.
   int totalCompressedSize = 0;
+
+  /// Number of entries tracked.
   int fileCount = 0;
 
+  /// Adds an entry to the statistics.
   void addEntry(int originalSize, int compressedSize) {
     totalOriginalSize += originalSize;
     totalCompressedSize += compressedSize;
     fileCount++;
   }
 
+  /// Returns the overall compression ratio.
   double get compressionRatio =>
       totalOriginalSize == 0 ? 0 : totalCompressedSize / totalOriginalSize;
 }

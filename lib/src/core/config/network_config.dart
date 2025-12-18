@@ -16,7 +16,6 @@ import 'package:dart_ipfs/src/utils/base58.dart';
 /// );
 /// ```
 class NetworkConfig {
-
   /// Creates a network configuration with the given options.
   NetworkConfig({
     this.listenAddresses = defaultListenAddresses,
@@ -27,6 +26,7 @@ class NetworkConfig {
     this.delegatedRoutingEndpoint,
   }) : nodeId = nodeId ?? _generateDefaultNodeId();
 
+  /// Creates a network configuration with the given options and a generated Peer ID.
   factory NetworkConfig.withGeneratedId({
     List<String> listenAddresses = defaultListenAddresses,
     List<String> bootstrapPeers = defaultBootstrapPeers,
@@ -42,6 +42,7 @@ class NetworkConfig {
     );
   }
 
+  /// Creates a network configuration from a JSON map.
   factory NetworkConfig.fromJson(Map<String, dynamic> json) {
     return NetworkConfig(
       listenAddresses: (json['listenAddresses'] as List?)?.cast<String>() ?? [],
@@ -54,6 +55,7 @@ class NetworkConfig {
       delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'] as String?,
     );
   }
+
   /// Default multiaddr listen addresses for TCP.
   static const defaultListenAddresses = [
     '/ip4/0.0.0.0/tcp/4001',
@@ -86,6 +88,7 @@ class NetworkConfig {
   /// Optional HTTP endpoint for delegated routing.
   final String? delegatedRoutingEndpoint;
 
+  /// Converts the network configuration to a JSON map.
   Map<String, dynamic> toJson() => {
     'listenAddresses': listenAddresses,
     'bootstrapPeers': bootstrapPeers,
@@ -102,14 +105,21 @@ class NetworkConfig {
   }
 }
 
+/// Configuration for a specific protocol.
 class ProtocolConfig {
-
+  /// Creates a new [ProtocolConfig].
   ProtocolConfig({
     required this.protocolId,
     this.messageTimeout = const Duration(seconds: 10),
     this.maxRetries = 3,
   });
+
+  /// The protocol identifier.
   final String protocolId;
+
+  /// Timeout for individual messages.
   final Duration messageTimeout;
+
+  /// Maximum number of retries per message.
   final int maxRetries;
 }

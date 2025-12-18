@@ -20,7 +20,6 @@ import 'package:hive/hive.dart';
 /// **Thread Safety:** All operations are atomic at the Hive level.
 /// **Consistency:** All boxes use `List<int>` storage for uniform API.
 class HiveDatastore implements Datastore {
-
   /// Creates a HiveDatastore instance with the specified base path.
   ///
   /// Call [init] before using any other methods.

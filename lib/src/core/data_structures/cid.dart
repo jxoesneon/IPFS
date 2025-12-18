@@ -30,7 +30,6 @@ import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart'; // Import the g
 /// - [CID] for the main CID implementation
 /// - [IPFSCIDProto] for the underlying protobuf message
 class StorageCID {
-
   /// Creates a StorageCID wrapping the given protobuf message.
   StorageCID(this._proto);
 
@@ -47,9 +46,12 @@ class StorageCID {
     return StorageCID(proto);
   }
 
+  /// Creates a [StorageCID] from a protobuf representation.
   factory StorageCID.fromProto(IPFSCIDProto proto) {
     return StorageCID(proto);
   }
+
+  /// The underlying protobuf representation.
   final IPFSCIDProto _proto;
 
   static const _supportedCodecs = {
@@ -59,18 +61,27 @@ class StorageCID {
     'dag-json': 0x129,
   };
 
-  // Getters for accessing proto fields
+  /// The CID version (e.g., CIDv0 or CIDv1).
   IPFSCIDVersion get version => _proto.version;
+
+  /// The raw multihash bytes.
   List<int> get multihash => _proto.multihash;
+
+  /// The codec name (e.g., 'dag-pb', 'raw').
   String get codec => _proto.codec;
+
+  /// The multibase prefix (e.g., 'base58btc').
   String get multibasePrefix => _proto.multibasePrefix;
 
+  /// Converts this CID to its protobuf representation.
   IPFSCIDProto toProto() => _proto;
 
+  /// Returns the hex-encoded hash value.
   String hashedValue() {
     return hex.encode(multihash);
   }
 
+  /// Returns the numeric codec code for a given codec name.
   static int getCodecCode(String codec) {
     if (!_supportedCodecs.containsKey(codec)) {
       throw ArgumentError('Unsupported codec: $codec');
@@ -79,7 +90,9 @@ class StorageCID {
   }
 }
 
+/// Extension for parsing CID strings into protobuf format.
 extension IPFSCIDProtoExtension on IPFSCIDProto {
+  /// Creates a protobuf CID from a string representation.
   static IPFSCIDProto fromString(String cidStr) {
     return IPFSCIDProto()
       ..multihash = Uint8List.fromList(cidStr.codeUnits)

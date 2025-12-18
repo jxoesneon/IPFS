@@ -9,7 +9,7 @@ import 'p2plib_router.dart'; // Import the P2P library for peer-to-peer communic
 
 /// Handles circuit relay operations for an IPFS node.
 class CircuitRelayClient {
-
+  /// Creates a new [CircuitRelayClient] using the provided [_router].
   CircuitRelayClient(this._router);
   static const String _protocolId = '/libp2p/circuit/relay/0.2.0/hop';
   final P2plibRouter _router; // Router instance for handling connections
@@ -189,9 +189,11 @@ class CircuitRelayClient {
   }
 
   /// Listens for incoming circuit relay events.
+  /// Stream of circuit relay connection events.
   Stream<CircuitRelayConnectionEvent> get onCircuitRelayEvents =>
       _circuitRelayEventsController.stream;
 
+  /// Stream of circuit relay connection events (alias).
   Stream<CircuitRelayConnectionEvent> get connectionEvents =>
       _circuitRelayEventsController.stream;
 
@@ -203,7 +205,7 @@ class CircuitRelayClient {
 
 /// Represents a circuit relay event.
 class CircuitRelayConnectionEvent {
-
+  /// Creates a [CircuitRelayConnectionEvent].
   CircuitRelayConnectionEvent({
     required this.eventType,
     required this.relayAddress,
@@ -211,26 +213,45 @@ class CircuitRelayConnectionEvent {
     this.reason = '',
     fixnum.Int64? dataSize,
   }) : dataSize = dataSize ?? fixnum.Int64.ZERO;
+
+  /// The type of relay event (e.g., 'circuit_relay_created').
   final String eventType;
+
+  /// The multiaddress or peer ID of the relay.
   final String relayAddress;
+
+  /// Error message if the event signifies a failure.
   final String errorMessage;
+
+  /// Reason for the event or closure.
   final String reason;
+
+  /// Total data size transferred during the session.
   final fixnum.Int64 dataSize;
 }
 
 /// Represents a Circuit Relay v2 reservation.
 class Reservation {
-
+  /// Creates a [Reservation] from relay details.
   Reservation({
     required this.relayPeerId,
     required this.expireTime,
     required this.limitData,
     required this.limitDuration,
   });
+
+  /// The relay peer ID.
   final String relayPeerId;
+
+  /// When this reservation expires.
   final DateTime expireTime;
+
+  /// Maximum data allowed in bytes.
   final fixnum.Int64 limitData;
+
+  /// Maximum duration allowed.
   final fixnum.Int64 limitDuration;
 
+  /// Returns true if this reservation has expired.
   bool get isExpired => DateTime.now().isAfter(expireTime);
 }

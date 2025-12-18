@@ -8,6 +8,7 @@ analyzer:
     - "**/*.pbenum.dart"
     - "**/*.pbjson.dart"
     - "**/*.pbserver.dart"
+    - test/**
   language:
     strict-casts: true
     strict-inference: true
@@ -17,6 +18,7 @@ analyzer:
     unused_import: error
     unused_local_variable: error
     dead_code: error
+    # Only show documentation lints as info and avoid noise in internal src/
     public_member_api_docs: info
     package_api_docs: info
 

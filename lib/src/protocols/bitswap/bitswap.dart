@@ -48,14 +48,16 @@ import 'ledger.dart';
 /// - [BitswapHandler] for higher-level integration
 /// - [IPFS Bitswap Spec](https://specs.ipfs.tech/bitswap-protocol/)
 class Bitswap {
-
   /// Creates a Bitswap instance with the given dependencies.
   Bitswap(this._router, this._ledger, this._datastore, [this.config]);
   final P2plibRouter _router;
   final BitLedger _ledger;
   final Datastore _datastore;
   final Set<LibP2PPeerId> _peers = {};
+
+  /// Optional configuration for the Bitswap protocol.
   final dynamic config;
+
   final _logger = Logger('BitSwap');
 
   /// Maximum length for block prefixes in messages.
@@ -189,11 +191,13 @@ class Bitswap {
     }
   }
 
+  /// Sends a block to a peer.
   Future<void> sendBlock(String peerId, Uint8List data) async {
     final message = proto.Message()..blocks.add(data);
     await send(peerId, message);
   }
 
+  /// Sends a wantlist to a peer.
   Future<void> sendWantlist(
     String peerId,
     proto.Message_Wantlist_Entry entry,
@@ -206,6 +210,7 @@ class Bitswap {
     await send(peerId, message);
   }
 
+  /// Adds a peer to the Bitswap network.
   void addPeer(LibP2PPeerId peerId) {
     _peers.add(peerId);
     _logger.debug(
@@ -214,6 +219,7 @@ class Bitswap {
     _logger.verbose('Current peer count: ${_peers.length}');
   }
 
+  /// Removes a peer from the Bitswap network.
   void removePeer(LibP2PPeerId peerId) {
     _peers.remove(peerId);
     // print(
@@ -265,7 +271,7 @@ class Bitswap {
     }
   }
 
-  // Helper function to send a Bitswap message to a peer
+  /// Sends a Bitswap message to a peer.
   Future<void> send(String peerId, proto.Message message) async {
     try {
       // Convert the string peerId to a PeerId object using Base58 decoding

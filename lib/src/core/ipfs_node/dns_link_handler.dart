@@ -6,9 +6,9 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:http/http.dart' as http;
 
-/// Handles DNSLink resolution with caching and multiple resolution strategies
+/// Handles DNSLink resolution with caching and multiple resolution strategies.
 class DNSLinkHandler {
-
+  /// Creates a DNSLink handler with config and optional HTTP client.
   DNSLinkHandler(this._config, {http.Client? client})
     : _client = client ?? http.Client() {
     _logger = Logger(
@@ -146,7 +146,6 @@ class DNSLinkHandler {
 
 /// Helper class for caching DNSLink resolutions
 class _CachedDNSLink {
-
   _CachedDNSLink({required this.cid, required this.timestamp});
   final String cid;
   final DateTime timestamp;

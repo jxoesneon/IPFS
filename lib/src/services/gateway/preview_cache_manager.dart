@@ -5,15 +5,17 @@ import 'package:dart_ipfs/src/services/gateway/gateway_lru_cache.dart';
 
 import 'compressed_cache_store.dart';
 
-/// Manages caching of file previews with multiple strategies
+/// Manages caching of file previews with multiple strategies.
 class PreviewCacheManager {
-
+  /// Creates a cache manager with compressed storage and in-memory LRU cache.
   PreviewCacheManager({required String cachePath, int maxMemoryEntries = 100})
     : _compressedStore = CompressedCacheStore(cachePath: cachePath),
       _memoryCache = GatewayLruCache(maxMemoryEntries);
+
   final CompressedCacheStore _compressedStore;
   final GatewayLruCache<String, Uint8List> _memoryCache;
 
+  /// Retrieves a cached preview, checking memory first then disk.
   Future<Uint8List?> getPreview(CID cid, String contentType) async {
     // Check memory cache first
     final memCached = _memoryCache.get(_generateCacheKey(cid, contentType));
@@ -32,6 +34,7 @@ class PreviewCacheManager {
     return null;
   }
 
+  /// Caches a preview in both memory and compressed storage.
   Future<void> cachePreview(
     CID cid,
     String contentType,
@@ -45,6 +48,7 @@ class PreviewCacheManager {
     return '${cid.encode()}_$contentType';
   }
 
+  /// Returns cache statistics.
   Map<String, int> getCacheStats() {
     return {
       'hits': _memoryCache.length,

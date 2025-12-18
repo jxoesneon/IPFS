@@ -8,15 +8,17 @@ void main(List<String> args) async {
   final router = RouterL0(
     transports: [
       TransportUdp(
-          bindAddress: FullAddress(
-        address: InternetAddress.anyIPv4,
-        port: port,
-      )),
+        bindAddress: FullAddress(
+          address: InternetAddress.anyIPv4,
+          port: port,
+        ),
+      ),
       TransportUdp(
-          bindAddress: FullAddress(
-        address: InternetAddress.anyIPv6,
-        port: port,
-      )),
+        bindAddress: FullAddress(
+          address: InternetAddress.anyIPv6,
+          port: port,
+        ),
+      ),
     ],
   );
   if (args.contains('log')) router.logger = stdout.writeln;

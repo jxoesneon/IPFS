@@ -7,7 +7,7 @@ import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 /// Validates IPLD nodes against type schemas including structs,
 /// unions, and basic types with optional constraints.
 class IPLDSchema {
-
+  /// Creates an IPLD schema with [name] and schema definition.
   IPLDSchema(this.name, this._schema);
   final Map<String, dynamic> _schema;
 
@@ -25,6 +25,7 @@ class IPLDSchema {
     'list': Kind.LIST,
   };
 
+  /// Validates an IPLD node against the schema type.
   Future<bool> validate(String typeName, IPLDNode node) async {
     final typeSchema = _schema[typeName];
     if (typeSchema == null) {

@@ -5,11 +5,11 @@ import 'kademlia_tree_node.dart';
 ///
 /// Uses a doubly-linked list for O(1) access and eviction.
 class LRUCache {
-
   /// Creates a cache with the given [capacity].
   LRUCache(this.capacity) {
     assert(capacity > 0, 'Capacity must be positive');
   }
+
   /// Maximum number of cached nodes.
   final int capacity;
 
@@ -17,6 +17,7 @@ class LRUCache {
   _Node? _head;
   _Node? _tail;
 
+  /// Adds or updates a node in the cache.
   void put(p2p.PeerId key, KademliaTreeNode value) {
     if (_cache.containsKey(key)) {
       _moveToFront(_cache[key]!);
@@ -31,6 +32,7 @@ class LRUCache {
     }
   }
 
+  /// Gets a node from the cache, returning null if not found.
   KademliaTreeNode? get(p2p.PeerId key) {
     final node = _cache[key];
     if (node != null) {
@@ -84,6 +86,7 @@ class LRUCache {
     }
   }
 
+  /// Returns the least recently used nodes.
   List<KademliaTreeNode> getLRUNodes(int count) {
     List<KademliaTreeNode> result = [];
     var current = _tail;
@@ -96,7 +99,6 @@ class LRUCache {
 }
 
 class _Node {
-
   _Node(this.key, this.value);
   final p2p.PeerId key;
   KademliaTreeNode value;

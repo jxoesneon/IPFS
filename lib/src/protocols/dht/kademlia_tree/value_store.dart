@@ -7,18 +7,19 @@ import '../dht_client.dart';
 /// Handles value persistence, expiry, and replication to
 /// maintain availability across the network.
 class ValueStore {
-
   /// Creates a value store with the given [_dhtClient].
   ValueStore(this._dhtClient);
+
   /// Number of nodes to replicate values to.
-  static const int REPLICATION_FACTOR = 3;
+  static const int replicationFactor = 3;
 
   /// How long before values expire.
-  static const Duration VALUE_EXPIRY = Duration(hours: 24);
+  static const Duration valueExpiry = Duration(hours: 24);
 
   final Map<String, StoredValue> _values = {};
   final DHTClient _dhtClient;
 
+  /// Stores a value in the DHT with replication.
   Future<void> store(String key, Uint8List value) async {
     final storedValue = StoredValue(
       value: value,
@@ -31,6 +32,7 @@ class ValueStore {
     await _replicateValue(key, value);
   }
 
+  /// Retrieves a value by key, returning null if expired or not found.
   Future<Uint8List?> retrieve(String key) async {
     final storedValue = _values[key];
     if (storedValue == null) {
@@ -38,7 +40,7 @@ class ValueStore {
     }
 
     // Check if value has expired
-    if (DateTime.now().difference(storedValue.timestamp) > VALUE_EXPIRY) {
+    if (DateTime.now().difference(storedValue.timestamp) > valueExpiry) {
       _values.remove(key);
       return null;
     }
@@ -50,7 +52,7 @@ class ValueStore {
     final targetPeerId = p2p.PeerId(value: Uint8List.fromList(key.codeUnits));
     final closestPeers = _dhtClient.kademliaRoutingTable.findClosestPeers(
       targetPeerId,
-      REPLICATION_FACTOR,
+      replicationFactor,
     );
 
     int successfulReplications = 0;
@@ -71,18 +73,19 @@ class ValueStore {
     }
 
     // Verify minimum replication factor
-    if (successfulReplications < REPLICATION_FACTOR ~/ 2) {
+    if (successfulReplications < replicationFactor ~/ 2) {
       // print(
       //   'Warning: Failed to achieve minimum replication factor for key $key',
       // );
     }
   }
 
+  /// Republishes all non-expired values to maintain replication.
   Future<void> republishValues() async {
     final expiredValues = <String>[];
 
     for (final entry in _values.entries) {
-      if (DateTime.now().difference(entry.value.timestamp) > VALUE_EXPIRY) {
+      if (DateTime.now().difference(entry.value.timestamp) > valueExpiry) {
         expiredValues.add(entry.key);
         continue;
       }
@@ -96,6 +99,7 @@ class ValueStore {
     }
   }
 
+  /// Increments the replication count for a key.
   Future<void> incrementReplicationCount(String key) async {
     final value = _values[key];
     if (value != null) {
@@ -103,6 +107,7 @@ class ValueStore {
     }
   }
 
+  /// Sets the replication count for a key.
   Future<void> updateReplicationCount(String key, int count) async {
     final value = _values[key];
     if (value != null) {
@@ -110,25 +115,33 @@ class ValueStore {
     }
   }
 
+  /// Returns all non-expired keys in the store.
   Future<List<String>> getAllKeys() async {
     // Remove expired values before returning keys
     final now = DateTime.now();
     _values.removeWhere(
-      (key, value) => now.difference(value.timestamp) > VALUE_EXPIRY,
+      (key, value) => now.difference(value.timestamp) > valueExpiry,
     );
 
     return _values.keys.toList();
   }
 }
 
+/// A value stored in the DHT with metadata.
 class StoredValue {
-
+  /// Creates a stored value.
   StoredValue({
     required this.value,
     required this.timestamp,
     this.replicationCount = 0,
   });
+
+  /// The stored data.
   final Uint8List value;
+
+  /// When the value was stored.
   final DateTime timestamp;
+
+  /// Number of successful replications.
   int replicationCount;
 }

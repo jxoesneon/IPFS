@@ -20,12 +20,12 @@ import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 /// - [MetricsCollector] for connection metrics
 /// - [ConnectionState] for connection state protobuf
 class ConnectionManager {
-
   /// Creates a connection manager with the given [_metrics] collector.
   ConnectionManager(this._metrics);
   final Map<String, ConnectionState> _connections = {};
   final MetricsCollector _metrics;
 
+  /// Handles a new peer connection.
   Future<void> handleNewConnection(LibP2PPeerId peerId) async {
     final now = DateTime.now();
     final timestamp = Timestamp()

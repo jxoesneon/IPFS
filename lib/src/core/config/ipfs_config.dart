@@ -65,7 +65,7 @@ import 'package:yaml/yaml.dart';
 /// IPFSConfig(offline: false)
 /// ```
 class IPFSConfig {
-
+  /// Creates a new [IPFSConfig] with the specified options.
   IPFSConfig({
     this.offline = false,
     this.network = const NetworkConfig(),
@@ -144,34 +144,92 @@ class IPFSConfig {
       defaultBandwidthQuota: json['defaultBandwidthQuota'] as int? ?? 1048576,
     );
   }
+
+  /// Detailed network configuration.
   final NetworkConfig network;
+
+  /// Distributed Hash Table configuration.
   final DHTConfig dht;
+
+  /// Storage and datastore configuration.
   final StorageConfig storage;
+
+  /// Security and identity configuration.
   final SecurityConfig security;
+
+  /// Enable debug mode.
   final bool debug;
+
+  /// Enable verbose logging.
   final bool verboseLogging;
+
+  /// Enable PubSub protocols.
   final bool enablePubSub;
+
+  /// Enable DHT protocols.
   final bool enableDHT;
+
+  /// Enable Circuit Relay support.
   final bool enableCircuitRelay;
+
+  /// Enable content routing.
   final bool enableContentRouting;
+
+  /// Enable DNSLink resolution.
   final bool enableDNSLinkResolution;
+
+  /// Enable IPLD support.
   final bool enableIPLD;
+
+  /// Enable Graphsync protocol.
   final bool enableGraphsync;
+
+  /// Enable metrics collection.
   final bool enableMetrics;
+
+  /// Enable system-wide logging.
   final bool enableLogging;
+
+  /// The logging level (e.g., 'info', 'debug', 'error').
   final String logLevel;
+
+  /// Enable bandwidth quota management.
   final bool enableQuotaManagement;
+
+  /// Default bandwidth quota in bytes.
   final int defaultBandwidthQuota;
+
+  /// Path to the datastore.
   final String datastorePath;
+
+  /// Path to the keystore.
   final String keystorePath;
+
+  /// Path to the blockstore.
   final String blockStorePath;
+
+  /// The unique node identifier.
   final String nodeId;
+
+  /// Interval for garbage collection.
   final Duration garbageCollectionInterval;
+
+  /// Enable automatic garbage collection.
   final bool garbageCollectionEnabled;
+
+  /// Metrics collection configuration.
   final MetricsConfig metrics;
+
+  /// The base path for node data.
   final String dataPath;
+
+  /// The keystore for managing keys.
   final Keystore keystore;
+
+  /// Run node in offline mode.
   final bool offline;
+
+  /// Key-value pair for custom configuration options.
   final Map<String, dynamic> customConfig;
 
   static String _generateDefaultNodeId() {
@@ -189,6 +247,7 @@ class IPFSConfig {
     );
   }
 
+  /// Converts to JSON representation.
   Map<String, dynamic> toJson() => {
     'offline': offline,
     'network': network.toJson(),
@@ -213,8 +272,9 @@ class IPFSConfig {
 }
 
 /// Network-specific configuration
+/// Network-specific configuration for an IPFS node.
 class NetworkConfig {
-
+  /// Creates a new [NetworkConfig].
   const NetworkConfig({
     this.listenAddresses = const ['/ip4/0.0.0.0/tcp/4001'],
     this.bootstrapPeers = defaultBootstrapPeers,
@@ -223,6 +283,7 @@ class NetworkConfig {
     this.delegatedRoutingEndpoint,
   });
 
+  /// Creates a [NetworkConfig] from a JSON map.
   factory NetworkConfig.fromJson(Map<String, dynamic> json) {
     return NetworkConfig(
       listenAddresses: List<String>.from(
@@ -238,12 +299,23 @@ class NetworkConfig {
       delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'] as String?,
     );
   }
+
+  /// List of multiaddrs this node listens on.
   final List<String> listenAddresses;
+
+  /// Peers to connect to on startup.
   final List<String> bootstrapPeers;
+
+  /// Maximum allowed concurrent connections.
   final int maxConnections;
+
+  /// Timeout for connection attempts.
   final Duration connectionTimeout;
+
+  /// Optional endpoint for delegated routing.
   final String? delegatedRoutingEndpoint;
 
+  /// Default IPFS bootstrap peers.
   static const List<String> defaultBootstrapPeers = [
     // Public IPFS Bootstrap Nodes (Direct IPs to bypass DNS resolution issues in p2plib)
     '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ', // mars.i.ipfs.io
@@ -254,6 +326,7 @@ class NetworkConfig {
     '/ip4/172.65.0.13/tcp/4009/p2p/QmcfgsJsMtx6qJb74akCw1M24X1zFwgGo11h1cuhwQjtJP',
   ];
 
+  /// Converts to JSON representation.
   Map<String, dynamic> toJson() => {
     'listenAddresses': listenAddresses,
     'bootstrapPeers': bootstrapPeers,
@@ -265,9 +338,14 @@ class NetworkConfig {
 
 // Similar implementations for DHTConfig, StorageConfig, and SecurityConfig...
 
+/// Represents a public/private key pair used for configuration.
 class KeyPair {
-
+  /// Creates a new [KeyPair].
   KeyPair(this.publicKey, this.privateKey);
+
+  /// The public key in string format.
   final String publicKey;
+
+  /// The private key in string format.
   final String privateKey;
 }

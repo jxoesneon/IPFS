@@ -31,7 +31,6 @@ import 'package:fixnum/fixnum.dart' as fixnum;
 /// - [PinManager] for bulk pin operations
 /// - [BlockStore] for storage that respects pins
 class Pin {
-
   /// Creates a new pin for the given [cid] with the specified [type].
   Pin({
     required this.cid,
@@ -50,6 +49,7 @@ class Pin {
       blockStore: blockStore,
     );
   }
+
   /// The content identifier being pinned.
   final CID cid;
 

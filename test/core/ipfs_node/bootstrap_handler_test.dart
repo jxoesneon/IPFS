@@ -11,7 +11,6 @@ class MockConfig extends IPFSConfig {
 }
 
 class MockNetworkHandler extends NetworkHandler {
-
   MockNetworkHandler() : super(MockConfig());
   final List<String> connectedPeers = [];
 

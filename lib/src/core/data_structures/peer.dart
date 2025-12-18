@@ -25,7 +25,6 @@ import 'package:p2plib/p2plib.dart' as p2p;
 /// - [PeerProto] for protobuf serialization
 /// - [P2plibRouter] for peer communication
 class Peer {
-
   /// Creates a new Peer with the given properties.
   Peer({
     required this.id,
@@ -49,6 +48,7 @@ class Peer {
     );
   }
 
+  /// Creates a [Peer] with minimal information from a peer ID string.
   factory Peer.fromId(String peerId) {
     return Peer(
       id: p2p.PeerId(value: Base58().base58Decode(peerId)),
@@ -57,6 +57,7 @@ class Peer {
       agentVersion: '', // Empty version since we don't know it yet
     );
   }
+
   /// The unique cryptographic identifier for this peer.
   final p2p.PeerId id;
 

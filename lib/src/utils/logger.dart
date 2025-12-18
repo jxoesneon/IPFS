@@ -27,7 +27,6 @@ import 'package:logging/logging.dart' as logging;
 ///
 /// Logs are written to both console and `ipfs.log` file.
 class Logger {
-
   /// Creates a new logger for the specified component
   Logger(String name, {bool debug = false, bool verbose = false})
     : _debug = debug,
@@ -41,6 +40,7 @@ class Logger {
   final bool _debug;
   final bool _verbose;
 
+  /// Initializes the global metrics collector for all loggers.
   static void initializeMetrics(IPFSConfig config) {
     _metrics = MetricsCollector(config);
   }

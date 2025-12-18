@@ -42,7 +42,6 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 /// - [PinManager] for pinning operations
 /// - [IBlockStore] for the interface contract
 class BlockStore implements IBlockStore {
-
   /// Creates a new BlockStore at the given [path].
   BlockStore({required this.path}) : _logger = Logger('BlockStore') {
     _pinManager = PinManager(this);

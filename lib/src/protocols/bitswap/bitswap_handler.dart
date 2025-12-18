@@ -16,7 +16,7 @@ import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Handles Bitswap protocol operations for an IPFS node following the Bitswap 1.2.0 specification
 class BitswapHandler {
-
+  /// Creates a new [BitswapHandler] with the given [config], [_blockStore], and [_router].
   BitswapHandler(IPFSConfig config, this._blockStore, this._router)
     : _logger = Logger(
         'BitswapHandler',
@@ -403,6 +403,7 @@ class BitswapHandler {
     await _handleMessage(msg);
   }
 
+  /// Handles an incoming want request for a CID.
   Future<void> handleWantRequest(String cidStr) async {
     try {
       final customMessage = message.Message();
@@ -431,6 +432,7 @@ class BitswapHandler {
     _logger.info('Bitswap protocol handlers initialized');
   }
 
+  /// Requests a single block by CID.
   Future<Block?> wantBlock(String cid) async {
     if (!_running) {
       throw StateError('BitswapHandler is not running');
@@ -445,7 +447,10 @@ class BitswapHandler {
     }
   }
 
+  /// Total bytes sent.
   int get bandwidthSent => _bandwidthSent;
+
+  /// Total bytes received.
   int get bandwidthReceived => _bandwidthReceived;
 
   void _updateBandwidthStats() {
@@ -454,6 +459,7 @@ class BitswapHandler {
     _bandwidthReceived = stats['received'] ?? 0;
   }
 
+  /// Returns the current status of the Bitswap handler.
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'active_sessions': _sessions.length,

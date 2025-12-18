@@ -37,7 +37,6 @@ import 'package:fixnum/fixnum.dart' as fixnum;
 /// - [MetricsConfig] for configuration options
 /// - [ConnectionMetrics] for per-peer statistics
 class MetricsCollector {
-
   /// Creates a new metrics collector with the given [_config].
   MetricsCollector(this._config) {
     _logger = Logger(
@@ -60,9 +59,11 @@ class MetricsCollector {
   final StreamController<Map<String, dynamic>> _metricsStreamController =
       StreamController.broadcast();
 
+  /// Stream of collected metrics.
   Stream<Map<String, dynamic>> get metricsStream =>
       _metricsStreamController.stream;
 
+  /// Starts metrics collection.
   Future<void> start() async {
     _logger.debug('Starting metrics collection...');
 
@@ -121,6 +122,7 @@ class MetricsCollector {
     }
   }
 
+  /// Stops metrics collection.
   Future<void> stop() async {
     _logger.debug('Stopping metrics collection');
     _collectionTimer?.cancel();
@@ -128,6 +130,7 @@ class MetricsCollector {
     await _metricsStreamController.close();
   }
 
+  /// Returns the current metrics collector status.
   Future<Map<String, dynamic>> getStatus() async {
     return <String, dynamic>{
       'enabled': _config.metrics.enabled,
@@ -211,26 +214,31 @@ class MetricsCollector {
   }
 
   // Get number of messages sent by a peer
+  /// Gets the number of messages sent to a peer.
   fixnum.Int64 getMessagesSent(String peerId) {
     return fixnum.Int64(_messageMetrics[peerId]?['sent'] ?? 0);
   }
 
   // Get number of messages received from a peer
+  /// Gets the number of messages received from a peer.
   fixnum.Int64 getMessagesReceived(String peerId) {
     return fixnum.Int64(_messageMetrics[peerId]?['received'] ?? 0);
   }
 
   // Get number of bytes sent to a peer
+  /// Gets the number of bytes sent to a peer.
   fixnum.Int64 getBytesSent(String peerId) {
     return fixnum.Int64(_byteMetrics[peerId]?['sent'] ?? 0);
   }
 
   // Get number of bytes received from a peer
+  /// Gets the number of bytes received from a peer.
   fixnum.Int64 getBytesReceived(String peerId) {
     return fixnum.Int64(_byteMetrics[peerId]?['received'] ?? 0);
   }
 
   // Get average latency for a peer
+  /// Gets the average latency for a peer.
   Duration getAverageLatency(String peerId) {
     final latencies = _latencyMetrics[peerId];
     if (latencies == null || latencies.isEmpty) {
@@ -244,6 +252,7 @@ class MetricsCollector {
   }
 
   // Update connection metrics
+  /// Updates connection metrics for a peer.
   Future<void> updateConnectionMetrics(ConnectionMetrics metrics) async {
     final peerId = metrics.peerId;
 

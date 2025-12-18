@@ -4,6 +4,7 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 
 /// Converts between internal responses and protobuf messages.
 class ResponseHandler {
+  /// Converts to AddBlockResponse protobuf.
   static AddBlockResponse toAddBlockResponse(
     BlockOperationResponse<dynamic> response,
   ) {
@@ -12,6 +13,7 @@ class ResponseHandler {
       ..message = response.message;
   }
 
+  /// Converts to GetBlockResponse protobuf.
   static GetBlockResponse toGetBlockResponse(
     BlockOperationResponse<Block> response,
   ) {
@@ -22,6 +24,7 @@ class ResponseHandler {
     return getBlockResponse;
   }
 
+  /// Converts to RemoveBlockResponse protobuf.
   static RemoveBlockResponse toRemoveBlockResponse(
     BlockOperationResponse<dynamic> response,
   ) {
@@ -30,6 +33,7 @@ class ResponseHandler {
       ..message = response.message;
   }
 
+  /// Converts from protobuf response to BlockOperationResponse.
   static BlockOperationResponse<dynamic> fromProtoResponse(
     dynamic protoResponse,
   ) {

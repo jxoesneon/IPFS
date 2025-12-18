@@ -468,7 +468,7 @@ dart run example/online_test.dart
 
 ## Security Considerations & Guidelines
 
-> [!IMPORTANT] > **Use in Production requires strict sandboxing.**
+> **IMPORTANT**: **Use in Production requires strict sandboxing.**
 > See `docker-compose.yml` for a secure reference implementation.
 
 ### 🛡️ Recommended Security Configuration (Remediation 8.2)

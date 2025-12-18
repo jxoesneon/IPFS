@@ -10,7 +10,7 @@ import '../utils/logger.dart';
 
 /// Handles content routing operations for an IPFS node.
 class ContentRouting {
-
+  /// Creates a content routing handler.
   ContentRouting(IPFSConfig config, NetworkHandler networkHandler)
     : _dhtClient = DHTClient(
         networkHandler: networkHandler,

@@ -23,7 +23,6 @@ import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 /// Processes CID messages, stores content, notifies listeners,
 /// and coordinates with Bitswap for block retrieval.
 class MessageHandler {
-
   /// Creates a handler with config, router, and optional PubSub.
   MessageHandler(this.config, this._router, [this._pubSubClient]) {
     _blockStore = BlockStore(path: config.blockStorePath);
@@ -31,11 +30,15 @@ class MessageHandler {
   final StreamController<pb_base.NetworkEvent> _eventController =
       StreamController<pb_base.NetworkEvent>.broadcast();
   final PubSubClient? _pubSubClient;
+
+  /// The IPFS configuration.
   final IPFSConfig config;
+
   final P2plibRouter _router;
   late final BlockStore _blockStore;
   final _logger = Logger('MessageHandler');
 
+  /// Handles an incoming CID message.
   Future<void> handleCIDMessage(pb_cid.IPFSCIDProto protoMessage) async {
     final cid = CID.fromProto(protoMessage);
     // Add handling logic here, for example:
@@ -46,6 +49,7 @@ class MessageHandler {
     notifyListeners(cid);
   }
 
+  /// Processes content associated with a CID.
   Future<void> processContent(CID cid) async {
     try {
       // Get the block data associated with the CID
@@ -71,6 +75,7 @@ class MessageHandler {
     }
   }
 
+  /// Stores a CID's block in the local blockstore.
   Future<void> storeCID(CID cid) async {
     try {
       _logger.verbose('Attempting to store CID: ${cid.encode()}');
@@ -101,6 +106,7 @@ class MessageHandler {
     }
   }
 
+  /// Notifies listeners about a CID update.
   void notifyListeners(CID cid) {
     try {
       // Create a network event for content update
@@ -134,6 +140,7 @@ class MessageHandler {
     }
   }
 
+  /// Retrieves a block by CID from local store or network.
   Future<Block?> getBlock(CID cid) async {
     try {
       // First try to get from local blockstore
@@ -153,6 +160,7 @@ class MessageHandler {
     }
   }
 
+  /// Handles processed content data.
   Future<void> handleProcessedData(
     CID cid,
     Uint8List data,
@@ -224,6 +232,7 @@ class MessageHandler {
     }
   }
 
+  /// Prepares a CID for network transmission.
   pb_cid.IPFSCIDProto prepareCIDMessage(CID cid) {
     return cid.toProto();
   }

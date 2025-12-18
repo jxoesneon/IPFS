@@ -33,6 +33,7 @@ class FixViolations<K_PeerId, V_PeerInfo> {
     tree.root?.color = common_tree.NodeColor.BLACK;
   }
 
+  /// Helper for insertion fix-up operations.
   void fixInsertionHelper(
     RedBlackTree<K_PeerId, V_PeerInfo> tree,
     RedBlackTreeNode<K_PeerId, V_PeerInfo> z,
@@ -73,6 +74,7 @@ class FixViolations<K_PeerId, V_PeerInfo> {
     }
   }
 
+  /// Fixes violations after deleting a node.
   void fixDeletion(
     RedBlackTree<K_PeerId, V_PeerInfo> tree,
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? x,

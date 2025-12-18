@@ -8,9 +8,9 @@ import 'logger.dart';
 
 /// Represents a public/private key pair for cryptographic operations.
 class KeyPair {
-
   /// Creates a new key pair.
   KeyPair(this.publicKey, this.privateKey);
+
   /// The public key in string format.
   final String publicKey;
 
@@ -33,11 +33,11 @@ class KeyPair {
 /// }
 /// ```
 class Keystore {
-
   /// Creates an empty keystore.
   Keystore();
 
   // Named constructor for configuration
+  /// Creates a keystore from the provided configuration.
   factory Keystore.withConfig(dynamic config) {
     final keystore = Keystore();
     // Initialize with config
@@ -47,7 +47,8 @@ class Keystore {
   final _logger = Logger('Keystore');
 
   /// The default key name used for node identity.
-  static const String DEFAULT_KEY = 'self';
+  /// The default key name used for node identity.
+  static const String defaultKeyName = 'self';
 
   /// Adds a new key pair to the keystore.
   void addKeyPair(String name, KeyPair keyPair) {
@@ -141,7 +142,7 @@ class Keystore {
 
   /// Getter for the default private key
   IPFSPrivateKey get privateKey {
-    final defaultPair = _keyPairs[DEFAULT_KEY];
+    final defaultPair = _keyPairs[defaultKeyName];
     if (defaultPair == null) {
       throw StateError('No default key pair found in keystore');
     }

@@ -16,22 +16,23 @@ import 'red_black_tree.dart';
 /// Kademlia DHT routing table with k-buckets.
 ///
 /// Organizes peers by XOR distance from the local node. Each bucket
-/// holds up to [K_BUCKET_SIZE] peers. Supports bucket splitting,
+/// holds up to [kBucketSize] peers. Supports bucket splitting,
 /// stale node eviction, periodic refresh, and IP diversity checks.
 class KademliaRoutingTable {
-
   /// Creates an uninitialized routing table.
   /// Call [initialize] before use.
   KademliaRoutingTable();
+
+  /// The underlying DHT client for network operations.
   late final DHTClient dhtClient;
   late KademliaTree _tree;
 
   /// Maximum peers per bucket.
-  static const int K_BUCKET_SIZE = 20;
+  static const int kBucketSize = 20;
 
   /// Maximum number of peers allowed from a single IP address.
   /// Prevents Sybil/Eclipse attacks where one attacker fills the table.
-  static const int MAX_PEERS_PER_IP = 2;
+  static const int maxPeersPerIp = 2;
 
   final Map<p2p.PeerId, ConnectionStatistics> _connectionStats = {};
 
@@ -55,6 +56,9 @@ class KademliaRoutingTable {
     );
   }
 
+  /// Adds a peer to the routing table.
+  ///
+  /// Enforces IP diversity limits to prevent Sybil attacks.
   Future<void> addPeer(
     p2p.PeerId peerId,
     p2p.PeerId associatedPeerId, {
@@ -66,9 +70,9 @@ class KademliaRoutingTable {
       final currentCount = _ipCounts[ip] ?? 0;
 
       // If peer is not already in the table (check _peerIps map) but limit exceeded
-      if (!_peerIps.containsKey(peerId) && currentCount >= MAX_PEERS_PER_IP) {
+      if (!_peerIps.containsKey(peerId) && currentCount >= maxPeersPerIp) {
         // print(
-        //   '[Security] Rejected peer $peerId from $ip (Limit: $MAX_PEERS_PER_IP)',
+        //   '[Security] Rejected peer $peerId from $ip (Limit: $maxPeersPerIp)',
         // );
         return;
       }
@@ -90,7 +94,7 @@ class KademliaRoutingTable {
       return;
     }
 
-    if (bucket.size >= K_BUCKET_SIZE) {
+    if (bucket.size >= kBucketSize) {
       if (!_removeStaleNode(bucket)) {
         if (_isOurBucket(bucketIndex)) {
           splitBucket(bucketIndex);
@@ -150,6 +154,7 @@ class KademliaRoutingTable {
     );
   }
 
+  /// Removes a peer from the routing table.
   void removePeer(p2p.PeerId peerId) {
     final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
     final bucketIndex = _getBucketIndex(distance);
@@ -191,26 +196,37 @@ class KademliaRoutingTable {
     }
   }
 
+  /// Gets the associated peer for a given peer ID.
   p2p.PeerId? getAssociatedPeer(p2p.PeerId peerId) =>
       _tree.getAssociatedPeer(peerId);
 
+  /// Returns true if the routing table contains the peer.
   bool containsPeer(p2p.PeerId peerId) =>
       _tree.buckets.any((bucket) => bucket.containsKey(peerId));
 
+  /// Total number of peers in the routing table.
   int get peerCount => _tree.buckets.fold(
     0,
     (sum, bucket) => (sum + bucket.entries.length).toInt(),
   );
 
-  void clear() => _tree.buckets.forEach((bucket) => bucket.clear());
+  /// Clears all peers from the routing table.
+  void clear() {
+    for (final bucket in _tree.buckets) {
+      bucket.clear();
+    }
+  }
 
+  /// Calculates XOR distance between two peer IDs.
   int distance(p2p.PeerId a, p2p.PeerId b) => _calculateXorDistance(a, b);
 
+  /// Access to the underlying k-buckets.
   List<RedBlackTree<p2p.PeerId, KademliaTreeNode>> get buckets => _tree.buckets;
 
+  /// Splits a bucket when it becomes full.
   void splitBucket(int bucketIndex) {
     if (bucketIndex >= buckets.length ||
-        buckets[bucketIndex].size <= K_BUCKET_SIZE) {
+        buckets[bucketIndex].size <= kBucketSize) {
       return;
     }
 
@@ -236,16 +252,19 @@ class KademliaRoutingTable {
     buckets.insert(bucketIndex + 1, upperBucket);
   }
 
+  /// Finds the k closest peers to target.
   List<p2p.PeerId> findClosestPeers(p2p.PeerId target, int k) =>
       _tree.findClosestPeers(target, k);
 
+  /// Performs a node lookup for target.
   Future<List<p2p.PeerId>> nodeLookup(p2p.PeerId target) async =>
       _tree.nodeLookup(target);
 
+  /// Refreshes stale buckets by querying for random keys.
   void refresh() {
     final bucketsNeedingRefresh = <int>[];
     for (var i = 0; i < buckets.length; i++) {
-      if (_removeStaleNodesInBucket(i) < K_BUCKET_SIZE / 2) {
+      if (_removeStaleNodesInBucket(i) < kBucketSize / 2) {
         bucketsNeedingRefresh.add(i);
       }
     }
@@ -257,7 +276,7 @@ class KademliaRoutingTable {
 
   void _refreshBucket(int bucketIndex, p2p.PeerId associatedPeerId) {
     final randomKey = _generateRandomKeyInBucket(bucketIndex);
-    for (var peer in findClosestPeers(randomKey, K_BUCKET_SIZE)) {
+    for (var peer in findClosestPeers(randomKey, kBucketSize)) {
       if (!containsPeer(peer)) addPeerToBucket(peer, associatedPeerId);
     }
   }
@@ -379,6 +398,7 @@ class KademliaRoutingTable {
     return null;
   }
 
+  /// Adds a peer directly to a bucket (internal).
   void addPeerToBucket(p2p.PeerId peerId, p2p.PeerId associatedPeerId) {
     final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
     final bucketIndex = _getBucketIndex(distance);
@@ -390,7 +410,7 @@ class KademliaRoutingTable {
       return;
     }
 
-    if (bucket.size >= K_BUCKET_SIZE) {
+    if (bucket.size >= kBucketSize) {
       if (!_removeStaleNode(bucket) && _isOurBucket(bucketIndex)) {
         splitBucket(bucketIndex);
         addPeerToBucket(peerId, associatedPeerId);
@@ -406,6 +426,7 @@ class KademliaRoutingTable {
     );
   }
 
+  /// Removes a peer from its bucket.
   void removePeerFromBucket(p2p.PeerId peerId) {
     for (var bucket in _tree.buckets) {
       if (bucket.containsKey(peerId)) {
@@ -440,7 +461,7 @@ class KademliaRoutingTable {
         final bucket = _tree.buckets[bucketIndex];
 
         // Check if bucket needs splitting
-        if (bucket.size >= K_BUCKET_SIZE) {
+        if (bucket.size >= kBucketSize) {
           splitBucket(bucketIndex);
         }
       }
@@ -497,7 +518,7 @@ class KademliaRoutingTable {
       // Send request through DHT client's network handler
       final response = await dhtClient.networkHandler.sendRequest(
         peerId,
-        DHTClient.PROTOCOL_DHT,
+        DHTClient.protocolDht,
         msg.writeToBuffer(),
       );
 

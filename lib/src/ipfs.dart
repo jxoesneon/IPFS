@@ -42,10 +42,16 @@ class IPFS {
       _router = _node.router,
       _bitswap = _node.bitswap;
 
-  // The underlying IPFSNode instance
+  /// The underlying IPFSNode instance
   final IPFSNode _node;
+
+  /// The datastore for persistent storage.
   final Datastore _datastore;
+
+  /// The router for P2P networking.
   final Router _router;
+
+  /// The Bitswap protocol handler.
   final BitswapHandler _bitswap;
 
   /// Creates a new IPFS node.
@@ -105,15 +111,15 @@ class IPFS {
     );
   }
 
-  // Expose a stream of new content CIDs
+  /// Stream of new content CIDs added to the node.
   Stream<String> get onNewContent => _node.onNewContent;
 
   /// Gets the peer ID of the IPFS node.
   String get peerID => _node.peerID;
 
-  /// Adds a file to IPFS.
+  /// Adds a file to the IPFS network from its raw data.
   ///
-  /// Returns the CID (Content Identifier) of the added file.
+  /// Returns the CID of the added file as a string.
   Future<String> addFile(Uint8List data) async {
     return _node.addFile(data);
   }

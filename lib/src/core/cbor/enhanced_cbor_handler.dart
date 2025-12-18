@@ -36,6 +36,7 @@ class EnhancedCBORHandler {
   static final _encoder = const CborEncoder();
   static final _decoder = const CborDecoder();
 
+  /// Mapping of CBOR tag values to their human-readable codec names.
   static const cborTags = {
     // Core IPLD Codecs
     0x55: 'raw',

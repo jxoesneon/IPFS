@@ -7,7 +7,7 @@ import 'package:path/path.dart' as path;
 
 /// Manages persistent caching of file previews on disk
 class PersistentPreviewCache {
-
+  /// Creates a [PersistentPreviewCache] at the given [cachePath].
   PersistentPreviewCache({
     required String cachePath,
     int maxCacheSize = 1024 * 1024 * 1024, // 1GB default
@@ -35,6 +35,7 @@ class PersistentPreviewCache {
     }
   }
 
+  /// Retrieves a cached preview for the given CID and content type.
   Future<Uint8List?> getPreview(CID cid, String contentType) async {
     final cacheFile = File(
       path.join(_cacheDir.path, _getCacheFileName(cid, contentType)),
@@ -51,6 +52,7 @@ class PersistentPreviewCache {
     return null;
   }
 
+  /// Caches a preview for the given CID and content type.
   Future<void> cachePreview(
     CID cid,
     String contentType,

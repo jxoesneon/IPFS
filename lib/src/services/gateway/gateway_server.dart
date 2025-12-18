@@ -15,7 +15,7 @@ import 'package:shelf_router/shelf_router.dart';
 ///
 /// **Security (SEC-007):** Rate limiting is enabled by default to prevent DoS.
 class GatewayServer {
-
+  /// Creates a new [GatewayServer] with the given configuration.
   GatewayServer({
     required this.blockStore,
     this.address = 'localhost',
@@ -31,10 +31,20 @@ class GatewayServer {
     _handler = GatewayHandler(blockStore, ipnsResolver: ipnsResolver);
     _setupRouter();
   }
+
+  /// The block store used for content retrieval.
   final BlockStore blockStore;
+
+  /// The address to listen on.
   final String address;
+
+  /// The port to listen on.
   final int port;
+
+  /// List of allowed CORS origins.
   final List<String> corsOrigins;
+
+  /// Optional IPNS resolver for /ipns/ paths.
   final IpnsResolver? ipnsResolver;
 
   /// Maximum requests per IP per time window (SEC-007)

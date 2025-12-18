@@ -38,10 +38,10 @@ import 'package:p2plib/p2plib.dart' as p2p;
 /// final providers = await dht.findProviders(cid);
 /// ```
 class DHTClient {
-
   /// Creates a new DHT client.
   DHTClient({required this.networkHandler, required P2plibRouter router})
     : _router = router;
+
   /// The IPFS node this client belongs to.
   IPFSNode get node => networkHandler.ipfsNode;
 
@@ -49,14 +49,20 @@ class DHTClient {
   final NetworkHandler networkHandler;
 
   final P2plibRouter _router;
+
+  /// The local peer ID.
   late final LibP2PPeerId peerId;
+
+  /// The associated peer ID.
   late final LibP2PPeerId associatedPeerId;
+
   late final KademliaRoutingTable _kademliaRoutingTable;
   bool _initialized = false;
 
   /// Protocol identifier for Kademlia DHT.
-  static const String PROTOCOL_DHT = '/ipfs/kad/1.0.0';
+  static const String protocolDht = '/ipfs/kad/1.0.0';
 
+  /// Initializes the DHT client.
   Future<void> initialize() async {
     if (_initialized) return;
 
@@ -93,12 +99,12 @@ class DHTClient {
 
   void _registerProtocols() {
     // Add protocol registration logic here
-    _router.registerProtocol(PROTOCOL_DHT);
+    _router.registerProtocol(protocolDht);
   }
 
   void _setupHandlers() {
     // Register handlers for each protocol
-    _router.registerProtocolHandler(PROTOCOL_DHT, _handlePacket);
+    _router.registerProtocolHandler(protocolDht, _handlePacket);
   }
 
   // Helper: Convert kad.Peer to p2p.PeerId
@@ -120,6 +126,7 @@ class DHTClient {
   }
 
   // Helper: Get Routing Key (SHA-256 of Multihash)
+  /// Computes the routing key for a CID string.
   p2p.PeerId getRoutingKey(String cidStr) {
     Uint8List hashBytes;
     try {
@@ -143,6 +150,7 @@ class DHTClient {
   }
 
   // Content Routing API: Find Providers (GET_PROVIDERS)
+  /// Finds providers for a CID in the DHT.
   Future<List<p2p.PeerId>> findProviders(String cid) async {
     final msg = kad.Message()
       ..type = kad.Message_MessageType.GET_PROVIDERS
@@ -163,7 +171,7 @@ class DHTClient {
       try {
         final responseBytes = await _sendRequest(
           peer,
-          PROTOCOL_DHT,
+          protocolDht,
           msg.writeToBuffer(),
         );
         final response = kad.Message.fromBuffer(responseBytes);
@@ -205,7 +213,7 @@ class DHTClient {
     return providers;
   }
 
-  // Peer Routing API: Find Peer (FIND_NODE)
+  /// Finds a peer by its ID in the DHT.
   Future<p2p.PeerId?> findPeer(p2p.PeerId id) async {
     final msg = kad.Message()
       ..type = kad.Message_MessageType.FIND_NODE
@@ -217,7 +225,7 @@ class DHTClient {
       try {
         final responseBytes = await _sendRequest(
           peer,
-          PROTOCOL_DHT,
+          protocolDht,
           msg.writeToBuffer(),
         );
         final response = kad.Message.fromBuffer(responseBytes);
@@ -261,7 +269,7 @@ class DHTClient {
 
     for (final peer in closestPeers) {
       try {
-        await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
+        await _sendRequest(peer, protocolDht, msg.writeToBuffer());
       } catch (e) {
         // print(
         //   'Error adding provider to peer ${Base58().encode(peer.value)}: $e',
@@ -293,7 +301,7 @@ class DHTClient {
     int successCount = 0;
     for (final peer in closestPeers) {
       try {
-        await _sendRequest(peer, PROTOCOL_DHT, msg.writeToBuffer());
+        await _sendRequest(peer, protocolDht, msg.writeToBuffer());
         successCount++;
       } catch (e) {
         // print('Error storing value on peer ${Base58().encode(peer.value)}: $e');
@@ -321,7 +329,7 @@ class DHTClient {
       try {
         final responseBytes = await _sendRequest(
           peer,
-          PROTOCOL_DHT,
+          protocolDht,
           msg.writeToBuffer(),
         );
         final response = kad.Message.fromBuffer(responseBytes);
@@ -350,7 +358,7 @@ class DHTClient {
     try {
       final responseBytes = await _sendRequest(
         peer,
-        PROTOCOL_DHT,
+        protocolDht,
         msg.writeToBuffer(),
       );
       final response = kad.Message.fromBuffer(responseBytes);
@@ -449,7 +457,7 @@ class DHTClient {
           .start(); // This will be safe now with the updated P2plibRouter
 
       // Register protocol handlers
-      node.dhtHandler.router.registerProtocol(PROTOCOL_DHT);
+      node.dhtHandler.router.registerProtocol(protocolDht);
 
       // Initialize routing table
       await _initializeRoutingTable();
@@ -502,10 +510,10 @@ class DHTClient {
     }
   }
 
-  // Add a getter for the routing table
+  /// The Kademlia routing table for peer management.
   KademliaRoutingTable get kademliaRoutingTable => _kademliaRoutingTable;
 
-  /// Helper method to compare two lists for equality
+  /// Compares two byte lists for equality.
   bool listsEqual(List<int> a, List<int> b) {
     if (a.length != b.length) return false;
     for (int i = 0; i < a.length; i++) {
@@ -514,6 +522,7 @@ class DHTClient {
     return true;
   }
 
+  /// Returns all stored DHT keys.
   Future<List<String>> getAllStoredKeys() async {
     try {
       // Get all keys from the DHT storage
@@ -553,6 +562,7 @@ class DHTClient {
     }
   }
 
+  /// Updates the republish timestamp for a key.
   Future<void> updateKeyRepublishTime(String key) async {
     try {
       // Create metadata key for storing republish time
@@ -635,5 +645,6 @@ class DHTClient {
   }
   */
 
+  /// The underlying P2P router.
   P2plibRouter get router => _router;
 }

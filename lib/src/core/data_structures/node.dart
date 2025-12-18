@@ -13,14 +13,25 @@ import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:fixnum/fixnum.dart';
 
 /// Types of IPFS nodes in the UnixFS data model.
-enum IPFSNodeType { file, directory, symlink, unknown }
+enum IPFSNodeType {
+  /// A regular file node.
+  file,
+
+  /// A directory containing links to other nodes.
+  directory,
+
+  /// A symbolic link to another path.
+  symlink,
+
+  /// An unrecognized node type.
+  unknown,
+}
 
 /// Represents an IPFS data node with links and handlers.
 ///
 /// IPFSDataNode is a high-level representation of content in IPFS,
 /// combining the CID, links to child nodes, and access to node services.
 class IPFSDataNode {
-
   /// Creates an IPFS data node.
   IPFSDataNode({
     required this.cid,
@@ -30,6 +41,7 @@ class IPFSDataNode {
     required this.size,
     required IPFSConfig config,
   }) : _config = config;
+
   /// The content identifier for this node.
   final CID cid;
 
@@ -47,11 +59,22 @@ class IPFSDataNode {
 
   final IPFSConfig _config;
 
+  /// The Bitswap protocol handler for block exchange.
   late final BitswapHandler bitswapHandler;
+
+  /// The DHT protocol handler for peer and content discovery.
   late final DHTHandler dhtHandler;
+
+  /// The datastore handler for persistence operations.
   late final DatastoreHandler datastoreHandler;
+
+  /// The routing handler for content routing.
   late final RoutingHandler routingHandler;
+
+  /// The network handler for peer communication.
   late final NetworkHandler networkHandler;
+
+  /// The PubSub handler for topic-based messaging.
   late final PubSubHandler pubSubHandler;
 
   final _newContentController = StreamController<String>.broadcast();
@@ -79,7 +102,6 @@ class IPFSDataNode {
 
 /// A named link to another node in the DAG.
 class NodeLink {
-
   /// Creates a node link.
   NodeLink({
     required this.name,
@@ -87,6 +109,7 @@ class NodeLink {
     required this.size,
     this.metadata = const {},
   });
+
   /// The link name (filename in directories).
   final String name;
 

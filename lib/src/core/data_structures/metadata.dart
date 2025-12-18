@@ -4,7 +4,6 @@
 ///
 /// Contains size, content type, modification time, and custom properties.
 class IPLDMetadata {
-
   /// Creates metadata with the given parameters.
   IPLDMetadata({
     required this.size,
@@ -12,6 +11,7 @@ class IPLDMetadata {
     this.lastModified,
     this.contentType,
   });
+
   /// Size of the content in bytes.
   final int size;
 
@@ -24,6 +24,7 @@ class IPLDMetadata {
   /// MIME type of the content.
   final String? contentType;
 
+  /// Converts this metadata to a JSON map.
   Map<String, dynamic> toJson() => {
     'size': size,
     'lastModified': lastModified?.toIso8601String(),

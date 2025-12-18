@@ -32,6 +32,7 @@ class GraphsyncProtocol {
       );
   }
 
+  /// Creates a cancel request for an in-progress request.
   GraphsyncMessage createCancelRequest(int requestId) {
     return GraphsyncMessage()
       ..requests.add(
@@ -41,6 +42,7 @@ class GraphsyncProtocol {
       );
   }
 
+  /// Creates a pause request.
   GraphsyncMessage createPauseRequest(int requestId) {
     return GraphsyncMessage()
       ..requests.add(
@@ -50,6 +52,7 @@ class GraphsyncProtocol {
       );
   }
 
+  /// Creates an unpause request to resume a paused request.
   GraphsyncMessage createUnpauseRequest(int requestId) {
     return GraphsyncMessage()
       ..requests.add(
@@ -59,6 +62,7 @@ class GraphsyncProtocol {
       );
   }
 
+  /// Creates a response message.
   GraphsyncMessage createResponse({
     required int requestId,
     required ResponseStatus status,
@@ -82,6 +86,7 @@ class GraphsyncProtocol {
     return message;
   }
 
+  /// Creates a progress response with block counts.
   GraphsyncMessage createProgressResponse({
     required int requestId,
     required int blocksProcessed,

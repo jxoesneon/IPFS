@@ -9,6 +9,7 @@ import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 /// Provides convenience methods for constructing [IPFSMessage] instances
 /// with proper timestamps and metadata.
 class MessageFactory {
+  /// Creates a base IPFS protocol message.
   static IPFSMessage createBaseMessage({
     required String protocolId,
     required Uint8List payload,

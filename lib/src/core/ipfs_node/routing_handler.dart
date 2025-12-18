@@ -10,7 +10,7 @@ import 'package:http/http.dart' as http;
 
 /// Handles routing operations for an IPFS node.
 class RoutingHandler {
-
+  /// Creates a routing handler with config and network handler.
   RoutingHandler(
     IPFSConfig config,
     NetworkHandler networkHandler, {

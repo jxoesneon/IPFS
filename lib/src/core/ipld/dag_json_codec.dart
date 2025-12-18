@@ -3,11 +3,18 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
 
-/// Interface for IPLD codecs
+/// Interface for IPLD codecs.
 abstract class IPLDCodec {
+  /// Codec name.
   String get name;
+
+  /// Multicodec code.
   int get code;
+
+  /// Encodes data to bytes.
   Uint8List encode(dynamic data);
+
+  /// Decodes bytes to data.
   dynamic decode(Uint8List data);
 }
 

@@ -1,10 +1,26 @@
 // lib/src/core/data_structures/node_type.dart
 
 /// Types of nodes in the UnixFS data model.
-enum NodeType { unknown, file, directory, symlink, raw }
+enum NodeType {
+  /// An unrecognized node type.
+  unknown,
+
+  /// A regular file node.
+  file,
+
+  /// A directory containing links to other nodes.
+  directory,
+
+  /// A symbolic link to another path.
+  symlink,
+
+  /// Raw binary data without structure.
+  raw,
+}
 
 /// Extension for protobuf conversion of [NodeType].
 extension NodeTypeExtension on NodeType {
+  /// Converts this [NodeType] to its protobuf integer representation.
   int toProto() {
     switch (this) {
       case NodeType.unknown:
@@ -20,6 +36,7 @@ extension NodeTypeExtension on NodeType {
     }
   }
 
+  /// Creates a [NodeType] from its protobuf integer representation.
   static NodeType fromProto(int value) {
     switch (value) {
       case 1:

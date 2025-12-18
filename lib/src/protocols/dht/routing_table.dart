@@ -12,7 +12,6 @@ import 'kademlia_tree.dart';
 ///
 /// Wraps a KademliaTree for efficient peer lookup and management.
 class RoutingTable {
-
   /// Creates a routing table for [_localPeerId].
   RoutingTable(this._localPeerId, DHTClient dhtClient) {
     _dhtClient = dhtClient;
@@ -34,15 +33,18 @@ class RoutingTable {
 
   late final DHTClient _dhtClient;
 
+  /// Returns the nearest peers to a key.
   List<p2p.PeerId> getNearestPeers(List<int> key, [int count = K]) {
     final targetPeerId = p2p.PeerId(value: Uint8List.fromList(key));
     return _kademliaTree.findClosestPeers(targetPeerId, count);
   }
 
+  /// Adds a peer to the routing table.
   void addPeer(p2p.PeerId peerId, p2p.PeerId associatedPeerId) {
     _kademliaTree.addPeer(peerId, associatedPeerId);
   }
 
+  /// Removes a peer from the routing table.
   void removePeer(p2p.PeerId peerId) {
     _kademliaTree.removePeer(peerId);
   }

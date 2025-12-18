@@ -6,7 +6,6 @@ import '../../proto/generated/core/node_stats.pb.dart'
 
 /// Represents statistics about the IPFS node.
 class NodeStats {
-
   /// Creates a new [NodeStats] instance.
   NodeStats({
     required this.numBlocks,
@@ -26,6 +25,7 @@ class NodeStats {
       bandwidthReceived: pbNodeStats.bandwidthReceived.toInt(),
     );
   }
+
   /// The number of blocks stored in the datastore.
   final int numBlocks;
 
@@ -62,6 +62,7 @@ class NodeStats {
         '}';
   }
 
+  /// Creates a [NodeStats] instance from a JSON map.
   static NodeStats fromJson(Map<String, dynamic> json) {
     return NodeStats(
       numBlocks: json['numBlocks'] as int,

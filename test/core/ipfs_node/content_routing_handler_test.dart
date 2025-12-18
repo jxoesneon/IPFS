@@ -18,7 +18,6 @@ class MockNetworkHandler extends NetworkHandler {
 }
 
 class MockContentRouting implements ContentRouting {
-
   MockContentRouting({this.providers = const [], this.dnsResult});
   final List<String> providers;
   final String? dnsResult;
@@ -44,7 +43,6 @@ class MockContentRouting implements ContentRouting {
 }
 
 class MockDelegatedRouting extends DelegatedRoutingHandler {
-
   MockDelegatedRouting({this.providers = const [], this.success = true})
     : super(delegateEndpoint: 'http://mock');
   final List<String> providers;

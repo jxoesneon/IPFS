@@ -29,7 +29,7 @@ import 'red_black_tree.dart';
 ///
 /// **Key Kademlia Parameters:**
 /// - `K = 20`: Maximum peers per bucket (replication factor)
-/// - `ALPHA = 3`: Concurrent lookup parallelism
+/// - `alpha = 3`: Concurrent lookup parallelism
 ///
 /// **Core Operations:**
 /// - [nodeLookup]: Find the K closest peers to a target
@@ -51,7 +51,6 @@ import 'red_black_tree.dart';
 /// - [DHTClient] for the DHT protocol handler
 /// - [Kademlia paper](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf)
 class KademliaTree {
-
   /// Creates a new Kademlia tree with the given [dhtClient].
   ///
   /// Optionally accepts a [root] node for custom initialization.
@@ -93,16 +92,16 @@ class KademliaTree {
   static const int K = 20;
 
   /// Number of concurrent lookups for parallel queries.
-  static const int ALPHA = 3;
+  static const int alpha = 3;
 
   /// Interval between periodic bucket refresh operations.
-  static const Duration REFRESH_INTERVAL = Duration(hours: 1);
+  static const Duration refreshInterval = Duration(hours: 1);
 
   /// Interval between key republishing.
-  static const Duration REPUBLISH_INTERVAL = Duration(hours: 24);
+  static const Duration republishInterval = Duration(hours: 24);
 
   /// Timeout for individual node requests.
-  static const Duration NODE_TIMEOUT = Duration(seconds: 5);
+  static const Duration nodeTimeout = Duration(seconds: 5);
 
   // List of k-buckets (256 for IPv6 compatibility)
   final List<RedBlackTree<p2p.PeerId, KademliaTreeNode>> _buckets = [];
@@ -117,6 +116,7 @@ class KademliaTree {
   final Map<p2p.PeerId, ConnectionStatistics> _connectionStats = {};
   final Map<p2p.PeerId, NodeStats> _nodeStats = {};
 
+  /// Timeout duration for bucket refreshes.
   final refreshTimeout = const Duration(minutes: 30);
 
   /// The underlying DHT client for network operations.
@@ -146,27 +146,39 @@ class KademliaTree {
   }
 
   void _startPeriodicTasks() {
-    Timer.periodic(REFRESH_INTERVAL, (_) => refresh());
-    Timer.periodic(REPUBLISH_INTERVAL, (_) => _republishKeys());
+    Timer.periodic(refreshInterval, (_) => refresh());
+    Timer.periodic(republishInterval, (_) => _republishKeys());
   }
 
   void _startValueMaintenanceTasks() {
     // Republish values periodically
-    Timer.periodic(REPUBLISH_INTERVAL, (_) async {
+    Timer.periodic(republishInterval, (_) async {
       await _valueStore.republishValues();
     });
   }
 
-  // Public getters
+  /// Map of last seen timestamps for peers.
   Map<p2p.PeerId, DateTime> get lastSeen => _lastSeen;
+
+  /// Set of recently contacted peers.
   Set<p2p.PeerId> get recentContacts => _recentContacts;
+
+  /// Lookup success history by peer.
   Map<p2p.PeerId, List<bool>> get lookupSuccessHistory => _lookupSuccessHistory;
+
+  /// Connection statistics by peer.
   Map<p2p.PeerId, ConnectionStatistics> get connectionStats => _connectionStats;
+
+  /// Node statistics by peer.
   Map<p2p.PeerId, NodeStats> get nodeStats => _nodeStats;
+
+  /// The list of k-buckets.
   List<RedBlackTree<p2p.PeerId, KademliaTreeNode>> get buckets => _buckets;
+
+  /// The root node of the tree.
   KademliaTreeNode? get root => _root;
 
-  // Implementing iterative node lookup as per Kademlia spec
+  /// Performs an iterative node lookup to find the K closest peers to [target].
   Future<List<p2p.PeerId>> nodeLookup(p2p.PeerId target) async {
     try {
       await _lookupLimiter.acquire();
@@ -174,7 +186,9 @@ class KademliaTree {
       Set<p2p.PeerId> queriedPeers = {};
       List<p2p.PeerId> closestPeers = findClosestPeers(target, K);
       int consecutiveFailedAttempts = 0;
-      Duration backoffDuration = const Duration(milliseconds: 100); // Initial backoff
+      Duration backoffDuration = const Duration(
+        milliseconds: 100,
+      ); // Initial backoff
       final maxBackoff = const Duration(seconds: 10);
       final minImprovement = 0.01; // 1% improvement threshold
 
@@ -185,7 +199,7 @@ class KademliaTree {
       for (int iteration = 0; iteration < 20; iteration++) {
         List<p2p.PeerId> peersToQuery = closestPeers
             .where((p) => !queriedPeers.contains(p))
-            .take(ALPHA)
+            .take(alpha)
             .toList();
 
         if (peersToQuery.isEmpty) {
@@ -336,7 +350,7 @@ class KademliaTree {
     );
 
     return completer.future.timeout(
-      NODE_TIMEOUT,
+      nodeTimeout,
       onTimeout: () {
         _pendingRequests.remove(requestId);
         throw TimeoutException('Request timed out');
@@ -358,6 +372,7 @@ class KademliaTree {
   }
 
   // Message handling
+  /// Handles an incoming DHT message.
   void handleIncomingMessage(p2p.Message message) {
     try {
       final ipfsMessage = IPFSMessage.fromBuffer(message.payload!);
@@ -397,15 +412,18 @@ class KademliaTree {
     }
   }
 
+  /// Refreshes all k-buckets.
   void refresh() {
     // This will use the extension method from refresh.dart
     Refresh(this).refresh();
   }
 
+  /// Finds the k closest peers to the target.
   List<p2p.PeerId> findClosestPeers(p2p.PeerId target, int k) {
     return FindClosestPeers(this).findClosestPeers(target, k);
   }
 
+  /// Sends a ping request to a peer.
   Future<p2p.Message?> sendPingRequest(p2p.PeerId peer) async {
     final requestId = _generateRequestId();
     final pingMessage = PingMessage(
@@ -439,6 +457,7 @@ class KademliaTree {
     }
   }
 
+  /// Sends a ping and returns true if the peer responds.
   Future<bool> sendPing(p2p.PeerId peer) async {
     final requestId = _generateRequestId();
     final message = PingMessage(
@@ -456,6 +475,7 @@ class KademliaTree {
     }
   }
 
+  /// Stores a value at a remote peer.
   Future<bool> storeValue(
     p2p.PeerId peer,
     Uint8List key,
@@ -489,6 +509,7 @@ class KademliaTree {
     }
   }
 
+  /// Finds a value by key in the DHT.
   Future<(Uint8List?, List<p2p.PeerId>)> findValue(Uint8List key) async {
     try {
       await _findValueLimiter.acquire();
@@ -535,17 +556,20 @@ class KademliaTree {
     }
   }
 
+  /// Stores a value locally in the DHT.
   Future<void> storeLocalValue(String key, Uint8List value) async {
     await _valueStore.store(key, value);
   }
 
+  /// Retrieves a locally stored value by key.
   Future<Uint8List?> getValue(String key) async {
     return await _valueStore.retrieve(key);
   }
 
-  // Add getter to show explicit usage
+  /// Access to bucket caches.
   Map<int, LRUCache> get bucketCaches => _bucketCaches;
 
+  /// Gets the associated peer for a given peer ID.
   p2p.PeerId? getAssociatedPeer(p2p.PeerId peerId) {
     for (var bucket in _buckets) {
       for (var entry in bucket.entries) {
@@ -558,9 +582,10 @@ class KademliaTree {
   }
 }
 
+/// Extension for index-based access on RedBlackTree.
 extension RedBlackTreeGetOperator<K, V> on RedBlackTree<K, V> {
+  /// Returns the value for [key], or null if not found.
   V? operator [](K key) {
-    // Implement the [] logic here
     for (var entry in entries) {
       if (entry.key == key) {
         return entry.value;
@@ -570,8 +595,9 @@ extension RedBlackTreeGetOperator<K, V> on RedBlackTree<K, V> {
   }
 }
 
-// Extension for RedBlackTree to support containsKey functionality
+/// Extension for containsKey functionality on RedBlackTree.
 extension RedBlackTreeContainsKey<K, V> on RedBlackTree<K, V> {
+  /// Returns true if [key] exists in the tree.
   bool containsKey(K key) {
     for (var entry in entries) {
       if (entry.key == key) {

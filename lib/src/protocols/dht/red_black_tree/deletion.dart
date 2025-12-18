@@ -65,6 +65,7 @@ class Deletion<K_PeerId, V_PeerInfo> {
     }
   }
 
+  /// Replaces subtree rooted at [u] with subtree rooted at [v].
   void transplant(
     RedBlackTree<K_PeerId, V_PeerInfo> tree,
     RedBlackTreeNode<K_PeerId, V_PeerInfo> u,
@@ -80,6 +81,7 @@ class Deletion<K_PeerId, V_PeerInfo> {
     v?.parent = u.parent;
   }
 
+  /// Finds the minimum node in a subtree.
   RedBlackTreeNode<K_PeerId, V_PeerInfo>? minimum(
     RedBlackTreeNode<K_PeerId, V_PeerInfo> node,
   ) {
@@ -89,6 +91,7 @@ class Deletion<K_PeerId, V_PeerInfo> {
     return node;
   }
 
+  /// Searches for a node by key.
   RedBlackTreeNode<K_PeerId, V_PeerInfo>? searchNode(
     RedBlackTree<K_PeerId, V_PeerInfo> tree,
     K_PeerId key,

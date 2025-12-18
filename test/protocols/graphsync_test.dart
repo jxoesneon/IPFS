@@ -18,7 +18,10 @@ void main() {
     });
 
     test('has default timeout', () {
-      expect(GraphsyncProtocol.defaultTimeout, equals(const Duration(seconds: 60)));
+      expect(
+        GraphsyncProtocol.defaultTimeout,
+        equals(const Duration(seconds: 60)),
+      );
     });
 
     test('createRequest creates valid request message', () {

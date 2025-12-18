@@ -7,15 +7,16 @@ import '../../utils/encoding.dart';
 ///
 /// Provides common serialization/deserialization for block types.
 abstract class BaseBlock {
-
   /// Creates a block with the given [data] and [cid].
   const BaseBlock(this.data, this.cid);
+
   /// The raw data payload.
   final Uint8List data;
 
   /// The content identifier.
   final CID cid;
 
+  /// Serializes this block to a byte array.
   Uint8List toBytes() {
     final bytes = BytesBuilder();
     final cidBytes = EncodingUtils.cidToBytes(cid);
@@ -25,6 +26,7 @@ abstract class BaseBlock {
     return bytes.toBytes();
   }
 
+  /// Deserializes a block from bytes using the provided factory function.
   static T fromBytes<T extends BaseBlock>(
     Uint8List bytes,
     T Function(Uint8List data, CID cid) factory,

@@ -107,8 +107,12 @@ enum GatewayMode {
   custom,
 }
 
+/// The main IPFS node implementation.
+///
+/// Provides high-level APIs for content addressing, publishing,
+/// DHT operations, and peer-to-peer networking.
 class IPFSNode {
-
+  /// Creates an IPFSNode from a pre-configured service container.
   IPFSNode.fromContainer(this._container) : _logger = Logger('IPFSNode') {
     _logger.debug('Creating IPFS Node from container');
 
@@ -121,6 +125,7 @@ class IPFSNode {
   final StreamController<String> _newContentController =
       StreamController<String>.broadcast();
 
+  /// Factory method to create and build an IPFS node from configuration.
   static Future<IPFSNode> create(IPFSConfig config) async {
     final builder = IPFSNodeBuilder(config);
     return await builder.build();
@@ -331,6 +336,7 @@ class IPFSNode {
     return const Stream.empty();
   }
 
+  /// Starts the IPFS node and all its subsystems.
   Future<void> start() async {
     _logger.debug('Starting IPFS Node...');
 
@@ -472,6 +478,7 @@ class IPFSNode {
     }
   }
 
+  /// Stops the IPFS node gracefully, releasing all resources.
   Future<void> stop() async {
     _logger.debug('Stopping IPFS Node...');
 
@@ -530,6 +537,7 @@ class IPFSNode {
     }
   }
 
+  /// Adds a file to IPFS and returns its CID.
   Future<String> addFile(Uint8List data) async {
     try {
       // Create a new block from the file data
@@ -565,6 +573,7 @@ class IPFSNode {
     }
   }
 
+  /// Adds a directory to IPFS and returns its CID.
   Future<String> addDirectory(Map<String, dynamic> directoryContent) async {
     // Create a new directory node
     // Note: Standard UnixFS directories don't store their own name/path internally
@@ -744,6 +753,7 @@ class IPFSNode {
     return null;
   }
 
+  /// Lists the contents of an IPFS directory.
   Future<List<Link>> ls(String cid) async {
     try {
       // Get the block
@@ -828,6 +838,7 @@ class IPFSNode {
   }
 
   // Add this method to the IPFSNode class
+  /// Publishes an IPNS record for the given CID.
   Future<void> publishIPNS(String cid, {required String keyName}) async {
     try {
       // Validate CID
@@ -847,6 +858,7 @@ class IPFSNode {
     }
   }
 
+  /// Imports a CAR (Content Addressable Archive) file.
   Future<void> importCAR(Uint8List carFile) async {
     try {
       await _container.get<DatastoreHandler>().importCAR(carFile);
@@ -909,6 +921,7 @@ class IPFSNode {
     }
   }
 
+  /// Requests a specific block from a peer via Bitswap.
   Future<void> requestBlock(String cid, Peer peer) async {
     try {
       // Validate CID format
@@ -957,6 +970,7 @@ class IPFSNode {
     }
   }
 
+  /// Returns a health status map for all subsystems.
   Future<Map<String, dynamic>> getHealthStatus() async {
     return {
       'core': {
@@ -998,13 +1012,23 @@ class IPFSNode {
   }
 
   // Core getters
+  /// Access to the underlying datastore.
   Datastore get datastore => _container.get<DatastoreHandler>().datastore;
+
+  /// Access to the network router.
   Router get router => _container.get<NetworkHandler>().router;
+
+  /// Access to the Bitswap handler.
   BitswapHandler get bitswap => _container.get<BitswapHandler>();
+
+  /// Access to the DHT handler.
   DHTHandler get dhtHandler => _container.get<DHTHandler>();
+
+  /// This node's peer ID.
   String get peerID => _container.get<NetworkHandler>().peerID;
 
   // Event streams
+  /// Stream of new content CIDs added to this node.
   Stream<String> get onNewContent => _newContentController.stream;
 
   /// Validates that all required services are registered in the container
@@ -1047,6 +1071,6 @@ class IPFSNode {
     _logger.debug('All required services validated successfully');
   }
 
-  // Add this getter to the IPFSNode class
+  /// Returns the service container for dependency injection.
   ServiceContainer get container => _container;
 }

@@ -32,7 +32,6 @@ import '../utils/logger.dart';
 /// - [Datastore] for low-level storage
 /// - [CID] for content addressing
 class ContentService {
-
   /// Creates a content service backed by [_datastore].
   ContentService(this._datastore);
   final Datastore _datastore;

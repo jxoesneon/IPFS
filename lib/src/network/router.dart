@@ -21,7 +21,6 @@ import '../transport/p2plib_router.dart';
 /// await router.sendMessage(peerId, messageBytes);
 /// ```
 class Router {
-
   /// Creates a router with the given [config].
   Router(IPFSConfig config)
     : _router = P2plibRouter(config),

@@ -95,7 +95,9 @@ void main() {
     });
 
     test('should handle disabled metrics gracefully', () async {
-      final disabledConfig = IPFSConfig(metrics: const MetricsConfig(enabled: false));
+      final disabledConfig = IPFSConfig(
+        metrics: const MetricsConfig(enabled: false),
+      );
       final disabledCollector = MetricsCollector(disabledConfig);
 
       await disabledCollector.start();
