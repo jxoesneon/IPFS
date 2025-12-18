@@ -1,20 +1,16 @@
 // src/core/ipfs_node/content_routing_handler.dart
 import 'dart:async';
-import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
+
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/routing/content_routing.dart';
 import 'package:dart_ipfs/src/routing/delegated_routing.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Handles content routing operations with fallback strategies
 class ContentRoutingHandler {
-  final IPFSConfig _config;
-  final NetworkHandler _networkHandler;
-  late final Logger _logger;
-  late final ContentRouting _contentRouting;
-  late final DelegatedRoutingHandler _delegatedRouting;
 
   ContentRoutingHandler(
     this._config,
@@ -38,6 +34,11 @@ class ContentRoutingHandler {
 
     _logger.debug('ContentRoutingHandler instance created');
   }
+  final IPFSConfig _config;
+  final NetworkHandler _networkHandler;
+  late final Logger _logger;
+  late final ContentRouting _contentRouting;
+  late final DelegatedRoutingHandler _delegatedRouting;
 
   /// Starts the content routing services
   Future<void> start() async {

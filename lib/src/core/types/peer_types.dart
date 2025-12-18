@@ -4,15 +4,12 @@ import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
-import '../../proto/generated/dht/kademlia.pb.dart' as kad;
+
 import '../../proto/generated/core/peer.pb.dart';
+import '../../proto/generated/dht/kademlia.pb.dart' as kad;
 
 /// Core peer representation used throughout the application
 class IPFSPeer {
-  final p2p.PeerId id;
-  final List<p2p.FullAddress> addresses;
-  final int latency;
-  final String agentVersion;
 
   IPFSPeer({
     required this.id,
@@ -46,6 +43,10 @@ class IPFSPeer {
       agentVersion: '', // DHT peers don't track version
     );
   }
+  final p2p.PeerId id;
+  final List<p2p.FullAddress> addresses;
+  final int latency;
+  final String agentVersion;
 
   PeerProto toProto() {
     return PeerProto()

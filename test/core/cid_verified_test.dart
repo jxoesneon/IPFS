@@ -1,8 +1,9 @@
 // test/core/cid_verified_test.dart
-import 'package:test/test.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'dart:typed_data';
 import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:test/test.dart';
 
 /// Comprehensive CID tests using VERIFIED APIs from actual source code.
 void main() {

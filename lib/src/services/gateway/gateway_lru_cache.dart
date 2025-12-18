@@ -5,15 +5,15 @@ import 'dart:collection';
 /// Evicts oldest entries when capacity is exceeded. Thread-safe
 /// for single-threaded Dart isolates.
 class GatewayLruCache<K, V> {
-  /// Maximum number of entries.
-  final int capacity;
-
-  final LinkedHashMap<K, V> _cache;
 
   /// Creates a cache with the given [capacity].
   GatewayLruCache(this.capacity)
     : assert(capacity > 0, 'Capacity must be positive'),
       _cache = LinkedHashMap();
+  /// Maximum number of entries.
+  final int capacity;
+
+  final LinkedHashMap<K, V> _cache;
 
   V? get(K key) {
     if (!_cache.containsKey(key)) return null;

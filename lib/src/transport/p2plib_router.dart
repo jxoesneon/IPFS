@@ -1,19 +1,21 @@
 // src/transport/p2plib_router.dart
-import 'dart:io';
-import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
-import '../protocols/dht/routing_table.dart';
-import 'package:synchronized/synchronized.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
-import '../protocols/bitswap/message.dart' show Message;
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/transport/local_crypto.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:synchronized/synchronized.dart';
+
+import '../protocols/bitswap/message.dart' show Message;
+import '../protocols/dht/routing_table.dart';
 
 /// Low-level P2P networking router using the p2plib package.
 ///
@@ -45,6 +47,24 @@ import 'package:dart_ipfs/src/transport/local_crypto.dart';
 /// - [NetworkHandler] for higher-level network operations
 /// - [DHTClient] for DHT protocol integration
 class P2plibRouter {
+  /// Returns a singleton instance of the router for the given [config].
+  factory P2plibRouter(IPFSConfig config) {
+    _instance ??= P2plibRouter.internal(config);
+    return _instance!;
+  }
+
+  P2plibRouter.internal(this._config)
+    : _router = p2p.RouterL2(
+        crypto: _sharedCrypto,
+        keepalivePeriod: const Duration(seconds: 30),
+      ),
+      _logger = Logger(
+        'P2plibRouter',
+        debug: _config.debug,
+        verbose: _config.verboseLogging,
+      ) {
+    _setupRouter();
+  }
   static P2plibRouter? _instance;
   static final p2p.Crypto _sharedCrypto = LocalCrypto();
   static final _cryptoInitLock = Lock();
@@ -72,27 +92,6 @@ class P2plibRouter {
   // Protocol handling
   final Set<String> _registeredProtocols = {};
   final Map<String, void Function(p2p.Packet)> _protocolHandlers = {};
-
-  /// Returns a singleton instance of the router for the given [config].
-  factory P2plibRouter(IPFSConfig config) {
-    if (_instance == null) {
-      _instance = P2plibRouter.internal(config);
-    }
-    return _instance!;
-  }
-
-  P2plibRouter.internal(this._config)
-    : _router = p2p.RouterL2(
-        crypto: _sharedCrypto,
-        keepalivePeriod: const Duration(seconds: 30),
-      ),
-      _logger = Logger(
-        'P2plibRouter',
-        debug: _config.debug,
-        verbose: _config.verboseLogging,
-      ) {
-    _setupRouter();
-  }
 
   void _setupRouter() {
     // Initialize the router with the provided configuration
@@ -635,7 +634,7 @@ class P2plibRouter {
 
       // Wait for response with timeout
       return await completer.future.timeout(
-        Duration(seconds: 30),
+        const Duration(seconds: 30),
         onTimeout: () {
           removeMessageHandler(protocolId);
           throw TimeoutException('Request to peer timed out');
@@ -696,76 +695,153 @@ class P2plibRouter {
   }
 }
 
+/// Interface for router implementations to handle multiaddresses
 mixin MultiAddressHandler {
+  /// Gets the multiaddress of the router
   String get multiaddr;
+
+  /// Sets the multiaddress of the router
   void setMultiaddr(String addr);
 }
 
+/// A wrapper for raw bytes sent over the network
 class NetworkMessage {
-  final Uint8List data;
-
+  /// Creates a new network message from bytes
   NetworkMessage(this.data);
 
+  /// The raw data of the message
+  final Uint8List data;
+
+  /// Creates a network message from a byte array
   static NetworkMessage fromBytes(Uint8List bytes) {
     return NetworkMessage(bytes);
   }
 }
 
-// Event classes for type-safe event handling
+/// Represents a change in peer connection state
 class ConnectionEvent {
-  final ConnectionEventType type;
-  final String peerId;
-
+  /// Creates a connection event
   ConnectionEvent({required this.type, required this.peerId});
-}
 
-enum ConnectionEventType { connected, disconnected }
+  /// The type of connection event (connected/disconnected)
+  final ConnectionEventType type;
 
-class MessageEvent {
+  /// The unique identifier of the peer
   final String peerId;
-  final Uint8List message;
+}
 
+/// Types of connection events
+enum ConnectionEventType {
+  /// Peer connected successfully
+  connected,
+
+  /// Peer disconnected
+  disconnected,
+}
+
+/// Represents an incoming message from a peer
+class MessageEvent {
+  /// Creates a message event
   MessageEvent({required this.peerId, required this.message});
-}
 
-class DHTEvent {
-  final DHTEventType type;
-  final Map<String, dynamic> data;
+  /// The unique identifier of the sender
+  final String peerId;
 
-  DHTEvent({required this.type, required this.data});
-}
-
-enum DHTEventType { valueFound, providerFound }
-
-class PubSubEvent {
-  final String topic;
+  /// The raw message payload
   final Uint8List message;
-  final String publisher;
-  final String eventType;
+}
 
+/// Data from a DHT operation
+class DHTEvent {
+  /// Creates a DHT event
+  DHTEvent({required this.type, required this.data});
+
+  /// The type of DHT event
+  final DHTEventType type;
+
+  /// The payload data returned by the DHT
+  final Map<String, dynamic> data;
+}
+
+/// Types of DHT search results
+enum DHTEventType {
+  /// A value was found for the requested key
+  valueFound,
+
+  /// A provider was found for the requested CID
+  providerFound,
+}
+
+/// Content or metadata from a PubSub subscription
+class PubSubEvent {
+  /// Creates a PubSub event
   PubSubEvent({
     required this.topic,
     required this.message,
     required this.publisher,
     required this.eventType,
   });
+
+  /// The subscription topic
+  final String topic;
+
+  /// The raw message payload
+  final Uint8List message;
+
+  /// The identifier of the publisher
+  final String publisher;
+
+  /// The type of event (e.g., 'message', 'join', 'leave')
+  final String eventType;
 }
 
+/// Represents a protocol or network error
 class ErrorEvent {
-  final ErrorEventType type;
-  final String message;
-
+  /// Creates an error event
   ErrorEvent({required this.type, required this.message});
+
+  /// The classification of the error
+  final ErrorEventType type;
+
+  /// A human-readable error message
+  final String message;
 }
 
-enum ErrorEventType { connectionError, disconnectionError, messageError }
+/// Classifications for network errors
+enum ErrorEventType {
+  /// Failure during connection establishment
+  connectionError,
 
+  /// Failure during disconnection
+  disconnectionError,
+
+  /// Failure during message processing or transport
+  messageError,
+}
+
+/// Lifecycle or data event for a multi-stream
 class StreamEvent {
-  final StreamEventType type;
-  final String streamId;
-  final Uint8List? data;
-
+  /// Creates a stream event
   StreamEvent({required this.type, required this.streamId, this.data});
+
+  /// The type of stream event
+  final StreamEventType type;
+
+  /// The unique identifier for the stream
+  final String streamId;
+
+  /// Optional data payload for 'data' events
+  final Uint8List? data;
 }
 
-enum StreamEventType { opened, closed, data }
+/// Types of stream transitions
+enum StreamEventType {
+  /// Stream was opened by a peer
+  opened,
+
+  /// Stream was closed
+  closed,
+
+  /// Data was received on the stream
+  data,
+}

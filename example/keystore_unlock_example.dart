@@ -18,7 +18,7 @@ Future<void> main() async {
 
   // Create configuration
   final config = IPFSConfig(offline: true);
-  final securityConfig = SecurityConfig();
+  final securityConfig = const SecurityConfig();
   final metrics = MetricsCollector(config);
 
   // Create security manager

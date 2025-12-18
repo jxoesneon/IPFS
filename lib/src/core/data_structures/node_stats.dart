@@ -6,20 +6,6 @@ import '../../proto/generated/core/node_stats.pb.dart'
 
 /// Represents statistics about the IPFS node.
 class NodeStats {
-  /// The number of blocks stored in the datastore.
-  final int numBlocks;
-
-  /// The total size of the blocks stored in the datastore (in bytes).
-  final int datastoreSize;
-
-  /// The number of connected peers.
-  final int numConnectedPeers;
-
-  /// The total bandwidth used for sending data (in bytes).
-  final int bandwidthSent;
-
-  /// The total bandwidth used for receiving data (in bytes).
-  final int bandwidthReceived;
 
   /// Creates a new [NodeStats] instance.
   NodeStats({
@@ -40,6 +26,20 @@ class NodeStats {
       bandwidthReceived: pbNodeStats.bandwidthReceived.toInt(),
     );
   }
+  /// The number of blocks stored in the datastore.
+  final int numBlocks;
+
+  /// The total size of the blocks stored in the datastore (in bytes).
+  final int datastoreSize;
+
+  /// The number of connected peers.
+  final int numConnectedPeers;
+
+  /// The total bandwidth used for sending data (in bytes).
+  final int bandwidthSent;
+
+  /// The total bandwidth used for receiving data (in bytes).
+  final int bandwidthReceived;
 
   /// Converts the [NodeStats] instance to its Protobuf representation.
   proto.NodeStats toProto() {

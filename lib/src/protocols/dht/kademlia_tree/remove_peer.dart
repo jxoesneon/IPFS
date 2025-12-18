@@ -1,7 +1,8 @@
+import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/bucket_management.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
+
 import 'helpers.dart';
-import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
 
 /// Extension for removing peers from a Kademlia tree.
 extension RemovePeer on KademliaTree {
@@ -18,11 +19,11 @@ extension RemovePeer on KademliaTree {
       // Check if the bucket can be merged with an adjacent bucket
       if (bucketIndex > 0 && bucketIndex < buckets.length - 1) {
         // Try merging with the previous or next bucket
-        this.mergeBuckets(
+        mergeBuckets(
           bucketIndex,
           bucketIndex - 1,
         ); // Use through KademliaTree instance
-        this.mergeBuckets(
+        mergeBuckets(
           bucketIndex,
           bucketIndex + 1,
         ); // Use through KademliaTree instance

@@ -2,22 +2,23 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:shelf/shelf.dart';
-import 'package:mime/mime.dart';
-import 'package:http_parser/http_parser.dart'; // For MediaType
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:p2plib/p2plib.dart' show PeerId;
-import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:http_parser/http_parser.dart'; // For MediaType
+import 'package:mime/mime.dart';
+import 'package:p2plib/p2plib.dart' show PeerId;
+import 'package:shelf/shelf.dart';
 
 /// Handlers for IPFS RPC API endpoints
 ///
 /// Implements Kubo-compatible RPC methods
 class RPCHandlers {
-  final IPFSNode node;
 
   RPCHandlers(this.node);
+  final IPFSNode node;
 
   /// GET /api/v0/version - Get IPFS version
   Future<Response> handleVersion(Request request) async {

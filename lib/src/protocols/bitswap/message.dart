@@ -6,6 +6,8 @@ import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as pb;
 
 /// Represents a Bitswap protocol message
 class Message {
+
+  Message();
   /// List of blocks being sent (Payload)
   final List<Block> _blocks = [];
 
@@ -20,8 +22,6 @@ class Message {
 
   /// Transient field: Pending bytes (Bitswap 1.2)
   int pendingBytes = 0;
-
-  Message();
 
   void addBlock(Block block) {
     _blocks.add(block);
@@ -218,11 +218,6 @@ enum WantType { block, have }
 enum BlockPresenceType { have, dontHave }
 
 class WantlistEntry {
-  final String cid;
-  final int priority;
-  final bool cancel;
-  final WantType wantType;
-  final bool sendDontHave;
 
   WantlistEntry({
     required this.cid,
@@ -231,6 +226,11 @@ class WantlistEntry {
     this.wantType = WantType.block,
     this.sendDontHave = false,
   });
+  final String cid;
+  final int priority;
+  final bool cancel;
+  final WantType wantType;
+  final bool sendDontHave;
 }
 
 class Wantlist {
@@ -248,8 +248,8 @@ class Wantlist {
 }
 
 class BlockPresence {
-  final String cid;
-  final BlockPresenceType type;
 
   BlockPresence({required this.cid, required this.type});
+  final String cid;
+  final BlockPresenceType type;
 }

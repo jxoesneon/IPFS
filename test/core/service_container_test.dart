@@ -2,8 +2,8 @@ import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:test/test.dart';
 
 class TestService {
-  final int value;
   TestService(this.value);
+  final int value;
 }
 
 void main() {

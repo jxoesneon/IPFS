@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
+import 'package:fixnum/fixnum.dart';
+import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 
 /// Factory for creating IPFS protocol messages.
 ///

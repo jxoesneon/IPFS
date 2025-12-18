@@ -1,10 +1,11 @@
 // test/core/responses/block_response_factory_test.dart
-import 'package:test/test.dart';
-import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
 import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
+import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import 'package:test/test.dart';
 
 /// Comprehensive tests for BlockResponseFactory utility methods.
 void main() {
@@ -80,7 +81,7 @@ void main() {
       });
 
       test('handles very long error messages', () {
-        final longMessage = 'Error: ' + 'x' * 1000;
+        final longMessage = 'Error: ${'x' * 1000}';
 
         final response = BlockResponseFactory.failureAdd(longMessage);
 
@@ -89,7 +90,7 @@ void main() {
       });
 
       test('handles special characters in messages', () {
-        final specialMsg = 'Error: \n\t"test" \$\{value\}';
+        final specialMsg = 'Error: \n\t"test" \${value}';
 
         final response = BlockResponseFactory.failureRemove(specialMsg);
 

@@ -1,28 +1,5 @@
 /// Configuration options for the DHT (Distributed Hash Table)
 class DHTConfig {
-  /// Protocol identifier for DHT
-  final String protocolId;
-
-  /// Number of parallel lookups (alpha value in Kademlia)
-  final int alpha;
-
-  /// Size of k-buckets
-  final int bucketSize;
-
-  /// Maximum number of providers to store per key
-  final int maxProvidersPerKey;
-
-  /// Time to wait before considering a request as failed
-  final Duration requestTimeout;
-
-  /// Maximum number of records to return per query
-  final int maxRecordsPerQuery;
-
-  /// Whether to enable provider recording
-  final bool enableProviderRecording;
-
-  /// Whether to enable value storage
-  final bool enableValueStorage;
 
   const DHTConfig({
     this.protocolId = '/ipfs/kad/1.0.0',
@@ -51,6 +28,29 @@ class DHTConfig {
       enableValueStorage: (json['enableValueStorage'] as bool?) ?? true,
     );
   }
+  /// Protocol identifier for DHT
+  final String protocolId;
+
+  /// Number of parallel lookups (alpha value in Kademlia)
+  final int alpha;
+
+  /// Size of k-buckets
+  final int bucketSize;
+
+  /// Maximum number of providers to store per key
+  final int maxProvidersPerKey;
+
+  /// Time to wait before considering a request as failed
+  final Duration requestTimeout;
+
+  /// Maximum number of records to return per query
+  final int maxRecordsPerQuery;
+
+  /// Whether to enable provider recording
+  final bool enableProviderRecording;
+
+  /// Whether to enable value storage
+  final bool enableValueStorage;
 
   /// Converts the config to JSON
   Map<String, dynamic> toJson() => {

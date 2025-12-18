@@ -1,7 +1,7 @@
 // lib/src/protocols/dht/red_black_tree/rotations.dart
-import '../red_black_tree.dart';
 import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
     as common_tree;
+import '../red_black_tree.dart';
 
 /// Handles rotation operations for Red-Black tree balancing.
 ///

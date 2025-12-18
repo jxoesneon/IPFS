@@ -1,9 +1,9 @@
 // lib/src/protocols/dht/red_black_tree/fix_violations.dart
 
-import '../red_black_tree.dart';
-import 'rotations.dart';
 import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
     as common_tree;
+import '../red_black_tree.dart';
+import 'rotations.dart';
 
 /// Fixes Red-Black tree violations after insertions and deletions.
 ///

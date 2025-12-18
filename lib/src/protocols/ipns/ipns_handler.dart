@@ -2,38 +2,24 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/cid.dart';
 
-import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
-import 'ipns_record.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:fixnum/fixnum.dart';
+
+import 'ipns_record.dart';
 
 /// Handles IPNS operations, combining both node-level coordination and protocol-level operations.
 ///
 /// **Security (SEC-004):** All IPNS records are signed with Ed25519 and verified
 /// on resolve to prevent record forgery attacks.
-class IPNSHandler {
-  final IPFSConfig _config;
-  final SecurityManager _securityManager;
-  final IDHTHandler _dhtHandler;
-  final PubSubHandler? _pubSubHandler; // Optional: May be null if offline
-  late final Logger _logger;
-  bool _isRunning = false;
-
-  /// Sequence numbers for each key (tracked to ensure monotonic increase)
-  final Map<String, int> _sequenceNumbers = {};
-
-  // Cache for resolved IPNS records
-  final Map<String, _CachedResolution> _resolutionCache = {};
-  static const Duration _cacheDuration = Duration(minutes: 30);
-
-  static const String _pubSubTopic = '/ipfs/ipns-1.0.0'; // Standard topic
+class IPNSHandler { // Standard topic
 
   IPNSHandler(
     this._config,
@@ -48,6 +34,21 @@ class IPNSHandler {
     );
     _logger.debug('IPNSHandler instance created');
   }
+  final IPFSConfig _config;
+  final SecurityManager _securityManager;
+  final IDHTHandler _dhtHandler;
+  final PubSubHandler? _pubSubHandler; // Optional: May be null if offline
+  late final Logger _logger;
+  bool _isRunning = false;
+
+  /// Sequence numbers for each key (tracked to ensure monotonic increase)
+  final Map<String, int> _sequenceNumbers = {};
+
+  // Cache for resolved IPNS records
+  final Map<String, _CachedResolution> _resolutionCache = {};
+  static const Duration _cacheDuration = Duration(minutes: 30);
+
+  static const String _pubSubTopic = '/ipfs/ipns-1.0.0';
 
   /// Publishes a SIGNED IPNS record linking a name to a CID.
   ///
@@ -327,10 +328,10 @@ class IPNSHandler {
 
 /// Helper class for caching IPNS resolutions
 class _CachedResolution {
-  final String cid;
-  final DateTime timestamp;
 
   _CachedResolution({required this.cid, required this.timestamp});
+  final String cid;
+  final DateTime timestamp;
 
   bool get isExpired =>
       DateTime.now().difference(timestamp) > IPNSHandler._cacheDuration;

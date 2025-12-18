@@ -1,11 +1,21 @@
 // src/core/ipfs_node/auto_nat_handler.dart
 import 'dart:async';
-import 'package:dart_ipfs/src/utils/logger.dart';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Handles NAT detection and traversal for an IPFS node
 class AutoNATHandler {
+
+  AutoNATHandler(this._config, this._networkHandler) {
+    _logger = Logger(
+      'AutoNATHandler',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
+    _logger.debug('AutoNATHandler instance created');
+  }
   final IPFSConfig _config;
   final NetworkHandler _networkHandler;
   late final Logger _logger;
@@ -18,15 +28,6 @@ class AutoNATHandler {
   DateTime? _lastDialbackTest;
 
   static const Duration _dialbackInterval = Duration(minutes: 30);
-
-  AutoNATHandler(this._config, this._networkHandler) {
-    _logger = Logger(
-      'AutoNATHandler',
-      debug: _config.debug,
-      verbose: _config.verboseLogging,
-    );
-    _logger.debug('AutoNATHandler instance created');
-  }
 
   /// Starts the AutoNAT service
   Future<void> start() async {

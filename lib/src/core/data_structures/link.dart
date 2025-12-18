@@ -1,7 +1,8 @@
 import 'dart:typed_data';
+
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:fixnum/fixnum.dart' as fixnum;
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_proto;
+import 'package:fixnum/fixnum.dart' as fixnum;
 
 // lib/src/core/data_structures/link.dart
 
@@ -35,19 +36,6 @@ import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_proto;
 /// - [MerkleDAGNode] for the node structure containing links
 /// - [CID] for content identifiers
 class Link {
-  /// The name of this link within its parent node.
-  ///
-  /// For UnixFS directories, this is the filename or subdirectory name.
-  final String name;
-
-  /// The content identifier of the linked target node.
-  final CID cid;
-
-  /// The cumulative size of the linked subgraph in bytes.
-  ///
-  /// For files, this is the file size. For directories, this includes
-  /// all descendant nodes recursively.
-  final fixnum.Int64 size;
 
   // Standard IPFS Link does not carry metadata, timestamp, or explicit isDirectory flags.
   // These must be resolved by fetching the target node.
@@ -70,6 +58,19 @@ class Link {
 
     return Link(name: proto.name, cid: cid, size: proto.size.toInt());
   }
+  /// The name of this link within its parent node.
+  ///
+  /// For UnixFS directories, this is the filename or subdirectory name.
+  final String name;
+
+  /// The content identifier of the linked target node.
+  final CID cid;
+
+  /// The cumulative size of the linked subgraph in bytes.
+  ///
+  /// For files, this is the file size. For directories, this includes
+  /// all descendant nodes recursively.
+  final fixnum.Int64 size;
 
   dag_proto.PBLink toProto() {
     return dag_proto.PBLink()

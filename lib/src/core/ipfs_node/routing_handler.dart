@@ -1,15 +1,15 @@
 // lib/src/core/ipfs_node/routing_handler.dart
 
 import 'dart:convert';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:http/http.dart' as http;
 import 'package:dart_ipfs/src/routing/content_routing.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart'; // Import your DNSLinkResolver utility
+import 'package:http/http.dart' as http;
 
 /// Handles routing operations for an IPFS node.
 class RoutingHandler {
-  final ContentRouting _contentRouting;
 
   RoutingHandler(
     IPFSConfig config,
@@ -17,6 +17,7 @@ class RoutingHandler {
     ContentRouting? contentRouting,
   }) : _contentRouting =
            contentRouting ?? ContentRouting(config, networkHandler);
+  final ContentRouting _contentRouting;
 
   /// Starts the routing services.
   Future<void> start() async {

@@ -1,17 +1,14 @@
 import 'dart:typed_data';
+
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:fixnum/fixnum.dart' show Int64;
 import 'package:dart_ipfs/src/proto/generated/core/car.pb.dart' as proto;
+import 'package:fixnum/fixnum.dart' show Int64;
 import 'package:protobuf/well_known_types/google/protobuf/any.pb.dart';
 // lib/src/core/data_structures/car.dart
 
 /// Represents a Content Addressable Archive (CAR) with v1 and v2 support.
 class CAR {
-  final List<Block> blocks;
-  final CarHeader header;
-  final CarIndex? index;
-  final int version;
 
   CAR({
     required this.blocks,
@@ -31,6 +28,10 @@ class CAR {
 
     return CAR(blocks: blocks, header: header, index: index, version: 2);
   }
+  final List<Block> blocks;
+  final CarHeader header;
+  final CarIndex? index;
+  final int version;
 
   /// Serializes the CAR to bytes for storage or transmission.
   Uint8List toBytes() {
@@ -112,10 +113,6 @@ class CAR {
 
 /// Represents a CAR file header
 class CarHeader {
-  final int version;
-  final List<String> characteristics;
-  final List<CID> roots;
-  final Map<String, dynamic> pragma;
 
   CarHeader({
     required this.version,
@@ -123,6 +120,10 @@ class CarHeader {
     this.roots = const [],
     this.pragma = const {},
   });
+  final int version;
+  final List<String> characteristics;
+  final List<CID> roots;
+  final Map<String, dynamic> pragma;
 
   proto.CarHeader toProto() {
     return proto.CarHeader()

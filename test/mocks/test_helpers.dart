@@ -51,10 +51,10 @@ Future<List<Block>> createTestBlocks(int count) async {
 
 /// Create a test block graph (linked blocks)
 class TestBlockGraph {
-  final List<Block> blocks;
-  final CID rootCID;
 
   TestBlockGraph(this.blocks, this.rootCID);
+  final List<Block> blocks;
+  final CID rootCID;
 
   static Future<TestBlockGraph> create(int blockCount) async {
     final blocks = await createTestBlocks(blockCount);

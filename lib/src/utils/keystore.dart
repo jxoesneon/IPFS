@@ -8,14 +8,14 @@ import 'logger.dart';
 
 /// Represents a public/private key pair for cryptographic operations.
 class KeyPair {
+
+  /// Creates a new key pair.
+  KeyPair(this.publicKey, this.privateKey);
   /// The public key in string format.
   final String publicKey;
 
   /// The private key in string format.
   final String privateKey;
-
-  /// Creates a new key pair.
-  KeyPair(this.publicKey, this.privateKey);
 }
 
 /// In-memory keystore for managing IPNS keys and cryptographic identities.
@@ -33,14 +33,21 @@ class KeyPair {
 /// }
 /// ```
 class Keystore {
+
+  /// Creates an empty keystore.
+  Keystore();
+
+  // Named constructor for configuration
+  factory Keystore.withConfig(dynamic config) {
+    final keystore = Keystore();
+    // Initialize with config
+    return keystore;
+  }
   final Map<String, KeyPair> _keyPairs = const {};
   final _logger = Logger('Keystore');
 
   /// The default key name used for node identity.
   static const String DEFAULT_KEY = 'self';
-
-  /// Creates an empty keystore.
-  Keystore();
 
   /// Adds a new key pair to the keystore.
   void addKeyPair(String name, KeyPair keyPair) {
@@ -168,12 +175,5 @@ class Keystore {
   void clearAfterMigration() {
     _keyPairs.clear();
     _logger.info('Plaintext keystore cleared after migration');
-  }
-
-  // Named constructor for configuration
-  factory Keystore.withConfig(dynamic config) {
-    final keystore = Keystore();
-    // Initialize with config
-    return keystore;
   }
 }

@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 void main() {
   group('MetricsConfig', () {
     test('defaults', () {
-      final config = MetricsConfig();
+      final config = const MetricsConfig();
       expect(config.enabled, isTrue);
       expect(config.collectionIntervalSeconds, 60);
       expect(config.prometheusEndpoint, '/metrics');
@@ -34,13 +34,13 @@ void main() {
 
   group('StorageConfig', () {
     test('defaults', () {
-      final config = StorageConfig();
+      final config = const StorageConfig();
       expect(config.baseDir, '.ipfs');
       expect(config.maxBlockSize, 1024 * 1024 * 2);
     });
 
     test('helpers', () {
-      final config = StorageConfig(baseDir: '/tmp');
+      final config = const StorageConfig(baseDir: '/tmp');
       expect(config.blockPath, '/tmp/blocks');
       expect(config.datastorePath, '/tmp/datastore');
       expect(config.keysPath, '/tmp/keys');
@@ -66,7 +66,7 @@ void main() {
 
   group('NetworkConfig', () {
     test('defaults', () {
-      final config = NetworkConfig();
+      final config = const NetworkConfig();
       expect(config.maxConnections, 50);
       expect(config.listenAddresses, contains('/ip4/0.0.0.0/tcp/4001'));
     });

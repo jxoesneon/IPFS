@@ -1,10 +1,11 @@
 import 'dart:convert' show utf8;
 import 'dart:typed_data' show Uint8List;
-import 'package:p2plib/p2plib.dart' as p2p;
+
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
     show V_PeerInfo;
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 
 // Change from DHTHandler to IDHTHandler to indicate it's an interface
 abstract class IDHTHandler {
@@ -26,7 +27,6 @@ abstract class IDHTHandler {
 
 /// Represents a key in the DHT
 class Key {
-  final Uint8List bytes;
 
   const Key(this.bytes);
 
@@ -39,6 +39,7 @@ class Key {
   factory Key.fromBytes(Uint8List bytes) {
     return Key(bytes);
   }
+  final Uint8List bytes;
 
   @override
   String toString() {
@@ -48,7 +49,6 @@ class Key {
 
 /// Represents a value stored in the DHT
 class Value {
-  final Uint8List bytes;
 
   const Value(this.bytes);
 
@@ -61,6 +61,7 @@ class Value {
   factory Value.fromBytes(Uint8List bytes) {
     return Value(bytes);
   }
+  final Uint8List bytes;
 
   @override
   String toString() {

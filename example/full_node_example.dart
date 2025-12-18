@@ -1,7 +1,7 @@
 // ignore_for_file: avoid_print
 // example/full_node_example.dart
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
 import 'package:dart_ipfs/src/services/rpc/rpc_server.dart';
 
@@ -19,7 +19,7 @@ Future<void> main() async {
   print('📝 Creating IPFS configuration...');
   // Use port 4002 to avoid conflict with Dashboard app (4001)
   final config = IPFSConfig(
-    network: NetworkConfig(listenAddresses: ['/ip4/0.0.0.0/tcp/4002']),
+    network: const NetworkConfig(listenAddresses: ['/ip4/0.0.0.0/tcp/4002']),
   );
 
   // Step 2: Initialize IPFS node
@@ -60,7 +60,7 @@ Future<void> main() async {
 
   // Keep the node running
   print('\n⏹️  Press Ctrl+C to stop the node\n');
-  await Future<void>.delayed(Duration(days: 365));
+  await Future<void>.delayed(const Duration(days: 365));
 }
 
 void _printUsageInfo(String gatewayUrl, String rpcUrl, String peerId) {

@@ -1,17 +1,18 @@
 import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_lru_cache.dart';
 
 import 'compressed_cache_store.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
 
 /// Manages caching of file previews with multiple strategies
 class PreviewCacheManager {
-  final CompressedCacheStore _compressedStore;
-  final GatewayLruCache<String, Uint8List> _memoryCache;
 
   PreviewCacheManager({required String cachePath, int maxMemoryEntries = 100})
     : _compressedStore = CompressedCacheStore(cachePath: cachePath),
       _memoryCache = GatewayLruCache(maxMemoryEntries);
+  final CompressedCacheStore _compressedStore;
+  final GatewayLruCache<String, Uint8List> _memoryCache;
 
   Future<Uint8List?> getPreview(CID cid, String contentType) async {
     // Check memory cache first

@@ -1,13 +1,15 @@
 // src/ipfs.dart
 import 'dart:typed_data';
-import 'network/router.dart';
-import 'core/storage/datastore.dart';
-import 'core/config/ipfs_config.dart';
-import 'core/ipfs_node/ipfs_node.dart';
-import 'core/data_structures/link.dart';
-import 'core/data_structures/peer.dart';
-import 'core/data_structures/node_stats.dart';
+
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+
+import 'core/config/ipfs_config.dart';
+import 'core/data_structures/link.dart';
+import 'core/data_structures/node_stats.dart';
+import 'core/data_structures/peer.dart';
+import 'core/ipfs_node/ipfs_node.dart';
+import 'core/storage/datastore.dart';
+import 'network/router.dart';
 
 /// Main entry point for the IPFS (InterPlanetary File System) implementation.
 ///

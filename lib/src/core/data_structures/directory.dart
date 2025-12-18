@@ -1,6 +1,6 @@
-import 'package:fixnum/fixnum.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
+import 'package:fixnum/fixnum.dart';
 
 // lib/src/core/data_structures/directory.dart
 
@@ -9,6 +9,15 @@ import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 /// **UnixFS v1.5:** Supports optional `mode` (Unix permissions) and `mtime`
 /// (modification time) for file system preservation.
 class IPFSDirectoryEntry {
+
+  IPFSDirectoryEntry({
+    required this.name,
+    required this.hash,
+    required this.size,
+    required this.isDirectory,
+    this.mode,
+    this.mtime,
+  });
   /// The name of this entry (file or subdirectory name).
   final String name;
 
@@ -29,15 +38,6 @@ class IPFSDirectoryEntry {
   /// Optional - when null, no mtime is stored.
   final DateTime? mtime;
 
-  IPFSDirectoryEntry({
-    required this.name,
-    required this.hash,
-    required this.size,
-    required this.isDirectory,
-    this.mode,
-    this.mtime,
-  });
-
   /// Converts this entry to a PBLink for inclusion in a MerkleDAG node.
   ///
   /// Note: mode and mtime are stored in the UnixFS Data of the linked node,
@@ -52,8 +52,6 @@ class IPFSDirectoryEntry {
 
 /// Manages IPFS directory creation using standard UnixFS Data and DAG nodes
 class IPFSDirectoryManager {
-  final Data _unixFsData;
-  final List<IPFSDirectoryEntry> _entries = [];
 
   IPFSDirectoryManager({int? mode, DateTime? mtime})
     : _unixFsData = Data()..type = Data_DataType.Directory {
@@ -64,6 +62,8 @@ class IPFSDirectoryManager {
       _unixFsData.mtime = Int64(mtime.millisecondsSinceEpoch ~/ 1000);
     }
   }
+  final Data _unixFsData;
+  final List<IPFSDirectoryEntry> _entries = [];
 
   /// Adds an entry to the directory.
   /// Note: Entries should ideally be added in sorted order by name for canonicalization,

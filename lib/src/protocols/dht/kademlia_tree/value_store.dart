@@ -7,6 +7,9 @@ import '../dht_client.dart';
 /// Handles value persistence, expiry, and replication to
 /// maintain availability across the network.
 class ValueStore {
+
+  /// Creates a value store with the given [_dhtClient].
+  ValueStore(this._dhtClient);
   /// Number of nodes to replicate values to.
   static const int REPLICATION_FACTOR = 3;
 
@@ -15,9 +18,6 @@ class ValueStore {
 
   final Map<String, StoredValue> _values = {};
   final DHTClient _dhtClient;
-
-  /// Creates a value store with the given [_dhtClient].
-  ValueStore(this._dhtClient);
 
   Future<void> store(String key, Uint8List value) async {
     final storedValue = StoredValue(
@@ -122,13 +122,13 @@ class ValueStore {
 }
 
 class StoredValue {
-  final Uint8List value;
-  final DateTime timestamp;
-  int replicationCount;
 
   StoredValue({
     required this.value,
     required this.timestamp,
     this.replicationCount = 0,
   });
+  final Uint8List value;
+  final DateTime timestamp;
+  int replicationCount;
 }

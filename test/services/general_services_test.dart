@@ -1,16 +1,16 @@
 import 'dart:async';
 import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/services/block_store_service.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:grpc/grpc.dart';
 import 'package:test/test.dart';
-
-import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 
 // Mocks
 class MockBlockStore implements BlockStore {
@@ -42,7 +42,7 @@ class MockBlockStore implements BlockStore {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 /// MockDatastore implementing the new Datastore interface
@@ -88,7 +88,7 @@ class MockDatastore implements Datastore {
 
 class MockIPFSNode implements IPFSNode {
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {

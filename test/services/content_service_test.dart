@@ -1,7 +1,9 @@
 import 'dart:typed_data';
-import 'package:test/test.dart';
-import 'package:dart_ipfs/src/services/content_service.dart';
+
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import 'package:dart_ipfs/src/services/content_service.dart';
+import 'package:test/test.dart';
+
 import '../mocks/in_memory_datastore.dart';
 
 void main() {

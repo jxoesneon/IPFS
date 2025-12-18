@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import '../../utils/base58.dart';
-import '../../utils/logger.dart';
+
+import 'package:crypto/crypto.dart'; // SEC-008: For message signing
 import 'package:http/http.dart' as http;
 import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:crypto/crypto.dart'; // SEC-008: For message signing
+
 import '../../core/data_structures/node_stats.dart';
 import '../../transport/p2plib_router.dart'; // Import your router class
+import '../../utils/base58.dart';
+import '../../utils/logger.dart';
 import 'pubsub_message.dart';
 
 // For encoding utilities
@@ -18,6 +20,9 @@ import 'pubsub_message.dart';
 /// sender identity spoofing. The signature is computed over the message content
 /// using the peer's ID as the key.
 class PubSubClient {
+
+  PubSubClient(this._router, String peerIdStr)
+    : _peerId = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
   final P2plibRouter _router; // Router for sending and receiving messages
   final StreamController<PubSubMessage> _messageController =
       StreamController<PubSubMessage>.broadcast();
@@ -37,9 +42,6 @@ class PubSubClient {
   // Constants
   static const int _targetMeshDegree = 6;
   static const Duration _heartbeatInterval = Duration(seconds: 1);
-
-  PubSubClient(this._router, String peerIdStr)
-    : _peerId = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
 
   /// Starts the PubSub client.
   Future<void> start() async {
@@ -266,7 +268,7 @@ class PubSubClient {
       }
     } catch (e, stackTrace) {
       _logger.error('Error retrieving node stats', e, stackTrace);
-      throw e; // Rethrow the error for handling upstream
+      rethrow; // Rethrow the error for handling upstream
     }
   }
 

@@ -53,16 +53,16 @@ class MockP2plibRouter implements P2plibRouter {
 }
 
 class SentMessage {
+  SentMessage(this.peerId, this.message);
   final p2p.PeerId peerId;
   final Uint8List message;
-  SentMessage(this.peerId, this.message);
 }
 
 class SentRequest {
+  SentRequest(this.peerId, this.protocolId, this.request);
   final String peerId;
   final String protocolId;
   final Uint8List request;
-  SentRequest(this.peerId, this.protocolId, this.request);
 }
 
 void main() {
@@ -101,7 +101,7 @@ void main() {
       // Simulate incoming packet
       final packet = p2p.Packet(
         datagram: Uint8List.fromList(reserveMsg.writeToBuffer()),
-        header: p2p.PacketHeader(id: 1, issuedAt: 0),
+        header: const p2p.PacketHeader(id: 1, issuedAt: 0),
         srcFullAddress: p2p.FullAddress(
           address: InternetAddress.loopbackIPv4,
           port: 0,
@@ -141,7 +141,7 @@ void main() {
       // Simulate incoming packet
       final packet = p2p.Packet(
         datagram: Uint8List.fromList(connectMsg.writeToBuffer()),
-        header: p2p.PacketHeader(id: 2, issuedAt: 0),
+        header: const p2p.PacketHeader(id: 2, issuedAt: 0),
         srcFullAddress: p2p.FullAddress(
           address: InternetAddress.loopbackIPv4,
           port: 0,
@@ -177,7 +177,7 @@ void main() {
         datagram: Uint8List.fromList(
           (HopMessage()..type = HopMessage_Type.RESERVE).writeToBuffer(),
         ),
-        header: p2p.PacketHeader(id: 1, issuedAt: 0),
+        header: const p2p.PacketHeader(id: 1, issuedAt: 0),
         srcFullAddress: p2p.FullAddress(
           address: InternetAddress.loopbackIPv4,
           port: 0,
@@ -195,7 +195,7 @@ void main() {
 
       final connectPacket = p2p.Packet(
         datagram: Uint8List.fromList(connectMsg.writeToBuffer()),
-        header: p2p.PacketHeader(id: 2, issuedAt: 0),
+        header: const p2p.PacketHeader(id: 2, issuedAt: 0),
         srcFullAddress: p2p.FullAddress(
           address: InternetAddress.loopbackIPv4,
           port: 0,
@@ -212,7 +212,7 @@ void main() {
           as Future?);
 
       // Wait a tick for async execution inside _handleConnect
-      await Future<void>.delayed(Duration(milliseconds: 100));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
 
       expect(mockRouter.sentRequests.length, 1); // STOP request sent
       expect(mockRouter.sentMessages.length, 1); // STATUS OK to Source
@@ -222,7 +222,7 @@ void main() {
       final payload = Uint8List.fromList([1, 2, 3, 4]);
       final transportPacket = p2p.Packet(
         datagram: payload,
-        header: p2p.PacketHeader(id: 3, issuedAt: 0),
+        header: const p2p.PacketHeader(id: 3, issuedAt: 0),
         srcFullAddress: p2p.FullAddress(
           address: InternetAddress.loopbackIPv4,
           port: 0,
@@ -250,7 +250,7 @@ void main() {
       final replyPayload = Uint8List.fromList([5, 6, 7, 8]);
       final replyPacket = p2p.Packet(
         datagram: replyPayload,
-        header: p2p.PacketHeader(id: 4, issuedAt: 0),
+        header: const p2p.PacketHeader(id: 4, issuedAt: 0),
         srcFullAddress: p2p.FullAddress(
           address: InternetAddress.loopbackIPv4,
           port: 0,

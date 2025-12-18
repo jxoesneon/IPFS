@@ -1,10 +1,11 @@
 // src/core/data_structures/peer.dart
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:fixnum/fixnum.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
+
 import 'package:dart_ipfs/src/proto/generated/core/peer.pb.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:fixnum/fixnum.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Represents a peer node in the IPFS network.
 ///
@@ -24,17 +25,6 @@ import 'package:dart_ipfs/src/proto/generated/core/peer.pb.dart';
 /// - [PeerProto] for protobuf serialization
 /// - [P2plibRouter] for peer communication
 class Peer {
-  /// The unique cryptographic identifier for this peer.
-  final p2p.PeerId id;
-
-  /// Network addresses where this peer can be reached.
-  final List<p2p.FullAddress> addresses;
-
-  /// Network latency to this peer in milliseconds.
-  final int latency;
-
-  /// The IPFS client version string reported by this peer.
-  final String agentVersion;
 
   /// Creates a new Peer with the given properties.
   Peer({
@@ -59,6 +49,26 @@ class Peer {
     );
   }
 
+  factory Peer.fromId(String peerId) {
+    return Peer(
+      id: p2p.PeerId(value: Base58().base58Decode(peerId)),
+      addresses: [], // Empty list since we don't know addresses yet
+      latency: 0, // Default latency
+      agentVersion: '', // Empty version since we don't know it yet
+    );
+  }
+  /// The unique cryptographic identifier for this peer.
+  final p2p.PeerId id;
+
+  /// Network addresses where this peer can be reached.
+  final List<p2p.FullAddress> addresses;
+
+  /// Network latency to this peer in milliseconds.
+  final int latency;
+
+  /// The IPFS client version string reported by this peer.
+  final String agentVersion;
+
   /// Converts the [Peer] to its Protobuf representation.
   PeerProto toProto() {
     return PeerProto()
@@ -74,15 +84,6 @@ class Peer {
   @override
   String toString() {
     return 'Peer{id: ${id.value}, addresses: ${addresses.map((addr) => addr.toString()).toList()}, latency: $latency, agentVersion: $agentVersion}';
-  }
-
-  factory Peer.fromId(String peerId) {
-    return Peer(
-      id: p2p.PeerId(value: Base58().base58Decode(peerId)),
-      addresses: [], // Empty list since we don't know addresses yet
-      latency: 0, // Default latency
-      agentVersion: '', // Empty version since we don't know it yet
-    );
   }
 
   /// Creates a [Peer] from a multiaddr string

@@ -7,14 +7,14 @@ import '../../utils/encoding.dart';
 ///
 /// Provides common serialization/deserialization for block types.
 abstract class BaseBlock {
+
+  /// Creates a block with the given [data] and [cid].
+  const BaseBlock(this.data, this.cid);
   /// The raw data payload.
   final Uint8List data;
 
   /// The content identifier.
   final CID cid;
-
-  /// Creates a block with the given [data] and [cid].
-  const BaseBlock(this.data, this.cid);
 
   Uint8List toBytes() {
     final bytes = BytesBuilder();
@@ -31,17 +31,17 @@ abstract class BaseBlock {
   ) {
     try {
       if (bytes.length < 3) {
-        throw FormatException('Invalid block bytes: too short');
+        throw const FormatException('Invalid block bytes: too short');
       }
 
       final cidLength = bytes[0];
       if (bytes.length < cidLength + 2) {
-        throw FormatException('Invalid block bytes: incomplete CID');
+        throw const FormatException('Invalid block bytes: incomplete CID');
       }
 
       final cidBytes = bytes.sublist(1, cidLength + 1);
       if (!EncodingUtils.isValidCIDBytes(cidBytes)) {
-        throw FormatException('Invalid CID bytes');
+        throw const FormatException('Invalid CID bytes');
       }
 
       final blockData = bytes.sublist(cidLength + 1);

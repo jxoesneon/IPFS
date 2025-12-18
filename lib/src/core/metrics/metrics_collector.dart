@@ -1,10 +1,11 @@
 // src/core/metrics/metrics_collector.dart
 import 'dart:async';
-import 'package:dart_ipfs/src/utils/logger.dart';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/proto/generated/metrics.pb.dart';
-import 'package:fixnum/fixnum.dart' as fixnum;
 import 'package:dart_ipfs/src/proto/generated/connection.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/metrics.pb.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:fixnum/fixnum.dart' as fixnum;
 
 /// Collects and manages metrics about IPFS node operations.
 ///
@@ -36,6 +37,16 @@ import 'package:dart_ipfs/src/proto/generated/connection.pb.dart';
 /// - [MetricsConfig] for configuration options
 /// - [ConnectionMetrics] for per-peer statistics
 class MetricsCollector {
+
+  /// Creates a new metrics collector with the given [_config].
+  MetricsCollector(this._config) {
+    _logger = Logger(
+      'MetricsCollector',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
+    _logger.debug('MetricsCollector instance created');
+  }
   final IPFSConfig _config;
   late final Logger _logger;
   Timer? _collectionTimer;
@@ -51,16 +62,6 @@ class MetricsCollector {
 
   Stream<Map<String, dynamic>> get metricsStream =>
       _metricsStreamController.stream;
-
-  /// Creates a new metrics collector with the given [_config].
-  MetricsCollector(this._config) {
-    _logger = Logger(
-      'MetricsCollector',
-      debug: _config.debug,
-      verbose: _config.verboseLogging,
-    );
-    _logger.debug('MetricsCollector instance created');
-  }
 
   Future<void> start() async {
     _logger.debug('Starting metrics collection...');

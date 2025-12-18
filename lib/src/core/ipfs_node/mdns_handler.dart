@@ -1,15 +1,26 @@
 // src/core/ipfs_node/mdns_handler.dart
 import 'dart:async';
 import 'dart:io';
-import 'package:dart_ipfs/src/network/mdns_client.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/network/mdns_client.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Handles mDNS (multicast DNS) peer discovery for an IPFS node.
 class MDNSHandler {
+
+  MDNSHandler(this._config, {MDnsClient? mdnsClient}) {
+    _logger = Logger(
+      'MDNSHandler',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
+    _mdnsClient = mdnsClient ?? MDnsClient();
+    _logger.debug('MDNSHandler instance created');
+  }
   final IPFSConfig _config;
   late final Logger _logger;
   late final MDnsClient _mdnsClient;
@@ -22,16 +33,6 @@ class MDNSHandler {
   bool _isRunning = false;
   Timer? _advertisementTimer;
   Timer? _discoveryTimer;
-
-  MDNSHandler(this._config, {MDnsClient? mdnsClient}) {
-    _logger = Logger(
-      'MDNSHandler',
-      debug: _config.debug,
-      verbose: _config.verboseLogging,
-    );
-    _mdnsClient = mdnsClient ?? MDnsClient();
-    _logger.debug('MDNSHandler instance created');
-  }
 
   /// Starts the mDNS discovery service
   Future<void> start() async {
@@ -97,7 +98,7 @@ class MDNSHandler {
     _logger.verbose('Starting peer discovery');
 
     _discoveryTimer?.cancel();
-    _discoveryTimer = Timer.periodic(Duration(seconds: 30), (_) {
+    _discoveryTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       _discoverPeers();
     });
 
@@ -109,7 +110,7 @@ class MDNSHandler {
     _logger.verbose('Starting service advertisement');
 
     _advertisementTimer?.cancel();
-    _advertisementTimer = Timer.periodic(Duration(seconds: 60), (_) {
+    _advertisementTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       _advertiseService();
     });
 

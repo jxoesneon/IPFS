@@ -1,8 +1,8 @@
 // Simplified validation tests for interfaces
-import 'package:test/test.dart';
-import 'package:dart_ipfs/src/core/interfaces/block_store_operations.dart';
 import 'package:dart_ipfs/src/core/interfaces/block_data.dart';
+import 'package:dart_ipfs/src/core/interfaces/block_store_operations.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('Interface Validation', () {

@@ -1,8 +1,8 @@
 // test/core/errors/error_instantiation_verified_test.dart
-import 'package:test/test.dart';
-import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/core/errors/graphsync_errors.dart';
+import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import 'package:test/test.dart';
 
 /// Simple verified tests for error class instantiation.
 void main() {

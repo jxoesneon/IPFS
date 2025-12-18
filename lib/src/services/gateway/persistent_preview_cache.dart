@@ -7,9 +7,6 @@ import 'package:path/path.dart' as path;
 
 /// Manages persistent caching of file previews on disk
 class PersistentPreviewCache {
-  final Directory _cacheDir;
-  final int _maxCacheSize;
-  int _currentCacheSize = 0;
 
   PersistentPreviewCache({
     required String cachePath,
@@ -18,6 +15,9 @@ class PersistentPreviewCache {
        _maxCacheSize = maxCacheSize {
     _initializeCache();
   }
+  final Directory _cacheDir;
+  final int _maxCacheSize;
+  int _currentCacheSize = 0;
 
   Future<void> _initializeCache() async {
     if (!await _cacheDir.exists()) {

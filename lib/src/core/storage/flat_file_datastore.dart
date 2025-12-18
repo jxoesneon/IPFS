@@ -6,10 +6,11 @@ import 'datastore.dart';
 
 /// A file-system based implementation of [Datastore].
 class FlatFileDatastore implements Datastore {
-  final String path;
 
   FlatFileDatastore(this.path);
+  final String path;
 
+  @override
   Future<void> init() async {
     final dir = Directory(path);
     if (!await dir.exists()) {
@@ -81,7 +82,7 @@ class FlatFileDatastore implements Datastore {
         // Reverse map path to Key
         final relative = p.relative(f.path, from: path);
         // Remove .data and add /
-        final keyStr = '/' + relative.substring(0, relative.length - 5);
+        final keyStr = '/${relative.substring(0, relative.length - 5)}';
         final key = Key(keyStr);
 
         // Apply filters

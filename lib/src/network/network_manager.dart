@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+
 import 'package:dart_ipfs/src/core/events/network_events.dart';
 import 'package:dart_ipfs/src/core/messages/network_messages.dart';
 import 'package:dart_ipfs/src/core/protocol_handlers/protocol_handler.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart' show Message;
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 
 /// Manages network message routing and protocol handler dispatch.
 ///
@@ -24,15 +25,15 @@ import 'package:dart_ipfs/src/protocols/bitswap/message.dart' show Message;
 /// - [P2plibRouter] for the underlying transport
 /// - [ProtocolHandler] for message handling interface
 class NetworkManager {
-  final P2plibRouter _router;
-  final Map<String, ProtocolHandler> _protocolHandlers = {};
-  final StreamController<NetworkEvent> _eventController =
-      StreamController<NetworkEvent>.broadcast();
 
   /// Creates a network manager with the given [_router].
   NetworkManager(this._router) {
     _setupMessageHandling();
   }
+  final P2plibRouter _router;
+  final Map<String, ProtocolHandler> _protocolHandlers = {};
+  final StreamController<NetworkEvent> _eventController =
+      StreamController<NetworkEvent>.broadcast();
 
   void _setupMessageHandling() {
     _router.onMessage((Message message) async {

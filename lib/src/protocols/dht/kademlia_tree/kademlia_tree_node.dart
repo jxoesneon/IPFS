@@ -17,6 +17,17 @@ enum KademliaNodeState {
 /// Tracks distance from the local node, connection state,
 /// latency, and failure count for eviction decisions.
 class KademliaTreeNode {
+
+  /// Creates a Kademlia tree node.
+  KademliaTreeNode(
+    this.peerId,
+    this.distance,
+    this._associatedPeerId, {
+    required int lastSeen,
+  }) : assert(peerId.value.isNotEmpty, 'PeerId cannot be empty'),
+       assert(distance >= 0, 'Distance must be non-negative'),
+       _lastSeen = lastSeen,
+       children = [];
   /// The peer identifier.
   final p2p.PeerId peerId;
 
@@ -41,17 +52,6 @@ class KademliaTreeNode {
 
   /// Standard k-bucket size.
   static const int K = 20;
-
-  /// Creates a Kademlia tree node.
-  KademliaTreeNode(
-    this.peerId,
-    this.distance,
-    this._associatedPeerId, {
-    required int lastSeen,
-  }) : assert(peerId.value.isNotEmpty, 'PeerId cannot be empty'),
-       assert(distance >= 0, 'Distance must be non-negative'),
-       _lastSeen = lastSeen,
-       children = [];
 
   int get lastSeen => _lastSeen;
 

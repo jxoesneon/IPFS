@@ -1,22 +1,24 @@
 // src/protocols/bitswap/bitswap.dart
 
-import 'ledger.dart';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:dart_ipfs/src/utils/encoding.dart';
+
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/core/data_structures/peer.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
+    as bitswap_pb;
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as proto;
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart'
     as bitswap_message;
-import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
-    as bitswap_pb;
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/utils/encoding.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
+
+import 'ledger.dart';
 
 /// Bitswap 1.2.0 block exchange protocol implementation.
 ///
@@ -46,6 +48,9 @@ import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
 /// - [BitswapHandler] for higher-level integration
 /// - [IPFS Bitswap Spec](https://specs.ipfs.tech/bitswap-protocol/)
 class Bitswap {
+
+  /// Creates a Bitswap instance with the given dependencies.
+  Bitswap(this._router, this._ledger, this._datastore, [this.config]);
   final P2plibRouter _router;
   final BitLedger _ledger;
   final Datastore _datastore;
@@ -55,9 +60,6 @@ class Bitswap {
 
   /// Maximum length for block prefixes in messages.
   static const int maxPrefixLength = 64;
-
-  /// Creates a Bitswap instance with the given dependencies.
-  Bitswap(this._router, this._ledger, this._datastore, [this.config]);
 
   /// Starts the Bitswap protocol.
   Future<void> start() async {

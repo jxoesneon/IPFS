@@ -5,20 +5,20 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 ///
 /// Contains success status and message for all block operations.
 abstract class BaseResponse {
+
+  /// Creates a response with [success] status and [message].
+  const BaseResponse({required this.success, required this.message});
   /// Whether the operation succeeded.
   final bool success;
 
   /// Human-readable result message.
   final String message;
 
-  /// Creates a response with [success] status and [message].
-  const BaseResponse({required this.success, required this.message});
-
   /// Converts to JSON representation.
   Map<String, dynamic> toJson();
 
   @override
-  String toString() => '${runtimeType}(success: $success, message: $message)';
+  String toString() => '$runtimeType(success: $success, message: $message)';
 }
 
 /// Response for block add operations.
@@ -40,7 +40,6 @@ class BlockAddResponse extends BaseResponse {
 }
 
 class BlockGetResponse extends BaseResponse {
-  final BlockProto? block;
 
   const BlockGetResponse({
     required super.success,
@@ -55,6 +54,7 @@ class BlockGetResponse extends BaseResponse {
       block: proto.hasBlock() ? proto.block : null,
     );
   }
+  final BlockProto? block;
 
   GetBlockResponse toProto() {
     final response = GetBlockResponse()..found = success;

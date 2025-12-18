@@ -5,11 +5,11 @@ import 'package:dart_ipfs/src/core/protocol_handlers/protocol_handler.dart';
 /// Manages registered protocols and provides methods to enable
 /// transports (TCP, QUIC), security (Noise, TLS), and muxers (yamux, mplex).
 class Libp2pNode {
-  /// Registered protocol handlers by protocol ID.
-  final Map<String, ProtocolHandler> protocols;
 
   /// Creates a node with the given [protocols].
   Libp2pNode({required this.protocols});
+  /// Registered protocol handlers by protocol ID.
+  final Map<String, ProtocolHandler> protocols;
 
   // Transport requirements
   Future<void> enableTransport(String transport) async {

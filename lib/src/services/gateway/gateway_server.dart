@@ -1,11 +1,12 @@
 // lib/src/services/gateway/gateway_server.dart
 import 'dart:io';
+
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
-import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// IPFS HTTP Gateway Server
 ///
@@ -14,6 +15,22 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 ///
 /// **Security (SEC-007):** Rate limiting is enabled by default to prevent DoS.
 class GatewayServer {
+
+  GatewayServer({
+    required this.blockStore,
+    this.address = 'localhost',
+    this.port = 8080,
+    this.corsOrigins = const [
+      'http://localhost',
+      'http://127.0.0.1',
+    ], // SEC-006: Restrict CORS
+    this.ipnsResolver,
+    this.maxRequestsPerIp = 100,
+    this.rateLimitWindowSeconds = 60,
+  }) {
+    _handler = GatewayHandler(blockStore, ipnsResolver: ipnsResolver);
+    _setupRouter();
+  }
   final BlockStore blockStore;
   final String address;
   final int port;
@@ -34,22 +51,6 @@ class GatewayServer {
 
   /// Tracks request counts per IP for rate limiting
   final Map<String, List<DateTime>> _requestLog = {};
-
-  GatewayServer({
-    required this.blockStore,
-    this.address = 'localhost',
-    this.port = 8080,
-    this.corsOrigins = const [
-      'http://localhost',
-      'http://127.0.0.1',
-    ], // SEC-006: Restrict CORS
-    this.ipnsResolver,
-    this.maxRequestsPerIp = 100,
-    this.rateLimitWindowSeconds = 60,
-  }) {
-    _handler = GatewayHandler(blockStore, ipnsResolver: ipnsResolver);
-    _setupRouter();
-  }
 
   void _setupRouter() {
     _router = Router();
@@ -91,7 +92,7 @@ class GatewayServer {
     }
 
     // Build middleware pipeline with rate limiting (SEC-007)
-    final handler = Pipeline()
+    final handler = const Pipeline()
         .addMiddleware(_corsMiddleware())
         .addMiddleware(_rateLimitMiddleware())
         .addMiddleware(_loggingMiddleware())

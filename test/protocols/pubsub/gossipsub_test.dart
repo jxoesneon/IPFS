@@ -31,7 +31,7 @@ class MockRouterL2 implements p2p.RouterL2 {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 // Mock P2plibRouter
@@ -86,7 +86,7 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
@@ -140,7 +140,7 @@ void main() {
 
       final packet = p2p.Packet(
         datagram: Uint8List.fromList(utf8.encode(jsonEncode(ihaveMsg))),
-        header: p2p.PacketHeader(id: 1, issuedAt: 0),
+        header: const p2p.PacketHeader(id: 1, issuedAt: 0),
         srcFullAddress: p2p.FullAddress(
           address: InternetAddress.loopbackIPv4,
           port: 0,
@@ -172,7 +172,7 @@ void main() {
 
       final p1 = p2p.Packet(
         datagram: Uint8List.fromList(utf8.encode(jsonEncode(publishMsg))),
-        header: p2p.PacketHeader(id: 1, issuedAt: 0),
+        header: const p2p.PacketHeader(id: 1, issuedAt: 0),
         srcFullAddress: p2p.FullAddress(
           address: InternetAddress.loopbackIPv4,
           port: 0,
@@ -196,7 +196,7 @@ void main() {
 
       final p2 = p2p.Packet(
         datagram: Uint8List.fromList(utf8.encode(jsonEncode(iwantMsg))),
-        header: p2p.PacketHeader(id: 1, issuedAt: 0),
+        header: const p2p.PacketHeader(id: 1, issuedAt: 0),
         srcFullAddress: p2p.FullAddress(
           address: InternetAddress.loopbackIPv4,
           port: 0,

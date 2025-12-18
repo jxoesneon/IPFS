@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:hive/hive.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart';
 
 /// Hive-based implementation of the [Datastore] interface.
 ///
@@ -19,6 +20,11 @@ import 'package:dart_ipfs/src/core/storage/datastore.dart';
 /// **Thread Safety:** All operations are atomic at the Hive level.
 /// **Consistency:** All boxes use `List<int>` storage for uniform API.
 class HiveDatastore implements Datastore {
+
+  /// Creates a HiveDatastore instance with the specified base path.
+  ///
+  /// Call [init] before using any other methods.
+  HiveDatastore(this._basePath);
   static const String _boxBlocks = 'blocks';
   static const String _boxPins = 'pins';
   static const String _boxDht = 'dht';
@@ -32,11 +38,6 @@ class HiveDatastore implements Datastore {
 
   final _logger = Logger('HiveDatastore');
   bool _initialized = false;
-
-  /// Creates a HiveDatastore instance with the specified base path.
-  ///
-  /// Call [init] before using any other methods.
-  HiveDatastore(this._basePath);
 
   @override
   Future<void> init() async {

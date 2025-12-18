@@ -1,16 +1,16 @@
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 import 'package:dart_ipfs/src/services/gateway/file_preview_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/lazy_preview_handler.dart';
 import 'package:intl/intl.dart';
-import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 
 /// Handles directory operations and metadata for IPFS directory listings
 class DirectoryHandler {
-  final String path;
-  final List<DirectoryEntry> _entries = [];
 
   DirectoryHandler(this.path);
+  final String path;
+  final List<DirectoryEntry> _entries = [];
 
   /// Adds an entry to the directory
   void addEntry(DirectoryEntry entry) {
@@ -25,11 +25,6 @@ class DirectoryHandler {
 
 /// Represents a single directory entry with metadata
 class DirectoryEntry {
-  final String name;
-  final int size;
-  final bool isDirectory;
-  final int timestamp;
-  final Map<String, String>? metadata;
 
   DirectoryEntry({
     required this.name,
@@ -38,6 +33,11 @@ class DirectoryEntry {
     required this.timestamp,
     this.metadata,
   });
+  final String name;
+  final int size;
+  final bool isDirectory;
+  final int timestamp;
+  final Map<String, String>? metadata;
 }
 
 /// Parses and formats IPFS directory listings with enhanced metadata

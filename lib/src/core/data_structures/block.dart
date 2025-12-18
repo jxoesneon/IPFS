@@ -1,22 +1,24 @@
 // src/core/data_structures/block.dart
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as proto;
 
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/interfaces/block.dart';
+import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as proto;
+import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 
 /// Represents an IPFS block.
-class Block implements IBlock {
-  final CID cid;
-  final Uint8List data;
-  final String format; // Keep format for existing methods
+class Block implements IBlock { // Keep format for existing methods
 
   Block({
     required this.cid,
     required this.data,
     this.format = 'raw', // Default format if not provided
   });
+  @override
+  final CID cid;
+  @override
+  final Uint8List data;
+  final String format;
 
   /// Creates a Block from raw data
   static Future<Block> fromData(Uint8List data, {String format = 'raw'}) async {
@@ -36,6 +38,7 @@ class Block implements IBlock {
   }
   */
 
+  @override
   int get size => data.length;
 
   /// Validates the block's data against its CID.
@@ -45,6 +48,7 @@ class Block implements IBlock {
   ///
   /// **Security Note:** This method MUST be called on all blocks received from
   /// untrusted peers to prevent malicious block injection attacks (SEC-002).
+  @override
   Future<bool> validate() async {
     try {
       final computedCid = await CID.fromContent(data, codec: format);
@@ -65,6 +69,7 @@ class Block implements IBlock {
   }
 
   /// Converts the block to its protobuf representation
+  @override
   BlockProto toProto() {
     return BlockProto()
       ..cid = cid.toProto()

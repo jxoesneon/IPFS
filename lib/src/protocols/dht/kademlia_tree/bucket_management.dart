@@ -1,10 +1,12 @@
+import 'dart:math' as Math;
+
+import 'package:p2plib/p2plib.dart' as p2p;
+
 import '../kademlia_tree.dart';
 import '../red_black_tree.dart';
 import 'helpers.dart' as helpers;
-import 'package:p2plib/p2plib.dart' as p2p;
 import 'kademlia_tree_node.dart';
 import 'lru_cache.dart';
-import 'dart:math' as Math;
 
 /// Extension for managing k-bucket operations in a Kademlia tree.
 ///
@@ -113,7 +115,7 @@ extension BucketManagement on KademliaTree {
   }
 
   bool _wasNodeContactInRecentLookup(p2p.PeerId peerId) {
-    return this.recentContacts.contains(peerId);
+    return recentContacts.contains(peerId);
   }
 
   KademliaTreeNode? _findLeastRecentlySeenNode(int bucketIndex) {
@@ -126,7 +128,7 @@ extension BucketManagement on KademliaTree {
 
     for (var nodeEntry in buckets[bucketIndex].entries) {
       var node = nodeEntry.value;
-      DateTime? lastSeenTime = this.lastSeen[node.peerId];
+      DateTime? lastSeenTime = lastSeen[node.peerId];
 
       if (lastSeenTime == null) {
         leastRecentlySeenNode = node;
@@ -157,7 +159,7 @@ extension BucketManagement on KademliaTree {
   }
 
   LRUCache _getOrCreateCache(int bucketIndex) {
-    return this.bucketCaches.putIfAbsent(
+    return bucketCaches.putIfAbsent(
       bucketIndex,
       () => LRUCache(KademliaTree.K * 2), // Cache size twice the k-bucket size
     );
@@ -256,7 +258,7 @@ extension BucketManagement on KademliaTree {
     final lastSeenDuration = DateTime.now().difference(
       DateTime.fromMillisecondsSinceEpoch(node.lastSeen),
     );
-    if (lastSeenDuration < Duration(minutes: 30)) {
+    if (lastSeenDuration < const Duration(minutes: 30)) {
       score *= 1.2; // 20% bonus for recent activity
     }
 

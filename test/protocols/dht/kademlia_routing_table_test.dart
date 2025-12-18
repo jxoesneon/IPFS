@@ -1,14 +1,15 @@
-import 'dart:typed_data';
-import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:test/test.dart';
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:test/test.dart';
 
 // Helper for valid PeerId (64 bytes)
 Uint8List validPeerIdBytes({int fillValue = 1}) =>
@@ -16,8 +17,9 @@ Uint8List validPeerIdBytes({int fillValue = 1}) =>
 
 // Mocks (reusing from dht_client_test.dart)
 class MockRouterL2 implements p2p.RouterL2 {
+  @override
   final Map<p2p.PeerId, p2p.Route> routes = {};
-  p2p.PeerId _selfId = p2p.PeerId(value: validPeerIdBytes());
+  final p2p.PeerId _selfId = p2p.PeerId(value: validPeerIdBytes());
 
   @override
   p2p.PeerId get selfId => _selfId;
@@ -34,7 +36,7 @@ class MockRouterL2 implements p2p.RouterL2 {
   }) {}
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockP2plibRouter implements P2plibRouter {
@@ -80,7 +82,7 @@ class MockP2plibRouter implements P2plibRouter {
   List<String> resolvePeerId(p2p.PeerId peerId) => ['127.0.0.1:4001'];
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockDatastore implements Datastore {
@@ -107,27 +109,28 @@ class MockDatastore implements Datastore {
 }
 
 class MockDHTHandler implements DHTHandler {
-  final P2plibRouter router;
-  final Datastore _mockStorage = MockDatastore();
 
   MockDHTHandler(this.router);
+  @override
+  final P2plibRouter router;
+  final Datastore _mockStorage = MockDatastore();
 
   @override
   Datastore get storage => _mockStorage;
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockIPFSNode implements IPFSNode {
-  final MockDHTHandler _dhtHandler;
   MockIPFSNode(this._dhtHandler);
+  final MockDHTHandler _dhtHandler;
 
   @override
   DHTHandler get dhtHandler => _dhtHandler;
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockNetworkHandler implements NetworkHandler {
@@ -135,7 +138,7 @@ class MockNetworkHandler implements NetworkHandler {
   late IPFSNode ipfsNode;
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {

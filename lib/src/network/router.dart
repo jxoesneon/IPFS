@@ -1,11 +1,13 @@
-import 'dart:io';
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
-import '../core/types/p2p_types.dart';
-import '../core/config/ipfs_config.dart';
-import '../transport/p2plib_router.dart';
+
 import 'package:p2plib/p2plib.dart' as p2p;
+
+import '../core/config/ipfs_config.dart';
 import '../core/data_structures/peer.dart';
+import '../core/types/p2p_types.dart';
+import '../transport/p2plib_router.dart';
 
 /// High-level network router for IPFS peer communication.
 ///
@@ -19,15 +21,15 @@ import '../core/data_structures/peer.dart';
 /// await router.sendMessage(peerId, messageBytes);
 /// ```
 class Router {
-  final P2plibRouter _router;
-  final StreamController<Peer> _peerDiscoveryController;
-  final Set<Peer> _connectedPeers;
 
   /// Creates a router with the given [config].
   Router(IPFSConfig config)
     : _router = P2plibRouter(config),
       _peerDiscoveryController = StreamController<Peer>.broadcast(),
       _connectedPeers = {};
+  final P2plibRouter _router;
+  final StreamController<Peer> _peerDiscoveryController;
+  final Set<Peer> _connectedPeers;
 
   /// The peer ID of this node
   String get peerID => _router.peerID;

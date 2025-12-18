@@ -1,16 +1,17 @@
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/data_structures/node.dart';
+
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
-import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as proto;
+import 'package:dart_ipfs/src/core/data_structures/node.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as proto;
 import 'package:fixnum/fixnum.dart' as fixnum;
 
 /// Repository handles the storage and retrieval of IPFS data structures
 class Repository {
-  final Datastore _datastore;
 
   Repository(this._datastore);
+  final Datastore _datastore;
 
   /// Adds a file to the repository and returns its node link
   Future<NodeLink> addFile(String path, Block block) async {

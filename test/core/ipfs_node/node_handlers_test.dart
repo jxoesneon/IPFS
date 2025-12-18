@@ -1,21 +1,22 @@
-import 'dart:io';
 import 'dart:async';
-import 'package:http/http.dart' as http;
+import 'dart:io';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/routing_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
 import 'package:dart_ipfs/src/network/mdns_client.dart';
 import 'package:dart_ipfs/src/routing/content_routing.dart';
+import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
 
 // Mocks
 class MockConfig extends IPFSConfig {
   MockConfig()
     : super(
-        network: NetworkConfig(bootstrapPeers: []),
+        network: const NetworkConfig(bootstrapPeers: []),
         debug: false,
         verboseLogging: false,
       );
@@ -38,7 +39,7 @@ class MockNetworkHandler implements NetworkHandler {
   Future<bool> testDialback() async => dialbackResult;
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockClient extends http.BaseClient {
@@ -68,7 +69,7 @@ class MockContentRouting implements ContentRouting {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockMDnsClient implements MDnsClient {
@@ -114,7 +115,7 @@ class MockMDnsClient implements MDnsClient {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {

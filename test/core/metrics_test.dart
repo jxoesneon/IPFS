@@ -1,6 +1,6 @@
-import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/config/metrics_config.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/proto/generated/connection.pb.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 import 'package:test/test.dart';
@@ -12,7 +12,7 @@ void main() {
 
     setUp(() {
       config = IPFSConfig(
-        metrics: MetricsConfig(
+        metrics: const MetricsConfig(
           enabled: true,
           collectionIntervalSeconds: 1,
           collectSystemMetrics: true,
@@ -95,7 +95,7 @@ void main() {
     });
 
     test('should handle disabled metrics gracefully', () async {
-      final disabledConfig = IPFSConfig(metrics: MetricsConfig(enabled: false));
+      final disabledConfig = IPFSConfig(metrics: const MetricsConfig(enabled: false));
       final disabledCollector = MetricsCollector(disabledConfig);
 
       await disabledCollector.start();

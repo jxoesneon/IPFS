@@ -11,29 +11,6 @@
 /// );
 /// ```
 class StorageConfig {
-  /// Base directory for all IPFS data
-  final String baseDir;
-
-  /// Maximum storage size in bytes
-  final int maxStorageSize;
-
-  /// Directory for block storage
-  final String blocksDir;
-
-  /// Directory for datastore
-  final String datastoreDir;
-
-  /// Directory for keys
-  final String keysDir;
-
-  /// Whether to enable garbage collection
-  final bool enableGC;
-
-  /// Garbage collection interval
-  final Duration gcInterval;
-
-  /// Maximum size for a single block
-  final int maxBlockSize;
 
   const StorageConfig({
     this.baseDir = '.ipfs',
@@ -58,6 +35,29 @@ class StorageConfig {
       maxBlockSize: json['maxBlockSize'] as int? ?? 1024 * 1024 * 2,
     );
   }
+  /// Base directory for all IPFS data
+  final String baseDir;
+
+  /// Maximum storage size in bytes
+  final int maxStorageSize;
+
+  /// Directory for block storage
+  final String blocksDir;
+
+  /// Directory for datastore
+  final String datastoreDir;
+
+  /// Directory for keys
+  final String keysDir;
+
+  /// Whether to enable garbage collection
+  final bool enableGC;
+
+  /// Garbage collection interval
+  final Duration gcInterval;
+
+  /// Maximum size for a single block
+  final int maxBlockSize;
 
   Map<String, dynamic> toJson() => {
     'baseDir': baseDir,

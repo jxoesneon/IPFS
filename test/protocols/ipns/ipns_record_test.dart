@@ -57,8 +57,8 @@ void main() {
           value: cid,
           keyPair: keyPair,
           sequence: 1,
-          validity: Duration(hours: 48),
-          ttl: Duration(minutes: 30),
+          validity: const Duration(hours: 48),
+          ttl: const Duration(minutes: 30),
         );
 
         expect(record.ttl.inMinutes, equals(30));
@@ -107,11 +107,11 @@ void main() {
           value: cid,
           keyPair: keyPair,
           sequence: 1,
-          validity: Duration(milliseconds: 1),
+          validity: const Duration(milliseconds: 1),
         );
 
         // Wait for expiration
-        await Future<void>.delayed(Duration(milliseconds: 10));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
 
         expect(await record.verify(), isFalse);
       });

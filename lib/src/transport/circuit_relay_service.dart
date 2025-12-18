@@ -1,10 +1,11 @@
 import 'dart:typed_data';
-import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:fixnum/fixnum.dart';
-import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:fixnum/fixnum.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Implements the Circuit Relay v2 Server (Relay Service).
 ///
@@ -13,6 +14,8 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 /// - HOP protocol: Handling RESERVE requests from peers wanting to serve traffic.
 /// - STOP protocol: Handling CONNECT requests destined for this node.
 class CircuitRelayService {
+
+  CircuitRelayService(this._router, this._config);
   final P2plibRouter _router;
   final IPFSConfig _config;
   final _logger = Logger('CircuitRelayService');
@@ -31,8 +34,6 @@ class CircuitRelayService {
   // Note: For full multiplexing, we'd need Circuit IDs.
   // This MVP assumes one active relayed connection per peer pair direction.
   final Map<String, String> _reverseCircuits = {};
-
-  CircuitRelayService(this._router, this._config);
 
   /// Starts the service and registers protocol handlers.
   void start() {
@@ -183,7 +184,7 @@ class CircuitRelayService {
   void _handleReserve(p2p.PeerId srcPeerId, HopMessage request) {
     // 1. Create Reservation
     final now = DateTime.now().toUtc();
-    final expireTime = now.add(Duration(hours: 2)); // Default 2h
+    final expireTime = now.add(const Duration(hours: 2)); // Default 2h
 
     // Limits
     final limit = Limit()
@@ -318,13 +319,6 @@ class CircuitRelayService {
 }
 
 class _CircuitContext {
-  final String source;
-  final p2p.PeerId sourcePeerId;
-  final String destination;
-  final p2p.PeerId destinationPeerId;
-  final int expire;
-  final int limitData;
-  int bytesTransferred = 0;
 
   _CircuitContext({
     required this.source,
@@ -334,4 +328,11 @@ class _CircuitContext {
     required this.expire,
     required this.limitData,
   });
+  final String source;
+  final p2p.PeerId sourcePeerId;
+  final String destination;
+  final p2p.PeerId destinationPeerId;
+  final int expire;
+  final int limitData;
+  int bytesTransferred = 0;
 }

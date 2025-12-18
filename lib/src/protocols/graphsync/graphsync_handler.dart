@@ -1,33 +1,27 @@
 // src/protocols/graphsync/graphsync_handler.dart
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart' as core;
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/errors/graphsync_errors.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
 import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_protocol.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_types.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:dart_ipfs/src/core/data_structures/block.dart' as core;
 
 /// Graphsync protocol handler for efficient DAG transfer.
 ///
 /// Handles requests, responses, and coordinates with Bitswap and
 /// IPLD for graph traversal and block fetching.
 class GraphsyncHandler {
-  final BitswapHandler _bitswap;
-  final IPLDHandler _ipld;
-  final P2plibRouter _router;
-  final BlockStore _blockStore;
-  final Logger _logger;
-  final GraphsyncProtocol _protocol;
-  final IPFSConfig _config;
 
   /// Creates a Graphsync handler.
   GraphsyncHandler(
@@ -43,6 +37,13 @@ class GraphsyncHandler {
       ),
       _protocol = GraphsyncProtocol(),
       _config = config;
+  final BitswapHandler _bitswap;
+  final IPLDHandler _ipld;
+  final P2plibRouter _router;
+  final BlockStore _blockStore;
+  final Logger _logger;
+  final GraphsyncProtocol _protocol;
+  final IPFSConfig _config;
 
   Future<void> start() async {
     _router.registerProtocol(GraphsyncProtocol.protocolID);

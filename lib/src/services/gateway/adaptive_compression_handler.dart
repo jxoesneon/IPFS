@@ -1,16 +1,24 @@
 // src/services/gateway/adaptive_compression_handler.dart
-import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/services/gateway/compressed_cache_store.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:es_compression/lz4.dart' as es;
+import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/services/gateway/compressed_cache_store.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:es_compression/lz4.dart' as es;
 
 /// Configuration for adaptive compression.
 class CompressionConfig {
+
+  /// Creates compression configuration.
+  CompressionConfig({
+    this.enabled = true,
+    this.maxUncompressedSize = 52428800, // 50MB
+    Map<String, CompressionType>? contentTypeRules,
+  }) : contentTypeRules = contentTypeRules ?? _defaultCompressionRules;
   /// Whether compression is enabled.
   final bool enabled;
 
@@ -19,13 +27,6 @@ class CompressionConfig {
 
   /// Compression type rules by content type prefix.
   final Map<String, CompressionType> contentTypeRules;
-
-  /// Creates compression configuration.
-  CompressionConfig({
-    this.enabled = true,
-    this.maxUncompressedSize = 52428800, // 50MB
-    Map<String, CompressionType>? contentTypeRules,
-  }) : contentTypeRules = contentTypeRules ?? _defaultCompressionRules;
 
   static final _defaultCompressionRules = {
     'text/': CompressionType.gzip,
@@ -39,30 +40,30 @@ class CompressionConfig {
 
 /// Analysis results for compression options.
 class CompressionAnalysis {
-  /// Compression ratios by type.
-  final Map<CompressionType, double> compressionRatios;
-
-  /// The recommended compression type.
-  final CompressionType recommendedType;
 
   /// Creates compression analysis results.
   CompressionAnalysis({
     required this.compressionRatios,
     required this.recommendedType,
   });
+  /// Compression ratios by type.
+  final Map<CompressionType, double> compressionRatios;
+
+  /// The recommended compression type.
+  final CompressionType recommendedType;
 }
 
 /// Handles adaptive compression for gateway content.
 ///
 /// Selects optimal compression based on content type and size.
 class AdaptiveCompressionHandler {
-  final BlockStore _blockStore;
-  final CompressionConfig _config;
-  final String _metadataPath;
 
   /// Creates a handler with [_blockStore] and [_config].
   AdaptiveCompressionHandler(this._blockStore, this._config)
     : _metadataPath = '${_blockStore.path}/metadata';
+  final BlockStore _blockStore;
+  final CompressionConfig _config;
+  final String _metadataPath;
 
   static bool? _lz4Available;
   final _logger = Logger('AdaptiveCompressionHandler');

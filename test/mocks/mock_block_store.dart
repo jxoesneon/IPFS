@@ -95,6 +95,7 @@ class MockBlockStore implements IBlockStore {
   }
 
   /// Check if a block exists (without recording call)
+  @override
   Future<bool> hasBlock(String cid) async {
     return _blocks.containsKey(cid);
   }

@@ -1,8 +1,9 @@
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart'
     as blockstore_pb;

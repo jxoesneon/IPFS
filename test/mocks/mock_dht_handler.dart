@@ -1,9 +1,10 @@
 // test/mocks/mock_dht_handler.dart
 import 'dart:async';
+
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
     show V_PeerInfo;
+import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Mock implementation of IDHTHandler for testing.
@@ -109,6 +110,7 @@ class MockDHTHandler implements IDHTHandler {
   // ===== Test Configuration Methods =====
 
   /// Start the mock DHT (for lifecycle testing)
+  @override
   Future<void> start() async {
     _checkAndThrow('start');
     await _simulateDelay();
@@ -117,6 +119,7 @@ class MockDHTHandler implements IDHTHandler {
   }
 
   /// Stop the mock DHT (for lifecycle testing)
+  @override
   Future<void> stop() async {
     _checkAndThrow('stop');
     await _simulateDelay();

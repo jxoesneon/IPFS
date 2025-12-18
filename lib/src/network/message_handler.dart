@@ -2,19 +2,20 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:fixnum/fixnum.dart';
+
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart' as pb_base;
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart' as pb_cid;
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
 import 'package:dart_ipfs/src/services/gateway/content_type_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/lazy_preview_handler.dart';
-import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart' as pb_base;
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 
 /// Handles IPFS message processing and content operations.
@@ -22,6 +23,11 @@ import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 /// Processes CID messages, stores content, notifies listeners,
 /// and coordinates with Bitswap for block retrieval.
 class MessageHandler {
+
+  /// Creates a handler with config, router, and optional PubSub.
+  MessageHandler(this.config, this._router, [this._pubSubClient]) {
+    _blockStore = BlockStore(path: config.blockStorePath);
+  }
   final StreamController<pb_base.NetworkEvent> _eventController =
       StreamController<pb_base.NetworkEvent>.broadcast();
   final PubSubClient? _pubSubClient;
@@ -29,11 +35,6 @@ class MessageHandler {
   final P2plibRouter _router;
   late final BlockStore _blockStore;
   final _logger = Logger('MessageHandler');
-
-  /// Creates a handler with config, router, and optional PubSub.
-  MessageHandler(this.config, this._router, [this._pubSubClient]) {
-    _blockStore = BlockStore(path: config.blockStorePath);
-  }
 
   Future<void> handleCIDMessage(pb_cid.IPFSCIDProto protoMessage) async {
     final cid = CID.fromProto(protoMessage);

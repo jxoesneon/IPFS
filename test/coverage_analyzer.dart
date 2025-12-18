@@ -60,10 +60,7 @@ void main() async {
     // lcov usually is relative to root: "lib/src/..."
 
     var stats = coveredFiles[relPath];
-    if (stats == null) {
-      // Try matching absolute path if lcov has absolute
-      stats = coveredFiles[file];
-    }
+    stats ??= coveredFiles[file];
 
     // Also try simple filename match if needed, but path is better.
 

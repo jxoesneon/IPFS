@@ -1,6 +1,7 @@
 import 'dart:typed_data';
-import 'package:test/test.dart';
+
 import 'package:dart_ipfs/src/utils/varint.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('Varint Utils', () {

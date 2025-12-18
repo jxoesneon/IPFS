@@ -31,6 +31,15 @@ import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
 /// final isValid = await record.verify();
 /// ```
 class IPNSRecord {
+
+  IPNSRecord._({
+    required this.value,
+    required this.validity,
+    required this.sequence,
+    required this.ttl,
+    required this.publicKey,
+    Uint8List? signature,
+  }) : _signature = signature;
   /// The value this IPNS name points to (typically /ipfs/CID).
   final Uint8List value;
 
@@ -55,15 +64,6 @@ class IPNSRecord {
 
   /// Whether this record has been signed.
   bool get isSigned => _signature != null;
-
-  IPNSRecord._({
-    required this.value,
-    required this.validity,
-    required this.sequence,
-    required this.ttl,
-    required this.publicKey,
-    Uint8List? signature,
-  }) : _signature = signature;
 
   /// Creates and signs a new IPNS record.
   ///
@@ -139,7 +139,7 @@ class IPNSRecord {
       CborString('Validity'): CborBytes(
         Uint8List.fromList(utf8.encode(validity.toUtc().toIso8601String())),
       ),
-      CborString('ValidityType'): CborSmallInt(0), // EOL (End of Life)
+      CborString('ValidityType'): const CborSmallInt(0), // EOL (End of Life)
       CborString('Sequence'): CborSmallInt(sequence),
       CborString('TTL'): CborSmallInt(ttl.inMicroseconds),
       CborString('PublicKey'): CborBytes(publicKey),
@@ -153,7 +153,7 @@ class IPNSRecord {
   static IPNSRecord fromCBOR(Uint8List data) {
     final decoded = cbor.decode(data);
     if (decoded is! CborMap) {
-      throw FormatException('Invalid IPNS record: expected CBOR map');
+      throw const FormatException('Invalid IPNS record: expected CBOR map');
     }
 
     final map = decoded;
@@ -207,7 +207,7 @@ class IPNSRecord {
       CborString('Validity'): CborBytes(
         Uint8List.fromList(utf8.encode(validity.toUtc().toIso8601String())),
       ),
-      CborString('ValidityType'): CborSmallInt(0),
+      CborString('ValidityType'): const CborSmallInt(0),
       CborString('Sequence'): CborSmallInt(sequence),
       CborString('TTL'): CborSmallInt(ttl.inMicroseconds),
     });

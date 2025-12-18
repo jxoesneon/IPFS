@@ -1,11 +1,13 @@
 // lib/src/services/gateway/content_type_handler.dart
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:dart_ipfs/src/utils/logger.dart';
-import 'directory_parser.dart';
-import 'package:mime/mime.dart';
-import '../../core/data_structures/block.dart';
 import 'package:markdown/markdown.dart' as md;
+import 'package:mime/mime.dart';
+
+import '../../core/data_structures/block.dart';
+import 'directory_parser.dart';
 
 /// Handles content type detection and processing for IPFS gateway responses
 class ContentTypeHandler {

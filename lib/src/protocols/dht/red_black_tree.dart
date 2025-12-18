@@ -2,15 +2,25 @@
 
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
     as common_tree;
-import 'package:dart_ipfs/src/protocols/dht/red_black_tree/insertion.dart'
-    as insertion;
 import 'package:dart_ipfs/src/protocols/dht/red_black_tree/deletion.dart'
     as deletion;
+import 'package:dart_ipfs/src/protocols/dht/red_black_tree/insertion.dart'
+    as insertion;
 import 'package:dart_ipfs/src/protocols/dht/red_black_tree/search.dart'
     as rb_search;
 
 /// A node in the Red-Black tree.
 class RedBlackTreeNode<K_PeerId, V_PeerInfo> {
+
+  /// Creates a tree node.
+  RedBlackTreeNode(
+    this.key,
+    this.value, {
+    this.color = common_tree.NodeColor.RED,
+    this.leftChild,
+    this.rightChild,
+    this.parent,
+  });
   /// The key (peer ID).
   K_PeerId key;
 
@@ -28,24 +38,21 @@ class RedBlackTreeNode<K_PeerId, V_PeerInfo> {
 
   /// Parent node.
   RedBlackTreeNode<K_PeerId, V_PeerInfo>? parent;
-
-  /// Creates a tree node.
-  RedBlackTreeNode(
-    this.key,
-    this.value, {
-    this.color = common_tree.NodeColor.RED,
-    this.leftChild,
-    this.rightChild,
-    this.parent,
-  });
 }
 
 /// Self-balancing Red-Black tree for efficient peer lookup.
 ///
 /// Used in Kademlia k-buckets for O(log n) peer operations.
 class RedBlackTree<K_PeerId, V_PeerInfo> {
+
+  /// Creates a Red-Black tree with optional comparator.
+  RedBlackTree({int Function(K_PeerId, K_PeerId)? compare})
+    : _compare = compare ?? ((a, b) => (a as int).compareTo(b as int)),
+      _insertion = insertion.Insertion<K_PeerId, V_PeerInfo>(),
+      _deletion = deletion.Deletion<K_PeerId, V_PeerInfo>(),
+      _search = rb_search.Search<K_PeerId, V_PeerInfo>();
   RedBlackTreeNode<K_PeerId, V_PeerInfo>? _root;
-  int Function(K_PeerId, K_PeerId) _compare;
+  final int Function(K_PeerId, K_PeerId) _compare;
 
   final insertion.Insertion<K_PeerId, V_PeerInfo> _insertion;
   final deletion.Deletion<K_PeerId, V_PeerInfo> _deletion;
@@ -59,13 +66,6 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
 
   /// All entries as key-value pairs.
   var entries = <MapEntry<K_PeerId, V_PeerInfo>>[];
-
-  /// Creates a Red-Black tree with optional comparator.
-  RedBlackTree({int Function(K_PeerId, K_PeerId)? compare})
-    : _compare = compare ?? ((a, b) => (a as int).compareTo(b as int)),
-      _insertion = insertion.Insertion<K_PeerId, V_PeerInfo>(),
-      _deletion = deletion.Deletion<K_PeerId, V_PeerInfo>(),
-      _search = rb_search.Search<K_PeerId, V_PeerInfo>();
 
   // Insert a new node with the given key and value into the tree.
   void insert(K_PeerId keyInsert, V_PeerInfo valueInsert) {

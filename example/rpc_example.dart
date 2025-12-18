@@ -1,8 +1,8 @@
 // ignore_for_file: avoid_print
 // example/rpc_example.dart
-import 'package:dart_ipfs/src/services/rpc/rpc_server.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/services/rpc/rpc_server.dart';
 
 /// Example of running the IPFS RPC API server
 ///
@@ -45,5 +45,5 @@ void main() async {
   print('\n⏹️  Press Ctrl+C to stop the server\n');
 
   // Keep the server running
-  await Future<void>.delayed(Duration(days: 1));
+  await Future<void>.delayed(const Duration(days: 1));
 }

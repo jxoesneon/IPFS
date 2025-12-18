@@ -1,5 +1,5 @@
-import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/core/types/peer_types.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Stores and manages peer information for the DHT protocol
 class PeerStore {

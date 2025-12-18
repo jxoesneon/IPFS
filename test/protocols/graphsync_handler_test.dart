@@ -1,24 +1,25 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:io';
-import 'package:test/test.dart';
+import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart'
+    as core_block; // generic
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart'; // interface
+import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
+import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
+import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart'; // for responses
+import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart'
+    as proto;
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_protocol.dart';
 // unused import removed
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart'; // interface
-import 'package:dart_ipfs/src/core/data_structures/block.dart'
-    as core_block; // generic
-import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart'
-    as proto;
-import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart'; // for responses
-import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
+import 'package:test/test.dart';
 
 // Mocks
 
@@ -48,7 +49,7 @@ class MockRouter implements P2plibRouter {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockBitswap extends BitswapHandler {
@@ -75,7 +76,7 @@ class MockBlockStore implements BlockStore {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockIPLD extends IPLDHandler {
@@ -97,8 +98,8 @@ class MockIPLD extends IPLDHandler {
 
 // Minimal dummy for result in executeSelector if needed
 class IPLDNode {
-  final CID cid;
   IPLDNode(this.cid);
+  final CID cid;
 }
 
 void main() {
@@ -177,7 +178,7 @@ void main() {
 
       final packet = p2p.Packet(
         datagram: requestMsg.writeToBuffer(),
-        header: p2p.PacketHeader(id: 1, issuedAt: 0),
+        header: const p2p.PacketHeader(id: 1, issuedAt: 0),
         srcFullAddress: p2p.FullAddress(
           address: InternetAddress.anyIPv4,
           port: 0,

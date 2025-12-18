@@ -1,7 +1,8 @@
 import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_protocol.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_types.dart';
-import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -17,7 +18,7 @@ void main() {
     });
 
     test('has default timeout', () {
-      expect(GraphsyncProtocol.defaultTimeout, equals(Duration(seconds: 60)));
+      expect(GraphsyncProtocol.defaultTimeout, equals(const Duration(seconds: 60)));
     });
 
     test('createRequest creates valid request message', () {

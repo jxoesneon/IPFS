@@ -7,10 +7,10 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/services/rpc/rpc_handlers.dart';
 import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
+import 'package:dart_ipfs/src/services/rpc/rpc_handlers.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
@@ -74,7 +74,7 @@ class MockDHTClient implements DHTClient {
   Future<void> addProvider(String cid, String providerId) async {}
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 // Mock IPFSNode
@@ -145,7 +145,7 @@ class MockIPFSNode implements IPFSNode {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {

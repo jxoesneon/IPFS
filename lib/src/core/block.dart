@@ -1,7 +1,8 @@
 import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/interfaces/block_cloneable.dart';
 import 'package:dart_ipfs/src/core/interfaces/block_data.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
 
 /// An immutable, content-addressed block of data in IPFS.
 ///
@@ -28,6 +29,12 @@ import 'package:dart_ipfs/src/core/cid.dart';
 /// - [BlockStore] for persisting blocks
 /// - [BlockData] for the interface contract
 class Block with BlockCloneable<Block> implements BlockData {
+
+  /// Creates a new block with the given [data] and [cid].
+  ///
+  /// The caller is responsible for ensuring the [cid] correctly
+  /// corresponds to the hash of [data].
+  const Block({required this.data, required CID cid}) : _cid = cid;
   /// The raw binary content of this block.
   ///
   /// This data is immutable and its hash determines the block's [cid].
@@ -42,12 +49,6 @@ class Block with BlockCloneable<Block> implements BlockData {
   CID get cid => _cid;
 
   final CID _cid;
-
-  /// Creates a new block with the given [data] and [cid].
-  ///
-  /// The caller is responsible for ensuring the [cid] correctly
-  /// corresponds to the hash of [data].
-  const Block({required this.data, required CID cid}) : _cid = cid;
 
   /// Creates a deep copy of this block.
   ///

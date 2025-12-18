@@ -1,10 +1,11 @@
 // src/core/cid.dart
 import 'dart:typed_data';
+
 import 'package:crypto/crypto.dart';
-import 'package:multibase/multibase.dart';
-import 'package:dart_multihash/dart_multihash.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 import 'package:dart_ipfs/src/utils/encoding.dart';
+import 'package:dart_multihash/dart_multihash.dart';
+import 'package:multibase/multibase.dart';
 
 /// A Content Identifier (CID) for content-addressed data in IPFS.
 ///
@@ -33,21 +34,6 @@ import 'package:dart_ipfs/src/utils/encoding.dart';
 /// - [IPFS CID Specification](https://github.com/multiformats/cid)
 /// - `Block` for content-addressed data storage
 class CID {
-  /// The CID version (0 or 1).
-  final int version;
-
-  /// The multihash containing the hash algorithm and digest.
-  final MultihashInfo multihash;
-
-  /// The content codec (e.g., 'dag-pb', 'raw', 'dag-cbor').
-  ///
-  /// Identifies how the content should be interpreted.
-  final String? codec;
-
-  /// The multibase encoding type for string representation.
-  ///
-  /// Common values: [Multibase.base58btc] (CIDv0), [Multibase.base32] (CIDv1).
-  final Multibase? multibaseType;
 
   /// Creates a CID with the specified components.
   ///
@@ -93,6 +79,21 @@ class CID {
       multibaseType: base,
     );
   }
+  /// The CID version (0 or 1).
+  final int version;
+
+  /// The multihash containing the hash algorithm and digest.
+  final MultihashInfo multihash;
+
+  /// The content codec (e.g., 'dag-pb', 'raw', 'dag-cbor').
+  ///
+  /// Identifies how the content should be interpreted.
+  final String? codec;
+
+  /// The multibase encoding type for string representation.
+  ///
+  /// Common values: [Multibase.base58btc] (CIDv0), [Multibase.base32] (CIDv1).
+  final Multibase? multibaseType;
 
   /// Parses a CID from its raw binary representation.
   static CID fromBytes(Uint8List bytes) {
@@ -115,7 +116,7 @@ class CID {
       int codecCode = 0;
       int shift = 0;
       while (true) {
-        if (index >= bytes.length) throw FormatException('Invalid CID bytes');
+        if (index >= bytes.length) throw const FormatException('Invalid CID bytes');
         int byte = bytes[index++];
         codecCode |= (byte & 0x7f) << shift;
         if ((byte & 0x80) == 0) break;
@@ -150,7 +151,7 @@ class CID {
       );
     }
 
-    throw FormatException('Invalid CID version');
+    throw const FormatException('Invalid CID version');
   }
 
   /// Decodes a CID from its string representation.

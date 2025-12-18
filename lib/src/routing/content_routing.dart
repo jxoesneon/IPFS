@@ -1,22 +1,23 @@
 import 'dart:async';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 
-import '../protocols/dht/dht_client.dart'; // Import DHT client
-import '../utils/dnslink_resolver.dart'; // Import DNSLink resolver
 import '../core/ipfs_node/network_handler.dart';
+import '../protocols/dht/dht_client.dart'; // Import DHT client
 import '../utils/base58.dart';
+import '../utils/dnslink_resolver.dart'; // Import DNSLink resolver
 import '../utils/logger.dart';
 
 /// Handles content routing operations for an IPFS node.
 class ContentRouting {
-  final DHTClient _dhtClient;
-  final _logger = Logger('ContentRouting');
 
   ContentRouting(IPFSConfig config, NetworkHandler networkHandler)
     : _dhtClient = DHTClient(
         networkHandler: networkHandler,
         router: networkHandler.p2pRouter,
       );
+  final DHTClient _dhtClient;
+  final _logger = Logger('ContentRouting');
 
   /// Starts the content routing services.
   Future<void> start() async {

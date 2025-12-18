@@ -16,37 +16,6 @@ import 'package:dart_ipfs/src/utils/base58.dart';
 /// );
 /// ```
 class NetworkConfig {
-  /// Default multiaddr listen addresses for TCP.
-  static const defaultListenAddresses = [
-    '/ip4/0.0.0.0/tcp/4001',
-    '/ip6/::/tcp/4001',
-  ];
-
-  /// Default IPFS bootstrap peers.
-  static const defaultBootstrapPeers = [
-    '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
-    '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
-    '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-    '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
-  ];
-
-  /// Addresses to listen on for incoming connections.
-  final List<String> listenAddresses;
-
-  /// Peers to connect to on startup.
-  final List<String> bootstrapPeers;
-
-  /// Maximum number of concurrent connections.
-  final int maxConnections;
-
-  /// Timeout for connection attempts.
-  final Duration connectionTimeout;
-
-  /// Unique identifier for this node.
-  final String nodeId;
-
-  /// Optional HTTP endpoint for delegated routing.
-  final String? delegatedRoutingEndpoint;
 
   /// Creates a network configuration with the given options.
   NetworkConfig({
@@ -85,6 +54,37 @@ class NetworkConfig {
       delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'] as String?,
     );
   }
+  /// Default multiaddr listen addresses for TCP.
+  static const defaultListenAddresses = [
+    '/ip4/0.0.0.0/tcp/4001',
+    '/ip6/::/tcp/4001',
+  ];
+
+  /// Default IPFS bootstrap peers.
+  static const defaultBootstrapPeers = [
+    '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+    '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+    '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+    '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
+  ];
+
+  /// Addresses to listen on for incoming connections.
+  final List<String> listenAddresses;
+
+  /// Peers to connect to on startup.
+  final List<String> bootstrapPeers;
+
+  /// Maximum number of concurrent connections.
+  final int maxConnections;
+
+  /// Timeout for connection attempts.
+  final Duration connectionTimeout;
+
+  /// Unique identifier for this node.
+  final String nodeId;
+
+  /// Optional HTTP endpoint for delegated routing.
+  final String? delegatedRoutingEndpoint;
 
   Map<String, dynamic> toJson() => {
     'listenAddresses': listenAddresses,
@@ -103,13 +103,13 @@ class NetworkConfig {
 }
 
 class ProtocolConfig {
-  final String protocolId;
-  final Duration messageTimeout;
-  final int maxRetries;
 
   ProtocolConfig({
     required this.protocolId,
     this.messageTimeout = const Duration(seconds: 10),
     this.maxRetries = 3,
   });
+  final String protocolId;
+  final Duration messageTimeout;
+  final int maxRetries;
 }

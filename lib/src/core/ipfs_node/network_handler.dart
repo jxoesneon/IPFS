@@ -1,29 +1,24 @@
 // src/core/ipfs_node/network_handler.dart
 import 'dart:async';
 import 'dart:convert';
-import 'ipfs_node.dart';
-
-import 'dart:typed_data';
-import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:dart_ipfs/src/network/router.dart';
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/network/router.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
+import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
+
+import 'ipfs_node.dart';
 
 // lib/src/core/ipfs_node/network_handler.dart
 
 /// Handles network operations for an IPFS node.
 class NetworkHandler {
-  late final CircuitRelayClient _circuitRelayClient;
-  final P2plibRouter _router;
-  late final IPFSNode ipfsNode;
-  late final StreamController<NetworkEvent> _networkEventController;
-  final IPFSConfig _config;
-  late final Logger _logger;
 
   NetworkHandler(this._config, {P2plibRouter? router})
     : _router = router ?? P2plibRouter(_config),
@@ -45,6 +40,12 @@ class NetworkHandler {
     _listenForNetworkEvents();
     _logger.debug('NetworkHandler initialization complete');
   }
+  late final CircuitRelayClient _circuitRelayClient;
+  final P2plibRouter _router;
+  late final IPFSNode ipfsNode;
+  late final StreamController<NetworkEvent> _networkEventController;
+  final IPFSConfig _config;
+  late final Logger _logger;
 
   /// Starts the network services.
   Future<void> start() async {
@@ -147,7 +148,7 @@ class NetworkHandler {
       });
     } catch (e) {
       // print('Error receiving messages from peer $peerId: $e');
-      return Stream.empty();
+      return const Stream.empty();
     }
   }
 
@@ -250,7 +251,7 @@ class NetworkHandler {
 
       // Wait for response with timeout
       return await completer.future.timeout(
-        Duration(seconds: 30),
+        const Duration(seconds: 30),
         onTimeout: () {
           _router.removeMessageHandler(protocolId);
           throw TimeoutException('Request to peer timed out');

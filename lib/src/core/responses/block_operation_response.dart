@@ -6,14 +6,6 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 /// Contains success status, message, and optional data payload.
 /// Used by [BlockStoreOperations] for type-safe results.
 class BlockOperationResponse<T> {
-  /// Whether the operation succeeded.
-  final bool success;
-
-  /// Human-readable result message.
-  final String message;
-
-  /// The result data, if any.
-  final T? data;
 
   /// Creates a response with status, message, and optional data.
   const BlockOperationResponse({
@@ -48,4 +40,12 @@ class BlockOperationResponse<T> {
     }
     throw ArgumentError('Unsupported proto type');
   }
+  /// Whether the operation succeeded.
+  final bool success;
+
+  /// Human-readable result message.
+  final String message;
+
+  /// The result data, if any.
+  final T? data;
 }

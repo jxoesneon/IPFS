@@ -1,11 +1,12 @@
 // ignore_for_file: avoid_print
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/services/gateway/compressed_cache_store.dart';
-import 'package:test/test.dart';
 import 'package:dart_ipfs/src/services/gateway/adaptive_compression_handler.dart';
+import 'package:dart_ipfs/src/services/gateway/compressed_cache_store.dart';
 import 'package:dart_multihash/dart_multihash.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('CompressedCacheStore LZ4', () {

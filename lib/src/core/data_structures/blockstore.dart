@@ -2,9 +2,9 @@
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Persistent storage for content-addressed blocks in IPFS.
 ///
@@ -42,6 +42,11 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 /// - [PinManager] for pinning operations
 /// - [IBlockStore] for the interface contract
 class BlockStore implements IBlockStore {
+
+  /// Creates a new BlockStore at the given [path].
+  BlockStore({required this.path}) : _logger = Logger('BlockStore') {
+    _pinManager = PinManager(this);
+  }
   final Map<String, Block> _blocks = {};
   late final PinManager _pinManager;
 
@@ -49,11 +54,6 @@ class BlockStore implements IBlockStore {
   final String path;
 
   final Logger _logger;
-
-  /// Creates a new BlockStore at the given [path].
-  BlockStore({required this.path}) : _logger = Logger('BlockStore') {
-    _pinManager = PinManager(this);
-  }
 
   @override
   Future<void> start() async {

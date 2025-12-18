@@ -1,15 +1,16 @@
 import 'dart:async';
-import 'package:fixnum/fixnum.dart';
+
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/network/router.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/routing_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/routing_handler.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import 'package:dart_ipfs/src/network/router.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
+import 'package:fixnum/fixnum.dart';
 
 /// Types of IPFS nodes in the UnixFS data model.
 enum IPFSNodeType { file, directory, symlink, unknown }
@@ -19,6 +20,16 @@ enum IPFSNodeType { file, directory, symlink, unknown }
 /// IPFSDataNode is a high-level representation of content in IPFS,
 /// combining the CID, links to child nodes, and access to node services.
 class IPFSDataNode {
+
+  /// Creates an IPFS data node.
+  IPFSDataNode({
+    required this.cid,
+    required this.links,
+    required this.nodeType,
+    this.metadata = const {},
+    required this.size,
+    required IPFSConfig config,
+  }) : _config = config;
   /// The content identifier for this node.
   final CID cid;
 
@@ -64,20 +75,18 @@ class IPFSDataNode {
 
   /// This node's peer ID.
   String get peerID => _peerID;
-
-  /// Creates an IPFS data node.
-  IPFSDataNode({
-    required this.cid,
-    required this.links,
-    required this.nodeType,
-    this.metadata = const {},
-    required this.size,
-    required IPFSConfig config,
-  }) : _config = config;
 }
 
 /// A named link to another node in the DAG.
 class NodeLink {
+
+  /// Creates a node link.
+  NodeLink({
+    required this.name,
+    required this.cid,
+    required this.size,
+    this.metadata = const {},
+  });
   /// The link name (filename in directories).
   final String name;
 
@@ -89,12 +98,4 @@ class NodeLink {
 
   /// Custom metadata for this link.
   final Map<String, String> metadata;
-
-  /// Creates a node link.
-  NodeLink({
-    required this.name,
-    required this.cid,
-    required this.size,
-    this.metadata = const {},
-  });
 }

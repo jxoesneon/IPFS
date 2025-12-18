@@ -1,16 +1,25 @@
 // src/core/ipfs_node/pubsub_handler.dart
 import 'dart:async';
 import 'dart:convert';
-import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
+
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
+import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
+
 import '../data_structures/node_stats.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
 
 /// Handles PubSub operations for an IPFS node.
 class PubSubHandler {
+
+  /// Constructs a [PubSubHandler] with the provided router, peer ID, and network events.
+  PubSubHandler(P2plibRouter router, String peerId, this._networkEvents)
+    : _pubSubClient = PubSubClient(router, peerId) {
+    // Register the pubsub protocol immediately upon construction
+    router.registerProtocol('pubsub');
+  }
   final PubSubClient _pubSubClient;
   final IpfsNodeNetworkEvents _networkEvents; // Reference to network events
   final Map<String, Set<void Function(String)>> _subscriptions = {};
@@ -19,13 +28,6 @@ class PubSubHandler {
   int _messageCount = 0;
 
   Stream<PubSubMessage> get messages => _messageController.stream;
-
-  /// Constructs a [PubSubHandler] with the provided router, peer ID, and network events.
-  PubSubHandler(P2plibRouter router, String peerId, this._networkEvents)
-    : _pubSubClient = PubSubClient(router, peerId) {
-    // Register the pubsub protocol immediately upon construction
-    router.registerProtocol('pubsub');
-  }
 
   /// Starts the PubSub client and listens for incoming messages.
   Future<void> start() async {

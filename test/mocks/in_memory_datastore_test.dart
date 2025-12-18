@@ -1,7 +1,9 @@
 // test/mocks/in_memory_datastore_test.dart
 import 'dart:typed_data';
-import 'package:test/test.dart';
+
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import 'package:test/test.dart';
+
 import 'in_memory_datastore.dart';
 import 'test_helpers.dart';
 
@@ -125,7 +127,7 @@ void main() {
     });
 
     test('handles long keys', () async {
-      final longKey = Key('/' + 'a' * 200);
+      final longKey = Key('/${'a' * 200}');
       final data = Uint8List.fromList([1, 2, 3]);
 
       await datastore.put(longKey, data);

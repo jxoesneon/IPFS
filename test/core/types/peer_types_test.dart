@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:test/test.dart';
+
 import 'package:dart_ipfs/src/core/types/peer_types.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:test/test.dart';
 
 void main() {
   group('IPFSPeer', () {

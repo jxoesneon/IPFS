@@ -76,8 +76,8 @@ class FilePreviewHandler {
 
   String _formatJson(String text) {
     try {
-      final parsedJson = JsonDecoder().convert(text);
-      return JsonEncoder.withIndent('  ').convert(parsedJson);
+      final parsedJson = const JsonDecoder().convert(text);
+      return const JsonEncoder.withIndent('  ').convert(parsedJson);
     } catch (_) {
       return text;
     }

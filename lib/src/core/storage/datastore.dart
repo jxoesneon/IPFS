@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 /// Error thrown when a datastore operation fails.
 class DatastoreError extends Error {
-  final String message;
   DatastoreError(this.message);
+  final String message;
   @override
   String toString() => 'DatastoreError: $message';
 }
@@ -11,9 +11,9 @@ class DatastoreError extends Error {
 /// Represents a key in the datastore.
 /// Keys are hierarchical path-like strings, e.g., /local/peers/Qm...
 class Key {
-  final String _string;
 
   Key(String s) : _string = _clean(s);
+  final String _string;
 
   String get string => _string;
 
@@ -48,12 +48,6 @@ class Key {
 
 /// A Query object for the datastore.
 class Query {
-  final String? prefix;
-  final List<QueryFilter>? filters;
-  final List<QueryOrder>? orders;
-  final int? limit;
-  final int? offset;
-  final bool keysOnly;
 
   Query({
     this.prefix,
@@ -63,6 +57,12 @@ class Query {
     this.offset,
     this.keysOnly = false,
   });
+  final String? prefix;
+  final List<QueryFilter>? filters;
+  final List<QueryOrder>? orders;
+  final int? limit;
+  final int? offset;
+  final bool keysOnly;
 }
 
 abstract class QueryFilter {
@@ -74,11 +74,11 @@ abstract class QueryOrder {
 }
 
 /// The entry returned by a query.
-class QueryEntry {
-  final Key key;
-  final Uint8List? value; // Null if keysOnly
+class QueryEntry { // Null if keysOnly
 
   QueryEntry(this.key, this.value);
+  final Key key;
+  final Uint8List? value;
 }
 
 /// Abstract interface for a key-value datastore.

@@ -1,12 +1,12 @@
-import 'package:fixnum/fixnum.dart';
 import 'dart:typed_data' show Uint8List;
-import 'package:p2plib/p2plib.dart' as p2p;
 
-import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/kademlia_node.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
 import 'package:dart_ipfs/src/proto/generated/dht/common_kademlia.pb.dart'
     as common_kademlia_pb;
+import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
+import 'package:dart_ipfs/src/proto/generated/dht/kademlia_node.pb.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
+import 'package:fixnum/fixnum.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 // lib/src/protocols/dht/kademlia_tree/helpers.dart
 
 /// Calculates the XOR distance between two Peer IDs.
@@ -133,7 +133,7 @@ Future<dht_pb.FindNodeResponse> sendRequest(
       ..closerPeers.add(dht_pb.DHTPeer()..id = foundPeer.value);
   } catch (e) {
     // print('Error sending request to peer ${Base58().encode(peer.value)}: $e');
-    throw e;
+    rethrow;
   }
 }
 

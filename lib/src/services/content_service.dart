@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:crypto/crypto.dart';
-import '../proto/generated/core/cid.pb.dart' as pb_cid;
+
 import '../core/cid.dart';
 import '../core/data_structures/block.dart';
 import '../core/storage/datastore.dart';
+import '../proto/generated/core/cid.pb.dart' as pb_cid;
 import '../utils/logger.dart';
 
 /// High-level service for content storage and retrieval.
@@ -30,11 +32,11 @@ import '../utils/logger.dart';
 /// - [Datastore] for low-level storage
 /// - [CID] for content addressing
 class ContentService {
-  final Datastore _datastore;
-  final _logger = Logger('ContentService');
 
   /// Creates a content service backed by [_datastore].
   ContentService(this._datastore);
+  final Datastore _datastore;
+  final _logger = Logger('ContentService');
 
   /// Stores content and returns its CID
   Future<CID> storeContent(List<int> content, {String codec = 'raw'}) async {

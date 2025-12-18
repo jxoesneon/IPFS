@@ -1,13 +1,16 @@
 import 'dart:async';
 
-import 'package:fixnum/fixnum.dart' as fixnum;
-import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart' as pb;
 import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:fixnum/fixnum.dart' as fixnum;
+import 'package:p2plib/p2plib.dart' as p2p;
+
 import 'p2plib_router.dart'; // Import the P2P library for peer-to-peer communication
 
 /// Handles circuit relay operations for an IPFS node.
 class CircuitRelayClient {
+
+  CircuitRelayClient(this._router);
   static const String _protocolId = '/libp2p/circuit/relay/0.2.0/hop';
   final P2plibRouter _router; // Router instance for handling connections
   final StreamController<CircuitRelayConnectionEvent>
@@ -16,8 +19,6 @@ class CircuitRelayClient {
 
   // Pending reservations keyed by Relay Peer ID
   final Map<String, Completer<Reservation>> _pendingReservations = {};
-
-  CircuitRelayClient(this._router);
 
   /// Starts the circuit relay client.
   Future<void> start() async {
@@ -202,11 +203,6 @@ class CircuitRelayClient {
 
 /// Represents a circuit relay event.
 class CircuitRelayConnectionEvent {
-  final String eventType;
-  final String relayAddress;
-  final String errorMessage;
-  final String reason;
-  final fixnum.Int64 dataSize;
 
   CircuitRelayConnectionEvent({
     required this.eventType,
@@ -215,14 +211,15 @@ class CircuitRelayConnectionEvent {
     this.reason = '',
     fixnum.Int64? dataSize,
   }) : dataSize = dataSize ?? fixnum.Int64.ZERO;
+  final String eventType;
+  final String relayAddress;
+  final String errorMessage;
+  final String reason;
+  final fixnum.Int64 dataSize;
 }
 
 /// Represents a Circuit Relay v2 reservation.
 class Reservation {
-  final String relayPeerId;
-  final DateTime expireTime;
-  final fixnum.Int64 limitData;
-  final fixnum.Int64 limitDuration;
 
   Reservation({
     required this.relayPeerId,
@@ -230,6 +227,10 @@ class Reservation {
     required this.limitData,
     required this.limitDuration,
   });
+  final String relayPeerId;
+  final DateTime expireTime;
+  final fixnum.Int64 limitData;
+  final fixnum.Int64 limitDuration;
 
   bool get isExpired => DateTime.now().isAfter(expireTime);
 }

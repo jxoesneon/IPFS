@@ -1,9 +1,9 @@
 // lib/src/protocols/dht/red_black_tree/insertion.dart
 
-import '../red_black_tree.dart';
-import 'fix_violations.dart';
 import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
     as common_tree;
+import '../red_black_tree.dart';
+import 'fix_violations.dart';
 
 /// Handles insertion operations for Red-Black trees.
 ///
@@ -16,7 +16,7 @@ class Insertion<K_PeerId, V_PeerInfo> {
     RedBlackTreeNode<K_PeerId, V_PeerInfo> node,
   ) {
     // `y` will eventually store the parent of the new node.
-    RedBlackTreeNode<K_PeerId, V_PeerInfo>? y = null;
+    RedBlackTreeNode<K_PeerId, V_PeerInfo>? y;
     // `x` is used to traverse the tree to find the correct insertion point.
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? x = tree.root;
 

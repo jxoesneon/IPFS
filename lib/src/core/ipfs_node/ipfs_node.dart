@@ -2,42 +2,44 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
-import 'pubsub_handler.dart';
-import 'network_handler.dart';
-import 'datastore_handler.dart';
+
+import 'package:dart_ipfs/src/core/builders/ipfs_node_builder.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:fixnum/fixnum.dart' as fixnum;
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:dart_ipfs/src/network/router.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/data_structures/pin.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/core/data_structures/link.dart';
-import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/data_structures/directory.dart';
+import 'package:dart_ipfs/src/core/data_structures/link.dart';
+import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
+import 'package:dart_ipfs/src/core/data_structures/peer.dart';
+import 'package:dart_ipfs/src/core/data_structures/pin.dart';
+import 'package:dart_ipfs/src/core/di/service_container.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/bootstrap_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
-import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
-import 'package:dart_ipfs/src/core/data_structures/directory.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/bootstrap_handler.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import 'package:dart_ipfs/src/network/router.dart';
+import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
-import 'package:dart_ipfs/src/core/di/service_container.dart';
-import 'package:dart_ipfs/src/core/builders/ipfs_node_builder.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
+import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:dart_ipfs/src/transport/http_gateway_client.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:fixnum/fixnum.dart' as fixnum;
+import 'package:p2plib/p2plib.dart' as p2p;
+
+import 'datastore_handler.dart';
+import 'network_handler.dart';
+import 'pubsub_handler.dart';
 
 /// The central node orchestrating all IPFS operations.
 ///
@@ -106,11 +108,6 @@ enum GatewayMode {
 }
 
 class IPFSNode {
-  final ServiceContainer _container;
-  final Logger _logger;
-  final HttpGatewayClient _httpGatewayClient = HttpGatewayClient();
-  final StreamController<String> _newContentController =
-      StreamController<String>.broadcast();
 
   IPFSNode.fromContainer(this._container) : _logger = Logger('IPFSNode') {
     _logger.debug('Creating IPFS Node from container');
@@ -118,6 +115,11 @@ class IPFSNode {
     // Validate required services
     _validateRequiredServices();
   }
+  final ServiceContainer _container;
+  final Logger _logger;
+  final HttpGatewayClient _httpGatewayClient = HttpGatewayClient();
+  final StreamController<String> _newContentController =
+      StreamController<String>.broadcast();
 
   static Future<IPFSNode> create(IPFSConfig config) async {
     final builder = IPFSNodeBuilder(config);

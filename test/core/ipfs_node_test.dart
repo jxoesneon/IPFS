@@ -1,13 +1,14 @@
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/core/di/service_container.dart';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:test/test.dart';
 
@@ -24,9 +25,9 @@ class MockBlockStore extends BlockStore {
 }
 
 class MockDatastoreHandler extends DatastoreHandler {
-  final Map<String, Block> blocks = {};
 
   MockDatastoreHandler() : super(_MockDatastore());
+  final Map<String, Block> blocks = {};
 
   @override
   Future<void> start() async {}
@@ -64,7 +65,7 @@ class _MockDatastore implements Datastore {
 }
 
 class MockIPLDHandler extends IPLDHandler {
-  MockIPLDHandler(IPFSConfig config, BlockStore store) : super(config, store);
+  MockIPLDHandler(super.config, super.store);
 
   @override
   Future<void> start() async {}

@@ -1,6 +1,8 @@
 import 'dart:typed_data';
-import 'package:test/test.dart';
+
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart'; // For Key/Value
+import 'package:test/test.dart';
+
 import 'mock_dht_handler.dart';
 
 // Helper aliases if needed
@@ -74,7 +76,7 @@ void main() {
     });
 
     test('simulates delays', () async {
-      dht.setSimulatedDelay(Duration(milliseconds: 50));
+      dht.setSimulatedDelay(const Duration(milliseconds: 50));
       final stopwatch = Stopwatch()..start();
 
       final key = Key(Uint8List.fromList([1]));

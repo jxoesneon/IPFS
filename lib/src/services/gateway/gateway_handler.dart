@@ -1,14 +1,15 @@
 // lib/src/services/gateway/gateway_handler.dart
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:shelf/shelf.dart';
-import 'package:mime/mime.dart';
+
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:mime/mime.dart';
+import 'package:shelf/shelf.dart';
 
 /// Resolver function for IPNS names (returns CID)
 typedef IpnsResolver = Future<String> Function(String name);
@@ -16,11 +17,11 @@ typedef IpnsResolver = Future<String> Function(String name);
 /// Handles IPFS Gateway HTTP requests following the IPFS Gateway specs
 /// See: https://specs.ipfs.tech/http-gateways/
 class GatewayHandler {
+
+  GatewayHandler(this.blockStore, {this.ipnsResolver});
   final BlockStore blockStore;
   final IpnsResolver? ipnsResolver;
   final _logger = Logger('GatewayHandler');
-
-  GatewayHandler(this.blockStore, {this.ipnsResolver});
 
   /// Handles path-based gateway requests (/ipfs/ and /ipns/)
   Future<Response> handlePath(Request request) async {

@@ -1,7 +1,8 @@
 import 'dart:typed_data';
-import 'package:test/test.dart';
+
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_multihash/dart_multihash.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('CID', () {

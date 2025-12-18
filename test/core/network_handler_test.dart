@@ -1,12 +1,13 @@
 import 'dart:async';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:test/test.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:test/test.dart';
 
 class MockP2plibRouter extends P2plibRouter {
-  MockP2plibRouter(IPFSConfig config) : super.internal(config);
+  MockP2plibRouter(super.config) : super.internal();
 
   bool started = false;
   final List<String> _mockConnectedPeers = [];

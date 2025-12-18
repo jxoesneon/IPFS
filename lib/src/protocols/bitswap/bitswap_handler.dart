@@ -1,20 +1,31 @@
 // src/protocols/bitswap/bitswap_handler.dart
-import 'dart:io';
 import 'dart:async';
-import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:dart_ipfs/src/utils/generic_lru_cache.dart';
+import 'dart:io';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/ledger.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/wantlist.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/ledger.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as message;
+import 'package:dart_ipfs/src/protocols/bitswap/wantlist.dart';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/utils/generic_lru_cache.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Handles Bitswap protocol operations for an IPFS node following the Bitswap 1.2.0 specification
 class BitswapHandler {
+
+  BitswapHandler(IPFSConfig config, this._blockStore, this._router)
+    : _logger = Logger(
+        'BitswapHandler',
+        debug: config.debug,
+        verbose: config.verboseLogging,
+      ) {
+    _logger.info('Initializing BitswapHandler');
+    _setupHandlers();
+  }
   final BlockStore _blockStore;
   final P2plibRouter _router;
   final Wantlist _wantlist = Wantlist();
@@ -28,24 +39,14 @@ class BitswapHandler {
   final Set<String> _sessions = {};
   final Set<String> _connectedPeers = {};
   int _blocksReceived = 0;
-  int _blocksSent = 0;
+  final int _blocksSent = 0;
 
   /// Cache for block presence checks to avoid repeated blockstore lookups.
   /// Entries expire after 30 seconds to handle block additions/removals.
   final TimedLRUCache<String, bool> _blockPresenceCache = TimedLRUCache(
     capacity: 1000,
-    ttl: Duration(seconds: 30),
+    ttl: const Duration(seconds: 30),
   );
-
-  BitswapHandler(IPFSConfig config, this._blockStore, this._router)
-    : _logger = Logger(
-        'BitswapHandler',
-        debug: config.debug,
-        verbose: config.verboseLogging,
-      ) {
-    _logger.info('Initializing BitswapHandler');
-    _setupHandlers();
-  }
 
   /// Starts the Bitswap handler
   Future<void> start() async {

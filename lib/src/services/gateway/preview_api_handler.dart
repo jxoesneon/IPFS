@@ -1,8 +1,9 @@
 import 'dart:convert';
+
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/services/gateway/cached_preview_generator.dart';
-import 'package:dart_ipfs/src/services/gateway/lazy_preview_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/content_type_handler.dart';
+import 'package:dart_ipfs/src/services/gateway/lazy_preview_handler.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
@@ -10,12 +11,12 @@ import 'package:shelf_router/shelf_router.dart';
 ///
 /// Serves generated previews via the gateway API.
 class PreviewApiHandler {
-  final CachedPreviewGenerator _previewGenerator;
-  final LazyPreviewHandler _lazyPreviewHandler;
-  final ContentTypeHandler _contentTypeHandler = ContentTypeHandler();
 
   /// Creates a handler with [_previewGenerator] and [_lazyPreviewHandler].
   PreviewApiHandler(this._previewGenerator, this._lazyPreviewHandler);
+  final CachedPreviewGenerator _previewGenerator;
+  final LazyPreviewHandler _lazyPreviewHandler;
+  final ContentTypeHandler _contentTypeHandler = ContentTypeHandler();
 
   String _detectContentType(Block block) {
     return _contentTypeHandler.detectContentType(block);

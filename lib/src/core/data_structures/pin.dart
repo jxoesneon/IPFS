@@ -1,8 +1,8 @@
-import 'package:fixnum/fixnum.dart' as fixnum;
-import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
+import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
+import 'package:fixnum/fixnum.dart' as fixnum;
 
 /// A pin that prevents content from being garbage collected.
 ///
@@ -31,19 +31,6 @@ import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 /// - [PinManager] for bulk pin operations
 /// - [BlockStore] for storage that respects pins
 class Pin {
-  /// The content identifier being pinned.
-  final CID cid;
-
-  /// The type of pin (direct, recursive, indirect).
-  final PinTypeProto type;
-
-  /// When this pin was created.
-  final DateTime timestamp;
-
-  /// The block store for storage operations.
-  final BlockStore blockStore;
-
-  final PinManager _pinManager;
 
   /// Creates a new pin for the given [cid] with the specified [type].
   Pin({
@@ -63,6 +50,19 @@ class Pin {
       blockStore: blockStore,
     );
   }
+  /// The content identifier being pinned.
+  final CID cid;
+
+  /// The type of pin (direct, recursive, indirect).
+  final PinTypeProto type;
+
+  /// When this pin was created.
+  final DateTime timestamp;
+
+  /// The block store for storage operations.
+  final BlockStore blockStore;
+
+  final PinManager _pinManager;
 
   /// Converts the [Pin] to its Protobuf representation.
   PinProto toProto() {

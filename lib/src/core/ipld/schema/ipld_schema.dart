@@ -1,12 +1,14 @@
 // src/core/ipld/schema/ipld_schema.dart
-import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
+import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 
 /// IPLD schema validator for structured data validation.
 ///
 /// Validates IPLD nodes against type schemas including structs,
 /// unions, and basic types with optional constraints.
 class IPLDSchema {
+
+  IPLDSchema(this.name, this._schema);
   final Map<String, dynamic> _schema;
 
   /// Schema name.
@@ -22,8 +24,6 @@ class IPLDSchema {
     'map': Kind.MAP,
     'list': Kind.LIST,
   };
-
-  IPLDSchema(this.name, this._schema);
 
   Future<bool> validate(String typeName, IPLDNode node) async {
     final typeSchema = _schema[typeName];

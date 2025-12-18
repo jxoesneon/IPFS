@@ -6,6 +6,9 @@ import 'package:dart_ipfs/src/proto/generated/config.pb.dart';
 /// Limits operations to [maxOperations] per [interval]. Queues
 /// excess requests and processes them when capacity is available.
 class RateLimiter {
+
+  /// Creates a rate limiter with given limits.
+  RateLimiter({required this.maxOperations, required this.interval});
   /// Maximum operations allowed per time window.
   final int maxOperations;
 
@@ -15,9 +18,6 @@ class RateLimiter {
   int _currentOperations = 0;
   DateTime _windowStart = DateTime.now();
   final _queue = <Completer<void>>[];
-
-  /// Creates a rate limiter with given limits.
-  RateLimiter({required this.maxOperations, required this.interval});
 
   Future<void> acquire() async {
     final now = DateTime.now();

@@ -2,29 +2,37 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:http/http.dart' as http;
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:p2plib/p2plib.dart' show PeerId;
-import 'package:dart_ipfs/src/utils/keystore.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
-import 'package:dart_ipfs/src/storage/hive_datastore.dart';
-import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/ipns/ipns.pb.dart';
-import 'package:fixnum/fixnum.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
+import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
+import 'package:dart_ipfs/src/storage/hive_datastore.dart';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
+import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
+import 'package:fixnum/fixnum.dart';
+import 'package:http/http.dart' as http;
+import 'package:p2plib/p2plib.dart' show PeerId;
 
 /// Handles DHT operations for an IPFS node.
 ///
 /// **Security (SEC-010):** Provider records are verified before storage
 /// to prevent DHT index poisoning attacks.
 class DHTHandler implements IDHTHandler {
+
+  DHTHandler(IPFSConfig config, this._router, NetworkHandler networkHandler)
+    : _keystore = Keystore(),
+      _storage = HiveDatastore(config.datastorePath) {
+    _logger = Logger('DHTHandler', debug: config.debug);
+    _storage.init();
+    dhtClient = DHTClient(networkHandler: networkHandler, router: _router);
+  }
   late final DHTClient dhtClient;
   final Keystore _keystore;
   final P2plibRouter _router;
@@ -45,15 +53,8 @@ class DHTHandler implements IDHTHandler {
   /// Track provider announcements per peer for rate limiting
   final Map<String, List<DateTime>> _providerAnnouncements = {};
 
-  DHTHandler(IPFSConfig config, this._router, NetworkHandler networkHandler)
-    : _keystore = Keystore(),
-      _storage = HiveDatastore(config.datastorePath) {
-    _logger = Logger('DHTHandler', debug: config.debug);
-    _storage.init();
-    dhtClient = DHTClient(networkHandler: networkHandler, router: _router);
-  }
-
   /// Starts the DHT client.
+  @override
   Future<void> start() async {
     try {
       await dhtClient.start();
@@ -65,6 +66,7 @@ class DHTHandler implements IDHTHandler {
   }
 
   /// Stops the DHT client.
+  @override
   Future<void> stop() async {
     try {
       await dhtClient.stop();
@@ -179,7 +181,7 @@ class DHTHandler implements IDHTHandler {
       final valuePath = utf8.encode('/ipfs/$cid');
 
       // Validity: RFC3339 format, 24 hours from now
-      final validityDate = DateTime.now().add(Duration(hours: 24)).toUtc();
+      final validityDate = DateTime.now().add(const Duration(hours: 24)).toUtc();
       final validity = utf8.encode(validityDate.toIso8601String());
       final validityType = IpnsEntry_ValidityType.EOL;
 

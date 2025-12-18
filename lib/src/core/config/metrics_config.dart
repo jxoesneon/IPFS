@@ -14,26 +14,6 @@
 /// );
 /// ```
 class MetricsConfig {
-  /// Whether metrics collection is enabled.
-  final bool enabled;
-
-  /// How often metrics are collected, in seconds.
-  final int collectionIntervalSeconds;
-
-  /// Whether to collect CPU and memory metrics.
-  final bool collectSystemMetrics;
-
-  /// Whether to collect network bandwidth and peer metrics.
-  final bool collectNetworkMetrics;
-
-  /// Whether to collect disk and block storage metrics.
-  final bool collectStorageMetrics;
-
-  /// Whether to expose metrics via Prometheus endpoint.
-  final bool enablePrometheusExport;
-
-  /// The HTTP path for Prometheus metrics.
-  final String prometheusEndpoint;
 
   /// Creates a metrics configuration with the given options.
   const MetricsConfig({
@@ -58,6 +38,26 @@ class MetricsConfig {
       prometheusEndpoint: json['prometheusEndpoint'] as String? ?? '/metrics',
     );
   }
+  /// Whether metrics collection is enabled.
+  final bool enabled;
+
+  /// How often metrics are collected, in seconds.
+  final int collectionIntervalSeconds;
+
+  /// Whether to collect CPU and memory metrics.
+  final bool collectSystemMetrics;
+
+  /// Whether to collect network bandwidth and peer metrics.
+  final bool collectNetworkMetrics;
+
+  /// Whether to collect disk and block storage metrics.
+  final bool collectStorageMetrics;
+
+  /// Whether to expose metrics via Prometheus endpoint.
+  final bool enablePrometheusExport;
+
+  /// The HTTP path for Prometheus metrics.
+  final String prometheusEndpoint;
 
   Map<String, dynamic> toJson() => {
     'enabled': enabled,

@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/responses/block_operation_response.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_handler.dart';
@@ -5,9 +8,7 @@ import 'package:dart_ipfs/src/core/responses/block_responses.dart';
 import 'package:dart_ipfs/src/core/responses/response_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:test/test.dart';
-import 'dart:typed_data';
 
 void main() {
   group('BlockResponseHandler', () {
@@ -38,7 +39,7 @@ void main() {
 
   group('ResponseHandler', () {
     test('toAddBlockResponse', () {
-      final op = BlockOperationResponse<dynamic>(success: true, message: 'OK');
+      final op = const BlockOperationResponse<dynamic>(success: true, message: 'OK');
       final proto = ResponseHandler.toAddBlockResponse(op);
       expect(proto.success, isTrue);
       expect(proto.message, 'OK');

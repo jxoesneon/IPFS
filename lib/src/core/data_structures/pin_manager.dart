@@ -1,12 +1,13 @@
 // src/core/data_structures/pin_manager.dart
 import 'dart:collection';
 import 'dart:typed_data';
+
 import 'package:cbor/cbor.dart';
-import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
+import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 
 /// Manages pinning operations to prevent content from garbage collection.
 ///
@@ -19,13 +20,13 @@ import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 /// await manager.pinBlock(cidProto, PinTypeProto.PIN_TYPE_RECURSIVE);
 /// ```
 class PinManager {
+
+  /// Creates a pin manager backed by [_blockStore].
+  PinManager(this._blockStore);
   final Map<String, PinTypeProto> _pins = {};
   final Map<String, Set<String>> _references = {};
   final Map<String, DateTime> _accessTimes = {};
   final BlockStore _blockStore;
-
-  /// Creates a pin manager backed by [_blockStore].
-  PinManager(this._blockStore);
 
   Future<bool> pinBlock(IPFSCIDProto cidProto, PinTypeProto type) async {
     if (type == PinTypeProto.PIN_TYPE_RECURSIVE) {
@@ -83,7 +84,7 @@ class PinManager {
         return null;
       }
 
-      final references = Set<String>();
+      final references = <String>{};
       final format = blockResult.block.format;
 
       switch (format) {
@@ -119,14 +120,14 @@ class PinManager {
 
   Future<dynamic> _decodeCbor(Uint8List data) async {
     try {
-      return CborSimpleDecoder().convert(data);
+      return const CborSimpleDecoder().convert(data);
     } catch (e) {
       throw FormatException('Failed to decode CBOR data: $e');
     }
   }
 
   Set<String> _extractCborReferences(dynamic decoded) {
-    final references = Set<String>();
+    final references = <String>{};
 
     if (decoded is Map) {
       for (final value in decoded.values) {

@@ -14,14 +14,14 @@ class MockConfig extends IPFSConfig {
 class MockNetworkHandler extends NetworkHandler {
   MockNetworkHandler() : super(MockConfig());
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockContentRouting implements ContentRouting {
-  final List<String> providers;
-  final String? dnsResult;
 
   MockContentRouting({this.providers = const [], this.dnsResult});
+  final List<String> providers;
+  final String? dnsResult;
 
   @override
   Future<List<String>> findProviders(String cid) async {
@@ -40,15 +40,15 @@ class MockContentRouting implements ContentRouting {
   Future<void> stop() async {}
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockDelegatedRouting extends DelegatedRoutingHandler {
-  final List<String> providers;
-  final bool success;
 
   MockDelegatedRouting({this.providers = const [], this.success = true})
     : super(delegateEndpoint: 'http://mock');
+  final List<String> providers;
+  final bool success;
 
   @override
   Future<RoutingResponse> findProviders(CID cid) async {

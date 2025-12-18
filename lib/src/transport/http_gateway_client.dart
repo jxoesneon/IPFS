@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
+
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:http/http.dart' as http;
 
 /// Client for interacting with public IPFS HTTP Gateways.
 ///

@@ -1,17 +1,18 @@
 // ignore_for_file: avoid_print
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:io';
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as msg;
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as msg;
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
 
 // Helper
@@ -47,12 +48,13 @@ class MockBlockStore implements BlockStore {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockRouterL2 implements p2p.RouterL2 {
+  @override
   final Map<p2p.PeerId, p2p.Route> routes = {};
-  p2p.PeerId _selfId = p2p.PeerId(value: validPeerIdBytes);
+  final p2p.PeerId _selfId = p2p.PeerId(value: validPeerIdBytes);
 
   @override
   p2p.PeerId get selfId => _selfId;
@@ -69,7 +71,7 @@ class MockRouterL2 implements p2p.RouterL2 {
   }) {}
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockP2plibRouter implements P2plibRouter {
@@ -114,7 +116,7 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockConfig extends IPFSConfig {
@@ -154,7 +156,7 @@ void main() {
 
       // Simulate response slightly later
       scheduleMicrotask(() async {
-        await Future<void>.delayed(Duration(milliseconds: 50));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
         await _simulateBlockArrival(mockRouter, targetData);
       });
 
@@ -180,10 +182,10 @@ void main() {
       final future2 = handler.wantBlock(cid2);
 
       // Fulfill 2 then 1 with slight delays
-      await Future<void>.delayed(Duration(milliseconds: 20));
+      await Future<void>.delayed(const Duration(milliseconds: 20));
       await _simulateBlockArrival(mockRouter, data2, codec: 'dag-pb');
 
-      await Future<void>.delayed(Duration(milliseconds: 20));
+      await Future<void>.delayed(const Duration(milliseconds: 20));
       await _simulateBlockArrival(mockRouter, data1, codec: 'dag-pb');
 
       final b1 = await future1;
@@ -243,7 +245,7 @@ void main() {
       // Need fromPeer to log correctly
       final packet = p2p.Packet(
         datagram: dontHaveMsg.toBytes(),
-        header: p2p.PacketHeader(id: 111, issuedAt: 0),
+        header: const p2p.PacketHeader(id: 111, issuedAt: 0),
         srcFullAddress: p2p.FullAddress(
           address: InternetAddress.loopbackIPv4,
           port: 111,
@@ -259,7 +261,7 @@ void main() {
       haveMsg.addBlockPresence(cid, msg.BlockPresenceType.have);
       final packet2 = p2p.Packet(
         datagram: haveMsg.toBytes(),
-        header: p2p.PacketHeader(id: 112, issuedAt: 0),
+        header: const p2p.PacketHeader(id: 112, issuedAt: 0),
         srcFullAddress: p2p.FullAddress(
           address: InternetAddress.loopbackIPv4,
           port: 111,
@@ -276,8 +278,8 @@ void main() {
 
 // Helper mock to capture outgoing messages
 class MockRouterL2Capture extends MockRouterL2 {
-  final Future<void> Function(Uint8List) onSend;
   MockRouterL2Capture(this.onSend);
+  final Future<void> Function(Uint8List) onSend;
 
   @override
   void sendDatagram({
@@ -303,7 +305,7 @@ Future<void> _simulateBlockArrival(
 
   final packet = p2p.Packet(
     datagram: responseMsg.toBytes(),
-    header: p2p.PacketHeader(id: 1234, issuedAt: 0),
+    header: const p2p.PacketHeader(id: 1234, issuedAt: 0),
     srcFullAddress: p2p.FullAddress(
       address: InternetAddress.loopbackIPv4,
       port: 1234,

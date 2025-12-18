@@ -60,18 +60,14 @@ abstract class NetworkEvent {
 
 /// Event for peer connections
 class PeerConnectedEvent extends NetworkEvent {
-  final String peerId;
-  final String address;
 
   PeerConnectedEvent({required this.peerId, required this.address});
+  final String peerId;
+  final String address;
 }
 
 /// Event for block transfers
 class BlockTransferEvent extends NetworkEvent {
-  final String cid;
-  final String peerId;
-  final TransferType type;
-  final int size;
 
   BlockTransferEvent({
     required this.cid,
@@ -79,6 +75,10 @@ class BlockTransferEvent extends NetworkEvent {
     required this.type,
     required this.size,
   });
+  final String cid;
+  final String peerId;
+  final TransferType type;
+  final int size;
 }
 
 enum TransferType { received, sent }

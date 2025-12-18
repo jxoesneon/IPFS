@@ -1,17 +1,18 @@
 // Validation tests for external dependencies
 // Confirms all external packages work correctly
 
+import 'dart:typed_data';
+
+import 'package:convert/convert.dart';
+import 'package:crypto/crypto.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
 import 'package:uuid/uuid.dart';
-import 'package:crypto/crypto.dart';
-import 'package:convert/convert.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
-import 'dart:typed_data';
 
 void main() {
   group('External Dependencies Validation', () {
     test('UUID package works', () {
-      final uuid = Uuid();
+      final uuid = const Uuid();
       final id = uuid.v4();
 
       expect(id, isNotNull);
@@ -64,7 +65,7 @@ void main() {
     });
 
     test('UUID generates unique IDs', () {
-      final uuid = Uuid();
+      final uuid = const Uuid();
       final ids = List.generate(100, (_) => uuid.v4());
       final uniqueIds = ids.toSet();
 

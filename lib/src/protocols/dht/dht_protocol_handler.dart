@@ -1,27 +1,27 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/types/p2p_types.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
-import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/types/p2p_types.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
+import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 
 /// Kademlia DHT protocol message handler.
 ///
 /// Handles PING, FIND_NODE, GET_VALUE, and PUT_VALUE messages
 /// according to the Kademlia protocol specification.
 class DHTProtocolHandler {
-  /// Kademlia protocol ID.
-  static const String PROTOCOL_ID = '/ipfs/kad/1.0.0';
-
-  final P2plibRouter _router;
-  final Datastore _storage;
 
   /// Creates a handler with [_router] and [_storage].
   DHTProtocolHandler(this._router, this._storage) {
     _setupHandlers();
   }
+  /// Kademlia protocol ID.
+  static const String PROTOCOL_ID = '/ipfs/kad/1.0.0';
+
+  final P2plibRouter _router;
+  final Datastore _storage;
 
   void _setupHandlers() {
     _router.registerProtocolHandler(PROTOCOL_ID, _handleDHTMessage);
@@ -33,7 +33,7 @@ class DHTProtocolHandler {
 
     switch (message.type) {
       case kad.Message_MessageType.PING:
-        response..type = kad.Message_MessageType.PING;
+        response.type = kad.Message_MessageType.PING;
         break;
 
       case kad.Message_MessageType.FIND_NODE:
@@ -47,7 +47,7 @@ class DHTProtocolHandler {
         final keyStr = utf8.decode(message.key);
         final storageKey = Key('/dht/values/$keyStr');
         final value = await _storage.get(storageKey);
-        response..type = kad.Message_MessageType.GET_VALUE;
+        response.type = kad.Message_MessageType.GET_VALUE;
         if (value != null) {
           response.record = (dht_pb.Record()..value = value);
         } else {
@@ -65,7 +65,7 @@ class DHTProtocolHandler {
             Uint8List.fromList(message.record.value),
           );
         }
-        response..type = kad.Message_MessageType.PUT_VALUE;
+        response.type = kad.Message_MessageType.PUT_VALUE;
         break;
 
       default:

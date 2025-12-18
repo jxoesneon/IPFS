@@ -1,9 +1,10 @@
-import 'dart:typed_data';
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/car.dart';
 import 'package:dart_ipfs/src/utils/car_reader.dart';
 import 'package:dart_ipfs/src/utils/car_writer.dart';
-import 'package:dart_ipfs/src/core/data_structures/car.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:test/test.dart';
 
 void main() {

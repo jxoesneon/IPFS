@@ -6,8 +6,8 @@ import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:dart_multihash/dart_multihash.dart';
+import 'package:fixnum/fixnum.dart';
 
 /// CBOR encoding/decoding for IPLD data structures.
 ///
@@ -33,8 +33,8 @@ import 'package:dart_multihash/dart_multihash.dart';
 /// - [IPLDNode] for the IPLD data model
 /// - [MerkleDAGNode] for DAG-PB nodes
 class EnhancedCBORHandler {
-  static final _encoder = CborEncoder();
-  static final _decoder = CborDecoder();
+  static final _encoder = const CborEncoder();
+  static final _decoder = const CborDecoder();
 
   static const cborTags = {
     // Core IPLD Codecs
@@ -90,7 +90,7 @@ class EnhancedCBORHandler {
   static CborValue convertIPLDNodeToCbor(IPLDNode node) {
     switch (node.kind) {
       case Kind.NULL:
-        return CborNull();
+        return const CborNull();
       case Kind.BOOL:
         return CborBool(node.boolValue);
       case Kind.INTEGER:

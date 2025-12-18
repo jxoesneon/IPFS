@@ -1,15 +1,16 @@
 // src/core/config/ipfs_config.dart
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:convert';
 import 'dart:typed_data';
-import 'package:yaml/yaml.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
+
 import 'package:dart_ipfs/src/core/config/dht_config.dart';
-import 'package:dart_ipfs/src/core/config/storage_config.dart';
 import 'package:dart_ipfs/src/core/config/metrics_config.dart';
 import 'package:dart_ipfs/src/core/config/security_config.dart';
+import 'package:dart_ipfs/src/core/config/storage_config.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
+import 'package:yaml/yaml.dart';
 
 /// Configuration for an IPFS node.
 ///
@@ -64,35 +65,6 @@ import 'package:dart_ipfs/src/utils/keystore.dart';
 /// IPFSConfig(offline: false)
 /// ```
 class IPFSConfig {
-  final NetworkConfig network;
-  final DHTConfig dht;
-  final StorageConfig storage;
-  final SecurityConfig security;
-  final bool debug;
-  final bool verboseLogging;
-  final bool enablePubSub;
-  final bool enableDHT;
-  final bool enableCircuitRelay;
-  final bool enableContentRouting;
-  final bool enableDNSLinkResolution;
-  final bool enableIPLD;
-  final bool enableGraphsync;
-  final bool enableMetrics;
-  final bool enableLogging;
-  final String logLevel;
-  final bool enableQuotaManagement;
-  final int defaultBandwidthQuota;
-  final String datastorePath;
-  final String keystorePath;
-  final String blockStorePath;
-  final String nodeId;
-  final Duration garbageCollectionInterval;
-  final bool garbageCollectionEnabled;
-  final MetricsConfig metrics;
-  final String dataPath;
-  final Keystore keystore;
-  final bool offline;
-  final Map<String, dynamic> customConfig;
 
   IPFSConfig({
     this.offline = false,
@@ -130,21 +102,6 @@ class IPFSConfig {
   /// Creates a new IPFSConfig with a generated nodeId
   factory IPFSConfig.withDefaults() {
     return IPFSConfig(nodeId: _generateDefaultNodeId());
-  }
-
-  static String _generateDefaultNodeId() {
-    final random = Random.secure();
-    final bytes = List<int>.generate(32, (i) => random.nextInt(256));
-    return Base58().encode(Uint8List.fromList(bytes));
-  }
-
-  /// Loads configuration from a YAML file
-  static Future<IPFSConfig> fromFile(String path) async {
-    final file = File(path);
-    final yaml = loadYaml(await file.readAsString());
-    return IPFSConfig.fromJson(
-      json.decode(json.encode(yaml)) as Map<String, dynamic>,
-    );
   }
 
   /// Creates configuration from JSON
@@ -187,6 +144,50 @@ class IPFSConfig {
       defaultBandwidthQuota: json['defaultBandwidthQuota'] as int? ?? 1048576,
     );
   }
+  final NetworkConfig network;
+  final DHTConfig dht;
+  final StorageConfig storage;
+  final SecurityConfig security;
+  final bool debug;
+  final bool verboseLogging;
+  final bool enablePubSub;
+  final bool enableDHT;
+  final bool enableCircuitRelay;
+  final bool enableContentRouting;
+  final bool enableDNSLinkResolution;
+  final bool enableIPLD;
+  final bool enableGraphsync;
+  final bool enableMetrics;
+  final bool enableLogging;
+  final String logLevel;
+  final bool enableQuotaManagement;
+  final int defaultBandwidthQuota;
+  final String datastorePath;
+  final String keystorePath;
+  final String blockStorePath;
+  final String nodeId;
+  final Duration garbageCollectionInterval;
+  final bool garbageCollectionEnabled;
+  final MetricsConfig metrics;
+  final String dataPath;
+  final Keystore keystore;
+  final bool offline;
+  final Map<String, dynamic> customConfig;
+
+  static String _generateDefaultNodeId() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(32, (i) => random.nextInt(256));
+    return Base58().encode(Uint8List.fromList(bytes));
+  }
+
+  /// Loads configuration from a YAML file
+  static Future<IPFSConfig> fromFile(String path) async {
+    final file = File(path);
+    final yaml = loadYaml(await file.readAsString());
+    return IPFSConfig.fromJson(
+      json.decode(json.encode(yaml)) as Map<String, dynamic>,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'offline': offline,
@@ -213,21 +214,6 @@ class IPFSConfig {
 
 /// Network-specific configuration
 class NetworkConfig {
-  final List<String> listenAddresses;
-  final List<String> bootstrapPeers;
-  final int maxConnections;
-  final Duration connectionTimeout;
-  final String? delegatedRoutingEndpoint;
-
-  static const List<String> defaultBootstrapPeers = [
-    // Public IPFS Bootstrap Nodes (Direct IPs to bypass DNS resolution issues in p2plib)
-    '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ', // mars.i.ipfs.io
-    '/ip4/104.236.179.241/tcp/4001/p2p/QmSoLPppuBtQSGwKDZT2M73ULpjvfd3aZ6ha4oFGL1KrGM', // pluto.i.ipfs.io
-    '/ip4/128.199.219.111/tcp/4001/p2p/QmSoLSafTMBsPKadTEgaXctDQVcqN88CNLHXMkTNwMKPnu', // saturn.i.ipfs.io
-    '/ip4/104.236.76.40/tcp/4001/p2p/QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64', // earth.i.ipfs.io
-    // Cloudflare
-    '/ip4/172.65.0.13/tcp/4009/p2p/QmcfgsJsMtx6qJb74akCw1M24X1zFwgGo11h1cuhwQjtJP',
-  ];
 
   const NetworkConfig({
     this.listenAddresses = const ['/ip4/0.0.0.0/tcp/4001'],
@@ -252,6 +238,21 @@ class NetworkConfig {
       delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'] as String?,
     );
   }
+  final List<String> listenAddresses;
+  final List<String> bootstrapPeers;
+  final int maxConnections;
+  final Duration connectionTimeout;
+  final String? delegatedRoutingEndpoint;
+
+  static const List<String> defaultBootstrapPeers = [
+    // Public IPFS Bootstrap Nodes (Direct IPs to bypass DNS resolution issues in p2plib)
+    '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ', // mars.i.ipfs.io
+    '/ip4/104.236.179.241/tcp/4001/p2p/QmSoLPppuBtQSGwKDZT2M73ULpjvfd3aZ6ha4oFGL1KrGM', // pluto.i.ipfs.io
+    '/ip4/128.199.219.111/tcp/4001/p2p/QmSoLSafTMBsPKadTEgaXctDQVcqN88CNLHXMkTNwMKPnu', // saturn.i.ipfs.io
+    '/ip4/104.236.76.40/tcp/4001/p2p/QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64', // earth.i.ipfs.io
+    // Cloudflare
+    '/ip4/172.65.0.13/tcp/4009/p2p/QmcfgsJsMtx6qJb74akCw1M24X1zFwgGo11h1cuhwQjtJP',
+  ];
 
   Map<String, dynamic> toJson() => {
     'listenAddresses': listenAddresses,
@@ -265,8 +266,8 @@ class NetworkConfig {
 // Similar implementations for DHTConfig, StorageConfig, and SecurityConfig...
 
 class KeyPair {
-  final String publicKey;
-  final String privateKey;
 
   KeyPair(this.publicKey, this.privateKey);
+  final String publicKey;
+  final String privateKey;
 }

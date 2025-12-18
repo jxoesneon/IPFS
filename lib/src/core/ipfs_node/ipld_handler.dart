@@ -13,23 +13,19 @@ import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/core/data_structures/metadata.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/core/ipld/extensions/ipld_node_json.dart';
+import 'package:dart_ipfs/src/core/ipld/jose_cose_handler.dart';
+import 'package:dart_ipfs/src/core/ipld/path/ipld_path_handler.dart';
 import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart';
 import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
-import 'package:dart_multihash/dart_multihash.dart' as multihash_lib;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 import 'package:dart_ipfs/src/utils/encoding.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:dart_multihash/dart_multihash.dart' as multihash_lib;
 import 'package:fixnum/fixnum.dart';
-import 'package:dart_ipfs/src/core/ipld/jose_cose_handler.dart';
-import 'package:dart_ipfs/src/core/ipld/path/ipld_path_handler.dart';
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 
 /// Handles IPLD (InterPlanetary Linked Data) operations
 class IPLDHandler {
-  final IPFSConfig _config;
-  final BlockStore _blockStore;
-  final Map<String, IPLDSchema> _schemas = {};
-  late final Logger _logger;
 
   IPLDHandler(this._config, this._blockStore) {
     _logger = Logger(
@@ -38,6 +34,10 @@ class IPLDHandler {
       verbose: _config.verboseLogging,
     );
   }
+  final IPFSConfig _config;
+  final BlockStore _blockStore;
+  final Map<String, IPLDSchema> _schemas = {};
+  late final Logger _logger;
 
   /// Puts a value into the blockstore
   Future<Block> put(

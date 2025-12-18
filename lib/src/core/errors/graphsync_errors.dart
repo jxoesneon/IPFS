@@ -1,10 +1,10 @@
 // src/core/errors/graphsync_errors.dart
 /// Base class for Graphsync protocol errors
 abstract class GraphsyncError implements Exception {
-  final String message;
-  final dynamic cause;
 
   GraphsyncError(this.message, [this.cause]);
+  final String message;
+  final dynamic cause;
 
   @override
   String toString() => cause == null

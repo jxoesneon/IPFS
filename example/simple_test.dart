@@ -1,9 +1,10 @@
 // ignore_for_file: avoid_print
 // example/simple_test.dart
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 
 /// Simple test demonstrating basic IPFS node functionality
 Future<void> main() async {

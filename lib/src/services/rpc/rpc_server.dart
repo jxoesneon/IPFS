@@ -1,11 +1,12 @@
 // lib/src/services/rpc/rpc_server.dart
 import 'dart:io';
+
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/services/rpc/rpc_handlers.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
-import 'package:dart_ipfs/src/services/rpc/rpc_handlers.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// IPFS HTTP RPC API Server
 ///
@@ -16,6 +17,27 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 /// require the `X-API-Key` header to match. Read-only operations like
 /// `version`, `id`, and `cat` are allowed without authentication.
 class RPCServer {
+
+  RPCServer({
+    required this.node,
+    this.address = 'localhost',
+    this.port = 5001,
+    this.corsOrigins = const [
+      'http://localhost',
+      'http://127.0.0.1',
+    ], // SEC-006: Restrict CORS
+    this.apiKey,
+  }) {
+    _handlers = RPCHandlers(node);
+    _setupRouter();
+    if (apiKey != null) {
+      _logger.info('RPC server configured with API key authentication');
+    } else {
+      _logger.warning(
+        'RPC server running WITHOUT authentication - set apiKey for production!',
+      );
+    }
+  }
   final IPFSNode node;
   final String address;
   final int port;
@@ -45,27 +67,6 @@ class RPCServer {
     '/api/v0/dht/findprovs',
     '/api/v0/dht/findpeer',
   };
-
-  RPCServer({
-    required this.node,
-    this.address = 'localhost',
-    this.port = 5001,
-    this.corsOrigins = const [
-      'http://localhost',
-      'http://127.0.0.1',
-    ], // SEC-006: Restrict CORS
-    this.apiKey,
-  }) {
-    _handlers = RPCHandlers(node);
-    _setupRouter();
-    if (apiKey != null) {
-      _logger.info('RPC server configured with API key authentication');
-    } else {
-      _logger.warning(
-        'RPC server running WITHOUT authentication - set apiKey for production!',
-      );
-    }
-  }
 
   void _setupRouter() {
     _router = Router();
@@ -111,7 +112,7 @@ class RPCServer {
     }
 
     // Build middleware pipeline with authentication (SEC-003)
-    final handler = Pipeline()
+    final handler = const Pipeline()
         .addMiddleware(_corsMiddleware())
         .addMiddleware(_authMiddleware())
         .addMiddleware(_loggingMiddleware())

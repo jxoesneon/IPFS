@@ -1,13 +1,14 @@
 // lib/src/core/data_structures/bitfield.dart
-import '../../proto/generated/core/bitfield.pb.dart'; // Import the generated Dart file for BitFieldProto
 import 'dart:typed_data';
 
+import '../../proto/generated/core/bitfield.pb.dart'; // Import the generated Dart file for BitFieldProto
+
 /// A class representing a simple bit field, used to manage binary flags efficiently.
-class BitField {
-  final Uint8List _bits; // Using Uint8List for memory efficiency
+class BitField { // Using Uint8List for memory efficiency
 
   /// Constructs a BitField of a given size, initializing all bits to false (0).
-  BitField(int size) : _bits = Uint8List((size + 7) ~/ 8); // Efficient storage
+  BitField(int size) : _bits = Uint8List((size + 7) ~/ 8);
+  final Uint8List _bits; // Efficient storage
 
   /// Sets the bit at the specified index to true.
   void setBit(int index) {

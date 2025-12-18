@@ -1,8 +1,8 @@
-import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_tree_node.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:collection/collection.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/helpers.dart';
+import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_tree_node.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Extension for finding closest peers in Kademlia tree.
 extension FindClosestPeers on KademliaTree {

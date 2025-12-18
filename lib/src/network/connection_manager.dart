@@ -1,8 +1,8 @@
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/proto/generated/connection.pb.dart';
-import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
-import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 
 /// Manages peer connection lifecycle and metrics.
 ///
@@ -20,11 +20,11 @@ import 'package:fixnum/fixnum.dart';
 /// - [MetricsCollector] for connection metrics
 /// - [ConnectionState] for connection state protobuf
 class ConnectionManager {
-  final Map<String, ConnectionState> _connections = {};
-  final MetricsCollector _metrics;
 
   /// Creates a connection manager with the given [_metrics] collector.
   ConnectionManager(this._metrics);
+  final Map<String, ConnectionState> _connections = {};
+  final MetricsCollector _metrics;
 
   Future<void> handleNewConnection(LibP2PPeerId peerId) async {
     final now = DateTime.now();

@@ -1,29 +1,17 @@
 import 'dart:collection';
 import 'dart:typed_data';
+
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
+
 import '../../proto/generated/core/cid.pb.dart';
-import '../../proto/generated/core/operation_log.pb.dart';
 import '../../proto/generated/core/node_type.pbenum.dart';
+import '../../proto/generated/core/operation_log.pb.dart';
 
 /// A single entry in the operation log.
 ///
 /// Records an operation with timestamp, details, and optional CID/node type.
 class OperationLogEntry {
-  /// When the operation occurred.
-  final DateTime timestamp;
-
-  /// The operation type (e.g., 'add', 'remove', 'pin').
-  final String operation;
-
-  /// Human-readable details about the operation.
-  final String details;
-
-  /// The CID involved, if any.
-  final CID? cid;
-
-  /// The node type involved, if any.
-  final NodeTypeProto? nodeType;
 
   /// Creates an operation log entry.
   OperationLogEntry({
@@ -43,6 +31,20 @@ class OperationLogEntry {
       nodeType: pbEntry.hasNodeType() ? pbEntry.nodeType : null,
     );
   }
+  /// When the operation occurred.
+  final DateTime timestamp;
+
+  /// The operation type (e.g., 'add', 'remove', 'pin').
+  final String operation;
+
+  /// Human-readable details about the operation.
+  final String details;
+
+  /// The CID involved, if any.
+  final CID? cid;
+
+  /// The node type involved, if any.
+  final NodeTypeProto? nodeType;
 
   OperationLogEntryProto toProto() {
     final pbEntry = OperationLogEntryProto();

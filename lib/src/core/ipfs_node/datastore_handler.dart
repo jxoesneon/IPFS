@@ -1,22 +1,24 @@
 // src/core/ipfs_node/datastore_handler.dart
 import 'dart:typed_data';
-import '../data_structures/car.dart';
-import '../data_structures/block.dart';
+
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import '../data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/utils/car_reader.dart';
 import 'package:dart_ipfs/src/utils/car_writer.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
+import '../data_structures/block.dart';
+import '../data_structures/car.dart';
+import '../data_structures/merkle_dag_node.dart';
+
 /// Handles datastore operations for an IPFS node.
 class DatastoreHandler {
+
+  DatastoreHandler(this._datastore);
   final Datastore _datastore;
   final Logger _logger = Logger('DatastoreHandler');
 
   // Add public getter for datastore
   Datastore get datastore => _datastore;
-
-  DatastoreHandler(this._datastore);
 
   /// Initializes and starts the datastore.
   Future<void> start() async {

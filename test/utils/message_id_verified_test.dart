@@ -1,6 +1,6 @@
 // test/utils/message_id_verified_test.dart
-import 'package:test/test.dart';
 import 'package:dart_ipfs/src/utils/generate_message_id.dart';
+import 'package:test/test.dart';
 
 /// Verified tests for message ID generation utilities.
 void main() {

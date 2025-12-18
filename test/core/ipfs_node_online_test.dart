@@ -1,26 +1,27 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/core/di/service_container.dart';
+
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
+import 'package:dart_ipfs/src/network/router.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/network/router.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/utils/base58.dart'; // Added import
 import 'package:test/test.dart';
 
@@ -42,7 +43,7 @@ class MockBlockStore extends BlockStore {
 // Mock Datastore for MockDatastoreHandler - uses noSuchMethod for all interface methods
 class _MockDatastore implements Datastore {
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockDatastoreHandler extends DatastoreHandler {
@@ -60,7 +61,7 @@ class MockDatastoreHandler extends DatastoreHandler {
 }
 
 class MockIPLDHandler extends IPLDHandler {
-  MockIPLDHandler(IPFSConfig config, BlockStore store) : super(config, store);
+  MockIPLDHandler(super.config, super.store);
   @override
   Future<void> start() async {}
   @override
@@ -70,7 +71,7 @@ class MockIPLDHandler extends IPLDHandler {
 }
 
 class MockP2plibRouter extends P2plibRouter {
-  MockP2plibRouter(IPFSConfig config) : super.internal(config);
+  MockP2plibRouter(super.config) : super.internal();
   @override
   Future<void> initialize() async {}
   @override
@@ -82,7 +83,7 @@ class MockP2plibRouter extends P2plibRouter {
 }
 
 class MockCircuitRelayClient extends CircuitRelayClient {
-  MockCircuitRelayClient(P2plibRouter router) : super(router);
+  MockCircuitRelayClient(super.router);
   @override
   Future<void> start() async {}
   @override
@@ -90,11 +91,10 @@ class MockCircuitRelayClient extends CircuitRelayClient {
 }
 
 class MockNetworkHandler extends NetworkHandler {
+
+  MockNetworkHandler(super.config, this._nodeReceiver, this._mockRouter);
   final IPFSNode _nodeReceiver;
   final P2plibRouter _mockRouter;
-
-  MockNetworkHandler(IPFSConfig config, this._nodeReceiver, this._mockRouter)
-    : super(config);
 
   @override
   IPFSNode get ipfsNode => _nodeReceiver;
@@ -166,8 +166,7 @@ class MockBitswapHandler extends BitswapHandler {
 }
 
 class MockIpfsNodeNetworkEvents extends IpfsNodeNetworkEvents {
-  MockIpfsNodeNetworkEvents(CircuitRelayClient relay, P2plibRouter router)
-    : super(relay, router);
+  MockIpfsNodeNetworkEvents(super.relay, super.router);
 
   final StreamController<NetworkEvent> _controller =
       StreamController.broadcast();
@@ -177,10 +176,10 @@ class MockIpfsNodeNetworkEvents extends IpfsNodeNetworkEvents {
 
 class MockPubSubHandler extends PubSubHandler {
   MockPubSubHandler(
-    P2plibRouter router,
-    String peerId,
-    IpfsNodeNetworkEvents events,
-  ) : super(router, peerId, events);
+    super.router,
+    super.peerId,
+    super.events,
+  );
 
   @override
   Future<void> start() async {}

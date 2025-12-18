@@ -5,8 +5,6 @@ import 'package:http/http.dart' as http;
 
 /// Response from a routing request
 class RoutingResponse {
-  final List<String> providers;
-  final String? error;
 
   RoutingResponse({this.providers = const [], this.error});
 
@@ -17,19 +15,21 @@ class RoutingResponse {
   factory RoutingResponse.error(String message) {
     return RoutingResponse(error: message);
   }
+  final List<String> providers;
+  final String? error;
 
   bool get isSuccess => error == null;
 }
 
 /// Handles delegated routing operations following the IPFS Delegated Routing V1 HTTP API spec
 class DelegatedRoutingHandler {
-  static const String _defaultDelegateEndpoint = 'https://delegated-ipfs.dev';
-  final String _delegateEndpoint;
-  final http.Client _httpClient;
 
   DelegatedRoutingHandler({String? delegateEndpoint, http.Client? httpClient})
     : _delegateEndpoint = delegateEndpoint ?? _defaultDelegateEndpoint,
       _httpClient = httpClient ?? http.Client();
+  static const String _defaultDelegateEndpoint = 'https://delegated-ipfs.dev';
+  final String _delegateEndpoint;
+  final http.Client _httpClient;
 
   /// Finds providers for a given CID using the delegated routing API
   Future<RoutingResponse> findProviders(CID cid) async {

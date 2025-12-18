@@ -12,6 +12,9 @@ import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
 /// See also:
 /// - [LedgerManager] for managing ledgers across multiple peers
 class BitLedger {
+
+  /// Creates a new ledger for tracking bitswap exchanges with a specific peer.
+  BitLedger(this.peerId);
   /// The peer this ledger tracks.
   final String peerId;
 
@@ -22,9 +25,6 @@ class BitLedger {
   int receivedBytes = 0;
 
   final Map<String, Uint8List> _blockData = {};
-
-  /// Creates a new ledger for tracking bitswap exchanges with a specific peer.
-  BitLedger(this.peerId);
 
   /// Record bytes sent to the peer.
   void addSentBytes(int bytes) {

@@ -15,6 +15,11 @@
 /// final value = cache.get('key1'); // 42
 /// ```
 class GenericLRUCache<K, V> {
+
+  /// Creates a cache with the given [capacity].
+  GenericLRUCache({required this.capacity, this.onEvict}) {
+    assert(capacity > 0, 'Capacity must be positive');
+  }
   /// Maximum number of entries before eviction.
   final int capacity;
 
@@ -24,11 +29,6 @@ class GenericLRUCache<K, V> {
   final Map<K, _Node<K, V>> _cache = {};
   _Node<K, V>? _head;
   _Node<K, V>? _tail;
-
-  /// Creates a cache with the given [capacity].
-  GenericLRUCache({required this.capacity, this.onEvict}) {
-    assert(capacity > 0, 'Capacity must be positive');
-  }
 
   /// Number of entries in the cache.
   int get length => _cache.length;
@@ -169,26 +169,26 @@ class GenericLRUCache<K, V> {
 }
 
 class _Node<K, V> {
+
+  _Node(this.key, this.value);
   final K key;
   V value;
   _Node<K, V>? next;
   _Node<K, V>? prev;
-
-  _Node(this.key, this.value);
 }
 
 /// Timed LRU cache that automatically expires entries.
 class TimedLRUCache<K, V> extends GenericLRUCache<K, V> {
+
+  TimedLRUCache({
+    required super.capacity,
+    required this.ttl,
+    super.onEvict,
+  });
   /// Duration before entries expire.
   final Duration ttl;
 
   final Map<K, DateTime> _timestamps = {};
-
-  TimedLRUCache({
-    required int capacity,
-    required this.ttl,
-    void Function(K key, V value)? onEvict,
-  }) : super(capacity: capacity, onEvict: onEvict);
 
   @override
   void put(K key, V value) {

@@ -1,8 +1,8 @@
 // lib/src/protocols/dht/red_black_tree/deletion.dart
-import '../red_black_tree.dart';
-import 'fix_violations.dart';
 import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
     as common_tree;
+import '../red_black_tree.dart';
+import 'fix_violations.dart';
 
 /// Handles deletion operations for Red-Black trees.
 ///

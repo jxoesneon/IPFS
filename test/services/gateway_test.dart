@@ -4,14 +4,14 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
-import 'package:fixnum/fixnum.dart';
 
 // Mock BlockStore
 class MockBlockStore implements BlockStore {

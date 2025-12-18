@@ -2,10 +2,11 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart' as pb;
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart' as pb;
 import 'package:fixnum/fixnum.dart' as fixnum;
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
@@ -34,7 +35,7 @@ class MockRouterL2 implements p2p.RouterL2 {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 // Mock P2plibRouter
@@ -74,7 +75,7 @@ class MockP2plibRouter implements P2plibRouter {
   Future<void> disconnect(String peerId) async {}
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
@@ -136,7 +137,7 @@ void main() {
 
         final packet = p2p.Packet(
           datagram: res.writeToBuffer(),
-          header: p2p.PacketHeader(id: 1, issuedAt: 0),
+          header: const p2p.PacketHeader(id: 1, issuedAt: 0),
           srcFullAddress: addresses.first,
         );
         packet.srcPeerId = peerIdObj;
@@ -163,7 +164,7 @@ void main() {
         final handler = mockRouter.handlers['/libp2p/circuit/relay/0.2.0/hop']!;
         final packet = p2p.Packet(
           datagram: res.writeToBuffer(),
-          header: p2p.PacketHeader(id: 1, issuedAt: 0),
+          header: const p2p.PacketHeader(id: 1, issuedAt: 0),
           srcFullAddress: addresses.first,
         );
         packet.srcPeerId = peerIdObj;

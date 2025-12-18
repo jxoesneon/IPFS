@@ -1,17 +1,18 @@
 // ignore_for_file: avoid_print
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:io';
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_proto;
+import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
-import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_proto;
-import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
 
 // Helper for valid PeerId (64 bytes)
@@ -19,8 +20,9 @@ Uint8List get validPeerIdBytes => Uint8List.fromList(List.filled(64, 1));
 
 // Mocks
 class MockRouterL2 implements p2p.RouterL2 {
+  @override
   final Map<p2p.PeerId, p2p.Route> routes = {};
-  p2p.PeerId _selfId = p2p.PeerId(value: validPeerIdBytes);
+  final p2p.PeerId _selfId = p2p.PeerId(value: validPeerIdBytes);
 
   @override
   p2p.PeerId get selfId => _selfId;
@@ -37,7 +39,7 @@ class MockRouterL2 implements p2p.RouterL2 {
   }) {}
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockP2plibRouter implements P2plibRouter {
@@ -95,7 +97,7 @@ class MockP2plibRouter implements P2plibRouter {
       final responseBytes = responseGenerator!(datagram);
       final responsePacket = p2p.Packet(
         datagram: responseBytes,
-        header: p2p.PacketHeader(id: 0, issuedAt: 0),
+        header: const p2p.PacketHeader(id: 0, issuedAt: 0),
         srcFullAddress: p2p.FullAddress(
           address: InternetAddress.loopbackIPv4,
           port: 4001,
@@ -118,36 +120,37 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockDatastore implements Datastore {
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockDHTHandler implements DHTHandler {
-  final P2plibRouter router;
-  final Datastore _mockStorage = MockDatastore();
 
   MockDHTHandler(this.router);
+  @override
+  final P2plibRouter router;
+  final Datastore _mockStorage = MockDatastore();
 
   @override
   Datastore get storage => _mockStorage;
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockIPFSNode implements IPFSNode {
-  final MockDHTHandler _dhtHandler;
   MockIPFSNode(this._dhtHandler);
+  final MockDHTHandler _dhtHandler;
 
   @override
   DHTHandler get dhtHandler => _dhtHandler;
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockNetworkHandler implements NetworkHandler {
@@ -155,7 +158,7 @@ class MockNetworkHandler implements NetworkHandler {
   late IPFSNode ipfsNode;
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
@@ -206,7 +209,7 @@ void main() {
 
             final responsePacket = p2p.Packet(
               datagram: response.writeToBuffer(),
-              header: p2p.PacketHeader(id: 0, issuedAt: 0),
+              header: const p2p.PacketHeader(id: 0, issuedAt: 0),
               srcFullAddress: p2p.FullAddress(
                 address: InternetAddress.loopbackIPv4,
                 port: 4001,

@@ -1,28 +1,5 @@
 /// Security-related configuration options for IPFS node
 class SecurityConfig {
-  /// Whether to enable TLS for secure communication
-  final bool enableTLS;
-
-  /// The path to the TLS certificate file
-  final String? tlsCertificatePath;
-
-  /// The path to the TLS private key file
-  final String? tlsPrivateKeyPath;
-
-  /// Whether to enable key rotation
-  final bool enableKeyRotation;
-
-  /// Key rotation interval
-  final Duration keyRotationInterval;
-
-  /// Maximum number of authentication attempts
-  final int maxAuthAttempts;
-
-  /// Whether to enable request rate limiting
-  final bool enableRateLimiting;
-
-  /// Maximum requests per minute
-  final int maxRequestsPerMinute;
 
   const SecurityConfig({
     this.enableTLS = false,
@@ -49,6 +26,29 @@ class SecurityConfig {
       maxRequestsPerMinute: json['maxRequestsPerMinute'] as int? ?? 100,
     );
   }
+  /// Whether to enable TLS for secure communication
+  final bool enableTLS;
+
+  /// The path to the TLS certificate file
+  final String? tlsCertificatePath;
+
+  /// The path to the TLS private key file
+  final String? tlsPrivateKeyPath;
+
+  /// Whether to enable key rotation
+  final bool enableKeyRotation;
+
+  /// Key rotation interval
+  final Duration keyRotationInterval;
+
+  /// Maximum number of authentication attempts
+  final int maxAuthAttempts;
+
+  /// Whether to enable request rate limiting
+  final bool enableRateLimiting;
+
+  /// Maximum requests per minute
+  final int maxRequestsPerMinute;
 
   Map<String, dynamic> toJson() => {
     'enableTLS': enableTLS,

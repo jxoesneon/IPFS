@@ -1,8 +1,10 @@
 // test/mocks/mock_integration_test.dart
 import 'dart:typed_data';
-import 'package:test/test.dart';
-import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
+
 import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
+import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
+import 'package:test/test.dart';
+
 import 'in_memory_datastore.dart';
 import 'mock_dht_handler.dart';
 import 'test_helpers.dart';
@@ -77,7 +79,7 @@ void main() {
     });
 
     test('MockDHTHandler simulates delays', () async {
-      dhtHandler.setSimulatedDelay(Duration(milliseconds: 100));
+      dhtHandler.setSimulatedDelay(const Duration(milliseconds: 100));
 
       final key = Key.fromString('delayed-key');
       final value = Value.fromString('delayed-value');

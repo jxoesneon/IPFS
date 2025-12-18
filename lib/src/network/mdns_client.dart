@@ -1,18 +1,19 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data'; // For BytesBuilder
-import 'package:multicast_dns/multicast_dns.dart' as mdns;
+
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:multicast_dns/multicast_dns.dart' as mdns;
 
 /// Resource record types for mDNS queries
 enum ResourceRecordType { PTR, SRV, TXT, A, AAAA }
 
 /// Query class for mDNS resource records
 class ResourceRecordQuery {
-  final String name;
-  final ResourceRecordType type;
 
   const ResourceRecordQuery(this.name, this.type);
+  final String name;
+  final ResourceRecordType type;
 
   /// Creates a PTR query for service discovery
   static ResourceRecordQuery serverPointer(String service) {
@@ -32,42 +33,41 @@ class ResourceRecordQuery {
 
 /// Base class for mDNS resource records
 abstract class ResourceRecord {
-  final String name;
-  final Duration ttl;
 
   ResourceRecord(this.name, this.ttl);
+  final String name;
+  final Duration ttl;
 }
 
 /// PTR record containing service instance name
 class PtrResourceRecord extends ResourceRecord {
-  final String domainName;
 
-  PtrResourceRecord(String name, Duration ttl, this.domainName)
-    : super(name, ttl);
+  PtrResourceRecord(super.name, super.ttl, this.domainName);
+  final String domainName;
 }
 
 /// SRV record containing service location information
 class SrvResourceRecord extends ResourceRecord {
-  final String target;
-  final int port;
-  final int priority;
-  final int weight;
 
   SrvResourceRecord(
-    String name,
-    Duration ttl,
+    super.name,
+    super.ttl,
     this.target,
     this.port, {
     this.priority = 0,
     this.weight = 0,
-  }) : super(name, ttl);
+  });
+  final String target;
+  final int port;
+  final int priority;
+  final int weight;
 }
 
 /// TXT record containing service metadata
 class TxtResourceRecord extends ResourceRecord {
-  final List<String> text;
 
-  TxtResourceRecord(String name, Duration ttl, this.text) : super(name, ttl);
+  TxtResourceRecord(super.name, super.ttl, this.text);
+  final List<String> text;
 }
 
 /// Client for multicast DNS operations following IPFS specifications
@@ -404,7 +404,7 @@ class MDnsClient {
 }
 
 class _Pair<A, B> {
+  _Pair(this.item1, this.item2);
   final A item1;
   final B item2;
-  _Pair(this.item1, this.item2);
 }

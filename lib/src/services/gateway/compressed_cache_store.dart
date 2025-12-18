@@ -1,20 +1,19 @@
 // lib/src/services/gateway/compressed_cache_store.dart
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:archive/archive.dart';
+import 'package:crypto/crypto.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'adaptive_compression_handler.dart';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
-import '../../utils/logger.dart';
 import 'package:es_compression/lz4.dart' as es;
+
+import '../../utils/logger.dart';
+import 'adaptive_compression_handler.dart';
 
 /// Manages compressed cache storage with multiple compression algorithms
 class CompressedCacheStore {
-  final Directory _cacheDir;
-  final AdaptiveCompressionHandler _compressionHandler;
-  final _logger = Logger('CompressedCacheStore');
 
   CompressedCacheStore({
     required String cachePath,
@@ -26,6 +25,9 @@ class CompressedCacheStore {
        ) {
     _initializeStore();
   }
+  final Directory _cacheDir;
+  final AdaptiveCompressionHandler _compressionHandler;
+  final _logger = Logger('CompressedCacheStore');
 
   void _initializeStore() {
     if (!_cacheDir.existsSync()) {
@@ -90,17 +92,17 @@ class CompressedCacheStore {
         case CompressionType.none:
           return data;
         case CompressionType.gzip:
-          final encoded = GZipEncoder().encode(data);
+          final encoded = const GZipEncoder().encode(data);
           return Uint8List.fromList(encoded);
         case CompressionType.zlib:
-          return Uint8List.fromList(ZLibEncoder().encode(data));
+          return Uint8List.fromList(const ZLibEncoder().encode(data));
         case CompressionType.lz4:
           return Uint8List.fromList(es.Lz4Encoder().convert(data));
       }
     } catch (e) {
       if (type == CompressionType.lz4) {
         _logger.warning('LZ4 compression failed ($e). Falling back to GZIP.');
-        final encoded = GZipEncoder().encode(data);
+        final encoded = const GZipEncoder().encode(data);
         return Uint8List.fromList(encoded);
       }
       rethrow;
@@ -113,9 +115,9 @@ class CompressedCacheStore {
         case CompressionType.none:
           return data;
         case CompressionType.gzip:
-          return Uint8List.fromList(GZipDecoder().decodeBytes(data));
+          return Uint8List.fromList(const GZipDecoder().decodeBytes(data));
         case CompressionType.zlib:
-          return Uint8List.fromList(ZLibDecoder().decodeBytes(data));
+          return Uint8List.fromList(const ZLibDecoder().decodeBytes(data));
         case CompressionType.lz4:
           return Uint8List.fromList(es.Lz4Decoder().convert(data));
       }

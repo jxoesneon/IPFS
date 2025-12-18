@@ -11,9 +11,9 @@ class MockConfig extends IPFSConfig {
 }
 
 class MockNetworkHandler extends NetworkHandler {
-  final List<String> connectedPeers = [];
 
   MockNetworkHandler() : super(MockConfig());
+  final List<String> connectedPeers = [];
 
   @override
   Future<void> connectToPeer(String multiaddress) async {
@@ -21,7 +21,7 @@ class MockNetworkHandler extends NetworkHandler {
   }
 
   @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {

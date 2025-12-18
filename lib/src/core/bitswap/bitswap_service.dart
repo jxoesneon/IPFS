@@ -1,5 +1,5 @@
-import '../data_structures/block.dart';
 import '../../proto/generated/bitswap/bitswap.pb.dart' as proto;
+import '../data_structures/block.dart';
 
 /// Service for converting blocks to and from Bitswap protocol format.
 ///

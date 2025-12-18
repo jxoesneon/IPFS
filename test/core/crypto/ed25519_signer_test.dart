@@ -4,8 +4,9 @@
 
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
+
 import 'package:dart_ipfs/src/core/crypto/crypto_utils.dart';
+import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
 import 'package:test/test.dart';
 
 void main() {

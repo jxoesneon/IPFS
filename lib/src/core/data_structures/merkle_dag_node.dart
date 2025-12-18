@@ -1,9 +1,10 @@
 import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_proto;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_proto;
-import 'package:dart_ipfs/src/core/cid.dart';
 
 // lib/src/core/data_structures/merkle_dag_node.dart
 
@@ -37,6 +38,14 @@ import 'package:dart_ipfs/src/core/cid.dart';
 /// - [CID] for content identifiers
 /// - [UnixFS spec](https://github.com/ipfs/specs/blob/main/UNIXFS.md)
 class MerkleDAGNode {
+
+  /// Creates a new MerkleDAGNode with the given components.
+  MerkleDAGNode({
+    required this.links,
+    required this.data,
+    this.isDirectory = false,
+    this.mtime,
+  });
   /// The list of links (edges) to child nodes.
   final List<Link> links;
 
@@ -53,14 +62,6 @@ class MerkleDAGNode {
 
   /// Unix modification time in seconds, if available.
   final int? mtime;
-
-  /// Creates a new MerkleDAGNode with the given components.
-  MerkleDAGNode({
-    required this.links,
-    required this.data,
-    this.isDirectory = false,
-    this.mtime,
-  });
 
   /// The content identifier for this node.
   ///

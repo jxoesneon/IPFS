@@ -1,14 +1,15 @@
 // src/core/security/security_manager.dart
-import 'dart:io';
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/utils/logger.dart';
+
+import 'package:cryptography/cryptography.dart';
 import 'package:dart_ipfs/src/core/config/security_config.dart';
+import 'package:dart_ipfs/src/core/crypto/encrypted_keystore.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
-import 'package:dart_ipfs/src/core/crypto/encrypted_keystore.dart';
-import 'package:cryptography/cryptography.dart';
 
 /// Manages security aspects of the IPFS node.
 ///
@@ -43,6 +44,15 @@ import 'package:cryptography/cryptography.dart';
 /// - [EncryptedKeystore] for secure key storage
 /// - [Keystore] for legacy key pair management
 class SecurityManager {
+
+  /// Creates a new security manager with the given [_config].
+  SecurityManager(this._config, MetricsCollector metricsCollector) {
+    _logger = Logger('SecurityManager');
+    _keystore = Keystore();
+    _encryptedKeystore = EncryptedKeystore();
+    _metrics = metricsCollector;
+    _initializeSecurity();
+  }
   final SecurityConfig _config;
   late final Logger _logger;
   late final Keystore _keystore;
@@ -57,15 +67,6 @@ class SecurityManager {
   // Key rotation
   Timer? _keyRotationTimer;
   DateTime? _lastKeyRotation;
-
-  /// Creates a new security manager with the given [_config].
-  SecurityManager(this._config, MetricsCollector metricsCollector) {
-    _logger = Logger('SecurityManager');
-    _keystore = Keystore();
-    _encryptedKeystore = EncryptedKeystore();
-    _metrics = metricsCollector;
-    _initializeSecurity();
-  }
 
   /// Returns the legacy keystore for backward compatibility.
   Keystore get keystore => _keystore;

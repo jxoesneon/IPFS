@@ -14,6 +14,10 @@ void main() {
 enum DashboardMode { home, peers, chat, files, explorer }
 
 class Dashboard {
+
+  Dashboard() {
+    // console.rawMode = true;
+  }
   final Console console = Console();
   IPFSNode? node;
   bool isRunning = false;
@@ -36,10 +40,6 @@ class Dashboard {
   int _lastOutBytes = 0;
   int _lastTimestamp = 0;
 
-  Dashboard() {
-    // console.rawMode = true;
-  }
-
   Future<void> run() async {
     console.clearScreen();
     console.hideCursor();
@@ -48,13 +48,13 @@ class Dashboard {
     // _toggleNode();
 
     // Refresh Loop (UI)
-    _refreshTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+    _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       _draw();
       _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
     });
 
     // Stats Loop (1s)
-    _statsTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _statsTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _updateStats();
     });
 
@@ -137,7 +137,7 @@ class Dashboard {
     if (key.char == 'a') {
       // Add Peer
       _refreshTimer?.cancel();
-      console.cursorPosition = Coordinate(8, 2);
+      console.cursorPosition = const Coordinate(8, 2);
       console.showCursor();
       console.write("Enter Multiaddr to connect: ");
       final input = console.readLine();
@@ -150,7 +150,7 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -158,7 +158,7 @@ class Dashboard {
     if (key.char == 'd') {
       // Disconnect Peer
       _refreshTimer?.cancel();
-      console.cursorPosition = Coordinate(8, 2);
+      console.cursorPosition = const Coordinate(8, 2);
       console.showCursor();
       console.write("Enter Peer ID or Multiaddr to disconnect: ");
       final input = console.readLine();
@@ -171,7 +171,7 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -181,7 +181,7 @@ class Dashboard {
   void _handleFilesInput(Key key) async {
     if (key.char == 'p') {
       _refreshTimer?.cancel();
-      console.cursorPosition = Coordinate(8, 2);
+      console.cursorPosition = const Coordinate(8, 2);
       console.showCursor();
       console.write("Enter CID to Pin: ");
       final input = console.readLine();
@@ -194,14 +194,14 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
     }
     if (key.char == 'u') {
       _refreshTimer?.cancel();
-      console.cursorPosition = Coordinate(8, 2);
+      console.cursorPosition = const Coordinate(8, 2);
       console.showCursor();
       console.write("Enter CID to Unpin: ");
       final input = console.readLine();
@@ -214,7 +214,7 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -229,7 +229,7 @@ class Dashboard {
   void _handleExplorerInput(Key key) async {
     if (key.char == 'g') {
       _refreshTimer?.cancel();
-      console.cursorPosition = Coordinate(8, 2);
+      console.cursorPosition = const Coordinate(8, 2);
       console.showCursor();
       console.write("Enter CID to Explore: ");
       final input = console.readLine();
@@ -240,7 +240,7 @@ class Dashboard {
           // Fetch data
           final data = await node?.cat(_explorerCid);
           _explorerData = data != null
-              ? String.fromCharCodes(data.take(100)) + "..."
+              ? "${String.fromCharCodes(data.take(100))}..."
               : "No Data";
           // Fetch links
           _explorerLinks = await node?.ls(_explorerCid) ?? [];
@@ -250,7 +250,7 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -266,21 +266,21 @@ class Dashboard {
   List<dynamic> _explorerLinks = []; // List<Link>
 
   void _drawFiles(int height) {
-    console.cursorPosition = Coordinate(3, 2);
+    console.cursorPosition = const Coordinate(3, 2);
     console.setForegroundColor(ConsoleColor.cyan);
     console.write("FILES & PINNING");
     console.resetColorAttributes();
 
     if (node == null || !isRunning) {
-      console.cursorPosition = Coordinate(5, 2);
+      console.cursorPosition = const Coordinate(5, 2);
       console.write("Node offline.");
       return;
     }
 
-    console.cursorPosition = Coordinate(4, 2);
+    console.cursorPosition = const Coordinate(4, 2);
     console.write("[P] Pin CID   [U] Unpin CID   [L] Refresh List");
 
-    console.cursorPosition = Coordinate(6, 2);
+    console.cursorPosition = const Coordinate(6, 2);
     console.write("Pinned Items:");
 
     // We need to async fetch pins. In draw loop we can't.
@@ -290,7 +290,7 @@ class Dashboard {
     // I'll add _pinsCache and update it in _updateStats.
 
     if (_pinsCache.isEmpty) {
-      console.cursorPosition = Coordinate(7, 2);
+      console.cursorPosition = const Coordinate(7, 2);
       console.write("(No pins or not fetched yet)");
     } else {
       int row = 7;
@@ -306,27 +306,27 @@ class Dashboard {
   List<String> _pinsCache = [];
 
   void _drawExplorer(int height) {
-    console.cursorPosition = Coordinate(3, 2);
+    console.cursorPosition = const Coordinate(3, 2);
     console.setForegroundColor(ConsoleColor.yellow);
     console.write("IPLD EXPLORER");
     console.resetColorAttributes();
 
-    console.cursorPosition = Coordinate(4, 2);
+    console.cursorPosition = const Coordinate(4, 2);
     console.write("[G] Go to CID   [B] Back");
 
     if (_explorerCid.isEmpty) {
-      console.cursorPosition = Coordinate(6, 2);
+      console.cursorPosition = const Coordinate(6, 2);
       console.write("No CID selected.");
       return;
     }
 
-    console.cursorPosition = Coordinate(6, 2);
+    console.cursorPosition = const Coordinate(6, 2);
     console.write("Current CID: $_explorerCid");
 
-    console.cursorPosition = Coordinate(7, 2);
+    console.cursorPosition = const Coordinate(7, 2);
     console.write("Data Preview: $_explorerData");
 
-    console.cursorPosition = Coordinate(9, 2);
+    console.cursorPosition = const Coordinate(9, 2);
     console.write("Links:");
     int row = 10;
     for (var l in _explorerLinks) {
@@ -415,7 +415,7 @@ class Dashboard {
     if (_gatewayMode == GatewayMode.custom) {
       // Pause spinner/draw loop to get input
       _refreshTimer?.cancel();
-      console.cursorPosition = Coordinate(8, 2);
+      console.cursorPosition = const Coordinate(8, 2);
       console.showCursor();
       console.write("Enter Custom URL: ");
       final input = console.readLine();
@@ -428,7 +428,7 @@ class Dashboard {
       }
       console.hideCursor();
       // Restart loop
-      _refreshTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -467,7 +467,7 @@ class Dashboard {
     final height = console.windowHeight;
 
     // 1. Header (Global)
-    console.cursorPosition = Coordinate(0, 0);
+    console.cursorPosition = const Coordinate(0, 0);
     console.setBackgroundColor(ConsoleColor.blue);
     console.setForegroundColor(ConsoleColor.white);
 
@@ -479,7 +479,7 @@ class Dashboard {
     console.resetColorAttributes();
 
     // 2. Navigation Bar
-    console.cursorPosition = Coordinate(1, 0);
+    console.cursorPosition = const Coordinate(1, 0);
     console.setBackgroundColor(ConsoleColor.white);
     console.setForegroundColor(ConsoleColor.black);
     console.write(" [H]ome | [P]eers | [C]hat | [F]iles | [E]xplorer | [Q]uit "
@@ -515,7 +515,7 @@ class Dashboard {
 
   void _drawHome(int height) {
     // Status Pane
-    console.cursorPosition = Coordinate(3, 2);
+    console.cursorPosition = const Coordinate(3, 2);
     console.setForegroundColor(ConsoleColor.green);
     console.write("STATUS: ");
     if (isRunning) {
@@ -526,28 +526,28 @@ class Dashboard {
       console.write("OFFLINE");
     }
 
-    console.cursorPosition = Coordinate(4, 2);
+    console.cursorPosition = const Coordinate(4, 2);
     console.setForegroundColor(ConsoleColor.green);
     console.write("PEER ID: ");
     console.setForegroundColor(ConsoleColor.white);
     console.write(node?.peerID ?? "N/A");
 
-    console.cursorPosition = Coordinate(5, 2);
+    console.cursorPosition = const Coordinate(5, 2);
     console.setForegroundColor(ConsoleColor.green);
     console.write("MSG: ");
     console.setForegroundColor(ConsoleColor.yellow);
     console.write(statusMessage);
 
     // Controls Help
-    console.cursorPosition = Coordinate(7, 2);
+    console.cursorPosition = const Coordinate(7, 2);
     console.resetColorAttributes();
     console.write(
         "[S] Start/Stop   [A] Add File   [M] Mode: ${_gatewayMode.name.toUpperCase()}");
 
     // Logs
-    console.cursorPosition = Coordinate(9, 0);
+    console.cursorPosition = const Coordinate(9, 0);
     console.write("-" * console.windowWidth);
-    console.cursorPosition = Coordinate(10, 2);
+    console.cursorPosition = const Coordinate(10, 2);
     console.setForegroundColor(ConsoleColor.cyan);
     console.write("SYSTEM LOGS");
 
@@ -562,19 +562,19 @@ class Dashboard {
   }
 
   void _drawPeers(int height) {
-    console.cursorPosition = Coordinate(3, 2);
+    console.cursorPosition = const Coordinate(3, 2);
     console.setForegroundColor(ConsoleColor.yellow);
     console.write("CONNECTED PEERS");
     console.resetColorAttributes();
 
     if (node == null || !isRunning) {
-      console.cursorPosition = Coordinate(5, 2);
+      console.cursorPosition = const Coordinate(5, 2);
       console.write("Node is offline.");
       return;
     }
 
     // Controls
-    console.cursorPosition = Coordinate(4, 2);
+    console.cursorPosition = const Coordinate(4, 2);
     console.write("[A] Connect Peer   [D] Disconnect Peer");
 
     // We can't await here in _draw, so we assume node.getPeers() is fast or we cache it.
@@ -586,7 +586,7 @@ class Dashboard {
     // Let's add _peersCache to Dashboard state and update it in _updateStats.
 
     if (_peersCache.isEmpty) {
-      console.cursorPosition = Coordinate(6, 2);
+      console.cursorPosition = const Coordinate(6, 2);
       console.write("No peers connected.");
     } else {
       int row = 6;
@@ -601,9 +601,9 @@ class Dashboard {
   List<String> _peersCache = [];
 
   String _chatInput = "";
-  List<String> _chatMessages = [];
+  final List<String> _chatMessages = [];
   bool _subscribedToChat = false;
-  String _activeTopic = "general";
+  final String _activeTopic = "general";
 
   Future<void> _handleChatInput(Key key) async {
     // Enter to send
@@ -651,13 +651,13 @@ class Dashboard {
 
   void _drawChat(int height) {
     // Header
-    console.cursorPosition = Coordinate(3, 2);
+    console.cursorPosition = const Coordinate(3, 2);
     console.setForegroundColor(ConsoleColor.magenta);
     console.write("PUBSUB CHAT [Topic: $_activeTopic]");
     console.resetColorAttributes();
 
     if (node == null || !isRunning) {
-      console.cursorPosition = Coordinate(5, 2);
+      console.cursorPosition = const Coordinate(5, 2);
       console.write("Node needs to be online locally to chat.");
       return;
     }

@@ -1,6 +1,6 @@
 // ignore_for_file: avoid_print, curly_braces_in_flow_control_structures
-import 'package:p2plib/p2plib.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:p2plib/p2plib.dart';
 
 void main() {
   print('Testing PeerId creation...');

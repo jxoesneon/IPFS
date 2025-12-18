@@ -2,10 +2,10 @@
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/utils/varint.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart'
     show IPFSCIDVersion;
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/utils/varint.dart';
 
 /// Utility class for encoding and decoding IPFS data
 class EncodingUtils {

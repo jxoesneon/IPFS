@@ -2,6 +2,9 @@ import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Represents a peer in the DHT network
 class Peer {
+
+  /// Creates a new Peer instance
+  Peer({required this.id, required this.address, this.metadata});
   /// The unique identifier of the peer
   final p2p.PeerId id;
 
@@ -10,9 +13,6 @@ class Peer {
 
   /// Optional metadata about the peer
   final Map<String, dynamic>? metadata;
-
-  /// Creates a new Peer instance
-  Peer({required this.id, required this.address, this.metadata});
 
   /// Creates a string representation of the peer
   @override

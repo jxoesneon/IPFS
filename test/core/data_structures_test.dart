@@ -1,15 +1,16 @@
 import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/metadata.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
-import 'package:fixnum/fixnum.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
 
 // Mock BlockStore for Pin testing
 class MockBlockStore implements BlockStore {

@@ -1,13 +1,13 @@
 class PubSubMessage {
-  final String topic;
-  final String content;
-  final String sender;
 
   PubSubMessage({
     required this.topic,
     required this.content,
     required this.sender,
   });
+  final String topic;
+  final String content;
+  final String sender;
 
   @override
   String toString() =>

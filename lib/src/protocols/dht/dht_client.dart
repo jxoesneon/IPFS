@@ -2,22 +2,22 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 
 import 'package:crypto/crypto.dart'; // For SHA256
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
+import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
+import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_proto;
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart'
     as ipfs_node_network_events;
+import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
+import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Kademlia DHT client implementation for IPFS.
 ///
@@ -38,6 +38,10 @@ import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.da
 /// final providers = await dht.findProviders(cid);
 /// ```
 class DHTClient {
+
+  /// Creates a new DHT client.
+  DHTClient({required this.networkHandler, required P2plibRouter router})
+    : _router = router;
   /// The IPFS node this client belongs to.
   IPFSNode get node => networkHandler.ipfsNode;
 
@@ -52,10 +56,6 @@ class DHTClient {
 
   /// Protocol identifier for Kademlia DHT.
   static const String PROTOCOL_DHT = '/ipfs/kad/1.0.0';
-
-  /// Creates a new DHT client.
-  DHTClient({required this.networkHandler, required P2plibRouter router})
-    : _router = router;
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -386,7 +386,7 @@ class DHTClient {
 
     // Wait for response with timeout
     try {
-      return await completer.future.timeout(Duration(seconds: 30));
+      return await completer.future.timeout(const Duration(seconds: 30));
     } finally {
       // Clean up the message handler
       p2plibRouter.removeMessageHandler(protocol);
@@ -539,7 +539,7 @@ class DHTClient {
           // Update routing table with key information
           _kademliaRoutingTable.addKeyProvider(
             targetPeerId,
-            this.peerId,
+            peerId,
             DateTime.now(),
           );
         } catch (e) {
@@ -574,7 +574,7 @@ class DHTClient {
         // Update the key provider timestamp in routing table
         _kademliaRoutingTable.updateKeyProviderTimestamp(
           targetPeerId,
-          this.peerId,
+          peerId,
           DateTime.now(),
         );
       } catch (e) {

@@ -8,6 +8,9 @@ import 'value_store.dart';
 /// Ensures minimum replica count and periodically checks
 /// replica health across the network.
 class ReplicationManager {
+
+  /// Creates a manager with [_dhtClient] and [_valueStore].
+  ReplicationManager(this._dhtClient, this._valueStore);
   final DHTClient _dhtClient;
   final ValueStore _valueStore;
 
@@ -16,9 +19,6 @@ class ReplicationManager {
 
   /// Interval between replication checks.
   static const Duration RECHECK_INTERVAL = Duration(hours: 1);
-
-  /// Creates a manager with [_dhtClient] and [_valueStore].
-  ReplicationManager(this._dhtClient, this._valueStore);
 
   Future<void> ensureReplication(String key, Uint8List value) async {
     await _valueStore.store(key, value);

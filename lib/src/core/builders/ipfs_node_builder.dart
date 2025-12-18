@@ -2,24 +2,24 @@
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/di/service_container.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/storage/hive_datastore.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
-import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
-import 'package:dart_ipfs/src/core/security/security_manager.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/bootstrap_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/security/security_manager.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
+import 'package:dart_ipfs/src/storage/hive_datastore.dart';
 import 'package:dart_ipfs/src/transport/circuit_relay_service.dart';
 
 /// Builder for constructing fully-configured [IPFSNode] instances.
@@ -46,11 +46,11 @@ import 'package:dart_ipfs/src/transport/circuit_relay_service.dart';
 /// - [IPFSConfig] for configuration options
 /// - [ServiceContainer] for dependency injection
 class IPFSNodeBuilder {
-  final ServiceContainer _container;
-  final IPFSConfig _config;
 
   /// Creates a new builder with the given [config].
   IPFSNodeBuilder(this._config) : _container = ServiceContainer();
+  final ServiceContainer _container;
+  final IPFSConfig _config;
 
   /// Builds and returns a fully-configured [IPFSNode].
   ///

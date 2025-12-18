@@ -1,24 +1,25 @@
-import 'dart:math';
 import 'dart:async';
+import 'dart:math';
 import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
+import 'package:dart_ipfs/src/core/messages/message_factory.dart';
+import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/helpers.dart'
     as helpers;
-
-import 'red_black_tree.dart';
-import 'connection_statistics.dart';
-import 'kademlia_tree/kademlia_tree_node.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
-import 'kademlia_tree/refresh.dart';
+
+import 'connection_statistics.dart';
 import 'kademlia_tree/find_closest_peers.dart';
-import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
-import 'package:dart_ipfs/src/core/messages/message_factory.dart';
-import 'kademlia_tree/protocol_messages.dart';
-import 'rate_limiter.dart';
-import 'kademlia_tree/value_store.dart';
+import 'kademlia_tree/kademlia_tree_node.dart';
 import 'kademlia_tree/lru_cache.dart';
+import 'kademlia_tree/protocol_messages.dart';
+import 'kademlia_tree/refresh.dart';
+import 'kademlia_tree/value_store.dart';
+import 'rate_limiter.dart';
+import 'red_black_tree.dart';
 
 /// Kademlia DHT routing table implementation using a tree structure.
 ///
@@ -50,50 +51,6 @@ import 'kademlia_tree/lru_cache.dart';
 /// - [DHTClient] for the DHT protocol handler
 /// - [Kademlia paper](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf)
 class KademliaTree {
-  // Tree structure
-  KademliaTreeNode? _root;
-
-  /// Maximum peers per k-bucket (replication factor).
-  static const int K = 20;
-
-  /// Number of concurrent lookups for parallel queries.
-  static const int ALPHA = 3;
-
-  /// Interval between periodic bucket refresh operations.
-  static const Duration REFRESH_INTERVAL = Duration(hours: 1);
-
-  /// Interval between key republishing.
-  static const Duration REPUBLISH_INTERVAL = Duration(hours: 24);
-
-  /// Timeout for individual node requests.
-  static const Duration NODE_TIMEOUT = Duration(seconds: 5);
-
-  // List of k-buckets (256 for IPv6 compatibility)
-  List<RedBlackTree<p2p.PeerId, KademliaTreeNode>> _buckets = [];
-
-  // Peer tracking
-  Map<p2p.PeerId, DateTime> _lastSeen = {};
-  Set<p2p.PeerId> _recentContacts = {};
-  Map<int, Completer<kad.Message>> _pendingRequests = {};
-
-  // Statistics
-  Map<p2p.PeerId, List<bool>> _lookupSuccessHistory = {};
-  Map<p2p.PeerId, ConnectionStatistics> _connectionStats = {};
-  Map<p2p.PeerId, NodeStats> _nodeStats = {};
-
-  final refreshTimeout = Duration(minutes: 30);
-
-  /// The underlying DHT client for network operations.
-  final DHTClient dhtClient;
-
-  late final ValueStore _valueStore;
-
-  // Rate limiters for different operations
-  late final RateLimiter _lookupLimiter;
-  late final RateLimiter _storeLimiter;
-  late final RateLimiter _findValueLimiter;
-
-  final Map<int, LRUCache> _bucketCaches = {};
 
   /// Creates a new Kademlia tree with the given [dhtClient].
   ///
@@ -116,19 +73,63 @@ class KademliaTree {
     // Initialize rate limiters with reasonable defaults
     _lookupLimiter = RateLimiter(
       maxOperations: 50, // 50 lookups per window
-      interval: Duration(minutes: 1),
+      interval: const Duration(minutes: 1),
     );
 
     _storeLimiter = RateLimiter(
       maxOperations: 100, // 100 store operations per window
-      interval: Duration(minutes: 1),
+      interval: const Duration(minutes: 1),
     );
 
     _findValueLimiter = RateLimiter(
       maxOperations: 100, // 100 find value queries per window
-      interval: Duration(minutes: 1),
+      interval: const Duration(minutes: 1),
     );
   }
+  // Tree structure
+  KademliaTreeNode? _root;
+
+  /// Maximum peers per k-bucket (replication factor).
+  static const int K = 20;
+
+  /// Number of concurrent lookups for parallel queries.
+  static const int ALPHA = 3;
+
+  /// Interval between periodic bucket refresh operations.
+  static const Duration REFRESH_INTERVAL = Duration(hours: 1);
+
+  /// Interval between key republishing.
+  static const Duration REPUBLISH_INTERVAL = Duration(hours: 24);
+
+  /// Timeout for individual node requests.
+  static const Duration NODE_TIMEOUT = Duration(seconds: 5);
+
+  // List of k-buckets (256 for IPv6 compatibility)
+  final List<RedBlackTree<p2p.PeerId, KademliaTreeNode>> _buckets = [];
+
+  // Peer tracking
+  final Map<p2p.PeerId, DateTime> _lastSeen = {};
+  final Set<p2p.PeerId> _recentContacts = {};
+  final Map<int, Completer<kad.Message>> _pendingRequests = {};
+
+  // Statistics
+  final Map<p2p.PeerId, List<bool>> _lookupSuccessHistory = {};
+  final Map<p2p.PeerId, ConnectionStatistics> _connectionStats = {};
+  final Map<p2p.PeerId, NodeStats> _nodeStats = {};
+
+  final refreshTimeout = const Duration(minutes: 30);
+
+  /// The underlying DHT client for network operations.
+  final DHTClient dhtClient;
+
+  late final ValueStore _valueStore;
+
+  // Rate limiters for different operations
+  late final RateLimiter _lookupLimiter;
+  late final RateLimiter _storeLimiter;
+  late final RateLimiter _findValueLimiter;
+
+  final Map<int, LRUCache> _bucketCaches = {};
 
   void _initializeBuckets() {
     for (int i = 0; i < 256; i++) {
@@ -173,8 +174,8 @@ class KademliaTree {
       Set<p2p.PeerId> queriedPeers = {};
       List<p2p.PeerId> closestPeers = findClosestPeers(target, K);
       int consecutiveFailedAttempts = 0;
-      Duration backoffDuration = Duration(milliseconds: 100); // Initial backoff
-      final maxBackoff = Duration(seconds: 10);
+      Duration backoffDuration = const Duration(milliseconds: 100); // Initial backoff
+      final maxBackoff = const Duration(seconds: 10);
       final minImprovement = 0.01; // 1% improvement threshold
 
       double previousBestDistance = double.infinity;
@@ -233,12 +234,12 @@ class KademliaTree {
           List<List<p2p.PeerId>> results = await Future.wait(
             queries,
             eagerError: false,
-          ).timeout(Duration(seconds: 30), onTimeout: () => []);
+          ).timeout(const Duration(seconds: 30), onTimeout: () => []);
 
           // Reset backoff on successful queries
           if (results.isNotEmpty) {
             consecutiveFailedAttempts = 0;
-            await Future<void>.delayed(Duration(milliseconds: 10));
+            await Future<void>.delayed(const Duration(milliseconds: 10));
           }
 
           Set<p2p.PeerId> newPeers = {};
@@ -560,7 +561,7 @@ class KademliaTree {
 extension RedBlackTreeGetOperator<K, V> on RedBlackTree<K, V> {
   V? operator [](K key) {
     // Implement the [] logic here
-    for (var entry in this.entries) {
+    for (var entry in entries) {
       if (entry.key == key) {
         return entry.value;
       }
@@ -572,7 +573,7 @@ extension RedBlackTreeGetOperator<K, V> on RedBlackTree<K, V> {
 // Extension for RedBlackTree to support containsKey functionality
 extension RedBlackTreeContainsKey<K, V> on RedBlackTree<K, V> {
   bool containsKey(K key) {
-    for (var entry in this.entries) {
+    for (var entry in entries) {
       if (entry.key == key) {
         return true;
       }

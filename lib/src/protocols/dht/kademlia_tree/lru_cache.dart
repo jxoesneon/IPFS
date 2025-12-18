@@ -5,17 +5,17 @@ import 'kademlia_tree_node.dart';
 ///
 /// Uses a doubly-linked list for O(1) access and eviction.
 class LRUCache {
+
+  /// Creates a cache with the given [capacity].
+  LRUCache(this.capacity) {
+    assert(capacity > 0, 'Capacity must be positive');
+  }
   /// Maximum number of cached nodes.
   final int capacity;
 
   final Map<p2p.PeerId, _Node> _cache = {};
   _Node? _head;
   _Node? _tail;
-
-  /// Creates a cache with the given [capacity].
-  LRUCache(this.capacity) {
-    assert(capacity > 0, 'Capacity must be positive');
-  }
 
   void put(p2p.PeerId key, KademliaTreeNode value) {
     if (_cache.containsKey(key)) {
@@ -59,9 +59,7 @@ class LRUCache {
       _head!.prev = node;
     }
     _head = node;
-    if (_tail == null) {
-      _tail = node;
-    }
+    _tail ??= node;
   }
 
   void _addToFront(_Node node) {
@@ -71,9 +69,7 @@ class LRUCache {
       _head!.prev = node;
     }
     _head = node;
-    if (_tail == null) {
-      _tail = node;
-    }
+    _tail ??= node;
   }
 
   void _removeLRU() {
@@ -100,10 +96,10 @@ class LRUCache {
 }
 
 class _Node {
+
+  _Node(this.key, this.value);
   final p2p.PeerId key;
   KademliaTreeNode value;
   _Node? next;
   _Node? prev;
-
-  _Node(this.key, this.value);
 }

@@ -5,18 +5,19 @@
 
 import 'dart:math';
 import 'dart:typed_data';
-import 'package:pointycastle/export.dart';
+
 import 'package:cryptography/cryptography.dart' as crypto;
+import 'package:pointycastle/export.dart';
 
 /// Result of AES-GCM encryption containing ciphertext, nonce, and auth tag.
 class EncryptedData {
+
+  const EncryptedData({required this.ciphertext, required this.nonce});
   /// The encrypted ciphertext (includes auth tag at end for AES-GCM).
   final Uint8List ciphertext;
 
   /// The 12-byte nonce/IV used for encryption.
   final Uint8List nonce;
-
-  const EncryptedData({required this.ciphertext, required this.nonce});
 
   /// Serializes to bytes: [nonce (12)] + [ciphertext]
   Uint8List toBytes() {

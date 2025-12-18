@@ -1,9 +1,10 @@
 // test/core/data_structures/block_verified_test.dart
-import 'package:test/test.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'dart:typed_data';
 import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:test/test.dart';
 
 /// Verified Block class tests based on actual API investigation.
 void main() {

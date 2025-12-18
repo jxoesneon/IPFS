@@ -1,16 +1,17 @@
-import 'dart:math';
 import 'dart:async';
+import 'dart:math';
 import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
+import 'package:dart_ipfs/src/protocols/dht/connection_statistics.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 
 import 'dht_client.dart';
 import 'kademlia_tree.dart';
-import 'red_black_tree.dart';
 import 'kademlia_tree/kademlia_tree_node.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
-import 'package:dart_ipfs/src/protocols/dht/connection_statistics.dart';
+import 'red_black_tree.dart';
 
 /// Kademlia DHT routing table with k-buckets.
 ///
@@ -18,6 +19,10 @@ import 'package:dart_ipfs/src/protocols/dht/connection_statistics.dart';
 /// holds up to [K_BUCKET_SIZE] peers. Supports bucket splitting,
 /// stale node eviction, periodic refresh, and IP diversity checks.
 class KademliaRoutingTable {
+
+  /// Creates an uninitialized routing table.
+  /// Call [initialize] before use.
+  KademliaRoutingTable();
   late final DHTClient dhtClient;
   late KademliaTree _tree;
 
@@ -35,10 +40,6 @@ class KademliaRoutingTable {
 
   /// Maps a PeerId to its IP address for quick lookup during removal.
   final Map<p2p.PeerId, String> _peerIps = {};
-
-  /// Creates an uninitialized routing table.
-  /// Call [initialize] before use.
-  KademliaRoutingTable() {}
 
   /// Initializes the routing table with a reference to the DHT client
   void initialize(DHTClient client) {
@@ -132,9 +133,9 @@ class KademliaRoutingTable {
   Duration _calculateStaleThreshold(NodeStats nodeStats) {
     // Example logic: Increase threshold if many peers are connected
     if (nodeStats.numConnectedPeers > 100) {
-      return Duration(hours: 2); // More lenient threshold
+      return const Duration(hours: 2); // More lenient threshold
     }
-    return Duration(hours: 1); // Default threshold
+    return const Duration(hours: 1); // Default threshold
   }
 
   NodeStats _getNodeStats() {

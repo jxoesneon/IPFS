@@ -1,7 +1,8 @@
 import 'dart:typed_data';
-import 'package:p2plib/p2plib.dart' as p2p;
-import 'package:dart_ipfs/src/protocols/dht/red_black_tree.dart';
+
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_tree_node.dart';
+import 'package:dart_ipfs/src/protocols/dht/red_black_tree.dart';
+import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
 
 void main() {

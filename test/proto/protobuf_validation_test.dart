@@ -1,11 +1,11 @@
 // Simplified validation tests for key protobuf classes
-import 'package:test/test.dart';
+import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
     as bitswap;
 import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart'
     as graphsync;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs;
-import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('Protobuf Validation', () {

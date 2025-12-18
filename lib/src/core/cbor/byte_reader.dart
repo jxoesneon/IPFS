@@ -17,11 +17,11 @@
 /// See also:
 /// - [EnhancedCBORHandler] for CBOR encoding/decoding
 class ByteReader {
-  final List<int> _bytes;
-  int _position = 0;
 
   /// Creates a reader for the given byte list.
   ByteReader(this._bytes);
+  final List<int> _bytes;
+  int _position = 0;
 
   /// Reads and returns the next byte, advancing the position.
   ///
