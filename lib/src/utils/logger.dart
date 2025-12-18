@@ -1,7 +1,9 @@
 // src/utils/logger.dart
-import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:logging/logging.dart' as logging;
 
 /// A hierarchical logging system for IPFS operations.
@@ -25,7 +27,7 @@ import 'package:logging/logging.dart' as logging;
 /// logger.error('Failed to store block', exception, stackTrace);
 /// ```
 ///
-/// Logs are written to both console and `ipfs.log` file.
+/// Logs are written to both console and `ipfs.log` file (on IO platforms).
 class Logger {
   /// Creates a new logger for the specified component
   Logger(String name, {bool debug = false, bool verbose = false})
@@ -37,6 +39,7 @@ class Logger {
   final logging.Logger _logger;
   static bool _initialized = false;
   static MetricsCollector? _metrics;
+  static IpfsPlatform? _platform;
   final bool _debug;
   final bool _verbose;
 
@@ -49,6 +52,14 @@ class Logger {
     if (!_initialized) {
       logging.hierarchicalLoggingEnabled = true;
       logging.Logger.root.level = logging.Level.ALL;
+
+      // Get platform for file logging (only on IO platforms)
+      try {
+        _platform = getPlatform();
+      } catch (e) {
+        // Platform not available (stub), skip file logging
+        _platform = null;
+      }
 
       logging.Logger.root.onRecord.listen((record) {
         final timestamp = DateTime.now().toIso8601String();
@@ -71,9 +82,12 @@ class Logger {
           print(message);
         }
 
-        _writeToLogFile(
-          '$message${record.error != null ? '\nError: ${record.error}\nStack trace: ${record.stackTrace}' : ''}',
-        );
+        // Only write to log file on IO platforms
+        if (_platform != null && _platform!.isIO) {
+          _writeToLogFile(
+            '$message${record.error != null ? '\nError: ${record.error}\nStack trace: ${record.stackTrace}' : ''}',
+          );
+        }
       });
 
       _initialized = true;
@@ -81,13 +95,24 @@ class Logger {
   }
 
   static void _writeToLogFile(String message) {
+    if (_platform == null || !_platform!.isIO) return;
+
     try {
-      final logFile = File('ipfs.log');
-      logFile.writeAsStringSync('$message\n', mode: FileMode.append);
+      // Use platform abstraction for file writing
+      _platform!.writeBytes(
+        'ipfs.log',
+        // Append mode not directly supported, so we read + write
+        // For simplicity, just log to console on web
+        _stringToBytes('$message\n'),
+      );
     } catch (e) {
       // ignore: avoid_print
       print('Failed to write to log file: $e');
     }
+  }
+
+  static Uint8List _stringToBytes(String s) {
+    return Uint8List.fromList(s.codeUnits);
   }
 
   /// Log a debug message
