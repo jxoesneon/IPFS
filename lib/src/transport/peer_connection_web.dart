@@ -64,11 +64,15 @@ class PeerConnectionWeb implements PeerConnection {
       final data = event.data;
       Uint8List bytes;
 
-      if (data is JSArrayBuffer) {
-        bytes = Uint8List.view(data.toDart);
-      } else {
+      // Use isA for JS interop type checking (platform-consistent)
+      if (data.isA<JSArrayBuffer>()) {
+        bytes = Uint8List.view((data as JSArrayBuffer).toDart);
+      } else if (data.isA<JSString>()) {
         // Handle string data
         bytes = Uint8List.fromList((data as JSString).toDart.codeUnits);
+      } else {
+        // Unknown data type, try to convert as string
+        bytes = Uint8List.fromList(data.toString().codeUnits);
       }
 
       _messagesController.add(PeerMessage(peerId: peerId, data: bytes));
