@@ -42,6 +42,7 @@ class IPFSWebNode {
   late final BitswapHandler _bitswap;
   late final PubSubClient _pubsub;
 
+  /// List of bootstrap peers (WebSocket URLs) to connect to on startup.
   final List<String> bootstrapPeers;
   bool _started = false;
 

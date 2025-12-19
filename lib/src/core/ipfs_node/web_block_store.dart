@@ -7,6 +7,7 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 
 /// Web-compatible implementation of IBlockStore using IpfsPlatform storage.
 class WebBlockStore implements IBlockStore {
+  /// Creates a [WebBlockStore] wrapping the given [IpfsPlatform] storage.
   WebBlockStore(this._platform);
   final IpfsPlatform _platform;
 

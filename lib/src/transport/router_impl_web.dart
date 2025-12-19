@@ -4,9 +4,9 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 
-import 'router_events.dart';
 import 'peer_connection.dart';
 import 'peer_connection_web.dart';
+import 'router_events.dart';
 
 /// Web stub implementation for P2plibRouter.
 ///
