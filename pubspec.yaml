@@ -1,6 +1,6 @@
 name: dart_ipfs
 description: Production-ready IPFS implementation in Dart with full protocol support, P2P networking, Gateway mode, and offline capabilities. Supports mobile (Flutter) and web platforms.
-version: 1.5.0
+version: 1.5.1
 homepage: https://github.com/jxoesneon/IPFS
 repository: https://github.com/jxoesneon/IPFS
 issue_tracker: https://github.com/jxoesneon/IPFS/issues
@@ -11,17 +11,17 @@ environment:
 dependencies:
   catalyst_cose: ^1.0.0
   collection: ^1.19.1
-  http: ^1.2.2
+  http: ^1.6.0
   fixnum: ^1.1.1
   convert: ^3.1.2
-  uuid: ^4.5.1
-  web: ^1.1.0
+  uuid: ^4.5.2
+  web: ^1.1.1
 
   # Networking and P2P
   p2plib: ^2.3.1
 
   # Cryptography
-  crypto: ^3.0.3
+  crypto: ^3.0.7
   pointycastle: ^4.0.0
 
   # Serialization
@@ -29,10 +29,10 @@ dependencies:
 
   # Data Storage
   hive: ^2.2.3
-  idb_shim: ^2.0.0 # IndexedDB for web storage
+  idb_shim: ^2.7.1+2 # IndexedDB for web storage
 
   # Logging
-  logging: ^1.0.2
+  logging: ^1.3.0
 
   # Metrics
   prometheus_client: ^1.0.0+1
@@ -44,32 +44,32 @@ dependencies:
   murmurhash: ^1.0.1
   cbor: ^6.3.7
   shelf_router: ^1.1.4
-  intl: ^0.20.0
-  markdown: ^7.2.2
+  intl: ^0.20.2
+  markdown: ^7.3.0
   synchronized: ^3.4.0
-  multicast_dns: ^0.3.2+7
-  jose: ^0.3.4
+  multicast_dns: ^0.3.3
+  jose: ^0.3.5
   mime: ^2.0.0
-  http_parser: ^4.1.0
+  http_parser: ^4.1.2
 
   # Common packages
   yaml: ^3.1.3
   meta: ^1.17.0
   shelf: ^1.4.2
-  path: ^1.9.0
+  path: ^1.9.1
   grpc: ^5.1.0
   cryptography: ^2.9.0
   # Security Overrides (Audit 2025-12-15)
   sodium: ^3.4.6
   es_compression: ^2.0.15
-  dart_lz4: ^0.0.7
+  dart_lz4: ^0.0.8
 
 dev_dependencies:
   test: ^1.28.0 # For unit and integration tests
   lints: ^6.0.0 # For code style analysis
   coverage: ^1.15.0
-  mockito: ^5.4.4
-  build_runner: ^2.4.8
+  mockito: ^5.6.1
+  build_runner: ^2.10.4
 
 # Assets used in the project, such as images or other static files.
 assets:
