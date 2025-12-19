@@ -1,7 +1,7 @@
 # dart_ipfs Roadmap
 
-**Current Version**: 1.4.1 (Production Ready)  
-**Last Updated**: 2025-12-17
+**Current Version**: 1.6.0 (Production Ready + Web Networked)  
+**Last Updated**: 2025-12-18
 
 ---
 

@@ -1,6 +1,6 @@
 name: dart_ipfs
 description: Production-ready IPFS implementation in Dart with full protocol support, P2P networking, Gateway mode, and offline capabilities. Supports mobile (Flutter) and web platforms.
-version: 1.5.1
+version: 1.6.0
 homepage: https://github.com/jxoesneon/IPFS
 repository: https://github.com/jxoesneon/IPFS
 issue_tracker: https://github.com/jxoesneon/IPFS/issues
@@ -77,8 +77,3 @@ assets:
 
 # Example entry point for running the application.
 example: main.dart
-
-# Specify any additional files or directories to include in the package.
-include:
-  - lib/src/core/
-  - lib/src/proto/

@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2025-12-18
+
+### Full Web Connectivity 🌐⚡
+
+The web implementation (`IPFSWebNode`) has been upgraded from an offline sandbox to a fully networked P2P node.
+
+- **Online Networking**: `IPFSWebNode` now initializes `P2plibRouter` (WebSocket), `BitswapHandler`, and `PubSubClient`.
+- **Bitswap Fallback**: `get()` operations now transparently query the swarm if content is missing locally.
+- **Bootstrap Support**: Added `bootstrapPeers` configuration to connect to WebSocket relays securely (`wss://`).
+- **WebBlockStore**: New adapter bridging `IndexedDB` with the `Bitswap` protocol.
+
+### Web Capabilities Updated
+
+| Feature             | Supported | Notes                 |
+| ------------------- | --------- | --------------------- |
+| P2P Networking      | ✅        | WebSocket transport   |
+| Bitswap Exchange    | ✅        | Active block fetching |
+| PubSub (Gossipsub)  | ✅        | Mesh participation    |
+| Offline Persistence | ✅        | IndexedDB             |
+
+### Refactoring
+
+- **BitswapHandler**: Decoupled from concrete `BlockStore` to usage of `IBlockStore` interface.
+- **Build System**: Removed restrictive `include` directive from `pubspec.yaml` to fully expose library modules.
+
 ## [1.5.1] - 2025-12-18
 
 - **Fix**: Tightened dependency constraints to pass pana downgrade analysis (160/160 score).

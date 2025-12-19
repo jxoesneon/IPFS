@@ -166,7 +166,10 @@ import 'dart:typed_data';
 
 void main() async {
   // Use IPFSWebNode for browser environments
-  final node = IPFSWebNode();
+  final node = IPFSWebNode(
+    // Optional: Connect to secure WebSocket relays
+    bootstrapPeers: ['wss://relay.node.address/p2p/...'],
+  );
   await node.start();
 
   // Add content (stores in IndexedDB)

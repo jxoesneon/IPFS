@@ -49,22 +49,26 @@ dart_ipfs/
 ## Development Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/jxoesneon/IPFS.git
    cd IPFS
    ```
 
 2. **Install dependencies**
+
    ```bash
    dart pub get
    ```
 
 3. **Run static analysis**
+
    ```bash
    dart analyze
    ```
 
 4. **Run tests**
+
    ```bash
    dart test
    ```
@@ -80,6 +84,7 @@ dart_ipfs/
 ### Types of Contributions
 
 We welcome:
+
 - 🐛 **Bug fixes**
 - ✨ **New features** (see ROADMAP.md for planned features)
 - 📝 **Documentation improvements**
@@ -95,6 +100,7 @@ Look for issues labeled `good-first-issue` on GitHub. These are suitable for new
 ### Feature Requests
 
 Before implementing a new feature:
+
 1. Check if it's in ROADMAP.md
 2. Open a discussion on GitHub Discussions
 3. Wait for maintainer feedback
@@ -116,7 +122,8 @@ We follow the [official Dart style guide](https://dart.dev/guides/language/effec
 ### Documentation
 
 All public APIs must have:
-```dart
+
+````dart
 /// Brief description.
 ///
 /// Detailed explanation with examples.
@@ -136,7 +143,7 @@ All public APIs must have:
 Future<IPFSNode> create(IPFSConfig config) async {
   // implementation
 }
-```
+````
 
 ### Commit Messages
 
@@ -151,6 +158,7 @@ type(scope): description
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation only
@@ -160,6 +168,7 @@ type(scope): description
 - `chore`: Maintenance tasks
 
 **Examples:**
+
 ```
 feat(dht): add improved peer discovery
 fix(gateway): resolve content-type detection bug
@@ -178,6 +187,9 @@ dart test
 # Specific test file
 dart test test/protocol_test.dart
 
+# Web Integration Tests (Chrome)
+dart test -p chrome test/web/ipfs_web_node_test.dart
+
 # With coverage
 dart test --coverage=coverage
 ```
@@ -185,6 +197,7 @@ dart test --coverage=coverage
 ### Writing Tests
 
 1. **Protocol Tests**: Ensure protocol compliance
+
    ```dart
    test('CID v1 encoding', () {
      final cid = CID.decode('bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi');
@@ -193,6 +206,7 @@ dart test --coverage=coverage
    ```
 
 2. **Integration Tests**: Test component interactions
+
    ```dart
    test('Add and retrieve content', () async {
      final node = await IPFSNode.create(config);
@@ -231,18 +245,22 @@ dart test --coverage=coverage
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 How has this been tested?
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Self-review completed
 - [ ] Comments added for complex code
@@ -275,6 +293,7 @@ Clear description of the bug
 
 **To Reproduce**
 Steps to reproduce:
+
 1. Initialize node with...
 2. Call method...
 3. See error
@@ -286,6 +305,7 @@ What should happen
 What actually happens
 
 **Environment**
+
 - dart_ipfs version: 1.0.0
 - Dart SDK: 3.5.4
 - OS: macOS 14.0
@@ -326,6 +346,7 @@ Use cases, examples, mockups
 ### Protocol Implementation
 
 When implementing IPFS protocols:
+
 1. Follow official specifications
 2. Add protocol compliance tests
 3. Document deviations (if any)
@@ -346,6 +367,7 @@ try {
 ### Logging
 
 Use appropriate log levels:
+
 ```dart
 _logger.error('Critical error');      // Errors
 _logger.warning('Warning message');   // Warnings
@@ -378,6 +400,7 @@ By contributing, you agree that your contributions will be licensed under the MI
 ## Questions?
 
 Feel free to:
+
 - Open a discussion on GitHub
 - Comment on relevant issues
 - Tag maintainers in PRs
