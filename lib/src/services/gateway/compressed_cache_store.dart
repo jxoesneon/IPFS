@@ -7,7 +7,7 @@ import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:es_compression/lz4.dart' as es;
+import 'package:dart_lz4/dart_lz4.dart';
 
 import '../../utils/logger.dart';
 import 'adaptive_compression_handler.dart';
@@ -100,13 +100,11 @@ class CompressedCacheStore {
         case CompressionType.zlib:
           return Uint8List.fromList(const ZLibEncoder().encode(data));
         case CompressionType.lz4:
-          return Uint8List.fromList(es.Lz4Encoder().convert(data));
+          return lz4FrameEncode(data);
       }
     } catch (e) {
       if (type == CompressionType.lz4) {
-        _logger.warning('LZ4 compression failed ($e). Falling back to GZIP.');
-        final encoded = const GZipEncoder().encode(data);
-        return Uint8List.fromList(encoded);
+        // lz4FrameEncode throws if validation fails, catch below handles it
       }
       rethrow;
     }
@@ -121,8 +119,9 @@ class CompressedCacheStore {
           return Uint8List.fromList(const GZipDecoder().decodeBytes(data));
         case CompressionType.zlib:
           return Uint8List.fromList(const ZLibDecoder().decodeBytes(data));
+
         case CompressionType.lz4:
-          return Uint8List.fromList(es.Lz4Decoder().convert(data));
+          return lz4FrameDecode(data);
       }
     } catch (e) {
       // If decompression fails (especially LZ4), we can't really fallback

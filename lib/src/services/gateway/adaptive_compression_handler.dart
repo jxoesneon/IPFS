@@ -7,8 +7,8 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/services/gateway/compressed_cache_store.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:es_compression/lz4.dart' as es;
+
+import 'package:dart_lz4/dart_lz4.dart';
 
 /// Configuration for adaptive compression.
 class CompressionConfig {
@@ -64,23 +64,8 @@ class AdaptiveCompressionHandler {
   final CompressionConfig _config;
   final String _metadataPath;
 
-  static bool? _lz4Available;
-  final _logger = Logger('AdaptiveCompressionHandler');
-
-  bool get _isLz4Available {
-    if (_lz4Available != null) return _lz4Available!;
-    try {
-      // Try to instantiate AND use to trigger FFI load
-      es.Lz4Encoder().convert([]);
-      _lz4Available = true;
-    } catch (e) {
-      _logger.warning(
-        'LZ4 compression unavailable (native binary missing). Falling back to GZIP.',
-      );
-      _lz4Available = false;
-    }
-    return _lz4Available!;
-  }
+  bool get _isLz4Available =>
+      true; // Pure Dart implementation is always available
 
   /// Compresses a block based on its content type.
   Future<Block> compressBlock(Block block, String contentType) async {
@@ -140,7 +125,7 @@ class AdaptiveCompressionHandler {
         return Uint8List.fromList(zlib.encode(data));
 
       case CompressionType.lz4:
-        return Uint8List.fromList(es.Lz4Encoder().convert(data));
+        return lz4FrameEncode(data);
     }
   }
 
