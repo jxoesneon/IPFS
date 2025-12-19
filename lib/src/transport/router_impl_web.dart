@@ -1,12 +1,12 @@
 import 'dart:async';
-import 'dart:js_interop';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
-import 'package:web/web.dart' as web;
 
 import 'router_events.dart';
+import 'peer_connection.dart';
+import 'peer_connection_web.dart';
 
 /// Web stub implementation for P2plibRouter.
 ///
@@ -24,7 +24,8 @@ class P2plibRouter with MultiAddressHandler {
 
   static P2plibRouter? _instance;
 
-  final Map<String, web.WebSocket> _sockets = {};
+  final PeerConnectionWeb _connection = PeerConnectionWeb();
+  final Map<String, void Function(NetworkPacket)> _protocolHandlers = {};
 
   // Stream controllers
   final _connectionEventsController =
@@ -35,85 +36,63 @@ class P2plibRouter with MultiAddressHandler {
   final _errorEventsController = StreamController<ErrorEvent>.broadcast();
   final _streamEventsController = StreamController<StreamEvent>.broadcast();
 
-  /// Returns the peer ID as a string (stub).
-  String get peerID => 'web_peer_id_stub';
+  /// Returns the peer ID as a string.
+  String get peerID => _connection.localPeerId;
 
-  /// Returns the peer ID object (stub).
-  PeerId get peerId => PeerId(value: Uint8List.fromList(List.filled(64, 1)));
+  /// Returns the peer ID object.
+  PeerId get peerId =>
+      PeerId(value: Uint8List.fromList(_connection.localPeerId.codeUnits));
 
   /// Returns list of connected peers.
-  List<String> get connectedPeers => [];
+  List<String> get connectedPeers => _connection.connectedPeers;
 
   /// Returns listening addresses.
   List<String> get listeningAddresses => [];
 
   /// Initializes the router.
-  Future<void> initialize() async {}
+  Future<void> initialize() async {
+    _connection.messages.listen(_handleIncomingMessage);
+  }
 
   /// Starts the router.
-  Future<void> start() async {}
+  Future<void> start() async {
+    // Already active
+  }
 
   /// Stops the router.
-  Future<void> stop() async {}
+  Future<void> stop() async {
+    _connection.dispose();
+  }
 
   /// Connects to a peer via WebSocket.
   Future<void> connect(String multiaddress) async {
-    try {
-      String url = multiaddress;
-      if (multiaddress.contains('/ws') || multiaddress.contains('/wss')) {
-        // WebSocket multiaddr detected
-      }
-
-      if (!url.startsWith('ws')) return;
-
-      final socket = web.WebSocket(url);
-      socket.binaryType = 'arraybuffer';
-
-      final completer = Completer<void>();
-
-      socket.onopen = ((web.Event event) {
-        _sockets[multiaddress] = socket;
-        _connectionEventsController.add(
-          ConnectionEvent(
-            type: ConnectionEventType.connected,
-            peerId: multiaddress,
-          ),
-        );
-        if (!completer.isCompleted) completer.complete();
-      }).toJS;
-
-      socket.onerror = ((web.Event event) {
-        if (!completer.isCompleted) {
-          completer.completeError(Exception('WebSocket error'));
-        }
-      }).toJS;
-
-      socket.onmessage = ((web.MessageEvent event) {
-        // Handle binary packet if needed
-      }).toJS;
-
-      await completer.future;
-    } catch (e) {
-      // ignore
-    }
+    await _connection.connect(multiaddress);
+    // PeerConnection doesn't emit connection events directly, we infer them or add them there?
+    // For now we assume success if await finishes.
+    _connectionEventsController.add(
+      ConnectionEvent(
+        type: ConnectionEventType.connected,
+        peerId: multiaddress, // Using generic peerId for now
+      ),
+    );
   }
 
   /// Disconnects from a peer.
-  Future<void> disconnect(String multiaddress) async {}
+  Future<void> disconnect(String multiaddress) async {
+    await _connection.disconnect(multiaddress);
+  }
 
   /// Lists connected peers.
-  List<String> listConnectedPeers() => [];
+  List<String> listConnectedPeers() => _connection.connectedPeers;
 
   /// Sends a message to a peer.
   Future<void> sendMessage(String peerId, Uint8List message) async {
-    final socket = _sockets[peerId];
-    if (socket != null && socket.readyState == web.WebSocket.OPEN) {
-      socket.send(message.buffer.toJS);
-    }
+    await _connection.send(peerId, message);
   }
 
   /// Receives messages from a peer.
   Stream<String> receiveMessages(String peerId) async* {
+    // Not implemented in abstract router usually?
     yield* const Stream.empty();
   }
 
@@ -121,10 +100,37 @@ class P2plibRouter with MultiAddressHandler {
   void registerProtocolHandler(
     String protocolId,
     void Function(NetworkPacket) handler,
-  ) {}
+  ) {
+    _protocolHandlers[protocolId] = handler;
+  }
 
   /// Registers a protocol.
-  void registerProtocol(String protocolId) {}
+  void registerProtocol(String protocolId) {
+    // No-op on web for now (no negotiation)
+  }
+
+  void _handleIncomingMessage(PeerMessage message) {
+    final packet = NetworkPacket(
+      srcPeerId: message.peerId,
+      datagram: message.data,
+    );
+
+    // Naive routing: Send to ALL handlers (Promiscuous mode)
+    // Since we don't have protocol negotiation on WebSockets yet.
+    // Handlers should robustly fail if message is not for them.
+    for (final handler in _protocolHandlers.values) {
+      try {
+        handler(packet);
+      } catch (e) {
+        // Prepare to ignore parsing errors from wrong protocols
+      }
+    }
+
+    // Also emit legacy message event
+    _messageEventsController.add(
+      MessageEvent(peerId: message.peerId, message: message.data),
+    );
+  }
 
   /// Resolves a peer to addresses.
   List<String> resolvePeer(String peerIdStr) => [];
@@ -134,15 +140,13 @@ class P2plibRouter with MultiAddressHandler {
 
   /// Broadcasts a message to all connected peers.
   Future<void> broadcastMessage(String protocolId, Uint8List message) async {
-    for (final socket in _sockets.values) {
-      if (socket.readyState == web.WebSocket.OPEN) {
-        socket.send(message.buffer.toJS);
-      }
-    }
+    await _connection.broadcast(message);
   }
 
   /// Removes a message handler.
-  void removeMessageHandler(String protocolId) {}
+  void removeMessageHandler(String protocolId) {
+    _protocolHandlers.remove(protocolId);
+  }
 
   /// Stream of connection events.
   Stream<ConnectionEvent> get connectionEvents =>
@@ -172,7 +176,8 @@ class P2plibRouter with MultiAddressHandler {
     String protocolId,
     Uint8List request,
   ) async {
-    throw UnimplementedError('sendRequest not implemented on web');
+    // TODO: Implement correlation
+    throw UnimplementedError('sendRequest not implemented/correlated on web');
   }
 
   /// Emits an event.
@@ -185,13 +190,13 @@ class P2plibRouter with MultiAddressHandler {
   void offEvent(String topic, void Function(NetworkMessage) handler) {}
 
   /// Checks if a peer is connected.
-  bool isConnectedPeer(String peerId) => false;
+  bool isConnectedPeer(String peerId) => _connection.isConnected(peerId);
 
   /// Returns the routing table.
   dynamic getRoutingTable() => throw UnimplementedError();
 
   @override
-  String get multiaddr => '';
+  String get multiaddr => _connection.localPeerId; // Stub
 
   @override
   void setMultiaddr(String addr) {}

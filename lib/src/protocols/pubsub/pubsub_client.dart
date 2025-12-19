@@ -4,9 +4,9 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart'; // SEC-008: For message signing
 import 'package:http/http.dart' as http;
-import 'package:p2plib/p2plib.dart' as p2p;
 
 import '../../core/data_structures/node_stats.dart';
+import '../../core/types/peer_id.dart';
 import '../../transport/p2plib_router.dart'; // Import your router class
 import '../../utils/base58.dart';
 import '../../utils/logger.dart';
@@ -22,11 +22,11 @@ import 'pubsub_message.dart';
 class PubSubClient {
   /// Creates a PubSub client with [_router] and peer ID.
   PubSubClient(this._router, String peerIdStr)
-    : _peerId = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
+    : _peerId = PeerId(value: Base58().base58Decode(peerIdStr));
   final P2plibRouter _router; // Router for sending and receiving messages
   final StreamController<PubSubMessage> _messageController =
       StreamController<PubSubMessage>.broadcast();
-  final p2p.PeerId _peerId;
+  final PeerId _peerId;
   final _logger = Logger('PubSubClient');
 
   // Gossipsub state
