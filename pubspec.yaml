@@ -29,6 +29,7 @@ dependencies:
 
   # Data Storage
   hive: ^2.2.3
+  idb_shim: ^2.0.0 # IndexedDB for web storage
 
   # Logging
   logging: ^1.0.2

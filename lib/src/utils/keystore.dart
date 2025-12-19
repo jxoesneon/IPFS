@@ -2,8 +2,10 @@
 
 import 'dart:convert';
 import 'dart:typed_data';
+
+import 'package:cryptography/cryptography.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
-import 'package:p2plib/p2plib.dart' show Crypto;
+
 import 'logger.dart';
 
 /// Represents a public/private key pair for cryptographic operations.
@@ -43,10 +45,10 @@ class Keystore {
     // Initialize with config
     return keystore;
   }
-  final Map<String, KeyPair> _keyPairs = const {};
+  final Map<String, KeyPair> _keyPairs = {};
   final _logger = Logger('Keystore');
+  final _ed25519 = Ed25519();
 
-  /// The default key name used for node identity.
   /// The default key name used for node identity.
   static const String defaultKeyName = 'self';
 
@@ -99,44 +101,61 @@ class Keystore {
   void deserialize(String jsonString) {
     final Map<String, dynamic> jsonMap =
         jsonDecode(jsonString) as Map<String, dynamic>;
-    jsonMap.forEach((name, keys) {
+    for (final entry in jsonMap.entries) {
+      final name = entry.key;
+      final keys = entry.value as Map<String, dynamic>;
       addKeyPair(
         name,
         KeyPair(keys['publicKey'] as String, keys['privateKey'] as String),
       );
-    });
+    }
     _logger.info('Keystore deserialized from JSON.');
   }
 
   /// Verifies a signature using a public key
+  ///
+  /// Uses Ed25519 signature verification via pure-Dart cryptography package.
   Future<bool> verifySignature(
     String publicKey,
     Uint8List data,
     Uint8List signature,
   ) async {
     try {
-      // Create crypto instance
-      final crypto = Crypto();
-      await crypto.init(); // Initialize the crypto worker
+      // Decode the public key from hex/base64
+      final pubKeyBytes = _decodePublicKey(publicKey);
 
-      // Construct the datagram in the format expected by p2plib
-      // This needs to match the Message format used in p2plib
-      final datagram = Uint8List.fromList([
-        ...data, // Original message
-        ...signature, // Signature appended at the end
-      ]);
+      // Create the public key object
+      final pubKey = SimplePublicKey(pubKeyBytes, type: KeyPairType.ed25519);
 
-      try {
-        // Verify the signature
-        await crypto.verify(datagram);
-        return true;
-      } catch (e) {
-        // If verification fails, crypto.verify throws an exception
-        return false;
-      }
+      // Create the signature object
+      final sig = Signature(signature, publicKey: pubKey);
+
+      // Verify the signature
+      final isValid = await _ed25519.verify(data, signature: sig);
+      return isValid;
     } catch (e, stackTrace) {
       _logger.error('Error verifying signature', e, stackTrace);
       return false;
+    }
+  }
+
+  Uint8List _decodePublicKey(String publicKey) {
+    // Try to decode as hex first
+    if (publicKey.length == 64) {
+      // Likely hex-encoded 32-byte key
+      final bytes = <int>[];
+      for (var i = 0; i < publicKey.length; i += 2) {
+        bytes.add(int.parse(publicKey.substring(i, i + 2), radix: 16));
+      }
+      return Uint8List.fromList(bytes);
+    }
+
+    // Try base64
+    try {
+      return base64Decode(publicKey);
+    } catch (e) {
+      // Return as bytes
+      return Uint8List.fromList(utf8.encode(publicKey));
     }
   }
 
