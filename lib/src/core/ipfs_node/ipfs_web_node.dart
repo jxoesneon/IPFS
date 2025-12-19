@@ -5,9 +5,14 @@
 
 import 'dart:typed_data';
 
-import 'package:crypto/crypto.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
+import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'web_block_store.dart';
 
 /// A minimal IPFS node for web browsers.
 ///
@@ -19,34 +24,71 @@ import 'package:dart_ipfs/src/platform/platform.dart';
 /// For full P2P functionality, run on native platforms (iOS, Android, desktop).
 class IPFSWebNode {
   /// Creates a new web IPFS node.
-  IPFSWebNode() {
+  IPFSWebNode({IPFSConfig? config, this.bootstrapPeers = const []}) {
     _platform = getPlatform();
+    _config = config ?? IPFSConfig();
+
+    // Initialize networking components
+    _router = P2plibRouter(_config);
+    _blockStore = WebBlockStore(_platform);
+    _bitswap = BitswapHandler(_config, _blockStore, _router);
+    _pubsub = PubSubClient(_router, _router.peerID);
   }
 
   late final IpfsPlatform _platform;
-  final _store = <String, Uint8List>{};
-  bool _started = false;
-  String _nodeId = '';
+  late final IPFSConfig _config;
+  late final P2plibRouter _router;
+  late final WebBlockStore _blockStore;
+  late final BitswapHandler _bitswap;
+  late final PubSubClient _pubsub;
 
-  /// The node's peer ID (generated locally for web).
-  String get peerID => _nodeId;
+  final List<String> bootstrapPeers;
+  bool _started = false;
+
+  /// The node's peer ID.
+  String get peerID => _router.peerID; // Use router's ID
 
   /// Whether the node is running.
   bool get isRunning => _started;
 
+  /// Access to Bitswap handler.
+  BitswapHandler get bitswap => _bitswap;
+
+  /// Access to PubSub client.
+  PubSubClient get pubsub => _pubsub;
+
   /// Starts the web node.
   Future<void> start() async {
-    // Generate a random node ID for web
-    final random = Uint8List(32);
-    for (var i = 0; i < 32; i++) {
-      random[i] = DateTime.now().microsecond % 256;
+    if (_started) return;
+
+    // Generate/Load ID via router (router usually generates one if generic)
+    await _router.initialize();
+
+    await _router.start();
+    await _bitswap.start();
+    await _pubsub.start();
+
+    // Connect to bootstrap peers
+    for (final peer in bootstrapPeers) {
+      try {
+        await _router.connect(peer);
+      } catch (e) {
+        // Log error but continue
+        // print('Failed to connect to bootstrap peer $peer: $e');
+      }
     }
-    _nodeId = 'web-${sha256.convert(random).toString().substring(0, 12)}';
+
     _started = true;
   }
 
   /// Stops the web node.
   Future<void> stop() async {
+    if (!_started) return;
+
+    await _pubsub.stop();
+    await _bitswap.stop();
+    await _router.stop();
+
     _started = false;
   }
 
@@ -60,28 +102,37 @@ class IPFSWebNode {
       version: 1,
     );
 
-    // Store the block
-    final cidStr = cid.encode();
-    _store[cidStr] = data;
+    // Store via BlockStore (which handles platform storage)
+    // We create a Block object
+    final block = Block(cid: cid, data: data);
+    await _blockStore.putBlock(block);
 
-    // Persist to IndexedDB
-    await _platform.writeBytes('blocks/$cidStr', data);
+    // Also cache in memory for speed (optional, BlockStore relies on platform)
+    // _store is redundant if WebBlockStore uses platform directly.
+    // We remove _store usage to rely on WebBlockStore + Platform.
 
     return cid;
   }
 
   /// Gets data by CID string.
   Future<Uint8List?> get(String cidString) async {
-    // Try memory cache first
-    if (_store.containsKey(cidString)) {
-      return _store[cidString];
+    // 1. Try local storage via BlockStore
+    final response = await _blockStore.getBlock(cidString);
+    if (response.found && response.hasBlock()) {
+      return Block.fromProto(response.block).data;
     }
 
-    // Try IndexedDB
-    final data = await _platform.readBytes('blocks/$cidString');
-    if (data != null) {
-      _store[cidString] = data;
-      return data;
+    // 2. Fallback to Bitswap
+    if (_router.connectedPeers.isNotEmpty) {
+      try {
+        final block = await _bitswap.wantBlock(cidString);
+        if (block != null) {
+          // Block is automatically added to store by BitswapHandler when received
+          return block.data;
+        }
+      } catch (e) {
+        // Networking failed or timed out
+      }
     }
 
     return null;

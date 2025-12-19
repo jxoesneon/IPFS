@@ -418,19 +418,20 @@ dart run example/online_test.dart
 
 ### Web Mode (Browser)
 
-**Perfect for:**
+The `IPFSWebNode` class provides a browser-compatible implementation that uses `IndexedDB` for storage and **WebSockets** for networking.
 
-- Single-page applications (SPAs)
-- Offline-first web apps
-- Decentralized web clients
+**Capabilities:**
 
-**Features:**
+- **Storage:** Persistent (IndexedDB)
+- **Networking:** Online (WebSocket connection to bootstrap peers)
+- **Protocols:** Bitswap (Exchange), PubSub (Gossipsub)
+- **IPNS:** Not yet supported
+- **DHT:** Not supported (Client mode only)
 
-- ✅ Run directly in browser (no server)
-- ✅ IndexedDB persistent storage
-- ✅ Content addressing & Pinning
-- ❌ P2P networking (Offline only)
-- ❌ DHT (requires Relay/Gateway)
+**Constraints:**
+
+- Requires a compliant WebSocket relay or gateway to join the swarm.
+- No TCP/UDP transport (browser limitation).
 
 ---
 

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/ledger.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as message;
 import 'package:dart_ipfs/src/protocols/bitswap/wantlist.dart';
@@ -22,7 +22,7 @@ class BitswapHandler {
     _logger.info('Initializing BitswapHandler');
     _setupHandlers();
   }
-  final BlockStore _blockStore;
+  final IBlockStore _blockStore;
   final P2plibRouter _router;
   final Wantlist _wantlist = Wantlist();
   final LedgerManager _ledgerManager = LedgerManager();
