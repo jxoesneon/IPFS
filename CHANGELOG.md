@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-12-18
+
+### Web Platform Support 🌐
+
+- **IPFSWebNode**: New minimal web-only node for browsers with offline functionality.
+- **IndexedDB Storage**: Persistent storage using IndexedDB via `idb_shim` package.
+- **Web Compilation**: Successfully compiles to JavaScript (`dart compile js`).
+
+### New Abstractions
+
+- **CryptoProvider**: Platform-agnostic crypto interface with IO/Web implementations.
+- **PeerConnection**: Abstract P2P connection interface with WebSocket support for web.
+
+### Web Mode Capabilities
+
+| Feature                | Supported         |
+| ---------------------- | ----------------- |
+| Add/Get content by CID | ✅                |
+| Pin/Unpin content      | ✅                |
+| IndexedDB persistence  | ✅                |
+| P2P networking         | ❌ (offline only) |
+
+### Dependencies
+
+- Added `idb_shim: ^2.0.0` for IndexedDB support.
+
 ## [1.4.3] - 2025-12-18
 
 ### Web Platform Support
