@@ -31,6 +31,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 - **PubSub**: Real-time messaging
 - **MDNS**: Local peer discovery
 - **Bootstrap Peers**: Network connectivity
+- **Web Platform**: Full browser support via `IPFSWebNode`
 
 ### ✅ Services
 
@@ -154,6 +155,27 @@ void main() async {
   print('P2P Node ID: ${node.peerID}');
 
   // Node participates in DHT, Bitswap, PubSub
+}
+```
+
+#### Web Platform (Browser)
+
+```dart
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
+import 'dart:typed_data';
+
+void main() async {
+  // Use IPFSWebNode for browser environments
+  final node = IPFSWebNode();
+  await node.start();
+
+  // Add content (stores in IndexedDB)
+  final cid = await node.add(Uint8List.fromList('Hello Web!'.codeUnits));
+  print('Added: $cid');
+
+  // Retrieve content
+  final data = await node.get(cid.encode());
+  print('Retrieved: ${String.fromCharCodes(data!)}');
 }
 ```
 
@@ -394,6 +416,22 @@ dart run example/online_test.dart
 - ✅ Provider records
 - ✅ PubSub messaging
 
+### Web Mode (Browser)
+
+**Perfect for:**
+
+- Single-page applications (SPAs)
+- Offline-first web apps
+- Decentralized web clients
+
+**Features:**
+
+- ✅ Run directly in browser (no server)
+- ✅ IndexedDB persistent storage
+- ✅ Content addressing & Pinning
+- ❌ P2P networking (Offline only)
+- ❌ DHT (requires Relay/Gateway)
+
 ---
 
 ## Architecture
@@ -559,7 +597,7 @@ Contributions welcome! Please:
 - Done: P2P networking
 - Done: Production cryptography
 - Planned: Mobile optimization (Flutter)
-- Planned: Web platform support
+- Done: Web platform support
 - Planned: QUIC transport
 - Planned: Full Ed25519/X25519 support
 
