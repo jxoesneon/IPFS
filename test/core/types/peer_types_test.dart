@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/core/types/peer_types.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:p2plib/p2plib.dart' as p2p;
@@ -41,7 +42,7 @@ void main() {
       );
 
       final peer = IPFSPeer(
-        id: PeerId(peerId.value),
+        id: PeerId(value: peerId.value),
         addresses: [address],
         latency: 0,
         agentVersion: '',

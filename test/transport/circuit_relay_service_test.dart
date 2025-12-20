@@ -5,12 +5,14 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart';
 import 'package:dart_ipfs/src/transport/circuit_relay_service.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_events.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
 
 // Manual Mock to avoid Mockito null-safety issues
 class MockP2plibRouter implements P2plibRouter {
-  final Map<String, void Function(p2p.Packet)> handlers = {};
+  final Map<String, void Function(NetworkPacket)> handlers = {};
   final List<SentMessage> sentMessages = [];
   final List<SentRequest> sentRequests = [];
 
@@ -23,7 +25,7 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  Future<void> sendMessage(p2p.PeerId peerId, Uint8List message) async {
+  Future<void> sendMessage(String peerId, Uint8List message) async {
     sentMessages.add(SentMessage(peerId, message));
   }
 
@@ -54,7 +56,7 @@ class MockP2plibRouter implements P2plibRouter {
 
 class SentMessage {
   SentMessage(this.peerId, this.message);
-  final p2p.PeerId peerId;
+  final String peerId;
   final Uint8List message;
 }
 
@@ -108,11 +110,16 @@ void main() {
         ),
       )..srcPeerId = srcPeerId;
 
-      mockRouter.handlers[CircuitRelayService.hopProtocolId]!(packet);
+      mockRouter.handlers[CircuitRelayService.hopProtocolId]!(
+        NetworkPacket(
+          datagram: packet.datagram,
+          srcPeerId: Base58().encode(srcPeerId.value),
+        ),
+      );
 
       expect(mockRouter.sentMessages.length, 1);
       final sent = mockRouter.sentMessages.first;
-      expect(sent.peerId, srcPeerId);
+      expect(sent.peerId, Base58().encode(srcPeerId.value));
 
       final response = HopMessage.fromBuffer(sent.message);
       expect(response.type, HopMessage_Type.STATUS);
@@ -148,7 +155,12 @@ void main() {
         ),
       )..srcPeerId = srcPeerId;
 
-      mockRouter.handlers[CircuitRelayService.hopProtocolId]!(packet);
+      mockRouter.handlers[CircuitRelayService.hopProtocolId]!(
+        NetworkPacket(
+          datagram: packet.datagram,
+          srcPeerId: Base58().encode(srcPeerId.value),
+        ),
+      );
 
       // Should invoke sendMessage with FAILED status
       expect(mockRouter.sentMessages.length, 1);
@@ -184,7 +196,12 @@ void main() {
         ),
       )..srcPeerId = destPeerId;
 
-      mockRouter.handlers[CircuitRelayService.hopProtocolId]!(reservePacket);
+      mockRouter.handlers[CircuitRelayService.hopProtocolId]!(
+        NetworkPacket(
+          datagram: reservePacket.datagram,
+          srcPeerId: Base58().encode(destPeerId.value),
+        ),
+      );
       expect(mockRouter.sentMessages.length, 1); // Status OK for reservation
       mockRouter.sentMessages.clear();
 
@@ -207,8 +224,12 @@ void main() {
       // _handleConnect should complete successfully.
       // Wait for async handler
       await (mockRouter.handlers[CircuitRelayService.hopProtocolId]!(
-        connectPacket,
-      ) as Future?);
+            NetworkPacket(
+              datagram: connectPacket.datagram,
+              srcPeerId: Base58().encode(srcPeerId.value),
+            ),
+          )
+          as Future?);
 
       // Wait a tick for async execution inside _handleConnect
       await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -229,7 +250,10 @@ void main() {
       )..srcPeerId = srcPeerId;
 
       mockRouter.handlers[CircuitRelayService.transportProtocolId]!(
-        transportPacket,
+        NetworkPacket(
+          datagram: transportPacket.datagram,
+          srcPeerId: Base58().encode(srcPeerId.value),
+        ),
       );
 
       // Expect forwarding to Dest
@@ -237,7 +261,7 @@ void main() {
       final forwarded = mockRouter.sentMessages.first;
       expect(
         forwarded.peerId,
-        destPeerId,
+        Base58().encode(destPeerId.value),
       ); // Actually checks equality of values or ref?
       // PeerId equality should work if values match. logic uses toString for map keys.
       // But sendMessage uses the stored PeerId object from context.
@@ -257,13 +281,16 @@ void main() {
       )..srcPeerId = destPeerId;
 
       mockRouter.handlers[CircuitRelayService.transportProtocolId]!(
-        replyPacket,
+        NetworkPacket(
+          datagram: replyPacket.datagram,
+          srcPeerId: Base58().encode(destPeerId.value),
+        ),
       );
 
       // Expect forwarding back to Source
       expect(mockRouter.sentMessages.length, 1);
       final forwardedReply = mockRouter.sentMessages.first;
-      expect(forwardedReply.peerId, srcPeerId);
+      expect(forwardedReply.peerId, Base58().encode(srcPeerId.value));
       expect(forwardedReply.message, replyPayload);
     });
   });
