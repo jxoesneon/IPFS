@@ -83,6 +83,7 @@ temp/
 logs/
 *.log
 *.log.*
+pana_report*.txt
 
 # Coverage
 coverage/

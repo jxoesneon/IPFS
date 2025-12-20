@@ -107,22 +107,25 @@ void main() {
 
     test('validates CID format', () async {
       await ipnsHandler.start();
-      // Unlock the mock keystore
-      await securityManager.unlockKeystore('test-password');
-      // Should throw ArgumentError for invalid CID
-      expect(
-        () => ipnsHandler.publish('Invalid CID!', keyName: 'self'),
-        throwsArgumentError,
-      );
+      try {
+        await ipnsHandler.publish('Invalid CID!', keyName: 'self');
+        fail('Should have thrown ArgumentError');
+      } catch (e) {
+        print('DEBUG: Caught expected error: $e');
+        expect(e, isA<ArgumentError>());
+      }
     });
 
     test('throws StateError when keystore is locked', () async {
       await ipnsHandler.start();
       // Keystore is locked by default
-      expect(
-        () => ipnsHandler.publish('somecid', keyName: 'self'),
-        throwsStateError,
-      );
+      try {
+        await ipnsHandler.publish('somecid', keyName: 'self');
+        fail('Should have thrown StateError');
+      } catch (e) {
+        print('DEBUG: Caught expected error: $e');
+        expect(e, isA<StateError>());
+      }
     });
   });
 }
