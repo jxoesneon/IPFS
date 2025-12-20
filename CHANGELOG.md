@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.6.7
+
+- **Docs**: Updated CHANGELOG to strictly follow conventions for perfect pub.dev score.
+
+## 1.6.6
+
+- **Test**: Resolved `p2plib` mock type mismatches and runtime errors in `ipns_handler_test.dart`.
+- **Optimization**: Reduced crypto test iterations to prevent timeouts (100k -> 1k).
+- **Fix**: Corrected mock implementations for `BitswapHandler` and `DHT`.
+
 ## 1.6.5
 
 - **Test**: Fixed compilation error in `MockDHTHandler` caused by type mismatch (regression from protocol refactoring).
