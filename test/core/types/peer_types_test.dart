@@ -41,7 +41,7 @@ void main() {
       );
 
       final peer = IPFSPeer(
-        id: peerId,
+        id: PeerId(peerId.value),
         addresses: [address],
         latency: 0,
         agentVersion: '',

@@ -15,7 +15,7 @@ import 'package:test/test.dart';
 class MockRouterL2 implements p2p.RouterL2 {
   final Map<p2p.PeerId, List<p2p.FullAddress>> resolvedAddresses = {};
   void Function(Uint8List datagram, Iterable<p2p.FullAddress> addresses)?
-  onSend;
+      onSend;
 
   @override
   Iterable<p2p.FullAddress> resolvePeerId(p2p.PeerId peerId) {
@@ -63,7 +63,7 @@ class MockP2plibRouter implements P2plibRouter {
   @override
   void registerProtocolHandler(
     String protocolId,
-    void Function(p2p.Packet) handler,
+    void Function(NetworkPacket) handler,
   ) {
     handlers[protocolId] = handler;
   }

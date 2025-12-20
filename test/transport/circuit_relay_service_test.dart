@@ -17,7 +17,7 @@ class MockP2plibRouter implements P2plibRouter {
   @override
   void registerProtocolHandler(
     String protocolId,
-    void Function(p2p.Packet) handler,
+    void Function(NetworkPacket) handler,
   ) {
     handlers[protocolId] = handler;
   }
@@ -207,9 +207,8 @@ void main() {
       // _handleConnect should complete successfully.
       // Wait for async handler
       await (mockRouter.handlers[CircuitRelayService.hopProtocolId]!(
-            connectPacket,
-          )
-          as Future?);
+        connectPacket,
+      ) as Future?);
 
       // Wait a tick for async execution inside _handleConnect
       await Future<void>.delayed(const Duration(milliseconds: 100));

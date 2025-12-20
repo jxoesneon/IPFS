@@ -39,7 +39,7 @@ class MockP2plibRouter extends P2plibRouter {
 
   // Override connectedPeers to avoid errors if called (return empty list of Routes)
   @override
-  List<p2p.Route> get connectedPeers => [];
+  List<String> get connectedPeers => [];
 }
 
 void main() {
