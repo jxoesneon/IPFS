@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:js_interop';
+import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:web/web.dart' as web;
 
 import 'peer_connection.dart';
@@ -14,7 +16,23 @@ import 'peer_connection.dart';
 class PeerConnectionWeb implements PeerConnection {
   /// Creates a web peer connection.
   PeerConnectionWeb() {
-    _localPeerId = 'web_peer_${DateTime.now().millisecondsSinceEpoch}';
+    // Generate a valid Multihash-like Peer ID (SHA-256 style)
+    // Multihash format: <hash-func-code><digest-length><digest-value>
+    // SHA-2-256: 0x12 (18), Length: 0x20 (32)
+    final random = Random.secure();
+    final digest = Uint8List(32);
+    for (var i = 0; i < 32; i++) {
+      digest[i] = random.nextInt(256);
+    }
+
+    final multihash = Uint8List(34);
+    multihash[0] = 0x12; // SHA-256
+    multihash[1] = 0x20; // 32 bytes
+    multihash.setRange(2, 34, digest);
+
+    multihash.setRange(2, 34, digest);
+
+    _localPeerId = Base58().encode(multihash);
   }
 
   final Map<String, web.WebSocket> _sockets = {};
