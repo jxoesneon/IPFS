@@ -2,10 +2,10 @@
 import 'dart:async';
 
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
     show V_PeerInfo;
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Mock implementation of IDHTHandler for testing.
 ///
@@ -78,7 +78,7 @@ class MockDHTHandler implements IDHTHandler {
   }
 
   @override
-  Future<List<V_PeerInfo>> findPeer(p2p.PeerId id) async {
+  Future<List<V_PeerInfo>> findPeer(PeerId id) async {
     _checkAndThrow('findPeer');
     _ensureRunning();
     await _simulateDelay();
@@ -97,7 +97,7 @@ class MockDHTHandler implements IDHTHandler {
   }
 
   @override
-  Future<void> handleProvideRequest(CID cid, p2p.PeerId provider) async {
+  Future<void> handleProvideRequest(CID cid, PeerId provider) async {
     _checkAndThrow('handleProvideRequest');
     await _simulateDelay();
 
@@ -147,7 +147,7 @@ class MockDHTHandler implements IDHTHandler {
   }
 
   /// Set up peer information
-  void setupPeerInfo(p2p.PeerId peerId, List<V_PeerInfo> info) {
+  void setupPeerInfo(PeerId peerId, List<V_PeerInfo> info) {
     _peers[peerId.toString()] = info;
   }
 
