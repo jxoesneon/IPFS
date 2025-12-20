@@ -1,5 +1,4 @@
 @TestOn('browser')
-
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';

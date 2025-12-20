@@ -227,8 +227,9 @@ void main() {
                 port: 4001,
               ),
             );
-            responsePacket.srcPeerId =
-                p2p.PeerId(value: Uint8List.fromList(List.filled(64, 2)));
+            responsePacket.srcPeerId = p2p.PeerId(
+              value: Uint8List.fromList(List.filled(64, 2)),
+            );
 
             // Inject response
             mockRouter.simulatePacket(responsePacket);

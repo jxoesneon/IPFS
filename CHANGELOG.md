@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.6.4
+
+- **CI**: Fixed code formatting to satisfy `dart format` checks in CI.
+
 ## 1.6.3
 
 - **CI**: Fixed `test` and `docs` workflows to use stable SDK, ensuring all checks pass.
