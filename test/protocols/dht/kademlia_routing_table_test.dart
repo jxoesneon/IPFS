@@ -8,7 +8,11 @@ import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/transport/router_events.dart'; // For NetworkPacket
+import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:p2plib/p2plib.dart'
+    as p2p; // Keep for RouterL2 mapping if needed, or remove if fully decoupled.
 import 'package:test/test.dart';
 
 // Helper for valid PeerId (64 bytes)
@@ -49,6 +53,9 @@ class MockP2plibRouter implements P2plibRouter {
   p2p.PeerId get peerId => _mockL2.selfId;
 
   @override
+  String get peerID => Base58().encode(validPeerIdBytes());
+
+  @override
   Map<p2p.PeerId, p2p.Route> get routes => _mockL2.routes;
 
   @override
@@ -66,7 +73,7 @@ class MockP2plibRouter implements P2plibRouter {
   @override
   void registerProtocolHandler(
     String protocolId,
-    void Function(p2p.Packet) handler,
+    void Function(NetworkPacket) handler,
   ) {}
 
   @override
@@ -79,7 +86,13 @@ class MockP2plibRouter implements P2plibRouter {
   }) async {}
 
   @override
-  List<String> resolvePeerId(p2p.PeerId peerId) => ['127.0.0.1:4001'];
+  List<String> resolvePeerId(String peerId) => ['127.0.0.1:4001'];
+
+  @override
+  bool isConnectedPeer(String peerId) => true;
+
+  @override
+  Future<void> sendMessage(String peerId, Uint8List message) async {}
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -172,7 +185,7 @@ void main() {
     });
 
     test('addPeer adds peer to correct bucket', () async {
-      final peerId = p2p.PeerId(value: validPeerIdBytes(fillValue: 2));
+      final peerId = PeerId(value: validPeerIdBytes(fillValue: 2));
 
       await routingTable.addPeer(peerId, peerId);
 
@@ -181,9 +194,9 @@ void main() {
     });
 
     test('addPeer handles multiple peers', () async {
-      final peer1 = p2p.PeerId(value: validPeerIdBytes(fillValue: 2));
-      final peer2 = p2p.PeerId(value: validPeerIdBytes(fillValue: 3));
-      final peer3 = p2p.PeerId(value: validPeerIdBytes(fillValue: 4));
+      final peer1 = PeerId(value: validPeerIdBytes(fillValue: 2));
+      final peer2 = PeerId(value: validPeerIdBytes(fillValue: 3));
+      final peer3 = PeerId(value: validPeerIdBytes(fillValue: 4));
 
       await routingTable.addPeer(peer1, peer1);
       await routingTable.addPeer(peer2, peer2);
@@ -203,7 +216,7 @@ void main() {
     // the XOR distance comparator can return 0 for different peers with the same
     // distance to root. This is a deeper bug requiring RedBlack Tree refactoring.
     test('addPeer handles duplicate peers gracefully', () async {
-      final peerId = p2p.PeerId(value: validPeerIdBytes(fillValue: 2));
+      final peerId = PeerId(value: validPeerIdBytes(fillValue: 2));
 
       await routingTable.addPeer(peerId, peerId);
       final countAfterFirst = routingTable.peerCount;
@@ -220,7 +233,7 @@ void main() {
 
     // Note: removePeer relies on RedBlackTree deletion which needs entries maintenance
     test('removePeer can be called without error', () async {
-      final peerId = p2p.PeerId(value: validPeerIdBytes(fillValue: 2));
+      final peerId = PeerId(value: validPeerIdBytes(fillValue: 2));
 
       await routingTable.addPeer(peerId, peerId);
 
@@ -229,8 +242,8 @@ void main() {
     });
 
     test('clear removes all peers', () async {
-      final peer1 = p2p.PeerId(value: validPeerIdBytes(fillValue: 2));
-      final peer2 = p2p.PeerId(value: validPeerIdBytes(fillValue: 3));
+      final peer1 = PeerId(value: validPeerIdBytes(fillValue: 2));
+      final peer2 = PeerId(value: validPeerIdBytes(fillValue: 3));
 
       await routingTable.addPeer(peer1, peer1);
       await routingTable.addPeer(peer2, peer2);
@@ -246,8 +259,8 @@ void main() {
       final peer2Bytes = Uint8List.fromList(List.filled(64, 0));
       peer2Bytes[0] = 0x01; // Set last bit of first byte (small difference)
 
-      final peer1 = p2p.PeerId(value: peer1Bytes);
-      final peer2 = p2p.PeerId(value: peer2Bytes);
+      final peer1 = PeerId(value: peer1Bytes);
+      final peer2 = PeerId(value: peer2Bytes);
 
       final dist1 = routingTable.distance(peer1, peer2);
       final dist2 = routingTable.distance(peer2, peer1);
@@ -259,8 +272,8 @@ void main() {
     });
 
     test('getAssociatedPeer returns correct associated peer', () async {
-      final peerId = p2p.PeerId(value: validPeerIdBytes(fillValue: 2));
-      final associatedPeerId = p2p.PeerId(
+      final peerId = PeerId(value: validPeerIdBytes(fillValue: 2));
+      final associatedPeerId = PeerId(
         value: validPeerIdBytes(fillValue: 10),
       );
 
@@ -273,7 +286,7 @@ void main() {
     });
 
     test('containsPeer returns false for non-existent peer', () {
-      final peerId = p2p.PeerId(value: validPeerIdBytes(fillValue: 99));
+      final peerId = PeerId(value: validPeerIdBytes(fillValue: 99));
 
       expect(routingTable.containsPeer(peerId), isFalse);
     });
@@ -281,11 +294,11 @@ void main() {
     test('peerCount is accurate after additions', () async {
       expect(routingTable.peerCount, equals(0));
 
-      final peer1 = p2p.PeerId(value: validPeerIdBytes(fillValue: 2));
+      final peer1 = PeerId(value: validPeerIdBytes(fillValue: 2));
       await routingTable.addPeer(peer1, peer1);
       expect(routingTable.peerCount, equals(1));
 
-      final peer2 = p2p.PeerId(value: validPeerIdBytes(fillValue: 3));
+      final peer2 = PeerId(value: validPeerIdBytes(fillValue: 3));
       await routingTable.addPeer(peer2, peer2);
       expect(routingTable.peerCount, equals(2));
 
@@ -305,7 +318,7 @@ void main() {
       for (int i = 0; i < 25; i++) {
         final bytes = Uint8List.fromList(List.filled(64, 2));
         bytes[63] = i; // Vary only last byte
-        final peerId = p2p.PeerId(value: bytes);
+        final peerId = PeerId(value: bytes);
         await routingTable.addPeer(peerId, peerId);
       }
 

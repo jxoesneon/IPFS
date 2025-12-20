@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart'
     as core_block; // generic
@@ -16,8 +17,8 @@ import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart'
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_protocol.dart';
-// unused import removed
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_events.dart'; // For NetworkPacket
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
 
@@ -28,7 +29,7 @@ class MockConfig extends IPFSConfig {
 }
 
 class MockRouter implements P2plibRouter {
-  final Map<String, void Function(p2p.Packet)> handlers = {};
+  final Map<String, void Function(NetworkPacket)> handlers = {};
   final List<List<int>> sentMessages = [];
 
   @override
@@ -37,7 +38,7 @@ class MockRouter implements P2plibRouter {
   @override
   void registerProtocolHandler(
     String protocolId,
-    void Function(p2p.Packet) handler,
+    void Function(NetworkPacket) handler,
   ) {
     handlers[protocolId] = handler;
   }
@@ -176,14 +177,10 @@ void main() {
           ..cancel = true,
       );
 
-      final packet = p2p.Packet(
+      final packet = NetworkPacket(
         datagram: requestMsg.writeToBuffer(),
-        header: const p2p.PacketHeader(id: 1, issuedAt: 0),
-        srcFullAddress: p2p.FullAddress(
-          address: InternetAddress.anyIPv4,
-          port: 0,
-        ),
-      )..srcPeerId = p2p.PeerId(value: Uint8List.fromList(List.filled(64, 1)));
+        srcPeerId: Base58().encode(Uint8List.fromList(List.filled(64, 1))),
+      );
 
       // Manually trigger handler
       mockRouter.handlers[GraphsyncProtocol.protocolID]!(packet);

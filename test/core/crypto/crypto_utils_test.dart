@@ -11,11 +11,14 @@ void main() {
   group('CryptoUtils', () {
     group('deriveKey', () {
       test('derives consistent key from password and salt', () {
+        const testIterations = 1000;
         final password = 'test-password-123';
         final salt = CryptoUtils.randomBytes(16);
 
-        final key1 = CryptoUtils.deriveKey(password, salt);
-        final key2 = CryptoUtils.deriveKey(password, salt);
+        final key1 =
+            CryptoUtils.deriveKey(password, salt, iterations: testIterations);
+        final key2 =
+            CryptoUtils.deriveKey(password, salt, iterations: testIterations);
 
         expect(key1.length, equals(32));
         expect(key1, equals(key2));
@@ -26,8 +29,8 @@ void main() {
         final salt1 = CryptoUtils.randomBytes(16);
         final salt2 = CryptoUtils.randomBytes(16);
 
-        final key1 = CryptoUtils.deriveKey(password, salt1);
-        final key2 = CryptoUtils.deriveKey(password, salt2);
+        final key1 = CryptoUtils.deriveKey(password, salt1, iterations: 1000);
+        final key2 = CryptoUtils.deriveKey(password, salt2, iterations: 1000);
 
         expect(key1, isNot(equals(key2)));
       });
@@ -35,8 +38,8 @@ void main() {
       test('derives different keys with different passwords', () {
         final salt = CryptoUtils.randomBytes(16);
 
-        final key1 = CryptoUtils.deriveKey('password1', salt);
-        final key2 = CryptoUtils.deriveKey('password2', salt);
+        final key1 = CryptoUtils.deriveKey('password1', salt, iterations: 1000);
+        final key2 = CryptoUtils.deriveKey('password2', salt, iterations: 1000);
 
         expect(key1, isNot(equals(key2)));
       });
@@ -45,7 +48,8 @@ void main() {
         final password = 'test-password';
         final salt = CryptoUtils.randomBytes(16);
 
-        final key64 = CryptoUtils.deriveKey(password, salt, keyLength: 64);
+        final key64 = CryptoUtils.deriveKey(password, salt,
+            keyLength: 64, iterations: 1000);
 
         expect(key64.length, equals(64));
       });

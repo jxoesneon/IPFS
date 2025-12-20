@@ -12,19 +12,19 @@ import 'package:dart_ipfs/src/core/crypto/encrypted_keystore.dart' as _i3;
 import 'package:dart_ipfs/src/core/data_structures/node_stats.dart' as _i9;
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart' as _i19;
 import 'package:dart_ipfs/src/core/security/security_manager.dart' as _i10;
+import 'package:dart_ipfs/src/core/storage/datastore.dart' as _i7;
+import 'package:dart_ipfs/src/core/types/peer_id.dart' as _i18;
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
     as _i15;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart' as _i5;
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart' as _i14;
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart' as _i8;
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart' as _i20;
-import 'package:dart_ipfs/src/core/storage/datastore.dart' as _i7;
 import 'package:dart_ipfs/src/transport/p2plib_router.dart' as _i6;
 import 'package:dart_ipfs/src/utils/keystore.dart' as _i2;
 import 'package:dart_ipfs/src/utils/private_key.dart' as _i13;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i17;
-import 'package:p2plib/p2plib.dart' as _i18;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_events.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
@@ -13,7 +14,7 @@ import 'package:test/test.dart';
 class MockRouterL2 implements p2p.RouterL2 {
   final Map<p2p.PeerId, List<p2p.FullAddress>> resolvedAddresses = {};
   void Function(Uint8List datagram, Iterable<p2p.FullAddress> addresses)?
-  onSend;
+      onSend;
 
   @override
   Iterable<p2p.FullAddress> resolvePeerId(p2p.PeerId peerId) {
@@ -38,10 +39,10 @@ class MockRouterL2 implements p2p.RouterL2 {
 class MockP2plibRouter implements P2plibRouter {
   bool started = false;
   final MockRouterL2 _routerL0 = MockRouterL2();
-  final Map<String, void Function(p2p.Packet)> handlers = {};
+  final Map<String, void Function(NetworkPacket)> handlers = {};
 
   // Track last sent message
-  p2p.PeerId? lastSentPeerId;
+  String? lastSentPeerId;
   Uint8List? lastSentMessage;
 
   @override
@@ -52,7 +53,7 @@ class MockP2plibRouter implements P2plibRouter {
     started = true;
   }
 
-  void simulateIncomingMessage(String protocol, p2p.Packet packet) {
+  void simulateIncomingMessage(String protocol, NetworkPacket packet) {
     if (handlers.containsKey(protocol)) {
       handlers[protocol]!(packet);
     }
@@ -66,7 +67,7 @@ class MockP2plibRouter implements P2plibRouter {
   @override
   void registerProtocolHandler(
     String protocolId,
-    void Function(p2p.Packet packet) handler,
+    void Function(NetworkPacket packet) handler,
   ) {
     handlers[protocolId] = handler;
   }
@@ -75,12 +76,12 @@ class MockP2plibRouter implements P2plibRouter {
   void registerProtocol(String protocolId) {}
 
   @override
-  bool isConnectedPeer(p2p.PeerId peerId) {
+  bool isConnectedPeer(String peerId) {
     return true; // Simulate always connected for valid peers
   }
 
   @override
-  Future<void> sendMessage(p2p.PeerId peerId, Uint8List message) async {
+  Future<void> sendMessage(String peerId, Uint8List message) async {
     lastSentPeerId = peerId;
     lastSentMessage = message;
   }
@@ -138,15 +139,10 @@ void main() {
         'content': '', // dummy
       };
 
-      final packet = p2p.Packet(
+      final packet = NetworkPacket(
         datagram: Uint8List.fromList(utf8.encode(jsonEncode(ihaveMsg))),
-        header: const p2p.PacketHeader(id: 1, issuedAt: 0),
-        srcFullAddress: p2p.FullAddress(
-          address: InternetAddress.loopbackIPv4,
-          port: 0,
-        ),
+        srcPeerId: otherPeerId,
       );
-      packet.srcPeerId = p2p.PeerId(value: Base58().base58Decode(otherPeerId));
 
       mockRouter.simulateIncomingMessage('pubsub', packet);
 
@@ -170,15 +166,10 @@ void main() {
         // no signature -> fallback ID
       };
 
-      final p1 = p2p.Packet(
+      final p1 = NetworkPacket(
         datagram: Uint8List.fromList(utf8.encode(jsonEncode(publishMsg))),
-        header: const p2p.PacketHeader(id: 1, issuedAt: 0),
-        srcFullAddress: p2p.FullAddress(
-          address: InternetAddress.loopbackIPv4,
-          port: 0,
-        ),
+        srcPeerId: otherPeerId,
       );
-      p1.srcPeerId = p2p.PeerId(value: Base58().base58Decode(otherPeerId));
 
       mockRouter.simulateIncomingMessage('pubsub', p1);
 
@@ -194,15 +185,10 @@ void main() {
         'content': '',
       };
 
-      final p2 = p2p.Packet(
+      final p2 = NetworkPacket(
         datagram: Uint8List.fromList(utf8.encode(jsonEncode(iwantMsg))),
-        header: const p2p.PacketHeader(id: 1, issuedAt: 0),
-        srcFullAddress: p2p.FullAddress(
-          address: InternetAddress.loopbackIPv4,
-          port: 0,
-        ),
+        srcPeerId: otherPeerId,
       );
-      p2.srcPeerId = p2p.PeerId(value: Base58().base58Decode(otherPeerId));
 
       mockRouter.simulateIncomingMessage('pubsub', p2);
 

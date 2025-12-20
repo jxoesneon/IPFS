@@ -40,11 +40,10 @@ void main() {
       final testCid = await CID.fromContent(data); // CIDv1 (default)
       final testCidStr = testCid.encode();
 
-      // Expected Routing Key = SHA256(Multihash) padded to 64 bytes
+      // Expected Routing Key = SHA256(Multihash) (32 bytes)
       final mh = testCid.multihash.toBytes();
       final hashBytes = sha256.convert(mh).bytes;
-      final expectedHash = Uint8List(64);
-      expectedHash.setAll(0, hashBytes);
+      final expectedHash = Uint8List.fromList(hashBytes);
 
       final routingKey = client.getRoutingKey(testCidStr);
 
@@ -53,10 +52,9 @@ void main() {
 
     test('getRoutingKey handles raw string fallback', () {
       final rawKey = 'some_raw_key';
-      // Fallback: SHA256(utf8.encode(key)) padded to 64 bytes
+      // Fallback: SHA256(utf8.encode(key)) (32 bytes)
       final hashBytes = sha256.convert(utf8.encode(rawKey)).bytes;
-      final expectedHash = Uint8List(64);
-      expectedHash.setAll(0, hashBytes);
+      final expectedHash = Uint8List.fromList(hashBytes);
 
       final routingKey = client.getRoutingKey(rawKey);
 

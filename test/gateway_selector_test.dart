@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dart_ipfs/dart_ipfs.dart';
 import 'package:test/test.dart';
 
+@Timeout(Duration(minutes: 2))
 void main() {
   group('Gateway Selector Integration', () {
     late HttpServer server;

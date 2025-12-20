@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
@@ -12,6 +13,7 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as msg;
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_events.dart'; // For NetworkPacket
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
 
@@ -76,7 +78,7 @@ class MockRouterL2 implements p2p.RouterL2 {
 
 class MockP2plibRouter implements P2plibRouter {
   p2p.RouterL2 _mockL2 = MockRouterL2();
-  void Function(p2p.Packet)? messageHandler;
+  void Function(NetworkPacket)? messageHandler;
 
   @override
   p2p.RouterL2 get routerL0 => _mockL2;
@@ -104,12 +106,18 @@ class MockP2plibRouter implements P2plibRouter {
   @override
   void registerProtocolHandler(
     String protocolId,
-    void Function(p2p.Packet) handler,
+    void Function(NetworkPacket) handler,
   ) {
     messageHandler = handler;
   }
 
-  Future<void> simulatePacket(p2p.Packet packet) async {
+  @override
+  List<String> get connectedPeers => [Base58().encode(validPeerIdBytes)];
+
+  @override
+  Future<void> sendMessage(String peerId, Uint8List data) async {}
+
+  Future<void> simulatePacket(NetworkPacket packet) async {
     if (messageHandler != null) {
       messageHandler!(packet);
     }
@@ -150,9 +158,8 @@ void main() {
       await handler.start();
 
       final targetData = Uint8List.fromList([1, 2, 3, 4]);
-      final targetCid = CID
-          .computeForDataSync(targetData, codec: 'dag-pb')
-          .encode();
+      final targetCid =
+          CID.computeForDataSync(targetData, codec: 'dag-pb').encode();
 
       // Simulate response slightly later
       scheduleMicrotask(() async {
@@ -243,15 +250,10 @@ void main() {
       final dontHaveMsg = msg.Message();
       dontHaveMsg.addBlockPresence(cid, msg.BlockPresenceType.dontHave);
       // Need fromPeer to log correctly
-      final packet = p2p.Packet(
+      final packet = NetworkPacket(
         datagram: dontHaveMsg.toBytes(),
-        header: const p2p.PacketHeader(id: 111, issuedAt: 0),
-        srcFullAddress: p2p.FullAddress(
-          address: InternetAddress.loopbackIPv4,
-          port: 111,
-        ),
+        srcPeerId: Base58().encode(validPeerIdBytes),
       );
-      packet.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
 
       // This shouldn't crash
       await mockRouter.simulatePacket(packet);
@@ -259,15 +261,10 @@ void main() {
       // Simulate HAVE message
       final haveMsg = msg.Message();
       haveMsg.addBlockPresence(cid, msg.BlockPresenceType.have);
-      final packet2 = p2p.Packet(
+      final packet2 = NetworkPacket(
         datagram: haveMsg.toBytes(),
-        header: const p2p.PacketHeader(id: 112, issuedAt: 0),
-        srcFullAddress: p2p.FullAddress(
-          address: InternetAddress.loopbackIPv4,
-          port: 111,
-        ),
+        srcPeerId: Base58().encode(validPeerIdBytes),
       );
-      packet2.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
 
       await mockRouter.simulatePacket(packet2);
 
@@ -303,15 +300,10 @@ Future<void> _simulateBlockArrival(
 
   responseMsg.addBlock(block);
 
-  final packet = p2p.Packet(
+  final packet = NetworkPacket(
     datagram: responseMsg.toBytes(),
-    header: const p2p.PacketHeader(id: 1234, issuedAt: 0),
-    srcFullAddress: p2p.FullAddress(
-      address: InternetAddress.loopbackIPv4,
-      port: 1234,
-    ),
+    srcPeerId: Base58().encode(validPeerIdBytes),
   );
-  packet.srcPeerId = p2p.PeerId(value: validPeerIdBytes);
 
   try {
     await router.simulatePacket(packet);

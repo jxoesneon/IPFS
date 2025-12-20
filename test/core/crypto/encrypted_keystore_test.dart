@@ -12,19 +12,20 @@ import 'package:test/test.dart';
 void main() {
   group('EncryptedKeystore', () {
     const testPassword = 'secure-test-password-123';
+    const testIterations = 1000;
 
     group('unlock/lock', () {
       test('unlocks keystore with password', () async {
         final keystore = EncryptedKeystore();
 
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
 
         expect(keystore.isUnlocked, isTrue);
       });
 
       test('locks keystore and clears master key', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
 
         keystore.lock();
 
@@ -35,7 +36,8 @@ void main() {
         final salt = CryptoUtils.randomBytes(16);
         final keystore = EncryptedKeystore();
 
-        await keystore.unlock(testPassword, salt: salt);
+        await keystore.unlock(testPassword,
+            salt: salt, iterations: testIterations);
 
         expect(keystore.isUnlocked, isTrue);
       });
@@ -44,7 +46,7 @@ void main() {
     group('generateKey', () {
       test('generates and stores encrypted key', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
 
         final publicKey = await keystore.generateKey('test-key');
 
@@ -63,7 +65,7 @@ void main() {
 
       test('throws if key name already exists', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
         await keystore.generateKey('duplicate-key');
 
         expect(
@@ -76,7 +78,7 @@ void main() {
     group('getKey', () {
       test('retrieves decrypted key pair', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
         await keystore.generateKey('my-key');
 
         final keyPair = await keystore.getKey('my-key');
@@ -86,7 +88,7 @@ void main() {
 
       test('throws if key not found', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
 
         expect(
           () => keystore.getKey('nonexistent'),
@@ -96,7 +98,7 @@ void main() {
 
       test('throws if keystore is locked', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
         await keystore.generateKey('test-key');
         keystore.lock();
 
@@ -107,7 +109,7 @@ void main() {
     group('importSeed', () {
       test('imports seed and stores encrypted', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
         final seed = CryptoUtils.randomBytes(32);
 
         final publicKey = await keystore.importSeed('imported', seed);
@@ -118,7 +120,7 @@ void main() {
 
       test('rejects wrong length seed', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
         final wrongSeed = CryptoUtils.randomBytes(16);
 
         expect(
@@ -131,13 +133,14 @@ void main() {
     group('serialize/deserialize', () {
       test('serializes and deserializes keystore', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
         await keystore.generateKey('key1', label: 'Test Key');
         await keystore.generateKey('key2');
 
         final json = keystore.serialize();
         final restored = EncryptedKeystore.deserialize(json);
-        await restored.unlock(testPassword, salt: restored._salt);
+        await restored.unlock(testPassword,
+            salt: restored._salt, iterations: testIterations);
 
         expect(restored.hasKey('key1'), isTrue);
         expect(restored.hasKey('key2'), isTrue);
@@ -145,13 +148,14 @@ void main() {
 
       test('loadAndUnlock restores functional keystore', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
         final originalPk = await keystore.generateKey('test');
         final json = keystore.serialize();
 
         final restored = await EncryptedKeystore.loadAndUnlock(
           json,
           testPassword,
+          iterations: testIterations,
         );
         final restoredPk = restored.getPublicKey('test');
 
@@ -162,7 +166,7 @@ void main() {
     group('keyNames and hasKey', () {
       test('lists all key names', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
         await keystore.generateKey('alpha');
         await keystore.generateKey('beta');
         await keystore.generateKey('gamma');
@@ -173,7 +177,7 @@ void main() {
 
       test('removeKey removes a key', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
         await keystore.generateKey('to-remove');
 
         expect(keystore.hasKey('to-remove'), isTrue);
@@ -185,7 +189,7 @@ void main() {
     group('getPublicKey', () {
       test('returns public key without requiring unlock', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
         final originalPk = await keystore.generateKey('test');
         keystore.lock();
 
@@ -196,7 +200,7 @@ void main() {
 
       test('returns null for non-existent key', () async {
         final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword);
+        await keystore.unlock(testPassword, iterations: testIterations);
 
         expect(keystore.getPublicKey('nonexistent'), isNull);
       });

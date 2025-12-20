@@ -102,9 +102,17 @@ class EncryptedKeystore {
   /// [salt] - Optional salt (generated if not provided)
   ///
   /// Derives a master key using PBKDF2 and stores it for encryption/decryption.
-  Future<void> unlock(String password, {Uint8List? salt}) async {
+  Future<void> unlock(
+    String password, {
+    Uint8List? salt,
+    int iterations = CryptoUtils.defaultIterations,
+  }) async {
     _salt = salt ?? CryptoUtils.generateSalt();
-    _masterKey = CryptoUtils.deriveKey(password, _salt!);
+    _masterKey = CryptoUtils.deriveKey(
+      password,
+      _salt!,
+      iterations: iterations,
+    );
   }
 
   /// Locks the keystore and zeros the master key from memory.
@@ -262,10 +270,15 @@ class EncryptedKeystore {
   /// Loads from JSON and unlocks with password.
   static Future<EncryptedKeystore> loadAndUnlock(
     String jsonStr,
-    String password,
-  ) async {
+    String password, {
+    int iterations = CryptoUtils.defaultIterations,
+  }) async {
     final keystore = deserialize(jsonStr);
-    await keystore.unlock(password, salt: keystore._salt);
+    await keystore.unlock(
+      password,
+      salt: keystore._salt,
+      iterations: iterations,
+    );
     return keystore;
   }
 

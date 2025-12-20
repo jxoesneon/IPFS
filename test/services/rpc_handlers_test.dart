@@ -11,7 +11,7 @@ import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/services/rpc/rpc_handlers.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
 
@@ -60,12 +60,12 @@ class MockBlockStore implements BlockStore {
 // Mock DHTClient
 class MockDHTClient implements DHTClient {
   @override
-  Future<List<p2p.PeerId>> findProviders(String cid) async {
+  Future<List<PeerId>> findProviders(String cid) async {
     return [];
   }
 
   @override
-  Future<p2p.PeerId?> findPeer(p2p.PeerId id) async {
+  Future<PeerId?> findPeer(PeerId id) async {
     // If searching for existing peer
     return id;
   }
@@ -250,8 +250,7 @@ void main() {
     test('handleAdd accepts multipart upload', () async {
       final boundary = 'boundary';
       final fileContent = 'Hello IPFS';
-      final body =
-          '--$boundary\r\n'
+      final body = '--$boundary\r\n'
           'Content-Disposition: form-data; name="file"; filename="test.txt"\r\n'
           'Content-Type: text/plain\r\n'
           '\r\n'

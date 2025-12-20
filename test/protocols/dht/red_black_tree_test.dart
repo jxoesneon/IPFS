@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_tree_node.dart';
 import 'package:dart_ipfs/src/protocols/dht/red_black_tree.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart' as dfs;
 import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
 
@@ -113,8 +114,12 @@ void main() {
     p2p.PeerId makePeerId(int fillValue) =>
         p2p.PeerId(value: Uint8List.fromList(List.filled(64, fillValue)));
 
-    KademliaTreeNode makeNode(p2p.PeerId peerId) =>
-        KademliaTreeNode(peerId, 0, peerId, lastSeen: 0);
+    KademliaTreeNode makeNode(p2p.PeerId peerId) => KademliaTreeNode(
+          dfs.PeerId(value: peerId.value),
+          0,
+          dfs.PeerId(value: peerId.value),
+          lastSeen: 0,
+        );
 
     test('handles PeerId keys correctly', () {
       final peer1 = makePeerId(1);
@@ -140,9 +145,9 @@ void main() {
 
       // Create new node with same peerId
       final node1Updated = KademliaTreeNode(
-        peer1,
+        dfs.PeerId(value: peer1.value),
         100, // different distance
-        peer1,
+        dfs.PeerId(value: peer1.value),
         lastSeen: 999,
       );
 
