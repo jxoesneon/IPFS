@@ -149,6 +149,14 @@ class BitswapHandler {
 
   /// Handles incoming wantlist entries according to Bitswap spec
   Future<void> _handleWantlist(Wantlist wantlist, String fromPeer) async {
+    // SEC-ZDAY-001: Limit entries to prevent DoS (CPU exhaustion on sort/iterate)
+    if (wantlist.entries.length > 5000) {
+      _logger.warning(
+        'Rejected excessive wantlist from $fromPeer (${wantlist.entries.length} entries)',
+      );
+      return;
+    }
+
     // Sort entries by priority before processing
     final sortedEntries = wantlist.entries.entries.toList()
       ..sort(

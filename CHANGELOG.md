@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.7.1
+
+- **Security Hardening**:
+  - [MEDIUM] Fixed Bitswap Wantlist DoS vulnerability by limiting want entries to 5000 per message.
+  - [LOW] Fixed potential PubSub listener crash on invalid UTF-8 messages (#SEC-ZDAY-002).
+  - [MEDIUM] Sanitized sensitive URLs in log outputs (DelegateDHTHandler).
+  - Validated supply chain security (Dependencies clean).
+
 ## [1.7.0] - 2025-12-20
 
 ### Web Platform Parity 🌐🚀

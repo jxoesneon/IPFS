@@ -137,15 +137,23 @@ class PubSubHandler implements IPubSub {
 
   /// Handles a received Pubsub message event.
   void _handlePubsubMessage(PubsubMessageReceivedEvent event) {
-    final message = utf8.decode(event.messageContent);
-    // print('Received message on topic ${event.topic}: $message');
+    try {
+      final message = utf8.decode(event.messageContent);
+      // print('Received message on topic ${event.topic}: $message');
 
-    // Further processing of the message can be done here
-    // For example, dispatching it to specific handlers based on the topic
+      // Further processing of the message can be done here
+      // For example, dispatching it to specific handlers based on the topic
 
-    _messageController.add(
-      PubSubMessage(topic: event.topic, sender: event.peerId, content: message),
-    );
+      _messageController.add(
+        PubSubMessage(
+          topic: event.topic,
+          sender: event.peerId,
+          content: message,
+        ),
+      );
+    } catch (e) {
+      // SEC-ZDAY-002: malformed UTF8 should not crash the listener
+    }
   }
 
   /// Returns the current status of the PubSub handler.

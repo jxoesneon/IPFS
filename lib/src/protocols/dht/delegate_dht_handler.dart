@@ -26,7 +26,11 @@ class DelegateDHTHandler implements IDHTHandler {
 
   @override
   Future<void> start() async {
-    _logger.info('Starting DelegateDHTHandler with endpoint: $delegateUrl');
+    // Sanitize URL for logging (redact potential API keys/secrets)
+    final sanitizedUrl = Uri.parse(
+      delegateUrl,
+    ).replace(userInfo: 'REDACTED').toString();
+    _logger.info('Starting DelegateDHTHandler with endpoint: $sanitizedUrl');
   }
 
   @override
