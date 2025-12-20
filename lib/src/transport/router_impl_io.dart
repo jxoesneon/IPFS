@@ -187,6 +187,13 @@ class P2plibRouter {
 
       _isInitialized = true;
       _logger.debug('P2plibRouter initialization complete');
+
+      // Pipe router messages to controller
+      _router.messageStream.listen((message) {
+        if (!_messageController.isClosed) {
+          _messageController.add(message);
+        }
+      });
     } catch (e, stackTrace) {
       _logger.error('Error initializing P2plibRouter', e, stackTrace);
       rethrow;
@@ -220,21 +227,23 @@ class P2plibRouter {
     for (final peer in _config.network.bootstrapPeers) {
       try {
         _logger.verbose('Attempting to connect to bootstrap peer: $peer');
-        final peerIdBytes = Base58().base58Decode(peer);
-        final peerId = p2p.PeerId(value: peerIdBytes);
 
-        _router.addPeerAddress(
-          peerId: peerId,
-          address: p2p.FullAddress(
-            address: InternetAddress.anyIPv4,
-            port: p2p.TransportUdp.defaultPort,
-          ),
-          properties: p2p.AddressProperties(),
-        );
-        _connectedPeers.add(peerId);
-        _connectionEventsController.add(
-          ConnectionEvent(type: ConnectionEventType.connected, peerId: peer),
-        );
+        // Check if it's a multiaddr or just a PeerID
+        if (peer.startsWith('/')) {
+          await connect(peer);
+        } else {
+          // Assume just PeerID (Base58), cannot connect without address unless doing lookup?
+          // But bootstrapping needs address.
+          // Existing code assumed Base58 decode which implies it expected PeerID but got Multiaddr.
+          // If we have connect(), use it.
+          // connect() handles multiaddr parsing.
+          // But we need to add to _connectedPeers? connect() does that.
+          // So just calling connect(peer) is enough?
+          // _connectToBootstrapPeers uses addPeerAddress directly.
+          // Let's use connect(peer) if possible.
+          // But connect() throws if fails? We are in try/catch.
+          await connect(peer);
+        }
       } catch (e, stackTrace) {
         _logger.error('Error adding bootstrap peer: $peer', e, stackTrace);
       }
@@ -370,31 +379,18 @@ class P2plibRouter {
     void Function(NetworkPacket) handler,
   ) {
     if (!_registeredProtocols.contains(protocolId)) {
-      // Auto-register protocol if not already done?
-      // Or fail? The current implementation throws.
-      // Better to register it implicitly or check.
       registerProtocol(protocolId);
     }
 
     _protocolHandlers[protocolId] = handler;
 
-    // Use the broadcast controller instead
-    if (!_messageController.hasListener) {
-      _router.messageStream.listen((message) {
-        _messageController.add(message);
-      });
-    }
-
+    // _messageController is already fed by initialize()
     _messageController.stream.listen((message) {
       final packet = NetworkPacket(
         srcPeerId: Base58().encode(message.srcPeerId.value),
         datagram: message.payload ?? Uint8List(0),
       );
 
-      // Call the appropriate protocol handler
-      // Note: Logic here is simplified; messageController emits all messages.
-      // We rely on the receiver to filter or we should filter by protocol here?
-      // For now preserving renaming logic.
       if (_protocolHandlers.containsKey(protocolId)) {
         _protocolHandlers[protocolId]!(packet);
       }

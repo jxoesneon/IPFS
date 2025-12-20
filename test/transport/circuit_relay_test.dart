@@ -190,34 +190,28 @@ void main() {
       expect(reservation.isExpired, isFalse);
     });
 
-    // test('reserve handles failure status', () async {
-    //   await client.start();
+    test('reserve handles failure status', () async {
+      await client.start();
 
-    //   mockRouter._routerL0.onSend = (datagram, addresses) {
-    //     final res = pb.HopMessage()
-    //       ..type = pb.HopMessage_Type.STATUS
-    //       ..status = pb.Status.FAILED;
+      mockRouter._routerL0.onSend = (datagram, addresses) {
+        final res = pb.HopMessage()
+          ..type = pb.HopMessage_Type.STATUS
+          ..status = pb.Status.FAILED;
 
-    //     final handler = mockRouter.handlers['/libp2p/circuit/relay/0.2.0/hop']!;
-    //     final packet = p2p.Packet(
-    //       datagram: res.writeToBuffer(),
-    //       header: const p2p.PacketHeader(id: 1, issuedAt: 0),
-    //       srcFullAddress: addresses.first,
-    //     );
-    //     packet.srcPeerId = peerIdObj;
-    //     handler(
-    //         NetworkPacket(datagram: packet.datagram, srcPeerId: validPeerId));
-    //   };
+        final handler = mockRouter.handlers['/libp2p/circuit/relay/0.2.0/hop']!;
+        final packet = p2p.Packet(
+          datagram: res.writeToBuffer(),
+          header: const p2p.PacketHeader(id: 1, issuedAt: 0),
+          srcFullAddress: addresses.first,
+        );
+        packet.srcPeerId = peerIdObj;
+        handler(
+          NetworkPacket(datagram: packet.datagram, srcPeerId: validPeerId),
+        );
+      };
 
-    //   Reservation? reservation;
-    //   try {
-    //     reservation = await client.reserve(validPeerId);
-    //   } catch (e) {
-    //     // If it throws, check if it matches expected error?
-    //     // But client.reserve stops exception.
-    //     print('Test Caught Exception: $e');
-    //   }
-    //   expect(reservation, isNull);
-    // });
+      final reservation = await client.reserve(validPeerId);
+      expect(reservation, isNull);
+    });
   });
 }

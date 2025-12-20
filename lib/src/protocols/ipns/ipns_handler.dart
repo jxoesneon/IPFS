@@ -5,10 +5,10 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
-import 'package:dart_ipfs/src/core/security/security_manager.dart';
+import 'package:dart_ipfs/src/core/security/security_manager_interface.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_interface.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart';
@@ -37,9 +37,9 @@ class IPNSHandler {
     _logger.debug('IPNSHandler instance created');
   }
   final IPFSConfig _config;
-  final SecurityManager _securityManager;
+  final ISecurityManager _securityManager;
   final IDHTHandler _dhtHandler;
-  final PubSubHandler? _pubSubHandler; // Optional: May be null if offline
+  final IPubSub? _pubSubHandler; // Optional: May be null if offline
   late final Logger _logger;
   bool _isRunning = false;
 

@@ -11,39 +11,11 @@ import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
 
+import 'security_manager_interface.dart';
+
 /// Manages security aspects of the IPFS node.
-///
-/// SecurityManager handles TLS configuration, key management,
-/// rate limiting, and authentication tracking. It integrates with
-/// [MetricsCollector] to record security-related events.
-///
-/// **Security (SEC-001):** Uses [EncryptedKeystore] for secure key storage
-/// with AES-256-GCM encryption and PBKDF2 key derivation.
-///
-/// **Features:**
-/// - Encrypted key storage (AES-256-GCM)
-/// - TLS certificate management
-/// - Automatic key rotation
-/// - Request rate limiting per client
-/// - Failed authentication tracking and lockout
-///
-/// Example:
-/// ```dart
-/// final manager = SecurityManager(securityConfig, metricsCollector);
-/// await manager.start();
-///
-/// // Unlock the secure keystore
-/// await manager.unlockKeystore('my-password');
-///
-/// // Get an Ed25519 key for signing
-/// final keyPair = await manager.getSecureKey('ipns-key');
-/// ```
-///
-/// See also:
-/// - [SecurityConfig] for configuration options
-/// - [EncryptedKeystore] for secure key storage
-/// - [Keystore] for legacy key pair management
-class SecurityManager {
+/// ...
+class SecurityManager implements ISecurityManager {
   /// Creates a new security manager with the given [_config].
   SecurityManager(this._config, MetricsCollector metricsCollector) {
     _logger = Logger('SecurityManager');
@@ -74,11 +46,13 @@ class SecurityManager {
   EncryptedKeystore get secureKeystore => _encryptedKeystore;
 
   /// Whether the encrypted keystore is currently unlocked.
+  @override
   bool get isKeystoreUnlocked => _encryptedKeystore.isUnlocked;
 
   /// Unlocks the encrypted keystore with a password.
   ///
   /// Must be called before accessing secure keys.
+  @override
   Future<void> unlockKeystore(String password, {Uint8List? salt}) async {
     _logger.debug('Unlocking encrypted keystore');
     await _encryptedKeystore.unlock(password, salt: salt);
@@ -87,6 +61,7 @@ class SecurityManager {
   }
 
   /// Locks the encrypted keystore and zeros the master key from memory.
+  @override
   void lockKeystore() {
     _encryptedKeystore.lock();
     _recordSecurityMetric('keystore_lock');
@@ -96,6 +71,7 @@ class SecurityManager {
   /// Gets an Ed25519 key pair from the encrypted keystore.
   ///
   /// Throws if keystore is locked or key not found.
+  @override
   Future<SimpleKeyPair> getSecureKey(String keyName) async {
     if (!_encryptedKeystore.isUnlocked) {
       throw StateError('Keystore is locked. Call unlockKeystore() first.');
@@ -106,6 +82,7 @@ class SecurityManager {
   /// Generates a new Ed25519 key and stores it encrypted.
   ///
   /// Returns the public key bytes.
+  @override
   Future<Uint8List> generateSecureKey(String keyName, {String? label}) async {
     if (!_encryptedKeystore.isUnlocked) {
       throw StateError('Keystore is locked. Call unlockKeystore() first.');
@@ -120,9 +97,11 @@ class SecurityManager {
   }
 
   /// Checks if a secure key exists.
+  @override
   bool hasSecureKey(String keyName) => _encryptedKeystore.hasKey(keyName);
 
   /// Gets the public key for a stored secure key.
+  @override
   Uint8List? getSecurePublicKey(String keyName) =>
       _encryptedKeystore.getPublicKey(keyName);
 

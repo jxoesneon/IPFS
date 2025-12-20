@@ -71,13 +71,8 @@ class CircuitRelayClient {
         );
       }
 
-      await _router.sendDatagram(
-        addresses: addresses,
-        datagram: msg.writeToBuffer(),
-      );
-
-      // Wait for response or timeout
-      return await completer.future
+      // Setup listener before sending to handle synchronous responses in tests
+      final responseFuture = completer.future
           .timeout(
             const Duration(seconds: 30),
             onTimeout: () {
@@ -95,6 +90,14 @@ class CircuitRelayClient {
             );
             return res;
           });
+
+      await _router.sendDatagram(
+        addresses: addresses,
+        datagram: msg.writeToBuffer(),
+      );
+
+      // Wait for response or timeout
+      return await responseFuture;
     } catch (e) {
       _pendingReservations.remove(relayPeerId);
       _circuitRelayEventsController.add(
@@ -127,9 +130,13 @@ class CircuitRelayClient {
               limitData: msg.reservation.limitData,
               limitDuration: msg.reservation.limitDuration,
             );
-            completer.complete(res);
+            Future.microtask(() => completer.complete(res));
           } else {
-            completer.completeError('Reservation rejected: ${msg.status}');
+            Future.microtask(
+              () => completer.completeError(
+                'Reservation rejected: ${msg.status}',
+              ),
+            );
           }
         }
       }

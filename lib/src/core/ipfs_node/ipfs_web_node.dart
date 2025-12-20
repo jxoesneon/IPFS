@@ -8,10 +8,18 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/security/security_manager_web.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/delegate_dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/mock_dht_handler.dart'; // Web doesn't support DHT yet, use mock or stub
+import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+
 import 'web_block_store.dart';
 
 /// A minimal IPFS node for web browsers.
@@ -31,16 +39,18 @@ class IPFSWebNode {
     // Initialize networking components
     _router = P2plibRouter(_config);
     _blockStore = WebBlockStore(_platform);
-    _bitswap = BitswapHandler(_config, _blockStore, _router);
-    _pubsub = PubSubClient(_router, _router.peerID);
+
+    // Other components initialized in start()
   }
 
   late final IpfsPlatform _platform;
   late final IPFSConfig _config;
   late final P2plibRouter _router;
   late final WebBlockStore _blockStore;
-  late final BitswapHandler _bitswap;
-  late final PubSubClient _pubsub;
+  late BitswapHandler _bitswap;
+  late PubSubClient _pubsub;
+  late SecurityManagerWeb _securityManager;
+  late IPNSHandler _ipns;
 
   /// List of bootstrap peers (WebSocket URLs) to connect to on startup.
   final List<String> bootstrapPeers;
@@ -64,6 +74,27 @@ class IPFSWebNode {
 
     // Generate/Load ID via router (router usually generates one if generic)
     await _router.initialize();
+
+    // Initialize components that depend on Router/PeerID
+    _bitswap = BitswapHandler(_config, _blockStore, _router);
+    _pubsub = PubSubClient(_router, _router.peerID);
+
+    // Security & IPNS
+    _securityManager = SecurityManagerWeb(
+      _config.security,
+      MetricsCollector(_config),
+    );
+
+    final delegateUrl = _config.network.delegatedRoutingEndpoint;
+    final IDHTHandler dht;
+
+    if (delegateUrl != null && delegateUrl.isNotEmpty) {
+      dht = DelegateDHTHandler(delegateUrl);
+    } else {
+      dht = MockDHTHandler();
+    }
+
+    _ipns = IPNSHandler(_config, _securityManager, dht, _pubsub);
 
     await _router.start();
     await _bitswap.start();
@@ -115,6 +146,42 @@ class IPFSWebNode {
     return cid;
   }
 
+  /// Adds data from a stream and returns the root CID.
+  ///
+  /// This is memory efficient for large files as it chunks and processes
+  /// the stream incrementally, building a UnixFS DAG.
+  Future<CID> addStream(Stream<List<int>> stream) async {
+    final builder = UnixFSBuilder();
+    CID? rootCid;
+
+    await for (final block in builder.build(stream)) {
+      await _blockStore.putBlock(block);
+      rootCid = block.cid;
+    }
+
+    if (rootCid == null) {
+      throw StateError('Stream was empty');
+    }
+
+    return rootCid;
+  }
+
+  /// Adds a file to IPFS using chunked streaming.
+  ///
+  /// [file] should be a `dart:html` File object or similar (dynamic to avoid import issues).
+  /// This method is designed for web usage.
+  Future<CID> addFile(dynamic file) async {
+    if (_platform.isWeb) {
+      if (file is Stream<List<int>>) {
+        return addStream(file);
+      }
+      throw UnimplementedError(
+        'addFile expecting Stream<List<int>>. Use addStream(file.stream()) instead.',
+      );
+    }
+    throw UnimplementedError('addFile only supported on Web');
+  }
+
   /// Gets data by CID string.
   Future<Uint8List?> get(String cidString) async {
     // 1. Try local storage via BlockStore
@@ -157,5 +224,17 @@ class IPFSWebNode {
   /// Lists all pinned CIDs.
   Future<List<String>> listPins() async {
     return _platform.listDirectory('pins');
+  }
+
+  /// Publishes an IPNS record.
+  Future<void> publishIPNS(String cid, {required String keyName}) async {
+    if (!_started) throw StateError('Node not started');
+    await _ipns.publish(cid, keyName: keyName);
+  }
+
+  /// Resolves an IPNS name.
+  Future<String?> resolveIPNS(String name) async {
+    if (!_started) throw StateError('Node not started');
+    return _ipns.resolve(name);
   }
 }

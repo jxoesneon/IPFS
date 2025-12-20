@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2025-12-20
+
+### Web Platform Parity 🌐🚀
+
+This release brings the Web implementation of `dart_ipfs` to near-parity with the IO implementation, enabling powerful P2P web applications.
+
+- **Web IPNS Support**: Implemented `SecurityManagerWeb` and adapter stack to enable IPNS record publishing and resolution in browsers.
+- **Web DHT Delegate**: Added `DelegateDHTHandler` to perform content routing and peer discovery via IPFS HTTP Delegates (Kubo RPC), bridging the browser DHT gap.
+- **Web Performance**: Implemented `UnixFSBuilder` and `IPFSWebNode.addStream` for chunked streaming of large files (>1GB) with minimal memory footprint.
+- **Improved UX**: Added `IPFSWebNode.addFile` convenience method.
+
+### Fixed
+
+- **Circuit Relay**: Fixed race conditions in `CircuitRelayClient` reservation logic that caused flaky test failures.
+- **Router**: Corrected `P2plibRouter` stream management to prevent "Stream already listened to" errors.
+
 ## 1.6.11
 
 - **Fix**: Resolved `CircuitRelayClient` test failures (mock implementation logic).

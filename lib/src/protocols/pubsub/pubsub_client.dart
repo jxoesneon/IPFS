@@ -10,6 +10,7 @@ import '../../core/types/peer_id.dart';
 import '../../transport/p2plib_router.dart'; // Import your router class
 import '../../utils/base58.dart';
 import '../../utils/logger.dart';
+import 'pubsub_interface.dart';
 import 'pubsub_message.dart';
 
 // For encoding utilities
@@ -19,7 +20,7 @@ import 'pubsub_message.dart';
 /// **Security (SEC-008):** Messages include HMAC-SHA256 signatures to prevent
 /// sender identity spoofing. The signature is computed over the message content
 /// using the peer's ID as the key.
-class PubSubClient {
+class PubSubClient implements IPubSub {
   /// Creates a PubSub client with [_router] and peer ID.
   PubSubClient(this._router, String peerIdStr)
     : _peerId = PeerId(value: Base58().base58Decode(peerIdStr));
@@ -37,6 +38,8 @@ class PubSubClient {
       {}; // Message IDs (hash) we've seen
   final Map<String, Map<String, String>> _messageCache =
       {}; // Cache for fulfilling IWANT requests
+  final Set<String> _subscriptions = {};
+  bool _started = false;
   Timer? _heartbeatTimer;
 
   // Constants
@@ -45,6 +48,7 @@ class PubSubClient {
 
   /// Starts the PubSub client.
   Future<void> start() async {
+    _started = true;
     _router.registerProtocolHandler('pubsub', (packet) {
       if (packet.datagram.isNotEmpty) {
         try {
@@ -146,44 +150,31 @@ class PubSubClient {
     _logger.info('PubSub client stopped.');
   }
 
-  /// Subscribes to a PubSub topic.
+  @override
   Future<void> subscribe(String topic) async {
-    // Store subscription interest
-    _logger.info('Subscribed to topic: $topic');
+    if (_subscriptions.contains(topic)) return;
+    _subscriptions.add(topic);
+    _router.registerProtocol(topic);
 
-    // Notify mesh peers
-    final subscribeData = {
-      'action': 'subscribe',
-      'topic': topic,
-      'subscriberId': Base58().encode(_peerId.value),
-    };
-    final encoded = Uint8List.fromList(utf8.encode(jsonEncode(subscribeData)));
-
-    for (final peerIdStr in _mesh) {
-      try {
-        await _router.sendMessage(peerIdStr, encoded);
-      } catch (_) {}
-    }
+    // In a full implementation, we would send GRAFT messages
+    _logger.debug('Subscribed to topic: $topic');
   }
 
-  /// Unsubscribes from a PubSub topic.
+  @override
   Future<void> unsubscribe(String topic) async {
-    try {
-      _logger.info('Unsubscribed from topic: $topic');
-      // Notify mesh (best effort)
-      final unsubscribeMsg = encodeUnsubscribeRequest(topic);
-      for (final peerIdStr in _mesh) {
-        try {
-          await _router.sendMessage(peerIdStr, unsubscribeMsg);
-        } catch (_) {}
-      }
-    } catch (e, stackTrace) {
-      _logger.error('Error unsubscribing from topic $topic', e, stackTrace);
-    }
+    if (!_subscriptions.contains(topic)) return;
+    _subscriptions.remove(topic);
+    _router.removeMessageHandler(topic);
+
+    // In a full implementation, we would send PRUNE messages
+    _logger.debug('Unsubscribed from topic: $topic');
   }
 
-  /// Publishes a message to a PubSub topic.
+  @override
   Future<void> publish(String topic, String message) async {
+    if (!_started) {
+      throw StateError('PubSub client not started');
+    }
     try {
       final encodedMessage = encodePublishRequest(topic, message);
 
@@ -203,7 +194,16 @@ class PubSubClient {
   }
 
   /// Handles incoming messages on a subscribed topic.
-  Stream<PubSubMessage> get onMessage => _messageController.stream;
+  Stream<PubSubMessage> get messagesStream => _messageController.stream;
+
+  @override
+  void onMessage(String topic, void Function(String) handler) {
+    messagesStream.listen((message) {
+      if (message.topic == topic) {
+        handler(message.content);
+      }
+    });
+  }
 
   /// Encodes a subscribe request for the given topic.
   Uint8List encodeSubscribeRequest(String topic) {

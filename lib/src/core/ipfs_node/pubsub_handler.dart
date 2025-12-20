@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_interface.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
@@ -12,7 +13,7 @@ import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import '../data_structures/node_stats.dart';
 
 /// Handles PubSub operations for an IPFS node.
-class PubSubHandler {
+class PubSubHandler implements IPubSub {
   /// Constructs a [PubSubHandler] with the provided router, peer ID, and network events.
   PubSubHandler(P2plibRouter router, String peerId, this._networkEvents)
     : _pubSubClient = PubSubClient(router, peerId) {
@@ -59,6 +60,7 @@ class PubSubHandler {
   }
 
   /// Subscribes to a PubSub topic.
+  @override
   Future<void> subscribe(String topic) async {
     try {
       await _pubSubClient.subscribe(topic);
@@ -70,6 +72,7 @@ class PubSubHandler {
   }
 
   /// Unsubscribes from a PubSub topic.
+  @override
   Future<void> unsubscribe(String topic) async {
     try {
       await _pubSubClient.unsubscribe(topic);
@@ -81,6 +84,7 @@ class PubSubHandler {
   }
 
   /// Publishes a message to a PubSub topic.
+  @override
   Future<void> publish(String topic, String message) async {
     try {
       await _pubSubClient.publish(topic, message);
@@ -92,14 +96,10 @@ class PubSubHandler {
   }
 
   /// Handles incoming messages on a subscribed topic.
+  @override
   void onMessage(String topic, void Function(String) handler) {
     try {
-      _pubSubClient.onMessage.listen((message) {
-        if (message.topic == topic) {
-          handler(message.content);
-          // print('Processed message on topic: $topic');
-        }
-      });
+      _pubSubClient.onMessage(topic, handler);
     } catch (e) {
       // print('Error setting handler for messages on topic $topic: $e');
     }
