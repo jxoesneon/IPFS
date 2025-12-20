@@ -115,11 +115,11 @@ void main() {
         p2p.PeerId(value: Uint8List.fromList(List.filled(64, fillValue)));
 
     KademliaTreeNode makeNode(p2p.PeerId peerId) => KademliaTreeNode(
-          dfs.PeerId(value: peerId.value),
-          0,
-          dfs.PeerId(value: peerId.value),
-          lastSeen: 0,
-        );
+      dfs.PeerId(value: peerId.value),
+      0,
+      dfs.PeerId(value: peerId.value),
+      lastSeen: 0,
+    );
 
     test('handles PeerId keys correctly', () {
       final peer1 = makePeerId(1);

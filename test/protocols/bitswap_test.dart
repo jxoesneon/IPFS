@@ -158,8 +158,9 @@ void main() {
       await handler.start();
 
       final targetData = Uint8List.fromList([1, 2, 3, 4]);
-      final targetCid =
-          CID.computeForDataSync(targetData, codec: 'dag-pb').encode();
+      final targetCid = CID
+          .computeForDataSync(targetData, codec: 'dag-pb')
+          .encode();
 
       // Simulate response slightly later
       scheduleMicrotask(() async {

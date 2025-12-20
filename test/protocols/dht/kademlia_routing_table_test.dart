@@ -273,9 +273,7 @@ void main() {
 
     test('getAssociatedPeer returns correct associated peer', () async {
       final peerId = PeerId(value: validPeerIdBytes(fillValue: 2));
-      final associatedPeerId = PeerId(
-        value: validPeerIdBytes(fillValue: 10),
-      );
+      final associatedPeerId = PeerId(value: validPeerIdBytes(fillValue: 10));
 
       await routingTable.addPeer(peerId, associatedPeerId);
 

@@ -250,7 +250,8 @@ void main() {
     test('handleAdd accepts multipart upload', () async {
       final boundary = 'boundary';
       final fileContent = 'Hello IPFS';
-      final body = '--$boundary\r\n'
+      final body =
+          '--$boundary\r\n'
           'Content-Disposition: form-data; name="file"; filename="test.txt"\r\n'
           'Content-Type: text/plain\r\n'
           '\r\n'

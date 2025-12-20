@@ -36,8 +36,11 @@ void main() {
         final salt = CryptoUtils.randomBytes(16);
         final keystore = EncryptedKeystore();
 
-        await keystore.unlock(testPassword,
-            salt: salt, iterations: testIterations);
+        await keystore.unlock(
+          testPassword,
+          salt: salt,
+          iterations: testIterations,
+        );
 
         expect(keystore.isUnlocked, isTrue);
       });
@@ -139,8 +142,11 @@ void main() {
 
         final json = keystore.serialize();
         final restored = EncryptedKeystore.deserialize(json);
-        await restored.unlock(testPassword,
-            salt: restored._salt, iterations: testIterations);
+        await restored.unlock(
+          testPassword,
+          salt: restored._salt,
+          iterations: testIterations,
+        );
 
         expect(restored.hasKey('key1'), isTrue);
         expect(restored.hasKey('key2'), isTrue);
