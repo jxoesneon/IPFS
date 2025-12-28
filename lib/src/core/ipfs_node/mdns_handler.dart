@@ -189,11 +189,15 @@ class MDNSHandler {
         return null;
       }
 
-      // Create a FullAddress from the SRV record
-      final address = p2p.FullAddress(
-        address: InternetAddress(srv.target),
-        port: srv.port,
-      );
+      // Resolve the .local hostname to an IP address
+      final addresses = await InternetAddress.lookup(srv.target);
+      if (addresses.isEmpty) {
+        _logger.warning('Failed to resolve hostname: ${srv.target}');
+        return null;
+      }
+
+      // Create a FullAddress from the resolved IP
+      final address = p2p.FullAddress(address: addresses.first, port: srv.port);
 
       // Create a PeerId from the TXT record
       final peerId = p2p.PeerId(value: Base58().base58Decode(txt.text.first));
