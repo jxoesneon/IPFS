@@ -15,6 +15,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
+import 'package:dart_ipfs/src/platform/libsodium_setup.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
@@ -107,7 +108,28 @@ class IPFSNodeBuilder {
     // Skip network initialization if offline
     if (_config.offline) return;
 
-    // First register NetworkHandler
+    // PROACTIVE CHECK: Ensure libsodium is available before importing p2plib
+    // This prevents the FFI hang that occurs when sodium package loads
+    try {
+      final hasLibsodium = await LibsodiumSetup.ensureAvailable(
+        autoInstall: true,
+        verbose: true,
+      );
+
+      if (!hasLibsodium) {
+        throw StateError(
+          '\nlibsodium not available and automatic installation failed.\n\n'
+          'Options:\n'
+          '  1. Install libsodium manually (see error output above)\n'
+          '  2. Use offline mode: IPFSConfig(offline: true)\n',
+        );
+      }
+    } catch (e) {
+      // If check itself fails, continue and let p2plib fail with its own error
+      // (The StateError will be thrown if hasLibsodium is false)
+    }
+
+    // Now safe to create NetworkHandler (which imports p2plib → sodium)
     _container.registerSingleton(NetworkHandler(_config));
 
     // Get the router from NetworkHandler for other handlers

@@ -77,6 +77,26 @@ Then run:
 dart pub get
 ```
 
+### Windows Setup
+
+**Important**: On Windows, P2P networking requires `libsodium` for cryptography.
+
+**✅ Automatic Setup**: dart_ipfs automatically detects and installs libsodium via `winget` on first run when needed.
+
+**Manual Installation** (if auto-install fails):
+```powershell
+# Via winget (recommended)
+winget install jedisct1.libsodium
+
+# Via vcpkg
+vcpkg install libsodium
+
+# Or use offline mode (no P2P)
+IPFSConfig(offline: true)
+```
+
+**Note**: You may need to restart your terminal/IDE after installation for PATH changes to take effect.
+
 ### Basic Usage
 
 #### Offline Mode (Local Storage)

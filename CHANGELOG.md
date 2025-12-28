@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.3] - 2025-12-28
+
+### Added
+
+- **Windows**: Proactive libsodium setup with automatic installation (#14)
+  - Automatically detects missing libsodium.dll on Windows
+  - Attempts automatic installation via winget
+  - Provides clear manual installation instructions if auto-install fails
+  - Prevents FFI hang during package import
+  - Gracefully handles offline mode (skips check entirely)
+  
+### Fixed
+
+- **Windows**: Resolved startup hang when libsodium not installed (#14)
+  - Added `LibsodiumSetup` utility for pre-flight dependency checks
+  - Integrated into `IPFSNodeBuilder` before P2P initialization
+  - Users now get helpful setup guidance instead of silent hangs
+
 ## [1.7.2] - 2025-12-27
 
 ### Fixed
