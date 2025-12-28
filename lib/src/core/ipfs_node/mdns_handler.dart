@@ -208,8 +208,19 @@ class MDNSHandler {
         latency: 0, // Default latency for new peers
         agentVersion: '', // Empty version since we don't know it yet
       );
-    } catch (e, stackTrace) {
-      _logger.error('Error resolving peer info', e, stackTrace);
+    } on SocketException catch (e) {
+      // Failed .local hostname lookups are expected on platforms without mDNS support
+      // (Windows without Bonjour, Linux without avahi-daemon)
+      _logger.verbose(
+        'Could not resolve mDNS hostname: $domainName '
+        '(OS Error: ${e.osError?.message ?? "Unknown"})',
+      );
+      return null;
+    } catch (e) {
+      // Unexpected errors might indicate real problems
+      _logger.warning(
+        'Unexpected error resolving peer info for $domainName: $e',
+      );
       return null;
     }
   }
