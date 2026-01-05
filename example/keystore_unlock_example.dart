@@ -8,7 +8,6 @@
 
 import 'dart:io';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/config/security_config.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/utils/password_prompt.dart';

@@ -63,10 +63,7 @@ class Message {
   ///
   /// Returns a [PeerId] representing the intended recipient of the message.
   static PeerId getDstPeerId(Uint8List datagram) => PeerId(
-    value: datagram.sublist(
-      PacketHeader.length + PeerId.length,
-      headerLength,
-    ),
+    value: datagram.sublist(PacketHeader.length + PeerId.length, headerLength),
   );
 
   // Unsigned Datagram methods

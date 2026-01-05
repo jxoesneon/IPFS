@@ -7,9 +7,7 @@ import 'screens/dashboard_screen.dart';
 void main() {
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => NodeService()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => NodeService())],
       child: const IPFSApp(),
     ),
   );
@@ -31,9 +29,7 @@ class IPFSApp extends StatelessWidget {
           secondary: Color(0xFF818CF8), // Indigo
           surface: Color(0xFF1E293B), // Slate 800
         ),
-        textTheme: GoogleFonts.outfitTextTheme(
-          ThemeData.dark().textTheme,
-        ),
+        textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
       ),
       home: const DashboardScreen(),
     );

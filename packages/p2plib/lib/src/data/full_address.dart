@@ -2,10 +2,7 @@ part of 'data.dart';
 
 @immutable
 class FullAddress {
-  const FullAddress({
-    required this.address,
-    required this.port,
-  });
+  const FullAddress({required this.address, required this.port});
 
   final InternetAddress address;
 

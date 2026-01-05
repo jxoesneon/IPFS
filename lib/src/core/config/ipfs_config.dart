@@ -6,11 +6,18 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/dht_config.dart';
 import 'package:dart_ipfs/src/core/config/metrics_config.dart';
+import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:dart_ipfs/src/core/config/security_config.dart';
 import 'package:dart_ipfs/src/core/config/storage_config.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:yaml/yaml.dart';
+
+export 'package:dart_ipfs/src/core/config/dht_config.dart';
+export 'package:dart_ipfs/src/core/config/metrics_config.dart';
+export 'package:dart_ipfs/src/core/config/network_config.dart';
+export 'package:dart_ipfs/src/core/config/security_config.dart';
+export 'package:dart_ipfs/src/core/config/storage_config.dart';
 
 /// Configuration for an IPFS node.
 ///
@@ -68,10 +75,10 @@ class IPFSConfig {
   /// Creates a new [IPFSConfig] with the specified options.
   IPFSConfig({
     this.offline = false,
-    this.network = const NetworkConfig(),
-    this.dht = const DHTConfig(),
-    this.storage = const StorageConfig(),
-    this.security = const SecurityConfig(),
+    NetworkConfig? network,
+    DHTConfig? dht,
+    StorageConfig? storage,
+    SecurityConfig? security,
     this.debug = true,
     this.verboseLogging = true,
     this.enablePubSub = true,
@@ -96,7 +103,11 @@ class IPFSConfig {
     this.dataPath = './ipfs_data',
     Keystore? keystore,
     this.customConfig = const {},
-  }) : nodeId = nodeId ?? _generateDefaultNodeId(),
+  }) : network = network ?? NetworkConfig(),
+       dht = dht ?? const DHTConfig(),
+       storage = storage ?? const StorageConfig(),
+       security = security ?? const SecurityConfig(),
+       nodeId = nodeId ?? _generateDefaultNodeId(),
        keystore = keystore ?? Keystore();
 
   /// Creates a new IPFSConfig with a generated nodeId
@@ -269,83 +280,4 @@ class IPFSConfig {
     'enableQuotaManagement': enableQuotaManagement,
     'defaultBandwidthQuota': defaultBandwidthQuota,
   };
-}
-
-/// Network-specific configuration
-/// Network-specific configuration for an IPFS node.
-class NetworkConfig {
-  /// Creates a new [NetworkConfig].
-  const NetworkConfig({
-    this.listenAddresses = const ['/ip4/0.0.0.0/tcp/4001'],
-    this.bootstrapPeers = defaultBootstrapPeers,
-    this.maxConnections = 50,
-    this.connectionTimeout = const Duration(seconds: 30),
-    this.delegatedRoutingEndpoint,
-  });
-
-  /// Creates a [NetworkConfig] from a JSON map.
-  factory NetworkConfig.fromJson(Map<String, dynamic> json) {
-    return NetworkConfig(
-      listenAddresses: List<String>.from(
-        (json['listenAddresses'] as List?) ?? [],
-      ),
-      bootstrapPeers: List<String>.from(
-        (json['bootstrapPeers'] as List?) ?? [],
-      ),
-      maxConnections: json['maxConnections'] as int? ?? 50,
-      connectionTimeout: Duration(
-        seconds: json['connectionTimeoutSeconds'] as int? ?? 30,
-      ),
-      delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'] as String?,
-    );
-  }
-
-  /// List of multiaddrs this node listens on.
-  final List<String> listenAddresses;
-
-  /// Peers to connect to on startup.
-  final List<String> bootstrapPeers;
-
-  /// Maximum allowed concurrent connections.
-  final int maxConnections;
-
-  /// Timeout for connection attempts.
-  final Duration connectionTimeout;
-
-  /// Optional endpoint for delegated routing.
-  final String? delegatedRoutingEndpoint;
-
-  /// Default IPFS bootstrap peers.
-  static const List<String> defaultBootstrapPeers = [
-    // Public IPFS Bootstrap Nodes (Direct IPs to bypass DNS resolution issues in p2plib)
-    '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ', // mars.i.ipfs.io
-    '/ip4/104.236.179.241/tcp/4001/p2p/QmSoLPppuBtQSGwKDZT2M73ULpjvfd3aZ6ha4oFGL1KrGM', // pluto.i.ipfs.io
-    '/ip4/128.199.219.111/tcp/4001/p2p/QmSoLSafTMBsPKadTEgaXctDQVcqN88CNLHXMkTNwMKPnu', // saturn.i.ipfs.io
-    '/ip4/104.236.76.40/tcp/4001/p2p/QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64', // earth.i.ipfs.io
-    // Cloudflare
-    '/ip4/172.65.0.13/tcp/4009/p2p/QmcfgsJsMtx6qJb74akCw1M24X1zFwgGo11h1cuhwQjtJP',
-  ];
-
-  /// Converts to JSON representation.
-  Map<String, dynamic> toJson() => {
-    'listenAddresses': listenAddresses,
-    'bootstrapPeers': bootstrapPeers,
-    'maxConnections': maxConnections,
-    'connectionTimeoutSeconds': connectionTimeout.inSeconds,
-    'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
-  };
-}
-
-// Similar implementations for DHTConfig, StorageConfig, and SecurityConfig...
-
-/// Represents a public/private key pair used for configuration.
-class KeyPair {
-  /// Creates a new [KeyPair].
-  KeyPair(this.publicKey, this.privateKey);
-
-  /// The public key in string format.
-  final String publicKey;
-
-  /// The private key in string format.
-  final String privateKey;
 }

@@ -377,14 +377,18 @@ class DHTClient {
   void _handlePacket(NetworkPacket packet) async {
     try {
       final message = kad.Message.fromBuffer(packet.datagram);
-      final peerId = packet.srcPeerId;
+      final peerIdStr = packet.srcPeerId;
+      final srcPeerId = PeerId.fromBase58(peerIdStr);
+
+      // SEC-005: Verify PoW for DHT Sybil protection
+      final difficulty = networkHandler.config.security.dhtDifficulty;
+      if (difficulty > 0 && !srcPeerId.verifyPoW(difficulty: difficulty)) {
+        // print('Rejecting DHT message from $peerIdStr: Insufficient PoW');
+        return;
+      }
 
       // Update routing table with IP diversity check
-      await _kademliaRoutingTable.addPeer(
-        PeerId.fromBase58(packet.srcPeerId),
-        PeerId.fromBase58(packet.srcPeerId),
-        // address: packet.srcFullAddress, // Addr not available in NetworkPacket yet
-      );
+      await _kademliaRoutingTable.addPeer(srcPeerId, srcPeerId);
 
       switch (message.type) {
         case kad.Message_MessageType.FIND_NODE:
@@ -396,7 +400,7 @@ class DHTClient {
           final response = kad.Message()
             ..type = kad.Message_MessageType.FIND_NODE
             ..closerPeers.addAll(closer.map((p) => _convertPeerIdToKadPeer(p)));
-          _sendResponse(peerId, response);
+          _sendResponse(peerIdStr, response);
           break;
         case kad.Message_MessageType.GET_VALUE:
           // Check local storage for record
@@ -404,7 +408,7 @@ class DHTClient {
           break;
         case kad.Message_MessageType.PING:
           final response = kad.Message()..type = kad.Message_MessageType.PING;
-          _sendResponse(peerId, response);
+          _sendResponse(peerIdStr, response);
           break;
         default:
         // print('Unhandled DHT message type: ${message.type}');

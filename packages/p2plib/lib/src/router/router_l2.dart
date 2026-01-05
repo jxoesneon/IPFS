@@ -172,10 +172,7 @@ class RouterL2 extends RouterL1 {
 
     // If the message was not sent successfully, update the last seen
     // controller to indicate that the peer is offline.
-    _lastSeenController.add((
-      peerId: peerId,
-      isOnline: getPeerStatus(peerId),
-    ));
+    _lastSeenController.add((peerId: peerId, isOnline: getPeerStatus(peerId)));
 
     // Return false to indicate that the peer is offline.
     return false;

@@ -170,7 +170,7 @@ class P2plibRouter {
         if (!_isCryptoInitialized) {
           _logger.verbose('Initializing crypto components');
           final seed = Uint8List.fromList(
-            List<int>.generate(32, (_) => Random().nextInt(256)),
+            List<int>.generate(32, (_) => Random.secure().nextInt(256)),
           );
           await _sharedCrypto.init(seed);
           _isCryptoInitialized = true;
@@ -179,7 +179,10 @@ class P2plibRouter {
       });
 
       _logger.verbose('Initializing router with peer ID');
-      final randomBytes = List<int>.generate(32, (i) => Random().nextInt(256));
+      final randomBytes = List<int>.generate(
+        32,
+        (i) => Random.secure().nextInt(256),
+      );
       await _router.init(Uint8List.fromList(randomBytes));
       _logger.verbose(
         'Router initialized with peer ID: ${Base58().encode(_router.selfId.value)}',

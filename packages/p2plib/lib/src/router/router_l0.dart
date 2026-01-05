@@ -37,18 +37,15 @@ class RouterL0 extends RouterBase {
   /// This timer helps to ensure that the router maintains an accurate view of
   /// the network topology by removing routes to peers that have become
   /// unreachable.
-  late final _routesCleaner = Timer.periodic(
-    keepalivePeriod,
-    (_) {
-      if (routes.isNotEmpty) {
-        final staleAt = _now - peerAddressTTL.inMilliseconds;
+  late final _routesCleaner = Timer.periodic(keepalivePeriod, (_) {
+    if (routes.isNotEmpty) {
+      final staleAt = _now - peerAddressTTL.inMilliseconds;
 
-        routes
-          ..forEach((_, r) => r.removeStaleAddresses(staleAt: staleAt))
-          ..removeWhere((_, r) => r.isEmpty);
-      }
-    },
-  );
+      routes
+        ..forEach((_, r) => r.removeStaleAddresses(staleAt: staleAt))
+        ..removeWhere((_, r) => r.isEmpty);
+    }
+  });
 
   /// Handles incoming messages.
   ///

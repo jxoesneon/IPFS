@@ -87,13 +87,10 @@ class PacketHeader {
     return head;
   }
 
-  PacketHeader copyWith({
-    int? issuedAt,
-    int? id,
-    PacketType? messageType,
-  }) => PacketHeader(
-    messageType: messageType ?? this.messageType,
-    issuedAt: issuedAt ?? this.issuedAt,
-    id: id ?? this.id,
-  );
+  PacketHeader copyWith({int? issuedAt, int? id, PacketType? messageType}) =>
+      PacketHeader(
+        messageType: messageType ?? this.messageType,
+        issuedAt: issuedAt ?? this.issuedAt,
+        id: id ?? this.id,
+      );
 }

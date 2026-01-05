@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.4] - 2026-01-05
+
+### Added
+
+- **Security (SEC-008)**: Implemented `EncryptedKeystore` for secure at-rest storage of private keys.
+  - AES-256-GCM encryption with PBKDF2 key derivation.
+  - Secure in-memory locking (zeroing master key).
+  - Migration warnings for legacy plaintext keys.
+- **Security (SEC-005)**: Added S/Kademlia Proof-of-Work (PoW) verification for `PeerId`s.
+  - Static PoW difficulty check in DHT packet handler to mitigate Sybil attacks.
+  - New `dhtDifficulty` setting in `SecurityConfig`.
+- **Security (SEC-002)**: Enhanced NAT traversal security with `enableNatTraversal` flag (defaults to false).
+
+### Fixed
+
+- **Security (SEC-004)**: Hardened `libsodium_setup.dart` by removing `runInShell: true` from system commands.
+- **Security (SEC-001)**: Replaced insecure `Random()` with `Random.secure()` in security-sensitive contexts.
+- **Security (SEC-010)**: Reinforced DHT rate limiting for provider announcements to prevent spam/poisoning.
+- **Refactor**: Consolidated configuration files and resolved duplicate definitions of `NetworkConfig`.
+- **Core**: Added `fromBytes` and `fromEd25519Seed` to `IPFSPrivateKey` for better cryptographic alignment.
+
 ## [1.7.3] - 2025-12-28
 
 ### Added
@@ -15,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Provides clear manual installation instructions if auto-install fails
   - Prevents FFI hang during package import
   - Gracefully handles offline mode (skips check entirely)
-  
+
 ### Fixed
 
 - **Windows**: Resolved startup hang when libsodium not installed (#14)
@@ -28,7 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **MDNS**: Fixed crash when resolving `.local` hostnames during mDNS peer discovery (#12)
-  - Replaced `InternetAddress(srv.target)` with `await InternetAddress.lookup(srv.target)` 
+  - Replaced `InternetAddress(srv.target)` with `await InternetAddress.lookup(srv.target)`
   - Added proper hostname resolution validation
   - Eliminated SEVERE error log spam when other IPFS nodes are on the same LAN
   - Local peer discovery via mDNS now works correctly

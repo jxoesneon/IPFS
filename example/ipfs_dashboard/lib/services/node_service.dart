@@ -103,10 +103,7 @@ class NodeService extends ChangeNotifier {
         dataPath = '${appDir.path}/ipfs_data';
       }
 
-      await _impl.start({
-        'dataPath': dataPath,
-        'offline': false,
-      });
+      await _impl.start({'dataPath': dataPath, 'offline': false});
 
       if (_impl.isOnline) {
         _log('Node started! Peer ID: $peerId');

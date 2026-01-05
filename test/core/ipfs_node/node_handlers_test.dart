@@ -16,7 +16,7 @@ import 'package:test/test.dart';
 class MockConfig extends IPFSConfig {
   MockConfig()
     : super(
-        network: const NetworkConfig(bootstrapPeers: []),
+        network: NetworkConfig(bootstrapPeers: []),
         debug: false,
         verboseLogging: false,
       );

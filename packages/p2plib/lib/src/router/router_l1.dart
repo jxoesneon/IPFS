@@ -41,14 +41,11 @@ class RouterL1 extends RouterL0 {
   ///
   /// This timer helps to maintain connections with peers by sending periodic
   /// keepalive messages.
-  late final _keepaliveWorker = Timer.periodic(
-    keepalivePeriod,
-    (_) async {
-      // Only send keepalive messages if the router is running and there are
-      // active routes.
-      if (isRunning && routes.isNotEmpty) await _pingNonLocals();
-    },
-  );
+  late final _keepaliveWorker = Timer.periodic(keepalivePeriod, (_) async {
+    // Only send keepalive messages if the router is running and there are
+    // active routes.
+    if (isRunning && routes.isNotEmpty) await _pingNonLocals();
+  });
 
   /// Returns an iterable of the self addresses of this router.
   ///
@@ -341,10 +338,7 @@ class RouterL1 extends RouterL0 {
       if (addresses.isNotEmpty) {
         // Send a message to the peer using the resolved addresses.
         // The message type is regular, and no payload is included for a ping.
-        await sendMessage(
-          dstPeerId: route.peerId,
-          useAddresses: addresses,
-        );
+        await sendMessage(dstPeerId: route.peerId, useAddresses: addresses);
       }
     }
   }

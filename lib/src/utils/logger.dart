@@ -128,8 +128,8 @@ class Logger {
   }
 
   /// Log a warning message
-  void warning(String message) {
-    _logger.warning('[WARNING] $message');
+  void warning(String message, [Object? error, StackTrace? stackTrace]) {
+    _logger.warning('[WARNING] $message', error, stackTrace);
   }
 
   /// Log an error message with optional error object and stack trace

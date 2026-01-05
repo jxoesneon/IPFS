@@ -3,12 +3,17 @@ import 'dart:async';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/network/nat_traversal_service.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Handles NAT detection and traversal for an IPFS node.
 class AutoNATHandler {
   /// Creates an AutoNATHandler with the given config and network handler.
-  AutoNATHandler(this._config, this._networkHandler) {
+  AutoNATHandler(
+    this._config,
+    this._networkHandler, {
+    NatTraversalService? natService,
+  }) : _natService = natService ?? NatTraversalService() {
     _logger = Logger(
       'AutoNATHandler',
       debug: _config.debug,
@@ -18,6 +23,7 @@ class AutoNATHandler {
   }
   final IPFSConfig _config;
   final NetworkHandler _networkHandler;
+  final NatTraversalService _natService;
   late final Logger _logger;
   bool _isRunning = false;
   Timer? _dialbackTimer;
@@ -42,6 +48,13 @@ class AutoNATHandler {
       // Initial NAT detection
       await _detectNATType();
 
+      // Attempt port mapping if behind NAT and enabled
+      if (_natType != NATType.none && _config.network.enableNatTraversal) {
+        await _attemptPortMapping();
+      } else if (_natType != NATType.none) {
+        _logger.info('NAT detected but port mapping is disabled in config');
+      }
+
       // Start periodic dialback tests
       _startDialbackTests();
 
@@ -65,6 +78,9 @@ class AutoNATHandler {
 
       _dialbackTimer?.cancel();
       _dialbackTimer = null;
+
+      // Clean up port mappings
+      await _natService.unmapPort(4001);
 
       _isRunning = false;
       _logger.info('AutoNATHandler stopped successfully');
@@ -158,6 +174,46 @@ class AutoNATHandler {
     } catch (e) {
       _logger.error('Error performing dialback test', e);
       _reachable = false;
+    }
+  }
+
+  Future<void> _attemptPortMapping() async {
+    _logger.debug('Attempting UPnP/NAT-PMP port mapping...');
+
+    // Extract port from listen addresses
+    int? port;
+    for (final addr in _config.network.listenAddresses) {
+      if (addr.contains('/tcp/') || addr.contains('/udp/')) {
+        final parts = addr.split('/');
+        // Format: /ip4/0.0.0.0/tcp/4001
+        for (var i = 0; i < parts.length - 1; i++) {
+          if (parts[i] == 'tcp' || parts[i] == 'udp') {
+            port = int.tryParse(parts[i + 1]);
+            if (port != null) break;
+          }
+        }
+      }
+      if (port != null) break;
+    }
+
+    if (port == null) {
+      _logger.warning(
+        'Could not determine listening port from config, skipping port mapping',
+      );
+      return;
+    }
+
+    _logger.debug('Identified listening port: $port');
+
+    final mapped = await _natService.mapPort(port);
+    if (mapped.isNotEmpty) {
+      _logger.info(
+        'Port mapping successful for protocols: ${mapped.join(", ")}',
+      );
+      // Re-check reachability after mapping
+      await _performDialbackTest();
+    } else {
+      _logger.debug('Port mapping failed or no gateway found');
     }
   }
 

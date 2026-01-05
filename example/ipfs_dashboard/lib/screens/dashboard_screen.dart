@@ -60,10 +60,7 @@ class DashboardScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 24),
                         // Right Panel: File Manager
-                        const Expanded(
-                          flex: 6,
-                          child: _MainContentPanel(),
-                        ),
+                        const Expanded(flex: 6, child: _MainContentPanel()),
                       ],
                     ),
                   ),
@@ -84,8 +81,11 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(LucideIcons.globe,
-                color: Theme.of(context).colorScheme.primary, size: 32)
+        Icon(
+              LucideIcons.globe,
+              color: Theme.of(context).colorScheme.primary,
+              size: 32,
+            )
             .animate(onPlay: (c) => c.repeat())
             .shimmer(duration: 2000.ms, color: Colors.cyanAccent),
         const SizedBox(width: 16),
@@ -128,8 +128,11 @@ class _Header extends StatelessWidget {
         // Multiaddr Copy
         Consumer<NodeService>(
           builder: (context, node, _) => IconButton(
-            icon:
-                const Icon(LucideIcons.share, color: Colors.white54, size: 20),
+            icon: const Icon(
+              LucideIcons.share,
+              color: Colors.white54,
+              size: 20,
+            ),
             tooltip: 'Copy My Multiaddr',
             onPressed: () async {
               final addrs = await node.getAddresses();
@@ -158,8 +161,11 @@ class _Header extends StatelessWidget {
               child: DropdownButton<GatewayMode>(
                 value: node.gatewayMode,
                 dropdownColor: const Color(0xFF0F172A),
-                icon: const Icon(LucideIcons.chevronDown,
-                    color: Colors.white70, size: 16),
+                icon: const Icon(
+                  LucideIcons.chevronDown,
+                  color: Colors.white70,
+                  size: 16,
+                ),
                 style: GoogleFonts.firaCode(color: Colors.white, fontSize: 12),
                 items: GatewayMode.values.map((mode) {
                   return DropdownMenuItem(
@@ -193,8 +199,9 @@ class _Header extends StatelessWidget {
               Consumer<NodeService>(
                 builder: (context, node, _) => CircleAvatar(
                   radius: 4,
-                  backgroundColor:
-                      node.isOnline ? Colors.greenAccent : Colors.redAccent,
+                  backgroundColor: node.isOnline
+                      ? Colors.greenAccent
+                      : Colors.redAccent,
                 ),
               ),
               const SizedBox(width: 8),
@@ -202,7 +209,9 @@ class _Header extends StatelessWidget {
                 builder: (context, node, _) => Text(
                   node.isOnline ? 'ONLINE' : 'OFFLINE',
                   style: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.bold),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -213,15 +222,20 @@ class _Header extends StatelessWidget {
   }
 
   Future<void> _showCustomGatewayDialog(
-      BuildContext context, NodeService node) async {
-    final controller =
-        TextEditingController(text: 'http://my-gateway:8080/ipfs');
+    BuildContext context,
+    NodeService node,
+  ) async {
+    final controller = TextEditingController(
+      text: 'http://my-gateway:8080/ipfs',
+    );
     final url = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Custom Gateway URL',
-            style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Custom Gateway URL',
+          style: TextStyle(color: Colors.white),
+        ),
         content: TextField(
           controller: controller,
           style: const TextStyle(color: Colors.white),
@@ -231,7 +245,8 @@ class _Header extends StatelessWidget {
             labelStyle: TextStyle(color: Colors.white54),
             hintStyle: TextStyle(color: Colors.white24),
             enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white24)),
+              borderSide: BorderSide(color: Colors.white24),
+            ),
           ),
         ),
         actions: [
@@ -279,7 +294,9 @@ class _BandwidthIcon extends StatelessWidget {
         Text(
           speed,
           style: GoogleFonts.firaCode(
-              color: Colors.white.withValues(alpha: 0.8), fontSize: 10),
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: 10,
+          ),
         ),
       ],
     );
@@ -324,10 +341,13 @@ class _StatusCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('NODE STATUS',
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12)),
+                Text(
+                  'NODE STATUS',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 12,
+                  ),
+                ),
                 Switch(
                   value: isOnline,
                   onChanged: (val) => val ? node.startNode() : node.stopNode(),
@@ -338,10 +358,13 @@ class _StatusCard extends StatelessWidget {
             ),
             const Spacer(),
             if (isOnline) ...[
-              Text('PEER ID',
-                  style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 12)),
+              Text(
+                'PEER ID',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 12,
+                ),
+              ),
               const SizedBox(height: 4),
               SelectableText(
                 node.peerId,
@@ -379,13 +402,19 @@ class _TerminalView extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(LucideIcons.terminal,
-                  size: 16, color: Colors.white.withValues(alpha: 0.5)),
+              Icon(
+                LucideIcons.terminal,
+                size: 16,
+                color: Colors.white.withValues(alpha: 0.5),
+              ),
               const SizedBox(width: 8),
-              Text('TERMINAL',
-                  style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 12)),
+              Text(
+                'TERMINAL',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -398,8 +427,9 @@ class _TerminalView extends StatelessWidget {
                   child: Text(
                     logs[index],
                     style: GoogleFonts.firaCode(
-                        fontSize: 12,
-                        color: Colors.greenAccent.withValues(alpha: 0.8)),
+                      fontSize: 12,
+                      color: Colors.greenAccent.withValues(alpha: 0.8),
+                    ),
                   ),
                 );
               },
@@ -475,13 +505,17 @@ class _FileManagerState extends State<_FileManager> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('FILE MANAGER',
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12)),
+                Text(
+                  'FILE MANAGER',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 12,
+                  ),
+                ),
                 ElevatedButton.icon(
-                  onPressed:
-                      context.watch<NodeService>().isOnline ? _pickFile : null,
+                  onPressed: context.watch<NodeService>().isOnline
+                      ? _pickFile
+                      : null,
                   icon: const Icon(LucideIcons.uploadCloud, size: 16),
                   label: const Text('Add File'),
                   style: ElevatedButton.styleFrom(
@@ -501,14 +535,17 @@ class _FileManagerState extends State<_FileManager> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(LucideIcons.hardDrive,
-                              size: 48,
-                              color: Colors.white.withValues(alpha: 0.1)),
+                          Icon(
+                            LucideIcons.hardDrive,
+                            size: 48,
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'No files added yet',
                             style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.3)),
+                              color: Colors.white.withValues(alpha: 0.3),
+                            ),
                           ),
                         ],
                       ),
@@ -549,34 +586,47 @@ class _FileItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('File',
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
+                Text(
+                  'File',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 Text(
                   cid,
                   style: GoogleFonts.firaCode(
-                      color: Colors.white.withValues(alpha: 0.5), fontSize: 10),
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 10,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(LucideIcons.download,
-                size: 16, color: Colors.cyanAccent),
+            icon: const Icon(
+              LucideIcons.download,
+              size: 16,
+              color: Colors.cyanAccent,
+            ),
             tooltip: 'Download',
             onPressed: () => _downloadFile(context),
           ),
           IconButton(
-            icon: const Icon(LucideIcons.share2,
-                size: 16, color: Colors.purpleAccent),
+            icon: const Icon(
+              LucideIcons.share2,
+              size: 16,
+              color: Colors.purpleAccent,
+            ),
             tooltip: 'Copy Public Link',
             onPressed: () {
               final url = 'https://ipfs.io/ipfs/$cid';
               Clipboard.setData(ClipboardData(text: url));
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                    content: Text('Public link copied to clipboard')),
+                  content: Text('Public link copied to clipboard'),
+                ),
               );
             },
           ),
@@ -600,15 +650,15 @@ class _FileItem extends StatelessWidget {
     try {
       final node = context.read<NodeService>();
       if (!node.isOnline) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Node is offline')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Node is offline')));
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Retrieving file...')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Retrieving file...')));
 
       final bytes = await node.cat(cid);
       if (bytes == null || bytes.isEmpty) {
@@ -637,15 +687,15 @@ class _FileItem extends StatelessWidget {
       await file.writeAsBytes(bytes);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Saved to $savePath')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Saved to $savePath')));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -739,8 +789,9 @@ class _MainContentPanelState extends State<_MainContentPanel>
             indicator: BoxDecoration(
               color: Colors.cyanAccent.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
-              border:
-                  Border.all(color: Colors.cyanAccent.withValues(alpha: 0.5)),
+              border: Border.all(
+                color: Colors.cyanAccent.withValues(alpha: 0.5),
+              ),
             ),
             labelColor: Colors.cyanAccent,
             unselectedLabelColor: Colors.white54,
@@ -851,8 +902,10 @@ class _NetworkViewState extends State<_NetworkView> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Connect to Peer',
-            style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Connect to Peer',
+          style: TextStyle(color: Colors.white),
+        ),
         content: TextField(
           controller: controller,
           style: const TextStyle(color: Colors.white),
@@ -862,7 +915,8 @@ class _NetworkViewState extends State<_NetworkView> {
             hintText: '/ip4/1.2.3.4/tcp/4001/p2p/Qm...',
             hintStyle: TextStyle(color: Colors.white24),
             enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white24)),
+              borderSide: BorderSide(color: Colors.white24),
+            ),
           ),
         ),
         actions: [
@@ -920,14 +974,19 @@ class _NetworkViewState extends State<_NetworkView> {
               children: [
                 Row(
                   children: [
-                    Text('CONNECTED PEERS',
-                        style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
-                            fontSize: 12)),
+                    Text(
+                      'CONNECTED PEERS',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.cyanAccent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
@@ -935,9 +994,10 @@ class _NetworkViewState extends State<_NetworkView> {
                       child: Text(
                         '${_peers.length}',
                         style: const TextStyle(
-                            color: Colors.cyanAccent,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold),
+                          color: Colors.cyanAccent,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -945,8 +1005,11 @@ class _NetworkViewState extends State<_NetworkView> {
                 Row(
                   children: [
                     IconButton(
-                      icon: const Icon(LucideIcons.refreshCw,
-                          size: 16, color: Colors.white54),
+                      icon: const Icon(
+                        LucideIcons.refreshCw,
+                        size: 16,
+                        color: Colors.white54,
+                      ),
                       onPressed: _isLoading ? null : _refreshPeers,
                     ),
                     const SizedBox(width: 8),
@@ -957,8 +1020,9 @@ class _NetworkViewState extends State<_NetworkView> {
                       icon: const Icon(LucideIcons.link, size: 16),
                       label: const Text('Connect'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            Colors.cyanAccent.withValues(alpha: 0.2),
+                        backgroundColor: Colors.cyanAccent.withValues(
+                          alpha: 0.2,
+                        ),
                         foregroundColor: Colors.cyanAccent,
                         elevation: 0,
                       ),
@@ -978,7 +1042,8 @@ class _NetworkViewState extends State<_NetworkView> {
                             ? 'No peers connected'
                             : 'Node is offline',
                         style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.3)),
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
                       ),
                     )
                   : ListView.builder(
@@ -992,7 +1057,8 @@ class _NetworkViewState extends State<_NetworkView> {
                             color: Colors.white.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.05)),
+                              color: Colors.white.withValues(alpha: 0.05),
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -1009,13 +1075,18 @@ class _NetworkViewState extends State<_NetworkView> {
                                 child: Text(
                                   peer,
                                   style: GoogleFonts.firaCode(
-                                      color: Colors.white70, fontSize: 12),
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(LucideIcons.x,
-                                    size: 14, color: Colors.redAccent),
+                                icon: const Icon(
+                                  LucideIcons.x,
+                                  size: 14,
+                                  color: Colors.redAccent,
+                                ),
                                 onPressed: () async {
                                   await context
                                       .read<NodeService>()
@@ -1107,8 +1178,10 @@ class _ChatViewState extends State<_ChatView> {
             'from': displayFrom,
             'peerId': from,
             'content': displayContent,
-            'time':
-                DateTime.now().toIso8601String().split('T')[1].substring(0, 5)
+            'time': DateTime.now()
+                .toIso8601String()
+                .split('T')[1]
+                .substring(0, 5),
           });
         });
 
@@ -1147,8 +1220,10 @@ class _ChatViewState extends State<_ChatView> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        title:
-            const Text('Change Topic', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Change Topic',
+          style: TextStyle(color: Colors.white),
+        ),
         content: TextField(
           controller: controller,
           style: const TextStyle(color: Colors.white),
@@ -1156,13 +1231,15 @@ class _ChatViewState extends State<_ChatView> {
             labelText: 'Topic Name',
             labelStyle: TextStyle(color: Colors.white54),
             enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white24)),
+              borderSide: BorderSide(color: Colors.white24),
+            ),
           ),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, controller.text),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
@@ -1219,12 +1296,19 @@ class _ChatViewState extends State<_ChatView> {
               children: [
                 Row(
                   children: [
-                    const Icon(LucideIcons.hash,
-                        color: Colors.cyanAccent, size: 16),
+                    const Icon(
+                      LucideIcons.hash,
+                      color: Colors.cyanAccent,
+                      size: 16,
+                    ),
                     const SizedBox(width: 8),
-                    Text(_topic,
-                        style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold)),
+                    Text(
+                      _topic,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 Row(
@@ -1237,8 +1321,11 @@ class _ChatViewState extends State<_ChatView> {
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(LucideIcons.settings,
-                          size: 16, color: Colors.white54),
+                      icon: const Icon(
+                        LucideIcons.settings,
+                        size: 16,
+                        color: Colors.white54,
+                      ),
                       onPressed: _changeTopic,
                       tooltip: 'Change Topic',
                     ),
@@ -1258,8 +1345,9 @@ class _ChatViewState extends State<_ChatView> {
                   final isMe =
                       msg['peerId'] == context.read<NodeService>().peerId;
                   return Align(
-                    alignment:
-                        isMe ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment: isMe
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       padding: const EdgeInsets.all(12),
@@ -1269,25 +1357,35 @@ class _ChatViewState extends State<_ChatView> {
                             : Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.05)),
+                          color: Colors.white.withValues(alpha: 0.05),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: isMe
                             ? CrossAxisAlignment.end
                             : CrossAxisAlignment.start,
                         children: [
-                          Text(msg['from']!,
-                              style: TextStyle(
-                                  color: Colors.cyanAccent,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold)),
+                          Text(
+                            msg['from']!,
+                            style: TextStyle(
+                              color: Colors.cyanAccent,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          Text(msg['content']!,
-                              style: const TextStyle(color: Colors.white)),
+                          Text(
+                            msg['content']!,
+                            style: const TextStyle(color: Colors.white),
+                          ),
                           const SizedBox(height: 4),
-                          Text(msg['time']!,
-                              style: TextStyle(
-                                  color: Colors.white54, fontSize: 8)),
+                          Text(
+                            msg['time']!,
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 8,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1307,8 +1405,9 @@ class _ChatViewState extends State<_ChatView> {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
-                      hintStyle:
-                          TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                      hintStyle: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
                       filled: true,
                       fillColor: Colors.black.withValues(alpha: 0.2),
                       border: OutlineInputBorder(
@@ -1316,7 +1415,9 @@ class _ChatViewState extends State<_ChatView> {
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
                     ),
                   ),
                 ),
@@ -1327,8 +1428,11 @@ class _ChatViewState extends State<_ChatView> {
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: IconButton(
-                    icon: const Icon(LucideIcons.send,
-                        color: Colors.black, size: 20),
+                    icon: const Icon(
+                      LucideIcons.send,
+                      color: Colors.black,
+                      size: 20,
+                    ),
                     onPressed: _sendMessage,
                   ),
                 ),
@@ -1491,7 +1595,8 @@ class _ToolsViewState extends State<_ToolsView> {
     if (mounted) {
       setState(() {
         _logs.add(
-            '${DateTime.now().toIso8601String().split('T')[1].substring(0, 8)} $message');
+          '${DateTime.now().toIso8601String().split('T')[1].substring(0, 8)} $message',
+        );
       });
     }
   }
@@ -1625,10 +1730,13 @@ class _ToolsViewState extends State<_ToolsView> {
               children: [
                 Icon(LucideIcons.wrench, color: Colors.amberAccent, size: 20),
                 const SizedBox(width: 8),
-                Text('NETWORK DIAGNOSTICS',
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12)),
+                Text(
+                  'NETWORK DIAGNOSTICS',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 12,
+                  ),
+                ),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: () {
@@ -1638,14 +1746,16 @@ class _ToolsViewState extends State<_ToolsView> {
                     });
                   },
                   icon: Icon(
-                      _showDetails
-                          ? LucideIcons.chevronUp
-                          : LucideIcons.chevronDown,
-                      size: 16,
-                      color: Colors.cyanAccent),
+                    _showDetails
+                        ? LucideIcons.chevronUp
+                        : LucideIcons.chevronDown,
+                    size: 16,
+                    color: Colors.cyanAccent,
+                  ),
                   label: Text(
-                      _showDetails ? 'Hide My Details' : 'Show My Details',
-                      style: const TextStyle(color: Colors.cyanAccent)),
+                    _showDetails ? 'Hide My Details' : 'Show My Details',
+                    style: const TextStyle(color: Colors.cyanAccent),
+                  ),
                 ),
               ],
             ),
@@ -1658,68 +1768,103 @@ class _ToolsViewState extends State<_ToolsView> {
                   color: Colors.cyanAccent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                      color: Colors.cyanAccent.withValues(alpha: 0.3)),
+                    color: Colors.cyanAccent.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('MY NODE IDENTITY',
-                        style: GoogleFonts.firaCode(
-                            color: Colors.cyanAccent,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold)),
+                    Text(
+                      'MY NODE IDENTITY',
+                      style: GoogleFonts.firaCode(
+                        color: Colors.cyanAccent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Text('Peer ID: ',
-                            style: GoogleFonts.firaCode(
-                                color: Colors.white70, fontSize: 11)),
+                        Text(
+                          'Peer ID: ',
+                          style: GoogleFonts.firaCode(
+                            color: Colors.white70,
+                            fontSize: 11,
+                          ),
+                        ),
                         Expanded(
-                            child: SelectableText(node.peerId,
-                                style: GoogleFonts.firaCode(
-                                    color: Colors.white, fontSize: 11))),
+                          child: SelectableText(
+                            node.peerId,
+                            style: GoogleFonts.firaCode(
+                              color: Colors.white,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
                         IconButton(
-                          icon: const Icon(LucideIcons.copy,
-                              size: 14, color: Colors.white54),
+                          icon: const Icon(
+                            LucideIcons.copy,
+                            size: 14,
+                            color: Colors.white54,
+                          ),
                           onPressed: () => Clipboard.setData(
-                              ClipboardData(text: node.peerId)),
+                            ClipboardData(text: node.peerId),
+                          ),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                        )
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     const Divider(color: Colors.white12, height: 1),
                     const SizedBox(height: 8),
-                    Text('LISTENING ADDRESSES:',
-                        style: GoogleFonts.firaCode(
-                            color: Colors.white70, fontSize: 10)),
+                    Text(
+                      'LISTENING ADDRESSES:',
+                      style: GoogleFonts.firaCode(
+                        color: Colors.white70,
+                        fontSize: 10,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     if (_addresses.isEmpty)
-                      Text('Fetching...',
-                          style: GoogleFonts.firaCode(
-                              color: Colors.white38, fontSize: 10))
+                      Text(
+                        'Fetching...',
+                        style: GoogleFonts.firaCode(
+                          color: Colors.white38,
+                          fontSize: 10,
+                        ),
+                      )
                     else
-                      ..._addresses.map((addr) => Padding(
-                            padding: const EdgeInsets.only(bottom: 2),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                    child: SelectableText(addr,
-                                        style: GoogleFonts.firaCode(
-                                            color: Colors.greenAccent,
-                                            fontSize: 10))),
-                                IconButton(
-                                  icon: const Icon(LucideIcons.copy,
-                                      size: 12, color: Colors.white24),
-                                  onPressed: () => Clipboard.setData(
-                                      ClipboardData(text: addr)),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                )
-                              ],
-                            ),
-                          )),
+                      ..._addresses.map(
+                        (addr) => Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: SelectableText(
+                                  addr,
+                                  style: GoogleFonts.firaCode(
+                                    color: Colors.greenAccent,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  LucideIcons.copy,
+                                  size: 12,
+                                  color: Colors.white24,
+                                ),
+                                onPressed: () => Clipboard.setData(
+                                  ClipboardData(text: addr),
+                                ),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -1743,30 +1888,41 @@ class _ToolsViewState extends State<_ToolsView> {
                       color: Colors.cyanAccent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(LucideIcons.gitBranch,
-                        color: Colors.cyanAccent),
+                    child: const Icon(
+                      LucideIcons.gitBranch,
+                      color: Colors.cyanAccent,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('IPLD Explorer',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
+                        const Text(
+                          'IPLD Explorer',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Text('Visualize and traverse Merkle DAG nodes',
-                            style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.5),
-                                fontSize: 12)),
+                        Text(
+                          'Visualize and traverse Merkle DAG nodes',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 12,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => const IPLDExplorerScreen()));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const IPLDExplorerScreen(),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.cyanAccent,
@@ -1791,8 +1947,10 @@ class _ToolsViewState extends State<_ToolsView> {
                 children: [
                   TextField(
                     controller: _inputController,
-                    style:
-                        GoogleFonts.firaCode(color: Colors.white, fontSize: 13),
+                    style: GoogleFonts.firaCode(
+                      color: Colors.white,
+                      fontSize: 13,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'CID or Multiaddr',
                       labelStyle: TextStyle(color: Colors.white54),
@@ -1811,8 +1969,9 @@ class _ToolsViewState extends State<_ToolsView> {
                           icon: const Icon(LucideIcons.search, size: 16),
                           label: const Text('Check Content'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Colors.blueAccent.withValues(alpha: 0.2),
+                            backgroundColor: Colors.blueAccent.withValues(
+                              alpha: 0.2,
+                            ),
                             foregroundColor: Colors.blueAccent,
                           ),
                         ),
@@ -1824,8 +1983,9 @@ class _ToolsViewState extends State<_ToolsView> {
                           icon: const Icon(LucideIcons.network, size: 16),
                           label: const Text('Check Peer'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Colors.purpleAccent.withValues(alpha: 0.2),
+                            backgroundColor: Colors.purpleAccent.withValues(
+                              alpha: 0.2,
+                            ),
                             foregroundColor: Colors.purpleAccent,
                           ),
                         ),
@@ -1844,17 +2004,21 @@ class _ToolsViewState extends State<_ToolsView> {
                 decoration: BoxDecoration(
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('DIAGNOSTIC LOG',
-                        style: GoogleFonts.firaCode(
-                            color: Colors.greenAccent,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold)),
+                    Text(
+                      'DIAGNOSTIC LOG',
+                      style: GoogleFonts.firaCode(
+                        color: Colors.greenAccent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const Divider(color: Colors.white12),
                     Expanded(
                       child: ListView.builder(
@@ -1865,7 +2029,9 @@ class _ToolsViewState extends State<_ToolsView> {
                             child: Text(
                               _logs[index],
                               style: GoogleFonts.firaCode(
-                                  color: Colors.white70, fontSize: 12),
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
                             ),
                           );
                         },

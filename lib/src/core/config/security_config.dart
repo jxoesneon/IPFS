@@ -10,6 +10,7 @@ class SecurityConfig {
     this.maxAuthAttempts = 3,
     this.enableRateLimiting = true,
     this.maxRequestsPerMinute = 100,
+    this.dhtDifficulty = 0, // SEC-005: Default disabled
   });
 
   /// Creates a [SecurityConfig] from a JSON map.
@@ -25,6 +26,7 @@ class SecurityConfig {
       maxAuthAttempts: json['maxAuthAttempts'] as int? ?? 3,
       enableRateLimiting: json['enableRateLimiting'] as bool? ?? true,
       maxRequestsPerMinute: json['maxRequestsPerMinute'] as int? ?? 100,
+      dhtDifficulty: json['dhtDifficulty'] as int? ?? 0,
     );
   }
 
@@ -52,6 +54,9 @@ class SecurityConfig {
   /// Maximum requests per minute
   final int maxRequestsPerMinute;
 
+  /// SEC-005: Static PoW difficulty for DHT Sybil protection (number of zero bits)
+  final int dhtDifficulty;
+
   /// Converts this configuration to a JSON map.
   Map<String, dynamic> toJson() => {
     'enableTLS': enableTLS,
@@ -62,5 +67,6 @@ class SecurityConfig {
     'maxAuthAttempts': maxAuthAttempts,
     'enableRateLimiting': enableRateLimiting,
     'maxRequestsPerMinute': maxRequestsPerMinute,
+    'dhtDifficulty': dhtDifficulty,
   };
 }

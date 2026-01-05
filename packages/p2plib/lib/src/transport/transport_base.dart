@@ -55,10 +55,7 @@ abstract class TransportBase {
   /// [fullAddresses] An iterable of [FullAddress] objects representing the
   ///   destinations to send the datagram to.
   /// [datagram] The datagram data to be sent.
-  void send(
-    Iterable<FullAddress> fullAddresses,
-    Uint8List datagram,
-  );
+  void send(Iterable<FullAddress> fullAddresses, Uint8List datagram);
 
   /// Returns a string representation of the bind address.
   @override

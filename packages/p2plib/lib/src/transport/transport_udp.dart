@@ -13,11 +13,7 @@ class TransportUdp extends TransportBase {
   /// [onMessage] The callback function to invoke when a datagram is received.
   /// [ttl] The time-to-live for outgoing datagrams, specifying the maximum
   ///   number of hops a datagram can traverse before being discarded.
-  TransportUdp({
-    required super.bindAddress,
-    super.onMessage,
-    super.ttl,
-  });
+  TransportUdp({required super.bindAddress, super.onMessage, super.ttl});
 
   /// The default port to use for UDP communication.
   static const defaultPort = 2022;
@@ -72,10 +68,7 @@ class TransportUdp extends TransportBase {
   ///   destinations to send the datagram to.
   /// [datagram] The datagram data to be sent.
   @override
-  void send(
-    Iterable<FullAddress> fullAddresses,
-    Uint8List datagram,
-  ) {
+  void send(Iterable<FullAddress> fullAddresses, Uint8List datagram) {
     // If the socket is not initialized, do nothing.
     if (_socket == null) {
       return;

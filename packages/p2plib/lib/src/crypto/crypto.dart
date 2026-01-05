@@ -13,10 +13,7 @@ import 'package:p2plib/src/crypto/worker.dart';
 /// unsealing (decryption and verification), and signature verification.
 class Crypto {
   Crypto() {
-    _recievePort.listen(
-      _onData,
-      cancelOnError: false,
-    );
+    _recievePort.listen(_onData, cancelOnError: false);
   }
 
   final _recievePort = ReceivePort();
@@ -30,41 +27,28 @@ class Crypto {
   var _idCounter = 0;
 
   Future<InitResult> init([Uint8List? seed]) async {
-    await Isolate.spawn<Object>(
-      cryptoWorker,
-      (sendPort: _recievePort.sendPort, seed: seed),
-      errorsAreFatal: false,
-    );
+    await Isolate.spawn<Object>(cryptoWorker, (
+      sendPort: _recievePort.sendPort,
+      seed: seed,
+    ), errorsAreFatal: false);
     return _initCompleter.future;
   }
 
   Future<Uint8List> seal(Uint8List datagram) {
     final result = _getCompleter();
-    _sendPort.send((
-      id: result.id,
-      type: TaskType.seal,
-      datagram: datagram,
-    ));
+    _sendPort.send((id: result.id, type: TaskType.seal, datagram: datagram));
     return result.completer.future;
   }
 
   Future<Uint8List> unseal(Uint8List datagram) {
     final result = _getCompleter();
-    _sendPort.send((
-      id: result.id,
-      type: TaskType.unseal,
-      datagram: datagram,
-    ));
+    _sendPort.send((id: result.id, type: TaskType.unseal, datagram: datagram));
     return result.completer.future;
   }
 
   Future<Uint8List> verify(Uint8List datagram) {
     final result = _getCompleter();
-    _sendPort.send((
-      id: result.id,
-      type: TaskType.verify,
-      datagram: datagram,
-    ));
+    _sendPort.send((id: result.id, type: TaskType.verify, datagram: datagram));
     return result.completer.future;
   }
 

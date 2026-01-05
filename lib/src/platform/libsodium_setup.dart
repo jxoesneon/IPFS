@@ -51,9 +51,7 @@ class LibsodiumSetup {
   /// Checks if libsodium.dll is in the system PATH on Windows.
   static Future<bool> _isInstalled() async {
     try {
-      final result = await Process.run('where', [
-        'libsodium.dll',
-      ], runInShell: true);
+      final result = await Process.run('where', ['libsodium.dll']);
       return result.exitCode == 0 && result.stdout.toString().isNotEmpty;
     } catch (e) {
       return false;
@@ -83,7 +81,7 @@ class LibsodiumSetup {
         '--accept-source-agreements',
         '--accept-package-agreements',
         '--silent',
-      ], runInShell: true);
+      ]);
 
       if (result.exitCode == 0) {
         if (verbose) {
@@ -93,7 +91,9 @@ class LibsodiumSetup {
         return true;
       } else {
         if (verbose) {
-          stdout.writeln('❌ Installation failed (exit code: ${result.exitCode})');
+          stdout.writeln(
+            '❌ Installation failed (exit code: ${result.exitCode})',
+          );
           if (result.stderr.toString().isNotEmpty) {
             stdout.writeln('   Error: ${result.stderr}');
           }
@@ -114,9 +114,7 @@ class LibsodiumSetup {
   /// Checks if winget (Windows Package Manager) is available.
   static Future<bool> _hasWinget() async {
     try {
-      final result = await Process.run('winget', [
-        '--version',
-      ], runInShell: true);
+      final result = await Process.run('winget', ['--version']);
       return result.exitCode == 0;
     } catch (e) {
       return false;

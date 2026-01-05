@@ -442,7 +442,7 @@ class NetworkHandler {
         return false;
       }
       final bootstrapPeer =
-          _config.network.bootstrapPeers[Random().nextInt(
+          _config.network.bootstrapPeers[Random.secure().nextInt(
             _config.network.bootstrapPeers.length,
           )];
 

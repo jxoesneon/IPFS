@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:dart_ipfs/src/core/config/security_config.dart';
+import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
 import 'package:dart_ipfs/src/core/crypto/encrypted_keystore.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
@@ -275,13 +276,30 @@ class SecurityManager implements ISecurityManager {
     _logger.debug('Retrieving private key for: $keyName');
 
     try {
-      if (!_keystore.hasKeyPair(keyName)) {
-        _logger.warning('Key not found: $keyName');
-        return null;
+      // 1. Try secure keystore first (SEC-008)
+      if (_encryptedKeystore.hasKey(keyName)) {
+        if (!_encryptedKeystore.isUnlocked) {
+          _logger.warning(
+            'Encrypted key requested but keystore is locked: $keyName',
+          );
+          return null;
+        }
+        final keyPair = await _encryptedKeystore.getKey(keyName);
+        final seed = await keyPair.extractSeedAndZero();
+        return IPFSPrivateKey.fromBytes(seed);
       }
 
-      final keyPair = _keystore.getKeyPair(keyName);
-      return IPFSPrivateKey.fromString(keyPair.privateKey);
+      // 2. Fallback to plaintext keystore for transition (legacy)
+      if (_keystore.hasKeyPair(keyName)) {
+        _logger.warning(
+          'Retrieved PLAINTEXT key for $keyName - migration recommended (SEC-008)',
+        );
+        final keyPair = _keystore.getKeyPair(keyName);
+        return IPFSPrivateKey.fromString(keyPair.privateKey);
+      }
+
+      _logger.warning('Key not found in any keystore: $keyName');
+      return null;
     } catch (e, stackTrace) {
       _logger.error('Failed to retrieve private key', e, stackTrace);
       return null;

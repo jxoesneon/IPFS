@@ -66,7 +66,7 @@ void main() {
 
   group('NetworkConfig', () {
     test('defaults', () {
-      final config = const NetworkConfig();
+      final config = NetworkConfig();
       expect(config.maxConnections, 50);
       expect(config.listenAddresses, contains('/ip4/0.0.0.0/tcp/4001'));
     });
@@ -78,11 +78,17 @@ void main() {
         'maxConnections': 100,
         'connectionTimeoutSeconds': 10,
         'delegatedRoutingEndpoint': 'https://example.com',
+        'enableNatTraversal': true,
       };
       final config = NetworkConfig.fromJson(json);
       expect(config.maxConnections, 100);
       expect(config.bootstrapPeers, hasLength(1));
-      expect(config.toJson(), json);
+      expect(config.enableNatTraversal, isTrue);
+
+      final output = config.toJson();
+      expect(output['enableNatTraversal'], isTrue);
+      expect(output['maxConnections'], 100);
+      expect(output['nodeId'], isNotEmpty);
     });
   });
 
