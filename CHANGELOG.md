@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.5] - 2026-01-05
+
+### Fixed
+
+- **Release**: Removed accidentally committed large test artifacts from the repository.
+- **CI**: Resolved analysis warnings by adding missing lint dependencies.
+- **CI**: Triggered clean CI run after successful local publication of v1.7.4.
+
 ## [1.7.4] - 2026-01-05
 
 ### Added
