@@ -62,6 +62,9 @@ class NetworkHandler {
       await _circuitRelayClient.start();
       _logger.verbose('Circuit relay client started successfully');
 
+      // Register AutoNAT dialback protocol handler
+      _registerDialbackHandler();
+
       _logger.info('Network services started successfully');
     } catch (e, stackTrace) {
       _logger.error('Error starting network services', e, stackTrace);
@@ -479,7 +482,7 @@ class NetworkHandler {
 
       final response = await _router.sendRequest(
         targetPeerId,
-        '/ipfs/autonat/1.0.0/dialback',
+        _dialbackProtocolId,
         Uint8List(0), // Empty payload for dialback request
       );
 
@@ -495,4 +498,32 @@ class NetworkHandler {
 
   /// Gets the peer ID of this node
   String get peerID => _router.peerID;
+
+  /// Protocol ID for AutoNAT dialback
+  static const String _dialbackProtocolId = '/ipfs/autonat/1.0.0/dialback';
+
+  /// Registers the AutoNAT dialback protocol handler.
+  ///
+  /// This handler responds to incoming dialback requests from peers.
+  /// When a peer sends a dialback request, we respond with a success
+  /// message to confirm that they can reach us.
+  void _registerDialbackHandler() {
+    _logger.verbose('Registering AutoNAT dialback protocol handler');
+
+    _router.registerProtocolHandler(_dialbackProtocolId, (packet) {
+      _logger.verbose('Received dialback request from ${packet.srcPeerId}');
+
+      try {
+        // Respond with a success acknowledgment
+        // The response just needs to be non-empty to indicate success
+        final response = Uint8List.fromList(utf8.encode('OK'));
+        _router.sendMessage(packet.srcPeerId.toString(), response);
+        _logger.debug('Sent dialback response to ${packet.srcPeerId}');
+      } catch (e) {
+        _logger.error('Error responding to dialback request', e);
+      }
+    });
+
+    _logger.debug('AutoNAT dialback handler registered');
+  }
 }

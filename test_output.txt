@@ -1,0 +1,38 @@
+00:00 [32m+0[0m: [1m[90mloading test/integration/full_nat_test.dart[0m[0m
+00:00 [32m+0[0m: Full NAT Integration Test NetworkHandler.testDialback correctly extracts PeerID from Multiaddr (Fix Verification)[0m
+2026-01-07T13:45:14.167991 [FINE] [NetworkHandler] [DEBUG] Initializing NetworkHandler...
+2026-01-07T13:45:14.171457 [FINE] [NetworkHandler] [VERBOSE] Creating CircuitRelayClient with router instance
+2026-01-07T13:45:14.171566 [FINE] [NetworkHandler] [VERBOSE] Setting up network event listeners
+2026-01-07T13:45:14.171652 [FINE] [NetworkHandler] [VERBOSE] Setting up network event stream listener
+2026-01-07T13:45:14.171714 [FINE] [NetworkHandler] [DEBUG] NetworkHandler initialization complete
+2026-01-07T13:45:14.171807 [FINE] [NetworkHandler] [VERBOSE] Starting dialback test
+2026-01-07T13:45:14.172610 [FINE] [NetworkHandler] [DEBUG] Dialback test completed successfully
+00:00 [32m+0[0m[31m -1[0m: Full NAT Integration Test NetworkHandler.testDialback correctly extracts PeerID from Multiaddr (Fix Verification) [1m[31m[E][0m[0m
+  Expected: true
+    Actual: <false>
+  Dialback should succeed via mock
+  
+  package:matcher                            expect
+  test/integration/full_nat_test.dart 119:7  main.<fn>.<fn>
+  
+00:00 [32m+0[0m[31m -1[0m: Full NAT Integration Test AutoNATHandler full lifecycle with NAT and Port Mapping[0m
+00:00 [32m+0[0m[31m -1[0m: Full NAT Integration Test NetworkHandler.testDialback correctly extracts PeerID from Multiaddr (Fix Verification)[0m
+2026-01-07T13:45:14.191382 [FINE] [AutoNATHandler] [DEBUG] AutoNATHandler instance created
+2026-01-07T13:45:14.191561 [FINE] [AutoNATHandler] [DEBUG] Starting AutoNATHandler...
+2026-01-07T13:45:14.191661 [FINE] [AutoNATHandler] [DEBUG] Detecting NAT type...
+2026-01-07T13:45:14.192384 [FINE] [AutoNATHandler] [DEBUG] NAT type detected: NATType.restricted
+2026-01-07T13:45:14.192899 [FINE] [AutoNATHandler] [DEBUG] Attempting UPnP/NAT-PMP port mapping...
+2026-01-07T13:45:14.193040 [FINE] [AutoNATHandler] [DEBUG] Identified listening port: 5001
+2026-01-07T13:45:14.193302 [INFO] [AutoNATHandler] [INFO] Port mapping successful for protocols: TCP, UDP
+2026-01-07T13:45:14.193384 [FINE] [AutoNATHandler] [VERBOSE] Performing dialback test
+2026-01-07T13:45:14.193478 [FINE] [AutoNATHandler] [DEBUG] Dialback test complete. Reachable: false
+2026-01-07T13:45:14.193557 [FINE] [AutoNATHandler] [VERBOSE] Starting periodic dialback tests
+2026-01-07T13:45:14.193849 [FINE] [AutoNATHandler] [VERBOSE] Performing dialback test
+2026-01-07T13:45:14.193891 [INFO] [AutoNATHandler] [INFO] AutoNATHandler started successfully
+2026-01-07T13:45:14.194054 [FINE] [AutoNATHandler] [DEBUG] Dialback test complete. Reachable: false
+2026-01-07T13:45:14.194336 [FINE] [AutoNATHandler] [DEBUG] Stopping AutoNATHandler...
+2026-01-07T13:45:14.194414 [INFO] [AutoNATHandler] [INFO] AutoNATHandler stopped successfully
+00:00 [32m+1[0m[31m -1[0m: [31mSome tests failed.[0m
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.
