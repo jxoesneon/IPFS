@@ -210,7 +210,7 @@ class AutoNATHandler {
     }
 
     _logger.debug('Identified listening port: $port');
-    
+
     // Store for unmapping
     _mappedPort = port;
 
