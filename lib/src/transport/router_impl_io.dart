@@ -329,7 +329,7 @@ class P2plibRouter {
   /// This ensures the message is correctly wrapped, signed, and encrypted.
   Future<void> sendMessage(String peerIdStr, Uint8List message) async {
     final peer = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
-    await _router.sendMessage(dstId: peer, payload: message);
+    await _router.sendMessage(dstPeerId: peer, payload: message);
   }
 
   /// Receives messages from a specific peer.
