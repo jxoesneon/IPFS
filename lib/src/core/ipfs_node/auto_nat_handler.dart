@@ -32,6 +32,7 @@ class AutoNATHandler {
   NATType _natType = NATType.unknown;
   bool _reachable = false;
   DateTime? _lastDialbackTest;
+  int? _mappedPort;
 
   static const Duration _dialbackInterval = Duration(minutes: 30);
 
@@ -80,7 +81,12 @@ class AutoNATHandler {
       _dialbackTimer = null;
 
       // Clean up port mappings
-      await _natService.unmapPort(4001);
+      if (_mappedPort != null) {
+        await _natService.unmapPort(_mappedPort!);
+      } else {
+        // Fallback or legacy default
+        await _natService.unmapPort(4001);
+      }
 
       _isRunning = false;
       _logger.info('AutoNATHandler stopped successfully');
@@ -204,6 +210,9 @@ class AutoNATHandler {
     }
 
     _logger.debug('Identified listening port: $port');
+    
+    // Store for unmapping
+    _mappedPort = port;
 
     final mapped = await _natService.mapPort(port);
     if (mapped.isNotEmpty) {

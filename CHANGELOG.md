@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.6] - 2026-01-07
+
+### Fixed
+
+- **AutoNAT**: Resolved bug in `AutoNATHandler.stop()` where port 4001 was forcibly unmapped instead of the actually mapped port (#16).
+- **Network**: Confirmed `NetworkHandler` correctly passes PeerID to the router during dialback validation.
+
+### Added
+
+- **Tests**: Added `test/integration/full_nat_test.dart` to verify NAT traversal lifecycle and fixes.
+- **Tests**: Added `test/e2e/e2e_test.dart` for end-to-end `IPFSNode` start/stop lifecycle validation.
+- **Verification**: Achieved passing status for all new integration and E2E tests, ensuring robust regression testing.
+
 ## [1.7.5] - 2026-01-05
 
 ### Fixed

@@ -19,7 +19,7 @@ Future<void> main() async {
   print('📝 Creating IPFS configuration...');
   // Use port 4002 to avoid conflict with Dashboard app (4001)
   final config = IPFSConfig(
-    network: const NetworkConfig(listenAddresses: ['/ip4/0.0.0.0/tcp/4002']),
+    network: NetworkConfig(listenAddresses: ['/ip4/0.0.0.0/tcp/4002']),
   );
 
   // Step 2: Initialize IPFS node

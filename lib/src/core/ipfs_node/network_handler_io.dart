@@ -466,8 +466,19 @@ class NetworkHandler {
   /// Sends a dialback request to a peer
   Future<bool> _sendDialbackRequest(String peerAddr) async {
     try {
+      // Extract Peer ID from Multiaddr string
+      String targetPeerId = peerAddr;
+      if (peerAddr.contains('/p2p/')) {
+        targetPeerId = peerAddr.split('/p2p/').last;
+      } else if (peerAddr.contains('/ipfs/')) {
+        targetPeerId = peerAddr.split('/ipfs/').last;
+      }
+      if (targetPeerId.contains('/')) {
+        targetPeerId = targetPeerId.split('/').first;
+      }
+
       final response = await _router.sendRequest(
-        peerAddr,
+        targetPeerId,
         '/ipfs/autonat/1.0.0/dialback',
         Uint8List(0), // Empty payload for dialback request
       );
