@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.10] - 2026-01-07
+
+### Fixed
+
+- **Transport**: Fixed transport mismatch where dialback responses were sent as raw UDP datagrams instead of signed `p2plib` messages (#20). Updated `sendMessage` to use high-level `_router.sendMessage` which ensures proper wrapping and signing, preventing packets from being dropped by the receiver's length checks.
+
 ## [1.7.9] - 2026-01-07
 
 ### Fixed
