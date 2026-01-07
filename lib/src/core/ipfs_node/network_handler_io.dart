@@ -507,6 +507,9 @@ class NetworkHandler {
   /// This handler responds to incoming dialback requests from peers.
   /// When a peer sends a dialback request, we respond with a success
   /// message to confirm that they can reach us.
+  ///
+  /// The response must include the original request ID (last 13 bytes of
+  /// the incoming datagram) so the sender can correlate the response.
   void _registerDialbackHandler() {
     _logger.verbose('Registering AutoNAT dialback protocol handler');
 
@@ -514,11 +517,26 @@ class NetworkHandler {
       _logger.verbose('Received dialback request from ${packet.srcPeerId}');
 
       try {
-        // Respond with a success acknowledgment
-        // The response just needs to be non-empty to indicate success
-        final response = Uint8List.fromList(utf8.encode('OK'));
+        // Extract request ID from the incoming packet (last 13 chars = timestamp)
+        String requestId = '';
+        if (packet.datagram.length >= 13) {
+          final requestIdBytes = packet.datagram.sublist(
+            packet.datagram.length - 13,
+          );
+          requestId = utf8.decode(requestIdBytes, allowMalformed: true);
+        }
+
+        // Respond with success acknowledgment + request ID for correlation
+        final responsePayload = utf8.encode('OK');
+        final response = Uint8List.fromList([
+          ...responsePayload,
+          ...utf8.encode(requestId),
+        ]);
+
         _router.sendMessage(packet.srcPeerId.toString(), response);
-        _logger.debug('Sent dialback response to ${packet.srcPeerId}');
+        _logger.debug(
+          'Sent dialback response to ${packet.srcPeerId} (requestId: $requestId)',
+        );
       } catch (e) {
         _logger.error('Error responding to dialback request', e);
       }
