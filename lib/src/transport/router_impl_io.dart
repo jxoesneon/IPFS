@@ -325,16 +325,11 @@ class P2plibRouter {
     return connectedPeers;
   }
 
-  /// Sends a message to a peer.
-  Future<void> sendMessage(String peerIdStr, Uint8List message) {
+  /// Sends a message to a peer using p2plib's high-level messaging.
+  /// This ensures the message is correctly wrapped, signed, and encrypted.
+  Future<void> sendMessage(String peerIdStr, Uint8List message) async {
     final peer = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
-    final addresses = _router.resolvePeerId(peer);
-    if (addresses.isEmpty) {
-      throw Exception('No addresses found for peer $peerIdStr');
-    }
-
-    _router.sendDatagram(addresses: addresses, datagram: message);
-    return Future.value();
+    await _router.sendMessage(dstId: peer, payload: message);
   }
 
   /// Receives messages from a specific peer.
