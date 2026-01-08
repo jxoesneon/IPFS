@@ -226,6 +226,10 @@ class P2plibRouter {
         try {
           final datagram = message.payload!;
           // Format: [1 byte protocol length][N bytes protocol ID][Rest: payload]
+          if (datagram.isEmpty) {
+            _logger.verbose('Dispatcher: Received empty datagram, skipping');
+            return;
+          }
           final protocolLen = datagram[0];
           if (protocolLen > 0 && protocolLen < datagram.length) {
             final protocolId = utf8.decode(
@@ -422,6 +426,8 @@ class P2plibRouter {
       finalPayload = builder.toBytes();
     }
 
+    // High-level p2plib sendMessage ensures proper encapsulation, signing, and encryption.
+    // L2 messaging is required for the receiver's RouterL1/L2 to accept and verify the packet.
     await _router.sendMessage(dstPeerId: peer, payload: finalPayload);
   }
 
@@ -474,6 +480,9 @@ class P2plibRouter {
     }
 
     _protocolHandlers[protocolId] = handler;
+
+    // The central dispatcher in initialize() already handles routing messages
+    // to these handlers via _protocolHandlers. No need for an additional listener here.
   }
 
   /// Removes a message handler for a specific protocol
@@ -665,12 +674,11 @@ class P2plibRouter {
       _logger.verbose('Protocol $protocolId already registered');
       return;
     }
-
     _registeredProtocols.add(protocolId);
     _logger.debug('Registered protocol: $protocolId');
   }
 
-  /// Gets the underlying RouterL0 instance
+  /// Gets the underlying RouterL2 instance
   p2p.RouterL2 get routerL0 => _router;
 
   /// Stream of connection events

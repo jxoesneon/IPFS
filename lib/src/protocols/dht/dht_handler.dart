@@ -376,7 +376,18 @@ class DHTHandler implements IDHTHandler {
 
   /// Returns the current status of the DHT handler.
   Future<Map<String, dynamic>> getStatus() async {
+    if (!dhtClient.isInitialized) {
+      return {
+        'status': 'disabled',
+        'active_queries': 0,
+        'routing_table_size': 0,
+        'total_providers': 0,
+        'protocol_version': _protocolVersion,
+      };
+    }
+
     return {
+      'status': 'active',
       'active_queries': _activeQueries.length,
       'routing_table_size': dhtClient.kademliaRoutingTable.peerCount,
       'total_providers': _providers.length,

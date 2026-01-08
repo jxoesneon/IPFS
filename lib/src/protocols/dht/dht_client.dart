@@ -144,6 +144,7 @@ class DHTClient {
   // Content Routing API: Find Providers (GET_PROVIDERS)
   /// Finds providers for a CID in the DHT.
   Future<List<PeerId>> findProviders(String cid) async {
+    _checkInitialized();
     final msg = kad.Message()
       ..type = kad.Message_MessageType.GET_PROVIDERS
       // The key sent on wire is the raw Multihash bytes for GET_PROVIDERS
@@ -191,6 +192,7 @@ class DHTClient {
 
   /// Finds a peer by its ID in the DHT.
   Future<PeerId?> findPeer(PeerId id) async {
+    _checkInitialized();
     final msg = kad.Message()
       ..type = kad.Message_MessageType.FIND_NODE
       ..key = id.value; // PeerId is already the key
@@ -225,6 +227,7 @@ class DHTClient {
 
   /// Adds a provider (ADD_PROVIDER)
   Future<void> addProvider(String cid, String providerId) async {
+    _checkInitialized();
     final msg = kad.Message()
       ..type = kad.Message_MessageType.ADD_PROVIDER
       ..key = CID
@@ -425,6 +428,9 @@ class DHTClient {
   /// Starts the DHT client and initializes necessary components
   Future<void> start() async {
     try {
+      // Ensure client is initialized before starting
+      await initialize();
+
       // Router should already be initialized by IPFSNode
       await _router
           .start(); // This will be safe now with the updated P2plibRouter
@@ -448,6 +454,7 @@ class DHTClient {
       // Clean up any active requests or connections
       // Clear routing table
       _kademliaRoutingTable.clear();
+    _initialized = false;
 
       // print('DHT client stopped successfully');
     } catch (e) {
@@ -618,6 +625,16 @@ class DHTClient {
   }
   */
 
+  void _checkInitialized() {
+    if (!_initialized) {
+      throw StateError(
+          'DHTClient not initialized. Did you forget to call start() or initialize()?');
+    }
+  }
+
   /// The underlying P2P router.
   P2plibRouter get router => _router;
+
+  /// Whether the DHT client has been initialized.
+  bool get isInitialized => _initialized;
 }
