@@ -85,6 +85,4 @@ example: main.dart
 
 dependency_overrides:
   pointycastle: ^4.0.0
-  p2plib:
-    path: /Users/meilynlopezcubero/SeedSphere/router/vendor/p2plib
   protobuf: 5.1.0
