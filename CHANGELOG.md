@@ -5,11 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.7.10] - 2026-01-07
+## [1.8.0] - 2026-01-07
+
+### Added
+
+- **Transport**: Implemented **`Libp2pTransport`** bridge, allowing the node to communicate with standard libp2p nodes using TCP and Noise encryption.
+- **Protobuf**: Added local support for Protobuf **Well-Known Types** (`Timestamp`, `Any`, `Empty`) to resolve compatibility issues with `dart_libp2p`.
 
 ### Fixed
 
-- **Transport**: Fixed transport mismatch where dialback responses were sent as raw UDP datagrams instead of signed `p2plib` messages (#20). Updated `sendMessage` to use high-level `_router.sendMessage` which ensures proper wrapping and signing, preventing packets from being dropped by the receiver's length checks.
+- **Dependencies**: Resolved critical version mismatch between `protobuf` and `grpc`. Pinned `protobuf` to `5.1.0` (with dependency override) to support both `PbList()` and shorthand builder methods (`aI`, `aOS`).
+- **Transport**: Fixed transport mismatch where dialback responses were sent as raw UDP datagrams instead of signed `p2plib` messages (#20).
+- **Security**: Resolved cross-process encryption mismatch by temporarily disabling transport encryption in `LocalCrypto` for specific local-only scenarios.
+- **Stability**: Resolved memory leak in `P2plibRouter` by using a single stream listener for all protocol handlers.
+- **Protocol**: Implemented central protocol dispatching and multiplexing in `P2plibRouter`.
+- **AutoNAT**: Fixed dialback response to include request ID for proper correlation (#18).
 
 ## [1.7.9] - 2026-01-07
 

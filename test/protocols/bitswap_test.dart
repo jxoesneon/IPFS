@@ -115,7 +115,11 @@ class MockP2plibRouter implements P2plibRouter {
   List<String> get connectedPeers => [Base58().encode(validPeerIdBytes)];
 
   @override
-  Future<void> sendMessage(String peerId, Uint8List data) async {}
+  Future<void> sendMessage(
+    String peerId,
+    Uint8List data, {
+    String? protocolId,
+  }) async {}
 
   Future<void> simulatePacket(NetworkPacket packet) async {
     if (messageHandler != null) {

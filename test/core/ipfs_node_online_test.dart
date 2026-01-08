@@ -71,7 +71,7 @@ class MockIPLDHandler extends IPLDHandler {
 }
 
 class MockP2plibRouter extends P2plibRouter {
-  MockP2plibRouter(super.config) : super.internal();
+  MockP2plibRouter(super.config);
   @override
   Future<void> initialize() async {}
   @override

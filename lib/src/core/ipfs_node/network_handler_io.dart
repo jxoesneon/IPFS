@@ -227,58 +227,7 @@ class NetworkHandler {
     String protocolId,
     Uint8List request,
   ) async {
-    try {
-      // Create a completer to handle the async response
-      final completer = Completer<Uint8List>();
-
-      // Generate request ID
-      final requestId = DateTime.now().millisecondsSinceEpoch.toString();
-
-      // Add request ID to message
-      final messageWithId = Uint8List.fromList([
-        ...request,
-        ...utf8.encode(requestId),
-      ]);
-
-      // Set up one-time response handler
-      _router.registerProtocolHandler(protocolId, (packet) {
-        if (packet.srcPeerId.toString() == peerId.toString() &&
-            _extractRequestId(packet.datagram) == requestId) {
-          _router.removeMessageHandler(protocolId);
-          completer.complete(packet.datagram);
-        }
-      });
-
-      // Send the request
-      await _router.sendMessage(peerId.toString(), messageWithId);
-
-      // Wait for response with timeout
-      return await completer.future.timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          _router.removeMessageHandler(protocolId);
-          throw TimeoutException('Request to peer timed out');
-        },
-      );
-    } catch (e) {
-      // print('Error sending request to peer ${peerId.toString()}: $e');
-      rethrow;
-    }
-  }
-
-  /// Extracts the request ID from a datagram
-  String _extractRequestId(Uint8List datagram) {
-    try {
-      // The request ID is appended at the end of the datagram
-      // Convert the last portion to UTF-8 string
-      final requestIdBytes = datagram.sublist(
-        datagram.length - 36,
-      ); // UUID is 36 chars
-      return utf8.decode(requestIdBytes);
-    } catch (e) {
-      // print('Error extracting request ID: $e');
-      return ''; // Return empty string on error
-    }
+    return _router.sendRequest(peerId, protocolId, request);
   }
 
   /// Gets the P2plibRouter instance
@@ -533,7 +482,11 @@ class NetworkHandler {
           ...utf8.encode(requestId),
         ]);
 
-        _router.sendMessage(packet.srcPeerId.toString(), response);
+        _router.sendMessage(
+          packet.srcPeerId.toString(),
+          response,
+          protocolId: _dialbackProtocolId,
+        );
         _logger.debug(
           'Sent dialback response to ${packet.srcPeerId} (requestId: $requestId)',
         );

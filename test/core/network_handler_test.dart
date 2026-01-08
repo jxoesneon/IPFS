@@ -7,7 +7,7 @@ import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
 
 class MockP2plibRouter extends P2plibRouter {
-  MockP2plibRouter(super.config) : super.internal();
+  MockP2plibRouter(super.config);
 
   bool started = false;
   final List<String> _mockConnectedPeers = [];

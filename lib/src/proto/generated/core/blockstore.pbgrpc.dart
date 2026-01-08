@@ -15,7 +15,8 @@ import 'dart:core' as $core;
 
 import 'package:grpc/service_api.dart' as $grpc;
 import 'package:protobuf/protobuf.dart' as $pb;
-import 'package:protobuf/well_known_types/google/protobuf/empty.pb.dart' as $3;
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/empty.pb.dart'
+    as $3;
 
 import 'block.pb.dart' as $0;
 import 'blockstore.pb.dart' as $1;

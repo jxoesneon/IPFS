@@ -96,6 +96,8 @@ class IPFSConfig {
     this.datastorePath = './ipfs_data',
     this.keystorePath = './ipfs_keystore',
     this.blockStorePath = 'blocks',
+    this.enableLibp2pBridge = false,
+    this.libp2pListenAddress = '/ip4/0.0.0.0/tcp/4001',
     String? nodeId,
     this.garbageCollectionInterval = const Duration(hours: 24),
     this.garbageCollectionEnabled = true,
@@ -219,6 +221,12 @@ class IPFSConfig {
   /// Path to the blockstore.
   final String blockStorePath;
 
+  /// Whether to enable the libp2p bridge transport.
+  final bool enableLibp2pBridge;
+
+  /// The listen address for the libp2p bridge.
+  final String libp2pListenAddress;
+
   /// The unique node identifier.
   final String nodeId;
 
@@ -279,5 +287,7 @@ class IPFSConfig {
     'logLevel': logLevel,
     'enableQuotaManagement': enableQuotaManagement,
     'defaultBandwidthQuota': defaultBandwidthQuota,
+    'enableLibp2pBridge': enableLibp2pBridge,
+    'libp2pListenAddress': libp2pListenAddress,
   };
 }

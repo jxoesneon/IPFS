@@ -92,7 +92,11 @@ class MockP2plibRouter implements P2plibRouter {
   bool isConnectedPeer(String peerId) => true;
 
   @override
-  Future<void> sendMessage(String peerId, Uint8List message) async {}
+  Future<void> sendMessage(
+    String peerId,
+    Uint8List message, {
+    String? protocolId,
+  }) async {}
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

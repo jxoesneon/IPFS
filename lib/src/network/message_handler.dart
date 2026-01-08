@@ -9,6 +9,7 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart' as pb_base;
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart' as pb_cid;
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
 import 'package:dart_ipfs/src/services/gateway/content_type_handler.dart';
@@ -16,7 +17,6 @@ import 'package:dart_ipfs/src/services/gateway/lazy_preview_handler.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 
 /// Handles IPFS message processing and content operations.
 ///

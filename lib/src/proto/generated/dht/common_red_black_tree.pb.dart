@@ -13,7 +13,7 @@
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
-import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart'
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart'
     as $0;
 
 import 'common_red_black_tree.pbenum.dart';

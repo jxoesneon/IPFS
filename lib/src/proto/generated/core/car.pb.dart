@@ -14,7 +14,8 @@ import 'dart:core' as $core;
 
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
-import 'package:protobuf/well_known_types/google/protobuf/any.pb.dart' as $1;
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/any.pb.dart'
+    as $1;
 
 import 'block.pb.dart' as $0;
 import 'cid.pb.dart' as $2;

@@ -25,7 +25,11 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  Future<void> sendMessage(String peerId, Uint8List message) async {
+  Future<void> sendMessage(
+    String peerId,
+    Uint8List message, {
+    String? protocolId,
+  }) async {
     sentMessages.add(SentMessage(peerId, message));
   }
 
