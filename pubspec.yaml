@@ -48,7 +48,7 @@ dependencies:
   markdown: ^7.3.0
   synchronized: ^3.4.0
   multicast_dns: ^0.3.3
-  dart_libp2p: any
+  dart_libp2p: ^0.5.3
 
   jose: ^0.3.5
   mime: ^2.0.0
