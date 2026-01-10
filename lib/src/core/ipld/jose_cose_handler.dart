@@ -232,7 +232,6 @@ class _IpfsCoseVerifier implements CatalystCoseVerifier {
 
   final IPFSPrivateKey _privateKey;
 
-  @override
   StringOrInt get alg => const IntValue(-7); // ES256 algorithm identifier
 
   @override
