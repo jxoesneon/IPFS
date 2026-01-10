@@ -50,7 +50,7 @@ void main() {
       const ip = '0.0.0.0';
       const port = 4001;
       final ma = '/ip4/$ip/tcp/$port';
-      
+
       expect(ma, equals('/ip4/0.0.0.0/tcp/4001'));
     });
 
@@ -58,7 +58,7 @@ void main() {
       final address = InternetAddress('192.168.1.1');
       const port = 5000;
       final ma = '/ip4/${address.address}/tcp/$port';
-      
+
       expect(ma, contains('192.168.1.1'));
       expect(ma, contains('5000'));
     });

@@ -63,11 +63,11 @@ const RedBlackTreeNode$json = {
 };
 
 /// Descriptor for `RedBlackTreeNode`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List redBlackTreeNodeDescriptor = $convert.base64Decode(
-    'ChBSZWRCbGFja1RyZWVOb2RlEjoKA2tleRgBIAEoCzIoLmlwZnMuZGh0LmNvbW1vbl9yZWRfYm'
-    'xhY2tfdHJlZS5LX1BlZXJJZFIDa2V5EkAKBXZhbHVlGAIgASgLMiouaXBmcy5kaHQuY29tbW9u'
-    'X3JlZF9ibGFja190cmVlLlZfUGVlckluZm9SBXZhbHVlEj8KBWNvbG9yGAMgASgOMikuaXBmcy'
-    '5kaHQuY29tbW9uX3JlZF9ibGFja190cmVlLk5vZGVDb2xvclIFY29sb3ISPQoEbGVmdBgEIAEo'
-    'CzIpLmlwZnMuZGh0LnJlZF9ibGFja190cmVlLlJlZEJsYWNrVHJlZU5vZGVSBGxlZnQSPwoFcm'
-    'lnaHQYBSABKAsyKS5pcGZzLmRodC5yZWRfYmxhY2tfdHJlZS5SZWRCbGFja1RyZWVOb2RlUgVy'
-    'aWdodA==');
+final $typed_data.Uint8List redBlackTreeNodeDescriptor = $convert
+    .base64Decode('ChBSZWRCbGFja1RyZWVOb2RlEjoKA2tleRgBIAEoCzIoLmlwZnMuZGh0LmNvbW1vbl9yZWRfYm'
+        'xhY2tfdHJlZS5LX1BlZXJJZFIDa2V5EkAKBXZhbHVlGAIgASgLMiouaXBmcy5kaHQuY29tbW9u'
+        'X3JlZF9ibGFja190cmVlLlZfUGVlckluZm9SBXZhbHVlEj8KBWNvbG9yGAMgASgOMikuaXBmcy'
+        '5kaHQuY29tbW9uX3JlZF9ibGFja190cmVlLk5vZGVDb2xvclIFY29sb3ISPQoEbGVmdBgEIAEo'
+        'CzIpLmlwZnMuZGh0LnJlZF9ibGFja190cmVlLlJlZEJsYWNrVHJlZU5vZGVSBGxlZnQSPwoFcm'
+        'lnaHQYBSABKAsyKS5pcGZzLmRodC5yZWRfYmxhY2tfdHJlZS5SZWRCbGFja1RyZWVOb2RlUgVy'
+        'aWdodA==');

@@ -192,10 +192,7 @@ void main() {
 
     group('Concurrent Operations', () {
       test('concurrent block creation', () async {
-        final futures = List.generate(
-          10,
-          (i) => Block.fromData(utf8.encode('concurrent $i')),
-        );
+        final futures = List.generate(10, (i) => Block.fromData(utf8.encode('concurrent $i')));
 
         final blocks = await Future.wait(futures);
 
@@ -203,10 +200,7 @@ void main() {
       });
 
       test('concurrent blocks have unique CIDs', () async {
-        final futures = List.generate(
-          5,
-          (i) => Block.fromData(utf8.encode('unique $i')),
-        );
+        final futures = List.generate(5, (i) => Block.fromData(utf8.encode('unique $i')));
 
         final blocks = await Future.wait(futures);
         final cids = blocks.map((b) => b.cid.toString()).toSet();

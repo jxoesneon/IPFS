@@ -13,11 +13,8 @@ void main() {
 
     test('cache hit returns stored value', () {
       final cache = <String, _MockCachedDNSLink>{};
-      cache['example.com'] = _MockCachedDNSLink(
-        cid: 'QmCached123',
-        timestamp: DateTime.now(),
-      );
-      
+      cache['example.com'] = _MockCachedDNSLink(cid: 'QmCached123', timestamp: DateTime.now());
+
       expect(cache.containsKey('example.com'), isTrue);
       expect(cache['example.com']!.cid, equals('QmCached123'));
     });
@@ -28,14 +25,14 @@ void main() {
         cid: 'QmOld',
         timestamp: DateTime.now().subtract(Duration(hours: 1)),
       );
-      
+
       final entry = cache['old.com']!;
       final isExpired = entry.isExpired(Duration(minutes: 30));
-      
+
       if (isExpired) {
         cache.remove('old.com');
       }
-      
+
       expect(cache.containsKey('old.com'), isFalse);
     });
   });

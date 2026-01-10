@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -19,7 +18,6 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
-
 
 class MockBlockStore implements BlockStore {
   @override
@@ -44,14 +42,13 @@ class MockBlockStore implements BlockStore {
   Future<void> stop() async {}
   @override
   Future<Map<String, dynamic>> getStatus() async => {};
-  
+
   @override
   PinManager get pinManager => throw UnimplementedError('Mock');
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
-
 
 class MockDatastoreHandler implements DatastoreHandler {
   @override
@@ -91,7 +88,7 @@ class MockIPFSNode extends IPFSNode {
 
   @override
   List<String> get addresses => ['/ip4/127.0.0.1/tcp/4001'];
-  
+
   @override
   // ignore: overridden_fields
   final Future<String> publicKey = Future.value('TestPublicKey');
@@ -119,9 +116,7 @@ void main() {
     });
 
     test('should return version details', () async {
-      final response = await http.post(
-        Uri.parse('http://localhost:$port/api/v0/version'),
-      );
+      final response = await http.post(Uri.parse('http://localhost:$port/api/v0/version'));
       expect(response.statusCode, 200);
       final body = jsonDecode(response.body);
       expect(body['Version'], isNotNull);
@@ -129,9 +124,7 @@ void main() {
     });
 
     test('should return node ID', () async {
-      final response = await http.post(
-        Uri.parse('http://localhost:$port/api/v0/id'),
-      );
+      final response = await http.post(Uri.parse('http://localhost:$port/api/v0/id'));
       expect(response.statusCode, 200);
       final body = jsonDecode(response.body);
       expect(body['ID'], 'QmTestPeerId');
@@ -140,9 +133,7 @@ void main() {
 
     test('should require API key for protected endpoints', () async {
       // Swarm peers is protected
-      final response = await http.post(
-        Uri.parse('http://localhost:$port/api/v0/swarm/peers'),
-      );
+      final response = await http.post(Uri.parse('http://localhost:$port/api/v0/swarm/peers'));
       expect(response.statusCode, 403);
     });
 
@@ -155,9 +146,9 @@ void main() {
       final body = jsonDecode(response.body);
       expect(body['Peers'], hasLength(2));
     });
-    
+
     test('should reject invalid API key', () async {
-       final response = await http.post(
+      final response = await http.post(
         Uri.parse('http://localhost:$port/api/v0/swarm/peers'),
         headers: {'X-API-Key': 'wrong-key'},
       );

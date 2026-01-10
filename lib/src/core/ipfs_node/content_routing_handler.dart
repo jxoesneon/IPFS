@@ -26,13 +26,10 @@ class ContentRoutingHandler {
       verbose: _config.verboseLogging,
     );
 
-    _contentRouting =
-        contentRouting ?? ContentRouting(_config, _networkHandler);
+    _contentRouting = contentRouting ?? ContentRouting(_config, _networkHandler);
     _delegatedRouting =
         delegatedRouting ??
-        DelegatedRoutingHandler(
-          delegateEndpoint: _config.network.delegatedRoutingEndpoint,
-        );
+        DelegatedRoutingHandler(delegateEndpoint: _config.network.delegatedRoutingEndpoint);
 
     _logger.debug('ContentRoutingHandler instance created');
   }
@@ -94,8 +91,7 @@ class ContentRoutingHandler {
 
       final delegatedResponse = await _delegatedRouting.findProviders(cidObj);
 
-      if (delegatedResponse.isSuccess &&
-          delegatedResponse.providers.isNotEmpty) {
+      if (delegatedResponse.isSuccess && delegatedResponse.providers.isNotEmpty) {
         _logger.debug(
           'Found ${delegatedResponse.providers.length} providers via delegated routing',
         );
@@ -145,8 +141,7 @@ class ContentRoutingHandler {
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'dht_routing_enabled': true,
-      'delegated_routing_enabled':
-          _config.network.delegatedRoutingEndpoint != null,
+      'delegated_routing_enabled': _config.network.delegatedRoutingEndpoint != null,
       'delegated_endpoint': _config.network.delegatedRoutingEndpoint,
     };
   }

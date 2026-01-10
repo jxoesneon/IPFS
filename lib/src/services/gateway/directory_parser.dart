@@ -62,9 +62,7 @@ class DirectoryParser {
   /// Parses a block containing a directory listing
   DirectoryHandler parseDirectoryBlock(Block block) {
     if (block.cid.codec != 'dag-pb') {
-      throw FormatException(
-        'Invalid directory block codec: ${block.cid.codec}',
-      );
+      throw FormatException('Invalid directory block codec: ${block.cid.codec}');
     }
 
     _currentBlock = block;
@@ -79,9 +77,7 @@ class DirectoryParser {
           final unixFsData = Data.fromBuffer(pbNode.data);
           if (unixFsData.type != Data_DataType.Directory &&
               unixFsData.type != Data_DataType.HAMTShard) {
-            throw FormatException(
-              'Block is not a UnixFS Directory (Type: ${unixFsData.type})',
-            );
+            throw FormatException('Block is not a UnixFS Directory (Type: ${unixFsData.type})');
           }
         } catch (e) {
           // If data fails to parse as UnixFS, it might not be a UnixFS directory
@@ -90,9 +86,7 @@ class DirectoryParser {
       }
 
       // Create Handler (Path is unknown from the block itself, defaults to root or empty)
-      final handler = DirectoryHandler(
-        '/${block.cid.encode()}',
-      ); // Use CID as placeholder path
+      final handler = DirectoryHandler('/${block.cid.encode()}'); // Use CID as placeholder path
 
       for (final link in pbNode.links) {
         // Determine if link is directory?
@@ -113,8 +107,7 @@ class DirectoryParser {
           DirectoryEntry(
             name: link.name,
             size: link.size.toInt(),
-            isDirectory:
-                false, // Cannot know without fetching child block in standard IPFS
+            isDirectory: false, // Cannot know without fetching child block in standard IPFS
             timestamp: 0, // Not stored in standard link
             metadata: {},
           ),
@@ -234,9 +227,7 @@ class DirectoryParser {
         .map((e) => '${e.key}: ${e.value}')
         .join('\n');
 
-    return tooltipContent.isEmpty
-        ? ''
-        : '<span class="metadata" title="$tooltipContent">ℹ️</span>';
+    return tooltipContent.isEmpty ? '' : '<span class="metadata" title="$tooltipContent">ℹ️</span>';
   }
 
   String _getIcon(String type) {

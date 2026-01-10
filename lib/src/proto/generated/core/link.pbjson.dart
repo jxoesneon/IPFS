@@ -27,22 +27,15 @@ const LinkType$json = {
 };
 
 /// Descriptor for `LinkType`. Decode as a `google.protobuf.EnumDescriptorProto`.
-final $typed_data.Uint8List linkTypeDescriptor = $convert.base64Decode(
-    'CghMaW5rVHlwZRIZChVMSU5LX1RZUEVfVU5TUEVDSUZJRUQQABIUChBMSU5LX1RZUEVfRElSRU'
-    'NUEAESEgoOTElOS19UWVBFX0hBTVQQAhIVChFMSU5LX1RZUEVfVFJJQ0tMRRAD');
+final $typed_data.Uint8List linkTypeDescriptor = $convert
+    .base64Decode('CghMaW5rVHlwZRIZChVMSU5LX1RZUEVfVU5TUEVDSUZJRUQQABIUChBMSU5LX1RZUEVfRElSRU'
+        'NUEAESEgoOTElOS19UWVBFX0hBTVQQAhIVChFMSU5LX1RZUEVfVFJJQ0tMRRAD');
 
 @$core.Deprecated('Use linkMetadataDescriptor instead')
 const LinkMetadata$json = {
   '1': 'LinkMetadata',
   '2': [
-    {
-      '1': 'link',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.core.data_structures.PBLink',
-      '10': 'link'
-    },
+    {'1': 'link', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.PBLink', '10': 'link'},
     {'1': 'timestamp', '3': 2, '4': 1, '5': 3, '10': 'timestamp'},
     {
       '1': 'metadata',
@@ -77,11 +70,11 @@ const LinkMetadata_MetadataEntry$json = {
 };
 
 /// Descriptor for `LinkMetadata`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List linkMetadataDescriptor = $convert.base64Decode(
-    'CgxMaW5rTWV0YWRhdGESNQoEbGluaxgBIAEoCzIhLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZX'
-    'MuUEJMaW5rUgRsaW5rEhwKCXRpbWVzdGFtcBgCIAEoA1IJdGltZXN0YW1wElEKCG1ldGFkYXRh'
-    'GAMgAygLMjUuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy5MaW5rTWV0YWRhdGEuTWV0YWRhdG'
-    'FFbnRyeVIIbWV0YWRhdGESNwoEdHlwZRgEIAEoDjIjLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVy'
-    'ZXMuTGlua1R5cGVSBHR5cGUSIQoMYnVja2V0X2luZGV4GAUgASgFUgtidWNrZXRJbmRleBIUCg'
-    'VkZXB0aBgGIAEoBVIFZGVwdGgaOwoNTWV0YWRhdGFFbnRyeRIQCgNrZXkYASABKAlSA2tleRIU'
-    'CgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
+final $typed_data.Uint8List linkMetadataDescriptor = $convert
+    .base64Decode('CgxMaW5rTWV0YWRhdGESNQoEbGluaxgBIAEoCzIhLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZX'
+        'MuUEJMaW5rUgRsaW5rEhwKCXRpbWVzdGFtcBgCIAEoA1IJdGltZXN0YW1wElEKCG1ldGFkYXRh'
+        'GAMgAygLMjUuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy5MaW5rTWV0YWRhdGEuTWV0YWRhdG'
+        'FFbnRyeVIIbWV0YWRhdGESNwoEdHlwZRgEIAEoDjIjLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVy'
+        'ZXMuTGlua1R5cGVSBHR5cGUSIQoMYnVja2V0X2luZGV4GAUgASgFUgtidWNrZXRJbmRleBIUCg'
+        'VkZXB0aBgGIAEoBVIFZGVwdGgaOwoNTWV0YWRhdGFFbnRyeRIQCgNrZXkYASABKAlSA2tleRIU'
+        'CgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');

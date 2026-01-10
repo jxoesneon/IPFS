@@ -1,7 +1,6 @@
 // lib/src/protocols/dht/red_black_tree/insertion.dart
 
-import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
-    as common_tree;
+import '../../../proto/generated/dht/common_red_black_tree.pb.dart' as common_tree;
 import '../red_black_tree.dart';
 import 'fix_violations.dart';
 

@@ -97,10 +97,7 @@ void main() {
       final key = Key.fromString('error-key');
       final value = Value.fromString('error-value');
 
-      expect(
-        () async => await dhtHandler.putValue(key, value),
-        throwsA(isA<Exception>()),
-      );
+      expect(() async => await dhtHandler.putValue(key, value), throwsA(isA<Exception>()));
     });
 
     test('MockDHTHandler resets state correctly', () async {
@@ -145,9 +142,7 @@ void main() {
 
       // Count stored blocks via query
       int count = 0;
-      await for (final _ in datastore.query(
-        ds.Query(prefix: '/blocks/', keysOnly: true),
-      )) {
+      await for (final _ in datastore.query(ds.Query(prefix: '/blocks/', keysOnly: true))) {
         count++;
       }
       expect(count, equals(5));

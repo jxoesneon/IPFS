@@ -39,9 +39,7 @@ void main() {
       // Register Storage
       container.registerSingleton<BlockStore>(blockStore);
       container.registerSingleton<DatastoreHandler>(datastoreHandler);
-      container.registerSingleton<IPLDHandler>(
-        IPLDHandler(config, blockStore),
-      );
+      container.registerSingleton<IPLDHandler>(IPLDHandler(config, blockStore));
 
       // No Network/Services for offline
     });
@@ -112,9 +110,7 @@ void main() {
 
       final directoryContent = {
         'file1.txt': Uint8List.fromList('Hello World'.codeUnits),
-        'subdir': {
-          'file2.txt': Uint8List.fromList('Subdir File'.codeUnits),
-        },
+        'subdir': {'file2.txt': Uint8List.fromList('Subdir File'.codeUnits)},
       };
 
       final cid = await node.addDirectory(directoryContent);
@@ -189,10 +185,7 @@ void main() {
       await node.subscribe('test-topic');
       await node.unsubscribe('test-topic');
       // publish throws StateError in offline mode (no PubSubHandler)
-      expect(
-        () => node.publish('test-topic', 'hello'),
-        throwsStateError,
-      );
+      expect(() => node.publish('test-topic', 'hello'), throwsStateError);
 
       await node.stop();
     });
@@ -201,10 +194,7 @@ void main() {
       final node = IPFSNode.fromContainer(container);
       await node.start();
 
-      expect(
-        () => node.connectToPeer('/ip4/127.0.0.1/tcp/4001'),
-        throwsStateError,
-      );
+      expect(() => node.connectToPeer('/ip4/127.0.0.1/tcp/4001'), throwsStateError);
 
       await node.stop();
     });
@@ -270,10 +260,7 @@ void main() {
       final node = IPFSNode.fromContainer(container);
       await node.start();
 
-      expect(
-        () => node.resolveIPNS('12D3KooWEXAMPLE'),
-        throwsA(anything),
-      );
+      expect(() => node.resolveIPNS('12D3KooWEXAMPLE'), throwsA(anything));
 
       await node.stop();
     });

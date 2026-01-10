@@ -48,10 +48,10 @@ void main() {
       test('processContent renders markdown', () async {
         final mdContent = '# Hello';
         final block = await Block.fromData(Uint8List.fromList(utf8.encode(mdContent)));
-        
+
         final processed = handler.processContent(block, 'text/markdown');
         final html = utf8.decode(processed);
-        
+
         expect(html, contains('<h1>Hello</h1>'));
         expect(html, contains('<!DOCTYPE html>'));
       });
@@ -59,18 +59,18 @@ void main() {
       test('processContent handles CAR files', () async {
         final data = Uint8List.fromList([1, 2, 3]); // Fake CAR data
         final block = await Block.fromData(data);
-        
+
         final processed = handler.processContent(block, 'application/vnd.ipfs.car');
         final html = utf8.decode(processed);
-        
+
         expect(html, contains('CAR Archive Preview'));
         expect(html, contains('3 B')); // Size check
       });
-      
+
       test('processContent calls pass-through for unknown types', () async {
         final data = Uint8List.fromList([1, 2, 3]);
         final block = await Block.fromData(data);
-        
+
         final processed = handler.processContent(block, 'application/unknown');
         expect(processed, equals(data));
       });

@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -14,12 +13,14 @@ void main() {
       final node = IPLDNode()
         ..kind = Kind.MAP
         ..mapValue = (IPLDMap()
-          ..entries.add(MapEntry()
-            ..key = 'hello'
-            ..value = (IPLDNode()
-              ..kind = Kind.STRING
-              ..stringValue = 'world')));
-      
+          ..entries.add(
+            MapEntry()
+              ..key = 'hello'
+              ..value = (IPLDNode()
+                ..kind = Kind.STRING
+                ..stringValue = 'world'),
+          ));
+
       final jsonStr = node.toJson();
       // proto3 json output might vary in spacing, but should parse back
       final decoded = jsonDecode(jsonStr);
@@ -31,7 +32,7 @@ void main() {
     test('factories create correct types', () {
       expect(IPLDSelector.all().type, SelectorType.all);
       expect(IPLDSelector.none().type, SelectorType.none);
-      
+
       final matcher = IPLDSelector.matcher(criteria: {'a': 1});
       expect(matcher.type, SelectorType.matcher);
       expect(matcher.criteria, containsPair('a', 1));
@@ -57,10 +58,10 @@ void main() {
         selector: IPLDSelector.explore(
           path: 'links',
           selector: IPLDSelector.union([
-             IPLDSelector.matcher(criteria: {'name': 'file.txt'}),
-             IPLDSelector.all()
-          ])
-        )
+            IPLDSelector.matcher(criteria: {'name': 'file.txt'}),
+            IPLDSelector.all(),
+          ]),
+        ),
       );
 
       final bytes = await selector.toBytes();
@@ -68,15 +69,15 @@ void main() {
 
       // Decode back
       final decoded = await IPLDSelector.fromBytesAsync(bytes);
-      
+
       expect(decoded.type, SelectorType.recursive);
       expect(decoded.maxDepth, equals(3));
       expect(decoded.subSelectors, hasLength(1));
-      
+
       final child = decoded.subSelectors!.first;
       expect(child.type, SelectorType.explore);
       expect(child.fieldPath, equals('links'));
-      
+
       final grandchild = child.subSelectors!.first;
       expect(grandchild.type, SelectorType.union);
       expect(grandchild.subSelectors, hasLength(2));

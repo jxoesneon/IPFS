@@ -39,10 +39,7 @@ class MockRouterL2 implements p2p.RouterL2 {
   }
 
   @override
-  void sendDatagram({
-    required Iterable<p2p.FullAddress> addresses,
-    required Uint8List datagram,
-  }) {}
+  void sendDatagram({required Iterable<p2p.FullAddress> addresses, required Uint8List datagram}) {}
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -82,10 +79,7 @@ class MockP2plibRouter implements P2plibRouter {
   void registerProtocol(String protocolId) {}
 
   @override
-  void registerProtocolHandler(
-    String protocolId,
-    void Function(NetworkPacket) handler,
-  ) {
+  void registerProtocolHandler(String protocolId, void Function(NetworkPacket) handler) {
     _handler = handler;
   }
 
@@ -95,11 +89,7 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  Future<void> sendMessage(
-    String peerId,
-    Uint8List message, {
-    String? protocolId,
-  }) async {
+  Future<void> sendMessage(String peerId, Uint8List message, {String? protocolId}) async {
     // In mock, we can just trigger onSendDatagram directly
     onSendDatagram?.call(message);
 
@@ -117,10 +107,7 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  Future<void> sendDatagram({
-    required List<String> addresses,
-    required Uint8List datagram,
-  }) async {
+  Future<void> sendDatagram({required List<String> addresses, required Uint8List datagram}) async {
     // Logic moved to sendMessage or similar
     onSendDatagram?.call(datagram);
   }
@@ -141,9 +128,12 @@ class MockP2plibRouter implements P2plibRouter {
 
   void simulateResponse(Uint8List datagram) {
     if (_handler != null) {
-      _handler!(NetworkPacket(
+      _handler!(
+        NetworkPacket(
           srcPeerId: 'QmPZ9gcCEpqKTo6aq61g2nd7KxcyPr7ReCcW6rUn9idKGr',
-          datagram: datagram));
+          datagram: datagram,
+        ),
+      );
     }
   }
 
@@ -168,7 +158,7 @@ class MockDatastore implements Datastore {
   Stream<QueryEntry> query(Query query) async* {
     for (var key in _data.keys) {
       if (key.toString().startsWith(query.prefix ?? '')) {
-         yield QueryEntry(key, _data[key]!);
+        yield QueryEntry(key, _data[key]!);
       }
     }
   }
@@ -232,13 +222,11 @@ void main() {
       mockNetworkHandler.ipfsNode = mockNode;
 
       // Populate routes so initialize doesn't fail
-      mockRouter._mockL2.routes[p2p.PeerId(value: validPeerIdBytes)] =
-          p2p.Route(peerId: p2p.PeerId(value: validPeerIdBytes));
-
-      client = DHTClient(
-        networkHandler: mockNetworkHandler,
-        router: mockRouter,
+      mockRouter._mockL2.routes[p2p.PeerId(value: validPeerIdBytes)] = p2p.Route(
+        peerId: p2p.PeerId(value: validPeerIdBytes),
       );
+
+      client = DHTClient(networkHandler: mockNetworkHandler, router: mockRouter);
     });
 
     test('initialize', () async {
@@ -266,14 +254,9 @@ void main() {
             final responsePacket = p2p.Packet(
               datagram: response.writeToBuffer(),
               header: const p2p.PacketHeader(id: 0, issuedAt: 0),
-              srcFullAddress: p2p.FullAddress(
-                address: InternetAddress.loopbackIPv4,
-                port: 4001,
-              ),
+              srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 4001),
             );
-            responsePacket.srcPeerId = p2p.PeerId(
-              value: Uint8List.fromList(List.filled(64, 2)),
-            );
+            responsePacket.srcPeerId = p2p.PeerId(value: Uint8List.fromList(List.filled(64, 2)));
 
             // Inject response
             mockRouter.simulatePacket(responsePacket);
@@ -346,8 +329,7 @@ void main() {
 
       // Set up auto-response: respond with empty record (no value)
       mockRouter.responseGenerator = (requestBytes) {
-        final response = kad.Message()
-          ..type = kad.Message_MessageType.GET_VALUE;
+        final response = kad.Message()..type = kad.Message_MessageType.GET_VALUE;
         // No record set
         return response.writeToBuffer();
       };
@@ -384,7 +366,7 @@ void main() {
       await client.kademliaRoutingTable.addPeer(seedPeerId, seedPeerId);
 
       final foundPeer = await client.findPeer(targetPeerId);
-      
+
       expect(foundPeer, isNotNull);
       expect(foundPeer!.value, equals(targetPeerIdBytes));
     });
@@ -405,10 +387,9 @@ void main() {
           if (msg.type == kad.Message_MessageType.ADD_PROVIDER) {
             messageSent = true;
             expect(msg.key, equals(cidObj.multihash.toBytes()));
-            
+
             // Send back a success response to avoid timeout
-            final response = kad.Message()
-              ..type = kad.Message_MessageType.ADD_PROVIDER;
+            final response = kad.Message()..type = kad.Message_MessageType.ADD_PROVIDER;
             mockRouter.simulateResponse(response.writeToBuffer());
           }
         } catch (_) {}
@@ -419,7 +400,7 @@ void main() {
       await client.kademliaRoutingTable.addPeer(seedPeerId, seedPeerId);
 
       await client.addProvider(cid, providerId);
-      
+
       expect(messageSent, isTrue);
     });
     test('storeValue properly sends PUT_VALUE to peers and returns true', () async {
@@ -442,12 +423,14 @@ void main() {
           final response = kad.Message()
             ..type = kad.Message_MessageType.PUT_VALUE
             ..key = key
-            ..record = (dht_proto.Record()..key=key..value=value);
-            
+            ..record = (dht_proto.Record()
+              ..key = key
+              ..value = value);
+
           final responsePacket = p2p.Packet(
-             datagram: response.writeToBuffer(),
-             header: const p2p.PacketHeader(id: 0, issuedAt: 0),
-             srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 4001),
+            datagram: response.writeToBuffer(),
+            header: const p2p.PacketHeader(id: 0, issuedAt: 0),
+            srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 4001),
           );
           responsePacket.srcPeerId = p2p.PeerId(value: peer.value);
           mockRouter.simulatePacket(responsePacket);
@@ -468,14 +451,17 @@ void main() {
       await client.kademliaRoutingTable.addPeer(peer, peer);
 
       mockRouter.responseGenerator = (req) {
-         final msg = kad.Message.fromBuffer(req);
-         if (msg.type == kad.Message_MessageType.GET_VALUE) {
-           final record = dht_proto.Record()
-             ..key = key
-             ..value = expectedValue;
-           return (kad.Message()..type = kad.Message_MessageType.GET_VALUE ..record = record).writeToBuffer();
-         }
-         return Uint8List(0);
+        final msg = kad.Message.fromBuffer(req);
+        if (msg.type == kad.Message_MessageType.GET_VALUE) {
+          final record = dht_proto.Record()
+            ..key = key
+            ..value = expectedValue;
+          return (kad.Message()
+                ..type = kad.Message_MessageType.GET_VALUE
+                ..record = record)
+              .writeToBuffer();
+        }
+        return Uint8List(0);
       };
 
       final result = await client.getValue(key);
@@ -512,40 +498,40 @@ void main() {
     });
 
     test('_handlePacket responds to FIND_NODE', () async {
-       await client.initialize();
-       
-       // Add a known peer to table so response closerPeers is not empty
-       final knownPeer = PeerId(value: Uint8List.fromList(List.filled(64, 12)));
-       await client.kademliaRoutingTable.addPeer(knownPeer, knownPeer);
-       
-       final senderBytes = Uint8List.fromList(List.filled(64, 13));
-       
-       bool responded = false;
-       mockRouter.onSendDatagram = (data) {
-         final msg = kad.Message.fromBuffer(data);
-         if (msg.type == kad.Message_MessageType.FIND_NODE) {
-           responded = true;
-           expect(msg.closerPeers, isNotEmpty);
-           // We expect knownPeer to be in closerPeers
-           final hasKnown = msg.closerPeers.any((p) => p.id.first == 12); // first byte 12 check
-           expect(hasKnown, isTrue);
-         }
-       };
+      await client.initialize();
 
-       final findMsg = kad.Message()
-         ..type = kad.Message_MessageType.FIND_NODE
-         ..key = knownPeer.value; // Search for knownPeer
-       
-       final packet = p2p.Packet(
-         datagram: findMsg.writeToBuffer(),
-         header: const p2p.PacketHeader(id: 2, issuedAt: 0),
-         srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 4001),
-       );
-       packet.srcPeerId = p2p.PeerId(value: senderBytes);
+      // Add a known peer to table so response closerPeers is not empty
+      final knownPeer = PeerId(value: Uint8List.fromList(List.filled(64, 12)));
+      await client.kademliaRoutingTable.addPeer(knownPeer, knownPeer);
 
-       mockRouter.simulatePacket(packet);
-       await Future.delayed(Duration(milliseconds: 50));
-       expect(responded, isTrue);
+      final senderBytes = Uint8List.fromList(List.filled(64, 13));
+
+      bool responded = false;
+      mockRouter.onSendDatagram = (data) {
+        final msg = kad.Message.fromBuffer(data);
+        if (msg.type == kad.Message_MessageType.FIND_NODE) {
+          responded = true;
+          expect(msg.closerPeers, isNotEmpty);
+          // We expect knownPeer to be in closerPeers
+          final hasKnown = msg.closerPeers.any((p) => p.id.first == 12); // first byte 12 check
+          expect(hasKnown, isTrue);
+        }
+      };
+
+      final findMsg = kad.Message()
+        ..type = kad.Message_MessageType.FIND_NODE
+        ..key = knownPeer.value; // Search for knownPeer
+
+      final packet = p2p.Packet(
+        datagram: findMsg.writeToBuffer(),
+        header: const p2p.PacketHeader(id: 2, issuedAt: 0),
+        srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 4001),
+      );
+      packet.srcPeerId = p2p.PeerId(value: senderBytes);
+
+      mockRouter.simulatePacket(packet);
+      await Future.delayed(Duration(milliseconds: 50));
+      expect(responded, isTrue);
     });
     test('start initializes routing table', () async {
       await client.start();
@@ -554,13 +540,13 @@ void main() {
 
     test('getAllStoredKeys returns decoded keys', () async {
       await client.initialize();
-      
+
       final mockStorage = (client.node.dhtHandler as MockDHTHandler).storage as MockDatastore;
-      
+
       final keyStr = 'QmKey1';
       final key = Key('/dht/values/$keyStr');
       await mockStorage.put(key, Uint8List(0));
-      
+
       final keys = await client.getAllStoredKeys();
       expect(keys, contains(keyStr));
     });

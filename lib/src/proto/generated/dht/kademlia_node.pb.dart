@@ -45,18 +45,14 @@ class KademliaNode extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'KademliaNode',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.kademlia_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'KademliaNode',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.kademlia_node'),
       createEmptyInstance: create)
-    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'peerId',
-        subBuilder: $0.KademliaId.create)
+    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'peerId', subBuilder: $0.KademliaId.create)
     ..aI(2, _omitFieldNames ? '' : 'distance')
     ..aOM<$0.KademliaId>(3, _omitFieldNames ? '' : 'associatedPeerId',
         subBuilder: $0.KademliaId.create)
-    ..pPM<KademliaNode>(4, _omitFieldNames ? '' : 'children',
-        subBuilder: KademliaNode.create)
+    ..pPM<KademliaNode>(4, _omitFieldNames ? '' : 'children', subBuilder: KademliaNode.create)
     ..aInt64(5, _omitFieldNames ? '' : 'lastSeen')
     ..hasRequiredFields = false;
 
@@ -64,8 +60,7 @@ class KademliaNode extends $pb.GeneratedMessage {
   KademliaNode clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   KademliaNode copyWith(void Function(KademliaNode) updates) =>
-      super.copyWith((message) => updates(message as KademliaNode))
-          as KademliaNode;
+      super.copyWith((message) => updates(message as KademliaNode)) as KademliaNode;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -75,8 +70,8 @@ class KademliaNode extends $pb.GeneratedMessage {
   @$core.override
   KademliaNode createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static KademliaNode getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<KademliaNode>(create);
+  static KademliaNode getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<KademliaNode>(create);
   static KademliaNode? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -123,7 +118,5 @@ class KademliaNode extends $pb.GeneratedMessage {
   void clearLastSeen() => $_clearField(5);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

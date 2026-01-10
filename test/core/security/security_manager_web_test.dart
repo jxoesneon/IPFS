@@ -53,10 +53,7 @@ void main() {
       securityManager.lockKeystore();
       expect(securityManager.isKeystoreUnlocked, isFalse);
 
-      expect(
-        () => securityManager.getSecureKey('test-key'),
-        throwsA(isA<StateError>()),
-      );
+      expect(() => securityManager.getSecureKey('test-key'), throwsA(isA<StateError>()));
     });
   });
 }

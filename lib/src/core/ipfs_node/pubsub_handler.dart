@@ -145,11 +145,7 @@ class PubSubHandler implements IPubSub {
       // For example, dispatching it to specific handlers based on the topic
 
       _messageController.add(
-        PubSubMessage(
-          topic: event.topic,
-          sender: event.peerId,
-          content: message,
-        ),
+        PubSubMessage(topic: event.topic, sender: event.peerId, content: message),
       );
     } catch (e) {
       // SEC-ZDAY-002: malformed UTF8 should not crash the listener

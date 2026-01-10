@@ -60,10 +60,7 @@ class DHTProtocolHandler {
         if (message.hasRecord()) {
           final keyStr = utf8.decode(message.key);
           final storageKey = Key('/dht/values/$keyStr');
-          await _storage.put(
-            storageKey,
-            Uint8List.fromList(message.record.value),
-          );
+          await _storage.put(storageKey, Uint8List.fromList(message.record.value));
         }
         response.type = kad.Message_MessageType.PUT_VALUE;
         break;
@@ -76,10 +73,7 @@ class DHTProtocolHandler {
     await _router.sendMessage(packet.srcPeerId, response.writeToBuffer());
   }
 
-  Future<List<kad.Peer>> _findClosestPeers(
-    List<int> key, {
-    int numPeers = 20,
-  }) async {
+  Future<List<kad.Peer>> _findClosestPeers(List<int> key, {int numPeers = 20}) async {
     // Get the routing table from the router
     final routingTable = _router.getRoutingTable();
 

@@ -108,6 +108,7 @@ class Block implements IBlock {
     // Assuming raw data block for now
     return data;
   }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

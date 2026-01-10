@@ -11,10 +11,7 @@ abstract class BaseProtoMessage extends GeneratedMessage {
   }
 
   /// Create message from bytes
-  static T fromBytes<T extends BaseProtoMessage>(
-    Uint8List bytes,
-    T Function() factory,
-  ) {
+  static T fromBytes<T extends BaseProtoMessage>(Uint8List bytes, T Function() factory) {
     final message = factory();
     message.mergeFromBuffer(bytes);
     return message;

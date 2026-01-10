@@ -17,28 +17,17 @@ class MockP2plibRouter implements P2plibRouter {
   final List<SentRequest> sentRequests = [];
 
   @override
-  void registerProtocolHandler(
-    String protocolId,
-    void Function(NetworkPacket) handler,
-  ) {
+  void registerProtocolHandler(String protocolId, void Function(NetworkPacket) handler) {
     handlers[protocolId] = handler;
   }
 
   @override
-  Future<void> sendMessage(
-    String peerId,
-    Uint8List message, {
-    String? protocolId,
-  }) async {
+  Future<void> sendMessage(String peerId, Uint8List message, {String? protocolId}) async {
     sentMessages.add(SentMessage(peerId, message));
   }
 
   @override
-  Future<Uint8List> sendRequest(
-    String peerId,
-    String protocolId,
-    Uint8List request,
-  ) async {
+  Future<Uint8List> sendRequest(String peerId, String protocolId, Uint8List request) async {
     sentRequests.add(SentRequest(peerId, protocolId, request));
 
     // Auto-respond for STOP Connect
@@ -85,14 +74,8 @@ void main() {
     });
 
     test('should register protocol handlers on start', () {
-      expect(
-        mockRouter.handlers.containsKey(CircuitRelayService.hopProtocolId),
-        isTrue,
-      );
-      expect(
-        mockRouter.handlers.containsKey(CircuitRelayService.stopProtocolId),
-        isTrue,
-      );
+      expect(mockRouter.handlers.containsKey(CircuitRelayService.hopProtocolId), isTrue);
+      expect(mockRouter.handlers.containsKey(CircuitRelayService.stopProtocolId), isTrue);
     });
 
     test('handleReserve should grant reservation', () async {
@@ -108,17 +91,11 @@ void main() {
       final packet = p2p.Packet(
         datagram: Uint8List.fromList(reserveMsg.writeToBuffer()),
         header: const p2p.PacketHeader(id: 1, issuedAt: 0),
-        srcFullAddress: p2p.FullAddress(
-          address: InternetAddress.loopbackIPv4,
-          port: 0,
-        ),
+        srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 0),
       )..srcPeerId = srcPeerId;
 
       mockRouter.handlers[CircuitRelayService.hopProtocolId]!(
-        NetworkPacket(
-          datagram: packet.datagram,
-          srcPeerId: Base58().encode(srcPeerId.value),
-        ),
+        NetworkPacket(datagram: packet.datagram, srcPeerId: Base58().encode(srcPeerId.value)),
       );
 
       expect(mockRouter.sentMessages.length, 1);
@@ -153,24 +130,16 @@ void main() {
       final packet = p2p.Packet(
         datagram: Uint8List.fromList(connectMsg.writeToBuffer()),
         header: const p2p.PacketHeader(id: 2, issuedAt: 0),
-        srcFullAddress: p2p.FullAddress(
-          address: InternetAddress.loopbackIPv4,
-          port: 0,
-        ),
+        srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 0),
       )..srcPeerId = srcPeerId;
 
       mockRouter.handlers[CircuitRelayService.hopProtocolId]!(
-        NetworkPacket(
-          datagram: packet.datagram,
-          srcPeerId: Base58().encode(srcPeerId.value),
-        ),
+        NetworkPacket(datagram: packet.datagram, srcPeerId: Base58().encode(srcPeerId.value)),
       );
 
       // Should invoke sendMessage with FAILED status
       expect(mockRouter.sentMessages.length, 1);
-      final response = HopMessage.fromBuffer(
-        mockRouter.sentMessages.first.message,
-      );
+      final response = HopMessage.fromBuffer(mockRouter.sentMessages.first.message);
       expect(response.status, Status.FAILED);
     });
 
@@ -194,10 +163,7 @@ void main() {
           (HopMessage()..type = HopMessage_Type.RESERVE).writeToBuffer(),
         ),
         header: const p2p.PacketHeader(id: 1, issuedAt: 0),
-        srcFullAddress: p2p.FullAddress(
-          address: InternetAddress.loopbackIPv4,
-          port: 0,
-        ),
+        srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 0),
       )..srcPeerId = destPeerId;
 
       mockRouter.handlers[CircuitRelayService.hopProtocolId]!(
@@ -217,10 +183,7 @@ void main() {
       final connectPacket = p2p.Packet(
         datagram: Uint8List.fromList(connectMsg.writeToBuffer()),
         header: const p2p.PacketHeader(id: 2, issuedAt: 0),
-        srcFullAddress: p2p.FullAddress(
-          address: InternetAddress.loopbackIPv4,
-          port: 0,
-        ),
+        srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 0),
       )..srcPeerId = srcPeerId;
 
       // Handle Connect (Should trigger STOP to Dest)
@@ -247,10 +210,7 @@ void main() {
       final transportPacket = p2p.Packet(
         datagram: payload,
         header: const p2p.PacketHeader(id: 3, issuedAt: 0),
-        srcFullAddress: p2p.FullAddress(
-          address: InternetAddress.loopbackIPv4,
-          port: 0,
-        ),
+        srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 0),
       )..srcPeerId = srcPeerId;
 
       mockRouter.handlers[CircuitRelayService.transportProtocolId]!(
@@ -278,17 +238,11 @@ void main() {
       final replyPacket = p2p.Packet(
         datagram: replyPayload,
         header: const p2p.PacketHeader(id: 4, issuedAt: 0),
-        srcFullAddress: p2p.FullAddress(
-          address: InternetAddress.loopbackIPv4,
-          port: 0,
-        ),
+        srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 0),
       )..srcPeerId = destPeerId;
 
       mockRouter.handlers[CircuitRelayService.transportProtocolId]!(
-        NetworkPacket(
-          datagram: replyPacket.datagram,
-          srcPeerId: Base58().encode(destPeerId.value),
-        ),
+        NetworkPacket(datagram: replyPacket.datagram, srcPeerId: Base58().encode(destPeerId.value)),
       );
 
       // Expect forwarding back to Source

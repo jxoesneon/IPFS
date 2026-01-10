@@ -7,8 +7,7 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/directory.dart';
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart'
-    as blockstore_pb;
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart' as blockstore_pb;
 import 'package:dart_ipfs/src/services/gateway/cached_preview_generator.dart';
 import 'package:dart_ipfs/src/services/gateway/file_preview_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
@@ -26,7 +25,7 @@ import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 // Mocks
 class MockBlockStore implements BlockStore {
   final Map<String, Block> _storage = {};
-  
+
   @override
   String get path => '/tmp/mock_blockstore';
 
@@ -116,8 +115,7 @@ class MockPreviewCacheManager implements PreviewCacheManager {
   }
 
   @override
-  Future<void> cachePreview(
-      CID cid, String contentType, Uint8List preview) async {
+  Future<void> cachePreview(CID cid, String contentType, Uint8List preview) async {
     _cache['${cid.encode()}_$contentType'] = preview;
   }
 
@@ -145,7 +143,9 @@ void main() {
     test('should serve text file', () async {
       final content = utf8.encode('Hello IPFS World');
       final block = await Block.fromData(
-          Uint8List.fromList(content), format: 'raw'); // Test raw first
+        Uint8List.fromList(content),
+        format: 'raw',
+      ); // Test raw first
       await mockBlockStore.putBlock(block);
 
       final request = Request('GET', Uri.parse('http://localhost:8080/ipfs/${block.cid.encode()}'));
@@ -172,13 +172,11 @@ void main() {
         ..type = Data_DataType.File
         ..data = content
         ..filesize = Int64(content.length);
-      
-      final pbNode = PBNode()
-        ..data = unixFsData.writeToBuffer();
-        
-      final block = await Block.fromData(
-          pbNode.writeToBuffer(), format: 'dag-pb');
-          
+
+      final pbNode = PBNode()..data = unixFsData.writeToBuffer();
+
+      final block = await Block.fromData(pbNode.writeToBuffer(), format: 'dag-pb');
+
       await mockBlockStore.putBlock(block);
 
       final request = Request(
@@ -227,10 +225,10 @@ void main() {
       final data2 = Uint8List(600); // Will require eviction
 
       await cache.cachePreview(cid1, 'type', data1);
-      
+
       // Wait a bit to ensure timestamp difference (fs resolution might be low)
       await Future.delayed(Duration(milliseconds: 100));
-      
+
       await cache.cachePreview(cid2, 'type', data2);
 
       final cached1 = await cache.getPreview(cid1, 'type');
@@ -260,7 +258,7 @@ void main() {
 
       expect(preview, isNotNull);
       expect(utf8.decode(preview!), equals('Long text ...'));
-      
+
       // Check cache
       final cached = await mockCache.getPreview(block.cid, 'text/plain');
       expect(cached, isNotNull);

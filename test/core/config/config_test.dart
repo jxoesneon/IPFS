@@ -134,10 +134,7 @@ void main() {
       final config = IPFSConfig.fromJson(json);
       expect(config.offline, isTrue);
       expect(config.debug, isFalse);
-      expect(
-        config.metrics.enabled,
-        isTrue,
-      ); // Default of nested if empty map passed
+      expect(config.metrics.enabled, isTrue); // Default of nested if empty map passed
 
       final output = config.toJson();
       expect(output['offline'], isTrue);

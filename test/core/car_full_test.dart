@@ -35,44 +35,44 @@ void main() {
 
     test('loadSelected full verification', () async {
       final car = CAR.v2WithIndex(testBlocks);
-      
+
       // Select first block
       final selected1 = await car.loadSelected([testBlocks.first.cid.toString()]);
       expect(selected1.blocks.length, equals(1));
       expect(selected1.blocks.first.cid, equals(testBlocks.first.cid));
-      
+
       // Select non-existent CID
       final selectedNone = await car.loadSelected(['non-existent']);
       expect(selectedNone.blocks, isEmpty);
-      
+
       // Without index throws
       final carNoIndex = CAR(blocks: testBlocks, header: CarHeader(version: 1));
       expect(() => carNoIndex.loadSelected([]), throwsUnsupportedError);
     });
 
     test('CarHeader toProto verification', () {
-       final header = CarHeader(
-         version: 1, 
-         roots: [testBlocks.first.cid],
-         characteristics: ['test-char'],
-         pragma: {'foo': 'bar'}
-       );
-       final proto = header.toProto();
-       expect(proto.version, equals(1));
-       expect(proto.characteristics, contains('test-char'));
-       expect(proto.roots.length, equals(1));
-       expect(proto.pragma.containsKey('foo'), isTrue);
+      final header = CarHeader(
+        version: 1,
+        roots: [testBlocks.first.cid],
+        characteristics: ['test-char'],
+        pragma: {'foo': 'bar'},
+      );
+      final proto = header.toProto();
+      expect(proto.version, equals(1));
+      expect(proto.characteristics, contains('test-char'));
+      expect(proto.roots.length, equals(1));
+      expect(proto.pragma.containsKey('foo'), isTrue);
     });
 
     test('CarIndex manual entries and methods', () {
       final index = CarIndex();
       index.addEntry('cid1', 10, 20);
       index.addEntry('cid2', 30, 40);
-      
+
       expect(index.getOffset('cid1'), equals(10));
       expect(index.getLength('cid1'), equals(20));
       expect(index.getOffset('undefined'), isNull);
-      
+
       final proto = index.toProto();
       expect(proto.entries.length, equals(2));
     });
@@ -80,15 +80,15 @@ void main() {
     test('CAR fromBytes/toBytes roundtrip with index and pragma', () {
       final header = CarHeader(version: 2, pragma: {'meta': 'data'});
       final car = CAR(
-        blocks: testBlocks, 
-        header: header, 
+        blocks: testBlocks,
+        header: header,
         index: CarIndex.generate(testBlocks),
-        version: 2
+        version: 2,
       );
-      
+
       final bytes = car.toBytes();
       final decoded = CAR.fromBytes(bytes);
-      
+
       expect(decoded.version, equals(2));
       expect(decoded.blocks.length, equals(2));
       expect(decoded.header.pragma['meta'], equals('data'));
@@ -99,10 +99,10 @@ void main() {
     test('CarReader/Writer edge cases', () async {
       final car = CAR.v2WithIndex(testBlocks);
       final carData = await CarWriter.writeCar(car);
-      
+
       final blocks = await CarReader.extractBlocks(carData);
       expect(blocks.length, equals(2));
-      
+
       final tempDir = await Directory.systemTemp.createTemp('car_io_test');
       final path = '${tempDir.path}/test.car';
       try {
@@ -117,11 +117,11 @@ void main() {
     });
 
     test('CarIndex.generate loop coverage', () {
-       final car = CAR.v2WithIndex(testBlocks);
-       expect(car.index, isNotNull);
-       // Ensure second block has a non-zero offset
-       final offset2 = car.getBlockOffset(testBlocks.last.cid.toString());
-       expect(offset2, equals(testBlocks.first.size));
+      final car = CAR.v2WithIndex(testBlocks);
+      expect(car.index, isNotNull);
+      // Ensure second block has a non-zero offset
+      final offset2 = car.getBlockOffset(testBlocks.last.cid.toString());
+      expect(offset2, equals(testBlocks.first.size));
     });
   });
 }

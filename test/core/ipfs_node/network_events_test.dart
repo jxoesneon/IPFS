@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:test/test.dart';
@@ -66,7 +65,7 @@ void main() {
 
     test('re-emits connection events', () async {
       final expectation = networkEvents.networkEvents.first;
-      
+
       final routerEvent = ConnectionEvent(type: ConnectionEventType.connected, peerId: 'peer1');
       routerConnectionController.add(routerEvent);
 
@@ -77,7 +76,7 @@ void main() {
 
     test('re-emits message events', () async {
       final expectation = networkEvents.networkEvents.first;
-      
+
       final routerEvent = MessageEvent(peerId: 'peer1', message: Uint8List.fromList([1, 2, 3]));
       routerMessageController.add(routerEvent);
 
@@ -88,7 +87,7 @@ void main() {
 
     test('re-emits pubsub events', () async {
       final expectation = networkEvents.networkEvents.first;
-      
+
       final routerEvent = PubSubEvent(
         eventType: 'pubsub_message_received',
         topic: 'news',
@@ -104,7 +103,7 @@ void main() {
 
     test('re-emits error events', () async {
       final expectation = networkEvents.networkEvents.first;
-      
+
       final routerEvent = ErrorEvent(type: ErrorEventType.connectionError, message: 'failed');
       routerErrorController.add(routerEvent);
 

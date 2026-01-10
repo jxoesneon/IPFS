@@ -28,8 +28,7 @@ class ConnectionState_Status extends $pb.ProtobufEnum {
   static const ConnectionState_Status ERROR =
       ConnectionState_Status._(5, _omitEnumNames ? '' : 'ERROR');
 
-  static const $core.List<ConnectionState_Status> values =
-      <ConnectionState_Status>[
+  static const $core.List<ConnectionState_Status> values = <ConnectionState_Status>[
     UNKNOWN,
     CONNECTING,
     CONNECTED,
@@ -46,5 +45,4 @@ class ConnectionState_Status extends $pb.ProtobufEnum {
   const ConnectionState_Status._(super.value, super.name);
 }
 
-const $core.bool _omitEnumNames =
-    $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

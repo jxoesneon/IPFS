@@ -15,14 +15,12 @@ import 'adaptive_compression_handler.dart';
 /// Manages compressed cache storage with multiple compression algorithms.
 class CompressedCacheStore {
   /// Creates a compressed cache store at [cachePath].
-  CompressedCacheStore({
-    required String cachePath,
-    CompressionConfig? compressionConfig,
-  }) : _cacheDir = Directory(cachePath),
-       _compressionHandler = AdaptiveCompressionHandler(
-         BlockStore(path: cachePath),
-         compressionConfig ?? CompressionConfig(),
-       ) {
+  CompressedCacheStore({required String cachePath, CompressionConfig? compressionConfig})
+    : _cacheDir = Directory(cachePath),
+      _compressionHandler = AdaptiveCompressionHandler(
+        BlockStore(path: cachePath),
+        compressionConfig ?? CompressionConfig(),
+      ) {
     _initializeStore();
   }
 
@@ -38,18 +36,14 @@ class CompressedCacheStore {
 
   /// Gets compressed data for a CID, decompressing before returning.
   Future<Uint8List?> getCompressedData(CID cid, String contentType) async {
-    final cacheFile = File(
-      '${_cacheDir.path}/${_getCacheFileName(cid, contentType)}',
-    );
+    final cacheFile = File('${_cacheDir.path}/${_getCacheFileName(cid, contentType)}');
 
     if (!await cacheFile.exists()) return null;
 
     try {
       final compressedData = await cacheFile.readAsBytes();
       final metadata = await _readMetadata(cacheFile.path);
-      final compressionType = _parseCompressionType(
-        metadata['compression'] ?? 'gzip',
-      );
+      final compressionType = _parseCompressionType(metadata['compression'] ?? 'gzip');
 
       return _decompress(compressedData, compressionType);
     } catch (e, stackTrace) {
@@ -59,15 +53,8 @@ class CompressedCacheStore {
   }
 
   /// Stores data with optimal compression for the content type.
-  Future<void> storeCompressedData(
-    CID cid,
-    String contentType,
-    Uint8List data,
-  ) async {
-    final compressionType = _compressionHandler.getOptimalCompression(
-      contentType,
-      data.length,
-    );
+  Future<void> storeCompressedData(CID cid, String contentType, Uint8List data) async {
+    final compressionType = _compressionHandler.getOptimalCompression(contentType, data.length);
 
     if (compressionType == CompressionType.none) {
       await _storeUncompressed(cid, contentType, data);
@@ -83,8 +70,7 @@ class CompressedCacheStore {
       'compression': compressionType.name,
       'originalSize': data.length.toString(),
       'compressedSize': compressedData.length.toString(),
-      'compressionRatio': analysis.compressionRatios[compressionType]
-          .toString(),
+      'compressionRatio': analysis.compressionRatios[compressionType].toString(),
       'timestamp': DateTime.now().toIso8601String(),
     });
   }
@@ -152,9 +138,7 @@ class CompressedCacheStore {
   }
 
   String _getCacheFileName(CID cid, String contentType) {
-    final hash = sha256
-        .convert(utf8.encode('${cid.encode()}_$contentType'))
-        .toString();
+    final hash = sha256.convert(utf8.encode('${cid.encode()}_$contentType')).toString();
     return '$hash.cache';
   }
 
@@ -166,9 +150,7 @@ class CompressedCacheStore {
 
     try {
       final content = await metadataFile.readAsString();
-      return Map<String, String>.from(
-        json.decode(content) as Map<dynamic, dynamic>,
-      );
+      return Map<String, String>.from(json.decode(content) as Map<dynamic, dynamic>);
     } catch (e, stackTrace) {
       _logger.error('Error reading metadata file', e, stackTrace);
       return {};
@@ -183,9 +165,7 @@ class CompressedCacheStore {
 
     try {
       final content = metadataFile.readAsStringSync();
-      return Map<String, String>.from(
-        json.decode(content) as Map<dynamic, dynamic>,
-      );
+      return Map<String, String>.from(json.decode(content) as Map<dynamic, dynamic>);
     } catch (e, stackTrace) {
       _logger.error('Error reading metadata file', e, stackTrace);
       return {};
@@ -198,9 +178,7 @@ class CompressedCacheStore {
     Uint8List data,
     Map<String, String> metadata,
   ) async {
-    final cacheFile = File(
-      '${_cacheDir.path}/${_getCacheFileName(cid, contentType)}',
-    );
+    final cacheFile = File('${_cacheDir.path}/${_getCacheFileName(cid, contentType)}');
     await cacheFile.writeAsBytes(data);
 
     final metadataFile = File('${cacheFile.path}.meta');
@@ -214,11 +192,7 @@ class CompressedCacheStore {
     );
   }
 
-  Future<void> _storeUncompressed(
-    CID cid,
-    String contentType,
-    Uint8List data,
-  ) async {
+  Future<void> _storeUncompressed(CID cid, String contentType, Uint8List data) async {
     await _storeWithMetadata(cid, contentType, data, {
       'compression': CompressionType.none.name,
       'originalSize': data.length.toString(),

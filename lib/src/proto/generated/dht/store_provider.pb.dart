@@ -45,15 +45,11 @@ class StoreProviderRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'StoreProviderRequest',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.store_provider'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StoreProviderRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.store_provider'),
       createEmptyInstance: create)
-    ..aOM<$0.K_PeerId>(1, _omitFieldNames ? '' : 'key',
-        subBuilder: $0.K_PeerId.create)
-    ..aOM<$0.V_PeerInfo>(2, _omitFieldNames ? '' : 'providerInfo',
-        subBuilder: $0.V_PeerInfo.create)
+    ..aOM<$0.K_PeerId>(1, _omitFieldNames ? '' : 'key', subBuilder: $0.K_PeerId.create)
+    ..aOM<$0.V_PeerInfo>(2, _omitFieldNames ? '' : 'providerInfo', subBuilder: $0.V_PeerInfo.create)
     ..aInt64(3, _omitFieldNames ? '' : 'ttl')
     ..hasRequiredFields = false;
 
@@ -61,8 +57,7 @@ class StoreProviderRequest extends $pb.GeneratedMessage {
   StoreProviderRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   StoreProviderRequest copyWith(void Function(StoreProviderRequest) updates) =>
-      super.copyWith((message) => updates(message as StoreProviderRequest))
-          as StoreProviderRequest;
+      super.copyWith((message) => updates(message as StoreProviderRequest)) as StoreProviderRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -72,8 +67,8 @@ class StoreProviderRequest extends $pb.GeneratedMessage {
   @$core.override
   StoreProviderRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static StoreProviderRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<StoreProviderRequest>(create);
+  static StoreProviderRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<StoreProviderRequest>(create);
   static StoreProviderRequest? _defaultInstance;
 
   /// The key for which provider information is being stored
@@ -136,8 +131,7 @@ class StoreProviderResponse extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'StoreProviderResponse',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.store_provider'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.store_provider'),
       createEmptyInstance: create)
     ..aE<StoreProviderResponse_Status>(1, _omitFieldNames ? '' : 'status',
         enumValues: StoreProviderResponse_Status.values)
@@ -148,8 +142,7 @@ class StoreProviderResponse extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   StoreProviderResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  StoreProviderResponse copyWith(
-          void Function(StoreProviderResponse) updates) =>
+  StoreProviderResponse copyWith(void Function(StoreProviderResponse) updates) =>
       super.copyWith((message) => updates(message as StoreProviderResponse))
           as StoreProviderResponse;
 
@@ -161,8 +154,8 @@ class StoreProviderResponse extends $pb.GeneratedMessage {
   @$core.override
   StoreProviderResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static StoreProviderResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<StoreProviderResponse>(create);
+  static StoreProviderResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<StoreProviderResponse>(create);
   static StoreProviderResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -216,13 +209,10 @@ class GetProvidersRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetProvidersRequest',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.store_provider'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetProvidersRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.store_provider'),
       createEmptyInstance: create)
-    ..aOM<$0.K_PeerId>(1, _omitFieldNames ? '' : 'key',
-        subBuilder: $0.K_PeerId.create)
+    ..aOM<$0.K_PeerId>(1, _omitFieldNames ? '' : 'key', subBuilder: $0.K_PeerId.create)
     ..aI(2, _omitFieldNames ? '' : 'maxProviders')
     ..hasRequiredFields = false;
 
@@ -230,8 +220,7 @@ class GetProvidersRequest extends $pb.GeneratedMessage {
   GetProvidersRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   GetProvidersRequest copyWith(void Function(GetProvidersRequest) updates) =>
-      super.copyWith((message) => updates(message as GetProvidersRequest))
-          as GetProvidersRequest;
+      super.copyWith((message) => updates(message as GetProvidersRequest)) as GetProvidersRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -241,8 +230,8 @@ class GetProvidersRequest extends $pb.GeneratedMessage {
   @$core.override
   GetProvidersRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GetProvidersRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetProvidersRequest>(create);
+  static GetProvidersRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetProvidersRequest>(create);
   static GetProvidersRequest? _defaultInstance;
 
   /// The key to look up providers for
@@ -289,23 +278,18 @@ class GetProvidersResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetProvidersResponse',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.store_provider'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetProvidersResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.store_provider'),
       createEmptyInstance: create)
-    ..pPM<$0.V_PeerInfo>(1, _omitFieldNames ? '' : 'providers',
-        subBuilder: $0.V_PeerInfo.create)
-    ..pPM<$0.V_PeerInfo>(2, _omitFieldNames ? '' : 'closestPeers',
-        subBuilder: $0.V_PeerInfo.create)
+    ..pPM<$0.V_PeerInfo>(1, _omitFieldNames ? '' : 'providers', subBuilder: $0.V_PeerInfo.create)
+    ..pPM<$0.V_PeerInfo>(2, _omitFieldNames ? '' : 'closestPeers', subBuilder: $0.V_PeerInfo.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   GetProvidersResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   GetProvidersResponse copyWith(void Function(GetProvidersResponse) updates) =>
-      super.copyWith((message) => updates(message as GetProvidersResponse))
-          as GetProvidersResponse;
+      super.copyWith((message) => updates(message as GetProvidersResponse)) as GetProvidersResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -315,8 +299,8 @@ class GetProvidersResponse extends $pb.GeneratedMessage {
   @$core.override
   GetProvidersResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GetProvidersResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetProvidersResponse>(create);
+  static GetProvidersResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetProvidersResponse>(create);
   static GetProvidersResponse? _defaultInstance;
 
   /// List of providers for the requested key
@@ -328,7 +312,5 @@ class GetProvidersResponse extends $pb.GeneratedMessage {
   $pb.PbList<$0.V_PeerInfo> get closestPeers => $_getList(1);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

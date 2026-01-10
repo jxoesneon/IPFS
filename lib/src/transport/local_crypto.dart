@@ -27,9 +27,7 @@ class LocalCrypto implements p2p.Crypto {
     // Use provided seed or generate a cryptographically secure one
     if (seed == null) {
       final secureRandom = Random.secure();
-      seed = Uint8List.fromList(
-        List.generate(32, (_) => secureRandom.nextInt(256)),
-      );
+      seed = Uint8List.fromList(List.generate(32, (_) => secureRandom.nextInt(256)));
     }
     _currentSeed = seed;
 

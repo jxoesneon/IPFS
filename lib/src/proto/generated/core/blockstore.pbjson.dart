@@ -25,9 +25,9 @@ const AddBlockResponse$json = {
 };
 
 /// Descriptor for `AddBlockResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List addBlockResponseDescriptor = $convert.base64Decode(
-    'ChBBZGRCbG9ja1Jlc3BvbnNlEhgKB3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3MSGAoHbWVzc2FnZR'
-    'gCIAEoCVIHbWVzc2FnZQ==');
+final $typed_data.Uint8List addBlockResponseDescriptor = $convert
+    .base64Decode('ChBBZGRCbG9ja1Jlc3BvbnNlEhgKB3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3MSGAoHbWVzc2FnZR'
+        'gCIAEoCVIHbWVzc2FnZQ==');
 
 @$core.Deprecated('Use getBlockResponseDescriptor instead')
 const GetBlockResponse$json = {
@@ -46,9 +46,9 @@ const GetBlockResponse$json = {
 };
 
 /// Descriptor for `GetBlockResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getBlockResponseDescriptor = $convert.base64Decode(
-    'ChBHZXRCbG9ja1Jlc3BvbnNlEjsKBWJsb2NrGAEgASgLMiUuaXBmcy5jb3JlLmRhdGFfc3RydW'
-    'N0dXJlcy5CbG9ja1Byb3RvUgVibG9jaxIUCgVmb3VuZBgCIAEoCFIFZm91bmQ=');
+final $typed_data.Uint8List getBlockResponseDescriptor = $convert
+    .base64Decode('ChBHZXRCbG9ja1Jlc3BvbnNlEjsKBWJsb2NrGAEgASgLMiUuaXBmcy5jb3JlLmRhdGFfc3RydW'
+        'N0dXJlcy5CbG9ja1Byb3RvUgVibG9jaxIUCgVmb3VuZBgCIAEoCFIFZm91bmQ=');
 
 @$core.Deprecated('Use removeBlockResponseDescriptor instead')
 const RemoveBlockResponse$json = {
@@ -60,6 +60,6 @@ const RemoveBlockResponse$json = {
 };
 
 /// Descriptor for `RemoveBlockResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List removeBlockResponseDescriptor = $convert.base64Decode(
-    'ChNSZW1vdmVCbG9ja1Jlc3BvbnNlEhgKB3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3MSGAoHbWVzc2'
-    'FnZRgCIAEoCVIHbWVzc2FnZQ==');
+final $typed_data.Uint8List removeBlockResponseDescriptor = $convert
+    .base64Decode('ChNSZW1vdmVCbG9ja1Jlc3BvbnNlEhgKB3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3MSGAoHbWVzc2'
+        'FnZRgCIAEoCVIHbWVzc2FnZQ==');

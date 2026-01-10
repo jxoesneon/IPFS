@@ -19,11 +19,9 @@ void main() async {
     } else if (line.startsWith('DA:') && currentFile != null) {
       final parts = line.substring(3).split(',');
       final count = int.parse(parts[1]);
-      coveredFiles[currentFile]!['total'] =
-          coveredFiles[currentFile]!['total']! + 1;
+      coveredFiles[currentFile]!['total'] = coveredFiles[currentFile]!['total']! + 1;
       if (count > 0) {
-        coveredFiles[currentFile]!['hit'] =
-            coveredFiles[currentFile]!['hit']! + 1;
+        coveredFiles[currentFile]!['hit'] = coveredFiles[currentFile]!['hit']! + 1;
       }
     }
   }
@@ -33,12 +31,7 @@ void main() async {
 
   final allLibFiles = Directory('lib/src')
       .listSync(recursive: true)
-      .where(
-        (e) =>
-            e is File &&
-            e.path.endsWith('.dart') &&
-            !e.path.contains('/proto/'),
-      )
+      .where((e) => e is File && e.path.endsWith('.dart') && !e.path.contains('/proto/'))
       .map((e) => e.absolute.path)
       .toList();
 
@@ -52,9 +45,7 @@ void main() async {
     // LCOV paths might be relative or absolute. usually relative to project root or absolute.
     // LCOV in dart often uses relative paths like 'lib/src/...'
 
-    final relPath = file.substring(
-      projectRoot.length + 1,
-    ); // remove /Users/.../IPFS/
+    final relPath = file.substring(projectRoot.length + 1); // remove /Users/.../IPFS/
 
     // Check if in coveredFiles (which might be absolute or relative)
     // lcov usually is relative to root: "lib/src/..."
@@ -78,7 +69,5 @@ void main() async {
 
   print('----------------');
   final totalCoverage = totalLines == 0 ? 0.0 : (totalHit / totalLines * 100);
-  print(
-    'Total Coverage (excluding proto): ${totalCoverage.toStringAsFixed(1)}%',
-  );
+  print('Total Coverage (excluding proto): ${totalCoverage.toStringAsFixed(1)}%');
 }

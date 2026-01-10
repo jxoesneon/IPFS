@@ -45,11 +45,7 @@ class BlockAddResponse extends BaseResponse {
 /// Response for block get operations.
 class BlockGetResponse extends BaseResponse {
   /// Creates a get response with optional [block].
-  const BlockGetResponse({
-    required super.success,
-    required super.message,
-    this.block,
-  });
+  const BlockGetResponse({required super.success, required super.message, this.block});
 
   /// Creates from protobuf.
   factory BlockGetResponse.fromProto(GetBlockResponse proto) {

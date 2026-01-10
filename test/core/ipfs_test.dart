@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -47,9 +46,7 @@ void main() {
 
       final dirContent = {
         'file1.txt': file1,
-        'subdir': {
-          'file2.txt': file2,
-        }
+        'subdir': {'file2.txt': file2},
       };
 
       final rootCid = await ipfs.addDirectory(dirContent);
@@ -68,7 +65,7 @@ void main() {
       final cid = await ipfs.addFile(content);
 
       await ipfs.pin(cid);
-      // We don't have a direct isPinned method exposed on IPFS facade, 
+      // We don't have a direct isPinned method exposed on IPFS facade,
       // but unpinning non-pinned might throw or return false if we checked return.
       // IPFS.unpin throws if failed.
       await ipfs.unpin(cid);
@@ -76,7 +73,7 @@ void main() {
 
     test('should report stats', () async {
       await ipfs.start();
-      
+
       // Add some content to populate datastore
       final content = Uint8List.fromList(utf8.encode('Stats Content'));
       await ipfs.addFile(content);
@@ -89,16 +86,16 @@ void main() {
 
     test('should expose onNewContent stream', () async {
       await ipfs.start();
-      
+
       final content = Uint8List.fromList(utf8.encode('Stream Content'));
-      
+
       final futureCid = ipfs.onNewContent.first;
       await ipfs.addFile(content);
-      
+
       final cid = await futureCid;
       expect(cid, isNotEmpty);
     });
-    
+
     // Note: Networking methods (findProviders, requestBlock, PubSub, IPNS)
     // are harder to test in isolation with just the facade in offline mode,
     // but they just delegate to IPFSNode which is tested elsewhere.

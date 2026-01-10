@@ -31,9 +31,9 @@ const PingRequest$json = {
 };
 
 /// Descriptor for `PingRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List pingRequestDescriptor = $convert.base64Decode(
-    'CgtQaW5nUmVxdWVzdBI9CgdwZWVyX2lkGAEgASgLMiQuaXBmcy5kaHQuY29tbW9uX2thZGVtbG'
-    'lhLkthZGVtbGlhSWRSBnBlZXJJZA==');
+final $typed_data.Uint8List pingRequestDescriptor = $convert
+    .base64Decode('CgtQaW5nUmVxdWVzdBI9CgdwZWVyX2lkGAEgASgLMiQuaXBmcy5kaHQuY29tbW9uX2thZGVtbG'
+        'lhLkthZGVtbGlhSWRSBnBlZXJJZA==');
 
 @$core.Deprecated('Use pingResponseDescriptor instead')
 const PingResponse$json = {
@@ -52,6 +52,6 @@ const PingResponse$json = {
 };
 
 /// Descriptor for `PingResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List pingResponseDescriptor = $convert.base64Decode(
-    'CgxQaW5nUmVzcG9uc2USPQoHcGVlcl9pZBgBIAEoCzIkLmlwZnMuZGh0LmNvbW1vbl9rYWRlbW'
-    'xpYS5LYWRlbWxpYUlkUgZwZWVySWQSGAoHc3VjY2VzcxgCIAEoCFIHc3VjY2Vzcw==');
+final $typed_data.Uint8List pingResponseDescriptor = $convert
+    .base64Decode('CgxQaW5nUmVzcG9uc2USPQoHcGVlcl9pZBgBIAEoCzIkLmlwZnMuZGh0LmNvbW1vbl9rYWRlbW'
+        'xpYS5LYWRlbWxpYUlkUgZwZWVySWQSGAoHc3VjY2VzcxgCIAEoCFIHc3VjY2Vzcw==');

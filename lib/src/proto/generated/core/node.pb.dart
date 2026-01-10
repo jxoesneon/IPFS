@@ -51,19 +51,13 @@ class NodeProto extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'NodeProto',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NodeProto',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
-    ..aOM<$0.IPFSCIDProto>(1, _omitFieldNames ? '' : 'cid',
-        subBuilder: $0.IPFSCIDProto.create)
-    ..pPM<$1.PBLink>(2, _omitFieldNames ? '' : 'links',
-        subBuilder: $1.PBLink.create)
-    ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
-    ..aE<$2.NodeTypeProto>(4, _omitFieldNames ? '' : 'type',
-        enumValues: $2.NodeTypeProto.values)
+    ..aOM<$0.IPFSCIDProto>(1, _omitFieldNames ? '' : 'cid', subBuilder: $0.IPFSCIDProto.create)
+    ..pPM<$1.PBLink>(2, _omitFieldNames ? '' : 'links', subBuilder: $1.PBLink.create)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..aE<$2.NodeTypeProto>(4, _omitFieldNames ? '' : 'type', enumValues: $2.NodeTypeProto.values)
     ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aInt64(6, _omitFieldNames ? '' : 'timestamp')
@@ -146,7 +140,5 @@ class NodeProto extends $pb.GeneratedMessage {
   $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(6);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

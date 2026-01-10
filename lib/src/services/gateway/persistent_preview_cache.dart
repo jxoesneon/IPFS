@@ -37,9 +37,7 @@ class PersistentPreviewCache {
 
   /// Retrieves a cached preview for the given CID and content type.
   Future<Uint8List?> getPreview(CID cid, String contentType) async {
-    final cacheFile = File(
-      path.join(_cacheDir.path, _getCacheFileName(cid, contentType)),
-    );
+    final cacheFile = File(path.join(_cacheDir.path, _getCacheFileName(cid, contentType)));
 
     if (await cacheFile.exists()) {
       try {
@@ -53,16 +51,10 @@ class PersistentPreviewCache {
   }
 
   /// Caches a preview for the given CID and content type.
-  Future<void> cachePreview(
-    CID cid,
-    String contentType,
-    Uint8List preview,
-  ) async {
+  Future<void> cachePreview(CID cid, String contentType, Uint8List preview) async {
     if (preview.length > _maxCacheSize) return;
 
-    final cacheFile = File(
-      path.join(_cacheDir.path, _getCacheFileName(cid, contentType)),
-    );
+    final cacheFile = File(path.join(_cacheDir.path, _getCacheFileName(cid, contentType)));
 
     // Check if we need to free up space
     if (_currentCacheSize + preview.length > _maxCacheSize) {
@@ -115,16 +107,11 @@ class PersistentPreviewCache {
   }
 
   String _getCacheFileName(CID cid, String contentType) {
-    final hash = sha256
-        .convert(utf8.encode('${cid.encode()}_$contentType'))
-        .toString();
+    final hash = sha256.convert(utf8.encode('${cid.encode()}_$contentType')).toString();
     return '$hash.cache';
   }
 
-  Future<void> _writeCacheMetadata(
-    String cachePath,
-    Map<String, String> metadata,
-  ) async {
+  Future<void> _writeCacheMetadata(String cachePath, Map<String, String> metadata) async {
     final metadataFile = File('$cachePath.meta');
     await metadataFile.writeAsString(json.encode(metadata));
   }
@@ -137,9 +124,6 @@ class PersistentPreviewCache {
   }
 
   Future<List<FileSystemEntity>> _getCacheEntries() async {
-    return await _cacheDir
-        .list()
-        .where((entity) => entity.path.endsWith('.cache'))
-        .toList();
+    return await _cacheDir.list().where((entity) => entity.path.endsWith('.cache')).toList();
   }
 }

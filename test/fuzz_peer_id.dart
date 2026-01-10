@@ -7,9 +7,7 @@ void main() {
     try {
       final bytes = Uint8List(i);
       final id = PeerId(value: bytes);
-      print(
-        'Length $i: PASS - Created PeerId: ${id.toString().substring(0, 10)}...',
-      );
+      print('Length $i: PASS - Created PeerId: ${id.toString().substring(0, 10)}...');
     } catch (e) {
       // print('Length $i: FAIL - $e');
     }

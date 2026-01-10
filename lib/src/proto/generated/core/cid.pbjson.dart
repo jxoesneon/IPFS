@@ -26,22 +26,15 @@ const IPFSCIDVersion$json = {
 };
 
 /// Descriptor for `IPFSCIDVersion`. Decode as a `google.protobuf.EnumDescriptorProto`.
-final $typed_data.Uint8List iPFSCIDVersionDescriptor = $convert.base64Decode(
-    'Cg5JUEZTQ0lEVmVyc2lvbhIgChxJUEZTX0NJRF9WRVJTSU9OX1VOU1BFQ0lGSUVEEAASFgoSSV'
-    'BGU19DSURfVkVSU0lPTl8wEAESFgoSSVBGU19DSURfVkVSU0lPTl8xEAI=');
+final $typed_data.Uint8List iPFSCIDVersionDescriptor = $convert
+    .base64Decode('Cg5JUEZTQ0lEVmVyc2lvbhIgChxJUEZTX0NJRF9WRVJTSU9OX1VOU1BFQ0lGSUVEEAASFgoSSV'
+        'BGU19DSURfVkVSU0lPTl8wEAESFgoSSVBGU19DSURfVkVSU0lPTl8xEAI=');
 
 @$core.Deprecated('Use iPFSCIDProtoDescriptor instead')
 const IPFSCIDProto$json = {
   '1': 'IPFSCIDProto',
   '2': [
-    {
-      '1': 'version',
-      '3': 1,
-      '4': 1,
-      '5': 14,
-      '6': '.ipfs.core.IPFSCIDVersion',
-      '10': 'version'
-    },
+    {'1': 'version', '3': 1, '4': 1, '5': 14, '6': '.ipfs.core.IPFSCIDVersion', '10': 'version'},
     {'1': 'multihash', '3': 2, '4': 1, '5': 12, '10': 'multihash'},
     {'1': 'codec', '3': 3, '4': 1, '5': 9, '10': 'codec'},
     {'1': 'multibase_prefix', '3': 4, '4': 1, '5': 9, '10': 'multibasePrefix'},
@@ -50,8 +43,8 @@ const IPFSCIDProto$json = {
 };
 
 /// Descriptor for `IPFSCIDProto`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List iPFSCIDProtoDescriptor = $convert.base64Decode(
-    'CgxJUEZTQ0lEUHJvdG8SMwoHdmVyc2lvbhgBIAEoDjIZLmlwZnMuY29yZS5JUEZTQ0lEVmVyc2'
-    'lvblIHdmVyc2lvbhIcCgltdWx0aWhhc2gYAiABKAxSCW11bHRpaGFzaBIUCgVjb2RlYxgDIAEo'
-    'CVIFY29kZWMSKQoQbXVsdGliYXNlX3ByZWZpeBgEIAEoCVIPbXVsdGliYXNlUHJlZml4Eh0KCm'
-    'NvZGVjX3R5cGUYBSABKAVSCWNvZGVjVHlwZQ==');
+final $typed_data.Uint8List iPFSCIDProtoDescriptor = $convert
+    .base64Decode('CgxJUEZTQ0lEUHJvdG8SMwoHdmVyc2lvbhgBIAEoDjIZLmlwZnMuY29yZS5JUEZTQ0lEVmVyc2'
+        'lvblIHdmVyc2lvbhIcCgltdWx0aWhhc2gYAiABKAxSCW11bHRpaGFzaBIUCgVjb2RlYxgDIAEo'
+        'CVIFY29kZWMSKQoQbXVsdGliYXNlX3ByZWZpeBgEIAEoCVIPbXVsdGliYXNlUHJlZml4Eh0KCm'
+        'NvZGVjX3R5cGUYBSABKAVSCWNvZGVjVHlwZQ==');

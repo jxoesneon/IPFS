@@ -45,29 +45,21 @@ class RedBlackTreeNode extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RedBlackTreeNode',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.red_black_tree'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RedBlackTreeNode',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.red_black_tree'),
       createEmptyInstance: create)
-    ..aOM<$0.K_PeerId>(1, _omitFieldNames ? '' : 'key',
-        subBuilder: $0.K_PeerId.create)
-    ..aOM<$0.V_PeerInfo>(2, _omitFieldNames ? '' : 'value',
-        subBuilder: $0.V_PeerInfo.create)
-    ..aE<$0.NodeColor>(3, _omitFieldNames ? '' : 'color',
-        enumValues: $0.NodeColor.values)
-    ..aOM<RedBlackTreeNode>(4, _omitFieldNames ? '' : 'left',
-        subBuilder: RedBlackTreeNode.create)
-    ..aOM<RedBlackTreeNode>(5, _omitFieldNames ? '' : 'right',
-        subBuilder: RedBlackTreeNode.create)
+    ..aOM<$0.K_PeerId>(1, _omitFieldNames ? '' : 'key', subBuilder: $0.K_PeerId.create)
+    ..aOM<$0.V_PeerInfo>(2, _omitFieldNames ? '' : 'value', subBuilder: $0.V_PeerInfo.create)
+    ..aE<$0.NodeColor>(3, _omitFieldNames ? '' : 'color', enumValues: $0.NodeColor.values)
+    ..aOM<RedBlackTreeNode>(4, _omitFieldNames ? '' : 'left', subBuilder: RedBlackTreeNode.create)
+    ..aOM<RedBlackTreeNode>(5, _omitFieldNames ? '' : 'right', subBuilder: RedBlackTreeNode.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   RedBlackTreeNode clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   RedBlackTreeNode copyWith(void Function(RedBlackTreeNode) updates) =>
-      super.copyWith((message) => updates(message as RedBlackTreeNode))
-          as RedBlackTreeNode;
+      super.copyWith((message) => updates(message as RedBlackTreeNode)) as RedBlackTreeNode;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -77,8 +69,8 @@ class RedBlackTreeNode extends $pb.GeneratedMessage {
   @$core.override
   RedBlackTreeNode createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static RedBlackTreeNode getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RedBlackTreeNode>(create);
+  static RedBlackTreeNode getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RedBlackTreeNode>(create);
   static RedBlackTreeNode? _defaultInstance;
 
   /// The key associated with this node.
@@ -140,7 +132,5 @@ class RedBlackTreeNode extends $pb.GeneratedMessage {
   RedBlackTreeNode ensureRight() => $_ensure(4);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

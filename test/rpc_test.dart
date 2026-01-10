@@ -12,8 +12,7 @@ void main() {
 
     setUp(() async {
       final config = IPFSConfig(
-        dataPath:
-            './test_data_rpc_bug/${DateTime.now().millisecondsSinceEpoch}',
+        dataPath: './test_data_rpc_bug/${DateTime.now().millisecondsSinceEpoch}',
         offline: true,
       );
       node = await IPFSNode.create(config);
@@ -43,11 +42,7 @@ void main() {
 
       // Verify block is stored
       final block = await node.blockStore.getBlock(key as String);
-      expect(
-        block.found,
-        isTrue,
-        reason: 'Block should be found in store after put',
-      );
+      expect(block.found, isTrue, reason: 'Block should be found in store after put');
       expect(block.block.data, equals(content));
     });
   });

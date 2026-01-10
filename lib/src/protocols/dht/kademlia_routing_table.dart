@@ -59,11 +59,7 @@ class KademliaRoutingTable {
   /// Adds a peer to the routing table.
   ///
   /// Enforces IP diversity limits to prevent Sybil attacks.
-  Future<void> addPeer(
-    PeerId peerId,
-    PeerId associatedPeerId, {
-    String? address,
-  }) async {
+  Future<void> addPeer(PeerId peerId, PeerId associatedPeerId, {String? address}) async {
     // 1. IP Diversity Check
     if (address != null) {
       final ip = address; // Assuming address string is the IP or contains it
@@ -113,14 +109,11 @@ class KademliaRoutingTable {
     }
   }
 
-
   bool _isStaleNode(KademliaTreeNode node) {
     final nodeStats = _getNodeStats(); // Fetch current network statistics
     final staleThreshold = _calculateStaleThreshold(nodeStats);
-    
-    return DateTime.now().difference(
-          DateTime.fromMillisecondsSinceEpoch(node.lastSeen),
-        ) >
+
+    return DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(node.lastSeen)) >
         staleThreshold;
   }
 
@@ -153,9 +146,9 @@ class KademliaRoutingTable {
     // Use _findNode to check existence (now robust)
     final node = _findNode(peerId);
     if (node != null) {
-       bucket.remove(peerId);
-       bucket.entries.removeWhere((e) => _peersEqual(e.key, peerId));
-       bucket.size = bucket.entries.length;
+      bucket.remove(peerId);
+      bucket.entries.removeWhere((e) => _peersEqual(e.key, peerId));
+      bucket.size = bucket.entries.length;
 
       // Decrement IP count
       if (_peerIps.containsKey(peerId)) {
@@ -172,25 +165,22 @@ class KademliaRoutingTable {
     }
   }
 
-
   /// Gets the associated peer for a given peer ID.
   PeerId? getAssociatedPeer(PeerId peerId) => _tree.getAssociatedPeer(peerId);
 
   /// Returns true if the routing table contains the peer.
   bool containsPeer(PeerId peerId) {
-      for (var bucket in _tree.buckets) {
-        for (var entry in bucket.entries) {
-          if (_peersEqual(entry.key, peerId)) return true;
-        }
+    for (var bucket in _tree.buckets) {
+      for (var entry in bucket.entries) {
+        if (_peersEqual(entry.key, peerId)) return true;
       }
-      return false;
+    }
+    return false;
   }
 
   /// Total number of peers in the routing table.
-  int get peerCount => _tree.buckets.fold(
-    0,
-    (sum, bucket) => (sum + bucket.entries.length).toInt(),
-  );
+  int get peerCount =>
+      _tree.buckets.fold(0, (sum, bucket) => (sum + bucket.entries.length).toInt());
 
   /// Clears all peers from the routing table.
   void clear() {
@@ -205,14 +195,11 @@ class KademliaRoutingTable {
   /// Access to the underlying k-buckets.
   List<RedBlackTree<PeerId, KademliaTreeNode>> get buckets => _tree.buckets;
 
-
   /// Finds the k closest peers to target.
-  List<PeerId> findClosestPeers(PeerId target, int k) =>
-      _tree.findClosestPeers(target, k);
+  List<PeerId> findClosestPeers(PeerId target, int k) => _tree.findClosestPeers(target, k);
 
   /// Performs a node lookup for target.
-  Future<List<PeerId>> nodeLookup(PeerId target) async =>
-      _tree.nodeLookup(target);
+  Future<List<PeerId>> nodeLookup(PeerId target) async => _tree.nodeLookup(target);
 
   /// Refreshes stale buckets by querying for random keys.
   void refresh() {
@@ -237,9 +224,7 @@ class KademliaRoutingTable {
 
   RedBlackTree<PeerId, KademliaTreeNode> _getOrCreateBucket(int bucketIndex) {
     while (_tree.buckets.length <= bucketIndex) {
-      _tree.buckets.add(
-        RedBlackTree<PeerId, KademliaTreeNode>(compare: _xorDistanceComparator),
-      );
+      _tree.buckets.add(RedBlackTree<PeerId, KademliaTreeNode>(compare: _xorDistanceComparator));
     }
     return _tree.buckets[bucketIndex];
   }
@@ -392,10 +377,10 @@ class KademliaRoutingTable {
       // Check via scan
       bool found = false;
       for (var entry in bucket.entries) {
-         if (_peersEqual(entry.key, peerId)) {
-           found = true;
-           break;
-         }
+        if (_peersEqual(entry.key, peerId)) {
+          found = true;
+          break;
+        }
       }
 
       if (found) {
@@ -431,7 +416,6 @@ class KademliaRoutingTable {
         final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
         // Bucket index calculated for potential future use
         _getBucketIndex(distance);
-
       }
     } else {
       // Create an associated PeerId from the peer info
@@ -464,11 +448,7 @@ class KademliaRoutingTable {
   }
 
   /// Updates the timestamp for a key provider
-  void updateKeyProviderTimestamp(
-    PeerId key,
-    PeerId provider,
-    DateTime timestamp,
-  ) {
+  void updateKeyProviderTimestamp(PeerId key, PeerId provider, DateTime timestamp) {
     final node = _findNode(key);
     if (node != null && node.associatedPeerId == provider) {
       node.lastSeen = timestamp.millisecondsSinceEpoch;

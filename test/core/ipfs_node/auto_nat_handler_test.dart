@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
@@ -31,17 +30,14 @@ void main() {
 
       // Default behaviors
       when(mockNetworkHandler.canConnectDirectly(any)).thenAnswer((_) async => false);
-      when(mockNetworkHandler.testConnection(sourcePort: anyNamed('sourcePort')))
-          .thenAnswer((_) async => '4001');
+      when(
+        mockNetworkHandler.testConnection(sourcePort: anyNamed('sourcePort')),
+      ).thenAnswer((_) async => '4001');
       when(mockNetworkHandler.testDialback()).thenAnswer((_) async => true);
       when(mockNatService.mapPort(any)).thenAnswer((_) async => ['TCP', 'UDP']);
       when(mockNatService.unmapPort(any)).thenAnswer((_) async => {});
 
-      handler = AutoNATHandler(
-        config,
-        mockNetworkHandler,
-        natService: mockNatService,
-      );
+      handler = AutoNATHandler(config, mockNetworkHandler, natService: mockNatService);
     });
 
     tearDown(() async {
@@ -58,7 +54,7 @@ void main() {
 
     test('double start log warning and no-op', () async {
       await handler.start();
-      await handler.start(); 
+      await handler.start();
     });
 
     test('stop unmaps ports and is idempotent', () async {
@@ -127,10 +123,7 @@ void main() {
 
     test('handles address formats without specific port markers', () async {
       final badConfig = IPFSConfig(
-        network: NetworkConfig(
-          listenAddresses: ['/unix/tmp/ipfs.sock'], 
-          enableNatTraversal: true,
-        ),
+        network: NetworkConfig(listenAddresses: ['/unix/tmp/ipfs.sock'], enableNatTraversal: true),
       );
       handler = AutoNATHandler(badConfig, mockNetworkHandler, natService: mockNatService);
       await handler.start();
@@ -142,10 +135,10 @@ void main() {
         network: NetworkConfig(listenAddresses: ['/bad'], enableNatTraversal: true),
       );
       handler = AutoNATHandler(badConfig, mockNetworkHandler, natService: mockNatService);
-      
-      await handler.start(); 
-      await handler.stop(); 
-      verify(mockNatService.unmapPort(4001)).called(1); 
+
+      await handler.start();
+      await handler.stop();
+      verify(mockNatService.unmapPort(4001)).called(1);
     });
 
     test('handles errors during stop', () async {

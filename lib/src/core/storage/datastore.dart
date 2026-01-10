@@ -56,14 +56,7 @@ class Key {
 /// A Query object for the datastore.
 class Query {
   /// Creates a new query with optional filters.
-  Query({
-    this.prefix,
-    this.filters,
-    this.orders,
-    this.limit,
-    this.offset,
-    this.keysOnly = false,
-  });
+  Query({this.prefix, this.filters, this.orders, this.limit, this.offset, this.keysOnly = false});
 
   /// Optional key prefix to filter by.
   final String? prefix;

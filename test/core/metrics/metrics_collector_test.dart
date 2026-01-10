@@ -34,19 +34,17 @@ void main() {
     });
 
     test('should respect enabled flag in config', () async {
-      final disabledConfig = IPFSConfig(
-        metrics: MetricsConfig(enabled: false),
-      );
+      final disabledConfig = IPFSConfig(metrics: MetricsConfig(enabled: false));
       final disabledCollector = MetricsCollector(disabledConfig);
-      
+
       await disabledCollector.start();
       final status = await disabledCollector.getStatus();
       expect(status['enabled'], isFalse);
-      
+
       // Recording should do nothing (no crash)
       disabledCollector.recordProtocolMetrics('test', {'val': 1});
       disabledCollector.recordError('cat', 'src', 'err');
-      
+
       await disabledCollector.stop();
     });
 
@@ -89,14 +87,14 @@ void main() {
 
     test('latency history management', () async {
       final peerId = 'peer_latency';
-      
+
       for (int i = 1; i <= 110; i++) {
         final m = ConnectionMetrics()
           ..peerId = peerId
           ..averageLatencyMs = i;
         await collector.updateConnectionMetrics(m);
       }
-      
+
       // Should only keep last 100.
       final avg = collector.getAverageLatency(peerId).inMilliseconds;
       expect(avg, closeTo(60, 1));
@@ -104,7 +102,7 @@ void main() {
 
     test('metricsStream emits data', () async {
       await collector.start();
-      
+
       final completer = Completer<Map<String, dynamic>>();
       collector.metricsStream.listen((data) {
         if (!completer.isCompleted) completer.complete(data);

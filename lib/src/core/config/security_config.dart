@@ -20,9 +20,7 @@ class SecurityConfig {
       tlsCertificatePath: json['tlsCertificatePath'] as String?,
       tlsPrivateKeyPath: json['tlsPrivateKeyPath'] as String?,
       enableKeyRotation: json['enableKeyRotation'] as bool? ?? true,
-      keyRotationInterval: Duration(
-        days: json['keyRotationDays'] as int? ?? 30,
-      ),
+      keyRotationInterval: Duration(days: json['keyRotationDays'] as int? ?? 30),
       maxAuthAttempts: json['maxAuthAttempts'] as int? ?? 3,
       enableRateLimiting: json['enableRateLimiting'] as bool? ?? true,
       maxRequestsPerMinute: json['maxRequestsPerMinute'] as int? ?? 100,

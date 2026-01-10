@@ -14,8 +14,7 @@ import 'dart:core' as $core;
 
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
-import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart'
-    as $0;
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart' as $0;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
@@ -23,14 +22,12 @@ class NetworkMetrics extends $pb.GeneratedMessage {
   factory NetworkMetrics({
     $0.Timestamp? timestamp,
     $core.Iterable<$core.MapEntry<$core.String, PeerMetrics>>? peerMetrics,
-    $core.Iterable<$core.MapEntry<$core.String, ProtocolMetrics>>?
-        protocolMetrics,
+    $core.Iterable<$core.MapEntry<$core.String, ProtocolMetrics>>? protocolMetrics,
   }) {
     final result = create();
     if (timestamp != null) result.timestamp = timestamp;
     if (peerMetrics != null) result.peerMetrics.addEntries(peerMetrics);
-    if (protocolMetrics != null)
-      result.protocolMetrics.addEntries(protocolMetrics);
+    if (protocolMetrics != null) result.protocolMetrics.addEntries(protocolMetrics);
     return result;
   }
 
@@ -43,12 +40,10 @@ class NetworkMetrics extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'NetworkMetrics',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NetworkMetrics',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.metrics'),
       createEmptyInstance: create)
-    ..aOM<$0.Timestamp>(1, _omitFieldNames ? '' : 'timestamp',
-        subBuilder: $0.Timestamp.create)
+    ..aOM<$0.Timestamp>(1, _omitFieldNames ? '' : 'timestamp', subBuilder: $0.Timestamp.create)
     ..m<$core.String, PeerMetrics>(2, _omitFieldNames ? '' : 'peerMetrics',
         entryClassName: 'NetworkMetrics.PeerMetricsEntry',
         keyFieldType: $pb.PbFieldType.OS,
@@ -56,8 +51,7 @@ class NetworkMetrics extends $pb.GeneratedMessage {
         valueCreator: PeerMetrics.create,
         valueDefaultOrMaker: PeerMetrics.getDefault,
         packageName: const $pb.PackageName('ipfs.metrics'))
-    ..m<$core.String, ProtocolMetrics>(
-        3, _omitFieldNames ? '' : 'protocolMetrics',
+    ..m<$core.String, ProtocolMetrics>(3, _omitFieldNames ? '' : 'protocolMetrics',
         entryClassName: 'NetworkMetrics.ProtocolMetricsEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OM,
@@ -70,8 +64,7 @@ class NetworkMetrics extends $pb.GeneratedMessage {
   NetworkMetrics clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   NetworkMetrics copyWith(void Function(NetworkMetrics) updates) =>
-      super.copyWith((message) => updates(message as NetworkMetrics))
-          as NetworkMetrics;
+      super.copyWith((message) => updates(message as NetworkMetrics)) as NetworkMetrics;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -81,8 +74,8 @@ class NetworkMetrics extends $pb.GeneratedMessage {
   @$core.override
   NetworkMetrics createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static NetworkMetrics getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<NetworkMetrics>(create);
+  static NetworkMetrics getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NetworkMetrics>(create);
   static NetworkMetrics? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -131,24 +124,18 @@ class PeerMetrics extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PeerMetrics',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PeerMetrics',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.metrics'),
       createEmptyInstance: create)
-    ..a<$fixnum.Int64>(
-        1, _omitFieldNames ? '' : 'messagesSent', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'messagesSent', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(
-        2, _omitFieldNames ? '' : 'messagesReceived', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'messagesReceived', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(
-        3, _omitFieldNames ? '' : 'bytesSent', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'bytesSent', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(
-        4, _omitFieldNames ? '' : 'bytesReceived', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'bytesReceived', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aI(5, _omitFieldNames ? '' : 'averageLatencyMs',
-        fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'averageLatencyMs', fieldType: $pb.PbFieldType.OU3)
     ..aI(6, _omitFieldNames ? '' : 'errorCount', fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
@@ -156,8 +143,7 @@ class PeerMetrics extends $pb.GeneratedMessage {
   PeerMetrics clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PeerMetrics copyWith(void Function(PeerMetrics) updates) =>
-      super.copyWith((message) => updates(message as PeerMetrics))
-          as PeerMetrics;
+      super.copyWith((message) => updates(message as PeerMetrics)) as PeerMetrics;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -167,8 +153,8 @@ class PeerMetrics extends $pb.GeneratedMessage {
   @$core.override
   PeerMetrics createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static PeerMetrics getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PeerMetrics>(create);
+  static PeerMetrics getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PeerMetrics>(create);
   static PeerMetrics? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -250,18 +236,14 @@ class ProtocolMetrics extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ProtocolMetrics',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ProtocolMetrics',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.metrics'),
       createEmptyInstance: create)
-    ..a<$fixnum.Int64>(
-        1, _omitFieldNames ? '' : 'messagesSent', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'messagesSent', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(
-        2, _omitFieldNames ? '' : 'messagesReceived', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'messagesReceived', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aI(3, _omitFieldNames ? '' : 'activeConnections',
-        fieldType: $pb.PbFieldType.OU3)
+    ..aI(3, _omitFieldNames ? '' : 'activeConnections', fieldType: $pb.PbFieldType.OU3)
     ..m<$core.String, $fixnum.Int64>(4, _omitFieldNames ? '' : 'errorCounts',
         entryClassName: 'ProtocolMetrics.ErrorCountsEntry',
         keyFieldType: $pb.PbFieldType.OS,
@@ -273,8 +255,7 @@ class ProtocolMetrics extends $pb.GeneratedMessage {
   ProtocolMetrics clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ProtocolMetrics copyWith(void Function(ProtocolMetrics) updates) =>
-      super.copyWith((message) => updates(message as ProtocolMetrics))
-          as ProtocolMetrics;
+      super.copyWith((message) => updates(message as ProtocolMetrics)) as ProtocolMetrics;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -284,8 +265,8 @@ class ProtocolMetrics extends $pb.GeneratedMessage {
   @$core.override
   ProtocolMetrics createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ProtocolMetrics getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ProtocolMetrics>(create);
+  static ProtocolMetrics getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ProtocolMetrics>(create);
   static ProtocolMetrics? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -319,7 +300,5 @@ class ProtocolMetrics extends $pb.GeneratedMessage {
   $pb.PbMap<$core.String, $fixnum.Int64> get errorCounts => $_getMap(3);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

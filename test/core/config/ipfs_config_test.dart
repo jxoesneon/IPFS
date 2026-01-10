@@ -21,11 +21,7 @@ void main() {
     });
 
     test('toJson / fromJson roundrip', () {
-      final config = IPFSConfig(
-        offline: true,
-        logLevel: 'debug',
-        defaultBandwidthQuota: 500,
-      );
+      final config = IPFSConfig(offline: true, logLevel: 'debug', defaultBandwidthQuota: 500);
 
       final json = config.toJson();
       expect(json['offline'], isTrue);

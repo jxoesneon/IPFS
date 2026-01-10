@@ -50,8 +50,7 @@ class Message_Wantlist_Entry extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'Message.Wantlist.Entry',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.bitswap'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(
-        1, _omitFieldNames ? '' : 'block', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'block', $pb.PbFieldType.OY)
     ..aI(2, _omitFieldNames ? '' : 'priority')
     ..aOB(3, _omitFieldNames ? '' : 'cancel')
     ..aE<Message_Wantlist_WantType>(4, _omitFieldNames ? '' : 'wantType',
@@ -62,8 +61,7 @@ class Message_Wantlist_Entry extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Message_Wantlist_Entry clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Message_Wantlist_Entry copyWith(
-          void Function(Message_Wantlist_Entry) updates) =>
+  Message_Wantlist_Entry copyWith(void Function(Message_Wantlist_Entry) updates) =>
       super.copyWith((message) => updates(message as Message_Wantlist_Entry))
           as Message_Wantlist_Entry;
 
@@ -75,8 +73,8 @@ class Message_Wantlist_Entry extends $pb.GeneratedMessage {
   @$core.override
   Message_Wantlist_Entry createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static Message_Wantlist_Entry getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Message_Wantlist_Entry>(create);
+  static Message_Wantlist_Entry getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Message_Wantlist_Entry>(create);
   static Message_Wantlist_Entry? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -145,8 +143,7 @@ class Message_Wantlist extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Message.Wantlist',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Message.Wantlist',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.bitswap'),
       createEmptyInstance: create)
     ..pPM<Message_Wantlist_Entry>(1, _omitFieldNames ? '' : 'entries',
@@ -158,8 +155,7 @@ class Message_Wantlist extends $pb.GeneratedMessage {
   Message_Wantlist clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Message_Wantlist copyWith(void Function(Message_Wantlist) updates) =>
-      super.copyWith((message) => updates(message as Message_Wantlist))
-          as Message_Wantlist;
+      super.copyWith((message) => updates(message as Message_Wantlist)) as Message_Wantlist;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -169,8 +165,8 @@ class Message_Wantlist extends $pb.GeneratedMessage {
   @$core.override
   Message_Wantlist createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static Message_Wantlist getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Message_Wantlist>(create);
+  static Message_Wantlist getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Message_Wantlist>(create);
   static Message_Wantlist? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -206,22 +202,18 @@ class Message_Block extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Message.Block',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Message.Block',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.bitswap'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(
-        1, _omitFieldNames ? '' : 'prefix', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'prefix', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Message_Block clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Message_Block copyWith(void Function(Message_Block) updates) =>
-      super.copyWith((message) => updates(message as Message_Block))
-          as Message_Block;
+      super.copyWith((message) => updates(message as Message_Block)) as Message_Block;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -231,8 +223,8 @@ class Message_Block extends $pb.GeneratedMessage {
   @$core.override
   Message_Block createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static Message_Block getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Message_Block>(create);
+  static Message_Block getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Message_Block>(create);
   static Message_Block? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -278,8 +270,7 @@ class Message_BlockPresence extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'Message.BlockPresence',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.bitswap'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(
-        1, _omitFieldNames ? '' : 'cid', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'cid', $pb.PbFieldType.OY)
     ..aE<Message_BlockPresence_Type>(2, _omitFieldNames ? '' : 'type',
         enumValues: Message_BlockPresence_Type.values)
     ..hasRequiredFields = false;
@@ -287,8 +278,7 @@ class Message_BlockPresence extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Message_BlockPresence clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Message_BlockPresence copyWith(
-          void Function(Message_BlockPresence) updates) =>
+  Message_BlockPresence copyWith(void Function(Message_BlockPresence) updates) =>
       super.copyWith((message) => updates(message as Message_BlockPresence))
           as Message_BlockPresence;
 
@@ -300,8 +290,8 @@ class Message_BlockPresence extends $pb.GeneratedMessage {
   @$core.override
   Message_BlockPresence createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static Message_BlockPresence getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Message_BlockPresence>(create);
+  static Message_BlockPresence getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Message_BlockPresence>(create);
   static Message_BlockPresence? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -349,16 +339,13 @@ class Message extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Message',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Message',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.bitswap'),
       createEmptyInstance: create)
     ..aOM<Message_Wantlist>(1, _omitFieldNames ? '' : 'wantlist',
         subBuilder: Message_Wantlist.create)
-    ..p<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'blocks', $pb.PbFieldType.PY)
-    ..pPM<Message_Block>(3, _omitFieldNames ? '' : 'payload',
-        subBuilder: Message_Block.create)
+    ..p<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'blocks', $pb.PbFieldType.PY)
+    ..pPM<Message_Block>(3, _omitFieldNames ? '' : 'payload', subBuilder: Message_Block.create)
     ..pPM<Message_BlockPresence>(4, _omitFieldNames ? '' : 'blockPresences',
         protoName: 'blockPresences', subBuilder: Message_BlockPresence.create)
     ..aI(5, _omitFieldNames ? '' : 'pendingBytes', protoName: 'pendingBytes')
@@ -412,7 +399,5 @@ class Message extends $pb.GeneratedMessage {
   void clearPendingBytes() => $_clearField(5);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

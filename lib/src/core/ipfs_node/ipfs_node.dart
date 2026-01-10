@@ -121,8 +121,7 @@ class IPFSNode {
   final ServiceContainer _container;
   final Logger _logger;
   final HttpGatewayClient _httpGatewayClient = HttpGatewayClient();
-  final StreamController<String> _newContentController =
-      StreamController<String>.broadcast();
+  final StreamController<String> _newContentController = StreamController<String>.broadcast();
 
   /// Factory method to create and build an IPFS node from configuration.
   static Future<IPFSNode> create(IPFSConfig config) async {
@@ -594,9 +593,7 @@ class IPFSNode {
         );
       } else if (entry.value is Map) {
         // Handle subdirectory recursively
-        final subDirCid = await addDirectory(
-          entry.value as Map<String, dynamic>,
-        );
+        final subDirCid = await addDirectory(entry.value as Map<String, dynamic>);
         directoryManager.addEntry(
           IPFSDirectoryEntry(
             name: entry.key,
@@ -612,10 +609,7 @@ class IPFSNode {
 
     // Create a block from the directory data
     final pbNode = directoryManager.build();
-    final block = await Block.fromData(
-      pbNode.writeToBuffer(),
-      format: 'dag-pb',
-    );
+    final block = await Block.fromData(pbNode.writeToBuffer(), format: 'dag-pb');
 
     // Store the directory block
     await _container.get<DatastoreHandler>().putBlock(block);
@@ -698,9 +692,7 @@ class IPFSNode {
 
       // If not found locally, try to fetch from the network
       if (_container.isRegistered(BitswapHandler)) {
-        final networkBlock = await _container.get<BitswapHandler>().wantBlock(
-          cid,
-        );
+        final networkBlock = await _container.get<BitswapHandler>().wantBlock(cid);
         if (networkBlock?.data != null) {
           return networkBlock!.data;
         }
@@ -708,9 +700,7 @@ class IPFSNode {
 
       // 3. HTTP Gateway Fallback (Hybrid Compatibility) - KEEP THIS for Internal Mode too?
       // Yes, "Hybrid Fallback" is a feature of Internal Mode.
-      _logger.debug(
-        'P2P retrieval failed, attempting HTTP gateway fallback for $cid',
-      );
+      _logger.debug('P2P retrieval failed, attempting HTTP gateway fallback for $cid');
       final gatewayData = await _httpGatewayClient.get(cid);
       if (gatewayData != null) {
         return gatewayData;
@@ -723,27 +713,19 @@ class IPFSNode {
     }
   }
 
-  Future<Uint8List?> _resolvePathInDirectory(
-    MerkleDAGNode dirNode,
-    String path,
-  ) async {
+  Future<Uint8List?> _resolvePathInDirectory(MerkleDAGNode dirNode, String path) async {
     final pathParts = path.split('/').where((part) => part.isNotEmpty).toList();
 
     for (final link in dirNode.links) {
       if (link.name == pathParts[0]) {
-        final childBlock = await _container.get<DatastoreHandler>().getBlock(
-          link.cid.toString(),
-        );
+        final childBlock = await _container.get<DatastoreHandler>().getBlock(link.cid.toString());
         if (childBlock == null) return null;
 
         if (pathParts.length == 1) {
           return childBlock.data;
         } else {
           final childNode = MerkleDAGNode.fromBytes(childBlock.data);
-          return await _resolvePathInDirectory(
-            childNode,
-            pathParts.sublist(1).join('/'),
-          );
+          return await _resolvePathInDirectory(childNode, pathParts.sublist(1).join('/'));
         }
       }
     }
@@ -892,20 +874,14 @@ class IPFSNode {
       final cidObj = CID.decode(cid);
 
       // Try finding providers through DHT
-      final dhtProviders = await _container.get<DHTHandler>().findProviders(
-        cidObj,
-      );
+      final dhtProviders = await _container.get<DHTHandler>().findProviders(cidObj);
       if (dhtProviders.isNotEmpty) {
         // Convert V_PeerInfo to String peer IDs
-        return dhtProviders
-            .map((p) => Base58().encode(Uint8List.fromList(p.peerId)))
-            .toList();
+        return dhtProviders.map((p) => Base58().encode(Uint8List.fromList(p.peerId))).toList();
       }
 
       // If DHT lookup fails, try finding through routing handler
-      final routingProviders = await _container
-          .get<ContentRoutingHandler>()
-          .findProviders(cid);
+      final routingProviders = await _container.get<ContentRoutingHandler>().findProviders(cid);
       if (routingProviders.isNotEmpty) {
         return routingProviders;
       }
@@ -945,17 +921,13 @@ class IPFSNode {
   Future<String> resolveDNSLink(String domainName) async {
     try {
       // First try resolving through the routing handler
-      final cid = await _container.get<ContentRoutingHandler>().resolveDNSLink(
-        domainName,
-      );
+      final cid = await _container.get<ContentRoutingHandler>().resolveDNSLink(domainName);
       if (cid != null) {
         return cid;
       }
 
       // If routing handler fails, try DHT handler
-      final dhtCid = await _container.get<DHTHandler>().resolveDNSLink(
-        domainName,
-      );
+      final dhtCid = await _container.get<DHTHandler>().resolveDNSLink(domainName);
       if (dhtCid != null) {
         return dhtCid;
       }
@@ -999,8 +971,7 @@ class IPFSNode {
   Future<Map<String, dynamic>> _getServiceStatus<T>() async {
     if (_container.isRegistered(T)) {
       try {
-        return await (_container.get<T>() as dynamic).getStatus()
-            as Map<String, dynamic>;
+        return await (_container.get<T>() as dynamic).getStatus() as Map<String, dynamic>;
       } catch (e) {
         return {'status': 'error', 'message': e.toString()};
       }

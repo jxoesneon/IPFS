@@ -33,12 +33,10 @@ class ResponseStatus extends $pb.ProtobufEnum {
       ResponseStatus._(3, _omitEnumNames ? '' : 'RS_CANCELLED');
 
   /// Request is paused
-  static const ResponseStatus RS_PAUSED =
-      ResponseStatus._(4, _omitEnumNames ? '' : 'RS_PAUSED');
+  static const ResponseStatus RS_PAUSED = ResponseStatus._(4, _omitEnumNames ? '' : 'RS_PAUSED');
 
   /// Request error occurred
-  static const ResponseStatus RS_ERROR =
-      ResponseStatus._(5, _omitEnumNames ? '' : 'RS_ERROR');
+  static const ResponseStatus RS_ERROR = ResponseStatus._(5, _omitEnumNames ? '' : 'RS_ERROR');
 
   /// Request is paused pending local resources
   static const ResponseStatus RS_PAUSED_PENDING_RESOURCES =
@@ -54,13 +52,11 @@ class ResponseStatus extends $pb.ProtobufEnum {
     RS_PAUSED_PENDING_RESOURCES,
   ];
 
-  static final $core.List<ResponseStatus?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 6);
+  static final $core.List<ResponseStatus?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 6);
   static ResponseStatus? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const ResponseStatus._(super.value, super.name);
 }
 
-const $core.bool _omitEnumNames =
-    $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

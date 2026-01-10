@@ -60,11 +60,7 @@ class NetworkHandler {
   }
 
   /// Sends a request to a peer (stub).
-  Future<Uint8List> sendRequest(
-    dynamic peer,
-    String protocolId,
-    Uint8List request,
-  ) async {
+  Future<Uint8List> sendRequest(dynamic peer, String protocolId, Uint8List request) async {
     throw UnimplementedError();
   }
 

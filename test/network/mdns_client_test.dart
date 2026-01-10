@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:io';
 import 'package:test/test.dart';
@@ -9,10 +8,13 @@ import 'package:dart_ipfs/src/network/mdns_client.dart';
 
 import 'mdns_client_test.mocks.dart';
 
-@GenerateMocks([], customMocks: [
-  MockSpec<mdns.MDnsClient>(as: #MockMDnsClient),
-  MockSpec<RawDatagramSocket>(as: #MockRawDatagramSocket),
-])
+@GenerateMocks(
+  [],
+  customMocks: [
+    MockSpec<mdns.MDnsClient>(as: #MockMDnsClient),
+    MockSpec<RawDatagramSocket>(as: #MockRawDatagramSocket),
+  ],
+)
 void main() {
   group('MDnsClient', () {
     late MDnsClient client;
@@ -84,11 +86,7 @@ void main() {
     test('lookup transforms TXT record', () async {
       await client.start();
       final query = ResourceRecordQuery.text('instance.local');
-      final rawRecord = mdns.TxtResourceRecord(
-        'instance.local',
-        120000,
-        text: 'peerid=123',
-      );
+      final rawRecord = mdns.TxtResourceRecord('instance.local', 120000, text: 'peerid=123');
 
       when(mockInnerClient.lookup(any)).thenAnswer((_) => Stream.fromIterable([rawRecord]));
 
@@ -99,9 +97,9 @@ void main() {
     test('lookup timeout and error handling', () async {
       await client.start();
       final query = ResourceRecordQuery.text('instance.local');
-      
+
       when(mockInnerClient.lookup(any)).thenAnswer((_) => Stream.error(TimeoutException('test')));
-      
+
       // lookup catch TimeoutException and doesn't rethrow, but lookup Stream will terminate
       final results = await client.lookup(query).toList();
       expect(results, isEmpty);

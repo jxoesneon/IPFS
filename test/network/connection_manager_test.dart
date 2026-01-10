@@ -15,7 +15,7 @@ void main() {
 
   setUp(() {
     mockMetrics = MockMetricsCollector();
-    
+
     // Set up default stubs for metrics
     when(mockMetrics.getMessagesSent(any)).thenReturn(Int64(10));
     when(mockMetrics.getMessagesReceived(any)).thenReturn(Int64(20));
@@ -31,8 +31,10 @@ void main() {
     test('handleNewConnection creates state and updates metrics', () async {
       final peerId = 'peer-123';
       await manager.handleNewConnection(peerId);
-      
-      final captured = verify(mockMetrics.updateConnectionMetrics(captureAny)).captured.single as ConnectionMetrics;
+
+      final captured =
+          verify(mockMetrics.updateConnectionMetrics(captureAny)).captured.single
+              as ConnectionMetrics;
       expect(captured.peerId, equals(peerId));
       expect(captured.messagesSent, equals(Int64(10)));
       expect(captured.messagesReceived, equals(Int64(20)));

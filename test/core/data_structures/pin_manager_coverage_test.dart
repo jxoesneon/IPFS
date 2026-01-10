@@ -52,11 +52,14 @@ void main() {
     test('isBlockPinned indirect via _isIndirectlyPinned many', () async {
       final child = makeCid('indirect');
       final parent = makeCid('parent');
-      final data = MerkleDAGNode(data: Uint8List(0), links: [Link(name: 'c', size: 1, cid: child)]).toBytes();
-      
+      final data = MerkleDAGNode(
+        data: Uint8List(0),
+        links: [Link(name: 'c', size: 1, cid: child)],
+      ).toBytes();
+
       mockStore.addBlock(parent, 'dag-pb', data);
       mockStore.addBlock(child, 'raw', [0]);
-      
+
       await manager.pinBlock(parent.toProto(), PinTypeProto.PIN_TYPE_RECURSIVE);
       // isBlockPinned(child) should hit _isIndirectlyPinned loop
       expect(manager.isBlockPinned(child.toProto()), isTrue);
@@ -66,10 +69,13 @@ void main() {
       final c1 = makeCid('c1');
       final c2 = makeCid('c2');
       final parent = makeCid('p');
-      final data = MerkleDAGNode(data: Uint8List(0), links: [
-        Link(name: '1', size: 1, cid: c1),
-        Link(name: '2', size: 1, cid: c2)
-      ]).toBytes();
+      final data = MerkleDAGNode(
+        data: Uint8List(0),
+        links: [
+          Link(name: '1', size: 1, cid: c1),
+          Link(name: '2', size: 1, cid: c2),
+        ],
+      ).toBytes();
 
       mockStore.addBlock(parent, 'dag-pb', data);
       mockStore.addBlock(c1, 'raw', [1]);

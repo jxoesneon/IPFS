@@ -11,8 +11,7 @@ class CircuitRelayClient {
   CircuitRelayClient(this._router);
   static const String _protocolId = '/libp2p/circuit/relay/0.2.0/hop';
   final P2plibRouter _router; // Router instance for handling connections
-  final StreamController<CircuitRelayConnectionEvent>
-  _circuitRelayEventsController =
+  final StreamController<CircuitRelayConnectionEvent> _circuitRelayEventsController =
       StreamController<CircuitRelayConnectionEvent>.broadcast();
 
   // Pending reservations keyed by Relay Peer ID
@@ -66,9 +65,7 @@ class CircuitRelayClient {
       final addresses = _router.resolvePeerId(relayPeerId);
 
       if (addresses.isEmpty) {
-        throw StateError(
-          'Could not resolve address for relay peer: $relayPeerId',
-        );
+        throw StateError('Could not resolve address for relay peer: $relayPeerId');
       }
 
       // Setup listener before sending to handle synchronous responses in tests
@@ -91,10 +88,7 @@ class CircuitRelayClient {
             return res;
           });
 
-      await _router.sendDatagram(
-        addresses: addresses,
-        datagram: msg.writeToBuffer(),
-      );
+      await _router.sendDatagram(addresses: addresses, datagram: msg.writeToBuffer());
 
       // Wait for response or timeout
       return await responseFuture;
@@ -132,11 +126,7 @@ class CircuitRelayClient {
             );
             Future.microtask(() => completer.complete(res));
           } else {
-            Future.microtask(
-              () => completer.completeError(
-                'Reservation rejected: ${msg.status}',
-              ),
-            );
+            Future.microtask(() => completer.completeError('Reservation rejected: ${msg.status}'));
           }
         }
       }
@@ -152,10 +142,7 @@ class CircuitRelayClient {
     try {
       await _router.connect(peerId);
       _circuitRelayEventsController.add(
-        CircuitRelayConnectionEvent(
-          eventType: 'circuit_relay_created',
-          relayAddress: peerId,
-        ),
+        CircuitRelayConnectionEvent(eventType: 'circuit_relay_created', relayAddress: peerId),
       );
     } catch (e) {
       _circuitRelayEventsController.add(
@@ -196,8 +183,7 @@ class CircuitRelayClient {
       _circuitRelayEventsController.stream;
 
   /// Stream of circuit relay connection events (alias).
-  Stream<CircuitRelayConnectionEvent> get connectionEvents =>
-      _circuitRelayEventsController.stream;
+  Stream<CircuitRelayConnectionEvent> get connectionEvents => _circuitRelayEventsController.stream;
 
   /// Emits a new circuit relay event.
   void emitCircuitRelayEvent(CircuitRelayConnectionEvent event) {

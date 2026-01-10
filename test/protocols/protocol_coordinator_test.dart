@@ -1,7 +1,7 @@
 // test/protocols/protocol_coordinator_test.dart
 import 'package:test/test.dart';
 
-// Note: ProtocolCoordinator requires heavy mocking of BitswapHandler, 
+// Note: ProtocolCoordinator requires heavy mocking of BitswapHandler,
 // GraphsyncHandler, and IPLDHandler. For unit-testable coverage, we test
 // the coordination logic patterns and status structure.
 
@@ -37,13 +37,13 @@ void main() {
     test('retrieval respects useGraphsync flag', () {
       // When useGraphsync=true and selector provided -> use graphsync
       // When useGraphsync=false or no selector -> use bitswap
-      
+
       final useGraphsync = true;
       final hasSelector = true;
-      
+
       final shouldUseGraphsync = useGraphsync && hasSelector;
       expect(shouldUseGraphsync, isTrue);
-      
+
       final useGraphsync2 = false;
       final shouldUseGraphsync2 = useGraphsync2 && hasSelector;
       expect(shouldUseGraphsync2, isFalse);
@@ -54,10 +54,10 @@ void main() {
       // 1. Try primary protocol (graphsync or bitswap)
       // 2. If fails, try IPLD resolution
       // 3. If IPLD fails, return null
-      
+
       var primaryFailed = true;
       var ipldFailed = false;
-      
+
       String? result;
       if (!primaryFailed) {
         result = 'primary';
@@ -66,14 +66,14 @@ void main() {
       } else {
         result = null;
       }
-      
+
       expect(result, equals('ipld_fallback'));
     });
 
     test('retrieval returns null when all methods fail', () {
       var primaryFailed = true;
       var ipldFailed = true;
-      
+
       String? result;
       if (!primaryFailed) {
         result = 'primary';
@@ -82,7 +82,7 @@ void main() {
       } else {
         result = null;
       }
-      
+
       expect(result, isNull);
     });
   });
@@ -91,24 +91,24 @@ void main() {
     test('initialize starts all handlers in correct order', () {
       // Expected order: IPLD -> Bitswap -> Graphsync
       final initOrder = <String>[];
-      
+
       // Simulate initialization
       initOrder.add('ipld');
       initOrder.add('bitswap');
       initOrder.add('graphsync');
-      
+
       expect(initOrder, equals(['ipld', 'bitswap', 'graphsync']));
     });
 
     test('stop stops all handlers in correct order', () {
       // Expected order: Graphsync -> Bitswap -> IPLD (reverse of init)
       final stopOrder = <String>[];
-      
+
       // Simulate stopping
       stopOrder.add('graphsync');
       stopOrder.add('bitswap');
       stopOrder.add('ipld');
-      
+
       expect(stopOrder, equals(['graphsync', 'bitswap', 'ipld']));
     });
   });

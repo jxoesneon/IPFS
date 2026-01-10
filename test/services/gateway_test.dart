@@ -50,8 +50,7 @@ class MockBlockStore implements BlockStore {
   }
 
   @override
-  Future<RemoveBlockResponse> removeBlock(String cid) async =>
-      RemoveBlockResponse();
+  Future<RemoveBlockResponse> removeBlock(String cid) async => RemoveBlockResponse();
   @override
   Future<Map<String, dynamic>> getStatus() async => {};
   @override
@@ -71,10 +70,7 @@ void main() {
     test('handlePath returns 404 for missing block', () async {
       // Use a valid CID string even if missing in store
       final cid = CID.computeForDataSync(Uint8List(0));
-      final request = Request(
-        'GET',
-        Uri.parse('http://localhost:8080/ipfs/${cid.encode()}'),
-      );
+      final request = Request('GET', Uri.parse('http://localhost:8080/ipfs/${cid.encode()}'));
       final response = await handler.handlePath(request);
       expect(response.statusCode, 404);
       expect(await response.readAsString(), 'Block not found');
@@ -88,10 +84,7 @@ void main() {
       final block = Block(cid: cid, data: data);
       blockStore.blocks[cidStr] = block;
 
-      final request = Request(
-        'GET',
-        Uri.parse('http://localhost:8080/ipfs/$cidStr'),
-      );
+      final request = Request('GET', Uri.parse('http://localhost:8080/ipfs/$cidStr'));
       final response = await handler.handlePath(request);
 
       expect(response.statusCode, 200);
@@ -121,10 +114,7 @@ void main() {
       final block = Block(cid: cid, data: blockData);
       blockStore.blocks[cidStr] = block;
 
-      final request = Request(
-        'GET',
-        Uri.parse('http://localhost:8080/ipfs/$cidStr'),
-      );
+      final request = Request('GET', Uri.parse('http://localhost:8080/ipfs/$cidStr'));
       final response = await handler.handlePath(request);
 
       expect(response.statusCode, 200);
@@ -188,10 +178,7 @@ void main() {
 
       blockStore.blocks[dirCidStr] = Block(cid: dirCid, data: dirData);
 
-      final request = Request(
-        'GET',
-        Uri.parse('http://localhost:8080/ipfs/$dirCidStr'),
-      );
+      final request = Request('GET', Uri.parse('http://localhost:8080/ipfs/$dirCidStr'));
       final response = await handler.handlePath(request);
 
       expect(response.statusCode, 200);
@@ -248,9 +235,7 @@ void main() {
           final data = utf8.encode('Resolved Content');
           final cid = CID.computeForDataSync(data);
 
-          await blockStore.putBlock(
-            Block(cid: cid, data: Uint8List.fromList(data)),
-          );
+          await blockStore.putBlock(Block(cid: cid, data: Uint8List.fromList(data)));
           return cid.encode();
         }
         throw Exception('Not found');
@@ -260,10 +245,7 @@ void main() {
       handler = GatewayHandler(blockStore, ipnsResolver: mockResolver);
 
       final validName = 'k51qzi5uqu5dlvj2baxnqnds23059p5483n5m8t4s6p7j7j2j';
-      final request = Request(
-        'GET',
-        Uri.parse('http://localhost:8080/ipns/$validName'),
-      );
+      final request = Request('GET', Uri.parse('http://localhost:8080/ipns/$validName'));
 
       final response = await handler.handlePath(request);
 
@@ -272,15 +254,9 @@ void main() {
     });
 
     test('handlePath returns 404 for unknown IPNS name', () async {
-      handler = GatewayHandler(
-        blockStore,
-        ipnsResolver: (name) async => throw Exception('Failed'),
-      );
+      handler = GatewayHandler(blockStore, ipnsResolver: (name) async => throw Exception('Failed'));
 
-      final request = Request(
-        'GET',
-        Uri.parse('http://localhost:8080/ipns/unknown'),
-      );
+      final request = Request('GET', Uri.parse('http://localhost:8080/ipns/unknown'));
 
       final response = await handler.handlePath(request);
       expect(response.statusCode, 404);

@@ -56,22 +56,17 @@ class Data extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Data',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Data',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.unixfs.pb'),
       createEmptyInstance: create)
     ..aE<Data_DataType>(1, _omitFieldNames ? '' : 'Type',
         protoName: 'Type', enumValues: Data_DataType.values)
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'Data', $pb.PbFieldType.OY,
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'Data', $pb.PbFieldType.OY,
         protoName: 'Data')
-    ..a<$fixnum.Int64>(
-        3, _omitFieldNames ? '' : 'filesize', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'filesize', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..p<$fixnum.Int64>(
-        4, _omitFieldNames ? '' : 'blocksizes', $pb.PbFieldType.KU6)
-    ..a<$fixnum.Int64>(
-        5, _omitFieldNames ? '' : 'hashType', $pb.PbFieldType.OU6,
+    ..p<$fixnum.Int64>(4, _omitFieldNames ? '' : 'blocksizes', $pb.PbFieldType.KU6)
+    ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'hashType', $pb.PbFieldType.OU6,
         protoName: 'hashType', defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'fanout', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
@@ -94,8 +89,7 @@ class Data extends $pb.GeneratedMessage {
   @$core.override
   Data createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static Data getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Data>(create);
+  static Data getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Data>(create);
   static Data? _defaultInstance;
 
   /// The type of UnixFS node
@@ -206,8 +200,7 @@ class Metadata extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Metadata',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Metadata',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.unixfs.pb'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'MimeType', protoName: 'MimeType')
@@ -263,7 +256,5 @@ class Metadata extends $pb.GeneratedMessage {
   $pb.PbMap<$core.String, $core.String> get properties => $_getMap(2);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

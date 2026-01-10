@@ -29,20 +29,20 @@ void main() {
     mockRouter = MockP2plibRouter();
     mockBlockStore = MockIBlockStore();
     mockConfig = MockIPFSConfig();
-    
+
     when(mockConfig.debug).thenReturn(false);
     when(mockConfig.verboseLogging).thenReturn(false);
-    
+
     when(mockRouter.initialize()).thenAnswer((_) async => {});
     when(mockRouter.start()).thenAnswer((_) async => {});
     when(mockRouter.stop()).thenAnswer((_) async => {});
-    
+
     when(mockRouter.registerProtocolHandler(any, any)).thenAnswer((Invocation inv) {
       if (inv.positionalArguments[0] == '/ipfs/bitswap/1.2.0') {
         bitswapPacketHandler = inv.positionalArguments[1];
       }
     });
-    
+
     final dummyPeerId = PeerId(value: Uint8List.fromList(List.filled(32, 1)));
     when(mockRouter.peerID).thenReturn(dummyPeerId.toString());
     when(mockRouter.sendMessage(any, any)).thenAnswer((_) async => {});
@@ -59,7 +59,9 @@ void main() {
 
   group('BitswapHandler Core Logic', () {
     test('start registers protocol and handler', () {
-      verify(mockRouter.registerProtocolHandler('/ipfs/bitswap/1.2.0', any)).called(greaterThanOrEqualTo(1));
+      verify(
+        mockRouter.registerProtocolHandler('/ipfs/bitswap/1.2.0', any),
+      ).called(greaterThanOrEqualTo(1));
       verify(mockRouter.registerProtocol('/ipfs/bitswap/1.2.0')).called(greaterThanOrEqualTo(1));
     });
 
@@ -73,15 +75,15 @@ void main() {
       final peer1 = 'peer1';
       final block = await Block.fromData(Uint8List.fromList([1]), format: 'dag-pb');
       final cidStr = block.cid.encode();
-      
+
       when(mockRouter.connectedPeers).thenReturn([peer1]);
-      
+
       // Use a background task to call wantBlock as it will wait for the block
       final wantFuture = handler.wantBlock(cidStr);
-      
+
       await Future.delayed(Duration(milliseconds: 100));
       verify(mockRouter.sendMessage(peer1, any)).called(1);
-      
+
       // Complete the future by stopping handler
       await handler.stop();
       expect(await wantFuture, isNull);
@@ -91,23 +93,22 @@ void main() {
       final fromPeer = 'peer2';
       final block = await Block.fromData(Uint8List.fromList([1, 2, 3]), format: 'dag-pb');
       final cid = block.cid.encode();
-      
-      when(mockBlockStore.getBlock(cid)).thenAnswer((_) async => GetBlockResponse()
-        ..found = true
-        ..block = block.toProto()
+
+      when(mockBlockStore.getBlock(cid)).thenAnswer(
+        (_) async => GetBlockResponse()
+          ..found = true
+          ..block = block.toProto(),
       );
-      
+
       final msg = bitswap_msg.Message();
       msg.addWantlistEntry(cid, wantType: bitswap_msg.WantType.have);
-      
-      final packet = NetworkPacket(
-        srcPeerId: fromPeer,
-        datagram: msg.toBytes(),
-      );
-      
+
+      final packet = NetworkPacket(srcPeerId: fromPeer, datagram: msg.toBytes());
+
       await bitswapPacketHandler(packet);
-      
-      final captured = verify(mockRouter.sendMessage(fromPeer, captureAny)).captured.single as Uint8List;
+
+      final captured =
+          verify(mockRouter.sendMessage(fromPeer, captureAny)).captured.single as Uint8List;
       final response = await bitswap_msg.Message.fromBytes(captured);
       expect(response.hasBlockPresences(), isTrue);
       expect(response.getBlockPresences().first.type, equals(bitswap_msg.BlockPresenceType.have));
@@ -117,25 +118,24 @@ void main() {
       final fromPeer = 'peer2';
       final block = await Block.fromData(Uint8List.fromList([1, 2, 3]), format: 'dag-pb');
       final cid = block.cid.encode();
-      
-      when(mockBlockStore.getBlock(cid)).thenAnswer((_) async => GetBlockResponse()
-        ..found = false
-      );
-      
+
+      when(mockBlockStore.getBlock(cid)).thenAnswer((_) async => GetBlockResponse()..found = false);
+
       final msg = bitswap_msg.Message();
       msg.addWantlistEntry(cid, wantType: bitswap_msg.WantType.have, sendDontHave: true);
-      
-      final packet = NetworkPacket(
-        srcPeerId: fromPeer,
-        datagram: msg.toBytes(),
-      );
-      
+
+      final packet = NetworkPacket(srcPeerId: fromPeer, datagram: msg.toBytes());
+
       await bitswapPacketHandler(packet);
-      
-      final captured = verify(mockRouter.sendMessage(fromPeer, captureAny)).captured.single as Uint8List;
+
+      final captured =
+          verify(mockRouter.sendMessage(fromPeer, captureAny)).captured.single as Uint8List;
       final response = await bitswap_msg.Message.fromBytes(captured);
       expect(response.hasBlockPresences(), isTrue);
-      expect(response.getBlockPresences().first.type, equals(bitswap_msg.BlockPresenceType.dontHave));
+      expect(
+        response.getBlockPresences().first.type,
+        equals(bitswap_msg.BlockPresenceType.dontHave),
+      );
     });
 
     test('DoS protection: rejects huge wantlist', () async {
@@ -148,20 +148,17 @@ void main() {
         int val = i;
         int offset = bytes.length - 1;
         while (val > 0 && offset >= 2) {
-           bytes[offset] = (bytes[offset] + (val & 0xFF)) % 256;
-           val >>= 8;
-           offset--;
+          bytes[offset] = (bytes[offset] + (val & 0xFF)) % 256;
+          val >>= 8;
+          offset--;
         }
         msg.addWantlistEntry(CID.fromBytes(bytes).encode());
       }
-      
-      final packet = NetworkPacket(
-        srcPeerId: fromPeer,
-        datagram: msg.toBytes(),
-      );
-      
+
+      final packet = NetworkPacket(srcPeerId: fromPeer, datagram: msg.toBytes());
+
       await bitswapPacketHandler(packet);
-      
+
       verifyNever(mockRouter.sendMessage(fromPeer, any));
     });
 
@@ -169,39 +166,38 @@ void main() {
       final data = Uint8List.fromList([10, 20, 30]);
       final block = await Block.fromData(data, format: 'dag-pb');
       final cidStr = block.cid.encode();
-      
+
       when(mockRouter.connectedPeers).thenReturn(['p1']);
-      
+
       final wantFuture = handler.wantBlock(cidStr);
-      
+
       final msg = bitswap_msg.Message();
       msg.addBlock(block);
-      
-      final packet = NetworkPacket(
-        srcPeerId: 'p1',
-        datagram: msg.toBytes(),
-      );
-      
-      when(mockBlockStore.putBlock(any)).thenAnswer((_) async => AddBlockResponse()..success = true);
-      
+
+      final packet = NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes());
+
+      when(
+        mockBlockStore.putBlock(any),
+      ).thenAnswer((_) async => AddBlockResponse()..success = true);
+
       await bitswapPacketHandler(packet);
-      
+
       final receivedBlock = await wantFuture;
       expect(receivedBlock, isNotNull);
       expect(receivedBlock!.data, equals(data));
     });
 
-  test('Rejects invalid block (hash mismatch)', () async {
-    final invalidBlock = FakeInvalidBlock(
-      cid: CID.decode('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z'),
-      data: Uint8List.fromList([1, 2, 3]),
-    );
-    
-    // Call handleBlocks directly to bypass parser's auto-recomputation
-    await handler.handleBlocks([invalidBlock]);
-    
-    verifyNever(mockBlockStore.putBlock(any));
-  });
+    test('Rejects invalid block (hash mismatch)', () async {
+      final invalidBlock = FakeInvalidBlock(
+        cid: CID.decode('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z'),
+        data: Uint8List.fromList([1, 2, 3]),
+      );
+
+      // Call handleBlocks directly to bypass parser's auto-recomputation
+      await handler.handleBlocks([invalidBlock]);
+
+      verifyNever(mockBlockStore.putBlock(any));
+    });
 
     test('getStatus returns correct stats', () async {
       final status = await handler.getStatus();
@@ -229,9 +225,9 @@ void main() {
         int val = i;
         int offset = bytes.length - 1;
         while (val > 0 && offset >= 2) {
-           bytes[offset] = (bytes[offset] + (val & 0xFF)) % 256;
-           val >>= 8;
-           offset--;
+          bytes[offset] = (bytes[offset] + (val & 0xFF)) % 256;
+          val >>= 8;
+          offset--;
         }
         // Encode manually or trust CID.decode handles valid bytes via constructor?
         // addWantlistEntry takes String.
@@ -242,12 +238,9 @@ void main() {
         final cid = CID.fromBytes(bytes).encode();
         msg.addWantlistEntry(cid);
       }
-      
-      await bitswapPacketHandler(NetworkPacket(
-        srcPeerId: 'p1',
-        datagram: msg.toBytes(),
-      ));
-      
+
+      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+
       // Should return early and not process entries (verified via absence of further actions)
       final status = await handler.getStatus();
       expect(status['wanted_blocks'], equals(0));
@@ -255,44 +248,37 @@ void main() {
 
     test('Handles WANT_TYPE_HAVE and sendDontHave', () async {
       final cid = 'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z';
-      when(mockBlockStore.getBlock(cid)).thenAnswer((_) async => 
-        GetBlockResponse()..found = false
-      );
-      
+      when(mockBlockStore.getBlock(cid)).thenAnswer((_) async => GetBlockResponse()..found = false);
+
       final msg = bitswap_msg.Message();
       msg.addWantlistEntry(cid, wantType: bitswap_msg.WantType.have, sendDontHave: true);
-      
-      await bitswapPacketHandler(NetworkPacket(
-        srcPeerId: 'p1',
-        datagram: msg.toBytes(),
-      ));
-      
+
+      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+
       verify(mockRouter.sendMessage('p1', any)).called(1);
     });
 
     test('Handles WANT_TYPE_BLOCK and serves block when found', () async {
       final cid = 'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z';
       final blockData = Uint8List.fromList([1, 2, 3, 4]);
-      
+
       // Mock block store to return the block
-      when(mockBlockStore.getBlock(cid)).thenAnswer((_) async => 
-        GetBlockResponse()
+      when(mockBlockStore.getBlock(cid)).thenAnswer(
+        (_) async => GetBlockResponse()
           ..found = true
           ..block = (block_pb.BlockProto()
             ..data = blockData
-            ..cid = CID.decode(cid).toProto())
+            ..cid = CID.decode(cid).toProto()),
       );
-      
+
       final msg = bitswap_msg.Message();
       msg.addWantlistEntry(cid, wantType: bitswap_msg.WantType.block);
-      
-      await bitswapPacketHandler(NetworkPacket(
-        srcPeerId: 'p1',
-        datagram: msg.toBytes(),
-      ));
-      
+
+      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+
       // Verify response contains the block
-      final captured = verify(mockRouter.sendMessage('p1', captureAny)).captured.single as Uint8List;
+      final captured =
+          verify(mockRouter.sendMessage('p1', captureAny)).captured.single as Uint8List;
       final responseMsg = await bitswap_msg.Message.fromBytes(captured);
       expect(responseMsg.hasBlocks(), isTrue);
       expect(responseMsg.getBlocks().first.data, equals(blockData));
@@ -300,115 +286,127 @@ void main() {
 
     test('Handles WANT_TYPE_HAVE and serves HAVE when found', () async {
       final cid = 'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z';
-      
-      when(mockBlockStore.getBlock(cid)).thenAnswer((_) async => 
-        GetBlockResponse()..found = true
-      );
-      
+
+      when(mockBlockStore.getBlock(cid)).thenAnswer((_) async => GetBlockResponse()..found = true);
+
       final msg = bitswap_msg.Message();
       msg.addWantlistEntry(cid, wantType: bitswap_msg.WantType.have);
-      
-      await bitswapPacketHandler(NetworkPacket(
-        srcPeerId: 'p1',
-        datagram: msg.toBytes(),
-      ));
-      
+
+      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+
       // Verify response contains HAVE presence
-      final captured = verify(mockRouter.sendMessage('p1', captureAny)).captured.single as Uint8List;
+      final captured =
+          verify(mockRouter.sendMessage('p1', captureAny)).captured.single as Uint8List;
       final responseMsg = await bitswap_msg.Message.fromBytes(captured);
       expect(responseMsg.hasBlockPresences(), isTrue);
-      expect(responseMsg.getBlockPresences().first.type, equals(bitswap_msg.BlockPresenceType.have));
+      expect(
+        responseMsg.getBlockPresences().first.type,
+        equals(bitswap_msg.BlockPresenceType.have),
+      );
     });
 
     test('handleBlockPresences coverage', () async {
       final msg = bitswap_msg.Message();
-      msg.addBlockPresence('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z', bitswap_msg.BlockPresenceType.have);
-      msg.addBlockPresence('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2y', bitswap_msg.BlockPresenceType.dontHave);
-      
-      await bitswapPacketHandler(NetworkPacket(
-        srcPeerId: 'p1',
-        datagram: msg.toBytes(),
-      ));
-      
+      msg.addBlockPresence(
+        'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z',
+        bitswap_msg.BlockPresenceType.have,
+      );
+      msg.addBlockPresence(
+        'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2y',
+        bitswap_msg.BlockPresenceType.dontHave,
+      );
+
+      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+
       // Verified via log coverage or internal state update if applicable
     });
 
     test('stop cancels pending blocks with error', () async {
       when(mockRouter.connectedPeers).thenReturn(['p1']);
       final wantFuture = handler.wantBlock('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z');
-      
+
       await Future.delayed(Duration(milliseconds: 10));
       await handler.stop();
-      
+
       expect(await wantFuture, isNull);
     });
 
     test('want multiple CIDs and handles blocks', () async {
       final b1 = await Block.fromData(Uint8List.fromList([1]), format: 'dag-pb');
       final b2 = await Block.fromData(Uint8List.fromList([2]), format: 'dag-pb');
-      
+
       when(mockRouter.connectedPeers).thenReturn(['p1']);
-      when(mockBlockStore.putBlock(any)).thenAnswer((_) async => AddBlockResponse()..success = true);
+      when(
+        mockBlockStore.putBlock(any),
+      ).thenAnswer((_) async => AddBlockResponse()..success = true);
 
       final wantFuture = handler.want([b1.cid.encode(), b2.cid.encode()]);
-      
+
       final msg = bitswap_msg.Message();
       msg.addBlock(b1);
       msg.addBlock(b2);
-      
+
       await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
-      
+
       final results = await wantFuture;
       expect(results.length, equals(2));
     });
-    
+
     test('want timeout handles cleanup', () async {
       when(mockRouter.connectedPeers).thenReturn(['p1']);
-      
+
       expect(
-        () => handler.want(['QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z'], timeout: Duration(milliseconds: 50)),
+        () => handler.want([
+          'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z',
+        ], timeout: Duration(milliseconds: 50)),
         throwsA(isA<TimeoutException>()),
       );
-      
+
       await Future.delayed(Duration(milliseconds: 100));
     });
 
     test('bandwidth stats update on message', () async {
       final fromPeer = 'peerB';
       when(mockRouter.connectedPeers).thenReturn([fromPeer]);
-      
+
       final data = Uint8List.fromList([1, 2, 3, 4, 5]);
       final block = await Block.fromData(data, format: 'dag-pb');
-      
+
       final msg = bitswap_msg.Message();
       msg.addBlock(block);
-      
+
       await bitswapPacketHandler(NetworkPacket(srcPeerId: fromPeer, datagram: msg.toBytes()));
-      
+
       expect(handler.bandwidthReceived, greaterThan(0));
     });
 
     test('handleBlockPresences processes HAVE messages', () async {
-       final msg = bitswap_msg.Message();
-       msg.addBlockPresence('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z', bitswap_msg.BlockPresenceType.have);
-       msg.addBlockPresence('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2y', bitswap_msg.BlockPresenceType.dontHave);
-       
-       await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+      final msg = bitswap_msg.Message();
+      msg.addBlockPresence(
+        'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z',
+        bitswap_msg.BlockPresenceType.have,
+      );
+      msg.addBlockPresence(
+        'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2y',
+        bitswap_msg.BlockPresenceType.dontHave,
+      );
+
+      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
     });
 
     test('_handleMessage with empty message', () async {
-       final msg = bitswap_msg.Message();
-       await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+      final msg = bitswap_msg.Message();
+      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
     });
 
     test('_handleWantlist with sender dont have requirement', () async {
-       final block = await Block.fromData(Uint8List.fromList([1, 2, 3]), format: 'dag-pb');
-       final cidStr = block.cid.encode();
-       
-       final msg = bitswap_msg.Message();
-       msg.addWantlistEntry(cidStr, wantType: bitswap_msg.WantType.block, sendDontHave: true);
-       await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
-       verify(mockRouter.sendMessage('p1', any)).called(1);
+      final block = await Block.fromData(Uint8List.fromList([1, 2, 3]), format: 'dag-pb');
+      final cidStr = block.cid.encode();
+
+      final msg = bitswap_msg.Message();
+      msg.addWantlistEntry(cidStr, wantType: bitswap_msg.WantType.block, sendDontHave: true);
+      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+      verify(mockRouter.sendMessage('p1', any)).called(1);
     });
   });
 }

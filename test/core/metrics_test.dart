@@ -95,9 +95,7 @@ void main() {
     });
 
     test('should handle disabled metrics gracefully', () async {
-      final disabledConfig = IPFSConfig(
-        metrics: const MetricsConfig(enabled: false),
-      );
+      final disabledConfig = IPFSConfig(metrics: const MetricsConfig(enabled: false));
       final disabledCollector = MetricsCollector(disabledConfig);
 
       await disabledCollector.start();
@@ -105,9 +103,7 @@ void main() {
       disabledCollector.recordError('test', 'source', 'msg');
       disabledCollector.recordProtocolMetrics('proto', {});
 
-      await disabledCollector.updateConnectionMetrics(
-        ConnectionMetrics(peerId: 'p1'),
-      );
+      await disabledCollector.updateConnectionMetrics(ConnectionMetrics(peerId: 'p1'));
       // Should result in zero stats
       expect(disabledCollector.getMessagesSent('p1').toInt(), 0);
 

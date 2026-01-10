@@ -88,10 +88,7 @@ void main() {
 
     test('generateKey throws for duplicate name', () async {
       await keystore.generateKey('dup-key');
-      expect(
-        () => keystore.generateKey('dup-key'),
-        throwsA(isA<StateError>()),
-      );
+      expect(() => keystore.generateKey('dup-key'), throwsA(isA<StateError>()));
     });
 
     test('hasKey returns true for existing key', () async {
@@ -149,10 +146,7 @@ void main() {
 
     test('importSeed throws for invalid seed length', () async {
       final invalidSeed = Uint8List.fromList([1, 2, 3]);
-      expect(
-        () => keystore.importSeed('bad', invalidSeed),
-        throwsArgumentError,
-      );
+      expect(() => keystore.importSeed('bad', invalidSeed), throwsArgumentError);
     });
   });
 
@@ -175,10 +169,7 @@ void main() {
     });
 
     test('getKey throws for missing key', () async {
-      expect(
-        () => keystore.getKey('nonexistent'),
-        throwsArgumentError,
-      );
+      expect(() => keystore.getKey('nonexistent'), throwsArgumentError);
     });
   });
 
@@ -211,28 +202,19 @@ void main() {
 
     test('deserialize throws for unsupported version', () {
       final badJson = '{"version":99,"salt":"AAAA","keys":{}}';
-      expect(
-        () => EncryptedKeystore.deserialize(badJson),
-        throwsFormatException,
-      );
+      expect(() => EncryptedKeystore.deserialize(badJson), throwsFormatException);
     });
   });
 
   group('EncryptedKeystore Locked Operations', () {
     test('generateKey throws when locked', () {
       final keystore = EncryptedKeystore();
-      expect(
-        () => keystore.generateKey('test'),
-        throwsA(isA<StateError>()),
-      );
+      expect(() => keystore.generateKey('test'), throwsA(isA<StateError>()));
     });
 
     test('getKey throws when locked', () {
       final keystore = EncryptedKeystore();
-      expect(
-        () => keystore.getKey('test'),
-        throwsA(isA<StateError>()),
-      );
+      expect(() => keystore.getKey('test'), throwsA(isA<StateError>()));
     });
   });
 }

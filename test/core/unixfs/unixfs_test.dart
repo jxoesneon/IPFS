@@ -22,7 +22,7 @@ void main() {
 
       final stream = Stream.value(data.toList());
       final builder = UnixFSBuilder();
-      
+
       final blocks = <Block>[];
       await for (final block in builder.build(stream)) {
         blocks.add(block);
@@ -39,7 +39,7 @@ void main() {
       // Verify Root Node
       final rootBlock = blocks.last;
       expect(rootBlock.cid.codec, 'dag-pb');
-      
+
       final rootNode = dag_pb.PBNode.fromBuffer(rootBlock.data);
       expect(rootNode.links.length, equals(5));
 
@@ -74,33 +74,39 @@ void main() {
 
       // 2. Create a subdirectory
       final subdirManager = IPFSDirectoryManager();
-      subdirManager.addEntry(IPFSDirectoryEntry(
-        name: 'file.txt',
-        hash: fileRootBlock.cid.multihash.toBytes(),
-        size: Int64(fileRootBlock.data.length),
-        isDirectory: false,
-      ));
+      subdirManager.addEntry(
+        IPFSDirectoryEntry(
+          name: 'file.txt',
+          hash: fileRootBlock.cid.multihash.toBytes(),
+          size: Int64(fileRootBlock.data.length),
+          isDirectory: false,
+        ),
+      );
       final subdirNode = subdirManager.build();
       final subdirData = subdirNode.writeToBuffer();
       final subdirCid = await CID.fromContent(subdirData, codec: 'dag-pb');
 
       // 3. Create root directory
       final rootManager = IPFSDirectoryManager();
-      rootManager.addEntry(IPFSDirectoryEntry(
-        name: 'subdir',
-        hash: subdirCid.multihash.toBytes(),
-        size: Int64(subdirData.length),
-        isDirectory: true,
-      ));
-      rootManager.addEntry(IPFSDirectoryEntry(
-        name: 'root_file.txt',
-        hash: fileRootBlock.cid.multihash.toBytes(),
-        size: Int64(fileRootBlock.data.length),
-        isDirectory: false,
-      ));
+      rootManager.addEntry(
+        IPFSDirectoryEntry(
+          name: 'subdir',
+          hash: subdirCid.multihash.toBytes(),
+          size: Int64(subdirData.length),
+          isDirectory: true,
+        ),
+      );
+      rootManager.addEntry(
+        IPFSDirectoryEntry(
+          name: 'root_file.txt',
+          hash: fileRootBlock.cid.multihash.toBytes(),
+          size: Int64(fileRootBlock.data.length),
+          isDirectory: false,
+        ),
+      );
 
       final rootNode = rootManager.build();
-      
+
       // Verify Root
       expect(rootNode.links.length, equals(2));
       // Links should be sorted by name: 'root_file.txt' vs 'subdir'

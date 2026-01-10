@@ -8,8 +8,7 @@ import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/helpers.dart'
-    as helpers;
+import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/helpers.dart' as helpers;
 
 import 'connection_statistics.dart';
 import 'kademlia_tree/find_closest_peers.dart';
@@ -186,9 +185,7 @@ class KademliaTree {
       Set<PeerId> queriedPeers = {};
       List<PeerId> closestPeers = findClosestPeers(target, K);
       int consecutiveFailedAttempts = 0;
-      Duration backoffDuration = const Duration(
-        milliseconds: 100,
-      ); // Initial backoff
+      Duration backoffDuration = const Duration(milliseconds: 100); // Initial backoff
       final maxBackoff = const Duration(seconds: 10);
       final minImprovement = 0.01; // 1% improvement threshold
 
@@ -214,8 +211,7 @@ class KademliaTree {
             .toDouble();
 
         // Check for sufficient improvement
-        double improvement =
-            (previousBestDistance - currentBestDistance) / previousBestDistance;
+        double improvement = (previousBestDistance - currentBestDistance) / previousBestDistance;
         if (improvement < minImprovement) {
           stagnantRounds++;
           if (stagnantRounds >= maxStagnantRounds) break;
@@ -279,8 +275,7 @@ class KademliaTree {
 
           // Enhanced termination condition
           if (_areListsEqual(closestPeers, newClosestPeers) &&
-              currentBestDistance <
-                  previousBestDistance * (1 + minImprovement)) {
+              currentBestDistance < previousBestDistance * (1 + minImprovement)) {
             break;
           }
 
@@ -319,11 +314,7 @@ class KademliaTree {
   int _generateRequestId() =>
       DateTime.now().millisecondsSinceEpoch + Random.secure().nextInt(1000000);
 
-  Future<kad.Message> _sendMessageWithTimeout(
-    PeerId peer,
-    kad.Message message,
-    int requestId,
-  ) {
+  Future<kad.Message> _sendMessageWithTimeout(PeerId peer, kad.Message message, int requestId) {
     final completer = Completer<kad.Message>();
     _pendingRequests[requestId] = completer;
 
@@ -436,11 +427,7 @@ class KademliaTree {
   /// Sends a ping and returns true if the peer responds.
   Future<bool> sendPing(PeerId peer) async {
     final requestId = _generateRequestId();
-    final message = PingMessage(
-      requestId.toString(),
-      _root!.peerId,
-      peer,
-    ).toDHTMessage();
+    final message = PingMessage(requestId.toString(), _root!.peerId, peer).toDHTMessage();
 
     try {
       final response = await _sendMessageWithTimeout(peer, message, requestId);
@@ -466,11 +453,7 @@ class KademliaTree {
       ).toDHTMessage();
 
       try {
-        final response = await _sendMessageWithTimeout(
-          peer,
-          message,
-          requestId,
-        );
+        final response = await _sendMessageWithTimeout(peer, message, requestId);
         return response.type == kad.Message_MessageType.PUT_VALUE;
       } catch (e) {
         // print('Store value failed for peer $peer: $e');
@@ -499,11 +482,7 @@ class KademliaTree {
         ).toDHTMessage();
 
         try {
-          final response = await _sendMessageWithTimeout(
-            peer,
-            message,
-            requestId,
-          );
+          final response = await _sendMessageWithTimeout(peer, message, requestId);
           if (response.type == kad.Message_MessageType.GET_VALUE &&
               (response.hasRecord() || response.providerPeers.isNotEmpty)) {
             // Check record or providers (GET_VALUE might return providers too?)

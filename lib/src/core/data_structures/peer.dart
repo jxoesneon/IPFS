@@ -99,9 +99,7 @@ class Peer {
         throw FormatException('No peer ID found in multiaddr: $multiaddr');
       }
 
-      final peerId = p2p.PeerId(
-        value: Base58().base58Decode(parts[peerIdIndex]),
-      );
+      final peerId = p2p.PeerId(value: Base58().base58Decode(parts[peerIdIndex]));
 
       // Parse the address portion
       final address = parseMultiaddrString(multiaddr);

@@ -46,9 +46,9 @@ const IpnsEntry_ValidityType$json = {
 };
 
 /// Descriptor for `IpnsEntry`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List ipnsEntryDescriptor = $convert.base64Decode(
-    'CglJcG5zRW50cnkSFAoFdmFsdWUYASABKAxSBXZhbHVlEhwKCXNpZ25hdHVyZRgCIAEoDFIJc2'
-    'lnbmF0dXJlEkUKDHZhbGlkaXR5VHlwZRgDIAEoDjIhLmlwZnMuaXBucy5JcG5zRW50cnkuVmFs'
-    'aWRpdHlUeXBlUgx2YWxpZGl0eVR5cGUSGgoIdmFsaWRpdHkYBCABKAxSCHZhbGlkaXR5EhoKCH'
-    'NlcXVlbmNlGAUgASgEUghzZXF1ZW5jZRIQCgN0dGwYBiABKARSA3R0bBIWCgZwdWJLZXkYByAB'
-    'KAxSBnB1YktleSIXCgxWYWxpZGl0eVR5cGUSBwoDRU9MEAA=');
+final $typed_data.Uint8List ipnsEntryDescriptor = $convert
+    .base64Decode('CglJcG5zRW50cnkSFAoFdmFsdWUYASABKAxSBXZhbHVlEhwKCXNpZ25hdHVyZRgCIAEoDFIJc2'
+        'lnbmF0dXJlEkUKDHZhbGlkaXR5VHlwZRgDIAEoDjIhLmlwZnMuaXBucy5JcG5zRW50cnkuVmFs'
+        'aWRpdHlUeXBlUgx2YWxpZGl0eVR5cGUSGgoIdmFsaWRpdHkYBCABKAxSCHZhbGlkaXR5EhoKCH'
+        'NlcXVlbmNlGAUgASgEUghzZXF1ZW5jZRIQCgN0dGwYBiABKARSA3R0bBIWCgZwdWJLZXkYByAB'
+        'KAxSBnB1YktleSIXCgxWYWxpZGl0eVR5cGUSBwoDRU9MEAA=');

@@ -4,8 +4,7 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
-    as unixfs_pb;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs_pb;
 import 'package:fixnum/fixnum.dart';
 
 /// Builds a UnixFS DAG from a stream of bytes.
@@ -24,9 +23,7 @@ class UnixFSBuilder {
       buffer.addAll(chunk);
 
       while (buffer.length >= defaultChunkSize) {
-        final leafData = Uint8List.fromList(
-          buffer.take(defaultChunkSize).toList(),
-        );
+        final leafData = Uint8List.fromList(buffer.take(defaultChunkSize).toList());
         buffer.removeRange(0, defaultChunkSize);
 
         final block = await _createLeaf(leafData);
@@ -50,13 +47,7 @@ class UnixFSBuilder {
       final block = await _createLeaf(leafData);
       yield block;
 
-      links.add(
-        dag_pb.PBLink(
-          hash: block.cid.toBytes(),
-          size: Int64(block.data.length),
-          name: '',
-        ),
-      );
+      links.add(dag_pb.PBLink(hash: block.cid.toBytes(), size: Int64(block.data.length), name: ''));
       logicalBlockSizes.add(Int64(leafData.length));
       totalSize += leafData.length;
     }
@@ -94,12 +85,7 @@ class UnixFSBuilder {
     final node = dag_pb.PBNode(data: unixFs.writeToBuffer());
 
     final encoded = node.writeToBuffer();
-    final cid = await CID.fromContent(
-      encoded,
-      codec: 'dag-pb',
-      hashType: 'sha2-256',
-      version: 0,
-    );
+    final cid = await CID.fromContent(encoded, codec: 'dag-pb', hashType: 'sha2-256', version: 0);
 
     return Block(cid: cid, data: encoded);
   }

@@ -180,10 +180,7 @@ void main() {
 
   group('TimedLRUCache', () {
     test('expires entries after TTL', () async {
-      final cache = TimedLRUCache<String, int>(
-        capacity: 10,
-        ttl: const Duration(milliseconds: 50),
-      );
+      final cache = TimedLRUCache<String, int>(capacity: 10, ttl: const Duration(milliseconds: 50));
 
       cache.put('key', 42);
       expect(cache.get('key'), equals(42));
@@ -194,10 +191,7 @@ void main() {
     });
 
     test('fresh entries are not expired', () async {
-      final cache = TimedLRUCache<String, int>(
-        capacity: 10,
-        ttl: const Duration(seconds: 10),
-      );
+      final cache = TimedLRUCache<String, int>(capacity: 10, ttl: const Duration(seconds: 10));
 
       cache.put('key', 42);
 

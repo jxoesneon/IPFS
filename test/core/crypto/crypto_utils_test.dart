@@ -15,16 +15,8 @@ void main() {
         final password = 'test-password-123';
         final salt = CryptoUtils.randomBytes(16);
 
-        final key1 = CryptoUtils.deriveKey(
-          password,
-          salt,
-          iterations: testIterations,
-        );
-        final key2 = CryptoUtils.deriveKey(
-          password,
-          salt,
-          iterations: testIterations,
-        );
+        final key1 = CryptoUtils.deriveKey(password, salt, iterations: testIterations);
+        final key2 = CryptoUtils.deriveKey(password, salt, iterations: testIterations);
 
         expect(key1.length, equals(32));
         expect(key1, equals(key2));
@@ -54,12 +46,7 @@ void main() {
         final password = 'test-password';
         final salt = CryptoUtils.randomBytes(16);
 
-        final key64 = CryptoUtils.deriveKey(
-          password,
-          salt,
-          keyLength: 64,
-          iterations: 1000,
-        );
+        final key64 = CryptoUtils.deriveKey(password, salt, keyLength: 64, iterations: 1000);
 
         expect(key64.length, equals(64));
       });
@@ -101,10 +88,7 @@ void main() {
         final wrongKey = CryptoUtils.randomBytes(16); // Should be 32
         final plaintext = Uint8List.fromList([1, 2, 3]);
 
-        expect(
-          () => CryptoUtils.encrypt(plaintext, wrongKey),
-          throwsA(isA<ArgumentError>()),
-        );
+        expect(() => CryptoUtils.encrypt(plaintext, wrongKey), throwsA(isA<ArgumentError>()));
       });
     });
 

@@ -1,4 +1,3 @@
-
 import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
@@ -19,7 +18,7 @@ void main() {
       final p2 = PeerId(value: Uint8List.fromList([0, 0, 2]));
       // [1] ^ [2] = 3
       expect(calculateDistance(p1, p2), 3);
-      
+
       final p3 = PeerId(value: Uint8List.fromList([1, 0, 0]));
       final p4 = PeerId(value: Uint8List.fromList([2, 0, 0]));
       // [1]^ [2] = 3. shifted by 16 bits = 3 * 256^2 = 196608
@@ -35,18 +34,15 @@ void main() {
 
     test('findClosestNode finds the best node in subtree', () {
       final target = PeerId(value: Uint8List.fromList([0, 0, 10]));
-      
-      final root = KademliaNode()
-        ..peerId = (common_pb.KademliaId()..id = [0, 0, 1]);
-      
-      final child1 = KademliaNode()
-        ..peerId = (common_pb.KademliaId()..id = [0, 0, 5]);
-      
-      final child2 = KademliaNode()
-        ..peerId = (common_pb.KademliaId()..id = [0, 0, 9]);
-      
+
+      final root = KademliaNode()..peerId = (common_pb.KademliaId()..id = [0, 0, 1]);
+
+      final child1 = KademliaNode()..peerId = (common_pb.KademliaId()..id = [0, 0, 5]);
+
+      final child2 = KademliaNode()..peerId = (common_pb.KademliaId()..id = [0, 0, 9]);
+
       root.children.addAll([child1, child2]);
-      
+
       final result = findClosestNode(root, target);
       expect(result?.peerId.id, [0, 0, 9]);
     });
@@ -55,9 +51,9 @@ void main() {
       final node = KademliaNode()
         ..peerId = (common_pb.KademliaId()..id = [0, 0, 1])
         ..associatedPeerId = (common_pb.KademliaId()..id = [0, 0, 2]);
-      
+
       splitNode(node);
-      
+
       expect(node.children.length, 2);
       expect(node.children[0].peerId.id, [0, 0, 1]);
       expect(node.children[1].peerId.id, [0, 0, 2]);
@@ -66,7 +62,7 @@ void main() {
     test('mergeNodes clears children', () {
       final node = KademliaNode();
       node.children.addAll([KademliaNode(), KademliaNode()]);
-      
+
       mergeNodes(node);
       expect(node.children.isEmpty, true);
     });
@@ -75,10 +71,10 @@ void main() {
       final mockClient = MockDHTClient();
       final peer = PeerId(value: Uint8List.fromList([0, 0, 1]));
       final target = PeerId(value: Uint8List.fromList([0, 0, 10]));
-      
+
       final foundPeer = PeerId(value: Uint8List.fromList([0, 0, 9]));
       when(mockClient.findPeer(peer)).thenAnswer((_) async => foundPeer);
-      
+
       final result = await findNode(mockClient, peer, target);
       expect(result.length, 1);
       expect(result[0].value, [0, 0, 9]);
@@ -88,9 +84,9 @@ void main() {
       final mockClient = MockDHTClient();
       final peer = PeerId(value: Uint8List.fromList([0, 0, 1]));
       final target = PeerId(value: Uint8List.fromList([0, 0, 10]));
-      
+
       when(mockClient.findPeer(peer)).thenThrow(Exception('test error'));
-      
+
       final result = await findNode(mockClient, peer, target);
       expect(result, isEmpty);
     });

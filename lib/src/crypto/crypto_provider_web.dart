@@ -39,9 +39,7 @@ class CryptoProviderWeb implements CryptoProvider {
     final encKeyPair = await x25519.newKeyPairFromSeed(_seed!.sublist(0, 32));
 
     // Generate Ed25519 key pair for signing
-    final signKeyPair = await _ed25519.newKeyPairFromSeed(
-      _seed!.sublist(0, 32),
-    );
+    final signKeyPair = await _ed25519.newKeyPairFromSeed(_seed!.sublist(0, 32));
     _signingKeyPair = signKeyPair;
 
     final encPubKey = await encKeyPair.extractPublicKey();

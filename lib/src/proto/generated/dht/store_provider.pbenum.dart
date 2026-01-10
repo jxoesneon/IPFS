@@ -21,11 +21,9 @@ class StoreProviderResponse_Status extends $pb.ProtobufEnum {
   static const StoreProviderResponse_Status ERROR =
       StoreProviderResponse_Status._(1, _omitEnumNames ? '' : 'ERROR');
   static const StoreProviderResponse_Status CAPACITY_EXCEEDED =
-      StoreProviderResponse_Status._(
-          2, _omitEnumNames ? '' : 'CAPACITY_EXCEEDED');
+      StoreProviderResponse_Status._(2, _omitEnumNames ? '' : 'CAPACITY_EXCEEDED');
 
-  static const $core.List<StoreProviderResponse_Status> values =
-      <StoreProviderResponse_Status>[
+  static const $core.List<StoreProviderResponse_Status> values = <StoreProviderResponse_Status>[
     SUCCESS,
     ERROR,
     CAPACITY_EXCEEDED,
@@ -39,5 +37,4 @@ class StoreProviderResponse_Status extends $pb.ProtobufEnum {
   const StoreProviderResponse_Status._(super.value, super.name);
 }
 
-const $core.bool _omitEnumNames =
-    $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

@@ -17,8 +17,7 @@ import 'package:protobuf/protobuf.dart' as $pb;
 class ConnectionType extends $pb.ProtobufEnum {
   static const ConnectionType NOT_CONNECTED =
       ConnectionType._(0, _omitEnumNames ? '' : 'NOT_CONNECTED');
-  static const ConnectionType CONNECTED =
-      ConnectionType._(1, _omitEnumNames ? '' : 'CONNECTED');
+  static const ConnectionType CONNECTED = ConnectionType._(1, _omitEnumNames ? '' : 'CONNECTED');
   static const ConnectionType CAN_CONNECT =
       ConnectionType._(2, _omitEnumNames ? '' : 'CAN_CONNECT');
   static const ConnectionType CANNOT_CONNECT =
@@ -31,8 +30,7 @@ class ConnectionType extends $pb.ProtobufEnum {
     CANNOT_CONNECT,
   ];
 
-  static final $core.List<ConnectionType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static final $core.List<ConnectionType?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 3);
   static ConnectionType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
@@ -50,8 +48,7 @@ class Message_MessageType extends $pb.ProtobufEnum {
       Message_MessageType._(3, _omitEnumNames ? '' : 'GET_PROVIDERS');
   static const Message_MessageType FIND_NODE =
       Message_MessageType._(4, _omitEnumNames ? '' : 'FIND_NODE');
-  static const Message_MessageType PING =
-      Message_MessageType._(5, _omitEnumNames ? '' : 'PING');
+  static const Message_MessageType PING = Message_MessageType._(5, _omitEnumNames ? '' : 'PING');
 
   static const $core.List<Message_MessageType> values = <Message_MessageType>[
     PUT_VALUE,
@@ -70,5 +67,4 @@ class Message_MessageType extends $pb.ProtobufEnum {
   const Message_MessageType._(super.value, super.name);
 }
 
-const $core.bool _omitEnumNames =
-    $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

@@ -14,8 +14,7 @@ class DNSLinkResolver {
 
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body) as Map<String, dynamic>;
-        return jsonResponse['cid']
-            as String?; // Adjust based on actual response structure
+        return jsonResponse['cid'] as String?; // Adjust based on actual response structure
       } else {
         return null;
       }

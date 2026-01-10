@@ -44,15 +44,11 @@ class PinProto extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PinProto',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PinProto',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
-    ..aOM<$0.IPFSCIDProto>(1, _omitFieldNames ? '' : 'cid',
-        subBuilder: $0.IPFSCIDProto.create)
-    ..aE<PinTypeProto>(2, _omitFieldNames ? '' : 'type',
-        enumValues: PinTypeProto.values)
+    ..aOM<$0.IPFSCIDProto>(1, _omitFieldNames ? '' : 'cid', subBuilder: $0.IPFSCIDProto.create)
+    ..aE<PinTypeProto>(2, _omitFieldNames ? '' : 'type', enumValues: PinTypeProto.values)
     ..aInt64(3, _omitFieldNames ? '' : 'timestamp')
     ..hasRequiredFields = false;
 
@@ -104,7 +100,5 @@ class PinProto extends $pb.GeneratedMessage {
   void clearTimestamp() => $_clearField(3);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -29,7 +28,7 @@ import '../mocks/in_memory_datastore.dart';
 class MockNetworkHandler implements NetworkHandler {
   @override
   late final IPFSNode ipfsNode;
-  
+
   @override
   void setIpfsNode(IPFSNode node) {
     ipfsNode = node;
@@ -66,7 +65,7 @@ class MockNetworkHandler implements NetworkHandler {
 class MockP2plibRouter implements P2plibRouter {
   @override
   List<String> get listeningAddresses => ['/ip4/127.0.0.1/udp/4001/p2p/MockPeerID123'];
-  
+
   @override
   List<String> resolvePeerId(String peerId) => ['127.0.0.1:4002'];
 
@@ -88,16 +87,16 @@ class MockDHTHandler implements DHTHandler {
 
   @override
   Future<String> resolveIPNS(String ipnsName) async => 'QmResolvedCID';
-  
+
   @override
   Future<String?> resolveDNSLink(String domain) async => 'QmDNSLinkCID';
 
   @override
   bool isValidCID(String cid) => true;
-  
+
   @override
   Future<void> publishIPNS(String cid, {required String keyName}) async {}
-  
+
   @override
   Future<List<V_PeerInfo>> findProviders(CID cid) async => [];
 
@@ -168,6 +167,7 @@ class MockSecurityManager implements SecurityManager {
     if (name == 'self') return MockPrivateKey();
     return null;
   }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -211,21 +211,21 @@ void main() {
 
       final metrics = MetricsCollector(config);
       container.registerSingleton(metrics);
-      
+
       mockSecurity = MockSecurityManager();
       container.registerSingleton<SecurityManager>(mockSecurity);
-      
+
       final blockStore = BlockStore(path: '/tmp/test_bs_online');
       container.registerSingleton(blockStore);
-      
+
       final inMemoryDatastore = InMemoryDatastore();
       await inMemoryDatastore.init();
       container.registerSingleton(DatastoreHandler(inMemoryDatastore));
-      
+
       container.registerSingleton(IPLDHandler(config, blockStore));
 
       node = IPFSNode.fromContainer(container);
-      
+
       mockNetwork = MockNetworkHandler();
       mockNetwork.setIpfsNode(node);
       mockDHT = MockDHTHandler();
@@ -288,7 +288,7 @@ void main() {
     });
 
     test('bandwidthMetrics returns stream', () {
-       expect(node.bandwidthMetrics, isA<Stream>());
+      expect(node.bandwidthMetrics, isA<Stream>());
     });
 
     test('publishIPNS delegates to DHTHandler', () async {
@@ -315,17 +315,17 @@ void main() {
     });
 
     test('Getters for core services', () {
-       expect(node.datastore, isNotNull);
-       expect(node.router, isNotNull);
-       expect(node.bitswap, isNotNull);
-       expect(node.dhtHandler, isNotNull);
-       expect(node.onNewContent, isA<Stream>());
+      expect(node.datastore, isNotNull);
+      expect(node.router, isNotNull);
+      expect(node.bitswap, isNotNull);
+      expect(node.dhtHandler, isNotNull);
+      expect(node.onNewContent, isA<Stream>());
     });
 
     test('stop clears core systems', () async {
-       await node.stop();
-       // Re-verify it doesn't crash on multiple stops
-       await node.stop();
+      await node.stop();
+      // Re-verify it doesn't crash on multiple stops
+      await node.stop();
     });
   });
 }

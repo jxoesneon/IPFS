@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:io';
 import 'package:test/test.dart';
@@ -34,12 +33,8 @@ void main() {
       mockNetworkHandler = MockNetworkHandler();
       peer1 = '/ip4/127.0.0.1/tcp/4001/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN';
       peer2 = '/ip4/127.0.0.1/tcp/4002/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa';
-      
-      config = IPFSConfig(
-        network: NetworkConfig(
-          bootstrapPeers: [peer1, peer2],
-        ),
-      );
+
+      config = IPFSConfig(network: NetworkConfig(bootstrapPeers: [peer1, peer2]));
       handler = BootstrapHandler(config, mockNetworkHandler);
     });
 
@@ -48,17 +43,16 @@ void main() {
 
       // connectToPeer is never called because Peer.fromMultiaddr throws
       verifyNever(mockNetworkHandler.connectToPeer(any));
-      
+
       final status = await handler.getStatus();
       expect(status['running'], isTrue);
       expect(status['connected_peers'], 0);
     });
 
-
     test('getStatus returns correct info', () async {
       await handler.start();
       final status = await handler.getStatus();
-      
+
       expect(status['running'], isTrue);
       expect(status['total_bootstrap_peers'], 2);
     });
@@ -71,11 +65,11 @@ void main() {
       expect(status['running'], isFalse);
       expect(status['connected_peers'], 0);
     });
-    
+
     test('start is idempotent', () async {
       await handler.start();
       await handler.start(); // Second call should leverage isRunning check
-      
+
       // Still 0 calls because of parsing error, but verifying no crash
       verifyNever(mockNetworkHandler.connectToPeer(any));
     });

@@ -38,23 +38,19 @@ class KademliaTree extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'KademliaTree',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.kademlia_tree'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'KademliaTree',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.kademlia_tree'),
       createEmptyInstance: create)
     ..aOM<$0.KademliaNode>(1, _omitFieldNames ? '' : 'localNode',
         subBuilder: $0.KademliaNode.create)
-    ..pPM<KademliaBucket>(2, _omitFieldNames ? '' : 'buckets',
-        subBuilder: KademliaBucket.create)
+    ..pPM<KademliaBucket>(2, _omitFieldNames ? '' : 'buckets', subBuilder: KademliaBucket.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   KademliaTree clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   KademliaTree copyWith(void Function(KademliaTree) updates) =>
-      super.copyWith((message) => updates(message as KademliaTree))
-          as KademliaTree;
+      super.copyWith((message) => updates(message as KademliaTree)) as KademliaTree;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -64,8 +60,8 @@ class KademliaTree extends $pb.GeneratedMessage {
   @$core.override
   KademliaTree createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static KademliaTree getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<KademliaTree>(create);
+  static KademliaTree getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<KademliaTree>(create);
   static KademliaTree? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -101,21 +97,17 @@ class KademliaBucket extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'KademliaBucket',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.kademlia_tree'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'KademliaBucket',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.kademlia_tree'),
       createEmptyInstance: create)
-    ..pPM<$0.KademliaNode>(1, _omitFieldNames ? '' : 'nodes',
-        subBuilder: $0.KademliaNode.create)
+    ..pPM<$0.KademliaNode>(1, _omitFieldNames ? '' : 'nodes', subBuilder: $0.KademliaNode.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   KademliaBucket clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   KademliaBucket copyWith(void Function(KademliaBucket) updates) =>
-      super.copyWith((message) => updates(message as KademliaBucket))
-          as KademliaBucket;
+      super.copyWith((message) => updates(message as KademliaBucket)) as KademliaBucket;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -125,15 +117,13 @@ class KademliaBucket extends $pb.GeneratedMessage {
   @$core.override
   KademliaBucket createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static KademliaBucket getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<KademliaBucket>(create);
+  static KademliaBucket getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<KademliaBucket>(create);
   static KademliaBucket? _defaultInstance;
 
   @$pb.TagNumber(1)
   $pb.PbList<$0.KademliaNode> get nodes => $_getList(0);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

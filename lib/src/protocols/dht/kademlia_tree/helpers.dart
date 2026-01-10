@@ -1,8 +1,7 @@
 import 'dart:typed_data' show Uint8List;
 
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/common_kademlia.pb.dart'
-    as common_kademlia_pb;
+import 'package:dart_ipfs/src/proto/generated/dht/common_kademlia.pb.dart' as common_kademlia_pb;
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia_node.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
@@ -64,9 +63,7 @@ KademliaNode? findClosestNode(KademliaNode? root, PeerId target) {
     var childClosest = findClosestNode(child, target);
     if (childClosest != null) {
       // Convert KademliaId to PeerId for closest child
-      final closestPeerId = PeerId(
-        value: Uint8List.fromList(childClosest.peerId.id),
-      );
+      final closestPeerId = PeerId(value: Uint8List.fromList(childClosest.peerId.id));
       int closestDistance = calculateDistance(closestPeerId, target);
       if (closestDistance < minDistance) {
         closest = childClosest;
@@ -82,8 +79,7 @@ KademliaNode? findClosestNode(KademliaNode? root, PeerId target) {
 void splitNode(KademliaNode node) {
   // Create KademliaId instances from the PeerIds
   final leftKademliaId = common_kademlia_pb.KademliaId()..id = node.peerId.id;
-  final rightKademliaId = common_kademlia_pb.KademliaId()
-    ..id = node.associatedPeerId.id;
+  final rightKademliaId = common_kademlia_pb.KademliaId()..id = node.associatedPeerId.id;
 
   // Create two child nodes with updated distances
   final leftChild = KademliaNode(
@@ -129,8 +125,7 @@ Future<dht_pb.FindNodeResponse> sendRequest(
     }
 
     // Convert the response to FindNodeResponse
-    return dht_pb.FindNodeResponse()
-      ..closerPeers.add(dht_pb.DHTPeer()..id = foundPeer.value);
+    return dht_pb.FindNodeResponse()..closerPeers.add(dht_pb.DHTPeer()..id = foundPeer.value);
   } catch (e) {
     // print('Error sending request to peer ${Base58().encode(peer.value)}: $e');
     rethrow;
@@ -138,18 +133,12 @@ Future<dht_pb.FindNodeResponse> sendRequest(
 }
 
 /// Sends a FIND_NODE request to a peer and returns closer peers to the target.
-Future<List<PeerId>> findNode(
-  DHTClient dhtClient,
-  PeerId peer,
-  PeerId target,
-) async {
+Future<List<PeerId>> findNode(DHTClient dhtClient, PeerId peer, PeerId target) async {
   final request = dht_pb.FindNodeRequest()..peerId = target.value;
 
   try {
     final response = await sendRequest(dhtClient, peer, request);
-    return response.closerPeers
-        .map((peer) => PeerId(value: Uint8List.fromList(peer.id)))
-        .toList();
+    return response.closerPeers.map((peer) => PeerId(value: Uint8List.fromList(peer.id))).toList();
   } catch (e) {
     // print('Error in findNode request: $e');
     return [];

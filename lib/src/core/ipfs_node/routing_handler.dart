@@ -11,12 +11,8 @@ import 'package:http/http.dart' as http;
 /// Handles routing operations for an IPFS node.
 class RoutingHandler {
   /// Creates a routing handler with config and network handler.
-  RoutingHandler(
-    IPFSConfig config,
-    NetworkHandler networkHandler, {
-    ContentRouting? contentRouting,
-  }) : _contentRouting =
-           contentRouting ?? ContentRouting(config, networkHandler);
+  RoutingHandler(IPFSConfig config, NetworkHandler networkHandler, {ContentRouting? contentRouting})
+    : _contentRouting = contentRouting ?? ContentRouting(config, networkHandler);
   final ContentRouting _contentRouting;
 
   /// Starts the routing services.
@@ -61,9 +57,7 @@ class RoutingHandler {
   /// Resolves a DNSLink to its corresponding CID with comprehensive error handling.
   Future<String?> resolveDNSLink(String domainName) async {
     try {
-      final cid = await DNSLinkResolver.resolve(
-        domainName,
-      ); // Use static access
+      final cid = await DNSLinkResolver.resolve(domainName); // Use static access
       if (cid != null) {
         // print('Resolved DNSLink for domain $domainName to CID: $cid');
         return cid;
@@ -75,9 +69,7 @@ class RoutingHandler {
 
       // Attempt alternative resolution methods, such as querying a public DNSLink resolver
       try {
-        final url = Uri.parse(
-          'https://dnslink-resolver.example.com/$domainName',
-        );
+        final url = Uri.parse('https://dnslink-resolver.example.com/$domainName');
         final response = await http.get(url);
         if (response.statusCode == 200) {
           final resolvedCid = jsonDecode(response.body)['cid'] as String?;
@@ -85,14 +77,10 @@ class RoutingHandler {
             // print('Resolved DNSLink using public resolver: $resolvedCid');
             return resolvedCid;
           } else {
-            throw Exception(
-              'Failed to extract CID from public resolver response.',
-            );
+            throw Exception('Failed to extract CID from public resolver response.');
           }
         } else {
-          throw Exception(
-            'Public resolver returned status code ${response.statusCode}',
-          );
+          throw Exception('Public resolver returned status code ${response.statusCode}');
         }
       } catch (altError) {
         // print('Alternative DNSLink resolution failed: $altError');

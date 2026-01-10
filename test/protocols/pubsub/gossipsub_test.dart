@@ -13,8 +13,7 @@ import 'package:test/test.dart';
 // Mock RouterL2
 class MockRouterL2 implements p2p.RouterL2 {
   final Map<p2p.PeerId, List<p2p.FullAddress>> resolvedAddresses = {};
-  void Function(Uint8List datagram, Iterable<p2p.FullAddress> addresses)?
-  onSend;
+  void Function(Uint8List datagram, Iterable<p2p.FullAddress> addresses)? onSend;
 
   @override
   Iterable<p2p.FullAddress> resolvePeerId(p2p.PeerId peerId) {
@@ -22,10 +21,7 @@ class MockRouterL2 implements p2p.RouterL2 {
   }
 
   @override
-  void sendDatagram({
-    required Iterable<p2p.FullAddress> addresses,
-    required Uint8List datagram,
-  }) {
+  void sendDatagram({required Iterable<p2p.FullAddress> addresses, required Uint8List datagram}) {
     if (onSend != null) {
       onSend!(datagram, addresses);
     }
@@ -65,10 +61,7 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  void registerProtocolHandler(
-    String protocolId,
-    void Function(NetworkPacket packet) handler,
-  ) {
+  void registerProtocolHandler(String protocolId, void Function(NetworkPacket packet) handler) {
     handlers[protocolId] = handler;
   }
 
@@ -81,11 +74,7 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  Future<void> sendMessage(
-    String peerId,
-    Uint8List message, {
-    String? protocolId,
-  }) async {
+  Future<void> sendMessage(String peerId, Uint8List message, {String? protocolId}) async {
     lastSentPeerId = peerId;
     lastSentMessage = message;
   }

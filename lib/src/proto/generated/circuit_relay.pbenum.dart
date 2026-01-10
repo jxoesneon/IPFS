@@ -27,8 +27,7 @@ class Status extends $pb.ProtobufEnum {
       Status._(223, _omitEnumNames ? '' : 'HOP_DST_MULTIADDR_INVALID');
   static const Status HOP_NO_CONN_TO_DST =
       Status._(260, _omitEnumNames ? '' : 'HOP_NO_CONN_TO_DST');
-  static const Status HOP_CANT_DIAL_DST =
-      Status._(261, _omitEnumNames ? '' : 'HOP_CANT_DIAL_DST');
+  static const Status HOP_CANT_DIAL_DST = Status._(261, _omitEnumNames ? '' : 'HOP_CANT_DIAL_DST');
   static const Status HOP_CANT_OPEN_DST_STREAM =
       Status._(262, _omitEnumNames ? '' : 'HOP_CANT_OPEN_DST_STREAM');
   static const Status HOP_CANT_SPEAK_RELAY =
@@ -62,20 +61,16 @@ class Status extends $pb.ProtobufEnum {
     STOP_DST_MULTIADDR_INVALID,
   ];
 
-  static final $core.Map<$core.int, Status> _byValue =
-      $pb.ProtobufEnum.initByValue(values);
+  static final $core.Map<$core.int, Status> _byValue = $pb.ProtobufEnum.initByValue(values);
   static Status? valueOf($core.int value) => _byValue[value];
 
   const Status._(super.value, super.name);
 }
 
 class HopMessage_Type extends $pb.ProtobufEnum {
-  static const HopMessage_Type RESERVE =
-      HopMessage_Type._(0, _omitEnumNames ? '' : 'RESERVE');
-  static const HopMessage_Type CONNECT =
-      HopMessage_Type._(1, _omitEnumNames ? '' : 'CONNECT');
-  static const HopMessage_Type STATUS =
-      HopMessage_Type._(2, _omitEnumNames ? '' : 'STATUS');
+  static const HopMessage_Type RESERVE = HopMessage_Type._(0, _omitEnumNames ? '' : 'RESERVE');
+  static const HopMessage_Type CONNECT = HopMessage_Type._(1, _omitEnumNames ? '' : 'CONNECT');
+  static const HopMessage_Type STATUS = HopMessage_Type._(2, _omitEnumNames ? '' : 'STATUS');
 
   static const $core.List<HopMessage_Type> values = <HopMessage_Type>[
     RESERVE,
@@ -92,10 +87,8 @@ class HopMessage_Type extends $pb.ProtobufEnum {
 }
 
 class StopMessage_Type extends $pb.ProtobufEnum {
-  static const StopMessage_Type CONNECT =
-      StopMessage_Type._(0, _omitEnumNames ? '' : 'CONNECT');
-  static const StopMessage_Type STATUS =
-      StopMessage_Type._(1, _omitEnumNames ? '' : 'STATUS');
+  static const StopMessage_Type CONNECT = StopMessage_Type._(0, _omitEnumNames ? '' : 'CONNECT');
+  static const StopMessage_Type STATUS = StopMessage_Type._(1, _omitEnumNames ? '' : 'STATUS');
 
   static const $core.List<StopMessage_Type> values = <StopMessage_Type>[
     CONNECT,
@@ -110,5 +103,4 @@ class StopMessage_Type extends $pb.ProtobufEnum {
   const StopMessage_Type._(super.value, super.name);
 }
 
-const $core.bool _omitEnumNames =
-    $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

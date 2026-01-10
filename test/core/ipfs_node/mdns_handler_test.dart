@@ -78,11 +78,11 @@ void main() {
     test('skips already discovered peer', () {
       final discoveredPeers = <String>{'existing.local'};
       final domainName = 'existing.local';
-      
+
       if (!discoveredPeers.contains(domainName)) {
         discoveredPeers.add(domainName);
       }
-      
+
       expect(discoveredPeers.length, equals(1));
     });
   });

@@ -32,7 +32,7 @@ class DAGJsonHandler {
         return node.stringValue;
       case Kind.BYTES:
         return {
-          '/': {'bytes': base64.encode(node.bytesValue)}
+          '/': {'bytes': base64.encode(node.bytesValue)},
         };
       case Kind.LIST:
         return node.listValue.values.map((e) => _toPlainObject(e)).toList();
@@ -76,8 +76,7 @@ class DAGJsonHandler {
       node.stringValue = obj;
     } else if (obj is List) {
       node.kind = Kind.LIST;
-      node.listValue = IPLDList()
-        ..values.addAll(obj.map((e) => _fromPlainObject(e)));
+      node.listValue = IPLDList()..values.addAll(obj.map((e) => _fromPlainObject(e)));
     } else if (obj is Map) {
       if (obj.length == 1 && obj.containsKey('/')) {
         final link = obj['/'];

@@ -30,10 +30,10 @@ const ResponseStatus$json = {
 };
 
 /// Descriptor for `ResponseStatus`. Decode as a `google.protobuf.EnumDescriptorProto`.
-final $typed_data.Uint8List responseStatusDescriptor = $convert.base64Decode(
-    'Cg5SZXNwb25zZVN0YXR1cxISCg5SU19JTl9QUk9HUkVTUxAAEhAKDFJTX0NPTVBMRVRFRBABEg'
-    '8KC1JTX1JFSkVDVEVEEAISEAoMUlNfQ0FOQ0VMTEVEEAMSDQoJUlNfUEFVU0VEEAQSDAoIUlNf'
-    'RVJST1IQBRIfChtSU19QQVVTRURfUEVORElOR19SRVNPVVJDRVMQBg==');
+final $typed_data.Uint8List responseStatusDescriptor = $convert
+    .base64Decode('Cg5SZXNwb25zZVN0YXR1cxISCg5SU19JTl9QUk9HUkVTUxAAEhAKDFJTX0NPTVBMRVRFRBABEg'
+        '8KC1JTX1JFSkVDVEVEEAISEAoMUlNfQ0FOQ0VMTEVEEAMSDQoJUlNfUEFVU0VEEAQSDAoIUlNf'
+        'RVJST1IQBRIfChtSU19QQVVTRURfUEVORElOR19SRVNPVVJDRVMQBg==');
 
 @$core.Deprecated('Use graphsyncMessageDescriptor instead')
 const GraphsyncMessage$json = {
@@ -55,14 +55,7 @@ const GraphsyncMessage$json = {
       '6': '.ipfs.graphsync.GraphsyncResponse',
       '10': 'responses'
     },
-    {
-      '1': 'blocks',
-      '3': 3,
-      '4': 3,
-      '5': 11,
-      '6': '.ipfs.graphsync.Block',
-      '10': 'blocks'
-    },
+    {'1': 'blocks', '3': 3, '4': 3, '5': 11, '6': '.ipfs.graphsync.Block', '10': 'blocks'},
     {
       '1': 'extensions',
       '3': 4,
@@ -86,14 +79,14 @@ const GraphsyncMessage_ExtensionsEntry$json = {
 };
 
 /// Descriptor for `GraphsyncMessage`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List graphsyncMessageDescriptor = $convert.base64Decode(
-    'ChBHcmFwaHN5bmNNZXNzYWdlEjwKCHJlcXVlc3RzGAEgAygLMiAuaXBmcy5ncmFwaHN5bmMuR3'
-    'JhcGhzeW5jUmVxdWVzdFIIcmVxdWVzdHMSPwoJcmVzcG9uc2VzGAIgAygLMiEuaXBmcy5ncmFw'
-    'aHN5bmMuR3JhcGhzeW5jUmVzcG9uc2VSCXJlc3BvbnNlcxItCgZibG9ja3MYAyADKAsyFS5pcG'
-    'ZzLmdyYXBoc3luYy5CbG9ja1IGYmxvY2tzElAKCmV4dGVuc2lvbnMYBCADKAsyMC5pcGZzLmdy'
-    'YXBoc3luYy5HcmFwaHN5bmNNZXNzYWdlLkV4dGVuc2lvbnNFbnRyeVIKZXh0ZW5zaW9ucxo9Cg'
-    '9FeHRlbnNpb25zRW50cnkSEAoDa2V5GAEgASgJUgNrZXkSFAoFdmFsdWUYAiABKAxSBXZhbHVl'
-    'OgI4AQ==');
+final $typed_data.Uint8List graphsyncMessageDescriptor = $convert
+    .base64Decode('ChBHcmFwaHN5bmNNZXNzYWdlEjwKCHJlcXVlc3RzGAEgAygLMiAuaXBmcy5ncmFwaHN5bmMuR3'
+        'JhcGhzeW5jUmVxdWVzdFIIcmVxdWVzdHMSPwoJcmVzcG9uc2VzGAIgAygLMiEuaXBmcy5ncmFw'
+        'aHN5bmMuR3JhcGhzeW5jUmVzcG9uc2VSCXJlc3BvbnNlcxItCgZibG9ja3MYAyADKAsyFS5pcG'
+        'ZzLmdyYXBoc3luYy5CbG9ja1IGYmxvY2tzElAKCmV4dGVuc2lvbnMYBCADKAsyMC5pcGZzLmdy'
+        'YXBoc3luYy5HcmFwaHN5bmNNZXNzYWdlLkV4dGVuc2lvbnNFbnRyeVIKZXh0ZW5zaW9ucxo9Cg'
+        '9FeHRlbnNpb25zRW50cnkSEAoDa2V5GAEgASgJUgNrZXkSFAoFdmFsdWUYAiABKAxSBXZhbHVl'
+        'OgI4AQ==');
 
 @$core.Deprecated('Use graphsyncRequestDescriptor instead')
 const GraphsyncRequest$json = {
@@ -129,27 +122,20 @@ const GraphsyncRequest_ExtensionsEntry$json = {
 };
 
 /// Descriptor for `GraphsyncRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List graphsyncRequestDescriptor = $convert.base64Decode(
-    'ChBHcmFwaHN5bmNSZXF1ZXN0Eg4KAmlkGAEgASgFUgJpZBISCgRyb290GAIgASgMUgRyb290Eh'
-    'oKCHNlbGVjdG9yGAMgASgMUghzZWxlY3RvchIaCghwcmlvcml0eRgEIAEoBVIIcHJpb3JpdHkS'
-    'UAoKZXh0ZW5zaW9ucxgFIAMoCzIwLmlwZnMuZ3JhcGhzeW5jLkdyYXBoc3luY1JlcXVlc3QuRX'
-    'h0ZW5zaW9uc0VudHJ5UgpleHRlbnNpb25zEhYKBmNhbmNlbBgGIAEoCFIGY2FuY2VsEhQKBXBh'
-    'dXNlGAcgASgIUgVwYXVzZRIYCgd1bnBhdXNlGAggASgIUgd1bnBhdXNlGj0KD0V4dGVuc2lvbn'
-    'NFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoDFIFdmFsdWU6AjgB');
+final $typed_data.Uint8List graphsyncRequestDescriptor = $convert
+    .base64Decode('ChBHcmFwaHN5bmNSZXF1ZXN0Eg4KAmlkGAEgASgFUgJpZBISCgRyb290GAIgASgMUgRyb290Eh'
+        'oKCHNlbGVjdG9yGAMgASgMUghzZWxlY3RvchIaCghwcmlvcml0eRgEIAEoBVIIcHJpb3JpdHkS'
+        'UAoKZXh0ZW5zaW9ucxgFIAMoCzIwLmlwZnMuZ3JhcGhzeW5jLkdyYXBoc3luY1JlcXVlc3QuRX'
+        'h0ZW5zaW9uc0VudHJ5UgpleHRlbnNpb25zEhYKBmNhbmNlbBgGIAEoCFIGY2FuY2VsEhQKBXBh'
+        'dXNlGAcgASgIUgVwYXVzZRIYCgd1bnBhdXNlGAggASgIUgd1bnBhdXNlGj0KD0V4dGVuc2lvbn'
+        'NFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoDFIFdmFsdWU6AjgB');
 
 @$core.Deprecated('Use graphsyncResponseDescriptor instead')
 const GraphsyncResponse$json = {
   '1': 'GraphsyncResponse',
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 5, '10': 'id'},
-    {
-      '1': 'status',
-      '3': 2,
-      '4': 1,
-      '5': 14,
-      '6': '.ipfs.graphsync.ResponseStatus',
-      '10': 'status'
-    },
+    {'1': 'status', '3': 2, '4': 1, '5': 14, '6': '.ipfs.graphsync.ResponseStatus', '10': 'status'},
     {
       '1': 'extensions',
       '3': 3,
@@ -167,10 +153,7 @@ const GraphsyncResponse$json = {
       '10': 'metadata'
     },
   ],
-  '3': [
-    GraphsyncResponse_ExtensionsEntry$json,
-    GraphsyncResponse_MetadataEntry$json
-  ],
+  '3': [GraphsyncResponse_ExtensionsEntry$json, GraphsyncResponse_MetadataEntry$json],
 };
 
 @$core.Deprecated('Use graphsyncResponseDescriptor instead')
@@ -194,14 +177,14 @@ const GraphsyncResponse_MetadataEntry$json = {
 };
 
 /// Descriptor for `GraphsyncResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List graphsyncResponseDescriptor = $convert.base64Decode(
-    'ChFHcmFwaHN5bmNSZXNwb25zZRIOCgJpZBgBIAEoBVICaWQSNgoGc3RhdHVzGAIgASgOMh4uaX'
-    'Bmcy5ncmFwaHN5bmMuUmVzcG9uc2VTdGF0dXNSBnN0YXR1cxJRCgpleHRlbnNpb25zGAMgAygL'
-    'MjEuaXBmcy5ncmFwaHN5bmMuR3JhcGhzeW5jUmVzcG9uc2UuRXh0ZW5zaW9uc0VudHJ5UgpleH'
-    'RlbnNpb25zEksKCG1ldGFkYXRhGAQgAygLMi8uaXBmcy5ncmFwaHN5bmMuR3JhcGhzeW5jUmVz'
-    'cG9uc2UuTWV0YWRhdGFFbnRyeVIIbWV0YWRhdGEaPQoPRXh0ZW5zaW9uc0VudHJ5EhAKA2tleR'
-    'gBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgMUgV2YWx1ZToCOAEaOwoNTWV0YWRhdGFFbnRyeRIQ'
-    'CgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
+final $typed_data.Uint8List graphsyncResponseDescriptor = $convert
+    .base64Decode('ChFHcmFwaHN5bmNSZXNwb25zZRIOCgJpZBgBIAEoBVICaWQSNgoGc3RhdHVzGAIgASgOMh4uaX'
+        'Bmcy5ncmFwaHN5bmMuUmVzcG9uc2VTdGF0dXNSBnN0YXR1cxJRCgpleHRlbnNpb25zGAMgAygL'
+        'MjEuaXBmcy5ncmFwaHN5bmMuR3JhcGhzeW5jUmVzcG9uc2UuRXh0ZW5zaW9uc0VudHJ5UgpleH'
+        'RlbnNpb25zEksKCG1ldGFkYXRhGAQgAygLMi8uaXBmcy5ncmFwaHN5bmMuR3JhcGhzeW5jUmVz'
+        'cG9uc2UuTWV0YWRhdGFFbnRyeVIIbWV0YWRhdGEaPQoPRXh0ZW5zaW9uc0VudHJ5EhAKA2tleR'
+        'gBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgMUgV2YWx1ZToCOAEaOwoNTWV0YWRhdGFFbnRyeRIQ'
+        'CgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
 
 @$core.Deprecated('Use blockDescriptor instead')
 const Block$json = {
@@ -213,5 +196,5 @@ const Block$json = {
 };
 
 /// Descriptor for `Block`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List blockDescriptor = $convert.base64Decode(
-    'CgVCbG9jaxIWCgZwcmVmaXgYASABKAxSBnByZWZpeBISCgRkYXRhGAIgASgMUgRkYXRh');
+final $typed_data.Uint8List blockDescriptor =
+    $convert.base64Decode('CgVCbG9jaxIWCgZwcmVmaXgYASABKAxSBnByZWZpeBISCgRkYXRhGAIgASgMUgRkYXRh');

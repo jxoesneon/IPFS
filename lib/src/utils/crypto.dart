@@ -24,10 +24,7 @@ class CryptoUtils {
 
   /// Generates a random nonce for cryptographic operations
   Uint8List generateNonce(int length) {
-    final random = List<int>.generate(
-      length,
-      (i) => DateTime.now().microsecondsSinceEpoch % 256,
-    );
+    final random = List<int>.generate(length, (i) => DateTime.now().microsecondsSinceEpoch % 256);
     return Uint8List.fromList(random);
   }
 

@@ -1,8 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
-    as bitswap_pb;
+import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as bitswap_pb;
 import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 
 /// Interface for content-addressed data blocks.

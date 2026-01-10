@@ -21,10 +21,10 @@ void main() {
     test('generateKeyPair with seed', () async {
       final seed = Uint8List(32)..fillRange(0, 32, 5);
       final keyPair = await signer.generateKeyPair(seed: seed);
-      
+
       final seed2 = Uint8List(32)..fillRange(0, 32, 5);
       final keyPair2 = await signer.generateKeyPair(seed: seed2);
-      
+
       final pub1 = await keyPair.extractPublicKey();
       final pub2 = await keyPair2.extractPublicKey();
       expect(pub1.bytes, equals(pub2.bytes));
@@ -47,10 +47,10 @@ void main() {
     test('sign and verify roundtrip', () async {
       final kp = await signer.generateKeyPair();
       final data = Uint8List.fromList([1, 2, 3, 4, 5]);
-      
+
       final signature = await signer.sign(data, kp);
       expect(signature.length, equals(64));
-      
+
       final pub = await signer.extractPublicKey(kp);
       final isValid = await signer.verify(data, signature, pub);
       expect(isValid, isTrue);
@@ -60,7 +60,7 @@ void main() {
       final kp = await signer.generateKeyPair();
       final data = Uint8List.fromList([1, 2, 3]);
       final sig = await signer.sign(data, kp);
-      
+
       final pub = await signer.extractPublicKey(kp);
       final isValid = await signer.verify(Uint8List.fromList([1, 2, 4]), sig, pub);
       expect(isValid, isFalse);

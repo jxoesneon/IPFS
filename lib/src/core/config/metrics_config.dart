@@ -30,8 +30,7 @@ class MetricsConfig {
   factory MetricsConfig.fromJson(Map<String, dynamic> json) {
     return MetricsConfig(
       enabled: json['enabled'] as bool? ?? true,
-      collectionIntervalSeconds:
-          json['collectionIntervalSeconds'] as int? ?? 60,
+      collectionIntervalSeconds: json['collectionIntervalSeconds'] as int? ?? 60,
       collectSystemMetrics: json['collectSystemMetrics'] as bool? ?? true,
       collectNetworkMetrics: json['collectNetworkMetrics'] as bool? ?? true,
       collectStorageMetrics: json['collectStorageMetrics'] as bool? ?? true,

@@ -23,11 +23,7 @@ void main() {
         final data = Uint8List.fromList(utf8.encode('Test content'));
         final cid = CID.computeForDataSync(data);
 
-        final record = await IPNSRecord.create(
-          value: cid,
-          keyPair: keyPair,
-          sequence: 1,
-        );
+        final record = await IPNSRecord.create(value: cid, keyPair: keyPair, sequence: 1);
 
         expect(record.sequence, equals(1));
         expect(record.isSigned, isTrue);
@@ -39,11 +35,7 @@ void main() {
         final keyPair = await signer.generateKeyPair();
         final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]));
 
-        final record = await IPNSRecord.create(
-          value: cid,
-          keyPair: keyPair,
-          sequence: 1,
-        );
+        final record = await IPNSRecord.create(value: cid, keyPair: keyPair, sequence: 1);
 
         expect(record.validity.isAfter(DateTime.now()), isTrue);
         expect(record.ttl.inHours, equals(1));
@@ -70,11 +62,7 @@ void main() {
         final keyPair = await signer.generateKeyPair();
         final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]));
 
-        final record = await IPNSRecord.create(
-          value: cid,
-          keyPair: keyPair,
-          sequence: 1,
-        );
+        final record = await IPNSRecord.create(value: cid, keyPair: keyPair, sequence: 1);
 
         expect(await record.verify(), isTrue);
       });
@@ -83,11 +71,7 @@ void main() {
         final keyPair = await signer.generateKeyPair();
         final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]));
 
-        final record = await IPNSRecord.create(
-          value: cid,
-          keyPair: keyPair,
-          sequence: 1,
-        );
+        final record = await IPNSRecord.create(value: cid, keyPair: keyPair, sequence: 1);
 
         // Tamper with the value (create new record with different value)
         final cbor = record.toCBOR();
@@ -122,11 +106,7 @@ void main() {
         final keyPair = await signer.generateKeyPair();
         final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]));
 
-        final original = await IPNSRecord.create(
-          value: cid,
-          keyPair: keyPair,
-          sequence: 42,
-        );
+        final original = await IPNSRecord.create(value: cid, keyPair: keyPair, sequence: 42);
 
         final cbor = original.toCBOR();
         final decoded = IPNSRecord.fromCBOR(cbor);
@@ -140,11 +120,7 @@ void main() {
         final keyPair = await signer.generateKeyPair();
         final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]));
 
-        final original = await IPNSRecord.create(
-          value: cid,
-          keyPair: keyPair,
-          sequence: 1,
-        );
+        final original = await IPNSRecord.create(value: cid, keyPair: keyPair, sequence: 1);
 
         final cbor = original.toCBOR();
         final decoded = IPNSRecord.fromCBOR(cbor);
@@ -159,11 +135,7 @@ void main() {
         final data = Uint8List.fromList(utf8.encode('Test'));
         final cid = CID.computeForDataSync(data);
 
-        final record = await IPNSRecord.create(
-          value: cid,
-          keyPair: keyPair,
-          sequence: 1,
-        );
+        final record = await IPNSRecord.create(value: cid, keyPair: keyPair, sequence: 1);
 
         final parsed = record.valueCID;
         expect(parsed, isNotNull);
@@ -177,11 +149,7 @@ void main() {
         final keyPair2 = await signer.generateKeyPair();
         final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]));
 
-        final record = await IPNSRecord.create(
-          value: cid,
-          keyPair: keyPair1,
-          sequence: 1,
-        );
+        final record = await IPNSRecord.create(value: cid, keyPair: keyPair1, sequence: 1);
 
         final sig1 = record.signature;
 

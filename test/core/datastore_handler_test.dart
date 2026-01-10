@@ -75,15 +75,15 @@ void main() {
 
     test('should persist and load pinned CIDs', () async {
       final pins = {'cid1', 'cid2', 'cid3'};
-      
+
       await handler.persistPinnedCIDs(pins);
-      
+
       final loadedPins = await handler.loadPinnedCIDs();
       expect(loadedPins, equals(pins));
-      
+
       // Verify in underlying datastore
       expect(await datastore.has(Key('/pins/cid1')), isTrue);
-      
+
       // Update pins (should clear old ones)
       await handler.persistPinnedCIDs({'cid4'});
       final updatedPins = await handler.loadPinnedCIDs();
@@ -93,7 +93,7 @@ void main() {
 
     test('should report status', () async {
       await handler.persistPinnedCIDs({'p1', 'p2'});
-      
+
       final status = await handler.getStatus();
       expect(status['status'], equals('active'));
       expect(status['pinned_blocks'], equals(2));
@@ -116,11 +116,11 @@ void main() {
       datastore = InMemoryDatastore(); // Reset
       await datastore.init();
       handler = DatastoreHandler(datastore); // Reset Handler
-      
+
       expect(await handler.hasBlock(cid1), isFalse);
 
       await handler.importCAR(carData);
-      
+
       expect(await handler.hasBlock(cid1), isTrue);
       final retrieved = await handler.getBlock(cid1);
       expect(retrieved!.data, equals(data1));
@@ -135,20 +135,20 @@ void main() {
 
       // Create a parent block (ProtoNode) linking to leaf
       final parentNode = MerkleDAGNode(
-         data: Uint8List(0),
-         links: [Link(cid: leafBlock.cid, name: 'leaf', size: leafBlock.data.length)],
+        data: Uint8List(0),
+        links: [Link(cid: leafBlock.cid, name: 'leaf', size: leafBlock.data.length)],
       );
       final parentBlock = Block(
-         cid: await parentNode.cid,
-         data: parentNode.toBytes(),
-         format: 'dag-pb'
+        cid: await parentNode.cid,
+        data: parentNode.toBytes(),
+        format: 'dag-pb',
       );
       await handler.putBlock(parentBlock);
 
       // Export CAR from parent
       final carData = await handler.exportCAR(parentBlock.cid.encode());
       expect(carData, isNotEmpty);
-      
+
       // Verify CAR contains both blocks
       final reader = await CarReader.readCar(carData);
       expect(reader.blocks.length, equals(2));
@@ -156,16 +156,16 @@ void main() {
       expect(cids, contains(leafBlock.cid.encode()));
       expect(cids, contains(parentBlock.cid.encode()));
     });
-    
+
     test('handles putBlock error', () async {
-       handler = DatastoreHandler(FailingDatastore());
-       await handler.putBlock(await Block.fromData(Uint8List(0)));
+      handler = DatastoreHandler(FailingDatastore());
+      await handler.putBlock(await Block.fromData(Uint8List(0)));
     });
-    
+
     test('handles getBlock error', () async {
-       handler = DatastoreHandler(FailingDatastore());
-       final result = await handler.getBlock('QmSomeCid');
-       expect(result, isNull);
+      handler = DatastoreHandler(FailingDatastore());
+      final result = await handler.getBlock('QmSomeCid');
+      expect(result, isNull);
     });
 
     test('handles hasBlock error', () async {
@@ -199,7 +199,7 @@ void main() {
       handler = DatastoreHandler(FailingDatastore());
       await handler.importCAR(Uint8List(0)); // Should catch exception
     });
-    
+
     test('handles exportCAR error', () async {
       handler = DatastoreHandler(FailingDatastore());
       final result = await handler.exportCAR('QmSomeCid');

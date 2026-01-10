@@ -72,11 +72,7 @@ class GatewayHandler {
   }
 
   /// Serves content for a given CID and optional sub-path
-  Future<Response> _serveContent(
-    String cidStr,
-    String subPath,
-    Request request,
-  ) async {
+  Future<Response> _serveContent(String cidStr, String subPath, Request request) async {
     final block = await _getBlockByCid(cidStr);
     if (block == null) {
       return Response.notFound('Block not found');
@@ -112,12 +108,7 @@ class GatewayHandler {
   }
 
   /// Serves a UnixFS file
-  Response _serveFile(
-    Data unixfsData,
-    PBNode pbNode,
-    String cidStr,
-    Request request,
-  ) {
+  Response _serveFile(Data unixfsData, PBNode pbNode, String cidStr, Request request) {
     final data = Uint8List.fromList(unixfsData.data);
     final contentType = _detectContentType(data);
 
@@ -161,17 +152,13 @@ class GatewayHandler {
     html.writeln('body { font-family: monospace; margin: 2em; }');
     html.writeln('h1 { font-size: 1.5em; }');
     html.writeln('table { border-collapse: collapse; width: 100%; }');
-    html.writeln(
-      'td, th { padding: 0.5em; text-align: left; border-bottom: 1px solid #ddd; }',
-    );
+    html.writeln('td, th { padding: 0.5em; text-align: left; border-bottom: 1px solid #ddd; }');
     html.writeln('a { color: #0066cc; text-decoration: none; }');
     html.writeln('a:hover { text-decoration: underline; }');
     html.writeln('</style></head><body>');
     html.writeln('<h1>Index of /ipfs/$cidStr</h1>');
     html.writeln('<table>');
-    html.writeln(
-      '<thead><tr><th>Name</th><th>Size</th><th>Type</th></tr></thead>',
-    );
+    html.writeln('<thead><tr><th>Name</th><th>Size</th><th>Type</th></tr></thead>');
     html.writeln('<tbody>');
 
     for (final link in pbNode.links) {
@@ -181,9 +168,7 @@ class GatewayHandler {
       final size = link.size.toInt();
       final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
       html.writeln('<tr>');
-      html.writeln(
-        '  <td><a href="/ipfs/${linkCid.encode()}">$escapedName</a></td>',
-      );
+      html.writeln('  <td><a href="/ipfs/${linkCid.encode()}">$escapedName</a></td>');
       html.writeln('  <td>${_formatSize(size.toInt())}</td>');
       html.writeln('  <td>-</td>');
       html.writeln('</tr>');
@@ -210,9 +195,7 @@ class GatewayHandler {
   ) async {
     final pathParts = subPath.split('/');
     final targetName = pathParts[0];
-    final remainingPath = pathParts.length > 1
-        ? pathParts.sublist(1).join('/')
-        : '';
+    final remainingPath = pathParts.length > 1 ? pathParts.sublist(1).join('/') : '';
 
     // Find the link with matching name
     for (final link in directory.links) {
@@ -227,11 +210,7 @@ class GatewayHandler {
   }
 
   /// Serves a byte range from data
-  Response _serveRange(
-    List<int> data,
-    String rangeHeader,
-    Map<String, String> baseHeaders,
-  ) {
+  Response _serveRange(List<int> data, String rangeHeader, Map<String, String> baseHeaders) {
     // Parse range header: "bytes=start-end"
     final rangeMatch = RegExp(r'bytes=(\d+)-(\d*)').firstMatch(rangeHeader);
     if (rangeMatch == null) {
@@ -240,9 +219,7 @@ class GatewayHandler {
 
     final start = int.parse(rangeMatch.group(1)!);
     final endStr = rangeMatch.group(2);
-    final end = endStr != null && endStr.isNotEmpty
-        ? int.parse(endStr)
-        : data.length - 1;
+    final end = endStr != null && endStr.isNotEmpty ? int.parse(endStr) : data.length - 1;
 
     if (start >= data.length || end >= data.length || start > end) {
       return Response(416, body: 'Range not satisfiable');

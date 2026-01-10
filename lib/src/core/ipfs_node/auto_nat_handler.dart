@@ -9,16 +9,9 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 /// Handles NAT detection and traversal for an IPFS node.
 class AutoNATHandler {
   /// Creates an AutoNATHandler with the given config and network handler.
-  AutoNATHandler(
-    this._config,
-    this._networkHandler, {
-    NatTraversalService? natService,
-  }) : _natService = natService ?? NatTraversalService() {
-    _logger = Logger(
-      'AutoNATHandler',
-      debug: _config.debug,
-      verbose: _config.verboseLogging,
-    );
+  AutoNATHandler(this._config, this._networkHandler, {NatTraversalService? natService})
+    : _natService = natService ?? NatTraversalService() {
+    _logger = Logger('AutoNATHandler', debug: _config.debug, verbose: _config.verboseLogging);
     _logger.debug('AutoNATHandler instance created');
   }
   final IPFSConfig _config;
@@ -197,9 +190,7 @@ class AutoNATHandler {
     }
 
     if (port == null) {
-      _logger.warning(
-        'Could not determine listening port from config, skipping port mapping',
-      );
+      _logger.warning('Could not determine listening port from config, skipping port mapping');
       return;
     }
 
@@ -210,9 +201,7 @@ class AutoNATHandler {
 
     final mapped = await _natService.mapPort(port);
     if (mapped.isNotEmpty) {
-      _logger.info(
-        'Port mapping successful for protocols: ${mapped.join(", ")}',
-      );
+      _logger.info('Port mapping successful for protocols: ${mapped.join(", ")}');
       // Re-check reachability after mapping
       await _performDialbackTest();
     } else {

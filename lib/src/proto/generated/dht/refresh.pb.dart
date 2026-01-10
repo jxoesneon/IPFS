@@ -28,10 +28,8 @@ class RefreshRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RefreshRequest',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.refresh'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RefreshRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.refresh'),
       createEmptyInstance: create)
     ..hasRequiredFields = false;
 
@@ -39,8 +37,7 @@ class RefreshRequest extends $pb.GeneratedMessage {
   RefreshRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   RefreshRequest copyWith(void Function(RefreshRequest) updates) =>
-      super.copyWith((message) => updates(message as RefreshRequest))
-          as RefreshRequest;
+      super.copyWith((message) => updates(message as RefreshRequest)) as RefreshRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -50,8 +47,8 @@ class RefreshRequest extends $pb.GeneratedMessage {
   @$core.override
   RefreshRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static RefreshRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RefreshRequest>(create);
+  static RefreshRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RefreshRequest>(create);
   static RefreshRequest? _defaultInstance;
 }
 
@@ -73,10 +70,8 @@ class RefreshResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RefreshResponse',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.refresh'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RefreshResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.refresh'),
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
     ..hasRequiredFields = false;
@@ -85,8 +80,7 @@ class RefreshResponse extends $pb.GeneratedMessage {
   RefreshResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   RefreshResponse copyWith(void Function(RefreshResponse) updates) =>
-      super.copyWith((message) => updates(message as RefreshResponse))
-          as RefreshResponse;
+      super.copyWith((message) => updates(message as RefreshResponse)) as RefreshResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -96,8 +90,8 @@ class RefreshResponse extends $pb.GeneratedMessage {
   @$core.override
   RefreshResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static RefreshResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RefreshResponse>(create);
+  static RefreshResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RefreshResponse>(create);
   static RefreshResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -110,7 +104,5 @@ class RefreshResponse extends $pb.GeneratedMessage {
   void clearSuccess() => $_clearField(1);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

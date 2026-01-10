@@ -55,7 +55,7 @@ void main() {
   group('IPFSNode Online Mode', () {
     late ServiceContainer container;
     late IPFSNode node;
-    
+
     late MockNetworkHandler mockNetworkHandler;
     late MockDHTHandler mockDHTHandler;
     late MockBitswapHandler mockBitswapHandler;
@@ -74,10 +74,10 @@ void main() {
     late MockIPLDHandler mockIPLDHandler;
     late MockDHTClient mockDHTClient;
     late MockP2plibRouter mockRouter;
-    
+
     setUp(() {
       container = ServiceContainer();
-      
+
       // Initialize mocks
       mockNetworkHandler = MockNetworkHandler();
       mockDHTHandler = MockDHTHandler();
@@ -115,7 +115,7 @@ void main() {
       container.registerSingleton<MetricsCollector>(mockMetricsCollector);
       container.registerSingleton<SecurityManager>(mockSecurityManager);
       container.registerSingleton<IPLDHandler>(mockIPLDHandler);
-      
+
       // Additional Setup
       when(mockNetworkHandler.p2pRouter).thenReturn(mockRouter);
       when(mockDHTHandler.dhtClient).thenReturn(mockDHTClient);
@@ -134,12 +134,12 @@ void main() {
       when(mockNetworkHandler.start()).thenAnswer((_) async {});
       // when(mockNetworkHandler.ip4Address).thenReturn('127.0.0.1'); // getter not available in mock?
       when(mockNetworkHandler.setIpfsNode(any)).thenReturn(null);
-      
+
       when(mockMDNSHandler.start()).thenAnswer((_) async {});
       when(mockDHTHandler.start()).thenAnswer((_) async {});
       when(mockPubSubHandler.start()).thenAnswer((_) async {});
       when(mockBitswapHandler.start()).thenAnswer((_) async {});
-      
+
       when(mockContentRoutingHandler.start()).thenAnswer((_) async {});
       when(mockDNSLinkHandler.start()).thenAnswer((_) async {});
       when(mockGraphsyncHandler.start()).thenAnswer((_) async {});
@@ -170,9 +170,9 @@ void main() {
       verify(mockAutoNATHandler.start()).called(1);
       verify(mockIPNSHandler.start()).called(1);
     });
-    
+
     test('stop stops all services in reverse order', () async {
-       // Setup successful stop for all
+      // Setup successful stop for all
       when(mockIPNSHandler.stop()).thenAnswer((_) async {});
       when(mockAutoNATHandler.stop()).thenAnswer((_) async {});
       when(mockGraphsyncHandler.stop()).thenAnswer((_) async {});
@@ -192,7 +192,7 @@ void main() {
       when(mockSecurityManager.stop()).thenAnswer((_) async {});
 
       await node.stop();
-      
+
       // Verify reverse order roughly
       verify(mockIPNSHandler.stop()).called(1);
       // ... verify others
@@ -201,7 +201,7 @@ void main() {
     });
 
     test('peerId returns NetworkHandler peerID', () {
-      when(mockNetworkHandler.ipfsNode).thenReturn(node); // Indirectly used? 
+      when(mockNetworkHandler.ipfsNode).thenReturn(node); // Indirectly used?
       // Actually peerID is accessed via networkHandler.ipfsNode.peerID in implementation
       // wait, implementation: networkHandler.ipfsNode.peerID
       // This is circular?
@@ -219,57 +219,57 @@ void main() {
       // IPFSNode: return networkHandler.ipfsNode.peerID; -> calls IPFSNode.peerID -> Recursive!!
       // If implementation is recursive, that's a BUG in IPFSNode.dart.
       // Let's check line 140 of ipfs_node.dart.
-      // return networkHandler.ipfsNode.peerID; 
+      // return networkHandler.ipfsNode.peerID;
       // networkHandler.ipfsNode IS 'this'.
       // So 'this.peerId' calls 'this.peerId'. StackOverflow.
-      
+
       // I should fix the BUG in IPFSNode.dart as well if true.
       // But first I fix the test to fail or work.
       // In test I mock NetworkHandler.ipfsNode to return node?
       // Or I expect NetworkHandler to have peerID.
-      
+
       // Let's fix test compile error first.
     });
 
     // ...
     // Skipping fixing peerId test logic for now, just fixing syntax errors first.
-    
+
     test('addFile delegates to DatastoreHandler', () async {
-       final data = Uint8List.fromList([1, 2, 3]);
-       when(mockDatastoreHandler.putBlock(any)).thenAnswer((_) async => {});
-       
-       final cid = await node.addFile(data);
-       
-       expect(cid, isNotNull);
-       verify(mockDatastoreHandler.putBlock(any)).called(1);
+      final data = Uint8List.fromList([1, 2, 3]);
+      when(mockDatastoreHandler.putBlock(any)).thenAnswer((_) async => {});
+
+      final cid = await node.addFile(data);
+
+      expect(cid, isNotNull);
+      verify(mockDatastoreHandler.putBlock(any)).called(1);
     });
-    
+
     test('cat retrieves data from local storage first', () async {
-        final cidString = 'Qm00000000000000000000000000000000000000000000'; 
-        final data = Uint8List.fromList([10, 20]);
-        final mockBlock = await Block.fromData(data); // Using async factory
-        
-        when(mockDatastoreHandler.getBlock(cidString)).thenAnswer((_) async => mockBlock);
-        
-        final result = await node.cat(cidString);
-        
-        expect(result, equals(data));
-        verify(mockDatastoreHandler.getBlock(cidString)).called(1);
+      final cidString = 'Qm00000000000000000000000000000000000000000000';
+      final data = Uint8List.fromList([10, 20]);
+      final mockBlock = await Block.fromData(data); // Using async factory
+
+      when(mockDatastoreHandler.getBlock(cidString)).thenAnswer((_) async => mockBlock);
+
+      final result = await node.cat(cidString);
+
+      expect(result, equals(data));
+      verify(mockDatastoreHandler.getBlock(cidString)).called(1);
     });
 
     test('cat retrieves data from Bitswap if not local', () async {
-        final cidString = 'Qm00000000000000000000000000000000000000000001';
-        final data = Uint8List.fromList([30, 40]);
-        final mockBlock = await Block.fromData(data);
+      final cidString = 'Qm00000000000000000000000000000000000000000001';
+      final data = Uint8List.fromList([30, 40]);
+      final mockBlock = await Block.fromData(data);
 
-        when(mockDatastoreHandler.getBlock(cidString)).thenAnswer((_) async => null);
-        when(mockBitswapHandler.wantBlock(cidString)).thenAnswer((_) async => mockBlock);
-        
-        final result = await node.cat(cidString);
-        
-        expect(result, equals(data));
-        verify(mockDatastoreHandler.getBlock(cidString)).called(1);
-        verify(mockBitswapHandler.wantBlock(cidString)).called(1);
+      when(mockDatastoreHandler.getBlock(cidString)).thenAnswer((_) async => null);
+      when(mockBitswapHandler.wantBlock(cidString)).thenAnswer((_) async => mockBlock);
+
+      final result = await node.cat(cidString);
+
+      expect(result, equals(data));
+      verify(mockDatastoreHandler.getBlock(cidString)).called(1);
+      verify(mockBitswapHandler.wantBlock(cidString)).called(1);
     });
   });
 }

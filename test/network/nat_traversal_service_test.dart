@@ -28,7 +28,7 @@ void main() {
 
     test('returns list of mapped protocols on success', () {
       final mappedProtocols = <String>[];
-      
+
       // Simulate successful TCP mapping
       mappedProtocols.add('TCP');
       // Simulate successful UDP mapping
@@ -39,11 +39,11 @@ void main() {
 
     test('partial success returns only successful protocols', () {
       final mappedProtocols = <String>[];
-      
+
       // Simulate successful TCP
       mappedProtocols.add('TCP');
       // Simulate failed UDP (exception caught, not added)
-      
+
       expect(mappedProtocols, equals(['TCP']));
     });
   });
@@ -62,7 +62,7 @@ void main() {
 
     test('attempts to close both TCP and UDP', () {
       final protocols = <String>[];
-      
+
       // Simulate close attempts
       protocols.add('TCP');
       protocols.add('UDP');
@@ -90,7 +90,7 @@ void main() {
       // Simulated behavior
       var gatewayDiscovered = false;
       final gateway = null;
-      
+
       if (gateway == null) {
         // Discover gateway
         gatewayDiscovered = true;

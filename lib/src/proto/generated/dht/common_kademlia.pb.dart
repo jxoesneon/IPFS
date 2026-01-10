@@ -34,13 +34,10 @@ class KademliaId extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'KademliaId',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.common_kademlia'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'KademliaId',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.common_kademlia'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(
-        1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -57,8 +54,8 @@ class KademliaId extends $pb.GeneratedMessage {
   @$core.override
   KademliaId createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static KademliaId getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<KademliaId>(create);
+  static KademliaId getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<KademliaId>(create);
   static KademliaId? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -71,7 +68,5 @@ class KademliaId extends $pb.GeneratedMessage {
   void clearId() => $_clearField(1);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

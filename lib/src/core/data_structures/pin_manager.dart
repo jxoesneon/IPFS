@@ -87,18 +87,14 @@ class PinManager {
 
       switch (format) {
         case 'dag-pb':
-          final dagNode = MerkleDAGNode.fromBytes(
-            Uint8List.fromList(blockResult.block.data),
-          );
+          final dagNode = MerkleDAGNode.fromBytes(Uint8List.fromList(blockResult.block.data));
           for (final link in dagNode.links) {
             references.add(link.cid.toString());
           }
           break;
 
         case 'dag-cbor':
-          final decoded = await _decodeCbor(
-            Uint8List.fromList(blockResult.block.data),
-          );
+          final decoded = await _decodeCbor(Uint8List.fromList(blockResult.block.data));
           references.addAll(_extractCborReferences(decoded));
           break;
 
@@ -171,8 +167,7 @@ class PinManager {
     if (_pins[cidStr] == PinTypeProto.PIN_TYPE_RECURSIVE) {
       final referencedBlocks = _references[cidStr] ?? <String>{};
       for (final refCid in referencedBlocks) {
-        if (!_pins.containsKey(refCid) ||
-            _pins[refCid] != PinTypeProto.PIN_TYPE_DIRECT) {
+        if (!_pins.containsKey(refCid) || _pins[refCid] != PinTypeProto.PIN_TYPE_DIRECT) {
           _pins.remove(refCid);
         }
       }
@@ -230,9 +225,7 @@ class PinManager {
   int get pinnedBlockCount {
     final directPins = _pins.values
         .where(
-          (type) =>
-              type == PinTypeProto.PIN_TYPE_DIRECT ||
-              type == PinTypeProto.PIN_TYPE_RECURSIVE,
+          (type) => type == PinTypeProto.PIN_TYPE_DIRECT || type == PinTypeProto.PIN_TYPE_RECURSIVE,
         )
         .length;
 

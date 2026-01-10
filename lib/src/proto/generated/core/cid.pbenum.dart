@@ -28,13 +28,11 @@ class IPFSCIDVersion extends $pb.ProtobufEnum {
     IPFS_CID_VERSION_1,
   ];
 
-  static final $core.List<IPFSCIDVersion?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static final $core.List<IPFSCIDVersion?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 2);
   static IPFSCIDVersion? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const IPFSCIDVersion._(super.value, super.name);
 }
 
-const $core.bool _omitEnumNames =
-    $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

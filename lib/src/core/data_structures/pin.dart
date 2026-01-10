@@ -32,12 +32,8 @@ import 'package:fixnum/fixnum.dart' as fixnum;
 /// - [BlockStore] for storage that respects pins
 class Pin {
   /// Creates a new pin for the given [cid] with the specified [type].
-  Pin({
-    required this.cid,
-    required this.type,
-    DateTime? timestamp,
-    required this.blockStore,
-  }) : timestamp = timestamp ?? DateTime.now();
+  Pin({required this.cid, required this.type, DateTime? timestamp, required this.blockStore})
+    : timestamp = timestamp ?? DateTime.now();
 
   /// Creates a [Pin] from its Protobuf representation.
   factory Pin.fromProto(PinProto pbPin, BlockStore blockStore) {

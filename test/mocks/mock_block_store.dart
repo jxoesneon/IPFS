@@ -80,11 +80,7 @@ class MockBlockStore implements IBlockStore {
   @override
   Future<Map<String, dynamic>> getStatus() async {
     _recordCall('getStatus');
-    return {
-      'started': _started,
-      'blockCount': _blocks.length,
-      'cids': _blocks.keys.toList(),
-    };
+    return {'started': _started, 'blockCount': _blocks.length, 'cids': _blocks.keys.toList()};
   }
 
   // ===== Test Helper Methods =====

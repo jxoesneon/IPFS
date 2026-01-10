@@ -20,19 +20,12 @@ const BlockProto$json = {
   '1': 'BlockProto',
   '2': [
     {'1': 'data', '3': 1, '4': 1, '5': 12, '10': 'data'},
-    {
-      '1': 'cid',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.core.IPFSCIDProto',
-      '10': 'cid'
-    },
+    {'1': 'cid', '3': 2, '4': 1, '5': 11, '6': '.ipfs.core.IPFSCIDProto', '10': 'cid'},
     {'1': 'format', '3': 3, '4': 1, '5': 9, '10': 'format'},
   ],
 };
 
 /// Descriptor for `BlockProto`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List blockProtoDescriptor = $convert.base64Decode(
-    'CgpCbG9ja1Byb3RvEhIKBGRhdGEYASABKAxSBGRhdGESKQoDY2lkGAIgASgLMhcuaXBmcy5jb3'
-    'JlLklQRlNDSURQcm90b1IDY2lkEhYKBmZvcm1hdBgDIAEoCVIGZm9ybWF0');
+final $typed_data.Uint8List blockProtoDescriptor = $convert
+    .base64Decode('CgpCbG9ja1Byb3RvEhIKBGRhdGEYASABKAxSBGRhdGESKQoDY2lkGAIgASgLMhcuaXBmcy5jb3'
+        'JlLklQRlNDSURQcm90b1IDY2lkEhYKBmZvcm1hdBgDIAEoCVIGZm9ybWF0');

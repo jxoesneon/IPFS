@@ -10,7 +10,7 @@ void main() {
       final data = Uint8List.fromList([1, 2, 3, 4, 5]);
       final encoded = EncodingUtils.toBase58(data);
       expect(encoded.startsWith('z'), isTrue);
-      
+
       final decoded = EncodingUtils.fromBase58(encoded);
       expect(decoded, equals(data));
     });
@@ -34,7 +34,7 @@ void main() {
       bytes[0] = 0x12;
       bytes[1] = 0x20;
       expect(EncodingUtils.isValidCIDBytes(bytes), isTrue);
-      
+
       // Invalid length
       expect(EncodingUtils.isValidCIDBytes(Uint8List(33)), isFalse);
     });
@@ -51,7 +51,10 @@ void main() {
     });
 
     test('indexToCidVersion', () {
-      expect(EncodingUtils.indexToCidVersion(0), equals(IPFSCIDVersion.IPFS_CID_VERSION_UNSPECIFIED));
+      expect(
+        EncodingUtils.indexToCidVersion(0),
+        equals(IPFSCIDVersion.IPFS_CID_VERSION_UNSPECIFIED),
+      );
       expect(EncodingUtils.indexToCidVersion(1), equals(IPFSCIDVersion.IPFS_CID_VERSION_0));
       expect(EncodingUtils.indexToCidVersion(2), equals(IPFSCIDVersion.IPFS_CID_VERSION_1));
       expect(() => EncodingUtils.indexToCidVersion(3), throwsUnsupportedError);
@@ -72,7 +75,7 @@ void main() {
     test('codec conversion', () {
       expect(EncodingUtils.getCodeFromCodec('raw'), equals(0x55));
       expect(EncodingUtils.getCodecFromCode(0x70), equals('dag-pb'));
-      
+
       expect(() => EncodingUtils.getCodeFromCodec('unknown'), throwsArgumentError);
       expect(() => EncodingUtils.getCodecFromCode(0xFFFF), throwsArgumentError);
     });

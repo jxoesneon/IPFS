@@ -15,10 +15,7 @@ import 'package:jose/jose.dart';
 /// Provides signing, encryption, and verification for IPLD nodes.
 class JoseCoseHandler {
   /// Encodes an IPLD node as a JWS (JSON Web Signature).
-  static Future<Uint8List> encodeJWS(
-    IPLDNode node,
-    IPFSPrivateKey privateKey,
-  ) async {
+  static Future<Uint8List> encodeJWS(IPLDNode node, IPFSPrivateKey privateKey) async {
     if (node.kind != Kind.MAP) {
       throw IPLDEncodingError('JWS encoding requires a map structure');
     }
@@ -46,10 +43,7 @@ class JoseCoseHandler {
   }
 
   /// Encodes an IPLD node as a JWE (JSON Web Encryption).
-  static Future<Uint8List> encodeJWE(
-    IPLDNode node,
-    List<int> recipientPublicKey,
-  ) async {
+  static Future<Uint8List> encodeJWE(IPLDNode node, List<int> recipientPublicKey) async {
     if (node.kind != Kind.MAP) {
       throw IPLDEncodingError('JWE encoding requires a map structure');
     }
@@ -72,10 +66,7 @@ class JoseCoseHandler {
   }
 
   /// Encodes an IPLD node as COSE Sign1 (CBOR Object Signing and Encryption).
-  static Future<Uint8List> encodeCOSE(
-    IPLDNode node,
-    IPFSPrivateKey privateKey,
-  ) async {
+  static Future<Uint8List> encodeCOSE(IPLDNode node, IPFSPrivateKey privateKey) async {
     if (node.kind != Kind.MAP) {
       throw IPLDEncodingError('COSE encoding requires a map structure');
     }
@@ -102,10 +93,7 @@ class JoseCoseHandler {
   }
 
   /// Decodes and verifies a JWS-encoded IPLD node.
-  static Future<Uint8List> decodeJWS(
-    IPLDNode node,
-    IPFSPrivateKey privateKey,
-  ) async {
+  static Future<Uint8List> decodeJWS(IPLDNode node, IPFSPrivateKey privateKey) async {
     if (node.kind != Kind.MAP) {
       throw IPLDEncodingError('JWS decoding requires a map structure');
     }
@@ -116,12 +104,8 @@ class JoseCoseHandler {
     final jwk = JsonWebKey.fromJson({
       'kty': 'EC',
       'crv': 'P-256',
-      'x': base64Url.encode(
-        _bigIntToBytes(privateKey.publicKey.Q!.x!.toBigInteger()),
-      ),
-      'y': base64Url.encode(
-        _bigIntToBytes(privateKey.publicKey.Q!.y!.toBigInteger()),
-      ),
+      'x': base64Url.encode(_bigIntToBytes(privateKey.publicKey.Q!.x!.toBigInteger())),
+      'y': base64Url.encode(_bigIntToBytes(privateKey.publicKey.Q!.y!.toBigInteger())),
     });
 
     // Create a key store and add the key
@@ -132,10 +116,7 @@ class JoseCoseHandler {
   }
 
   /// Decrypts a JWE-encoded IPLD node.
-  static Future<Uint8List> decodeJWE(
-    IPLDNode node,
-    List<int> recipientPrivateKey,
-  ) async {
+  static Future<Uint8List> decodeJWE(IPLDNode node, List<int> recipientPrivateKey) async {
     if (node.kind != Kind.MAP) {
       throw IPLDEncodingError('JWE decoding requires a map structure');
     }
@@ -157,10 +138,7 @@ class JoseCoseHandler {
   }
 
   /// Decodes and verifies a COSE Sign1-encoded IPLD node.
-  static Future<Uint8List> decodeCOSE(
-    IPLDNode node,
-    IPFSPrivateKey privateKey,
-  ) async {
+  static Future<Uint8List> decodeCOSE(IPLDNode node, IPFSPrivateKey privateKey) async {
     if (node.kind != Kind.MAP) {
       throw IPLDEncodingError('COSE decoding requires a map structure');
     }
@@ -184,9 +162,7 @@ class JoseCoseHandler {
   }
 
   static Uint8List _extractPayload(IPLDNode node) {
-    final payloadEntry = node.mapValue.entries.firstWhere(
-      (e) => e.key == 'payload',
-    );
+    final payloadEntry = node.mapValue.entries.firstWhere((e) => e.key == 'payload');
     if (payloadEntry.value.kind == Kind.BYTES) {
       return Uint8List.fromList(payloadEntry.value.bytesValue);
     }

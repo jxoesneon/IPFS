@@ -38,10 +38,7 @@ class ProtocolCoordinator {
       if (useGraphsync && selector != null) {
         final graphsyncBlock = await _graphsync.requestGraph(cid, selector);
         return graphsyncBlock != null
-            ? Block.fromData(
-                Uint8List.fromList(graphsyncBlock.data),
-                format: 'dag-cbor',
-              )
+            ? Block.fromData(Uint8List.fromList(graphsyncBlock.data), format: 'dag-cbor')
             : null;
       } else {
         return _bitswap.wantBlock(cid);
@@ -55,14 +52,10 @@ class ProtocolCoordinator {
           final Uint8List encodedData;
           if (resolvedData.kind == Kind.BYTES) {
             // Direct bytes value
-            encodedData = Uint8List.fromList(
-              resolvedData.bytesValue as List<int>,
-            );
+            encodedData = Uint8List.fromList(resolvedData.bytesValue as List<int>);
           } else {
             // Encode other kinds as dag-cbor
-            encodedData = await EnhancedCBORHandler.encodeCbor(
-              resolvedData as IPLDNode,
-            );
+            encodedData = await EnhancedCBORHandler.encodeCbor(resolvedData as IPLDNode);
           }
           return Block.fromData(encodedData, format: 'dag-cbor');
         }

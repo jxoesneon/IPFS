@@ -33,7 +33,7 @@ void main() {
       final bitfield = BitField(16);
       bitfield.setBit(7);
       expect(bitfield.getBit(7), isTrue);
-      
+
       bitfield.clearBit(7);
       expect(bitfield.getBit(7), isFalse);
     });
@@ -41,7 +41,7 @@ void main() {
     test('setBit only affects target bit', () {
       final bitfield = BitField(16);
       bitfield.setBit(3);
-      
+
       expect(bitfield.getBit(2), isFalse);
       expect(bitfield.getBit(3), isTrue);
       expect(bitfield.getBit(4), isFalse);

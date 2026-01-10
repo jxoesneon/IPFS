@@ -42,10 +42,8 @@ class ValidationResult extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ValidationResult',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.validation'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ValidationResult',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.validation'),
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'isValid')
     ..aOS(2, _omitFieldNames ? '' : 'errorMessage')
@@ -57,8 +55,7 @@ class ValidationResult extends $pb.GeneratedMessage {
   ValidationResult clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ValidationResult copyWith(void Function(ValidationResult) updates) =>
-      super.copyWith((message) => updates(message as ValidationResult))
-          as ValidationResult;
+      super.copyWith((message) => updates(message as ValidationResult)) as ValidationResult;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -68,8 +65,8 @@ class ValidationResult extends $pb.GeneratedMessage {
   @$core.override
   ValidationResult createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ValidationResult getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ValidationResult>(create);
+  static ValidationResult getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ValidationResult>(create);
   static ValidationResult? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -100,7 +97,5 @@ class ValidationResult extends $pb.GeneratedMessage {
   void clearCode() => $_clearField(3);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

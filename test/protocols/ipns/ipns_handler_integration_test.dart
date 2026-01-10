@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -152,19 +151,13 @@ void main() {
     group('publish validation', () {
       test('publish throws for invalid CID format', () async {
         await handler.start();
-        expect(
-          () => handler.publish('invalid!cid', keyName: 'test'),
-          throwsArgumentError,
-        );
+        expect(() => handler.publish('invalid!cid', keyName: 'test'), throwsArgumentError);
       });
 
       test('publish throws when keystore is locked', () async {
         await handler.start();
         mockSecurity.keystoreUnlocked = false;
-        expect(
-          () => handler.publish('QmTestCID123', keyName: 'mykey'),
-          throwsStateError,
-        );
+        expect(() => handler.publish('QmTestCID123', keyName: 'mykey'), throwsStateError);
       });
     });
 
@@ -189,7 +182,7 @@ void main() {
         final cid = CID.decode('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z');
         final keyBytes = Uint8List.fromList([1, 2, 3, 4]);
         final record = await handler.createRecord(cid, keyBytes);
-        
+
         expect(record.key, equals(keyBytes));
         expect(record.value, isNotEmpty);
         expect(record.sequence.toInt(), greaterThan(0));
@@ -201,26 +194,23 @@ void main() {
         // Create unsigned record via CBOR (no signature field)
         final cborBytes = _createUnsignedRecordCBOR();
         final unsignedRecord = IPNSRecord.fromCBOR(cborBytes);
-        
-        expect(
-          () => handler.publishRecord(unsignedRecord),
-          throwsStateError,
-        );
+
+        expect(() => handler.publishRecord(unsignedRecord), throwsStateError);
       });
     });
 
     group('resolve caching', () {
       test('caches resolution and returns cached value', () async {
         await handler.start();
-        
+
         // First resolve
         final result1 = await handler.resolve('cached-name');
         expect(result1, isNotNull);
-        
+
         // Second resolve should return cached value
         final result2 = await handler.resolve('cached-name');
         expect(result2, equals(result1));
-        
+
         await handler.stop();
       });
     });
@@ -234,7 +224,7 @@ Uint8List _createUnsignedRecordCBOR() {
   final value = utf8.encode('/ipfs/QmTest');
   final validity = utf8.encode(DateTime.now().add(Duration(hours: 1)).toUtc().toIso8601String());
   final publicKey = Uint8List(32); // Empty public key
-  
+
   // Use cbor package
   final cborValue = CborMap({
     CborString('Value'): CborBytes(value),
@@ -245,6 +235,6 @@ Uint8List _createUnsignedRecordCBOR() {
     CborString('PublicKey'): CborBytes(publicKey),
     // No Signature field = unsigned
   });
-  
+
   return Uint8List.fromList(cbor.encode(cborValue));
 }

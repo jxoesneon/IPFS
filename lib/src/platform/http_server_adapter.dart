@@ -15,9 +15,5 @@ abstract class IpfsHttpServerInstance {
 /// Abstract interface for starting an HTTP server.
 abstract class HttpServerAdapter {
   /// Starts serving with the given handler at the specified address and port.
-  Future<IpfsHttpServerInstance> serve(
-    Handler handler,
-    String address,
-    int port,
-  );
+  Future<IpfsHttpServerInstance> serve(Handler handler, String address, int port);
 }

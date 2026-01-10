@@ -47,9 +47,9 @@ const ValidationResult_ValidationCode$json = {
 };
 
 /// Descriptor for `ValidationResult`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List validationResultDescriptor = $convert.base64Decode(
-    'ChBWYWxpZGF0aW9uUmVzdWx0EhkKCGlzX3ZhbGlkGAEgASgIUgdpc1ZhbGlkEiMKDWVycm9yX2'
-    '1lc3NhZ2UYAiABKAlSDGVycm9yTWVzc2FnZRJECgRjb2RlGAMgASgOMjAuaXBmcy52YWxpZGF0'
-    'aW9uLlZhbGlkYXRpb25SZXN1bHQuVmFsaWRhdGlvbkNvZGVSBGNvZGUieAoOVmFsaWRhdGlvbk'
-    'NvZGUSCwoHVU5LTk9XThAAEgsKB1NVQ0NFU1MQARIQCgxJTlZBTElEX1NJWkUQAhIUChBJTlZB'
-    'TElEX1BST1RPQ09MEAMSEgoOSU5WQUxJRF9GT1JNQVQQBBIQCgxSQVRFX0xJTUlURUQQBQ==');
+final $typed_data.Uint8List validationResultDescriptor = $convert
+    .base64Decode('ChBWYWxpZGF0aW9uUmVzdWx0EhkKCGlzX3ZhbGlkGAEgASgIUgdpc1ZhbGlkEiMKDWVycm9yX2'
+        '1lc3NhZ2UYAiABKAlSDGVycm9yTWVzc2FnZRJECgRjb2RlGAMgASgOMjAuaXBmcy52YWxpZGF0'
+        'aW9uLlZhbGlkYXRpb25SZXN1bHQuVmFsaWRhdGlvbkNvZGVSBGNvZGUieAoOVmFsaWRhdGlvbk'
+        'NvZGUSCwoHVU5LTk9XThAAEgsKB1NVQ0NFU1MQARIQCgxJTlZBTElEX1NJWkUQAhIUChBJTlZB'
+        'TElEX1BST1RPQ09MEAMSEgoOSU5WQUxJRF9GT1JNQVQQBBIQCgxSQVRFX0xJTUlURUQQBQ==');

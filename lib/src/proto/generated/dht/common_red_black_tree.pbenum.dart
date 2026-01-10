@@ -27,8 +27,7 @@ class NodeColor extends $pb.ProtobufEnum {
     BLACK,
   ];
 
-  static final $core.List<NodeColor?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 1);
+  static final $core.List<NodeColor?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 1);
   static NodeColor? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
@@ -44,8 +43,7 @@ class V_PeerInfo_ConnectionStatus extends $pb.ProtobufEnum {
   static const V_PeerInfo_ConnectionStatus CONNECTED =
       V_PeerInfo_ConnectionStatus._(2, _omitEnumNames ? '' : 'CONNECTED');
 
-  static const $core.List<V_PeerInfo_ConnectionStatus> values =
-      <V_PeerInfo_ConnectionStatus>[
+  static const $core.List<V_PeerInfo_ConnectionStatus> values = <V_PeerInfo_ConnectionStatus>[
     DISCONNECTED,
     CONNECTING,
     CONNECTED,
@@ -59,5 +57,4 @@ class V_PeerInfo_ConnectionStatus extends $pb.ProtobufEnum {
   const V_PeerInfo_ConnectionStatus._(super.value, super.name);
 }
 
-const $core.bool _omitEnumNames =
-    $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

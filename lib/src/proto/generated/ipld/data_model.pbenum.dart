@@ -40,13 +40,11 @@ class Kind extends $pb.ProtobufEnum {
     BIG_INT,
   ];
 
-  static final $core.List<Kind?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 9);
+  static final $core.List<Kind?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 9);
   static Kind? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const Kind._(super.value, super.name);
 }
 
-const $core.bool _omitEnumNames =
-    $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

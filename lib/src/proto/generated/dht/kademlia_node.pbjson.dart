@@ -49,10 +49,10 @@ const KademliaNode$json = {
 };
 
 /// Descriptor for `KademliaNode`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List kademliaNodeDescriptor = $convert.base64Decode(
-    'CgxLYWRlbWxpYU5vZGUSPQoHcGVlcl9pZBgBIAEoCzIkLmlwZnMuZGh0LmNvbW1vbl9rYWRlbW'
-    'xpYS5LYWRlbWxpYUlkUgZwZWVySWQSGgoIZGlzdGFuY2UYAiABKAVSCGRpc3RhbmNlElIKEmFz'
-    'c29jaWF0ZWRfcGVlcl9pZBgDIAEoCzIkLmlwZnMuZGh0LmNvbW1vbl9rYWRlbWxpYS5LYWRlbW'
-    'xpYUlkUhBhc3NvY2lhdGVkUGVlcklkEkAKCGNoaWxkcmVuGAQgAygLMiQuaXBmcy5kaHQua2Fk'
-    'ZW1saWFfbm9kZS5LYWRlbWxpYU5vZGVSCGNoaWxkcmVuEhsKCWxhc3Rfc2VlbhgFIAEoA1IIbG'
-    'FzdFNlZW4=');
+final $typed_data.Uint8List kademliaNodeDescriptor = $convert
+    .base64Decode('CgxLYWRlbWxpYU5vZGUSPQoHcGVlcl9pZBgBIAEoCzIkLmlwZnMuZGh0LmNvbW1vbl9rYWRlbW'
+        'xpYS5LYWRlbWxpYUlkUgZwZWVySWQSGgoIZGlzdGFuY2UYAiABKAVSCGRpc3RhbmNlElIKEmFz'
+        'c29jaWF0ZWRfcGVlcl9pZBgDIAEoCzIkLmlwZnMuZGh0LmNvbW1vbl9rYWRlbWxpYS5LYWRlbW'
+        'xpYUlkUhBhc3NvY2lhdGVkUGVlcklkEkAKCGNoaWxkcmVuGAQgAygLMiQuaXBmcy5kaHQua2Fk'
+        'ZW1saWFfbm9kZS5LYWRlbWxpYU5vZGVSCGNoaWxkcmVuEhsKCWxhc3Rfc2VlbhgFIAEoA1IIbG'
+        'FzdFNlZW4=');

@@ -18,7 +18,7 @@ class MockMetricsCollector implements MetricsCollector {
     recordedMetrics[protocol] = metrics;
     metricHistory.add({'protocol': protocol, 'metrics': metrics});
   }
-  
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -68,14 +68,14 @@ void main() {
 
     test('should enforce rate limiting', () {
       final clientId = 'client1';
-      
+
       // First 2 requests should be allowed
       expect(securityManager.shouldRateLimit(clientId), isFalse);
       expect(securityManager.shouldRateLimit(clientId), isFalse);
-      
+
       // 3rd request should be limited
       expect(securityManager.shouldRateLimit(clientId), isTrue);
-      
+
       // Check metrics
       expect(mockMetrics.recordedMetrics['security'], isNotNull);
       expect(mockMetrics.recordedMetrics['security']['type'], equals('rate_limit'));
@@ -83,13 +83,13 @@ void main() {
 
     test('should track auth attempts', () {
       final clientId = 'client2';
-      
+
       // First failure
       expect(securityManager.trackAuthAttempt(clientId, false), isTrue); // Allowed to retry
-      
+
       // Second failure
       expect(securityManager.trackAuthAttempt(clientId, false), isFalse); // Blocked
-      
+
       // Successful auth should reset
       securityManager.trackAuthAttempt('client3', false);
       expect(securityManager.trackAuthAttempt('client3', true), isTrue);
@@ -98,9 +98,9 @@ void main() {
     test('should generate secure key when unlocked', () async {
       await securityManager.unlockKeystore('secure_password', salt: testSalt);
       final keyName = 'test_key';
-      
+
       final publicKey = await securityManager.generateSecureKey(keyName);
-      
+
       expect(publicKey, isNotNull);
       expect(publicKey.length, equals(32)); // Ed25519 public key size
       expect(securityManager.hasSecureKey(keyName), isTrue);
@@ -110,32 +110,26 @@ void main() {
     test('getSecureKey - success', () async {
       await securityManager.unlockKeystore('pwd', salt: testSalt);
       await securityManager.generateSecureKey('test_key');
-      
+
       final keyPair = await securityManager.getSecureKey('test_key');
       expect(keyPair, isNotNull);
     });
 
     test('should throw error when accessing keys while locked', () async {
       final keyName = 'test_key_locked';
-      
-      expect(
-        () => securityManager.generateSecureKey(keyName),
-        throwsStateError,
-      );
-      
-      expect(
-        () => securityManager.getSecureKey(keyName),
-        throwsStateError,
-      );
+
+      expect(() => securityManager.generateSecureKey(keyName), throwsStateError);
+
+      expect(() => securityManager.getSecureKey(keyName), throwsStateError);
     });
 
     test('migrateKeysFromPlaintext - success', () async {
       // Add a key to legacy keystore with 32-byte "private key" string
       securityManager.keystore.addKeyPair('legacy_key', KeyPair('pub', validPrivKeyBase64));
-      
+
       await securityManager.unlockKeystore('temp_pwd', salt: testSalt);
       final count = await securityManager.migrateKeysFromPlaintext();
-      
+
       expect(count, equals(1));
       expect(securityManager.hasSecureKey('legacy_key'), isTrue);
       expect(securityManager.keystore.hasKeyPair('legacy_key'), isFalse); // Cleared
@@ -150,26 +144,20 @@ void main() {
     test('migrateKeysFromPlaintext - skip existing', () async {
       await securityManager.unlockKeystore('temp_pwd', salt: testSalt);
       await securityManager.generateSecureKey('existing_key');
-      
+
       securityManager.keystore.addKeyPair('existing_key', KeyPair('pub', validPrivKeyBase64));
-      
+
       final count = await securityManager.migrateKeysFromPlaintext();
       expect(count, equals(0));
     });
 
     test('migrateKeysFromPlaintext - locked error', () async {
-      expect(
-        () => securityManager.migrateKeysFromPlaintext(),
-        throwsStateError,
-      );
+      expect(() => securityManager.migrateKeysFromPlaintext(), throwsStateError);
     });
 
     test('TLS initialization error - missing paths', () {
       final tlsConfig = SecurityConfig(enableTLS: true);
-      expect(
-        () => SecurityManager(tlsConfig, mockMetrics),
-        throwsStateError,
-      );
+      expect(() => SecurityManager(tlsConfig, mockMetrics), throwsStateError);
     });
 
     test('TLS initialization error - missing cert', () {
@@ -178,22 +166,19 @@ void main() {
         tlsCertificatePath: 'non_existent_cert',
         tlsPrivateKeyPath: 'non_existent_key',
       );
-      expect(
-        () => SecurityManager(tlsConfig, mockMetrics),
-        throwsA(isA<FileSystemException>()),
-      );
+      expect(() => SecurityManager(tlsConfig, mockMetrics), throwsA(isA<FileSystemException>()));
     });
 
     test('TLS initialization error - cert exists but key missing', () {
       final tempDir = Directory.systemTemp.createTempSync();
       final certFile = File('${tempDir.path}/cert')..createSync();
-      
+
       final tlsConfig = SecurityConfig(
         enableTLS: true,
         tlsCertificatePath: certFile.path,
         tlsPrivateKeyPath: 'non_existent_key',
       );
-      
+
       try {
         expect(
           () => SecurityManager(tlsConfig, mockMetrics),
@@ -211,14 +196,14 @@ void main() {
       );
       final manager = SecurityManager(rotationConfig, mockMetrics);
       await manager.start();
-      
+
       // Wait for at least one rotation
       await Future.delayed(Duration(milliseconds: 30));
-      
+
       final status = await manager.getStatus();
       expect(status['key_rotation_enabled'], isTrue);
       // Depending on timing, metrics might have been recorded
-      
+
       await manager.stop();
     });
 
@@ -230,14 +215,14 @@ void main() {
     test('getPrivateKey fallback - secure key', () async {
       await securityManager.unlockKeystore('pwd', salt: testSalt);
       await securityManager.generateSecureKey('secure_key');
-      
+
       final key = await securityManager.getPrivateKey('secure_key');
       expect(key, isNotNull);
     });
 
     test('getPrivateKey fallback - plaintext key', () async {
       securityManager.keystore.addKeyPair('legacy_key', KeyPair('pub', validPrivKeyBase64));
-      
+
       final key = await securityManager.getPrivateKey('legacy_key');
       expect(key, isNotNull);
     });
@@ -246,7 +231,7 @@ void main() {
       await securityManager.unlockKeystore('pwd', salt: testSalt);
       await securityManager.generateSecureKey('secure_key');
       securityManager.lockKeystore();
-      
+
       final key = await securityManager.getPrivateKey('secure_key');
       expect(key, isNull);
     });

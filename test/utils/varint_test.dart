@@ -9,7 +9,7 @@ void main() {
         final encoded = encodeVarint(i);
         expect(encoded.length, equals(1));
         expect(encoded[0], equals(i));
-        
+
         final (decoded, read) = decodeVarint(encoded);
         expect(decoded, equals(i));
         expect(read, equals(1));
@@ -18,11 +18,11 @@ void main() {
 
     test('encode/decode multi-byte integers', () {
       final testValues = [
-        128,      // 0x80 0x01
-        300,      // 0xAC 0x02
-        16383,    // 0xFF 0x7F
-        16384,    // 0x80 0x80 0x01
-        2097151,  // 0xFF 0xFF 0x7F
+        128, // 0x80 0x01
+        300, // 0xAC 0x02
+        16383, // 0xFF 0x7F
+        16384, // 0x80 0x80 0x01
+        2097151, // 0xFF 0xFF 0x7F
       ];
 
       for (final val in testValues) {

@@ -33,7 +33,7 @@ void main() {
       mockIpld = MockIPLDHandler();
       mockBlockStore = MockBlockStore();
       config = IPFSConfig();
-      
+
       handler = GraphsyncHandler(config, mockRouter, mockBitswap, mockIpld, mockBlockStore);
     });
 
@@ -50,24 +50,24 @@ void main() {
     test('stop logs success', () async {
       await handler.stop();
     });
-    
+
     test('requestGraph sends request and fetches root block', () async {
       final blockData = Uint8List.fromList([1, 2, 3]);
       final block = await core.Block.fromData(blockData, format: 'raw');
       final cidStr = block.cid.toString();
       final selector = IPLDSelector(type: SelectorType.all);
-      
+
       when(mockRouter.broadcastMessage(any, any)).thenAnswer((_) async {});
       when(mockBitswap.wantBlock(any)).thenAnswer((_) async => block);
-      when(mockBlockStore.putBlock(any)).thenAnswer(
-        (_) async => BlockResponseFactory.successAdd('Added'),
-      );
+      when(
+        mockBlockStore.putBlock(any),
+      ).thenAnswer((_) async => BlockResponseFactory.successAdd('Added'));
 
       final result = await handler.requestGraph(cidStr, selector);
-      
+
       expect(result, isNotNull);
       expect(result!.data, equals(blockData));
-      
+
       // Use any for protocol ID matching to avoid strict string issues or import protocol class
       verify(mockRouter.broadcastMessage(argThat(contains('graphsync')), any)).called(1);
       verify(mockBitswap.wantBlock(cidStr)).called(1);
@@ -76,10 +76,10 @@ void main() {
     test('handleCancelRequest processes message', () async {
       // Access private method via reflection or just construct incoming packet?
       // Since _handleMessage is attached to the router filter, we can test by simulating the callback.
-      // But _handleMessage is private. 
+      // But _handleMessage is private.
       // We can expose it or invoke it via a test helper if we modify the class.
       // Alternatively, we capture the callback passed to registerProtocolHandler.
-      
+
       var callback;
       when(mockRouter.registerProtocol(any)).thenReturn(null);
       when(mockRouter.registerProtocolHandler(any, any)).thenAnswer((invocation) {
@@ -91,13 +91,14 @@ void main() {
 
       // Create cancel request packet
       final gsMsg = GraphsyncMessage()
-        ..requests.add(GraphsyncRequest()
+        ..requests.add(
+          GraphsyncRequest()
             ..id = 123
-            ..cancel = true
+            ..cancel = true,
         );
-      
+
       // Prepare Packet (Packet class needs checking)
-      // The callback expects 'packet'. 
+      // The callback expects 'packet'.
       // Checking graphsync_handler.dart: (packet) => _handleMessage(packet.srcPeerId, packet.datagram)
       // So packet has srcPeerId and datagram.
       // We need a MockPacket.

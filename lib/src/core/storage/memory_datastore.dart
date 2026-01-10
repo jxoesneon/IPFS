@@ -38,9 +38,7 @@ class MemoryDatastore implements Datastore {
 
     // 1. Filtering
     if (q.prefix != null) {
-      entries = entries
-          .where((e) => e.key.toString().startsWith(q.prefix!))
-          .toList();
+      entries = entries.where((e) => e.key.toString().startsWith(q.prefix!)).toList();
     }
 
     if (q.filters != null) {

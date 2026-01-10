@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -13,11 +12,15 @@ void main() {
     verifyDatastore('MemoryDatastore', () => MemoryDatastore());
 
     final tempDir = Directory.systemTemp.createTempSync('ipfs_datastore_test_');
-    verifyDatastore('FlatFileDatastore', () => FlatFileDatastore(tempDir.path), teardown: () {
-      if (tempDir.existsSync()) {
-        tempDir.deleteSync(recursive: true);
-      }
-    });
+    verifyDatastore(
+      'FlatFileDatastore',
+      () => FlatFileDatastore(tempDir.path),
+      teardown: () {
+        if (tempDir.existsSync()) {
+          tempDir.deleteSync(recursive: true);
+        }
+      },
+    );
   });
 }
 
@@ -70,13 +73,13 @@ void verifyDatastore(String name, Datastore Function() create, {void Function()?
       expect(results.any((e) => e.key.toString() == '/a/1'), isTrue);
       expect(results.any((e) => e.key.toString() == '/a/2'), isTrue);
     });
-    
+
     test('query keysOnly', () async {
-       await ds.put(Key('/k/1'), Uint8List.fromList([1]));
-       final q = Query(prefix: '/k', keysOnly: true);
-       final results = await ds.query(q).toList();
-       expect(results.length, equals(1));
-       expect(results.first.value, isNull);
+      await ds.put(Key('/k/1'), Uint8List.fromList([1]));
+      final q = Query(prefix: '/k', keysOnly: true);
+      final results = await ds.query(q).toList();
+      expect(results.length, equals(1));
+      expect(results.first.value, isNull);
     });
   });
 }

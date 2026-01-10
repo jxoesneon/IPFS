@@ -40,19 +40,16 @@ class FindClosestPeersRequest extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'FindClosestPeersRequest',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.find_closest_peers'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.find_closest_peers'),
       createEmptyInstance: create)
-    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'target',
-        subBuilder: $0.KademliaId.create)
+    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'target', subBuilder: $0.KademliaId.create)
     ..aI(2, _omitFieldNames ? '' : 'count')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   FindClosestPeersRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  FindClosestPeersRequest copyWith(
-          void Function(FindClosestPeersRequest) updates) =>
+  FindClosestPeersRequest copyWith(void Function(FindClosestPeersRequest) updates) =>
       super.copyWith((message) => updates(message as FindClosestPeersRequest))
           as FindClosestPeersRequest;
 
@@ -64,8 +61,8 @@ class FindClosestPeersRequest extends $pb.GeneratedMessage {
   @$core.override
   FindClosestPeersRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static FindClosestPeersRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<FindClosestPeersRequest>(create);
+  static FindClosestPeersRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FindClosestPeersRequest>(create);
   static FindClosestPeersRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -109,18 +106,15 @@ class FindClosestPeersResponse extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'FindClosestPeersResponse',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.find_closest_peers'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.find_closest_peers'),
       createEmptyInstance: create)
-    ..pPM<$0.KademliaId>(1, _omitFieldNames ? '' : 'peerIds',
-        subBuilder: $0.KademliaId.create)
+    ..pPM<$0.KademliaId>(1, _omitFieldNames ? '' : 'peerIds', subBuilder: $0.KademliaId.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   FindClosestPeersResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  FindClosestPeersResponse copyWith(
-          void Function(FindClosestPeersResponse) updates) =>
+  FindClosestPeersResponse copyWith(void Function(FindClosestPeersResponse) updates) =>
       super.copyWith((message) => updates(message as FindClosestPeersResponse))
           as FindClosestPeersResponse;
 
@@ -132,15 +126,13 @@ class FindClosestPeersResponse extends $pb.GeneratedMessage {
   @$core.override
   FindClosestPeersResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static FindClosestPeersResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<FindClosestPeersResponse>(create);
+  static FindClosestPeersResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FindClosestPeersResponse>(create);
   static FindClosestPeersResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $pb.PbList<$0.KademliaId> get peerIds => $_getList(0);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

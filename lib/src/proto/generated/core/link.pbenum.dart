@@ -18,10 +18,8 @@ import 'package:protobuf/protobuf.dart' as $pb;
 class LinkType extends $pb.ProtobufEnum {
   static const LinkType LINK_TYPE_UNSPECIFIED =
       LinkType._(0, _omitEnumNames ? '' : 'LINK_TYPE_UNSPECIFIED');
-  static const LinkType LINK_TYPE_DIRECT =
-      LinkType._(1, _omitEnumNames ? '' : 'LINK_TYPE_DIRECT');
-  static const LinkType LINK_TYPE_HAMT =
-      LinkType._(2, _omitEnumNames ? '' : 'LINK_TYPE_HAMT');
+  static const LinkType LINK_TYPE_DIRECT = LinkType._(1, _omitEnumNames ? '' : 'LINK_TYPE_DIRECT');
+  static const LinkType LINK_TYPE_HAMT = LinkType._(2, _omitEnumNames ? '' : 'LINK_TYPE_HAMT');
   static const LinkType LINK_TYPE_TRICKLE =
       LinkType._(3, _omitEnumNames ? '' : 'LINK_TYPE_TRICKLE');
 
@@ -32,13 +30,11 @@ class LinkType extends $pb.ProtobufEnum {
     LINK_TYPE_TRICKLE,
   ];
 
-  static final $core.List<LinkType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static final $core.List<LinkType?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 3);
   static LinkType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const LinkType._(super.value, super.name);
 }
 
-const $core.bool _omitEnumNames =
-    $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

@@ -1,13 +1,9 @@
 // lib/src/protocols/dht/red_black_tree.dart
 
-import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
-    as common_tree;
-import 'package:dart_ipfs/src/protocols/dht/red_black_tree/deletion.dart'
-    as deletion;
-import 'package:dart_ipfs/src/protocols/dht/red_black_tree/insertion.dart'
-    as insertion;
-import 'package:dart_ipfs/src/protocols/dht/red_black_tree/search.dart'
-    as rb_search;
+import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart' as common_tree;
+import 'package:dart_ipfs/src/protocols/dht/red_black_tree/deletion.dart' as deletion;
+import 'package:dart_ipfs/src/protocols/dht/red_black_tree/insertion.dart' as insertion;
+import 'package:dart_ipfs/src/protocols/dht/red_black_tree/search.dart' as rb_search;
 
 /// A node in the Red-Black tree.
 class RedBlackTreeNode<K_PeerId, V_PeerInfo> {

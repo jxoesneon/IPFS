@@ -38,15 +38,12 @@ class Any extends $pb.GeneratedMessage with $mixin.AnyMixin {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Any',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Any',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'),
       createEmptyInstance: create,
       wellKnownType: $mixin.WellKnownType.any)
     ..aOS(1, _omitFieldNames ? '' : 'typeUrl')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -63,8 +60,7 @@ class Any extends $pb.GeneratedMessage with $mixin.AnyMixin {
   @$core.override
   Any createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static Any getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Any>(create);
+  static Any getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Any>(create);
   static Any? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -93,7 +89,5 @@ class Any extends $pb.GeneratedMessage with $mixin.AnyMixin {
   }
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

@@ -61,10 +61,7 @@ class NetworkConfig {
   }
 
   /// Default multiaddr listen addresses for TCP.
-  static const defaultListenAddresses = [
-    '/ip4/0.0.0.0/tcp/4001',
-    '/ip6/::/tcp/4001',
-  ];
+  static const defaultListenAddresses = ['/ip4/0.0.0.0/tcp/4001', '/ip6/::/tcp/4001'];
 
   /// Default IPFS bootstrap peers.
   static const defaultBootstrapPeers = [

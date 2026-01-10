@@ -62,11 +62,7 @@ class Ed25519Signer {
   /// Verifies an Ed25519 signature.
   ///
   /// Returns `true` if the signature is valid for the given data and public key.
-  Future<bool> verify(
-    Uint8List data,
-    Uint8List signatureBytes,
-    SimplePublicKey publicKey,
-  ) async {
+  Future<bool> verify(Uint8List data, Uint8List signatureBytes, SimplePublicKey publicKey) async {
     try {
       final signature = Signature(signatureBytes, publicKey: publicKey);
       return await _algorithm.verify(data, signature: signature);

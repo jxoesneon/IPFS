@@ -63,15 +63,11 @@ class MockP2plibRouter implements P2plibRouter {
 
   void simulatePubSubMessage(String topic, String content, String publisher) {
     final data = Uint8List.fromList(utf8.encode(content));
-    
+
     // Simulate Router-level protocol message (json for PubSubClient)
-    final pubsubPacket = {
-      'topic': topic,
-      'content': content,
-      'sender': publisher,
-    };
+    final pubsubPacket = {'topic': topic, 'content': content, 'sender': publisher};
     final datagram = Uint8List.fromList(utf8.encode(jsonEncode(pubsubPacket)));
-    
+
     if (handlers.containsKey('pubsub')) {
       handlers['pubsub']!(NetworkPacket(srcPeerId: publisher, datagram: datagram));
     }
@@ -137,11 +133,11 @@ void main() {
 
     test('should receive messages on subscribed topic', () async {
       await handler.subscribe('test-topic');
-      
+
       final messageFuture = handler.messages.firstWhere((m) => m.topic == 'test-topic');
-      
+
       router.simulatePubSubMessage('test-topic', 'Hello World', 'other-peer');
-      
+
       final received = await messageFuture.timeout(const Duration(seconds: 1));
       expect(received.content, equals('Hello World'));
       expect(received.sender, equals('other-peer'));
@@ -150,21 +146,21 @@ void main() {
     test('should track number of published messages', () async {
       await handler.publish('test-topic', 'Message 1');
       await handler.publish('test-topic', 'Message 2');
-      
+
       final status = await handler.getStatus();
       expect(status['messages_published'], equals(2));
     });
 
     test('should handle onMessage callback', () async {
       final completer = Completer<String>();
-      
+
       handler.onMessage('test-topic', (msg) {
         completer.complete(msg);
       });
-      
+
       await handler.subscribe('test-topic');
       router.simulatePubSubMessage('test-topic', 'Callback Data', 'sender-1');
-      
+
       final result = await completer.future.timeout(const Duration(seconds: 1));
       expect(result, equals('Callback Data'));
     });

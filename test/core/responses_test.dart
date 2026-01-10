@@ -39,10 +39,7 @@ void main() {
 
   group('ResponseHandler', () {
     test('toAddBlockResponse', () {
-      final op = const BlockOperationResponse<dynamic>(
-        success: true,
-        message: 'OK',
-      );
+      final op = const BlockOperationResponse<dynamic>(success: true, message: 'OK');
       final proto = ResponseHandler.toAddBlockResponse(op);
       expect(proto.success, isTrue);
       expect(proto.message, 'OK');
@@ -54,11 +51,7 @@ void main() {
       final cid = CID.computeForDataSync(bytes);
       final block = Block(cid: cid, data: bytes);
 
-      final op = BlockOperationResponse<Block>(
-        success: true,
-        message: 'OK',
-        data: block,
-      );
+      final op = BlockOperationResponse<Block>(success: true, message: 'OK', data: block);
       final proto = ResponseHandler.toGetBlockResponse(op);
 
       expect(proto.found, isTrue);
@@ -93,10 +86,7 @@ void main() {
       final wrapper = BlockGetResponse.fromProto(proto);
       expect(wrapper.success, isFalse);
       expect(wrapper.message, 'Block not found');
-      expect(
-        wrapper.toProto().found,
-        isFalse,
-      ); // Need to check if toProto handles null block
+      expect(wrapper.toProto().found, isFalse); // Need to check if toProto handles null block
       // BlockGetResponse.toProto calls block!, so we shouldn't call it if block is null?
       // Let's check logic.
     });

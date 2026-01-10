@@ -45,8 +45,7 @@ class IpfsNodeNetworkEvents {
             ..multiaddress = event.peerId;
           break;
         case ConnectionEventType.disconnected:
-          networkEvent.peerDisconnected = PeerDisconnectedEvent()
-            ..peerId = event.peerId;
+          networkEvent.peerDisconnected = PeerDisconnectedEvent()..peerId = event.peerId;
           break;
       }
       _networkEventsController.add(networkEvent);
@@ -78,9 +77,7 @@ class IpfsNodeNetworkEvents {
         case DHTEventType.providerFound:
           networkEvent.dhtProviderQueried = DHTProviderQueriedEvent()
             ..key = event.data['key'] as String
-            ..providers.addAll(
-              (event.data['providers'] as List).cast<String>(),
-            );
+            ..providers.addAll((event.data['providers'] as List).cast<String>());
           break;
       }
       _networkEventsController.add(networkEvent);
@@ -99,12 +96,12 @@ class IpfsNodeNetworkEvents {
             ..peerId = event.publisher;
           break;
         case 'pubsub_subscribed':
-          networkEvent.pubsubSubscriptionCreated =
-              PubsubSubscriptionCreatedEvent()..topic = event.topic;
+          networkEvent.pubsubSubscriptionCreated = PubsubSubscriptionCreatedEvent()
+            ..topic = event.topic;
           break;
         case 'pubsub_unsubscribed':
-          networkEvent.pubsubSubscriptionCancelled =
-              PubsubSubscriptionCancelledEvent()..topic = event.topic;
+          networkEvent.pubsubSubscriptionCancelled = PubsubSubscriptionCancelledEvent()
+            ..topic = event.topic;
           break;
       }
       _networkEventsController.add(networkEvent);
@@ -117,8 +114,7 @@ class IpfsNodeNetworkEvents {
       final networkEvent = NetworkEvent();
       switch (event.type) {
         case StreamEventType.opened:
-          networkEvent.streamStarted = StreamStartedEvent()
-            ..streamId = event.streamId;
+          networkEvent.streamStarted = StreamStartedEvent()..streamId = event.streamId;
           break;
         case StreamEventType.closed:
           networkEvent.streamEnded = StreamEndedEvent()
@@ -158,10 +154,9 @@ class IpfsNodeNetworkEvents {
             ..dataSize = event.dataSize;
           break;
         case 'circuit_relay_data_received':
-          networkEvent.circuitRelayDataReceived =
-              CircuitRelayDataReceivedEvent()
-                ..relayAddress = event.relayAddress
-                ..dataSize = event.dataSize;
+          networkEvent.circuitRelayDataReceived = CircuitRelayDataReceivedEvent()
+            ..relayAddress = event.relayAddress
+            ..dataSize = event.dataSize;
           break;
         case 'circuit_relay_data_sent':
           networkEvent.circuitRelayDataSent = CircuitRelayDataSentEvent()

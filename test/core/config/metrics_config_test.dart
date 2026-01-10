@@ -24,11 +24,11 @@ void main() {
         enablePrometheusExport: true,
         prometheusEndpoint: '/stats',
       );
-      
+
       final json = config.toJson();
       expect(json['enabled'], isFalse);
       expect(json['collectionIntervalSeconds'], equals(30));
-      
+
       final config2 = MetricsConfig.fromJson(json);
       expect(config2.enabled, isFalse);
       expect(config2.collectionIntervalSeconds, equals(30));

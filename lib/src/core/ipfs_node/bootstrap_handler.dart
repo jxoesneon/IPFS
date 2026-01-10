@@ -10,11 +10,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 class BootstrapHandler {
   /// Creates a bootstrap handler with the given config and network handler.
   BootstrapHandler(this._config, this._networkHandler) {
-    _logger = Logger(
-      'BootstrapHandler',
-      debug: _config.debug,
-      verbose: _config.verboseLogging,
-    );
+    _logger = Logger('BootstrapHandler', debug: _config.debug, verbose: _config.verboseLogging);
     _logger.debug('Creating new BootstrapHandler instance');
   }
   final IPFSConfig _config;
@@ -90,9 +86,7 @@ class BootstrapHandler {
 
     for (final peerAddress in _config.network.bootstrapPeers) {
       try {
-        _logger.verbose(
-          'Attempting to connect to bootstrap peer: $peerAddress',
-        );
+        _logger.verbose('Attempting to connect to bootstrap peer: $peerAddress');
 
         // Create peer instance from multiaddr
         final peer = await Peer.fromMultiaddr(peerAddress);
@@ -109,11 +103,7 @@ class BootstrapHandler {
         _connectedBootstrapPeers.add(peer);
         _logger.debug('Successfully connected to bootstrap peer: $peerAddress');
       } catch (e, stackTrace) {
-        _logger.error(
-          'Failed to connect to bootstrap peer: $peerAddress',
-          e,
-          stackTrace,
-        );
+        _logger.error('Failed to connect to bootstrap peer: $peerAddress', e, stackTrace);
       }
     }
   }

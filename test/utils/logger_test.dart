@@ -74,11 +74,11 @@ void main() {
     test('debug messages only logged when enabled', () {
       var logged = false;
       const debugEnabled = true;
-      
+
       if (debugEnabled) {
         logged = true;
       }
-      
+
       expect(logged, isTrue);
     });
   });

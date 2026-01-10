@@ -7,11 +7,7 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 /// Used by [BlockStoreOperations] for type-safe results.
 class BlockOperationResponse<T> {
   /// Creates a response with status, message, and optional data.
-  const BlockOperationResponse({
-    required this.success,
-    required this.message,
-    this.data,
-  });
+  const BlockOperationResponse({required this.success, required this.message, this.data});
 
   /// Creates a success response with optional data.
   factory BlockOperationResponse.success(String message, [T? data]) {

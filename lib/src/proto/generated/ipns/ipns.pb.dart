@@ -51,25 +51,19 @@ class IpnsEntry extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'IpnsEntry',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'IpnsEntry',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.ipns'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(
-        1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
     ..aE<IpnsEntry_ValidityType>(3, _omitFieldNames ? '' : 'validityType',
         protoName: 'validityType', enumValues: IpnsEntry_ValidityType.values)
-    ..a<$core.List<$core.int>>(
-        4, _omitFieldNames ? '' : 'validity', $pb.PbFieldType.OY)
-    ..a<$fixnum.Int64>(
-        5, _omitFieldNames ? '' : 'sequence', $pb.PbFieldType.OU6,
+    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'validity', $pb.PbFieldType.OY)
+    ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'sequence', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'ttl', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$core.List<$core.int>>(
-        7, _omitFieldNames ? '' : 'pubKey', $pb.PbFieldType.OY,
+    ..a<$core.List<$core.int>>(7, _omitFieldNames ? '' : 'pubKey', $pb.PbFieldType.OY,
         protoName: 'pubKey')
     ..hasRequiredFields = false;
 
@@ -155,7 +149,5 @@ class IpnsEntry extends $pb.GeneratedMessage {
   void clearPubKey() => $_clearField(7);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

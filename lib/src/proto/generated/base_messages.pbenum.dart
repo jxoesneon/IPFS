@@ -28,8 +28,7 @@ class IPFSMessage_MessageType extends $pb.ProtobufEnum {
   static const IPFSMessage_MessageType PING =
       IPFSMessage_MessageType._(5, _omitEnumNames ? '' : 'PING');
 
-  static const $core.List<IPFSMessage_MessageType> values =
-      <IPFSMessage_MessageType>[
+  static const $core.List<IPFSMessage_MessageType> values = <IPFSMessage_MessageType>[
     UNKNOWN,
     DHT,
     BITSWAP,
@@ -46,5 +45,4 @@ class IPFSMessage_MessageType extends $pb.ProtobufEnum {
   const IPFSMessage_MessageType._(super.value, super.name);
 }
 
-const $core.bool _omitEnumNames =
-    $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

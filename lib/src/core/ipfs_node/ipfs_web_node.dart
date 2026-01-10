@@ -80,10 +80,7 @@ class IPFSWebNode {
     _pubsub = PubSubClient(_router, _router.peerID);
 
     // Security & IPNS
-    _securityManager = SecurityManagerWeb(
-      _config.security,
-      MetricsCollector(_config),
-    );
+    _securityManager = SecurityManagerWeb(_config.security, MetricsCollector(_config));
 
     final delegateUrl = _config.network.delegatedRoutingEndpoint;
     final IDHTHandler dht;
@@ -127,12 +124,7 @@ class IPFSWebNode {
   /// Adds data and returns its CID.
   Future<CID> add(Uint8List data) async {
     // Create a CID using the fromContent factory
-    final cid = await CID.fromContent(
-      data,
-      codec: 'raw',
-      hashType: 'sha2-256',
-      version: 1,
-    );
+    final cid = await CID.fromContent(data, codec: 'raw', hashType: 'sha2-256', version: 1);
 
     // Store via BlockStore (which handles platform storage)
     // We create a Block object

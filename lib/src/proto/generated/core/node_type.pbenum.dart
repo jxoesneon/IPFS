@@ -47,13 +47,11 @@ class NodeTypeProto extends $pb.ProtobufEnum {
     NODE_TYPE_ARCHIVAL,
   ];
 
-  static final $core.List<NodeTypeProto?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 8);
+  static final $core.List<NodeTypeProto?> _byValue = $pb.ProtobufEnum.$_initByValueList(values, 8);
   static NodeTypeProto? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const NodeTypeProto._(super.value, super.name);
 }
 
-const $core.bool _omitEnumNames =
-    $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

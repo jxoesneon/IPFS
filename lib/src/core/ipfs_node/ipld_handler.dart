@@ -28,11 +28,7 @@ import 'package:fixnum/fixnum.dart';
 class IPLDHandler {
   /// Creates an IPLD handler with config and blockstore.
   IPLDHandler(this._config, this._blockStore) {
-    _logger = Logger(
-      'IPLDHandler',
-      debug: _config.debug,
-      verbose: _config.verboseLogging,
-    );
+    _logger = Logger('IPLDHandler', debug: _config.debug, verbose: _config.verboseLogging);
   }
   final IPFSConfig _config;
   final BlockStore _blockStore;
@@ -40,11 +36,7 @@ class IPLDHandler {
   late final Logger _logger;
 
   /// Puts a value into the blockstore
-  Future<Block> put(
-    dynamic value, {
-    String codec = 'dag-cbor',
-    String? schemaType,
-  }) async {
+  Future<Block> put(dynamic value, {String codec = 'dag-cbor', String? schemaType}) async {
     try {
       final ipldNode = _toIPLDNode(value);
 
@@ -75,10 +67,7 @@ class IPLDHandler {
   Future<dynamic> get(CID cid) async {
     try {
       final block = await _blockStore.getBlock(cid.toString());
-      return await _decodeData(
-        Uint8List.fromList(block.block.data),
-        cid.codec ?? 'raw',
-      );
+      return await _decodeData(Uint8List.fromList(block.block.data), cid.codec ?? 'raw');
     } catch (e) {
       _logger.error('Failed to get IPLD data', e);
       rethrow;
@@ -320,17 +309,11 @@ class IPLDHandler {
 
   /// Gets the status of the IPLD handler
   Future<Map<String, dynamic>> getStatus() async {
-    return {
-      'supported_codecs': EncodingUtils.supportedCodecs,
-      'enabled': _config.enableIPLD,
-    };
+    return {'supported_codecs': EncodingUtils.supportedCodecs, 'enabled': _config.enableIPLD};
   }
 
   /// Executes a selector query on an IPLD node
-  Future<List<dynamic>> executeSelector(
-    CID rootCid,
-    IPLDSelector selector,
-  ) async {
+  Future<List<dynamic>> executeSelector(CID rootCid, IPLDSelector selector) async {
     final results = <dynamic>[];
     final visited = <String>{};
 
@@ -353,8 +336,7 @@ class IPLDHandler {
         case SelectorType.explore:
           if (currentSelector.fieldPath != null) {
             final value = _resolveFieldPath(node, currentSelector.fieldPath!);
-            if (value != null &&
-                currentSelector.subSelectors?.isNotEmpty == true) {
+            if (value != null && currentSelector.subSelectors?.isNotEmpty == true) {
               if (value is String && _isCIDLink(value)) {
                 final linkedCid = await _resolveCIDLink(value);
                 await traverse(linkedCid, currentSelector.subSelectors!.first);
@@ -370,8 +352,7 @@ class IPLDHandler {
           break;
 
         case SelectorType.recursive:
-          if (currentSelector.maxDepth == null ||
-              visited.length <= currentSelector.maxDepth!) {
+          if (currentSelector.maxDepth == null || visited.length <= currentSelector.maxDepth!) {
             if (currentSelector.subSelectors?.isNotEmpty == true) {
               final subSelector = currentSelector.subSelectors!.first;
               if (_matchesCriteria(node, subSelector.criteria)) {
@@ -380,10 +361,7 @@ class IPLDHandler {
             }
 
             if (!(currentSelector.stopAtLink ?? false)) {
-              await _traverseLinks(
-                node,
-                (link) => traverse(link, currentSelector),
-              );
+              await _traverseLinks(node, (link) => traverse(link, currentSelector));
             }
           }
           break;
@@ -400,10 +378,7 @@ class IPLDHandler {
               ) ??
               false) {
             results.add(node);
-            await _traverseLinks(
-              node,
-              (link) => traverse(link, currentSelector),
-            );
+            await _traverseLinks(node, (link) => traverse(link, currentSelector));
           }
           break;
       }
@@ -413,11 +388,7 @@ class IPLDHandler {
     return results;
   }
 
-  Future<void> _traverseLinks(
-    dynamic node,
-    Future<void> Function(CID) callback,
-  ) async {
-
+  Future<void> _traverseLinks(dynamic node, Future<void> Function(CID) callback) async {
     if (node is IPLDNode) {
       if (node.kind == Kind.MAP) {
         for (final entry in node.mapValue.entries) {
@@ -427,14 +398,14 @@ class IPLDHandler {
             final cid = CID.v1(link.codec, multihash);
             await callback(cid);
           } else if (entry.value.kind == Kind.MAP) {
-             final linkCid = _tryGetCidFromMap(entry.value);
-             if (linkCid != null) {
-               await callback(linkCid);
-             } else {
-               await _traverseLinks(entry.value, callback);
-             }
+            final linkCid = _tryGetCidFromMap(entry.value);
+            if (linkCid != null) {
+              await callback(linkCid);
+            } else {
+              await _traverseLinks(entry.value, callback);
+            }
           } else if (entry.value.kind == Kind.LIST) {
-             await _traverseLinks(entry.value, callback);
+            await _traverseLinks(entry.value, callback);
           }
         }
       } else if (node.kind == Kind.LIST) {
@@ -445,12 +416,12 @@ class IPLDHandler {
             final cid = CID.v1(link.codec, multihash);
             await callback(cid);
           } else if (value.kind == Kind.MAP) {
-             final linkCid = _tryGetCidFromMap(value);
-             if (linkCid != null) {
-               await callback(linkCid);
-             } else {
-               await _traverseLinks(value, callback);
-             }
+            final linkCid = _tryGetCidFromMap(value);
+            if (linkCid != null) {
+              await callback(linkCid);
+            } else {
+              await _traverseLinks(value, callback);
+            }
           } else if (value.kind == Kind.LIST) {
             await _traverseLinks(value, callback);
           }
@@ -476,33 +447,35 @@ class IPLDHandler {
     for (final entry in node.mapValue.entries) {
       if (entry.key == '/') {
         if (entry.value.kind == Kind.STRING) {
-           try {
-             return CID.decode(entry.value.stringValue);
-           } catch (_) { return null; }
+          try {
+            return CID.decode(entry.value.stringValue);
+          } catch (_) {
+            return null;
+          }
         } else if (entry.value.kind == Kind.BYTES) {
-           try {
-             return CID.fromBytes(Uint8List.fromList(entry.value.bytesValue));
-           } catch (_) {
-             // Fallback: If bytes are raw multihash, assume DAG-CBOR (common in this context) or RAW?
-             // Or maybe it's CIDv0 (dag-pb)? 
-             // If starting with 0x12 0x20 (sha2-256), could be v0.
-             // But verify length.
-             try {
-                final mh = multihash_lib.Multihash.decode(Uint8List.fromList(entry.value.bytesValue));
-                // If effective CIDv0?
-                if (mh.code == 0x12 && mh.digest.length == 32) {
-                   // Typically this implies CIDv0 (dag-pb). 
-                   // However, in our environment, we are seeing dag-cbor CIDs being encoded as bare multihashes.
-                   // Defaulting to dag-pb breaks traversing dag-cbor.
-                   // Defaulting to dag-cbor allows traversal.
-                   return CID.v1('dag-cbor', mh);
-                }
-                // Else assume dag-cbor for now (as per test case)
+          try {
+            return CID.fromBytes(Uint8List.fromList(entry.value.bytesValue));
+          } catch (_) {
+            // Fallback: If bytes are raw multihash, assume DAG-CBOR (common in this context) or RAW?
+            // Or maybe it's CIDv0 (dag-pb)?
+            // If starting with 0x12 0x20 (sha2-256), could be v0.
+            // But verify length.
+            try {
+              final mh = multihash_lib.Multihash.decode(Uint8List.fromList(entry.value.bytesValue));
+              // If effective CIDv0?
+              if (mh.code == 0x12 && mh.digest.length == 32) {
+                // Typically this implies CIDv0 (dag-pb).
+                // However, in our environment, we are seeing dag-cbor CIDs being encoded as bare multihashes.
+                // Defaulting to dag-pb breaks traversing dag-cbor.
+                // Defaulting to dag-cbor allows traversal.
                 return CID.v1('dag-cbor', mh);
-             } catch (e) {
-                return null;
-             }
-           }
+              }
+              // Else assume dag-cbor for now (as per test case)
+              return CID.v1('dag-cbor', mh);
+            } catch (e) {
+              return null;
+            }
+          }
         }
       }
     }
@@ -529,27 +502,27 @@ class IPLDHandler {
       if (current == null) return null;
       if (current is IPLDNode) {
         if (current.kind == Kind.MAP) {
-           final entry = current.mapValue.entries.firstWhere(
-             (e) => e.key == part,
-             orElse: () => MapEntry()..key = '', // Dummy if not found
-           );
-           if (entry.key == part) {
-             current = entry.value; // This is IPLDNode
-             // Wait, result of resolveFieldPath is dynamic.
-             // If we return IPLDNode, _matchesValue handles dynamic value.
-             // _matchesValue does `value is String`, `value is num`.
-             // So if we return IPLDNode, _matchesValue fails unless we unwrap.
-             // We should unwrap IPLDNode to native type for matching?
-             // Or update _matchesValue to handle IPLDNode.
-             // Let's Unwrap here for convenience if it's a leaf?
-             // But recursive structure might need node.
-             // _matchesValue uses == criterion.
-             // If criterion is 25, value should be 25.
-             // IPLDNode(int=25). We need to unwrap.
-             current = _unwrapIPLDNode(current);
-           } else {
-             return null;
-           }
+          final entry = current.mapValue.entries.firstWhere(
+            (e) => e.key == part,
+            orElse: () => MapEntry()..key = '', // Dummy if not found
+          );
+          if (entry.key == part) {
+            current = entry.value; // This is IPLDNode
+            // Wait, result of resolveFieldPath is dynamic.
+            // If we return IPLDNode, _matchesValue handles dynamic value.
+            // _matchesValue does `value is String`, `value is num`.
+            // So if we return IPLDNode, _matchesValue fails unless we unwrap.
+            // We should unwrap IPLDNode to native type for matching?
+            // Or update _matchesValue to handle IPLDNode.
+            // Let's Unwrap here for convenience if it's a leaf?
+            // But recursive structure might need node.
+            // _matchesValue uses == criterion.
+            // If criterion is 25, value should be 25.
+            // IPLDNode(int=25). We need to unwrap.
+            current = _unwrapIPLDNode(current);
+          } else {
+            return null;
+          }
         } else {
           return null;
         }
@@ -578,28 +551,37 @@ class IPLDHandler {
 
   dynamic _unwrapIPLDNode(IPLDNode node) {
     switch (node.kind) {
-      case Kind.BOOL: return node.boolValue;
-      case Kind.INTEGER: return node.intValue.toInt();
-      case Kind.FLOAT: return node.floatValue;
-      case Kind.STRING: return node.stringValue;
-      case Kind.BYTES: return node.bytesValue;
-      case Kind.LINK: 
-         // Return CID string or CID object?
-         // _isCIDLink checks string starting with ipfs:// etc.
-         // Or just return the Link object?
-         // Let's return the string representation of CID for regex matching or check.
-         // Actually, _matchesCriteria might check for link?
-         final link = node.linkValue;
-         final multihash = multihash_lib.Multihash.decode(Uint8List.fromList(link.multihash));
-         return CID.v1(link.codec, multihash).toString();
-      case Kind.NULL: return null;
-      case Kind.MAP: 
-         final cid = _tryGetCidFromMap(node);
-         if (cid != null) return cid.toString();
-         return node; 
-      case Kind.LIST: return node;
-      case Kind.BIG_INT: return BigInt.parse(node.bigIntValue.toString()); // Approx
-      default: return node;
+      case Kind.BOOL:
+        return node.boolValue;
+      case Kind.INTEGER:
+        return node.intValue.toInt();
+      case Kind.FLOAT:
+        return node.floatValue;
+      case Kind.STRING:
+        return node.stringValue;
+      case Kind.BYTES:
+        return node.bytesValue;
+      case Kind.LINK:
+        // Return CID string or CID object?
+        // _isCIDLink checks string starting with ipfs:// etc.
+        // Or just return the Link object?
+        // Let's return the string representation of CID for regex matching or check.
+        // Actually, _matchesCriteria might check for link?
+        final link = node.linkValue;
+        final multihash = multihash_lib.Multihash.decode(Uint8List.fromList(link.multihash));
+        return CID.v1(link.codec, multihash).toString();
+      case Kind.NULL:
+        return null;
+      case Kind.MAP:
+        final cid = _tryGetCidFromMap(node);
+        if (cid != null) return cid.toString();
+        return node;
+      case Kind.LIST:
+        return node;
+      case Kind.BIG_INT:
+        return BigInt.parse(node.bigIntValue.toString()); // Approx
+      default:
+        return node;
     }
   }
 
@@ -650,8 +632,7 @@ class IPLDHandler {
       node.bytesValue = value;
     } else if (value is List) {
       node.kind = Kind.LIST;
-      node.listValue = IPLDList()
-        ..values.addAll(value.map((e) => _toIPLDNode(e)));
+      node.listValue = IPLDList()..values.addAll(value.map((e) => _toIPLDNode(e)));
     } else if (value is Map) {
       node.kind = Kind.MAP;
       node.mapValue = IPLDMap()
@@ -696,29 +677,18 @@ class IPLDHandler {
       throw IPLDEncodingError('JOSE encoding requires a map structure');
     }
 
-    final header = node.mapValue.entries
-        .firstWhere((e) => e.key == 'header')
-        .value;
+    final header = node.mapValue.entries.firstWhere((e) => e.key == 'header').value;
 
-    final algorithm = header.mapValue.entries
-        .firstWhere((e) => e.key == 'alg')
-        .value
-        .stringValue;
+    final algorithm = header.mapValue.entries.firstWhere((e) => e.key == 'alg').value.stringValue;
 
     switch (algorithm) {
       case 'JWS':
-        return await JoseCoseHandler.encodeJWS(
-          node,
-          _config.keystore.privateKey,
-        );
+        return await JoseCoseHandler.encodeJWS(node, _config.keystore.privateKey);
       case 'JWE':
         final recipientKey = await _getRecipientKey(node);
         return await JoseCoseHandler.encodeJWE(node, recipientKey);
       case 'COSE':
-        return await JoseCoseHandler.encodeCOSE(
-          node,
-          _config.keystore.privateKey,
-        );
+        return await JoseCoseHandler.encodeCOSE(node, _config.keystore.privateKey);
       default:
         throw IPLDEncodingError('Unsupported JOSE algorithm: $algorithm');
     }
@@ -727,9 +697,7 @@ class IPLDHandler {
   Future<IPLDNode> _decodeJose(Uint8List data) async {
     final joseData = json.decode(utf8.decode(data));
 
-    final header = json.decode(
-      utf8.decode(base64Url.decode(joseData['protected'] as String)),
-    );
+    final header = json.decode(utf8.decode(base64Url.decode(joseData['protected'] as String)));
     final payload = base64Url.decode(joseData['payload'] as String);
 
     return IPLDNode()
@@ -762,12 +730,8 @@ class IPLDHandler {
   }
 
   Future<List<int>> _getRecipientKey(IPLDNode node) async {
-    final header = node.mapValue.entries
-        .firstWhere((e) => e.key == 'header')
-        .value;
-    final recipientEntry = header.mapValue.entries.firstWhere(
-      (e) => e.key == 'recipient',
-    );
+    final header = node.mapValue.entries.firstWhere((e) => e.key == 'header').value;
+    final recipientEntry = header.mapValue.entries.firstWhere((e) => e.key == 'recipient');
 
     if (recipientEntry.value.kind != Kind.BYTES) {
       throw IPLDEncodingError('Recipient key must be bytes');
@@ -819,9 +783,7 @@ class IPLDHandler {
     if (node.kind == Kind.MAP) {
       for (final entry in node.mapValue.entries) {
         if (entry.value.kind == Kind.LINK) {
-          final linkedBlock = await _blockStore.getBlock(
-            entry.value.linkValue.toString(),
-          );
+          final linkedBlock = await _blockStore.getBlock(entry.value.linkValue.toString());
           final linkedNode = await _decodeData(
             Uint8List.fromList(linkedBlock.block.data),
             entry.value.linkValue.codec,
@@ -906,9 +868,7 @@ class IPLDHandler {
         if (link.name == part) {
           final block = await _blockStore.getBlock(link.cid.toString());
 
-          current = MerkleDAGNode.fromBytes(
-            Uint8List.fromList(block.block.data),
-          );
+          current = MerkleDAGNode.fromBytes(Uint8List.fromList(block.block.data));
           found = true;
           break;
         }
@@ -927,8 +887,7 @@ class IPLDHandler {
     final unixFsData = Data.fromBuffer(node.data);
 
     // Verify it's a directory
-    if (unixFsData.type != Data_DataType.Directory &&
-        unixFsData.type != Data_DataType.HAMTShard) {
+    if (unixFsData.type != Data_DataType.Directory && unixFsData.type != Data_DataType.HAMTShard) {
       throw IPLDPathError('Not a directory');
     }
 
@@ -941,9 +900,7 @@ class IPLDHandler {
         if (link.name == part) {
           final block = await _blockStore.getBlock(link.cid.toString());
 
-          current = MerkleDAGNode.fromBytes(
-            Uint8List.fromList(block.block.data),
-          );
+          current = MerkleDAGNode.fromBytes(Uint8List.fromList(block.block.data));
 
           // Verify child node
           if (_isUnixFSNode(current)) {
@@ -992,9 +949,7 @@ class IPLDHandler {
             // Construct CID
             final cid = CID.v1(
               link.codec,
-              multihash_lib.Multihash.decode(
-                Uint8List.fromList(link.multihash),
-              ),
+              multihash_lib.Multihash.decode(Uint8List.fromList(link.multihash)),
             );
             final resolvedNode = await get(cid);
             return (resolvedNode, cid);
@@ -1004,9 +959,7 @@ class IPLDHandler {
           // Returning (value, rootCid) or similar.
           // _resolveIPLDPath handles null CID? No it expects CID.
           // Computed CID for the value node.
-          final cid = await CID.computeForData(
-            Uint8List.fromList(utf8.encode(value.toString())),
-          );
+          final cid = await CID.computeForData(Uint8List.fromList(utf8.encode(value.toString())));
           return (value, cid);
         }
 
@@ -1025,8 +978,7 @@ class IPLDHandler {
                 orElse: () => MapEntry(),
               );
 
-              if (nameEntry.key == 'Name' &&
-                  nameEntry.value.stringValue == segment) {
+              if (nameEntry.key == 'Name' && nameEntry.value.stringValue == segment) {
                 // Match found! Get Hash/Cid
                 final hashEntry = linkNode.mapValue.entries.firstWhere(
                   (e) => e.key == 'Hash',
@@ -1042,14 +994,10 @@ class IPLDHandler {
                     final l = hashEntry.value.linkValue;
                     cid = CID.v1(
                       l.codec,
-                      multihash_lib.Multihash.decode(
-                        Uint8List.fromList(l.multihash),
-                      ),
+                      multihash_lib.Multihash.decode(Uint8List.fromList(l.multihash)),
                     );
                   } else if (hashEntry.value.kind == Kind.BYTES) {
-                    cid = CID.fromBytes(
-                      Uint8List.fromList(hashEntry.value.bytesValue),
-                    );
+                    cid = CID.fromBytes(Uint8List.fromList(hashEntry.value.bytesValue));
                   } else {
                     continue;
                   }
@@ -1063,24 +1011,18 @@ class IPLDHandler {
         }
       } else if (node.kind == Kind.LIST) {
         final index = int.tryParse(segment);
-        if (index != null &&
-            index >= 0 &&
-            index < node.listValue.values.length) {
+        if (index != null && index >= 0 && index < node.listValue.values.length) {
           final value = node.listValue.values[index];
           if (value.kind == Kind.LINK) {
             final link = value.linkValue;
             final cid = CID.v1(
               link.codec,
-              multihash_lib.Multihash.decode(
-                Uint8List.fromList(link.multihash),
-              ),
+              multihash_lib.Multihash.decode(Uint8List.fromList(link.multihash)),
             );
             final resolvedNode = await get(cid);
             return (resolvedNode, cid);
           }
-          final cid = await CID.computeForData(
-            Uint8List.fromList(utf8.encode(value.toString())),
-          );
+          final cid = await CID.computeForData(Uint8List.fromList(utf8.encode(value.toString())));
           return (value, cid);
         }
       }
@@ -1103,10 +1045,7 @@ class IPLDHandler {
         return (resolvedNode, cid);
       }
       // For non-link values, create a dummy CID
-      return (
-        value,
-        await CID.computeForData(utf8.encode(value.toString()), format: 'raw'),
-      );
+      return (value, await CID.computeForData(utf8.encode(value.toString()), format: 'raw'));
     }
 
     if (node is List) {
@@ -1122,10 +1061,7 @@ class IPLDHandler {
         return (resolvedNode, cid);
       }
       // For non-link array values, create a dummy CID
-      return (
-        value,
-        await CID.computeForData(utf8.encode(value.toString()), format: 'raw'),
-      );
+      return (value, await CID.computeForData(utf8.encode(value.toString()), format: 'raw'));
     }
 
     if (node is MerkleDAGNode) {
@@ -1224,17 +1160,12 @@ class IPLDHandler {
     }
 
     // For non-MerkleDAG nodes, return basic metadata
-    return IPLDMetadata(
-      size: node.toString().length,
-      contentType: _inferContentType(node),
-    );
+    return IPLDMetadata(size: node.toString().length, contentType: _inferContentType(node));
   }
 
   String? _inferContentType(dynamic node) {
     if (node is MerkleDAGNode) {
-      return _isUnixFSNode(node)
-          ? 'application/ipfs-unixfs'
-          : 'application/dag-pb';
+      return _isUnixFSNode(node) ? 'application/ipfs-unixfs' : 'application/dag-pb';
     } else if (node is Map) {
       return 'application/dag-cbor';
     }

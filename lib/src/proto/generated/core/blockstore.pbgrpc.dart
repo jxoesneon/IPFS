@@ -15,8 +15,7 @@ import 'dart:core' as $core;
 
 import 'package:grpc/service_api.dart' as $grpc;
 import 'package:protobuf/protobuf.dart' as $pb;
-import 'package:dart_ipfs/src/proto/generated/google/protobuf/empty.pb.dart'
-    as $3;
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/empty.pb.dart' as $3;
 
 import 'block.pb.dart' as $0;
 import 'blockstore.pb.dart' as $1;
@@ -62,28 +61,24 @@ class BlockStoreServiceClient extends $grpc.Client {
     $3.Empty request, {
     $grpc.CallOptions? options,
   }) {
-    return $createStreamingCall(
-        _$getAllBlocks, $async.Stream.fromIterable([request]),
+    return $createStreamingCall(_$getAllBlocks, $async.Stream.fromIterable([request]),
         options: options);
   }
 
   // method descriptors
 
-  static final _$addBlock =
-      $grpc.ClientMethod<$0.BlockProto, $1.AddBlockResponse>(
-          '/ipfs.core.data_structures.BlockStoreService/AddBlock',
-          ($0.BlockProto value) => value.writeToBuffer(),
-          $1.AddBlockResponse.fromBuffer);
-  static final _$getBlock =
-      $grpc.ClientMethod<$2.IPFSCIDProto, $1.GetBlockResponse>(
-          '/ipfs.core.data_structures.BlockStoreService/GetBlock',
-          ($2.IPFSCIDProto value) => value.writeToBuffer(),
-          $1.GetBlockResponse.fromBuffer);
-  static final _$removeBlock =
-      $grpc.ClientMethod<$2.IPFSCIDProto, $1.RemoveBlockResponse>(
-          '/ipfs.core.data_structures.BlockStoreService/RemoveBlock',
-          ($2.IPFSCIDProto value) => value.writeToBuffer(),
-          $1.RemoveBlockResponse.fromBuffer);
+  static final _$addBlock = $grpc.ClientMethod<$0.BlockProto, $1.AddBlockResponse>(
+      '/ipfs.core.data_structures.BlockStoreService/AddBlock',
+      ($0.BlockProto value) => value.writeToBuffer(),
+      $1.AddBlockResponse.fromBuffer);
+  static final _$getBlock = $grpc.ClientMethod<$2.IPFSCIDProto, $1.GetBlockResponse>(
+      '/ipfs.core.data_structures.BlockStoreService/GetBlock',
+      ($2.IPFSCIDProto value) => value.writeToBuffer(),
+      $1.GetBlockResponse.fromBuffer);
+  static final _$removeBlock = $grpc.ClientMethod<$2.IPFSCIDProto, $1.RemoveBlockResponse>(
+      '/ipfs.core.data_structures.BlockStoreService/RemoveBlock',
+      ($2.IPFSCIDProto value) => value.writeToBuffer(),
+      $1.RemoveBlockResponse.fromBuffer);
   static final _$getAllBlocks = $grpc.ClientMethod<$3.Empty, $0.BlockProto>(
       '/ipfs.core.data_structures.BlockStoreService/GetAllBlocks',
       ($3.Empty value) => value.writeToBuffer(),
@@ -129,16 +124,14 @@ abstract class BlockStoreServiceBase extends $grpc.Service {
     return addBlock($call, await $request);
   }
 
-  $async.Future<$1.AddBlockResponse> addBlock(
-      $grpc.ServiceCall call, $0.BlockProto request);
+  $async.Future<$1.AddBlockResponse> addBlock($grpc.ServiceCall call, $0.BlockProto request);
 
   $async.Future<$1.GetBlockResponse> getBlock_Pre(
       $grpc.ServiceCall $call, $async.Future<$2.IPFSCIDProto> $request) async {
     return getBlock($call, await $request);
   }
 
-  $async.Future<$1.GetBlockResponse> getBlock(
-      $grpc.ServiceCall call, $2.IPFSCIDProto request);
+  $async.Future<$1.GetBlockResponse> getBlock($grpc.ServiceCall call, $2.IPFSCIDProto request);
 
   $async.Future<$1.RemoveBlockResponse> removeBlock_Pre(
       $grpc.ServiceCall $call, $async.Future<$2.IPFSCIDProto> $request) async {
@@ -153,6 +146,5 @@ abstract class BlockStoreServiceBase extends $grpc.Service {
     yield* getAllBlocks($call, await $request);
   }
 
-  $async.Stream<$0.BlockProto> getAllBlocks(
-      $grpc.ServiceCall call, $3.Empty request);
+  $async.Stream<$0.BlockProto> getAllBlocks($grpc.ServiceCall call, $3.Empty request);
 }

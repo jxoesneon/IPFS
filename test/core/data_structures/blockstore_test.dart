@@ -68,9 +68,15 @@ void main() {
     });
 
     test('getAllBlocks and status', () async {
-      final b1 = Block(cid: CID.computeForDataSync(Uint8List.fromList([1])), data: Uint8List.fromList([1]));
-      final b2 = Block(cid: CID.computeForDataSync(Uint8List.fromList([2])), data: Uint8List.fromList([2]));
-      
+      final b1 = Block(
+        cid: CID.computeForDataSync(Uint8List.fromList([1])),
+        data: Uint8List.fromList([1]),
+      );
+      final b2 = Block(
+        cid: CID.computeForDataSync(Uint8List.fromList([2])),
+        data: Uint8List.fromList([2]),
+      );
+
       await store.putBlock(b1);
       await store.putBlock(b2);
 
@@ -86,7 +92,7 @@ void main() {
       final data = Uint8List.fromList([100]);
       final block = Block(cid: CID.computeForDataSync(data), data: data);
       await store.putBlock(block);
-      
+
       // Pin via pinManager
       final cidProto = block.cid.toProto();
       // Need to import PinTypeProto

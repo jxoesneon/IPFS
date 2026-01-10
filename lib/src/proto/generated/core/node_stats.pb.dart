@@ -44,10 +44,8 @@ class NodeStats extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'NodeStats',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NodeStats',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'numBlocks')
     ..aInt64(2, _omitFieldNames ? '' : 'datastoreSize')
@@ -125,7 +123,5 @@ class NodeStats extends $pb.GeneratedMessage {
   void clearBandwidthReceived() => $_clearField(5);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

@@ -15,11 +15,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 class BitswapHandler {
   /// Creates a new [BitswapHandler] with the given [config], [_blockStore], and [_router].
   BitswapHandler(IPFSConfig config, this._blockStore, this._router)
-    : _logger = Logger(
-        'BitswapHandler',
-        debug: config.debug,
-        verbose: config.verboseLogging,
-      ) {
+    : _logger = Logger('BitswapHandler', debug: config.debug, verbose: config.verboseLogging) {
     _logger.info('Initializing BitswapHandler');
     _setupHandlers();
   }
@@ -95,8 +91,8 @@ class BitswapHandler {
   Future<void> _handleMessage(message.Message message) async {
     if (!_running) return;
 
-    final fromPeer = message
-        .from; // Note: 'from' field is transient and set by packet handler if passed?
+    final fromPeer =
+        message.from; // Note: 'from' field is transient and set by packet handler if passed?
     // Actually packet handler didn't set it in my previous `message.dart`.
     // I should check `_handlePacket`.
 
@@ -133,10 +129,7 @@ class BitswapHandler {
         final ledger = _ledgerManager.getLedger(fromPeer);
         // Update received bytes in ledger
         ledger.addReceivedBytes(
-          message
-              .getBlocks()
-              .map((b) => b.data.length)
-              .fold<int>(0, (sum, size) => sum + size),
+          message.getBlocks().map((b) => b.data.length).fold<int>(0, (sum, size) => sum + size),
         );
         _updateBandwidthStats();
       }
@@ -160,9 +153,7 @@ class BitswapHandler {
 
     // Sort entries by priority before processing
     final sortedEntries = wantlist.entries.entries.toList()
-      ..sort(
-        (a, b) => b.value.priority.compareTo(a.value.priority),
-      ); // Higher priority first
+      ..sort((a, b) => b.value.priority.compareTo(a.value.priority)); // Higher priority first
 
     final outgoingMessage = message.Message();
     outgoingMessage.from = _router.peerID.toString();
@@ -184,16 +175,10 @@ class BitswapHandler {
         });
 
         if (found) {
-          outgoingMessage.addBlockPresence(
-            cidStr,
-            message.BlockPresenceType.have,
-          );
+          outgoingMessage.addBlockPresence(cidStr, message.BlockPresenceType.have);
           hasContent = true;
         } else if (wantEntry.sendDontHave) {
-          outgoingMessage.addBlockPresence(
-            cidStr,
-            message.BlockPresenceType.dontHave,
-          );
+          outgoingMessage.addBlockPresence(cidStr, message.BlockPresenceType.dontHave);
           hasContent = true;
         }
       } else {
@@ -205,10 +190,7 @@ class BitswapHandler {
           outgoingMessage.addBlock(Block.fromProto(response.block));
           hasContent = true;
         } else if (wantEntry.sendDontHave) {
-          outgoingMessage.addBlockPresence(
-            cidStr,
-            message.BlockPresenceType.dontHave,
-          );
+          outgoingMessage.addBlockPresence(cidStr, message.BlockPresenceType.dontHave);
           hasContent = true;
         }
       }
@@ -232,10 +214,7 @@ class BitswapHandler {
   }
 
   /// Handles incoming block presences (HAVE/DONT_HAVE)
-  void _handleBlockPresences(
-    List<message.BlockPresence> presences,
-    String? fromPeer,
-  ) {
+  void _handleBlockPresences(List<message.BlockPresence> presences, String? fromPeer) {
     if (fromPeer == null) return;
 
     for (final presence in presences) {
@@ -262,9 +241,7 @@ class BitswapHandler {
       // Validate block hash before storing (SEC-002 security fix)
       final isValid = await block.validate();
       if (!isValid) {
-        _logger.warning(
-          'Rejected invalid block: ${block.cid.encode()} - hash mismatch',
-        );
+        _logger.warning('Rejected invalid block: ${block.cid.encode()} - hash mismatch');
         continue;
       }
 
@@ -322,8 +299,7 @@ class BitswapHandler {
           .map(
             (completer) => completer.future.timeout(
               timeout,
-              onTimeout: () =>
-                  throw TimeoutException('Block request timed out'),
+              onTimeout: () => throw TimeoutException('Block request timed out'),
             ),
           )
           .toList();

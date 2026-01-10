@@ -39,10 +39,10 @@ const KademliaTree$json = {
 };
 
 /// Descriptor for `KademliaTree`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List kademliaTreeDescriptor = $convert.base64Decode(
-    'CgxLYWRlbWxpYVRyZWUSQwoKbG9jYWxfbm9kZRgBIAEoCzIkLmlwZnMuZGh0LmthZGVtbGlhX2'
-    '5vZGUuS2FkZW1saWFOb2RlUglsb2NhbE5vZGUSQAoHYnVja2V0cxgCIAMoCzImLmlwZnMuZGh0'
-    'LmthZGVtbGlhX3RyZWUuS2FkZW1saWFCdWNrZXRSB2J1Y2tldHM=');
+final $typed_data.Uint8List kademliaTreeDescriptor = $convert
+    .base64Decode('CgxLYWRlbWxpYVRyZWUSQwoKbG9jYWxfbm9kZRgBIAEoCzIkLmlwZnMuZGh0LmthZGVtbGlhX2'
+        '5vZGUuS2FkZW1saWFOb2RlUglsb2NhbE5vZGUSQAoHYnVja2V0cxgCIAMoCzImLmlwZnMuZGh0'
+        'LmthZGVtbGlhX3RyZWUuS2FkZW1saWFCdWNrZXRSB2J1Y2tldHM=');
 
 @$core.Deprecated('Use kademliaBucketDescriptor instead')
 const KademliaBucket$json = {
@@ -60,6 +60,6 @@ const KademliaBucket$json = {
 };
 
 /// Descriptor for `KademliaBucket`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List kademliaBucketDescriptor = $convert.base64Decode(
-    'Cg5LYWRlbWxpYUJ1Y2tldBI6CgVub2RlcxgBIAMoCzIkLmlwZnMuZGh0LmthZGVtbGlhX25vZG'
-    'UuS2FkZW1saWFOb2RlUgVub2Rlcw==');
+final $typed_data.Uint8List kademliaBucketDescriptor = $convert
+    .base64Decode('Cg5LYWRlbWxpYUJ1Y2tldBI6CgVub2RlcxgBIAMoCzIkLmlwZnMuZGh0LmthZGVtbGlhX25vZG'
+        'UuS2FkZW1saWFOb2RlUgVub2Rlcw==');

@@ -26,8 +26,7 @@ class GraphsyncMessage extends $pb.GeneratedMessage {
     $core.Iterable<GraphsyncRequest>? requests,
     $core.Iterable<GraphsyncResponse>? responses,
     $core.Iterable<Block>? blocks,
-    $core.Iterable<$core.MapEntry<$core.String, $core.List<$core.int>>>?
-        extensions,
+    $core.Iterable<$core.MapEntry<$core.String, $core.List<$core.int>>>? extensions,
   }) {
     final result = create();
     if (requests != null) result.requests.addAll(requests);
@@ -46,8 +45,7 @@ class GraphsyncMessage extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GraphsyncMessage',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GraphsyncMessage',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.graphsync'),
       createEmptyInstance: create)
     ..pPM<GraphsyncRequest>(1, _omitFieldNames ? '' : 'requests',
@@ -55,8 +53,7 @@ class GraphsyncMessage extends $pb.GeneratedMessage {
     ..pPM<GraphsyncResponse>(2, _omitFieldNames ? '' : 'responses',
         subBuilder: GraphsyncResponse.create)
     ..pPM<Block>(3, _omitFieldNames ? '' : 'blocks', subBuilder: Block.create)
-    ..m<$core.String, $core.List<$core.int>>(
-        4, _omitFieldNames ? '' : 'extensions',
+    ..m<$core.String, $core.List<$core.int>>(4, _omitFieldNames ? '' : 'extensions',
         entryClassName: 'GraphsyncMessage.ExtensionsEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OY,
@@ -67,8 +64,7 @@ class GraphsyncMessage extends $pb.GeneratedMessage {
   GraphsyncMessage clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   GraphsyncMessage copyWith(void Function(GraphsyncMessage) updates) =>
-      super.copyWith((message) => updates(message as GraphsyncMessage))
-          as GraphsyncMessage;
+      super.copyWith((message) => updates(message as GraphsyncMessage)) as GraphsyncMessage;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -78,8 +74,8 @@ class GraphsyncMessage extends $pb.GeneratedMessage {
   @$core.override
   GraphsyncMessage createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GraphsyncMessage getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GraphsyncMessage>(create);
+  static GraphsyncMessage getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GraphsyncMessage>(create);
   static GraphsyncMessage? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -102,8 +98,7 @@ class GraphsyncRequest extends $pb.GeneratedMessage {
     $core.List<$core.int>? root,
     $core.List<$core.int>? selector,
     $core.int? priority,
-    $core.Iterable<$core.MapEntry<$core.String, $core.List<$core.int>>>?
-        extensions,
+    $core.Iterable<$core.MapEntry<$core.String, $core.List<$core.int>>>? extensions,
     $core.bool? cancel,
     $core.bool? pause,
     $core.bool? unpause,
@@ -129,18 +124,14 @@ class GraphsyncRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GraphsyncRequest',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GraphsyncRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.graphsync'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'id')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'root', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'selector', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'root', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'selector', $pb.PbFieldType.OY)
     ..aI(4, _omitFieldNames ? '' : 'priority')
-    ..m<$core.String, $core.List<$core.int>>(
-        5, _omitFieldNames ? '' : 'extensions',
+    ..m<$core.String, $core.List<$core.int>>(5, _omitFieldNames ? '' : 'extensions',
         entryClassName: 'GraphsyncRequest.ExtensionsEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OY,
@@ -154,8 +145,7 @@ class GraphsyncRequest extends $pb.GeneratedMessage {
   GraphsyncRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   GraphsyncRequest copyWith(void Function(GraphsyncRequest) updates) =>
-      super.copyWith((message) => updates(message as GraphsyncRequest))
-          as GraphsyncRequest;
+      super.copyWith((message) => updates(message as GraphsyncRequest)) as GraphsyncRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -165,8 +155,8 @@ class GraphsyncRequest extends $pb.GeneratedMessage {
   @$core.override
   GraphsyncRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GraphsyncRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GraphsyncRequest>(create);
+  static GraphsyncRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GraphsyncRequest>(create);
   static GraphsyncRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -241,8 +231,7 @@ class GraphsyncResponse extends $pb.GeneratedMessage {
   factory GraphsyncResponse({
     $core.int? id,
     ResponseStatus? status,
-    $core.Iterable<$core.MapEntry<$core.String, $core.List<$core.int>>>?
-        extensions,
+    $core.Iterable<$core.MapEntry<$core.String, $core.List<$core.int>>>? extensions,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
   }) {
     final result = create();
@@ -262,15 +251,12 @@ class GraphsyncResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GraphsyncResponse',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GraphsyncResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.graphsync'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'id')
-    ..aE<ResponseStatus>(2, _omitFieldNames ? '' : 'status',
-        enumValues: ResponseStatus.values)
-    ..m<$core.String, $core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'extensions',
+    ..aE<ResponseStatus>(2, _omitFieldNames ? '' : 'status', enumValues: ResponseStatus.values)
+    ..m<$core.String, $core.List<$core.int>>(3, _omitFieldNames ? '' : 'extensions',
         entryClassName: 'GraphsyncResponse.ExtensionsEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OY,
@@ -286,8 +272,7 @@ class GraphsyncResponse extends $pb.GeneratedMessage {
   GraphsyncResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   GraphsyncResponse copyWith(void Function(GraphsyncResponse) updates) =>
-      super.copyWith((message) => updates(message as GraphsyncResponse))
-          as GraphsyncResponse;
+      super.copyWith((message) => updates(message as GraphsyncResponse)) as GraphsyncResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -297,8 +282,8 @@ class GraphsyncResponse extends $pb.GeneratedMessage {
   @$core.override
   GraphsyncResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GraphsyncResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GraphsyncResponse>(create);
+  static GraphsyncResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GraphsyncResponse>(create);
   static GraphsyncResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -347,14 +332,11 @@ class Block extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Block',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Block',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.graphsync'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(
-        1, _omitFieldNames ? '' : 'prefix', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'prefix', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -394,7 +376,5 @@ class Block extends $pb.GeneratedMessage {
   void clearData() => $_clearField(2);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

@@ -46,37 +46,34 @@ void main() {
       verifyNever(mockDelegated.findProviders(any));
     });
 
-    test(
-      'findProviders falls back to Delegated Routing if DHT fails',
-      () async {
-        final mockContent = MockContentRouting();
-        final mockDelegated = MockDelegatedRoutingHandler();
+    test('findProviders falls back to Delegated Routing if DHT fails', () async {
+      final mockContent = MockContentRouting();
+      final mockDelegated = MockDelegatedRoutingHandler();
 
-        when(mockContent.findProviders(any)).thenAnswer((_) async => []);
-        when(mockDelegated.findProviders(any)).thenAnswer((_) async => RoutingResponse(
-          providers: ['PeerC'],
-        ));
+      when(mockContent.findProviders(any)).thenAnswer((_) async => []);
+      when(
+        mockDelegated.findProviders(any),
+      ).thenAnswer((_) async => RoutingResponse(providers: ['PeerC']));
 
-        handler = ContentRoutingHandler(
-          config,
-          networkHandler,
-          contentRouting: mockContent,
-          delegatedRouting: mockDelegated,
-          dnsClient: dnsClient,
-        );
+      handler = ContentRoutingHandler(
+        config,
+        networkHandler,
+        contentRouting: mockContent,
+        delegatedRouting: mockDelegated,
+        dnsClient: dnsClient,
+      );
 
-        final validCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
+      final validCid = 'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG';
 
-        final result = await handler.findProviders(validCid);
-        expect(result, hasLength(1));
-        expect(result.first, 'PeerC');
-      },
-    );
+      final result = await handler.findProviders(validCid);
+      expect(result, hasLength(1));
+      expect(result.first, 'PeerC');
+    });
 
     test('resolveDNSLink falls back to DHT if DNS fails', () async {
       final domain = 'example.com';
       final mockContent = MockContentRouting();
-      
+
       // Mock DNSLink failure (404)
       when(dnsClient.get(any)).thenAnswer((_) async => http.Response('Not Found', 404));
       when(mockContent.resolveDNSLink(any)).thenAnswer((_) async => 'QmResolved');

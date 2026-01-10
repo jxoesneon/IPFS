@@ -48,10 +48,7 @@ class ContentService {
     final cid = CID.fromProto(proto);
 
     // Create block and store raw data
-    final block = await Block.fromData(
-      Uint8List.fromList(content),
-      format: codec,
-    );
+    final block = await Block.fromData(Uint8List.fromList(content), format: codec);
     final key = Key('/blocks/${cid.encode()}');
     await _datastore.put(key, block.data);
 
@@ -65,11 +62,7 @@ class ContentService {
       final data = await _datastore.get(key);
       return data;
     } catch (e, stackTrace) {
-      _logger.error(
-        'Error retrieving content for CID ${cid.encode()}',
-        e,
-        stackTrace,
-      );
+      _logger.error('Error retrieving content for CID ${cid.encode()}', e, stackTrace);
       return null;
     }
   }
@@ -87,11 +80,7 @@ class ContentService {
       await _datastore.delete(blockKey);
       return true;
     } catch (e, stackTrace) {
-      _logger.error(
-        'Error removing content for CID ${cid.encode()}',
-        e,
-        stackTrace,
-      );
+      _logger.error('Error removing content for CID ${cid.encode()}', e, stackTrace);
       return false;
     }
   }
@@ -109,11 +98,7 @@ class ContentService {
       await _datastore.put(pinKey, Uint8List.fromList([1]));
       return true;
     } catch (e, stackTrace) {
-      _logger.error(
-        'Error pinning content for CID ${cid.encode()}',
-        e,
-        stackTrace,
-      );
+      _logger.error('Error pinning content for CID ${cid.encode()}', e, stackTrace);
       return false;
     }
   }
@@ -125,11 +110,7 @@ class ContentService {
       await _datastore.delete(pinKey);
       return true;
     } catch (e, stackTrace) {
-      _logger.error(
-        'Error unpinning content for CID ${cid.encode()}',
-        e,
-        stackTrace,
-      );
+      _logger.error('Error unpinning content for CID ${cid.encode()}', e, stackTrace);
       return false;
     }
   }

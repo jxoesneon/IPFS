@@ -1,4 +1,3 @@
-
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -30,7 +29,7 @@ void main() {
         final newPath = p.join(tempDir.path, 'new_subdir');
         final newDs = FlatFileDatastore(newPath);
         await newDs.init();
-        
+
         expect(await Directory(newPath).exists(), isTrue);
         await newDs.close();
       });
@@ -46,10 +45,10 @@ void main() {
       test('stores and retrieves data', () async {
         final key = Key('/test/data1');
         final value = Uint8List.fromList([1, 2, 3, 4, 5]);
-        
+
         await datastore.put(key, value);
         final retrieved = await datastore.get(key);
-        
+
         expect(retrieved, equals(value));
       });
 
@@ -57,18 +56,18 @@ void main() {
         final key = Key('/overwrite');
         final value1 = Uint8List.fromList([1, 2, 3]);
         final value2 = Uint8List.fromList([4, 5, 6, 7]);
-        
+
         await datastore.put(key, value1);
         await datastore.put(key, value2);
         final retrieved = await datastore.get(key);
-        
+
         expect(retrieved, equals(value2));
       });
 
       test('returns null for non-existent key', () async {
         final key = Key('/nonexistent');
         final retrieved = await datastore.get(key);
-        
+
         expect(retrieved, isNull);
       });
     });
@@ -77,7 +76,7 @@ void main() {
       test('returns true for existing key', () async {
         final key = Key('/exists');
         await datastore.put(key, Uint8List.fromList([1]));
-        
+
         expect(await datastore.has(key), isTrue);
       });
 
@@ -92,7 +91,7 @@ void main() {
         final key = Key('/to_delete');
         await datastore.put(key, Uint8List.fromList([1, 2]));
         expect(await datastore.has(key), isTrue);
-        
+
         await datastore.delete(key);
         expect(await datastore.has(key), isFalse);
       });
@@ -110,7 +109,7 @@ void main() {
         await datastore.put(Key('/a'), Uint8List.fromList([1]));
         await datastore.put(Key('/b'), Uint8List.fromList([2]));
         await datastore.put(Key('/c'), Uint8List.fromList([3]));
-        
+
         final entries = await datastore.query(Query()).toList();
         expect(entries.length, equals(3));
       });
@@ -119,7 +118,7 @@ void main() {
         await datastore.put(Key('/users/alice'), Uint8List.fromList([1]));
         await datastore.put(Key('/users/bob'), Uint8List.fromList([2]));
         await datastore.put(Key('/posts/first'), Uint8List.fromList([3]));
-        
+
         final entries = await datastore.query(Query(prefix: '/users')).toList();
         expect(entries.length, equals(2));
         expect(entries.every((e) => e.key.toString().startsWith('/users')), isTrue);
@@ -127,7 +126,7 @@ void main() {
 
       test('keysOnly query returns null values', () async {
         await datastore.put(Key('/key1'), Uint8List.fromList([1, 2, 3]));
-        
+
         final entries = await datastore.query(Query(keysOnly: true)).toList();
         expect(entries.length, equals(1));
         // keysOnly may still return value if filters are applied

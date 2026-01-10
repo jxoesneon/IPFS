@@ -30,8 +30,7 @@ class IPLDDecodingError extends IPLDError {
 /// Error during IPLD path resolution.
 class IPLDResolutionError extends IPLDError {
   /// Creates a resolution error with the given message.
-  IPLDResolutionError(String message)
-    : super('IPLD resolution error: $message');
+  IPLDResolutionError(String message) : super('IPLD resolution error: $message');
 }
 
 /// Error during IPLD storage operations.
@@ -43,8 +42,7 @@ class IPLDStorageError extends IPLDError {
 /// Error during IPLD content validation.
 class IPLDValidationError extends IPLDError {
   /// Creates a validation error with the given message.
-  IPLDValidationError(String message)
-    : super('IPLD validation error: $message');
+  IPLDValidationError(String message) : super('IPLD validation error: $message');
 }
 
 /// Error resolving IPLD links (e.g., broken DAG references).

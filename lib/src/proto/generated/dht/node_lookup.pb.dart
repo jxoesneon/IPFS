@@ -36,21 +36,17 @@ class NodeLookupRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'NodeLookupRequest',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.node_lookup'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NodeLookupRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.node_lookup'),
       createEmptyInstance: create)
-    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'target',
-        subBuilder: $0.KademliaId.create)
+    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'target', subBuilder: $0.KademliaId.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   NodeLookupRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   NodeLookupRequest copyWith(void Function(NodeLookupRequest) updates) =>
-      super.copyWith((message) => updates(message as NodeLookupRequest))
-          as NodeLookupRequest;
+      super.copyWith((message) => updates(message as NodeLookupRequest)) as NodeLookupRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -60,8 +56,8 @@ class NodeLookupRequest extends $pb.GeneratedMessage {
   @$core.override
   NodeLookupRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static NodeLookupRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<NodeLookupRequest>(create);
+  static NodeLookupRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NodeLookupRequest>(create);
   static NodeLookupRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -94,21 +90,17 @@ class NodeLookupResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'NodeLookupResponse',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.node_lookup'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NodeLookupResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.node_lookup'),
       createEmptyInstance: create)
-    ..pPM<$0.KademliaId>(1, _omitFieldNames ? '' : 'closestNodes',
-        subBuilder: $0.KademliaId.create)
+    ..pPM<$0.KademliaId>(1, _omitFieldNames ? '' : 'closestNodes', subBuilder: $0.KademliaId.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   NodeLookupResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   NodeLookupResponse copyWith(void Function(NodeLookupResponse) updates) =>
-      super.copyWith((message) => updates(message as NodeLookupResponse))
-          as NodeLookupResponse;
+      super.copyWith((message) => updates(message as NodeLookupResponse)) as NodeLookupResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -118,15 +110,13 @@ class NodeLookupResponse extends $pb.GeneratedMessage {
   @$core.override
   NodeLookupResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static NodeLookupResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<NodeLookupResponse>(create);
+  static NodeLookupResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NodeLookupResponse>(create);
   static NodeLookupResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $pb.PbList<$0.KademliaId> get closestNodes => $_getList(0);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

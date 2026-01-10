@@ -19,11 +19,7 @@ class Peer {
   String toString() => 'Peer(id: $id, address: $address)';
 
   /// Creates a copy of this peer with optional parameter updates
-  Peer copyWith({
-    p2p.PeerId? id,
-    String? address,
-    Map<String, dynamic>? metadata,
-  }) {
+  Peer copyWith({p2p.PeerId? id, String? address, Map<String, dynamic>? metadata}) {
     return Peer(
       id: id ?? this.id,
       address: address ?? this.address,

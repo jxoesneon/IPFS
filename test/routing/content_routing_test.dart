@@ -46,9 +46,9 @@ void main() {
 
     test('stop stops DHT client', () {
       var stopped = false;
-      
+
       stopped = true;
-      
+
       expect(stopped, isTrue);
     });
   });

@@ -41,10 +41,7 @@ class CompressionConfig {
 /// Analysis results for compression options.
 class CompressionAnalysis {
   /// Creates compression analysis results.
-  CompressionAnalysis({
-    required this.compressionRatios,
-    required this.recommendedType,
-  });
+  CompressionAnalysis({required this.compressionRatios, required this.recommendedType});
 
   /// Compression ratios by type.
   final Map<CompressionType, double> compressionRatios;
@@ -64,8 +61,7 @@ class AdaptiveCompressionHandler {
   final CompressionConfig _config;
   final String _metadataPath;
 
-  bool get _isLz4Available =>
-      true; // Pure Dart implementation is always available
+  bool get _isLz4Available => true; // Pure Dart implementation is always available
 
   /// Compresses a block based on its content type.
   Future<Block> compressBlock(Block block, String contentType) async {
@@ -129,10 +125,7 @@ class AdaptiveCompressionHandler {
     }
   }
 
-  Future<void> _storeCompressionMetadata(
-    CID cid,
-    Map<String, String> metadata,
-  ) async {
+  Future<void> _storeCompressionMetadata(CID cid, Map<String, String> metadata) async {
     final metadataFile = File('$_metadataPath/${cid.encode()}.json');
     await metadataFile.parent.create(recursive: true);
     await metadataFile.writeAsString(jsonEncode(metadata));
@@ -161,9 +154,6 @@ class AdaptiveCompressionHandler {
       }
     }
 
-    return CompressionAnalysis(
-      compressionRatios: ratios,
-      recommendedType: bestType,
-    );
+    return CompressionAnalysis(compressionRatios: ratios, recommendedType: bestType);
   }
 }

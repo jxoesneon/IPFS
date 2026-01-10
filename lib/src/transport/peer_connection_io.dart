@@ -62,5 +62,4 @@ class PeerConnectionIO implements PeerConnection {
 }
 
 /// Factory function for IO platform.
-PeerConnection createPeerConnection(dynamic router) =>
-    PeerConnectionIO(router as p2p.RouterL2);
+PeerConnection createPeerConnection(dynamic router) => PeerConnectionIO(router as p2p.RouterL2);

@@ -1,4 +1,3 @@
-
 import 'package:dart_ipfs/src/core/data_structures/metadata.dart';
 import 'package:test/test.dart';
 
@@ -6,7 +5,7 @@ void main() {
   group('IPLDMetadata', () {
     test('creates metadata with required size', () {
       final metadata = IPLDMetadata(size: 1024);
-      
+
       expect(metadata.size, equals(1024));
       expect(metadata.properties, isEmpty);
       expect(metadata.lastModified, isNull);
@@ -21,7 +20,7 @@ void main() {
         lastModified: now,
         contentType: 'application/json',
       );
-      
+
       expect(metadata.size, equals(2048));
       expect(metadata.properties['author'], equals('test'));
       expect(metadata.properties['version'], equals('1.0'));
@@ -37,7 +36,7 @@ void main() {
         lastModified: now,
         contentType: 'text/plain',
       );
-      
+
       final json = metadata.toJson();
       expect(json['size'], equals(512));
       expect(json['properties'], equals({'key': 'value'}));
@@ -47,7 +46,7 @@ void main() {
 
     test('toJson() handles null optional fields', () {
       final metadata = IPLDMetadata(size: 100);
-      
+
       final json = metadata.toJson();
       expect(json['size'], equals(100));
       expect(json['lastModified'], isNull);

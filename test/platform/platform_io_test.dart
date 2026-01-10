@@ -29,10 +29,10 @@ void main() {
     test('writeBytes and readBytes', () async {
       final filePath = '${tempDir.path}/test.bin';
       final data = Uint8List.fromList([1, 2, 3, 4]);
-      
+
       await platform.writeBytes(filePath, data);
       expect(await File(filePath).exists(), isTrue);
-      
+
       final read = await platform.readBytes(filePath);
       expect(read, equals(data));
     });
@@ -46,11 +46,11 @@ void main() {
       final filePath = '${tempDir.path}/exists.bin';
       await File(filePath).writeAsBytes([0]);
       expect(await platform.exists(filePath), isTrue);
-      
+
       final subDir = '${tempDir.path}/subdir';
       await Directory(subDir).create();
       expect(await platform.exists(subDir), isTrue);
-      
+
       expect(await platform.exists('${tempDir.path}/not_here'), isFalse);
     });
 
@@ -59,7 +59,7 @@ void main() {
       await file.writeAsBytes([0]);
       await platform.delete(file.path);
       expect(await file.exists(), isFalse);
-      
+
       final dir = Directory('${tempDir.path}/dir_to_delete');
       await dir.create();
       await platform.delete(dir.path);
@@ -77,7 +77,7 @@ void main() {
       await Directory(subDir).create();
       await File('$subDir/f1').create();
       await File('$subDir/f2').create();
-      
+
       final list = await platform.listDirectory(subDir);
       expect(list.length, equals(2));
       expect(list, contains(endsWith('f1')));

@@ -31,13 +31,10 @@ class PubSubClient implements IPubSub {
   final _logger = Logger('PubSubClient');
 
   // Gossipsub state
-  final Set<String> _mesh =
-      {}; // Peers in our mesh (String representation of PeerId)
+  final Set<String> _mesh = {}; // Peers in our mesh (String representation of PeerId)
   final Map<String, double> _scores = {}; // Peer scores
-  final Map<String, Set<String>> _seenMessages =
-      {}; // Message IDs (hash) we've seen
-  final Map<String, Map<String, String>> _messageCache =
-      {}; // Cache for fulfilling IWANT requests
+  final Map<String, Set<String>> _seenMessages = {}; // Message IDs (hash) we've seen
+  final Map<String, Map<String, String>> _messageCache = {}; // Cache for fulfilling IWANT requests
   final Set<String> _subscriptions = {};
   bool _started = false;
   Timer? _heartbeatTimer;
@@ -59,17 +56,13 @@ class PubSubClient implements IPubSub {
           if (action == null || action == 'publish') {
             final topic = decodedJson['topic'] as String?;
             if (topic != null) {
-              final msgId =
-                  decodedJson['signature'] ??
-                  decodedJson['content'].hashCode.toString();
+              final msgId = decodedJson['signature'] ?? decodedJson['content'].hashCode.toString();
               if (_seenMessages.containsKey(topic)) {
                 if (_seenMessages[topic]!.contains(msgId)) {
                   return;
                 }
               }
-              _seenMessages
-                  .putIfAbsent(topic, () => {})
-                  .add(msgId as String);
+              _seenMessages.putIfAbsent(topic, () => {}).add(msgId as String);
             }
           }
 
@@ -105,9 +98,7 @@ class PubSubClient implements IPubSub {
             }
           } else if (action == null) {
             // Only warn for content messages (null action usually means publish)
-            _logger.verbose(
-              'Received unsigned message from ${decodedJson['sender']}',
-            );
+            _logger.verbose('Received unsigned message from ${decodedJson['sender']}');
           }
 
           // Update mesh/scores on valid message
@@ -119,8 +110,7 @@ class PubSubClient implements IPubSub {
             if (action == null || action == 'publish') {
               // Cache message
               final msgId =
-                  decodedJson['signature'] as String? ??
-                  decodedJson['content'].hashCode.toString();
+                  decodedJson['signature'] as String? ?? decodedJson['content'].hashCode.toString();
               final topic = decodedJson['topic'] as String;
               final content = decodedJson['content'] as String;
               _messageCache.putIfAbsent(topic, () => {})[msgId] = content;
@@ -143,9 +133,7 @@ class PubSubClient implements IPubSub {
     // Start heartbeat
     _heartbeatTimer = Timer.periodic(_heartbeatInterval, _heartbeat);
 
-    _logger.info(
-      'PubSub client started with peer ID: ${Base58().encode(_peerId.value)}',
-    );
+    _logger.info('PubSub client started with peer ID: ${Base58().encode(_peerId.value)}');
   }
 
   /// Stops the PubSub client.
@@ -257,9 +245,7 @@ class PubSubClient implements IPubSub {
       final response = await http.get(Uri.parse('http://localhost:5001/stats'));
       if (response.statusCode == 200) {
         // Assuming response body contains JSON data for NodeStats
-        return NodeStats.fromJson(
-          jsonDecode(response.body) as Map<String, dynamic>,
-        );
+        return NodeStats.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
       } else {
         throw Exception('Failed to load node stats');
       }
@@ -311,8 +297,7 @@ class PubSubClient implements IPubSub {
     final wantIds = <String>[];
 
     for (final id in msgIds) {
-      if (!_seenMessages.containsKey(topic) ||
-          !_seenMessages[topic]!.contains(id)) {
+      if (!_seenMessages.containsKey(topic) || !_seenMessages[topic]!.contains(id)) {
         wantIds.add(id);
       }
     }
@@ -343,8 +328,7 @@ class PubSubClient implements IPubSub {
 
     try {
       for (final id in msgIds) {
-        if (_messageCache.containsKey(topic) &&
-            _messageCache[topic]!.containsKey(id)) {
+        if (_messageCache.containsKey(topic) && _messageCache[topic]!.containsKey(id)) {
           final content = _messageCache[topic]![id]!;
           final encoded = encodePublishRequest(topic, content);
           _router.sendMessage(senderStr, encoded);

@@ -12,8 +12,7 @@ import 'package:http/http.dart' as http;
 /// A DHT handler that delegates queries to an HTTP IPFS node (e.g. Kubo RPC).
 class DelegateDHTHandler implements IDHTHandler {
   /// Creates a [DelegateDHTHandler] using the specified [delegateUrl].
-  DelegateDHTHandler(this.delegateUrl, {http.Client? client})
-    : _client = client ?? http.Client() {
+  DelegateDHTHandler(this.delegateUrl, {http.Client? client}) : _client = client ?? http.Client() {
     _logger = Logger('DelegateDHTHandler');
   }
 
@@ -27,9 +26,7 @@ class DelegateDHTHandler implements IDHTHandler {
   @override
   Future<void> start() async {
     // Sanitize URL for logging (redact potential API keys/secrets)
-    final sanitizedUrl = Uri.parse(
-      delegateUrl,
-    ).replace(userInfo: 'REDACTED').toString();
+    final sanitizedUrl = Uri.parse(delegateUrl).replace(userInfo: 'REDACTED').toString();
     _logger.info('Starting DelegateDHTHandler with endpoint: $sanitizedUrl');
   }
 
@@ -48,9 +45,7 @@ class DelegateDHTHandler implements IDHTHandler {
       final response = await _client.post(uri);
 
       if (response.statusCode != 200) {
-        _logger.warning(
-          'Delegate findProviders failed: ${response.statusCode}',
-        );
+        _logger.warning('Delegate findProviders failed: ${response.statusCode}');
         return [];
       }
 
@@ -61,9 +56,7 @@ class DelegateDHTHandler implements IDHTHandler {
             final json = jsonDecode(line);
             if (json['Type'] == 4 && json['Responses'] != null) {
               for (final resp in (json['Responses'] as List)) {
-                if (resp is Map &&
-                    resp['ID'] != null &&
-                    resp['Addrs'] != null) {
+                if (resp is Map && resp['ID'] != null && resp['Addrs'] != null) {
                   // Convert to V_PeerInfo...
                 }
               }
@@ -110,9 +103,7 @@ class DelegateDHTHandler implements IDHTHandler {
           if (line.isNotEmpty) {
             final json = jsonDecode(line);
             if (json['Type'] == 5 && json['Extra'] != null) {
-              return Value.fromBytes(
-                Uint8List.fromList(utf8.encode(json['Extra'] as String)),
-              );
+              return Value.fromBytes(Uint8List.fromList(utf8.encode(json['Extra'] as String)));
             }
           }
         }

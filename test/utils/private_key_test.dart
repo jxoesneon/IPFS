@@ -23,7 +23,7 @@ void main() {
       // Use a known private key (32 bytes zeroed for simplicity in test, though not secure)
       final dummyPrivBytes = Uint8List(32)..fillRange(0, 32, 1);
       final privBase64 = base64Url.encode(dummyPrivBytes);
-      
+
       final pk = IPFSPrivateKey.fromString(privBase64);
       expect(pk.algorithm, equals('ECDSA'));
 
@@ -41,15 +41,17 @@ void main() {
     });
 
     test('fromBytes - Unsupported algorithm', () {
-      expect(() => IPFSPrivateKey.fromBytes(Uint8List(32), algorithm: 'RSA'), 
-             throwsUnsupportedError);
+      expect(
+        () => IPFSPrivateKey.fromBytes(Uint8List(32), algorithm: 'RSA'),
+        throwsUnsupportedError,
+      );
     });
 
     test('signature verification failure on wrong data', () async {
       final pk = await IPFSPrivateKey.generate();
       final data = Uint8List.fromList(utf8.encode('data 1'));
       final sig = pk.sign(data);
-      
+
       final wrongData = Uint8List.fromList(utf8.encode('data 2'));
       expect(pk.verify(wrongData, sig), isFalse);
     });

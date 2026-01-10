@@ -44,9 +44,7 @@ void main() {
         expect(retrieved, equals(data));
       } catch (e) {
         if (e.toString().contains('Failed to load dynamic library')) {
-          print(
-            'Skipping LZ4 test: Native library not compatible with this architecture.',
-          );
+          print('Skipping LZ4 test: Native library not compatible with this architecture.');
           return;
         }
         rethrow;

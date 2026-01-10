@@ -54,7 +54,7 @@ void main() {
 
       // Add a large sample to push out the first
       stats.updateConnectionDuration(Duration(milliseconds: 1100));
-      
+
       // Window: 9 * 100 + 1100 = 2000 / 10 = 200
       expect(stats.averageConnectionDuration, 200.0);
     });
@@ -77,7 +77,7 @@ void main() {
       // Initial update sets value (0 * 0.9 + val * 0.1) actually logic is:
       // averageLatency = alpha * latency + (1 - alpha) * averageLatency;
       // alpha = 0.1
-      
+
       stats.updateLatency(100.0);
       // 0.1 * 100 + 0.9 * 0 = 10
       expect(stats.averageLatency, 10.0);
@@ -89,7 +89,7 @@ void main() {
 
     test('updateFromPeerInfo updates status', () {
       final dump = proto.V_PeerInfo();
-      
+
       // First update
       stats.updateFromPeerInfo(dump);
       expect(stats.isConnected, isTrue);

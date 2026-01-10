@@ -39,10 +39,7 @@ void main() {
       // 256 * 1024 = 262144 bytes + protobuf overhead?
       // UnixFSBuilder yields encoded blocks.
       // We assume simple wrapping.
-      expect(
-        firstBlock.data.length,
-        greaterThan(256 * 1024),
-      ); // Due to protobuf wrap
+      expect(firstBlock.data.length, greaterThan(256 * 1024)); // Due to protobuf wrap
     });
 
     test('should handle small stream efficiently', () async {

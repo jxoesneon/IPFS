@@ -5,18 +5,14 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 /// Converts between internal responses and protobuf messages.
 class ResponseHandler {
   /// Converts to AddBlockResponse protobuf.
-  static AddBlockResponse toAddBlockResponse(
-    BlockOperationResponse<dynamic> response,
-  ) {
+  static AddBlockResponse toAddBlockResponse(BlockOperationResponse<dynamic> response) {
     return AddBlockResponse()
       ..success = response.success
       ..message = response.message;
   }
 
   /// Converts to GetBlockResponse protobuf.
-  static GetBlockResponse toGetBlockResponse(
-    BlockOperationResponse<Block> response,
-  ) {
+  static GetBlockResponse toGetBlockResponse(BlockOperationResponse<Block> response) {
     final getBlockResponse = GetBlockResponse()..found = response.success;
     if (response.data != null) {
       getBlockResponse.block = response.data!.toProto();
@@ -25,20 +21,15 @@ class ResponseHandler {
   }
 
   /// Converts to RemoveBlockResponse protobuf.
-  static RemoveBlockResponse toRemoveBlockResponse(
-    BlockOperationResponse<dynamic> response,
-  ) {
+  static RemoveBlockResponse toRemoveBlockResponse(BlockOperationResponse<dynamic> response) {
     return RemoveBlockResponse()
       ..success = response.success
       ..message = response.message;
   }
 
   /// Converts from protobuf response to BlockOperationResponse.
-  static BlockOperationResponse<dynamic> fromProtoResponse(
-    dynamic protoResponse,
-  ) {
-    if (protoResponse is AddBlockResponse ||
-        protoResponse is RemoveBlockResponse) {
+  static BlockOperationResponse<dynamic> fromProtoResponse(dynamic protoResponse) {
+    if (protoResponse is AddBlockResponse || protoResponse is RemoveBlockResponse) {
       return BlockOperationResponse(
         success: protoResponse.success as bool,
         message: protoResponse.message as String,

@@ -89,15 +89,15 @@ void main() {
 
     test('start and stop success', () async {
       final startFuture = server.start();
-      
+
       expect(mockAdapter.lastAddress, equals('localhost'));
       expect(mockAdapter.lastPort, equals(8080));
-      
+
       await startFuture;
-      
+
       expect(server.isRunning, isTrue);
       expect(server.url, equals('http://localhost:8080'));
-      
+
       await server.stop();
       expect(server.isRunning, isFalse);
     });
@@ -185,21 +185,24 @@ void main() {
     });
 
     test('HEAD request returns headers only', () async {
-       await server.start();
-       final handler = mockAdapter.lastHandler!;
-       
-       // Note: /ipfs/ paths will call GatewayHandler which might fail if not mocked properly,
-       // but GatewayServer logic should still handle the HEAD wrap.
-       // We can use a path that returns 404 or something from handler.
-       
-       final request = Request('HEAD', Uri.parse('http://localhost/ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'));
-       final response = await handler(request);
-       
-       // GatewayHandler will likely return 404 or 500 because BlockStore is not mocked for 'handlePath'.
-       // But HEAD logic in GatewayServer should still work.
-       expect(response.statusCode, isNotNull);
-       // Shelf response body for HEAD might be empty.
-       expect(await response.readAsString(), isEmpty);
+      await server.start();
+      final handler = mockAdapter.lastHandler!;
+
+      // Note: /ipfs/ paths will call GatewayHandler which might fail if not mocked properly,
+      // but GatewayServer logic should still handle the HEAD wrap.
+      // We can use a path that returns 404 or something from handler.
+
+      final request = Request(
+        'HEAD',
+        Uri.parse('http://localhost/ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+      );
+      final response = await handler(request);
+
+      // GatewayHandler will likely return 404 or 500 because BlockStore is not mocked for 'handlePath'.
+      // But HEAD logic in GatewayServer should still work.
+      expect(response.statusCode, isNotNull);
+      // Shelf response body for HEAD might be empty.
+      expect(await response.readAsString(), isEmpty);
     });
 
     test('Rate limiting middleware with X-Forwarded-For', () async {
@@ -207,7 +210,9 @@ void main() {
       final handler = mockAdapter.lastHandler!;
       final uri = Uri.parse('http://localhost/health');
 
-      final response = await handler(Request('GET', uri, headers: {'x-forwarded-for': '2.2.2.2, 3.3.3.3'}));
+      final response = await handler(
+        Request('GET', uri, headers: {'x-forwarded-for': '2.2.2.2, 3.3.3.3'}),
+      );
       expect(response.statusCode, equals(200));
       // The rate limiter should have recorded '2.2.2.2'
     });
@@ -224,14 +229,17 @@ void main() {
       final request = Request('GET', Uri.parse('http://localhost/ipns/test.eth'));
       final response = await handler(request);
 
-      expect(response.statusCode, equals(404)); // 404 because block is not found in mockBlockStore, which is fine
+      expect(
+        response.statusCode,
+        equals(404),
+      ); // 404 because block is not found in mockBlockStore, which is fine
     });
 
     test('Logging middleware executes', () async {
       await server.start();
       final handler = mockAdapter.lastHandler!;
       final request = Request('GET', Uri.parse('http://localhost/health'));
-      
+
       // Just ensure it doesn't crash and duration is logged (internally)
       final response = await handler(request);
       expect(response.statusCode, equals(200));

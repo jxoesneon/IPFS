@@ -13,10 +13,7 @@ class LibsodiumSetup {
   ///
   /// Set [autoInstall] to false to skip automatic installation attempts.
   /// Set [verbose] to false to suppress console output.
-  static Future<bool> ensureAvailable({
-    bool autoInstall = true,
-    bool verbose = true,
-  }) async {
+  static Future<bool> ensureAvailable({bool autoInstall = true, bool verbose = true}) async {
     if (!Platform.isWindows) {
       // macOS and Linux handle libsodium differently
       return await _checkNonWindows(verbose);
@@ -91,9 +88,7 @@ class LibsodiumSetup {
         return true;
       } else {
         if (verbose) {
-          stdout.writeln(
-            '❌ Installation failed (exit code: ${result.exitCode})',
-          );
+          stdout.writeln('❌ Installation failed (exit code: ${result.exitCode})');
           if (result.stderr.toString().isNotEmpty) {
             stdout.writeln('   Error: ${result.stderr}');
           }

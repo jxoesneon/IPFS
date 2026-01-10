@@ -100,8 +100,7 @@ class NetworkEvent extends $pb.GeneratedMessage {
     final result = create();
     if (peerConnected != null) result.peerConnected = peerConnected;
     if (peerDisconnected != null) result.peerDisconnected = peerDisconnected;
-    if (connectionAttempted != null)
-      result.connectionAttempted = connectionAttempted;
+    if (connectionAttempted != null) result.connectionAttempted = connectionAttempted;
     if (connectionFailed != null) result.connectionFailed = connectionFailed;
     if (messageReceived != null) result.messageReceived = messageReceived;
     if (messageSent != null) result.messageSent = messageSent;
@@ -112,38 +111,29 @@ class NetworkEvent extends $pb.GeneratedMessage {
     if (dhtValueFound != null) result.dhtValueFound = dhtValueFound;
     if (dhtValueProvided != null) result.dhtValueProvided = dhtValueProvided;
     if (dhtValueNotFound != null) result.dhtValueNotFound = dhtValueNotFound;
-    if (pubsubMessagePublished != null)
-      result.pubsubMessagePublished = pubsubMessagePublished;
-    if (pubsubMessageReceived != null)
-      result.pubsubMessageReceived = pubsubMessageReceived;
+    if (pubsubMessagePublished != null) result.pubsubMessagePublished = pubsubMessagePublished;
+    if (pubsubMessageReceived != null) result.pubsubMessageReceived = pubsubMessageReceived;
     if (pubsubSubscriptionCreated != null)
       result.pubsubSubscriptionCreated = pubsubSubscriptionCreated;
     if (pubsubSubscriptionCancelled != null)
       result.pubsubSubscriptionCancelled = pubsubSubscriptionCancelled;
-    if (circuitRelayCreated != null)
-      result.circuitRelayCreated = circuitRelayCreated;
-    if (circuitRelayClosed != null)
-      result.circuitRelayClosed = circuitRelayClosed;
-    if (circuitRelayTraffic != null)
-      result.circuitRelayTraffic = circuitRelayTraffic;
-    if (circuitRelayFailed != null)
-      result.circuitRelayFailed = circuitRelayFailed;
+    if (circuitRelayCreated != null) result.circuitRelayCreated = circuitRelayCreated;
+    if (circuitRelayClosed != null) result.circuitRelayClosed = circuitRelayClosed;
+    if (circuitRelayTraffic != null) result.circuitRelayTraffic = circuitRelayTraffic;
+    if (circuitRelayFailed != null) result.circuitRelayFailed = circuitRelayFailed;
     if (nodeStarted != null) result.nodeStarted = nodeStarted;
     if (nodeStopped != null) result.nodeStopped = nodeStopped;
     if (error != null) result.error = error;
     if (networkChanged != null) result.networkChanged = networkChanged;
     if (dhtProviderAdded != null) result.dhtProviderAdded = dhtProviderAdded;
-    if (dhtProviderQueried != null)
-      result.dhtProviderQueried = dhtProviderQueried;
+    if (dhtProviderQueried != null) result.dhtProviderQueried = dhtProviderQueried;
     if (streamStarted != null) result.streamStarted = streamStarted;
     if (streamEnded != null) result.streamEnded = streamEnded;
     if (peerDiscovered != null) result.peerDiscovered = peerDiscovered;
     if (circuitRelayDataReceived != null)
       result.circuitRelayDataReceived = circuitRelayDataReceived;
-    if (circuitRelayDataSent != null)
-      result.circuitRelayDataSent = circuitRelayDataSent;
-    if (resourceLimitExceeded != null)
-      result.resourceLimitExceeded = resourceLimitExceeded;
+    if (circuitRelayDataSent != null) result.circuitRelayDataSent = circuitRelayDataSent;
+    if (resourceLimitExceeded != null) result.resourceLimitExceeded = resourceLimitExceeded;
     if (systemAlert != null) result.systemAlert = systemAlert;
     return result;
   }
@@ -157,8 +147,7 @@ class NetworkEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static const $core.Map<$core.int, NetworkEvent_Event>
-      _NetworkEvent_EventByTag = {
+  static const $core.Map<$core.int, NetworkEvent_Event> _NetworkEvent_EventByTag = {
     1: NetworkEvent_Event.peerConnected,
     2: NetworkEvent_Event.peerDisconnected,
     3: NetworkEvent_Event.connectionAttempted,
@@ -195,10 +184,8 @@ class NetworkEvent extends $pb.GeneratedMessage {
     34: NetworkEvent_Event.systemAlert,
     0: NetworkEvent_Event.notSet
   };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'NetworkEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NetworkEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..oo(0, [
       1,
@@ -240,8 +227,7 @@ class NetworkEvent extends $pb.GeneratedMessage {
         subBuilder: PeerConnectedEvent.create)
     ..aOM<PeerDisconnectedEvent>(2, _omitFieldNames ? '' : 'peerDisconnected',
         subBuilder: PeerDisconnectedEvent.create)
-    ..aOM<ConnectionAttemptedEvent>(
-        3, _omitFieldNames ? '' : 'connectionAttempted',
+    ..aOM<ConnectionAttemptedEvent>(3, _omitFieldNames ? '' : 'connectionAttempted',
         subBuilder: ConnectionAttemptedEvent.create)
     ..aOM<ConnectionFailedEvent>(4, _omitFieldNames ? '' : 'connectionFailed',
         subBuilder: ConnectionFailedEvent.create)
@@ -251,12 +237,10 @@ class NetworkEvent extends $pb.GeneratedMessage {
         subBuilder: MessageSentEvent.create)
     ..aOM<BlockReceivedEvent>(7, _omitFieldNames ? '' : 'blockReceived',
         subBuilder: BlockReceivedEvent.create)
-    ..aOM<BlockSentEvent>(8, _omitFieldNames ? '' : 'blockSent',
-        subBuilder: BlockSentEvent.create)
+    ..aOM<BlockSentEvent>(8, _omitFieldNames ? '' : 'blockSent', subBuilder: BlockSentEvent.create)
     ..aOM<DHTQueryStartedEvent>(9, _omitFieldNames ? '' : 'dhtQueryStarted',
         subBuilder: DHTQueryStartedEvent.create)
-    ..aOM<DHTQueryCompletedEvent>(
-        10, _omitFieldNames ? '' : 'dhtQueryCompleted',
+    ..aOM<DHTQueryCompletedEvent>(10, _omitFieldNames ? '' : 'dhtQueryCompleted',
         subBuilder: DHTQueryCompletedEvent.create)
     ..aOM<DHTValueFoundEvent>(11, _omitFieldNames ? '' : 'dhtValueFound',
         subBuilder: DHTValueFoundEvent.create)
@@ -264,43 +248,33 @@ class NetworkEvent extends $pb.GeneratedMessage {
         subBuilder: DHTValueProvidedEvent.create)
     ..aOM<DHTValueNotFoundEvent>(13, _omitFieldNames ? '' : 'dhtValueNotFound',
         subBuilder: DHTValueNotFoundEvent.create)
-    ..aOM<PubsubMessagePublishedEvent>(
-        14, _omitFieldNames ? '' : 'pubsubMessagePublished',
+    ..aOM<PubsubMessagePublishedEvent>(14, _omitFieldNames ? '' : 'pubsubMessagePublished',
         subBuilder: PubsubMessagePublishedEvent.create)
-    ..aOM<PubsubMessageReceivedEvent>(
-        15, _omitFieldNames ? '' : 'pubsubMessageReceived',
+    ..aOM<PubsubMessageReceivedEvent>(15, _omitFieldNames ? '' : 'pubsubMessageReceived',
         subBuilder: PubsubMessageReceivedEvent.create)
-    ..aOM<PubsubSubscriptionCreatedEvent>(
-        16, _omitFieldNames ? '' : 'pubsubSubscriptionCreated',
+    ..aOM<PubsubSubscriptionCreatedEvent>(16, _omitFieldNames ? '' : 'pubsubSubscriptionCreated',
         subBuilder: PubsubSubscriptionCreatedEvent.create)
     ..aOM<PubsubSubscriptionCancelledEvent>(
         17, _omitFieldNames ? '' : 'pubsubSubscriptionCancelled',
         subBuilder: PubsubSubscriptionCancelledEvent.create)
-    ..aOM<CircuitRelayCreatedEvent>(
-        18, _omitFieldNames ? '' : 'circuitRelayCreated',
+    ..aOM<CircuitRelayCreatedEvent>(18, _omitFieldNames ? '' : 'circuitRelayCreated',
         subBuilder: CircuitRelayCreatedEvent.create)
-    ..aOM<CircuitRelayClosedEvent>(
-        19, _omitFieldNames ? '' : 'circuitRelayClosed',
+    ..aOM<CircuitRelayClosedEvent>(19, _omitFieldNames ? '' : 'circuitRelayClosed',
         subBuilder: CircuitRelayClosedEvent.create)
-    ..aOM<CircuitRelayTrafficEvent>(
-        20, _omitFieldNames ? '' : 'circuitRelayTraffic',
+    ..aOM<CircuitRelayTrafficEvent>(20, _omitFieldNames ? '' : 'circuitRelayTraffic',
         subBuilder: CircuitRelayTrafficEvent.create)
-    ..aOM<CircuitRelayFailedEvent>(
-        21, _omitFieldNames ? '' : 'circuitRelayFailed',
+    ..aOM<CircuitRelayFailedEvent>(21, _omitFieldNames ? '' : 'circuitRelayFailed',
         subBuilder: CircuitRelayFailedEvent.create)
     ..aOM<NodeStartedEvent>(22, _omitFieldNames ? '' : 'nodeStarted',
         subBuilder: NodeStartedEvent.create)
     ..aOM<NodeStoppedEvent>(23, _omitFieldNames ? '' : 'nodeStopped',
         subBuilder: NodeStoppedEvent.create)
-    ..aOM<NodeErrorEvent>(24, _omitFieldNames ? '' : 'error',
-        subBuilder: NodeErrorEvent.create)
-    ..aOM<NetworkStatusChangedEvent>(
-        25, _omitFieldNames ? '' : 'networkChanged',
+    ..aOM<NodeErrorEvent>(24, _omitFieldNames ? '' : 'error', subBuilder: NodeErrorEvent.create)
+    ..aOM<NetworkStatusChangedEvent>(25, _omitFieldNames ? '' : 'networkChanged',
         subBuilder: NetworkStatusChangedEvent.create)
     ..aOM<DHTProviderAddedEvent>(26, _omitFieldNames ? '' : 'dhtProviderAdded',
         subBuilder: DHTProviderAddedEvent.create)
-    ..aOM<DHTProviderQueriedEvent>(
-        27, _omitFieldNames ? '' : 'dhtProviderQueried',
+    ..aOM<DHTProviderQueriedEvent>(27, _omitFieldNames ? '' : 'dhtProviderQueried',
         subBuilder: DHTProviderQueriedEvent.create)
     ..aOM<StreamStartedEvent>(28, _omitFieldNames ? '' : 'streamStarted',
         subBuilder: StreamStartedEvent.create)
@@ -308,14 +282,11 @@ class NetworkEvent extends $pb.GeneratedMessage {
         subBuilder: StreamEndedEvent.create)
     ..aOM<PeerDiscoveredEvent>(30, _omitFieldNames ? '' : 'peerDiscovered',
         subBuilder: PeerDiscoveredEvent.create)
-    ..aOM<CircuitRelayDataReceivedEvent>(
-        31, _omitFieldNames ? '' : 'circuitRelayDataReceived',
+    ..aOM<CircuitRelayDataReceivedEvent>(31, _omitFieldNames ? '' : 'circuitRelayDataReceived',
         subBuilder: CircuitRelayDataReceivedEvent.create)
-    ..aOM<CircuitRelayDataSentEvent>(
-        32, _omitFieldNames ? '' : 'circuitRelayDataSent',
+    ..aOM<CircuitRelayDataSentEvent>(32, _omitFieldNames ? '' : 'circuitRelayDataSent',
         subBuilder: CircuitRelayDataSentEvent.create)
-    ..aOM<ResourceLimitExceededEvent>(
-        33, _omitFieldNames ? '' : 'resourceLimitExceeded',
+    ..aOM<ResourceLimitExceededEvent>(33, _omitFieldNames ? '' : 'resourceLimitExceeded',
         subBuilder: ResourceLimitExceededEvent.create)
     ..aOM<SystemAlertEvent>(34, _omitFieldNames ? '' : 'systemAlert',
         subBuilder: SystemAlertEvent.create)
@@ -325,8 +296,7 @@ class NetworkEvent extends $pb.GeneratedMessage {
   NetworkEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   NetworkEvent copyWith(void Function(NetworkEvent) updates) =>
-      super.copyWith((message) => updates(message as NetworkEvent))
-          as NetworkEvent;
+      super.copyWith((message) => updates(message as NetworkEvent)) as NetworkEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -336,8 +306,8 @@ class NetworkEvent extends $pb.GeneratedMessage {
   @$core.override
   NetworkEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static NetworkEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<NetworkEvent>(create);
+  static NetworkEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NetworkEvent>(create);
   static NetworkEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -436,8 +406,7 @@ class NetworkEvent extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   ConnectionAttemptedEvent get connectionAttempted => $_getN(2);
   @$pb.TagNumber(3)
-  set connectionAttempted(ConnectionAttemptedEvent value) =>
-      $_setField(3, value);
+  set connectionAttempted(ConnectionAttemptedEvent value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasConnectionAttempted() => $_has(2);
   @$pb.TagNumber(3)
@@ -558,8 +527,7 @@ class NetworkEvent extends $pb.GeneratedMessage {
   @$pb.TagNumber(14)
   PubsubMessagePublishedEvent get pubsubMessagePublished => $_getN(13);
   @$pb.TagNumber(14)
-  set pubsubMessagePublished(PubsubMessagePublishedEvent value) =>
-      $_setField(14, value);
+  set pubsubMessagePublished(PubsubMessagePublishedEvent value) => $_setField(14, value);
   @$pb.TagNumber(14)
   $core.bool hasPubsubMessagePublished() => $_has(13);
   @$pb.TagNumber(14)
@@ -570,8 +538,7 @@ class NetworkEvent extends $pb.GeneratedMessage {
   @$pb.TagNumber(15)
   PubsubMessageReceivedEvent get pubsubMessageReceived => $_getN(14);
   @$pb.TagNumber(15)
-  set pubsubMessageReceived(PubsubMessageReceivedEvent value) =>
-      $_setField(15, value);
+  set pubsubMessageReceived(PubsubMessageReceivedEvent value) => $_setField(15, value);
   @$pb.TagNumber(15)
   $core.bool hasPubsubMessageReceived() => $_has(14);
   @$pb.TagNumber(15)
@@ -582,35 +549,29 @@ class NetworkEvent extends $pb.GeneratedMessage {
   @$pb.TagNumber(16)
   PubsubSubscriptionCreatedEvent get pubsubSubscriptionCreated => $_getN(15);
   @$pb.TagNumber(16)
-  set pubsubSubscriptionCreated(PubsubSubscriptionCreatedEvent value) =>
-      $_setField(16, value);
+  set pubsubSubscriptionCreated(PubsubSubscriptionCreatedEvent value) => $_setField(16, value);
   @$pb.TagNumber(16)
   $core.bool hasPubsubSubscriptionCreated() => $_has(15);
   @$pb.TagNumber(16)
   void clearPubsubSubscriptionCreated() => $_clearField(16);
   @$pb.TagNumber(16)
-  PubsubSubscriptionCreatedEvent ensurePubsubSubscriptionCreated() =>
-      $_ensure(15);
+  PubsubSubscriptionCreatedEvent ensurePubsubSubscriptionCreated() => $_ensure(15);
 
   @$pb.TagNumber(17)
-  PubsubSubscriptionCancelledEvent get pubsubSubscriptionCancelled =>
-      $_getN(16);
+  PubsubSubscriptionCancelledEvent get pubsubSubscriptionCancelled => $_getN(16);
   @$pb.TagNumber(17)
-  set pubsubSubscriptionCancelled(PubsubSubscriptionCancelledEvent value) =>
-      $_setField(17, value);
+  set pubsubSubscriptionCancelled(PubsubSubscriptionCancelledEvent value) => $_setField(17, value);
   @$pb.TagNumber(17)
   $core.bool hasPubsubSubscriptionCancelled() => $_has(16);
   @$pb.TagNumber(17)
   void clearPubsubSubscriptionCancelled() => $_clearField(17);
   @$pb.TagNumber(17)
-  PubsubSubscriptionCancelledEvent ensurePubsubSubscriptionCancelled() =>
-      $_ensure(16);
+  PubsubSubscriptionCancelledEvent ensurePubsubSubscriptionCancelled() => $_ensure(16);
 
   @$pb.TagNumber(18)
   CircuitRelayCreatedEvent get circuitRelayCreated => $_getN(17);
   @$pb.TagNumber(18)
-  set circuitRelayCreated(CircuitRelayCreatedEvent value) =>
-      $_setField(18, value);
+  set circuitRelayCreated(CircuitRelayCreatedEvent value) => $_setField(18, value);
   @$pb.TagNumber(18)
   $core.bool hasCircuitRelayCreated() => $_has(17);
   @$pb.TagNumber(18)
@@ -621,8 +582,7 @@ class NetworkEvent extends $pb.GeneratedMessage {
   @$pb.TagNumber(19)
   CircuitRelayClosedEvent get circuitRelayClosed => $_getN(18);
   @$pb.TagNumber(19)
-  set circuitRelayClosed(CircuitRelayClosedEvent value) =>
-      $_setField(19, value);
+  set circuitRelayClosed(CircuitRelayClosedEvent value) => $_setField(19, value);
   @$pb.TagNumber(19)
   $core.bool hasCircuitRelayClosed() => $_has(18);
   @$pb.TagNumber(19)
@@ -633,8 +593,7 @@ class NetworkEvent extends $pb.GeneratedMessage {
   @$pb.TagNumber(20)
   CircuitRelayTrafficEvent get circuitRelayTraffic => $_getN(19);
   @$pb.TagNumber(20)
-  set circuitRelayTraffic(CircuitRelayTrafficEvent value) =>
-      $_setField(20, value);
+  set circuitRelayTraffic(CircuitRelayTrafficEvent value) => $_setField(20, value);
   @$pb.TagNumber(20)
   $core.bool hasCircuitRelayTraffic() => $_has(19);
   @$pb.TagNumber(20)
@@ -645,8 +604,7 @@ class NetworkEvent extends $pb.GeneratedMessage {
   @$pb.TagNumber(21)
   CircuitRelayFailedEvent get circuitRelayFailed => $_getN(20);
   @$pb.TagNumber(21)
-  set circuitRelayFailed(CircuitRelayFailedEvent value) =>
-      $_setField(21, value);
+  set circuitRelayFailed(CircuitRelayFailedEvent value) => $_setField(21, value);
   @$pb.TagNumber(21)
   $core.bool hasCircuitRelayFailed() => $_has(20);
   @$pb.TagNumber(21)
@@ -712,8 +670,7 @@ class NetworkEvent extends $pb.GeneratedMessage {
   @$pb.TagNumber(27)
   DHTProviderQueriedEvent get dhtProviderQueried => $_getN(26);
   @$pb.TagNumber(27)
-  set dhtProviderQueried(DHTProviderQueriedEvent value) =>
-      $_setField(27, value);
+  set dhtProviderQueried(DHTProviderQueriedEvent value) => $_setField(27, value);
   @$pb.TagNumber(27)
   $core.bool hasDhtProviderQueried() => $_has(26);
   @$pb.TagNumber(27)
@@ -757,21 +714,18 @@ class NetworkEvent extends $pb.GeneratedMessage {
   @$pb.TagNumber(31)
   CircuitRelayDataReceivedEvent get circuitRelayDataReceived => $_getN(30);
   @$pb.TagNumber(31)
-  set circuitRelayDataReceived(CircuitRelayDataReceivedEvent value) =>
-      $_setField(31, value);
+  set circuitRelayDataReceived(CircuitRelayDataReceivedEvent value) => $_setField(31, value);
   @$pb.TagNumber(31)
   $core.bool hasCircuitRelayDataReceived() => $_has(30);
   @$pb.TagNumber(31)
   void clearCircuitRelayDataReceived() => $_clearField(31);
   @$pb.TagNumber(31)
-  CircuitRelayDataReceivedEvent ensureCircuitRelayDataReceived() =>
-      $_ensure(30);
+  CircuitRelayDataReceivedEvent ensureCircuitRelayDataReceived() => $_ensure(30);
 
   @$pb.TagNumber(32)
   CircuitRelayDataSentEvent get circuitRelayDataSent => $_getN(31);
   @$pb.TagNumber(32)
-  set circuitRelayDataSent(CircuitRelayDataSentEvent value) =>
-      $_setField(32, value);
+  set circuitRelayDataSent(CircuitRelayDataSentEvent value) => $_setField(32, value);
   @$pb.TagNumber(32)
   $core.bool hasCircuitRelayDataSent() => $_has(31);
   @$pb.TagNumber(32)
@@ -782,8 +736,7 @@ class NetworkEvent extends $pb.GeneratedMessage {
   @$pb.TagNumber(33)
   ResourceLimitExceededEvent get resourceLimitExceeded => $_getN(32);
   @$pb.TagNumber(33)
-  set resourceLimitExceeded(ResourceLimitExceededEvent value) =>
-      $_setField(33, value);
+  set resourceLimitExceeded(ResourceLimitExceededEvent value) => $_setField(33, value);
   @$pb.TagNumber(33)
   $core.bool hasResourceLimitExceeded() => $_has(32);
   @$pb.TagNumber(33)
@@ -824,10 +777,8 @@ class PeerConnectedEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PeerConnectedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PeerConnectedEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'peerId')
     ..aOS(2, _omitFieldNames ? '' : 'multiaddress')
@@ -837,8 +788,7 @@ class PeerConnectedEvent extends $pb.GeneratedMessage {
   PeerConnectedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PeerConnectedEvent copyWith(void Function(PeerConnectedEvent) updates) =>
-      super.copyWith((message) => updates(message as PeerConnectedEvent))
-          as PeerConnectedEvent;
+      super.copyWith((message) => updates(message as PeerConnectedEvent)) as PeerConnectedEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -848,8 +798,8 @@ class PeerConnectedEvent extends $pb.GeneratedMessage {
   @$core.override
   PeerConnectedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static PeerConnectedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PeerConnectedEvent>(create);
+  static PeerConnectedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PeerConnectedEvent>(create);
   static PeerConnectedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -893,8 +843,7 @@ class PeerDisconnectedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PeerDisconnectedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'peerId')
     ..aOS(2, _omitFieldNames ? '' : 'reason')
@@ -903,8 +852,7 @@ class PeerDisconnectedEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PeerDisconnectedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PeerDisconnectedEvent copyWith(
-          void Function(PeerDisconnectedEvent) updates) =>
+  PeerDisconnectedEvent copyWith(void Function(PeerDisconnectedEvent) updates) =>
       super.copyWith((message) => updates(message as PeerDisconnectedEvent))
           as PeerDisconnectedEvent;
 
@@ -916,8 +864,8 @@ class PeerDisconnectedEvent extends $pb.GeneratedMessage {
   @$core.override
   PeerDisconnectedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static PeerDisconnectedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PeerDisconnectedEvent>(create);
+  static PeerDisconnectedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PeerDisconnectedEvent>(create);
   static PeerDisconnectedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -961,8 +909,7 @@ class ConnectionAttemptedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ConnectionAttemptedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'peerId')
     ..aOB(2, _omitFieldNames ? '' : 'success')
@@ -971,8 +918,7 @@ class ConnectionAttemptedEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ConnectionAttemptedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ConnectionAttemptedEvent copyWith(
-          void Function(ConnectionAttemptedEvent) updates) =>
+  ConnectionAttemptedEvent copyWith(void Function(ConnectionAttemptedEvent) updates) =>
       super.copyWith((message) => updates(message as ConnectionAttemptedEvent))
           as ConnectionAttemptedEvent;
 
@@ -984,8 +930,8 @@ class ConnectionAttemptedEvent extends $pb.GeneratedMessage {
   @$core.override
   ConnectionAttemptedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ConnectionAttemptedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ConnectionAttemptedEvent>(create);
+  static ConnectionAttemptedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ConnectionAttemptedEvent>(create);
   static ConnectionAttemptedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1029,8 +975,7 @@ class ConnectionFailedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ConnectionFailedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'peerId')
     ..aOS(2, _omitFieldNames ? '' : 'reason')
@@ -1039,8 +984,7 @@ class ConnectionFailedEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ConnectionFailedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ConnectionFailedEvent copyWith(
-          void Function(ConnectionFailedEvent) updates) =>
+  ConnectionFailedEvent copyWith(void Function(ConnectionFailedEvent) updates) =>
       super.copyWith((message) => updates(message as ConnectionFailedEvent))
           as ConnectionFailedEvent;
 
@@ -1052,8 +996,8 @@ class ConnectionFailedEvent extends $pb.GeneratedMessage {
   @$core.override
   ConnectionFailedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ConnectionFailedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ConnectionFailedEvent>(create);
+  static ConnectionFailedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ConnectionFailedEvent>(create);
   static ConnectionFailedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1095,22 +1039,18 @@ class MessageReceivedEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'MessageReceivedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MessageReceivedEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'peerId')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'messageContent', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'messageContent', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   MessageReceivedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   MessageReceivedEvent copyWith(void Function(MessageReceivedEvent) updates) =>
-      super.copyWith((message) => updates(message as MessageReceivedEvent))
-          as MessageReceivedEvent;
+      super.copyWith((message) => updates(message as MessageReceivedEvent)) as MessageReceivedEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -1120,8 +1060,8 @@ class MessageReceivedEvent extends $pb.GeneratedMessage {
   @$core.override
   MessageReceivedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static MessageReceivedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<MessageReceivedEvent>(create);
+  static MessageReceivedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MessageReceivedEvent>(create);
   static MessageReceivedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1163,22 +1103,18 @@ class MessageSentEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'MessageSentEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MessageSentEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'peerId')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'messageContent', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'messageContent', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   MessageSentEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   MessageSentEvent copyWith(void Function(MessageSentEvent) updates) =>
-      super.copyWith((message) => updates(message as MessageSentEvent))
-          as MessageSentEvent;
+      super.copyWith((message) => updates(message as MessageSentEvent)) as MessageSentEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -1188,8 +1124,8 @@ class MessageSentEvent extends $pb.GeneratedMessage {
   @$core.override
   MessageSentEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static MessageSentEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<MessageSentEvent>(create);
+  static MessageSentEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MessageSentEvent>(create);
   static MessageSentEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1231,10 +1167,8 @@ class BlockReceivedEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'BlockReceivedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockReceivedEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'cid')
     ..aOS(2, _omitFieldNames ? '' : 'peerId')
@@ -1244,8 +1178,7 @@ class BlockReceivedEvent extends $pb.GeneratedMessage {
   BlockReceivedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   BlockReceivedEvent copyWith(void Function(BlockReceivedEvent) updates) =>
-      super.copyWith((message) => updates(message as BlockReceivedEvent))
-          as BlockReceivedEvent;
+      super.copyWith((message) => updates(message as BlockReceivedEvent)) as BlockReceivedEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -1255,8 +1188,8 @@ class BlockReceivedEvent extends $pb.GeneratedMessage {
   @$core.override
   BlockReceivedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static BlockReceivedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<BlockReceivedEvent>(create);
+  static BlockReceivedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockReceivedEvent>(create);
   static BlockReceivedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1298,10 +1231,8 @@ class BlockSentEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'BlockSentEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockSentEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'cid')
     ..aOS(2, _omitFieldNames ? '' : 'peerId')
@@ -1311,8 +1242,7 @@ class BlockSentEvent extends $pb.GeneratedMessage {
   BlockSentEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   BlockSentEvent copyWith(void Function(BlockSentEvent) updates) =>
-      super.copyWith((message) => updates(message as BlockSentEvent))
-          as BlockSentEvent;
+      super.copyWith((message) => updates(message as BlockSentEvent)) as BlockSentEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -1322,8 +1252,8 @@ class BlockSentEvent extends $pb.GeneratedMessage {
   @$core.override
   BlockSentEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static BlockSentEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<BlockSentEvent>(create);
+  static BlockSentEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockSentEvent>(create);
   static BlockSentEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1365,10 +1295,8 @@ class DHTQueryStartedEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'DHTQueryStartedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DHTQueryStartedEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'queryType')
     ..aOS(2, _omitFieldNames ? '' : 'targetKey')
@@ -1378,8 +1306,7 @@ class DHTQueryStartedEvent extends $pb.GeneratedMessage {
   DHTQueryStartedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   DHTQueryStartedEvent copyWith(void Function(DHTQueryStartedEvent) updates) =>
-      super.copyWith((message) => updates(message as DHTQueryStartedEvent))
-          as DHTQueryStartedEvent;
+      super.copyWith((message) => updates(message as DHTQueryStartedEvent)) as DHTQueryStartedEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -1389,8 +1316,8 @@ class DHTQueryStartedEvent extends $pb.GeneratedMessage {
   @$core.override
   DHTQueryStartedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static DHTQueryStartedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<DHTQueryStartedEvent>(create);
+  static DHTQueryStartedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTQueryStartedEvent>(create);
   static DHTQueryStartedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1436,8 +1363,7 @@ class DHTQueryCompletedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'DHTQueryCompletedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'queryType')
     ..aOS(2, _omitFieldNames ? '' : 'targetKey')
@@ -1447,8 +1373,7 @@ class DHTQueryCompletedEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   DHTQueryCompletedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DHTQueryCompletedEvent copyWith(
-          void Function(DHTQueryCompletedEvent) updates) =>
+  DHTQueryCompletedEvent copyWith(void Function(DHTQueryCompletedEvent) updates) =>
       super.copyWith((message) => updates(message as DHTQueryCompletedEvent))
           as DHTQueryCompletedEvent;
 
@@ -1460,8 +1385,8 @@ class DHTQueryCompletedEvent extends $pb.GeneratedMessage {
   @$core.override
   DHTQueryCompletedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static DHTQueryCompletedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<DHTQueryCompletedEvent>(create);
+  static DHTQueryCompletedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTQueryCompletedEvent>(create);
   static DHTQueryCompletedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1508,14 +1433,11 @@ class DHTValueFoundEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'DHTValueFoundEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DHTValueFoundEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'key')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..aOS(3, _omitFieldNames ? '' : 'peerId')
     ..hasRequiredFields = false;
 
@@ -1523,8 +1445,7 @@ class DHTValueFoundEvent extends $pb.GeneratedMessage {
   DHTValueFoundEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   DHTValueFoundEvent copyWith(void Function(DHTValueFoundEvent) updates) =>
-      super.copyWith((message) => updates(message as DHTValueFoundEvent))
-          as DHTValueFoundEvent;
+      super.copyWith((message) => updates(message as DHTValueFoundEvent)) as DHTValueFoundEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -1534,8 +1455,8 @@ class DHTValueFoundEvent extends $pb.GeneratedMessage {
   @$core.override
   DHTValueFoundEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static DHTValueFoundEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<DHTValueFoundEvent>(create);
+  static DHTValueFoundEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTValueFoundEvent>(create);
   static DHTValueFoundEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1586,8 +1507,7 @@ class DHTValueNotFoundEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'DHTValueNotFoundEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'key')
     ..hasRequiredFields = false;
@@ -1595,8 +1515,7 @@ class DHTValueNotFoundEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   DHTValueNotFoundEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DHTValueNotFoundEvent copyWith(
-          void Function(DHTValueNotFoundEvent) updates) =>
+  DHTValueNotFoundEvent copyWith(void Function(DHTValueNotFoundEvent) updates) =>
       super.copyWith((message) => updates(message as DHTValueNotFoundEvent))
           as DHTValueNotFoundEvent;
 
@@ -1608,8 +1527,8 @@ class DHTValueNotFoundEvent extends $pb.GeneratedMessage {
   @$core.override
   DHTValueNotFoundEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static DHTValueNotFoundEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<DHTValueNotFoundEvent>(create);
+  static DHTValueNotFoundEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTValueNotFoundEvent>(create);
   static DHTValueNotFoundEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1644,19 +1563,16 @@ class DHTValueProvidedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'DHTValueProvidedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'key')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   DHTValueProvidedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DHTValueProvidedEvent copyWith(
-          void Function(DHTValueProvidedEvent) updates) =>
+  DHTValueProvidedEvent copyWith(void Function(DHTValueProvidedEvent) updates) =>
       super.copyWith((message) => updates(message as DHTValueProvidedEvent))
           as DHTValueProvidedEvent;
 
@@ -1668,8 +1584,8 @@ class DHTValueProvidedEvent extends $pb.GeneratedMessage {
   @$core.override
   DHTValueProvidedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static DHTValueProvidedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<DHTValueProvidedEvent>(create);
+  static DHTValueProvidedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTValueProvidedEvent>(create);
   static DHTValueProvidedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1713,8 +1629,7 @@ class DHTProviderAddedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'DHTProviderAddedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'key')
     ..aOS(2, _omitFieldNames ? '' : 'peerId')
@@ -1723,8 +1638,7 @@ class DHTProviderAddedEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   DHTProviderAddedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DHTProviderAddedEvent copyWith(
-          void Function(DHTProviderAddedEvent) updates) =>
+  DHTProviderAddedEvent copyWith(void Function(DHTProviderAddedEvent) updates) =>
       super.copyWith((message) => updates(message as DHTProviderAddedEvent))
           as DHTProviderAddedEvent;
 
@@ -1736,8 +1650,8 @@ class DHTProviderAddedEvent extends $pb.GeneratedMessage {
   @$core.override
   DHTProviderAddedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static DHTProviderAddedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<DHTProviderAddedEvent>(create);
+  static DHTProviderAddedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTProviderAddedEvent>(create);
   static DHTProviderAddedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1781,8 +1695,7 @@ class DHTProviderQueriedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'DHTProviderQueriedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'key')
     ..pPS(2, _omitFieldNames ? '' : 'providers')
@@ -1791,8 +1704,7 @@ class DHTProviderQueriedEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   DHTProviderQueriedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  DHTProviderQueriedEvent copyWith(
-          void Function(DHTProviderQueriedEvent) updates) =>
+  DHTProviderQueriedEvent copyWith(void Function(DHTProviderQueriedEvent) updates) =>
       super.copyWith((message) => updates(message as DHTProviderQueriedEvent))
           as DHTProviderQueriedEvent;
 
@@ -1804,8 +1716,8 @@ class DHTProviderQueriedEvent extends $pb.GeneratedMessage {
   @$core.override
   DHTProviderQueriedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static DHTProviderQueriedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<DHTProviderQueriedEvent>(create);
+  static DHTProviderQueriedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DHTProviderQueriedEvent>(create);
   static DHTProviderQueriedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1843,34 +1755,29 @@ class PubsubMessagePublishedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PubsubMessagePublishedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'topic')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'messageContent', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'messageContent', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PubsubMessagePublishedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PubsubMessagePublishedEvent copyWith(
-          void Function(PubsubMessagePublishedEvent) updates) =>
-      super.copyWith(
-              (message) => updates(message as PubsubMessagePublishedEvent))
+  PubsubMessagePublishedEvent copyWith(void Function(PubsubMessagePublishedEvent) updates) =>
+      super.copyWith((message) => updates(message as PubsubMessagePublishedEvent))
           as PubsubMessagePublishedEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static PubsubMessagePublishedEvent create() =>
-      PubsubMessagePublishedEvent._();
+  static PubsubMessagePublishedEvent create() => PubsubMessagePublishedEvent._();
   @$core.override
   PubsubMessagePublishedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static PubsubMessagePublishedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PubsubMessagePublishedEvent>(create);
+  static PubsubMessagePublishedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PubsubMessagePublishedEvent>(create);
   static PubsubMessagePublishedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1916,22 +1823,18 @@ class PubsubMessageReceivedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PubsubMessageReceivedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'topic')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'messageContent', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'messageContent', $pb.PbFieldType.OY)
     ..aOS(3, _omitFieldNames ? '' : 'peerId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PubsubMessageReceivedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PubsubMessageReceivedEvent copyWith(
-          void Function(PubsubMessageReceivedEvent) updates) =>
-      super.copyWith(
-              (message) => updates(message as PubsubMessageReceivedEvent))
+  PubsubMessageReceivedEvent copyWith(void Function(PubsubMessageReceivedEvent) updates) =>
+      super.copyWith((message) => updates(message as PubsubMessageReceivedEvent))
           as PubsubMessageReceivedEvent;
 
   @$core.override
@@ -1942,8 +1845,8 @@ class PubsubMessageReceivedEvent extends $pb.GeneratedMessage {
   @$core.override
   PubsubMessageReceivedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static PubsubMessageReceivedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PubsubMessageReceivedEvent>(create);
+  static PubsubMessageReceivedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PubsubMessageReceivedEvent>(create);
   static PubsubMessageReceivedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -1994,8 +1897,7 @@ class PubsubSubscriptionCreatedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PubsubSubscriptionCreatedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'topic')
     ..hasRequiredFields = false;
@@ -2003,18 +1905,15 @@ class PubsubSubscriptionCreatedEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PubsubSubscriptionCreatedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PubsubSubscriptionCreatedEvent copyWith(
-          void Function(PubsubSubscriptionCreatedEvent) updates) =>
-      super.copyWith(
-              (message) => updates(message as PubsubSubscriptionCreatedEvent))
+  PubsubSubscriptionCreatedEvent copyWith(void Function(PubsubSubscriptionCreatedEvent) updates) =>
+      super.copyWith((message) => updates(message as PubsubSubscriptionCreatedEvent))
           as PubsubSubscriptionCreatedEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static PubsubSubscriptionCreatedEvent create() =>
-      PubsubSubscriptionCreatedEvent._();
+  static PubsubSubscriptionCreatedEvent create() => PubsubSubscriptionCreatedEvent._();
   @$core.override
   PubsubSubscriptionCreatedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
@@ -2043,8 +1942,7 @@ class PubsubSubscriptionCancelledEvent extends $pb.GeneratedMessage {
 
   PubsubSubscriptionCancelledEvent._();
 
-  factory PubsubSubscriptionCancelledEvent.fromBuffer(
-          $core.List<$core.int> data,
+  factory PubsubSubscriptionCancelledEvent.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
   factory PubsubSubscriptionCancelledEvent.fromJson($core.String json,
@@ -2053,8 +1951,7 @@ class PubsubSubscriptionCancelledEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PubsubSubscriptionCancelledEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'topic')
     ..hasRequiredFields = false;
@@ -2064,22 +1961,19 @@ class PubsubSubscriptionCancelledEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PubsubSubscriptionCancelledEvent copyWith(
           void Function(PubsubSubscriptionCancelledEvent) updates) =>
-      super.copyWith(
-              (message) => updates(message as PubsubSubscriptionCancelledEvent))
+      super.copyWith((message) => updates(message as PubsubSubscriptionCancelledEvent))
           as PubsubSubscriptionCancelledEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static PubsubSubscriptionCancelledEvent create() =>
-      PubsubSubscriptionCancelledEvent._();
+  static PubsubSubscriptionCancelledEvent create() => PubsubSubscriptionCancelledEvent._();
   @$core.override
   PubsubSubscriptionCancelledEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
   static PubsubSubscriptionCancelledEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PubsubSubscriptionCancelledEvent>(
-          create);
+      $pb.GeneratedMessage.$_defaultFor<PubsubSubscriptionCancelledEvent>(create);
   static PubsubSubscriptionCancelledEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -2112,8 +2006,7 @@ class CircuitRelayCreatedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'CircuitRelayCreatedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'relayAddress')
     ..hasRequiredFields = false;
@@ -2121,8 +2014,7 @@ class CircuitRelayCreatedEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   CircuitRelayCreatedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CircuitRelayCreatedEvent copyWith(
-          void Function(CircuitRelayCreatedEvent) updates) =>
+  CircuitRelayCreatedEvent copyWith(void Function(CircuitRelayCreatedEvent) updates) =>
       super.copyWith((message) => updates(message as CircuitRelayCreatedEvent))
           as CircuitRelayCreatedEvent;
 
@@ -2134,8 +2026,8 @@ class CircuitRelayCreatedEvent extends $pb.GeneratedMessage {
   @$core.override
   CircuitRelayCreatedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static CircuitRelayCreatedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<CircuitRelayCreatedEvent>(create);
+  static CircuitRelayCreatedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CircuitRelayCreatedEvent>(create);
   static CircuitRelayCreatedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -2170,8 +2062,7 @@ class CircuitRelayClosedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'CircuitRelayClosedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'relayAddress')
     ..aOS(2, _omitFieldNames ? '' : 'reason')
@@ -2180,8 +2071,7 @@ class CircuitRelayClosedEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   CircuitRelayClosedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CircuitRelayClosedEvent copyWith(
-          void Function(CircuitRelayClosedEvent) updates) =>
+  CircuitRelayClosedEvent copyWith(void Function(CircuitRelayClosedEvent) updates) =>
       super.copyWith((message) => updates(message as CircuitRelayClosedEvent))
           as CircuitRelayClosedEvent;
 
@@ -2193,8 +2083,8 @@ class CircuitRelayClosedEvent extends $pb.GeneratedMessage {
   @$core.override
   CircuitRelayClosedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static CircuitRelayClosedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<CircuitRelayClosedEvent>(create);
+  static CircuitRelayClosedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CircuitRelayClosedEvent>(create);
   static CircuitRelayClosedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -2238,8 +2128,7 @@ class CircuitRelayTrafficEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'CircuitRelayTrafficEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'relayAddress')
     ..aInt64(2, _omitFieldNames ? '' : 'dataSize')
@@ -2248,8 +2137,7 @@ class CircuitRelayTrafficEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   CircuitRelayTrafficEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CircuitRelayTrafficEvent copyWith(
-          void Function(CircuitRelayTrafficEvent) updates) =>
+  CircuitRelayTrafficEvent copyWith(void Function(CircuitRelayTrafficEvent) updates) =>
       super.copyWith((message) => updates(message as CircuitRelayTrafficEvent))
           as CircuitRelayTrafficEvent;
 
@@ -2261,8 +2149,8 @@ class CircuitRelayTrafficEvent extends $pb.GeneratedMessage {
   @$core.override
   CircuitRelayTrafficEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static CircuitRelayTrafficEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<CircuitRelayTrafficEvent>(create);
+  static CircuitRelayTrafficEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CircuitRelayTrafficEvent>(create);
   static CircuitRelayTrafficEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -2306,8 +2194,7 @@ class CircuitRelayDataReceivedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'CircuitRelayDataReceivedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'relayAddress')
     ..aInt64(2, _omitFieldNames ? '' : 'dataSize')
@@ -2316,23 +2203,20 @@ class CircuitRelayDataReceivedEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   CircuitRelayDataReceivedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CircuitRelayDataReceivedEvent copyWith(
-          void Function(CircuitRelayDataReceivedEvent) updates) =>
-      super.copyWith(
-              (message) => updates(message as CircuitRelayDataReceivedEvent))
+  CircuitRelayDataReceivedEvent copyWith(void Function(CircuitRelayDataReceivedEvent) updates) =>
+      super.copyWith((message) => updates(message as CircuitRelayDataReceivedEvent))
           as CircuitRelayDataReceivedEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static CircuitRelayDataReceivedEvent create() =>
-      CircuitRelayDataReceivedEvent._();
+  static CircuitRelayDataReceivedEvent create() => CircuitRelayDataReceivedEvent._();
   @$core.override
   CircuitRelayDataReceivedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static CircuitRelayDataReceivedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<CircuitRelayDataReceivedEvent>(create);
+  static CircuitRelayDataReceivedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CircuitRelayDataReceivedEvent>(create);
   static CircuitRelayDataReceivedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -2376,8 +2260,7 @@ class CircuitRelayDataSentEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'CircuitRelayDataSentEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'relayAddress')
     ..aInt64(2, _omitFieldNames ? '' : 'dataSize')
@@ -2386,8 +2269,7 @@ class CircuitRelayDataSentEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   CircuitRelayDataSentEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CircuitRelayDataSentEvent copyWith(
-          void Function(CircuitRelayDataSentEvent) updates) =>
+  CircuitRelayDataSentEvent copyWith(void Function(CircuitRelayDataSentEvent) updates) =>
       super.copyWith((message) => updates(message as CircuitRelayDataSentEvent))
           as CircuitRelayDataSentEvent;
 
@@ -2399,8 +2281,8 @@ class CircuitRelayDataSentEvent extends $pb.GeneratedMessage {
   @$core.override
   CircuitRelayDataSentEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static CircuitRelayDataSentEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<CircuitRelayDataSentEvent>(create);
+  static CircuitRelayDataSentEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CircuitRelayDataSentEvent>(create);
   static CircuitRelayDataSentEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -2444,8 +2326,7 @@ class CircuitRelayFailedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'CircuitRelayFailedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'relayAddress')
     ..aOS(2, _omitFieldNames ? '' : 'reason')
@@ -2454,8 +2335,7 @@ class CircuitRelayFailedEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   CircuitRelayFailedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CircuitRelayFailedEvent copyWith(
-          void Function(CircuitRelayFailedEvent) updates) =>
+  CircuitRelayFailedEvent copyWith(void Function(CircuitRelayFailedEvent) updates) =>
       super.copyWith((message) => updates(message as CircuitRelayFailedEvent))
           as CircuitRelayFailedEvent;
 
@@ -2467,8 +2347,8 @@ class CircuitRelayFailedEvent extends $pb.GeneratedMessage {
   @$core.override
   CircuitRelayFailedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static CircuitRelayFailedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<CircuitRelayFailedEvent>(create);
+  static CircuitRelayFailedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CircuitRelayFailedEvent>(create);
   static CircuitRelayFailedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -2510,10 +2390,8 @@ class StreamStartedEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'StreamStartedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StreamStartedEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'streamId')
     ..aOS(2, _omitFieldNames ? '' : 'peerId')
@@ -2523,8 +2401,7 @@ class StreamStartedEvent extends $pb.GeneratedMessage {
   StreamStartedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   StreamStartedEvent copyWith(void Function(StreamStartedEvent) updates) =>
-      super.copyWith((message) => updates(message as StreamStartedEvent))
-          as StreamStartedEvent;
+      super.copyWith((message) => updates(message as StreamStartedEvent)) as StreamStartedEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -2534,8 +2411,8 @@ class StreamStartedEvent extends $pb.GeneratedMessage {
   @$core.override
   StreamStartedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static StreamStartedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<StreamStartedEvent>(create);
+  static StreamStartedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<StreamStartedEvent>(create);
   static StreamStartedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -2579,10 +2456,8 @@ class StreamEndedEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'StreamEndedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StreamEndedEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'streamId')
     ..aOS(2, _omitFieldNames ? '' : 'peerId')
@@ -2593,8 +2468,7 @@ class StreamEndedEvent extends $pb.GeneratedMessage {
   StreamEndedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   StreamEndedEvent copyWith(void Function(StreamEndedEvent) updates) =>
-      super.copyWith((message) => updates(message as StreamEndedEvent))
-          as StreamEndedEvent;
+      super.copyWith((message) => updates(message as StreamEndedEvent)) as StreamEndedEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -2604,8 +2478,8 @@ class StreamEndedEvent extends $pb.GeneratedMessage {
   @$core.override
   StreamEndedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static StreamEndedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<StreamEndedEvent>(create);
+  static StreamEndedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<StreamEndedEvent>(create);
   static StreamEndedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -2654,10 +2528,8 @@ class PeerDiscoveredEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PeerDiscoveredEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PeerDiscoveredEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'peerId')
     ..hasRequiredFields = false;
@@ -2666,8 +2538,7 @@ class PeerDiscoveredEvent extends $pb.GeneratedMessage {
   PeerDiscoveredEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PeerDiscoveredEvent copyWith(void Function(PeerDiscoveredEvent) updates) =>
-      super.copyWith((message) => updates(message as PeerDiscoveredEvent))
-          as PeerDiscoveredEvent;
+      super.copyWith((message) => updates(message as PeerDiscoveredEvent)) as PeerDiscoveredEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -2677,8 +2548,8 @@ class PeerDiscoveredEvent extends $pb.GeneratedMessage {
   @$core.override
   PeerDiscoveredEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static PeerDiscoveredEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PeerDiscoveredEvent>(create);
+  static PeerDiscoveredEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PeerDiscoveredEvent>(create);
   static PeerDiscoveredEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -2703,10 +2574,8 @@ class NodeStartedEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'NodeStartedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NodeStartedEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..hasRequiredFields = false;
 
@@ -2714,8 +2583,7 @@ class NodeStartedEvent extends $pb.GeneratedMessage {
   NodeStartedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   NodeStartedEvent copyWith(void Function(NodeStartedEvent) updates) =>
-      super.copyWith((message) => updates(message as NodeStartedEvent))
-          as NodeStartedEvent;
+      super.copyWith((message) => updates(message as NodeStartedEvent)) as NodeStartedEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -2725,8 +2593,8 @@ class NodeStartedEvent extends $pb.GeneratedMessage {
   @$core.override
   NodeStartedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static NodeStartedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<NodeStartedEvent>(create);
+  static NodeStartedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NodeStartedEvent>(create);
   static NodeStartedEvent? _defaultInstance;
 }
 
@@ -2742,10 +2610,8 @@ class NodeStoppedEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'NodeStoppedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NodeStoppedEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..hasRequiredFields = false;
 
@@ -2753,8 +2619,7 @@ class NodeStoppedEvent extends $pb.GeneratedMessage {
   NodeStoppedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   NodeStoppedEvent copyWith(void Function(NodeStoppedEvent) updates) =>
-      super.copyWith((message) => updates(message as NodeStoppedEvent))
-          as NodeStoppedEvent;
+      super.copyWith((message) => updates(message as NodeStoppedEvent)) as NodeStoppedEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -2764,8 +2629,8 @@ class NodeStoppedEvent extends $pb.GeneratedMessage {
   @$core.override
   NodeStoppedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static NodeStoppedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<NodeStoppedEvent>(create);
+  static NodeStoppedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NodeStoppedEvent>(create);
   static NodeStoppedEvent? _defaultInstance;
 }
 
@@ -2793,10 +2658,8 @@ class NodeErrorEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'NodeErrorEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NodeErrorEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aE<NodeErrorEvent_ErrorType>(1, _omitFieldNames ? '' : 'errorType',
         enumValues: NodeErrorEvent_ErrorType.values)
@@ -2809,8 +2672,7 @@ class NodeErrorEvent extends $pb.GeneratedMessage {
   NodeErrorEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   NodeErrorEvent copyWith(void Function(NodeErrorEvent) updates) =>
-      super.copyWith((message) => updates(message as NodeErrorEvent))
-          as NodeErrorEvent;
+      super.copyWith((message) => updates(message as NodeErrorEvent)) as NodeErrorEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -2820,8 +2682,8 @@ class NodeErrorEvent extends $pb.GeneratedMessage {
   @$core.override
   NodeErrorEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static NodeErrorEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<NodeErrorEvent>(create);
+  static NodeErrorEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NodeErrorEvent>(create);
   static NodeErrorEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -2881,19 +2743,16 @@ class NetworkStatusChangedEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'NetworkStatusChangedEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
-    ..aE<NetworkStatusChangedEvent_ChangeType>(
-        1, _omitFieldNames ? '' : 'changeType',
+    ..aE<NetworkStatusChangedEvent_ChangeType>(1, _omitFieldNames ? '' : 'changeType',
         enumValues: NetworkStatusChangedEvent_ChangeType.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   NetworkStatusChangedEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  NetworkStatusChangedEvent copyWith(
-          void Function(NetworkStatusChangedEvent) updates) =>
+  NetworkStatusChangedEvent copyWith(void Function(NetworkStatusChangedEvent) updates) =>
       super.copyWith((message) => updates(message as NetworkStatusChangedEvent))
           as NetworkStatusChangedEvent;
 
@@ -2905,15 +2764,14 @@ class NetworkStatusChangedEvent extends $pb.GeneratedMessage {
   @$core.override
   NetworkStatusChangedEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static NetworkStatusChangedEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<NetworkStatusChangedEvent>(create);
+  static NetworkStatusChangedEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NetworkStatusChangedEvent>(create);
   static NetworkStatusChangedEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
   NetworkStatusChangedEvent_ChangeType get changeType => $_getN(0);
   @$pb.TagNumber(1)
-  set changeType(NetworkStatusChangedEvent_ChangeType value) =>
-      $_setField(1, value);
+  set changeType(NetworkStatusChangedEvent_ChangeType value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasChangeType() => $_has(0);
   @$pb.TagNumber(1)
@@ -2942,8 +2800,7 @@ class ResourceLimitExceededEvent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ResourceLimitExceededEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'resourceType')
     ..aOS(2, _omitFieldNames ? '' : 'message')
@@ -2952,10 +2809,8 @@ class ResourceLimitExceededEvent extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ResourceLimitExceededEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ResourceLimitExceededEvent copyWith(
-          void Function(ResourceLimitExceededEvent) updates) =>
-      super.copyWith(
-              (message) => updates(message as ResourceLimitExceededEvent))
+  ResourceLimitExceededEvent copyWith(void Function(ResourceLimitExceededEvent) updates) =>
+      super.copyWith((message) => updates(message as ResourceLimitExceededEvent))
           as ResourceLimitExceededEvent;
 
   @$core.override
@@ -2966,8 +2821,8 @@ class ResourceLimitExceededEvent extends $pb.GeneratedMessage {
   @$core.override
   ResourceLimitExceededEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ResourceLimitExceededEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ResourceLimitExceededEvent>(create);
+  static ResourceLimitExceededEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ResourceLimitExceededEvent>(create);
   static ResourceLimitExceededEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -3009,10 +2864,8 @@ class SystemAlertEvent extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'SystemAlertEvent',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SystemAlertEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.ipfs_node'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'alertType')
     ..aOS(2, _omitFieldNames ? '' : 'message')
@@ -3022,8 +2875,7 @@ class SystemAlertEvent extends $pb.GeneratedMessage {
   SystemAlertEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   SystemAlertEvent copyWith(void Function(SystemAlertEvent) updates) =>
-      super.copyWith((message) => updates(message as SystemAlertEvent))
-          as SystemAlertEvent;
+      super.copyWith((message) => updates(message as SystemAlertEvent)) as SystemAlertEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -3033,8 +2885,8 @@ class SystemAlertEvent extends $pb.GeneratedMessage {
   @$core.override
   SystemAlertEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static SystemAlertEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<SystemAlertEvent>(create);
+  static SystemAlertEvent getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SystemAlertEvent>(create);
   static SystemAlertEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -3056,7 +2908,5 @@ class SystemAlertEvent extends $pb.GeneratedMessage {
   void clearMessage() => $_clearField(2);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

@@ -211,19 +211,13 @@ void main() {
       });
 
       test('dag-pb codec', () {
-        final cid = CID.computeForDataSync(
-          utf8.encode('dagpb'),
-          codec: 'dag-pb',
-        );
+        final cid = CID.computeForDataSync(utf8.encode('dagpb'), codec: 'dag-pb');
 
         expect(cid.codec, equals('dag-pb'));
       });
 
       test('dag-cbor codec', () {
-        final cid = CID.computeForDataSync(
-          utf8.encode('cbor'),
-          codec: 'dag-cbor',
-        );
+        final cid = CID.computeForDataSync(utf8.encode('cbor'), codec: 'dag-cbor');
 
         expect(cid.codec, equals('dag-cbor'));
       });

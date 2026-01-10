@@ -35,10 +35,7 @@ void main() {
     });
 
     test('RequestHandlingError with cause', () {
-      final error = RequestHandlingError(
-        'Failed to process',
-        Exception('Network'),
-      );
+      final error = RequestHandlingError('Failed to process', Exception('Network'));
       expect(error.message, contains('Failed to handle request'));
       expect(error.cause, isA<Exception>());
     });

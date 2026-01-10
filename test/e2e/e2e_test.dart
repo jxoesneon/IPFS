@@ -22,8 +22,7 @@ void main() {
         debug: true,
         network: NetworkConfig(
           listenAddresses: ['/ip4/127.0.0.1/tcp/0'], // Use random port
-          enableNatTraversal:
-              false, // Disable NAT for local test to avoid delays
+          enableNatTraversal: false, // Disable NAT for local test to avoid delays
           bootstrapPeers: [], // No metadata noise
         ),
       );
@@ -80,10 +79,7 @@ void main() {
       // or check health status. For this test, we assume stop completes without error.
       // Alternatively, we can check health status which should show disabled services.
       final health = await node.getHealthStatus();
-      expect(
-        health['network']['dht']['status'],
-        anyOf(equals('disabled'), contains('error')),
-      );
+      expect(health['network']['dht']['status'], anyOf(equals('disabled'), contains('error')));
     });
   });
 }

@@ -19,14 +19,8 @@ extension RemovePeer on KademliaTree {
       // Check if the bucket can be merged with an adjacent bucket
       if (bucketIndex > 0 && bucketIndex < buckets.length - 1) {
         // Try merging with the previous or next bucket
-        mergeBuckets(
-          bucketIndex,
-          bucketIndex - 1,
-        ); // Use through KademliaTree instance
-        mergeBuckets(
-          bucketIndex,
-          bucketIndex + 1,
-        ); // Use through KademliaTree instance
+        mergeBuckets(bucketIndex, bucketIndex - 1); // Use through KademliaTree instance
+        mergeBuckets(bucketIndex, bucketIndex + 1); // Use through KademliaTree instance
       }
     }
   }

@@ -174,7 +174,7 @@ void main() {
 
       final bytes = msg.toBytes();
       expect(bytes.isNotEmpty, isTrue);
-      
+
       // Note: Full round-trip deserialization depends on Message.fromBytes implementation
       // which may have edge cases. Basic serialization verified here.
     });

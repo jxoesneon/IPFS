@@ -36,10 +36,7 @@ void main() {
 
     test('toKadPeer converts addresses to binary (TODO case)', () {
       final peerId = p2p.PeerId(value: Uint8List.fromList(List.filled(64, 1)));
-      final address = p2p.FullAddress(
-        address: InternetAddress('127.0.0.1'),
-        port: 4001,
-      );
+      final address = p2p.FullAddress(address: InternetAddress('127.0.0.1'), port: 4001);
 
       final peer = IPFSPeer(
         id: PeerId(value: peerId.value),

@@ -83,9 +83,7 @@ class IPNSRecord {
     final publicKey = await signer.extractPublicKeyBytes(keyPair);
 
     // Value is /ipfs/<CID>
-    final valueBytes = Uint8List.fromList(
-      utf8.encode('/ipfs/${value.encode()}'),
-    );
+    final valueBytes = Uint8List.fromList(utf8.encode('/ipfs/${value.encode()}'));
 
     final record = IPNSRecord._(
       value: valueBytes,

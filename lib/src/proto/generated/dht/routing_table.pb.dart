@@ -36,10 +36,8 @@ class RoutingTableProto extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RoutingTableProto',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.routing_table'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RoutingTableProto',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.routing_table'),
       createEmptyInstance: create)
     ..m<$core.String, $0.KademliaNode>(1, _omitFieldNames ? '' : 'entries',
         entryClassName: 'RoutingTableProto.EntriesEntry',
@@ -54,8 +52,7 @@ class RoutingTableProto extends $pb.GeneratedMessage {
   RoutingTableProto clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   RoutingTableProto copyWith(void Function(RoutingTableProto) updates) =>
-      super.copyWith((message) => updates(message as RoutingTableProto))
-          as RoutingTableProto;
+      super.copyWith((message) => updates(message as RoutingTableProto)) as RoutingTableProto;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -65,8 +62,8 @@ class RoutingTableProto extends $pb.GeneratedMessage {
   @$core.override
   RoutingTableProto createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static RoutingTableProto getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RoutingTableProto>(create);
+  static RoutingTableProto getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RoutingTableProto>(create);
   static RoutingTableProto? _defaultInstance;
 
   /// Represents the routing table entries.
@@ -75,7 +72,5 @@ class RoutingTableProto extends $pb.GeneratedMessage {
   $pb.PbMap<$core.String, $0.KademliaNode> get entries => $_getMap(0);
 }
 
-const $core.bool _omitFieldNames =
-    $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

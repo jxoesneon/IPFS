@@ -19,7 +19,7 @@ void main() {
       final encoded = base58.encode(bytes);
       // 'hello' in base58 is 'Cn8Jmjm'
       expect(encoded, isNotEmpty);
-      
+
       final decoded = base58.base58Decode(encoded);
       expect(String.fromCharCodes(decoded), equals('hello'));
     });
@@ -28,7 +28,7 @@ void main() {
       final bytes = Uint8List.fromList([0, 0, 1, 2, 3]);
       final encoded = base58.encode(bytes);
       expect(encoded.startsWith('11'), isTrue);
-      
+
       final decoded = base58.base58Decode(encoded);
       expect(decoded, equals(bytes));
     });
@@ -47,7 +47,7 @@ void main() {
       final bytes = Uint8List.fromList([0x12, 0x20] + List.generate(32, (i) => i));
       final encoded = base58.encode(bytes);
       expect(encoded.startsWith('Qm'), isTrue); // Should start with Qm
-      
+
       final decoded = base58.base58Decode(encoded);
       expect(decoded, equals(bytes));
     });

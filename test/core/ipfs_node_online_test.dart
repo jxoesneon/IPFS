@@ -26,8 +26,7 @@ import 'package:dart_ipfs/src/utils/base58.dart'; // Added import
 import 'package:test/test.dart';
 
 // Helper to generate valid 64-byte peer ID string
-String get validMockPeerId =>
-    Base58().encode(Uint8List.fromList(List.filled(64, 1)));
+String get validMockPeerId => Base58().encode(Uint8List.fromList(List.filled(64, 1)));
 
 // Mocks
 class MockBlockStore extends BlockStore {
@@ -116,13 +115,14 @@ class MockNetworkHandler extends NetworkHandler {
 
   @override
   Future<void> connectToPeer(String multiaddress) async {
-     // Mock success
+    // Mock success
   }
 
   @override
   Future<void> disconnectFromPeer(String multiaddress) async {
-     // Mock success
-  }}
+    // Mock success
+  }
+}
 
 class MockDHTHandler extends DHTHandler {
   MockDHTHandler(IPFSConfig config, NetworkHandler networkHandler)
@@ -150,11 +150,8 @@ class MockDHTHandler extends DHTHandler {
 }
 
 class MockBitswapHandler extends BitswapHandler {
-  MockBitswapHandler(
-    IPFSConfig config,
-    BlockStore store,
-    NetworkHandler networkHandler,
-  ) : super(config, store, networkHandler.p2pRouter);
+  MockBitswapHandler(IPFSConfig config, BlockStore store, NetworkHandler networkHandler)
+    : super(config, store, networkHandler.p2pRouter);
 
   @override
   Future<void> start() async {}
@@ -165,19 +162,14 @@ class MockBitswapHandler extends BitswapHandler {
 
   @override
   Future<Block?> wantBlock(String cid) async {
-    return Block(
-      cid: CID.decode(cid),
-      data: Uint8List.fromList([10, 20, 30]),
-      format: 'raw',
-    );
+    return Block(cid: CID.decode(cid), data: Uint8List.fromList([10, 20, 30]), format: 'raw');
   }
 }
 
 class MockIpfsNodeNetworkEvents extends IpfsNodeNetworkEvents {
   MockIpfsNodeNetworkEvents(super.relay, super.router);
 
-  final StreamController<NetworkEvent> _controller =
-      StreamController.broadcast();
+  final StreamController<NetworkEvent> _controller = StreamController.broadcast();
   @override
   Stream<NetworkEvent> get networkEvents => _controller.stream;
 }
@@ -221,9 +213,7 @@ void main() {
       // Register Storage
       container.registerSingleton<BlockStore>(mockBlockStore);
       container.registerSingleton<DatastoreHandler>(mockDatastore);
-      container.registerSingleton<IPLDHandler>(
-        MockIPLDHandler(config, mockBlockStore),
-      );
+      container.registerSingleton<IPLDHandler>(MockIPLDHandler(config, mockBlockStore));
 
       // Mocks for Network
       final mockRouter = MockP2plibRouter(config);
@@ -232,16 +222,10 @@ void main() {
 
       final ipfsNodeForMocks = IPFSNode.fromContainer(container);
 
-      final mockNetworkHandler = MockNetworkHandler(
-        config,
-        ipfsNodeForMocks,
-        mockRouter,
-      );
+      final mockNetworkHandler = MockNetworkHandler(config, ipfsNodeForMocks, mockRouter);
       container.registerSingleton<NetworkHandler>(mockNetworkHandler);
 
-      container.registerSingleton<DHTHandler>(
-        MockDHTHandler(config, mockNetworkHandler),
-      );
+      container.registerSingleton<DHTHandler>(MockDHTHandler(config, mockNetworkHandler));
 
       container.registerSingleton<BitswapHandler>(
         MockBitswapHandler(config, mockBlockStore, mockNetworkHandler),

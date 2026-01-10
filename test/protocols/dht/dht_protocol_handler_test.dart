@@ -26,9 +26,9 @@ void main() {
     mockRouter = MockP2plibRouter();
     mockStorage = MockDatastore();
     mockRoutingTable = MockRoutingTable();
-    
+
     when(mockRouter.getRoutingTable()).thenReturn(mockRoutingTable);
-    
+
     // Capture the handler
     when(mockRouter.registerProtocolHandler(any, any)).thenAnswer((Invocation inv) {
       if (inv.positionalArguments[0] == DHTProtocolHandler.protocolId) {
@@ -40,10 +40,7 @@ void main() {
   });
 
   NetworkPacket createPacket(kad.Message message, [String peerId = 'srcPeer']) {
-    return NetworkPacket(
-      srcPeerId: peerId,
-      datagram: message.writeToBuffer(),
-    );
+    return NetworkPacket(srcPeerId: peerId, datagram: message.writeToBuffer());
   }
 
   group('DHTProtocolHandler', () {
@@ -63,7 +60,7 @@ void main() {
       final findNodeRequest = kad.Message()
         ..type = kad.Message_MessageType.FIND_NODE
         ..key = targetId.value;
-      
+
       final closerPeerId = PeerId(value: Uint8List.fromList([4, 5, 6]));
       when(mockRoutingTable.getNearestPeers(any, any)).thenReturn([closerPeerId]);
 
@@ -80,7 +77,7 @@ void main() {
       final keyStr = 'testKey';
       final key = utf8.encode(keyStr);
       final value = Uint8List.fromList([10, 20, 30]);
-      
+
       final getRequest = kad.Message()
         ..type = kad.Message_MessageType.GET_VALUE
         ..key = key;
@@ -123,16 +120,17 @@ void main() {
       await messageHandler(createPacket(putRequest));
 
       verify(mockStorage.put(any, any)).called(1);
-      
+
       final captured = verify(mockRouter.sendMessage(any, captureAny)).captured.single as Uint8List;
       final response = kad.Message.fromBuffer(captured);
       expect(response.type, equals(kad.Message_MessageType.PUT_VALUE));
     });
 
     test('handles unknown message type', () async {
-       final unknownMsg = kad.Message()..type = kad.Message_MessageType.GET_PROVIDERS; // Not explicitly handled in switch
-       await messageHandler(createPacket(unknownMsg));
-       verifyNever(mockRouter.sendMessage(any, any));
+      final unknownMsg = kad.Message()
+        ..type = kad.Message_MessageType.GET_PROVIDERS; // Not explicitly handled in switch
+      await messageHandler(createPacket(unknownMsg));
+      verifyNever(mockRouter.sendMessage(any, any));
     });
   });
 }

@@ -53,16 +53,8 @@ void main() {
 
       final result = await node.cat('test_cid');
 
-      expect(
-        serverHit,
-        isTrue,
-        reason: 'Server should have been hit in custom mode',
-      );
-      expect(
-        result,
-        equals([1, 2, 3]),
-        reason: 'Should return data from gateway',
-      );
+      expect(serverHit, isTrue, reason: 'Server should have been hit in custom mode');
+      expect(result, equals([1, 2, 3]), reason: 'Should return data from gateway');
     });
 
     test(
@@ -75,46 +67,27 @@ void main() {
         // BUT importantly, it should NOT hit our HTTP server.
         final result = await node.cat('test_cid');
 
-        expect(
-          serverHit,
-          isFalse,
-          reason: 'Server should NOT be hit in internal mode',
-        );
-        expect(
-          result,
-          isNull,
-          reason: 'Should return null for missing content in offline mode',
-        );
+        expect(serverHit, isFalse, reason: 'Server should NOT be hit in internal mode');
+        expect(result, isNull, reason: 'Should return null for missing content in offline mode');
       },
     );
 
-    test(
-      'GatewayMode.public uses default ipfs.io logic (Integration Check)',
-      () async {
-        // We can't easily mock the HARDCODED ipfs.io url in HttpGatewayClient without DI.
-        // But we can verify it *tries* to use HttpGatewayClient logic.
-        // Since we can't observe the private internal client URL easily, we will rely on
-        // the fact that it DOESN'T hit our local mock server.
-        node.setGatewayMode(GatewayMode.public);
+    test('GatewayMode.public uses default ipfs.io logic (Integration Check)', () async {
+      // We can't easily mock the HARDCODED ipfs.io url in HttpGatewayClient without DI.
+      // But we can verify it *tries* to use HttpGatewayClient logic.
+      // Since we can't observe the private internal client URL easily, we will rely on
+      // the fact that it DOESN'T hit our local mock server.
+      node.setGatewayMode(GatewayMode.public);
 
-        // Use a valid CID that exists on public IPFS gateways (empty directory hash)
-        // This ensures we actually test successful connectivity as requested.
-        final validCid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
-        
-        final result = await node.cat(validCid);
+      // Use a valid CID that exists on public IPFS gateways (empty directory hash)
+      // This ensures we actually test successful connectivity as requested.
+      final validCid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
 
-        expect(
-          serverHit,
-          isFalse,
-          reason: 'Public mode should not hit the local custom mock server',
-        );
-        
-        expect(
-          result,
-          isNotNull,
-          reason: 'Should successfully retrieve content from public gateway',
-        );
-      },
-    );
+      final result = await node.cat(validCid);
+
+      expect(serverHit, isFalse, reason: 'Public mode should not hit the local custom mock server');
+
+      expect(result, isNotNull, reason: 'Should successfully retrieve content from public gateway');
+    });
   });
 }

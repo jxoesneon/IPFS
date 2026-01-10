@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -19,7 +18,9 @@ void main() {
   group('JoseCoseHandler', () {
     group('encodeJWS', () {
       test('throws on non-MAP node', () async {
-        final node = IPLDNode()..kind = Kind.STRING..stringValue = 'test';
+        final node = IPLDNode()
+          ..kind = Kind.STRING
+          ..stringValue = 'test';
         expect(
           () => JoseCoseHandler.encodeJWS(node, testPrivateKey),
           throwsA(isA<IPLDEncodingError>()),
@@ -30,8 +31,14 @@ void main() {
         final node = IPLDNode()
           ..kind = Kind.MAP
           ..mapValue = (IPLDMap()
-            ..entries.add(MapEntry()..key = 'payload'..value = (IPLDNode()..kind = Kind.STRING..stringValue = 'test payload')));
-        
+            ..entries.add(
+              MapEntry()
+                ..key = 'payload'
+                ..value = (IPLDNode()
+                  ..kind = Kind.STRING
+                  ..stringValue = 'test payload'),
+            ));
+
         final result = await JoseCoseHandler.encodeJWS(node, testPrivateKey);
         expect(result, isNotEmpty);
         // JWS compact serialization has 3 parts separated by dots
@@ -46,7 +53,7 @@ void main() {
         // Generate a dummy public key (65 bytes for uncompressed EC point)
         final recipientPublicKey = List<int>.filled(65, 0);
         recipientPublicKey[0] = 0x04; // Uncompressed point indicator
-        
+
         expect(
           () => JoseCoseHandler.encodeJWE(node, recipientPublicKey),
           throwsA(isA<IPLDEncodingError>()),
@@ -57,14 +64,20 @@ void main() {
         final node = IPLDNode()
           ..kind = Kind.MAP
           ..mapValue = (IPLDMap()
-            ..entries.add(MapEntry()..key = 'payload'..value = (IPLDNode()..kind = Kind.STRING..stringValue = 'secret data')));
-        
+            ..entries.add(
+              MapEntry()
+                ..key = 'payload'
+                ..value = (IPLDNode()
+                  ..kind = Kind.STRING
+                  ..stringValue = 'secret data'),
+            ));
+
         // Generate a proper recipient public key from our test key
         final pubKey = testPrivateKey.publicKey;
         final xBytes = _bigIntToBytes(pubKey.Q!.x!.toBigInteger()!);
         final yBytes = _bigIntToBytes(pubKey.Q!.y!.toBigInteger()!);
         final recipientPublicKey = [0x04, ...xBytes, ...yBytes];
-        
+
         try {
           final result = await JoseCoseHandler.encodeJWE(node, recipientPublicKey);
           expect(result, isNotEmpty);
@@ -83,13 +96,19 @@ void main() {
           throwsA(isA<IPLDEncodingError>()),
         );
       });
-      
+
       test('encodes MAP node successfully', () async {
         final node = IPLDNode()
           ..kind = Kind.MAP
           ..mapValue = (IPLDMap()
-            ..entries.add(MapEntry()..key = 'payload'..value = (IPLDNode()..kind = Kind.STRING..stringValue = 'cose test payload')));
-        
+            ..entries.add(
+              MapEntry()
+                ..key = 'payload'
+                ..value = (IPLDNode()
+                  ..kind = Kind.STRING
+                  ..stringValue = 'cose test payload'),
+            ));
+
         final result = await JoseCoseHandler.encodeCOSE(node, testPrivateKey);
         expect(result, isNotEmpty);
         expect(result.length, greaterThan(10));
@@ -97,8 +116,10 @@ void main() {
     });
 
     group('decodeJWS', () {
-       test('throws on non-MAP node', () async {
-        final node = IPLDNode()..kind = Kind.STRING..stringValue = 'test';
+      test('throws on non-MAP node', () async {
+        final node = IPLDNode()
+          ..kind = Kind.STRING
+          ..stringValue = 'test';
         expect(
           () => JoseCoseHandler.decodeJWS(node, testPrivateKey),
           throwsA(isA<IPLDEncodingError>()),
@@ -110,15 +131,27 @@ void main() {
         final encodeNode = IPLDNode()
           ..kind = Kind.MAP
           ..mapValue = (IPLDMap()
-            ..entries.add(MapEntry()..key = 'payload'..value = (IPLDNode()..kind = Kind.STRING..stringValue = originalPayload)));
-        
+            ..entries.add(
+              MapEntry()
+                ..key = 'payload'
+                ..value = (IPLDNode()
+                  ..kind = Kind.STRING
+                  ..stringValue = originalPayload),
+            ));
+
         final jwsBytes = await JoseCoseHandler.encodeJWS(encodeNode, testPrivateKey);
-        
+
         final decodeNode = IPLDNode()
           ..kind = Kind.MAP
           ..mapValue = (IPLDMap()
-            ..entries.add(MapEntry()..key = 'payload'..value = (IPLDNode()..kind = Kind.BYTES..bytesValue = jwsBytes)));
-        
+            ..entries.add(
+              MapEntry()
+                ..key = 'payload'
+                ..value = (IPLDNode()
+                  ..kind = Kind.BYTES
+                  ..bytesValue = jwsBytes),
+            ));
+
         // Attempt successful decode
         try {
           final result = await JoseCoseHandler.decodeJWS(decodeNode, testPrivateKey);
@@ -128,29 +161,29 @@ void main() {
         }
       });
     });
-    
+
     group('decodeJWE', () {
-       test('throws on non-MAP node', () async {
+      test('throws on non-MAP node', () async {
         final node = IPLDNode()..kind = Kind.NULL;
-        expect(
-          () => JoseCoseHandler.decodeJWE(node, []),
-          throwsA(isA<IPLDEncodingError>()),
-        );
+        expect(() => JoseCoseHandler.decodeJWE(node, []), throwsA(isA<IPLDEncodingError>()));
       });
-      
+
       test('decodeJWE handles exception path on invalid data', () async {
         final decodeNode = IPLDNode()
           ..kind = Kind.MAP
           ..mapValue = (IPLDMap()
-            ..entries.add(MapEntry()..key = 'payload'..value = (IPLDNode()..kind = Kind.STRING..stringValue = 'invalid-jwe')));
-        
-        expect(
-          () => JoseCoseHandler.decodeJWE(decodeNode, List.filled(32, 1)),
-          throwsA(anything),
-        );
+            ..entries.add(
+              MapEntry()
+                ..key = 'payload'
+                ..value = (IPLDNode()
+                  ..kind = Kind.STRING
+                  ..stringValue = 'invalid-jwe'),
+            ));
+
+        expect(() => JoseCoseHandler.decodeJWE(decodeNode, List.filled(32, 1)), throwsA(anything));
       });
     });
-    
+
     group('decodeCOSE', () {
       test('throws on non-MAP node', () async {
         final node = IPLDNode()..kind = Kind.BYTES;
@@ -159,21 +192,33 @@ void main() {
           throwsA(isA<IPLDEncodingError>()),
         );
       });
-      
+
       test('successful COSE roundtrip', () async {
         final payloadText = 'cose roundtrip payload';
         final encodeNode = IPLDNode()
           ..kind = Kind.MAP
           ..mapValue = (IPLDMap()
-            ..entries.add(MapEntry()..key = 'payload'..value = (IPLDNode()..kind = Kind.STRING..stringValue = payloadText)));
-        
+            ..entries.add(
+              MapEntry()
+                ..key = 'payload'
+                ..value = (IPLDNode()
+                  ..kind = Kind.STRING
+                  ..stringValue = payloadText),
+            ));
+
         final coseBytes = await JoseCoseHandler.encodeCOSE(encodeNode, testPrivateKey);
-        
+
         final decodeNode = IPLDNode()
           ..kind = Kind.MAP
           ..mapValue = (IPLDMap()
-            ..entries.add(MapEntry()..key = 'payload'..value = (IPLDNode()..kind = Kind.BYTES..bytesValue = coseBytes)));
-        
+            ..entries.add(
+              MapEntry()
+                ..key = 'payload'
+                ..value = (IPLDNode()
+                  ..kind = Kind.BYTES
+                  ..bytesValue = coseBytes),
+            ));
+
         final result = await JoseCoseHandler.decodeCOSE(decodeNode, testPrivateKey);
         expect(utf8.decode(result), equals(payloadText));
       });
@@ -183,19 +228,31 @@ void main() {
         final encodeNode = IPLDNode()
           ..kind = Kind.MAP
           ..mapValue = (IPLDMap()
-            ..entries.add(MapEntry()..key = 'payload'..value = (IPLDNode()..kind = Kind.STRING..stringValue = payloadText)));
-        
+            ..entries.add(
+              MapEntry()
+                ..key = 'payload'
+                ..value = (IPLDNode()
+                  ..kind = Kind.STRING
+                  ..stringValue = payloadText),
+            ));
+
         final coseBytes = await JoseCoseHandler.encodeCOSE(encodeNode, testPrivateKey);
-        
+
         // Tamper with data - find payload in CBOR and change it
         // Or just use a different key for verification
         final otherKey = await IPFSPrivateKey.generate('ECDSA');
-        
+
         final decodeNode = IPLDNode()
           ..kind = Kind.MAP
           ..mapValue = (IPLDMap()
-            ..entries.add(MapEntry()..key = 'payload'..value = (IPLDNode()..kind = Kind.BYTES..bytesValue = coseBytes)));
-        
+            ..entries.add(
+              MapEntry()
+                ..key = 'payload'
+                ..value = (IPLDNode()
+                  ..kind = Kind.BYTES
+                  ..bytesValue = coseBytes),
+            ));
+
         expect(
           () => JoseCoseHandler.decodeCOSE(decodeNode, otherKey),
           throwsA(isA<IPLDDecodingError>()),
