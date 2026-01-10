@@ -86,6 +86,14 @@ void main() {
       );
     });
 
+    tearDown(() async {
+      try {
+        if (server.isRunning) {
+          await server.stop();
+        }
+      } catch (_) {}
+    });
+
     test('initial state', () {
       expect(server.isRunning, isFalse);
       expect(server.url, contains('not started'));

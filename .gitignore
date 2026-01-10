@@ -106,8 +106,8 @@ tool/
 test/advanced_coverage_analyzer.dart
 
 # Generated mock files (mockito)
-*.mocks.dart
-!test/protocols/ipns/ipns_pubsub_test.mocks.dart
+# *.mocks.dart
+# !test/protocols/ipns/ipns_pubsub_test.mocks.dart
 
 # Environment
 .env
