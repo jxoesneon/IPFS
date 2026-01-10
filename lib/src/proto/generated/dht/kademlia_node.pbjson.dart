@@ -17,10 +17,31 @@ import 'dart:typed_data' as $typed_data;
 const KademliaNode$json = {
   '1': 'KademliaNode',
   '2': [
-    {'1': 'peer_id', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'peerId'},
+    {
+      '1': 'peer_id',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.common_kademlia.KademliaId',
+      '10': 'peerId'
+    },
     {'1': 'distance', '3': 2, '4': 1, '5': 5, '10': 'distance'},
-    {'1': 'associated_peer_id', '3': 3, '4': 1, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'associatedPeerId'},
-    {'1': 'children', '3': 4, '4': 3, '5': 11, '6': '.ipfs.dht.kademlia_node.KademliaNode', '10': 'children'},
+    {
+      '1': 'associated_peer_id',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.common_kademlia.KademliaId',
+      '10': 'associatedPeerId'
+    },
+    {
+      '1': 'children',
+      '3': 4,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.dht.kademlia_node.KademliaNode',
+      '10': 'children'
+    },
     {'1': 'last_seen', '3': 5, '4': 1, '5': 3, '10': 'lastSeen'},
   ],
 };
@@ -33,4 +54,3 @@ final $typed_data.Uint8List kademliaNodeDescriptor = $convert.base64Decode(
     'xpYUlkUhBhc3NvY2lhdGVkUGVlcklkEkAKCGNoaWxkcmVuGAQgAygLMiQuaXBmcy5kaHQua2Fk'
     'ZW1saWFfbm9kZS5LYWRlbWxpYU5vZGVSCGNoaWxkcmVuEhsKCWxhc3Rfc2VlbhgFIAEoA1IIbG'
     'FzdFNlZW4=');
-

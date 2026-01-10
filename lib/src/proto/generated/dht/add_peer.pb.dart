@@ -30,40 +30,54 @@ class AddPeerRequest extends $pb.GeneratedMessage {
     return $result;
   }
   AddPeerRequest._() : super();
-  factory AddPeerRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory AddPeerRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory AddPeerRequest.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory AddPeerRequest.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AddPeerRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.add_peer'), createEmptyInstance: create)
-    ..aOM<$9.KademliaId>(1, _omitFieldNames ? '' : 'peerId', subBuilder: $9.KademliaId.create)
-    ..aOM<$9.KademliaId>(2, _omitFieldNames ? '' : 'associatedPeerId', subBuilder: $9.KademliaId.create)
-    ..hasRequiredFields = false
-  ;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'AddPeerRequest',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.add_peer'),
+      createEmptyInstance: create)
+    ..aOM<$9.KademliaId>(1, _omitFieldNames ? '' : 'peerId',
+        subBuilder: $9.KademliaId.create)
+    ..aOM<$9.KademliaId>(2, _omitFieldNames ? '' : 'associatedPeerId',
+        subBuilder: $9.KademliaId.create)
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   AddPeerRequest clone() => AddPeerRequest()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  AddPeerRequest copyWith(void Function(AddPeerRequest) updates) => super.copyWith((message) => updates(message as AddPeerRequest)) as AddPeerRequest;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  AddPeerRequest copyWith(void Function(AddPeerRequest) updates) =>
+      super.copyWith((message) => updates(message as AddPeerRequest))
+          as AddPeerRequest;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static AddPeerRequest create() => AddPeerRequest._();
   AddPeerRequest createEmptyInstance() => create();
-  static $pb.PbList<AddPeerRequest> createRepeated() => $pb.PbList<AddPeerRequest>();
+  static $pb.PbList<AddPeerRequest> createRepeated() =>
+      $pb.PbList<AddPeerRequest>();
   @$core.pragma('dart2js:noInline')
-  static AddPeerRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AddPeerRequest>(create);
+  static AddPeerRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AddPeerRequest>(create);
   static AddPeerRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $9.KademliaId get peerId => $_getN(0);
   @$pb.TagNumber(1)
-  set peerId($9.KademliaId v) { setField(1, v); }
+  set peerId($9.KademliaId v) {
+    setField(1, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasPeerId() => $_has(0);
   @$pb.TagNumber(1)
@@ -74,7 +88,10 @@ class AddPeerRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $9.KademliaId get associatedPeerId => $_getN(1);
   @$pb.TagNumber(2)
-  set associatedPeerId($9.KademliaId v) { setField(2, v); }
+  set associatedPeerId($9.KademliaId v) {
+    setField(2, v);
+  }
+
   @$pb.TagNumber(2)
   $core.bool hasAssociatedPeerId() => $_has(1);
   @$pb.TagNumber(2)
@@ -94,45 +111,57 @@ class AddPeerResponse extends $pb.GeneratedMessage {
     return $result;
   }
   AddPeerResponse._() : super();
-  factory AddPeerResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory AddPeerResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory AddPeerResponse.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory AddPeerResponse.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AddPeerResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.add_peer'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'AddPeerResponse',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.add_peer'),
+      createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
-    ..hasRequiredFields = false
-  ;
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   AddPeerResponse clone() => AddPeerResponse()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  AddPeerResponse copyWith(void Function(AddPeerResponse) updates) => super.copyWith((message) => updates(message as AddPeerResponse)) as AddPeerResponse;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  AddPeerResponse copyWith(void Function(AddPeerResponse) updates) =>
+      super.copyWith((message) => updates(message as AddPeerResponse))
+          as AddPeerResponse;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static AddPeerResponse create() => AddPeerResponse._();
   AddPeerResponse createEmptyInstance() => create();
-  static $pb.PbList<AddPeerResponse> createRepeated() => $pb.PbList<AddPeerResponse>();
+  static $pb.PbList<AddPeerResponse> createRepeated() =>
+      $pb.PbList<AddPeerResponse>();
   @$core.pragma('dart2js:noInline')
-  static AddPeerResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AddPeerResponse>(create);
+  static AddPeerResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AddPeerResponse>(create);
   static AddPeerResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.bool get success => $_getBF(0);
   @$pb.TagNumber(1)
-  set success($core.bool v) { $_setBool(0, v); }
+  set success($core.bool v) {
+    $_setBool(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasSuccess() => $_has(0);
   @$pb.TagNumber(1)
   void clearSuccess() => clearField(1);
 }
 
-
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

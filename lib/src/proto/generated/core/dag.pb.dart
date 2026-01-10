@@ -34,26 +34,34 @@ class PBLink extends $pb.GeneratedMessage {
     return $result;
   }
   PBLink._() : super();
-  factory PBLink.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory PBLink.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory PBLink.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory PBLink.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PBLink', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'hash', $pb.PbFieldType.OY)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PBLink',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'hash', $pb.PbFieldType.OY)
     ..aOS(2, _omitFieldNames ? '' : 'name')
-    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..hasRequiredFields = false
-  ;
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   PBLink clone() => PBLink()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  PBLink copyWith(void Function(PBLink) updates) => super.copyWith((message) => updates(message as PBLink)) as PBLink;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  PBLink copyWith(void Function(PBLink) updates) =>
+      super.copyWith((message) => updates(message as PBLink)) as PBLink;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -62,14 +70,18 @@ class PBLink extends $pb.GeneratedMessage {
   PBLink createEmptyInstance() => create();
   static $pb.PbList<PBLink> createRepeated() => $pb.PbList<PBLink>();
   @$core.pragma('dart2js:noInline')
-  static PBLink getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PBLink>(create);
+  static PBLink getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PBLink>(create);
   static PBLink? _defaultInstance;
 
   /// multihash of the target object
   @$pb.TagNumber(1)
   $core.List<$core.int> get hash => $_getN(0);
   @$pb.TagNumber(1)
-  set hash($core.List<$core.int> v) { $_setBytes(0, v); }
+  set hash($core.List<$core.int> v) {
+    $_setBytes(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasHash() => $_has(0);
   @$pb.TagNumber(1)
@@ -79,7 +91,10 @@ class PBLink extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.String get name => $_getSZ(1);
   @$pb.TagNumber(2)
-  set name($core.String v) { $_setString(1, v); }
+  set name($core.String v) {
+    $_setString(1, v);
+  }
+
   @$pb.TagNumber(2)
   $core.bool hasName() => $_has(1);
   @$pb.TagNumber(2)
@@ -89,7 +104,10 @@ class PBLink extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $fixnum.Int64 get size => $_getI64(2);
   @$pb.TagNumber(3)
-  set size($fixnum.Int64 v) { $_setInt64(2, v); }
+  set size($fixnum.Int64 v) {
+    $_setInt64(2, v);
+  }
+
   @$pb.TagNumber(3)
   $core.bool hasSize() => $_has(2);
   @$pb.TagNumber(3)
@@ -112,25 +130,33 @@ class PBNode extends $pb.GeneratedMessage {
     return $result;
   }
   PBNode._() : super();
-  factory PBNode.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory PBNode.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory PBNode.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory PBNode.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PBNode', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
-    ..pc<PBLink>(2, _omitFieldNames ? '' : 'links', $pb.PbFieldType.PM, subBuilder: PBLink.create)
-    ..hasRequiredFields = false
-  ;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PBNode',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..pc<PBLink>(2, _omitFieldNames ? '' : 'links', $pb.PbFieldType.PM,
+        subBuilder: PBLink.create)
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   PBNode clone() => PBNode()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  PBNode copyWith(void Function(PBNode) updates) => super.copyWith((message) => updates(message as PBNode)) as PBNode;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  PBNode copyWith(void Function(PBNode) updates) =>
+      super.copyWith((message) => updates(message as PBNode)) as PBNode;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -139,14 +165,18 @@ class PBNode extends $pb.GeneratedMessage {
   PBNode createEmptyInstance() => create();
   static $pb.PbList<PBNode> createRepeated() => $pb.PbList<PBNode>();
   @$core.pragma('dart2js:noInline')
-  static PBNode getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PBNode>(create);
+  static PBNode getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PBNode>(create);
   static PBNode? _defaultInstance;
 
   /// opaque user data content
   @$pb.TagNumber(1)
   $core.List<$core.int> get data => $_getN(0);
   @$pb.TagNumber(1)
-  set data($core.List<$core.int> v) { $_setBytes(0, v); }
+  set data($core.List<$core.int> v) {
+    $_setBytes(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasData() => $_has(0);
   @$pb.TagNumber(1)
@@ -157,6 +187,6 @@ class PBNode extends $pb.GeneratedMessage {
   $core.List<PBLink> get links => $_getList(1);
 }
 
-
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

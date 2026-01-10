@@ -17,15 +17,38 @@ import 'dart:typed_data' as $typed_data;
 const Data$json = {
   '1': 'Data',
   '2': [
-    {'1': 'Type', '3': 1, '4': 1, '5': 14, '6': '.ipfs.unixfs.pb.Data.DataType', '10': 'Type'},
+    {
+      '1': 'Type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.unixfs.pb.Data.DataType',
+      '10': 'Type'
+    },
     {'1': 'Data', '3': 2, '4': 1, '5': 12, '10': 'Data'},
     {'1': 'filesize', '3': 3, '4': 1, '5': 4, '10': 'filesize'},
     {'1': 'blocksizes', '3': 4, '4': 3, '5': 4, '10': 'blocksizes'},
-    {'1': 'hashType', '3': 5, '4': 1, '5': 4, '9': 0, '10': 'hashType', '17': true},
+    {
+      '1': 'hashType',
+      '3': 5,
+      '4': 1,
+      '5': 4,
+      '9': 0,
+      '10': 'hashType',
+      '17': true
+    },
     {'1': 'fanout', '3': 6, '4': 1, '5': 4, '9': 1, '10': 'fanout', '17': true},
     {'1': 'mode', '3': 7, '4': 1, '5': 13, '9': 2, '10': 'mode', '17': true},
     {'1': 'mtime', '3': 8, '4': 1, '5': 3, '9': 3, '10': 'mtime', '17': true},
-    {'1': 'mtime_nsecs', '3': 9, '4': 1, '5': 13, '9': 4, '10': 'mtimeNsecs', '17': true},
+    {
+      '1': 'mtime_nsecs',
+      '3': 9,
+      '4': 1,
+      '5': 13,
+      '9': 4,
+      '10': 'mtimeNsecs',
+      '17': true
+    },
   ],
   '4': [Data_DataType$json],
   '8': [
@@ -67,7 +90,14 @@ const Metadata$json = {
   '2': [
     {'1': 'MimeType', '3': 1, '4': 1, '5': 9, '10': 'MimeType'},
     {'1': 'Size', '3': 2, '4': 1, '5': 4, '10': 'Size'},
-    {'1': 'properties', '3': 3, '4': 3, '5': 11, '6': '.ipfs.unixfs.pb.Metadata.PropertiesEntry', '10': 'properties'},
+    {
+      '1': 'properties',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.unixfs.pb.Metadata.PropertiesEntry',
+      '10': 'properties'
+    },
   ],
   '3': [Metadata_PropertiesEntry$json],
 };
@@ -88,4 +118,3 @@ final $typed_data.Uint8List metadataDescriptor = $convert.base64Decode(
     'l6ZRJICgpwcm9wZXJ0aWVzGAMgAygLMiguaXBmcy51bml4ZnMucGIuTWV0YWRhdGEuUHJvcGVy'
     'dGllc0VudHJ5Ugpwcm9wZXJ0aWVzGj0KD1Byb3BlcnRpZXNFbnRyeRIQCgNrZXkYASABKAlSA2'
     'tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
-

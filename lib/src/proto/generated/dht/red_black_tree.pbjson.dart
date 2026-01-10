@@ -17,11 +17,46 @@ import 'dart:typed_data' as $typed_data;
 const RedBlackTreeNode$json = {
   '1': 'RedBlackTreeNode',
   '2': [
-    {'1': 'key', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_red_black_tree.K_PeerId', '10': 'key'},
-    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.ipfs.dht.common_red_black_tree.V_PeerInfo', '10': 'value'},
-    {'1': 'color', '3': 3, '4': 1, '5': 14, '6': '.ipfs.dht.common_red_black_tree.NodeColor', '10': 'color'},
-    {'1': 'left', '3': 4, '4': 1, '5': 11, '6': '.ipfs.dht.red_black_tree.RedBlackTreeNode', '10': 'left'},
-    {'1': 'right', '3': 5, '4': 1, '5': 11, '6': '.ipfs.dht.red_black_tree.RedBlackTreeNode', '10': 'right'},
+    {
+      '1': 'key',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.common_red_black_tree.K_PeerId',
+      '10': 'key'
+    },
+    {
+      '1': 'value',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.common_red_black_tree.V_PeerInfo',
+      '10': 'value'
+    },
+    {
+      '1': 'color',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.dht.common_red_black_tree.NodeColor',
+      '10': 'color'
+    },
+    {
+      '1': 'left',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.red_black_tree.RedBlackTreeNode',
+      '10': 'left'
+    },
+    {
+      '1': 'right',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.red_black_tree.RedBlackTreeNode',
+      '10': 'right'
+    },
   ],
 };
 
@@ -34,4 +69,3 @@ final $typed_data.Uint8List redBlackTreeNodeDescriptor = $convert.base64Decode(
     'CzIpLmlwZnMuZGh0LnJlZF9ibGFja190cmVlLlJlZEJsYWNrVHJlZU5vZGVSBGxlZnQSPwoFcm'
     'lnaHQYBSABKAsyKS5pcGZzLmRodC5yZWRfYmxhY2tfdHJlZS5SZWRCbGFja1RyZWVOb2RlUgVy'
     'aWdodA==');
-

@@ -15,15 +15,22 @@ import 'package:protobuf/protobuf.dart' as $pb;
 
 /// Standard response status codes
 class ResponseStatus extends $pb.ProtobufEnum {
-  static const ResponseStatus RS_IN_PROGRESS = ResponseStatus._(0, _omitEnumNames ? '' : 'RS_IN_PROGRESS');
-  static const ResponseStatus RS_COMPLETED = ResponseStatus._(1, _omitEnumNames ? '' : 'RS_COMPLETED');
-  static const ResponseStatus RS_REJECTED = ResponseStatus._(2, _omitEnumNames ? '' : 'RS_REJECTED');
-  static const ResponseStatus RS_CANCELLED = ResponseStatus._(3, _omitEnumNames ? '' : 'RS_CANCELLED');
-  static const ResponseStatus RS_PAUSED = ResponseStatus._(4, _omitEnumNames ? '' : 'RS_PAUSED');
-  static const ResponseStatus RS_ERROR = ResponseStatus._(5, _omitEnumNames ? '' : 'RS_ERROR');
-  static const ResponseStatus RS_PAUSED_PENDING_RESOURCES = ResponseStatus._(6, _omitEnumNames ? '' : 'RS_PAUSED_PENDING_RESOURCES');
+  static const ResponseStatus RS_IN_PROGRESS =
+      ResponseStatus._(0, _omitEnumNames ? '' : 'RS_IN_PROGRESS');
+  static const ResponseStatus RS_COMPLETED =
+      ResponseStatus._(1, _omitEnumNames ? '' : 'RS_COMPLETED');
+  static const ResponseStatus RS_REJECTED =
+      ResponseStatus._(2, _omitEnumNames ? '' : 'RS_REJECTED');
+  static const ResponseStatus RS_CANCELLED =
+      ResponseStatus._(3, _omitEnumNames ? '' : 'RS_CANCELLED');
+  static const ResponseStatus RS_PAUSED =
+      ResponseStatus._(4, _omitEnumNames ? '' : 'RS_PAUSED');
+  static const ResponseStatus RS_ERROR =
+      ResponseStatus._(5, _omitEnumNames ? '' : 'RS_ERROR');
+  static const ResponseStatus RS_PAUSED_PENDING_RESOURCES =
+      ResponseStatus._(6, _omitEnumNames ? '' : 'RS_PAUSED_PENDING_RESOURCES');
 
-  static const $core.List<ResponseStatus> values = <ResponseStatus> [
+  static const $core.List<ResponseStatus> values = <ResponseStatus>[
     RS_IN_PROGRESS,
     RS_COMPLETED,
     RS_REJECTED,
@@ -33,11 +40,11 @@ class ResponseStatus extends $pb.ProtobufEnum {
     RS_PAUSED_PENDING_RESOURCES,
   ];
 
-  static final $core.Map<$core.int, ResponseStatus> _byValue = $pb.ProtobufEnum.initByValue(values);
+  static final $core.Map<$core.int, ResponseStatus> _byValue =
+      $pb.ProtobufEnum.initByValue(values);
   static ResponseStatus? valueOf($core.int value) => _byValue[value];
 
   const ResponseStatus._($core.int v, $core.String n) : super(v, n);
 }
-
 
 const _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

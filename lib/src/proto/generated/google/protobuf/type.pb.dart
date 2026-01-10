@@ -55,30 +55,42 @@ class Type extends $pb.GeneratedMessage {
     return $result;
   }
   Type._() : super();
-  factory Type.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Type.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory Type.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory Type.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Type', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Type',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'),
+      createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
-    ..pc<Field>(2, _omitFieldNames ? '' : 'fields', $pb.PbFieldType.PM, subBuilder: Field.create)
+    ..pc<Field>(2, _omitFieldNames ? '' : 'fields', $pb.PbFieldType.PM,
+        subBuilder: Field.create)
     ..pPS(3, _omitFieldNames ? '' : 'oneofs')
-    ..pc<Option>(4, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM, subBuilder: Option.create)
-    ..aOM<$12.SourceContext>(5, _omitFieldNames ? '' : 'sourceContext', subBuilder: $12.SourceContext.create)
-    ..e<Syntax>(6, _omitFieldNames ? '' : 'syntax', $pb.PbFieldType.OE, defaultOrMaker: Syntax.SYNTAX_PROTO2, valueOf: Syntax.valueOf, enumValues: Syntax.values)
+    ..pc<Option>(4, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM,
+        subBuilder: Option.create)
+    ..aOM<$12.SourceContext>(5, _omitFieldNames ? '' : 'sourceContext',
+        subBuilder: $12.SourceContext.create)
+    ..e<Syntax>(6, _omitFieldNames ? '' : 'syntax', $pb.PbFieldType.OE,
+        defaultOrMaker: Syntax.SYNTAX_PROTO2,
+        valueOf: Syntax.valueOf,
+        enumValues: Syntax.values)
     ..aOS(7, _omitFieldNames ? '' : 'edition')
-    ..hasRequiredFields = false
-  ;
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   Type clone() => Type()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  Type copyWith(void Function(Type) updates) => super.copyWith((message) => updates(message as Type)) as Type;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  Type copyWith(void Function(Type) updates) =>
+      super.copyWith((message) => updates(message as Type)) as Type;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -87,14 +99,18 @@ class Type extends $pb.GeneratedMessage {
   Type createEmptyInstance() => create();
   static $pb.PbList<Type> createRepeated() => $pb.PbList<Type>();
   @$core.pragma('dart2js:noInline')
-  static Type getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Type>(create);
+  static Type getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Type>(create);
   static Type? _defaultInstance;
 
   /// The fully qualified message name.
   @$pb.TagNumber(1)
   $core.String get name => $_getSZ(0);
   @$pb.TagNumber(1)
-  set name($core.String v) { $_setString(0, v); }
+  set name($core.String v) {
+    $_setString(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasName() => $_has(0);
   @$pb.TagNumber(1)
@@ -116,7 +132,10 @@ class Type extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $12.SourceContext get sourceContext => $_getN(4);
   @$pb.TagNumber(5)
-  set sourceContext($12.SourceContext v) { setField(5, v); }
+  set sourceContext($12.SourceContext v) {
+    setField(5, v);
+  }
+
   @$pb.TagNumber(5)
   $core.bool hasSourceContext() => $_has(4);
   @$pb.TagNumber(5)
@@ -128,7 +147,10 @@ class Type extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   Syntax get syntax => $_getN(5);
   @$pb.TagNumber(6)
-  set syntax(Syntax v) { setField(6, v); }
+  set syntax(Syntax v) {
+    setField(6, v);
+  }
+
   @$pb.TagNumber(6)
   $core.bool hasSyntax() => $_has(5);
   @$pb.TagNumber(6)
@@ -138,7 +160,10 @@ class Type extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   $core.String get edition => $_getSZ(6);
   @$pb.TagNumber(7)
-  set edition($core.String v) { $_setString(6, v); }
+  set edition($core.String v) {
+    $_setString(6, v);
+  }
+
   @$pb.TagNumber(7)
   $core.bool hasEdition() => $_has(6);
   @$pb.TagNumber(7)
@@ -193,33 +218,47 @@ class Field extends $pb.GeneratedMessage {
     return $result;
   }
   Field._() : super();
-  factory Field.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Field.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory Field.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory Field.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Field', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
-    ..e<Field_Kind>(1, _omitFieldNames ? '' : 'kind', $pb.PbFieldType.OE, defaultOrMaker: Field_Kind.TYPE_UNKNOWN, valueOf: Field_Kind.valueOf, enumValues: Field_Kind.values)
-    ..e<Field_Cardinality>(2, _omitFieldNames ? '' : 'cardinality', $pb.PbFieldType.OE, defaultOrMaker: Field_Cardinality.CARDINALITY_UNKNOWN, valueOf: Field_Cardinality.valueOf, enumValues: Field_Cardinality.values)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Field',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'),
+      createEmptyInstance: create)
+    ..e<Field_Kind>(1, _omitFieldNames ? '' : 'kind', $pb.PbFieldType.OE,
+        defaultOrMaker: Field_Kind.TYPE_UNKNOWN,
+        valueOf: Field_Kind.valueOf,
+        enumValues: Field_Kind.values)
+    ..e<Field_Cardinality>(
+        2, _omitFieldNames ? '' : 'cardinality', $pb.PbFieldType.OE,
+        defaultOrMaker: Field_Cardinality.CARDINALITY_UNKNOWN,
+        valueOf: Field_Cardinality.valueOf,
+        enumValues: Field_Cardinality.values)
     ..a<$core.int>(3, _omitFieldNames ? '' : 'number', $pb.PbFieldType.O3)
     ..aOS(4, _omitFieldNames ? '' : 'name')
     ..aOS(6, _omitFieldNames ? '' : 'typeUrl')
     ..a<$core.int>(7, _omitFieldNames ? '' : 'oneofIndex', $pb.PbFieldType.O3)
     ..aOB(8, _omitFieldNames ? '' : 'packed')
-    ..pc<Option>(9, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM, subBuilder: Option.create)
+    ..pc<Option>(9, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM,
+        subBuilder: Option.create)
     ..aOS(10, _omitFieldNames ? '' : 'jsonName')
     ..aOS(11, _omitFieldNames ? '' : 'defaultValue')
-    ..hasRequiredFields = false
-  ;
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   Field clone() => Field()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  Field copyWith(void Function(Field) updates) => super.copyWith((message) => updates(message as Field)) as Field;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  Field copyWith(void Function(Field) updates) =>
+      super.copyWith((message) => updates(message as Field)) as Field;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -228,14 +267,18 @@ class Field extends $pb.GeneratedMessage {
   Field createEmptyInstance() => create();
   static $pb.PbList<Field> createRepeated() => $pb.PbList<Field>();
   @$core.pragma('dart2js:noInline')
-  static Field getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Field>(create);
+  static Field getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Field>(create);
   static Field? _defaultInstance;
 
   /// The field type.
   @$pb.TagNumber(1)
   Field_Kind get kind => $_getN(0);
   @$pb.TagNumber(1)
-  set kind(Field_Kind v) { setField(1, v); }
+  set kind(Field_Kind v) {
+    setField(1, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasKind() => $_has(0);
   @$pb.TagNumber(1)
@@ -245,7 +288,10 @@ class Field extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   Field_Cardinality get cardinality => $_getN(1);
   @$pb.TagNumber(2)
-  set cardinality(Field_Cardinality v) { setField(2, v); }
+  set cardinality(Field_Cardinality v) {
+    setField(2, v);
+  }
+
   @$pb.TagNumber(2)
   $core.bool hasCardinality() => $_has(1);
   @$pb.TagNumber(2)
@@ -255,7 +301,10 @@ class Field extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.int get number => $_getIZ(2);
   @$pb.TagNumber(3)
-  set number($core.int v) { $_setSignedInt32(2, v); }
+  set number($core.int v) {
+    $_setSignedInt32(2, v);
+  }
+
   @$pb.TagNumber(3)
   $core.bool hasNumber() => $_has(2);
   @$pb.TagNumber(3)
@@ -265,7 +314,10 @@ class Field extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.String get name => $_getSZ(3);
   @$pb.TagNumber(4)
-  set name($core.String v) { $_setString(3, v); }
+  set name($core.String v) {
+    $_setString(3, v);
+  }
+
   @$pb.TagNumber(4)
   $core.bool hasName() => $_has(3);
   @$pb.TagNumber(4)
@@ -276,7 +328,10 @@ class Field extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   $core.String get typeUrl => $_getSZ(4);
   @$pb.TagNumber(6)
-  set typeUrl($core.String v) { $_setString(4, v); }
+  set typeUrl($core.String v) {
+    $_setString(4, v);
+  }
+
   @$pb.TagNumber(6)
   $core.bool hasTypeUrl() => $_has(4);
   @$pb.TagNumber(6)
@@ -287,7 +342,10 @@ class Field extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   $core.int get oneofIndex => $_getIZ(5);
   @$pb.TagNumber(7)
-  set oneofIndex($core.int v) { $_setSignedInt32(5, v); }
+  set oneofIndex($core.int v) {
+    $_setSignedInt32(5, v);
+  }
+
   @$pb.TagNumber(7)
   $core.bool hasOneofIndex() => $_has(5);
   @$pb.TagNumber(7)
@@ -297,7 +355,10 @@ class Field extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   $core.bool get packed => $_getBF(6);
   @$pb.TagNumber(8)
-  set packed($core.bool v) { $_setBool(6, v); }
+  set packed($core.bool v) {
+    $_setBool(6, v);
+  }
+
   @$pb.TagNumber(8)
   $core.bool hasPacked() => $_has(6);
   @$pb.TagNumber(8)
@@ -311,7 +372,10 @@ class Field extends $pb.GeneratedMessage {
   @$pb.TagNumber(10)
   $core.String get jsonName => $_getSZ(8);
   @$pb.TagNumber(10)
-  set jsonName($core.String v) { $_setString(8, v); }
+  set jsonName($core.String v) {
+    $_setString(8, v);
+  }
+
   @$pb.TagNumber(10)
   $core.bool hasJsonName() => $_has(8);
   @$pb.TagNumber(10)
@@ -321,7 +385,10 @@ class Field extends $pb.GeneratedMessage {
   @$pb.TagNumber(11)
   $core.String get defaultValue => $_getSZ(9);
   @$pb.TagNumber(11)
-  set defaultValue($core.String v) { $_setString(9, v); }
+  set defaultValue($core.String v) {
+    $_setString(9, v);
+  }
+
   @$pb.TagNumber(11)
   $core.bool hasDefaultValue() => $_has(9);
   @$pb.TagNumber(11)
@@ -360,29 +427,41 @@ class Enum extends $pb.GeneratedMessage {
     return $result;
   }
   Enum._() : super();
-  factory Enum.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Enum.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory Enum.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory Enum.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Enum', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Enum',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'),
+      createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
-    ..pc<EnumValue>(2, _omitFieldNames ? '' : 'enumvalue', $pb.PbFieldType.PM, subBuilder: EnumValue.create)
-    ..pc<Option>(3, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM, subBuilder: Option.create)
-    ..aOM<$12.SourceContext>(4, _omitFieldNames ? '' : 'sourceContext', subBuilder: $12.SourceContext.create)
-    ..e<Syntax>(5, _omitFieldNames ? '' : 'syntax', $pb.PbFieldType.OE, defaultOrMaker: Syntax.SYNTAX_PROTO2, valueOf: Syntax.valueOf, enumValues: Syntax.values)
+    ..pc<EnumValue>(2, _omitFieldNames ? '' : 'enumvalue', $pb.PbFieldType.PM,
+        subBuilder: EnumValue.create)
+    ..pc<Option>(3, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM,
+        subBuilder: Option.create)
+    ..aOM<$12.SourceContext>(4, _omitFieldNames ? '' : 'sourceContext',
+        subBuilder: $12.SourceContext.create)
+    ..e<Syntax>(5, _omitFieldNames ? '' : 'syntax', $pb.PbFieldType.OE,
+        defaultOrMaker: Syntax.SYNTAX_PROTO2,
+        valueOf: Syntax.valueOf,
+        enumValues: Syntax.values)
     ..aOS(6, _omitFieldNames ? '' : 'edition')
-    ..hasRequiredFields = false
-  ;
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   Enum clone() => Enum()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  Enum copyWith(void Function(Enum) updates) => super.copyWith((message) => updates(message as Enum)) as Enum;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  Enum copyWith(void Function(Enum) updates) =>
+      super.copyWith((message) => updates(message as Enum)) as Enum;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -391,14 +470,18 @@ class Enum extends $pb.GeneratedMessage {
   Enum createEmptyInstance() => create();
   static $pb.PbList<Enum> createRepeated() => $pb.PbList<Enum>();
   @$core.pragma('dart2js:noInline')
-  static Enum getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Enum>(create);
+  static Enum getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Enum>(create);
   static Enum? _defaultInstance;
 
   /// Enum type name.
   @$pb.TagNumber(1)
   $core.String get name => $_getSZ(0);
   @$pb.TagNumber(1)
-  set name($core.String v) { $_setString(0, v); }
+  set name($core.String v) {
+    $_setString(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasName() => $_has(0);
   @$pb.TagNumber(1)
@@ -416,7 +499,10 @@ class Enum extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $12.SourceContext get sourceContext => $_getN(3);
   @$pb.TagNumber(4)
-  set sourceContext($12.SourceContext v) { setField(4, v); }
+  set sourceContext($12.SourceContext v) {
+    setField(4, v);
+  }
+
   @$pb.TagNumber(4)
   $core.bool hasSourceContext() => $_has(3);
   @$pb.TagNumber(4)
@@ -428,7 +514,10 @@ class Enum extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   Syntax get syntax => $_getN(4);
   @$pb.TagNumber(5)
-  set syntax(Syntax v) { setField(5, v); }
+  set syntax(Syntax v) {
+    setField(5, v);
+  }
+
   @$pb.TagNumber(5)
   $core.bool hasSyntax() => $_has(4);
   @$pb.TagNumber(5)
@@ -438,7 +527,10 @@ class Enum extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   $core.String get edition => $_getSZ(5);
   @$pb.TagNumber(6)
-  set edition($core.String v) { $_setString(5, v); }
+  set edition($core.String v) {
+    $_setString(5, v);
+  }
+
   @$pb.TagNumber(6)
   $core.bool hasEdition() => $_has(5);
   @$pb.TagNumber(6)
@@ -465,26 +557,33 @@ class EnumValue extends $pb.GeneratedMessage {
     return $result;
   }
   EnumValue._() : super();
-  factory EnumValue.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory EnumValue.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory EnumValue.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory EnumValue.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EnumValue', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EnumValue',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'),
+      createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
     ..a<$core.int>(2, _omitFieldNames ? '' : 'number', $pb.PbFieldType.O3)
-    ..pc<Option>(3, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM, subBuilder: Option.create)
-    ..hasRequiredFields = false
-  ;
+    ..pc<Option>(3, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM,
+        subBuilder: Option.create)
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   EnumValue clone() => EnumValue()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  EnumValue copyWith(void Function(EnumValue) updates) => super.copyWith((message) => updates(message as EnumValue)) as EnumValue;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  EnumValue copyWith(void Function(EnumValue) updates) =>
+      super.copyWith((message) => updates(message as EnumValue)) as EnumValue;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -493,14 +592,18 @@ class EnumValue extends $pb.GeneratedMessage {
   EnumValue createEmptyInstance() => create();
   static $pb.PbList<EnumValue> createRepeated() => $pb.PbList<EnumValue>();
   @$core.pragma('dart2js:noInline')
-  static EnumValue getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<EnumValue>(create);
+  static EnumValue getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<EnumValue>(create);
   static EnumValue? _defaultInstance;
 
   /// Enum value name.
   @$pb.TagNumber(1)
   $core.String get name => $_getSZ(0);
   @$pb.TagNumber(1)
-  set name($core.String v) { $_setString(0, v); }
+  set name($core.String v) {
+    $_setString(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasName() => $_has(0);
   @$pb.TagNumber(1)
@@ -510,7 +613,10 @@ class EnumValue extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.int get number => $_getIZ(1);
   @$pb.TagNumber(2)
-  set number($core.int v) { $_setSignedInt32(1, v); }
+  set number($core.int v) {
+    $_setSignedInt32(1, v);
+  }
+
   @$pb.TagNumber(2)
   $core.bool hasNumber() => $_has(1);
   @$pb.TagNumber(2)
@@ -538,25 +644,31 @@ class Option extends $pb.GeneratedMessage {
     return $result;
   }
   Option._() : super();
-  factory Option.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Option.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory Option.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory Option.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Option', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Option',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'),
+      createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
     ..aOM<$6.Any>(2, _omitFieldNames ? '' : 'value', subBuilder: $6.Any.create)
-    ..hasRequiredFields = false
-  ;
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   Option clone() => Option()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  Option copyWith(void Function(Option) updates) => super.copyWith((message) => updates(message as Option)) as Option;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  Option copyWith(void Function(Option) updates) =>
+      super.copyWith((message) => updates(message as Option)) as Option;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -565,7 +677,8 @@ class Option extends $pb.GeneratedMessage {
   Option createEmptyInstance() => create();
   static $pb.PbList<Option> createRepeated() => $pb.PbList<Option>();
   @$core.pragma('dart2js:noInline')
-  static Option getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Option>(create);
+  static Option getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Option>(create);
   static Option? _defaultInstance;
 
   /// The option's name. For protobuf built-in options (options defined in
@@ -575,7 +688,10 @@ class Option extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.String get name => $_getSZ(0);
   @$pb.TagNumber(1)
-  set name($core.String v) { $_setString(0, v); }
+  set name($core.String v) {
+    $_setString(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasName() => $_has(0);
   @$pb.TagNumber(1)
@@ -588,7 +704,10 @@ class Option extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $6.Any get value => $_getN(1);
   @$pb.TagNumber(2)
-  set value($6.Any v) { setField(2, v); }
+  set value($6.Any v) {
+    setField(2, v);
+  }
+
   @$pb.TagNumber(2)
   $core.bool hasValue() => $_has(1);
   @$pb.TagNumber(2)
@@ -597,6 +716,6 @@ class Option extends $pb.GeneratedMessage {
   $6.Any ensureValue() => $_ensure(1);
 }
 
-
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

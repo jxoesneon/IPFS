@@ -49,29 +49,44 @@ class Message extends $pb.GeneratedMessage {
     return $result;
   }
   Message._() : super();
-  factory Message.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Message.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory Message.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory Message.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Message', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
-    ..e<Message_MessageType>(1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: Message_MessageType.PUT_VALUE, valueOf: Message_MessageType.valueOf, enumValues: Message_MessageType.values)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
-    ..aOM<$11.Record>(3, _omitFieldNames ? '' : 'record', subBuilder: $11.Record.create)
-    ..pc<Peer>(8, _omitFieldNames ? '' : 'closerPeers', $pb.PbFieldType.PM, protoName: 'closerPeers', subBuilder: Peer.create)
-    ..pc<Peer>(9, _omitFieldNames ? '' : 'providerPeers', $pb.PbFieldType.PM, protoName: 'providerPeers', subBuilder: Peer.create)
-    ..a<$core.int>(10, _omitFieldNames ? '' : 'clusterLevelRaw', $pb.PbFieldType.O3, protoName: 'clusterLevelRaw')
-    ..hasRequiredFields = false
-  ;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Message',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
+      createEmptyInstance: create)
+    ..e<Message_MessageType>(
+        1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
+        defaultOrMaker: Message_MessageType.PUT_VALUE,
+        valueOf: Message_MessageType.valueOf,
+        enumValues: Message_MessageType.values)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
+    ..aOM<$11.Record>(3, _omitFieldNames ? '' : 'record',
+        subBuilder: $11.Record.create)
+    ..pc<Peer>(8, _omitFieldNames ? '' : 'closerPeers', $pb.PbFieldType.PM,
+        protoName: 'closerPeers', subBuilder: Peer.create)
+    ..pc<Peer>(9, _omitFieldNames ? '' : 'providerPeers', $pb.PbFieldType.PM,
+        protoName: 'providerPeers', subBuilder: Peer.create)
+    ..a<$core.int>(
+        10, _omitFieldNames ? '' : 'clusterLevelRaw', $pb.PbFieldType.O3,
+        protoName: 'clusterLevelRaw')
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   Message clone() => Message()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  Message copyWith(void Function(Message) updates) => super.copyWith((message) => updates(message as Message)) as Message;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  Message copyWith(void Function(Message) updates) =>
+      super.copyWith((message) => updates(message as Message)) as Message;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -80,13 +95,17 @@ class Message extends $pb.GeneratedMessage {
   Message createEmptyInstance() => create();
   static $pb.PbList<Message> createRepeated() => $pb.PbList<Message>();
   @$core.pragma('dart2js:noInline')
-  static Message getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Message>(create);
+  static Message getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Message>(create);
   static Message? _defaultInstance;
 
   @$pb.TagNumber(1)
   Message_MessageType get type => $_getN(0);
   @$pb.TagNumber(1)
-  set type(Message_MessageType v) { setField(1, v); }
+  set type(Message_MessageType v) {
+    setField(1, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasType() => $_has(0);
   @$pb.TagNumber(1)
@@ -95,7 +114,10 @@ class Message extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.List<$core.int> get key => $_getN(1);
   @$pb.TagNumber(2)
-  set key($core.List<$core.int> v) { $_setBytes(1, v); }
+  set key($core.List<$core.int> v) {
+    $_setBytes(1, v);
+  }
+
   @$pb.TagNumber(2)
   $core.bool hasKey() => $_has(1);
   @$pb.TagNumber(2)
@@ -104,7 +126,10 @@ class Message extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $11.Record get record => $_getN(2);
   @$pb.TagNumber(3)
-  set record($11.Record v) { setField(3, v); }
+  set record($11.Record v) {
+    setField(3, v);
+  }
+
   @$pb.TagNumber(3)
   $core.bool hasRecord() => $_has(2);
   @$pb.TagNumber(3)
@@ -121,7 +146,10 @@ class Message extends $pb.GeneratedMessage {
   @$pb.TagNumber(10)
   $core.int get clusterLevelRaw => $_getIZ(5);
   @$pb.TagNumber(10)
-  set clusterLevelRaw($core.int v) { $_setSignedInt32(5, v); }
+  set clusterLevelRaw($core.int v) {
+    $_setSignedInt32(5, v);
+  }
+
   @$pb.TagNumber(10)
   $core.bool hasClusterLevelRaw() => $_has(5);
   @$pb.TagNumber(10)
@@ -147,26 +175,37 @@ class Peer extends $pb.GeneratedMessage {
     return $result;
   }
   Peer._() : super();
-  factory Peer.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Peer.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory Peer.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory Peer.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Peer', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OY)
-    ..p<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'addrs', $pb.PbFieldType.PY)
-    ..e<ConnectionType>(3, _omitFieldNames ? '' : 'connection', $pb.PbFieldType.OE, defaultOrMaker: ConnectionType.NOT_CONNECTED, valueOf: ConnectionType.valueOf, enumValues: ConnectionType.values)
-    ..hasRequiredFields = false
-  ;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Peer',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OY)
+    ..p<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'addrs', $pb.PbFieldType.PY)
+    ..e<ConnectionType>(
+        3, _omitFieldNames ? '' : 'connection', $pb.PbFieldType.OE,
+        defaultOrMaker: ConnectionType.NOT_CONNECTED,
+        valueOf: ConnectionType.valueOf,
+        enumValues: ConnectionType.values)
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   Peer clone() => Peer()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  Peer copyWith(void Function(Peer) updates) => super.copyWith((message) => updates(message as Peer)) as Peer;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  Peer copyWith(void Function(Peer) updates) =>
+      super.copyWith((message) => updates(message as Peer)) as Peer;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -175,13 +214,17 @@ class Peer extends $pb.GeneratedMessage {
   Peer createEmptyInstance() => create();
   static $pb.PbList<Peer> createRepeated() => $pb.PbList<Peer>();
   @$core.pragma('dart2js:noInline')
-  static Peer getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Peer>(create);
+  static Peer getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Peer>(create);
   static Peer? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.List<$core.int> get id => $_getN(0);
   @$pb.TagNumber(1)
-  set id($core.List<$core.int> v) { $_setBytes(0, v); }
+  set id($core.List<$core.int> v) {
+    $_setBytes(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasId() => $_has(0);
   @$pb.TagNumber(1)
@@ -193,13 +236,16 @@ class Peer extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   ConnectionType get connection => $_getN(2);
   @$pb.TagNumber(3)
-  set connection(ConnectionType v) { setField(3, v); }
+  set connection(ConnectionType v) {
+    setField(3, v);
+  }
+
   @$pb.TagNumber(3)
   $core.bool hasConnection() => $_has(2);
   @$pb.TagNumber(3)
   void clearConnection() => clearField(3);
 }
 
-
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

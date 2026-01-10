@@ -35,41 +35,66 @@ class NetworkMetrics extends $pb.GeneratedMessage {
     return $result;
   }
   NetworkMetrics._() : super();
-  factory NetworkMetrics.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory NetworkMetrics.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory NetworkMetrics.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory NetworkMetrics.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NetworkMetrics', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.metrics'), createEmptyInstance: create)
-    ..aOM<$7.Timestamp>(1, _omitFieldNames ? '' : 'timestamp', subBuilder: $7.Timestamp.create)
-    ..m<$core.String, PeerMetrics>(2, _omitFieldNames ? '' : 'peerMetrics', entryClassName: 'NetworkMetrics.PeerMetricsEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OM, valueCreator: PeerMetrics.create, valueDefaultOrMaker: PeerMetrics.getDefault, packageName: const $pb.PackageName('ipfs.metrics'))
-    ..m<$core.String, ProtocolMetrics>(3, _omitFieldNames ? '' : 'protocolMetrics', entryClassName: 'NetworkMetrics.ProtocolMetricsEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OM, valueCreator: ProtocolMetrics.create, valueDefaultOrMaker: ProtocolMetrics.getDefault, packageName: const $pb.PackageName('ipfs.metrics'))
-    ..hasRequiredFields = false
-  ;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'NetworkMetrics',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.metrics'),
+      createEmptyInstance: create)
+    ..aOM<$7.Timestamp>(1, _omitFieldNames ? '' : 'timestamp',
+        subBuilder: $7.Timestamp.create)
+    ..m<$core.String, PeerMetrics>(2, _omitFieldNames ? '' : 'peerMetrics',
+        entryClassName: 'NetworkMetrics.PeerMetricsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OM,
+        valueCreator: PeerMetrics.create,
+        valueDefaultOrMaker: PeerMetrics.getDefault,
+        packageName: const $pb.PackageName('ipfs.metrics'))
+    ..m<$core.String, ProtocolMetrics>(
+        3, _omitFieldNames ? '' : 'protocolMetrics',
+        entryClassName: 'NetworkMetrics.ProtocolMetricsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OM,
+        valueCreator: ProtocolMetrics.create,
+        valueDefaultOrMaker: ProtocolMetrics.getDefault,
+        packageName: const $pb.PackageName('ipfs.metrics'))
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   NetworkMetrics clone() => NetworkMetrics()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  NetworkMetrics copyWith(void Function(NetworkMetrics) updates) => super.copyWith((message) => updates(message as NetworkMetrics)) as NetworkMetrics;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  NetworkMetrics copyWith(void Function(NetworkMetrics) updates) =>
+      super.copyWith((message) => updates(message as NetworkMetrics))
+          as NetworkMetrics;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static NetworkMetrics create() => NetworkMetrics._();
   NetworkMetrics createEmptyInstance() => create();
-  static $pb.PbList<NetworkMetrics> createRepeated() => $pb.PbList<NetworkMetrics>();
+  static $pb.PbList<NetworkMetrics> createRepeated() =>
+      $pb.PbList<NetworkMetrics>();
   @$core.pragma('dart2js:noInline')
-  static NetworkMetrics getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NetworkMetrics>(create);
+  static NetworkMetrics getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<NetworkMetrics>(create);
   static NetworkMetrics? _defaultInstance;
 
   @$pb.TagNumber(1)
   $7.Timestamp get timestamp => $_getN(0);
   @$pb.TagNumber(1)
-  set timestamp($7.Timestamp v) { setField(1, v); }
+  set timestamp($7.Timestamp v) {
+    setField(1, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasTimestamp() => $_has(0);
   @$pb.TagNumber(1)
@@ -115,29 +140,44 @@ class PeerMetrics extends $pb.GeneratedMessage {
     return $result;
   }
   PeerMetrics._() : super();
-  factory PeerMetrics.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory PeerMetrics.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory PeerMetrics.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory PeerMetrics.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PeerMetrics', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.metrics'), createEmptyInstance: create)
-    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'messagesSent', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'messagesReceived', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'bytesSent', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'bytesReceived', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$core.int>(5, _omitFieldNames ? '' : 'averageLatencyMs', $pb.PbFieldType.OU3)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PeerMetrics',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.metrics'),
+      createEmptyInstance: create)
+    ..a<$fixnum.Int64>(
+        1, _omitFieldNames ? '' : 'messagesSent', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        2, _omitFieldNames ? '' : 'messagesReceived', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'bytesSent', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        4, _omitFieldNames ? '' : 'bytesReceived', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$core.int>(
+        5, _omitFieldNames ? '' : 'averageLatencyMs', $pb.PbFieldType.OU3)
     ..a<$core.int>(6, _omitFieldNames ? '' : 'errorCount', $pb.PbFieldType.OU3)
-    ..hasRequiredFields = false
-  ;
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   PeerMetrics clone() => PeerMetrics()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  PeerMetrics copyWith(void Function(PeerMetrics) updates) => super.copyWith((message) => updates(message as PeerMetrics)) as PeerMetrics;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  PeerMetrics copyWith(void Function(PeerMetrics) updates) =>
+      super.copyWith((message) => updates(message as PeerMetrics))
+          as PeerMetrics;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -146,13 +186,17 @@ class PeerMetrics extends $pb.GeneratedMessage {
   PeerMetrics createEmptyInstance() => create();
   static $pb.PbList<PeerMetrics> createRepeated() => $pb.PbList<PeerMetrics>();
   @$core.pragma('dart2js:noInline')
-  static PeerMetrics getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PeerMetrics>(create);
+  static PeerMetrics getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PeerMetrics>(create);
   static PeerMetrics? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get messagesSent => $_getI64(0);
   @$pb.TagNumber(1)
-  set messagesSent($fixnum.Int64 v) { $_setInt64(0, v); }
+  set messagesSent($fixnum.Int64 v) {
+    $_setInt64(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasMessagesSent() => $_has(0);
   @$pb.TagNumber(1)
@@ -161,7 +205,10 @@ class PeerMetrics extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $fixnum.Int64 get messagesReceived => $_getI64(1);
   @$pb.TagNumber(2)
-  set messagesReceived($fixnum.Int64 v) { $_setInt64(1, v); }
+  set messagesReceived($fixnum.Int64 v) {
+    $_setInt64(1, v);
+  }
+
   @$pb.TagNumber(2)
   $core.bool hasMessagesReceived() => $_has(1);
   @$pb.TagNumber(2)
@@ -170,7 +217,10 @@ class PeerMetrics extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $fixnum.Int64 get bytesSent => $_getI64(2);
   @$pb.TagNumber(3)
-  set bytesSent($fixnum.Int64 v) { $_setInt64(2, v); }
+  set bytesSent($fixnum.Int64 v) {
+    $_setInt64(2, v);
+  }
+
   @$pb.TagNumber(3)
   $core.bool hasBytesSent() => $_has(2);
   @$pb.TagNumber(3)
@@ -179,7 +229,10 @@ class PeerMetrics extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $fixnum.Int64 get bytesReceived => $_getI64(3);
   @$pb.TagNumber(4)
-  set bytesReceived($fixnum.Int64 v) { $_setInt64(3, v); }
+  set bytesReceived($fixnum.Int64 v) {
+    $_setInt64(3, v);
+  }
+
   @$pb.TagNumber(4)
   $core.bool hasBytesReceived() => $_has(3);
   @$pb.TagNumber(4)
@@ -188,7 +241,10 @@ class PeerMetrics extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $core.int get averageLatencyMs => $_getIZ(4);
   @$pb.TagNumber(5)
-  set averageLatencyMs($core.int v) { $_setUnsignedInt32(4, v); }
+  set averageLatencyMs($core.int v) {
+    $_setUnsignedInt32(4, v);
+  }
+
   @$pb.TagNumber(5)
   $core.bool hasAverageLatencyMs() => $_has(4);
   @$pb.TagNumber(5)
@@ -197,7 +253,10 @@ class PeerMetrics extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   $core.int get errorCount => $_getIZ(5);
   @$pb.TagNumber(6)
-  set errorCount($core.int v) { $_setUnsignedInt32(5, v); }
+  set errorCount($core.int v) {
+    $_setUnsignedInt32(5, v);
+  }
+
   @$pb.TagNumber(6)
   $core.bool hasErrorCount() => $_has(5);
   @$pb.TagNumber(6)
@@ -227,42 +286,62 @@ class ProtocolMetrics extends $pb.GeneratedMessage {
     return $result;
   }
   ProtocolMetrics._() : super();
-  factory ProtocolMetrics.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory ProtocolMetrics.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory ProtocolMetrics.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory ProtocolMetrics.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ProtocolMetrics', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.metrics'), createEmptyInstance: create)
-    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'messagesSent', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'messagesReceived', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$core.int>(3, _omitFieldNames ? '' : 'activeConnections', $pb.PbFieldType.OU3)
-    ..m<$core.String, $fixnum.Int64>(4, _omitFieldNames ? '' : 'errorCounts', entryClassName: 'ProtocolMetrics.ErrorCountsEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OU6, packageName: const $pb.PackageName('ipfs.metrics'))
-    ..hasRequiredFields = false
-  ;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ProtocolMetrics',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.metrics'),
+      createEmptyInstance: create)
+    ..a<$fixnum.Int64>(
+        1, _omitFieldNames ? '' : 'messagesSent', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        2, _omitFieldNames ? '' : 'messagesReceived', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$core.int>(
+        3, _omitFieldNames ? '' : 'activeConnections', $pb.PbFieldType.OU3)
+    ..m<$core.String, $fixnum.Int64>(4, _omitFieldNames ? '' : 'errorCounts',
+        entryClassName: 'ProtocolMetrics.ErrorCountsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OU6,
+        packageName: const $pb.PackageName('ipfs.metrics'))
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   ProtocolMetrics clone() => ProtocolMetrics()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  ProtocolMetrics copyWith(void Function(ProtocolMetrics) updates) => super.copyWith((message) => updates(message as ProtocolMetrics)) as ProtocolMetrics;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  ProtocolMetrics copyWith(void Function(ProtocolMetrics) updates) =>
+      super.copyWith((message) => updates(message as ProtocolMetrics))
+          as ProtocolMetrics;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static ProtocolMetrics create() => ProtocolMetrics._();
   ProtocolMetrics createEmptyInstance() => create();
-  static $pb.PbList<ProtocolMetrics> createRepeated() => $pb.PbList<ProtocolMetrics>();
+  static $pb.PbList<ProtocolMetrics> createRepeated() =>
+      $pb.PbList<ProtocolMetrics>();
   @$core.pragma('dart2js:noInline')
-  static ProtocolMetrics getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ProtocolMetrics>(create);
+  static ProtocolMetrics getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ProtocolMetrics>(create);
   static ProtocolMetrics? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get messagesSent => $_getI64(0);
   @$pb.TagNumber(1)
-  set messagesSent($fixnum.Int64 v) { $_setInt64(0, v); }
+  set messagesSent($fixnum.Int64 v) {
+    $_setInt64(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasMessagesSent() => $_has(0);
   @$pb.TagNumber(1)
@@ -271,7 +350,10 @@ class ProtocolMetrics extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $fixnum.Int64 get messagesReceived => $_getI64(1);
   @$pb.TagNumber(2)
-  set messagesReceived($fixnum.Int64 v) { $_setInt64(1, v); }
+  set messagesReceived($fixnum.Int64 v) {
+    $_setInt64(1, v);
+  }
+
   @$pb.TagNumber(2)
   $core.bool hasMessagesReceived() => $_has(1);
   @$pb.TagNumber(2)
@@ -280,7 +362,10 @@ class ProtocolMetrics extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.int get activeConnections => $_getIZ(2);
   @$pb.TagNumber(3)
-  set activeConnections($core.int v) { $_setUnsignedInt32(2, v); }
+  set activeConnections($core.int v) {
+    $_setUnsignedInt32(2, v);
+  }
+
   @$pb.TagNumber(3)
   $core.bool hasActiveConnections() => $_has(2);
   @$pb.TagNumber(3)
@@ -290,6 +375,6 @@ class ProtocolMetrics extends $pb.GeneratedMessage {
   $core.Map<$core.String, $fixnum.Int64> get errorCounts => $_getMap(3);
 }
 
-
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

@@ -17,40 +17,312 @@ import 'dart:typed_data' as $typed_data;
 const NetworkEvent$json = {
   '1': 'NetworkEvent',
   '2': [
-    {'1': 'peer_connected', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PeerConnectedEvent', '9': 0, '10': 'peerConnected'},
-    {'1': 'peer_disconnected', '3': 2, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PeerDisconnectedEvent', '9': 0, '10': 'peerDisconnected'},
-    {'1': 'connection_attempted', '3': 3, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.ConnectionAttemptedEvent', '9': 0, '10': 'connectionAttempted'},
-    {'1': 'connection_failed', '3': 4, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.ConnectionFailedEvent', '9': 0, '10': 'connectionFailed'},
-    {'1': 'message_received', '3': 5, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.MessageReceivedEvent', '9': 0, '10': 'messageReceived'},
-    {'1': 'message_sent', '3': 6, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.MessageSentEvent', '9': 0, '10': 'messageSent'},
-    {'1': 'block_received', '3': 7, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.BlockReceivedEvent', '9': 0, '10': 'blockReceived'},
-    {'1': 'block_sent', '3': 8, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.BlockSentEvent', '9': 0, '10': 'blockSent'},
-    {'1': 'dht_query_started', '3': 9, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTQueryStartedEvent', '9': 0, '10': 'dhtQueryStarted'},
-    {'1': 'dht_query_completed', '3': 10, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTQueryCompletedEvent', '9': 0, '10': 'dhtQueryCompleted'},
-    {'1': 'dht_value_found', '3': 11, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTValueFoundEvent', '9': 0, '10': 'dhtValueFound'},
-    {'1': 'dht_value_provided', '3': 12, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTValueProvidedEvent', '9': 0, '10': 'dhtValueProvided'},
-    {'1': 'dht_value_not_found', '3': 13, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTValueNotFoundEvent', '9': 0, '10': 'dhtValueNotFound'},
-    {'1': 'pubsub_message_published', '3': 14, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PubsubMessagePublishedEvent', '9': 0, '10': 'pubsubMessagePublished'},
-    {'1': 'pubsub_message_received', '3': 15, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PubsubMessageReceivedEvent', '9': 0, '10': 'pubsubMessageReceived'},
-    {'1': 'pubsub_subscription_created', '3': 16, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PubsubSubscriptionCreatedEvent', '9': 0, '10': 'pubsubSubscriptionCreated'},
-    {'1': 'pubsub_subscription_cancelled', '3': 17, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PubsubSubscriptionCancelledEvent', '9': 0, '10': 'pubsubSubscriptionCancelled'},
-    {'1': 'circuit_relay_created', '3': 18, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayCreatedEvent', '9': 0, '10': 'circuitRelayCreated'},
-    {'1': 'circuit_relay_closed', '3': 19, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayClosedEvent', '9': 0, '10': 'circuitRelayClosed'},
-    {'1': 'circuit_relay_traffic', '3': 20, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayTrafficEvent', '9': 0, '10': 'circuitRelayTraffic'},
-    {'1': 'circuit_relay_failed', '3': 21, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayFailedEvent', '9': 0, '10': 'circuitRelayFailed'},
-    {'1': 'node_started', '3': 22, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.NodeStartedEvent', '9': 0, '10': 'nodeStarted'},
-    {'1': 'node_stopped', '3': 23, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.NodeStoppedEvent', '9': 0, '10': 'nodeStopped'},
-    {'1': 'error', '3': 24, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.NodeErrorEvent', '9': 0, '10': 'error'},
-    {'1': 'network_changed', '3': 25, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.NetworkStatusChangedEvent', '9': 0, '10': 'networkChanged'},
-    {'1': 'dht_provider_added', '3': 26, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTProviderAddedEvent', '9': 0, '10': 'dhtProviderAdded'},
-    {'1': 'dht_provider_queried', '3': 27, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.DHTProviderQueriedEvent', '9': 0, '10': 'dhtProviderQueried'},
-    {'1': 'stream_started', '3': 28, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.StreamStartedEvent', '9': 0, '10': 'streamStarted'},
-    {'1': 'stream_ended', '3': 29, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.StreamEndedEvent', '9': 0, '10': 'streamEnded'},
-    {'1': 'peer_discovered', '3': 30, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.PeerDiscoveredEvent', '9': 0, '10': 'peerDiscovered'},
-    {'1': 'circuit_relay_data_received', '3': 31, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayDataReceivedEvent', '9': 0, '10': 'circuitRelayDataReceived'},
-    {'1': 'circuit_relay_data_sent', '3': 32, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.CircuitRelayDataSentEvent', '9': 0, '10': 'circuitRelayDataSent'},
-    {'1': 'resource_limit_exceeded', '3': 33, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.ResourceLimitExceededEvent', '9': 0, '10': 'resourceLimitExceeded'},
-    {'1': 'system_alert', '3': 34, '4': 1, '5': 11, '6': '.ipfs.core.ipfs_node.SystemAlertEvent', '9': 0, '10': 'systemAlert'},
+    {
+      '1': 'peer_connected',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.PeerConnectedEvent',
+      '9': 0,
+      '10': 'peerConnected'
+    },
+    {
+      '1': 'peer_disconnected',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.PeerDisconnectedEvent',
+      '9': 0,
+      '10': 'peerDisconnected'
+    },
+    {
+      '1': 'connection_attempted',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.ConnectionAttemptedEvent',
+      '9': 0,
+      '10': 'connectionAttempted'
+    },
+    {
+      '1': 'connection_failed',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.ConnectionFailedEvent',
+      '9': 0,
+      '10': 'connectionFailed'
+    },
+    {
+      '1': 'message_received',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.MessageReceivedEvent',
+      '9': 0,
+      '10': 'messageReceived'
+    },
+    {
+      '1': 'message_sent',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.MessageSentEvent',
+      '9': 0,
+      '10': 'messageSent'
+    },
+    {
+      '1': 'block_received',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.BlockReceivedEvent',
+      '9': 0,
+      '10': 'blockReceived'
+    },
+    {
+      '1': 'block_sent',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.BlockSentEvent',
+      '9': 0,
+      '10': 'blockSent'
+    },
+    {
+      '1': 'dht_query_started',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.DHTQueryStartedEvent',
+      '9': 0,
+      '10': 'dhtQueryStarted'
+    },
+    {
+      '1': 'dht_query_completed',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.DHTQueryCompletedEvent',
+      '9': 0,
+      '10': 'dhtQueryCompleted'
+    },
+    {
+      '1': 'dht_value_found',
+      '3': 11,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.DHTValueFoundEvent',
+      '9': 0,
+      '10': 'dhtValueFound'
+    },
+    {
+      '1': 'dht_value_provided',
+      '3': 12,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.DHTValueProvidedEvent',
+      '9': 0,
+      '10': 'dhtValueProvided'
+    },
+    {
+      '1': 'dht_value_not_found',
+      '3': 13,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.DHTValueNotFoundEvent',
+      '9': 0,
+      '10': 'dhtValueNotFound'
+    },
+    {
+      '1': 'pubsub_message_published',
+      '3': 14,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.PubsubMessagePublishedEvent',
+      '9': 0,
+      '10': 'pubsubMessagePublished'
+    },
+    {
+      '1': 'pubsub_message_received',
+      '3': 15,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.PubsubMessageReceivedEvent',
+      '9': 0,
+      '10': 'pubsubMessageReceived'
+    },
+    {
+      '1': 'pubsub_subscription_created',
+      '3': 16,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.PubsubSubscriptionCreatedEvent',
+      '9': 0,
+      '10': 'pubsubSubscriptionCreated'
+    },
+    {
+      '1': 'pubsub_subscription_cancelled',
+      '3': 17,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.PubsubSubscriptionCancelledEvent',
+      '9': 0,
+      '10': 'pubsubSubscriptionCancelled'
+    },
+    {
+      '1': 'circuit_relay_created',
+      '3': 18,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.CircuitRelayCreatedEvent',
+      '9': 0,
+      '10': 'circuitRelayCreated'
+    },
+    {
+      '1': 'circuit_relay_closed',
+      '3': 19,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.CircuitRelayClosedEvent',
+      '9': 0,
+      '10': 'circuitRelayClosed'
+    },
+    {
+      '1': 'circuit_relay_traffic',
+      '3': 20,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.CircuitRelayTrafficEvent',
+      '9': 0,
+      '10': 'circuitRelayTraffic'
+    },
+    {
+      '1': 'circuit_relay_failed',
+      '3': 21,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.CircuitRelayFailedEvent',
+      '9': 0,
+      '10': 'circuitRelayFailed'
+    },
+    {
+      '1': 'node_started',
+      '3': 22,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.NodeStartedEvent',
+      '9': 0,
+      '10': 'nodeStarted'
+    },
+    {
+      '1': 'node_stopped',
+      '3': 23,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.NodeStoppedEvent',
+      '9': 0,
+      '10': 'nodeStopped'
+    },
+    {
+      '1': 'error',
+      '3': 24,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.NodeErrorEvent',
+      '9': 0,
+      '10': 'error'
+    },
+    {
+      '1': 'network_changed',
+      '3': 25,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.NetworkStatusChangedEvent',
+      '9': 0,
+      '10': 'networkChanged'
+    },
+    {
+      '1': 'dht_provider_added',
+      '3': 26,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.DHTProviderAddedEvent',
+      '9': 0,
+      '10': 'dhtProviderAdded'
+    },
+    {
+      '1': 'dht_provider_queried',
+      '3': 27,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.DHTProviderQueriedEvent',
+      '9': 0,
+      '10': 'dhtProviderQueried'
+    },
+    {
+      '1': 'stream_started',
+      '3': 28,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.StreamStartedEvent',
+      '9': 0,
+      '10': 'streamStarted'
+    },
+    {
+      '1': 'stream_ended',
+      '3': 29,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.StreamEndedEvent',
+      '9': 0,
+      '10': 'streamEnded'
+    },
+    {
+      '1': 'peer_discovered',
+      '3': 30,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.PeerDiscoveredEvent',
+      '9': 0,
+      '10': 'peerDiscovered'
+    },
+    {
+      '1': 'circuit_relay_data_received',
+      '3': 31,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.CircuitRelayDataReceivedEvent',
+      '9': 0,
+      '10': 'circuitRelayDataReceived'
+    },
+    {
+      '1': 'circuit_relay_data_sent',
+      '3': 32,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.CircuitRelayDataSentEvent',
+      '9': 0,
+      '10': 'circuitRelayDataSent'
+    },
+    {
+      '1': 'resource_limit_exceeded',
+      '3': 33,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.ResourceLimitExceededEvent',
+      '9': 0,
+      '10': 'resourceLimitExceeded'
+    },
+    {
+      '1': 'system_alert',
+      '3': 34,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.ipfs_node.SystemAlertEvent',
+      '9': 0,
+      '10': 'systemAlert'
+    },
   ],
   '8': [
     {'1': 'event'},
@@ -155,9 +427,10 @@ const ConnectionAttemptedEvent$json = {
 };
 
 /// Descriptor for `ConnectionAttemptedEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List connectionAttemptedEventDescriptor = $convert.base64Decode(
-    'ChhDb25uZWN0aW9uQXR0ZW1wdGVkRXZlbnQSFwoHcGVlcl9pZBgBIAEoCVIGcGVlcklkEhgKB3'
-    'N1Y2Nlc3MYAiABKAhSB3N1Y2Nlc3M=');
+final $typed_data.Uint8List connectionAttemptedEventDescriptor =
+    $convert.base64Decode(
+        'ChhDb25uZWN0aW9uQXR0ZW1wdGVkRXZlbnQSFwoHcGVlcl9pZBgBIAEoCVIGcGVlcklkEhgKB3'
+        'N1Y2Nlc3MYAiABKAhSB3N1Y2Nlc3M=');
 
 @$core.Deprecated('Use connectionFailedEventDescriptor instead')
 const ConnectionFailedEvent$json = {
@@ -283,8 +556,8 @@ const DHTValueNotFoundEvent$json = {
 };
 
 /// Descriptor for `DHTValueNotFoundEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List dHTValueNotFoundEventDescriptor = $convert.base64Decode(
-    'ChVESFRWYWx1ZU5vdEZvdW5kRXZlbnQSEAoDa2V5GAEgASgJUgNrZXk=');
+final $typed_data.Uint8List dHTValueNotFoundEventDescriptor = $convert
+    .base64Decode('ChVESFRWYWx1ZU5vdEZvdW5kRXZlbnQSEAoDa2V5GAEgASgJUgNrZXk=');
 
 @$core.Deprecated('Use dHTValueProvidedEventDescriptor instead')
 const DHTValueProvidedEvent$json = {
@@ -324,9 +597,10 @@ const DHTProviderQueriedEvent$json = {
 };
 
 /// Descriptor for `DHTProviderQueriedEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List dHTProviderQueriedEventDescriptor = $convert.base64Decode(
-    'ChdESFRQcm92aWRlclF1ZXJpZWRFdmVudBIQCgNrZXkYASABKAlSA2tleRIcCglwcm92aWRlcn'
-    'MYAiADKAlSCXByb3ZpZGVycw==');
+final $typed_data.Uint8List dHTProviderQueriedEventDescriptor =
+    $convert.base64Decode(
+        'ChdESFRQcm92aWRlclF1ZXJpZWRFdmVudBIQCgNrZXkYASABKAlSA2tleRIcCglwcm92aWRlcn'
+        'MYAiADKAlSCXByb3ZpZGVycw==');
 
 @$core.Deprecated('Use pubsubMessagePublishedEventDescriptor instead')
 const PubsubMessagePublishedEvent$json = {
@@ -338,9 +612,10 @@ const PubsubMessagePublishedEvent$json = {
 };
 
 /// Descriptor for `PubsubMessagePublishedEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List pubsubMessagePublishedEventDescriptor = $convert.base64Decode(
-    'ChtQdWJzdWJNZXNzYWdlUHVibGlzaGVkRXZlbnQSFAoFdG9waWMYASABKAlSBXRvcGljEicKD2'
-    '1lc3NhZ2VfY29udGVudBgCIAEoDFIObWVzc2FnZUNvbnRlbnQ=');
+final $typed_data.Uint8List pubsubMessagePublishedEventDescriptor =
+    $convert.base64Decode(
+        'ChtQdWJzdWJNZXNzYWdlUHVibGlzaGVkRXZlbnQSFAoFdG9waWMYASABKAlSBXRvcGljEicKD2'
+        '1lc3NhZ2VfY29udGVudBgCIAEoDFIObWVzc2FnZUNvbnRlbnQ=');
 
 @$core.Deprecated('Use pubsubMessageReceivedEventDescriptor instead')
 const PubsubMessageReceivedEvent$json = {
@@ -353,10 +628,11 @@ const PubsubMessageReceivedEvent$json = {
 };
 
 /// Descriptor for `PubsubMessageReceivedEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List pubsubMessageReceivedEventDescriptor = $convert.base64Decode(
-    'ChpQdWJzdWJNZXNzYWdlUmVjZWl2ZWRFdmVudBIUCgV0b3BpYxgBIAEoCVIFdG9waWMSJwoPbW'
-    'Vzc2FnZV9jb250ZW50GAIgASgMUg5tZXNzYWdlQ29udGVudBIXCgdwZWVyX2lkGAMgASgJUgZw'
-    'ZWVySWQ=');
+final $typed_data.Uint8List pubsubMessageReceivedEventDescriptor =
+    $convert.base64Decode(
+        'ChpQdWJzdWJNZXNzYWdlUmVjZWl2ZWRFdmVudBIUCgV0b3BpYxgBIAEoCVIFdG9waWMSJwoPbW'
+        'Vzc2FnZV9jb250ZW50GAIgASgMUg5tZXNzYWdlQ29udGVudBIXCgdwZWVyX2lkGAMgASgJUgZw'
+        'ZWVySWQ=');
 
 @$core.Deprecated('Use pubsubSubscriptionCreatedEventDescriptor instead')
 const PubsubSubscriptionCreatedEvent$json = {
@@ -367,8 +643,9 @@ const PubsubSubscriptionCreatedEvent$json = {
 };
 
 /// Descriptor for `PubsubSubscriptionCreatedEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List pubsubSubscriptionCreatedEventDescriptor = $convert.base64Decode(
-    'Ch5QdWJzdWJTdWJzY3JpcHRpb25DcmVhdGVkRXZlbnQSFAoFdG9waWMYASABKAlSBXRvcGlj');
+final $typed_data.Uint8List pubsubSubscriptionCreatedEventDescriptor =
+    $convert.base64Decode(
+        'Ch5QdWJzdWJTdWJzY3JpcHRpb25DcmVhdGVkRXZlbnQSFAoFdG9waWMYASABKAlSBXRvcGlj');
 
 @$core.Deprecated('Use pubsubSubscriptionCancelledEventDescriptor instead')
 const PubsubSubscriptionCancelledEvent$json = {
@@ -379,9 +656,10 @@ const PubsubSubscriptionCancelledEvent$json = {
 };
 
 /// Descriptor for `PubsubSubscriptionCancelledEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List pubsubSubscriptionCancelledEventDescriptor = $convert.base64Decode(
-    'CiBQdWJzdWJTdWJzY3JpcHRpb25DYW5jZWxsZWRFdmVudBIUCgV0b3BpYxgBIAEoCVIFdG9waW'
-    'M=');
+final $typed_data.Uint8List pubsubSubscriptionCancelledEventDescriptor =
+    $convert.base64Decode(
+        'CiBQdWJzdWJTdWJzY3JpcHRpb25DYW5jZWxsZWRFdmVudBIUCgV0b3BpYxgBIAEoCVIFdG9waW'
+        'M=');
 
 @$core.Deprecated('Use circuitRelayCreatedEventDescriptor instead')
 const CircuitRelayCreatedEvent$json = {
@@ -392,9 +670,10 @@ const CircuitRelayCreatedEvent$json = {
 };
 
 /// Descriptor for `CircuitRelayCreatedEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List circuitRelayCreatedEventDescriptor = $convert.base64Decode(
-    'ChhDaXJjdWl0UmVsYXlDcmVhdGVkRXZlbnQSIwoNcmVsYXlfYWRkcmVzcxgBIAEoCVIMcmVsYX'
-    'lBZGRyZXNz');
+final $typed_data.Uint8List circuitRelayCreatedEventDescriptor =
+    $convert.base64Decode(
+        'ChhDaXJjdWl0UmVsYXlDcmVhdGVkRXZlbnQSIwoNcmVsYXlfYWRkcmVzcxgBIAEoCVIMcmVsYX'
+        'lBZGRyZXNz');
 
 @$core.Deprecated('Use circuitRelayClosedEventDescriptor instead')
 const CircuitRelayClosedEvent$json = {
@@ -406,9 +685,10 @@ const CircuitRelayClosedEvent$json = {
 };
 
 /// Descriptor for `CircuitRelayClosedEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List circuitRelayClosedEventDescriptor = $convert.base64Decode(
-    'ChdDaXJjdWl0UmVsYXlDbG9zZWRFdmVudBIjCg1yZWxheV9hZGRyZXNzGAEgASgJUgxyZWxheU'
-    'FkZHJlc3MSFgoGcmVhc29uGAIgASgJUgZyZWFzb24=');
+final $typed_data.Uint8List circuitRelayClosedEventDescriptor =
+    $convert.base64Decode(
+        'ChdDaXJjdWl0UmVsYXlDbG9zZWRFdmVudBIjCg1yZWxheV9hZGRyZXNzGAEgASgJUgxyZWxheU'
+        'FkZHJlc3MSFgoGcmVhc29uGAIgASgJUgZyZWFzb24=');
 
 @$core.Deprecated('Use circuitRelayTrafficEventDescriptor instead')
 const CircuitRelayTrafficEvent$json = {
@@ -420,9 +700,10 @@ const CircuitRelayTrafficEvent$json = {
 };
 
 /// Descriptor for `CircuitRelayTrafficEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List circuitRelayTrafficEventDescriptor = $convert.base64Decode(
-    'ChhDaXJjdWl0UmVsYXlUcmFmZmljRXZlbnQSIwoNcmVsYXlfYWRkcmVzcxgBIAEoCVIMcmVsYX'
-    'lBZGRyZXNzEhsKCWRhdGFfc2l6ZRgCIAEoA1IIZGF0YVNpemU=');
+final $typed_data.Uint8List circuitRelayTrafficEventDescriptor =
+    $convert.base64Decode(
+        'ChhDaXJjdWl0UmVsYXlUcmFmZmljRXZlbnQSIwoNcmVsYXlfYWRkcmVzcxgBIAEoCVIMcmVsYX'
+        'lBZGRyZXNzEhsKCWRhdGFfc2l6ZRgCIAEoA1IIZGF0YVNpemU=');
 
 @$core.Deprecated('Use circuitRelayDataReceivedEventDescriptor instead')
 const CircuitRelayDataReceivedEvent$json = {
@@ -434,9 +715,10 @@ const CircuitRelayDataReceivedEvent$json = {
 };
 
 /// Descriptor for `CircuitRelayDataReceivedEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List circuitRelayDataReceivedEventDescriptor = $convert.base64Decode(
-    'Ch1DaXJjdWl0UmVsYXlEYXRhUmVjZWl2ZWRFdmVudBIjCg1yZWxheV9hZGRyZXNzGAEgASgJUg'
-    'xyZWxheUFkZHJlc3MSGwoJZGF0YV9zaXplGAIgASgDUghkYXRhU2l6ZQ==');
+final $typed_data.Uint8List circuitRelayDataReceivedEventDescriptor =
+    $convert.base64Decode(
+        'Ch1DaXJjdWl0UmVsYXlEYXRhUmVjZWl2ZWRFdmVudBIjCg1yZWxheV9hZGRyZXNzGAEgASgJUg'
+        'xyZWxheUFkZHJlc3MSGwoJZGF0YV9zaXplGAIgASgDUghkYXRhU2l6ZQ==');
 
 @$core.Deprecated('Use circuitRelayDataSentEventDescriptor instead')
 const CircuitRelayDataSentEvent$json = {
@@ -448,9 +730,10 @@ const CircuitRelayDataSentEvent$json = {
 };
 
 /// Descriptor for `CircuitRelayDataSentEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List circuitRelayDataSentEventDescriptor = $convert.base64Decode(
-    'ChlDaXJjdWl0UmVsYXlEYXRhU2VudEV2ZW50EiMKDXJlbGF5X2FkZHJlc3MYASABKAlSDHJlbG'
-    'F5QWRkcmVzcxIbCglkYXRhX3NpemUYAiABKANSCGRhdGFTaXpl');
+final $typed_data.Uint8List circuitRelayDataSentEventDescriptor =
+    $convert.base64Decode(
+        'ChlDaXJjdWl0UmVsYXlEYXRhU2VudEV2ZW50EiMKDXJlbGF5X2FkZHJlc3MYASABKAlSDHJlbG'
+        'F5QWRkcmVzcxIbCglkYXRhX3NpemUYAiABKANSCGRhdGFTaXpl');
 
 @$core.Deprecated('Use circuitRelayFailedEventDescriptor instead')
 const CircuitRelayFailedEvent$json = {
@@ -462,9 +745,10 @@ const CircuitRelayFailedEvent$json = {
 };
 
 /// Descriptor for `CircuitRelayFailedEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List circuitRelayFailedEventDescriptor = $convert.base64Decode(
-    'ChdDaXJjdWl0UmVsYXlGYWlsZWRFdmVudBIjCg1yZWxheV9hZGRyZXNzGAEgASgJUgxyZWxheU'
-    'FkZHJlc3MSFgoGcmVhc29uGAIgASgJUgZyZWFzb24=');
+final $typed_data.Uint8List circuitRelayFailedEventDescriptor =
+    $convert.base64Decode(
+        'ChdDaXJjdWl0UmVsYXlGYWlsZWRFdmVudBIjCg1yZWxheV9hZGRyZXNzGAEgASgJUgxyZWxheU'
+        'FkZHJlc3MSFgoGcmVhc29uGAIgASgJUgZyZWFzb24=');
 
 @$core.Deprecated('Use streamStartedEventDescriptor instead')
 const StreamStartedEvent$json = {
@@ -504,8 +788,9 @@ const PeerDiscoveredEvent$json = {
 };
 
 /// Descriptor for `PeerDiscoveredEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List peerDiscoveredEventDescriptor = $convert.base64Decode(
-    'ChNQZWVyRGlzY292ZXJlZEV2ZW50EhcKB3BlZXJfaWQYASABKAlSBnBlZXJJZA==');
+final $typed_data.Uint8List peerDiscoveredEventDescriptor =
+    $convert.base64Decode(
+        'ChNQZWVyRGlzY292ZXJlZEV2ZW50EhcKB3BlZXJfaWQYASABKAlSBnBlZXJJZA==');
 
 @$core.Deprecated('Use nodeStartedEventDescriptor instead')
 const NodeStartedEvent$json = {
@@ -513,8 +798,8 @@ const NodeStartedEvent$json = {
 };
 
 /// Descriptor for `NodeStartedEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List nodeStartedEventDescriptor = $convert.base64Decode(
-    'ChBOb2RlU3RhcnRlZEV2ZW50');
+final $typed_data.Uint8List nodeStartedEventDescriptor =
+    $convert.base64Decode('ChBOb2RlU3RhcnRlZEV2ZW50');
 
 @$core.Deprecated('Use nodeStoppedEventDescriptor instead')
 const NodeStoppedEvent$json = {
@@ -522,14 +807,21 @@ const NodeStoppedEvent$json = {
 };
 
 /// Descriptor for `NodeStoppedEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List nodeStoppedEventDescriptor = $convert.base64Decode(
-    'ChBOb2RlU3RvcHBlZEV2ZW50');
+final $typed_data.Uint8List nodeStoppedEventDescriptor =
+    $convert.base64Decode('ChBOb2RlU3RvcHBlZEV2ZW50');
 
 @$core.Deprecated('Use nodeErrorEventDescriptor instead')
 const NodeErrorEvent$json = {
   '1': 'NodeErrorEvent',
   '2': [
-    {'1': 'error_type', '3': 1, '4': 1, '5': 14, '6': '.ipfs.core.ipfs_node.NodeErrorEvent.ErrorType', '10': 'errorType'},
+    {
+      '1': 'error_type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.core.ipfs_node.NodeErrorEvent.ErrorType',
+      '10': 'errorType'
+    },
     {'1': 'message', '3': 2, '4': 1, '5': 9, '10': 'message'},
     {'1': 'stack_trace', '3': 3, '4': 1, '5': 9, '10': 'stackTrace'},
     {'1': 'source', '3': 4, '4': 1, '5': 9, '10': 'source'},
@@ -567,7 +859,14 @@ final $typed_data.Uint8List nodeErrorEventDescriptor = $convert.base64Decode(
 const NetworkStatusChangedEvent$json = {
   '1': 'NetworkStatusChangedEvent',
   '2': [
-    {'1': 'change_type', '3': 1, '4': 1, '5': 14, '6': '.ipfs.core.ipfs_node.NetworkStatusChangedEvent.ChangeType', '10': 'changeType'},
+    {
+      '1': 'change_type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.core.ipfs_node.NetworkStatusChangedEvent.ChangeType',
+      '10': 'changeType'
+    },
   ],
   '4': [NetworkStatusChangedEvent_ChangeType$json],
 };
@@ -642,9 +941,10 @@ const ResourceLimitExceededEvent$json = {
 };
 
 /// Descriptor for `ResourceLimitExceededEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List resourceLimitExceededEventDescriptor = $convert.base64Decode(
-    'ChpSZXNvdXJjZUxpbWl0RXhjZWVkZWRFdmVudBIjCg1yZXNvdXJjZV90eXBlGAEgASgJUgxyZX'
-    'NvdXJjZVR5cGUSGAoHbWVzc2FnZRgCIAEoCVIHbWVzc2FnZQ==');
+final $typed_data.Uint8List resourceLimitExceededEventDescriptor =
+    $convert.base64Decode(
+        'ChpSZXNvdXJjZUxpbWl0RXhjZWVkZWRFdmVudBIjCg1yZXNvdXJjZV90eXBlGAEgASgJUgxyZX'
+        'NvdXJjZVR5cGUSGAoHbWVzc2FnZRgCIAEoCVIHbWVzc2FnZQ==');
 
 @$core.Deprecated('Use systemAlertEventDescriptor instead')
 const SystemAlertEvent$json = {
@@ -659,4 +959,3 @@ const SystemAlertEvent$json = {
 final $typed_data.Uint8List systemAlertEventDescriptor = $convert.base64Decode(
     'ChBTeXN0ZW1BbGVydEV2ZW50Eh0KCmFsZXJ0X3R5cGUYASABKAlSCWFsZXJ0VHlwZRIYCgdtZX'
     'NzYWdlGAIgASgJUgdtZXNzYWdl');
-

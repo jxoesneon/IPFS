@@ -18,12 +18,47 @@ const Api$json = {
   '1': 'Api',
   '2': [
     {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'methods', '3': 2, '4': 3, '5': 11, '6': '.google.protobuf.Method', '10': 'methods'},
-    {'1': 'options', '3': 3, '4': 3, '5': 11, '6': '.google.protobuf.Option', '10': 'options'},
+    {
+      '1': 'methods',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.google.protobuf.Method',
+      '10': 'methods'
+    },
+    {
+      '1': 'options',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.google.protobuf.Option',
+      '10': 'options'
+    },
     {'1': 'version', '3': 4, '4': 1, '5': 9, '10': 'version'},
-    {'1': 'source_context', '3': 5, '4': 1, '5': 11, '6': '.google.protobuf.SourceContext', '10': 'sourceContext'},
-    {'1': 'mixins', '3': 6, '4': 3, '5': 11, '6': '.google.protobuf.Mixin', '10': 'mixins'},
-    {'1': 'syntax', '3': 7, '4': 1, '5': 14, '6': '.google.protobuf.Syntax', '10': 'syntax'},
+    {
+      '1': 'source_context',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.SourceContext',
+      '10': 'sourceContext'
+    },
+    {
+      '1': 'mixins',
+      '3': 6,
+      '4': 3,
+      '5': 11,
+      '6': '.google.protobuf.Mixin',
+      '10': 'mixins'
+    },
+    {
+      '1': 'syntax',
+      '3': 7,
+      '4': 1,
+      '5': 14,
+      '6': '.google.protobuf.Syntax',
+      '10': 'syntax'
+    },
   ],
 };
 
@@ -42,11 +77,37 @@ const Method$json = {
   '2': [
     {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
     {'1': 'request_type_url', '3': 2, '4': 1, '5': 9, '10': 'requestTypeUrl'},
-    {'1': 'request_streaming', '3': 3, '4': 1, '5': 8, '10': 'requestStreaming'},
+    {
+      '1': 'request_streaming',
+      '3': 3,
+      '4': 1,
+      '5': 8,
+      '10': 'requestStreaming'
+    },
     {'1': 'response_type_url', '3': 4, '4': 1, '5': 9, '10': 'responseTypeUrl'},
-    {'1': 'response_streaming', '3': 5, '4': 1, '5': 8, '10': 'responseStreaming'},
-    {'1': 'options', '3': 6, '4': 3, '5': 11, '6': '.google.protobuf.Option', '10': 'options'},
-    {'1': 'syntax', '3': 7, '4': 1, '5': 14, '6': '.google.protobuf.Syntax', '10': 'syntax'},
+    {
+      '1': 'response_streaming',
+      '3': 5,
+      '4': 1,
+      '5': 8,
+      '10': 'responseStreaming'
+    },
+    {
+      '1': 'options',
+      '3': 6,
+      '4': 3,
+      '5': 11,
+      '6': '.google.protobuf.Option',
+      '10': 'options'
+    },
+    {
+      '1': 'syntax',
+      '3': 7,
+      '4': 1,
+      '5': 14,
+      '6': '.google.protobuf.Syntax',
+      '10': 'syntax'
+    },
   ],
 };
 
@@ -71,4 +132,3 @@ const Mixin$json = {
 /// Descriptor for `Mixin`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List mixinDescriptor = $convert.base64Decode(
     'CgVNaXhpbhISCgRuYW1lGAEgASgJUgRuYW1lEhIKBHJvb3QYAiABKAlSBHJvb3Q=');
-

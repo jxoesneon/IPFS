@@ -19,15 +19,15 @@ import 'data_model.pbenum.dart';
 export 'data_model.pbenum.dart';
 
 enum IPLDNode_Value {
-  boolValue, 
-  intValue, 
-  floatValue, 
-  stringValue, 
-  bytesValue, 
-  listValue, 
-  mapValue, 
-  linkValue, 
-  bigIntValue, 
+  boolValue,
+  intValue,
+  floatValue,
+  stringValue,
+  bytesValue,
+  listValue,
+  mapValue,
+  linkValue,
+  bigIntValue,
   notSet
 }
 
@@ -79,46 +79,62 @@ class IPLDNode extends $pb.GeneratedMessage {
     return $result;
   }
   IPLDNode._() : super();
-  factory IPLDNode.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory IPLDNode.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory IPLDNode.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory IPLDNode.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
   static const $core.Map<$core.int, IPLDNode_Value> _IPLDNode_ValueByTag = {
-    2 : IPLDNode_Value.boolValue,
-    3 : IPLDNode_Value.intValue,
-    4 : IPLDNode_Value.floatValue,
-    5 : IPLDNode_Value.stringValue,
-    6 : IPLDNode_Value.bytesValue,
-    7 : IPLDNode_Value.listValue,
-    8 : IPLDNode_Value.mapValue,
-    9 : IPLDNode_Value.linkValue,
-    10 : IPLDNode_Value.bigIntValue,
-    0 : IPLDNode_Value.notSet
+    2: IPLDNode_Value.boolValue,
+    3: IPLDNode_Value.intValue,
+    4: IPLDNode_Value.floatValue,
+    5: IPLDNode_Value.stringValue,
+    6: IPLDNode_Value.bytesValue,
+    7: IPLDNode_Value.listValue,
+    8: IPLDNode_Value.mapValue,
+    9: IPLDNode_Value.linkValue,
+    10: IPLDNode_Value.bigIntValue,
+    0: IPLDNode_Value.notSet
   };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'IPLDNode', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'IPLDNode',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'),
+      createEmptyInstance: create)
     ..oo(0, [2, 3, 4, 5, 6, 7, 8, 9, 10])
-    ..e<Kind>(1, _omitFieldNames ? '' : 'kind', $pb.PbFieldType.OE, defaultOrMaker: Kind.NULL, valueOf: Kind.valueOf, enumValues: Kind.values)
+    ..e<Kind>(1, _omitFieldNames ? '' : 'kind', $pb.PbFieldType.OE,
+        defaultOrMaker: Kind.NULL,
+        valueOf: Kind.valueOf,
+        enumValues: Kind.values)
     ..aOB(2, _omitFieldNames ? '' : 'boolValue')
-    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'intValue', $pb.PbFieldType.OS6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$core.double>(4, _omitFieldNames ? '' : 'floatValue', $pb.PbFieldType.OD)
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'intValue', $pb.PbFieldType.OS6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$core.double>(
+        4, _omitFieldNames ? '' : 'floatValue', $pb.PbFieldType.OD)
     ..aOS(5, _omitFieldNames ? '' : 'stringValue')
-    ..a<$core.List<$core.int>>(6, _omitFieldNames ? '' : 'bytesValue', $pb.PbFieldType.OY)
-    ..aOM<IPLDList>(7, _omitFieldNames ? '' : 'listValue', subBuilder: IPLDList.create)
-    ..aOM<IPLDMap>(8, _omitFieldNames ? '' : 'mapValue', subBuilder: IPLDMap.create)
-    ..aOM<IPLDLink>(9, _omitFieldNames ? '' : 'linkValue', subBuilder: IPLDLink.create)
-    ..a<$core.List<$core.int>>(10, _omitFieldNames ? '' : 'bigIntValue', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false
-  ;
+    ..a<$core.List<$core.int>>(
+        6, _omitFieldNames ? '' : 'bytesValue', $pb.PbFieldType.OY)
+    ..aOM<IPLDList>(7, _omitFieldNames ? '' : 'listValue',
+        subBuilder: IPLDList.create)
+    ..aOM<IPLDMap>(8, _omitFieldNames ? '' : 'mapValue',
+        subBuilder: IPLDMap.create)
+    ..aOM<IPLDLink>(9, _omitFieldNames ? '' : 'linkValue',
+        subBuilder: IPLDLink.create)
+    ..a<$core.List<$core.int>>(
+        10, _omitFieldNames ? '' : 'bigIntValue', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   IPLDNode clone() => IPLDNode()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  IPLDNode copyWith(void Function(IPLDNode) updates) => super.copyWith((message) => updates(message as IPLDNode)) as IPLDNode;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  IPLDNode copyWith(void Function(IPLDNode) updates) =>
+      super.copyWith((message) => updates(message as IPLDNode)) as IPLDNode;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -127,7 +143,8 @@ class IPLDNode extends $pb.GeneratedMessage {
   IPLDNode createEmptyInstance() => create();
   static $pb.PbList<IPLDNode> createRepeated() => $pb.PbList<IPLDNode>();
   @$core.pragma('dart2js:noInline')
-  static IPLDNode getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<IPLDNode>(create);
+  static IPLDNode getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<IPLDNode>(create);
   static IPLDNode? _defaultInstance;
 
   IPLDNode_Value whichValue() => _IPLDNode_ValueByTag[$_whichOneof(0)]!;
@@ -137,7 +154,10 @@ class IPLDNode extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   Kind get kind => $_getN(0);
   @$pb.TagNumber(1)
-  set kind(Kind v) { setField(1, v); }
+  set kind(Kind v) {
+    setField(1, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasKind() => $_has(0);
   @$pb.TagNumber(1)
@@ -147,7 +167,10 @@ class IPLDNode extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool get boolValue => $_getBF(1);
   @$pb.TagNumber(2)
-  set boolValue($core.bool v) { $_setBool(1, v); }
+  set boolValue($core.bool v) {
+    $_setBool(1, v);
+  }
+
   @$pb.TagNumber(2)
   $core.bool hasBoolValue() => $_has(1);
   @$pb.TagNumber(2)
@@ -156,7 +179,10 @@ class IPLDNode extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $fixnum.Int64 get intValue => $_getI64(2);
   @$pb.TagNumber(3)
-  set intValue($fixnum.Int64 v) { $_setInt64(2, v); }
+  set intValue($fixnum.Int64 v) {
+    $_setInt64(2, v);
+  }
+
   @$pb.TagNumber(3)
   $core.bool hasIntValue() => $_has(2);
   @$pb.TagNumber(3)
@@ -165,7 +191,10 @@ class IPLDNode extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.double get floatValue => $_getN(3);
   @$pb.TagNumber(4)
-  set floatValue($core.double v) { $_setDouble(3, v); }
+  set floatValue($core.double v) {
+    $_setDouble(3, v);
+  }
+
   @$pb.TagNumber(4)
   $core.bool hasFloatValue() => $_has(3);
   @$pb.TagNumber(4)
@@ -174,7 +203,10 @@ class IPLDNode extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $core.String get stringValue => $_getSZ(4);
   @$pb.TagNumber(5)
-  set stringValue($core.String v) { $_setString(4, v); }
+  set stringValue($core.String v) {
+    $_setString(4, v);
+  }
+
   @$pb.TagNumber(5)
   $core.bool hasStringValue() => $_has(4);
   @$pb.TagNumber(5)
@@ -183,7 +215,10 @@ class IPLDNode extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   $core.List<$core.int> get bytesValue => $_getN(5);
   @$pb.TagNumber(6)
-  set bytesValue($core.List<$core.int> v) { $_setBytes(5, v); }
+  set bytesValue($core.List<$core.int> v) {
+    $_setBytes(5, v);
+  }
+
   @$pb.TagNumber(6)
   $core.bool hasBytesValue() => $_has(5);
   @$pb.TagNumber(6)
@@ -193,7 +228,10 @@ class IPLDNode extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   IPLDList get listValue => $_getN(6);
   @$pb.TagNumber(7)
-  set listValue(IPLDList v) { setField(7, v); }
+  set listValue(IPLDList v) {
+    setField(7, v);
+  }
+
   @$pb.TagNumber(7)
   $core.bool hasListValue() => $_has(6);
   @$pb.TagNumber(7)
@@ -204,7 +242,10 @@ class IPLDNode extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   IPLDMap get mapValue => $_getN(7);
   @$pb.TagNumber(8)
-  set mapValue(IPLDMap v) { setField(8, v); }
+  set mapValue(IPLDMap v) {
+    setField(8, v);
+  }
+
   @$pb.TagNumber(8)
   $core.bool hasMapValue() => $_has(7);
   @$pb.TagNumber(8)
@@ -215,7 +256,10 @@ class IPLDNode extends $pb.GeneratedMessage {
   @$pb.TagNumber(9)
   IPLDLink get linkValue => $_getN(8);
   @$pb.TagNumber(9)
-  set linkValue(IPLDLink v) { setField(9, v); }
+  set linkValue(IPLDLink v) {
+    setField(9, v);
+  }
+
   @$pb.TagNumber(9)
   $core.bool hasLinkValue() => $_has(8);
   @$pb.TagNumber(9)
@@ -227,7 +271,10 @@ class IPLDNode extends $pb.GeneratedMessage {
   @$pb.TagNumber(10)
   $core.List<$core.int> get bigIntValue => $_getN(9);
   @$pb.TagNumber(10)
-  set bigIntValue($core.List<$core.int> v) { $_setBytes(9, v); }
+  set bigIntValue($core.List<$core.int> v) {
+    $_setBytes(9, v);
+  }
+
   @$pb.TagNumber(10)
   $core.bool hasBigIntValue() => $_has(9);
   @$pb.TagNumber(10)
@@ -246,24 +293,30 @@ class IPLDList extends $pb.GeneratedMessage {
     return $result;
   }
   IPLDList._() : super();
-  factory IPLDList.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory IPLDList.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory IPLDList.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory IPLDList.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'IPLDList', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'), createEmptyInstance: create)
-    ..pc<IPLDNode>(1, _omitFieldNames ? '' : 'values', $pb.PbFieldType.PM, subBuilder: IPLDNode.create)
-    ..hasRequiredFields = false
-  ;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'IPLDList',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'),
+      createEmptyInstance: create)
+    ..pc<IPLDNode>(1, _omitFieldNames ? '' : 'values', $pb.PbFieldType.PM,
+        subBuilder: IPLDNode.create)
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   IPLDList clone() => IPLDList()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  IPLDList copyWith(void Function(IPLDList) updates) => super.copyWith((message) => updates(message as IPLDList)) as IPLDList;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  IPLDList copyWith(void Function(IPLDList) updates) =>
+      super.copyWith((message) => updates(message as IPLDList)) as IPLDList;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -272,7 +325,8 @@ class IPLDList extends $pb.GeneratedMessage {
   IPLDList createEmptyInstance() => create();
   static $pb.PbList<IPLDList> createRepeated() => $pb.PbList<IPLDList>();
   @$core.pragma('dart2js:noInline')
-  static IPLDList getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<IPLDList>(create);
+  static IPLDList getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<IPLDList>(create);
   static IPLDList? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -291,24 +345,30 @@ class IPLDMap extends $pb.GeneratedMessage {
     return $result;
   }
   IPLDMap._() : super();
-  factory IPLDMap.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory IPLDMap.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory IPLDMap.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory IPLDMap.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'IPLDMap', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'), createEmptyInstance: create)
-    ..pc<MapEntry>(1, _omitFieldNames ? '' : 'entries', $pb.PbFieldType.PM, subBuilder: MapEntry.create)
-    ..hasRequiredFields = false
-  ;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'IPLDMap',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'),
+      createEmptyInstance: create)
+    ..pc<MapEntry>(1, _omitFieldNames ? '' : 'entries', $pb.PbFieldType.PM,
+        subBuilder: MapEntry.create)
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   IPLDMap clone() => IPLDMap()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  IPLDMap copyWith(void Function(IPLDMap) updates) => super.copyWith((message) => updates(message as IPLDMap)) as IPLDMap;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  IPLDMap copyWith(void Function(IPLDMap) updates) =>
+      super.copyWith((message) => updates(message as IPLDMap)) as IPLDMap;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -317,7 +377,8 @@ class IPLDMap extends $pb.GeneratedMessage {
   IPLDMap createEmptyInstance() => create();
   static $pb.PbList<IPLDMap> createRepeated() => $pb.PbList<IPLDMap>();
   @$core.pragma('dart2js:noInline')
-  static IPLDMap getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<IPLDMap>(create);
+  static IPLDMap getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<IPLDMap>(create);
   static IPLDMap? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -340,25 +401,31 @@ class MapEntry extends $pb.GeneratedMessage {
     return $result;
   }
   MapEntry._() : super();
-  factory MapEntry.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory MapEntry.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory MapEntry.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory MapEntry.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MapEntry', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'MapEntry',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'),
+      createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'key')
-    ..aOM<IPLDNode>(2, _omitFieldNames ? '' : 'value', subBuilder: IPLDNode.create)
-    ..hasRequiredFields = false
-  ;
+    ..aOM<IPLDNode>(2, _omitFieldNames ? '' : 'value',
+        subBuilder: IPLDNode.create)
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   MapEntry clone() => MapEntry()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  MapEntry copyWith(void Function(MapEntry) updates) => super.copyWith((message) => updates(message as MapEntry)) as MapEntry;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  MapEntry copyWith(void Function(MapEntry) updates) =>
+      super.copyWith((message) => updates(message as MapEntry)) as MapEntry;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -367,13 +434,17 @@ class MapEntry extends $pb.GeneratedMessage {
   MapEntry createEmptyInstance() => create();
   static $pb.PbList<MapEntry> createRepeated() => $pb.PbList<MapEntry>();
   @$core.pragma('dart2js:noInline')
-  static MapEntry getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MapEntry>(create);
+  static MapEntry getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MapEntry>(create);
   static MapEntry? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get key => $_getSZ(0);
   @$pb.TagNumber(1)
-  set key($core.String v) { $_setString(0, v); }
+  set key($core.String v) {
+    $_setString(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasKey() => $_has(0);
   @$pb.TagNumber(1)
@@ -382,7 +453,10 @@ class MapEntry extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   IPLDNode get value => $_getN(1);
   @$pb.TagNumber(2)
-  set value(IPLDNode v) { setField(2, v); }
+  set value(IPLDNode v) {
+    setField(2, v);
+  }
+
   @$pb.TagNumber(2)
   $core.bool hasValue() => $_has(1);
   @$pb.TagNumber(2)
@@ -411,26 +485,32 @@ class IPLDLink extends $pb.GeneratedMessage {
     return $result;
   }
   IPLDLink._() : super();
-  factory IPLDLink.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory IPLDLink.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory IPLDLink.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory IPLDLink.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'IPLDLink', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'IPLDLink',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'),
+      createEmptyInstance: create)
     ..a<$core.int>(1, _omitFieldNames ? '' : 'version', $pb.PbFieldType.OU3)
     ..aOS(2, _omitFieldNames ? '' : 'codec')
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'multihash', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false
-  ;
+    ..a<$core.List<$core.int>>(
+        3, _omitFieldNames ? '' : 'multihash', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   IPLDLink clone() => IPLDLink()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  IPLDLink copyWith(void Function(IPLDLink) updates) => super.copyWith((message) => updates(message as IPLDLink)) as IPLDLink;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  IPLDLink copyWith(void Function(IPLDLink) updates) =>
+      super.copyWith((message) => updates(message as IPLDLink)) as IPLDLink;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -439,14 +519,18 @@ class IPLDLink extends $pb.GeneratedMessage {
   IPLDLink createEmptyInstance() => create();
   static $pb.PbList<IPLDLink> createRepeated() => $pb.PbList<IPLDLink>();
   @$core.pragma('dart2js:noInline')
-  static IPLDLink getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<IPLDLink>(create);
+  static IPLDLink getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<IPLDLink>(create);
   static IPLDLink? _defaultInstance;
 
   /// CID version (0 or 1)
   @$pb.TagNumber(1)
   $core.int get version => $_getIZ(0);
   @$pb.TagNumber(1)
-  set version($core.int v) { $_setUnsignedInt32(0, v); }
+  set version($core.int v) {
+    $_setUnsignedInt32(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasVersion() => $_has(0);
   @$pb.TagNumber(1)
@@ -456,7 +540,10 @@ class IPLDLink extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.String get codec => $_getSZ(1);
   @$pb.TagNumber(2)
-  set codec($core.String v) { $_setString(1, v); }
+  set codec($core.String v) {
+    $_setString(1, v);
+  }
+
   @$pb.TagNumber(2)
   $core.bool hasCodec() => $_has(1);
   @$pb.TagNumber(2)
@@ -466,13 +553,16 @@ class IPLDLink extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.List<$core.int> get multihash => $_getN(2);
   @$pb.TagNumber(3)
-  set multihash($core.List<$core.int> v) { $_setBytes(2, v); }
+  set multihash($core.List<$core.int> v) {
+    $_setBytes(2, v);
+  }
+
   @$pb.TagNumber(3)
   $core.bool hasMultihash() => $_has(2);
   @$pb.TagNumber(3)
   void clearMultihash() => clearField(3);
 }
 
-
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

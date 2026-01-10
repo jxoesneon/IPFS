@@ -17,8 +17,23 @@ import 'dart:typed_data' as $typed_data;
 const CppFeatures$json = {
   '1': 'CppFeatures',
   '2': [
-    {'1': 'legacy_closed_enum', '3': 1, '4': 1, '5': 8, '8': {}, '10': 'legacyClosedEnum'},
-    {'1': 'string_type', '3': 2, '4': 1, '5': 14, '6': '.pb.CppFeatures.StringType', '8': {}, '10': 'stringType'},
+    {
+      '1': 'legacy_closed_enum',
+      '3': 1,
+      '4': 1,
+      '5': 8,
+      '8': {},
+      '10': 'legacyClosedEnum'
+    },
+    {
+      '1': 'string_type',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.pb.CppFeatures.StringType',
+      '8': {},
+      '10': 'stringType'
+    },
   ],
   '4': [CppFeatures_StringType$json],
 };
@@ -45,4 +60,3 @@ final $typed_data.Uint8List cppFeaturesDescriptor = $convert.base64Decode(
     'ZUIpiAEBmAEEmAEBogELEgZTVFJJTkcYhAeiAQkSBFZJRVcY6QeyAQMI6AdSCnN0cmluZ1R5cG'
     'UiRQoKU3RyaW5nVHlwZRIXChNTVFJJTkdfVFlQRV9VTktOT1dOEAASCAoEVklFVxABEggKBENP'
     'UkQQAhIKCgZTVFJJTkcQAw==');
-

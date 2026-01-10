@@ -19,8 +19,8 @@ const RefreshRequest$json = {
 };
 
 /// Descriptor for `RefreshRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List refreshRequestDescriptor = $convert.base64Decode(
-    'Cg5SZWZyZXNoUmVxdWVzdA==');
+final $typed_data.Uint8List refreshRequestDescriptor =
+    $convert.base64Decode('Cg5SZWZyZXNoUmVxdWVzdA==');
 
 @$core.Deprecated('Use refreshResponseDescriptor instead')
 const RefreshResponse$json = {
@@ -33,4 +33,3 @@ const RefreshResponse$json = {
 /// Descriptor for `RefreshResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List refreshResponseDescriptor = $convert.base64Decode(
     'Cg9SZWZyZXNoUmVzcG9uc2USGAoHc3VjY2VzcxgBIAEoCFIHc3VjY2Vzcw==');
-

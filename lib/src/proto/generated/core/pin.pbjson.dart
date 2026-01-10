@@ -32,8 +32,22 @@ final $typed_data.Uint8List pinTypeProtoDescriptor = $convert.base64Decode(
 const PinProto$json = {
   '1': 'PinProto',
   '2': [
-    {'1': 'cid', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.IPFSCIDProto', '10': 'cid'},
-    {'1': 'type', '3': 2, '4': 1, '5': 14, '6': '.ipfs.core.data_structures.PinTypeProto', '10': 'type'},
+    {
+      '1': 'cid',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.IPFSCIDProto',
+      '10': 'cid'
+    },
+    {
+      '1': 'type',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.core.data_structures.PinTypeProto',
+      '10': 'type'
+    },
     {'1': 'timestamp', '3': 3, '4': 1, '5': 3, '10': 'timestamp'},
   ],
 };
@@ -43,4 +57,3 @@ final $typed_data.Uint8List pinProtoDescriptor = $convert.base64Decode(
     'CghQaW5Qcm90bxIpCgNjaWQYASABKAsyFy5pcGZzLmNvcmUuSVBGU0NJRFByb3RvUgNjaWQSOw'
     'oEdHlwZRgCIAEoDjInLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuUGluVHlwZVByb3RvUgR0'
     'eXBlEhwKCXRpbWVzdGFtcBgDIAEoA1IJdGltZXN0YW1w');
-

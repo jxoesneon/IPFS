@@ -32,7 +32,14 @@ final $typed_data.Uint8List pBLinkDescriptor = $convert.base64Decode(
 const PBNode$json = {
   '1': 'PBNode',
   '2': [
-    {'1': 'links', '3': 2, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.PBLink', '10': 'links'},
+    {
+      '1': 'links',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.core.data_structures.PBLink',
+      '10': 'links'
+    },
     {'1': 'data', '3': 1, '4': 1, '5': 12, '10': 'data'},
   ],
 };
@@ -41,4 +48,3 @@ const PBNode$json = {
 final $typed_data.Uint8List pBNodeDescriptor = $convert.base64Decode(
     'CgZQQk5vZGUSNwoFbGlua3MYAiADKAsyIS5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLlBCTG'
     'lua1IFbGlua3MSEgoEZGF0YRgBIAEoDFIEZGF0YQ==');
-

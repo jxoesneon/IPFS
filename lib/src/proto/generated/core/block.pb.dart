@@ -34,26 +34,34 @@ class BlockProto extends $pb.GeneratedMessage {
     return $result;
   }
   BlockProto._() : super();
-  factory BlockProto.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory BlockProto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory BlockProto.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory BlockProto.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
-    ..aOM<$2.IPFSCIDProto>(2, _omitFieldNames ? '' : 'cid', subBuilder: $2.IPFSCIDProto.create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BlockProto',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..aOM<$2.IPFSCIDProto>(2, _omitFieldNames ? '' : 'cid',
+        subBuilder: $2.IPFSCIDProto.create)
     ..aOS(3, _omitFieldNames ? '' : 'format')
-    ..hasRequiredFields = false
-  ;
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   BlockProto clone() => BlockProto()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  BlockProto copyWith(void Function(BlockProto) updates) => super.copyWith((message) => updates(message as BlockProto)) as BlockProto;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  BlockProto copyWith(void Function(BlockProto) updates) =>
+      super.copyWith((message) => updates(message as BlockProto)) as BlockProto;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -62,13 +70,17 @@ class BlockProto extends $pb.GeneratedMessage {
   BlockProto createEmptyInstance() => create();
   static $pb.PbList<BlockProto> createRepeated() => $pb.PbList<BlockProto>();
   @$core.pragma('dart2js:noInline')
-  static BlockProto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockProto>(create);
+  static BlockProto getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BlockProto>(create);
   static BlockProto? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.List<$core.int> get data => $_getN(0);
   @$pb.TagNumber(1)
-  set data($core.List<$core.int> v) { $_setBytes(0, v); }
+  set data($core.List<$core.int> v) {
+    $_setBytes(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasData() => $_has(0);
   @$pb.TagNumber(1)
@@ -77,7 +89,10 @@ class BlockProto extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $2.IPFSCIDProto get cid => $_getN(1);
   @$pb.TagNumber(2)
-  set cid($2.IPFSCIDProto v) { setField(2, v); }
+  set cid($2.IPFSCIDProto v) {
+    setField(2, v);
+  }
+
   @$pb.TagNumber(2)
   $core.bool hasCid() => $_has(1);
   @$pb.TagNumber(2)
@@ -88,13 +103,16 @@ class BlockProto extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.String get format => $_getSZ(2);
   @$pb.TagNumber(3)
-  set format($core.String v) { $_setString(2, v); }
+  set format($core.String v) {
+    $_setString(2, v);
+  }
+
   @$pb.TagNumber(3)
   $core.bool hasFormat() => $_has(2);
   @$pb.TagNumber(3)
   void clearFormat() => clearField(3);
 }
 
-
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

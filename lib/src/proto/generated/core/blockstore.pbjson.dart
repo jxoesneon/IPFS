@@ -31,7 +31,14 @@ final $typed_data.Uint8List addBlockResponseDescriptor = $convert.base64Decode(
 const GetBlockResponse$json = {
   '1': 'GetBlockResponse',
   '2': [
-    {'1': 'block', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.BlockProto', '10': 'block'},
+    {
+      '1': 'block',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.data_structures.BlockProto',
+      '10': 'block'
+    },
     {'1': 'found', '3': 2, '4': 1, '5': 8, '10': 'found'},
   ],
 };
@@ -54,4 +61,3 @@ const RemoveBlockResponse$json = {
 final $typed_data.Uint8List removeBlockResponseDescriptor = $convert.base64Decode(
     'ChNSZW1vdmVCbG9ja1Jlc3BvbnNlEhgKB3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3MSGAoHbWVzc2'
     'FnZRgCIAEoCVIHbWVzc2FnZQ==');
-

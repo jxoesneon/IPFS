@@ -20,8 +20,22 @@ const OperationLogEntryProto$json = {
     {'1': 'timestamp', '3': 1, '4': 1, '5': 3, '10': 'timestamp'},
     {'1': 'operation', '3': 2, '4': 1, '5': 9, '10': 'operation'},
     {'1': 'details', '3': 3, '4': 1, '5': 9, '10': 'details'},
-    {'1': 'cid', '3': 4, '4': 1, '5': 11, '6': '.ipfs.core.IPFSCIDProto', '10': 'cid'},
-    {'1': 'node_type', '3': 5, '4': 1, '5': 14, '6': '.ipfs.core.data_structures.NodeTypeProto', '10': 'nodeType'},
+    {
+      '1': 'cid',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.IPFSCIDProto',
+      '10': 'cid'
+    },
+    {
+      '1': 'node_type',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.core.data_structures.NodeTypeProto',
+      '10': 'nodeType'
+    },
   ],
 };
 
@@ -37,7 +51,14 @@ final $typed_data.Uint8List operationLogEntryProtoDescriptor = $convert.base64De
 const OperationLogProto$json = {
   '1': 'OperationLogProto',
   '2': [
-    {'1': 'entries', '3': 1, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.OperationLogEntryProto', '10': 'entries'},
+    {
+      '1': 'entries',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.core.data_structures.OperationLogEntryProto',
+      '10': 'entries'
+    },
   ],
 };
 
@@ -45,4 +66,3 @@ const OperationLogProto$json = {
 final $typed_data.Uint8List operationLogProtoDescriptor = $convert.base64Decode(
     'ChFPcGVyYXRpb25Mb2dQcm90bxJLCgdlbnRyaWVzGAEgAygLMjEuaXBmcy5jb3JlLmRhdGFfc3'
     'RydWN0dXJlcy5PcGVyYXRpb25Mb2dFbnRyeVByb3RvUgdlbnRyaWVz');
-

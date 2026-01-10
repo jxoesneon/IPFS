@@ -35,8 +35,9 @@ const SplitBucketResponse$json = {
 };
 
 /// Descriptor for `SplitBucketResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List splitBucketResponseDescriptor = $convert.base64Decode(
-    'ChNTcGxpdEJ1Y2tldFJlc3BvbnNlEhgKB3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3M=');
+final $typed_data.Uint8List splitBucketResponseDescriptor =
+    $convert.base64Decode(
+        'ChNTcGxpdEJ1Y2tldFJlc3BvbnNlEhgKB3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3M=');
 
 @$core.Deprecated('Use mergeBucketsRequestDescriptor instead')
 const MergeBucketsRequest$json = {
@@ -61,6 +62,6 @@ const MergeBucketsResponse$json = {
 };
 
 /// Descriptor for `MergeBucketsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List mergeBucketsResponseDescriptor = $convert.base64Decode(
-    'ChRNZXJnZUJ1Y2tldHNSZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNz');
-
+final $typed_data.Uint8List mergeBucketsResponseDescriptor =
+    $convert.base64Decode(
+        'ChRNZXJnZUJ1Y2tldHNSZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNz');

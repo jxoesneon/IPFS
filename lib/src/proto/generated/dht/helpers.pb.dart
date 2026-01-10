@@ -31,40 +31,56 @@ class CalculateDistanceRequest extends $pb.GeneratedMessage {
     return $result;
   }
   CalculateDistanceRequest._() : super();
-  factory CalculateDistanceRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory CalculateDistanceRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory CalculateDistanceRequest.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory CalculateDistanceRequest.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CalculateDistanceRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.helpers'), createEmptyInstance: create)
-    ..aOM<$9.KademliaId>(1, _omitFieldNames ? '' : 'id1', subBuilder: $9.KademliaId.create)
-    ..aOM<$9.KademliaId>(2, _omitFieldNames ? '' : 'id2', subBuilder: $9.KademliaId.create)
-    ..hasRequiredFields = false
-  ;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CalculateDistanceRequest',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.helpers'),
+      createEmptyInstance: create)
+    ..aOM<$9.KademliaId>(1, _omitFieldNames ? '' : 'id1',
+        subBuilder: $9.KademliaId.create)
+    ..aOM<$9.KademliaId>(2, _omitFieldNames ? '' : 'id2',
+        subBuilder: $9.KademliaId.create)
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  CalculateDistanceRequest clone() => CalculateDistanceRequest()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  CalculateDistanceRequest copyWith(void Function(CalculateDistanceRequest) updates) => super.copyWith((message) => updates(message as CalculateDistanceRequest)) as CalculateDistanceRequest;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
+  CalculateDistanceRequest clone() =>
+      CalculateDistanceRequest()..mergeFromMessage(this);
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  CalculateDistanceRequest copyWith(
+          void Function(CalculateDistanceRequest) updates) =>
+      super.copyWith((message) => updates(message as CalculateDistanceRequest))
+          as CalculateDistanceRequest;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static CalculateDistanceRequest create() => CalculateDistanceRequest._();
   CalculateDistanceRequest createEmptyInstance() => create();
-  static $pb.PbList<CalculateDistanceRequest> createRepeated() => $pb.PbList<CalculateDistanceRequest>();
+  static $pb.PbList<CalculateDistanceRequest> createRepeated() =>
+      $pb.PbList<CalculateDistanceRequest>();
   @$core.pragma('dart2js:noInline')
-  static CalculateDistanceRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CalculateDistanceRequest>(create);
+  static CalculateDistanceRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CalculateDistanceRequest>(create);
   static CalculateDistanceRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $9.KademliaId get id1 => $_getN(0);
   @$pb.TagNumber(1)
-  set id1($9.KademliaId v) { setField(1, v); }
+  set id1($9.KademliaId v) {
+    setField(1, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasId1() => $_has(0);
   @$pb.TagNumber(1)
@@ -75,7 +91,10 @@ class CalculateDistanceRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $9.KademliaId get id2 => $_getN(1);
   @$pb.TagNumber(2)
-  set id2($9.KademliaId v) { setField(2, v); }
+  set id2($9.KademliaId v) {
+    setField(2, v);
+  }
+
   @$pb.TagNumber(2)
   $core.bool hasId2() => $_has(1);
   @$pb.TagNumber(2)
@@ -95,45 +114,59 @@ class CalculateDistanceResponse extends $pb.GeneratedMessage {
     return $result;
   }
   CalculateDistanceResponse._() : super();
-  factory CalculateDistanceResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory CalculateDistanceResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory CalculateDistanceResponse.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory CalculateDistanceResponse.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CalculateDistanceResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.helpers'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CalculateDistanceResponse',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.helpers'),
+      createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'distance')
-    ..hasRequiredFields = false
-  ;
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  CalculateDistanceResponse clone() => CalculateDistanceResponse()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  CalculateDistanceResponse copyWith(void Function(CalculateDistanceResponse) updates) => super.copyWith((message) => updates(message as CalculateDistanceResponse)) as CalculateDistanceResponse;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
+  CalculateDistanceResponse clone() =>
+      CalculateDistanceResponse()..mergeFromMessage(this);
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  CalculateDistanceResponse copyWith(
+          void Function(CalculateDistanceResponse) updates) =>
+      super.copyWith((message) => updates(message as CalculateDistanceResponse))
+          as CalculateDistanceResponse;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static CalculateDistanceResponse create() => CalculateDistanceResponse._();
   CalculateDistanceResponse createEmptyInstance() => create();
-  static $pb.PbList<CalculateDistanceResponse> createRepeated() => $pb.PbList<CalculateDistanceResponse>();
+  static $pb.PbList<CalculateDistanceResponse> createRepeated() =>
+      $pb.PbList<CalculateDistanceResponse>();
   @$core.pragma('dart2js:noInline')
-  static CalculateDistanceResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CalculateDistanceResponse>(create);
+  static CalculateDistanceResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CalculateDistanceResponse>(create);
   static CalculateDistanceResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get distance => $_getI64(0);
   @$pb.TagNumber(1)
-  set distance($fixnum.Int64 v) { $_setInt64(0, v); }
+  set distance($fixnum.Int64 v) {
+    $_setInt64(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasDistance() => $_has(0);
   @$pb.TagNumber(1)
   void clearDistance() => clearField(1);
 }
 
-
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

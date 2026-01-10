@@ -24,4 +24,3 @@ const SourceContext$json = {
 /// Descriptor for `SourceContext`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List sourceContextDescriptor = $convert.base64Decode(
     'Cg1Tb3VyY2VDb250ZXh0EhsKCWZpbGVfbmFtZRgBIAEoCVIIZmlsZU5hbWU=');
-

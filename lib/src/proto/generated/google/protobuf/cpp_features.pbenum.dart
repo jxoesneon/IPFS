@@ -14,23 +14,28 @@ import 'dart:core' as $core;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 class CppFeatures_StringType extends $pb.ProtobufEnum {
-  static const CppFeatures_StringType STRING_TYPE_UNKNOWN = CppFeatures_StringType._(0, _omitEnumNames ? '' : 'STRING_TYPE_UNKNOWN');
-  static const CppFeatures_StringType VIEW = CppFeatures_StringType._(1, _omitEnumNames ? '' : 'VIEW');
-  static const CppFeatures_StringType CORD = CppFeatures_StringType._(2, _omitEnumNames ? '' : 'CORD');
-  static const CppFeatures_StringType STRING = CppFeatures_StringType._(3, _omitEnumNames ? '' : 'STRING');
+  static const CppFeatures_StringType STRING_TYPE_UNKNOWN =
+      CppFeatures_StringType._(0, _omitEnumNames ? '' : 'STRING_TYPE_UNKNOWN');
+  static const CppFeatures_StringType VIEW =
+      CppFeatures_StringType._(1, _omitEnumNames ? '' : 'VIEW');
+  static const CppFeatures_StringType CORD =
+      CppFeatures_StringType._(2, _omitEnumNames ? '' : 'CORD');
+  static const CppFeatures_StringType STRING =
+      CppFeatures_StringType._(3, _omitEnumNames ? '' : 'STRING');
 
-  static const $core.List<CppFeatures_StringType> values = <CppFeatures_StringType> [
+  static const $core.List<CppFeatures_StringType> values =
+      <CppFeatures_StringType>[
     STRING_TYPE_UNKNOWN,
     VIEW,
     CORD,
     STRING,
   ];
 
-  static final $core.Map<$core.int, CppFeatures_StringType> _byValue = $pb.ProtobufEnum.initByValue(values);
+  static final $core.Map<$core.int, CppFeatures_StringType> _byValue =
+      $pb.ProtobufEnum.initByValue(values);
   static CppFeatures_StringType? valueOf($core.int value) => _byValue[value];
 
   const CppFeatures_StringType._($core.int v, $core.String n) : super(v, n);
 }
-
 
 const _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

@@ -17,8 +17,22 @@ import 'dart:typed_data' as $typed_data;
 const CalculateDistanceRequest$json = {
   '1': 'CalculateDistanceRequest',
   '2': [
-    {'1': 'id1', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'id1'},
-    {'1': 'id2', '3': 2, '4': 1, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'id2'},
+    {
+      '1': 'id1',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.common_kademlia.KademliaId',
+      '10': 'id1'
+    },
+    {
+      '1': 'id2',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.common_kademlia.KademliaId',
+      '10': 'id2'
+    },
   ],
 };
 
@@ -37,7 +51,7 @@ const CalculateDistanceResponse$json = {
 };
 
 /// Descriptor for `CalculateDistanceResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List calculateDistanceResponseDescriptor = $convert.base64Decode(
-    'ChlDYWxjdWxhdGVEaXN0YW5jZVJlc3BvbnNlEhoKCGRpc3RhbmNlGAEgASgDUghkaXN0YW5jZQ'
-    '==');
-
+final $typed_data.Uint8List calculateDistanceResponseDescriptor =
+    $convert.base64Decode(
+        'ChlDYWxjdWxhdGVEaXN0YW5jZVJlc3BvbnNlEhoKCGRpc3RhbmNlGAEgASgDUghkaXN0YW5jZQ'
+        '==');

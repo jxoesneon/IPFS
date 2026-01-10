@@ -17,8 +17,22 @@ import 'dart:typed_data' as $typed_data;
 const StoreProviderRequest$json = {
   '1': 'StoreProviderRequest',
   '2': [
-    {'1': 'key', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_red_black_tree.K_PeerId', '10': 'key'},
-    {'1': 'provider_info', '3': 2, '4': 1, '5': 11, '6': '.ipfs.dht.common_red_black_tree.V_PeerInfo', '10': 'providerInfo'},
+    {
+      '1': 'key',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.common_red_black_tree.K_PeerId',
+      '10': 'key'
+    },
+    {
+      '1': 'provider_info',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.common_red_black_tree.V_PeerInfo',
+      '10': 'providerInfo'
+    },
     {'1': 'ttl', '3': 3, '4': 1, '5': 3, '10': 'ttl'},
   ],
 };
@@ -34,9 +48,22 @@ final $typed_data.Uint8List storeProviderRequestDescriptor = $convert.base64Deco
 const StoreProviderResponse$json = {
   '1': 'StoreProviderResponse',
   '2': [
-    {'1': 'status', '3': 1, '4': 1, '5': 14, '6': '.ipfs.dht.store_provider.StoreProviderResponse.Status', '10': 'status'},
+    {
+      '1': 'status',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.dht.store_provider.StoreProviderResponse.Status',
+      '10': 'status'
+    },
     {'1': 'error_message', '3': 2, '4': 1, '5': 9, '10': 'errorMessage'},
-    {'1': 'replication_count', '3': 3, '4': 1, '5': 5, '10': 'replicationCount'},
+    {
+      '1': 'replication_count',
+      '3': 3,
+      '4': 1,
+      '5': 5,
+      '10': 'replicationCount'
+    },
   ],
   '4': [StoreProviderResponse_Status$json],
 };
@@ -63,7 +90,14 @@ final $typed_data.Uint8List storeProviderResponseDescriptor = $convert.base64Dec
 const GetProvidersRequest$json = {
   '1': 'GetProvidersRequest',
   '2': [
-    {'1': 'key', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_red_black_tree.K_PeerId', '10': 'key'},
+    {
+      '1': 'key',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.common_red_black_tree.K_PeerId',
+      '10': 'key'
+    },
     {'1': 'max_providers', '3': 2, '4': 1, '5': 5, '10': 'maxProviders'},
   ],
 };
@@ -78,8 +112,22 @@ final $typed_data.Uint8List getProvidersRequestDescriptor = $convert.base64Decod
 const GetProvidersResponse$json = {
   '1': 'GetProvidersResponse',
   '2': [
-    {'1': 'providers', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.common_red_black_tree.V_PeerInfo', '10': 'providers'},
-    {'1': 'closest_peers', '3': 2, '4': 3, '5': 11, '6': '.ipfs.dht.common_red_black_tree.V_PeerInfo', '10': 'closestPeers'},
+    {
+      '1': 'providers',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.dht.common_red_black_tree.V_PeerInfo',
+      '10': 'providers'
+    },
+    {
+      '1': 'closest_peers',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.dht.common_red_black_tree.V_PeerInfo',
+      '10': 'closestPeers'
+    },
   ],
 };
 
@@ -89,4 +137,3 @@ final $typed_data.Uint8List getProvidersResponseDescriptor = $convert.base64Deco
     '1tb25fcmVkX2JsYWNrX3RyZWUuVl9QZWVySW5mb1IJcHJvdmlkZXJzEk8KDWNsb3Nlc3RfcGVl'
     'cnMYAiADKAsyKi5pcGZzLmRodC5jb21tb25fcmVkX2JsYWNrX3RyZWUuVl9QZWVySW5mb1IMY2'
     'xvc2VzdFBlZXJz');
-

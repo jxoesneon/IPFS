@@ -17,7 +17,14 @@ import 'dart:typed_data' as $typed_data;
 const FindClosestPeersRequest$json = {
   '1': 'FindClosestPeersRequest',
   '2': [
-    {'1': 'target', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'target'},
+    {
+      '1': 'target',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.common_kademlia.KademliaId',
+      '10': 'target'
+    },
     {'1': 'count', '3': 2, '4': 1, '5': 5, '10': 'count'},
   ],
 };
@@ -31,12 +38,19 @@ final $typed_data.Uint8List findClosestPeersRequestDescriptor = $convert.base64D
 const FindClosestPeersResponse$json = {
   '1': 'FindClosestPeersResponse',
   '2': [
-    {'1': 'peer_ids', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'peerIds'},
+    {
+      '1': 'peer_ids',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.dht.common_kademlia.KademliaId',
+      '10': 'peerIds'
+    },
   ],
 };
 
 /// Descriptor for `FindClosestPeersResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List findClosestPeersResponseDescriptor = $convert.base64Decode(
-    'ChhGaW5kQ2xvc2VzdFBlZXJzUmVzcG9uc2USPwoIcGVlcl9pZHMYASADKAsyJC5pcGZzLmRodC'
-    '5jb21tb25fa2FkZW1saWEuS2FkZW1saWFJZFIHcGVlcklkcw==');
-
+final $typed_data.Uint8List findClosestPeersResponseDescriptor =
+    $convert.base64Decode(
+        'ChhGaW5kQ2xvc2VzdFBlZXJzUmVzcG9uc2USPwoIcGVlcl9pZHMYASADKAsyJC5pcGZzLmRodC'
+        '5jb21tb25fa2FkZW1saWEuS2FkZW1saWFJZFIHcGVlcklkcw==');

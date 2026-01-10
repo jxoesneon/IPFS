@@ -26,39 +26,52 @@ class RemovePeerRequest extends $pb.GeneratedMessage {
     return $result;
   }
   RemovePeerRequest._() : super();
-  factory RemovePeerRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory RemovePeerRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory RemovePeerRequest.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory RemovePeerRequest.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RemovePeerRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.remove_peer'), createEmptyInstance: create)
-    ..aOM<$9.KademliaId>(1, _omitFieldNames ? '' : 'peerId', subBuilder: $9.KademliaId.create)
-    ..hasRequiredFields = false
-  ;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RemovePeerRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.remove_peer'),
+      createEmptyInstance: create)
+    ..aOM<$9.KademliaId>(1, _omitFieldNames ? '' : 'peerId',
+        subBuilder: $9.KademliaId.create)
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   RemovePeerRequest clone() => RemovePeerRequest()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  RemovePeerRequest copyWith(void Function(RemovePeerRequest) updates) => super.copyWith((message) => updates(message as RemovePeerRequest)) as RemovePeerRequest;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  RemovePeerRequest copyWith(void Function(RemovePeerRequest) updates) =>
+      super.copyWith((message) => updates(message as RemovePeerRequest))
+          as RemovePeerRequest;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static RemovePeerRequest create() => RemovePeerRequest._();
   RemovePeerRequest createEmptyInstance() => create();
-  static $pb.PbList<RemovePeerRequest> createRepeated() => $pb.PbList<RemovePeerRequest>();
+  static $pb.PbList<RemovePeerRequest> createRepeated() =>
+      $pb.PbList<RemovePeerRequest>();
   @$core.pragma('dart2js:noInline')
-  static RemovePeerRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RemovePeerRequest>(create);
+  static RemovePeerRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RemovePeerRequest>(create);
   static RemovePeerRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $9.KademliaId get peerId => $_getN(0);
   @$pb.TagNumber(1)
-  set peerId($9.KademliaId v) { setField(1, v); }
+  set peerId($9.KademliaId v) {
+    setField(1, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasPeerId() => $_has(0);
   @$pb.TagNumber(1)
@@ -78,45 +91,57 @@ class RemovePeerResponse extends $pb.GeneratedMessage {
     return $result;
   }
   RemovePeerResponse._() : super();
-  factory RemovePeerResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory RemovePeerResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory RemovePeerResponse.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory RemovePeerResponse.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RemovePeerResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.remove_peer'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RemovePeerResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.remove_peer'),
+      createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
-    ..hasRequiredFields = false
-  ;
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   RemovePeerResponse clone() => RemovePeerResponse()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  RemovePeerResponse copyWith(void Function(RemovePeerResponse) updates) => super.copyWith((message) => updates(message as RemovePeerResponse)) as RemovePeerResponse;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  RemovePeerResponse copyWith(void Function(RemovePeerResponse) updates) =>
+      super.copyWith((message) => updates(message as RemovePeerResponse))
+          as RemovePeerResponse;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static RemovePeerResponse create() => RemovePeerResponse._();
   RemovePeerResponse createEmptyInstance() => create();
-  static $pb.PbList<RemovePeerResponse> createRepeated() => $pb.PbList<RemovePeerResponse>();
+  static $pb.PbList<RemovePeerResponse> createRepeated() =>
+      $pb.PbList<RemovePeerResponse>();
   @$core.pragma('dart2js:noInline')
-  static RemovePeerResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RemovePeerResponse>(create);
+  static RemovePeerResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RemovePeerResponse>(create);
   static RemovePeerResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.bool get success => $_getBF(0);
   @$pb.TagNumber(1)
-  set success($core.bool v) { $_setBool(0, v); }
+  set success($core.bool v) {
+    $_setBool(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasSuccess() => $_has(0);
   @$pb.TagNumber(1)
   void clearSuccess() => clearField(1);
 }
 
-
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

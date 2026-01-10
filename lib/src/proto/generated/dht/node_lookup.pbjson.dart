@@ -17,7 +17,14 @@ import 'dart:typed_data' as $typed_data;
 const NodeLookupRequest$json = {
   '1': 'NodeLookupRequest',
   '2': [
-    {'1': 'target', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'target'},
+    {
+      '1': 'target',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.common_kademlia.KademliaId',
+      '10': 'target'
+    },
   ],
 };
 
@@ -30,7 +37,14 @@ final $typed_data.Uint8List nodeLookupRequestDescriptor = $convert.base64Decode(
 const NodeLookupResponse$json = {
   '1': 'NodeLookupResponse',
   '2': [
-    {'1': 'closest_nodes', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'closestNodes'},
+    {
+      '1': 'closest_nodes',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.dht.common_kademlia.KademliaId',
+      '10': 'closestNodes'
+    },
   ],
 };
 
@@ -38,4 +52,3 @@ const NodeLookupResponse$json = {
 final $typed_data.Uint8List nodeLookupResponseDescriptor = $convert.base64Decode(
     'ChJOb2RlTG9va3VwUmVzcG9uc2USSQoNY2xvc2VzdF9ub2RlcxgBIAMoCzIkLmlwZnMuZGh0Lm'
     'NvbW1vbl9rYWRlbWxpYS5LYWRlbWxpYUlkUgxjbG9zZXN0Tm9kZXM=');
-

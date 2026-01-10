@@ -33,11 +33,39 @@ const Type$json = {
   '1': 'Type',
   '2': [
     {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'fields', '3': 2, '4': 3, '5': 11, '6': '.google.protobuf.Field', '10': 'fields'},
+    {
+      '1': 'fields',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.google.protobuf.Field',
+      '10': 'fields'
+    },
     {'1': 'oneofs', '3': 3, '4': 3, '5': 9, '10': 'oneofs'},
-    {'1': 'options', '3': 4, '4': 3, '5': 11, '6': '.google.protobuf.Option', '10': 'options'},
-    {'1': 'source_context', '3': 5, '4': 1, '5': 11, '6': '.google.protobuf.SourceContext', '10': 'sourceContext'},
-    {'1': 'syntax', '3': 6, '4': 1, '5': 14, '6': '.google.protobuf.Syntax', '10': 'syntax'},
+    {
+      '1': 'options',
+      '3': 4,
+      '4': 3,
+      '5': 11,
+      '6': '.google.protobuf.Option',
+      '10': 'options'
+    },
+    {
+      '1': 'source_context',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.SourceContext',
+      '10': 'sourceContext'
+    },
+    {
+      '1': 'syntax',
+      '3': 6,
+      '4': 1,
+      '5': 14,
+      '6': '.google.protobuf.Syntax',
+      '10': 'syntax'
+    },
     {'1': 'edition', '3': 7, '4': 1, '5': 9, '10': 'edition'},
   ],
 };
@@ -55,14 +83,35 @@ final $typed_data.Uint8List typeDescriptor = $convert.base64Decode(
 const Field$json = {
   '1': 'Field',
   '2': [
-    {'1': 'kind', '3': 1, '4': 1, '5': 14, '6': '.google.protobuf.Field.Kind', '10': 'kind'},
-    {'1': 'cardinality', '3': 2, '4': 1, '5': 14, '6': '.google.protobuf.Field.Cardinality', '10': 'cardinality'},
+    {
+      '1': 'kind',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.google.protobuf.Field.Kind',
+      '10': 'kind'
+    },
+    {
+      '1': 'cardinality',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.google.protobuf.Field.Cardinality',
+      '10': 'cardinality'
+    },
     {'1': 'number', '3': 3, '4': 1, '5': 5, '10': 'number'},
     {'1': 'name', '3': 4, '4': 1, '5': 9, '10': 'name'},
     {'1': 'type_url', '3': 6, '4': 1, '5': 9, '10': 'typeUrl'},
     {'1': 'oneof_index', '3': 7, '4': 1, '5': 5, '10': 'oneofIndex'},
     {'1': 'packed', '3': 8, '4': 1, '5': 8, '10': 'packed'},
-    {'1': 'options', '3': 9, '4': 3, '5': 11, '6': '.google.protobuf.Option', '10': 'options'},
+    {
+      '1': 'options',
+      '3': 9,
+      '4': 3,
+      '5': 11,
+      '6': '.google.protobuf.Option',
+      '10': 'options'
+    },
     {'1': 'json_name', '3': 10, '4': 1, '5': 9, '10': 'jsonName'},
     {'1': 'default_value', '3': 11, '4': 1, '5': 9, '10': 'defaultValue'},
   ],
@@ -129,10 +178,38 @@ const Enum$json = {
   '1': 'Enum',
   '2': [
     {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'enumvalue', '3': 2, '4': 3, '5': 11, '6': '.google.protobuf.EnumValue', '10': 'enumvalue'},
-    {'1': 'options', '3': 3, '4': 3, '5': 11, '6': '.google.protobuf.Option', '10': 'options'},
-    {'1': 'source_context', '3': 4, '4': 1, '5': 11, '6': '.google.protobuf.SourceContext', '10': 'sourceContext'},
-    {'1': 'syntax', '3': 5, '4': 1, '5': 14, '6': '.google.protobuf.Syntax', '10': 'syntax'},
+    {
+      '1': 'enumvalue',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.google.protobuf.EnumValue',
+      '10': 'enumvalue'
+    },
+    {
+      '1': 'options',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.google.protobuf.Option',
+      '10': 'options'
+    },
+    {
+      '1': 'source_context',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.SourceContext',
+      '10': 'sourceContext'
+    },
+    {
+      '1': 'syntax',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.google.protobuf.Syntax',
+      '10': 'syntax'
+    },
     {'1': 'edition', '3': 6, '4': 1, '5': 9, '10': 'edition'},
   ],
 };
@@ -152,7 +229,14 @@ const EnumValue$json = {
   '2': [
     {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
     {'1': 'number', '3': 2, '4': 1, '5': 5, '10': 'number'},
-    {'1': 'options', '3': 3, '4': 3, '5': 11, '6': '.google.protobuf.Option', '10': 'options'},
+    {
+      '1': 'options',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.google.protobuf.Option',
+      '10': 'options'
+    },
   ],
 };
 
@@ -166,7 +250,14 @@ const Option$json = {
   '1': 'Option',
   '2': [
     {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Any', '10': 'value'},
+    {
+      '1': 'value',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Any',
+      '10': 'value'
+    },
   ],
 };
 
@@ -174,4 +265,3 @@ const Option$json = {
 final $typed_data.Uint8List optionDescriptor = $convert.base64Decode(
     'CgZPcHRpb24SEgoEbmFtZRgBIAEoCVIEbmFtZRIqCgV2YWx1ZRgCIAEoCzIULmdvb2dsZS5wcm'
     '90b2J1Zi5BbnlSBXZhbHVl');
-

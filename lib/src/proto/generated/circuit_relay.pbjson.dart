@@ -50,11 +50,46 @@ final $typed_data.Uint8List statusDescriptor = $convert.base64Decode(
 const HopMessage$json = {
   '1': 'HopMessage',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.circuit_relay.HopMessage.Type', '10': 'type'},
-    {'1': 'peer', '3': 2, '4': 1, '5': 11, '6': '.circuit_relay.Peer', '10': 'peer'},
-    {'1': 'reservation', '3': 3, '4': 1, '5': 11, '6': '.circuit_relay.Reservation', '10': 'reservation'},
-    {'1': 'limit', '3': 4, '4': 1, '5': 11, '6': '.circuit_relay.Limit', '10': 'limit'},
-    {'1': 'status', '3': 5, '4': 1, '5': 14, '6': '.circuit_relay.Status', '10': 'status'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.circuit_relay.HopMessage.Type',
+      '10': 'type'
+    },
+    {
+      '1': 'peer',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Peer',
+      '10': 'peer'
+    },
+    {
+      '1': 'reservation',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Reservation',
+      '10': 'reservation'
+    },
+    {
+      '1': 'limit',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Limit',
+      '10': 'limit'
+    },
+    {
+      '1': 'status',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.circuit_relay.Status',
+      '10': 'status'
+    },
   ],
   '4': [HopMessage_Type$json],
 };
@@ -82,10 +117,38 @@ final $typed_data.Uint8List hopMessageDescriptor = $convert.base64Decode(
 const StopMessage$json = {
   '1': 'StopMessage',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.circuit_relay.StopMessage.Type', '10': 'type'},
-    {'1': 'peer', '3': 2, '4': 1, '5': 11, '6': '.circuit_relay.Peer', '10': 'peer'},
-    {'1': 'limit', '3': 3, '4': 1, '5': 11, '6': '.circuit_relay.Limit', '10': 'limit'},
-    {'1': 'status', '3': 4, '4': 1, '5': 14, '6': '.circuit_relay.Status', '10': 'status'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.circuit_relay.StopMessage.Type',
+      '10': 'type'
+    },
+    {
+      '1': 'peer',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Peer',
+      '10': 'peer'
+    },
+    {
+      '1': 'limit',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Limit',
+      '10': 'limit'
+    },
+    {
+      '1': 'status',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.circuit_relay.Status',
+      '10': 'status'
+    },
   ],
   '4': [StopMessage_Type$json],
 };
@@ -150,4 +213,3 @@ const Limit$json = {
 final $typed_data.Uint8List limitDescriptor = $convert.base64Decode(
     'CgVMaW1pdBIaCghkdXJhdGlvbhgBIAEoBFIIZHVyYXRpb24SEgoEZGF0YRgCIAEoBFIEZGF0YQ'
     '==');
-
