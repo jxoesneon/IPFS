@@ -62,21 +62,28 @@ const CarProto_PragmaEntry$json = {
   '1': 'PragmaEntry',
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
-    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Any', '10': 'value'},
+    {
+      '1': 'value',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Any',
+      '10': 'value'
+    },
   ],
   '7': {'7': true},
 };
 
 /// Descriptor for `CarProto`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List carProtoDescriptor = $convert
-    .base64Decode('CghDYXJQcm90bxIYCgd2ZXJzaW9uGAEgASgFUgd2ZXJzaW9uEigKD2NoYXJhY3RlcmlzdGljcx'
-        'gCIAMoCVIPY2hhcmFjdGVyaXN0aWNzEkcKBnByYWdtYRgDIAMoCzIvLmlwZnMuY29yZS5kYXRh'
-        'X3N0cnVjdHVyZXMuQ2FyUHJvdG8uUHJhZ21hRW50cnlSBnByYWdtYRI9CgZibG9ja3MYBCADKA'
-        'syJS5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLkJsb2NrUHJvdG9SBmJsb2NrcxI5CgVpbmRl'
-        'eBgFIAEoCzIjLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuQ2FySW5kZXhSBWluZGV4EjwKBm'
-        'hlYWRlchgGIAEoCzIkLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuQ2FySGVhZGVyUgZoZWFk'
-        'ZXIaTwoLUHJhZ21hRW50cnkSEAoDa2V5GAEgASgJUgNrZXkSKgoFdmFsdWUYAiABKAsyFC5nb2'
-        '9nbGUucHJvdG9idWYuQW55UgV2YWx1ZToCOAE=');
+final $typed_data.Uint8List carProtoDescriptor = $convert.base64Decode(
+    'CghDYXJQcm90bxIYCgd2ZXJzaW9uGAEgASgFUgd2ZXJzaW9uEigKD2NoYXJhY3RlcmlzdGljcx'
+    'gCIAMoCVIPY2hhcmFjdGVyaXN0aWNzEkcKBnByYWdtYRgDIAMoCzIvLmlwZnMuY29yZS5kYXRh'
+    'X3N0cnVjdHVyZXMuQ2FyUHJvdG8uUHJhZ21hRW50cnlSBnByYWdtYRI9CgZibG9ja3MYBCADKA'
+    'syJS5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLkJsb2NrUHJvdG9SBmJsb2NrcxI5CgVpbmRl'
+    'eBgFIAEoCzIjLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuQ2FySW5kZXhSBWluZGV4EjwKBm'
+    'hlYWRlchgGIAEoCzIkLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuQ2FySGVhZGVyUgZoZWFk'
+    'ZXIaTwoLUHJhZ21hRW50cnkSEAoDa2V5GAEgASgJUgNrZXkSKgoFdmFsdWUYAiABKAsyFC5nb2'
+    '9nbGUucHJvdG9idWYuQW55UgV2YWx1ZToCOAE=');
 
 @$core.Deprecated('Use carHeaderDescriptor instead')
 const CarHeader$json = {
@@ -84,7 +91,14 @@ const CarHeader$json = {
   '2': [
     {'1': 'version', '3': 1, '4': 1, '5': 5, '10': 'version'},
     {'1': 'characteristics', '3': 2, '4': 3, '5': 9, '10': 'characteristics'},
-    {'1': 'roots', '3': 3, '4': 3, '5': 11, '6': '.ipfs.core.IPFSCIDProto', '10': 'roots'},
+    {
+      '1': 'roots',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.core.IPFSCIDProto',
+      '10': 'roots'
+    },
     {
       '1': 'pragma',
       '3': 4,
@@ -102,19 +116,26 @@ const CarHeader_PragmaEntry$json = {
   '1': 'PragmaEntry',
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
-    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Any', '10': 'value'},
+    {
+      '1': 'value',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Any',
+      '10': 'value'
+    },
   ],
   '7': {'7': true},
 };
 
 /// Descriptor for `CarHeader`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List carHeaderDescriptor = $convert
-    .base64Decode('CglDYXJIZWFkZXISGAoHdmVyc2lvbhgBIAEoBVIHdmVyc2lvbhIoCg9jaGFyYWN0ZXJpc3RpY3'
-        'MYAiADKAlSD2NoYXJhY3RlcmlzdGljcxItCgVyb290cxgDIAMoCzIXLmlwZnMuY29yZS5JUEZT'
-        'Q0lEUHJvdG9SBXJvb3RzEkgKBnByYWdtYRgEIAMoCzIwLmlwZnMuY29yZS5kYXRhX3N0cnVjdH'
-        'VyZXMuQ2FySGVhZGVyLlByYWdtYUVudHJ5UgZwcmFnbWEaTwoLUHJhZ21hRW50cnkSEAoDa2V5'
-        'GAEgASgJUgNrZXkSKgoFdmFsdWUYAiABKAsyFC5nb29nbGUucHJvdG9idWYuQW55UgV2YWx1ZT'
-        'oCOAE=');
+final $typed_data.Uint8List carHeaderDescriptor = $convert.base64Decode(
+    'CglDYXJIZWFkZXISGAoHdmVyc2lvbhgBIAEoBVIHdmVyc2lvbhIoCg9jaGFyYWN0ZXJpc3RpY3'
+    'MYAiADKAlSD2NoYXJhY3RlcmlzdGljcxItCgVyb290cxgDIAMoCzIXLmlwZnMuY29yZS5JUEZT'
+    'Q0lEUHJvdG9SBXJvb3RzEkgKBnByYWdtYRgEIAMoCzIwLmlwZnMuY29yZS5kYXRhX3N0cnVjdH'
+    'VyZXMuQ2FySGVhZGVyLlByYWdtYUVudHJ5UgZwcmFnbWEaTwoLUHJhZ21hRW50cnkSEAoDa2V5'
+    'GAEgASgJUgNrZXkSKgoFdmFsdWUYAiABKAsyFC5nb29nbGUucHJvdG9idWYuQW55UgV2YWx1ZT'
+    'oCOAE=');
 
 @$core.Deprecated('Use carIndexDescriptor instead')
 const CarIndex$json = {
@@ -132,9 +153,9 @@ const CarIndex$json = {
 };
 
 /// Descriptor for `CarIndex`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List carIndexDescriptor = $convert
-    .base64Decode('CghDYXJJbmRleBI/CgdlbnRyaWVzGAEgAygLMiUuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy'
-        '5JbmRleEVudHJ5UgdlbnRyaWVz');
+final $typed_data.Uint8List carIndexDescriptor = $convert.base64Decode(
+    'CghDYXJJbmRleBI/CgdlbnRyaWVzGAEgAygLMiUuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy'
+    '5JbmRleEVudHJ5UgdlbnRyaWVz');
 
 @$core.Deprecated('Use indexEntryDescriptor instead')
 const IndexEntry$json = {
@@ -147,6 +168,6 @@ const IndexEntry$json = {
 };
 
 /// Descriptor for `IndexEntry`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List indexEntryDescriptor = $convert
-    .base64Decode('CgpJbmRleEVudHJ5EhAKA2NpZBgBIAEoCVIDY2lkEhYKBm9mZnNldBgCIAEoA1IGb2Zmc2V0Eh'
-        'YKBmxlbmd0aBgDIAEoA1IGbGVuZ3Ro');
+final $typed_data.Uint8List indexEntryDescriptor = $convert.base64Decode(
+    'CgpJbmRleEVudHJ5EhAKA2NpZBgBIAEoCVIDY2lkEhYKBm9mZnNldBgCIAEoA1IGb2Zmc2V0Eh'
+    'YKBmxlbmd0aBgDIAEoA1IGbGVuZ3Ro');

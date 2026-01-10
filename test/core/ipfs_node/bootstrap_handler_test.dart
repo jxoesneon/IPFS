@@ -31,10 +31,14 @@ void main() {
 
     setUp(() {
       mockNetworkHandler = MockNetworkHandler();
-      peer1 = '/ip4/127.0.0.1/tcp/4001/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN';
-      peer2 = '/ip4/127.0.0.1/tcp/4002/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa';
+      peer1 =
+          '/ip4/127.0.0.1/tcp/4001/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN';
+      peer2 =
+          '/ip4/127.0.0.1/tcp/4002/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa';
 
-      config = IPFSConfig(network: NetworkConfig(bootstrapPeers: [peer1, peer2]));
+      config = IPFSConfig(
+        network: NetworkConfig(bootstrapPeers: [peer1, peer2]),
+      );
       handler = BootstrapHandler(config, mockNetworkHandler);
     });
 

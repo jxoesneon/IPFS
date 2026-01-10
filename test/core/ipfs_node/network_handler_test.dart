@@ -72,7 +72,10 @@ class MockP2plibRouter implements P2plibRouter {
   Future<void> connect(String multiaddress) async {
     connectedPeers.add(multiaddress);
     _connectionEvents.add(
-      ConnectionEvent(type: ConnectionEventType.connected, peerId: multiaddress),
+      ConnectionEvent(
+        type: ConnectionEventType.connected,
+        peerId: multiaddress,
+      ),
     );
   }
 
@@ -80,17 +83,28 @@ class MockP2plibRouter implements P2plibRouter {
   Future<void> disconnect(String multiaddress) async {
     connectedPeers.remove(multiaddress);
     _connectionEvents.add(
-      ConnectionEvent(type: ConnectionEventType.disconnected, peerId: multiaddress),
+      ConnectionEvent(
+        type: ConnectionEventType.disconnected,
+        peerId: multiaddress,
+      ),
     );
   }
 
   @override
-  Future<void> sendMessage(String peerId, Uint8List message, {String? protocolId}) async {
+  Future<void> sendMessage(
+    String peerId,
+    Uint8List message, {
+    String? protocolId,
+  }) async {
     sentMessages.putIfAbsent(peerId, () => []).add(message);
   }
 
   @override
-  Future<Uint8List> sendRequest(String peerId, String protocolId, Uint8List request) async {
+  Future<Uint8List> sendRequest(
+    String peerId,
+    String protocolId,
+    Uint8List request,
+  ) async {
     sentMessages.putIfAbsent(peerId, () => []).add(request);
     if (responseGenerator != null) {
       return responseGenerator!(protocolId, request);
@@ -104,7 +118,10 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  void registerProtocolHandler(String protocolId, void Function(NetworkPacket) handler) {
+  void registerProtocolHandler(
+    String protocolId,
+    void Function(NetworkPacket) handler,
+  ) {
     protocolHandlers[protocolId] = handler;
   }
 
@@ -116,7 +133,10 @@ class MockP2plibRouter implements P2plibRouter {
 
   void simulateMessageEvent(String peerId, String message) {
     _messageEvents.add(
-      MessageEvent(peerId: peerId, message: Uint8List.fromList(utf8.encode(message))),
+      MessageEvent(
+        peerId: peerId,
+        message: Uint8List.fromList(utf8.encode(message)),
+      ),
     );
   }
 
@@ -132,7 +152,11 @@ class MockKademliaRoutingTable implements KademliaRoutingTable {
   final List<dht.PeerId> removedPeers = [];
 
   @override
-  Future<void> addPeer(dht.PeerId peer, dht.PeerId associatedPeer, {String? address}) async {
+  Future<void> addPeer(
+    dht.PeerId peer,
+    dht.PeerId associatedPeer, {
+    String? address,
+  }) async {
     addedPeers.add(peer);
   }
 
@@ -213,7 +237,9 @@ void main() {
     });
 
     test('canConnectDirectly returns true on success', () async {
-      final success = await handler.canConnectDirectly('/ip4/127.0.0.1/tcp/4001');
+      final success = await handler.canConnectDirectly(
+        '/ip4/127.0.0.1/tcp/4001',
+      );
       expect(success, isTrue);
       // Logic calls connect then disconnect immediately
       expect(
@@ -231,7 +257,10 @@ void main() {
 
     test('registers dialback handler on start', () async {
       await handler.start();
-      expect(mockRouter.protocolHandlers.containsKey('/ipfs/autonat/1.0.0/dialback'), isTrue);
+      expect(
+        mockRouter.protocolHandlers.containsKey('/ipfs/autonat/1.0.0/dialback'),
+        isTrue,
+      );
     });
 
     test('testDialback sends request and returns true on success', () async {
@@ -265,14 +294,21 @@ void main() {
 
       // Mock router event
       mockRouter._connectionEvents.add(
-        ConnectionEvent(type: ConnectionEventType.connected, peerId: 'QmPeer123'),
+        ConnectionEvent(
+          type: ConnectionEventType.connected,
+          peerId: 'QmPeer123',
+        ),
       );
 
       // Wait for stream listener
       await Future.delayed(Duration(milliseconds: 50));
 
-      final mockTable = (mockNode.dhtHandler!.dhtClient as MockDHTClient)._table;
-      expect(mockTable.addedPeers.map((p) => String.fromCharCodes(p.value)), contains('QmPeer123'));
+      final mockTable =
+          (mockNode.dhtHandler!.dhtClient as MockDHTClient)._table;
+      expect(
+        mockTable.addedPeers.map((p) => String.fromCharCodes(p.value)),
+        contains('QmPeer123'),
+      );
     });
 
     test('PeerDisconnected event updates DHT', () async {
@@ -280,13 +316,17 @@ void main() {
 
       // Mock router event
       mockRouter._connectionEvents.add(
-        ConnectionEvent(type: ConnectionEventType.disconnected, peerId: 'QmPeer123'),
+        ConnectionEvent(
+          type: ConnectionEventType.disconnected,
+          peerId: 'QmPeer123',
+        ),
       );
 
       // Wait for stream listener
       await Future.delayed(Duration(milliseconds: 50));
 
-      final mockTable = (mockNode.dhtHandler!.dhtClient as MockDHTClient)._table;
+      final mockTable =
+          (mockNode.dhtHandler!.dhtClient as MockDHTClient)._table;
       expect(
         mockTable.removedPeers.map((p) => String.fromCharCodes(p.value)),
         contains('QmPeer123'),
@@ -305,34 +345,45 @@ void main() {
 
       expect(events, isNotEmpty);
       expect(events.first.hasMessageReceived(), isTrue);
-      expect(utf8.decode(events.first.messageReceived.messageContent), equals('Hello World'));
+      expect(
+        utf8.decode(events.first.messageReceived.messageContent),
+        equals('Hello World'),
+      );
 
       await sub.cancel();
     });
 
-    test('testConnection executes transport logic', skip: 'Hard to mock p2plib internals', () async {
-      // This tests complex logic interacting with routerL0
-      // We setup mock routes
-      final bootstrapPeerIdBytes = Uint8List.fromList([0x12, 0x20] + List.filled(32, 0));
-      final bootstrapPeerId = p2p.PeerId(value: bootstrapPeerIdBytes);
-      mockRouter._routerL0.routes[bootstrapPeerId] = p2p.Route(peerId: bootstrapPeerId);
+    test(
+      'testConnection executes transport logic',
+      skip: 'Hard to mock p2plib internals',
+      () async {
+        // This tests complex logic interacting with routerL0
+        // We setup mock routes
+        final bootstrapPeerIdBytes = Uint8List.fromList(
+          [0x12, 0x20] + List.filled(32, 0),
+        );
+        final bootstrapPeerId = p2p.PeerId(value: bootstrapPeerIdBytes);
+        mockRouter._routerL0.routes[bootstrapPeerId] = p2p.Route(
+          peerId: bootstrapPeerId,
+        );
 
-      // Note: config bootstrap peer is '/ip4/1.2.3.4/tcp/4001'
-      // We need to match that string in routes find logic?
-      // Logic:
-      // final bootstrapPeer = _config.network.bootstrapPeers.first; // String
-      // .firstWhere((r) => r.peerId.toString() == bootstrapPeer)
-      // So peerId.toString() must match '/ip4/...'
-      // p2p.PeerId.toString() usually returns base58 or hex?
-      // If logic expects peerId.toString() to be multiaddr string, that implies something about p2plib structure or my config.
-      // Usually bootstrapPeers are multiaddrs. routes are indexed by PeerID.
-      // The code in network_handler_io.dart line 364 checks `r.peerId.toString() == bootstrapPeer`.
-      // This looks suspicious if bootstrapPeer is multiaddr. But if it works, it works.
-      // Test simply:
-      // We skip deep logic test if it's too tied to p2plib internal string representation,
-      // OR we mock what it expects.
-      // Let's skip testConnection for now as it seems brittle to mock correctly without p2plib deep knowledge.
-      // The added tests cover most logic.
-    });
+        // Note: config bootstrap peer is '/ip4/1.2.3.4/tcp/4001'
+        // We need to match that string in routes find logic?
+        // Logic:
+        // final bootstrapPeer = _config.network.bootstrapPeers.first; // String
+        // .firstWhere((r) => r.peerId.toString() == bootstrapPeer)
+        // So peerId.toString() must match '/ip4/...'
+        // p2p.PeerId.toString() usually returns base58 or hex?
+        // If logic expects peerId.toString() to be multiaddr string, that implies something about p2plib structure or my config.
+        // Usually bootstrapPeers are multiaddrs. routes are indexed by PeerID.
+        // The code in network_handler_io.dart line 364 checks `r.peerId.toString() == bootstrapPeer`.
+        // This looks suspicious if bootstrapPeer is multiaddr. But if it works, it works.
+        // Test simply:
+        // We skip deep logic test if it's too tied to p2plib internal string representation,
+        // OR we mock what it expects.
+        // Let's skip testConnection for now as it seems brittle to mock correctly without p2plib deep knowledge.
+        // The added tests cover most logic.
+      },
+    );
   });
 }

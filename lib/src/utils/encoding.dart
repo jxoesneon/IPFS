@@ -2,7 +2,8 @@
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart' show IPFSCIDVersion;
+import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart'
+    show IPFSCIDVersion;
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/varint.dart';
 
@@ -171,7 +172,10 @@ class EncodingUtils {
   /// Gets the encoding name from a multibase prefix
   static String? getEncodingFromPrefix(String prefix) {
     return _supportedMultibasePrefixes.entries
-        .firstWhere((entry) => entry.value == prefix, orElse: () => const MapEntry('', ''))
+        .firstWhere(
+          (entry) => entry.value == prefix,
+          orElse: () => const MapEntry('', ''),
+        )
         .key;
   }
 
@@ -199,7 +203,9 @@ class EncodingUtils {
     final codec = _supportedCodecs.entries
         .firstWhere(
           (entry) => entry.value == code,
-          orElse: () => throw ArgumentError('Unsupported codec code: 0x${code.toRadixString(16)}'),
+          orElse: () => throw ArgumentError(
+            'Unsupported codec code: 0x${code.toRadixString(16)}',
+          ),
         )
         .key;
     return codec;

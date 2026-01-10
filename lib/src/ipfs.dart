@@ -196,7 +196,9 @@ class IPFS {
 
   /// Finds providers for a CID.
   Future<List<String>> findProviders(String cid) async {
-    return _node.findProviders(cid).then((peers) => peers.map((peer) => peer.toString()).toList());
+    return _node
+        .findProviders(cid)
+        .then((peers) => peers.map((peer) => peer.toString()).toList());
   }
 
   /// Requests a block from the network using Bitswap.

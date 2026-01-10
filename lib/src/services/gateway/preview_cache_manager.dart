@@ -22,7 +22,10 @@ class PreviewCacheManager {
     if (memCached != null) return memCached;
 
     // Try compressed cache
-    final compressed = await _compressedStore.getCompressedData(cid, contentType);
+    final compressed = await _compressedStore.getCompressedData(
+      cid,
+      contentType,
+    );
     if (compressed != null) {
       _memoryCache.put(_generateCacheKey(cid, contentType), compressed);
       return compressed;
@@ -32,7 +35,11 @@ class PreviewCacheManager {
   }
 
   /// Caches a preview in both memory and compressed storage.
-  Future<void> cachePreview(CID cid, String contentType, Uint8List preview) async {
+  Future<void> cachePreview(
+    CID cid,
+    String contentType,
+    Uint8List preview,
+  ) async {
     _memoryCache.put(_generateCacheKey(cid, contentType), preview);
     await _compressedStore.storeCompressedData(cid, contentType, preview);
   }

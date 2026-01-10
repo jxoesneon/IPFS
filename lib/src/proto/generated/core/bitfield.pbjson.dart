@@ -63,8 +63,8 @@ const BitFieldProto_BitResponse$json = {
 };
 
 /// Descriptor for `BitFieldProto`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List bitFieldProtoDescriptor = $convert
-    .base64Decode('Cg1CaXRGaWVsZFByb3RvEhIKBGJpdHMYASABKAxSBGJpdHMSEgoEc2l6ZRgCIAEoBVIEc2l6ZR'
-        'olCg1TZXRCaXRSZXF1ZXN0EhQKBWluZGV4GAEgASgFUgVpbmRleBonCg9DbGVhckJpdFJlcXVl'
-        'c3QSFAoFaW5kZXgYASABKAVSBWluZGV4GiUKDUdldEJpdFJlcXVlc3QSFAoFaW5kZXgYASABKA'
-        'VSBWluZGV4GiMKC0JpdFJlc3BvbnNlEhQKBXZhbHVlGAEgASgIUgV2YWx1ZQ==');
+final $typed_data.Uint8List bitFieldProtoDescriptor = $convert.base64Decode(
+    'Cg1CaXRGaWVsZFByb3RvEhIKBGJpdHMYASABKAxSBGJpdHMSEgoEc2l6ZRgCIAEoBVIEc2l6ZR'
+    'olCg1TZXRCaXRSZXF1ZXN0EhQKBWluZGV4GAEgASgFUgVpbmRleBonCg9DbGVhckJpdFJlcXVl'
+    'c3QSFAoFaW5kZXgYASABKAVSBWluZGV4GiUKDUdldEJpdFJlcXVlc3QSFAoFaW5kZXgYASABKA'
+    'VSBWluZGV4GiMKC0JpdFJlc3BvbnNlEhQKBXZhbHVlGAEgASgIUgV2YWx1ZQ==');

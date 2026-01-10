@@ -15,7 +15,11 @@ import 'package:test/test.dart';
 // Mocks
 class MockConfig extends IPFSConfig {
   MockConfig()
-    : super(network: NetworkConfig(bootstrapPeers: []), debug: false, verboseLogging: false);
+    : super(
+        network: NetworkConfig(bootstrapPeers: []),
+        debug: false,
+        verboseLogging: false,
+      );
 }
 
 class MockNetworkHandler implements NetworkHandler {
@@ -71,7 +75,10 @@ class MockContentRouting implements ContentRouting {
 class MockMDnsClient implements MDnsClient {
   bool started = false;
   @override
-  Future<void> start({InternetAddress? address, NetworkInterface? interface}) async {
+  Future<void> start({
+    InternetAddress? address,
+    NetworkInterface? interface,
+  }) async {
     started = true;
   }
 
@@ -100,7 +107,10 @@ class MockMDnsClient implements MDnsClient {
   ) async {}
 
   @override
-  Stream<T> lookup<T extends ResourceRecord>(ResourceRecordQuery query, {Duration? timeout}) {
+  Stream<T> lookup<T extends ResourceRecord>(
+    ResourceRecordQuery query, {
+    Duration? timeout,
+  }) {
     return Stream.empty();
   }
 

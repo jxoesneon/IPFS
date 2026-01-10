@@ -19,9 +19,12 @@ class DHTConfig {
       alpha: (json['alpha'] as int?) ?? 3,
       bucketSize: (json['bucketSize'] as int?) ?? 20,
       maxProvidersPerKey: (json['maxProvidersPerKey'] as int?) ?? 20,
-      requestTimeout: Duration(seconds: (json['requestTimeoutSeconds'] as int?) ?? 30),
+      requestTimeout: Duration(
+        seconds: (json['requestTimeoutSeconds'] as int?) ?? 30,
+      ),
       maxRecordsPerQuery: (json['maxRecordsPerQuery'] as int?) ?? 20,
-      enableProviderRecording: (json['enableProviderRecording'] as bool?) ?? true,
+      enableProviderRecording:
+          (json['enableProviderRecording'] as bool?) ?? true,
       enableValueStorage: (json['enableValueStorage'] as bool?) ?? true,
     );
   }

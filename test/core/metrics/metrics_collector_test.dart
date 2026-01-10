@@ -120,7 +120,9 @@ void main() {
     });
 
     test('recordProtocolMetrics - error paths', () {
-      collector.recordProtocolMetrics('invalid', {'messages_sent': 'not_an_int'});
+      collector.recordProtocolMetrics('invalid', {
+        'messages_sent': 'not_an_int',
+      });
     });
   });
 }

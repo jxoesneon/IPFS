@@ -23,8 +23,17 @@ class IPNSHandler {
   // Standard topic
 
   /// Creates a new [IPNSHandler].
-  IPNSHandler(this._config, this._securityManager, this._dhtHandler, [this._pubSubHandler]) {
-    _logger = Logger('IPNSHandler', debug: _config.debug, verbose: _config.verboseLogging);
+  IPNSHandler(
+    this._config,
+    this._securityManager,
+    this._dhtHandler, [
+    this._pubSubHandler,
+  ]) {
+    _logger = Logger(
+      'IPNSHandler',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
     _logger.debug('IPNSHandler instance created');
   }
   final IPFSConfig _config;
@@ -93,7 +102,9 @@ class IPNSHandler {
 
       // Check if keystore is unlocked
       if (!_securityManager.isKeystoreUnlocked) {
-        throw StateError('Keystore is locked. Call securityManager.unlockKeystore() first.');
+        throw StateError(
+          'Keystore is locked. Call securityManager.unlockKeystore() first.',
+        );
       }
 
       // Get key pair from encrypted keystore
@@ -130,7 +141,9 @@ class IPNSHandler {
 
           await _pubSubHandler.publish(specificTopic, payload);
 
-          _logger.verbose('Published IPNS record to topics: $_pubSubTopic, $specificTopic');
+          _logger.verbose(
+            'Published IPNS record to topics: $_pubSubTopic, $specificTopic',
+          );
         } catch (e) {
           _logger.warning('Failed to publish IPNS record to PubSub: $e');
         }
@@ -255,12 +268,16 @@ class IPNSHandler {
 
       // Resolve through protocol handler
       final record = await resolveRecord(name);
-      final decodedCid = CID.fromBytes(Uint8List.fromList(record.value)).encode();
+      final decodedCid = CID
+          .fromBytes(Uint8List.fromList(record.value))
+          .encode();
 
       // Cache the result
       _cacheResolution(name, decodedCid);
 
-      _logger.info('Successfully resolved IPNS name: $name to CID: $decodedCid');
+      _logger.info(
+        'Successfully resolved IPNS name: $name to CID: $decodedCid',
+      );
       return decodedCid;
     } catch (e, stackTrace) {
       _logger.error('Failed to resolve IPNS name', e, stackTrace);
@@ -283,7 +300,10 @@ class IPNSHandler {
 
   void _cacheResolution(String name, String cid) {
     _logger.verbose('Caching IPNS resolution for: $name');
-    _resolutionCache[name] = _CachedResolution(cid: cid, timestamp: DateTime.now());
+    _resolutionCache[name] = _CachedResolution(
+      cid: cid,
+      timestamp: DateTime.now(),
+    );
   }
 
   void _handlePubSubMessage(String messageContent) async {
@@ -294,11 +314,15 @@ class IPNSHandler {
       // Parse and Verify Record
       final record = IPNSRecord.fromCBOR(recordBytes);
       if (!await record.verify()) {
-        _logger.warning('Received invalid IPNS record via PubSub (signature check failed)');
+        _logger.warning(
+          'Received invalid IPNS record via PubSub (signature check failed)',
+        );
         return;
       }
 
-      _logger.verbose('Received valid IPNS record via PubSub (Validity: ${record.validity})');
+      _logger.verbose(
+        'Received valid IPNS record via PubSub (Validity: ${record.validity})',
+      );
     } catch (e) {
       _logger.verbose('Failed to process IPNS PubSub message: $e');
     }
@@ -311,5 +335,6 @@ class _CachedResolution {
   final String cid;
   final DateTime timestamp;
 
-  bool get isExpired => DateTime.now().difference(timestamp) > IPNSHandler._cacheDuration;
+  bool get isExpired =>
+      DateTime.now().difference(timestamp) > IPNSHandler._cacheDuration;
 }

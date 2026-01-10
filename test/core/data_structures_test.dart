@@ -61,9 +61,17 @@ void main() {
     test('should serialize to/from protobuf', () {
       final bytes = Uint8List.fromList(List.filled(64, 1));
       final id = p2p.PeerId(value: bytes);
-      final address = p2p.FullAddress(address: InternetAddress('127.0.0.1'), port: 4001);
+      final address = p2p.FullAddress(
+        address: InternetAddress('127.0.0.1'),
+        port: 4001,
+      );
 
-      final peer = Peer(id: id, addresses: [address], latency: 100, agentVersion: 'v1.0.0');
+      final peer = Peer(
+        id: id,
+        addresses: [address],
+        latency: 100,
+        agentVersion: 'v1.0.0',
+      );
 
       final proto = peer.toProto();
       expect(proto.latency, Int64(100));
@@ -94,10 +102,17 @@ void main() {
     });
 
     test('should create and serialize', () {
-      final pin = Pin(cid: mockCid, type: PinTypeProto.PIN_TYPE_RECURSIVE, blockStore: mockStore);
+      final pin = Pin(
+        cid: mockCid,
+        type: PinTypeProto.PIN_TYPE_RECURSIVE,
+        blockStore: mockStore,
+      );
 
       expect(pin.type, PinTypeProto.PIN_TYPE_RECURSIVE);
-      expect(pin.isPinned(), isFalse); // Assuming default mock behavior or uninitialized manager
+      expect(
+        pin.isPinned(),
+        isFalse,
+      ); // Assuming default mock behavior or uninitialized manager
 
       final proto = pin.toProto();
       expect(proto.type, PinTypeProto.PIN_TYPE_RECURSIVE);

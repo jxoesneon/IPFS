@@ -14,7 +14,8 @@ import 'dart:core' as $core;
 
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
-import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart' as $0;
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart'
+    as $0;
 
 import 'connection.pbenum.dart';
 
@@ -46,13 +47,16 @@ class ConnectionState extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ConnectionState',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.connection'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ConnectionState',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.connection'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'peerId')
     ..aE<ConnectionState_Status>(2, _omitFieldNames ? '' : 'status',
         enumValues: ConnectionState_Status.values)
-    ..aOM<$0.Timestamp>(3, _omitFieldNames ? '' : 'connectedAt', subBuilder: $0.Timestamp.create)
+    ..aOM<$0.Timestamp>(3, _omitFieldNames ? '' : 'connectedAt',
+        subBuilder: $0.Timestamp.create)
     ..m<$core.String, $core.String>(4, _omitFieldNames ? '' : 'metadata',
         entryClassName: 'ConnectionState.MetadataEntry',
         keyFieldType: $pb.PbFieldType.OS,
@@ -64,7 +68,8 @@ class ConnectionState extends $pb.GeneratedMessage {
   ConnectionState clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ConnectionState copyWith(void Function(ConnectionState) updates) =>
-      super.copyWith((message) => updates(message as ConnectionState)) as ConnectionState;
+      super.copyWith((message) => updates(message as ConnectionState))
+          as ConnectionState;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -74,8 +79,8 @@ class ConnectionState extends $pb.GeneratedMessage {
   @$core.override
   ConnectionState createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ConnectionState getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ConnectionState>(create);
+  static ConnectionState getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ConnectionState>(create);
   static ConnectionState? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -139,26 +144,34 @@ class ConnectionMetrics extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ConnectionMetrics',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.connection'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ConnectionMetrics',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.connection'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'peerId')
-    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'messagesSent', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(
+        2, _omitFieldNames ? '' : 'messagesSent', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'messagesReceived', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'messagesReceived', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'bytesSent', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(
+        4, _omitFieldNames ? '' : 'bytesSent', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'bytesReceived', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(
+        5, _omitFieldNames ? '' : 'bytesReceived', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aI(6, _omitFieldNames ? '' : 'averageLatencyMs', fieldType: $pb.PbFieldType.OU3)
+    ..aI(6, _omitFieldNames ? '' : 'averageLatencyMs',
+        fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ConnectionMetrics clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ConnectionMetrics copyWith(void Function(ConnectionMetrics) updates) =>
-      super.copyWith((message) => updates(message as ConnectionMetrics)) as ConnectionMetrics;
+      super.copyWith((message) => updates(message as ConnectionMetrics))
+          as ConnectionMetrics;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -168,8 +181,8 @@ class ConnectionMetrics extends $pb.GeneratedMessage {
   @$core.override
   ConnectionMetrics createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ConnectionMetrics getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ConnectionMetrics>(create);
+  static ConnectionMetrics getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ConnectionMetrics>(create);
   static ConnectionMetrics? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -227,5 +240,7 @@ class ConnectionMetrics extends $pb.GeneratedMessage {
   void clearAverageLatencyMs() => $_clearField(6);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

@@ -51,17 +51,21 @@ class LinkMetadata extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LinkMetadata',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'LinkMetadata',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
-    ..aOM<$0.PBLink>(1, _omitFieldNames ? '' : 'link', subBuilder: $0.PBLink.create)
+    ..aOM<$0.PBLink>(1, _omitFieldNames ? '' : 'link',
+        subBuilder: $0.PBLink.create)
     ..aInt64(2, _omitFieldNames ? '' : 'timestamp')
     ..m<$core.String, $core.String>(3, _omitFieldNames ? '' : 'metadata',
         entryClassName: 'LinkMetadata.MetadataEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('ipfs.core.data_structures'))
-    ..aE<LinkType>(4, _omitFieldNames ? '' : 'type', enumValues: LinkType.values)
+    ..aE<LinkType>(4, _omitFieldNames ? '' : 'type',
+        enumValues: LinkType.values)
     ..aI(5, _omitFieldNames ? '' : 'bucketIndex')
     ..aI(6, _omitFieldNames ? '' : 'depth')
     ..hasRequiredFields = false;
@@ -70,7 +74,8 @@ class LinkMetadata extends $pb.GeneratedMessage {
   LinkMetadata clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   LinkMetadata copyWith(void Function(LinkMetadata) updates) =>
-      super.copyWith((message) => updates(message as LinkMetadata)) as LinkMetadata;
+      super.copyWith((message) => updates(message as LinkMetadata))
+          as LinkMetadata;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -80,8 +85,8 @@ class LinkMetadata extends $pb.GeneratedMessage {
   @$core.override
   LinkMetadata createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static LinkMetadata getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<LinkMetadata>(create);
+  static LinkMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<LinkMetadata>(create);
   static LinkMetadata? _defaultInstance;
 
   /// Reference to the standard PBLink
@@ -141,5 +146,7 @@ class LinkMetadata extends $pb.GeneratedMessage {
   void clearDepth() => $_clearField(6);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

@@ -15,7 +15,8 @@ import 'package:test/test.dart';
 // Mock RouterL2
 class MockRouterL2 implements p2p.RouterL2 {
   final Map<p2p.PeerId, List<p2p.FullAddress>> resolvedAddresses = {};
-  void Function(Uint8List datagram, Iterable<p2p.FullAddress> addresses)? onSend;
+  void Function(Uint8List datagram, Iterable<p2p.FullAddress> addresses)?
+  onSend;
 
   @override
   Iterable<p2p.FullAddress> resolvePeerId(p2p.PeerId peerId) {
@@ -25,7 +26,10 @@ class MockRouterL2 implements p2p.RouterL2 {
   }
 
   @override
-  void sendDatagram({required Iterable<p2p.FullAddress> addresses, required Uint8List datagram}) {
+  void sendDatagram({
+    required Iterable<p2p.FullAddress> addresses,
+    required Uint8List datagram,
+  }) {
     if (onSend != null) {
       onSend!(datagram, addresses);
     }
@@ -58,7 +62,10 @@ class MockP2plibRouter implements P2plibRouter {
   void registerProtocol(String protocolId) {}
 
   @override
-  void registerProtocolHandler(String protocolId, void Function(NetworkPacket) handler) {
+  void registerProtocolHandler(
+    String protocolId,
+    void Function(NetworkPacket) handler,
+  ) {
     handlers[protocolId] = handler;
   }
 
@@ -81,7 +88,10 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  Future<void> sendDatagram({required List<String> addresses, required Uint8List datagram}) async {
+  Future<void> sendDatagram({
+    required List<String> addresses,
+    required Uint8List datagram,
+  }) async {
     final fullAddresses = addresses.map((a) {
       // Parse string back to FullAddress?
       // For test purposes, we can construct dummy or parse.
@@ -127,7 +137,10 @@ void main() {
     test('start/stop', () async {
       await client.start();
       expect(mockRouter.started, isTrue);
-      expect(mockRouter.handlers.containsKey('/libp2p/circuit/relay/0.2.0/hop'), isTrue);
+      expect(
+        mockRouter.handlers.containsKey('/libp2p/circuit/relay/0.2.0/hop'),
+        isTrue,
+      );
 
       await client.stop();
       // stop() calls router.stop() but doesn't clear handlers in mock, which is fine
@@ -148,7 +161,9 @@ void main() {
           ..type = pb.HopMessage_Type.STATUS
           ..status = pb.Status.OK
           ..reservation = (pb.Reservation()
-            ..expire = fixnum.Int64((DateTime.now().millisecondsSinceEpoch ~/ 1000) + 3600)
+            ..expire = fixnum.Int64(
+              (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 3600,
+            )
             ..limitData = fixnum.Int64(1000)
             ..limitDuration = fixnum.Int64(3600));
 
@@ -162,7 +177,9 @@ void main() {
         );
         packet.srcPeerId = peerIdObj;
 
-        handler(NetworkPacket(datagram: packet.datagram, srcPeerId: validPeerId));
+        handler(
+          NetworkPacket(datagram: packet.datagram, srcPeerId: validPeerId),
+        );
       };
 
       final reservation = await client.reserve(validPeerId);
@@ -188,7 +205,9 @@ void main() {
           srcFullAddress: addresses.first,
         );
         packet.srcPeerId = peerIdObj;
-        handler(NetworkPacket(datagram: packet.datagram, srcPeerId: validPeerId));
+        handler(
+          NetworkPacket(datagram: packet.datagram, srcPeerId: validPeerId),
+        );
       };
 
       final reservation = await client.reserve(validPeerId);

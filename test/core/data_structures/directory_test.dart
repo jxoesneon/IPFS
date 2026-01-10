@@ -64,7 +64,9 @@ void main() {
     });
 
     test('build includes mode and mtime if provided', () {
-      final now = DateTime.fromMillisecondsSinceEpoch(1609459200000); // 2021-01-01
+      final now = DateTime.fromMillisecondsSinceEpoch(
+        1609459200000,
+      ); // 2021-01-01
       final manager = IPFSDirectoryManager(mode: 0755, mtime: now);
 
       final node = manager.build();
@@ -77,7 +79,9 @@ void main() {
 
     test('setMode and setModificationTime update internal state', () {
       final manager = IPFSDirectoryManager();
-      final now = DateTime.fromMillisecondsSinceEpoch(1672531200000); // 2023-01-01
+      final now = DateTime.fromMillisecondsSinceEpoch(
+        1672531200000,
+      ); // 2023-01-01
 
       manager.setMode(0644);
       manager.setModificationTime(now);
@@ -92,10 +96,20 @@ void main() {
     test('addEntry adds entries to directory', () {
       final manager = IPFSDirectoryManager();
       manager.addEntry(
-        IPFSDirectoryEntry(name: 'file1.txt', hash: [1], size: Int64(100), isDirectory: false),
+        IPFSDirectoryEntry(
+          name: 'file1.txt',
+          hash: [1],
+          size: Int64(100),
+          isDirectory: false,
+        ),
       );
       manager.addEntry(
-        IPFSDirectoryEntry(name: 'file2.txt', hash: [2], size: Int64(200), isDirectory: false),
+        IPFSDirectoryEntry(
+          name: 'file2.txt',
+          hash: [2],
+          size: Int64(200),
+          isDirectory: false,
+        ),
       );
 
       final node = manager.build();
@@ -105,13 +119,28 @@ void main() {
     test('build sorts entries by name', () {
       final manager = IPFSDirectoryManager();
       manager.addEntry(
-        IPFSDirectoryEntry(name: 'z_last', hash: [1], size: Int64(10), isDirectory: false),
+        IPFSDirectoryEntry(
+          name: 'z_last',
+          hash: [1],
+          size: Int64(10),
+          isDirectory: false,
+        ),
       );
       manager.addEntry(
-        IPFSDirectoryEntry(name: 'a_first', hash: [2], size: Int64(20), isDirectory: false),
+        IPFSDirectoryEntry(
+          name: 'a_first',
+          hash: [2],
+          size: Int64(20),
+          isDirectory: false,
+        ),
       );
       manager.addEntry(
-        IPFSDirectoryEntry(name: 'm_middle', hash: [3], size: Int64(30), isDirectory: false),
+        IPFSDirectoryEntry(
+          name: 'm_middle',
+          hash: [3],
+          size: Int64(30),
+          isDirectory: false,
+        ),
       );
 
       final node = manager.build();

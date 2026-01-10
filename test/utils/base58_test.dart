@@ -44,7 +44,9 @@ void main() {
 
     test('encode/decode large value (multi-hash style)', () {
       // Common IPFS multihash prefix 0x1220...
-      final bytes = Uint8List.fromList([0x12, 0x20] + List.generate(32, (i) => i));
+      final bytes = Uint8List.fromList(
+        [0x12, 0x20] + List.generate(32, (i) => i),
+      );
       final encoded = base58.encode(bytes);
       expect(encoded.startsWith('Qm'), isTrue); // Should start with Qm
 

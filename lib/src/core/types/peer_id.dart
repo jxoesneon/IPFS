@@ -23,7 +23,9 @@ class PeerId {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PeerId && runtimeType == other.runtimeType && _listsEqual(value, other.value);
+      other is PeerId &&
+          runtimeType == other.runtimeType &&
+          _listsEqual(value, other.value);
 
   @override
   int get hashCode => _listHashCode(value);

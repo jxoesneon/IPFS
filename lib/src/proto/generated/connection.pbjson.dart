@@ -73,15 +73,15 @@ const ConnectionState_Status$json = {
 };
 
 /// Descriptor for `ConnectionState`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List connectionStateDescriptor = $convert
-    .base64Decode('Cg9Db25uZWN0aW9uU3RhdGUSFwoHcGVlcl9pZBgBIAEoCVIGcGVlcklkEj8KBnN0YXR1cxgCIA'
-        'EoDjInLmlwZnMuY29ubmVjdGlvbi5Db25uZWN0aW9uU3RhdGUuU3RhdHVzUgZzdGF0dXMSPQoM'
-        'Y29ubmVjdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcFILY29ubmVjdG'
-        'VkQXQSSgoIbWV0YWRhdGEYBCADKAsyLi5pcGZzLmNvbm5lY3Rpb24uQ29ubmVjdGlvblN0YXRl'
-        'Lk1ldGFkYXRhRW50cnlSCG1ldGFkYXRhGjsKDU1ldGFkYXRhRW50cnkSEAoDa2V5GAEgASgJUg'
-        'NrZXkSFAoFdmFsdWUYAiABKAlSBXZhbHVlOgI4ASJkCgZTdGF0dXMSCwoHVU5LTk9XThAAEg4K'
-        'CkNPTk5FQ1RJTkcQARINCglDT05ORUNURUQQAhIRCg1ESVNDT05ORUNUSU5HEAMSEAoMRElTQ0'
-        '9OTkVDVEVEEAQSCQoFRVJST1IQBQ==');
+final $typed_data.Uint8List connectionStateDescriptor = $convert.base64Decode(
+    'Cg9Db25uZWN0aW9uU3RhdGUSFwoHcGVlcl9pZBgBIAEoCVIGcGVlcklkEj8KBnN0YXR1cxgCIA'
+    'EoDjInLmlwZnMuY29ubmVjdGlvbi5Db25uZWN0aW9uU3RhdGUuU3RhdHVzUgZzdGF0dXMSPQoM'
+    'Y29ubmVjdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcFILY29ubmVjdG'
+    'VkQXQSSgoIbWV0YWRhdGEYBCADKAsyLi5pcGZzLmNvbm5lY3Rpb24uQ29ubmVjdGlvblN0YXRl'
+    'Lk1ldGFkYXRhRW50cnlSCG1ldGFkYXRhGjsKDU1ldGFkYXRhRW50cnkSEAoDa2V5GAEgASgJUg'
+    'NrZXkSFAoFdmFsdWUYAiABKAlSBXZhbHVlOgI4ASJkCgZTdGF0dXMSCwoHVU5LTk9XThAAEg4K'
+    'CkNPTk5FQ1RJTkcQARINCglDT05ORUNURUQQAhIRCg1ESVNDT05ORUNUSU5HEAMSEAoMRElTQ0'
+    '9OTkVDVEVEEAQSCQoFRVJST1IQBQ==');
 
 @$core.Deprecated('Use connectionMetricsDescriptor instead')
 const ConnectionMetrics$json = {
@@ -89,17 +89,29 @@ const ConnectionMetrics$json = {
   '2': [
     {'1': 'peer_id', '3': 1, '4': 1, '5': 9, '10': 'peerId'},
     {'1': 'messages_sent', '3': 2, '4': 1, '5': 4, '10': 'messagesSent'},
-    {'1': 'messages_received', '3': 3, '4': 1, '5': 4, '10': 'messagesReceived'},
+    {
+      '1': 'messages_received',
+      '3': 3,
+      '4': 1,
+      '5': 4,
+      '10': 'messagesReceived'
+    },
     {'1': 'bytes_sent', '3': 4, '4': 1, '5': 4, '10': 'bytesSent'},
     {'1': 'bytes_received', '3': 5, '4': 1, '5': 4, '10': 'bytesReceived'},
-    {'1': 'average_latency_ms', '3': 6, '4': 1, '5': 13, '10': 'averageLatencyMs'},
+    {
+      '1': 'average_latency_ms',
+      '3': 6,
+      '4': 1,
+      '5': 13,
+      '10': 'averageLatencyMs'
+    },
   ],
 };
 
 /// Descriptor for `ConnectionMetrics`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List connectionMetricsDescriptor = $convert
-    .base64Decode('ChFDb25uZWN0aW9uTWV0cmljcxIXCgdwZWVyX2lkGAEgASgJUgZwZWVySWQSIwoNbWVzc2FnZX'
-        'Nfc2VudBgCIAEoBFIMbWVzc2FnZXNTZW50EisKEW1lc3NhZ2VzX3JlY2VpdmVkGAMgASgEUhBt'
-        'ZXNzYWdlc1JlY2VpdmVkEh0KCmJ5dGVzX3NlbnQYBCABKARSCWJ5dGVzU2VudBIlCg5ieXRlc1'
-        '9yZWNlaXZlZBgFIAEoBFINYnl0ZXNSZWNlaXZlZBIsChJhdmVyYWdlX2xhdGVuY3lfbXMYBiAB'
-        'KA1SEGF2ZXJhZ2VMYXRlbmN5TXM=');
+final $typed_data.Uint8List connectionMetricsDescriptor = $convert.base64Decode(
+    'ChFDb25uZWN0aW9uTWV0cmljcxIXCgdwZWVyX2lkGAEgASgJUgZwZWVySWQSIwoNbWVzc2FnZX'
+    'Nfc2VudBgCIAEoBFIMbWVzc2FnZXNTZW50EisKEW1lc3NhZ2VzX3JlY2VpdmVkGAMgASgEUhBt'
+    'ZXNzYWdlc1JlY2VpdmVkEh0KCmJ5dGVzX3NlbnQYBCABKARSCWJ5dGVzU2VudBIlCg5ieXRlc1'
+    '9yZWNlaXZlZBgFIAEoBFINYnl0ZXNSZWNlaXZlZBIsChJhdmVyYWdlX2xhdGVuY3lfbXMYBiAB'
+    'KA1SEGF2ZXJhZ2VMYXRlbmN5TXM=');

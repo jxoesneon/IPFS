@@ -35,7 +35,10 @@ class ReplicationManager {
 
       for (final _ in additionalPeers) {
         try {
-          final success = await _dhtClient.storeValue(Uint8List.fromList(key.codeUnits), value);
+          final success = await _dhtClient.storeValue(
+            Uint8List.fromList(key.codeUnits),
+            value,
+          );
 
           if (success) {
             await _valueStore.incrementReplicationCount(key);
@@ -52,7 +55,10 @@ class ReplicationManager {
     int replicaCount = localValue != null ? 1 : 0;
 
     final targetPeerId = PeerId(value: Uint8List.fromList(key.codeUnits));
-    final potentialHolders = _dhtClient.kademliaRoutingTable.findClosestPeers(targetPeerId, 20);
+    final potentialHolders = _dhtClient.kademliaRoutingTable.findClosestPeers(
+      targetPeerId,
+      20,
+    );
 
     final keyBytes = Uint8List.fromList(key.codeUnits);
     for (final peer in potentialHolders) {

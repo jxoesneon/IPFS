@@ -64,7 +64,9 @@ class MockNetworkHandler implements NetworkHandler {
 
 class MockP2plibRouter implements P2plibRouter {
   @override
-  List<String> get listeningAddresses => ['/ip4/127.0.0.1/udp/4001/p2p/MockPeerID123'];
+  List<String> get listeningAddresses => [
+    '/ip4/127.0.0.1/udp/4001/p2p/MockPeerID123',
+  ];
 
   @override
   List<String> resolvePeerId(String peerId) => ['127.0.0.1:4002'];
@@ -252,7 +254,10 @@ void main() {
     });
 
     test('addresses returns mock listening addresses', () {
-      expect(node.addresses, contains('/ip4/127.0.0.1/udp/4001/p2p/MockPeerID123'));
+      expect(
+        node.addresses,
+        contains('/ip4/127.0.0.1/udp/4001/p2p/MockPeerID123'),
+      );
     });
 
     test('resolvePeerId returns mock addresses', () {

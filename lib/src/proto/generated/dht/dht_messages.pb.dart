@@ -36,17 +36,21 @@ class PingRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PingRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.dht_messages'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PingRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.dht_messages'),
       createEmptyInstance: create)
-    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'peerId', subBuilder: $0.KademliaId.create)
+    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'peerId',
+        subBuilder: $0.KademliaId.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PingRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PingRequest copyWith(void Function(PingRequest) updates) =>
-      super.copyWith((message) => updates(message as PingRequest)) as PingRequest;
+      super.copyWith((message) => updates(message as PingRequest))
+          as PingRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -56,8 +60,8 @@ class PingRequest extends $pb.GeneratedMessage {
   @$core.override
   PingRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static PingRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PingRequest>(create);
+  static PingRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PingRequest>(create);
   static PingRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -92,10 +96,13 @@ class PingResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PingResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.dht_messages'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PingResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.dht_messages'),
       createEmptyInstance: create)
-    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'peerId', subBuilder: $0.KademliaId.create)
+    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'peerId',
+        subBuilder: $0.KademliaId.create)
     ..aOB(2, _omitFieldNames ? '' : 'success')
     ..hasRequiredFields = false;
 
@@ -103,7 +110,8 @@ class PingResponse extends $pb.GeneratedMessage {
   PingResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PingResponse copyWith(void Function(PingResponse) updates) =>
-      super.copyWith((message) => updates(message as PingResponse)) as PingResponse;
+      super.copyWith((message) => updates(message as PingResponse))
+          as PingResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -113,8 +121,8 @@ class PingResponse extends $pb.GeneratedMessage {
   @$core.override
   PingResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static PingResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PingResponse>(create);
+  static PingResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PingResponse>(create);
   static PingResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -138,5 +146,7 @@ class PingResponse extends $pb.GeneratedMessage {
   void clearSuccess() => $_clearField(2);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

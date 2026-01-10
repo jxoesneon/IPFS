@@ -31,9 +31,9 @@ const RemovePeerRequest$json = {
 };
 
 /// Descriptor for `RemovePeerRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List removePeerRequestDescriptor = $convert
-    .base64Decode('ChFSZW1vdmVQZWVyUmVxdWVzdBI9CgdwZWVyX2lkGAEgASgLMiQuaXBmcy5kaHQuY29tbW9uX2'
-        'thZGVtbGlhLkthZGVtbGlhSWRSBnBlZXJJZA==');
+final $typed_data.Uint8List removePeerRequestDescriptor = $convert.base64Decode(
+    'ChFSZW1vdmVQZWVyUmVxdWVzdBI9CgdwZWVyX2lkGAEgASgLMiQuaXBmcy5kaHQuY29tbW9uX2'
+    'thZGVtbGlhLkthZGVtbGlhSWRSBnBlZXJJZA==');
 
 @$core.Deprecated('Use removePeerResponseDescriptor instead')
 const RemovePeerResponse$json = {
@@ -45,4 +45,5 @@ const RemovePeerResponse$json = {
 
 /// Descriptor for `RemovePeerResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List removePeerResponseDescriptor =
-    $convert.base64Decode('ChJSZW1vdmVQZWVyUmVzcG9uc2USGAoHc3VjY2VzcxgBIAEoCFIHc3VjY2Vzcw==');
+    $convert.base64Decode(
+        'ChJSZW1vdmVQZWVyUmVzcG9uc2USGAoHc3VjY2VzcxgBIAEoCFIHc3VjY2Vzcw==');

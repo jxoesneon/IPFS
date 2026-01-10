@@ -38,7 +38,9 @@ void main() {
     when(mockRouter.start()).thenAnswer((_) async => {});
     when(mockRouter.stop()).thenAnswer((_) async => {});
 
-    when(mockRouter.registerProtocolHandler(any, any)).thenAnswer((Invocation inv) {
+    when(mockRouter.registerProtocolHandler(any, any)).thenAnswer((
+      Invocation inv,
+    ) {
       if (inv.positionalArguments[0] == '/ipfs/bitswap/1.2.0') {
         bitswapPacketHandler = inv.positionalArguments[1];
       }
@@ -47,8 +49,12 @@ void main() {
     final dummyPeerId = PeerId(value: Uint8List.fromList(List.filled(32, 1)));
     when(mockRouter.peerID).thenReturn(dummyPeerId.toString());
     when(mockRouter.sendMessage(any, any)).thenAnswer((_) async => {});
-    when(mockBlockStore.putBlock(any)).thenAnswer((_) async => AddBlockResponse()..success = true);
-    when(mockBlockStore.getBlock(any)).thenAnswer((_) async => GetBlockResponse()..found = false);
+    when(
+      mockBlockStore.putBlock(any),
+    ).thenAnswer((_) async => AddBlockResponse()..success = true);
+    when(
+      mockBlockStore.getBlock(any),
+    ).thenAnswer((_) async => GetBlockResponse()..found = false);
     when(mockRouter.connectedPeers).thenReturn([]);
 
     handler = BitswapHandler(mockConfig, mockBlockStore, mockRouter);
@@ -67,7 +73,11 @@ void main() {
     });
 
     test('start() handles errors', () async {
-      final brokenHandler = BitswapHandler(mockConfig, mockBlockStore, mockRouter);
+      final brokenHandler = BitswapHandler(
+        mockConfig,
+        mockBlockStore,
+        mockRouter,
+      );
       when(mockRouter.initialize()).thenThrow(Exception('Router broken'));
 
       expect(brokenHandler.start(), throwsException);
@@ -141,7 +151,9 @@ void main() {
       msg.addWantlistEntry('QmTest');
 
       // packetHandler calls _handleMessage.
-      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+      await bitswapPacketHandler(
+        NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()),
+      );
 
       // Should not throw, should just return.
     });
@@ -168,7 +180,9 @@ void main() {
     test('_handleWantlist logic with NO sendDontHave', () async {
       final cid = 'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z';
       // Mock block store to return NOT found
-      when(mockBlockStore.getBlock(cid)).thenAnswer((_) async => GetBlockResponse()..found = false);
+      when(
+        mockBlockStore.getBlock(cid),
+      ).thenAnswer((_) async => GetBlockResponse()..found = false);
 
       // Request with sendDontHave = false (default for generic addWantlistEntry?)
       // Message_Wantlist_Entry default sendDontHave is false?
@@ -177,37 +191,57 @@ void main() {
       // Manually create entry to ensure sendDontHave is false
       // addWantlistEntry has default sendDontHave: false/true?
       //   void addWantlistEntry(String cid, { ... bool sendDontHave = false })
-      msg.addWantlistEntry(cid, sendDontHave: false, wantType: bitswap_msg.WantType.block);
+      msg.addWantlistEntry(
+        cid,
+        sendDontHave: false,
+        wantType: bitswap_msg.WantType.block,
+      );
 
-      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+      await bitswapPacketHandler(
+        NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()),
+      );
 
       // Verify NO response sent (because not found AND no DontHave requested)
       verifyNever(mockRouter.sendMessage('p1', any));
     });
 
-    test('_handleWantlist logic with sendDontHave=true but block NOT found', () async {
-      final cid = 'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z';
-      when(mockBlockStore.getBlock(cid)).thenAnswer((_) async => GetBlockResponse()..found = false);
+    test(
+      '_handleWantlist logic with sendDontHave=true but block NOT found',
+      () async {
+        final cid = 'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z';
+        when(
+          mockBlockStore.getBlock(cid),
+        ).thenAnswer((_) async => GetBlockResponse()..found = false);
 
-      final msg = bitswap_msg.Message();
-      msg.addWantlistEntry(cid, sendDontHave: true, wantType: bitswap_msg.WantType.block);
+        final msg = bitswap_msg.Message();
+        msg.addWantlistEntry(
+          cid,
+          sendDontHave: true,
+          wantType: bitswap_msg.WantType.block,
+        );
 
-      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+        await bitswapPacketHandler(
+          NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()),
+        );
 
-      // Verify DONT_HAVE response
-      final captured =
-          verify(mockRouter.sendMessage('p1', captureAny)).captured.single as Uint8List;
-      final response = await bitswap_msg.Message.fromBytes(captured);
-      expect(response.hasBlockPresences(), isTrue);
-      expect(
-        response.getBlockPresences().first.type,
-        equals(bitswap_msg.BlockPresenceType.dontHave),
-      );
-    });
+        // Verify DONT_HAVE response
+        final captured =
+            verify(mockRouter.sendMessage('p1', captureAny)).captured.single
+                as Uint8List;
+        final response = await bitswap_msg.Message.fromBytes(captured);
+        expect(response.hasBlockPresences(), isTrue);
+        expect(
+          response.getBlockPresences().first.type,
+          equals(bitswap_msg.BlockPresenceType.dontHave),
+        );
+      },
+    );
 
     test('_broadcastWantRequest handles send errors gracefully', () async {
       when(mockRouter.connectedPeers).thenReturn(['p1']);
-      when(mockRouter.sendMessage('p1', any)).thenThrow(Exception('Network Fail'));
+      when(
+        mockRouter.sendMessage('p1', any),
+      ).thenThrow(Exception('Network Fail'));
 
       // Should fail with TimeoutException, NOT exception from send
       // Use short timeout to make test fast
@@ -234,7 +268,9 @@ void main() {
       // Hand-craft a valid V1 CID manually to avoid version errors
       // V1 CID: <version 0x01> <codec 0x55 (raw)> <multihash>
       // Multihash: <code 0x12> <size 0x01> <digest 0x00>
-      final correctCid = CID.fromBytes(Uint8List.fromList([0x01, 0x55, 0x12, 0x01, 0x00]));
+      final correctCid = CID.fromBytes(
+        Uint8List.fromList([0x01, 0x55, 0x12, 0x01, 0x00]),
+      );
       // Use a fake CID for the block object
       final fakeCid = CID.decode(
         'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z',
@@ -344,7 +380,10 @@ void main() {
       expect(l1, isNotEmpty);
       expect(l1.first.cid, equals(block.cid)); // Verified match
 
-      expect(l2, isEmpty); // Proves deduplication path skipped creating new waiter
+      expect(
+        l2,
+        isEmpty,
+      ); // Proves deduplication path skipped creating new waiter
     });
 
     test('_handleMessage updates bandwidth stats', () async {
@@ -354,7 +393,9 @@ void main() {
 
       final msg = bitswap_msg.Message();
       msg.from = fromPeer;
-      msg.addBlock(block); // bitswap_msg.addBlock handles Block object conversion?
+      msg.addBlock(
+        block,
+      ); // bitswap_msg.addBlock handles Block object conversion?
       // Wait, Check message.dart definition.
       // It seems it takes a Block object or BlockProto?
       // Let's check bitswap/message.dart source.
@@ -382,7 +423,9 @@ void main() {
       final initialStats = await handler.getStatus();
       final initialReceived = initialStats['blocks_received'] as int;
 
-      await bitswapPacketHandler(NetworkPacket(srcPeerId: fromPeer, datagram: msg.toBytes()));
+      await bitswapPacketHandler(
+        NetworkPacket(srcPeerId: fromPeer, datagram: msg.toBytes()),
+      );
 
       final newStats = await handler.getStatus();
 
@@ -421,16 +464,22 @@ void main() {
     test('_handleWantlist catches send errors', () async {
       // Setup a scenario where _handleWantlist attempts to send a response (HAVE found)
       final cid = 'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z';
-      when(mockBlockStore.getBlock(cid)).thenAnswer((_) async => GetBlockResponse()..found = true);
+      when(
+        mockBlockStore.getBlock(cid),
+      ).thenAnswer((_) async => GetBlockResponse()..found = true);
 
       // Mock router to throw on sendMessage
-      when(mockRouter.sendMessage(any, any)).thenThrow(Exception('Send failed'));
+      when(
+        mockRouter.sendMessage(any, any),
+      ).thenThrow(Exception('Send failed'));
 
       final msg = bitswap_msg.Message();
       msg.addWantlistEntry(cid, wantType: bitswap_msg.WantType.have);
 
       // Should not throw, catch block should handle it.
-      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+      await bitswapPacketHandler(
+        NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()),
+      );
 
       // Verify sendMessage was called
       verify(mockRouter.sendMessage('p1', any)).called(1);
@@ -438,16 +487,22 @@ void main() {
 
     test('_blockPresenceCache prevents redundant store lookups', () async {
       final cid = 'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z';
-      when(mockBlockStore.getBlock(cid)).thenAnswer((_) async => GetBlockResponse()..found = true);
+      when(
+        mockBlockStore.getBlock(cid),
+      ).thenAnswer((_) async => GetBlockResponse()..found = true);
 
       final msg = bitswap_msg.Message();
       msg.addWantlistEntry(cid, wantType: bitswap_msg.WantType.have);
 
       // First Request
-      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+      await bitswapPacketHandler(
+        NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()),
+      );
 
       // Second Request (same CID, same wantType)
-      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p2', datagram: msg.toBytes()));
+      await bitswapPacketHandler(
+        NetworkPacket(srcPeerId: 'p2', datagram: msg.toBytes()),
+      );
 
       // getBlock should be called ONLY ONCE due to cache
       // Note: LRUCache 'getOrCompute' calls closure only on miss.
@@ -456,8 +511,10 @@ void main() {
 
     test('_handleWantlist processes items in priority order', () async {
       // Setup two blocks
-      final cid1 = 'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z'; // Valid CID
-      final cid2 = 'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2y'; // Valid CID 2
+      final cid1 =
+          'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z'; // Valid CID
+      final cid2 =
+          'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2y'; // Valid CID 2
 
       final d1 = Uint8List.fromList([1]);
       final d2 = Uint8List.fromList([2]);
@@ -480,16 +537,27 @@ void main() {
 
       final msg = bitswap_msg.Message();
       // Add cid1 with LOW priority
-      msg.addWantlistEntry(cid1, priority: 1, wantType: bitswap_msg.WantType.block);
+      msg.addWantlistEntry(
+        cid1,
+        priority: 1,
+        wantType: bitswap_msg.WantType.block,
+      );
       // Add cid2 with HIGH priority
-      msg.addWantlistEntry(cid2, priority: 999, wantType: bitswap_msg.WantType.block);
+      msg.addWantlistEntry(
+        cid2,
+        priority: 999,
+        wantType: bitswap_msg.WantType.block,
+      );
 
       // Send packet
-      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+      await bitswapPacketHandler(
+        NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()),
+      );
 
       // Verify outgoing message order
       final captured =
-          verify(mockRouter.sendMessage('p1', captureAny)).captured.single as Uint8List;
+          verify(mockRouter.sendMessage('p1', captureAny)).captured.single
+              as Uint8List;
       final response = await bitswap_msg.Message.fromBytes(captured);
 
       // Expect blocks in order: cid2 (high prio), then cid1 (low prio)
@@ -504,7 +572,9 @@ void main() {
       when(mockRouter.connectedPeers).thenReturn([]);
 
       expect(
-        () => handler.handleWantRequest('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z'),
+        () => handler.handleWantRequest(
+          'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z',
+        ),
         throwsA(isA<StateError>()),
       );
     });
@@ -514,7 +584,9 @@ void main() {
       for (int i = 0; i < 5001; i++) {
         msg.addWantlistEntry('QmVal${i}', wantType: bitswap_msg.WantType.have);
       }
-      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+      await bitswapPacketHandler(
+        NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()),
+      );
       verifyNever(mockBlockStore.getBlock(any));
       verifyNever(mockRouter.sendMessage(any, any));
     });
@@ -533,8 +605,13 @@ void main() {
     test('_handleBlockPresences logs verbose', () async {
       final msg = bitswap_msg.Message();
       msg.addBlockPresence('QmHave', bitswap_msg.BlockPresenceType.have);
-      msg.addBlockPresence('QmDontHave', bitswap_msg.BlockPresenceType.dontHave);
-      await bitswapPacketHandler(NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()));
+      msg.addBlockPresence(
+        'QmDontHave',
+        bitswap_msg.BlockPresenceType.dontHave,
+      );
+      await bitswapPacketHandler(
+        NetworkPacket(srcPeerId: 'p1', datagram: msg.toBytes()),
+      );
     });
   });
 }

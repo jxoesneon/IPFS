@@ -19,7 +19,14 @@ import 'dart:typed_data' as $typed_data;
 const NodeProto$json = {
   '1': 'NodeProto',
   '2': [
-    {'1': 'cid', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.IPFSCIDProto', '10': 'cid'},
+    {
+      '1': 'cid',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.IPFSCIDProto',
+      '10': 'cid'
+    },
     {
       '1': 'links',
       '3': 2,
@@ -62,11 +69,11 @@ const NodeProto_MetadataEntry$json = {
 };
 
 /// Descriptor for `NodeProto`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List nodeProtoDescriptor = $convert
-    .base64Decode('CglOb2RlUHJvdG8SKQoDY2lkGAEgASgLMhcuaXBmcy5jb3JlLklQRlNDSURQcm90b1IDY2lkEj'
-        'cKBWxpbmtzGAIgAygLMiEuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy5QQkxpbmtSBWxpbmtz'
-        'EhIKBGRhdGEYAyABKAxSBGRhdGESPAoEdHlwZRgEIAEoDjIoLmlwZnMuY29yZS5kYXRhX3N0cn'
-        'VjdHVyZXMuTm9kZVR5cGVQcm90b1IEdHlwZRISCgRzaXplGAUgASgEUgRzaXplEhwKCXRpbWVz'
-        'dGFtcBgGIAEoA1IJdGltZXN0YW1wEk4KCG1ldGFkYXRhGAcgAygLMjIuaXBmcy5jb3JlLmRhdG'
-        'Ffc3RydWN0dXJlcy5Ob2RlUHJvdG8uTWV0YWRhdGFFbnRyeVIIbWV0YWRhdGEaOwoNTWV0YWRh'
-        'dGFFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
+final $typed_data.Uint8List nodeProtoDescriptor = $convert.base64Decode(
+    'CglOb2RlUHJvdG8SKQoDY2lkGAEgASgLMhcuaXBmcy5jb3JlLklQRlNDSURQcm90b1IDY2lkEj'
+    'cKBWxpbmtzGAIgAygLMiEuaXBmcy5jb3JlLmRhdGFfc3RydWN0dXJlcy5QQkxpbmtSBWxpbmtz'
+    'EhIKBGRhdGEYAyABKAxSBGRhdGESPAoEdHlwZRgEIAEoDjIoLmlwZnMuY29yZS5kYXRhX3N0cn'
+    'VjdHVyZXMuTm9kZVR5cGVQcm90b1IEdHlwZRISCgRzaXplGAUgASgEUgRzaXplEhwKCXRpbWVz'
+    'dGFtcBgGIAEoA1IJdGltZXN0YW1wEk4KCG1ldGFkYXRhGAcgAygLMjIuaXBmcy5jb3JlLmRhdG'
+    'Ffc3RydWN0dXJlcy5Ob2RlUHJvdG8uTWV0YWRhdGFFbnRyeVIIbWV0YWRhdGEaOwoNTWV0YWRh'
+    'dGFFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');

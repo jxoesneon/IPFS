@@ -49,12 +49,14 @@ class OperationLogEntryProto extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'OperationLogEntryProto',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'timestamp')
     ..aOS(2, _omitFieldNames ? '' : 'operation')
     ..aOS(3, _omitFieldNames ? '' : 'details')
-    ..aOM<$0.IPFSCIDProto>(4, _omitFieldNames ? '' : 'cid', subBuilder: $0.IPFSCIDProto.create)
+    ..aOM<$0.IPFSCIDProto>(4, _omitFieldNames ? '' : 'cid',
+        subBuilder: $0.IPFSCIDProto.create)
     ..aE<$1.NodeTypeProto>(5, _omitFieldNames ? '' : 'nodeType',
         enumValues: $1.NodeTypeProto.values)
     ..hasRequiredFields = false;
@@ -62,7 +64,8 @@ class OperationLogEntryProto extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   OperationLogEntryProto clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  OperationLogEntryProto copyWith(void Function(OperationLogEntryProto) updates) =>
+  OperationLogEntryProto copyWith(
+          void Function(OperationLogEntryProto) updates) =>
       super.copyWith((message) => updates(message as OperationLogEntryProto))
           as OperationLogEntryProto;
 
@@ -74,8 +77,8 @@ class OperationLogEntryProto extends $pb.GeneratedMessage {
   @$core.override
   OperationLogEntryProto createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static OperationLogEntryProto getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<OperationLogEntryProto>(create);
+  static OperationLogEntryProto getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OperationLogEntryProto>(create);
   static OperationLogEntryProto? _defaultInstance;
 
   /// The timestamp of when the operation was performed.
@@ -150,8 +153,10 @@ class OperationLogProto extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'OperationLogProto',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'OperationLogProto',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
     ..pPM<OperationLogEntryProto>(1, _omitFieldNames ? '' : 'entries',
         subBuilder: OperationLogEntryProto.create)
@@ -161,7 +166,8 @@ class OperationLogProto extends $pb.GeneratedMessage {
   OperationLogProto clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   OperationLogProto copyWith(void Function(OperationLogProto) updates) =>
-      super.copyWith((message) => updates(message as OperationLogProto)) as OperationLogProto;
+      super.copyWith((message) => updates(message as OperationLogProto))
+          as OperationLogProto;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -171,8 +177,8 @@ class OperationLogProto extends $pb.GeneratedMessage {
   @$core.override
   OperationLogProto createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static OperationLogProto getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<OperationLogProto>(create);
+  static OperationLogProto getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OperationLogProto>(create);
   static OperationLogProto? _defaultInstance;
 
   /// A list of log entries.
@@ -180,5 +186,7 @@ class OperationLogProto extends $pb.GeneratedMessage {
   $pb.PbList<OperationLogEntryProto> get entries => $_getList(0);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

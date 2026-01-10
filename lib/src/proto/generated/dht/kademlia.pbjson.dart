@@ -27,20 +27,48 @@ const ConnectionType$json = {
 };
 
 /// Descriptor for `ConnectionType`. Decode as a `google.protobuf.EnumDescriptorProto`.
-final $typed_data.Uint8List connectionTypeDescriptor = $convert
-    .base64Decode('Cg5Db25uZWN0aW9uVHlwZRIRCg1OT1RfQ09OTkVDVEVEEAASDQoJQ09OTkVDVEVEEAESDwoLQ0'
-        'FOX0NPTk5FQ1QQAhISCg5DQU5OT1RfQ09OTkVDVBAD');
+final $typed_data.Uint8List connectionTypeDescriptor = $convert.base64Decode(
+    'Cg5Db25uZWN0aW9uVHlwZRIRCg1OT1RfQ09OTkVDVEVEEAASDQoJQ09OTkVDVEVEEAESDwoLQ0'
+    'FOX0NPTk5FQ1QQAhISCg5DQU5OT1RfQ09OTkVDVBAD');
 
 @$core.Deprecated('Use messageDescriptor instead')
 const Message$json = {
   '1': 'Message',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.ipfs.dht.Message.MessageType', '10': 'type'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.dht.Message.MessageType',
+      '10': 'type'
+    },
     {'1': 'clusterLevelRaw', '3': 10, '4': 1, '5': 5, '10': 'clusterLevelRaw'},
     {'1': 'key', '3': 2, '4': 1, '5': 12, '10': 'key'},
-    {'1': 'record', '3': 3, '4': 1, '5': 11, '6': '.ipfs.dht.Record', '10': 'record'},
-    {'1': 'closerPeers', '3': 8, '4': 3, '5': 11, '6': '.ipfs.dht.Peer', '10': 'closerPeers'},
-    {'1': 'providerPeers', '3': 9, '4': 3, '5': 11, '6': '.ipfs.dht.Peer', '10': 'providerPeers'},
+    {
+      '1': 'record',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.Record',
+      '10': 'record'
+    },
+    {
+      '1': 'closerPeers',
+      '3': 8,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.dht.Peer',
+      '10': 'closerPeers'
+    },
+    {
+      '1': 'providerPeers',
+      '3': 9,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.dht.Peer',
+      '10': 'providerPeers'
+    },
   ],
   '4': [Message_MessageType$json],
 };
@@ -59,14 +87,14 @@ const Message_MessageType$json = {
 };
 
 /// Descriptor for `Message`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List messageDescriptor = $convert
-    .base64Decode('CgdNZXNzYWdlEjEKBHR5cGUYASABKA4yHS5pcGZzLmRodC5NZXNzYWdlLk1lc3NhZ2VUeXBlUg'
-        'R0eXBlEigKD2NsdXN0ZXJMZXZlbFJhdxgKIAEoBVIPY2x1c3RlckxldmVsUmF3EhAKA2tleRgC'
-        'IAEoDFIDa2V5EigKBnJlY29yZBgDIAEoCzIQLmlwZnMuZGh0LlJlY29yZFIGcmVjb3JkEjAKC2'
-        'Nsb3NlclBlZXJzGAggAygLMg4uaXBmcy5kaHQuUGVlclILY2xvc2VyUGVlcnMSNAoNcHJvdmlk'
-        'ZXJQZWVycxgJIAMoCzIOLmlwZnMuZGh0LlBlZXJSDXByb3ZpZGVyUGVlcnMiaQoLTWVzc2FnZV'
-        'R5cGUSDQoJUFVUX1ZBTFVFEAASDQoJR0VUX1ZBTFVFEAESEAoMQUREX1BST1ZJREVSEAISEQoN'
-        'R0VUX1BST1ZJREVSUxADEg0KCUZJTkRfTk9ERRAEEggKBFBJTkcQBQ==');
+final $typed_data.Uint8List messageDescriptor = $convert.base64Decode(
+    'CgdNZXNzYWdlEjEKBHR5cGUYASABKA4yHS5pcGZzLmRodC5NZXNzYWdlLk1lc3NhZ2VUeXBlUg'
+    'R0eXBlEigKD2NsdXN0ZXJMZXZlbFJhdxgKIAEoBVIPY2x1c3RlckxldmVsUmF3EhAKA2tleRgC'
+    'IAEoDFIDa2V5EigKBnJlY29yZBgDIAEoCzIQLmlwZnMuZGh0LlJlY29yZFIGcmVjb3JkEjAKC2'
+    'Nsb3NlclBlZXJzGAggAygLMg4uaXBmcy5kaHQuUGVlclILY2xvc2VyUGVlcnMSNAoNcHJvdmlk'
+    'ZXJQZWVycxgJIAMoCzIOLmlwZnMuZGh0LlBlZXJSDXByb3ZpZGVyUGVlcnMiaQoLTWVzc2FnZV'
+    'R5cGUSDQoJUFVUX1ZBTFVFEAASDQoJR0VUX1ZBTFVFEAESEAoMQUREX1BST1ZJREVSEAISEQoN'
+    'R0VUX1BST1ZJREVSUxADEg0KCUZJTkRfTk9ERRAEEggKBFBJTkcQBQ==');
 
 @$core.Deprecated('Use peerDescriptor instead')
 const Peer$json = {
@@ -86,6 +114,6 @@ const Peer$json = {
 };
 
 /// Descriptor for `Peer`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List peerDescriptor = $convert
-    .base64Decode('CgRQZWVyEg4KAmlkGAEgASgMUgJpZBIUCgVhZGRycxgCIAMoDFIFYWRkcnMSOAoKY29ubmVjdG'
-        'lvbhgDIAEoDjIYLmlwZnMuZGh0LkNvbm5lY3Rpb25UeXBlUgpjb25uZWN0aW9u');
+final $typed_data.Uint8List peerDescriptor = $convert.base64Decode(
+    'CgRQZWVyEg4KAmlkGAEgASgMUgJpZBIUCgVhZGRycxgCIAMoDFIFYWRkcnMSOAoKY29ubmVjdG'
+    'lvbhgDIAEoDjIYLmlwZnMuZGh0LkNvbm5lY3Rpb25UeXBlUgpjb25uZWN0aW9u');

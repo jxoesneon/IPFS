@@ -86,7 +86,9 @@ void main() {
       final algorithm = Ed25519();
       final keyPair = await algorithm.newKeyPairFromSeed(seed);
       final pubKey = await keyPair.extractPublicKey();
-      final pubHex = pubKey.bytes.map((e) => e.toRadixString(16).padLeft(2, '0')).join();
+      final pubHex = pubKey.bytes
+          .map((e) => e.toRadixString(16).padLeft(2, '0'))
+          .join();
 
       final data = Uint8List.fromList(utf8.encode('hello'));
       final signature = await algorithm.sign(data, keyPair: keyPair);
@@ -121,7 +123,11 @@ void main() {
       // This is a weird path in the code: return Uint8List.fromList(utf8.encode(publicKey))
       // It won't actually result in a valid Ed25519 public key unless the string IS exactly 32 bytes of raw data.
       // But we can test that it doesn't crash.
-      final isValid = await keystore.verifySignature('too-short', Uint8List(0), Uint8List(64));
+      final isValid = await keystore.verifySignature(
+        'too-short',
+        Uint8List(0),
+        Uint8List(64),
+      );
       expect(isValid, isFalse);
     });
 

@@ -18,7 +18,10 @@ class GatewayServer {
     required this.blockStore,
     this.address = 'localhost',
     this.port = 8080,
-    this.corsOrigins = const ['http://localhost', 'http://127.0.0.1'], // SEC-006: Restrict CORS
+    this.corsOrigins = const [
+      'http://localhost',
+      'http://127.0.0.1',
+    ], // SEC-006: Restrict CORS
     this.ipnsResolver,
     this.maxRequestsPerIp = 100,
     this.rateLimitWindowSeconds = 60,
@@ -109,7 +112,9 @@ class GatewayServer {
 
     try {
       _server = await httpAdapter.serve(handler, address, port);
-      _logger.info('Gateway server listening on http://${_server!.host}:${_server!.port}');
+      _logger.info(
+        'Gateway server listening on http://${_server!.host}:${_server!.port}',
+      );
     } catch (e, stackTrace) {
       _logger.error('Failed to start gateway server', e, stackTrace);
       rethrow;
@@ -141,7 +146,9 @@ class GatewayServer {
             'unknown';
 
         final now = DateTime.now();
-        final windowStart = now.subtract(Duration(seconds: rateLimitWindowSeconds));
+        final windowStart = now.subtract(
+          Duration(seconds: rateLimitWindowSeconds),
+        );
 
         // Clean old entries and get recent requests
         _requestLog[clientIp] = (_requestLog[clientIp] ?? [])
@@ -191,7 +198,8 @@ class GatewayServer {
       'Access-Control-Allow-Origin': corsOrigins.join(','),
       'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Range',
-      'Access-Control-Expose-Headers': 'Content-Range, X-IPFS-Path, X-IPFS-Roots',
+      'Access-Control-Expose-Headers':
+          'Content-Range, X-IPFS-Path, X-IPFS-Roots',
       'Access-Control-Max-Age': '86400',
     };
   }

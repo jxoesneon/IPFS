@@ -19,7 +19,8 @@ class FailingDatastore extends InMemoryDatastore {
   Future<void> close() async => throw Exception('Close failed');
 
   @override
-  Future<void> put(Key key, Uint8List value) async => throw Exception('Put failed');
+  Future<void> put(Key key, Uint8List value) async =>
+      throw Exception('Put failed');
 
   @override
   Future<Uint8List?> get(Key key) async => throw Exception('Get failed');
@@ -136,7 +137,9 @@ void main() {
       // Create a parent block (ProtoNode) linking to leaf
       final parentNode = MerkleDAGNode(
         data: Uint8List(0),
-        links: [Link(cid: leafBlock.cid, name: 'leaf', size: leafBlock.data.length)],
+        links: [
+          Link(cid: leafBlock.cid, name: 'leaf', size: leafBlock.data.length),
+        ],
       );
       final parentBlock = Block(
         cid: await parentNode.cid,

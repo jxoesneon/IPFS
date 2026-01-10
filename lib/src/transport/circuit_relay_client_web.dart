@@ -9,7 +9,8 @@ class CircuitRelayClient {
   /// Creates a new [CircuitRelayClient] using the provided router.
   CircuitRelayClient(P2plibRouter router);
 
-  final StreamController<CircuitRelayConnectionEvent> _circuitRelayEventsController =
+  final StreamController<CircuitRelayConnectionEvent>
+  _circuitRelayEventsController =
       StreamController<CircuitRelayConnectionEvent>.broadcast();
 
   /// Starts the circuit relay client.
@@ -43,7 +44,8 @@ class CircuitRelayClient {
       _circuitRelayEventsController.stream;
 
   /// Stream of circuit relay connection events (alias).
-  Stream<CircuitRelayConnectionEvent> get connectionEvents => _circuitRelayEventsController.stream;
+  Stream<CircuitRelayConnectionEvent> get connectionEvents =>
+      _circuitRelayEventsController.stream;
 
   /// Emits a new circuit relay event.
   void emitCircuitRelayEvent(CircuitRelayConnectionEvent event) {

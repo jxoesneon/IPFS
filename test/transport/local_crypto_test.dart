@@ -18,7 +18,10 @@ void main() {
       expect(result.seed.length, 32);
       expect(result.signPubKey, isNotNull);
       expect(result.signPubKey.length, 32);
-      expect(result.encPubKey, equals(result.signPubKey)); // Current implementation behavior
+      expect(
+        result.encPubKey,
+        equals(result.signPubKey),
+      ); // Current implementation behavior
     });
 
     test('init generates deterministic keys with provided seed', () async {

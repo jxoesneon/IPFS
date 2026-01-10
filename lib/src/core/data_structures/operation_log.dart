@@ -106,7 +106,9 @@ class OperationLog {
   void deserialize(Uint8List data) {
     final protoLog = OperationLogProto.fromBuffer(data);
     _logEntries.clear();
-    _logEntries.addAll(protoLog.entries.map((pbEntry) => OperationLogEntry.fromProto(pbEntry)));
+    _logEntries.addAll(
+      protoLog.entries.map((pbEntry) => OperationLogEntry.fromProto(pbEntry)),
+    );
   }
 
   @override

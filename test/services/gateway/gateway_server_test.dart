@@ -32,7 +32,11 @@ class MockHttpServerAdapter implements HttpServerAdapter {
   bool shouldFail = false;
 
   @override
-  Future<IpfsHttpServerInstance> serve(Handler handler, String address, int port) async {
+  Future<IpfsHttpServerInstance> serve(
+    Handler handler,
+    String address,
+    int port,
+  ) async {
     lastHandler = handler;
     lastAddress = address;
     lastPort = port;
@@ -130,7 +134,10 @@ void main() {
       await server.start();
       final handler = mockAdapter.lastHandler!;
 
-      final request = Request('GET', Uri.parse('http://localhost/api/v0/version'));
+      final request = Request(
+        'GET',
+        Uri.parse('http://localhost/api/v0/version'),
+      );
       final response = await handler(request);
 
       expect(response.statusCode, equals(200));
@@ -167,20 +174,28 @@ void main() {
       final uri = Uri.parse('http://localhost/health');
 
       // First request - OK
-      var response = await handler(Request('GET', uri, headers: {'x-real-ip': '1.2.3.4'}));
+      var response = await handler(
+        Request('GET', uri, headers: {'x-real-ip': '1.2.3.4'}),
+      );
       expect(response.statusCode, equals(200));
 
       // Second request - OK (limit is 2)
-      response = await handler(Request('GET', uri, headers: {'x-real-ip': '1.2.3.4'}));
+      response = await handler(
+        Request('GET', uri, headers: {'x-real-ip': '1.2.3.4'}),
+      );
       expect(response.statusCode, equals(200));
 
       // Third request - 429
-      response = await handler(Request('GET', uri, headers: {'x-real-ip': '1.2.3.4'}));
+      response = await handler(
+        Request('GET', uri, headers: {'x-real-ip': '1.2.3.4'}),
+      );
       expect(response.statusCode, equals(429));
       expect(await response.readAsString(), contains('Rate limit exceeded'));
 
       // Different IP - OK
-      response = await handler(Request('GET', uri, headers: {'x-real-ip': '1.2.3.5'}));
+      response = await handler(
+        Request('GET', uri, headers: {'x-real-ip': '1.2.3.5'}),
+      );
       expect(response.statusCode, equals(200));
     });
 
@@ -194,7 +209,9 @@ void main() {
 
       final request = Request(
         'HEAD',
-        Uri.parse('http://localhost/ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        Uri.parse(
+          'http://localhost/ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+        ),
       );
       final response = await handler(request);
 
@@ -221,12 +238,16 @@ void main() {
       final ipnsServer = GatewayServer(
         blockStore: mockBlockStore,
         httpAdapter: mockAdapter,
-        ipnsResolver: (name) async => 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+        ipnsResolver: (name) async =>
+            'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
       );
       await ipnsServer.start();
       final handler = mockAdapter.lastHandler!;
 
-      final request = Request('GET', Uri.parse('http://localhost/ipns/test.eth'));
+      final request = Request(
+        'GET',
+        Uri.parse('http://localhost/ipns/test.eth'),
+      );
       final response = await handler(request);
 
       expect(

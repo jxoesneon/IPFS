@@ -86,11 +86,17 @@ class CircuitRelayService {
       }
     }
 
-    _logger.verbose('Received transport packet from $senderId with no active circuit.');
+    _logger.verbose(
+      'Received transport packet from $senderId with no active circuit.',
+    );
   }
 
   /// Forwards a packet to the target peer.
-  void _forwardPacket(String targetPeerId, Uint8List payload, _CircuitContext context) {
+  void _forwardPacket(
+    String targetPeerId,
+    Uint8List payload,
+    _CircuitContext context,
+  ) {
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
     // Check limits
@@ -100,7 +106,9 @@ class CircuitRelayService {
     }
 
     if (context.bytesTransferred + payload.length > context.limitData) {
-      _logger.debug('Circuit limit exceeded for ${context.source} -> ${context.destination}');
+      _logger.debug(
+        'Circuit limit exceeded for ${context.source} -> ${context.destination}',
+      );
       _closeCircuit(context);
       return;
     }
@@ -122,7 +130,9 @@ class CircuitRelayService {
   void _closeCircuit(_CircuitContext context) {
     _activeCircuits.remove(context.source);
     _reverseCircuits.remove(context.destination);
-    _logger.debug('Closed circuit: ${context.source} <-> ${context.destination}');
+    _logger.debug(
+      'Closed circuit: ${context.source} <-> ${context.destination}',
+    );
   }
 
   /// Handles incoming HOP messages (RESERVE, CONNECT).
@@ -157,13 +167,18 @@ class CircuitRelayService {
       if (message.type == StopMessage_Type.CONNECT) {
         // Someone is connecting TO us via a relay.
         // We should accept the connection.
-        _logger.info('Received relayed connection request (STOP) from ${packet.srcPeerId}');
+        _logger.info(
+          'Received relayed connection request (STOP) from ${packet.srcPeerId}',
+        );
 
         final response = StopMessage()
           ..type = StopMessage_Type.STATUS
           ..status = Status.OK;
 
-        _router.sendMessage(packet.srcPeerId, Uint8List.fromList(response.writeToBuffer()));
+        _router.sendMessage(
+          packet.srcPeerId,
+          Uint8List.fromList(response.writeToBuffer()),
+        );
       }
     } catch (e) {
       _logger.warning('Failed to handle STOP message: $e');
@@ -202,7 +217,10 @@ class CircuitRelayService {
       ..reservation = reservation
       ..limit = limit;
 
-    _router.sendMessage(srcPeerId, Uint8List.fromList(response.writeToBuffer()));
+    _router.sendMessage(
+      srcPeerId,
+      Uint8List.fromList(response.writeToBuffer()),
+    );
     _logger.verbose('Granted reservation to $srcIdStr');
   }
 
@@ -256,7 +274,9 @@ class CircuitRelayService {
       final stopResponse = StopMessage.fromBuffer(responseBytes);
 
       if (stopResponse.status == Status.OK) {
-        _logger.info('Circuit established between $srcPeerId and $destPeerIdStr');
+        _logger.info(
+          'Circuit established between $srcPeerId and $destPeerIdStr',
+        );
 
         // 4. Register Active Circuit
         final srcIdStr = srcPeerId;
@@ -281,7 +301,9 @@ class CircuitRelayService {
         // 5. Send Success to Source
         _sendHopStatus(srcPeerId, Status.OK);
       } else {
-        _logger.warning('Destination rejected STOP connection: ${stopResponse.status}');
+        _logger.warning(
+          'Destination rejected STOP connection: ${stopResponse.status}',
+        );
         _sendHopStatus(srcPeerId, stopResponse.status);
       }
     } catch (e) {

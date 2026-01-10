@@ -95,13 +95,19 @@ class RPCHandlers {
         final contentDisposition = part.headers['content-disposition'];
         String name = cid; // Fallback name
         if (contentDisposition != null) {
-          final nameMatch = RegExp(r'filename="([^"]+)"').firstMatch(contentDisposition);
+          final nameMatch = RegExp(
+            r'filename="([^"]+)"',
+          ).firstMatch(contentDisposition);
           if (nameMatch != null) {
             name = nameMatch.group(1)!;
           }
         }
 
-        results.add({'Name': name, 'Hash': cid, 'Size': content.length.toString()});
+        results.add({
+          'Name': name,
+          'Hash': cid,
+          'Size': content.length.toString(),
+        });
       }
 
       if (results.isEmpty) {
@@ -248,12 +254,17 @@ class RPCHandlers {
     }
 
     try {
-      final found = await node.dhtClient.findPeer(PeerId(value: Base58().base58Decode(peerId)));
+      final found = await node.dhtClient.findPeer(
+        PeerId(value: Base58().base58Decode(peerId)),
+      );
       if (found != null) {
         return _jsonResponse({
           'Type': 2,
           'Responses': [
-            {'ID': found.toString(), 'Addrs': node.resolvePeerId(found.toString())},
+            {
+              'ID': found.toString(),
+              'Addrs': node.resolvePeerId(found.toString()),
+            },
           ],
         });
       } else {
@@ -415,7 +426,10 @@ class RPCHandlers {
   // Helper methods
 
   Response _jsonResponse(Map<String, dynamic> data) {
-    return Response.ok(json.encode(data), headers: {'Content-Type': 'application/json'});
+    return Response.ok(
+      json.encode(data),
+      headers: {'Content-Type': 'application/json'},
+    );
   }
 
   Response _errorResponse(String message, {int code = 500}) {

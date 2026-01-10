@@ -40,11 +40,11 @@ const StoreProviderRequest$json = {
 };
 
 /// Descriptor for `StoreProviderRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List storeProviderRequestDescriptor = $convert
-    .base64Decode('ChRTdG9yZVByb3ZpZGVyUmVxdWVzdBI6CgNrZXkYASABKAsyKC5pcGZzLmRodC5jb21tb25fcm'
-        'VkX2JsYWNrX3RyZWUuS19QZWVySWRSA2tleRJPCg1wcm92aWRlcl9pbmZvGAIgASgLMiouaXBm'
-        'cy5kaHQuY29tbW9uX3JlZF9ibGFja190cmVlLlZfUGVlckluZm9SDHByb3ZpZGVySW5mbxIQCg'
-        'N0dGwYAyABKANSA3R0bA==');
+final $typed_data.Uint8List storeProviderRequestDescriptor = $convert.base64Decode(
+    'ChRTdG9yZVByb3ZpZGVyUmVxdWVzdBI6CgNrZXkYASABKAsyKC5pcGZzLmRodC5jb21tb25fcm'
+    'VkX2JsYWNrX3RyZWUuS19QZWVySWRSA2tleRJPCg1wcm92aWRlcl9pbmZvGAIgASgLMiouaXBm'
+    'cy5kaHQuY29tbW9uX3JlZF9ibGFja190cmVlLlZfUGVlckluZm9SDHByb3ZpZGVySW5mbxIQCg'
+    'N0dGwYAyABKANSA3R0bA==');
 
 @$core.Deprecated('Use storeProviderResponseDescriptor instead')
 const StoreProviderResponse$json = {
@@ -59,7 +59,13 @@ const StoreProviderResponse$json = {
       '10': 'status'
     },
     {'1': 'error_message', '3': 2, '4': 1, '5': 9, '10': 'errorMessage'},
-    {'1': 'replication_count', '3': 3, '4': 1, '5': 5, '10': 'replicationCount'},
+    {
+      '1': 'replication_count',
+      '3': 3,
+      '4': 1,
+      '5': 5,
+      '10': 'replicationCount'
+    },
   ],
   '4': [StoreProviderResponse_Status$json],
 };
@@ -75,12 +81,12 @@ const StoreProviderResponse_Status$json = {
 };
 
 /// Descriptor for `StoreProviderResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List storeProviderResponseDescriptor = $convert
-    .base64Decode('ChVTdG9yZVByb3ZpZGVyUmVzcG9uc2USTQoGc3RhdHVzGAEgASgOMjUuaXBmcy5kaHQuc3Rvcm'
-        'VfcHJvdmlkZXIuU3RvcmVQcm92aWRlclJlc3BvbnNlLlN0YXR1c1IGc3RhdHVzEiMKDWVycm9y'
-        'X21lc3NhZ2UYAiABKAlSDGVycm9yTWVzc2FnZRIrChFyZXBsaWNhdGlvbl9jb3VudBgDIAEoBV'
-        'IQcmVwbGljYXRpb25Db3VudCI3CgZTdGF0dXMSCwoHU1VDQ0VTUxAAEgkKBUVSUk9SEAESFQoR'
-        'Q0FQQUNJVFlfRVhDRUVERUQQAg==');
+final $typed_data.Uint8List storeProviderResponseDescriptor = $convert.base64Decode(
+    'ChVTdG9yZVByb3ZpZGVyUmVzcG9uc2USTQoGc3RhdHVzGAEgASgOMjUuaXBmcy5kaHQuc3Rvcm'
+    'VfcHJvdmlkZXIuU3RvcmVQcm92aWRlclJlc3BvbnNlLlN0YXR1c1IGc3RhdHVzEiMKDWVycm9y'
+    'X21lc3NhZ2UYAiABKAlSDGVycm9yTWVzc2FnZRIrChFyZXBsaWNhdGlvbl9jb3VudBgDIAEoBV'
+    'IQcmVwbGljYXRpb25Db3VudCI3CgZTdGF0dXMSCwoHU1VDQ0VTUxAAEgkKBUVSUk9SEAESFQoR'
+    'Q0FQQUNJVFlfRVhDRUVERUQQAg==');
 
 @$core.Deprecated('Use getProvidersRequestDescriptor instead')
 const GetProvidersRequest$json = {
@@ -99,10 +105,10 @@ const GetProvidersRequest$json = {
 };
 
 /// Descriptor for `GetProvidersRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getProvidersRequestDescriptor = $convert
-    .base64Decode('ChNHZXRQcm92aWRlcnNSZXF1ZXN0EjoKA2tleRgBIAEoCzIoLmlwZnMuZGh0LmNvbW1vbl9yZW'
-        'RfYmxhY2tfdHJlZS5LX1BlZXJJZFIDa2V5EiMKDW1heF9wcm92aWRlcnMYAiABKAVSDG1heFBy'
-        'b3ZpZGVycw==');
+final $typed_data.Uint8List getProvidersRequestDescriptor = $convert.base64Decode(
+    'ChNHZXRQcm92aWRlcnNSZXF1ZXN0EjoKA2tleRgBIAEoCzIoLmlwZnMuZGh0LmNvbW1vbl9yZW'
+    'RfYmxhY2tfdHJlZS5LX1BlZXJJZFIDa2V5EiMKDW1heF9wcm92aWRlcnMYAiABKAVSDG1heFBy'
+    'b3ZpZGVycw==');
 
 @$core.Deprecated('Use getProvidersResponseDescriptor instead')
 const GetProvidersResponse$json = {
@@ -128,8 +134,8 @@ const GetProvidersResponse$json = {
 };
 
 /// Descriptor for `GetProvidersResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getProvidersResponseDescriptor = $convert
-    .base64Decode('ChRHZXRQcm92aWRlcnNSZXNwb25zZRJICglwcm92aWRlcnMYASADKAsyKi5pcGZzLmRodC5jb2'
-        '1tb25fcmVkX2JsYWNrX3RyZWUuVl9QZWVySW5mb1IJcHJvdmlkZXJzEk8KDWNsb3Nlc3RfcGVl'
-        'cnMYAiADKAsyKi5pcGZzLmRodC5jb21tb25fcmVkX2JsYWNrX3RyZWUuVl9QZWVySW5mb1IMY2'
-        'xvc2VzdFBlZXJz');
+final $typed_data.Uint8List getProvidersResponseDescriptor = $convert.base64Decode(
+    'ChRHZXRQcm92aWRlcnNSZXNwb25zZRJICglwcm92aWRlcnMYASADKAsyKi5pcGZzLmRodC5jb2'
+    '1tb25fcmVkX2JsYWNrX3RyZWUuVl9QZWVySW5mb1IJcHJvdmlkZXJzEk8KDWNsb3Nlc3RfcGVl'
+    'cnMYAiADKAsyKi5pcGZzLmRodC5jb21tb25fcmVkX2JsYWNrX3RyZWUuVl9QZWVySW5mb1IMY2'
+    'xvc2VzdFBlZXJz');

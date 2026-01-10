@@ -13,7 +13,8 @@
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
-import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart' as $0;
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart'
+    as $0;
 
 import 'common_red_black_tree.pbenum.dart';
 
@@ -40,8 +41,10 @@ class RBTreePeerId extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RBTreePeerId',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.common_red_black_tree'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RBTreePeerId',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.common_red_black_tree'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'id')
     ..hasRequiredFields = false;
@@ -50,7 +53,8 @@ class RBTreePeerId extends $pb.GeneratedMessage {
   RBTreePeerId clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   RBTreePeerId copyWith(void Function(RBTreePeerId) updates) =>
-      super.copyWith((message) => updates(message as RBTreePeerId)) as RBTreePeerId;
+      super.copyWith((message) => updates(message as RBTreePeerId))
+          as RBTreePeerId;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -60,8 +64,8 @@ class RBTreePeerId extends $pb.GeneratedMessage {
   @$core.override
   RBTreePeerId createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static RBTreePeerId getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RBTreePeerId>(create);
+  static RBTreePeerId getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RBTreePeerId>(create);
   static RBTreePeerId? _defaultInstance;
 
   /// The ID of the peer, represented as a string.
@@ -96,11 +100,15 @@ class Node extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Node',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.common_red_black_tree'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Node',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.common_red_black_tree'),
       createEmptyInstance: create)
-    ..aOM<RBTreePeerId>(1, _omitFieldNames ? '' : 'peerId', subBuilder: RBTreePeerId.create)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..aOM<RBTreePeerId>(1, _omitFieldNames ? '' : 'peerId',
+        subBuilder: RBTreePeerId.create)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -117,7 +125,8 @@ class Node extends $pb.GeneratedMessage {
   @$core.override
   Node createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static Node getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Node>(create);
+  static Node getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Node>(create);
   static Node? _defaultInstance;
 
   /// The unique identifier of the peer associated with this node.
@@ -162,10 +171,13 @@ class K_PeerId extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'K_PeerId',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.common_red_black_tree'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'K_PeerId',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.common_red_black_tree'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -235,19 +247,25 @@ class V_PeerInfo extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'V_PeerInfo',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.common_red_black_tree'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'V_PeerInfo',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.common_red_black_tree'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'peerId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'peerId', $pb.PbFieldType.OY)
     ..aOS(2, _omitFieldNames ? '' : 'ipAddress')
     ..aI(3, _omitFieldNames ? '' : 'port')
     ..pPS(4, _omitFieldNames ? '' : 'protocols')
     ..aI(5, _omitFieldNames ? '' : 'latency')
-    ..aE<V_PeerInfo_ConnectionStatus>(6, _omitFieldNames ? '' : 'connectionStatus',
+    ..aE<V_PeerInfo_ConnectionStatus>(
+        6, _omitFieldNames ? '' : 'connectionStatus',
         enumValues: V_PeerInfo_ConnectionStatus.values)
-    ..aOM<$0.Timestamp>(7, _omitFieldNames ? '' : 'lastSeen', subBuilder: $0.Timestamp.create)
+    ..aOM<$0.Timestamp>(7, _omitFieldNames ? '' : 'lastSeen',
+        subBuilder: $0.Timestamp.create)
     ..aOS(8, _omitFieldNames ? '' : 'agentVersion')
-    ..a<$core.List<$core.int>>(9, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        9, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
     ..pPS(10, _omitFieldNames ? '' : 'addresses')
     ..aOS(11, _omitFieldNames ? '' : 'observedAddr')
     ..hasRequiredFields = false;
@@ -266,8 +284,8 @@ class V_PeerInfo extends $pb.GeneratedMessage {
   @$core.override
   V_PeerInfo createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static V_PeerInfo getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<V_PeerInfo>(create);
+  static V_PeerInfo getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<V_PeerInfo>(create);
   static V_PeerInfo? _defaultInstance;
 
   /// The unique identifier of the peer.
@@ -317,7 +335,8 @@ class V_PeerInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   V_PeerInfo_ConnectionStatus get connectionStatus => $_getN(5);
   @$pb.TagNumber(6)
-  set connectionStatus(V_PeerInfo_ConnectionStatus value) => $_setField(6, value);
+  set connectionStatus(V_PeerInfo_ConnectionStatus value) =>
+      $_setField(6, value);
   @$pb.TagNumber(6)
   $core.bool hasConnectionStatus() => $_has(5);
   @$pb.TagNumber(6)
@@ -370,5 +389,7 @@ class V_PeerInfo extends $pb.GeneratedMessage {
   void clearObservedAddr() => $_clearField(11);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

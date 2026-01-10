@@ -13,8 +13,10 @@ class ManualMockRouterL2 extends Mock implements p2p.RouterL2 {
   static final validPeerIdBytes = Uint8List(64); // 64 bytes required by p2plib
 
   @override
-  Duration get messageTTL =>
-      super.noSuchMethod(Invocation.getter(#messageTTL), returnValue: Duration(seconds: 10));
+  Duration get messageTTL => super.noSuchMethod(
+    Invocation.getter(#messageTTL),
+    returnValue: Duration(seconds: 10),
+  );
 
   @override
   Stream<p2p.Message> get messageStream => super.noSuchMethod(
@@ -23,8 +25,10 @@ class ManualMockRouterL2 extends Mock implements p2p.RouterL2 {
   ); // Wait, messageStream type? check later. Assuming Stream<p2p.Message>.
 
   @override
-  List<p2p.TransportBase> get transports =>
-      super.noSuchMethod(Invocation.getter(#transports), returnValue: <p2p.TransportBase>[]);
+  List<p2p.TransportBase> get transports => super.noSuchMethod(
+    Invocation.getter(#transports),
+    returnValue: <p2p.TransportBase>[],
+  );
 
   @override
   p2p.PeerId get selfId => super.noSuchMethod(
@@ -68,7 +72,9 @@ class ManualMockRouterL2 extends Mock implements p2p.RouterL2 {
       #useAddresses: useAddresses,
     }),
     returnValue: Future.value(p2p.PacketHeader(id: 0, issuedAt: 0)),
-    returnValueForMissingStub: Future.value(p2p.PacketHeader(id: 0, issuedAt: 0)),
+    returnValueForMissingStub: Future.value(
+      p2p.PacketHeader(id: 0, issuedAt: 0),
+    ),
   );
 
   @override
@@ -99,14 +105,21 @@ void main() {
 
     // Config
     config = IPFSConfig(
-      network: NetworkConfig(listenAddresses: ['/ip4/127.0.0.1/udp/4001'], bootstrapPeers: []),
+      network: NetworkConfig(
+        listenAddresses: ['/ip4/127.0.0.1/udp/4001'],
+        bootstrapPeers: [],
+      ),
       debug: true,
     );
 
     // Stub behaviors
-    when(mockRouterL2.messageStream).thenAnswer((_) => messageStreamController.stream);
+    when(
+      mockRouterL2.messageStream,
+    ).thenAnswer((_) => messageStreamController.stream);
     when(mockRouterL2.transports).thenReturn([]);
-    when(mockRouterL2.selfId).thenReturn(p2p.PeerId(value: ManualMockRouterL2.validPeerIdBytes));
+    when(
+      mockRouterL2.selfId,
+    ).thenReturn(p2p.PeerId(value: ManualMockRouterL2.validPeerIdBytes));
 
     // Inject mock into router
     router = P2plibRouter(config, router: mockRouterL2);
@@ -171,14 +184,19 @@ void main() {
     final packet = Uint8List.fromList(utf8.encode(payload));
 
     final msg = p2p.Message(
-      header: p2p.PacketHeader(id: 1, issuedAt: DateTime.now().millisecondsSinceEpoch),
+      header: p2p.PacketHeader(
+        id: 1,
+        issuedAt: DateTime.now().millisecondsSinceEpoch,
+      ),
       srcPeerId: realPeerId,
       dstPeerId: mockRouterL2.selfId,
       payload: packet,
     );
 
     final receivedMessages = <String>[];
-    final sub = router.receiveMessages(peerIdStr).listen((m) => receivedMessages.add(m));
+    final sub = router
+        .receiveMessages(peerIdStr)
+        .listen((m) => receivedMessages.add(m));
 
     messageStreamController.add(msg);
 

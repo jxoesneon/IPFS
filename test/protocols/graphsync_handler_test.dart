@@ -5,14 +5,16 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart' as core_block; // generic
+import 'package:dart_ipfs/src/core/data_structures/block.dart'
+    as core_block; // generic
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart'; // interface
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart'; // for responses
-import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart' as proto;
+import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart'
+    as proto;
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_protocol.dart';
@@ -35,7 +37,10 @@ class MockRouter implements P2plibRouter {
   void registerProtocol(String protocolId) {}
 
   @override
-  void registerProtocolHandler(String protocolId, void Function(NetworkPacket) handler) {
+  void registerProtocolHandler(
+    String protocolId,
+    void Function(NetworkPacket) handler,
+  ) {
     handlers[protocolId] = handler;
   }
 
@@ -88,7 +93,10 @@ class MockIPLD extends IPLDHandler {
   }
 
   @override
-  Future<List<IPLDNode>> executeSelector(CID root, IPLDSelector selector) async {
+  Future<List<IPLDNode>> executeSelector(
+    CID root,
+    IPLDSelector selector,
+  ) async {
     return []; // Empty results by default
   }
 }
@@ -113,7 +121,13 @@ void main() {
       mockStore = MockBlockStore();
       mockIPLD = MockIPLD();
 
-      handler = GraphsyncHandler(MockConfig(), mockRouter, mockBitswap, mockIPLD, mockStore);
+      handler = GraphsyncHandler(
+        MockConfig(),
+        mockRouter,
+        mockBitswap,
+        mockIPLD,
+        mockStore,
+      );
 
       await handler.start();
     });
@@ -123,15 +137,24 @@ void main() {
     });
 
     test('start registers protocol handler', () {
-      expect(mockRouter.handlers.containsKey(GraphsyncProtocol.protocolID), isTrue);
+      expect(
+        mockRouter.handlers.containsKey(GraphsyncProtocol.protocolID),
+        isTrue,
+      );
     });
 
     test('requestGraph sends request and calls bitswap', () async {
-      final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]), codec: 'dag-pb');
+      final cid = CID.computeForDataSync(
+        Uint8List.fromList([1, 2, 3]),
+        codec: 'dag-pb',
+      );
       final selector = IPLDSelector(type: SelectorType.all);
 
       // Setup bitswap response
-      final block = core_block.Block(cid: cid, data: Uint8List.fromList([1, 2, 3]));
+      final block = core_block.Block(
+        cid: cid,
+        data: Uint8List.fromList([1, 2, 3]),
+      );
       mockBitswap.blocks[cid.toString()] = block;
 
       final result = await handler.requestGraph(cid.toString(), selector);
@@ -143,7 +166,9 @@ void main() {
       expect(mockRouter.sentMessages, isNotEmpty);
 
       // Parse sent message to verify it's a Request
-      final msg = proto.GraphsyncMessage.fromBuffer(mockRouter.sentMessages.first);
+      final msg = proto.GraphsyncMessage.fromBuffer(
+        mockRouter.sentMessages.first,
+      );
       expect(msg.requests, isNotEmpty);
       expect(msg.requests.first.root, equals(cid.toBytes()));
     });
@@ -166,7 +191,9 @@ void main() {
 
       // Expect response
       expect(mockRouter.sentMessages, isNotEmpty);
-      final respMsg = proto.GraphsyncMessage.fromBuffer(mockRouter.sentMessages.last);
+      final respMsg = proto.GraphsyncMessage.fromBuffer(
+        mockRouter.sentMessages.last,
+      );
       expect(respMsg.responses.first.id, 123);
       expect(respMsg.responses.first.status, proto.ResponseStatus.RS_CANCELLED);
     });

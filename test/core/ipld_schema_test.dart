@@ -116,7 +116,10 @@ void main() {
 
     test('throws on unknown type', () async {
       final node = IPLDNode()..kind = Kind.NULL;
-      expect(() => schema.validate('UnknownType', node), throwsA(isA<IPLDSchemaError>()));
+      expect(
+        () => schema.validate('UnknownType', node),
+        throwsA(isA<IPLDSchemaError>()),
+      );
     });
   });
 }

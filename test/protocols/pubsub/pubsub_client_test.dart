@@ -23,7 +23,9 @@ void main() {
     mockRouter = MockP2plibRouter();
     localPeerIdStr = Base58().encode(Uint8List(32));
 
-    when(mockRouter.registerProtocolHandler(any, any)).thenAnswer((Invocation inv) {
+    when(mockRouter.registerProtocolHandler(any, any)).thenAnswer((
+      Invocation inv,
+    ) {
       if (inv.positionalArguments[0] == 'pubsub') {
         pubsubHandler = inv.positionalArguments[1];
       }
@@ -66,7 +68,8 @@ void main() {
       await client.publish(topic, 'hello');
 
       final captured =
-          verify(mockRouter.sendMessage(peer1, captureAny)).captured.single as Uint8List;
+          verify(mockRouter.sendMessage(peer1, captureAny)).captured.single
+              as Uint8List;
       final msg = jsonDecode(utf8.decode(captured));
       expect(msg['topic'], equals(topic));
       expect(msg['content'], equals('hello'));
@@ -160,7 +163,9 @@ void main() {
         NetworkPacket(
           srcPeerId: peerId,
           datagram: Uint8List.fromList(
-            utf8.encode(jsonEncode({'action': 'graft', 'sender': peerId, 'topic': 'any'})),
+            utf8.encode(
+              jsonEncode({'action': 'graft', 'sender': peerId, 'topic': 'any'}),
+            ),
           ),
         ),
       );
@@ -176,7 +181,9 @@ void main() {
         NetworkPacket(
           srcPeerId: peerId,
           datagram: Uint8List.fromList(
-            utf8.encode(jsonEncode({'action': 'prune', 'sender': peerId, 'topic': 'any'})),
+            utf8.encode(
+              jsonEncode({'action': 'prune', 'sender': peerId, 'topic': 'any'}),
+            ),
           ),
         ),
       );
@@ -206,7 +213,8 @@ void main() {
       );
 
       final captured =
-          verify(mockRouter.sendMessage(sender, captureAny)).captured.single as Uint8List;
+          verify(mockRouter.sendMessage(sender, captureAny)).captured.single
+              as Uint8List;
       final iwant = jsonDecode(utf8.decode(captured));
       expect(iwant['action'], equals('iwant'));
       expect(iwant['msgIds'], contains(msgId));
@@ -256,7 +264,8 @@ void main() {
       );
 
       final captured =
-          verify(mockRouter.sendMessage(sender, captureAny)).captured.single as Uint8List;
+          verify(mockRouter.sendMessage(sender, captureAny)).captured.single
+              as Uint8List;
       final response = jsonDecode(utf8.decode(captured));
       expect(response['content'], equals(content));
     });
@@ -278,7 +287,9 @@ void main() {
     test('subscribe duplicate topic', () async {
       await client.subscribe('topic-A');
       await client.subscribe('topic-A'); // Triggers duplicate check
-      verify(mockRouter.registerProtocol('topic-A')).called(1); // Should only be called once
+      verify(
+        mockRouter.registerProtocol('topic-A'),
+      ).called(1); // Should only be called once
     });
 
     test('handles PRUNE and GRAFT edge cases', () async {

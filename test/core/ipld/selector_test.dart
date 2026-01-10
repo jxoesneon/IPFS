@@ -5,7 +5,8 @@ import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart' as blockstore_pb;
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart'
+    as blockstore_pb;
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:test/test.dart';
@@ -87,17 +88,25 @@ void main() {
 
       expect(results.length, 2);
       // Contains root
-      final rootEntry = results[0].mapValue.entries.firstWhere((e) => e.key == 'link');
+      final rootEntry = results[0].mapValue.entries.firstWhere(
+        (e) => e.key == 'link',
+      );
       // It might be Kind.MAP (Link Map) or Kind.LINK.
       if (rootEntry.value.kind == Kind.LINK) {
-        expect(rootEntry.value.linkValue.multihash, rootData['link']!.multihash.toBytes());
+        expect(
+          rootEntry.value.linkValue.multihash,
+          rootData['link']!.multihash.toBytes(),
+        );
       } else if (rootEntry.value.kind == Kind.MAP) {
         // Expect {'/' : bytes} or string
         final linkMap = rootEntry.value.mapValue;
         final slashEntry = linkMap.entries.firstWhere((e) => e.key == '/');
         if (slashEntry.value.kind == Kind.BYTES) {
           // Actual behavior: Link Map contains raw multihash bytes here
-          expect(slashEntry.value.bytesValue, rootData['link']!.multihash.toBytes());
+          expect(
+            slashEntry.value.bytesValue,
+            rootData['link']!.multihash.toBytes(),
+          );
           // Wait, CID bytes or Multihash bytes?
           // CID.fromBytes uses full CID bytes. rootData['link'] is CID.
           // If encoded as CID bytes.
@@ -120,15 +129,18 @@ void main() {
       expect(childName, 'child');
     });
 
-    test('SelectorType.none should return nothing and stop traversal', () async {
-      final data = {'name': 'test'};
-      final block = await handler.put(data, codec: 'dag-cbor');
+    test(
+      'SelectorType.none should return nothing and stop traversal',
+      () async {
+        final data = {'name': 'test'};
+        final block = await handler.put(data, codec: 'dag-cbor');
 
-      final selector = IPLDSelector(type: SelectorType.none);
-      final results = await handler.executeSelector(block.cid, selector);
+        final selector = IPLDSelector(type: SelectorType.none);
+        final results = await handler.executeSelector(block.cid, selector);
 
-      expect(results, isEmpty);
-    });
+        expect(results, isEmpty);
+      },
+    );
 
     test('SelectorType.matcher should match criteria', () async {
       final data = {'age': 25, 'name': 'Alice'};
@@ -144,7 +156,10 @@ void main() {
 
       final results = await handler.executeSelector(block.cid, selector);
       expect(results.length, 1);
-      final name = results[0].mapValue.entries.firstWhere((e) => e.key == 'name').value.stringValue;
+      final name = results[0].mapValue.entries
+          .firstWhere((e) => e.key == 'name')
+          .value
+          .stringValue;
       expect(name, 'Alice');
 
       // No match if age < 10
@@ -154,34 +169,43 @@ void main() {
           'age': {'\$lt': 10},
         },
       );
-      final failResults = await handler.executeSelector(block.cid, failSelector);
+      final failResults = await handler.executeSelector(
+        block.cid,
+        failSelector,
+      );
       expect(failResults, isEmpty);
     });
 
-    test('SelectorType.explore should follow path and verify subselector', () async {
-      // Root -> Link -> Child('target')
-      final childData = {'name': 'target'};
-      final childBlock = await handler.put(childData, codec: 'dag-cbor');
+    test(
+      'SelectorType.explore should follow path and verify subselector',
+      () async {
+        // Root -> Link -> Child('target')
+        final childData = {'name': 'target'};
+        final childBlock = await handler.put(childData, codec: 'dag-cbor');
 
-      final rootData = {'next': childBlock.cid};
-      final rootBlock = await handler.put(rootData, codec: 'dag-cbor');
+        final rootData = {'next': childBlock.cid};
+        final rootBlock = await handler.put(rootData, codec: 'dag-cbor');
 
-      // Explore 'next' field, then apply Matcher on child
-      final selector = IPLDSelector(
-        type: SelectorType.explore,
-        fieldPath: 'next',
-        subSelectors: [
-          IPLDSelector(type: SelectorType.matcher, criteria: {'name': 'target'}),
-        ],
-      );
+        // Explore 'next' field, then apply Matcher on child
+        final selector = IPLDSelector(
+          type: SelectorType.explore,
+          fieldPath: 'next',
+          subSelectors: [
+            IPLDSelector(
+              type: SelectorType.matcher,
+              criteria: {'name': 'target'},
+            ),
+          ],
+        );
 
-      final results = await handler.executeSelector(rootBlock.cid, selector);
-      expect(results.length, 1);
-      final targetName = results[0].mapValue.entries
-          .firstWhere((e) => e.key == 'name')
-          .value
-          .stringValue;
-      expect(targetName, 'target');
-    });
+        final results = await handler.executeSelector(rootBlock.cid, selector);
+        expect(results.length, 1);
+        final targetName = results[0].mapValue.entries
+            .firstWhere((e) => e.key == 'name')
+            .value
+            .stringValue;
+        expect(targetName, 'target');
+      },
+    );
   });
 }

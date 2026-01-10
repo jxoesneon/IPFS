@@ -21,7 +21,11 @@ class ValueStore {
 
   /// Stores a value in the DHT with replication.
   Future<void> store(String key, Uint8List value) async {
-    final storedValue = StoredValue(value: value, timestamp: DateTime.now(), replicationCount: 0);
+    final storedValue = StoredValue(
+      value: value,
+      timestamp: DateTime.now(),
+      replicationCount: 0,
+    );
     _values[key] = storedValue;
 
     // Trigger replication
@@ -109,7 +113,9 @@ class ValueStore {
   Future<List<String>> getAllKeys() async {
     // Remove expired values before returning keys
     final now = DateTime.now();
-    _values.removeWhere((key, value) => now.difference(value.timestamp) > valueExpiry);
+    _values.removeWhere(
+      (key, value) => now.difference(value.timestamp) > valueExpiry,
+    );
 
     return _values.keys.toList();
   }
@@ -118,7 +124,11 @@ class ValueStore {
 /// A value stored in the DHT with metadata.
 class StoredValue {
   /// Creates a stored value.
-  StoredValue({required this.value, required this.timestamp, this.replicationCount = 0});
+  StoredValue({
+    required this.value,
+    required this.timestamp,
+    this.replicationCount = 0,
+  });
 
   /// The stored data.
   final Uint8List value;

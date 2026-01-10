@@ -18,7 +18,9 @@ void main() {
     CID createTestCID() {
       return CID(
         version: 0,
-        multihash: Multihash.decode(Uint8List.fromList([0x12, 0x20, ...List.filled(32, 0)])),
+        multihash: Multihash.decode(
+          Uint8List.fromList([0x12, 0x20, ...List.filled(32, 0)]),
+        ),
         codec: 'dag-pb',
         multibaseType: Multibase.base58btc,
       );
@@ -74,7 +76,9 @@ void main() {
     });
 
     test('getValue throws on non-200 or missing value', () async {
-      final mockClient = MockClient((request) async => http.Response('error', 500));
+      final mockClient = MockClient(
+        (request) async => http.Response('error', 500),
+      );
       final handler = DelegateDHTHandler(delegateUrl, client: mockClient);
 
       expect(() => handler.getValue(Key.fromString('test')), throwsException);
@@ -95,14 +99,18 @@ void main() {
     });
 
     test('findPeer currently returns empty list', () async {
-      final mockClient = MockClient((request) async => http.Response('{}', 200));
+      final mockClient = MockClient(
+        (request) async => http.Response('{}', 200),
+      );
       final handler = DelegateDHTHandler(delegateUrl, client: mockClient);
       final peers = await handler.findPeer(PeerId(value: Uint8List(32)));
       expect(peers, isEmpty);
     });
 
     test('error handling', () async {
-      final mockClient = MockClient((request) async => throw Exception('net error'));
+      final mockClient = MockClient(
+        (request) async => throw Exception('net error'),
+      );
       final handler = DelegateDHTHandler(delegateUrl, client: mockClient);
 
       final providers = await handler.findProviders(createTestCID());
@@ -111,19 +119,30 @@ void main() {
       expect(() => handler.getValue(Key.fromString('k')), throwsException);
     });
 
-    test('handleRoutingTableUpdate and handleProvideRequest do nothing', () async {
-      final handler = DelegateDHTHandler(delegateUrl);
-      final peerInfo = V_PeerInfo();
-      await handler.handleRoutingTableUpdate(peerInfo);
-      await handler.handleProvideRequest(createTestCID(), PeerId(value: Uint8List(32)));
-    });
+    test(
+      'handleRoutingTableUpdate and handleProvideRequest do nothing',
+      () async {
+        final handler = DelegateDHTHandler(delegateUrl);
+        final peerInfo = V_PeerInfo();
+        await handler.handleRoutingTableUpdate(peerInfo);
+        await handler.handleProvideRequest(
+          createTestCID(),
+          PeerId(value: Uint8List(32)),
+        );
+      },
+    );
 
     test('non-200 responses and other errors in DelegateDHTHandler', () async {
-      final mockClient = MockClient((request) async => http.Response('error', 404));
+      final mockClient = MockClient(
+        (request) async => http.Response('error', 404),
+      );
       final handler = DelegateDHTHandler(delegateUrl, client: mockClient);
 
       expect(await handler.findProviders(createTestCID()), isEmpty);
-      await handler.putValue(Key.fromString('k'), Value.fromString('v')); // Covers catch/logging
+      await handler.putValue(
+        Key.fromString('k'),
+        Value.fromString('v'),
+      ); // Covers catch/logging
       await handler.provide(createTestCID()); // Covers catch/logging
       expect(await handler.findPeer(PeerId(value: Uint8List(32))), isEmpty);
     });

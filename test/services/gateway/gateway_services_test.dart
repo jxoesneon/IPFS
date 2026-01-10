@@ -7,7 +7,8 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/directory.dart';
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart' as blockstore_pb;
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart'
+    as blockstore_pb;
 import 'package:dart_ipfs/src/services/gateway/cached_preview_generator.dart';
 import 'package:dart_ipfs/src/services/gateway/file_preview_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
@@ -115,7 +116,11 @@ class MockPreviewCacheManager implements PreviewCacheManager {
   }
 
   @override
-  Future<void> cachePreview(CID cid, String contentType, Uint8List preview) async {
+  Future<void> cachePreview(
+    CID cid,
+    String contentType,
+    Uint8List preview,
+  ) async {
     _cache['${cid.encode()}_$contentType'] = preview;
   }
 
@@ -148,16 +153,25 @@ void main() {
       ); // Test raw first
       await mockBlockStore.putBlock(block);
 
-      final request = Request('GET', Uri.parse('http://localhost:8080/ipfs/${block.cid.encode()}'));
+      final request = Request(
+        'GET',
+        Uri.parse('http://localhost:8080/ipfs/${block.cid.encode()}'),
+      );
       final response = await gatewayHandler.handlePath(request);
 
       expect(response.statusCode, equals(200));
       expect(await response.readAsString(), equals('Hello IPFS World'));
-      expect(response.headers['X-IPFS-Path'], equals('/ipfs/${block.cid.encode()}'));
+      expect(
+        response.headers['X-IPFS-Path'],
+        equals('/ipfs/${block.cid.encode()}'),
+      );
     });
 
     test('should return 404 for missing block', () async {
-      final request = Request('GET', Uri.parse('http://localhost:8080/ipfs/QmMissing'));
+      final request = Request(
+        'GET',
+        Uri.parse('http://localhost:8080/ipfs/QmMissing'),
+      );
       final response = await gatewayHandler.handlePath(request);
 
       expect(response.statusCode, equals(404));
@@ -175,7 +189,10 @@ void main() {
 
       final pbNode = PBNode()..data = unixFsData.writeToBuffer();
 
-      final block = await Block.fromData(pbNode.writeToBuffer(), format: 'dag-pb');
+      final block = await Block.fromData(
+        pbNode.writeToBuffer(),
+        format: 'dag-pb',
+      );
 
       await mockBlockStore.putBlock(block);
 
@@ -198,8 +215,13 @@ void main() {
     late PersistentPreviewCache cache;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('ipfs_preview_cache_test');
-      cache = PersistentPreviewCache(cachePath: tempDir.path, maxCacheSize: 1024); // Small size
+      tempDir = await Directory.systemTemp.createTemp(
+        'ipfs_preview_cache_test',
+      );
+      cache = PersistentPreviewCache(
+        cachePath: tempDir.path,
+        maxCacheSize: 1024,
+      ); // Small size
     });
 
     tearDown(() async {
@@ -252,7 +274,10 @@ void main() {
 
     test('should generate and cache new preview', () async {
       final content = utf8.encode('Long text content that needs preview');
-      final block = await Block.fromData(Uint8List.fromList(content), format: 'raw');
+      final block = await Block.fromData(
+        Uint8List.fromList(content),
+        format: 'raw',
+      );
 
       final preview = await generator.generatePreview(block, 'text/plain');
 
@@ -266,7 +291,10 @@ void main() {
 
     test('should return cached preview if available', () async {
       final content = utf8.encode('content');
-      final block = await Block.fromData(Uint8List.fromList(content), format: 'raw');
+      final block = await Block.fromData(
+        Uint8List.fromList(content),
+        format: 'raw',
+      );
       final cachedData = Uint8List.fromList(utf8.encode('cached preview'));
 
       await mockCache.cachePreview(block.cid, 'text/plain', cachedData);

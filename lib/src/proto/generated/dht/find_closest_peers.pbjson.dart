@@ -32,9 +32,9 @@ const FindClosestPeersRequest$json = {
 };
 
 /// Descriptor for `FindClosestPeersRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List findClosestPeersRequestDescriptor = $convert
-    .base64Decode('ChdGaW5kQ2xvc2VzdFBlZXJzUmVxdWVzdBI8CgZ0YXJnZXQYASABKAsyJC5pcGZzLmRodC5jb2'
-        '1tb25fa2FkZW1saWEuS2FkZW1saWFJZFIGdGFyZ2V0EhQKBWNvdW50GAIgASgFUgVjb3VudA==');
+final $typed_data.Uint8List findClosestPeersRequestDescriptor = $convert.base64Decode(
+    'ChdGaW5kQ2xvc2VzdFBlZXJzUmVxdWVzdBI8CgZ0YXJnZXQYASABKAsyJC5pcGZzLmRodC5jb2'
+    '1tb25fa2FkZW1saWEuS2FkZW1saWFJZFIGdGFyZ2V0EhQKBWNvdW50GAIgASgFUgVjb3VudA==');
 
 @$core.Deprecated('Use findClosestPeersResponseDescriptor instead')
 const FindClosestPeersResponse$json = {
@@ -52,6 +52,7 @@ const FindClosestPeersResponse$json = {
 };
 
 /// Descriptor for `FindClosestPeersResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List findClosestPeersResponseDescriptor = $convert
-    .base64Decode('ChhGaW5kQ2xvc2VzdFBlZXJzUmVzcG9uc2USPwoIcGVlcl9pZHMYASADKAsyJC5pcGZzLmRodC'
+final $typed_data.Uint8List findClosestPeersResponseDescriptor =
+    $convert.base64Decode(
+        'ChhGaW5kQ2xvc2VzdFBlZXJzUmVzcG9uc2USPwoIcGVlcl9pZHMYASADKAsyJC5pcGZzLmRodC'
         '5jb21tb25fa2FkZW1saWEuS2FkZW1saWFJZFIHcGVlcklkcw==');

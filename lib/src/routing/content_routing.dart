@@ -12,7 +12,10 @@ import '../utils/logger.dart';
 class ContentRouting {
   /// Creates a content routing handler.
   ContentRouting(IPFSConfig config, NetworkHandler networkHandler)
-    : _dhtClient = DHTClient(networkHandler: networkHandler, router: networkHandler.p2pRouter);
+    : _dhtClient = DHTClient(
+        networkHandler: networkHandler,
+        router: networkHandler.p2pRouter,
+      );
   final DHTClient _dhtClient;
   final _logger = Logger('ContentRouting');
 
@@ -66,7 +69,11 @@ class ContentRouting {
         throw Exception('DNSLink for domain $domainName not found.');
       }
     } catch (e, stackTrace) {
-      _logger.error('Error resolving DNSLink for domain $domainName', e, stackTrace);
+      _logger.error(
+        'Error resolving DNSLink for domain $domainName',
+        e,
+        stackTrace,
+      );
       return null;
     }
   }

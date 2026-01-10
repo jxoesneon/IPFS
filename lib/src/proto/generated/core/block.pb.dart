@@ -40,11 +40,15 @@ class BlockProto extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockProto',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BlockProto',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
-    ..aOM<$0.IPFSCIDProto>(2, _omitFieldNames ? '' : 'cid', subBuilder: $0.IPFSCIDProto.create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..aOM<$0.IPFSCIDProto>(2, _omitFieldNames ? '' : 'cid',
+        subBuilder: $0.IPFSCIDProto.create)
     ..aOS(3, _omitFieldNames ? '' : 'format')
     ..hasRequiredFields = false;
 
@@ -62,8 +66,8 @@ class BlockProto extends $pb.GeneratedMessage {
   @$core.override
   BlockProto createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static BlockProto getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockProto>(create);
+  static BlockProto getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BlockProto>(create);
   static BlockProto? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -96,5 +100,7 @@ class BlockProto extends $pb.GeneratedMessage {
   void clearFormat() => $_clearField(3);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

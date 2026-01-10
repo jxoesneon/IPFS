@@ -127,7 +127,10 @@ class Message {
     // Parse legacy blocks (1.0)
     for (var blockBytes in pbMessage.blocks) {
       try {
-        final newBlock = await Block.fromData(Uint8List.fromList(blockBytes), format: 'dag-pb');
+        final newBlock = await Block.fromData(
+          Uint8List.fromList(blockBytes),
+          format: 'dag-pb',
+        );
         message.addBlock(newBlock);
       } catch (e) {
         // print('Error parsing legacy block: $e');

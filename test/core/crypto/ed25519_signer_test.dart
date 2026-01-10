@@ -31,7 +31,10 @@ void main() {
     });
 
     test('generateKeyPair with invalid seed length', () {
-      expect(() => signer.generateKeyPair(seed: Uint8List(31)), throwsArgumentError);
+      expect(
+        () => signer.generateKeyPair(seed: Uint8List(31)),
+        throwsArgumentError,
+      );
     });
 
     test('keyPairFromSeed', () async {
@@ -62,7 +65,11 @@ void main() {
       final sig = await signer.sign(data, kp);
 
       final pub = await signer.extractPublicKey(kp);
-      final isValid = await signer.verify(Uint8List.fromList([1, 2, 4]), sig, pub);
+      final isValid = await signer.verify(
+        Uint8List.fromList([1, 2, 4]),
+        sig,
+        pub,
+      );
       expect(isValid, isFalse);
     });
 
@@ -93,7 +100,10 @@ void main() {
     });
 
     test('publicKeyFromBytes invalid length', () {
-      expect(() => signer.publicKeyFromBytes(Uint8List(31)), throwsArgumentError);
+      expect(
+        () => signer.publicKeyFromBytes(Uint8List(31)),
+        throwsArgumentError,
+      );
     });
 
     test('KeyPairExtensions.extractSeedAndZero', () async {

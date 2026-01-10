@@ -19,7 +19,10 @@ void main() {
     mockClient = MockDHTClient();
     mockRoutingTable = MockKademliaRoutingTable();
     when(mockClient.kademliaRoutingTable).thenReturn(mockRoutingTable);
-    valueStore = ValueStore(mockClient, valueExpiry: const Duration(milliseconds: 100));
+    valueStore = ValueStore(
+      mockClient,
+      valueExpiry: const Duration(milliseconds: 100),
+    );
   });
 
   group('ValueStore', () {
@@ -29,7 +32,9 @@ void main() {
       final peer = PeerId(value: Uint8List.fromList([1, 1, 1]));
 
       when(mockRoutingTable.findClosestPeers(any, any)).thenReturn([peer]);
-      when(mockClient.storeValueToPeer(any, any, any)).thenAnswer((_) async => true);
+      when(
+        mockClient.storeValueToPeer(any, any, any),
+      ).thenAnswer((_) async => true);
 
       await valueStore.store(key, value);
 
@@ -59,7 +64,9 @@ void main() {
       final key2 = 'to_expire';
 
       when(mockRoutingTable.findClosestPeers(any, any)).thenReturn([]);
-      when(mockClient.storeValueToPeer(any, any, any)).thenAnswer((_) async => true);
+      when(
+        mockClient.storeValueToPeer(any, any, any),
+      ).thenAnswer((_) async => true);
 
       await valueStore.store(key1, Uint8List.fromList([1]));
 
@@ -78,25 +85,30 @@ void main() {
       expect(keys, isNot(contains(key1)));
     });
 
-    test('incrementReplicationCount and updateReplicationCount works', () async {
-      final key = 'counts';
-      when(mockRoutingTable.findClosestPeers(any, any)).thenReturn([]);
+    test(
+      'incrementReplicationCount and updateReplicationCount works',
+      () async {
+        final key = 'counts';
+        when(mockRoutingTable.findClosestPeers(any, any)).thenReturn([]);
 
-      await valueStore.store(key, Uint8List.fromList([1]));
+        await valueStore.store(key, Uint8List.fromList([1]));
 
-      await valueStore.incrementReplicationCount(key);
-      await valueStore.updateReplicationCount(key, 10);
+        await valueStore.incrementReplicationCount(key);
+        await valueStore.updateReplicationCount(key, 10);
 
-      final keys = await valueStore.getAllKeys();
-      expect(keys, contains(key));
-    });
+        final keys = await valueStore.getAllKeys();
+        expect(keys, contains(key));
+      },
+    );
 
     test('replicateValue handles failure', () async {
       final key = 'fail';
       final peer = PeerId(value: Uint8List.fromList([1, 1, 1]));
 
       when(mockRoutingTable.findClosestPeers(any, any)).thenReturn([peer]);
-      when(mockClient.storeValueToPeer(any, any, any)).thenThrow(Exception('replicate error'));
+      when(
+        mockClient.storeValueToPeer(any, any, any),
+      ).thenThrow(Exception('replicate error'));
 
       await valueStore.store(key, Uint8List.fromList([1]));
       // Verify it doesn't crash

@@ -131,7 +131,9 @@ void main() {
         offlineContainer.registerSingleton<MetricsCollector>(mockMetrics);
         offlineContainer.registerSingleton<SecurityManager>(mockSecurity);
         offlineContainer.registerSingleton<BlockStore>(mockBlockStore);
-        offlineContainer.registerSingleton<DatastoreHandler>(mockDatastoreHandler);
+        offlineContainer.registerSingleton<DatastoreHandler>(
+          mockDatastoreHandler,
+        );
         offlineContainer.registerSingleton<IPLDHandler>(mockIpld);
 
         final offlineNode = IPFSNode.fromContainer(offlineContainer);
@@ -167,25 +169,36 @@ void main() {
       });
 
       test('connectedPeers returns empty list on exception', () async {
-        when(mockNetwork.listConnectedPeers()).thenThrow(Exception('P2P Error'));
+        when(
+          mockNetwork.listConnectedPeers(),
+        ).thenThrow(Exception('P2P Error'));
         final peers = await node.connectedPeers;
         expect(peers, isEmpty);
       });
 
       test('resolvePeerId paths', () {
-        when(mockRouter.resolvePeerId(any)).thenReturn(['/ip4/127.0.0.1/tcp/4001']);
-        expect(node.resolvePeerId('QmPeer'), contains('/ip4/127.0.0.1/tcp/4001'));
+        when(
+          mockRouter.resolvePeerId(any),
+        ).thenReturn(['/ip4/127.0.0.1/tcp/4001']);
+        expect(
+          node.resolvePeerId('QmPeer'),
+          contains('/ip4/127.0.0.1/tcp/4001'),
+        );
 
         when(mockNetwork.p2pRouter).thenThrow(Exception('DI Error'));
         expect(node.resolvePeerId('QmPeer'), isEmpty);
       });
 
       test('pinnedCids paths', () async {
-        when(mockDatastoreHandler.loadPinnedCIDs()).thenAnswer((_) async => {'QmPin'});
+        when(
+          mockDatastoreHandler.loadPinnedCIDs(),
+        ).thenAnswer((_) async => {'QmPin'});
         final pins = await node.pinnedCids;
         expect(pins, contains('QmPin'));
 
-        when(mockDatastoreHandler.loadPinnedCIDs()).thenThrow(Exception('Storage Error'));
+        when(
+          mockDatastoreHandler.loadPinnedCIDs(),
+        ).thenThrow(Exception('Storage Error'));
         final pinsErr = await node.pinnedCids;
         expect(pinsErr, isEmpty);
       });
@@ -196,7 +209,9 @@ void main() {
         final pubKey = await node.publicKey;
         expect(pubKey, isNotEmpty);
 
-        when(mockSecurity.getPrivateKey('self')).thenThrow(Exception('Key Error'));
+        when(
+          mockSecurity.getPrivateKey('self'),
+        ).thenThrow(Exception('Key Error'));
         final pubKeyErr = await node.publicKey;
         expect(pubKeyErr, isEmpty);
       });
@@ -211,7 +226,9 @@ void main() {
         final cid = 'QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco';
         when(mockPinManager.pinBlock(any, any)).thenAnswer((_) async => true);
         when(mockPinManager.unpinBlock(any)).thenAnswer((_) async => true);
-        when(mockDatastoreHandler.persistPinnedCIDs(any)).thenAnswer((_) async => {});
+        when(
+          mockDatastoreHandler.persistPinnedCIDs(any),
+        ).thenAnswer((_) async => {});
         when(mockDatastore.delete(any)).thenAnswer((_) async => {});
 
         await node.pin(cid);
@@ -224,9 +241,14 @@ void main() {
 
       test('publishIPNS delegates to DHT', () async {
         when(mockDht.isValidCID(any)).thenReturn(true);
-        when(mockDht.publishIPNS(any, keyName: anyNamed('keyName'))).thenAnswer((_) async => {});
+        when(
+          mockDht.publishIPNS(any, keyName: anyNamed('keyName')),
+        ).thenAnswer((_) async => {});
 
-        await node.publishIPNS('QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco', keyName: 'self');
+        await node.publishIPNS(
+          'QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco',
+          keyName: 'self',
+        );
         verify(mockDht.publishIPNS(any, keyName: 'self')).called(1);
       });
 
@@ -236,7 +258,9 @@ void main() {
         when(mockDatastoreHandler.exportCAR(any)).thenAnswer((_) async => data);
 
         await node.importCAR(data);
-        final exported = await node.exportCAR('QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco');
+        final exported = await node.exportCAR(
+          'QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco',
+        );
         expect(exported, data);
       });
 

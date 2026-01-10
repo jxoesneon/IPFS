@@ -26,15 +26,22 @@ const PinTypeProto$json = {
 };
 
 /// Descriptor for `PinTypeProto`. Decode as a `google.protobuf.EnumDescriptorProto`.
-final $typed_data.Uint8List pinTypeProtoDescriptor = $convert
-    .base64Decode('CgxQaW5UeXBlUHJvdG8SGAoUUElOX1RZUEVfVU5TUEVDSUZJRUQQABITCg9QSU5fVFlQRV9ESV'
-        'JFQ1QQARIWChJQSU5fVFlQRV9SRUNVUlNJVkUQAg==');
+final $typed_data.Uint8List pinTypeProtoDescriptor = $convert.base64Decode(
+    'CgxQaW5UeXBlUHJvdG8SGAoUUElOX1RZUEVfVU5TUEVDSUZJRUQQABITCg9QSU5fVFlQRV9ESV'
+    'JFQ1QQARIWChJQSU5fVFlQRV9SRUNVUlNJVkUQAg==');
 
 @$core.Deprecated('Use pinProtoDescriptor instead')
 const PinProto$json = {
   '1': 'PinProto',
   '2': [
-    {'1': 'cid', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.IPFSCIDProto', '10': 'cid'},
+    {
+      '1': 'cid',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.IPFSCIDProto',
+      '10': 'cid'
+    },
     {
       '1': 'type',
       '3': 2,
@@ -48,7 +55,7 @@ const PinProto$json = {
 };
 
 /// Descriptor for `PinProto`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List pinProtoDescriptor = $convert
-    .base64Decode('CghQaW5Qcm90bxIpCgNjaWQYASABKAsyFy5pcGZzLmNvcmUuSVBGU0NJRFByb3RvUgNjaWQSOw'
-        'oEdHlwZRgCIAEoDjInLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuUGluVHlwZVByb3RvUgR0'
-        'eXBlEhwKCXRpbWVzdGFtcBgDIAEoA1IJdGltZXN0YW1w');
+final $typed_data.Uint8List pinProtoDescriptor = $convert.base64Decode(
+    'CghQaW5Qcm90bxIpCgNjaWQYASABKAsyFy5pcGZzLmNvcmUuSVBGU0NJRFByb3RvUgNjaWQSOw'
+    'oEdHlwZRgCIAEoDjInLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuUGluVHlwZVByb3RvUgR0'
+    'eXBlEhwKCXRpbWVzdGFtcBgDIAEoA1IJdGltZXN0YW1w');

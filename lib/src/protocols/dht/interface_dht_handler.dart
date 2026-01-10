@@ -3,7 +3,8 @@ import 'dart:typed_data' show Uint8List;
 
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart' show V_PeerInfo;
+import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
+    show V_PeerInfo;
 import 'package:dart_ipfs/src/utils/base58.dart';
 
 /// Interface for DHT handler implementations.

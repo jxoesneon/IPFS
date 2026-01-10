@@ -88,7 +88,10 @@ class SecurityManager implements ISecurityManager {
     if (!_encryptedKeystore.isUnlocked) {
       throw StateError('Keystore is locked. Call unlockKeystore() first.');
     }
-    final publicKey = await _encryptedKeystore.generateKey(keyName, label: label);
+    final publicKey = await _encryptedKeystore.generateKey(
+      keyName,
+      label: label,
+    );
     _recordSecurityMetric('key_generated', data: {'keyName': keyName});
     _logger.info('Generated secure key: $keyName');
     return publicKey;
@@ -100,7 +103,8 @@ class SecurityManager implements ISecurityManager {
 
   /// Gets the public key for a stored secure key.
   @override
-  Uint8List? getSecurePublicKey(String keyName) => _encryptedKeystore.getPublicKey(keyName);
+  Uint8List? getSecurePublicKey(String keyName) =>
+      _encryptedKeystore.getPublicKey(keyName);
 
   /// Migrates keys from plaintext Keystore to EncryptedKeystore.
   ///
@@ -135,7 +139,11 @@ class SecurityManager implements ISecurityManager {
 
       try {
         // Import the key into encrypted storage
-        await _encryptedKeystore.importSeed(keyName, keyBytes, label: 'Migrated from plaintext');
+        await _encryptedKeystore.importSeed(
+          keyName,
+          keyBytes,
+          label: 'Migrated from plaintext',
+        );
         migratedCount++;
         _logger.debug('Migrated key: $keyName');
       } catch (e) {
@@ -175,20 +183,31 @@ class SecurityManager implements ISecurityManager {
   void _initializeTLS() {
     _logger.verbose('Initializing TLS');
 
-    if (_config.tlsCertificatePath == null || _config.tlsPrivateKeyPath == null) {
-      throw StateError('TLS enabled but certificate or private key path not provided');
+    if (_config.tlsCertificatePath == null ||
+        _config.tlsPrivateKeyPath == null) {
+      throw StateError(
+        'TLS enabled but certificate or private key path not provided',
+      );
     }
 
     // Verify certificate and key files exist
     if (!File(_config.tlsCertificatePath!).existsSync()) {
-      throw FileSystemException('TLS certificate file not found', _config.tlsCertificatePath);
+      throw FileSystemException(
+        'TLS certificate file not found',
+        _config.tlsCertificatePath,
+      );
     }
 
     if (!File(_config.tlsPrivateKeyPath!).existsSync()) {
-      throw FileSystemException('TLS private key file not found', _config.tlsPrivateKeyPath);
+      throw FileSystemException(
+        'TLS private key file not found',
+        _config.tlsPrivateKeyPath,
+      );
     }
 
-    _logger.debug('TLS initialized with certificate: ${_config.tlsCertificatePath}');
+    _logger.debug(
+      'TLS initialized with certificate: ${_config.tlsCertificatePath}',
+    );
   }
 
   void _setupKeyRotation() {
@@ -200,7 +219,9 @@ class SecurityManager implements ISecurityManager {
     });
 
     _lastKeyRotation = DateTime.now();
-    _logger.debug('Key rotation scheduled for interval: ${_config.keyRotationInterval}');
+    _logger.debug(
+      'Key rotation scheduled for interval: ${_config.keyRotationInterval}',
+    );
   }
 
   Future<void> _rotateKeys() async {
@@ -223,11 +244,14 @@ class SecurityManager implements ISecurityManager {
     final now = DateTime.now();
     _requestLog.putIfAbsent(clientId, () => []);
 
-    _requestLog[clientId]!.removeWhere((time) => now.difference(time) > const Duration(minutes: 1));
+    _requestLog[clientId]!.removeWhere(
+      (time) => now.difference(time) > const Duration(minutes: 1),
+    );
 
     _requestLog[clientId]!.add(now);
 
-    final shouldLimit = _requestLog[clientId]!.length > _config.maxRequestsPerMinute;
+    final shouldLimit =
+        _requestLog[clientId]!.length > _config.maxRequestsPerMinute;
     if (shouldLimit) {
       _recordSecurityMetric('rate_limit');
     }
@@ -255,7 +279,9 @@ class SecurityManager implements ISecurityManager {
       // 1. Try secure keystore first (SEC-008)
       if (_encryptedKeystore.hasKey(keyName)) {
         if (!_encryptedKeystore.isUnlocked) {
-          _logger.warning('Encrypted key requested but keystore is locked: $keyName');
+          _logger.warning(
+            'Encrypted key requested but keystore is locked: $keyName',
+          );
           return null;
         }
         final keyPair = await _encryptedKeystore.getKey(keyName);
@@ -265,7 +291,9 @@ class SecurityManager implements ISecurityManager {
 
       // 2. Fallback to plaintext keystore for transition (legacy)
       if (_keystore.hasKeyPair(keyName)) {
-        _logger.warning('Retrieved PLAINTEXT key for $keyName - migration recommended (SEC-008)');
+        _logger.warning(
+          'Retrieved PLAINTEXT key for $keyName - migration recommended (SEC-008)',
+        );
         final keyPair = _keystore.getKeyPair(keyName);
         return IPFSPrivateKey.fromString(keyPair.privateKey);
       }
@@ -308,7 +336,8 @@ class SecurityManager implements ISecurityManager {
   void _recordSecurityMetric(String metricType, {Map<String, dynamic>? data}) {
     switch (metricType) {
       case 'auth_attempt':
-        _securityMetrics['auth_attempts'] = (_securityMetrics['auth_attempts'] ?? 0) + 1;
+        _securityMetrics['auth_attempts'] =
+            (_securityMetrics['auth_attempts'] ?? 0) + 1;
         if (data?['success'] == true) {
           _securityMetrics['successful_auth_attempts'] =
               (_securityMetrics['successful_auth_attempts'] ?? 0) + 1;
@@ -318,10 +347,12 @@ class SecurityManager implements ISecurityManager {
         }
         break;
       case 'rate_limit':
-        _securityMetrics['rate_limit_hits'] = (_securityMetrics['rate_limit_hits'] ?? 0) + 1;
+        _securityMetrics['rate_limit_hits'] =
+            (_securityMetrics['rate_limit_hits'] ?? 0) + 1;
         break;
       case 'key_rotation':
-        _securityMetrics['key_rotations'] = (_securityMetrics['key_rotations'] ?? 0) + 1;
+        _securityMetrics['key_rotations'] =
+            (_securityMetrics['key_rotations'] ?? 0) + 1;
         break;
     }
 

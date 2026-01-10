@@ -146,7 +146,10 @@ void main() {
 
     test('importSeed throws for invalid seed length', () async {
       final invalidSeed = Uint8List.fromList([1, 2, 3]);
-      expect(() => keystore.importSeed('bad', invalidSeed), throwsArgumentError);
+      expect(
+        () => keystore.importSeed('bad', invalidSeed),
+        throwsArgumentError,
+      );
     });
   });
 
@@ -202,7 +205,10 @@ void main() {
 
     test('deserialize throws for unsupported version', () {
       final badJson = '{"version":99,"salt":"AAAA","keys":{}}';
-      expect(() => EncryptedKeystore.deserialize(badJson), throwsFormatException);
+      expect(
+        () => EncryptedKeystore.deserialize(badJson),
+        throwsFormatException,
+      );
     });
   });
 

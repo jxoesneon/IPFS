@@ -108,7 +108,11 @@ class EncryptedKeystore {
     int iterations = CryptoUtils.defaultIterations,
   }) async {
     _salt = salt ?? CryptoUtils.generateSalt();
-    _masterKey = CryptoUtils.deriveKey(password, _salt!, iterations: iterations);
+    _masterKey = CryptoUtils.deriveKey(
+      password,
+      _salt!,
+      iterations: iterations,
+    );
   }
 
   /// Locks the keystore and zeros the master key from memory.
@@ -153,7 +157,11 @@ class EncryptedKeystore {
   }
 
   /// Imports an existing Ed25519 seed and stores it encrypted.
-  Future<Uint8List> importSeed(String name, Uint8List seed, {String? label}) async {
+  Future<Uint8List> importSeed(
+    String name,
+    Uint8List seed, {
+    String? label,
+  }) async {
     _requireUnlocked();
 
     if (seed.length != 32) {
@@ -197,7 +205,10 @@ class EncryptedKeystore {
     }
 
     // Decrypt the seed
-    final encrypted = EncryptedData(ciphertext: entry.encryptedSeed, nonce: entry.nonce);
+    final encrypted = EncryptedData(
+      ciphertext: entry.encryptedSeed,
+      nonce: entry.nonce,
+    );
     final seed = await CryptoUtils.decrypt(encrypted, _masterKey!);
 
     // Reconstruct key pair
@@ -248,7 +259,9 @@ class EncryptedKeystore {
 
     final keysJson = json['keys'] as Map<String, dynamic>;
     for (final entry in keysJson.entries) {
-      keystore._keys[entry.key] = EncryptedKeyEntry.fromJson(entry.value as Map<String, dynamic>);
+      keystore._keys[entry.key] = EncryptedKeyEntry.fromJson(
+        entry.value as Map<String, dynamic>,
+      );
     }
 
     return keystore;
@@ -261,7 +274,11 @@ class EncryptedKeystore {
     int iterations = CryptoUtils.defaultIterations,
   }) async {
     final keystore = deserialize(jsonStr);
-    await keystore.unlock(password, salt: keystore._salt, iterations: iterations);
+    await keystore.unlock(
+      password,
+      salt: keystore._salt,
+      iterations: iterations,
+    );
     return keystore;
   }
 

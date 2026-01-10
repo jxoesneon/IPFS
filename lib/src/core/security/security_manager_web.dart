@@ -58,5 +58,6 @@ class SecurityManagerWeb implements ISecurityManager {
   bool hasSecureKey(String keyName) => _encryptedKeystore.hasKey(keyName);
 
   @override
-  Uint8List? getSecurePublicKey(String keyName) => _encryptedKeystore.getPublicKey(keyName);
+  Uint8List? getSecurePublicKey(String keyName) =>
+      _encryptedKeystore.getPublicKey(keyName);
 }

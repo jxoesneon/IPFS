@@ -53,7 +53,10 @@ void main() {
     });
 
     test('fromBase58 throws on invalid prefix', () {
-      expect(() => EncodingUtils.fromBase58('x123'), throwsA(isA<ArgumentError>()));
+      expect(
+        () => EncodingUtils.fromBase58('x123'),
+        throwsA(isA<ArgumentError>()),
+      );
     });
 
     test('isValidCIDBytes validates CIDv0', () {

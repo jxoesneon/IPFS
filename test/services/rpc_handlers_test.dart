@@ -52,7 +52,8 @@ class MockBlockStore implements BlockStore {
   @override
   Future<bool> hasBlock(String cid) async => blocks.containsKey(cid);
   @override
-  Future<RemoveBlockResponse> removeBlock(String cid) async => RemoveBlockResponse();
+  Future<RemoveBlockResponse> removeBlock(String cid) async =>
+      RemoveBlockResponse();
   @override
   Future<Map<String, dynamic>> getStatus() async => {};
   @override
@@ -108,7 +109,11 @@ class MockIPFSNode implements IPFSNode {
     // Mock ls to return empty list or dummy
     if (cid == 'QmDir') {
       return [
-        Link(name: 'file.txt', cid: CID.computeForDataSync(utf8.encode('content')), size: 100),
+        Link(
+          name: 'file.txt',
+          cid: CID.computeForDataSync(utf8.encode('content')),
+          size: 100,
+        ),
       ];
     }
     return [];
@@ -157,7 +162,10 @@ void main() {
     });
 
     test('handleVersion returns version info', () async {
-      final request = Request('GET', Uri.parse('http://localhost/api/v0/version'));
+      final request = Request(
+        'GET',
+        Uri.parse('http://localhost/api/v0/version'),
+      );
       final response = await handlers.handleVersion(request);
       expect(response.statusCode, 200);
     });
@@ -177,14 +185,20 @@ void main() {
 
       await node.blockStore.putBlock(Block(cid: cid, data: data));
 
-      final request = Request('POST', Uri.parse('http://localhost/api/v0/cat?arg=$cidStr'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/cat?arg=$cidStr'),
+      );
       final response = await handlers.handleCat(request);
       expect(response.statusCode, 200);
       expect(await response.readAsString(), 'Hello Cat');
     });
 
     test('handleLs lists directory', () async {
-      final request = Request('POST', Uri.parse('http://localhost/api/v0/ls?arg=QmDir'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/ls?arg=QmDir'),
+      );
       final response = await handlers.handleLs(request);
       final body = json.decode(await response.readAsString());
       expect(body['Objects'], isNotEmpty);
@@ -193,7 +207,11 @@ void main() {
 
     test('handleBlockPut stores block', () async {
       final data = utf8.encode('Block Data');
-      final request = Request('POST', Uri.parse('http://localhost/api/v0/block/put'), body: data);
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/block/put'),
+        body: data,
+      );
       final response = await handlers.handleBlockPut(request);
       final body = json.decode(await response.readAsString());
 
@@ -211,13 +229,19 @@ void main() {
       final cidStr = cid.encode();
       await node.blockStore.putBlock(Block(cid: cid, data: data));
 
-      final request = Request('POST', Uri.parse('http://localhost/api/v0/block/get?arg=$cidStr'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/block/get?arg=$cidStr'),
+      );
       final response = await handlers.handleBlockGet(request);
       expect(await response.readAsString(), 'Block Content');
     });
 
     test('handleDhtFindProviders', () async {
-      final request = Request('POST', Uri.parse('http://localhost/api/v0/dht/findprovs?arg=QmCid'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dht/findprovs?arg=QmCid'),
+      );
       final response = await handlers.handleDhtFindProviders(request);
       // Should trigger internal error? dhtClient.findProviders returns dummy.
       // Response is ndjson.
@@ -262,7 +286,10 @@ void main() {
     });
 
     test('handleSwarmPeers', () async {
-      final request = Request('POST', Uri.parse('http://localhost/api/v0/swarm/peers'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/swarm/peers'),
+      );
       final response = await handlers.handleSwarmPeers(request);
       final body = json.decode(await response.readAsString());
       expect(body['Peers'], isNotEmpty);

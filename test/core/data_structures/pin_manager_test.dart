@@ -51,7 +51,10 @@ void main() {
 
     test('direct pinning', () async {
       final cid = makeCid('direct_cid');
-      final success = await manager.pinBlock(cid.toProto(), PinTypeProto.PIN_TYPE_DIRECT);
+      final success = await manager.pinBlock(
+        cid.toProto(),
+        PinTypeProto.PIN_TYPE_DIRECT,
+      );
       expect(success, isTrue);
       expect(manager.isBlockPinned(cid.toProto()), isTrue);
     });
@@ -120,24 +123,30 @@ void main() {
       expect(manager.isBlockPinned(child.toProto()), isFalse);
     });
 
-    test('unpinning recursive - child pinned twice (recursive + direct)', () async {
-      final child = makeCid('child');
-      final parent = makeCid('parent');
-      final pnode = MerkleDAGNode(
-        data: Uint8List(0),
-        links: [Link(name: 'c', size: 1, cid: child)],
-      ).toBytes();
+    test(
+      'unpinning recursive - child pinned twice (recursive + direct)',
+      () async {
+        final child = makeCid('child');
+        final parent = makeCid('parent');
+        final pnode = MerkleDAGNode(
+          data: Uint8List(0),
+          links: [Link(name: 'c', size: 1, cid: child)],
+        ).toBytes();
 
-      mockStore.addBlock(parent, 'dag-pb', pnode);
-      mockStore.addBlock(child, 'raw', [0]);
+        mockStore.addBlock(parent, 'dag-pb', pnode);
+        mockStore.addBlock(child, 'raw', [0]);
 
-      await manager.pinBlock(child.toProto(), PinTypeProto.PIN_TYPE_DIRECT);
-      await manager.pinBlock(parent.toProto(), PinTypeProto.PIN_TYPE_RECURSIVE);
+        await manager.pinBlock(child.toProto(), PinTypeProto.PIN_TYPE_DIRECT);
+        await manager.pinBlock(
+          parent.toProto(),
+          PinTypeProto.PIN_TYPE_RECURSIVE,
+        );
 
-      await manager.unpinBlock(parent.toProto());
-      // child should remain because it was DIRECTLY pinned
-      expect(manager.isBlockPinned(child.toProto()), isTrue);
-    });
+        await manager.unpinBlock(parent.toProto());
+        // child should remain because it was DIRECTLY pinned
+        expect(manager.isBlockPinned(child.toProto()), isTrue);
+      },
+    );
 
     test('CBOR list extraction', () async {
       final c1 = makeCid('c1');
@@ -161,7 +170,10 @@ void main() {
     test('errors - getBlockReferences failure', () async {
       mockStore.shouldThrow = true;
       final cid = makeCid('error_cid');
-      final success = await manager.pinBlock(cid.toProto(), PinTypeProto.PIN_TYPE_RECURSIVE);
+      final success = await manager.pinBlock(
+        cid.toProto(),
+        PinTypeProto.PIN_TYPE_RECURSIVE,
+      );
       expect(success, isTrue); // Returns true despite internal error catch
     });
 

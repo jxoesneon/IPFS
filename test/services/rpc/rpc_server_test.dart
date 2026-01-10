@@ -27,7 +27,8 @@ class MockBlockStore implements BlockStore {
   @override
   Future<bool> hasBlock(String cid) async => false;
   @override
-  Future<RemoveBlockResponse> removeBlock(String cid) async => RemoveBlockResponse();
+  Future<RemoveBlockResponse> removeBlock(String cid) async =>
+      RemoveBlockResponse();
   @override
   Stream<CID> get storedBlocks => const Stream.empty();
   @override
@@ -116,7 +117,9 @@ void main() {
     });
 
     test('should return version details', () async {
-      final response = await http.post(Uri.parse('http://localhost:$port/api/v0/version'));
+      final response = await http.post(
+        Uri.parse('http://localhost:$port/api/v0/version'),
+      );
       expect(response.statusCode, 200);
       final body = jsonDecode(response.body);
       expect(body['Version'], isNotNull);
@@ -124,7 +127,9 @@ void main() {
     });
 
     test('should return node ID', () async {
-      final response = await http.post(Uri.parse('http://localhost:$port/api/v0/id'));
+      final response = await http.post(
+        Uri.parse('http://localhost:$port/api/v0/id'),
+      );
       expect(response.statusCode, 200);
       final body = jsonDecode(response.body);
       expect(body['ID'], 'QmTestPeerId');
@@ -133,7 +138,9 @@ void main() {
 
     test('should require API key for protected endpoints', () async {
       // Swarm peers is protected
-      final response = await http.post(Uri.parse('http://localhost:$port/api/v0/swarm/peers'));
+      final response = await http.post(
+        Uri.parse('http://localhost:$port/api/v0/swarm/peers'),
+      );
       expect(response.statusCode, 403);
     });
 

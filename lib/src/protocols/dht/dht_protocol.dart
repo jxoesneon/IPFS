@@ -34,7 +34,10 @@ class DHTProtocol {
   final NetworkHandler _network;
 
   /// Finds the closest peers to a given key
-  Future<List<PeerId>> findClosestPeers(List<int> key, {int numPeers = K}) async {
+  Future<List<PeerId>> findClosestPeers(
+    List<int> key, {
+    int numPeers = K,
+  }) async {
     final closest = _routingTable.getNearestPeers(key, numPeers);
     final results = <PeerId>[];
 

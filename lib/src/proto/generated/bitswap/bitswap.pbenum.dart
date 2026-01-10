@@ -20,7 +20,8 @@ class Message_Wantlist_WantType extends $pb.ProtobufEnum {
   static const Message_Wantlist_WantType Have =
       Message_Wantlist_WantType._(1, _omitEnumNames ? '' : 'Have');
 
-  static const $core.List<Message_Wantlist_WantType> values = <Message_Wantlist_WantType>[
+  static const $core.List<Message_Wantlist_WantType> values =
+      <Message_Wantlist_WantType>[
     Block,
     Have,
   ];
@@ -39,7 +40,8 @@ class Message_BlockPresence_Type extends $pb.ProtobufEnum {
   static const Message_BlockPresence_Type DontHave =
       Message_BlockPresence_Type._(1, _omitEnumNames ? '' : 'DontHave');
 
-  static const $core.List<Message_BlockPresence_Type> values = <Message_BlockPresence_Type>[
+  static const $core.List<Message_BlockPresence_Type> values =
+      <Message_BlockPresence_Type>[
     Have,
     DontHave,
   ];
@@ -52,4 +54,5 @@ class Message_BlockPresence_Type extends $pb.ProtobufEnum {
   const Message_BlockPresence_Type._(super.value, super.name);
 }
 
-const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames =
+    $core.bool.fromEnvironment('protobuf.omit_enum_names');

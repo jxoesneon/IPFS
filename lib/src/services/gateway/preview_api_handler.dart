@@ -42,7 +42,10 @@ class PreviewApiHandler {
     }
 
     return Response.ok(
-      jsonEncode({'preview': base64Encode(preview), 'contentType': contentType}),
+      jsonEncode({
+        'preview': base64Encode(preview),
+        'contentType': contentType,
+      }),
       headers: {'content-type': 'application/json'},
     );
   }

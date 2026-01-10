@@ -32,21 +32,35 @@ void main() {
       mockRelayClient = MockCircuitRelayClient();
       mockRouter = MockP2plibRouter();
 
-      routerConnectionController = StreamController<ConnectionEvent>.broadcast();
+      routerConnectionController =
+          StreamController<ConnectionEvent>.broadcast();
       routerMessageController = StreamController<MessageEvent>.broadcast();
       routerDhtController = StreamController<DHTEvent>.broadcast();
       routerPubSubController = StreamController<PubSubEvent>.broadcast();
       routerStreamController = StreamController<StreamEvent>.broadcast();
       routerErrorController = StreamController<ErrorEvent>.broadcast();
-      relayEventController = StreamController<CircuitRelayConnectionEvent>.broadcast();
+      relayEventController =
+          StreamController<CircuitRelayConnectionEvent>.broadcast();
 
-      when(mockRouter.connectionEvents).thenAnswer((_) => routerConnectionController.stream);
-      when(mockRouter.messageEvents).thenAnswer((_) => routerMessageController.stream);
+      when(
+        mockRouter.connectionEvents,
+      ).thenAnswer((_) => routerConnectionController.stream);
+      when(
+        mockRouter.messageEvents,
+      ).thenAnswer((_) => routerMessageController.stream);
       when(mockRouter.dhtEvents).thenAnswer((_) => routerDhtController.stream);
-      when(mockRouter.pubSubEvents).thenAnswer((_) => routerPubSubController.stream);
-      when(mockRouter.streamEvents).thenAnswer((_) => routerStreamController.stream);
-      when(mockRouter.errorEvents).thenAnswer((_) => routerErrorController.stream);
-      when(mockRelayClient.connectionEvents).thenAnswer((_) => relayEventController.stream);
+      when(
+        mockRouter.pubSubEvents,
+      ).thenAnswer((_) => routerPubSubController.stream);
+      when(
+        mockRouter.streamEvents,
+      ).thenAnswer((_) => routerStreamController.stream);
+      when(
+        mockRouter.errorEvents,
+      ).thenAnswer((_) => routerErrorController.stream);
+      when(
+        mockRelayClient.connectionEvents,
+      ).thenAnswer((_) => relayEventController.stream);
 
       networkEvents = IpfsNodeNetworkEvents(mockRelayClient, mockRouter);
       networkEvents.start();
@@ -66,7 +80,10 @@ void main() {
     test('re-emits connection events', () async {
       final expectation = networkEvents.networkEvents.first;
 
-      final routerEvent = ConnectionEvent(type: ConnectionEventType.connected, peerId: 'peer1');
+      final routerEvent = ConnectionEvent(
+        type: ConnectionEventType.connected,
+        peerId: 'peer1',
+      );
       routerConnectionController.add(routerEvent);
 
       final result = await expectation;
@@ -77,7 +94,10 @@ void main() {
     test('re-emits message events', () async {
       final expectation = networkEvents.networkEvents.first;
 
-      final routerEvent = MessageEvent(peerId: 'peer1', message: Uint8List.fromList([1, 2, 3]));
+      final routerEvent = MessageEvent(
+        peerId: 'peer1',
+        message: Uint8List.fromList([1, 2, 3]),
+      );
       routerMessageController.add(routerEvent);
 
       final result = await expectation;
@@ -104,7 +124,10 @@ void main() {
     test('re-emits error events', () async {
       final expectation = networkEvents.networkEvents.first;
 
-      final routerEvent = ErrorEvent(type: ErrorEventType.connectionError, message: 'failed');
+      final routerEvent = ErrorEvent(
+        type: ErrorEventType.connectionError,
+        message: 'failed',
+      );
       routerErrorController.add(routerEvent);
 
       final result = await expectation;

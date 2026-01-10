@@ -6,7 +6,12 @@ import 'package:markdown/markdown.dart' as md;
 /// Handles file preview generation for supported file types
 class FilePreviewHandler {
   static const _maxPreviewSize = 5 * 1024 * 1024; // 5MB preview limit
-  static const _supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  static const _supportedImageTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+  ];
   static const _supportedTextTypes = [
     'text/plain',
     'text/markdown',
@@ -90,6 +95,7 @@ class FilePreviewHandler {
 
   /// Checks if the given content type is supported for preview generation
   bool isSupportedType(String contentType) {
-    return _supportedImageTypes.contains(contentType) || _supportedTextTypes.contains(contentType);
+    return _supportedImageTypes.contains(contentType) ||
+        _supportedTextTypes.contains(contentType);
   }
 }

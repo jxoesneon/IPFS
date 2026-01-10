@@ -83,7 +83,9 @@ void main() {
     });
 
     test('encodes and decodes LINK (CID)', () {
-      final cid = CID.decode('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z'); // V0
+      final cid = CID.decode(
+        'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z',
+      ); // V0
       final node = IPLDNode()
         ..kind = Kind.LINK
         ..linkValue = (IPLDLink()
@@ -100,7 +102,9 @@ void main() {
       final decoded = DAGJsonHandler.decode(encoded);
       expect(decoded.kind, equals(Kind.LINK));
       // Decoded link might be V1 CID
-      final decodedCid = CID.fromBytes(Uint8List.fromList(decoded.linkValue.multihash));
+      final decodedCid = CID.fromBytes(
+        Uint8List.fromList(decoded.linkValue.multihash),
+      );
       // But we can check codec
       expect(decoded.linkValue.codec, equals('dag-pb'));
     });
@@ -150,23 +154,29 @@ void main() {
       expect(decoded.mapValue.entries.first.value.stringValue, equals('bar'));
     });
 
-    test('handles map with slash key correctly (escape mechanism or literal)', () {
-      // {"/": ...} is special.
-      // What if we mean a literal map with key "/"?
-      // _fromPlainObject logic:
-      // if (obj.length == 1 && obj.containsKey('/')) -> treats as Link/Bytes.
-      // Unless it doesn't match link/bytes structure?
-      // Code:
-      // if link is String -> Link.
-      // if link is Map && has bytes -> Bytes.
-      // else -> Literal map.
+    test(
+      'handles map with slash key correctly (escape mechanism or literal)',
+      () {
+        // {"/": ...} is special.
+        // What if we mean a literal map with key "/"?
+        // _fromPlainObject logic:
+        // if (obj.length == 1 && obj.containsKey('/')) -> treats as Link/Bytes.
+        // Unless it doesn't match link/bytes structure?
+        // Code:
+        // if link is String -> Link.
+        // if link is Map && has bytes -> Bytes.
+        // else -> Literal map.
 
-      // Let's test literal map with key "/" and value 123
-      final jsonStr = '{"/": 123}';
-      final decoded = DAGJsonHandler.decode(jsonStr);
-      expect(decoded.kind, equals(Kind.MAP));
-      expect(decoded.mapValue.entries.first.key, equals('/'));
-      expect(decoded.mapValue.entries.first.value.intValue, equals(Int64(123)));
-    });
+        // Let's test literal map with key "/" and value 123
+        final jsonStr = '{"/": 123}';
+        final decoded = DAGJsonHandler.decode(jsonStr);
+        expect(decoded.kind, equals(Kind.MAP));
+        expect(decoded.mapValue.entries.first.key, equals('/'));
+        expect(
+          decoded.mapValue.entries.first.value.intValue,
+          equals(Int64(123)),
+        );
+      },
+    );
   });
 }

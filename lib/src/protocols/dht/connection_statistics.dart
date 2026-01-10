@@ -1,4 +1,5 @@
-import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart' show V_PeerInfo;
+import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
+    show V_PeerInfo;
 
 /// Statistics for a peer connection in the DHT.
 ///
@@ -65,7 +66,8 @@ class ConnectionStatistics {
     }
 
     averageConnectionDuration =
-        _connectionDurations.reduce((a, b) => a + b) / _connectionDurations.length;
+        _connectionDurations.reduce((a, b) => a + b) /
+        _connectionDurations.length;
   }
 
   /// Adds to the bytes sent counter.

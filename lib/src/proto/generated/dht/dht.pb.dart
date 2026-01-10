@@ -38,10 +38,12 @@ class DHTPeer extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DHTPeer',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DHTPeer',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OY)
     ..pPS(2, _omitFieldNames ? '' : 'addrs')
     ..hasRequiredFields = false;
 
@@ -103,13 +105,18 @@ class Record extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Record',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Record',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
-    ..aOM<DHTPeer>(3, _omitFieldNames ? '' : 'publisher', subBuilder: DHTPeer.create)
-    ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'sequence', $pb.PbFieldType.OU6,
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..aOM<DHTPeer>(3, _omitFieldNames ? '' : 'publisher',
+        subBuilder: DHTPeer.create)
+    ..a<$fixnum.Int64>(
+        4, _omitFieldNames ? '' : 'sequence', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false;
 
@@ -195,10 +202,12 @@ class FindProvidersRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FindProvidersRequest',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FindProvidersRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
     ..aI(2, _omitFieldNames ? '' : 'count')
     ..hasRequiredFields = false;
 
@@ -206,7 +215,8 @@ class FindProvidersRequest extends $pb.GeneratedMessage {
   FindProvidersRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   FindProvidersRequest copyWith(void Function(FindProvidersRequest) updates) =>
-      super.copyWith((message) => updates(message as FindProvidersRequest)) as FindProvidersRequest;
+      super.copyWith((message) => updates(message as FindProvidersRequest))
+          as FindProvidersRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -216,8 +226,8 @@ class FindProvidersRequest extends $pb.GeneratedMessage {
   @$core.override
   FindProvidersRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static FindProvidersRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FindProvidersRequest>(create);
+  static FindProvidersRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FindProvidersRequest>(create);
   static FindProvidersRequest? _defaultInstance;
 
   /// Required: The key to find providers for.
@@ -266,14 +276,16 @@ class FindProvidersResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'FindProvidersResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
-    ..pPM<DHTPeer>(1, _omitFieldNames ? '' : 'providers', subBuilder: DHTPeer.create)
+    ..pPM<DHTPeer>(1, _omitFieldNames ? '' : 'providers',
+        subBuilder: DHTPeer.create)
     ..aOB(2, _omitFieldNames ? '' : 'closerPeers', protoName: 'closerPeers')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   FindProvidersResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  FindProvidersResponse copyWith(void Function(FindProvidersResponse) updates) =>
+  FindProvidersResponse copyWith(
+          void Function(FindProvidersResponse) updates) =>
       super.copyWith((message) => updates(message as FindProvidersResponse))
           as FindProvidersResponse;
 
@@ -285,8 +297,8 @@ class FindProvidersResponse extends $pb.GeneratedMessage {
   @$core.override
   FindProvidersResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static FindProvidersResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FindProvidersResponse>(create);
+  static FindProvidersResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FindProvidersResponse>(create);
   static FindProvidersResponse? _defaultInstance;
 
   /// Repeated: The providers found for the key.
@@ -325,18 +337,22 @@ class ProvideRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ProvideRequest',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ProvideRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
-    ..aOM<DHTPeer>(2, _omitFieldNames ? '' : 'provider', subBuilder: DHTPeer.create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
+    ..aOM<DHTPeer>(2, _omitFieldNames ? '' : 'provider',
+        subBuilder: DHTPeer.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ProvideRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ProvideRequest copyWith(void Function(ProvideRequest) updates) =>
-      super.copyWith((message) => updates(message as ProvideRequest)) as ProvideRequest;
+      super.copyWith((message) => updates(message as ProvideRequest))
+          as ProvideRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -346,8 +362,8 @@ class ProvideRequest extends $pb.GeneratedMessage {
   @$core.override
   ProvideRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ProvideRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ProvideRequest>(create);
+  static ProvideRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ProvideRequest>(create);
   static ProvideRequest? _defaultInstance;
 
   /// Required: The key for which the record is being provided.
@@ -392,7 +408,8 @@ class ProvideResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ProvideResponse',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ProvideResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
@@ -402,7 +419,8 @@ class ProvideResponse extends $pb.GeneratedMessage {
   ProvideResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ProvideResponse copyWith(void Function(ProvideResponse) updates) =>
-      super.copyWith((message) => updates(message as ProvideResponse)) as ProvideResponse;
+      super.copyWith((message) => updates(message as ProvideResponse))
+          as ProvideResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -412,8 +430,8 @@ class ProvideResponse extends $pb.GeneratedMessage {
   @$core.override
   ProvideResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ProvideResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ProvideResponse>(create);
+  static ProvideResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ProvideResponse>(create);
   static ProvideResponse? _defaultInstance;
 
   /// Required: Whether or not the record was successfully provided.
@@ -446,17 +464,20 @@ class FindValueRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FindValueRequest',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FindValueRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   FindValueRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   FindValueRequest copyWith(void Function(FindValueRequest) updates) =>
-      super.copyWith((message) => updates(message as FindValueRequest)) as FindValueRequest;
+      super.copyWith((message) => updates(message as FindValueRequest))
+          as FindValueRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -466,8 +487,8 @@ class FindValueRequest extends $pb.GeneratedMessage {
   @$core.override
   FindValueRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static FindValueRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FindValueRequest>(create);
+  static FindValueRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FindValueRequest>(create);
   static FindValueRequest? _defaultInstance;
 
   /// Required: The key to find the value for.
@@ -502,10 +523,12 @@ class FindValueResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FindValueResponse',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FindValueResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..pPM<DHTPeer>(2, _omitFieldNames ? '' : 'closerPeers',
         protoName: 'closerPeers', subBuilder: DHTPeer.create)
     ..hasRequiredFields = false;
@@ -514,7 +537,8 @@ class FindValueResponse extends $pb.GeneratedMessage {
   FindValueResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   FindValueResponse copyWith(void Function(FindValueResponse) updates) =>
-      super.copyWith((message) => updates(message as FindValueResponse)) as FindValueResponse;
+      super.copyWith((message) => updates(message as FindValueResponse))
+          as FindValueResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -524,8 +548,8 @@ class FindValueResponse extends $pb.GeneratedMessage {
   @$core.override
   FindValueResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static FindValueResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FindValueResponse>(create);
+  static FindValueResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FindValueResponse>(create);
   static FindValueResponse? _defaultInstance;
 
   /// Optional: The value found for the key (if present).
@@ -564,18 +588,22 @@ class PutValueRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PutValueRequest',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PutValueRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PutValueRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PutValueRequest copyWith(void Function(PutValueRequest) updates) =>
-      super.copyWith((message) => updates(message as PutValueRequest)) as PutValueRequest;
+      super.copyWith((message) => updates(message as PutValueRequest))
+          as PutValueRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -585,8 +613,8 @@ class PutValueRequest extends $pb.GeneratedMessage {
   @$core.override
   PutValueRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static PutValueRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PutValueRequest>(create);
+  static PutValueRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PutValueRequest>(create);
   static PutValueRequest? _defaultInstance;
 
   /// Required: The key to store the value for.
@@ -629,7 +657,8 @@ class PutValueResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PutValueResponse',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PutValueResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
@@ -639,7 +668,8 @@ class PutValueResponse extends $pb.GeneratedMessage {
   PutValueResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PutValueResponse copyWith(void Function(PutValueResponse) updates) =>
-      super.copyWith((message) => updates(message as PutValueResponse)) as PutValueResponse;
+      super.copyWith((message) => updates(message as PutValueResponse))
+          as PutValueResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -649,8 +679,8 @@ class PutValueResponse extends $pb.GeneratedMessage {
   @$core.override
   PutValueResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static PutValueResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PutValueResponse>(create);
+  static PutValueResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PutValueResponse>(create);
   static PutValueResponse? _defaultInstance;
 
   /// Required: Whether or not the value was successfully stored.
@@ -683,10 +713,12 @@ class FindNodeRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FindNodeRequest',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FindNodeRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'peerId', $pb.PbFieldType.OY,
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'peerId', $pb.PbFieldType.OY,
         protoName: 'peerId')
     ..hasRequiredFields = false;
 
@@ -694,7 +726,8 @@ class FindNodeRequest extends $pb.GeneratedMessage {
   FindNodeRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   FindNodeRequest copyWith(void Function(FindNodeRequest) updates) =>
-      super.copyWith((message) => updates(message as FindNodeRequest)) as FindNodeRequest;
+      super.copyWith((message) => updates(message as FindNodeRequest))
+          as FindNodeRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -704,8 +737,8 @@ class FindNodeRequest extends $pb.GeneratedMessage {
   @$core.override
   FindNodeRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static FindNodeRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FindNodeRequest>(create);
+  static FindNodeRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FindNodeRequest>(create);
   static FindNodeRequest? _defaultInstance;
 
   /// Required: The ID of the peer to find.
@@ -738,7 +771,8 @@ class FindNodeResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FindNodeResponse',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FindNodeResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
     ..pPM<DHTPeer>(1, _omitFieldNames ? '' : 'closerPeers',
@@ -749,7 +783,8 @@ class FindNodeResponse extends $pb.GeneratedMessage {
   FindNodeResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   FindNodeResponse copyWith(void Function(FindNodeResponse) updates) =>
-      super.copyWith((message) => updates(message as FindNodeResponse)) as FindNodeResponse;
+      super.copyWith((message) => updates(message as FindNodeResponse))
+          as FindNodeResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -759,8 +794,8 @@ class FindNodeResponse extends $pb.GeneratedMessage {
   @$core.override
   FindNodeResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static FindNodeResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FindNodeResponse>(create);
+  static FindNodeResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FindNodeResponse>(create);
   static FindNodeResponse? _defaultInstance;
 
   /// Repeated: The peers that are closer to the requested peer ID.
@@ -768,5 +803,7 @@ class FindNodeResponse extends $pb.GeneratedMessage {
   $pb.PbList<DHTPeer> get closerPeers => $_getList(0);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

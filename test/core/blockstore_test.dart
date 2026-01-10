@@ -46,7 +46,9 @@ void main() {
     late BlockStore store;
 
     setUp(() {
-      store = BlockStore(path: '/tmp/test_defs'); // Path irrelevant for in-memory map
+      store = BlockStore(
+        path: '/tmp/test_defs',
+      ); // Path irrelevant for in-memory map
     });
 
     test('should start and stop', () async {

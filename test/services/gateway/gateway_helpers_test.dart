@@ -20,7 +20,10 @@ CID get dagPbCid {
 void main() {
   group('GatewayLruCache', () {
     test('capacity check', () {
-      expect(() => GatewayLruCache<String, int>(0), throwsA(isA<AssertionError>()));
+      expect(
+        () => GatewayLruCache<String, int>(0),
+        throwsA(isA<AssertionError>()),
+      );
     });
 
     test('put/get/eviction', () {
@@ -29,7 +32,10 @@ void main() {
       cache.put('a', 1);
       cache.put('b', 2);
       expect(cache.length, 2);
-      expect(cache.get('a'), 1); // Access 'a', making 'b' LRU if explicit access updates it?
+      expect(
+        cache.get('a'),
+        1,
+      ); // Access 'a', making 'b' LRU if explicit access updates it?
       // LinkedHashMap by default is insertion order.
       // GatewayLruCache implementation does remove(key) + put(key) on access.
       // So 'a' becomes MRU. 'b' is LRU.
@@ -54,11 +60,23 @@ void main() {
 
     test('detectContentType from filename', () {
       final block = Block(cid: mockCid, data: Uint8List(0));
-      expect(handler.detectContentType(block, filename: 'test.html'), 'text/html');
+      expect(
+        handler.detectContentType(block, filename: 'test.html'),
+        'text/html',
+      );
     });
 
     test('detectContentType from content', () {
-      final pngData = Uint8List.fromList([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+      final pngData = Uint8List.fromList([
+        0x89,
+        0x50,
+        0x4E,
+        0x47,
+        0x0D,
+        0x0A,
+        0x1A,
+        0x0A,
+      ]);
       final block = Block(cid: mockCid, data: pngData);
       expect(handler.detectContentType(block), 'image/png');
     });
@@ -101,7 +119,14 @@ void main() {
 
     test('generateHtmlListing', () {
       final dir = DirectoryHandler('/foo');
-      dir.addEntry(DirectoryEntry(name: 'test.txt', size: 100, isDirectory: false, timestamp: 0));
+      dir.addEntry(
+        DirectoryEntry(
+          name: 'test.txt',
+          size: 100,
+          isDirectory: false,
+          timestamp: 0,
+        ),
+      );
 
       final html = parser.generateHtmlListing(dir, '/foo/');
       expect(html, contains('test.txt'));

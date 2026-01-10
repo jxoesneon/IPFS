@@ -48,7 +48,9 @@ class InMemoryDatastore implements Datastore {
 
     // 1. Filtering by prefix
     if (q.prefix != null) {
-      entries = entries.where((e) => e.key.toString().startsWith(q.prefix!)).toList();
+      entries = entries
+          .where((e) => e.key.toString().startsWith(q.prefix!))
+          .toList();
     }
 
     // 2. Filtering

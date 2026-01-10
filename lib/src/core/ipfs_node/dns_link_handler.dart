@@ -9,8 +9,13 @@ import 'package:http/http.dart' as http;
 /// Handles DNSLink resolution with caching and multiple resolution strategies.
 class DNSLinkHandler {
   /// Creates a DNSLink handler with config and optional HTTP client.
-  DNSLinkHandler(this._config, {http.Client? client}) : _client = client ?? http.Client() {
-    _logger = Logger('DNSLinkHandler', debug: _config.debug, verbose: _config.verboseLogging);
+  DNSLinkHandler(this._config, {http.Client? client})
+    : _client = client ?? http.Client() {
+    _logger = Logger(
+      'DNSLinkHandler',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
     _logger.debug('DNSLinkHandler instance created');
   }
   final IPFSConfig _config;
@@ -96,7 +101,10 @@ class DNSLinkHandler {
     }
   }
 
-  Future<String?> _resolveWithPublicResolver(String domainName, String resolver) async {
+  Future<String?> _resolveWithPublicResolver(
+    String domainName,
+    String resolver,
+  ) async {
     _logger.verbose('Querying resolver: $resolver');
 
     final url = Uri.parse('$resolver$domainName');
@@ -142,5 +150,6 @@ class _CachedDNSLink {
   final String cid;
   final DateTime timestamp;
 
-  bool get isExpired => DateTime.now().difference(timestamp) > DNSLinkHandler._cacheDuration;
+  bool get isExpired =>
+      DateTime.now().difference(timestamp) > DNSLinkHandler._cacheDuration;
 }

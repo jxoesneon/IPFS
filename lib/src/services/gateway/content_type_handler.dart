@@ -83,7 +83,9 @@ class ContentTypeHandler {
       return Uint8List.fromList(html.codeUnits);
     } catch (e, stackTrace) {
       _logger.error('Error generating directory listing', e, stackTrace);
-      return Uint8List.fromList('Error: Failed to generate directory listing'.codeUnits);
+      return Uint8List.fromList(
+        'Error: Failed to generate directory listing'.codeUnits,
+      );
     }
   }
 
@@ -293,7 +295,11 @@ class ContentTypeHandler {
       // For now, we'll just store in memory since the cache would be cleared on restart anyway
       _contentTypeCache[cidStr] = contentType;
     } catch (e, stackTrace) {
-      _logger.error('Error caching content type for CID $cidStr', e, stackTrace);
+      _logger.error(
+        'Error caching content type for CID $cidStr',
+        e,
+        stackTrace,
+      );
     }
   }
 }

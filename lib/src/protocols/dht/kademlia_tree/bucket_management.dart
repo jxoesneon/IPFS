@@ -13,13 +13,16 @@ import 'lru_cache.dart';
 /// Handles bucket splitting, merging, and peer replacement strategies.
 extension BucketManagement on KademliaTree {
   /// Handler for full bucket situations.
-  Future<void> Function(int, PeerId, PeerId) get handleBucketFullness => _handleBucketFullness;
+  Future<void> Function(int, PeerId, PeerId) get handleBucketFullness =>
+      _handleBucketFullness;
 
   /// Checks if a node was in a recent lookup.
-  bool Function(PeerId) get wasNodeContactInRecentLookup => _wasNodeContactInRecentLookup;
+  bool Function(PeerId) get wasNodeContactInRecentLookup =>
+      _wasNodeContactInRecentLookup;
 
   /// Finds the least recently seen node in a bucket.
-  KademliaTreeNode? Function(int) get findLeastRecentlySeenNode => _findLeastRecentlySeenNode;
+  KademliaTreeNode? Function(int) get findLeastRecentlySeenNode =>
+      _findLeastRecentlySeenNode;
 
   /// Splits a bucket into two.
   void Function(int) get splitBucket => _splitBucket;
@@ -47,7 +50,9 @@ extension BucketManagement on KademliaTree {
     );
 
     // 2. Move peers
-    var nodesToMove = buckets[bucketIndex].entries.map((entry) => entry.value).toList();
+    var nodesToMove = buckets[bucketIndex].entries
+        .map((entry) => entry.value)
+        .toList();
     for (var node in nodesToMove) {
       if (_getBucketIndex(node.distance) == bucketIndex + 1) {
         buckets[bucketIndex].delete(node.peerId);
@@ -85,7 +90,9 @@ extension BucketManagement on KademliaTree {
     }
 
     // Move peers
-    var nodesToMove = buckets[bucketIndex2].entries.map((entry) => entry.value).toList();
+    var nodesToMove = buckets[bucketIndex2].entries
+        .map((entry) => entry.value)
+        .toList();
     for (var node in nodesToMove) {
       buckets[bucketIndex1].insert(node.peerId, node);
       node.bucketIndex = bucketIndex1;
@@ -136,7 +143,8 @@ extension BucketManagement on KademliaTree {
       if (lastSeenTime == null) {
         leastRecentlySeenNode = node;
         break;
-      } else if (oldestLastSeenTime == null || lastSeenTime.isBefore(oldestLastSeenTime)) {
+      } else if (oldestLastSeenTime == null ||
+          lastSeenTime.isBefore(oldestLastSeenTime)) {
         oldestLastSeenTime = lastSeenTime;
         leastRecentlySeenNode = node;
       }
@@ -152,7 +160,9 @@ extension BucketManagement on KademliaTree {
 
   Future<bool> _pingNode(KademliaTreeNode node) async {
     try {
-      final isAlive = await sendPing(node.peerId); // Uses sendPing returning bool
+      final isAlive = await sendPing(
+        node.peerId,
+      ); // Uses sendPing returning bool
       return isAlive;
     } catch (e) {
       // print('Ping failed for node ${node.peerId}: $e');

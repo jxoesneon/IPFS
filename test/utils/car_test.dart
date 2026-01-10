@@ -10,8 +10,12 @@ import 'package:test/test.dart';
 void main() {
   group('CAR Format', () {
     test('CAR.v2WithIndex creates valid archive', () async {
-      final block1 = await Block.fromData(Uint8List.fromList(utf8.encode('block1')));
-      final block2 = await Block.fromData(Uint8List.fromList(utf8.encode('block2')));
+      final block1 = await Block.fromData(
+        Uint8List.fromList(utf8.encode('block1')),
+      );
+      final block2 = await Block.fromData(
+        Uint8List.fromList(utf8.encode('block2')),
+      );
 
       final car = CAR.v2WithIndex([block1, block2]);
 
@@ -21,7 +25,9 @@ void main() {
     });
 
     test('CAR serialization produces bytes', () async {
-      final block = await Block.fromData(Uint8List.fromList(utf8.encode('test data')));
+      final block = await Block.fromData(
+        Uint8List.fromList(utf8.encode('test data')),
+      );
 
       final car = CAR.v2WithIndex([block]);
       final bytes = car.toBytes();
@@ -30,7 +36,9 @@ void main() {
     });
 
     test('CAR deserialization restores structure', () async {
-      final block = await Block.fromData(Uint8List.fromList(utf8.encode('test data')));
+      final block = await Block.fromData(
+        Uint8List.fromList(utf8.encode('test data')),
+      );
 
       final car = CAR.v2WithIndex([block]);
       final bytes = car.toBytes();
@@ -41,7 +49,9 @@ void main() {
     });
 
     test('CAR version is 2 by default', () async {
-      final block = await Block.fromData(Uint8List.fromList(utf8.encode('data')));
+      final block = await Block.fromData(
+        Uint8List.fromList(utf8.encode('data')),
+      );
       final car = CAR.v2WithIndex([block]);
 
       expect(car.version, equals(2));
@@ -55,13 +65,18 @@ void main() {
     });
 
     test('CarHeader stores characteristics', () {
-      final header = CarHeader(version: 2, characteristics: ['index-sorted', 'content-addressed']);
+      final header = CarHeader(
+        version: 2,
+        characteristics: ['index-sorted', 'content-addressed'],
+      );
       expect(header.characteristics.length, equals(2));
       expect(header.characteristics, contains('index-sorted'));
     });
 
     test('CarHeader stores roots', () async {
-      final block = await Block.fromData(Uint8List.fromList(utf8.encode('root')));
+      final block = await Block.fromData(
+        Uint8List.fromList(utf8.encode('root')),
+      );
       final header = CarHeader(version: 2, roots: [block.cid]);
 
       expect(header.roots.length, equals(1));
@@ -72,7 +87,9 @@ void main() {
   group('CarIndex', () {
     test('CarIndex.generate creates index from blocks', () async {
       final block1 = await Block.fromData(Uint8List.fromList(utf8.encode('a')));
-      final block2 = await Block.fromData(Uint8List.fromList(utf8.encode('bb')));
+      final block2 = await Block.fromData(
+        Uint8List.fromList(utf8.encode('bb')),
+      );
 
       final index = CarIndex.generate([block1, block2]);
 
@@ -98,18 +115,25 @@ void main() {
 
   group('CAR Selective Loading', () {
     test('loadSelected throws without index', () async {
-      final block = await Block.fromData(Uint8List.fromList(utf8.encode('data')));
+      final block = await Block.fromData(
+        Uint8List.fromList(utf8.encode('data')),
+      );
       final car = CAR(
         blocks: [block],
         header: CarHeader(version: 2, roots: [block.cid]),
         index: null, // No index
       );
 
-      expect(() => car.loadSelected(['QmCid']), throwsA(isA<UnsupportedError>()));
+      expect(
+        () => car.loadSelected(['QmCid']),
+        throwsA(isA<UnsupportedError>()),
+      );
     });
 
     test('getBlockOffset uses index', () async {
-      final block = await Block.fromData(Uint8List.fromList(utf8.encode('data')));
+      final block = await Block.fromData(
+        Uint8List.fromList(utf8.encode('data')),
+      );
       final car = CAR.v2WithIndex([block]);
 
       final offset = car.getBlockOffset(block.cid.toString());

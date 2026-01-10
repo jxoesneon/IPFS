@@ -33,10 +33,10 @@ const Kind$json = {
 };
 
 /// Descriptor for `Kind`. Decode as a `google.protobuf.EnumDescriptorProto`.
-final $typed_data.Uint8List kindDescriptor = $convert
-    .base64Decode('CgRLaW5kEggKBE5VTEwQABIICgRCT09MEAESCwoHSU5URUdFUhACEgkKBUZMT0FUEAMSCgoGU1'
-        'RSSU5HEAQSCQoFQllURVMQBRIICgRMSVNUEAYSBwoDTUFQEAcSCAoETElOSxAIEgsKB0JJR19J'
-        'TlQQCQ==');
+final $typed_data.Uint8List kindDescriptor = $convert.base64Decode(
+    'CgRLaW5kEggKBE5VTEwQABIICgRCT09MEAESCwoHSU5URUdFUhACEgkKBUZMT0FUEAMSCgoGU1'
+    'RSSU5HEAQSCQoFQllURVMQBRIICgRMSVNUEAYSBwoDTUFQEAcSCAoETElOSxAIEgsKB0JJR19J'
+    'TlQQCQ==');
 
 @$core.Deprecated('Use iPLDNodeDescriptor instead')
 const IPLDNode$json = {
@@ -48,10 +48,41 @@ const IPLDNode$json = {
     {'1': 'float_value', '3': 4, '4': 1, '5': 1, '9': 0, '10': 'floatValue'},
     {'1': 'string_value', '3': 5, '4': 1, '5': 9, '9': 0, '10': 'stringValue'},
     {'1': 'bytes_value', '3': 6, '4': 1, '5': 12, '9': 0, '10': 'bytesValue'},
-    {'1': 'list_value', '3': 7, '4': 1, '5': 11, '6': '.ipld.IPLDList', '9': 0, '10': 'listValue'},
-    {'1': 'map_value', '3': 8, '4': 1, '5': 11, '6': '.ipld.IPLDMap', '9': 0, '10': 'mapValue'},
-    {'1': 'link_value', '3': 9, '4': 1, '5': 11, '6': '.ipld.IPLDLink', '9': 0, '10': 'linkValue'},
-    {'1': 'big_int_value', '3': 10, '4': 1, '5': 12, '9': 0, '10': 'bigIntValue'},
+    {
+      '1': 'list_value',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.ipld.IPLDList',
+      '9': 0,
+      '10': 'listValue'
+    },
+    {
+      '1': 'map_value',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.ipld.IPLDMap',
+      '9': 0,
+      '10': 'mapValue'
+    },
+    {
+      '1': 'link_value',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.ipld.IPLDLink',
+      '9': 0,
+      '10': 'linkValue'
+    },
+    {
+      '1': 'big_int_value',
+      '3': 10,
+      '4': 1,
+      '5': 12,
+      '9': 0,
+      '10': 'bigIntValue'
+    },
   ],
   '8': [
     {'1': 'value'},
@@ -59,53 +90,74 @@ const IPLDNode$json = {
 };
 
 /// Descriptor for `IPLDNode`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List iPLDNodeDescriptor = $convert
-    .base64Decode('CghJUExETm9kZRIeCgRraW5kGAEgASgOMgouaXBsZC5LaW5kUgRraW5kEh8KCmJvb2xfdmFsdW'
-        'UYAiABKAhIAFIJYm9vbFZhbHVlEh0KCWludF92YWx1ZRgDIAEoEkgAUghpbnRWYWx1ZRIhCgtm'
-        'bG9hdF92YWx1ZRgEIAEoAUgAUgpmbG9hdFZhbHVlEiMKDHN0cmluZ192YWx1ZRgFIAEoCUgAUg'
-        'tzdHJpbmdWYWx1ZRIhCgtieXRlc192YWx1ZRgGIAEoDEgAUgpieXRlc1ZhbHVlEi8KCmxpc3Rf'
-        'dmFsdWUYByABKAsyDi5pcGxkLklQTERMaXN0SABSCWxpc3RWYWx1ZRIsCgltYXBfdmFsdWUYCC'
-        'ABKAsyDS5pcGxkLklQTERNYXBIAFIIbWFwVmFsdWUSLwoKbGlua192YWx1ZRgJIAEoCzIOLmlw'
-        'bGQuSVBMRExpbmtIAFIJbGlua1ZhbHVlEiQKDWJpZ19pbnRfdmFsdWUYCiABKAxIAFILYmlnSW'
-        '50VmFsdWVCBwoFdmFsdWU=');
+final $typed_data.Uint8List iPLDNodeDescriptor = $convert.base64Decode(
+    'CghJUExETm9kZRIeCgRraW5kGAEgASgOMgouaXBsZC5LaW5kUgRraW5kEh8KCmJvb2xfdmFsdW'
+    'UYAiABKAhIAFIJYm9vbFZhbHVlEh0KCWludF92YWx1ZRgDIAEoEkgAUghpbnRWYWx1ZRIhCgtm'
+    'bG9hdF92YWx1ZRgEIAEoAUgAUgpmbG9hdFZhbHVlEiMKDHN0cmluZ192YWx1ZRgFIAEoCUgAUg'
+    'tzdHJpbmdWYWx1ZRIhCgtieXRlc192YWx1ZRgGIAEoDEgAUgpieXRlc1ZhbHVlEi8KCmxpc3Rf'
+    'dmFsdWUYByABKAsyDi5pcGxkLklQTERMaXN0SABSCWxpc3RWYWx1ZRIsCgltYXBfdmFsdWUYCC'
+    'ABKAsyDS5pcGxkLklQTERNYXBIAFIIbWFwVmFsdWUSLwoKbGlua192YWx1ZRgJIAEoCzIOLmlw'
+    'bGQuSVBMRExpbmtIAFIJbGlua1ZhbHVlEiQKDWJpZ19pbnRfdmFsdWUYCiABKAxIAFILYmlnSW'
+    '50VmFsdWVCBwoFdmFsdWU=');
 
 @$core.Deprecated('Use iPLDListDescriptor instead')
 const IPLDList$json = {
   '1': 'IPLDList',
   '2': [
-    {'1': 'values', '3': 1, '4': 3, '5': 11, '6': '.ipld.IPLDNode', '10': 'values'},
+    {
+      '1': 'values',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.ipld.IPLDNode',
+      '10': 'values'
+    },
   ],
 };
 
 /// Descriptor for `IPLDList`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List iPLDListDescriptor =
-    $convert.base64Decode('CghJUExETGlzdBImCgZ2YWx1ZXMYASADKAsyDi5pcGxkLklQTEROb2RlUgZ2YWx1ZXM=');
+final $typed_data.Uint8List iPLDListDescriptor = $convert.base64Decode(
+    'CghJUExETGlzdBImCgZ2YWx1ZXMYASADKAsyDi5pcGxkLklQTEROb2RlUgZ2YWx1ZXM=');
 
 @$core.Deprecated('Use iPLDMapDescriptor instead')
 const IPLDMap$json = {
   '1': 'IPLDMap',
   '2': [
-    {'1': 'entries', '3': 1, '4': 3, '5': 11, '6': '.ipld.MapEntry', '10': 'entries'},
+    {
+      '1': 'entries',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.ipld.MapEntry',
+      '10': 'entries'
+    },
   ],
 };
 
 /// Descriptor for `IPLDMap`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List iPLDMapDescriptor =
-    $convert.base64Decode('CgdJUExETWFwEigKB2VudHJpZXMYASADKAsyDi5pcGxkLk1hcEVudHJ5UgdlbnRyaWVz');
+final $typed_data.Uint8List iPLDMapDescriptor = $convert.base64Decode(
+    'CgdJUExETWFwEigKB2VudHJpZXMYASADKAsyDi5pcGxkLk1hcEVudHJ5UgdlbnRyaWVz');
 
 @$core.Deprecated('Use mapEntryDescriptor instead')
 const MapEntry$json = {
   '1': 'MapEntry',
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
-    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.ipld.IPLDNode', '10': 'value'},
+    {
+      '1': 'value',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.ipld.IPLDNode',
+      '10': 'value'
+    },
   ],
 };
 
 /// Descriptor for `MapEntry`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List mapEntryDescriptor = $convert
-    .base64Decode('CghNYXBFbnRyeRIQCgNrZXkYASABKAlSA2tleRIkCgV2YWx1ZRgCIAEoCzIOLmlwbGQuSVBMRE'
-        '5vZGVSBXZhbHVl');
+final $typed_data.Uint8List mapEntryDescriptor = $convert.base64Decode(
+    'CghNYXBFbnRyeRIQCgNrZXkYASABKAlSA2tleRIkCgV2YWx1ZRgCIAEoCzIOLmlwbGQuSVBMRE'
+    '5vZGVSBXZhbHVl');
 
 @$core.Deprecated('Use iPLDLinkDescriptor instead')
 const IPLDLink$json = {
@@ -118,6 +170,6 @@ const IPLDLink$json = {
 };
 
 /// Descriptor for `IPLDLink`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List iPLDLinkDescriptor = $convert
-    .base64Decode('CghJUExETGluaxIYCgd2ZXJzaW9uGAEgASgNUgd2ZXJzaW9uEhQKBWNvZGVjGAIgASgJUgVjb2'
-        'RlYxIcCgltdWx0aWhhc2gYAyABKAxSCW11bHRpaGFzaA==');
+final $typed_data.Uint8List iPLDLinkDescriptor = $convert.base64Decode(
+    'CghJUExETGluaxIYCgd2ZXJzaW9uGAEgASgNUgd2ZXJzaW9uEhQKBWNvZGVjGAIgASgJUgVjb2'
+    'RlYxIcCgltdWx0aWhhc2gYAyABKAxSCW11bHRpaGFzaA==');

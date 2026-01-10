@@ -194,7 +194,10 @@ class DatastoreHandler {
   }
 
   // Helper function to recursively retrieve blocks of linked nodes
-  Future<void> _recursiveGetBlocks(MerkleDAGNode node, List<Block> blocks) async {
+  Future<void> _recursiveGetBlocks(
+    MerkleDAGNode node,
+    List<Block> blocks,
+  ) async {
     // Verify all links
     for (var link in node.links) {
       final childBlock = await getBlock(link.cid.toString());

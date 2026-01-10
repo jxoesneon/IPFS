@@ -25,7 +25,11 @@ class IpfsHttpServerInstanceWeb implements IpfsHttpServerInstance {
 /// Web stub implementation of HTTP server adapter.
 class HttpServerAdapterWeb implements HttpServerAdapter {
   @override
-  Future<IpfsHttpServerInstance> serve(Handler handler, String address, int port) async {
+  Future<IpfsHttpServerInstance> serve(
+    Handler handler,
+    String address,
+    int port,
+  ) async {
     // On web, we generally cannot bind a TCP port.
     // This is a stub that mainly allows compilation.
     return IpfsHttpServerInstanceWeb(address, port);

@@ -22,7 +22,10 @@ class RPCServer {
     required this.node,
     this.address = 'localhost',
     this.port = 5001,
-    this.corsOrigins = const ['http://localhost', 'http://127.0.0.1'], // SEC-006: Restrict CORS
+    this.corsOrigins = const [
+      'http://localhost',
+      'http://127.0.0.1',
+    ], // SEC-006: Restrict CORS
     this.apiKey,
   }) {
     _handlers = RPCHandlers(node);
@@ -30,7 +33,9 @@ class RPCServer {
     if (apiKey != null) {
       _logger.info('RPC server configured with API key authentication');
     } else {
-      _logger.warning('RPC server running WITHOUT authentication - set apiKey for production!');
+      _logger.warning(
+        'RPC server running WITHOUT authentication - set apiKey for production!',
+      );
     }
   }
 
@@ -110,7 +115,9 @@ class RPCServer {
 
     try {
       _server = await shelf_io.serve(handler, address, port);
-      _logger.info('RPC server listening on http://${_server!.address.host}:${_server!.port}');
+      _logger.info(
+        'RPC server listening on http://${_server!.address.host}:${_server!.port}',
+      );
     } catch (e, stackTrace) {
       _logger.error('Failed to start RPC server', e, stackTrace);
       rethrow;

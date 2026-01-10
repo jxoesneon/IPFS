@@ -41,16 +41,20 @@ class CalculateDistanceRequest extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'CalculateDistanceRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.helpers'),
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.helpers'),
       createEmptyInstance: create)
-    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'id1', subBuilder: $0.KademliaId.create)
-    ..aOM<$0.KademliaId>(2, _omitFieldNames ? '' : 'id2', subBuilder: $0.KademliaId.create)
+    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'id1',
+        subBuilder: $0.KademliaId.create)
+    ..aOM<$0.KademliaId>(2, _omitFieldNames ? '' : 'id2',
+        subBuilder: $0.KademliaId.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   CalculateDistanceRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CalculateDistanceRequest copyWith(void Function(CalculateDistanceRequest) updates) =>
+  CalculateDistanceRequest copyWith(
+          void Function(CalculateDistanceRequest) updates) =>
       super.copyWith((message) => updates(message as CalculateDistanceRequest))
           as CalculateDistanceRequest;
 
@@ -62,8 +66,8 @@ class CalculateDistanceRequest extends $pb.GeneratedMessage {
   @$core.override
   CalculateDistanceRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static CalculateDistanceRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CalculateDistanceRequest>(create);
+  static CalculateDistanceRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CalculateDistanceRequest>(create);
   static CalculateDistanceRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -109,7 +113,8 @@ class CalculateDistanceResponse extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'CalculateDistanceResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.helpers'),
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.helpers'),
       createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'distance')
     ..hasRequiredFields = false;
@@ -117,7 +122,8 @@ class CalculateDistanceResponse extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   CalculateDistanceResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CalculateDistanceResponse copyWith(void Function(CalculateDistanceResponse) updates) =>
+  CalculateDistanceResponse copyWith(
+          void Function(CalculateDistanceResponse) updates) =>
       super.copyWith((message) => updates(message as CalculateDistanceResponse))
           as CalculateDistanceResponse;
 
@@ -129,8 +135,8 @@ class CalculateDistanceResponse extends $pb.GeneratedMessage {
   @$core.override
   CalculateDistanceResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static CalculateDistanceResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CalculateDistanceResponse>(create);
+  static CalculateDistanceResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CalculateDistanceResponse>(create);
   static CalculateDistanceResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -143,5 +149,7 @@ class CalculateDistanceResponse extends $pb.GeneratedMessage {
   void clearDistance() => $_clearField(1);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

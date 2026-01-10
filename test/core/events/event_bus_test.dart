@@ -78,7 +78,10 @@ void main() {
 
   group('PeerConnectedEvent', () {
     test('stores peerId and address', () {
-      final event = PeerConnectedEvent(peerId: 'QmPeer123', address: '/ip4/127.0.0.1/tcp/4001');
+      final event = PeerConnectedEvent(
+        peerId: 'QmPeer123',
+        address: '/ip4/127.0.0.1/tcp/4001',
+      );
       expect(event.peerId, equals('QmPeer123'));
       expect(event.address, contains('/ip4/'));
     });
@@ -104,7 +107,12 @@ void main() {
     });
 
     test('sent transfer type', () {
-      final event = BlockTransferEvent(cid: 'Qm', peerId: 'Qm', type: TransferType.sent, size: 512);
+      final event = BlockTransferEvent(
+        cid: 'Qm',
+        peerId: 'Qm',
+        type: TransferType.sent,
+        size: 512,
+      );
       expect(event.type, equals(TransferType.sent));
     });
   });

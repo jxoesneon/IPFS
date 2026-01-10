@@ -11,7 +11,8 @@ import 'package:test/test.dart';
 
 class MockP2plibRouter implements P2plibRouter {
   final _pubSubEventsController = StreamController<PubSubEvent>.broadcast();
-  final _connectionEventsController = StreamController<ConnectionEvent>.broadcast();
+  final _connectionEventsController =
+      StreamController<ConnectionEvent>.broadcast();
   final _messageEventsController = StreamController<MessageEvent>.broadcast();
   final _dhtEventsController = StreamController<DHTEvent>.broadcast();
   final _streamEventsController = StreamController<StreamEvent>.broadcast();
@@ -23,7 +24,8 @@ class MockP2plibRouter implements P2plibRouter {
   @override
   Stream<PubSubEvent> get pubSubEvents => _pubSubEventsController.stream;
   @override
-  Stream<ConnectionEvent> get connectionEvents => _connectionEventsController.stream;
+  Stream<ConnectionEvent> get connectionEvents =>
+      _connectionEventsController.stream;
   @override
   Stream<MessageEvent> get messageEvents => _messageEventsController.stream;
   @override
@@ -39,7 +41,11 @@ class MockP2plibRouter implements P2plibRouter {
   }
 
   @override
-  Future<void> sendMessage(String peerId, Uint8List message, {String? protocolId}) async {
+  Future<void> sendMessage(
+    String peerId,
+    Uint8List message, {
+    String? protocolId,
+  }) async {
     if (protocolId == 'pubsub') {
       // In a real client, the message would be a pubsub-specific format.
       // Here we just track it.
@@ -49,7 +55,10 @@ class MockP2plibRouter implements P2plibRouter {
   final Map<String, void Function(NetworkPacket)> handlers = {};
 
   @override
-  void registerProtocolHandler(String protocolId, void Function(NetworkPacket) handler) {
+  void registerProtocolHandler(
+    String protocolId,
+    void Function(NetworkPacket) handler,
+  ) {
     handlers[protocolId] = handler;
   }
 
@@ -65,11 +74,17 @@ class MockP2plibRouter implements P2plibRouter {
     final data = Uint8List.fromList(utf8.encode(content));
 
     // Simulate Router-level protocol message (json for PubSubClient)
-    final pubsubPacket = {'topic': topic, 'content': content, 'sender': publisher};
+    final pubsubPacket = {
+      'topic': topic,
+      'content': content,
+      'sender': publisher,
+    };
     final datagram = Uint8List.fromList(utf8.encode(jsonEncode(pubsubPacket)));
 
     if (handlers.containsKey('pubsub')) {
-      handlers['pubsub']!(NetworkPacket(srcPeerId: publisher, datagram: datagram));
+      handlers['pubsub']!(
+        NetworkPacket(srcPeerId: publisher, datagram: datagram),
+      );
     }
 
     // Simulate Node-level network event
@@ -87,10 +102,12 @@ class MockP2plibRouter implements P2plibRouter {
 }
 
 class MockCircuitRelayClient implements CircuitRelayClient {
-  final _eventsController = StreamController<CircuitRelayConnectionEvent>.broadcast();
+  final _eventsController =
+      StreamController<CircuitRelayConnectionEvent>.broadcast();
 
   @override
-  Stream<CircuitRelayConnectionEvent> get connectionEvents => _eventsController.stream;
+  Stream<CircuitRelayConnectionEvent> get connectionEvents =>
+      _eventsController.stream;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -134,7 +151,9 @@ void main() {
     test('should receive messages on subscribed topic', () async {
       await handler.subscribe('test-topic');
 
-      final messageFuture = handler.messages.firstWhere((m) => m.topic == 'test-topic');
+      final messageFuture = handler.messages.firstWhere(
+        (m) => m.topic == 'test-topic',
+      );
 
       router.simulatePubSubMessage('test-topic', 'Hello World', 'other-peer');
 

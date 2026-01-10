@@ -32,7 +32,9 @@ void main() {
       });
 
       test('detectContentType detects text', () async {
-        final textData = utf8.encode('Hello world, this is just plain text content.');
+        final textData = utf8.encode(
+          'Hello world, this is just plain text content.',
+        );
         final block = await Block.fromData(Uint8List.fromList(textData));
         expect(handler.detectContentType(block), 'text/plain');
       });
@@ -40,14 +42,19 @@ void main() {
       test('detectContentType favors filename', () async {
         final data = Uint8List.fromList([0x00]);
         final block = await Block.fromData(data);
-        expect(handler.detectContentType(block, filename: 'test.html'), 'text/html');
+        expect(
+          handler.detectContentType(block, filename: 'test.html'),
+          'text/html',
+        );
       });
     });
 
     group('Processing', () {
       test('processContent renders markdown', () async {
         final mdContent = '# Hello';
-        final block = await Block.fromData(Uint8List.fromList(utf8.encode(mdContent)));
+        final block = await Block.fromData(
+          Uint8List.fromList(utf8.encode(mdContent)),
+        );
 
         final processed = handler.processContent(block, 'text/markdown');
         final html = utf8.decode(processed);
@@ -60,7 +67,10 @@ void main() {
         final data = Uint8List.fromList([1, 2, 3]); // Fake CAR data
         final block = await Block.fromData(data);
 
-        final processed = handler.processContent(block, 'application/vnd.ipfs.car');
+        final processed = handler.processContent(
+          block,
+          'application/vnd.ipfs.car',
+        );
         final html = utf8.decode(processed);
 
         expect(html, contains('CAR Archive Preview'));

@@ -21,7 +21,9 @@ void main() {
     when(mockMetrics.getMessagesReceived(any)).thenReturn(Int64(20));
     when(mockMetrics.getBytesSent(any)).thenReturn(Int64(1024));
     when(mockMetrics.getBytesReceived(any)).thenReturn(Int64(2048));
-    when(mockMetrics.getAverageLatency(any)).thenReturn(Duration(milliseconds: 50));
+    when(
+      mockMetrics.getAverageLatency(any),
+    ).thenReturn(Duration(milliseconds: 50));
     when(mockMetrics.updateConnectionMetrics(any)).thenAnswer((_) async => {});
 
     manager = ConnectionManager(mockMetrics);
@@ -33,7 +35,9 @@ void main() {
       await manager.handleNewConnection(peerId);
 
       final captured =
-          verify(mockMetrics.updateConnectionMetrics(captureAny)).captured.single
+          verify(
+                mockMetrics.updateConnectionMetrics(captureAny),
+              ).captured.single
               as ConnectionMetrics;
       expect(captured.peerId, equals(peerId));
       expect(captured.messagesSent, equals(Int64(10)));

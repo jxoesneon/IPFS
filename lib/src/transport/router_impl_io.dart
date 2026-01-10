@@ -57,7 +57,11 @@ class P2plibRouter {
             keepalivePeriod: const Duration(seconds: 30),
             transports: [],
           ),
-      _logger = Logger('P2plibRouter', debug: _config.debug, verbose: _config.verboseLogging) {
+      _logger = Logger(
+        'P2plibRouter',
+        debug: _config.debug,
+        verbose: _config.verboseLogging,
+      ) {
     _setupRouter();
     // Increase peer TTL to be more robust against packet loss
     _router.peerAddressTTL = const Duration(minutes: 10);
@@ -74,7 +78,8 @@ class P2plibRouter {
 
   // Stream controllers
   final _messageController = StreamController<p2p.Message>.broadcast();
-  final _connectionEventsController = StreamController<ConnectionEvent>.broadcast();
+  final _connectionEventsController =
+      StreamController<ConnectionEvent>.broadcast();
   final _messageEventsController = StreamController<MessageEvent>.broadcast();
   final _dhtEventsController = StreamController<DHTEvent>.broadcast();
   final _pubSubEventsController = StreamController<PubSubEvent>.broadcast();
@@ -132,7 +137,10 @@ class P2plibRouter {
 
       _router.transports.add(
         Libp2pTransport(
-          bindAddress: p2p.FullAddress(address: InternetAddress.anyIPv4, port: libp2pPort),
+          bindAddress: p2p.FullAddress(
+            address: InternetAddress.anyIPv4,
+            port: libp2pPort,
+          ),
           // Pass the same seed used for p2plib crypto for identity mapping
           seed: (_router.crypto as LocalCrypto).seed,
           logger: (msg) => _logger.debug('[Libp2pBridge] $msg'),
@@ -190,14 +198,21 @@ class P2plibRouter {
     try {
       _logger.debug('Initializing P2plibRouter...');
       _logger.verbose('Initializing crypto components');
-      final seed = Uint8List.fromList(List<int>.generate(32, (_) => Random.secure().nextInt(256)));
+      final seed = Uint8List.fromList(
+        List<int>.generate(32, (_) => Random.secure().nextInt(256)),
+      );
       await _router.crypto.init(seed);
       _logger.verbose('Crypto components initialized successfully');
 
       _logger.verbose('Initializing router with peer ID');
-      final randomBytes = List<int>.generate(32, (i) => Random.secure().nextInt(256));
+      final randomBytes = List<int>.generate(
+        32,
+        (i) => Random.secure().nextInt(256),
+      );
       await _router.init(Uint8List.fromList(randomBytes));
-      _logger.verbose('Router initialized with peer ID: ${Base58().encode(_router.selfId.value)}');
+      _logger.verbose(
+        'Router initialized with peer ID: ${Base58().encode(_router.selfId.value)}',
+      );
 
       _isInitialized = true;
       _logger.debug('P2plibRouter initialization complete');
@@ -219,10 +234,14 @@ class P2plibRouter {
           }
           final protocolLen = datagram[0];
           if (protocolLen > 0 && protocolLen < datagram.length) {
-            final protocolId = utf8.decode(datagram.sublist(1, 1 + protocolLen));
+            final protocolId = utf8.decode(
+              datagram.sublist(1, 1 + protocolLen),
+            );
             final payload = datagram.sublist(1 + protocolLen);
 
-            _logger.verbose('Dispatcher: Received packet for protocol $protocolId');
+            _logger.verbose(
+              'Dispatcher: Received packet for protocol $protocolId',
+            );
 
             if (_protocolHandlers.containsKey(protocolId)) {
               final packet = NetworkPacket(
@@ -231,7 +250,9 @@ class P2plibRouter {
               );
               _protocolHandlers[protocolId]!(packet);
             } else {
-              _logger.verbose('Dispatcher: No handler for protocol $protocolId');
+              _logger.verbose(
+                'Dispatcher: No handler for protocol $protocolId',
+              );
             }
           } else {
             // Legacy/Unwrapped message - Send to ALL for compatibility during transition
@@ -249,7 +270,9 @@ class P2plibRouter {
         } catch (e) {
           _logger.verbose('Dispatcher: Error processing packet: $e');
           // If unwrapping fails, it might be a raw message
-          _logger.verbose('Dispatcher: Failed to unwrap packet, trying raw broadcast');
+          _logger.verbose(
+            'Dispatcher: Failed to unwrap packet, trying raw broadcast',
+          );
           final packet = NetworkPacket(
             srcPeerId: Base58().encode(message.srcPeerId.value),
             datagram: message.payload!,
@@ -303,7 +326,9 @@ class P2plibRouter {
             await connect(peer);
           }
         } catch (e) {
-          _logger.warning('Skipping incompatible bootstrap peer: $peer (Protocol Mismatch)');
+          _logger.warning(
+            'Skipping incompatible bootstrap peer: $peer (Protocol Mismatch)',
+          );
         }
       } catch (e, stackTrace) {
         _logger.error('Error adding bootstrap peer: $peer', e, stackTrace);
@@ -329,11 +354,20 @@ class P2plibRouter {
   Future<void> connect(String multiaddress) async {
     try {
       final address = parseMultiaddr(multiaddress);
-      final peerId = p2p.PeerId(value: _extractPeerIdFromMultiaddr(multiaddress));
-      _router.addPeerAddress(peerId: peerId, address: address, properties: p2p.AddressProperties());
+      final peerId = p2p.PeerId(
+        value: _extractPeerIdFromMultiaddr(multiaddress),
+      );
+      _router.addPeerAddress(
+        peerId: peerId,
+        address: address,
+        properties: p2p.AddressProperties(),
+      );
       _connectedPeers.add(peerId);
       _connectionEventsController.add(
-        ConnectionEvent(type: ConnectionEventType.connected, peerId: multiaddress),
+        ConnectionEvent(
+          type: ConnectionEventType.connected,
+          peerId: multiaddress,
+        ),
       );
     } catch (e) {
       _errorEventsController.add(
@@ -354,7 +388,10 @@ class P2plibRouter {
       _router.removePeerAddress(peerId);
       _connectedPeers.remove(peerId);
       _connectionEventsController.add(
-        ConnectionEvent(type: ConnectionEventType.disconnected, peerId: multiaddress),
+        ConnectionEvent(
+          type: ConnectionEventType.disconnected,
+          peerId: multiaddress,
+        ),
       );
     } catch (e) {
       _errorEventsController.add(
@@ -374,7 +411,11 @@ class P2plibRouter {
 
   /// Sends a message to a peer with an optional protocolId for multiplexing.
   /// This ensures the message is correctly wrapped, signed, and encrypted by p2plib.
-  Future<void> sendMessage(String peerIdStr, Uint8List message, {String? protocolId}) async {
+  Future<void> sendMessage(
+    String peerIdStr,
+    Uint8List message, {
+    String? protocolId,
+  }) async {
     final peer = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
 
     Uint8List finalPayload = message;
@@ -436,7 +477,10 @@ class P2plibRouter {
   }
 
   /// Adds a message handler for a specific protocol
-  void registerProtocolHandler(String protocolId, void Function(NetworkPacket) handler) {
+  void registerProtocolHandler(
+    String protocolId,
+    void Function(NetworkPacket) handler,
+  ) {
     if (!_registeredProtocols.contains(protocolId)) {
       registerProtocol(protocolId);
     }
@@ -453,14 +497,20 @@ class P2plibRouter {
   }
 
   /// Sends a datagram to the specified addresses.
-  Future<void> sendDatagram({required List<String> addresses, required Uint8List datagram}) {
+  Future<void> sendDatagram({
+    required List<String> addresses,
+    required Uint8List datagram,
+  }) {
     // Convert string addresses to FullAddress objects
     final fullAddresses = addresses.map((addr) {
       final parts = addr.split(':');
       if (parts.length != 2) {
         throw FormatException('Invalid address format: $addr');
       }
-      return p2p.FullAddress(address: InternetAddress(parts[0]), port: int.parse(parts[1]));
+      return p2p.FullAddress(
+        address: InternetAddress(parts[0]),
+        port: int.parse(parts[1]),
+      );
     });
 
     _router.sendDatagram(addresses: fullAddresses, datagram: datagram);
@@ -585,7 +635,9 @@ class P2plibRouter {
     }
 
     // 4. Check if the peer has been seen recently (within last 2 minutes)
-    if (DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(route.lastSeen)) >
+    if (DateTime.now().difference(
+          DateTime.fromMillisecondsSinceEpoch(route.lastSeen),
+        ) >
         const Duration(minutes: 2)) {
       // Clean up stale connection
       _connectedPeers.remove(peerId);
@@ -636,7 +688,8 @@ class P2plibRouter {
   p2p.RouterL2 get routerL0 => _router;
 
   /// Stream of connection events
-  Stream<ConnectionEvent> get connectionEvents => _connectionEventsController.stream;
+  Stream<ConnectionEvent> get connectionEvents =>
+      _connectionEventsController.stream;
 
   /// Stream of message events
   Stream<MessageEvent> get messageEvents => _messageEventsController.stream;
@@ -657,18 +710,26 @@ class P2plibRouter {
   bool get isInitialized => _isInitialized;
 
   /// Sends a request to a peer and waits for a response
-  Future<Uint8List> sendRequest(String peerId, String protocolId, Uint8List request) async {
+  Future<Uint8List> sendRequest(
+    String peerId,
+    String protocolId,
+    Uint8List request,
+  ) async {
     try {
       // Create a completer to handle the async response
       final completer = Completer<Uint8List>();
       final requestId = DateTime.now().millisecondsSinceEpoch.toString();
 
       // Add request ID to message
-      final messageWithId = Uint8List.fromList([...request, ...utf8.encode(requestId)]);
+      final messageWithId = Uint8List.fromList([
+        ...request,
+        ...utf8.encode(requestId),
+      ]);
 
       // Set up one-time response handler
       registerProtocolHandler(protocolId, (packet) {
-        if (packet.srcPeerId == peerId && _extractRequestId(packet.datagram) == requestId) {
+        if (packet.srcPeerId == peerId &&
+            _extractRequestId(packet.datagram) == requestId) {
           removeMessageHandler(protocolId);
           completer.complete(packet.datagram);
         }
@@ -694,7 +755,9 @@ class P2plibRouter {
   String _extractRequestId(Uint8List datagram) {
     try {
       // The request ID is appended at the end of the datagram
-      final requestIdBytes = datagram.sublist(datagram.length - 13); // Timestamp is 13 chars
+      final requestIdBytes = datagram.sublist(
+        datagram.length - 13,
+      ); // Timestamp is 13 chars
       return utf8.decode(requestIdBytes);
     } catch (e) {
       _logger.error('Error extracting request ID', e);
@@ -720,7 +783,11 @@ class P2plibRouter {
       try {
         await sendMessage(peerId.toString(), message);
       } catch (e, stackTrace) {
-        _logger.error('Failed to send message to peer ${peerId.toString()}', e, stackTrace);
+        _logger.error(
+          'Failed to send message to peer ${peerId.toString()}',
+          e,
+          stackTrace,
+        );
         failures.add(peerId.toString());
       }
     }

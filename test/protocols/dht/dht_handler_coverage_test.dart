@@ -62,7 +62,9 @@ void main() {
   CID createTestCID() {
     return CID(
       version: 0,
-      multihash: Multihash.decode(Uint8List.fromList([0x12, 0x20, ...List.filled(32, 0)])),
+      multihash: Multihash.decode(
+        Uint8List.fromList([0x12, 0x20, ...List.filled(32, 0)]),
+      ),
       codec: 'dag-pb',
       multibaseType: Multibase.base58btc,
     );
@@ -116,21 +118,26 @@ void main() {
       }
 
       // Verify addProvider called exactly 10 times
-      verify(mockDhtClient.addProvider(cid.toString(), provider.toString())).called(10);
+      verify(
+        mockDhtClient.addProvider(cid.toString(), provider.toString()),
+      ).called(10);
     });
 
-    test('handleProvideRequest enforces max providers per CID (SEC-010)', () async {
-      final cid = createTestCID();
+    test(
+      'handleProvideRequest enforces max providers per CID (SEC-010)',
+      () async {
+        final cid = createTestCID();
 
-      // Exceed max providers (default is 20)
-      for (var i = 0; i < 25; i++) {
-        final provider = createTestPeerId(i);
-        await dhtHandler.handleProvideRequest(cid, provider);
-      }
+        // Exceed max providers (default is 20)
+        for (var i = 0; i < 25; i++) {
+          final provider = createTestPeerId(i);
+          await dhtHandler.handleProvideRequest(cid, provider);
+        }
 
-      // Verify addProvider called exactly 20 times
-      verify(mockDhtClient.addProvider(cid.toString(), any)).called(20);
-    });
+        // Verify addProvider called exactly 20 times
+        verify(mockDhtClient.addProvider(cid.toString(), any)).called(20);
+      },
+    );
 
     test('getStatus returns correct information', () async {
       when(mockDhtClient.isInitialized).thenReturn(true);
@@ -196,7 +203,10 @@ void main() {
         keystore: mockKeystore,
         httpClient: httpClientFailExtraction,
       );
-      expect(() => handlerFailExtraction.resolveIPNS(ipnsName), throwsException);
+      expect(
+        () => handlerFailExtraction.resolveIPNS(ipnsName),
+        throwsException,
+      );
 
       // 3. Status 404
       final httpClient404 = MockClient((request) async {
@@ -216,7 +226,10 @@ void main() {
 
     test('getValue not found throws', () async {
       when(mockStorage.get(any)).thenAnswer((_) async => null);
-      expect(() => dhtHandler.getValue(Key.fromString('missing')), throwsException);
+      expect(
+        () => dhtHandler.getValue(Key.fromString('missing')),
+        throwsException,
+      );
     });
 
     test('publishIPNS signature and sequence logic', () async {
@@ -224,7 +237,9 @@ void main() {
       // Mock a valid keypair
       final privKeyB64 = base64Url.encode(Uint8List(32));
       final pubKeyHex = '00' * 32;
-      when(mockKeystore.getKeyPair(keyName)).thenReturn(KeyPair(pubKeyHex, privKeyB64));
+      when(
+        mockKeystore.getKeyPair(keyName),
+      ).thenReturn(KeyPair(pubKeyHex, privKeyB64));
       when(mockStorage.get(any)).thenThrow(Exception('not found'));
 
       await dhtHandler.publishIPNS(
@@ -245,7 +260,9 @@ void main() {
       verify(mockDhtClient.addProvider(cid.toString(), any)).called(1);
 
       // Error in provide
-      when(mockDhtClient.addProvider(any, any)).thenThrow(Exception('dht error'));
+      when(
+        mockDhtClient.addProvider(any, any),
+      ).thenThrow(Exception('dht error'));
       await dhtHandler.provide(cid); // should catch and not throw
 
       when(mockDhtClient.findPeer(peer)).thenAnswer((_) async => peer);
@@ -265,13 +282,19 @@ void main() {
     });
 
     test('extractCIDFromResponse handles various formats', () {
-      final response = 'Content at QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco here';
+      final response =
+          'Content at QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco here';
       final cid = dhtHandler.extractCIDFromResponse(response);
       expect(cid, 'QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco');
     });
 
     test('isValidPeerID validates formats', () {
-      expect(dhtHandler.isValidPeerID('QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco'), isTrue);
+      expect(
+        dhtHandler.isValidPeerID(
+          'QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco',
+        ),
+        isTrue,
+      );
       expect(dhtHandler.isValidPeerID(''), isFalse);
     });
   });

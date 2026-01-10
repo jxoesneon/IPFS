@@ -26,9 +26,9 @@ const PBLink$json = {
 };
 
 /// Descriptor for `PBLink`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List pBLinkDescriptor = $convert
-    .base64Decode('CgZQQkxpbmsSEgoEaGFzaBgBIAEoDFIEaGFzaBISCgRuYW1lGAIgASgJUgRuYW1lEhIKBHNpem'
-        'UYAyABKARSBHNpemU=');
+final $typed_data.Uint8List pBLinkDescriptor = $convert.base64Decode(
+    'CgZQQkxpbmsSEgoEaGFzaBgBIAEoDFIEaGFzaBISCgRuYW1lGAIgASgJUgRuYW1lEhIKBHNpem'
+    'UYAyABKARSBHNpemU=');
 
 @$core.Deprecated('Use pBNodeDescriptor instead')
 const PBNode$json = {
@@ -47,6 +47,6 @@ const PBNode$json = {
 };
 
 /// Descriptor for `PBNode`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List pBNodeDescriptor = $convert
-    .base64Decode('CgZQQk5vZGUSNwoFbGlua3MYAiADKAsyIS5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLlBCTG'
-        'lua1IFbGlua3MSEgoEZGF0YRgBIAEoDFIEZGF0YQ==');
+final $typed_data.Uint8List pBNodeDescriptor = $convert.base64Decode(
+    'CgZQQk5vZGUSNwoFbGlua3MYAiADKAsyIS5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLlBCTG'
+    'lua1IFbGlua3MSEgoEZGF0YRgBIAEoDFIEZGF0YQ==');

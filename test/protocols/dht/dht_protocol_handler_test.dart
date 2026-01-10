@@ -30,7 +30,9 @@ void main() {
     when(mockRouter.getRoutingTable()).thenReturn(mockRoutingTable);
 
     // Capture the handler
-    when(mockRouter.registerProtocolHandler(any, any)).thenAnswer((Invocation inv) {
+    when(mockRouter.registerProtocolHandler(any, any)).thenAnswer((
+      Invocation inv,
+    ) {
       if (inv.positionalArguments[0] == DHTProtocolHandler.protocolId) {
         messageHandler = inv.positionalArguments[1];
       }
@@ -50,7 +52,9 @@ void main() {
 
       await messageHandler(packet);
 
-      final captured = verify(mockRouter.sendMessage(any, captureAny)).captured.single as Uint8List;
+      final captured =
+          verify(mockRouter.sendMessage(any, captureAny)).captured.single
+              as Uint8List;
       final response = kad.Message.fromBuffer(captured);
       expect(response.type, equals(kad.Message_MessageType.PING));
     });
@@ -62,11 +66,15 @@ void main() {
         ..key = targetId.value;
 
       final closerPeerId = PeerId(value: Uint8List.fromList([4, 5, 6]));
-      when(mockRoutingTable.getNearestPeers(any, any)).thenReturn([closerPeerId]);
+      when(
+        mockRoutingTable.getNearestPeers(any, any),
+      ).thenReturn([closerPeerId]);
 
       await messageHandler(createPacket(findNodeRequest));
 
-      final captured = verify(mockRouter.sendMessage(any, captureAny)).captured.single as Uint8List;
+      final captured =
+          verify(mockRouter.sendMessage(any, captureAny)).captured.single
+              as Uint8List;
       final response = kad.Message.fromBuffer(captured);
       expect(response.type, equals(kad.Message_MessageType.FIND_NODE));
       expect(response.closerPeers.length, 1);
@@ -86,7 +94,9 @@ void main() {
 
       await messageHandler(createPacket(getRequest));
 
-      final captured = verify(mockRouter.sendMessage(any, captureAny)).captured.single as Uint8List;
+      final captured =
+          verify(mockRouter.sendMessage(any, captureAny)).captured.single
+              as Uint8List;
       final response = kad.Message.fromBuffer(captured);
       expect(response.type, equals(kad.Message_MessageType.GET_VALUE));
       expect(response.record.value, equals(value));
@@ -103,7 +113,9 @@ void main() {
 
       await messageHandler(createPacket(getRequest));
 
-      final captured = verify(mockRouter.sendMessage(any, captureAny)).captured.single as Uint8List;
+      final captured =
+          verify(mockRouter.sendMessage(any, captureAny)).captured.single
+              as Uint8List;
       final response = kad.Message.fromBuffer(captured);
       expect(response.type, equals(kad.Message_MessageType.GET_VALUE));
       expect(response.hasRecord(), isFalse);
@@ -121,14 +133,18 @@ void main() {
 
       verify(mockStorage.put(any, any)).called(1);
 
-      final captured = verify(mockRouter.sendMessage(any, captureAny)).captured.single as Uint8List;
+      final captured =
+          verify(mockRouter.sendMessage(any, captureAny)).captured.single
+              as Uint8List;
       final response = kad.Message.fromBuffer(captured);
       expect(response.type, equals(kad.Message_MessageType.PUT_VALUE));
     });
 
     test('handles unknown message type', () async {
       final unknownMsg = kad.Message()
-        ..type = kad.Message_MessageType.GET_PROVIDERS; // Not explicitly handled in switch
+        ..type = kad
+            .Message_MessageType
+            .GET_PROVIDERS; // Not explicitly handled in switch
       await messageHandler(createPacket(unknownMsg));
       verifyNever(mockRouter.sendMessage(any, any));
     });

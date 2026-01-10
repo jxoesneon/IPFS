@@ -13,7 +13,11 @@ import 'package:p2plib/p2plib.dart' as p2p;
 class MDNSHandler {
   /// Creates an mDNS handler with config and optional mDNS client.
   MDNSHandler(this._config, {MDnsClient? mdnsClient}) {
-    _logger = Logger('MDNSHandler', debug: _config.debug, verbose: _config.verboseLogging);
+    _logger = Logger(
+      'MDNSHandler',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
     _mdnsClient = mdnsClient ?? MDnsClient();
     _logger.debug('MDNSHandler instance created');
   }
@@ -23,7 +27,8 @@ class MDNSHandler {
 
   final String _serviceType = '_ipfs-discovery._udp';
   final Set<String> _discoveredPeers = {};
-  final StreamController<Peer> _peerDiscoveryController = StreamController<Peer>.broadcast();
+  final StreamController<Peer> _peerDiscoveryController =
+      StreamController<Peer>.broadcast();
 
   bool _isRunning = false;
   Timer? _advertisementTimer;
@@ -133,9 +138,10 @@ class MDNSHandler {
     try {
       _logger.verbose('Performing peer discovery');
 
-      await for (final PtrResourceRecord ptr in _mdnsClient.lookup<PtrResourceRecord>(
-        ResourceRecordQuery.serverPointer(_serviceType),
-      )) {
+      await for (final PtrResourceRecord ptr
+          in _mdnsClient.lookup<PtrResourceRecord>(
+            ResourceRecordQuery.serverPointer(_serviceType),
+          )) {
         if (!_discoveredPeers.contains(ptr.domainName)) {
           _logger.debug('New peer discovered: ${ptr.domainName}');
 
@@ -156,7 +162,9 @@ class MDNSHandler {
       _logger.verbose('Advertising IPFS service');
 
       final port = _getPort();
-      await _mdnsClient.announce(_serviceType, _config.nodeId, port, [_config.nodeId]);
+      await _mdnsClient.announce(_serviceType, _config.nodeId, port, [
+        _config.nodeId,
+      ]);
 
       _logger.debug('Service advertised successfully');
     } catch (e, stackTrace) {
@@ -210,7 +218,9 @@ class MDNSHandler {
       return null;
     } catch (e) {
       // Unexpected errors might indicate real problems
-      _logger.warning('Unexpected error resolving peer info for $domainName: $e');
+      _logger.warning(
+        'Unexpected error resolving peer info for $domainName: $e',
+      );
       return null;
     }
   }

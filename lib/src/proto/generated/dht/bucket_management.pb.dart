@@ -34,8 +34,10 @@ class SplitBucketRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SplitBucketRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.bucket_management'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SplitBucketRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.bucket_management'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'bucketIndex')
     ..hasRequiredFields = false;
@@ -44,7 +46,8 @@ class SplitBucketRequest extends $pb.GeneratedMessage {
   SplitBucketRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   SplitBucketRequest copyWith(void Function(SplitBucketRequest) updates) =>
-      super.copyWith((message) => updates(message as SplitBucketRequest)) as SplitBucketRequest;
+      super.copyWith((message) => updates(message as SplitBucketRequest))
+          as SplitBucketRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -54,8 +57,8 @@ class SplitBucketRequest extends $pb.GeneratedMessage {
   @$core.override
   SplitBucketRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static SplitBucketRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SplitBucketRequest>(create);
+  static SplitBucketRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SplitBucketRequest>(create);
   static SplitBucketRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -86,8 +89,10 @@ class SplitBucketResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SplitBucketResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.bucket_management'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SplitBucketResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.bucket_management'),
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
     ..hasRequiredFields = false;
@@ -96,7 +101,8 @@ class SplitBucketResponse extends $pb.GeneratedMessage {
   SplitBucketResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   SplitBucketResponse copyWith(void Function(SplitBucketResponse) updates) =>
-      super.copyWith((message) => updates(message as SplitBucketResponse)) as SplitBucketResponse;
+      super.copyWith((message) => updates(message as SplitBucketResponse))
+          as SplitBucketResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -106,8 +112,8 @@ class SplitBucketResponse extends $pb.GeneratedMessage {
   @$core.override
   SplitBucketResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static SplitBucketResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SplitBucketResponse>(create);
+  static SplitBucketResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SplitBucketResponse>(create);
   static SplitBucketResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -140,8 +146,10 @@ class MergeBucketsRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MergeBucketsRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.bucket_management'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'MergeBucketsRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.bucket_management'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'bucketIndex1', protoName: 'bucket_index_1')
     ..aI(2, _omitFieldNames ? '' : 'bucketIndex2', protoName: 'bucket_index_2')
@@ -151,7 +159,8 @@ class MergeBucketsRequest extends $pb.GeneratedMessage {
   MergeBucketsRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   MergeBucketsRequest copyWith(void Function(MergeBucketsRequest) updates) =>
-      super.copyWith((message) => updates(message as MergeBucketsRequest)) as MergeBucketsRequest;
+      super.copyWith((message) => updates(message as MergeBucketsRequest))
+          as MergeBucketsRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -161,8 +170,8 @@ class MergeBucketsRequest extends $pb.GeneratedMessage {
   @$core.override
   MergeBucketsRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static MergeBucketsRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MergeBucketsRequest>(create);
+  static MergeBucketsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<MergeBucketsRequest>(create);
   static MergeBucketsRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -202,8 +211,10 @@ class MergeBucketsResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MergeBucketsResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.bucket_management'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'MergeBucketsResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.bucket_management'),
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
     ..hasRequiredFields = false;
@@ -212,7 +223,8 @@ class MergeBucketsResponse extends $pb.GeneratedMessage {
   MergeBucketsResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   MergeBucketsResponse copyWith(void Function(MergeBucketsResponse) updates) =>
-      super.copyWith((message) => updates(message as MergeBucketsResponse)) as MergeBucketsResponse;
+      super.copyWith((message) => updates(message as MergeBucketsResponse))
+          as MergeBucketsResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -222,8 +234,8 @@ class MergeBucketsResponse extends $pb.GeneratedMessage {
   @$core.override
   MergeBucketsResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static MergeBucketsResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MergeBucketsResponse>(create);
+  static MergeBucketsResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<MergeBucketsResponse>(create);
   static MergeBucketsResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -236,5 +248,7 @@ class MergeBucketsResponse extends $pb.GeneratedMessage {
   void clearSuccess() => $_clearField(1);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

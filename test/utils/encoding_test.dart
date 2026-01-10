@@ -47,7 +47,10 @@ void main() {
 
     test('isValidCIDBytes - invalid bytes', () {
       expect(EncodingUtils.isValidCIDBytes(Uint8List(0)), isFalse);
-      expect(EncodingUtils.isValidCIDBytes(Uint8List.fromList([0x02, 0x01])), isFalse);
+      expect(
+        EncodingUtils.isValidCIDBytes(Uint8List.fromList([0x02, 0x01])),
+        isFalse,
+      );
     });
 
     test('indexToCidVersion', () {
@@ -55,8 +58,14 @@ void main() {
         EncodingUtils.indexToCidVersion(0),
         equals(IPFSCIDVersion.IPFS_CID_VERSION_UNSPECIFIED),
       );
-      expect(EncodingUtils.indexToCidVersion(1), equals(IPFSCIDVersion.IPFS_CID_VERSION_0));
-      expect(EncodingUtils.indexToCidVersion(2), equals(IPFSCIDVersion.IPFS_CID_VERSION_1));
+      expect(
+        EncodingUtils.indexToCidVersion(1),
+        equals(IPFSCIDVersion.IPFS_CID_VERSION_0),
+      );
+      expect(
+        EncodingUtils.indexToCidVersion(2),
+        equals(IPFSCIDVersion.IPFS_CID_VERSION_1),
+      );
       expect(() => EncodingUtils.indexToCidVersion(3), throwsUnsupportedError);
     });
 
@@ -76,7 +85,10 @@ void main() {
       expect(EncodingUtils.getCodeFromCodec('raw'), equals(0x55));
       expect(EncodingUtils.getCodecFromCode(0x70), equals('dag-pb'));
 
-      expect(() => EncodingUtils.getCodeFromCodec('unknown'), throwsArgumentError);
+      expect(
+        () => EncodingUtils.getCodeFromCodec('unknown'),
+        throwsArgumentError,
+      );
       expect(() => EncodingUtils.getCodecFromCode(0xFFFF), throwsArgumentError);
     });
 

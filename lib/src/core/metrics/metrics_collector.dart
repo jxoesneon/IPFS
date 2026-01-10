@@ -39,21 +39,29 @@ import 'package:fixnum/fixnum.dart' as fixnum;
 class MetricsCollector {
   /// Creates a new metrics collector with the given [_config].
   MetricsCollector(this._config) {
-    _logger = Logger('MetricsCollector', debug: _config.debug, verbose: _config.verboseLogging);
+    _logger = Logger(
+      'MetricsCollector',
+      debug: _config.debug,
+      verbose: _config.verboseLogging,
+    );
     _logger.debug('MetricsCollector instance created');
   }
   final IPFSConfig _config;
   late final Logger _logger;
   Timer? _collectionTimer;
   final Map<String, dynamic> _metrics = <String, dynamic>{};
-  final Map<String, Map<String, int>> _messageMetrics = <String, Map<String, int>>{};
-  final Map<String, Map<String, int>> _byteMetrics = <String, Map<String, int>>{};
-  final Map<String, List<Duration>> _latencyMetrics = <String, List<Duration>>{};
+  final Map<String, Map<String, int>> _messageMetrics =
+      <String, Map<String, int>>{};
+  final Map<String, Map<String, int>> _byteMetrics =
+      <String, Map<String, int>>{};
+  final Map<String, List<Duration>> _latencyMetrics =
+      <String, List<Duration>>{};
   final StreamController<Map<String, dynamic>> _metricsStreamController =
       StreamController.broadcast();
 
   /// Stream of collected metrics.
-  Stream<Map<String, dynamic>> get metricsStream => _metricsStreamController.stream;
+  Stream<Map<String, dynamic>> get metricsStream =>
+      _metricsStreamController.stream;
 
   /// Starts metrics collection.
   Future<void> start() async {
@@ -151,7 +159,8 @@ class MetricsCollector {
     if (!_config.metrics.enabled) return;
 
     try {
-      final protocolMetrics = _metrics['protocol_metrics'] ??= <String, ProtocolMetrics>{};
+      final protocolMetrics = _metrics['protocol_metrics'] ??=
+          <String, ProtocolMetrics>{};
       final metrics = protocolMetrics[source] ?? ProtocolMetrics();
 
       // Update error counts map
@@ -171,7 +180,8 @@ class MetricsCollector {
     if (!_config.metrics.enabled) return;
 
     try {
-      final protocolMetrics = _metrics['protocol_metrics'] ??= <String, ProtocolMetrics>{};
+      final protocolMetrics = _metrics['protocol_metrics'] ??=
+          <String, ProtocolMetrics>{};
       final metrics = protocolMetrics[protocol] ?? ProtocolMetrics();
 
       // Update message counts if provided
@@ -179,7 +189,9 @@ class MetricsCollector {
         metrics.messagesSent += fixnum.Int64(data['messages_sent'] as int);
       }
       if (data['messages_received'] != null) {
-        metrics.messagesReceived += fixnum.Int64(data['messages_received'] as int);
+        metrics.messagesReceived += fixnum.Int64(
+          data['messages_received'] as int,
+        );
       }
 
       // Update active connections if provided
@@ -232,7 +244,10 @@ class MetricsCollector {
     if (latencies == null || latencies.isEmpty) {
       return Duration.zero;
     }
-    final totalMs = latencies.fold<int>(0, (sum, duration) => sum + duration.inMilliseconds);
+    final totalMs = latencies.fold<int>(
+      0,
+      (sum, duration) => sum + duration.inMilliseconds,
+    );
     return Duration(milliseconds: totalMs ~/ latencies.length);
   }
 
@@ -255,7 +270,9 @@ class MetricsCollector {
 
     // Update latency metrics
     _latencyMetrics[peerId] ??= [];
-    _latencyMetrics[peerId]?.add(Duration(milliseconds: metrics.averageLatencyMs));
+    _latencyMetrics[peerId]?.add(
+      Duration(milliseconds: metrics.averageLatencyMs),
+    );
 
     // Keep only last 100 latency measurements
     if (_latencyMetrics[peerId]!.length > 100) {

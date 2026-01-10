@@ -30,7 +30,14 @@ const IPFSMessage$json = {
       '10': 'timestamp'
     },
     {'1': 'sender_id', '3': 4, '4': 1, '5': 9, '10': 'senderId'},
-    {'1': 'type', '3': 5, '4': 1, '5': 14, '6': '.ipfs.base.IPFSMessage.MessageType', '10': 'type'},
+    {
+      '1': 'type',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.base.IPFSMessage.MessageType',
+      '10': 'type'
+    },
     {'1': 'request_id', '3': 6, '4': 1, '5': 9, '10': 'requestId'},
   ],
   '4': [IPFSMessage_MessageType$json],
@@ -50,13 +57,13 @@ const IPFSMessage_MessageType$json = {
 };
 
 /// Descriptor for `IPFSMessage`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List iPFSMessageDescriptor = $convert
-    .base64Decode('CgtJUEZTTWVzc2FnZRIfCgtwcm90b2NvbF9pZBgBIAEoCVIKcHJvdG9jb2xJZBIYCgdwYXlsb2'
-        'FkGAIgASgMUgdwYXlsb2FkEjgKCXRpbWVzdGFtcBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5U'
-        'aW1lc3RhbXBSCXRpbWVzdGFtcBIbCglzZW5kZXJfaWQYBCABKAlSCHNlbmRlcklkEjYKBHR5cG'
-        'UYBSABKA4yIi5pcGZzLmJhc2UuSVBGU01lc3NhZ2UuTWVzc2FnZVR5cGVSBHR5cGUSHQoKcmVx'
-        'dWVzdF9pZBgGIAEoCVIJcmVxdWVzdElkIlQKC01lc3NhZ2VUeXBlEgsKB1VOS05PV04QABIHCg'
-        'NESFQQARILCgdCSVRTV0FQEAISCgoGUFVCU1VCEAMSDAoISURFTlRJRlkQBBIICgRQSU5HEAU=');
+final $typed_data.Uint8List iPFSMessageDescriptor = $convert.base64Decode(
+    'CgtJUEZTTWVzc2FnZRIfCgtwcm90b2NvbF9pZBgBIAEoCVIKcHJvdG9jb2xJZBIYCgdwYXlsb2'
+    'FkGAIgASgMUgdwYXlsb2FkEjgKCXRpbWVzdGFtcBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5U'
+    'aW1lc3RhbXBSCXRpbWVzdGFtcBIbCglzZW5kZXJfaWQYBCABKAlSCHNlbmRlcklkEjYKBHR5cG'
+    'UYBSABKA4yIi5pcGZzLmJhc2UuSVBGU01lc3NhZ2UuTWVzc2FnZVR5cGVSBHR5cGUSHQoKcmVx'
+    'dWVzdF9pZBgGIAEoCVIJcmVxdWVzdElkIlQKC01lc3NhZ2VUeXBlEgsKB1VOS05PV04QABIHCg'
+    'NESFQQARILCgdCSVRTV0FQEAISCgoGUFVCU1VCEAMSDAoISURFTlRJRlkQBBIICgRQSU5HEAU=');
 
 @$core.Deprecated('Use networkEventDescriptor instead')
 const NetworkEvent$json = {
@@ -77,7 +84,7 @@ const NetworkEvent$json = {
 };
 
 /// Descriptor for `NetworkEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List networkEventDescriptor = $convert
-    .base64Decode('CgxOZXR3b3JrRXZlbnQSOAoJdGltZXN0YW1wGAEgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbW'
-        'VzdGFtcFIJdGltZXN0YW1wEh0KCmV2ZW50X3R5cGUYAiABKAlSCWV2ZW50VHlwZRIXCgdwZWVy'
-        'X2lkGAMgASgJUgZwZWVySWQSEgoEZGF0YRgEIAEoDFIEZGF0YQ==');
+final $typed_data.Uint8List networkEventDescriptor = $convert.base64Decode(
+    'CgxOZXR3b3JrRXZlbnQSOAoJdGltZXN0YW1wGAEgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbW'
+    'VzdGFtcFIJdGltZXN0YW1wEh0KCmV2ZW50X3R5cGUYAiABKAlSCWV2ZW50VHlwZRIXCgdwZWVy'
+    'X2lkGAMgASgJUgZwZWVySWQSEgoEZGF0YRgEIAEoDFIEZGF0YQ==');

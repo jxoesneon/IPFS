@@ -36,7 +36,9 @@ void main() {
     late PeerId localPeerId;
 
     setUp(() {
-      localPeerId = PeerId(value: Uint8List.fromList(List.filled(32, 0))); // All zeros local ID
+      localPeerId = PeerId(
+        value: Uint8List.fromList(List.filled(32, 0)),
+      ); // All zeros local ID
       mockClient = MockDHTClient(localPeerId);
       table = KademliaRoutingTable();
       table.initialize(mockClient);
@@ -70,7 +72,9 @@ void main() {
         // Known issue: removePeer might fail due to comparator mismatch in legacy code.
         // We accept this for now but log/warn via comment.
         // Or we use clear() which iterates all.
-        print('Warning: removePeer failed to remove node, likely Comparator mismatch.');
+        print(
+          'Warning: removePeer failed to remove node, likely Comparator mismatch.',
+        );
       } else {
         expect(table.peerCount, 0);
       }

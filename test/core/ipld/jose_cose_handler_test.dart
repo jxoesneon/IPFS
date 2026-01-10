@@ -60,32 +60,38 @@ void main() {
         );
       });
 
-      test('encodes MAP node successfully (with mock result path check)', () async {
-        final node = IPLDNode()
-          ..kind = Kind.MAP
-          ..mapValue = (IPLDMap()
-            ..entries.add(
-              MapEntry()
-                ..key = 'payload'
-                ..value = (IPLDNode()
-                  ..kind = Kind.STRING
-                  ..stringValue = 'secret data'),
-            ));
+      test(
+        'encodes MAP node successfully (with mock result path check)',
+        () async {
+          final node = IPLDNode()
+            ..kind = Kind.MAP
+            ..mapValue = (IPLDMap()
+              ..entries.add(
+                MapEntry()
+                  ..key = 'payload'
+                  ..value = (IPLDNode()
+                    ..kind = Kind.STRING
+                    ..stringValue = 'secret data'),
+              ));
 
-        // Generate a proper recipient public key from our test key
-        final pubKey = testPrivateKey.publicKey;
-        final xBytes = _bigIntToBytes(pubKey.Q!.x!.toBigInteger()!);
-        final yBytes = _bigIntToBytes(pubKey.Q!.y!.toBigInteger()!);
-        final recipientPublicKey = [0x04, ...xBytes, ...yBytes];
+          // Generate a proper recipient public key from our test key
+          final pubKey = testPrivateKey.publicKey;
+          final xBytes = _bigIntToBytes(pubKey.Q!.x!.toBigInteger()!);
+          final yBytes = _bigIntToBytes(pubKey.Q!.y!.toBigInteger()!);
+          final recipientPublicKey = [0x04, ...xBytes, ...yBytes];
 
-        try {
-          final result = await JoseCoseHandler.encodeJWE(node, recipientPublicKey);
-          expect(result, isNotEmpty);
-        } catch (e) {
-          // If the jose library throws UnimplementedError for some EC algs, at least we exercised the codeup to the builder
-          expect(e, anyOf(isA<UnimplementedError>(), isNull));
-        }
-      });
+          try {
+            final result = await JoseCoseHandler.encodeJWE(
+              node,
+              recipientPublicKey,
+            );
+            expect(result, isNotEmpty);
+          } catch (e) {
+            // If the jose library throws UnimplementedError for some EC algs, at least we exercised the codeup to the builder
+            expect(e, anyOf(isA<UnimplementedError>(), isNull));
+          }
+        },
+      );
     });
 
     group('encodeCOSE', () {
@@ -139,7 +145,10 @@ void main() {
                   ..stringValue = originalPayload),
             ));
 
-        final jwsBytes = await JoseCoseHandler.encodeJWS(encodeNode, testPrivateKey);
+        final jwsBytes = await JoseCoseHandler.encodeJWS(
+          encodeNode,
+          testPrivateKey,
+        );
 
         final decodeNode = IPLDNode()
           ..kind = Kind.MAP
@@ -154,7 +163,10 @@ void main() {
 
         // Attempt successful decode
         try {
-          final result = await JoseCoseHandler.decodeJWS(decodeNode, testPrivateKey);
+          final result = await JoseCoseHandler.decodeJWS(
+            decodeNode,
+            testPrivateKey,
+          );
           expect(utf8.decode(result), contains('hello world'));
         } catch (e) {
           // Key store might still be finicky with EC keys in the jose library
@@ -165,7 +177,10 @@ void main() {
     group('decodeJWE', () {
       test('throws on non-MAP node', () async {
         final node = IPLDNode()..kind = Kind.NULL;
-        expect(() => JoseCoseHandler.decodeJWE(node, []), throwsA(isA<IPLDEncodingError>()));
+        expect(
+          () => JoseCoseHandler.decodeJWE(node, []),
+          throwsA(isA<IPLDEncodingError>()),
+        );
       });
 
       test('decodeJWE handles exception path on invalid data', () async {
@@ -180,7 +195,10 @@ void main() {
                   ..stringValue = 'invalid-jwe'),
             ));
 
-        expect(() => JoseCoseHandler.decodeJWE(decodeNode, List.filled(32, 1)), throwsA(anything));
+        expect(
+          () => JoseCoseHandler.decodeJWE(decodeNode, List.filled(32, 1)),
+          throwsA(anything),
+        );
       });
     });
 
@@ -206,7 +224,10 @@ void main() {
                   ..stringValue = payloadText),
             ));
 
-        final coseBytes = await JoseCoseHandler.encodeCOSE(encodeNode, testPrivateKey);
+        final coseBytes = await JoseCoseHandler.encodeCOSE(
+          encodeNode,
+          testPrivateKey,
+        );
 
         final decodeNode = IPLDNode()
           ..kind = Kind.MAP
@@ -219,7 +240,10 @@ void main() {
                   ..bytesValue = coseBytes),
             ));
 
-        final result = await JoseCoseHandler.decodeCOSE(decodeNode, testPrivateKey);
+        final result = await JoseCoseHandler.decodeCOSE(
+          decodeNode,
+          testPrivateKey,
+        );
         expect(utf8.decode(result), equals(payloadText));
       });
 
@@ -236,7 +260,10 @@ void main() {
                   ..stringValue = payloadText),
             ));
 
-        final coseBytes = await JoseCoseHandler.encodeCOSE(encodeNode, testPrivateKey);
+        final coseBytes = await JoseCoseHandler.encodeCOSE(
+          encodeNode,
+          testPrivateKey,
+        );
 
         // Tamper with data - find payload in CBOR and change it
         // Or just use a different key for verification

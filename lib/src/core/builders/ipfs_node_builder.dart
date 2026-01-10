@@ -99,7 +99,9 @@ class IPFSNodeBuilder {
     // I will replace this line and then add imports.
     final datastore = HiveDatastore(_config.datastorePath);
     _container.registerSingleton(DatastoreHandler(datastore));
-    _container.registerSingleton(IPLDHandler(_config, _container.get<BlockStore>()));
+    _container.registerSingleton(
+      IPLDHandler(_config, _container.get<BlockStore>()),
+    );
   }
 
   Future<void> _initializeNetworkLayer() async {
@@ -109,7 +111,10 @@ class IPFSNodeBuilder {
     // PROACTIVE CHECK: Ensure libsodium is available before importing p2plib
     // This prevents the FFI hang that occurs when sodium package loads
     try {
-      final hasLibsodium = await LibsodiumSetup.ensureAvailable(autoInstall: true, verbose: true);
+      final hasLibsodium = await LibsodiumSetup.ensureAvailable(
+        autoInstall: true,
+        verbose: true,
+      );
 
       if (!hasLibsodium) {
         throw StateError(
@@ -133,7 +138,9 @@ class IPFSNodeBuilder {
 
     _container.registerSingleton(MDNSHandler(_config));
 
-    _container.registerSingleton(DHTHandler(_config, networkHandler.p2pRouter, networkHandler));
+    _container.registerSingleton(
+      DHTHandler(_config, networkHandler.p2pRouter, networkHandler),
+    );
 
     // Create IpfsNodeNetworkEvents instance
     final networkEvents = IpfsNodeNetworkEvents(
@@ -150,7 +157,11 @@ class IPFSNodeBuilder {
     );
 
     _container.registerSingleton(
-      BitswapHandler(_config, _container.get<BlockStore>(), networkHandler.p2pRouter),
+      BitswapHandler(
+        _config,
+        _container.get<BlockStore>(),
+        networkHandler.p2pRouter,
+      ),
     );
 
     _container.registerSingleton(BootstrapHandler(_config, networkHandler));
@@ -162,7 +173,9 @@ class IPFSNodeBuilder {
 
     final networkHandler = _container.get<NetworkHandler>();
 
-    _container.registerSingleton(ContentRoutingHandler(_config, networkHandler));
+    _container.registerSingleton(
+      ContentRoutingHandler(_config, networkHandler),
+    );
     _container.registerSingleton(DNSLinkHandler(_config));
     _container.registerSingleton(
       GraphsyncHandler(
@@ -179,12 +192,17 @@ class IPFSNodeBuilder {
         _config,
         _container.get<SecurityManager>(),
         _container.get<DHTHandler>(),
-        _container.isRegistered(PubSubHandler) ? _container.get<PubSubHandler>() : null,
+        _container.isRegistered(PubSubHandler)
+            ? _container.get<PubSubHandler>()
+            : null,
       ),
     );
 
     if (_config.enableCircuitRelay) {
-      final relayService = CircuitRelayService(networkHandler.p2pRouter, _config);
+      final relayService = CircuitRelayService(
+        networkHandler.p2pRouter,
+        _config,
+      );
       relayService.start();
       _container.registerSingleton(relayService);
     }

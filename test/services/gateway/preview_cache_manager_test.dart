@@ -11,7 +11,10 @@ void main() {
 
   setUp(() async {
     tempDir = await Directory.systemTemp.createTemp('preview_cache_test_');
-    cacheManager = PreviewCacheManager(cachePath: tempDir.path, maxMemoryEntries: 10);
+    cacheManager = PreviewCacheManager(
+      cachePath: tempDir.path,
+      maxMemoryEntries: 10,
+    );
   });
 
   tearDown(() async {

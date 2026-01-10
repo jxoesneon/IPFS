@@ -103,7 +103,9 @@ class EnhancedCBORHandler {
       case Kind.BYTES:
         return CborBytes(node.bytesValue, tags: [45]); // Raw tag
       case Kind.LIST:
-        final list = node.listValue.values.map((e) => convertIPLDNodeToCbor(e)).toList();
+        final list = node.listValue.values
+            .map((e) => convertIPLDNodeToCbor(e))
+            .toList();
         return CborList(list);
       case Kind.MAP:
         final map = <CborValue, CborValue>{};
@@ -139,7 +141,9 @@ class EnhancedCBORHandler {
       final tag = value.tags.first;
       switch (tag) {
         case 42: // DAG-PB
-          return convertFromMerkleDAGNode(MerkleDAGNode.fromBytes(Uint8List.fromList(value.bytes)));
+          return convertFromMerkleDAGNode(
+            MerkleDAGNode.fromBytes(Uint8List.fromList(value.bytes)),
+          );
         case 43: // DAG-CBOR
           return convertCborValueToIPLDNode(value);
         case 6: // CID Link
@@ -202,7 +206,8 @@ class EnhancedCBORHandler {
 
   /// Converts a MerkleDAGNode to an IPLDNode
   static IPLDNode convertFromMerkleDAGNode(MerkleDAGNode dagNode) {
-    final links = IPLDList()..values.addAll(dagNode.links.map(_convertFromMerkleLink));
+    final links = IPLDList()
+      ..values.addAll(dagNode.links.map(_convertFromMerkleLink));
 
     return IPLDNode()
       ..kind = Kind.MAP
@@ -302,7 +307,8 @@ class EnhancedCBORHandler {
               ..linkValue = (IPLDLink()
                 ..version = link.cid.version
                 ..codec = link.cid.codec ?? 'dag-pb'
-                ..multihash = link.cid.multihash.toBytes())), // Encode CID as Link
+                ..multihash = link.cid.multihash
+                    .toBytes())), // Encode CID as Link
           MapEntry()
             ..key = 'Tsize'
             ..value = (IPLDNode()
@@ -376,7 +382,9 @@ class EnhancedCBORHandler {
 
     final codec = codecMap[code];
     if (codec == null) {
-      throw IPLDDecodingError('Unsupported codec code: 0x${code.toRadixString(16)}');
+      throw IPLDDecodingError(
+        'Unsupported codec code: 0x${code.toRadixString(16)}',
+      );
     }
     return codec;
   }

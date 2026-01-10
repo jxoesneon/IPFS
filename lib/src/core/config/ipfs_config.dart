@@ -122,16 +122,24 @@ class IPFSConfig {
     return IPFSConfig(
       offline: json['offline'] as bool? ?? false,
       network: NetworkConfig.fromJson(
-        json['network'] != null ? Map<String, dynamic>.from(json['network'] as Map) : {},
+        json['network'] != null
+            ? Map<String, dynamic>.from(json['network'] as Map)
+            : {},
       ),
       dht: DHTConfig.fromJson(
-        json['dht'] != null ? Map<String, dynamic>.from(json['dht'] as Map) : {},
+        json['dht'] != null
+            ? Map<String, dynamic>.from(json['dht'] as Map)
+            : {},
       ),
       storage: StorageConfig.fromJson(
-        json['storage'] != null ? Map<String, dynamic>.from(json['storage'] as Map) : {},
+        json['storage'] != null
+            ? Map<String, dynamic>.from(json['storage'] as Map)
+            : {},
       ),
       security: SecurityConfig.fromJson(
-        json['security'] != null ? Map<String, dynamic>.from(json['security'] as Map) : {},
+        json['security'] != null
+            ? Map<String, dynamic>.from(json['security'] as Map)
+            : {},
       ),
       debug: json['debug'] as bool? ?? false,
       verboseLogging: json['verboseLogging'] as bool? ?? false,
@@ -253,7 +261,9 @@ class IPFSConfig {
   static Future<IPFSConfig> fromFile(String path) async {
     final file = File(path);
     final yaml = loadYaml(await file.readAsString());
-    return IPFSConfig.fromJson(json.decode(json.encode(yaml)) as Map<String, dynamic>);
+    return IPFSConfig.fromJson(
+      json.decode(json.encode(yaml)) as Map<String, dynamic>,
+    );
   }
 
   /// Converts to JSON representation.

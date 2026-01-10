@@ -26,7 +26,12 @@ void main() {
       mockPubSubHandler = MockPubSubHandler();
       config = IPFSConfig(offline: false);
 
-      ipnsHandler = IPNSHandler(config, mockSecurityManager, mockDHTHandler, mockPubSubHandler);
+      ipnsHandler = IPNSHandler(
+        config,
+        mockSecurityManager,
+        mockDHTHandler,
+        mockPubSubHandler,
+      );
     });
 
     test('start() subscribes to PubSub topic', () async {
@@ -48,7 +53,9 @@ void main() {
 
       final algorithm = Ed25519();
       final keyPair = await algorithm.newKeyPair();
-      when(mockSecurityManager.getSecureKey(any)).thenAnswer((_) async => keyPair);
+      when(
+        mockSecurityManager.getSecureKey(any),
+      ).thenAnswer((_) async => keyPair);
 
       // Setup DHT put
       when(mockDHTHandler.putValue(any, any)).thenAnswer((_) async {});

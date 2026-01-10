@@ -76,7 +76,8 @@ class DAGJsonHandler {
       node.stringValue = obj;
     } else if (obj is List) {
       node.kind = Kind.LIST;
-      node.listValue = IPLDList()..values.addAll(obj.map((e) => _fromPlainObject(e)));
+      node.listValue = IPLDList()
+        ..values.addAll(obj.map((e) => _fromPlainObject(e)));
     } else if (obj is Map) {
       if (obj.length == 1 && obj.containsKey('/')) {
         final link = obj['/'];

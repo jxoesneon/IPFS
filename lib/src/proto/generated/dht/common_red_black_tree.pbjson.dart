@@ -57,9 +57,9 @@ const Node$json = {
 };
 
 /// Descriptor for `Node`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List nodeDescriptor = $convert
-    .base64Decode('CgROb2RlEkUKB3BlZXJfaWQYASABKAsyLC5pcGZzLmRodC5jb21tb25fcmVkX2JsYWNrX3RyZW'
-        'UuUkJUcmVlUGVlcklkUgZwZWVySWQSEgoEZGF0YRgCIAEoDFIEZGF0YQ==');
+final $typed_data.Uint8List nodeDescriptor = $convert.base64Decode(
+    'CgROb2RlEkUKB3BlZXJfaWQYASABKAsyLC5pcGZzLmRodC5jb21tb25fcmVkX2JsYWNrX3RyZW'
+    'UuUkJUcmVlUGVlcklkUgZwZWVySWQSEgoEZGF0YRgCIAEoDFIEZGF0YQ==');
 
 @$core.Deprecated('Use k_PeerIdDescriptor instead')
 const K_PeerId$json = {
@@ -117,14 +117,14 @@ const V_PeerInfo_ConnectionStatus$json = {
 };
 
 /// Descriptor for `V_PeerInfo`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List v_PeerInfoDescriptor = $convert
-    .base64Decode('CgpWX1BlZXJJbmZvEhcKB3BlZXJfaWQYASABKAxSBnBlZXJJZBIdCgppcF9hZGRyZXNzGAIgAS'
-        'gJUglpcEFkZHJlc3MSEgoEcG9ydBgDIAEoBVIEcG9ydBIcCglwcm90b2NvbHMYBCADKAlSCXBy'
-        'b3RvY29scxIYCgdsYXRlbmN5GAUgASgFUgdsYXRlbmN5EmgKEWNvbm5lY3Rpb25fc3RhdHVzGA'
-        'YgASgOMjsuaXBmcy5kaHQuY29tbW9uX3JlZF9ibGFja190cmVlLlZfUGVlckluZm8uQ29ubmVj'
-        'dGlvblN0YXR1c1IQY29ubmVjdGlvblN0YXR1cxI3CglsYXN0X3NlZW4YByABKAsyGi5nb29nbG'
-        'UucHJvdG9idWYuVGltZXN0YW1wUghsYXN0U2VlbhIjCg1hZ2VudF92ZXJzaW9uGAggASgJUgxh'
-        'Z2VudFZlcnNpb24SHQoKcHVibGljX2tleRgJIAEoDFIJcHVibGljS2V5EhwKCWFkZHJlc3Nlcx'
-        'gKIAMoCVIJYWRkcmVzc2VzEiMKDW9ic2VydmVkX2FkZHIYCyABKAlSDG9ic2VydmVkQWRkciJD'
-        'ChBDb25uZWN0aW9uU3RhdHVzEhAKDERJU0NPTk5FQ1RFRBAAEg4KCkNPTk5FQ1RJTkcQARINCg'
-        'lDT05ORUNURUQQAg==');
+final $typed_data.Uint8List v_PeerInfoDescriptor = $convert.base64Decode(
+    'CgpWX1BlZXJJbmZvEhcKB3BlZXJfaWQYASABKAxSBnBlZXJJZBIdCgppcF9hZGRyZXNzGAIgAS'
+    'gJUglpcEFkZHJlc3MSEgoEcG9ydBgDIAEoBVIEcG9ydBIcCglwcm90b2NvbHMYBCADKAlSCXBy'
+    'b3RvY29scxIYCgdsYXRlbmN5GAUgASgFUgdsYXRlbmN5EmgKEWNvbm5lY3Rpb25fc3RhdHVzGA'
+    'YgASgOMjsuaXBmcy5kaHQuY29tbW9uX3JlZF9ibGFja190cmVlLlZfUGVlckluZm8uQ29ubmVj'
+    'dGlvblN0YXR1c1IQY29ubmVjdGlvblN0YXR1cxI3CglsYXN0X3NlZW4YByABKAsyGi5nb29nbG'
+    'UucHJvdG9idWYuVGltZXN0YW1wUghsYXN0U2VlbhIjCg1hZ2VudF92ZXJzaW9uGAggASgJUgxh'
+    'Z2VudFZlcnNpb24SHQoKcHVibGljX2tleRgJIAEoDFIJcHVibGljS2V5EhwKCWFkZHJlc3Nlcx'
+    'gKIAMoCVIJYWRkcmVzc2VzEiMKDW9ic2VydmVkX2FkZHIYCyABKAlSDG9ic2VydmVkQWRkciJD'
+    'ChBDb25uZWN0aW9uU3RhdHVzEhAKDERJU0NPTk5FQ1RFRBAAEg4KCkNPTk5FQ1RJTkcQARINCg'
+    'lDT05ORUNURUQQAg==');

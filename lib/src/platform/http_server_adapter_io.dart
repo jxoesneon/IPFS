@@ -27,7 +27,11 @@ class IpfsHttpServerInstanceIO implements IpfsHttpServerInstance {
 /// IO implementation of HTTP server adapter.
 class HttpServerAdapterIO implements HttpServerAdapter {
   @override
-  Future<IpfsHttpServerInstance> serve(Handler handler, String address, int port) async {
+  Future<IpfsHttpServerInstance> serve(
+    Handler handler,
+    String address,
+    int port,
+  ) async {
     final server = await shelf_io.serve(handler, address, port);
     return IpfsHttpServerInstanceIO(server);
   }

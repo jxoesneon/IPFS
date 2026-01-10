@@ -7,7 +7,8 @@ import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
-import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart' as pb_ts;
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/timestamp.pb.dart'
+    as pb_ts;
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_tree_node.dart';
 import 'package:dart_ipfs/src/protocols/dht/red_black_tree.dart';
 import 'package:test/test.dart';
@@ -17,7 +18,11 @@ class MockNetworkHandler implements NetworkHandler {
   Future<Uint8List> Function(String, String, Uint8List)? onSendRequest;
 
   @override
-  Future<Uint8List> sendRequest(String peerId, String protocol, Uint8List data) async {
+  Future<Uint8List> sendRequest(
+    String peerId,
+    String protocol,
+    Uint8List data,
+  ) async {
     if (onSendRequest != null) return onSendRequest!(peerId, protocol, data);
     return Uint8List(0);
   }
@@ -118,7 +123,9 @@ void main() {
       await table.addPeer(peer, peer);
 
       final node = table.buckets[0].entries.first.value;
-      node.lastSeen = DateTime.now().subtract(Duration(hours: 5)).millisecondsSinceEpoch;
+      node.lastSeen = DateTime.now()
+          .subtract(Duration(hours: 5))
+          .millisecondsSinceEpoch;
 
       table.refresh();
       expect(table.containsPeer(peer), isFalse);
@@ -141,7 +148,8 @@ void main() {
         ..lastSeen = pb_ts.Timestamp.fromDateTime(DateTime.now());
 
       final pingMsg = kad.Message()..type = kad.Message_MessageType.PING;
-      mockNetworkHandler.onSendRequest = (p, pr, d) async => pingMsg.writeToBuffer();
+      mockNetworkHandler.onSendRequest = (p, pr, d) async =>
+          pingMsg.writeToBuffer();
 
       await table.updatePeer(vPeerInfo);
       expect(table.containsPeer(peerId), isTrue);
@@ -151,13 +159,15 @@ void main() {
       final peerId = createPeerId(0x40);
       final vPeerInfo = V_PeerInfo()..peerId = peerId.value;
 
-      mockNetworkHandler.onSendRequest = (p, pr, d) async => throw Exception('Ping failed');
+      mockNetworkHandler.onSendRequest = (p, pr, d) async =>
+          throw Exception('Ping failed');
 
       expect(() => table.updatePeer(vPeerInfo), throwsException);
     });
 
     test('pingPeer failure', () async {
-      mockNetworkHandler.onSendRequest = (p, pr, d) async => throw Exception('Timeout');
+      mockNetworkHandler.onSendRequest = (p, pr, d) async =>
+          throw Exception('Timeout');
 
       final result = await table.pingPeer(createPeerId(0x20));
       expect(result, isFalse);
@@ -188,7 +198,9 @@ void main() {
 
       // Force node stale for 1.5 hours (Default threshold is 1 hour)
       final node = table.buckets[0].entries.first.value;
-      node.lastSeen = DateTime.now().subtract(Duration(minutes: 90)).millisecondsSinceEpoch;
+      node.lastSeen = DateTime.now()
+          .subtract(Duration(minutes: 90))
+          .millisecondsSinceEpoch;
 
       // Should be stale with default stats (50 connected peers)
       table.refresh();
@@ -220,7 +232,11 @@ void main() {
       table.addKeyProvider(key, provider, now);
       expect(table.containsPeer(key), isTrue);
 
-      table.updateKeyProviderTimestamp(key, provider, now.add(Duration(minutes: 1)));
+      table.updateKeyProviderTimestamp(
+        key,
+        provider,
+        now.add(Duration(minutes: 1)),
+      );
     });
 
     test('xorDistanceComparator Tiebreakers', () {
@@ -286,7 +302,9 @@ void main() {
 
       final bucket1 = table.buckets[1];
       for (var entry in bucket1.entries.toList()) {
-        entry.value.lastSeen = DateTime.now().subtract(Duration(hours: 10)).millisecondsSinceEpoch;
+        entry.value.lastSeen = DateTime.now()
+            .subtract(Duration(hours: 10))
+            .millisecondsSinceEpoch;
       }
 
       table.refresh();
@@ -319,7 +337,9 @@ void main() {
 
       // Manually make node stale
       final node = table.buckets[0].entries.first.value;
-      node.lastSeen = DateTime.now().subtract(Duration(hours: 2)).millisecondsSinceEpoch;
+      node.lastSeen = DateTime.now()
+          .subtract(Duration(hours: 2))
+          .millisecondsSinceEpoch;
 
       table.refresh();
       expect(table.containsPeer(p1), isFalse);

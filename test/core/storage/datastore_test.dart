@@ -24,7 +24,11 @@ void main() {
   });
 }
 
-void verifyDatastore(String name, Datastore Function() create, {void Function()? teardown}) {
+void verifyDatastore(
+  String name,
+  Datastore Function() create, {
+  void Function()? teardown,
+}) {
   group(name, () {
     late Datastore ds;
 

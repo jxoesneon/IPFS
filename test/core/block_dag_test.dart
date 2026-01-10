@@ -3,7 +3,8 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs_proto;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
+    as unixfs_proto;
 import 'package:fixnum/fixnum.dart';
 import 'package:test/test.dart';
 
@@ -95,7 +96,12 @@ void main() {
       final linkCid = CID.computeForDataSync(Uint8List(10));
       final links = [Link(name: 'child1', size: 10, cid: linkCid)];
 
-      final node = MerkleDAGNode(links: links, data: data, isDirectory: true, mtime: 123456789);
+      final node = MerkleDAGNode(
+        links: links,
+        data: data,
+        isDirectory: true,
+        mtime: 123456789,
+      );
 
       final bytes = node.toBytes();
       final fromBytes = MerkleDAGNode.fromBytes(bytes);
@@ -114,11 +120,19 @@ void main() {
     });
 
     test('toString and HAMTShard coverage', () {
-      final node = MerkleDAGNode(links: [], data: Uint8List(0), isDirectory: false);
+      final node = MerkleDAGNode(
+        links: [],
+        data: Uint8List(0),
+        isDirectory: false,
+      );
       expect(node.toString(), contains('MerkleDAGNode'));
 
-      final hamtData = unixfs_proto.Data()..type = unixfs_proto.Data_DataType.HAMTShard;
-      final pbNode = MerkleDAGNode(links: [], data: Uint8List.fromList(hamtData.writeToBuffer()));
+      final hamtData = unixfs_proto.Data()
+        ..type = unixfs_proto.Data_DataType.HAMTShard;
+      final pbNode = MerkleDAGNode(
+        links: [],
+        data: Uint8List.fromList(hamtData.writeToBuffer()),
+      );
       final decoded = MerkleDAGNode.fromBytes(pbNode.toBytes());
       expect(decoded.isDirectory, isTrue);
     });

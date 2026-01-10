@@ -1,5 +1,6 @@
 // lib/src/protocols/dht/red_black_tree/deletion.dart
-import '../../../proto/generated/dht/common_red_black_tree.pb.dart' as common_tree;
+import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
+    as common_tree;
 import '../red_black_tree.dart';
 import 'fix_violations.dart';
 
@@ -50,7 +51,8 @@ class Deletion<K_PeerId, V_PeerInfo> {
     }
 
     // Create an instance of FixViolations to fix any violations after deletion
-    FixViolations<K_PeerId, V_PeerInfo> fixViolations = FixViolations<K_PeerId, V_PeerInfo>();
+    FixViolations<K_PeerId, V_PeerInfo> fixViolations =
+        FixViolations<K_PeerId, V_PeerInfo>();
 
     if (yOriginalColor == common_tree.NodeColor.BLACK && x != null) {
       fixViolations.fixDeletion(tree, x, x.parent); // Fix any violations
@@ -80,7 +82,9 @@ class Deletion<K_PeerId, V_PeerInfo> {
   }
 
   /// Finds the minimum node in a subtree.
-  RedBlackTreeNode<K_PeerId, V_PeerInfo>? minimum(RedBlackTreeNode<K_PeerId, V_PeerInfo> node) {
+  RedBlackTreeNode<K_PeerId, V_PeerInfo>? minimum(
+    RedBlackTreeNode<K_PeerId, V_PeerInfo> node,
+  ) {
     while (node.leftChild != null) {
       node = node.leftChild!;
     }

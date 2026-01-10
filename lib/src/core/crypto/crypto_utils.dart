@@ -30,7 +30,10 @@ class EncryptedData {
     if (bytes.length < 12) {
       throw ArgumentError('Encrypted data too short');
     }
-    return EncryptedData(nonce: bytes.sublist(0, 12), ciphertext: bytes.sublist(12));
+    return EncryptedData(
+      nonce: bytes.sublist(0, 12),
+      ciphertext: bytes.sublist(12),
+    );
   }
 }
 
@@ -84,7 +87,10 @@ class CryptoUtils {
   ///
   /// Returns [EncryptedData] containing ciphertext and nonce.
   /// The ciphertext includes the 16-byte authentication tag.
-  static Future<EncryptedData> encrypt(Uint8List plaintext, Uint8List key) async {
+  static Future<EncryptedData> encrypt(
+    Uint8List plaintext,
+    Uint8List key,
+  ) async {
     if (key.length != keySize) {
       throw ArgumentError('Key must be $keySize bytes');
     }
@@ -93,10 +99,17 @@ class CryptoUtils {
     final algorithm = crypto.AesGcm.with256bits();
 
     final secretKey = crypto.SecretKey(key);
-    final secretBox = await algorithm.encrypt(plaintext, secretKey: secretKey, nonce: nonce);
+    final secretBox = await algorithm.encrypt(
+      plaintext,
+      secretKey: secretKey,
+      nonce: nonce,
+    );
 
     // Combine ciphertext + MAC
-    final ciphertext = Uint8List.fromList([...secretBox.cipherText, ...secretBox.mac.bytes]);
+    final ciphertext = Uint8List.fromList([
+      ...secretBox.cipherText,
+      ...secretBox.mac.bytes,
+    ]);
 
     return EncryptedData(ciphertext: ciphertext, nonce: nonce);
   }
@@ -104,7 +117,10 @@ class CryptoUtils {
   /// Decrypts AES-256-GCM encrypted data.
   ///
   /// Throws [crypto.SecretBoxAuthenticationError] if authentication fails.
-  static Future<Uint8List> decrypt(EncryptedData encrypted, Uint8List key) async {
+  static Future<Uint8List> decrypt(
+    EncryptedData encrypted,
+    Uint8List key,
+  ) async {
     if (key.length != keySize) {
       throw ArgumentError('Key must be $keySize bytes');
     }
@@ -144,7 +160,9 @@ class CryptoUtils {
   /// Generates cryptographically secure random bytes.
   static Uint8List randomBytes(int length) {
     final random = Random.secure();
-    return Uint8List.fromList(List.generate(length, (_) => random.nextInt(256)));
+    return Uint8List.fromList(
+      List.generate(length, (_) => random.nextInt(256)),
+    );
   }
 
   /// Generates a random salt for PBKDF2.

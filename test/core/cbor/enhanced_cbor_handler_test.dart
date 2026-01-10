@@ -73,7 +73,9 @@ void main() {
       });
 
       test('encodes and decodes CID LINK (Tag 6)', () async {
-        final cid = CID.decode('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z'); // V0
+        final cid = CID.decode(
+          'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z',
+        ); // V0
         final node = IPLDNode()
           ..kind = Kind.LINK
           ..linkValue = (IPLDLink()
@@ -138,11 +140,15 @@ void main() {
           ..listValue = list;
 
         final bytesMap = await EnhancedCBORHandler.encodeCbor(nodeMap);
-        final decodedMap = await EnhancedCBORHandler.decodeCborWithTags(bytesMap);
+        final decodedMap = await EnhancedCBORHandler.decodeCborWithTags(
+          bytesMap,
+        );
         expect(decodedMap.kind, equals(Kind.MAP));
 
         final bytesList = await EnhancedCBORHandler.encodeCbor(nodeList);
-        final decodedList = await EnhancedCBORHandler.decodeCborWithTags(bytesList);
+        final decodedList = await EnhancedCBORHandler.decodeCborWithTags(
+          bytesList,
+        );
         expect(decodedList.kind, equals(Kind.LIST));
       });
     });
@@ -173,14 +179,29 @@ void main() {
         expect(linkMap.kind, equals(Kind.MAP));
         // Verify Link fields: Name, Hash, Tsize
         final linkEntries = linkMap.mapValue.entries;
-        expect(linkEntries.any((e) => e.key == 'Name' && e.value.stringValue == 'link1'), isTrue);
-        expect(linkEntries.any((e) => e.key == 'Hash' && e.value.kind == Kind.LINK), isTrue);
-        expect(linkEntries.any((e) => e.key == 'Tsize' && e.value.intValue == Int64(100)), isTrue);
+        expect(
+          linkEntries.any(
+            (e) => e.key == 'Name' && e.value.stringValue == 'link1',
+          ),
+          isTrue,
+        );
+        expect(
+          linkEntries.any((e) => e.key == 'Hash' && e.value.kind == Kind.LINK),
+          isTrue,
+        );
+        expect(
+          linkEntries.any(
+            (e) => e.key == 'Tsize' && e.value.intValue == Int64(100),
+          ),
+          isTrue,
+        );
       });
 
       test('convertToMerkleLink converts IPLDNode map back to Link', () {
         // Construct IPLD map manually
-        final cid = CID.decode('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z');
+        final cid = CID.decode(
+          'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z',
+        );
         final node = IPLDNode()
           ..kind = Kind.MAP
           ..mapValue = (IPLDMap()
@@ -216,7 +237,9 @@ void main() {
       });
 
       test('convertToMerkleLink handles hash as bytes (legacy)', () {
-        final cid = CID.decode('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z'); // V0 multihash
+        final cid = CID.decode(
+          'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z',
+        ); // V0 multihash
         final node = IPLDNode()
           ..kind = Kind.MAP
           ..mapValue = (IPLDMap()
@@ -237,7 +260,9 @@ void main() {
 
       test('convertToMerkleLink throws if not MAP', () {
         expect(
-          () => EnhancedCBORHandler.convertToMerkleLink(IPLDNode()..kind = Kind.STRING),
+          () => EnhancedCBORHandler.convertToMerkleLink(
+            IPLDNode()..kind = Kind.STRING,
+          ),
           throwsA(isA<IPLDEncodingError>()),
         );
       });

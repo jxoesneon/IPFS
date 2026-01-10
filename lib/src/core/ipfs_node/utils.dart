@@ -46,7 +46,9 @@ class IPFSUtils {
 
   /// Extracts a CID from an HTTP response body.
   static String? extractCIDFromResponse(String responseBody) {
-    final match = RegExp(r'Qm[1-9A-HJ-NP-Za-km-z]{44}').firstMatch(responseBody);
+    final match = RegExp(
+      r'Qm[1-9A-HJ-NP-Za-km-z]{44}',
+    ).firstMatch(responseBody);
     final cid = match?.group(0);
     return cid != null && isValidCID(cid) ? cid : null;
   }

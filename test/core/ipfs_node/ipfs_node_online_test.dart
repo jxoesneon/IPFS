@@ -105,7 +105,9 @@ void main() {
       container.registerSingleton<PubSubHandler>(mockPubSubHandler);
       container.registerSingleton<MDNSHandler>(mockMDNSHandler);
       container.registerSingleton<BootstrapHandler>(mockBootstrapHandler);
-      container.registerSingleton<ContentRoutingHandler>(mockContentRoutingHandler);
+      container.registerSingleton<ContentRoutingHandler>(
+        mockContentRoutingHandler,
+      );
       container.registerSingleton<GraphsyncHandler>(mockGraphsyncHandler);
       container.registerSingleton<AutoNATHandler>(mockAutoNATHandler);
       container.registerSingleton<IPNSHandler>(mockIPNSHandler);
@@ -249,7 +251,9 @@ void main() {
       final data = Uint8List.fromList([10, 20]);
       final mockBlock = await Block.fromData(data); // Using async factory
 
-      when(mockDatastoreHandler.getBlock(cidString)).thenAnswer((_) async => mockBlock);
+      when(
+        mockDatastoreHandler.getBlock(cidString),
+      ).thenAnswer((_) async => mockBlock);
 
       final result = await node.cat(cidString);
 
@@ -262,8 +266,12 @@ void main() {
       final data = Uint8List.fromList([30, 40]);
       final mockBlock = await Block.fromData(data);
 
-      when(mockDatastoreHandler.getBlock(cidString)).thenAnswer((_) async => null);
-      when(mockBitswapHandler.wantBlock(cidString)).thenAnswer((_) async => mockBlock);
+      when(
+        mockDatastoreHandler.getBlock(cidString),
+      ).thenAnswer((_) async => null);
+      when(
+        mockBitswapHandler.wantBlock(cidString),
+      ).thenAnswer((_) async => mockBlock);
 
       final result = await node.cat(cidString);
 

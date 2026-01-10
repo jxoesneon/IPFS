@@ -31,9 +31,15 @@ class MockP2plibRouter extends Mock implements P2plibRouter {
   String? lastTargetAddress;
 
   @override
-  Future<Uint8List> sendRequest(String address, String protocol, Uint8List data) async {
+  Future<Uint8List> sendRequest(
+    String address,
+    String protocol,
+    Uint8List data,
+  ) async {
     lastTargetAddress = address;
-    return Uint8List.fromList([1]); // Return success (non-empty for isNotEmpty check)
+    return Uint8List.fromList([
+      1,
+    ]); // Return success (non-empty for isNotEmpty check)
   }
 
   @override
@@ -46,7 +52,10 @@ class MockP2plibRouter extends Mock implements P2plibRouter {
   Stream<MessageEvent> get messageEvents => Stream.empty();
 
   @override
-  void registerProtocolHandler(String protocolId, void Function(NetworkPacket) handler) {
+  void registerProtocolHandler(
+    String protocolId,
+    void Function(NetworkPacket) handler,
+  ) {
     // No-op for mock
   }
 
@@ -125,7 +134,8 @@ void main() {
         expect(
           mockRouter.lastTargetAddress,
           'QmTargetPeerID',
-          reason: 'NetworkHandler incorrectly sent the full Multiaddr instead of PeerID',
+          reason:
+              'NetworkHandler incorrectly sent the full Multiaddr instead of PeerID',
         );
       },
     );
@@ -148,7 +158,11 @@ void main() {
 
       final natService = FakeNatTraversalService();
 
-      final autoNat = AutoNATHandler(config, stubNetworkHandler, natService: natService);
+      final autoNat = AutoNATHandler(
+        config,
+        stubNetworkHandler,
+        natService: natService,
+      );
 
       // Execute Start
       await autoNat.start();

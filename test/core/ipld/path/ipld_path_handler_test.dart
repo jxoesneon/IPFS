@@ -7,21 +7,33 @@ void main() {
   group('IPLDPathHandler', () {
     group('parsePath', () {
       test('throws if path does not start with /', () {
-        expect(() => IPLDPathHandler.parsePath('invalid'), throwsA(isA<IPLDPathError>()));
+        expect(
+          () => IPLDPathHandler.parsePath('invalid'),
+          throwsA(isA<IPLDPathError>()),
+        );
       });
 
       test('throws if path is empty parts', () {
         // split of "/" is empty list?
         // split('/') -> ['', ''] -> where -> [].
-        expect(() => IPLDPathHandler.parsePath('/'), throwsA(isA<IPLDPathError>()));
+        expect(
+          () => IPLDPathHandler.parsePath('/'),
+          throwsA(isA<IPLDPathError>()),
+        );
       });
 
       test('throws if namespace invalid', () {
-        expect(() => IPLDPathHandler.parsePath('/invalid'), throwsA(isA<IPLDPathError>()));
+        expect(
+          () => IPLDPathHandler.parsePath('/invalid'),
+          throwsA(isA<IPLDPathError>()),
+        );
       });
 
       test('throws if CID invalid', () {
-        expect(() => IPLDPathHandler.parsePath('/ipfs/notacid'), throwsA(isA<IPLDPathError>()));
+        expect(
+          () => IPLDPathHandler.parsePath('/ipfs/notacid'),
+          throwsA(isA<IPLDPathError>()),
+        );
       });
 
       test('parses simple path', () {

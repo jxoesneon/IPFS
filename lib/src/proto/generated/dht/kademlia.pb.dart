@@ -49,18 +49,22 @@ class Message extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Message',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Message',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
     ..aE<Message_MessageType>(1, _omitFieldNames ? '' : 'type',
         enumValues: Message_MessageType.values)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
-    ..aOM<$0.Record>(3, _omitFieldNames ? '' : 'record', subBuilder: $0.Record.create)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
+    ..aOM<$0.Record>(3, _omitFieldNames ? '' : 'record',
+        subBuilder: $0.Record.create)
     ..pPM<Peer>(8, _omitFieldNames ? '' : 'closerPeers',
         protoName: 'closerPeers', subBuilder: Peer.create)
     ..pPM<Peer>(9, _omitFieldNames ? '' : 'providerPeers',
         protoName: 'providerPeers', subBuilder: Peer.create)
-    ..aI(10, _omitFieldNames ? '' : 'clusterLevelRaw', protoName: 'clusterLevelRaw')
+    ..aI(10, _omitFieldNames ? '' : 'clusterLevelRaw',
+        protoName: 'clusterLevelRaw')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -148,12 +152,16 @@ class Peer extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Peer',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Peer',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OY)
-    ..p<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'addrs', $pb.PbFieldType.PY)
-    ..aE<ConnectionType>(3, _omitFieldNames ? '' : 'connection', enumValues: ConnectionType.values)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OY)
+    ..p<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'addrs', $pb.PbFieldType.PY)
+    ..aE<ConnectionType>(3, _omitFieldNames ? '' : 'connection',
+        enumValues: ConnectionType.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -170,7 +178,8 @@ class Peer extends $pb.GeneratedMessage {
   @$core.override
   Peer createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static Peer getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Peer>(create);
+  static Peer getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Peer>(create);
   static Peer? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -195,5 +204,7 @@ class Peer extends $pb.GeneratedMessage {
   void clearConnection() => $_clearField(3);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

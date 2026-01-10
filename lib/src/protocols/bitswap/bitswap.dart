@@ -7,9 +7,11 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
-import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as bitswap_pb;
+import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
+    as bitswap_pb;
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as proto;
-import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as bitswap_message;
+import 'package:dart_ipfs/src/protocols/bitswap/message.dart'
+    as bitswap_message;
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
@@ -60,7 +62,9 @@ class Bitswap {
 
   /// Starts the Bitswap protocol.
   Future<void> start() async {
-    _router.registerProtocolHandler('/ipfs/bitswap/1.2.0', (NetworkPacket packet) {
+    _router.registerProtocolHandler('/ipfs/bitswap/1.2.0', (
+      NetworkPacket packet,
+    ) {
       _handlePacket(packet);
     });
     await _router.start();
@@ -170,7 +174,10 @@ class Bitswap {
   }
 
   /// Handles requests for blocks from peers.
-  Future<void> handleWantBlock(String peerId, bitswap_pb.Message_Wantlist_Entry entry) async {
+  Future<void> handleWantBlock(
+    String peerId,
+    bitswap_pb.Message_Wantlist_Entry entry,
+  ) async {
     final blockId = base64.encode(entry.block);
 
     // Check if we have the requested block locally
@@ -190,7 +197,10 @@ class Bitswap {
   }
 
   /// Sends a wantlist to a peer.
-  Future<void> sendWantlist(String peerId, proto.Message_Wantlist_Entry entry) async {
+  Future<void> sendWantlist(
+    String peerId,
+    proto.Message_Wantlist_Entry entry,
+  ) async {
     final wantlist = proto.Message_Wantlist();
     wantlist.entries.add(entry);
 
@@ -222,7 +232,9 @@ class Bitswap {
     _logger.verbose('Received have request for block $blockId from $peerId');
 
     if (_ledger.hasBlock(blockId)) {
-      _logger.debug('Responding to have request for block $blockId from $peerId');
+      _logger.debug(
+        'Responding to have request for block $blockId from $peerId',
+      );
       sendHave(peerId, entry);
     } else if (entry.sendDontHave) {
       _logger.debug('Sending dont-have response for block $blockId to $peerId');
@@ -278,7 +290,10 @@ class Bitswap {
   }
 
   /// Sends a DONT_HAVE message to a peer for a specific wantlist entry
-  Future<void> sendDontHave(String peerId, proto.Message_Wantlist_Entry entry) async {
+  Future<void> sendDontHave(
+    String peerId,
+    proto.Message_Wantlist_Entry entry,
+  ) async {
     final message = proto.Message()
       ..blockPresences.add(
         proto.Message_BlockPresence()
@@ -290,7 +305,10 @@ class Bitswap {
   }
 
   /// Sends a HAVE message to a peer for a specific wantlist entry
-  Future<void> sendHave(String peerId, proto.Message_Wantlist_Entry entry) async {
+  Future<void> sendHave(
+    String peerId,
+    proto.Message_Wantlist_Entry entry,
+  ) async {
     final message = proto.Message()
       ..blockPresences.add(
         proto.Message_BlockPresence()
@@ -302,7 +320,9 @@ class Bitswap {
   }
 
   // Add this helper method to convert between WantType enums
-  proto.Message_Wantlist_WantType _convertToProtoWantType(bitswap_message.WantType type) {
+  proto.Message_Wantlist_WantType _convertToProtoWantType(
+    bitswap_message.WantType type,
+  ) {
     switch (type) {
       case bitswap_message.WantType.block:
         return proto.Message_Wantlist_WantType.Block;

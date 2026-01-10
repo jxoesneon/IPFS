@@ -5,13 +5,19 @@ import 'package:test/test.dart';
 
 void main() {
   group('IPLDPathHandler', () {
-    const validCidString = 'QmXg9Pp2ytZ14xgmQjYEiHjVjMFXzCVVEcRTWJBmLgR39V'; // A valid CIDv0
+    const validCidString =
+        'QmXg9Pp2ytZ14xgmQjYEiHjVjMFXzCVVEcRTWJBmLgR39V'; // A valid CIDv0
 
     group('parsePath', () {
       test('parses valid IPFS path with just CID', () {
-        final (namespace, cid, remaining) = IPLDPathHandler.parsePath('/ipfs/$validCidString');
+        final (namespace, cid, remaining) = IPLDPathHandler.parsePath(
+          '/ipfs/$validCidString',
+        );
         expect(namespace, 'ipfs');
-        expect(cid.encode(), validCidString); // Compare encoded string as CID object might vary
+        expect(
+          cid.encode(),
+          validCidString,
+        ); // Compare encoded string as CID object might vary
         expect(remaining, isNull);
       });
 
@@ -25,7 +31,9 @@ void main() {
       });
 
       test('parses valid IPLD path', () {
-        final (namespace, cid, remaining) = IPLDPathHandler.parsePath('/ipld/$validCidString');
+        final (namespace, cid, remaining) = IPLDPathHandler.parsePath(
+          '/ipld/$validCidString',
+        );
         expect(namespace, 'ipld');
         expect(cid.encode(), validCidString);
         expect(remaining, isNull);
@@ -35,7 +43,9 @@ void main() {
         // modifying CID handling might be needed if IPNS uses PeerIDs that aren't strict CIDs in this parser?
         // The parser calls CID.decode, so likely IPNS keys are treated as CIDs here or expected to be CIDs.
         // Let's assume standard CID for now.
-        final (namespace, cid, remaining) = IPLDPathHandler.parsePath('/ipns/$validCidString');
+        final (namespace, cid, remaining) = IPLDPathHandler.parsePath(
+          '/ipns/$validCidString',
+        );
         expect(namespace, 'ipns');
         expect(cid.encode(), validCidString);
       });
@@ -55,13 +65,19 @@ void main() {
       });
 
       test('throws IPLDPathError on invalid CID', () {
-        expect(() => IPLDPathHandler.parsePath('/ipfs/not-a-cid'), throwsA(isA<IPLDPathError>()));
+        expect(
+          () => IPLDPathHandler.parsePath('/ipfs/not-a-cid'),
+          throwsA(isA<IPLDPathError>()),
+        );
       });
 
       test('throws IPLDPathError on empty path parts', () {
         // e.g. just "/" or empty
         // path "/" split is ["", ""], filtered to empty
-        expect(() => IPLDPathHandler.parsePath('/'), throwsA(isA<IPLDPathError>()));
+        expect(
+          () => IPLDPathHandler.parsePath('/'),
+          throwsA(isA<IPLDPathError>()),
+        );
       });
     });
 
@@ -74,7 +90,10 @@ void main() {
       });
 
       test('removes trailing slash', () {
-        expect(IPLDPathHandler.normalizePath('/ipfs/$validCidString/'), '/ipfs/$validCidString');
+        expect(
+          IPLDPathHandler.normalizePath('/ipfs/$validCidString/'),
+          '/ipfs/$validCidString',
+        );
       });
 
       test('preserves root slash', () {
@@ -82,7 +101,10 @@ void main() {
       });
 
       test('handles already clean path', () {
-        expect(IPLDPathHandler.normalizePath('/ipfs/$validCidString'), '/ipfs/$validCidString');
+        expect(
+          IPLDPathHandler.normalizePath('/ipfs/$validCidString'),
+          '/ipfs/$validCidString',
+        );
       });
     });
   });

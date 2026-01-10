@@ -37,7 +37,10 @@ void main() {
       final keyBytes = Uint8List(32)..fillRange(0, 32, 2);
       final pk = IPFSPrivateKey.fromBytes(keyBytes);
       expect(pk.algorithm, equals('ECDSA'));
-      expect(pk.privateKey.d, equals(BigInt.parse(hex.encode(keyBytes), radix: 16)));
+      expect(
+        pk.privateKey.d,
+        equals(BigInt.parse(hex.encode(keyBytes), radix: 16)),
+      );
     });
 
     test('fromBytes - Unsupported algorithm', () {

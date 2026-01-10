@@ -14,7 +14,8 @@ import 'dart:core' as $core;
 
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
-import 'package:dart_ipfs/src/proto/generated/google/protobuf/any.pb.dart' as $1;
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/any.pb.dart'
+    as $1;
 
 import 'block.pb.dart' as $0;
 import 'cid.pb.dart' as $2;
@@ -50,8 +51,10 @@ class CarProto extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CarProto',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CarProto',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'version')
     ..pPS(2, _omitFieldNames ? '' : 'characteristics')
@@ -62,9 +65,12 @@ class CarProto extends $pb.GeneratedMessage {
         valueCreator: $1.Any.create,
         valueDefaultOrMaker: $1.Any.getDefault,
         packageName: const $pb.PackageName('ipfs.core.data_structures'))
-    ..pPM<$0.BlockProto>(4, _omitFieldNames ? '' : 'blocks', subBuilder: $0.BlockProto.create)
-    ..aOM<CarIndex>(5, _omitFieldNames ? '' : 'index', subBuilder: CarIndex.create)
-    ..aOM<CarHeader>(6, _omitFieldNames ? '' : 'header', subBuilder: CarHeader.create)
+    ..pPM<$0.BlockProto>(4, _omitFieldNames ? '' : 'blocks',
+        subBuilder: $0.BlockProto.create)
+    ..aOM<CarIndex>(5, _omitFieldNames ? '' : 'index',
+        subBuilder: CarIndex.create)
+    ..aOM<CarHeader>(6, _omitFieldNames ? '' : 'header',
+        subBuilder: CarHeader.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -151,12 +157,15 @@ class CarHeader extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CarHeader',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CarHeader',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'version')
     ..pPS(2, _omitFieldNames ? '' : 'characteristics')
-    ..pPM<$2.IPFSCIDProto>(3, _omitFieldNames ? '' : 'roots', subBuilder: $2.IPFSCIDProto.create)
+    ..pPM<$2.IPFSCIDProto>(3, _omitFieldNames ? '' : 'roots',
+        subBuilder: $2.IPFSCIDProto.create)
     ..m<$core.String, $1.Any>(4, _omitFieldNames ? '' : 'pragma',
         entryClassName: 'CarHeader.PragmaEntry',
         keyFieldType: $pb.PbFieldType.OS,
@@ -222,10 +231,13 @@ class CarIndex extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CarIndex',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CarIndex',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
-    ..pPM<IndexEntry>(1, _omitFieldNames ? '' : 'entries', subBuilder: IndexEntry.create)
+    ..pPM<IndexEntry>(1, _omitFieldNames ? '' : 'entries',
+        subBuilder: IndexEntry.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -273,8 +285,10 @@ class IndexEntry extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'IndexEntry',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'IndexEntry',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'cid')
     ..aInt64(2, _omitFieldNames ? '' : 'offset')
@@ -295,8 +309,8 @@ class IndexEntry extends $pb.GeneratedMessage {
   @$core.override
   IndexEntry createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static IndexEntry getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<IndexEntry>(create);
+  static IndexEntry getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<IndexEntry>(create);
   static IndexEntry? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -327,5 +341,7 @@ class IndexEntry extends $pb.GeneratedMessage {
   void clearLength() => $_clearField(3);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

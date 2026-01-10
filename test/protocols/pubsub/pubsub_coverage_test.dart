@@ -172,7 +172,8 @@ void main() {
 
       // Expect IWANT sent back
       final captured =
-          verify(mockRouter.sendMessage(senderStr, captureAny)).captured.single as Uint8List;
+          verify(mockRouter.sendMessage(senderStr, captureAny)).captured.single
+              as Uint8List;
       final sentJson = jsonDecode(utf8.decode(captured));
 
       expect(sentJson['action'], equals('iwant'));
@@ -190,7 +191,9 @@ void main() {
 
       // Inject message via packet handler to populate cache
       // Need valid signature for it to be accepted and cached
-      final msgSender = Base58().encode(Uint8List.fromList(List.filled(32, 3))); // peerC
+      final msgSender = Base58().encode(
+        Uint8List.fromList(List.filled(32, 3)),
+      ); // peerC
       final key = utf8.encode(msgSender);
       final data = utf8.encode('$topic:$content');
       final sig = Hmac(sha256, key).convert(data).toString();
@@ -226,7 +229,8 @@ void main() {
 
       // 3. Verify PUBLISH sent back to peerB
       final captured =
-          verify(mockRouter.sendMessage(senderStr, captureAny)).captured.single as Uint8List;
+          verify(mockRouter.sendMessage(senderStr, captureAny)).captured.single
+              as Uint8List;
       final sentJson = jsonDecode(utf8.decode(captured));
 
       expect(sentJson['content'], equals(content));
@@ -285,7 +289,9 @@ void main() {
         ),
       );
 
-      when(mockRouter.sendMessage(peer, any)).thenThrow(Exception('Send failed'));
+      when(
+        mockRouter.sendMessage(peer, any),
+      ).thenThrow(Exception('Send failed'));
 
       // Should not throw
       await client.publish('topic', 'msg');
@@ -344,7 +350,8 @@ void main() {
 
       // 3. Verify IWANT requests ONLY 'sig2-unseen'
       final captured =
-          verify(mockRouter.sendMessage(sender2, captureAny)).captured.single as Uint8List;
+          verify(mockRouter.sendMessage(sender2, captureAny)).captured.single
+              as Uint8List;
       final sentJson = jsonDecode(utf8.decode(captured));
 
       expect(sentJson['action'], equals('iwant'));
@@ -362,7 +369,9 @@ void main() {
         'sender': sender,
       };
 
-      when(mockRouter.sendMessage(sender, any)).thenThrow(Exception('Send failed'));
+      when(
+        mockRouter.sendMessage(sender, any),
+      ).thenThrow(Exception('Send failed'));
 
       // Should handle exception gracefully (log warning)
       packetHandler(
@@ -414,7 +423,9 @@ void main() {
         'sender': sender,
       };
 
-      when(mockRouter.sendMessage(sender, any)).thenThrow(Exception('Send failed'));
+      when(
+        mockRouter.sendMessage(sender, any),
+      ).thenThrow(Exception('Send failed'));
 
       // Should handle exception gracefully
       packetHandler(

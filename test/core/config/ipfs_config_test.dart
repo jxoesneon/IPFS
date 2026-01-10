@@ -21,7 +21,11 @@ void main() {
     });
 
     test('toJson / fromJson roundrip', () {
-      final config = IPFSConfig(offline: true, logLevel: 'debug', defaultBandwidthQuota: 500);
+      final config = IPFSConfig(
+        offline: true,
+        logLevel: 'debug',
+        defaultBandwidthQuota: 500,
+      );
 
       final json = config.toJson();
       expect(json['offline'], isTrue);
@@ -55,7 +59,10 @@ network:
         final config = await IPFSConfig.fromFile('test_config.yaml');
         expect(config.offline, isTrue);
         expect(config.logLevel, equals('warning'));
-        expect(config.network.listenAddresses, contains('/ip4/127.0.0.1/tcp/4001'));
+        expect(
+          config.network.listenAddresses,
+          contains('/ip4/127.0.0.1/tcp/4001'),
+        );
       } finally {
         if (await file.exists()) await file.delete();
       }

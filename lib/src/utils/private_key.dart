@@ -43,10 +43,17 @@ class IPFSPrivateKey implements PrivateKey {
     final random = SecureRandom('Fortuna');
     final seedSource = Random.secure();
     random.seed(
-      KeyParameter(Uint8List.fromList(List<int>.generate(32, (_) => seedSource.nextInt(256)))),
+      KeyParameter(
+        Uint8List.fromList(
+          List<int>.generate(32, (_) => seedSource.nextInt(256)),
+        ),
+      ),
     );
 
-    final params = ParametersWithRandom(PrivateKeyParameter(_keyPair.privateKey), random);
+    final params = ParametersWithRandom(
+      PrivateKeyParameter(_keyPair.privateKey),
+      random,
+    );
 
     signer.init(true, params);
     final signature = signer.generateSignature(data) as ECSignature;
@@ -79,7 +86,11 @@ class IPFSPrivateKey implements PrivateKey {
     final random = SecureRandom('Fortuna');
     final seedSource = Random.secure();
     random.seed(
-      KeyParameter(Uint8List.fromList(List<int>.generate(32, (_) => seedSource.nextInt(256)))),
+      KeyParameter(
+        Uint8List.fromList(
+          List<int>.generate(32, (_) => seedSource.nextInt(256)),
+        ),
+      ),
     );
 
     keyGen.init(ParametersWithRandom(params, random));
@@ -115,7 +126,10 @@ class IPFSPrivateKey implements PrivateKey {
   }
 
   /// Creates an IPFSPrivateKey from raw bytes (hex-encoded string compatible)
-  static IPFSPrivateKey fromBytes(Uint8List keyBytes, {String algorithm = 'ECDSA'}) {
+  static IPFSPrivateKey fromBytes(
+    Uint8List keyBytes, {
+    String algorithm = 'ECDSA',
+  }) {
     if (algorithm == 'ECDSA') {
       final d = BigInt.parse(hex.encode(keyBytes), radix: 16);
       final curve = ECCurve_secp256k1();

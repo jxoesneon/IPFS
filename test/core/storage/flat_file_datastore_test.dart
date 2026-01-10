@@ -11,7 +11,9 @@ void main() {
   late FlatFileDatastore datastore;
 
   setUp(() async {
-    tempDir = await Directory.systemTemp.createTemp('flat_file_datastore_test_');
+    tempDir = await Directory.systemTemp.createTemp(
+      'flat_file_datastore_test_',
+    );
     datastore = FlatFileDatastore(tempDir.path);
     await datastore.init();
   });
@@ -121,7 +123,10 @@ void main() {
 
         final entries = await datastore.query(Query(prefix: '/users')).toList();
         expect(entries.length, equals(2));
-        expect(entries.every((e) => e.key.toString().startsWith('/users')), isTrue);
+        expect(
+          entries.every((e) => e.key.toString().startsWith('/users')),
+          isTrue,
+        );
       });
 
       test('keysOnly query returns null values', () async {

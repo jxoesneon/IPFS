@@ -18,10 +18,14 @@ enum KademliaNodeState {
 /// latency, and failure count for eviction decisions.
 class KademliaTreeNode {
   /// Creates a Kademlia tree node.
-  KademliaTreeNode(this.peerId, this.distance, this.associatedPeerId, {required this.lastSeen})
-    : assert(peerId.value.isNotEmpty, 'PeerId cannot be empty'),
-      assert(distance >= 0, 'Distance must be non-negative'),
-      children = [];
+  KademliaTreeNode(
+    this.peerId,
+    this.distance,
+    this.associatedPeerId, {
+    required this.lastSeen,
+  }) : assert(peerId.value.isNotEmpty, 'PeerId cannot be empty'),
+       assert(distance >= 0, 'Distance must be non-negative'),
+       children = [];
 
   /// The peer identifier.
   final PeerId peerId;

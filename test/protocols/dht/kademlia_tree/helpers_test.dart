@@ -5,7 +5,8 @@ import 'package:mockito/annotations.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/helpers.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia_node.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/common_kademlia.pb.dart' as common_pb;
+import 'package:dart_ipfs/src/proto/generated/dht/common_kademlia.pb.dart'
+    as common_pb;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 
 @GenerateMocks([DHTClient])
@@ -35,11 +36,14 @@ void main() {
     test('findClosestNode finds the best node in subtree', () {
       final target = PeerId(value: Uint8List.fromList([0, 0, 10]));
 
-      final root = KademliaNode()..peerId = (common_pb.KademliaId()..id = [0, 0, 1]);
+      final root = KademliaNode()
+        ..peerId = (common_pb.KademliaId()..id = [0, 0, 1]);
 
-      final child1 = KademliaNode()..peerId = (common_pb.KademliaId()..id = [0, 0, 5]);
+      final child1 = KademliaNode()
+        ..peerId = (common_pb.KademliaId()..id = [0, 0, 5]);
 
-      final child2 = KademliaNode()..peerId = (common_pb.KademliaId()..id = [0, 0, 9]);
+      final child2 = KademliaNode()
+        ..peerId = (common_pb.KademliaId()..id = [0, 0, 9]);
 
       root.children.addAll([child1, child2]);
 

@@ -86,7 +86,9 @@ class MessageHandler {
         throw Exception('Block not found for CID: ${cid.encode()}');
       }
 
-      _logger.debug('Retrieved block for CID: ${cid.encode()}, size: ${block.data.length} bytes');
+      _logger.debug(
+        'Retrieved block for CID: ${cid.encode()}, size: ${block.data.length} bytes',
+      );
 
       final blockStore = _blockStore;
       final response = await blockStore.putBlock(block);
@@ -159,7 +161,11 @@ class MessageHandler {
   }
 
   /// Handles processed content data.
-  Future<void> handleProcessedData(CID cid, Uint8List data, String contentType) async {
+  Future<void> handleProcessedData(
+    CID cid,
+    Uint8List data,
+    String contentType,
+  ) async {
     try {
       // Create a new block with the processed data
       final block = await Block.fromData(data, format: 'raw');
@@ -169,7 +175,9 @@ class MessageHandler {
       final storeResponse = await blockStore.putBlock(block);
 
       if (!storeResponse.success) {
-        throw Exception('Failed to store processed data: ${storeResponse.message}');
+        throw Exception(
+          'Failed to store processed data: ${storeResponse.message}',
+        );
       }
 
       // Cache the content type mapping for future reference

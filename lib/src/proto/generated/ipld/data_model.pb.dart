@@ -83,20 +83,28 @@ class IPLDNode extends $pb.GeneratedMessage {
     10: IPLDNode_Value.bigIntValue,
     0: IPLDNode_Value.notSet
   };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'IPLDNode',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'IPLDNode',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'),
+      createEmptyInstance: create)
     ..oo(0, [2, 3, 4, 5, 6, 7, 8, 9, 10])
     ..aE<Kind>(1, _omitFieldNames ? '' : 'kind', enumValues: Kind.values)
     ..aOB(2, _omitFieldNames ? '' : 'boolValue')
-    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'intValue', $pb.PbFieldType.OS6,
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'intValue', $pb.PbFieldType.OS6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aD(4, _omitFieldNames ? '' : 'floatValue')
     ..aOS(5, _omitFieldNames ? '' : 'stringValue')
-    ..a<$core.List<$core.int>>(6, _omitFieldNames ? '' : 'bytesValue', $pb.PbFieldType.OY)
-    ..aOM<IPLDList>(7, _omitFieldNames ? '' : 'listValue', subBuilder: IPLDList.create)
-    ..aOM<IPLDMap>(8, _omitFieldNames ? '' : 'mapValue', subBuilder: IPLDMap.create)
-    ..aOM<IPLDLink>(9, _omitFieldNames ? '' : 'linkValue', subBuilder: IPLDLink.create)
-    ..a<$core.List<$core.int>>(10, _omitFieldNames ? '' : 'bigIntValue', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        6, _omitFieldNames ? '' : 'bytesValue', $pb.PbFieldType.OY)
+    ..aOM<IPLDList>(7, _omitFieldNames ? '' : 'listValue',
+        subBuilder: IPLDList.create)
+    ..aOM<IPLDMap>(8, _omitFieldNames ? '' : 'mapValue',
+        subBuilder: IPLDMap.create)
+    ..aOM<IPLDLink>(9, _omitFieldNames ? '' : 'linkValue',
+        subBuilder: IPLDLink.create)
+    ..a<$core.List<$core.int>>(
+        10, _omitFieldNames ? '' : 'bigIntValue', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -258,9 +266,12 @@ class IPLDList extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'IPLDList',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'), createEmptyInstance: create)
-    ..pPM<IPLDNode>(1, _omitFieldNames ? '' : 'values', subBuilder: IPLDNode.create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'IPLDList',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'),
+      createEmptyInstance: create)
+    ..pPM<IPLDNode>(1, _omitFieldNames ? '' : 'values',
+        subBuilder: IPLDNode.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -304,9 +315,12 @@ class IPLDMap extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'IPLDMap',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'), createEmptyInstance: create)
-    ..pPM<MapEntry>(1, _omitFieldNames ? '' : 'entries', subBuilder: MapEntry.create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'IPLDMap',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'),
+      createEmptyInstance: create)
+    ..pPM<MapEntry>(1, _omitFieldNames ? '' : 'entries',
+        subBuilder: MapEntry.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -352,10 +366,13 @@ class MapEntry extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MapEntry',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'MapEntry',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'),
+      createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'key')
-    ..aOM<IPLDNode>(2, _omitFieldNames ? '' : 'value', subBuilder: IPLDNode.create)
+    ..aOM<IPLDNode>(2, _omitFieldNames ? '' : 'value',
+        subBuilder: IPLDNode.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -420,11 +437,14 @@ class IPLDLink extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'IPLDLink',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'IPLDLink',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipld'),
+      createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'version', fieldType: $pb.PbFieldType.OU3)
     ..aOS(2, _omitFieldNames ? '' : 'codec')
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'multihash', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        3, _omitFieldNames ? '' : 'multihash', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -476,5 +496,7 @@ class IPLDLink extends $pb.GeneratedMessage {
   void clearMultihash() => $_clearField(3);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

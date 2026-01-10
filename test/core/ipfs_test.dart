@@ -11,8 +11,10 @@ void main() {
 
     setUp(() async {
       final config = IPFSConfig(
-        datastorePath: './test_tmp/ipfs_facade_${DateTime.now().millisecondsSinceEpoch}',
-        blockStorePath: './test_tmp/ipfs_facade_blocks_${DateTime.now().millisecondsSinceEpoch}',
+        datastorePath:
+            './test_tmp/ipfs_facade_${DateTime.now().millisecondsSinceEpoch}',
+        blockStorePath:
+            './test_tmp/ipfs_facade_blocks_${DateTime.now().millisecondsSinceEpoch}',
         offline: true, // Run offline to make tests faster/isolated
       );
       ipfs = await IPFS.create(config: config);

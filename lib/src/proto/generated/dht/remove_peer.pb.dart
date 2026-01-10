@@ -36,17 +36,21 @@ class RemovePeerRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RemovePeerRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.remove_peer'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RemovePeerRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.remove_peer'),
       createEmptyInstance: create)
-    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'peerId', subBuilder: $0.KademliaId.create)
+    ..aOM<$0.KademliaId>(1, _omitFieldNames ? '' : 'peerId',
+        subBuilder: $0.KademliaId.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   RemovePeerRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   RemovePeerRequest copyWith(void Function(RemovePeerRequest) updates) =>
-      super.copyWith((message) => updates(message as RemovePeerRequest)) as RemovePeerRequest;
+      super.copyWith((message) => updates(message as RemovePeerRequest))
+          as RemovePeerRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -56,8 +60,8 @@ class RemovePeerRequest extends $pb.GeneratedMessage {
   @$core.override
   RemovePeerRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static RemovePeerRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RemovePeerRequest>(create);
+  static RemovePeerRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RemovePeerRequest>(create);
   static RemovePeerRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -90,8 +94,10 @@ class RemovePeerResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RemovePeerResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.remove_peer'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RemovePeerResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.dht.remove_peer'),
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
     ..hasRequiredFields = false;
@@ -100,7 +106,8 @@ class RemovePeerResponse extends $pb.GeneratedMessage {
   RemovePeerResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   RemovePeerResponse copyWith(void Function(RemovePeerResponse) updates) =>
-      super.copyWith((message) => updates(message as RemovePeerResponse)) as RemovePeerResponse;
+      super.copyWith((message) => updates(message as RemovePeerResponse))
+          as RemovePeerResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -110,8 +117,8 @@ class RemovePeerResponse extends $pb.GeneratedMessage {
   @$core.override
   RemovePeerResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static RemovePeerResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RemovePeerResponse>(create);
+  static RemovePeerResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RemovePeerResponse>(create);
   static RemovePeerResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -124,5 +131,7 @@ class RemovePeerResponse extends $pb.GeneratedMessage {
   void clearSuccess() => $_clearField(1);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

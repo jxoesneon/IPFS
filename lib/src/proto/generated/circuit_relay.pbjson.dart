@@ -38,22 +38,36 @@ const Status$json = {
 };
 
 /// Descriptor for `Status`. Decode as a `google.protobuf.EnumDescriptorProto`.
-final $typed_data.Uint8List statusDescriptor = $convert
-    .base64Decode('CgZTdGF0dXMSBgoCT0sQABIKCgZGQUlMRUQQARIaChVIT1BfU1JDX0FERFJfVE9PX0xPTkcQ3A'
-        'ESGgoVSE9QX0RTVF9BRERSX1RPT19MT05HEN0BEh4KGUhPUF9TUkNfTVVMVElBRERSX0lOVkFM'
-        'SUQQ3gESHgoZSE9QX0RTVF9NVUxUSUFERFJfSU5WQUxJRBDfARIXChJIT1BfTk9fQ09OTl9UT1'
-        '9EU1QQhAISFgoRSE9QX0NBTlRfRElBTF9EU1QQhQISHQoYSE9QX0NBTlRfT1BFTl9EU1RfU1RS'
-        'RUFNEIYCEhkKFEhPUF9DQU5UX1NQRUFLX1JFTEFZEI4CEhsKFkhPUF9DQU5UX1JFTEFZX1RPX1'
-        'NFTEYQmAISGwoWU1RPUF9TUkNfQUREUl9UT09fTE9ORxDAAhIbChZTVE9QX0RTVF9BRERSX1RP'
-        'T19MT05HEMECEh8KGlNUT1BfU1JDX01VTFRJQUREUl9JTlZBTElEEMICEh8KGlNUT1BfRFNUX0'
-        '1VTFRJQUREUl9JTlZBTElEEMMC');
+final $typed_data.Uint8List statusDescriptor = $convert.base64Decode(
+    'CgZTdGF0dXMSBgoCT0sQABIKCgZGQUlMRUQQARIaChVIT1BfU1JDX0FERFJfVE9PX0xPTkcQ3A'
+    'ESGgoVSE9QX0RTVF9BRERSX1RPT19MT05HEN0BEh4KGUhPUF9TUkNfTVVMVElBRERSX0lOVkFM'
+    'SUQQ3gESHgoZSE9QX0RTVF9NVUxUSUFERFJfSU5WQUxJRBDfARIXChJIT1BfTk9fQ09OTl9UT1'
+    '9EU1QQhAISFgoRSE9QX0NBTlRfRElBTF9EU1QQhQISHQoYSE9QX0NBTlRfT1BFTl9EU1RfU1RS'
+    'RUFNEIYCEhkKFEhPUF9DQU5UX1NQRUFLX1JFTEFZEI4CEhsKFkhPUF9DQU5UX1JFTEFZX1RPX1'
+    'NFTEYQmAISGwoWU1RPUF9TUkNfQUREUl9UT09fTE9ORxDAAhIbChZTVE9QX0RTVF9BRERSX1RP'
+    'T19MT05HEMECEh8KGlNUT1BfU1JDX01VTFRJQUREUl9JTlZBTElEEMICEh8KGlNUT1BfRFNUX0'
+    '1VTFRJQUREUl9JTlZBTElEEMMC');
 
 @$core.Deprecated('Use hopMessageDescriptor instead')
 const HopMessage$json = {
   '1': 'HopMessage',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.circuit_relay.HopMessage.Type', '10': 'type'},
-    {'1': 'peer', '3': 2, '4': 1, '5': 11, '6': '.circuit_relay.Peer', '10': 'peer'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.circuit_relay.HopMessage.Type',
+      '10': 'type'
+    },
+    {
+      '1': 'peer',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Peer',
+      '10': 'peer'
+    },
     {
       '1': 'reservation',
       '3': 3,
@@ -62,8 +76,22 @@ const HopMessage$json = {
       '6': '.circuit_relay.Reservation',
       '10': 'reservation'
     },
-    {'1': 'limit', '3': 4, '4': 1, '5': 11, '6': '.circuit_relay.Limit', '10': 'limit'},
-    {'1': 'status', '3': 5, '4': 1, '5': 14, '6': '.circuit_relay.Status', '10': 'status'},
+    {
+      '1': 'limit',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Limit',
+      '10': 'limit'
+    },
+    {
+      '1': 'status',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.circuit_relay.Status',
+      '10': 'status'
+    },
   ],
   '4': [HopMessage_Type$json],
 };
@@ -79,22 +107,50 @@ const HopMessage_Type$json = {
 };
 
 /// Descriptor for `HopMessage`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List hopMessageDescriptor = $convert
-    .base64Decode('CgpIb3BNZXNzYWdlEjIKBHR5cGUYASABKA4yHi5jaXJjdWl0X3JlbGF5LkhvcE1lc3NhZ2UuVH'
-        'lwZVIEdHlwZRInCgRwZWVyGAIgASgLMhMuY2lyY3VpdF9yZWxheS5QZWVyUgRwZWVyEjwKC3Jl'
-        'c2VydmF0aW9uGAMgASgLMhouY2lyY3VpdF9yZWxheS5SZXNlcnZhdGlvblILcmVzZXJ2YXRpb2'
-        '4SKgoFbGltaXQYBCABKAsyFC5jaXJjdWl0X3JlbGF5LkxpbWl0UgVsaW1pdBItCgZzdGF0dXMY'
-        'BSABKA4yFS5jaXJjdWl0X3JlbGF5LlN0YXR1c1IGc3RhdHVzIiwKBFR5cGUSCwoHUkVTRVJWRR'
-        'AAEgsKB0NPTk5FQ1QQARIKCgZTVEFUVVMQAg==');
+final $typed_data.Uint8List hopMessageDescriptor = $convert.base64Decode(
+    'CgpIb3BNZXNzYWdlEjIKBHR5cGUYASABKA4yHi5jaXJjdWl0X3JlbGF5LkhvcE1lc3NhZ2UuVH'
+    'lwZVIEdHlwZRInCgRwZWVyGAIgASgLMhMuY2lyY3VpdF9yZWxheS5QZWVyUgRwZWVyEjwKC3Jl'
+    'c2VydmF0aW9uGAMgASgLMhouY2lyY3VpdF9yZWxheS5SZXNlcnZhdGlvblILcmVzZXJ2YXRpb2'
+    '4SKgoFbGltaXQYBCABKAsyFC5jaXJjdWl0X3JlbGF5LkxpbWl0UgVsaW1pdBItCgZzdGF0dXMY'
+    'BSABKA4yFS5jaXJjdWl0X3JlbGF5LlN0YXR1c1IGc3RhdHVzIiwKBFR5cGUSCwoHUkVTRVJWRR'
+    'AAEgsKB0NPTk5FQ1QQARIKCgZTVEFUVVMQAg==');
 
 @$core.Deprecated('Use stopMessageDescriptor instead')
 const StopMessage$json = {
   '1': 'StopMessage',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.circuit_relay.StopMessage.Type', '10': 'type'},
-    {'1': 'peer', '3': 2, '4': 1, '5': 11, '6': '.circuit_relay.Peer', '10': 'peer'},
-    {'1': 'limit', '3': 3, '4': 1, '5': 11, '6': '.circuit_relay.Limit', '10': 'limit'},
-    {'1': 'status', '3': 4, '4': 1, '5': 14, '6': '.circuit_relay.Status', '10': 'status'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.circuit_relay.StopMessage.Type',
+      '10': 'type'
+    },
+    {
+      '1': 'peer',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Peer',
+      '10': 'peer'
+    },
+    {
+      '1': 'limit',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Limit',
+      '10': 'limit'
+    },
+    {
+      '1': 'status',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.circuit_relay.Status',
+      '10': 'status'
+    },
   ],
   '4': [StopMessage_Type$json],
 };
@@ -109,12 +165,12 @@ const StopMessage_Type$json = {
 };
 
 /// Descriptor for `StopMessage`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List stopMessageDescriptor = $convert
-    .base64Decode('CgtTdG9wTWVzc2FnZRIzCgR0eXBlGAEgASgOMh8uY2lyY3VpdF9yZWxheS5TdG9wTWVzc2FnZS'
-        '5UeXBlUgR0eXBlEicKBHBlZXIYAiABKAsyEy5jaXJjdWl0X3JlbGF5LlBlZXJSBHBlZXISKgoF'
-        'bGltaXQYAyABKAsyFC5jaXJjdWl0X3JlbGF5LkxpbWl0UgVsaW1pdBItCgZzdGF0dXMYBCABKA'
-        '4yFS5jaXJjdWl0X3JlbGF5LlN0YXR1c1IGc3RhdHVzIh8KBFR5cGUSCwoHQ09OTkVDVBAAEgoK'
-        'BlNUQVRVUxAB');
+final $typed_data.Uint8List stopMessageDescriptor = $convert.base64Decode(
+    'CgtTdG9wTWVzc2FnZRIzCgR0eXBlGAEgASgOMh8uY2lyY3VpdF9yZWxheS5TdG9wTWVzc2FnZS'
+    '5UeXBlUgR0eXBlEicKBHBlZXIYAiABKAsyEy5jaXJjdWl0X3JlbGF5LlBlZXJSBHBlZXISKgoF'
+    'bGltaXQYAyABKAsyFC5jaXJjdWl0X3JlbGF5LkxpbWl0UgVsaW1pdBItCgZzdGF0dXMYBCABKA'
+    '4yFS5jaXJjdWl0X3JlbGF5LlN0YXR1c1IGc3RhdHVzIh8KBFR5cGUSCwoHQ09OTkVDVBAAEgoK'
+    'BlNUQVRVUxAB');
 
 @$core.Deprecated('Use peerDescriptor instead')
 const Peer$json = {
@@ -126,8 +182,8 @@ const Peer$json = {
 };
 
 /// Descriptor for `Peer`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List peerDescriptor =
-    $convert.base64Decode('CgRQZWVyEg4KAmlkGAEgASgMUgJpZBIUCgVhZGRycxgCIAMoDFIFYWRkcnM=');
+final $typed_data.Uint8List peerDescriptor = $convert.base64Decode(
+    'CgRQZWVyEg4KAmlkGAEgASgMUgJpZBIUCgVhZGRycxgCIAMoDFIFYWRkcnM=');
 
 @$core.Deprecated('Use reservationDescriptor instead')
 const Reservation$json = {
@@ -141,10 +197,10 @@ const Reservation$json = {
 };
 
 /// Descriptor for `Reservation`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List reservationDescriptor = $convert
-    .base64Decode('CgtSZXNlcnZhdGlvbhIWCgZleHBpcmUYASABKARSBmV4cGlyZRIlCg5saW1pdF9kdXJhdGlvbh'
-        'gCIAEoBFINbGltaXREdXJhdGlvbhIdCgpsaW1pdF9kYXRhGAMgASgEUglsaW1pdERhdGESFAoF'
-        'YWRkcnMYBCADKAxSBWFkZHJz');
+final $typed_data.Uint8List reservationDescriptor = $convert.base64Decode(
+    'CgtSZXNlcnZhdGlvbhIWCgZleHBpcmUYASABKARSBmV4cGlyZRIlCg5saW1pdF9kdXJhdGlvbh'
+    'gCIAEoBFINbGltaXREdXJhdGlvbhIdCgpsaW1pdF9kYXRhGAMgASgEUglsaW1pdERhdGESFAoF'
+    'YWRkcnMYBCADKAxSBWFkZHJz');
 
 @$core.Deprecated('Use limitDescriptor instead')
 const Limit$json = {
@@ -156,6 +212,6 @@ const Limit$json = {
 };
 
 /// Descriptor for `Limit`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List limitDescriptor = $convert
-    .base64Decode('CgVMaW1pdBIaCghkdXJhdGlvbhgBIAEoBFIIZHVyYXRpb24SEgoEZGF0YRgCIAEoBFIEZGF0YQ'
-        '==');
+final $typed_data.Uint8List limitDescriptor = $convert.base64Decode(
+    'CgVMaW1pdBIaCghkdXJhdGlvbhgBIAEoBFIIZHVyYXRpb24SEgoEZGF0YRgCIAEoBFIEZGF0YQ'
+    '==');

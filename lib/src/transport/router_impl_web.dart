@@ -28,7 +28,8 @@ class P2plibRouter with MultiAddressHandler {
   final Map<String, void Function(NetworkPacket)> _protocolHandlers = {};
 
   // Stream controllers
-  final _connectionEventsController = StreamController<ConnectionEvent>.broadcast();
+  final _connectionEventsController =
+      StreamController<ConnectionEvent>.broadcast();
   final _messageEventsController = StreamController<MessageEvent>.broadcast();
   final _dhtEventsController = StreamController<DHTEvent>.broadcast();
   final _pubSubEventsController = StreamController<PubSubEvent>.broadcast();
@@ -39,7 +40,8 @@ class P2plibRouter with MultiAddressHandler {
   String get peerID => _connection.localPeerId;
 
   /// Returns the peer ID object.
-  PeerId get peerId => PeerId(value: Uint8List.fromList(_connection.localPeerId.codeUnits));
+  PeerId get peerId =>
+      PeerId(value: Uint8List.fromList(_connection.localPeerId.codeUnits));
 
   /// Returns list of connected peers.
   List<String> get connectedPeers => _connection.connectedPeers;
@@ -95,7 +97,10 @@ class P2plibRouter with MultiAddressHandler {
   }
 
   /// Registers a protocol handler.
-  void registerProtocolHandler(String protocolId, void Function(NetworkPacket) handler) {
+  void registerProtocolHandler(
+    String protocolId,
+    void Function(NetworkPacket) handler,
+  ) {
     _protocolHandlers[protocolId] = handler;
   }
 
@@ -105,7 +110,10 @@ class P2plibRouter with MultiAddressHandler {
   }
 
   void _handleIncomingMessage(PeerMessage message) {
-    final packet = NetworkPacket(srcPeerId: message.peerId, datagram: message.data);
+    final packet = NetworkPacket(
+      srcPeerId: message.peerId,
+      datagram: message.data,
+    );
 
     // Naive routing: Send to ALL handlers (Promiscuous mode)
     // Since we don't have protocol negotiation on WebSockets yet.
@@ -119,7 +127,9 @@ class P2plibRouter with MultiAddressHandler {
     }
 
     // Also emit legacy message event
-    _messageEventsController.add(MessageEvent(peerId: message.peerId, message: message.data));
+    _messageEventsController.add(
+      MessageEvent(peerId: message.peerId, message: message.data),
+    );
   }
 
   /// Resolves a peer to addresses.
@@ -139,7 +149,8 @@ class P2plibRouter with MultiAddressHandler {
   }
 
   /// Stream of connection events.
-  Stream<ConnectionEvent> get connectionEvents => _connectionEventsController.stream;
+  Stream<ConnectionEvent> get connectionEvents =>
+      _connectionEventsController.stream;
 
   /// Stream of message events.
   Stream<MessageEvent> get messageEvents => _messageEventsController.stream;
@@ -160,7 +171,11 @@ class P2plibRouter with MultiAddressHandler {
   bool get isInitialized => true;
 
   /// Sends a request to a peer.
-  Future<Uint8List> sendRequest(String peerId, String protocolId, Uint8List request) async {
+  Future<Uint8List> sendRequest(
+    String peerId,
+    String protocolId,
+    Uint8List request,
+  ) async {
     // TODO: Implement correlation
     throw UnimplementedError('sendRequest not implemented/correlated on web');
   }

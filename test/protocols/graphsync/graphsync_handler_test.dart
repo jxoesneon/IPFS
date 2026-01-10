@@ -34,7 +34,13 @@ void main() {
       mockBlockStore = MockBlockStore();
       config = IPFSConfig();
 
-      handler = GraphsyncHandler(config, mockRouter, mockBitswap, mockIpld, mockBlockStore);
+      handler = GraphsyncHandler(
+        config,
+        mockRouter,
+        mockBitswap,
+        mockIpld,
+        mockBlockStore,
+      );
     });
 
     test('start registers protocol and handler', () async {
@@ -44,7 +50,9 @@ void main() {
       await handler.start();
 
       verify(mockRouter.registerProtocol('/ipfs/graphsync/1.0.0')).called(1);
-      verify(mockRouter.registerProtocolHandler('/ipfs/graphsync/1.0.0', any)).called(1);
+      verify(
+        mockRouter.registerProtocolHandler('/ipfs/graphsync/1.0.0', any),
+      ).called(1);
     });
 
     test('stop logs success', () async {
@@ -69,7 +77,9 @@ void main() {
       expect(result!.data, equals(blockData));
 
       // Use any for protocol ID matching to avoid strict string issues or import protocol class
-      verify(mockRouter.broadcastMessage(argThat(contains('graphsync')), any)).called(1);
+      verify(
+        mockRouter.broadcastMessage(argThat(contains('graphsync')), any),
+      ).called(1);
       verify(mockBitswap.wantBlock(cidStr)).called(1);
     });
 
@@ -82,7 +92,9 @@ void main() {
 
       var callback;
       when(mockRouter.registerProtocol(any)).thenReturn(null);
-      when(mockRouter.registerProtocolHandler(any, any)).thenAnswer((invocation) {
+      when(mockRouter.registerProtocolHandler(any, any)).thenAnswer((
+        invocation,
+      ) {
         callback = invocation.positionalArguments[1];
       });
 

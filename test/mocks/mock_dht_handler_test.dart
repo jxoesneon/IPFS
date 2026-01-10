@@ -84,13 +84,19 @@ void main() {
       await dht.putValue(key, value);
 
       stopwatch.stop();
-      expect(stopwatch.elapsedMilliseconds, greaterThanOrEqualTo(40)); // allow some buffer
+      expect(
+        stopwatch.elapsedMilliseconds,
+        greaterThanOrEqualTo(40),
+      ); // allow some buffer
     });
 
     test('simulates errors on next call', () async {
       dht.throwOnNext(Exception('Simulated failure'));
 
-      expect(() => dht.putValue(Key(Uint8List(1)), Value(Uint8List(1))), throwsException);
+      expect(
+        () => dht.putValue(Key(Uint8List(1)), Value(Uint8List(1))),
+        throwsException,
+      );
 
       // Next call should succeed (error consumed)
       await dht.putValue(Key(Uint8List(1)), Value(Uint8List(1)));
@@ -110,7 +116,10 @@ void main() {
 
     test('operations throw if not running', () async {
       await dht.stop();
-      expect(() => dht.putValue(Key(Uint8List(1)), Value(Uint8List(1))), throwsStateError);
+      expect(
+        () => dht.putValue(Key(Uint8List(1)), Value(Uint8List(1))),
+        throwsStateError,
+      );
     });
   });
 }

@@ -35,9 +35,18 @@ void main() {
     });
 
     test('getOptimalCompression selects correct type', () {
-      expect(handler.getOptimalCompression('text/html', 1000), CompressionType.gzip);
-      expect(handler.getOptimalCompression('application/json', 1000), CompressionType.gzip);
-      expect(handler.getOptimalCompression('image/png', 1000), CompressionType.none);
+      expect(
+        handler.getOptimalCompression('text/html', 1000),
+        CompressionType.gzip,
+      );
+      expect(
+        handler.getOptimalCompression('application/json', 1000),
+        CompressionType.gzip,
+      );
+      expect(
+        handler.getOptimalCompression('image/png', 1000),
+        CompressionType.none,
+      );
       expect(
         handler.getOptimalCompression('unknown/type', 1000),
         CompressionType.gzip, // Fallback
@@ -46,7 +55,10 @@ void main() {
 
     test('compressBlock returns original if disabled', () async {
       final disabledConfig = CompressionConfig(enabled: false);
-      final disabledHandler = AdaptiveCompressionHandler(mockBlockStore, disabledConfig);
+      final disabledHandler = AdaptiveCompressionHandler(
+        mockBlockStore,
+        disabledConfig,
+      );
 
       final block = await Block.fromData(Uint8List.fromList([1, 2, 3]));
       final result = await disabledHandler.compressBlock(block, 'text/plain');

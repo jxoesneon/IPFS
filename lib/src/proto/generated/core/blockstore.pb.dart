@@ -39,8 +39,10 @@ class AddBlockResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AddBlockResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'AddBlockResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
     ..aOS(2, _omitFieldNames ? '' : 'message')
@@ -50,7 +52,8 @@ class AddBlockResponse extends $pb.GeneratedMessage {
   AddBlockResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   AddBlockResponse copyWith(void Function(AddBlockResponse) updates) =>
-      super.copyWith((message) => updates(message as AddBlockResponse)) as AddBlockResponse;
+      super.copyWith((message) => updates(message as AddBlockResponse))
+          as AddBlockResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -60,8 +63,8 @@ class AddBlockResponse extends $pb.GeneratedMessage {
   @$core.override
   AddBlockResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static AddBlockResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AddBlockResponse>(create);
+  static AddBlockResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AddBlockResponse>(create);
   static AddBlockResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -104,10 +107,13 @@ class GetBlockResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetBlockResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
-    ..aOM<$0.BlockProto>(1, _omitFieldNames ? '' : 'block', subBuilder: $0.BlockProto.create)
+    ..aOM<$0.BlockProto>(1, _omitFieldNames ? '' : 'block',
+        subBuilder: $0.BlockProto.create)
     ..aOB(2, _omitFieldNames ? '' : 'found')
     ..hasRequiredFields = false;
 
@@ -115,7 +121,8 @@ class GetBlockResponse extends $pb.GeneratedMessage {
   GetBlockResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   GetBlockResponse copyWith(void Function(GetBlockResponse) updates) =>
-      super.copyWith((message) => updates(message as GetBlockResponse)) as GetBlockResponse;
+      super.copyWith((message) => updates(message as GetBlockResponse))
+          as GetBlockResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -125,8 +132,8 @@ class GetBlockResponse extends $pb.GeneratedMessage {
   @$core.override
   GetBlockResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GetBlockResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetBlockResponse>(create);
+  static GetBlockResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetBlockResponse>(create);
   static GetBlockResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -171,8 +178,10 @@ class RemoveBlockResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RemoveBlockResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RemoveBlockResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
     ..aOS(2, _omitFieldNames ? '' : 'message')
@@ -182,7 +191,8 @@ class RemoveBlockResponse extends $pb.GeneratedMessage {
   RemoveBlockResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   RemoveBlockResponse copyWith(void Function(RemoveBlockResponse) updates) =>
-      super.copyWith((message) => updates(message as RemoveBlockResponse)) as RemoveBlockResponse;
+      super.copyWith((message) => updates(message as RemoveBlockResponse))
+          as RemoveBlockResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -192,8 +202,8 @@ class RemoveBlockResponse extends $pb.GeneratedMessage {
   @$core.override
   RemoveBlockResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static RemoveBlockResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RemoveBlockResponse>(create);
+  static RemoveBlockResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RemoveBlockResponse>(create);
   static RemoveBlockResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -215,5 +225,7 @@ class RemoveBlockResponse extends $pb.GeneratedMessage {
   void clearMessage() => $_clearField(2);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

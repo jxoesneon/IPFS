@@ -24,9 +24,9 @@ const SplitBucketRequest$json = {
 };
 
 /// Descriptor for `SplitBucketRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List splitBucketRequestDescriptor = $convert
-    .base64Decode('ChJTcGxpdEJ1Y2tldFJlcXVlc3QSIQoMYnVja2V0X2luZGV4GAEgASgFUgtidWNrZXRJbmRleA'
-        '==');
+final $typed_data.Uint8List splitBucketRequestDescriptor = $convert.base64Decode(
+    'ChJTcGxpdEJ1Y2tldFJlcXVlc3QSIQoMYnVja2V0X2luZGV4GAEgASgFUgtidWNrZXRJbmRleA'
+    '==');
 
 @$core.Deprecated('Use splitBucketResponseDescriptor instead')
 const SplitBucketResponse$json = {
@@ -38,7 +38,8 @@ const SplitBucketResponse$json = {
 
 /// Descriptor for `SplitBucketResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List splitBucketResponseDescriptor =
-    $convert.base64Decode('ChNTcGxpdEJ1Y2tldFJlc3BvbnNlEhgKB3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3M=');
+    $convert.base64Decode(
+        'ChNTcGxpdEJ1Y2tldFJlc3BvbnNlEhgKB3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3M=');
 
 @$core.Deprecated('Use mergeBucketsRequestDescriptor instead')
 const MergeBucketsRequest$json = {
@@ -50,9 +51,9 @@ const MergeBucketsRequest$json = {
 };
 
 /// Descriptor for `MergeBucketsRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List mergeBucketsRequestDescriptor = $convert
-    .base64Decode('ChNNZXJnZUJ1Y2tldHNSZXF1ZXN0EiQKDmJ1Y2tldF9pbmRleF8xGAEgASgFUgxidWNrZXRJbm'
-        'RleDESJAoOYnVja2V0X2luZGV4XzIYAiABKAVSDGJ1Y2tldEluZGV4Mg==');
+final $typed_data.Uint8List mergeBucketsRequestDescriptor = $convert.base64Decode(
+    'ChNNZXJnZUJ1Y2tldHNSZXF1ZXN0EiQKDmJ1Y2tldF9pbmRleF8xGAEgASgFUgxidWNrZXRJbm'
+    'RleDESJAoOYnVja2V0X2luZGV4XzIYAiABKAVSDGJ1Y2tldEluZGV4Mg==');
 
 @$core.Deprecated('Use mergeBucketsResponseDescriptor instead')
 const MergeBucketsResponse$json = {
@@ -64,4 +65,5 @@ const MergeBucketsResponse$json = {
 
 /// Descriptor for `MergeBucketsResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List mergeBucketsResponseDescriptor =
-    $convert.base64Decode('ChRNZXJnZUJ1Y2tldHNSZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNz');
+    $convert.base64Decode(
+        'ChRNZXJnZUJ1Y2tldHNSZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNz');

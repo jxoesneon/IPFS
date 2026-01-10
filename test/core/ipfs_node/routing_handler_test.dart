@@ -65,7 +65,9 @@ void main() {
     test('findProviders delegates to contentRouting', () async {
       const cid = 'QmTest';
       final providers = ['/ip4/127.0.0.1/tcp/4001'];
-      when(mockContentRouting.findProviders(cid)).thenAnswer((_) async => providers);
+      when(
+        mockContentRouting.findProviders(cid),
+      ).thenAnswer((_) async => providers);
 
       final result = await routingHandler.findProviders(cid);
 
@@ -75,7 +77,9 @@ void main() {
 
     test('findProviders returns empty list on error', () async {
       const cid = 'QmTest';
-      when(mockContentRouting.findProviders(cid)).thenThrow(Exception('Lookup failed'));
+      when(
+        mockContentRouting.findProviders(cid),
+      ).thenThrow(Exception('Lookup failed'));
 
       final result = await routingHandler.findProviders(cid);
 

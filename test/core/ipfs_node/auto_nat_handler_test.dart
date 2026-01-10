@@ -29,7 +29,9 @@ void main() {
       mockNatService = MockNatTraversalService();
 
       // Default behaviors
-      when(mockNetworkHandler.canConnectDirectly(any)).thenAnswer((_) async => false);
+      when(
+        mockNetworkHandler.canConnectDirectly(any),
+      ).thenAnswer((_) async => false);
       when(
         mockNetworkHandler.testConnection(sourcePort: anyNamed('sourcePort')),
       ).thenAnswer((_) async => '4001');
@@ -37,7 +39,11 @@ void main() {
       when(mockNatService.mapPort(any)).thenAnswer((_) async => ['TCP', 'UDP']);
       when(mockNatService.unmapPort(any)).thenAnswer((_) async => {});
 
-      handler = AutoNATHandler(config, mockNetworkHandler, natService: mockNatService);
+      handler = AutoNATHandler(
+        config,
+        mockNetworkHandler,
+        natService: mockNatService,
+      );
     });
 
     tearDown(() async {
@@ -67,7 +73,9 @@ void main() {
     });
 
     test('detects direct connectivity (NATType.none)', () async {
-      when(mockNetworkHandler.canConnectDirectly(any)).thenAnswer((_) async => true);
+      when(
+        mockNetworkHandler.canConnectDirectly(any),
+      ).thenAnswer((_) async => true);
       await handler.start();
       final status = await handler.getStatus();
       expect(status['nat_type'], contains('none'));
@@ -75,15 +83,21 @@ void main() {
     });
 
     test('detects symmetric NAT', () async {
-      when(mockNetworkHandler.testConnection(sourcePort: 4001)).thenAnswer((_) async => '4001');
-      when(mockNetworkHandler.testConnection(sourcePort: 4002)).thenAnswer((_) async => '4005');
+      when(
+        mockNetworkHandler.testConnection(sourcePort: 4001),
+      ).thenAnswer((_) async => '4001');
+      when(
+        mockNetworkHandler.testConnection(sourcePort: 4002),
+      ).thenAnswer((_) async => '4005');
       await handler.start();
       final status = await handler.getStatus();
       expect(status['nat_type'], contains('symmetric'));
     });
 
     test('handles NAT detection error gracefully', () async {
-      when(mockNetworkHandler.canConnectDirectly(any)).thenThrow(Exception('Connect error'));
+      when(
+        mockNetworkHandler.canConnectDirectly(any),
+      ).thenThrow(Exception('Connect error'));
       await handler.start();
       final status = await handler.getStatus();
       expect(status['nat_type'], contains('unknown'));
@@ -96,7 +110,11 @@ void main() {
           enableNatTraversal: false,
         ),
       );
-      handler = AutoNATHandler(disabledConfig, mockNetworkHandler, natService: mockNatService);
+      handler = AutoNATHandler(
+        disabledConfig,
+        mockNetworkHandler,
+        natService: mockNatService,
+      );
       await handler.start();
       verifyNever(mockNatService.mapPort(any));
     });
@@ -116,25 +134,43 @@ void main() {
           enableNatTraversal: true,
         ),
       );
-      handler = AutoNATHandler(customConfig, mockNetworkHandler, natService: mockNatService);
+      handler = AutoNATHandler(
+        customConfig,
+        mockNetworkHandler,
+        natService: mockNatService,
+      );
       await handler.start();
       verify(mockNatService.mapPort(9090)).called(1);
     });
 
     test('handles address formats without specific port markers', () async {
       final badConfig = IPFSConfig(
-        network: NetworkConfig(listenAddresses: ['/unix/tmp/ipfs.sock'], enableNatTraversal: true),
+        network: NetworkConfig(
+          listenAddresses: ['/unix/tmp/ipfs.sock'],
+          enableNatTraversal: true,
+        ),
       );
-      handler = AutoNATHandler(badConfig, mockNetworkHandler, natService: mockNatService);
+      handler = AutoNATHandler(
+        badConfig,
+        mockNetworkHandler,
+        natService: mockNatService,
+      );
       await handler.start();
       verifyNever(mockNatService.mapPort(any));
     });
 
     test('stop handles mappedPort null fallback', () async {
       final badConfig = IPFSConfig(
-        network: NetworkConfig(listenAddresses: ['/bad'], enableNatTraversal: true),
+        network: NetworkConfig(
+          listenAddresses: ['/bad'],
+          enableNatTraversal: true,
+        ),
       );
-      handler = AutoNATHandler(badConfig, mockNetworkHandler, natService: mockNatService);
+      handler = AutoNATHandler(
+        badConfig,
+        mockNetworkHandler,
+        natService: mockNatService,
+      );
 
       await handler.start();
       await handler.stop();
@@ -143,14 +179,18 @@ void main() {
 
     test('handles errors during stop', () async {
       await handler.start();
-      when(mockNatService.unmapPort(any)).thenThrow(Exception('NAT service unmap error'));
+      when(
+        mockNatService.unmapPort(any),
+      ).thenThrow(Exception('NAT service unmap error'));
       // Expect stop to rethrow or log error depending on implementation
       // Current implementation rethrows
       expect(handler.stop(), throwsA(isA<Exception>()));
     });
 
     test('handles dialback test error', () async {
-      when(mockNetworkHandler.testDialback()).thenThrow(Exception('Dialback error'));
+      when(
+        mockNetworkHandler.testDialback(),
+      ).thenThrow(Exception('Dialback error'));
       await handler.start();
       // Small delay to allow fire-and-forget dialback to fail
       await Future.delayed(const Duration(milliseconds: 50));

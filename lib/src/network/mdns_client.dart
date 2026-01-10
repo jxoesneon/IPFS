@@ -169,7 +169,8 @@ class MDnsClient {
         0x8000, // This is the constant for multicast questions in mDNS
       );
 
-      await for (final record in _client!.lookup(queryParameters).timeout(timeout)) {
+      await for (final record
+          in _client!.lookup(queryParameters).timeout(timeout)) {
         final transformed = _transformRecord<T>(record);
         if (transformed != null) {
           yield transformed;
@@ -187,7 +188,11 @@ class MDnsClient {
   T? _transformRecord<T extends ResourceRecord>(mdns.ResourceRecord raw) {
     try {
       if (T == PtrResourceRecord && raw is mdns.PtrResourceRecord) {
-        return PtrResourceRecord(raw.name, Duration(milliseconds: raw.validUntil), raw.domainName)
+        return PtrResourceRecord(
+              raw.name,
+              Duration(milliseconds: raw.validUntil),
+              raw.domainName,
+            )
             as T;
       } else if (T == SrvResourceRecord && raw is mdns.SrvResourceRecord) {
         return SrvResourceRecord(
@@ -200,7 +205,12 @@ class MDnsClient {
             )
             as T;
       } else if (T == TxtResourceRecord && raw is mdns.TxtResourceRecord) {
-        return TxtResourceRecord(raw.name, Duration(milliseconds: raw.validUntil), [raw.text]) as T;
+        return TxtResourceRecord(
+              raw.name,
+              Duration(milliseconds: raw.validUntil),
+              [raw.text],
+            )
+            as T;
       }
       return null;
     } catch (e) {
@@ -263,7 +273,12 @@ class MDnsClient {
   }
 
   /// Sends an unsolicited announcement (response)
-  Future<void> announce(String serviceType, String instanceName, int port, List<String> txt) async {
+  Future<void> announce(
+    String serviceType,
+    String instanceName,
+    int port,
+    List<String> txt,
+  ) async {
     if (_serverSocket == null) return;
     try {
       _sendResponse(serviceType, instanceName, port, txt);
@@ -313,7 +328,12 @@ class MDnsClient {
     }
   }
 
-  void _sendResponse(String serviceType, String instanceName, int port, List<String> txtRecords) {
+  void _sendResponse(
+    String serviceType,
+    String instanceName,
+    int port,
+    List<String> txtRecords,
+  ) {
     // Construct DNS Response Packet
     final response = BytesBuilder();
 

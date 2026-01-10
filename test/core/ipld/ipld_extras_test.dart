@@ -42,11 +42,17 @@ void main() {
       expect(explore.fieldPath, equals('p'));
       expect(explore.subSelectors, hasLength(1));
 
-      final rec = IPLDSelector.recursive(selector: IPLDSelector.all(), maxDepth: 5);
+      final rec = IPLDSelector.recursive(
+        selector: IPLDSelector.all(),
+        maxDepth: 5,
+      );
       expect(rec.type, SelectorType.recursive);
       expect(rec.maxDepth, equals(5));
 
-      final union = IPLDSelector.union([IPLDSelector.all(), IPLDSelector.none()]);
+      final union = IPLDSelector.union([
+        IPLDSelector.all(),
+        IPLDSelector.none(),
+      ]);
       expect(union.type, SelectorType.union);
       expect(union.subSelectors, hasLength(2));
     });

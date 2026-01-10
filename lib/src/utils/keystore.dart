@@ -89,19 +89,25 @@ class Keystore {
   /// Serializes the keystore to JSON format (optional).
   String serialize() {
     final jsonMap = _keyPairs.map(
-      (name, keyPair) =>
-          MapEntry(name, {'publicKey': keyPair.publicKey, 'privateKey': keyPair.privateKey}),
+      (name, keyPair) => MapEntry(name, {
+        'publicKey': keyPair.publicKey,
+        'privateKey': keyPair.privateKey,
+      }),
     );
     return jsonEncode(jsonMap);
   }
 
   /// Deserializes the keystore from JSON format (optional).
   void deserialize(String jsonString) {
-    final Map<String, dynamic> jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
+    final Map<String, dynamic> jsonMap =
+        jsonDecode(jsonString) as Map<String, dynamic>;
     for (final entry in jsonMap.entries) {
       final name = entry.key;
       final keys = entry.value as Map<String, dynamic>;
-      addKeyPair(name, KeyPair(keys['publicKey'] as String, keys['privateKey'] as String));
+      addKeyPair(
+        name,
+        KeyPair(keys['publicKey'] as String, keys['privateKey'] as String),
+      );
     }
     _logger.info('Keystore deserialized from JSON.');
   }
@@ -109,7 +115,11 @@ class Keystore {
   /// Verifies a signature using a public key
   ///
   /// Uses Ed25519 signature verification via pure-Dart cryptography package.
-  Future<bool> verifySignature(String publicKey, Uint8List data, Uint8List signature) async {
+  Future<bool> verifySignature(
+    String publicKey,
+    Uint8List data,
+    Uint8List signature,
+  ) async {
     try {
       // Decode the public key from hex/base64
       final pubKeyBytes = _decodePublicKey(publicKey);
@@ -166,7 +176,9 @@ class Keystore {
   ///
   /// Returns a map of key names to their private key bytes.
   Map<String, Uint8List> exportKeysForMigration() {
-    _logger.warning('Exporting plaintext keys for migration - ensure they are encrypted!');
+    _logger.warning(
+      'Exporting plaintext keys for migration - ensure they are encrypted!',
+    );
     final result = <String, Uint8List>{};
     for (final entry in _keyPairs.entries) {
       try {
@@ -174,7 +186,9 @@ class Keystore {
         result[entry.key] = base64Url.decode(entry.value.privateKey);
       } catch (_) {
         // Fallback to UTF-8 for legacy raw string keys
-        result[entry.key] = Uint8List.fromList(utf8.encode(entry.value.privateKey));
+        result[entry.key] = Uint8List.fromList(
+          utf8.encode(entry.value.privateKey),
+        );
       }
     }
     return result;

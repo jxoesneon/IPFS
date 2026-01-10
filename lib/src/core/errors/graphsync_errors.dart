@@ -11,8 +11,9 @@ abstract class GraphsyncError implements Exception {
   final dynamic cause;
 
   @override
-  String toString() =>
-      cause == null ? 'GraphsyncError: $message' : 'GraphsyncError: $message (Cause: $cause)';
+  String toString() => cause == null
+      ? 'GraphsyncError: $message'
+      : 'GraphsyncError: $message (Cause: $cause)';
 }
 
 /// Error when a block is not found.
@@ -38,13 +39,15 @@ class GraphTraversalError extends GraphsyncError {
 /// Error when sending/receiving messages.
 class MessageError extends GraphsyncError {
   /// Creates a message error with [message] and optional [cause].
-  MessageError(String message, [dynamic cause]) : super('Message error: $message', cause);
+  MessageError(String message, [dynamic cause])
+    : super('Message error: $message', cause);
 }
 
 /// Error when request times out.
 class RequestTimeoutError extends GraphsyncError {
   /// Creates a timeout error for [requestId].
-  RequestTimeoutError(String requestId) : super('Request timed out: $requestId');
+  RequestTimeoutError(String requestId)
+    : super('Request timed out: $requestId');
 }
 
 /// Error when handling graphsync requests.

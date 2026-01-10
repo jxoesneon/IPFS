@@ -71,7 +71,10 @@ class MockRouterL2 implements p2p.RouterL2 {
   }
 
   @override
-  void sendDatagram({required Iterable<p2p.FullAddress> addresses, required Uint8List datagram}) {}
+  void sendDatagram({
+    required Iterable<p2p.FullAddress> addresses,
+    required Uint8List datagram,
+  }) {}
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -105,7 +108,10 @@ class MockP2plibRouter implements P2plibRouter {
   void registerProtocol(String protocolId) {}
 
   @override
-  void registerProtocolHandler(String protocolId, void Function(NetworkPacket) handler) {
+  void registerProtocolHandler(
+    String protocolId,
+    void Function(NetworkPacket) handler,
+  ) {
     messageHandler = handler;
   }
 
@@ -113,7 +119,11 @@ class MockP2plibRouter implements P2plibRouter {
   List<String> get connectedPeers => [Base58().encode(validPeerIdBytes)];
 
   @override
-  Future<void> sendMessage(String peerId, Uint8List data, {String? protocolId}) async {}
+  Future<void> sendMessage(
+    String peerId,
+    Uint8List data, {
+    String? protocolId,
+  }) async {}
 
   Future<void> simulatePacket(NetworkPacket packet) async {
     if (messageHandler != null) {
@@ -143,9 +153,8 @@ void main() {
       handler = BitswapHandler(mockConfig, mockBlockStore, mockRouter);
 
       // Setup minimal mock router state
-      mockRouter._mockL2.routes[p2p.PeerId(value: validPeerIdBytes)] = p2p.Route(
-        peerId: p2p.PeerId(value: validPeerIdBytes),
-      );
+      mockRouter._mockL2.routes[p2p.PeerId(value: validPeerIdBytes)] =
+          p2p.Route(peerId: p2p.PeerId(value: validPeerIdBytes));
     });
 
     test('start/stop', () async {
@@ -157,7 +166,9 @@ void main() {
       await handler.start();
 
       final targetData = Uint8List.fromList([1, 2, 3, 4]);
-      final targetCid = CID.computeForDataSync(targetData, codec: 'dag-pb').encode();
+      final targetCid = CID
+          .computeForDataSync(targetData, codec: 'dag-pb')
+          .encode();
 
       // Simulate response slightly later
       scheduleMicrotask(() async {
@@ -206,7 +217,8 @@ void main() {
 
     test(
       'verifies Bitswap 1.2 features (sendDontHave)',
-      skip: 'Flaky: MockRouterL2Capture message capture times out intermittently',
+      skip:
+          'Flaky: MockRouterL2Capture message capture times out intermittently',
       () async {
         await handler.start();
         final data = Uint8List.fromList([9, 9, 9]);
@@ -276,7 +288,10 @@ class MockRouterL2Capture extends MockRouterL2 {
   final Future<void> Function(Uint8List) onSend;
 
   @override
-  void sendDatagram({required Iterable<p2p.FullAddress> addresses, required Uint8List datagram}) {
+  void sendDatagram({
+    required Iterable<p2p.FullAddress> addresses,
+    required Uint8List datagram,
+  }) {
     onSend(datagram);
   }
 }

@@ -10,7 +10,12 @@ import 'package:fixnum/fixnum.dart' show Int64;
 /// Represents a Content Addressable Archive (CAR) with v1 and v2 support.
 class CAR {
   /// Creates a new [CAR] archive with the given [blocks] and [header].
-  CAR({required this.blocks, required this.header, this.index, this.version = 2});
+  CAR({
+    required this.blocks,
+    required this.header,
+    this.index,
+    this.version = 2,
+  });
 
   /// Creates a CARv2 with index
   factory CAR.v2WithIndex(List<Block> blocks) {
@@ -56,9 +61,16 @@ class CAR {
       throw UnsupportedError('Selective loading requires an index');
     }
 
-    final selectedBlocks = blocks.where((block) => cids.contains(block.cid.toString())).toList();
+    final selectedBlocks = blocks
+        .where((block) => cids.contains(block.cid.toString()))
+        .toList();
 
-    return CAR(blocks: selectedBlocks, header: header, index: index, version: version);
+    return CAR(
+      blocks: selectedBlocks,
+      header: header,
+      index: index,
+      version: version,
+    );
   }
 
   /// Gets block offset information from index
@@ -70,7 +82,9 @@ class CAR {
   static CAR fromBytes(Uint8List bytes) {
     final carProto = proto.CarProto.fromBuffer(bytes);
 
-    final blocks = carProto.blocks.map((blockProto) => Block.fromProto(blockProto)).toList();
+    final blocks = carProto.blocks
+        .map((blockProto) => Block.fromProto(blockProto))
+        .toList();
 
     final header = CarHeader(
       version: carProto.header.version,
@@ -91,7 +105,12 @@ class CAR {
       }
     }
 
-    return CAR(blocks: blocks, header: header, index: index, version: carProto.version);
+    return CAR(
+      blocks: blocks,
+      header: header,
+      index: index,
+      version: carProto.version,
+    );
   }
 }
 
@@ -123,7 +142,11 @@ class CarHeader {
       ..version = version
       ..characteristics.addAll(characteristics)
       ..roots.addAll(roots.map((r) => r.toProto()))
-      ..pragma.addAll(pragma.map((k, v) => MapEntry(k, Any()..value = v.toString().codeUnits)));
+      ..pragma.addAll(
+        pragma.map(
+          (k, v) => MapEntry(k, Any()..value = v.toString().codeUnits),
+        ),
+      );
   }
 }
 

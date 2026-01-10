@@ -3,7 +3,8 @@
 import 'dart:typed_data';
 
 /// The Bitcoin/IPFS Base58 alphabet (excludes 0, O, I, l).
-const String _base58Alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const String _base58Alphabet =
+    '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
 /// Base58 encoding/decoding for IPFS identifiers.
 ///
@@ -75,11 +76,15 @@ class Base58 {
     }
 
     // Add leading zeros
-    final leadingZeros = input.split('').takeWhile((c) => c == _base58Alphabet[0]).length;
+    final leadingZeros = input
+        .split('')
+        .takeWhile((c) => c == _base58Alphabet[0])
+        .length;
     final bytes = bigIntToUint8List(
       result,
     ); // Use the helper function to convert BigInt to Uint8List
-    final decoded = Uint8List(leadingZeros + bytes.length)..setAll(leadingZeros, bytes);
+    final decoded = Uint8List(leadingZeros + bytes.length)
+      ..setAll(leadingZeros, bytes);
 
     return decoded;
   }

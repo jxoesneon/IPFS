@@ -41,7 +41,8 @@ class Link {
   // We keep the class simple to match the spec.
 
   /// Creates a new link with the given [name], [cid], and [size].
-  Link({required this.name, required this.cid, required int size}) : size = fixnum.Int64(size);
+  Link({required this.name, required this.cid, required int size})
+    : size = fixnum.Int64(size);
 
   /// Creates a Link from a standard PBLink proto.
   factory Link.fromProto(dag_proto.PBLink proto) {

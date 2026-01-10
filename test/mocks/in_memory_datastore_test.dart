@@ -68,7 +68,9 @@ void main() {
       }
 
       int count = 0;
-      await for (final _ in datastore.query(Query(prefix: '/blocks/', keysOnly: true))) {
+      await for (final _ in datastore.query(
+        Query(prefix: '/blocks/', keysOnly: true),
+      )) {
         count++;
       }
       expect(count, equals(3));
@@ -79,7 +81,9 @@ void main() {
       final key = Key('/blocks/${block.cid.toString()}');
       await datastore.put(key, block.data);
 
-      await for (final entry in datastore.query(Query(prefix: '/blocks/', keysOnly: true))) {
+      await for (final entry in datastore.query(
+        Query(prefix: '/blocks/', keysOnly: true),
+      )) {
         expect(entry.value, isNull);
         expect(entry.key.toString(), startsWith('/blocks/'));
       }
@@ -90,7 +94,9 @@ void main() {
       final key = Key('/blocks/${block.cid.toString()}');
       await datastore.put(key, block.data);
 
-      await for (final entry in datastore.query(Query(prefix: '/blocks/', keysOnly: false))) {
+      await for (final entry in datastore.query(
+        Query(prefix: '/blocks/', keysOnly: false),
+      )) {
         expect(entry.value, isNotNull);
         expect(entry.value, equals(block.data));
       }

@@ -55,7 +55,9 @@ void main() {
         domainName: 'instance.local',
       );
 
-      when(mockInnerClient.lookup(any)).thenAnswer((_) => Stream.fromIterable([rawRecord]));
+      when(
+        mockInnerClient.lookup(any),
+      ).thenAnswer((_) => Stream.fromIterable([rawRecord]));
 
       final result = await client.lookup<PtrResourceRecord>(query).first;
       expect(result.name, '_ipfs-discovery._udp.local');
@@ -74,7 +76,9 @@ void main() {
         weight: 20,
       );
 
-      when(mockInnerClient.lookup(any)).thenAnswer((_) => Stream.fromIterable([rawRecord]));
+      when(
+        mockInnerClient.lookup(any),
+      ).thenAnswer((_) => Stream.fromIterable([rawRecord]));
 
       final result = await client.lookup<SrvResourceRecord>(query).first;
       expect(result.target, 'hostname.local');
@@ -86,9 +90,15 @@ void main() {
     test('lookup transforms TXT record', () async {
       await client.start();
       final query = ResourceRecordQuery.text('instance.local');
-      final rawRecord = mdns.TxtResourceRecord('instance.local', 120000, text: 'peerid=123');
+      final rawRecord = mdns.TxtResourceRecord(
+        'instance.local',
+        120000,
+        text: 'peerid=123',
+      );
 
-      when(mockInnerClient.lookup(any)).thenAnswer((_) => Stream.fromIterable([rawRecord]));
+      when(
+        mockInnerClient.lookup(any),
+      ).thenAnswer((_) => Stream.fromIterable([rawRecord]));
 
       final result = await client.lookup<TxtResourceRecord>(query).first;
       expect(result.text, ['peerid=123']);
@@ -98,13 +108,17 @@ void main() {
       await client.start();
       final query = ResourceRecordQuery.text('instance.local');
 
-      when(mockInnerClient.lookup(any)).thenAnswer((_) => Stream.error(TimeoutException('test')));
+      when(
+        mockInnerClient.lookup(any),
+      ).thenAnswer((_) => Stream.error(TimeoutException('test')));
 
       // lookup catch TimeoutException and doesn't rethrow, but lookup Stream will terminate
       final results = await client.lookup(query).toList();
       expect(results, isEmpty);
 
-      when(mockInnerClient.lookup(any)).thenAnswer((_) => Stream.error(Exception('other')));
+      when(
+        mockInnerClient.lookup(any),
+      ).thenAnswer((_) => Stream.error(Exception('other')));
       expect(() => client.lookup(query).toList(), throwsException);
     });
   });

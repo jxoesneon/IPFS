@@ -9,8 +9,10 @@ extension Refresh on KademliaTree {
     for (var bucket in buckets) {
       for (var nodeEntry in bucket.entries) {
         // Check if the peer has been seen recently
-        DateTime? lastSeenTime = lastSeen[nodeEntry.key]; // Use the public getter instead
-        if (lastSeenTime != null && DateTime.now().difference(lastSeenTime) > refreshTimeout) {
+        DateTime? lastSeenTime =
+            lastSeen[nodeEntry.key]; // Use the public getter instead
+        if (lastSeenTime != null &&
+            DateTime.now().difference(lastSeenTime) > refreshTimeout) {
           // 2. Evict stale peers
           removePeer(nodeEntry.key);
           lastSeen.remove(nodeEntry.key); // Use the public getter

@@ -46,11 +46,14 @@ class IPFSCIDProto extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'IPFSCIDProto',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'IPFSCIDProto',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core'),
       createEmptyInstance: create)
-    ..aE<IPFSCIDVersion>(1, _omitFieldNames ? '' : 'version', enumValues: IPFSCIDVersion.values)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'multihash', $pb.PbFieldType.OY)
+    ..aE<IPFSCIDVersion>(1, _omitFieldNames ? '' : 'version',
+        enumValues: IPFSCIDVersion.values)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'multihash', $pb.PbFieldType.OY)
     ..aOS(3, _omitFieldNames ? '' : 'codec')
     ..aOS(4, _omitFieldNames ? '' : 'multibasePrefix')
     ..aI(5, _omitFieldNames ? '' : 'codecType')
@@ -60,7 +63,8 @@ class IPFSCIDProto extends $pb.GeneratedMessage {
   IPFSCIDProto clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   IPFSCIDProto copyWith(void Function(IPFSCIDProto) updates) =>
-      super.copyWith((message) => updates(message as IPFSCIDProto)) as IPFSCIDProto;
+      super.copyWith((message) => updates(message as IPFSCIDProto))
+          as IPFSCIDProto;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -70,8 +74,8 @@ class IPFSCIDProto extends $pb.GeneratedMessage {
   @$core.override
   IPFSCIDProto createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static IPFSCIDProto getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<IPFSCIDProto>(create);
+  static IPFSCIDProto getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<IPFSCIDProto>(create);
   static IPFSCIDProto? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -120,5 +124,7 @@ class IPFSCIDProto extends $pb.GeneratedMessage {
   void clearCodecType() => $_clearField(5);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

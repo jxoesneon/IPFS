@@ -24,7 +24,11 @@ void main() {
 
     test('getEntry returns correct entry', () {
       final wantlist = Wantlist();
-      wantlist.add('QmTest1', priority: 10, wantType: bitswap_msg.WantType.have);
+      wantlist.add(
+        'QmTest1',
+        priority: 10,
+        wantType: bitswap_msg.WantType.have,
+      );
       final entry = wantlist.getEntry('QmTest1');
       expect(entry, isNotNull);
       expect(entry!.priority, equals(10));
@@ -49,7 +53,10 @@ void main() {
 
     test('rejects negative priority', () {
       final wantlist = Wantlist();
-      expect(() => wantlist.add('QmTest', priority: -1), throwsA(isA<ArgumentError>()));
+      expect(
+        () => wantlist.add('QmTest', priority: -1),
+        throwsA(isA<ArgumentError>()),
+      );
     });
   });
 
@@ -92,7 +99,10 @@ void main() {
 
     test('throws on missing block data', () {
       final ledger = BitLedger('PeerA');
-      expect(() => ledger.getBlockData('QmMissing'), throwsA(isA<StateError>()));
+      expect(
+        () => ledger.getBlockData('QmMissing'),
+        throwsA(isA<StateError>()),
+      );
     });
   });
 

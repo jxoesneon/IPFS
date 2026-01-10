@@ -69,8 +69,14 @@ class Logger {
 
         if (record.error != null) {
           // ignore: avoid_print
-          print('$message\nError: ${record.error}\nStack trace: ${record.stackTrace}');
-          _metrics?.recordError('system', record.loggerName, record.error.toString());
+          print(
+            '$message\nError: ${record.error}\nStack trace: ${record.stackTrace}',
+          );
+          _metrics?.recordError(
+            'system',
+            record.loggerName,
+            record.error.toString(),
+          );
         } else {
           // ignore: avoid_print
           print(message);

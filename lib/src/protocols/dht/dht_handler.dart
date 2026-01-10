@@ -41,7 +41,8 @@ class DHTHandler implements IDHTHandler {
     if (storage == null) {
       _storage.init();
     }
-    dhtClient = client ?? DHTClient(networkHandler: networkHandler, router: _router);
+    dhtClient =
+        client ?? DHTClient(networkHandler: networkHandler, router: _router);
   }
 
   /// The underlying DHT client for network operations.
@@ -94,7 +95,9 @@ class DHTHandler implements IDHTHandler {
   Future<List<V_PeerInfo>> findProviders(CID cid) async {
     try {
       final providers = await dhtClient.findProviders(cid.toString());
-      return providers.map((peer) => V_PeerInfo()..peerId = peer.value).toList();
+      return providers
+          .map((peer) => V_PeerInfo()..peerId = peer.value)
+          .toList();
     } catch (e) {
       // print('Error finding providers: $e');
       return [];
@@ -157,10 +160,14 @@ class DHTHandler implements IDHTHandler {
           if (resolvedCid != null) {
             // print('Resolved IPNS name using public resolver: $resolvedCid');
           } else {
-            throw Exception('Failed to extract CID from public resolver response.');
+            throw Exception(
+              'Failed to extract CID from public resolver response.',
+            );
           }
         } else {
-          throw Exception('Public resolver returned status code ${response.statusCode}');
+          throw Exception(
+            'Public resolver returned status code ${response.statusCode}',
+          );
         }
       } catch (e) {
         // print('Error resolving IPNS name using public resolver: $e');
@@ -188,7 +195,9 @@ class DHTHandler implements IDHTHandler {
       final valuePath = utf8.encode('/ipfs/$cid');
 
       // Validity: RFC3339 format, 24 hours from now
-      final validityDate = DateTime.now().add(const Duration(hours: 24)).toUtc();
+      final validityDate = DateTime.now()
+          .add(const Duration(hours: 24))
+          .toUtc();
       final validity = utf8.encode(validityDate.toIso8601String());
       final validityType = IpnsEntry_ValidityType.EOL;
 
@@ -235,7 +244,8 @@ class DHTHandler implements IDHTHandler {
   }
 
   /// Validates if a given string is a valid CID.
-  bool isValidCID(String cid) => cid.isNotEmpty && RegExp(r'^[a-zA-Z0-9]+$').hasMatch(cid);
+  bool isValidCID(String cid) =>
+      cid.isNotEmpty && RegExp(r'^[a-zA-Z0-9]+$').hasMatch(cid);
 
   /// Validates if a given string is a valid peer ID.
   bool isValidPeerID(String peerId) =>
@@ -245,7 +255,9 @@ class DHTHandler implements IDHTHandler {
   String? extractCIDFromResponse(String responseBody) {
     // Placeholder logic to extract CID from response body
     // Implement actual extraction logic based on response format
-    final match = RegExp(r'Qm[1-9A-HJ-NP-Za-km-z]{44}').firstMatch(responseBody);
+    final match = RegExp(
+      r'Qm[1-9A-HJ-NP-Za-km-z]{44}',
+    ).firstMatch(responseBody);
     return match?.group(0);
   }
 
@@ -320,7 +332,9 @@ class DHTHandler implements IDHTHandler {
       final existingProviders = _providers[cidStr] ?? <String>{};
       if (existingProviders.length >= maxProvidersPerCid &&
           !existingProviders.contains(providerStr)) {
-        _logger.warning('SEC-010: Max providers ($maxProvidersPerCid) reached for CID $cidStr');
+        _logger.warning(
+          'SEC-010: Max providers ($maxProvidersPerCid) reached for CID $cidStr',
+        );
         return; // Reject - too many providers
       }
 

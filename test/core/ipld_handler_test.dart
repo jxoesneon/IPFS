@@ -9,7 +9,8 @@ import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart' as blockstore_pb;
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart'
+    as blockstore_pb;
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_multihash/dart_multihash.dart';
@@ -90,10 +91,14 @@ void main() {
       final retrieved = await handler.get(block.cid);
       expect(retrieved.kind, Kind.MAP);
 
-      final nameEntry = retrieved.mapValue.entries.firstWhere((dynamic e) => e.key == 'name');
+      final nameEntry = retrieved.mapValue.entries.firstWhere(
+        (dynamic e) => e.key == 'name',
+      );
       expect(nameEntry.value.stringValue, 'test');
 
-      final valueEntry = retrieved.mapValue.entries.firstWhere((dynamic e) => e.key == 'value');
+      final valueEntry = retrieved.mapValue.entries.firstWhere(
+        (dynamic e) => e.key == 'value',
+      );
       expect(valueEntry.value.intValue.toInt(), 123);
     });
 
@@ -104,7 +109,10 @@ void main() {
       expect(block.cid.codec, 'raw');
 
       final retrieved = await handler.get(block.cid);
-      expect(retrieved.kind.toString(), contains('BYTES')); // raw decodes to IPLDNode with BYTES
+      expect(
+        retrieved.kind.toString(),
+        contains('BYTES'),
+      ); // raw decodes to IPLDNode with BYTES
       expect(retrieved.bytesValue, data);
     });
 
@@ -127,7 +135,9 @@ void main() {
       final retrieved = await handler.get(block.cid);
       expect(retrieved.kind, Kind.MAP);
 
-      final linkEntry = retrieved.mapValue.entries.firstWhere((e) => e.key == 'link');
+      final linkEntry = retrieved.mapValue.entries.firstWhere(
+        (e) => e.key == 'link',
+      );
       expect(linkEntry.value.kind, Kind.LINK);
       final linkProto = linkEntry.value.linkValue;
       final multihash = Uint8List.fromList(linkProto.multihash);
@@ -187,7 +197,10 @@ void main() {
       // However, DAG-PB resolution logic involves _resolveSegment.
       // For MerkleDAGNode, it iterates links and matches name.
 
-      final (resolvedNode, lastCid) = await handler.resolveLink(parentBlock.cid, 'child');
+      final (resolvedNode, lastCid) = await handler.resolveLink(
+        parentBlock.cid,
+        'child',
+      );
 
       expect(lastCid, leafCid.toString());
       // resolvedNode should be the content of the leaf.
@@ -198,7 +211,10 @@ void main() {
 
     test('should throw error for unsupported codec', () async {
       final data = Uint8List.fromList([1, 2, 3]);
-      expect(() => handler.put(data, codec: 'unknown-codec'), throwsA(isA<UnsupportedError>()));
+      expect(
+        () => handler.put(data, codec: 'unknown-codec'),
+        throwsA(isA<UnsupportedError>()),
+      );
     });
 
     // Removed unsupported codec test as CID validation prevents creating such CIDs easily.

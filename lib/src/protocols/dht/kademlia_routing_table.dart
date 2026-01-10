@@ -59,7 +59,11 @@ class KademliaRoutingTable {
   /// Adds a peer to the routing table.
   ///
   /// Enforces IP diversity limits to prevent Sybil attacks.
-  Future<void> addPeer(PeerId peerId, PeerId associatedPeerId, {String? address}) async {
+  Future<void> addPeer(
+    PeerId peerId,
+    PeerId associatedPeerId, {
+    String? address,
+  }) async {
     // 1. IP Diversity Check
     if (address != null) {
       final ip = address; // Assuming address string is the IP or contains it
@@ -113,7 +117,9 @@ class KademliaRoutingTable {
     final nodeStats = _getNodeStats(); // Fetch current network statistics
     final staleThreshold = _calculateStaleThreshold(nodeStats);
 
-    return DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(node.lastSeen)) >
+    return DateTime.now().difference(
+          DateTime.fromMillisecondsSinceEpoch(node.lastSeen),
+        ) >
         staleThreshold;
   }
 
@@ -179,8 +185,10 @@ class KademliaRoutingTable {
   }
 
   /// Total number of peers in the routing table.
-  int get peerCount =>
-      _tree.buckets.fold(0, (sum, bucket) => (sum + bucket.entries.length).toInt());
+  int get peerCount => _tree.buckets.fold(
+    0,
+    (sum, bucket) => (sum + bucket.entries.length).toInt(),
+  );
 
   /// Clears all peers from the routing table.
   void clear() {
@@ -196,10 +204,12 @@ class KademliaRoutingTable {
   List<RedBlackTree<PeerId, KademliaTreeNode>> get buckets => _tree.buckets;
 
   /// Finds the k closest peers to target.
-  List<PeerId> findClosestPeers(PeerId target, int k) => _tree.findClosestPeers(target, k);
+  List<PeerId> findClosestPeers(PeerId target, int k) =>
+      _tree.findClosestPeers(target, k);
 
   /// Performs a node lookup for target.
-  Future<List<PeerId>> nodeLookup(PeerId target) async => _tree.nodeLookup(target);
+  Future<List<PeerId>> nodeLookup(PeerId target) async =>
+      _tree.nodeLookup(target);
 
   /// Refreshes stale buckets by querying for random keys.
   void refresh() {
@@ -224,7 +234,9 @@ class KademliaRoutingTable {
 
   RedBlackTree<PeerId, KademliaTreeNode> _getOrCreateBucket(int bucketIndex) {
     while (_tree.buckets.length <= bucketIndex) {
-      _tree.buckets.add(RedBlackTree<PeerId, KademliaTreeNode>(compare: _xorDistanceComparator));
+      _tree.buckets.add(
+        RedBlackTree<PeerId, KademliaTreeNode>(compare: _xorDistanceComparator),
+      );
     }
     return _tree.buckets[bucketIndex];
   }
@@ -448,7 +460,11 @@ class KademliaRoutingTable {
   }
 
   /// Updates the timestamp for a key provider
-  void updateKeyProviderTimestamp(PeerId key, PeerId provider, DateTime timestamp) {
+  void updateKeyProviderTimestamp(
+    PeerId key,
+    PeerId provider,
+    DateTime timestamp,
+  ) {
     final node = _findNode(key);
     if (node != null && node.associatedPeerId == provider) {
       node.lastSeen = timestamp.millisecondsSinceEpoch;

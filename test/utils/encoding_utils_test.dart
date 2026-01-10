@@ -21,7 +21,10 @@ void main() {
       });
 
       test('fromBase58 throws on invalid prefix', () {
-        expect(() => EncodingUtils.fromBase58('xBadPrefix'), throwsArgumentError);
+        expect(
+          () => EncodingUtils.fromBase58('xBadPrefix'),
+          throwsArgumentError,
+        );
       });
 
       test('fromBase58 throws on unsupported supported prefix', () {
@@ -52,7 +55,10 @@ void main() {
       test('isValidCIDBytes handles invalid data gracefully', () {
         expect(EncodingUtils.isValidCIDBytes(Uint8List(0)), isFalse);
         // Identity byte 0x00 is not 0x12 or 0x01, so should be false
-        expect(EncodingUtils.isValidCIDBytes(Uint8List.fromList([0x00])), isFalse);
+        expect(
+          EncodingUtils.isValidCIDBytes(Uint8List.fromList([0x00])),
+          isFalse,
+        );
       });
     });
 
@@ -70,11 +76,17 @@ void main() {
       });
 
       test('getCodecFromCode throws on unknown code', () {
-        expect(() => EncodingUtils.getCodecFromCode(0xFFFFFF), throwsArgumentError);
+        expect(
+          () => EncodingUtils.getCodecFromCode(0xFFFFFF),
+          throwsArgumentError,
+        );
       });
 
       test('getCodeFromCodec throws on unknown codec', () {
-        expect(() => EncodingUtils.getCodeFromCodec('unknown_codec'), throwsArgumentError);
+        expect(
+          () => EncodingUtils.getCodeFromCodec('unknown_codec'),
+          throwsArgumentError,
+        );
       });
 
       test('supportedCodecs list is not empty', () {

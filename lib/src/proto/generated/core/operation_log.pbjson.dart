@@ -22,7 +22,14 @@ const OperationLogEntryProto$json = {
     {'1': 'timestamp', '3': 1, '4': 1, '5': 3, '10': 'timestamp'},
     {'1': 'operation', '3': 2, '4': 1, '5': 9, '10': 'operation'},
     {'1': 'details', '3': 3, '4': 1, '5': 9, '10': 'details'},
-    {'1': 'cid', '3': 4, '4': 1, '5': 11, '6': '.ipfs.core.IPFSCIDProto', '10': 'cid'},
+    {
+      '1': 'cid',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.IPFSCIDProto',
+      '10': 'cid'
+    },
     {
       '1': 'node_type',
       '3': 5,
@@ -35,12 +42,12 @@ const OperationLogEntryProto$json = {
 };
 
 /// Descriptor for `OperationLogEntryProto`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List operationLogEntryProtoDescriptor = $convert
-    .base64Decode('ChZPcGVyYXRpb25Mb2dFbnRyeVByb3RvEhwKCXRpbWVzdGFtcBgBIAEoA1IJdGltZXN0YW1wEh'
-        'wKCW9wZXJhdGlvbhgCIAEoCVIJb3BlcmF0aW9uEhgKB2RldGFpbHMYAyABKAlSB2RldGFpbHMS'
-        'KQoDY2lkGAQgASgLMhcuaXBmcy5jb3JlLklQRlNDSURQcm90b1IDY2lkEkUKCW5vZGVfdHlwZR'
-        'gFIAEoDjIoLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuTm9kZVR5cGVQcm90b1IIbm9kZVR5'
-        'cGU=');
+final $typed_data.Uint8List operationLogEntryProtoDescriptor = $convert.base64Decode(
+    'ChZPcGVyYXRpb25Mb2dFbnRyeVByb3RvEhwKCXRpbWVzdGFtcBgBIAEoA1IJdGltZXN0YW1wEh'
+    'wKCW9wZXJhdGlvbhgCIAEoCVIJb3BlcmF0aW9uEhgKB2RldGFpbHMYAyABKAlSB2RldGFpbHMS'
+    'KQoDY2lkGAQgASgLMhcuaXBmcy5jb3JlLklQRlNDSURQcm90b1IDY2lkEkUKCW5vZGVfdHlwZR'
+    'gFIAEoDjIoLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuTm9kZVR5cGVQcm90b1IIbm9kZVR5'
+    'cGU=');
 
 @$core.Deprecated('Use operationLogProtoDescriptor instead')
 const OperationLogProto$json = {
@@ -58,6 +65,6 @@ const OperationLogProto$json = {
 };
 
 /// Descriptor for `OperationLogProto`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List operationLogProtoDescriptor = $convert
-    .base64Decode('ChFPcGVyYXRpb25Mb2dQcm90bxJLCgdlbnRyaWVzGAEgAygLMjEuaXBmcy5jb3JlLmRhdGFfc3'
-        'RydWN0dXJlcy5PcGVyYXRpb25Mb2dFbnRyeVByb3RvUgdlbnRyaWVz');
+final $typed_data.Uint8List operationLogProtoDescriptor = $convert.base64Decode(
+    'ChFPcGVyYXRpb25Mb2dQcm90bxJLCgdlbnRyaWVzGAEgAygLMjEuaXBmcy5jb3JlLmRhdGFfc3'
+    'RydWN0dXJlcy5PcGVyYXRpb25Mb2dFbnRyeVByb3RvUgdlbnRyaWVz');

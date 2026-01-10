@@ -22,8 +22,17 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 /// IPLD for graph traversal and block fetching.
 class GraphsyncHandler {
   /// Creates a Graphsync handler.
-  GraphsyncHandler(IPFSConfig config, this._router, this._bitswap, this._ipld, this._blockStore)
-    : _logger = Logger('GraphsyncHandler', debug: config.debug, verbose: config.verboseLogging),
+  GraphsyncHandler(
+    IPFSConfig config,
+    this._router,
+    this._bitswap,
+    this._ipld,
+    this._blockStore,
+  ) : _logger = Logger(
+        'GraphsyncHandler',
+        debug: config.debug,
+        verbose: config.verboseLogging,
+      ),
       _protocol = GraphsyncProtocol(),
       _config = config;
   final BitswapHandler _bitswap;
@@ -103,7 +112,10 @@ class GraphsyncHandler {
 
       // Convert to bytes and send response
       final responseBytes = response.writeToBuffer();
-      await _router.broadcastMessage(GraphsyncProtocol.protocolID, responseBytes);
+      await _router.broadcastMessage(
+        GraphsyncProtocol.protocolID,
+        responseBytes,
+      );
 
       _logger.debug('Cancel request handled successfully for ID: $requestId');
     } catch (e, stackTrace) {
@@ -122,7 +134,10 @@ class GraphsyncHandler {
       );
 
       final responseBytes = response.writeToBuffer();
-      await _router.broadcastMessage(GraphsyncProtocol.protocolID, responseBytes);
+      await _router.broadcastMessage(
+        GraphsyncProtocol.protocolID,
+        responseBytes,
+      );
 
       _logger.debug('Pause request handled successfully for ID: $requestId');
     } catch (e, stackTrace) {
@@ -141,7 +156,10 @@ class GraphsyncHandler {
       );
 
       final responseBytes = response.writeToBuffer();
-      await _router.broadcastMessage(GraphsyncProtocol.protocolID, responseBytes);
+      await _router.broadcastMessage(
+        GraphsyncProtocol.protocolID,
+        responseBytes,
+      );
 
       _logger.debug('Unpause request handled successfully for ID: $requestId');
     } catch (e, stackTrace) {
@@ -167,7 +185,10 @@ class GraphsyncHandler {
       );
 
       // Send initial response
-      await _router.broadcastMessage(GraphsyncProtocol.protocolID, response.writeToBuffer());
+      await _router.broadcastMessage(
+        GraphsyncProtocol.protocolID,
+        response.writeToBuffer(),
+      );
 
       // Process the request using IPLD and Bitswap
       try {
@@ -244,7 +265,10 @@ class GraphsyncHandler {
           metadata: {'error': e.toString()},
         );
 
-        await _router.broadcastMessage(GraphsyncProtocol.protocolID, errorResponse.writeToBuffer());
+        await _router.broadcastMessage(
+          GraphsyncProtocol.protocolID,
+          errorResponse.writeToBuffer(),
+        );
         rethrow;
       }
     } catch (e, stackTrace) {
@@ -270,7 +294,10 @@ class GraphsyncHandler {
         priority: GraphsyncPriority.normal,
       );
 
-      await _router.broadcastMessage(GraphsyncProtocol.protocolID, request.writeToBuffer());
+      await _router.broadcastMessage(
+        GraphsyncProtocol.protocolID,
+        request.writeToBuffer(),
+      );
 
       // Get block via Bitswap and convert to appropriate type
       final bitswapBlock = await _bitswap.wantBlock(cidStr);
@@ -287,6 +314,9 @@ class GraphsyncHandler {
   }
 
   Block _convertToGraphsyncBlock(core.Block bitswapBlock) {
-    return Block(prefix: bitswapBlock.cid.toBytes().sublist(0, 1), data: bitswapBlock.data);
+    return Block(
+      prefix: bitswapBlock.cid.toBytes().sublist(0, 1),
+      data: bitswapBlock.data,
+    );
   }
 }

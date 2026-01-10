@@ -3,7 +3,8 @@ import 'dart:async';
 
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart' show V_PeerInfo;
+import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
+    show V_PeerInfo;
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 
 /// Mock implementation of IDHTHandler for testing.
@@ -100,7 +101,9 @@ class MockDHTHandler implements IDHTHandler {
     _checkAndThrow('handleProvideRequest');
     await _simulateDelay();
 
-    _recordCall('handleProvideRequest:${cid.toString()}:${provider.toString()}');
+    _recordCall(
+      'handleProvideRequest:${cid.toString()}:${provider.toString()}',
+    );
     // Just track the call
   }
 
@@ -222,7 +225,8 @@ class MockDHTHandler implements IDHTHandler {
   }
 
   V_PeerInfo _createMockPeerInfo() {
-    return V_PeerInfo()..peerId = [1, 2, 3, 4, 5]; // List<int> for peer ID bytes
+    return V_PeerInfo()
+      ..peerId = [1, 2, 3, 4, 5]; // List<int> for peer ID bytes
     // Note: addresses field also uses List<int>, skipping for mock simplicity
   }
 }

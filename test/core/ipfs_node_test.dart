@@ -172,7 +172,10 @@ void main() {
       node.setGatewayMode(GatewayMode.internal);
       node.setGatewayMode(GatewayMode.public);
       node.setGatewayMode(GatewayMode.local);
-      node.setGatewayMode(GatewayMode.custom, customUrl: 'http://my-gateway.io');
+      node.setGatewayMode(
+        GatewayMode.custom,
+        customUrl: 'http://my-gateway.io',
+      );
 
       await node.stop();
     });
@@ -194,7 +197,10 @@ void main() {
       final node = IPFSNode.fromContainer(container);
       await node.start();
 
-      expect(() => node.connectToPeer('/ip4/127.0.0.1/tcp/4001'), throwsStateError);
+      expect(
+        () => node.connectToPeer('/ip4/127.0.0.1/tcp/4001'),
+        throwsStateError,
+      );
 
       await node.stop();
     });

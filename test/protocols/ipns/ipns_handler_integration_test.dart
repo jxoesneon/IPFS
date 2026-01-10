@@ -38,7 +38,9 @@ class MockDHTHandler implements IDHTHandler {
 
   @override
   Future<Value> getValue(Key key) async {
-    return Value(Uint8List.fromList([18, 32, ...List.filled(32, 0)])); // Fake CID bytes
+    return Value(
+      Uint8List.fromList([18, 32, ...List.filled(32, 0)]),
+    ); // Fake CID bytes
   }
 
   @override
@@ -94,7 +96,10 @@ void main() {
       test('start initializes handler and starts DHT', () async {
         await handler.start();
         expect(mockDHT.started, isTrue);
-        expect(mockPubSub.subscribedTopics.contains('/ipfs/ipns-1.0.0'), isTrue);
+        expect(
+          mockPubSub.subscribedTopics.contains('/ipfs/ipns-1.0.0'),
+          isTrue,
+        );
       });
 
       test('start is idempotent', () async {
@@ -106,7 +111,10 @@ void main() {
       test('stop clears cache and unsubscribes', () async {
         await handler.start();
         await handler.stop();
-        expect(mockPubSub.subscribedTopics.contains('/ipfs/ipns-1.0.0'), isFalse);
+        expect(
+          mockPubSub.subscribedTopics.contains('/ipfs/ipns-1.0.0'),
+          isFalse,
+        );
       });
 
       test('stop is idempotent', () async {
@@ -151,13 +159,19 @@ void main() {
     group('publish validation', () {
       test('publish throws for invalid CID format', () async {
         await handler.start();
-        expect(() => handler.publish('invalid!cid', keyName: 'test'), throwsArgumentError);
+        expect(
+          () => handler.publish('invalid!cid', keyName: 'test'),
+          throwsArgumentError,
+        );
       });
 
       test('publish throws when keystore is locked', () async {
         await handler.start();
         mockSecurity.keystoreUnlocked = false;
-        expect(() => handler.publish('QmTestCID123', keyName: 'mykey'), throwsStateError);
+        expect(
+          () => handler.publish('QmTestCID123', keyName: 'mykey'),
+          throwsStateError,
+        );
       });
     });
 
@@ -179,7 +193,9 @@ void main() {
 
     group('createRecord (deprecated)', () {
       test('creates an unsigned Record', () async {
-        final cid = CID.decode('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z');
+        final cid = CID.decode(
+          'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z',
+        );
         final keyBytes = Uint8List.fromList([1, 2, 3, 4]);
         final record = await handler.createRecord(cid, keyBytes);
 
@@ -222,7 +238,9 @@ Uint8List _createUnsignedRecordCBOR() {
   // Manually create CBOR without signature
   // Simple approach: just return enough bytes to parse
   final value = utf8.encode('/ipfs/QmTest');
-  final validity = utf8.encode(DateTime.now().add(Duration(hours: 1)).toUtc().toIso8601String());
+  final validity = utf8.encode(
+    DateTime.now().add(Duration(hours: 1)).toUtc().toIso8601String(),
+  );
   final publicKey = Uint8List(32); // Empty public key
 
   // Use cbor package

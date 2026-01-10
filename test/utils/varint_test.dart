@@ -34,7 +34,12 @@ void main() {
     });
 
     test('decode stops at MSB 0', () {
-      final bytes = Uint8List.fromList([0x80, 0x80, 0x01, 0xFF]); // 16384 followed by noise
+      final bytes = Uint8List.fromList([
+        0x80,
+        0x80,
+        0x01,
+        0xFF,
+      ]); // 16384 followed by noise
       final (decoded, read) = decodeVarint(bytes);
       expect(decoded, equals(16384));
       expect(read, equals(3));

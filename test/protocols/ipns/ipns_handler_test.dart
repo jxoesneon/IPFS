@@ -19,12 +19,18 @@ void main() {
       keyPair = await algorithm.newKeyPair();
 
       // Create a test CID
-      final block = await Block.fromData(Uint8List.fromList(utf8.encode('test content')));
+      final block = await Block.fromData(
+        Uint8List.fromList(utf8.encode('test content')),
+      );
       testCID = block.cid;
     });
 
     test('create generates a signed record', () async {
-      final record = await IPNSRecord.create(value: testCID, keyPair: keyPair, sequence: 1);
+      final record = await IPNSRecord.create(
+        value: testCID,
+        keyPair: keyPair,
+        sequence: 1,
+      );
 
       expect(record.isSigned, isTrue);
       expect(record.sequence, equals(1));
@@ -32,7 +38,11 @@ void main() {
     });
 
     test('verify returns true for valid signed record', () async {
-      final record = await IPNSRecord.create(value: testCID, keyPair: keyPair, sequence: 2);
+      final record = await IPNSRecord.create(
+        value: testCID,
+        keyPair: keyPair,
+        sequence: 2,
+      );
 
       final isValid = await record.verify();
       expect(isValid, isTrue);
@@ -54,14 +64,22 @@ void main() {
     });
 
     test('toCBOR serializes correctly', () async {
-      final record = await IPNSRecord.create(value: testCID, keyPair: keyPair, sequence: 4);
+      final record = await IPNSRecord.create(
+        value: testCID,
+        keyPair: keyPair,
+        sequence: 4,
+      );
 
       final cbor = record.toCBOR();
       expect(cbor, isNotEmpty);
     });
 
     test('fromCBOR deserializes correctly', () async {
-      final record = await IPNSRecord.create(value: testCID, keyPair: keyPair, sequence: 5);
+      final record = await IPNSRecord.create(
+        value: testCID,
+        keyPair: keyPair,
+        sequence: 5,
+      );
 
       final cbor = record.toCBOR();
       final restored = IPNSRecord.fromCBOR(cbor);
@@ -72,7 +90,11 @@ void main() {
     });
 
     test('roundtrip preserves data and signature validity', () async {
-      final record = await IPNSRecord.create(value: testCID, keyPair: keyPair, sequence: 6);
+      final record = await IPNSRecord.create(
+        value: testCID,
+        keyPair: keyPair,
+        sequence: 6,
+      );
 
       final cbor = record.toCBOR();
       final restored = IPNSRecord.fromCBOR(cbor);
@@ -82,7 +104,11 @@ void main() {
     });
 
     test('valueCID parses CID from value', () async {
-      final record = await IPNSRecord.create(value: testCID, keyPair: keyPair, sequence: 7);
+      final record = await IPNSRecord.create(
+        value: testCID,
+        keyPair: keyPair,
+        sequence: 7,
+      );
 
       final parsedCID = record.valueCID;
       expect(parsedCID, isNotNull);
@@ -90,7 +116,11 @@ void main() {
     });
 
     test('toString provides readable output', () async {
-      final record = await IPNSRecord.create(value: testCID, keyPair: keyPair, sequence: 8);
+      final record = await IPNSRecord.create(
+        value: testCID,
+        keyPair: keyPair,
+        sequence: 8,
+      );
 
       final str = record.toString();
       expect(str, contains('IPNSRecord'));
@@ -99,9 +129,17 @@ void main() {
     });
 
     test('sequence numbers can be incremented', () async {
-      final record1 = await IPNSRecord.create(value: testCID, keyPair: keyPair, sequence: 10);
+      final record1 = await IPNSRecord.create(
+        value: testCID,
+        keyPair: keyPair,
+        sequence: 10,
+      );
 
-      final record2 = await IPNSRecord.create(value: testCID, keyPair: keyPair, sequence: 11);
+      final record2 = await IPNSRecord.create(
+        value: testCID,
+        keyPair: keyPair,
+        sequence: 11,
+      );
 
       expect(record2.sequence, greaterThan(record1.sequence));
     });
@@ -110,9 +148,17 @@ void main() {
       final algorithm = Ed25519();
       final otherKeyPair = await algorithm.newKeyPair();
 
-      final record1 = await IPNSRecord.create(value: testCID, keyPair: keyPair, sequence: 12);
+      final record1 = await IPNSRecord.create(
+        value: testCID,
+        keyPair: keyPair,
+        sequence: 12,
+      );
 
-      final record2 = await IPNSRecord.create(value: testCID, keyPair: otherKeyPair, sequence: 12);
+      final record2 = await IPNSRecord.create(
+        value: testCID,
+        keyPair: otherKeyPair,
+        sequence: 12,
+      );
 
       expect(record1.signature, isNot(equals(record2.signature)));
       expect(record1.publicKey, isNot(equals(record2.publicKey)));

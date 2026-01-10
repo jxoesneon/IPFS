@@ -16,7 +16,12 @@ const String p2plibProtocolId = '/p2plib/1.0.0';
 /// A transport adapter that bridges p2plib traffic over a libp2p connection.
 class Libp2pTransport extends p2p.TransportBase {
   /// Creates a new [Libp2pTransport].
-  Libp2pTransport({required super.bindAddress, this.seed, super.logger, super.ttl});
+  Libp2pTransport({
+    required super.bindAddress,
+    this.seed,
+    super.logger,
+    super.ttl,
+  });
 
   /// Optional seed for persistent identity derivation.
   final Uint8List? seed;
@@ -66,7 +71,9 @@ class Libp2pTransport extends p2p.TransportBase {
         return Future.value();
       });
 
-      logger?.call('Libp2pHost started with ID: ${_host!.id} on addresses: ${_host!.addrs}');
+      logger?.call(
+        'Libp2pHost started with ID: ${_host!.id} on addresses: ${_host!.addrs}',
+      );
       _startCompleter.complete();
     } catch (e) {
       logger?.call('Failed to start Libp2pTransport: $e');
@@ -138,7 +145,9 @@ class Libp2pTransport extends p2p.TransportBase {
         final info = libp2p.AddrInfo(libp2pPeerId, [ma]);
         await _host!.connect(info);
 
-        stream = await _host!.newStream(libp2pPeerId, [p2plibProtocolId], libp2p.Context());
+        stream = await _host!.newStream(libp2pPeerId, [
+          p2plibProtocolId,
+        ], libp2p.Context());
 
         _streamCache[libp2pPeerId] = stream;
 
@@ -189,7 +198,9 @@ class Libp2pTransport extends p2p.TransportBase {
           await onMessage!(
             p2p.Packet(
               srcFullAddress: p2p.FullAddress(
-                address: InternetAddress(remoteAddr.toIP()?.address ?? '0.0.0.0'),
+                address: InternetAddress(
+                  remoteAddr.toIP()?.address ?? '0.0.0.0',
+                ),
                 port: remoteAddr.port ?? 0,
               ),
               datagram: Uint8List.fromList(payload),

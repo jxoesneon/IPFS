@@ -19,7 +19,8 @@ class IpnsEntry_ValidityType extends $pb.ProtobufEnum {
   static const IpnsEntry_ValidityType EOL =
       IpnsEntry_ValidityType._(0, _omitEnumNames ? '' : 'EOL');
 
-  static const $core.List<IpnsEntry_ValidityType> values = <IpnsEntry_ValidityType>[
+  static const $core.List<IpnsEntry_ValidityType> values =
+      <IpnsEntry_ValidityType>[
     EOL,
   ];
 
@@ -31,4 +32,5 @@ class IpnsEntry_ValidityType extends $pb.ProtobufEnum {
   const IpnsEntry_ValidityType._(super.value, super.name);
 }
 
-const $core.bool _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames =
+    $core.bool.fromEnvironment('protobuf.omit_enum_names');

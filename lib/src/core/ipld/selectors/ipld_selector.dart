@@ -53,8 +53,14 @@ class IPLDSelector {
   factory IPLDSelector.none() => IPLDSelector(type: SelectorType.none);
 
   /// Creates an explore selector for traversing a specific path.
-  factory IPLDSelector.explore({required String path, required IPLDSelector selector}) =>
-      IPLDSelector(type: SelectorType.explore, fieldPath: path, subSelectors: [selector]);
+  factory IPLDSelector.explore({
+    required String path,
+    required IPLDSelector selector,
+  }) => IPLDSelector(
+    type: SelectorType.explore,
+    fieldPath: path,
+    subSelectors: [selector],
+  );
 
   /// Creates a matcher selector with the given criteria.
   factory IPLDSelector.matcher({required Map<String, dynamic> criteria}) =>
@@ -129,7 +135,8 @@ class IPLDSelector {
                     await Future.wait(
                       subSelectors!.map(
                         (s) => s.toBytes().then(
-                          (bytes) => EnhancedCBORHandler.decodeCborWithTags(bytes),
+                          (bytes) =>
+                              EnhancedCBORHandler.decodeCborWithTags(bytes),
                         ),
                       ),
                     ),
@@ -242,7 +249,10 @@ class IPLDSelector {
     final type = SelectorType.values.firstWhere(
       (t) =>
           t.toString() ==
-          node.mapValue.entries.firstWhere((e) => e.key == '.tag').value.stringValue,
+          node.mapValue.entries
+              .firstWhere((e) => e.key == '.tag')
+              .value
+              .stringValue,
       orElse: () => throw IPLDDecodingError('Invalid selector type'),
     );
 
@@ -324,7 +334,10 @@ class IPLDSelector {
     final type = SelectorType.values.firstWhere(
       (t) =>
           t.toString() ==
-          node.mapValue.entries.firstWhere((e) => e.key == '.tag').value.stringValue,
+          node.mapValue.entries
+              .firstWhere((e) => e.key == '.tag')
+              .value
+              .stringValue,
       orElse: () => throw IPLDDecodingError('Invalid selector type'),
     );
 

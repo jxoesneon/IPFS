@@ -37,7 +37,8 @@ class BitFieldProto_SetBitRequest extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'BitFieldProto.SetBitRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'index')
     ..hasRequiredFields = false;
@@ -45,20 +46,23 @@ class BitFieldProto_SetBitRequest extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   BitFieldProto_SetBitRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BitFieldProto_SetBitRequest copyWith(void Function(BitFieldProto_SetBitRequest) updates) =>
-      super.copyWith((message) => updates(message as BitFieldProto_SetBitRequest))
+  BitFieldProto_SetBitRequest copyWith(
+          void Function(BitFieldProto_SetBitRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as BitFieldProto_SetBitRequest))
           as BitFieldProto_SetBitRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static BitFieldProto_SetBitRequest create() => BitFieldProto_SetBitRequest._();
+  static BitFieldProto_SetBitRequest create() =>
+      BitFieldProto_SetBitRequest._();
   @$core.override
   BitFieldProto_SetBitRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static BitFieldProto_SetBitRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BitFieldProto_SetBitRequest>(create);
+  static BitFieldProto_SetBitRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BitFieldProto_SetBitRequest>(create);
   static BitFieldProto_SetBitRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -92,7 +96,8 @@ class BitFieldProto_ClearBitRequest extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'BitFieldProto.ClearBitRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'index')
     ..hasRequiredFields = false;
@@ -100,20 +105,23 @@ class BitFieldProto_ClearBitRequest extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   BitFieldProto_ClearBitRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BitFieldProto_ClearBitRequest copyWith(void Function(BitFieldProto_ClearBitRequest) updates) =>
-      super.copyWith((message) => updates(message as BitFieldProto_ClearBitRequest))
+  BitFieldProto_ClearBitRequest copyWith(
+          void Function(BitFieldProto_ClearBitRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as BitFieldProto_ClearBitRequest))
           as BitFieldProto_ClearBitRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static BitFieldProto_ClearBitRequest create() => BitFieldProto_ClearBitRequest._();
+  static BitFieldProto_ClearBitRequest create() =>
+      BitFieldProto_ClearBitRequest._();
   @$core.override
   BitFieldProto_ClearBitRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static BitFieldProto_ClearBitRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BitFieldProto_ClearBitRequest>(create);
+  static BitFieldProto_ClearBitRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BitFieldProto_ClearBitRequest>(create);
   static BitFieldProto_ClearBitRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -147,7 +155,8 @@ class BitFieldProto_GetBitRequest extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'BitFieldProto.GetBitRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'index')
     ..hasRequiredFields = false;
@@ -155,20 +164,23 @@ class BitFieldProto_GetBitRequest extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   BitFieldProto_GetBitRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BitFieldProto_GetBitRequest copyWith(void Function(BitFieldProto_GetBitRequest) updates) =>
-      super.copyWith((message) => updates(message as BitFieldProto_GetBitRequest))
+  BitFieldProto_GetBitRequest copyWith(
+          void Function(BitFieldProto_GetBitRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as BitFieldProto_GetBitRequest))
           as BitFieldProto_GetBitRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static BitFieldProto_GetBitRequest create() => BitFieldProto_GetBitRequest._();
+  static BitFieldProto_GetBitRequest create() =>
+      BitFieldProto_GetBitRequest._();
   @$core.override
   BitFieldProto_GetBitRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static BitFieldProto_GetBitRequest getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BitFieldProto_GetBitRequest>(create);
+  static BitFieldProto_GetBitRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BitFieldProto_GetBitRequest>(create);
   static BitFieldProto_GetBitRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -202,7 +214,8 @@ class BitFieldProto_BitResponse extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'BitFieldProto.BitResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'value')
     ..hasRequiredFields = false;
@@ -210,7 +223,8 @@ class BitFieldProto_BitResponse extends $pb.GeneratedMessage {
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   BitFieldProto_BitResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BitFieldProto_BitResponse copyWith(void Function(BitFieldProto_BitResponse) updates) =>
+  BitFieldProto_BitResponse copyWith(
+          void Function(BitFieldProto_BitResponse) updates) =>
       super.copyWith((message) => updates(message as BitFieldProto_BitResponse))
           as BitFieldProto_BitResponse;
 
@@ -222,8 +236,8 @@ class BitFieldProto_BitResponse extends $pb.GeneratedMessage {
   @$core.override
   BitFieldProto_BitResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static BitFieldProto_BitResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BitFieldProto_BitResponse>(create);
+  static BitFieldProto_BitResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BitFieldProto_BitResponse>(create);
   static BitFieldProto_BitResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -256,10 +270,13 @@ class BitFieldProto extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BitFieldProto',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'),
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BitFieldProto',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'bits', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'bits', $pb.PbFieldType.OY)
     ..aI(2, _omitFieldNames ? '' : 'size')
     ..hasRequiredFields = false;
 
@@ -267,7 +284,8 @@ class BitFieldProto extends $pb.GeneratedMessage {
   BitFieldProto clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   BitFieldProto copyWith(void Function(BitFieldProto) updates) =>
-      super.copyWith((message) => updates(message as BitFieldProto)) as BitFieldProto;
+      super.copyWith((message) => updates(message as BitFieldProto))
+          as BitFieldProto;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -277,8 +295,8 @@ class BitFieldProto extends $pb.GeneratedMessage {
   @$core.override
   BitFieldProto createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static BitFieldProto getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BitFieldProto>(create);
+  static BitFieldProto getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BitFieldProto>(create);
   static BitFieldProto? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -300,5 +318,7 @@ class BitFieldProto extends $pb.GeneratedMessage {
   void clearSize() => $_clearField(2);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

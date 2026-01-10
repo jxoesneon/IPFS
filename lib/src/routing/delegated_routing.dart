@@ -51,14 +51,19 @@ class DelegatedRoutingHandler {
       final url = Uri.parse('$_delegateEndpoint/routing/v1/providers/$cid');
 
       // Make the HTTP request
-      final response = await _httpClient.get(url, headers: {'Accept': 'application/json'});
+      final response = await _httpClient.get(
+        url,
+        headers: {'Accept': 'application/json'},
+      );
 
       if (response.statusCode == 200) {
         // Parse the response
-        final Map<String, dynamic> data = json.decode(response.body) as Map<String, dynamic>;
+        final Map<String, dynamic> data =
+            json.decode(response.body) as Map<String, dynamic>;
 
         if (data.containsKey('Providers')) {
-          final List<dynamic> providersList = data['Providers'] as List<dynamic>;
+          final List<dynamic> providersList =
+              data['Providers'] as List<dynamic>;
           final providers = providersList
               .map((provider) => provider['ID'] as String)
               .where((id) => id.isNotEmpty)
@@ -72,7 +77,9 @@ class DelegatedRoutingHandler {
         // No providers found is a valid response
         return RoutingResponse.success([]);
       } else {
-        return RoutingResponse.error('Failed to find providers: HTTP ${response.statusCode}');
+        return RoutingResponse.error(
+          'Failed to find providers: HTTP ${response.statusCode}',
+        );
       }
     } catch (e) {
       return RoutingResponse.error('Error finding providers: $e');

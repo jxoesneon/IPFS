@@ -27,7 +27,8 @@ class ProtocolConfig extends $pb.GeneratedMessage {
   }) {
     final result = create();
     if (protocolId != null) result.protocolId = protocolId;
-    if (messageTimeoutSeconds != null) result.messageTimeoutSeconds = messageTimeoutSeconds;
+    if (messageTimeoutSeconds != null)
+      result.messageTimeoutSeconds = messageTimeoutSeconds;
     if (maxRetries != null) result.maxRetries = maxRetries;
     if (maxMessageSize != null) result.maxMessageSize = maxMessageSize;
     if (rateLimit != null) result.rateLimit = rateLimit;
@@ -44,13 +45,16 @@ class ProtocolConfig extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ProtocolConfig',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ProtocolConfig',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.config'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'protocolId')
-    ..aI(2, _omitFieldNames ? '' : 'messageTimeoutSeconds', fieldType: $pb.PbFieldType.OU3)
+    ..aI(2, _omitFieldNames ? '' : 'messageTimeoutSeconds',
+        fieldType: $pb.PbFieldType.OU3)
     ..aI(3, _omitFieldNames ? '' : 'maxRetries', fieldType: $pb.PbFieldType.OU3)
-    ..aI(4, _omitFieldNames ? '' : 'maxMessageSize', fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'maxMessageSize',
+        fieldType: $pb.PbFieldType.OU3)
     ..aOM<RateLimitConfig>(5, _omitFieldNames ? '' : 'rateLimit',
         subBuilder: RateLimitConfig.create)
     ..aOM<CircuitBreakerConfig>(6, _omitFieldNames ? '' : 'circuitBreaker',
@@ -61,7 +65,8 @@ class ProtocolConfig extends $pb.GeneratedMessage {
   ProtocolConfig clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ProtocolConfig copyWith(void Function(ProtocolConfig) updates) =>
-      super.copyWith((message) => updates(message as ProtocolConfig)) as ProtocolConfig;
+      super.copyWith((message) => updates(message as ProtocolConfig))
+          as ProtocolConfig;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -71,8 +76,8 @@ class ProtocolConfig extends $pb.GeneratedMessage {
   @$core.override
   ProtocolConfig createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ProtocolConfig getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ProtocolConfig>(create);
+  static ProtocolConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ProtocolConfig>(create);
   static ProtocolConfig? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -140,7 +145,8 @@ class RateLimitConfig extends $pb.GeneratedMessage {
     $core.int? windowSeconds,
   }) {
     final result = create();
-    if (maxRequestsPerWindow != null) result.maxRequestsPerWindow = maxRequestsPerWindow;
+    if (maxRequestsPerWindow != null)
+      result.maxRequestsPerWindow = maxRequestsPerWindow;
     if (windowSeconds != null) result.windowSeconds = windowSeconds;
     return result;
   }
@@ -154,18 +160,22 @@ class RateLimitConfig extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RateLimitConfig',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RateLimitConfig',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.config'),
       createEmptyInstance: create)
-    ..aI(1, _omitFieldNames ? '' : 'maxRequestsPerWindow', fieldType: $pb.PbFieldType.OU3)
-    ..aI(2, _omitFieldNames ? '' : 'windowSeconds', fieldType: $pb.PbFieldType.OU3)
+    ..aI(1, _omitFieldNames ? '' : 'maxRequestsPerWindow',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(2, _omitFieldNames ? '' : 'windowSeconds',
+        fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   RateLimitConfig clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   RateLimitConfig copyWith(void Function(RateLimitConfig) updates) =>
-      super.copyWith((message) => updates(message as RateLimitConfig)) as RateLimitConfig;
+      super.copyWith((message) => updates(message as RateLimitConfig))
+          as RateLimitConfig;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -175,8 +185,8 @@ class RateLimitConfig extends $pb.GeneratedMessage {
   @$core.override
   RateLimitConfig createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static RateLimitConfig getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RateLimitConfig>(create);
+  static RateLimitConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RateLimitConfig>(create);
   static RateLimitConfig? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -205,9 +215,11 @@ class CircuitBreakerConfig extends $pb.GeneratedMessage {
     $core.int? halfOpenTimeoutSeconds,
   }) {
     final result = create();
-    if (resetTimeoutSeconds != null) result.resetTimeoutSeconds = resetTimeoutSeconds;
+    if (resetTimeoutSeconds != null)
+      result.resetTimeoutSeconds = resetTimeoutSeconds;
     if (failureThreshold != null) result.failureThreshold = failureThreshold;
-    if (halfOpenTimeoutSeconds != null) result.halfOpenTimeoutSeconds = halfOpenTimeoutSeconds;
+    if (halfOpenTimeoutSeconds != null)
+      result.halfOpenTimeoutSeconds = halfOpenTimeoutSeconds;
     return result;
   }
 
@@ -220,19 +232,24 @@ class CircuitBreakerConfig extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CircuitBreakerConfig',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CircuitBreakerConfig',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.config'),
       createEmptyInstance: create)
-    ..aI(1, _omitFieldNames ? '' : 'resetTimeoutSeconds', fieldType: $pb.PbFieldType.OU3)
-    ..aI(2, _omitFieldNames ? '' : 'failureThreshold', fieldType: $pb.PbFieldType.OU3)
-    ..aI(3, _omitFieldNames ? '' : 'halfOpenTimeoutSeconds', fieldType: $pb.PbFieldType.OU3)
+    ..aI(1, _omitFieldNames ? '' : 'resetTimeoutSeconds',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(2, _omitFieldNames ? '' : 'failureThreshold',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(3, _omitFieldNames ? '' : 'halfOpenTimeoutSeconds',
+        fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   CircuitBreakerConfig clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   CircuitBreakerConfig copyWith(void Function(CircuitBreakerConfig) updates) =>
-      super.copyWith((message) => updates(message as CircuitBreakerConfig)) as CircuitBreakerConfig;
+      super.copyWith((message) => updates(message as CircuitBreakerConfig))
+          as CircuitBreakerConfig;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -242,8 +259,8 @@ class CircuitBreakerConfig extends $pb.GeneratedMessage {
   @$core.override
   CircuitBreakerConfig createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static CircuitBreakerConfig getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CircuitBreakerConfig>(create);
+  static CircuitBreakerConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CircuitBreakerConfig>(create);
   static CircuitBreakerConfig? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -274,5 +291,7 @@ class CircuitBreakerConfig extends $pb.GeneratedMessage {
   void clearHalfOpenTimeoutSeconds() => $_clearField(3);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

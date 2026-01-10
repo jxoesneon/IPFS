@@ -47,12 +47,15 @@ class HopMessage extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'HopMessage',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'HopMessage',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'circuit_relay'),
       createEmptyInstance: create)
-    ..aE<HopMessage_Type>(1, _omitFieldNames ? '' : 'type', enumValues: HopMessage_Type.values)
+    ..aE<HopMessage_Type>(1, _omitFieldNames ? '' : 'type',
+        enumValues: HopMessage_Type.values)
     ..aOM<Peer>(2, _omitFieldNames ? '' : 'peer', subBuilder: Peer.create)
-    ..aOM<Reservation>(3, _omitFieldNames ? '' : 'reservation', subBuilder: Reservation.create)
+    ..aOM<Reservation>(3, _omitFieldNames ? '' : 'reservation',
+        subBuilder: Reservation.create)
     ..aOM<Limit>(4, _omitFieldNames ? '' : 'limit', subBuilder: Limit.create)
     ..aE<Status>(5, _omitFieldNames ? '' : 'status', enumValues: Status.values)
     ..hasRequiredFields = false;
@@ -71,8 +74,8 @@ class HopMessage extends $pb.GeneratedMessage {
   @$core.override
   HopMessage createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static HopMessage getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<HopMessage>(create);
+  static HopMessage getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<HopMessage>(create);
   static HopMessage? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -151,10 +154,12 @@ class StopMessage extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StopMessage',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StopMessage',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'circuit_relay'),
       createEmptyInstance: create)
-    ..aE<StopMessage_Type>(1, _omitFieldNames ? '' : 'type', enumValues: StopMessage_Type.values)
+    ..aE<StopMessage_Type>(1, _omitFieldNames ? '' : 'type',
+        enumValues: StopMessage_Type.values)
     ..aOM<Peer>(2, _omitFieldNames ? '' : 'peer', subBuilder: Peer.create)
     ..aOM<Limit>(3, _omitFieldNames ? '' : 'limit', subBuilder: Limit.create)
     ..aE<Status>(4, _omitFieldNames ? '' : 'status', enumValues: Status.values)
@@ -164,7 +169,8 @@ class StopMessage extends $pb.GeneratedMessage {
   StopMessage clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   StopMessage copyWith(void Function(StopMessage) updates) =>
-      super.copyWith((message) => updates(message as StopMessage)) as StopMessage;
+      super.copyWith((message) => updates(message as StopMessage))
+          as StopMessage;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -174,8 +180,8 @@ class StopMessage extends $pb.GeneratedMessage {
   @$core.override
   StopMessage createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static StopMessage getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<StopMessage>(create);
+  static StopMessage getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<StopMessage>(create);
   static StopMessage? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -239,11 +245,14 @@ class Peer extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Peer',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Peer',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'circuit_relay'),
       createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OY)
-    ..p<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'addrs', $pb.PbFieldType.PY)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OY)
+    ..p<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'addrs', $pb.PbFieldType.PY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -260,7 +269,8 @@ class Peer extends $pb.GeneratedMessage {
   @$core.override
   Peer createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static Peer getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Peer>(create);
+  static Peer getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Peer>(create);
   static Peer? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -300,23 +310,28 @@ class Reservation extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Reservation',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Reservation',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'circuit_relay'),
       createEmptyInstance: create)
     ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'expire', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'limitDuration', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(
+        2, _omitFieldNames ? '' : 'limitDuration', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'limitData', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'limitData', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..p<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'addrs', $pb.PbFieldType.PY)
+    ..p<$core.List<$core.int>>(
+        4, _omitFieldNames ? '' : 'addrs', $pb.PbFieldType.PY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Reservation clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Reservation copyWith(void Function(Reservation) updates) =>
-      super.copyWith((message) => updates(message as Reservation)) as Reservation;
+      super.copyWith((message) => updates(message as Reservation))
+          as Reservation;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
@@ -326,8 +341,8 @@ class Reservation extends $pb.GeneratedMessage {
   @$core.override
   Reservation createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static Reservation getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Reservation>(create);
+  static Reservation getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Reservation>(create);
   static Reservation? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -381,10 +396,12 @@ class Limit extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Limit',
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Limit',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'circuit_relay'),
       createEmptyInstance: create)
-    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'duration', $pb.PbFieldType.OU6,
+    ..a<$fixnum.Int64>(
+        1, _omitFieldNames ? '' : 'duration', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
@@ -427,5 +444,7 @@ class Limit extends $pb.GeneratedMessage {
   void clearData() => $_clearField(2);
 }
 
-const $core.bool _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const $core.bool _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

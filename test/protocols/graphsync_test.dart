@@ -18,14 +18,21 @@ void main() {
     });
 
     test('has default timeout', () {
-      expect(GraphsyncProtocol.defaultTimeout, equals(const Duration(seconds: 60)));
+      expect(
+        GraphsyncProtocol.defaultTimeout,
+        equals(const Duration(seconds: 60)),
+      );
     });
 
     test('createRequest creates valid request message', () {
       final root = Uint8List.fromList([1, 2, 3]);
       final selector = Uint8List.fromList([4, 5, 6]);
 
-      final message = protocol.createRequest(id: 1, root: root, selector: selector);
+      final message = protocol.createRequest(
+        id: 1,
+        root: root,
+        selector: selector,
+      );
 
       expect(message, isNotNull);
       expect(message.requests, hasLength(1));
@@ -42,7 +49,10 @@ void main() {
         priority: GraphsyncPriority.high,
       );
 
-      expect(message.requests.first.priority, equals(GraphsyncPriority.high.value));
+      expect(
+        message.requests.first.priority,
+        equals(GraphsyncPriority.high.value),
+      );
     });
 
     test('createRequest with extensions includes extensions', () {
@@ -58,7 +68,10 @@ void main() {
       );
 
       expect(message.requests.first.extensions, isNotEmpty);
-      expect(message.requests.first.extensions.containsKey('test-extension'), isTrue);
+      expect(
+        message.requests.first.extensions.containsKey('test-extension'),
+        isTrue,
+      );
     });
 
     test('createCancelRequest creates cancel message', () {
@@ -86,12 +99,18 @@ void main() {
     });
 
     test('createResponse creates valid response message', () {
-      final message = protocol.createResponse(requestId: 1, status: ResponseStatus.RS_COMPLETED);
+      final message = protocol.createResponse(
+        requestId: 1,
+        status: ResponseStatus.RS_COMPLETED,
+      );
 
       expect(message, isNotNull);
       expect(message.responses, hasLength(1));
       expect(message.responses.first.id, equals(1));
-      expect(message.responses.first.status, equals(ResponseStatus.RS_COMPLETED));
+      expect(
+        message.responses.first.status,
+        equals(ResponseStatus.RS_COMPLETED),
+      );
     });
 
     test('createResponse with metadata includes metadata', () {
@@ -143,7 +162,10 @@ void main() {
         totalBlocks: 100,
       );
 
-      expect(message.responses.first.status, equals(ResponseStatus.RS_IN_PROGRESS));
+      expect(
+        message.responses.first.status,
+        equals(ResponseStatus.RS_IN_PROGRESS),
+      );
       expect(message.responses.first.metadata['blocksProcessed'], equals('50'));
       expect(message.responses.first.metadata['totalBlocks'], equals('100'));
     });
@@ -195,11 +217,26 @@ void main() {
     });
 
     test('GraphsyncMessageType enum has all standard types', () {
-      expect(GraphsyncMessageType.values, contains(GraphsyncMessageType.request));
-      expect(GraphsyncMessageType.values, contains(GraphsyncMessageType.response));
-      expect(GraphsyncMessageType.values, contains(GraphsyncMessageType.complete));
-      expect(GraphsyncMessageType.values, contains(GraphsyncMessageType.cancel));
-      expect(GraphsyncMessageType.values, contains(GraphsyncMessageType.progress));
+      expect(
+        GraphsyncMessageType.values,
+        contains(GraphsyncMessageType.request),
+      );
+      expect(
+        GraphsyncMessageType.values,
+        contains(GraphsyncMessageType.response),
+      );
+      expect(
+        GraphsyncMessageType.values,
+        contains(GraphsyncMessageType.complete),
+      );
+      expect(
+        GraphsyncMessageType.values,
+        contains(GraphsyncMessageType.cancel),
+      );
+      expect(
+        GraphsyncMessageType.values,
+        contains(GraphsyncMessageType.progress),
+      );
       expect(GraphsyncMessageType.values, contains(GraphsyncMessageType.error));
     });
   });

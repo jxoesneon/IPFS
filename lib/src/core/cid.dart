@@ -38,7 +38,12 @@ class CID {
   ///
   /// Prefer using factory constructors [CID.v0], [CID.v1], or [CID.fromContent]
   /// for creating CIDs with proper validation.
-  const CID({required this.version, required this.multihash, this.codec, this.multibaseType});
+  const CID({
+    required this.version,
+    required this.multihash,
+    this.codec,
+    this.multibaseType,
+  });
 
   // Constants moved to EncodingUtils or deprecated?
   // Removing unused fields.
@@ -52,12 +57,26 @@ class CID {
     // Encode as multihash using correct API
     final mhInfo = Multihash.encode('sha2-256', hashBytes);
 
-    return CID(version: 0, multihash: mhInfo, codec: 'dag-pb', multibaseType: Multibase.base58btc);
+    return CID(
+      version: 0,
+      multihash: mhInfo,
+      codec: 'dag-pb',
+      multibaseType: Multibase.base58btc,
+    );
   }
 
   /// Creates a CIDv1.
-  factory CID.v1(String codec, MultihashInfo multihash, {Multibase base = Multibase.base32}) {
-    return CID(version: 1, codec: codec, multihash: multihash, multibaseType: base);
+  factory CID.v1(
+    String codec,
+    MultihashInfo multihash, {
+    Multibase base = Multibase.base32,
+  }) {
+    return CID(
+      version: 1,
+      codec: codec,
+      multihash: multihash,
+      multibaseType: base,
+    );
   }
 
   /// The CID version (0 or 1).
@@ -126,7 +145,12 @@ class CID {
       // But if we want to SUPPORT 'dag-cbor', EncodingUtils MUST have it.
       // I tested EncodingUtils has 'dag-cbor'. So it will return 'dag-cbor'.
 
-      return CID(version: 1, multihash: mh, codec: codecStr, multibaseType: Multibase.base32);
+      return CID(
+        version: 1,
+        multihash: mh,
+        codec: codecStr,
+        multibaseType: Multibase.base32,
+      );
     }
 
     throw const FormatException('Invalid CID version');
@@ -141,7 +165,9 @@ class CID {
     // Check if it's a CIDv0 (base58, starts with 'Qm')
     if (cidStr.startsWith('Qm')) {
       // Decode base58
-      final decoded = multibaseDecode('z$cidStr'); // Add 'z' prefix for base58btc
+      final decoded = multibaseDecode(
+        'z$cidStr',
+      ); // Add 'z' prefix for base58btc
       return fromBytes(decoded);
     }
 
@@ -220,7 +246,8 @@ class CID {
   }
 
   @override
-  int get hashCode => Object.hash(version, codec, Object.hashAll(multihash.toBytes()));
+  int get hashCode =>
+      Object.hash(version, codec, Object.hashAll(multihash.toBytes()));
 
   bool _bytesEqual(Uint8List a, Uint8List b) {
     if (a.length != b.length) return false;
@@ -258,7 +285,10 @@ class CID {
       final mh = Multihash.decode(Uint8List.fromList(proto.multihash));
       return CID.v0(Uint8List.fromList(mh.digest));
     }
-    return CID.v1(proto.codec, Multihash.decode(Uint8List.fromList(proto.multihash)));
+    return CID.v1(
+      proto.codec,
+      Multihash.decode(Uint8List.fromList(proto.multihash)),
+    );
   }
 
   /// Creates a [CID] from raw content.
@@ -287,14 +317,20 @@ class CID {
   }
 
   /// Computes CID for data (async version for compatibility).
-  static Future<CID> computeForData(Uint8List data, {String format = 'raw'}) async {
+  static Future<CID> computeForData(
+    Uint8List data, {
+    String format = 'raw',
+  }) async {
     return await fromContent(data, codec: format);
   }
 
   /// Computes CID for data (sync version).
   static CID computeForDataSync(Uint8List data, {String codec = 'raw'}) {
     final digest = sha256.convert(data);
-    final mhInfo = Multihash.encode('sha2-256', Uint8List.fromList(digest.bytes));
+    final mhInfo = Multihash.encode(
+      'sha2-256',
+      Uint8List.fromList(digest.bytes),
+    );
     return CID.v1(codec, mhInfo);
   }
 }

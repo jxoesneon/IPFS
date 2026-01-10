@@ -11,13 +11,26 @@ class MockHTTPClientBuilder {
   final List<http.Request> _requests = [];
 
   /// Set up a response for a specific URL
-  void setupResponse(String url, int statusCode, String body, {Map<String, String>? headers}) {
-    _responses[Uri.parse(url)] = http.Response(body, statusCode, headers: headers ?? {});
+  void setupResponse(
+    String url,
+    int statusCode,
+    String body, {
+    Map<String, String>? headers,
+  }) {
+    _responses[Uri.parse(url)] = http.Response(
+      body,
+      statusCode,
+      headers: headers ?? {},
+    );
   }
 
   /// Set up IPNS resolution response
   void setupIPNSResponse(String name, String cid) {
-    setupResponse('https://ipfs.io/api/v0/name/resolve?arg=$name', 200, '{"Path": "/ipfs/$cid"}');
+    setupResponse(
+      'https://ipfs.io/api/v0/name/resolve?arg=$name',
+      200,
+      '{"Path": "/ipfs/$cid"}',
+    );
   }
 
   /// Set up DNSLink resolution response

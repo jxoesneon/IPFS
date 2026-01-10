@@ -36,7 +36,13 @@ class PingMessage extends KademliaMessage {
 /// STORE message for putting values in the DHT.
 class StoreMessage extends KademliaMessage {
   /// Creates a store message with [key] and [value].
-  StoreMessage(super.messageId, super.sender, PeerId super.recipient, this.key, this.value);
+  StoreMessage(
+    super.messageId,
+    super.sender,
+    PeerId super.recipient,
+    this.key,
+    this.value,
+  );
 
   /// The key to store.
   final Uint8List key;
@@ -58,7 +64,12 @@ class StoreMessage extends KademliaMessage {
 /// FIND_NODE message for locating peers.
 class FindNodeMessage extends KademliaMessage {
   /// Creates a find node message for [targetId].
-  FindNodeMessage(super.messageId, super.sender, PeerId super.recipient, this.targetId);
+  FindNodeMessage(
+    super.messageId,
+    super.sender,
+    PeerId super.recipient,
+    this.targetId,
+  );
 
   /// The target peer to find.
   final PeerId targetId;
@@ -74,7 +85,12 @@ class FindNodeMessage extends KademliaMessage {
 /// GET_VALUE message for retrieving values.
 class FindValueMessage extends KademliaMessage {
   /// Creates a find value message for [key].
-  FindValueMessage(super.messageId, super.sender, PeerId super.recipient, this.key);
+  FindValueMessage(
+    super.messageId,
+    super.sender,
+    PeerId super.recipient,
+    this.key,
+  );
 
   /// The key to look up.
   final Uint8List key;

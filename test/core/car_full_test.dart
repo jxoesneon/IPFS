@@ -37,7 +37,9 @@ void main() {
       final car = CAR.v2WithIndex(testBlocks);
 
       // Select first block
-      final selected1 = await car.loadSelected([testBlocks.first.cid.toString()]);
+      final selected1 = await car.loadSelected([
+        testBlocks.first.cid.toString(),
+      ]);
       expect(selected1.blocks.length, equals(1));
       expect(selected1.blocks.first.cid, equals(testBlocks.first.cid));
 
@@ -93,7 +95,10 @@ void main() {
       expect(decoded.blocks.length, equals(2));
       expect(decoded.header.pragma['meta'], equals('data'));
       expect(decoded.index, isNotNull);
-      expect(decoded.getBlockOffset(testBlocks.first.cid.toString()), equals(0));
+      expect(
+        decoded.getBlockOffset(testBlocks.first.cid.toString()),
+        equals(0),
+      );
     });
 
     test('CarReader/Writer edge cases', () async {

@@ -8,7 +8,9 @@ void main() {
       // Find a PeerId that satisfies a 4-bit difficulty
       PeerId? found;
       for (int i = 0; i < 1000; i++) {
-        final pid = PeerId(value: Uint8List.fromList([i & 0xFF, (i >> 8) & 0xFF]));
+        final pid = PeerId(
+          value: Uint8List.fromList([i & 0xFF, (i >> 8) & 0xFF]),
+        );
         if (pid.verifyPoW(difficulty: 4)) {
           found = pid;
           break;

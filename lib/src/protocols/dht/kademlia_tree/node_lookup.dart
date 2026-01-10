@@ -43,11 +43,15 @@ extension NodeLookup on KademliaTree {
       }
 
       newClosestPeers.sort(
-        (a, b) => calculateDistance(target, a).compareTo(calculateDistance(target, b)),
+        (a, b) => calculateDistance(
+          target,
+          a,
+        ).compareTo(calculateDistance(target, b)),
       );
       newClosestPeers = newClosestPeers.take(K).toList();
 
-      if (newClosestPeers.equals(closestPeers) || newClosestPeers.contains(target)) {
+      if (newClosestPeers.equals(closestPeers) ||
+          newClosestPeers.contains(target)) {
         break;
       }
 

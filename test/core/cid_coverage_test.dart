@@ -1,7 +1,8 @@
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs_proto;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
+    as unixfs_proto;
 import 'package:dart_multihash/dart_multihash.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:test/test.dart';
@@ -76,7 +77,9 @@ void main() {
       expect(() => CID.fromBytes(Uint8List(1)), throwsFormatException);
 
       // Invalid version
-      final invalidVersion = Uint8List.fromList([2, 0x55, 0x12, 0x20] + List.filled(32, 0));
+      final invalidVersion = Uint8List.fromList(
+        [2, 0x55, 0x12, 0x20] + List.filled(32, 0),
+      );
       expect(() => CID.fromBytes(invalidVersion), throwsFormatException);
     });
 
@@ -91,7 +94,9 @@ void main() {
 
     test('bytesEqual coverage', () {
       final cid1 = CID.computeForDataSync(Uint8List(32));
-      final cid2 = CID.computeForDataSync(Uint8List.fromList(List.filled(31, 0) + [1]));
+      final cid2 = CID.computeForDataSync(
+        Uint8List.fromList(List.filled(31, 0) + [1]),
+      );
       expect(cid1 == cid2, isFalse);
     });
 
@@ -141,7 +146,10 @@ void main() {
 
     test('error paths', () async {
       expect(() => CID.decode(''), throwsArgumentError);
-      expect(() => CID.fromContent(Uint8List(0), hashType: 'unsupported'), throwsUnsupportedError);
+      expect(
+        () => CID.fromContent(Uint8List(0), hashType: 'unsupported'),
+        throwsUnsupportedError,
+      );
     });
   });
 }

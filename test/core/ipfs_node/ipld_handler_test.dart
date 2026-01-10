@@ -42,9 +42,9 @@ void main() {
         expect(block.format, 'raw');
 
         // Get
-        when(
-          mockBlockStore.getBlock(block.cid.toString()),
-        ).thenAnswer((_) async => BlockResponseFactory.successGet(block.toProto()));
+        when(mockBlockStore.getBlock(block.cid.toString())).thenAnswer(
+          (_) async => BlockResponseFactory.successGet(block.toProto()),
+        );
         final result = await handler.get(block.cid);
 
         expect(result.kind.toString(), contains('BYTES'));
@@ -62,9 +62,9 @@ void main() {
 
         verify(mockBlockStore.putBlock(any)).called(1);
 
-        when(
-          mockBlockStore.getBlock(block.cid.toString()),
-        ).thenAnswer((_) async => BlockResponseFactory.successGet(block.toProto()));
+        when(mockBlockStore.getBlock(block.cid.toString())).thenAnswer(
+          (_) async => BlockResponseFactory.successGet(block.toProto()),
+        );
 
         final result = await handler.get(block.cid);
         expect(result.kind.toString(), contains('MAP'));
@@ -82,9 +82,9 @@ void main() {
 
         final block = await handler.put(data, codec: 'dag-cbor');
 
-        when(
-          mockBlockStore.getBlock(block.cid.toString()),
-        ).thenAnswer((_) async => BlockResponseFactory.successGet(block.toProto()));
+        when(mockBlockStore.getBlock(block.cid.toString())).thenAnswer(
+          (_) async => BlockResponseFactory.successGet(block.toProto()),
+        );
 
         final result = await handler.get(block.cid);
         expect(result.kind.toString(), contains('MAP'));
@@ -111,9 +111,10 @@ void main() {
         final block = await Block.fromData(Uint8List(0), format: 'raw');
         final cid = block.cid;
 
-        when(
-          mockBlockStore.getBlock(cid.toString()),
-        ).thenAnswer((realInvocation) async => BlockResponseFactory.successGet(block.toProto()));
+        when(mockBlockStore.getBlock(cid.toString())).thenAnswer(
+          (realInvocation) async =>
+              BlockResponseFactory.successGet(block.toProto()),
+        );
 
         final (node, resolvedCid) = await handler.resolveLink(cid, '');
         expect(resolvedCid, cid.toString());
@@ -123,9 +124,10 @@ void main() {
     group('Selectors', () {
       test('executeSelector All returns root', () async {
         final block = await Block.fromData(Uint8List(0), format: 'raw');
-        when(
-          mockBlockStore.getBlock(block.cid.toString()),
-        ).thenAnswer((realInvocation) async => BlockResponseFactory.successGet(block.toProto()));
+        when(mockBlockStore.getBlock(block.cid.toString())).thenAnswer(
+          (realInvocation) async =>
+              BlockResponseFactory.successGet(block.toProto()),
+        );
 
         final selector = IPLDSelector(type: SelectorType.all);
         final results = await handler.executeSelector(block.cid, selector);

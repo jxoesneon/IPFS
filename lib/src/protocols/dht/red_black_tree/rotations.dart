@@ -1,5 +1,6 @@
 // lib/src/protocols/dht/red_black_tree/rotations.dart
-import '../../../proto/generated/dht/common_red_black_tree.pb.dart' as common_tree;
+import '../../../proto/generated/dht/common_red_black_tree.pb.dart'
+    as common_tree;
 import '../red_black_tree.dart';
 
 /// Handles rotation operations for Red-Black tree balancing.
@@ -40,7 +41,10 @@ class Rotations<K_PeerId, V_PeerInfo> {
     x.parent = y;
 
     // Verify tree.root update when root node is involved
-    assert(tree.root == y || tree.root != x, 'Root node not updated correctly in rotateLeft');
+    assert(
+      tree.root == y || tree.root != x,
+      'Root node not updated correctly in rotateLeft',
+    );
   }
 
   /// Performs a right rotation around [y].
@@ -77,17 +81,22 @@ class Rotations<K_PeerId, V_PeerInfo> {
     y.parent = x;
 
     // Verify tree.root update when root node is involved
-    assert(tree.root == x || tree.root != y, 'Root node not updated correctly in rotateRight');
+    assert(
+      tree.root == x || tree.root != y,
+      'Root node not updated correctly in rotateRight',
+    );
   }
 
   // Validation method for node colors (all nodes must be either red or black)
   /// Validates all node colors in the tree.
   bool validateNodeColors(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node) {
     if (node == null) return true; // Null nodes (leaves) are treated as black
-    if (node.color != common_tree.NodeColor.RED && node.color != common_tree.NodeColor.BLACK) {
+    if (node.color != common_tree.NodeColor.RED &&
+        node.color != common_tree.NodeColor.BLACK) {
       return false; // Every node must be either red or black
     }
-    return validateNodeColors(node.leftChild) && validateNodeColors(node.rightChild);
+    return validateNodeColors(node.leftChild) &&
+        validateNodeColors(node.rightChild);
   }
 
   // Validate the red-black tree properties
@@ -102,12 +111,15 @@ class Rotations<K_PeerId, V_PeerInfo> {
     bool validateRedProperty(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node) {
       if (node == null) return true;
       if (node.color == common_tree.NodeColor.RED) {
-        if ((node.leftChild != null && node.leftChild!.color == common_tree.NodeColor.RED) ||
-            (node.rightChild != null && node.rightChild!.color == common_tree.NodeColor.RED)) {
+        if ((node.leftChild != null &&
+                node.leftChild!.color == common_tree.NodeColor.RED) ||
+            (node.rightChild != null &&
+                node.rightChild!.color == common_tree.NodeColor.RED)) {
           return false;
         }
       }
-      return validateRedProperty(node.leftChild) && validateRedProperty(node.rightChild);
+      return validateRedProperty(node.leftChild) &&
+          validateRedProperty(node.rightChild);
     }
 
     // 3. Every path from root to leaf must have the same number of black nodes (black-height property)
@@ -136,15 +148,18 @@ class Rotations<K_PeerId, V_PeerInfo> {
     bool validateBSTProperty(RedBlackTreeNode<K_PeerId, V_PeerInfo>? node) {
       if (node == null) return true;
 
-      if (node.leftChild != null && tree.compare(node.leftChild!.key, node.key) >= 0) {
+      if (node.leftChild != null &&
+          tree.compare(node.leftChild!.key, node.key) >= 0) {
         return false;
       }
 
-      if (node.rightChild != null && tree.compare(node.rightChild!.key, node.key) <= 0) {
+      if (node.rightChild != null &&
+          tree.compare(node.rightChild!.key, node.key) <= 0) {
         return false;
       }
 
-      return validateBSTProperty(node.leftChild) && validateBSTProperty(node.rightChild);
+      return validateBSTProperty(node.leftChild) &&
+          validateBSTProperty(node.rightChild);
     }
 
     // 6. Validate tree size
