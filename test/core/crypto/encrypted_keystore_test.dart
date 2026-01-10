@@ -1,226 +1,238 @@
 // test/core/crypto/encrypted_keystore_test.dart
-//
-// Tests for encrypted keystore (SEC-001)
-
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/crypto/crypto_utils.dart';
 import 'package:dart_ipfs/src/core/crypto/encrypted_keystore.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('EncryptedKeystore', () {
-    const testPassword = 'secure-test-password-123';
-    const testIterations = 1000;
+  group('EncryptedKeyEntry', () {
+    test('toJson serializes correctly', () {
+      final entry = EncryptedKeyEntry(
+        encryptedSeed: Uint8List.fromList([1, 2, 3]),
+        nonce: Uint8List.fromList([4, 5, 6]),
+        publicKey: Uint8List.fromList([7, 8, 9]),
+        createdAt: DateTime(2025, 1, 1),
+        label: 'test-label',
+      );
 
-    group('unlock/lock', () {
-      test('unlocks keystore with password', () async {
-        final keystore = EncryptedKeystore();
-
-        await keystore.unlock(testPassword, iterations: testIterations);
-
-        expect(keystore.isUnlocked, isTrue);
-      });
-
-      test('locks keystore and clears master key', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
-
-        keystore.lock();
-
-        expect(keystore.isUnlocked, isFalse);
-      });
-
-      test('uses provided salt', () async {
-        final salt = CryptoUtils.randomBytes(16);
-        final keystore = EncryptedKeystore();
-
-        await keystore.unlock(
-          testPassword,
-          salt: salt,
-          iterations: testIterations,
-        );
-
-        expect(keystore.isUnlocked, isTrue);
-      });
+      final json = entry.toJson();
+      expect(json['label'], equals('test-label'));
+      expect(json.containsKey('encryptedSeed'), isTrue);
+      expect(json.containsKey('nonce'), isTrue);
     });
 
-    group('generateKey', () {
-      test('generates and stores encrypted key', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
+    test('fromJson deserializes correctly', () {
+      final json = {
+        'encryptedSeed': base64Encode([1, 2, 3]),
+        'nonce': base64Encode([4, 5, 6]),
+        'publicKey': base64Encode([7, 8, 9]),
+        'createdAt': '2025-01-01T00:00:00.000',
+        'label': 'restored',
+      };
 
-        final publicKey = await keystore.generateKey('test-key');
-
-        expect(publicKey.length, equals(32));
-        expect(keystore.hasKey('test-key'), isTrue);
-      });
-
-      test('throws if keystore is locked', () async {
-        final keystore = EncryptedKeystore();
-
-        expect(
-          () => keystore.generateKey('test-key'),
-          throwsA(isA<StateError>()),
-        );
-      });
-
-      test('throws if key name already exists', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
-        await keystore.generateKey('duplicate-key');
-
-        expect(
-          () => keystore.generateKey('duplicate-key'),
-          throwsA(isA<StateError>()),
-        );
-      });
-    });
-
-    group('getKey', () {
-      test('retrieves decrypted key pair', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
-        await keystore.generateKey('my-key');
-
-        final keyPair = await keystore.getKey('my-key');
-
-        expect(keyPair, isNotNull);
-      });
-
-      test('throws if key not found', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
-
-        expect(
-          () => keystore.getKey('nonexistent'),
-          throwsA(isA<ArgumentError>()),
-        );
-      });
-
-      test('throws if keystore is locked', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
-        await keystore.generateKey('test-key');
-        keystore.lock();
-
-        expect(() => keystore.getKey('test-key'), throwsA(isA<StateError>()));
-      });
-    });
-
-    group('importSeed', () {
-      test('imports seed and stores encrypted', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
-        final seed = CryptoUtils.randomBytes(32);
-
-        final publicKey = await keystore.importSeed('imported', seed);
-
-        expect(publicKey.length, equals(32));
-        expect(keystore.hasKey('imported'), isTrue);
-      });
-
-      test('rejects wrong length seed', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
-        final wrongSeed = CryptoUtils.randomBytes(16);
-
-        expect(
-          () => keystore.importSeed('bad-import', wrongSeed),
-          throwsA(isA<ArgumentError>()),
-        );
-      });
-    });
-
-    group('serialize/deserialize', () {
-      test('serializes and deserializes keystore', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
-        await keystore.generateKey('key1', label: 'Test Key');
-        await keystore.generateKey('key2');
-
-        final json = keystore.serialize();
-        final restored = EncryptedKeystore.deserialize(json);
-        await restored.unlock(
-          testPassword,
-          salt: restored._salt,
-          iterations: testIterations,
-        );
-
-        expect(restored.hasKey('key1'), isTrue);
-        expect(restored.hasKey('key2'), isTrue);
-      });
-
-      test('loadAndUnlock restores functional keystore', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
-        final originalPk = await keystore.generateKey('test');
-        final json = keystore.serialize();
-
-        final restored = await EncryptedKeystore.loadAndUnlock(
-          json,
-          testPassword,
-          iterations: testIterations,
-        );
-        final restoredPk = restored.getPublicKey('test');
-
-        expect(restoredPk, equals(originalPk));
-      });
-    });
-
-    group('keyNames and hasKey', () {
-      test('lists all key names', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
-        await keystore.generateKey('alpha');
-        await keystore.generateKey('beta');
-        await keystore.generateKey('gamma');
-
-        expect(keystore.keyNames, containsAll(['alpha', 'beta', 'gamma']));
-        expect(keystore.keyNames.length, equals(3));
-      });
-
-      test('removeKey removes a key', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
-        await keystore.generateKey('to-remove');
-
-        expect(keystore.hasKey('to-remove'), isTrue);
-        keystore.removeKey('to-remove');
-        expect(keystore.hasKey('to-remove'), isFalse);
-      });
-    });
-
-    group('getPublicKey', () {
-      test('returns public key without requiring unlock', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
-        final originalPk = await keystore.generateKey('test');
-        keystore.lock();
-
-        final retrievedPk = keystore.getPublicKey('test');
-
-        expect(retrievedPk, equals(originalPk));
-      });
-
-      test('returns null for non-existent key', () async {
-        final keystore = EncryptedKeystore();
-        await keystore.unlock(testPassword, iterations: testIterations);
-
-        expect(keystore.getPublicKey('nonexistent'), isNull);
-      });
+      final entry = EncryptedKeyEntry.fromJson(json);
+      expect(entry.label, equals('restored'));
+      expect(entry.publicKey.length, equals(3));
     });
   });
-}
 
-// Extension to access private salt for testing
-extension TestableKeystore on EncryptedKeystore {
-  Uint8List? get _salt {
-    // Access via serialization/deserialization
-    final json = serialize();
-    final decoded = jsonDecode(json) as Map<String, dynamic>;
-    final saltStr = decoded['salt'] as String?;
-    return saltStr != null ? base64Decode(saltStr) : null;
-  }
+  group('EncryptedKeystore Lifecycle', () {
+    late EncryptedKeystore keystore;
+
+    setUp(() {
+      keystore = EncryptedKeystore();
+    });
+
+    tearDown(() {
+      keystore.lock();
+    });
+
+    test('isUnlocked is false by default', () {
+      expect(keystore.isUnlocked, isFalse);
+    });
+
+    test('unlock sets isUnlocked to true', () async {
+      await keystore.unlock('password123');
+      expect(keystore.isUnlocked, isTrue);
+    });
+
+    test('lock sets isUnlocked to false', () async {
+      await keystore.unlock('password123');
+      keystore.lock();
+      expect(keystore.isUnlocked, isFalse);
+    });
+  });
+
+  group('EncryptedKeystore Key Management', () {
+    late EncryptedKeystore keystore;
+
+    setUp(() async {
+      keystore = EncryptedKeystore();
+      await keystore.unlock('secure-password');
+    });
+
+    tearDown(() {
+      keystore.lock();
+    });
+
+    test('generateKey creates new key', () async {
+      final publicKey = await keystore.generateKey('my-key');
+      expect(publicKey.length, equals(32)); // Ed25519 public key
+    });
+
+    test('generateKey with label stores label', () async {
+      await keystore.generateKey('labeled-key', label: 'My Label');
+      expect(keystore.hasKey('labeled-key'), isTrue);
+    });
+
+    test('generateKey throws for duplicate name', () async {
+      await keystore.generateKey('dup-key');
+      expect(
+        () => keystore.generateKey('dup-key'),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('hasKey returns true for existing key', () async {
+      await keystore.generateKey('existing');
+      expect(keystore.hasKey('existing'), isTrue);
+    });
+
+    test('hasKey returns false for non-existent key', () {
+      expect(keystore.hasKey('nonexistent'), isFalse);
+    });
+
+    test('getPublicKey returns public key bytes', () async {
+      final generated = await keystore.generateKey('pub-test');
+      final retrieved = keystore.getPublicKey('pub-test');
+      expect(retrieved, equals(generated));
+    });
+
+    test('getPublicKey returns null for missing key', () {
+      expect(keystore.getPublicKey('missing'), isNull);
+    });
+
+    test('removeKey removes key', () async {
+      await keystore.generateKey('to-remove');
+      keystore.removeKey('to-remove');
+      expect(keystore.hasKey('to-remove'), isFalse);
+    });
+
+    test('keyNames lists all keys', () async {
+      await keystore.generateKey('key1');
+      await keystore.generateKey('key2');
+      final names = keystore.keyNames;
+      expect(names, contains('key1'));
+      expect(names, contains('key2'));
+    });
+  });
+
+  group('EncryptedKeystore importSeed', () {
+    late EncryptedKeystore keystore;
+
+    setUp(() async {
+      keystore = EncryptedKeystore();
+      await keystore.unlock('password');
+    });
+
+    tearDown(() {
+      keystore.lock();
+    });
+
+    test('importSeed stores seed successfully', () async {
+      final seed = Uint8List.fromList(List.generate(32, (i) => i));
+      final publicKey = await keystore.importSeed('imported', seed);
+      expect(publicKey.length, equals(32));
+      expect(keystore.hasKey('imported'), isTrue);
+    });
+
+    test('importSeed throws for invalid seed length', () async {
+      final invalidSeed = Uint8List.fromList([1, 2, 3]);
+      expect(
+        () => keystore.importSeed('bad', invalidSeed),
+        throwsArgumentError,
+      );
+    });
+  });
+
+  group('EncryptedKeystore getKey', () {
+    late EncryptedKeystore keystore;
+
+    setUp(() async {
+      keystore = EncryptedKeystore();
+      await keystore.unlock('password');
+    });
+
+    tearDown(() {
+      keystore.lock();
+    });
+
+    test('getKey retrieves decryptable key', () async {
+      await keystore.generateKey('decrypt-test');
+      final keyPair = await keystore.getKey('decrypt-test');
+      expect(keyPair, isNotNull);
+    });
+
+    test('getKey throws for missing key', () async {
+      expect(
+        () => keystore.getKey('nonexistent'),
+        throwsArgumentError,
+      );
+    });
+  });
+
+  group('EncryptedKeystore Serialization', () {
+    test('serialize produces valid JSON', () async {
+      final keystore = EncryptedKeystore();
+      await keystore.unlock('password');
+      await keystore.generateKey('ser-key');
+
+      final json = keystore.serialize();
+      final parsed = jsonDecode(json) as Map<String, dynamic>;
+
+      expect(parsed['version'], equals(1));
+      expect(parsed.containsKey('salt'), isTrue);
+      expect(parsed.containsKey('keys'), isTrue);
+
+      keystore.lock();
+    });
+
+    test('deserialize restores keystore', () async {
+      final original = EncryptedKeystore();
+      await original.unlock('password');
+      await original.generateKey('deser-key');
+      final json = original.serialize();
+      original.lock();
+
+      final restored = EncryptedKeystore.deserialize(json);
+      expect(restored.hasKey('deser-key'), isTrue);
+    });
+
+    test('deserialize throws for unsupported version', () {
+      final badJson = '{"version":99,"salt":"AAAA","keys":{}}';
+      expect(
+        () => EncryptedKeystore.deserialize(badJson),
+        throwsFormatException,
+      );
+    });
+  });
+
+  group('EncryptedKeystore Locked Operations', () {
+    test('generateKey throws when locked', () {
+      final keystore = EncryptedKeystore();
+      expect(
+        () => keystore.generateKey('test'),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('getKey throws when locked', () {
+      final keystore = EncryptedKeystore();
+      expect(
+        () => keystore.getKey('test'),
+        throwsA(isA<StateError>()),
+      );
+    });
+  });
 }

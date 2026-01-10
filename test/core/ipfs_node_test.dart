@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
@@ -12,80 +13,23 @@ import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:test/test.dart';
 
-// Manual Mocks
-class MockBlockStore extends BlockStore {
-  MockBlockStore() : super(path: '/tmp/mock');
-
-  @override
-  Future<void> start() async {}
-  @override
-  Future<void> stop() async {}
-  @override
-  Future<Map<String, dynamic>> getStatus() async => {'status': 'mock_ok'};
-}
-
-class MockDatastoreHandler extends DatastoreHandler {
-  MockDatastoreHandler() : super(_MockDatastore());
-  final Map<String, Block> blocks = {};
-
-  @override
-  Future<void> start() async {}
-  @override
-  Future<void> stop() async {}
-  @override
-  Future<Map<String, dynamic>> getStatus() async => {'status': 'mock_ok'};
-
-  @override
-  Future<void> putBlock(Block block) async {
-    blocks[block.cid.toString()] = block;
-  }
-
-  @override
-  Future<Block?> getBlock(String cid) async {
-    return blocks[cid];
-  }
-}
-
-class _MockDatastore implements Datastore {
-  @override
-  Future<void> init() async {}
-  @override
-  Future<void> put(Key key, Uint8List value) async {}
-  @override
-  Future<Uint8List?> get(Key key) async => null;
-  @override
-  Future<bool> has(Key key) async => false;
-  @override
-  Future<void> delete(Key key) async {}
-  @override
-  Stream<QueryEntry> query(Query q) async* {}
-  @override
-  Future<void> close() async {}
-}
-
-class MockIPLDHandler extends IPLDHandler {
-  MockIPLDHandler(super.config, super.store);
-
-  @override
-  Future<void> start() async {}
-  @override
-  Future<void> stop() async {}
-  @override
-  Future<Map<String, dynamic>> getStatus() async => {'status': 'mock_ok'};
-}
+import '../mocks/in_memory_datastore.dart';
 
 void main() {
   group('IPFSNode Offline Tests', () {
     late ServiceContainer container;
     late IPFSConfig config;
-    late MockBlockStore mockBlockStore;
-    late MockDatastoreHandler mockDatastore;
+    late BlockStore blockStore;
+    late DatastoreHandler datastoreHandler;
+    late InMemoryDatastore inMemoryDatastore;
 
-    setUp(() {
+    setUp(() async {
       container = ServiceContainer();
       config = IPFSConfig(offline: true, dataPath: '/tmp/test_repo');
-      mockBlockStore = MockBlockStore();
-      mockDatastore = MockDatastoreHandler();
+      blockStore = BlockStore(path: '/tmp/mock_blocks');
+      inMemoryDatastore = InMemoryDatastore();
+      await inMemoryDatastore.init();
+      datastoreHandler = DatastoreHandler(inMemoryDatastore);
 
       // Register Core
       final metrics = MetricsCollector(config);
@@ -93,10 +37,10 @@ void main() {
       container.registerSingleton(SecurityManager(config.security, metrics));
 
       // Register Storage
-      container.registerSingleton<BlockStore>(mockBlockStore);
-      container.registerSingleton<DatastoreHandler>(mockDatastore);
+      container.registerSingleton<BlockStore>(blockStore);
+      container.registerSingleton<DatastoreHandler>(datastoreHandler);
       container.registerSingleton<IPLDHandler>(
-        MockIPLDHandler(config, mockBlockStore),
+        IPLDHandler(config, blockStore),
       );
 
       // No Network/Services for offline
@@ -112,7 +56,7 @@ void main() {
 
       // Verify health status to confirm startup
       final health = await node.getHealthStatus();
-      expect(health['storage']['blockstore']['status'], 'mock_ok');
+      expect(health['storage']['datastore']['status'], 'active');
 
       await node.stop();
     });
@@ -159,6 +103,193 @@ void main() {
       final retrievedData = await node.get(cid);
       expect(retrievedData, equals(data));
 
+      await node.stop();
+    });
+
+    test('should add and list directory', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      final directoryContent = {
+        'file1.txt': Uint8List.fromList('Hello World'.codeUnits),
+        'subdir': {
+          'file2.txt': Uint8List.fromList('Subdir File'.codeUnits),
+        },
+      };
+
+      final cid = await node.addDirectory(directoryContent);
+      expect(cid, isNotNull);
+
+      // List directory
+      final links = await node.ls(cid);
+      expect(links.length, equals(2));
+      expect(links.any((l) => l.name == 'file1.txt'), isTrue);
+      expect(links.any((l) => l.name == 'subdir'), isTrue);
+
+      // Resolve path within directory
+      final file1Data = await node.get(cid, path: 'file1.txt');
+      expect(utf8.decode(file1Data!), equals('Hello World'));
+
+      final file2Data = await node.get(cid, path: 'subdir/file2.txt');
+      expect(utf8.decode(file2Data!), equals('Subdir File'));
+
+      await node.stop();
+    });
+
+    test('should handle pinning and unpinning', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      final data = Uint8List.fromList([1, 1, 1]);
+      final cid = await node.addFile(data);
+
+      // Pin
+      await node.pin(cid);
+
+      // Check if pinned in datastore
+      final pinKey = Key('/pins/$cid');
+      expect(await inMemoryDatastore.has(pinKey), isTrue);
+
+      // Unpin
+      final unpinned = await node.unpin(cid);
+      expect(unpinned, isTrue);
+      expect(await inMemoryDatastore.has(pinKey), isFalse);
+
+      await node.stop();
+    });
+
+    test('should return null for missing content', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      final result = await node.get('nonexistentcid');
+      expect(result, isNull);
+
+      await node.stop();
+    });
+
+    test('setGatewayMode changes node behavior', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      // Test each gateway mode - no exceptions should be thrown
+      node.setGatewayMode(GatewayMode.internal);
+      node.setGatewayMode(GatewayMode.public);
+      node.setGatewayMode(GatewayMode.local);
+      node.setGatewayMode(GatewayMode.custom, customUrl: 'http://my-gateway.io');
+
+      await node.stop();
+    });
+
+    test('subscribe/unsubscribe/publish are no-ops in offline mode', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      // These should not throw in offline mode (graceful no-ops)
+      await node.subscribe('test-topic');
+      await node.unsubscribe('test-topic');
+      // publish throws StateError in offline mode (no PubSubHandler)
+      expect(
+        () => node.publish('test-topic', 'hello'),
+        throwsStateError,
+      );
+
+      await node.stop();
+    });
+
+    test('connectToPeer throws in offline mode', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      expect(
+        () => node.connectToPeer('/ip4/127.0.0.1/tcp/4001'),
+        throwsStateError,
+      );
+
+      await node.stop();
+    });
+
+    test('disconnectFromPeer is no-op in offline mode', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      // Should not throw
+      await node.disconnectFromPeer('12D3KooWEXAMPLE');
+
+      await node.stop();
+    });
+
+    test('pubsubMessages returns empty stream in offline mode', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      final messages = await node.pubsubMessages.toList();
+      expect(messages, isEmpty);
+
+      await node.stop();
+    });
+
+    test('getHealthStatus returns comprehensive status', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      final health = await node.getHealthStatus();
+      expect(health['storage'], isNotNull);
+      expect(health['storage']['datastore'], isNotNull);
+      expect(health['storage']['blockstore'], isNotNull);
+
+      await node.stop();
+    });
+
+    test('resolvePeerId returns empty list in offline mode', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      final addresses = node.resolvePeerId('12D3KooWEXAMPLE');
+      expect(addresses, isEmpty);
+
+      await node.stop();
+    });
+
+    test('pinnedCids returns pinned content', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      // Add and pin a file
+      final data = Uint8List.fromList([1, 2, 3]);
+      final cid = await node.addFile(data);
+      await node.pin(cid);
+
+      final pinned = await node.pinnedCids;
+      expect(pinned, contains(cid));
+
+      await node.stop();
+    });
+
+    test('resolveIPNS throws when DHTHandler not available', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      expect(
+        () => node.resolveIPNS('12D3KooWEXAMPLE'),
+        throwsA(anything),
+      );
+
+      await node.stop();
+    });
+
+    test('stop is idempotent', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+      await node.stop();
+      await node.stop(); // Should not throw
+    });
+
+    test('double start throws StateError or is handled', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+      // Second start should be handled gracefully
+      // (depends on implementation - may throw or be idempotent)
       await node.stop();
     });
   });

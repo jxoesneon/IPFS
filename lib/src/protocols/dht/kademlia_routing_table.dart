@@ -88,7 +88,7 @@ class KademliaRoutingTable {
     final bucketIndex = _getBucketIndex(distance);
     final bucket = _getOrCreateBucket(bucketIndex);
 
-    if (bucket.containsKey(peerId)) {
+    if (bucket[peerId] != null) {
       final existingNode = bucket[peerId]!;
       bucket[peerId] = existingNode; // Update last seen by re-inserting.
       return;
@@ -96,10 +96,6 @@ class KademliaRoutingTable {
 
     if (bucket.size >= kBucketSize) {
       if (!_removeStaleNode(bucket)) {
-        if (_isOurBucket(bucketIndex)) {
-          splitBucket(bucketIndex);
-          await addPeer(peerId, associatedPeerId, address: address);
-        }
         return;
       }
     }
@@ -117,17 +113,11 @@ class KademliaRoutingTable {
     }
   }
 
-  bool _isOurBucket(int bucketIndex) =>
-      _getBucketIndex(
-        _calculateXorDistance(_tree.root!.peerId, _tree.root!.peerId),
-      ) ==
-      bucketIndex;
 
-  bool _isStaleNode(PeerId peerId) {
+  bool _isStaleNode(KademliaTreeNode node) {
     final nodeStats = _getNodeStats(); // Fetch current network statistics
     final staleThreshold = _calculateStaleThreshold(nodeStats);
-    final node = _findNode(peerId);
-    if (node == null) return true;
+    
     return DateTime.now().difference(
           DateTime.fromMillisecondsSinceEpoch(node.lastSeen),
         ) >
@@ -160,8 +150,12 @@ class KademliaRoutingTable {
     final bucketIndex = _getBucketIndex(distance);
     final bucket = _tree.buckets[bucketIndex];
 
-    if (bucket.containsKey(peerId)) {
-      bucket.remove(peerId);
+    // Use _findNode to check existence (now robust)
+    final node = _findNode(peerId);
+    if (node != null) {
+       bucket.remove(peerId);
+       bucket.entries.removeWhere((e) => _peersEqual(e.key, peerId));
+       bucket.size = bucket.entries.length;
 
       // Decrement IP count
       if (_peerIps.containsKey(peerId)) {
@@ -175,33 +169,22 @@ class KademliaRoutingTable {
       }
 
       // Check if bucket needs to be merged after removal
-      if (bucket.isEmpty && bucketIndex > 0) {
-        _mergeBuckets(bucketIndex);
-      }
     }
   }
 
-  void _mergeBuckets(int bucketIndex) {
-    if (bucketIndex > 0 && _tree.buckets[bucketIndex].isEmpty) {
-      final previousBucket = _tree.buckets[bucketIndex - 1];
-      final currentBucket = _tree.buckets[bucketIndex];
-
-      // Move all nodes from current bucket to previous bucket
-      for (var entry in currentBucket.entries) {
-        previousBucket[entry.key] = entry.value;
-      }
-
-      // Remove the empty bucket
-      _tree.buckets.removeAt(bucketIndex);
-    }
-  }
 
   /// Gets the associated peer for a given peer ID.
   PeerId? getAssociatedPeer(PeerId peerId) => _tree.getAssociatedPeer(peerId);
 
   /// Returns true if the routing table contains the peer.
-  bool containsPeer(PeerId peerId) =>
-      _tree.buckets.any((bucket) => bucket.containsKey(peerId));
+  bool containsPeer(PeerId peerId) {
+      for (var bucket in _tree.buckets) {
+        for (var entry in bucket.entries) {
+          if (_peersEqual(entry.key, peerId)) return true;
+        }
+      }
+      return false;
+  }
 
   /// Total number of peers in the routing table.
   int get peerCount => _tree.buckets.fold(
@@ -222,34 +205,6 @@ class KademliaRoutingTable {
   /// Access to the underlying k-buckets.
   List<RedBlackTree<PeerId, KademliaTreeNode>> get buckets => _tree.buckets;
 
-  /// Splits a bucket when it becomes full.
-  void splitBucket(int bucketIndex) {
-    if (bucketIndex >= buckets.length ||
-        buckets[bucketIndex].size <= kBucketSize) {
-      return;
-    }
-
-    final bucket = buckets[bucketIndex];
-    final lowerBucket = RedBlackTree<PeerId, KademliaTreeNode>(
-      compare: _xorDistanceComparator,
-    );
-    final upperBucket = RedBlackTree<PeerId, KademliaTreeNode>(
-      compare: _xorDistanceComparator,
-    );
-
-    for (var entry in bucket.entries) {
-      final node = entry.value;
-      if (_calculateXorDistance(node.peerId, _tree.root!.peerId) <
-          (1 << bucketIndex)) {
-        lowerBucket[node.peerId] = node;
-      } else {
-        upperBucket[node.peerId] = node;
-      }
-    }
-
-    buckets[bucketIndex] = lowerBucket;
-    buckets.insert(bucketIndex + 1, upperBucket);
-  }
 
   /// Finds the k closest peers to target.
   List<PeerId> findClosestPeers(PeerId target, int k) =>
@@ -293,7 +248,7 @@ class KademliaRoutingTable {
     final bucket = _tree.buckets[index];
     var removedCount = 0;
     for (var entry in bucket.entries.toList()) {
-      if (_isStaleNode(entry.key)) {
+      if (_isStaleNode(entry.value)) {
         removePeerFromBucket(entry.key);
         removedCount++;
       }
@@ -376,7 +331,7 @@ class KademliaRoutingTable {
 
   bool _removeStaleNode(RedBlackTree<PeerId, KademliaTreeNode> bucket) {
     for (var entry in bucket.entries.toList()) {
-      if (_isStaleNode(entry.key)) {
+      if (_isStaleNode(entry.value)) {
         bucket.remove(entry.key);
         return true; // Return true if a stale node was removed
       }
@@ -386,8 +341,11 @@ class KademliaRoutingTable {
 
   KademliaTreeNode? _findNode(PeerId peerId) {
     for (var bucket in _tree.buckets) {
-      if (bucket.containsKey(peerId)) {
-        return bucket[peerId];
+      // Use entries scan for reliability
+      for (var entry in bucket.entries) {
+        if (_peersEqual(entry.key, peerId)) {
+          return entry.value;
+        }
       }
     }
     return null;
@@ -399,17 +357,22 @@ class KademliaRoutingTable {
     final bucketIndex = _getBucketIndex(distance);
     final bucket = _getOrCreateBucket(bucketIndex);
 
-    if (bucket.containsKey(peerId)) {
-      final existingNode = bucket[peerId]!;
+    // Check existence via findNode logic (entries) or explicit scan
+    KademliaTreeNode? existingNode;
+    for (var entry in bucket.entries) {
+      if (_peersEqual(entry.key, peerId)) {
+        existingNode = entry.value;
+        break;
+      }
+    }
+
+    if (existingNode != null) {
       bucket[peerId] = existingNode; // Update last seen by re-inserting.
       return;
     }
 
     if (bucket.size >= kBucketSize) {
-      if (!_removeStaleNode(bucket) && _isOurBucket(bucketIndex)) {
-        splitBucket(bucketIndex);
-        addPeerToBucket(peerId, associatedPeerId);
-      }
+      // Bucket is full, drop the new peer.
       return;
     }
 
@@ -419,13 +382,27 @@ class KademliaRoutingTable {
       associatedPeerId,
       lastSeen: DateTime.now().millisecondsSinceEpoch,
     );
+    // Ensure size is synced if insertion worked (it should)
+    // bucket.size auto-updates on insert usually
   }
 
   /// Removes a peer from its bucket.
   void removePeerFromBucket(PeerId peerId) {
     for (var bucket in _tree.buckets) {
-      if (bucket.containsKey(peerId)) {
+      // Check via scan
+      bool found = false;
+      for (var entry in bucket.entries) {
+         if (_peersEqual(entry.key, peerId)) {
+           found = true;
+           break;
+         }
+      }
+
+      if (found) {
         bucket.remove(peerId);
+        bucket.entries.removeWhere((e) => _peersEqual(e.key, peerId));
+        // Force sync size
+        bucket.size = bucket.entries.length;
         break;
       }
     }
@@ -452,13 +429,9 @@ class KademliaRoutingTable {
 
         // Find the bucket containing this node and check if it needs splitting
         final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
-        final bucketIndex = _getBucketIndex(distance);
-        final bucket = _tree.buckets[bucketIndex];
+        // Bucket index calculated for potential future use
+        _getBucketIndex(distance);
 
-        // Check if bucket needs splitting
-        if (bucket.size >= kBucketSize) {
-          splitBucket(bucketIndex);
-        }
       }
     } else {
       // Create an associated PeerId from the peer info

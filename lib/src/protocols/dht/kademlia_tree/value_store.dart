@@ -8,13 +8,13 @@ import '../dht_client.dart';
 /// maintain availability across the network.
 class ValueStore {
   /// Creates a value store with the given [_dhtClient].
-  ValueStore(this._dhtClient);
+  ValueStore(this._dhtClient, {this.valueExpiry = const Duration(hours: 24)});
 
   /// Number of nodes to replicate values to.
   static const int replicationFactor = 3;
 
   /// How long before values expire.
-  static const Duration valueExpiry = Duration(hours: 24);
+  final Duration valueExpiry;
 
   final Map<String, StoredValue> _values = {};
   final DHTClient _dhtClient;
@@ -56,27 +56,21 @@ class ValueStore {
     );
 
     int successfulReplications = 0;
-    for (final _ in closestPeers) {
+    for (final peer in closestPeers) {
       try {
-        /*
-        final success = await _dhtClient.storeValue(
-            peer, Uint8List.fromList(key.codeUnits), value);
+        final success = await _dhtClient.storeValueToPeer(
+          peer,
+          Uint8List.fromList(key.codeUnits),
+          value,
+        );
 
         if (success) {
           successfulReplications++;
           _values[key]?.replicationCount = successfulReplications;
         }
-        */
       } catch (e) {
-        // print('Failed to replicate value to peer ${peer.toString()}: $e');
+        // Failed to replicate
       }
-    }
-
-    // Verify minimum replication factor
-    if (successfulReplications < replicationFactor ~/ 2) {
-      // print(
-      //   'Warning: Failed to achieve minimum replication factor for key $key',
-      // );
     }
   }
 

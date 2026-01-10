@@ -49,8 +49,8 @@ import 'package:p2plib/p2plib.dart' as p2p;
 /// - [DHTClient] for DHT protocol integration
 class P2plibRouter {
   /// Creates a [P2plibRouter] instance for the given [config].
-  P2plibRouter(this._config)
-    : _router = p2p.RouterL2(
+  P2plibRouter(this._config, {p2p.RouterL2? router})
+    : _router = router ?? p2p.RouterL2(
         crypto: LocalCrypto(),
         keepalivePeriod: const Duration(seconds: 30),
         transports: [],
@@ -434,7 +434,7 @@ class P2plibRouter {
   /// Receives messages from a specific peer.
   Stream<String> receiveMessages(String peerId) async* {
     // Convert the messageStream to filter messages from specific peer
-    await for (final message in _router.messageStream) {
+    await for (final message in _messageController.stream) {
       if (message.srcPeerId.toString() == peerId) {
         final payload = message.payload;
         if (payload != null && payload.isNotEmpty) {
@@ -446,11 +446,15 @@ class P2plibRouter {
 
   /// Resolves a peer ID to a list of addresses.
   List<String> resolvePeerId(String peerIdStr) {
-    final peerId = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
-    return _router
-        .resolvePeerId(peerId)
-        .map((address) => '${address.address.address}:${address.port}')
-        .toList();
+    try {
+      final peerId = p2p.PeerId(value: Base58().base58Decode(peerIdStr));
+      return _router
+          .resolvePeerId(peerId)
+          .map((address) => '${address.address.address}:${address.port}')
+          .toList();
+    } catch (e) {
+      return [];
+    }
   }
 
   /// Registers a callback for handling incoming messages

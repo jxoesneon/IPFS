@@ -113,7 +113,16 @@ class MockNetworkHandler extends NetworkHandler {
 
   @override
   Router get router => Router(config);
-}
+
+  @override
+  Future<void> connectToPeer(String multiaddress) async {
+     // Mock success
+  }
+
+  @override
+  Future<void> disconnectFromPeer(String multiaddress) async {
+     // Mock success
+  }}
 
 class MockDHTHandler extends DHTHandler {
   MockDHTHandler(IPFSConfig config, NetworkHandler networkHandler)
@@ -286,6 +295,19 @@ void main() {
       // Should not throw
       await node.subscribe('test-topic');
       await node.publish('test-topic', 'hello');
+    });
+    test('should connect and disconnect peer', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      // Should not throw
+      await node.connectToPeer('/ip4/127.0.0.1/tcp/4001/p2p/$validMockPeerId');
+      await node.disconnectFromPeer(validMockPeerId);
+    });
+
+    test('should expose network addresses', () async {
+      final node = IPFSNode.fromContainer(container);
+      expect(node.addresses, isNotEmpty);
     });
   });
 }

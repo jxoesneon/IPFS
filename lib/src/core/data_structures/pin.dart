@@ -37,8 +37,7 @@ class Pin {
     required this.type,
     DateTime? timestamp,
     required this.blockStore,
-  }) : timestamp = timestamp ?? DateTime.now(),
-       _pinManager = PinManager(blockStore);
+  }) : timestamp = timestamp ?? DateTime.now();
 
   /// Creates a [Pin] from its Protobuf representation.
   factory Pin.fromProto(PinProto pbPin, BlockStore blockStore) {
@@ -62,8 +61,6 @@ class Pin {
   /// The block store for storage operations.
   final BlockStore blockStore;
 
-  final PinManager _pinManager;
-
   /// Converts the [Pin] to its Protobuf representation.
   PinProto toProto() {
     return PinProto()
@@ -79,16 +76,16 @@ class Pin {
 
   /// Pins this block according to its type
   Future<bool> pin() async {
-    return await _pinManager.pinBlock(cid.toProto(), type);
+    return await blockStore.pinManager.pinBlock(cid.toProto(), type);
   }
 
   /// Unpins this block
   Future<bool> unpin() async {
-    return await _pinManager.unpinBlock(cid.toProto());
+    return await blockStore.pinManager.unpinBlock(cid.toProto());
   }
 
   /// Checks if this block is pinned
   bool isPinned() {
-    return _pinManager.isBlockPinned(cid.toProto());
+    return blockStore.pinManager.isBlockPinned(cid.toProto());
   }
 }

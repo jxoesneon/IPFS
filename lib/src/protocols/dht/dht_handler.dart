@@ -26,12 +26,23 @@ import 'package:http/http.dart' as http;
 /// to prevent DHT index poisoning attacks.
 class DHTHandler implements IDHTHandler {
   /// Creates a new [DHTHandler] with the given [config], [_router], and [networkHandler].
-  DHTHandler(IPFSConfig config, this._router, NetworkHandler networkHandler)
-    : _keystore = Keystore(),
-      _storage = HiveDatastore(config.datastorePath) {
+  DHTHandler(
+    IPFSConfig config,
+    this._router,
+    NetworkHandler networkHandler, {
+    ds.Datastore? storage,
+    DHTClient? client,
+    Keystore? keystore,
+    http.Client? httpClient,
+  }) : _keystore = keystore ?? Keystore(),
+       _httpClient = httpClient ?? http.Client(),
+       _storage = storage ?? HiveDatastore(config.datastorePath) {
     _logger = Logger('DHTHandler', debug: config.debug);
-    _storage.init();
-    dhtClient = DHTClient(networkHandler: networkHandler, router: _router);
+    if (storage == null) {
+      _storage.init();
+    }
+    dhtClient = client ??
+        DHTClient(networkHandler: networkHandler, router: _router);
   }
 
   /// The underlying DHT client for network operations.
@@ -39,6 +50,7 @@ class DHTHandler implements IDHTHandler {
   final Keystore _keystore;
   final P2plibRouter _router;
   final ds.Datastore _storage;
+  final http.Client _httpClient;
   late final Logger _logger;
 
   final Set<String> _activeQueries = {};
@@ -142,7 +154,7 @@ class DHTHandler implements IDHTHandler {
     if (resolvedCid == null) {
       try {
         final url = Uri.parse('https://ipfs.io/ipns/$ipnsName');
-        final response = await http.get(url);
+        final response = await _httpClient.get(url);
         if (response.statusCode == 200) {
           resolvedCid = extractCIDFromResponse(response.body);
           if (resolvedCid != null) {

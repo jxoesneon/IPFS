@@ -56,8 +56,8 @@ class AutoNATHandler {
         _logger.info('NAT detected but port mapping is disabled in config');
       }
 
-      // Start periodic dialback tests
-      _startDialbackTests();
+      // Start periodic dialback tests and perform initial test
+      await _startDialbackTests();
 
       _isRunning = true;
       _logger.info('AutoNATHandler started successfully');
@@ -96,7 +96,7 @@ class AutoNATHandler {
     }
   }
 
-  void _startDialbackTests() {
+  Future<void> _startDialbackTests() async {
     _logger.verbose('Starting periodic dialback tests');
 
     _dialbackTimer?.cancel();
@@ -104,8 +104,11 @@ class AutoNATHandler {
       _performDialbackTest();
     });
 
-    // Initial test
-    _performDialbackTest();
+    // Initial test - only if not already performed by port mapping
+    if (_lastDialbackTest == null ||
+        DateTime.now().difference(_lastDialbackTest!) > const Duration(seconds: 5)) {
+      await _performDialbackTest();
+    }
   }
 
   Future<void> _detectNATType() async {
@@ -134,38 +137,29 @@ class AutoNATHandler {
   }
 
   Future<bool> _checkDirectConnectivity() async {
-    try {
-      // Attempt direct connections to bootstrap nodes
-      final bootstrapPeers = _config.network.bootstrapPeers;
-      int successfulConnections = 0;
+    // Attempt direct connections to bootstrap nodes
+    final bootstrapPeers = _config.network.bootstrapPeers;
+    int successfulConnections = 0;
 
-      for (final peer in bootstrapPeers) {
-        if (await _networkHandler.canConnectDirectly(peer)) {
-          successfulConnections++;
-        }
+    for (final peer in bootstrapPeers) {
+      if (await _networkHandler.canConnectDirectly(peer)) {
+        successfulConnections++;
       }
-
-      return successfulConnections >= bootstrapPeers.length ~/ 2;
-    } catch (e) {
-      _logger.error('Error checking direct connectivity', e);
-      return false;
     }
+
+    if (bootstrapPeers.isEmpty) return false;
+    return successfulConnections >= (bootstrapPeers.length + 1) ~/ 2;
   }
 
   Future<bool> _testSymmetricNAT() async {
-    try {
-      // Test connections from different source ports
-      final results = await Future.wait([
-        _networkHandler.testConnection(sourcePort: 4001),
-        _networkHandler.testConnection(sourcePort: 4002),
-      ]);
+    // Test connections from different source ports
+    final results = await Future.wait([
+      _networkHandler.testConnection(sourcePort: 4001),
+      _networkHandler.testConnection(sourcePort: 4002),
+    ]);
 
-      // If external ports are different, it's symmetric NAT
-      return results[0] != results[1];
-    } catch (e) {
-      _logger.error('Error testing symmetric NAT', e);
-      return false;
-    }
+    // If external ports are different, it's symmetric NAT
+    return results[0] != results[1];
   }
 
   Future<void> _performDialbackTest() async {

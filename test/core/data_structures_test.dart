@@ -6,6 +6,7 @@ import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/metadata.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin.dart';
+import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:fixnum/fixnum.dart';
@@ -14,6 +15,8 @@ import 'package:test/test.dart';
 
 // Mock BlockStore for Pin testing
 class MockBlockStore implements BlockStore {
+  @override
+  PinManager get pinManager => throw UnimplementedError('Mock');
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

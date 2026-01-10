@@ -97,20 +97,22 @@ void main() {
         // the fact that it DOESN'T hit our local mock server.
         node.setGatewayMode(GatewayMode.public);
 
-        // This will try to hit the real internet/ipfs.io.
-        // To prevent test flakiness/slowness, we might strict timeout or expect failure?
-        // Actually, unmocked network tests are bad.
-        // But we CAN verify it acts differently than 'custom'.
-
-        // Let's just verify it definitely doesn't hit our local server.
-        await node.cat(
-          'test_cid',
-        ); // This might hang or return null if offline/internet issues
+        // Use a valid CID that exists on public IPFS gateways (empty directory hash)
+        // This ensures we actually test successful connectivity as requested.
+        final validCid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        
+        final result = await node.cat(validCid);
 
         expect(
           serverHit,
           isFalse,
           reason: 'Public mode should not hit the local custom mock server',
+        );
+        
+        expect(
+          result,
+          isNotNull,
+          reason: 'Should successfully retrieve content from public gateway',
         );
       },
     );

@@ -49,6 +49,7 @@ class NetworkHandler {
   late final StreamController<NetworkEvent> _networkEventController;
   final IPFSConfig _config;
   late final Logger _logger;
+  final List<StreamSubscription<dynamic>> _subscriptions = [];
 
   /// Starts the network services.
   Future<void> start() async {
@@ -81,6 +82,13 @@ class NetworkHandler {
 
       await _router.stop();
       _logger.verbose('Router stopped');
+
+      // Cancel all stream subscriptions
+      for (final sub in _subscriptions) {
+        await sub.cancel();
+      }
+      _subscriptions.clear();
+      _logger.verbose('Network event subscriptions canceled');
 
       await _networkEventController.close();
       _logger.verbose('Network event controller closed');
@@ -157,7 +165,7 @@ class NetworkHandler {
   /// Listens for network events and handles them appropriately.
   void _listenForNetworkEvents() {
     _logger.verbose('Setting up network event stream listener');
-    _networkEventController.stream.listen(
+    final sub = _networkEventController.stream.listen(
       (event) {
         try {
           if (event.hasPeerConnected()) {
@@ -169,7 +177,7 @@ class NetworkHandler {
             final peer = dht.PeerId(value: peerIdBytes);
             try {
               _logger.verbose('Adding peer to routing table: $peerId');
-              ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable.addPeer(
+              ipfsNode.dhtHandler?.dhtClient.kademliaRoutingTable.addPeer(
                 peer,
                 peer,
               );
@@ -185,7 +193,7 @@ class NetworkHandler {
             final peerId = dht.PeerId(value: peerIdBytes);
             try {
               _logger.verbose('Removing peer from routing table: $peerIdStr');
-              ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable.removePeer(
+              ipfsNode.dhtHandler?.dhtClient.kademliaRoutingTable.removePeer(
                 peerId,
               );
             } catch (e) {
@@ -211,6 +219,7 @@ class NetworkHandler {
         _logger.debug('Network event stream closed');
       },
     );
+    _subscriptions.add(sub);
   }
 
   /// Returns a Router instance.
@@ -257,15 +266,19 @@ class NetworkHandler {
   void _setupEventHandlers() {
     _logger.verbose('Setting up network event handlers');
 
-    _router.connectionEvents.listen((event) {
-      _logger.debug('Connection event: ${event.type} - Peer: ${event.peerId}');
-      _handleConnectionEvent(event);
-    });
+    _subscriptions.add(
+      _router.connectionEvents.listen((event) {
+        _logger.debug('Connection event: ${event.type} - Peer: ${event.peerId}');
+        _handleConnectionEvent(event);
+      }),
+    );
 
-    _router.messageEvents.listen((event) {
-      _logger.verbose('Message received from: ${event.peerId}');
-      _handleMessageEvent(event);
-    });
+    _subscriptions.add(
+      _router.messageEvents.listen((event) {
+        _logger.verbose('Message received from: ${event.peerId}');
+        _handleMessageEvent(event);
+      }),
+    );
   }
 
   void _handleConnectionEvent(ConnectionEvent event) {

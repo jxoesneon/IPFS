@@ -11,6 +11,7 @@ import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as msg;
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/transport/router_events.dart'; // For NetworkPacket
@@ -48,6 +49,9 @@ class MockBlockStore implements BlockStore {
   Future<List<Block>> getAllBlocks() async {
     return blocks.values.toList();
   }
+
+  @override
+  PinManager get pinManager => throw UnimplementedError('Mock');
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

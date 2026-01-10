@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:catalyst_cose/catalyst_cose.dart';
 import 'package:cbor/cbor.dart';
 import 'package:convert/convert.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
@@ -70,7 +71,7 @@ class JoseCoseHandler {
     return Uint8List.fromList(utf8.encode(jwe.toCompactSerialization()));
   }
 
-  /// Encodes an IPLD node as COSE (CBOR Object Signing and Encryption).
+  /// Encodes an IPLD node as COSE Sign1 (CBOR Object Signing and Encryption).
   static Future<Uint8List> encodeCOSE(
     IPLDNode node,
     IPFSPrivateKey privateKey,
@@ -79,17 +80,25 @@ class JoseCoseHandler {
       throw IPLDEncodingError('COSE encoding requires a map structure');
     }
 
-    // final payload = _extractPayload(node);
+    final payload = _extractPayload(node);
 
-    // Create COSE Sign1 message using CatalystCose
-    /*
-    final coseValue = await CatalystCose.sign1(
-      privateKey: _privateKeyToBytes(privateKey),
+    // Create signer adapter
+    final signer = _IpfsCoseSigner(privateKey);
+
+    // Create COSE Sign1 message using named parameters
+    final coseSign1 = await CoseSign1.sign(
+      protectedHeaders: CoseHeaders.protected(
+        alg: signer.alg,
+        kid: Uint8List.fromList(utf8.encode('ipfs-key')),
+      ),
+      unprotectedHeaders: const CoseHeaders.unprotected(),
       payload: payload,
-      kid: CborString('ipfs-key'),
+      signer: signer,
     );
-    */
-    throw UnimplementedError('CatalystCose not available');
+
+    // Encode to CBOR bytes
+    final cborValue = coseSign1.toCbor();
+    return Uint8List.fromList(cbor.encode(cborValue));
   }
 
   /// Decodes and verifies a JWS-encoded IPLD node.
@@ -147,7 +156,7 @@ class JoseCoseHandler {
     return Uint8List.fromList(payload.data);
   }
 
-  /// Decodes and verifies a COSE-encoded IPLD node.
+  /// Decodes and verifies a COSE Sign1-encoded IPLD node.
   static Future<Uint8List> decodeCOSE(
     IPLDNode node,
     IPFSPrivateKey privateKey,
@@ -157,25 +166,30 @@ class JoseCoseHandler {
     }
 
     final coseData = _extractPayload(node);
-    // ignore: unused_local_variable
-    final coseValue = cbor.decode(coseData);
+    final cborValue = cbor.decode(coseData);
 
-    /*
-    final isValid = await CatalystCose.verifyCoseSign1(
-      coseSign1: coseValue,
-      publicKey: _publicKeyToBytes(privateKey.publicKey),
-    );
-    */
-    // Stubbed validation
-    // ignore: unused_local_variable
-    final isValid = false;
-    throw UnimplementedError('CatalystCose not available');
+    // Parse COSE Sign1 structure
+    final coseSign1 = CoseSign1.fromCbor(cborValue);
+
+    // Create verifier adapter
+    final verifier = _IpfsCoseVerifier(privateKey);
+
+    // Verify signature
+    final isValid = await coseSign1.verify(verifier: verifier);
+    if (!isValid) {
+      throw IPLDDecodingError('COSE signature verification failed');
+    }
+
+    return coseSign1.payload;
   }
 
   static Uint8List _extractPayload(IPLDNode node) {
     final payloadEntry = node.mapValue.entries.firstWhere(
       (e) => e.key == 'payload',
     );
+    if (payloadEntry.value.kind == Kind.BYTES) {
+      return Uint8List.fromList(payloadEntry.value.bytesValue);
+    }
     return Uint8List.fromList(utf8.encode(payloadEntry.value.stringValue));
   }
 
@@ -184,7 +198,48 @@ class JoseCoseHandler {
     if (value == null) {
       throw IPLDEncodingError('Invalid EC key parameters');
     }
-    final bytes = value.toRadixString(16).padLeft(64, '0');
-    return Uint8List.fromList(hex.decode(bytes));
+    var hexString = value.toRadixString(16);
+    if (hexString.length % 2 != 0) hexString = '0$hexString';
+    // Pad to 32 bytes for EC P-256 curve
+    hexString = hexString.padLeft(64, '0');
+    return Uint8List.fromList(hex.decode(hexString));
+  }
+}
+
+/// Adapter to use IPFSPrivateKey with catalyst_cose signing API.
+class _IpfsCoseSigner implements CatalystCoseSigner {
+  _IpfsCoseSigner(this._privateKey);
+
+  final IPFSPrivateKey _privateKey;
+
+  @override
+  StringOrInt get alg => const IntValue(-7); // ES256 algorithm identifier
+
+  @override
+  Future<Uint8List?> get kid async => Uint8List.fromList(utf8.encode('ipfs-key'));
+
+  @override
+  Future<Uint8List> sign(Uint8List data) async {
+    // Use IPFSPrivateKey's sign method which does ECDSA with SHA-256
+    return _privateKey.sign(data);
+  }
+}
+
+/// Adapter to use IPFSPrivateKey for verification with catalyst_cose API.
+class _IpfsCoseVerifier implements CatalystCoseVerifier {
+  _IpfsCoseVerifier(this._privateKey);
+
+  final IPFSPrivateKey _privateKey;
+
+  @override
+  StringOrInt get alg => const IntValue(-7); // ES256 algorithm identifier
+
+  @override
+  Future<Uint8List?> get kid async => Uint8List.fromList(utf8.encode('ipfs-key'));
+
+  @override
+  Future<bool> verify(Uint8List data, Uint8List signature) async {
+    // Use IPFSPrivateKey's verify method
+    return _privateKey.verify(data, signature);
   }
 }

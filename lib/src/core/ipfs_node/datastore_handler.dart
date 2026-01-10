@@ -1,6 +1,7 @@
 // src/core/ipfs_node/datastore_handler.dart
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/utils/car_reader.dart';
 import 'package:dart_ipfs/src/utils/car_writer.dart';
@@ -59,7 +60,14 @@ class DatastoreHandler {
       final data = await _datastore.get(key);
       if (data != null) {
         _logger.verbose('Retrieved block with CID: $cid');
-        return Block.fromData(data);
+        // Decode the CID to get its properties (like codec)
+        final decodedCid = CID.decode(cid);
+        // Map codec to format string if possible, or just use the decoded CID
+        return Block(
+          cid: decodedCid,
+          data: data,
+          format: decodedCid.codec == 'dag-pb' ? 'dag-pb' : 'raw',
+        );
       } else {
         _logger.verbose('Block with CID $cid not found.');
         return null;
@@ -158,9 +166,14 @@ class DatastoreHandler {
       blocks.add(rootBlock);
 
       // Recursively retrieve linked blocks
-      // We need to parse the block to get links
-      final rootNode = MerkleDAGNode.fromBytes(rootBlock.data);
-      await _recursiveGetBlocks(rootNode, blocks);
+      // We only need to parse for links if the codec is dag-pb or dag-cbor
+      final decodedCid = rootBlock.cid;
+      if (decodedCid.codec == 'dag-pb') {
+        // dag-pb
+        final rootNode = MerkleDAGNode.fromBytes(rootBlock.data);
+        await _recursiveGetBlocks(rootNode, blocks);
+      }
+      // If it's raw (0x55), it has no links, so we just include the block itself.
 
       // Create a CAR object using the blocks list
       final car = CAR(
@@ -185,16 +198,21 @@ class DatastoreHandler {
     MerkleDAGNode node,
     List<Block> blocks,
   ) async {
-    if (node.isDirectory) {
-      for (var link in node.links) {
-        final childBlock = await getBlock(link.cid.toString());
-        if (childBlock != null && !blocks.contains(childBlock)) {
-          blocks.add(childBlock);
+    // Verify all links
+    for (var link in node.links) {
+      final childBlock = await getBlock(link.cid.toString());
+      if (childBlock != null && !blocks.contains(childBlock)) {
+        blocks.add(childBlock);
+        
+        // Only recurse if the child is also a MerkleDAG node (dag-pb)
+        if (childBlock.format == 'dag-pb') {
           await _recursiveGetBlocks(
             MerkleDAGNode.fromBytes(childBlock.data),
             blocks,
           ); // Recursive call
         }
+      } else {
+        // print('Failed to get block for link: ${link.cid.toString()} or already present');
       }
     }
   }
@@ -206,6 +224,7 @@ class DatastoreHandler {
     // Or we skip generic counts for now or implement stat in interface.
     // For MVP, we can return 0 or implement a count query.
     return {
+      'status': 'active',
       'total_blocks': 0, // Not supported in generic interface
       'total_size': 0,
       'pinned_blocks': (await loadPinnedCIDs()).length,

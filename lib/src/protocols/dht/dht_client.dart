@@ -260,6 +260,28 @@ class DHTClient {
   /// Sends the value to the K closest peers to the key.
   /// Returns true if at least one peer successfully stored the value.
   Future<bool> storeValue(Uint8List key, Uint8List value) async {
+    final targetPeerId = getRoutingKey(Base58().encode(key));
+    final closestPeers = _kademliaRoutingTable.findClosestPeers(
+      targetPeerId,
+      20,
+    );
+
+    int successCount = 0;
+    for (final peer in closestPeers) {
+      if (await storeValueToPeer(peer, key, value)) {
+        successCount++;
+      }
+    }
+
+    return successCount > 0;
+  }
+
+  /// Stores a value directly on a specific peer.
+  Future<bool> storeValueToPeer(
+    PeerId peer,
+    Uint8List key,
+    Uint8List value,
+  ) async {
     final record = dht_proto.Record()
       ..key = key
       ..value = value;
@@ -269,23 +291,13 @@ class DHTClient {
       ..key = key
       ..record = record;
 
-    final targetPeerId = getRoutingKey(Base58().encode(key));
-    final closestPeers = _kademliaRoutingTable.findClosestPeers(
-      targetPeerId,
-      20,
-    );
-
-    int successCount = 0;
-    for (final peer in closestPeers) {
-      try {
-        await _sendRequest(peer, protocolDht, msg.writeToBuffer());
-        successCount++;
-      } catch (e) {
-        // print('Error storing value on peer ${Base58().encode(peer.value)}: $e');
-      }
+    try {
+      await _sendRequest(peer, protocolDht, msg.writeToBuffer());
+      return true;
+    } catch (e) {
+      // print('Error storing value with peer ${Base58().encode(peer.value)}: $e');
+      return false;
     }
-
-    return successCount > 0;
   }
 
   /// Retrieves a value from the DHT (GET_VALUE)
@@ -353,7 +365,10 @@ class DHTClient {
   ) async {
     final completer = Completer<Uint8List>();
 
-    final p2plibRouter = node.dhtHandler.router;
+    final p2plibRouter = node.dhtHandler?.router;
+    if (p2plibRouter == null) {
+      throw Exception('DHT Offline: Router not available');
+    }
 
     // Register a one-time message handler for the response
     // Note: this logic is brittle if multiple requests flight to same peer.
@@ -422,7 +437,7 @@ class DHTClient {
   }
 
   void _sendResponse(String peerIdStr, kad.Message msg) {
-    node.dhtHandler.router.sendMessage(peerIdStr, msg.writeToBuffer());
+    node.dhtHandler?.router.sendMessage(peerIdStr, msg.writeToBuffer());
   }
 
   /// Starts the DHT client and initializes necessary components
@@ -436,7 +451,7 @@ class DHTClient {
           .start(); // This will be safe now with the updated P2plibRouter
 
       // Register protocol handlers
-      node.dhtHandler.router.registerProtocol(protocolDht);
+      node.dhtHandler?.router.registerProtocol(protocolDht);
 
       // Initialize routing table
       await _initializeRoutingTable();
@@ -510,7 +525,9 @@ class DHTClient {
 
       // Query the datastore for all DHT keys using query
       final query = ds.Query(prefix: '/dht/values/', keysOnly: true);
-      await for (final entry in node.dhtHandler.storage.query(query)) {
+      // Use nullable handler access and default to empty stream
+      final stream = node.dhtHandler?.storage.query(query) ?? const Stream.empty();
+      await for (final entry in stream) {
         final key = entry.key.toString();
         // Remove the prefix to get the actual key
         final actualKey = key.substring('/dht/values/'.length);
@@ -555,7 +572,7 @@ class DHTClient {
       );
 
       // Update the timestamp in DHT storage
-      await node.dhtHandler.storage.put(metadataKey, timestampData);
+      await node.dhtHandler?.storage.put(metadataKey, timestampData);
 
       // Update routing table metadata
       try {
@@ -576,7 +593,7 @@ class DHTClient {
         ..key = key
         ..value = utf8.encode(timestamp.toString());
 
-      await node.dhtHandler.router.emitEvent(
+      await node.dhtHandler?.router.emitEvent(
         'dht:key:republished',
         event.writeToBuffer(),
       );

@@ -16,6 +16,9 @@ import 'package:dart_ipfs/src/transport/router_events.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/config/network_config.dart';
+import 'package:dart_ipfs/src/core/config/security_config.dart';
 import 'package:test/test.dart';
 
 // Helper for valid PeerId (64 bytes)
@@ -136,11 +139,40 @@ class MockP2plibRouter implements P2plibRouter {
     _handler?.call(networkPacket);
   }
 
+  void simulateResponse(Uint8List datagram) {
+    if (_handler != null) {
+      _handler!(NetworkPacket(
+          srcPeerId: 'QmPZ9gcCEpqKTo6aq61g2nd7KxcyPr7ReCcW6rUn9idKGr',
+          datagram: datagram));
+    }
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockDatastore implements Datastore {
+  final Map<Key, Uint8List> _data = {};
+
+  @override
+  Future<void> put(Key key, Uint8List value) async {
+    _data[key] = value;
+  }
+
+  @override
+  Future<Uint8List?> get(Key key) async {
+    return _data[key];
+  }
+
+  @override
+  Stream<QueryEntry> query(Query query) async* {
+    for (var key in _data.keys) {
+      if (key.toString().startsWith(query.prefix ?? '')) {
+         yield QueryEntry(key, _data[key]!);
+      }
+    }
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -170,6 +202,14 @@ class MockIPFSNode implements IPFSNode {
 }
 
 class MockNetworkHandler implements NetworkHandler {
+  final IPFSConfig _config = IPFSConfig(
+    network: NetworkConfig(bootstrapPeers: []),
+    security: SecurityConfig(dhtDifficulty: 0), // Disable PoW for basic tests, enable for PoW test
+  );
+
+  @override
+  IPFSConfig get config => _config;
+
   @override
   late IPFSNode ipfsNode;
 
@@ -316,6 +356,213 @@ void main() {
 
       final hasValue = await client.checkValueOnPeer(peer, key);
       expect(hasValue, isFalse);
+    });
+
+    test('findPeer returns correct peer', () async {
+      await client.initialize();
+
+      final targetPeerIdBytes = Uint8List.fromList(List.filled(64, 7));
+      final targetPeerId = PeerId(value: targetPeerIdBytes);
+
+      mockRouter.responseGenerator = (requestBytes) {
+        final msg = kad.Message.fromBuffer(requestBytes);
+        if (msg.type == kad.Message_MessageType.FIND_NODE) {
+          final response = kad.Message()
+            ..type = kad.Message_MessageType.FIND_NODE
+            ..closerPeers.add(
+              kad.Peer()
+                ..id = targetPeerIdBytes
+                ..addrs.add(Uint8List.fromList('/ip4/1.2.3.4/tcp/4001'.codeUnits)),
+            );
+          return response.writeToBuffer();
+        }
+        return Uint8List(0);
+      };
+
+      // Add a peer to routing table to trigger the query
+      final seedPeerId = PeerId(value: Uint8List.fromList(List.filled(64, 2)));
+      await client.kademliaRoutingTable.addPeer(seedPeerId, seedPeerId);
+
+      final foundPeer = await client.findPeer(targetPeerId);
+      
+      expect(foundPeer, isNotNull);
+      expect(foundPeer!.value, equals(targetPeerIdBytes));
+    });
+
+    test('addProvider successfully sends ADD_PROVIDER message', () async {
+      await client.initialize();
+
+      final data = Uint8List.fromList([1, 1, 1]);
+      final cidObj = await CID.fromContent(data);
+      final cid = cidObj.encode();
+      const providerId = 'QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco';
+      // final providerId = Base58().encode(Uint8List.fromList(List.filled(64, 1)));
+
+      bool messageSent = false;
+      mockRouter.onSendDatagram = (data) {
+        try {
+          final msg = kad.Message.fromBuffer(data);
+          if (msg.type == kad.Message_MessageType.ADD_PROVIDER) {
+            messageSent = true;
+            expect(msg.key, equals(cidObj.multihash.toBytes()));
+            
+            // Send back a success response to avoid timeout
+            final response = kad.Message()
+              ..type = kad.Message_MessageType.ADD_PROVIDER;
+            mockRouter.simulateResponse(response.writeToBuffer());
+          }
+        } catch (_) {}
+      };
+
+      // Add a peer to routing table
+      final seedPeerId = PeerId.fromBase58('QmPZ9gcCEpqKTo6aq61g2nd7KxcyPr7ReCcW6rUn9idKGr');
+      await client.kademliaRoutingTable.addPeer(seedPeerId, seedPeerId);
+
+      await client.addProvider(cid, providerId);
+      
+      expect(messageSent, isTrue);
+    });
+    test('storeValue properly sends PUT_VALUE to peers and returns true', () async {
+      await client.initialize();
+      final key = Uint8List.fromList([1, 2, 3, 4]);
+      final value = Uint8List.fromList([5, 6, 7, 8]);
+
+      // Seed table
+      final peer = PeerId(value: Uint8List.fromList(List.filled(64, 9)));
+      await client.kademliaRoutingTable.addPeer(peer, peer);
+
+      bool sent = false;
+      mockRouter.onSendDatagram = (data) {
+        final msg = kad.Message.fromBuffer(data);
+        if (msg.type == kad.Message_MessageType.PUT_VALUE) {
+          sent = true;
+          // Respond success (behavior depends on implementation awaiting response or fire-and-forget?)
+          // DHTClient implementation awaits response.
+          // Any response is sufficient to not throw.
+          final response = kad.Message()
+            ..type = kad.Message_MessageType.PUT_VALUE
+            ..key = key
+            ..record = (dht_proto.Record()..key=key..value=value);
+            
+          final responsePacket = p2p.Packet(
+             datagram: response.writeToBuffer(),
+             header: const p2p.PacketHeader(id: 0, issuedAt: 0),
+             srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 4001),
+          );
+          responsePacket.srcPeerId = p2p.PeerId(value: peer.value);
+          mockRouter.simulatePacket(responsePacket);
+        }
+      };
+
+      final result = await client.storeValue(key, value);
+      expect(result, isTrue);
+      expect(sent, isTrue);
+    });
+
+    test('getValue queries peers and returns value', () async {
+      await client.initialize();
+      final key = Uint8List.fromList([10, 11, 12]);
+      final expectedValue = Uint8List.fromList([99, 88]);
+
+      final peer = PeerId(value: Uint8List.fromList(List.filled(64, 10)));
+      await client.kademliaRoutingTable.addPeer(peer, peer);
+
+      mockRouter.responseGenerator = (req) {
+         final msg = kad.Message.fromBuffer(req);
+         if (msg.type == kad.Message_MessageType.GET_VALUE) {
+           final record = dht_proto.Record()
+             ..key = key
+             ..value = expectedValue;
+           return (kad.Message()..type = kad.Message_MessageType.GET_VALUE ..record = record).writeToBuffer();
+         }
+         return Uint8List(0);
+      };
+
+      final result = await client.getValue(key);
+      expect(result, isNotNull);
+      expect(result, equals(expectedValue));
+    });
+
+    test('_handlePacket responds to PING', () async {
+      await client.initialize();
+      final senderBytes = Uint8List.fromList(List.filled(64, 11));
+      final sender = PeerId(value: senderBytes);
+
+      bool responded = false;
+      mockRouter.onSendDatagram = (data) {
+        final msg = kad.Message.fromBuffer(data);
+        if (msg.type == kad.Message_MessageType.PING) {
+          responded = true;
+        }
+      };
+
+      final pingMsg = kad.Message()..type = kad.Message_MessageType.PING;
+      final packet = p2p.Packet(
+        datagram: pingMsg.writeToBuffer(),
+        header: const p2p.PacketHeader(id: 1, issuedAt: 0),
+        srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 4001),
+      );
+      packet.srcPeerId = p2p.PeerId(value: sender.value);
+
+      mockRouter.simulatePacket(packet);
+
+      // give async handler time
+      await Future.delayed(Duration(milliseconds: 50));
+      expect(responded, isTrue);
+    });
+
+    test('_handlePacket responds to FIND_NODE', () async {
+       await client.initialize();
+       
+       // Add a known peer to table so response closerPeers is not empty
+       final knownPeer = PeerId(value: Uint8List.fromList(List.filled(64, 12)));
+       await client.kademliaRoutingTable.addPeer(knownPeer, knownPeer);
+       
+       final senderBytes = Uint8List.fromList(List.filled(64, 13));
+       
+       bool responded = false;
+       mockRouter.onSendDatagram = (data) {
+         final msg = kad.Message.fromBuffer(data);
+         if (msg.type == kad.Message_MessageType.FIND_NODE) {
+           responded = true;
+           expect(msg.closerPeers, isNotEmpty);
+           // We expect knownPeer to be in closerPeers
+           final hasKnown = msg.closerPeers.any((p) => p.id.first == 12); // first byte 12 check
+           expect(hasKnown, isTrue);
+         }
+       };
+
+       final findMsg = kad.Message()
+         ..type = kad.Message_MessageType.FIND_NODE
+         ..key = knownPeer.value; // Search for knownPeer
+       
+       final packet = p2p.Packet(
+         datagram: findMsg.writeToBuffer(),
+         header: const p2p.PacketHeader(id: 2, issuedAt: 0),
+         srcFullAddress: p2p.FullAddress(address: InternetAddress.loopbackIPv4, port: 4001),
+       );
+       packet.srcPeerId = p2p.PeerId(value: senderBytes);
+
+       mockRouter.simulatePacket(packet);
+       await Future.delayed(Duration(milliseconds: 50));
+       expect(responded, isTrue);
+    });
+    test('start initializes routing table', () async {
+      await client.start();
+      expect(client.isInitialized, isTrue);
+    });
+
+    test('getAllStoredKeys returns decoded keys', () async {
+      await client.initialize();
+      
+      final mockStorage = (client.node.dhtHandler as MockDHTHandler).storage as MockDatastore;
+      
+      final keyStr = 'QmKey1';
+      final key = Key('/dht/values/$keyStr');
+      await mockStorage.put(key, Uint8List(0));
+      
+      final keys = await client.getAllStoredKeys();
+      expect(keys, contains(keyStr));
     });
   });
 }

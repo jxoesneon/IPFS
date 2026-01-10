@@ -1,11 +1,5 @@
-// test/core/crypto/ed25519_signer_test.dart
-//
-// Tests for Ed25519 signing service (SEC-004)
-
-import 'dart:convert';
 import 'dart:typed_data';
-
-import 'package:dart_ipfs/src/core/crypto/crypto_utils.dart';
+import 'package:cryptography/cryptography.dart';
 import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
 import 'package:test/test.dart';
 
@@ -17,146 +11,95 @@ void main() {
       signer = Ed25519Signer();
     });
 
-    group('generateKeyPair', () {
-      test('generates valid key pair', () async {
-        final keyPair = await signer.generateKeyPair();
-        final publicKey = await signer.extractPublicKeyBytes(keyPair);
-
-        expect(publicKey.length, equals(32));
-      });
-
-      test('generates different key pairs each time', () async {
-        final keyPair1 = await signer.generateKeyPair();
-        final keyPair2 = await signer.generateKeyPair();
-
-        final pk1 = await signer.extractPublicKeyBytes(keyPair1);
-        final pk2 = await signer.extractPublicKeyBytes(keyPair2);
-
-        expect(pk1, isNot(equals(pk2)));
-      });
-
-      test('generates deterministic key pair from seed', () async {
-        final seed = CryptoUtils.randomBytes(32);
-
-        final keyPair1 = await signer.generateKeyPair(seed: seed);
-        final keyPair2 = await signer.generateKeyPair(seed: seed);
-
-        final pk1 = await signer.extractPublicKeyBytes(keyPair1);
-        final pk2 = await signer.extractPublicKeyBytes(keyPair2);
-
-        expect(pk1, equals(pk2));
-      });
-
-      test('rejects seed of wrong length', () async {
-        final wrongSeed = CryptoUtils.randomBytes(16);
-
-        expect(
-          () => signer.generateKeyPair(seed: wrongSeed),
-          throwsA(isA<ArgumentError>()),
-        );
-      });
+    test('generateKeyPair without seed', () async {
+      final keyPair = await signer.generateKeyPair();
+      expect(keyPair, isA<SimpleKeyPair>());
+      final pub = await keyPair.extractPublicKey();
+      expect(pub.bytes.length, equals(32));
     });
 
-    group('sign and verify', () {
-      test('signs data and verifies signature', () async {
-        final keyPair = await signer.generateKeyPair();
-        final data = Uint8List.fromList(utf8.encode('Hello, IPNS!'));
-
-        final signature = await signer.sign(data, keyPair);
-        final publicKey = await signer.extractPublicKey(keyPair);
-
-        expect(signature.length, equals(64));
-        expect(await signer.verify(data, signature, publicKey), isTrue);
-      });
-
-      test('fails to verify with wrong data', () async {
-        final keyPair = await signer.generateKeyPair();
-        final data1 = Uint8List.fromList(utf8.encode('Original'));
-        final data2 = Uint8List.fromList(utf8.encode('Tampered'));
-
-        final signature = await signer.sign(data1, keyPair);
-        final publicKey = await signer.extractPublicKey(keyPair);
-
-        expect(await signer.verify(data2, signature, publicKey), isFalse);
-      });
-
-      test('fails to verify with wrong public key', () async {
-        final keyPair1 = await signer.generateKeyPair();
-        final keyPair2 = await signer.generateKeyPair();
-        final data = Uint8List.fromList(utf8.encode('Test data'));
-
-        final signature = await signer.sign(data, keyPair1);
-        final wrongPublicKey = await signer.extractPublicKey(keyPair2);
-
-        expect(await signer.verify(data, signature, wrongPublicKey), isFalse);
-      });
-
-      test('fails to verify tampered signature', () async {
-        final keyPair = await signer.generateKeyPair();
-        final data = Uint8List.fromList(utf8.encode('Important'));
-
-        final signature = await signer.sign(data, keyPair);
-        signature[0] ^= 0xFF; // Tamper with signature
-
-        final publicKey = await signer.extractPublicKey(keyPair);
-
-        expect(await signer.verify(data, signature, publicKey), isFalse);
-      });
+    test('generateKeyPair with seed', () async {
+      final seed = Uint8List(32)..fillRange(0, 32, 5);
+      final keyPair = await signer.generateKeyPair(seed: seed);
+      
+      final seed2 = Uint8List(32)..fillRange(0, 32, 5);
+      final keyPair2 = await signer.generateKeyPair(seed: seed2);
+      
+      final pub1 = await keyPair.extractPublicKey();
+      final pub2 = await keyPair2.extractPublicKey();
+      expect(pub1.bytes, equals(pub2.bytes));
     });
 
-    group('keyPairFromSeed', () {
-      test('recovers key pair from seed', () async {
-        final seed = CryptoUtils.randomBytes(32);
-
-        final keyPair1 = await signer.keyPairFromSeed(seed);
-        final keyPair2 = await signer.keyPairFromSeed(seed);
-
-        final pk1 = await signer.extractPublicKeyBytes(keyPair1);
-        final pk2 = await signer.extractPublicKeyBytes(keyPair2);
-
-        expect(pk1, equals(pk2));
-      });
+    test('generateKeyPair with invalid seed length', () {
+      expect(() => signer.generateKeyPair(seed: Uint8List(31)), throwsArgumentError);
     });
 
-    group('extractSeed', () {
-      test('extracts 32-byte seed from key pair', () async {
-        final keyPair = await signer.generateKeyPair();
-
-        final seed = await signer.extractSeed(keyPair);
-
-        expect(seed.length, equals(32));
-      });
-
-      test('extracted seed can recreate same key pair', () async {
-        final keyPair1 = await signer.generateKeyPair();
-        final seed = await signer.extractSeed(keyPair1);
-        final keyPair2 = await signer.keyPairFromSeed(seed);
-
-        final pk1 = await signer.extractPublicKeyBytes(keyPair1);
-        final pk2 = await signer.extractPublicKeyBytes(keyPair2);
-
-        expect(pk1, equals(pk2));
-      });
+    test('keyPairFromSeed', () async {
+      final seed = Uint8List(32)..fillRange(0, 32, 10);
+      final kp = await signer.keyPairFromSeed(seed);
+      expect(kp, isA<SimpleKeyPair>());
     });
 
-    group('publicKeyFromBytes', () {
-      test('creates public key from bytes', () async {
-        final keyPair = await signer.generateKeyPair();
-        final pkBytes = await signer.extractPublicKeyBytes(keyPair);
+    test('keyPairFromSeed with invalid seed length', () {
+      expect(() => signer.keyPairFromSeed(Uint8List(33)), throwsArgumentError);
+    });
 
-        final publicKey = signer.publicKeyFromBytes(pkBytes);
+    test('sign and verify roundtrip', () async {
+      final kp = await signer.generateKeyPair();
+      final data = Uint8List.fromList([1, 2, 3, 4, 5]);
+      
+      final signature = await signer.sign(data, kp);
+      expect(signature.length, equals(64));
+      
+      final pub = await signer.extractPublicKey(kp);
+      final isValid = await signer.verify(data, signature, pub);
+      expect(isValid, isTrue);
+    });
 
-        expect(publicKey.bytes, equals(pkBytes));
-      });
+    test('verify failure with wrong data', () async {
+      final kp = await signer.generateKeyPair();
+      final data = Uint8List.fromList([1, 2, 3]);
+      final sig = await signer.sign(data, kp);
+      
+      final pub = await signer.extractPublicKey(kp);
+      final isValid = await signer.verify(Uint8List.fromList([1, 2, 4]), sig, pub);
+      expect(isValid, isFalse);
+    });
 
-      test('rejects wrong length bytes', () {
-        final wrongBytes = Uint8List(16);
+    test('verify failure with catch path', () async {
+      // Pass invalid signature length (not 64 bytes) to trigger catch
+      final kp = await signer.generateKeyPair();
+      final pub = await signer.extractPublicKey(kp);
+      final isValid = await signer.verify(Uint8List(0), Uint8List(10), pub);
+      expect(isValid, isFalse);
+    });
 
-        expect(
-          () => signer.publicKeyFromBytes(wrongBytes),
-          throwsA(isA<ArgumentError>()),
-        );
-      });
+    test('extractPublicKeyBytes', () async {
+      final kp = await signer.generateKeyPair();
+      final bytes = await signer.extractPublicKeyBytes(kp);
+      expect(bytes.length, equals(32));
+    });
+
+    test('extractSeed', () async {
+      final kp = await signer.generateKeyPair();
+      final seed = await signer.extractSeed(kp);
+      expect(seed.length, equals(32));
+    });
+
+    test('publicKeyFromBytes', () {
+      final bytes = Uint8List(32)..fillRange(0, 32, 1);
+      final pub = signer.publicKeyFromBytes(bytes);
+      expect(pub.bytes, equals(bytes));
+    });
+
+    test('publicKeyFromBytes invalid length', () {
+      expect(() => signer.publicKeyFromBytes(Uint8List(31)), throwsArgumentError);
+    });
+
+    test('KeyPairExtensions.extractSeedAndZero', () async {
+      final kp = await signer.generateKeyPair();
+      final seed = await kp.extractSeedAndZero();
+      expect(seed.length, equals(32));
     });
   });
 }

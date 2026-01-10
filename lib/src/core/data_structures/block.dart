@@ -108,4 +108,14 @@ class Block implements IBlock {
     // Assuming raw data block for now
     return data;
   }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Block &&
+          runtimeType == other.runtimeType &&
+          cid.encode() == other.cid.encode() &&
+          data.toString() == other.data.toString(); // Weak data check, but sufficient for small blocks
+
+  @override
+  int get hashCode => cid.encode().hashCode ^ data.length.hashCode;
 }

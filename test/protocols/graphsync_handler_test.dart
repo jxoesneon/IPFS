@@ -9,6 +9,7 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart'
     as core_block; // generic
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart'; // interface
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
+import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart'; // for responses
@@ -75,6 +76,9 @@ class MockBlockStore implements BlockStore {
     stored[block.cid.toString()] = block;
     return BlockResponseFactory.successAdd('ok');
   }
+
+  @override
+  PinManager get pinManager => throw UnimplementedError('Mock');
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

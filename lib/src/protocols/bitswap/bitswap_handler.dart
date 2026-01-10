@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:meta/meta.dart';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
@@ -252,6 +253,9 @@ class BitswapHandler {
     }
   }
 
+  @visibleForTesting
+  Future<void> handleBlocks(List<Block> blocks) => _handleBlocks(blocks);
+
   /// Handles incoming blocks according to Bitswap spec
   Future<void> _handleBlocks(List<Block> blocks) async {
     for (final block in blocks) {
@@ -311,9 +315,9 @@ class BitswapHandler {
       );
     }
 
-    await _broadcastWantRequest(msg);
-
     try {
+      await _broadcastWantRequest(msg);
+
       final futures = completers.values
           .map(
             (completer) => completer.future.timeout(

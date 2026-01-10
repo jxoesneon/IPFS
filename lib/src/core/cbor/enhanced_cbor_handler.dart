@@ -114,8 +114,20 @@ class EnhancedCBORHandler {
         }
         return CborMap(map, tags: [43]); // DAG-CBOR tag
       case Kind.LINK:
-        final linkMap = {CborString('/'): CborBytes(node.linkValue.multihash)};
-        return CborMap(linkMap, tags: [42]); // DAG-PB tag for links
+        final link = node.linkValue;
+        Uint8List cidBytes;
+        if (link.version == 0) {
+           // CIDv0: just multihash
+           cidBytes = Uint8List.fromList(link.multihash);
+        } else {
+           // CIDv1
+           // Reconstruct CID to get bytes
+           // We need MultihashInfo from bytes
+           final mh = Multihash.decode(Uint8List.fromList(link.multihash));
+           final cid = CID.v1(link.codec, mh);
+           cidBytes = cid.toBytes();
+        }
+        return CborBytes(cidBytes, tags: [6]); // Tag 6 for CID link
       case Kind.BIG_INT:
         return CborBigInt.fromBytes(node.bigIntValue);
       default:
@@ -170,7 +182,7 @@ class EnhancedCBORHandler {
     } else if (value is CborList) {
       final list = IPLDList();
       for (final item in value.toList()) {
-        list.values.add(convertCborValueToIPLDNode(item));
+        list.values.add(convertCborToIPLDNode(item));
       }
       return IPLDNode()
         ..kind = Kind.LIST
@@ -181,7 +193,7 @@ class EnhancedCBORHandler {
         map.entries.add(
           MapEntry()
             ..key = entry.key.toString()
-            ..value = convertCborValueToIPLDNode(entry.value),
+            ..value = convertCborToIPLDNode(entry.value),
         );
       }
       return IPLDNode()

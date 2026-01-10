@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.2] - 2026-01-09
+
+### Fixed
+
+- **Static Analysis**: Resolved all static analysis errors (unused imports and variables).
+  - Removed unused import in `ipld_handler.dart`.
+  - Fixed import ordering and removed unused import in `ipld_node_json.dart`.
+  - Removed unused variables in `dht_client.dart` and `kademlia_routing_table.dart`.
+  - Added explicit type argument to `StreamSubscription` in `network_handler_io.dart`.
+
+### Improved
+
+- **Documentation**: Updated README test counts (270+ tests) and version references (^1.8.2).
+- **Coverage**: Completed Phase 29 coverage expansion achieving 65.3% coverage for `ipfs_node.dart` (239/366 lines, 21 tests).
+
 ## [1.8.1] - 2026-01-08
 
 ### Fixed

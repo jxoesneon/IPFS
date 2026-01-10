@@ -115,11 +115,8 @@ class FlatFileDatastore implements Datastore {
             }
           }
         } else {
-          // Assume dir? try to list?
-          // This recursion logic is fragile without isDirectory check.
-          // But our _files in Web are flat map.
-          // In IO, we might encounter subdirs.
-          // We'll leave recursive walking as TODO/Enhancement for simplicity.
+          // It's likely a directory, add to stack to recurse
+          stack.add(childPath);
         }
       }
     }

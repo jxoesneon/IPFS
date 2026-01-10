@@ -6,7 +6,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 [![Dart](https://img.shields.io/badge/dart-%3E%3D3.0.0-blue.svg)](https://dart.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://github.com/jxoesneon/IPFS/actions/workflows/test.yml/badge.svg)](https://github.com/jxoesneon/IPFS/actions/workflows/test.yml)
-[![Tests](https://img.shields.io/badge/tests-510%20passing-brightgreen.svg)](https://github.com/jxoesneon/IPFS/actions)
+[![Tests](https://img.shields.io/badge/tests-270%2B%20passing-brightgreen.svg)](https://github.com/jxoesneon/IPFS/actions)
 [![Ko-Fi](https://img.shields.io/badge/Ko--fi-F16061?style=flat&logo=ko-fi&logoColor=white)](https://ko-fi.com/jxoesneon)
 
 ## 📚 Documentation
@@ -59,7 +59,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_ipfs: ^1.3.0
+  dart_ipfs: ^1.8.2
 ```
 
 Or from Git for latest development:
@@ -84,6 +84,7 @@ dart pub get
 **✅ Automatic Setup**: dart_ipfs automatically detects and installs libsodium via `winget` on first run when needed.
 
 **Manual Installation** (if auto-install fails):
+
 ```powershell
 # Via winget (recommended)
 winget install jedisct1.libsodium
@@ -597,7 +598,7 @@ Expected results:
 
 - ✅ 0 errors
 - ✅ 0 warnings
-- ✅ 510 tests pass (1 skipped)
+- ✅ 270+ tests pass (1 skipped)
 
 ---
 

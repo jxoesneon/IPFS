@@ -45,12 +45,7 @@ class CAR {
   Uint8List toBytes() {
     final carProto = proto.CarProto()
       ..version = version
-      ..characteristics.addAll(header.characteristics)
-      ..pragma.addAll(
-        header.pragma.map(
-          (k, v) => MapEntry(k, Any()..value = v.toString().codeUnits),
-        ),
-      )
+      ..header = header.toProto()
       ..blocks.addAll(blocks.map((b) => b.toProto()));
 
     if (index != null) {

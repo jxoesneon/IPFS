@@ -181,9 +181,15 @@ class Keystore {
     );
     final result = <String, Uint8List>{};
     for (final entry in _keyPairs.entries) {
-      result[entry.key] = Uint8List.fromList(
-        utf8.encode(entry.value.privateKey),
-      );
+      try {
+        // Try base64 decoding first (standard for IPFSPrivateKey)
+        result[entry.key] = base64Url.decode(entry.value.privateKey);
+      } catch (_) {
+        // Fallback to UTF-8 for legacy raw string keys
+        result[entry.key] = Uint8List.fromList(
+          utf8.encode(entry.value.privateKey),
+        );
+      }
     }
     return result;
   }

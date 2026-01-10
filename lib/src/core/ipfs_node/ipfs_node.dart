@@ -587,8 +587,7 @@ class IPFSNode {
             name: entry.key,
             hash: CID
                 .decode(cid)
-                .multihash
-                .toBytes(), // Decode CID to multihash bytes for the link
+                .toBytes(), // Use toBytes() for binary CID (preserves version/codec)
             size: fixnum.Int64((entry.value as Uint8List).length),
             isDirectory: false,
           ),
@@ -601,7 +600,7 @@ class IPFSNode {
         directoryManager.addEntry(
           IPFSDirectoryEntry(
             name: entry.key,
-            hash: CID.decode(subDirCid).multihash.toBytes(),
+            hash: CID.decode(subDirCid).toBytes(),
             size: fixnum.Int64(
               0,
             ), // Tsize should ideally be known, but 0 is acceptable if unknown for now
@@ -1014,13 +1013,28 @@ class IPFSNode {
   Datastore get datastore => _container.get<DatastoreHandler>().datastore;
 
   /// Access to the network router.
-  Router get router => _container.get<NetworkHandler>().router;
+  Router? get router {
+    if (_container.isRegistered(NetworkHandler)) {
+      return _container.get<NetworkHandler>().router;
+    }
+    return null;
+  }
 
   /// Access to the Bitswap handler.
-  BitswapHandler get bitswap => _container.get<BitswapHandler>();
+  BitswapHandler? get bitswap {
+    if (_container.isRegistered(BitswapHandler)) {
+      return _container.get<BitswapHandler>();
+    }
+    return null;
+  }
 
   /// Access to the DHT handler.
-  DHTHandler get dhtHandler => _container.get<DHTHandler>();
+  DHTHandler? get dhtHandler {
+    if (_container.isRegistered(DHTHandler)) {
+      return _container.get<DHTHandler>();
+    }
+    return null;
+  }
 
   /// This node's peer ID.
   String get peerID => _container.get<NetworkHandler>().peerID;

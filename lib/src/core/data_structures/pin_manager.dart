@@ -31,10 +31,11 @@ class PinManager {
   ///
   /// Returns true if pinning succeeded.
   Future<bool> pinBlock(IPFSCIDProto cidProto, PinTypeProto type) async {
+    final cidStr = CID.fromProto(cidProto).encode();
     if (type == PinTypeProto.PIN_TYPE_RECURSIVE) {
       return await _pinRecursive(cidProto);
     } else if (type == PinTypeProto.PIN_TYPE_DIRECT) {
-      _pins[cidProto.toString()] = type;
+      _pins[cidStr] = type;
       return true;
     }
     return false;
@@ -43,7 +44,7 @@ class PinManager {
   Future<bool> _pinRecursive(IPFSCIDProto cid) async {
     final Set<String> visited = {};
     final Queue<String> queue = Queue();
-    final String cidStr = cid.toString();
+    final String cidStr = CID.fromProto(cid).encode();
 
     _pins[cidStr] = PinTypeProto.PIN_TYPE_RECURSIVE;
     queue.add(cidStr);
@@ -74,12 +75,7 @@ class PinManager {
 
   Future<Set<String>?> _getBlockReferences(String cidStr) async {
     try {
-      final cidProto = IPFSCIDProto()
-        ..codec = 'raw'
-        ..multihash = Uint8List.fromList(cidStr.codeUnits)
-        ..version = IPFSCIDVersion.IPFS_CID_VERSION_1;
-
-      final blockResult = await _blockStore.getBlock(cidProto.toString());
+      final blockResult = await _blockStore.getBlock(cidStr);
 
       // Early return if block not found or doesn't have a block
       if (!blockResult.found || !blockResult.hasBlock()) {
@@ -132,12 +128,15 @@ class PinManager {
     final references = <String>{};
 
     if (decoded is Map) {
-      for (final value in decoded.values) {
-        if (value is Map && value.containsKey('/')) {
-          references.add(value['/'] as String);
-        } else {
-          references.addAll(_extractCborReferences(value));
+      if (decoded.containsKey('/')) {
+        final linkValue = decoded['/'];
+        if (linkValue is String) {
+          references.add(linkValue);
         }
+        return references;
+      }
+      for (final value in decoded.values) {
+        references.addAll(_extractCborReferences(value));
       }
     } else if (decoded is List) {
       for (final item in decoded) {
@@ -150,7 +149,7 @@ class PinManager {
 
   /// Returns whether the block is pinned (directly or indirectly).
   bool isBlockPinned(IPFSCIDProto cid) {
-    final cidStr = cid.toString();
+    final cidStr = CID.fromProto(cid).encode();
     return _pins.containsKey(cidStr) || _isIndirectlyPinned(cidStr);
   }
 
@@ -164,7 +163,7 @@ class PinManager {
   ///
   /// Returns true if the block was unpinned.
   Future<bool> unpinBlock(IPFSCIDProto cid) async {
-    final cidStr = cid.toString();
+    final cidStr = CID.fromProto(cid).encode();
     if (!_pins.containsKey(cidStr)) {
       return false;
     }
@@ -237,10 +236,11 @@ class PinManager {
         )
         .length;
 
-    // Count indirectly pinned blocks from recursive pins
+    // Count indirectly pinned blocks from recursive pins that aren't already in _pins
     final indirectPins = _references.entries
         .where((entry) => _pins[entry.key] == PinTypeProto.PIN_TYPE_RECURSIVE)
         .fold<Set<String>>({}, (acc, entry) => acc..addAll(entry.value))
+        .where((ref) => !_pins.containsKey(ref))
         .length;
 
     return directPins + indirectPins;

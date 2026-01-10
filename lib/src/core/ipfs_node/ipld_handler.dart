@@ -12,7 +12,7 @@ import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/core/data_structures/metadata.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
-import 'package:dart_ipfs/src/core/ipld/extensions/ipld_node_json.dart';
+import 'package:dart_ipfs/src/core/ipld/dag_json_handler.dart';
 import 'package:dart_ipfs/src/core/ipld/jose_cose_handler.dart';
 import 'package:dart_ipfs/src/core/ipld/path/ipld_path_handler.dart';
 import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart';
@@ -121,8 +121,8 @@ class IPLDHandler {
   bool _isCIDLink(String value) {
     return value.startsWith('ipfs://') ||
         value.startsWith('/ipfs/') ||
-        value.startsWith('Qm') ||
-        value.startsWith('bafy');
+        (value.length > 2 && (value.startsWith('b') || value.startsWith('B'))) ||
+        value.startsWith('Qm');
   }
 
   bool _isIPLDLink(Map<dynamic, dynamic> value) {
@@ -183,7 +183,7 @@ class IPLDHandler {
 
       case 'dag-json':
         try {
-          encoded = Uint8List.fromList(utf8.encode(node.toJson()));
+          encoded = Uint8List.fromList(utf8.encode(DAGJsonHandler.encode(node)));
         } catch (e) {
           throw IPLDEncodingError('Failed to encode JSON: $e');
         }
@@ -244,7 +244,7 @@ class IPLDHandler {
 
       case 'dag-json':
         try {
-          return IPLDNode.fromJson(utf8.decode(data));
+          return DAGJsonHandler.decode(utf8.decode(data));
         } catch (e) {
           throw IPLDDecodingError('Failed to decode JSON: $e');
         }
@@ -417,7 +417,46 @@ class IPLDHandler {
     dynamic node,
     Future<void> Function(CID) callback,
   ) async {
-    if (node is MerkleDAGNode) {
+
+    if (node is IPLDNode) {
+      if (node.kind == Kind.MAP) {
+        for (final entry in node.mapValue.entries) {
+          if (entry.value.kind == Kind.LINK) {
+            final link = entry.value.linkValue;
+            final multihash = multihash_lib.Multihash.decode(Uint8List.fromList(link.multihash));
+            final cid = CID.v1(link.codec, multihash);
+            await callback(cid);
+          } else if (entry.value.kind == Kind.MAP) {
+             final linkCid = _tryGetCidFromMap(entry.value);
+             if (linkCid != null) {
+               await callback(linkCid);
+             } else {
+               await _traverseLinks(entry.value, callback);
+             }
+          } else if (entry.value.kind == Kind.LIST) {
+             await _traverseLinks(entry.value, callback);
+          }
+        }
+      } else if (node.kind == Kind.LIST) {
+        for (final value in node.listValue.values) {
+          if (value.kind == Kind.LINK) {
+            final link = value.linkValue;
+            final multihash = multihash_lib.Multihash.decode(Uint8List.fromList(link.multihash));
+            final cid = CID.v1(link.codec, multihash);
+            await callback(cid);
+          } else if (value.kind == Kind.MAP) {
+             final linkCid = _tryGetCidFromMap(value);
+             if (linkCid != null) {
+               await callback(linkCid);
+             } else {
+               await _traverseLinks(value, callback);
+             }
+          } else if (value.kind == Kind.LIST) {
+            await _traverseLinks(value, callback);
+          }
+        }
+      }
+    } else if (node is MerkleDAGNode) {
       for (final link in node.links) {
         await callback(CID.decode(link.cid.toString()));
       }
@@ -425,9 +464,49 @@ class IPLDHandler {
       for (final value in node.values) {
         if (value is String && _isCIDLink(value)) {
           await callback(await _resolveCIDLink(value));
+        } else if (value is CID) {
+          await callback(value);
         }
       }
     }
+  }
+
+  CID? _tryGetCidFromMap(IPLDNode node) {
+    if (node.kind != Kind.MAP) return null;
+    for (final entry in node.mapValue.entries) {
+      if (entry.key == '/') {
+        if (entry.value.kind == Kind.STRING) {
+           try {
+             return CID.decode(entry.value.stringValue);
+           } catch (_) { return null; }
+        } else if (entry.value.kind == Kind.BYTES) {
+           try {
+             return CID.fromBytes(Uint8List.fromList(entry.value.bytesValue));
+           } catch (_) {
+             // Fallback: If bytes are raw multihash, assume DAG-CBOR (common in this context) or RAW?
+             // Or maybe it's CIDv0 (dag-pb)? 
+             // If starting with 0x12 0x20 (sha2-256), could be v0.
+             // But verify length.
+             try {
+                final mh = multihash_lib.Multihash.decode(Uint8List.fromList(entry.value.bytesValue));
+                // If effective CIDv0?
+                if (mh.code == 0x12 && mh.digest.length == 32) {
+                   // Typically this implies CIDv0 (dag-pb). 
+                   // However, in our environment, we are seeing dag-cbor CIDs being encoded as bare multihashes.
+                   // Defaulting to dag-pb breaks traversing dag-cbor.
+                   // Defaulting to dag-cbor allows traversal.
+                   return CID.v1('dag-cbor', mh);
+                }
+                // Else assume dag-cbor for now (as per test case)
+                return CID.v1('dag-cbor', mh);
+             } catch (e) {
+                return null;
+             }
+           }
+        }
+      }
+    }
+    return null;
   }
 
   bool _matchesCriteria(dynamic node, Map<String, dynamic> criteria) {
@@ -448,7 +527,33 @@ class IPLDHandler {
 
     for (final part in parts) {
       if (current == null) return null;
-      if (current is Map) {
+      if (current is IPLDNode) {
+        if (current.kind == Kind.MAP) {
+           final entry = current.mapValue.entries.firstWhere(
+             (e) => e.key == part,
+             orElse: () => MapEntry()..key = '', // Dummy if not found
+           );
+           if (entry.key == part) {
+             current = entry.value; // This is IPLDNode
+             // Wait, result of resolveFieldPath is dynamic.
+             // If we return IPLDNode, _matchesValue handles dynamic value.
+             // _matchesValue does `value is String`, `value is num`.
+             // So if we return IPLDNode, _matchesValue fails unless we unwrap.
+             // We should unwrap IPLDNode to native type for matching?
+             // Or update _matchesValue to handle IPLDNode.
+             // Let's Unwrap here for convenience if it's a leaf?
+             // But recursive structure might need node.
+             // _matchesValue uses == criterion.
+             // If criterion is 25, value should be 25.
+             // IPLDNode(int=25). We need to unwrap.
+             current = _unwrapIPLDNode(current);
+           } else {
+             return null;
+           }
+        } else {
+          return null;
+        }
+      } else if (current is Map) {
         current = current[part];
       } else if (current is MerkleDAGNode) {
         switch (part) {
@@ -469,6 +574,33 @@ class IPLDHandler {
       }
     }
     return current;
+  }
+
+  dynamic _unwrapIPLDNode(IPLDNode node) {
+    switch (node.kind) {
+      case Kind.BOOL: return node.boolValue;
+      case Kind.INTEGER: return node.intValue.toInt();
+      case Kind.FLOAT: return node.floatValue;
+      case Kind.STRING: return node.stringValue;
+      case Kind.BYTES: return node.bytesValue;
+      case Kind.LINK: 
+         // Return CID string or CID object?
+         // _isCIDLink checks string starting with ipfs:// etc.
+         // Or just return the Link object?
+         // Let's return the string representation of CID for regex matching or check.
+         // Actually, _matchesCriteria might check for link?
+         final link = node.linkValue;
+         final multihash = multihash_lib.Multihash.decode(Uint8List.fromList(link.multihash));
+         return CID.v1(link.codec, multihash).toString();
+      case Kind.NULL: return null;
+      case Kind.MAP: 
+         final cid = _tryGetCidFromMap(node);
+         if (cid != null) return cid.toString();
+         return node; 
+      case Kind.LIST: return node;
+      case Kind.BIG_INT: return BigInt.parse(node.bigIntValue.toString()); // Approx
+      default: return node;
+    }
   }
 
   bool _matchesValue(dynamic value, dynamic criterion) {

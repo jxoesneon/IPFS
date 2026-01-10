@@ -54,21 +54,26 @@ class PubSubClient implements IPubSub {
         try {
           final decodedJson = jsonDecode(utf8.decode(packet.datagram));
 
-          // Dedup messages
-          final msgId =
-              decodedJson['signature'] ??
-              decodedJson['content'].hashCode.toString();
-          if (_seenMessages.containsKey(decodedJson['topic'])) {
-            if (_seenMessages[decodedJson['topic']]!.contains(msgId)) {
-              return;
+          // Dedup messages - Only for content/publish messages
+          final action = decodedJson['action'] as String?;
+          if (action == null || action == 'publish') {
+            final topic = decodedJson['topic'] as String?;
+            if (topic != null) {
+              final msgId =
+                  decodedJson['signature'] ??
+                  decodedJson['content'].hashCode.toString();
+              if (_seenMessages.containsKey(topic)) {
+                if (_seenMessages[topic]!.contains(msgId)) {
+                  return;
+                }
+              }
+              _seenMessages
+                  .putIfAbsent(topic, () => {})
+                  .add(msgId as String);
             }
           }
-          _seenMessages
-              .putIfAbsent(decodedJson['topic'] as String, () => {})
-              .add(msgId as String);
 
           // Handle Gossipsub actions
-          final action = decodedJson['action'] as String?;
           final msgMap = decodedJson as Map<String, dynamic>;
           if (action == 'ihave') {
             _handleIHave(msgMap);

@@ -49,10 +49,12 @@ class IPFS {
   final Datastore _datastore;
 
   /// The router for P2P networking.
-  final Router _router;
+  /// Null if running in offline mode.
+  final Router? _router;
 
   /// The Bitswap protocol handler.
-  final BitswapHandler _bitswap;
+  /// Null if running in offline mode.
+  final BitswapHandler? _bitswap;
 
   /// Creates a new IPFS node.
   ///
@@ -95,11 +97,11 @@ class IPFS {
     }
 
     // 2. Get router stats
-    final numConnectedPeers = _router.connectedPeers.length;
+    final numConnectedPeers = _router?.connectedPeers.length ?? 0;
 
     // 3. Get Bitswap stats
-    final bandwidthSent = _bitswap.bandwidthSent;
-    final bandwidthReceived = _bitswap.bandwidthReceived;
+    final bandwidthSent = _bitswap?.bandwidthSent ?? 0;
+    final bandwidthReceived = _bitswap?.bandwidthReceived ?? 0;
 
     // 4. Construct and return the NodeStats object
     return NodeStats(
@@ -167,7 +169,11 @@ class IPFS {
 
   /// Resolves an IPNS name to its corresponding CID.
   Future<String> resolveIPNS(String ipnsName) async {
-    final resolvedCid = await _node.dhtHandler.resolveIPNS(ipnsName);
+    final dht = _node.dhtHandler;
+    if (dht == null) {
+      throw Exception('DHT not available (offline)');
+    }
+    final resolvedCid = await dht.resolveIPNS(ipnsName);
     return resolvedCid;
   }
 
