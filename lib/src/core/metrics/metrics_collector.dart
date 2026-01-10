@@ -186,17 +186,20 @@ class MetricsCollector {
 
       // Update message counts if provided
       if (data['messages_sent'] != null) {
-        metrics.messagesSent += fixnum.Int64(data['messages_sent'] as int);
+        final val = data['messages_sent'];
+        final count = val is int ? val : int.tryParse(val.toString()) ?? 0;
+        metrics.messagesSent += fixnum.Int64(count);
       }
       if (data['messages_received'] != null) {
-        metrics.messagesReceived += fixnum.Int64(
-          data['messages_received'] as int,
-        );
+        final val = data['messages_received'];
+        final count = val is int ? val : int.tryParse(val.toString()) ?? 0;
+        metrics.messagesReceived += fixnum.Int64(count);
       }
 
       // Update active connections if provided
       if (data['active_connections'] != null) {
-        metrics.activeConnections = data['active_connections'] as int;
+        final val = data['active_connections'];
+        metrics.activeConnections = val is int ? val : int.tryParse(val.toString()) ?? 0;
       }
 
       // Record error if this is an error event
