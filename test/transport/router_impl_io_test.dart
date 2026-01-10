@@ -9,7 +9,6 @@ import 'package:test/test.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 
 @Skip('Requires complex p2plib mocking - RouterL2 mock incomplete')
-
 // Manual Mock
 class ManualMockRouterL2 extends Mock implements p2p.RouterL2 {
   static final validPeerIdBytes = Uint8List(64); // 64 bytes required by p2plib
