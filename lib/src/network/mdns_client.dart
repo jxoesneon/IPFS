@@ -107,13 +107,13 @@ class TxtResourceRecord extends ResourceRecord {
 
 /// Client for multicast DNS operations following IPFS specifications
 class MDnsClient {
+  /// Creates an mDNS client. An optional [client] can be provided for testing.
+  MDnsClient({mdns.MDnsClient? client}) : _injectedClient = client;
+
   mdns.MDnsClient? _client;
   final mdns.MDnsClient? _injectedClient;
   bool _isRunning = false;
   final Logger _logger = Logger('MDnsClient');
-
-  /// Creates an mDNS client. An optional [client] can be provided for testing.
-  MDnsClient({mdns.MDnsClient? client}) : _injectedClient = client;
 
   /// Starts the mDNS client
   Future<void> start() async {

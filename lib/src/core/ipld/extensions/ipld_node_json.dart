@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 
+/// Extension to provide enhanced JSON capabilities for [IPLDNode].
 extension IPLDNodeJson on IPLDNode {
   /// Converts this node to a clean JSON string representing the data model.
   String toJson() {

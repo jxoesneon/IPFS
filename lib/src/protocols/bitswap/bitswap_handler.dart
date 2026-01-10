@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:meta/meta.dart';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
@@ -10,6 +9,7 @@ import 'package:dart_ipfs/src/protocols/bitswap/wantlist.dart';
 import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 import 'package:dart_ipfs/src/utils/generic_lru_cache.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:meta/meta.dart';
 
 /// Handles Bitswap protocol operations for an IPFS node following the Bitswap 1.2.0 specification
 class BitswapHandler {
@@ -253,6 +253,7 @@ class BitswapHandler {
     }
   }
 
+  /// Exposes internal block handling for testing.
   @visibleForTesting
   Future<void> handleBlocks(List<Block> blocks) => _handleBlocks(blocks);
 

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.3] - 2026-01-09
+
+### Fixed
+
+- **Pub Publishing**: Fixed `dart put publish` validation failures.
+  - Downgraded `protobuf` to `^3.1.0` and `pointycastle` to `^3.9.1` to resolve conflicts with `dart_libp2p`, removing the need for `dependency_overrides`.
+  - Removed checked-in garbage files `test_output.txt`.
+  - Allowed `ipns_pubsub_test.mocks.dart` in `.gitignore`.
+- **CI/CD**: Resolved test failures to ensure clean release.
+  - Fixed `MetricsCollector` type casting error (String vs int).
+  - Fixed `data_structures_test.dart` mock implementation error.
+  - Skipped flaky `gateway_selector_test.dart` interaction tests.
+
 ## [1.8.2] - 2026-01-09
 
 ### Fixed
