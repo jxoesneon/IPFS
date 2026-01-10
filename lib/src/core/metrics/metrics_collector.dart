@@ -199,7 +199,9 @@ class MetricsCollector {
       // Update active connections if provided
       if (data['active_connections'] != null) {
         final val = data['active_connections'];
-        metrics.activeConnections = val is int ? val : int.tryParse(val.toString()) ?? 0;
+        metrics.activeConnections = val is int
+            ? val
+            : int.tryParse(val.toString()) ?? 0;
       }
 
       // Record error if this is an error event
