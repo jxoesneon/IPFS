@@ -83,7 +83,3 @@ assets:
 
 # Example entry point for running the application.
 example: main.dart
-
-dependency_overrides:
-  pointycastle: ^4.0.0
-  protobuf: 5.1.0
