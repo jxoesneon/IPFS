@@ -1,15 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from dht/dht.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: dht/dht.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
-// ignore_for_file: unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -34,14 +32,7 @@ const Record$json = {
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 12, '10': 'key'},
     {'1': 'value', '3': 2, '4': 1, '5': 12, '10': 'value'},
-    {
-      '1': 'publisher',
-      '3': 3,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.dht.DHTPeer',
-      '10': 'publisher'
-    },
+    {'1': 'publisher', '3': 3, '4': 1, '5': 11, '6': '.ipfs.dht.DHTPeer', '10': 'publisher'},
     {'1': 'sequence', '3': 4, '4': 1, '5': 4, '10': 'sequence'},
   ],
 };
@@ -70,14 +61,7 @@ final $typed_data.Uint8List findProvidersRequestDescriptor = $convert.base64Deco
 const FindProvidersResponse$json = {
   '1': 'FindProvidersResponse',
   '2': [
-    {
-      '1': 'providers',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.ipfs.dht.DHTPeer',
-      '10': 'providers'
-    },
+    {'1': 'providers', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.DHTPeer', '10': 'providers'},
     {'1': 'closerPeers', '3': 2, '4': 1, '5': 8, '10': 'closerPeers'},
   ],
 };
@@ -92,14 +76,7 @@ const ProvideRequest$json = {
   '1': 'ProvideRequest',
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 12, '10': 'key'},
-    {
-      '1': 'provider',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.dht.DHTPeer',
-      '10': 'provider'
-    },
+    {'1': 'provider', '3': 2, '4': 1, '5': 11, '6': '.ipfs.dht.DHTPeer', '10': 'provider'},
   ],
 };
 
@@ -129,22 +106,15 @@ const FindValueRequest$json = {
 };
 
 /// Descriptor for `FindValueRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List findValueRequestDescriptor =
-    $convert.base64Decode('ChBGaW5kVmFsdWVSZXF1ZXN0EhAKA2tleRgBIAEoDFIDa2V5');
+final $typed_data.Uint8List findValueRequestDescriptor = $convert.base64Decode(
+    'ChBGaW5kVmFsdWVSZXF1ZXN0EhAKA2tleRgBIAEoDFIDa2V5');
 
 @$core.Deprecated('Use findValueResponseDescriptor instead')
 const FindValueResponse$json = {
   '1': 'FindValueResponse',
   '2': [
     {'1': 'value', '3': 1, '4': 1, '5': 12, '10': 'value'},
-    {
-      '1': 'closerPeers',
-      '3': 2,
-      '4': 3,
-      '5': 11,
-      '6': '.ipfs.dht.DHTPeer',
-      '10': 'closerPeers'
-    },
+    {'1': 'closerPeers', '3': 2, '4': 3, '5': 11, '6': '.ipfs.dht.DHTPeer', '10': 'closerPeers'},
   ],
 };
 
@@ -188,21 +158,14 @@ const FindNodeRequest$json = {
 };
 
 /// Descriptor for `FindNodeRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List findNodeRequestDescriptor = $convert
-    .base64Decode('Cg9GaW5kTm9kZVJlcXVlc3QSFgoGcGVlcklkGAEgASgMUgZwZWVySWQ=');
+final $typed_data.Uint8List findNodeRequestDescriptor = $convert.base64Decode(
+    'Cg9GaW5kTm9kZVJlcXVlc3QSFgoGcGVlcklkGAEgASgMUgZwZWVySWQ=');
 
 @$core.Deprecated('Use findNodeResponseDescriptor instead')
 const FindNodeResponse$json = {
   '1': 'FindNodeResponse',
   '2': [
-    {
-      '1': 'closerPeers',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.ipfs.dht.DHTPeer',
-      '10': 'closerPeers'
-    },
+    {'1': 'closerPeers', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.DHTPeer', '10': 'closerPeers'},
   ],
 };
 
@@ -210,3 +173,4 @@ const FindNodeResponse$json = {
 final $typed_data.Uint8List findNodeResponseDescriptor = $convert.base64Decode(
     'ChBGaW5kTm9kZVJlc3BvbnNlEjMKC2Nsb3NlclBlZXJzGAEgAygLMhEuaXBmcy5kaHQuREhUUG'
     'VlclILY2xvc2VyUGVlcnM=');
+

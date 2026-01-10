@@ -1,15 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from config.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: config.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
-// ignore_for_file: unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -20,31 +18,11 @@ const ProtocolConfig$json = {
   '1': 'ProtocolConfig',
   '2': [
     {'1': 'protocol_id', '3': 1, '4': 1, '5': 9, '10': 'protocolId'},
-    {
-      '1': 'message_timeout_seconds',
-      '3': 2,
-      '4': 1,
-      '5': 13,
-      '10': 'messageTimeoutSeconds'
-    },
+    {'1': 'message_timeout_seconds', '3': 2, '4': 1, '5': 13, '10': 'messageTimeoutSeconds'},
     {'1': 'max_retries', '3': 3, '4': 1, '5': 13, '10': 'maxRetries'},
     {'1': 'max_message_size', '3': 4, '4': 1, '5': 13, '10': 'maxMessageSize'},
-    {
-      '1': 'rate_limit',
-      '3': 5,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.config.RateLimitConfig',
-      '10': 'rateLimit'
-    },
-    {
-      '1': 'circuit_breaker',
-      '3': 6,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.config.CircuitBreakerConfig',
-      '10': 'circuitBreaker'
-    },
+    {'1': 'rate_limit', '3': 5, '4': 1, '5': 11, '6': '.ipfs.config.RateLimitConfig', '10': 'rateLimit'},
+    {'1': 'circuit_breaker', '3': 6, '4': 1, '5': 11, '6': '.ipfs.config.CircuitBreakerConfig', '10': 'circuitBreaker'},
   ],
 };
 
@@ -61,13 +39,7 @@ final $typed_data.Uint8List protocolConfigDescriptor = $convert.base64Decode(
 const RateLimitConfig$json = {
   '1': 'RateLimitConfig',
   '2': [
-    {
-      '1': 'max_requests_per_window',
-      '3': 1,
-      '4': 1,
-      '5': 13,
-      '10': 'maxRequestsPerWindow'
-    },
+    {'1': 'max_requests_per_window', '3': 1, '4': 1, '5': 13, '10': 'maxRequestsPerWindow'},
     {'1': 'window_seconds', '3': 2, '4': 1, '5': 13, '10': 'windowSeconds'},
   ],
 };
@@ -81,27 +53,9 @@ final $typed_data.Uint8List rateLimitConfigDescriptor = $convert.base64Decode(
 const CircuitBreakerConfig$json = {
   '1': 'CircuitBreakerConfig',
   '2': [
-    {
-      '1': 'reset_timeout_seconds',
-      '3': 1,
-      '4': 1,
-      '5': 13,
-      '10': 'resetTimeoutSeconds'
-    },
-    {
-      '1': 'failure_threshold',
-      '3': 2,
-      '4': 1,
-      '5': 13,
-      '10': 'failureThreshold'
-    },
-    {
-      '1': 'half_open_timeout_seconds',
-      '3': 3,
-      '4': 1,
-      '5': 13,
-      '10': 'halfOpenTimeoutSeconds'
-    },
+    {'1': 'reset_timeout_seconds', '3': 1, '4': 1, '5': 13, '10': 'resetTimeoutSeconds'},
+    {'1': 'failure_threshold', '3': 2, '4': 1, '5': 13, '10': 'failureThreshold'},
+    {'1': 'half_open_timeout_seconds', '3': 3, '4': 1, '5': 13, '10': 'halfOpenTimeoutSeconds'},
   ],
 };
 
@@ -111,3 +65,4 @@ final $typed_data.Uint8List circuitBreakerConfigDescriptor = $convert.base64Deco
     'Jlc2V0VGltZW91dFNlY29uZHMSKwoRZmFpbHVyZV90aHJlc2hvbGQYAiABKA1SEGZhaWx1cmVU'
     'aHJlc2hvbGQSOQoZaGFsZl9vcGVuX3RpbWVvdXRfc2Vjb25kcxgDIAEoDVIWaGFsZk9wZW5UaW'
     '1lb3V0U2Vjb25kcw==');
+

@@ -1,15 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from dht/node_lookup.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: dht/node_lookup.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
-// ignore_for_file: unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -19,14 +17,7 @@ import 'dart:typed_data' as $typed_data;
 const NodeLookupRequest$json = {
   '1': 'NodeLookupRequest',
   '2': [
-    {
-      '1': 'target',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.dht.common_kademlia.KademliaId',
-      '10': 'target'
-    },
+    {'1': 'target', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'target'},
   ],
 };
 
@@ -39,14 +30,7 @@ final $typed_data.Uint8List nodeLookupRequestDescriptor = $convert.base64Decode(
 const NodeLookupResponse$json = {
   '1': 'NodeLookupResponse',
   '2': [
-    {
-      '1': 'closest_nodes',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.ipfs.dht.common_kademlia.KademliaId',
-      '10': 'closestNodes'
-    },
+    {'1': 'closest_nodes', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'closestNodes'},
   ],
 };
 
@@ -54,3 +38,4 @@ const NodeLookupResponse$json = {
 final $typed_data.Uint8List nodeLookupResponseDescriptor = $convert.base64Decode(
     'ChJOb2RlTG9va3VwUmVzcG9uc2USSQoNY2xvc2VzdF9ub2RlcxgBIAMoCzIkLmlwZnMuZGh0Lm'
     'NvbW1vbl9rYWRlbWxpYS5LYWRlbWxpYUlkUgxjbG9zZXN0Tm9kZXM=');
+

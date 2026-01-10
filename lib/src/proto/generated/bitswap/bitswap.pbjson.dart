@@ -1,15 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from bitswap/bitswap.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: bitswap/bitswap.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
-// ignore_for_file: unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -19,31 +17,10 @@ import 'dart:typed_data' as $typed_data;
 const Message$json = {
   '1': 'Message',
   '2': [
-    {
-      '1': 'wantlist',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.bitswap.Message.Wantlist',
-      '10': 'wantlist'
-    },
+    {'1': 'wantlist', '3': 1, '4': 1, '5': 11, '6': '.ipfs.bitswap.Message.Wantlist', '10': 'wantlist'},
     {'1': 'blocks', '3': 2, '4': 3, '5': 12, '10': 'blocks'},
-    {
-      '1': 'payload',
-      '3': 3,
-      '4': 3,
-      '5': 11,
-      '6': '.ipfs.bitswap.Message.Block',
-      '10': 'payload'
-    },
-    {
-      '1': 'blockPresences',
-      '3': 4,
-      '4': 3,
-      '5': 11,
-      '6': '.ipfs.bitswap.Message.BlockPresence',
-      '10': 'blockPresences'
-    },
+    {'1': 'payload', '3': 3, '4': 3, '5': 11, '6': '.ipfs.bitswap.Message.Block', '10': 'payload'},
+    {'1': 'blockPresences', '3': 4, '4': 3, '5': 11, '6': '.ipfs.bitswap.Message.BlockPresence', '10': 'blockPresences'},
     {'1': 'pendingBytes', '3': 5, '4': 1, '5': 5, '10': 'pendingBytes'},
   ],
   '3': [Message_Wantlist$json, Message_Block$json, Message_BlockPresence$json],
@@ -53,14 +30,7 @@ const Message$json = {
 const Message_Wantlist$json = {
   '1': 'Wantlist',
   '2': [
-    {
-      '1': 'entries',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.ipfs.bitswap.Message.Wantlist.Entry',
-      '10': 'entries'
-    },
+    {'1': 'entries', '3': 1, '4': 3, '5': 11, '6': '.ipfs.bitswap.Message.Wantlist.Entry', '10': 'entries'},
     {'1': 'full', '3': 2, '4': 1, '5': 8, '10': 'full'},
   ],
   '3': [Message_Wantlist_Entry$json],
@@ -74,14 +44,7 @@ const Message_Wantlist_Entry$json = {
     {'1': 'block', '3': 1, '4': 1, '5': 12, '10': 'block'},
     {'1': 'priority', '3': 2, '4': 1, '5': 5, '10': 'priority'},
     {'1': 'cancel', '3': 3, '4': 1, '5': 8, '10': 'cancel'},
-    {
-      '1': 'wantType',
-      '3': 4,
-      '4': 1,
-      '5': 14,
-      '6': '.ipfs.bitswap.Message.Wantlist.WantType',
-      '10': 'wantType'
-    },
+    {'1': 'wantType', '3': 4, '4': 1, '5': 14, '6': '.ipfs.bitswap.Message.Wantlist.WantType', '10': 'wantType'},
     {'1': 'sendDontHave', '3': 5, '4': 1, '5': 8, '10': 'sendDontHave'},
   ],
 };
@@ -109,14 +72,7 @@ const Message_BlockPresence$json = {
   '1': 'BlockPresence',
   '2': [
     {'1': 'cid', '3': 1, '4': 1, '5': 12, '10': 'cid'},
-    {
-      '1': 'type',
-      '3': 2,
-      '4': 1,
-      '5': 14,
-      '6': '.ipfs.bitswap.Message.BlockPresence.Type',
-      '10': 'type'
-    },
+    {'1': 'type', '3': 2, '4': 1, '5': 14, '6': '.ipfs.bitswap.Message.BlockPresence.Type', '10': 'type'},
   ],
   '4': [Message_BlockPresence_Type$json],
 };
@@ -146,3 +102,4 @@ final $typed_data.Uint8List messageDescriptor = $convert.base64Decode(
     'ZpeBISCgRkYXRhGAIgASgMUgRkYXRhGn8KDUJsb2NrUHJlc2VuY2USEAoDY2lkGAEgASgMUgNj'
     'aWQSPAoEdHlwZRgCIAEoDjIoLmlwZnMuYml0c3dhcC5NZXNzYWdlLkJsb2NrUHJlc2VuY2UuVH'
     'lwZVIEdHlwZSIeCgRUeXBlEggKBEhhdmUQABIMCghEb250SGF2ZRAB');
+

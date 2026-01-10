@@ -1,15 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from core/pin.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: core/pin.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
-// ignore_for_file: unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -34,22 +32,8 @@ final $typed_data.Uint8List pinTypeProtoDescriptor = $convert.base64Decode(
 const PinProto$json = {
   '1': 'PinProto',
   '2': [
-    {
-      '1': 'cid',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.core.IPFSCIDProto',
-      '10': 'cid'
-    },
-    {
-      '1': 'type',
-      '3': 2,
-      '4': 1,
-      '5': 14,
-      '6': '.ipfs.core.data_structures.PinTypeProto',
-      '10': 'type'
-    },
+    {'1': 'cid', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.IPFSCIDProto', '10': 'cid'},
+    {'1': 'type', '3': 2, '4': 1, '5': 14, '6': '.ipfs.core.data_structures.PinTypeProto', '10': 'type'},
     {'1': 'timestamp', '3': 3, '4': 1, '5': 3, '10': 'timestamp'},
   ],
 };
@@ -59,3 +43,4 @@ final $typed_data.Uint8List pinProtoDescriptor = $convert.base64Decode(
     'CghQaW5Qcm90bxIpCgNjaWQYASABKAsyFy5pcGZzLmNvcmUuSVBGU0NJRFByb3RvUgNjaWQSOw'
     'oEdHlwZRgCIAEoDjInLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuUGluVHlwZVByb3RvUgR0'
     'eXBlEhwKCXRpbWVzdGFtcBgDIAEoA1IJdGltZXN0YW1w');
+

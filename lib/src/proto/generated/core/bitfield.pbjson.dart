@@ -1,15 +1,13 @@
-// This is a generated file - do not edit.
 //
-// Generated from core/bitfield.proto.
-
-// @dart = 3.3
+//  Generated code. Do not modify.
+//  source: core/bitfield.proto
+//
+// @dart = 2.12
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names
-// ignore_for_file: curly_braces_in_flow_control_structures
-// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
-// ignore_for_file: unused_import
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -22,12 +20,7 @@ const BitFieldProto$json = {
     {'1': 'bits', '3': 1, '4': 1, '5': 12, '10': 'bits'},
     {'1': 'size', '3': 2, '4': 1, '5': 5, '10': 'size'},
   ],
-  '3': [
-    BitFieldProto_SetBitRequest$json,
-    BitFieldProto_ClearBitRequest$json,
-    BitFieldProto_GetBitRequest$json,
-    BitFieldProto_BitResponse$json
-  ],
+  '3': [BitFieldProto_SetBitRequest$json, BitFieldProto_ClearBitRequest$json, BitFieldProto_GetBitRequest$json, BitFieldProto_BitResponse$json],
 };
 
 @$core.Deprecated('Use bitFieldProtoDescriptor instead')
@@ -68,3 +61,4 @@ final $typed_data.Uint8List bitFieldProtoDescriptor = $convert.base64Decode(
     'olCg1TZXRCaXRSZXF1ZXN0EhQKBWluZGV4GAEgASgFUgVpbmRleBonCg9DbGVhckJpdFJlcXVl'
     'c3QSFAoFaW5kZXgYASABKAVSBWluZGV4GiUKDUdldEJpdFJlcXVlc3QSFAoFaW5kZXgYASABKA'
     'VSBWluZGV4GiMKC0JpdFJlc3BvbnNlEhQKBXZhbHVlGAEgASgIUgV2YWx1ZQ==');
+
