@@ -245,4 +245,4 @@ paket-files/
 
 # Agent Rules
 .agent/
-.windsurf/
+.windsurf/ci_*.log
