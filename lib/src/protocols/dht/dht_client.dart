@@ -410,13 +410,13 @@ class DHTClient {
       }
 
       // Update routing table with IP diversity check
-      // Ensure we check/init table access even inside handlers? 
+      // Ensure we check/init table access even inside handlers?
       // Handlers are setup in initialize(), so technically _kademliaRoutingTable should be ready.
       // But if stop() is called, handlers might still be active briefly.
       if (_initialized) {
-          await _kademliaRoutingTable.addPeer(srcPeerId, srcPeerId);
+        await _kademliaRoutingTable.addPeer(srcPeerId, srcPeerId);
       } else {
-          return;
+        return;
       }
 
       switch (message.type) {
@@ -481,7 +481,7 @@ class DHTClient {
       // Clean up any active requests or connections
       // Clear routing table
       if (_initialized) {
-          _kademliaRoutingTable.clear();
+        _kademliaRoutingTable.clear();
       }
       _initialized = false;
 
@@ -577,7 +577,7 @@ class DHTClient {
 
   /// Updates the republish timestamp for a key.
   Future<void> updateKeyRepublishTime(String key) async {
-     _checkInitialized();
+    _checkInitialized();
     try {
       // Create metadata key for storing republish time
       final metadataKey = ds.Key('/dht/metadata/$key/last_republish');

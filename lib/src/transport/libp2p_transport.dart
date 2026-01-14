@@ -111,7 +111,9 @@ class Libp2pTransport extends p2p.TransportBase {
 
   @override
   void send(Iterable<p2p.FullAddress> fullAddresses, Uint8List datagram) {
-    logger?.call('Libp2pTransport.send called with ${fullAddresses.length} addresses');
+    logger?.call(
+      'Libp2pTransport.send called with ${fullAddresses.length} addresses',
+    );
     // p2plib might pass multiple addresses, but libp2p handles routing via PeerId.
     // However, the interface requires us to handle these addresses.
     // In our bridge, we mostly care about the PeerId if available,
@@ -140,7 +142,9 @@ class Libp2pTransport extends p2p.TransportBase {
         libp2p.Ed25519PublicKey.fromRawBytes(pubKeyBytes),
       );
 
-      logger?.call('Libp2pTransport._sendOne targeting $libp2pPeerId via $dstAddress');
+      logger?.call(
+        'Libp2pTransport._sendOne targeting $libp2pPeerId via $dstAddress',
+      );
 
       // 2. Get or Open Stream
       libp2p.P2PStream<dynamic>? stream = _streamCache[libp2pPeerId];
@@ -178,7 +182,9 @@ class Libp2pTransport extends p2p.TransportBase {
         await _host!.connect(info);
         logger?.call('Libp2pTransport: Connected to $libp2pPeerId');
 
-        logger?.call('Libp2pTransport: Opening stream for $p2plibProtocolId...');
+        logger?.call(
+          'Libp2pTransport: Opening stream for $p2plibProtocolId...',
+        );
         // Use a context with timeout to avoid hanging indefinitely if negation stalls
         final context = libp2p.Context(timeout: const Duration(seconds: 15));
 
@@ -188,7 +194,9 @@ class Libp2pTransport extends p2p.TransportBase {
           ], context);
           logger?.call('Libp2pTransport: Stream opened for $libp2pPeerId');
         } catch (e) {
-          logger?.call('Libp2pTransport: Failed to open stream for $libp2pPeerId: $e');
+          logger?.call(
+            'Libp2pTransport: Failed to open stream for $libp2pPeerId: $e',
+          );
           rethrow;
         }
 
@@ -261,7 +269,9 @@ class Libp2pTransport extends p2p.TransportBase {
 
         if (onMessage != null) {
           try {
-            logger?.call('Libp2pTransport: Calling onMessage handler for packet...');
+            logger?.call(
+              'Libp2pTransport: Calling onMessage handler for packet...',
+            );
             await onMessage!(
               p2p.Packet(
                 srcFullAddress: p2p.FullAddress(
@@ -272,7 +282,9 @@ class Libp2pTransport extends p2p.TransportBase {
                 header: p2p.PacketHeader.fromBytes(payload),
               ),
             );
-            logger?.call('Libp2pTransport: onMessage handler completed successfully');
+            logger?.call(
+              'Libp2pTransport: onMessage handler completed successfully',
+            );
           } on p2p.StopProcessing catch (e) {
             logger?.call(
               'Libp2pTransport: StopProcessing signal received from router: $e',
@@ -281,7 +293,9 @@ class Libp2pTransport extends p2p.TransportBase {
             logger?.call('Libp2pTransport: Error in onMessage handler: $e');
           }
         } else {
-          logger?.call('Libp2pTransport: WARNING: onMessage is NULL! dropping packet');
+          logger?.call(
+            'Libp2pTransport: WARNING: onMessage is NULL! dropping packet',
+          );
         }
       }
     } catch (e) {
