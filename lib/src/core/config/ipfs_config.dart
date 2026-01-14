@@ -98,6 +98,7 @@ class IPFSConfig {
     this.blockStorePath = 'blocks',
     this.enableLibp2pBridge = false,
     this.libp2pListenAddress = '/ip4/0.0.0.0/tcp/4001',
+    this.libp2pIdentitySeed,
     String? nodeId,
     this.garbageCollectionInterval = const Duration(hours: 24),
     this.garbageCollectionEnabled = true,
@@ -226,6 +227,9 @@ class IPFSConfig {
 
   /// The listen address for the libp2p bridge.
   final String libp2pListenAddress;
+
+  /// Optional seed for persistent libp2p identity.
+  final Uint8List? libp2pIdentitySeed;
 
   /// The unique node identifier.
   final String nodeId;

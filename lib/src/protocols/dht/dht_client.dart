@@ -260,6 +260,7 @@ class DHTClient {
   /// Sends the value to the K closest peers to the key.
   /// Returns true if at least one peer successfully stored the value.
   Future<bool> storeValue(Uint8List key, Uint8List value) async {
+    _checkInitialized();
     final targetPeerId = getRoutingKey(Base58().encode(key));
     final closestPeers = _kademliaRoutingTable.findClosestPeers(
       targetPeerId,
@@ -282,6 +283,7 @@ class DHTClient {
     Uint8List key,
     Uint8List value,
   ) async {
+    _checkInitialized();
     final record = dht_proto.Record()
       ..key = key
       ..value = value;
@@ -304,6 +306,7 @@ class DHTClient {
   ///
   /// Queries the K closest peers to the key and returns the first value found.
   Future<Uint8List?> getValue(Uint8List key) async {
+    _checkInitialized();
     final msg = kad.Message()
       ..type = kad.Message_MessageType.GET_VALUE
       ..key = key;
@@ -340,6 +343,7 @@ class DHTClient {
   ///
   /// Used for replica health checks.
   Future<bool> checkValueOnPeer(PeerId peer, Uint8List key) async {
+    _checkInitialized();
     final msg = kad.Message()
       ..type = kad.Message_MessageType.GET_VALUE
       ..key = key;
@@ -406,10 +410,18 @@ class DHTClient {
       }
 
       // Update routing table with IP diversity check
-      await _kademliaRoutingTable.addPeer(srcPeerId, srcPeerId);
+      // Ensure we check/init table access even inside handlers? 
+      // Handlers are setup in initialize(), so technically _kademliaRoutingTable should be ready.
+      // But if stop() is called, handlers might still be active briefly.
+      if (_initialized) {
+          await _kademliaRoutingTable.addPeer(srcPeerId, srcPeerId);
+      } else {
+          return;
+      }
 
       switch (message.type) {
         case kad.Message_MessageType.FIND_NODE:
+          if (!_initialized) break;
           // Reply with closer peers
           final closer = _kademliaRoutingTable.findClosestPeers(
             PeerId(value: Uint8List.fromList(message.key)),
@@ -468,7 +480,9 @@ class DHTClient {
     try {
       // Clean up any active requests or connections
       // Clear routing table
-      _kademliaRoutingTable.clear();
+      if (_initialized) {
+          _kademliaRoutingTable.clear();
+      }
       _initialized = false;
 
       // print('DHT client stopped successfully');
@@ -519,6 +533,7 @@ class DHTClient {
 
   /// Returns all stored DHT keys.
   Future<List<String>> getAllStoredKeys() async {
+    _checkInitialized();
     try {
       // Get all keys from the DHT storage
       final List<String> storedKeys = [];
@@ -562,6 +577,7 @@ class DHTClient {
 
   /// Updates the republish timestamp for a key.
   Future<void> updateKeyRepublishTime(String key) async {
+     _checkInitialized();
     try {
       // Create metadata key for storing republish time
       final metadataKey = ds.Key('/dht/metadata/$key/last_republish');

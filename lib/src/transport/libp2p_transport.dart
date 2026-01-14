@@ -19,12 +19,16 @@ class Libp2pTransport extends p2p.TransportBase {
   Libp2pTransport({
     required super.bindAddress,
     this.seed,
+    this.listenAddress,
     super.logger,
     super.ttl,
   });
 
   /// Optional seed for persistent identity derivation.
   final Uint8List? seed;
+
+  /// Optional multiaddress to listen on. Defaults to /ip4/0.0.0.0/tcp/{bindAddress.port}
+  final String? listenAddress;
 
   libp2p.Host? _host;
   final Completer<void> _startCompleter = Completer<void>();
@@ -35,6 +39,7 @@ class Libp2pTransport extends p2p.TransportBase {
 
   @override
   Future<void> start() async {
+    print('Libp2pTransport: start() called');
     if (isStarted) return;
     logger?.call('Starting Libp2pTransport on $bindAddress');
 
@@ -52,9 +57,16 @@ class Libp2pTransport extends p2p.TransportBase {
       // Initialize required resources for Transport
       final resourceManager = ResourceManagerImpl(limiter: FixedLimiter());
 
-      // Extract port from bindAddress if possible, otherwise let libp2p decide
-      final port = bindAddress.port;
-      final listenAddr = libp2p.MultiAddr('/ip4/0.0.0.0/tcp/$port');
+      // 2. Select Listen Address
+      final libp2p.MultiAddr listenAddr;
+      if (listenAddress != null) {
+        listenAddr = libp2p.MultiAddr(listenAddress!);
+      } else {
+        // Extract port from bindAddress if possible, otherwise let libp2p decide
+        final port = bindAddress.port;
+        listenAddr = libp2p.MultiAddr('/ip4/0.0.0.0/tcp/$port');
+      }
+      print('Libp2pTransport: listener address: $listenAddr');
 
       _host = await Libp2p.new_([
         Libp2p.transport(TCPTransport(resourceManager: resourceManager)),
@@ -71,6 +83,9 @@ class Libp2pTransport extends p2p.TransportBase {
         return Future.value();
       });
 
+      print(
+        'Libp2pHost started with ID: ${_host!.id} on addresses: ${_host!.addrs}',
+      );
       logger?.call(
         'Libp2pHost started with ID: ${_host!.id} on addresses: ${_host!.addrs}',
       );
@@ -99,6 +114,7 @@ class Libp2pTransport extends p2p.TransportBase {
 
   @override
   void send(Iterable<p2p.FullAddress> fullAddresses, Uint8List datagram) {
+    print('Libp2pTransport.send called with ${fullAddresses.length} addresses');
     // p2plib might pass multiple addresses, but libp2p handles routing via PeerId.
     // However, the interface requires us to handle these addresses.
     // In our bridge, we mostly care about the PeerId if available,
@@ -113,15 +129,11 @@ class Libp2pTransport extends p2p.TransportBase {
     if (_host == null) return;
 
     try {
-      // 1. Construct Libp2p MultiAddr from dstAddress
-      final ip = dstAddress.address.address;
-      final port = dstAddress.port;
-      final ma = libp2p.MultiAddr('/ip4/$ip/tcp/$port');
-
-      // 2. Derive Destination PeerId
+      // 1. Derive Destination PeerId
       // p2plib packets have the destination PeerId in the header.
       // We parse the datagram to find who we are talking to.
       final dstPeerId = p2p.Message.getDstPeerId(datagram);
+      final dstPeerIdStr = dstPeerId.toString();
 
       // Convert p2plib PeerId to libp2p PeerId.
       // p2plib PeerId is 64 bytes (encKey + signKey).
@@ -131,29 +143,67 @@ class Libp2pTransport extends p2p.TransportBase {
         libp2p.Ed25519PublicKey.fromRawBytes(pubKeyBytes),
       );
 
-      // 3. Get or Open Stream
+      print('Libp2pTransport._sendOne targeting $libp2pPeerId via $dstAddress');
+
+      // 2. Get or Open Stream
       libp2p.P2PStream<dynamic>? stream = _streamCache[libp2pPeerId];
       if (stream == null || stream.isClosed) {
-        logger?.call('Opening new stream to $libp2pPeerId via $ma');
+        // 3. Resolve Addresses for the Peer
+        // First try the PeerStore (might have discovered addresses via Gossipsub/DHT/mDNS)
+        var addresses = await _host!.peerStore.addrBook.addrs(libp2pPeerId);
 
-        // Ensure we have the address in the peerstore
-        await _host!.peerStore.addrBook.addAddrs(libp2pPeerId, [
-          ma,
-        ], libp2p.AddressTTL.permanentAddrTTL);
+        if (addresses.isEmpty) {
+          // Fallback to the FullAddress provided by p2plib, converted to Libp2p MultiAddr
+          // This assumes the peer listens on the same port for both p2plib (UDP) and libp2p (TCP).
+          final ip = dstAddress.address.address;
+          final port = dstAddress.port;
+          final ma = libp2p.MultiAddr('/ip4/$ip/tcp/$port');
+          addresses = [ma];
+
+          logger?.call(
+            'Libp2pTransport: No addresses in PeerStore, using fallback: $ma',
+          );
+
+          await _host!.peerStore.addrBook.addAddrs(
+            libp2pPeerId,
+            addresses,
+            libp2p.AddressTTL.permanentAddrTTL,
+          );
+        }
+
+        print(
+          'Libp2pTransport: Opening new stream to $libp2pPeerId via ${addresses.first}',
+        );
 
         // Ensure we are connected
-        final info = libp2p.AddrInfo(libp2pPeerId, [ma]);
+        final info = libp2p.AddrInfo(libp2pPeerId, addresses);
+        print('Libp2pTransport: Connecting to $info...');
         await _host!.connect(info);
+        print('Libp2pTransport: Connected to $libp2pPeerId');
 
-        stream = await _host!.newStream(libp2pPeerId, [
-          p2plibProtocolId,
-        ], libp2p.Context());
+        print('Libp2pTransport: Opening stream for $p2plibProtocolId...');
+        // Use a context with timeout to avoid hanging indefinitely if negation stalls
+        final context = libp2p.Context(timeout: const Duration(seconds: 15));
+
+        try {
+          stream = await _host!.newStream(libp2pPeerId, [
+            p2plibProtocolId,
+          ], context);
+          print('Libp2pTransport: Stream opened for $libp2pPeerId');
+        } catch (e) {
+          print('Libp2pTransport: Failed to open stream for $libp2pPeerId: $e');
+          rethrow;
+        }
 
         _streamCache[libp2pPeerId] = stream;
 
         // Handle stream closure cleanup
         // Note: dart_libp2p might not have a direct 'onClose',
         // we might check it periodically or on next send.
+      } else {
+        logger?.call(
+          'Libp2pTransport: Reusing cached stream for $libp2pPeerId',
+        );
       }
 
       // 4. Send framed data
@@ -161,15 +211,18 @@ class Libp2pTransport extends p2p.TransportBase {
       final lenBytes = Uint8List(4);
       ByteData.view(lenBytes.buffer).setUint32(0, datagram.length);
 
+      print(
+        'Libp2pTransport: Sending ${datagram.length} bytes to $libp2pPeerId',
+      );
       await stream.write(lenBytes);
       await stream.write(datagram);
 
       // We don't close the stream here to allow reuse.
       // It will stay in _streamCache.
     } catch (e) {
+      print('Libp2pTransport: send error: $e');
       logger?.call('Libp2pTransport send error: $e');
       // If error occurs, clear cache for this peer as the stream might be dead
-      // (PeerId derivation might also fail if packet is malformed)
     }
   }
 
@@ -177,43 +230,92 @@ class Libp2pTransport extends p2p.TransportBase {
     libp2p.P2PStream<dynamic> stream,
     libp2p.PeerId remotePeerId,
   ) async {
+    print(
+      'Libp2pTransport: Handling incoming stream from $remotePeerId on ${stream.protocol()}',
+    );
     try {
       while (!stream.isClosed) {
         // Read Length (4 bytes)
-        final lenBytes = await stream.read(4);
-        if (lenBytes.isEmpty) break;
-        if (lenBytes.length < 4) break;
+        final lenBytes = await _readExactly(stream, 4);
+        if (lenBytes == null) {
+          logger?.call('Steam closed during length read from $remotePeerId');
+          break;
+        }
 
         final length = ByteData.view(lenBytes.buffer).getUint32(0);
+        print(
+          'Libp2pTransport: Reading datagram of length $length from $remotePeerId',
+        );
+        if (length == 0) continue;
 
         // Read Body
-        final payload = await stream.read(length);
-        if (payload.length < length) break;
+        final payload = await _readExactly(stream, length);
+        if (payload == null) {
+          logger?.call('Steam closed during payload read from $remotePeerId');
+          break;
+        }
 
+        print(
+          'Libp2pTransport: Received $length bytes from $remotePeerId via libp2p',
+        );
         // Extract connection info
         final conn = stream.conn;
         final remoteAddr = conn.remoteMultiaddr;
 
         if (onMessage != null) {
-          await onMessage!(
-            p2p.Packet(
-              srcFullAddress: p2p.FullAddress(
-                address: InternetAddress(
-                  remoteAddr.toIP()?.address ?? '0.0.0.0',
+          try {
+            print('Libp2pTransport: Calling onMessage handler for packet...');
+            await onMessage!(
+              p2p.Packet(
+                srcFullAddress: p2p.FullAddress(
+                  address: remoteAddr.toIP() ?? InternetAddress('0.0.0.0'),
+                  port: remoteAddr.port ?? 0,
                 ),
-                port: remoteAddr.port ?? 0,
+                datagram: payload,
+                header: p2p.PacketHeader.fromBytes(payload),
               ),
-              datagram: Uint8List.fromList(payload),
-              header: p2p.PacketHeader.fromBytes(payload),
-            ),
-          );
+            );
+            print('Libp2pTransport: onMessage handler completed successfully');
+          } on p2p.StopProcessing catch (e) {
+            print(
+              'Libp2pTransport: StopProcessing signal received from router: $e',
+            );
+          } catch (e) {
+            print('Libp2pTransport: Error in onMessage handler: $e');
+          }
+        } else {
+          print('Libp2pTransport: WARNING: onMessage is NULL! dropping packet');
         }
       }
     } catch (e) {
-      logger?.call('Stream error: $e');
+      logger?.call('Libp2pTransport stream handler error: $e');
     } finally {
+      logger?.call('Closing stream from $remotePeerId');
       _streamCache.remove(remotePeerId);
-      await stream.close();
     }
+  }
+
+  Future<Uint8List?> _readExactly(
+    libp2p.P2PStream<dynamic> stream,
+    int length,
+  ) async {
+    final bytes = BytesBuilder(copy: false);
+    int remaining = length;
+
+    while (remaining > 0) {
+      final chunk = await stream.read(remaining);
+      if (chunk.isEmpty) {
+        if (remaining != length) {
+          logger?.call(
+            'Partial read: got ${length - remaining} of $length bytes',
+          );
+        }
+        return null;
+      }
+      bytes.add(chunk);
+      remaining -= chunk.length;
+    }
+
+    return bytes.takeBytes();
   }
 }

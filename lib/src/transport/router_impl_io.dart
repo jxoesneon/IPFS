@@ -18,6 +18,8 @@ import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:p2plib/p2plib.dart' as p2p;
 
+import 'simple_crypto.dart';
+
 /// Low-level P2P networking router using the p2plib package.
 ///
 /// P2plibRouter provides the transport layer for IPFS networking,
@@ -53,15 +55,11 @@ class P2plibRouter {
     : _router =
           router ??
           p2p.RouterL2(
-            crypto: LocalCrypto(),
+            crypto: SimpleCrypto(),
             keepalivePeriod: const Duration(seconds: 30),
             transports: [],
           ),
-      _logger = Logger(
-        'P2plibRouter',
-        debug: _config.debug,
-        verbose: _config.verboseLogging,
-      ) {
+      _logger = Logger('P2plibRouter', debug: true, verbose: true) {
     _setupRouter();
     // Increase peer TTL to be more robust against packet loss
     _router.peerAddressTTL = const Duration(minutes: 10);
@@ -126,27 +124,7 @@ class P2plibRouter {
       );
     }
 
-    // Add Libp2p Bridge Transport if enabled
-    if (_config.enableLibp2pBridge) {
-      final libp2pParts = _config.libp2pListenAddress.split('/');
-      final libp2pPortIndex = libp2pParts.indexOf('tcp') + 1;
-      int libp2pPort = 4001;
-      if (libp2pPortIndex > 0 && libp2pPortIndex < libp2pParts.length) {
-        libp2pPort = int.tryParse(libp2pParts[libp2pPortIndex]) ?? 4001;
-      }
-
-      _router.transports.add(
-        Libp2pTransport(
-          bindAddress: p2p.FullAddress(
-            address: InternetAddress.anyIPv4,
-            port: libp2pPort,
-          ),
-          // Pass the same seed used for p2plib crypto for identity mapping
-          seed: (_router.crypto as LocalCrypto).seed,
-          logger: (msg) => _logger.debug('[Libp2pBridge] $msg'),
-        ),
-      );
-    }
+    // Libp2p Bridge Transport is now added during initialize() after crypto is ready.
 
     _router.messageTTL = const Duration(minutes: 1);
   }
@@ -198,21 +176,54 @@ class P2plibRouter {
     try {
       _logger.debug('Initializing P2plibRouter...');
       _logger.verbose('Initializing crypto components');
-      final seed = Uint8List.fromList(
-        List<int>.generate(32, (_) => Random.secure().nextInt(256)),
-      );
+
+      // Use the nodeId from config as the seed.
+      // This ensures Libp2p ID and p2plib ID represent the same node.
+      final seed = Base58().base58Decode(_config.nodeId);
+
       await _router.crypto.init(seed);
       _logger.verbose('Crypto components initialized successfully');
 
       _logger.verbose('Initializing router with peer ID');
-      final randomBytes = List<int>.generate(
-        32,
-        (i) => Random.secure().nextInt(256),
-      );
-      await _router.init(Uint8List.fromList(randomBytes));
+      await _router.init(seed);
       _logger.verbose(
         'Router initialized with peer ID: ${Base58().encode(_router.selfId.value)}',
       );
+
+      // Add Libp2p Bridge Transport if enabled
+      if (_config.enableLibp2pBridge) {
+        _logger.debug('Enabling Libp2p Bridge Transport...');
+        final libp2pParts = _config.libp2pListenAddress.split('/');
+        final libp2pPortIndex = libp2pParts.indexOf('tcp') + 1;
+        int libp2pPort = 4001;
+        if (libp2pPortIndex > 0 && libp2pPortIndex < libp2pParts.length) {
+          libp2pPort = int.tryParse(libp2pParts[libp2pPortIndex]) ?? 4001;
+        }
+
+        final libp2pTransport = Libp2pTransport(
+          bindAddress: p2p.FullAddress(
+            address: InternetAddress.anyIPv4,
+            port: libp2pPort,
+          ),
+          // Use the same seed decoded from nodeId
+          seed: seed,
+          listenAddress: _config.libp2pListenAddress,
+          logger: (msg) => _logger.info('Libp2pBridge: $msg'),
+        );
+        libp2pTransport.onMessage = (packet) async {
+          // Re-stamp destination ID to match our actual selfId
+          // This fixes mismatches between padded 32-byte IDs and derived 64-byte IDs
+          // Offset 80: PacketHeader.length(16) + PeerId.length(64)
+          if (packet.datagram.length >= 144) {
+            packet.datagram.setRange(80, 144, _router.selfId.value);
+          }
+          packet.dstPeerId = _router.selfId;
+          await _router.onMessage(packet);
+        };
+        _router.transports.add(libp2pTransport);
+        // Explicitly start the transport
+        unawaited(libp2pTransport.start());
+      }
 
       _isInitialized = true;
       _logger.debug('P2plibRouter initialization complete');
@@ -226,7 +237,15 @@ class P2plibRouter {
         if (message.payload == null || message.payload!.isEmpty) return;
 
         try {
-          final datagram = message.payload!;
+          var datagram = message.payload!;
+          // If payload contains the p2plib header/IDs (144 bytes), skip them.
+          // This happens because RouterL1/L2's onMessage unseals the whole datagram
+          // and passes it as the payload.
+          if (datagram.length > 144) {
+            // Check if it looks like a p2plib message (optional but safer)
+            // For now, assume if it's long enough, skip the header.
+            datagram = datagram.sublist(144);
+          }
           // Format: [1 byte protocol length][N bytes protocol ID][Rest: payload]
           if (datagram.isEmpty) {
             _logger.verbose('Dispatcher: Received empty datagram, skipping');
@@ -255,17 +274,13 @@ class P2plibRouter {
               );
             }
           } else {
-            // Legacy/Unwrapped message - Send to ALL for compatibility during transition
-            // In a strict design, we would drop this or require a default protocol.
-            _logger.verbose('Dispatcher: Received legacy/unwrapped packet');
-            final packet = NetworkPacket(
-              srcPeerId: Base58().encode(message.srcPeerId.value),
-              datagram: datagram,
+            _logger.verbose(
+              'Dispatcher: Received legacy/unwrapped packet (first byte: ${datagram.isNotEmpty ? datagram[0] : "empty"})',
             );
-            _protocolHandlers.forEach((id, handler) {
-              // Only send if protocolId is NOT a "strict" one or just broadcast for now
-              handler(packet);
-            });
+            // DISABLED legacy broadcast to avoid interfering with strict handlers like Bitswap
+            /*
+            _protocolHandlers.forEach((id, handler) => handler(packet));
+            */
           }
         } catch (e) {
           _logger.verbose('Dispatcher: Error processing packet: $e');
@@ -601,7 +616,16 @@ class P2plibRouter {
     if (peerIdIndex >= parts.length) {
       throw FormatException('No peer ID found in multiaddr: $multiaddr');
     }
-    return Base58().base58Decode(parts[peerIdIndex]);
+    final decoded = Base58().base58Decode(parts[peerIdIndex]);
+    if (decoded.length == 32) {
+      // Pad 32-byte ID to 64 bytes by repeating it.
+      // This matches how p2plib LocalCrypto usually works when same key is used for both.
+      final padded = Uint8List(64);
+      padded.setRange(0, 32, decoded);
+      padded.setRange(32, 64, decoded);
+      return padded;
+    }
+    return decoded;
   }
 
   // Add to P2plibRouter class
