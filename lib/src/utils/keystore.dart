@@ -133,6 +133,10 @@ class Keystore {
       // Verify the signature
       final isValid = await _ed25519.verify(data, signature: sig);
       return isValid;
+    } on ArgumentError catch (e) {
+      // Invalid key length or format
+      _logger.warning('Invalid key format for verification: ${e.message}');
+      return false;
     } catch (e, stackTrace) {
       _logger.error('Error verifying signature', e, stackTrace);
       return false;
