@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -12,7 +11,6 @@ import 'package:dart_ipfs/src/protocols/bitswap/message.dart' show Message;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/routing_table.dart';
 import 'package:dart_ipfs/src/transport/libp2p_transport.dart';
-import 'package:dart_ipfs/src/transport/local_crypto.dart';
 import 'package:dart_ipfs/src/transport/router_events.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';

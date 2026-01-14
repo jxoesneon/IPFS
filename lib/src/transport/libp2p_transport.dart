@@ -39,7 +39,7 @@ class Libp2pTransport extends p2p.TransportBase {
 
   @override
   Future<void> start() async {
-    print('Libp2pTransport: start() called');
+    logger?.call('Libp2pTransport: start() called');
     if (isStarted) return;
     logger?.call('Starting Libp2pTransport on $bindAddress');
 
@@ -66,7 +66,7 @@ class Libp2pTransport extends p2p.TransportBase {
         final port = bindAddress.port;
         listenAddr = libp2p.MultiAddr('/ip4/0.0.0.0/tcp/$port');
       }
-      print('Libp2pTransport: listener address: $listenAddr');
+      logger?.call('Libp2pTransport: listener address: $listenAddr');
 
       _host = await Libp2p.new_([
         Libp2p.transport(TCPTransport(resourceManager: resourceManager)),
@@ -83,9 +83,6 @@ class Libp2pTransport extends p2p.TransportBase {
         return Future.value();
       });
 
-      print(
-        'Libp2pHost started with ID: ${_host!.id} on addresses: ${_host!.addrs}',
-      );
       logger?.call(
         'Libp2pHost started with ID: ${_host!.id} on addresses: ${_host!.addrs}',
       );
@@ -114,7 +111,7 @@ class Libp2pTransport extends p2p.TransportBase {
 
   @override
   void send(Iterable<p2p.FullAddress> fullAddresses, Uint8List datagram) {
-    print('Libp2pTransport.send called with ${fullAddresses.length} addresses');
+    logger?.call('Libp2pTransport.send called with ${fullAddresses.length} addresses');
     // p2plib might pass multiple addresses, but libp2p handles routing via PeerId.
     // However, the interface requires us to handle these addresses.
     // In our bridge, we mostly care about the PeerId if available,
@@ -133,7 +130,7 @@ class Libp2pTransport extends p2p.TransportBase {
       // p2plib packets have the destination PeerId in the header.
       // We parse the datagram to find who we are talking to.
       final dstPeerId = p2p.Message.getDstPeerId(datagram);
-      final dstPeerIdStr = dstPeerId.toString();
+      // final dstPeerIdStr = dstPeerId.toString(); // Unused
 
       // Convert p2plib PeerId to libp2p PeerId.
       // p2plib PeerId is 64 bytes (encKey + signKey).
@@ -143,7 +140,7 @@ class Libp2pTransport extends p2p.TransportBase {
         libp2p.Ed25519PublicKey.fromRawBytes(pubKeyBytes),
       );
 
-      print('Libp2pTransport._sendOne targeting $libp2pPeerId via $dstAddress');
+      logger?.call('Libp2pTransport._sendOne targeting $libp2pPeerId via $dstAddress');
 
       // 2. Get or Open Stream
       libp2p.P2PStream<dynamic>? stream = _streamCache[libp2pPeerId];
@@ -171,17 +168,17 @@ class Libp2pTransport extends p2p.TransportBase {
           );
         }
 
-        print(
+        logger?.call(
           'Libp2pTransport: Opening new stream to $libp2pPeerId via ${addresses.first}',
         );
 
         // Ensure we are connected
         final info = libp2p.AddrInfo(libp2pPeerId, addresses);
-        print('Libp2pTransport: Connecting to $info...');
+        logger?.call('Libp2pTransport: Connecting to $info...');
         await _host!.connect(info);
-        print('Libp2pTransport: Connected to $libp2pPeerId');
+        logger?.call('Libp2pTransport: Connected to $libp2pPeerId');
 
-        print('Libp2pTransport: Opening stream for $p2plibProtocolId...');
+        logger?.call('Libp2pTransport: Opening stream for $p2plibProtocolId...');
         // Use a context with timeout to avoid hanging indefinitely if negation stalls
         final context = libp2p.Context(timeout: const Duration(seconds: 15));
 
@@ -189,9 +186,9 @@ class Libp2pTransport extends p2p.TransportBase {
           stream = await _host!.newStream(libp2pPeerId, [
             p2plibProtocolId,
           ], context);
-          print('Libp2pTransport: Stream opened for $libp2pPeerId');
+          logger?.call('Libp2pTransport: Stream opened for $libp2pPeerId');
         } catch (e) {
-          print('Libp2pTransport: Failed to open stream for $libp2pPeerId: $e');
+          logger?.call('Libp2pTransport: Failed to open stream for $libp2pPeerId: $e');
           rethrow;
         }
 
@@ -211,7 +208,7 @@ class Libp2pTransport extends p2p.TransportBase {
       final lenBytes = Uint8List(4);
       ByteData.view(lenBytes.buffer).setUint32(0, datagram.length);
 
-      print(
+      logger?.call(
         'Libp2pTransport: Sending ${datagram.length} bytes to $libp2pPeerId',
       );
       await stream.write(lenBytes);
@@ -220,7 +217,7 @@ class Libp2pTransport extends p2p.TransportBase {
       // We don't close the stream here to allow reuse.
       // It will stay in _streamCache.
     } catch (e) {
-      print('Libp2pTransport: send error: $e');
+      logger?.call('Libp2pTransport: send error: $e');
       logger?.call('Libp2pTransport send error: $e');
       // If error occurs, clear cache for this peer as the stream might be dead
     }
@@ -230,7 +227,7 @@ class Libp2pTransport extends p2p.TransportBase {
     libp2p.P2PStream<dynamic> stream,
     libp2p.PeerId remotePeerId,
   ) async {
-    print(
+    logger?.call(
       'Libp2pTransport: Handling incoming stream from $remotePeerId on ${stream.protocol()}',
     );
     try {
@@ -243,7 +240,7 @@ class Libp2pTransport extends p2p.TransportBase {
         }
 
         final length = ByteData.view(lenBytes.buffer).getUint32(0);
-        print(
+        logger?.call(
           'Libp2pTransport: Reading datagram of length $length from $remotePeerId',
         );
         if (length == 0) continue;
@@ -255,7 +252,7 @@ class Libp2pTransport extends p2p.TransportBase {
           break;
         }
 
-        print(
+        logger?.call(
           'Libp2pTransport: Received $length bytes from $remotePeerId via libp2p',
         );
         // Extract connection info
@@ -264,7 +261,7 @@ class Libp2pTransport extends p2p.TransportBase {
 
         if (onMessage != null) {
           try {
-            print('Libp2pTransport: Calling onMessage handler for packet...');
+            logger?.call('Libp2pTransport: Calling onMessage handler for packet...');
             await onMessage!(
               p2p.Packet(
                 srcFullAddress: p2p.FullAddress(
@@ -275,16 +272,16 @@ class Libp2pTransport extends p2p.TransportBase {
                 header: p2p.PacketHeader.fromBytes(payload),
               ),
             );
-            print('Libp2pTransport: onMessage handler completed successfully');
+            logger?.call('Libp2pTransport: onMessage handler completed successfully');
           } on p2p.StopProcessing catch (e) {
-            print(
+            logger?.call(
               'Libp2pTransport: StopProcessing signal received from router: $e',
             );
           } catch (e) {
-            print('Libp2pTransport: Error in onMessage handler: $e');
+            logger?.call('Libp2pTransport: Error in onMessage handler: $e');
           }
         } else {
-          print('Libp2pTransport: WARNING: onMessage is NULL! dropping packet');
+          logger?.call('Libp2pTransport: WARNING: onMessage is NULL! dropping packet');
         }
       }
     } catch (e) {
