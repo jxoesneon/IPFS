@@ -246,3 +246,7 @@ paket-files/
 # Agent Rules
 .agent/
 .windsurf/ci_*.log
+
+# Test Artifacts
+ipfs_facade_*
+verify.log
