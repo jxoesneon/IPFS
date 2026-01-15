@@ -145,7 +145,7 @@ class Libp2pRouter implements RouterInterface {
         config.Libp2p.transport(TCPTransport(resourceManager: resourceManager)),
         config.Libp2p.listenAddrs([listenAddr]),
         config.Libp2p.identity(_keyPair!),
-        config.Libp2p.userAgent('dart_ipfs/1.8.10'),
+        config.Libp2p.userAgent('dart_ipfs/1.9.0'),
       ]);
 
       await _host!.start();
