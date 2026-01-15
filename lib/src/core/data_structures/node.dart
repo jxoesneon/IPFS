@@ -7,9 +7,9 @@ import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/routing_handler.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/network/router.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:fixnum/fixnum.dart';
 
 /// Types of IPFS nodes in the UnixFS data model.
@@ -83,7 +83,7 @@ class IPFSDataNode {
   Datastore get datastore => datastoreHandler.datastore;
 
   /// Access to the network router.
-  Router get router => networkHandler.router;
+  RouterInterface get router => networkHandler.router;
 
   /// Access to the Bitswap handler.
   BitswapHandler get bitswap => bitswapHandler;

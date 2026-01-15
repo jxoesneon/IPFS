@@ -16,7 +16,7 @@ import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart' as _i5;
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_tree_node.dart'
     as _i11;
 import 'package:dart_ipfs/src/protocols/dht/red_black_tree.dart' as _i10;
-import 'package:dart_ipfs/src/transport/p2plib_router.dart' as _i6;
+import 'package:dart_ipfs/src/transport/router_interface.dart' as _i6;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -56,8 +56,9 @@ class _FakeKademliaRoutingTable_3 extends _i1.SmartFake
     : super(parent, parentInvocation);
 }
 
-class _FakeP2plibRouter_4 extends _i1.SmartFake implements _i6.P2plibRouter {
-  _FakeP2plibRouter_4(Object parent, Invocation parentInvocation)
+class _FakeRouterInterface_4 extends _i1.SmartFake
+    implements _i6.RouterInterface {
+  _FakeRouterInterface_4(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
@@ -124,12 +125,15 @@ class MockDHTClient extends _i1.Mock implements _i7.DHTClient {
           as _i5.KademliaRoutingTable);
 
   @override
-  _i6.P2plibRouter get router =>
+  _i6.RouterInterface get router =>
       (super.noSuchMethod(
             Invocation.getter(#router),
-            returnValue: _FakeP2plibRouter_4(this, Invocation.getter(#router)),
+            returnValue: _FakeRouterInterface_4(
+              this,
+              Invocation.getter(#router),
+            ),
           )
-          as _i6.P2plibRouter);
+          as _i6.RouterInterface);
 
   @override
   bool get isInitialized =>

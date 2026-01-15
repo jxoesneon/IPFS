@@ -8,6 +8,7 @@ import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:test/test.dart';
+import 'package:logging/logging.dart';
 
 class MockMetricsCollector implements MetricsCollector {
   final Map<String, dynamic> recordedMetrics = {};
@@ -24,6 +25,8 @@ class MockMetricsCollector implements MetricsCollector {
 }
 
 void main() {
+  Logger.root.level = Level.OFF;
+
   group('SecurityManager', () {
     late SecurityConfig config;
     late MockMetricsCollector mockMetrics;

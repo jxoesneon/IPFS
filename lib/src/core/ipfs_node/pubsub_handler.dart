@@ -7,7 +7,7 @@ import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.da
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_interface.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 
 import '../data_structures/node_stats.dart';
@@ -15,7 +15,7 @@ import '../data_structures/node_stats.dart';
 /// Handles PubSub operations for an IPFS node.
 class PubSubHandler implements IPubSub {
   /// Constructs a [PubSubHandler] with the provided router, peer ID, and network events.
-  PubSubHandler(P2plibRouter router, String peerId, this._networkEvents)
+  PubSubHandler(RouterInterface router, String peerId, this._networkEvents)
     : _pubSubClient = PubSubClient(router, peerId) {
     // Register the pubsub protocol immediately upon construction
     router.registerProtocol('pubsub');

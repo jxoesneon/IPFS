@@ -14,7 +14,7 @@ import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
 import 'package:dart_ipfs/src/services/gateway/content_type_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/lazy_preview_handler.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart';
 
@@ -34,7 +34,7 @@ class MessageHandler {
   /// The IPFS configuration.
   final IPFSConfig config;
 
-  final P2plibRouter _router;
+  final RouterInterface _router;
   late final BlockStore _blockStore;
   final _logger = Logger('MessageHandler');
 

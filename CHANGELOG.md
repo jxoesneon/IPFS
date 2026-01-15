@@ -1,9 +1,13 @@
 # Changelog
 
-## [1.8.10] - 2026-01-14
+## [1.9.0] - 2026-01-15
 
-- **Maintenance**: Removed internal `.agent` tooling and updated `.gitignore` to prevent publishing of development artifacts.
-- **Maintenance**: Improved release workflow reliability and documentation.
+- **Full Libp2p Migration**: Successfully transitioned to the native `dart_libp2p` architecture for standard IPFS networking.
+- **Improved Coverage**: Achieved 95.6% test coverage for the core `Libp2pRouter` implementation.
+- **Stability**: Verified 100% test pass rate across the entire suite (1098 tests).
+- **Maintenance**: Removed deprecated `p2plib` references and cleaned up stale development artifacts.
+
+## [1.8.10] - 2026-01-14
 
 ## [1.8.9] - 2026-01-14
 

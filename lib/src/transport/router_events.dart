@@ -26,13 +26,20 @@ class NetworkMessage {
 /// Represents a network packet with source/destination info.
 class NetworkPacket {
   /// Creates a network packet.
-  NetworkPacket({required this.srcPeerId, required this.datagram});
+  NetworkPacket({
+    required this.srcPeerId,
+    required this.datagram,
+    this.responder,
+  });
 
   /// The source peer ID.
   final String srcPeerId;
 
   /// The raw datagram bytes.
   final Uint8List datagram;
+
+  /// Optional responder function for synchronous request/response
+  final Future<void> Function(Uint8List)? responder;
 }
 
 /// Represents a change in peer connection state

@@ -159,6 +159,8 @@ void main() {
     group('publish validation', () {
       test('publish throws for invalid CID format', () async {
         await handler.start();
+        // Temporarily suppress logs if possible, or accept the log.
+        // The test passes, so we just ensure it's clean.
         expect(
           () => handler.publish('invalid!cid', keyName: 'test'),
           throwsArgumentError,

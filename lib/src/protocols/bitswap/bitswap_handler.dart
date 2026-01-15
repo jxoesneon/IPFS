@@ -6,7 +6,7 @@ import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/ledger.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as message;
 import 'package:dart_ipfs/src/protocols/bitswap/wantlist.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/generic_lru_cache.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:meta/meta.dart';
@@ -24,7 +24,7 @@ class BitswapHandler {
     _setupHandlers();
   }
   final IBlockStore _blockStore;
-  final P2plibRouter _router;
+  final RouterInterface _router;
   final Wantlist _wantlist = Wantlist();
   final LedgerManager _ledgerManager = LedgerManager();
   final Map<String, Completer<Block>> _pendingBlocks = {};

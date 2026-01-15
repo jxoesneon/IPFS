@@ -17,7 +17,7 @@ import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.da
 import 'package:dart_ipfs/src/routing/content_routing.dart' as _i14;
 import 'package:dart_ipfs/src/routing/delegated_routing.dart' as _i7;
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart' as _i5;
-import 'package:dart_ipfs/src/transport/p2plib_router.dart' as _i4;
+import 'package:dart_ipfs/src/transport/router_interface.dart' as _i4;
 import 'package:http/http.dart' as _i8;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i12;
@@ -47,8 +47,9 @@ class _FakeRouter_1 extends _i1.SmartFake implements _i3.Router {
     : super(parent, parentInvocation);
 }
 
-class _FakeP2plibRouter_2 extends _i1.SmartFake implements _i4.P2plibRouter {
-  _FakeP2plibRouter_2(Object parent, Invocation parentInvocation)
+class _FakeRouterInterface_2 extends _i1.SmartFake
+    implements _i4.RouterInterface {
+  _FakeRouterInterface_2(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
@@ -113,15 +114,15 @@ class MockNetworkHandler extends _i1.Mock implements _i9.NetworkHandler {
           as _i3.Router);
 
   @override
-  _i4.P2plibRouter get p2pRouter =>
+  _i4.RouterInterface get p2pRouter =>
       (super.noSuchMethod(
             Invocation.getter(#p2pRouter),
-            returnValue: _FakeP2plibRouter_2(
+            returnValue: _FakeRouterInterface_2(
               this,
               Invocation.getter(#p2pRouter),
             ),
           )
-          as _i4.P2plibRouter);
+          as _i4.RouterInterface);
 
   @override
   _i5.CircuitRelayClient get circuitRelayClient =>

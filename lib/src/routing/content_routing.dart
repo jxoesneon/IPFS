@@ -14,7 +14,7 @@ class ContentRouting {
   ContentRouting(IPFSConfig config, NetworkHandler networkHandler)
     : _dhtClient = DHTClient(
         networkHandler: networkHandler,
-        router: networkHandler.p2pRouter,
+        router: networkHandler.router,
       );
   final DHTClient _dhtClient;
   final _logger = Logger('ContentRouting');

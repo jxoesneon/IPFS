@@ -1,7 +1,5 @@
-// src/core/ipfs_node/network_handler.dart
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -10,9 +8,9 @@ import 'package:dart_ipfs/src/core/types/peer_id.dart' as dht;
 import 'package:dart_ipfs/src/network/router.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/libp2p_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 
 import 'ipfs_node.dart';
 
@@ -21,8 +19,10 @@ import 'ipfs_node.dart';
 /// Handles network operations for an IPFS node.
 class NetworkHandler {
   /// Creates a network handler with config and optional router.
-  NetworkHandler(this._config, {P2plibRouter? router})
-    : _router = router ?? P2plibRouter(_config),
+  ///
+  /// If [router] is not provided, defaults to [Libp2pRouter].
+  NetworkHandler(this._config, {RouterInterface? router})
+    : _router = router ?? Libp2pRouter(_config),
       _networkEventController = StreamController<NetworkEvent>.broadcast() {
     // Initialize logger
     _logger = Logger(
@@ -42,7 +42,7 @@ class NetworkHandler {
     _logger.debug('NetworkHandler initialization complete');
   }
   late final CircuitRelayClient _circuitRelayClient;
-  final P2plibRouter _router;
+  final RouterInterface _router;
 
   /// Reference to the parent IPFS node.
   late final IPFSNode ipfsNode;
@@ -50,6 +50,9 @@ class NetworkHandler {
   final IPFSConfig _config;
   late final Logger _logger;
   final List<StreamSubscription<dynamic>> _subscriptions = [];
+
+  /// Returns the router for protocol use.
+  RouterInterface get router => _router;
 
   /// Starts the network services.
   Future<void> start() async {
@@ -209,7 +212,7 @@ class NetworkHandler {
             _logger.warning('Unhandled event type: ${event.runtimeType}');
           }
         } catch (e, stackTrace) {
-          _logger.error('Error processing network event', e, stackTrace);
+          _logger.error('Error running network event listener', e, stackTrace);
         }
       },
       onError: (Object error, StackTrace stackTrace) {
@@ -222,8 +225,8 @@ class NetworkHandler {
     _subscriptions.add(sub);
   }
 
-  /// Returns a Router instance.
-  Router get router => Router(_config);
+  /// Returns a high-level Router instance (for DHT operations).
+  Router get dhtRouter => Router(_config);
 
   /// Sets the parent IPFS node reference.
   void setIpfsNode(IPFSNode node) {
@@ -231,16 +234,13 @@ class NetworkHandler {
   }
 
   /// Sends a request to a peer and waits for a response
-  Future<Uint8List> sendRequest(
+  Future<Uint8List?> sendRequest(
     String peerId,
     String protocolId,
     Uint8List request,
   ) async {
     return _router.sendRequest(peerId, protocolId, request);
   }
-
-  /// Gets the P2plibRouter instance
-  P2plibRouter get p2pRouter => _router;
 
   /// Returns the circuit relay client.
   CircuitRelayClient get circuitRelayClient => _circuitRelayClient;
@@ -353,51 +353,6 @@ class NetworkHandler {
     }
   }
 
-  /// Tests a connection using a specific source port
-  Future<String> testConnection({required int sourcePort}) async {
-    late final p2p.TransportUdp tempTransport;
-
-    try {
-      _logger.verbose('Testing connection from source port: $sourcePort');
-
-      // Initialize the transport
-      tempTransport = p2p.TransportUdp(
-        bindAddress: p2p.FullAddress(
-          address: InternetAddress.anyIPv4,
-          port: sourcePort,
-        ),
-        ttl: _router.routerL0.messageTTL.inSeconds,
-      );
-
-      // Add the transport to the router
-      _router.routerL0.transports.add(tempTransport);
-
-      final bootstrapPeer = _config.network.bootstrapPeers.first;
-      await _router.connect(bootstrapPeer);
-
-      final peerId = _router.routerL0.routes.values
-          .firstWhere((r) => r.peerId.toString() == bootstrapPeer)
-          .peerId;
-
-      final addresses = _router.routerL0.resolvePeerId(peerId);
-      if (addresses.isEmpty) {
-        throw StateError('No addresses found for peer');
-      }
-      final externalPort = addresses.first.port.toString();
-
-      await _router.disconnect(bootstrapPeer);
-
-      _logger.debug('Connection test completed. External port: $externalPort');
-      return externalPort;
-    } catch (e, stackTrace) {
-      _logger.error('Error testing connection', e, stackTrace);
-      return '';
-    } finally {
-      // Now tempTransport is accessible here
-      _router.routerL0.transports.remove(tempTransport);
-    }
-  }
-
   /// Tests if the node is reachable from the outside network through dialback
   Future<bool> testDialback() async {
     try {
@@ -450,7 +405,7 @@ class NetworkHandler {
         Uint8List(0), // Empty payload for dialback request
       );
 
-      return response.isNotEmpty;
+      return response != null && response.isNotEmpty;
     } catch (e) {
       _logger.error('Error sending dialback request', e);
       return false;

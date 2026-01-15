@@ -1,131 +1,99 @@
-// test/core/ipfs_node/dns_link_handler_test.dart
+import 'dart:convert';
+
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:test/test.dart';
 
-// Note: DNSLinkHandler uses HTTP client which makes real network requests.
-// These tests focus on unit-testable logic patterns.
-
 void main() {
-  group('DNSLinkHandler Cache', () {
-    test('cache duration is 30 minutes', () {
-      const cacheDuration = Duration(minutes: 30);
-      expect(cacheDuration.inMinutes, equals(30));
+  group('DNSLinkHandler', () {
+    final config = IPFSConfig();
+
+    test('resolve returns CID from public resolver', () async {
+      final mockClient = MockClient((request) async {
+        if (request.url.toString().contains('dnslink.io')) {
+          return http.Response(jsonEncode({'Path': '/ipfs/QmHash'}), 200);
+        }
+        return http.Response('Not Found', 404);
+      });
+
+      final handler = DNSLinkHandler(config, client: mockClient);
+      final result = await handler.resolve('example.com');
+
+      expect(result, '/ipfs/QmHash');
     });
 
-    test('cache hit returns stored value', () {
-      final cache = <String, _MockCachedDNSLink>{};
-      cache['example.com'] = _MockCachedDNSLink(
-        cid: 'QmCached123',
-        timestamp: DateTime.now(),
-      );
+    test('resolve caches result', () async {
+      int callCount = 0;
+      final mockClient = MockClient((request) async {
+        callCount++;
+        return http.Response(jsonEncode({'Path': '/ipfs/QmCache'}), 200);
+      });
 
-      expect(cache.containsKey('example.com'), isTrue);
-      expect(cache['example.com']!.cid, equals('QmCached123'));
+      final handler = DNSLinkHandler(config, client: mockClient);
+
+      // First call
+      final result1 = await handler.resolve('cached.com');
+      expect(result1, '/ipfs/QmCache');
+      expect(callCount, 1);
+
+      // Second call (should be cached)
+      final result2 = await handler.resolve('cached.com');
+      expect(result2, '/ipfs/QmCache');
+      expect(callCount, 1);
     });
 
-    test('expired cache entry is removed', () {
-      final cache = <String, _MockCachedDNSLink>{};
-      cache['old.com'] = _MockCachedDNSLink(
-        cid: 'QmOld',
-        timestamp: DateTime.now().subtract(Duration(hours: 1)),
-      );
+    test('resolve tries fallback resolvers on failure', () async {
+      int callCount = 0;
+      final mockClient = MockClient((request) async {
+        callCount++;
+        // First resolver fails
+        if (request.url.toString().contains('dnslink.io')) {
+          return http.Response('Error', 500);
+        }
+        // Second resolver succeeds (based on the list order in handler)
+        // Order: dnslink.io -> example.com -> ipfs.io
+        if (request.url.toString().contains('example.com')) {
+          return http.Response(jsonEncode({'cid': 'QmFallback'}), 200);
+        }
+        return http.Response('Not Found', 404);
+      });
 
-      final entry = cache['old.com']!;
-      final isExpired = entry.isExpired(Duration(minutes: 30));
+      final handler = DNSLinkHandler(config, client: mockClient);
+      final result = await handler.resolve('fallback.com');
 
-      if (isExpired) {
-        cache.remove('old.com');
-      }
-
-      expect(cache.containsKey('old.com'), isFalse);
-    });
-  });
-
-  group('DNSLinkHandler Public Resolvers', () {
-    test('has dnslink.io resolver', () {
-      const resolvers = [
-        'https://dnslink.io/',
-        'https://dnslink-resolver.example.com/',
-        'https://ipfs.io/api/v0/dns/',
-      ];
-      expect(resolvers, contains('https://dnslink.io/'));
+      expect(result, 'QmFallback');
+      expect(callCount, greaterThanOrEqualTo(2));
     });
 
-    test('has ipfs.io API resolver', () {
-      const resolvers = [
-        'https://dnslink.io/',
-        'https://dnslink-resolver.example.com/',
-        'https://ipfs.io/api/v0/dns/',
-      ];
-      expect(resolvers.any((r) => r.contains('ipfs.io')), isTrue);
+    test('resolve returns null when all fail', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Failed', 500);
+      });
+
+      final handler = DNSLinkHandler(config, client: mockClient);
+      final result = await handler.resolve('failed.com');
+
+      expect(result, isNull);
     });
 
-    test('uses multiple fallback resolvers', () {
-      const resolvers = [
-        'https://dnslink.io/',
-        'https://dnslink-resolver.example.com/',
-        'https://ipfs.io/api/v0/dns/',
-      ];
-      expect(resolvers.length, greaterThanOrEqualTo(2));
-    });
-  });
+    test('start and stop clear cache', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response(jsonEncode({'Path': '/ipfs/QmHash'}), 200);
+      });
 
-  group('DNSLinkHandler Response Parsing', () {
-    test('extracts CID from Path field first', () {
-      final response = {'Path': '/ipfs/QmPath', 'cid': 'QmCid'};
-      final cid = response['Path'] ?? response['cid'] ?? response['Target'];
-      expect(cid, equals('/ipfs/QmPath'));
-    });
+      final handler = DNSLinkHandler(config, client: mockClient);
+      await handler.start();
 
-    test('falls back to cid field', () {
-      final response = {'cid': 'QmCid'};
-      final cid = response['Path'] ?? response['cid'] ?? response['Target'];
-      expect(cid, equals('QmCid'));
-    });
+      // Populate cache
+      await handler.resolve('test.com');
+      var status = await handler.getStatus();
+      expect(status['cache_size'], 1);
 
-    test('falls back to Target field', () {
-      final response = {'Target': 'QmTarget'};
-      final cid = response['Path'] ?? response['cid'] ?? response['Target'];
-      expect(cid, equals('QmTarget'));
-    });
-  });
-
-  group('DNSLinkHandler Status', () {
-    test('status includes cache size', () {
-      final status = {
-        'cache_size': 5,
-        'cache_duration_minutes': 30,
-        'public_resolvers': ['https://dnslink.io/'],
-      };
-      expect(status['cache_size'], equals(5));
-    });
-
-    test('status includes cache duration', () {
-      final status = {'cache_duration_minutes': 30};
-      expect(status['cache_duration_minutes'], equals(30));
+      await handler.stop();
+      status = await handler.getStatus();
+      expect(status['cache_size'], 0);
     });
   });
-
-  group('DNSLinkHandler Lifecycle', () {
-    test('start clears cache', () {
-      final cache = <String, String>{'old': 'entry'};
-      cache.clear();
-      expect(cache, isEmpty);
-    });
-
-    test('stop clears cache', () {
-      final cache = <String, String>{'to': 'clear'};
-      cache.clear();
-      expect(cache, isEmpty);
-    });
-  });
-}
-
-class _MockCachedDNSLink {
-  _MockCachedDNSLink({required this.cid, required this.timestamp});
-  final String cid;
-  final DateTime timestamp;
-
-  bool isExpired(Duration cacheDuration) {
-    return DateTime.now().difference(timestamp) > cacheDuration;
-  }
 }

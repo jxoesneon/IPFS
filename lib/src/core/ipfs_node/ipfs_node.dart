@@ -23,7 +23,6 @@ import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/network/router.dart';
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
@@ -32,6 +31,7 @@ import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:dart_ipfs/src/transport/http_gateway_client.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
@@ -137,7 +137,7 @@ class IPFSNode {
     try {
       if (!_container.isRegistered(NetworkHandler)) return 'offline';
       final networkHandler = _container.get<NetworkHandler>();
-      return networkHandler.ipfsNode.peerID;
+      return networkHandler.peerID;
     } catch (e) {
       _logger.warning('Failed to get peerId: $e');
       return 'unknown';
@@ -157,7 +157,8 @@ class IPFSNode {
     try {
       if (!_container.isRegistered(NetworkHandler)) return [];
       final networkHandler = _container.get<NetworkHandler>();
-      return networkHandler.p2pRouter.listeningAddresses;
+      final router = networkHandler.router;
+      return router.listeningAddresses;
     } catch (e) {
       _logger.warning('Failed to get addresses: $e');
       return [];
@@ -229,7 +230,7 @@ class IPFSNode {
   List<String> resolvePeerId(String peerIdStr) {
     try {
       if (!_container.isRegistered(NetworkHandler)) return [];
-      final router = _container.get<NetworkHandler>().p2pRouter;
+      final router = _container.get<NetworkHandler>().router;
       return router.resolvePeerId(peerIdStr);
     } catch (e) {
       _logger.warning('Failed to resolve peer ID $peerIdStr: $e');
@@ -1013,7 +1014,7 @@ class IPFSNode {
   Datastore get datastore => _container.get<DatastoreHandler>().datastore;
 
   /// Access to the network router.
-  Router? get router {
+  RouterInterface? get router {
     if (_container.isRegistered(NetworkHandler)) {
       return _container.get<NetworkHandler>().router;
     }

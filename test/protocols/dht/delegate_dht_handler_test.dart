@@ -11,7 +11,12 @@ import 'package:dart_multihash/dart_multihash.dart';
 import 'package:multibase/multibase.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 
+import 'package:logging/logging.dart';
+
 void main() {
+  // Suppress logs for tests that expect errors
+  Logger.root.level = Level.OFF;
+
   group('DelegateDHTHandler', () {
     const delegateUrl = 'http://localhost:5001';
 

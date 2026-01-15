@@ -4,14 +4,14 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler_io.dart'; // import IO version for testing
 import 'package:dart_ipfs/src/network/nat_traversal_service.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/transport/router_events.dart'; // Needed for NetworkPacket
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 
 // --- Mocks ---
 
-class MockP2plibRouter extends Mock implements P2plibRouter {
+class MockRouterInterface extends Mock implements RouterInterface {
   final _connectedPeers = <String>[];
 
   @override
@@ -120,7 +120,7 @@ void main() {
           ),
         );
 
-        final mockRouter = MockP2plibRouter();
+        final mockRouter = MockRouterInterface();
         final networkHandler = NetworkHandler(config, router: mockRouter);
 
         // Execute

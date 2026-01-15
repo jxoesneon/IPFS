@@ -18,7 +18,7 @@ import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/mock_dht_handler.dart'; // Web doesn't support DHT yet, use mock or stub
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 
 import 'web_block_store.dart';
 
@@ -29,7 +29,8 @@ import 'web_block_store.dart';
 /// - Retrieve content by CID
 /// - Local storage via IndexedDB
 ///
-/// For full P2P functionality, run on native platforms (iOS, Android, desktop).
+/// For full P2P functionality, run on native platforms (iOS, Android, desktop)
+/// or use a WebRTC/WebSocket relay supported by the router.
 class IPFSWebNode {
   /// Creates a new web IPFS node.
   IPFSWebNode({IPFSConfig? config, this.bootstrapPeers = const []}) {
@@ -37,7 +38,8 @@ class IPFSWebNode {
     _config = config ?? IPFSConfig();
 
     // Initialize networking components
-    _router = P2plibRouter(_config);
+    // Use WebStubRouter for now as Libp2pRouter is TCP-only
+    _router = WebStubRouter();
     _blockStore = WebBlockStore(_platform);
 
     // Other components initialized in start()
@@ -45,7 +47,7 @@ class IPFSWebNode {
 
   late final IpfsPlatform _platform;
   late final IPFSConfig _config;
-  late final P2plibRouter _router;
+  late final RouterInterface _router;
   late final WebBlockStore _blockStore;
   late BitswapHandler _bitswap;
   late PubSubClient _pubsub;
@@ -237,4 +239,97 @@ class IPFSWebNode {
     if (!_started) throw StateError('Node not started');
     return _ipns.resolve(name);
   }
+}
+
+/// Stub router for Web until Libp2p supports WebSockets/WebRTC
+class WebStubRouter implements RouterInterface {
+  @override
+  // Use a known valid Base58 string
+  String get peerID => 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+
+  @override
+  bool get hasStarted => true;
+
+  @override
+  bool get isInitialized => true;
+
+  @override
+  Set<String> get connectedPeers => {};
+
+  @override
+  List<String> get listeningAddresses => [];
+
+  @override
+  Stream<ConnectionEvent> get connectionEvents => const Stream.empty();
+
+  @override
+  Stream<MessageEvent> get messageEvents => const Stream.empty();
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  Future<void> start() async {}
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> connect(String multiaddress) async {}
+
+  @override
+  Future<void> disconnect(String peerIdOrMultiaddress) async {}
+
+  @override
+  List<String> listConnectedPeers() => [];
+
+  @override
+  bool isConnectedPeer(String peerIdStr) => false;
+
+  @override
+  Future<void> sendMessage(
+    String peerId,
+    Uint8List message, {
+    String? protocolId,
+  }) async {}
+
+  @override
+  Future<Uint8List?> sendRequest(
+    String peerId,
+    String protocolId,
+    Uint8List request,
+  ) async => null;
+
+  @override
+  Stream<Uint8List> receiveMessages(String peerId) => const Stream.empty();
+
+  @override
+  void registerProtocolHandler(
+    String protocolId,
+    void Function(NetworkPacket) handler,
+  ) {}
+
+  @override
+  void removeMessageHandler(String protocolId) {}
+
+  @override
+  void registerProtocol(String protocolId) {}
+
+  @override
+  Future<void> broadcastMessage(String protocolId, Uint8List message) async {}
+
+  @override
+  void emitEvent(String topic, Uint8List data) {}
+
+  @override
+  void onEvent(String topic, void Function(dynamic) handler) {}
+
+  @override
+  void offEvent(String topic, void Function(dynamic) handler) {}
+
+  @override
+  dynamic parseMultiaddr(String multiaddr) => null;
+
+  @override
+  List<String> resolvePeerId(String peerIdStr) => [];
 }

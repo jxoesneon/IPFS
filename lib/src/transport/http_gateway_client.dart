@@ -9,7 +9,12 @@ import 'package:http/http.dart' as http;
 /// This allows the node to retrieve content from the public IPFS network
 /// even if the P2P layer is incompatible or disconnected.
 class HttpGatewayClient {
+  /// Creates a new [HttpGatewayClient].
+  HttpGatewayClient({http.Client? client}) : _client = client ?? http.Client();
+
   final Logger _logger = Logger('HttpGatewayClient');
+  final http.Client _client;
+
   final List<String> _gateways = [
     'https://ipfs.io/ipfs/',
     'https://dweb.link/ipfs/',
@@ -31,7 +36,7 @@ class HttpGatewayClient {
         final url = Uri.parse('$cleanBase$cid');
         _logger.debug('Fetching from specific gateway: $url');
 
-        final response = await http
+        final response = await _client
             .get(url)
             .timeout(const Duration(seconds: 5));
 
@@ -53,7 +58,7 @@ class HttpGatewayClient {
         final url = Uri.parse('$gateway$cid');
         _logger.debug('Trying gateway: $url');
 
-        final response = await http
+        final response = await _client
             .get(url)
             .timeout(const Duration(seconds: 5));
 
@@ -79,7 +84,7 @@ class HttpGatewayClient {
       // CID for "Hello World" or similar
       // Use QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn (empty dir) - might be safer
 
-      final response = await http
+      final response = await _client
           .head(
             Uri.parse(
               'https://ipfs.io/ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',

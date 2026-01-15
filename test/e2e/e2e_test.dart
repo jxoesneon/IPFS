@@ -24,6 +24,7 @@ void main() {
           listenAddresses: ['/ip4/127.0.0.1/tcp/0'], // Use random port
           enableNatTraversal:
               false, // Disable NAT for local test to avoid delays
+          enableMDNS: false, // Disable mDNS to avoid port conflicts
           bootstrapPeers: [], // No metadata noise
         ),
       );

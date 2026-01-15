@@ -100,10 +100,10 @@ test_pin_debug.txt
 final_test_output.txt
 
 # Debug/Analysis tools
-parse_all_coverage.dart
-tool_coverage.dart
-tool/
-test/advanced_coverage_analyzer.dart
+# parse_all_coverage.dart
+# tool_coverage.dart
+# tool/
+# test/advanced_coverage_analyzer.dart
 
 # Generated mock files (mockito)
 # *.mocks.dart

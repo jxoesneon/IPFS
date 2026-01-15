@@ -4,7 +4,6 @@ import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 
 import '../../proto/generated/core/peer.pb.dart';
 import '../../proto/generated/dht/kademlia.pb.dart' as kad;
@@ -25,7 +24,7 @@ class IPFSPeer {
       id: PeerId(value: Base58().base58Decode(proto.id)),
       addresses: proto.addresses
           .map((addr) => parseMultiaddrString(addr))
-          .whereType<p2p.FullAddress>()
+          .whereType<FullAddress>()
           .toList(),
       latency: proto.latency.toInt(),
       agentVersion: proto.agentVersion,
@@ -38,7 +37,7 @@ class IPFSPeer {
       id: PeerId(value: Uint8List.fromList(peer.id)),
       addresses: peer.addrs
           .map((addr) => multiaddrFromBytes(Uint8List.fromList(addr)))
-          .whereType<p2p.FullAddress>()
+          .whereType<FullAddress>()
           .toList(),
       latency: 0, // DHT peers don't track latency
       agentVersion: '', // DHT peers don't track version
@@ -49,7 +48,7 @@ class IPFSPeer {
   final PeerId id;
 
   /// Known addresses for this peer.
-  final List<p2p.FullAddress> addresses;
+  final List<FullAddress> addresses;
 
   /// Network latency in milliseconds.
   final int latency;

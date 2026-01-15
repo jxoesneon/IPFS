@@ -1,5 +1,5 @@
 import 'package:dart_ipfs/src/core/messages/network_messages.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 
 /// Base class for protocol-specific message handlers.
 ///
@@ -13,11 +13,11 @@ abstract class ProtocolHandler {
   final String protocolId;
 
   /// The local peer's ID.
-  final p2p.PeerId peerId;
+  final PeerId peerId;
 
   /// Handles an incoming [message].
   Future<void> handleMessage(BaseMessage message);
 
   /// Sends a [message] to [targetPeerId].
-  Future<void> sendMessage(p2p.PeerId targetPeerId, BaseMessage message);
+  Future<void> sendMessage(PeerId targetPeerId, BaseMessage message);
 }

@@ -9,7 +9,7 @@ import 'package:crypto/crypto.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:test/test.dart';
 
 // Manual Mocks
@@ -18,7 +18,7 @@ class MockNetworkHandler implements NetworkHandler {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class MockP2plibRouter implements P2plibRouter {
+class MockRouterInterface implements RouterInterface {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -26,12 +26,12 @@ class MockP2plibRouter implements P2plibRouter {
 void main() {
   group('DHT Routing Logic', () {
     late MockNetworkHandler mockHandler;
-    late MockP2plibRouter mockRouter;
+    late MockRouterInterface mockRouter;
     late DHTClient client;
 
     setUp(() {
       mockHandler = MockNetworkHandler();
-      mockRouter = MockP2plibRouter();
+      mockRouter = MockRouterInterface();
       client = DHTClient(networkHandler: mockHandler, router: mockRouter);
     });
 

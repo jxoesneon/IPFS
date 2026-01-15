@@ -20,7 +20,7 @@ import 'package:dart_ipfs/src/protocols/dht/dht_client.dart' as _i5;
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart' as _i14;
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart' as _i8;
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart' as _i20;
-import 'package:dart_ipfs/src/transport/p2plib_router.dart' as _i6;
+import 'package:dart_ipfs/src/transport/router_interface.dart' as _i6;
 import 'package:dart_ipfs/src/utils/keystore.dart' as _i2;
 import 'package:dart_ipfs/src/utils/private_key.dart' as _i13;
 import 'package:mockito/mockito.dart' as _i1;
@@ -62,8 +62,9 @@ class _FakeDHTClient_3 extends _i1.SmartFake implements _i5.DHTClient {
     : super(parent, parentInvocation);
 }
 
-class _FakeP2plibRouter_4 extends _i1.SmartFake implements _i6.P2plibRouter {
-  _FakeP2plibRouter_4(Object parent, Invocation parentInvocation)
+class _FakeRouterInterface_4 extends _i1.SmartFake
+    implements _i6.RouterInterface {
+  _FakeRouterInterface_4(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
@@ -247,12 +248,15 @@ class MockDHTHandler extends _i1.Mock implements _i14.DHTHandler {
           as _i5.DHTClient);
 
   @override
-  _i6.P2plibRouter get router =>
+  _i6.RouterInterface get router =>
       (super.noSuchMethod(
             Invocation.getter(#router),
-            returnValue: _FakeP2plibRouter_4(this, Invocation.getter(#router)),
+            returnValue: _FakeRouterInterface_4(
+              this,
+              Invocation.getter(#router),
+            ),
           )
-          as _i6.P2plibRouter);
+          as _i6.RouterInterface);
 
   @override
   _i7.Datastore get storage =>

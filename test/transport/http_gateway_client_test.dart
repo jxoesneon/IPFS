@@ -1,121 +1,96 @@
-// test/transport/http_gateway_client_test.dart
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:dart_ipfs/src/transport/http_gateway_client.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:test/test.dart';
 
-// Note: HttpGatewayClient makes real HTTP requests. These tests focus on
-// unit-testable logic patterns without network calls.
-
 void main() {
-  group('HttpGatewayClient Gateway URLs', () {
-    final gateways = [
-      'https://ipfs.io/ipfs/',
-      'https://dweb.link/ipfs/',
-      'https://gateway.pinata.cloud/ipfs/',
-      'https://cloudflare-ipfs.com/ipfs/',
-    ];
+  group('HttpGatewayClient', () {
+    test('get returns data when gateway succeeds', () async {
+      final mockClient = MockClient((request) async {
+        if (request.url.toString().contains('ipfs.io')) {
+          return http.Response('content', 200);
+        }
+        return http.Response('Not Found', 404);
+      });
 
-    test('default gateways are HTTPS', () {
-      for (final gateway in gateways) {
-        expect(gateway.startsWith('https://'), isTrue);
-      }
+      final client = HttpGatewayClient(client: mockClient);
+      final result = await client.get('QmHash');
+
+      expect(result, isNotNull);
+      expect(utf8.decode(result!), 'content');
     });
 
-    test('default gateways end with /ipfs/', () {
-      for (final gateway in gateways) {
-        expect(gateway.endsWith('/ipfs/'), isTrue);
-      }
+    test('get returns null when all gateways fail', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Error', 500);
+      });
+
+      final client = HttpGatewayClient(client: mockClient);
+      final result = await client.get('QmHash');
+
+      expect(result, isNull);
     });
 
-    test('gateway count matches expected', () {
-      expect(gateways.length, equals(4));
-    });
-  });
+    test('get uses specific baseUrl if provided', () async {
+      final mockClient = MockClient((request) async {
+        if (request.url.toString().contains('custom.gateway')) {
+          return http.Response('custom content', 200);
+        }
+        return http.Response('Error', 404);
+      });
 
-  group('HttpGatewayClient URL Construction', () {
-    test('URL is correctly constructed with CID', () {
-      const gateway = 'https://ipfs.io/ipfs/';
-      const cid = 'QmTest123';
-      final url = Uri.parse('$gateway$cid');
+      final client = HttpGatewayClient(client: mockClient);
+      final result = await client.get(
+        'QmHash',
+        baseUrl: 'https://custom.gateway/ipfs/',
+      );
 
-      expect(url.toString(), equals('https://ipfs.io/ipfs/QmTest123'));
-    });
-
-    test('cleanBase adds trailing slash if missing', () {
-      const baseUrl = 'https://custom-gateway.com/ipfs';
-      final cleanBase = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
-      expect(cleanBase, equals('https://custom-gateway.com/ipfs/'));
+      expect(result, isNotNull);
+      expect(utf8.decode(result!), 'custom content');
     });
 
-    test('cleanBase preserves trailing slash if present', () {
-      const baseUrl = 'https://custom-gateway.com/ipfs/';
-      final cleanBase = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
-      expect(cleanBase, equals('https://custom-gateway.com/ipfs/'));
-    });
-  });
+    test('get handles fallback correctly', () async {
+      int callCount = 0;
+      final mockClient = MockClient((request) async {
+        callCount++;
+        // First gateway fails, second (dweb.link) succeeds
+        if (request.url.toString().contains('dweb.link')) {
+          return http.Response('fallback content', 200);
+        }
+        return http.Response('Timeout', 504);
+      });
 
-  group('HttpGatewayClient Reachability', () {
-    test('known CID for reachability check is correct', () {
-      // Empty directory CID used for health check
-      const emptyCid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
-      expect(emptyCid.startsWith('Qm'), isTrue);
-      expect(emptyCid.length, equals(46)); // CIDv0 length
-    });
-  });
+      final client = HttpGatewayClient(client: mockClient);
+      final result = await client.get('QmHash');
 
-  group('HttpGatewayClient Response Handling', () {
-    test('HTTP 200 indicates success', () {
-      const statusCode = 200;
-      expect(statusCode == 200, isTrue);
+      expect(result, isNotNull);
+      expect(utf8.decode(result!), 'fallback content');
+      expect(callCount, greaterThanOrEqualTo(2));
     });
 
-    test('non-200 status codes indicate failure', () {
-      final failureCodes = [404, 500, 502, 503];
-      for (final code in failureCodes) {
-        expect(code != 200, isTrue);
-      }
-    });
-  });
+    test('isReachable returns true on success', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('', 200);
+      });
 
-  group('HttpGatewayClient Timeout', () {
-    test('timeout duration is reasonable', () {
-      const timeout = Duration(seconds: 5);
-      expect(timeout.inSeconds, equals(5));
-      expect(timeout.inSeconds, lessThanOrEqualTo(10));
+      final client = HttpGatewayClient(client: mockClient);
+      final result = await client.isReachable();
+
+      expect(result, isTrue);
     });
 
-    test('reachability timeout is shorter', () {
-      const reachabilityTimeout = Duration(seconds: 3);
-      const fetchTimeout = Duration(seconds: 5);
-      expect(reachabilityTimeout < fetchTimeout, isTrue);
-    });
-  });
+    test('isReachable returns false on failure', () async {
+      final mockClient = MockClient((request) async {
+        throw http.ClientException('Network down');
+      });
 
-  group('HttpGatewayClient Fallback Logic', () {
-    test('iterates through all gateways on failure', () {
-      final gateways = ['gw1', 'gw2', 'gw3', 'gw4'];
-      var triedCount = 0;
+      final client = HttpGatewayClient(client: mockClient);
+      final result = await client.isReachable();
 
-      for (final gateway in gateways) {
-        triedCount++;
-        // Simulate failure - continue to next
-        final success = false;
-        if (success) break;
-      }
-
-      expect(triedCount, equals(4)); // All gateways tried
-    });
-
-    test('stops on first success', () {
-      final gateways = ['gw1', 'gw2', 'gw3', 'gw4'];
-      var triedCount = 0;
-
-      for (final gateway in gateways) {
-        triedCount++;
-        // Simulate success on second gateway
-        final success = gateway == 'gw2';
-        if (success) break;
-      }
-
-      expect(triedCount, equals(2)); // Stopped at second
+      expect(result, isFalse);
     });
   });
 }

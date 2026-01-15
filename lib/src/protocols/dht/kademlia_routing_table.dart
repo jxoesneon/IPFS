@@ -484,6 +484,8 @@ class KademliaRoutingTable {
         msg.writeToBuffer(),
       );
 
+      if (response == null) return false;
+
       // Parse response
       final pingResponse = kad.Message.fromBuffer(response);
       return pingResponse.type == kad.Message_MessageType.PING;

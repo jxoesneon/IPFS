@@ -14,7 +14,7 @@ import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.da
     as ipfs_node_network_events;
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 
 /// Kademlia DHT client implementation for IPFS.
@@ -37,7 +37,7 @@ import 'package:dart_ipfs/src/utils/base58.dart';
 /// ```
 class DHTClient {
   /// Creates a new DHT client.
-  DHTClient({required this.networkHandler, required P2plibRouter router})
+  DHTClient({required this.networkHandler, required RouterInterface router})
     : _router = router;
 
   /// The IPFS node this client belongs to.
@@ -46,7 +46,7 @@ class DHTClient {
   /// Handler for network operations.
   final NetworkHandler networkHandler;
 
-  final P2plibRouter _router;
+  final RouterInterface _router;
 
   /// The local peer ID.
   late final PeerId peerId;
@@ -104,7 +104,7 @@ class DHTClient {
   kad.Peer _convertPeerIdToKadPeer(PeerId peerId) {
     var addresses = <String>[];
     try {
-      addresses = _router.resolvePeer(peerId.toBase58());
+      addresses = _router.resolvePeerId(peerId.toBase58());
     } catch (_) {
       // Ignore if peer not found
     }
@@ -114,9 +114,6 @@ class DHTClient {
         addresses.map((a) => Uint8List.fromList(utf8.encode(a))),
       ); // Sending string addrs as bytes? Proto expects bytes.
     // Note: Traditionally IPFS sends multiaddr bytes.
-    // Platform abstraction: String -> Multiaddr Bytes is tricky without p2plib/dart-multiaddr on web?
-    // For now, we are sending utf8 encoded strings if we don't have multiaddr encoder on web.
-    // If p2plib_router IO implementation returns strings which are multiaddrs, updating it to return bytes or strings.
     // Since resolvePeer returns List<String>, we have to encode if protocol expects bytes.
     // Let's assume standard IPFS expects multiaddr bytes.
   }
@@ -135,7 +132,7 @@ class DHTClient {
       hashBytes = Uint8List.fromList(sha256.convert(utf8.encode(cidStr)).bytes);
     }
 
-    // PeerId in p2plib was 64 bytes?! DHT keys are usually 32 bytes (SHA256).
+    // DHT keys are usually 32 bytes (SHA256).
     // Our new PeerId is just bytes wrapper.
     // If the DHT requires 256-bit keys, we use 32 bytes.
     return PeerId(value: hashBytes);
@@ -460,7 +457,7 @@ class DHTClient {
 
       // Router should already be initialized by IPFSNode
       await _router
-          .start(); // This will be safe now with the updated P2plibRouter
+          .start(); // This will be safe now with the updated RouterInterface
 
       // Register protocol handlers
       node.dhtHandler?.router.registerProtocol(protocolDht);
@@ -610,7 +607,7 @@ class DHTClient {
         ..key = key
         ..value = utf8.encode(timestamp.toString());
 
-      await node.dhtHandler?.router.emitEvent(
+      node.dhtHandler?.router.emitEvent(
         'dht:key:republished',
         event.writeToBuffer(),
       );
@@ -668,7 +665,7 @@ class DHTClient {
   }
 
   /// The underlying P2P router.
-  P2plibRouter get router => _router;
+  RouterInterface get router => _router;
 
   /// Whether the DHT client has been initialized.
   bool get isInitialized => _initialized;

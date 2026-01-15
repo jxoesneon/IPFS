@@ -7,10 +7,10 @@ import 'package:dart_ipfs/src/core/data_structures/metadata.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
 
 // Mock BlockStore for Pin testing
@@ -60,8 +60,8 @@ void main() {
 
     test('should serialize to/from protobuf', () {
       final bytes = Uint8List.fromList(List.filled(64, 1));
-      final id = p2p.PeerId(value: bytes);
-      final address = p2p.FullAddress(
+      final id = PeerId(value: bytes);
+      final address = FullAddress(
         address: InternetAddress('127.0.0.1'),
         port: 4001,
       );

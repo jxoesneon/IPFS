@@ -21,7 +21,7 @@ import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.da
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart'; // Added import
 import 'package:dart_ipfs/src/utils/base58.dart'; // Added import
 import 'package:test/test.dart';
 
@@ -70,8 +70,23 @@ class MockIPLDHandler extends IPLDHandler {
   Future<Map<String, dynamic>> getStatus() async => {'status': 'mock_ok'};
 }
 
-class MockP2plibRouter extends P2plibRouter {
-  MockP2plibRouter(super.config);
+class MockRouter implements RouterInterface {
+  MockRouter(IPFSConfig config);
+
+  @override
+  String get peerID => validMockPeerId;
+  @override
+  bool get hasStarted => true;
+  @override
+  bool get isInitialized => true;
+  @override
+  Set<String> get connectedPeers => {};
+  @override
+  List<String> get listeningAddresses => ['/ip4/127.0.0.1/tcp/4001'];
+  @override
+  Stream<ConnectionEvent> get connectionEvents => const Stream.empty();
+  @override
+  Stream<MessageEvent> get messageEvents => const Stream.empty();
   @override
   Future<void> initialize() async {}
   @override
@@ -79,7 +94,48 @@ class MockP2plibRouter extends P2plibRouter {
   @override
   Future<void> stop() async {}
   @override
-  String get peerID => validMockPeerId;
+  Future<void> connect(String multiaddress) async {}
+  @override
+  Future<void> disconnect(String peerIdOrMultiaddress) async {}
+  @override
+  List<String> listConnectedPeers() => [];
+  @override
+  bool isConnectedPeer(String peerIdStr) => false;
+  @override
+  Future<void> sendMessage(
+    String peerId,
+    Uint8List message, {
+    String? protocolId,
+  }) async {}
+  @override
+  Future<Uint8List?> sendRequest(
+    String peerId,
+    String protocolId,
+    Uint8List request,
+  ) async => null;
+  @override
+  Stream<Uint8List> receiveMessages(String peerId) => const Stream.empty();
+  @override
+  void registerProtocolHandler(
+    String protocolId,
+    void Function(NetworkPacket) handler,
+  ) {}
+  @override
+  void removeMessageHandler(String protocolId) {}
+  @override
+  void registerProtocol(String protocolId) {}
+  @override
+  Future<void> broadcastMessage(String protocolId, Uint8List message) async {}
+  @override
+  void emitEvent(String topic, Uint8List data) {}
+  @override
+  void onEvent(String topic, void Function(dynamic) handler) {}
+  @override
+  void offEvent(String topic, void Function(dynamic) handler) {}
+  @override
+  dynamic parseMultiaddr(String multiaddr) => null;
+  @override
+  List<String> resolvePeerId(String peerIdStr) => [];
 }
 
 class MockCircuitRelayClient extends CircuitRelayClient {
@@ -90,44 +146,78 @@ class MockCircuitRelayClient extends CircuitRelayClient {
   Future<void> stop() async {}
 }
 
-class MockNetworkHandler extends NetworkHandler {
-  MockNetworkHandler(super.config, this._nodeReceiver, this._mockRouter);
-  final IPFSNode _nodeReceiver;
-  final P2plibRouter _mockRouter;
+class MockNetworkHandler implements NetworkHandler {
+  MockNetworkHandler(this._mockRouter);
+  final RouterInterface _mockRouter;
 
   @override
-  IPFSNode get ipfsNode => _nodeReceiver;
+  late IPFSNode ipfsNode;
 
   @override
-  String get peerID => validMockPeerId;
+  CircuitRelayClient get circuitRelayClient =>
+      MockCircuitRelayClient(_mockRouter);
+
+  @override
+  RouterInterface get router => _mockRouter;
+
+  @override
+  Router get dhtRouter => Router(IPFSConfig());
+
+  @override
+  IPFSConfig get config => IPFSConfig(); // stub config
+
+  @override
+  Future<void> initialize() async {}
 
   @override
   Future<void> start() async {}
+
   @override
   Future<void> stop() async {}
-  @override
-  void setIpfsNode(IPFSNode node) {}
 
   @override
-  P2plibRouter get p2pRouter => _mockRouter;
+  Stream<NetworkEvent> get networkEvents => const Stream.empty();
 
   @override
-  Router get router => Router(config);
+  String get peerID => _mockRouter.peerID;
 
   @override
-  Future<void> connectToPeer(String multiaddress) async {
-    // Mock success
+  Future<void> connectToPeer(String multiaddress) async {}
+
+  @override
+  Future<void> disconnectFromPeer(String multiaddress) async {}
+
+  @override
+  Future<List<String>> listConnectedPeers() async => [];
+
+  @override
+  Future<void> sendMessage(String peerId, String message) async {}
+
+  @override
+  Stream<String> receiveMessages(String peerId) => const Stream.empty();
+
+  @override
+  Future<Uint8List?> sendRequest(
+    String peerId,
+    String protocolId,
+    Uint8List request,
+  ) async => null;
+
+  @override
+  void setIpfsNode(IPFSNode node) {
+    ipfsNode = node;
   }
 
   @override
-  Future<void> disconnectFromPeer(String multiaddress) async {
-    // Mock success
-  }
+  Future<bool> canConnectDirectly(String peerAddress) async => true;
+
+  @override
+  Future<bool> testDialback() async => true;
 }
 
 class MockDHTHandler extends DHTHandler {
   MockDHTHandler(IPFSConfig config, NetworkHandler networkHandler)
-    : super(config, networkHandler.p2pRouter, networkHandler);
+    : super(config, networkHandler.router, networkHandler);
 
   @override
   Future<void> start() async {}
@@ -155,7 +245,7 @@ class MockBitswapHandler extends BitswapHandler {
     IPFSConfig config,
     BlockStore store,
     NetworkHandler networkHandler,
-  ) : super(config, store, networkHandler.p2pRouter);
+  ) : super(config, store, networkHandler.router);
 
   @override
   Future<void> start() async {}
@@ -175,7 +265,7 @@ class MockBitswapHandler extends BitswapHandler {
 }
 
 class MockIpfsNodeNetworkEvents extends IpfsNodeNetworkEvents {
-  MockIpfsNodeNetworkEvents(super.relay, super.router);
+  MockIpfsNodeNetworkEvents(super.router);
 
   final StreamController<NetworkEvent> _controller =
       StreamController.broadcast();
@@ -227,17 +317,14 @@ void main() {
       );
 
       // Mocks for Network
-      final mockRouter = MockP2plibRouter(config);
+      // Mocks for Network
+      final mockRouter = MockRouter(config);
       final mockRelay = MockCircuitRelayClient(mockRouter);
-      final mockEvents = MockIpfsNodeNetworkEvents(mockRelay, mockRouter);
+      final mockEvents = MockIpfsNodeNetworkEvents(mockRouter);
 
-      final ipfsNodeForMocks = IPFSNode.fromContainer(container);
+      // final ipfsNodeForMocks = IPFSNode.fromContainer(container); // Unused in new mock
 
-      final mockNetworkHandler = MockNetworkHandler(
-        config,
-        ipfsNodeForMocks,
-        mockRouter,
-      );
+      final mockNetworkHandler = MockNetworkHandler(mockRouter);
       container.registerSingleton<NetworkHandler>(mockNetworkHandler);
 
       container.registerSingleton<DHTHandler>(

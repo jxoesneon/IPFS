@@ -12,7 +12,7 @@ import 'package:dart_ipfs/src/proto/generated/ipns.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'package:dart_ipfs/src/storage/hive_datastore.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
@@ -48,7 +48,7 @@ class DHTHandler implements IDHTHandler {
   /// The underlying DHT client for network operations.
   late final DHTClient dhtClient;
   final Keystore _keystore;
-  final P2plibRouter _router;
+  final RouterInterface _router;
   final ds.Datastore _storage;
   final http.Client _httpClient;
   late final Logger _logger;
@@ -262,7 +262,7 @@ class DHTHandler implements IDHTHandler {
   }
 
   /// Returns the underlying P2P router.
-  P2plibRouter get router => _router;
+  RouterInterface get router => _router;
 
   @override
   Future<List<V_PeerInfo>> findPeer(PeerId id) async {
@@ -281,7 +281,7 @@ class DHTHandler implements IDHTHandler {
   @override
   Future<void> provide(CID cid) async {
     try {
-      await dhtClient.addProvider(cid.toString(), _router.peerId.toString());
+      await dhtClient.addProvider(cid.toString(), _router.peerID);
     } catch (e) {
       // print('Error providing CID: $e');
     }

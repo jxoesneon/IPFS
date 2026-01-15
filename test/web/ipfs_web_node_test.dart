@@ -1,25 +1,39 @@
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
 import 'package:test/test.dart';
 
+import 'dart:io';
+
+@TestOn('vm || browser')
 void main() {
   group('IPFSWebNode', () {
     late IPFSWebNode node;
+    late Directory tempDir;
 
     setUp(() async {
-      node = IPFSWebNode();
+      tempDir = Directory.systemTemp.createTempSync('ipfs_web_node_test_');
+      final config = IPFSConfig(
+        blockStorePath: tempDir.path,
+        datastorePath: tempDir.path,
+      );
+      node = IPFSWebNode(config: config);
       await node.start();
     });
 
     tearDown(() async {
       await node.stop();
+      if (tempDir.existsSync()) {
+        try {
+          tempDir.deleteSync(recursive: true);
+        } catch (_) {}
+      }
     });
 
     test('should start and set running state', () async {
       expect(node.isRunning, isTrue);
-      expect(node.peerID, isNotEmpty);
       expect(node.peerID, isNotEmpty);
       // expect(node.peerID, startsWith('web-')); // Router in VM generates real ID
     });

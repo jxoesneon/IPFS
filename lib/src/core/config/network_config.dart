@@ -23,6 +23,7 @@ class NetworkConfig {
     this.maxConnections = 50,
     this.connectionTimeout = const Duration(seconds: 30),
     this.enableNatTraversal = false,
+    this.enableMDNS = true,
     String? nodeId,
     this.delegatedRoutingEndpoint,
   }) : nodeId = nodeId ?? _generateDefaultNodeId();
@@ -34,6 +35,7 @@ class NetworkConfig {
     int maxConnections = 50,
     Duration connectionTimeout = const Duration(seconds: 30),
     bool enableNatTraversal = false,
+    bool enableMDNS = true,
   }) {
     return NetworkConfig(
       listenAddresses: listenAddresses,
@@ -41,6 +43,7 @@ class NetworkConfig {
       maxConnections: maxConnections,
       connectionTimeout: connectionTimeout,
       enableNatTraversal: enableNatTraversal,
+      enableMDNS: enableMDNS,
       nodeId: _generateDefaultNodeId(),
     );
   }
@@ -55,6 +58,7 @@ class NetworkConfig {
           ? Duration(seconds: json['connectionTimeoutSeconds'] as int)
           : const Duration(seconds: 30),
       enableNatTraversal: json['enableNatTraversal'] as bool? ?? false,
+      enableMDNS: json['enableMDNS'] as bool? ?? true,
       nodeId: json['nodeId'] as String?,
       delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'] as String?,
     );
@@ -89,6 +93,9 @@ class NetworkConfig {
   /// Whether to enable NAT traversal (UPnP/NAT-PMP). Defaults to false for security.
   final bool enableNatTraversal;
 
+  /// Whether to enable mDNS for local peer discovery. Defaults to true.
+  final bool enableMDNS;
+
   /// Unique identifier for this node.
   final String nodeId;
 
@@ -102,6 +109,7 @@ class NetworkConfig {
     'maxConnections': maxConnections,
     'connectionTimeoutSeconds': connectionTimeout.inSeconds,
     'enableNatTraversal': enableNatTraversal,
+    'enableMDNS': enableMDNS,
     'nodeId': nodeId,
     'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
   };

@@ -9,7 +9,7 @@ import 'core/data_structures/node_stats.dart';
 import 'core/data_structures/peer.dart';
 import 'core/ipfs_node/ipfs_node.dart';
 import 'core/storage/datastore.dart';
-import 'network/router.dart';
+import 'transport/router_interface.dart';
 
 /// Main entry point for the IPFS (InterPlanetary File System) implementation.
 ///
@@ -50,7 +50,7 @@ class IPFS {
 
   /// The router for P2P networking.
   /// Null if running in offline mode.
-  final Router? _router;
+  final RouterInterface? _router;
 
   /// The Bitswap protocol handler.
   /// Null if running in offline mode.

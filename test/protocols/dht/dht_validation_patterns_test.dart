@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 
 /// Tests for DHTHandler validation regex patterns.
 ///
-/// Since DHTHandler requires complex P2plibRouter and NetworkHandler for
+/// Since DHTHandler requires complex RouterInterface and NetworkHandler for
 /// full initialization, we test the validation logic patterns directly.
 ///
 /// These patterns match what DHTHandler.isValidCID, isValidPeerID, and

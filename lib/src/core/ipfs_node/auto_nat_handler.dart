@@ -127,8 +127,10 @@ class AutoNATHandler {
       }
 
       // Test for symmetric NAT
-      final isSymmetric = await _testSymmetricNAT();
-      _natType = isSymmetric ? NATType.symmetric : NATType.restricted;
+      // Note: checkDialback already tests reachability.
+      // Accurate symmetric NAT detection requires binding multiple ports which RouterInterface doesn't expose yet.
+      // Defaulting to restricted for now if not directly reachable.
+      _natType = NATType.restricted;
 
       _logger.debug('NAT type detected: $_natType');
     } catch (e, stackTrace) {
@@ -152,16 +154,8 @@ class AutoNATHandler {
     return successfulConnections >= (bootstrapPeers.length + 1) ~/ 2;
   }
 
-  Future<bool> _testSymmetricNAT() async {
-    // Test connections from different source ports
-    final results = await Future.wait([
-      _networkHandler.testConnection(sourcePort: 4001),
-      _networkHandler.testConnection(sourcePort: 4002),
-    ]);
-
-    // If external ports are different, it's symmetric NAT
-    return results[0] != results[1];
-  }
+  // Symmetric NAT test removed as NetworkHandler.testConnection is deprecated.
+  // Future<bool> _testSymmetricNAT() async { ... }
 
   Future<void> _performDialbackTest() async {
     _logger.verbose('Performing dialback test');
