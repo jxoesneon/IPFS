@@ -142,7 +142,7 @@ class Libp2pRouter implements RouterInterface {
       final resourceManager = ResourceManagerImpl(limiter: FixedLimiter());
 
       _host = await config.Libp2p.new_([
-        config.Libp2p.transport(TCPTransport(resourceManager: resourceManager)),
+        ..._buildTransports(resourceManager),
         config.Libp2p.listenAddrs([listenAddr]),
         config.Libp2p.identity(_keyPair!),
         config.Libp2p.userAgent('dart_ipfs/1.9.0'),
@@ -501,5 +501,27 @@ class Libp2pRouter implements RouterInterface {
       shift += 7;
     }
     return result;
+  }
+
+  /// Builds a list of libp2p transports based on configuration.
+  ///
+  /// Currently supports TCP. Phase 1 will expand this to include
+  /// WebTransport and WebRTC.
+  List<config.Option> _buildTransports(libp2p.ResourceManager resourceManager) {
+    final transports = <config.Option>[];
+
+    // Always include TCP for now (standard IPFS / Amino compatibility)
+    transports.add(
+      config.Libp2p.transport(TCPTransport(resourceManager: resourceManager)),
+    );
+
+    // TODO: Add WebTransport and WebRTC based on config (Phase 1)
+    /*
+    if (_config.network.useWebTransport) {
+      transports.add(config.Libp2p.transport(WebTransport()));
+    }
+    */
+
+    return transports;
   }
 }
