@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.9.1] - 2026-01-31
+
+### Added
+- **Protobuf 6.0.0 Compatibility**: Full migration to protobuf 6.0.0 with complete backward compatibility
+- **Enhanced Documentation**: Updated compatibility guides and troubleshooting sections
+
+### Fixed
+- **dart_libp2p Compatibility**: Resolved `PbList`/`createRepeated()` issues in 10+ files
+- **Any/Timestamp Conflicts**: Fixed import conflicts in 5 critical IPFS files
+- **Test Suite Stability**: Verified 42+ tests passing with protobuf 6.0.0
+
+### Changed
+- **Dependency Updates**: Updated `protobuf` dependency to `^6.0.0`
+- **Import Patterns**: Standardized well-known type imports to use `package:protobuf/well_known_types/`
+
 ## [1.9.0] - 2026-01-15
 
 - **Full Libp2p Migration**: Successfully transitioned to the native `dart_libp2p` architecture for standard IPFS networking.

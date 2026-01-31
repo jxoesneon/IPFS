@@ -1,6 +1,6 @@
 name: dart_ipfs
 description: "Production-ready IPFS implementation in Dart with full protocol support, P2P networking, Gateway mode, and offline capabilities. Supports mobile (Flutter) and web platforms."
-version: 1.9.0
+version: 1.9.1
 homepage: https://github.com/jxoesneon/IPFS
 repository: https://github.com/jxoesneon/IPFS
 issue_tracker: https://github.com/jxoesneon/IPFS/issues
@@ -24,7 +24,7 @@ dependencies:
   pointycastle: ^3.9.1
 
   # Serialization
-  protobuf: ^3.1.0
+  protobuf: ^6.0.0
 
   # Data Storage
   hive: ^2.2.3
@@ -82,3 +82,7 @@ assets:
 
 # Example entry point for running the application.
 example: main.dart
+
+dependency_overrides:
+  # Override protobuf to 6.0.0 for all dependencies
+  protobuf: ^6.0.0
