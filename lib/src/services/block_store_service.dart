@@ -5,7 +5,7 @@ import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 // import 'package:dart_ipfs/src/proto/generated/core/block.pbgrpc.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pbgrpc.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/google/protobuf/empty.pb.dart';
+import 'package:protobuf/well_known_types/google/protobuf/empty.pb.dart';
 import 'package:grpc/grpc.dart';
 
 /// gRPC service implementation for block storage operations.

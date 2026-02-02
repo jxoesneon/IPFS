@@ -87,7 +87,8 @@ class FlatFileDatastore implements Datastore {
         // Let's assume everything ending in .data is a file we care about.
         if (childPath.endsWith('.data')) {
           final relative = p.relative(childPath, from: path);
-          final keyStr = '/${relative.substring(0, relative.length - 5)}';
+          final normalizedRelative = relative.replaceAll(r'\', '/');
+          final keyStr = '/${normalizedRelative.substring(0, normalizedRelative.length - 5)}';
           final key = Key(keyStr);
 
           // Filter logic reused

@@ -1,13 +1,14 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: core/blockstore.proto
-//
-// @dart = 2.12
+// Generated from core/blockstore.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -15,69 +16,74 @@ import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'block.pb.dart' as $0;
 
+export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
+
 /// Response message for adding a block
 class AddBlockResponse extends $pb.GeneratedMessage {
   factory AddBlockResponse({
     $core.bool? success,
     $core.String? message,
   }) {
-    final $result = create();
-    if (success != null) {
-      $result.success = success;
-    }
-    if (message != null) {
-      $result.message = message;
-    }
-    return $result;
+    final result = create();
+    if (success != null) result.success = success;
+    if (message != null) result.message = message;
+    return result;
   }
-  AddBlockResponse._() : super();
-  factory AddBlockResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory AddBlockResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AddBlockResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+  AddBlockResponse._();
+
+  factory AddBlockResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory AddBlockResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'AddBlockResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
+      createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
     ..aOS(2, _omitFieldNames ? '' : 'message')
-    ..hasRequiredFields = false
-  ;
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  AddBlockResponse clone() => AddBlockResponse()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  AddBlockResponse copyWith(void Function(AddBlockResponse) updates) => super.copyWith((message) => updates(message as AddBlockResponse)) as AddBlockResponse;
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AddBlockResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AddBlockResponse copyWith(void Function(AddBlockResponse) updates) =>
+      super.copyWith((message) => updates(message as AddBlockResponse))
+          as AddBlockResponse;
 
+  @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static AddBlockResponse create() => AddBlockResponse._();
+  @$core.override
   AddBlockResponse createEmptyInstance() => create();
-  static $pb.PbList<AddBlockResponse> createRepeated() => $pb.PbList<AddBlockResponse>();
   @$core.pragma('dart2js:noInline')
-  static AddBlockResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AddBlockResponse>(create);
+  static AddBlockResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AddBlockResponse>(create);
   static AddBlockResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.bool get success => $_getBF(0);
   @$pb.TagNumber(1)
-  set success($core.bool v) { $_setBool(0, v); }
+  set success($core.bool value) => $_setBool(0, value);
   @$pb.TagNumber(1)
   $core.bool hasSuccess() => $_has(0);
   @$pb.TagNumber(1)
-  void clearSuccess() => clearField(1);
+  void clearSuccess() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get message => $_getSZ(1);
   @$pb.TagNumber(2)
-  set message($core.String v) { $_setString(1, v); }
+  set message($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
   $core.bool hasMessage() => $_has(1);
   @$pb.TagNumber(2)
-  void clearMessage() => clearField(2);
+  void clearMessage() => $_clearField(2);
 }
 
 /// Response message for retrieving a block
@@ -86,65 +92,69 @@ class GetBlockResponse extends $pb.GeneratedMessage {
     $0.BlockProto? block,
     $core.bool? found,
   }) {
-    final $result = create();
-    if (block != null) {
-      $result.block = block;
-    }
-    if (found != null) {
-      $result.found = found;
-    }
-    return $result;
+    final result = create();
+    if (block != null) result.block = block;
+    if (found != null) result.found = found;
+    return result;
   }
-  GetBlockResponse._() : super();
-  factory GetBlockResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory GetBlockResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
-    ..aOM<$0.BlockProto>(1, _omitFieldNames ? '' : 'block', subBuilder: $0.BlockProto.create)
+  GetBlockResponse._();
+
+  factory GetBlockResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetBlockResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetBlockResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
+      createEmptyInstance: create)
+    ..aOM<$0.BlockProto>(1, _omitFieldNames ? '' : 'block',
+        subBuilder: $0.BlockProto.create)
     ..aOB(2, _omitFieldNames ? '' : 'found')
-    ..hasRequiredFields = false
-  ;
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  GetBlockResponse clone() => GetBlockResponse()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  GetBlockResponse copyWith(void Function(GetBlockResponse) updates) => super.copyWith((message) => updates(message as GetBlockResponse)) as GetBlockResponse;
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetBlockResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetBlockResponse copyWith(void Function(GetBlockResponse) updates) =>
+      super.copyWith((message) => updates(message as GetBlockResponse))
+          as GetBlockResponse;
 
+  @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static GetBlockResponse create() => GetBlockResponse._();
+  @$core.override
   GetBlockResponse createEmptyInstance() => create();
-  static $pb.PbList<GetBlockResponse> createRepeated() => $pb.PbList<GetBlockResponse>();
   @$core.pragma('dart2js:noInline')
-  static GetBlockResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetBlockResponse>(create);
+  static GetBlockResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetBlockResponse>(create);
   static GetBlockResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $0.BlockProto get block => $_getN(0);
   @$pb.TagNumber(1)
-  set block($0.BlockProto v) { setField(1, v); }
+  set block($0.BlockProto value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasBlock() => $_has(0);
   @$pb.TagNumber(1)
-  void clearBlock() => clearField(1);
+  void clearBlock() => $_clearField(1);
   @$pb.TagNumber(1)
   $0.BlockProto ensureBlock() => $_ensure(0);
 
   @$pb.TagNumber(2)
   $core.bool get found => $_getBF(1);
   @$pb.TagNumber(2)
-  set found($core.bool v) { $_setBool(1, v); }
+  set found($core.bool value) => $_setBool(1, value);
   @$pb.TagNumber(2)
   $core.bool hasFound() => $_has(1);
   @$pb.TagNumber(2)
-  void clearFound() => clearField(2);
+  void clearFound() => $_clearField(2);
 }
 
 /// Response message for removing a block
@@ -153,65 +163,69 @@ class RemoveBlockResponse extends $pb.GeneratedMessage {
     $core.bool? success,
     $core.String? message,
   }) {
-    final $result = create();
-    if (success != null) {
-      $result.success = success;
-    }
-    if (message != null) {
-      $result.message = message;
-    }
-    return $result;
+    final result = create();
+    if (success != null) result.success = success;
+    if (message != null) result.message = message;
+    return result;
   }
-  RemoveBlockResponse._() : super();
-  factory RemoveBlockResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory RemoveBlockResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RemoveBlockResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
+  RemoveBlockResponse._();
+
+  factory RemoveBlockResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RemoveBlockResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RemoveBlockResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
+      createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
     ..aOS(2, _omitFieldNames ? '' : 'message')
-    ..hasRequiredFields = false
-  ;
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  RemoveBlockResponse clone() => RemoveBlockResponse()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  RemoveBlockResponse copyWith(void Function(RemoveBlockResponse) updates) => super.copyWith((message) => updates(message as RemoveBlockResponse)) as RemoveBlockResponse;
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RemoveBlockResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RemoveBlockResponse copyWith(void Function(RemoveBlockResponse) updates) =>
+      super.copyWith((message) => updates(message as RemoveBlockResponse))
+          as RemoveBlockResponse;
 
+  @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static RemoveBlockResponse create() => RemoveBlockResponse._();
+  @$core.override
   RemoveBlockResponse createEmptyInstance() => create();
-  static $pb.PbList<RemoveBlockResponse> createRepeated() => $pb.PbList<RemoveBlockResponse>();
   @$core.pragma('dart2js:noInline')
-  static RemoveBlockResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RemoveBlockResponse>(create);
+  static RemoveBlockResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RemoveBlockResponse>(create);
   static RemoveBlockResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.bool get success => $_getBF(0);
   @$pb.TagNumber(1)
-  set success($core.bool v) { $_setBool(0, v); }
+  set success($core.bool value) => $_setBool(0, value);
   @$pb.TagNumber(1)
   $core.bool hasSuccess() => $_has(0);
   @$pb.TagNumber(1)
-  void clearSuccess() => clearField(1);
+  void clearSuccess() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get message => $_getSZ(1);
   @$pb.TagNumber(2)
-  set message($core.String v) { $_setString(1, v); }
+  set message($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
   $core.bool hasMessage() => $_has(1);
   @$pb.TagNumber(2)
-  void clearMessage() => clearField(2);
+  void clearMessage() => $_clearField(2);
 }
 
-
-const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

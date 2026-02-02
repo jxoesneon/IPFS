@@ -1,13 +1,15 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: circuit_relay.proto
-//
-// @dart = 2.12
+// Generated from circuit_relay.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -50,11 +52,46 @@ final $typed_data.Uint8List statusDescriptor = $convert.base64Decode(
 const HopMessage$json = {
   '1': 'HopMessage',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.circuit_relay.HopMessage.Type', '10': 'type'},
-    {'1': 'peer', '3': 2, '4': 1, '5': 11, '6': '.circuit_relay.Peer', '10': 'peer'},
-    {'1': 'reservation', '3': 3, '4': 1, '5': 11, '6': '.circuit_relay.Reservation', '10': 'reservation'},
-    {'1': 'limit', '3': 4, '4': 1, '5': 11, '6': '.circuit_relay.Limit', '10': 'limit'},
-    {'1': 'status', '3': 5, '4': 1, '5': 14, '6': '.circuit_relay.Status', '10': 'status'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.circuit_relay.HopMessage.Type',
+      '10': 'type'
+    },
+    {
+      '1': 'peer',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Peer',
+      '10': 'peer'
+    },
+    {
+      '1': 'reservation',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Reservation',
+      '10': 'reservation'
+    },
+    {
+      '1': 'limit',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Limit',
+      '10': 'limit'
+    },
+    {
+      '1': 'status',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.circuit_relay.Status',
+      '10': 'status'
+    },
   ],
   '4': [HopMessage_Type$json],
 };
@@ -82,10 +119,38 @@ final $typed_data.Uint8List hopMessageDescriptor = $convert.base64Decode(
 const StopMessage$json = {
   '1': 'StopMessage',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.circuit_relay.StopMessage.Type', '10': 'type'},
-    {'1': 'peer', '3': 2, '4': 1, '5': 11, '6': '.circuit_relay.Peer', '10': 'peer'},
-    {'1': 'limit', '3': 3, '4': 1, '5': 11, '6': '.circuit_relay.Limit', '10': 'limit'},
-    {'1': 'status', '3': 4, '4': 1, '5': 14, '6': '.circuit_relay.Status', '10': 'status'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.circuit_relay.StopMessage.Type',
+      '10': 'type'
+    },
+    {
+      '1': 'peer',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Peer',
+      '10': 'peer'
+    },
+    {
+      '1': 'limit',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.circuit_relay.Limit',
+      '10': 'limit'
+    },
+    {
+      '1': 'status',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.circuit_relay.Status',
+      '10': 'status'
+    },
   ],
   '4': [StopMessage_Type$json],
 };
@@ -150,4 +215,3 @@ const Limit$json = {
 final $typed_data.Uint8List limitDescriptor = $convert.base64Decode(
     'CgVMaW1pdBIaCghkdXJhdGlvbhgBIAEoBFIIZHVyYXRpb24SEgoEZGF0YRgCIAEoBFIEZGF0YQ'
     '==');
-

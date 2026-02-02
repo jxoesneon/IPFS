@@ -1,13 +1,15 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: dht/find_closest_peers.proto
-//
-// @dart = 2.12
+// Generated from dht/find_closest_peers.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -17,7 +19,14 @@ import 'dart:typed_data' as $typed_data;
 const FindClosestPeersRequest$json = {
   '1': 'FindClosestPeersRequest',
   '2': [
-    {'1': 'target', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'target'},
+    {
+      '1': 'target',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.common_kademlia.KademliaId',
+      '10': 'target'
+    },
     {'1': 'count', '3': 2, '4': 1, '5': 5, '10': 'count'},
   ],
 };
@@ -31,12 +40,19 @@ final $typed_data.Uint8List findClosestPeersRequestDescriptor = $convert.base64D
 const FindClosestPeersResponse$json = {
   '1': 'FindClosestPeersResponse',
   '2': [
-    {'1': 'peer_ids', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'peerIds'},
+    {
+      '1': 'peer_ids',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.dht.common_kademlia.KademliaId',
+      '10': 'peerIds'
+    },
   ],
 };
 
 /// Descriptor for `FindClosestPeersResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List findClosestPeersResponseDescriptor = $convert.base64Decode(
-    'ChhGaW5kQ2xvc2VzdFBlZXJzUmVzcG9uc2USPwoIcGVlcl9pZHMYASADKAsyJC5pcGZzLmRodC'
-    '5jb21tb25fa2FkZW1saWEuS2FkZW1saWFJZFIHcGVlcklkcw==');
-
+final $typed_data.Uint8List findClosestPeersResponseDescriptor =
+    $convert.base64Decode(
+        'ChhGaW5kQ2xvc2VzdFBlZXJzUmVzcG9uc2USPwoIcGVlcl9pZHMYASADKAsyJC5pcGZzLmRodC'
+        '5jb21tb25fa2FkZW1saWEuS2FkZW1saWFJZFIHcGVlcklkcw==');

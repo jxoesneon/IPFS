@@ -1,13 +1,15 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: base_messages.proto
-//
-// @dart = 2.12
+// Generated from base_messages.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -19,9 +21,23 @@ const IPFSMessage$json = {
   '2': [
     {'1': 'protocol_id', '3': 1, '4': 1, '5': 9, '10': 'protocolId'},
     {'1': 'payload', '3': 2, '4': 1, '5': 12, '10': 'payload'},
-    {'1': 'timestamp', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'timestamp'},
+    {
+      '1': 'timestamp',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'timestamp'
+    },
     {'1': 'sender_id', '3': 4, '4': 1, '5': 9, '10': 'senderId'},
-    {'1': 'type', '3': 5, '4': 1, '5': 14, '6': '.ipfs.base.IPFSMessage.MessageType', '10': 'type'},
+    {
+      '1': 'type',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.base.IPFSMessage.MessageType',
+      '10': 'type'
+    },
     {'1': 'request_id', '3': 6, '4': 1, '5': 9, '10': 'requestId'},
   ],
   '4': [IPFSMessage_MessageType$json],
@@ -53,7 +69,14 @@ final $typed_data.Uint8List iPFSMessageDescriptor = $convert.base64Decode(
 const NetworkEvent$json = {
   '1': 'NetworkEvent',
   '2': [
-    {'1': 'timestamp', '3': 1, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'timestamp'},
+    {
+      '1': 'timestamp',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'timestamp'
+    },
     {'1': 'event_type', '3': 2, '4': 1, '5': 9, '10': 'eventType'},
     {'1': 'peer_id', '3': 3, '4': 1, '5': 9, '10': 'peerId'},
     {'1': 'data', '3': 4, '4': 1, '5': 12, '10': 'data'},
@@ -65,4 +88,3 @@ final $typed_data.Uint8List networkEventDescriptor = $convert.base64Decode(
     'CgxOZXR3b3JrRXZlbnQSOAoJdGltZXN0YW1wGAEgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbW'
     'VzdGFtcFIJdGltZXN0YW1wEh0KCmV2ZW50X3R5cGUYAiABKAlSCWV2ZW50VHlwZRIXCgdwZWVy'
     'X2lkGAMgASgJUgZwZWVySWQSEgoEZGF0YRgEIAEoDFIEZGF0YQ==');
-

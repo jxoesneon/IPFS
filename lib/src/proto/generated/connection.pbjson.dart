@@ -1,13 +1,15 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: connection.proto
-//
-// @dart = 2.12
+// Generated from connection.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -18,9 +20,30 @@ const ConnectionState$json = {
   '1': 'ConnectionState',
   '2': [
     {'1': 'peer_id', '3': 1, '4': 1, '5': 9, '10': 'peerId'},
-    {'1': 'status', '3': 2, '4': 1, '5': 14, '6': '.ipfs.connection.ConnectionState.Status', '10': 'status'},
-    {'1': 'connected_at', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'connectedAt'},
-    {'1': 'metadata', '3': 4, '4': 3, '5': 11, '6': '.ipfs.connection.ConnectionState.MetadataEntry', '10': 'metadata'},
+    {
+      '1': 'status',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.connection.ConnectionState.Status',
+      '10': 'status'
+    },
+    {
+      '1': 'connected_at',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'connectedAt'
+    },
+    {
+      '1': 'metadata',
+      '3': 4,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.connection.ConnectionState.MetadataEntry',
+      '10': 'metadata'
+    },
   ],
   '3': [ConnectionState_MetadataEntry$json],
   '4': [ConnectionState_Status$json],
@@ -66,10 +89,22 @@ const ConnectionMetrics$json = {
   '2': [
     {'1': 'peer_id', '3': 1, '4': 1, '5': 9, '10': 'peerId'},
     {'1': 'messages_sent', '3': 2, '4': 1, '5': 4, '10': 'messagesSent'},
-    {'1': 'messages_received', '3': 3, '4': 1, '5': 4, '10': 'messagesReceived'},
+    {
+      '1': 'messages_received',
+      '3': 3,
+      '4': 1,
+      '5': 4,
+      '10': 'messagesReceived'
+    },
     {'1': 'bytes_sent', '3': 4, '4': 1, '5': 4, '10': 'bytesSent'},
     {'1': 'bytes_received', '3': 5, '4': 1, '5': 4, '10': 'bytesReceived'},
-    {'1': 'average_latency_ms', '3': 6, '4': 1, '5': 13, '10': 'averageLatencyMs'},
+    {
+      '1': 'average_latency_ms',
+      '3': 6,
+      '4': 1,
+      '5': 13,
+      '10': 'averageLatencyMs'
+    },
   ],
 };
 
@@ -80,4 +115,3 @@ final $typed_data.Uint8List connectionMetricsDescriptor = $convert.base64Decode(
     'ZXNzYWdlc1JlY2VpdmVkEh0KCmJ5dGVzX3NlbnQYBCABKARSCWJ5dGVzU2VudBIlCg5ieXRlc1'
     '9yZWNlaXZlZBgFIAEoBFINYnl0ZXNSZWNlaXZlZBIsChJhdmVyYWdlX2xhdGVuY3lfbXMYBiAB'
     'KA1SEGF2ZXJhZ2VMYXRlbmN5TXM=');
-

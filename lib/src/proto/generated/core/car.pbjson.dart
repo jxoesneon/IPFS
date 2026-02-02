@@ -1,13 +1,15 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: core/car.proto
-//
-// @dart = 2.12
+// Generated from core/car.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -19,10 +21,38 @@ const CarProto$json = {
   '2': [
     {'1': 'version', '3': 1, '4': 1, '5': 5, '10': 'version'},
     {'1': 'characteristics', '3': 2, '4': 3, '5': 9, '10': 'characteristics'},
-    {'1': 'pragma', '3': 3, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.CarProto.PragmaEntry', '10': 'pragma'},
-    {'1': 'blocks', '3': 4, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.BlockProto', '10': 'blocks'},
-    {'1': 'index', '3': 5, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.CarIndex', '10': 'index'},
-    {'1': 'header', '3': 6, '4': 1, '5': 11, '6': '.ipfs.core.data_structures.CarHeader', '10': 'header'},
+    {
+      '1': 'pragma',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.core.data_structures.CarProto.PragmaEntry',
+      '10': 'pragma'
+    },
+    {
+      '1': 'blocks',
+      '3': 4,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.core.data_structures.BlockProto',
+      '10': 'blocks'
+    },
+    {
+      '1': 'index',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.data_structures.CarIndex',
+      '10': 'index'
+    },
+    {
+      '1': 'header',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.core.data_structures.CarHeader',
+      '10': 'header'
+    },
   ],
   '3': [CarProto_PragmaEntry$json],
 };
@@ -32,7 +62,14 @@ const CarProto_PragmaEntry$json = {
   '1': 'PragmaEntry',
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
-    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Any', '10': 'value'},
+    {
+      '1': 'value',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Any',
+      '10': 'value'
+    },
   ],
   '7': {'7': true},
 };
@@ -54,8 +91,22 @@ const CarHeader$json = {
   '2': [
     {'1': 'version', '3': 1, '4': 1, '5': 5, '10': 'version'},
     {'1': 'characteristics', '3': 2, '4': 3, '5': 9, '10': 'characteristics'},
-    {'1': 'roots', '3': 3, '4': 3, '5': 11, '6': '.ipfs.core.IPFSCIDProto', '10': 'roots'},
-    {'1': 'pragma', '3': 4, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.CarHeader.PragmaEntry', '10': 'pragma'},
+    {
+      '1': 'roots',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.core.IPFSCIDProto',
+      '10': 'roots'
+    },
+    {
+      '1': 'pragma',
+      '3': 4,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.core.data_structures.CarHeader.PragmaEntry',
+      '10': 'pragma'
+    },
   ],
   '3': [CarHeader_PragmaEntry$json],
 };
@@ -65,7 +116,14 @@ const CarHeader_PragmaEntry$json = {
   '1': 'PragmaEntry',
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
-    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Any', '10': 'value'},
+    {
+      '1': 'value',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Any',
+      '10': 'value'
+    },
   ],
   '7': {'7': true},
 };
@@ -83,7 +141,14 @@ final $typed_data.Uint8List carHeaderDescriptor = $convert.base64Decode(
 const CarIndex$json = {
   '1': 'CarIndex',
   '2': [
-    {'1': 'entries', '3': 1, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.IndexEntry', '10': 'entries'},
+    {
+      '1': 'entries',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.core.data_structures.IndexEntry',
+      '10': 'entries'
+    },
   ],
 };
 
@@ -106,4 +171,3 @@ const IndexEntry$json = {
 final $typed_data.Uint8List indexEntryDescriptor = $convert.base64Decode(
     'CgpJbmRleEVudHJ5EhAKA2NpZBgBIAEoCVIDY2lkEhYKBm9mZnNldBgCIAEoA1IGb2Zmc2V0Eh'
     'YKBmxlbmd0aBgDIAEoA1IGbGVuZ3Ro');
-

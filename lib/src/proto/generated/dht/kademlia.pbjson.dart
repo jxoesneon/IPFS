@@ -1,13 +1,15 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: dht/kademlia.proto
-//
-// @dart = 2.12
+// Generated from dht/kademlia.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -33,12 +35,40 @@ final $typed_data.Uint8List connectionTypeDescriptor = $convert.base64Decode(
 const Message$json = {
   '1': 'Message',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.ipfs.dht.Message.MessageType', '10': 'type'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.dht.Message.MessageType',
+      '10': 'type'
+    },
     {'1': 'clusterLevelRaw', '3': 10, '4': 1, '5': 5, '10': 'clusterLevelRaw'},
     {'1': 'key', '3': 2, '4': 1, '5': 12, '10': 'key'},
-    {'1': 'record', '3': 3, '4': 1, '5': 11, '6': '.ipfs.dht.Record', '10': 'record'},
-    {'1': 'closerPeers', '3': 8, '4': 3, '5': 11, '6': '.ipfs.dht.Peer', '10': 'closerPeers'},
-    {'1': 'providerPeers', '3': 9, '4': 3, '5': 11, '6': '.ipfs.dht.Peer', '10': 'providerPeers'},
+    {
+      '1': 'record',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.ipfs.dht.Record',
+      '10': 'record'
+    },
+    {
+      '1': 'closerPeers',
+      '3': 8,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.dht.Peer',
+      '10': 'closerPeers'
+    },
+    {
+      '1': 'providerPeers',
+      '3': 9,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.dht.Peer',
+      '10': 'providerPeers'
+    },
   ],
   '4': [Message_MessageType$json],
 };
@@ -72,7 +102,14 @@ const Peer$json = {
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 12, '10': 'id'},
     {'1': 'addrs', '3': 2, '4': 3, '5': 12, '10': 'addrs'},
-    {'1': 'connection', '3': 3, '4': 1, '5': 14, '6': '.ipfs.dht.ConnectionType', '10': 'connection'},
+    {
+      '1': 'connection',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.dht.ConnectionType',
+      '10': 'connection'
+    },
   ],
 };
 
@@ -80,4 +117,3 @@ const Peer$json = {
 final $typed_data.Uint8List peerDescriptor = $convert.base64Decode(
     'CgRQZWVyEg4KAmlkGAEgASgMUgJpZBIUCgVhZGRycxgCIAMoDFIFYWRkcnMSOAoKY29ubmVjdG'
     'lvbhgDIAEoDjIYLmlwZnMuZGh0LkNvbm5lY3Rpb25UeXBlUgpjb25uZWN0aW9u');
-

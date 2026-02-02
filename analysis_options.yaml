@@ -3,6 +3,7 @@ include: package:lints/recommended.yaml
 analyzer:
   exclude:
     - vendor/**
+    - example/**
     - lib/src/proto/generated/**
     - "**/*.g.dart"
     - "**/*.pb.dart"

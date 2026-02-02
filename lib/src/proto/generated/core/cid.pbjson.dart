@@ -1,13 +1,15 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: core/cid.proto
-//
-// @dart = 2.12
+// Generated from core/cid.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -32,7 +34,14 @@ final $typed_data.Uint8List iPFSCIDVersionDescriptor = $convert.base64Decode(
 const IPFSCIDProto$json = {
   '1': 'IPFSCIDProto',
   '2': [
-    {'1': 'version', '3': 1, '4': 1, '5': 14, '6': '.ipfs.core.IPFSCIDVersion', '10': 'version'},
+    {
+      '1': 'version',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.core.IPFSCIDVersion',
+      '10': 'version'
+    },
     {'1': 'multihash', '3': 2, '4': 1, '5': 12, '10': 'multihash'},
     {'1': 'codec', '3': 3, '4': 1, '5': 9, '10': 'codec'},
     {'1': 'multibase_prefix', '3': 4, '4': 1, '5': 9, '10': 'multibasePrefix'},
@@ -46,4 +55,3 @@ final $typed_data.Uint8List iPFSCIDProtoDescriptor = $convert.base64Decode(
     'lvblIHdmVyc2lvbhIcCgltdWx0aWhhc2gYAiABKAxSCW11bHRpaGFzaBIUCgVjb2RlYxgDIAEo'
     'CVIFY29kZWMSKQoQbXVsdGliYXNlX3ByZWZpeBgEIAEoCVIPbXVsdGliYXNlUHJlZml4Eh0KCm'
     'NvZGVjX3R5cGUYBSABKAVSCWNvZGVjVHlwZQ==');
-

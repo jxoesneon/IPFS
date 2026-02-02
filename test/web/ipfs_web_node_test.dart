@@ -65,7 +65,7 @@ void main() {
       // We can't easily inspect the platform storage directly in unit tests
       // without mocking, but we can list pins
       final pins = await node.listPins();
-      expect(pins, contains(anyOf(cid.encode(), 'pins/${cid.encode()}')));
+      expect(pins, contains(anyOf(cid.encode(), 'pins/${cid.encode()}', 'pins\\${cid.encode()}')));
 
       await node.unpin(cid);
       final pinsAfter = await node.listPins();

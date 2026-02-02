@@ -1,13 +1,15 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: graphsync/graphsync.proto
-//
-// @dart = 2.12
+// Generated from graphsync/graphsync.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -37,10 +39,38 @@ final $typed_data.Uint8List responseStatusDescriptor = $convert.base64Decode(
 const GraphsyncMessage$json = {
   '1': 'GraphsyncMessage',
   '2': [
-    {'1': 'requests', '3': 1, '4': 3, '5': 11, '6': '.ipfs.graphsync.GraphsyncRequest', '10': 'requests'},
-    {'1': 'responses', '3': 2, '4': 3, '5': 11, '6': '.ipfs.graphsync.GraphsyncResponse', '10': 'responses'},
-    {'1': 'blocks', '3': 3, '4': 3, '5': 11, '6': '.ipfs.graphsync.Block', '10': 'blocks'},
-    {'1': 'extensions', '3': 4, '4': 3, '5': 11, '6': '.ipfs.graphsync.GraphsyncMessage.ExtensionsEntry', '10': 'extensions'},
+    {
+      '1': 'requests',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.graphsync.GraphsyncRequest',
+      '10': 'requests'
+    },
+    {
+      '1': 'responses',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.graphsync.GraphsyncResponse',
+      '10': 'responses'
+    },
+    {
+      '1': 'blocks',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.graphsync.Block',
+      '10': 'blocks'
+    },
+    {
+      '1': 'extensions',
+      '3': 4,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.graphsync.GraphsyncMessage.ExtensionsEntry',
+      '10': 'extensions'
+    },
   ],
   '3': [GraphsyncMessage_ExtensionsEntry$json],
 };
@@ -73,7 +103,14 @@ const GraphsyncRequest$json = {
     {'1': 'root', '3': 2, '4': 1, '5': 12, '10': 'root'},
     {'1': 'selector', '3': 3, '4': 1, '5': 12, '10': 'selector'},
     {'1': 'priority', '3': 4, '4': 1, '5': 5, '10': 'priority'},
-    {'1': 'extensions', '3': 5, '4': 3, '5': 11, '6': '.ipfs.graphsync.GraphsyncRequest.ExtensionsEntry', '10': 'extensions'},
+    {
+      '1': 'extensions',
+      '3': 5,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.graphsync.GraphsyncRequest.ExtensionsEntry',
+      '10': 'extensions'
+    },
     {'1': 'cancel', '3': 6, '4': 1, '5': 8, '10': 'cancel'},
     {'1': 'pause', '3': 7, '4': 1, '5': 8, '10': 'pause'},
     {'1': 'unpause', '3': 8, '4': 1, '5': 8, '10': 'unpause'},
@@ -105,11 +142,35 @@ const GraphsyncResponse$json = {
   '1': 'GraphsyncResponse',
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 5, '10': 'id'},
-    {'1': 'status', '3': 2, '4': 1, '5': 14, '6': '.ipfs.graphsync.ResponseStatus', '10': 'status'},
-    {'1': 'extensions', '3': 3, '4': 3, '5': 11, '6': '.ipfs.graphsync.GraphsyncResponse.ExtensionsEntry', '10': 'extensions'},
-    {'1': 'metadata', '3': 4, '4': 3, '5': 11, '6': '.ipfs.graphsync.GraphsyncResponse.MetadataEntry', '10': 'metadata'},
+    {
+      '1': 'status',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.ipfs.graphsync.ResponseStatus',
+      '10': 'status'
+    },
+    {
+      '1': 'extensions',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.graphsync.GraphsyncResponse.ExtensionsEntry',
+      '10': 'extensions'
+    },
+    {
+      '1': 'metadata',
+      '3': 4,
+      '4': 3,
+      '5': 11,
+      '6': '.ipfs.graphsync.GraphsyncResponse.MetadataEntry',
+      '10': 'metadata'
+    },
   ],
-  '3': [GraphsyncResponse_ExtensionsEntry$json, GraphsyncResponse_MetadataEntry$json],
+  '3': [
+    GraphsyncResponse_ExtensionsEntry$json,
+    GraphsyncResponse_MetadataEntry$json
+  ],
 };
 
 @$core.Deprecated('Use graphsyncResponseDescriptor instead')
@@ -154,4 +215,3 @@ const Block$json = {
 /// Descriptor for `Block`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List blockDescriptor = $convert.base64Decode(
     'CgVCbG9jaxIWCgZwcmVmaXgYASABKAxSBnByZWZpeBISCgRkYXRhGAIgASgMUgRkYXRh');
-
