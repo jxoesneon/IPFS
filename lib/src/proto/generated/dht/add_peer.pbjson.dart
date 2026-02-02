@@ -17,22 +17,8 @@ import 'dart:typed_data' as $typed_data;
 const AddPeerRequest$json = {
   '1': 'AddPeerRequest',
   '2': [
-    {
-      '1': 'peer_id',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.dht.common_kademlia.KademliaId',
-      '10': 'peerId'
-    },
-    {
-      '1': 'associated_peer_id',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.dht.common_kademlia.KademliaId',
-      '10': 'associatedPeerId'
-    },
+    {'1': 'peer_id', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'peerId'},
+    {'1': 'associated_peer_id', '3': 2, '4': 1, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'associatedPeerId'},
   ],
 };
 
@@ -53,3 +39,4 @@ const AddPeerResponse$json = {
 /// Descriptor for `AddPeerResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List addPeerResponseDescriptor = $convert.base64Decode(
     'Cg9BZGRQZWVyUmVzcG9uc2USGAoHc3VjY2VzcxgBIAEoCFIHc3VjY2Vzcw==');
+

@@ -42,35 +42,28 @@ class NodeStats extends $pb.GeneratedMessage {
     return $result;
   }
   NodeStats._() : super();
-  factory NodeStats.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory NodeStats.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory NodeStats.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory NodeStats.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'NodeStats',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.core.data_structures'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NodeStats', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core.data_structures'), createEmptyInstance: create)
     ..a<$core.int>(1, _omitFieldNames ? '' : 'numBlocks', $pb.PbFieldType.O3)
     ..aInt64(2, _omitFieldNames ? '' : 'datastoreSize')
-    ..a<$core.int>(
-        3, _omitFieldNames ? '' : 'numConnectedPeers', $pb.PbFieldType.O3)
+    ..a<$core.int>(3, _omitFieldNames ? '' : 'numConnectedPeers', $pb.PbFieldType.O3)
     ..aInt64(4, _omitFieldNames ? '' : 'bandwidthSent')
     ..aInt64(5, _omitFieldNames ? '' : 'bandwidthReceived')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   NodeStats clone() => NodeStats()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  NodeStats copyWith(void Function(NodeStats) updates) =>
-      super.copyWith((message) => updates(message as NodeStats)) as NodeStats;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  NodeStats copyWith(void Function(NodeStats) updates) => super.copyWith((message) => updates(message as NodeStats)) as NodeStats;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -79,18 +72,14 @@ class NodeStats extends $pb.GeneratedMessage {
   NodeStats createEmptyInstance() => create();
   static $pb.PbList<NodeStats> createRepeated() => $pb.PbList<NodeStats>();
   @$core.pragma('dart2js:noInline')
-  static NodeStats getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NodeStats>(create);
+  static NodeStats getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<NodeStats>(create);
   static NodeStats? _defaultInstance;
 
   /// The number of blocks stored in the datastore.
   @$pb.TagNumber(1)
   $core.int get numBlocks => $_getIZ(0);
   @$pb.TagNumber(1)
-  set numBlocks($core.int v) {
-    $_setSignedInt32(0, v);
-  }
-
+  set numBlocks($core.int v) { $_setSignedInt32(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasNumBlocks() => $_has(0);
   @$pb.TagNumber(1)
@@ -100,10 +89,7 @@ class NodeStats extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $fixnum.Int64 get datastoreSize => $_getI64(1);
   @$pb.TagNumber(2)
-  set datastoreSize($fixnum.Int64 v) {
-    $_setInt64(1, v);
-  }
-
+  set datastoreSize($fixnum.Int64 v) { $_setInt64(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasDatastoreSize() => $_has(1);
   @$pb.TagNumber(2)
@@ -113,10 +99,7 @@ class NodeStats extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.int get numConnectedPeers => $_getIZ(2);
   @$pb.TagNumber(3)
-  set numConnectedPeers($core.int v) {
-    $_setSignedInt32(2, v);
-  }
-
+  set numConnectedPeers($core.int v) { $_setSignedInt32(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasNumConnectedPeers() => $_has(2);
   @$pb.TagNumber(3)
@@ -126,10 +109,7 @@ class NodeStats extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $fixnum.Int64 get bandwidthSent => $_getI64(3);
   @$pb.TagNumber(4)
-  set bandwidthSent($fixnum.Int64 v) {
-    $_setInt64(3, v);
-  }
-
+  set bandwidthSent($fixnum.Int64 v) { $_setInt64(3, v); }
   @$pb.TagNumber(4)
   $core.bool hasBandwidthSent() => $_has(3);
   @$pb.TagNumber(4)
@@ -139,16 +119,13 @@ class NodeStats extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $fixnum.Int64 get bandwidthReceived => $_getI64(4);
   @$pb.TagNumber(5)
-  set bandwidthReceived($fixnum.Int64 v) {
-    $_setInt64(4, v);
-  }
-
+  set bandwidthReceived($fixnum.Int64 v) { $_setInt64(4, v); }
   @$pb.TagNumber(5)
   $core.bool hasBandwidthReceived() => $_has(4);
   @$pb.TagNumber(5)
   void clearBandwidthReceived() => clearField(5);
 }
 
+
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

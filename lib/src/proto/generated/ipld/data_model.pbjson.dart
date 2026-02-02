@@ -46,41 +46,10 @@ const IPLDNode$json = {
     {'1': 'float_value', '3': 4, '4': 1, '5': 1, '9': 0, '10': 'floatValue'},
     {'1': 'string_value', '3': 5, '4': 1, '5': 9, '9': 0, '10': 'stringValue'},
     {'1': 'bytes_value', '3': 6, '4': 1, '5': 12, '9': 0, '10': 'bytesValue'},
-    {
-      '1': 'list_value',
-      '3': 7,
-      '4': 1,
-      '5': 11,
-      '6': '.ipld.IPLDList',
-      '9': 0,
-      '10': 'listValue'
-    },
-    {
-      '1': 'map_value',
-      '3': 8,
-      '4': 1,
-      '5': 11,
-      '6': '.ipld.IPLDMap',
-      '9': 0,
-      '10': 'mapValue'
-    },
-    {
-      '1': 'link_value',
-      '3': 9,
-      '4': 1,
-      '5': 11,
-      '6': '.ipld.IPLDLink',
-      '9': 0,
-      '10': 'linkValue'
-    },
-    {
-      '1': 'big_int_value',
-      '3': 10,
-      '4': 1,
-      '5': 12,
-      '9': 0,
-      '10': 'bigIntValue'
-    },
+    {'1': 'list_value', '3': 7, '4': 1, '5': 11, '6': '.ipld.IPLDList', '9': 0, '10': 'listValue'},
+    {'1': 'map_value', '3': 8, '4': 1, '5': 11, '6': '.ipld.IPLDMap', '9': 0, '10': 'mapValue'},
+    {'1': 'link_value', '3': 9, '4': 1, '5': 11, '6': '.ipld.IPLDLink', '9': 0, '10': 'linkValue'},
+    {'1': 'big_int_value', '3': 10, '4': 1, '5': 12, '9': 0, '10': 'bigIntValue'},
   ],
   '8': [
     {'1': 'value'},
@@ -102,14 +71,7 @@ final $typed_data.Uint8List iPLDNodeDescriptor = $convert.base64Decode(
 const IPLDList$json = {
   '1': 'IPLDList',
   '2': [
-    {
-      '1': 'values',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.ipld.IPLDNode',
-      '10': 'values'
-    },
+    {'1': 'values', '3': 1, '4': 3, '5': 11, '6': '.ipld.IPLDNode', '10': 'values'},
   ],
 };
 
@@ -121,14 +83,7 @@ final $typed_data.Uint8List iPLDListDescriptor = $convert.base64Decode(
 const IPLDMap$json = {
   '1': 'IPLDMap',
   '2': [
-    {
-      '1': 'entries',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.ipld.MapEntry',
-      '10': 'entries'
-    },
+    {'1': 'entries', '3': 1, '4': 3, '5': 11, '6': '.ipld.MapEntry', '10': 'entries'},
   ],
 };
 
@@ -141,14 +96,7 @@ const MapEntry$json = {
   '1': 'MapEntry',
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
-    {
-      '1': 'value',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.ipld.IPLDNode',
-      '10': 'value'
-    },
+    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.ipld.IPLDNode', '10': 'value'},
   ],
 };
 
@@ -171,3 +119,4 @@ const IPLDLink$json = {
 final $typed_data.Uint8List iPLDLinkDescriptor = $convert.base64Decode(
     'CghJUExETGluaxIYCgd2ZXJzaW9uGAEgASgNUgd2ZXJzaW9uEhQKBWNvZGVjGAIgASgJUgVjb2'
     'RlYxIcCgltdWx0aWhhc2gYAyABKAxSCW11bHRpaGFzaA==');
+

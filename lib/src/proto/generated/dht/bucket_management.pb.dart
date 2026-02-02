@@ -24,51 +24,39 @@ class SplitBucketRequest extends $pb.GeneratedMessage {
     return $result;
   }
   SplitBucketRequest._() : super();
-  factory SplitBucketRequest.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory SplitBucketRequest.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory SplitBucketRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory SplitBucketRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'SplitBucketRequest',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.bucket_management'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SplitBucketRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.bucket_management'), createEmptyInstance: create)
     ..a<$core.int>(1, _omitFieldNames ? '' : 'bucketIndex', $pb.PbFieldType.O3)
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   SplitBucketRequest clone() => SplitBucketRequest()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  SplitBucketRequest copyWith(void Function(SplitBucketRequest) updates) =>
-      super.copyWith((message) => updates(message as SplitBucketRequest))
-          as SplitBucketRequest;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  SplitBucketRequest copyWith(void Function(SplitBucketRequest) updates) => super.copyWith((message) => updates(message as SplitBucketRequest)) as SplitBucketRequest;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static SplitBucketRequest create() => SplitBucketRequest._();
   SplitBucketRequest createEmptyInstance() => create();
-  static $pb.PbList<SplitBucketRequest> createRepeated() =>
-      $pb.PbList<SplitBucketRequest>();
+  static $pb.PbList<SplitBucketRequest> createRepeated() => $pb.PbList<SplitBucketRequest>();
   @$core.pragma('dart2js:noInline')
-  static SplitBucketRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<SplitBucketRequest>(create);
+  static SplitBucketRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SplitBucketRequest>(create);
   static SplitBucketRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.int get bucketIndex => $_getIZ(0);
   @$pb.TagNumber(1)
-  set bucketIndex($core.int v) {
-    $_setSignedInt32(0, v);
-  }
-
+  set bucketIndex($core.int v) { $_setSignedInt32(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasBucketIndex() => $_has(0);
   @$pb.TagNumber(1)
@@ -86,51 +74,39 @@ class SplitBucketResponse extends $pb.GeneratedMessage {
     return $result;
   }
   SplitBucketResponse._() : super();
-  factory SplitBucketResponse.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory SplitBucketResponse.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory SplitBucketResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory SplitBucketResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'SplitBucketResponse',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.bucket_management'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SplitBucketResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.bucket_management'), createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   SplitBucketResponse clone() => SplitBucketResponse()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  SplitBucketResponse copyWith(void Function(SplitBucketResponse) updates) =>
-      super.copyWith((message) => updates(message as SplitBucketResponse))
-          as SplitBucketResponse;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  SplitBucketResponse copyWith(void Function(SplitBucketResponse) updates) => super.copyWith((message) => updates(message as SplitBucketResponse)) as SplitBucketResponse;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static SplitBucketResponse create() => SplitBucketResponse._();
   SplitBucketResponse createEmptyInstance() => create();
-  static $pb.PbList<SplitBucketResponse> createRepeated() =>
-      $pb.PbList<SplitBucketResponse>();
+  static $pb.PbList<SplitBucketResponse> createRepeated() => $pb.PbList<SplitBucketResponse>();
   @$core.pragma('dart2js:noInline')
-  static SplitBucketResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<SplitBucketResponse>(create);
+  static SplitBucketResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SplitBucketResponse>(create);
   static SplitBucketResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.bool get success => $_getBF(0);
   @$pb.TagNumber(1)
-  set success($core.bool v) {
-    $_setBool(0, v);
-  }
-
+  set success($core.bool v) { $_setBool(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasSuccess() => $_has(0);
   @$pb.TagNumber(1)
@@ -152,54 +128,40 @@ class MergeBucketsRequest extends $pb.GeneratedMessage {
     return $result;
   }
   MergeBucketsRequest._() : super();
-  factory MergeBucketsRequest.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory MergeBucketsRequest.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory MergeBucketsRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory MergeBucketsRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'MergeBucketsRequest',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.bucket_management'),
-      createEmptyInstance: create)
-    ..a<$core.int>(1, _omitFieldNames ? '' : 'bucketIndex1', $pb.PbFieldType.O3,
-        protoName: 'bucket_index_1')
-    ..a<$core.int>(2, _omitFieldNames ? '' : 'bucketIndex2', $pb.PbFieldType.O3,
-        protoName: 'bucket_index_2')
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MergeBucketsRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.bucket_management'), createEmptyInstance: create)
+    ..a<$core.int>(1, _omitFieldNames ? '' : 'bucketIndex1', $pb.PbFieldType.O3, protoName: 'bucket_index_1')
+    ..a<$core.int>(2, _omitFieldNames ? '' : 'bucketIndex2', $pb.PbFieldType.O3, protoName: 'bucket_index_2')
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   MergeBucketsRequest clone() => MergeBucketsRequest()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  MergeBucketsRequest copyWith(void Function(MergeBucketsRequest) updates) =>
-      super.copyWith((message) => updates(message as MergeBucketsRequest))
-          as MergeBucketsRequest;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  MergeBucketsRequest copyWith(void Function(MergeBucketsRequest) updates) => super.copyWith((message) => updates(message as MergeBucketsRequest)) as MergeBucketsRequest;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static MergeBucketsRequest create() => MergeBucketsRequest._();
   MergeBucketsRequest createEmptyInstance() => create();
-  static $pb.PbList<MergeBucketsRequest> createRepeated() =>
-      $pb.PbList<MergeBucketsRequest>();
+  static $pb.PbList<MergeBucketsRequest> createRepeated() => $pb.PbList<MergeBucketsRequest>();
   @$core.pragma('dart2js:noInline')
-  static MergeBucketsRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<MergeBucketsRequest>(create);
+  static MergeBucketsRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MergeBucketsRequest>(create);
   static MergeBucketsRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.int get bucketIndex1 => $_getIZ(0);
   @$pb.TagNumber(1)
-  set bucketIndex1($core.int v) {
-    $_setSignedInt32(0, v);
-  }
-
+  set bucketIndex1($core.int v) { $_setSignedInt32(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasBucketIndex1() => $_has(0);
   @$pb.TagNumber(1)
@@ -208,10 +170,7 @@ class MergeBucketsRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.int get bucketIndex2 => $_getIZ(1);
   @$pb.TagNumber(2)
-  set bucketIndex2($core.int v) {
-    $_setSignedInt32(1, v);
-  }
-
+  set bucketIndex2($core.int v) { $_setSignedInt32(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasBucketIndex2() => $_has(1);
   @$pb.TagNumber(2)
@@ -229,58 +188,45 @@ class MergeBucketsResponse extends $pb.GeneratedMessage {
     return $result;
   }
   MergeBucketsResponse._() : super();
-  factory MergeBucketsResponse.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory MergeBucketsResponse.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory MergeBucketsResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory MergeBucketsResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'MergeBucketsResponse',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.bucket_management'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MergeBucketsResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.bucket_management'), createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  MergeBucketsResponse clone() =>
-      MergeBucketsResponse()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  MergeBucketsResponse copyWith(void Function(MergeBucketsResponse) updates) =>
-      super.copyWith((message) => updates(message as MergeBucketsResponse))
-          as MergeBucketsResponse;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  MergeBucketsResponse clone() => MergeBucketsResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  MergeBucketsResponse copyWith(void Function(MergeBucketsResponse) updates) => super.copyWith((message) => updates(message as MergeBucketsResponse)) as MergeBucketsResponse;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static MergeBucketsResponse create() => MergeBucketsResponse._();
   MergeBucketsResponse createEmptyInstance() => create();
-  static $pb.PbList<MergeBucketsResponse> createRepeated() =>
-      $pb.PbList<MergeBucketsResponse>();
+  static $pb.PbList<MergeBucketsResponse> createRepeated() => $pb.PbList<MergeBucketsResponse>();
   @$core.pragma('dart2js:noInline')
-  static MergeBucketsResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<MergeBucketsResponse>(create);
+  static MergeBucketsResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MergeBucketsResponse>(create);
   static MergeBucketsResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.bool get success => $_getBF(0);
   @$pb.TagNumber(1)
-  set success($core.bool v) {
-    $_setBool(0, v);
-  }
-
+  set success($core.bool v) { $_setBool(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasSuccess() => $_has(0);
   @$pb.TagNumber(1)
   void clearSuccess() => clearField(1);
 }
 
+
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

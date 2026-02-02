@@ -14,25 +14,14 @@ import 'dart:core' as $core;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 class ValidationResult_ValidationCode extends $pb.ProtobufEnum {
-  static const ValidationResult_ValidationCode UNKNOWN =
-      ValidationResult_ValidationCode._(0, _omitEnumNames ? '' : 'UNKNOWN');
-  static const ValidationResult_ValidationCode SUCCESS =
-      ValidationResult_ValidationCode._(1, _omitEnumNames ? '' : 'SUCCESS');
-  static const ValidationResult_ValidationCode INVALID_SIZE =
-      ValidationResult_ValidationCode._(
-          2, _omitEnumNames ? '' : 'INVALID_SIZE');
-  static const ValidationResult_ValidationCode INVALID_PROTOCOL =
-      ValidationResult_ValidationCode._(
-          3, _omitEnumNames ? '' : 'INVALID_PROTOCOL');
-  static const ValidationResult_ValidationCode INVALID_FORMAT =
-      ValidationResult_ValidationCode._(
-          4, _omitEnumNames ? '' : 'INVALID_FORMAT');
-  static const ValidationResult_ValidationCode RATE_LIMITED =
-      ValidationResult_ValidationCode._(
-          5, _omitEnumNames ? '' : 'RATE_LIMITED');
+  static const ValidationResult_ValidationCode UNKNOWN = ValidationResult_ValidationCode._(0, _omitEnumNames ? '' : 'UNKNOWN');
+  static const ValidationResult_ValidationCode SUCCESS = ValidationResult_ValidationCode._(1, _omitEnumNames ? '' : 'SUCCESS');
+  static const ValidationResult_ValidationCode INVALID_SIZE = ValidationResult_ValidationCode._(2, _omitEnumNames ? '' : 'INVALID_SIZE');
+  static const ValidationResult_ValidationCode INVALID_PROTOCOL = ValidationResult_ValidationCode._(3, _omitEnumNames ? '' : 'INVALID_PROTOCOL');
+  static const ValidationResult_ValidationCode INVALID_FORMAT = ValidationResult_ValidationCode._(4, _omitEnumNames ? '' : 'INVALID_FORMAT');
+  static const ValidationResult_ValidationCode RATE_LIMITED = ValidationResult_ValidationCode._(5, _omitEnumNames ? '' : 'RATE_LIMITED');
 
-  static const $core.List<ValidationResult_ValidationCode> values =
-      <ValidationResult_ValidationCode>[
+  static const $core.List<ValidationResult_ValidationCode> values = <ValidationResult_ValidationCode> [
     UNKNOWN,
     SUCCESS,
     INVALID_SIZE,
@@ -41,13 +30,11 @@ class ValidationResult_ValidationCode extends $pb.ProtobufEnum {
     RATE_LIMITED,
   ];
 
-  static final $core.Map<$core.int, ValidationResult_ValidationCode> _byValue =
-      $pb.ProtobufEnum.initByValue(values);
-  static ValidationResult_ValidationCode? valueOf($core.int value) =>
-      _byValue[value];
+  static final $core.Map<$core.int, ValidationResult_ValidationCode> _byValue = $pb.ProtobufEnum.initByValue(values);
+  static ValidationResult_ValidationCode? valueOf($core.int value) => _byValue[value];
 
-  const ValidationResult_ValidationCode._($core.int v, $core.String n)
-      : super(v, n);
+  const ValidationResult_ValidationCode._($core.int v, $core.String n) : super(v, n);
 }
+
 
 const _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

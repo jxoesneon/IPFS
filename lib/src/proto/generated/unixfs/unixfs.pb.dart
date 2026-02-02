@@ -62,49 +62,32 @@ class Data extends $pb.GeneratedMessage {
     return $result;
   }
   Data._() : super();
-  factory Data.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Data.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Data.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Data.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Data',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.unixfs.pb'),
-      createEmptyInstance: create)
-    ..e<Data_DataType>(1, _omitFieldNames ? '' : 'Type', $pb.PbFieldType.OE,
-        protoName: 'Type',
-        defaultOrMaker: Data_DataType.Raw,
-        valueOf: Data_DataType.valueOf,
-        enumValues: Data_DataType.values)
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'Data', $pb.PbFieldType.OY,
-        protoName: 'Data')
-    ..a<$fixnum.Int64>(
-        3, _omitFieldNames ? '' : 'filesize', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..p<$fixnum.Int64>(
-        4, _omitFieldNames ? '' : 'blocksizes', $pb.PbFieldType.KU6)
-    ..a<$fixnum.Int64>(
-        5, _omitFieldNames ? '' : 'hashType', $pb.PbFieldType.OU6,
-        protoName: 'hashType', defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'fanout', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Data', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.unixfs.pb'), createEmptyInstance: create)
+    ..e<Data_DataType>(1, _omitFieldNames ? '' : 'Type', $pb.PbFieldType.OE, protoName: 'Type', defaultOrMaker: Data_DataType.Raw, valueOf: Data_DataType.valueOf, enumValues: Data_DataType.values)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'Data', $pb.PbFieldType.OY, protoName: 'Data')
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'filesize', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..p<$fixnum.Int64>(4, _omitFieldNames ? '' : 'blocksizes', $pb.PbFieldType.KU6)
+    ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'hashType', $pb.PbFieldType.OU6, protoName: 'hashType', defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'fanout', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$core.int>(7, _omitFieldNames ? '' : 'mode', $pb.PbFieldType.OU3)
     ..aInt64(8, _omitFieldNames ? '' : 'mtime')
     ..a<$core.int>(9, _omitFieldNames ? '' : 'mtimeNsecs', $pb.PbFieldType.OU3)
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Data clone() => Data()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Data copyWith(void Function(Data) updates) =>
-      super.copyWith((message) => updates(message as Data)) as Data;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Data copyWith(void Function(Data) updates) => super.copyWith((message) => updates(message as Data)) as Data;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -113,18 +96,14 @@ class Data extends $pb.GeneratedMessage {
   Data createEmptyInstance() => create();
   static $pb.PbList<Data> createRepeated() => $pb.PbList<Data>();
   @$core.pragma('dart2js:noInline')
-  static Data getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Data>(create);
+  static Data getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Data>(create);
   static Data? _defaultInstance;
 
   /// The type of UnixFS node
   @$pb.TagNumber(1)
   Data_DataType get type => $_getN(0);
   @$pb.TagNumber(1)
-  set type(Data_DataType v) {
-    setField(1, v);
-  }
-
+  set type(Data_DataType v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasType() => $_has(0);
   @$pb.TagNumber(1)
@@ -134,10 +113,7 @@ class Data extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.List<$core.int> get data => $_getN(1);
   @$pb.TagNumber(2)
-  set data($core.List<$core.int> v) {
-    $_setBytes(1, v);
-  }
-
+  set data($core.List<$core.int> v) { $_setBytes(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasData() => $_has(1);
   @$pb.TagNumber(2)
@@ -147,10 +123,7 @@ class Data extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $fixnum.Int64 get filesize => $_getI64(2);
   @$pb.TagNumber(3)
-  set filesize($fixnum.Int64 v) {
-    $_setInt64(2, v);
-  }
-
+  set filesize($fixnum.Int64 v) { $_setInt64(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasFilesize() => $_has(2);
   @$pb.TagNumber(3)
@@ -164,10 +137,7 @@ class Data extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $fixnum.Int64 get hashType => $_getI64(4);
   @$pb.TagNumber(5)
-  set hashType($fixnum.Int64 v) {
-    $_setInt64(4, v);
-  }
-
+  set hashType($fixnum.Int64 v) { $_setInt64(4, v); }
   @$pb.TagNumber(5)
   $core.bool hasHashType() => $_has(4);
   @$pb.TagNumber(5)
@@ -177,10 +147,7 @@ class Data extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   $fixnum.Int64 get fanout => $_getI64(5);
   @$pb.TagNumber(6)
-  set fanout($fixnum.Int64 v) {
-    $_setInt64(5, v);
-  }
-
+  set fanout($fixnum.Int64 v) { $_setInt64(5, v); }
   @$pb.TagNumber(6)
   $core.bool hasFanout() => $_has(5);
   @$pb.TagNumber(6)
@@ -190,10 +157,7 @@ class Data extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   $core.int get mode => $_getIZ(6);
   @$pb.TagNumber(7)
-  set mode($core.int v) {
-    $_setUnsignedInt32(6, v);
-  }
-
+  set mode($core.int v) { $_setUnsignedInt32(6, v); }
   @$pb.TagNumber(7)
   $core.bool hasMode() => $_has(6);
   @$pb.TagNumber(7)
@@ -203,10 +167,7 @@ class Data extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   $fixnum.Int64 get mtime => $_getI64(7);
   @$pb.TagNumber(8)
-  set mtime($fixnum.Int64 v) {
-    $_setInt64(7, v);
-  }
-
+  set mtime($fixnum.Int64 v) { $_setInt64(7, v); }
   @$pb.TagNumber(8)
   $core.bool hasMtime() => $_has(7);
   @$pb.TagNumber(8)
@@ -216,10 +177,7 @@ class Data extends $pb.GeneratedMessage {
   @$pb.TagNumber(9)
   $core.int get mtimeNsecs => $_getIZ(8);
   @$pb.TagNumber(9)
-  set mtimeNsecs($core.int v) {
-    $_setUnsignedInt32(8, v);
-  }
-
+  set mtimeNsecs($core.int v) { $_setUnsignedInt32(8, v); }
   @$pb.TagNumber(9)
   $core.bool hasMtimeNsecs() => $_has(8);
   @$pb.TagNumber(9)
@@ -246,36 +204,26 @@ class Metadata extends $pb.GeneratedMessage {
     return $result;
   }
   Metadata._() : super();
-  factory Metadata.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Metadata.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Metadata.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Metadata.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Metadata',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.unixfs.pb'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Metadata', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.unixfs.pb'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'MimeType', protoName: 'MimeType')
-    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'Size', $pb.PbFieldType.OU6,
-        protoName: 'Size', defaultOrMaker: $fixnum.Int64.ZERO)
-    ..m<$core.String, $core.String>(3, _omitFieldNames ? '' : 'properties',
-        entryClassName: 'Metadata.PropertiesEntry',
-        keyFieldType: $pb.PbFieldType.OS,
-        valueFieldType: $pb.PbFieldType.OS,
-        packageName: const $pb.PackageName('ipfs.unixfs.pb'))
-    ..hasRequiredFields = false;
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'Size', $pb.PbFieldType.OU6, protoName: 'Size', defaultOrMaker: $fixnum.Int64.ZERO)
+    ..m<$core.String, $core.String>(3, _omitFieldNames ? '' : 'properties', entryClassName: 'Metadata.PropertiesEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('ipfs.unixfs.pb'))
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Metadata clone() => Metadata()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Metadata copyWith(void Function(Metadata) updates) =>
-      super.copyWith((message) => updates(message as Metadata)) as Metadata;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Metadata copyWith(void Function(Metadata) updates) => super.copyWith((message) => updates(message as Metadata)) as Metadata;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -284,18 +232,14 @@ class Metadata extends $pb.GeneratedMessage {
   Metadata createEmptyInstance() => create();
   static $pb.PbList<Metadata> createRepeated() => $pb.PbList<Metadata>();
   @$core.pragma('dart2js:noInline')
-  static Metadata getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Metadata>(create);
+  static Metadata getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Metadata>(create);
   static Metadata? _defaultInstance;
 
   /// MimeType is the mime type of the file
   @$pb.TagNumber(1)
   $core.String get mimeType => $_getSZ(0);
   @$pb.TagNumber(1)
-  set mimeType($core.String v) {
-    $_setString(0, v);
-  }
-
+  set mimeType($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasMimeType() => $_has(0);
   @$pb.TagNumber(1)
@@ -305,10 +249,7 @@ class Metadata extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $fixnum.Int64 get size => $_getI64(1);
   @$pb.TagNumber(2)
-  set size($fixnum.Int64 v) {
-    $_setInt64(1, v);
-  }
-
+  set size($fixnum.Int64 v) { $_setInt64(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasSize() => $_has(1);
   @$pb.TagNumber(2)
@@ -319,6 +260,6 @@ class Metadata extends $pb.GeneratedMessage {
   $core.Map<$core.String, $core.String> get properties => $_getMap(2);
 }
 
+
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

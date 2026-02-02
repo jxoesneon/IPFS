@@ -44,58 +44,43 @@ class IPFSCIDProto extends $pb.GeneratedMessage {
     return $result;
   }
   IPFSCIDProto._() : super();
-  factory IPFSCIDProto.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory IPFSCIDProto.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory IPFSCIDProto.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory IPFSCIDProto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'IPFSCIDProto',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core'),
-      createEmptyInstance: create)
-    ..e<IPFSCIDVersion>(1, _omitFieldNames ? '' : 'version', $pb.PbFieldType.OE,
-        defaultOrMaker: IPFSCIDVersion.IPFS_CID_VERSION_UNSPECIFIED,
-        valueOf: IPFSCIDVersion.valueOf,
-        enumValues: IPFSCIDVersion.values)
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'multihash', $pb.PbFieldType.OY)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'IPFSCIDProto', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.core'), createEmptyInstance: create)
+    ..e<IPFSCIDVersion>(1, _omitFieldNames ? '' : 'version', $pb.PbFieldType.OE, defaultOrMaker: IPFSCIDVersion.IPFS_CID_VERSION_UNSPECIFIED, valueOf: IPFSCIDVersion.valueOf, enumValues: IPFSCIDVersion.values)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'multihash', $pb.PbFieldType.OY)
     ..aOS(3, _omitFieldNames ? '' : 'codec')
     ..aOS(4, _omitFieldNames ? '' : 'multibasePrefix')
     ..a<$core.int>(5, _omitFieldNames ? '' : 'codecType', $pb.PbFieldType.O3)
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   IPFSCIDProto clone() => IPFSCIDProto()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  IPFSCIDProto copyWith(void Function(IPFSCIDProto) updates) =>
-      super.copyWith((message) => updates(message as IPFSCIDProto))
-          as IPFSCIDProto;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  IPFSCIDProto copyWith(void Function(IPFSCIDProto) updates) => super.copyWith((message) => updates(message as IPFSCIDProto)) as IPFSCIDProto;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static IPFSCIDProto create() => IPFSCIDProto._();
   IPFSCIDProto createEmptyInstance() => create();
-  static $pb.PbList<IPFSCIDProto> createRepeated() =>
-      $pb.PbList<IPFSCIDProto>();
+  static $pb.PbList<IPFSCIDProto> createRepeated() => $pb.PbList<IPFSCIDProto>();
   @$core.pragma('dart2js:noInline')
-  static IPFSCIDProto getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<IPFSCIDProto>(create);
+  static IPFSCIDProto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<IPFSCIDProto>(create);
   static IPFSCIDProto? _defaultInstance;
 
   @$pb.TagNumber(1)
   IPFSCIDVersion get version => $_getN(0);
   @$pb.TagNumber(1)
-  set version(IPFSCIDVersion v) {
-    setField(1, v);
-  }
-
+  set version(IPFSCIDVersion v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasVersion() => $_has(0);
   @$pb.TagNumber(1)
@@ -104,10 +89,7 @@ class IPFSCIDProto extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.List<$core.int> get multihash => $_getN(1);
   @$pb.TagNumber(2)
-  set multihash($core.List<$core.int> v) {
-    $_setBytes(1, v);
-  }
-
+  set multihash($core.List<$core.int> v) { $_setBytes(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasMultihash() => $_has(1);
   @$pb.TagNumber(2)
@@ -116,10 +98,7 @@ class IPFSCIDProto extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.String get codec => $_getSZ(2);
   @$pb.TagNumber(3)
-  set codec($core.String v) {
-    $_setString(2, v);
-  }
-
+  set codec($core.String v) { $_setString(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasCodec() => $_has(2);
   @$pb.TagNumber(3)
@@ -128,10 +107,7 @@ class IPFSCIDProto extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.String get multibasePrefix => $_getSZ(3);
   @$pb.TagNumber(4)
-  set multibasePrefix($core.String v) {
-    $_setString(3, v);
-  }
-
+  set multibasePrefix($core.String v) { $_setString(3, v); }
   @$pb.TagNumber(4)
   $core.bool hasMultibasePrefix() => $_has(3);
   @$pb.TagNumber(4)
@@ -140,16 +116,13 @@ class IPFSCIDProto extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $core.int get codecType => $_getIZ(4);
   @$pb.TagNumber(5)
-  set codecType($core.int v) {
-    $_setSignedInt32(4, v);
-  }
-
+  set codecType($core.int v) { $_setSignedInt32(4, v); }
   @$pb.TagNumber(5)
   $core.bool hasCodecType() => $_has(4);
   @$pb.TagNumber(5)
   void clearCodecType() => clearField(5);
 }
 
+
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

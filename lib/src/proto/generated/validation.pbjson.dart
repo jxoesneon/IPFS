@@ -19,14 +19,7 @@ const ValidationResult$json = {
   '2': [
     {'1': 'is_valid', '3': 1, '4': 1, '5': 8, '10': 'isValid'},
     {'1': 'error_message', '3': 2, '4': 1, '5': 9, '10': 'errorMessage'},
-    {
-      '1': 'code',
-      '3': 3,
-      '4': 1,
-      '5': 14,
-      '6': '.ipfs.validation.ValidationResult.ValidationCode',
-      '10': 'code'
-    },
+    {'1': 'code', '3': 3, '4': 1, '5': 14, '6': '.ipfs.validation.ValidationResult.ValidationCode', '10': 'code'},
   ],
   '4': [ValidationResult_ValidationCode$json],
 };
@@ -51,3 +44,4 @@ final $typed_data.Uint8List validationResultDescriptor = $convert.base64Decode(
     'aW9uLlZhbGlkYXRpb25SZXN1bHQuVmFsaWRhdGlvbkNvZGVSBGNvZGUieAoOVmFsaWRhdGlvbk'
     'NvZGUSCwoHVU5LTk9XThAAEgsKB1NVQ0NFU1MQARIQCgxJTlZBTElEX1NJWkUQAhIUChBJTlZB'
     'TElEX1BST1RPQ09MEAMSEgoOSU5WQUxJRF9GT1JNQVQQBBIQCgxSQVRFX0xJTUlURUQQBQ==');
+

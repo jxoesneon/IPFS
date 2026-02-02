@@ -17,14 +17,7 @@ import 'dart:typed_data' as $typed_data;
 const PingRequest$json = {
   '1': 'PingRequest',
   '2': [
-    {
-      '1': 'peer_id',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.dht.common_kademlia.KademliaId',
-      '10': 'peerId'
-    },
+    {'1': 'peer_id', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'peerId'},
   ],
 };
 
@@ -37,14 +30,7 @@ final $typed_data.Uint8List pingRequestDescriptor = $convert.base64Decode(
 const PingResponse$json = {
   '1': 'PingResponse',
   '2': [
-    {
-      '1': 'peer_id',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.dht.common_kademlia.KademliaId',
-      '10': 'peerId'
-    },
+    {'1': 'peer_id', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'peerId'},
     {'1': 'success', '3': 2, '4': 1, '5': 8, '10': 'success'},
   ],
 };
@@ -53,3 +39,4 @@ const PingResponse$json = {
 final $typed_data.Uint8List pingResponseDescriptor = $convert.base64Decode(
     'CgxQaW5nUmVzcG9uc2USPQoHcGVlcl9pZBgBIAEoCzIkLmlwZnMuZGh0LmNvbW1vbl9rYWRlbW'
     'xpYS5LYWRlbWxpYUlkUgZwZWVySWQSGAoHc3VjY2VzcxgCIAEoCFIHc3VjY2Vzcw==');
+

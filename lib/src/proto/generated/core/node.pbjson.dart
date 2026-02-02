@@ -17,41 +17,13 @@ import 'dart:typed_data' as $typed_data;
 const NodeProto$json = {
   '1': 'NodeProto',
   '2': [
-    {
-      '1': 'cid',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.core.IPFSCIDProto',
-      '10': 'cid'
-    },
-    {
-      '1': 'links',
-      '3': 2,
-      '4': 3,
-      '5': 11,
-      '6': '.ipfs.core.data_structures.PBLink',
-      '10': 'links'
-    },
+    {'1': 'cid', '3': 1, '4': 1, '5': 11, '6': '.ipfs.core.IPFSCIDProto', '10': 'cid'},
+    {'1': 'links', '3': 2, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.PBLink', '10': 'links'},
     {'1': 'data', '3': 3, '4': 1, '5': 12, '10': 'data'},
-    {
-      '1': 'type',
-      '3': 4,
-      '4': 1,
-      '5': 14,
-      '6': '.ipfs.core.data_structures.NodeTypeProto',
-      '10': 'type'
-    },
+    {'1': 'type', '3': 4, '4': 1, '5': 14, '6': '.ipfs.core.data_structures.NodeTypeProto', '10': 'type'},
     {'1': 'size', '3': 5, '4': 1, '5': 4, '10': 'size'},
     {'1': 'timestamp', '3': 6, '4': 1, '5': 3, '10': 'timestamp'},
-    {
-      '1': 'metadata',
-      '3': 7,
-      '4': 3,
-      '5': 11,
-      '6': '.ipfs.core.data_structures.NodeProto.MetadataEntry',
-      '10': 'metadata'
-    },
+    {'1': 'metadata', '3': 7, '4': 3, '5': 11, '6': '.ipfs.core.data_structures.NodeProto.MetadataEntry', '10': 'metadata'},
   ],
   '3': [NodeProto_MetadataEntry$json],
 };
@@ -75,3 +47,4 @@ final $typed_data.Uint8List nodeProtoDescriptor = $convert.base64Decode(
     'dGFtcBgGIAEoA1IJdGltZXN0YW1wEk4KCG1ldGFkYXRhGAcgAygLMjIuaXBmcy5jb3JlLmRhdG'
     'Ffc3RydWN0dXJlcy5Ob2RlUHJvdG8uTWV0YWRhdGFFbnRyeVIIbWV0YWRhdGEaOwoNTWV0YWRh'
     'dGFFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
+

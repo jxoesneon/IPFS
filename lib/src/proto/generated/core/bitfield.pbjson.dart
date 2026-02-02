@@ -20,12 +20,7 @@ const BitFieldProto$json = {
     {'1': 'bits', '3': 1, '4': 1, '5': 12, '10': 'bits'},
     {'1': 'size', '3': 2, '4': 1, '5': 5, '10': 'size'},
   ],
-  '3': [
-    BitFieldProto_SetBitRequest$json,
-    BitFieldProto_ClearBitRequest$json,
-    BitFieldProto_GetBitRequest$json,
-    BitFieldProto_BitResponse$json
-  ],
+  '3': [BitFieldProto_SetBitRequest$json, BitFieldProto_ClearBitRequest$json, BitFieldProto_GetBitRequest$json, BitFieldProto_BitResponse$json],
 };
 
 @$core.Deprecated('Use bitFieldProtoDescriptor instead')
@@ -66,3 +61,4 @@ final $typed_data.Uint8List bitFieldProtoDescriptor = $convert.base64Decode(
     'olCg1TZXRCaXRSZXF1ZXN0EhQKBWluZGV4GAEgASgFUgVpbmRleBonCg9DbGVhckJpdFJlcXVl'
     'c3QSFAoFaW5kZXgYASABKAVSBWluZGV4GiUKDUdldEJpdFJlcXVlc3QSFAoFaW5kZXgYASABKA'
     'VSBWluZGV4GiMKC0JpdFJlc3BvbnNlEhQKBXZhbHVlGAEgASgIUgV2YWx1ZQ==');
+

@@ -13,9 +13,9 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'source_context.pb.dart' as $12;
-import 'type.pb.dart' as $13;
-import 'type.pbenum.dart' as $13;
+import 'source_context.pb.dart' as $1;
+import 'type.pb.dart' as $0;
+import 'type.pbenum.dart' as $0;
 
 ///  Api is a light-weight descriptor for an API Interface.
 ///
@@ -30,11 +30,11 @@ class Api extends $pb.GeneratedMessage {
   factory Api({
     $core.String? name,
     $core.Iterable<Method>? methods,
-    $core.Iterable<$13.Option>? options,
+    $core.Iterable<$0.Option>? options,
     $core.String? version,
-    $12.SourceContext? sourceContext,
+    $1.SourceContext? sourceContext,
     $core.Iterable<Mixin>? mixins,
-    $13.Syntax? syntax,
+    $0.Syntax? syntax,
   }) {
     final $result = create();
     if (name != null) {
@@ -61,43 +61,30 @@ class Api extends $pb.GeneratedMessage {
     return $result;
   }
   Api._() : super();
-  factory Api.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Api.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Api.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Api.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Api',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Api', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
-    ..pc<Method>(2, _omitFieldNames ? '' : 'methods', $pb.PbFieldType.PM,
-        subBuilder: Method.create)
-    ..pc<$13.Option>(3, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM,
-        subBuilder: $13.Option.create)
+    ..pc<Method>(2, _omitFieldNames ? '' : 'methods', $pb.PbFieldType.PM, subBuilder: Method.create)
+    ..pc<$0.Option>(3, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM, subBuilder: $0.Option.create)
     ..aOS(4, _omitFieldNames ? '' : 'version')
-    ..aOM<$12.SourceContext>(5, _omitFieldNames ? '' : 'sourceContext',
-        subBuilder: $12.SourceContext.create)
-    ..pc<Mixin>(6, _omitFieldNames ? '' : 'mixins', $pb.PbFieldType.PM,
-        subBuilder: Mixin.create)
-    ..e<$13.Syntax>(7, _omitFieldNames ? '' : 'syntax', $pb.PbFieldType.OE,
-        defaultOrMaker: $13.Syntax.SYNTAX_PROTO2,
-        valueOf: $13.Syntax.valueOf,
-        enumValues: $13.Syntax.values)
-    ..hasRequiredFields = false;
+    ..aOM<$1.SourceContext>(5, _omitFieldNames ? '' : 'sourceContext', subBuilder: $1.SourceContext.create)
+    ..pc<Mixin>(6, _omitFieldNames ? '' : 'mixins', $pb.PbFieldType.PM, subBuilder: Mixin.create)
+    ..e<$0.Syntax>(7, _omitFieldNames ? '' : 'syntax', $pb.PbFieldType.OE, defaultOrMaker: $0.Syntax.SYNTAX_PROTO2, valueOf: $0.Syntax.valueOf, enumValues: $0.Syntax.values)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Api clone() => Api()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Api copyWith(void Function(Api) updates) =>
-      super.copyWith((message) => updates(message as Api)) as Api;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Api copyWith(void Function(Api) updates) => super.copyWith((message) => updates(message as Api)) as Api;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -106,8 +93,7 @@ class Api extends $pb.GeneratedMessage {
   Api createEmptyInstance() => create();
   static $pb.PbList<Api> createRepeated() => $pb.PbList<Api>();
   @$core.pragma('dart2js:noInline')
-  static Api getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Api>(create);
+  static Api getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Api>(create);
   static Api? _defaultInstance;
 
   /// The fully qualified name of this interface, including package name
@@ -115,10 +101,7 @@ class Api extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.String get name => $_getSZ(0);
   @$pb.TagNumber(1)
-  set name($core.String v) {
-    $_setString(0, v);
-  }
-
+  set name($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasName() => $_has(0);
   @$pb.TagNumber(1)
@@ -130,7 +113,7 @@ class Api extends $pb.GeneratedMessage {
 
   /// Any metadata attached to the interface.
   @$pb.TagNumber(3)
-  $core.List<$13.Option> get options => $_getList(2);
+  $core.List<$0.Option> get options => $_getList(2);
 
   ///  A version string for this interface. If specified, must have the form
   ///  `major-version.minor-version`, as in `1.10`. If the minor version is
@@ -154,10 +137,7 @@ class Api extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.String get version => $_getSZ(3);
   @$pb.TagNumber(4)
-  set version($core.String v) {
-    $_setString(3, v);
-  }
-
+  set version($core.String v) { $_setString(3, v); }
   @$pb.TagNumber(4)
   $core.bool hasVersion() => $_has(3);
   @$pb.TagNumber(4)
@@ -166,18 +146,15 @@ class Api extends $pb.GeneratedMessage {
   /// Source context for the protocol buffer service represented by this
   /// message.
   @$pb.TagNumber(5)
-  $12.SourceContext get sourceContext => $_getN(4);
+  $1.SourceContext get sourceContext => $_getN(4);
   @$pb.TagNumber(5)
-  set sourceContext($12.SourceContext v) {
-    setField(5, v);
-  }
-
+  set sourceContext($1.SourceContext v) { setField(5, v); }
   @$pb.TagNumber(5)
   $core.bool hasSourceContext() => $_has(4);
   @$pb.TagNumber(5)
   void clearSourceContext() => clearField(5);
   @$pb.TagNumber(5)
-  $12.SourceContext ensureSourceContext() => $_ensure(4);
+  $1.SourceContext ensureSourceContext() => $_ensure(4);
 
   /// Included interfaces. See [Mixin][].
   @$pb.TagNumber(6)
@@ -185,12 +162,9 @@ class Api extends $pb.GeneratedMessage {
 
   /// The source syntax of the service.
   @$pb.TagNumber(7)
-  $13.Syntax get syntax => $_getN(6);
+  $0.Syntax get syntax => $_getN(6);
   @$pb.TagNumber(7)
-  set syntax($13.Syntax v) {
-    setField(7, v);
-  }
-
+  set syntax($0.Syntax v) { setField(7, v); }
   @$pb.TagNumber(7)
   $core.bool hasSyntax() => $_has(6);
   @$pb.TagNumber(7)
@@ -205,8 +179,8 @@ class Method extends $pb.GeneratedMessage {
     $core.bool? requestStreaming,
     $core.String? responseTypeUrl,
     $core.bool? responseStreaming,
-    $core.Iterable<$13.Option>? options,
-    $13.Syntax? syntax,
+    $core.Iterable<$0.Option>? options,
+    $0.Syntax? syntax,
   }) {
     final $result = create();
     if (name != null) {
@@ -233,40 +207,30 @@ class Method extends $pb.GeneratedMessage {
     return $result;
   }
   Method._() : super();
-  factory Method.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Method.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Method.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Method.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Method',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Method', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
     ..aOS(2, _omitFieldNames ? '' : 'requestTypeUrl')
     ..aOB(3, _omitFieldNames ? '' : 'requestStreaming')
     ..aOS(4, _omitFieldNames ? '' : 'responseTypeUrl')
     ..aOB(5, _omitFieldNames ? '' : 'responseStreaming')
-    ..pc<$13.Option>(6, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM,
-        subBuilder: $13.Option.create)
-    ..e<$13.Syntax>(7, _omitFieldNames ? '' : 'syntax', $pb.PbFieldType.OE,
-        defaultOrMaker: $13.Syntax.SYNTAX_PROTO2,
-        valueOf: $13.Syntax.valueOf,
-        enumValues: $13.Syntax.values)
-    ..hasRequiredFields = false;
+    ..pc<$0.Option>(6, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM, subBuilder: $0.Option.create)
+    ..e<$0.Syntax>(7, _omitFieldNames ? '' : 'syntax', $pb.PbFieldType.OE, defaultOrMaker: $0.Syntax.SYNTAX_PROTO2, valueOf: $0.Syntax.valueOf, enumValues: $0.Syntax.values)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Method clone() => Method()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Method copyWith(void Function(Method) updates) =>
-      super.copyWith((message) => updates(message as Method)) as Method;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Method copyWith(void Function(Method) updates) => super.copyWith((message) => updates(message as Method)) as Method;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -275,18 +239,14 @@ class Method extends $pb.GeneratedMessage {
   Method createEmptyInstance() => create();
   static $pb.PbList<Method> createRepeated() => $pb.PbList<Method>();
   @$core.pragma('dart2js:noInline')
-  static Method getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Method>(create);
+  static Method getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Method>(create);
   static Method? _defaultInstance;
 
   /// The simple name of this method.
   @$pb.TagNumber(1)
   $core.String get name => $_getSZ(0);
   @$pb.TagNumber(1)
-  set name($core.String v) {
-    $_setString(0, v);
-  }
-
+  set name($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasName() => $_has(0);
   @$pb.TagNumber(1)
@@ -296,10 +256,7 @@ class Method extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.String get requestTypeUrl => $_getSZ(1);
   @$pb.TagNumber(2)
-  set requestTypeUrl($core.String v) {
-    $_setString(1, v);
-  }
-
+  set requestTypeUrl($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasRequestTypeUrl() => $_has(1);
   @$pb.TagNumber(2)
@@ -309,10 +266,7 @@ class Method extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool get requestStreaming => $_getBF(2);
   @$pb.TagNumber(3)
-  set requestStreaming($core.bool v) {
-    $_setBool(2, v);
-  }
-
+  set requestStreaming($core.bool v) { $_setBool(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasRequestStreaming() => $_has(2);
   @$pb.TagNumber(3)
@@ -322,10 +276,7 @@ class Method extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.String get responseTypeUrl => $_getSZ(3);
   @$pb.TagNumber(4)
-  set responseTypeUrl($core.String v) {
-    $_setString(3, v);
-  }
-
+  set responseTypeUrl($core.String v) { $_setString(3, v); }
   @$pb.TagNumber(4)
   $core.bool hasResponseTypeUrl() => $_has(3);
   @$pb.TagNumber(4)
@@ -335,10 +286,7 @@ class Method extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $core.bool get responseStreaming => $_getBF(4);
   @$pb.TagNumber(5)
-  set responseStreaming($core.bool v) {
-    $_setBool(4, v);
-  }
-
+  set responseStreaming($core.bool v) { $_setBool(4, v); }
   @$pb.TagNumber(5)
   $core.bool hasResponseStreaming() => $_has(4);
   @$pb.TagNumber(5)
@@ -346,16 +294,13 @@ class Method extends $pb.GeneratedMessage {
 
   /// Any metadata attached to the method.
   @$pb.TagNumber(6)
-  $core.List<$13.Option> get options => $_getList(5);
+  $core.List<$0.Option> get options => $_getList(5);
 
   /// The source syntax of this method.
   @$pb.TagNumber(7)
-  $13.Syntax get syntax => $_getN(6);
+  $0.Syntax get syntax => $_getN(6);
   @$pb.TagNumber(7)
-  set syntax($13.Syntax v) {
-    setField(7, v);
-  }
-
+  set syntax($0.Syntax v) { setField(7, v); }
   @$pb.TagNumber(7)
   $core.bool hasSyntax() => $_has(6);
   @$pb.TagNumber(7)
@@ -455,31 +400,25 @@ class Mixin extends $pb.GeneratedMessage {
     return $result;
   }
   Mixin._() : super();
-  factory Mixin.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Mixin.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Mixin.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Mixin.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Mixin',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Mixin', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
     ..aOS(2, _omitFieldNames ? '' : 'root')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Mixin clone() => Mixin()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Mixin copyWith(void Function(Mixin) updates) =>
-      super.copyWith((message) => updates(message as Mixin)) as Mixin;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Mixin copyWith(void Function(Mixin) updates) => super.copyWith((message) => updates(message as Mixin)) as Mixin;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -488,18 +427,14 @@ class Mixin extends $pb.GeneratedMessage {
   Mixin createEmptyInstance() => create();
   static $pb.PbList<Mixin> createRepeated() => $pb.PbList<Mixin>();
   @$core.pragma('dart2js:noInline')
-  static Mixin getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Mixin>(create);
+  static Mixin getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Mixin>(create);
   static Mixin? _defaultInstance;
 
   /// The fully qualified name of the interface which is included.
   @$pb.TagNumber(1)
   $core.String get name => $_getSZ(0);
   @$pb.TagNumber(1)
-  set name($core.String v) {
-    $_setString(0, v);
-  }
-
+  set name($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasName() => $_has(0);
   @$pb.TagNumber(1)
@@ -510,16 +445,13 @@ class Mixin extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.String get root => $_getSZ(1);
   @$pb.TagNumber(2)
-  set root($core.String v) {
-    $_setString(1, v);
-  }
-
+  set root($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasRoot() => $_has(1);
   @$pb.TagNumber(2)
   void clearRoot() => clearField(2);
 }
 
+
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

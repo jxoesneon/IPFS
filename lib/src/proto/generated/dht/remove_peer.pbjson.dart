@@ -17,14 +17,7 @@ import 'dart:typed_data' as $typed_data;
 const RemovePeerRequest$json = {
   '1': 'RemovePeerRequest',
   '2': [
-    {
-      '1': 'peer_id',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.dht.common_kademlia.KademliaId',
-      '10': 'peerId'
-    },
+    {'1': 'peer_id', '3': 1, '4': 1, '5': 11, '6': '.ipfs.dht.common_kademlia.KademliaId', '10': 'peerId'},
   ],
 };
 
@@ -42,6 +35,6 @@ const RemovePeerResponse$json = {
 };
 
 /// Descriptor for `RemovePeerResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List removePeerResponseDescriptor =
-    $convert.base64Decode(
-        'ChJSZW1vdmVQZWVyUmVzcG9uc2USGAoHc3VjY2VzcxgBIAEoCFIHc3VjY2Vzcw==');
+final $typed_data.Uint8List removePeerResponseDescriptor = $convert.base64Decode(
+    'ChJSZW1vdmVQZWVyUmVzcG9uc2USGAoHc3VjY2VzcxgBIAEoCFIHc3VjY2Vzcw==');
+

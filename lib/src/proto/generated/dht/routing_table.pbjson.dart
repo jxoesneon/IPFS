@@ -17,14 +17,7 @@ import 'dart:typed_data' as $typed_data;
 const RoutingTableProto$json = {
   '1': 'RoutingTableProto',
   '2': [
-    {
-      '1': 'entries',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.ipfs.dht.routing_table.RoutingTableProto.EntriesEntry',
-      '10': 'entries'
-    },
+    {'1': 'entries', '3': 1, '4': 3, '5': 11, '6': '.ipfs.dht.routing_table.RoutingTableProto.EntriesEntry', '10': 'entries'},
   ],
   '3': [RoutingTableProto_EntriesEntry$json],
 };
@@ -34,14 +27,7 @@ const RoutingTableProto_EntriesEntry$json = {
   '1': 'EntriesEntry',
   '2': [
     {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
-    {
-      '1': 'value',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.ipfs.dht.kademlia_node.KademliaNode',
-      '10': 'value'
-    },
+    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.ipfs.dht.kademlia_node.KademliaNode', '10': 'value'},
   ],
   '7': {'7': true},
 };
@@ -52,3 +38,4 @@ final $typed_data.Uint8List routingTableProtoDescriptor = $convert.base64Decode(
     '90YWJsZS5Sb3V0aW5nVGFibGVQcm90by5FbnRyaWVzRW50cnlSB2VudHJpZXMaYAoMRW50cmll'
     'c0VudHJ5EhAKA2tleRgBIAEoCVIDa2V5EjoKBXZhbHVlGAIgASgLMiQuaXBmcy5kaHQua2FkZW'
     '1saWFfbm9kZS5LYWRlbWxpYU5vZGVSBXZhbHVlOgI4AQ==');
+

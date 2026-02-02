@@ -14,19 +14,17 @@ import 'dart:core' as $core;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 class IpnsEntry_ValidityType extends $pb.ProtobufEnum {
-  static const IpnsEntry_ValidityType EOL =
-      IpnsEntry_ValidityType._(0, _omitEnumNames ? '' : 'EOL');
+  static const IpnsEntry_ValidityType EOL = IpnsEntry_ValidityType._(0, _omitEnumNames ? '' : 'EOL');
 
-  static const $core.List<IpnsEntry_ValidityType> values =
-      <IpnsEntry_ValidityType>[
+  static const $core.List<IpnsEntry_ValidityType> values = <IpnsEntry_ValidityType> [
     EOL,
   ];
 
-  static final $core.Map<$core.int, IpnsEntry_ValidityType> _byValue =
-      $pb.ProtobufEnum.initByValue(values);
+  static final $core.Map<$core.int, IpnsEntry_ValidityType> _byValue = $pb.ProtobufEnum.initByValue(values);
   static IpnsEntry_ValidityType? valueOf($core.int value) => _byValue[value];
 
   const IpnsEntry_ValidityType._($core.int v, $core.String n) : super(v, n);
 }
+
 
 const _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

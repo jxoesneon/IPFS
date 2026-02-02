@@ -97,7 +97,18 @@ test_output*.txt
 test_results.json
 test_node_debug.txt
 test_pin_debug.txt
+test_results_*.txt
+test_failures.txt
 final_test_output.txt
+rpc_test_*.txt
+test_summary.txt
+lib_analysis_errors.txt
+lint_issues.txt
+pub_get_error.txt
+git_status_output.txt
+
+# Temporary backups
+temp_backup/
 
 # Debug/Analysis tools
 # parse_all_coverage.dart

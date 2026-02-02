@@ -26,3 +26,4 @@ const Duration$json = {
 final $typed_data.Uint8List durationDescriptor = $convert.base64Decode(
     'CghEdXJhdGlvbhIYCgdzZWNvbmRzGAEgASgDUgdzZWNvbmRzEhQKBW5hbm9zGAIgASgFUgVuYW'
     '5vcw==');
+

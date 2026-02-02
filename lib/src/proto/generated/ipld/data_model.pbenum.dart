@@ -26,7 +26,7 @@ class Kind extends $pb.ProtobufEnum {
   static const Kind LINK = Kind._(8, _omitEnumNames ? '' : 'LINK');
   static const Kind BIG_INT = Kind._(9, _omitEnumNames ? '' : 'BIG_INT');
 
-  static const $core.List<Kind> values = <Kind>[
+  static const $core.List<Kind> values = <Kind> [
     NULL,
     BOOL,
     INTEGER,
@@ -39,11 +39,11 @@ class Kind extends $pb.ProtobufEnum {
     BIG_INT,
   ];
 
-  static final $core.Map<$core.int, Kind> _byValue =
-      $pb.ProtobufEnum.initByValue(values);
+  static final $core.Map<$core.int, Kind> _byValue = $pb.ProtobufEnum.initByValue(values);
   static Kind? valueOf($core.int value) => _byValue[value];
 
   const Kind._($core.int v, $core.String n) : super(v, n);
 }
+
 
 const _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');

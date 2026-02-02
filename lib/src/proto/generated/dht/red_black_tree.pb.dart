@@ -13,15 +13,15 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'common_red_black_tree.pb.dart' as $8;
-import 'common_red_black_tree.pbenum.dart' as $8;
+import 'common_red_black_tree.pb.dart' as $0;
+import 'common_red_black_tree.pbenum.dart' as $0;
 
 /// Represents a node in a Red-Black Tree.
 class RedBlackTreeNode extends $pb.GeneratedMessage {
   factory RedBlackTreeNode({
-    $8.K_PeerId? key,
-    $8.V_PeerInfo? value,
-    $8.NodeColor? color,
+    $0.K_PeerId? key,
+    $0.V_PeerInfo? value,
+    $0.NodeColor? color,
     RedBlackTreeNode? left,
     RedBlackTreeNode? right,
   }) {
@@ -44,93 +44,68 @@ class RedBlackTreeNode extends $pb.GeneratedMessage {
     return $result;
   }
   RedBlackTreeNode._() : super();
-  factory RedBlackTreeNode.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory RedBlackTreeNode.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory RedBlackTreeNode.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory RedBlackTreeNode.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RedBlackTreeNode',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'ipfs.dht.red_black_tree'),
-      createEmptyInstance: create)
-    ..aOM<$8.K_PeerId>(1, _omitFieldNames ? '' : 'key',
-        subBuilder: $8.K_PeerId.create)
-    ..aOM<$8.V_PeerInfo>(2, _omitFieldNames ? '' : 'value',
-        subBuilder: $8.V_PeerInfo.create)
-    ..e<$8.NodeColor>(3, _omitFieldNames ? '' : 'color', $pb.PbFieldType.OE,
-        defaultOrMaker: $8.NodeColor.RED,
-        valueOf: $8.NodeColor.valueOf,
-        enumValues: $8.NodeColor.values)
-    ..aOM<RedBlackTreeNode>(4, _omitFieldNames ? '' : 'left',
-        subBuilder: RedBlackTreeNode.create)
-    ..aOM<RedBlackTreeNode>(5, _omitFieldNames ? '' : 'right',
-        subBuilder: RedBlackTreeNode.create)
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RedBlackTreeNode', package: const $pb.PackageName(_omitMessageNames ? '' : 'ipfs.dht.red_black_tree'), createEmptyInstance: create)
+    ..aOM<$0.K_PeerId>(1, _omitFieldNames ? '' : 'key', subBuilder: $0.K_PeerId.create)
+    ..aOM<$0.V_PeerInfo>(2, _omitFieldNames ? '' : 'value', subBuilder: $0.V_PeerInfo.create)
+    ..e<$0.NodeColor>(3, _omitFieldNames ? '' : 'color', $pb.PbFieldType.OE, defaultOrMaker: $0.NodeColor.RED, valueOf: $0.NodeColor.valueOf, enumValues: $0.NodeColor.values)
+    ..aOM<RedBlackTreeNode>(4, _omitFieldNames ? '' : 'left', subBuilder: RedBlackTreeNode.create)
+    ..aOM<RedBlackTreeNode>(5, _omitFieldNames ? '' : 'right', subBuilder: RedBlackTreeNode.create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   RedBlackTreeNode clone() => RedBlackTreeNode()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  RedBlackTreeNode copyWith(void Function(RedBlackTreeNode) updates) =>
-      super.copyWith((message) => updates(message as RedBlackTreeNode))
-          as RedBlackTreeNode;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  RedBlackTreeNode copyWith(void Function(RedBlackTreeNode) updates) => super.copyWith((message) => updates(message as RedBlackTreeNode)) as RedBlackTreeNode;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static RedBlackTreeNode create() => RedBlackTreeNode._();
   RedBlackTreeNode createEmptyInstance() => create();
-  static $pb.PbList<RedBlackTreeNode> createRepeated() =>
-      $pb.PbList<RedBlackTreeNode>();
+  static $pb.PbList<RedBlackTreeNode> createRepeated() => $pb.PbList<RedBlackTreeNode>();
   @$core.pragma('dart2js:noInline')
-  static RedBlackTreeNode getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RedBlackTreeNode>(create);
+  static RedBlackTreeNode getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RedBlackTreeNode>(create);
   static RedBlackTreeNode? _defaultInstance;
 
   /// The key associated with this node.
   @$pb.TagNumber(1)
-  $8.K_PeerId get key => $_getN(0);
+  $0.K_PeerId get key => $_getN(0);
   @$pb.TagNumber(1)
-  set key($8.K_PeerId v) {
-    setField(1, v);
-  }
-
+  set key($0.K_PeerId v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasKey() => $_has(0);
   @$pb.TagNumber(1)
   void clearKey() => clearField(1);
   @$pb.TagNumber(1)
-  $8.K_PeerId ensureKey() => $_ensure(0);
+  $0.K_PeerId ensureKey() => $_ensure(0);
 
   /// The value associated with this node.
   @$pb.TagNumber(2)
-  $8.V_PeerInfo get value => $_getN(1);
+  $0.V_PeerInfo get value => $_getN(1);
   @$pb.TagNumber(2)
-  set value($8.V_PeerInfo v) {
-    setField(2, v);
-  }
-
+  set value($0.V_PeerInfo v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasValue() => $_has(1);
   @$pb.TagNumber(2)
   void clearValue() => clearField(2);
   @$pb.TagNumber(2)
-  $8.V_PeerInfo ensureValue() => $_ensure(1);
+  $0.V_PeerInfo ensureValue() => $_ensure(1);
 
   /// The color of this node (RED or BLACK).
   @$pb.TagNumber(3)
-  $8.NodeColor get color => $_getN(2);
+  $0.NodeColor get color => $_getN(2);
   @$pb.TagNumber(3)
-  set color($8.NodeColor v) {
-    setField(3, v);
-  }
-
+  set color($0.NodeColor v) { setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasColor() => $_has(2);
   @$pb.TagNumber(3)
@@ -140,10 +115,7 @@ class RedBlackTreeNode extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   RedBlackTreeNode get left => $_getN(3);
   @$pb.TagNumber(4)
-  set left(RedBlackTreeNode v) {
-    setField(4, v);
-  }
-
+  set left(RedBlackTreeNode v) { setField(4, v); }
   @$pb.TagNumber(4)
   $core.bool hasLeft() => $_has(3);
   @$pb.TagNumber(4)
@@ -155,10 +127,7 @@ class RedBlackTreeNode extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   RedBlackTreeNode get right => $_getN(4);
   @$pb.TagNumber(5)
-  set right(RedBlackTreeNode v) {
-    setField(5, v);
-  }
-
+  set right(RedBlackTreeNode v) { setField(5, v); }
   @$pb.TagNumber(5)
   $core.bool hasRight() => $_has(4);
   @$pb.TagNumber(5)
@@ -167,6 +136,6 @@ class RedBlackTreeNode extends $pb.GeneratedMessage {
   RedBlackTreeNode ensureRight() => $_ensure(4);
 }
 
+
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
