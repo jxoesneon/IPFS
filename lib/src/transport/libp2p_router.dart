@@ -70,7 +70,12 @@ class Libp2pRouter implements RouterInterface {
   Set<String> get connectedPeers => _connectedPeers;
 
   @override
-  List<String> get listeningAddresses => _config.network.listenAddresses;
+  List<String> get listeningAddresses {
+    if (_hasStarted && _host != null) {
+      return _host!.network.listenAddresses.map((a) => a.toString()).toList();
+    }
+    return _config.network.listenAddresses;
+  }
 
   @override
   Stream<ConnectionEvent> get connectionEvents =>
@@ -153,7 +158,7 @@ class Libp2pRouter implements RouterInterface {
       // Listen for connection events to maintain _connectedPeers
       _host!.network.notify(
         libp2p.NotifyBundle(
-          connectedF: (net, conn) {
+          connectedF: (net, conn, {dialLatency}) {
             final remotePeerId = conn.remotePeer.toString();
             _connectedPeers.add(remotePeerId);
             _connectionEventsController.add(

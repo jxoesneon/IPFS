@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/proto/generated/core/car.pb.dart' as proto;
-import 'package:protobuf/well_known_types/google/protobuf/any.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/google/protobuf/any.pb.dart';
 import 'package:fixnum/fixnum.dart' show Int64;
 // lib/src/core/data_structures/car.dart
 

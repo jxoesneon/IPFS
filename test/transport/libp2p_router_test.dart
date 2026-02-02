@@ -16,14 +16,20 @@ void main() {
     late IPFSConfig configB;
 
     setUp(() async {
-      // Config for Node A (Port 0 for dynamic assignment if supported, or explicit 4101)
+      // Config for Node A (Port 0 for dynamic assignment)
       configA = IPFSConfig(
-        network: NetworkConfig(listenAddresses: ['/ip4/127.0.0.1/tcp/4101']),
+        network: NetworkConfig(
+          listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
+          bootstrapPeers: [],
+        ),
       );
 
-      // Config for Node B (Port 4102)
+      // Config for Node B (Port 0 for dynamic assignment)
       configB = IPFSConfig(
-        network: NetworkConfig(listenAddresses: ['/ip4/127.0.0.1/tcp/4102']),
+        network: NetworkConfig(
+          listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
+          bootstrapPeers: [],
+        ),
       );
 
       routerA = Libp2pRouter(configA);
@@ -42,20 +48,35 @@ void main() {
       await routerA.start();
       expect(routerA.hasStarted, isTrue);
       expect(routerA.peerID, isNotEmpty);
-      expect(routerA.listeningAddresses, contains('/ip4/127.0.0.1/tcp/4101'));
+      expect(routerA.listeningAddresses, isNotEmpty);
+      // Validating it contains a tcp address
+      expect(
+          routerA.listeningAddresses
+              .any((a) => a.contains('/tcp/')),
+          isTrue);
 
       await routerA.stop();
       expect(routerA.hasStarted, isFalse);
     });
+
+    String getLocalConnectAddress(Libp2pRouter router) {
+      var addr = router.listeningAddresses.firstWhere(
+        (a) => a.contains('/tcp/'),
+        orElse: () =>
+            throw Exception('No TCP address found for peer ${router.peerID}'),
+      );
+      if (addr.contains('/ip4/0.0.0.0/')) {
+        addr = addr.replaceAll('/ip4/0.0.0.0/', '/ip4/127.0.0.1/');
+      }
+      return '$addr/p2p/${router.peerID}';
+    }
 
     test('should connect to another peer', () async {
       await routerA.start();
       await routerB.start();
 
       // Connect A -> B
-      // Construct B's multiaddr with its PeerID
-      final addrB = '/ip4/127.0.0.1/tcp/4102/p2p/${routerB.peerID}';
-
+      final addrB = getLocalConnectAddress(routerB);
       await routerA.connect(addrB);
 
       // Verify connection on A side
@@ -70,7 +91,7 @@ void main() {
       await routerA.start();
       await routerB.start();
 
-      final addrB = '/ip4/127.0.0.1/tcp/4102/p2p/${routerB.peerID}';
+      final addrB = getLocalConnectAddress(routerB);
       await routerA.connect(addrB);
       await Future.delayed(Duration(milliseconds: 500));
 

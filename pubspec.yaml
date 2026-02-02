@@ -24,7 +24,7 @@ dependencies:
   pointycastle: ^3.9.1
 
   # Serialization
-  protobuf: ^6.0.0
+  protobuf: ^3.1.0
 
   # Data Storage
   hive: ^2.2.3
@@ -47,7 +47,8 @@ dependencies:
   markdown: ^7.3.0
   synchronized: ^3.4.0
   multicast_dns: ^0.3.3
-  dart_libp2p: ^0.5.3
+  dart_libp2p:
+    path: vendor/dart_libp2p
 
   jose: ^0.3.5
   mime: ^2.0.0
@@ -82,7 +83,3 @@ assets:
 
 # Example entry point for running the application.
 example: main.dart
-
-dependency_overrides:
-  # Override protobuf to 6.0.0 for all dependencies
-  protobuf: ^6.0.0
