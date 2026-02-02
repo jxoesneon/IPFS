@@ -9,20 +9,22 @@ import 'package:dart_libp2p/core/network/common.dart';
 import 'package:dart_libp2p/core/network/conn.dart';
 import 'package:dart_libp2p/core/network/transport_conn.dart';
 import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart' as p2p_mux;
+import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart'
+    as p2p_mux;
 import 'package:dart_libp2p/p2p/security/secured_connection.dart';
 import 'package:logging/logging.dart';
 
 /// Mock multiplexer for testing
 class MockMultiplexer implements p2p_mux.Multiplexer {
   final Logger _logger = Logger('MockMultiplexer');
-  
+
   final SecuredConnection _securedConn;
   final bool _isClient;
   final List<MockMuxedStream> _streams = [];
   int _nextStreamId = 1;
   bool _isClosed = false;
-  final StreamController<P2PStream> _incomingStreamsController = StreamController.broadcast();
+  final StreamController<P2PStream> _incomingStreamsController =
+      StreamController.broadcast();
   Future<void> Function(P2PStream stream)? _streamHandler;
 
   MockMultiplexer(this._securedConn, this._isClient) {
@@ -38,7 +40,8 @@ class MockMultiplexer implements p2p_mux.Multiplexer {
     bool isServer,
     PeerScope peerScope,
   ) async {
-    _logger.fine('MockMultiplexer: Creating new muxed connection, isServer=$isServer');
+    _logger.fine(
+        'MockMultiplexer: Creating new muxed connection, isServer=$isServer');
     // Cast transport to SecuredConnection for our mock
     final securedConn = transport as SecuredConnection;
     return MockMuxedConn(securedConn, isServer, this);
@@ -103,8 +106,9 @@ class MockMultiplexer implements p2p_mux.Multiplexer {
       isOutbound: isOutbound,
     );
     _streams.add(stream);
-    _logger.fine('MockMultiplexer: Created stream ${stream.id()}, outbound=$isOutbound');
-    
+    _logger.fine(
+        'MockMultiplexer: Created stream ${stream.id()}, outbound=$isOutbound');
+
     // If this is an incoming stream, notify the handler
     if (!isOutbound && _streamHandler != null) {
       Future.microtask(() async {
@@ -115,7 +119,7 @@ class MockMultiplexer implements p2p_mux.Multiplexer {
         }
       });
     }
-    
+
     return stream;
   }
 
@@ -128,7 +132,7 @@ class MockMultiplexer implements p2p_mux.Multiplexer {
 /// Mock muxed connection
 class MockMuxedConn implements core_mux.MuxedConn {
   final Logger _logger = Logger('MockMuxedConn');
-  
+
   final SecuredConnection _transport;
   final bool _isServer;
   final MockMultiplexer _multiplexer;
@@ -167,7 +171,7 @@ class MockMuxedConn implements core_mux.MuxedConn {
 /// Mock muxed stream
 class MockMuxedStream implements core_mux.MuxedStream, P2PStream<Uint8List> {
   final Logger _logger = Logger('MockMuxedStream');
-  
+
   final String _id;
   final SecuredConnection _conn;
   final bool _isOutbound;
@@ -179,7 +183,9 @@ class MockMuxedStream implements core_mux.MuxedStream, P2PStream<Uint8List> {
     required String id,
     required SecuredConnection conn,
     required bool isOutbound,
-  }) : _id = id, _conn = conn, _isOutbound = isOutbound {
+  })  : _id = id,
+        _conn = conn,
+        _isOutbound = isOutbound {
     _logger.fine('Created MockMuxedStream: $_id, outbound=$_isOutbound');
   }
 
@@ -217,7 +223,7 @@ class MockMuxedStream implements core_mux.MuxedStream, P2PStream<Uint8List> {
     if (_isClosed) {
       throw StateError('Stream is closed');
     }
-    
+
     // For testing, return empty data to simulate no data available
     return Uint8List(0);
   }
@@ -227,7 +233,7 @@ class MockMuxedStream implements core_mux.MuxedStream, P2PStream<Uint8List> {
     if (_isClosed) {
       throw StateError('Stream is closed');
     }
-    
+
     _writeBuffer.add(Uint8List.fromList(data));
     _logger.fine('MockMuxedStream ${id()}: Wrote ${data.length} bytes');
   }
@@ -244,9 +250,9 @@ class MockMuxedStream implements core_mux.MuxedStream, P2PStream<Uint8List> {
 
   @override
   StreamStats stat() => StreamStats(
-    direction: _isOutbound ? Direction.outbound : Direction.inbound,
-    opened: DateTime.now(),
-  );
+        direction: _isOutbound ? Direction.outbound : Direction.inbound,
+        opened: DateTime.now(),
+      );
 
   @override
   Conn get conn => _conn;
@@ -281,7 +287,8 @@ class MockMuxedStream implements core_mux.MuxedStream, P2PStream<Uint8List> {
 }
 
 /// Null scope implementation for testing
-class NullScope implements StreamManagementScope, PeerScope, ProtocolScope, ServiceScope {
+class NullScope
+    implements StreamManagementScope, PeerScope, ProtocolScope, ServiceScope {
   @override
   ScopeStat get stat => const ScopeStat();
 

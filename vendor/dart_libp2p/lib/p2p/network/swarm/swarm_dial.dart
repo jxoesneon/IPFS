@@ -13,7 +13,8 @@ import '../../../core/interfaces.dart';
 import '../../../core/network/conn.dart';
 
 /// DialFunc is a function that dials a peer at a specific address
-typedef DialFunc = Future<Conn> Function(Context context, MultiAddr addr, PeerId peerId);
+typedef DialFunc = Future<Conn> Function(
+    Context context, MultiAddr addr, PeerId peerId);
 
 /// AddrDialer is a helper for dialing multiple addresses in parallel
 class AddrDialer {
@@ -37,11 +38,10 @@ class AddrDialer {
     required List<MultiAddr> addrs,
     required DialFunc dialFunc,
     required Context context,
-  }) : 
-    _peerId = peerId,
-    _addrs = addrs,
-    _dialFunc = dialFunc,
-    _context = context;
+  })  : _peerId = peerId,
+        _addrs = addrs,
+        _dialFunc = dialFunc,
+        _context = context;
 
   /// Dials the addresses in parallel and returns the first successful connection
   Future<Conn> dial() async {
@@ -51,7 +51,7 @@ class AddrDialer {
 
     // Create a completer for the first successful connection
     final completer = Completer<Conn>();
-    
+
     // Track all errors for comprehensive reporting (3b)
     final errors = <String, Exception>{};
     var dialsInProgress = _addrs.length;
@@ -65,20 +65,17 @@ class AddrDialer {
         }
       }).catchError((error) {
         // Collect error for this address
-        errors[addr.toString()] = error is Exception 
-            ? error 
-            : Exception(error.toString());
-        
+        errors[addr.toString()] =
+            error is Exception ? error : Exception(error.toString());
+
         dialsInProgress--;
-        
+
         // If all dials failed, report all errors
         if (dialsInProgress == 0 && !completer.isCompleted) {
-          final errorMsg = errors.entries
-              .map((e) => '${e.key}: ${e.value}')
-              .join('; ');
+          final errorMsg =
+              errors.entries.map((e) => '${e.key}: ${e.value}').join('; ');
           completer.completeError(
-            Exception('Failed to dial any address. Errors: $errorMsg')
-          );
+              Exception('Failed to dial any address. Errors: $errorMsg'));
         }
       });
     }
@@ -107,8 +104,10 @@ class DelayDialRanker {
 
     for (final addr in addrs) {
       bool isRelay = false;
-      for (final p in addr.protocols) { // This 'p' is of type multiaddr_protocol.Protocol
-        if (p.code == multiaddr_protocol.Protocols.circuit.code) { // Corrected access to P_CIRCUIT code
+      for (final p in addr.protocols) {
+        // This 'p' is of type multiaddr_protocol.Protocol
+        if (p.code == multiaddr_protocol.Protocols.circuit.code) {
+          // Corrected access to P_CIRCUIT code
           isRelay = true;
           break;
         }
@@ -150,10 +149,9 @@ class DialBackoff {
   DialBackoff({
     Duration baseDelay = const Duration(milliseconds: 100),
     Duration maxDelay = const Duration(minutes: 5),
-  }) : 
-    _baseDelay = baseDelay,
-    _maxDelay = maxDelay,
-    _currentDelay = baseDelay;
+  })  : _baseDelay = baseDelay,
+        _maxDelay = maxDelay,
+        _currentDelay = baseDelay;
 
   /// Gets the next delay and increases the backoff
   Duration nextDelay() {
@@ -178,9 +176,9 @@ class DialBackoff {
 class ScoredAddress {
   final MultiAddr addr;
   final AddressType type;
-  final int priority;           // Lower = higher priority
-  final Duration timeout;       // Type-specific timeout
-  
+  final int priority; // Lower = higher priority
+  final Duration timeout; // Type-specific timeout
+
   ScoredAddress({
     required this.addr,
     required this.type,
@@ -193,38 +191,38 @@ class ScoredAddress {
 class CapabilityAwarePriorityRanker {
   static const directTimeout = Duration(seconds: 5);
   static const relayTimeout = Duration(seconds: 10);
-  
+
   /// Rank addresses by priority based on local capabilities
   List<ScoredAddress> rank(
     List<MultiAddr> addresses,
     OutboundCapabilityInfo capability,
   ) {
     final scored = <ScoredAddress>[];
-    
+
     for (final addr in addresses) {
       final type = addr.addressType;
       final priority = _assignPriority(type, capability);
       final timeout = _timeoutFor(type);
-      
+
       scored.add(ScoredAddress(
-        addr: addr, 
-        type: type, 
-        priority: priority, 
+        addr: addr,
+        type: type,
+        priority: priority,
         timeout: timeout,
       ));
     }
-    
+
     // Sort by priority (lower = higher priority)
     scored.sort((a, b) => a.priority.compareTo(b.priority));
     return scored;
   }
-  
+
   /// Assign priority based on address type and capability
   int _assignPriority(AddressType type, OutboundCapabilityInfo capability) {
     if (capability.capability == OutboundCapability.dualStack) {
       // Dual-stack: prefer IPv6, then IPv4, then relay
       return switch (type) {
-        AddressType.directIPv6Public => 1,  // Prefer IPv6 for dual-stack
+        AddressType.directIPv6Public => 1, // Prefer IPv6 for dual-stack
         AddressType.directIPv4Public => 2,
         AddressType.directIPv4Private => 3,
         AddressType.relaySpecific => 10,
@@ -257,7 +255,7 @@ class CapabilityAwarePriorityRanker {
       };
     }
   }
-  
+
   /// Determine timeout based on address type
   Duration _timeoutFor(AddressType type) {
     return switch (type) {
@@ -269,13 +267,13 @@ class CapabilityAwarePriorityRanker {
 }
 
 /// Happy Eyeballs dialer with staggered connection attempts (RFC 8305)
-/// 
+///
 /// Attempts connections in priority order with a stagger delay between each.
 /// First successful connection wins and cancels remaining attempts.
 class HappyEyeballsDialer {
   final Logger _logger = Logger('HappyEyeballsDialer');
   static const staggerDelay = Duration(milliseconds: 250);
-  
+
   final PeerId _peerId;
   final List<ScoredAddress> _addrs;
   final DialFunc _dialFunc;
@@ -286,13 +284,13 @@ class HappyEyeballsDialer {
     required List<ScoredAddress> addrs,
     required DialFunc dialFunc,
     required Context context,
-  }) : _peerId = peerId, 
-       _addrs = addrs, 
-       _dialFunc = dialFunc, 
-       _context = context;
+  })  : _peerId = peerId,
+        _addrs = addrs,
+        _dialFunc = dialFunc,
+        _context = context;
 
   /// Dial with Happy Eyeballs algorithm
-  /// 
+  ///
   /// Attempts connections in priority order, staggering each attempt by 250ms.
   /// Returns the first successful connection and cancels remaining attempts.
   Future<Conn> dial() async {
@@ -316,13 +314,13 @@ class HappyEyeballsDialer {
         }
 
         _logger.fine('Attempting ${scored.addr} (priority ${scored.priority})');
-        
+
         try {
           final conn = await _dialFunc(_context, scored.addr, _peerId)
               .timeout(scored.timeout);
 
           if (!completer.isCompleted) {
-            cancelled = true;  // Signal other attempts to stop
+            cancelled = true; // Signal other attempts to stop
             completer.complete(conn);
             _logger.fine('Connected via ${scored.addr}');
           } else {
@@ -336,15 +334,13 @@ class HappyEyeballsDialer {
         } catch (e) {
           errors[scored.addr.toString()] = e is Exception ? e : Exception('$e');
           pendingAttempts--;
-          
+
           // If all attempts failed, complete with error
           if (pendingAttempts == 0 && !completer.isCompleted) {
-            final errorMsg = errors.entries
-                .map((e) => '${e.key}: ${e.value}')
-                .join('; ');
+            final errorMsg =
+                errors.entries.map((e) => '${e.key}: ${e.value}').join('; ');
             completer.completeError(
-              Exception('All dial attempts failed: $errorMsg')
-            );
+                Exception('All dial attempts failed: $errorMsg'));
           }
         }
       });
@@ -352,9 +348,10 @@ class HappyEyeballsDialer {
 
     // Overall timeout: max individual timeout + total stagger time
     final maxWait = _addrs.fold<Duration>(
-      Duration.zero,
-      (max, addr) => addr.timeout > max ? addr.timeout : max,
-    ) + (staggerDelay * _addrs.length);
+          Duration.zero,
+          (max, addr) => addr.timeout > max ? addr.timeout : max,
+        ) +
+        (staggerDelay * _addrs.length);
 
     return completer.future.timeout(maxWait, onTimeout: () {
       cancelled = true;

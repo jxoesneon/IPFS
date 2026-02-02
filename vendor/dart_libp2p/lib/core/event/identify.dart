@@ -24,7 +24,7 @@ class EvtPeerIdentificationCompleted {
   final List<ProtocolID> protocols;
 
   /// SignedPeerRecord is the provided signed peer record of the peer. May be null.
-  /// 
+  ///
   /// Note: In the Dart implementation, we're using a dynamic type for now as the record.Envelope
   /// type is not yet defined. This should be updated when the record package is implemented.
   final dynamic signedPeerRecord;
@@ -39,7 +39,6 @@ class EvtPeerIdentificationCompleted {
   /// ObservedAddr is the our side's connection address as observed by the
   /// peer. This is not verified, the peer could return anything here.
   final MultiAddr? observedAddr;
-
 
   @override
   String toString() {
@@ -63,10 +62,9 @@ class EvtPeerIdentificationCompleted {
 class EvtPeerIdentificationFailed {
   /// Peer is the ID of the peer whose identification failed.
   final PeerId peer;
-  
+
   /// Reason is the reason why identification failed.
   final Exception reason;
-
 
   @override
   String toString() {

@@ -52,7 +52,7 @@ void main() {
         // Arrange
         when(mockHost.removeStreamHandler(any)).thenReturn(null);
         when(mockHost.setStreamHandler(any, any)).thenReturn(null);
-        
+
         await client.start();
 
         // Act
@@ -138,11 +138,11 @@ void main() {
 
         // Act - We'll verify by checking the address components
         final components = circuitAddr.components;
-        
+
         // Assert - Find the relay ID and dest ID in components
         final hasRelayId = components.any((comp) => comp.$2 == relayId);
         final hasDestId = components.any((comp) => comp.$2 == destId);
-        
+
         expect(hasRelayId, isTrue, reason: 'Should contain relay peer ID');
         expect(hasDestId, isTrue, reason: 'Should contain destination peer ID');
       });
@@ -339,7 +339,7 @@ void main() {
         // Arrange
         when(mockHost.setStreamHandler(any, any)).thenReturn(null);
         when(mockHost.removeStreamHandler(any)).thenReturn(null);
-        
+
         await client.start();
 
         // Act

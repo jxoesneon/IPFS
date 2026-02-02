@@ -23,14 +23,14 @@ class MockConnStats extends ConnStats {
     Map<dynamic, dynamic> extra = const {},
     int numStreams = 0,
   }) : super(
-    stats: Stats(
-      direction: direction,
-      opened: opened,
-      limited: limited,
-      extra: extra,
-    ),
-    numStreams: numStreams,
-  );
+          stats: Stats(
+            direction: direction,
+            opened: opened,
+            limited: limited,
+            extra: extra,
+          ),
+          numStreams: numStreams,
+        );
 }
 
 /// Enhanced YamuxMockConnection that can be used as a TransportConn in swarm tests
@@ -50,15 +50,16 @@ class EnhancedYamuxTransportConn implements TransportConn {
     required MultiAddr localAddr,
     required MultiAddr remoteAddr,
     required ConnScope scope,
-  }) : _yamuxConn = yamuxConn,
-       _localPeer = localPeer,
-       _remotePeer = remotePeer,
-       _localAddr = localAddr,
-       _remoteAddr = remoteAddr,
-       _scope = scope;
+  })  : _yamuxConn = yamuxConn,
+        _localPeer = localPeer,
+        _remotePeer = remotePeer,
+        _localAddr = localAddr,
+        _remoteAddr = remoteAddr,
+        _scope = scope;
 
   /// Creates a pair of connected enhanced Yamux transport connections
-  static (EnhancedYamuxTransportConn, EnhancedYamuxTransportConn) createConnectedPair({
+  static (EnhancedYamuxTransportConn, EnhancedYamuxTransportConn)
+      createConnectedPair({
     required PeerId peer1,
     required PeerId peer2,
     required MultiAddr addr1,
@@ -107,7 +108,8 @@ class EnhancedYamuxTransportConn implements TransportConn {
   Future<void> write(Uint8List data) => _yamuxConn.write(data);
 
   @override
-  Socket get socket => throw UnimplementedError('Socket not available in mock connection');
+  Socket get socket =>
+      throw UnimplementedError('Socket not available in mock connection');
 
   @override
   void setReadTimeout(Duration timeout) => _yamuxConn.setReadTimeout(timeout);
@@ -156,19 +158,20 @@ class EnhancedYamuxTransportConn implements TransportConn {
 
   @override
   ConnStats get stat => MockConnStats(
-    direction: Direction.outbound,
-    opened: DateTime.now(),
-    numStreams: 0,
-  );
+        direction: Direction.outbound,
+        opened: DateTime.now(),
+        numStreams: 0,
+      );
 
   @override
   ConnState get state => ConnState(
-    streamMultiplexer: '/yamux/1.0.0',
-    security: '/noise',
-    transport: '/tcp',
-    usedEarlyMuxerNegotiation: false,
-  );
+        streamMultiplexer: '/yamux/1.0.0',
+        security: '/noise',
+        transport: '/tcp',
+        usedEarlyMuxerNegotiation: false,
+      );
 
   @override
-  String toString() => 'EnhancedYamuxTransportConn($id: ${_localPeer.toString().substring(0, 8)}...→${_remotePeer.toString().substring(0, 8)}...)';
+  String toString() =>
+      'EnhancedYamuxTransportConn($id: ${_localPeer.toString().substring(0, 8)}...→${_remotePeer.toString().substring(0, 8)}...)';
 }

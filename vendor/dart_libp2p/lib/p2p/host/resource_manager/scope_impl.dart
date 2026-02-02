@@ -9,8 +9,7 @@ import 'package:dart_libp2p/p2p/host/resource_manager/limit.dart';
 // import 'package:dart_libp2p/log/logger.dart' as log;
 
 // A simple logger placeholder, replace with actual logging if available
-void _logWarn(String message) {
-}
+void _logWarn(String message) {}
 
 class _Resources {
   final Limit limit;
@@ -66,13 +65,13 @@ class _Resources {
   void releaseMemory(int size) {
     memory -= size;
     if (memory < 0) {
-      _logWarn('BUG: too much memory released (size: $size, memory before: ${memory + size}, after attempted subtract: $memory)');
+      _logWarn(
+          'BUG: too much memory released (size: $size, memory before: ${memory + size}, after attempted subtract: $memory)');
       memory = 0;
     }
   }
 
   Exception? addStream(Direction dir, String ownerId) {
-
     final currentLimit = limit.getStreamLimit(dir);
     final totalLimit = limit.streamTotalLimit;
 
@@ -197,7 +196,8 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
   // TODO: Add trace and metrics objects later
 
   ResourceScopeImpl(Limit limit, this.name,
-      {ResourceScopeImpl? owner, List<ResourceScopeImpl>? edges}) // Changed back to edges
+      {ResourceScopeImpl? owner,
+      List<ResourceScopeImpl>? edges}) // Changed back to edges
       : _resources = _Resources(limit),
         _owner = owner,
         this.edges = edges ?? [] {
@@ -206,7 +206,8 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
     // }
     if (_owner == null) {
       // This is a DAG scope, increment ref count of its parents
-      for (var edge in this.edges) { // Use public field via 'this' for clarity
+      for (var edge in this.edges) {
+        // Use public field via 'this' for clarity
         edge.incRef();
       }
     }
@@ -229,7 +230,7 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
       // Optionally, if we want to add context while preserving type:
       // return network_errors.ResourceLimitExceededException(_wrapErrorMsg('resource limit exceeded'));
       // For now, just return the original error to ensure type matching in tests.
-      return err; 
+      return err;
     }
     if (err is network_errors.ResourceScopeClosedException) {
       // Similarly, preserve type or re-wrap with same type.
@@ -254,7 +255,8 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
       await _reserveMemoryForAncestors(size, priority);
     } catch (e) {
       _resources.releaseMemory(size); // Rollback local reservation
-      final memoryAfterRollback = _resources.memory; // Explicitly read after rollback
+      final memoryAfterRollback =
+          _resources.memory; // Explicitly read after rollback
       // Specific check for the failing test conditions - removing this as well
       // if (name == 'childScope' && size == 70 && memoryAfterRollback != 0) {
       // }
@@ -272,7 +274,8 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
 
     List<ResourceScopeImpl> reservedEdges = [];
     try {
-      for (var edge in edges) { // Use public field
+      for (var edge in edges) {
+        // Use public field
         // This is a simplified call. Go's ReserveMemoryForChild is not async
         // and returns ScopeStat + error. We're calling the public async API.
         // This might need adjustment if we create internal synchronous reservation paths.
@@ -303,7 +306,8 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
       _owner!.releaseMemory(size);
       return;
     }
-    for (var edge in edges) { // Use public field
+    for (var edge in edges) {
+      // Use public field
       edge.releaseMemory(size);
     }
   }
@@ -321,7 +325,6 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
     _resources.releaseMemory(size);
   }
 
-
   @override
   ScopeStat get stat => _resources.stat();
 
@@ -334,7 +337,8 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
     _spanIdCounter++;
     final spanName = '$name.span-$_spanIdCounter';
     // Span inherits its limit from the owner.
-    return ResourceScopeImpl._asSpan(_resources.limit, spanName, this, _spanIdCounter);
+    return ResourceScopeImpl._asSpan(
+        _resources.limit, spanName, this, _spanIdCounter);
   }
 
   @override
@@ -351,7 +355,8 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
       _owner!.decRef(); // Decrement owner's ref count as span is done
     } else {
       // This is a DAG scope
-      for (var edge in edges) { // Use public field
+      for (var edge in edges) {
+        // Use public field
         edge._releaseResourcesForChild(currentStat);
         edge.decRef();
       }
@@ -374,29 +379,29 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
   void _releaseResourcesForChild(ScopeStat childStat) {
     if (_isDone) return;
     _resources.releaseMemory(childStat.memory);
-    
+
     for (int i = 0; i < childStat.numStreamsInbound; i++) {
       _resources.removeStream(Direction.inbound, name); // Pass owner id (name)
       _removeStreamForAncestors(Direction.inbound); // Propagate release upwards
     }
     for (int i = 0; i < childStat.numStreamsOutbound; i++) {
       _resources.removeStream(Direction.outbound, name); // Pass owner id (name)
-      _removeStreamForAncestors(Direction.outbound); // Propagate release upwards
+      _removeStreamForAncestors(
+          Direction.outbound); // Propagate release upwards
     }
     // Assuming childStat.numFD is the number of connections that used FDs
     // And that conns are released one by one with their direction and fd usage.
     // This is a simplification. Go's model is more granular.
     // For now, just reduce counts.
     _resources.connsInbound -= childStat.numConnsInbound;
-    if(_resources.connsInbound < 0) _resources.connsInbound = 0;
+    if (_resources.connsInbound < 0) _resources.connsInbound = 0;
     _resources.connsOutbound -= childStat.numConnsOutbound;
-    if(_resources.connsOutbound < 0) _resources.connsOutbound = 0;
+    if (_resources.connsOutbound < 0) _resources.connsOutbound = 0;
     _resources.fds -= childStat.numFD;
-    if(_resources.fds < 0) _resources.fds = 0;
+    if (_resources.fds < 0) _resources.fds = 0;
 
     // TODO: More detailed trace calls for released resources
   }
-
 
   void incRef() {
     _refCnt++;
@@ -435,7 +440,7 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
     if (_isDone) {
       throw _wrapError(network_errors.ResourceScopeClosedException());
     }
-    
+
     final err = _resources.addStream(dir, name); // Pass owner id (name)
     if (err != null) {
       throw _wrapError(err); // Wrap it for context
@@ -447,11 +452,11 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
       _resources.removeStream(dir, name); // Rollback, Pass owner id (name)
       if (e is network_errors.ResourceLimitExceededException ||
           e is network_errors.ResourceScopeClosedException) {
-        rethrow; 
+        rethrow;
       } else if (e is Exception) {
-        throw _wrapError(e); 
+        throw _wrapError(e);
       } else {
-        rethrow; 
+        rethrow;
       }
     }
   }
@@ -461,33 +466,36 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
       _owner!.addStream(dir); // Call public void method on owner
       return;
     }
-    
+
     List<ResourceScopeImpl> successfulEdges = [];
     try {
-      for (var edge in edges) { // Use public field
+      for (var edge in edges) {
+        // Use public field
         edge.addStream(dir); // Call public void method on edge
         successfulEdges.add(edge);
       }
     } catch (e) {
       // Rollback from successfully reserved edges if a subsequent one fails
-      for (var successfulEdge in successfulEdges.reversed) { // Rollback in reverse order of success
-        successfulEdge.removeStream(dir); // Use public removeStream for rollback
+      for (var successfulEdge in successfulEdges.reversed) {
+        // Rollback in reverse order of success
+        successfulEdge
+            .removeStream(dir); // Use public removeStream for rollback
       }
       rethrow; // Rethrow the original error
     }
   }
-  
+
   Exception? _addStreamForChild(Direction dir) {
     // This method is for a parent to update its own resources when directly told so by a child.
     // It does NOT trigger further propagation up from this parent.
     // That's the responsibility of the child calling the parent's public addStream method.
     if (_isDone) return network_errors.ResourceScopeClosedException();
-    return _resources.addStream(dir, name); 
+    return _resources.addStream(dir, name);
   }
 
   void removeStream(Direction dir) {
     if (_isDone) return;
-    _resources.removeStream(dir, name); 
+    _resources.removeStream(dir, name);
     _removeStreamForAncestors(dir);
   }
 
@@ -496,7 +504,7 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
       _owner!.removeStream(dir); // Call public method
       return;
     }
-    for (var edge in edges) { 
+    for (var edge in edges) {
       edge.removeStream(dir); // Call public method
     }
   }
@@ -521,7 +529,7 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
     if (err != null) {
       throw _wrapError(err);
     }
-    
+
     try {
       _addConnForAncestors(dir, usefd);
     } catch (e) {
@@ -549,7 +557,8 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
         successfulEdges.add(edge);
       }
     } catch (e) {
-      for (var successfulEdge in successfulEdges.reversed) { // Rollback in reverse
+      for (var successfulEdge in successfulEdges.reversed) {
+        // Rollback in reverse
         successfulEdge.removeConn(dir, usefd); // Rollback with public method
       }
       rethrow;
@@ -576,7 +585,7 @@ class ResourceScopeImpl implements ResourceScope, ResourceScopeSpan {
       edge.removeConn(dir, usefd); // Call public method
     }
   }
-  
+
   void _removeConnForChild(Direction dir, bool usefd) {
     if (_isDone) return;
     _resources.removeConn(dir, usefd);

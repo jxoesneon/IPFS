@@ -46,7 +46,7 @@ class ExpBackoff {
   }
 
   /// Runs the provided function with exponential backoff.
-  /// 
+  ///
   /// Returns a tuple containing the error (if any) and a boolean indicating
   /// whether the function was actually run.
   Future<(Object?, bool)> run(Future<void> Function() f) async {

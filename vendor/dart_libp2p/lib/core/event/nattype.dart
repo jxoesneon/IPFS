@@ -7,7 +7,7 @@
 enum NATTransportProtocol {
   /// TCP protocol
   tcp,
-  
+
   /// UDP protocol
   udp,
 }
@@ -16,11 +16,11 @@ enum NATTransportProtocol {
 enum NATDeviceType {
   /// Unknown NAT type
   unknown,
-  
+
   /// Cone NAT allows inbound connections from any external IP address and port
   /// if the internal host has previously sent outbound packets to that specific IP address and port.
   cone,
-  
+
   /// Symmetric NAT restricts inbound connections based on the external IP address and port.
   /// Each outbound connection from the same internal IP address and port to a different destination
   /// creates a unique external IP address and port mapping, making it difficult for external hosts
@@ -36,7 +36,7 @@ enum NATDeviceType {
 class EvtNATDeviceTypeChanged {
   /// TransportProtocol is the Transport Protocol for which the NAT Device Type has been determined.
   final NATTransportProtocol transportProtocol;
-  
+
   /// NatDeviceType indicates the type of the NAT Device for the Transport Protocol.
   /// Currently, it can be either a `Cone NAT` or a `Symmetric NAT`. Please see the detailed documentation
   /// on the `NATDeviceType` enumeration for a better understanding of what these types mean and

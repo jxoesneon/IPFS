@@ -15,10 +15,10 @@ import '../../../core/event/protocol.dart';
 enum IdentifyPushSupport {
   /// The peer's support for identify push is unknown.
   unknown,
-  
+
   /// The peer supports identify push.
   supported,
-  
+
   /// The peer does not support identify push.
   unsupported,
 }
@@ -27,13 +27,13 @@ enum IdentifyPushSupport {
 abstract class MetricsTracer {
   /// TriggeredPushes counts IdentifyPushes triggered by event.
   void triggeredPushes(dynamic event);
-  
+
   /// ConnPushSupport counts peers by Push Support.
   void connPushSupport(IdentifyPushSupport support);
-  
+
   /// IdentifyReceived tracks metrics on receiving an identify response.
   void identifyReceived(bool isPush, int numProtocols, int numAddrs);
-  
+
   /// IdentifySent tracks metrics on sending an identify response.
   void identifySent(bool isPush, int numProtocols, int numAddrs);
 }
@@ -42,16 +42,16 @@ abstract class MetricsTracer {
 class NoopMetricsTracer implements MetricsTracer {
   /// Creates a new no-op metrics tracer.
   const NoopMetricsTracer();
-  
+
   @override
   void triggeredPushes(dynamic event) {}
-  
+
   @override
   void connPushSupport(IdentifyPushSupport support) {}
-  
+
   @override
   void identifyReceived(bool isPush, int numProtocols, int numAddrs) {}
-  
+
   @override
   void identifySent(bool isPush, int numProtocols, int numAddrs) {}
 }
@@ -60,7 +60,7 @@ class NoopMetricsTracer implements MetricsTracer {
 class LoggingMetricsTracer implements MetricsTracer {
   /// Creates a new logging metrics tracer.
   const LoggingMetricsTracer();
-  
+
   @override
   void triggeredPushes(dynamic event) {
     String type = 'unknown';
@@ -70,17 +70,16 @@ class LoggingMetricsTracer implements MetricsTracer {
       type = 'addresses_updated';
     }
   }
-  
+
   @override
-  void connPushSupport(IdentifyPushSupport support) {
-  }
-  
+  void connPushSupport(IdentifyPushSupport support) {}
+
   @override
   void identifyReceived(bool isPush, int numProtocols, int numAddrs) {
     final direction = isPush ? 'inbound' : 'outbound';
     final type = isPush ? 'push' : 'identify';
   }
-  
+
   @override
   void identifySent(bool isPush, int numProtocols, int numAddrs) {
     final direction = isPush ? 'outbound' : 'inbound';

@@ -34,7 +34,8 @@ class Protocol {
       case 'ip6':
         return InternetAddress(value, type: InternetAddressType.IPv6);
       default:
-        throw ArgumentError('Protocol $name does not support conversion to InternetAddress');
+        throw ArgumentError(
+            'Protocol $name does not support conversion to InternetAddress');
     }
   }
 

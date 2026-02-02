@@ -16,7 +16,6 @@ import 'notifiee.dart';
 /// a single, large serialized object.
 const int messageSizeMax = 1 << 22; // 4 MB
 
-
 /// Connectedness signals the capacity for a connection with a given node.
 /// It is used to signal to services and other peers whether a node is reachable.
 enum Connectedness {
@@ -51,13 +50,12 @@ enum Reachability {
   private,
 }
 
-
-
 /// StreamHandler is the type of function used to listen for
 /// streams opened by the remote side.
 // typedef StreamHandler = void Function(P2PStream stream);
 
-typedef StreamHandler = Future<void> Function(P2PStream stream, PeerId remotePeer);
+typedef StreamHandler = Future<void> Function(
+    P2PStream stream, PeerId remotePeer);
 
 /// Network is the interface used to connect to the outside world.
 /// It dials and listens for connections. it uses a Swarm to pool
@@ -68,10 +66,11 @@ abstract class Network implements Dialer {
 
   /// Sets the handler for new streams opened by the remote side.
   /// This operation is thread-safe.
-  /// 
+  ///
   /// @param protocol The protocol ID for which to set the handler
   /// @param handler The handler function that will be called when a new stream is opened
-  void setStreamHandler(String protocol, Future<void> Function(dynamic stream, PeerId remotePeer) handler);
+  void setStreamHandler(String protocol,
+      Future<void> Function(dynamic stream, PeerId remotePeer) handler);
 
   /// Returns a new stream to given peer p.
   /// If there is no connection to p, attempts to create one.
@@ -150,9 +149,7 @@ abstract class Dialer {
   bool canDial(PeerId peerId, MultiAddr addr);
 
   void removeListenAddress(MultiAddr addr);
-
 }
-
 
 class EvtPeerConnectednessChanged {
   /// Peer is the remote peer whose connectedness has changed.

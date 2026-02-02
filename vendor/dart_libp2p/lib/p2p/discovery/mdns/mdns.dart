@@ -46,7 +46,7 @@ class MdnsDiscovery implements Discovery {
   StreamSubscription<ServiceEntry>? _discoverySubscription;
   Timer? _discoveryTimer;
   bool _isRunning = false;
-  
+
   // Track discovered services to avoid duplicates
   final Set<String> _discoveredServices = <String>{};
 
@@ -56,13 +56,13 @@ class MdnsDiscovery implements Discovery {
   }
 
   /// Creates a new MdnsDiscovery service
-  MdnsDiscovery(this._host, {
+  MdnsDiscovery(
+    this._host, {
     String? serviceName,
     MdnsNotifee? notifee,
-  }) : 
-    _serviceName = serviceName ?? MdnsConstants.serviceName,
-    _peerName = _generateRandomString(32 + Random().nextInt(32)),
-    _notifee = notifee;
+  })  : _serviceName = serviceName ?? MdnsConstants.serviceName,
+        _peerName = _generateRandomString(32 + Random().nextInt(32)),
+        _notifee = notifee;
 
   /// Starts the mDNS discovery service
   Future<void> start() async {
@@ -81,11 +81,10 @@ class MdnsDiscovery implements Discovery {
   Future<void> stop() async {
     if (!_isRunning) return;
 
-
     // Stop discovery
     _discoverySubscription?.cancel();
     _discoverySubscription = null;
-    
+
     // Stop periodic discovery timer
     _discoveryTimer?.cancel();
     _discoveryTimer = null;
@@ -104,7 +103,8 @@ class MdnsDiscovery implements Discovery {
   }
 
   @override
-  Future<Duration> advertise(String ns, [List<DiscoveryOption> options = const []]) async {
+  Future<Duration> advertise(String ns,
+      [List<DiscoveryOption> options = const []]) async {
     if (!_isRunning) {
       await start();
     }
@@ -114,7 +114,8 @@ class MdnsDiscovery implements Discovery {
   }
 
   @override
-  Future<Stream<AddrInfo>> findPeers(String ns, [List<DiscoveryOption> options = const []]) async {
+  Future<Stream<AddrInfo>> findPeers(String ns,
+      [List<DiscoveryOption> options = const []]) async {
     if (!_isRunning) {
       await start();
     }
@@ -181,84 +182,80 @@ class MdnsDiscovery implements Discovery {
 
       _server = MDNSServer(config);
       await _server!.start();
-
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   /// Start discovering other peers using REAL mDNS discovery
   Future<void> _startDiscovery() async {
-
     try {
       final serviceName = '$_serviceName.${MdnsConstants.mdnsDomain}';
 
       // Wait a moment for the network to settle and other services to be advertised
       await Future.delayed(const Duration(milliseconds: 1500));
-      
+
       // Start immediate discovery
       await _performDiscoveryQuery(serviceName);
-      
+
       // Set up frequent discovery queries (every 5 seconds)
       // This compensates for MDNSClient.lookup() being a one-shot query
       _discoveryTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
         await _performDiscoveryQuery(serviceName);
       });
-
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   /// Perform a single mDNS discovery query
   Future<void> _performDiscoveryQuery(String serviceName) async {
     try {
       // Use MDNSClient.query() with longer timeout instead of lookup() which has 1s timeout
-      // Extract just the service part (remove .local if present)  
+      // Extract just the service part (remove .local if present)
       final serviceOnly = serviceName.replaceAll('.local', '');
       final params = QueryParams(
-        service: serviceOnly,  // Pass "_p2p._udp" not "_p2p._udp.local"
+        service: serviceOnly, // Pass "_p2p._udp" not "_p2p._udp.local"
         domain: 'local',
-        timeout: const Duration(seconds: 10), // Extended timeout for better discovery
+        timeout: const Duration(
+            seconds: 10), // Extended timeout for better discovery
         wantUnicastResponse: false,
         reusePort: true,
         reuseAddress: true,
         multicastHops: 1,
       );
-      
+
       final stream = await MDNSClient.query(params);
-      
+
       var serviceCount = 0;
-      
+
       await for (final serviceEntry in stream) {
         serviceCount++;
         _processDiscoveredService(serviceEntry);
       }
-      
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   /// Process a discovered mDNS service entry
   void _processDiscoveredService(ServiceEntry serviceEntry) {
     try {
       // Create a unique key for this service
-      final serviceKey = '${serviceEntry.name}@${serviceEntry.host}:${serviceEntry.port}';
-      
+      final serviceKey =
+          '${serviceEntry.name}@${serviceEntry.host}:${serviceEntry.port}';
+
       // Check if we've already processed this service
       if (_discoveredServices.contains(serviceKey)) {
         return;
       }
-      
+
       // Mark as discovered
       _discoveredServices.add(serviceKey);
-      
+
       // Extract peer information from TXT records
       final addresses = <MultiAddr>[];
       PeerId? peerId;
 
       for (final txtRecord in serviceEntry.infoFields) {
         if (txtRecord.startsWith(MdnsConstants.dnsaddrPrefix)) {
-          final addrStr = txtRecord.substring(MdnsConstants.dnsaddrPrefix.length);
-          
+          final addrStr =
+              txtRecord.substring(MdnsConstants.dnsaddrPrefix.length);
+
           try {
             final addr = MultiAddr(addrStr);
             addresses.add(addr);
@@ -270,8 +267,7 @@ class MdnsDiscovery implements Discovery {
                 peerId = PeerId.fromString(peerIdStr);
               }
             }
-          } catch (e) {
-          }
+          } catch (e) {}
         }
       }
 
@@ -285,8 +281,7 @@ class MdnsDiscovery implements Discovery {
         final addrInfo = AddrInfo(peerId, addresses);
         _notifee?.handlePeerFound(addrInfo);
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   /// Get local IP addresses for service announcement
@@ -329,9 +324,8 @@ class MdnsDiscovery implements Discovery {
   static String _generateRandomString(int length) {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     final random = Random();
-    return String.fromCharCodes(
-      List.generate(length, (_) => chars.codeUnitAt(random.nextInt(chars.length)))
-    );
+    return String.fromCharCodes(List.generate(
+        length, (_) => chars.codeUnitAt(random.nextInt(chars.length))));
   }
 }
 

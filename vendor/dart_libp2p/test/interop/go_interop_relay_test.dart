@@ -140,15 +140,13 @@ void main() {
       print('Dart host started');
 
       // 4. Connect to the relay first
-      await dartHost!.connect(
-          AddrInfo(relayPeerId, [relayAddr]),
+      await dartHost!.connect(AddrInfo(relayPeerId, [relayAddr]),
           context: core_context.Context());
       print('Connected to relay');
 
       // 5. Dial through relay to echo server
       final circuitMA = MultiAddr(circuitAddr);
-      await dartHost!.connect(
-          AddrInfo(echoServerPeerId, [circuitMA]),
+      await dartHost!.connect(AddrInfo(echoServerPeerId, [circuitMA]),
           context: core_context.Context());
       print('Connected to echo server through relay');
 
@@ -185,8 +183,7 @@ void main() {
       final keyPair = await crypto_ed25519.generateEd25519KeyPair();
       final dartPeerId = await PeerId.fromPublicKey(keyPair.publicKey);
       dartHost = await createHost(keyPair,
-          listenAddrs: [MultiAddr('/ip4/127.0.0.1/tcp/0')],
-          enableRelay: true);
+          listenAddrs: [MultiAddr('/ip4/127.0.0.1/tcp/0')], enableRelay: true);
       print('Dart host started');
 
       // Register echo handler
@@ -204,14 +201,14 @@ void main() {
       });
 
       // 3. Connect Dart to relay and reserve a slot
-      await dartHost!.connect(
-          AddrInfo(relayPeerId, [relayAddr]),
+      await dartHost!.connect(AddrInfo(relayPeerId, [relayAddr]),
           context: core_context.Context());
       print('Dart connected to relay');
 
       // Make a reservation on the relay
       final relayClient = dartHost!.circuitV2Client;
-      expect(relayClient, isNotNull, reason: 'CircuitV2Client should be created when relay is enabled');
+      expect(relayClient, isNotNull,
+          reason: 'CircuitV2Client should be created when relay is enabled');
       final reservation = await relayClient!.reserve(relayPeerId);
       print('Dart reserved slot on relay, expires: ${reservation.expire}');
 
@@ -227,8 +224,7 @@ void main() {
       print('Go relay-echo-client stdout: ${result.stdout}');
       print('Go relay-echo-client stderr: ${result.stderr}');
 
-      expect(result.exitCode, 0,
-          reason: 'Go relay-echo-client should succeed');
+      expect(result.exitCode, 0, reason: 'Go relay-echo-client should succeed');
       expect(result.stdout.toString(), contains('Echo successful'));
       print('Go → Dart echo through relay verified');
     }, timeout: Timeout(Duration(seconds: 60)));

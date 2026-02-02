@@ -12,7 +12,7 @@ abstract class Multiplexer {
   String get protocolId;
 
   // newStream removed, users should get a MuxedConn via newConnOnTransport and use its openStream.
-  // Future<P2PStream> newStream(Context context); 
+  // Future<P2PStream> newStream(Context context);
 
   /// Accepts an inbound stream
   Future<P2PStream> acceptStream();
@@ -51,10 +51,7 @@ abstract class Multiplexer {
   /// [scope]: The peer-specific resource scope for this connection.
   /// Returns a [core_mux.MuxedConn] representing the multiplexed connection.
   Future<core_mux.MuxedConn> newConnOnTransport(
-    TransportConn secureConnection,
-    bool isServer,
-    PeerScope scope
-  );
+      TransportConn secureConnection, bool isServer, PeerScope scope);
 }
 
 /// Configuration for stream multiplexing
@@ -69,17 +66,17 @@ class MultiplexerConfig {
   final int maxStreamWindowSize;
 
   /// Maximum size of a single DATA frame payload in bytes (default: 16KB)
-  /// 
+  ///
   /// This limits the size of individual Yamux DATA frames sent over the wire.
   /// Smaller frames result in smaller encrypted messages when used with Noise,
   /// which improves resilience to packet loss by reducing head-of-line blocking.
-  /// 
+  ///
   /// When encrypted with Noise, each frame becomes an atomic message that must
   /// be fully received before decryption. Smaller frames mean:
   /// - Faster recovery from packet loss (less data to retransmit)
   /// - Better interleaving of control frames (window updates, pings)
   /// - Reduced risk of deadlock from flow control starvation
-  /// 
+  ///
   /// Recommended values:
   /// - 1024 (1KB): Most resilient, higher overhead
   /// - 4096 (4KB): Good balance for high-latency/lossy networks

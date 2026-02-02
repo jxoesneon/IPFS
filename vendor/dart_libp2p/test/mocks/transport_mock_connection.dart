@@ -27,15 +27,15 @@ class TransportMockConnection extends BaseMockConnection {
   @override
   Future<Uint8List> read([int? length]) async {
     validateNotClosed();
-    
+
     if (_shouldThrowOnRead) {
       throw Exception('Mock read error');
     }
-    
+
     if (_nextReadResult == null) {
       throw StateError('No mock data set for read');
     }
-    
+
     return _nextReadResult!;
   }
 
@@ -44,4 +44,4 @@ class TransportMockConnection extends BaseMockConnection {
     validateNotClosed();
     recordWrite(data);
   }
-} 
+}

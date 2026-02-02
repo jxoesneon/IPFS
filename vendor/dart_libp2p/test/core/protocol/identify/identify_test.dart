@@ -39,8 +39,10 @@ void main() {
       fakeSubscription = FakeSubscription();
       fakeEmitter = FakeEmitter();
       when(mockHost.eventBus).thenReturn(mockEventBus);
-      when(mockEventBus.subscribe(any, opts: anyNamed('opts'))).thenReturn(fakeSubscription);
-      when(mockEventBus.emitter(any, opts: anyNamed('opts'))).thenAnswer((_) async => fakeEmitter);
+      when(mockEventBus.subscribe(any, opts: anyNamed('opts')))
+          .thenReturn(fakeSubscription);
+      when(mockEventBus.emitter(any, opts: anyNamed('opts')))
+          .thenAnswer((_) async => fakeEmitter);
     });
 
     group('signedPeerRecordFromMessage', () {
@@ -63,12 +65,12 @@ void main() {
         final msg = Identify(
           signedPeerRecord: [1, 2, 3, 4, 5], // Invalid protobuf data
         );
-        
+
         final service = IdentifyService(mockHost);
         final result = await service.signedPeerRecordFromMessage(msg);
-        
+
         expect(result, isNull);
       });
     });
   });
-} 
+}

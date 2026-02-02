@@ -14,14 +14,16 @@ class EchoClient {
     try {
       final ctx = Context();
       final stream = await host.newStream(targetPeer, [protocolId], ctx);
-      
-      print('📤 [ECHO CLIENT] Sending: "$message" to server [${_truncatePeerId(targetPeer)}]');
+
+      print(
+          '📤 [ECHO CLIENT] Sending: "$message" to server [${_truncatePeerId(targetPeer)}]');
       await stream.write(utf8.encode(message + '\n'));
-      
+
       // Close the stream after sending - the server will echo it to its console
       await stream.close();
     } catch (e) {
-      print('❌ [ECHO CLIENT] Error sending echo to ${_truncatePeerId(targetPeer)}: $e');
+      print(
+          '❌ [ECHO CLIENT] Error sending echo to ${_truncatePeerId(targetPeer)}: $e');
     }
   }
 

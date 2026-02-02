@@ -13,7 +13,7 @@ import 'dart:io' show Platform;
 String defaultUserAgent = 'dart-libp2p';
 
 /// Initializes the default user agent based on the package information.
-/// 
+///
 /// This should be called early in the application lifecycle, typically
 /// during the initialization of the libp2p node.
 Future<void> initUserAgent() async {

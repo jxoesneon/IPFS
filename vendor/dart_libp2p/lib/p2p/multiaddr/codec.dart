@@ -21,14 +21,17 @@ class MultiAddrCodec {
       case 'unix':
         return _encodePath(value);
       default:
-        if (protocol.size == 0) { // Protocol has no value component
+        if (protocol.size == 0) {
+          // Protocol has no value component
           return Uint8List(0);
         }
-        if (protocol.isVariableSize) { // Protocol has a variable-length string value
+        if (protocol.isVariableSize) {
+          // Protocol has a variable-length string value
           return _encodeString(value);
         }
         // Protocol has a fixed, non-zero size but is not handled by a specific case
-        throw ArgumentError('Unsupported protocol for encoding: ${protocol.name}');
+        throw ArgumentError(
+            'Unsupported protocol for encoding: ${protocol.name}');
     }
   }
 
@@ -45,14 +48,17 @@ class MultiAddrCodec {
       case 'unix':
         return _decodePath(bytes);
       default:
-        if (protocol.size == 0) { // Protocol has no value component
+        if (protocol.size == 0) {
+          // Protocol has no value component
           return '';
         }
-        if (protocol.isVariableSize) { // Protocol has a variable-length string value
+        if (protocol.isVariableSize) {
+          // Protocol has a variable-length string value
           return _decodeString(bytes);
         }
         // Protocol has a fixed, non-zero size but is not handled by a specific case
-        throw ArgumentError('Unsupported protocol for decoding: ${protocol.name}');
+        throw ArgumentError(
+            'Unsupported protocol for decoding: ${protocol.name}');
     }
   }
 
@@ -70,7 +76,8 @@ class MultiAddrCodec {
   }
 
   /// Decodes a varint
-  static (int value, int bytesRead) decodeVarint(Uint8List bytes, [int offset = 0]) {
+  static (int value, int bytesRead) decodeVarint(Uint8List bytes,
+      [int offset = 0]) {
     var value = 0;
     var shift = 0;
     var bytesRead = 0;
@@ -120,7 +127,8 @@ class MultiAddrCodec {
     final parts = value.split(':');
 
     if (parts.length != 8) {
-      throw FormatException('Invalid IPv6 address: must have exactly 8 segments');
+      throw FormatException(
+          'Invalid IPv6 address: must have exactly 8 segments');
     }
 
     for (var i = 0; i < 8; i++) {

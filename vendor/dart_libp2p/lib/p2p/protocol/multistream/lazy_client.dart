@@ -11,7 +11,6 @@ import 'package:dart_libp2p/core/protocol/protocol.dart';
 import 'package:dart_libp2p/p2p/protocol/multistream/multistream.dart';
 import 'package:dart_libp2p/p2p/protocol/multistream/client.dart';
 
-
 /// LazyConn is a ReadWriteCloser adapter that lazily negotiates a protocol
 /// using multistream-select on first use.
 abstract class LazyConn {
@@ -120,7 +119,8 @@ class _LazyClientConn implements LazyConn {
         }
 
         if (tok != proto) {
-          _readError = FormatException('Protocol mismatch in lazy handshake ($tok != $proto)');
+          _readError = FormatException(
+              'Protocol mismatch in lazy handshake ($tok != $proto)');
           _readHandshakeLock.complete();
           _readHandshakeDone = true;
           return;
@@ -193,7 +193,8 @@ class _LazyClientConn implements LazyConn {
         // Write handshake and extra data
         final combined = Uint8List(handshakeBytes.length + extra.length);
         combined.setRange(0, handshakeBytes.length, handshakeBytes);
-        combined.setRange(handshakeBytes.length, handshakeBytes.length + extra.length, extra);
+        combined.setRange(
+            handshakeBytes.length, handshakeBytes.length + extra.length, extra);
         stream.write(combined);
         _writeHandshakeLock.complete();
         _writeHandshakeDone = true;

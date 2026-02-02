@@ -22,7 +22,6 @@ class GenericDHTEvent {
   /// Raw is the raw JSON representation of the event payload.
   final RawJSON raw;
 
-
   @override
   String toString() {
     return "GenericDHTEvent";

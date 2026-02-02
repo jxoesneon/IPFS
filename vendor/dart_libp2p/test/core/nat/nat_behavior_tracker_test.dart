@@ -11,8 +11,8 @@ class MockStunClientPool extends StunClientPool {
 
   MockStunClientPool({
     NatBehavior? mockBehavior,
-  }) : _mockBehavior = mockBehavior ?? NatBehavior(),
-       super(stunServers: []);
+  })  : _mockBehavior = mockBehavior ?? NatBehavior(),
+        super(stunServers: []);
 
   void setMockBehavior(NatBehavior behavior) {
     _mockBehavior = behavior;
@@ -36,7 +36,8 @@ void main() {
       tracker = NatBehaviorTracker(
         stunClientPool: mockStunClientPool,
         storageBroker: storageBroker,
-        checkInterval: Duration(milliseconds: 100), // Short interval for testing
+        checkInterval:
+            Duration(milliseconds: 100), // Short interval for testing
         maxHistorySize: 5,
         storageKey: 'test_nat_behavior',
       );
@@ -58,13 +59,17 @@ void main() {
       await tracker.initialize();
 
       // Check that behavior was discovered
-      expect(tracker.currentBehavior.mappingBehavior, equals(NatMappingBehavior.endpointIndependent));
-      expect(tracker.currentBehavior.filteringBehavior, equals(NatFilteringBehavior.addressDependent));
+      expect(tracker.currentBehavior.mappingBehavior,
+          equals(NatMappingBehavior.endpointIndependent));
+      expect(tracker.currentBehavior.filteringBehavior,
+          equals(NatFilteringBehavior.addressDependent));
 
       // Check that history was updated
       expect(tracker.behaviorHistory.length, equals(1));
-      expect(tracker.behaviorHistory.first.behavior.mappingBehavior, equals(NatMappingBehavior.endpointIndependent));
-      expect(tracker.behaviorHistory.first.behavior.filteringBehavior, equals(NatFilteringBehavior.addressDependent));
+      expect(tracker.behaviorHistory.first.behavior.mappingBehavior,
+          equals(NatMappingBehavior.endpointIndependent));
+      expect(tracker.behaviorHistory.first.behavior.filteringBehavior,
+          equals(NatFilteringBehavior.addressDependent));
     });
 
     test('should save and load behavior from storage', () async {
@@ -91,13 +96,17 @@ void main() {
       await newTracker.initialize();
 
       // Check that behavior was loaded from storage
-      expect(newTracker.currentBehavior.mappingBehavior, equals(NatMappingBehavior.endpointIndependent));
-      expect(newTracker.currentBehavior.filteringBehavior, equals(NatFilteringBehavior.addressDependent));
+      expect(newTracker.currentBehavior.mappingBehavior,
+          equals(NatMappingBehavior.endpointIndependent));
+      expect(newTracker.currentBehavior.filteringBehavior,
+          equals(NatFilteringBehavior.addressDependent));
 
       // Check that history was loaded from storage
       expect(newTracker.behaviorHistory.length, equals(1));
-      expect(newTracker.behaviorHistory.first.behavior.mappingBehavior, equals(NatMappingBehavior.endpointIndependent));
-      expect(newTracker.behaviorHistory.first.behavior.filteringBehavior, equals(NatFilteringBehavior.addressDependent));
+      expect(newTracker.behaviorHistory.first.behavior.mappingBehavior,
+          equals(NatMappingBehavior.endpointIndependent));
+      expect(newTracker.behaviorHistory.first.behavior.filteringBehavior,
+          equals(NatFilteringBehavior.addressDependent));
 
       // Clean up
       newTracker.dispose();
@@ -125,13 +134,17 @@ void main() {
       await tracker.discoverBehavior();
 
       // Check that behavior was updated
-      expect(tracker.currentBehavior.mappingBehavior, equals(NatMappingBehavior.addressAndPortDependent));
-      expect(tracker.currentBehavior.filteringBehavior, equals(NatFilteringBehavior.addressDependent));
+      expect(tracker.currentBehavior.mappingBehavior,
+          equals(NatMappingBehavior.addressAndPortDependent));
+      expect(tracker.currentBehavior.filteringBehavior,
+          equals(NatFilteringBehavior.addressDependent));
 
       // Check that history was updated
       expect(tracker.behaviorHistory.length, equals(2));
-      expect(tracker.behaviorHistory.last.behavior.mappingBehavior, equals(NatMappingBehavior.addressAndPortDependent));
-      expect(tracker.behaviorHistory.last.behavior.filteringBehavior, equals(NatFilteringBehavior.addressDependent));
+      expect(tracker.behaviorHistory.last.behavior.mappingBehavior,
+          equals(NatMappingBehavior.addressAndPortDependent));
+      expect(tracker.behaviorHistory.last.behavior.filteringBehavior,
+          equals(NatFilteringBehavior.addressDependent));
     });
 
     test('should not update if behavior has not changed', () async {
@@ -182,10 +195,14 @@ void main() {
       await tracker.discoverBehavior();
 
       // Check that callback was called with correct behaviors
-      expect(oldBehaviorFromCallback?.mappingBehavior, equals(NatMappingBehavior.endpointIndependent));
-      expect(oldBehaviorFromCallback?.filteringBehavior, equals(NatFilteringBehavior.addressDependent));
-      expect(newBehaviorFromCallback?.mappingBehavior, equals(NatMappingBehavior.addressAndPortDependent));
-      expect(newBehaviorFromCallback?.filteringBehavior, equals(NatFilteringBehavior.addressDependent));
+      expect(oldBehaviorFromCallback?.mappingBehavior,
+          equals(NatMappingBehavior.endpointIndependent));
+      expect(oldBehaviorFromCallback?.filteringBehavior,
+          equals(NatFilteringBehavior.addressDependent));
+      expect(newBehaviorFromCallback?.mappingBehavior,
+          equals(NatMappingBehavior.addressAndPortDependent));
+      expect(newBehaviorFromCallback?.filteringBehavior,
+          equals(NatFilteringBehavior.addressDependent));
     });
 
     test('should limit history size', () async {
@@ -202,8 +219,8 @@ void main() {
       // Change behavior multiple times
       for (var i = 0; i < 10; i++) {
         final newBehavior = NatBehavior(
-          mappingBehavior: i % 2 == 0 
-              ? NatMappingBehavior.addressDependent 
+          mappingBehavior: i % 2 == 0
+              ? NatMappingBehavior.addressDependent
               : NatMappingBehavior.addressAndPortDependent,
           filteringBehavior: NatFilteringBehavior.addressDependent,
         );
@@ -217,14 +234,17 @@ void main() {
       // Print out the mapping behaviors of all records in the history
       print('History size: ${tracker.behaviorHistory.length}');
       for (var i = 0; i < tracker.behaviorHistory.length; i++) {
-        print('Record $i: ${tracker.behaviorHistory[i].behavior.mappingBehavior}');
+        print(
+            'Record $i: ${tracker.behaviorHistory[i].behavior.mappingBehavior}');
       }
 
       // Check that the history contains the expected entries
       // The history contains the 5 most recent entries, which are the last 5 entries from the loop
       // The loop alternates between addressDependent and addressAndPortDependent
-      expect(tracker.behaviorHistory.first.behavior.mappingBehavior, equals(NatMappingBehavior.addressAndPortDependent));
-      expect(tracker.behaviorHistory.last.behavior.mappingBehavior, equals(NatMappingBehavior.addressAndPortDependent));
+      expect(tracker.behaviorHistory.first.behavior.mappingBehavior,
+          equals(NatMappingBehavior.addressAndPortDependent));
+      expect(tracker.behaviorHistory.last.behavior.mappingBehavior,
+          equals(NatMappingBehavior.addressAndPortDependent));
     });
 
     test('should perform periodic checks', () async {
@@ -252,7 +272,8 @@ void main() {
       await Future.delayed(Duration(milliseconds: 150));
 
       // Check that behavior was updated
-      expect(tracker.currentBehavior.mappingBehavior, equals(NatMappingBehavior.addressAndPortDependent));
+      expect(tracker.currentBehavior.mappingBehavior,
+          equals(NatMappingBehavior.addressAndPortDependent));
       expect(tracker.behaviorHistory.length, equals(2));
     });
 
@@ -281,7 +302,8 @@ void main() {
       await Future.delayed(Duration(milliseconds: 150));
 
       // Check that behavior was not updated
-      expect(tracker.currentBehavior.mappingBehavior, equals(NatMappingBehavior.endpointIndependent));
+      expect(tracker.currentBehavior.mappingBehavior,
+          equals(NatMappingBehavior.endpointIndependent));
       expect(tracker.behaviorHistory.length, equals(1));
     });
   });

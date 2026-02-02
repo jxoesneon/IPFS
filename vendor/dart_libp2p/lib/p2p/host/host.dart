@@ -1,5 +1,5 @@
 /// Host implementations for libp2p.
-/// 
+///
 /// This package provides implementations of the Host interface.
 
 export 'basic/index.dart';

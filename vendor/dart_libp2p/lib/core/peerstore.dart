@@ -40,14 +40,15 @@ class AddressTTL {
   static const Duration ownObservedAddrTTL = Duration(minutes: 30);
 
   /// The ttl for a "permanent address" (e.g. bootstrap nodes).
-  static const Duration permanentAddrTTL = Duration(days: 365 * 100); // ~100 years
+  static const Duration permanentAddrTTL =
+      Duration(days: 365 * 100); // ~100 years
 
   /// The ttl used for the addresses of a peer to whom
   /// we're connected directly. This is basically permanent, as we will
   /// clear them + re-add under a TempAddrTTL after disconnecting.
-  static const Duration connectedAddrTTL = Duration(days: 365 * 100 - 1); // ~100 years - 1 day
+  static const Duration connectedAddrTTL =
+      Duration(days: 365 * 100 - 1); // ~100 years - 1 day
 }
-
 
 /// Configuration for the peer store
 class PeerStoreConfig {
@@ -91,7 +92,8 @@ abstract class Peerstore {
   KeyBook get keyBook;
 
 //   /// Adds or updates a peer
-  Future<void> addOrUpdatePeer(PeerId peerId, {
+  Future<void> addOrUpdatePeer(
+    PeerId peerId, {
     List<MultiAddr>? addrs,
     List<String>? protocols,
     Map<String, dynamic>? metadata,
@@ -130,7 +132,6 @@ abstract class PeerMetadata {
   Future<void> removePeer(PeerId id);
 
   Future<Map<String, dynamic>?> getAll(PeerId peerId);
-
 }
 
 /// AddrBook holds the multiaddrs of peers.
@@ -220,11 +221,13 @@ abstract class ProtoBook {
 
   /// SupportsProtocols returns the set of protocols the peer supports from among the given protocols.
   /// If the returned error is not null, the result is indeterminate.
-  Future<List<ProtocolID>> supportsProtocols(PeerId id, List<ProtocolID> protocols);
+  Future<List<ProtocolID>> supportsProtocols(
+      PeerId id, List<ProtocolID> protocols);
 
   /// FirstSupportedProtocol returns the first protocol that the peer supports among the given protocols.
   /// If the peer does not support any of the given protocols, this function will return null.
-  Future<ProtocolID?> firstSupportedProtocol(PeerId id, List<ProtocolID> protocols);
+  Future<ProtocolID?> firstSupportedProtocol(
+      PeerId id, List<ProtocolID> protocols);
 
   /// RemovePeer removes all protocols associated with a peer.
   void removePeer(PeerId id);

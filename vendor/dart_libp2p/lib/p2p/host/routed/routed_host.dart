@@ -17,7 +17,7 @@ import 'package:dart_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
 import 'package:dart_libp2p/p2p/protocol/holepunch.dart'; // Added for HolePunchService
 
 // User added this, assuming it brings PeerId class for PeerId.fromString
-import '../../../core/peer/peer_id.dart'; 
+import '../../../core/peer/peer_id.dart';
 
 // TODO: Consider if a logger is needed, similar to Go's `log = logging.Logger("routedhost")`
 // import 'package:logging/logging.dart';
@@ -73,7 +73,8 @@ class RoutedHost implements Host {
   }
 
   @override
-  void setStreamHandlerMatch(ProtocolID pid, bool Function(ProtocolID) match, StreamHandler handler) {
+  void setStreamHandlerMatch(
+      ProtocolID pid, bool Function(ProtocolID) match, StreamHandler handler) {
     _host.setStreamHandlerMatch(pid, match, handler);
   }
 
@@ -90,7 +91,7 @@ class RoutedHost implements Host {
     AddrInfo? peerInfo;
     try {
       // TODO: map context to RoutingOptions if needed for findPeer
-      peerInfo = await _routing.findPeer(peerId); 
+      peerInfo = await _routing.findPeer(peerId);
     } catch (e) {
       // _log.warning('Failed to find peer $peerId via routing: $e');
       rethrow; // Propagate the error
@@ -102,7 +103,8 @@ class RoutedHost implements Host {
     }
     if (peerInfo.id != peerId) {
       // _log.severe('Routing failure: got info for wrong peer. Wanted $peerId, got ${peerInfo.id}');
-      throw Exception('Routing failure: provided addrs for different peer. Wanted $peerId, got ${peerInfo.id}');
+      throw Exception(
+          'Routing failure: provided addrs for different peer. Wanted $peerId, got ${peerInfo.id}');
     }
     return peerInfo.addrs;
   }
@@ -126,7 +128,8 @@ class RoutedHost implements Host {
     if (pi.addrs.isNotEmpty) {
       // The Go version uses peerstore.TempAddrTTL.
       // Dart `AddressTTL.tempAddrTTL` (Duration(minutes: 2)) matches Go's `time.Second * 120`.
-      await peerStore.addrBook.addAddrs(pi.id, pi.addrs, AddressTTL.tempAddrTTL);
+      await peerStore.addrBook
+          .addAddrs(pi.id, pi.addrs, AddressTTL.tempAddrTTL);
     }
 
     List<MultiAddr> currentAddrs = await peerStore.addrBook.addrs(pi.id);
@@ -137,22 +140,25 @@ class RoutedHost implements Host {
           throw Exception('No addresses found for peer ${pi.id} after routing');
         }
         // Add these newly found addresses to the peerstore
-        peerStore.addrBook.addAddrs(pi.id, currentAddrs, AddressTTL.tempAddrTTL);
+        peerStore.addrBook
+            .addAddrs(pi.id, currentAddrs, AddressTTL.tempAddrTTL);
       } catch (e) {
         // _log.warning('Failed to find peer addresses for ${pi.id}: $e');
         rethrow;
       }
     }
-    
+
     // Issue 448: if our address set includes routed specific relay addrs,
     // we need to make sure the relay's addr itself is in the peerstore or else
     // we won't be able to dial it.
     for (final addr in currentAddrs) {
-      if (addr.hasProtocol(multiaddr_protocol.Protocols.circuit.name)) { // Check if it's a relay address
-        final String? relayIdStr = addr.valueForProtocol(multiaddr_protocol.Protocols.p2p.name);
+      if (addr.hasProtocol(multiaddr_protocol.Protocols.circuit.name)) {
+        // Check if it's a relay address
+        final String? relayIdStr =
+            addr.valueForProtocol(multiaddr_protocol.Protocols.p2p.name);
         if (relayIdStr == null) {
-            // _log.warning('Relay address $addr missing P2P component value');
-            continue;
+          // _log.warning('Relay address $addr missing P2P component value');
+          continue;
         }
         final PeerId relayId;
         try {
@@ -170,7 +176,8 @@ class RoutedHost implements Host {
         try {
           final foundRelayAddrs = await _findPeerAddrs(effectiveCtx, relayId);
           if (foundRelayAddrs.isNotEmpty) {
-            peerStore.addrBook.addAddrs(relayId, foundRelayAddrs, AddressTTL.tempAddrTTL);
+            peerStore.addrBook
+                .addAddrs(relayId, foundRelayAddrs, AddressTTL.tempAddrTTL);
           } else {
             // _log.info('Could not find addresses for relay peer $relayId');
           }
@@ -180,7 +187,6 @@ class RoutedHost implements Host {
         }
       }
     }
-
 
     final addrInfoToConnect = AddrInfo(pi.id, currentAddrs);
 
@@ -194,14 +200,15 @@ class RoutedHost implements Host {
         newAddrs = await _findPeerAddrs(effectiveCtx, pi.id);
       } catch (findErr) {
         // _log.debug('Failed to find more peer addresses for ${pi.id}: $findErr');
-        rethrow ; // Original connect error is more relevant
+        rethrow; // Original connect error is more relevant
       }
 
       if (newAddrs.isEmpty && currentAddrs.isEmpty) {
-         rethrow ; // No addresses before, no new addresses now.
+        rethrow; // No addresses before, no new addresses now.
       }
-      
-      final currentAddrsSet = Set<String>.from(currentAddrs.map((a) => a.toString()));
+
+      final currentAddrsSet =
+          Set<String>.from(currentAddrs.map((a) => a.toString()));
       bool foundNewUniqueAddr = false;
       for (final newAddr in newAddrs) {
         if (!currentAddrsSet.contains(newAddr.toString())) {
@@ -221,7 +228,7 @@ class RoutedHost implements Host {
           return; // Successfully connected on retry
         } catch (retryError) {
           // _log.warning('Still failed to connect to ${pi.id} after finding new addresses: $retryError');
-          rethrow ; // Throw the error from the retry attempt
+          rethrow; // Throw the error from the retry attempt
         }
       }
       // No appropriate new address found, or all new addresses were already known.
@@ -231,9 +238,11 @@ class RoutedHost implements Host {
   }
 
   @override
-  Future<P2PStream> newStream(PeerId p, List<ProtocolID> pids, Context context) async {
-    final effectiveCtx = context; // context is now non-nullable due to interface
-    
+  Future<P2PStream> newStream(
+      PeerId p, List<ProtocolID> pids, Context context) async {
+    final effectiveCtx =
+        context; // context is now non-nullable due to interface
+
     // Use specific getter from Context
     bool noDial = effectiveCtx.getNoDial().$1;
 

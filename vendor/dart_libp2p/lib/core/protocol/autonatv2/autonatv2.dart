@@ -33,7 +33,8 @@ class Result {
   /// Status is the outcome of the dialback
   final int status;
 
-  Result({required this.addr, required this.reachability, required this.status});
+  Result(
+      {required this.addr, required this.reachability, required this.status});
 }
 
 /// Interface for the AutoNAT v2 service

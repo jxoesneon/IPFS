@@ -5,7 +5,6 @@ import 'package:dart_libp2p/core/peer/peer_id.dart';
 import 'package:dart_libp2p/core/peer/addr_info.dart';
 import 'package:dart_libp2p/core/routing/options.dart';
 
-
 /// Error thrown when a routing operation fails to find the requested record
 class NotFoundError implements Exception {
   final String message;
@@ -17,7 +16,8 @@ class NotFoundError implements Exception {
 /// Error thrown when a routing operation is not supported
 class NotSupportedError implements Exception {
   final String message;
-  const NotSupportedError([this.message = 'routing: operation or key not supported']);
+  const NotSupportedError(
+      [this.message = 'routing: operation or key not supported']);
   @override
   String toString() => message;
 }
@@ -33,7 +33,7 @@ abstract class ContentProviding {
 /// ContentDiscovery is able to retrieve providers for a given CID using the Routing system.
 abstract class ContentDiscovery {
   /// Search for peers who are able to provide a given key
-  /// 
+  ///
   /// When count is 0, this method will return an unbounded number of results.
   Stream<AddrInfo> findProvidersAsync(CID cid, int count);
 }

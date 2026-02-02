@@ -35,7 +35,7 @@ void main() {
         equals('Noise_XX_25519_ChaChaPoly_SHA256'),
         reason: 'Protocol name must match Noise specification exactly',
       );
-      
+
       // Verify it contains only printable ASCII characters
       final protocolBytes = utf8.encode(NoiseXXPattern.PROTOCOL_NAME);
       expect(
@@ -43,7 +43,7 @@ void main() {
         isTrue,
         reason: 'Protocol name must contain only printable ASCII characters',
       );
-      
+
       // Verify length matches specification
       expect(
         protocolBytes.length,
@@ -140,7 +140,7 @@ void main() {
       // Verify exchanged static keys
       final initiatorStaticPub = await initiator.getStaticPublicKey();
       final responderStaticPub = await responder.getStaticPublicKey();
-      
+
       expect(initiator.remoteStaticKey, equals(responderStaticPub));
       expect(responder.remoteStaticKey, equals(initiatorStaticPub));
     });
@@ -169,21 +169,15 @@ void main() {
       // Initiator cannot read first (must send e first)
       expect(
         () => initiator.readMessage(Uint8List(0)),
-        throwsA(isA<StateError>().having(
-          (e) => e.message,
-          'message',
-          'Initiator cannot read first message'
-        )),
+        throwsA(isA<StateError>().having((e) => e.message, 'message',
+            'Initiator cannot read first message')),
       );
 
       // Responder cannot write first (must receive e first)
       expect(
         () => responder.writeMessage(Uint8List(0)),
-        throwsA(isA<StateError>().having(
-          (e) => e.message,
-          'message',
-          'Responder cannot write first message'
-        )),
+        throwsA(isA<StateError>().having((e) => e.message, 'message',
+            'Responder cannot write first message')),
       );
 
       // Complete first message exchange
@@ -193,44 +187,38 @@ void main() {
       // Initiator cannot write again before reading responder's message
       expect(
         () => initiator.writeMessage(Uint8List(0)),
-        throwsA(isA<StateError>().having(
-          (e) => e.message,
-          'message',
-          'Initiator cannot write second message'
-        )),
+        throwsA(isA<StateError>().having((e) => e.message, 'message',
+            'Initiator cannot write second message')),
       );
 
       // Responder cannot read before sending its message
       expect(
         () => responder.readMessage(Uint8List(0)),
-        throwsA(isA<StateError>().having(
-          (e) => e.message,
-          'message',
-          'Responder cannot receive second message'
-        )),
+        throwsA(isA<StateError>().having((e) => e.message, 'message',
+            'Responder cannot receive second message')),
       );
     });
 
     test('completes handshake with payload', () async {
       // Complete handshake with payload
       final payload = Uint8List.fromList([1, 2, 3, 4, 5]);
-      
+
       // -> e
       final message1 = await initiator.writeMessage(payload);
       await responder.readMessage(message1);
-      
+
       // <- e, ee, s, es
       final message2 = await responder.writeMessage(payload);
       await initiator.readMessage(message2);
-      
+
       // -> s, se
       final message3 = await initiator.writeMessage(payload);
       await responder.readMessage(message3);
-      
+
       // Verify handshake completed
       expect(initiator.isComplete, isTrue);
       expect(responder.isComplete, isTrue);
-      
+
       // Verify keys were derived
       expect(initiator.sendKey, isNotNull);
       expect(initiator.recvKey, isNotNull);
@@ -248,10 +236,11 @@ void main() {
       final shortMessage = Uint8List(8); // Need 32 bytes for ephemeral key
       expect(
         () => initiator.readMessage(shortMessage),
-        throwsA(
-          predicate((e) => e is StateError && 
-            e.toString().contains('Message too short to contain ephemeral key'))
-        ),
+        throwsA(predicate((e) =>
+            e is StateError &&
+            e
+                .toString()
+                .contains('Message too short to contain ephemeral key'))),
       );
     });
 
@@ -264,13 +253,13 @@ void main() {
       // Create a message that's long enough for ephemeral key but not static key
       final shortMessage = Uint8List(40); // Has 32 bytes for ephemeral key
       shortMessage.fillRange(0, 32, 0x42); // Fill with dummy ephemeral key
-      
+
       expect(
         () => initiator.readMessage(shortMessage),
-        throwsA(
-          predicate((e) => e is StateError && 
-            e.toString().contains('Message too short to contain encrypted static key'))
-        ),
+        throwsA(predicate((e) =>
+            e is StateError &&
+            e.toString().contains(
+                'Message too short to contain encrypted static key'))),
       );
     });
 
@@ -284,13 +273,13 @@ void main() {
       // Create a message that's long enough for static key but not MAC
       final shortMessage = Uint8List(32); // Just enough for static key
       shortMessage.fillRange(0, 32, 0x42); // Fill with dummy static key
-      
+
       expect(
         () => responder.readMessage(shortMessage),
-        throwsA(
-          predicate((e) => e is StateError && 
-            e.toString().contains('Final message too short: 32 < 48 (needs 32 bytes encrypted static key + 16 bytes MAC)'))
-        ),
+        throwsA(predicate((e) =>
+            e is StateError &&
+            e.toString().contains(
+                'Final message too short: 32 < 48 (needs 32 bytes encrypted static key + 16 bytes MAC)'))),
       );
     });
 
@@ -307,7 +296,8 @@ void main() {
       // Verify that the keys are temporary and not the final handshake keys
       final sendKey1 = await pattern.sendKey.extractBytes();
       final sendKey2 = await pattern.sendKey.extractBytes();
-      expect(sendKey1, equals(sendKey2), reason: 'Keys should be stable before handshake');
+      expect(sendKey1, equals(sendKey2),
+          reason: 'Keys should be stable before handshake');
 
       // Complete handshake
       final message1 = await pattern.writeMessage(Uint8List(0));
@@ -320,16 +310,17 @@ void main() {
 
       // Verify that the keys have changed
       final sendKey3 = await pattern.sendKey.extractBytes();
-      expect(sendKey1, isNot(equals(sendKey3)), reason: 'Keys should change after handshake');
+      expect(sendKey1, isNot(equals(sendKey3)),
+          reason: 'Keys should change after handshake');
     });
 
-    test('fails if remote static key is accessed before handshake completion', () {
+    test('fails if remote static key is accessed before handshake completion',
+        () {
       expect(
         () => initiator.remoteStaticKey,
-        throwsA(
-          predicate((e) => e is StateError && 
-            e.toString().contains('Remote static key not available'))
-        ),
+        throwsA(predicate((e) =>
+            e is StateError &&
+            e.toString().contains('Remote static key not available'))),
       );
     });
 
@@ -354,7 +345,7 @@ void main() {
     test('handles large payloads correctly', () async {
       // Create a large payload
       final largePayload = Uint8List(1024)..fillRange(0, 1024, 42);
-      
+
       // Complete handshake with large payload
       final message1 = await initiator.writeMessage(largePayload);
       await responder.readMessage(message1);
@@ -375,7 +366,7 @@ void main() {
         equals('Noise_XX_25519_ChaChaPoly_SHA256'),
         reason: 'Protocol name must match Noise specification exactly',
       );
-      
+
       // Verify it contains only printable ASCII characters
       final protocolBytes = utf8.encode(NoiseXXPattern.PROTOCOL_NAME);
       expect(
@@ -385,7 +376,8 @@ void main() {
       );
     });
 
-    test('fails if trying to write message after handshake completion', () async {
+    test('fails if trying to write message after handshake completion',
+        () async {
       // Complete handshake
       final message1 = await initiator.writeMessage(Uint8List(0));
       await responder.readMessage(message1);
@@ -397,10 +389,9 @@ void main() {
       // Try to write another message
       expect(
         () => initiator.writeMessage(Uint8List(0)),
-        throwsA(
-          predicate((e) => e is StateError && 
-            e.toString().contains('Handshake already complete'))
-        ),
+        throwsA(predicate((e) =>
+            e is StateError &&
+            e.toString().contains('Handshake already complete'))),
       );
     });
 
@@ -417,11 +408,12 @@ void main() {
       expect(responder.isComplete, isTrue);
     });
 
-    test('verifies different static keys produce different shared secrets', () async {
+    test('verifies different static keys produce different shared secrets',
+        () async {
       final algorithm = X25519();
       final staticKey1 = await algorithm.newKeyPair();
       final staticKey2 = await algorithm.newKeyPair();
-      
+
       // Create two pairs of initiator/responder with different static keys
       final initiator1 = await NoiseXXPattern.create(true, staticKey1);
       final responder1 = await NoiseXXPattern.create(false, staticKey1);
@@ -454,7 +446,7 @@ void main() {
     test('verifies message encryption during handshake', () async {
       final algorithm = X25519();
       final staticKey = await algorithm.newKeyPair();
-      
+
       final initiator = await NoiseXXPattern.create(true, staticKey);
       final responder = await NoiseXXPattern.create(false, staticKey);
 
@@ -482,19 +474,19 @@ void main() {
       // Complete both handshakes concurrently
       final message1 = await initiator.writeMessage(Uint8List(0));
       final message1_2 = await initiator2.writeMessage(Uint8List(0));
-      
+
       await responder.readMessage(message1);
       await responder2.readMessage(message1_2);
-      
+
       final message2 = await responder.writeMessage(Uint8List(0));
       final message2_2 = await responder2.writeMessage(Uint8List(0));
-      
+
       await initiator.readMessage(message2);
       await initiator2.readMessage(message2_2);
-      
+
       final message3 = await initiator.writeMessage(Uint8List(0));
       final message3_2 = await initiator2.writeMessage(Uint8List(0));
-      
+
       await responder.readMessage(message3);
       await responder2.readMessage(message3_2);
 
@@ -513,7 +505,8 @@ void main() {
     test('verifies ephemeral keys are unique per handshake', () async {
       // Complete first handshake
       final message1 = await initiator.writeMessage(Uint8List(0));
-      final ephemeral1 = message1.sublist(0, 32); // First 32 bytes are ephemeral key
+      final ephemeral1 =
+          message1.sublist(0, 32); // First 32 bytes are ephemeral key
 
       // Create new initiator and complete second handshake
       final initiator2 = await NoiseXXPattern.create(true, initiatorStatic);
@@ -678,11 +671,13 @@ void main() {
       // Complete handshake to get to a known chain key state
       final message1 = await initiator.writeMessage(Uint8List(0));
       await responder.readMessage(message1);
-      
+
       // Verify both sides have same chain key
       final hmac = Hmac.sha256();
-      final k1_init = await hmac.calculateMac([0x01], secretKey: initiator.sendKey);
-      final k1_resp = await hmac.calculateMac([0x01], secretKey: responder.recvKey);
+      final k1_init =
+          await hmac.calculateMac([0x01], secretKey: initiator.sendKey);
+      final k1_resp =
+          await hmac.calculateMac([0x01], secretKey: responder.recvKey);
       expect(k1_init.bytes, equals(k1_resp.bytes),
           reason: 'Same HMAC operation should produce same result');
     });
@@ -691,16 +686,18 @@ void main() {
       // -> e
       final message1 = await initiator.writeMessage(Uint8List(0));
       await responder.readMessage(message1);
-      
+
       // <- e, ee, s, es
       final message2 = await responder.writeMessage(Uint8List(0));
       await initiator.readMessage(message2);
-      
+
       // At this point both sides should have performed the same DH operations
       // and should have the same chain key
       final hmac = Hmac.sha256();
-      final k1_init = await hmac.calculateMac([0x01], secretKey: initiator.sendKey);
-      final k1_resp = await hmac.calculateMac([0x01], secretKey: responder.recvKey);
+      final k1_init =
+          await hmac.calculateMac([0x01], secretKey: initiator.sendKey);
+      final k1_resp =
+          await hmac.calculateMac([0x01], secretKey: responder.recvKey);
       expect(k1_init.bytes, equals(k1_resp.bytes),
           reason: 'Chain key should be identical after ee+es');
     });
@@ -709,11 +706,11 @@ void main() {
       // -> e
       final message1 = await initiator.writeMessage(Uint8List(0));
       await responder.readMessage(message1);
-      
+
       // <- e, ee, s, es
       final message2 = await responder.writeMessage(Uint8List(0));
       await initiator.readMessage(message2);
-      
+
       // -> s, se
       final message3 = await initiator.writeMessage(Uint8List(0));
       await responder.readMessage(message3);
@@ -727,7 +724,8 @@ void main() {
       final algorithm = X25519();
       final shared = await algorithm.sharedSecretKey(
         keyPair: initiator.debugEphemeralKeys,
-        remotePublicKey: SimplePublicKey(remoteStatic, type: KeyPairType.x25519),
+        remotePublicKey:
+            SimplePublicKey(remoteStatic, type: KeyPairType.x25519),
       );
       final sharedBytes = await shared.extractBytes();
 
@@ -740,11 +738,11 @@ void main() {
       // -> e
       final message1 = await initiator.writeMessage(Uint8List(0));
       await responder.readMessage(message1);
-      
+
       // <- e, ee, s, es
       final message2 = await responder.writeMessage(Uint8List(0));
       await initiator.readMessage(message2);
-      
+
       // -> s, se
       final message3 = await initiator.writeMessage(Uint8List(0));
       await responder.readMessage(message3);
@@ -760,36 +758,36 @@ void main() {
       // print('\nInitial handshake hashes:');
       // print('Initiator: ${initiator.debugHandshakeHash}');
       // print('Responder: ${responder.debugHandshakeHash}');
-      
+
       // -> e
       final message1 = await initiator.writeMessage(Uint8List(0));
       await responder.readMessage(message1);
-      
+
       // print('\nAfter first message:');
       // print('Initiator: ${initiator.debugHandshakeHash}');
       // print('Responder: ${responder.debugHandshakeHash}');
-      
+
       // <- e, ee, s, es
       final message2 = await responder.writeMessage(Uint8List(0));
       await initiator.readMessage(message2);
-      
+
       // print('\nAfter second message:');
       // print('Initiator: ${initiator.debugHandshakeHash}');
       // print('Responder: ${responder.debugHandshakeHash}');
-      
+
       // -> s, se
       final message3 = await initiator.writeMessage(Uint8List(0));
-      
+
       // print('\nAfter initiator writes final message:');
       // print('Initiator: ${initiator.debugHandshakeHash}');
       // print('Responder: ${responder.debugHandshakeHash}');
-      
+
       await responder.readMessage(message3);
-      
+
       // print('\nAfter responder reads final message:');
       // print('Initiator: ${initiator.debugHandshakeHash}');
       // print('Responder: ${responder.debugHandshakeHash}');
-      
+
       // Verify final handshake hashes match
       expect(initiator.debugHandshakeHash, equals(responder.debugHandshakeHash),
           reason: 'Final handshake hashes should match');
@@ -801,15 +799,15 @@ void main() {
       await responder.readMessage(message1);
       final message2 = await responder.writeMessage(Uint8List(0));
       await initiator.readMessage(message2);
-      
+
       // Get the static public key that will be encrypted
       final staticPubKey = await initiator.getStaticPublicKey();
       // print('\nStatic public key to encrypt: ${staticPubKey}');
-      
+
       // Write final message
       final message3 = await initiator.writeMessage(Uint8List(0));
       // print('Final message (encrypted): ${message3}');
-      
+
       // Try to decrypt it
       try {
         await responder.readMessage(message3);
@@ -824,19 +822,19 @@ void main() {
       // Create a test payload
       final payload = Uint8List.fromList([1, 2, 3]);
       // print('\nTest payload: $payload');
-      
+
       // Complete handshake with payload in each message
       final message1 = await initiator.writeMessage(payload);
       // print('Message 1 length: ${message1.length}');
       await responder.readMessage(message1);
-      
+
       final message2 = await responder.writeMessage(payload);
       // print('Message 2 length: ${message2.length}');
       await initiator.readMessage(message2);
-      
+
       final message3 = await initiator.writeMessage(payload);
       // print('Message 3 length: ${message3.length}');
-      
+
       // Try to decrypt the final message
       try {
         await responder.readMessage(message3);
@@ -850,22 +848,22 @@ void main() {
     test('proves protocol framing issue', () async {
       // Create a test payload
       final payload = Uint8List.fromList([1, 2, 3]);
-      
+
       // Complete first two messages
       final message1 = await initiator.writeMessage(payload);
       await responder.readMessage(message1);
       final message2 = await responder.writeMessage(payload);
       await initiator.readMessage(message2);
-      
+
       // Write final message with payload
       final message3 = await initiator.writeMessage(payload);
-      
+
       // The message should be:
       // - encrypted static key (32 bytes)
       // - MAC for static key (16 bytes)
       // - MAC for payload (16 bytes)
       // Total: 64 bytes
-      
+
       // This message will be framed by NoiseXXProtocol with:
       // [2 bytes length prefix][encrypted payload][16 bytes MAC]
       // But the payload is already encrypted and has a MAC!
@@ -874,7 +872,7 @@ void main() {
       // print('Encrypted message: ${message3.length} bytes');
       // print('Additional MAC: 16 bytes');
       // print('Total framed length: ${2 + message3.length + 16} bytes');
-      
+
       // The protocol is adding an extra layer of encryption and MAC
       // when it should just be framing the message
       await responder.readMessage(message3);
@@ -882,41 +880,41 @@ void main() {
 
     test('traces handshake byte sequences', () async {
       // print('\nTracing complete handshake sequence:');
-      
+
       // -> e
       // print('\nStep 1: -> e');
       final message1 = await initiator.writeMessage(Uint8List(0));
       // print('Message 1 length: ${message1.length}');
       // print('Message 1 bytes: ${message1.toList()}');
-      
+
       await responder.readMessage(message1);
       // print('Responder state after reading e: ${responder.state}');
-      
+
       // <- e, ee, s, es
       // print('\nStep 2: <- e, ee, s, es');
       final message2 = await responder.writeMessage(Uint8List(0));
       // print('Message 2 length: ${message2.length}');
       // print('Message 2 bytes: ${message2.toList()}');
-      
+
       await initiator.readMessage(message2);
       // print('Initiator state after reading e,ee,s,es: ${initiator.state}');
-      
+
       // -> s, se
       // print('\nStep 3: -> s, se');
       final message3 = await initiator.writeMessage(Uint8List(0));
       // print('Message 3 length: ${message3.length}');
       // print('Message 3 bytes: ${message3.toList()}');
-      
+
       // print('\nBefore responder reads final message:');
       // print('Responder state: ${responder.state}');
       // print('Responder handshake hash: ${responder.debugHandshakeHash}');
-      
+
       await responder.readMessage(message3);
-      
+
       // print('\nAfter responder reads final message:');
       // print('Responder state: ${responder.state}');
       // print('Responder handshake hash: ${responder.debugHandshakeHash}');
-      
+
       // Verify both sides completed
       expect(initiator.isComplete, isTrue);
       expect(responder.isComplete, isTrue);
@@ -928,77 +926,89 @@ void main() {
       await responder.readMessage(message1);
       final message2 = await responder.writeMessage(Uint8List(0));
       await initiator.readMessage(message2);
-      
+
       // Create a test payload with recognizable pattern
-      final payload = Uint8List.fromList(List.filled(32, 0x42));  // 32 bytes of 0x42
+      final payload =
+          Uint8List.fromList(List.filled(32, 0x42)); // 32 bytes of 0x42
       // print('\nPayload: ${payload.toList()}');
-      
+
       // Write final message with payload
       final message3 = await initiator.writeMessage(payload);
       // print('Final message length: ${message3.length}');
       // print('Final message: ${message3.toList()}');
-      
+
       // Message should be:
       // - 32 bytes encrypted static key
       // - 16 bytes MAC for static key
       // - 32 bytes encrypted payload
       // - 16 bytes MAC for payload
       // Total: 96 bytes
-      
-      expect(message3.length, equals(96), 
-        reason: 'Final message should contain encrypted static key (32) + MAC (16) + encrypted payload (32) + MAC (16)');
-        
+
+      expect(message3.length, equals(96),
+          reason:
+              'Final message should contain encrypted static key (32) + MAC (16) + encrypted payload (32) + MAC (16)');
+
       // Check for absence of payload pattern (consecutive 0x42 bytes)
       bool hasPayloadPattern = false;
       for (int i = 0; i < message3.length - 3; i++) {
-        if (message3[i] == 0x42 && message3[i + 1] == 0x42 && message3[i + 2] == 0x42) {
+        if (message3[i] == 0x42 &&
+            message3[i + 1] == 0x42 &&
+            message3[i + 2] == 0x42) {
           hasPayloadPattern = true;
           break;
         }
       }
       expect(hasPayloadPattern, isFalse,
-        reason: 'Message should not contain consecutive payload bytes (0x42)');
+          reason:
+              'Message should not contain consecutive payload bytes (0x42)');
     });
 
-    test('proves payload is encrypted in final message with large payload', () async {
+    test('proves payload is encrypted in final message with large payload',
+        () async {
       // Complete first two messages
       final message1 = await initiator.writeMessage(Uint8List(0));
       await responder.readMessage(message1);
       final message2 = await responder.writeMessage(Uint8List(0));
       await initiator.readMessage(message2);
-      
+
       // Create a large test payload with recognizable pattern
-      final payload = Uint8List.fromList(List.filled(1024, 0x42));  // 1KB of 0x42
+      final payload =
+          Uint8List.fromList(List.filled(1024, 0x42)); // 1KB of 0x42
       // print('\nPayload: ${payload.length} bytes of 0x42');
-      
+
       // Write final message with payload
       final message3 = await initiator.writeMessage(payload);
       // print('Final message length: ${message3.length}');
       // print('Final message: ${message3.toList()}');
-      
+
       // Message should be:
       // - 32 bytes encrypted static key
       // - 16 bytes MAC for static key
       // - 1024 bytes encrypted payload
       // - 16 bytes MAC for payload
       // Total: 1088 bytes
-      
-      expect(message3.length, equals(1088), 
-        reason: 'Final message should contain encrypted static key (32) + MAC (16) + encrypted payload (1024) + MAC (16)');
-        
+
+      expect(message3.length, equals(1088),
+          reason:
+              'Final message should contain encrypted static key (32) + MAC (16) + encrypted payload (1024) + MAC (16)');
+
       // Check for absence of payload pattern (consecutive 0x42 bytes)
       bool hasPayloadPattern = false;
       for (int i = 0; i < message3.length - 3; i++) {
-        if (message3[i] == 0x42 && message3[i + 1] == 0x42 && message3[i + 2] == 0x42) {
+        if (message3[i] == 0x42 &&
+            message3[i + 1] == 0x42 &&
+            message3[i + 2] == 0x42) {
           hasPayloadPattern = true;
           break;
         }
       }
       expect(hasPayloadPattern, isFalse,
-        reason: 'Message should not contain consecutive payload bytes (0x42)');
+          reason:
+              'Message should not contain consecutive payload bytes (0x42)');
     });
 
-    test('readMessage correctly parses final message with static key and MAC', () async {
+    test('readMessage correctly parses final message with static key and MAC',
+        () async {
       // Create pattern instances for both sides
       final algorithm = X25519();
       final initiatorStatic = await algorithm.newKeyPair();
@@ -1014,7 +1024,9 @@ void main() {
 
       // Get the final message from initiator
       final message3 = await initiator.writeMessage(Uint8List(0));
-      expect(message3.length, equals(48), reason: 'Final message should be 48 bytes (32 encrypted key + 16 MAC)');
+      expect(message3.length, equals(48),
+          reason:
+              'Final message should be 48 bytes (32 encrypted key + 16 MAC)');
 
       // This should succeed in reading the message
       await responder.readMessage(message3);
@@ -1036,16 +1048,17 @@ void main() {
       await responder.readMessage(message1);
 
       // Create a message that's too short to contain required data
-      final shortMessage = Uint8List(34); // Just enough for length prefix + ephemeral key
+      final shortMessage =
+          Uint8List(34); // Just enough for length prefix + ephemeral key
       shortMessage[0] = 0x00;
       shortMessage[1] = 0x20; // Indicate 32 bytes of data
 
       expect(
         () => initiator.readMessage(shortMessage),
-        throwsA(
-          predicate((e) => e is StateError && 
-            e.toString().contains('Message too short to contain encrypted static key'))
-        ),
+        throwsA(predicate((e) =>
+            e is StateError &&
+            e.toString().contains(
+                'Message too short to contain encrypted static key'))),
       );
     });
 
@@ -1056,7 +1069,7 @@ void main() {
 
       // Create a valid second message
       final message2 = await responder.writeMessage(Uint8List(0));
-      
+
       // Corrupt the encrypted static key portion
       final corruptedMessage = Uint8List(message2.length);
       corruptedMessage.setAll(0, message2);
@@ -1082,16 +1095,16 @@ void main() {
       // Create a message that's too short to be valid
       final shortMessage = Uint8List(16); // Too short for ephemeral key
       shortMessage.fillRange(0, 16, 0x42); // Fill with dummy data
-      
+
       expect(
         () => responder.readMessage(shortMessage),
-        throwsA(
-          predicate((e) => e is StateError && 
-            e.toString().contains('Message too short to contain ephemeral key'))
-        ),
+        throwsA(predicate((e) =>
+            e is StateError &&
+            e
+                .toString()
+                .contains('Message too short to contain ephemeral key'))),
       );
     });
-
 
     test('proves message length checks should be in order', () async {
       // Complete first message exchange to get into a state where we can decrypt
@@ -1101,13 +1114,13 @@ void main() {
       // Create a message that's too short for the static key (but has ephemeral key)
       final shortMessage = Uint8List(34); // Just enough for ephemeral key
       shortMessage.fillRange(0, 32, 0x42); // Fill with dummy ephemeral key
-      
+
       expect(
         () => initiator.readMessage(shortMessage),
-        throwsA(
-          predicate((e) => e is StateError && 
-            e.toString().contains('Message too short to contain encrypted static key'))
-        ),
+        throwsA(predicate((e) =>
+            e is StateError &&
+            e.toString().contains(
+                'Message too short to contain encrypted static key'))),
       );
     });
 
@@ -1119,26 +1132,25 @@ void main() {
       // Create a message that's too short for the static key (but has ephemeral key)
       final shortMessage = Uint8List(34); // Just enough for ephemeral key
       shortMessage.fillRange(0, 32, 0x42); // Fill with dummy ephemeral key
-      
+
       // The initiator should be in sentE state, so it should expect a message with:
       // - ephemeral key (32 bytes)
       // - encrypted static key (32 bytes)
       // - MAC (16 bytes)
       // Total: 80 bytes
-      
+
       expect(initiator.state, equals(XXHandshakeState.sentE),
-        reason: 'Initiator should be in sentE state before receiving second message');
-      
+          reason:
+              'Initiator should be in sentE state before receiving second message');
+
       expect(
         () => initiator.readMessage(shortMessage),
-        throwsA(
-          predicate((e) => e is StateError && 
-            e.toString().contains('Message too short to contain encrypted static key'))
-        ),
+        throwsA(predicate((e) =>
+            e is StateError &&
+            e.toString().contains(
+                'Message too short to contain encrypted static key'))),
       );
     });
-
-
 
     test('rejects invalid handshake messages', () async {
       // Create a responder since it can receive first messages
@@ -1149,13 +1161,14 @@ void main() {
       // Create a message that's too short to be valid
       final shortMessage = Uint8List(16); // Too short for ephemeral key
       shortMessage.fillRange(0, 16, 0x42); // Fill with dummy data
-      
+
       expect(
         () => responder.readMessage(shortMessage),
-        throwsA(
-          predicate((e) => e is StateError && 
-            e.toString().contains('Message too short to contain ephemeral key'))
-        ),
+        throwsA(predicate((e) =>
+            e is StateError &&
+            e
+                .toString()
+                .contains('Message too short to contain ephemeral key'))),
       );
     });
 
@@ -1169,7 +1182,8 @@ void main() {
         nonce: nonce,
         aad: Uint8List(0),
       );
-      return Uint8List.fromList([...secretBox.cipherText, ...secretBox.mac.bytes]);
+      return Uint8List.fromList(
+          [...secretBox.cipherText, ...secretBox.mac.bytes]);
     }
 
     // Helper function to decrypt data with a key
@@ -1193,13 +1207,14 @@ void main() {
       await responder.readMessage(message1);
       final message2 = await responder.writeMessage(Uint8List(0));
       await initiator.readMessage(message2);
-      
+
       // Create a recognizable payload for the final message
-      final payload = Uint8List.fromList(List.filled(32, 0x42)); // 32 bytes of 0x42
-      
+      final payload =
+          Uint8List.fromList(List.filled(32, 0x42)); // 32 bytes of 0x42
+
       // Write final message with payload
       final message3 = await initiator.writeMessage(payload);
-      
+
       // The message should contain:
       // - encrypted static key (32 bytes)
       // - MAC for static key (16 bytes)
@@ -1207,33 +1222,37 @@ void main() {
       // - MAC for payload (16 bytes)
       // Total: 96 bytes
       expect(message3.length, equals(96),
-        reason: 'Final message should be 96 bytes (32 static + 16 MAC + 32 payload + 16 MAC)');
-        
+          reason:
+              'Final message should be 96 bytes (32 static + 16 MAC + 32 payload + 16 MAC)');
+
       // Process the message - this should decrypt both the static key and payload
       await responder.readMessage(message3);
-      
+
       // Verify the pattern completed
       expect(responder.state, equals(XXHandshakeState.complete),
-        reason: 'Responder should be in complete state');
-      
+          reason: 'Responder should be in complete state');
+
       // The handshake hashes should match, proving the payload was processed
       final initiatorHash = initiator.debugHandshakeHash;
       final responderHash = responder.debugHandshakeHash;
       expect(initiatorHash, equals(responderHash),
-        reason: 'Handshake hashes should match if payload was properly processed');
-        
+          reason:
+              'Handshake hashes should match if payload was properly processed');
+
       // Now let's try to send a message after the handshake
       final testData = Uint8List.fromList([1, 2, 3]);
-      final encryptedTestData = await _encryptWithKey(testData, initiator.sendKey);
-      final decryptedTestData = await _decryptWithKey(encryptedTestData, responder.recvKey);
-      
+      final encryptedTestData =
+          await _encryptWithKey(testData, initiator.sendKey);
+      final decryptedTestData =
+          await _decryptWithKey(encryptedTestData, responder.recvKey);
+
       // The decryption succeeds, which means:
       // 1. The keys are properly derived and working
       // 2. There's no buffering issue
       // 3. The payload in the final handshake message is properly processed
       expect(decryptedTestData, equals(testData),
-        reason: 'Post-handshake encryption/decryption should work');
-        
+          reason: 'Post-handshake encryption/decryption should work');
+
       // The real issue is that we decrypt the payload in the final message
       // but we don't have any way to return it to the caller
       // This means the identity key and signature in the payload are lost
@@ -1243,40 +1262,38 @@ void main() {
     test('updates state after writing message', () async {
       final staticKeys = await X25519().newKeyPair();
       final pattern = await NoiseXXPattern.create(true, staticKeys);
-      
+
       expect(pattern.state, equals(XXHandshakeState.initial));
-      
+
       // Write first message
       await pattern.writeMessage(Uint8List(0));
-      
+
       expect(pattern.state, equals(XXHandshakeState.sentE));
     });
 
     test('follows correct message sequence for initiator', () async {
       final staticKeys = await X25519().newKeyPair();
       final pattern = await NoiseXXPattern.create(true, staticKeys);
-      
+
       // First write should succeed (-> e)
       final firstMessage = await pattern.writeMessage(Uint8List(0));
       expect(firstMessage, isNotEmpty);
-      
+
       // Attempting to write again before reading should fail
-      expect(() => pattern.writeMessage(Uint8List(0)), 
-        throwsA(isA<StateError>().having(
-          (e) => e.message,
-          'message',
-          'Initiator cannot write second message'
-        )),
+      expect(
+        () => pattern.writeMessage(Uint8List(0)),
+        throwsA(isA<StateError>().having((e) => e.message, 'message',
+            'Initiator cannot write second message')),
       );
     });
 
     test('transitions state after writing message', () async {
       final staticKeys = await X25519().newKeyPair();
       final pattern = await NoiseXXPattern.create(true, staticKeys);
-      
+
       // First write should succeed (-> e)
       await pattern.writeMessage(Uint8List(0));
-      
+
       // Second write should fail because we haven't read yet
       expect(() => pattern.writeMessage(Uint8List(0)), throwsStateError);
     });
@@ -1306,14 +1323,15 @@ void main() {
       final message1 = await initiator.writeMessage(Uint8List(0));
       final initiatorEphemeralPub = await initiatorEphemeral.extractPublicKey();
       final initiatorEphemeralBytes = await initiatorEphemeralPub.bytes;
-      expect(message1, equals(initiatorEphemeralBytes), 
-        reason: 'First message should contain exactly the ephemeral public key');
-      
+      expect(message1, equals(initiatorEphemeralBytes),
+          reason:
+              'First message should contain exactly the ephemeral public key');
+
       // Record chain key before processing
       final chainKeyBeforeE = initiator.debugChainKey;
       await responder.readMessage(message1);
       expect(responder.debugChainKey, equals(chainKeyBeforeE),
-        reason: 'Chain key should not change after receiving e');
+          reason: 'Chain key should not change after receiving e');
 
       // <- e, ee, s, es
       final message2 = await responder.writeMessage(Uint8List(0));
@@ -1322,13 +1340,15 @@ void main() {
       // - encrypted static key (32 bytes)
       // - MAC for static key (16 bytes)
       expect(message2.length, equals(80),
-        reason: 'Second message should be 80 bytes (e[32] + encrypted_s[32] + MAC[16])');
-      
+          reason:
+              'Second message should be 80 bytes (e[32] + encrypted_s[32] + MAC[16])');
+
       // First 32 bytes should be responder's ephemeral key
       final responderEphemeralPub = await responderEphemeral.extractPublicKey();
       final responderEphemeralBytes = await responderEphemeralPub.bytes;
       expect(message2.sublist(0, 32), equals(responderEphemeralBytes),
-        reason: 'First 32 bytes of second message should be responder ephemeral key');
+          reason:
+              'First 32 bytes of second message should be responder ephemeral key');
 
       await initiator.readMessage(message2);
 
@@ -1338,7 +1358,8 @@ void main() {
       // - encrypted static key (32 bytes)
       // - MAC for static key (16 bytes)
       expect(message3.length, equals(48),
-        reason: 'Third message should be 48 bytes (encrypted_s[32] + MAC[16])');
+          reason:
+              'Third message should be 48 bytes (encrypted_s[32] + MAC[16])');
 
       await responder.readMessage(message3);
 
@@ -1348,7 +1369,7 @@ void main() {
 
       // Final chain keys should match
       expect(initiator.debugChainKey, equals(responder.debugChainKey),
-        reason: 'Chain keys should match after handshake completion');
+          reason: 'Chain keys should match after handshake completion');
     });
 
     test('proves chain key mismatch issue', () async {
@@ -1378,7 +1399,7 @@ void main() {
       // -> e
       final message1 = await initiator.writeMessage(Uint8List(0));
       await responder.readMessage(message1);
-      
+
       print('\nAfter first message (e):');
       print('Initiator: ${initiator.debugChainKey}');
       print('Responder: ${responder.debugChainKey}');
@@ -1386,7 +1407,7 @@ void main() {
       // <- e, ee, s, es
       final message2 = await responder.writeMessage(Uint8List(0));
       await initiator.readMessage(message2);
-      
+
       print('\nAfter second message (e, ee, s, es):');
       print('Initiator: ${initiator.debugChainKey}');
       print('Responder: ${responder.debugChainKey}');
@@ -1394,7 +1415,7 @@ void main() {
       // -> s, se
       final message3 = await initiator.writeMessage(Uint8List(0));
       await responder.readMessage(message3);
-      
+
       print('\nAfter final message (s, se):');
       print('Initiator: ${initiator.debugChainKey}');
       print('Responder: ${responder.debugChainKey}');
@@ -1426,33 +1447,33 @@ void main() {
       // -> e
       final message1 = await initiator.writeMessage(Uint8List(0));
       await responder.readMessage(message1);
-      
+
       print('\nAfter initiator e:');
       print('Initiator: ${initiator.debugChainKey}');
       print('Responder: ${responder.debugChainKey}');
 
       // <- e, ee, s, es
       final message2 = await responder.writeMessage(Uint8List(0));
-      
+
       print('\nAfter responder writes message2:');
       print('Initiator: ${initiator.debugChainKey}');
       print('Responder: ${responder.debugChainKey}');
 
       await initiator.readMessage(message2);
-      
+
       print('\nAfter initiator reads message2:');
       print('Initiator: ${initiator.debugChainKey}');
       print('Responder: ${responder.debugChainKey}');
-      
+
       // -> s, se
       final message3 = await initiator.writeMessage(Uint8List(0));
-      
+
       print('\nAfter initiator writes message3:');
       print('Initiator: ${initiator.debugChainKey}');
       print('Responder: ${responder.debugChainKey}');
 
       await responder.readMessage(message3);
-      
+
       print('\nAfter responder reads message3:');
       print('Initiator: ${initiator.debugChainKey}');
       print('Responder: ${responder.debugChainKey}');
@@ -1482,7 +1503,7 @@ void main() {
       // Record initial states
       final initialHash = initiator.debugHandshakeHash;
       expect(responder.debugHandshakeHash, equals(initialHash),
-        reason: 'Initial handshake hashes should match');
+          reason: 'Initial handshake hashes should match');
 
       // Step 1: -> e
       final message1 = await initiator.writeMessage(Uint8List(0));
@@ -1490,30 +1511,32 @@ void main() {
       final initiatorEphemeralPub = await initiatorEphemeral.extractPublicKey();
       final initiatorEphemeralBytes = await initiatorEphemeralPub.bytes;
       expect(message1, equals(initiatorEphemeralBytes),
-        reason: 'First message should contain exactly the ephemeral public key');
+          reason:
+              'First message should contain exactly the ephemeral public key');
       await responder.readMessage(message1);
       // Verify states after first message
       expect(initiator.state, equals(XXHandshakeState.sentE));
       expect(responder.state, equals(XXHandshakeState.sentE));
       expect(initiator.debugHandshakeHash, equals(responder.debugHandshakeHash),
-        reason: 'Handshake hashes should match after first message');
+          reason: 'Handshake hashes should match after first message');
 
       // Step 2: <- e, ee, s, es
       final message2 = await responder.writeMessage(Uint8List(0));
       // Verify second message structure
       expect(message2.length, equals(80),
-        reason: 'Second message should be 80 bytes (e[32] + encrypted_s[32] + MAC[16])');
+          reason:
+              'Second message should be 80 bytes (e[32] + encrypted_s[32] + MAC[16])');
       // Verify responder's ephemeral key
       final responderEphemeralPub = await responderEphemeral.extractPublicKey();
       final responderEphemeralBytes = await responderEphemeralPub.bytes;
       expect(message2.sublist(0, 32), equals(responderEphemeralBytes),
-        reason: 'First 32 bytes should be responder ephemeral key');
+          reason: 'First 32 bytes should be responder ephemeral key');
       await initiator.readMessage(message2);
       // Verify states after second message
       expect(initiator.state, equals(XXHandshakeState.sentEES));
       expect(responder.state, equals(XXHandshakeState.sentEES));
       expect(initiator.debugHandshakeHash, equals(responder.debugHandshakeHash),
-        reason: 'Handshake hashes should match after second message');
+          reason: 'Handshake hashes should match after second message');
 
       // Record chain key before final message
       final chainKeyBeforeFinalMsg = initiator.debugChainKey;
@@ -1525,44 +1548,47 @@ void main() {
       // - encrypted static key (32 bytes)
       // - MAC for static key (16 bytes)
       expect(message3.length, equals(48),
-        reason: 'Final message should be 48 bytes (encrypted_s[32] + MAC[16])');
+          reason:
+              'Final message should be 48 bytes (encrypted_s[32] + MAC[16])');
 
       // Process message
       await responder.readMessage(message3);
 
       // Verify states after final message
       expect(initiator.state, equals(XXHandshakeState.complete),
-        reason: 'Initiator should be in complete state');
+          reason: 'Initiator should be in complete state');
       expect(responder.state, equals(XXHandshakeState.complete),
-        reason: 'Responder should be in complete state');
+          reason: 'Responder should be in complete state');
 
       // Verify chain key has changed after se operation
       expect(initiator.debugChainKey, equals(responder.debugChainKey),
-        reason: 'Chain keys should match after final message');
+          reason: 'Chain keys should match after final message');
       expect(initiator.debugChainKey, isNot(equals(chainKeyBeforeFinalMsg)),
-        reason: 'Chain key should change after se operation');
+          reason: 'Chain key should change after se operation');
 
       // Verify responder received initiator's static key
       final initiatorStaticPub = await initiatorStatic.extractPublicKey();
       final initiatorStaticBytes = await initiatorStaticPub.bytes;
       expect(responder.debugRemoteStaticKey, equals(initiatorStaticBytes),
-        reason: 'Responder should have initiator static key');
+          reason: 'Responder should have initiator static key');
 
       // Verify both sides have derived the same final keys
       final initiatorSendKey = await initiator.sendKey.extractBytes();
       final responderRecvKey = await responder.recvKey.extractBytes();
       expect(initiatorSendKey, equals(responderRecvKey),
-        reason: 'Initiator send key should match responder receive key');
+          reason: 'Initiator send key should match responder receive key');
 
       final initiatorRecvKey = await initiator.recvKey.extractBytes();
       final responderSendKey = await responder.sendKey.extractBytes();
       expect(initiatorRecvKey, equals(responderSendKey),
-        reason: 'Initiator receive key should match responder send key');
+          reason: 'Initiator receive key should match responder send key');
     });
 
     test('Initiator and responder derive same chain keys', () async {
-      final initiator = await NoiseXXPattern.createForTesting(true, initiatorStatic, initiatorEphemeral);
-      final responder = await NoiseXXPattern.createForTesting(false, responderStatic, responderEphemeral);
+      final initiator = await NoiseXXPattern.createForTesting(
+          true, initiatorStatic, initiatorEphemeral);
+      final responder = await NoiseXXPattern.createForTesting(
+          false, responderStatic, responderEphemeral);
 
       // First message: -> e
       final message1 = await initiator.writeMessage([]);
@@ -1585,7 +1611,8 @@ void main() {
       final algorithm = X25519();
       final shared = await algorithm.sharedSecretKey(
         keyPair: responderStatic,
-        remotePublicKey: SimplePublicKey(remoteStatic, type: KeyPairType.x25519),
+        remotePublicKey:
+            SimplePublicKey(remoteStatic, type: KeyPairType.x25519),
       );
       final sharedBytes = await shared.extractBytes();
 
@@ -1615,41 +1642,44 @@ void main() {
       // Record initial states
       final initiatorInitialHash = initiator.debugHandshakeHash;
       final responderInitialHash = responder.debugHandshakeHash;
-      expect(initiatorInitialHash, equals(responderInitialHash), 
-        reason: 'Initial handshake hashes should match');
+      expect(initiatorInitialHash, equals(responderInitialHash),
+          reason: 'Initial handshake hashes should match');
 
       // -> e
       final message1 = await initiator.writeMessage(Uint8List(0));
-      
+
       // Verify message contains exactly the ephemeral public key
       final initiatorEphemeralPub = await initiatorEphemeral.extractPublicKey();
       final initiatorEphemeralBytes = await initiatorEphemeralPub.bytes;
       expect(message1, equals(initiatorEphemeralBytes),
-        reason: 'First message should contain exactly the ephemeral public key');
+          reason:
+              'First message should contain exactly the ephemeral public key');
       expect(message1.length, equals(32),
-        reason: 'Ephemeral key should be 32 bytes');
+          reason: 'Ephemeral key should be 32 bytes');
 
       // Process message
       await responder.readMessage(message1);
 
       // Verify states after first message
       expect(initiator.state, equals(XXHandshakeState.sentE),
-        reason: 'Initiator should be in sentE state');
+          reason: 'Initiator should be in sentE state');
       expect(responder.state, equals(XXHandshakeState.sentE),
-        reason: 'Responder should be in sentE state');
+          reason: 'Responder should be in sentE state');
 
       // Verify handshake hashes match
       expect(initiator.debugHandshakeHash, equals(responder.debugHandshakeHash),
-        reason: 'Handshake hashes should match after first message');
+          reason: 'Handshake hashes should match after first message');
 
       // Verify chain keys match and haven't changed
       expect(initiator.debugChainKey, equals(responder.debugChainKey),
-        reason: 'Chain keys should match');
+          reason: 'Chain keys should match');
       expect(initiator.debugChainKey, equals(initiatorInitialHash),
-        reason: 'Chain key should not change after first message');
+          reason: 'Chain key should not change after first message');
     });
 
-    test('Step 2: <- e, ee, s, es - responder sends ephemeral key and static key', () async {
+    test(
+        'Step 2: <- e, ee, s, es - responder sends ephemeral key and static key',
+        () async {
       // Create pattern instances with known keys for deterministic testing
       final algorithm = X25519();
       final initiatorStatic = await algorithm.newKeyPair();
@@ -1683,37 +1713,39 @@ void main() {
       // - encrypted static key (32 bytes)
       // - MAC for static key (16 bytes)
       expect(message2.length, equals(80),
-        reason: 'Second message should be 80 bytes (e[32] + encrypted_s[32] + MAC[16])');
+          reason:
+              'Second message should be 80 bytes (e[32] + encrypted_s[32] + MAC[16])');
 
       // First 32 bytes should be responder's ephemeral key
       final responderEphemeralPub = await responderEphemeral.extractPublicKey();
       final responderEphemeralBytes = await responderEphemeralPub.bytes;
       expect(message2.sublist(0, 32), equals(responderEphemeralBytes),
-        reason: 'First 32 bytes should be responder ephemeral key');
+          reason: 'First 32 bytes should be responder ephemeral key');
 
       // Process message
       await initiator.readMessage(message2);
 
       // Verify states after second message
       expect(initiator.state, equals(XXHandshakeState.sentEES),
-        reason: 'Initiator should be in sentEES state');
+          reason: 'Initiator should be in sentEES state');
       expect(responder.state, equals(XXHandshakeState.sentEES),
-        reason: 'Responder should be in sentEES state');
+          reason: 'Responder should be in sentEES state');
 
       // Verify chain key has changed after ee operation
       expect(initiator.debugChainKey, equals(responder.debugChainKey),
-        reason: 'Chain keys should match after second message');
+          reason: 'Chain keys should match after second message');
       expect(initiator.debugChainKey, isNot(equals(chainKeyBeforeSecondMsg)),
-        reason: 'Chain key should change after ee operation');
+          reason: 'Chain key should change after ee operation');
 
       // Verify initiator received responder's static key
       final responderStaticPub = await responderStatic.extractPublicKey();
       final responderStaticBytes = await responderStaticPub.bytes;
       expect(initiator.debugRemoteStaticKey, equals(responderStaticBytes),
-        reason: 'Initiator should have responder static key');
+          reason: 'Initiator should have responder static key');
     });
 
-    test('Step 3: -> s, se - initiator sends static key and performs se', () async {
+    test('Step 3: -> s, se - initiator sends static key and performs se',
+        () async {
       // Create pattern instances with known keys for deterministic testing
       final algorithm = X25519();
       final initiatorStatic = await algorithm.newKeyPair();
@@ -1735,7 +1767,7 @@ void main() {
       // Record initial states
       final initialHash = initiator.debugHandshakeHash;
       expect(responder.debugHandshakeHash, equals(initialHash),
-        reason: 'Initial handshake hashes should match');
+          reason: 'Initial handshake hashes should match');
 
       // Step 1: -> e
       final message1 = await initiator.writeMessage(Uint8List(0));
@@ -1743,30 +1775,32 @@ void main() {
       final initiatorEphemeralPub = await initiatorEphemeral.extractPublicKey();
       final initiatorEphemeralBytes = await initiatorEphemeralPub.bytes;
       expect(message1, equals(initiatorEphemeralBytes),
-        reason: 'First message should contain exactly the ephemeral public key');
+          reason:
+              'First message should contain exactly the ephemeral public key');
       await responder.readMessage(message1);
       // Verify states after first message
       expect(initiator.state, equals(XXHandshakeState.sentE));
       expect(responder.state, equals(XXHandshakeState.sentE));
       expect(initiator.debugHandshakeHash, equals(responder.debugHandshakeHash),
-        reason: 'Handshake hashes should match after first message');
+          reason: 'Handshake hashes should match after first message');
 
       // Step 2: <- e, ee, s, es
       final message2 = await responder.writeMessage(Uint8List(0));
       // Verify second message structure
       expect(message2.length, equals(80),
-        reason: 'Second message should be 80 bytes (e[32] + encrypted_s[32] + MAC[16])');
+          reason:
+              'Second message should be 80 bytes (e[32] + encrypted_s[32] + MAC[16])');
       // Verify responder's ephemeral key
       final responderEphemeralPub = await responderEphemeral.extractPublicKey();
       final responderEphemeralBytes = await responderEphemeralPub.bytes;
       expect(message2.sublist(0, 32), equals(responderEphemeralBytes),
-        reason: 'First 32 bytes should be responder ephemeral key');
+          reason: 'First 32 bytes should be responder ephemeral key');
       await initiator.readMessage(message2);
       // Verify states after second message
       expect(initiator.state, equals(XXHandshakeState.sentEES));
       expect(responder.state, equals(XXHandshakeState.sentEES));
       expect(initiator.debugHandshakeHash, equals(responder.debugHandshakeHash),
-        reason: 'Handshake hashes should match after second message');
+          reason: 'Handshake hashes should match after second message');
 
       // Record chain key before final message
       final chainKeyBeforeFinalMsg = initiator.debugChainKey;
@@ -1778,7 +1812,8 @@ void main() {
       // - encrypted static key (32 bytes)
       // - MAC for static key (16 bytes)
       expect(message3.length, equals(48),
-        reason: 'Final message should be 48 bytes (encrypted_s[32] + MAC[16])');
+          reason:
+              'Final message should be 48 bytes (encrypted_s[32] + MAC[16])');
 
       // Process message
       await responder.readMessage(message3);
@@ -1812,47 +1847,44 @@ void main() {
       final shortFirstMessage = Uint8List(16);
       expect(
         () => responder.readMessage(shortFirstMessage),
-        throwsA(isA<StateError>().having(
-          (e) => e.message,
-          'message',
-          'Message too short to contain ephemeral key: 16 < 32'
-        )),
+        throwsA(isA<StateError>().having((e) => e.message, 'message',
+            'Message too short to contain ephemeral key: 16 < 32')),
       );
 
       // Complete first message
       final message1 = await initiator.writeMessage(Uint8List(0));
-      expect(message1.length, equals(32), reason: 'First message should be exactly 32 bytes');
+      expect(message1.length, equals(32),
+          reason: 'First message should be exactly 32 bytes');
       await responder.readMessage(message1);
 
       // Test second message (e, ee, s, es) length validation
       final shortSecondMessage = Uint8List(40);
       expect(
         () => initiator.readMessage(shortSecondMessage),
-        throwsA(isA<StateError>().having(
-          (e) => e.message,
-          'message',
-          'Message too short to contain encrypted static key: 40 < 64'
-        )),
+        throwsA(isA<StateError>().having((e) => e.message, 'message',
+            'Message too short to contain encrypted static key: 40 < 64')),
       );
 
       // Complete second message
       final message2 = await responder.writeMessage(Uint8List(0));
-      expect(message2.length, equals(80), reason: 'Second message should be exactly 80 bytes');
+      expect(message2.length, equals(80),
+          reason: 'Second message should be exactly 80 bytes');
       await initiator.readMessage(message2);
 
       // Test third message (s, se) length validation
       final shortThirdMessage = Uint8List(40);
       expect(
         () => responder.readMessage(shortThirdMessage),
-        throwsA(
-          predicate((e) => e is StateError && 
-            e.toString().contains('Final message too short: 40 < 48 (needs 32 bytes encrypted static key + 16 bytes MAC)'))
-        ),
+        throwsA(predicate((e) =>
+            e is StateError &&
+            e.toString().contains(
+                'Final message too short: 40 < 48 (needs 32 bytes encrypted static key + 16 bytes MAC)'))),
       );
 
       // Complete third message
       final message3 = await initiator.writeMessage(Uint8List(0));
-      expect(message3.length, equals(48), reason: 'Third message should be exactly 48 bytes');
+      expect(message3.length, equals(48),
+          reason: 'Third message should be exactly 48 bytes');
       await responder.readMessage(message3);
     });
 
@@ -1865,18 +1897,12 @@ void main() {
       expect(
         () => initiator.remoteStaticKey,
         throwsA(isA<StateError>().having(
-          (e) => e.message,
-          'message',
-          'Remote static key not available'
-        )),
+            (e) => e.message, 'message', 'Remote static key not available')),
       );
       expect(
         () => responder.remoteStaticKey,
         throwsA(isA<StateError>().having(
-          (e) => e.message,
-          'message',
-          'Remote static key not available'
-        )),
+            (e) => e.message, 'message', 'Remote static key not available')),
       );
 
       // -> e
@@ -1924,15 +1950,13 @@ void main() {
     test('follows correct message sequence for responder', () async {
       final staticKeys = await X25519().newKeyPair();
       final pattern = await NoiseXXPattern.create(false, staticKeys);
-      
+
       // Attempting to write first should fail
-      expect(() => pattern.writeMessage(Uint8List(0)), 
-        throwsA(isA<StateError>().having(
-          (e) => e.message,
-          'message',
-          'Responder cannot write first message'
-        )),
+      expect(
+        () => pattern.writeMessage(Uint8List(0)),
+        throwsA(isA<StateError>().having((e) => e.message, 'message',
+            'Responder cannot write first message')),
       );
     });
   });
-} 
+}

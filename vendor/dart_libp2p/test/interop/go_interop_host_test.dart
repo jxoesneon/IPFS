@@ -123,8 +123,8 @@ void main() {
       print('Dart host started');
 
       // Connect triggers: TCP dial → Noise → Yamux → identify exchange
-      await dartHost!
-          .connect(AddrInfo(goPeerId, [goAddr]), context: core_context.Context());
+      await dartHost!.connect(AddrInfo(goPeerId, [goAddr]),
+          context: core_context.Context());
       print('Connected to Go peer');
 
       // Verify identify exchanged Go's protocols into peerstore
@@ -149,8 +149,8 @@ void main() {
       dartHost = await createHost(keyPair);
 
       // Connect + identify
-      await dartHost!
-          .connect(AddrInfo(goPeerId, [goAddr]), context: core_context.Context());
+      await dartHost!.connect(AddrInfo(goPeerId, [goAddr]),
+          context: core_context.Context());
       print('Connected to Go peer');
 
       // Open stream via Host API (connection lookup → identify wait → multistream)
@@ -216,8 +216,7 @@ void main() {
       print('Go echo-client stdout: ${result.stdout}');
       print('Go echo-client stderr: ${result.stderr}');
 
-      expect(result.exitCode, 0,
-          reason: 'Go echo-client should succeed');
+      expect(result.exitCode, 0, reason: 'Go echo-client should succeed');
       expect(result.stdout.toString(), contains('Echo successful'));
       print('Go → Dart echo via BasicHost verified');
     }, timeout: Timeout(Duration(seconds: 30)));
@@ -294,7 +293,8 @@ void main() {
           await dartHost!.peerStore.protoBook.getProtocols(goPeerId);
       print('Go peer protocols after push: $protocols');
       expect(protocols, contains('/test/push-verify/1.0.0'),
-          reason: 'Identify push should have added the new protocol to peerstore');
+          reason:
+              'Identify push should have added the new protocol to peerstore');
       print('Go → Dart identify push verified');
     }, timeout: Timeout(Duration(seconds: 30)));
   });

@@ -17,7 +17,8 @@ const int maxRsaKeyBits = 8192;
 /// Exception thrown when an RSA key is too small
 class RsaKeyTooSmallException implements Exception {
   final String message;
-  RsaKeyTooSmallException() : message = 'RSA keys must be >= $minRsaKeyBits bits to be useful';
+  RsaKeyTooSmallException()
+      : message = 'RSA keys must be >= $minRsaKeyBits bits to be useful';
   @override
   String toString() => message;
 }
@@ -52,20 +53,18 @@ class RsaPublicKey implements p2pkeys.PublicKey {
       (asn1Sequence.elements?[0] as pc.ASN1Integer).integer!,
       (asn1Sequence.elements?[1] as pc.ASN1Integer).integer!,
     );
-    
+
     return RsaPublicKey(publicKey);
   }
 
-  factory RsaPublicKey.unmarshal(Uint8List bytes){
+  factory RsaPublicKey.unmarshal(Uint8List bytes) {
     final pbKey = pb.PublicKey.fromBuffer(bytes);
 
     if (pbKey.type != pb.KeyType.RSA) {
       throw FormatException('Not an RSA public key');
     }
     return RsaPublicKey.fromRawBytes(Uint8List.fromList(pbKey.data));
-
   }
-
 
   @override
   pb.KeyType get type => pb.KeyType.RSA;
@@ -90,7 +89,8 @@ class RsaPublicKey implements p2pkeys.PublicKey {
   @override
   Future<bool> verify(Uint8List data, Uint8List signature) async {
     try {
-      final signer = RSASigner(SHA256Digest(), '0609608648016503040201'); // SHA-256 with PKCS1v15 padding
+      final signer = RSASigner(SHA256Digest(),
+          '0609608648016503040201'); // SHA-256 with PKCS1v15 padding
       signer.init(false, PublicKeyParameter<RSAPublicKey>(_key));
       return signer.verifySignature(data, RSASignature(signature));
     } catch (e) {
@@ -103,8 +103,8 @@ class RsaPublicKey implements p2pkeys.PublicKey {
     if (other is! RsaPublicKey) return false;
 
     // Compare modulus and exponent
-    return _key.modulus == other._key.modulus && 
-           _key.exponent == other._key.exponent;
+    return _key.modulus == other._key.modulus &&
+        _key.exponent == other._key.exponent;
   }
 }
 
@@ -129,7 +129,6 @@ class RsaPrivateKey implements p2pkeys.PrivateKey {
     }
 
     try {
-
       // Debug information
 
       final parser = pc.ASN1Parser(bytes);
@@ -140,7 +139,8 @@ class RsaPrivateKey implements p2pkeys.PrivateKey {
       }
 
       if (asn1Object is! pc.ASN1Sequence) {
-        throw FormatException('Expected ASN.1 SEQUENCE but got: ${asn1Object.runtimeType}');
+        throw FormatException(
+            'Expected ASN.1 SEQUENCE but got: ${asn1Object.runtimeType}');
       }
 
       final asn1Sequence = asn1Object;
@@ -160,7 +160,8 @@ class RsaPrivateKey implements p2pkeys.PrivateKey {
       // }
 
       if (asn1Sequence.elements == null || asn1Sequence.elements!.length < 9) {
-        throw FormatException('RSA private key sequence does not contain required elements. Found: ${asn1Sequence.elements?.length ?? 0}');
+        throw FormatException(
+            'RSA private key sequence does not contain required elements. Found: ${asn1Sequence.elements?.length ?? 0}');
       }
 
       // Validate and extract each element with proper type checking
@@ -176,7 +177,8 @@ class RsaPrivateKey implements p2pkeys.PrivateKey {
       final elements = <BigInt?>[];
       for (int i = 0; i < 9; i++) {
         if (asn1Sequence.elements![i] is! pc.ASN1Integer) {
-          throw FormatException('Expected ASN1Integer at position $i but got ${asn1Sequence.elements![i].runtimeType}');
+          throw FormatException(
+              'Expected ASN1Integer at position $i but got ${asn1Sequence.elements![i].runtimeType}');
         }
         elements.add((asn1Sequence.elements![i] as pc.ASN1Integer).integer);
       }
@@ -191,17 +193,18 @@ class RsaPrivateKey implements p2pkeys.PrivateKey {
       final qInv = elements[8];
 
       // Validate that no required values are null
-      if (modulus == null || publicExponent == null || privateExponent == null ||
-          p == null || q == null || dP == null || dQ == null || qInv == null) {
+      if (modulus == null ||
+          publicExponent == null ||
+          privateExponent == null ||
+          p == null ||
+          q == null ||
+          dP == null ||
+          dQ == null ||
+          qInv == null) {
         throw FormatException('One or more required RSA parameters are null');
       }
 
-      final privateKey = pc.RSAPrivateKey(
-        modulus,
-        privateExponent,
-        p,
-        q
-      );
+      final privateKey = pc.RSAPrivateKey(modulus, privateExponent, p, q);
 
       final publicKey = pc.RSAPublicKey(
         modulus,
@@ -269,7 +272,7 @@ class RsaPrivateKey implements p2pkeys.PrivateKey {
     if (pbKey.type != pb.KeyType.RSA) {
       throw FormatException('Not an RSA private key');
     }
-    
+
     return fromRawBytes(Uint8List.fromList(pbKey.data));
   }
 
@@ -282,26 +285,26 @@ class RsaPrivateKey implements p2pkeys.PrivateKey {
     final asn1Sequence = pc.ASN1Sequence();
     asn1Sequence.add(pc.ASN1Integer(BigInt.from(0))); // version
     asn1Sequence.add(pc.ASN1Integer(_key.modulus!));
-    
+
     // For the public exponent, we need to extract it from the public key
     asn1Sequence.add(pc.ASN1Integer(_publicKey._key.exponent!));
-    
+
     asn1Sequence.add(pc.ASN1Integer(_key.privateExponent!));
     asn1Sequence.add(pc.ASN1Integer(_key.p!));
     asn1Sequence.add(pc.ASN1Integer(_key.q!));
-    
+
     // Calculate d mod (p-1)
     final dP = _key.privateExponent! % (_key.p! - BigInt.from(1));
     asn1Sequence.add(pc.ASN1Integer(dP));
-    
+
     // Calculate d mod (q-1)
     final dQ = _key.privateExponent! % (_key.q! - BigInt.from(1));
     asn1Sequence.add(pc.ASN1Integer(dQ));
-    
+
     // Calculate (inverse of q) mod p
     final qInv = _key.q!.modInverse(_key.p!);
     asn1Sequence.add(pc.ASN1Integer(qInv));
-    
+
     return Uint8List.fromList(asn1Sequence.encode() ?? []);
   }
 
@@ -316,7 +319,8 @@ class RsaPrivateKey implements p2pkeys.PrivateKey {
 
   @override
   Future<Uint8List> sign(Uint8List data) async {
-    final signer = RSASigner(SHA256Digest(), '0609608648016503040201'); // SHA-256 with PKCS1v15 padding
+    final signer = RSASigner(SHA256Digest(),
+        '0609608648016503040201'); // SHA-256 with PKCS1v15 padding
     signer.init(true, PrivateKeyParameter<RSAPrivateKey>(_key));
     final signature = signer.generateSignature(data);
     return signature.bytes;
@@ -328,11 +332,11 @@ class RsaPrivateKey implements p2pkeys.PrivateKey {
   @override
   Future<bool> equals(p2pkeys.PrivateKey other) async {
     if (other is! RsaPrivateKey) return false;
-    
+
     // Compare public keys (modulus and exponent)
     final publicKeyEquals = await _publicKey.equals(other.publicKey);
     if (!publicKeyEquals) return false;
-    
+
     // Compare private exponent
     return _key.privateExponent == other._key.privateExponent;
   }
@@ -346,10 +350,9 @@ Future<p2pkeys.KeyPair> generateRsaKeyPair({int bits = 2048}) async {
   if (bits > maxRsaKeyBits) {
     throw RsaKeyTooBigException();
   }
-  
+
   return await generateRSAKeyPair(bits: bits);
 }
-
 
 /// Creates an RsaPublicKey from its protobuf bytes
 p2pkeys.PublicKey unmarshalRsaPublicKey(Uint8List bytes) {
@@ -360,5 +363,3 @@ p2pkeys.PublicKey unmarshalRsaPublicKey(Uint8List bytes) {
   }
   return RsaPublicKey.fromRawBytes(Uint8List.fromList(pbKey.data));
 }
-
-

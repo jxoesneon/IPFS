@@ -12,19 +12,19 @@ import 'package:dart_libp2p/core/peer/peer_id.dart';
 abstract class IdentifyException implements Exception {
   /// The peer ID for which identification failed (if known).
   final PeerId? peerId;
-  
+
   /// A descriptive message about the failure.
   final String message;
-  
+
   /// The underlying cause of the failure (if any).
   final Object? cause;
-  
+
   IdentifyException({
     this.peerId,
     required this.message,
     this.cause,
   });
-  
+
   @override
   String toString() {
     final peerStr = peerId != null ? ' (peer: $peerId)' : '';
@@ -50,14 +50,14 @@ abstract class IdentifyException implements Exception {
 class IdentifyTimeoutException extends IdentifyException {
   /// The duration before the timeout occurred.
   final Duration? timeout;
-  
+
   IdentifyTimeoutException({
     PeerId? peerId,
     required String message,
     this.timeout,
     Object? cause,
   }) : super(peerId: peerId, message: message, cause: cause);
-  
+
   /// Creates an IdentifyTimeoutException from a generic exception.
   ///
   /// This factory method helps convert generic timeout exceptions into
@@ -108,9 +108,9 @@ class IdentifyProtocolException extends IdentifyException {
 /// if it represents a timeout condition.
 bool isTimeoutException(Object exception) {
   final errorString = exception.toString().toLowerCase();
-  return errorString.contains('timeout') || 
-         errorString.contains('timed out') ||
-         errorString.contains('timeoutexception');
+  return errorString.contains('timeout') ||
+      errorString.contains('timed out') ||
+      errorString.contains('timeoutexception');
 }
 
 /// Helper function to wrap a generic exception into an appropriate
@@ -130,7 +130,7 @@ IdentifyException wrapIdentifyException({
       timeout: timeout,
     );
   }
-  
+
   // For now, wrap unknown exceptions as stream exceptions
   return IdentifyStreamException(
     peerId: peerId,
@@ -138,4 +138,3 @@ IdentifyException wrapIdentifyException({
     cause: exception,
   );
 }
-

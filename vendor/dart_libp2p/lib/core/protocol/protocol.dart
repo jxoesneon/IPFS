@@ -21,7 +21,7 @@ class ReservedProtocolIDs {
 class ProtocolIDUtil {
   /// Converts a list of strings to a list of protocol IDs.
   static List<ProtocolID> convertFromStrings(List<String> ids) {
-    return ids.map((id) => id ).toList();
+    return ids.map((id) => id).toList();
   }
 
   /// Converts a list of protocol IDs to a list of strings.
@@ -36,7 +36,8 @@ class ProtocolIDUtil {
 /// Will be invoked with the protocol ID string as the first argument,
 /// which may differ from the ID used for registration if the handler
 /// was registered using a match function.
-typedef HandlerFunc = void Function(ProtocolID protocol, P2PStream<dynamic> stream);
+typedef HandlerFunc = void Function(
+    ProtocolID protocol, P2PStream<dynamic> stream);
 
 /// Router is an interface that allows users to add and remove protocol handlers,
 /// which will be invoked when incoming stream requests for registered protocols
@@ -59,7 +60,8 @@ abstract class Router {
   /// the protocol. Note that the protocol ID argument is not
   /// used for matching; if you want to match the protocol ID
   /// string exactly, you must check for it in your match function.
-  Future<void> addHandlerWithFunc(ProtocolID protocol, bool Function(ProtocolID) match, HandlerFunc handler);
+  Future<void> addHandlerWithFunc(ProtocolID protocol,
+      bool Function(ProtocolID) match, HandlerFunc handler);
 
   /// RemoveHandler removes the registered handler (if any) for the
   /// given protocol ID string.
@@ -86,4 +88,3 @@ abstract class Negotiator {
   /// the protocol ID and the stream. Returns an error if negotiation fails.
   Future<void> handle(P2PStream<dynamic> stream);
 }
-

@@ -36,8 +36,8 @@ class TCPTransport implements Transport {
     required this.resourceManager,
     TransportConfig? config,
     ConnManager? connManager,
-  }) : config = config ?? TransportConfig.defaultConfig,
-       _connManager = connManager ?? ConnectionManager();
+  })  : config = config ?? TransportConfig.defaultConfig,
+        _connManager = connManager ?? ConnectionManager();
 
   @override
   Future<TransportConn> dial(MultiAddr addr, {Duration? timeout}) async {
@@ -53,7 +53,7 @@ class TCPTransport implements Transport {
 
     try {
       final socket = await Socket.connect(
-        host, 
+        host,
         port,
         timeout: effectiveTimeout,
       ).timeout(
@@ -64,28 +64,30 @@ class TCPTransport implements Transport {
       );
 
       // Create multiaddrs for local and remote endpoints
-      final localAddr = MultiAddr('/ip4/${socket.address.address}/tcp/${socket.port}');
-      final remoteAddr = MultiAddr('/ip4/${socket.remoteAddress.address}/tcp/${socket.remotePort}');
+      final localAddr =
+          MultiAddr('/ip4/${socket.address.address}/tcp/${socket.port}');
+      final remoteAddr = MultiAddr(
+          '/ip4/${socket.remoteAddress.address}/tcp/${socket.remotePort}');
 
       // Placeholder PeerIDs - these should be derived from a security handshake
       // which typically happens before or as part of the transport upgrade process.
       // For now, using fixed placeholders. This is a CRITICAL point for a real system.
       final localPeerId = await PeerId.random(); // Using PeerId.random()
-      final remotePeerId = await PeerId.random(); // Placeholder for remote PeerId (SHOULD COME FROM HANDSHAKE)
-
+      final remotePeerId = await PeerId
+          .random(); // Placeholder for remote PeerId (SHOULD COME FROM HANDSHAKE)
 
       final connection = await TCPConnection.create(
-        socket,
-        localAddr,
-        remoteAddr,
-        localPeerId, 
-        remotePeerId, 
-        // multiplexer, // Removed
-        resourceManager,
-        false, // isServer = false for dial
-        legacyConnManager: _connManager
-        // onIncomingStream callback removed from TCPConnection.create
-      );
+          socket,
+          localAddr,
+          remoteAddr,
+          localPeerId,
+          remotePeerId,
+          // multiplexer, // Removed
+          resourceManager,
+          false, // isServer = false for dial
+          legacyConnManager: _connManager
+          // onIncomingStream callback removed from TCPConnection.create
+          );
 
       // Set read/write timeouts from config (these are for the raw socket, may be deprecated)
       // connection.setReadTimeout(config.readTimeout);
@@ -120,21 +122,22 @@ class TCPTransport implements Transport {
         connManager: _connManager,
         // multiplexer: multiplexer, // This line was correctly commented out, but TCPListener itself needs update
         resourceManager: resourceManager,
-        onConnection: (Socket socket, MultiAddr localRealAddr, MultiAddr remoteRealAddr) async {
+        onConnection: (Socket socket, MultiAddr localRealAddr,
+            MultiAddr remoteRealAddr) async {
           final localInstancePeerId = await PeerId.random();
           PeerId? remoteReceivedPeerId;
 
           final connection = await TCPConnection.create(
-            socket,
-            localRealAddr,
-            remoteRealAddr,
-            localInstancePeerId,
-            remoteReceivedPeerId,
-            resourceManager,
-            true, // isServer = true
-            legacyConnManager: _connManager
-            // onIncomingStream callback removed
-          );
+              socket,
+              localRealAddr,
+              remoteRealAddr,
+              localInstancePeerId,
+              remoteReceivedPeerId,
+              resourceManager,
+              true, // isServer = true
+              legacyConnManager: _connManager
+              // onIncomingStream callback removed
+              );
 
           return connection;
         },
@@ -153,13 +156,13 @@ class TCPTransport implements Transport {
     // Check if the address has either ip4 or ip6 and tcp protocols
     final hasIP = addr.hasProtocol('ip4') || addr.hasProtocol('ip6');
     final hasTCP = addr.hasProtocol('tcp');
-    
+
     // Refuse circuit relay addresses - those should be handled by CircuitV2Client
     final hasCircuit = addr.hasProtocol('p2p-circuit');
     if (hasCircuit) {
       return false;
     }
-    
+
     return hasIP && hasTCP;
   }
 
@@ -177,5 +180,4 @@ class TCPTransport implements Transport {
     final hasTCP = addr.hasProtocol('tcp');
     return hasIP && hasTCP;
   }
-
 }

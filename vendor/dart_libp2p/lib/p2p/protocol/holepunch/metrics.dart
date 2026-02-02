@@ -5,7 +5,6 @@ import 'package:dart_libp2p/p2p/protocol/holepunch/holepuncher.dart';
 import 'package:dart_libp2p/core/multiaddr.dart';
 import 'package:dart_libp2p/core/network/conn.dart';
 
-
 /// Metrics tracer for the holepunch protocol
 class MetricsTracer implements HolePunchTracer {
   /// Number of successful direct dials
@@ -82,7 +81,8 @@ class MetricsTracer implements HolePunchTracer {
   }
 
   @override
-  void holePunchFinished(String side, int attempts, List<MultiAddr> addrs, List<MultiAddr> obsAddrs, Conn? conn) {
+  void holePunchFinished(String side, int attempts, List<MultiAddr> addrs,
+      List<MultiAddr> obsAddrs, Conn? conn) {
     // No metrics to collect here
   }
 
@@ -90,5 +90,4 @@ class MetricsTracer implements HolePunchTracer {
   void close() {
     // No resources to clean up
   }
-
 }

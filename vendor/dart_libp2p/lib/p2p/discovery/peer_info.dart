@@ -68,15 +68,9 @@ class PeerInfo {
   /// Creates a copy of this PeerInfo
   PeerInfo copy() {
     return PeerInfo(
-      peerId: peerId,
-      addrs: addrs,
-      protocols: protocols,
-      metadata: metadata
-    );
+        peerId: peerId, addrs: addrs, protocols: protocols, metadata: metadata);
   }
-
 }
-
 
 // /// Stores information about known peers
 // class PeerStore {

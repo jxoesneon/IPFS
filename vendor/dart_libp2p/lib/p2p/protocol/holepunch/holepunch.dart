@@ -31,7 +31,8 @@ Future<HolePunchService> newHolePunchService(
     throw ArgumentError('identify service can\'t be null');
   }
 
-  final service = HolePunchServiceImpl(host, ids, listenAddrs, options: options);
+  final service =
+      HolePunchServiceImpl(host, ids, listenAddrs, options: options);
   await service.start();
   return service;
 }

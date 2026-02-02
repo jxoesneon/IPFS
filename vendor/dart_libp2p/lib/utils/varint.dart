@@ -36,4 +36,4 @@ int decodeVarint(Uint8List data) {
   }
 
   throw FormatException('Invalid varint encoding');
-} 
+}

@@ -9,7 +9,8 @@ void main() {
   group('StunClientPool', () {
     test('should initialize with default servers', () {
       final pool = StunClientPool();
-      expect(pool.getServerHealthStatus().length, equals(5)); // Default has 10 servers
+      expect(pool.getServerHealthStatus().length,
+          equals(5)); // Default has 10 servers
     });
 
     test('should initialize with custom servers', () {
@@ -68,10 +69,12 @@ void main() {
 
       // Create a pool with these mock servers
       pool = StunClientPool(
-        stunServers: mockServers.map((server) => (
-          host: 'localhost',
-          port: server.port,
-        )).toList(),
+        stunServers: mockServers
+            .map((server) => (
+                  host: 'localhost',
+                  port: server.port,
+                ))
+            .toList(),
         // Use shorter timeouts for testing
         timeout: Duration(seconds: 1),
         healthCheckInterval: Duration(milliseconds: 100),
@@ -113,8 +116,16 @@ void main() {
 
       // Check that health scores were updated
       final healthStatus = pool.getServerHealthStatus();
-      expect(healthStatus.firstWhere((s) => s.port == mockServers[0].port).healthScore, lessThan(100)); // First server should have reduced health
-      expect(healthStatus.firstWhere((s) => s.port == mockServers[1].port).healthScore, equals(100)); // Second server should have perfect health
+      expect(
+          healthStatus
+              .firstWhere((s) => s.port == mockServers[0].port)
+              .healthScore,
+          lessThan(100)); // First server should have reduced health
+      expect(
+          healthStatus
+              .firstWhere((s) => s.port == mockServers[1].port)
+              .healthScore,
+          equals(100)); // Second server should have perfect health
     });
 
     test('should detect symmetric NAT', () async {
@@ -202,7 +213,8 @@ void main() {
       final secondServerPort = mockServers[1].port;
 
       // Verify first server has good health
-      final firstServerInfo = healthStatus.firstWhere((s) => s.port == firstServerPort);
+      final firstServerInfo =
+          healthStatus.firstWhere((s) => s.port == firstServerPort);
       expect(firstServerInfo.healthScore, equals(100));
 
       // Now make the first server fail and the second succeed
@@ -220,11 +232,18 @@ void main() {
       healthStatus = pool.getServerHealthStatus();
 
       // First server should have reduced health, second should be healthy
-      expect(healthStatus.firstWhere((s) => s.port == firstServerPort).healthScore, lessThan(100));
-      expect(healthStatus.firstWhere((s) => s.port == secondServerPort).healthScore, equals(100));
+      expect(
+          healthStatus.firstWhere((s) => s.port == firstServerPort).healthScore,
+          lessThan(100));
+      expect(
+          healthStatus
+              .firstWhere((s) => s.port == secondServerPort)
+              .healthScore,
+          equals(100));
 
       // Find the server with the highest health score
-      final highestHealthServer = healthStatus.reduce((a, b) => a.healthScore > b.healthScore ? a : b);
+      final highestHealthServer =
+          healthStatus.reduce((a, b) => a.healthScore > b.healthScore ? a : b);
 
       // The server with the highest health score should be the second server
       expect(highestHealthServer.port, equals(secondServerPort));

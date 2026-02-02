@@ -2,7 +2,6 @@ import 'dart:typed_data';
 import 'peer_id.dart';
 import '../multiaddr.dart';
 
-
 /// Represents a peer with its addresses
 class AddrInfo {
   /// The peer ID
@@ -17,8 +16,7 @@ class AddrInfo {
   /// Creates a new AddrInfo with the given peer ID and no addresses
   AddrInfo.withId(this.id) : addrs = [];
 
-  static AddrInfo fromMultiaddr(MultiAddr addr){
-
+  static AddrInfo fromMultiaddr(MultiAddr addr) {
     // Extract the peer ID from the multiaddress string
     final addrStr = addr.toString();
     final parts = addrStr.split('/');
@@ -74,7 +72,7 @@ class AddrInfo {
     if (other is! AddrInfo) return false;
     if (id != other.id) return false;
     if (addrs.length != other.addrs.length) return false;
-    
+
     final otherAddrsSet = other.addrs.map((a) => a.toString()).toSet();
     return addrs.every((addr) => otherAddrsSet.contains(addr.toString()));
   }

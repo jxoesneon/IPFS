@@ -26,7 +26,8 @@ void main() {
 
       // Verify with wrong message
       final wrongMessage = Uint8List.fromList([5, 4, 3, 2, 1]);
-      final wrongVerified = await keyPair.publicKey.verify(wrongMessage, signature);
+      final wrongVerified =
+          await keyPair.publicKey.verify(wrongMessage, signature);
       expect(wrongVerified, isFalse);
     });
 

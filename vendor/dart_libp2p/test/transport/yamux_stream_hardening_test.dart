@@ -30,7 +30,7 @@ void main() {
     setUp(() {
       mockConn = MockConn();
       sentFrames = [];
-      
+
       // Create a stream with a mock frame sender
       stream = YamuxStream(
         id: 1,
@@ -42,7 +42,8 @@ void main() {
         },
         parentConn: mockConn,
         logPrefix: 'Test',
-        remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+        remotePeer:
+            MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
         maxFrameSize: 64 * 1024,
       );
     });
@@ -50,7 +51,7 @@ void main() {
     test('read() on reset stream throws YamuxStreamStateException', () async {
       // Force the stream into reset state
       await stream.forceReset();
-      
+
       // Attempt to read should throw a properly classified exception
       await expectLater(
         stream.read(),
@@ -64,10 +65,10 @@ void main() {
     test('read() on closed stream throws YamuxStreamStateException', () async {
       // Open the stream first
       await stream.open();
-      
+
       // Close the stream
       await stream.close();
-      
+
       // Attempt to read should throw a properly classified exception
       await expectLater(
         stream.read(),
@@ -92,13 +93,13 @@ void main() {
     test('read() with timeout on hanging stream', () async {
       // Open the stream
       await stream.open();
-      
+
       // Start a read operation that will timeout
       final readFuture = stream.read();
-      
+
       // Wait a bit to ensure the read is waiting
       await Future.delayed(Duration(milliseconds: 100));
-      
+
       // The read should eventually timeout and throw YamuxStreamTimeoutException
       expect(
         () async => await readFuture.timeout(Duration(seconds: 1)),
@@ -112,11 +113,11 @@ void main() {
     test('read() returns EOF on closing stream with empty queue', () async {
       // Open the stream
       await stream.open();
-      
+
       // Simulate receiving a FIN frame to put stream in closing state
       final finFrame = YamuxFrame.createData(1, Uint8List(0), fin: true);
       await stream.handleFrame(finFrame);
-      
+
       // Read should return EOF (empty data) instead of throwing
       final result = await stream.read();
       expect(result, isEmpty);
@@ -125,7 +126,7 @@ void main() {
     test('read() handles state transitions gracefully', () async {
       // Open the stream
       await stream.open();
-      
+
       // Start a read operation and immediately set up expectation to handle the error
       final readFuture = stream.read();
       final expectation = expectLater(
@@ -135,13 +136,13 @@ void main() {
             .having((e) => e.requestedOperation, 'requestedOperation', 'read')
             .having((e) => e.streamId, 'streamId', 1)),
       );
-      
+
       // Give the read operation time to start waiting
       await Future.delayed(Duration(milliseconds: 10));
-      
+
       // Reset the stream while read is waiting
       await stream.reset();
-      
+
       // Wait for the expectation to complete
       await expectation;
     });
@@ -149,7 +150,7 @@ void main() {
     test('multiple concurrent reads handle state changes safely', () async {
       // Open the stream
       await stream.open();
-      
+
       // Start multiple read operations with immediate error handlers
       // Note: YamuxStream only supports one pending read at a time, so only the last
       // completer is actually active. The earlier reads will hang.
@@ -159,19 +160,21 @@ void main() {
       readFutures.add(stream.read().catchError((e) => Uint8List(0)));
       await Future.delayed(Duration(milliseconds: 10));
       readFutures.add(stream.read().catchError((e) => Uint8List(0)));
-      
+
       // Reset the stream while the last read is waiting
       await Future.delayed(Duration(milliseconds: 10));
       await stream.reset();
-      
+
       // The last read should complete, but the earlier ones will hang
       // So we only wait for the last one with a timeout for the others
       final results = await Future.wait([
-        readFutures[0].timeout(Duration(milliseconds: 100), onTimeout: () => Uint8List(0)),
-        readFutures[1].timeout(Duration(milliseconds: 100), onTimeout: () => Uint8List(0)),
-        readFutures[2],  // This one should complete with error
+        readFutures[0].timeout(Duration(milliseconds: 100),
+            onTimeout: () => Uint8List(0)),
+        readFutures[1].timeout(Duration(milliseconds: 100),
+            onTimeout: () => Uint8List(0)),
+        readFutures[2], // This one should complete with error
       ]);
-      
+
       // All should return empty (either from error handler or timeout)
       for (final result in results) {
         expect(result, isEmpty);
@@ -180,7 +183,8 @@ void main() {
 
     test('YamuxExceptionHandler.classifyYamuxException works correctly', () {
       // Test StateError classification
-      final stateError = StateError('Stream is now in state YamuxStreamState.reset');
+      final stateError =
+          StateError('Stream is now in state YamuxStreamState.reset');
       final classified = YamuxExceptionHandler.classifyYamuxException(
         stateError,
         StackTrace.current,
@@ -188,7 +192,7 @@ void main() {
         operation: 'read',
         currentState: 'reset',
       );
-      
+
       expect(classified, isA<YamuxStreamStateException>());
       final streamStateEx = classified as YamuxStreamStateException;
       expect(streamStateEx.currentState, 'reset');
@@ -205,7 +209,7 @@ void main() {
         streamId: 1,
       );
       expect(YamuxExceptionHandler.shouldResetStream(resetStateEx), false);
-      
+
       final openStateEx = YamuxStreamStateException(
         'test',
         currentState: 'open',
@@ -213,7 +217,7 @@ void main() {
         streamId: 1,
       );
       expect(YamuxExceptionHandler.shouldResetStream(openStateEx), true);
-      
+
       final protocolEx = YamuxStreamProtocolException(
         'test',
         protocolError: 'format_error',
@@ -224,29 +228,29 @@ void main() {
 
     test('stream state validation methods work correctly', () async {
       // Test _isValidStateForRead through public interface
-      
+
       // Init state should be invalid for read
       await expectLater(
         stream.read(),
         throwsA(isA<YamuxStreamStateException>()),
       );
-      
+
       // Open state should be valid for read (will timeout but not throw state error)
       await stream.open();
       final readFuture = stream.read();
-      
+
       // Immediately set up expectation to handle the error when it occurs
       final expectation = expectLater(
         readFuture,
         throwsA(isA<YamuxStreamStateException>()),
       );
-      
+
       // Give the read operation time to start waiting
       await Future.delayed(Duration(milliseconds: 10));
-      
+
       // Cancel the read to avoid timeout
       await stream.reset();
-      
+
       // Wait for the expectation to complete
       await expectation;
     });
@@ -260,7 +264,7 @@ void main() {
     setUp(() {
       mockConn = MockConn();
       sentFrames = [];
-      
+
       stream = YamuxStream(
         id: 2,
         protocol: '/integration/1.0.0',
@@ -271,7 +275,8 @@ void main() {
         },
         parentConn: mockConn,
         logPrefix: 'Integration',
-        remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+        remotePeer:
+            MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
         maxFrameSize: 64 * 1024,
       );
     });
@@ -279,7 +284,7 @@ void main() {
     test('exception context is properly preserved', () async {
       await stream.open();
       await stream.reset();
-      
+
       try {
         await stream.read();
         fail('Should have thrown an exception');
@@ -296,7 +301,7 @@ void main() {
     test('exception chaining preserves original error information', () async {
       await stream.open();
       await stream.reset();
-      
+
       try {
         await stream.read();
         fail('Should have thrown an exception');

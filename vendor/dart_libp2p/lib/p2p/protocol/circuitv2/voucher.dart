@@ -45,7 +45,8 @@ class ReservationVoucherData {
   static ReservationVoucherData fromProto(ReservationVoucher pb) {
     final relay = PeerId.fromBytes(Uint8List.fromList(pb.relay));
     final peer = PeerId.fromBytes(Uint8List.fromList(pb.peer));
-    final expiration = DateTime.fromMillisecondsSinceEpoch(pb.expiration.toInt() * 1000);
+    final expiration =
+        DateTime.fromMillisecondsSinceEpoch(pb.expiration.toInt() * 1000);
     return ReservationVoucherData(
       relay: relay,
       peer: peer,

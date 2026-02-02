@@ -11,8 +11,6 @@ import 'dart:async';
 
 import 'package:dart_libp2p/core/peer/peer_id.dart';
 
-
-
 /// HolePunchService is the interface for the holepunch service.
 abstract class HolePunchService {
   /// DirectConnect attempts to make a direct connection with a remote peer.

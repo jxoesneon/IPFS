@@ -54,7 +54,8 @@ class PeerstoreManager {
   bool _closed = false;
 
   /// Creates a new PeerstoreManager.
-  PeerstoreManager(this._pstore, this._eventBus, this._network, {List<Option>? opts})
+  PeerstoreManager(this._pstore, this._eventBus, this._network,
+      {List<Option>? opts})
       : _gracePeriod = Duration(minutes: 1) {
     if (opts != null) {
       for (var opt in opts) {
@@ -73,14 +74,16 @@ class PeerstoreManager {
     try {
       final sub = await _eventBus.subscribe(EvtPeerConnectednessChanged);
       _subscription = sub.stream.listen(_handleConnectChangeEvent);
-      _timer = Timer.periodic(_cleanupInterval ?? Duration(minutes: 5), _cleanup);
+      _timer =
+          Timer.periodic(_cleanupInterval ?? Duration(minutes: 5), _cleanup);
     } catch (e) {
-      _log.warning('Subscription failed. Peerstore manager not activated. Error: $e');
+      _log.warning(
+          'Subscription failed. Peerstore manager not activated. Error: $e');
     }
   }
 
   void _handleConnectChangeEvent(dynamic event) {
-    if (!(event is EvtPeerConnectednessChanged)){
+    if (!(event is EvtPeerConnectednessChanged)) {
       return;
     }
 
@@ -116,7 +119,8 @@ class PeerstoreManager {
         // is processed after this time has fired.
         // Note: In Go, there's a Connectedness method on the network interface,
         // but in Dart we need to check the connections list.
-        bool isConnected = _network.conns.any((conn) => conn.remotePeer == peerId);
+        bool isConnected =
+            _network.conns.any((conn) => conn.remotePeer == peerId);
         if (!isConnected) {
           _pstore.removePeer(peerId);
           toRemove.add(peerId);

@@ -66,12 +66,18 @@ class GoProcessManager {
   Future<void> _start(List<String> args) async {
     _process = await Process.start(binaryPath, args);
 
-    _process!.stderr.transform(utf8.decoder).transform(const LineSplitter()).listen((line) {
+    _process!.stderr
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .listen((line) {
       _output.add('[stderr] $line');
       _outputController.add('[stderr] $line');
     });
 
-    _process!.stdout.transform(utf8.decoder).transform(const LineSplitter()).listen((line) {
+    _process!.stdout
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .listen((line) {
       _output.add(line);
       _outputController.add(line);
 
@@ -130,10 +136,15 @@ class GoProcessManager {
   }
 
   /// Runs the Go peer in relay-echo-client mode.
-  Future<ProcessResult> runRelayEchoClient(String circuitAddr, String message) async {
+  Future<ProcessResult> runRelayEchoClient(
+      String circuitAddr, String message) async {
     return Process.run(
       binaryPath,
-      ['--mode=relay-echo-client', '--target=$circuitAddr', '--message=$message'],
+      [
+        '--mode=relay-echo-client',
+        '--target=$circuitAddr',
+        '--message=$message'
+      ],
       stdoutEncoding: utf8,
       stderrEncoding: utf8,
     ).timeout(const Duration(seconds: 30));
@@ -145,10 +156,16 @@ class GoProcessManager {
   }
 
   /// Runs the Go peer in dht-put-value mode.
-  Future<ProcessResult> runDHTPutValue(String target, String key, String value) async {
+  Future<ProcessResult> runDHTPutValue(
+      String target, String key, String value) async {
     return Process.run(
       binaryPath,
-      ['--mode=dht-put-value', '--target=$target', '--key=$key', '--value=$value'],
+      [
+        '--mode=dht-put-value',
+        '--target=$target',
+        '--key=$key',
+        '--value=$value'
+      ],
       stdoutEncoding: utf8,
       stderrEncoding: utf8,
     ).timeout(const Duration(seconds: 30));
@@ -185,7 +202,8 @@ class GoProcessManager {
   }
 
   /// Runs the Go peer in echo-client mode.
-  Future<ProcessResult> runEchoClient(String targetMultiaddr, String message) async {
+  Future<ProcessResult> runEchoClient(
+      String targetMultiaddr, String message) async {
     return Process.run(
       binaryPath,
       ['--mode=echo-client', '--target=$targetMultiaddr', '--message=$message'],
@@ -193,7 +211,8 @@ class GoProcessManager {
   }
 
   /// Waits for a specific string to appear in the output.
-  Future<String> waitForOutput(String pattern, {Duration timeout = const Duration(seconds: 30)}) async {
+  Future<String> waitForOutput(String pattern,
+      {Duration timeout = const Duration(seconds: 30)}) async {
     // Check existing output first
     for (final line in _output) {
       if (line.contains(pattern)) return line;

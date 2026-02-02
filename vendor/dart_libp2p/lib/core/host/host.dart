@@ -17,7 +17,6 @@ import 'package:dart_libp2p/core/protocol/switch.dart';
 import 'package:dart_libp2p/core/network/stream.dart';
 import 'package:dart_libp2p/p2p/protocol/holepunch.dart'; // Added for HolePunchService
 
-
 /// AddrsFactory functions can be passed to a Host to override
 /// addresses returned by Addrs.
 typedef AddrsFactory = List<MultiAddr> Function(List<MultiAddr> addrs);
@@ -48,7 +47,7 @@ abstract class Host {
   /// peerstore. If there is not an active connection, Connect will issue a
   /// h.Network.Dial, and block until a connection is open, or an error is
   /// returned.
-  /// 
+  ///
   /// If [context] is not provided, a new Context will be created.
   Future<void> connect(AddrInfo pi, {Context? context});
 
@@ -60,7 +59,8 @@ abstract class Host {
 
   /// SetStreamHandlerMatch sets the protocol handler on the Host's Mux
   /// using a matching function for protocol selection.
-  void setStreamHandlerMatch(ProtocolID pid, bool Function(ProtocolID) match, StreamHandler handler);
+  void setStreamHandlerMatch(
+      ProtocolID pid, bool Function(ProtocolID) match, StreamHandler handler);
 
   /// RemoveStreamHandler removes a handler on the mux that was set by
   /// SetStreamHandler
@@ -70,7 +70,7 @@ abstract class Host {
   /// header with given ProtocolID. If there is no connection to p, attempts
   /// to create one. If ProtocolID is "", writes no header.
   /// (Thread-safe)
-  /// 
+  ///
   /// If [context] is not provided, a new Context will be created.
   Future<P2PStream> newStream(PeerId p, List<ProtocolID> pids, Context context);
 

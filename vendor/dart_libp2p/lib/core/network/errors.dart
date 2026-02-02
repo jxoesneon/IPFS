@@ -1,12 +1,12 @@
 /// Exception thrown when a temporary error occurs
 class TemporaryException implements Exception {
   final String message;
-  
+
   const TemporaryException([this.message = '']);
-  
+
   bool get isTemporary => true;
   bool get isTimeout => false;
-  
+
   @override
   String toString() => 'TemporaryException: $message';
 }
@@ -14,7 +14,7 @@ class TemporaryException implements Exception {
 /// Exception thrown when there are no addresses associated with a peer during a dial.
 class NoRemoteAddrsException implements Exception {
   const NoRemoteAddrsException();
-  
+
   @override
   String toString() => 'NoRemoteAddrsException: no remote addresses';
 }
@@ -23,7 +23,7 @@ class NoRemoteAddrsException implements Exception {
 /// option and no usable connection is available.
 class NoConnException implements Exception {
   const NoConnException();
-  
+
   @override
   String toString() => 'NoConnException: no usable connection to peer';
 }
@@ -32,7 +32,7 @@ class NoConnException implements Exception {
 /// connection, without specifying the AllowLimitedConn option.
 class LimitedConnException implements Exception {
   const LimitedConnException();
-  
+
   @override
   String toString() => 'LimitedConnException: limited connection to peer';
 }
@@ -43,7 +43,7 @@ class LimitedConnException implements Exception {
 /// Deprecated: Use LimitedConnException instead.
 class TransientConnException extends LimitedConnException {
   const TransientConnException();
-  
+
   @override
   String toString() => 'TransientConnException: limited connection to peer';
 }
@@ -58,7 +58,7 @@ class ResourceLimitExceededException extends TemporaryException {
 /// scope.
 class ResourceScopeClosedException implements Exception {
   const ResourceScopeClosedException();
-  
+
   @override
   String toString() => 'ResourceScopeClosedException: resource scope closed';
 }

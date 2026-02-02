@@ -6,7 +6,6 @@ import 'package:dart_libp2p/core/peer/peer_id.dart';
 import 'package:dart_libp2p/p2p/transport/connection_state.dart';
 import 'package:dart_libp2p/p2p/transport/tcp_connection.dart';
 
-
 /// Package connmgr provides connection tracking and management interfaces for libp2p.
 ///
 /// The ConnManager interface allows libp2p to enforce an upper bound on the total
@@ -103,62 +102,63 @@ abstract class ConnManager {
   Future<void> close();
 
   /// Registers a new connection with the connection manager.
-  /// 
+  ///
   /// This method initializes state tracking for the connection and starts monitoring it.
   /// Once registered, the connection's lifecycle will be managed by the connection manager.
-  /// 
+  ///
   /// [conn] The transport connection to register.
   void registerConnection(TransportConn conn);
 
   /// Updates the state of a connection and notifies listeners of the state change.
-  /// 
+  ///
   /// This method is used to transition a connection between different states in its lifecycle.
   /// State changes trigger notifications to any listeners subscribed to the connection's state stream.
-  /// 
+  ///
   /// [conn] The transport connection whose state is being updated.
   /// [state] The new state to set for the connection.
   /// [error] Optional error object that may be provided when transitioning to an error state.
-  void updateState(TransportConn conn, ConnectionState state, {required Object? error});
+  void updateState(TransportConn conn, ConnectionState state,
+      {required Object? error});
 
   /// Returns the current state of a connection.
-  /// 
+  ///
   /// [conn] The transport connection to query.
-  /// 
+  ///
   /// Returns the current [ConnectionState] of the connection, or null if the connection
   /// is not registered with the manager.
   ConnectionState? getState(TransportConn conn);
 
   /// Records activity on a connection and updates its timestamp.
-  /// 
+  ///
   /// This method should be called whenever there is data transfer or other activity
   /// on the connection. It helps the connection manager track which connections are
   /// active and which are idle.
-  /// 
+  ///
   /// [tcpConnection] The transport connection on which activity occurred.
   void recordActivity(TransportConn tcpConnection);
 
   /// Disposes of the connection manager and releases all resources.
-  /// 
+  ///
   /// This method closes all managed connections and cleans up any associated resources.
   /// It should be called when the connection manager is no longer needed.
   Future<void> dispose();
 
   /// Returns a stream of state changes for a specific connection.
-  /// 
+  ///
   /// Subscribers to this stream will be notified whenever the connection's state changes.
-  /// 
+  ///
   /// [conn] The transport connection to monitor.
-  /// 
+  ///
   /// Returns a [Stream] of [ConnectionStateChange] events, or null if the connection
   /// is not registered with the manager.
   Stream<ConnectionStateChange>? getStateStream(TransportConn conn);
 
   /// Initiates a graceful shutdown of a connection.
-  /// 
+  ///
   /// This method attempts to close the connection cleanly, allowing any in-flight
   /// operations to complete. If the graceful shutdown exceeds the configured timeout,
   /// the connection may be forcibly closed.
-  /// 
+  ///
   /// [conn] The transport connection to close.
   Future<void> closeConnection(TransportConn conn);
 }

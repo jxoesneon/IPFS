@@ -15,4 +15,4 @@ class ConnectionFailedException extends Libp2pException {
   @override
   final String message;
   ConnectionFailedException(this.message);
-} 
+}

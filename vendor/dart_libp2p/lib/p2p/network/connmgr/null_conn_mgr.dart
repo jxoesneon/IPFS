@@ -14,16 +14,15 @@ import 'package:dart_libp2p/core/connmgr/conn_manager.dart';
 class NoopNotifiee implements Notifiee {
   const NoopNotifiee();
 
+  @override
+  void listen(Network network, MultiAddr addr) {}
 
   @override
-  void listen(Network network, MultiAddr addr) { }
+  void listenClose(Network network, MultiAddr addr) {}
 
   @override
-  void listenClose(Network network, MultiAddr addr) { }
-
-  @override
-  Future<void> connected(Network network, Conn conn, {Duration? dialLatency}) async {
-
+  Future<void> connected(Network network, Conn conn,
+      {Duration? dialLatency}) async {
     return await Future.delayed(Duration(milliseconds: 10));
   }
 
@@ -79,20 +78,17 @@ class NullConnMgr implements ConnManager {
   }
 
   @override
-  ConnectionState? getState(TransportConn conn) {
-  }
+  ConnectionState? getState(TransportConn conn) {}
 
   @override
-  void recordActivity(TransportConn tcpConnection) {
-  }
+  void recordActivity(TransportConn tcpConnection) {}
 
   @override
-  void registerConnection(TransportConn conn) {
-  }
+  void registerConnection(TransportConn conn) {}
 
   @override
-  void updateState(TransportConn conn, ConnectionState state, {required Object? error}) {
-  }
+  void updateState(TransportConn conn, ConnectionState state,
+      {required Object? error}) {}
 
   @override
   Future<void> closeConnection(TransportConn conn) {

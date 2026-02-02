@@ -9,7 +9,8 @@ import 'package:dart_libp2p/core/network/context.dart';
 import 'package:dart_libp2p/core/peer/peer_id.dart';
 import 'package:dart_udx/dart_udx.dart';
 import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart' as p2p_conn_mgr;
+import 'package:dart_libp2p/p2p/transport/connection_manager.dart'
+    as p2p_conn_mgr;
 import 'package:dart_libp2p/p2p/host/eventbus/basic.dart' as p2p_event_bus;
 import 'package:dart_libp2p/core/event/identify.dart';
 import 'dart:async';
@@ -19,7 +20,8 @@ import '../real_net_stack.dart';
 void main() {
   Logger.root.level = Level.INFO;
   Logger.root.onRecord.listen((record) {
-    print('${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}');
+    print(
+        '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}');
   });
 
   group('Ping with UDX Transport using real_net_stack', () {
@@ -82,7 +84,8 @@ void main() {
       // Wait for identify to complete
       await identifyCompleter.future;
 
-      final stream = await host2.newStream(peerId1, [PingConstants.protocolId], Context());
+      final stream =
+          await host2.newStream(peerId1, [PingConstants.protocolId], Context());
       final pingPayload = Uint8List(32);
       await stream.write(pingPayload);
       final response = await stream.read();

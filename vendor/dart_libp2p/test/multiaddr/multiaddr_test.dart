@@ -31,7 +31,8 @@ void main() {
       expect(addr.ip4, equals('152.42.240.103'));
       expect(addr.udpPort, equals(55222));
       expect(addr.hasUdx, isTrue);
-      expect(addr.peerId, equals('12D3KooWL3dpNwLsf8MNvdaiiMe3YvgMARoinCHTnej3nQ8pnFb1'));
+      expect(addr.peerId,
+          equals('12D3KooWL3dpNwLsf8MNvdaiiMe3YvgMARoinCHTnej3nQ8pnFb1'));
     });
 
     test('Parse unspecified IPv4 address', () {
@@ -93,25 +94,26 @@ void main() {
     test('Parse full bootstrap peer IPv6 address', () {
       final addr = MultiAddr(
           '/ip6/2400:6180:0:d2:0:2:8351:9000/udp/55222/udx/p2p/12D3KooWL3dpNwLsf8MNvdaiiMe3YvgMARoinCHTnej3nQ8pnFb1');
-      
+
       print('Full address: ${addr.toString()}');
       print('IPv6 value: ${addr.ip6}');
       print('UDP port: ${addr.udpPort}');
       print('Has UDX: ${addr.hasUdx}');
       print('Peer ID: ${addr.peerId}');
-      
+
       expect(addr.ip6, equals('2400:6180:0:d2:0:2:8351:9000'));
       expect(addr.udpPort, equals(55222));
       expect(addr.hasUdx, isTrue);
-      expect(addr.peerId, equals('12D3KooWL3dpNwLsf8MNvdaiiMe3YvgMARoinCHTnej3nQ8pnFb1'));
+      expect(addr.peerId,
+          equals('12D3KooWL3dpNwLsf8MNvdaiiMe3YvgMARoinCHTnej3nQ8pnFb1'));
     });
 
     test('valueForProtocol returns correct IPv6 value', () {
       final addr = MultiAddr('/ip6/2400:6180:0:d2:0:2:8351:9000/udp/55222/udx');
       final ip6Value = addr.valueForProtocol('ip6');
-      
+
       print('valueForProtocol(ip6): $ip6Value');
-      
+
       expect(ip6Value, isNotNull);
       expect(ip6Value, equals('2400:6180:0:d2:0:2:8351:9000'));
     });
@@ -122,20 +124,21 @@ void main() {
       final original = MultiAddr('/ip4/152.42.240.103/udp/55222/udx');
       final bytes = original.toBytes();
       final decoded = MultiAddr.fromBytes(bytes);
-      
+
       expect(decoded.toString(), equals(original.toString()));
       expect(decoded.ip4, equals('152.42.240.103'));
     });
 
     test('IPv6 roundtrip encoding', () {
-      final original = MultiAddr('/ip6/2400:6180:0:d2:0:2:8351:9000/udp/55222/udx');
+      final original =
+          MultiAddr('/ip6/2400:6180:0:d2:0:2:8351:9000/udp/55222/udx');
       final bytes = original.toBytes();
       final decoded = MultiAddr.fromBytes(bytes);
-      
+
       print('Original: ${original.toString()}');
       print('Bytes: $bytes');
       print('Decoded: ${decoded.toString()}');
-      
+
       expect(decoded.ip6, equals('2400:6180:0:d2:0:2:8351:9000'));
       expect(decoded.udpPort, equals(55222));
     });
@@ -145,11 +148,12 @@ void main() {
           '/ip6/2400:6180:0:d2:0:2:8351:9000/udp/55222/udx/p2p/12D3KooWL3dpNwLsf8MNvdaiiMe3YvgMARoinCHTnej3nQ8pnFb1');
       final bytes = original.toBytes();
       final decoded = MultiAddr.fromBytes(bytes);
-      
+
       expect(decoded.ip6, equals('2400:6180:0:d2:0:2:8351:9000'));
       expect(decoded.udpPort, equals(55222));
       expect(decoded.hasUdx, isTrue);
-      expect(decoded.peerId, equals('12D3KooWL3dpNwLsf8MNvdaiiMe3YvgMARoinCHTnej3nQ8pnFb1'));
+      expect(decoded.peerId,
+          equals('12D3KooWL3dpNwLsf8MNvdaiiMe3YvgMARoinCHTnej3nQ8pnFb1'));
     });
   });
 
@@ -157,7 +161,7 @@ void main() {
     test('Get components from IPv4 multiaddr', () {
       final addr = MultiAddr('/ip4/152.42.240.103/udp/55222/udx');
       final components = addr.components;
-      
+
       expect(components.length, equals(3));
       expect(components[0].$1.name, equals('ip4'));
       expect(components[0].$2, equals('152.42.240.103'));
@@ -169,12 +173,12 @@ void main() {
     test('Get components from IPv6 multiaddr', () {
       final addr = MultiAddr('/ip6/2400:6180:0:d2:0:2:8351:9000/udp/55222/udx');
       final components = addr.components;
-      
+
       print('Components:');
       for (var i = 0; i < components.length; i++) {
         print('  [$i] ${components[i].$1.name} = "${components[i].$2}"');
       }
-      
+
       expect(components.length, equals(3));
       expect(components[0].$1.name, equals('ip6'));
       expect(components[0].$2, equals('2400:6180:0:d2:0:2:8351:9000'));
@@ -201,4 +205,3 @@ void main() {
     });
   });
 }
-

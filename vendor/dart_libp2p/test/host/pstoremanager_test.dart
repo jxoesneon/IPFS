@@ -42,15 +42,12 @@ void main() {
 
     test('grace period removes peer after timeout', () async {
       const gracePeriod = Duration(milliseconds: 250);
-      final peerId = PeerId.fromString('QmYyQSo1c1Ym7orWxLYvCrM2EmxFTANf8wXmmE7DWjhx5N');
+      final peerId =
+          PeerId.fromString('QmYyQSo1c1Ym7orWxLYvCrM2EmxFTANf8wXmmE7DWjhx5N');
 
       // Setup manager with short grace period for testing
-      final manager = PeerstoreManager(
-        pstore, 
-        eventBus, 
-        network, 
-        opts: [withGracePeriod(gracePeriod)]
-      );
+      final manager = PeerstoreManager(pstore, eventBus, network,
+          opts: [withGracePeriod(gracePeriod)]);
 
       await manager.start();
 
@@ -78,15 +75,12 @@ void main() {
 
     test('reconnecting peer is not removed', () async {
       const gracePeriod = Duration(milliseconds: 200);
-      final peerId = PeerId.fromString('QmYyQSo1c1Ym7orWxLYvCrM2EmxFTANf8wXmmE7DWjhx5N');
+      final peerId =
+          PeerId.fromString('QmYyQSo1c1Ym7orWxLYvCrM2EmxFTANf8wXmmE7DWjhx5N');
 
       // Setup manager with short grace period for testing
-      final manager = PeerstoreManager(
-        pstore, 
-        eventBus, 
-        network, 
-        opts: [withGracePeriod(gracePeriod)]
-      );
+      final manager = PeerstoreManager(pstore, eventBus, network,
+          opts: [withGracePeriod(gracePeriod)]);
 
       await manager.start();
 
@@ -112,16 +106,13 @@ void main() {
     });
 
     test('close removes all disconnected peers', () async {
-      final peerId = PeerId.fromString('QmYyQSo1c1Ym7orWxLYvCrM2EmxFTANf8wXmmE7DWjhx5N');
+      final peerId =
+          PeerId.fromString('QmYyQSo1c1Ym7orWxLYvCrM2EmxFTANf8wXmmE7DWjhx5N');
       const gracePeriod = Duration(hours: 1); // Long grace period
 
       // Setup manager with long grace period
-      final manager = PeerstoreManager(
-        pstore, 
-        eventBus, 
-        network, 
-        opts: [withGracePeriod(gracePeriod)]
-      );
+      final manager = PeerstoreManager(pstore, eventBus, network,
+          opts: [withGracePeriod(gracePeriod)]);
 
       await manager.start();
 

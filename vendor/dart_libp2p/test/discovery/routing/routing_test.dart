@@ -44,7 +44,8 @@ class MockContentRouting implements ContentRouting {
 
     // Generate some test peers
     for (int i = 0; i < count && i < 3; i++) {
-      final peerId = await PeerId.fromString('QmYyQSo1c1Ym7orWxLYvCrM2EmxFTANf8wXmmE7DWjhx$i');
+      final peerId = await PeerId.fromString(
+          'QmYyQSo1c1Ym7orWxLYvCrM2EmxFTANf8wXmmE7DWjhx$i');
       yield AddrInfo(peerId, []);
     }
   }
@@ -59,7 +60,8 @@ class MockDiscovery implements Discovery {
   bool shouldThrowError = false;
 
   @override
-  Future<Duration> advertise(String ns, [List<DiscoveryOption> options = const []]) async {
+  Future<Duration> advertise(String ns,
+      [List<DiscoveryOption> options = const []]) async {
     advertiseWasCalled = true;
     lastAdvertisedNs = ns;
     lastOptions = options;
@@ -76,7 +78,8 @@ class MockDiscovery implements Discovery {
   }
 
   @override
-  Future<Stream<AddrInfo>> findPeers(String ns, [List<DiscoveryOption> options = const []]) async {
+  Future<Stream<AddrInfo>> findPeers(String ns,
+      [List<DiscoveryOption> options = const []]) async {
     final controller = StreamController<AddrInfo>();
 
     if (shouldTimeout) {
@@ -92,7 +95,8 @@ class MockDiscovery implements Discovery {
 
     // Generate some test peers
     for (int i = 0; i < 3; i++) {
-      final peerId = await PeerId.fromString('QmYyQSo1c1Ym7orWxLYvCrM2EmxFTANf8wXmmE7DWjhx$i');
+      final peerId = await PeerId.fromString(
+          'QmYyQSo1c1Ym7orWxLYvCrM2EmxFTANf8wXmmE7DWjhx$i');
       controller.add(AddrInfo(peerId, []));
     }
 
@@ -124,13 +128,14 @@ void main() {
       final customTtl = const Duration(hours: 1);
       final options = [
         (DiscoveryOptions opts) => DiscoveryOptions(
-          ttl: customTtl,
-          limit: opts.limit,
-          other: Map.from(opts.other),
-        ),
+              ttl: customTtl,
+              limit: opts.limit,
+              other: Map.from(opts.other),
+            ),
       ];
 
-      final duration = await routingDiscovery.advertise('test-namespace', options);
+      final duration =
+          await routingDiscovery.advertise('test-namespace', options);
 
       expect(duration, equals(customTtl));
     });

@@ -13,7 +13,8 @@ class PeerScopeImpl extends ResourceScopeImpl implements PeerScope {
   // for more complex operations (e.g., creating sub-scopes for protocols/services under this peer).
 
   PeerScopeImpl(Limit limit, this.peer, {List<ResourceScopeImpl>? edges})
-      : super(limit, 'peer:${peer.toString()}', edges: edges); // Scope name is prefixed with peer ID
+      : super(limit, 'peer:${peer.toString()}',
+            edges: edges); // Scope name is prefixed with peer ID
 
   // The `peer` getter is fulfilled by the final field.
 }

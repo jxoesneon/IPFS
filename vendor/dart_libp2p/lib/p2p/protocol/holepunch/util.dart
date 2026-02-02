@@ -7,7 +7,6 @@ import 'package:dart_libp2p/core/multiaddr.dart';
 import 'package:dart_libp2p/core/network/conn.dart';
 import 'package:dart_libp2p/core/peer/peer_id.dart';
 
-
 /// Protocol ID for the holepunch protocol
 const protocolId = '/libp2p/dcutr';
 
@@ -46,7 +45,8 @@ List<MultiAddr> addrsFromBytes(List<dynamic> bytes) {
   final addrs = <MultiAddr>[];
   for (final byte in bytes) {
     try {
-      final Uint8List byteList = byte is Uint8List ? byte : Uint8List.fromList(byte as List<int>);
+      final Uint8List byteList =
+          byte is Uint8List ? byte : Uint8List.fromList(byte as List<int>);
       final addr = MultiAddr.fromBytes(byteList);
       addrs.add(addr);
     } catch (_) {
@@ -55,7 +55,6 @@ List<MultiAddr> addrsFromBytes(List<dynamic> bytes) {
   }
   return addrs;
 }
-
 
 /// Gets a direct (non-relay) connection to a peer if one exists
 Conn? getDirectConnection(Host host, PeerId peerId) {

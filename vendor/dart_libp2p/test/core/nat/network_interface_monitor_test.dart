@@ -38,7 +38,8 @@ void main() {
 
       // Create monitor with mock interface provider
       monitor = NetworkInterfaceMonitor(
-        checkInterval: Duration(milliseconds: 100), // Short interval for testing
+        checkInterval:
+            Duration(milliseconds: 100), // Short interval for testing
         interfaceProvider: () async => mockInterfaces,
       );
     });
@@ -93,7 +94,8 @@ void main() {
       expect(callbackCalled, isTrue);
     });
 
-    test('should not notify callbacks when network interfaces do not change', () async {
+    test('should not notify callbacks when network interfaces do not change',
+        () async {
       // Initialize the monitor with initial interfaces
       await monitor.initialize();
 

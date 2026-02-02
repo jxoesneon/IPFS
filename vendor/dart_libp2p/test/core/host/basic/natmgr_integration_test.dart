@@ -14,7 +14,8 @@ import 'package:dart_libp2p/p2p/transport/transport.dart';
 import 'package:dart_libp2p/p2p/transport/transport_config.dart';
 import 'package:dart_libp2p/core/multiaddr.dart';
 import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/network/mux.dart' show Multiplexer, MuxedConn; // For NullMultiplexer
+import 'package:dart_libp2p/core/network/mux.dart'
+    show Multiplexer, MuxedConn; // For NullMultiplexer
 import 'dart:io' show Socket; // For NullMultiplexer
 import 'package:test/test.dart';
 import 'package:dart_libp2p/p2p/nat/nat_behavior.dart';
@@ -44,8 +45,9 @@ void main() {
     setUp(() async {
       // Define NullMultiplexer if not already available from another import
       // This is a simplified stub.
-      final nullMultiplexer = NullMultiplexer(); // Assuming NullMultiplexer is defined as in the other test file or imported
-      
+      final nullMultiplexer =
+          NullMultiplexer(); // Assuming NullMultiplexer is defined as in the other test file or imported
+
       testTransport = TCPTransport(
         config: const TransportConfig(
           dialTimeout: Duration(seconds: 5),
@@ -65,10 +67,12 @@ void main() {
       final testConfig = Config();
       testConfig.peerKey = keyPair;
       // NAT manager tests might not need full security/muxing, but BasicUpgrader needs a ResourceManager
-      final testUpgrader = BasicUpgrader(resourceManager: NullResourceManager());
+      final testUpgrader =
+          BasicUpgrader(resourceManager: NullResourceManager());
 
       // MockHost is needed because Swarm constructor now requires a Host.
-      final mockHost = MockHost(); // Assuming MockHost exists or needs to be created
+      final mockHost =
+          MockHost(); // Assuming MockHost exists or needs to be created
 
       network = Swarm(
         host: mockHost, // Added host parameter
@@ -77,7 +81,7 @@ void main() {
         resourceManager: NullResourceManager(),
         transports: [testTransport],
         upgrader: testUpgrader, // Added
-        config: testConfig,      // Added
+        config: testConfig, // Added
       );
       natManager = newNATManager(network);
     });
@@ -95,29 +99,29 @@ void main() {
     test('NAT manager handles listen address changes', () async {
       // Wait for NAT discovery
       await Future.delayed(Duration(seconds: 2));
-      
+
       // Add a listen address
       final addr = MultiAddr('/ip4/127.0.0.1/tcp/12345');
       network.listen([addr]);
-      
+
       // Wait for mapping
       await Future.delayed(Duration(seconds: 1));
-      
+
       // Get the mapping
       final mapping = natManager.getMapping(addr);
       expect(mapping, isNotNull);
-      
+
       // Verify the mapping has the external address
       final parts = mapping.toString().split('/');
       expect(parts, contains('ip4'));
       expect(parts, contains('tcp'));
-      
+
       // Remove the listen address
       network.removeListenAddress(addr);
-      
+
       // Wait for unmapping
       await Future.delayed(Duration(seconds: 1));
-      
+
       // Mapping should be gone
       expect(natManager.getMapping(addr), isNull);
     });
@@ -125,7 +129,7 @@ void main() {
     test('NAT manager handles multiple listen addresses', () async {
       // Wait for NAT discovery
       await Future.delayed(Duration(seconds: 2));
-      
+
       // Add multiple listen addresses (TCP only; see note below)
       final addr1 = MultiAddr('/ip4/127.0.0.1/tcp/12346');
       final addr2 = MultiAddr('/ip4/127.0.0.1/tcp/12347');
@@ -133,26 +137,26 @@ void main() {
       // discover the external mapping for a UDP port unless it can use the actual
       // listening socket, which is not supported in this test setup.
       // final addr3 = Multiaddr('/ip4/127.0.0.1/udp/12348');
-      
+
       network.listen([addr1, addr2]);
 
       // Wait for mappings
       await Future.delayed(Duration(seconds: 1));
-      
+
       // Get the mappings
       final mapping1 = natManager.getMapping(addr1);
       final mapping2 = natManager.getMapping(addr2);
       // final mapping3 = natManager.getMapping(addr3);
-      
+
       expect(mapping1, isNotNull);
       expect(mapping2, isNotNull);
       // expect(mapping3, isNotNull);
-      
+
       // Verify the mappings have different ports
       final port1 = int.parse(mapping1.toString().split('/').last);
       final port2 = int.parse(mapping2.toString().split('/').last);
       // final port3 = int.parse(mapping3.toString().split('/').last);
-      
+
       expect(port1, isNot(equals(port2)));
       // expect(port2, isNot(equals(port3)));
       // expect(port1, isNot(equals(port3)));
@@ -161,31 +165,34 @@ void main() {
     test('NAT manager handles close gracefully', () async {
       // Wait for NAT discovery
       await Future.delayed(Duration(seconds: 2));
-      
+
       // Add a listen address
       final addr = MultiAddr('/ip4/127.0.0.1/tcp/12349');
       network.listen([addr]);
-      
+
       // Wait for mapping
       await Future.delayed(Duration(seconds: 1));
-      
+
       // Close the NAT manager
       await natManager.close();
-      
+
       // Verify it's closed
       expect(natManager.hasDiscoveredNAT(), isTrue);
       expect(natManager.getMapping(addr), isNull);
     });
 
-    test('NAT manager exposes current behavior and traversal strategy', () async {
+    test('NAT manager exposes current behavior and traversal strategy',
+        () async {
       // Wait for NAT discovery
       await Future.delayed(Duration(seconds: 2));
-      
+
       // Verify current behavior is not unknown
-      expect(natManager.currentBehavior.mappingBehavior, isNot(equals(NatMappingBehavior.unknown)));
-      
+      expect(natManager.currentBehavior.mappingBehavior,
+          isNot(equals(NatMappingBehavior.unknown)));
+
       // Verify traversal strategy is not unknown
-      expect(natManager.traversalStrategy, isNot(equals(TraversalStrategy.unknown)));
+      expect(natManager.traversalStrategy,
+          isNot(equals(TraversalStrategy.unknown)));
     });
 
     test('NAT manager notifies on behavior changes', () async {
@@ -203,12 +210,15 @@ void main() {
       // Verify callback was called with valid behaviors
       expect(oldBehavior, isNotNull, reason: 'Old behavior should not be null');
       expect(newBehavior, isNotNull, reason: 'New behavior should not be null');
-      expect(oldBehavior, isNot(equals(newBehavior)), reason: 'Behavior should have changed');
+      expect(oldBehavior, isNot(equals(newBehavior)),
+          reason: 'Behavior should have changed');
       // For the first discovery, oldBehavior.mappingBehavior may be unknown
       // but newBehavior.mappingBehavior should be known
-      expect(newBehavior!.mappingBehavior, isNot(equals(NatMappingBehavior.unknown)), 
+      expect(newBehavior!.mappingBehavior,
+          isNot(equals(NatMappingBehavior.unknown)),
           reason: 'New mapping behavior should be known');
-      expect(newBehavior!.filteringBehavior, isNot(equals(NatFilteringBehavior.unknown)), 
+      expect(newBehavior!.filteringBehavior,
+          isNot(equals(NatFilteringBehavior.unknown)),
           reason: 'New filtering behavior should be known');
     });
   });

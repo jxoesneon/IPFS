@@ -7,7 +7,8 @@ class NoiseMessage {
   /// Validates that a message contains enough bytes for a MAC
   static void validateMessageWithMAC(Uint8List message) {
     if (message.length < MAC_LENGTH) {
-      throw StateError('Message too short to contain MAC: ${message.length} < $MAC_LENGTH bytes');
+      throw StateError(
+          'Message too short to contain MAC: ${message.length} < $MAC_LENGTH bytes');
     }
   }
 
@@ -26,4 +27,4 @@ class NoiseMessage {
     validateMessageWithMAC(message);
     return message.sublist(message.length - MAC_LENGTH);
   }
-} 
+}

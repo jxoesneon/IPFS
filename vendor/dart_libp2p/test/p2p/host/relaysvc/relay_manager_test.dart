@@ -86,10 +86,12 @@ void main() {
     });
 
     group('Reachability Handling', () {
-      test('should start relay service when reachability becomes public', () async {
+      test('should start relay service when reachability becomes public',
+          () async {
         // Arrange
-        final reachabilityController = StreamController<EvtLocalReachabilityChanged>.broadcast();
-        
+        final reachabilityController =
+            StreamController<EvtLocalReachabilityChanged>.broadcast();
+
         when(mockEventBus.subscribe(EvtLocalReachabilityChanged))
             .thenReturn(mockSubscription);
         when(mockSubscription.stream)
@@ -115,10 +117,12 @@ void main() {
         await reachabilityController.close();
       });
 
-      test('should not start relay service when reachability is private', () async {
+      test('should not start relay service when reachability is private',
+          () async {
         // Arrange
-        final reachabilityController = StreamController<EvtLocalReachabilityChanged>.broadcast();
-        
+        final reachabilityController =
+            StreamController<EvtLocalReachabilityChanged>.broadcast();
+
         when(mockEventBus.subscribe(EvtLocalReachabilityChanged))
             .thenReturn(mockSubscription);
         when(mockSubscription.stream)
@@ -141,10 +145,12 @@ void main() {
         await reachabilityController.close();
       });
 
-      test('should not start relay service when reachability is unknown', () async {
+      test('should not start relay service when reachability is unknown',
+          () async {
         // Arrange
-        final reachabilityController = StreamController<EvtLocalReachabilityChanged>.broadcast();
-        
+        final reachabilityController =
+            StreamController<EvtLocalReachabilityChanged>.broadcast();
+
         when(mockEventBus.subscribe(EvtLocalReachabilityChanged))
             .thenReturn(mockSubscription);
         when(mockSubscription.stream)
@@ -166,10 +172,13 @@ void main() {
         await reachabilityController.close();
       });
 
-      test('should stop relay service when reachability changes from public to private', () async {
+      test(
+          'should stop relay service when reachability changes from public to private',
+          () async {
         // Arrange
-        final reachabilityController = StreamController<EvtLocalReachabilityChanged>.broadcast();
-        
+        final reachabilityController =
+            StreamController<EvtLocalReachabilityChanged>.broadcast();
+
         when(mockEventBus.subscribe(EvtLocalReachabilityChanged))
             .thenReturn(mockSubscription);
         when(mockSubscription.stream)
@@ -198,10 +207,12 @@ void main() {
         await reachabilityController.close();
       });
 
-      test('should not restart relay if already running on public event', () async {
+      test('should not restart relay if already running on public event',
+          () async {
         // Arrange
-        final reachabilityController = StreamController<EvtLocalReachabilityChanged>.broadcast();
-        
+        final reachabilityController =
+            StreamController<EvtLocalReachabilityChanged>.broadcast();
+
         when(mockEventBus.subscribe(EvtLocalReachabilityChanged))
             .thenReturn(mockSubscription);
         when(mockSubscription.stream)
@@ -248,8 +259,9 @@ void main() {
 
       test('should close cleanly when relay is running', () async {
         // Arrange
-        final reachabilityController = StreamController<EvtLocalReachabilityChanged>.broadcast();
-        
+        final reachabilityController =
+            StreamController<EvtLocalReachabilityChanged>.broadcast();
+
         when(mockEventBus.subscribe(EvtLocalReachabilityChanged))
             .thenReturn(mockSubscription);
         when(mockSubscription.stream)
@@ -303,15 +315,16 @@ void main() {
         await manager.close();
 
         // Assert - Should handle gracefully (second close is no-op)
-        verify(mockSubscription.close()).called(1);  // Only called once
+        verify(mockSubscription.close()).called(1); // Only called once
       });
     });
 
     group('Error Handling', () {
       test('should handle relay start errors gracefully', () async {
         // Arrange
-        final reachabilityController = StreamController<EvtLocalReachabilityChanged>.broadcast();
-        
+        final reachabilityController =
+            StreamController<EvtLocalReachabilityChanged>.broadcast();
+
         when(mockEventBus.subscribe(EvtLocalReachabilityChanged))
             .thenReturn(mockSubscription);
         when(mockSubscription.stream)
@@ -325,11 +338,11 @@ void main() {
         reachabilityController.add(
           EvtLocalReachabilityChanged(reachability: Reachability.public),
         );
-        
+
         await Future.delayed(Duration(milliseconds: 100));
 
         // Assert - Should not crash, error logged internally
-        expect(true, isTrue);  // If we got here, error was handled
+        expect(true, isTrue); // If we got here, error was handled
 
         await manager.close();
         await reachabilityController.close();
@@ -337,8 +350,9 @@ void main() {
 
       test('should handle relay stop errors gracefully', () async {
         // Arrange
-        final reachabilityController = StreamController<EvtLocalReachabilityChanged>.broadcast();
-        
+        final reachabilityController =
+            StreamController<EvtLocalReachabilityChanged>.broadcast();
+
         when(mockEventBus.subscribe(EvtLocalReachabilityChanged))
             .thenReturn(mockSubscription);
         when(mockSubscription.stream)
@@ -370,8 +384,9 @@ void main() {
 
       test('should handle event stream errors gracefully', () async {
         // Arrange
-        final reachabilityController = StreamController<EvtLocalReachabilityChanged>.broadcast();
-        
+        final reachabilityController =
+            StreamController<EvtLocalReachabilityChanged>.broadcast();
+
         when(mockEventBus.subscribe(EvtLocalReachabilityChanged))
             .thenReturn(mockSubscription);
         when(mockSubscription.stream)

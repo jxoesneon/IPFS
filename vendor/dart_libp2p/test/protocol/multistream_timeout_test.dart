@@ -23,7 +23,8 @@ class TimeoutMockStream implements P2PStream<Uint8List> {
   TimeoutMockStream({
     Duration readDelay = const Duration(milliseconds: 100),
     bool shouldTimeout = false,
-  }) : _readDelay = readDelay, _shouldTimeout = shouldTimeout;
+  })  : _readDelay = readDelay,
+        _shouldTimeout = shouldTimeout;
 
   @override
   String id() => _id;
@@ -38,9 +39,9 @@ class TimeoutMockStream implements P2PStream<Uint8List> {
 
   @override
   StreamStats stat() => StreamStats(
-    direction: Direction.inbound,
-    opened: DateTime.now(),
-  );
+        direction: Direction.inbound,
+        opened: DateTime.now(),
+      );
 
   @override
   Conn get conn => throw UnimplementedError();
@@ -55,13 +56,13 @@ class TimeoutMockStream implements P2PStream<Uint8List> {
       await Future.delayed(const Duration(minutes: 5));
       return Uint8List(0);
     }
-    
+
     // Simulate normal read with delay
     await Future.delayed(_readDelay);
     if (_isClosed) {
       return Uint8List(0);
     }
-    
+
     // Return some mock data
     return Uint8List.fromList([1, 2, 3, 4, 5]);
   }
@@ -127,20 +128,20 @@ void main() {
       // Create a muxer with fast timeout for testing
       final config = MultistreamConfig.failFast();
       final muxer = MultistreamMuxer(config: config);
-      
+
       // Create a mock stream that will timeout
       final stream = TimeoutMockStream(shouldTimeout: true);
-      
+
       // Attempt to read from the stream - should timeout quickly
       final stopwatch = Stopwatch()..start();
-      
+
       expect(
         () async => await muxer.selectOneOf(stream, ['/test/protocol']),
         throwsA(isA<TimeoutException>()),
       );
-      
+
       stopwatch.stop();
-      
+
       // Should timeout within the configured time (5 seconds + some buffer)
       expect(stopwatch.elapsed.inSeconds, lessThan(10));
     });
@@ -149,7 +150,7 @@ void main() {
       // Create a muxer with slow network config (more retries)
       final config = MultistreamConfig.slowNetwork();
       final muxer = MultistreamMuxer(config: config);
-      
+
       // Verify the configuration is applied
       expect(muxer.maxRetries, equals(5));
       expect(muxer.readTimeout.inSeconds, equals(60));
@@ -159,7 +160,7 @@ void main() {
       // Create a muxer with fail-fast config (no retries)
       final config = MultistreamConfig.failFast();
       final muxer = MultistreamMuxer(config: config);
-      
+
       // Verify the configuration is applied
       expect(muxer.maxRetries, equals(0));
       expect(muxer.readTimeout.inSeconds, equals(5));
@@ -169,7 +170,7 @@ void main() {
       // Create a muxer with fast network config
       final config = MultistreamConfig.fastNetwork();
       final muxer = MultistreamMuxer(config: config);
-      
+
       // Verify the configuration is applied
       expect(muxer.maxRetries, equals(2));
       expect(muxer.readTimeout.inSeconds, equals(10));
@@ -177,11 +178,11 @@ void main() {
 
     test('should handle stream state validation', () async {
       final muxer = MultistreamMuxer();
-      
+
       // Create a closed stream
       final stream = TimeoutMockStream();
       await stream.close();
-      
+
       // Attempt to use the closed stream
       expect(
         () async => await muxer.selectOneOf(stream, ['/test/protocol']),
@@ -197,9 +198,9 @@ void main() {
         retryDelay: Duration(milliseconds: 50),
         enableTimeoutLogging: false,
       );
-      
+
       final muxer = MultistreamMuxer(config: customConfig);
-      
+
       expect(muxer.readTimeout.inSeconds, equals(15));
       expect(muxer.maxRetries, equals(2));
       expect(muxer.config.useProgressiveTimeout, isFalse);
@@ -212,7 +213,7 @@ void main() {
         readTimeout: const Duration(seconds: 20),
         maxRetries: 5,
       );
-      
+
       expect(modifiedConfig.readTimeout.inSeconds, equals(20));
       expect(modifiedConfig.maxRetries, equals(5));
       // Other values should remain from original

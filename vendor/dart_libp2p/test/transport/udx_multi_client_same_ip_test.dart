@@ -22,7 +22,8 @@ import 'package:dart_libp2p/config/stream_muxer.dart';
 import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
 import 'package:dart_udx/dart_udx.dart';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart' as p2p_transport;
+import 'package:dart_libp2p/p2p/transport/connection_manager.dart'
+    as p2p_transport;
 import 'package:dart_libp2p/core/connmgr/conn_manager.dart' as core_connmgr;
 import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
 import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart';
@@ -62,7 +63,8 @@ class _TestYamuxMuxerProvider extends StreamMuxer {
 void main() {
   Logger.root.level = Level.INFO; // Adjusted for less verbose output initially
   Logger.root.onRecord.listen((record) {
-    print('${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}');
+    print(
+        '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}');
     if (record.error != null) {
       print('ERROR: ${record.error}');
     }
@@ -93,17 +95,22 @@ void main() {
     setUpAll(() async {
       udxInstance = UDX();
       resourceManager = ResourceManagerImpl(limiter: FixedLimiter());
-      connManager = p2p_transport.ConnectionManager(); // Shared by all transports
+      connManager =
+          p2p_transport.ConnectionManager(); // Shared by all transports
       hostEventBus = BasicBus();
 
       // Generate keys and PeerIDs for all three hosts
       serverKeyPair = await crypto_ed25519.generateEd25519KeyPair();
       client1KeyPair = await crypto_ed25519.generateEd25519KeyPair();
-      client2KeyPair = await crypto_ed25519.generateEd25519KeyPair(); // Re-enable client2
+      client2KeyPair =
+          await crypto_ed25519.generateEd25519KeyPair(); // Re-enable client2
 
-      serverPeerId = await core_peer_id_lib.PeerId.fromPublicKey(serverKeyPair.publicKey);
-      client1PeerId = await core_peer_id_lib.PeerId.fromPublicKey(client1KeyPair.publicKey);
-      client2PeerId = await core_peer_id_lib.PeerId.fromPublicKey(client2KeyPair.publicKey); // Re-enable client2
+      serverPeerId =
+          await core_peer_id_lib.PeerId.fromPublicKey(serverKeyPair.publicKey);
+      client1PeerId =
+          await core_peer_id_lib.PeerId.fromPublicKey(client1KeyPair.publicKey);
+      client2PeerId = await core_peer_id_lib.PeerId.fromPublicKey(
+          client2KeyPair.publicKey); // Re-enable client2
 
       final yamuxMultiplexerConfig = MultiplexerConfig(
         keepAliveInterval: Duration.zero,
@@ -112,13 +119,18 @@ void main() {
         streamWriteTimeout: Duration(seconds: 10),
         maxStreams: 256,
       );
-      final muxerDefs = [_TestYamuxMuxerProvider(yamuxConfig: yamuxMultiplexerConfig)];
+      final muxerDefs = [
+        _TestYamuxMuxerProvider(yamuxConfig: yamuxMultiplexerConfig)
+      ];
 
       // Helper to create a host
-      Future<BasicHost> createHost(KeyPair keyPair, core_peer_id_lib.PeerId peerId, [List<MultiAddr>? listenAddrs]) async {
+      Future<BasicHost> createHost(
+          KeyPair keyPair, core_peer_id_lib.PeerId peerId,
+          [List<MultiAddr>? listenAddrs]) async {
         final security = [await NoiseSecurity.create(keyPair)];
         final peerstore = MemoryPeerstore();
-        final udxTransport = UDXTransport(connManager: connManager, udxInstance: udxInstance);
+        final udxTransport =
+            UDXTransport(connManager: connManager, udxInstance: udxInstance);
         final upgrader = BasicUpgrader(resourceManager: resourceManager);
 
         final swarmConfig = p2p_config.Config()
@@ -150,8 +162,9 @@ void main() {
           ..muxers = muxerDefs
           ..securityProtocols = security
           ..listenAddrs = listenAddrs ?? [];
-          
-        final host = await BasicHost.create(network: network, config: hostConfig);
+
+        final host =
+            await BasicHost.create(network: network, config: hostConfig);
         network.setHost(host);
         await host.start();
         if (listenAddrs != null && listenAddrs.isNotEmpty) {
@@ -161,23 +174,33 @@ void main() {
       }
 
       final initialListen = MultiAddr('/ip4/127.0.0.1/udp/0/udx');
-      serverHost = await createHost(serverKeyPair, serverPeerId, [initialListen]);
+      serverHost =
+          await createHost(serverKeyPair, serverPeerId, [initialListen]);
       client1Host = await createHost(client1KeyPair, client1PeerId);
-      client2Host = await createHost(client2KeyPair, client2PeerId); // Re-enable client2
-      
-      expect(serverHost.addrs.isNotEmpty, isTrue, reason: "Server host should have listen addresses.");
+      client2Host =
+          await createHost(client2KeyPair, client2PeerId); // Re-enable client2
+
+      expect(serverHost.addrs.isNotEmpty, isTrue,
+          reason: "Server host should have listen addresses.");
       serverListenAddr = serverHost.addrs.firstWhere(
           (addr) => addr.hasProtocol(multiaddr_protocol.Protocols.udx.name),
-          orElse: () => throw StateError("No UDX listen address found for server host"));
-      print('Server Host (${serverPeerId.toBase58().substring(0,10)}) listening on: $serverListenAddr');
+          orElse: () =>
+              throw StateError("No UDX listen address found for server host"));
+      print(
+          'Server Host (${serverPeerId.toBase58().substring(0, 10)}) listening on: $serverListenAddr');
 
       // Populate client peerstores with server info
-      client1Host.peerStore.addrBook.addAddrs(serverPeerId, [serverListenAddr], AddressTTL.permanentAddrTTL);
-      client1Host.peerStore.keyBook.addPubKey(serverPeerId, serverKeyPair.publicKey);
-      client2Host.peerStore.addrBook.addAddrs(serverPeerId, [serverListenAddr], AddressTTL.permanentAddrTTL); // Re-enable client2
-      client2Host.peerStore.keyBook.addPubKey(serverPeerId, serverKeyPair.publicKey); // Re-enable client2
+      client1Host.peerStore.addrBook.addAddrs(
+          serverPeerId, [serverListenAddr], AddressTTL.permanentAddrTTL);
+      client1Host.peerStore.keyBook
+          .addPubKey(serverPeerId, serverKeyPair.publicKey);
+      client2Host.peerStore.addrBook.addAddrs(serverPeerId, [serverListenAddr],
+          AddressTTL.permanentAddrTTL); // Re-enable client2
+      client2Host.peerStore.keyBook.addPubKey(
+          serverPeerId, serverKeyPair.publicKey); // Re-enable client2
 
-      print('Setup Complete. Server: ${serverPeerId.toBase58().substring(0,10)}, Client1: ${client1PeerId.toBase58().substring(0,10)}, Client2: ${client2PeerId.toBase58().substring(0,10)}');
+      print(
+          'Setup Complete. Server: ${serverPeerId.toBase58().substring(0, 10)}, Client1: ${client1PeerId.toBase58().substring(0, 10)}, Client2: ${client2PeerId.toBase58().substring(0, 10)}');
     });
 
     tearDownAll(() async {
@@ -187,34 +210,49 @@ void main() {
       await client2Host.close(); // Re-enable client2
       print('Closing server host...');
       await serverHost.close();
-      
+
       await connManager.dispose();
       await resourceManager.close();
       print('Teardown Complete.');
     });
 
-    test('server correctly distinguishes connections from two clients on same IP, different ports', () async { // Restore original test name
+    test(
+        'server correctly distinguishes connections from two clients on same IP, different ports',
+        () async {
+      // Restore original test name
       const String testProtocolID = '/multi-client-echo/1.0.0';
       final serverReceivedDataFromClient1 = Completer<Uint8List>();
-      final serverReceivedDataFromClient2 = Completer<Uint8List>(); // Re-enable client2
+      final serverReceivedDataFromClient2 =
+          Completer<Uint8List>(); // Re-enable client2
 
       serverHost.setStreamHandler(testProtocolID, (stream, remotePeer) async {
-        print('Server Host (${serverPeerId.toBase58().substring(0,10)}): Received stream ${stream.id()} from ${remotePeer.toBase58().substring(0,10)} for protocol ${stream.protocol}');
+        print(
+            'Server Host (${serverPeerId.toBase58().substring(0, 10)}): Received stream ${stream.id()} from ${remotePeer.toBase58().substring(0, 10)} for protocol ${stream.protocol}');
         try {
-          final receivedData = await stream.read().timeout(Duration(seconds: 10));
-          print('Server Host (${serverPeerId.toBase58().substring(0,10)}): Stream ${stream.id()} received ${receivedData.length} bytes.');
+          final receivedData =
+              await stream.read().timeout(Duration(seconds: 10));
+          print(
+              'Server Host (${serverPeerId.toBase58().substring(0, 10)}): Stream ${stream.id()} received ${receivedData.length} bytes.');
           await stream.write(receivedData); // Echo data
-          print('Server Host (${serverPeerId.toBase58().substring(0,10)}): Stream ${stream.id()} echoed data.');
+          print(
+              'Server Host (${serverPeerId.toBase58().substring(0, 10)}): Stream ${stream.id()} echoed data.');
 
           if (remotePeer == client1PeerId) {
-            if (!serverReceivedDataFromClient1.isCompleted) serverReceivedDataFromClient1.complete(receivedData);
-          } else if (remotePeer == client2PeerId) { // Re-enable client2
-            if (!serverReceivedDataFromClient2.isCompleted) serverReceivedDataFromClient2.complete(receivedData);
+            if (!serverReceivedDataFromClient1.isCompleted)
+              serverReceivedDataFromClient1.complete(receivedData);
+          } else if (remotePeer == client2PeerId) {
+            // Re-enable client2
+            if (!serverReceivedDataFromClient2.isCompleted)
+              serverReceivedDataFromClient2.complete(receivedData);
           }
         } catch (e, s) {
           print('Server Host stream handler error: $e\n$s');
-          if (remotePeer == client1PeerId && !serverReceivedDataFromClient1.isCompleted) serverReceivedDataFromClient1.completeError(e);
-          if (remotePeer == client2PeerId && !serverReceivedDataFromClient2.isCompleted) serverReceivedDataFromClient2.completeError(e); // Re-enable client2
+          if (remotePeer == client1PeerId &&
+              !serverReceivedDataFromClient1.isCompleted)
+            serverReceivedDataFromClient1.completeError(e);
+          if (remotePeer == client2PeerId &&
+              !serverReceivedDataFromClient2.isCompleted)
+            serverReceivedDataFromClient2.completeError(e); // Re-enable client2
         } finally {
           if (!stream.isClosed) await stream.close();
         }
@@ -223,36 +261,57 @@ void main() {
       final serverAddrInfo = AddrInfo(serverPeerId, serverHost.addrs);
 
       // Client 1 connects and opens a stream
-      print('Client1 (${client1PeerId.toBase58().substring(0,10)}) connecting to Server (${serverPeerId.toBase58().substring(0,10)}) at $serverAddrInfo');
+      print(
+          'Client1 (${client1PeerId.toBase58().substring(0, 10)}) connecting to Server (${serverPeerId.toBase58().substring(0, 10)}) at $serverAddrInfo');
       await client1Host.connect(serverAddrInfo).timeout(Duration(seconds: 15));
-      print('Client1 (${client1PeerId.toBase58().substring(0,10)}) connected. Opening stream for $testProtocolID');
-      final client1Stream = await client1Host.newStream(serverPeerId, [testProtocolID], core_context.Context()).timeout(Duration(seconds:10));
-      print('Client1 (${client1PeerId.toBase58().substring(0,10)}) opened stream: ${client1Stream.id()}');
+      print(
+          'Client1 (${client1PeerId.toBase58().substring(0, 10)}) connected. Opening stream for $testProtocolID');
+      final client1Stream = await client1Host
+          .newStream(serverPeerId, [testProtocolID], core_context.Context())
+          .timeout(Duration(seconds: 10));
+      print(
+          'Client1 (${client1PeerId.toBase58().substring(0, 10)}) opened stream: ${client1Stream.id()}');
 
       // Re-enable Client 2 operations
-      print('Client2 (${client2PeerId.toBase58().substring(0,10)}) connecting to Server (${serverPeerId.toBase58().substring(0,10)}) at $serverAddrInfo');
+      print(
+          'Client2 (${client2PeerId.toBase58().substring(0, 10)}) connecting to Server (${serverPeerId.toBase58().substring(0, 10)}) at $serverAddrInfo');
       await client2Host.connect(serverAddrInfo).timeout(Duration(seconds: 15));
-      print('Client2 (${client2PeerId.toBase58().substring(0,10)}) connected. Opening stream for $testProtocolID');
-      final client2Stream = await client2Host.newStream(serverPeerId, [testProtocolID], core_context.Context()).timeout(Duration(seconds:10));
-      print('Client2 (${client2PeerId.toBase58().substring(0,10)}) opened stream: ${client2Stream.id()}');
+      print(
+          'Client2 (${client2PeerId.toBase58().substring(0, 10)}) connected. Opening stream for $testProtocolID');
+      final client2Stream = await client2Host
+          .newStream(serverPeerId, [testProtocolID], core_context.Context())
+          .timeout(Duration(seconds: 10));
+      print(
+          'Client2 (${client2PeerId.toBase58().substring(0, 10)}) opened stream: ${client2Stream.id()}');
 
       // Verify connections on server
-      final serverConns = serverHost.network.conns; 
-      expect(serverConns.length, equals(2), reason: "Server should have two connections."); // Restore for two clients
+      final serverConns = serverHost.network.conns;
+      expect(serverConns.length, equals(2),
+          reason:
+              "Server should have two connections."); // Restore for two clients
 
       final connsToClient1List = serverHost.network.connsToPeer(client1PeerId);
-      final connToClient1 = connsToClient1List.isNotEmpty ? connsToClient1List.first : null;
-      final connsToClient2List = serverHost.network.connsToPeer(client2PeerId); // Re-enable client2
-      final connToClient2 = connsToClient2List.isNotEmpty ? connsToClient2List.first : null; // Re-enable client2
+      final connToClient1 =
+          connsToClient1List.isNotEmpty ? connsToClient1List.first : null;
+      final connsToClient2List =
+          serverHost.network.connsToPeer(client2PeerId); // Re-enable client2
+      final connToClient2 = connsToClient2List.isNotEmpty
+          ? connsToClient2List.first
+          : null; // Re-enable client2
 
-      expect(connToClient1, isNotNull, reason: "Server should have a connection to Client1.");
-      expect(connToClient2, isNotNull, reason: "Server should have a connection to Client2."); // Re-enable client2
-      
+      expect(connToClient1, isNotNull,
+          reason: "Server should have a connection to Client1.");
+      expect(connToClient2, isNotNull,
+          reason:
+              "Server should have a connection to Client2."); // Re-enable client2
+
       final remoteAddrClient1 = connToClient1!.remoteMultiaddr;
-      final remoteAddrClient2 = connToClient2!.remoteMultiaddr; // Re-enable client2
+      final remoteAddrClient2 =
+          connToClient2!.remoteMultiaddr; // Re-enable client2
 
       print('Server: Conn to Client1 remote multiaddr: $remoteAddrClient1');
-      print('Server: Conn to Client2 remote multiaddr: $remoteAddrClient2'); // Re-enable client2
+      print(
+          'Server: Conn to Client2 remote multiaddr: $remoteAddrClient2'); // Re-enable client2
 
       // CRITICAL ASSERTION: Remote multiaddrs should have different UDP source ports
       // The UDX transport embeds its port within the UDP component of the multiaddr.
@@ -260,7 +319,8 @@ void main() {
 
       String getUdpComponent(MultiAddr addr) {
         // Temporary simplification for diagnostics
-        final protocol = addr.components.firstWhereOrNull((el) => el.$1.name == multiaddr_protocol.Protocols.udp.name);
+        final protocol = addr.components.firstWhereOrNull(
+            (el) => el.$1.name == multiaddr_protocol.Protocols.udp.name);
 
         if (protocol != null) {
           // Still perform the check to ensure portValue is an int
@@ -272,44 +332,61 @@ void main() {
       final udpComponentClient1 = getUdpComponent(remoteAddrClient1);
       final udpComponentClient2 = getUdpComponent(remoteAddrClient2);
 
-      expect(udpComponentClient1, isNotEmpty, reason: "Client1 remote multiaddr should have a UDP component.");
-      expect(udpComponentClient2, isNotEmpty, reason: "Client2 remote multiaddr should have a UDP component.");
-      
+      expect(udpComponentClient1, isNotEmpty,
+          reason: "Client1 remote multiaddr should have a UDP component.");
+      expect(udpComponentClient2, isNotEmpty,
+          reason: "Client2 remote multiaddr should have a UDP component.");
+
       print('Server: UDP component for Client1: $udpComponentClient1');
       print('Server: UDP component for Client2: $udpComponentClient2');
 
-      expect(udpComponentClient1, isNot(equals(udpComponentClient2)), 
-          reason: "The UDP components (including source ports) for Client1 and Client2 connections on the server must be different.");
+      expect(udpComponentClient1, isNot(equals(udpComponentClient2)),
+          reason:
+              "The UDP components (including source ports) for Client1 and Client2 connections on the server must be different.");
 
       // Send data and verify echo independently
       final random = Random();
-      final dataC1 = Uint8List.fromList(List.generate(16, (_) => random.nextInt(256)));
-      final dataC2 = Uint8List.fromList(List.generate(24, (_) => random.nextInt(256))); // Re-enable client2 data
+      final dataC1 =
+          Uint8List.fromList(List.generate(16, (_) => random.nextInt(256)));
+      final dataC2 = Uint8List.fromList(List.generate(
+          24, (_) => random.nextInt(256))); // Re-enable client2 data
 
-      print('Client1 (${client1PeerId.toBase58().substring(0,10)}) sending data (${dataC1.length} bytes) on stream ${client1Stream.id()}');
+      print(
+          'Client1 (${client1PeerId.toBase58().substring(0, 10)}) sending data (${dataC1.length} bytes) on stream ${client1Stream.id()}');
       await client1Stream.write(dataC1);
-      final echoedToC1 = await client1Stream.read().timeout(Duration(seconds:10));
-      expect(echoedToC1, orderedEquals(dataC1), reason: "Client1 did not receive correct echo.");
-      print('Client1 (${client1PeerId.toBase58().substring(0,10)}) received echo.');
+      final echoedToC1 =
+          await client1Stream.read().timeout(Duration(seconds: 10));
+      expect(echoedToC1, orderedEquals(dataC1),
+          reason: "Client1 did not receive correct echo.");
+      print(
+          'Client1 (${client1PeerId.toBase58().substring(0, 10)}) received echo.');
       await client1Stream.close();
 
       // Re-enable Client 2 data sending
-      print('Client2 (${client2PeerId.toBase58().substring(0,10)}) sending data (${dataC2.length} bytes) on stream ${client2Stream.id()}');
+      print(
+          'Client2 (${client2PeerId.toBase58().substring(0, 10)}) sending data (${dataC2.length} bytes) on stream ${client2Stream.id()}');
       await client2Stream.write(dataC2);
-      final echoedToC2 = await client2Stream.read().timeout(Duration(seconds:10));
-      expect(echoedToC2, orderedEquals(dataC2), reason: "Client2 did not receive correct echo.");
-      print('Client2 (${client2PeerId.toBase58().substring(0,10)}) received echo.');
+      final echoedToC2 =
+          await client2Stream.read().timeout(Duration(seconds: 10));
+      expect(echoedToC2, orderedEquals(dataC2),
+          reason: "Client2 did not receive correct echo.");
+      print(
+          'Client2 (${client2PeerId.toBase58().substring(0, 10)}) received echo.');
       await client2Stream.close();
 
       // Verify server received the correct data on distinct logical streams
-      final serverReceivedC1 = await serverReceivedDataFromClient1.future.timeout(Duration(seconds:5));
-      final serverReceivedC2 = await serverReceivedDataFromClient2.future.timeout(Duration(seconds:5)); // Re-enable client2
+      final serverReceivedC1 = await serverReceivedDataFromClient1.future
+          .timeout(Duration(seconds: 5));
+      final serverReceivedC2 = await serverReceivedDataFromClient2.future
+          .timeout(Duration(seconds: 5)); // Re-enable client2
       expect(serverReceivedC1, orderedEquals(dataC1));
       expect(serverReceivedC2, orderedEquals(dataC2)); // Re-enable client2
 
-      print('Test successful: Server distinguished connections and streams correctly.');
+      print(
+          'Test successful: Server distinguished connections and streams correctly.');
       serverHost.removeStreamHandler(testProtocolID);
-
-    }, timeout: Timeout(Duration(seconds: 90))); // Increased overall test timeout
+    },
+        timeout:
+            Timeout(Duration(seconds: 90))); // Increased overall test timeout
   });
 }

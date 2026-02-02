@@ -18,7 +18,7 @@ const int maxConfidence = 3;
 
 /// Ambient AutoNAT v2 orchestrator that wraps AutoNATv2 with automatic
 /// background probing and reachability detection.
-/// 
+///
 /// This class:
 /// - Listens for peer identification events
 /// - Automatically probes peers that support AutoNAT v2
@@ -28,22 +28,22 @@ class AmbientAutoNATv2 {
   final Host _host;
   final AutoNATv2 _autoNATv2;
   final AmbientAutoNATv2Config _config;
-  
+
   // State tracking
   Reachability _currentStatus = Reachability.unknown;
   int _confidence = 0;
-  
+
   // Event emission
   late final Emitter _emitter;
-  
+
   // Background processing
   Future<void>? _scheduledProbe;
   StreamSubscription? _eventSubscription;
   bool _closed = false;
   int _probeGeneration = 0; // Track probe generations for cancellation
-  
+
   AmbientAutoNATv2._(this._host, this._autoNATv2, this._config);
-  
+
   /// Create and start a new AmbientAutoNATv2 orchestrator
   static Future<AmbientAutoNATv2> create(
     Host host,
@@ -55,38 +55,43 @@ class AmbientAutoNATv2 {
       autoNATv2,
       config ?? const AmbientAutoNATv2Config(),
     );
-    
+
     await ambient._initialize();
     return ambient;
   }
-  
+
   /// Current reachability status
   Reachability get status => _currentStatus;
-  
+
   /// Current confidence level (0-3)
   int get confidence => _confidence;
-  
+
   Future<void> _initialize() async {
     // Initialize event emitter
     _emitter = await _host.eventBus.emitter(EvtLocalReachabilityChanged);
-    
+
     // Subscribe to relevant events
-    _eventSubscription = _host.eventBus.subscribe([
-      EvtLocalAddressesUpdated,
-      EvtPeerIdentificationCompleted,
-    ]).stream.listen(_handleEvent);
-    
-    _log.fine('AmbientAutoNATv2 initialized, scheduling first probe after boot delay (${_config.bootDelay.inSeconds}s)');
-    
+    _eventSubscription = _host.eventBus
+        .subscribe([
+          EvtLocalAddressesUpdated,
+          EvtPeerIdentificationCompleted,
+        ])
+        .stream
+        .listen(_handleEvent);
+
+    _log.fine(
+        'AmbientAutoNATv2 initialized, scheduling first probe after boot delay (${_config.bootDelay.inSeconds}s)');
+
     // Schedule first probe after boot delay (non-blocking)
     _scheduleNextProbe(false, delay: _config.bootDelay);
   }
-  
+
   void _handleEvent(dynamic event) {
     if (_closed) return;
-    
+
     if (event is EvtLocalAddressesUpdated) {
-      _log.fine('Address change detected, reducing confidence and rescheduling probe');
+      _log.fine(
+          'Address change detected, reducing confidence and rescheduling probe');
       if (_confidence == maxConfidence) {
         _confidence--;
       }
@@ -95,13 +100,13 @@ class AmbientAutoNATv2 {
       _handlePeerIdentified(event.peer);
     }
   }
-  
+
   Future<void> _handlePeerIdentified(dynamic peerId) async {
     if (_closed) return;
-    
+
     try {
       final protocols = await _host.peerStore.protoBook.getProtocols(peerId);
-      
+
       // Check if peer supports AutoNAT v2 dial protocol
       if (protocols.contains(AutoNATv2Protocols.dialProtocol)) {
         _log.fine('Peer $peerId supports AutoNAT v2, scheduling probe');
@@ -111,28 +116,29 @@ class AmbientAutoNATv2 {
       _log.warning('Error checking protocols for peer $peerId: $e');
     }
   }
-  
+
   void _scheduleNextProbe(bool forceProbe, {Duration? delay}) {
     if (_closed) return;
-    
+
     // Increment generation to invalidate any pending probes
     _probeGeneration++;
     final probeGeneration = _probeGeneration;
-    
+
     // Determine delay
     final Duration nextProbeAfter = delay ?? _getProbeInterval(forceProbe);
-    
+
     _log.fine('Scheduling probe in ${nextProbeAfter.inSeconds}s '
-              '(force: $forceProbe, status: $_currentStatus, confidence: $_confidence)');
-    
+        '(force: $forceProbe, status: $_currentStatus, confidence: $_confidence)');
+
     // Schedule probe using Future.delayed for better error handling
     _scheduledProbe = Future.delayed(nextProbeAfter).then((_) async {
       // Check if this probe is still valid (not superseded by a newer schedule)
       if (_closed || probeGeneration != _probeGeneration) {
-        _log.fine('Probe generation $probeGeneration cancelled (current: $_probeGeneration)');
+        _log.fine(
+            'Probe generation $probeGeneration cancelled (current: $_probeGeneration)');
         return;
       }
-      
+
       try {
         await _executeProbe();
       } catch (e, stackTrace) {
@@ -142,68 +148,72 @@ class AmbientAutoNATv2 {
       }
     });
   }
-  
+
   Duration _getProbeInterval(bool forceProbe) {
     if (forceProbe && _currentStatus == Reachability.unknown) {
       return const Duration(seconds: 2);
     } else if (_currentStatus == Reachability.unknown ||
-               _confidence < maxConfidence) {
+        _confidence < maxConfidence) {
       return _config.retryInterval;
     } else {
       return _config.refreshInterval;
     }
   }
-  
+
   Future<void> _executeProbe() async {
     if (_closed) return;
-    
+
     _log.info('Executing reachability probe');
-    
+
     // Get addresses to probe
     final addrs = _getAddressesToProbe();
-    
+
     if (addrs.isEmpty) {
       _log.warning('No addresses to probe');
       _scheduleNextProbe(false);
       return;
     }
-    
+
     // Create requests for each address
-    final requests = addrs.map((addr) => Request(
-      addr: addr,
-      sendDialData: false,
-    )).toList();
-    
+    final requests = addrs
+        .map((addr) => Request(
+              addr: addr,
+              sendDialData: false,
+            ))
+        .toList();
+
     _log.fine('Probing ${requests.length} addresses');
-    
+
     // Use AutoNATv2 to check reachability
     // Errors are caught at the scheduling level
     final result = await _autoNATv2.getReachability(requests);
     _handleProbeResult(result);
   }
-  
+
   List<MultiAddr> _getAddressesToProbe() {
     if (_config.addressFunc != null) {
       return _config.addressFunc!();
     }
-    
+
     // Use host addresses, filtering for public addresses
     var addrs = _host.addrs.where((addr) => addr.isPublic());
-    
+
     // If ipv4Only is set, filter out IPv6 addresses.
     // This ensures relay reservations are created even if device has public IPv6,
     // for compatibility with IPv4-only peers.
     if (_config.ipv4Only) {
       addrs = addrs.where((addr) => addr.ip6 == null);
-      _log.fine('ipv4Only mode: filtered to ${addrs.length} IPv4-only addresses for probing');
+      _log.fine(
+          'ipv4Only mode: filtered to ${addrs.length} IPv4-only addresses for probing');
     }
-    
+
     return addrs.toList();
   }
-  
+
   void _handleProbeResult(Result result) {
-    _log.fine('Probe result: addr=${result.addr}, reachability=${result.reachability}, status=${result.status}');
-    
+    _log.fine(
+        'Probe result: addr=${result.addr}, reachability=${result.reachability}, status=${result.status}');
+
     // Record observation based on result
     if (result.reachability == Reachability.public) {
       _recordObservation(Reachability.public);
@@ -212,24 +222,24 @@ class AmbientAutoNATv2 {
     } else {
       _recordObservation(Reachability.unknown);
     }
-    
+
     // Schedule next probe
     _scheduleNextProbe(false);
   }
-  
+
   void _handleProbeError(dynamic error) {
     _log.warning('Probe error, treating as unknown: $error');
-    
+
     // Treat errors as unknown observations
     _recordObservation(Reachability.unknown);
-    
+
     // Schedule next probe
     _scheduleNextProbe(false);
   }
-  
+
   void _recordObservation(Reachability observation) {
     if (_closed) return;
-    
+
     if (observation == Reachability.public) {
       // Aggressively switch to public
       if (_currentStatus != Reachability.public) {
@@ -255,7 +265,8 @@ class AmbientAutoNATv2 {
         }
       } else if (_confidence < maxConfidence) {
         _confidence++;
-        _log.fine('Private reachability confirmed, confidence now $_confidence');
+        _log.fine(
+            'Private reachability confirmed, confidence now $_confidence');
       }
     } else if (observation == Reachability.unknown) {
       // Reduce confidence on unknown observations
@@ -269,12 +280,12 @@ class AmbientAutoNATv2 {
       }
     }
   }
-  
+
   Future<void> _emitStatusChange() async {
     if (_closed) return;
-    
+
     _log.info('Emitting reachability change event: $_currentStatus');
-    
+
     try {
       await _emitter.emit(
         EvtLocalReachabilityChanged(reachability: _currentStatus),
@@ -283,17 +294,17 @@ class AmbientAutoNATv2 {
       _log.severe('Failed to emit reachability change event: $e');
     }
   }
-  
+
   /// Close the ambient orchestrator and clean up resources
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
-    
+
     _log.fine('Closing AmbientAutoNATv2');
-    
+
     // Increment generation to cancel any pending probes
     _probeGeneration++;
-    
+
     // Wait for any in-flight probe to complete (with timeout)
     if (_scheduledProbe != null) {
       try {
@@ -302,9 +313,8 @@ class AmbientAutoNATv2 {
         _log.fine('Timeout waiting for scheduled probe to complete: $e');
       }
     }
-    
+
     await _eventSubscription?.cancel();
     await _emitter.close();
   }
 }
-

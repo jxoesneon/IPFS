@@ -15,7 +15,8 @@ import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart';
 import 'package:dart_libp2p/core/connmgr/conn_manager.dart'; // Added
 import 'package:dart_libp2p/core/event/bus.dart'; // Added
 import 'package:dart_libp2p/p2p/host/basic/natmgr.dart'; // Added
-import 'package:dart_libp2p/core/host/host.dart' show AddrsFactory; // Added for AddrsFactory
+import 'package:dart_libp2p/core/host/host.dart'
+    show AddrsFactory; // Added for AddrsFactory
 import 'package:dart_libp2p/p2p/host/basic/basic_host.dart'; // Added for BasicHost
 
 // Added imports for _createNetwork
@@ -24,9 +25,12 @@ import 'package:dart_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart'; // For
 import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
 import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart'; // For FixedLimiter
 import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart' as concrete_peer_id; // For concrete PeerId if needed
-import 'package:dart_libp2p/core/peerstore.dart' show Peerstore; // For type hinting
-import 'package:dart_libp2p/core/network/rcmgr.dart' show ResourceManager; // For type hinting
+import 'package:dart_libp2p/core/peer/peer_id.dart'
+    as concrete_peer_id; // For concrete PeerId if needed
+import 'package:dart_libp2p/core/peerstore.dart'
+    show Peerstore; // For type hinting
+import 'package:dart_libp2p/core/network/rcmgr.dart'
+    show ResourceManager; // For type hinting
 import 'package:dart_libp2p/core/record/record_registry.dart';
 import 'package:logging/logging.dart';
 
@@ -97,16 +101,17 @@ class Config {
 
   // AutoNATv2 specific configurations
   List<AutoNATv2Option> autoNATv2Options = [];
-  
+
   // AmbientAutoNATv2 specific configurations
   AmbientAutoNATv2Config? ambientAutoNATConfig;
-  
+
   // Force reachability option (for edge cases like relay servers)
   Reachability? forceReachability;
-  
+
   // Relay server configuration
-  List<String> relayServers = []; // List of relay multiaddr strings to auto-connect
-  
+  List<String> relayServers =
+      []; // List of relay multiaddr strings to auto-connect
+
   // Relay metrics observer (for instrumentation)
   RelayMetricsObserver? relayMetricsObserver;
 
@@ -128,9 +133,8 @@ class Config {
 
     // Ensure core record types are registered (idempotent)
     RecordRegistry.register<pb.PeerRecord>(
-      String.fromCharCodes(PeerRecordEnvelopePayloadType),
-      pb.PeerRecord.fromBuffer
-    );
+        String.fromCharCodes(PeerRecordEnvelopePayloadType),
+        pb.PeerRecord.fromBuffer);
 
     // This is a placeholder implementation that outlines the steps involved in creating a Host.
     // In a real implementation, these steps would be implemented with actual code.
@@ -142,11 +146,13 @@ class Config {
     final network = await _createNetwork(peerId); // Creates Swarm
 
     // 3. Create a Host with the Network
-    final host = await _createHost(network, peerId); // Creates BasicHost, Swarm gets host set.
+    final host = await _createHost(
+        network, peerId); // Creates BasicHost, Swarm gets host set.
 
     // 4. Network listening will be initiated by host.start() if listenAddrs are configured.
     //    Removing direct network.listen() call here to avoid double listening.
-    _logger.info('[Config.newNode] for peer ${peerId.toString()}: Host created. Listening will be handled by host.start().');
+    _logger.info(
+        '[Config.newNode] for peer ${peerId.toString()}: Host created. Listening will be handled by host.start().');
 
     return host;
   }
@@ -170,16 +176,20 @@ class Config {
     // Add local peer's keys to the keyBook
     if (this.peerKey == null) {
       // This should ideally be caught by _validate() earlier, but as a safeguard:
-      throw StateError('Config.peerKey is null when trying to populate KeyBook in _createNetwork.');
+      throw StateError(
+          'Config.peerKey is null when trying to populate KeyBook in _createNetwork.');
     }
     // Ensure localPeerId matches the one derived from this.peerKey.public
     // (localPeerId is derived from this.peerKey.privateKey in _createPeerId, so they should match)
     peerstore.keyBook.addPrivKey(localPeerId, this.peerKey!.privateKey);
     peerstore.keyBook.addPubKey(localPeerId, this.peerKey!.publicKey);
-    
-    final Limiter limiter = FixedLimiter(); // Or use a Limiter from Config if added later
-    final ResourceManager resourceManager = ResourceManagerImpl(limiter: limiter);
-    final BasicUpgrader upgrader = BasicUpgrader(resourceManager: resourceManager);
+
+    final Limiter limiter =
+        FixedLimiter(); // Or use a Limiter from Config if added later
+    final ResourceManager resourceManager =
+        ResourceManagerImpl(limiter: limiter);
+    final BasicUpgrader upgrader =
+        BasicUpgrader(resourceManager: resourceManager);
 
     // Instantiate Swarm
     final Swarm swarm = Swarm(
@@ -201,17 +211,19 @@ class Config {
     // The peerId is implicitly available in the Config (this.peerKey)
     // or via network.localPeer() after network is fully initialized.
     // For BasicHost constructor, we only need the network and the config.
-    final BasicHost host = await BasicHost.create(network: network, config: this);
-    
+    final BasicHost host =
+        await BasicHost.create(network: network, config: this);
+
     // Set the host on the swarm to resolve circular dependency
     if (network is Swarm) {
       network.setHost(host);
     } else {
       // This case should ideally not happen if _createNetwork always returns a Swarm
       // or a Network implementation that supports setHost or similar mechanism.
-      _logger.info('Warning: Network is not a Swarm instance, cannot set host on network.');
+      _logger.info(
+          'Warning: Network is not a Swarm instance, cannot set host on network.');
     }
-    
+
     return host;
   }
 
@@ -224,7 +236,8 @@ class Config {
     }
 
     if (insecure && securityProtocols.isNotEmpty) {
-      throw Exception('Cannot use security protocols with an insecure configuration');
+      throw Exception(
+          'Cannot use security protocols with an insecure configuration');
     }
 
     if (muxers.isEmpty) {
@@ -236,12 +249,12 @@ class Config {
     }
 
     if (!insecure && securityProtocols.isEmpty) {
-      throw Exception('No security protocols specified and insecure is not enabled');
+      throw Exception(
+          'No security protocols specified and insecure is not enabled');
     }
 
     // Add more validation as needed
   }
-
 }
 
 /// Option is a libp2p config option that can be given to the libp2p constructor.
@@ -257,7 +270,8 @@ extension ConfigOptions on Config {
   /// Configures libp2p to use the given security protocol.
   Future<void> withSecurity(SecurityProtocol securityProtocol) async {
     if (insecure) {
-      throw Exception('Cannot use security protocols with an insecure configuration');
+      throw Exception(
+          'Cannot use security protocols with an insecure configuration');
     }
     securityProtocols.add(securityProtocol);
   }
@@ -265,7 +279,8 @@ extension ConfigOptions on Config {
   /// Configures libp2p to use no security (insecure connections).
   Future<void> withNoSecurity() async {
     if (securityProtocols.isNotEmpty) {
-      throw Exception('Cannot use insecure connections with security protocols configured');
+      throw Exception(
+          'Cannot use insecure connections with security protocols configured');
     }
     insecure = true;
   }
@@ -299,7 +314,8 @@ extension ConfigOptions on Config {
   }
 
   /// Configures libp2p to use the given stream multiplexer.
-  Future<void> withMuxer(String id, Multiplexer Function(Conn secureConn, bool isClient) muxerFactory) async {
+  Future<void> withMuxer(String id,
+      Multiplexer Function(Conn secureConn, bool isClient) muxerFactory) async {
     muxers.add(StreamMuxer(id: id, muxerFactory: muxerFactory));
   }
 
@@ -364,7 +380,7 @@ extension ConfigOptions on Config {
   Future<void> withHolePunching(bool enabled) async {
     enableHolePunching = enabled;
   }
-  
+
   /// Configures relay servers to automatically connect to during startup
   Future<void> withRelayServers(List<String> servers) async {
     relayServers = servers;
@@ -383,17 +399,20 @@ extension ConfigOptions on Config {
   }
 
   /// Configures AutoNATv2 server rate limits
-  Future<void> withAutoNATv2ServerRateLimit(int rpm, int perPeerRPM, int dialDataRPM) async {
+  Future<void> withAutoNATv2ServerRateLimit(
+      int rpm, int perPeerRPM, int dialDataRPM) async {
     autoNATv2Options.add(withServerRateLimit(rpm, perPeerRPM, dialDataRPM));
   }
 
   /// Configures AutoNATv2 amplification attack prevention dial wait time
-  Future<void> withAutoNATv2AmplificationAttackPreventionDialWait(Duration duration) async {
+  Future<void> withAutoNATv2AmplificationAttackPreventionDialWait(
+      Duration duration) async {
     autoNATv2Options.add(withAmplificationAttackPreventionDialWait(duration));
   }
 
   /// Configures AutoNATv2 with a custom data request policy
-  Future<void> withAutoNATv2DataRequestPolicy(DataRequestPolicyFunc policy) async {
+  Future<void> withAutoNATv2DataRequestPolicy(
+      DataRequestPolicyFunc policy) async {
     autoNATv2Options.add(withDataRequestPolicy(policy));
   }
 
@@ -435,8 +454,8 @@ class Libp2p {
     return (config) => config.withUserAgent(agent);
   }
 
-  static Option forceReachability(Reachability reachability){
-    return (config)  => config.withReachability(reachability);
+  static Option forceReachability(Reachability reachability) {
+    return (config) => config.withReachability(reachability);
   }
 
   /// Configures libp2p to use the given protocol version.
@@ -445,7 +464,8 @@ class Libp2p {
   }
 
   /// Configures libp2p to use the given stream multiplexer.
-  static Option muxer(String id, Multiplexer Function(Conn secureConn, bool isClient) muxerFactory) {
+  static Option muxer(String id,
+      Multiplexer Function(Conn secureConn, bool isClient) muxerFactory) {
     return (config) => config.withMuxer(id, muxerFactory);
   }
 
@@ -487,7 +507,7 @@ class Libp2p {
     return (config) => config.withIdentifyDisableObservedAddrManager(disable);
   }
 
-  static Option ambientAutoNATv2Config(AmbientAutoNATv2Config conf){
+  static Option ambientAutoNATv2Config(AmbientAutoNATv2Config conf) {
     return (config) => config.withAmbientAutoNAT(conf);
   }
 
@@ -509,7 +529,7 @@ class Libp2p {
   static Option autoNAT(bool enabled) {
     return (config) => config.withAutoNAT(enabled);
   }
-  
+
   static Option relayServers(List<String> servers) {
     return (config) => config.withRelayServers(servers);
   }
@@ -520,7 +540,7 @@ class Libp2p {
   }
 
   // AutoNATv2 specific options
-  
+
   /// Configures AutoNATv2 with specific options
   static Option autoNATv2Options(List<AutoNATv2Option> options) {
     return (config) => config.withAutoNATv2Options(options);
@@ -532,13 +552,17 @@ class Libp2p {
   }
 
   /// Configures AutoNATv2 server rate limits
-  static Option autoNATv2ServerRateLimit(int rpm, int perPeerRPM, int dialDataRPM) {
-    return (config) => config.withAutoNATv2ServerRateLimit(rpm, perPeerRPM, dialDataRPM);
+  static Option autoNATv2ServerRateLimit(
+      int rpm, int perPeerRPM, int dialDataRPM) {
+    return (config) =>
+        config.withAutoNATv2ServerRateLimit(rpm, perPeerRPM, dialDataRPM);
   }
 
   /// Configures AutoNATv2 amplification attack prevention dial wait time
-  static Option autoNATv2AmplificationAttackPreventionDialWait(Duration duration) {
-    return (config) => config.withAutoNATv2AmplificationAttackPreventionDialWait(duration);
+  static Option autoNATv2AmplificationAttackPreventionDialWait(
+      Duration duration) {
+    return (config) =>
+        config.withAutoNATv2AmplificationAttackPreventionDialWait(duration);
   }
 
   /// Configures AutoNATv2 with a custom data request policy
@@ -561,7 +585,7 @@ class Libp2p {
   }
 
   /// Creates a new libp2p node with the given options.
-  /// 
+  ///
   /// This is a convenience method that creates a new Config, applies the options,
   /// and calls newNode() on the Config.
   static Future<Host> new_(List<Option> options) async {
@@ -573,9 +597,8 @@ class Libp2p {
 
     // Register core record types
     RecordRegistry.register<pb.PeerRecord>(
-      String.fromCharCodes(PeerRecordEnvelopePayloadType),
-      pb.PeerRecord.fromBuffer
-    );
+        String.fromCharCodes(PeerRecordEnvelopePayloadType),
+        pb.PeerRecord.fromBuffer);
 
     return await config.newNode();
   }

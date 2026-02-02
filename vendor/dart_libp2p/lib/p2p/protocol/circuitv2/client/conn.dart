@@ -22,7 +22,8 @@ import '../../../../core/network/rcmgr.dart';
 
 /// _RelayedConnStats implements ConnStats for a RelayedConn.
 class _RelayedConnStats implements ConnStats {
-  final StreamStats _streamStats; // Stats from the underlying P2PStream to the relay
+  final StreamStats
+      _streamStats; // Stats from the underlying P2PStream to the relay
   final Stats _stats;
 
   _RelayedConnStats(this._streamStats)
@@ -46,15 +47,18 @@ class _RelayedConnStats implements ConnStats {
 /// It implements the [TransportConn] interface.
 class RelayedConn implements TransportConn {
   final P2PStream<Uint8List> _stream; // Stream to the relay
-  final CircuitV2Client _transport; // The transport that created this connection
+  final CircuitV2Client
+      _transport; // The transport that created this connection
   final PeerId _localPeer;
   final PeerId _remotePeer; // The actual remote peer, not the relay
   final MultiAddr _localMultiaddr;
-  final MultiAddr _remoteMultiaddr; // Multiaddr of the remote peer, potentially a circuit addr
+  final MultiAddr
+      _remoteMultiaddr; // Multiaddr of the remote peer, potentially a circuit addr
   final _RelayedConnStats _connStats;
-  final void Function()? _onClose; // Callback for cleanup when connection closes
+  final void Function()?
+      _onClose; // Callback for cleanup when connection closes
   // final bool _isInitiator; // Captured by _stream.stat().direction
-  
+
   /// Diagnostic session ID for cross-node correlation
   final String? diagnosticSessionId;
 
@@ -144,7 +148,7 @@ class RelayedConn implements TransportConn {
     // This matches go-libp2p's behavior where the circuit relay Conn is upgraded.
     return ConnState(
       streamMultiplexer: '', // Empty = not yet multiplexed
-      security: '',          // Empty = not yet secured
+      security: '', // Empty = not yet secured
       transport: 'circuit-relay',
       usedEarlyMuxerNegotiation: false,
     );
@@ -172,8 +176,7 @@ class RelayedConn implements TransportConn {
   Future<List<P2PStream<dynamic>>> get streams {
     // A RelayedConn wraps a single P2PStream to the relay.
     // It does not manage a list of multiplexed streams itself.
-    throw UnimplementedError(
-        'streams getter on RelayedConn is not supported.');
+    throw UnimplementedError('streams getter on RelayedConn is not supported.');
     // If it were to represent the stream it wraps: return Future.value([_stream]);
     // But this conflicts with the semantics of Conn.streams.
   }

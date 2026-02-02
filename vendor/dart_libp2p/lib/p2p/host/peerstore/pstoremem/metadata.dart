@@ -6,7 +6,6 @@ import 'package:dart_libp2p/core/peer/peer_id.dart';
 import 'package:dart_libp2p/core/peerstore.dart';
 import 'package:synchronized/synchronized.dart';
 
-
 /// A memory-based implementation of the PeerMetadata interface.
 class MemoryPeerMetadata implements PeerMetadata {
   final _ds = HashMap<String, Map<String, dynamic>>();
@@ -58,7 +57,6 @@ class MemoryPeerMetadata implements PeerMetadata {
       return _ds[peerId.toString()];
     });
   }
-  
 }
 
 /// Creates a new memory-based peer metadata implementation.

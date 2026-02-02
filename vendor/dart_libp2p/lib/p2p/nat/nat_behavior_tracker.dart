@@ -23,8 +23,10 @@ class NatBehaviorRecord {
   factory NatBehaviorRecord.fromJson(Map<String, dynamic> json) {
     return NatBehaviorRecord(
       behavior: NatBehavior(
-        mappingBehavior: NatMappingBehavior.values.byName(json['mappingBehavior']),
-        filteringBehavior: NatFilteringBehavior.values.byName(json['filteringBehavior']),
+        mappingBehavior:
+            NatMappingBehavior.values.byName(json['mappingBehavior']),
+        filteringBehavior:
+            NatFilteringBehavior.values.byName(json['filteringBehavior']),
         supportsHairpinning: json['supportsHairpinning'],
         preservesPorts: json['preservesPorts'],
         supportsPortMapping: json['supportsPortMapping'],
@@ -49,7 +51,8 @@ class NatBehaviorRecord {
 }
 
 /// A callback function for NAT behavior changes
-typedef NatBehaviorChangeCallback = void Function(NatBehavior oldBehavior, NatBehavior newBehavior);
+typedef NatBehaviorChangeCallback = void Function(
+    NatBehavior oldBehavior, NatBehavior newBehavior);
 
 /// A class that tracks NAT behavior over time
 class NatBehaviorTracker {
@@ -83,7 +86,6 @@ class NatBehaviorTracker {
   /// Callbacks for behavior changes
   final List<NatBehaviorChangeCallback> _callbacks = [];
 
-
   List<NatBehaviorChangeCallback> get callbacks => _callbacks;
 
   /// Creates a new NAT behavior tracker
@@ -100,7 +102,8 @@ class NatBehaviorTracker {
   NatBehavior get currentBehavior => _currentBehavior;
 
   /// The history of NAT behavior records
-  List<NatBehaviorRecord> get behaviorHistory => List.unmodifiable(_behaviorHistory);
+  List<NatBehaviorRecord> get behaviorHistory =>
+      List.unmodifiable(_behaviorHistory);
 
   /// Initializes the NAT behavior tracker
   Future<void> initialize() async {
@@ -195,11 +198,13 @@ class NatBehaviorTracker {
 
     // Compare with current behavior
     return newBehavior.mappingBehavior != _currentBehavior.mappingBehavior ||
-           newBehavior.filteringBehavior != _currentBehavior.filteringBehavior ||
-           newBehavior.supportsHairpinning != _currentBehavior.supportsHairpinning ||
-           newBehavior.preservesPorts != _currentBehavior.preservesPorts ||
-           newBehavior.supportsPortMapping != _currentBehavior.supportsPortMapping ||
-           newBehavior.mappingLifetime != _currentBehavior.mappingLifetime;
+        newBehavior.filteringBehavior != _currentBehavior.filteringBehavior ||
+        newBehavior.supportsHairpinning !=
+            _currentBehavior.supportsHairpinning ||
+        newBehavior.preservesPorts != _currentBehavior.preservesPorts ||
+        newBehavior.supportsPortMapping !=
+            _currentBehavior.supportsPortMapping ||
+        newBehavior.mappingLifetime != _currentBehavior.mappingLifetime;
   }
 
   /// Notifies callbacks of a NAT behavior change
@@ -219,11 +224,11 @@ class NatBehaviorTracker {
         final json = jsonDecode(data) as List<dynamic>;
         _behaviorHistory.clear();
         for (final item in json) {
-          _behaviorHistory.add(NatBehaviorRecord.fromJson(item as Map<String, dynamic>));
+          _behaviorHistory
+              .add(NatBehaviorRecord.fromJson(item as Map<String, dynamic>));
         }
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   /// Saves NAT behavior history to storage
@@ -234,8 +239,7 @@ class NatBehaviorTracker {
       final json = _behaviorHistory.map((record) => record.toJson()).toList();
       final data = jsonEncode(json);
       await storageBroker!.save(storageKey, data);
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   /// Disposes the NAT behavior tracker

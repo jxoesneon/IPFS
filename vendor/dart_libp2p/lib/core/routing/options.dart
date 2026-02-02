@@ -28,7 +28,7 @@ class RoutingOptions {
     return (RoutingOptions opts) {
       opts.expired = expired;
       opts.offline = offline;
-      
+
       if (other != null) {
         opts.other = Map<dynamic, dynamic>.from(other!);
       }

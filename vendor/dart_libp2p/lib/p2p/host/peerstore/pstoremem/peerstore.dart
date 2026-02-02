@@ -29,12 +29,11 @@ class MemoryPeerstore implements Peerstore {
     MemoryAddrBook? addrBook,
     MemoryProtoBook? protoBook,
     MemoryPeerMetadata? peerMetadata,
-  }) : 
-    _metrics = metrics ?? newMetrics(),
-    _keyBook = keyBook ?? newKeyBook(),
-    _addrBook = addrBook ?? newAddrBook(),
-    _protoBook = protoBook ?? newProtoBook(),
-    _peerMetadata = peerMetadata ?? newPeerMetadata();
+  })  : _metrics = metrics ?? newMetrics(),
+        _keyBook = keyBook ?? newKeyBook(),
+        _addrBook = addrBook ?? newAddrBook(),
+        _protoBook = protoBook ?? newProtoBook(),
+        _peerMetadata = peerMetadata ?? newPeerMetadata();
 
   @override
   AddrBook get addrBook => _addrBook;
@@ -58,10 +57,7 @@ class MemoryPeerstore implements Peerstore {
 
   @override
   Future<AddrInfo> peerInfo(PeerId id) async {
-    return AddrInfo(
-      id,
-      await _addrBook.addrs(id)
-    );
+    return AddrInfo(id, await _addrBook.addrs(id));
   }
 
   @override
@@ -96,7 +92,10 @@ class MemoryPeerstore implements Peerstore {
   }
 
   @override
-  Future<void> addOrUpdatePeer(PeerId peerId, {List<MultiAddr>? addrs, List<String>? protocols, Map<String, dynamic>? metadata}) async {
+  Future<void> addOrUpdatePeer(PeerId peerId,
+      {List<MultiAddr>? addrs,
+      List<String>? protocols,
+      Map<String, dynamic>? metadata}) async {
     if (addrs != null) {
       // Use a default TTL for addresses added via this general method.
       // AddressTTL.addressTTL (1 hour) seems like a reasonable default.
@@ -120,7 +119,9 @@ class MemoryPeerstore implements Peerstore {
     final protocols = await _protoBook.getProtocols(peerId);
     final metadata = await _peerMetadata.getAll(peerId);
 
-    if (addrs.isEmpty && protocols.isEmpty && (metadata?.values.isEmpty ?? true)) {
+    if (addrs.isEmpty &&
+        protocols.isEmpty &&
+        (metadata?.values.isEmpty ?? true)) {
       return null;
     }
 

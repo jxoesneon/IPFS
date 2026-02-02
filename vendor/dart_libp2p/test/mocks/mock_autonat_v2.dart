@@ -6,4 +6,3 @@ class MockAutoNATv2 extends Mock implements AutoNATv2 {}
 
 /// Mock implementation of AutoNATv2 Result for testing
 class MockResult extends Mock implements Result {}
-

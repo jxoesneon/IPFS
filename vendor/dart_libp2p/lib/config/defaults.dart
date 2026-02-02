@@ -7,11 +7,13 @@ import '../p2p/host/autonat/ambient_config.dart'; // For AmbientAutoNATv2Config
 
 // Imports for new defaults
 import '../core/crypto/keys.dart'; // For KeyPair, KeyType
-import '../core/crypto/ed25519.dart' as crypto_ed25519; // For generateEd25519KeyPair
+import '../core/crypto/ed25519.dart'
+    as crypto_ed25519; // For generateEd25519KeyPair
 import '../p2p/transport/tcp_transport.dart';
 import '../p2p/security/noise/noise_protocol.dart';
 import '../p2p/host/eventbus/basic.dart'; // For BasicBus
-import '../p2p/transport/connection_manager.dart' as p2p_conn_mgr; // For ConnectionManager
+import '../p2p/transport/connection_manager.dart'
+    as p2p_conn_mgr; // For ConnectionManager
 // No specific import for defaultAddrsFactory if defined in this file.
 // If imported from basic_host, it would be:
 // import '../p2p/host/basic/basic_host.dart' show defaultAddrsFactory;
@@ -103,7 +105,7 @@ Future<void> applyDefaults(Config config) async {
 
   // Default Connection Manager
   if (config.connManager == null) {
-    config.connManager = p2p_conn_mgr.ConnectionManager(); 
+    config.connManager = p2p_conn_mgr.ConnectionManager();
   }
 
   // Default Event Bus
@@ -126,7 +128,7 @@ Future<void> applyDefaults(Config config) async {
   // AutoNAT: Enable by default to automatically detect reachability
   config.enableAutoNAT = true; // Changed to true by default
   // config.enableHolePunching is already true by default.
-  
+
   // Default AmbientAutoNATv2 configuration
   if (config.ambientAutoNATConfig == null) {
     config.ambientAutoNATConfig = const AmbientAutoNATv2Config();
@@ -144,7 +146,8 @@ List<MultiAddr> _defaultAddrsFactoryInternal(List<MultiAddr> addrs) {
     }
     final ip4Val = addr.valueForProtocol('ip4');
     final ip6Val = addr.valueForProtocol('ip6');
-    if ((ip4Val == '0.0.0.0' || ip4Val == '0.0.0.0.0.0') || (ip6Val == '::' || ip6Val == '0:0:0:0:0:0:0:0')) {
+    if ((ip4Val == '0.0.0.0' || ip4Val == '0.0.0.0.0.0') ||
+        (ip6Val == '::' || ip6Val == '0:0:0:0:0:0:0:0')) {
       return false;
     }
     return true;

@@ -17,7 +17,6 @@ import 'package:dart_libp2p/core/event/bus.dart';
 import 'package:dart_libp2p/p2p/protocol/holepunch.dart'; // Added for HolePunchService
 
 class MockHost implements Host {
-
   @override
   Future<void> close() {
     // TODO: implement close
@@ -49,7 +48,8 @@ class MockHost implements Host {
   }
 
   @override
-  Future<P2PStream> newStream(PeerId p, List<ProtocolID> pids, Context context) {
+  Future<P2PStream> newStream(
+      PeerId p, List<ProtocolID> pids, Context context) {
     // TODO: implement newStream
     throw UnimplementedError();
   }
@@ -125,7 +125,8 @@ class MockHost implements Host {
   }
 
   @override
-  void setStreamHandlerMatch(ProtocolID pid, bool Function(ProtocolID p1) match, StreamHandler handler) {
+  void setStreamHandlerMatch(ProtocolID pid, bool Function(ProtocolID p1) match,
+      StreamHandler handler) {
     // TODO: implement setStreamHandlerMatch
     throw UnimplementedError();
   }
@@ -190,5 +191,6 @@ class MockHost implements Host {
   }
 
   @override
-  HolePunchService? get holePunchService => null; // Added stub for HolePunchService
+  HolePunchService? get holePunchService =>
+      null; // Added stub for HolePunchService
 }

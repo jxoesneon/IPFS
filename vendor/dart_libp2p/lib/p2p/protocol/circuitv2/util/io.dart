@@ -38,7 +38,7 @@ class DelimitedReader {
 
     // Read the message data
     final data = await _readExact(length);
-    
+
     // Parse the message
     message.mergeFromBuffer(data);
     return message;

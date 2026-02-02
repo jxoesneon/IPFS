@@ -10,7 +10,7 @@ class MessageFraming {
     final lengthBytes = Uint8List(PREFIX_LENGTH)
       ..[0] = message.length >> 8
       ..[1] = message.length & 0xFF;
-    
+
     return Uint8List(PREFIX_LENGTH + message.length)
       ..setAll(0, lengthBytes)
       ..setAll(PREFIX_LENGTH, message);
@@ -30,4 +30,4 @@ class MessageFraming {
       throw StateError('Failed to read complete message');
     }
   }
-} 
+}

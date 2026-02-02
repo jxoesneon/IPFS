@@ -25,7 +25,8 @@ void main() {
 
       // Verify with wrong message
       final wrongMessage = Uint8List.fromList([5, 4, 3, 2, 1]);
-      final wrongVerified = await keyPair.publicKey.verify(wrongMessage, signature);
+      final wrongVerified =
+          await keyPair.publicKey.verify(wrongMessage, signature);
       expect(wrongVerified, isFalse);
     });
 
@@ -116,12 +117,12 @@ void main() {
 
     test('Key size validation', () async {
       // Test minimum key size
-      expect(() async => await generateRsaKeyPair(bits: minRsaKeyBits - 1), 
-             throwsA(isA<RsaKeyTooSmallException>()));
+      expect(() async => await generateRsaKeyPair(bits: minRsaKeyBits - 1),
+          throwsA(isA<RsaKeyTooSmallException>()));
 
       // Test maximum key size
-      expect(() async => await generateRsaKeyPair(bits: maxRsaKeyBits + 1), 
-             throwsA(isA<RsaKeyTooBigException>()));
+      expect(() async => await generateRsaKeyPair(bits: maxRsaKeyBits + 1),
+          throwsA(isA<RsaKeyTooBigException>()));
 
       // Test valid key size
       final keyPair = await generateRsaKeyPair(bits: minRsaKeyBits);

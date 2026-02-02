@@ -9,7 +9,8 @@ import 'package:dart_libp2p/core/multiaddr.dart';
 import 'package:dart_libp2p/core/network/common.dart';
 import 'package:dart_libp2p/core/network/conn.dart';
 import 'package:dart_libp2p/core/network/context.dart' as core_context;
-import 'package:dart_libp2p/core/network/mux.dart' as core_mux_types; // Aliased import
+import 'package:dart_libp2p/core/network/mux.dart'
+    as core_mux_types; // Aliased import
 import 'package:dart_libp2p/core/network/rcmgr.dart';
 import 'package:dart_libp2p/core/network/transport_conn.dart';
 import 'package:dart_libp2p/core/peer/peer_id.dart';
@@ -44,7 +45,8 @@ class _TestYamuxMuxerProvider extends StreamMuxer {
 }
 
 void main() {
-  group('TCPTransport with Noise and Ping Integration Test', () { // Changed group description
+  group('TCPTransport with Noise and Ping Integration Test', () {
+    // Changed group description
     late TCPTransport clientTransport; // Changed from UDXTransport
     late TCPTransport serverTransport; // Changed from UDXTransport
     late BasicUpgrader clientUpgrader;
@@ -71,9 +73,13 @@ void main() {
       clientPeerId = await PeerId.fromPublicKey(clientKeyPair.publicKey);
       serverPeerId = await PeerId.fromPublicKey(serverKeyPair.publicKey);
 
-      final securityProtocolsClient = [await NoiseSecurity.create(clientKeyPair)];
-      final securityProtocolsServer = [await NoiseSecurity.create(serverKeyPair)];
-      
+      final securityProtocolsClient = [
+        await NoiseSecurity.create(clientKeyPair)
+      ];
+      final securityProtocolsServer = [
+        await NoiseSecurity.create(serverKeyPair)
+      ];
+
       final yamuxMultiplexerConfig = MultiplexerConfig(
         keepAliveInterval: Duration(seconds: 30),
         maxStreamWindowSize: 1024 * 1024,
@@ -81,7 +87,9 @@ void main() {
         streamWriteTimeout: Duration(seconds: 10),
         maxStreams: 256,
       );
-      final muxerDefs = [_TestYamuxMuxerProvider(yamuxConfig: yamuxMultiplexerConfig)];
+      final muxerDefs = [
+        _TestYamuxMuxerProvider(yamuxConfig: yamuxMultiplexerConfig)
+      ];
 
       clientP2PConfig = p2p_config.Config()
         ..peerKey = clientKeyPair
@@ -94,8 +102,10 @@ void main() {
         ..muxers = muxerDefs;
 
       // Changed to TCPTransport, removed udxInstance
-      clientTransport = TCPTransport(connManager: connManager, resourceManager: resourceManager);
-      serverTransport = TCPTransport(connManager: connManager, resourceManager: resourceManager);
+      clientTransport = TCPTransport(
+          connManager: connManager, resourceManager: resourceManager);
+      serverTransport = TCPTransport(
+          connManager: connManager, resourceManager: resourceManager);
 
       clientUpgrader = BasicUpgrader(resourceManager: resourceManager);
       serverUpgrader = BasicUpgrader(resourceManager: resourceManager);
@@ -106,9 +116,13 @@ void main() {
       await serverTransport.dispose();
     });
 
-    test('should establish TCP connection, upgrade to Noise/Yamux, and perform ping', () async { // Changed test description
+    test(
+        'should establish TCP connection, upgrade to Noise/Yamux, and perform ping',
+        () async {
+      // Changed test description
       // 1. Server Listen
-      final initialListenAddr = MultiAddr('/ip4/127.0.0.1/tcp/0'); // Changed to TCP
+      final initialListenAddr =
+          MultiAddr('/ip4/127.0.0.1/tcp/0'); // Changed to TCP
       listener = await serverTransport.listen(initialListenAddr);
       actualListenAddr = listener.addr;
       print('Server listening on: $actualListenAddr');
@@ -124,7 +138,8 @@ void main() {
         return serverRawConn;
       });
 
-      final clientDialFuture = clientTransport.dial(actualListenAddr).then((conn) {
+      final clientDialFuture =
+          clientTransport.dial(actualListenAddr).then((conn) {
         clientRawConn = conn;
         print('Client dialed raw connection: ${clientRawConn.id}');
         return clientRawConn;
@@ -148,12 +163,15 @@ void main() {
         config: serverP2PConfig,
       );
 
-      final List<Conn> upgradedConns = await Future.wait([clientUpgradedFuture, serverUpgradedFuture]);
+      final List<Conn> upgradedConns =
+          await Future.wait([clientUpgradedFuture, serverUpgradedFuture]);
       final Conn clientUpgradedConn = upgradedConns[0];
       final Conn serverUpgradedConn = upgradedConns[1];
 
-      print('Client upgraded. Remote peer: ${clientUpgradedConn.remotePeer}, Security: ${clientUpgradedConn.state.security}, Muxer: ${clientUpgradedConn.state.streamMultiplexer}');
-      print('Server upgraded. Remote peer: ${serverUpgradedConn.remotePeer}, Security: ${serverUpgradedConn.state.security}, Muxer: ${serverUpgradedConn.state.streamMultiplexer}');
+      print(
+          'Client upgraded. Remote peer: ${clientUpgradedConn.remotePeer}, Security: ${clientUpgradedConn.state.security}, Muxer: ${clientUpgradedConn.state.streamMultiplexer}');
+      print(
+          'Server upgraded. Remote peer: ${serverUpgradedConn.remotePeer}, Security: ${serverUpgradedConn.state.security}, Muxer: ${serverUpgradedConn.state.streamMultiplexer}');
 
       expect(clientUpgradedConn.remotePeer.toString(), serverPeerId.toString());
       expect(serverUpgradedConn.remotePeer.toString(), clientPeerId.toString());
@@ -166,42 +184,50 @@ void main() {
       late YamuxStream clientStream;
       late YamuxStream serverStream;
 
-      final serverAcceptStreamFuture = (serverUpgradedConn as core_mux_types.MuxedConn).acceptStream().then((stream) { 
+      final serverAcceptStreamFuture =
+          (serverUpgradedConn as core_mux_types.MuxedConn)
+              .acceptStream()
+              .then((stream) {
         serverStream = stream as YamuxStream;
-        print('Server accepted stream: ${serverStream.id()}'); 
+        print('Server accepted stream: ${serverStream.id()}');
         return serverStream;
       });
 
       await Future.delayed(Duration(milliseconds: 100));
 
-      clientStream = await (clientUpgradedConn as core_mux_types.MuxedConn).openStream(core_context.Context()) as YamuxStream; 
-      print('Client opened stream: ${clientStream.id()}'); 
-      
+      clientStream = await (clientUpgradedConn as core_mux_types.MuxedConn)
+          .openStream(core_context.Context()) as YamuxStream;
+      print('Client opened stream: ${clientStream.id()}');
+
       await serverAcceptStreamFuture;
 
       expect(clientStream, isNotNull);
       expect(serverStream, isNotNull);
 
-      await clientStream.setProtocol(PingConstants.protocolId); 
+      await clientStream.setProtocol(PingConstants.protocolId);
 
       // 5. Perform Ping Manually
       final random = Random();
-      final pingData = Uint8List.fromList(List.generate(32, (_) => random.nextInt(256)));
-      print('Client sending ping data (${pingData.length} bytes) on stream ${clientStream.id()}');
+      final pingData =
+          Uint8List.fromList(List.generate(32, (_) => random.nextInt(256)));
+      print(
+          'Client sending ping data (${pingData.length} bytes) on stream ${clientStream.id()}');
 
       await clientStream.write(pingData);
       print('Client ping data sent.');
 
-      final receivedOnServer = await serverStream.read(); 
-      print('Server received data (${receivedOnServer.length} bytes) on stream ${serverStream.id()}');
+      final receivedOnServer = await serverStream.read();
+      print(
+          'Server received data (${receivedOnServer.length} bytes) on stream ${serverStream.id()}');
       expect(receivedOnServer, orderedEquals(pingData));
 
       print('Server echoing data back on stream ${serverStream.id()}');
       await serverStream.write(receivedOnServer);
       print('Server data echoed.');
 
-      final echoedToClient = await clientStream.read(); 
-      print('Client received echoed data (${echoedToClient.length} bytes) on stream ${clientStream.id()}');
+      final echoedToClient = await clientStream.read();
+      print(
+          'Client received echoed data (${echoedToClient.length} bytes) on stream ${clientStream.id()}');
       expect(echoedToClient, orderedEquals(pingData));
       print('Ping successful.');
 
@@ -216,9 +242,11 @@ void main() {
       print('Closing server upgraded connection ${serverUpgradedConn.id}');
       await serverUpgradedConn.close();
 
-      expect(clientRawConn.isClosed, isTrue, reason: "Client raw connection should be closed by upgrader/muxer");
-      expect(serverRawConn.isClosed, isTrue, reason: "Server raw connection should be closed by upgrader/muxer");
-      
+      expect(clientRawConn.isClosed, isTrue,
+          reason: "Client raw connection should be closed by upgrader/muxer");
+      expect(serverRawConn.isClosed, isTrue,
+          reason: "Server raw connection should be closed by upgrader/muxer");
+
       print('Closing listener');
       await listener.close();
       expect(listener.isClosed, isTrue);

@@ -19,7 +19,6 @@ abstract class Key {
 
 /// Represents a public key
 abstract class PublicKey extends Key {
-
   /// Verifies a signature against the given data
   Future<bool> verify(Uint8List data, Uint8List signature);
 
@@ -49,19 +48,17 @@ class KeyPair {
   KeyPair(this.publicKey, this.privateKey);
 }
 
-Map <pb.KeyType, PublicKey Function(Uint8List)> PubKeyUnmarshallers = {
-  pb.KeyType.ECDSA : (data) => EcdsaPublicKey.unmarshal(data),
-  pb.KeyType.Ed25519 : (data) => Ed25519PublicKey.unmarshal(data),
-  pb.KeyType.RSA : (data) => RsaPublicKey.unmarshal(data),
+Map<pb.KeyType, PublicKey Function(Uint8List)> PubKeyUnmarshallers = {
+  pb.KeyType.ECDSA: (data) => EcdsaPublicKey.unmarshal(data),
+  pb.KeyType.Ed25519: (data) => Ed25519PublicKey.unmarshal(data),
+  pb.KeyType.RSA: (data) => RsaPublicKey.unmarshal(data),
   // pb.KeyType.Secp256k1: (data) => ,
 };
 
-
 PublicKey publicKeyFromProto(pb.PublicKey pmes) {
-
   final unmarshalFunc = PubKeyUnmarshallers[pmes.type];
 
-  if (unmarshalFunc == null){
+  if (unmarshalFunc == null) {
     throw Exception("Unsupported public key type : ${pmes.type}");
   }
 

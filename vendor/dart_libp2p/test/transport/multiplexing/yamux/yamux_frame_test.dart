@@ -8,7 +8,7 @@ void main() {
     test('creates data frame correctly', () {
       final data = Uint8List.fromList([1, 2, 3, 4, 5]);
       final frame = YamuxFrame.createData(1, data);
-      
+
       expect(frame.type, equals(YamuxFrameType.dataFrame));
       expect(frame.flags, equals(0));
       expect(frame.streamId, equals(1));
@@ -82,7 +82,7 @@ void main() {
         final original = YamuxFrame.createData(1, data);
         final bytes = original.toBytes();
         final decoded = YamuxFrame.fromBytes(bytes);
-        
+
         expect(decoded.type, equals(original.type));
         expect(decoded.flags, equals(original.flags));
         expect(decoded.streamId, equals(original.streamId));
@@ -94,7 +94,7 @@ void main() {
         final original = YamuxFrame.windowUpdate(1, 1024);
         final bytes = original.toBytes();
         final decoded = YamuxFrame.fromBytes(bytes);
-        
+
         expect(decoded.type, equals(original.type));
         expect(decoded.flags, equals(original.flags));
         expect(decoded.streamId, equals(original.streamId));
@@ -103,9 +103,9 @@ void main() {
       });
 
       test('handles invalid frame version', () {
-        final data = Uint8List(12);  // Empty frame with wrong version
-        data[0] = 1;  // Set version to 1 (invalid)
-        
+        final data = Uint8List(12); // Empty frame with wrong version
+        data[0] = 1; // Set version to 1 (invalid)
+
         expect(
           () => YamuxFrame.fromBytes(data),
           throwsA(isA<FormatException>()),
@@ -113,8 +113,8 @@ void main() {
       });
 
       test('handles frame too short', () {
-        final data = Uint8List(11);  // One byte too short
-        
+        final data = Uint8List(11); // One byte too short
+
         expect(
           () => YamuxFrame.fromBytes(data),
           throwsA(isA<FormatException>()),
@@ -122,10 +122,11 @@ void main() {
       });
 
       test('handles data length mismatch', () {
-        final data = Uint8List(16);  // 12 byte header + 4 bytes data
+        final data = Uint8List(16); // 12 byte header + 4 bytes data
         final header = ByteData.view(data.buffer, 0, 12);
-        header.setUint32(8, 8, Endian.big);  // Set length to 8 but only 4 bytes present
-        
+        header.setUint32(
+            8, 8, Endian.big); // Set length to 8 but only 4 bytes present
+
         expect(
           () => YamuxFrame.fromBytes(data),
           throwsA(isA<FormatException>()),
@@ -133,4 +134,4 @@ void main() {
       });
     });
   });
-} 
+}

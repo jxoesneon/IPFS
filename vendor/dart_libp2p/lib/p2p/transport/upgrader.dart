@@ -27,7 +27,6 @@ class UpgradeProtocol {
   String toString() => id;
 }
 
-
 /// Handles the full upgrade of connections to a secure and multiplexed state.
 abstract class Upgrader {
   /// Upgrades an outbound connection.

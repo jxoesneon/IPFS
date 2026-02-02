@@ -43,7 +43,7 @@ class StunMessage {
   }
 
   /// Creates a binding request message with CHANGE-REQUEST attribute
-  /// 
+  ///
   /// [changeIP] - Request the server to send the response from a different IP address
   /// [changePort] - Request the server to send the response from a different port
   static StunMessage createBindingRequestWithChangeRequest({
@@ -65,15 +65,18 @@ class StunMessage {
     changeRequestBuffer.setUint32(0, flags);
     attributes[StunAttribute.changeRequest] = changeRequestBytes;
 
-    return StunMessage(StunMessageType.bindingRequest, transactionId, attributes);
+    return StunMessage(
+        StunMessageType.bindingRequest, transactionId, attributes);
   }
 
   /// Creates a binding response message with mapped address
-  static StunMessage createBindingResponse(List<int> transactionId, dynamic address, int port) {
+  static StunMessage createBindingResponse(
+      List<int> transactionId, dynamic address, int port) {
     final attributes = <int, Uint8List>{};
 
     // Create XOR-MAPPED-ADDRESS attribute
-    final addressBytes = address.address.split('.').map((e) => int.parse(e)).toList();
+    final addressBytes =
+        address.address.split('.').map((e) => int.parse(e)).toList();
     final xorAddressBytes = Uint8List(8);
     final xorBuffer = ByteData.view(xorAddressBytes.buffer);
 
@@ -85,19 +88,22 @@ class StunMessage {
     xorBuffer.setUint16(2, port ^ (magicCookie >> 16));
     // IPv4 address XORed with magic cookie
     for (var i = 0; i < 4; i++) {
-      xorAddressBytes[i + 4] = addressBytes[i] ^ ((magicCookie >> (8 * (3 - i))) & 0xFF);
+      xorAddressBytes[i + 4] =
+          addressBytes[i] ^ ((magicCookie >> (8 * (3 - i))) & 0xFF);
     }
 
     attributes[StunAttribute.xorMappedAddress] = xorAddressBytes;
 
-    return StunMessage(StunMessageType.bindingResponse, transactionId, attributes);
+    return StunMessage(
+        StunMessageType.bindingResponse, transactionId, attributes);
   }
 
   /// Encode the STUN message to bytes
   Uint8List encode() {
     // Calculate message length (excluding header)
     int messageLength = 0;
-    attributes.forEach((_, value) => messageLength += value.length + 4); // 4 for type and length
+    attributes.forEach((_, value) =>
+        messageLength += value.length + 4); // 4 for type and length
 
     final buffer = ByteData(20 + messageLength); // 20 bytes header + attributes
     var offset = 0;
@@ -175,7 +181,8 @@ class StunMessage {
   }
 
   /// Extracts the RESPONSE-ORIGIN attribute from a STUN message
-  static ({InternetAddress address, int port})? extractResponseOrigin(StunMessage message) {
+  static ({InternetAddress address, int port})? extractResponseOrigin(
+      StunMessage message) {
     final responseOrigin = message.attributes[StunAttribute.responseOrigin];
     if (responseOrigin != null) {
       return decodeAddress(responseOrigin);
@@ -184,7 +191,8 @@ class StunMessage {
   }
 
   /// Extracts the OTHER-ADDRESS attribute from a STUN message
-  static ({InternetAddress address, int port})? extractOtherAddress(StunMessage message) {
+  static ({InternetAddress address, int port})? extractOtherAddress(
+      StunMessage message) {
     final otherAddress = message.attributes[StunAttribute.otherAddress];
     if (otherAddress != null) {
       return decodeAddress(otherAddress);

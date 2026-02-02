@@ -51,9 +51,9 @@ void main() {
       expect(routerA.listeningAddresses, isNotEmpty);
       // Validating it contains a tcp address
       expect(
-          routerA.listeningAddresses
-              .any((a) => a.contains('/tcp/')),
-          isTrue);
+        routerA.listeningAddresses.any((a) => a.contains('/tcp/')),
+        isTrue,
+      );
 
       await routerA.stop();
       expect(routerA.hasStarted, isFalse);

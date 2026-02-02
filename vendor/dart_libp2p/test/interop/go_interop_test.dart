@@ -48,7 +48,9 @@ void main() {
   Logger.root.level = Level.INFO;
   Logger.root.onRecord.listen((record) {
     // ignore very noisy loggers unless severe
-    if (record.level >= Level.WARNING || record.loggerName.contains('Noise') || record.loggerName.contains('Yamux')) {
+    if (record.level >= Level.WARNING ||
+        record.loggerName.contains('Noise') ||
+        record.loggerName.contains('Yamux')) {
       print('${record.level.name}: ${record.loggerName}: ${record.message}');
     }
   });
@@ -155,7 +157,8 @@ void main() {
 
       // Negotiate /echo/1.0.0 protocol via multistream-select
       // YamuxStream implements both MuxedStream and P2PStream
-      await ms_client.selectProtoOrFail('/echo/1.0.0', stream as p2p_stream.P2PStream<dynamic>);
+      await ms_client.selectProtoOrFail(
+          '/echo/1.0.0', stream as p2p_stream.P2PStream<dynamic>);
       print('Echo protocol negotiated');
 
       // Send 32 random bytes, expect echo
@@ -203,7 +206,8 @@ void main() {
       final result = await goProcess.runClient(dartMultiaddr);
       print('Go client stdout: ${result.stdout}');
       print('Go client stderr: ${result.stderr}');
-      expect(result.exitCode, 0, reason: 'Go client should connect successfully');
+      expect(result.exitCode, 0,
+          reason: 'Go client should connect successfully');
       expect(result.stdout.toString(), contains('Connected'));
 
       final upgradedConn = await acceptFuture.timeout(Duration(seconds: 15));

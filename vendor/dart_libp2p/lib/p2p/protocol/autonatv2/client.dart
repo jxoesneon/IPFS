@@ -44,7 +44,8 @@ class AutoNATv2ClientImpl implements AutoNATv2Client {
   /// Map of nonce to dial-back queue
   final Map<int, Completer<MultiAddr>> _dialBackQueues = {};
 
-  AutoNATv2ClientImpl(this.host, {MultiAddr Function(MultiAddr)? normalizeMultiaddr})
+  AutoNATv2ClientImpl(this.host,
+      {MultiAddr Function(MultiAddr)? normalizeMultiaddr})
       : _dialData = Uint8List(4000),
         normalizeMultiaddr = normalizeMultiaddr ?? ((a) => a) {
     // Initialize dial data with random bytes
@@ -71,19 +72,23 @@ class AutoNATv2ClientImpl implements AutoNATv2Client {
     final protocols = [AutoNATv2Protocols.dialProtocol];
     final stream = await host.newStream(peerId, protocols, context);
 
-    try{
+    try {
       await stream.scope().setService(AutoNATv2Protocols.serviceName);
-    }catch(ex){
+    } catch (ex) {
       stream.reset();
-      throw Exception('Failed to attach stream ${AutoNATv2Protocols.dialProtocol} to service ${AutoNATv2Protocols.serviceName}');
+      throw Exception(
+          'Failed to attach stream ${AutoNATv2Protocols.dialProtocol} to service ${AutoNATv2Protocols.serviceName}');
     }
 
     try {
-      await stream.scope().reserveMemory(maxMsgSize, ReservationPriority.always);
+      await stream
+          .scope()
+          .reserveMemory(maxMsgSize, ReservationPriority.always);
       // Reserve memory
-    }catch(ex){
+    } catch (ex) {
       stream.reset();
-      throw Exception('Failed to reserve memory for stream ${AutoNATv2Protocols.dialProtocol}');
+      throw Exception(
+          'Failed to reserve memory for stream ${AutoNATv2Protocols.dialProtocol}');
     }
 
     // Set deadline
@@ -160,7 +165,8 @@ class AutoNATv2ClientImpl implements AutoNATv2Client {
   }
 
   /// Process a dial response
-  Future<Result> _processDialResponse(DialResponse response, List<Request> requests, Completer<MultiAddr> completer) async {
+  Future<Result> _processDialResponse(DialResponse response,
+      List<Request> requests, Completer<MultiAddr> completer) async {
     // Handle E_DIAL_REFUSED - this means the server cannot/will not dial the address
     // This typically means the peer is NOT publicly reachable
     if (response.status == DialResponse_ResponseStatus.E_DIAL_REFUSED) {
@@ -168,14 +174,16 @@ class AutoNATv2ClientImpl implements AutoNATv2Client {
       // Use the first request address as the address being probed
       return Result(
         addr: requests.isNotEmpty ? requests[0].addr : MultiAddr('/'),
-        reachability: Reachability.private, // Dial refused = not publicly reachable
+        reachability:
+            Reachability.private, // Dial refused = not publicly reachable
         status: response.status.value, // Convert enum to int
       );
     }
-    
+
     // Check other response statuses
     if (response.status != DialResponse_ResponseStatus.OK) {
-      throw Exception('Dial request failed: response status ${response.status}');
+      throw Exception(
+          'Dial request failed: response status ${response.status}');
     }
 
     // Check dial status
@@ -185,7 +193,8 @@ class AutoNATv2ClientImpl implements AutoNATv2Client {
 
     // Check address index
     if (response.addrIdx >= requests.length) {
-      throw Exception('Invalid response: addr index out of range: ${response.addrIdx} [0-${requests.length})');
+      throw Exception(
+          'Invalid response: addr index out of range: ${response.addrIdx} [0-${requests.length})');
     }
 
     // Wait for dial-back if status is OK
@@ -203,7 +212,8 @@ class AutoNATv2ClientImpl implements AutoNATv2Client {
   }
 
   /// Validate and send dial data
-  Future<void> _validateAndSendDialData(List<Request> requests, Message message, P2PStream stream) async {
+  Future<void> _validateAndSendDialData(
+      List<Request> requests, Message message, P2PStream stream) async {
     final dialDataRequest = message.dialDataRequest;
     final idx = dialDataRequest.addrIdx;
 
@@ -242,7 +252,8 @@ class AutoNATv2ClientImpl implements AutoNATv2Client {
   }
 
   /// Create a result from a dial response
-  Result _createResult(DialResponse response, List<Request> requests, MultiAddr? dialBackAddr) {
+  Result _createResult(
+      DialResponse response, List<Request> requests, MultiAddr? dialBackAddr) {
     final idx = response.addrIdx;
     final addr = requests[idx].addr;
 
@@ -250,7 +261,8 @@ class AutoNATv2ClientImpl implements AutoNATv2Client {
     switch (response.dialStatus) {
       case DialStatus.OK:
         if (!_areAddrsConsistent(dialBackAddr, addr)) {
-          throw Exception('Invalid response: dialBackAddr: $dialBackAddr, respAddr: $addr');
+          throw Exception(
+              'Invalid response: dialBackAddr: $dialBackAddr, respAddr: $addr');
         }
         reachability = Reachability.public;
         break;
@@ -268,8 +280,10 @@ class AutoNATv2ClientImpl implements AutoNATv2Client {
         }
         break;
       default:
-        _log.warning('Invalid status code received in response for addr $addr: ${response.dialStatus}');
-        throw Exception('Invalid response: invalid status code for addr $addr: ${response.dialStatus}');
+        _log.warning(
+            'Invalid status code received in response for addr $addr: ${response.dialStatus}');
+        throw Exception(
+            'Invalid response: invalid status code for addr $addr: ${response.dialStatus}');
     }
 
     return Result(
@@ -284,17 +298,21 @@ class AutoNATv2ClientImpl implements AutoNATv2Client {
     // Set service name
     try {
       await stream.scope().setService(AutoNATv2Protocols.serviceName);
-    }catch (ex){
-      _log.fine('Failed to attach stream to service ${AutoNATv2Protocols.serviceName}');
+    } catch (ex) {
+      _log.fine(
+          'Failed to attach stream to service ${AutoNATv2Protocols.serviceName}');
       stream.reset();
       return;
     }
 
     try {
-      await stream.scope().reserveMemory( dialBackMaxMsgSize, ReservationPriority.always);
+      await stream
+          .scope()
+          .reserveMemory(dialBackMaxMsgSize, ReservationPriority.always);
       // Reserve memory
-    }catch (ex){
-      _log.fine('Failed to reserve memory for stream ${AutoNATv2Protocols.dialBackProtocol}');
+    } catch (ex) {
+      _log.fine(
+          'Failed to reserve memory for stream ${AutoNATv2Protocols.dialBackProtocol}');
       stream.reset();
       return;
     }
@@ -308,7 +326,8 @@ class AutoNATv2ClientImpl implements AutoNATv2Client {
       final data = await stream.read();
       dialBack = DialBack.fromBuffer(data);
     } catch (e) {
-      _log.fine('Failed to read dialback msg from ${stream.conn.remoteMultiaddr}: $e');
+      _log.fine(
+          'Failed to read dialback msg from ${stream.conn.remoteMultiaddr}: $e');
       stream.reset();
       return;
     }
@@ -318,7 +337,8 @@ class AutoNATv2ClientImpl implements AutoNATv2Client {
     // Find the completer for this nonce
     final completer = _dialBackQueues[nonce];
     if (completer == null) {
-      _log.fine('Dialback received with invalid nonce: localAddr: ${stream.conn.localMultiaddr} peer: ${stream.conn.remotePeer} nonce: $nonce');
+      _log.fine(
+          'Dialback received with invalid nonce: localAddr: ${stream.conn.localMultiaddr} peer: ${stream.conn.remotePeer} nonce: $nonce');
       stream.reset();
       return;
     }
@@ -327,14 +347,16 @@ class AutoNATv2ClientImpl implements AutoNATv2Client {
     if (!completer.isCompleted) {
       completer.complete(stream.conn.localMultiaddr);
     } else {
-      _log.fine('Multiple dialbacks received: localAddr: ${stream.conn.localMultiaddr} peer: ${stream.conn.remotePeer}');
+      _log.fine(
+          'Multiple dialbacks received: localAddr: ${stream.conn.localMultiaddr} peer: ${stream.conn.remotePeer}');
       stream.reset();
       return;
     }
 
     // Send a response
     try {
-      final response = DialBackResponse()..status = DialBackResponse_DialBackStatus.OK;
+      final response = DialBackResponse()
+        ..status = DialBackResponse_DialBackStatus.OK;
       await stream.write(response.writeToBuffer());
     } catch (e) {
       _log.fine('Failed to write dialback response: $e');

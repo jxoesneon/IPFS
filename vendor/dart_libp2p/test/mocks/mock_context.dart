@@ -21,7 +21,8 @@ class MockContext implements Context {
     if (timeout != null) {
       Timer(timeout, () {
         if (!_doneCompleter.isCompleted) {
-          _doneCompleter.completeError(TimeoutException('Context timed out', timeout));
+          _doneCompleter
+              .completeError(TimeoutException('Context timed out', timeout));
         }
       });
     }

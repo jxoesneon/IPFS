@@ -17,9 +17,30 @@ import 'dart:typed_data' as $typed_data;
 const Message$json = {
   '1': 'Message',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.autonat.pb.Message.MessageType', '10': 'type'},
-    {'1': 'dial', '3': 2, '4': 1, '5': 11, '6': '.autonat.pb.Message.Dial', '10': 'dial'},
-    {'1': 'dialResponse', '3': 3, '4': 1, '5': 11, '6': '.autonat.pb.Message.DialResponse', '10': 'dialResponse'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.autonat.pb.Message.MessageType',
+      '10': 'type'
+    },
+    {
+      '1': 'dial',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.autonat.pb.Message.Dial',
+      '10': 'dial'
+    },
+    {
+      '1': 'dialResponse',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.autonat.pb.Message.DialResponse',
+      '10': 'dialResponse'
+    },
   ],
   '3': [Message_PeerInfo$json, Message_Dial$json, Message_DialResponse$json],
   '4': [Message_MessageType$json, Message_ResponseStatus$json],
@@ -38,7 +59,14 @@ const Message_PeerInfo$json = {
 const Message_Dial$json = {
   '1': 'Dial',
   '2': [
-    {'1': 'peer', '3': 1, '4': 1, '5': 11, '6': '.autonat.pb.Message.PeerInfo', '10': 'peer'},
+    {
+      '1': 'peer',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.autonat.pb.Message.PeerInfo',
+      '10': 'peer'
+    },
   ],
 };
 
@@ -46,7 +74,14 @@ const Message_Dial$json = {
 const Message_DialResponse$json = {
   '1': 'DialResponse',
   '2': [
-    {'1': 'status', '3': 1, '4': 1, '5': 14, '6': '.autonat.pb.Message.ResponseStatus', '10': 'status'},
+    {
+      '1': 'status',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.autonat.pb.Message.ResponseStatus',
+      '10': 'status'
+    },
     {'1': 'statusText', '3': 2, '4': 1, '5': 9, '10': 'statusText'},
     {'1': 'addr', '3': 3, '4': 1, '5': 12, '10': 'addr'},
   ],
@@ -86,4 +121,3 @@ final $typed_data.Uint8List messageDescriptor = $convert.base64Decode(
     'SUFMX1JFU1BPTlNFEAEiaQoOUmVzcG9uc2VTdGF0dXMSBgoCT0sQABIQCgxFX0RJQUxfRVJST1'
     'IQZBISCg5FX0RJQUxfUkVGVVNFRBBlEhIKDUVfQkFEX1JFUVVFU1QQyAESFQoQRV9JTlRFUk5B'
     'TF9FUlJPUhCsAg==');
-

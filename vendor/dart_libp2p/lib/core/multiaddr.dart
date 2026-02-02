@@ -11,8 +11,7 @@ class MultiAddr {
   /// Creates a new Multiaddr from a string
   /// Format: /protocol1/value1/protocol2/value2
   /// Example: /ip4/127.0.0.1/tcp/1234
-  MultiAddr(String addr): _components = _parseAddr(addr);
-
+  MultiAddr(String addr) : _components = _parseAddr(addr);
 
   static List<(Protocol, String)> _parseAddr(String addr) {
     final components = <(Protocol, String)>[];
@@ -48,12 +47,12 @@ class MultiAddr {
           throw FormatException('Missing value for protocol: $protocolName');
         }
         var value = parts[i];
-        
+
         // Strip zone identifier from IPv6 addresses (e.g., fe80::1%eth0 -> fe80::1)
         if (protocolName == 'ip6') {
           value = value.split('%')[0];
         }
-        
+
         components.add((protocol, value));
         i++; // Consumed value
       }
@@ -66,7 +65,8 @@ class MultiAddr {
     final sb = StringBuffer();
     for (final (protocol, value) in _components) {
       sb.write('/${protocol.name}');
-      if (protocol.size != 0) { // Only add value if protocol is not size 0
+      if (protocol.size != 0) {
+        // Only add value if protocol is not size 0
         sb.write('/$value');
       }
     }
@@ -101,7 +101,8 @@ class MultiAddr {
 
     while (offset < bytes.length) {
       // Read protocol code
-      final (code, protocolBytesRead) = MultiAddrCodec.decodeVarint(bytes, offset);
+      final (code, protocolBytesRead) =
+          MultiAddrCodec.decodeVarint(bytes, offset);
       offset += protocolBytesRead;
 
       final protocol = Protocols.byCode(code);
@@ -112,7 +113,8 @@ class MultiAddr {
       // Read value
       int valueLength;
       if (protocol.isVariableSize) {
-        final (length, lengthBytesRead) = MultiAddrCodec.decodeVarint(bytes, offset);
+        final (length, lengthBytesRead) =
+            MultiAddrCodec.decodeVarint(bytes, offset);
         offset += lengthBytesRead;
         valueLength = length;
       } else {
@@ -120,7 +122,8 @@ class MultiAddr {
       }
 
       if (offset + valueLength > bytes.length) {
-        throw FormatException('Invalid multiaddr bytes: unexpected end of input');
+        throw FormatException(
+            'Invalid multiaddr bytes: unexpected end of input');
       }
 
       final valueBytes = bytes.sublist(offset, offset + valueLength);
@@ -134,7 +137,8 @@ class MultiAddr {
     final sb = StringBuffer();
     for (final (protocol, value) in components) {
       sb.write('/${protocol.name}');
-      if (protocol.size != 0) { // Only add value if protocol is not size 0
+      if (protocol.size != 0) {
+        // Only add value if protocol is not size 0
         sb.write('/$value');
       }
       // If protocol.size == 0, we add nothing more for this component.
@@ -252,72 +256,72 @@ class MultiAddr {
   // ========== Named Component Getters ==========
 
   /// Network Address Getters
-  
+
   /// Returns the IPv4 address if present
   String? get ip4 => valueForProtocol('ip4');
-  
+
   /// Returns the IPv6 address if present
   String? get ip6 => valueForProtocol('ip6');
-  
+
   /// Returns the first available IP address (IPv4 or IPv6)
   String? get ip => ip4 ?? ip6;
-  
+
   /// Returns the DNS4 address if present
   String? get dns4 => valueForProtocol('dns4');
-  
+
   /// Returns the DNS6 address if present
   String? get dns6 => valueForProtocol('dns6');
-  
+
   /// Returns the DNS address if present
   String? get dnsaddr => valueForProtocol('dnsaddr');
 
   /// Port Getters
-  
+
   /// Returns the TCP port number if present
   int? get tcpPort => _parsePort(valueForProtocol('tcp'));
-  
+
   /// Returns the UDP port number if present
   int? get udpPort => _parsePort(valueForProtocol('udp'));
-  
+
   /// Returns the first available port number (TCP or UDP)
   int? get port => tcpPort ?? udpPort;
 
   /// Protocol Flag Getters
-  
+
   /// Returns true if UDX protocol is present
   bool get hasUdx => hasProtocol('udx');
-  
+
   /// Returns true if QUIC-v1 protocol is present
   bool get hasQuicV1 => hasProtocol('quic-v1');
-  
+
   /// Returns true if WebTransport protocol is present
   bool get hasWebtransport => hasProtocol('webtransport');
-  
+
   /// Returns true if P2P circuit protocol is present
   bool get hasCircuit => hasProtocol('p2p-circuit');
 
   /// Identity and Path Getters
-  
+
   /// Returns the peer ID if present
   String? get peerId => valueForProtocol('p2p');
-  
+
   /// Returns the Unix path if present
   String? get unixPath => valueForProtocol('unix');
-  
+
   /// Returns the certificate hash if present
   String? get certhash => valueForProtocol('certhash');
-  
+
   /// Returns the SNI value if present
   String? get sni => valueForProtocol('sni');
 
   /// Convenience Methods
-  
+
   /// Helper method for parsing port strings to integers
   int? _parsePort(String? portStr) {
     if (portStr == null) return null;
     return int.tryParse(portStr);
   }
-  
+
   /// Returns all transport protocols present in this multiaddr
   List<String> get transports {
     final transports = <String>[];
@@ -328,7 +332,6 @@ class MultiAddr {
     if (hasWebtransport) transports.add('webtransport');
     return transports;
   }
-
 }
 
 /// Address type classification for connection prioritization
@@ -337,8 +340,8 @@ enum AddressType {
   directIPv4Private,
   directIPv6Public,
   directIPv6LinkLocal,
-  relaySpecific,   // Full circuit path with relay peer ID
-  relayGeneric,    // Bare /p2p-circuit
+  relaySpecific, // Full circuit path with relay peer ID
+  relayGeneric, // Bare /p2p-circuit
 }
 
 /// Extension for address classification and analysis
@@ -349,18 +352,18 @@ extension MultiAddrClassification on MultiAddr {
     if (hasCircuit) {
       // Check if it's a specific relay path or generic
       final comps = components;
-      
+
       // Look for p2p protocol before p2p-circuit (indicates specific relay)
       var hasRelayPeerId = false;
       var circuitIndex = -1;
-      
+
       for (var i = 0; i < comps.length; i++) {
         if (comps[i].$1.name == 'p2p-circuit') {
           circuitIndex = i;
           break;
         }
       }
-      
+
       if (circuitIndex > 0) {
         // Check if there's a p2p component before circuit
         for (var i = 0; i < circuitIndex; i++) {
@@ -370,10 +373,12 @@ extension MultiAddrClassification on MultiAddr {
           }
         }
       }
-      
-      return hasRelayPeerId ? AddressType.relaySpecific : AddressType.relayGeneric;
+
+      return hasRelayPeerId
+          ? AddressType.relaySpecific
+          : AddressType.relayGeneric;
     }
-    
+
     // Check IP type by examining components directly
     final comps = components;
     for (final (protocol, value) in comps) {
@@ -384,23 +389,25 @@ extension MultiAddrClassification on MultiAddr {
         return AddressType.directIPv6Public;
       } else if (protocol.name == 'ip4') {
         // It's an IPv4 address
-        return isPrivate() ? AddressType.directIPv4Private : AddressType.directIPv4Public;
+        return isPrivate()
+            ? AddressType.directIPv4Private
+            : AddressType.directIPv4Public;
       }
     }
-    
+
     return AddressType.relayGeneric; // Fallback
   }
-  
+
   /// Extract /64 prefix for IPv6 deduplication
   /// Returns null if not an IPv6 address
   String? get ipv6Prefix64 {
     final v6 = ip6;
     if (v6 == null) return null;
-    
+
     // Split by colon and take first 4 groups (64 bits)
     final parts = v6.split(':');
     if (parts.length < 4) return null;
-    
+
     return parts.take(4).join(':');
   }
 }

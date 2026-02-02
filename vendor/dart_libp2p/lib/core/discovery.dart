@@ -5,17 +5,17 @@ import 'peer/addr_info.dart';
 class DiscoveryOptions {
   /// Time-to-live for advertisements
   final Duration? ttl;
-  
+
   /// Maximum number of peers to discover
   final int? limit;
-  
+
   /// Other implementation-specific options
   final Map<dynamic, dynamic> other;
-  
+
   /// Creates a new DiscoveryOptions
   DiscoveryOptions({this.ttl, this.limit, Map<dynamic, dynamic>? other})
       : other = other ?? {};
-  
+
   /// Applies the given options to this DiscoveryOptions
   DiscoveryOptions apply(List<DiscoveryOption> options) {
     var result = this;
@@ -50,13 +50,15 @@ DiscoveryOption limit(int limit) {
 /// Interface for advertising services
 abstract class Advertiser {
   /// Advertises a service
-  Future<Duration> advertise(String ns, [List<DiscoveryOption> options = const []]);
+  Future<Duration> advertise(String ns,
+      [List<DiscoveryOption> options = const []]);
 }
 
 /// Interface for peer discovery
 abstract class Discoverer {
   /// Discovers peers providing a service
-  Future<Stream<AddrInfo>> findPeers(String ns, [List<DiscoveryOption> options = const []]);
+  Future<Stream<AddrInfo>> findPeers(String ns,
+      [List<DiscoveryOption> options = const []]);
 }
 
 /// Interface that combines service advertisement and peer discovery

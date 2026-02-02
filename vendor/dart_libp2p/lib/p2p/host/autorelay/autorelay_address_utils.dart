@@ -1,8 +1,8 @@
 import 'package:dart_libp2p/core/multiaddr.dart';
 import 'package:dart_libp2p/p2p/multiaddr/protocol.dart'; // For Protocols class
 // From search: lib/p2p/protocol/holepunch/util.dart
-import 'package:dart_libp2p/p2p/protocol/holepunch/util.dart' show isRelayAddress;
-
+import 'package:dart_libp2p/p2p/protocol/holepunch/util.dart'
+    show isRelayAddress;
 
 /// Cleans up a relay's address set to remove private addresses and curtail addrsplosion.
 List<MultiAddr> cleanupAddressSet(List<MultiAddr> addrs) {
@@ -33,7 +33,8 @@ List<MultiAddr> cleanupAddressSet(List<MultiAddr> addrs) {
 
 bool isDNSAddr(MultiAddr a) {
   if (a.components.isEmpty) return false;
-  final firstComponentProtocol = a.components.first.$1; // This is a Protocol object
+  final firstComponentProtocol =
+      a.components.first.$1; // This is a Protocol object
   return firstComponentProtocol.code == Protocols.dns4.code ||
       firstComponentProtocol.code == Protocols.dns6.code ||
       firstComponentProtocol.code == Protocols.dnsaddr.code;
@@ -53,7 +54,7 @@ _AddrKeyAndPort getAddrKeyAndPort(MultiAddr a) {
 
   for (var component in a.components) {
     final protocol = component.$1; // Protocol object
-    final value = component.$2;   // String value of the component
+    final value = component.$2; // String value of the component
     final pCode = protocol.code;
 
     if (pCode == Protocols.tcp.code || pCode == Protocols.udp.code) {
@@ -64,7 +65,8 @@ _AddrKeyAndPort getAddrKeyAndPort(MultiAddr a) {
         // For now, keep port as 0 or throw, depending on desired strictness.
         // Example: log.warning('Could not parse port: $value for ${protocol.name}');
       }
-      key += '/${protocol.name}'; // Add protocol name, not its value (which is the port)
+      key +=
+          '/${protocol.name}'; // Add protocol name, not its value (which is the port)
     } else {
       // Mimic Go: if value is empty, use protocol name. Otherwise, use value.
       String valStr = value.isNotEmpty ? value : protocol.name;
@@ -120,17 +122,21 @@ List<MultiAddr> sanitizeAddrsplodedSet(
       if (privports.contains(pa.port)) {
         selectedForThisKey.add(pa.addr);
         haveAddr = true;
-      } else if (pa.port == 4001 || pa.port == 4002) { // Default libp2p ports
+      } else if (pa.port == 4001 || pa.port == 4002) {
+        // Default libp2p ports
         // Only add if not already added via private port match for this key
-        if (!selectedForThisKey.any((sa) => getAddrKeyAndPort(sa).port == pa.port)) {
-             selectedForThisKey.add(pa.addr);
+        if (!selectedForThisKey
+            .any((sa) => getAddrKeyAndPort(sa).port == pa.port)) {
+          selectedForThisKey.add(pa.addr);
         }
         haveAddr = true;
       }
     }
 
     if (haveAddr) {
-        result.addAll(selectedForThisKey.toSet().toList()); // toSet to remove duplicates if any
+      result.addAll(selectedForThisKey
+          .toSet()
+          .toList()); // toSet to remove duplicates if any
     } else {
       // We weren't able to select a preferred port; use them all for this key
       for (var pa in pas) {

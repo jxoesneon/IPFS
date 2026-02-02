@@ -13,7 +13,6 @@ import 'package:dart_libp2p/core/crypto/ed25519.dart' as ed;
 
 import '../../core/crypto/keys.dart' as p2pkeys;
 
-
 class RsaKeyPair {
   final rsa.RsaPublicKey publicKey;
   final rsa.RsaPrivateKey privateKey;
@@ -27,18 +26,17 @@ Future<p2pkeys.KeyPair> generateRSAKeyPair({int bits = 2048}) async {
   var generator = RSAKeyGenerator();
 
   var params = pc.RSAKeyGeneratorParameters(BigInt.from(65537), bits, 64);
-  generator.init(pc.ParametersWithRandom( params, fortunaRandom()));
+  generator.init(pc.ParametersWithRandom(params, fortunaRandom()));
 
   final rsaKeyPair = generator.generateKeyPair();
 
   // RsaKeyPair(RsaPublicKey(), RsaPrivateKey());
   final pubKey = rsa.RsaPublicKey(rsaKeyPair.publicKey as pc.RSAPublicKey);
-  final privKey = rsa.RsaPrivateKey(rsaKeyPair.privateKey as pc.RSAPrivateKey, pubKey);
+  final privKey =
+      rsa.RsaPrivateKey(rsaKeyPair.privateKey as pc.RSAPrivateKey, pubKey);
 
   return p2pkeys.KeyPair(pubKey, privKey);
-
 }
-
 
 pc.SecureRandom fortunaRandom() {
   final secureRandom = pc.SecureRandom('Fortuna')
@@ -57,7 +55,6 @@ Uint8List generateSecureRandomBytes() {
   return bytes;
 }
 
-
 // class Ed25519KeyPair {
 //   final ed.Ed25519PublicKey publicKey;
 //   final ed.Ed25519PrivateKey privateKey;
@@ -69,12 +66,13 @@ Uint8List generateSecureRandomBytes() {
 Future<p2pkeys.KeyPair> generateEd25519KeyPair() async {
   final algorithm = Ed25519();
   final keyPair = await algorithm.newKeyPair();
-  final cryptoPubkey= await keyPair.extractPublicKey();
+  final cryptoPubkey = await keyPair.extractPublicKey();
   final cryptoPrivatekey = await keyPair.extractPrivateKeyBytes();
 
-
-  final edPubkey = await ed.Ed25519PublicKey.fromRawBytes(Uint8List.fromList(cryptoPubkey.bytes));
-  final edPrivkey = await ed.Ed25519PrivateKey.fromRawBytes(Uint8List.fromList(cryptoPrivatekey));
+  final edPubkey = await ed.Ed25519PublicKey.fromRawBytes(
+      Uint8List.fromList(cryptoPubkey.bytes));
+  final edPrivkey = await ed.Ed25519PrivateKey.fromRawBytes(
+      Uint8List.fromList(cryptoPrivatekey));
 
   // return Ed25519KeyPair(edPubkey, edPrivkey);
   return p2pkeys.KeyPair(edPubkey, edPrivkey);

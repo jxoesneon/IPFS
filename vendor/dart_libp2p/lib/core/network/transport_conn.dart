@@ -10,7 +10,7 @@ abstract class TransportConn extends Conn {
   /// Otherwise, reads whatever is available.
   Future<Uint8List> read([int? length]);
 
-  Socket get socket ;
+  Socket get socket;
 
   /// Writes data to the connection.
   Future<void> write(Uint8List data);

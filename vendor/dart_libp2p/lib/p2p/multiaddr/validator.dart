@@ -32,9 +32,10 @@ class MultiAddrValidator {
         // Throw only if it's a fixed, non-zero size protocol not explicitly handled.
         // Protocols with size 0 (like udx, quic-v1) have no value part to validate.
         // Protocols with size -1 (variable, like dns, p2p) have their values validated by other means or not at all here.
-        if (protocol.size > 0) { 
+        if (protocol.size > 0) {
           // This condition means it's a protocol with a fixed-size value that isn't one of the handled cases.
-          throw ArgumentError('Unsupported protocol with fixed-size value: ${protocol.name}');
+          throw ArgumentError(
+              'Unsupported protocol with fixed-size value: ${protocol.name}');
         }
         // If size is 0 or -1, and not handled by a specific case, validation passes here.
         break;
@@ -55,6 +56,7 @@ class MultiAddrValidator {
       }
     }
   }
+
   /// Validates IPv6 address format
   static void _validateIP6(String value) {
     // Remove zone identifier if present (e.g., %30)
@@ -64,7 +66,8 @@ class MultiAddrValidator {
     final compressionCount = '::'.allMatches(cleanValue).length;
 
     if (compressionCount > 1) {
-      throw FormatException('Invalid IPv6 address: multiple :: compression markers');
+      throw FormatException(
+          'Invalid IPv6 address: multiple :: compression markers');
     }
 
     final hasCompression = compressionCount == 1;
@@ -81,7 +84,8 @@ class MultiAddrValidator {
     final parts = value.split(':');
 
     if (parts.length != 8) {
-      throw FormatException('Invalid IPv6 address: must have exactly 8 segments without compression');
+      throw FormatException(
+          'Invalid IPv6 address: must have exactly 8 segments without compression');
     }
 
     _validateSegments(parts);
@@ -101,19 +105,19 @@ class MultiAddrValidator {
 
       final rightSegments = rightPart.split(':');
       if (rightSegments.length >= 8) {
-        throw FormatException('Invalid IPv6 address: too many segments after ::');
+        throw FormatException(
+            'Invalid IPv6 address: too many segments after ::');
       }
       _validateSegments(rightSegments);
-
     } else if (value.endsWith('::')) {
       // e.g., "2001:db8::"
       final leftPart = value.substring(0, value.length - 2);
       final leftSegments = leftPart.split(':');
       if (leftSegments.length >= 8) {
-        throw FormatException('Invalid IPv6 address: too many segments before ::');
+        throw FormatException(
+            'Invalid IPv6 address: too many segments before ::');
       }
       _validateSegments(leftSegments);
-
     } else {
       // e.g., "2001:db8::1" or "fdc5:3e28:8691::2"
       final parts = value.split('::');
@@ -126,7 +130,8 @@ class MultiAddrValidator {
 
       final totalSegments = leftSegments.length + rightSegments.length;
       if (totalSegments >= 8) {
-        throw FormatException('Invalid IPv6 address: too many segments with compression');
+        throw FormatException(
+            'Invalid IPv6 address: too many segments with compression');
       }
 
       _validateSegments([...leftSegments, ...rightSegments]);
@@ -146,7 +151,8 @@ class MultiAddrValidator {
 
       // Check for valid hexadecimal characters
       if (!RegExp(r'^[0-9a-fA-F]+$').hasMatch(segment)) {
-        throw FormatException('Invalid IPv6 address: invalid characters in segment');
+        throw FormatException(
+            'Invalid IPv6 address: invalid characters in segment');
       }
 
       final num = int.tryParse(segment, radix: 16);
@@ -204,12 +210,14 @@ class MultiAddrValidator {
   /// Validates DNS name
   static void _validateDNS(String value) {
     if (value.isEmpty || value.length > 253) {
-      throw FormatException('Invalid DNS name: length must be between 1 and 253 characters');
+      throw FormatException(
+          'Invalid DNS name: length must be between 1 and 253 characters');
     }
 
     final labels = value.split('.');
     if (labels.any((label) => label.isEmpty || label.length > 63)) {
-      throw FormatException('Invalid DNS name: label length must be between 1 and 63 characters');
+      throw FormatException(
+          'Invalid DNS name: label length must be between 1 and 63 characters');
     }
 
     // RFC 1035 compliance check

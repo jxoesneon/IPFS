@@ -4,7 +4,6 @@ import 'package:dart_libp2p/core/network/network.dart'; // For Reachability, if 
 // Assuming DialPolicy abstract class is in options.dart or a common place
 import './options.dart' show DialPolicy;
 
-
 class DialPolicyImpl implements DialPolicy {
   final bool allowSelfDials;
   final Host host;
@@ -14,7 +13,8 @@ class DialPolicyImpl implements DialPolicy {
   @override
   bool skipDial(MultiAddr addr) {
     // skip relay addresses
-    if (addr.hasProtocol('p2p-circuit')) { // Check for circuit relay protocol
+    if (addr.hasProtocol('p2p-circuit')) {
+      // Check for circuit relay protocol
       return true;
     }
 
@@ -26,7 +26,7 @@ class DialPolicyImpl implements DialPolicy {
     if (!addr.isPublic()) {
       return true;
     }
-    
+
     final candidateIP = addr.toIP();
     if (candidateIP == null) {
       return true; // Not an IP address

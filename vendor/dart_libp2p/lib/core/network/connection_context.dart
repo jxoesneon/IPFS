@@ -4,39 +4,39 @@ const _uuid = Uuid();
 
 /// Context information for a connection that enables correlation of events
 /// across all layers of the protocol stack.
-/// 
+///
 /// For relay connections, there are two levels:
 /// - Outer connection: Direct connection to the relay server
 /// - Inner connection: End-to-end connection through the relay to remote peer
 class ConnectionContext {
   /// Unique identifier for this connection
   final String connectionId;
-  
+
   /// Remote peer ID (base58)
   final String remotePeerId;
-  
+
   /// Type of connection: 'direct' or 'relay'
   final String connectionType;
-  
+
   /// Timestamp when connection was established
   final DateTime establishedAt;
-  
+
   // Fields for relay connections (inner connections)
-  
+
   /// For relay inner connections: the outer connection ID (to relay server)
   final String? outerConnectionId;
-  
+
   /// Cross-node correlation ID for relay sessions
   final String? sessionId;
-  
+
   /// Relay server peer ID (for relay connections)
   final String? relayPeerId;
-  
+
   /// Yamux stream ID of the HOP stream (for relay inner connections)
   final int? hopStreamId;
-  
+
   // Transport layer reference
-  
+
   /// Underlying transport connection ID (e.g., UDX CID)
   final String? transportConnectionId;
 
@@ -126,4 +126,3 @@ class ConnectionContext {
     return buffer.toString();
   }
 }
-

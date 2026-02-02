@@ -4,10 +4,13 @@ import 'dart:typed_data';
 enum YamuxFrameType {
   /// Used to send data (length = data size, followed by data bytes)
   dataFrame(0x0),
+
   /// Used to update window sizes (length = window delta, no data payload)
   windowUpdate(0x1),
+
   /// Used for keepalive (length = opaque ping value, no data payload)
   ping(0x2),
+
   /// Used to close session (length = error code, no data payload)
   goAway(0x3);
 
@@ -89,7 +92,8 @@ class YamuxFrame {
     if (type.hasDataPayload) {
       data = bytes.length > 12 ? bytes.sublist(12) : Uint8List(0);
       if (data.length != length) {
-        throw FormatException('Frame data length mismatch: expected $length, got ${data.length}');
+        throw FormatException(
+            'Frame data length mismatch: expected $length, got ${data.length}');
       }
     } else {
       data = Uint8List(0);
@@ -123,7 +127,8 @@ class YamuxFrame {
   }
 
   /// Creates a DATA frame
-  static YamuxFrame createData(int streamId, Uint8List data, {bool fin = false}) {
+  static YamuxFrame createData(int streamId, Uint8List data,
+      {bool fin = false}) {
     return YamuxFrame(
       type: YamuxFrameType.dataFrame,
       flags: fin ? YamuxFlags.fin : 0,

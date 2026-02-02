@@ -7,12 +7,14 @@ import 'package:base_x/base_x.dart';
 
 // Helper functions for WebTransport multiaddresses
 MultiAddr toWebtransportMultiaddr(InternetAddress address, int port) {
-  if (address.type != InternetAddressType.IPv4 && address.type != InternetAddressType.IPv6) {
+  if (address.type != InternetAddressType.IPv4 &&
+      address.type != InternetAddressType.IPv6) {
     throw ArgumentError('Unsupported address type');
   }
 
   final addrType = address.type == InternetAddressType.IPv4 ? 'ip4' : 'ip6';
-  return MultiAddr('/$addrType/${address.address}/udp/$port/quic-v1/webtransport');
+  return MultiAddr(
+      '/$addrType/${address.address}/udp/$port/quic-v1/webtransport');
 }
 
 MultiAddr stringToWebtransportMultiaddr(String addressString) {
@@ -52,7 +54,8 @@ String encodeCertHash(List<int> data, String hashAlgorithm, String encoding) {
 
   // Encode hash based on encoding
   if (encoding == 'base58btc') {
-    final codec = BaseXCodec('123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz');
+    final codec = BaseXCodec(
+        '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz');
     return 'z${codec.encode(hash)}'; // 'z' prefix for base58btc
   } else if (encoding == 'base32') {
     final codec = BaseXCodec('abcdefghijklmnopqrstuvwxyz234567');
@@ -61,7 +64,6 @@ String encodeCertHash(List<int> data, String hashAlgorithm, String encoding) {
     throw ArgumentError('Unsupported encoding: $encoding');
   }
 }
-
 
 // Extract certificate hashes from a multiaddr
 List<List<int>> extractCertHashes(MultiAddr addr) {
@@ -130,7 +132,8 @@ void main() {
 
     test('TestWebtransportMultiaddr - invalid', () {
       expect(
-        () => toWebtransportMultiaddr(InternetAddress('127.0.0.1', type: InternetAddressType.unix), 1337),
+        () => toWebtransportMultiaddr(
+            InternetAddress('127.0.0.1', type: InternetAddressType.unix), 1337),
         throwsArgumentError,
       );
     });
@@ -177,11 +180,13 @@ void main() {
           'hashes': <String>[],
         },
         {
-          'addr': '/ip4/127.0.0.1/udp/1234/quic-v1/webtransport/certhash/$fooHash',
+          'addr':
+              '/ip4/127.0.0.1/udp/1234/quic-v1/webtransport/certhash/$fooHash',
           'hashes': ['foo'],
         },
         {
-          'addr': '/ip4/127.0.0.1/udp/1234/quic-v1/webtransport/certhash/$fooHash/certhash/$barHash',
+          'addr':
+              '/ip4/127.0.0.1/udp/1234/quic-v1/webtransport/certhash/$fooHash/certhash/$barHash',
           'hashes': ['foo', 'bar'],
         },
       ];
@@ -208,22 +213,26 @@ void main() {
           'certhashCount': 0,
         },
         {
-          'addr': '/ip4/1.2.3.4/udp/60042/quic-v1/webtransport/certhash/$fooHash',
+          'addr':
+              '/ip4/1.2.3.4/udp/60042/quic-v1/webtransport/certhash/$fooHash',
           'want': true,
           'certhashCount': 1,
         },
         {
-          'addr': '/ip4/1.2.3.4/udp/60042/quic-v1/webtransport/certhash/$fooHash/certhash/$barHash',
+          'addr':
+              '/ip4/1.2.3.4/udp/60042/quic-v1/webtransport/certhash/$fooHash/certhash/$barHash',
           'want': true,
           'certhashCount': 2,
         },
         {
-          'addr': '/dns4/example.com/udp/60042/quic-v1/webtransport/certhash/$fooHash',
+          'addr':
+              '/dns4/example.com/udp/60042/quic-v1/webtransport/certhash/$fooHash',
           'want': true,
           'certhashCount': 1,
         },
         {
-          'addr': '/dns4/example.com/tcp/60042/quic-v1/webtransport/certhash/$fooHash',
+          'addr':
+              '/dns4/example.com/tcp/60042/quic-v1/webtransport/certhash/$fooHash',
           'want': false,
           'certhashCount': 0,
         },

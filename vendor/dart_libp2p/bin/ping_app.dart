@@ -15,9 +15,9 @@ import 'package:dart_libp2p/core/network/context.dart' as core_context;
 import 'package:dart_libp2p/config/config.dart' as p2p_config;
 import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart';
 import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart' as p2p_conn_manager;
+import 'package:dart_libp2p/p2p/transport/connection_manager.dart'
+    as p2p_conn_manager;
 import 'package:dart_libp2p/p2p/multiaddr/protocol.dart'; // For Protocol.p2p.code
-
 
 const String PING_PROTOCOL_ID = '/dart-libp2p/example-ping/udx/1.0.0';
 
@@ -45,10 +45,16 @@ Future<void> main(List<String> arguments) async {
   // });
 
   final parser = ArgParser()
-    ..addOption('listen', abbr: 'l', help: 'Listen multiaddress (e.g., /ip4/0.0.0.0/udp/0/udx)')
-    ..addOption('target', abbr: 't', help: 'Target peer multiaddress (e.g., /ip4/127.0.0.1/udp/12345/udx/p2p/QmPeerId)')
-    ..addOption('interval', abbr: 'i', help: 'Interval between pings in seconds', defaultsTo: '1')
-    ..addFlag('help', abbr: 'h', negatable: false, help: 'Display this help message.');
+    ..addOption('listen',
+        abbr: 'l', help: 'Listen multiaddress (e.g., /ip4/0.0.0.0/udp/0/udx)')
+    ..addOption('target',
+        abbr: 't',
+        help:
+            'Target peer multiaddress (e.g., /ip4/127.0.0.1/udp/12345/udx/p2p/QmPeerId)')
+    ..addOption('interval',
+        abbr: 'i', help: 'Interval between pings in seconds', defaultsTo: '1')
+    ..addFlag('help',
+        abbr: 'h', negatable: false, help: 'Display this help message.');
 
   ArgResults results;
   try {
@@ -69,7 +75,8 @@ Future<void> main(List<String> arguments) async {
   final targetAddrStr = results['target'] as String?;
 
   if (listenAddrStr == null && targetAddrStr == null) {
-    print('Error: You must specify a listen address (--listen) or a target peer (--target).');
+    print(
+        'Error: You must specify a listen address (--listen) or a target peer (--target).');
     print(parser.usage);
     exit(1);
   }
@@ -89,7 +96,8 @@ Future<void> main(List<String> arguments) async {
     final options = <p2p_config.Option>[
       p2p_config.Libp2p.identity(localKeyPair),
       p2p_config.Libp2p.connManager(connManager), // Pass the specific instance
-      p2p_config.Libp2p.transport(UDXTransport(connManager: connManager, udxInstance: udxInstance)),
+      p2p_config.Libp2p.transport(
+          UDXTransport(connManager: connManager, udxInstance: udxInstance)),
       p2p_config.Libp2p.security(await NoiseSecurity.create(localKeyPair)),
       // Muxers will be provided by p2p_config.Libp2p.new_() using defaults
     ];
@@ -115,27 +123,34 @@ Future<void> main(List<String> arguments) async {
     // For example, by default or via a specific Libp2p.holePunching() option.
 
     print('[$hostIdForLog] Host ID: $fullHostId');
-    if (host.addrs.isNotEmpty) { // host is non-null here after start()
+    if (host.addrs.isNotEmpty) {
+      // host is non-null here after start()
       print('[$hostIdForLog] Listening on:');
-      for (var addr in host.addrs) { // host is non-null here
+      for (var addr in host.addrs) {
+        // host is non-null here
         print('  $addr/p2p/$fullHostId');
       }
-      print('[$hostIdForLog] Use one of the above full addresses (including /p2p/...) as the target for another instance.');
+      print(
+          '[$hostIdForLog] Use one of the above full addresses (including /p2p/...) as the target for another instance.');
     } else {
-      print('[$hostIdForLog] Not actively listening on a predefined address. (This is okay if only targeting another peer).');
+      print(
+          '[$hostIdForLog] Not actively listening on a predefined address. (This is okay if only targeting another peer).');
     }
 
     host.setStreamHandler(PING_PROTOCOL_ID, (stream, remotePeer) async {
       final currentHostLogId = shortPeerId(host!.id); // host is not null here
       final remotePeerLogId = shortPeerId(remotePeer);
-      print('[$currentHostLogId] Received ping from $remotePeerLogId on stream ${stream.id()} for protocol ${stream.protocol()}');
+      print(
+          '[$currentHostLogId] Received ping from $remotePeerLogId on stream ${stream.id()} for protocol ${stream.protocol()}');
       try {
         final data = await stream.read().timeout(Duration(seconds: 10));
-        print('[$currentHostLogId] Ping data received (${data.length} bytes) from $remotePeerLogId.');
+        print(
+            '[$currentHostLogId] Ping data received (${data.length} bytes) from $remotePeerLogId.');
         await stream.write(data); // Echo the data back (pong)
         print('[$currentHostLogId] Pong sent to $remotePeerLogId.');
       } catch (e, s) {
-        print('[$currentHostLogId] Error in ping handler for $remotePeerLogId: $e\n$s');
+        print(
+            '[$currentHostLogId] Error in ping handler for $remotePeerLogId: $e\n$s');
         await stream.reset();
       } finally {
         if (!stream.isClosed) {
@@ -151,7 +166,8 @@ Future<void> main(List<String> arguments) async {
       try {
         targetMa = MultiAddr(targetAddrStr);
       } catch (e) {
-        print('[$currentHostLogId] Error parsing target address "$targetAddrStr": $e');
+        print(
+            '[$currentHostLogId] Error parsing target address "$targetAddrStr": $e');
         exit(1);
       }
 
@@ -161,23 +177,29 @@ Future<void> main(List<String> arguments) async {
       final targetPeerIdStr = targetMa.valueForProtocol(Protocols.p2p.name);
 
       if (targetPeerIdStr == null) {
-        print('[$currentHostLogId] Error: Target multiaddress "$targetAddrStr" must include a /p2p/<peer-id> component (using protocol name lookup).');
+        print(
+            '[$currentHostLogId] Error: Target multiaddress "$targetAddrStr" must include a /p2p/<peer-id> component (using protocol name lookup).');
         exit(1);
       }
       PeerId targetPeerId;
       try {
         targetPeerId = PeerId.fromString(targetPeerIdStr);
       } catch (e) {
-         print('[$currentHostLogId] Error parsing PeerId from "$targetPeerIdStr": $e');
-         exit(1);
+        print(
+            '[$currentHostLogId] Error parsing PeerId from "$targetPeerIdStr": $e');
+        exit(1);
       }
-      
-      final connectAddr = targetMa.decapsulate(Protocols.p2p.name); // Use protocol name for decapsulate
+
+      final connectAddr = targetMa
+          .decapsulate(Protocols.p2p.name); // Use protocol name for decapsulate
       if (connectAddr != null) {
-        await host.peerStore.addrBook.addAddrs(targetPeerId, [connectAddr], Duration(hours: 1));
-        print('[$currentHostLogId] Added ${shortPeerId(targetPeerId)} ($connectAddr) to peerstore.');
+        await host.peerStore.addrBook
+            .addAddrs(targetPeerId, [connectAddr], Duration(hours: 1));
+        print(
+            '[$currentHostLogId] Added ${shortPeerId(targetPeerId)} ($connectAddr) to peerstore.');
       } else {
-        print('[$currentHostLogId] Could not decapsulate /p2p component from $targetMa to get connection address.');
+        print(
+            '[$currentHostLogId] Could not decapsulate /p2p component from $targetMa to get connection address.');
         // Decide if to exit or continue without adding to peerstore if newStream can handle it.
         // For now, we'll let newStream try.
       }
@@ -185,45 +207,58 @@ Future<void> main(List<String> arguments) async {
       // Attempt hole punch once before starting the ping loop
       final hps = host!.holePunchService; // host is not null here
       if (hps != null) {
-        print('[$currentHostLogId] Attempting initial hole punch to ${shortPeerId(targetPeerId)}...');
+        print(
+            '[$currentHostLogId] Attempting initial hole punch to ${shortPeerId(targetPeerId)}...');
         try {
           await hps.directConnect(targetPeerId).timeout(Duration(seconds: 20));
-          print('[$currentHostLogId] Initial hole punch attempt to ${shortPeerId(targetPeerId)} completed.');
+          print(
+              '[$currentHostLogId] Initial hole punch attempt to ${shortPeerId(targetPeerId)} completed.');
         } catch (e, s) {
-          print('[$currentHostLogId] Initial hole punch attempt to ${shortPeerId(targetPeerId)} failed: $e');
+          print(
+              '[$currentHostLogId] Initial hole punch attempt to ${shortPeerId(targetPeerId)} failed: $e');
           if (s != null) print(s);
           // Continue to try pinging anyway; direct connection might still be possible or relay might be used.
         }
       }
 
       int pingAttempt = 0;
-      while (true) { // Loop indefinitely
+      while (true) {
+        // Loop indefinitely
         pingAttempt++;
         final remotePeerLogId = shortPeerId(targetPeerId);
-        print('[$currentHostLogId] Pinging $remotePeerLogId (attempt $pingAttempt)...');
-        
+        print(
+            '[$currentHostLogId] Pinging $remotePeerLogId (attempt $pingAttempt)...');
+
         final startTime = DateTime.now();
         core_network_stream.P2PStream? clientStream;
 
         try {
-          clientStream = await host!.newStream( // host is not null here
-            targetPeerId,
-            [PING_PROTOCOL_ID],
-            core_context.Context(),
-          ).timeout(Duration(seconds: 15));
-          print('[$currentHostLogId] Opened stream ${clientStream.id()} to ${shortPeerId(targetPeerId)} for protocol ${clientStream.protocol()}');
+          clientStream = await host!
+              .newStream(
+                // host is not null here
+                targetPeerId,
+                [PING_PROTOCOL_ID],
+                core_context.Context(),
+              )
+              .timeout(Duration(seconds: 15));
+          print(
+              '[$currentHostLogId] Opened stream ${clientStream.id()} to ${shortPeerId(targetPeerId)} for protocol ${clientStream.protocol()}');
 
-          final payload = Uint8List.fromList(List.generate(32, (_) => Random().nextInt(256)));
+          final payload = Uint8List.fromList(
+              List.generate(32, (_) => Random().nextInt(256)));
           await clientStream.write(payload);
-          print('[$currentHostLogId] Sent ${payload.length} byte ping to ${shortPeerId(targetPeerId)}.');
+          print(
+              '[$currentHostLogId] Sent ${payload.length} byte ping to ${shortPeerId(targetPeerId)}.');
 
-          final pongData = await clientStream.read().timeout(Duration(seconds: 10));
+          final pongData =
+              await clientStream.read().timeout(Duration(seconds: 10));
           final rtt = DateTime.now().difference(startTime);
-          print('[$currentHostLogId] Received ${pongData.length} byte pong from ${shortPeerId(targetPeerId)} in ${rtt.inMilliseconds}ms.');
+          print(
+              '[$currentHostLogId] Received ${pongData.length} byte pong from ${shortPeerId(targetPeerId)} in ${rtt.inMilliseconds}ms.');
 
           bool success = pongData.lengthInBytes == payload.lengthInBytes;
           if (success) {
-            for(int k=0; k < payload.length; k++) {
+            for (int k = 0; k < payload.length; k++) {
               if (payload[k] != pongData[k]) {
                 success = false;
                 break;
@@ -233,9 +268,9 @@ Future<void> main(List<String> arguments) async {
           if (!success) {
             print('[$currentHostLogId] Pong payload mismatch!');
           }
-
-        } catch (e,s) {
-          print('[$currentHostLogId] Ping to ${shortPeerId(targetPeerId)} failed: $e');
+        } catch (e, s) {
+          print(
+              '[$currentHostLogId] Ping to ${shortPeerId(targetPeerId)} failed: $e');
           if (s != null) print(s);
         } finally {
           if (clientStream != null && !clientStream.isClosed) {
@@ -245,7 +280,8 @@ Future<void> main(List<String> arguments) async {
         // Always delay if the loop continues (which it will, until SIGINT)
         await Future.delayed(Duration(seconds: pingIntervalSec));
       }
-    } else if (listenAddrStr != null) { // This case implies targetAddrStr is null
+    } else if (listenAddrStr != null) {
+      // This case implies targetAddrStr is null
       final currentHostLogId = shortPeerId(host.id); // host is not null here
       print('[$currentHostLogId] Listening for pings. Press Ctrl+C to exit.');
       // Keep alive, relying on SIGINT for shutdown (handled below)
@@ -253,29 +289,30 @@ Future<void> main(List<String> arguments) async {
 
     // If we are listening OR pinging (targetAddrStr != null), we need to wait for SIGINT.
     if (listenAddrStr != null || targetAddrStr != null) {
-        // Setup SIGINT handler
-        ProcessSignal.sigint.watch().listen((signal) async {
-            final currentHostLogId = host != null ? shortPeerId(host!.id) : "Host";
-            print('\n[$currentHostLogId] SIGINT received, shutting down...');
-            if (!shutdownCompleter.isCompleted) {
-              shutdownCompleter.complete();
-            }
-        });
-
-        if (targetAddrStr != null && listenAddrStr == null) {
-             final currentHostLogId = shortPeerId(host!.id);
-             print('[$currentHostLogId] Continuously pinging target. Press Ctrl+C to exit.');
-        } else if (listenAddrStr != null && targetAddrStr != null) {
-            final currentHostLogId = shortPeerId(host!.id);
-            print('[$currentHostLogId] Listening and continuously pinging target. Press Ctrl+C to exit.');
+      // Setup SIGINT handler
+      ProcessSignal.sigint.watch().listen((signal) async {
+        final currentHostLogId = host != null ? shortPeerId(host!.id) : "Host";
+        print('\n[$currentHostLogId] SIGINT received, shutting down...');
+        if (!shutdownCompleter.isCompleted) {
+          shutdownCompleter.complete();
         }
-        // If only listenAddrStr is set, the message is already printed above.
-        // If neither is set, we would have exited earlier.
-        
-        await shutdownCompleter.future; // Keep alive until SIGINT
+      });
+
+      if (targetAddrStr != null && listenAddrStr == null) {
+        final currentHostLogId = shortPeerId(host!.id);
+        print(
+            '[$currentHostLogId] Continuously pinging target. Press Ctrl+C to exit.');
+      } else if (listenAddrStr != null && targetAddrStr != null) {
+        final currentHostLogId = shortPeerId(host!.id);
+        print(
+            '[$currentHostLogId] Listening and continuously pinging target. Press Ctrl+C to exit.');
+      }
+      // If only listenAddrStr is set, the message is already printed above.
+      // If neither is set, we would have exited earlier.
+
+      await shutdownCompleter.future; // Keep alive until SIGINT
     }
     // No automatic exit after ping loop anymore if only target was specified.
-
   } catch (e, s) {
     print('An unexpected error occurred: $e');
     print(s);
@@ -283,19 +320,20 @@ Future<void> main(List<String> arguments) async {
   } finally {
     final String finalHostId = host != null ? shortPeerId(host.id) : "Host";
     print('\n[$finalHostId] Initiating final shutdown sequence...');
-    if (host != null) { // Removed host.isStarted check
+    if (host != null) {
+      // Removed host.isStarted check
       await host.close();
       print('[$finalHostId] Host closed.');
     }
 
     // HolePunchService is closed by BasicHost.close() if it was initialized.
-    
+
     // p2p_conn_manager.ConnectionManager has a dispose method.
-     await connManager.dispose();
-     print('[$finalHostId] Connection manager disposed.');
+    await connManager.dispose();
+    print('[$finalHostId] Connection manager disposed.');
 
     // Removed udxInstance.destroy() as it's not available/needed.
-    // await udxInstance.destroy(); 
+    // await udxInstance.destroy();
     // print('[$finalHostId] UDX instance destroyed.'); // Removed
     print('[$finalHostId] Application shutdown complete.');
     // Ensure exit if we were only pinging and not listening

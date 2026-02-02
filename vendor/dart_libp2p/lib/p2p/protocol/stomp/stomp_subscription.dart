@@ -20,9 +20,9 @@ class StompSubscription {
     required this.destination,
     required this.ackMode,
     Map<String, String>? headers,
-  }) : headers = headers ?? <String, String>{},
-       _messageController = StreamController<StompMessage>.broadcast(),
-       _unsubscribeController = StreamController<void>.broadcast();
+  })  : headers = headers ?? <String, String>{},
+        _messageController = StreamController<StompMessage>.broadcast(),
+        _unsubscribeController = StreamController<void>.broadcast();
 
   /// Stream of messages for this subscription
   Stream<StompMessage> get messages => _messageController.stream;
@@ -36,7 +36,8 @@ class StompSubscription {
   /// Delivers a message to this subscription
   void deliverMessage(StompMessage message) {
     if (!_isActive) {
-      throw StompSubscriptionException('Cannot deliver message to inactive subscription', id);
+      throw StompSubscriptionException(
+          'Cannot deliver message to inactive subscription', id);
     }
     _messageController.add(message);
   }
@@ -44,7 +45,7 @@ class StompSubscription {
   /// Marks this subscription as unsubscribed
   void markUnsubscribed() {
     if (!_isActive) return;
-    
+
     _isActive = false;
     _unsubscribeController.add(null);
     _messageController.close();
@@ -87,7 +88,8 @@ class StompMessage {
   /// Creates a StompMessage from a MESSAGE frame
   factory StompMessage.fromFrame(StompFrame frame) {
     if (frame.command != StompCommands.message) {
-      throw StompFrameException('Cannot create StompMessage from non-MESSAGE frame: ${frame.command}');
+      throw StompFrameException(
+          'Cannot create StompMessage from non-MESSAGE frame: ${frame.command}');
     }
 
     final messageId = frame.getHeader(StompHeaders.messageId);
@@ -95,13 +97,16 @@ class StompMessage {
     final subscriptionId = frame.getHeader(StompHeaders.subscription);
 
     if (messageId == null) {
-      throw const StompFrameException('MESSAGE frame missing message-id header');
+      throw const StompFrameException(
+          'MESSAGE frame missing message-id header');
     }
     if (destination == null) {
-      throw const StompFrameException('MESSAGE frame missing destination header');
+      throw const StompFrameException(
+          'MESSAGE frame missing destination header');
     }
     if (subscriptionId == null) {
-      throw const StompFrameException('MESSAGE frame missing subscription header');
+      throw const StompFrameException(
+          'MESSAGE frame missing subscription header');
     }
 
     return StompMessage(
@@ -150,17 +155,21 @@ class StompMessage {
 /// Manager for STOMP subscriptions
 class StompSubscriptionManager {
   final Map<String, StompSubscription> _subscriptions = {};
-  final StreamController<StompSubscription> _subscriptionController = StreamController<StompSubscription>.broadcast();
-  final StreamController<String> _unsubscribeController = StreamController<String>.broadcast();
+  final StreamController<StompSubscription> _subscriptionController =
+      StreamController<StompSubscription>.broadcast();
+  final StreamController<String> _unsubscribeController =
+      StreamController<String>.broadcast();
 
   /// Stream of new subscriptions
-  Stream<StompSubscription> get onSubscription => _subscriptionController.stream;
+  Stream<StompSubscription> get onSubscription =>
+      _subscriptionController.stream;
 
   /// Stream of unsubscribed subscription IDs
   Stream<String> get onUnsubscribe => _unsubscribeController.stream;
 
   /// Gets all active subscriptions
-  List<StompSubscription> get subscriptions => _subscriptions.values.where((s) => s.isActive).toList();
+  List<StompSubscription> get subscriptions =>
+      _subscriptions.values.where((s) => s.isActive).toList();
 
   /// Gets a subscription by ID
   StompSubscription? getSubscription(String id) {
@@ -175,11 +184,13 @@ class StompSubscriptionManager {
     Map<String, String>? headers,
   }) {
     if (_subscriptions.containsKey(id)) {
-      throw StompSubscriptionException('Subscription with ID already exists', id);
+      throw StompSubscriptionException(
+          'Subscription with ID already exists', id);
     }
 
     if (_subscriptions.length >= StompConstants.maxSubscriptions) {
-      throw StompSubscriptionException('Maximum number of subscriptions reached', id);
+      throw StompSubscriptionException(
+          'Maximum number of subscriptions reached', id);
     }
 
     final subscription = StompSubscription(
@@ -315,8 +326,9 @@ class StompAckManager {
     if (ack.ackId == null) return; // No ack required
 
     _pendingAcks[ack.ackId!] = ack;
-    
-    final subscriptionAcks = _subscriptionAcks.putIfAbsent(ack.subscriptionId, () => <PendingAck>[]);
+
+    final subscriptionAcks =
+        _subscriptionAcks.putIfAbsent(ack.subscriptionId, () => <PendingAck>[]);
     subscriptionAcks.add(ack);
   }
 

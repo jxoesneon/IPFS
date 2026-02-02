@@ -22,13 +22,15 @@ class RelayManager {
 
   Relay? _activeRelay; // The managed instance of the Relay service
   final Lock _lock = Lock();
-  Subscription? _eventBusSubscription; // To hold the subscription object from EventBus
-  StreamSubscription<dynamic>? _reachabilityStreamSubscription; // To hold the listener on the stream
+  Subscription?
+      _eventBusSubscription; // To hold the subscription object from EventBus
+  StreamSubscription<dynamic>?
+      _reachabilityStreamSubscription; // To hold the listener on the stream
   bool _isClosed = false;
   Completer<void>? _backgroundCompleter;
 
   static final _log = Logger('RelayManager');
-  
+
   /// Returns the active relay service instance, if running
   Relay? get activeRelay => _activeRelay;
 
@@ -71,30 +73,35 @@ class RelayManager {
   void _startBackgroundListener() {
     // Subscribe to the event type.
     // Note: The stream from EventBus.subscribe is dynamic, so we cast the event.
-    _eventBusSubscription = _host.eventBus.subscribe(EvtLocalReachabilityChanged);
-    _reachabilityStreamSubscription = _eventBusSubscription!.stream.listen(
-      (dynamic event) async { // Event is dynamic, needs casting
-        if (_isClosed) return;
-        if (event is EvtLocalReachabilityChanged) {
-          _log.fine('Received EvtLocalReachabilityChanged: ${event.reachability}');
-          await _handleReachabilityChanged(event.reachability);
-        } else {
-          _log.warning('Received unknown event type on reachability stream: ${event.runtimeType}');
-        }
-      },
-      onDone: () {
-        if (!_isClosed && _backgroundCompleter != null && !_backgroundCompleter!.isCompleted) {
-          _log.fine('Reachability event stream closed.');
-          _backgroundCompleter!.complete();
-        }
-      },
-      onError: (e, StackTrace s) {
-        _log.severe('Error in reachability listener.', e, s);
-        if (!_isClosed && _backgroundCompleter != null && !_backgroundCompleter!.isCompleted) {
-          _backgroundCompleter!.completeError(e, s);
-        }
+    _eventBusSubscription =
+        _host.eventBus.subscribe(EvtLocalReachabilityChanged);
+    _reachabilityStreamSubscription =
+        _eventBusSubscription!.stream.listen((dynamic event) async {
+      // Event is dynamic, needs casting
+      if (_isClosed) return;
+      if (event is EvtLocalReachabilityChanged) {
+        _log.fine(
+            'Received EvtLocalReachabilityChanged: ${event.reachability}');
+        await _handleReachabilityChanged(event.reachability);
+      } else {
+        _log.warning(
+            'Received unknown event type on reachability stream: ${event.runtimeType}');
       }
-    );
+    }, onDone: () {
+      if (!_isClosed &&
+          _backgroundCompleter != null &&
+          !_backgroundCompleter!.isCompleted) {
+        _log.fine('Reachability event stream closed.');
+        _backgroundCompleter!.complete();
+      }
+    }, onError: (e, StackTrace s) {
+      _log.severe('Error in reachability listener.', e, s);
+      if (!_isClosed &&
+          _backgroundCompleter != null &&
+          !_backgroundCompleter!.isCompleted) {
+        _backgroundCompleter!.completeError(e, s);
+      }
+    });
     _log.fine('Subscribed to reachability events.');
   }
 
@@ -116,12 +123,14 @@ class RelayManager {
               _activeRelay = null; // Ensure it's null if start failed
             }
           } else {
-            _log.fine('Host is public, Circuit Relay v2 service already running.');
+            _log.fine(
+                'Host is public, Circuit Relay v2 service already running.');
           }
           break;
         default: // private, unknown
           if (_activeRelay != null) {
-            _log.fine('Host is not public ($reachability), stopping Circuit Relay v2 service.');
+            _log.fine(
+                'Host is not public ($reachability), stopping Circuit Relay v2 service.');
             try {
               await _activeRelay!.close();
               _log.fine('Circuit Relay v2 service stopped successfully.');
@@ -130,7 +139,8 @@ class RelayManager {
             }
             _activeRelay = null;
           } else {
-            _log.fine('Host is not public ($reachability), Circuit Relay v2 service already stopped.');
+            _log.fine(
+                'Host is not public ($reachability), Circuit Relay v2 service already stopped.');
           }
           break;
       }
@@ -158,15 +168,18 @@ class RelayManager {
         _log.fine('Closing active Circuit Relay v2 service.');
         try {
           await _activeRelay!.close();
-        } catch (e,s) {
-            _log.warning('Error closing active Circuit Relay during RelayManager close.', e, s);
+        } catch (e, s) {
+          _log.warning(
+              'Error closing active Circuit Relay during RelayManager close.',
+              e,
+              s);
         }
         _activeRelay = null;
       }
     });
-    
+
     if (_backgroundCompleter != null && !_backgroundCompleter!.isCompleted) {
-        _backgroundCompleter!.complete();
+      _backgroundCompleter!.complete();
     }
     _log.fine('RelayManager closed.');
   }

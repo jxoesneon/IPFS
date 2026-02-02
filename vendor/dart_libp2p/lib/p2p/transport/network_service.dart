@@ -10,23 +10,22 @@ class NetworkService {
   // TCP Socket Implementation
   Socket? _tcpSocket;
   bool _isConnected = false;
-  
+
   Future<void> createTcpServer(String host, int port) async {
     try {
       final server = await ServerSocket.bind(host, port);
-      
+
       server.listen((Socket client) {
         handleClient(client);
       });
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   Future<void> connectToTcpServer(String host, int port) async {
     try {
       _tcpSocket = await Socket.connect(host, port);
       _isConnected = true;
-      
+
       _tcpSocket?.listen(
         (Uint8List data) {
           final message = String.fromCharCodes(data);
@@ -40,8 +39,7 @@ class NetworkService {
           _tcpSocket?.close();
         },
       );
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   void sendTcpMessage(String message) {
@@ -51,7 +49,6 @@ class NetworkService {
   }
 
   void handleClient(Socket client) {
-    
     client.listen(
       (Uint8List data) {
         final message = String.fromCharCodes(data);
@@ -73,7 +70,7 @@ class NetworkService {
   Future<void> createUdpSocket(String host, int port) async {
     try {
       _udpSocket = await RawDatagramSocket.bind(host, port);
-      
+
       _udpSocket?.listen(
         (RawSocketEvent event) {
           if (event == RawSocketEvent.read) {
@@ -83,13 +80,10 @@ class NetworkService {
             }
           }
         },
-        onError: (error) {
-        },
-        onDone: () {
-        },
+        onError: (error) {},
+        onDone: () {},
       );
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   void sendUdpMessage(String message, InternetAddress address, int port) {
@@ -108,14 +102,14 @@ class NetworkService {
 // // Usage example:
 // void main() async {
 //   final networkService = NetworkService();
-  
+
 //   // TCP Server example
 //   await networkService.createTcpServer('0.0.0.0', 8080);
-  
+
 //   // TCP Client example
 //   await networkService.connectToTcpServer('127.0.0.1', 8080);
 //   networkService.sendTcpMessage('Hello Server!');
-  
+
 //   // UDP example
 //   await networkService.createUdpSocket('0.0.0.0', 8081);
 //   networkService.sendUdpMessage(

@@ -4,4 +4,9 @@
 
 export 'basic.dart' show BasicBus;
 export 'opts.dart' show bufSize, name, stateful, withMetricsTracer;
-export 'metrics.dart' show MetricsTracer, SimpleMetricsTracer, NoopMetricsTracer, createMetricsTracer;
+export 'metrics.dart'
+    show
+        MetricsTracer,
+        SimpleMetricsTracer,
+        NoopMetricsTracer,
+        createMetricsTracer;

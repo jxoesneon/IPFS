@@ -88,8 +88,10 @@ class BasicBus implements EventBus {
     for (final eventTypeString in types) {
       final future = _withNode(eventTypeString, (node) async {
         await node.addSink(_NamedSink(controller: controller, name: sub.name));
-        nodeListForSubscription.add(node); // Add to the list passed to _Subscription
-        node.keepLast = true; // Always keep the last event when there are subscribers
+        nodeListForSubscription
+            .add(node); // Add to the list passed to _Subscription
+        node.keepLast =
+            true; // Always keep the last event when there are subscribers
         _metricsTracer?.addSubscriber(eventTypeString);
         // Deliver the last event directly if available
         if (node.last != null) {
@@ -144,7 +146,8 @@ class BasicBus implements EventBus {
     return List.unmodifiable(_nodes.keys);
   }
 
-  Future<void> _withNode(String type, Future<void> Function(_Node) callback, Future<void> Function(_Node?)? asyncCallback) async {
+  Future<void> _withNode(String type, Future<void> Function(_Node) callback,
+      Future<void> Function(_Node?)? asyncCallback) async {
     _Node? node = _nodes[type.toString()];
     if (node == null) {
       node = _Node(type: type, metricsTracer: _metricsTracer);
@@ -163,7 +166,7 @@ class BasicBus implements EventBus {
   Future<void> _tryDropNode(String type) async {
     final node = _nodes[type.toString()];
     if (node == null) {
-      return; 
+      return;
     }
 
     bool shouldDrop = false;
@@ -200,7 +203,8 @@ class _Emitter implements Emitter {
     }
 
     if (event.runtimeType.toString() != type) {
-      throw Exception('Emit called with wrong type. Expected: $type, got: ${event.toString()}');
+      throw Exception(
+          'Emit called with wrong type. Expected: $type, got: ${event.toString()}');
     }
 
     await node.emit(event);
@@ -260,7 +264,8 @@ class _WildcardSubscription implements Subscription {
       }
 
       await node.lock.synchronized(() async {
-        node.sinks.removeWhere((sink) => sink.name == name && sink.controller == _controller);
+        node.sinks.removeWhere(
+            (sink) => sink.name == name && sink.controller == _controller);
         metricsTracer?.removeSubscriber(WildcardSubscription.toString());
       });
     });
@@ -297,7 +302,7 @@ class _Subscription implements Subscription {
       try {
         await Future.wait(opsToWait);
       } finally {
-        _initializationComplete = true; 
+        _initializationComplete = true;
       }
     }
   }
@@ -318,7 +323,8 @@ class _Subscription implements Subscription {
 
       for (final node in nodesToProcess) {
         await node.lock.synchronized(() async {
-          node.sinks.removeWhere((sink) => sink.name == name && sink.controller == _controller);
+          node.sinks.removeWhere(
+              (sink) => sink.name == name && sink.controller == _controller);
           metricsTracer?.removeSubscriber(node.type);
           if (node.sinks.isEmpty && node.nEmitters == 0) {
             await dropper(node.type);
@@ -375,7 +381,8 @@ class _WildcardNode {
   final List<_NamedSink> sinks = [];
   MetricsTracer? _metricsTracer;
 
-  _WildcardNode({MetricsTracer? metricsTracer}) : _metricsTracer = metricsTracer;
+  _WildcardNode({MetricsTracer? metricsTracer})
+      : _metricsTracer = metricsTracer;
 
   Future<void> addSink(_NamedSink sink) async {
     await lock.synchronized(() async {
@@ -384,7 +391,8 @@ class _WildcardNode {
     });
   }
 
-  Future<void> removeSink(StreamSink<Object> controller) async { // This method seems unused, but kept for now.
+  Future<void> removeSink(StreamSink<Object> controller) async {
+    // This method seems unused, but kept for now.
     await lock.synchronized(() async {
       sinks.removeWhere((sink) => sink.controller.sink == controller);
     });
@@ -403,7 +411,8 @@ class _WildcardNode {
             sink.controller.add(event);
           }
         } catch (e) {
-              print('This can lead to libp2p stalling and hard to debug issues. Error: $e');
+          print(
+              'This can lead to libp2p stalling and hard to debug issues. Error: $e');
         }
       }
     });

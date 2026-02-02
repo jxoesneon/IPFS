@@ -4,7 +4,6 @@ import 'package:dart_libp2p/core/peer/addr_info.dart'; // For AddrInfo
 import 'package:dart_libp2p/core/host/host.dart'; // For Host interface
 import './autorelay_metrics.dart'; // For MetricsTracer
 
-
 // Equivalent to Go's PeerSource func(ctx context.Context, num int) <-chan peer.AddrInfo
 // The context is handled by Stream cancellation.
 typedef PeerSource = Stream<AddrInfo> Function(int numPeers);
@@ -23,7 +22,8 @@ abstract class Clock {
 }
 
 class RealInstantTimer implements InstantTimer {
-  final StreamController<DateTime> _controller = StreamController<DateTime>.broadcast();
+  final StreamController<DateTime> _controller =
+      StreamController<DateTime>.broadcast();
   Timer? _timer;
   DateTime _triggerTime;
 
@@ -123,19 +123,20 @@ class AutoRelayConfig {
       throw ArgumentError(
           'minCandidates cannot be greater than maxCandidates. Got min: ${this.minCandidates}, max: ${this.maxCandidates}');
     }
-    if (this.desiredRelays == 0 && (staticRelays == null || staticRelays!.isEmpty)) {
-        // If desiredRelays is 0, it usually means it's derived from staticRelays.
-        // If staticRelays is also empty/null, this might be an issue unless peerSource is very effective.
-        // The Go code adjusts desiredRelays in WithStaticRelays.
+    if (this.desiredRelays == 0 &&
+        (staticRelays == null || staticRelays!.isEmpty)) {
+      // If desiredRelays is 0, it usually means it's derived from staticRelays.
+      // If staticRelays is also empty/null, this might be an issue unless peerSource is very effective.
+      // The Go code adjusts desiredRelays in WithStaticRelays.
     }
-     if (staticRelays != null && staticRelays!.isNotEmpty) {
-        // If static relays are provided, they often dictate min/max candidates and desired relays.
-        // The Go WithStaticRelays option adjusts these.
-        // Here, we assume if they are passed, they are the source of truth,
-        // and the user should set other params accordingly or we use defaults that might be overridden
-        // by a more specific factory method if we create one later.
-        // For simplicity now, direct assignment.
-     }
+    if (staticRelays != null && staticRelays!.isNotEmpty) {
+      // If static relays are provided, they often dictate min/max candidates and desired relays.
+      // The Go WithStaticRelays option adjusts these.
+      // Here, we assume if they are passed, they are the source of truth,
+      // and the user should set other params accordingly or we use defaults that might be overridden
+      // by a more specific factory method if we create one later.
+      // For simplicity now, direct assignment.
+    }
   }
 
   // Factory constructor for static relays to mimic Go's WithStaticRelays behavior more closely
@@ -143,8 +144,9 @@ class AutoRelayConfig {
     List<AddrInfo> staticRelays, {
     Clock? clock,
     Duration? bootDelay, // bootDelay is not set by Go's WithStaticRelays
-    Duration? backoff,   // backoff is not set by Go's WithStaticRelays
-    Duration? maxCandidateAge, // maxCandidateAge is not set by Go's WithStaticRelays
+    Duration? backoff, // backoff is not set by Go's WithStaticRelays
+    Duration?
+        maxCandidateAge, // maxCandidateAge is not set by Go's WithStaticRelays
     Duration? minInterval, // minInterval is not set by Go's WithStaticRelays
     MetricsTracer? metricsTracer,
   }) {
@@ -173,7 +175,8 @@ class AutoRelayConfig {
     if (staticRelays != null && staticRelays!.isNotEmpty) {
       return (int numPeers) {
         final controller = StreamController<AddrInfo>();
-        final effectiveNum = numPeers < staticRelays!.length ? numPeers : staticRelays!.length;
+        final effectiveNum =
+            numPeers < staticRelays!.length ? numPeers : staticRelays!.length;
         for (int i = 0; i < effectiveNum; i++) {
           controller.add(staticRelays![i]);
         }
@@ -184,6 +187,7 @@ class AutoRelayConfig {
     if (peerSourceCallback != null) {
       return peerSourceCallback!;
     }
-    throw StateError('AutoRelayConfig must have either staticRelays or a peerSourceCallback.');
+    throw StateError(
+        'AutoRelayConfig must have either staticRelays or a peerSourceCallback.');
   }
 }

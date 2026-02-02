@@ -18,7 +18,8 @@ class RoutingDiscovery implements Discovery {
   RoutingDiscovery(this._router);
 
   @override
-  Future<Duration> advertise(String ns, [List<DiscoveryOption> options = const []]) async {
+  Future<Duration> advertise(String ns,
+      [List<DiscoveryOption> options = const []]) async {
     final opts = DiscoveryOptions().apply(options);
 
     var ttl = opts.ttl;
@@ -62,9 +63,11 @@ class RoutingDiscovery implements Discovery {
   }
 
   @override
-  Future<Stream<AddrInfo>> findPeers(String ns, [List<DiscoveryOption> options = const []]) async {
+  Future<Stream<AddrInfo>> findPeers(String ns,
+      [List<DiscoveryOption> options = const []]) async {
     final opts = DiscoveryOptions().apply(options);
-    final limit = opts.limit ?? 100; // default limit if not specified in options
+    final limit =
+        opts.limit ?? 100; // default limit if not specified in options
 
     final cid = await nsToCid(ns);
 

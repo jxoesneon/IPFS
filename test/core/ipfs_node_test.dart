@@ -30,7 +30,7 @@ void main() {
     setUp(() async {
       tempRepoDir = Directory.systemTemp.createTempSync('ipfs_test_repo_');
       tempBlockDir = Directory.systemTemp.createTempSync('ipfs_test_blocks_');
-      
+
       container = ServiceContainer();
       config = IPFSConfig(offline: true, dataPath: tempRepoDir.path);
       blockStore = BlockStore(path: tempBlockDir.path);
@@ -50,7 +50,7 @@ void main() {
 
       // No Network/Services for offline
     });
-    
+
     tearDown(() {
       if (tempRepoDir.existsSync()) tempRepoDir.deleteSync(recursive: true);
       if (tempBlockDir.existsSync()) tempBlockDir.deleteSync(recursive: true);

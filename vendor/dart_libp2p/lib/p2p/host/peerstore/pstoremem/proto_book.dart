@@ -7,7 +7,6 @@ import 'package:dart_libp2p/core/peerstore.dart';
 import 'package:dart_libp2p/core/protocol/protocol.dart';
 import 'package:synchronized/synchronized.dart';
 
-
 /// Error thrown when too many protocols are added for a peer.
 class ErrTooManyProtocols implements Exception {
   final String message;
@@ -25,7 +24,8 @@ class ProtoSegment {
 
 /// A memory-based implementation of the ProtoBook interface.
 class MemoryProtoBook implements ProtoBook {
-  final List<ProtoSegment> _segments = List.generate(256, (_) => ProtoSegment());
+  final List<ProtoSegment> _segments =
+      List.generate(256, (_) => ProtoSegment());
   final int _maxProtos;
   final _lock = Lock();
 
@@ -78,7 +78,7 @@ class MemoryProtoBook implements ProtoBook {
   }
 
   @override
-  Future<List<ProtocolID>> getProtocols(PeerId id) async{
+  Future<List<ProtocolID>> getProtocols(PeerId id) async {
     final s = _getSegment(id);
     return await _lock.synchronized(() async {
       final protoSet = s._protocols[id.toString()];
@@ -112,7 +112,8 @@ class MemoryProtoBook implements ProtoBook {
   }
 
   @override
-  Future<List<ProtocolID>> supportsProtocols(PeerId id, List<ProtocolID> protocols) async {
+  Future<List<ProtocolID>> supportsProtocols(
+      PeerId id, List<ProtocolID> protocols) async {
     final s = _getSegment(id);
     return await _lock.synchronized(() async {
       final result = <ProtocolID>[];
@@ -132,9 +133,10 @@ class MemoryProtoBook implements ProtoBook {
   }
 
   @override
-  Future<ProtocolID?> firstSupportedProtocol(PeerId id, List<ProtocolID> protocols) async {
+  Future<ProtocolID?> firstSupportedProtocol(
+      PeerId id, List<ProtocolID> protocols) async {
     final s = _getSegment(id);
-    return await _lock.synchronized(() async{
+    return await _lock.synchronized(() async {
       final protoSet = s._protocols[id.toString()];
       if (protoSet == null) {
         return null;

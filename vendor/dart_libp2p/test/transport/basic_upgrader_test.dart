@@ -14,14 +14,16 @@ import 'package:dart_libp2p/core/peer/peer_id.dart';
 import 'dart:io'; // Added for Socket
 
 import 'package:dart_libp2p/core/protocol/protocol.dart';
-import 'package:dart_libp2p/core/crypto/ed25519.dart' as crypto_ed25519; // Corrected path
+import 'package:dart_libp2p/core/crypto/ed25519.dart'
+    as crypto_ed25519; // Corrected path
 import 'package:dart_libp2p/p2p/protocol/multistream/multistream.dart';
 import 'package:dart_libp2p/p2p/security/secured_connection.dart';
 import 'package:dart_libp2p/p2p/security/security_protocol.dart';
 import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart';
 import 'package:dart_libp2p/config/config.dart' as p2p_config;
 import 'package:dart_libp2p/config/stream_muxer.dart' as config_stream_muxer;
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart' as p2p_mux;
+import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart'
+    as p2p_mux;
 import 'package:dart_libp2p/p2p/multiaddr/codec.dart'; // Added for MultiAddrCodec
 
 import 'package:test/test.dart';
@@ -33,38 +35,48 @@ class MockResourceManager extends NullResourceManager {}
 class MockSecurityProtocol implements SecurityProtocol {
   @override
   final ProtocolID protocolId;
-  final Future<SecuredConnection> Function(TransportConn conn) secureOutboundFunc;
-  final Future<SecuredConnection> Function(TransportConn conn) secureInboundFunc;
+  final Future<SecuredConnection> Function(TransportConn conn)
+      secureOutboundFunc;
+  final Future<SecuredConnection> Function(TransportConn conn)
+      secureInboundFunc;
 
-  MockSecurityProtocol(this.protocolId, this.secureOutboundFunc, this.secureInboundFunc);
+  MockSecurityProtocol(
+      this.protocolId, this.secureOutboundFunc, this.secureInboundFunc);
 
   @override
-  Future<SecuredConnection> secureOutbound(TransportConn conn) => secureOutboundFunc(conn);
+  Future<SecuredConnection> secureOutbound(TransportConn conn) =>
+      secureOutboundFunc(conn);
 
   @override
-  Future<SecuredConnection> secureInbound(TransportConn conn) => secureInboundFunc(conn);
+  Future<SecuredConnection> secureInbound(TransportConn conn) =>
+      secureInboundFunc(conn);
 }
 
 class MockStreamMuxerDef extends config_stream_muxer.StreamMuxer {
   MockStreamMuxerDef({
     required ProtocolID id,
-    required p2p_mux.Multiplexer Function(Conn secureConn, bool isClient) muxerFactory,
+    required p2p_mux.Multiplexer Function(Conn secureConn, bool isClient)
+        muxerFactory,
   }) : super(id: id, muxerFactory: muxerFactory);
 }
 
 class MockP2pMultiplexer implements p2p_mux.Multiplexer {
-  final Future<core_mux.MuxedConn> Function(TransportConn secureConnection, bool isServer, PeerScope scope) newConnOnTransportFunc;
+  final Future<core_mux.MuxedConn> Function(
+          TransportConn secureConnection, bool isServer, PeerScope scope)
+      newConnOnTransportFunc;
 
   MockP2pMultiplexer(this.newConnOnTransportFunc);
 
   @override
   String get protocolId => '/mock-muxer/1.0.0';
   @override
-  Future<P2PStream> openStream(Context context) async => throw UnimplementedError(); // Changed from newStream()
+  Future<P2PStream> openStream(Context context) async =>
+      throw UnimplementedError(); // Changed from newStream()
   @override
   Future<P2PStream> acceptStream() async => throw UnimplementedError();
   @override
-  Future<List<P2PStream>> get streams async => throw UnimplementedError(); // Changed to async
+  Future<List<P2PStream>> get streams async =>
+      throw UnimplementedError(); // Changed to async
   @override
   Stream<P2PStream> get incomingStreams => throw UnimplementedError();
   @override
@@ -83,7 +95,8 @@ class MockP2pMultiplexer implements p2p_mux.Multiplexer {
   void removeStreamHandler() {}
 
   @override
-  Future<core_mux.MuxedConn> newConnOnTransport(TransportConn secureConnection, bool isServer, PeerScope scope) =>
+  Future<core_mux.MuxedConn> newConnOnTransport(
+          TransportConn secureConnection, bool isServer, PeerScope scope) =>
       newConnOnTransportFunc(secureConnection, isServer, scope);
 }
 
@@ -93,9 +106,11 @@ class MockMuxedConn implements core_mux.MuxedConn {
   @override
   bool get isClosed => false;
   @override
-  Future<core_mux.MuxedStream> openStream(Context context) async => throw UnimplementedError();
+  Future<core_mux.MuxedStream> openStream(Context context) async =>
+      throw UnimplementedError();
   @override
-  Future<core_mux.MuxedStream> acceptStream() async => throw UnimplementedError();
+  Future<core_mux.MuxedStream> acceptStream() async =>
+      throw UnimplementedError();
 }
 
 class MockTransportConn implements TransportConn {
@@ -112,7 +127,8 @@ class MockTransportConn implements TransportConn {
   bool _isClosed = false;
   Completer<void>? _readCompleter;
 
-  MockTransportConn(this._localPeer, this._remotePeer, this._localMultiaddr, this._remoteMultiaddr, this._localKeyPair, this.remoteKeyPair);
+  MockTransportConn(this._localPeer, this._remotePeer, this._localMultiaddr,
+      this._remoteMultiaddr, this._localKeyPair, this.remoteKeyPair);
 
   void addDataToRead(Uint8List data) {
     dataToRead.add(data);
@@ -128,9 +144,10 @@ class MockTransportConn implements TransportConn {
       _readCompleter = Completer<void>();
       await _readCompleter!.future; // Wait for data to be added
       _readCompleter = null;
-      if (_isClosed) throw Exception('Connection closed while waiting for read');
+      if (_isClosed)
+        throw Exception('Connection closed while waiting for read');
       if (readPointer >= dataToRead.length) {
-         throw Exception('No more data to read after wait');
+        throw Exception('No more data to read after wait');
       }
     }
     final data = dataToRead[readPointer++];
@@ -146,7 +163,7 @@ class MockTransportConn implements TransportConn {
   @override
   Future<void> close() async {
     _isClosed = true;
-     if (_readCompleter != null && !_readCompleter!.isCompleted) {
+    if (_readCompleter != null && !_readCompleter!.isCompleted) {
       _readCompleter!.completeError(Exception('Connection closed by closer'));
     }
   }
@@ -165,7 +182,7 @@ class MockTransportConn implements TransportConn {
   PeerId get remotePeer => _remotePeer;
   @override
   Future<PublicKey?> get remotePublicKey async => remoteKeyPair.publicKey;
-   @override
+  @override
   ConnScope get scope => NullScope(); // Using NullScope from rcmgr.dart
 
   // Unimplemented but required by interface
@@ -193,9 +210,11 @@ class MockTransportConn implements TransportConn {
 class DelegatingMockSecuredConnection implements SecuredConnection {
   final MockTransportConn _delegate;
   final PeerId _localPeer;
-  final PeerId _remotePeer; // This is the peer ID established by the security handshake
+  final PeerId
+      _remotePeer; // This is the peer ID established by the security handshake
   final KeyPair _localKeyPair; // Local keypair for this secured identity
-  final PublicKey _establishedRemotePublicKey; // Remote public key established by handshake
+  final PublicKey
+      _establishedRemotePublicKey; // Remote public key established by handshake
   final String _protocolId; // The ID of the security protocol used
 
   DelegatingMockSecuredConnection(
@@ -217,7 +236,8 @@ class DelegatingMockSecuredConnection implements SecuredConnection {
   @override
   bool get isClosed => _delegate.isClosed;
   @override
-  String get id => _delegate.id; // Or a new ID specific to the secured connection
+  String get id =>
+      _delegate.id; // Or a new ID specific to the secured connection
   @override
   MultiAddr get localMultiaddr => _delegate.localMultiaddr;
   @override
@@ -225,14 +245,18 @@ class DelegatingMockSecuredConnection implements SecuredConnection {
 
   // SecuredConnection specific properties (and TransportConn properties that might change post-security)
   @override
-  PeerId get localPeer => _localPeer; // Use the local peer specific to this secured context
+  PeerId get localPeer =>
+      _localPeer; // Use the local peer specific to this secured context
   @override
-  PeerId get remotePeer => _remotePeer; // CRITICAL: This is the peer ID from the security handshake
+  PeerId get remotePeer =>
+      _remotePeer; // CRITICAL: This is the peer ID from the security handshake
   @override
-  Future<PublicKey?> get remotePublicKey async => _establishedRemotePublicKey; // CRITICAL: Key from handshake
+  Future<PublicKey?> get remotePublicKey async =>
+      _establishedRemotePublicKey; // CRITICAL: Key from handshake
 
   @override
-  ConnScope get scope => _delegate.scope; // Or a new scope if security changes it
+  ConnScope get scope =>
+      _delegate.scope; // Or a new scope if security changes it
 
   // Implement other TransportConn methods required by the interface by delegating
   @override
@@ -246,7 +270,8 @@ class DelegatingMockSecuredConnection implements SecuredConnection {
   @override
   Future<List<P2PStream>> get streams async => _delegate.streams;
   @override
-  ConnState get state => _delegate.state; // This might need to be constructed based on secured state
+  ConnState get state => _delegate
+      .state; // This might need to be constructed based on secured state
   @override
   ConnStats get stat => _delegate.stat;
 
@@ -264,7 +289,8 @@ class DelegatingMockSecuredConnection implements SecuredConnection {
 
   @override
   void notifyActivity() {
-    _delegate.notifyActivity(); // Delegate to the underlying mock transport connection
+    _delegate
+        .notifyActivity(); // Delegate to the underlying mock transport connection
   }
 
   @override
@@ -275,7 +301,6 @@ class DelegatingMockSecuredConnection implements SecuredConnection {
   // TODO: implement currentSendNonce
   int get currentSendNonce => throw UnimplementedError();
 }
-
 
 void main() {
   group('BasicUpgrader', () {
@@ -298,15 +323,19 @@ void main() {
       remoteKeyPair = await crypto_ed25519.generateEd25519KeyPair();
       localPeerId = await PeerId.fromPublicKey(localKeyPair.publicKey);
       remotePeerId = await PeerId.fromPublicKey(remoteKeyPair.publicKey);
-      localAddr = MultiAddr('/ip4/127.0.0.1/tcp/1000'); // Assuming Multiaddr.fromString exists
-      remoteAddr = MultiAddr('/ip4/127.0.0.1/tcp/2000'); // Assuming Multiaddr.fromString exists
+      localAddr = MultiAddr(
+          '/ip4/127.0.0.1/tcp/1000'); // Assuming Multiaddr.fromString exists
+      remoteAddr = MultiAddr(
+          '/ip4/127.0.0.1/tcp/2000'); // Assuming Multiaddr.fromString exists
 
       upgrader = BasicUpgrader(resourceManager: MockResourceManager());
-      mockConn = MockTransportConn(localPeerId, remotePeerId, localAddr, remoteAddr, localKeyPair, remoteKeyPair);
+      mockConn = MockTransportConn(localPeerId, remotePeerId, localAddr,
+          remoteAddr, localKeyPair, remoteKeyPair);
 
       mockMuxedConn = MockMuxedConn();
-      mockP2pMuxer = MockP2pMultiplexer((conn, isServer, scope) async => mockMuxedConn);
-      
+      mockP2pMuxer =
+          MockP2pMultiplexer((conn, isServer, scope) async => mockMuxedConn);
+
       mockSecProto = MockSecurityProtocol(
         '/mock-sec/1.0.0',
         (transportConn) async {
@@ -317,11 +346,13 @@ void main() {
             localPeerId, // Local peer for the secured connection
             remotePeerId, // Remote peer ID established by this mock handshake
             localKeyPair, // Local keypair
-            remoteKeyPair.publicKey, // Remote public key established by this mock handshake
+            remoteKeyPair
+                .publicKey, // Remote public key established by this mock handshake
             '/mock-sec/1.0.0', // The ID of this mock security protocol
           );
         },
-        (transportConn) async { // secureInboundFunc
+        (transportConn) async {
+          // secureInboundFunc
           final originalMockConn = transportConn as MockTransportConn;
           // For inbound, remotePeerId and remoteKeyPair.publicKey are "discovered"
           return DelegatingMockSecuredConnection(
@@ -355,9 +386,11 @@ void main() {
       // 2. Acknowledgment of the chosen security protocol
       Timer.run(() {
         // Mock responds to initiator's /multistream/1.0.0
-        mockConn.addDataToRead(_prepareMultistreamResponse(protocolID)); // protocolID is '/multistream/1.0.0'
+        mockConn.addDataToRead(_prepareMultistreamResponse(
+            protocolID)); // protocolID is '/multistream/1.0.0'
         // Mock responds to initiator's security protocol proposal
-        mockConn.addDataToRead(_prepareMultistreamResponse(mockSecProto.protocolId));
+        mockConn.addDataToRead(
+            _prepareMultistreamResponse(mockSecProto.protocolId));
       });
 
       // Simulate multistream negotiation for muxer
@@ -394,8 +427,9 @@ void main() {
       // 1. /multistream/1.0.0
       // 2. Its chosen security protocol
       mockConn.addDataToRead(_prepareMultistreamResponse(protocolID));
-      mockConn.addDataToRead(_prepareMultistreamResponse(mockSecProto.protocolId));
-      
+      mockConn
+          .addDataToRead(_prepareMultistreamResponse(mockSecProto.protocolId));
+
       // Simulate initiator (remote) sending its preferred muxer protocol
       // The initiator (mockConn) sends:
       // 1. /multistream/1.0.0
@@ -413,26 +447,28 @@ void main() {
       expect(upgradedConn.state.streamMultiplexer, equals(mockMuxerDef.id));
       expect(upgradedConn.localPeer, equals(localPeerId));
       // Remote peer ID is established during security handshake, simulated by MockSecuredConnection
-      expect(upgradedConn.remotePeer, equals(remotePeerId)); 
+      expect(upgradedConn.remotePeer, equals(remotePeerId));
     });
 
-    test('upgradeOutbound fails if security negotiation fails (no common protocol)', () async {
+    test(
+        'upgradeOutbound fails if security negotiation fails (no common protocol)',
+        () async {
       Timer.run(() {
         // Mock acks /multistream/1.0.0
         mockConn.addDataToRead(_prepareMultistreamResponse(protocolID));
         // Simulate remote responding with a protocol not offered by us
-        mockConn.addDataToRead(_prepareMultistreamResponse('/non-existent-sec/1.0.0'));
+        mockConn.addDataToRead(
+            _prepareMultistreamResponse('/non-existent-sec/1.0.0'));
       });
 
       await expectLater(
-        upgrader.upgradeOutbound(
-          connection: mockConn,
-          remotePeerId: remotePeerId,
-          config: testConfig,
-          remoteAddr: remoteAddr,
-        ),
-        throwsA(isA<IncorrectVersionException>())
-      );
+          upgrader.upgradeOutbound(
+            connection: mockConn,
+            remotePeerId: remotePeerId,
+            config: testConfig,
+            remoteAddr: remoteAddr,
+          ),
+          throwsA(isA<IncorrectVersionException>()));
       expect(mockConn.isClosed, isTrue);
     });
 
@@ -442,29 +478,32 @@ void main() {
         // Mock acks /multistream/1.0.0 for security
         mockConn.addDataToRead(_prepareMultistreamResponse(protocolID));
         // Mock acks the security protocol
-        mockConn.addDataToRead(_prepareMultistreamResponse(mockSecProto.protocolId));
+        mockConn.addDataToRead(
+            _prepareMultistreamResponse(mockSecProto.protocolId));
       });
       // Muxer negotiation fails
       Timer.run(() {
         // Mock acks /multistream/1.0.0 for muxer
         mockConn.addDataToRead(_prepareMultistreamResponse(protocolID));
         // Mock responds with a non-existent muxer
-        mockConn.addDataToRead(_prepareMultistreamResponse('/non-existent-muxer/1.0.0'));
+        mockConn.addDataToRead(
+            _prepareMultistreamResponse('/non-existent-muxer/1.0.0'));
       });
-      
+
       await expectLater(
-        upgrader.upgradeOutbound(
-          connection: mockConn,
-          remotePeerId: remotePeerId,
-          config: testConfig,
-          remoteAddr: remoteAddr,
-        ), throwsA(isA<IncorrectVersionException>())
-      );
-       // The underlying connection (mockConn) might be closed by the security layer if muxer fails,
-       // or by BasicUpgrader itself. Here, secureConn (which is mockConn) would be closed.
+          upgrader.upgradeOutbound(
+            connection: mockConn,
+            remotePeerId: remotePeerId,
+            config: testConfig,
+            remoteAddr: remoteAddr,
+          ),
+          throwsA(isA<IncorrectVersionException>()));
+      // The underlying connection (mockConn) might be closed by the security layer if muxer fails,
+      // or by BasicUpgrader itself. Here, secureConn (which is mockConn) would be closed.
       expect(mockConn.isClosed, isTrue);
     });
-     test('upgradeOutbound closes connection on error during security handshake', () async {
+    test('upgradeOutbound closes connection on error during security handshake',
+        () async {
       final erroringSecProto = MockSecurityProtocol(
         '/error-sec/1.0.0',
         (conn) async => throw Exception('Security handshake error'),
@@ -476,9 +515,10 @@ void main() {
         // Mock acks /multistream/1.0.0
         mockConn.addDataToRead(_prepareMultistreamResponse(protocolID));
         // Mock "selects" the erroring security protocol
-        mockConn.addDataToRead(_prepareMultistreamResponse(erroringSecProto.protocolId));
+        mockConn.addDataToRead(
+            _prepareMultistreamResponse(erroringSecProto.protocolId));
       });
-      
+
       await expectLater(
         upgrader.upgradeOutbound(
           connection: mockConn,
@@ -486,7 +526,8 @@ void main() {
           config: testConfig,
           remoteAddr: remoteAddr,
         ),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('Security handshake error'))),
+        throwsA(isA<Exception>().having((e) => e.toString(), 'message',
+            contains('Security handshake error'))),
       );
       expect(mockConn.isClosed, isTrue);
     });
@@ -499,7 +540,8 @@ Uint8List _prepareMultistreamResponse(String protocolPayload) {
   final messageBytes = utf8.encode(protocolPayload);
   // The length written by _writeDelimited in MultistreamMuxer is message.length + 1 (for the newline)
   final lengthOfMessageAndNewline = messageBytes.length + 1;
-  final lengthPrefixBytes = MultiAddrCodec.encodeVarint(lengthOfMessageAndNewline);
+  final lengthPrefixBytes =
+      MultiAddrCodec.encodeVarint(lengthOfMessageAndNewline);
 
   final fullMessage = BytesBuilder();
   fullMessage.add(lengthPrefixBytes);

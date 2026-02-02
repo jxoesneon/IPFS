@@ -98,7 +98,10 @@ void main() {
       // Second delay: random between min and min*base
       final secondDelay = backoff.delay();
       expect(secondDelay, greaterThanOrEqualTo(min));
-      expect(secondDelay, lessThanOrEqualTo(Duration(milliseconds: (min.inMilliseconds * base).round())));
+      expect(
+          secondDelay,
+          lessThanOrEqualTo(
+              Duration(milliseconds: (min.inMilliseconds * base).round())));
 
       backoff.reset();
 
@@ -115,7 +118,8 @@ void main() {
       // NoJitter returns the bounded duration
       expect(noJitter(duration, min, max, rng), equals(duration));
       expect(noJitter(Duration(milliseconds: 5), min, max, rng), equals(min));
-      expect(noJitter(Duration(milliseconds: 2000), min, max, rng), equals(max));
+      expect(
+          noJitter(Duration(milliseconds: 2000), min, max, rng), equals(max));
 
       // FullJitter returns a random duration between min and bounded duration
       final jittered = fullJitter(duration, min, max, rng);

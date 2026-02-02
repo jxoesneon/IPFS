@@ -28,10 +28,12 @@ class UnrecognizedResponseException implements Exception {
   final String actual;
   final String expected;
 
-  const UnrecognizedResponseException({required this.actual, required this.expected});
+  const UnrecognizedResponseException(
+      {required this.actual, required this.expected});
 
   @override
-  String toString() => 'Unrecognized response. Expected: $expected (or na). Got: $actual';
+  String toString() =>
+      'Unrecognized response. Expected: $expected (or na). Got: $actual';
 }
 
 /// ErrNoProtocols is the error thrown when no protocols have been specified.
@@ -45,7 +47,8 @@ class NoProtocolsException implements Exception {
 /// SelectProtoOrFail performs the initial multistream handshake
 /// to inform the muxer of the protocol that will be used to communicate
 /// on this stream. It returns an error if the muxer does not support the protocol.
-Future<void> selectProtoOrFail(ProtocolID proto, P2PStream<dynamic> stream) async {
+Future<void> selectProtoOrFail(
+    ProtocolID proto, P2PStream<dynamic> stream) async {
   try {
     // Send the multistream protocol ID and the requested protocol
     await writeDelimited(stream, utf8.encode(protocolID));
@@ -62,14 +65,15 @@ Future<void> selectProtoOrFail(ProtocolID proto, P2PStream<dynamic> stream) asyn
     if (protoResponse == 'na') {
       throw ProtocolNotSupportedException([proto]);
     } else if (protoResponse != proto) {
-      throw UnrecognizedResponseException(actual: protoResponse, expected: proto);
+      throw UnrecognizedResponseException(
+          actual: protoResponse, expected: proto);
     }
 
     // Success - protocol selected
     return;
   } catch (e) {
-    if (e is! ProtocolNotSupportedException && 
-        e is! UnrecognizedResponseException && 
+    if (e is! ProtocolNotSupportedException &&
+        e is! UnrecognizedResponseException &&
         e is! FormatException) {
       await stream.reset();
     }
@@ -79,7 +83,8 @@ Future<void> selectProtoOrFail(ProtocolID proto, P2PStream<dynamic> stream) asyn
 
 /// SelectOneOf will perform handshakes with the protocols on the given list
 /// until it finds one which is supported by the muxer.
-Future<ProtocolID> selectOneOf(List<ProtocolID> protos, P2PStream<dynamic> stream) async {
+Future<ProtocolID> selectOneOf(
+    List<ProtocolID> protos, P2PStream<dynamic> stream) async {
   if (protos.isEmpty) {
     throw const NoProtocolsException();
   }
@@ -130,14 +135,16 @@ Future<void> _trySelect(ProtocolID proto, P2PStream<dynamic> stream) async {
 }
 
 /// Writes a delimited message to the stream
-Future<void> writeDelimited(P2PStream<dynamic> stream, List<int> message) async {
+Future<void> writeDelimited(
+    P2PStream<dynamic> stream, List<int> message) async {
   // Encode the length as a varint
   final lengthBytes = encodeVarint(message.length + 1);
 
   // Create the full message: length + message + newline
   final fullMessage = Uint8List(lengthBytes.length + message.length + 1);
   fullMessage.setRange(0, lengthBytes.length, lengthBytes);
-  fullMessage.setRange(lengthBytes.length, lengthBytes.length + message.length, message);
+  fullMessage.setRange(
+      lengthBytes.length, lengthBytes.length + message.length, message);
   fullMessage[lengthBytes.length + message.length] = 10; // '\n'
 
   // Write to the stream
@@ -178,7 +185,6 @@ Future<Uint8List> readDelimited(P2PStream<dynamic> stream) async {
     varintBytes = firstByte;
   }
 
-
   // Decode the varint to get the message length
   final (length, _) = decodeVarint(varintBytes);
   if (length > 1024) {
@@ -192,7 +198,8 @@ Future<Uint8List> readDelimited(P2PStream<dynamic> stream) async {
   }
 
   // Check for trailing newline
-  if (message.isEmpty || message[length - 1] != 10) { // '\n'
+  if (message.isEmpty || message[length - 1] != 10) {
+    // '\n'
     throw FormatException('Message did not have trailing newline');
   }
 

@@ -9,7 +9,8 @@ import 'package:dart_libp2p/core/network/common.dart';
 import 'package:dart_libp2p/core/network/conn.dart';
 import 'package:dart_libp2p/core/network/transport_conn.dart';
 import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart' as p2p_mux;
+import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart'
+    as p2p_mux;
 import 'package:dart_libp2p/p2p/security/secured_connection.dart';
 import 'package:logging/logging.dart';
 
@@ -27,9 +28,10 @@ class StreamlinedMockMultiplexerFactory implements p2p_mux.Multiplexer {
     bool isServer,
     PeerScope peerScope,
   ) async {
-    _logger.fine('StreamlinedMockMultiplexerFactory: Creating new muxed connection, isServer=$isServer');
+    _logger.fine(
+        'StreamlinedMockMultiplexerFactory: Creating new muxed connection, isServer=$isServer');
     final securedConn = transport as SecuredConnection;
-    
+
     // Create the actual multiplexed connection implementation
     final multiplexer = StreamlinedMockMultiplexer(securedConn, !isServer);
     return StreamlinedMockMuxedConn(securedConn, isServer, multiplexer);
@@ -37,48 +39,58 @@ class StreamlinedMockMultiplexerFactory implements p2p_mux.Multiplexer {
 
   // Factory methods - these should not be called on the factory itself
   @override
-  Future<List<P2PStream>> get streams async => throw UnsupportedError('Factory method - use MuxedConn instead');
-
-  @override
-  Future<P2PStream> acceptStream() async => throw UnsupportedError('Factory method - use MuxedConn instead');
-
-  @override
-  Stream<P2PStream> get incomingStreams => throw UnsupportedError('Factory method - use MuxedConn instead');
-
-  @override
-  int get maxStreams => throw UnsupportedError('Factory method - use MuxedConn instead');
-
-  @override
-  int get numStreams => throw UnsupportedError('Factory method - use MuxedConn instead');
-
-  @override
-  bool get canCreateStream => throw UnsupportedError('Factory method - use MuxedConn instead');
-
-  @override
-  void setStreamHandler(Future<void> Function(P2PStream stream) handler) => 
+  Future<List<P2PStream>> get streams async =>
       throw UnsupportedError('Factory method - use MuxedConn instead');
 
   @override
-  void removeStreamHandler() => throw UnsupportedError('Factory method - use MuxedConn instead');
+  Future<P2PStream> acceptStream() async =>
+      throw UnsupportedError('Factory method - use MuxedConn instead');
 
   @override
-  Future<void> close() async => throw UnsupportedError('Factory method - use MuxedConn instead');
+  Stream<P2PStream> get incomingStreams =>
+      throw UnsupportedError('Factory method - use MuxedConn instead');
 
   @override
-  bool get isClosed => throw UnsupportedError('Factory method - use MuxedConn instead');
+  int get maxStreams =>
+      throw UnsupportedError('Factory method - use MuxedConn instead');
+
+  @override
+  int get numStreams =>
+      throw UnsupportedError('Factory method - use MuxedConn instead');
+
+  @override
+  bool get canCreateStream =>
+      throw UnsupportedError('Factory method - use MuxedConn instead');
+
+  @override
+  void setStreamHandler(Future<void> Function(P2PStream stream) handler) =>
+      throw UnsupportedError('Factory method - use MuxedConn instead');
+
+  @override
+  void removeStreamHandler() =>
+      throw UnsupportedError('Factory method - use MuxedConn instead');
+
+  @override
+  Future<void> close() async =>
+      throw UnsupportedError('Factory method - use MuxedConn instead');
+
+  @override
+  bool get isClosed =>
+      throw UnsupportedError('Factory method - use MuxedConn instead');
 }
 
 /// Streamlined mock multiplexer that focuses on connection state tracking
 /// This handles the actual multiplexing logic for a single connection
 class StreamlinedMockMultiplexer {
   final Logger _logger = Logger('StreamlinedMockMultiplexer');
-  
+
   final SecuredConnection _securedConn;
   final bool _isClient;
   final List<StreamlinedMockStream> _streams = [];
   int _nextStreamId = 1;
   bool _isClosed = false;
-  final StreamController<P2PStream> _incomingStreamsController = StreamController.broadcast();
+  final StreamController<P2PStream> _incomingStreamsController =
+      StreamController.broadcast();
   Future<void> Function(P2PStream stream)? _streamHandler;
 
   // Connection reuse tracking
@@ -88,7 +100,8 @@ class StreamlinedMockMultiplexer {
   final List<String> _streamHistory = [];
 
   StreamlinedMockMultiplexer(this._securedConn, this._isClient) {
-    _logger.fine('Created StreamlinedMockMultiplexer: client=$_isClient, conn=${_securedConn.id}');
+    _logger.fine(
+        'Created StreamlinedMockMultiplexer: client=$_isClient, conn=${_securedConn.id}');
   }
 
   String get protocolId => '/yamux/1.0.0';
@@ -135,7 +148,8 @@ class StreamlinedMockMultiplexer {
   bool get isClosed => _isClosed;
 
   /// Creates a new mock stream with connection reuse tracking
-  StreamlinedMockStream createStream(Context context, {required bool isOutbound}) {
+  StreamlinedMockStream createStream(Context context,
+      {required bool isOutbound}) {
     if (_isClosed) {
       throw StateError('Multiplexer is closed');
     }
@@ -143,27 +157,30 @@ class StreamlinedMockMultiplexer {
     final streamId = _nextStreamId++;
     _totalStreamsCreated++;
     _activeStreams++;
-    
+
     final stream = StreamlinedMockStream(
       id: streamId.toString(),
       conn: _securedConn,
       isOutbound: isOutbound,
       onClose: () => _onStreamClosed(streamId.toString()),
     );
-    
+
     _streams.add(stream);
-    _streamHistory.add('Created stream $streamId (${isOutbound ? 'outbound' : 'inbound'}) at ${DateTime.now()}');
-    
-    _logger.fine('StreamlinedMockMultiplexer: Created stream $streamId, outbound=$isOutbound. Total created: $_totalStreamsCreated, Active: $_activeStreams');
-    
+    _streamHistory.add(
+        'Created stream $streamId (${isOutbound ? 'outbound' : 'inbound'}) at ${DateTime.now()}');
+
+    _logger.fine(
+        'StreamlinedMockMultiplexer: Created stream $streamId, outbound=$isOutbound. Total created: $_totalStreamsCreated, Active: $_activeStreams');
+
     return stream;
   }
 
   void _onStreamClosed(String streamId) {
     _activeStreams--;
     _streamHistory.add('Closed stream $streamId at ${DateTime.now()}');
-    _logger.fine('StreamlinedMockMultiplexer: Stream $streamId closed. Active streams: $_activeStreams');
-    
+    _logger.fine(
+        'StreamlinedMockMultiplexer: Stream $streamId closed. Active streams: $_activeStreams');
+
     // Remove from active streams list
     _streams.removeWhere((s) => s.id() == streamId);
   }
@@ -175,9 +192,9 @@ class StreamlinedMockMultiplexer {
     _logger.info('  - Total streams created: $_totalStreamsCreated');
     _logger.info('  - Final active streams: $_activeStreams');
     _logger.info('  - Stream history: ${_streamHistory.length} events');
-    
+
     // Log recent stream history for debugging
-    final recentHistory = _streamHistory.length > 10 
+    final recentHistory = _streamHistory.length > 10
         ? _streamHistory.sublist(_streamHistory.length - 10)
         : _streamHistory;
     for (final event in recentHistory) {
@@ -196,13 +213,14 @@ class StreamlinedMockMultiplexer {
 /// Streamlined mock muxed connection
 class StreamlinedMockMuxedConn implements core_mux.MuxedConn {
   final Logger _logger = Logger('StreamlinedMockMuxedConn');
-  
+
   final SecuredConnection _transport;
   final bool _isServer;
   final StreamlinedMockMultiplexer _multiplexer;
 
   StreamlinedMockMuxedConn(this._transport, this._isServer, this._multiplexer) {
-    _logger.fine('Created StreamlinedMockMuxedConn: server=$_isServer, conn=${_transport.id}');
+    _logger.fine(
+        'Created StreamlinedMockMuxedConn: server=$_isServer, conn=${_transport.id}');
   }
 
   // Expose the multiplexer for testing
@@ -210,21 +228,24 @@ class StreamlinedMockMuxedConn implements core_mux.MuxedConn {
 
   @override
   Future<core_mux.MuxedStream> openStream(Context context) async {
-    _logger.fine('StreamlinedMockMuxedConn: Opening new stream on connection ${_transport.id}');
+    _logger.fine(
+        'StreamlinedMockMuxedConn: Opening new stream on connection ${_transport.id}');
     final stream = _multiplexer.createStream(context, isOutbound: true);
     return stream;
   }
 
   @override
   Future<core_mux.MuxedStream> acceptStream() async {
-    _logger.fine('StreamlinedMockMuxedConn: Accepting stream on connection ${_transport.id}');
+    _logger.fine(
+        'StreamlinedMockMuxedConn: Accepting stream on connection ${_transport.id}');
     final stream = _multiplexer.createStream(Context(), isOutbound: false);
     return stream;
   }
 
   @override
   Future<void> close() async {
-    _logger.fine('StreamlinedMockMuxedConn: Closing connection ${_transport.id}');
+    _logger
+        .fine('StreamlinedMockMuxedConn: Closing connection ${_transport.id}');
     await _multiplexer.close();
   }
 
@@ -233,9 +254,10 @@ class StreamlinedMockMuxedConn implements core_mux.MuxedConn {
 }
 
 /// Streamlined mock stream with connection reuse tracking
-class StreamlinedMockStream implements core_mux.MuxedStream, P2PStream<Uint8List> {
+class StreamlinedMockStream
+    implements core_mux.MuxedStream, P2PStream<Uint8List> {
   final Logger _logger = Logger('StreamlinedMockStream');
-  
+
   final String _id;
   final SecuredConnection _conn;
   final bool _isOutbound;
@@ -250,8 +272,12 @@ class StreamlinedMockStream implements core_mux.MuxedStream, P2PStream<Uint8List
     required SecuredConnection conn,
     required bool isOutbound,
     VoidCallback? onClose,
-  }) : _id = id, _conn = conn, _isOutbound = isOutbound, _onClose = onClose {
-    _logger.fine('Created StreamlinedMockStream: $_id, outbound=$_isOutbound, conn=${_conn.id}');
+  })  : _id = id,
+        _conn = conn,
+        _isOutbound = isOutbound,
+        _onClose = onClose {
+    _logger.fine(
+        'Created StreamlinedMockStream: $_id, outbound=$_isOutbound, conn=${_conn.id}');
   }
 
   @override
@@ -274,7 +300,8 @@ class StreamlinedMockStream implements core_mux.MuxedStream, P2PStream<Uint8List
     if (!_isClosed) {
       _isClosed = true;
       final age = DateTime.now().difference(_createdAt);
-      _logger.fine('StreamlinedMockStream ${id()}: Closed (age: $age, writes: ${_writeBuffer.length})');
+      _logger.fine(
+          'StreamlinedMockStream ${id()}: Closed (age: $age, writes: ${_writeBuffer.length})');
       _onClose?.call();
     }
   }
@@ -290,7 +317,7 @@ class StreamlinedMockStream implements core_mux.MuxedStream, P2PStream<Uint8List
     if (_isClosed) {
       throw StateError('Stream is closed');
     }
-    
+
     // For testing, return empty data to simulate no data available
     return Uint8List(0);
   }
@@ -300,9 +327,10 @@ class StreamlinedMockStream implements core_mux.MuxedStream, P2PStream<Uint8List
     if (_isClosed) {
       throw StateError('Stream is closed');
     }
-    
+
     _writeBuffer.add(Uint8List.fromList(data));
-    _logger.fine('StreamlinedMockStream ${id()}: Wrote ${data.length} bytes (total writes: ${_writeBuffer.length})');
+    _logger.fine(
+        'StreamlinedMockStream ${id()}: Wrote ${data.length} bytes (total writes: ${_writeBuffer.length})');
   }
 
   @override
@@ -317,9 +345,9 @@ class StreamlinedMockStream implements core_mux.MuxedStream, P2PStream<Uint8List
 
   @override
   StreamStats stat() => StreamStats(
-    direction: _isOutbound ? Direction.outbound : Direction.inbound,
-    opened: _createdAt,
-  );
+        direction: _isOutbound ? Direction.outbound : Direction.inbound,
+        opened: _createdAt,
+      );
 
   @override
   Conn get conn => _conn;
@@ -347,7 +375,7 @@ class StreamlinedMockStream implements core_mux.MuxedStream, P2PStream<Uint8List
 
   /// Get the data written to this stream for testing
   List<Uint8List> get writtenData => List.unmodifiable(_writeBuffer);
-  
+
   /// Get diagnostic information about this stream
   Duration get age => DateTime.now().difference(_createdAt);
   int get writeCount => _writeBuffer.length;
@@ -358,7 +386,8 @@ class StreamlinedMockStream implements core_mux.MuxedStream, P2PStream<Uint8List
 }
 
 /// Null scope implementation for testing
-class NullScope implements StreamManagementScope, PeerScope, ProtocolScope, ServiceScope {
+class NullScope
+    implements StreamManagementScope, PeerScope, ProtocolScope, ServiceScope {
   @override
   ScopeStat get stat => const ScopeStat();
 

@@ -14,11 +14,12 @@ class _MockNatBehaviorDiscovery extends NatBehaviorDiscovery {
   _MockNatBehaviorDiscovery({
     required this.mappingBehavior,
     required this.filteringBehavior,
-  }) : super(stunClient: StunClient(
-    serverHost: 'stun.l.google.com',
-    stunPort: 19302,
-    timeout: Duration(seconds: 5),
-  ));
+  }) : super(
+            stunClient: StunClient(
+          serverHost: 'stun.l.google.com',
+          stunPort: 19302,
+          timeout: Duration(seconds: 5),
+        ));
 
   @override
   Future<NatMappingBehavior> discoverMappingBehavior() async {
@@ -185,7 +186,8 @@ void main() {
       );
 
       final mappingBehavior = await mockDiscovery.discoverMappingBehavior();
-      expect(mappingBehavior, equals(NatMappingBehavior.addressAndPortDependent));
+      expect(
+          mappingBehavior, equals(NatMappingBehavior.addressAndPortDependent));
     });
 
     test('should detect endpoint-independent filtering', () async {
@@ -199,7 +201,8 @@ void main() {
       );
 
       final filteringBehavior = await mockDiscovery.discoverFilteringBehavior();
-      expect(filteringBehavior, equals(NatFilteringBehavior.endpointIndependent));
+      expect(
+          filteringBehavior, equals(NatFilteringBehavior.endpointIndependent));
     });
 
     test('should detect address-dependent filtering', () async {
@@ -227,7 +230,8 @@ void main() {
       );
 
       final filteringBehavior = await mockDiscovery.discoverFilteringBehavior();
-      expect(filteringBehavior, equals(NatFilteringBehavior.addressAndPortDependent));
+      expect(filteringBehavior,
+          equals(NatFilteringBehavior.addressAndPortDependent));
     });
   });
 }

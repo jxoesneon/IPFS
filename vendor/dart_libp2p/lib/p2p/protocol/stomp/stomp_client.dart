@@ -40,7 +40,8 @@ class StompClient {
   final Map<String, String> _serverHeaders = {};
 
   // Managers
-  final StompSubscriptionManager _subscriptionManager = StompSubscriptionManager();
+  final StompSubscriptionManager _subscriptionManager =
+      StompSubscriptionManager();
   final StompTransactionManager _transactionManager = StompTransactionManager();
   final StompAckManager _ackManager = StompAckManager();
 
@@ -53,9 +54,12 @@ class StompClient {
   Duration? _heartBeatInterval;
 
   // Event streams
-  final StreamController<StompClientState> _stateController = StreamController<StompClientState>.broadcast();
-  final StreamController<StompFrame> _frameController = StreamController<StompFrame>.broadcast();
-  final StreamController<StompServerErrorException> _errorController = StreamController<StompServerErrorException>.broadcast();
+  final StreamController<StompClientState> _stateController =
+      StreamController<StompClientState>.broadcast();
+  final StreamController<StompFrame> _frameController =
+      StreamController<StompFrame>.broadcast();
+  final StreamController<StompServerErrorException> _errorController =
+      StreamController<StompServerErrorException>.broadcast();
 
   StompClient({
     required Host host,
@@ -64,12 +68,12 @@ class StompClient {
     String? login,
     String? passcode,
     Duration timeout = StompConstants.defaultTimeout,
-  }) : _host = host,
-       _serverPeerId = serverPeerId,
-       _hostName = hostName,
-       _login = login,
-       _passcode = passcode,
-       _timeout = timeout;
+  })  : _host = host,
+        _serverPeerId = serverPeerId,
+        _hostName = hostName,
+        _login = login,
+        _passcode = passcode,
+        _timeout = timeout;
 
   /// Current connection state
   StompClientState get state => _state;
@@ -84,7 +88,8 @@ class StompClient {
   String? get serverInfo => _serverInfo;
 
   /// Server headers from CONNECTED frame
-  Map<String, String> get serverHeaders => Map<String, String>.unmodifiable(_serverHeaders);
+  Map<String, String> get serverHeaders =>
+      Map<String, String>.unmodifiable(_serverHeaders);
 
   /// Stream of state changes
   Stream<StompClientState> get onStateChange => _stateController.stream;
@@ -111,7 +116,8 @@ class StompClient {
 
     try {
       // Create stream to server
-      _stream = await _host.newStream(_serverPeerId, [StompProtocols.stomp], Context());
+      _stream = await _host.newStream(
+          _serverPeerId, [StompProtocols.stomp], Context());
       await _stream!.scope().setService(StompProtocols.serviceName);
       await _stream!.setDeadline(DateTime.now().add(_timeout));
 
@@ -128,12 +134,12 @@ class StompClient {
       await _sendFrame(connectFrame);
 
       // Wait for CONNECTED frame
-      final connectedFrame = await _waitForFrame(StompCommands.connected, _timeout);
+      final connectedFrame =
+          await _waitForFrame(StompCommands.connected, _timeout);
       await _handleConnectedFrame(connectedFrame);
 
       _setState(StompClientState.connected);
       _logger.info('Connected to STOMP server $_serverPeerId');
-
     } catch (e) {
       _setState(StompClientState.error);
       await _cleanup();
@@ -143,7 +149,8 @@ class StompClient {
 
   /// Disconnects from the STOMP server
   Future<void> disconnect() async {
-    if (_state == StompClientState.disconnected || _state == StompClientState.disconnecting) {
+    if (_state == StompClientState.disconnected ||
+        _state == StompClientState.disconnecting) {
       return;
     }
 
@@ -153,10 +160,11 @@ class StompClient {
       if (_stream != null && !_stream!.isClosed) {
         // Send DISCONNECT frame with receipt
         final receiptId = _generateReceiptId();
-        final disconnectFrame = StompFrameFactory.disconnect(receipt: receiptId);
-        
+        final disconnectFrame =
+            StompFrameFactory.disconnect(receipt: receiptId);
+
         await _sendFrame(disconnectFrame);
-        
+
         // Wait for receipt
         try {
           await _waitForReceipt(receiptId, const Duration(seconds: 5));
@@ -226,7 +234,7 @@ class StompClient {
     _ensureConnected();
 
     final subscriptionId = id ?? _generateSubscriptionId();
-    
+
     String? receiptId;
     if (requestReceipt) {
       receiptId = _generateReceiptId();
@@ -376,7 +384,7 @@ class StompClient {
     _ensureConnected();
 
     final txId = transactionId ?? _generateTransactionId();
-    
+
     String? receiptId;
     if (requestReceipt) {
       receiptId = _generateReceiptId();
@@ -463,11 +471,11 @@ class StompClient {
     if (_state != StompClientState.disconnected) {
       await disconnect();
     }
-    
+
     _subscriptionManager.close();
     _transactionManager.close();
     _ackManager.clear();
-    
+
     _stateController.close();
     _frameController.close();
     _errorController.close();
@@ -482,7 +490,8 @@ class StompClient {
 
   void _ensureConnected() {
     if (!isConnected) {
-      throw StompStateException('Client not connected', _state.name, 'connected');
+      throw StompStateException(
+          'Client not connected', _state.name, 'connected');
     }
   }
 
@@ -494,7 +503,7 @@ class StompClient {
     final frameBytes = frame.toBytes();
     await _stream!.write(frameBytes);
     _frameController.add(frame);
-    
+
     _logger.finest('Sent frame: ${frame.command}');
   }
 
@@ -510,23 +519,24 @@ class StompClient {
     if (_stream == null) return;
 
     final buffer = <int>[];
-    
+
     while (!_stream!.isClosed && _state != StompClientState.disconnected) {
       try {
         final data = await _stream!.read();
         if (data.isEmpty) break; // EOF
-        
+
         buffer.addAll(data);
-        
+
         // Look for complete frames (terminated by NULL byte)
         while (true) {
           final nullIndex = buffer.indexOf(StompConstants.nullByte);
           if (nullIndex == -1) break; // No complete frame yet
-          
+
           // Extract frame data including the NULL byte
-          final frameData = Uint8List.fromList(buffer.sublist(0, nullIndex + 1));
+          final frameData =
+              Uint8List.fromList(buffer.sublist(0, nullIndex + 1));
           buffer.removeRange(0, nullIndex + 1);
-          
+
           // Parse and handle frame
           try {
             final frame = StompFrame.fromBytes(frameData);
@@ -536,7 +546,8 @@ class StompClient {
           }
         }
       } catch (e) {
-        if (_state != StompClientState.disconnecting && _state != StompClientState.disconnected) {
+        if (_state != StompClientState.disconnecting &&
+            _state != StompClientState.disconnected) {
           _logger.warning('Error reading from stream: $e');
           break;
         }
@@ -569,7 +580,7 @@ class StompClient {
   Future<void> _handleConnectedFrame(StompFrame frame) async {
     _sessionId = frame.getHeader(StompHeaders.session);
     _serverInfo = frame.getHeader(StompHeaders.server);
-    
+
     // Store all server headers
     _serverHeaders.clear();
     _serverHeaders.addAll(frame.headers);
@@ -580,16 +591,18 @@ class StompClient {
       _setupHeartBeat(heartBeatHeader);
     }
 
-    _logger.info('Connected to STOMP server: session=$_sessionId, server=$_serverInfo');
+    _logger.info(
+        'Connected to STOMP server: session=$_sessionId, server=$_serverInfo');
   }
 
   Future<void> _handleMessageFrame(StompFrame frame) async {
     try {
       final message = StompMessage.fromFrame(frame);
-      
+
       // Add to ack manager if acknowledgment is required
       if (message.requiresAck) {
-        final subscription = _subscriptionManager.getSubscription(message.subscriptionId);
+        final subscription =
+            _subscriptionManager.getSubscription(message.subscriptionId);
         if (subscription != null) {
           final ackMode = StompAckMode.fromHeaderValue(subscription.ackMode);
           final pendingAck = PendingAck(
@@ -601,11 +614,12 @@ class StompClient {
           _ackManager.addPendingAck(pendingAck);
         }
       }
-      
+
       // Deliver to subscription
       final delivered = _subscriptionManager.deliverMessage(message);
       if (!delivered) {
-        _logger.warning('No subscription found for message: ${message.subscriptionId}');
+        _logger.warning(
+            'No subscription found for message: ${message.subscriptionId}');
       }
     } catch (e) {
       _logger.warning('Error handling MESSAGE frame: $e');
@@ -623,71 +637,73 @@ class StompClient {
   void _handleErrorFrame(StompFrame frame) {
     final message = frame.getHeader(StompHeaders.message) ?? 'Unknown error';
     final receiptId = frame.getHeader(StompHeaders.receiptId);
-    
+
     final error = StompServerErrorException(
       message,
       receiptId,
       frame.headers,
     );
-    
+
     _errorController.add(error);
-    
+
     // Complete any pending receipt with error
     if (receiptId != null) {
       final completer = _pendingReceipts.remove(receiptId);
       completer?.completeError(error);
     }
-    
+
     _logger.severe('Server error: $message');
   }
 
   void _setupHeartBeat(String heartBeatHeader) {
     final parts = heartBeatHeader.split(',');
     if (parts.length != 2) return;
-    
+
     final serverSend = int.tryParse(parts[0]) ?? 0;
     final serverReceive = int.tryParse(parts[1]) ?? 0;
-    
+
     // For now, we don't implement heart-beating
     // In a full implementation, you would:
     // 1. Send heart-beats if serverReceive > 0
     // 2. Expect heart-beats if serverSend > 0
-    
+
     _logger.info('Server heart-beat: send=$serverSend, receive=$serverReceive');
   }
 
   Future<StompFrame> _waitForFrame(String command, Duration timeout) async {
     final completer = Completer<StompFrame>();
     late StreamSubscription subscription;
-    
+
     subscription = _frameController.stream.listen((frame) {
       if (frame.command == command) {
         subscription.cancel();
         completer.complete(frame);
       }
     });
-    
+
     Timer(timeout, () {
       subscription.cancel();
       if (!completer.isCompleted) {
-        completer.completeError(StompTimeoutException('Timeout waiting for $command frame', timeout));
+        completer.completeError(StompTimeoutException(
+            'Timeout waiting for $command frame', timeout));
       }
     });
-    
+
     return completer.future;
   }
 
   Future<StompFrame> _waitForReceipt(String receiptId, Duration timeout) async {
     final completer = Completer<StompFrame>();
     _pendingReceipts[receiptId] = completer;
-    
+
     Timer(timeout, () {
       final pendingCompleter = _pendingReceipts.remove(receiptId);
       if (pendingCompleter != null && !pendingCompleter.isCompleted) {
-        pendingCompleter.completeError(StompTimeoutException('Timeout waiting for receipt $receiptId', timeout));
+        pendingCompleter.completeError(StompTimeoutException(
+            'Timeout waiting for receipt $receiptId', timeout));
       }
     });
-    
+
     return completer.future;
   }
 
@@ -706,22 +722,23 @@ class StompClient {
   Future<void> _cleanup() async {
     _heartBeatTimer?.cancel();
     _heartBeatTimer = null;
-    
+
     // Complete all pending receipts with error
     for (final completer in _pendingReceipts.values) {
       if (!completer.isCompleted) {
-        completer.completeError(const StompConnectionException('Connection closed'));
+        completer
+            .completeError(const StompConnectionException('Connection closed'));
       }
     }
     _pendingReceipts.clear();
-    
+
     // Abort all active transactions
     _transactionManager.abortAllTransactions();
-    
+
     // Clear subscriptions
     _subscriptionManager.clear();
     _ackManager.clear();
-    
+
     // Close stream
     if (_stream != null && !_stream!.isClosed) {
       try {

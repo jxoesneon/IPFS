@@ -7,9 +7,9 @@ import 'rcmgr.dart';
 /// Error thrown when reading or writing on a reset stream.
 class ResetException implements Exception {
   final String message;
-  
+
   const ResetException([this.message = 'stream reset']);
-  
+
   @override
   String toString() => 'ResetException: $message';
 }
@@ -18,10 +18,10 @@ class ResetException implements Exception {
 abstract class MuxedStream {
   /// Reads data from the stream.
   Future<List<int>> read(int length);
-  
+
   /// Writes data to the stream.
   Future<void> write(List<int> data);
-  
+
   /// Closes the stream.
   ///
   /// * Any buffered data for writing will be flushed.
@@ -38,12 +38,12 @@ abstract class MuxedStream {
   ///
   /// When done with a stream, the user must call either close() or `reset()` to discard the stream, even after calling `closeRead` and/or `closeWrite`.
   Future<void> close();
-  
+
   /// Closes the stream for writing but leaves it open for reading.
   ///
   /// closeWrite does not free the stream, users must still call close or reset.
   Future<void> closeWrite();
-  
+
   /// Closes the stream for reading but leaves it open for writing.
   ///
   /// When closeRead is called, all in-progress read calls are interrupted with a non-EOF error and
@@ -53,17 +53,17 @@ abstract class MuxedStream {
   ///
   /// closeRead does not free the stream, users must still call close or reset.
   Future<void> closeRead();
-  
+
   /// Resets closes both ends of the stream. Use this to tell the remote
   /// side to hang up and go away.
   Future<void> reset();
-  
+
   /// Sets a deadline for all operations on the stream.
   void setDeadline(DateTime time);
-  
+
   /// Sets a deadline for read operations on the stream.
   void setReadDeadline(DateTime time);
-  
+
   /// Sets a deadline for write operations on the stream.
   void setWriteDeadline(DateTime time);
 }
@@ -81,17 +81,16 @@ abstract class MuxedStream {
 abstract class MuxedConn {
   /// Closes the stream muxer and the the underlying connection.
   Future<void> close();
-  
+
   /// Returns whether a connection is fully closed, so it can be garbage collected.
   bool get isClosed;
-  
+
   /// Creates a new stream.
   Future<MuxedStream> openStream(Context context);
-  
+
   /// Accepts a stream opened by the other side.
   Future<MuxedStream> acceptStream();
 }
-
 
 /// Multiplexer wraps a connection with a stream multiplexing
 /// implementation and returns a MuxedConn that supports opening

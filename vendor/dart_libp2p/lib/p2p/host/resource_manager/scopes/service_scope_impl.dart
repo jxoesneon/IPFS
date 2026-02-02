@@ -20,15 +20,19 @@ class ServiceScopeImpl extends ResourceScopeImpl implements ServiceScope {
 
   // The `name` getter is fulfilled by the final field.
 
-  ResourceScopeImpl getPeerSubScope(PeerId peerId, Limiter limiter, ResourceScopeImpl systemScope) {
+  ResourceScopeImpl getPeerSubScope(
+      PeerId peerId, Limiter limiter, ResourceScopeImpl systemScope) {
     return _peerSubScopes.putIfAbsent(peerId, () {
       final peerServiceLimit = limiter.getServicePeerLimits(this.name, peerId);
       final scopeName = 'service:${this.name}-peer:${peerId.toString()}';
-      
+
       final newPeerSubScope = ResourceScopeImpl(
         peerServiceLimit,
         scopeName,
-        edges: [this, systemScope], // Parent is this service scope and system scope
+        edges: [
+          this,
+          systemScope
+        ], // Parent is this service scope and system scope
       );
       newPeerSubScope.incRef(); // This sub-scope is now in use
       return newPeerSubScope;

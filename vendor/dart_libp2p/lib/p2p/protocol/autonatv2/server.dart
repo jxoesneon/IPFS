@@ -63,7 +63,8 @@ class AutoNATv2ServerImpl implements AutoNATv2Server {
 
   AutoNATv2ServerImpl(this.host, this.dialerHost, AutoNATv2Settings settings)
       : dataRequestPolicy = settings.dataRequestPolicy,
-        amplificationAttackPreventionDialWait = settings.amplificationAttackPreventionDialWait,
+        amplificationAttackPreventionDialWait =
+            settings.amplificationAttackPreventionDialWait,
         allowPrivateAddrs = settings.allowPrivateAddrs,
         now = settings.now,
         metricsTracer = settings.metricsTracer,
@@ -88,15 +89,18 @@ class AutoNATv2ServerImpl implements AutoNATv2Server {
   /// Handle a dial request
   Future<void> _handleDialRequest(P2PStream stream, PeerId peerId) async {
     try {
-      _log.fine( 'Received dial-request from: ${stream.conn.remotePeer}, addr: ${stream.conn.remoteMultiaddr}');
+      _log.fine(
+          'Received dial-request from: ${stream.conn.remotePeer}, addr: ${stream.conn.remoteMultiaddr}');
 
       final evt = await _serveDialRequest(stream);
 
-      _log.fine( 'Completed dial-request from ${stream.conn.remotePeer}, response status: ${evt.responseStatus}, dial status: ${evt.dialStatus}, err: ${evt.error}');
+      _log.fine(
+          'Completed dial-request from ${stream.conn.remotePeer}, response status: ${evt.responseStatus}, dial status: ${evt.dialStatus}, err: ${evt.error}');
 
       metricsTracer?.completedRequest(evt);
     } catch (e, stackTrace) {
-      _log.warning( 'Error handling dial request from ${stream.conn.remotePeer}: $e');
+      _log.warning(
+          'Error handling dial request from ${stream.conn.remotePeer}: $e');
       _log.fine('Stack trace: $stackTrace');
 
       try {
@@ -120,9 +124,10 @@ class AutoNATv2ServerImpl implements AutoNATv2Server {
     // Set service name
     try {
       await stream.scope().setService(AutoNATv2Protocols.serviceName);
-    }catch (ex){
+    } catch (ex) {
       stream.reset();
-      _log.fine('Failed to attach stream to ${AutoNATv2Protocols.serviceName} service');
+      _log.fine(
+          'Failed to attach stream to ${AutoNATv2Protocols.serviceName} service');
       return EventDialRequestCompleted(
         error: Exception('Failed to attach stream to autonat-v2'),
         responseStatus: DialResponse_ResponseStatus.E_INTERNAL_ERROR,
@@ -133,10 +138,13 @@ class AutoNATv2ServerImpl implements AutoNATv2Server {
 
     try {
       // Reserve memory
-      await stream.scope().reserveMemory(maxMsgSize, ReservationPriority.always);
-    }catch (ex){
+      await stream
+          .scope()
+          .reserveMemory(maxMsgSize, ReservationPriority.always);
+    } catch (ex) {
       stream.reset();
-      _log.fine('Failed to reserve memory for stream ${AutoNATv2Protocols.dialProtocol}');
+      _log.fine(
+          'Failed to reserve memory for stream ${AutoNATv2Protocols.dialProtocol}');
       return EventDialRequestCompleted(
         error: ServerErrors.resourceLimitExceeded,
         responseStatus: DialResponse_ResponseStatus.E_INTERNAL_ERROR,
@@ -211,9 +219,12 @@ class AutoNATv2ServerImpl implements AutoNATv2Server {
     MultiAddr? dialAddr;
     int addrIdx = 0;
 
-    for (int i = 0; i < message.dialRequest.addrs.length && i < maxPeerAddresses; i++) {
+    for (int i = 0;
+        i < message.dialRequest.addrs.length && i < maxPeerAddresses;
+        i++) {
       try {
-        final addr = MultiAddr.fromBytes(Uint8List.fromList(message.dialRequest.addrs[i]));
+        final addr = MultiAddr.fromBytes(
+            Uint8List.fromList(message.dialRequest.addrs[i]));
 
         if (!allowPrivateAddrs && !addr.isPublic()) {
           continue;
@@ -307,7 +318,9 @@ class AutoNATv2ServerImpl implements AutoNATv2Server {
       }
 
       // Wait to prevent thundering herd style attacks
-      final waitTime = Duration(milliseconds: Random().nextInt(amplificationAttackPreventionDialWait.inMilliseconds + 1));
+      final waitTime = Duration(
+          milliseconds: Random().nextInt(
+              amplificationAttackPreventionDialWait.inMilliseconds + 1));
       Future.delayed(waitTime);
     }
 
@@ -345,7 +358,8 @@ class AutoNATv2ServerImpl implements AutoNATv2Server {
 
   /// Get dial data from the client
   Future<void> _getDialData(P2PStream stream, int addrIdx) async {
-    final numBytes = minHandshakeSizeBytes + Random().nextInt(maxHandshakeSizeBytes - minHandshakeSizeBytes);
+    final numBytes = minHandshakeSizeBytes +
+        Random().nextInt(maxHandshakeSizeBytes - minHandshakeSizeBytes);
 
     final request = Message()
       ..dialDataRequest = (DialDataRequest()
@@ -393,7 +407,8 @@ class AutoNATv2ServerImpl implements AutoNATv2Server {
     try {
       // Open a stream for the dial-back
       final context = Context();
-      final stream = await dialerHost.newStream(peerId, [AutoNATv2Protocols.dialBackProtocol], context);
+      final stream = await dialerHost.newStream(
+          peerId, [AutoNATv2Protocols.dialBackProtocol], context);
 
       // Set deadline
       stream.setDeadline(now().add(dialBackStreamTimeout));
@@ -495,14 +510,16 @@ class RateLimiter {
 
     // Clean up global requests
     int idx = 0;
-    while (idx < _reqs.length && currentTime.difference(_reqs[idx].time) >= minute) {
+    while (idx < _reqs.length &&
+        currentTime.difference(_reqs[idx].time) >= minute) {
       final entry = _reqs[idx];
 
       // Clean up peer requests
       if (_peerReqs.containsKey(entry.peerId)) {
         int peerIdx = 0;
-        while (peerIdx < _peerReqs[entry.peerId]!.length && 
-               currentTime.difference(_peerReqs[entry.peerId]![peerIdx]) >= minute) {
+        while (peerIdx < _peerReqs[entry.peerId]!.length &&
+            currentTime.difference(_peerReqs[entry.peerId]![peerIdx]) >=
+                minute) {
           peerIdx++;
         }
 
@@ -524,7 +541,8 @@ class RateLimiter {
 
     // Clean up dial data requests
     idx = 0;
-    while (idx < _dialDataReqs.length && currentTime.difference(_dialDataReqs[idx]) >= minute) {
+    while (idx < _dialDataReqs.length &&
+        currentTime.difference(_dialDataReqs[idx]) >= minute) {
       idx++;
     }
 

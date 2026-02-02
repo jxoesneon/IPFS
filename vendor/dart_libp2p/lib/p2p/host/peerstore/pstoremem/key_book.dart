@@ -7,7 +7,6 @@ import 'package:dart_libp2p/core/peerstore.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:dart_libp2p/core/crypto/keys.dart';
 
-
 /// A memory-based implementation of the KeyBook interface.
 class MemoryKeyBook implements KeyBook {
   final _pks = HashMap<String, PublicKey>();

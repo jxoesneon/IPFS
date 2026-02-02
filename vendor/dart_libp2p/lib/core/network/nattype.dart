@@ -23,7 +23,7 @@ enum NATDeviceType {
 enum NATTransportProtocol {
   /// Means that the NAT Device Type has been determined for the UDP Protocol.
   udp,
-  
+
   /// Means that the NAT Device Type has been determined for the TCP Protocol.
   tcp,
 }

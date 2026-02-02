@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-
-
 import 'package:dart_libp2p/core/peer/peer_id.dart';
 
 /// Resources manages the resources for the relay service.
@@ -22,7 +20,7 @@ class Resources {
 
   /// The maximum data transfer for connections in bytes.
   final int connectionData;
-  
+
   /// The maximum number of HOP requests per peer per minute (rate limiting).
   final int maxHopRequestsPerMinute;
 
@@ -31,7 +29,7 @@ class Resources {
 
   /// The current number of connections.
   int _connections = 0;
-  
+
   /// Track HOP request history for rate limiting
   final Map<String, List<DateTime>> _hopRequestHistory = {};
 
@@ -74,25 +72,25 @@ class Resources {
   void removeConnection(PeerId src, PeerId dst) {
     _connections--;
   }
-  
+
   /// Checks if a peer can make a HOP request (rate limiting)
   /// Uses a sliding window to track requests per minute
   bool canMakeHopRequest(PeerId peer) {
     final peerStr = peer.toString();
     final now = DateTime.now();
     final cutoff = now.subtract(Duration(minutes: 1));
-    
+
     // Clean old entries (older than 1 minute)
     _hopRequestHistory[peerStr] = (_hopRequestHistory[peerStr] ?? [])
         .where((t) => t.isAfter(cutoff))
         .toList();
-    
+
     // Check rate limit
     final requestCount = _hopRequestHistory[peerStr]?.length ?? 0;
     if (requestCount >= maxHopRequestsPerMinute) {
       return false;
     }
-    
+
     // Record this request
     _hopRequestHistory.putIfAbsent(peerStr, () => []).add(now);
     return true;

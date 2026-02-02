@@ -12,7 +12,8 @@ import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart';
 import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
 import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart';
 import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart' as p2p_transport;
+import 'package:dart_libp2p/p2p/transport/connection_manager.dart'
+    as p2p_transport;
 import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart';
 import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/session.dart';
 import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/stream.dart';
@@ -31,7 +32,8 @@ class _TestYamuxMuxerProvider extends StreamMuxer {
           id: '/yamux/1.0.0',
           muxerFactory: (Conn secureConn, bool isClient) {
             if (secureConn is! TransportConn) {
-              throw ArgumentError('YamuxMuxer factory expects a TransportConn, got ${secureConn.runtimeType}');
+              throw ArgumentError(
+                  'YamuxMuxer factory expects a TransportConn, got ${secureConn.runtimeType}');
             }
             return YamuxSession(secureConn, yamuxConfig, isClient);
           },
@@ -40,7 +42,9 @@ class _TestYamuxMuxerProvider extends StreamMuxer {
 
 void main() {
   group('Large Message Framing Test (UDX + Noise + Yamux)', () {
-    test('validates SecuredConnection read/write locks fix framing issues with large messages', () async {
+    test(
+        'validates SecuredConnection read/write locks fix framing issues with large messages',
+        () async {
       // This test validates that the SecuredConnection read/write locks
       // properly fix the MAC authentication errors that occurred with large
       // messages (>50KB) over UDX transport.
@@ -71,8 +75,12 @@ void main() {
         maxStreams: 256,
       );
 
-      final securityProtocolsClient = [await NoiseSecurity.create(clientKeyPair)];
-      final securityProtocolsServer = [await NoiseSecurity.create(serverKeyPair)];
+      final securityProtocolsClient = [
+        await NoiseSecurity.create(clientKeyPair)
+      ];
+      final securityProtocolsServer = [
+        await NoiseSecurity.create(serverKeyPair)
+      ];
       final muxerDefs = [_TestYamuxMuxerProvider(yamuxConfig: yamuxConfig)];
 
       final clientP2PConfig = p2p_config.Config()
@@ -86,8 +94,10 @@ void main() {
         ..muxers = muxerDefs;
 
       // Create transports
-      final clientTransport = UDXTransport(connManager: connManager, udxInstance: udxInstance);
-      final serverTransport = UDXTransport(connManager: connManager, udxInstance: udxInstance);
+      final clientTransport =
+          UDXTransport(connManager: connManager, udxInstance: udxInstance);
+      final serverTransport =
+          UDXTransport(connManager: connManager, udxInstance: udxInstance);
 
       final clientUpgrader = BasicUpgrader(resourceManager: resourceManager);
       final serverUpgrader = BasicUpgrader(resourceManager: resourceManager);
@@ -118,7 +128,8 @@ void main() {
           config: serverP2PConfig,
         );
 
-        final upgradedConns = await Future.wait([clientUpgradedFuture, serverUpgradedFuture]);
+        final upgradedConns =
+            await Future.wait([clientUpgradedFuture, serverUpgradedFuture]);
         final clientUpgradedConn = upgradedConns[0] as core_mux_types.MuxedConn;
         final serverUpgradedConn = upgradedConns[1] as core_mux_types.MuxedConn;
 
@@ -127,21 +138,24 @@ void main() {
         // Open a stream
         final serverAcceptStreamFuture = serverUpgradedConn.acceptStream();
         await Future.delayed(Duration(milliseconds: 100));
-        final clientStream = await clientUpgradedConn.openStream(core_context.Context()) as YamuxStream;
+        final clientStream = await clientUpgradedConn
+            .openStream(core_context.Context()) as YamuxStream;
         final serverStream = await serverAcceptStreamFuture as YamuxStream;
 
         print('✅ Stream opened');
 
         // Test message sizes that previously failed (>50KB with ~35+ UDP packets)
         final testSizes = [
-          50 * 1024,   // 50KB - Would fail without SecuredConnection locks
-          96 * 1024,   // 96KB - Original production bug size
-          200 * 1024,  // 200KB - Extreme case (~145 UDP packets)
+          50 * 1024, // 50KB - Would fail without SecuredConnection locks
+          96 * 1024, // 96KB - Original production bug size
+          200 * 1024, // 200KB - Extreme case (~145 UDP packets)
         ];
 
         for (final size in testSizes) {
-          print('\n📤 Testing ${(size / 1024).toStringAsFixed(0)}KB message...');
-          final testData = Uint8List.fromList(List.generate(size, (i) => i % 256));
+          print(
+              '\n📤 Testing ${(size / 1024).toStringAsFixed(0)}KB message...');
+          final testData =
+              Uint8List.fromList(List.generate(size, (i) => i % 256));
 
           // Send large message
           await clientStream.write(testData);
@@ -153,24 +167,29 @@ void main() {
 
           // Verify
           expect(received.length, equals(size),
-              reason: 'Should receive full ${(size / 1024).toStringAsFixed(0)}KB message');
+              reason:
+                  'Should receive full ${(size / 1024).toStringAsFixed(0)}KB message');
 
           bool dataMatches = true;
           for (int i = 0; i < size; i++) {
             if (received[i] != testData[i]) {
               dataMatches = false;
-              print('   ❌ Data mismatch at byte $i: expected ${testData[i]}, got ${received[i]}');
+              print(
+                  '   ❌ Data mismatch at byte $i: expected ${testData[i]}, got ${received[i]}');
               break;
             }
           }
 
           expect(dataMatches, isTrue,
-              reason: 'Data should be preserved for ${(size / 1024).toStringAsFixed(0)}KB message');
+              reason:
+                  'Data should be preserved for ${(size / 1024).toStringAsFixed(0)}KB message');
 
-          print('   ✅ ${(size / 1024).toStringAsFixed(0)}KB message transferred successfully');
+          print(
+              '   ✅ ${(size / 1024).toStringAsFixed(0)}KB message transferred successfully');
         }
 
-        print('\n🎉 All large message tests PASSED - SecuredConnection locks work!');
+        print(
+            '\n🎉 All large message tests PASSED - SecuredConnection locks work!');
 
         // Cleanup
         await clientStream.close();
@@ -187,4 +206,3 @@ void main() {
     }, timeout: Timeout(Duration(seconds: 60)));
   });
 }
-

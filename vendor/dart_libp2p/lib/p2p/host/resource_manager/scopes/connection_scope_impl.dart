@@ -9,12 +9,14 @@ import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart
 import 'package:dart_libp2p/p2p/host/resource_manager/scope_impl.dart';
 import 'package:dart_libp2p/p2p/host/resource_manager/scopes/peer_scope_impl.dart';
 import 'package:dart_libp2p/p2p/host/resource_manager/scopes/transient_scope_impl.dart'; // Added import
-import 'package:dart_libp2p/p2p/host/resource_manager/scopes/system_scope_impl.dart';   // Added import
-import 'package:dart_libp2p/core/network/errors.dart' as network_errors; // Added import
+import 'package:dart_libp2p/p2p/host/resource_manager/scopes/system_scope_impl.dart'; // Added import
+import 'package:dart_libp2p/core/network/errors.dart'
+    as network_errors; // Added import
 
 // Debug logging removed to reduce console noise
 
-class ConnectionScopeImpl extends ResourceScopeImpl implements ConnManagementScope {
+class ConnectionScopeImpl extends ResourceScopeImpl
+    implements ConnManagementScope {
   final Direction direction;
   final bool useFd;
   final MultiAddr remoteEndpoint;
@@ -40,28 +42,26 @@ class ConnectionScopeImpl extends ResourceScopeImpl implements ConnManagementSco
   @override
   Future<void> setPeer(PeerId peerId) async {
     if (_peerScopeImpl != null) {
-      throw Exception('$name: connection scope already attached to a peer: ${_peerScopeImpl!.name}');
+      throw Exception(
+          '$name: connection scope already attached to a peer: ${_peerScopeImpl!.name}');
     }
-
-
 
     // 1. Get PeerScope from the ResourceManager.
     // Note: _rcmgr._getPeerScope is not public, but ConnectionScopeImpl is in the same library.
     // A cleaner way might be for ResourceManagerImpl to expose a method like `internalGetPeerScope`.
     // For now, direct access is assumed as they are tightly coupled.
-    final newPeerScope = _rcmgr.getPeerScopeInternal(peerId); 
+    final newPeerScope = _rcmgr.getPeerScopeInternal(peerId);
 
     // 2. Identify original transient scope and get the global system scope.
     // ConnectionScopeImpl is initially parented only by the transient scope.
     if (edges.isEmpty || edges[0] is! TransientScopeImpl) {
-
-        throw StateError('$name: Expected initial parent to be TransientScopeImpl.');
+      throw StateError(
+          '$name: Expected initial parent to be TransientScopeImpl.');
     }
     final transientScope = edges[0] as TransientScopeImpl;
     // Get the system scope from the resource manager.
     // This assumes _rcmgr.systemScope provides the correct SystemScopeImpl instance.
     final systemScope = _rcmgr.systemScope;
-
 
     // 3. Resource Juggling
     // Get current stats of this connection scope.
@@ -82,14 +82,14 @@ class ConnectionScopeImpl extends ResourceScopeImpl implements ConnManagementSco
       if (reservationError == null) {
         // If reservation in peer scope is successful, release from transient scope.
         // removeConn will release resources and propagate to its parents (system).
-        transientScope.removeConn(direction, useFd); 
+        transientScope.removeConn(direction, useFd);
         // Note: Memory associated with the connection is handled by addConn/removeConn internally.
 
         // Update internal state and edges
         _peerScopeImpl = newPeerScope;
         // The connection scope is now parented by the specific peer scope and the global system scope.
         // The peer scope itself is parented by the system scope.
-        this.edges = [newPeerScope, systemScope]; 
+        this.edges = [newPeerScope, systemScope];
 
         // Decrement ref count of transient scope as this connection is no longer its direct child for these resources.
         // This is tricky: the transient scope itself is a long-lived scope.
@@ -99,8 +99,6 @@ class ConnectionScopeImpl extends ResourceScopeImpl implements ConnManagementSco
         // Calling `transientScope.removeConn` correctly decrements the counts on the transient scope
         // and its parent (system).
         // The ref counts on transient/system scopes are managed by their lifecycle, not per-resource juggling.
-
-
       }
     } on network_errors.ResourceLimitExceededException catch (e) {
       reservationError = e;

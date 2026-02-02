@@ -1,5 +1,5 @@
 /// Yamux-specific exception handling and classification
-/// 
+///
 /// This module provides comprehensive exception handling for Yamux multiplexer
 /// operations, similar to the UDX exception handling system.
 
@@ -13,7 +13,8 @@ final _log = Logger('YamuxExceptions');
 /// Base class for all Yamux-related exceptions
 abstract class YamuxException implements Exception {
   final String message;
-  final dynamic originalException; // Changed to dynamic to handle both Exception and Error
+  final dynamic
+      originalException; // Changed to dynamic to handle both Exception and Error
   final StackTrace? originalStackTrace;
   final DateTime timestamp;
   final Map<String, dynamic> context;
@@ -190,7 +191,8 @@ class YamuxSessionException extends YamuxException {
         );
 
   @override
-  String toString() => 'YamuxSessionException: $message (Session error: $sessionError)';
+  String toString() =>
+      'YamuxSessionException: $message (Session error: $sessionError)';
 
   @override
   YamuxException _copyWith({Map<String, dynamic>? context}) {
@@ -228,7 +230,7 @@ class YamuxExceptionHandler {
     if (exception is StateError) {
       final stateError = exception as StateError;
       final message = stateError.message;
-      
+
       // Check for specific state-related errors
       if (message.contains('reset') || message.contains('Reset')) {
         return YamuxStreamStateException(
@@ -241,7 +243,7 @@ class YamuxExceptionHandler {
           context: baseContext,
         );
       }
-      
+
       if (message.contains('closed') || message.contains('Closed')) {
         return YamuxStreamStateException(
           'Stream operation failed: stream is closed',
@@ -253,7 +255,7 @@ class YamuxExceptionHandler {
           context: baseContext,
         );
       }
-      
+
       if (message.contains('closing') || message.contains('Closing')) {
         return YamuxStreamStateException(
           'Stream operation failed: stream is closing',
@@ -265,7 +267,7 @@ class YamuxExceptionHandler {
           context: baseContext,
         );
       }
-      
+
       // Generic state error
       return YamuxStreamStateException(
         'Stream operation failed due to invalid state: $message',
@@ -341,7 +343,7 @@ class YamuxExceptionHandler {
         // Already classified, just rethrow
         rethrow;
       }
-      
+
       // Handle both Exception and Error types (StateError extends Error, not Exception)
       if (e is Exception || e is Error) {
         final classified = classifyYamuxException(
@@ -352,16 +354,16 @@ class YamuxExceptionHandler {
           currentState: currentState,
           context: context,
         );
-        
+
         _log.warning(
           'Yamux operation failed: ${classified.message}',
           classified.originalException,
           classified.originalStackTrace,
         );
-        
+
         throw classified;
       }
-      
+
       // Other types (shouldn't happen in normal operation)
       rethrow;
     }
@@ -373,12 +375,12 @@ class YamuxExceptionHandler {
     if (exception is YamuxStreamStateException) {
       return false;
     }
-    
+
     // Timeout exceptions might be recoverable with retry
     if (exception is YamuxStreamTimeoutException) {
       return true;
     }
-    
+
     // Some protocol exceptions might be recoverable
     if (exception is YamuxStreamProtocolException) {
       // Socket errors are usually not recoverable
@@ -392,7 +394,7 @@ class YamuxExceptionHandler {
       // Unknown errors - be conservative
       return false;
     }
-    
+
     // Session exceptions are generally not recoverable
     return false;
   }
@@ -404,17 +406,17 @@ class YamuxExceptionHandler {
       // If stream is already reset or closed, no need to reset again
       return !['reset', 'closed'].contains(exception.currentState);
     }
-    
+
     // Protocol exceptions usually warrant a reset
     if (exception is YamuxStreamProtocolException) {
       return true;
     }
-    
+
     // Timeout exceptions might warrant a reset
     if (exception is YamuxStreamTimeoutException) {
       return true;
     }
-    
+
     // Session exceptions don't reset individual streams
     return false;
   }
@@ -429,7 +431,8 @@ class YamuxExceptionUtils {
         await stream.close();
       }
     } catch (e) {
-      _log.warning('Error during safe stream close${context != null ? ' ($context)' : ''}: $e');
+      _log.warning(
+          'Error during safe stream close${context != null ? ' ($context)' : ''}: $e');
     }
   }
 
@@ -440,7 +443,8 @@ class YamuxExceptionUtils {
         await stream.reset();
       }
     } catch (e) {
-      _log.warning('Error during safe stream reset${context != null ? ' ($context)' : ''}: $e');
+      _log.warning(
+          'Error during safe stream reset${context != null ? ' ($context)' : ''}: $e');
     }
   }
 

@@ -14,9 +14,9 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 
 @GenerateMocks([
-  Host, 
-  Network, 
-  IDService, 
+  Host,
+  Network,
+  IDService,
   Peerstore,
 ])
 import 'holepunch_basic_test.mocks.dart';
@@ -36,12 +36,12 @@ void main() {
       mockIdService = MockIDService();
       mockPeerstore = MockPeerstore();
       testPeerId = await PeerId.random();
-      
+
       listenAddrs = () => [
-        MultiAddr('/ip4/127.0.0.1/tcp/4001'),
-        MultiAddr('/ip6/::1/tcp/4002'),
-      ];
-      
+            MultiAddr('/ip4/127.0.0.1/tcp/4001'),
+            MultiAddr('/ip6/::1/tcp/4002'),
+          ];
+
       // Setup basic mock stubs
       when(mockHost.network).thenReturn(mockNetwork);
       when(mockHost.peerStore).thenReturn(mockPeerstore);
@@ -59,7 +59,7 @@ void main() {
           listenAddrs,
           options: const HolePunchOptions(),
         );
-        
+
         expect(service, isNotNull);
         expect(service, isA<HolePunchService>());
       });
@@ -70,7 +70,7 @@ void main() {
           mockIdService,
           listenAddrs,
         );
-        
+
         expect(service, isNotNull);
         expect(service, isA<HolePunchService>());
       });
@@ -99,14 +99,14 @@ void main() {
           tracer: null,
           filter: null,
         );
-        
+
         expect(options.tracer, isNull);
         expect(options.filter, isNull);
       });
 
       test('should create default options', () {
         const options = HolePunchOptions();
-        
+
         expect(options.tracer, isNull);
         expect(options.filter, isNull);
       });
@@ -119,9 +119,9 @@ void main() {
           mockIdService,
           listenAddrs,
         );
-        
+
         expect(service, isA<HolePunchService>());
-        
+
         // Should have the required methods
         expect(service.directConnect, isA<Function>());
         expect(service.start, isA<Function>());
@@ -131,7 +131,7 @@ void main() {
 
     group('Service Lifecycle', () {
       late HolePunchServiceImpl service;
-      
+
       setUp(() {
         service = HolePunchServiceImpl(
           mockHost,
@@ -151,7 +151,7 @@ void main() {
 
       test('should start successfully', () async {
         await expectLater(service.start(), completes);
-        
+
         // Verify the service registered a stream handler
         verify(mockHost.setStreamHandler(protocolId, any)).called(1);
       });
@@ -159,7 +159,7 @@ void main() {
       test('should close successfully after starting', () async {
         await service.start();
         await expectLater(service.close(), completes);
-        
+
         // Verify cleanup happened
         verify(mockHost.removeStreamHandler(protocolId)).called(1);
       });

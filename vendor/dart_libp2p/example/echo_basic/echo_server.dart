@@ -20,7 +20,8 @@ class EchoServer {
       if (data.isNotEmpty) {
         final message = utf8.decode(data).trim();
         // Display the received message (echo it back to console)
-        print('\n🔊 [ECHO SERVER] Received: "$message" from client [${_truncatePeerId(remotePeer)}]');
+        print(
+            '\n🔊 [ECHO SERVER] Received: "$message" from client [${_truncatePeerId(remotePeer)}]');
         stdout.write('> ');
       }
     } catch (e) {

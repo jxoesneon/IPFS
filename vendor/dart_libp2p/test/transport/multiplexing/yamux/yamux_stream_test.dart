@@ -7,12 +7,15 @@ import 'package:test/test.dart';
 import 'package:dart_libp2p/core/network/common.dart' show Direction;
 import 'package:dart_libp2p/core/network/conn.dart';
 import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart' show ConnScope, ScopeStat, ResourceScopeSpan;
+import 'package:dart_libp2p/core/network/rcmgr.dart'
+    show ConnScope, ScopeStat, ResourceScopeSpan;
 import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/multiaddr.dart' hide Protocol; // Hide core Protocol if it exists to avoid conflict
+import 'package:dart_libp2p/core/multiaddr.dart'
+    hide Protocol; // Hide core Protocol if it exists to avoid conflict
 import 'package:dart_libp2p/p2p/multiaddr/protocol.dart'; // Import the Protocol class for Multiaddr
 import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart' as core_protocol; // Alias to avoid conflict with multiaddr.Protocol
+import 'package:dart_libp2p/core/protocol/protocol.dart'
+    as core_protocol; // Alias to avoid conflict with multiaddr.Protocol
 import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/stream.dart';
 import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/frame.dart';
 import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/yamux_exceptions.dart';
@@ -78,9 +81,11 @@ class MockMultiaddr implements MultiAddr {
   @override
   String toString() => _addr;
   @override
-  Uint8List toBytes() => Uint8List.fromList(_addr.codeUnits); // Implemented toBytes
+  Uint8List toBytes() =>
+      Uint8List.fromList(_addr.codeUnits); // Implemented toBytes
   @override
-  List<Protocol> get protocols => []; // Uses p2p/multiaddr/protocol.dart's Protocol
+  List<Protocol> get protocols =>
+      []; // Uses p2p/multiaddr/protocol.dart's Protocol
   @override
   String? valueForProtocol(String protocol) => null;
   @override
@@ -88,7 +93,8 @@ class MockMultiaddr implements MultiAddr {
   @override
   List<(Protocol, String)> get components => [];
   @override
-  MultiAddr encapsulate(String protocol, String value) => throw UnimplementedError();
+  MultiAddr encapsulate(String protocol, String value) =>
+      throw UnimplementedError();
   @override
   MultiAddr? decapsulate(String protocol) => null;
   // Removed methods not in Multiaddr interface:
@@ -101,7 +107,8 @@ class MockMultiaddr implements MultiAddr {
   // getPeerId()
   // getTransport()
   @override
-  bool equals(MultiAddr other) => other is MockMultiaddr && other._addr == _addr;
+  bool equals(MultiAddr other) =>
+      other is MockMultiaddr && other._addr == _addr;
   @override
   int get hashCode => _addr.hashCode;
   @override
@@ -205,7 +212,13 @@ class MockConnScope implements ConnScope {
   @override
   void releaseMemory(int size) {}
   @override
-  ScopeStat get stat => const ScopeStat(numStreamsInbound: 0, numStreamsOutbound: 0, numConnsInbound: 0, numConnsOutbound: 0, memory: 0, numFD: 0);
+  ScopeStat get stat => const ScopeStat(
+      numStreamsInbound: 0,
+      numStreamsOutbound: 0,
+      numConnsInbound: 0,
+      numConnsOutbound: 0,
+      memory: 0,
+      numFD: 0);
   @override
   Future<ResourceScopeSpan> beginSpan() async => MockResourceScopeSpan();
 
@@ -213,7 +226,9 @@ class MockConnScope implements ConnScope {
   // Mocked methods from original attempt, some might not be directly from ConnScope but from ResourceScopeSpan which ConnScope might extend in some contexts or via ConnManagementScope.
   // For now, ConnScope only extends ResourceScope directly.
   // Keeping setPeer as it was in the mock, though not in ConnScope interface directly.
-  void setPeer(PeerId p) {} // This was in the mock, but not in ConnScope interface. Retaining for now.
+  void setPeer(
+      PeerId
+          p) {} // This was in the mock, but not in ConnScope interface. Retaining for now.
 
   // Methods that were in the mock but might belong to ResourceScopeSpan or other specific scopes.
   // For ConnScope, only ResourceScope methods are strictly required.
@@ -222,7 +237,8 @@ class MockConnScope implements ConnScope {
 
   // Methods for P2PStream interaction, if ConnScope is used in that context by YamuxStream.
   // These are not part of the defined ConnScope interface.
-  Future<void> addStream(P2PStream stream) async {} // Not in ConnScope interface
+  Future<void> addStream(
+      P2PStream stream) async {} // Not in ConnScope interface
   @override
   void removeStream(P2PStream stream) {} // Not in ConnScope interface
 }
@@ -240,13 +256,13 @@ class MockResourceScopeSpan implements ResourceScopeSpan {
   @override
   ScopeStat get stat => const ScopeStat();
   @override
-  Future<ResourceScopeSpan> beginSpan() async => this; // A span can begin a sub-span
+  Future<ResourceScopeSpan> beginSpan() async =>
+      this; // A span can begin a sub-span
 
   // Original mock methods - connScope is not part of ResourceScopeSpan
   // Future<void> returnMemory(int size) async {} // This is releaseMemory
   // ConnScope get connScope => MockConnScope(); // Not part of ResourceScopeSpan
 }
-
 
 class MockConn implements Conn {
   @override
@@ -263,10 +279,12 @@ class MockConn implements Conn {
   Future<P2PStream<dynamic>> newStream(Context context) async {
     throw UnimplementedError('MockConn.newStream not implemented');
   }
+
   @override
   MultiAddr get remoteMultiaddr => MockMultiaddr('/ip4/127.0.0.1/tcp/54321');
   @override
-  PeerId get remotePeer => MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx');
+  PeerId get remotePeer =>
+      MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx');
   @override
   Future<PublicKey?> get remotePublicKey async => null;
   @override
@@ -294,9 +312,11 @@ void main() {
     setUp(() {
       sentFrames = [];
       sendFrame = (frame) async {
-        print('[TEST DEBUG] sendFrame called for streamId: ${frame.streamId}. Current sentFrames.length before add: ${sentFrames.length}');
+        print(
+            '[TEST DEBUG] sendFrame called for streamId: ${frame.streamId}. Current sentFrames.length before add: ${sentFrames.length}');
         sentFrames.add(frame);
-        print('[TEST DEBUG] sendFrame after add: sentFrames.length: ${sentFrames.length}');
+        print(
+            '[TEST DEBUG] sendFrame after add: sentFrames.length: ${sentFrames.length}');
       };
       mockConn = MockConn();
 
@@ -307,7 +327,8 @@ void main() {
         initialWindowSize: 256 * 1024, // 256KB
         sendFrame: sendFrame,
         parentConn: mockConn,
-        remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+        remotePeer:
+            MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
         maxFrameSize: 64 * 1024, // 64KB default
       );
     });
@@ -333,7 +354,8 @@ void main() {
 
     test('throws when writing to unopened stream', () async {
       final data = Uint8List.fromList([1, 2, 3]);
-      expect(() => stream.write(data), throwsA(isA<YamuxStreamStateException>()));
+      expect(
+          () => stream.write(data), throwsA(isA<YamuxStreamStateException>()));
     });
 
     test('throws when reading from unopened stream', () async {
@@ -352,7 +374,8 @@ void main() {
         initialWindowSize: 10, // Start with just 10 bytes
         sendFrame: sendFrame,
         parentConn: mockConn,
-        remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+        remotePeer:
+            MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
         maxFrameSize: 64 * 1024,
       );
       await stream.open();
@@ -398,17 +421,19 @@ void main() {
         // This test uses the 'stream' from the main setUp,
         // which is opened by the group's setUp, and then sentFrames is cleared.
         // So, stream is open and sentFrames is empty here.
-        print('[TEST DEBUG] writes data correctly - Start. sentFrames.length: ${sentFrames.length}');
-        
+        print(
+            '[TEST DEBUG] writes data correctly - Start. sentFrames.length: ${sentFrames.length}');
+
         final data = Uint8List.fromList([1, 2, 3, 4, 5]);
         await stream.write(data); // Should add 1 data frame.
-        
-        // Add a more substantial delay to allow async sendFrame to complete
-        await Future.delayed(const Duration(milliseconds: 50)); 
 
-        print('[TEST DEBUG] writes data correctly - After stream.write and delay. sentFrames.length: ${sentFrames.length}');
+        // Add a more substantial delay to allow async sendFrame to complete
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        print(
+            '[TEST DEBUG] writes data correctly - After stream.write and delay. sentFrames.length: ${sentFrames.length}');
         expect(sentFrames.length, equals(1)); // Expecting 1 data frame.
-        
+
         if (sentFrames.isNotEmpty) {
           expect(sentFrames[0].type, equals(YamuxFrameType.dataFrame));
           expect(sentFrames[0].streamId, equals(1));
@@ -440,7 +465,8 @@ void main() {
           initialWindowSize: 64 * 1024, // 64KB
           sendFrame: sendFrame,
           parentConn: mockConn,
-          remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+          remotePeer: MockPeerId(
+              '12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
           maxFrameSize: 64 * 1024,
         );
         await stream.open();
@@ -509,7 +535,8 @@ void main() {
         final frame = YamuxFrame.windowUpdate(1, updateSize);
         await stream.handleFrame(frame);
 
-        expect(stream.currentRemoteReceiveWindow, equals(initialWindow + updateSize));
+        expect(stream.currentRemoteReceiveWindow,
+            equals(initialWindow + updateSize));
       });
 
       test('respects window size when writing', () async {
@@ -521,7 +548,8 @@ void main() {
           initialWindowSize: 1024, // 1KB
           sendFrame: sendFrame,
           parentConn: mockConn,
-          remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+          remotePeer: MockPeerId(
+              '12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
           maxFrameSize: 64 * 1024,
         );
         await stream.open();
@@ -567,29 +595,36 @@ void main() {
         // This test uses the 'stream' from the main setUp,
         // which is opened by the group's setUp, and then sentFrames is cleared.
         // So, stream is open and sentFrames is empty here.
-        print('[TEST DEBUG] closes stream gracefully - Start. sentFrames.length: ${sentFrames.length}');
+        print(
+            '[TEST DEBUG] closes stream gracefully - Start. sentFrames.length: ${sentFrames.length}');
 
         final data = Uint8List.fromList([1, 2, 3]);
         await stream.write(data); // Should add 1 data frame
         // Add a substantial delay
         await Future.delayed(const Duration(milliseconds: 50));
-        print('[TEST DEBUG] closes stream gracefully - After write and delay. sentFrames.length: ${sentFrames.length}');
+        print(
+            '[TEST DEBUG] closes stream gracefully - After write and delay. sentFrames.length: ${sentFrames.length}');
         // At this point, sentFrames should have 1 item (the data frame). We are NOT clearing it.
 
-        await stream.close(); // Should send 1 FIN frame (which is a data frame with FIN flag)
+        await stream
+            .close(); // Should send 1 FIN frame (which is a data frame with FIN flag)
         // Add a substantial delay
         await Future.delayed(const Duration(milliseconds: 50));
-        print('[TEST DEBUG] closes stream gracefully - After close and delay. sentFrames.length: ${sentFrames.length}');
+        print(
+            '[TEST DEBUG] closes stream gracefully - After close and delay. sentFrames.length: ${sentFrames.length}');
 
         expect(stream.streamState, equals(YamuxStreamState.closed));
         expect(stream.isClosed, isTrue);
 
         // Expecting 2 frames: 1 data frame, 1 FIN frame (data frame with FIN flag)
-        expect(sentFrames.length, equals(2), reason: "Expected data frame and FIN frame."); 
+        expect(sentFrames.length, equals(2),
+            reason: "Expected data frame and FIN frame.");
         if (sentFrames.length == 2) {
-          expect(sentFrames[0].type, equals(YamuxFrameType.dataFrame), reason: "First frame should be data.");
+          expect(sentFrames[0].type, equals(YamuxFrameType.dataFrame),
+              reason: "First frame should be data.");
           expect(sentFrames[0].data, equals(data));
-          expect(sentFrames[1].type, equals(YamuxFrameType.dataFrame), reason: "Second frame should be FIN (data type with FIN flag).");
+          expect(sentFrames[1].type, equals(YamuxFrameType.dataFrame),
+              reason: "Second frame should be FIN (data type with FIN flag).");
           expect(sentFrames[1].flags & YamuxFlags.fin, equals(YamuxFlags.fin));
         }
       });
@@ -600,7 +635,7 @@ void main() {
           await stream.open();
         }
         sentFrames.clear();
-        
+
         // Send FIN frame from remote
         final frame = YamuxFrame.createData(1, Uint8List(0), fin: true);
         await stream.handleFrame(frame);
@@ -612,14 +647,13 @@ void main() {
         // With half-close, local can still write after remote sends FIN
         await stream.write(Uint8List.fromList([1, 2, 3]));
         expect(sentFrames.isNotEmpty, isTrue);
-        
+
         // Reads should return EOF since remote closed its write side
         final readResult = await stream.read();
         expect(readResult.isEmpty, isTrue);
       });
 
       test('closes cleanly with pending reads', () async {
-
         //FIXME: Should revisit this test. It looks like this requirement
         //has internal conflicts with how our read() logic works
         // print('Starting test...');
@@ -659,7 +693,8 @@ void main() {
           initialWindowSize: 1024,
           sendFrame: sendFrame,
           parentConn: mockConn,
-          remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+          remotePeer: MockPeerId(
+              '12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
           maxFrameSize: 64 * 1024,
         );
         await stream.open();
@@ -675,8 +710,10 @@ void main() {
         // Close the stream
         print('Closing stream...');
         await stream.close();
-        await Future.delayed(const Duration(milliseconds: 1)); // Slightly longer delay for state finalization
-        print('Stream closed, state: ${stream.streamState}, frames sent: ${sentFrames.length}');
+        await Future.delayed(const Duration(
+            milliseconds: 1)); // Slightly longer delay for state finalization
+        print(
+            'Stream closed, state: ${stream.streamState}, frames sent: ${sentFrames.length}');
 
         // Verify cleanup
         expect(stream.streamState, equals(YamuxStreamState.closed));
@@ -697,7 +734,8 @@ void main() {
           initialWindowSize: 1024,
           sendFrame: sendFrame,
           parentConn: mockConn,
-          remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+          remotePeer: MockPeerId(
+              '12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
           maxFrameSize: 64 * 1024,
         );
 
@@ -764,7 +802,7 @@ void main() {
       test('closeWrite() sends FIN and prevents further writes', () async {
         final mockConn = MockConn();
         final sentFrames = <YamuxFrame>[];
-        
+
         final stream = YamuxStream(
           id: 1,
           protocol: '/test/1.0.0',
@@ -774,20 +812,21 @@ void main() {
             sentFrames.add(frame);
           },
           parentConn: mockConn,
-          remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+          remotePeer: MockPeerId(
+              '12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
           maxFrameSize: 64 * 1024,
         );
-        
+
         await stream.open();
         sentFrames.clear(); // Clear the initial window update
         await stream.closeWrite();
-        
+
         // Verify FIN frame was sent
         expect(sentFrames.length, equals(1));
         expect(sentFrames[0].type, equals(YamuxFrameType.dataFrame));
         expect(sentFrames[0].flags & YamuxFlags.fin, equals(YamuxFlags.fin));
         expect(sentFrames[0].data.isEmpty, isTrue);
-        
+
         // Verify further writes throw error
         expect(
           () => stream.write([1, 2, 3]),
@@ -797,7 +836,7 @@ void main() {
 
       test('closeWrite() allows continued reads', () async {
         final mockConn = MockConn();
-        
+
         final stream = YamuxStream(
           id: 1,
           protocol: '/test/1.0.0',
@@ -805,18 +844,19 @@ void main() {
           initialWindowSize: 256 * 1024,
           sendFrame: (frame) async {},
           parentConn: mockConn,
-          remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+          remotePeer: MockPeerId(
+              '12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
           maxFrameSize: 64 * 1024,
         );
-        
+
         await stream.open();
         await stream.closeWrite();
-        
+
         // Should still be able to receive data
         final testData = Uint8List.fromList([10, 20, 30]);
         final dataFrame = YamuxFrame.createData(1, testData);
         await stream.handleFrame(dataFrame);
-        
+
         final received = await stream.read();
         expect(received, equals(testData));
       });
@@ -824,7 +864,7 @@ void main() {
       test('bidirectional half-close with independent write closure', () async {
         final mockConn = MockConn();
         final sentFrames = <YamuxFrame>[];
-        
+
         final stream = YamuxStream(
           id: 1,
           protocol: '/test/1.0.0',
@@ -834,47 +874,48 @@ void main() {
             sentFrames.add(frame);
           },
           parentConn: mockConn,
-          remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+          remotePeer: MockPeerId(
+              '12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
           maxFrameSize: 64 * 1024,
         );
-        
+
         await stream.open();
         sentFrames.clear(); // Clear the initial window update
-        
+
         // Local closeWrite
         await stream.closeWrite();
         expect(sentFrames.length, equals(1));
         expect(sentFrames[0].flags & YamuxFlags.fin, equals(YamuxFlags.fin));
-        
+
         // Remote can still send data
         final testData = Uint8List.fromList([40, 50, 60]);
         final dataFrame = YamuxFrame.createData(1, testData);
         await stream.handleFrame(dataFrame);
-        
+
         final received = await stream.read();
         expect(received, equals(testData));
-        
+
         // Remote closes its write side
         final remoteFin = YamuxFrame.createData(1, Uint8List(0), fin: true);
         await stream.handleFrame(remoteFin);
-        
+
         // Stream should be in closing state (both FINs exchanged)
         // The stream remains in closing state until all data is consumed via read()
         // This prevents data loss in relay scenarios where one direction may still have
         // pending data to read even after both FINs are exchanged.
         expect(stream.streamState, equals(YamuxStreamState.closing));
-        
+
         // Reading EOF triggers cleanup when both FINs sent and queue is empty
         final eof = await stream.read();
         expect(eof.isEmpty, isTrue);
-        
+
         // Now the stream should be fully closed
         expect(stream.streamState, equals(YamuxStreamState.closed));
       });
 
       test('receiving FIN transitions to closing state', () async {
         final mockConn = MockConn();
-        
+
         final stream = YamuxStream(
           id: 1,
           protocol: '/test/1.0.0',
@@ -882,20 +923,21 @@ void main() {
           initialWindowSize: 256 * 1024,
           sendFrame: (frame) async {},
           parentConn: mockConn,
-          remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+          remotePeer: MockPeerId(
+              '12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
           maxFrameSize: 64 * 1024,
         );
-        
+
         // Initial state should be init
         expect(stream.streamState, equals(YamuxStreamState.init));
-        
+
         // Receive FIN from remote
         final finFrame = YamuxFrame.createData(1, Uint8List(0), fin: true);
         await stream.handleFrame(finFrame);
-        
+
         // Should transition to closing state
         expect(stream.streamState, equals(YamuxStreamState.closing));
-        
+
         // Test that local can still write after receiving remote FIN
         final sentFrames2 = <YamuxFrame>[];
         final stream2 = YamuxStream(
@@ -907,27 +949,29 @@ void main() {
             sentFrames2.add(frame);
           },
           parentConn: mockConn,
-          remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+          remotePeer: MockPeerId(
+              '12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
           maxFrameSize: 64 * 1024,
         );
-        
+
         await stream2.open();
         sentFrames2.clear();
-        
+
         // Receive FIN from remote
         final finFrame2 = YamuxFrame.createData(2, Uint8List(0), fin: true);
         await stream2.handleFrame(finFrame2);
-        
+
         expect(stream2.streamState, equals(YamuxStreamState.closing));
-        
+
         // Can still write after receiving FIN
         await stream2.write([2, 3, 4]);
-        expect(sentFrames2.isNotEmpty, isTrue, reason: 'Write after receiving FIN should send data frames');
+        expect(sentFrames2.isNotEmpty, isTrue,
+            reason: 'Write after receiving FIN should send data frames');
       });
 
       test('closeRead() completes pending read with EOF', () async {
         final mockConn = MockConn();
-        
+
         final stream = YamuxStream(
           id: 1,
           protocol: '/test/1.0.0',
@@ -935,22 +979,23 @@ void main() {
           initialWindowSize: 256 * 1024,
           sendFrame: (frame) async {},
           parentConn: mockConn,
-          remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+          remotePeer: MockPeerId(
+              '12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
           maxFrameSize: 64 * 1024,
         );
-        
+
         await stream.open();
-        
+
         // Start a pending read
         final readFuture = stream.read();
-        
+
         // Close read side
         await stream.closeRead();
-        
+
         // Pending read should complete with EOF
         final result = await readFuture;
         expect(result.isEmpty, isTrue);
-        
+
         // Future reads should also return EOF
         final result2 = await stream.read();
         expect(result2.isEmpty, isTrue);
@@ -959,7 +1004,7 @@ void main() {
       test('full close after closeWrite() works correctly', () async {
         final mockConn = MockConn();
         final sentFrames = <YamuxFrame>[];
-        
+
         final stream = YamuxStream(
           id: 1,
           protocol: '/test/1.0.0',
@@ -969,17 +1014,18 @@ void main() {
             sentFrames.add(frame);
           },
           parentConn: mockConn,
-          remotePeer: MockPeerId('12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
+          remotePeer: MockPeerId(
+              '12D3KooWF22ud67s2HPZrmD8PdGKEc6A8xaK9qvLmfbLTdqNLSXx'),
           maxFrameSize: 64 * 1024,
         );
-        
+
         await stream.open();
         sentFrames.clear(); // Clear the initial window update
         await stream.closeWrite();
         expect(sentFrames.length, equals(1));
-        
+
         await stream.close();
-        
+
         // close() should send another FIN if not already in closing state
         // or just do cleanup if already sent FIN
         expect(stream.streamState, equals(YamuxStreamState.closed));

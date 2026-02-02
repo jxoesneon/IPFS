@@ -10,7 +10,8 @@ import 'package:dart_libp2p/core/multiaddr.dart';
 import 'package:dart_libp2p/core/network/common.dart';
 import 'package:dart_libp2p/core/network/conn.dart';
 import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/network/transport_conn.dart' as core_transport_conn;
+import 'package:dart_libp2p/core/network/transport_conn.dart'
+    as core_transport_conn;
 import 'package:dart_libp2p/core/peer/peer_id.dart';
 import 'package:dart_libp2p/core/peer/addr_info.dart';
 import 'package:dart_libp2p/core/protocol/protocol.dart' as core_protocol;
@@ -22,9 +23,12 @@ import 'package:dart_libp2p/core/network/mux.dart' as core_mux;
 // P2P layer imports for mocks
 import 'package:dart_libp2p/p2p/transport/transport.dart' as p2p_transport;
 import 'package:dart_libp2p/p2p/transport/listener.dart' as p2p_listener;
-import 'package:dart_libp2p/p2p/security/security_protocol.dart' as p2p_security;
-import 'package:dart_libp2p/p2p/security/secured_connection.dart' as p2p_secured_conn;
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart' as p2p_muxer;
+import 'package:dart_libp2p/p2p/security/security_protocol.dart'
+    as p2p_security;
+import 'package:dart_libp2p/p2p/security/secured_connection.dart'
+    as p2p_secured_conn;
+import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart'
+    as p2p_muxer;
 import 'package:dart_libp2p/p2p/transport/transport_config.dart';
 
 import 'package:dart_libp2p/config/config.dart' as p2p_config;
@@ -32,7 +36,6 @@ import 'package:dart_libp2p/config/stream_muxer.dart' as config_stream_muxer;
 import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
 
 const String identifyProtocolId = '/ipfs/id/1.0.0';
-
 
 // --- Mock Classes ---
 
@@ -56,15 +59,21 @@ class MockResourceScope implements ResourceScope {
   @override
   Future<void> close() async {}
   @override
-  Future<ResourceScopeSpan> beginSpan() async => throw UnimplementedError('MockResourceScope.beginSpan not implemented');
+  Future<ResourceScopeSpan> beginSpan() async =>
+      throw UnimplementedError('MockResourceScope.beginSpan not implemented');
   @override
-  ScopeStat get stat => throw UnimplementedError('MockResourceScope.stat not implemented');
+  ScopeStat get stat =>
+      throw UnimplementedError('MockResourceScope.stat not implemented');
 }
 
 class MockPublicKey extends PublicKey {
   static int _defaultKeyCounter = 0;
   final Uint8List _bytes;
-  MockPublicKey([List<int>? bytes]) : _bytes = Uint8List.fromList(bytes ?? List.generate(34, (i) => i + 100 + _defaultKeyCounter++)..[0]=0x00 ..[1]=0x24);
+  MockPublicKey([List<int>? bytes])
+      : _bytes = Uint8List.fromList(
+            bytes ?? List.generate(34, (i) => i + 100 + _defaultKeyCounter++)
+              ..[0] = 0x00
+              ..[1] = 0x24);
   @override
   Uint8List marshal() => _bytes;
   @override
@@ -82,7 +91,9 @@ class MockPublicKey extends PublicKey {
 class MockPrivateKey extends PrivateKey {
   static int _defaultKeyCounterP = 0;
   final Uint8List _bytes;
-  MockPrivateKey([List<int>? bytes]) : _bytes = Uint8List.fromList(bytes ?? List.generate(32, (i) => i + 200 + _defaultKeyCounterP++));
+  MockPrivateKey([List<int>? bytes])
+      : _bytes = Uint8List.fromList(
+            bytes ?? List.generate(32, (i) => i + 200 + _defaultKeyCounterP++));
   @override
   pb.KeyType get keyType => pb.KeyType.Ed25519;
   @override
@@ -105,7 +116,9 @@ class MockKeyPair implements KeyPair {
   @override
   final PublicKey publicKey;
   // MockKeyPair will now naturally create unique pairs due to counters in MockPrivateKey and MockPublicKey
-  MockKeyPair() : privateKey = MockPrivateKey(), publicKey = MockPublicKey();
+  MockKeyPair()
+      : privateKey = MockPrivateKey(),
+        publicKey = MockPublicKey();
 }
 
 class MockStats implements Stats {
@@ -137,7 +150,8 @@ class MockConnStats implements ConnStats {
 }
 
 class MockP2PStream implements P2PStream {
-  String _id = 'mock-stream-${DateTime.now().millisecondsSinceEpoch}-${_streamIdCounter++}';
+  String _id =
+      'mock-stream-${DateTime.now().millisecondsSinceEpoch}-${_streamIdCounter++}';
   static int _streamIdCounter = 0;
   @override
   String id() => _id;
@@ -148,7 +162,8 @@ class MockP2PStream implements P2PStream {
   void setMockProtocol(String p) => _protocol = p;
 
   @override
-  StreamStats stat() => StreamStats(direction: Direction.unknown, opened: DateTime.now());
+  StreamStats stat() =>
+      StreamStats(direction: Direction.unknown, opened: DateTime.now());
 
   Completer<Uint8List>? _hangingReadCompleter;
   bool _shouldHangRead = false;
@@ -162,12 +177,16 @@ class MockP2PStream implements P2PStream {
     _hangingReadCompleter = Completer<Uint8List>();
     onReadCalledWhileHanging = onReadCallback;
   }
+
   void addDataToRead(Uint8List data) {
     _pendingReadData.add(data);
     _tryCompleteRead();
   }
+
   void _tryCompleteRead() {
-    if (_currentReadCompleter != null && !_currentReadCompleter!.isCompleted && _pendingReadData.isNotEmpty) {
+    if (_currentReadCompleter != null &&
+        !_currentReadCompleter!.isCompleted &&
+        _pendingReadData.isNotEmpty) {
       _currentReadCompleter!.complete(_pendingReadData.removeAt(0));
       _currentReadCompleter = null;
     }
@@ -192,32 +211,47 @@ class MockP2PStream implements P2PStream {
   @override
   Future<void> setWriteDeadline(DateTime? time) async {}
   @override
-  Future<void> closeWrite() async { _writeClosed = true; }
+  Future<void> closeWrite() async {
+    _writeClosed = true;
+  }
+
   @override
-  Future<void> closeRead() async { _readClosed = true; }
+  Future<void> closeRead() async {
+    _readClosed = true;
+  }
+
   @override
   Future<void> close() async {
     _isStreamClosed = true;
     _writeClosed = true;
     _readClosed = true;
     if (_hangingReadCompleter?.isCompleted == false) {
-      _hangingReadCompleter!.completeError(Exception("Stream closed while read was hanging"));
+      _hangingReadCompleter!
+          .completeError(Exception("Stream closed while read was hanging"));
     }
     if (_currentReadCompleter?.isCompleted == false) {
-      _currentReadCompleter!.completeError(Exception("Stream closed while reading"));
+      _currentReadCompleter!
+          .completeError(Exception("Stream closed while reading"));
     }
     if (!_closeCompleter.isCompleted) _closeCompleter.complete();
   }
+
   @override
-  Future<void> reset() async { await close(); }
+  Future<void> reset() async {
+    await close();
+  }
+
   @override
   Future<void> write(Uint8List data) async {
-    if (_isStreamClosed || _writeClosed) throw Exception('Stream closed or write-closed');
+    if (_isStreamClosed || _writeClosed)
+      throw Exception('Stream closed or write-closed');
     writtenData.add(data);
   }
+
   @override
   Future<Uint8List> read([int? maxLength]) async {
-    if (_isStreamClosed || _readClosed) throw Exception('Stream closed or read-closed');
+    if (_isStreamClosed || _readClosed)
+      throw Exception('Stream closed or read-closed');
     if (_shouldHangRead && _hangingReadCompleter != null) {
       onReadCalledWhileHanging?.call();
       return _hangingReadCompleter!.future;
@@ -228,12 +262,17 @@ class MockP2PStream implements P2PStream {
     _currentReadCompleter = Completer<Uint8List>();
     return _currentReadCompleter!.future;
   }
+
   @override
-  P2PStream<Uint8List> get incoming => throw UnimplementedError('MockP2PStream.incoming not implemented');
+  P2PStream<Uint8List> get incoming =>
+      throw UnimplementedError('MockP2PStream.incoming not implemented');
   @override
-  StreamManagementScope scope() => throw UnimplementedError('MockP2PStream.scope not implemented'); // Changed return type
+  StreamManagementScope scope() => throw UnimplementedError(
+      'MockP2PStream.scope not implemented'); // Changed return type
   @override
-  Future<void> setProtocol(String id) async { _protocol = id; }
+  Future<void> setProtocol(String id) async {
+    _protocol = id;
+  }
 
   @override
   // TODO: implement conn
@@ -241,7 +280,8 @@ class MockP2PStream implements P2PStream {
 }
 
 class MockConnBase implements Conn {
-  String _connId = 'mock-conn-${DateTime.now().millisecondsSinceEpoch}-${_connBaseIdCounter++}';
+  String _connId =
+      'mock-conn-${DateTime.now().millisecondsSinceEpoch}-${_connBaseIdCounter++}';
   static int _connBaseIdCounter = 0;
   @override
   String get id => _connId;
@@ -249,47 +289,58 @@ class MockConnBase implements Conn {
   MultiAddr? _localMultiaddrVal;
   MultiAddr? _remoteMultiaddrVal;
   MockConnBase({MultiAddr? localAddr, MultiAddr? remoteAddr})
-    : _localMultiaddrVal = localAddr, _remoteMultiaddrVal = remoteAddr;
+      : _localMultiaddrVal = localAddr,
+        _remoteMultiaddrVal = remoteAddr;
 
   @override
-  MultiAddr get localMultiaddr => _localMultiaddrVal ?? MultiAddr('/ip4/127.0.0.1/tcp/1111');
+  MultiAddr get localMultiaddr =>
+      _localMultiaddrVal ?? MultiAddr('/ip4/127.0.0.1/tcp/1111');
   @override
-  MultiAddr get remoteMultiaddr => _remoteMultiaddrVal ?? MultiAddr('/ip4/127.0.0.1/tcp/2222');
+  MultiAddr get remoteMultiaddr =>
+      _remoteMultiaddrVal ?? MultiAddr('/ip4/127.0.0.1/tcp/2222');
   @override
   ConnStats get stat => MockConnStats();
   bool _isConnClosed = false;
   @override
-  Future<void> close() async { _isConnClosed = true; }
+  Future<void> close() async {
+    _isConnClosed = true;
+  }
+
   @override
   bool get isClosed => _isConnClosed;
   @override
   ConnScope get scope => MockConnScope();
   @override
-  PeerId get localPeer => throw UnimplementedError('MockConnBase.localPeer not implemented');
+  PeerId get localPeer =>
+      throw UnimplementedError('MockConnBase.localPeer not implemented');
   @override
-  Future<P2PStream> newStream(core_context.Context context) async => MockP2PStream();
+  Future<P2PStream> newStream(core_context.Context context) async =>
+      MockP2PStream();
   @override
-  PeerId get remotePeer => throw UnimplementedError('MockConnBase.remotePeer not implemented');
+  PeerId get remotePeer =>
+      throw UnimplementedError('MockConnBase.remotePeer not implemented');
   @override
   Future<PublicKey?> get remotePublicKey async => null;
   @override
   ConnState get state => ConnState(
-    streamMultiplexer: '/mock/1.0.0',
-    security: '/mock/1.0.0',
-    transport: 'mock',
-    usedEarlyMuxerNegotiation: false,
-  );
+        streamMultiplexer: '/mock/1.0.0',
+        security: '/mock/1.0.0',
+        transport: 'mock',
+        usedEarlyMuxerNegotiation: false,
+      );
   @override
   Future<List<P2PStream>> get streams async => [];
 }
 
 class MockConnScope extends MockResourceScope implements ConnScope {}
 
-class MockTransportConn extends MockConnBase implements core_transport_conn.TransportConn {
+class MockTransportConn extends MockConnBase
+    implements core_transport_conn.TransportConn {
   @override
   final p2p_transport.Transport transport;
-  MockTransportConn({required this.transport, MultiAddr? localAddr, MultiAddr? remoteAddr})
-    : super(localAddr: localAddr, remoteAddr: remoteAddr);
+  MockTransportConn(
+      {required this.transport, MultiAddr? localAddr, MultiAddr? remoteAddr})
+      : super(localAddr: localAddr, remoteAddr: remoteAddr);
 
   @override
   Future<Uint8List> read([int? length]) async => Uint8List(0);
@@ -298,7 +349,8 @@ class MockTransportConn extends MockConnBase implements core_transport_conn.Tran
   @override
   void setWriteTimeout(Duration timeout) {}
   @override
-  Socket get socket => throw UnimplementedError('MockTransportConn.socket not implemented');
+  Socket get socket =>
+      throw UnimplementedError('MockTransportConn.socket not implemented');
   @override
   Future<void> write(Uint8List data) async {}
 
@@ -306,15 +358,17 @@ class MockTransportConn extends MockConnBase implements core_transport_conn.Tran
   void notifyActivity() {}
 }
 
-class MockSecuredConn extends MockConnBase implements p2p_secured_conn.SecuredConnection {
+class MockSecuredConn extends MockConnBase
+    implements p2p_secured_conn.SecuredConnection {
   @override
   final PeerId localPeer;
   @override
   final PeerId remotePeer;
   final PublicKey? _remotePublicKeyVal;
 
-  MockSecuredConn(this.localPeer, this.remotePeer, this._remotePublicKeyVal, {MultiAddr? localAddr, MultiAddr? remoteAddr})
-    : super(localAddr: localAddr, remoteAddr: remoteAddr);
+  MockSecuredConn(this.localPeer, this.remotePeer, this._remotePublicKeyVal,
+      {MultiAddr? localAddr, MultiAddr? remoteAddr})
+      : super(localAddr: localAddr, remoteAddr: remoteAddr);
 
   @override
   Future<PublicKey?> get remotePublicKey async => _remotePublicKeyVal;
@@ -323,8 +377,9 @@ class MockSecuredConn extends MockConnBase implements p2p_secured_conn.SecuredCo
   @override
   String get securityProtocolId => '/mock-sec/1.0.0';
   @override
-  p2p_transport.Transport get transport => throw UnimplementedError('MockSecuredConn.transport not implemented');
-  
+  p2p_transport.Transport get transport =>
+      throw UnimplementedError('MockSecuredConn.transport not implemented');
+
   @override
   Future<Uint8List> read([int? length]) async => Uint8List(0);
   @override
@@ -332,10 +387,11 @@ class MockSecuredConn extends MockConnBase implements p2p_secured_conn.SecuredCo
   @override
   void setWriteTimeout(Duration timeout) {}
   @override
-  Socket get socket => throw UnimplementedError('MockSecuredConn.socket not implemented');
+  Socket get socket =>
+      throw UnimplementedError('MockSecuredConn.socket not implemented');
   @override
   Future<void> write(Uint8List data) async {}
-  
+
   @override
   PeerId? get establishedRemotePeer => remotePeer;
   @override
@@ -358,11 +414,12 @@ class MockSecuredConn extends MockConnBase implements p2p_secured_conn.SecuredCo
 }
 
 class MockMuxerInstance implements p2p_muxer.Multiplexer {
-  final Conn _connection; 
+  final Conn _connection;
   final bool _isClient;
   final Map<String, Future<P2PStream> Function()> _specificStreamProviders;
 
-  MockMuxerInstance(this._connection, this._isClient, this._specificStreamProviders);
+  MockMuxerInstance(
+      this._connection, this._isClient, this._specificStreamProviders);
 
   @override
   String get id => protocolId;
@@ -370,43 +427,51 @@ class MockMuxerInstance implements p2p_muxer.Multiplexer {
   String get protocolId => 'mock-muxer/1.0.0';
   bool _muxerClosed = false;
   @override
-  Future<void> close() async { _muxerClosed = true; }
+  Future<void> close() async {
+    _muxerClosed = true;
+  }
+
   @override
   bool get isClosed => _muxerClosed;
 
   @override
-  Future<P2PStream> openStream(core_context.Context context) async { 
+  Future<P2PStream> openStream(core_context.Context context) async {
     // Mock implementation can ignore context if not needed for its logic
-    if (!_isClient) throw StateError('Listener side should not call openStream directly in this mock setup');
+    if (!_isClient)
+      throw StateError(
+          'Listener side should not call openStream directly in this mock setup');
     if (_specificStreamProviders.containsKey(identifyProtocolId)) {
       return await _specificStreamProviders[identifyProtocolId]!();
     }
-    return MockP2PStream(); 
+    return MockP2PStream();
   }
 
   StreamHandler? _globalStreamHandler;
 
   @override
-  void setStreamHandler(Future<void> Function(P2PStream stream) handler) { 
+  void setStreamHandler(Future<void> Function(P2PStream stream) handler) {
     _globalStreamHandler = (P2PStream stream, PeerId remotePeer) async {
-        await handler(stream);
+      await handler(stream);
     };
   }
+
   @override
-  void removeStreamHandler() { 
+  void removeStreamHandler() {
     _globalStreamHandler = null;
   }
 
-  void simulateIncomingStream(String protocolId, MockP2PStream stream, PeerId remotePeer) {
-    stream.setMockProtocol(protocolId); 
+  void simulateIncomingStream(
+      String protocolId, MockP2PStream stream, PeerId remotePeer) {
+    stream.setMockProtocol(protocolId);
     if (_globalStreamHandler != null) {
       _globalStreamHandler!(stream, remotePeer);
     } else {
-      print('MockMuxerInstance: No global stream handler for incoming protocol $protocolId');
+      print(
+          'MockMuxerInstance: No global stream handler for incoming protocol $protocolId');
       stream.reset();
     }
   }
-  
+
   @override
   bool get canCreateStream => true;
   @override
@@ -414,31 +479,35 @@ class MockMuxerInstance implements p2p_muxer.Multiplexer {
   @override
   int get maxStreams => 100;
   @override
-  Future<core_mux.MuxedConn> newConnOnTransport( core_transport_conn.TransportConn secureConnection, bool isServer, PeerScope scope ){
-
+  Future<core_mux.MuxedConn> newConnOnTransport(
+      core_transport_conn.TransportConn secureConnection,
+      bool isServer,
+      PeerScope scope) {
     throw UnimplementedError('newConnOnTransport not implemented in mock');
   }
+
   @override
   int get numStreams => 0;
   @override
   Future<List<P2PStream>> get streams async => [];
   @override
-  Future<P2PStream> acceptStream() async => throw UnimplementedError('acceptStream not implemented in mock');
+  Future<P2PStream> acceptStream() async =>
+      throw UnimplementedError('acceptStream not implemented in mock');
 }
 
 class MockStreamMuxerDef extends config_stream_muxer.StreamMuxer {
   final Map<String, Future<P2PStream> Function()> specificStreamProviders;
   MockStreamMuxerDef(this.specificStreamProviders)
-    : super(
-        id: 'mock-muxer/1.0.0',
-        muxerFactory: (Conn secureConn, bool isClient) {
-          return MockMuxerInstance(
-            secureConn,
-            isClient,
-            isClient ? specificStreamProviders : {},
-          );
-        },
-      );
+      : super(
+          id: 'mock-muxer/1.0.0',
+          muxerFactory: (Conn secureConn, bool isClient) {
+            return MockMuxerInstance(
+              secureConn,
+              isClient,
+              isClient ? specificStreamProviders : {},
+            );
+          },
+        );
 }
 
 class MockSecurityProtocol implements p2p_security.SecurityProtocol {
@@ -450,16 +519,27 @@ class MockSecurityProtocol implements p2p_security.SecurityProtocol {
   String get protocolId => '/mock-sec/1.0.0';
 
   @override
-  Future<p2p_secured_conn.SecuredConnection> secureInbound(core_transport_conn.TransportConn conn) async {
-    final remotePeerId = await PeerId.fromPublicKey(MockPublicKey(List.generate(34, (i)=>i+50)..[0]=0x00..[1]=0x24)); 
+  Future<p2p_secured_conn.SecuredConnection> secureInbound(
+      core_transport_conn.TransportConn conn) async {
+    final remotePeerId = await PeerId.fromPublicKey(
+        MockPublicKey(List.generate(34, (i) => i + 50)
+          ..[0] = 0x00
+          ..[1] = 0x24));
     final localPeer = await PeerId.fromPublicKey(localKeyPair.publicKey);
-    return MockSecuredConn(localPeer, remotePeerId, MockPublicKey(), localAddr: conn.localMultiaddr, remoteAddr: conn.remoteMultiaddr);
+    return MockSecuredConn(localPeer, remotePeerId, MockPublicKey(),
+        localAddr: conn.localMultiaddr, remoteAddr: conn.remoteMultiaddr);
   }
+
   @override
-  Future<p2p_secured_conn.SecuredConnection> secureOutbound(core_transport_conn.TransportConn conn) async {
-    final remotePeerId = await PeerId.fromPublicKey(MockPublicKey(List.generate(34, (i)=>i+60)..[0]=0x00..[1]=0x24)); 
+  Future<p2p_secured_conn.SecuredConnection> secureOutbound(
+      core_transport_conn.TransportConn conn) async {
+    final remotePeerId = await PeerId.fromPublicKey(
+        MockPublicKey(List.generate(34, (i) => i + 60)
+          ..[0] = 0x00
+          ..[1] = 0x24));
     final localPeer = await PeerId.fromPublicKey(localKeyPair.publicKey);
-    return MockSecuredConn(localPeer, remotePeerId, MockPublicKey(), localAddr: conn.localMultiaddr, remoteAddr: conn.remoteMultiaddr);
+    return MockSecuredConn(localPeer, remotePeerId, MockPublicKey(),
+        localAddr: conn.localMultiaddr, remoteAddr: conn.remoteMultiaddr);
   }
 }
 
@@ -472,18 +552,22 @@ class MockListener implements p2p_listener.Listener {
   }
 
   @override
-  Stream<core_transport_conn.TransportConn> get newConnections => _connController.stream;
+  Stream<core_transport_conn.TransportConn> get newConnections =>
+      _connController.stream;
   @override
   Future<void> close() async {
     if (!_connController.isClosed) {
       await _connController.close();
     }
   }
+
   @override
   List<MultiAddr> get listenAddrs {
-    print('[MockListener] listenAddrs getter called, returning: [${laddr.toString()}]');
+    print(
+        '[MockListener] listenAddrs getter called, returning: [${laddr.toString()}]');
     return [laddr];
   }
+
   @override
   Future<core_transport_conn.TransportConn?> accept() async {
     if (_connController.isClosed || !_connController.hasListener) return null;
@@ -493,10 +577,12 @@ class MockListener implements p2p_listener.Listener {
       return null;
     }
   }
+
   @override
   MultiAddr get addr => laddr;
   @override
-  Stream<core_transport_conn.TransportConn> get connectionStream => _connController.stream;
+  Stream<core_transport_conn.TransportConn> get connectionStream =>
+      _connController.stream;
   @override
   bool get isClosed => _connController.isClosed;
   @override
@@ -505,7 +591,8 @@ class MockListener implements p2p_listener.Listener {
 
 class MockTransport implements p2p_transport.Transport {
   Completer<core_transport_conn.TransportConn>? _pendingDialCompleter;
-  StreamController<core_transport_conn.TransportConn>? _activeListenerController;
+  StreamController<core_transport_conn.TransportConn>?
+      _activeListenerController;
   @override
   MultiAddr? _listenAddrVal;
 
@@ -514,33 +601,43 @@ class MockTransport implements p2p_transport.Transport {
     _pendingDialCompleter = Completer<core_transport_conn.TransportConn>();
     return _pendingDialCompleter!.future;
   }
+
   void completeDial(core_transport_conn.TransportConn conn) {
     if (_pendingDialCompleter != null && !_pendingDialCompleter!.isCompleted) {
       _pendingDialCompleter!.complete(conn);
     }
   }
+
   void failDial(Exception e) {
     if (_pendingDialCompleter != null && !_pendingDialCompleter!.isCompleted) {
       _pendingDialCompleter!.completeError(e);
     }
   }
+
   @override
   Future<p2p_listener.Listener> listen(MultiAddr laddr) async {
-    print('[MockTransport] listen() called with: ${laddr.toString()} (this is the original laddr)');
+    print(
+        '[MockTransport] listen() called with: ${laddr.toString()} (this is the original laddr)');
     MultiAddr effectiveListenAddr = laddr;
     if (laddr.toString().endsWith('/tcp/0')) {
-      print('[MockTransport] Original laddr ends with /tcp/0. Resolving to /ip4/127.0.0.1/tcp/9999');
+      print(
+          '[MockTransport] Original laddr ends with /tcp/0. Resolving to /ip4/127.0.0.1/tcp/9999');
       effectiveListenAddr = MultiAddr('/ip4/127.0.0.1/tcp/9999');
     }
-    _listenAddrVal = effectiveListenAddr; 
-    print('[MockTransport] _listenAddrVal is now: ${_listenAddrVal.toString()}');
-    _activeListenerController = StreamController<core_transport_conn.TransportConn>();
-    print('[MockTransport] Creating MockListener with: ${_listenAddrVal.toString()}');
+    _listenAddrVal = effectiveListenAddr;
+    print(
+        '[MockTransport] _listenAddrVal is now: ${_listenAddrVal.toString()}');
+    _activeListenerController =
+        StreamController<core_transport_conn.TransportConn>();
+    print(
+        '[MockTransport] Creating MockListener with: ${_listenAddrVal.toString()}');
     return MockListener(_activeListenerController!, _listenAddrVal!);
   }
+
   void acceptConnection(core_transport_conn.TransportConn conn) {
     _activeListenerController?.add(conn);
   }
+
   @override
   bool canDial(MultiAddr addr) => true;
   @override
@@ -592,18 +689,19 @@ void main() {
         ..transports = [mockTransportA]
         ..securityProtocols = [MockSecurityProtocol(keyPairA)]
         ..muxers = [
-          MockStreamMuxerDef({ 
-            identifyProtocolId: () async => hangingIdentifyStreamForA, 
+          MockStreamMuxerDef({
+            identifyProtocolId: () async => hangingIdentifyStreamForA,
           })
         ];
-      
+
       final configB = p2p_config.Config()
         ..peerKey = keyPairB
         ..transports = [mockTransportB]
         ..securityProtocols = [MockSecurityProtocol(keyPairB)]
-        ..muxers = [MockStreamMuxerDef({})] 
+        ..muxers = [MockStreamMuxerDef({})]
         ..listenAddrs = [MultiAddr('/ip4/127.0.0.1/tcp/0')]
-        ..enableHolePunching = false; // Explicitly disable hole punching for hostB
+        ..enableHolePunching =
+            false; // Explicitly disable hole punching for hostB
 
       hostA = await configA.newNode() as BasicHost;
       hostB = await configB.newNode() as BasicHost;
@@ -621,66 +719,79 @@ void main() {
       // Original assertion was here. We add delay before it.
       // expect(hostB.addrs, isNotEmpty, reason: "Host B should have listen addresses.");
       var allAddrs = hostB.addrs;
-      
+
       // Wait a bit for async operations like Swarm listening to potentially complete
-      print('[TEST] About to delay before checking hostB.addrs. Current hostB.addrs: ${allAddrs}');
+      print(
+          '[TEST] About to delay before checking hostB.addrs. Current hostB.addrs: ${allAddrs}');
       await Future.delayed(const Duration(milliseconds: 200));
       allAddrs = hostB.addrs;
-      print('[TEST] After delay, checking hostB.addrs. Current hostB.addrs: ${allAddrs}');
-      expect(allAddrs.isNotEmpty, true, reason: 'hostB should have listen addresses from configB. Actual: ${allAddrs}');
+      print(
+          '[TEST] After delay, checking hostB.addrs. Current hostB.addrs: ${allAddrs}');
+      expect(allAddrs.isNotEmpty, true,
+          reason:
+              'hostB should have listen addresses from configB. Actual: ${allAddrs}');
 
       final serverAddrInfo = AddrInfo(peerIdB, allAddrs);
-      
-      final connectOperation = hostA.connect(serverAddrInfo, context: core_context.Context());
+
+      final connectOperation =
+          hostA.connect(serverAddrInfo, context: core_context.Context());
 
       await Future.delayed(Duration(milliseconds: 100));
 
       final dialerTransportConn = MockTransportConn(
-        transport: mockTransportA,
-        localAddr: MultiAddr('/ip4/127.0.0.1/tcp/12345'),
-        remoteAddr: serverAddrInfo.addrs.first
-      );
+          transport: mockTransportA,
+          localAddr: MultiAddr('/ip4/127.0.0.1/tcp/12345'),
+          remoteAddr: serverAddrInfo.addrs.first);
       final listenerTransportConn = MockTransportConn(
-        transport: mockTransportB,
-        localAddr: serverAddrInfo.addrs.first,
-        remoteAddr: MultiAddr('/ip4/127.0.0.1/tcp/12345')
-      );
-      
+          transport: mockTransportB,
+          localAddr: serverAddrInfo.addrs.first,
+          remoteAddr: MultiAddr('/ip4/127.0.0.1/tcp/12345'));
+
       mockTransportA.completeDial(dialerTransportConn);
       mockTransportB.acceptConnection(listenerTransportConn);
 
       bool didTestTimeout = false;
       try {
-        await connectOperation.timeout(Duration(seconds: 2), onTimeout: (){ 
-          print("connectOperation itself timed out (unexpected, Identify might be blocking it)");
+        await connectOperation.timeout(Duration(seconds: 2), onTimeout: () {
+          print(
+              "connectOperation itself timed out (unexpected, Identify might be blocking it)");
           throw TimeoutException("connectOperation timed out");
         });
-        print('Host A connect() operation completed. Identify should be running/hanging now.');
+        print(
+            'Host A connect() operation completed. Identify should be running/hanging now.');
 
-        await Future.delayed(Duration(seconds: 3)); 
+        await Future.delayed(Duration(seconds: 3));
 
-        if (readOnHangingStreamWasCalled && 
-            hangingIdentifyStreamForA._hangingReadCompleter != null && 
-           !hangingIdentifyStreamForA._hangingReadCompleter!.isCompleted) {
-          print('Identify read was called and is hanging. Test should now hit its global timeout.');
-          await Completer<void>().future; 
-        } else if (readOnHangingStreamWasCalled && hangingIdentifyStreamForA._hangingReadCompleter?.isCompleted == true) {
-            fail('Identify read was called but completed, expected to hang.');
+        if (readOnHangingStreamWasCalled &&
+            hangingIdentifyStreamForA._hangingReadCompleter != null &&
+            !hangingIdentifyStreamForA._hangingReadCompleter!.isCompleted) {
+          print(
+              'Identify read was called and is hanging. Test should now hit its global timeout.');
+          await Completer<void>().future;
+        } else if (readOnHangingStreamWasCalled &&
+            hangingIdentifyStreamForA._hangingReadCompleter?.isCompleted ==
+                true) {
+          fail('Identify read was called but completed, expected to hang.');
         } else {
-            fail('Identify read on the hanging stream was not called. Check mock setup for newStream in MockMuxerInstance and MockStreamMuxerDef.');
+          fail(
+              'Identify read on the hanging stream was not called. Check mock setup for newStream in MockMuxerInstance and MockStreamMuxerDef.');
         }
-      } on TimeoutException catch(e) {
+      } on TimeoutException catch (e) {
         print('Test caught TimeoutException: $e');
-        if (readOnHangingStreamWasCalled && 
-            hangingIdentifyStreamForA._hangingReadCompleter != null && 
-           !hangingIdentifyStreamForA._hangingReadCompleter!.isCompleted) {
+        if (readOnHangingStreamWasCalled &&
+            hangingIdentifyStreamForA._hangingReadCompleter != null &&
+            !hangingIdentifyStreamForA._hangingReadCompleter!.isCompleted) {
           didTestTimeout = true;
-          print('Test timed out as expected, and Identify read was called and is hanging.');
+          print(
+              'Test timed out as expected, and Identify read was called and is hanging.');
         } else {
-          fail('Test timed out, but the Identify read hang state is not as expected. readCalled: $readOnHangingStreamWasCalled, completer: ${hangingIdentifyStreamForA._hangingReadCompleter}');
+          fail(
+              'Test timed out, but the Identify read hang state is not as expected. readCalled: $readOnHangingStreamWasCalled, completer: ${hangingIdentifyStreamForA._hangingReadCompleter}');
         }
       }
-      expect(didTestTimeout, isTrue, reason: "The test should have timed out because IdentifyService's read() call was hanging.");
-    }, timeout: Timeout(Duration(seconds: 6))); 
+      expect(didTestTimeout, isTrue,
+          reason:
+              "The test should have timed out because IdentifyService's read() call was hanging.");
+    }, timeout: Timeout(Duration(seconds: 6)));
   });
 }

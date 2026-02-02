@@ -10,7 +10,8 @@ import '../../../../core/network/transport_conn.dart';
 import '../../../../core/crypto/keys.dart'; // For PublicKey
 import '../../../../core/multiaddr.dart'; // For Multiaddr
 import '../multiplexer.dart'; // This now brings in core_mux.MuxedConn and PeerScope via its own imports
-import '../../../../core/network/mux.dart' as core_mux; // Explicit import for MuxedConn, MuxedStream
+import '../../../../core/network/mux.dart'
+    as core_mux; // Explicit import for MuxedConn, MuxedStream
 import '../../../../core/network/rcmgr.dart'; // Explicit import for PeerScope
 import '../../../../core/network/context.dart'; // Explicit import for Context
 import 'frame.dart';
@@ -24,8 +25,10 @@ final _log = Logger('YamuxSession');
 enum YamuxCloseReason {
   /// Normal closure
   normal(0x0),
+
   /// Protocol error
   protocolError(0x1),
+
   /// Internal error
   internalError(0x2);
 
@@ -33,13 +36,13 @@ enum YamuxCloseReason {
   const YamuxCloseReason(this.value);
 }
 
-
 class YamuxConstants {
   static const String protocolId = '/yamux/1.0.0';
 }
 
 /// Yamux session that implements the Multiplexer and MuxedConn interfaces
-class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added Conn
+class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn {
+  // Added Conn
   static int _instanceCounter = 0; // Added instance counter
   final int _instanceId; // Added instance ID field
 
@@ -56,7 +59,7 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
   final MultiplexerConfig _config;
   final bool _isClient;
   PeerScope? _peerScope;
-  final YamuxMetricsObserver? metricsObserver; 
+  final YamuxMetricsObserver? metricsObserver;
 
   final _streams = <int, YamuxStream>{};
   int _nextStreamId;
@@ -67,33 +70,36 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
   // misses events if SYN arrives before .first listener attaches
   Completer<P2PStream>? _pendingAcceptStreamCompleter;
   bool _closed = false;
-  bool _cleanupStarted = false; 
+  bool _cleanupStarted = false;
   final _initCompleter = Completer<void>();
   Timer? _keepaliveTimer;
   String get _logPrefix => "[$_instanceId][${_isClient ? "Client" : "Server"}]";
   int _lastPingId = 0;
   final _pendingStreams = <int, Completer<void>>{};
-  
+
   // Ping-pong timeout detection
   final Map<int, DateTime> _pendingPings = {};
   static const Duration _pingTimeout = Duration(seconds: 30);
   static const int _pingTimeoutThreshold = 5; // Close after this many timeouts
-  
+
   // Write lock to serialize frame writes and prevent Noise encryption nonce desync
   // This ensures encryption operations complete sequentially to maintain nonce ordering
   final Queue<Completer<void>> _writeLockQueue = Queue<Completer<void>>();
   bool _writeLockHeld = false;
 
-  YamuxSession(this._connection, this._config, this._isClient, [this._peerScope, this.metricsObserver])
-      : _instanceId = _instanceCounter++, 
+  YamuxSession(this._connection, this._config, this._isClient,
+      [this._peerScope, this.metricsObserver])
+      : _instanceId = _instanceCounter++,
         _nextStreamId = _isClient ? 1 : 2 {
     _init();
   }
 
   void _init() {
-    _readFrames().catchError((error, stackTrace) { 
+    _readFrames().catchError((error, stackTrace) {
       if (!_closed) {
-        _log.severe('$_logPrefix Uncaught error in _readFrames, initiating GO_AWAY: $error', stackTrace);
+        _log.severe(
+            '$_logPrefix Uncaught error in _readFrames, initiating GO_AWAY: $error',
+            stackTrace);
         _goAway(YamuxCloseReason.internalError);
       }
     });
@@ -105,20 +111,20 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
     if (_config.keepAliveInterval == Duration.zero) {
       return;
     }
-    _keepaliveTimer = Timer.periodic(_config.keepAliveInterval, (_) => _sendPing());
+    _keepaliveTimer =
+        Timer.periodic(_config.keepAliveInterval, (_) => _sendPing());
   }
 
   Future<void> _sendPing() async {
     if (_closed) return;
-    
+
     // Check for timed-out pings
     final now = DateTime.now();
     final timedOut = _pendingPings.entries
         .where((e) => now.difference(e.value) > _pingTimeout)
         .toList();
-    
-    if (timedOut.isNotEmpty) {
 
+    if (timedOut.isNotEmpty) {
       // After threshold timeouts, close the session as unhealthy
       // This is lenient for mobile connections with intermittent connectivity
       if (timedOut.length >= _pingTimeoutThreshold) {
@@ -126,10 +132,10 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
         return;
       }
     }
-    
+
     final pingId = ++_lastPingId;
     _pendingPings[pingId] = now;
-    
+
     try {
       final frame = YamuxFrame.ping(false, pingId);
       await _sendFrame(frame);
@@ -137,18 +143,19 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
       // Notify metrics observer
       metricsObserver?.onPingSent(remotePeer, pingId, now);
     } catch (e) {
-      _log.warning('$_logPrefix ❌ [YAMUX-KEEPALIVE] Error sending PING: $e. Session may be unhealthy.');
+      _log.warning(
+          '$_logPrefix ❌ [YAMUX-KEEPALIVE] Error sending PING: $e. Session may be unhealthy.');
       _pendingPings.remove(pingId);
     }
   }
 
   Future<void> _readFrames() async {
     final headerSize = 12;
-    var buffer = Uint8List(0); 
+    var buffer = Uint8List(0);
     int frameCount = 0;
     int framesInCurrentBatch = 0;
     final startTime = DateTime.now();
-    
+
     // Session-level performance tracking for adaptive behavior
     final List<Duration> _recentFrameProcessingTimes = [];
 
@@ -160,13 +167,12 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
     void _updateVolumeMode() {
       final now = DateTime.now();
       if (now.difference(_lastFrameCountReset) > Duration(seconds: 1)) {
-        _isHighVolumeMode = _recentFrameCount > 50; // 50+ frames/sec = high volume
+        _isHighVolumeMode =
+            _recentFrameCount > 50; // 50+ frames/sec = high volume
         _recentFrameCount = 0;
         _lastFrameCountReset = now;
-        
       }
     }
-
 
     void _recordFrameProcessingTime(Duration duration) {
       _recentFrameProcessingTimes.add(duration);
@@ -177,9 +183,9 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
 
     bool _isSessionUnderStress() {
       if (_recentFrameProcessingTimes.length < 10) return false;
-      
-      final avgTime = _recentFrameProcessingTimes.reduce((a, b) => a + b) ~/ 
-                     _recentFrameProcessingTimes.length;
+
+      final avgTime = _recentFrameProcessingTimes.reduce((a, b) => a + b) ~/
+          _recentFrameProcessingTimes.length;
       return avgTime > _stressThreshold;
     }
 
@@ -199,10 +205,9 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
         frameCount++;
         framesInCurrentBatch++;
         _recentFrameCount++;
-        
+
         // Update volume mode detection
         _updateVolumeMode();
-        
 
         // Adaptive yielding based on batch processing and session stress
         if (framesInCurrentBatch >= _maxFramesPerBatch) {
@@ -212,32 +217,34 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
           // Minimal yield for event loop cooperation during normal processing
           await Future.delayed(Duration.zero);
         }
-        
+
         // Ensure we have enough bytes for at least a header
         while (buffer.length < headerSize) {
-          if (_closed || _connection.isClosed) { // Check before read
-             await _cleanupWithoutFrames(); return;
+          if (_closed || _connection.isClosed) {
+            // Check before read
+            await _cleanupWithoutFrames();
+            return;
           }
-          
+
           final bytesNeeded = headerSize - buffer.length;
 
           final readStartTime = DateTime.now();
           final chunk = await _connection.read(bytesNeeded);
           final readDuration = DateTime.now().difference(readStartTime);
-          
 
-          if (chunk.isEmpty) { // Connection closed by peer
-            await _cleanupWithoutFrames(); return;
+          if (chunk.isEmpty) {
+            // Connection closed by peer
+            await _cleanupWithoutFrames();
+            return;
           }
           final newBuffer = Uint8List(buffer.length + chunk.length);
           newBuffer.setAll(0, buffer);
           newBuffer.setAll(buffer.length, chunk);
           buffer = newBuffer;
-          
         }
 
-
-        final headerView = ByteData.view(buffer.buffer, buffer.offsetInBytes, headerSize);
+        final headerView =
+            ByteData.view(buffer.buffer, buffer.offsetInBytes, headerSize);
         final frameTypeValue = headerView.getUint8(1);
         final lengthField = headerView.getUint32(8, Endian.big);
 
@@ -250,12 +257,14 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
         // Ensure we have the full frame (header + data payload if applicable)
         while (buffer.length < expectedTotalFrameLength) {
           if (_closed || _connection.isClosed) {
-             await _cleanupWithoutFrames(); return;
+            await _cleanupWithoutFrames();
+            return;
           }
           final stillNeeded = expectedTotalFrameLength - buffer.length;
           final chunk = await _connection.read(stillNeeded);
           if (chunk.isEmpty) {
-            await _cleanupWithoutFrames(); return;
+            await _cleanupWithoutFrames();
+            return;
           }
           final newBuffer = Uint8List(buffer.length + chunk.length);
           newBuffer.setAll(0, buffer);
@@ -267,50 +276,56 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
         final frame = YamuxFrame.fromBytes(frameBytesForParser);
 
         final handleStartTime = DateTime.now();
-        
+
         try {
           await _handleFrame(frame);
           final handleDuration = DateTime.now().difference(handleStartTime);
-          
+
           // Record frame processing time for adaptive behavior
           _recordFrameProcessingTime(handleDuration);
-
         } catch (e, st) {
           final handleDuration = DateTime.now().difference(handleStartTime);
-          _log.severe('$_logPrefix 🔧 [YAMUX-FRAME-READER-HANDLE-ERROR-$frameCount] Frame handling failed after ${handleDuration.inMilliseconds}ms: $e\n$st');
+          _log.severe(
+              '$_logPrefix 🔧 [YAMUX-FRAME-READER-HANDLE-ERROR-$frameCount] Frame handling failed after ${handleDuration.inMilliseconds}ms: $e\n$st');
           rethrow;
         }
-        
+
         buffer = buffer.sublist(expectedTotalFrameLength);
         final loopDuration = DateTime.now().difference(loopStartTime);
       }
     } catch (e, st) {
       final bool connIsClosed = _connection.isClosed; // Capture current state
       if (!_closed && !connIsClosed) {
-        _log.severe('$_logPrefix Error in _readFrames loop (session and conn not marked closed): $e', st);
+        _log.severe(
+            '$_logPrefix Error in _readFrames loop (session and conn not marked closed): $e',
+            st);
 
         // Notify metrics observer of session error
         try {
           metricsObserver?.onSessionError(remotePeer, e.toString(), st);
         } catch (observerError) {
-          _log.warning('$_logPrefix Error notifying metrics observer: $observerError');
+          _log.warning(
+              '$_logPrefix Error notifying metrics observer: $observerError');
         }
-        
+
         await _goAway(YamuxCloseReason.internalError);
       } else if (!_closed && connIsClosed) {
         await _cleanupWithoutFrames();
       }
     } finally {
-      if (!_closed) { 
-        await _goAway(YamuxCloseReason.internalError); // This will also call _cleanupWithoutFrames
+      if (!_closed) {
+        await _goAway(YamuxCloseReason
+            .internalError); // This will also call _cleanupWithoutFrames
       }
     }
   }
 
   Future<void> _handleFrame(YamuxFrame frame) async {
     // If session is closing/closed, only process essential frames
-    if (_closed && frame.type != YamuxFrameType.goAway && (frame.flags & YamuxFlags.rst == 0)) {
-        return;
+    if (_closed &&
+        frame.type != YamuxFrameType.goAway &&
+        (frame.flags & YamuxFlags.rst == 0)) {
+      return;
     }
 
     try {
@@ -328,7 +343,8 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
 
       // For stream-bearing frames (Data, WindowUpdate), check lifecycle flags.
       // Per go-yamux: SYN opens a stream, ACK (without SYN) accepts it.
-      if (frame.flags & YamuxFlags.ack != 0 && frame.flags & YamuxFlags.syn == 0) {
+      if (frame.flags & YamuxFlags.ack != 0 &&
+          frame.flags & YamuxFlags.syn == 0) {
         // ACK (no SYN): response to our outbound stream creation
         final completer = _pendingStreams.remove(frame.streamId);
         if (completer != null && !completer.isCompleted) {
@@ -361,24 +377,24 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
           break; // Already handled above
       }
     } catch (e, st) {
-      _log.severe('$_logPrefix Error handling frame: Type=${frame.type}, StreamID=${frame.streamId}, Error: $e\n$st');
+      _log.severe(
+          '$_logPrefix Error handling frame: Type=${frame.type}, StreamID=${frame.streamId}, Error: $e\n$st');
       rethrow;
     }
   }
 
   /// Optimized handler for DATA frames (most common frame type)
   Future<void> _handleDataFrame(YamuxFrame frame) async {
-
     // Notify activity on the underlying connection when data is received
-    _connection.notifyActivity(); 
+    _connection.notifyActivity();
     final streamData = _streams[frame.streamId];
     if (streamData != null) {
-
       final streamHandleStart = DateTime.now();
       await streamData.handleFrame(frame);
       final streamHandleDuration = DateTime.now().difference(streamHandleStart);
     } else {
-      _log.warning('$_logPrefix 🔧 [YAMUX-HANDLE-FRAME-DATA-ERROR] Received ${frame.type} for unknown/closed stream ID ${frame.streamId}. Flags: ${frame.flags}, Length: ${frame.length}');
+      _log.warning(
+          '$_logPrefix 🔧 [YAMUX-HANDLE-FRAME-DATA-ERROR] Received ${frame.type} for unknown/closed stream ID ${frame.streamId}. Flags: ${frame.flags}, Length: ${frame.length}');
       // If it's a DATA for a non-existent stream, it could be a protocol error.
       // Consider sending a RESET for this stream ID if it's unexpected data.
     }
@@ -392,18 +408,20 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
     }
   }
 
-  Future<void> _handleNewStream(YamuxFrame frame) async { 
+  Future<void> _handleNewStream(YamuxFrame frame) async {
     // DEBUG: Add detailed inbound stream creation logging
-    final caller = StackTrace.current.toString().split('\n').length > 1 
-        ? StackTrace.current.toString().split('\n')[1].trim() 
+    final caller = StackTrace.current.toString().split('\n').length > 1
+        ? StackTrace.current.toString().split('\n')[1].trim()
         : 'unknown_caller';
 
-    
-    if (frame.flags & YamuxFlags.syn == 0) { // Should be redundant due to earlier check in _handleFrame
-      _log.severe('$_logPrefix New stream frame missing SYN flag for ID ${frame.streamId}');
-      await _goAway(YamuxCloseReason.protocolError); return;
+    if (frame.flags & YamuxFlags.syn == 0) {
+      // Should be redundant due to earlier check in _handleFrame
+      _log.severe(
+          '$_logPrefix New stream frame missing SYN flag for ID ${frame.streamId}');
+      await _goAway(YamuxCloseReason.protocolError);
+      return;
     }
-    
+
     // YAMUX PROTOCOL COMPLIANCE: Validate incoming stream ID follows Yamux specification
     // Incoming streams from client should have odd IDs (1, 3, 5, ...)
     // Incoming streams from server should have even IDs (2, 4, 6, ...)
@@ -412,42 +430,46 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
 
     if (isIncomingFromClient && !weAreServer) {
       // We're a client receiving an odd stream ID (client-initiated) - this is wrong
-      _log.severe('$_logPrefix YAMUX PROTOCOL VIOLATION: Client received client-initiated stream ID ${frame.streamId}');
+      _log.severe(
+          '$_logPrefix YAMUX PROTOCOL VIOLATION: Client received client-initiated stream ID ${frame.streamId}');
       await _goAway(YamuxCloseReason.protocolError);
       return;
     }
 
     if (!isIncomingFromClient && weAreServer) {
       // We're a server receiving an even stream ID (server-initiated) - this is wrong
-      _log.severe('$_logPrefix YAMUX PROTOCOL VIOLATION: Server received server-initiated stream ID ${frame.streamId}');
+      _log.severe(
+          '$_logPrefix YAMUX PROTOCOL VIOLATION: Server received server-initiated stream ID ${frame.streamId}');
       await _goAway(YamuxCloseReason.protocolError);
       return;
     }
-    
 
     if (_closed || !canCreateStream) {
-      _log.warning('$_logPrefix Cannot accept new stream ID ${frame.streamId}. Session closed: $_closed, Can create: $canCreateStream. Sending RESET.');
+      _log.warning(
+          '$_logPrefix Cannot accept new stream ID ${frame.streamId}. Session closed: $_closed, Can create: $canCreateStream. Sending RESET.');
       final rstFrame = YamuxFrame.reset(frame.streamId);
       await _sendFrame(rstFrame).catchError((e) {
-        _log.warning('$_logPrefix Error sending RESET for unaccepted stream ${frame.streamId}: $e');
+        _log.warning(
+            '$_logPrefix Error sending RESET for unaccepted stream ${frame.streamId}: $e');
       });
       return;
     }
-    
+
     final ackFrame = YamuxFrame.synAckStream(frame.streamId);
     try {
-      await _sendFrame(ackFrame); 
+      await _sendFrame(ackFrame);
     } catch (e) {
-      _log.severe('$_logPrefix _handleNewStream: FAILED to send SYN-ACK for stream ID ${frame.streamId}: $e. Aborting stream setup.'); // More specific message
-      return; 
+      _log.severe(
+          '$_logPrefix _handleNewStream: FAILED to send SYN-ACK for stream ID ${frame.streamId}: $e. Aborting stream setup.'); // More specific message
+      return;
     }
 
     final initialWindow = _config.initialStreamWindowSize;
     final stream = YamuxStream(
       id: frame.streamId,
-      protocol: '', 
+      protocol: '',
       metadata: {},
-      initialWindowSize: initialWindow, 
+      initialWindowSize: initialWindow,
       sendFrame: _sendFrame,
       parentConn: this, // Added parentConn
       remotePeer: remotePeer, // For metrics reporting
@@ -457,36 +479,42 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
     );
 
     _streams[frame.streamId] = stream;
-    
+
     // DEBUG: Add session-level stream tracking for inbound streams
 
-
     try {
-      await stream.open(); 
+      await stream.open();
 
       // Notify metrics observer of incoming stream opened
-      metricsObserver?.onStreamOpened(remotePeer, frame.streamId, stream.protocol());
-      
+      metricsObserver?.onStreamOpened(
+          remotePeer, frame.streamId, stream.protocol());
+
       // Check if there's a pending acceptStream() call waiting for a stream
-      if (_pendingAcceptStreamCompleter != null && !_pendingAcceptStreamCompleter!.isCompleted) {
+      if (_pendingAcceptStreamCompleter != null &&
+          !_pendingAcceptStreamCompleter!.isCompleted) {
         _pendingAcceptStreamCompleter!.complete(stream);
         _pendingAcceptStreamCompleter = null;
       }
-      
+
       // Always add to controller for broadcast stream listeners
       _incomingStreamsController.add(stream);
 
       // If there's a stream handler, invoke it
       if (_streamHandler != null) {
         _streamHandler!(stream).catchError((e, st) {
-          _log.severe('$_logPrefix _handleNewStream: Error in _streamHandler for stream ID ${frame.streamId}: $e', st);
+          _log.severe(
+              '$_logPrefix _handleNewStream: Error in _streamHandler for stream ID ${frame.streamId}: $e',
+              st);
           stream.reset().catchError((_) {});
         });
       }
-    } catch (e, st) { // Added stackTrace
-      _log.severe('$_logPrefix _handleNewStream: Error during local stream open or handler setup for ID ${frame.streamId}: $e', st); // More specific message
+    } catch (e, st) {
+      // Added stackTrace
+      _log.severe(
+          '$_logPrefix _handleNewStream: Error during local stream open or handler setup for ID ${frame.streamId}: $e',
+          st); // More specific message
       _streams.remove(frame.streamId);
-      await stream.reset().catchError((_) {}); 
+      await stream.reset().catchError((_) {});
       // Do not rethrow here as it might kill the _readFrames loop unnecessarily if one stream handler fails.
     }
   }
@@ -502,7 +530,8 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
         final rtt = receivedTime.difference(removed);
 
         // Notify metrics observer
-        metricsObserver?.onPongReceived(remotePeer, opaqueValue, removed, receivedTime, rtt);
+        metricsObserver?.onPongReceived(
+            remotePeer, opaqueValue, removed, receivedTime, rtt);
       }
       return;
     }
@@ -515,40 +544,46 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
     // The reason code from frame.length is an int. We need to map it to YamuxCloseReason or use a default.
     YamuxCloseReason reason;
     try {
-      reason = YamuxCloseReason.values.firstWhere((r) => r.value == frame.length);
+      reason =
+          YamuxCloseReason.values.firstWhere((r) => r.value == frame.length);
     } catch (_) {
       reason = YamuxCloseReason.protocolError; // Default if unknown code
     }
-    await _goAway(reason); 
+    await _goAway(reason);
   }
 
   Future<void> _sendFrame(YamuxFrame frame) async {
-    if (_closed && !_cleanupStarted) { // Allow sending GO_AWAY even if _closed is true but cleanup hasn't started
-        if (frame.type != YamuxFrameType.goAway) {
-             throw StateError('Session is closing/closed, cannot send frame type ${frame.type}');
-        }
+    if (_closed && !_cleanupStarted) {
+      // Allow sending GO_AWAY even if _closed is true but cleanup hasn't started
+      if (frame.type != YamuxFrameType.goAway) {
+        throw StateError(
+            'Session is closing/closed, cannot send frame type ${frame.type}');
+      }
     } else if (_closed && _cleanupStarted) {
-        return; // Suppress send if cleanup fully started
+      return; // Suppress send if cleanup fully started
     }
 
     // Acquire write lock to serialize frame writes and prevent Noise encryption nonce desync
     final lockAcquireStart = DateTime.now();
     await _acquireWriteLock();
     final lockAcquireDuration = DateTime.now().difference(lockAcquireStart);
-    
+
     try {
       // Detailed logging for outgoing frames, especially Identify SYN
       if (frame.streamId == 1 && (frame.flags & YamuxFlags.syn != 0)) {
         final bytes = frame.toBytes();
       }
-      
+
       final writeStart = DateTime.now();
       await _connection.write(frame.toBytes());
       final writeDuration = DateTime.now().difference(writeStart);
     } catch (e) {
-      _log.severe('$_logPrefix Error sending frame: Type=${frame.type}, StreamID=${frame.streamId}. Error: $e');
-      if (!_closed) { // If not already closing due to this error, initiate closure.
-        _log.warning('$_logPrefix Error sending frame indicates session issue. Initiating GO_AWAY. Error: $e.');
+      _log.severe(
+          '$_logPrefix Error sending frame: Type=${frame.type}, StreamID=${frame.streamId}. Error: $e');
+      if (!_closed) {
+        // If not already closing due to this error, initiate closure.
+        _log.warning(
+            '$_logPrefix Error sending frame indicates session issue. Initiating GO_AWAY. Error: $e.');
         // Don't await _goAway here to avoid potential deadlocks if _goAway itself tries to send.
         // The error will propagate up and likely cause _readFrames to terminate and cleanup.
         // Or, if this sendFrame was called from _goAway, the finally block there will handle cleanup.
@@ -563,13 +598,13 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
   /// Acquire write lock to serialize frame writes.
   /// This prevents concurrent encryption operations which would cause
   /// Noise encryption nonce desynchronization and MAC authentication errors.
-  /// 
+  ///
   /// The lock ensures that each frame:
   /// 1. Gets its nonce assigned
   /// 2. Completes encryption
   /// 3. Is sent to the underlying connection
   /// 4. THEN the next frame can start
-  /// 
+  ///
   /// Uses queue-first pattern to prevent race conditions where multiple callers
   /// could pass the "lock available" check before any of them acquires it.
   Future<void> _acquireWriteLock() async {
@@ -604,25 +639,26 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
       return;
     }
     if (_closed && !_cleanupStarted) {
-        // _closed is true, so _sendFrame will only allow GO_AWAY if it's not already in cleanup.
-        // This path implies _goAway might be called recursively or from different error paths.
-        // The primary goal now is to ensure cleanup.
+      // _closed is true, so _sendFrame will only allow GO_AWAY if it's not already in cleanup.
+      // This path implies _goAway might be called recursively or from different error paths.
+      // The primary goal now is to ensure cleanup.
     } else {
-       _closed = true; 
+      _closed = true;
     }
 
     try {
-      if (!_connection.isClosed && !_cleanupStarted) { // Only send if conn open and cleanup not started
+      if (!_connection.isClosed && !_cleanupStarted) {
+        // Only send if conn open and cleanup not started
         final frame = YamuxFrame.goAway(reason.value);
-        await _sendFrame(frame); 
+        await _sendFrame(frame);
       }
     } catch (e) {
-      _log.warning('$_logPrefix _goAway(${reason.name}): Error occurred during _sendFrame for GO_AWAY: $e. Proceeding to cleanup.');
+      _log.warning(
+          '$_logPrefix _goAway(${reason.name}): Error occurred during _sendFrame for GO_AWAY: $e. Proceeding to cleanup.');
     } finally {
       await _cleanupWithoutFrames(); // This will set _cleanupStarted = true
     }
   }
-
 
   @override
   Future<core_mux.MuxedStream> openStream(Context context) async {
@@ -634,40 +670,43 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
     }
 
     if (!canCreateStream) {
-      _log.warning('$_logPrefix newStream: Maximum streams reached ($maxStreams).');
+      _log.warning(
+          '$_logPrefix newStream: Maximum streams reached ($maxStreams).');
       throw StateError('Maximum streams reached');
     }
 
     final streamId = _nextStreamId;
     _nextStreamId += 2;
-    
+
     // Notify metrics observer of stream open start
     metricsObserver?.onStreamOpenStart(remotePeer, streamId);
-    
+
     // YAMUX PROTOCOL COMPLIANCE: Validate stream ID assignment follows Yamux specification
     // Client should only create odd-numbered streams (1, 3, 5, ...)
     // Server should only create even-numbered streams (2, 4, 6, ...)
     if (_isClient && streamId % 2 == 0) {
-      _log.severe('$_logPrefix YAMUX PROTOCOL VIOLATION: Client attempted to create even stream ID: $streamId');
-      throw StateError('Yamux protocol violation: Client cannot create even stream ID: $streamId');
+      _log.severe(
+          '$_logPrefix YAMUX PROTOCOL VIOLATION: Client attempted to create even stream ID: $streamId');
+      throw StateError(
+          'Yamux protocol violation: Client cannot create even stream ID: $streamId');
     }
     if (!_isClient && streamId % 2 == 1) {
-      _log.severe('$_logPrefix YAMUX PROTOCOL VIOLATION: Server attempted to create odd stream ID: $streamId');
-      throw StateError('Yamux protocol violation: Server cannot create odd stream ID: $streamId');
+      _log.severe(
+          '$_logPrefix YAMUX PROTOCOL VIOLATION: Server attempted to create odd stream ID: $streamId');
+      throw StateError(
+          'Yamux protocol violation: Server cannot create odd stream ID: $streamId');
     }
-    
+
     // DEBUG: Add detailed stream creation logging with caller info
-    final caller = StackTrace.current.toString().split('\n').length > 1 
-        ? StackTrace.current.toString().split('\n')[1].trim() 
+    final caller = StackTrace.current.toString().split('\n').length > 1
+        ? StackTrace.current.toString().split('\n')[1].trim()
         : 'unknown_caller';
 
-
-    
     final stream = YamuxStream(
       id: streamId,
-      protocol: '', 
+      protocol: '',
       metadata: {},
-      initialWindowSize: _config.initialStreamWindowSize, 
+      initialWindowSize: _config.initialStreamWindowSize,
       sendFrame: _sendFrame,
       parentConn: this, // Added parentConn
       remotePeer: remotePeer, // For metrics reporting
@@ -677,10 +716,8 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
     );
 
     _streams[streamId] = stream;
-    
-    // DEBUG: Add session-level stream tracking
 
-    
+    // DEBUG: Add session-level stream tracking
 
     final completer = Completer<void>();
     _pendingStreams[streamId] = completer;
@@ -695,25 +732,29 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
 
       // Notify metrics observer of successful stream open
       metricsObserver?.onStreamOpened(remotePeer, streamId, stream.protocol());
-      
+
       return stream;
     } catch (e) {
-      _log.severe('$_logPrefix openStream: FAILED to open new stream ID $streamId: $e'); // More specific message
+      _log.severe(
+          '$_logPrefix openStream: FAILED to open new stream ID $streamId: $e'); // More specific message
       _pendingStreams.remove(streamId);
       _streams.remove(streamId); // Ensure stream is removed if setup fails
-      _log.finer('$_logPrefix openStream: Removed stream ID $streamId from _pendingStreams and _streams due to error.');
+      _log.finer(
+          '$_logPrefix openStream: Removed stream ID $streamId from _pendingStreams and _streams due to error.');
       // Don't await reset if stream.open() failed, as stream might not be in a state to send reset.
       // Just ensure local cleanup of the stream object if it was partially initialized.
       // If _sendFrame for SYN failed, stream.reset() would also fail.
       // If timeout occurred, stream.reset() is appropriate.
       if (e is TimeoutException) {
         await stream.reset().catchError((resetError) {
-          _log.warning('$_logPrefix openStream: Error resetting stream ID $streamId during newStream timeout handling: $resetError');
+          _log.warning(
+              '$_logPrefix openStream: Error resetting stream ID $streamId during newStream timeout handling: $resetError');
         });
       } else {
         // For other errors (e.g. _sendFrame failed), a simple local cleanup might be best.
         await stream.forceReset().catchError((forceResetError) {
-             _log.warning('$_logPrefix openStream: Error force-resetting stream ID $streamId: $forceResetError');
+          _log.warning(
+              '$_logPrefix openStream: Error force-resetting stream ID $streamId: $forceResetError');
         });
       }
       rethrow;
@@ -724,12 +765,12 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
   Future<YamuxStream> acceptStream() async {
     // Changed from AND to OR - if either is closed, we can't accept
     if (_closed || _incomingStreamsController.isClosed) {
-        throw StateError('Session is closed, cannot accept new streams.');
+      throw StateError('Session is closed, cannot accept new streams.');
     }
-    
+
     // Use completer-based approach to avoid race condition
     _pendingAcceptStreamCompleter = Completer<P2PStream>();
-    
+
     try {
       // Race between the completer (set by _handleNewStream) and the stream listener
       // This handles the race condition where a SYN arrives before .first attaches
@@ -745,11 +786,12 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
           throw e;
         }),
       ]);
-      
+
       if (p2pStream is YamuxStream) {
         return p2pStream;
       } else {
-        throw StateError('Incoming stream is not a YamuxStream, which is unexpected.');
+        throw StateError(
+            'Incoming stream is not a YamuxStream, which is unexpected.');
       }
     } catch (e) {
       // Handle errors from both the completer and the stream
@@ -803,25 +845,27 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
       return;
     }
     _cleanupStarted = true; // Set flag at the beginning
-    _closed = true; 
+    _closed = true;
 
     _keepaliveTimer?.cancel();
 
     // Fail any pending outgoing streams
     _pendingStreams.forEach((id, completer) {
-        if (!completer.isCompleted) {
-            completer.completeError(StateError('Session closed while opening stream $id'));
-        }
+      if (!completer.isCompleted) {
+        completer.completeError(
+            StateError('Session closed while opening stream $id'));
+      }
     });
     _pendingStreams.clear();
 
-    final activeStreams = List<YamuxStream>.from(_streams.values); 
-    _streams.clear(); 
+    final activeStreams = List<YamuxStream>.from(_streams.values);
+    _streams.clear();
     for (final stream in activeStreams) {
       try {
         await stream.forceReset();
       } catch (e) {
-        _log.warning('$_logPrefix _cleanupWithoutFrames: Error force-resetting stream ${stream.id()}: $e');
+        _log.warning(
+            '$_logPrefix _cleanupWithoutFrames: Error force-resetting stream ${stream.id()}: $e');
       }
     }
 
@@ -830,7 +874,8 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
         await _incomingStreamsController.close();
       }
     } catch (e) {
-      _log.warning('$_logPrefix _cleanupWithoutFrames: Error closing incoming streams controller: $e');
+      _log.warning(
+          '$_logPrefix _cleanupWithoutFrames: Error closing incoming streams controller: $e');
     }
 
     try {
@@ -838,24 +883,25 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
         await _connection.close();
       }
     } catch (e) {
-      _log.warning('$_logPrefix _cleanupWithoutFrames: Error closing underlying connection: $e');
+      _log.warning(
+          '$_logPrefix _cleanupWithoutFrames: Error closing underlying connection: $e');
     }
   }
 
   @override
   Future<core_mux.MuxedConn> newConnOnTransport(
-    TransportConn secureConnection, 
-    bool isServer,                 
-    PeerScope scope
-  ) async {
+      TransportConn secureConnection, bool isServer, PeerScope scope) async {
     if (secureConnection != this._connection) {
-      _log.warning('YamuxSession.newConnOnTransport: secureConnection mismatch. Expected ${_connection.id}, got ${secureConnection.id}');
+      _log.warning(
+          'YamuxSession.newConnOnTransport: secureConnection mismatch. Expected ${_connection.id}, got ${secureConnection.id}');
     }
-    if (isServer == this._isClient) { // isServer from perspective of Multiplexer interface
-      _log.warning('YamuxSession.newConnOnTransport: isServer flag mismatch. Expected isServer=${!_isClient}, got $isServer');
+    if (isServer == this._isClient) {
+      // isServer from perspective of Multiplexer interface
+      _log.warning(
+          'YamuxSession.newConnOnTransport: isServer flag mismatch. Expected isServer=${!_isClient}, got $isServer');
     }
 
-    this._peerScope = scope; 
+    this._peerScope = scope;
     await _initCompleter.future;
     return this;
   }
@@ -868,12 +914,14 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
   // This implements Conn.newStream by calling the MuxedConn.openStream method.
   @override
   Future<P2PStream> newStream(Context context) async {
-    return await openStream(context) as P2PStream; // openStream returns MuxedStream, cast to P2PStream
+    return await openStream(context)
+        as P2PStream; // openStream returns MuxedStream, cast to P2PStream
   }
 
   // This `streams` getter satisfies both Multiplexer.streams (now Future) and Conn.streams (Future).
   @override
-  Future<List<P2PStream>> get streams async => List.unmodifiable(_streams.values);
+  Future<List<P2PStream>> get streams async =>
+      List.unmodifiable(_streams.values);
 
   // isClosed is already implemented by MuxedConn and satisfies Conn.
 
@@ -893,8 +941,10 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
     return ConnState(
       streamMultiplexer: protocolId, // Yamux is the multiplexer
       security: underlyingState.security, // Get security from underlying conn
-      transport: underlyingState.transport, // Get transport from underlying conn
-      usedEarlyMuxerNegotiation: underlyingState.usedEarlyMuxerNegotiation, // Get from underlying
+      transport:
+          underlyingState.transport, // Get transport from underlying conn
+      usedEarlyMuxerNegotiation:
+          underlyingState.usedEarlyMuxerNegotiation, // Get from underlying
     );
   }
 
@@ -905,7 +955,8 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
   MultiAddr get remoteMultiaddr => _connection.remoteMultiaddr;
 
   @override
-  ConnStats get stat => _connection.stat; // Assumes TransportConn provides a compatible ConnStats
+  ConnStats get stat =>
+      _connection.stat; // Assumes TransportConn provides a compatible ConnStats
 
   @override
   ConnScope get scope {
@@ -923,7 +974,7 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn { // Added C
       // A simpler approach: ConnScope is about managing the connection's lifecycle within rcmgr.
       // The YamuxSession itself is scoped.
       // The _connection (TransportConn) should have its own scope.
-      return _connection.scope; 
+      return _connection.scope;
     }
     return _connection.scope;
   }

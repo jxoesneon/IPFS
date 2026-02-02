@@ -71,7 +71,8 @@ class AutoNATv2Impl implements AutoNATv2 {
     // Process events for peer discovery
     _subscription?.stream.listen((event) {
       if (event is EvtPeerIdentificationCompleted) {
-        _log.fine('Peer ${event.peer} identification completed, updating peer map');
+        _log.fine(
+            'Peer ${event.peer} identification completed, updating peer map');
         _updatePeer(event.peer);
       } else if (event is EvtPeerProtocolsUpdated) {
         _log.fine('Peer ${event.peer} protocols updated, updating peer map');
@@ -93,7 +94,8 @@ class AutoNATv2Impl implements AutoNATv2 {
     if (!allowPrivateAddrs) {
       for (final request in requests) {
         if (!request.addr.isPublic()) {
-          throw Exception('Private address cannot be verified by autonatv2: ${request.addr}');
+          throw Exception(
+              'Private address cannot be verified by autonatv2: ${request.addr}');
         }
       }
     }
@@ -119,7 +121,8 @@ class AutoNATv2Impl implements AutoNATv2 {
             try {
               final relayPeerId = PeerId.fromString(prevValue);
               if (relayPeerId == peerId) {
-                _log.fine('Filtering out circuit address that routes through AutoNAT server $peerId: ${req.addr}');
+                _log.fine(
+                    'Filtering out circuit address that routes through AutoNAT server $peerId: ${req.addr}');
                 return false; // Exclude this address
               }
             } catch (e) {
@@ -132,7 +135,8 @@ class AutoNATv2Impl implements AutoNATv2 {
     }).toList();
 
     if (filteredRequests.isEmpty) {
-      throw Exception('No valid addresses to check after filtering circuit addresses through AutoNAT server $peerId');
+      throw Exception(
+          'No valid addresses to check after filtering circuit addresses through AutoNAT server $peerId');
     }
 
     try {
@@ -152,10 +156,13 @@ class AutoNATv2Impl implements AutoNATv2 {
     final protocols = await host.peerStore.protoBook.getProtocols(peerId);
     final connectedness = host.network.connectedness(peerId);
 
-    _log.fine('Updating peer $peerId: protocols=$protocols, connectedness=$connectedness');
+    _log.fine(
+        'Updating peer $peerId: protocols=$protocols, connectedness=$connectedness');
 
-    if (protocols.contains(AutoNATv2Protocols.dialProtocol) && connectedness == Connectedness.connected) {
-      _log.fine('Adding peer $peerId to AutoNAT v2 peer map (supports ${AutoNATv2Protocols.dialProtocol})');
+    if (protocols.contains(AutoNATv2Protocols.dialProtocol) &&
+        connectedness == Connectedness.connected) {
+      _log.fine(
+          'Adding peer $peerId to AutoNAT v2 peer map (supports ${AutoNATv2Protocols.dialProtocol})');
       _peers.put(peerId);
     } else {
       _log.fine('Removing peer $peerId from AutoNAT v2 peer map');

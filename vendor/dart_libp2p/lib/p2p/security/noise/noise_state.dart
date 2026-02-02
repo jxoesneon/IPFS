@@ -106,4 +106,4 @@ class NoiseStateMachine {
 
   /// Returns true if the handshake is complete
   bool get isComplete => _state == XXHandshakeState.complete;
-} 
+}

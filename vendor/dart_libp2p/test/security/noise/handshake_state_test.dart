@@ -8,13 +8,15 @@ void main() {
     });
 
     test('has correct state values', () {
-      expect(XXHandshakeState.values, containsAll([
-        XXHandshakeState.initial,
-        XXHandshakeState.sentE,
-        XXHandshakeState.sentEES,
-        XXHandshakeState.complete,
-        XXHandshakeState.error,
-      ]));
+      expect(
+          XXHandshakeState.values,
+          containsAll([
+            XXHandshakeState.initial,
+            XXHandshakeState.sentE,
+            XXHandshakeState.sentEES,
+            XXHandshakeState.complete,
+            XXHandshakeState.error,
+          ]));
     });
 
     test('states are in correct order', () {
@@ -34,4 +36,4 @@ void main() {
       expect(XXHandshakeState.error.toString(), contains('error'));
     });
   });
-} 
+}

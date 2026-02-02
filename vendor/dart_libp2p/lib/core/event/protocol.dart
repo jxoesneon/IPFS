@@ -10,13 +10,12 @@ import 'package:dart_libp2p/core/protocol/protocol.dart';
 class EvtPeerProtocolsUpdated {
   /// Peer is the peer whose protocols were updated.
   final PeerId peer;
-  
+
   /// Added enumerates the protocols that were added by this peer.
   final List<ProtocolID> added;
-  
+
   /// Removed enumerates the protocols that were removed by this peer.
   final List<ProtocolID> removed;
-
 
   @override
   String toString() {
@@ -37,7 +36,7 @@ class EvtPeerProtocolsUpdated {
 class EvtLocalProtocolsUpdated {
   /// Added enumerates the protocols that were added locally.
   final List<ProtocolID> added;
-  
+
   /// Removed enumerates the protocols that were removed locally.
   final List<ProtocolID> removed;
 

@@ -16,10 +16,10 @@ final _logger = Logger('stomp.service');
 class StompService {
   final Host _host;
   final StompServiceOptions _options;
-  
+
   StompServer? _server;
   final Map<PeerId, StompClient> _clients = {};
-  
+
   bool _isStarted = false;
 
   StompService(this._host, {StompServiceOptions? options})
@@ -37,7 +37,8 @@ class StompService {
   /// Starts the STOMP service
   Future<void> start() async {
     if (_isStarted) {
-      throw const StompStateException('Service already started', 'started', 'stopped');
+      throw const StompStateException(
+          'Service already started', 'started', 'stopped');
     }
 
     _logger.info('Starting STOMP service on ${_host.id}');
@@ -90,7 +91,8 @@ class StompService {
     Duration? timeout,
   }) async {
     if (!_isStarted) {
-      throw const StompStateException('Service not started', 'stopped', 'started');
+      throw const StompStateException(
+          'Service not started', 'stopped', 'started');
     }
 
     // Check if we already have a client for this peer
@@ -116,7 +118,8 @@ class StompService {
 
     // Listen for state changes to clean up disconnected clients
     client.onStateChange.listen((state) {
-      if (state == StompClientState.disconnected || state == StompClientState.error) {
+      if (state == StompClientState.disconnected ||
+          state == StompClientState.error) {
         _clients.remove(peerId);
       }
     });
@@ -142,11 +145,11 @@ class StompService {
   Future<void> disconnectAll() async {
     final clientList = List<StompClient>.from(_clients.values);
     _clients.clear();
-    
+
     for (final client in clientList) {
       await client.disconnect();
     }
-    
+
     _logger.info('Disconnected from all STOMP servers');
   }
 
@@ -209,7 +212,7 @@ class StompService {
     Map<String, String>? headers,
   }) async {
     final futures = <Future<String?>>[];
-    
+
     for (final client in _clients.values) {
       if (client.isConnected) {
         futures.add(client.send(
@@ -220,7 +223,7 @@ class StompService {
         ));
       }
     }
-    
+
     await Future.wait(futures);
     _logger.info('Broadcasted message to ${futures.length} peers');
   }
@@ -229,7 +232,7 @@ class StompService {
   StompServiceStats getStats() {
     final connectedClients = _clients.values.where((c) => c.isConnected).length;
     final serverConnections = _server?.connections.length ?? 0;
-    
+
     return StompServiceStats(
       isStarted: _isStarted,
       serverEnabled: _options.enableServer,
@@ -276,8 +279,8 @@ class StompServiceOptions {
     this.enableAutoReconnect = false,
     this.reconnectInterval = const Duration(seconds: 5),
     this.maxReconnectAttempts = 3,
-  }) : enableServer = false,
-       serverName = null;
+  })  : enableServer = false,
+        serverName = null;
 
   /// Creates options with server enabled
   const StompServiceOptions.serverEnabled({
@@ -334,7 +337,8 @@ class StompServiceStats {
 /// Helper class for creating STOMP services with common configurations
 class StompServiceFactory {
   /// Creates a STOMP service with both client and server capabilities
-  static StompService createFullService(Host host, {
+  static StompService createFullService(
+    Host host, {
     String? serverName,
     Duration? timeout,
   }) {
@@ -348,7 +352,8 @@ class StompServiceFactory {
   }
 
   /// Creates a STOMP service with only client capabilities
-  static StompService createClientOnlyService(Host host, {
+  static StompService createClientOnlyService(
+    Host host, {
     Duration? timeout,
     bool enableAutoReconnect = false,
   }) {
@@ -362,7 +367,8 @@ class StompServiceFactory {
   }
 
   /// Creates a STOMP service with custom options
-  static StompService createCustomService(Host host, StompServiceOptions options) {
+  static StompService createCustomService(
+      Host host, StompServiceOptions options) {
     return StompService(host, options: options);
   }
 }
@@ -392,7 +398,7 @@ extension StompHostExtension on Host {
       passcode: passcode,
       timeout: timeout ?? StompConstants.defaultTimeout,
     );
-    
+
     await client.connect();
     return client;
   }
@@ -403,16 +409,16 @@ class StompUtils {
   /// Validates a destination name
   static bool isValidDestination(String destination) {
     if (destination.isEmpty) return false;
-    
+
     // Basic validation - destinations should start with /
     if (!destination.startsWith('/')) return false;
-    
+
     // Check for invalid characters
     const invalidChars = ['\n', '\r', '\0'];
     for (final char in invalidChars) {
       if (destination.contains(char)) return false;
     }
-    
+
     return true;
   }
 

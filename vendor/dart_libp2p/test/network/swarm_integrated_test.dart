@@ -20,18 +20,22 @@ import 'package:dart_libp2p/core/crypto/keys.dart'; // For PrivKey
 
 // New imports for real components and mocked interfaces
 import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart' as p2p_peer; // For PeerId.createFromPublicKey
+import 'package:dart_libp2p/core/peer/peer_id.dart'
+    as p2p_peer; // For PeerId.createFromPublicKey
 import 'package:dart_libp2p/p2p/transport/upgrader.dart'; // Corrected path
 import 'package:dart_libp2p/core/event/bus.dart';
 import 'package:dart_libp2p/core/connmgr/conn_manager.dart';
 import 'package:dart_libp2p/core/connmgr/conn_gater.dart';
-import 'package:dart_libp2p/p2p/transport/transport.dart' show Transport; // Corrected path
-import 'package:dart_libp2p/p2p/transport/listener.dart' show Listener; // Corrected path
+import 'package:dart_libp2p/p2p/transport/transport.dart'
+    show Transport; // Corrected path
+import 'package:dart_libp2p/p2p/transport/listener.dart'
+    show Listener; // Corrected path
 import 'swarm_integrated_test.mocks.dart'; // Import for generated mocks
 
 // Annotations for Mockito code generation
 @GenerateMocks(
-  [ // Default mocks
+  [
+    // Default mocks
     Peerstore,
     ResourceManager,
     Upgrader,
@@ -43,11 +47,14 @@ import 'swarm_integrated_test.mocks.dart'; // Import for generated mocks
     PeerMetadata, // Added
     Emitter, // Added for EventBus
   ],
-  customMocks: [ // Custom named mocks
-    MockSpec<Transport>(as: #SwarmTestMockTransport), // Custom name for Transport mock
+  customMocks: [
+    // Custom named mocks
+    MockSpec<Transport>(
+        as: #SwarmTestMockTransport), // Custom name for Transport mock
     // StreamSubscription is from dart:async, often better to use a real one from a dummy stream if complex
     // For now, let's try mocking it. If it causes issues, we can switch.
-    MockSpec<Subscription<dynamic>>(as: #MockStreamSubscription), // Moved to customMocks
+    MockSpec<Subscription<dynamic>>(
+        as: #MockStreamSubscription), // Moved to customMocks
   ],
 )
 void main() {
@@ -97,13 +104,16 @@ void main() {
       // Configure MockEventBus
       when(mockEventBus.emitter(any, opts: anyNamed('opts')))
           .thenAnswer((_) async => mockEmitter);
-              when(mockEventBus.subscribe(any, opts: anyNamed('opts')))
-                  .thenReturn(mockStreamSubscription );
-              when(mockEmitter.emit(any)).thenAnswer((_) async {}); // Assuming emit is async void or returns Future<void>
-              when(mockStreamSubscription.close()).thenAnswer((_) async {}); // Assuming cancel is async
-              when(mockStreamSubscription.stream).thenAnswer((_) => Stream.empty()); // Stub for stream getter
+      when(mockEventBus.subscribe(any, opts: anyNamed('opts')))
+          .thenReturn(mockStreamSubscription);
+      when(mockEmitter.emit(any)).thenAnswer(
+          (_) async {}); // Assuming emit is async void or returns Future<void>
+      when(mockStreamSubscription.close())
+          .thenAnswer((_) async {}); // Assuming cancel is async
+      when(mockStreamSubscription.stream)
+          .thenAnswer((_) => Stream.empty()); // Stub for stream getter
 
-              // 2. Setup Config
+      // 2. Setup Config
       config = Config();
       final kp = await generateEd25519KeyPair();
       peerKey = kp.privateKey;
@@ -115,15 +125,19 @@ void main() {
       // config.peerstore = mockPeerstore; // BasicHost gets peerstore via network.peerStore
 
       // Derive localPeerId from peerKey
-      localPeerId = p2p_peer.PeerId.fromPublicKey(peerKey.publicKey); // Corrected
+      localPeerId =
+          p2p_peer.PeerId.fromPublicKey(peerKey.publicKey); // Corrected
 
       // Mock interactions for localPeerId's keys in the peerstore
       // These might be called by Swarm or Config initialization logic implicitly
-      when(mockKeyBook.addPrivKey(localPeerId, peerKey)).thenAnswer((_) async {});
-      when(mockKeyBook.addPubKey(localPeerId, peerKey.publicKey)).thenAnswer((_) async {});
-      when(mockPeerstore.getPeer(localPeerId)).thenAnswer((_) async => null); // Corrected method
-      when(mockPeerMetadata.put(localPeerId, any, any)).thenAnswer((_) async {}); // Corrected: assumes for localPeerId, any key, any val
-
+      when(mockKeyBook.addPrivKey(localPeerId, peerKey))
+          .thenAnswer((_) async {});
+      when(mockKeyBook.addPubKey(localPeerId, peerKey.publicKey))
+          .thenAnswer((_) async {});
+      when(mockPeerstore.getPeer(localPeerId))
+          .thenAnswer((_) async => null); // Corrected method
+      when(mockPeerMetadata.put(localPeerId, any, any)).thenAnswer(
+          (_) async {}); // Corrected: assumes for localPeerId, any key, any val
 
       // Instantiate Swarm first, with host: null
       swarm = Swarm(
@@ -147,14 +161,20 @@ void main() {
 
       // Provide default mock behaviors
       // when(mockPeerstore.get(localPeerId)).thenAnswer((_) async => mockPeerstore); // mockPeerstore is already a mock
-      when(mockPeerstore.getPeer(localPeerId)).thenAnswer((_) async => null); // Corrected method, more realistic default
+      when(mockPeerstore.getPeer(localPeerId)).thenAnswer(
+          (_) async => null); // Corrected method, more realistic default
       // when(mockTransport.dialerScore(any, any)).thenReturn(1); // Removed, not on Transport interface
       when(mockTransport.protocols).thenReturn([]); // Default empty protocols
-      when(mockConnManager.isProtected(any, any)).thenReturn(false); // Corrected method
-      when(mockConnGater.interceptPeerDial(any)).thenReturn(true); // Default allow dial
-      when(mockConnGater.interceptAddrDial(any, any)).thenReturn(true); // Default allow addr dial
-      when(mockConnGater.interceptSecured(any, any, any)).thenReturn(true); // Default allow secured
-      when(mockConnGater.interceptUpgraded(any)).thenReturn((true, null)); // Corrected return type
+      when(mockConnManager.isProtected(any, any))
+          .thenReturn(false); // Corrected method
+      when(mockConnGater.interceptPeerDial(any))
+          .thenReturn(true); // Default allow dial
+      when(mockConnGater.interceptAddrDial(any, any))
+          .thenReturn(true); // Default allow addr dial
+      when(mockConnGater.interceptSecured(any, any, any))
+          .thenReturn(true); // Default allow secured
+      when(mockConnGater.interceptUpgraded(any))
+          .thenReturn((true, null)); // Corrected return type
     });
 
     tearDown(() async {
@@ -177,9 +197,12 @@ void main() {
       expect(host.id, equals(localPeerId));
     });
 
-    test('listen operation should interact with mock transport and update addresses', () async {
+    test(
+        'listen operation should interact with mock transport and update addresses',
+        () async {
       final listenAddrInput = MultiAddr('/ip4/127.0.0.1/tcp/0');
-      final listenAddrActual = MultiAddr('/ip4/127.0.0.1/tcp/12345'); // Example actual address
+      final listenAddrActual =
+          MultiAddr('/ip4/127.0.0.1/tcp/12345'); // Example actual address
 
       final mockListener = MockListener();
       // when(mockListener.listenAddresses).thenReturn([listenAddrActual]); // Incorrect getter
@@ -188,21 +211,23 @@ void main() {
       when(mockListener.close()).thenAnswer((_) async {});
       // Mock connectionStream to return an empty stream by default for this test,
       // as Swarm.listen will try to listen to it.
-      when(mockListener.connectionStream).thenAnswer((_) => Stream<TransportConn>.empty());
-
+      when(mockListener.connectionStream)
+          .thenAnswer((_) => Stream<TransportConn>.empty());
 
       when(mockTransport.canListen(listenAddrInput)).thenReturn(true);
-      when(mockTransport.listen(listenAddrInput)).thenAnswer((_) async => mockListener);
-      
+      when(mockTransport.listen(listenAddrInput))
+          .thenAnswer((_) async => mockListener);
+
       // Swarm.listen also calls peerstore.addAddrs
-      const expectedTTL = Duration(hours: 24 * 365 * 100); // Explicitly define for clarity
+      const expectedTTL =
+          Duration(hours: 24 * 365 * 100); // Explicitly define for clarity
       when(mockAddrBook.addAddrs(localPeerId, [listenAddrActual], expectedTTL))
           .thenAnswer((_) async {});
 
       await swarm.listen([listenAddrInput]);
 
       verify(mockTransport.listen(listenAddrInput)).called(1);
-      
+
       // Capture and verify arguments for mockAddrBook.addAddrs
       // The verify(...).captured itself confirms the call occurred with matching signature.
       // final List<dynamic> capturedAddrsArgs = verify(mockAddrBook.addAddrs(

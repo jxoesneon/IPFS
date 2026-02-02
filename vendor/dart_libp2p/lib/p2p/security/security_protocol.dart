@@ -16,4 +16,3 @@ abstract class SecurityProtocol {
   /// Secures an inbound connection
   Future<SecuredConnection> secureInbound(TransportConn connection);
 }
-

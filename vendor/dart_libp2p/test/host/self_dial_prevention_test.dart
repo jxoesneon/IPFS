@@ -78,7 +78,8 @@ void main() {
       await host.connect(selfAddrInfo);
 
       // Verify that no connection was actually established
-      expect(host.network.connectedness(localPeerId), equals(Connectedness.notConnected));
+      expect(host.network.connectedness(localPeerId),
+          equals(Connectedness.notConnected));
     });
 
     test('Swarm.dialPeer should prevent self-dialing', () async {
@@ -113,7 +114,8 @@ void main() {
 
         // Check that the prevention message was logged
         expect(
-          logMessages.any((msg) => msg.contains('Preventing self-dial attempt')),
+          logMessages
+              .any((msg) => msg.contains('Preventing self-dial attempt')),
           isTrue,
           reason: 'Expected self-dial prevention log message',
         );
@@ -122,7 +124,8 @@ void main() {
       }
     });
 
-    test('Self-dial prevention should work with different address formats', () async {
+    test('Self-dial prevention should work with different address formats',
+        () async {
       // Test with various address formats that might be encountered
       final testAddresses = [
         '/ip4/0.0.0.0/udp/33220/udx',
@@ -141,7 +144,8 @@ void main() {
         await host.connect(selfAddrInfo);
 
         // Verify no connection was established
-        expect(host.network.connectedness(localPeerId), equals(Connectedness.notConnected));
+        expect(host.network.connectedness(localPeerId),
+            equals(Connectedness.notConnected));
       }
     });
   });

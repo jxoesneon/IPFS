@@ -9,8 +9,8 @@ import 'package:dart_libp2p/core/network/stream.dart';
 import 'package:dart_libp2p/core/network/transport_conn.dart';
 import 'package:dart_libp2p/core/peer/peer_id.dart'; // Provides PeerId
 import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/network/context.dart' as core_context; // Added for Context
-
+import 'package:dart_libp2p/core/network/context.dart'
+    as core_context; // Added for Context
 
 import 'package:dart_libp2p/p2p/protocol/ping/ping.dart'; // This provides PingConstants and PingService
 import 'package:dart_libp2p/config/config.dart' as p2p_config;
@@ -28,7 +28,6 @@ import 'package:test/test.dart';
 // Helper class for providing YamuxMuxer to the config
 class _TestYamuxMuxerProvider extends StreamMuxer {
   final MultiplexerConfig yamuxConfig;
-
 
   _TestYamuxMuxerProvider({required this.yamuxConfig})
       : super(
@@ -70,8 +69,9 @@ void main() {
         streamWriteTimeout: Duration(seconds: 10), // Reverted to original 10s
         maxStreams: 256,
       );
-      final muxerDef = _TestYamuxMuxerProvider(yamuxConfig: yamuxMultiplexerConfig);
-      
+      final muxerDef =
+          _TestYamuxMuxerProvider(yamuxConfig: yamuxMultiplexerConfig);
+
       // Create ConnectionManagers beforehand
       final clientConnMgr = ConnectionManager();
       final serverConnMgr = ConnectionManager();
@@ -108,7 +108,7 @@ void main() {
       // Use Config.newNode() to create hosts
       clientHost = await clientConfig.newNode() as BasicHost;
       serverHost = await serverConfig.newNode() as BasicHost;
-      
+
       // Start server first - BasicHost.start() is called by newNode if listenAddrs are present
       // For serverHost, newNode should have started listening.
       // For clientHost, we might need to call start explicitly if newNode doesn't.
@@ -119,7 +119,7 @@ void main() {
       // Let's assume BasicHost's constructor or an internal part of newNode's _createNetwork
       // or _createHost handles starting the network listening if listenAddrs are provided.
       // The `BasicHost.start()` method is for starting its own services.
-      
+
       // The `newNode` method in `Config` calls `_startListening` which just adds to `host.addrs`.
       // The actual listening is typically initiated by `Network.listen(Multiaddr)`.
       // `BasicHost` itself doesn't directly call `_network.listen()`.
@@ -138,25 +138,30 @@ void main() {
       }
       serverListenAddr = serverHost.addrs.firstWhere(
         (addr) => addr.toString().contains('/udx'),
-        orElse: () => throw Exception('Server did not listen on a UDX address.'),
+        orElse: () =>
+            throw Exception('Server did not listen on a UDX address.'),
       );
       print('Server Host UDX Listen Address: $serverListenAddr');
 
       // Set stream handler on server for Ping protocol
-      serverHost.setStreamHandler(PingConstants.protocolId, (P2PStream stream, PeerId remotePeer) async {
-        print('Server Host: Received stream for protocol ${stream.protocol} from $remotePeer');
+      serverHost.setStreamHandler(PingConstants.protocolId,
+          (P2PStream stream, PeerId remotePeer) async {
+        print(
+            'Server Host: Received stream for protocol ${stream.protocol} from $remotePeer');
         try {
           final data = await stream.read();
-          print('Server Host: Read ${data.length} bytes from $remotePeer, echoing back.');
+          print(
+              'Server Host: Read ${data.length} bytes from $remotePeer, echoing back.');
           await stream.write(data);
           await stream.closeWrite(); // Close write side after echoing
           print('Server Host: Echo sent to $remotePeer, stream write closed.');
         } catch (e, s) {
-          print('Server Host: Error in stream handler with $remotePeer: $e\n$s');
+          print(
+              'Server Host: Error in stream handler with $remotePeer: $e\n$s');
           await stream.reset();
         }
       });
-      
+
       await clientHost.start(); // Start client host services
       print('Client Host services started.');
     });
@@ -171,37 +176,51 @@ void main() {
       print('BasicHost E2E test teardown complete.');
     });
 
-    test('client connects to server, opens stream, and pings successfully', () async {
-      print('Test: Attempting to connect client to server ($serverPeerId @ $serverListenAddr)');
+    test('client connects to server, opens stream, and pings successfully',
+        () async {
+      print(
+          'Test: Attempting to connect client to server ($serverPeerId @ $serverListenAddr)');
       final serverAddrInfo = AddrInfo(serverPeerId, [serverListenAddr]);
-      
-      await clientHost.connect(serverAddrInfo, context: core_context.Context()); // Pass context
+
+      await clientHost.connect(serverAddrInfo,
+          context: core_context.Context()); // Pass context
       print('Test: Client connected to server.');
 
-      print('Test: Client opening new stream to server for protocol ${PingConstants.protocolId}');
+      print(
+          'Test: Client opening new stream to server for protocol ${PingConstants.protocolId}');
       // Pass context to newStream
-      final P2PStream stream = await clientHost.newStream(serverPeerId, [PingConstants.protocolId], core_context.Context());
-      print('Test: Client stream opened with ID: ${stream.id()}, Protocol: ${stream.protocol()}');
+      final P2PStream stream = await clientHost.newStream(
+          serverPeerId, [PingConstants.protocolId], core_context.Context());
+      print(
+          'Test: Client stream opened with ID: ${stream.id()}, Protocol: ${stream.protocol()}');
 
-      expect(stream.protocol(), PingConstants.protocolId); // This should be fine if PingConstants.protocolId is static const
+      expect(
+          stream.protocol(),
+          PingConstants
+              .protocolId); // This should be fine if PingConstants.protocolId is static const
 
       final random = Random();
-      final pingData = Uint8List.fromList(List.generate(32, (_) => random.nextInt(256)));
-      
-      print('Test: Client writing ${pingData.length} bytes to stream ${stream.id()}');
+      final pingData =
+          Uint8List.fromList(List.generate(32, (_) => random.nextInt(256)));
+
+      print(
+          'Test: Client writing ${pingData.length} bytes to stream ${stream.id()}');
       await stream.write(pingData);
       print('Test: Client data written. Closing write side of client stream.');
-      await stream.closeWrite(); // Important to signal end of writing to the server
+      await stream
+          .closeWrite(); // Important to signal end of writing to the server
 
       print('Test: Client reading echoed data from stream ${stream.id()}');
       final echoedData = await stream.read();
       print('Test: Client received ${echoedData.length} bytes.');
-      
+
       expect(echoedData, orderedEquals(pingData));
       print('Test: Ping data matches echoed data. Ping successful.');
 
       await stream.close(); // Fully close the stream
       print('Test: Client stream closed.');
-    }, timeout: Timeout(Duration(seconds: 30))); // Increased timeout for network ops
+    },
+        timeout: Timeout(
+            Duration(seconds: 30))); // Increased timeout for network ops
   });
 }

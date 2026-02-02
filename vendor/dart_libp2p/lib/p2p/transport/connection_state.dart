@@ -22,8 +22,6 @@ enum ConnectionState {
   error
 }
 
-
-
 /// Represents a state change event in a connection
 class ConnectionStateChange {
   /// The previous state of the connection
@@ -51,4 +49,4 @@ class ConnectionStateChange {
     final errorStr = error != null ? ' (Error: $error)' : '';
     return 'ConnectionStateChange: $previousState -> $newState$errorStr';
   }
-} 
+}

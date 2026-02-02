@@ -162,7 +162,8 @@ class StunClientPool {
       // Need at least 2 servers for accurate detection
       await _checkServerHealth();
       // Try again after health check
-      final updatedHealthyServers = _servers.where((s) => s.healthScore > 30).toList();
+      final updatedHealthyServers =
+          _servers.where((s) => s.healthScore > 30).toList();
       if (updatedHealthyServers.length < 2) {
         // Still not enough healthy servers, use whatever we have
         if (_servers.isEmpty) {
@@ -179,8 +180,8 @@ class StunClientPool {
     }
 
     // Use at least 2 servers for detection
-    final serversToUse = healthyServers.length >= 2 
-        ? healthyServers.sublist(0, min(3, healthyServers.length)) 
+    final serversToUse = healthyServers.length >= 2
+        ? healthyServers.sublist(0, min(3, healthyServers.length))
         : _servers.sublist(0, min(3, _servers.length));
 
     // Get responses from multiple servers
@@ -245,7 +246,7 @@ class StunClientPool {
         final behavior = await discovery.discoverBehavior();
 
         // If we got a valid result (not unknown for both behaviors), return it
-        if (behavior.mappingBehavior != NatMappingBehavior.unknown || 
+        if (behavior.mappingBehavior != NatMappingBehavior.unknown ||
             behavior.filteringBehavior != NatFilteringBehavior.unknown) {
           return behavior;
         }
@@ -271,13 +272,15 @@ class StunClientPool {
 
     // Symmetric NAT has address-dependent or address-and-port-dependent mapping
     if (behavior.mappingBehavior == NatMappingBehavior.addressDependent ||
-        behavior.mappingBehavior == NatMappingBehavior.addressAndPortDependent) {
+        behavior.mappingBehavior ==
+            NatMappingBehavior.addressAndPortDependent) {
       return NatType.symmetric;
     }
 
     // Full cone NAT has endpoint-independent mapping and filtering
     if (behavior.mappingBehavior == NatMappingBehavior.endpointIndependent &&
-        behavior.filteringBehavior == NatFilteringBehavior.endpointIndependent) {
+        behavior.filteringBehavior ==
+            NatFilteringBehavior.endpointIndependent) {
       return NatType.fullCone;
     }
 
@@ -289,7 +292,8 @@ class StunClientPool {
 
     // Port restricted cone NAT has endpoint-independent mapping and address-and-port-dependent filtering
     if (behavior.mappingBehavior == NatMappingBehavior.endpointIndependent &&
-        behavior.filteringBehavior == NatFilteringBehavior.addressAndPortDependent) {
+        behavior.filteringBehavior ==
+            NatFilteringBehavior.addressAndPortDependent) {
       return NatType.portRestricted;
     }
 
@@ -298,16 +302,25 @@ class StunClientPool {
   }
 
   /// Gets the current health status of all servers in the pool
-  List<({String host, int port, int healthScore, Duration? lastResponseTime, DateTime? lastSuccessTime, int consecutiveFailures})> 
-      getServerHealthStatus() {
-    return _servers.map((s) => (
-      host: s.host,
-      port: s.port,
-      healthScore: s.healthScore,
-      lastResponseTime: s.lastResponseTime,
-      lastSuccessTime: s.lastSuccessTime,
-      consecutiveFailures: s.consecutiveFailures,
-    )).toList();
+  List<
+      ({
+        String host,
+        int port,
+        int healthScore,
+        Duration? lastResponseTime,
+        DateTime? lastSuccessTime,
+        int consecutiveFailures
+      })> getServerHealthStatus() {
+    return _servers
+        .map((s) => (
+              host: s.host,
+              port: s.port,
+              healthScore: s.healthScore,
+              lastResponseTime: s.lastResponseTime,
+              lastSuccessTime: s.lastSuccessTime,
+              consecutiveFailures: s.consecutiveFailures,
+            ))
+        .toList();
   }
 
   /// Adds a new STUN server to the pool
