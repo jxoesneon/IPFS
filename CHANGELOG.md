@@ -3,15 +3,18 @@
 ## [1.9.1] - 2026-01-31
 
 ### Added
+
 - **Protobuf 6.0.0 Compatibility**: Full migration to protobuf 6.0.0 with complete backward compatibility
 - **Enhanced Documentation**: Updated compatibility guides and troubleshooting sections
 
 ### Fixed
+
 - **dart_libp2p Compatibility**: Resolved `PbList`/`createRepeated()` issues in 10+ files
 - **Any/Timestamp Conflicts**: Fixed import conflicts in 5 critical IPFS files
-- **Test Suite Stability**: Verified 42+ tests passing with protobuf 6.0.0
+- **Test Suite Stability**: Verified 1098 tests passing with protobuf 6.0.0
 
 ### Changed
+
 - **Dependency Updates**: Updated `protobuf` dependency to `^6.0.0`
 - **Import Patterns**: Standardized well-known type imports to use `package:protobuf/well_known_types/`
 
@@ -451,7 +454,6 @@ The web implementation (`IPFSWebNode`) has been upgraded from an offline sandbox
 ### Added
 
 - **CLI Dashboard Completeness** (Parity with Flutter App)
-
   - **Peer Manager**: Full TUI for listing, adding, and disconnecting peers.
   - **PubSub Chat**: Asynchronous chat interface with dedicated drawing loop.
   - **Files & Pinning**: Pin/Unpin CIDs directly from terminal.
@@ -577,7 +579,6 @@ The web implementation (`IPFSWebNode`) has been upgraded from an offline sandbox
 ### Added
 
 - **Complete IPFS Protocol Implementation**
-
   - CID v0 and v1 support with full encoding/decoding
   - UnixFS file system with chunking and directory support
   - DAG-PB (MerkleDAG) operations and IPLD traversal
@@ -585,7 +586,6 @@ The web implementation (`IPFSWebNode`) has been upgraded from an offline sandbox
   - Content-addressable storage with pinning
 
 - **P2P Networking**
-
   - Production-grade cryptography (secp256k1 + ChaCha20-Poly1305 AEAD)
   - Bitswap 1.2.0 protocol for efficient block exchange
   - Kademlia DHT for distributed routing and content discovery
@@ -596,7 +596,6 @@ The web implementation (`IPFSWebNode`) has been upgraded from an offline sandbox
   - Auto-NAT detection
 
 - **Services & APIs**
-
   - HTTP Gateway (read-only and writable modes)
   - RPC API compatible with go-ipfs
   - IPNS mutable naming system
@@ -605,13 +604,11 @@ The web implementation (`IPFSWebNode`) has been upgraded from an offline sandbox
   - Prometheus-compatible metrics
 
 - **Multiple Deployment Modes**
-
   - Offline mode: Local storage without networking
   - Gateway mode: HTTP serving with optional P2P
   - Full P2P mode: Complete network participation
 
 - **Documentation**
-
   - Comprehensive README with installation and usage
   - API reference and configuration guides
   - Multiple working examples (blog, gateway, P2P)
@@ -619,7 +616,6 @@ The web implementation (`IPFSWebNode`) has been upgraded from an offline sandbox
   - Future roadmap (v1.1 through v3.0)
 
 - **Examples**
-
   - blog_use_case.dart: Offline content publishing
   - online_test.dart: P2P networking demonstration
   - gateway_example.dart: HTTP gateway server
