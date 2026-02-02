@@ -16,7 +16,10 @@ void main() {
 
     IPFSConfig createConfig([int port = 0]) {
       return IPFSConfig(
-        network: NetworkConfig(listenAddresses: ['/ip4/127.0.0.1/tcp/$port']),
+        network: NetworkConfig(
+          listenAddresses: ['/ip4/127.0.0.1/tcp/$port'],
+          bootstrapPeers: [],
+        ),
       );
     }
 

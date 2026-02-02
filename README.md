@@ -50,6 +50,24 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 | **Stability Baseline**  | 100% pass rate confirmed across 1098 unit/integration tests  |
 | **Cleanup**             | Removed all legacy `p2plib` dependencies and shims           |
 
+## 🚀 Protobuf 6.0.0 Compatibility (2026-02-02)
+
+### ✅ Full Migration Complete
+
+| Feature                     | Status                    | Details                                     |
+| --------------------------- | ------------------------- | ------------------------------------------- |
+| **Protobuf 6.0.0**          | ✅ **COMPATIBLE**         | Full support for latest protobuf version    |
+| **dart_libp2p Integration** | ✅ **FIXED**              | Resolved `PbList`/`createRepeated()` issues |
+| **Any/Timestamp Types**     | ✅ **RESOLVED**           | Fixed import conflicts in 5 critical files  |
+| **Test Suite**              | ✅ **1098 TESTS PASSING** | Verified comprehensive functionality        |
+| **Backward Compatibility**  | ✅ **MAINTAINED**         | Seamless upgrade from protobuf 5.x          |
+
+### 🛠 Migration Notes
+
+- **Well-known types**: Use `package:protobuf/well_known_types/google/protobuf/[type].pb.dart`
+- **Import patterns**: Avoid local copies of `any.pb.dart`/`timestamp.pb.dart`
+- **Dependency**: Updated to `protobuf: ^6.0.0` in `pubspec.yaml`
+
 ## 🚀 What's New in v1.8
 
 ### Major Features

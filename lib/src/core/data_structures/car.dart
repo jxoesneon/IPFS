@@ -3,8 +3,8 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/proto/generated/core/car.pb.dart' as proto;
-import 'package:dart_ipfs/src/proto/generated/google/protobuf/any.pb.dart';
 import 'package:fixnum/fixnum.dart' show Int64;
+import 'package:protobuf/well_known_types/google/protobuf/any.pb.dart';
 // lib/src/core/data_structures/car.dart
 
 /// Represents a Content Addressable Archive (CAR) with v1 and v2 support.

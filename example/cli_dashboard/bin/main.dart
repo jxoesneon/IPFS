@@ -512,8 +512,8 @@ class Dashboard {
     console.setBackgroundColor(ConsoleColor.blue);
     console.setForegroundColor(ConsoleColor.white);
 
-    String headerTitle =
-        " dart_ipfs CLI [${_mode.name.toUpperCase()}] ".padRight(width - 40);
+    String headerTitle = " dart_ipfs CLI [${_mode.name.toUpperCase()}] "
+        .padRight(width - 40);
     String stats =
         " IN: ${_formatRate(_inRate)} | OUT: ${_formatRate(_outRate)} ";
     console.write(headerTitle + stats.padLeft(40));
@@ -670,8 +670,10 @@ class Dashboard {
           // Prefix message with username/handle
           final payload = "<CLI_User> $msg";
 
-          final time =
-              DateTime.now().toIso8601String().split('T')[1].substring(0, 5);
+          final time = DateTime.now()
+              .toIso8601String()
+              .split('T')[1]
+              .substring(0, 5);
           _chatMessages.add("[$time] [ME] $msg");
           if (_chatMessages.length > 50) _chatMessages.removeAt(0);
 
@@ -720,8 +722,10 @@ class Dashboard {
 
       // Listen once
       node!.pubsubMessages.listen((msg) {
-        final time =
-            DateTime.now().toIso8601String().split('T')[1].substring(0, 5);
+        final time = DateTime.now()
+            .toIso8601String()
+            .split('T')[1]
+            .substring(0, 5);
         if (msg.topic == _activeTopic) {
           // Don't echo self if we did manual add, or handle dedup.
           // Simple: just show everything. User might see double if we manually added.
@@ -755,9 +759,11 @@ class Dashboard {
     int startMsgIndex = _chatMessages.length - msgsToShow;
     if (startMsgIndex < 0) startMsgIndex = 0;
 
-    for (int i = 0;
-        i < msgsToShow && (startMsgIndex + i) < _chatMessages.length;
-        i++) {
+    for (
+      int i = 0;
+      i < msgsToShow && (startMsgIndex + i) < _chatMessages.length;
+      i++
+    ) {
       console.cursorPosition = Coordinate(startY + i, 2);
       console.write(_chatMessages[startMsgIndex + i]);
     }

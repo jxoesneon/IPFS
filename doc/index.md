@@ -7,6 +7,7 @@ Welcome to the documentation for **dart_ipfs**, a production-ready IPFS implemen
 - [Getting Started](../README.md#quick-start)
 - [Architecture](../README.md#architecture)
 - [Gateway Selector](../README.md#gateway-selector-new-in-120)
+- [Protobuf 6.0.0 Compatibility](PROTOBUF_COMPATIBILITY.md) - **NEW**
 
 ## API Reference
 
@@ -16,3 +17,7 @@ Welcome to the documentation for **dart_ipfs**, a production-ready IPFS implemen
 
 - [Flutter Dashboard](../example/ipfs_dashboard/README.md)
 - [CLI Dashboard](../example/cli_dashboard/README.md)
+
+## Maintenance
+
+- [Maintainer Guide](MAINTAINER_GUIDE.md)

@@ -1,35 +1,79 @@
-graph TD
-    A[Create IPFS Instance] --> B[Initialize Config]
-    B --> C[Create IPFSNode]
+graph TB
+    subgraph "Application Layer"
+        UserApp["External Application"]
+        IPFSNode["IPFSNode<br/>(lib/src/core/ipfs_node/ipfs_node.dart)"]:::core
+        IPFSWebNode["IPFSWebNode<br/>(lib/src/core/ipfs_node/ipfs_web_node.dart)"]:::core
+    end
+
+    subgraph "Service Layer"
+        Gateway["HTTP Gateway Server<br/>(lib/src/services/gateway/)"]:::service
+        RPC["RPC API<br/>(lib/src/services/rpc/)"]:::service
+        PubSubH["PubSub Handler<br/>(lib/src/core/ipfs_node/pubsub_handler.dart)"]:::service
+        IPNSH["IPNS Handler<br/>(lib/src/protocols/ipns/)"]:::service
+        DNSLinkH["DNSLink Handler<br/>(lib/src/core/ipfs_node/dns_link_handler.dart)"]:::service
+    end
+
+    subgraph "Protocol Layer"
+        Bitswap["Bitswap 1.2.0<br/>(lib/src/protocols/bitswap/)"]:::protocol
+        DHT["Kademlia / S-Kademlia<br/>(lib/src/protocols/dht/)"]:::protocol
+        GraphSync["GraphSync<br/>(lib/src/protocols/graphsync/)"]:::protocol
+    end
+
+    subgraph "Network & Transport Layer"
+        NH["Network Handler<br/>(lib/src/core/ipfs_node/network_handler.dart)"]:::transport
+        RouterI["Router Interface<br/>(lib/src/transport/router_interface.dart)"]:::transport
+        Libp2p["Libp2p Router (Native)<br/>(lib/src/transport/libp2p_router.dart)"]:::transport
+        AutoNAT["AutoNAT Service<br/>(lib/src/core/ipfs_node/auto_nat_handler.dart)"]:::transport
+        MDNS["mDNS Discovery<br/>(lib/src/core/ipfs_node/mdns_handler.dart)"]:::transport
+        Relay["Circuit Relay v2<br/>(Relay Protocol)"]:::transport
+    end
+
+    subgraph "Storage & IPLD Layer"
+        UnixFS["UnixFS Engine<br/>(lib/src/core/unixfs/)"]:::storage
+        IPLD["IPLD Handler (CBOR/JSON/PB)<br/>(lib/src/core/ipfs_node/ipld_handler.dart)"]:::storage
+        BlockStore["BlockStore<br/>(lib/src/core/data_structures/blockstore.dart)"]:::storage
+        Datastore["Datastore (Hive/IDB/Flat-File)<br/>(lib/src/core/storage/)"]:::storage
+    end
+
+    subgraph "Security & Utilities"
+        Security["Security Manager (Keystore)<br/>(lib/src/core/security/)"]:::utils
+        Metrics["Metrics Collector<br/>(lib/src/core/metrics/)"]:::utils
+        Logger["Structured Logger<br/>(lib/src/utils/logger.dart)"]:::utils
+    end
+
+    %% Key Interactions
+    UserApp --> IPFSNode
+    IPFSNode --> Gateway & RPC & PubSubH & IPNSH & DNSLinkH
+    IPFSNode --> Bitswap & DHT & GraphSync & UnixFS
     
-    %% Security and Core Systems
-    C --> D1[Initialize Security Manager]:::implemented
-    C --> D2[Initialize Logger]:::implemented
-    C --> D3[Initialize Metrics Collector]:::implemented
+    Bitswap --> BlockStore
+    Bitswap --> DHT
+    DHT --> NH
+    NH --> RouterI
+    RouterI --> Libp2p
     
-    %% Storage Layer
-    D1 & D2 & D3 --> E1[Initialize BlockStore]:::implemented
-    E1 --> E2[Initialize Datastore]:::implemented
-    E1 --> E3[Initialize IPLD]:::partial
+    Libp2p --> AutoNAT & MDNS & Relay
     
-    %% Network Layer
-    E1 & E2 & E3 --> F1[Initialize NetworkHandler]:::partial
-    F1 --> F2[Initialize DHT]:::partial
-    F1 --> F3[Initialize PubSub]:::partial
-    F1 --> F4[Initialize BitSwap]:::partial
-    F1 --> F5[Initialize mDNS]:::missing
-    F1 --> F6[Initialize Bootstrap]:::partial
+    Gateway --> IPLD
+    IPLD --> BlockStore
+    BlockStore --> Datastore
     
-    %% High-level Services
-    F1 & F2 & F3 & F4 & F5 & F6 --> G1[Initialize ContentRouting]:::partial
-    F1 & F2 & F3 & F4 & F5 & F6 --> G2[Initialize DNSLink]:::missing
-    F1 & F2 & F3 & F4 & F5 & F6 --> G3[Initialize Graphsync]:::missing
-    F1 & F2 & F3 & F4 & F5 & F6 --> G4[Initialize AutoNAT]:::missing
-    F1 & F2 & F3 & F4 & F5 & F6 --> G5[Initialize IPNS]:::partial
+    UnixFS --> IPLD
     
-    %% Start Services
-    G1 & G2 & G3 & G4 & G5 --> H[Start All Services]
-    
-    classDef implemented fill:#00ff00,stroke:#333,stroke-width:2px;
-    classDef partial fill:#ffff00,stroke:#333,stroke-width:2px;
-    classDef missing fill:#ff0000,stroke:#333,stroke-width:2px;
+    IPFSNode -.-> Security & Metrics & Logger
+
+    %% Deployment & Infrastructure
+    subgraph "Deployment (Docker)"
+        Docker["Dockerfile / Compose"]
+        Nginx["Nginx Reverse Proxy"]
+        Docker --> IPFSNode
+        Nginx --> Gateway & RPC
+    end
+
+    %% Styling
+    classDef core fill:#e1f5fe,stroke:#01579b,stroke-width:3px;
+    classDef service fill:#fff9c4,stroke:#fbc02d,stroke-width:2px;
+    classDef protocol fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef transport fill:#fce4ec,stroke:#c2185b,stroke-width:2px;
+    classDef storage fill:#ede7f6,stroke:#512da8,stroke-width:2px;
+    classDef utils fill:#f5f5f5,stroke:#616161,stroke-width:2px;

@@ -1,13 +1,14 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: dht/common_red_black_tree.proto
-//
-// @dart = 2.12
+// Generated from dht/common_red_black_tree.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -15,7 +16,10 @@ import 'package:protobuf/protobuf.dart' as $pb;
 
 /// Defines an enum representing the color of a node in a tree structure.
 class NodeColor extends $pb.ProtobufEnum {
+  /// Represents the color red, typically used in red-black trees.
   static const NodeColor RED = NodeColor._(0, _omitEnumNames ? '' : 'RED');
+
+  /// Represents the color black, typically used in red-black trees.
   static const NodeColor BLACK = NodeColor._(1, _omitEnumNames ? '' : 'BLACK');
 
   static const $core.List<NodeColor> values = <NodeColor>[
@@ -23,11 +27,12 @@ class NodeColor extends $pb.ProtobufEnum {
     BLACK,
   ];
 
-  static final $core.Map<$core.int, NodeColor> _byValue =
-      $pb.ProtobufEnum.initByValue(values);
-  static NodeColor? valueOf($core.int value) => _byValue[value];
+  static final $core.List<NodeColor?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 1);
+  static NodeColor? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
 
-  const NodeColor._($core.int v, $core.String n) : super(v, n);
+  const NodeColor._(super.value, super.name);
 }
 
 /// The current connection status of the peer.
@@ -46,13 +51,13 @@ class V_PeerInfo_ConnectionStatus extends $pb.ProtobufEnum {
     CONNECTED,
   ];
 
-  static final $core.Map<$core.int, V_PeerInfo_ConnectionStatus> _byValue =
-      $pb.ProtobufEnum.initByValue(values);
+  static final $core.List<V_PeerInfo_ConnectionStatus?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
   static V_PeerInfo_ConnectionStatus? valueOf($core.int value) =>
-      _byValue[value];
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
 
-  const V_PeerInfo_ConnectionStatus._($core.int v, $core.String n)
-      : super(v, n);
+  const V_PeerInfo_ConnectionStatus._(super.value, super.name);
 }
 
-const _omitEnumNames = $core.bool.fromEnvironment('protobuf.omit_enum_names');
+const $core.bool _omitEnumNames =
+    $core.bool.fromEnvironment('protobuf.omit_enum_names');

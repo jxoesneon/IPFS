@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:convert';
 
@@ -23,10 +24,16 @@ void main() {
     late DatastoreHandler datastoreHandler;
     late InMemoryDatastore inMemoryDatastore;
 
+    late Directory tempRepoDir;
+    late Directory tempBlockDir;
+
     setUp(() async {
+      tempRepoDir = Directory.systemTemp.createTempSync('ipfs_test_repo_');
+      tempBlockDir = Directory.systemTemp.createTempSync('ipfs_test_blocks_');
+
       container = ServiceContainer();
-      config = IPFSConfig(offline: true, dataPath: '/tmp/test_repo');
-      blockStore = BlockStore(path: '/tmp/mock_blocks');
+      config = IPFSConfig(offline: true, dataPath: tempRepoDir.path);
+      blockStore = BlockStore(path: tempBlockDir.path);
       inMemoryDatastore = InMemoryDatastore();
       await inMemoryDatastore.init();
       datastoreHandler = DatastoreHandler(inMemoryDatastore);
@@ -42,6 +49,11 @@ void main() {
       container.registerSingleton<IPLDHandler>(IPLDHandler(config, blockStore));
 
       // No Network/Services for offline
+    });
+
+    tearDown(() {
+      if (tempRepoDir.existsSync()) tempRepoDir.deleteSync(recursive: true);
+      if (tempBlockDir.existsSync()) tempBlockDir.deleteSync(recursive: true);
     });
 
     test('should initialize and start in offline mode', () async {
