@@ -19,7 +19,7 @@ import 'package:dart_libp2p/core/record/envelope.dart';
 /// This is a placeholder for the actual Envelope class that would be defined in the record module.
 /// When the record module is implemented, this should be replaced with the actual Envelope class.
 ///
-// import 'package:dart_libp2p/core/crypto/keys.dart';
+
 import 'package:synchronized/synchronized.dart';
 
 /// CertifiedAddrBook manages signed peer records and "self-certified" addresses
