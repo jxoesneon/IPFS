@@ -1,12 +1,3 @@
-﻿/// Metrics for the identify service.
-///
-/// This file contains the interface and implementation for collecting metrics
-/// from the identify service.
-///
-/// This is a port of the Go implementation from go-libp2p/p2p/protocol/identify/metrics.go
-/// to Dart, using native Dart idioms.
-
-import 'package:ipfs_libp2p/core/network/network.dart';
 
 import '../../../core/event/addrs.dart';
 import '../../../core/event/protocol.dart';

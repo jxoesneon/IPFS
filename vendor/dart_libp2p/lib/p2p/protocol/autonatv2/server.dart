@@ -1,11 +1,10 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'package:ipfs_libp2p/p2p/protocol/autonatv2/pb/autonatv2.pb.dart';
 import 'package:ipfs_libp2p/core/host/host.dart';
-import 'package:ipfs_libp2p/core/network/network.dart';
 import 'package:ipfs_libp2p/core/protocol/autonatv2/autonatv2.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
@@ -198,17 +197,6 @@ class AutoNATv2ServerImpl implements AutoNATv2Server {
       _log.fine('Failed to read request from $peerId: $e');
       return EventDialRequestCompleted(
         error: Exception('Read failed: $e'),
-        responseStatus: DialResponse_ResponseStatus.E_INTERNAL_ERROR,
-        dialStatus: DialStatus.UNUSED,
-        dialDataRequired: false,
-      );
-    }
-
-    if (message.dialRequest == null) {
-      stream.reset();
-      _log.fine('Invalid message type from $peerId: expected DialRequest');
-      return EventDialRequestCompleted(
-        error: ServerErrors.badRequest,
         responseStatus: DialResponse_ResponseStatus.E_INTERNAL_ERROR,
         dialStatus: DialStatus.UNUSED,
         dialDataRequired: false,

@@ -1,4 +1,3 @@
-﻿import 'dart:async';
 import 'dart:io';
 import 'package:ipfs_libp2p/p2p/nat/network_interface_monitor.dart';
 import 'package:test/test.dart';

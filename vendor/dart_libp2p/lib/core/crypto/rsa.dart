@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 import 'package:pointycastle/pointycastle.dart' as pc;
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/asymmetric/api.dart';
@@ -133,10 +133,6 @@ class RsaPrivateKey implements p2pkeys.PrivateKey {
 
       final parser = pc.ASN1Parser(bytes);
       final asn1Object = parser.nextObject();
-
-      if (asn1Object == null) {
-        throw FormatException('Failed to parse ASN.1 object from bytes');
-      }
 
       if (asn1Object is! pc.ASN1Sequence) {
         throw FormatException(

@@ -1,4 +1,4 @@
-﻿/// Package identify provides the identify service for libp2p.
+/// Package identify provides the identify service for libp2p.
 ///
 /// The identify service provides peer discovery and network address discovery
 /// capabilities for libp2p. It is a required service for a libp2p node.
@@ -7,7 +7,6 @@
 /// to Dart, using native Dart idioms.
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:ipfs_libp2p/core/network/conn.dart';

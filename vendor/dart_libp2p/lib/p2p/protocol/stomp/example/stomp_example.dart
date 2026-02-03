@@ -1,4 +1,4 @@
-﻿/// Example demonstrating the STOMP protocol implementation for dart-libp2p
+/// Example demonstrating the STOMP protocol implementation for dart-libp2p
 ///
 /// This example shows how to:
 /// 1. Set up a STOMP server
@@ -20,7 +20,7 @@ Future<void> main() async {
 
   try {
     await runStompExample();
-  } catch (e, stackTrace) {
+  } catch (e) {
     exit(1);
   }
 }

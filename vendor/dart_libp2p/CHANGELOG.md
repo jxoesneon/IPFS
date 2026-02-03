@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.5] - 2026-02-03
+
+- **Fixed**: Corrected character encoding issues in README.md (Mojibake).
+- **Security**: Upgraded `pointycastle` to `^4.0.0` for improved security.
+- **Changed**: Major dependency upgrades for `lints` and other dev dependencies.
+
 ## [0.5.4] - 2026-02-03
 
 ### Fixed

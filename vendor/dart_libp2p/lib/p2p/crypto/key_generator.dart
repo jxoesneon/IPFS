@@ -1,13 +1,9 @@
-﻿import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
-import 'package:pointycastle/ecc/curves/secp256k1.dart';
-import 'package:pointycastle/key_generators/ec_key_generator.dart';
 import 'package:pointycastle/key_generators/rsa_key_generator.dart';
 import 'package:pointycastle/pointycastle.dart' as pc;
-import 'package:pointycastle/random/fortuna_random.dart';
 import 'package:ipfs_libp2p/core/crypto/rsa.dart' as rsa;
 import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as ed;
 
@@ -31,9 +27,9 @@ Future<p2pkeys.KeyPair> generateRSAKeyPair({int bits = 2048}) async {
   final rsaKeyPair = generator.generateKeyPair();
 
   // RsaKeyPair(RsaPublicKey(), RsaPrivateKey());
-  final pubKey = rsa.RsaPublicKey(rsaKeyPair.publicKey as pc.RSAPublicKey);
+  final pubKey = rsa.RsaPublicKey(rsaKeyPair.publicKey);
   final privKey =
-      rsa.RsaPrivateKey(rsaKeyPair.privateKey as pc.RSAPrivateKey, pubKey);
+      rsa.RsaPrivateKey(rsaKeyPair.privateKey, pubKey);
 
   return p2pkeys.KeyPair(pubKey, privKey);
 }

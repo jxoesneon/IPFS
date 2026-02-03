@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:math';
@@ -21,10 +21,7 @@ import 'package:ipfs_libp2p/p2p/security/secured_connection.dart';
 import 'package:test/test.dart';
 import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart';
-import 'package:ipfs_libp2p/p2p/security/security_protocol.dart';
-import 'package:ipfs_libp2p/pb/noise/payload.pb.dart';
 import '../mocks/noise_mock_connection.dart';
-import 'package:ipfs_libp2p/p2p/security/noise/xx_pattern.dart';
 import 'package:collection/collection.dart'; // For ListEquality
 
 /// Simple adapter to make NoiseMockConnection compatible with TransportConn
@@ -183,10 +180,8 @@ class TrackedTransportAdapter implements TransportConn {
   void notifyActivity() {
     // If _conn implements notifyActivity, call it.
     // Otherwise, this mock might not need to do anything specific for activity.
-    if (_conn is TransportConn) {
-      (_conn as TransportConn).notifyActivity();
+    (_conn as TransportConn).notifyActivity();
     }
-  }
 }
 
 class MockConnection implements TransportConn {

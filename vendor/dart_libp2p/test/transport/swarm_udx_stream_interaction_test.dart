@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -10,7 +10,6 @@ import 'package:ipfs_libp2p/core/network/context.dart' as core_context;
 import 'package:ipfs_libp2p/core/network/mux.dart' as core_mux_types;
 import 'package:ipfs_libp2p/core/network/network.dart';
 import 'package:ipfs_libp2p/core/network/notifiee.dart';
-import 'package:ipfs_libp2p/core/network/rcmgr.dart';
 import 'package:ipfs_libp2p/core/network/stream.dart' as core_network_stream;
 import 'package:ipfs_libp2p/core/network/transport_conn.dart';
 import 'package:ipfs_libp2p/core/peer/peer_id.dart';

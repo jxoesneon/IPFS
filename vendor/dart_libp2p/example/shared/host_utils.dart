@@ -1,8 +1,7 @@
-﻿/// Shared utilities for creating libp2p hosts in examples
+/// Shared utilities for creating libp2p hosts in examples
 import 'package:ipfs_libp2p/dart_libp2p.dart';
 import 'package:ipfs_libp2p/config/config.dart' as p2p_config;
 import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
-import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart';
 import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
 import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart'

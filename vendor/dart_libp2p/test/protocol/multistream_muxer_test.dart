@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
@@ -6,17 +6,15 @@ import 'dart:typed_data';
 import 'package:ipfs_libp2p/core/interfaces.dart';
 import 'package:test/test.dart';
 import 'package:ipfs_libp2p/p2p/protocol/multistream/multistream.dart';
-import 'package:ipfs_libp2p/core/network/stream.dart';
-import 'package:ipfs_libp2p/core/protocol/protocol.dart'; // ProtocolID, HandlerFunc
+// ProtocolID, HandlerFunc
 import 'package:ipfs_libp2p/p2p/multiaddr/codec.dart'; // For varint encoding in tests if needed
-import 'package:ipfs_libp2p/core/network/conn.dart'; // Conn, ConnStats, Stats, ConnState
+// Conn, ConnStats, Stats, ConnState
 import 'package:ipfs_libp2p/core/network/common.dart'; // Direction
-import 'package:ipfs_libp2p/core/network/rcmgr.dart'
-    show StreamScope, ConnScope, NullScope; // Using NullScope for mocks
+// Using NullScope for mocks
 import 'package:ipfs_libp2p/core/peer/peer_id.dart'; // PeerId, PeerId
-import 'package:ipfs_libp2p/core/multiaddr.dart'; // Multiaddr
+// Multiaddr
 import 'package:ipfs_libp2p/core/crypto/keys.dart'; // PublicKey
-import 'package:ipfs_libp2p/core/network/context.dart'; // Context
+// Context
 
 // --- Mock Dependencies ---
 

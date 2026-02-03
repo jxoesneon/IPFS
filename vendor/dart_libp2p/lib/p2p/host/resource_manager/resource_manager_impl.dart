@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:ipfs_libp2p/core/network/rcmgr.dart';
 import 'package:ipfs_libp2p/core/network/common.dart';
@@ -6,7 +6,6 @@ import 'package:ipfs_libp2p/core/peer/peer_id.dart'; // Provides concrete PeerId
 import 'package:ipfs_libp2p/core/protocol/protocol.dart';
 import 'package:ipfs_libp2p/core/multiaddr.dart'; // Corrected import
 import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
-import 'package:ipfs_libp2p/p2p/host/resource_manager/scope_impl.dart';
 import 'package:ipfs_libp2p/p2p/host/resource_manager/scopes/system_scope_impl.dart';
 import 'package:ipfs_libp2p/p2p/host/resource_manager/scopes/transient_scope_impl.dart';
 import 'package:ipfs_libp2p/p2p/host/resource_manager/scopes/service_scope_impl.dart';
@@ -14,7 +13,6 @@ import 'package:ipfs_libp2p/p2p/host/resource_manager/scopes/protocol_scope_impl
 import 'package:ipfs_libp2p/p2p/host/resource_manager/scopes/peer_scope_impl.dart';
 import 'package:ipfs_libp2p/p2p/host/resource_manager/scopes/connection_scope_impl.dart'; // Added import
 import 'package:ipfs_libp2p/p2p/host/resource_manager/scopes/stream_scope_impl.dart'; // Added import
-import 'package:ipfs_libp2p/core/network/errors.dart' as network_errors;
 import 'package:logging/logging.dart';
 
 // A simple logger placeholder

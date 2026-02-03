@@ -1,18 +1,16 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:logging/logging.dart';
 import 'package:test/test.dart';
 import 'package:dart_udx/src/udx.dart';
-import 'package:dart_udx/src/socket.dart';
-import 'package:dart_udx/src/stream.dart';
 
 import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
 import 'package:ipfs_libp2p/p2p/transport/transport_config.dart';
 import 'package:ipfs_libp2p/p2p/transport/connection_state.dart';
 import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart';
-import 'package:dart_udx/src/packet.dart'; // For UDXPacket.construct
-import 'package:dart_udx/src/events.dart'; // For UDXEvent
+// For UDXPacket.construct
+// For UDXEvent
 
 void main() {
   Logger.root.level = Level.ALL; // Capture all Yamux logs
@@ -147,7 +145,7 @@ void main() {
             '[Data Transfer Test] Listener stream (${listenerStream.id()}) reading data...');
         final receivedData = await listenerStream.read();
         print(
-            '[Data Transfer Test] Listener stream data read: ${receivedData?.length} bytes.');
+            '[Data Transfer Test] Listener stream data read: ${receivedData.length} bytes.');
         expect(receivedData, equals(testData));
 
         // Close the streams first, then the connections
@@ -254,13 +252,13 @@ void main() {
 
         // Add initial state
         final initialState = testTransport.connectionManager
-            .getState(dialerConn as UDXSessionConn);
+            .getState(dialerConn);
         expect(initialState, isNotNull,
             reason: "Initial state of dialer connection should not be null.");
         states.add(initialState!);
 
         // Use the initialP2PStreams for data transfer
-        final dialerStream = (dialerConn as UDXSessionConn).initialP2PStream;
+        final dialerStream = (dialerConn).initialP2PStream;
         final listenerStream =
             (listenerConn as UDXSessionConn).initialP2PStream;
 
@@ -373,7 +371,7 @@ void main() {
         });
 
         // Try to write to the stream of a closed connection
-        final dialerStream = (dialerConn as UDXSessionConn).initialP2PStream;
+        final dialerStream = (dialerConn).initialP2PStream;
         await dialerConn.close(); // Close the connection
 
         expect(

@@ -1,4 +1,3 @@
-﻿import 'dart:async';
 
 import 'package:ipfs_libp2p/p2p/protocol/autonatv2/server.dart';
 import 'package:ipfs_libp2p/core/protocol/autonatv2/autonatv2.dart';

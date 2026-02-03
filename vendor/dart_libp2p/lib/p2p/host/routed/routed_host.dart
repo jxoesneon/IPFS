@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:ipfs_libp2p/core/host/host.dart';
 import 'package:ipfs_libp2p/core/peer/addr_info.dart';
@@ -9,7 +9,7 @@ import 'package:ipfs_libp2p/core/routing/routing.dart';
 import 'package:ipfs_libp2p/core/network/network.dart';
 import 'package:ipfs_libp2p/core/network/stream.dart';
 import 'package:ipfs_libp2p/core/network/context.dart';
-import 'package:ipfs_libp2p/core/network/common.dart'; // For Connectedness
+// For Connectedness
 import 'package:ipfs_libp2p/core/connmgr/conn_manager.dart';
 import 'package:ipfs_libp2p/core/event/bus.dart';
 import 'package:ipfs_libp2p/core/multiaddr.dart';

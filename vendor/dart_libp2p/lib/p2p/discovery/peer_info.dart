@@ -1,4 +1,3 @@
-﻿import 'dart:async';
 
 import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import '../../core/multiaddr.dart';

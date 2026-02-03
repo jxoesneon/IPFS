@@ -1,15 +1,14 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:ipfs_libp2p/p2p/transport/tcp_connection.dart';
 import 'package:ipfs_libp2p/core/multiaddr.dart';
-import 'package:ipfs_libp2p/core/network/common.dart'; // Changed import
+// Changed import
 import 'package:ipfs_libp2p/core/peer/peer_id.dart';
-import 'package:ipfs_libp2p/core/crypto/keys.dart';
 import 'package:ipfs_libp2p/p2p/crypto/key_generator.dart';
 import 'package:ipfs_libp2p/core/network/rcmgr.dart';
-import 'package:ipfs_libp2p/core/connmgr/conn_manager.dart'; // Added for legacyConnManager if needed
+// Added for legacyConnManager if needed
 import 'package:logging/logging.dart'; // Added for logging setup
 
 import 'package:test/test.dart';

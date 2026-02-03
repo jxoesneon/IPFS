@@ -5,7 +5,7 @@
 
 A comprehensive Dart implementation of the [libp2p](https://libp2p.io/) networking stack, providing a modular and extensible foundation for building peer-to-peer applications.
 
-## ðŸš€ Features
+## 🚀 Features
 
 - **Modular Architecture**: Pluggable transports, security protocols, and stream multiplexers
 - **Multiple Transports**: TCP and custom UDX (UDP-based) transport support
@@ -17,7 +17,7 @@ A comprehensive Dart implementation of the [libp2p](https://libp2p.io/) networki
 - **Event System**: Comprehensive event bus for monitoring network activity
 - **NAT Traversal**: Hole punching and relay support for NAT traversal
 
-## ðŸ“¦ Installation
+## 📦 Installation
 
 Add `dart_libp2p` to your `pubspec.yaml`:
 
@@ -32,7 +32,7 @@ Then run:
 dart pub get
 ```
 
-## ðŸƒâ€â™‚ï¸ Quick Start
+##  Quick Start
 
 Here's a simple example of creating two libp2p nodes and connecting them:
 
@@ -79,7 +79,7 @@ void main() async {
 }
 ```
 
-## ðŸ—ï¸ Architecture
+##  Architecture
 
 Dart Libp2p follows a layered architecture where each component provides services to the layer above it:
 
@@ -111,21 +111,23 @@ Dart Libp2p follows a layered architecture where each component provides service
 - **Security**: Encrypts and authenticates connections (Noise)
 - **Multiplexer**: Enables multiple streams over single connections (Yamux)
 
-## ðŸš› Transports
+## 🚛 Transports
 
 ### TCP Transport
+
 - **Protocols**: `/ip4/tcp`, `/ip6/tcp`
 - **Use Case**: Reliable, widely available transport for most applications
 - **Best For**: Data centers, servers with public IPs
 
 ### UDX Transport
+
 - **Protocols**: `/ip4/udp/udx`, `/ip6/udp/udx`
 - **Use Case**: Custom UDP-based transport with built-in reliability
 - **Best For**: NAT traversal, hole punching, peer-to-peer connections
 
 > **Note**: This implementation does not support QUIC. Instead, we've opted for a custom `dart-udx` implementation that provides similar benefits for peer-to-peer networking.
 
-## ðŸ” Security
+##  Security
 
 Dart Libp2p uses the Noise protocol for securing connections:
 
@@ -134,7 +136,7 @@ Dart Libp2p uses the Noise protocol for securing connections:
 - **Perfect Forward Secrecy**: Session keys are ephemeral
 - **Handshake**: Efficient key exchange and authentication
 
-## ðŸ“š Documentation
+## 📚 Documentation
 
 For detailed documentation, visit the [docs](./doc/) directory:
 
@@ -151,33 +153,35 @@ For detailed documentation, visit the [docs](./doc/) directory:
 - **[Resource Manager](./doc/resource-manager.md)**: Resource protection
 - **[Cookbook](./doc/cookbook.md)**: Practical examples and recipes
 
-## ðŸ§ª Examples
+##  Examples
 
 Check out the [examples](./example/) directory for working examples:
 
-| Example | Type | Description | Key Features |
-|---------|------|-------------|--------------|
-| **[echo_basic](./example/echo_basic/)** | Basic | Simple echo server/client | One-way messaging, connection basics |
-| **[chat_mdns](./example/chat_mdns/)** | Advanced | mDNS-enabled P2P chat | **mDNS discovery**, multi-peer chat, zero-config networking |
+| Example                                 | Type     | Description               | Key Features                                                |
+| --------------------------------------- | -------- | ------------------------- | ----------------------------------------------------------- |
+| **[echo_basic](./example/echo_basic/)** | Basic    | Simple echo server/client | One-way messaging, connection basics                        |
+| **[chat_mdns](./example/chat_mdns/)**   | Advanced | mDNS-enabled P2P chat     | **mDNS discovery**, multi-peer chat, zero-config networking |
 
 ### Featured Example: mDNS Chat
 
 The `chat_mdns` example demonstrates **mDNS service discovery** using the `mdns_dart` package:
-- âœ… **Real mDNS service advertisement** (not fake lookup calls)  
-- âœ… **Actual network-level discovery** (broadcasts to 224.0.0.251:5353)  
-- âœ… **Zero-configuration networking** (no fallback mechanisms needed)  
-- âœ… **Cross-subnet support** (works beyond localhost)  
+
+- ✅ **Real mDNS service advertisement** (not fake lookup calls)
+- ✅ **Actual network-level discovery** (broadcasts to 224.0.0.251:5353)
+- ✅ **Zero-configuration networking** (no fallback mechanisms needed)
+- ✅ **Cross-subnet support** (works beyond localhost)
 
 Run multiple instances to see real peer discovery in action:
+
 ```bash
 # Terminal 1
 dart run example/chat_mdns/main.dart
 
-# Terminal 2  
+# Terminal 2
 dart run example/chat_mdns/main.dart
 ```
 
-## ðŸ§ª Testing
+##  Testing
 
 Run the test suite:
 
@@ -185,23 +189,24 @@ Run the test suite:
 dart test
 ```
 
-## ðŸ¤ Contributing
+##  Contributing
 
 We welcome contributions! Please see our contributing guidelines and code of conduct.
 
-## ðŸ“„ License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## ðŸ™ Acknowledgments
+##  Acknowledgments
 
 - [libp2p](https://libp2p.io/) - The original protocol specification
-- [dart-udx](https://pub.dev/packages/dart_udx) - Custom UDP transport implementation  
+- [dart-udx](https://pub.dev/packages/dart_udx) - Custom UDP transport implementation
 - [mdns_dart](https://pub.dev/packages/mdns_dart) - mDNS service advertisement and discovery
 - The libp2p community for inspiration and guidance
 
-## ðŸ”— Links
+## 🔗 Links
 
 - [libp2p.io](https://libp2p.io/) - Official libp2p documentation
 - [Dart](https://dart.dev/) - Dart programming language
-- [pub.dev](https://pub.dev/packages/dart_libp2p) - Package on pub.dev 
+- [pub.dev](https://pub.dev/packages/dart_libp2p) - Package on pub.dev
+

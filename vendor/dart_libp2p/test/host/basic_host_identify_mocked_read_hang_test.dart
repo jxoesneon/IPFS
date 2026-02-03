@@ -1,11 +1,10 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io' show Socket;
 import 'dart:typed_data';
 
 import 'package:ipfs_libp2p/core/network/network.dart';
 import 'package:test/test.dart';
 import 'package:ipfs_libp2p/core/crypto/keys.dart';
-import 'package:ipfs_libp2p/core/host/host.dart';
 import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:ipfs_libp2p/core/network/common.dart';
 import 'package:ipfs_libp2p/core/network/conn.dart';
@@ -14,7 +13,6 @@ import 'package:ipfs_libp2p/core/network/transport_conn.dart'
     as core_transport_conn;
 import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'package:ipfs_libp2p/core/peer/addr_info.dart';
-import 'package:ipfs_libp2p/core/protocol/protocol.dart' as core_protocol;
 import 'package:ipfs_libp2p/core/crypto/pb/crypto.pb.dart' as pb;
 import 'package:ipfs_libp2p/core/network/context.dart' as core_context;
 import 'package:ipfs_libp2p/core/network/rcmgr.dart';

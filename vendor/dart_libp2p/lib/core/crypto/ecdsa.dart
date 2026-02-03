@@ -5,7 +5,6 @@ import 'package:pointycastle/ecc/api.dart';
 import 'package:pointycastle/ecc/curves/secp256r1.dart';
 import 'package:pointycastle/signers/ecdsa_signer.dart';
 import 'package:pointycastle/digests/sha256.dart';
-import '../../p2p/crypto/key_generator.dart';
 import '../../core/crypto/pb/crypto.pb.dart' as pb;
 import 'keys.dart' as p2pkeys;
 
@@ -39,9 +38,6 @@ class EcdsaPublicKey implements p2pkeys.PublicKey {
       // Create the public key
       final curve = ECCurve_secp256r1();
       final point = curve.curve.createPoint(x, y);
-      if (point == null) {
-        throw ECDSAKeyException('Failed to create EC point from coordinates');
-      }
 
       return EcdsaPublicKey(ECPublicKey(point, ECDSACurve));
     } catch (e) {
@@ -157,9 +153,6 @@ class EcdsaPrivateKey implements p2pkeys.PrivateKey {
       // Create the public key
       final curve = ECCurve_secp256r1();
       final point = curve.curve.createPoint(x, y);
-      if (point == null) {
-        throw ECDSAKeyException('Failed to create EC point from coordinates');
-      }
 
       final privateKey = ECPrivateKey(d, ECDSACurve);
       final publicKey = ECPublicKey(point, ECDSACurve);

@@ -156,12 +156,8 @@ class NoiseSecurity implements SecurityProtocol {
         throw NoiseProtocolException(
             'Responder msg2 did not contain identity payload');
       }
-      if (pattern.remoteStaticKey == null) {
-        throw NoiseProtocolException(
-            "Responder's static key is null after msg2");
-      }
       final remotePeerId =
-          await _verifyHandshakePayload(msg2Payload, pattern.remoteStaticKey!);
+          await _verifyHandshakePayload(msg2Payload, pattern.remoteStaticKey);
 
       // 3. Send msg3 with our identity payload
       final ownStaticKey = await pattern.getStaticPublicKey();
@@ -231,12 +227,8 @@ class NoiseSecurity implements SecurityProtocol {
         throw NoiseProtocolException(
             'Initiator msg3 did not contain identity payload');
       }
-      if (pattern.remoteStaticKey == null) {
-        throw NoiseProtocolException(
-            "Initiator's static key is null after msg3");
-      }
       final remotePeerId =
-          await _verifyHandshakePayload(msg3Payload, pattern.remoteStaticKey!);
+          await _verifyHandshakePayload(msg3Payload, pattern.remoteStaticKey);
 
       _log.info(
           'secureInbound: Handshake complete. Remote peer: ${remotePeerId.toBase58()}');

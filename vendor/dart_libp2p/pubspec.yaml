@@ -1,6 +1,6 @@
 name: ipfs_libp2p
 description: A comprehensive Dart implementation of the libp2p networking stack with modular architecture, multiple transports (TCP/UDX), Noise security, and peer-to-peer capabilities.
-version: 0.5.4
+version: 0.5.5
 homepage: https://github.com/stephanfeb/dart_libp2p
 repository: https://github.com/stephanfeb/dart_libp2p
 documentation: https://github.com/stephanfeb/dart_libp2p/tree/main/docs
@@ -14,7 +14,7 @@ dependencies:
   x25519: ^0.1.1
   cryptography: ^2.7.0
   crypto: ^3.0.3
-  pointycastle: ^3.7.3
+  pointycastle: ^4.0.0
   fixnum: ^1.1.0
   uuid: ^4.4.2
   synchronized: ^3.3.0+3
@@ -42,6 +42,6 @@ dev_dependencies:
   mockito: ^5.4.5
   build_runner: ^2.4.15
   protoc_builder: ^0.4.1
-  test: ^1.24.0
+  test: ^1.26.3
   protoc_plugin: ^25.0.0
-  lints: ^2.1.0
+  lints: ^6.0.0

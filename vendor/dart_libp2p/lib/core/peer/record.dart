@@ -1,12 +1,9 @@
-﻿import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'package:ipfs_libp2p/core/peer/pb/peer_record.pb.dart' as pb;
 import 'package:fixnum/fixnum.dart';
-import 'package:protobuf/protobuf.dart';
 import 'package:synchronized/synchronized.dart';
 import 'dart:core';
 

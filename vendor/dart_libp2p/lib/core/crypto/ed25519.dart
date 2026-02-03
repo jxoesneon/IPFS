@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart' as crypto;
 import 'package:ipfs_libp2p/core/crypto/keys.dart';
 import 'package:ipfs_libp2p/core/crypto/pb/crypto.pb.dart' as pb;
@@ -125,7 +125,7 @@ class Ed25519PrivateKey implements PrivateKey {
       final publicKeyObj = await keyPair.extractPublicKey();
 
       return Ed25519PrivateKey.withPublicKey(keyPair,
-          Ed25519PublicKey(publicKeyObj as crypto.SimplePublicKey), bytes);
+          Ed25519PublicKey(publicKeyObj), bytes);
     }
   }
 
@@ -164,7 +164,7 @@ class Ed25519PrivateKey implements PrivateKey {
   Future<Ed25519PublicKey> _extractPublicKey() async {
     final algorithm = crypto.Ed25519();
     final publicKeyObj = await _keyPair.extractPublicKey();
-    return Ed25519PublicKey(publicKeyObj as crypto.SimplePublicKey);
+    return Ed25519PublicKey(publicKeyObj);
   }
 
   @override

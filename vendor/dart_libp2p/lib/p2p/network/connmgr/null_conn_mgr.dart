@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'package:ipfs_libp2p/p2p/transport/connection_state.dart';
@@ -78,7 +78,9 @@ class NullConnMgr implements ConnManager {
   }
 
   @override
-  ConnectionState? getState(TransportConn conn) {}
+  ConnectionState? getState(TransportConn conn) {
+    return null;
+  }
 
   @override
   void recordActivity(TransportConn tcpConnection) {}

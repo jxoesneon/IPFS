@@ -1,4 +1,4 @@
-﻿/// The holepuncher implementation for the holepunch protocol.
+/// The holepuncher implementation for the holepunch protocol.
 
 import 'dart:async';
 import 'dart:typed_data';
@@ -21,7 +21,6 @@ import '../../../core/network/context.dart';
 import '../../../core/network/notifiee.dart';
 import '../../../core/network/rcmgr.dart';
 import '../../../core/peer/addr_info.dart';
-import '../../../core/protocol/protocol.dart';
 import '../../discovery/peer_info.dart';
 
 /// Logger for the holepuncher

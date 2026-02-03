@@ -1,4 +1,4 @@
-﻿/// Identify service for libp2p.
+/// Identify service for libp2p.
 ///
 /// This file contains the implementation of the identify service, which is
 /// responsible for exchanging peer information with other peers.
@@ -7,8 +7,7 @@
 /// to Dart, using native Dart idioms.
 
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io'; // Added for IOException
+// Added for IOException
 import 'dart:typed_data';
 
 import 'package:ipfs_libp2p/core/alias.dart';
@@ -16,14 +15,12 @@ import 'package:ipfs_libp2p/core/crypto/keys.dart';
 import 'package:ipfs_libp2p/core/event/bus.dart';
 import 'package:ipfs_libp2p/core/event/identify.dart';
 import 'package:ipfs_libp2p/core/host/host.dart';
-import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:ipfs_libp2p/core/network/conn.dart';
 import 'package:ipfs_libp2p/core/network/context.dart';
 import 'package:ipfs_libp2p/core/network/network.dart';
 import 'package:ipfs_libp2p/core/network/notifiee.dart';
 import 'package:ipfs_libp2p/core/network/stream.dart';
 import 'package:ipfs_libp2p/p2p/peerstore.dart';
-import 'package:ipfs_libp2p/core/protocol/protocol.dart';
 import 'package:ipfs_libp2p/p2p/host/autorelay/autorelay.dart'; // For EvtAutoRelayAddrsUpdated
 import 'package:logging/logging.dart';
 import 'package:synchronized/synchronized.dart';
@@ -628,7 +625,7 @@ class IdentifyService implements IDService {
         return;
       }
       await sendIdentifyResp(stream, true);
-    } catch (e, st) {
+    } catch (e) {
       // Comprehensive error isolation to prevent session-level cascades
       final errorStr = e.toString();
 
@@ -687,7 +684,7 @@ class IdentifyService implements IDService {
 
       final protocolMuxer = host.mux as MultistreamMuxer;
       final selectedProtocol = await protocolMuxer
-          .selectOneOf(stream, [protoIDString as ProtocolID]);
+          .selectOneOf(stream, [protoIDString]);
 
       if (selectedProtocol == null) {
         _log.warning(
@@ -944,13 +941,7 @@ class IdentifyService implements IDService {
     try {
       // Now actualRecord is confirmed to be an Envelope
       final marshalledRecord =
-          await actualRecord.marshal(); // Envelope.marshal() is async
-      if (marshalledRecord == null) {
-        // Check if marshal itself returned null
-        _log.warning(
-            'IdentifyService._getSignedRecord: Marshalled record is null.');
-        return null;
-      }
+          await actualRecord.marshal();
       _log.finer(
           'IdentifyService._getSignedRecord: Marshalled signed record successfully (${marshalledRecord.length} bytes).');
       return marshalledRecord;
@@ -1396,7 +1387,7 @@ class IdentifyService implements IDService {
       PeerId p, Envelope? signedPeerRecord) async {
     _log.finer(
         'IdentifyService._consumeSignedPeerRecord: Consuming signed record for peer $p.');
-    if (signedPeerRecord == null || signedPeerRecord.publicKey == null) {
+    if (signedPeerRecord == null) {
       _log.warning(
           'IdentifyService._consumeSignedPeerRecord: Missing signed peer record or public key for $p.');
       throw Exception("missing pubkey or record");
@@ -1763,7 +1754,7 @@ class IdentifyService implements IDService {
       await handleIdentifyResponse(stream, false);
 
       final totalDuration = DateTime.now().difference(identifyStart);
-    } catch (e, st) {
+    } catch (e) {
       final duration = DateTime.now().difference(identifyStart);
       _log.severe(
           ' [IDENTIFY-CONN-ERROR] peer=$peerId, error=$e, duration=${duration.inMilliseconds}ms, stream_state=${stream?.isClosed ?? 'null'}');

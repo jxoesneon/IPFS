@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io'; // Added for InternetAddress
 import 'dart:typed_data';
 
@@ -14,8 +14,7 @@ import 'package:ipfs_libp2p/core/multiaddr.dart'
     hide Protocol; // Hide core Protocol if it exists to avoid conflict
 import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart'; // Import the Protocol class for Multiaddr
 import 'package:ipfs_libp2p/core/crypto/keys.dart';
-import 'package:ipfs_libp2p/core/protocol/protocol.dart'
-    as core_protocol; // Alias to avoid conflict with multiaddr.Protocol
+// Alias to avoid conflict with multiaddr.Protocol
 import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/stream.dart';
 import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/frame.dart';
 import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/yamux_exceptions.dart';

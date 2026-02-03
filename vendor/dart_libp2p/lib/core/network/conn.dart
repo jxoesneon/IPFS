@@ -1,5 +1,4 @@
-﻿import 'dart:async';
-import 'dart:io';
+import 'dart:async';
 
 import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'package:ipfs_libp2p/core/protocol/protocol.dart';

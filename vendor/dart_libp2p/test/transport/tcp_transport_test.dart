@@ -1,6 +1,6 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:typed_data';
-import 'dart:io'; // For BytesBuilder and potential SocketException
+// For BytesBuilder and potential SocketException
 import 'dart:math'; // For min function
 
 import 'package:ipfs_libp2p/core/multiaddr.dart';

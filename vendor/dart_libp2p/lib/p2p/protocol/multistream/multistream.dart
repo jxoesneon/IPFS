@@ -1,4 +1,4 @@
-﻿/// Package multistream implements a simple stream router for the
+/// Package multistream implements a simple stream router for the
 /// multistream-select protocol. The protocol is defined at
 /// https://github.com/multiformats/multistream-select
 
@@ -8,13 +8,11 @@ import 'dart:typed_data';
 
 import 'package:ipfs_libp2p/p2p/multiaddr/codec.dart';
 import 'package:ipfs_libp2p/core/interfaces.dart';
-import 'package:ipfs_libp2p/core/network/stream.dart';
-import 'package:ipfs_libp2p/core/protocol/protocol.dart';
 import 'package:ipfs_libp2p/config/multistream_config.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:logging/logging.dart'; // Added import for Logger
 
-import '../../../core/network/conn.dart'; // Added import for Conn
+// Added import for Conn
 import '../../transport/multiplexing/yamux/yamux_exceptions.dart'; // Import Yamux exception handling
 import '../../transport/multiplexing/yamux/stream.dart'; // For YamuxStream.pushData
 import '../../network/swarm/swarm_stream.dart'; // For SwarmStream.incoming
@@ -339,7 +337,7 @@ class MultistreamMuxer implements ProtocolSwitch {
 
       await stream.reset(); // Ensure stream is reset if no protocol is selected
       return null;
-    } catch (e, st) {
+    } catch (e) {
       final totalDuration = DateTime.now().difference(startTime);
 
       await stream.reset();

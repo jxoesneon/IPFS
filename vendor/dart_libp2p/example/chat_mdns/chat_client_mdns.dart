@@ -1,10 +1,9 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:ipfs_libp2p/dart_libp2p.dart';
 import 'package:ipfs_libp2p/p2p/discovery/mdns/mdns.dart';
-import 'package:ipfs_libp2p/core/network/context.dart';
 
 /// A chat client that uses REAL mDNS for peer discovery
 class ChatClientMdns implements MdnsNotifee {

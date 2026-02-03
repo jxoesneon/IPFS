@@ -178,7 +178,7 @@ class ContainerOrchestrator {
     try {
       return await _performHttpRequest(containerName, path, method, body)
           .timeout(timeout);
-    } on TimeoutException catch (e) {
+    } on TimeoutException {
       throw ContainerException(
         'HTTP $method $path to $containerName timed out after ${timeout.inSeconds}s',
       );

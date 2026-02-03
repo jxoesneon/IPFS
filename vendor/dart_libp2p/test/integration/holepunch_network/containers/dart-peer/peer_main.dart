@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -472,9 +472,6 @@ class IntegrationTestPeer {
         // Use the host's ping service to ping the peer
         // This will work through relay connections if direct connection is not possible
         final pingService = PingService(host);
-        if (pingService == null) {
-          throw Exception('Ping service not available on this host');
-        }
 
         print('ðŸ“ Initiating libp2p ping to $targetPeerIdStr...');
         final pingStartTime = DateTime.now();
@@ -589,14 +586,12 @@ class IntegrationTestPeer {
       }
 
       // Show public addresses that holepunch service will see
-      if (host is BasicHost) {
-        final publicAddrs = (host as dynamic).publicAddrs as List;
-        print('ðŸ” Public addresses for holepunch (${publicAddrs.length}):');
-        for (final addr in publicAddrs) {
-          print('  ðŸ“ Public address: $addr');
-        }
+      final publicAddrs = (host as dynamic).publicAddrs as List;
+      print('ðŸ” Public addresses for holepunch (${publicAddrs.length}):');
+      for (final addr in publicAddrs) {
+        print('  ðŸ“ Public address: $addr');
       }
-
+    
       // Use the existing holepunch service from BasicHost
       final holePunchService = host.holePunchService;
       if (holePunchService == null) {

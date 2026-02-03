@@ -1,6 +1,6 @@
-﻿import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
 import 'package:ipfs_libp2p/core/multiaddr.dart';
-import 'package:ipfs_libp2p/core/network/network.dart'; // For Reachability, if needed, or other network consts
+// For Reachability, if needed, or other network consts
 // Assuming DialPolicy abstract class is in options.dart or a common place
 import './options.dart' show DialPolicy;
 

@@ -1,9 +1,7 @@
-﻿import 'dart:io';
-import 'dart:async';
+import 'dart:io';
 import 'package:ipfs_libp2p/p2p/nat/nat_type.dart';
 import 'package:ipfs_libp2p/p2p/nat/stun/stun_client.dart';
 import 'package:test/test.dart';
-import 'package:test/scaffolding.dart';
 
 void main() {
   group('StunClient', () {

@@ -1,6 +1,5 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
@@ -380,13 +379,9 @@ void main() {
       await clientTransport.dispose();
       await serverTransport.dispose();
 
-      if (connManager is p2p_transport.ConnectionManager) {
-        await (connManager as p2p_transport.ConnectionManager).dispose();
-      }
-      if (resourceManager is ResourceManagerImpl) {
-        await (resourceManager as ResourceManagerImpl).close();
-      }
-    });
+      await (connManager).dispose();
+          await (resourceManager).close();
+        });
 
     test(
         'should establish UDX, upgrade (Noise/Yamux) with real managers, and perform OBP protocol',

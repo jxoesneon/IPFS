@@ -12,9 +12,8 @@ import '../../config/config.dart';
 import '../security/secured_connection.dart';
 import './upgrader.dart'; // For Upgrader interface
 import '../protocol/multistream/multistream.dart'; // For MultistreamMuxer
-import '../../p2p/security/security_protocol.dart'; // For SecurityProtocol and SecuredConnection
+// For SecurityProtocol and SecuredConnection
 // Use a specific alias for config.StreamMuxer to avoid conflict if StreamMuxer name is used elsewhere
-import '../../config/stream_muxer.dart' as config_stream_muxer;
 // Use a specific alias for core_mux.Multiplexer
 import '../../core/network/mux.dart'
     as core_mux; // For MuxedConn, and potentially core Multiplexer if different

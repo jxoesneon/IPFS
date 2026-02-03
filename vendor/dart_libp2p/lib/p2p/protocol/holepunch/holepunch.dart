@@ -1,4 +1,4 @@
-﻿/// Package holepunch provides the holepunch service for libp2p.
+/// Package holepunch provides the holepunch service for libp2p.
 ///
 /// The holepunch service provides direct connection establishment capabilities
 /// for libp2p nodes behind NATs/firewalls. It coordinates hole punching between
@@ -27,10 +27,6 @@ Future<HolePunchService> newHolePunchService(
   List<MultiAddr> Function() listenAddrs, {
   HolePunchOptions? options,
 }) async {
-  if (ids == null) {
-    throw ArgumentError('identify service can\'t be null');
-  }
-
   final service =
       HolePunchServiceImpl(host, ids, listenAddrs, options: options);
   await service.start();

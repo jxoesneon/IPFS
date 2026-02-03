@@ -1,8 +1,7 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:ipfs_libp2p/core/peer/peer_id.dart';
-import 'package:ipfs_libp2p/core/peerstore.dart';
 import 'package:ipfs_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart';
 import 'package:ipfs_libp2p/core/crypto/ed25519.dart';
 import 'package:test/test.dart';

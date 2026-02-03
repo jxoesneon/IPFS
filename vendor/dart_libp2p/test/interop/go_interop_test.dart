@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -18,9 +18,7 @@ import 'package:ipfs_libp2p/core/network/stream.dart' as p2p_stream;
 import 'package:ipfs_libp2p/p2p/protocol/multistream/client.dart' as ms_client;
 import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart';
 import 'package:ipfs_libp2p/p2p/transport/basic_upgrader.dart';
-import 'package:ipfs_libp2p/p2p/transport/listener.dart';
 import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/session.dart';
-import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/stream.dart';
 import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart';
 import 'package:ipfs_libp2p/p2p/transport/tcp_transport.dart';
 import 'package:logging/logging.dart';

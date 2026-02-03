@@ -1,8 +1,6 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
-import 'package:ipfs_libp2p/p2p/host/eventbus/basic.dart';
 import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'package:ipfs_libp2p/core/peer/addr_info.dart';
 import 'package:ipfs_libp2p/core/event/bus.dart';
@@ -12,7 +10,6 @@ import 'package:ipfs_libp2p/core/network/context.dart';
 import 'package:ipfs_libp2p/core/network/network.dart';
 import 'package:ipfs_libp2p/core/network/stream.dart';
 import 'package:ipfs_libp2p/core/peerstore.dart'; // KeyBook is part of this
-import 'package:ipfs_libp2p/core/protocol/protocol.dart';
 import 'package:ipfs_libp2p/p2p/host/host.dart';
 import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart'
     as multiaddr_protocol; // Aliased import

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:ipfs_libp2p/config/defaults.dart';
 import 'package:ipfs_libp2p/config/stream_muxer.dart';
@@ -15,8 +15,7 @@ import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart';
 import 'package:ipfs_libp2p/core/connmgr/conn_manager.dart'; // Added
 import 'package:ipfs_libp2p/core/event/bus.dart'; // Added
 import 'package:ipfs_libp2p/p2p/host/basic/natmgr.dart'; // Added
-import 'package:ipfs_libp2p/core/host/host.dart'
-    show AddrsFactory; // Added for AddrsFactory
+// Added for AddrsFactory
 import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart'; // Added for BasicHost
 
 // Added imports for _createNetwork
@@ -38,7 +37,6 @@ import '../core/peer/pb/peer_record.pb.dart' as pb;
 import '../core/peer/record.dart'; // Added for RecordRegistry
 
 // AutoNATv2 imports
-import 'package:ipfs_libp2p/core/protocol/autonatv2/autonatv2.dart';
 import 'package:ipfs_libp2p/p2p/protocol/autonatv2.dart';
 import 'package:ipfs_libp2p/p2p/protocol/autonatv2/options.dart';
 import 'package:ipfs_libp2p/p2p/host/autonat/ambient_config.dart';

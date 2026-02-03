@@ -1,7 +1,7 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:ipfs_libp2p/core/peer/addr_info.dart'; // For AddrInfo
-import 'package:ipfs_libp2p/core/host/host.dart'; // For Host interface
+// For Host interface
 import './autorelay_metrics.dart'; // For MetricsTracer
 
 // Equivalent to Go's PeerSource func(ctx context.Context, num int) <-chan peer.AddrInfo

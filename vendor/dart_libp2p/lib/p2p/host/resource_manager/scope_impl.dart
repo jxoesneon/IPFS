@@ -1,5 +1,4 @@
-﻿import 'dart:async';
-import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:ipfs_libp2p/core/network/common.dart';
 import 'package:ipfs_libp2p/core/network/rcmgr.dart';

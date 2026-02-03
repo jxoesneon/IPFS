@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:ipfs_libp2p/core/crypto/keys.dart';
@@ -8,12 +8,11 @@ import 'package:ipfs_libp2p/core/network/connection_context.dart';
 import 'package:ipfs_libp2p/core/network/context.dart';
 import 'package:ipfs_libp2p/core/network/stream.dart';
 import 'package:ipfs_libp2p/core/peer/peer_id.dart';
-import 'package:ipfs_libp2p/core/protocol/protocol.dart';
 import 'package:logging/logging.dart';
 import 'package:synchronized/synchronized.dart';
 
 import '../../../core/network/common.dart';
-import '../../../core/network/mux.dart' as core_mux; // ADDED for MuxedConn
+// ADDED for MuxedConn
 import '../../../core/network/rcmgr.dart'
     show
         ConnScope,
@@ -22,7 +21,7 @@ import '../../../core/network/rcmgr.dart'
         ResourceScope,
         ConnManagementScope;
 import '../../transport/basic_upgrader.dart'; // For UpgradedConnectionImpl
-import '../../transport/multiplexing/yamux/session.dart'; // For YamuxSession
+// For YamuxSession
 import 'connection_health.dart'; // For event-driven health monitoring
 import 'swarm.dart';
 import 'swarm_stream.dart';

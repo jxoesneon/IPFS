@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
@@ -128,7 +128,7 @@ void main() {
       // Verify stream IDs match
       print('Verifying stream IDs...');
       expect(
-          (stream1 as YamuxStream).id(), equals((stream2 as YamuxStream).id()));
+          (stream1).id(), equals((stream2).id()));
       print('Stream IDs verified');
 
       try {
@@ -921,8 +921,7 @@ void main() {
               session1.openStream(core_context.Context()), 'stream creation')
           as P2PStream;
       final stream2 =
-          await withTimeout(streamReceived.future, 'stream acceptance')
-              as P2PStream;
+          await withTimeout(streamReceived.future, 'stream acceptance');
       print('Streams established');
 
       await withTimeout(stream1.reset(), 'stream1 reset');

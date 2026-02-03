@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2022 The dart-libp2p Authors. All rights reserved.
+// Copyright (c) 2022 The dart-libp2p Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -97,7 +97,7 @@ class Relay {
             await finalStream.close();
           } catch (closeError) {}
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       try {
         await _writeResponse(stream, Status.MALFORMED_MESSAGE);
         await stream.close();

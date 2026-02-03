@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:ipfs_libp2p/core/peer/pb/peer_record.pb.dart' as pb;
 import 'package:ipfs_libp2p/core/peer/record.dart';
 import 'package:ipfs_libp2p/core/record/record_registry.dart';
@@ -204,7 +204,7 @@ Future<Libp2pNode> createLibp2pNode({
   }
 
   return (
-    host: host as BasicHost,
+    host: host,
     peerId: peerId,
     listenAddrs: actualListenAddrs,
     keyPair: kp

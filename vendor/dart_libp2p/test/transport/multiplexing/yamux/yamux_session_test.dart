@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:ipfs_libp2p/core/network/conn.dart' as core_conn
@@ -11,7 +11,6 @@ import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart';
 import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/session.dart';
 import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/stream.dart';
 import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/frame.dart';
-import 'package:logging/logging.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
@@ -36,11 +35,11 @@ void main() {
       clientPeerId = PeerId.fromBytes(
           Uint8List.fromList(List.generate(34, (i) => (i % 250) + 1)
             ..[0] = 0x12
-            ..[1] = 0x20)) as PeerId; // Example Ed25519 PeerId bytes
+            ..[1] = 0x20)); // Example Ed25519 PeerId bytes
       serverPeerId = PeerId.fromBytes(
           Uint8List.fromList(List.generate(34, (i) => (i % 250) + 2)
             ..[0] = 0x12
-            ..[1] = 0x20)) as PeerId; // Example Ed25519 PeerId bytes
+            ..[1] = 0x20)); // Example Ed25519 PeerId bytes
 
       clientMa = MultiAddr('/ip4/127.0.0.1/tcp/12345');
       serverMa = MultiAddr('/ip4/192.168.0.10/tcp/54321');

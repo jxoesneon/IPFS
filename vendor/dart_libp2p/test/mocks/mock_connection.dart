@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -14,7 +14,6 @@ import 'package:ipfs_libp2p/core/network/context.dart';
 import 'package:ipfs_libp2p/core/network/stream.dart'; // For P2PStream
 import 'package:ipfs_libp2p/core/network/rcmgr.dart'
     show ConnScope, ScopeStat, ResourceScopeSpan, ResourceScope;
-import 'package:ipfs_libp2p/core/protocol/protocol.dart';
 
 /// A mock implementation of Connection for testing
 class MockConnection implements Conn {

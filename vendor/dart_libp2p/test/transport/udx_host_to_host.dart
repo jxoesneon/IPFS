@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -6,7 +6,7 @@ import 'package:logging/logging.dart';
 import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
 import 'package:ipfs_libp2p/core/crypto/keys.dart';
 import 'package:ipfs_libp2p/core/multiaddr.dart';
-import 'package:ipfs_libp2p/core/network/common.dart'; // For Connectedness
+// For Connectedness
 import 'package:ipfs_libp2p/core/network/conn.dart';
 import 'package:ipfs_libp2p/core/network/context.dart' as core_context;
 // import 'package:ipfs_libp2p/core/network/mux.dart' as core_mux_types; // No longer directly used for accept/openStream on MuxedConn
@@ -29,7 +29,6 @@ import 'package:dart_udx/dart_udx.dart';
 import 'package:test/test.dart';
 import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart'
     as p2p_transport;
-import 'package:ipfs_libp2p/core/connmgr/conn_manager.dart' as core_connmgr;
 import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
 import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
 import 'package:ipfs_libp2p/p2p/network/swarm/swarm.dart';
@@ -40,8 +39,8 @@ import 'package:ipfs_libp2p/core/peer/addr_info.dart';
 import 'package:ipfs_libp2p/core/network/stream.dart' as core_network_stream;
 import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
 import 'package:ipfs_libp2p/core/peerstore.dart'; // For AddressTTL, Peerstore
-import 'package:ipfs_libp2p/core/host/host.dart'; // For Host interface
-import 'package:ipfs_libp2p/core/network/network.dart'; // For Network interface
+// For Host interface
+// For Network interface
 // import 'package:ipfs_libp2p/core/network/notifiee.dart'; // TestNotifiee removed
 
 // Custom AddrsFactory for testing that doesn't filter loopback

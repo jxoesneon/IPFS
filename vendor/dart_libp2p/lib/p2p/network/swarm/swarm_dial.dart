@@ -1,16 +1,12 @@
-﻿import 'dart:async';
+import 'dart:async';
 
-import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 // Corrected import for Protocol constants:
 import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
-import 'package:ipfs_libp2p/core/network/context.dart';
-import 'package:ipfs_libp2p/core/network/network.dart';
 import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
 import 'package:logging/logging.dart';
 
 import '../../../core/interfaces.dart';
-import '../../../core/network/conn.dart';
 
 /// DialFunc is a function that dials a peer at a specific address
 typedef DialFunc = Future<Conn> Function(

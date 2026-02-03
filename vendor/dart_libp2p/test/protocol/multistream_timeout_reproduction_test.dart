@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:ipfs_libp2p/p2p/protocol/multistream/multistream.dart';
@@ -219,7 +219,7 @@ void main() {
 
       // Verify the exception details match the client app error
       expect(caughtException, isNotNull);
-      expect(caughtException!.duration, equals(const Duration(seconds: 30)));
+      expect(caughtException.duration, equals(const Duration(seconds: 30)));
       expect(caughtException.message,
           contains('Multistream read operation timed out'));
     });

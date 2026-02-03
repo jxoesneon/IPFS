@@ -1,8 +1,7 @@
-﻿import 'package:ipfs_libp2p/p2p/protocol/identify/identify.dart';
+import 'package:ipfs_libp2p/p2p/protocol/identify/identify.dart';
 import 'package:ipfs_libp2p/p2p/protocol/identify/pb/identify.pb.dart';
 import 'package:ipfs_libp2p/core/host/host.dart';
 import 'package:ipfs_libp2p/core/event/bus.dart';
-import 'package:ipfs_libp2p/core/record/envelope.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';

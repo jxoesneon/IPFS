@@ -1,10 +1,9 @@
-﻿import 'package:uuid/uuid.dart'; // Moved to top
+import 'package:uuid/uuid.dart'; // Moved to top
 import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:ipfs_libp2p/core/network/common.dart';
 import 'package:ipfs_libp2p/core/network/conn.dart';
-import 'package:ipfs_libp2p/core/network/context.dart';
 import 'package:ipfs_libp2p/core/network/mux.dart'
     show MuxedStream, ResetException; // Added ResetException
 import 'package:ipfs_libp2p/core/network/rcmgr.dart'

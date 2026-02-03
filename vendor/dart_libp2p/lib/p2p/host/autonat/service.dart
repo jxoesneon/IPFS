@@ -1,10 +1,7 @@
-﻿import 'dart:async';
-import 'dart:math';
+import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:ipfs_libp2p/core/host/host.dart';
 import 'package:ipfs_libp2p/core/network/context.dart';
-import 'package:ipfs_libp2p/core/network/network.dart';
 import 'package:ipfs_libp2p/core/network/conn.dart'; // Import for Conn
 import 'package:ipfs_libp2p/core/network/stream.dart';
 import 'package:ipfs_libp2p/core/peer/peer_id.dart';
@@ -15,7 +12,7 @@ import 'package:ipfs_libp2p/core/protocol/autonatv1/autonatv1.dart';
 import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:ipfs_libp2p/core/peer/addr_info.dart';
 import './pb/autonat.pb.dart' as pb;
-import './client.dart' show MetricsTracer; // Import MetricsTracer
+// Import MetricsTracer
 import './options.dart'; // Import AutoNATConfig and DialPolicy
 import '../../../p2p/multiaddr/protocol.dart'
     as mp_protocol; // Import for mp_protocol.Protocol
@@ -155,7 +152,7 @@ class AutoNATService {
               // Replace with observed IP
               newComponents.add((
                 hostIpComponent.protocols.first,
-                hostIpComponentValue!
+                hostIpComponentValue
               )); // Added ! for hostIpComponentValue
               ipReplaced = true;
             } else {
