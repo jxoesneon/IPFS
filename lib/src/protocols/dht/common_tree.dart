@@ -25,3 +25,4 @@ abstract class TreeNode {
   /// Right child node.
   TreeNode? rightChild;
 }
+

@@ -61,3 +61,4 @@ class SecurityManagerWeb implements ISecurityManager {
   Uint8List? getSecurePublicKey(String keyName) =>
       _encryptedKeystore.getPublicKey(keyName);
 }
+

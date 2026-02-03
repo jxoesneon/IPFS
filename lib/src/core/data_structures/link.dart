@@ -81,3 +81,4 @@ class Link {
       ..size = size;
   }
 }
+

@@ -257,3 +257,4 @@ class MockNetworkHandler extends _i1.Mock implements _i7.NetworkHandler {
           )
           as _i8.Future<bool>);
 }
+

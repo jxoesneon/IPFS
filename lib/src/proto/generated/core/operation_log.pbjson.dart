@@ -68,3 +68,4 @@ const OperationLogProto$json = {
 final $typed_data.Uint8List operationLogProtoDescriptor = $convert.base64Decode(
     'ChFPcGVyYXRpb25Mb2dQcm90bxJLCgdlbnRyaWVzGAEgAygLMjEuaXBmcy5jb3JlLmRhdGFfc3'
     'RydWN0dXJlcy5PcGVyYXRpb25Mb2dFbnRyeVByb3RvUgdlbnRyaWVz');
+

@@ -169,3 +169,4 @@ enum StreamEventType {
   /// Data was received on the stream
   data,
 }
+

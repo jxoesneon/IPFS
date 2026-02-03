@@ -25,3 +25,4 @@ abstract class BlockData {
     return bytes.toBytes();
   }
 }
+

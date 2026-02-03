@@ -360,3 +360,4 @@ class SecurityManager implements ISecurityManager {
     _metrics.recordProtocolMetrics('security', {'type': metricType, ...?data});
   }
 }
+

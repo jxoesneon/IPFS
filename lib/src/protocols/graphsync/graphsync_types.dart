@@ -91,3 +91,4 @@ class GraphsyncMetadata {
   /// Metadata key for transfer rate.
   static const transferRate = 'transfer-rate';
 }
+

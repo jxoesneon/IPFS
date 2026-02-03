@@ -42,3 +42,4 @@ abstract class IpfsPlatform {
 IpfsPlatform getPlatform() => throw UnsupportedError(
   'Cannot create platform without dart:io or dart:html',
 );
+

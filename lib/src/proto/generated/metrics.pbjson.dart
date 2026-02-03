@@ -177,3 +177,4 @@ final $typed_data.Uint8List protocolMetricsDescriptor = $convert.base64Decode(
     'gLMi4uaXBmcy5tZXRyaWNzLlByb3RvY29sTWV0cmljcy5FcnJvckNvdW50c0VudHJ5UgtlcnJv'
     'ckNvdW50cxo+ChBFcnJvckNvdW50c0VudHJ5EhAKA2tleRgBIAEoCVIDa2V5EhQKBXZhbHVlGA'
     'IgASgEUgV2YWx1ZToCOAE=');
+

@@ -104,3 +104,4 @@ class UnixFSBuilder {
     return Block(cid: cid, data: encoded);
   }
 }
+

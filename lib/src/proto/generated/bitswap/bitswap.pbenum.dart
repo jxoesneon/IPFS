@@ -56,3 +56,4 @@ class Message_BlockPresence_Type extends $pb.ProtobufEnum {
 
 const $core.bool _omitEnumNames =
     $core.bool.fromEnvironment('protobuf.omit_enum_names');
+

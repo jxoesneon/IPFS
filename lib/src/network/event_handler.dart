@@ -70,3 +70,4 @@ class NetworkEventHandler {
   /// Stream of network events for listeners.
   Stream<NetworkEvent> get events => _eventController.stream;
 }
+

@@ -222,3 +222,4 @@ class IPFS {
     return _node.resolveDNSLink(domainName);
   }
 }
+

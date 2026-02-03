@@ -32,3 +32,4 @@ class IPLDMetadata {
     'properties': properties,
   };
 }
+

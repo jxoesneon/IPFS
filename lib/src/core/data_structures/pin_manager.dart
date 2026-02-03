@@ -246,3 +246,4 @@ class PinManager {
     return directPins + indirectPins;
   }
 }
+

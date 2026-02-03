@@ -519,3 +519,4 @@ class MockPubSubHandler extends _i1.Mock implements _i19.PubSubHandler {
           )
           as _i11.Future<Map<String, dynamic>>);
 }
+

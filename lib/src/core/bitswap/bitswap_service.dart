@@ -32,3 +32,4 @@ class BitswapService {
     return await Block.fromBitswapProto(protoBlock);
   }
 }
+

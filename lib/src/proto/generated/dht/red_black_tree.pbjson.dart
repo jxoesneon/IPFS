@@ -71,3 +71,4 @@ final $typed_data.Uint8List redBlackTreeNodeDescriptor = $convert.base64Decode(
     'CzIpLmlwZnMuZGh0LnJlZF9ibGFja190cmVlLlJlZEJsYWNrVHJlZU5vZGVSBGxlZnQSPwoFcm'
     'lnaHQYBSABKAsyKS5pcGZzLmRodC5yZWRfYmxhY2tfdHJlZS5SZWRCbGFja1RyZWVOb2RlUgVy'
     'aWdodA==');
+

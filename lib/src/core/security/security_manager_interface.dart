@@ -25,3 +25,4 @@ abstract class ISecurityManager {
   /// Gets the public key for a stored secure key.
   Uint8List? getSecurePublicKey(String keyName);
 }
+

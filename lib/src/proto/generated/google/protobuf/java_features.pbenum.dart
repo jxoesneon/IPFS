@@ -49,3 +49,4 @@ class JavaFeatures_Utf8Validation extends $pb.ProtobufEnum {
 
 const $core.bool _omitEnumNames =
     $core.bool.fromEnvironment('protobuf.omit_enum_names');
+

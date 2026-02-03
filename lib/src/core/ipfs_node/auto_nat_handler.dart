@@ -241,3 +241,4 @@ enum NATType {
   /// Symmetric NAT (hardest to traverse).
   symmetric,
 }
+

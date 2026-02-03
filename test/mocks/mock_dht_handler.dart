@@ -230,3 +230,4 @@ class MockDHTHandler implements IDHTHandler {
     // Note: addresses field also uses List<int>, skipping for mock simplicity
   }
 }
+

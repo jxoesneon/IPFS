@@ -139,3 +139,4 @@ final $typed_data.Uint8List getProvidersResponseDescriptor = $convert.base64Deco
     '1tb25fcmVkX2JsYWNrX3RyZWUuVl9QZWVySW5mb1IJcHJvdmlkZXJzEk8KDWNsb3Nlc3RfcGVl'
     'cnMYAiADKAsyKi5pcGZzLmRodC5jb21tb25fcmVkX2JsYWNrX3RyZWUuVl9QZWVySW5mb1IMY2'
     'xvc2VzdFBlZXJz');
+

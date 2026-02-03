@@ -307,3 +307,4 @@ Uint8List _bigIntToBytes(BigInt value) {
   }
   return result;
 }
+

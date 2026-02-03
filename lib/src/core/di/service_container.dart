@@ -67,3 +67,4 @@ class ServiceContainer {
     return _services.containsKey(type) || _factories.containsKey(type);
   }
 }
+

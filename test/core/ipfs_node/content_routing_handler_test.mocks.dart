@@ -533,3 +533,4 @@ class MockClient extends _i1.Mock implements _i8.Client {
     returnValueForMissingStub: null,
   );
 }
+

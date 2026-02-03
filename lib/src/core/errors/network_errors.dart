@@ -32,3 +32,4 @@ class ProtocolError extends NetworkError {
   /// The protocol that encountered the error.
   final String protocolId;
 }
+

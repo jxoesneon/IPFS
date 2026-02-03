@@ -63,3 +63,4 @@ class Empty extends $pb.GeneratedMessage {
 
 const $core.bool _omitMessageNames =
     $core.bool.fromEnvironment('protobuf.omit_message_names');
+

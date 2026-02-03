@@ -100,3 +100,4 @@ class BlockRemoveResponse extends BaseResponse {
   @override
   Map<String, dynamic> toJson() => {'success': success, 'message': message};
 }
+

@@ -961,3 +961,4 @@ const SystemAlertEvent$json = {
 final $typed_data.Uint8List systemAlertEventDescriptor = $convert.base64Decode(
     'ChBTeXN0ZW1BbGVydEV2ZW50Eh0KCmFsZXJ0X3R5cGUYASABKAlSCWFsZXJ0VHlwZRIYCgdtZX'
     'NzYWdlGAIgASgJUgdtZXNzYWdl');
+

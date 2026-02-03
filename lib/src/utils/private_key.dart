@@ -145,3 +145,4 @@ class IPFSPrivateKey implements PrivateKey {
     }
   }
 }
+

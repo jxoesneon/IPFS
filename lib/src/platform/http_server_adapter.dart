@@ -21,3 +21,4 @@ abstract class HttpServerAdapter {
     int port,
   );
 }
+

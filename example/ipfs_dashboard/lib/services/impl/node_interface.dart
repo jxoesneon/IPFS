@@ -20,3 +20,4 @@ abstract class INodeImplementation {
   Future<List<String>> getPinnedCids();
   Future<List<Map<String, dynamic>>> ls(String cid);
 }
+

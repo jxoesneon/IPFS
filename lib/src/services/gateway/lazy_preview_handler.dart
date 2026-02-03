@@ -189,3 +189,4 @@ class LazyPreviewHandler {
     _logger.verbose('Current cache size: ${_previewCache.length}');
   }
 }
+

@@ -50,3 +50,4 @@ const PBNode$json = {
 final $typed_data.Uint8List pBNodeDescriptor = $convert.base64Decode(
     'CgZQQk5vZGUSNwoFbGlua3MYAiADKAsyIS5pcGZzLmNvcmUuZGF0YV9zdHJ1Y3R1cmVzLlBCTG'
     'lua1IFbGlua3MSEgoEZGF0YRgBIAEoDFIEZGF0YQ==');
+

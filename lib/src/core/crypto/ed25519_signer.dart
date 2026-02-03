@@ -119,3 +119,4 @@ extension KeyPairExtensions on SimpleKeyPair {
     return seed;
   }
 }
+

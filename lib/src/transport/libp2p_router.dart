@@ -5,12 +5,12 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:dart_libp2p/config/config.dart' as config;
-import 'package:dart_libp2p/core/crypto/ed25519.dart' as crypto;
-import 'package:dart_libp2p/dart_libp2p.dart' as libp2p;
-import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
-import 'package:dart_libp2p/p2p/transport/tcp_transport.dart';
+import 'package:ipfs_libp2p/config/config.dart' as config;
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto;
+import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
+import 'package:ipfs_libp2p/p2p/transport/tcp_transport.dart';
 
 /// Native libp2p router implementation.
 ///
@@ -530,3 +530,4 @@ class Libp2pRouter implements RouterInterface {
     return transports;
   }
 }
+

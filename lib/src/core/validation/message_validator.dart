@@ -62,3 +62,4 @@ class MessageValidator {
     return ValidationResult()..isValid = true;
   }
 }
+

@@ -338,3 +338,4 @@ class _CachedResolution {
   bool get isExpired =>
       DateTime.now().difference(timestamp) > IPNSHandler._cacheDuration;
 }
+

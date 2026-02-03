@@ -99,3 +99,4 @@ extension IPFSCIDProtoExtension on IPFSCIDProto {
       ..version = IPFSCIDVersion.IPFS_CID_VERSION_1; // or appropriate version
   }
 }
+

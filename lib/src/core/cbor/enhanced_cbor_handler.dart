@@ -410,3 +410,4 @@ class EnhancedCBORHandler {
     return hashLen == supportedHashFns[hashFn] && digest.length == hashLen;
   }
 }
+

@@ -89,3 +89,4 @@ class Pin {
     return blockStore.pinManager.isBlockPinned(cid.toProto());
   }
 }
+

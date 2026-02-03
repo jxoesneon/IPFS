@@ -122,3 +122,4 @@ class NodeLink {
   /// Custom metadata for this link.
   final Map<String, String> metadata;
 }
+

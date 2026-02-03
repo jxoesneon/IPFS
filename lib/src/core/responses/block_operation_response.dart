@@ -52,3 +52,4 @@ class BlockOperationResponse<T> {
   /// The result data, if any.
   final T? data;
 }
+

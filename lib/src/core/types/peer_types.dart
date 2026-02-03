@@ -72,3 +72,4 @@ class IPFSPeer {
       ..addrs.addAll(addresses.map((addr) => multiaddrToBytes(addr)));
   }
 }
+

@@ -155,3 +155,4 @@ class MockSecurityManager implements SecurityManager {
     _calls.add(call);
   }
 }
+

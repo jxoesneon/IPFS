@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.2] - 2026-02-03
+
+- **Architecture**: Migrated from vendored `dart_libp2p` to hosted `ipfs_libp2p` package.
+- **Cleanup**: Removed `vendor/` directory.
+- **Dependencies**: Upgraded to `ipfs_libp2p ^0.5.6`.
+
 ## [1.9.1] - 2026-01-31
 
 ### Added

@@ -120,3 +120,4 @@ final $typed_data.Uint8List metadataDescriptor = $convert.base64Decode(
     'l6ZRJICgpwcm9wZXJ0aWVzGAMgAygLMiguaXBmcy51bml4ZnMucGIuTWV0YWRhdGEuUHJvcGVy'
     'dGllc0VudHJ5Ugpwcm9wZXJ0aWVzGj0KD1Byb3BlcnRpZXNFbnRyeRIQCgNrZXkYASABKAlSA2'
     'tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
+

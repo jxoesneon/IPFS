@@ -29,3 +29,4 @@ class MessageFactory {
       ..type = type;
   }
 }
+

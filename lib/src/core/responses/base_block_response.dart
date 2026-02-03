@@ -22,3 +22,4 @@ abstract class BaseBlockResponse extends GeneratedMessage {
     return true;
   }
 }
+

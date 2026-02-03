@@ -128,3 +128,4 @@ final $typed_data.Uint8List v_PeerInfoDescriptor = $convert.base64Decode(
     'gKIAMoCVIJYWRkcmVzc2VzEiMKDW9ic2VydmVkX2FkZHIYCyABKAlSDG9ic2VydmVkQWRkciJD'
     'ChBDb25uZWN0aW9uU3RhdHVzEhAKDERJU0NPTk5FQ1RFRBAAEg4KCkNPTk5FQ1RJTkcQARINCg'
     'lDT05ORUNURUQQAg==');
+

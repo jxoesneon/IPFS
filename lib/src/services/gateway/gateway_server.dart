@@ -229,3 +229,4 @@ class GatewayServer {
       ? 'http://${_server!.host}:${_server!.port}'
       : 'http://$address:$port (not started)';
 }
+

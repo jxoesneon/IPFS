@@ -111,3 +111,4 @@ final $typed_data.Uint8List circuitBreakerConfigDescriptor = $convert.base64Deco
     'Jlc2V0VGltZW91dFNlY29uZHMSKwoRZmFpbHVyZV90aHJlc2hvbGQYAiABKA1SEGZhaWx1cmVU'
     'aHJlc2hvbGQSOQoZaGFsZl9vcGVuX3RpbWVvdXRfc2Vjb25kcxgDIAEoDVIWaGFsZk9wZW5UaW'
     '1lb3V0U2Vjb25kcw==');
+

@@ -56,3 +56,4 @@ class RequestHandlingError extends GraphsyncError {
   RequestHandlingError(String message, [dynamic cause])
     : super('Failed to handle request: $message', cause);
 }
+

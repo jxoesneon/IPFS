@@ -36,3 +36,4 @@ Uint8List encodeVarint(int value) {
   }
   return (value, i + 1); // i + 1 to include the last byte read
 }
+

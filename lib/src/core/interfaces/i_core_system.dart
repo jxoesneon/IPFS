@@ -14,3 +14,4 @@ abstract class ICoreSystem {
   /// Returns the current status and health information.
   Future<Map<String, dynamic>> getStatus();
 }
+

@@ -139,3 +139,4 @@ class StoredValue {
   /// Number of successful replications.
   int replicationCount;
 }
+

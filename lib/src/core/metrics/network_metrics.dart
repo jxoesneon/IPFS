@@ -37,3 +37,4 @@ class PeerMetrics {
   /// Average round-trip latency to this peer.
   Duration averageLatency = Duration.zero;
 }
+

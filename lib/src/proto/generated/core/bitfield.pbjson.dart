@@ -68,3 +68,4 @@ final $typed_data.Uint8List bitFieldProtoDescriptor = $convert.base64Decode(
     'olCg1TZXRCaXRSZXF1ZXN0EhQKBWluZGV4GAEgASgFUgVpbmRleBonCg9DbGVhckJpdFJlcXVl'
     'c3QSFAoFaW5kZXgYASABKAVSBWluZGV4GiUKDUdldEJpdFJlcXVlc3QSFAoFaW5kZXgYASABKA'
     'VSBWluZGV4GiMKC0JpdFJlc3BvbnNlEhQKBXZhbHVlGAEgASgIUgV2YWx1ZQ==');
+

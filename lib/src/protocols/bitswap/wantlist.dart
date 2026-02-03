@@ -60,3 +60,4 @@ class Wantlist {
     return 'Wantlist{entries: $_entries}';
   }
 }
+

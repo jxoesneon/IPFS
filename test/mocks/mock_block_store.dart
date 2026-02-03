@@ -130,3 +130,4 @@ class MockBlockStore implements IBlockStore {
     _calls.add(call);
   }
 }
+

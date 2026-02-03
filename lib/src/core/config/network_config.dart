@@ -139,3 +139,4 @@ class ProtocolConfig {
   /// Maximum number of retries per message.
   final int maxRetries;
 }
+

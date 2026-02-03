@@ -17,3 +17,4 @@ abstract class BaseResponse {
   @override
   String toString() => '$runtimeType(success: $success, message: $message)';
 }
+

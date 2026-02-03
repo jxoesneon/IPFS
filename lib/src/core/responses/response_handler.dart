@@ -53,3 +53,4 @@ class ResponseHandler {
     throw ArgumentError('Unsupported proto response type');
   }
 }
+

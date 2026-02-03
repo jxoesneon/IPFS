@@ -220,3 +220,4 @@ Uint8List multiaddrToBytes(FullAddress address) {
 
   return buffer.toBytes();
 }
+

@@ -63,3 +63,4 @@ const RemoveBlockResponse$json = {
 final $typed_data.Uint8List removeBlockResponseDescriptor = $convert.base64Decode(
     'ChNSZW1vdmVCbG9ja1Jlc3BvbnNlEhgKB3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3MSGAoHbWVzc2'
     'FnZRgCIAEoCVIHbWVzc2FnZQ==');
+

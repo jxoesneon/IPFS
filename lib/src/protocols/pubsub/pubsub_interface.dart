@@ -14,3 +14,4 @@ abstract class IPubSub {
   /// Listens for messages on a specific topic.
   void onMessage(String topic, void Function(String) handler);
 }
+

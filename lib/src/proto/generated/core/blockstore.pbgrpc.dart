@@ -156,3 +156,4 @@ abstract class BlockStoreServiceBase extends $grpc.Service {
   $async.Stream<$0.BlockProto> getAllBlocks(
       $grpc.ServiceCall call, $3.Empty request);
 }
+

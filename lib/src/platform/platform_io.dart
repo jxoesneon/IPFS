@@ -60,3 +60,4 @@ class IpfsPlatformIO implements IpfsPlatform {
 
 /// Returns the IO platform implementation.
 IpfsPlatform getPlatform() => IpfsPlatformIO();
+

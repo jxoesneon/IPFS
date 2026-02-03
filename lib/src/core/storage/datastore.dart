@@ -131,3 +131,4 @@ abstract class Datastore {
   /// Close the datastore.
   Future<void> close();
 }
+

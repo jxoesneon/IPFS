@@ -77,3 +77,4 @@ final $typed_data.Uint8List nodeProtoDescriptor = $convert.base64Decode(
     'dGFtcBgGIAEoA1IJdGltZXN0YW1wEk4KCG1ldGFkYXRhGAcgAygLMjIuaXBmcy5jb3JlLmRhdG'
     'Ffc3RydWN0dXJlcy5Ob2RlUHJvdG8uTWV0YWRhdGFFbnRyeVIIbWV0YWRhdGEaOwoNTWV0YWRh'
     'dGFFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
+

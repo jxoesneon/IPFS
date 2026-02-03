@@ -60,3 +60,4 @@ class PasswordPrompt {
     return true;
   }
 }
+

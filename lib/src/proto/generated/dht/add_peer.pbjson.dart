@@ -55,3 +55,4 @@ const AddPeerResponse$json = {
 /// Descriptor for `AddPeerResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List addPeerResponseDescriptor = $convert.base64Decode(
     'Cg9BZGRQZWVyUmVzcG9uc2USGAoHc3VjY2VzcxgBIAEoCFIHc3VjY2Vzcw==');
+

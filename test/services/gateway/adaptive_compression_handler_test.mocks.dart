@@ -160,3 +160,4 @@ class MockBlockStore extends _i1.Mock implements _i4.BlockStore {
           )
           as _i6.Future<Map<String, dynamic>>);
 }
+

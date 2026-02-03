@@ -134,3 +134,4 @@ const Mixin$json = {
 /// Descriptor for `Mixin`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List mixinDescriptor = $convert.base64Decode(
     'CgVNaXhpbhISCgRuYW1lGAEgASgJUgRuYW1lEhIKBHJvb3QYAiABKAlSBHJvb3Q=');
+

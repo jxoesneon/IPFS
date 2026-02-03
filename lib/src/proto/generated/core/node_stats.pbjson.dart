@@ -45,3 +45,4 @@ final $typed_data.Uint8List nodeStatsDescriptor = $convert.base64Decode(
     '9zaXplGAIgASgDUg1kYXRhc3RvcmVTaXplEi4KE251bV9jb25uZWN0ZWRfcGVlcnMYAyABKAVS'
     'EW51bUNvbm5lY3RlZFBlZXJzEiUKDmJhbmR3aWR0aF9zZW50GAQgASgDUg1iYW5kd2lkdGhTZW'
     '50Ei0KEmJhbmR3aWR0aF9yZWNlaXZlZBgFIAEoA1IRYmFuZHdpZHRoUmVjZWl2ZWQ=');
+

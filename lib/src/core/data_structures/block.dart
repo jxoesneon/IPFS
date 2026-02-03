@@ -120,3 +120,4 @@ class Block implements IBlock {
   @override
   int get hashCode => cid.encode().hashCode ^ data.length.hashCode;
 }
+

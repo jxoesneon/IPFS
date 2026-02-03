@@ -49,3 +49,4 @@ class CachedPreviewGenerator {
     return _contentTypeHandler.detectContentType(block);
   }
 }
+

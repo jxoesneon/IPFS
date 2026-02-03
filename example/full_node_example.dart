@@ -110,3 +110,4 @@ void _printUsageInfo(String gatewayUrl, String rpcUrl, String peerId) {
 
   print('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
+
