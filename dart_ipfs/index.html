@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="dart_ipfs library API docs, for the Dart programming language.">
+  <title>dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li class="self-crumb">dart_ipfs.dart</li>
+  </ol>
+  <div class="self-name">dart_ipfs</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar=""
+    data-below-sidebar="dart_ipfs&#47;dart_ipfs-library-sidebar.html">
+  
+    <div>
+      
+
+      <h1>
+        <span class="kind-library">dart_ipfs</span>
+        library 
+ 
+
+      </h1>
+    </div>
+
+    
+<section class="desc markdown">
+  <p>Production-ready IPFS (InterPlanetary File System) implementation in Dart.</p>
+<p>This library provides a complete IPFS implementation with support for:</p>
+<ul>
+<li>Full IPFS protocol compliance (CID, UnixFS, DAG-PB, Bitswap, DHT)</li>
+<li>P2P networking with production-grade cryptography</li>
+<li>Multiple deployment modes (offline, gateway, full P2P)</li>
+<li>HTTP Gateway and RPC API</li>
+<li>Mobile (Flutter) and web platform support</li>
+</ul>
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="offline-mode-local-storage">Offline Mode (Local Storage)</h3>
+<pre class="language-dart"><code class="language-dart">import 'package:dart_ipfs/dart_ipfs.dart';
+
+void main() async {
+  final node = await IPFSNode.create(
+    IPFSConfig(offline: true),
+  );
+  await node.start();
+
+  // Add content
+  final cid = await node.addFile(data);
+  // print('Added: $cid');
+
+  // Retrieve content
+  final content = await node.get(cid);
+
+  await node.stop();
+}
+</code></pre>
+<h3 id="gateway-mode-http-server">Gateway Mode (HTTP Server)</h3>
+<pre class="language-dart"><code class="language-dart">final node = await IPFSNode.create(
+  IPFSConfig(
+    offline: true,
+    gateway: GatewayConfig(
+      enabled: true,
+      port: 8080,
+    ),
+  ),
+);
+await node.start();
+// Access at http://localhost:8080/ipfs/&lt;CID&gt;
+</code></pre>
+<h3 id="full-p2p-mode">Full P2P Mode</h3>
+<pre class="language-dart"><code class="language-dart">final node = await IPFSNode.create(
+  IPFSConfig(offline: false),
+);
+await node.start();
+// print('Peer ID: ${node.peerID}');
+</code></pre>
+<h2 id="features">Features</h2>
+<h3 id="core-ipfs">Core IPFS</h3>
+<ul>
+<li><strong>CID v0/v1</strong>: Content identifier support</li>
+<li><strong>UnixFS</strong>: File system with chunking</li>
+<li><strong>DAG-PB</strong>: MerkleDAG operations</li>
+<li><strong>Pinning</strong>: Content persistence</li>
+<li><strong>CAR Files</strong>: Import/export</li>
+</ul>
+<h3 id="networking">Networking</h3>
+<ul>
+<li><strong>Bitswap 1.2.0</strong>: Block exchange protocol</li>
+<li><strong>Kademlia DHT</strong>: Distributed routing</li>
+<li><strong>PubSub</strong>: Real-time messaging</li>
+<li><strong>MDNS</strong>: Local peer discovery</li>
+<li><strong>Circuit Relay</strong>: NAT traversal</li>
+</ul>
+<h3 id="services">Services</h3>
+<ul>
+<li><strong>HTTP Gateway</strong>: Content serving</li>
+<li><strong>RPC API</strong>: go-ipfs compatible</li>
+<li><strong>IPNS</strong>: Mutable naming</li>
+<li><strong>DNSLink</strong>: Domain resolution</li>
+<li><strong>Metrics</strong>: Prometheus compatible</li>
+</ul>
+<h2 id="architecture">Architecture</h2>
+<p>The library is organized into layers:</p>
+<ul>
+<li><strong>Core</strong>: CID, blocks, data structures</li>
+<li><strong>Protocols</strong>: Bitswap, DHT, PubSub</li>
+<li><strong>Services</strong>: Gateway, RPC, IPNS</li>
+<li><strong>Transport</strong>: P2P networking</li>
+<li><strong>Storage</strong>: Local datastore</li>
+</ul>
+<h2 id="security">Security</h2>
+<p>Production-grade cryptography:</p>
+<ul>
+<li><strong>secp256k1</strong>: Elliptic curve (128-bit security)</li>
+<li><strong>ChaCha20-Poly1305</strong>: AEAD encryption</li>
+<li><strong>SHA-256</strong>: Content hashing</li>
+</ul>
+<h2 id="platform-support">Platform Support</h2>
+<ul>
+<li>✅ Mobile (Flutter iOS/Android)</li>
+<li>✅ Web (Dart Web)</li>
+<li>✅ Desktop (Windows/macOS/Linux)</li>
+<li>✅ Server (Dart VM)</li>
+</ul>
+<h2 id="examples">Examples</h2>
+<p>See the <code>example/</code> directory for:</p>
+<ul>
+<li>Offline content publishing</li>
+<li>P2P networking</li>
+<li>HTTP gateway</li>
+<li>Full node operation</li>
+</ul>
+<h2 id="learn-more">Learn More</h2>
+<ul>
+<li><a href="https://github.com/jxoesneon/IPFS">GitHub Repository</a></li>
+<li><a href="https://specs.ipfs.tech/">IPFS Specifications</a></li>
+<li><a href="https://pub.dev/documentation/dart_ipfs/latest/">API Documentation</a></li>
+</ul>
+</section>
+
+
+    <section class="summary offset-anchor" id="classes">
+      <h2>Classes</h2>
+      <dl>
+          <dt id="CID">
+  <span class="name "><a href="../dart_ipfs/CID-class.html">CID</a></span> 
+
+</dt>
+<dd>
+  A Content Identifier (CID) for content-addressed data in IPFS.
+</dd>
+
+          <dt id="DHTConfig">
+  <span class="name "><a href="../dart_ipfs/DHTConfig-class.html">DHTConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration options for the DHT (Distributed Hash Table)
+</dd>
+
+          <dt id="IPFS">
+  <span class="name "><a href="../dart_ipfs/IPFS-class.html">IPFS</a></span> 
+
+</dt>
+<dd>
+  Main entry point for the IPFS (InterPlanetary File System) implementation.
+</dd>
+
+          <dt id="IPFSConfig">
+  <span class="name "><a href="../dart_ipfs/IPFSConfig-class.html">IPFSConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration for an IPFS node.
+</dd>
+
+          <dt id="IPFSNode">
+  <span class="name "><a href="../dart_ipfs/IPFSNode-class.html">IPFSNode</a></span> 
+
+</dt>
+<dd>
+  The main IPFS node implementation.
+</dd>
+
+          <dt id="MetricsConfig">
+  <span class="name "><a href="../dart_ipfs/MetricsConfig-class.html">MetricsConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration options for telemetry and metrics collection.
+</dd>
+
+          <dt id="NetworkConfig">
+  <span class="name "><a href="../dart_ipfs/NetworkConfig-class.html">NetworkConfig</a></span> 
+
+</dt>
+<dd>
+  Network configuration for the IPFS node.
+</dd>
+
+          <dt id="ProtocolConfig">
+  <span class="name "><a href="../dart_ipfs/ProtocolConfig-class.html">ProtocolConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration for a specific protocol.
+</dd>
+
+          <dt id="PubSubMessage">
+  <span class="name "><a href="../dart_ipfs/PubSubMessage-class.html">PubSubMessage</a></span> 
+
+</dt>
+<dd>
+  Represents a message published on a PubSub topic.
+</dd>
+
+          <dt id="SecurityConfig">
+  <span class="name "><a href="../dart_ipfs/SecurityConfig-class.html">SecurityConfig</a></span> 
+
+</dt>
+<dd>
+  Security-related configuration options for IPFS node
+</dd>
+
+          <dt id="StorageConfig">
+  <span class="name "><a href="../dart_ipfs/StorageConfig-class.html">StorageConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration options for IPFS storage.
+</dd>
+
+      </dl>
+    </section>
+
+    <section class="summary offset-anchor" id="enums">
+      <h2>Enums</h2>
+      <dl>
+          <dt id="GatewayMode">
+  <span class="name "><a href="../dart_ipfs/GatewayMode.html">GatewayMode</a></span> 
+
+</dt>
+<dd>
+  The central node orchestrating all IPFS operations.
+</dd>
+
+      </dl>
+    </section>
+
+
+
+
+
+
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li class="self-crumb">dart_ipfs.dart</li>
+</ol>
+
+    <h5><span class="package-name">dart_ipfs</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="../dart_ipfs/">dart_ipfs</a></li>
+</ol>
+
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+    <h5>dart_ipfs library</h5>
+  </div><!--/sidebar-offcanvas-right-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.9.4
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

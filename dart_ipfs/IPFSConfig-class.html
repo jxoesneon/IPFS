@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the IPFSConfig class from the dart_ipfs library, for the Dart programming language.">
+  <title>IPFSConfig class - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li class="self-crumb">IPFSConfig class</li>
+  </ol>
+  <div class="self-name">IPFSConfig</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="dart_ipfs&#47;dart_ipfs-library-sidebar.html"
+    data-below-sidebar="dart_ipfs&#47;IPFSConfig-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">IPFSConfig</span> class 
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>Configuration for an IPFS node.</p>
+<p>This class defines all configuration options for initializing and running
+an IPFS node, including storage paths, networking parameters, security
+settings, and service configurations.</p>
+<p><strong>Basic Configuration:</strong></p>
+<pre class="language-dart"><code class="language-dart">final config = IPFSConfig(
+  offline: false,  // Enable P2P networking
+  blockStorePath: './ipfs/blocks',
+  datastorePath: './ipfs/datastore',
+);
+</code></pre>
+<p><strong>Advanced Configuration:</strong></p>
+<pre class="language-dart"><code class="language-dart">final config = IPFSConfig(
+  offline: false,
+  network: NetworkConfig(
+    bootstrapPeers: ['&lt;multiaddr&gt;', ...],
+    listenAddresses: ['/ip4/0.0.0.0/tcp/4001'],
+  ),
+  dht: DHTConfig(
+    mode: DHTMode.server,  // Participate as DHT server
+    bucketSize: 20,
+  ),
+  security: SecurityConfig(
+    enableEncryption: true,
+  ),
+);
+</code></pre>
+<p><strong>Deployment Modes:</strong></p>
+<p><strong>Offline Mode</strong> (Local storage only):</p>
+<pre class="language-dart"><code class="language-dart">IPFSConfig(offline: true)
+</code></pre>
+<p><strong>Gateway Mode</strong> (HTTP serving):</p>
+<pre class="language-dart"><code class="language-dart">IPFSConfig(
+  offline: true,
+  gateway: GatewayConfig(enabled: true, port: 8080),
+)
+</code></pre>
+<p><strong>Full P2P Mode</strong> (Network participation):</p>
+<pre class="language-dart"><code class="language-dart">IPFSConfig(offline: false)
+</code></pre>
+</section>
+
+
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+    <dl class="constructor-summary-list">
+        <dt id="IPFSConfig.new" class="callable">
+          <span class="name"><a href="../dart_ipfs/IPFSConfig/IPFSConfig.html">IPFSConfig</a></span><span class="signature">({<span class="parameter" id="-param-offline"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">offline</span> = <span class="default-value">false</span>, </span><span class="parameter" id="-param-network"><span class="type-annotation"><a href="../dart_ipfs/NetworkConfig-class.html">NetworkConfig</a>?</span> <span class="parameter-name">network</span>, </span><span class="parameter" id="-param-dht"><span class="type-annotation"><a href="../dart_ipfs/DHTConfig-class.html">DHTConfig</a>?</span> <span class="parameter-name">dht</span>, </span><span class="parameter" id="-param-storage"><span class="type-annotation"><a href="../dart_ipfs/StorageConfig-class.html">StorageConfig</a>?</span> <span class="parameter-name">storage</span>, </span><span class="parameter" id="-param-security"><span class="type-annotation"><a href="../dart_ipfs/SecurityConfig-class.html">SecurityConfig</a>?</span> <span class="parameter-name">security</span>, </span><span class="parameter" id="-param-debug"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">debug</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-verboseLogging"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">verboseLogging</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-enablePubSub"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enablePubSub</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-enableDHT"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableDHT</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-enableCircuitRelay"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableCircuitRelay</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-enableContentRouting"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableContentRouting</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-enableDNSLinkResolution"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableDNSLinkResolution</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-enableIPLD"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableIPLD</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-enableGraphsync"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableGraphsync</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-enableMetrics"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableMetrics</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-enableLogging"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableLogging</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-logLevel"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">logLevel</span> = <span class="default-value">&#39;info&#39;</span>, </span><span class="parameter" id="-param-enableQuotaManagement"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableQuotaManagement</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-defaultBandwidthQuota"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/int-class.html">int</a></span> <span class="parameter-name">defaultBandwidthQuota</span> = <span class="default-value">1048576</span>, </span><span class="parameter" id="-param-datastorePath"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">datastorePath</span> = <span class="default-value">&#39;.&#47;ipfs_data&#39;</span>, </span><span class="parameter" id="-param-keystorePath"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">keystorePath</span> = <span class="default-value">&#39;.&#47;ipfs_keystore&#39;</span>, </span><span class="parameter" id="-param-blockStorePath"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">blockStorePath</span> = <span class="default-value">&#39;blocks&#39;</span>, </span><span class="parameter" id="-param-enableLibp2pBridge"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableLibp2pBridge</span> = <span class="default-value">false</span>, </span><span class="parameter" id="-param-libp2pListenAddress"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">libp2pListenAddress</span> = <span class="default-value">&#39;&#47;ip4&#47;0.0.0.0&#47;tcp&#47;4001&#39;</span>, </span><span class="parameter" id="-param-libp2pIdentitySeed"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-typed_data/Uint8List-class.html">Uint8List</a>?</span> <span class="parameter-name">libp2pIdentitySeed</span>, </span><span class="parameter" id="-param-nodeId"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">nodeId</span>, </span><span class="parameter" id="-param-garbageCollectionInterval"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Duration-class.html">Duration</a></span> <span class="parameter-name">garbageCollectionInterval</span> = <span class="default-value">const Duration(hours: 24)</span>, </span><span class="parameter" id="-param-garbageCollectionEnabled"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">garbageCollectionEnabled</span> = <span class="default-value">true</span>, </span><span class="parameter" id="-param-metrics"><span class="type-annotation"><a href="../dart_ipfs/MetricsConfig-class.html">MetricsConfig</a></span> <span class="parameter-name">metrics</span> = <span class="default-value">const MetricsConfig()</span>, </span><span class="parameter" id="-param-dataPath"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">dataPath</span> = <span class="default-value">&#39;.&#47;ipfs_data&#39;</span>, </span><span class="parameter" id="-param-keystore"><span class="type-annotation">Keystore?</span> <span class="parameter-name">keystore</span>, </span><span class="parameter" id="-param-customConfig"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span> <span class="parameter-name">customConfig</span> = <span class="default-value">const {}</span></span>})</span>
+        </dt>
+        <dd>
+          Creates a new <a href="../dart_ipfs/IPFSConfig-class.html">IPFSConfig</a> with the specified options.
+        </dd>
+        <dt id="IPFSConfig.fromJson" class="callable">
+          <span class="name"><a href="../dart_ipfs/IPFSConfig/IPFSConfig.fromJson.html">IPFSConfig.fromJson</a></span><span class="signature">(<span class="parameter" id="fromJson-param-json"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span> <span class="parameter-name">json</span></span>)</span>
+        </dt>
+        <dd>
+          Creates configuration from JSON
+            <div class="constructor-modifier features">factory</div>
+        </dd>
+        <dt id="IPFSConfig.withDefaults" class="callable">
+          <span class="name"><a href="../dart_ipfs/IPFSConfig/IPFSConfig.withDefaults.html">IPFSConfig.withDefaults</a></span><span class="signature">()</span>
+        </dt>
+        <dd>
+          Creates a new IPFSConfig with a generated nodeId
+            <div class="constructor-modifier features">factory</div>
+        </dd>
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
+        <dt id="blockStorePath" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/blockStorePath.html">blockStorePath</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  Path to the blockstore.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="customConfig" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/customConfig.html">customConfig</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Key-value pair for custom configuration options.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="dataPath" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/dataPath.html">dataPath</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  The base path for node data.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="datastorePath" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/datastorePath.html">datastorePath</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  Path to the datastore.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="debug" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/debug.html">debug</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Enable debug mode.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="defaultBandwidthQuota" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/defaultBandwidthQuota.html">defaultBandwidthQuota</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd>
+  Default bandwidth quota in bytes.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="dht" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/dht.html">dht</a></span>
+  <span class="signature">&#8594; <a href="../dart_ipfs/DHTConfig-class.html">DHTConfig</a></span>
+  
+
+</dt>
+<dd>
+  Distributed Hash Table configuration.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="enableCircuitRelay" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/enableCircuitRelay.html">enableCircuitRelay</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Enable Circuit Relay support.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="enableContentRouting" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/enableContentRouting.html">enableContentRouting</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Enable content routing.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="enableDHT" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/enableDHT.html">enableDHT</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Enable DHT protocols.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="enableDNSLinkResolution" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/enableDNSLinkResolution.html">enableDNSLinkResolution</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Enable DNSLink resolution.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="enableGraphsync" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/enableGraphsync.html">enableGraphsync</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Enable Graphsync protocol.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="enableIPLD" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/enableIPLD.html">enableIPLD</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Enable IPLD support.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="enableLibp2pBridge" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/enableLibp2pBridge.html">enableLibp2pBridge</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Whether to enable the libp2p bridge transport.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="enableLogging" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/enableLogging.html">enableLogging</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Enable system-wide logging.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="enableMetrics" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/enableMetrics.html">enableMetrics</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Enable metrics collection.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="enablePubSub" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/enablePubSub.html">enablePubSub</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Enable PubSub protocols.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="enableQuotaManagement" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/enableQuotaManagement.html">enableQuotaManagement</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Enable bandwidth quota management.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="garbageCollectionEnabled" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/garbageCollectionEnabled.html">garbageCollectionEnabled</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Enable automatic garbage collection.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="garbageCollectionInterval" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/garbageCollectionInterval.html">garbageCollectionInterval</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Duration-class.html">Duration</a></span>
+  
+
+</dt>
+<dd>
+  Interval for garbage collection.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="keystore" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/keystore.html">keystore</a></span>
+  <span class="signature">&#8594; Keystore</span>
+  
+
+</dt>
+<dd>
+  The keystore for managing keys.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="keystorePath" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/keystorePath.html">keystorePath</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  Path to the keystore.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="libp2pIdentitySeed" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/libp2pIdentitySeed.html">libp2pIdentitySeed</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-typed_data/Uint8List-class.html">Uint8List</a>?</span>
+  
+
+</dt>
+<dd>
+  Optional seed for persistent libp2p identity.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="libp2pListenAddress" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/libp2pListenAddress.html">libp2pListenAddress</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  The listen address for the libp2p bridge.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="logLevel" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/logLevel.html">logLevel</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  The logging level (e.g., 'info', 'debug', 'error').
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="metrics" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/metrics.html">metrics</a></span>
+  <span class="signature">&#8594; <a href="../dart_ipfs/MetricsConfig-class.html">MetricsConfig</a></span>
+  
+
+</dt>
+<dd>
+  Metrics collection configuration.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="network" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/network.html">network</a></span>
+  <span class="signature">&#8594; <a href="../dart_ipfs/NetworkConfig-class.html">NetworkConfig</a></span>
+  
+
+</dt>
+<dd>
+  Detailed network configuration.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="nodeId" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/nodeId.html">nodeId</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  The unique node identifier.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="offline" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/offline.html">offline</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Run node in offline mode.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="security" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/security.html">security</a></span>
+  <span class="signature">&#8594; <a href="../dart_ipfs/SecurityConfig-class.html">SecurityConfig</a></span>
+  
+
+</dt>
+<dd>
+  Security and identity configuration.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="storage" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/storage.html">storage</a></span>
+  <span class="signature">&#8594; <a href="../dart_ipfs/StorageConfig-class.html">StorageConfig</a></span>
+  
+
+</dt>
+<dd>
+  Storage and datastore configuration.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="verboseLogging" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/verboseLogging.html">verboseLogging</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Enable verbose logging.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="toJson" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/toJson.html">toJson</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Converts to JSON representation.
+  
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Object/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A string representation of this object.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+  <section class="summary offset-anchor" id="static-methods">
+    <h2>Static Methods</h2>
+    <dl class="callables">
+        <dt id="fromFile" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSConfig/fromFile.html">fromFile</a></span><span class="signature">(<wbr><span class="parameter" id="fromFile-param-path"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">path</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../dart_ipfs/IPFSConfig-class.html">IPFSConfig</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Loads configuration from a YAML file
+  
+
+</dd>
+
+    </dl>
+  </section>
+    
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs</a></li>
+    <li class="self-crumb">IPFSConfig class</li>
+</ol>
+
+    <h5>dart_ipfs library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.9.4
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the IPFSNode class from the dart_ipfs library, for the Dart programming language.">
+  <title>IPFSNode class - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li class="self-crumb">IPFSNode class</li>
+  </ol>
+  <div class="self-name">IPFSNode</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="dart_ipfs&#47;dart_ipfs-library-sidebar.html"
+    data-below-sidebar="dart_ipfs&#47;IPFSNode-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">IPFSNode</span> class 
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>The main IPFS node implementation.</p>
+<p>Provides high-level APIs for content addressing, publishing,
+DHT operations, and peer-to-peer networking.</p>
+</section>
+
+
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+    <dl class="constructor-summary-list">
+        <dt id="IPFSNode.fromContainer" class="callable">
+          <span class="name"><a href="../dart_ipfs/IPFSNode/IPFSNode.fromContainer.html">IPFSNode.fromContainer</a></span><span class="signature">(<span class="parameter" id="fromContainer-param-_container"><span class="type-annotation">ServiceContainer</span> <span class="parameter-name">_container</span></span>)</span>
+        </dt>
+        <dd>
+          Creates an IPFSNode from a pre-configured service container.
+        </dd>
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
+        <dt id="addresses" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/addresses.html">addresses</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Get the addresses this node is listening on
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="bandwidthMetrics" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/bandwidthMetrics.html">bandwidthMetrics</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Stream-class.html">Stream</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Broadcast stream of bandwidth metrics
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="bitswap" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/bitswap.html">bitswap</a></span>
+  <span class="signature">&#8594; BitswapHandler?</span>
+  
+
+</dt>
+<dd>
+  Access to the Bitswap handler.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="blockStore" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/blockStore.html">blockStore</a></span>
+  <span class="signature">&#8594; BlockStore</span>
+  
+
+</dt>
+<dd>
+  Get the block store
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="connectedPeers" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/connectedPeers.html">connectedPeers</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>&gt;</span></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Get list of connected peers
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="container" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/container.html">container</a></span>
+  <span class="signature">&#8594; ServiceContainer</span>
+  
+
+</dt>
+<dd>
+  Returns the service container for dependency injection.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="datastore" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/datastore.html">datastore</a></span>
+  <span class="signature">&#8594; Datastore</span>
+  
+
+</dt>
+<dd>
+  Access to the underlying datastore.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="dhtClient" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/dhtClient.html">dhtClient</a></span>
+  <span class="signature">&#8594; DHTClient</span>
+  
+
+</dt>
+<dd>
+  Get the DHT client
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="dhtHandler" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/dhtHandler.html">dhtHandler</a></span>
+  <span class="signature">&#8594; DHTHandler?</span>
+  
+
+</dt>
+<dd>
+  Access to the DHT handler.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="onNewContent" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/onNewContent.html">onNewContent</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Stream-class.html">Stream</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Stream of new content CIDs added to this node.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="peerId" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/peerId.html">peerId</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  Get the peer ID of this node
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="peerID" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/peerID.html">peerID</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  This node's peer ID.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="pinnedCids" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/pinnedCids.html">pinnedCids</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>&gt;</span></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Get list of pinned CIDs
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="publicKey" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/publicKey.html">publicKey</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Get the public key of this node (base64 encoded)
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="pubsubMessages" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/pubsubMessages.html">pubsubMessages</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Stream-class.html">Stream</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../dart_ipfs/PubSubMessage-class.html">PubSubMessage</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Stream of incoming PubSub messages
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="router" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/router.html">router</a></span>
+  <span class="signature">&#8594; RouterInterface?</span>
+  
+
+</dt>
+<dd>
+  Access to the network router.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="addDirectory" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/addDirectory.html">addDirectory</a></span><span class="signature">(<wbr><span class="parameter" id="addDirectory-param-directoryContent"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span> <span class="parameter-name">directoryContent</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a directory to IPFS and returns its CID.
+  
+
+</dd>
+
+        <dt id="addFile" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/addFile.html">addFile</a></span><span class="signature">(<wbr><span class="parameter" id="addFile-param-data"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-typed_data/Uint8List-class.html">Uint8List</a></span> <span class="parameter-name">data</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a file to IPFS and returns its CID.
+  
+
+</dd>
+
+        <dt id="addFileStream" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/addFileStream.html">addFileStream</a></span><span class="signature">(<wbr><span class="parameter" id="addFileStream-param-dataStream"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Stream-class.html">Stream</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/int-class.html">int</a></span>&gt;</span></span>&gt;</span></span> <span class="parameter-name">dataStream</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds file content from a stream (memory-efficient for large files)
+  
+
+</dd>
+
+        <dt id="cat" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/cat.html">cat</a></span><span class="signature">(<wbr><span class="parameter" id="cat-param-cid"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">cid</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-typed_data/Uint8List-class.html">Uint8List</a>?</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Get content by CID (alias for get method)
+  
+
+</dd>
+
+        <dt id="connectToPeer" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/connectToPeer.html">connectToPeer</a></span><span class="signature">(<wbr><span class="parameter" id="connectToPeer-param-multiaddr"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">multiaddr</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Connect to a peer by multiaddr
+  
+
+</dd>
+
+        <dt id="disconnectFromPeer" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/disconnectFromPeer.html">disconnectFromPeer</a></span><span class="signature">(<wbr><span class="parameter" id="disconnectFromPeer-param-peerIdOrAddr"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">peerIdOrAddr</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Disconnect from a peer
+  
+
+</dd>
+
+        <dt id="exportCAR" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/exportCAR.html">exportCAR</a></span><span class="signature">(<wbr><span class="parameter" id="exportCAR-param-cid"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">cid</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-typed_data/Uint8List-class.html">Uint8List</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Exports a CAR file for the given CID.
+  
+
+</dd>
+
+        <dt id="findProviders" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/findProviders.html">findProviders</a></span><span class="signature">(<wbr><span class="parameter" id="findProviders-param-cid"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">cid</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Finds providers for a given CID.
+  
+
+</dd>
+
+        <dt id="get" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/get.html">get</a></span><span class="signature">(<wbr><span class="parameter" id="get-param-cid"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">cid</span>, {</span><span class="parameter" id="get-param-path"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">path</span> = <span class="default-value">&#39;&#39;</span></span>})
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-typed_data/Uint8List-class.html">Uint8List</a>?</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the content of a file or directory from IPFS.
+  
+
+</dd>
+
+        <dt id="getHealthStatus" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/getHealthStatus.html">getHealthStatus</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns a health status map for all subsystems.
+  
+
+</dd>
+
+        <dt id="importCAR" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/importCAR.html">importCAR</a></span><span class="signature">(<wbr><span class="parameter" id="importCAR-param-carFile"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-typed_data/Uint8List-class.html">Uint8List</a></span> <span class="parameter-name">carFile</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Imports a CAR (Content Addressable Archive) file.
+  
+
+</dd>
+
+        <dt id="ls" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/ls.html">ls</a></span><span class="signature">(<wbr><span class="parameter" id="ls-param-cid"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">cid</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter">Link</span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Lists the contents of an IPFS directory.
+  
+
+</dd>
+
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="pin" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/pin.html">pin</a></span><span class="signature">(<wbr><span class="parameter" id="pin-param-cid"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">cid</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Pins a CID to prevent it from being garbage collected.
+  
+
+</dd>
+
+        <dt id="publish" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/publish.html">publish</a></span><span class="signature">(<wbr><span class="parameter" id="publish-param-topic"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">topic</span>, </span><span class="parameter" id="publish-param-message"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">message</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Publish a message
+  
+
+</dd>
+
+        <dt id="publishIPNS" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/publishIPNS.html">publishIPNS</a></span><span class="signature">(<wbr><span class="parameter" id="publishIPNS-param-cid"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">cid</span>, {</span><span class="parameter" id="publishIPNS-param-keyName"><span>required</span> <span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">keyName</span></span>})
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Publishes an IPNS record for the given CID.
+  
+
+</dd>
+
+        <dt id="requestBlock" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/requestBlock.html">requestBlock</a></span><span class="signature">(<wbr><span class="parameter" id="requestBlock-param-cid"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">cid</span>, </span><span class="parameter" id="requestBlock-param-peer"><span class="type-annotation">Peer</span> <span class="parameter-name">peer</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Requests a specific block from a peer via Bitswap.
+  
+
+</dd>
+
+        <dt id="resolveDNSLink" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/resolveDNSLink.html">resolveDNSLink</a></span><span class="signature">(<wbr><span class="parameter" id="resolveDNSLink-param-domainName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">domainName</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Resolves a DNSLink to its corresponding CID.
+  
+
+</dd>
+
+        <dt id="resolveIPNS" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/resolveIPNS.html">resolveIPNS</a></span><span class="signature">(<wbr><span class="parameter" id="resolveIPNS-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Resolve IPNS name to CID
+  
+
+</dd>
+
+        <dt id="resolvePeerId" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/resolvePeerId.html">resolvePeerId</a></span><span class="signature">(<wbr><span class="parameter" id="resolvePeerId-param-peerIdStr"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">peerIdStr</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Resolve a peer ID to its known addresses (from Routing Table)
+  
+
+</dd>
+
+        <dt id="setGatewayMode" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/setGatewayMode.html">setGatewayMode</a></span><span class="signature">(<wbr><span class="parameter" id="setGatewayMode-param-mode"><span class="type-annotation"><a href="../dart_ipfs/GatewayMode.html">GatewayMode</a></span> <span class="parameter-name">mode</span>, {</span><span class="parameter" id="setGatewayMode-param-customUrl"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">customUrl</span></span>})
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Sets the mode for retrieving content.
+  
+
+</dd>
+
+        <dt id="start" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/start.html">start</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Starts the IPFS node and all its subsystems.
+  
+
+</dd>
+
+        <dt id="stop" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/stop.html">stop</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Stops the IPFS node gracefully, releasing all resources.
+  
+
+</dd>
+
+        <dt id="subscribe" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/subscribe.html">subscribe</a></span><span class="signature">(<wbr><span class="parameter" id="subscribe-param-topic"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">topic</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Subscribe to a topic
+  
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Object/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A string representation of this object.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="unpin" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/unpin.html">unpin</a></span><span class="signature">(<wbr><span class="parameter" id="unpin-param-cid"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">cid</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Unpins a CID from IPFS.
+  
+
+</dd>
+
+        <dt id="unsubscribe" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/unsubscribe.html">unsubscribe</a></span><span class="signature">(<wbr><span class="parameter" id="unsubscribe-param-topic"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/String-class.html">String</a></span> <span class="parameter-name">topic</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Unsubscribe from a topic
+  
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+  <section class="summary offset-anchor" id="static-methods">
+    <h2>Static Methods</h2>
+    <dl class="callables">
+        <dt id="create" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSNode/create.html">create</a></span><span class="signature">(<wbr><span class="parameter" id="create-param-config"><span class="type-annotation"><a href="../dart_ipfs/IPFSConfig-class.html">IPFSConfig</a></span> <span class="parameter-name">config</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.10.8/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../dart_ipfs/IPFSNode-class.html">IPFSNode</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Factory method to create and build an IPFS node from configuration.
+  
+
+</dd>
+
+    </dl>
+  </section>
+    
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs</a></li>
+    <li class="self-crumb">IPFSNode class</li>
+</ol>
+
+    <h5>dart_ipfs library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.9.4
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

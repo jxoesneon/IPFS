@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the fromBytes method from the CID class, for the Dart programming language.">
+  <title>fromBytes method - CID class - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li><a href="../../dart_ipfs/CID-class.html">CID</a></li>
+    <li class="self-crumb">fromBytes static method</li>
+  </ol>
+  <div class="self-name">fromBytes</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="dart_ipfs&#47;CID-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">fromBytes</span> static method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="../../dart_ipfs/CID-class.html">CID</a></span>
+<span class="name ">fromBytes</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="fromBytes-param-bytes"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.10.8/dart-typed_data/Uint8List-class.html">Uint8List</a></span> <span class="parameter-name">bytes</span></span></li>
+</ol>)
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Parses a CID from its raw binary representation.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">static CID fromBytes(Uint8List bytes) {
+  if (bytes.isEmpty) throw ArgumentError(&#39;Empty bytes&#39;);
+
+  &#47;&#47; CIDv0 check (SHA2-256)
+  &#47;&#47; 0x12 0x20 ... (34 bytes total)
+  if (bytes.length == 34 &amp;&amp; bytes[0] == 0x12 &amp;&amp; bytes[1] == 0x20) {
+    return CID(
+      version: 0,
+      multihash: Multihash.decode(bytes),
+      codec: &#39;dag-pb&#39;,
+      multibaseType: Multibase.base58btc,
+    );
+  }
+
+  &#47;&#47; CIDv1 check
+  if (bytes[0] == 0x01) {
+    int index = 1;
+    int codecCode = 0;
+    int shift = 0;
+    while (true) {
+      if (index &gt;= bytes.length) {
+        throw const FormatException(&#39;Invalid CID bytes&#39;);
+      }
+      int byte = bytes[index++];
+      codecCode |= (byte &amp; 0x7f) &lt;&lt; shift;
+      if ((byte &amp; 0x80) == 0) break;
+      shift += 7;
+    }
+
+    final mh = Multihash.decode(bytes.sublist(index));
+
+    String codecStr;
+    try {
+      codecStr = EncodingUtils.getCodecFromCode(codecCode);
+    } catch (e) {
+      codecStr = &#39;unknown&#39;; &#47;&#47; Or throw?
+      &#47;&#47; If unknown, &#39;unknown&#39; might break equal check if original was &#39;unknown&#39; or asserted?
+      &#47;&#47; But better to use string &#39;unknown&#39; than failing if that&#39;s what we want.
+      &#47;&#47; But wait, `EncodingUtils` throws ArgumentError if unknown.
+      &#47;&#47; If I catch it, I can default to &#39;unknown&#39;.
+      &#47;&#47; But better to let it throw or return unknown?
+      &#47;&#47; The previous code returned &#39;unknown&#39; if not matched.
+      &#47;&#47; So keeping &#39;unknown&#39; is safe fallback for now.
+    }
+
+    &#47;&#47; Special case: if getCodecFromCode doesn&#39;t have it, we fall back to &#39;unknown&#39;.
+    &#47;&#47; But if we want to SUPPORT &#39;dag-cbor&#39;, EncodingUtils MUST have it.
+    &#47;&#47; I tested EncodingUtils has &#39;dag-cbor&#39;. So it will return &#39;dag-cbor&#39;.
+
+    return CID(
+      version: 1,
+      multihash: mh,
+      codec: codecStr,
+      multibaseType: Multibase.base32,
+    );
+  }
+
+  throw const FormatException(&#39;Invalid CID version&#39;);
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/CID-class.html">CID</a></li>
+    <li class="self-crumb">fromBytes static method</li>
+</ol>
+
+    <h5>CID class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.9.4
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="dart_ipfs API docs, for the Dart programming language.">
+  <title>dart_ipfs - Dart API docs</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="static-assets/github.css?v1">
+  <link rel="stylesheet" href="static-assets/styles.css?v1">
+  <link rel="icon" href="static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="https://github.com/jxoesneon/IPFS">dart_ipfs package</a></li>
+  </ol>
+  <div class="self-name">dart_ipfs</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div id="dartdoc-main-content" class="main-content">
+      
+<section class="desc markdown">
+  <h1 id="dart_ipfs">dart_ipfs</h1>
+<p>A complete, production-ready IPFS (InterPlanetary File System) implementation in Dart, supporting offline, gateway, and full P2P modes. Built for mobile (Flutter), desktop, and web platforms.</p>
+<p><a href="https://pub.dev/packages/dart_ipfs"><img src="https://img.shields.io/pub/v/dart_ipfs.svg" alt="pub package"></a>
+<a href="https://dart.dev/"><img src="https://img.shields.io/badge/dart-%3E%3D3.0.0-blue.svg" alt="Dart"></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+<a href="https://github.com/jxoesneon/IPFS/actions/workflows/test.yml"><img src="https://github.com/jxoesneon/IPFS/actions/workflows/test.yml/badge.svg" alt="Build Status"></a>
+<a href="https://github.com/jxoesneon/IPFS/actions"><img src="https://img.shields.io/badge/tests-1098-brightgreen.svg" alt="Tests"></a>
+<a href="https://ko-fi.com/jxoesneon"><img src="https://img.shields.io/badge/Ko--fi-F16061?style=flat&amp;logo=ko-fi&amp;logoColor=white" alt="Ko-Fi"></a></p>
+<blockquote>
+<p><strong>TL;DR</strong>: A pure-Dart IPFS node for mobile, desktop, and web. Supports offline content-addressable storage, full P2P networking with NAT traversal, HTTP gateways, and production-grade security.</p>
+</blockquote>
+<hr>
+<h2 id="-documentation">📚 Documentation</h2>
+<ul>
+<li><strong><a href="https://github.com/jxoesneon/IPFS/wiki">Wiki</a></strong> — Guides, Installation, Architecture</li>
+<li><strong><a href="https://jxoesneon.github.io/IPFS/">API Reference</a></strong> — Auto-generated Dart docs</li>
+</ul>
+<hr>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#-whats-new-in-v18">What's New in v1.8</a></li>
+<li><a href="#features">Features</a></li>
+<li><a href="#quick-start">Quick Start</a></li>
+<li><a href="#configuration">Configuration</a></li>
+<li><a href="#use-cases">Use Cases</a></li>
+<li><a href="#architecture">Architecture</a></li>
+<li><a href="#-security">Security</a></li>
+<li><a href="#performance">Performance</a></li>
+<li><a href="#known-limitations">Known Limitations</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#contributing">Contributing</a></li>
+<li><a href="#roadmap">Roadmap</a></li>
+<li><a href="#license">License</a></li>
+</ul>
+<hr>
+<h2 id="-whats-new-in-v19">🚀 What's New in v1.9</h2>
+<h3 id="major-features">Major Features</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Native libp2p Core</strong></td>
+<td>Fully migrated to <code>dart_libp2p</code> for standard IPFS networking</td>
+</tr>
+<tr>
+<td><strong>95% Router Coverage</strong></td>
+<td>Core <code>Libp2pRouter</code> achieves <strong>95.6%</strong> test coverage</td>
+</tr>
+<tr>
+<td><strong>Stability Baseline</strong></td>
+<td>100% pass rate confirmed across 1098 unit/integration tests</td>
+</tr>
+<tr>
+<td><strong>Cleanup</strong></td>
+<td>Removed all legacy <code>p2plib</code> dependencies and shims</td>
+</tr>
+</tbody>
+</table>
+<h2 id="-protobuf-600-compatibility-2026-02-02">🚀 Protobuf 6.0.0 Compatibility (2026-02-02)</h2>
+<h3 id="-full-migration-complete">✅ Full Migration Complete</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Protobuf 6.0.0</strong></td>
+<td>✅ <strong>COMPATIBLE</strong></td>
+<td>Full support for latest protobuf version</td>
+</tr>
+<tr>
+<td><strong>dart_libp2p Integration</strong></td>
+<td>✅ <strong>FIXED</strong></td>
+<td>Resolved <code>PbList</code>/<code>createRepeated()</code> issues</td>
+</tr>
+<tr>
+<td><strong>Any/Timestamp Types</strong></td>
+<td>✅ <strong>RESOLVED</strong></td>
+<td>Fixed import conflicts in 5 critical files</td>
+</tr>
+<tr>
+<td><strong>Test Suite</strong></td>
+<td>✅ <strong>1098 TESTS PASSING</strong></td>
+<td>Verified comprehensive functionality</td>
+</tr>
+<tr>
+<td><strong>Backward Compatibility</strong></td>
+<td>✅ <strong>MAINTAINED</strong></td>
+<td>Seamless upgrade from protobuf 5.x</td>
+</tr>
+</tbody>
+</table>
+<h3 id="-migration-notes">🛠 Migration Notes</h3>
+<ul>
+<li><strong>Well-known types</strong>: Use <code>package:protobuf/well_known_types/google/protobuf/[type].pb.dart</code></li>
+<li><strong>Import patterns</strong>: Avoid local copies of <code>any.pb.dart</code>/<code>timestamp.pb.dart</code></li>
+<li><strong>Dependency</strong>: Updated to <code>protobuf: ^6.0.0</code> in <code>pubspec.yaml</code></li>
+</ul>
+<h2 id="-whats-new-in-v18">🚀 What's New in v1.8</h2>
+<h3 id="major-features-2">Major Features</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>libp2p Bridge</strong></td>
+<td>TCP/Noise transport to connect with standard libp2p nodes</td>
+</tr>
+<tr>
+<td><strong>Circuit Relay v2</strong></td>
+<td>Full HOP/STOP/RESERVE implementation for hole-punching</td>
+</tr>
+<tr>
+<td><strong>AutoNAT</strong></td>
+<td>Automatic NAT type detection (symmetric/restricted/none)</td>
+</tr>
+<tr>
+<td><strong>S/Kademlia PoW</strong></td>
+<td>Sybil attack protection for DHT routing</td>
+</tr>
+<tr>
+<td><strong>Encrypted Keystore</strong></td>
+<td>AES-256-GCM with PBKDF2 key derivation</td>
+</tr>
+</tbody>
+</table>
+<h3 id="security-hardening-v174">Security Hardening (v1.7.4+)</h3>
+<ul>
+<li>SEC-001: Secure random number generation</li>
+<li>SEC-002: NAT traversal security controls</li>
+<li>SEC-004: Hardened command execution</li>
+<li>SEC-005: S/Kademlia Proof-of-Work</li>
+<li>SEC-008: Encrypted key storage</li>
+<li>SEC-010: DHT rate limiting</li>
+</ul>
+<h3 id="stability">Stability</h3>
+<ul>
+<li>1098 tests passing</li>
+<li>Resolved 50+ issues since v1.7.0</li>
+<li>Protocol compliance with go-ipfs (Kubo)</li>
+</ul>
+<hr>
+<h2 id="features">Features</h2>
+<h3 id="-core-ipfs-functionality">✅ Core IPFS Functionality</h3>
+<ul>
+<li><strong>Content-Addressable Storage</strong>: CID v0 and v1 support</li>
+<li><strong>UnixFS</strong>: Full file system implementation with chunking</li>
+<li><strong>DAG-PB</strong>: MerkleDAG operations and IPLD traversal</li>
+<li><strong>CAR Files</strong>: Import/export support</li>
+<li><strong>Pinning</strong>: Content persistence management</li>
+</ul>
+<h3 id="-networking--nat-traversal">✅ Networking &amp; NAT Traversal</h3>
+<ul>
+<li><strong>Bitswap 1.2.0</strong>: Efficient block exchange with wantlist management</li>
+<li><strong>Kademlia DHT</strong>: Distributed hash table for peer/content routing</li>
+<li><strong>AutoNAT</strong>: Automatic NAT type detection
+<ul>
+<li>Direct connectivity testing</li>
+<li>Symmetric NAT detection</li>
+<li>Periodic dialback verification</li>
+</ul>
+</li>
+<li><strong>UPnP/NAT-PMP</strong>: Automatic port mapping via <code>NatTraversalService</code></li>
+<li><strong>Circuit Relay v2</strong>: Hole-punching via relay peers
+<ul>
+<li>HOP protocol (relay serving)</li>
+<li>STOP protocol (connection handling)</li>
+<li>RESERVE protocol (relay reservations)</li>
+</ul>
+</li>
+<li><strong>libp2p Core</strong>: Native TCP/Noise transport for standard P2P networking</li>
+<li><strong>PubSub</strong>: Real-time messaging (Gossipsub)</li>
+<li><strong>mDNS</strong>: Local peer discovery</li>
+<li><strong>Bootstrap Peers</strong>: Network connectivity initialization</li>
+</ul>
+<h3 id="-services">✅ Services</h3>
+<ul>
+<li><strong>HTTP Gateway</strong>: Read-only and writable modes</li>
+<li><strong>RPC API</strong>: Compatible with go-ipfs API</li>
+<li><strong>IPNS</strong>: Mutable naming system with Ed25519 signatures</li>
+<li><strong>DNSLink</strong>: Domain-based content resolution</li>
+<li><strong>GraphSync</strong>: Efficient graph synchronization protocol</li>
+<li><strong>Metrics</strong>: Prometheus-compatible monitoring</li>
+</ul>
+<h3 id="-security">✅ Security</h3>
+<ul>
+<li><strong>Production Cryptography</strong>
+<ul>
+<li>secp256k1 key exchange (128-bit security)</li>
+<li>ChaCha20-Poly1305 AEAD encryption</li>
+<li>SHA-256 content hashing</li>
+<li>Ed25519 IPNS signatures</li>
+</ul>
+</li>
+<li><strong>Encrypted Keystore (SEC-008)</strong>
+<ul>
+<li>AES-256-GCM encryption</li>
+<li>PBKDF2 key derivation</li>
+<li>Automatic key rotation</li>
+<li>Memory zeroing on lock</li>
+</ul>
+</li>
+<li><strong>Sybil Protection (SEC-005)</strong>
+<ul>
+<li>S/Kademlia Proof-of-Work for PeerId verification</li>
+<li>Configurable difficulty via <code>SecurityConfig.dhtDifficulty</code></li>
+</ul>
+</li>
+<li><strong>Rate Limiting</strong>
+<ul>
+<li>Per-client authentication throttling</li>
+<li>DHT provider announcement limits</li>
+</ul>
+</li>
+<li><strong>Content Verification</strong>
+<ul>
+<li>Automatic CID validation</li>
+<li>Merkle tree verification</li>
+<li>Block integrity checks</li>
+</ul>
+</li>
+</ul>
+<h3 id="-web-platform">✅ Web Platform</h3>
+<ul>
+<li><strong><code>IPFSWebNode</code></strong>: Browser-compatible implementation</li>
+<li><strong>IndexedDB Storage</strong>: Persistent local storage</li>
+<li><strong>WebSocket Transport</strong>: Networking via secure relays</li>
+<li><strong>Bitswap &amp; PubSub</strong>: Full protocol support in browsers</li>
+</ul>
+<hr>
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="installation">Installation</h3>
+<p>Add to your <code>pubspec.yaml</code>:</p>
+<pre class="language-yaml"><code class="language-yaml">dependencies:
+  dart_ipfs: ^1.9.0
+</code></pre>
+<p>Or from Git for latest development:</p>
+<pre class="language-yaml"><code class="language-yaml">dependencies:
+  dart_ipfs:
+    git:
+      url: https://github.com/jxoesneon/IPFS.git
+</code></pre>
+<p>Then run:</p>
+<pre class="language-bash"><code class="language-bash">dart pub get
+</code></pre>
+<h3 id="windows-setup">Windows Setup</h3>
+<p><strong>Important</strong>: On Windows, P2P networking requires <code>libsodium</code> for cryptography.</p>
+<p><strong>✅ Automatic Setup</strong>: dart_ipfs automatically detects and installs libsodium via <code>winget</code> on first run.</p>
+<p><strong>Manual Installation</strong> (if auto-install fails):</p>
+<pre class="language-powershell"><code class="language-powershell"># Via winget (recommended)
+winget install jedisct1.libsodium
+
+# Or use offline mode (no P2P)
+IPFSConfig(offline: true)
+</code></pre>
+<h3 id="basic-usage">Basic Usage</h3>
+<h4 id="offline-mode-local-storage">Offline Mode (Local Storage)</h4>
+<pre class="language-dart"><code class="language-dart">import 'package:dart_ipfs/dart_ipfs.dart';
+
+void main() async {
+  final node = await IPFSNode.create(
+    IPFSConfig(
+      dataDir: './ipfs_data',
+      offline: true,  // No P2P networking
+    ),
+  );
+
+  await node.start();
+
+  // Add content
+  final cid = await node.add('Hello, IPFS!');
+  print('Added with CID: $cid');
+
+  // Retrieve content
+  final retrieved = await node.cat(cid);
+  print('Retrieved: $retrieved');
+
+  await node.stop();
+}
+</code></pre>
+<h4 id="gateway-mode-http-server">Gateway Mode (HTTP Server)</h4>
+<pre class="language-dart"><code class="language-dart">final node = await IPFSNode.create(
+  IPFSConfig(
+    dataDir: './gateway_data',
+    offline: true,
+    gateway: GatewayConfig(
+      enabled: true,
+      port: 8080,
+    ),
+  ),
+);
+
+await node.start();
+print('Gateway running at http://localhost:8080');
+// Access content at: http://localhost:8080/ipfs/&lt;CID&gt;
+</code></pre>
+<h4 id="p2p-network-mode-full-node">P2P Network Mode (Full Node)</h4>
+<pre class="language-dart"><code class="language-dart">final node = await IPFSNode.create(
+  IPFSConfig(
+    dataDir: './p2p_data',
+    offline: false,  // Enable P2P networking
+    network: NetworkConfig(
+      bootstrapPeers: [
+        '/dnsaddr/bootstrap.libp2p.io/p2p/...',
+      ],
+      enableNatTraversal: true,  // UPnP/NAT-PMP
+    ),
+  ),
+);
+
+await node.start();
+print('P2P Node ID: ${node.peerID}');
+// Node participates in DHT, Bitswap, PubSub
+</code></pre>
+<h4 id="web-platform-browser">Web Platform (Browser)</h4>
+<pre class="language-dart"><code class="language-dart">import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
+
+void main() async {
+  final node = IPFSWebNode(
+    bootstrapPeers: ['wss://relay.node.address/p2p/...'],
+  );
+  await node.start();
+
+  final cid = await node.add(Uint8List.fromList('Hello Web!'.codeUnits));
+  print('Added: $cid');
+
+  final data = await node.get(cid.encode());
+  print('Retrieved: ${String.fromCharCodes(data!)}');
+}
+</code></pre>
+<hr>
+<h2 id="configuration">Configuration</h2>
+<h3 id="full-configuration-reference">Full Configuration Reference</h3>
+<pre class="language-dart"><code class="language-dart">IPFSConfig(
+  // Storage
+  dataDir: './ipfs_data',
+
+  // Networking
+  offline: false,
+  network: NetworkConfig(
+    bootstrapPeers: [...],
+    listenAddresses: ['/ip4/0.0.0.0/tcp/4001'],
+    enableNatTraversal: true,  // UPnP/NAT-PMP port mapping
+  ),
+
+  // Gateway
+  gateway: GatewayConfig(
+    enabled: true,
+    port: 8080,
+    writable: false,
+    cacheSize: 1024 * 1024 * 1024,  // 1GB
+  ),
+
+  // RPC API
+  rpc: RPCConfig(
+    enabled: true,
+    port: 5001,
+  ),
+
+  // DHT
+  dht: DHTConfig(
+    mode: DHTMode.server,  // client, server, or auto
+    bucketSize: 20,
+  ),
+
+  // Security
+  security: SecurityConfig(
+    dhtDifficulty: 16,              // S/Kademlia PoW difficulty
+    rateLimitWindow: Duration(minutes: 1),
+    maxAuthAttempts: 5,
+    keyRotationInterval: Duration(days: 30),
+  ),
+
+  // Logging
+  debug: false,
+  verboseLogging: false,
+)
+</code></pre>
+<hr>
+<h2 id="use-cases">Use Cases</h2>
+<h3 id="1-decentralized-storage">1. Decentralized Storage</h3>
+<pre class="language-dart"><code class="language-dart">final file = File('document.pdf');
+final bytes = await file.readAsBytes();
+final cid = await node.addBytes(bytes);
+print('Document CID: $cid');
+// Content is permanently addressable
+</code></pre>
+<h3 id="2-content-distribution-network">2. Content Distribution Network</h3>
+<pre class="language-dart"><code class="language-dart">final config = IPFSConfig(
+  gateway: GatewayConfig(
+    enabled: true,
+    port: 8080,
+    cacheSize: 1024 * 1024 * 1024,
+  ),
+);
+</code></pre>
+<h3 id="3-peer-to-peer-applications">3. Peer-to-Peer Applications</h3>
+<pre class="language-dart"><code class="language-dart">// PubSub messaging
+await node.pubsub.subscribe('my-topic', (message) {
+  print('Received: $message');
+});
+
+await node.pubsub.publish('my-topic', 'Hello, peers!');
+</code></pre>
+<h3 id="4-decentralized-websites">4. Decentralized Websites</h3>
+<pre class="language-dart"><code class="language-dart">final websiteDir = Directory('./my-website');
+final rootCID = await node.addDirectory(websiteDir);
+// Access via: http://gateway/ipfs/&lt;rootCID&gt;/index.html
+</code></pre>
+<hr>
+<h2 id="architecture">Architecture</h2>
+<pre class="language-dart"><code>┌─────────────────────────────────────┐
+│         Application Layer            │
+│   (Your Dart/Flutter Application)    │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│         dart_ipfs Public API         │
+│  (IPFSNode, add, cat, pin, etc.)    │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│         Service Layer                │
+│  Gateway │ RPC │ PubSub │ IPNS      │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│        Protocol Layer                │
+│  Bitswap │ DHT │ GraphSync │ Relay  │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│        Transport Layer               │
+│        P2P (Native libp2p)           │
+│  AutoNAT │ Circuit Relay v2           │
+│  Crypto (Ed25519 + Noise)            │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│         Storage Layer                │
+│   UnixFS │ DAG-PB │ BlockStore       │
+│   Datastore (Hive) │ Pinning         │
+└─────────────────────────────────────┘
+</code></pre>
+<hr>
+<h2 id="-security-2">🛡️ Security</h2>
+<blockquote>
+<p><strong>IMPORTANT</strong>: Production use requires strict sandboxing.
+See <code>docker-compose.yml</code> for a secure reference implementation.</p>
+</blockquote>
+<h3 id="recommended-deployment">Recommended Deployment</h3>
+<ol>
+<li><strong>Immutable Filesystem</strong>: Run with a read-only root</li>
+<li><strong>Non-Root Execution</strong>: Use UID &gt; 1000 (e.g., <code>10001</code>)</li>
+<li><strong>Network Isolation</strong>: Bind ports to localhost (<code>127.0.0.1</code>) only</li>
+<li><strong>IP Diversity Limits</strong>: Max 5 peers/IP to prevent routing table poisoning</li>
+</ol>
+<h3 id="encrypted-keystore">Encrypted Keystore</h3>
+<pre class="language-dart"><code class="language-dart">// Unlock keystore with password
+await node.securityManager.unlockKeystore('your-password');
+
+// Keys are encrypted at rest with AES-256-GCM
+// Master key derived via PBKDF2
+// Automatic memory zeroing on lock
+</code></pre>
+<h3 id="skademlia-pow">S/Kademlia PoW</h3>
+<pre class="language-dart"><code class="language-dart">// Enable Sybil protection in DHT
+SecurityConfig(
+  dhtDifficulty: 16,  // Require 16-bit PoW prefix
+)
+// Peers with insufficient PoW are rejected from routing table
+</code></pre>
+<hr>
+<h2 id="performance">Performance</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Content Hashing</td>
+<td>~50 MB/s (SHA-256)</td>
+</tr>
+<tr>
+<td>Block Storage</td>
+<td>~1000 ops/sec (Hive)</td>
+</tr>
+<tr>
+<td>Gateway Latency</td>
+<td>&lt;10ms (local cache hit)</td>
+</tr>
+<tr>
+<td>P2P Handshake</td>
+<td>&lt;100ms (secp256k1 ECDH)</td>
+</tr>
+<tr>
+<td>Memory Baseline</td>
+<td>~50MB + content cache</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="known-limitations">Known Limitations</h2>
+<p>None.</p>
+<hr>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="node-wont-start-windows">Node Won't Start (Windows)</h3>
+<p><strong>Symptom</strong>: Hangs during startup</p>
+<p><strong>Solution</strong>: Install libsodium:</p>
+<pre class="language-powershell"><code class="language-powershell">winget install jedisct1.libsodium
+</code></pre>
+<h3 id="autonat-reports-symmetric">AutoNAT Reports "Symmetric"</h3>
+<p><strong>Symptom</strong>: Peers can't connect to you</p>
+<p><strong>Solution</strong>: Enable port mapping:</p>
+<pre class="language-dart"><code class="language-dart">NetworkConfig(enableNatTraversal: true)
+</code></pre>
+<h3 id="dht-queries-slow">DHT Queries Slow</h3>
+<p><strong>Symptom</strong>: <code>findProviders</code> takes &gt;30s</p>
+<p><strong>Solution</strong>: Ensure bootstrap peers are reachable and check <code>dhtDifficulty</code> isn't too high.</p>
+<h3 id="gateway-returns-404">Gateway Returns 404</h3>
+<p><strong>Symptom</strong>: Content not found even though added</p>
+<p><strong>Solution</strong>: Check if content is pinned:</p>
+<pre class="language-dart"><code class="language-dart">await node.pin(cid);
+</code></pre>
+<hr>
+<h2 id="examples">Examples</h2>
+<p>See the <code>example/</code> directory for full applications:</p>
+<ul>
+<li><strong><a href="example/ipfs_dashboard">📱 Premium Dashboard</a></strong>: Flutter desktop app with glassmorphism UI</li>
+<li><strong><a href="example/cli_dashboard">📟 CLI Dashboard</a></strong>: Matrix-style terminal interface</li>
+</ul>
+<p>Other examples:</p>
+<ul>
+<li><a href="example/dart_ipfs_example.dart">Basic Usage</a></li>
+<li><a href="example/blog_use_case.dart">Offline Blog</a></li>
+<li><a href="example/online_test.dart">P2P Networking</a></li>
+<li><a href="example/gateway_example.dart">HTTP Gateway</a></li>
+<li><a href="example/full_node_example.dart">Full Node</a></li>
+<li><a href="example/keystore_unlock_example.dart">Keystore Unlock</a></li>
+<li><a href="example/verify_bridge.dart">libp2p Bridge Verification</a></li>
+</ul>
+<p>Run examples:</p>
+<pre class="language-bash"><code class="language-bash">dart run example/blog_use_case.dart
+dart run example/online_test.dart
+</code></pre>
+<hr>
+<h2 id="testing">Testing</h2>
+<pre class="language-bash"><code class="language-bash"># Run all tests
+dart test
+
+# Run with verbose output
+dart test -r expanded
+
+# Static analysis
+dart analyze
+</code></pre>
+<p>Expected results:</p>
+<ul>
+<li>✅ 0 errors</li>
+<li>✅ 0 warnings</li>
+<li>✅ 1098 tests pass</li>
+</ul>
+<hr>
+<h2 id="contributing">Contributing</h2>
+<p>Contributions welcome! Please:</p>
+<ol>
+<li>Fork the repository</li>
+<li>Create a feature branch</li>
+<li>Write tests for new features</li>
+<li>Ensure <code>dart analyze</code> and <code>dart test</code> pass</li>
+<li>Submit a pull request</li>
+</ol>
+<hr>
+<h2 id="roadmap">Roadmap</h2>
+<h3 id="-done">✅ Done</h3>
+<ul>
+<li>Core IPFS protocols (Bitswap, DHT, PubSub)</li>
+<li>Offline, Gateway, and P2P modes</li>
+<li>Production cryptography</li>
+<li>Web platform support</li>
+<li>libp2p core migration</li>
+<li>Circuit Relay v2</li>
+<li>AutoNAT</li>
+<li>Encrypted keystore</li>
+<li>S/Kademlia PoW</li>
+<li>95%+ Router Coverage</li>
+</ul>
+<h3 id="-in-progress">🔄 In Progress</h3>
+<ul>
+<li>Mobile optimization (Flutter performance)</li>
+<li>QUIC transport (native, beyond libp2p bridge)</li>
+</ul>
+<h3 id="-planned">📋 Planned</h3>
+<ul>
+<li>Full WebRTC transport</li>
+<li>Filecoin integration</li>
+</ul>
+<hr>
+<h2 id="comparison-with-go-ipfs">Comparison with go-ipfs</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>dart_ipfs</th>
+<th>go-ipfs (Kubo)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Content Storage</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>UnixFS</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>CID v0/v1</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Bitswap 1.2.0</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Kademlia DHT</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>HTTP Gateway</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>RPC API</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>PubSub</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>IPNS</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>GraphSync</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Circuit Relay v2</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>AutoNAT</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Language</td>
+<td>Dart</td>
+<td>Go</td>
+</tr>
+<tr>
+<td>Mobile Support</td>
+<td>✅ Flutter</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Web Support</td>
+<td>✅ Dart Web</td>
+<td>❌</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="license">License</h2>
+<p>MIT License — see <a href="LICENSE">LICENSE</a> file for details</p>
+<hr>
+<h2 id="credits">Credits</h2>
+<p>Built with:</p>
+<ul>
+<li><a href="https://pub.dev/packages/dart_libp2p">dart_libp2p</a> — Native P2P networking</li>
+<li><a href="https://pub.dev/packages/pointycastle">pointycastle</a> — Cryptography</li>
+<li><a href="https://pub.dev/packages/hive">hive</a> — Storage</li>
+<li><a href="https://pub.dev/packages/protobuf">protobuf</a> — Protocol buffers</li>
+</ul>
+<p>Inspired by:</p>
+<ul>
+<li><a href="https://github.com/ipfs/kubo">go-ipfs (Kubo)</a> — Reference implementation</li>
+<li><a href="https://github.com/ipfs/js-ipfs">js-ipfs</a> — JavaScript implementation</li>
+</ul>
+<hr>
+<h2 id="support">Support</h2>
+<ul>
+<li><strong>Issues</strong>: <a href="https://github.com/jxoesneon/IPFS/issues">GitHub Issues</a></li>
+<li><strong>Discussions</strong>: <a href="https://github.com/jxoesneon/IPFS/discussions">GitHub Discussions</a></li>
+<li><strong>IPFS Docs</strong>: <a href="https://docs.ipfs.tech/">docs.ipfs.tech</a></li>
+</ul>
+<hr>
+<p><strong>Ready to build decentralized applications? Get started with dart_ipfs today!</strong> 🚀</p>
+</section>
+
+
+      <section class="summary">
+          <h2>Libraries</h2>
+        <dl>
+          <dt id="dart_ipfs">
+  <span class="name"><a href="dart_ipfs/">dart_ipfs</a></span> 
+
+</dt>
+<dd>Production-ready IPFS (InterPlanetary File System) implementation in Dart.
+</dd>
+
+        </dl>
+      </section>
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="https://github.com/jxoesneon/IPFS">dart_ipfs package</a></li>
+</ol>
+
+    <h5 class="hidden-xs"><span class="package-name">dart_ipfs</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="dart_ipfs/">dart_ipfs</a></li>
+</ol>
+
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div>
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.9.4
+  </span>
+  
+</footer>
+
+
+<script src="static-assets/highlight.pack.js?v1"></script>
+<script src="static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
