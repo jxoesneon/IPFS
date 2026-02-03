@@ -1,0 +1,5 @@
+dartdoc:
+  exclude:
+    - "vendor/**"
+    - "example/**"
+    - "temp_backup/**"
