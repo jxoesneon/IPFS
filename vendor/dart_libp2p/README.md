@@ -32,7 +32,7 @@ Then run:
 dart pub get
 ```
 
-##  Quick Start
+## Quick Start
 
 Here's a simple example of creating two libp2p nodes and connecting them:
 
@@ -79,27 +79,27 @@ void main() async {
 }
 ```
 
-##  Architecture
+## Architecture
 
 Dart Libp2p follows a layered architecture where each component provides services to the layer above it:
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚           Application               â”‚
-â”‚        (Your Custom Protocols)      â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚              Host                   â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚           Network/Swarm             â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚            Upgrader                 â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚  Multiplexer (Yamux) â”‚ Security     â”‚
-â”‚                      â”‚ (Noise)      â”‚
-â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
-â”‚           Transport                 â”‚
-â”‚        (TCP, UDX)                   â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌──────────────────────────────────────┐
+│           Application                │
+│        (Your Custom Protocols)       │
+├──────────────────────────────────────┤
+│              Host                    │
+├──────────────────────────────────────┤
+│           Network/Swarm              │
+├──────────────────────────────────────┤
+│            Upgrader                  │
+├──────────────────────────────────────┤
+│  Multiplexer (Yamux) │ Security      │
+│                      │ (Noise)       │
+├──────────────────────────────────────┤
+│           Transport                  │
+│        (TCP, UDX)                    │
+└──────────────────────────────────────┘
 ```
 
 ### Core Components
@@ -127,7 +127,7 @@ Dart Libp2p follows a layered architecture where each component provides service
 
 > **Note**: This implementation does not support QUIC. Instead, we've opted for a custom `dart-udx` implementation that provides similar benefits for peer-to-peer networking.
 
-##  Security
+## Security
 
 Dart Libp2p uses the Noise protocol for securing connections:
 
@@ -153,7 +153,7 @@ For detailed documentation, visit the [docs](./doc/) directory:
 - **[Resource Manager](./doc/resource-manager.md)**: Resource protection
 - **[Cookbook](./doc/cookbook.md)**: Practical examples and recipes
 
-##  Examples
+## Examples
 
 Check out the [examples](./example/) directory for working examples:
 
@@ -181,7 +181,7 @@ dart run example/chat_mdns/main.dart
 dart run example/chat_mdns/main.dart
 ```
 
-##  Testing
+## Testing
 
 Run the test suite:
 
@@ -189,7 +189,7 @@ Run the test suite:
 dart test
 ```
 
-##  Contributing
+## Contributing
 
 We welcome contributions! Please see our contributing guidelines and code of conduct.
 
@@ -197,7 +197,7 @@ We welcome contributions! Please see our contributing guidelines and code of con
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-##  Acknowledgments
+## Acknowledgments
 
 - [libp2p](https://libp2p.io/) - The original protocol specification
 - [dart-udx](https://pub.dev/packages/dart_udx) - Custom UDP transport implementation
@@ -209,4 +209,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [libp2p.io](https://libp2p.io/) - Official libp2p documentation
 - [Dart](https://dart.dev/) - Dart programming language
 - [pub.dev](https://pub.dev/packages/dart_libp2p) - Package on pub.dev
-
