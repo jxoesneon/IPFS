@@ -775,4 +775,3 @@ class Dashboard {
     console.write("> $_chatInput"); // Cursor
   }
 }
-

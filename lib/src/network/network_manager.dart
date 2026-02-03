@@ -55,4 +55,3 @@ class NetworkManager {
   /// Stream of network events.
   Stream<NetworkEvent> get events => _eventController.stream;
 }
-

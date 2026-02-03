@@ -82,4 +82,3 @@ bool _listsEqual(List<int> a, List<int> b) {
 int _listHashCode(List<int> list) {
   return list.fold(0, (prev, element) => prev ^ element.hashCode);
 }
-

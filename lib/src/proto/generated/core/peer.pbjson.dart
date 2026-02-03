@@ -31,4 +31,3 @@ final $typed_data.Uint8List peerProtoDescriptor = $convert.base64Decode(
     'CglQZWVyUHJvdG8SDgoCaWQYASABKAlSAmlkEhwKCWFkZHJlc3NlcxgCIAMoCVIJYWRkcmVzc2'
     'VzEhgKB2xhdGVuY3kYAyABKANSB2xhdGVuY3kSIwoNYWdlbnRfdmVyc2lvbhgEIAEoCVIMYWdl'
     'bnRWZXJzaW9u');
-

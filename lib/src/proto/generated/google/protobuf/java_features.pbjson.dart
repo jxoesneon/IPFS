@@ -89,4 +89,3 @@ final $typed_data.Uint8List javaFeaturesDescriptor = $convert.base64Decode(
     'lkYXRpb24gYmVoYXZpb3Igc2hvdWxkIHVzZSB0aGUgZ2xvYmFsIGNyb3NzLWxhbmd1YWdlIHV0'
     'ZjhfdmFsaWRhdGlvbiBmZWF0dXJlLlIOdXRmOFZhbGlkYXRpb24iRgoOVXRmOFZhbGlkYXRpb2'
     '4SGwoXVVRGOF9WQUxJREFUSU9OX1VOS05PV04QABILCgdERUZBVUxUEAESCgoGVkVSSUZZEAI=');
-

@@ -157,4 +157,3 @@ class MockMetricsCollector extends _i1.Mock implements _i3.MetricsCollector {
           )
           as _i4.Future<void>);
 }
-

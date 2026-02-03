@@ -123,4 +123,3 @@ class LedgerManager {
     return {'sent': totalSent, 'received': totalReceived};
   }
 }
-

@@ -56,4 +56,3 @@ final $typed_data.Uint8List findClosestPeersResponseDescriptor =
     $convert.base64Decode(
         'ChhGaW5kQ2xvc2VzdFBlZXJzUmVzcG9uc2USPwoIcGVlcl9pZHMYASADKAsyJC5pcGZzLmRodC'
         '5jb21tb25fa2FkZW1saWEuS2FkZW1saWFJZFIHcGVlcklkcw==');
-

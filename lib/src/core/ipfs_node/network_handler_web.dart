@@ -93,4 +93,3 @@ class NetworkHandler {
   /// Initializes the handler (stub).
   Future<void> initialize() async {}
 }
-

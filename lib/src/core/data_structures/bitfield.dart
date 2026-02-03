@@ -54,4 +54,3 @@ class BitField {
   /// Returns the total size of the BitField in bits.
   int get size => _bits.length * 8;
 }
-

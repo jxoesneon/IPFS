@@ -171,4 +171,3 @@ const IndexEntry$json = {
 final $typed_data.Uint8List indexEntryDescriptor = $convert.base64Decode(
     'CgpJbmRleEVudHJ5EhAKA2NpZBgBIAEoCVIDY2lkEhYKBm9mZnNldBgCIAEoA1IGb2Zmc2V0Eh'
     'YKBmxlbmd0aBgDIAEoA1IGbGVuZ3Ro');
-

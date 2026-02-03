@@ -50,4 +50,3 @@ class CryptoUtils {
     return digest.bytes;
   }
 }
-

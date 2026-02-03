@@ -89,4 +89,3 @@ class ProtocolCoordinator {
     await _ipld.stop();
   }
 }
-

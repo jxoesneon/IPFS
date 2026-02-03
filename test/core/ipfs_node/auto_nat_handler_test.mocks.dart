@@ -289,4 +289,3 @@ class MockNatTraversalService extends _i1.Mock
           )
           as _i8.Future<void>);
 }
-

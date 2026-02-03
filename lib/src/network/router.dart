@@ -74,4 +74,3 @@ class Router {
     await _router.disconnect(multiaddr);
   }
 }
-

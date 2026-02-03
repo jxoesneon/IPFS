@@ -22,4 +22,3 @@ mixin BlockCloneable<T extends BlockCloneable<T>> {
     return clone;
   }
 }
-

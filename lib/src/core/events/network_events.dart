@@ -38,4 +38,3 @@ class MessageEvent extends NetworkEvent {
   /// The peer that sent the message.
   final LibP2PPeerId sender;
 }
-

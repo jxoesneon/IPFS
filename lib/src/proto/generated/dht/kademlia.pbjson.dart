@@ -117,4 +117,3 @@ const Peer$json = {
 final $typed_data.Uint8List peerDescriptor = $convert.base64Decode(
     'CgRQZWVyEg4KAmlkGAEgASgMUgJpZBIUCgVhZGRycxgCIAMoDFIFYWRkcnMSOAoKY29ubmVjdG'
     'lvbhgDIAEoDjIYLmlwZnMuZGh0LkNvbm5lY3Rpb25UeXBlUgpjb25uZWN0aW9u');
-

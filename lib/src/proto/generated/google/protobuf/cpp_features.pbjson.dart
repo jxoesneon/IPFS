@@ -83,4 +83,3 @@ final $typed_data.Uint8List cppFeaturesDescriptor = $convert.base64Decode(
     'ZUIpiAEBmAEEmAEBogELEgZTVFJJTkcYhAeiAQkSBFZJRVcY6QeyAQMI6AdSCnN0cmluZ1R5cG'
     'UiRQoKU3RyaW5nVHlwZRIXChNTVFJJTkdfVFlQRV9VTktOT1dOEAASCAoEVklFVxABEggKBENP'
     'UkQQAhIKCgZTVFJJTkcQAw==');
-

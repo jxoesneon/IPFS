@@ -240,4 +240,3 @@ class IPNSRecord {
         'signed: $isSigned)';
   }
 }
-

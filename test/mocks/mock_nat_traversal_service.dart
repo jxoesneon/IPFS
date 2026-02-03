@@ -26,4 +26,3 @@ class MockNatTraversalService implements NatTraversalService {
     unmappedPorts.add(port);
   }
 }
-

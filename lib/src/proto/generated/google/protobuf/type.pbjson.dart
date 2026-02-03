@@ -267,4 +267,3 @@ const Option$json = {
 final $typed_data.Uint8List optionDescriptor = $convert.base64Decode(
     'CgZPcHRpb24SEgoEbmFtZRgBIAEoCVIEbmFtZRIqCgV2YWx1ZRgCIAEoCzIULmdvb2dsZS5wcm'
     '90b2J1Zi5BbnlSBXZhbHVl');
-

@@ -52,4 +52,3 @@ final $typed_data.Uint8List ipnsEntryDescriptor = $convert.base64Decode(
     'aWRpdHlUeXBlUgx2YWxpZGl0eVR5cGUSGgoIdmFsaWRpdHkYBCABKAxSCHZhbGlkaXR5EhoKCH'
     'NlcXVlbmNlGAUgASgEUghzZXF1ZW5jZRIQCgN0dGwYBiABKARSA3R0bBIWCgZwdWJLZXkYByAB'
     'KAxSBnB1YktleSIXCgxWYWxpZGl0eVR5cGUSBwoDRU9MEAA=');
-

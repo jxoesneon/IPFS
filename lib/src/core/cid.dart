@@ -334,4 +334,3 @@ class CID {
     return CID.v1(codec, mhInfo);
   }
 }
-

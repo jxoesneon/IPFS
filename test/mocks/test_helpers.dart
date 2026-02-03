@@ -60,4 +60,3 @@ class TestBlockGraph {
     return TestBlockGraph(blocks, blocks.first.cid);
   }
 }
-

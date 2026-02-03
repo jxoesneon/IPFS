@@ -59,4 +59,3 @@ final $typed_data.Uint8List pinProtoDescriptor = $convert.base64Decode(
     'CghQaW5Qcm90bxIpCgNjaWQYASABKAsyFy5pcGZzLmNvcmUuSVBGU0NJRFByb3RvUgNjaWQSOw'
     'oEdHlwZRgCIAEoDjInLmlwZnMuY29yZS5kYXRhX3N0cnVjdHVyZXMuUGluVHlwZVByb3RvUgR0'
     'eXBlEhwKCXRpbWVzdGFtcBgDIAEoA1IJdGltZXN0YW1w');
-

@@ -333,4 +333,3 @@ class WebStubRouter implements RouterInterface {
   @override
   List<String> resolvePeerId(String peerIdStr) => [];
 }
-

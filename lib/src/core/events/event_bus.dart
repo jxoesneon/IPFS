@@ -102,4 +102,3 @@ enum TransferType {
   /// Block was sent to a peer.
   sent,
 }
-

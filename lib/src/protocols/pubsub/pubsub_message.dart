@@ -20,4 +20,3 @@ class PubSubMessage {
   String toString() =>
       'PubSubMessage(topic: $topic, sender: $sender, content: $content)';
 }
-

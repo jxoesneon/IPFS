@@ -266,4 +266,3 @@ class CompressionStats {
   double get compressionRatio =>
       totalOriginalSize == 0 ? 0 : totalCompressedSize / totalOriginalSize;
 }
-

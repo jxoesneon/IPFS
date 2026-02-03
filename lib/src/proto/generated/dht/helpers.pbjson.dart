@@ -57,4 +57,3 @@ final $typed_data.Uint8List calculateDistanceResponseDescriptor =
     $convert.base64Decode(
         'ChlDYWxjdWxhdGVEaXN0YW5jZVJlc3BvbnNlEhoKCGRpc3RhbmNlGAEgASgDUghkaXN0YW5jZQ'
         '==');
-

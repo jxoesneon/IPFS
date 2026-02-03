@@ -55,4 +55,3 @@ const PingResponse$json = {
 final $typed_data.Uint8List pingResponseDescriptor = $convert.base64Decode(
     'CgxQaW5nUmVzcG9uc2USPQoHcGVlcl9pZBgBIAEoCzIkLmlwZnMuZGh0LmNvbW1vbl9rYWRlbW'
     'xpYS5LYWRlbWxpYUlkUgZwZWVySWQSGAoHc3VjY2VzcxgCIAEoCFIHc3VjY2Vzcw==');
-

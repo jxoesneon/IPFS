@@ -77,4 +77,3 @@ class Insertion<K_PeerId, V_PeerInfo> {
     tree.isEmpty = false;
   }
 }
-

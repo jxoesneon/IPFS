@@ -4,4 +4,3 @@ import 'http_server_adapter.dart';
 HttpServerAdapter createHttpServerAdapter() => throw UnimplementedError(
   'HttpServerAdapter not implemented for this platform',
 );
-

@@ -70,4 +70,3 @@ class SecurityConfig {
     'dhtDifficulty': dhtDifficulty,
   };
 }
-

@@ -112,4 +112,3 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
     _deletion.deleteNode(this, key);
   }
 }
-

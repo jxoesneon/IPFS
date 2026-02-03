@@ -150,4 +150,3 @@ class FixViolations<K_PeerId, V_PeerInfo> {
     x?.color = common_tree.NodeColor.BLACK;
   }
 }
-

@@ -153,4 +153,3 @@ class _CachedDNSLink {
   bool get isExpired =>
       DateTime.now().difference(timestamp) > DNSLinkHandler._cacheDuration;
 }
-

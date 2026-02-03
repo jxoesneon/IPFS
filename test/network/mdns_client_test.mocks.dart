@@ -674,4 +674,3 @@ class MockRawDatagramSocket extends _i1.Mock implements _i2.RawDatagramSocket {
           )
           as _i3.Stream<_i2.RawSocketEvent>);
 }
-

@@ -58,4 +58,3 @@ class IPLDSchemaError extends IPLDError {
   /// Creates a schema error with the given message.
   IPLDSchemaError(String message) : super('IPLD schema error: $message');
 }
-

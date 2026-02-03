@@ -85,4 +85,3 @@ final $typed_data.Uint8List linkMetadataDescriptor = $convert.base64Decode(
     'ZXMuTGlua1R5cGVSBHR5cGUSIQoMYnVja2V0X2luZGV4GAUgASgFUgtidWNrZXRJbmRleBIUCg'
     'VkZXB0aBgGIAEoBVIFZGVwdGgaOwoNTWV0YWRhdGFFbnRyeRIQCgNrZXkYASABKAlSA2tleRIU'
     'CgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
-

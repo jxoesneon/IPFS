@@ -49,4 +49,3 @@ abstract class IBlockFactory<T extends IBlock> {
   /// Creates a block from raw data and its CID.
   T fromData(Uint8List data, CID cid);
 }
-

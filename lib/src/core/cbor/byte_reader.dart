@@ -56,4 +56,3 @@ class ByteReader {
   /// The current read position in the buffer.
   int get position => _position;
 }
-

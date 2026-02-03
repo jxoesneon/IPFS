@@ -47,4 +47,3 @@ const RemovePeerResponse$json = {
 final $typed_data.Uint8List removePeerResponseDescriptor =
     $convert.base64Decode(
         'ChJSZW1vdmVQZWVyUmVzcG9uc2USGAoHc3VjY2VzcxgBIAEoCFIHc3VjY2Vzcw==');
-

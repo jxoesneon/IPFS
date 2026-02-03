@@ -67,4 +67,3 @@ const MergeBucketsResponse$json = {
 final $typed_data.Uint8List mergeBucketsResponseDescriptor =
     $convert.base64Decode(
         'ChRNZXJnZUJ1Y2tldHNSZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNz');
-

@@ -21,4 +21,3 @@ class CarWriter {
     await file.writeAsBytes(carData);
   }
 }
-

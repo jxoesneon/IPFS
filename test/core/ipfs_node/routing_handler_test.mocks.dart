@@ -618,4 +618,3 @@ class MockIPFSConfig extends _i1.Mock implements _i6.IPFSConfig {
           )
           as Map<String, dynamic>);
 }
-

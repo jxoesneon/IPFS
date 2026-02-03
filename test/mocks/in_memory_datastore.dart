@@ -104,4 +104,3 @@ class InMemoryDatastore implements Datastore {
     }
   }
 }
-

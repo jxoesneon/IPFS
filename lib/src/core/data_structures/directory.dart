@@ -106,4 +106,3 @@ class IPFSDirectoryManager {
     return node;
   }
 }
-

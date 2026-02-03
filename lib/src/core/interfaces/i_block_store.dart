@@ -50,4 +50,3 @@ abstract class IBlockStore extends IStorageSystem {
   @override
   Future<Map<String, dynamic>> getStatus();
 }
-

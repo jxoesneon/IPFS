@@ -54,4 +54,3 @@ final $typed_data.Uint8List routingTableProtoDescriptor = $convert.base64Decode(
     '90YWJsZS5Sb3V0aW5nVGFibGVQcm90by5FbnRyaWVzRW50cnlSB2VudHJpZXMaYAoMRW50cmll'
     'c0VudHJ5EhAKA2tleRgBIAEoCVIDa2V5EjoKBXZhbHVlGAIgASgLMiQuaXBmcy5kaHQua2FkZW'
     '1saWFfbm9kZS5LYWRlbWxpYU5vZGVSBXZhbHVlOgI4AQ==');
-

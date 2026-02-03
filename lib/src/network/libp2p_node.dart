@@ -26,4 +26,3 @@ class Libp2pNode {
     return Future.value();
   }
 }
-

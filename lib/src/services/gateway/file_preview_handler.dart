@@ -100,4 +100,3 @@ class FilePreviewHandler {
         _supportedTextTypes.contains(contentType);
   }
 }
-

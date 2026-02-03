@@ -223,4 +223,3 @@ class EncodingUtils {
   /// Add public getter
   static List<String> get supportedCodecs => _supportedCodecs.keys.toList();
 }
-

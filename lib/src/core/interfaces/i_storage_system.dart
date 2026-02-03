@@ -19,4 +19,3 @@ abstract class IStorageSystem extends ICoreSystem {
   /// Returns true if a block with [cid] exists.
   Future<bool> hasBlock(String cid);
 }
-

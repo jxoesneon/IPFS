@@ -17,4 +17,3 @@ abstract class INetworkSystem extends ICoreSystem {
   /// Stream of network events for monitoring.
   Stream<NetworkEvent> get events;
 }
-

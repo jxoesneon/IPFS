@@ -61,4 +61,3 @@ extension NodeLookup on KademliaTree {
     return closestPeers;
   }
 }
-

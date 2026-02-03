@@ -55,4 +55,3 @@ final $typed_data.Uint8List iPFSCIDProtoDescriptor = $convert.base64Decode(
     'lvblIHdmVyc2lvbhIcCgltdWx0aWhhc2gYAiABKAxSCW11bHRpaGFzaBIUCgVjb2RlYxgDIAEo'
     'CVIFY29kZWMSKQoQbXVsdGliYXNlX3ByZWZpeBgEIAEoCVIPbXVsdGliYXNlUHJlZml4Eh0KCm'
     'NvZGVjX3R5cGUYBSABKAVSCWNvZGVjVHlwZQ==');
-

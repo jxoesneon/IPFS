@@ -38,4 +38,3 @@ class Peer {
   @override
   int get hashCode => id.hashCode ^ address.hashCode;
 }
-

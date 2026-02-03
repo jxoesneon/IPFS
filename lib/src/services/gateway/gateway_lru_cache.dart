@@ -61,4 +61,3 @@ class GatewayLruCache<K, V> {
   /// Returns an iterable of all values in the cache, ordered from oldest to newest.
   Iterable<V> get values => _cache.values;
 }
-

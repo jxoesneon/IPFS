@@ -115,4 +115,3 @@ final $typed_data.Uint8List connectionMetricsDescriptor = $convert.base64Decode(
     'ZXNzYWdlc1JlY2VpdmVkEh0KCmJ5dGVzX3NlbnQYBCABKARSCWJ5dGVzU2VudBIlCg5ieXRlc1'
     '9yZWNlaXZlZBgFIAEoBFINYnl0ZXNSZWNlaXZlZBIsChJhdmVyYWdlX2xhdGVuY3lfbXMYBiAB'
     'KA1SEGF2ZXJhZ2VMYXRlbmN5TXM=');
-

@@ -77,4 +77,3 @@ class MemoryDatastore implements Datastore {
     _data.clear();
   }
 }
-

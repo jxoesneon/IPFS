@@ -59,4 +59,3 @@ class IPLDPathHandler {
     return path;
   }
 }
-

@@ -300,4 +300,3 @@ class BlockPresence {
   /// The presence type.
   final BlockPresenceType type;
 }
-

@@ -239,4 +239,3 @@ class RPCServer {
       ? 'http://${_server!.address.host}:${_server!.port}'
       : 'http://$address:$port (not started)';
 }
-

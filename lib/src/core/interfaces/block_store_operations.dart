@@ -17,4 +17,3 @@ abstract class BlockStoreOperations {
   /// Returns all stored blocks.
   Future<BlockOperationResponse<List<Block>>> getAllBlocks();
 }
-

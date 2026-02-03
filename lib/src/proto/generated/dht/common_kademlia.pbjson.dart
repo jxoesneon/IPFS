@@ -26,4 +26,3 @@ const KademliaId$json = {
 /// Descriptor for `KademliaId`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List kademliaIdDescriptor =
     $convert.base64Decode('CgpLYWRlbWxpYUlkEg4KAmlkGAEgASgMUgJpZA==');
-

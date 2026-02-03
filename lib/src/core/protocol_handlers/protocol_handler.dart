@@ -21,4 +21,3 @@ abstract class ProtocolHandler {
   /// Sends a [message] to [targetPeerId].
   Future<void> sendMessage(PeerId targetPeerId, BaseMessage message);
 }
-

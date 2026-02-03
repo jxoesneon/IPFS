@@ -237,4 +237,3 @@ class MessageHandler {
     return cid.toProto();
   }
 }
-

@@ -24,4 +24,3 @@ extension Refresh on KademliaTree {
     }
   }
 }
-

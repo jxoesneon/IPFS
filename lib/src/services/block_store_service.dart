@@ -46,4 +46,3 @@ class BlockStoreService extends BlockStoreServiceBase {
     }
   }
 }
-

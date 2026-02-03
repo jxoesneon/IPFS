@@ -530,4 +530,3 @@ class Libp2pRouter implements RouterInterface {
     return transports;
   }
 }
-

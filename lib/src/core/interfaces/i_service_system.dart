@@ -11,4 +11,3 @@ abstract class IServiceSystem extends ICoreSystem {
   /// Whether the service is currently running.
   bool get isRunning;
 }
-

@@ -63,4 +63,3 @@ const KademliaBucket$json = {
 final $typed_data.Uint8List kademliaBucketDescriptor = $convert.base64Decode(
     'Cg5LYWRlbWxpYUJ1Y2tldBI6CgVub2RlcxgBIAMoCzIkLmlwZnMuZGh0LmthZGVtbGlhX25vZG'
     'UuS2FkZW1saWFOb2RlUgVub2Rlcw==');
-

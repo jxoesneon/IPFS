@@ -56,4 +56,3 @@ final $typed_data.Uint8List kademliaNodeDescriptor = $convert.base64Decode(
     'xpYUlkUhBhc3NvY2lhdGVkUGVlcklkEkAKCGNoaWxkcmVuGAQgAygLMiQuaXBmcy5kaHQua2Fk'
     'ZW1saWFfbm9kZS5LYWRlbWxpYU5vZGVSCGNoaWxkcmVuEhsKCWxhc3Rfc2VlbhgFIAEoA1IIbG'
     'FzdFNlZW4=');
-

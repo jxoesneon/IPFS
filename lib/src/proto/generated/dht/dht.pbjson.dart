@@ -210,4 +210,3 @@ const FindNodeResponse$json = {
 final $typed_data.Uint8List findNodeResponseDescriptor = $convert.base64Decode(
     'ChBGaW5kTm9kZVJlc3BvbnNlEjMKC2Nsb3NlclBlZXJzGAEgAygLMhEuaXBmcy5kaHQuREhUUG'
     'VlclILY2xvc2VyUGVlcnM=');
-

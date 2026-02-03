@@ -173,4 +173,3 @@ const IPLDLink$json = {
 final $typed_data.Uint8List iPLDLinkDescriptor = $convert.base64Decode(
     'CghJUExETGluaxIYCgd2ZXJzaW9uGAEgASgNUgd2ZXJzaW9uEhQKBWNvZGVjGAIgASgJUgVjb2'
     'RlYxIcCgltdWx0aWhhc2gYAyABKAxSCW11bHRpaGFzaA==');
-

@@ -81,4 +81,3 @@ class KademliaTreeNode {
   /// Number of failed requests for this node.
   int get failedRequests => _failedRequests;
 }
-

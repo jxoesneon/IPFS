@@ -114,4 +114,3 @@ class WebBlockStore implements IBlockStore {
     }
   }
 }
-

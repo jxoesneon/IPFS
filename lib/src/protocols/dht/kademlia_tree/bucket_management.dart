@@ -285,4 +285,3 @@ extension BucketManagement on KademliaTree {
     return score.clamp(0.0, 1.0); // Ensure final score is between 0 and 1
   }
 }
-

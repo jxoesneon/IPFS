@@ -101,4 +101,3 @@ class Base58 {
     return data;
   }
 }
-

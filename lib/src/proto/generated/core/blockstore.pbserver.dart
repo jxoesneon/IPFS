@@ -69,4 +69,3 @@ abstract class BlockStoreServiceBase extends $pb.GeneratedService {
   $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       get $messageJson => BlockStoreServiceBase$messageJson;
 }
-

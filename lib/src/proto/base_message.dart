@@ -31,4 +31,3 @@ abstract class BaseProtoMessage extends GeneratedMessage {
     return clone() as T;
   }
 }
-

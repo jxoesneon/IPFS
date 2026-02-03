@@ -191,4 +191,3 @@ class HiveDatastore implements Datastore {
     }
   }
 }
-

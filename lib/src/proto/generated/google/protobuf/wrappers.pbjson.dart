@@ -122,4 +122,3 @@ const BytesValue$json = {
 /// Descriptor for `BytesValue`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List bytesValueDescriptor =
     $convert.base64Decode('CgpCeXRlc1ZhbHVlEhQKBXZhbHVlGAEgASgMUgV2YWx1ZQ==');
-

@@ -32,4 +32,3 @@ class BitSwapMessage extends BaseMessage {
   /// The BitSwap operation (e.g., 'WANT', 'HAVE').
   final String operation;
 }
-

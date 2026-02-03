@@ -468,4 +468,3 @@ class NetworkHandler {
     _logger.debug('AutoNAT dialback handler registered');
   }
 }
-

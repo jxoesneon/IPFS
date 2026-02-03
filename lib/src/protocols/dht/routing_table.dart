@@ -48,4 +48,3 @@ class RoutingTable {
     _kademliaTree.removePeer(peerId);
   }
 }
-

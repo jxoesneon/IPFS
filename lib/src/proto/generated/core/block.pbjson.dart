@@ -36,4 +36,3 @@ const BlockProto$json = {
 final $typed_data.Uint8List blockProtoDescriptor = $convert.base64Decode(
     'CgpCbG9ja1Byb3RvEhIKBGRhdGEYASABKAxSBGRhdGESKQoDY2lkGAIgASgLMhcuaXBmcy5jb3'
     'JlLklQRlNDSURQcm90b1IDY2lkEhYKBmZvcm1hdBgDIAEoCVIGZm9ybWF0');
-

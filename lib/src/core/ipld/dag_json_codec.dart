@@ -86,4 +86,3 @@ class DagJsonCodec implements IPLDCodec {
     return data;
   }
 }
-

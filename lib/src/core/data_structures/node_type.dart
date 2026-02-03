@@ -52,4 +52,3 @@ extension NodeTypeExtension on NodeType {
     }
   }
 }
-

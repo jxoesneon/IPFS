@@ -259,4 +259,3 @@ class Reservation {
   /// Returns true if this reservation has expired.
   bool get isExpired => DateTime.now().isAfter(expireTime);
 }
-

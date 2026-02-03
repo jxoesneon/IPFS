@@ -258,4 +258,3 @@ Uint8List _createUnsignedRecordCBOR() {
 
   return Uint8List.fromList(cbor.encode(cborValue));
 }
-

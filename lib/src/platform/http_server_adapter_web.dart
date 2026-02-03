@@ -38,4 +38,3 @@ class HttpServerAdapterWeb implements HttpServerAdapter {
 
 /// Factory for conditional imports.
 HttpServerAdapter createHttpServerAdapter() => HttpServerAdapterWeb();
-

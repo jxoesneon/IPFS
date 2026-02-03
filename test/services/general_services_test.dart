@@ -175,4 +175,3 @@ class DummyServiceCall extends ServiceCall {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
-

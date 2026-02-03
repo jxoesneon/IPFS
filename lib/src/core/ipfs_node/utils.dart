@@ -53,4 +53,3 @@ class IPFSUtils {
     return cid != null && isValidCID(cid) ? cid : null;
   }
 }
-

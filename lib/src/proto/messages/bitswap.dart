@@ -25,4 +25,3 @@ class BitswapMessage extends BaseProtoMessage {
   @override
   BuilderInfo get info_ => _info;
 }
-

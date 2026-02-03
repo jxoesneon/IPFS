@@ -111,4 +111,3 @@ void main() async {
   print('Total Lines Hit:        $totalHit');
   print('Overall Coverage:       ${totalCoverage.toStringAsFixed(2)}%');
 }
-

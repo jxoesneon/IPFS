@@ -353,4 +353,3 @@ class PubSubClient implements IPubSub {
     }
   }
 }
-

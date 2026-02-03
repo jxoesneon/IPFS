@@ -215,4 +215,3 @@ const Block$json = {
 /// Descriptor for `Block`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List blockDescriptor = $convert.base64Decode(
     'CgVCbG9jaxIWCgZwcmVmaXgYASABKAxSBnByZWZpeBISCgRkYXRhGAIgASgMUgRkYXRh');
-

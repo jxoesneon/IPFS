@@ -88,4 +88,3 @@ final $typed_data.Uint8List networkEventDescriptor = $convert.base64Decode(
     'CgxOZXR3b3JrRXZlbnQSOAoJdGltZXN0YW1wGAEgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbW'
     'VzdGFtcFIJdGltZXN0YW1wEh0KCmV2ZW50X3R5cGUYAiABKAlSCWV2ZW50VHlwZRIXCgdwZWVy'
     'X2lkGAMgASgJUgZwZWVySWQSEgoEZGF0YRgEIAEoDFIEZGF0YQ==');
-

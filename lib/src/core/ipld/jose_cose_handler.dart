@@ -244,4 +244,3 @@ class _IpfsCoseVerifier implements CatalystCoseVerifier {
     return _privateKey.verify(data, signature);
   }
 }
-

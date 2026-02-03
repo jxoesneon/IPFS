@@ -84,4 +84,3 @@ class Value {
     return utf8.decode(bytes);
   }
 }
-

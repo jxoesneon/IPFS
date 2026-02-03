@@ -128,4 +128,3 @@ abstract class RouterInterface {
   /// Resolves a peer ID to available addresses.
   List<String> resolvePeerId(String peerIdStr);
 }
-

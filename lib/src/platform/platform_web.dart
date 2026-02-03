@@ -183,4 +183,3 @@ class IpfsPlatformWeb implements IpfsPlatform {
 
 /// Returns the Web platform implementation.
 IpfsPlatform getPlatform() => IpfsPlatformWeb();
-

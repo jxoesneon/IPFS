@@ -72,4 +72,3 @@ class MetricsConfig {
     'prometheusEndpoint': prometheusEndpoint,
   };
 }
-

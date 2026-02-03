@@ -7,4 +7,3 @@ String generateMessageId() {
   var uuid = const Uuid();
   return uuid.v4(); // Generate a UUID v4
 }
-

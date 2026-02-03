@@ -82,4 +82,3 @@ class StorageConfig {
   /// Computed path to the keys directory.
   String get keysPath => '$baseDir/$keysDir';
 }
-

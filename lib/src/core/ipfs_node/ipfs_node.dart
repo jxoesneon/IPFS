@@ -1087,4 +1087,3 @@ class IPFSNode {
   /// Returns the service container for dependency injection.
   ServiceContainer get container => _container;
 }
-

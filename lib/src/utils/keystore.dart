@@ -207,4 +207,3 @@ class Keystore {
     _logger.info('Plaintext keystore cleared after migration');
   }
 }
-

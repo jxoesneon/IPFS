@@ -82,4 +82,3 @@ void main() async {
     'Total Coverage (excluding proto): ${totalCoverage.toStringAsFixed(1)}%',
   );
 }
-

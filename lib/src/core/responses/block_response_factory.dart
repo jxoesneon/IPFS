@@ -43,4 +43,3 @@ class BlockResponseFactory {
       ..message = message;
   }
 }
-

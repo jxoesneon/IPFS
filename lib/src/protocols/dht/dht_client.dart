@@ -670,4 +670,3 @@ class DHTClient {
   /// Whether the DHT client has been initialized.
   bool get isInitialized => _initialized;
 }
-
