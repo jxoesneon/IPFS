@@ -1,21 +1,21 @@
-/// Package host provides the core Host interface for libp2p.
+﻿/// Package host provides the core Host interface for libp2p.
 ///
 /// Host represents a single libp2p node in a peer-to-peer network.
 
 import 'dart:async';
 
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/connmgr/conn_manager.dart';
-import 'package:dart_libp2p/core/event/bus.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/network.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart';
-import 'package:dart_libp2p/core/protocol/switch.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/p2p/protocol/holepunch.dart'; // Added for HolePunchService
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/connmgr/conn_manager.dart';
+import 'package:ipfs_libp2p/core/event/bus.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/core/protocol/switch.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/p2p/protocol/holepunch.dart'; // Added for HolePunchService
 
 /// AddrsFactory functions can be passed to a Host to override
 /// addresses returned by Addrs.

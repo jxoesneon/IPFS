@@ -1,4 +1,4 @@
-# Configuration
+﻿# Configuration
 
 The configuration system for dart-libp2p provides a flexible and extensible way to configure your libp2p node. It is modeled after the Go implementation's configuration system but uses Dart's extension methods for a more idiomatic API.
 
@@ -58,7 +58,7 @@ There are two primary ways to configure and create a libp2p host.
 This is the simplest way to get a host running. It creates a `Config` object, applies your options, adds sensible defaults for any unspecified options, and returns a new `Host`.
 
 ```dart
-import 'package:dart_libp2p/dart_libp2p.dart';
+import 'package:ipfs_libp2p/dart_libp2p.dart';
 
 final host = await Libp2p.new_([
   // Set the identity (private key)
@@ -91,8 +91,8 @@ await host.start();
 This method gives you more control over the configuration process and follows the pattern used in go-libp2p.
 
 ```dart
-import 'package:dart_libp2p/dart_libp2p.dart';
-import 'package:dart_libp2p/config/defaults.dart';
+import 'package:ipfs_libp2p/dart_libp2p.dart';
+import 'package:ipfs_libp2p/config/defaults.dart';
 
 // Step 1: Create a new Config
 final config = Libp2p.newConfig();

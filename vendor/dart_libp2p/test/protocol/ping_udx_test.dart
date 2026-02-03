@@ -1,18 +1,18 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/p2p/protocol/ping/ping.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/p2p/protocol/ping/ping.dart';
 import 'package:logging/logging.dart';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'package:dart_udx/dart_udx.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart'
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart'
     as p2p_conn_mgr;
-import 'package:dart_libp2p/p2p/host/eventbus/basic.dart' as p2p_event_bus;
-import 'package:dart_libp2p/core/event/identify.dart';
+import 'package:ipfs_libp2p/p2p/host/eventbus/basic.dart' as p2p_event_bus;
+import 'package:ipfs_libp2p/core/event/identify.dart';
 import 'dart:async';
 
 import '../real_net_stack.dart';

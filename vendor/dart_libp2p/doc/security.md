@@ -1,4 +1,4 @@
-# Connection Security
+﻿# Connection Security
 
 In a peer-to-peer network, ensuring that communication is private and authentic is critical. Libp2p provides a modular security layer that allows peers to establish secure channels over raw network connections.
 
@@ -39,8 +39,8 @@ The result of a successful Noise handshake is a `SecuredConnection` where:
 The `NoiseSecurity` protocol is enabled by default when you use the `Libp2p.new_` constructor. You can also configure it manually.
 
 ```dart
-import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart';
-import 'package:dart_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart';
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
 
 // You need an identity key pair for your host
 KeyPair myKeyPair = await generateKeyPair();

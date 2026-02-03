@@ -1,25 +1,25 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart' show Conn;
-import 'package:dart_libp2p/core/network/context.dart' as core_context;
-import 'package:dart_libp2p/core/network/mux.dart' as core_mux_types;
-import 'package:dart_libp2p/core/network/transport_conn.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
-import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart';
-import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart'
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart' show Conn;
+import 'package:ipfs_libp2p/core/network/context.dart' as core_context;
+import 'package:ipfs_libp2p/core/network/mux.dart' as core_mux_types;
+import 'package:ipfs_libp2p/core/network/transport_conn.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart';
+import 'package:ipfs_libp2p/p2p/transport/basic_upgrader.dart';
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart'
     as p2p_transport;
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/session.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/stream.dart';
-import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
-import 'package:dart_libp2p/config/config.dart' as p2p_config;
-import 'package:dart_libp2p/config/stream_muxer.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/session.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/stream.dart';
+import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
+import 'package:ipfs_libp2p/config/config.dart' as p2p_config;
+import 'package:ipfs_libp2p/config/stream_muxer.dart';
 import 'package:dart_udx/dart_udx.dart';
 import 'package:test/test.dart';
 
@@ -133,7 +133,7 @@ void main() {
         final clientUpgradedConn = upgradedConns[0] as core_mux_types.MuxedConn;
         final serverUpgradedConn = upgradedConns[1] as core_mux_types.MuxedConn;
 
-        print('✅ Upgraded to Noise+Yamux');
+        print('âœ… Upgraded to Noise+Yamux');
 
         // Open a stream
         final serverAcceptStreamFuture = serverUpgradedConn.acceptStream();
@@ -142,7 +142,7 @@ void main() {
             .openStream(core_context.Context()) as YamuxStream;
         final serverStream = await serverAcceptStreamFuture as YamuxStream;
 
-        print('✅ Stream opened');
+        print('âœ… Stream opened');
 
         // Test message sizes that previously failed (>50KB with ~35+ UDP packets)
         final testSizes = [
@@ -153,7 +153,7 @@ void main() {
 
         for (final size in testSizes) {
           print(
-              '\n📤 Testing ${(size / 1024).toStringAsFixed(0)}KB message...');
+              '\nðŸ“¤ Testing ${(size / 1024).toStringAsFixed(0)}KB message...');
           final testData =
               Uint8List.fromList(List.generate(size, (i) => i % 256));
 
@@ -175,7 +175,7 @@ void main() {
             if (received[i] != testData[i]) {
               dataMatches = false;
               print(
-                  '   ❌ Data mismatch at byte $i: expected ${testData[i]}, got ${received[i]}');
+                  '   âŒ Data mismatch at byte $i: expected ${testData[i]}, got ${received[i]}');
               break;
             }
           }
@@ -185,11 +185,11 @@ void main() {
                   'Data should be preserved for ${(size / 1024).toStringAsFixed(0)}KB message');
 
           print(
-              '   ✅ ${(size / 1024).toStringAsFixed(0)}KB message transferred successfully');
+              '   âœ… ${(size / 1024).toStringAsFixed(0)}KB message transferred successfully');
         }
 
         print(
-            '\n🎉 All large message tests PASSED - SecuredConnection locks work!');
+            '\nðŸŽ‰ All large message tests PASSED - SecuredConnection locks work!');
 
         // Cleanup
         await clientStream.close();

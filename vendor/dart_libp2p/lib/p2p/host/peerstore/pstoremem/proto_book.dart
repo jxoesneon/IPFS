@@ -1,10 +1,10 @@
-/// ProtoBook implementation for the memory-based peerstore.
+﻿/// ProtoBook implementation for the memory-based peerstore.
 
 import 'dart:collection';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
 import 'package:synchronized/synchronized.dart';
 
 /// Error thrown when too many protocols are added for a peer.

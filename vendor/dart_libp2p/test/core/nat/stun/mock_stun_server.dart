@@ -1,8 +1,8 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/p2p/nat/stun/stun_message.dart';
+import 'package:ipfs_libp2p/p2p/nat/stun/stun_message.dart';
 
 /// A mock STUN server for testing purposes
 class MockStunServer {

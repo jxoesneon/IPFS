@@ -1,36 +1,36 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/transport_conn.dart';
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/network/network.dart';
-import 'package:dart_libp2p/core/network/notifiee.dart';
-import 'package:dart_libp2p/core/network/mux.dart' as core_mux_types;
-import 'package:dart_libp2p/p2p/network/swarm/swarm.dart';
-import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart';
-import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
-import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/session.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart';
-import 'package:dart_libp2p/p2p/host/peerstore/pstoremem.dart';
-import 'package:dart_libp2p/config/config.dart';
-import 'package:dart_libp2p/config/stream_muxer.dart';
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/transport_conn.dart';
+import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/core/network/notifiee.dart';
+import 'package:ipfs_libp2p/core/network/mux.dart' as core_mux_types;
+import 'package:ipfs_libp2p/p2p/network/swarm/swarm.dart';
+import 'package:ipfs_libp2p/p2p/transport/basic_upgrader.dart';
+import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/session.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart';
+import 'package:ipfs_libp2p/p2p/host/peerstore/pstoremem.dart';
+import 'package:ipfs_libp2p/config/config.dart';
+import 'package:ipfs_libp2p/config/stream_muxer.dart';
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
 import 'package:dart_udx/dart_udx.dart';
 import 'package:test/test.dart';
 import 'package:logging/logging.dart';
@@ -182,9 +182,9 @@ void main() {
             reason: 'All streams should share one connection');
 
         final sharedConn = connections.first;
-        print('✓ All streams share connection ID: ${sharedConn.id}');
-        print('✓ Connection remote peer: ${sharedConn.remotePeer}');
-        print('✓ Connection is closed: ${sharedConn.isClosed}');
+        print('âœ“ All streams share connection ID: ${sharedConn.id}');
+        print('âœ“ Connection remote peer: ${sharedConn.remotePeer}');
+        print('âœ“ Connection is closed: ${sharedConn.isClosed}');
 
         // Phase 5: Close some streams and pause
         print('Phase 5: Closing streams and pausing...');
@@ -195,7 +195,7 @@ void main() {
         // Verify connection is still alive after closing streams
         expect(sharedConn.isClosed, isFalse,
             reason: 'Connection should remain alive after stream closure');
-        print('✓ Connection remains alive after closing streams');
+        print('âœ“ Connection remains alive after closing streams');
 
         // Pause to test connection persistence
         print('Pausing for 3 seconds to test connection persistence...');
@@ -210,7 +210,7 @@ void main() {
             reason: 'Should still have one connection after pause');
         expect(connectionsAfterPause.first.id, equals(sharedConn.id),
             reason: 'Should be the same connection after pause');
-        print('✓ Connection persisted through pause');
+        print('âœ“ Connection persisted through pause');
 
         // Phase 7: Create new streams (should reuse existing connection)
         print('Phase 7: Creating new streams to test re-use...');
@@ -239,8 +239,8 @@ void main() {
         expect(connectionsAfter.first.id, equals(sharedConn.id),
             reason: 'Should reuse the same connection');
 
-        print('✓ Successfully reused connection ${sharedConn.id}');
-        print('✓ New streams created on existing connection');
+        print('âœ“ Successfully reused connection ${sharedConn.id}');
+        print('âœ“ New streams created on existing connection');
 
         // Phase 9: Verify stream isolation and data integrity
         print('Phase 9: Verifying stream isolation...');
@@ -254,7 +254,7 @@ void main() {
         final additionalData =
             'additional-data-${DateTime.now().millisecondsSinceEpoch}';
         await remainingStream.write(utf8.encode(additionalData));
-        print('✓ Remaining original stream still functional');
+        print('âœ“ Remaining original stream still functional');
 
         // Verify all new streams are functional
         for (int i = 0; i < newStreams.length; i++) {
@@ -266,7 +266,7 @@ void main() {
           final verifyData =
               'verify-$i-${DateTime.now().millisecondsSinceEpoch}';
           await stream.write(utf8.encode(verifyData));
-          print('✓ New stream $i is functional');
+          print('âœ“ New stream $i is functional');
         }
 
         // Phase 10: Final connection state verification
@@ -279,12 +279,12 @@ void main() {
         expect(finalConnections.first.isClosed, isFalse,
             reason: 'Final connection should be healthy');
 
-        print('✓ Connection reuse test completed successfully!');
-        print('✓ Original connection ID: ${sharedConn.id}');
-        print('✓ Total streams created: ${streams.length + newStreams.length}');
-        print('✓ Streams closed: 2');
-        print('✓ Streams remaining: ${streams.length + newStreams.length - 2}');
-        print('✓ Connections used throughout test: 1');
+        print('âœ“ Connection reuse test completed successfully!');
+        print('âœ“ Original connection ID: ${sharedConn.id}');
+        print('âœ“ Total streams created: ${streams.length + newStreams.length}');
+        print('âœ“ Streams closed: 2');
+        print('âœ“ Streams remaining: ${streams.length + newStreams.length - 2}');
+        print('âœ“ Connections used throughout test: 1');
       } finally {
         // Cleanup
         print('Cleaning up test resources...');
@@ -362,8 +362,8 @@ void main() {
           print('Cycle $cycle completed');
         }
 
-        print('✓ Rapid cycling test completed successfully!');
-        print('✓ Same connection used across all cycles: $connectionId');
+        print('âœ“ Rapid cycling test completed successfully!');
+        print('âœ“ Same connection used across all cycles: $connectionId');
       } finally {
         await swarmA.close();
         await swarmB.close();
@@ -471,9 +471,9 @@ void main() {
         expect(connectionsAfter.first.id, equals(connectionId));
 
         print(
-            '[${DateTime.now().difference(testStart).inMilliseconds}ms] ✓ Mixed stream states test completed successfully!');
-        print('✓ Connection remained healthy with mixed stream states');
-        print('✓ New streams successfully created alongside existing ones');
+            '[${DateTime.now().difference(testStart).inMilliseconds}ms] âœ“ Mixed stream states test completed successfully!');
+        print('âœ“ Connection remained healthy with mixed stream states');
+        print('âœ“ New streams successfully created alongside existing ones');
       } finally {
         print(
             '[${DateTime.now().difference(testStart).inMilliseconds}ms] FINALLY BLOCK: Starting cleanup...');
@@ -542,7 +542,7 @@ void main() {
         final connections = swarmB.connsToPeer(swarmA.localPeer);
         expect(connections.length, equals(1));
         final sharedConnectionId = connections.first.id;
-        print('✓ Connection established: $sharedConnectionId');
+        print('âœ“ Connection established: $sharedConnectionId');
 
         // Phase 2: Start independent background echo server
         print('Phase 2: Starting background echo server...');
@@ -569,7 +569,7 @@ void main() {
 
         // Wait for sequential tests
         await Future.wait(clientTests);
-        print('✓ Sequential echo tests completed');
+        print('âœ“ Sequential echo tests completed');
 
         // Phase 4: Test concurrent streams
         print('Phase 4: Testing concurrent independent streams...');
@@ -587,23 +587,23 @@ void main() {
 
         // Wait for concurrent tests
         await Future.wait(concurrentTests);
-        print('✓ Concurrent echo tests completed');
+        print('âœ“ Concurrent echo tests completed');
 
         // Phase 5: Verify connection reuse throughout
         print('Phase 5: Verifying connection reuse after all tests...');
         final finalConnections = swarmB.connsToPeer(swarmA.localPeer);
         expect(finalConnections.length, equals(1));
         expect(finalConnections.first.id, equals(sharedConnectionId));
-        print('✓ Connection reuse maintained throughout all tests');
+        print('âœ“ Connection reuse maintained throughout all tests');
 
         // Stop background server
         serverCancellation.complete();
         await serverTask;
-        print('✓ Background echo server stopped');
+        print('âœ“ Background echo server stopped');
 
-        print('✓ Bidirectional data exchange test completed successfully!');
-        print('✓ All streams used the same connection: $sharedConnectionId');
-        print('✓ Data integrity verified across all independent echo tests');
+        print('âœ“ Bidirectional data exchange test completed successfully!');
+        print('âœ“ All streams used the same connection: $sharedConnectionId');
+        print('âœ“ Data integrity verified across all independent echo tests');
 
         // Cleanup notifiee
         swarmA.stopNotify(serverNotifiee);
@@ -704,7 +704,7 @@ void main() {
 
           // Verify data integrity
           expect(receivedData, orderedEquals(testData));
-          print('✓ Data integrity verified for ${size} bytes');
+          print('âœ“ Data integrity verified for ${size} bytes');
 
           // Verify connection reuse
           final connections = swarmB.connsToPeer(swarmA.localPeer);
@@ -716,8 +716,8 @@ void main() {
           await serverStream.close();
         }
 
-        print('✓ Large data transfer test completed successfully!');
-        print('✓ All transfers used the same connection: $connectionId');
+        print('âœ“ Large data transfer test completed successfully!');
+        print('âœ“ All transfers used the same connection: $connectionId');
 
         swarmA.stopNotify(serverNotifiee);
       } finally {
@@ -782,7 +782,7 @@ Future<void> _performEchoTest({
   await clientStream.close();
   await serverStream.close();
 
-  print('✓ Echo test $testId completed successfully');
+  print('âœ“ Echo test $testId completed successfully');
 }
 
 /// Performs a concurrent echo test
@@ -907,7 +907,7 @@ Future<void> _performIndependentEchoTest({
     // Cleanup
     await clientStream.close();
 
-    print('✓ Independent echo test $testId completed successfully');
+    print('âœ“ Independent echo test $testId completed successfully');
   } catch (e) {
     print('Error in independent echo test $testId: $e');
     rethrow;

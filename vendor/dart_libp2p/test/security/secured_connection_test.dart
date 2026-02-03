@@ -1,7 +1,7 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:cryptography/cryptography.dart';
-import 'package:dart_libp2p/p2p/security/secured_connection.dart';
+import 'package:ipfs_libp2p/p2p/security/secured_connection.dart';
 import '../mocks/secured_mock_connection.dart';
 
 void main() {

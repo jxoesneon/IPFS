@@ -1,4 +1,4 @@
-/// Package multistream implements a simple stream router for the
+﻿/// Package multistream implements a simple stream router for the
 /// multistream-select protocol. The protocol is defined at
 /// https://github.com/multiformats/multistream-select
 
@@ -6,11 +6,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/p2p/multiaddr/codec.dart';
-import 'package:dart_libp2p/core/interfaces.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart';
-import 'package:dart_libp2p/config/multistream_config.dart';
+import 'package:ipfs_libp2p/p2p/multiaddr/codec.dart';
+import 'package:ipfs_libp2p/core/interfaces.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/config/multistream_config.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:logging/logging.dart'; // Added import for Logger
 

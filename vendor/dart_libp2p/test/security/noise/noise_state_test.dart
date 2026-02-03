@@ -1,6 +1,6 @@
-import 'package:test/test.dart';
-import 'package:dart_libp2p/p2p/security/noise/noise_state.dart';
-import 'package:dart_libp2p/p2p/security/noise/handshake_state.dart';
+﻿import 'package:test/test.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/noise_state.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/handshake_state.dart';
 
 void main() {
   group('NoiseStateMachine', () {

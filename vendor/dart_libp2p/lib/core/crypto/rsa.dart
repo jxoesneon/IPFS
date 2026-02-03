@@ -1,12 +1,12 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 import 'package:pointycastle/pointycastle.dart' as pc;
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/asymmetric/api.dart';
 import 'package:pointycastle/signers/rsa_signer.dart';
 import 'package:pointycastle/digests/sha256.dart';
-import 'package:dart_libp2p/p2p/crypto/key_generator.dart';
-import 'package:dart_libp2p/core/crypto/pb/crypto.pb.dart' as pb;
-import 'package:dart_libp2p/core/crypto/keys.dart' as p2pkeys;
+import 'package:ipfs_libp2p/p2p/crypto/key_generator.dart';
+import 'package:ipfs_libp2p/core/crypto/pb/crypto.pb.dart' as pb;
+import 'package:ipfs_libp2p/core/crypto/keys.dart' as p2pkeys;
 
 /// Minimum RSA key size in bits
 const int minRsaKeyBits = 2048;

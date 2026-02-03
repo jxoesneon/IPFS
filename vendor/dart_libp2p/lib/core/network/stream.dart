@@ -1,9 +1,9 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart'
+import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart'
     show
         StreamScope,
         StreamManagementScope,

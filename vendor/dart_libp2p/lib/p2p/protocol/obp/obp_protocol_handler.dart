@@ -1,8 +1,8 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:logging/logging.dart';
-import 'package:dart_libp2p/core/network/stream.dart' as core_p2p_stream;
+import 'package:ipfs_libp2p/core/network/stream.dart' as core_p2p_stream;
 
 import 'obp_frame.dart';
 

@@ -1,7 +1,7 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:collection';
 import 'dart:typed_data';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'package:logging/logging.dart'; // Added for logging
 
 import '../../../../core/network/conn.dart';
@@ -144,7 +144,7 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn {
       metricsObserver?.onPingSent(remotePeer, pingId, now);
     } catch (e) {
       _log.warning(
-          '$_logPrefix ❌ [YAMUX-KEEPALIVE] Error sending PING: $e. Session may be unhealthy.');
+          '$_logPrefix âŒ [YAMUX-KEEPALIVE] Error sending PING: $e. Session may be unhealthy.');
       _pendingPings.remove(pingId);
     }
   }
@@ -286,7 +286,7 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn {
         } catch (e, st) {
           final handleDuration = DateTime.now().difference(handleStartTime);
           _log.severe(
-              '$_logPrefix 🔧 [YAMUX-FRAME-READER-HANDLE-ERROR-$frameCount] Frame handling failed after ${handleDuration.inMilliseconds}ms: $e\n$st');
+              '$_logPrefix ðŸ”§ [YAMUX-FRAME-READER-HANDLE-ERROR-$frameCount] Frame handling failed after ${handleDuration.inMilliseconds}ms: $e\n$st');
           rethrow;
         }
 
@@ -329,7 +329,7 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn {
     }
 
     try {
-      // Ping and GoAway are session-level frames — dispatch directly.
+      // Ping and GoAway are session-level frames â€” dispatch directly.
       // SYN/ACK/RST/FIN flags on these types have different semantics
       // (e.g., go-yamux uses SYN on Ping to mean "request", ACK for "response").
       if (frame.type == YamuxFrameType.ping) {
@@ -394,7 +394,7 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn {
       final streamHandleDuration = DateTime.now().difference(streamHandleStart);
     } else {
       _log.warning(
-          '$_logPrefix 🔧 [YAMUX-HANDLE-FRAME-DATA-ERROR] Received ${frame.type} for unknown/closed stream ID ${frame.streamId}. Flags: ${frame.flags}, Length: ${frame.length}');
+          '$_logPrefix ðŸ”§ [YAMUX-HANDLE-FRAME-DATA-ERROR] Received ${frame.type} for unknown/closed stream ID ${frame.streamId}. Flags: ${frame.flags}, Length: ${frame.length}');
       // If it's a DATA for a non-existent stream, it could be a protocol error.
       // Consider sending a RESET for this stream ID if it's unexpected data.
     }
@@ -535,7 +535,7 @@ class YamuxSession implements Multiplexer, core_mux.MuxedConn, Conn {
       }
       return;
     }
-    // Ping request (SYN flag or no flags) — respond with ACK
+    // Ping request (SYN flag or no flags) â€” respond with ACK
     final response = YamuxFrame.ping(true, opaqueValue);
     await _sendFrame(response);
   }

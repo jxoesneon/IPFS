@@ -1,4 +1,4 @@
-/// Package pstoremanager provides a manager for the peerstore that removes
+﻿/// Package pstoremanager provides a manager for the peerstore that removes
 /// peers that have disconnected and haven't reconnected within a grace period.
 ///
 /// This is a port of the Go implementation from go-libp2p/p2p/host/pstoremanager/pstoremanager.go
@@ -6,10 +6,10 @@
 
 import 'dart:async';
 
-import 'package:dart_libp2p/core/event/bus.dart';
-import 'package:dart_libp2p/core/network/network.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/event/bus.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
 import 'package:logging/logging.dart';
 
 final _log = Logger('pstoremanager');

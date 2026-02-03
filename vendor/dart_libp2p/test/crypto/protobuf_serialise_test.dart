@@ -1,6 +1,6 @@
-import 'package:test/test.dart';
+﻿import 'package:test/test.dart';
 import 'package:convert/convert.dart';
-import 'package:dart_libp2p/p2p/crypto/pb/pb.dart';
+import 'package:ipfs_libp2p/p2p/crypto/pb/pb.dart';
 
 void main() {
   group('Protobuf Key Deserialization Tests', () {

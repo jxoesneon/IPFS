@@ -1,13 +1,13 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 
-import 'package:dart_libp2p/dart_libp2p.dart';
+import 'package:ipfs_libp2p/dart_libp2p.dart';
 import '../shared/host_utils.dart';
 import 'echo_client.dart';
 import 'echo_server.dart';
 
 void main() async {
-  print('🔊 Starting Basic Echo Example');
+  print('ðŸ”Š Starting Basic Echo Example');
   print(
       'This example demonstrates one-way messaging where a client sends messages to an echo server.\n');
 
@@ -27,17 +27,17 @@ void main() async {
 
     // Connect client to server
     await clientHost.connect(AddrInfo(serverHost.id, serverHost.addrs));
-    print('\n✅ Client connected to server successfully!');
+    print('\nâœ… Client connected to server successfully!');
 
     print('\n--- Echo Session Started! ---');
     print('Type a message and press Enter to send it to the echo server.');
     print('');
-    print('📤 CLIENT [${truncatePeerId(clientHost.id)}] sends messages');
+    print('ðŸ“¤ CLIENT [${truncatePeerId(clientHost.id)}] sends messages');
     print(
-        '🔊 SERVER [${truncatePeerId(serverHost.id)}] receives and displays them');
+        'ðŸ”Š SERVER [${truncatePeerId(serverHost.id)}] receives and displays them');
     print('');
     print(
-        '💡 Note: You\'ll see both CLIENT and SERVER logs since both run in this same process.');
+        'ðŸ’¡ Note: You\'ll see both CLIENT and SERVER logs since both run in this same process.');
     print('Type "quit" to exit.');
     print('------------------------------\n');
 
@@ -48,13 +48,13 @@ void main() async {
       if (isShuttingDown) return;
       isShuttingDown = true;
 
-      print('\n\n🛑 Shutting down...');
+      print('\n\nðŸ›‘ Shutting down...');
       try {
         await clientHost.close();
         await serverHost.close();
-        print('✅ Cleanup completed.');
+        print('âœ… Cleanup completed.');
       } catch (e) {
-        print('⚠️  Error during cleanup: $e');
+        print('âš ï¸  Error during cleanup: $e');
       }
       exit(0);
     }
@@ -78,7 +78,7 @@ void main() async {
 
     stdout.write('> ');
   } catch (e) {
-    print('❌ Error: $e');
+    print('âŒ Error: $e');
     exit(1);
   }
 }

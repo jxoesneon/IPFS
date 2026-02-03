@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The dart-libp2p Authors. All rights reserved.
+﻿// Copyright (c) 2024 The dart-libp2p Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -6,12 +6,12 @@ import 'dart:async';
 import 'package:synchronized/synchronized.dart';
 import 'package:logging/logging.dart';
 
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/event/bus.dart';
-import 'package:dart_libp2p/core/event/reachability.dart';
-import 'package:dart_libp2p/core/network/network.dart'; // For Reachability enum
-import 'package:dart_libp2p/p2p/protocol/circuitv2/relay/relay.dart';
-import 'package:dart_libp2p/p2p/protocol/circuitv2/relay/resources.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/event/bus.dart';
+import 'package:ipfs_libp2p/core/event/reachability.dart';
+import 'package:ipfs_libp2p/core/network/network.dart'; // For Reachability enum
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/relay/relay.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/relay/resources.dart';
 
 /// RelayManager monitors the host's reachability and manages a Circuit Relay v2 service.
 /// If the host becomes publicly reachable, it starts the relay service.

@@ -1,8 +1,8 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/p2p/multiaddr/codec.dart';
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart';
+import 'package:ipfs_libp2p/p2p/multiaddr/codec.dart';
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart';
 
 /// Represents a multiaddress
 class MultiAddr {

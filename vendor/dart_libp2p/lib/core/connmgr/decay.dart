@@ -1,6 +1,6 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 
 import 'conn_manager.dart';
 

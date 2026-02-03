@@ -1,4 +1,4 @@
-# Core Protocols
+﻿# Core Protocols
 
 Libp2p is a modular system built from a collection of protocols. Each protocol defines a set of rules for exchanging information to accomplish a specific task. This page documents some of the core protocols included in dart-libp2p.
 
@@ -24,7 +24,7 @@ This process can be repeated over the same stream to get multiple latency measur
 The `PingService` is enabled by default on the `BasicHost`. You can access it to ping other peers.
 
 ```dart
-import 'package:dart_libp2p/p2p/protocol/ping/ping.dart';
+import 'package:ipfs_libp2p/p2p/protocol/ping/ping.dart';
 
 // Assuming 'host' is your initialized Host and you are connected to 'remotePeerId'
 final pingService = host.services[PingConstants.protocolId] as PingService;
@@ -98,7 +98,7 @@ This protocol provides a powerful way to build complex APIs between your peers.
 #### Creating an HTTP Server
 
 ```dart
-import 'package:dart_libp2p/p2p/protocol/http/http_protocol.dart';
+import 'package:ipfs_libp2p/p2p/protocol/http/http_protocol.dart';
 
 // Assuming 'myHost' is your initialized Host
 final httpServer = HttpProtocolService(myHost);

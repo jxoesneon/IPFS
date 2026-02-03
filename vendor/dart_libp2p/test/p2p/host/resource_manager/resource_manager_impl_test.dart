@@ -1,15 +1,15 @@
-import 'package:test/test.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/crypto/ed25519.dart'
+﻿import 'package:test/test.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart'
     as ed25519_key; // For generating KeyPair
-import 'package:dart_libp2p/core/network/common.dart'; // For Direction
-import 'package:dart_libp2p/core/multiaddr.dart'; // For MultiAddr
-import 'package:dart_libp2p/core/protocol/protocol.dart'; // For ProtocolID
-import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart'; // For Limiter and FixedLimiter
-import 'package:dart_libp2p/p2p/host/resource_manager/limit.dart'; // For BaseLimit
-import 'package:dart_libp2p/core/network/errors.dart'
+import 'package:ipfs_libp2p/core/network/common.dart'; // For Direction
+import 'package:ipfs_libp2p/core/multiaddr.dart'; // For MultiAddr
+import 'package:ipfs_libp2p/core/protocol/protocol.dart'; // For ProtocolID
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart'; // For Limiter and FixedLimiter
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limit.dart'; // For BaseLimit
+import 'package:ipfs_libp2p/core/network/errors.dart'
     as network_errors; // For ResourceLimitExceededException
 
 // Custom Limiter for testing resource limits

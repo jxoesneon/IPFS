@@ -1,7 +1,7 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart' as crypto;
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/crypto/pb/crypto.pb.dart' as pb;
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/crypto/pb/crypto.pb.dart' as pb;
 
 /// Implementation of Ed25519 public key
 class Ed25519PublicKey implements PublicKey {

@@ -1,7 +1,7 @@
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/limit.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/scope_impl.dart';
+﻿import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limit.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/scope_impl.dart';
 
 /// PeerScopeImpl is the concrete implementation for peer-specific scopes.
 class PeerScopeImpl extends ResourceScopeImpl implements PeerScope {

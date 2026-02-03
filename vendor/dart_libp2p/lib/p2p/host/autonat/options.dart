@@ -1,8 +1,8 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/network/network.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
 
 // Assuming AddrFunc is defined/imported from elsewhere (e.g. client.dart or a common types file)
 // MetricsTracer is now imported from ./metrics.dart

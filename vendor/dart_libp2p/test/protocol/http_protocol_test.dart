@@ -1,36 +1,36 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/transport_conn.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/peer/record.dart';
-import 'package:dart_libp2p/core/peer/pb/peer_record.pb.dart' as pb;
-import 'package:dart_libp2p/core/record/record_registry.dart';
-import 'package:dart_libp2p/p2p/network/swarm/swarm.dart';
-import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart';
-import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
-import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/session.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart';
-import 'package:dart_libp2p/p2p/host/peerstore/pstoremem.dart';
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
-import 'package:dart_libp2p/config/config.dart';
-import 'package:dart_libp2p/config/stream_muxer.dart';
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
-import 'package:dart_libp2p/p2p/protocol/http/http_protocol.dart';
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/transport_conn.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/peer/record.dart';
+import 'package:ipfs_libp2p/core/peer/pb/peer_record.pb.dart' as pb;
+import 'package:ipfs_libp2p/core/record/record_registry.dart';
+import 'package:ipfs_libp2p/p2p/network/swarm/swarm.dart';
+import 'package:ipfs_libp2p/p2p/transport/basic_upgrader.dart';
+import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/session.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart';
+import 'package:ipfs_libp2p/p2p/host/peerstore/pstoremem.dart';
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
+import 'package:ipfs_libp2p/config/config.dart';
+import 'package:ipfs_libp2p/config/stream_muxer.dart';
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
+import 'package:ipfs_libp2p/p2p/protocol/http/http_protocol.dart';
 import 'package:dart_udx/dart_udx.dart';
 import 'package:test/test.dart';
 import 'package:logging/logging.dart';
@@ -145,7 +145,7 @@ void main() {
         expect(response1.status, equals(HttpStatus.ok));
         expect(response1.contentType, contains('text/plain'));
         expect(response1.bodyAsString, equals('Hello, World!'));
-        print('✓ GET /hello successful: ${response1.bodyAsString}');
+        print('âœ“ GET /hello successful: ${response1.bodyAsString}');
 
         // Test 2: GET request with path parameters
         print('Testing GET /users/123...');
@@ -159,7 +159,7 @@ void main() {
         expect(userData, isNotNull);
         expect(userData!['user_id'], equals('123'));
         expect(userData['name'], equals('John Doe'));
-        print('✓ GET /users/123 successful: $userData');
+        print('âœ“ GET /users/123 successful: $userData');
 
         // Test 3: 404 Not Found
         print('Testing GET /nonexistent...');
@@ -168,7 +168,7 @@ void main() {
 
         expect(response3.status, equals(HttpStatus.notFound));
         expect(response3.bodyAsString, equals('Not found'));
-        print('✓ GET /nonexistent returned 404 as expected');
+        print('âœ“ GET /nonexistent returned 404 as expected');
       } finally {
         await serverHost.close();
         await clientHost.close();
@@ -273,7 +273,7 @@ void main() {
         expect(createdUser['email'], equals('alice@example.com'));
         expect(createdUser['id'], isNotNull);
         expect(createdUser['created_at'], isNotNull);
-        print('✓ POST /users successful: $createdUser');
+        print('âœ“ POST /users successful: $createdUser');
 
         // Test 2: Process data
         print('Testing POST /process with complex data...');
@@ -294,7 +294,7 @@ void main() {
         expect(processResult!['processed'], equals(true));
         expect(processResult['input'], equals(processData));
         expect(processResult['result'], isNotNull);
-        print('✓ POST /process successful: ${processResult['result']}');
+        print('âœ“ POST /process successful: ${processResult['result']}');
 
         // Test 3: Invalid JSON
         print('Testing POST with invalid data...');
@@ -308,7 +308,7 @@ void main() {
 
         expect(response3.status, equals(HttpStatus.badRequest));
         expect(response3.bodyAsString, contains('Invalid JSON data'));
-        print('✓ POST with invalid JSON returned 400 as expected');
+        print('âœ“ POST with invalid JSON returned 400 as expected');
       } finally {
         await serverHost.close();
         await clientHost.close();
@@ -396,7 +396,7 @@ void main() {
         final status1 = response1.bodyAsJson!;
         expect(status1['request_count'], equals(1));
         print(
-            '✓ Request 1 (GET /api/status): count = ${status1['request_count']}');
+            'âœ“ Request 1 (GET /api/status): count = ${status1['request_count']}');
 
         // Request 2: GET data
         final response2 =
@@ -405,7 +405,7 @@ void main() {
         final data2 = response2.bodyAsJson!;
         expect(data2['request_count'], equals(2));
         print(
-            '✓ Request 2 (GET /api/data/123): count = ${data2['request_count']}');
+            'âœ“ Request 2 (GET /api/data/123): count = ${data2['request_count']}');
 
         // Request 3: POST submit
         final submitData = {'message': 'Hello from client', 'value': 42};
@@ -416,7 +416,7 @@ void main() {
         expect(submit3['request_count'], equals(3));
         expect(submit3['received_data'], equals(submitData));
         print(
-            '✓ Request 3 (POST /api/submit): count = ${submit3['request_count']}');
+            'âœ“ Request 3 (POST /api/submit): count = ${submit3['request_count']}');
 
         // Request 4: Another GET status
         final response4 =
@@ -425,13 +425,13 @@ void main() {
         final status4 = response4.bodyAsJson!;
         expect(status4['request_count'], equals(4));
         print(
-            '✓ Request 4 (GET /api/status): count = ${status4['request_count']}');
+            'âœ“ Request 4 (GET /api/status): count = ${status4['request_count']}');
 
         // Verify connection reuse by checking that all requests were handled
         // by the same server instance (evidenced by incrementing counter)
         expect(requestCount, equals(4));
-        print('✓ All 4 requests processed by same server instance');
-        print('✓ Connection reuse working correctly');
+        print('âœ“ All 4 requests processed by same server instance');
+        print('âœ“ Connection reuse working correctly');
       } finally {
         await serverHost.close();
         await clientHost.close();
@@ -522,35 +522,35 @@ void main() {
             await httpClient.getRequest(serverHost.id, '/success');
         expect(response1.status, equals(HttpStatus.ok));
         expect(response1.bodyAsString, equals('Success!'));
-        print('✓ Success case works');
+        print('âœ“ Success case works');
 
         print('Testing 400 Bad Request...');
         final response2 =
             await httpClient.getRequest(serverHost.id, '/error/400');
         expect(response2.status, equals(HttpStatus.badRequest));
         expect(response2.bodyAsString, equals('Bad request example'));
-        print('✓ 400 Bad Request handled correctly');
+        print('âœ“ 400 Bad Request handled correctly');
 
         print('Testing 401 Unauthorized...');
         final response3 =
             await httpClient.getRequest(serverHost.id, '/error/401');
         expect(response3.status, equals(HttpStatus.unauthorized));
         expect(response3.bodyAsString, equals('Unauthorized access'));
-        print('✓ 401 Unauthorized handled correctly');
+        print('âœ“ 401 Unauthorized handled correctly');
 
         print('Testing 500 Internal Server Error...');
         final response4 =
             await httpClient.getRequest(serverHost.id, '/error/500');
         expect(response4.status, equals(HttpStatus.internalServerError));
         expect(response4.bodyAsString, equals('Internal server error'));
-        print('✓ 500 Internal Server Error handled correctly');
+        print('âœ“ 500 Internal Server Error handled correctly');
 
         print('Testing 404 Not Found...');
         final response5 =
             await httpClient.getRequest(serverHost.id, '/nonexistent');
         expect(response5.status, equals(HttpStatus.notFound));
         expect(response5.bodyAsString, equals('Not found'));
-        print('✓ 404 Not Found handled correctly');
+        print('âœ“ 404 Not Found handled correctly');
 
         print('Testing validation errors...');
 
@@ -560,7 +560,7 @@ void main() {
         expect(response6.status, equals(HttpStatus.badRequest));
         expect(
             response6.bodyAsString, contains('Missing required field: name'));
-        print('✓ Validation error for missing name');
+        print('âœ“ Validation error for missing name');
 
         // Missing email field
         final response7 = await httpClient
@@ -568,7 +568,7 @@ void main() {
         expect(response7.status, equals(HttpStatus.badRequest));
         expect(
             response7.bodyAsString, contains('Missing required field: email'));
-        print('✓ Validation error for missing email');
+        print('âœ“ Validation error for missing email');
 
         // Valid data
         final validData = {'name': 'John Doe', 'email': 'john@example.com'};
@@ -578,7 +578,7 @@ void main() {
         final result = response8.bodyAsJson!;
         expect(result['validated'], equals(true));
         expect(result['data'], equals(validData));
-        print('✓ Valid data accepted');
+        print('âœ“ Valid data accepted');
       } finally {
         await serverHost.close();
         await clientHost.close();

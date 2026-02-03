@@ -1,12 +1,12 @@
-// Copyright (c) 2024 The dart-libp2p Authors. All rights reserved.
+﻿// Copyright (c) 2024 The dart-libp2p Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/p2p/protocol/circuitv2/util/buffered_reader.dart';
-import 'package:dart_libp2p/p2p/protocol/circuitv2/pb/circuit.pb.dart' as pb;
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/util/buffered_reader.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/pb/circuit.pb.dart' as pb;
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
@@ -69,7 +69,7 @@ void main() {
       expect(remainingData.length, equals(6));
 
       print(
-          '✅ No data loss: ${remainingData.length} bytes preserved after STOP handshake');
+          'âœ… No data loss: ${remainingData.length} bytes preserved after STOP handshake');
     });
 
     test('Large relay data following STOP message', () async {
@@ -109,7 +109,7 @@ void main() {
       expect(remainingData, equals(relayData));
 
       print(
-          '✅ Large data preserved: ${remainingData.length} bytes after STOP handshake');
+          'âœ… Large data preserved: ${remainingData.length} bytes after STOP handshake');
     });
 
     test('Multiple messages - verify buffer management', () async {
@@ -163,7 +163,7 @@ void main() {
       final remaining = bufferedReader.remainingBuffer;
       expect(remaining, equals(appData));
 
-      print('✅ Multiple messages handled correctly');
+      print('âœ… Multiple messages handled correctly');
     });
 
     test('Chunked data arrival - buffering works correctly', () async {
@@ -212,7 +212,7 @@ void main() {
       expect(remainingData, equals(relayData));
 
       print(
-          '✅ Chunked data handled correctly: ${remainingData.length} bytes preserved');
+          'âœ… Chunked data handled correctly: ${remainingData.length} bytes preserved');
     });
 
     test('Empty relay data after STOP - no false positives', () async {
@@ -246,7 +246,7 @@ void main() {
       expect(remainingData, isEmpty);
       expect(bufferedReader.hasRemainingData, isFalse);
 
-      print('✅ Empty buffer case handled correctly');
+      print('âœ… Empty buffer case handled correctly');
     });
 
     test('Bidirectional simulation - source to destination', () async {
@@ -282,7 +282,7 @@ void main() {
       expect(relayedData, equals(srcToDstData));
       expect(relayedData.length, equals(100));
 
-      print('✅ Bidirectional source→dest: ${relayedData.length} bytes relayed');
+      print('âœ… Bidirectional sourceâ†’dest: ${relayedData.length} bytes relayed');
     });
 
     test('Stress test - 1000 bytes immediately after STOP', () async {
@@ -323,7 +323,7 @@ void main() {
             reason: 'Byte mismatch at position $i');
       }
 
-      print('✅ Stress test passed: 1000 bytes verified');
+      print('âœ… Stress test passed: 1000 bytes verified');
     });
   });
 }

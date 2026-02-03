@@ -1,4 +1,4 @@
-/// Observed address manager for libp2p.
+﻿/// Observed address manager for libp2p.
 ///
 /// This file contains the implementation of the observed address manager, which
 /// tracks addresses that peers have observed for us.
@@ -11,10 +11,10 @@ import 'dart:collection';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
 import 'package:logging/logging.dart';
 
 import '../../../core/event/nattype.dart';

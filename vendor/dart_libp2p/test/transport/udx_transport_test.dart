@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:typed_data';
 import 'package:logging/logging.dart';
 import 'package:test/test.dart';
@@ -6,11 +6,11 @@ import 'package:dart_udx/src/udx.dart';
 import 'package:dart_udx/src/socket.dart';
 import 'package:dart_udx/src/stream.dart';
 
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
-import 'package:dart_libp2p/p2p/transport/transport_config.dart';
-import 'package:dart_libp2p/p2p/transport/connection_state.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
+import 'package:ipfs_libp2p/p2p/transport/transport_config.dart';
+import 'package:ipfs_libp2p/p2p/transport/connection_state.dart';
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart';
 import 'package:dart_udx/src/packet.dart'; // For UDXPacket.construct
 import 'package:dart_udx/src/events.dart'; // For UDXEvent
 

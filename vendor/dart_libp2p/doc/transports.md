@@ -1,4 +1,4 @@
-# Transports
+﻿# Transports
 
 Transports are the foundation of the libp2p network stack, providing the mechanism for sending and receiving data over the actual network. They are responsible for establishing connections between peers. Libp2p is transport-agnostic, meaning it can run over any number of underlying transport protocols.
 
@@ -44,7 +44,7 @@ This library currently provides two main transport implementations:
 **Usage:**
 
 ```dart
-import 'package:dart_libp2p/p2p/transport/tcp_transport.dart';
+import 'package:ipfs_libp2p/p2p/transport/tcp_transport.dart';
 
 // Add TCP transport to your configuration
 final config = [
@@ -62,7 +62,7 @@ final config = [
 **Usage:**
 
 ```dart
-import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
+import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
 
 // Add UDX transport to your configuration
 final config = [

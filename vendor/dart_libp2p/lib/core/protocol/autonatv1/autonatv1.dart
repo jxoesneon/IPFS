@@ -1,4 +1,4 @@
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+﻿import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 
 /// Protocol ID for AutoNAT v1.0.0
 const String autoNATV1Proto = '/libp2p/autonat/1.0.0';

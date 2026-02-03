@@ -1,4 +1,4 @@
-/// NAT emitter for libp2p.
+﻿/// NAT emitter for libp2p.
 ///
 /// This file contains the implementation of the NAT emitter, which emits events
 /// when the NAT type changes.
@@ -8,12 +8,12 @@
 
 import 'dart:async';
 
-import 'package:dart_libp2p/p2p/host/eventbus/eventbus.dart';
-import 'package:dart_libp2p/core/event/bus.dart';
-import 'package:dart_libp2p/core/event/nattype.dart';
-import 'package:dart_libp2p/core/event/reachability.dart';
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/p2p/host/eventbus/eventbus.dart';
+import 'package:ipfs_libp2p/core/event/bus.dart';
+import 'package:ipfs_libp2p/core/event/nattype.dart';
+import 'package:ipfs_libp2p/core/event/reachability.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
 import 'package:logging/logging.dart';
 
 import 'observed_addr_manager.dart';

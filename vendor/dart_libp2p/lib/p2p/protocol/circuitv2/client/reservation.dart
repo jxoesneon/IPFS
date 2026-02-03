@@ -1,21 +1,21 @@
-// Copyright (c) 2022 The dart-libp2p Authors. All rights reserved.
+﻿// Copyright (c) 2022 The dart-libp2p Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/stream.dart'
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart'
     show P2PStream; // Explicit import for P2PStream
-import 'package:dart_libp2p/p2p/protocol/circuitv2/client/client.dart';
-import 'package:dart_libp2p/p2p/protocol/circuitv2/pb/circuit.pb.dart'
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/client/client.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/pb/circuit.pb.dart'
     as pb; // Alias for protobuf messages
-import 'package:dart_libp2p/p2p/protocol/circuitv2/proto.dart';
-import 'package:dart_libp2p/p2p/protocol/circuitv2/util/io.dart';
-import 'package:dart_libp2p/p2p/protocol/circuitv2/util/buffered_reader.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/proto.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/util/io.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/util/buffered_reader.dart';
 
 const Duration reserveTimeout = Duration(minutes: 1);
 

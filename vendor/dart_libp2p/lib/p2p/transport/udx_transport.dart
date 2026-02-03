@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math'; // Added import for Random
 import 'dart:typed_data';
 import 'dart:io'
@@ -9,8 +9,8 @@ import 'dart:io'
         Socket,
         RawDatagramSocket; // For specific error types and network classes
 
-import 'package:dart_libp2p/p2p/transport/udx_stream_adapter.dart';
-import 'package:dart_libp2p/p2p/transport/udx_exceptions.dart';
+import 'package:ipfs_libp2p/p2p/transport/udx_stream_adapter.dart';
+import 'package:ipfs_libp2p/p2p/transport/udx_exceptions.dart';
 import 'package:dart_udx/dart_udx.dart';
 import 'package:logging/logging.dart';
 

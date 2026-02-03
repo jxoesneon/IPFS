@@ -1,4 +1,4 @@
-import 'package:dart_libp2p/core/network/common.dart';
+﻿import 'package:ipfs_libp2p/core/network/common.dart';
 
 /// Limit is an object that specifies basic resource limits.
 abstract class Limit {

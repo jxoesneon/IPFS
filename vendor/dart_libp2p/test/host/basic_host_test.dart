@@ -1,28 +1,28 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
-import 'package:dart_libp2p/p2p/host/eventbus/basic.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/event/bus.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/network.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/peerstore.dart'; // KeyBook is part of this
-import 'package:dart_libp2p/core/protocol/protocol.dart';
-import 'package:dart_libp2p/p2p/host/host.dart';
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart'
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
+import 'package:ipfs_libp2p/p2p/host/eventbus/basic.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/event/bus.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart'; // KeyBook is part of this
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/p2p/host/host.dart';
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart'
     as multiaddr_protocol; // Aliased import
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/config/config.dart'; // Added Config import
-import 'package:dart_libp2p/core/crypto/keys.dart'; // Import PrivateKey
+import 'package:ipfs_libp2p/config/config.dart'; // Added Config import
+import 'package:ipfs_libp2p/core/crypto/keys.dart'; // Import PrivateKey
 
-import 'package:dart_libp2p/core/network/rcmgr.dart'; // Import ResourceManager
+import 'package:ipfs_libp2p/core/network/rcmgr.dart'; // Import ResourceManager
 
 // Generate mocks for dependencies
 @GenerateMocks([

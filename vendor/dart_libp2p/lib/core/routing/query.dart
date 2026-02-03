@@ -1,6 +1,6 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:dart_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
 
 import '../peer/peer_id.dart';
 

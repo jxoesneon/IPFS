@@ -1,13 +1,13 @@
-/// Identify-related events for libp2p.
+﻿/// Identify-related events for libp2p.
 ///
 /// This is a port of the Go implementation from go-libp2p/core/event/identify.go
 /// to Dart, using native Dart idioms.
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
 
 /// EvtPeerIdentificationCompleted is emitted when the initial identification round for a peer is completed.
 class EvtPeerIdentificationCompleted {

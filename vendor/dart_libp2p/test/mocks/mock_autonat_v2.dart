@@ -1,4 +1,4 @@
-import 'package:dart_libp2p/core/protocol/autonatv2/autonatv2.dart';
+﻿import 'package:ipfs_libp2p/core/protocol/autonatv2/autonatv2.dart';
 import 'package:mockito/mockito.dart';
 
 /// Mock implementation of AutoNATv2 for testing

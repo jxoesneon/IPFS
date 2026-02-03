@@ -1,8 +1,8 @@
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart'; // Added for concrete PeerId
-import 'package:dart_libp2p/p2p/host/resource_manager/limit.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart'; // Added for Limiter
-import 'package:dart_libp2p/p2p/host/resource_manager/scope_impl.dart';
+﻿import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart'; // Added for concrete PeerId
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limit.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart'; // Added for Limiter
+import 'package:ipfs_libp2p/p2p/host/resource_manager/scope_impl.dart';
 
 /// ServiceScopeImpl is the concrete implementation for service-specific scopes.
 class ServiceScopeImpl extends ResourceScopeImpl implements ServiceScope {

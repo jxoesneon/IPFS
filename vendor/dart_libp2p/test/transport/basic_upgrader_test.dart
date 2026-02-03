@@ -1,30 +1,30 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:typed_data';
 import 'dart:convert';
 
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/mux.dart' as core_mux;
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/network/transport_conn.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/mux.dart' as core_mux;
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/network/transport_conn.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'dart:io'; // Added for Socket
 
-import 'package:dart_libp2p/core/protocol/protocol.dart';
-import 'package:dart_libp2p/core/crypto/ed25519.dart'
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart'
     as crypto_ed25519; // Corrected path
-import 'package:dart_libp2p/p2p/protocol/multistream/multistream.dart';
-import 'package:dart_libp2p/p2p/security/secured_connection.dart';
-import 'package:dart_libp2p/p2p/security/security_protocol.dart';
-import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart';
-import 'package:dart_libp2p/config/config.dart' as p2p_config;
-import 'package:dart_libp2p/config/stream_muxer.dart' as config_stream_muxer;
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart'
+import 'package:ipfs_libp2p/p2p/protocol/multistream/multistream.dart';
+import 'package:ipfs_libp2p/p2p/security/secured_connection.dart';
+import 'package:ipfs_libp2p/p2p/security/security_protocol.dart';
+import 'package:ipfs_libp2p/p2p/transport/basic_upgrader.dart';
+import 'package:ipfs_libp2p/config/config.dart' as p2p_config;
+import 'package:ipfs_libp2p/config/stream_muxer.dart' as config_stream_muxer;
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart'
     as p2p_mux;
-import 'package:dart_libp2p/p2p/multiaddr/codec.dart'; // Added for MultiAddrCodec
+import 'package:ipfs_libp2p/p2p/multiaddr/codec.dart'; // Added for MultiAddrCodec
 
 import 'package:test/test.dart';
 

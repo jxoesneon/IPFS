@@ -1,4 +1,4 @@
-/// Example demonstrating the STOMP protocol implementation for dart-libp2p
+﻿/// Example demonstrating the STOMP protocol implementation for dart-libp2p
 ///
 /// This example shows how to:
 /// 1. Set up a STOMP server
@@ -9,8 +9,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dart_libp2p/dart_libp2p.dart';
-import 'package:dart_libp2p/p2p/protocol/stomp.dart';
+import 'package:ipfs_libp2p/dart_libp2p.dart';
+import 'package:ipfs_libp2p/p2p/protocol/stomp.dart';
 import 'package:logging/logging.dart';
 
 Future<void> main() async {

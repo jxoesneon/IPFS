@@ -1,10 +1,10 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:dart_libp2p/p2p/host/pstoremanager/pstoremanager.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/event/bus.dart';
-import 'package:dart_libp2p/core/network/network.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/p2p/host/pstoremanager/pstoremanager.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/event/bus.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';

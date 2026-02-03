@@ -1,9 +1,9 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:cryptography/cryptography.dart';
-import 'package:dart_libp2p/p2p/security/noise/xx_pattern.dart';
-import 'package:dart_libp2p/p2p/security/noise/handshake_state.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/xx_pattern.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/handshake_state.dart';
 
 void main() {
   group('NoiseXXPattern', () {

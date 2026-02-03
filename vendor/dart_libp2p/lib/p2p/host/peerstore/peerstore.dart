@@ -1,7 +1,7 @@
-/// Package peerstore provides utility functions for working with peerstores.
+﻿/// Package peerstore provides utility functions for working with peerstores.
 
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 
 import '../../../core/peerstore.dart';
 

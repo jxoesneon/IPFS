@@ -1,4 +1,4 @@
-# Libp2p Cookbook
+﻿# Libp2p Cookbook
 
 This cookbook provides practical, goal-oriented recipes for common tasks you might want to accomplish with `dart-libp2p`.
 
@@ -19,7 +19,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dart_libp2p/dart_libp2p.dart';
+import 'package:ipfs_libp2p/dart_libp2p.dart';
 
 class ChatClient {
   final Host host;

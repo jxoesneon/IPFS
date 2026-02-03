@@ -1,16 +1,16 @@
-/// Package peerstore provides types and interfaces for local storage of address information,
+﻿/// Package peerstore provides types and interfaces for local storage of address information,
 /// metadata, and public key material about libp2p peers.
 
 import 'dart:async';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
 
-import 'package:dart_libp2p/p2p/discovery/peer_info.dart';
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/certified_addr_book.dart';
+import 'package:ipfs_libp2p/p2p/discovery/peer_info.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/certified_addr_book.dart';
 
 /// Error thrown when an item is not found in the peerstore.
 class ErrNotFound implements Exception {

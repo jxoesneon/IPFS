@@ -1,8 +1,8 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'dart:async';
-import 'package:dart_libp2p/p2p/nat/nat_behavior.dart';
-import 'package:dart_libp2p/p2p/nat/nat_behavior_discovery.dart';
-import 'package:dart_libp2p/p2p/nat/stun/stun_client.dart';
+import 'package:ipfs_libp2p/p2p/nat/nat_behavior.dart';
+import 'package:ipfs_libp2p/p2p/nat/nat_behavior_discovery.dart';
+import 'package:ipfs_libp2p/p2p/nat/stun/stun_client.dart';
 import 'package:test/test.dart';
 import 'stun/mock_stun_server.dart';
 

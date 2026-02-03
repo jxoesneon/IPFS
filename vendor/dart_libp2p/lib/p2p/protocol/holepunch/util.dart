@@ -1,11 +1,11 @@
-/// Utility functions for the holepunch protocol.
+﻿/// Utility functions for the holepunch protocol.
 
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 
 /// Protocol ID for the holepunch protocol
 const protocolId = '/libp2p/dcutr';

@@ -1,4 +1,4 @@
-# The Event Bus
+﻿# The Event Bus
 
 The `EventBus` provides a powerful, type-based system for subscribing to and emitting events within the libp2p host. It allows different components of the system to communicate with each other and with your application in a decoupled way.
 
@@ -19,8 +19,8 @@ You can subscribe to events to react to things happening within the libp2p stack
 The library defines several core event types. For example, `EvtPeerConnected` is emitted when a new connection to a peer is established, and `EvtPeerDisconnected` is emitted when a connection is lost.
 
 ```dart
-import 'package:dart_libp2p/core/event/bus.dart';
-import 'package:dart_libp2p/core/event/network.dart'; // Contains network event types
+import 'package:ipfs_libp2p/core/event/bus.dart';
+import 'package:ipfs_libp2p/core/event/network.dart'; // Contains network event types
 
 // Assuming 'host' is your initialized Host
 final EventBus bus = host.eventBus;

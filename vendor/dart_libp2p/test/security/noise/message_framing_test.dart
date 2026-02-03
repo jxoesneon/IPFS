@@ -1,6 +1,6 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/p2p/security/noise/message_framing.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/message_framing.dart';
 
 void main() {
   group('MessageFraming', () {

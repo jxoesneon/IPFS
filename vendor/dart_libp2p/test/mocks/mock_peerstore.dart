@@ -1,10 +1,10 @@
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/discovery/peer_info.dart';
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart';
-import 'package:dart_libp2p/core/crypto/keys.dart';
+﻿import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/discovery/peer_info.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
 
 /// A mock implementation of Peerstore for testing
 class MockPeerstore implements Peerstore {

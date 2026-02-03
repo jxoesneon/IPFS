@@ -1,4 +1,4 @@
-import 'package:dart_libp2p/core/multiaddr.dart';
+﻿import 'package:ipfs_libp2p/core/multiaddr.dart';
 
 /// Configuration for AmbientAutoNATv2 orchestrator
 class AmbientAutoNATv2Config {

@@ -1,12 +1,12 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:dart_libp2p/core/crypto/ed25519.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/config/config.dart';
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
-import 'package:dart_libp2p/p2p/protocol/holepunch/util.dart';
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/config/config.dart';
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
+import 'package:ipfs_libp2p/p2p/protocol/holepunch/util.dart';
 import 'package:test/test.dart';
 
 void main() {

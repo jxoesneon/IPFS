@@ -1,9 +1,9 @@
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/limit.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/scope_impl.dart';
+﻿import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limit.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/scope_impl.dart';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/core/network/errors.dart' as network_errors;
+import 'package:ipfs_libp2p/core/network/errors.dart' as network_errors;
 
 // Helper to create a simple BaseLimit for testing
 BaseLimit createTestLimit({

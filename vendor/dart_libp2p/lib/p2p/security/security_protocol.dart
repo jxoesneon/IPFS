@@ -1,7 +1,7 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/p2p/security/secured_connection.dart';
+import 'package:ipfs_libp2p/p2p/security/secured_connection.dart';
 
 import '../../core/network/transport_conn.dart';
 

@@ -1,11 +1,11 @@
-/// KeyBook implementation for the memory-based peerstore.
+﻿/// KeyBook implementation for the memory-based peerstore.
 
 import 'dart:collection';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:dart_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
 
 /// A memory-based implementation of the KeyBook interface.
 class MemoryKeyBook implements KeyBook {

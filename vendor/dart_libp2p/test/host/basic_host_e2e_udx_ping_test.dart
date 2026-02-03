@@ -1,26 +1,26 @@
-import 'dart:math';
+﻿import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/network/transport_conn.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart'; // Provides PeerId
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/network/context.dart'
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/network/transport_conn.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart'; // Provides PeerId
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/network/context.dart'
     as core_context; // Added for Context
 
-import 'package:dart_libp2p/p2p/protocol/ping/ping.dart'; // This provides PingConstants and PingService
-import 'package:dart_libp2p/config/config.dart' as p2p_config;
-import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/session.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart';
-import 'package:dart_libp2p/config/stream_muxer.dart';
-import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart';
+import 'package:ipfs_libp2p/p2p/protocol/ping/ping.dart'; // This provides PingConstants and PingService
+import 'package:ipfs_libp2p/config/config.dart' as p2p_config;
+import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/session.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart';
+import 'package:ipfs_libp2p/config/stream_muxer.dart';
+import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart';
 
 import 'package:dart_udx/dart_udx.dart';
 import 'package:test/test.dart';

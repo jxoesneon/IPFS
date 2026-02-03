@@ -1,7 +1,7 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
-import 'package:dart_libp2p/dart_libp2p.dart';
-import 'package:dart_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/dart_libp2p.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
 
 class EchoClient {
   final Host host;
@@ -16,14 +16,14 @@ class EchoClient {
       final stream = await host.newStream(targetPeer, [protocolId], ctx);
 
       print(
-          '📤 [ECHO CLIENT] Sending: "$message" to server [${_truncatePeerId(targetPeer)}]');
+          'ðŸ“¤ [ECHO CLIENT] Sending: "$message" to server [${_truncatePeerId(targetPeer)}]');
       await stream.write(utf8.encode(message + '\n'));
 
       // Close the stream after sending - the server will echo it to its console
       await stream.close();
     } catch (e) {
       print(
-          '❌ [ECHO CLIENT] Error sending echo to ${_truncatePeerId(targetPeer)}: $e');
+          'âŒ [ECHO CLIENT] Error sending echo to ${_truncatePeerId(targetPeer)}: $e');
     }
   }
 

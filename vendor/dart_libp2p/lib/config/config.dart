@@ -1,48 +1,48 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:dart_libp2p/config/defaults.dart';
-import 'package:dart_libp2p/config/stream_muxer.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/network.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/config/defaults.dart';
+import 'package:ipfs_libp2p/config/stream_muxer.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/p2p/security/security_protocol.dart';
-import 'package:dart_libp2p/p2p/transport/transport.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart';
-import 'package:dart_libp2p/core/connmgr/conn_manager.dart'; // Added
-import 'package:dart_libp2p/core/event/bus.dart'; // Added
-import 'package:dart_libp2p/p2p/host/basic/natmgr.dart'; // Added
-import 'package:dart_libp2p/core/host/host.dart'
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/p2p/security/security_protocol.dart';
+import 'package:ipfs_libp2p/p2p/transport/transport.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart';
+import 'package:ipfs_libp2p/core/connmgr/conn_manager.dart'; // Added
+import 'package:ipfs_libp2p/core/event/bus.dart'; // Added
+import 'package:ipfs_libp2p/p2p/host/basic/natmgr.dart'; // Added
+import 'package:ipfs_libp2p/core/host/host.dart'
     show AddrsFactory; // Added for AddrsFactory
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart'; // Added for BasicHost
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart'; // Added for BasicHost
 
 // Added imports for _createNetwork
-import 'package:dart_libp2p/p2p/network/swarm/swarm.dart';
-import 'package:dart_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart'; // For MemoryPeerstore
-import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart'; // For FixedLimiter
-import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart'
+import 'package:ipfs_libp2p/p2p/network/swarm/swarm.dart';
+import 'package:ipfs_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart'; // For MemoryPeerstore
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart'; // For FixedLimiter
+import 'package:ipfs_libp2p/p2p/transport/basic_upgrader.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart'
     as concrete_peer_id; // For concrete PeerId if needed
-import 'package:dart_libp2p/core/peerstore.dart'
+import 'package:ipfs_libp2p/core/peerstore.dart'
     show Peerstore; // For type hinting
-import 'package:dart_libp2p/core/network/rcmgr.dart'
+import 'package:ipfs_libp2p/core/network/rcmgr.dart'
     show ResourceManager; // For type hinting
-import 'package:dart_libp2p/core/record/record_registry.dart';
+import 'package:ipfs_libp2p/core/record/record_registry.dart';
 import 'package:logging/logging.dart';
 
 import '../core/peer/pb/peer_record.pb.dart' as pb;
 import '../core/peer/record.dart'; // Added for RecordRegistry
 
 // AutoNATv2 imports
-import 'package:dart_libp2p/core/protocol/autonatv2/autonatv2.dart';
-import 'package:dart_libp2p/p2p/protocol/autonatv2.dart';
-import 'package:dart_libp2p/p2p/protocol/autonatv2/options.dart';
-import 'package:dart_libp2p/p2p/host/autonat/ambient_config.dart';
-import 'package:dart_libp2p/p2p/protocol/circuitv2/client/metrics_observer.dart';
+import 'package:ipfs_libp2p/core/protocol/autonatv2/autonatv2.dart';
+import 'package:ipfs_libp2p/p2p/protocol/autonatv2.dart';
+import 'package:ipfs_libp2p/p2p/protocol/autonatv2/options.dart';
+import 'package:ipfs_libp2p/p2p/host/autonat/ambient_config.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/client/metrics_observer.dart';
 
 final Logger _logger = Logger('Config');
 

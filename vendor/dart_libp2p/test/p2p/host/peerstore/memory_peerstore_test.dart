@@ -1,10 +1,10 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
-import 'package:dart_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart';
-import 'package:dart_libp2p/core/crypto/ed25519.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart';
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -107,18 +107,18 @@ void main() {
         MultiAddr('/ip4/10.10.0.3/tcp/4001')
       ];
 
-      print('🔧 Adding addresses for peer ${targetPeerId.toString()}...');
+      print('ðŸ”§ Adding addresses for peer ${targetPeerId.toString()}...');
 
       // Step 1: Add addresses (mimics /connect endpoint)
       await peerstore.addrBook
           .addAddrs(targetPeerId, targetAddrs, Duration(hours: 1));
 
       print(
-          '✅ Added ${targetAddrs.length} addresses for peer ${targetPeerId.toString()}');
+          'âœ… Added ${targetAddrs.length} addresses for peer ${targetPeerId.toString()}');
 
       // Step 2: Look up addresses (mimics holepunch handler)
       print(
-          '🔎 Looking up addresses for peer ${targetPeerId.toString()} in peerstore...');
+          'ðŸ”Ž Looking up addresses for peer ${targetPeerId.toString()} in peerstore...');
 
       final existingAddrs =
           await peerstore.addrBook.addrs(targetPeerId).timeout(
@@ -131,7 +131,7 @@ void main() {
       );
 
       print(
-          '🔎 Found ${existingAddrs.length} addresses for peer ${targetPeerId.toString()}');
+          'ðŸ”Ž Found ${existingAddrs.length} addresses for peer ${targetPeerId.toString()}');
 
       // If we get here, the lookup worked
       expect(existingAddrs.length, equals(2),
@@ -152,7 +152,7 @@ void main() {
       final ownPeerId = PeerId.fromPublicKey(keyPair.publicKey);
 
       // Step 2: Initialize peerstore with own keys (critical step from peer_main.dart fix)
-      print('🔧 Initializing peerstore with own keys...');
+      print('ðŸ”§ Initializing peerstore with own keys...');
       isolatedPeerstore.keyBook.addPrivKey(ownPeerId, keyPair.privateKey);
       isolatedPeerstore.keyBook.addPubKey(ownPeerId, keyPair.publicKey);
 
@@ -164,14 +164,14 @@ void main() {
       ];
 
       print(
-          '🔧 Adding addresses for target peer ${targetPeerId.toString()}...');
+          'ðŸ”§ Adding addresses for target peer ${targetPeerId.toString()}...');
 
       // Step 4: Add peer addresses (mimics /connect endpoint)
       await isolatedPeerstore.addrBook
           .addAddrs(targetPeerId, targetAddrs, Duration(hours: 1));
 
       print(
-          '✅ Added ${targetAddrs.length} addresses for peer ${targetPeerId.toString()}');
+          'âœ… Added ${targetAddrs.length} addresses for peer ${targetPeerId.toString()}');
 
       // Step 5: Concurrent operations that might trigger deadlock
       final futures = <Future>[];
@@ -180,10 +180,10 @@ void main() {
       for (int i = 0; i < 5; i++) {
         futures.add(Future.delayed(Duration(milliseconds: i * 10), () async {
           print(
-              '🔎 Lookup $i: Looking up addresses for peer ${targetPeerId.toString()} in peerstore...');
+              'ðŸ”Ž Lookup $i: Looking up addresses for peer ${targetPeerId.toString()} in peerstore...');
           final addrs = await isolatedPeerstore.addrBook.addrs(targetPeerId);
           print(
-              '🔎 Lookup $i: Found ${addrs.length} addresses for peer ${targetPeerId.toString()}');
+              'ðŸ”Ž Lookup $i: Found ${addrs.length} addresses for peer ${targetPeerId.toString()}');
           return addrs;
         }));
       }
@@ -206,7 +206,7 @@ void main() {
             reason: 'Each lookup should contain the exact addresses');
       }
 
-      print('✅ All concurrent lookups completed successfully');
+      print('âœ… All concurrent lookups completed successfully');
     }, timeout: Timeout(Duration(seconds: 10)));
   });
 }

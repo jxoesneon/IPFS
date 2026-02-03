@@ -1,12 +1,12 @@
-import 'dart:typed_data';
-import 'package:dart_libp2p/core/record/record_registry.dart';
+﻿import 'dart:typed_data';
+import 'package:ipfs_libp2p/core/record/record_registry.dart';
 
-import 'package:dart_libp2p/core/crypto/pb/crypto.pb.dart' as pb;
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/peer/pb/peer_record.pb.dart' as pb;
-import 'package:dart_libp2p/core/peer/record.dart';
-import 'package:dart_libp2p/core/record/pb/envelope.pb.dart' as pb;
-import 'package:dart_libp2p/utils/varint.dart';
+import 'package:ipfs_libp2p/core/crypto/pb/crypto.pb.dart' as pb;
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/peer/pb/peer_record.pb.dart' as pb;
+import 'package:ipfs_libp2p/core/peer/record.dart';
+import 'package:ipfs_libp2p/core/record/pb/envelope.pb.dart' as pb;
+import 'package:ipfs_libp2p/utils/varint.dart';
 
 /// Envelope contains an arbitrary [Uint8List] payload, signed by a libp2p peer.
 ///

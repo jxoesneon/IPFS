@@ -1,18 +1,18 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/network/network.dart'; // For Reachability
-import 'package:dart_libp2p/p2p/host/autorelay/autorelay.dart'; // For EvtAutoRelayAddrsUpdated
-import 'package:dart_libp2p/p2p/host/autonat/ambient_config.dart'; // For AmbientAutoNATv2Config
-import 'package:dart_libp2p/p2p/protocol/ping/ping.dart';
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart'; // For Protocols
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart'
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/network/network.dart'; // For Reachability
+import 'package:ipfs_libp2p/p2p/host/autorelay/autorelay.dart'; // For EvtAutoRelayAddrsUpdated
+import 'package:ipfs_libp2p/p2p/host/autonat/ambient_config.dart'; // For AmbientAutoNATv2Config
+import 'package:ipfs_libp2p/p2p/protocol/ping/ping.dart';
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart'; // For Protocols
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart'
     as p2p_conn_mgr;
-import 'package:dart_libp2p/p2p/host/eventbus/basic.dart' as p2p_event_bus;
+import 'package:ipfs_libp2p/p2p/host/eventbus/basic.dart' as p2p_event_bus;
 import 'package:dart_udx/dart_udx.dart';
 import 'package:logging/logging.dart';
 import 'package:test/test.dart';
@@ -116,7 +116,7 @@ void main() {
       print('Peer A created: ${peerAPeerId.toBase58()}');
       print('Peer A addresses: ${peerAHost.addrs}');
       print(
-          '✅ Peer A configured to auto-connect to ${relayServerAddrs.length} relay servers');
+          'âœ… Peer A configured to auto-connect to ${relayServerAddrs.length} relay servers');
 
       // Create peer B with its own event bus, fast AutoNAT config, and relay auto-connect
       print('\nCreating peer B...');
@@ -137,7 +137,7 @@ void main() {
       print('Peer B created: ${peerBPeerId.toBase58()}');
       print('Peer B addresses: ${peerBHost.addrs}');
       print(
-          '✅ Peer B configured to auto-connect to ${relayServerAddrs.length} relay servers');
+          'âœ… Peer B configured to auto-connect to ${relayServerAddrs.length} relay servers');
 
       print('\n=== Test: Circuit Relay Advertisement and Ping ===');
 
@@ -147,7 +147,7 @@ void main() {
       autoRelaySubA = autoRelaySubASub.stream.listen((event) {
         if (event is EvtAutoRelayAddrsUpdated) {
           print(
-              '🔄 Peer A AutoRelay addresses updated (${event.advertisableAddrs.length}):');
+              'ðŸ”„ Peer A AutoRelay addresses updated (${event.advertisableAddrs.length}):');
           for (var addr in event.advertisableAddrs) {
             print('   - $addr');
             print(
@@ -161,7 +161,7 @@ void main() {
       autoRelaySubB = autoRelaySubBSub.stream.listen((event) {
         if (event is EvtAutoRelayAddrsUpdated) {
           print(
-              '🔄 Peer B AutoRelay addresses updated (${event.advertisableAddrs.length}):');
+              'ðŸ”„ Peer B AutoRelay addresses updated (${event.advertisableAddrs.length}):');
           for (var addr in event.advertisableAddrs) {
             print('   - $addr');
             print(
@@ -184,14 +184,14 @@ void main() {
 
       // Give connections a moment to finish closing, but don't wait too long
       await Future.delayed(Duration(milliseconds: 500));
-      print('✅ Teardown complete');
+      print('âœ… Teardown complete');
     });
 
     test('Peers advertise circuit relay addresses and can ping through relay',
         () async {
       // Step 1: Verify auto-connection to relay server
       // NOTE: Peers should already be connected to relay via Config.relayServers during host.start()
-      print('\n📡 Step 1: Verifying auto-connection to relay server...');
+      print('\nðŸ“¡ Step 1: Verifying auto-connection to relay server...');
 
       // Verify connections established automatically
       expect(peerAHost.network.connectedness(relayPeerId).name,
@@ -199,19 +199,19 @@ void main() {
       expect(peerBHost.network.connectedness(relayPeerId).name,
           equals('connected'));
       print(
-          '✅ Both peers automatically connected to relay server via Config.relayServers');
+          'âœ… Both peers automatically connected to relay server via Config.relayServers');
 
       // Step 1b: AutoNAT will automatically detect reachability after connections are established
       // No manual event emission needed - AmbientAutoNATv2 handles this automatically
       print(
-          '\n🔧 Waiting for AutoNAT to detect reachability and trigger AutoRelay...');
+          '\nðŸ”§ Waiting for AutoNAT to detect reachability and trigger AutoRelay...');
       // Give AutoNAT time to probe and determine reachability
       // bootDelay=500ms + probe time + AutoRelay processing
       await Future.delayed(Duration(seconds: 2));
-      print('✅ AutoNAT should have detected reachability by now');
+      print('âœ… AutoNAT should have detected reachability by now');
 
       // Debug: Check what protocols the relay server advertises
-      print('\n🔍 Debug: Checking relay server protocols...');
+      print('\nðŸ” Debug: Checking relay server protocols...');
       final relayProtocols =
           await peerAHost.peerStore.protoBook.getProtocols(relayPeerId);
       print('Relay server protocols: $relayProtocols');
@@ -220,7 +220,7 @@ void main() {
       print('Has circuit relay protocol: $hasCircuitV2');
 
       // Debug: Check connected peers from Peer A's perspective
-      print('\n🔍 Debug: Checking Peer A\'s connected peers...');
+      print('\nðŸ” Debug: Checking Peer A\'s connected peers...');
       final peerAConnectedPeers = peerAHost.network.peers;
       print('Peer A connected peers: ${peerAConnectedPeers.length}');
       for (final peerId in peerAConnectedPeers) {
@@ -229,11 +229,11 @@ void main() {
 
       // Step 2: Wait for AutoRelay to discover relay and reserve slot
       print(
-          '\n⏳ Step 2: Waiting for AutoRelay to discover relay (bootDelay=5s + processing)...');
+          '\nâ³ Step 2: Waiting for AutoRelay to discover relay (bootDelay=5s + processing)...');
       await Future.delayed(Duration(seconds: 12));
 
       // Step 3: Verify peers advertise circuit addresses
-      print('\n🔍 Step 3: Verifying circuit relay addresses...');
+      print('\nðŸ” Step 3: Verifying circuit relay addresses...');
       final peerAAddrs = peerAHost.addrs;
       final peerBAddrs = peerBHost.addrs;
 
@@ -263,11 +263,11 @@ void main() {
           reason:
               'Peer B should advertise at least one circuit relay address through relay ${relayPeerId.toBase58()}');
 
-      print('✅ Both peers advertise circuit relay addresses');
+      print('âœ… Both peers advertise circuit relay addresses');
 
       // Step 3.5: Verify relay server's peerstore was updated via Identify Push
       print(
-          '\n🔍 Step 3.5: Verifying relay server\'s peerstore has peers\' circuit addresses...');
+          '\nðŸ” Step 3.5: Verifying relay server\'s peerstore has peers\' circuit addresses...');
 
       // Check relay's peerstore for peer A's addresses
       final relayKnownPeerAAddrs =
@@ -310,13 +310,13 @@ void main() {
               'Relay server should have received Peer B\'s circuit addresses via Identify Push');
 
       print(
-          '✅ Relay server\'s peerstore correctly updated with both peers\' circuit addresses');
+          'âœ… Relay server\'s peerstore correctly updated with both peers\' circuit addresses');
 
       // Step 4: Construct full dialable circuit addresses for peer B
       // AutoRelay advertises: /ip4/X.X.X.X/udp/PORT/udx/p2p/RELAY_ID/p2p-circuit
       // We need to dial:      /ip4/X.X.X.X/udp/PORT/udx/p2p/RELAY_ID/p2p-circuit/p2p/DEST_PEER_ID
       print(
-          '\n📋 Step 4: Constructing dialable circuit addresses for peer B...');
+          '\nðŸ“‹ Step 4: Constructing dialable circuit addresses for peer B...');
       final peerBDialableCircuitAddrs = peerBBaseCircuitAddrs.map((addr) {
         // Append destination peer ID to make it dialable
         return addr.encapsulate(Protocols.p2p.name, peerBPeerId.toString());
@@ -329,14 +329,14 @@ void main() {
       // Identify runs when peers connect, so peer A shouldn't know peer B's addresses yet
       // unless there's automatic discovery through the relay.
       print(
-          '\n🔍 Debug: Checking peer A\'s peerstore for peer B BEFORE manual add...');
+          '\nðŸ” Debug: Checking peer A\'s peerstore for peer B BEFORE manual add...');
       final existingPeerBAddrs =
           await peerAHost.peerStore.addrBook.addrs(peerBPeerId);
       print(
           'Existing addresses for peer B in peer A\'s peerstore: ${existingPeerBAddrs.length}');
       if (existingPeerBAddrs.isEmpty) {
         print(
-            '   → Empty (as expected - peers haven\'t connected to each other yet)');
+            '   â†’ Empty (as expected - peers haven\'t connected to each other yet)');
       } else {
         for (var addr in existingPeerBAddrs) {
           print('   - $addr');
@@ -354,10 +354,10 @@ void main() {
         Duration(hours: 1),
       );
       print(
-          '✅ Peer B dialable circuit addresses added to peer A peerstore (${peerBDialableCircuitAddrs.length} addresses)');
+          'âœ… Peer B dialable circuit addresses added to peer A peerstore (${peerBDialableCircuitAddrs.length} addresses)');
 
       // Verify peerstore was properly updated with circuit addresses
-      print('\n🔍 Verifying peerstore contains circuit addresses...');
+      print('\nðŸ” Verifying peerstore contains circuit addresses...');
       final storedAddrs = await peerAHost.peerStore.addrBook.addrs(peerBPeerId);
       print(
           'Stored addresses for peer B in peer A\'s peerstore: ${storedAddrs.length}');
@@ -380,10 +380,10 @@ void main() {
           reason: 'Peerstore must contain circuit relay addresses for peer B');
 
       print(
-          '✅ Peerstore verified: ${storedCircuitAddrs.length} circuit addresses stored correctly');
+          'âœ… Peerstore verified: ${storedCircuitAddrs.length} circuit addresses stored correctly');
 
       // Step 5: Ping peer B from peer A via circuit relay
-      print('\n🏓 Step 5: Pinging peer B from peer A via circuit relay...');
+      print('\nðŸ“ Step 5: Pinging peer B from peer A via circuit relay...');
       final pingService = PingService(peerAHost);
 
       try {
@@ -402,7 +402,7 @@ void main() {
         expect(pingResult.rtt, isNotNull,
             reason: 'Ping should return a valid RTT');
 
-        print('✅ Ping succeeded! RTT: ${pingResult.rtt?.inMilliseconds}ms');
+        print('âœ… Ping succeeded! RTT: ${pingResult.rtt?.inMilliseconds}ms');
 
         // Verify the connection is using circuit relay
         final conns = peerAHost.network.connsToPeer(peerBPeerId);
@@ -416,14 +416,14 @@ void main() {
             reason:
                 'Connection MUST be using circuit relay (address should contain /p2p-circuit). '
                 'Got: $connAddr');
-        print('✅ Verified: Connection is using circuit relay');
+        print('âœ… Verified: Connection is using circuit relay');
       } catch (e, stackTrace) {
-        print('❌ Ping failed: $e');
+        print('âŒ Ping failed: $e');
         print('Stack trace: $stackTrace');
         rethrow;
       }
 
-      print('\n✅ Test completed successfully!');
+      print('\nâœ… Test completed successfully!');
     },
         timeout:
             Timeout(Duration(seconds: 30))); // Increased timeout for teardown
@@ -434,18 +434,18 @@ void main() {
       // a relay, the Swarm reuses the existing connection rather than creating
       // new relay connections each time.
 
-      print('\n🔄 Testing circuit relay connection reuse at Swarm level...');
+      print('\nðŸ”„ Testing circuit relay connection reuse at Swarm level...');
 
       // Step 1: Verify both peers are connected to relay
       expect(peerAHost.network.connectedness(relayPeerId).name,
           equals('connected'));
       expect(peerBHost.network.connectedness(relayPeerId).name,
           equals('connected'));
-      print('✅ Both peers connected to relay');
+      print('âœ… Both peers connected to relay');
 
       // Step 2: Wait for AutoRelay to properly set up circuit addresses
       print(
-          '\n⏳ Waiting for AutoRelay to discover relay and advertise circuit addresses...');
+          '\nâ³ Waiting for AutoRelay to discover relay and advertise circuit addresses...');
       await Future.delayed(Duration(
           seconds: 12)); // Same as other test - needs time for AutoRelay
 
@@ -484,7 +484,7 @@ void main() {
       );
 
       // Step 5: First dial to peer B through relay
-      print('\n🔌 Dial #1: Creating initial relay connection...');
+      print('\nðŸ”Œ Dial #1: Creating initial relay connection...');
       await peerAHost.connect(AddrInfo(peerBPeerId, [dialableCircuitAddr]));
 
       // Get the initial connection
@@ -499,11 +499,11 @@ void main() {
       expect(conn1Addr.contains('/p2p-circuit'), isTrue,
           reason: 'First connection should be via circuit relay');
 
-      print('✅ First connection established: $conn1Addr');
+      print('âœ… First connection established: $conn1Addr');
       print('   Connection ID: ${conn1.id}');
 
       // Step 6: Second dial to the same peer (should reuse connection)
-      print('\n🔌 Dial #2: Attempting to dial same peer again...');
+      print('\nðŸ”Œ Dial #2: Attempting to dial same peer again...');
       await peerAHost.connect(AddrInfo(peerBPeerId, [dialableCircuitAddr]));
 
       // Get connections again
@@ -513,7 +513,7 @@ void main() {
               'Should STILL have exactly one connection (reused, not duplicated)');
 
       final conn2 = conns2.first;
-      print('✅ Second dial completed');
+      print('âœ… Second dial completed');
       print('   Connection ID: ${conn2.id}');
 
       // Verify it's the same connection
@@ -521,17 +521,17 @@ void main() {
           reason:
               'Swarm MUST reuse the same connection instance for multiple dials to same peer');
 
-      print('✅ Verified: Swarm reuses the same circuit relay connection');
+      print('âœ… Verified: Swarm reuses the same circuit relay connection');
 
       // Step 7: Third dial via ping service (another way to trigger dial)
-      print('\n🏓 Dial #3: Pinging peer (triggers dial internally)...');
+      print('\nðŸ“ Dial #3: Pinging peer (triggers dial internally)...');
       final pingService = PingService(peerAHost);
       final pingResult = await pingService.ping(peerBPeerId).first.timeout(
             Duration(seconds: 10),
           );
 
       expect(pingResult.hasError, isFalse, reason: 'Ping should succeed');
-      print('✅ Ping succeeded: RTT=${pingResult.rtt?.inMilliseconds}ms');
+      print('âœ… Ping succeeded: RTT=${pingResult.rtt?.inMilliseconds}ms');
 
       // Verify still only one connection
       final conns3 = peerAHost.network.connsToPeer(peerBPeerId);
@@ -541,11 +541,11 @@ void main() {
           reason: 'Should be the same connection instance');
 
       print(
-          '✅ Verified: Ping reused existing connection (no new connection created)');
+          'âœ… Verified: Ping reused existing connection (no new connection created)');
 
       // Step 8: CRITICAL - Test bidirectional reuse (B dials back to A)
       print(
-          '\n🔄 Step 8: Testing BIDIRECTIONAL reuse - Peer B dials back to Peer A...');
+          '\nðŸ”„ Step 8: Testing BIDIRECTIONAL reuse - Peer B dials back to Peer A...');
 
       // Get Peer A's circuit addresses
       final peerAAddrs = peerAHost.addrs;
@@ -584,12 +584,12 @@ void main() {
       final connsFromABefore = peerAHost.network.connsToPeer(peerBPeerId);
       final connsFromBBefore = peerBHost.network.connsToPeer(peerAPeerId);
 
-      print('Before B→A dial:');
+      print('Before Bâ†’A dial:');
       print('  Peer A sees ${connsFromABefore.length} connection(s) to B');
       print('  Peer B sees ${connsFromBBefore.length} connection(s) to A');
 
       // Now Peer B dials Peer A (REVERSE direction)
-      print('\n🔌 Dial #4 (REVERSE): Peer B → Peer A...');
+      print('\nðŸ”Œ Dial #4 (REVERSE): Peer B â†’ Peer A...');
       await peerBHost
           .connect(AddrInfo(peerAPeerId, [MultiAddr(dialableCircuitAddrToA)]));
 
@@ -597,7 +597,7 @@ void main() {
       final connsFromAAfter = peerAHost.network.connsToPeer(peerBPeerId);
       final connsFromBAfter = peerBHost.network.connsToPeer(peerAPeerId);
 
-      print('\nAfter B→A dial:');
+      print('\nAfter Bâ†’A dial:');
       print('  Peer A sees ${connsFromAAfter.length} connection(s) to B');
       print('  Peer B sees ${connsFromBAfter.length} connection(s) to A');
 
@@ -615,13 +615,13 @@ void main() {
           reason:
               'Peer A should still have the SAME connection instance after B dials back');
 
-      print('✅ CRITICAL: Verified bidirectional connection reuse!');
-      print('   ✓ A→B established 1 connection');
-      print('   ✓ B→A reused that SAME connection (not created new one)');
-      print('   ✓ Total connections: 1 (not 2)');
+      print('âœ… CRITICAL: Verified bidirectional connection reuse!');
+      print('   âœ“ Aâ†’B established 1 connection');
+      print('   âœ“ Bâ†’A reused that SAME connection (not created new one)');
+      print('   âœ“ Total connections: 1 (not 2)');
 
       // Step 9: Verify bidirectional communication works
-      print('\n🏓 Step 9: Testing bidirectional communication (B pings A)...');
+      print('\nðŸ“ Step 9: Testing bidirectional communication (B pings A)...');
       final pingServiceB = PingService(peerBHost);
       final pingResultBA = await pingServiceB.ping(peerAPeerId).first.timeout(
             Duration(seconds: 10),
@@ -629,7 +629,7 @@ void main() {
 
       expect(pingResultBA.hasError, isFalse,
           reason: 'Ping from B to A should succeed using reused connection');
-      print('✅ B→A Ping succeeded: RTT=${pingResultBA.rtt?.inMilliseconds}ms');
+      print('âœ… Bâ†’A Ping succeeded: RTT=${pingResultBA.rtt?.inMilliseconds}ms');
 
       // Final verification: Still only 1 connection each direction
       final finalConnsA = peerAHost.network.connsToPeer(peerBPeerId);
@@ -641,12 +641,12 @@ void main() {
           reason: 'After all operations, should STILL have only 1 connection');
 
       print(
-          '\n🎉 Circuit relay BIDIRECTIONAL connection reuse test completed successfully!');
-      print('   ✓ Multiple dials from same peer reuse connection (A→B→A→B)');
-      print('   ✓ Reverse dial reuses connection (A→B, then B→A)');
-      print('   ✓ Bidirectional communication works (A pings B, B pings A)');
-      print('   ✓ No duplicate connections created');
-      print('   ✓ Connection reuse works at Swarm level (not transport level)');
+          '\nðŸŽ‰ Circuit relay BIDIRECTIONAL connection reuse test completed successfully!');
+      print('   âœ“ Multiple dials from same peer reuse connection (Aâ†’Bâ†’Aâ†’B)');
+      print('   âœ“ Reverse dial reuses connection (Aâ†’B, then Bâ†’A)');
+      print('   âœ“ Bidirectional communication works (A pings B, B pings A)');
+      print('   âœ“ No duplicate connections created');
+      print('   âœ“ Connection reuse works at Swarm level (not transport level)');
     },
         timeout: Timeout(
             Duration(seconds: 60))); // Increased timeout for bidirectional test

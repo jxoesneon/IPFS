@@ -1,10 +1,10 @@
-// Copyright (c) 2022 The dart-libp2p Authors. All rights reserved.
+﻿// Copyright (c) 2022 The dart-libp2p Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/p2p/protocol/circuitv2/pb/circuit.pb.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/pb/circuit.pb.dart';
 
 import '../../../../core/multiaddr.dart';
 import '../../../discovery/peer_info.dart';

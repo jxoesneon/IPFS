@@ -1,6 +1,6 @@
-import 'package:test/test.dart';
-import 'package:dart_libp2p/p2p/host/eventbus/eventbus.dart';
-import 'package:dart_libp2p/core/event/bus.dart';
+﻿import 'package:test/test.dart';
+import 'package:ipfs_libp2p/p2p/host/eventbus/eventbus.dart';
+import 'package:ipfs_libp2p/core/event/bus.dart';
 
 // Test event classes
 class TestEvent {

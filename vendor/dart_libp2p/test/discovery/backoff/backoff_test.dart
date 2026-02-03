@@ -1,6 +1,6 @@
-import 'dart:math';
+﻿import 'dart:math';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/p2p/discovery/backoff/backoff.dart';
+import 'package:ipfs_libp2p/p2p/discovery/backoff/backoff.dart';
 
 void main() {
   group('Backoff Strategies', () {

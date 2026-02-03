@@ -1,7 +1,7 @@
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart'; // Provides concrete PeerId
-import 'package:dart_libp2p/core/network/common.dart';
+﻿import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart'; // Provides concrete PeerId
+import 'package:ipfs_libp2p/core/network/common.dart';
 // conn.dart is not directly used by interfaces here, but might be by implementations
 
 // --- New/Explicit Definitions Start ---

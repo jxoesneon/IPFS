@@ -1,6 +1,6 @@
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/limit.dart';
+﻿import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limit.dart';
 
 /// Limiter is the interface for providing limits to the resource manager.
 abstract class Limiter {

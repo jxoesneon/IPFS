@@ -1,4 +1,4 @@
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+﻿import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 
 import '../network/conn.dart';
 import '../multiaddr.dart';

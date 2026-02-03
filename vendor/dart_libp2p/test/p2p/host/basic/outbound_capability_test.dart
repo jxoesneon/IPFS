@@ -1,6 +1,6 @@
-import 'package:test/test.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
+﻿import 'package:test/test.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
 
 void main() {
   group('OutboundCapabilityInfo', () {

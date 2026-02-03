@@ -1,4 +1,4 @@
-# Stream Multiplexing
+﻿# Stream Multiplexing
 
 A single connection between two peers can handle multiple independent, concurrent streams of communication. This is achieved through a stream multiplexer, which takes a single connection (like a TCP socket) and splits it into many virtual streams.
 
@@ -34,8 +34,8 @@ When you write data to a `YamuxStream`, the `YamuxSession` packages it into `Dat
 Yamux is enabled by default when you use the `Libp2p.new_` constructor. You can also configure it manually.
 
 ```dart
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/session.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/session.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart';
 
 // Add Yamux to your configuration
 final config = [

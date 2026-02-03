@@ -1,12 +1,12 @@
-// Copyright (c) 2024 The dart-libp2p Authors. All rights reserved.
+﻿// Copyright (c) 2024 The dart-libp2p Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
 
 /// A wrapper around P2PStream that prepends buffered data to the stream.
 ///

@@ -1,26 +1,26 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/network/network.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
-import 'package:dart_libp2p/p2p/protocol/ping/ping.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
+import 'package:ipfs_libp2p/p2p/protocol/ping/ping.dart';
 import 'package:mockito/annotations.dart';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
 import 'package:mockito/mockito.dart';
-import 'package:dart_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart';
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
-import 'package:dart_libp2p/config/config.dart'; // Added Config import
-import 'package:dart_libp2p/core/crypto/keys.dart'; // For PublicKey
-import 'package:dart_libp2p/p2p/transport/transport.dart'; // Corrected Transport import
-import 'package:dart_libp2p/core/network/context.dart'; // For Context
+import 'package:ipfs_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart';
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
+import 'package:ipfs_libp2p/config/config.dart'; // Added Config import
+import 'package:ipfs_libp2p/core/crypto/keys.dart'; // For PublicKey
+import 'package:ipfs_libp2p/p2p/transport/transport.dart'; // Corrected Transport import
+import 'package:ipfs_libp2p/core/network/context.dart'; // For Context
 
 @GenerateMocks(
   [Host, Network, Peerstore, P2PStream, StreamScope],

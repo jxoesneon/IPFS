@@ -1,4 +1,4 @@
-# STOMP Protocol Implementation for dart-libp2p
+﻿# STOMP Protocol Implementation for dart-libp2p
 
 This directory contains a complete implementation of the STOMP (Simple Text Oriented Messaging Protocol) version 1.2 for the dart-libp2p library. STOMP is a simple interoperable protocol designed for asynchronous message passing between clients via mediating servers.
 
@@ -42,7 +42,7 @@ The implementation follows the libp2p pattern of separating interfaces and imple
 ### Basic Setup
 
 ```dart
-import 'package:dart_libp2p/p2p/protocol/stomp.dart';
+import 'package:ipfs_libp2p/p2p/protocol/stomp.dart';
 
 // Create a STOMP service with both client and server capabilities
 final stompService = await host.addStompService(

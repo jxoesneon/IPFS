@@ -1,4 +1,4 @@
-# Resource Manager
+﻿# Resource Manager
 
 A public-facing libp2p node can be exposed to resource exhaustion attacks, where malicious peers open many connections or streams to consume all available memory or file descriptors. The **Resource Manager** is the component responsible for protecting a node against such attacks by tracking and limiting the resources consumed by other peers.
 
@@ -45,8 +45,8 @@ The default `ResourceManagerImpl` uses a `FixedLimiter` which provides a basic, 
 ### Example: Configuring a Custom Limiter
 
 ```dart
-import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
 
 // Create a custom limiter configuration
 final limiterConfig = LimiterConfig(

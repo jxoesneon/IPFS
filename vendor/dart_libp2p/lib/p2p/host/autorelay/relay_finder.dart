@@ -1,30 +1,30 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math';
 
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/network.dart'
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/network.dart'
     show Connectedness, EvtPeerConnectednessChanged, ConnectionManager;
-import 'package:dart_libp2p/core/network/conn.dart'
+import 'package:ipfs_libp2p/core/network/conn.dart'
     show Conn; // Direct import for Conn
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/transport/upgrader.dart'
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/transport/upgrader.dart'
     show Upgrader; // Import Upgrader
 
 // Circuit V2 client imports
-import 'package:dart_libp2p/p2p/protocol/circuitv2/client/client.dart'
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/client/client.dart'
     show CircuitV2Client; // Changed Client to CircuitV2Client
-import 'package:dart_libp2p/p2p/protocol/circuitv2/client/reservation.dart';
-import 'package:dart_libp2p/p2p/protocol/circuitv2/proto.dart'
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/client/reservation.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/proto.dart'
     show CircuitV2Protocol;
 
 import 'package:meta/meta.dart'; // For @visibleForTesting
 import 'package:logging/logging.dart';
 
 import 'package:synchronized/synchronized.dart';
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart'; // For Protocols class
-import 'package:dart_libp2p/p2p/protocol/holepunch/util.dart'
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart'; // For Protocols class
+import 'package:ipfs_libp2p/p2p/protocol/holepunch/util.dart'
     show isRelayAddress; // For isRelayAddress
 
 import './autorelay_config.dart';

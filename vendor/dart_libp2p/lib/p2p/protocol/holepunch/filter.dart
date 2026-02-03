@@ -1,8 +1,8 @@
-/// Address filter for the holepunch protocol.
+﻿/// Address filter for the holepunch protocol.
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/protocol/holepunch/holepuncher.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/protocol/holepunch/holepuncher.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
 
 /// Basic address filter implementation for the holepunch protocol
 class BasicAddrFilter implements AddrFilter {

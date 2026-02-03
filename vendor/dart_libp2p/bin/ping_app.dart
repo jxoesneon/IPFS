@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:math';
@@ -6,18 +6,18 @@ import 'dart:math';
 import 'package:args/args.dart';
 import 'package:dart_udx/dart_udx.dart';
 
-import 'package:dart_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/network/stream.dart' as core_network_stream;
-import 'package:dart_libp2p/core/network/context.dart' as core_context;
-import 'package:dart_libp2p/config/config.dart' as p2p_config;
-import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart';
-import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart'
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart' as core_network_stream;
+import 'package:ipfs_libp2p/core/network/context.dart' as core_context;
+import 'package:ipfs_libp2p/config/config.dart' as p2p_config;
+import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart';
+import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart'
     as p2p_conn_manager;
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart'; // For Protocol.p2p.code
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart'; // For Protocol.p2p.code
 
 const String PING_PROTOCOL_ID = '/dart-libp2p/example-ping/udx/1.0.0';
 

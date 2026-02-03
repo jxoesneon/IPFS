@@ -1,9 +1,9 @@
-/// Metrics implementation for the memory-based peerstore.
+﻿/// Metrics implementation for the memory-based peerstore.
 
 import 'dart:collection';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
 import 'package:synchronized/synchronized.dart';
 
 /// The smoothing factor for the exponentially weighted moving average.

@@ -1,12 +1,12 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/session.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/stream.dart';
-import 'package:dart_libp2p/core/network/context.dart'
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/session.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/stream.dart';
+import 'package:ipfs_libp2p/core/network/context.dart'
     as core_context; // Added for Context
 import '../../../mocks/yamux_mock_connection.dart';
 
@@ -343,13 +343,13 @@ void main() {
               await withTimeout(serverStream.read(), 'server read $i');
           expect(received, equals(testData),
               reason: 'Data mismatch on stream $i');
-          print('✅ Stream pair $i communication successful');
+          print('âœ… Stream pair $i communication successful');
 
           // Close both streams cleanly before opening the next pair
           print('Closing stream pair $i...');
           await withTimeout(clientStream.close(), 'client stream $i close');
           await withTimeout(serverStream.close(), 'server stream $i close');
-          print('✅ Stream pair $i closed');
+          print('âœ… Stream pair $i closed');
 
           // Give the session time to clean up the closed streams
           if (i < numSequentialStreams - 1) {
@@ -363,14 +363,14 @@ void main() {
             expect(session2.isClosed, isFalse,
                 reason:
                     'Server session should still be open after closing stream $i');
-            print('✅ Sessions verified healthy');
+            print('âœ… Sessions verified healthy');
           }
         }
 
         print(
-            '\n✅ Sequential stream reuse test PASSED - All $numSequentialStreams stream pairs opened successfully');
+            '\nâœ… Sequential stream reuse test PASSED - All $numSequentialStreams stream pairs opened successfully');
       } catch (e, stackTrace) {
-        print('\n❌ Sequential stream reuse test FAILED: $e');
+        print('\nâŒ Sequential stream reuse test FAILED: $e');
         print('Stack trace: $stackTrace');
         print('\nDiagnostic Info:');
         print('- Total client streams created: ${clientStreams.length}');
@@ -427,7 +427,7 @@ void main() {
           final acceptFuture = session2.acceptStream().timeout(
             Duration(seconds: 5),
             onTimeout: () {
-              print('❌ acceptStream() TIMED OUT - stream event was lost!');
+              print('âŒ acceptStream() TIMED OUT - stream event was lost!');
               throw TimeoutException(
                   'acceptStream timed out - likely missed stream event from broadcast');
             },
@@ -453,7 +453,7 @@ void main() {
           ]).timeout(
             Duration(seconds: 6),
             onTimeout: () {
-              print('❌ RACE CONDITION DETECTED:');
+              print('âŒ RACE CONDITION DETECTED:');
               print(
                   '   acceptStream() is stuck waiting because the broadcast stream');
               print(
@@ -467,7 +467,7 @@ void main() {
           final serverStream = results[1] as YamuxStream;
 
           print(
-              '✅ Both streams obtained: client=${clientStream.id()}, server=${serverStream.id()}');
+              'âœ… Both streams obtained: client=${clientStream.id()}, server=${serverStream.id()}');
           expect(clientStream.id(), equals(serverStream.id()));
 
           // Quick communication test
@@ -484,13 +484,13 @@ void main() {
           // Small delay before next iteration
           await Future.delayed(Duration(milliseconds: 100));
 
-          print('✅ Iteration ${i + 1} completed successfully');
+          print('âœ… Iteration ${i + 1} completed successfully');
         }
 
         print(
-            '\n✅ Broadcast stream race condition test PASSED - All $numIterations iterations succeeded');
+            '\nâœ… Broadcast stream race condition test PASSED - All $numIterations iterations succeeded');
       } catch (e, stackTrace) {
-        print('\n❌ Broadcast stream race condition test FAILED: $e');
+        print('\nâŒ Broadcast stream race condition test FAILED: $e');
         print('Stack trace: $stackTrace');
         print(
             '\nThis failure indicates that the broadcast StreamController in YamuxSession');
@@ -1189,7 +1189,7 @@ void main() {
           equals(largeData),
           reason: 'Received data should match sent data',
         );
-        print('✓ Data integrity verified');
+        print('âœ“ Data integrity verified');
 
         // Final session health check
         checkSessionHealth('Final');
@@ -1204,10 +1204,10 @@ void main() {
         expect(stream2.isClosed, isFalse,
             reason: 'Stream2 should remain open after large payload transfer');
 
-        print('✓ Large payload with rapid chunk delivery test PASSED');
+        print('âœ“ Large payload with rapid chunk delivery test PASSED');
         print('  This indicates Yamux can handle the OBP scenario correctly');
       } catch (e, stackTrace) {
-        print('❌ Large payload test FAILED: $e');
+        print('âŒ Large payload test FAILED: $e');
         print('  This confirms the Yamux issue that affects OBP');
         print('  Stack trace: $stackTrace');
 

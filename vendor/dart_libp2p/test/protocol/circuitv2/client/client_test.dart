@@ -1,15 +1,15 @@
-import 'package:test/test.dart';
+﻿import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/connmgr/conn_manager.dart';
-import 'package:dart_libp2p/p2p/transport/upgrader.dart';
-import 'package:dart_libp2p/p2p/protocol/circuitv2/client/client.dart';
-import 'package:dart_libp2p/p2p/protocol/circuitv2/proto.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/connmgr/conn_manager.dart';
+import 'package:ipfs_libp2p/p2p/transport/upgrader.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/client/client.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/proto.dart';
 
 @GenerateMocks([Host, Upgrader, ConnManager, P2PStream, Conn])
 import 'client_test.mocks.dart';

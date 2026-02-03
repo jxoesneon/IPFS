@@ -1,5 +1,5 @@
-import 'dart:typed_data';
-import 'package:dart_libp2p/core/crypto/ed25519.dart';
+﻿import 'dart:typed_data';
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart';
 import 'package:test/test.dart';
 
 void main() {

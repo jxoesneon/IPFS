@@ -1,7 +1,7 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:crypto/crypto.dart';
 import 'package:base_x/base_x.dart';
 

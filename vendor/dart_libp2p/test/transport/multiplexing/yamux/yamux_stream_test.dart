@@ -1,24 +1,24 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io'; // Added for InternetAddress
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/core/network/common.dart' show Direction;
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart'
+import 'package:ipfs_libp2p/core/network/common.dart' show Direction;
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart'
     show ConnScope, ScopeStat, ResourceScopeSpan;
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/multiaddr.dart'
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart'
     hide Protocol; // Hide core Protocol if it exists to avoid conflict
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart'; // Import the Protocol class for Multiaddr
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart'
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart'; // Import the Protocol class for Multiaddr
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart'
     as core_protocol; // Alias to avoid conflict with multiaddr.Protocol
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/stream.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/frame.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/yamux_exceptions.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/stream.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/frame.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/yamux_exceptions.dart';
 
 // Mock implementations for dependencies
 class MockPeerId extends PeerId {

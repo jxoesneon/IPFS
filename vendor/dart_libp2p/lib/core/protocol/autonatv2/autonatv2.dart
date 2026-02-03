@@ -1,6 +1,6 @@
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/protocol/autonatv2/pb/autonatv2.pb.dart';
-import 'package:dart_libp2p/core/network/network.dart';
+﻿import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/protocol/autonatv2/pb/autonatv2.pb.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
 
 import '../../multiaddr.dart';
 

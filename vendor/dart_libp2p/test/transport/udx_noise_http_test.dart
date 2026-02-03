@@ -1,45 +1,45 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/context.dart' as core_context;
-import 'package:dart_libp2p/core/network/mux.dart'
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/context.dart' as core_context;
+import 'package:ipfs_libp2p/core/network/mux.dart'
     as core_mux_types; // Aliased import
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/network/transport_conn.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/host/eventbus/basic.dart';
-import 'package:dart_libp2p/p2p/protocol/http/http_protocol.dart';
-import 'package:dart_libp2p/config/config.dart' as p2p_config;
-import 'package:dart_libp2p/p2p/network/connmgr/null_conn_mgr.dart';
-import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart'; // Corrected import
-import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart';
-import 'package:dart_libp2p/p2p/transport/listener.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/session.dart'; // Corrected import for YamuxSession
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/stream.dart'; // Added import for YamuxStream
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart'; // For MultiplexerConfig
-import 'package:dart_libp2p/config/stream_muxer.dart'; // For StreamMuxer base class
-import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/network/transport_conn.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/host/eventbus/basic.dart';
+import 'package:ipfs_libp2p/p2p/protocol/http/http_protocol.dart';
+import 'package:ipfs_libp2p/config/config.dart' as p2p_config;
+import 'package:ipfs_libp2p/p2p/network/connmgr/null_conn_mgr.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart'; // Corrected import
+import 'package:ipfs_libp2p/p2p/transport/basic_upgrader.dart';
+import 'package:ipfs_libp2p/p2p/transport/listener.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/session.dart'; // Corrected import for YamuxSession
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/stream.dart'; // Added import for YamuxStream
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart'; // For MultiplexerConfig
+import 'package:ipfs_libp2p/config/stream_muxer.dart'; // For StreamMuxer base class
+import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
 import 'package:dart_udx/dart_udx.dart';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart'
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart'
     as p2p_transport; // Aliased for clarity
-import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart'; // Added for ResourceManagerImpl
-import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart'; // Added for FixedLimiter
-import 'package:dart_libp2p/p2p/network/swarm/swarm.dart';
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
-import 'package:dart_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart';
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/network/stream.dart' as core_network_stream;
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
-import 'package:dart_libp2p/core/peerstore.dart'; // For AddressTTL
-import 'package:dart_libp2p/core/network/network.dart'; // For Network type in TestNotifiee
-import 'package:dart_libp2p/core/network/notifiee.dart'; // For Notifiee interface
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart'; // Added for ResourceManagerImpl
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart'; // Added for FixedLimiter
+import 'package:ipfs_libp2p/p2p/network/swarm/swarm.dart';
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
+import 'package:ipfs_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart' as core_network_stream;
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
+import 'package:ipfs_libp2p/core/peerstore.dart'; // For AddressTTL
+import 'package:ipfs_libp2p/core/network/network.dart'; // For Network type in TestNotifiee
+import 'package:ipfs_libp2p/core/network/notifiee.dart'; // For Notifiee interface
 
 // Custom AddrsFactory for testing that doesn't filter loopback
 List<MultiAddr> passThroughAddrsFactory(List<MultiAddr> addrs) {
@@ -252,7 +252,7 @@ void main() {
         expect(response1.status, equals(HttpStatus.ok));
         expect(response1.contentType, contains('text/plain'));
         expect(response1.bodyAsString, equals('Hello, World!'));
-        print('✓ GET /hello successful: ${response1.bodyAsString}');
+        print('âœ“ GET /hello successful: ${response1.bodyAsString}');
 
         // Test 2: JSON API request
         print('Testing GET /api/status...');
@@ -267,7 +267,7 @@ void main() {
         expect(statusData!['status'], equals('ok'));
         expect(statusData['server'], equals('dart-libp2p-http-test'));
         expect(statusData['timestamp'], isNotNull);
-        print('✓ GET /api/status successful: $statusData');
+        print('âœ“ GET /api/status successful: $statusData');
 
         // Test 3: 404 Not Found
         print('Testing GET /nonexistent...');
@@ -276,7 +276,7 @@ void main() {
 
         expect(response3.status, equals(HttpStatus.notFound));
         expect(response3.bodyAsString, equals('Not found'));
-        print('✓ GET /nonexistent returned 404 as expected');
+        print('âœ“ GET /nonexistent returned 404 as expected');
 
         print('Basic HTTP protocol test successful via Swarm/Host.');
       } catch (e, s) {
@@ -360,7 +360,7 @@ void main() {
         expect(createdUser['email'], equals('alice.johnson@example.com'));
         expect(createdUser['id'], isNotNull);
         expect(createdUser['created_at'], isNotNull);
-        print('✓ POST /api/users successful: User ID ${createdUser['id']}');
+        print('âœ“ POST /api/users successful: User ID ${createdUser['id']}');
 
         // Test 2: Process complex data
         print('Testing POST /api/process with complex data...');
@@ -386,7 +386,7 @@ void main() {
         expect(processResult['input'], equals(processData));
         expect(processResult['result_count'], equals(3));
         print(
-            '✓ POST /api/process successful: Processed ${processResult['result_count']} items');
+            'âœ“ POST /api/process successful: Processed ${processResult['result_count']} items');
 
         // Test 3: Invalid JSON handling
         print('Testing POST with invalid JSON...');
@@ -400,7 +400,7 @@ void main() {
 
         expect(response3.status, equals(HttpStatus.badRequest));
         expect(response3.bodyAsString, contains('Invalid JSON data'));
-        print('✓ POST with invalid JSON returned 400 as expected');
+        print('âœ“ POST with invalid JSON returned 400 as expected');
 
         // Test 4: Missing required fields
         print('Testing POST with missing required fields...');
@@ -410,7 +410,7 @@ void main() {
 
         expect(response4.status, equals(HttpStatus.badRequest));
         expect(response4.bodyAsString, contains('Missing required fields'));
-        print('✓ POST with missing fields returned 400 as expected');
+        print('âœ“ POST with missing fields returned 400 as expected');
 
         print('POST JSON test successful via Swarm/Host.');
       } catch (e, s) {
@@ -509,7 +509,7 @@ void main() {
         expect(
             protectedData['user_agent'], equals('dart-libp2p-test-client/1.0'));
         expect(protectedData['custom_header'], equals('test-custom-value'));
-        print('✓ GET /api/protected with valid auth successful');
+        print('âœ“ GET /api/protected with valid auth successful');
 
         // Test 2: Request without authorization header
         print('Testing GET /api/protected without authorization...');
@@ -519,7 +519,7 @@ void main() {
         expect(response2.status, equals(HttpStatus.unauthorized));
         expect(response2.bodyAsString,
             contains('Missing or invalid authorization header'));
-        print('✓ GET /api/protected without auth returned 401 as expected');
+        print('âœ“ GET /api/protected without auth returned 401 as expected');
 
         // Test 3: Request with invalid token
         print('Testing GET /api/protected with invalid token...');
@@ -533,7 +533,7 @@ void main() {
         expect(response3.status, equals(HttpStatus.forbidden));
         expect(response3.bodyAsString, contains('Invalid token'));
         print(
-            '✓ GET /api/protected with invalid token returned 403 as expected');
+            'âœ“ GET /api/protected with invalid token returned 403 as expected');
 
         // Test 4: Path parameters
         print('Testing GET with path parameters...');
@@ -547,7 +547,7 @@ void main() {
         expect(pathData['post_id'], equals('post456'));
         expect(pathData['title'], isNotNull);
         print(
-            '✓ GET with path parameters successful: User ${pathData['user_id']}, Post ${pathData['post_id']}');
+            'âœ“ GET with path parameters successful: User ${pathData['user_id']}, Post ${pathData['post_id']}');
 
         // Test 5: Custom response headers
         print('Testing GET /api/headers-test for custom response headers...');
@@ -564,7 +564,7 @@ void main() {
         expect(headersData, isNotNull);
         expect(headersData!['message'], equals('Headers test response'));
         print(
-            '✓ GET /api/headers-test with custom response headers successful');
+            'âœ“ GET /api/headers-test with custom response headers successful');
         print(
             '  Custom headers: x-custom-response=${response5.headers['x-custom-response']}, x-request-id=${response5.headers['x-request-id']}');
 
@@ -674,7 +674,7 @@ void main() {
         expect(updatedUser['version'], equals(2));
         expect(updatedUser['updated_at'], isNotNull);
         print(
-            '✓ PUT /api/users/user456 successful: Version ${updatedUser['version']}');
+            'âœ“ PUT /api/users/user456 successful: Version ${updatedUser['version']}');
 
         // Test 2: DELETE request
         print('Testing DELETE /api/users/user789...');
@@ -690,7 +690,7 @@ void main() {
         expect(deleteResult!['deleted'], equals(true));
         expect(deleteResult['user_id'], equals('user789'));
         expect(deleteResult['deleted_at'], isNotNull);
-        print('✓ DELETE /api/users/user789 successful');
+        print('âœ“ DELETE /api/users/user789 successful');
 
         // Test 3: PUT with different status codes
         print('Testing PUT /api/status/202 (Accepted)...');
@@ -705,7 +705,7 @@ void main() {
         final acceptedResult = response3.bodyAsJson;
         expect(acceptedResult, isNotNull);
         expect(acceptedResult!['code'], equals(202));
-        print('✓ PUT /api/status/202 returned 202 Accepted');
+        print('âœ“ PUT /api/status/202 returned 202 Accepted');
 
         // Test 4: PUT with 204 No Content
         print('Testing PUT /api/status/204 (No Content)...');
@@ -718,7 +718,7 @@ void main() {
 
         expect(response4.status, equals(HttpStatus.noContent));
         expect(response4.body, anyOf(isNull, isEmpty));
-        print('✓ PUT /api/status/204 returned 204 No Content');
+        print('âœ“ PUT /api/status/204 returned 204 No Content');
 
         // Test 5: PUT with 409 Conflict
         print('Testing PUT /api/status/409 (Conflict)...');
@@ -731,7 +731,7 @@ void main() {
 
         expect(response5.status, equals(HttpStatus.conflict));
         expect(response5.bodyAsString, contains('Resource conflict'));
-        print('✓ PUT /api/status/409 returned 409 Conflict');
+        print('âœ“ PUT /api/status/409 returned 409 Conflict');
 
         print('PUT and DELETE methods test successful via Swarm/Host.');
       } catch (e, s) {
@@ -807,12 +807,12 @@ void main() {
           expect(responseData!['request_id'], equals('req${i + 1}'));
           expect(responseData['request_number'], isNotNull);
           print(
-              '✓ Concurrent request ${i + 1}: ID=${responseData['request_id']}, Number=${responseData['request_number']}');
+              'âœ“ Concurrent request ${i + 1}: ID=${responseData['request_id']}, Number=${responseData['request_number']}');
         }
 
         // Verify all requests were processed (counter should be at least 5)
         expect(requestCounter, greaterThanOrEqualTo(5));
-        print('✓ All 5 concurrent GET requests completed successfully');
+        print('âœ“ All 5 concurrent GET requests completed successfully');
 
         // Test 2: Mixed concurrent requests (GET and POST)
         print('Testing mixed concurrent requests (3 GET + 2 POST)...');
@@ -843,7 +843,7 @@ void main() {
           expect(mixedResponses[i].status, equals(HttpStatus.ok));
           final getData = mixedResponses[i].bodyAsJson;
           expect(getData!['request_id'], equals('mixed${i + 6}'));
-          print('✓ Mixed GET request ${i + 1}: ${getData['request_id']}');
+          print('âœ“ Mixed GET request ${i + 1}: ${getData['request_id']}');
         }
 
         // Check POST responses (last 2)
@@ -852,10 +852,10 @@ void main() {
           final postData = mixedResponses[i].bodyAsJson;
           expect(postData!['batch_id'], equals('batch${i - 2}'));
           expect(postData['status'], equals('completed'));
-          print('✓ Mixed POST request ${i - 2}: ${postData['batch_id']}');
+          print('âœ“ Mixed POST request ${i - 2}: ${postData['batch_id']}');
         }
 
-        print('✓ All 5 mixed concurrent requests completed successfully');
+        print('âœ“ All 5 mixed concurrent requests completed successfully');
 
         // Test 3: High-frequency sequential requests
         print('Testing 10 rapid sequential requests...');
@@ -876,11 +876,11 @@ void main() {
         for (int i = 0; i < sequentialResults.length; i++) {
           expect(sequentialResults[i]['request_id'], equals('seq${i + 1}'));
           print(
-              '✓ Sequential request ${i + 1}: Number=${sequentialResults[i]['request_number']}');
+              'âœ“ Sequential request ${i + 1}: Number=${sequentialResults[i]['request_number']}');
         }
 
-        print('✓ All 10 sequential requests completed successfully');
-        print('✓ Total requests processed: $requestCounter');
+        print('âœ“ All 10 sequential requests completed successfully');
+        print('âœ“ Total requests processed: $requestCounter');
 
         print('Concurrent HTTP requests test successful via Swarm/Host.');
       } catch (e, s) {
@@ -984,7 +984,7 @@ void main() {
 
         expect(response1.status, equals(HttpStatus.internalServerError));
         expect(response1.bodyAsString, equals('Internal server error'));
-        print('✓ Server exception returned 500 Internal Server Error');
+        print('âœ“ Server exception returned 500 Internal Server Error');
 
         // Test 2: Various HTTP error codes
         final errorCodes = ['400', '401', '403', '404', '405', '500', '503'];
@@ -1006,7 +1006,7 @@ void main() {
           expect(response.status, equals(expectedStatuses[i]));
           expect(response.bodyAsString, isNotEmpty);
           print(
-              '✓ Error ${errorCodes[i]} returned ${expectedStatuses[i].code} as expected');
+              'âœ“ Error ${errorCodes[i]} returned ${expectedStatuses[i].code} as expected');
         }
 
         // Test 3: Content-Type validation
@@ -1026,7 +1026,7 @@ void main() {
         expect(
             validResult!['message'], equals('Content validated successfully'));
         expect(validResult['received'], equals(validData));
-        print('✓ Valid JSON with correct content-type accepted');
+        print('âœ“ Valid JSON with correct content-type accepted');
 
         // Invalid content-type
         final response3b = await httpClient.postRequest(
@@ -1039,7 +1039,7 @@ void main() {
         expect(response3b.status, equals(HttpStatus.badRequest));
         expect(response3b.bodyAsString,
             contains('Content-Type must be application/json'));
-        print('✓ Invalid content-type rejected with 400');
+        print('âœ“ Invalid content-type rejected with 400');
 
         // Invalid JSON with correct content-type
         final response3c = await httpClient.postRequest(
@@ -1052,7 +1052,7 @@ void main() {
         expect(response3c.status, equals(HttpStatus.badRequest));
         expect(
             response3c.bodyAsString, contains('Invalid JSON in request body'));
-        print('✓ Invalid JSON rejected with 400');
+        print('âœ“ Invalid JSON rejected with 400');
 
         // Test 4: Request size validation
         print('Testing request size validation...');
@@ -1067,7 +1067,7 @@ void main() {
         expect(sizeResult!['message'], equals('Size check passed'));
         expect(sizeResult['body_size'], lessThan(1000));
         print(
-            '✓ Small request passed size check: ${sizeResult['body_size']} bytes');
+            'âœ“ Small request passed size check: ${sizeResult['body_size']} bytes');
 
         // Large request (should fail)
         final largeData = {'message': 'x' * 1500}; // Create large payload
@@ -1076,7 +1076,7 @@ void main() {
 
         expect(response4b.status, equals(HttpStatus.badRequest));
         expect(response4b.bodyAsString, contains('Request body too large'));
-        print('✓ Large request rejected with 400');
+        print('âœ“ Large request rejected with 400');
 
         print(
             'HTTP error scenarios and edge cases test successful via Swarm/Host.');

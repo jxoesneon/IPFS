@@ -1,16 +1,16 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart'; // For concrete PeerId
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/limit.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/scope_impl.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/scopes/peer_scope_impl.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/scopes/transient_scope_impl.dart'; // Added import
-import 'package:dart_libp2p/p2p/host/resource_manager/scopes/system_scope_impl.dart'; // Added import
-import 'package:dart_libp2p/core/network/errors.dart'
+import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart'; // For concrete PeerId
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limit.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/scope_impl.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/scopes/peer_scope_impl.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/scopes/transient_scope_impl.dart'; // Added import
+import 'package:ipfs_libp2p/p2p/host/resource_manager/scopes/system_scope_impl.dart'; // Added import
+import 'package:ipfs_libp2p/core/network/errors.dart'
     as network_errors; // Added import
 
 // Debug logging removed to reduce console noise

@@ -1,4 +1,4 @@
-# Circuit Relay v2 Setup Guide
+﻿# Circuit Relay v2 Setup Guide
 
 This guide explains how to set up Circuit Relay v2 in dart-libp2p, based on the go-libp2p implementation with nested security and multiplexing.
 
@@ -20,7 +20,7 @@ This guide explains how to set up Circuit Relay v2 in dart-libp2p, based on the 
 For a dedicated relay server that's always publicly reachable:
 
 ```dart
-import 'package:dart_libp2p/p2p/protocol/autonatv2/options.dart';
+import 'package:ipfs_libp2p/p2p/protocol/autonatv2/options.dart';
 
 final config = Config()
   ..enableRelay = true                    // Enable relay service
@@ -34,8 +34,8 @@ final host = await BasicHost.create(
 );
 
 await host.start();
-// ✅ Relay service automatically starts and advertises the hop protocol
-// ✅ AutoNAT v2 server provides reachability checks for other peers
+// âœ… Relay service automatically starts and advertises the hop protocol
+// âœ… AutoNAT v2 server provides reachability checks for other peers
 // No manual event emission required!
 ```
 
@@ -53,7 +53,7 @@ await host.start();
 For relays that should only operate when publicly reachable (e.g., mobile nodes):
 
 ```dart
-import 'package:dart_libp2p/p2p/host/autonat/ambient_config.dart';
+import 'package:ipfs_libp2p/p2p/host/autonat/ambient_config.dart';
 
 final config = Config()
   ..enableRelay = true     // Enable relay service
@@ -91,7 +91,7 @@ await host.start();
 The **canonical approach** - fully automatic reachability detection:
 
 ```dart
-import 'package:dart_libp2p/p2p/host/autonat/ambient_config.dart';
+import 'package:ipfs_libp2p/p2p/host/autonat/ambient_config.dart';
 
 final config = Config()
   ..enableAutoRelay = true   // Enable AutoRelay client
@@ -113,17 +113,17 @@ await host.start();
 final relayAddr = MultiAddr('/ip4/1.2.3.4/tcp/4001/p2p/12D3Koo...');
 final relayPeerId = PeerId.fromString('12D3Koo...');
 await host.connect(AddrInfo(relayPeerId, [relayAddr]));
-print('✅ Connected to relay server');
+print('âœ… Connected to relay server');
 
 // Wait for AmbientAutoNATv2 + AutoRelay initialization
-// bootDelay (500ms) + probes (1-2s) + AutoRelay (2-3s) ≈ 5-6s total
-print('⏰ Waiting for automatic reachability detection and relay reservations...');
+// bootDelay (500ms) + probes (1-2s) + AutoRelay (2-3s) â‰ˆ 5-6s total
+print('â° Waiting for automatic reachability detection and relay reservations...');
 await Future.delayed(Duration(seconds: 6));
 
 // Verify circuit addresses are advertised
 final myAddrs = host.addrs;
 final circuitAddrs = myAddrs.where((a) => a.toString().contains('/p2p-circuit')).toList();
-print('📍 Circuit addresses: $circuitAddrs');
+print('ðŸ“ Circuit addresses: $circuitAddrs');
 // Circuit addresses look like:
 // /ip4/1.2.3.4/tcp/4001/p2p/RELAY_PEER_ID/p2p-circuit/
 ```
@@ -143,7 +143,7 @@ print('📍 Circuit addresses: $circuitAddrs');
 Configure relay servers to automatically connect during host startup:
 
 ```dart
-import 'package:dart_libp2p/p2p/host/autonat/ambient_config.dart';
+import 'package:ipfs_libp2p/p2p/host/autonat/ambient_config.dart';
 
 final config = Config()
   ..enableAutoRelay = true   // Enable AutoRelay client
@@ -164,7 +164,7 @@ final host = await BasicHost.create(
 );
 
 await host.start();
-// ✅ Host automatically connects to configured relay servers during startup
+// âœ… Host automatically connects to configured relay servers during startup
 // No manual connect() calls needed!
 
 // Wait for AmbientAutoNATv2 + AutoRelay initialization
@@ -173,7 +173,7 @@ await Future.delayed(Duration(seconds: 6));
 // Verify circuit addresses are advertised
 final myAddrs = host.addrs;
 final circuitAddrs = myAddrs.where((a) => a.toString().contains('/p2p-circuit')).toList();
-print('📍 Circuit addresses: $circuitAddrs');
+print('ðŸ“ Circuit addresses: $circuitAddrs');
 ```
 
 **What happens automatically:**
@@ -212,7 +212,7 @@ await host.connect(AddrInfo(relayPeerId, [relayAddr]));
 final emitter = await host.eventBus.emitter(EvtLocalReachabilityChanged);
 await emitter.emit(EvtLocalReachabilityChanged(reachability: Reachability.private));
 await emitter.close();
-print('✅ AutoRelay manually triggered');
+print('âœ… AutoRelay manually triggered');
 
 // Wait for reservations
 await Future.delayed(Duration(seconds: 10));
@@ -239,7 +239,7 @@ To dial a peer through the relay, you need a **full dialable address**:
 ### Constructing Dialable Circuit Addresses
 
 ```dart
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart';
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart';
 
 // Get destination peer's base circuit addresses
 final destPeerId = PeerId.fromString('12D3Koo...');
@@ -290,7 +290,7 @@ Once connected, use the connection normally:
 // Ping through relay
 final pingService = PingService(host);
 final result = await pingService.ping(destPeerId).first;
-print('✅ Ping RTT: ${result.rtt?.inMilliseconds}ms');
+print('âœ… Ping RTT: ${result.rtt?.inMilliseconds}ms');
 
 // Verify connection is relayed
 final conns = host.network.connsToPeer(destPeerId);
@@ -311,18 +311,18 @@ Circuit relay in dart-libp2p follows the go-libp2p model with nested security/mu
 
 ```
 Application Data (e.g., Ping, Custom Protocol)
-    ↓
-Yamux (inner)       ← Multiplexing for relayed connection
-    ↓  
-Noise (inner)       ← Security for relayed connection
-    ↓
-ONE Relay Stream    ← Single stream from HOP CONNECT
-    ↓
-Yamux (outer)       ← Multiplexing to relay server
-    ↓
-Noise (outer)       ← Security to relay server
-    ↓
-Transport (UDX/TCP) ← Physical connection
+    â†“
+Yamux (inner)       â† Multiplexing for relayed connection
+    â†“  
+Noise (inner)       â† Security for relayed connection
+    â†“
+ONE Relay Stream    â† Single stream from HOP CONNECT
+    â†“
+Yamux (outer)       â† Multiplexing to relay server
+    â†“
+Noise (outer)       â† Security to relay server
+    â†“
+Transport (UDX/TCP) â† Physical connection
 ```
 
 **Key Insight:** The `RelayedConn` (single stream through relay) is itself upgraded with Noise + Yamux, creating a nested structure. This allows multiple application streams over one relay connection.
@@ -338,7 +338,7 @@ Transport (UDX/TCP) ← Physical connection
 
 ### Circuit Relay Protocol Messages
 
-**HOP CONNECT (Source → Relay):**
+**HOP CONNECT (Source â†’ Relay):**
 ```protobuf
 HopMessage {
   type: CONNECT
@@ -346,7 +346,7 @@ HopMessage {
 }
 ```
 
-**STOP (Relay → Destination):**
+**STOP (Relay â†’ Destination):**
 ```protobuf
 StopMessage {
   type: CONNECT
@@ -354,7 +354,7 @@ StopMessage {
 }
 ```
 
-**STOP Response (Destination → Relay):**
+**STOP Response (Destination â†’ Relay):**
 ```protobuf
 StopMessage {
   type: STATUS
@@ -362,7 +362,7 @@ StopMessage {
 }
 ```
 
-**HOP Response (Relay → Source):**
+**HOP Response (Relay â†’ Source):**
 ```protobuf
 HopMessage {
   type: STATUS
@@ -445,10 +445,10 @@ test('Circuit relay with ping (automatic detection)', () async {
 ```
 
 **Key differences from old approach:**
-- ✅ Uses `forceReachability` for relay server
-- ✅ Uses `AmbientAutoNATv2Config` for fast testing
-- ✅ No manual `EvtLocalReachabilityChanged` emission
-- ✅ Fully automatic reachability detection
+- âœ… Uses `forceReachability` for relay server
+- âœ… Uses `AmbientAutoNATv2Config` for fast testing
+- âœ… No manual `EvtLocalReachabilityChanged` emission
+- âœ… Fully automatic reachability detection
 
 ### Docker Integration Test
 
@@ -483,7 +483,7 @@ await host.start();
 
 // 3. For relay servers: done! Service is active.
 if (role == 'relay') {
-  print('📡 Relay server ready (HOP + AutoNAT v2 server active)');
+  print('ðŸ“¡ Relay server ready (HOP + AutoNAT v2 server active)');
   return;
 }
 
@@ -492,18 +492,18 @@ await _connectToRelayServers();
 
 // 5. Wait for AmbientAutoNATv2 + AutoRelay initialization
 // No manual event emission needed!
-print('⏰ Waiting for automatic reachability detection and relay reservations...');
+print('â° Waiting for automatic reachability detection and relay reservations...');
 await Future.delayed(Duration(seconds: 5));
 
 // 6. Circuit addresses now available
-print('📍 My addresses: ${host.addrs}');
+print('ðŸ“ My addresses: ${host.addrs}');
 ```
 
 **Key improvements:**
-- ✅ Relay servers use `forceReachability` to skip ambient probing
-- ✅ Clients use `AmbientAutoNATv2Config` for fast testing
-- ✅ No manual `EvtLocalReachabilityChanged` emission needed
-- ✅ Automatic reachability detection and relay discovery
+- âœ… Relay servers use `forceReachability` to skip ambient probing
+- âœ… Clients use `AmbientAutoNATv2Config` for fast testing
+- âœ… No manual `EvtLocalReachabilityChanged` emission needed
+- âœ… Automatic reachability detection and relay discovery
 
 ---
 
@@ -521,7 +521,7 @@ print('📍 My addresses: ${host.addrs}');
    ```dart
    final config = Config()
      ..enableAutoRelay = true
-     ..enableAutoNAT = true;  // ✅ Must be true for automatic detection
+     ..enableAutoNAT = true;  // âœ… Must be true for automatic detection
    ```
 
 2. **Connect to relay server that supports AutoNAT v2:**
@@ -559,7 +559,7 @@ print('📍 My addresses: ${host.addrs}');
    // Relay configuration must include:
    final relayConfig = Config()
      ..enableRelay = true
-     ..enableAutoNAT = true  // ✅ Provides AutoNAT service to clients
+     ..enableAutoNAT = true  // âœ… Provides AutoNAT service to clients
      ..forceReachability = Reachability.public;
    ```
 
@@ -573,10 +573,10 @@ print('📍 My addresses: ${host.addrs}');
 Use full dialable address with destination peer ID:
 
 ```dart
-// ❌ WRONG: Base circuit address (missing destination)
+// âŒ WRONG: Base circuit address (missing destination)
 final addr = '/ip4/1.2.3.4/tcp/4001/p2p/RELAY_ID/p2p-circuit/';
 
-// ✅ CORRECT: Full dialable address (with destination)
+// âœ… CORRECT: Full dialable address (with destination)
 final addr = '/ip4/1.2.3.4/tcp/4001/p2p/RELAY_ID/p2p-circuit/p2p/DEST_PEER_ID';
 
 // Use encapsulate() to construct correctly

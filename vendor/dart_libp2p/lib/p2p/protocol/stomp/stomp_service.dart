@@ -1,6 +1,6 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:dart_libp2p/p2p/protocol/stomp/stomp_subscription.dart';
+import 'package:ipfs_libp2p/p2p/protocol/stomp/stomp_subscription.dart';
 import 'package:logging/logging.dart';
 
 import '../../../core/interfaces.dart';

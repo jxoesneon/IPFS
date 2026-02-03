@@ -1,18 +1,18 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/crypto/ed25519.dart';
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart';
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/p2p/protocol/circuitv2/relay/relay.dart';
-import 'package:dart_libp2p/p2p/protocol/circuitv2/relay/resources.dart';
-import 'package:dart_libp2p/p2p/protocol/circuitv2/proto.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/relay/relay.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/relay/resources.dart';
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/proto.dart';
 
 @GenerateMocks([Host, Conn])
 @GenerateNiceMocks([MockSpec<P2PStream>()])

@@ -1,7 +1,7 @@
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart'; // For Protocols class
+﻿import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart'; // For Protocols class
 // From search: lib/p2p/protocol/holepunch/util.dart
-import 'package:dart_libp2p/p2p/protocol/holepunch/util.dart'
+import 'package:ipfs_libp2p/p2p/protocol/holepunch/util.dart'
     show isRelayAddress;
 
 /// Cleans up a relay's address set to remove private addresses and curtail addrsplosion.

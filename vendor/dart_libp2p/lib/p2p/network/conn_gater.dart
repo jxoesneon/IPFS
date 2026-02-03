@@ -1,7 +1,7 @@
-import 'package:dart_libp2p/core/connmgr/conn_gater.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+﻿import 'package:ipfs_libp2p/core/connmgr/conn_gater.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'dart:async';
 import 'package:logging/logging.dart';
 

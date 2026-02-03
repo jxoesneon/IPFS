@@ -1,23 +1,23 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math';
 import 'dart:collection'; // For HashSet
 
-import 'package:dart_libp2p/core/event/bus.dart';
-import 'package:dart_libp2p/core/event/addrs.dart'; // For EvtLocalAddressesUpdated
-import 'package:dart_libp2p/core/event/identify.dart'; // For EvtPeerIdentificationCompleted
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/network/network.dart'
+import 'package:ipfs_libp2p/core/event/bus.dart';
+import 'package:ipfs_libp2p/core/event/addrs.dart'; // For EvtLocalAddressesUpdated
+import 'package:ipfs_libp2p/core/event/identify.dart'; // For EvtPeerIdentificationCompleted
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/network/network.dart'
     show Reachability, Network; // Conn is in its own file
-import 'package:dart_libp2p/core/network/conn.dart'; // Import Conn explicitly
+import 'package:ipfs_libp2p/core/network/conn.dart'; // Import Conn explicitly
 // Direction is now in common.dart
-import 'package:dart_libp2p/core/network/notifiee.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/network/notifiee.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import '../../../core/network/common.dart'
     show Direction; // Import Direction from common.dart
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/protocol/autonatv1/autonatv1.dart'; // For AutoNATProto and AutoNATV1Client
-import 'package:dart_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/protocol/autonatv1/autonatv1.dart'; // For AutoNATProto and AutoNATV1Client
+import 'package:ipfs_libp2p/core/peerstore.dart';
 
 import './options.dart';
 import './client.dart';

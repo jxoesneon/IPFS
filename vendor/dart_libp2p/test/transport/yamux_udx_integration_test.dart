@@ -1,42 +1,42 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/context.dart' as core_context;
-import 'package:dart_libp2p/core/network/mux.dart' as core_mux_types;
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/network/transport_conn.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/host/eventbus/basic.dart';
-import 'package:dart_libp2p/config/config.dart' as p2p_config;
-import 'package:dart_libp2p/p2p/network/connmgr/null_conn_mgr.dart';
-import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart';
-import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart';
-import 'package:dart_libp2p/p2p/transport/listener.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/session.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/stream.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart';
-import 'package:dart_libp2p/config/stream_muxer.dart';
-import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/context.dart' as core_context;
+import 'package:ipfs_libp2p/core/network/mux.dart' as core_mux_types;
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/network/transport_conn.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/host/eventbus/basic.dart';
+import 'package:ipfs_libp2p/config/config.dart' as p2p_config;
+import 'package:ipfs_libp2p/p2p/network/connmgr/null_conn_mgr.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart';
+import 'package:ipfs_libp2p/p2p/transport/basic_upgrader.dart';
+import 'package:ipfs_libp2p/p2p/transport/listener.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/session.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/stream.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart';
+import 'package:ipfs_libp2p/config/stream_muxer.dart';
+import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
 import 'package:dart_udx/dart_udx.dart';
 import 'package:logging/logging.dart';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart'
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart'
     as p2p_transport;
-import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart';
-import 'package:dart_libp2p/p2p/network/swarm/swarm.dart';
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
-import 'package:dart_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart';
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/network/stream.dart' as core_network_stream;
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
-import 'package:dart_libp2p/core/peerstore.dart';
-import 'package:dart_libp2p/core/network/network.dart';
-import 'package:dart_libp2p/core/network/notifiee.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
+import 'package:ipfs_libp2p/p2p/network/swarm/swarm.dart';
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
+import 'package:ipfs_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart' as core_network_stream;
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
+import 'package:ipfs_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/core/network/notifiee.dart';
 
 // Custom AddrsFactory for testing that doesn't filter loopback
 List<MultiAddr> passThroughAddrsFactory(List<MultiAddr> addrs) {
@@ -119,7 +119,7 @@ void main() {
     late KeyPair serverKeyPair;
 
     setUpAll(() async {
-      print('\n🔧 Setting up integration test suite...');
+      print('\nðŸ”§ Setting up integration test suite...');
       udxInstance = UDX();
 
       clientKeyPair = await crypto_ed25519.generateEd25519KeyPair();
@@ -127,22 +127,22 @@ void main() {
       clientPeerId = await PeerId.fromPublicKey(clientKeyPair.publicKey);
       serverPeerId = await PeerId.fromPublicKey(serverKeyPair.publicKey);
 
-      print('✅ Test suite setup complete');
+      print('âœ… Test suite setup complete');
       print('   Client PeerID: ${clientPeerId.toString()}');
       print('   Server PeerID: ${serverPeerId.toString()}');
     });
 
     tearDownAll(() async {
-      print('\n🧹 Cleaning up test suite...');
+      print('\nðŸ§¹ Cleaning up test suite...');
       // UDX instance cleanup is handled by individual tests
-      print('✅ Test suite cleanup complete');
+      print('âœ… Test suite cleanup complete');
     });
 
     group('Layer 1: Yamux over Real UDX Transport', () {
       test(
           'should handle large payloads (100KB) over real UDX without Noise/Swarm',
           () async {
-        print('\n🧪 TEST 1: Yamux + UDX (no Noise, no Swarm)');
+        print('\nðŸ§ª TEST 1: Yamux + UDX (no Noise, no Swarm)');
         print(
             '   Goal: Isolate if the issue is in UDX transport vs mock connections');
 
@@ -195,7 +195,7 @@ void main() {
               serverPeerId, serverKeyPair.publicKey, 'test-no-security');
           (serverRawConn as dynamic).setRemotePeerDetails(
               clientPeerId, clientKeyPair.publicKey, 'test-no-security');
-          print('   ✅ Peer IDs configured');
+          print('   âœ… Peer IDs configured');
 
           // Create Yamux sessions directly over UDX (no security layer)
           final yamuxConfig = MultiplexerConfig(
@@ -216,7 +216,7 @@ void main() {
               reason: 'Client session should be open');
           expect(serverSession.isClosed, isFalse,
               reason: 'Server session should be open');
-          print('   ✅ Yamux sessions established');
+          print('   âœ… Yamux sessions established');
 
           // Setup stream handling
           final serverStreamCompleter = Completer<YamuxStream>();
@@ -237,10 +237,10 @@ void main() {
           await serverStreamCompleter.future;
           expect(clientStream, isNotNull);
           expect(serverStream, isNotNull);
-          print('   ✅ Yamux streams established');
+          print('   âœ… Yamux streams established');
 
           // Test large payload transfer (100KB - same size that fails in OBP test)
-          print('   🚀 Starting large payload test (100KB)...');
+          print('   ðŸš€ Starting large payload test (100KB)...');
           await _testLargePayloadTransfer(
             clientStream,
             serverStream,
@@ -250,13 +250,13 @@ void main() {
           );
 
           print(
-              '   ✅ Layer 1 test PASSED - UDX transport works with large payloads');
+              '   âœ… Layer 1 test PASSED - UDX transport works with large payloads');
         } catch (e, stackTrace) {
-          print('   ❌ Layer 1 test FAILED: $e');
+          print('   âŒ Layer 1 test FAILED: $e');
           print('   Stack trace: $stackTrace');
 
           // Provide diagnostic information
-          print('\n   🔍 Diagnostic Information:');
+          print('\n   ðŸ” Diagnostic Information:');
           if (clientSession != null)
             print('   - Client session closed: ${clientSession.isClosed}');
           if (serverSession != null)
@@ -269,7 +269,7 @@ void main() {
           rethrow;
         } finally {
           // Cleanup
-          print('   🧹 Cleaning up Layer 1 test...');
+          print('   ðŸ§¹ Cleaning up Layer 1 test...');
           try {
             if (clientStream != null && !clientStream.isClosed) {
               await clientStream.close().timeout(Duration(seconds: 2));
@@ -289,9 +289,9 @@ void main() {
             await clientTransport.dispose();
             await serverTransport.dispose();
           } catch (e) {
-            print('   ⚠️ Error during Layer 1 cleanup: $e');
+            print('   âš ï¸ Error during Layer 1 cleanup: $e');
           }
-          print('   ✅ Layer 1 cleanup complete');
+          print('   âœ… Layer 1 cleanup complete');
         }
       }, timeout: Timeout(Duration(seconds: 60)));
     });
@@ -300,7 +300,7 @@ void main() {
       test(
           'should handle large payloads (100KB) over UDX + Noise without Swarm',
           () async {
-        print('\n🧪 TEST 2: Yamux + UDX + Noise (no Swarm)');
+        print('\nðŸ§ª TEST 2: Yamux + UDX + Noise (no Swarm)');
         print('   Goal: Determine if Noise security layer causes the issue');
 
         late UDXTransport clientTransport;
@@ -385,7 +385,7 @@ void main() {
           await Future.wait([clientDialFuture, serverAcceptFuture]);
 
           // Upgrade connections with Noise + Yamux
-          print('   🔐 Upgrading connections with Noise + Yamux...');
+          print('   ðŸ” Upgrading connections with Noise + Yamux...');
           final clientUpgradedFuture = clientUpgrader.upgradeOutbound(
             connection: clientRawConn,
             remotePeerId: serverPeerId,
@@ -411,7 +411,7 @@ void main() {
           expect(serverUpgradedConn.state.security, contains('noise'));
           expect(clientUpgradedConn.state.streamMultiplexer, contains('yamux'));
           expect(serverUpgradedConn.state.streamMultiplexer, contains('yamux'));
-          print('   ✅ Connections upgraded with Noise + Yamux');
+          print('   âœ… Connections upgraded with Noise + Yamux');
 
           // Setup stream handling
           final serverStreamCompleter = Completer<YamuxStream>();
@@ -434,10 +434,10 @@ void main() {
           await serverAcceptStreamFuture;
           expect(clientStream, isNotNull);
           expect(serverStream, isNotNull);
-          print('   ✅ Yamux streams established over Noise');
+          print('   âœ… Yamux streams established over Noise');
 
           // Test large payload transfer
-          print('   🚀 Starting large payload test (100KB) over Noise...');
+          print('   ðŸš€ Starting large payload test (100KB) over Noise...');
           await _testLargePayloadTransfer(
             clientStream,
             serverStream,
@@ -447,13 +447,13 @@ void main() {
           );
 
           print(
-              '   ✅ Layer 2 test PASSED - UDX + Noise works with large payloads');
+              '   âœ… Layer 2 test PASSED - UDX + Noise works with large payloads');
         } catch (e, stackTrace) {
-          print('   ❌ Layer 2 test FAILED: $e');
+          print('   âŒ Layer 2 test FAILED: $e');
           print('   Stack trace: $stackTrace');
 
           // Provide diagnostic information
-          print('\n   🔍 Diagnostic Information:');
+          print('\n   ðŸ” Diagnostic Information:');
           if (clientUpgradedConn != null)
             print(
                 '   - Client upgraded conn closed: ${clientUpgradedConn.isClosed}');
@@ -466,11 +466,11 @@ void main() {
             print('   - Server stream closed: ${serverStream.isClosed}');
 
           print(
-              '   🔍 This suggests the issue is introduced by the Noise security layer');
+              '   ðŸ” This suggests the issue is introduced by the Noise security layer');
           rethrow;
         } finally {
           // Cleanup
-          print('   🧹 Cleaning up Layer 2 test...');
+          print('   ðŸ§¹ Cleaning up Layer 2 test...');
           try {
             if (clientStream != null && !clientStream.isClosed) {
               await clientStream.close().timeout(Duration(seconds: 2));
@@ -490,9 +490,9 @@ void main() {
             await clientTransport.dispose();
             await serverTransport.dispose();
           } catch (e) {
-            print('   ⚠️ Error during Layer 2 cleanup: $e');
+            print('   âš ï¸ Error during Layer 2 cleanup: $e');
           }
-          print('   ✅ Layer 2 cleanup complete');
+          print('   âœ… Layer 2 cleanup complete');
         }
       }, timeout: Timeout(Duration(seconds: 60)));
     });
@@ -502,7 +502,7 @@ void main() {
           'should handle large payloads (100KB) over UDX + Noise + BasicHost with one-way transfer',
           () async {
         print(
-            '\n🧪 TEST 3: Yamux + UDX + Noise + BasicHost (One-Way Transfer)');
+            '\nðŸ§ª TEST 3: Yamux + UDX + Noise + BasicHost (One-Way Transfer)');
         print(
             '   Goal: Test the full stack with a simple one-way transfer protocol');
 
@@ -645,7 +645,7 @@ void main() {
               .addPubKey(serverPeerId, serverKeyPair.publicKey);
 
           // Connect and open stream via BasicHost exactly like working test
-          print('   🔗 Connecting via BasicHost...');
+          print('   ðŸ”— Connecting via BasicHost...');
           final serverAddrInfo = AddrInfo(serverPeerId, [serverListenAddr]);
           await clientHost.connect(serverAddrInfo);
           print('   Client Host connected to server');
@@ -658,14 +658,14 @@ void main() {
           print('   Server Host accepted stream: ${serverStream.id()}');
 
           // Test large payload one-way transfer
-          print('   🚀 Starting large payload test (100KB) over BasicHost...');
+          print('   ðŸš€ Starting large payload test (100KB) over BasicHost...');
 
           // Create 100KB test data
           final largeData = Uint8List(100 * 1024);
           for (var i = 0; i < largeData.length; i++) {
             largeData[i] = i % 256;
           }
-          print('   📤 Client sending ${largeData.length} bytes...');
+          print('   ðŸ“¤ Client sending ${largeData.length} bytes...');
 
           // Send data in chunks
           const chunkSize = 8192;
@@ -677,14 +677,14 @@ void main() {
 
             if ((i + chunkSize) % 25000 < chunkSize) {
               print(
-                  '   📤 Client sent ${i + chunkSize}/${largeData.length} bytes');
+                  '   ðŸ“¤ Client sent ${i + chunkSize}/${largeData.length} bytes');
             }
           }
-          print('   ✅ Client finished sending all data');
+          print('   âœ… Client finished sending all data');
 
           // Close write side to signal EOF
           await clientStream.closeWrite();
-          print('   🔒 Client closed write side');
+          print('   ðŸ”’ Client closed write side');
 
           // Wait for server to receive all data
           var waitCount = 0;
@@ -694,36 +694,36 @@ void main() {
             waitCount++;
             if (waitCount % 10 == 0) {
               print(
-                  '   ⏳ Waiting for server to receive all data: ${serverReceivedData.length}/${largeData.length} bytes');
+                  '   â³ Waiting for server to receive all data: ${serverReceivedData.length}/${largeData.length} bytes');
             }
           }
 
           // Verify data integrity
-          print('   🔍 Verifying data integrity...');
+          print('   ðŸ” Verifying data integrity...');
           expect(
             Uint8List.fromList(serverReceivedData),
             equals(largeData),
             reason: 'Server should receive all data correctly',
           );
-          print('   ✅ Data integrity verified');
+          print('   âœ… Data integrity verified');
 
           print(
-              '   ✅ Layer 3 test PASSED - UDX + Noise + BasicHost works with large payloads');
+              '   âœ… Layer 3 test PASSED - UDX + Noise + BasicHost works with large payloads');
         } catch (e, stackTrace) {
-          print('   ❌ Layer 3 test FAILED: $e');
+          print('   âŒ Layer 3 test FAILED: $e');
           print('   Stack trace: $stackTrace');
 
           // Provide diagnostic information
-          print('\n   🔍 Diagnostic Information:');
+          print('\n   ðŸ” Diagnostic Information:');
           if (clientStream != null)
             print('   - Client stream closed: ${clientStream.isClosed}');
 
           print(
-              '   🔍 This suggests the issue is in the BasicHost layer or above');
+              '   ðŸ” This suggests the issue is in the BasicHost layer or above');
           rethrow;
         } finally {
           // Cleanup
-          print('   🧹 Cleaning up Layer 3 test...');
+          print('   ðŸ§¹ Cleaning up Layer 3 test...');
           try {
             if (clientStream != null && !clientStream.isClosed) {
               await clientStream.close().timeout(Duration(seconds: 2));
@@ -735,9 +735,9 @@ void main() {
               await serverHost.close().timeout(Duration(seconds: 5));
             }
           } catch (e) {
-            print('   ⚠️ Error during Layer 3 cleanup: $e');
+            print('   âš ï¸ Error during Layer 3 cleanup: $e');
           }
-          print('   ✅ Layer 3 cleanup complete');
+          print('   âœ… Layer 3 cleanup complete');
         }
       }, timeout: Timeout(Duration(seconds: 60)));
     });
@@ -745,7 +745,7 @@ void main() {
     group('FIN Handling: closeWrite() Half-Close Semantics', () {
       test('should allow reading all data after sender calls closeWrite()',
           () async {
-        print('\n🧪 TEST FIN-1: closeWrite() should not break pending reads');
+        print('\nðŸ§ª TEST FIN-1: closeWrite() should not break pending reads');
         print(
             '   Goal: Verify that closeWrite() allows receiver to read all buffered data');
 
@@ -822,10 +822,10 @@ void main() {
           clientStream = await clientSession.openStream(core_context.Context())
               as YamuxStream;
           await serverStreamCompleter.future;
-          print('   ✅ Streams established');
+          print('   âœ… Streams established');
 
           // Test scenario: Write large data, then closeWrite(), then read
-          print('   📤 Writing 64KB of data...');
+          print('   ðŸ“¤ Writing 64KB of data...');
           final testData = Uint8List(64 * 1024);
           for (var i = 0; i < testData.length; i++) {
             testData[i] = i % 256;
@@ -839,18 +839,18 @@ void main() {
                 : i + chunkSize;
             await clientStream.write(testData.sublist(i, end));
           }
-          print('   ✅ Data written');
+          print('   âœ… Data written');
 
           // Small delay to ensure data is in transit
           await Future.delayed(Duration(milliseconds: 50));
 
           // Call closeWrite() - this is the critical test
-          print('   🔒 Calling closeWrite() on sender stream...');
+          print('   ðŸ”’ Calling closeWrite() on sender stream...');
           await clientStream.closeWrite();
-          print('   ✅ closeWrite() completed');
+          print('   âœ… closeWrite() completed');
 
           // Now read all data on the receiver side
-          print('   📥 Reading data after closeWrite()...');
+          print('   ðŸ“¥ Reading data after closeWrite()...');
           final receivedData = <int>[];
           var readAttempts = 0;
 
@@ -860,19 +860,19 @@ void main() {
                 await serverStream.read().timeout(Duration(seconds: 5));
 
             if (chunk.isEmpty) {
-              print('   📭 Received EOF after ${receivedData.length} bytes');
+              print('   ðŸ“­ Received EOF after ${receivedData.length} bytes');
               break;
             }
 
             receivedData.addAll(chunk);
             if (readAttempts % 5 == 0) {
               print(
-                  '   📈 Progress: ${receivedData.length}/${testData.length} bytes');
+                  '   ðŸ“ˆ Progress: ${receivedData.length}/${testData.length} bytes');
             }
           }
 
           // Verify all data was received
-          print('   🔍 Verifying data integrity...');
+          print('   ðŸ” Verifying data integrity...');
           expect(
             receivedData.length,
             equals(testData.length),
@@ -886,13 +886,13 @@ void main() {
           );
 
           print(
-              '   ✅ FIN-1 test PASSED - closeWrite() allows complete data transfer');
+              '   âœ… FIN-1 test PASSED - closeWrite() allows complete data transfer');
         } catch (e, stackTrace) {
-          print('   ❌ FIN-1 test FAILED: $e');
+          print('   âŒ FIN-1 test FAILED: $e');
           print('   Stack trace: $stackTrace');
           rethrow;
         } finally {
-          print('   🧹 Cleaning up FIN-1 test...');
+          print('   ðŸ§¹ Cleaning up FIN-1 test...');
           try {
             if (clientStream != null && !clientStream.isClosed) {
               await clientStream.close().timeout(Duration(seconds: 2));
@@ -912,14 +912,14 @@ void main() {
             await clientTransport.dispose();
             await serverTransport.dispose();
           } catch (e) {
-            print('   ⚠️ Error during FIN-1 cleanup: $e');
+            print('   âš ï¸ Error during FIN-1 cleanup: $e');
           }
         }
       }, timeout: Timeout(Duration(seconds: 30)));
 
       test('should return EOF (not error) when reading after FIN received',
           () async {
-        print('\n🧪 TEST FIN-2: Read after FIN should return EOF, not error');
+        print('\nðŸ§ª TEST FIN-2: Read after FIN should return EOF, not error');
         print(
             '   Goal: Verify that read() returns empty Uint8List after FIN, not StateError');
 
@@ -995,48 +995,48 @@ void main() {
           clientStream = await clientSession.openStream(core_context.Context())
               as YamuxStream;
           await serverStreamCompleter.future;
-          print('   ✅ Streams established');
+          print('   âœ… Streams established');
 
           // Write some data and then closeWrite
-          print('   📤 Writing small data packet...');
+          print('   ðŸ“¤ Writing small data packet...');
           final testData = Uint8List.fromList([1, 2, 3, 4, 5]);
           await clientStream.write(testData);
 
           // Call closeWrite
-          print('   🔒 Calling closeWrite()...');
+          print('   ðŸ”’ Calling closeWrite()...');
           await clientStream.closeWrite();
 
           // Small delay to ensure FIN is transmitted
           await Future.delayed(Duration(milliseconds: 100));
 
           // Read the data
-          print('   📥 Reading data...');
+          print('   ðŸ“¥ Reading data...');
           final receivedData =
               await serverStream.read().timeout(Duration(seconds: 5));
           expect(receivedData, equals(testData),
               reason: 'First read should return the data');
-          print('   ✅ First read returned ${receivedData.length} bytes');
+          print('   âœ… First read returned ${receivedData.length} bytes');
 
           // Read again - should return EOF (empty), NOT throw an error
-          print('   📥 Reading again (expecting EOF)...');
+          print('   ðŸ“¥ Reading again (expecting EOF)...');
           try {
             final eofData =
                 await serverStream.read().timeout(Duration(seconds: 5));
             expect(eofData.isEmpty, isTrue,
                 reason: 'Second read after FIN should return empty (EOF)');
             print(
-                '   ✅ Second read returned EOF (empty Uint8List) as expected');
+                '   âœ… Second read returned EOF (empty Uint8List) as expected');
           } on StateError catch (e) {
             fail('Read after FIN should return EOF, not throw StateError: $e');
           }
 
-          print('   ✅ FIN-2 test PASSED - Read returns EOF after FIN');
+          print('   âœ… FIN-2 test PASSED - Read returns EOF after FIN');
         } catch (e, stackTrace) {
-          print('   ❌ FIN-2 test FAILED: $e');
+          print('   âŒ FIN-2 test FAILED: $e');
           print('   Stack trace: $stackTrace');
           rethrow;
         } finally {
-          print('   🧹 Cleaning up FIN-2 test...');
+          print('   ðŸ§¹ Cleaning up FIN-2 test...');
           try {
             if (clientStream != null && !clientStream.isClosed) {
               await clientStream.close().timeout(Duration(seconds: 2));
@@ -1056,13 +1056,13 @@ void main() {
             await clientTransport.dispose();
             await serverTransport.dispose();
           } catch (e) {
-            print('   ⚠️ Error during FIN-2 cleanup: $e');
+            print('   âš ï¸ Error during FIN-2 cleanup: $e');
           }
         }
       }, timeout: Timeout(Duration(seconds: 30)));
 
       test('should handle pending read when FIN arrives', () async {
-        print('\n🧪 TEST FIN-3: Pending read when FIN arrives');
+        print('\nðŸ§ª TEST FIN-3: Pending read when FIN arrives');
         print(
             '   Goal: Verify that a read() blocked waiting for data handles FIN gracefully');
 
@@ -1138,11 +1138,11 @@ void main() {
           clientStream = await clientSession.openStream(core_context.Context())
               as YamuxStream;
           await serverStreamCompleter.future;
-          print('   ✅ Streams established');
+          print('   âœ… Streams established');
 
           // Start a read on the server side BEFORE any data is sent
           // This creates a pending read that will be waiting when FIN arrives
-          print('   📥 Starting read() that will block waiting for data...');
+          print('   ðŸ“¥ Starting read() that will block waiting for data...');
           final readFuture = serverStream.read().timeout(
                 Duration(seconds: 10),
                 onTimeout: () => throw TimeoutException('Read timed out'),
@@ -1152,20 +1152,20 @@ void main() {
           await Future.delayed(Duration(milliseconds: 100));
 
           // Now send data and closeWrite
-          print('   📤 Writing data while read is pending...');
+          print('   ðŸ“¤ Writing data while read is pending...');
           final testData =
               Uint8List.fromList(List.generate(1000, (i) => i % 256));
           await clientStream.write(testData);
 
-          print('   🔒 Calling closeWrite()...');
+          print('   ðŸ”’ Calling closeWrite()...');
           await clientStream.closeWrite();
 
           // The pending read should complete with the data, NOT error
-          print('   ⏳ Waiting for pending read to complete...');
+          print('   â³ Waiting for pending read to complete...');
           try {
             final receivedData = await readFuture;
             print(
-                '   ✅ Pending read completed with ${receivedData.length} bytes');
+                '   âœ… Pending read completed with ${receivedData.length} bytes');
             expect(receivedData.isNotEmpty, isTrue,
                 reason: 'Should receive data, not empty');
             expect(receivedData, equals(testData),
@@ -1175,13 +1175,13 @@ void main() {
                 'Pending read should complete with data, not throw StateError: $e');
           }
 
-          print('   ✅ FIN-3 test PASSED - Pending reads handle FIN gracefully');
+          print('   âœ… FIN-3 test PASSED - Pending reads handle FIN gracefully');
         } catch (e, stackTrace) {
-          print('   ❌ FIN-3 test FAILED: $e');
+          print('   âŒ FIN-3 test FAILED: $e');
           print('   Stack trace: $stackTrace');
           rethrow;
         } finally {
-          print('   🧹 Cleaning up FIN-3 test...');
+          print('   ðŸ§¹ Cleaning up FIN-3 test...');
           try {
             if (clientStream != null && !clientStream.isClosed) {
               await clientStream.close().timeout(Duration(seconds: 2));
@@ -1201,7 +1201,7 @@ void main() {
             await clientTransport.dispose();
             await serverTransport.dispose();
           } catch (e) {
-            print('   ⚠️ Error during FIN-3 cleanup: $e');
+            print('   âš ï¸ Error during FIN-3 cleanup: $e');
           }
         }
       }, timeout: Timeout(Duration(seconds: 30)));
@@ -1212,7 +1212,7 @@ void main() {
           'should handle 100 sequential framed messages (1KB each) over Noise without MAC errors',
           () async {
         print(
-            '\n🧪 TEST NOISE-1: Multiple Sequential Framed Messages Over Noise');
+            '\nðŸ§ª TEST NOISE-1: Multiple Sequential Framed Messages Over Noise');
         print(
             '   Goal: Replicate Ricochet pattern - many small messages vs one large blob');
         print(
@@ -1298,7 +1298,7 @@ void main() {
           await Future.wait([clientDialFuture, serverAcceptFuture]);
 
           // Upgrade connections with Noise + Yamux
-          print('   🔐 Upgrading connections with Noise + Yamux...');
+          print('   ðŸ” Upgrading connections with Noise + Yamux...');
           final clientUpgradedFuture = clientUpgrader.upgradeOutbound(
             connection: clientRawConn,
             remotePeerId: serverPeerId,
@@ -1314,7 +1314,7 @@ void main() {
               await Future.wait([clientUpgradedFuture, serverUpgradedFuture]);
           clientUpgradedConn = upgradedConns[0];
           serverUpgradedConn = upgradedConns[1];
-          print('   ✅ Connections upgraded with Noise + Yamux');
+          print('   âœ… Connections upgraded with Noise + Yamux');
 
           // Setup stream handling
           final serverAcceptStreamFuture =
@@ -1334,15 +1334,15 @@ void main() {
           await serverAcceptStreamFuture;
           expect(clientStream, isNotNull);
           expect(serverStream, isNotNull);
-          print('   ✅ Yamux streams established over Noise');
+          print('   âœ… Yamux streams established over Noise');
 
           // Test multiple sequential framed messages
-          print('   🚀 Starting test: 100 framed messages (1KB each)...');
+          print('   ðŸš€ Starting test: 100 framed messages (1KB each)...');
           const messageCount = 100;
           const messageSize = 1024;
 
           // Server writes 100 framed messages rapidly
-          print('   📤 Server writing $messageCount framed messages...');
+          print('   ðŸ“¤ Server writing $messageCount framed messages...');
           final writeCompleter = Completer<void>();
           Future.microtask(() async {
             try {
@@ -1362,20 +1362,20 @@ void main() {
                 // NO DELAY - write rapidly like Ricochet does
 
                 if ((i + 1) % 20 == 0) {
-                  print('   📤 Server wrote ${i + 1}/$messageCount messages');
+                  print('   ðŸ“¤ Server wrote ${i + 1}/$messageCount messages');
                 }
               }
-              print('   ✅ Server wrote all $messageCount framed messages');
+              print('   âœ… Server wrote all $messageCount framed messages');
               writeCompleter.complete();
             } catch (e, stackTrace) {
-              print('   ❌ Server write failed: $e');
+              print('   âŒ Server write failed: $e');
               print('   Stack trace: $stackTrace');
               writeCompleter.completeError(e);
             }
           });
 
           // Client reads all 100 framed messages
-          print('   📥 Client reading framed messages...');
+          print('   ðŸ“¥ Client reading framed messages...');
           final receivedMessages = <Uint8List>[];
           try {
             for (int i = 0; i < messageCount; i++) {
@@ -1389,14 +1389,14 @@ void main() {
               receivedMessages.add(messageData);
 
               if ((i + 1) % 20 == 0) {
-                print('   📥 Client received ${i + 1}/$messageCount messages');
+                print('   ðŸ“¥ Client received ${i + 1}/$messageCount messages');
               }
             }
 
-            print('   ✅ Client received all $messageCount messages');
+            print('   âœ… Client received all $messageCount messages');
           } catch (e, stackTrace) {
             print(
-                '   ❌ Client read failed after ${receivedMessages.length} messages: $e');
+                '   âŒ Client read failed after ${receivedMessages.length} messages: $e');
             print('   Stack trace: $stackTrace');
 
             // Check if it's a MAC error (the hypothesis we're testing)
@@ -1404,9 +1404,9 @@ void main() {
             if (errorString.contains('mac') ||
                 errorString.contains('authentication')) {
               print(
-                  '   🔍 HYPOTHESIS CONFIRMED: MAC/Authentication error during sequential messages!');
+                  '   ðŸ” HYPOTHESIS CONFIRMED: MAC/Authentication error during sequential messages!');
               print(
-                  '   🔍 This indicates Noise encryption state desynchronization');
+                  '   ðŸ” This indicates Noise encryption state desynchronization');
             }
 
             rethrow;
@@ -1430,9 +1430,9 @@ void main() {
           }
 
           print(
-              '   ✅ NOISE-1 test PASSED - No MAC errors with sequential messages');
+              '   âœ… NOISE-1 test PASSED - No MAC errors with sequential messages');
         } catch (e, stackTrace) {
-          print('   ❌ NOISE-1 test FAILED: $e');
+          print('   âŒ NOISE-1 test FAILED: $e');
           print('   Stack trace: $stackTrace');
 
           // Check if it's the MAC error we're investigating
@@ -1440,17 +1440,17 @@ void main() {
           if (errorString.contains('mac') ||
               errorString.contains('authentication')) {
             print(
-                '\n   🔍 CRITICAL FINDING: MAC authentication error detected!');
+                '\n   ðŸ” CRITICAL FINDING: MAC authentication error detected!');
             print(
-                '   🔍 This confirms the hypothesis: Noise encryption state desyncs during rapid sequential writes');
+                '   ðŸ” This confirms the hypothesis: Noise encryption state desyncs during rapid sequential writes');
             print(
-                '   🔍 Root cause is likely in Noise nonce/counter management during buffered writes');
+                '   ðŸ” Root cause is likely in Noise nonce/counter management during buffered writes');
           }
 
           rethrow;
         } finally {
           // Cleanup
-          print('   🧹 Cleaning up NOISE-1 test...');
+          print('   ðŸ§¹ Cleaning up NOISE-1 test...');
           try {
             if (clientStream != null && !clientStream.isClosed) {
               await clientStream.close().timeout(Duration(seconds: 2));
@@ -1470,16 +1470,16 @@ void main() {
             await clientTransport.dispose();
             await serverTransport.dispose();
           } catch (e) {
-            print('   ⚠️ Error during NOISE-1 cleanup: $e');
+            print('   âš ï¸ Error during NOISE-1 cleanup: $e');
           }
-          print('   ✅ NOISE-1 cleanup complete');
+          print('   âœ… NOISE-1 cleanup complete');
         }
       }, timeout: Timeout(Duration(minutes: 2)));
 
       test(
           'should maintain Noise encryption state across rapid vs delayed writes',
           () async {
-        print('\n🧪 TEST NOISE-2: Rapid vs Delayed Writes Comparison');
+        print('\nðŸ§ª TEST NOISE-2: Rapid vs Delayed Writes Comparison');
         print(
             '   Goal: Compare behavior of writes with delays vs without delays');
         print(
@@ -1558,7 +1558,7 @@ void main() {
 
           await Future.wait([clientDialFuture, serverAcceptFuture]);
 
-          print('   🔐 Upgrading connections with Noise + Yamux...');
+          print('   ðŸ” Upgrading connections with Noise + Yamux...');
           final clientUpgradedFuture = clientUpgrader.upgradeOutbound(
             connection: clientRawConn,
             remotePeerId: serverPeerId,
@@ -1574,7 +1574,7 @@ void main() {
               await Future.wait([clientUpgradedFuture, serverUpgradedFuture]);
           clientUpgradedConn = upgradedConns[0];
           serverUpgradedConn = upgradedConns[1];
-          print('   ✅ Connections upgraded with Noise + Yamux');
+          print('   âœ… Connections upgraded with Noise + Yamux');
 
           // Test data
           final testData = Uint8List(1024);
@@ -1584,7 +1584,7 @@ void main() {
 
           // Scenario A: Sequential writes WITH delays (should work)
           print(
-              '\n   🧪 Scenario A: 50 writes WITH 10ms delays between writes');
+              '\n   ðŸ§ª Scenario A: 50 writes WITH 10ms delays between writes');
           {
             final serverAcceptStreamFuture =
                 (serverUpgradedConn as core_mux_types.MuxedConn).acceptStream();
@@ -1602,7 +1602,7 @@ void main() {
                     Duration(milliseconds: 10)); // Allow read to drain
 
                 if ((i + 1) % 10 == 0) {
-                  print('   📤 Scenario A: Wrote ${i + 1}/50 messages');
+                  print('   ðŸ“¤ Scenario A: Wrote ${i + 1}/50 messages');
                 }
               }
             });
@@ -1619,13 +1619,13 @@ void main() {
                 receivedCount = totalBytes ~/ testData.length;
 
                 if (receivedCount % 10 == 0 && receivedCount > 0) {
-                  print('   📥 Scenario A: Received ~$receivedCount messages');
+                  print('   ðŸ“¥ Scenario A: Received ~$receivedCount messages');
                 }
               }
               print(
-                  '   ✅ Scenario A PASSED: Received ~$receivedCount messages (${totalBytes} bytes)');
+                  '   âœ… Scenario A PASSED: Received ~$receivedCount messages (${totalBytes} bytes)');
             } catch (e) {
-              print('   ❌ Scenario A FAILED: $e');
+              print('   âŒ Scenario A FAILED: $e');
               rethrow;
             } finally {
               await clientStream.close();
@@ -1637,7 +1637,7 @@ void main() {
           await Future.delayed(Duration(milliseconds: 500));
 
           // Scenario B: Rapid sequential writes WITHOUT delays (may fail if Noise state issue)
-          print('\n   🧪 Scenario B: 50 writes WITHOUT delays (rapid fire)');
+          print('\n   ðŸ§ª Scenario B: 50 writes WITHOUT delays (rapid fire)');
           {
             final serverAcceptStreamFuture =
                 (serverUpgradedConn as core_mux_types.MuxedConn).acceptStream();
@@ -1655,12 +1655,12 @@ void main() {
                   // NO DELAY - this is the critical test
 
                   if ((i + 1) % 10 == 0) {
-                    print('   📤 Scenario B: Wrote ${i + 1}/50 messages');
+                    print('   ðŸ“¤ Scenario B: Wrote ${i + 1}/50 messages');
                   }
                 }
-                print('   ✅ Scenario B: All writes completed');
+                print('   âœ… Scenario B: All writes completed');
               } catch (e) {
-                print('   ❌ Scenario B: Write failed: $e');
+                print('   âŒ Scenario B: Write failed: $e');
               }
             });
 
@@ -1676,29 +1676,29 @@ void main() {
                 receivedCount = totalBytes ~/ testData.length;
 
                 if (receivedCount % 10 == 0 && receivedCount > 0) {
-                  print('   📥 Scenario B: Received ~$receivedCount messages');
+                  print('   ðŸ“¥ Scenario B: Received ~$receivedCount messages');
                 }
               }
 
               if (receivedCount < 50) {
                 print(
-                    '   ⚠️  Scenario B: Only received $receivedCount/50 messages (${totalBytes} bytes)');
+                    '   âš ï¸  Scenario B: Only received $receivedCount/50 messages (${totalBytes} bytes)');
                 print(
-                    '   🔍 This suggests data loss or stream closure during rapid writes');
+                    '   ðŸ” This suggests data loss or stream closure during rapid writes');
               } else {
                 print(
-                    '   ✅ Scenario B PASSED: Received all ~$receivedCount messages (${totalBytes} bytes)');
+                    '   âœ… Scenario B PASSED: Received all ~$receivedCount messages (${totalBytes} bytes)');
               }
             } catch (e) {
-              print('   ❌ Scenario B FAILED after $receivedCount messages: $e');
+              print('   âŒ Scenario B FAILED after $receivedCount messages: $e');
 
               final errorString = e.toString().toLowerCase();
               if (errorString.contains('mac') ||
                   errorString.contains('authentication')) {
                 print(
-                    '   🔍 CRITICAL: MAC error in rapid writes but not delayed writes!');
+                    '   ðŸ” CRITICAL: MAC error in rapid writes but not delayed writes!');
                 print(
-                    '   🔍 This confirms timing-dependent Noise encryption state issue');
+                    '   ðŸ” This confirms timing-dependent Noise encryption state issue');
               }
 
               rethrow;
@@ -1708,13 +1708,13 @@ void main() {
             }
           }
 
-          print('\n   ✅ NOISE-2 test PASSED - Both scenarios completed');
+          print('\n   âœ… NOISE-2 test PASSED - Both scenarios completed');
         } catch (e, stackTrace) {
-          print('   ❌ NOISE-2 test FAILED: $e');
+          print('   âŒ NOISE-2 test FAILED: $e');
           print('   Stack trace: $stackTrace');
           rethrow;
         } finally {
-          print('   🧹 Cleaning up NOISE-2 test...');
+          print('   ðŸ§¹ Cleaning up NOISE-2 test...');
           try {
             if (clientUpgradedConn != null && !clientUpgradedConn.isClosed) {
               await clientUpgradedConn.close().timeout(Duration(seconds: 2));
@@ -1728,9 +1728,9 @@ void main() {
             await clientTransport.dispose();
             await serverTransport.dispose();
           } catch (e) {
-            print('   ⚠️ Error during NOISE-2 cleanup: $e');
+            print('   âš ï¸ Error during NOISE-2 cleanup: $e');
           }
-          print('   ✅ NOISE-2 cleanup complete');
+          print('   âœ… NOISE-2 cleanup complete');
         }
       }, timeout: Timeout(Duration(minutes: 2)));
     });
@@ -1740,11 +1740,11 @@ void main() {
           'should handle 500KB bidirectional transfers repeated multiple times',
           () async {
         print(
-            '\n🧪 TEST STRESS-1: 500KB Bidirectional Transfers (Multiple Iterations)');
+            '\nðŸ§ª TEST STRESS-1: 500KB Bidirectional Transfers (Multiple Iterations)');
         print(
             '   Goal: Simulate Ricochet mailbox upload scenario with large payloads');
         print(
-            '   Pattern: Client → Server (500KB), Server → Client (500KB), repeat 5 times');
+            '   Pattern: Client â†’ Server (500KB), Server â†’ Client (500KB), repeat 5 times');
         print(
             '   Note: Using 4KB max frame size to prevent Noise HOL blocking');
 
@@ -1830,10 +1830,10 @@ void main() {
           // Add network notifiee to track connection events
           clientSwarm.notify(TestNotifiee(
             connectedCallback: (network, conn) {
-              print('   🔗 [CLIENT] Connected: ${conn.remotePeer}');
+              print('   ðŸ”— [CLIENT] Connected: ${conn.remotePeer}');
             },
             disconnectedCallback: (network, conn) {
-              print('   ⚠️  [CLIENT] Disconnected: ${conn.remotePeer}');
+              print('   âš ï¸  [CLIENT] Disconnected: ${conn.remotePeer}');
               connectionDropDetected = true;
               connectionDropReason = 'Client detected disconnection';
             },
@@ -1857,10 +1857,10 @@ void main() {
           // Add network notifiee to track connection events
           serverSwarm.notify(TestNotifiee(
             connectedCallback: (network, conn) {
-              print('   🔗 [SERVER] Connected: ${conn.remotePeer}');
+              print('   ðŸ”— [SERVER] Connected: ${conn.remotePeer}');
             },
             disconnectedCallback: (network, conn) {
-              print('   ⚠️  [SERVER] Disconnected: ${conn.remotePeer}');
+              print('   âš ï¸  [SERVER] Disconnected: ${conn.remotePeer}');
               connectionDropDetected = true;
               connectionDropReason = 'Server detected disconnection';
             },
@@ -1895,7 +1895,7 @@ void main() {
             currentServerIteration++;
 
             print(
-                '   📨 [SERVER] Received stream for iteration $iteration: ${stream.id()} from $peerId');
+                '   ðŸ“¨ [SERVER] Received stream for iteration $iteration: ${stream.id()} from $peerId');
             serverStreamsByIteration[iteration] = stream;
 
             if (serverStreamCompleters.containsKey(iteration) &&
@@ -1922,10 +1922,10 @@ void main() {
               .addPubKey(serverPeerId, serverKeyPair.publicKey);
 
           // Connect via BasicHost
-          print('   🔗 Connecting via BasicHost...');
+          print('   ðŸ”— Connecting via BasicHost...');
           final serverAddrInfo = AddrInfo(serverPeerId, [serverListenAddr]);
           await clientHost.connect(serverAddrInfo);
-          print('   ✅ Client Host connected to server');
+          print('   âœ… Client Host connected to server');
 
           // Create 500KB test data (simulating large image upload)
           const payloadSize = 500 * 1024; // 500KB
@@ -1933,26 +1933,26 @@ void main() {
           for (var i = 0; i < largeData.length; i++) {
             largeData[i] = i % 256;
           }
-          print('   📊 Test payload: ${payloadSize ~/ 1024}KB');
+          print('   ðŸ“Š Test payload: ${payloadSize ~/ 1024}KB');
 
           // Perform 5 iterations of bidirectional transfer
           const iterations = 5;
           for (var iteration = 0; iteration < iterations; iteration++) {
-            print('\n   ════════════════════════════════════════════════');
-            print('   🔄 ITERATION ${iteration + 1}/$iterations');
-            print('   ════════════════════════════════════════════════');
+            print('\n   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
+            print('   ðŸ”„ ITERATION ${iteration + 1}/$iterations');
+            print('   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
 
             // Check connection health before each iteration
             if (connectionDropDetected) {
               print(
-                  '   ❌ CONNECTION DROP DETECTED before iteration ${iteration + 1}');
+                  '   âŒ CONNECTION DROP DETECTED before iteration ${iteration + 1}');
               print('   Reason: $connectionDropReason');
               fail(
                   'Connection dropped before iteration ${iteration + 1}: $connectionDropReason');
             }
 
             // Open new stream for this iteration
-            print('   📤 Opening stream for iteration ${iteration + 1}...');
+            print('   ðŸ“¤ Opening stream for iteration ${iteration + 1}...');
             final clientStream = await clientHost
                 .newStream(
               serverPeerId,
@@ -1966,7 +1966,7 @@ void main() {
                     'Failed to open stream for iteration ${iteration + 1}');
               },
             );
-            print('   ✅ Client stream opened: ${clientStream.id()}');
+            print('   âœ… Client stream opened: ${clientStream.id()}');
 
             // Wait for server to accept stream
             final serverStream =
@@ -1977,11 +1977,11 @@ void main() {
                     'Server failed to accept stream for iteration ${iteration + 1}');
               },
             );
-            print('   ✅ Server stream accepted: ${serverStream.id()}');
+            print('   âœ… Server stream accepted: ${serverStream.id()}');
 
-            // Phase 1: Client → Server (500KB)
+            // Phase 1: Client â†’ Server (500KB)
             print(
-                '\n   📤 Phase 1: Client → Server (${payloadSize ~/ 1024}KB)');
+                '\n   ðŸ“¤ Phase 1: Client â†’ Server (${payloadSize ~/ 1024}KB)');
             final phase1StartTime = DateTime.now();
 
             // Send data in chunks - using 4KB to prevent Noise encryption head-of-line blocking
@@ -1992,7 +1992,7 @@ void main() {
             for (var i = 0; i < largeData.length; i += chunkSize) {
               if (connectionDropDetected) {
                 print(
-                    '   ❌ CONNECTION DROP during Phase 1 send at byte $bytesSent');
+                    '   âŒ CONNECTION DROP during Phase 1 send at byte $bytesSent');
                 fail(
                     'Connection dropped during Phase 1 of iteration ${iteration + 1}');
               }
@@ -2013,23 +2013,23 @@ void main() {
               if (bytesSent % (100 * 1024) == 0 ||
                   bytesSent == largeData.length) {
                 print(
-                    '   📤 Sent: ${bytesSent ~/ 1024}KB / ${payloadSize ~/ 1024}KB');
+                    '   ðŸ“¤ Sent: ${bytesSent ~/ 1024}KB / ${payloadSize ~/ 1024}KB');
               }
             }
 
             // Signal end of client data
             await clientStream.closeWrite();
-            print('   ✅ Client finished sending, closeWrite() called');
+            print('   âœ… Client finished sending, closeWrite() called');
 
             // Read all data on server side
-            print('   📥 Server reading incoming data...');
+            print('   ðŸ“¥ Server reading incoming data...');
             final serverReceivedData = <int>[];
             try {
               while (true) {
                 final chunk =
                     await serverStream.read().timeout(Duration(seconds: 30));
                 if (chunk.isEmpty) {
-                  print('   📭 Server received EOF');
+                  print('   ðŸ“­ Server received EOF');
                   break;
                 }
                 serverReceivedData.addAll(chunk);
@@ -2037,11 +2037,11 @@ void main() {
                 if (serverReceivedData.length % (100 * 1024) == 0 ||
                     serverReceivedData.length >= payloadSize) {
                   print(
-                      '   📥 Received: ${serverReceivedData.length ~/ 1024}KB / ${payloadSize ~/ 1024}KB');
+                      '   ðŸ“¥ Received: ${serverReceivedData.length ~/ 1024}KB / ${payloadSize ~/ 1024}KB');
                 }
               }
             } catch (e) {
-              print('   ⚠️  Server read error: $e');
+              print('   âš ï¸  Server read error: $e');
               if (serverReceivedData.length < payloadSize) {
                 rethrow;
               }
@@ -2049,7 +2049,7 @@ void main() {
 
             final phase1Duration = DateTime.now().difference(phase1StartTime);
             print(
-                '   ⏱️  Phase 1 completed in ${phase1Duration.inMilliseconds}ms');
+                '   â±ï¸  Phase 1 completed in ${phase1Duration.inMilliseconds}ms');
 
             // Verify Phase 1 data
             expect(
@@ -2065,11 +2065,11 @@ void main() {
                   'Iteration ${iteration + 1} Phase 1: Data integrity check',
             );
             print(
-                '   ✅ Phase 1 verified: ${serverReceivedData.length ~/ 1024}KB received correctly');
+                '   âœ… Phase 1 verified: ${serverReceivedData.length ~/ 1024}KB received correctly');
 
-            // Phase 2: Server → Client (500KB response)
+            // Phase 2: Server â†’ Client (500KB response)
             print(
-                '\n   📤 Phase 2: Server → Client (${payloadSize ~/ 1024}KB)');
+                '\n   ðŸ“¤ Phase 2: Server â†’ Client (${payloadSize ~/ 1024}KB)');
             final phase2StartTime = DateTime.now();
 
             // Create response data (different pattern to verify)
@@ -2084,7 +2084,7 @@ void main() {
             for (var i = 0; i < responseData.length; i += chunkSize) {
               if (connectionDropDetected) {
                 print(
-                    '   ❌ CONNECTION DROP during Phase 2 send at byte $responseSent');
+                    '   âŒ CONNECTION DROP during Phase 2 send at byte $responseSent');
                 fail(
                     'Connection dropped during Phase 2 of iteration ${iteration + 1}');
               }
@@ -2104,23 +2104,23 @@ void main() {
               if (responseSent % (100 * 1024) == 0 ||
                   responseSent == responseData.length) {
                 print(
-                    '   📤 Server sent: ${responseSent ~/ 1024}KB / ${payloadSize ~/ 1024}KB');
+                    '   ðŸ“¤ Server sent: ${responseSent ~/ 1024}KB / ${payloadSize ~/ 1024}KB');
               }
             }
 
             // Signal end of server data
             await serverStream.closeWrite();
-            print('   ✅ Server finished sending, closeWrite() called');
+            print('   âœ… Server finished sending, closeWrite() called');
 
             // Read response on client side
-            print('   📥 Client reading response...');
+            print('   ðŸ“¥ Client reading response...');
             final clientReceivedData = <int>[];
             try {
               while (true) {
                 final chunk =
                     await clientStream.read().timeout(Duration(seconds: 30));
                 if (chunk.isEmpty) {
-                  print('   📭 Client received EOF');
+                  print('   ðŸ“­ Client received EOF');
                   break;
                 }
                 clientReceivedData.addAll(chunk);
@@ -2128,11 +2128,11 @@ void main() {
                 if (clientReceivedData.length % (100 * 1024) == 0 ||
                     clientReceivedData.length >= payloadSize) {
                   print(
-                      '   📥 Client received: ${clientReceivedData.length ~/ 1024}KB / ${payloadSize ~/ 1024}KB');
+                      '   ðŸ“¥ Client received: ${clientReceivedData.length ~/ 1024}KB / ${payloadSize ~/ 1024}KB');
                 }
               }
             } catch (e) {
-              print('   ⚠️  Client read error: $e');
+              print('   âš ï¸  Client read error: $e');
               if (clientReceivedData.length < payloadSize) {
                 rethrow;
               }
@@ -2140,7 +2140,7 @@ void main() {
 
             final phase2Duration = DateTime.now().difference(phase2StartTime);
             print(
-                '   ⏱️  Phase 2 completed in ${phase2Duration.inMilliseconds}ms');
+                '   â±ï¸  Phase 2 completed in ${phase2Duration.inMilliseconds}ms');
 
             // Verify Phase 2 data
             expect(
@@ -2156,37 +2156,37 @@ void main() {
                   'Iteration ${iteration + 1} Phase 2: Response data integrity check',
             );
             print(
-                '   ✅ Phase 2 verified: ${clientReceivedData.length ~/ 1024}KB received correctly');
+                '   âœ… Phase 2 verified: ${clientReceivedData.length ~/ 1024}KB received correctly');
 
             // Close streams for this iteration
             await clientStream.close();
             await serverStream.close();
 
-            print('   ✅ Iteration ${iteration + 1} COMPLETE');
+            print('   âœ… Iteration ${iteration + 1} COMPLETE');
             print(
-                '   📊 Total transferred this iteration: ${(payloadSize * 2) ~/ 1024}KB');
+                '   ðŸ“Š Total transferred this iteration: ${(payloadSize * 2) ~/ 1024}KB');
 
             // Brief pause between iterations to let any cleanup happen
             await Future.delayed(Duration(milliseconds: 100));
           }
 
-          print('\n   ════════════════════════════════════════════════');
-          print('   ✅ ALL $iterations ITERATIONS COMPLETED SUCCESSFULLY');
+          print('\n   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
+          print('   âœ… ALL $iterations ITERATIONS COMPLETED SUCCESSFULLY');
           print(
-              '   📊 Total data transferred: ${(payloadSize * 2 * iterations) ~/ 1024}KB');
-          print('   ════════════════════════════════════════════════');
+              '   ðŸ“Š Total data transferred: ${(payloadSize * 2 * iterations) ~/ 1024}KB');
+          print('   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
         } catch (e, stackTrace) {
-          print('\n   ❌ TEST FAILED: $e');
+          print('\n   âŒ TEST FAILED: $e');
           print('   Stack trace: $stackTrace');
 
           if (connectionDropDetected) {
-            print('\n   🔍 CONNECTION DROP ANALYSIS:');
+            print('\n   ðŸ” CONNECTION DROP ANALYSIS:');
             print('   Reason: $connectionDropReason');
           }
 
           rethrow;
         } finally {
-          print('\n   🧹 Cleaning up stress test...');
+          print('\n   ðŸ§¹ Cleaning up stress test...');
           try {
             if (clientHost != null) {
               await clientHost.close().timeout(Duration(seconds: 5));
@@ -2195,16 +2195,16 @@ void main() {
               await serverHost.close().timeout(Duration(seconds: 5));
             }
           } catch (e) {
-            print('   ⚠️ Error during cleanup: $e');
+            print('   âš ï¸ Error during cleanup: $e');
           }
-          print('   ✅ Cleanup complete');
+          print('   âœ… Cleanup complete');
         }
       }, timeout: Timeout(Duration(minutes: 5)));
 
       test('should handle rapid sequential small messages after large transfer',
           () async {
         print(
-            '\n🧪 TEST STRESS-2: Large Transfer Followed by Rapid Small Messages');
+            '\nðŸ§ª TEST STRESS-2: Large Transfer Followed by Rapid Small Messages');
         print(
             '   Goal: Simulate Ricochet pattern where large mailbox upload is followed by ACKs/status messages');
 
@@ -2302,7 +2302,7 @@ void main() {
           var messageStreamIndex = 0;
 
           serverHost.setStreamHandler(uploadProtocolId, (stream, peerId) async {
-            print('   📨 [SERVER] Upload stream received');
+            print('   ðŸ“¨ [SERVER] Upload stream received');
             if (!uploadStreamCompleter.isCompleted) {
               uploadStreamCompleter.complete(stream);
             }
@@ -2311,7 +2311,7 @@ void main() {
           serverHost.setStreamHandler(messageProtocolId,
               (stream, peerId) async {
             final idx = messageStreamIndex++;
-            print('   📨 [SERVER] Message stream $idx received');
+            print('   ðŸ“¨ [SERVER] Message stream $idx received');
             if (idx < messageStreamCompleters.length &&
                 !messageStreamCompleters[idx].isCompleted) {
               messageStreamCompleters[idx].complete(stream);
@@ -2331,12 +2331,12 @@ void main() {
               .addPubKey(serverPeerId, serverKeyPair.publicKey);
 
           // Connect
-          print('   🔗 Connecting...');
+          print('   ðŸ”— Connecting...');
           await clientHost.connect(AddrInfo(serverPeerId, [serverListenAddr]));
-          print('   ✅ Connected');
+          print('   âœ… Connected');
 
           // Phase 1: Large upload (500KB)
-          print('\n   📤 Phase 1: Large upload (500KB)');
+          print('\n   ðŸ“¤ Phase 1: Large upload (500KB)');
           final uploadData = Uint8List(500 * 1024);
           for (var i = 0; i < uploadData.length; i++) {
             uploadData[i] = i % 256;
@@ -2356,7 +2356,7 @@ void main() {
             await uploadClientStream.write(uploadData.sublist(i, end));
             if ((i + chunkSize) % (100 * 1024) < chunkSize) {
               print(
-                  '   📤 Upload: ${(i + chunkSize) ~/ 1024}KB / ${uploadData.length ~/ 1024}KB');
+                  '   ðŸ“¤ Upload: ${(i + chunkSize) ~/ 1024}KB / ${uploadData.length ~/ 1024}KB');
             }
           }
           await uploadClientStream.closeWrite();
@@ -2372,7 +2372,7 @@ void main() {
 
           expect(uploadReceived.length, equals(uploadData.length));
           print(
-              '   ✅ Large upload complete: ${uploadReceived.length ~/ 1024}KB');
+              '   âœ… Large upload complete: ${uploadReceived.length ~/ 1024}KB');
 
           // Send ACK back
           final ackData = Uint8List.fromList([0x41, 0x43, 0x4B]); // "ACK"
@@ -2382,13 +2382,13 @@ void main() {
           final ackReceived =
               await uploadClientStream.read().timeout(Duration(seconds: 5));
           expect(ackReceived, equals(ackData));
-          print('   ✅ ACK received');
+          print('   âœ… ACK received');
 
           await uploadClientStream.close();
           await uploadServerStream.close();
 
           // Phase 2: Rapid small messages (50 messages of 1KB each)
-          print('\n   📨 Phase 2: 50 rapid small messages (1KB each)');
+          print('\n   ðŸ“¨ Phase 2: 50 rapid small messages (1KB each)');
           const messageCount = 50;
           const messageSize = 1024;
           var successfulMessages = 0;
@@ -2443,38 +2443,38 @@ void main() {
               successfulMessages++;
 
               if ((i + 1) % 10 == 0) {
-                print('   📨 Completed: ${i + 1}/$messageCount messages');
+                print('   ðŸ“¨ Completed: ${i + 1}/$messageCount messages');
               }
             } catch (e) {
-              print('   ❌ Message $i failed: $e');
+              print('   âŒ Message $i failed: $e');
               rethrow;
             }
           }
 
           print(
-              '\n   ✅ All $successfulMessages/$messageCount messages completed');
+              '\n   âœ… All $successfulMessages/$messageCount messages completed');
           print(
-              '   📊 Total: ${uploadData.length ~/ 1024}KB upload + ${messageCount * messageSize ~/ 1024}KB messages');
+              '   ðŸ“Š Total: ${uploadData.length ~/ 1024}KB upload + ${messageCount * messageSize ~/ 1024}KB messages');
         } catch (e, stackTrace) {
-          print('\n   ❌ TEST FAILED: $e');
+          print('\n   âŒ TEST FAILED: $e');
           print('   Stack trace: $stackTrace');
           rethrow;
         } finally {
-          print('\n   🧹 Cleaning up...');
+          print('\n   ðŸ§¹ Cleaning up...');
           try {
             if (clientHost != null)
               await clientHost.close().timeout(Duration(seconds: 5));
             if (serverHost != null)
               await serverHost.close().timeout(Duration(seconds: 5));
           } catch (e) {
-            print('   ⚠️ Cleanup error: $e');
+            print('   âš ï¸ Cleanup error: $e');
           }
         }
       }, timeout: Timeout(Duration(minutes: 3)));
 
       test('should maintain connection through connection reuse pattern',
           () async {
-        print('\n🧪 TEST STRESS-3: Connection Reuse Over Extended Period');
+        print('\nðŸ§ª TEST STRESS-3: Connection Reuse Over Extended Period');
         print(
             '   Goal: Test connection stability when reusing same connection for multiple operations');
         print(
@@ -2599,9 +2599,9 @@ void main() {
               .addPubKey(serverPeerId, serverKeyPair.publicKey);
 
           // Connect once
-          print('   🔗 Establishing initial connection...');
+          print('   ðŸ”— Establishing initial connection...');
           await clientHost.connect(AddrInfo(serverPeerId, [serverListenAddr]));
-          print('   ✅ Connected');
+          print('   âœ… Connected');
 
           // Perform varying payload operations over time
           final payloadSizes = [
@@ -2620,11 +2620,11 @@ void main() {
           for (var i = 0; i < payloadSizes.length; i++) {
             final size = payloadSizes[i];
             print(
-                '\n   🔄 Operation ${i + 1}/${payloadSizes.length}: ${size ~/ 1024}KB echo');
+                '\n   ðŸ”„ Operation ${i + 1}/${payloadSizes.length}: ${size ~/ 1024}KB echo');
 
             // Check connection state
             print(
-                '   📊 Connection stats: disconnections=$disconnectionCount, reconnections=$reconnectionCount');
+                '   ðŸ“Š Connection stats: disconnections=$disconnectionCount, reconnections=$reconnectionCount');
 
             final data = Uint8List(size);
             for (var j = 0; j < size; j++) {
@@ -2659,36 +2659,36 @@ void main() {
                 reason: 'Echo data mismatch for operation ${i + 1}');
 
             await stream.close();
-            print('   ✅ Operation ${i + 1} complete');
+            print('   âœ… Operation ${i + 1} complete');
 
             // Small delay between operations
             await Future.delayed(Duration(milliseconds: 200));
           }
 
-          print('\n   ════════════════════════════════════════════════');
-          print('   ✅ ALL OPERATIONS COMPLETE');
+          print('\n   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
+          print('   âœ… ALL OPERATIONS COMPLETE');
           print(
-              '   📊 Final stats: disconnections=$disconnectionCount, reconnections=$reconnectionCount');
-          print('   ════════════════════════════════════════════════');
+              '   ðŸ“Š Final stats: disconnections=$disconnectionCount, reconnections=$reconnectionCount');
+          print('   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
 
           // Verify connection was stable (no unexpected disconnections)
           expect(disconnectionCount, equals(0),
               reason: 'Should not have any disconnections during test');
         } catch (e, stackTrace) {
-          print('\n   ❌ TEST FAILED: $e');
+          print('\n   âŒ TEST FAILED: $e');
           print('   Stack trace: $stackTrace');
           print(
-              '   📊 Stats at failure: disconnections=$disconnectionCount, reconnections=$reconnectionCount');
+              '   ðŸ“Š Stats at failure: disconnections=$disconnectionCount, reconnections=$reconnectionCount');
           rethrow;
         } finally {
-          print('\n   🧹 Cleaning up...');
+          print('\n   ðŸ§¹ Cleaning up...');
           try {
             if (clientHost != null)
               await clientHost.close().timeout(Duration(seconds: 5));
             if (serverHost != null)
               await serverHost.close().timeout(Duration(seconds: 5));
           } catch (e) {
-            print('   ⚠️ Cleanup error: $e');
+            print('   âš ï¸ Cleanup error: $e');
           }
         }
       }, timeout: Timeout(Duration(minutes: 5)));
@@ -2698,7 +2698,7 @@ void main() {
       test('should allow sequential streams over Yamux+UDX without Noise',
           () async {
         print(
-            '\n🧪 TEST ISOLATION-1: Sequential Streams over Yamux+UDX (NO Noise)');
+            '\nðŸ§ª TEST ISOLATION-1: Sequential Streams over Yamux+UDX (NO Noise)');
         print(
             '   Goal: Determine if sequential stream issue is in Yamux+UDX or in Noise layer');
         print(
@@ -2742,7 +2742,7 @@ void main() {
           });
 
           await Future.wait([clientDialFuture, serverAcceptFuture]);
-          print('   ✅ Raw UDX connections established');
+          print('   âœ… Raw UDX connections established');
 
           // Manually set peer details (since we're skipping security)
           (clientRawConn as dynamic).setRemotePeerDetails(
@@ -2762,7 +2762,7 @@ void main() {
           clientSession = YamuxSession(clientRawConn!, yamuxConfig, true, null);
           serverSession =
               YamuxSession(serverRawConn!, yamuxConfig, false, null);
-          print('   ✅ Yamux sessions created');
+          print('   âœ… Yamux sessions created');
 
           // Test data
           final testData = Uint8List(1024);
@@ -2771,7 +2771,7 @@ void main() {
           }
 
           // Iteration 1: First stream
-          print('\n   🔄 Iteration 1: Opening first stream');
+          print('\n   ðŸ”„ Iteration 1: Opening first stream');
           {
             final serverAcceptFuture =
                 serverSession.acceptStream().timeout(Duration(seconds: 5));
@@ -2781,26 +2781,26 @@ void main() {
                 .timeout(Duration(seconds: 5)) as YamuxStream;
             final serverStream = await serverAcceptFuture as YamuxStream;
             print(
-                '   ✅ Iteration 1: Streams opened (client=${clientStream.id()}, server=${serverStream.id()})');
+                '   âœ… Iteration 1: Streams opened (client=${clientStream.id()}, server=${serverStream.id()})');
 
             // Quick data transfer
             await clientStream.write(testData);
             final received =
                 await serverStream.read().timeout(Duration(seconds: 5));
             expect(received, equals(testData));
-            print('   ✅ Iteration 1: Data transfer successful');
+            print('   âœ… Iteration 1: Data transfer successful');
 
             // Close streams
             await clientStream.close();
             await serverStream.close();
-            print('   ✅ Iteration 1: Streams closed');
+            print('   âœ… Iteration 1: Streams closed');
           }
 
           // Small delay
           await Future.delayed(Duration(milliseconds: 500));
 
           // Check session health
-          print('\n   🏥 Session health check:');
+          print('\n   ðŸ¥ Session health check:');
           print('      - Client session closed: ${clientSession.isClosed}');
           print('      - Server session closed: ${serverSession.isClosed}');
           expect(clientSession.isClosed, isFalse,
@@ -2810,17 +2810,17 @@ void main() {
 
           // Iteration 2: Second stream (THIS IS WHERE NOISE TESTS FAIL)
           print(
-              '\n   🔄 Iteration 2: Opening second stream on SAME Yamux session');
+              '\n   ðŸ”„ Iteration 2: Opening second stream on SAME Yamux session');
           print(
-              '   ⚠️  CRITICAL: This is where the Noise+UDX test fails with acceptStream timeout');
+              '   âš ï¸  CRITICAL: This is where the Noise+UDX test fails with acceptStream timeout');
           {
             print('   Starting server acceptStream()...');
             final serverAcceptFuture = serverSession.acceptStream().timeout(
               Duration(seconds: 5),
               onTimeout: () {
-                print('   ❌ SERVER ACCEPTSTREAM TIMED OUT!');
+                print('   âŒ SERVER ACCEPTSTREAM TIMED OUT!');
                 print(
-                    '   🔍 This means the stream event was lost or session is stuck');
+                    '   ðŸ” This means the stream event was lost or session is stuck');
                 throw TimeoutException(
                     'Server acceptStream timed out on second stream');
               },
@@ -2833,52 +2833,52 @@ void main() {
                 await (clientSession.openStream(core_context.Context()).timeout(
               Duration(seconds: 5),
               onTimeout: () {
-                print('   ❌ CLIENT OPENSTREAM TIMED OUT!');
+                print('   âŒ CLIENT OPENSTREAM TIMED OUT!');
                 throw TimeoutException(
                     'Client openStream timed out on second stream');
               },
             )) as YamuxStream;
 
-            print('   ✅ Client stream opened: ${clientStream.id()}');
+            print('   âœ… Client stream opened: ${clientStream.id()}');
             print('   Waiting for server acceptStream...');
 
             final serverStream = await serverAcceptFuture as YamuxStream;
             print(
-                '   ✅ Iteration 2: Streams opened (client=${clientStream.id()}, server=${serverStream.id()})');
+                '   âœ… Iteration 2: Streams opened (client=${clientStream.id()}, server=${serverStream.id()})');
 
             // Quick data transfer
             await clientStream.write(testData);
             final received =
                 await serverStream.read().timeout(Duration(seconds: 5));
             expect(received, equals(testData));
-            print('   ✅ Iteration 2: Data transfer successful');
+            print('   âœ… Iteration 2: Data transfer successful');
 
             // Close streams
             await clientStream.close();
             await serverStream.close();
-            print('   ✅ Iteration 2: Streams closed');
+            print('   âœ… Iteration 2: Streams closed');
           }
 
           print(
-              '\n   ✅ ISOLATION TEST PASSED: Yamux+UDX supports sequential streams');
+              '\n   âœ… ISOLATION TEST PASSED: Yamux+UDX supports sequential streams');
           print(
-              '   🔍 CONCLUSION: The bug must be in the Noise layer or how BasicUpgrader wraps Noise+Yamux');
+              '   ðŸ” CONCLUSION: The bug must be in the Noise layer or how BasicUpgrader wraps Noise+Yamux');
         } catch (e, stackTrace) {
-          print('\n   ❌ ISOLATION TEST FAILED: $e');
+          print('\n   âŒ ISOLATION TEST FAILED: $e');
           print('   Stack trace: $stackTrace');
 
           if (e.toString().contains('acceptStream timed out')) {
             print(
-                '\n   🔍 CRITICAL FINDING: The bug is in Yamux+UDX integration, NOT Noise!');
+                '\n   ðŸ” CRITICAL FINDING: The bug is in Yamux+UDX integration, NOT Noise!');
             print(
-                '   🔍 This suggests a race condition or state management issue in YamuxSession');
+                '   ðŸ” This suggests a race condition or state management issue in YamuxSession');
             print(
-                '   🔍 when handling sequential stream establishment over real transports');
+                '   ðŸ” when handling sequential stream establishment over real transports');
           }
 
           rethrow;
         } finally {
-          print('   🧹 Cleaning up isolation test...');
+          print('   ðŸ§¹ Cleaning up isolation test...');
           try {
             if (clientSession != null && !clientSession.isClosed) {
               await clientSession.close().timeout(Duration(seconds: 2));
@@ -2896,7 +2896,7 @@ void main() {
               await serverTransport.dispose();
             }
           } catch (e) {
-            print('   ⚠️ Error during isolation test cleanup: $e');
+            print('   âš ï¸ Error during isolation test cleanup: $e');
           }
         }
       }, timeout: Timeout(Duration(seconds: 30)));
@@ -2928,14 +2928,14 @@ Future<Uint8List> _readExact(YamuxStream stream, int length) async {
 Future<void> _testLargePayloadTransfer(
     YamuxStream clientStream, YamuxStream serverStream, String testContext,
     {bool? expectSuccess}) async {
-  print('   📊 [$testContext] Creating 100KB test data...');
+  print('   ðŸ“Š [$testContext] Creating 100KB test data...');
 
   // Create 100KB test data - same size that causes OBP test to fail
   final largeData = Uint8List(100 * 1024);
   for (var i = 0; i < largeData.length; i++) {
     largeData[i] = i % 256;
   }
-  print('   📊 [$testContext] Test data created: ${largeData.length} bytes');
+  print('   ðŸ“Š [$testContext] Test data created: ${largeData.length} bytes');
 
   // Simulate the rapid chunk delivery pattern from UDX (1384-byte chunks)
   const chunkSize = 1384; // Exact size from the OBP failure logs
@@ -2946,13 +2946,13 @@ Future<void> _testLargePayloadTransfer(
     chunks.add(largeData.sublist(i, end));
   }
   print(
-      '   📊 [$testContext] Created ${chunks.length} chunks of ${chunkSize} bytes each');
+      '   ðŸ“Š [$testContext] Created ${chunks.length} chunks of ${chunkSize} bytes each');
 
   // Track session health throughout the test
   var sessionHealthChecks = 0;
   void checkSessionHealth(String phase) {
     sessionHealthChecks++;
-    print('   🏥 [$testContext][$phase] Health check #$sessionHealthChecks:');
+    print('   ðŸ¥ [$testContext][$phase] Health check #$sessionHealthChecks:');
     print('      - Client stream closed: ${clientStream.isClosed}');
     print('      - Server stream closed: ${serverStream.isClosed}');
 
@@ -2965,7 +2965,7 @@ Future<void> _testLargePayloadTransfer(
   checkSessionHealth('Initial');
 
   print(
-      '   🚀 [$testContext] Starting rapid write operations (no delays between chunks)...');
+      '   ðŸš€ [$testContext] Starting rapid write operations (no delays between chunks)...');
   final writeCompleter = Completer<void>();
   var chunksWritten = 0;
 
@@ -2981,15 +2981,15 @@ Future<void> _testLargePayloadTransfer(
           checkSessionHealth('Write chunk $chunksWritten/${chunks.length}');
         }
       }
-      print('   ✅ [$testContext] All chunks written successfully');
+      print('   âœ… [$testContext] All chunks written successfully');
       writeCompleter.complete();
     } catch (e) {
-      print('   ❌ [$testContext] Write operation failed: $e');
+      print('   âŒ [$testContext] Write operation failed: $e');
       writeCompleter.completeError(e);
     }
   });
 
-  print('   📥 [$testContext] Reading data and monitoring session health...');
+  print('   ðŸ“¥ [$testContext] Reading data and monitoring session health...');
   final receivedData = <int>[];
   var readOperations = 0;
 
@@ -2998,7 +2998,7 @@ Future<void> _testLargePayloadTransfer(
       final chunk = await serverStream.read().timeout(Duration(seconds: 10));
       if (chunk.isEmpty) {
         print(
-            '   ⚠️ [$testContext] Received empty chunk, stream might be closed');
+            '   âš ï¸ [$testContext] Received empty chunk, stream might be closed');
         break;
       }
 
@@ -3010,32 +3010,32 @@ Future<void> _testLargePayloadTransfer(
         checkSessionHealth('Read operation $readOperations');
         final progress = (receivedData.length * 100 ~/ largeData.length);
         print(
-            '   📈 [$testContext] Progress: ${receivedData.length}/${largeData.length} bytes (${progress}%)');
+            '   ðŸ“ˆ [$testContext] Progress: ${receivedData.length}/${largeData.length} bytes (${progress}%)');
       }
     } catch (e) {
-      print('   ❌ [$testContext] Read operation failed: $e');
+      print('   âŒ [$testContext] Read operation failed: $e');
       checkSessionHealth('Read failure');
       rethrow;
     }
   }
 
-  print('   ⏳ [$testContext] Waiting for write operations to complete...');
+  print('   â³ [$testContext] Waiting for write operations to complete...');
   await writeCompleter.future.timeout(Duration(seconds: 30));
 
   checkSessionHealth('After write completion');
 
-  print('   🔍 [$testContext] Verifying data integrity...');
+  print('   ðŸ” [$testContext] Verifying data integrity...');
   expect(
     Uint8List.fromList(receivedData),
     equals(largeData),
     reason: 'Received data should match sent data',
   );
-  print('   ✅ [$testContext] Data integrity verified');
+  print('   âœ… [$testContext] Data integrity verified');
 
   // Final session health check
   checkSessionHealth('Final');
 
-  print('   ✅ [$testContext] Large payload transfer completed successfully');
+  print('   âœ… [$testContext] Large payload transfer completed successfully');
 }
 
 // Helper function to test large payload transfer with echo protocol over P2P streams
@@ -3044,14 +3044,14 @@ Future<void> _testLargePayloadEcho(
   core_network_stream.P2PStream serverStream,
   String testContext,
 ) async {
-  print('   📊 [$testContext] Creating 100KB test data...');
+  print('   ðŸ“Š [$testContext] Creating 100KB test data...');
 
   // Create 100KB test data - same size that causes OBP test to fail
   final largeData = Uint8List(100 * 1024);
   for (var i = 0; i < largeData.length; i++) {
     largeData[i] = i % 256;
   }
-  print('   📊 [$testContext] Test data created: ${largeData.length} bytes');
+  print('   ðŸ“Š [$testContext] Test data created: ${largeData.length} bytes');
 
   // Simulate the rapid chunk delivery pattern from UDX (1384-byte chunks)
   const chunkSize = 1384; // Exact size from the OBP failure logs
@@ -3062,13 +3062,13 @@ Future<void> _testLargePayloadEcho(
     chunks.add(largeData.sublist(i, end));
   }
   print(
-      '   📊 [$testContext] Created ${chunks.length} chunks of ${chunkSize} bytes each');
+      '   ðŸ“Š [$testContext] Created ${chunks.length} chunks of ${chunkSize} bytes each');
 
   // Track stream health throughout the test
   var healthChecks = 0;
   void checkStreamHealth(String phase) {
     healthChecks++;
-    print('   🏥 [$testContext][$phase] Health check #$healthChecks:');
+    print('   ðŸ¥ [$testContext][$phase] Health check #$healthChecks:');
     print('      - Client stream closed: ${clientStream.isClosed}');
     print('      - Server stream closed: ${serverStream.isClosed}');
 
@@ -3080,7 +3080,7 @@ Future<void> _testLargePayloadEcho(
 
   checkStreamHealth('Initial');
 
-  print('   🚀 [$testContext] Starting echo test with large payload...');
+  print('   ðŸš€ [$testContext] Starting echo test with large payload...');
 
   // Send data and receive echo back (simulating echo protocol)
   final writeCompleter = Completer<void>();
@@ -3095,7 +3095,7 @@ Future<void> _testLargePayloadEcho(
         final chunk = await clientStream.read().timeout(Duration(seconds: 10));
         if (chunk.isEmpty) {
           print(
-              '   ⚠️ [$testContext] Received empty chunk, stream might be closed');
+              '   âš ï¸ [$testContext] Received empty chunk, stream might be closed');
           break;
         }
 
@@ -3107,11 +3107,11 @@ Future<void> _testLargePayloadEcho(
           checkStreamHealth('Read echo chunk $chunksReceived');
           final progress = (receivedData.length * 100 ~/ largeData.length);
           print(
-              '   📈 [$testContext] Echo progress: ${receivedData.length}/${largeData.length} bytes (${progress}%)');
+              '   ðŸ“ˆ [$testContext] Echo progress: ${receivedData.length}/${largeData.length} bytes (${progress}%)');
         }
       }
     } catch (e) {
-      print('   ❌ [$testContext] Echo read operation failed: $e');
+      print('   âŒ [$testContext] Echo read operation failed: $e');
       checkStreamHealth('Echo read failure');
       rethrow;
     }
@@ -3142,7 +3142,7 @@ Future<void> _testLargePayloadEcho(
           // Safety: If no progress for 10 seconds, something is wrong
           if (flowControlWaits > 2000) {
             print(
-                '   ⚠️ [$testContext] Flow control timeout - no echo progress. Sent: $bytesWritten, Received: ${receivedData.length}');
+                '   âš ï¸ [$testContext] Flow control timeout - no echo progress. Sent: $bytesWritten, Received: ${receivedData.length}');
             throw TimeoutException(
                 'Flow control deadlock - echoes stopped arriving');
           }
@@ -3152,7 +3152,7 @@ Future<void> _testLargePayloadEcho(
               flowControlWaits > 100) {
             // Give initial writes time to echo back (500ms)
             print(
-                '   ⚠️ [$testContext] No echoes received yet after 500ms, continuing anyway...');
+                '   âš ï¸ [$testContext] No echoes received yet after 500ms, continuing anyway...');
             break;
           }
         }
@@ -3165,18 +3165,18 @@ Future<void> _testLargePayloadEcho(
         if (chunksWritten % 10 == 0) {
           checkStreamHealth('Write chunk $chunksWritten/${chunks.length}');
           print(
-              '   📤 [$testContext] Write progress: $bytesWritten bytes sent, ${receivedData.length} bytes echoed back');
+              '   ðŸ“¤ [$testContext] Write progress: $bytesWritten bytes sent, ${receivedData.length} bytes echoed back');
         }
       }
-      print('   ✅ [$testContext] All chunks written successfully');
+      print('   âœ… [$testContext] All chunks written successfully');
       writeCompleter.complete();
     } catch (e) {
-      print('   ❌ [$testContext] Write operation failed: $e');
+      print('   âŒ [$testContext] Write operation failed: $e');
       writeCompleter.completeError(e);
     }
   });
 
-  print('   ⏳ [$testContext] Waiting for write operations to complete...');
+  print('   â³ [$testContext] Waiting for write operations to complete...');
   await writeCompleter.future.timeout(Duration(seconds: 30));
 
   // Wait for all echo data to be received
@@ -3186,24 +3186,24 @@ Future<void> _testLargePayloadEcho(
     waitCount++;
     if (waitCount % 10 == 0) {
       print(
-          '   ⏳ [$testContext] Waiting for echo completion: ${receivedData.length}/${largeData.length} bytes');
+          '   â³ [$testContext] Waiting for echo completion: ${receivedData.length}/${largeData.length} bytes');
     }
   }
 
   checkStreamHealth('After echo completion');
 
-  print('   🔍 [$testContext] Verifying echo data integrity...');
+  print('   ðŸ” [$testContext] Verifying echo data integrity...');
   expect(
     Uint8List.fromList(receivedData),
     equals(largeData),
     reason: 'Echoed data should match sent data',
   );
-  print('   ✅ [$testContext] Echo data integrity verified');
+  print('   âœ… [$testContext] Echo data integrity verified');
 
   // Final stream health check
   checkStreamHealth('Final');
 
-  print('   ✅ [$testContext] Large payload echo test completed successfully');
+  print('   âœ… [$testContext] Large payload echo test completed successfully');
 }
 
 // Helper function to test large payload transfer over P2P streams
@@ -3212,14 +3212,14 @@ Future<void> _testLargePayloadTransferP2P(
     core_network_stream.P2PStream serverStream,
     String testContext,
     {bool? expectSuccess}) async {
-  print('   📊 [$testContext] Creating 100KB test data...');
+  print('   ðŸ“Š [$testContext] Creating 100KB test data...');
 
   // Create 100KB test data - same size that causes OBP test to fail
   final largeData = Uint8List(100 * 1024);
   for (var i = 0; i < largeData.length; i++) {
     largeData[i] = i % 256;
   }
-  print('   📊 [$testContext] Test data created: ${largeData.length} bytes');
+  print('   ðŸ“Š [$testContext] Test data created: ${largeData.length} bytes');
 
   // Simulate the rapid chunk delivery pattern from UDX (1384-byte chunks)
   const chunkSize = 1384; // Exact size from the OBP failure logs
@@ -3230,13 +3230,13 @@ Future<void> _testLargePayloadTransferP2P(
     chunks.add(largeData.sublist(i, end));
   }
   print(
-      '   📊 [$testContext] Created ${chunks.length} chunks of ${chunkSize} bytes each');
+      '   ðŸ“Š [$testContext] Created ${chunks.length} chunks of ${chunkSize} bytes each');
 
   // Track stream health throughout the test
   var healthChecks = 0;
   void checkStreamHealth(String phase) {
     healthChecks++;
-    print('   🏥 [$testContext][$phase] Health check #$healthChecks:');
+    print('   ðŸ¥ [$testContext][$phase] Health check #$healthChecks:');
     print('      - Client stream closed: ${clientStream.isClosed}');
     print('      - Server stream closed: ${serverStream.isClosed}');
 
@@ -3249,7 +3249,7 @@ Future<void> _testLargePayloadTransferP2P(
   checkStreamHealth('Initial');
 
   print(
-      '   🚀 [$testContext] Starting rapid write operations (no delays between chunks)...');
+      '   ðŸš€ [$testContext] Starting rapid write operations (no delays between chunks)...');
   final writeCompleter = Completer<void>();
   var chunksWritten = 0;
 
@@ -3265,15 +3265,15 @@ Future<void> _testLargePayloadTransferP2P(
           checkStreamHealth('Write chunk $chunksWritten/${chunks.length}');
         }
       }
-      print('   ✅ [$testContext] All chunks written successfully');
+      print('   âœ… [$testContext] All chunks written successfully');
       writeCompleter.complete();
     } catch (e) {
-      print('   ❌ [$testContext] Write operation failed: $e');
+      print('   âŒ [$testContext] Write operation failed: $e');
       writeCompleter.completeError(e);
     }
   });
 
-  print('   📥 [$testContext] Reading data and monitoring stream health...');
+  print('   ðŸ“¥ [$testContext] Reading data and monitoring stream health...');
   final receivedData = <int>[];
   var readOperations = 0;
 
@@ -3282,7 +3282,7 @@ Future<void> _testLargePayloadTransferP2P(
       final chunk = await serverStream.read().timeout(Duration(seconds: 10));
       if (chunk.isEmpty) {
         print(
-            '   ⚠️ [$testContext] Received empty chunk, stream might be closed');
+            '   âš ï¸ [$testContext] Received empty chunk, stream might be closed');
         break;
       }
 
@@ -3294,30 +3294,30 @@ Future<void> _testLargePayloadTransferP2P(
         checkStreamHealth('Read operation $readOperations');
         final progress = (receivedData.length * 100 ~/ largeData.length);
         print(
-            '   📈 [$testContext] Progress: ${receivedData.length}/${largeData.length} bytes (${progress}%)');
+            '   ðŸ“ˆ [$testContext] Progress: ${receivedData.length}/${largeData.length} bytes (${progress}%)');
       }
     } catch (e) {
-      print('   ❌ [$testContext] Read operation failed: $e');
+      print('   âŒ [$testContext] Read operation failed: $e');
       checkStreamHealth('Read failure');
       rethrow;
     }
   }
 
-  print('   ⏳ [$testContext] Waiting for write operations to complete...');
+  print('   â³ [$testContext] Waiting for write operations to complete...');
   await writeCompleter.future.timeout(Duration(seconds: 30));
 
   checkStreamHealth('After write completion');
 
-  print('   🔍 [$testContext] Verifying data integrity...');
+  print('   ðŸ” [$testContext] Verifying data integrity...');
   expect(
     Uint8List.fromList(receivedData),
     equals(largeData),
     reason: 'Received data should match sent data',
   );
-  print('   ✅ [$testContext] Data integrity verified');
+  print('   âœ… [$testContext] Data integrity verified');
 
   // Final stream health check
   checkStreamHealth('Final');
 
-  print('   ✅ [$testContext] Large payload transfer completed successfully');
+  print('   âœ… [$testContext] Large payload transfer completed successfully');
 }

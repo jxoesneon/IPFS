@@ -1,15 +1,15 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
 import 'package:logging/logging.dart';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/crypto/ed25519.dart';
-import 'package:dart_libp2p/p2p/security/secured_connection.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart';
+import 'package:ipfs_libp2p/p2p/security/secured_connection.dart';
 
 // Import streamlined mocks for testing
 import '../mocks/streamlined_mock_transport_conn.dart';
@@ -99,7 +99,7 @@ void main() {
       await stream4.close();
       await multiplexer.close();
 
-      print('✓ Basic multiplexer test completed successfully!');
+      print('âœ“ Basic multiplexer test completed successfully!');
       print(
           'Final stats: Total created: ${multiplexer.totalStreamsCreated}, Final active: ${multiplexer.activeStreams}');
     });
@@ -159,7 +159,7 @@ void main() {
       await stream2.close();
       await muxedConn.close();
 
-      print('✓ Muxed connection test completed successfully!');
+      print('âœ“ Muxed connection test completed successfully!');
       print(
           'Final stats: Total created: ${multiplexer.totalStreamsCreated}, Final active: ${multiplexer.activeStreams}');
     });

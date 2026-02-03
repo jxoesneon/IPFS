@@ -1,34 +1,34 @@
-import 'dart:async';
-import 'package:dart_libp2p/core/peer/pb/peer_record.pb.dart' as pb;
-import 'package:dart_libp2p/core/peer/record.dart';
-import 'package:dart_libp2p/core/record/record_registry.dart';
+﻿import 'dart:async';
+import 'package:ipfs_libp2p/core/peer/pb/peer_record.pb.dart' as pb;
+import 'package:ipfs_libp2p/core/peer/record.dart';
+import 'package:ipfs_libp2p/core/record/record_registry.dart';
 import 'package:logging/logging.dart';
-import 'package:dart_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/transport_conn.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart' as core_peer_id_lib;
-import 'package:dart_libp2p/p2p/host/eventbus/basic.dart'
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/transport_conn.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart' as core_peer_id_lib;
+import 'package:ipfs_libp2p/p2p/host/eventbus/basic.dart'
     as p2p_eventbus; // Aliased
-import 'package:dart_libp2p/config/config.dart' as p2p_config;
-import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart';
-import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/session.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart';
-import 'package:dart_libp2p/config/stream_muxer.dart';
-import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
+import 'package:ipfs_libp2p/config/config.dart' as p2p_config;
+import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart';
+import 'package:ipfs_libp2p/p2p/transport/basic_upgrader.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/session.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart';
+import 'package:ipfs_libp2p/config/stream_muxer.dart';
+import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
 import 'package:dart_udx/dart_udx.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart'
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart'
     as p2p_transport;
-import 'package:dart_libp2p/core/network/rcmgr.dart'; // Interface - Corrected Path
-import 'package:dart_libp2p/p2p/network/swarm/swarm.dart';
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
-import 'package:dart_libp2p/p2p/host/peerstore/pstoremem.dart';
-import 'package:dart_libp2p/core/event/bus.dart' as core_event_bus; // Interface
-import 'package:dart_libp2p/core/network/network.dart'
+import 'package:ipfs_libp2p/core/network/rcmgr.dart'; // Interface - Corrected Path
+import 'package:ipfs_libp2p/p2p/network/swarm/swarm.dart';
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
+import 'package:ipfs_libp2p/p2p/host/peerstore/pstoremem.dart';
+import 'package:ipfs_libp2p/core/event/bus.dart' as core_event_bus; // Interface
+import 'package:ipfs_libp2p/core/network/network.dart'
     show Reachability; // For forceReachability parameter
-import 'package:dart_libp2p/p2p/host/autonat/ambient_config.dart'; // For AmbientAutoNATv2Config
+import 'package:ipfs_libp2p/p2p/host/autonat/ambient_config.dart'; // For AmbientAutoNATv2Config
 
 // Logger for this utility file
 final _log = Logger('RealNetStack');

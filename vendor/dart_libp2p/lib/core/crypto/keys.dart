@@ -1,9 +1,9 @@
-import 'dart:typed_data';
-import 'package:dart_libp2p/core/crypto/ecdsa.dart';
-import 'package:dart_libp2p/core/crypto/rsa.dart';
+﻿import 'dart:typed_data';
+import 'package:ipfs_libp2p/core/crypto/ecdsa.dart';
+import 'package:ipfs_libp2p/core/crypto/rsa.dart';
 
-import 'package:dart_libp2p/core/crypto/pb/crypto.pb.dart' as pb;
-import 'package:dart_libp2p/core/crypto/ed25519.dart';
+import 'package:ipfs_libp2p/core/crypto/pb/crypto.pb.dart' as pb;
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart';
 
 /// Represents a cryptographic key
 abstract class Key {

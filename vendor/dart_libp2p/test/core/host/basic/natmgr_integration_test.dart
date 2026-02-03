@@ -1,28 +1,28 @@
-// Copyright (c) 2024 The dart-libp2p Authors. All rights reserved.
+﻿// Copyright (c) 2024 The dart-libp2p Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 import 'dart:async';
 
-import 'package:dart_libp2p/p2p/host/basic/natmgr.dart';
-import 'package:dart_libp2p/p2p/host/host.dart';
-import 'package:dart_libp2p/p2p/network/swarm/swarm.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart';
-import 'package:dart_libp2p/p2p/transport/tcp_transport.dart';
-import 'package:dart_libp2p/p2p/transport/transport.dart';
-import 'package:dart_libp2p/p2p/transport/transport_config.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/network/mux.dart'
+import 'package:ipfs_libp2p/p2p/host/basic/natmgr.dart';
+import 'package:ipfs_libp2p/p2p/host/host.dart';
+import 'package:ipfs_libp2p/p2p/network/swarm/swarm.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart';
+import 'package:ipfs_libp2p/p2p/transport/tcp_transport.dart';
+import 'package:ipfs_libp2p/p2p/transport/transport.dart';
+import 'package:ipfs_libp2p/p2p/transport/transport_config.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/network/mux.dart'
     show Multiplexer, MuxedConn; // For NullMultiplexer
 import 'dart:io' show Socket; // For NullMultiplexer
 import 'package:test/test.dart';
-import 'package:dart_libp2p/p2p/nat/nat_behavior.dart';
-import 'package:dart_libp2p/p2p/nat/nat_traversal_strategy.dart';
-import 'package:dart_libp2p/config/config.dart'; // Added for Config
-import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart'; // Added for BasicUpgrader
-import 'package:dart_libp2p/core/crypto/ed25519.dart'; // For KeyPair generation
+import 'package:ipfs_libp2p/p2p/nat/nat_behavior.dart';
+import 'package:ipfs_libp2p/p2p/nat/nat_traversal_strategy.dart';
+import 'package:ipfs_libp2p/config/config.dart'; // Added for Config
+import 'package:ipfs_libp2p/p2p/transport/basic_upgrader.dart'; // Added for BasicUpgrader
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart'; // For KeyPair generation
 import '../../../mocks/mock_host.dart'; // Added import for MockHost
 
 // Define NullMultiplexer stub for tests

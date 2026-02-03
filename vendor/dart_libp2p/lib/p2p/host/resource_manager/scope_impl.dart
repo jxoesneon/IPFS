@@ -1,12 +1,12 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/network/errors.dart' as network_errors;
-import 'package:dart_libp2p/p2p/host/resource_manager/limit.dart';
+import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/network/errors.dart' as network_errors;
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limit.dart';
 // It's good practice to alias if class names might collide or for clarity.
-// import 'package:dart_libp2p/log/logger.dart' as log;
+// import 'package:ipfs_libp2p/log/logger.dart' as log;
 
 // A simple logger placeholder, replace with actual logging if available
 void _logWarn(String message) {}

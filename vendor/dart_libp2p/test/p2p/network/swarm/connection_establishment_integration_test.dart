@@ -1,8 +1,8 @@
-import 'package:test/test.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
-import 'package:dart_libp2p/p2p/network/swarm/address_filter.dart';
-import 'package:dart_libp2p/p2p/network/swarm/swarm_dial.dart';
+﻿import 'package:test/test.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
+import 'package:ipfs_libp2p/p2p/network/swarm/address_filter.dart';
+import 'package:ipfs_libp2p/p2p/network/swarm/swarm_dial.dart';
 
 void main() {
   group('Connection Establishment Integration', () {

@@ -1,35 +1,35 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:logging/logging.dart';
-import 'package:dart_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart' as core_peer_id_lib;
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/transport_conn.dart';
-import 'package:dart_libp2p/p2p/host/eventbus/basic.dart';
-import 'package:dart_libp2p/config/config.dart' as p2p_config;
-import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart';
-import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/session.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart';
-import 'package:dart_libp2p/config/stream_muxer.dart';
-import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart' as core_peer_id_lib;
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/transport_conn.dart';
+import 'package:ipfs_libp2p/p2p/host/eventbus/basic.dart';
+import 'package:ipfs_libp2p/config/config.dart' as p2p_config;
+import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart';
+import 'package:ipfs_libp2p/p2p/transport/basic_upgrader.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/session.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart';
+import 'package:ipfs_libp2p/config/stream_muxer.dart';
+import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
 import 'package:dart_udx/dart_udx.dart';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart'
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart'
     as p2p_transport;
-import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
-import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart';
-import 'package:dart_libp2p/p2p/network/swarm/swarm.dart';
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
-import 'package:dart_libp2p/p2p/host/peerstore/pstoremem.dart';
-import 'package:dart_libp2p/core/event/bus.dart';
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
+import 'package:ipfs_libp2p/p2p/network/swarm/swarm.dart';
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
+import 'package:ipfs_libp2p/p2p/host/peerstore/pstoremem.dart';
+import 'package:ipfs_libp2p/core/event/bus.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
 
 // mDNS-specific imports
-import 'package:dart_libp2p/p2p/discovery/mdns/mdns.dart';
+import 'package:ipfs_libp2p/p2p/discovery/mdns/mdns.dart';
 
 /// Custom AddrsFactory that adds peer IDs to addresses for mDNS discovery
 List<MultiAddr> Function(List<MultiAddr>) createMdnsAddrsFactory(
@@ -67,7 +67,7 @@ class TestMdnsNotifee implements MdnsNotifee {
   void handlePeerFound(AddrInfo peer) {
     discoveredPeers.add(peer);
     print(
-        '🔍 TestMdnsNotifee: Peer found: ${peer.id} with addresses: ${peer.addrs}');
+        'ðŸ” TestMdnsNotifee: Peer found: ${peer.id} with addresses: ${peer.addrs}');
   }
 }
 
@@ -105,7 +105,7 @@ void main() {
     late MdnsDiscovery serverMdns;
 
     setUpAll(() async {
-      print('🚀 Setting up REAL mDNS Integration Test');
+      print('ðŸš€ Setting up REAL mDNS Integration Test');
 
       udxInstance = UDX();
       resourceManager = ResourceManagerImpl(limiter: FixedLimiter());
@@ -251,48 +251,48 @@ void main() {
           orElse: () =>
               throw StateError("No UDX listen address found for client host"));
 
-      print('🏠 Server Host listening on: $serverListenAddr');
-      print('🏠 Client Host listening on: $clientListenAddr');
+      print('ðŸ  Server Host listening on: $serverListenAddr');
+      print('ðŸ  Client Host listening on: $clientListenAddr');
 
       // Create REAL mDNS discovery services using mdns_dart
-      print('🔧 Creating REAL mDNS discovery services...');
+      print('ðŸ”§ Creating REAL mDNS discovery services...');
       clientMdns = MdnsDiscovery(clientHost);
       serverMdns = MdnsDiscovery(serverHost);
 
       // Start REAL mDNS services
-      print('📡 Starting REAL mDNS services...');
+      print('ðŸ“¡ Starting REAL mDNS services...');
       await clientMdns.start();
       await serverMdns.start();
 
-      print('✅ REAL mDNS Setup Complete!');
+      print('âœ… REAL mDNS Setup Complete!');
       print('   Client: ${clientPeerId.toString().substring(0, 16)}...');
       print('   Server: ${serverPeerId.toString().substring(0, 16)}...');
     });
 
     tearDownAll(() async {
-      print('🛑 Stopping REAL mDNS services...');
+      print('ðŸ›‘ Stopping REAL mDNS services...');
       await clientMdns.stop();
       await serverMdns.stop();
 
-      print('🛑 Closing hosts...');
+      print('ðŸ›‘ Closing hosts...');
       await clientHost.close();
       await serverHost.close();
 
       await connManager.dispose();
       await resourceManager.close();
-      print('✅ REAL mDNS Integration Test Teardown Complete.');
+      print('âœ… REAL mDNS Integration Test Teardown Complete.');
     });
 
     test('should advertise host addresses via REAL mDNS', () async {
-      print('📡 Testing REAL mDNS advertising for both hosts...');
+      print('ðŸ“¡ Testing REAL mDNS advertising for both hosts...');
 
       const String testNamespace = 'test-network';
 
       final clientAdvertiseDuration = await clientMdns.advertise(testNamespace);
       final serverAdvertiseDuration = await serverMdns.advertise(testNamespace);
 
-      print('✅ Client advertise duration: $clientAdvertiseDuration');
-      print('✅ Server advertise duration: $serverAdvertiseDuration');
+      print('âœ… Client advertise duration: $clientAdvertiseDuration');
+      print('âœ… Server advertise duration: $serverAdvertiseDuration');
 
       expect(clientAdvertiseDuration, isA<Duration>());
       expect(serverAdvertiseDuration, isA<Duration>());
@@ -303,11 +303,11 @@ void main() {
       expect(serverHost.addrs.isNotEmpty, isTrue,
           reason: "Server host should have addresses to advertise");
 
-      print('🎉 REAL mDNS advertising test completed successfully');
+      print('ðŸŽ‰ REAL mDNS advertising test completed successfully');
     }, timeout: Timeout(Duration(seconds: 30)));
 
     test('should discover peers via REAL mDNS', () async {
-      print('🔍 Testing REAL mDNS peer discovery...');
+      print('ðŸ” Testing REAL mDNS peer discovery...');
 
       const String testNamespace = 'test-network';
 
@@ -323,10 +323,10 @@ void main() {
       final serverDiscoveryStream = await serverMdns.findPeers(testNamespace);
 
       // Start advertising (this triggers REAL mDNS service announcement)
-      print('📡 Starting REAL mDNS advertising...');
+      print('ðŸ“¡ Starting REAL mDNS advertising...');
       await clientMdns.advertise(testNamespace);
       await serverMdns.advertise(testNamespace);
-      print('✅ Both hosts are now advertising via REAL mDNS');
+      print('âœ… Both hosts are now advertising via REAL mDNS');
 
       // Wait for discovery
       final clientDiscoveryCompleter = Completer<AddrInfo>();
@@ -337,7 +337,7 @@ void main() {
 
       clientSub = clientDiscoveryStream.listen((peer) {
         print(
-            '🔍 Client discovered peer: ${peer.id} with addresses: ${peer.addrs}');
+            'ðŸ” Client discovered peer: ${peer.id} with addresses: ${peer.addrs}');
         if (peer.id == serverPeerId && !clientDiscoveryCompleter.isCompleted) {
           clientDiscoveryCompleter.complete(peer);
           clientSub.cancel();
@@ -346,7 +346,7 @@ void main() {
 
       serverSub = serverDiscoveryStream.listen((peer) {
         print(
-            '🔍 Server discovered peer: ${peer.id} with addresses: ${peer.addrs}');
+            'ðŸ” Server discovered peer: ${peer.id} with addresses: ${peer.addrs}');
         if (peer.id == clientPeerId && !serverDiscoveryCompleter.isCompleted) {
           serverDiscoveryCompleter.complete(peer);
           serverSub.cancel();
@@ -355,30 +355,30 @@ void main() {
 
       try {
         // Give REAL mDNS more time to work since it's doing actual network operations
-        print('⏳ Waiting for REAL mDNS discovery (up to 10 seconds)...');
+        print('â³ Waiting for REAL mDNS discovery (up to 10 seconds)...');
         await Future.wait([
           clientDiscoveryCompleter.future.timeout(Duration(seconds: 10),
               onTimeout: () {
             print(
-                '⚠️ REAL mDNS discovery timeout - falling back to simulation');
+                'âš ï¸ REAL mDNS discovery timeout - falling back to simulation');
             throw TimeoutException('REAL mDNS discovery timeout');
           }),
           serverDiscoveryCompleter.future.timeout(Duration(seconds: 10),
               onTimeout: () {
             print(
-                '⚠️ REAL mDNS discovery timeout - falling back to simulation');
+                'âš ï¸ REAL mDNS discovery timeout - falling back to simulation');
             throw TimeoutException('REAL mDNS discovery timeout');
           }),
         ]);
 
-        print('🎉 REAL mDNS mutual discovery successful!');
+        print('ðŸŽ‰ REAL mDNS mutual discovery successful!');
         print(
             '   This proves our mDNS implementation actually works over the network!');
       } on TimeoutException catch (_) {
         // REAL mDNS may not work reliably in CI environments
         // Fall back to simulation to test the integration pipeline
         print(
-            '📝 REAL mDNS discovery timed out - simulating to test integration pipeline');
+            'ðŸ“ REAL mDNS discovery timed out - simulating to test integration pipeline');
         print(
             '   Note: This fallback tests that mDNS services handle discovered peers correctly');
 
@@ -395,7 +395,7 @@ void main() {
           serverDiscoveryCompleter.future.timeout(Duration(seconds: 2)),
         ]);
 
-        print('✅ Simulated mDNS discovery integration test completed');
+        print('âœ… Simulated mDNS discovery integration test completed');
       } finally {
         await clientSub.cancel();
         await serverSub.cancel();
@@ -411,7 +411,7 @@ void main() {
       expect(clientDiscoveredPeer.addrs.isNotEmpty, isTrue);
       expect(serverDiscoveredPeer.addrs.isNotEmpty, isTrue);
 
-      print('🎉 REAL mDNS discovery test completed successfully!');
+      print('ðŸŽ‰ REAL mDNS discovery test completed successfully!');
     }, timeout: Timeout(Duration(seconds: 60)));
   });
 }

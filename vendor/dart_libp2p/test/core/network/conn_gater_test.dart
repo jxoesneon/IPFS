@@ -1,9 +1,9 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:dart_libp2p/p2p/network/conn_gater.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/p2p/network/conn_gater.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
 import 'package:test/test.dart';
 import '../../mocks/mock_connection.dart';
 

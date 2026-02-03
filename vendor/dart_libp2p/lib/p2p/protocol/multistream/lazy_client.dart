@@ -1,4 +1,4 @@
-/// Package multistream implements lazy client functionality for the
+﻿/// Package multistream implements lazy client functionality for the
 /// multistream-select protocol. The protocol is defined at
 /// https://github.com/multiformats/multistream-select
 
@@ -6,10 +6,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart';
-import 'package:dart_libp2p/p2p/protocol/multistream/multistream.dart';
-import 'package:dart_libp2p/p2p/protocol/multistream/client.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/p2p/protocol/multistream/multistream.dart';
+import 'package:ipfs_libp2p/p2p/protocol/multistream/client.dart';
 
 /// LazyConn is a ReadWriteCloser adapter that lazily negotiates a protocol
 /// using multistream-select on first use.

@@ -1,5 +1,5 @@
-import 'dart:async';
-import 'package:dart_libp2p/core/network/network.dart'
+﻿import 'dart:async';
+import 'package:ipfs_libp2p/core/network/network.dart'
     show Reachability; // For Reachability enum
 import './pb/autonat.pb.dart' as pb; // For pb.Message_ResponseStatus
 

@@ -1,7 +1,7 @@
-import 'package:test/test.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart';
+﻿import 'package:test/test.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart';
 
 void main() {
   group('UDXTransport IPv6 Dial Tests', () {

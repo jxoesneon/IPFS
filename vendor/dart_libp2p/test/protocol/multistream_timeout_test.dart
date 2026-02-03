@@ -1,15 +1,15 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/p2p/protocol/multistream/multistream.dart';
-import 'package:dart_libp2p/config/multistream_config.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/p2p/protocol/multistream/multistream.dart';
+import 'package:ipfs_libp2p/config/multistream_config.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
 
 /// Mock stream that can simulate timeout scenarios
 class TimeoutMockStream implements P2PStream<Uint8List> {

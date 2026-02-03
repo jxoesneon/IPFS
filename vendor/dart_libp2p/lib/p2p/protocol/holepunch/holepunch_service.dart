@@ -1,4 +1,4 @@
-/// Package holepunch provides the holepunch service for libp2p.
+﻿/// Package holepunch provides the holepunch service for libp2p.
 ///
 /// The holepunch service provides direct connection establishment capabilities
 /// for libp2p nodes behind NATs/firewalls. It coordinates hole punching between
@@ -9,7 +9,7 @@
 
 import 'dart:async';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 
 /// HolePunchService is the interface for the holepunch service.
 abstract class HolePunchService {

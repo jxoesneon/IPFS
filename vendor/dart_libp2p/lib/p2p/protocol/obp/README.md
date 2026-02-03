@@ -1,4 +1,4 @@
-# OverNode Binary Protocol (OBP)
+﻿# OverNode Binary Protocol (OBP)
 
 ## Overview
 
@@ -17,31 +17,31 @@ OBP serves as the **application protocol layer** between your application logic 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────┐
-│        OverNode Application Logic           │
-│    (Chat, Data Sync, User Features)        │
-└─────────────────────────────────────────────┘
-                     ↕
-┌─────────────────────────────────────────────┐
-│   OBP (OverNode Binary Protocol) ← HERE     │
-│ - Frame encoding/decoding                   │
-│ - Request/response handling                 │
-│ - Protocol handshaking                      │
-│ - Prekey & CRDT message types               │
-└─────────────────────────────────────────────┘
-                     ↕
-┌─────────────────────────────────────────────┐
-│         libp2p Protocol Layer               │
-│ - P2PStream (multiplexed streams)           │
-│ - Stream handlers & protocol IDs            │
-└─────────────────────────────────────────────┘
-                     ↕
-┌─────────────────────────────────────────────┐
-│         libp2p Transport Layer              │
-│ - TCP, QUIC, WebTransport                   │
-│ - Security (Noise, TLS)                     │
-│ - Multiplexing (Yamux, MPLEX)               │
-└─────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚        OverNode Application Logic           â”‚
+â”‚    (Chat, Data Sync, User Features)        â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                     â†•
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚   OBP (OverNode Binary Protocol) â† HERE     â”‚
+â”‚ - Frame encoding/decoding                   â”‚
+â”‚ - Request/response handling                 â”‚
+â”‚ - Protocol handshaking                      â”‚
+â”‚ - Prekey & CRDT message types               â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                     â†•
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚         libp2p Protocol Layer               â”‚
+â”‚ - P2PStream (multiplexed streams)           â”‚
+â”‚ - Stream handlers & protocol IDs            â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                     â†•
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚         libp2p Transport Layer              â”‚
+â”‚ - TCP, QUIC, WebTransport                   â”‚
+â”‚ - Security (Noise, TLS)                     â”‚
+â”‚ - Multiplexing (Yamux, MPLEX)               â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ## Frame Structure
@@ -49,15 +49,15 @@ OBP serves as the **application protocol layer** between your application logic 
 OBP uses a 16-byte header followed by a variable-length payload:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ Magic (4 bytes) │ Version (1) │ Type (1) │ Flags (1) │ Res(1)│
-├─────────────────────────────────────────────────────────────┤
-│                    Length (4 bytes, big-endian)            │
-├─────────────────────────────────────────────────────────────┤
-│                    Stream ID (4 bytes)                     │
-├─────────────────────────────────────────────────────────────┤
-│                    Payload (Length bytes)                  │
-└─────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚ Magic (4 bytes) â”‚ Version (1) â”‚ Type (1) â”‚ Flags (1) â”‚ Res(1)â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                    Length (4 bytes, big-endian)            â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                    Stream ID (4 bytes)                     â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                    Payload (Length bytes)                  â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Header Fields
@@ -96,8 +96,8 @@ OBP uses a 16-byte header followed by a variable-length payload:
 ### Client-Side: Performing Handshake and Sending Requests
 
 ```dart
-import 'package:dart_libp2p/p2p/protocol/obp/obp_protocol_handler.dart';
-import 'package:dart_libp2p/p2p/protocol/obp/obp_frame.dart';
+import 'package:ipfs_libp2p/p2p/protocol/obp/obp_protocol_handler.dart';
+import 'package:ipfs_libp2p/p2p/protocol/obp/obp_frame.dart';
 
 // Open a libp2p stream to the peer
 final stream = await host.newStream(peerId, ['/overnode/obp/1.0.0']);
@@ -140,8 +140,8 @@ await OBPProtocolHandler.closeStream(stream, context: 'my-app-client');
 ### Server-Side: Handling Incoming Requests
 
 ```dart
-import 'package:dart_libp2p/p2p/protocol/obp/obp_protocol_handler.dart';
-import 'package:dart_libp2p/p2p/protocol/obp/obp_frame.dart';
+import 'package:ipfs_libp2p/p2p/protocol/obp/obp_protocol_handler.dart';
+import 'package:ipfs_libp2p/p2p/protocol/obp/obp_frame.dart';
 
 // Register OBP protocol handler
 host.setStreamHandler('/overnode/obp/1.0.0', (stream) async {
@@ -280,17 +280,17 @@ await OBPProtocolHandler.sendRequest(
 
 Use OBP when you need:
 
-✅ **Structured messaging** over raw byte streams  
-✅ **Multiple message types** in a single protocol  
-✅ **Request/response semantics** with acknowledgments  
-✅ **Application-level handshaking** beyond libp2p's connection security  
-✅ **Built-in retry/timeout logic** at the application layer  
+âœ… **Structured messaging** over raw byte streams  
+âœ… **Multiple message types** in a single protocol  
+âœ… **Request/response semantics** with acknowledgments  
+âœ… **Application-level handshaking** beyond libp2p's connection security  
+âœ… **Built-in retry/timeout logic** at the application layer  
 
 Don't use OBP if:
 
-❌ You need a simple unidirectional stream  
-❌ You're building a protocol that fits existing libp2p protocols (ping, identify, etc.)  
-❌ Your messages are simple enough to handle without framing  
+âŒ You need a simple unidirectional stream  
+âŒ You're building a protocol that fits existing libp2p protocols (ping, identify, etc.)  
+âŒ Your messages are simple enough to handle without framing  
 
 ## Components
 

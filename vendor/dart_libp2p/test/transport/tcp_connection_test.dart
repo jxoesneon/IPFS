@@ -1,17 +1,17 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'package:mockito/annotations.dart';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart'
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart'
     as concrete_peer_id; // For PeerId concrete class and PeerId.random()
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/core/network/conn.dart'; // For ConnStats, ConnScope
-import 'package:dart_libp2p/p2p/transport/tcp_connection.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart'; // For ConnStats, ConnScope
+import 'package:ipfs_libp2p/p2p/transport/tcp_connection.dart';
 import 'package:mockito/mockito.dart'; // Provides Mock, when, any, anyNamed, and hopefully typed
 import 'package:logging/logging.dart';
 

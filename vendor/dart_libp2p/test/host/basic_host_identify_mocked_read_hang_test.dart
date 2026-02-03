@@ -1,39 +1,39 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io' show Socket;
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/network/transport_conn.dart'
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/network/transport_conn.dart'
     as core_transport_conn;
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart' as core_protocol;
-import 'package:dart_libp2p/core/crypto/pb/crypto.pb.dart' as pb;
-import 'package:dart_libp2p/core/network/context.dart' as core_context;
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/network/mux.dart' as core_mux;
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart' as core_protocol;
+import 'package:ipfs_libp2p/core/crypto/pb/crypto.pb.dart' as pb;
+import 'package:ipfs_libp2p/core/network/context.dart' as core_context;
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/network/mux.dart' as core_mux;
 
 // P2P layer imports for mocks
-import 'package:dart_libp2p/p2p/transport/transport.dart' as p2p_transport;
-import 'package:dart_libp2p/p2p/transport/listener.dart' as p2p_listener;
-import 'package:dart_libp2p/p2p/security/security_protocol.dart'
+import 'package:ipfs_libp2p/p2p/transport/transport.dart' as p2p_transport;
+import 'package:ipfs_libp2p/p2p/transport/listener.dart' as p2p_listener;
+import 'package:ipfs_libp2p/p2p/security/security_protocol.dart'
     as p2p_security;
-import 'package:dart_libp2p/p2p/security/secured_connection.dart'
+import 'package:ipfs_libp2p/p2p/security/secured_connection.dart'
     as p2p_secured_conn;
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart'
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart'
     as p2p_muxer;
-import 'package:dart_libp2p/p2p/transport/transport_config.dart';
+import 'package:ipfs_libp2p/p2p/transport/transport_config.dart';
 
-import 'package:dart_libp2p/config/config.dart' as p2p_config;
-import 'package:dart_libp2p/config/stream_muxer.dart' as config_stream_muxer;
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
+import 'package:ipfs_libp2p/config/config.dart' as p2p_config;
+import 'package:ipfs_libp2p/config/stream_muxer.dart' as config_stream_muxer;
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
 
 const String identifyProtocolId = '/ipfs/id/1.0.0';
 

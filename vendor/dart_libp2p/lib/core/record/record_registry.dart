@@ -1,6 +1,6 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/peer/pb/peer_record.pb.dart';
+import 'package:ipfs_libp2p/core/peer/pb/peer_record.pb.dart';
 
 abstract class RecordBase {
   // Domain is the "signature domain" used when signing and verifying a particular

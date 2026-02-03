@@ -1,14 +1,14 @@
-/// AddrBook implementation for the memory-based peerstore.
+﻿/// AddrBook implementation for the memory-based peerstore.
 
 import 'dart:async';
 import 'dart:collection';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/certified_addr_book.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
-import 'package:dart_libp2p/core/record/envelope.dart';
+import 'package:ipfs_libp2p/core/certified_addr_book.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/record/envelope.dart';
 import 'package:logging/logging.dart';
 import 'package:synchronized/synchronized.dart';
 

@@ -1,26 +1,26 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:collection';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/transport/listener.dart';
-import 'package:dart_libp2p/p2p/transport/transport.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/transport_conn.dart'; // Added import
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/network.dart';
-import 'package:dart_libp2p/core/network/notifiee.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/host/host.dart'; // Added import for Host
-import 'package:dart_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/transport/listener.dart';
+import 'package:ipfs_libp2p/p2p/transport/transport.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/transport_conn.dart'; // Added import
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/core/network/notifiee.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/host/host.dart'; // Added import for Host
+import 'package:ipfs_libp2p/core/peerstore.dart';
 import 'package:logging/logging.dart';
 import 'package:synchronized/synchronized.dart';
 import 'dart:io'
     show NetworkInterface, InternetAddressType; // For NetworkInterface.list
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart' show Protocols;
-import 'package:dart_libp2p/core/network/mux.dart'
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart' show Protocols;
+import 'package:ipfs_libp2p/core/network/mux.dart'
     as core_mux; // Changed to package import
 
 import '../../../core/network/common.dart' show Direction;
@@ -31,7 +31,7 @@ import 'swarm_conn.dart';
 import 'swarm_stream.dart';
 import 'swarm_dial.dart'; // For AddrDialer and DelayDialRanker
 import 'address_filter.dart'; // For AddressFilter
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart'; // For OutboundCapabilityInfo
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart'; // For OutboundCapabilityInfo
 
 /// Swarm is a Network implementation that manages connections to peers and
 /// handles streams over those connections.

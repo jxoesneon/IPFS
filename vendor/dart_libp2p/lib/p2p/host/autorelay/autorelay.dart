@@ -1,12 +1,12 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/network/network.dart'
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/network/network.dart'
     show Reachability; // Only import Reachability
-import 'package:dart_libp2p/core/event/reachability.dart'
+import 'package:ipfs_libp2p/core/event/reachability.dart'
     show EvtLocalReachabilityChanged; // Import the correct event
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/p2p/transport/upgrader.dart' show Upgrader;
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/p2p/transport/upgrader.dart' show Upgrader;
 import 'package:logging/logging.dart';
 
 import './autorelay_config.dart';

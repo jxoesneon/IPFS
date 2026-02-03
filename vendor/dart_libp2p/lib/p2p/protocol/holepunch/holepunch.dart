@@ -1,4 +1,4 @@
-/// Package holepunch provides the holepunch service for libp2p.
+﻿/// Package holepunch provides the holepunch service for libp2p.
 ///
 /// The holepunch service provides direct connection establishment capabilities
 /// for libp2p nodes behind NATs/firewalls. It coordinates hole punching between
@@ -7,11 +7,11 @@
 /// This is a port of the Go implementation from go-libp2p/p2p/protocol/holepunch
 /// to Dart, using native Dart idioms.
 
-import 'package:dart_libp2p/p2p/protocol/holepunch/holepunch_service.dart';
-import 'package:dart_libp2p/p2p/protocol/holepunch/service.dart';
-import 'package:dart_libp2p/p2p/protocol/identify/id_service.dart';
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/p2p/protocol/holepunch/holepunch_service.dart';
+import 'package:ipfs_libp2p/p2p/protocol/holepunch/service.dart';
+import 'package:ipfs_libp2p/p2p/protocol/identify/id_service.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
 
 /// Creates a new holepunch service.
 ///

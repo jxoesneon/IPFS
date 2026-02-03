@@ -1,16 +1,16 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/stream.dart'; // P2PStream is used
-import 'package:dart_libp2p/core/network/rcmgr.dart'
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart'; // P2PStream is used
+import 'package:ipfs_libp2p/core/network/rcmgr.dart'
     show ConnScope, ScopeStat, ResourceScopeSpan; // Import new types
 
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/common.dart'; // Provides Direction
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/common.dart'; // Provides Direction
 
 /// Conn is a connection to a remote peer. It multiplexes streams.
 /// Usually there is no need to use a Conn directly, but it may

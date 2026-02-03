@@ -1,47 +1,47 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/context.dart' as core_context;
-import 'package:dart_libp2p/core/network/mux.dart'
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto_ed25519;
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/context.dart' as core_context;
+import 'package:ipfs_libp2p/core/network/mux.dart'
     as core_mux_types; // Aliased import
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/network/transport_conn.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/host/eventbus/basic.dart';
-import 'package:dart_libp2p/p2p/protocol/obp/obp_frame.dart';
-import 'package:dart_libp2p/p2p/protocol/obp/obp_protocol_handler.dart';
-import 'package:dart_libp2p/config/config.dart' as p2p_config;
-import 'package:dart_libp2p/p2p/network/connmgr/null_conn_mgr.dart';
-import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart'; // Corrected import
-import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart';
-import 'package:dart_libp2p/p2p/transport/listener.dart';
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/session.dart'; // Corrected import for YamuxSession
-import 'package:dart_libp2p/p2p/transport/multiplexing/yamux/stream.dart'; // Added import for YamuxStream
-import 'package:dart_libp2p/p2p/transport/multiplexing/multiplexer.dart'; // For MultiplexerConfig
-import 'package:dart_libp2p/config/stream_muxer.dart'; // For StreamMuxer base class
-import 'package:dart_libp2p/p2p/transport/udx_transport.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/network/transport_conn.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/host/eventbus/basic.dart';
+import 'package:ipfs_libp2p/p2p/protocol/obp/obp_frame.dart';
+import 'package:ipfs_libp2p/p2p/protocol/obp/obp_protocol_handler.dart';
+import 'package:ipfs_libp2p/config/config.dart' as p2p_config;
+import 'package:ipfs_libp2p/p2p/network/connmgr/null_conn_mgr.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart'; // Corrected import
+import 'package:ipfs_libp2p/p2p/transport/basic_upgrader.dart';
+import 'package:ipfs_libp2p/p2p/transport/listener.dart';
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/session.dart'; // Corrected import for YamuxSession
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/yamux/stream.dart'; // Added import for YamuxStream
+import 'package:ipfs_libp2p/p2p/transport/multiplexing/multiplexer.dart'; // For MultiplexerConfig
+import 'package:ipfs_libp2p/config/stream_muxer.dart'; // For StreamMuxer base class
+import 'package:ipfs_libp2p/p2p/transport/udx_transport.dart';
 import 'package:dart_udx/dart_udx.dart';
 import 'package:logging/logging.dart';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart'
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart'
     as p2p_transport; // Aliased for clarity
-import 'package:dart_libp2p/p2p/host/resource_manager/resource_manager_impl.dart'; // Added for ResourceManagerImpl
-import 'package:dart_libp2p/p2p/host/resource_manager/limiter.dart'; // Added for FixedLimiter
-import 'package:dart_libp2p/p2p/network/swarm/swarm.dart';
-import 'package:dart_libp2p/p2p/host/basic/basic_host.dart';
-import 'package:dart_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart';
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/network/stream.dart' as core_network_stream;
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
-import 'package:dart_libp2p/core/peerstore.dart'; // For AddressTTL
-import 'package:dart_libp2p/core/network/network.dart'; // For Network type in TestNotifiee
-import 'package:dart_libp2p/core/network/notifiee.dart'; // For Notifiee interface
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart'; // Added for ResourceManagerImpl
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart'; // Added for FixedLimiter
+import 'package:ipfs_libp2p/p2p/network/swarm/swarm.dart';
+import 'package:ipfs_libp2p/p2p/host/basic/basic_host.dart';
+import 'package:ipfs_libp2p/p2p/host/peerstore/pstoremem/peerstore.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart' as core_network_stream;
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart' as multiaddr_protocol;
+import 'package:ipfs_libp2p/core/peerstore.dart'; // For AddressTTL
+import 'package:ipfs_libp2p/core/network/network.dart'; // For Network type in TestNotifiee
+import 'package:ipfs_libp2p/core/network/notifiee.dart'; // For Notifiee interface
 
 // OBP Protocol Constants
 class OBPConstants {
@@ -819,7 +819,7 @@ Future<void> _testOBPFeatures(
   void checkStreamHealth(String phase) {
     healthChecks++;
     print(
-        '🏥 [OBP-HEALTH-CHECK-$healthChecks][$phase] Connection health check:');
+        'ðŸ¥ [OBP-HEALTH-CHECK-$healthChecks][$phase] Connection health check:');
     print('   - Stream closed: ${currentStream.isClosed}');
     print('   - Connection closed: ${currentStream.conn.isClosed}');
     print('   - Stream protocol: ${currentStream.protocol()}');
@@ -843,8 +843,8 @@ Future<void> _testOBPFeatures(
       checkStreamHealth(testName);
       return stream;
     } catch (e) {
-      print('❌ Stream health check failed for $testName: $e');
-      print('⚠️ Cannot proceed with $testName - connection is not viable');
+      print('âŒ Stream health check failed for $testName: $e');
+      print('âš ï¸ Cannot proceed with $testName - connection is not viable');
       rethrow;
     }
   }
@@ -871,12 +871,12 @@ Future<void> _testOBPFeatures(
     expect(pongResponse!.type, equals(OBPMessageType.pong));
     expect(
         utf8.decode(pongResponse.payload), equals('comprehensive-test-ping'));
-    print('✓ Basic ping/pong successful');
+    print('âœ“ Basic ping/pong successful');
 
     // Verify stream health after successful operation
     checkStreamHealth('Test 1 - Post-success');
   } catch (e) {
-    print('❌ Test 1 failed: $e');
+    print('âŒ Test 1 failed: $e');
     checkStreamHealth('Test 1 - Post-failure');
     rethrow;
   }
@@ -915,16 +915,16 @@ Future<void> _testOBPFeatures(
     expect(mediumPongResponse!.type, equals(OBPMessageType.pong));
     expect(mediumPongResponse.payload.length, equals(mediumPayload.length));
     print(
-        '✓ Medium payload handling successful (${mediumPayload.length} bytes)');
+        'âœ“ Medium payload handling successful (${mediumPayload.length} bytes)');
 
     checkStreamHealth('Test 2a - Post-success');
   } catch (e) {
-    print('❌ Test 2a (32KB) failed: $e');
+    print('âŒ Test 2a (32KB) failed: $e');
     checkStreamHealth('Test 2a - Post-failure');
 
     // If 32KB fails, don't try larger payloads
     print(
-        '⚠️ Skipping remaining payload tests due to 32KB failure - indicates transport limitation');
+        'âš ï¸ Skipping remaining payload tests due to 32KB failure - indicates transport limitation');
     return;
   }
 
@@ -954,17 +954,17 @@ Future<void> _testOBPFeatures(
         reason: 'Should receive large pong response');
     expect(largePongResponse!.type, equals(OBPMessageType.pong));
     expect(largePongResponse.payload.length, equals(largePayload.length));
-    print('✓ Large payload handling successful (${largePayload.length} bytes)');
+    print('âœ“ Large payload handling successful (${largePayload.length} bytes)');
 
     checkStreamHealth('Test 2b - Post-success');
   } catch (e) {
-    print('❌ Test 2b (100KB) failed: $e');
+    print('âŒ Test 2b (100KB) failed: $e');
     checkStreamHealth('Test 2b - Post-failure');
 
     // If the large payload test fails due to connection issues, we'll skip remaining tests
     // but not fail the entire test suite since the basic functionality works
     print(
-        '⚠️ Skipping remaining tests due to connection instability after large payload');
+        'âš ï¸ Skipping remaining tests due to connection instability after large payload');
     print('   This suggests the transport has limitations with 100KB payloads');
     return;
   }
@@ -995,15 +995,15 @@ Future<void> _testOBPFeatures(
     expect(flaggedResponse, isNotNull,
         reason: 'Should receive flagged response');
     expect(flaggedResponse!.type, equals(OBPMessageType.pong));
-    print('✓ Frame with flags successful');
+    print('âœ“ Frame with flags successful');
 
     checkStreamHealth('Test 3 - Post-success');
   } catch (e) {
-    print('❌ Test 3 failed: $e');
+    print('âŒ Test 3 failed: $e');
     checkStreamHealth('Test 3 - Post-failure');
 
     if (currentStream.isClosed) {
-      print('⚠️ Stream closed during Test 3, skipping remaining tests');
+      print('âš ï¸ Stream closed during Test 3, skipping remaining tests');
       return;
     }
     rethrow;
@@ -1040,11 +1040,11 @@ Future<void> _testOBPFeatures(
       expect(rapidResponses[i]!.type, equals(OBPMessageType.pong));
       expect(utf8.decode(rapidResponses[i]!.payload), equals('rapid-ping-$i'));
     }
-    print('✓ Multiple rapid requests successful');
+    print('âœ“ Multiple rapid requests successful');
 
     checkStreamHealth('Test 4 - Post-success');
   } catch (e) {
-    print('❌ Test 4 failed: $e');
+    print('âŒ Test 4 failed: $e');
     checkStreamHealth('Test 4 - Post-failure');
     rethrow;
   }

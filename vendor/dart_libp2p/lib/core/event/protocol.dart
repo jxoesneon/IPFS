@@ -1,10 +1,10 @@
-/// Protocol-related events for libp2p.
+﻿/// Protocol-related events for libp2p.
 ///
 /// This is a port of the Go implementation from go-libp2p/core/event/protocol.go
 /// to Dart, using native Dart idioms.
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
 
 /// EvtPeerProtocolsUpdated should be emitted when a peer we're connected to adds or removes protocols from their stack.
 class EvtPeerProtocolsUpdated {

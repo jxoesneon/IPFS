@@ -1,10 +1,10 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dart_libp2p/dart_libp2p.dart';
-import 'package:dart_libp2p/p2p/discovery/mdns/mdns.dart';
-import 'package:dart_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/dart_libp2p.dart';
+import 'package:ipfs_libp2p/p2p/discovery/mdns/mdns.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
 
 /// A chat client that uses REAL mDNS for peer discovery
 class ChatClientMdns implements MdnsNotifee {
@@ -29,7 +29,7 @@ class ChatClientMdns implements MdnsNotifee {
 
   /// Start REAL mDNS advertising and discovery
   Future<void> startDiscovery() async {
-    print('🚀 Starting REAL mDNS discovery and advertising...');
+    print('ðŸš€ Starting REAL mDNS discovery and advertising...');
 
     await mdnsDiscovery.start();
     await mdnsDiscovery.advertise(chatNamespace);
@@ -41,14 +41,14 @@ class ChatClientMdns implements MdnsNotifee {
     });
 
     print(
-        '📡 REAL mDNS discovery started - broadcasting and listening for chat peers!');
+        'ðŸ“¡ REAL mDNS discovery started - broadcasting and listening for chat peers!');
     print(
-        '💡 No fallback mechanisms needed - using genuine mDNS service advertisement');
+        'ðŸ’¡ No fallback mechanisms needed - using genuine mDNS service advertisement');
   }
 
   /// Stop mDNS services
   Future<void> stopDiscovery() async {
-    print('🛑 Stopping mDNS discovery...');
+    print('ðŸ›‘ Stopping mDNS discovery...');
     await mdnsDiscovery.stop();
   }
 
@@ -64,7 +64,7 @@ class ChatClientMdns implements MdnsNotifee {
     // Add to discovered peers if not already present
     if (!discoveredPeers.containsKey(peer.id)) {
       discoveredPeers[peer.id] = peer;
-      print('\n🔍 Discovered new chat peer: [${_truncatePeerId(peer.id)}]');
+      print('\nðŸ” Discovered new chat peer: [${_truncatePeerId(peer.id)}]');
       print('   via REAL mDNS network discovery!');
       showPeerList();
       stdout.write('> ');
@@ -75,35 +75,35 @@ class ChatClientMdns implements MdnsNotifee {
   void showPeerList() {
     if (discoveredPeers.isEmpty) {
       print('No chat peers discovered yet. Waiting for REAL mDNS discovery...');
-      print('💡 Make sure other chat clients are running on the same network.');
+      print('ðŸ’¡ Make sure other chat clients are running on the same network.');
       return;
     }
 
-    print('\n📋 Available chat peers (discovered via REAL mDNS):');
+    print('\nðŸ“‹ Available chat peers (discovered via REAL mDNS):');
     int index = 1;
     for (final peer in discoveredPeers.values) {
-      final prefix = _currentPeer == peer.id ? '👉' : '  ';
+      final prefix = _currentPeer == peer.id ? 'ðŸ‘‰' : '  ';
       print(
           '$prefix $index. [${_truncatePeerId(peer.id)}] - ${peer.addrs.first}');
       index++;
     }
 
     if (_currentPeer == null && discoveredPeers.isNotEmpty) {
-      print('\n💡 Type "select <number>" to choose a peer to chat with.');
-      print('💡 Type "list" to see available peers.');
+      print('\nðŸ’¡ Type "select <number>" to choose a peer to chat with.');
+      print('ðŸ’¡ Type "list" to see available peers.');
     }
   }
 
   /// Select a peer to chat with by index
   bool selectPeer(int index) {
     if (index < 1 || index > discoveredPeers.length) {
-      print('❌ Invalid peer number. Use "list" to see available peers.');
+      print('âŒ Invalid peer number. Use "list" to see available peers.');
       return false;
     }
 
     final peer = discoveredPeers.values.elementAt(index - 1);
     _currentPeer = peer.id;
-    print('✅ Selected peer [${_truncatePeerId(peer.id)}] for chatting.');
+    print('âœ… Selected peer [${_truncatePeerId(peer.id)}] for chatting.');
     return true;
   }
 
@@ -116,7 +116,7 @@ class ChatClientMdns implements MdnsNotifee {
       if (data.isNotEmpty) {
         final message = utf8.decode(data).trim();
         // Display the received message
-        print('\n📨 [${_truncatePeerId(remotePeer)} says]: $message');
+        print('\nðŸ“¨ [${_truncatePeerId(remotePeer)} says]: $message');
         stdout.write('> ');
       }
     } catch (e) {
@@ -131,13 +131,13 @@ class ChatClientMdns implements MdnsNotifee {
   /// Send a message to the currently selected peer
   Future<bool> sendMessage(String message) async {
     if (_currentPeer == null) {
-      print('❌ No peer selected. Use "select <number>" to choose a peer.');
+      print('âŒ No peer selected. Use "select <number>" to choose a peer.');
       return false;
     }
 
     final peer = discoveredPeers[_currentPeer!];
     if (peer == null) {
-      print('❌ Selected peer is no longer available.');
+      print('âŒ Selected peer is no longer available.');
       _currentPeer = null;
       return false;
     }
@@ -155,10 +155,10 @@ class ChatClientMdns implements MdnsNotifee {
       await stream.close();
 
       // Show our own message
-      print('📤 [You → ${_truncatePeerId(_currentPeer!)}]: $message');
+      print('ðŸ“¤ [You â†’ ${_truncatePeerId(_currentPeer!)}]: $message');
       return true;
     } catch (e) {
-      print('❌ Error sending message to ${_truncatePeerId(_currentPeer!)}: $e');
+      print('âŒ Error sending message to ${_truncatePeerId(_currentPeer!)}: $e');
       return false;
     }
   }
@@ -175,12 +175,12 @@ class ChatClientMdns implements MdnsNotifee {
 
       case 'select':
         if (parts.length != 2) {
-          print('❌ Usage: select <number>');
+          print('âŒ Usage: select <number>');
           return true;
         }
         final index = int.tryParse(parts[1]);
         if (index == null) {
-          print('❌ Please provide a valid number.');
+          print('âŒ Please provide a valid number.');
           return true;
         }
         selectPeer(index);
@@ -201,7 +201,7 @@ class ChatClientMdns implements MdnsNotifee {
         // Not a command, treat as message
         if (_currentPeer == null) {
           print(
-              '❌ No peer selected. Use "select <number>" to choose a peer first.');
+              'âŒ No peer selected. Use "select <number>" to choose a peer first.');
           return true;
         }
         await sendMessage(input);
@@ -211,16 +211,16 @@ class ChatClientMdns implements MdnsNotifee {
 
   void _showHelp() {
     print('''
-📚 Available commands:
+ðŸ“š Available commands:
   list         - Show discovered peers (via REAL mDNS)
   select <n>   - Select peer number <n> for chatting
   status       - Show discovery status
   help or ?    - Show this help message
   quit or exit - Exit the application
   
-💬 To send a message, just type it and press Enter (after selecting a peer).
+ðŸ’¬ To send a message, just type it and press Enter (after selecting a peer).
 
-🌟 This chat client uses REAL mDNS service discovery!
+ðŸŒŸ This chat client uses REAL mDNS service discovery!
    - No fallback mechanisms needed
    - Genuine network-level peer discovery
    - Works across different subnets (where mDNS is supported)
@@ -228,17 +228,17 @@ class ChatClientMdns implements MdnsNotifee {
   }
 
   void _showStatus() {
-    print('\n📊 Chat Client Status:');
-    print('   🔍 Discovery: REAL mDNS (mdns_dart package)');
-    print('   📡 Service: $_chatNamespace on ${MdnsConstants.serviceName}');
-    print('   👥 Peers discovered: ${discoveredPeers.length}');
+    print('\nðŸ“Š Chat Client Status:');
+    print('   ðŸ” Discovery: REAL mDNS (mdns_dart package)');
+    print('   ðŸ“¡ Service: $_chatNamespace on ${MdnsConstants.serviceName}');
+    print('   ðŸ‘¥ Peers discovered: ${discoveredPeers.length}');
     print(
-        '   💬 Current chat peer: ${_currentPeer != null ? _truncatePeerId(_currentPeer!) : "none"}');
-    print('   🏠 Your peer ID: [${_truncatePeerId(host.id)}]');
+        '   ðŸ’¬ Current chat peer: ${_currentPeer != null ? _truncatePeerId(_currentPeer!) : "none"}');
+    print('   ðŸ  Your peer ID: [${_truncatePeerId(host.id)}]');
     print(
-        '   🌐 Your addresses: ${host.addrs.map((a) => a.toString()).join(", ")}');
+        '   ðŸŒ Your addresses: ${host.addrs.map((a) => a.toString()).join(", ")}');
     print(
-        '\n💡 This implementation uses genuine mDNS service advertisement and discovery!');
+        '\nðŸ’¡ This implementation uses genuine mDNS service advertisement and discovery!');
   }
 
   /// Get current status summary

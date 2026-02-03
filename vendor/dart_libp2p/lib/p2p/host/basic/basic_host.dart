@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io'
     show
         NetworkInterface,
@@ -6,58 +6,58 @@ import 'dart:io'
         InternetAddress,
         RawDatagramSocket; // Added for NetworkInterface
 
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/connmgr/conn_manager.dart';
-import 'package:dart_libp2p/core/event/addrs.dart';
-import 'package:dart_libp2p/core/event/bus.dart';
-import 'package:dart_libp2p/core/event/protocol.dart';
-import 'package:dart_libp2p/core/event/reachability.dart';
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/network.dart';
-import 'package:dart_libp2p/p2p/network/swarm/swarm.dart'; // Added for Swarm cast
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart';
-import 'package:dart_libp2p/core/protocol/switch.dart';
-import 'package:dart_libp2p/core/record/envelope.dart'; // Added for Envelope
-import 'package:dart_libp2p/core/peer/record.dart'
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/connmgr/conn_manager.dart';
+import 'package:ipfs_libp2p/core/event/addrs.dart';
+import 'package:ipfs_libp2p/core/event/bus.dart';
+import 'package:ipfs_libp2p/core/event/protocol.dart';
+import 'package:ipfs_libp2p/core/event/reachability.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/p2p/network/swarm/swarm.dart'; // Added for Swarm cast
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/core/protocol/switch.dart';
+import 'package:ipfs_libp2p/core/record/envelope.dart'; // Added for Envelope
+import 'package:ipfs_libp2p/core/peer/record.dart'
     as peer_record; // Added for PeerRecord
-import 'package:dart_libp2p/core/certified_addr_book.dart'; // Added for CertifiedAddrBook
-import 'package:dart_libp2p/p2p/host/basic/natmgr.dart';
-import 'package:dart_libp2p/p2p/protocol/autonatv2.dart';
+import 'package:ipfs_libp2p/core/certified_addr_book.dart'; // Added for CertifiedAddrBook
+import 'package:ipfs_libp2p/p2p/host/basic/natmgr.dart';
+import 'package:ipfs_libp2p/p2p/protocol/autonatv2.dart';
 import 'package:logging/logging.dart';
 import 'package:synchronized/synchronized.dart';
 
-import 'package:dart_libp2p/core/host/host.dart'
+import 'package:ipfs_libp2p/core/host/host.dart'
     show AddrsFactory; // Import AddrsFactory
-import 'package:dart_libp2p/p2p/protocol/multistream/multistream.dart';
-import 'package:dart_libp2p/p2p/protocol/identify/id_service.dart'; // Added import
-import 'package:dart_libp2p/p2p/protocol/identify/identify.dart'; // Added import
-import 'package:dart_libp2p/p2p/protocol/identify/identify_exceptions.dart'; // Added for typed exceptions
-import 'package:dart_libp2p/p2p/protocol/identify/options.dart'; // Added import
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/notifiee.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/protocol/multistream/multistream.dart';
+import 'package:ipfs_libp2p/p2p/protocol/identify/id_service.dart'; // Added import
+import 'package:ipfs_libp2p/p2p/protocol/identify/identify.dart'; // Added import
+import 'package:ipfs_libp2p/p2p/protocol/identify/identify_exceptions.dart'; // Added for typed exceptions
+import 'package:ipfs_libp2p/p2p/protocol/identify/options.dart'; // Added import
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/notifiee.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'internal/backoff/backoff.dart';
-import 'package:dart_libp2p/p2p/network/connmgr/null_conn_mgr.dart';
-import 'package:dart_libp2p/p2p/transport/connection_manager.dart'; // For real ConnectionManager
-import 'package:dart_libp2p/p2p/host/eventbus/basic.dart';
-import 'package:dart_libp2p/config/config.dart'; // Added import for Config
-import 'package:dart_libp2p/p2p/protocol/ping/ping.dart'; // Added for PingService
-import 'package:dart_libp2p/p2p/host/relaysvc/relay_manager.dart'; // Added for RelayManager
-import 'package:dart_libp2p/p2p/host/autonat/ambient_autonat_v2.dart'; // AmbientAutoNATv2 orchestrator
-import 'package:dart_libp2p/p2p/protocol/autonatv2/autonatv2.dart'; // AutoNATv2Impl
-import 'package:dart_libp2p/p2p/protocol/holepunch/holepunch_service.dart'; // Added for HolePunchService interface
-import 'package:dart_libp2p/p2p/protocol/holepunch/service.dart'
+import 'package:ipfs_libp2p/p2p/network/connmgr/null_conn_mgr.dart';
+import 'package:ipfs_libp2p/p2p/transport/connection_manager.dart'; // For real ConnectionManager
+import 'package:ipfs_libp2p/p2p/host/eventbus/basic.dart';
+import 'package:ipfs_libp2p/config/config.dart'; // Added import for Config
+import 'package:ipfs_libp2p/p2p/protocol/ping/ping.dart'; // Added for PingService
+import 'package:ipfs_libp2p/p2p/host/relaysvc/relay_manager.dart'; // Added for RelayManager
+import 'package:ipfs_libp2p/p2p/host/autonat/ambient_autonat_v2.dart'; // AmbientAutoNATv2 orchestrator
+import 'package:ipfs_libp2p/p2p/protocol/autonatv2/autonatv2.dart'; // AutoNATv2Impl
+import 'package:ipfs_libp2p/p2p/protocol/holepunch/holepunch_service.dart'; // Added for HolePunchService interface
+import 'package:ipfs_libp2p/p2p/protocol/holepunch/service.dart'
     as holepunch_impl; // Added for HolePunchServiceImpl and Options
-import 'package:dart_libp2p/p2p/protocol/holepunch/util.dart'
+import 'package:ipfs_libp2p/p2p/protocol/holepunch/util.dart'
     show isRelayAddress; // Added for isRelayAddress
-import 'package:dart_libp2p/p2p/transport/basic_upgrader.dart'; // Added for BasicUpgrader
-import 'package:dart_libp2p/p2p/host/autorelay/autorelay.dart'; // Added for AutoRelay
-import 'package:dart_libp2p/p2p/host/autorelay/autorelay_config.dart'; // Added for AutoRelayConfig
-import 'package:dart_libp2p/p2p/protocol/circuitv2/client/client.dart'; // Added for CircuitV2Client
+import 'package:ipfs_libp2p/p2p/transport/basic_upgrader.dart'; // Added for BasicUpgrader
+import 'package:ipfs_libp2p/p2p/host/autorelay/autorelay.dart'; // Added for AutoRelay
+import 'package:ipfs_libp2p/p2p/host/autorelay/autorelay_config.dart'; // Added for AutoRelayConfig
+import 'package:ipfs_libp2p/p2p/protocol/circuitv2/client/client.dart'; // Added for CircuitV2Client
 
 final _log = Logger('basichost');
 
@@ -809,7 +809,7 @@ class BasicHost implements Host {
   void _newStreamHandler(P2PStream stream) async {
     final startTime = DateTime.now();
     _log.warning(
-        '[_newStreamHandler] 🎯 ENTERED for stream ${stream.id()} from ${stream.conn.remotePeer}');
+        '[_newStreamHandler] ðŸŽ¯ ENTERED for stream ${stream.id()} from ${stream.conn.remotePeer}');
 
     // Set negotiation timeout if configured
     if (_negtimeout > Duration.zero) {
@@ -819,11 +819,11 @@ class BasicHost implements Host {
     try {
       // Negotiate protocol
       _log.warning(
-          '[_newStreamHandler] 🔄 Starting protocol negotiation for stream ${stream.id()}');
+          '[_newStreamHandler] ðŸ”„ Starting protocol negotiation for stream ${stream.id()}');
       final (protocol, handler) =
           await _mux.negotiate(stream); // Use MultistreamMuxer.negotiate
       _log.warning(
-          '[_newStreamHandler] ✅ Protocol negotiated: $protocol for stream ${stream.id()}');
+          '[_newStreamHandler] âœ… Protocol negotiated: $protocol for stream ${stream.id()}');
 
       // Clear deadline after negotiation
       if (_negtimeout > Duration.zero) {
@@ -839,14 +839,14 @@ class BasicHost implements Host {
 
       // Handle the stream using the handler returned by negotiate
       _log.warning(
-          '[_newStreamHandler] 🚀 Invoking handler for protocol: $protocol, stream ${stream.id()}');
+          '[_newStreamHandler] ðŸš€ Invoking handler for protocol: $protocol, stream ${stream.id()}');
       handler(protocol, stream);
       _log.warning(
-          '[_newStreamHandler] ✅ Handler invoked for protocol: $protocol, stream ${stream.id()}');
+          '[_newStreamHandler] âœ… Handler invoked for protocol: $protocol, stream ${stream.id()}');
     } catch (e) {
       final elapsed = DateTime.now().difference(startTime);
       _log.severe(
-          '[_newStreamHandler] ❌ Protocol negotiation failed for incoming stream ${stream.id()}: $e (took ${elapsed.inMilliseconds}ms)');
+          '[_newStreamHandler] âŒ Protocol negotiation failed for incoming stream ${stream.id()}: $e (took ${elapsed.inMilliseconds}ms)');
       stream.reset();
     }
   }
@@ -1161,7 +1161,7 @@ class BasicHost implements Host {
       final dialTime = DateTime.now().difference(dialStartTime);
       final totalTime = DateTime.now().difference(startTime);
       _log.warning(
-          '⏱️ [CONNECT-TIMEOUT] Connection to ${pi.id} timed out during identify after ${totalTime.inMilliseconds}ms (dial: ${dialTime.inMilliseconds}ms): $e');
+          'â±ï¸ [CONNECT-TIMEOUT] Connection to ${pi.id} timed out during identify after ${totalTime.inMilliseconds}ms (dial: ${dialTime.inMilliseconds}ms): $e');
       // Rethrow the typed exception so callers can handle it specifically
       rethrow;
     } on IdentifyException catch (e, stackTrace) {
@@ -1169,13 +1169,13 @@ class BasicHost implements Host {
       final dialTime = DateTime.now().difference(dialStartTime);
       final totalTime = DateTime.now().difference(startTime);
       _log.severe(
-          '❌ [CONNECT-IDENTIFY-ERROR] Connection failed due to identify error after ${totalTime.inMilliseconds}ms (dial: ${dialTime.inMilliseconds}ms): $e\n$stackTrace');
+          'âŒ [CONNECT-IDENTIFY-ERROR] Connection failed due to identify error after ${totalTime.inMilliseconds}ms (dial: ${dialTime.inMilliseconds}ms): $e\n$stackTrace');
       rethrow;
     } catch (e, stackTrace) {
       final dialTime = DateTime.now().difference(dialStartTime);
       final totalTime = DateTime.now().difference(startTime);
       _log.severe(
-          '❌ [CONNECT-ERROR] Connection failed after ${totalTime.inMilliseconds}ms (dial: ${dialTime.inMilliseconds}ms): $e\n$stackTrace');
+          'âŒ [CONNECT-ERROR] Connection failed after ${totalTime.inMilliseconds}ms (dial: ${dialTime.inMilliseconds}ms): $e\n$stackTrace');
       rethrow;
     }
   }
@@ -1198,18 +1198,18 @@ class BasicHost implements Host {
       // the peer may have gone offline or be unreachable.
       final totalTime = DateTime.now().difference(startTime);
       _log.warning(
-          '⏱️ [DIAL-PEER-TIMEOUT] Identify timed out for ${p.toString()} after ${totalTime.inMilliseconds}ms: $e');
+          'â±ï¸ [DIAL-PEER-TIMEOUT] Identify timed out for ${p.toString()} after ${totalTime.inMilliseconds}ms: $e');
 
       // CRITICAL: Remove the stale connection to prevent persistent failure loops.
       // Without this, subsequent newStream calls would reuse the dead connection
       // and timeout again, creating a 30-second delay on every operation.
       try {
         _log.warning(
-            '🗑️ [DIAL-PEER-TIMEOUT] Removing stale connection to ${p.toString()}');
+            'ðŸ—‘ï¸ [DIAL-PEER-TIMEOUT] Removing stale connection to ${p.toString()}');
         await _network.closePeer(p);
       } catch (closeError) {
         _log.warning(
-            '⚠️ [DIAL-PEER-TIMEOUT] Error closing stale connection: $closeError');
+            'âš ï¸ [DIAL-PEER-TIMEOUT] Error closing stale connection: $closeError');
       }
 
       // Rethrow the typed exception so callers can handle it appropriately
@@ -1222,12 +1222,12 @@ class BasicHost implements Host {
       // Handle other identify exceptions
       final totalTime = DateTime.now().difference(startTime);
       _log.severe(
-          '❌ [DIAL-PEER-IDENTIFY-ERROR] Identify failed for ${p.toString()} after ${totalTime.inMilliseconds}ms: $e\n$stackTrace');
+          'âŒ [DIAL-PEER-IDENTIFY-ERROR] Identify failed for ${p.toString()} after ${totalTime.inMilliseconds}ms: $e\n$stackTrace');
       rethrow;
     } catch (e, stackTrace) {
       final totalTime = DateTime.now().difference(startTime);
       _log.severe(
-          '❌ [DIAL-PEER-ERROR] Failed to dial ${p.toString()} after ${totalTime.inMilliseconds}ms: $e\n$stackTrace');
+          'âŒ [DIAL-PEER-ERROR] Failed to dial ${p.toString()} after ${totalTime.inMilliseconds}ms: $e\n$stackTrace');
       throw Exception('Failed to dial: $e');
     }
   }
@@ -1290,7 +1290,7 @@ class BasicHost implements Host {
       PeerId p, List<ProtocolID> pids, Context context) async {
     final startTime = DateTime.now();
     _log.warning(
-        '🎯 [newStream] ENTERED for peer ${p.toBase58()}, protocols: $pids');
+        'ðŸŽ¯ [newStream] ENTERED for peer ${p.toBase58()}, protocols: $pids');
 
     // Set up a timeout context if needed
     final hasTimeout = _negtimeout > Duration.zero;
@@ -1300,22 +1300,22 @@ class BasicHost implements Host {
 
     final connectStartTime = DateTime.now();
     _log.warning(
-        '🎯 [newStream Phase 1] Connecting to peer ${p.toBase58()}...');
+        'ðŸŽ¯ [newStream Phase 1] Connecting to peer ${p.toBase58()}...');
 
     try {
       await connect(AddrInfo(p, []), context: context);
     } on IdentifyTimeoutException catch (e) {
       final totalTime = DateTime.now().difference(startTime);
       _log.warning(
-          '⏱️ [newStream Phase 1] Connection to ${p.toBase58()} timed out during identify after ${totalTime.inMilliseconds}ms');
+          'â±ï¸ [newStream Phase 1] Connection to ${p.toBase58()} timed out during identify after ${totalTime.inMilliseconds}ms');
       rethrow;
     } on IdentifyException catch (e) {
       final totalTime = DateTime.now().difference(startTime);
       _log.severe(
-          '❌ [newStream Phase 1] Connection to ${p.toBase58()} failed due to identify error after ${totalTime.inMilliseconds}ms: $e');
+          'âŒ [newStream Phase 1] Connection to ${p.toBase58()} failed due to identify error after ${totalTime.inMilliseconds}ms: $e');
       rethrow;
     }
-    _log.warning('✅ [newStream Phase 1] Connected to peer ${p.toBase58()}');
+    _log.warning('âœ… [newStream Phase 1] Connected to peer ${p.toBase58()}');
 
     final connectTime = DateTime.now().difference(connectStartTime);
 
@@ -1323,11 +1323,11 @@ class BasicHost implements Host {
 
     final streamCreateStartTime = DateTime.now();
     _log.warning(
-        '🎯 [newStream Phase 2] Creating stream to peer ${p.toBase58()}...');
+        'ðŸŽ¯ [newStream Phase 2] Creating stream to peer ${p.toBase58()}...');
 
     final stream = await _network.newStream(context, p);
     _log.warning(
-        '✅ [newStream Phase 2] Stream ${stream.id()} created to peer ${p.toBase58()}');
+        'âœ… [newStream Phase 2] Stream ${stream.id()} created to peer ${p.toBase58()}');
 
     final streamCreateTime = DateTime.now().difference(streamCreateStartTime);
 
@@ -1340,14 +1340,14 @@ class BasicHost implements Host {
 
     final identifyStartTime = DateTime.now();
     _log.warning(
-        '🎯 [newStream Phase 3] Waiting for identify on stream ${stream.id()}...');
+        'ðŸŽ¯ [newStream Phase 3] Waiting for identify on stream ${stream.id()}...');
 
     try {
       await _idService.identifyWait(stream.conn);
     } on IdentifyTimeoutException catch (e) {
       final totalTime = DateTime.now().difference(startTime);
       _log.warning(
-          '⏱️ [newStream Phase 3] Identify for ${p.toBase58()} timed out after ${totalTime.inMilliseconds}ms');
+          'â±ï¸ [newStream Phase 3] Identify for ${p.toBase58()} timed out after ${totalTime.inMilliseconds}ms');
       await stream.reset();
 
       // CRITICAL: Remove the stale connection to prevent persistent failure loops.
@@ -1355,23 +1355,23 @@ class BasicHost implements Host {
       // cause repeated 30-second timeouts on subsequent operations.
       try {
         _log.warning(
-            '🗑️ [newStream Phase 3] Removing stale connection to ${p.toBase58()}');
+            'ðŸ—‘ï¸ [newStream Phase 3] Removing stale connection to ${p.toBase58()}');
         await _network.closePeer(p);
       } catch (closeError) {
         _log.warning(
-            '⚠️ [newStream Phase 3] Error closing stale connection: $closeError');
+            'âš ï¸ [newStream Phase 3] Error closing stale connection: $closeError');
       }
 
       rethrow;
     } on IdentifyException catch (e) {
       final totalTime = DateTime.now().difference(startTime);
       _log.severe(
-          '❌ [newStream Phase 3] Identify for ${p.toBase58()} failed after ${totalTime.inMilliseconds}ms: $e');
+          'âŒ [newStream Phase 3] Identify for ${p.toBase58()} failed after ${totalTime.inMilliseconds}ms: $e');
       await stream.reset();
       rethrow;
     }
     _log.warning(
-        '✅ [newStream Phase 3] Identify complete for stream ${stream.id()}');
+        'âœ… [newStream Phase 3] Identify complete for stream ${stream.id()}');
 
     final identifyTime = DateTime.now().difference(identifyStartTime);
 
@@ -1392,11 +1392,11 @@ class BasicHost implements Host {
 
       final selectStartTime = DateTime.now();
       _log.warning(
-          '🎯 [newStream Phase 4] Negotiating protocols $pids on stream ${stream.id()}...');
+          'ðŸŽ¯ [newStream Phase 4] Negotiating protocols $pids on stream ${stream.id()}...');
 
       final selectedProtocol = await _mux.selectOneOf(stream, pids);
       _log.warning(
-          '✅ [newStream Phase 4] Protocol negotiated: $selectedProtocol on stream ${stream.id()}');
+          'âœ… [newStream Phase 4] Protocol negotiated: $selectedProtocol on stream ${stream.id()}');
 
       final selectTime = DateTime.now().difference(selectStartTime);
 
@@ -1407,7 +1407,7 @@ class BasicHost implements Host {
       }
 
       if (selectedProtocol == null) {
-        _log.severe('🤝 [NEWSTREAM-PHASE-4] No protocol selected from: $pids');
+        _log.severe('ðŸ¤ [NEWSTREAM-PHASE-4] No protocol selected from: $pids');
         stream.reset();
         throw Exception(
             'Failed to negotiate any of the requested protocols: $pids with peer $p');
@@ -1417,7 +1417,7 @@ class BasicHost implements Host {
 
       final setupStartTime = DateTime.now();
       _log.warning(
-          '🎯 [newStream Phase 5] Setting up protocol $selectedProtocol on stream ${stream.id()}...');
+          'ðŸŽ¯ [newStream Phase 5] Setting up protocol $selectedProtocol on stream ${stream.id()}...');
 
       // DEBUG: Add protocol assignment tracking
 
@@ -1439,9 +1439,9 @@ class BasicHost implements Host {
       final totalTime = DateTime.now().difference(startTime);
 
       _log.warning(
-          '✅ [newStream Phase 5] Protocol setup complete for stream ${stream.id()}');
+          'âœ… [newStream Phase 5] Protocol setup complete for stream ${stream.id()}');
       _log.warning(
-          '✅ [newStream] COMPLETE - Returning stream ${stream.id()} with protocol $selectedProtocol');
+          'âœ… [newStream] COMPLETE - Returning stream ${stream.id()} with protocol $selectedProtocol');
 
       // DEBUG: Add final protocol assignment confirmation
 
@@ -1450,13 +1450,13 @@ class BasicHost implements Host {
       final negotiationTime = DateTime.now().difference(negotiationStartTime);
       final totalTime = DateTime.now().difference(startTime);
       _log.severe(
-          '❌ [NEWSTREAM-ERROR] Stream creation failed after ${totalTime.inMilliseconds}ms (negotiation: ${negotiationTime.inMilliseconds}ms): $e\n$stackTrace');
+          'âŒ [NEWSTREAM-ERROR] Stream creation failed after ${totalTime.inMilliseconds}ms (negotiation: ${negotiationTime.inMilliseconds}ms): $e\n$stackTrace');
 
       try {
         stream.reset();
       } catch (resetError) {
         _log.warning(
-            '⚠️ [NEWSTREAM-ERROR] Error during stream reset: $resetError');
+            'âš ï¸ [NEWSTREAM-ERROR] Error during stream reset: $resetError');
       }
 
       // No need to check for UnimplementedError specifically anymore

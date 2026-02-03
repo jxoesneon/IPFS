@@ -1,9 +1,9 @@
-/// Metadata implementation for the memory-based peerstore.
+﻿/// Metadata implementation for the memory-based peerstore.
 
 import 'dart:collection';
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/peerstore.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peerstore.dart';
 import 'package:synchronized/synchronized.dart';
 
 /// A memory-based implementation of the PeerMetadata interface.

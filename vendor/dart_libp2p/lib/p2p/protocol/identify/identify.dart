@@ -1,4 +1,4 @@
-/// Identify service for libp2p.
+﻿/// Identify service for libp2p.
 ///
 /// This file contains the implementation of the identify service, which is
 /// responsible for exchanging peer information with other peers.
@@ -11,45 +11,45 @@ import 'dart:convert';
 import 'dart:io'; // Added for IOException
 import 'dart:typed_data';
 
-import 'package:dart_libp2p/core/alias.dart';
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/event/bus.dart';
-import 'package:dart_libp2p/core/event/identify.dart';
-import 'package:dart_libp2p/core/host/host.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/network.dart';
-import 'package:dart_libp2p/core/network/notifiee.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/p2p/peerstore.dart';
-import 'package:dart_libp2p/core/protocol/protocol.dart';
-import 'package:dart_libp2p/p2p/host/autorelay/autorelay.dart'; // For EvtAutoRelayAddrsUpdated
+import 'package:ipfs_libp2p/core/alias.dart';
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/event/bus.dart';
+import 'package:ipfs_libp2p/core/event/identify.dart';
+import 'package:ipfs_libp2p/core/host/host.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/core/network/notifiee.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/p2p/peerstore.dart';
+import 'package:ipfs_libp2p/core/protocol/protocol.dart';
+import 'package:ipfs_libp2p/p2p/host/autorelay/autorelay.dart'; // For EvtAutoRelayAddrsUpdated
 import 'package:logging/logging.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:dart_libp2p/p2p/protocol/multistream/multistream.dart'; // Added import
-import 'package:dart_libp2p/p2p/multiaddr/codec.dart'
+import 'package:ipfs_libp2p/p2p/protocol/multistream/multistream.dart'; // Added import
+import 'package:ipfs_libp2p/p2p/multiaddr/codec.dart'
     show MultiAddrCodec; // For varint encoding
-import 'package:dart_libp2p/p2p/protocol/identify/identify_exceptions.dart';
+import 'package:ipfs_libp2p/p2p/protocol/identify/identify_exceptions.dart';
 
-import 'package:dart_libp2p/core/certified_addr_book.dart';
-import 'package:dart_libp2p/core/event/addrs.dart';
-import 'package:dart_libp2p/core/event/protocol.dart';
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/peer/record.dart';
-import 'package:dart_libp2p/core/record/envelope.dart';
-import 'package:dart_libp2p/p2p/multiaddr/protocol.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/protocol/identify/id_service.dart';
-import 'package:dart_libp2p/p2p/protocol/identify/metrics.dart';
-import 'package:dart_libp2p/p2p/protocol/identify/nat_emitter.dart';
-import 'package:dart_libp2p/p2p/protocol/identify/observed_addr_manager.dart';
-import 'package:dart_libp2p/p2p/protocol/identify/options.dart';
-import 'package:dart_libp2p/p2p/protocol/identify/pb/identify.pb.dart';
-import 'package:dart_libp2p/core/peer/pb/peer_record.pb.dart' as pr;
-import 'package:dart_libp2p/core/crypto/pb/crypto.pb.dart' as crypto;
-import 'package:dart_libp2p/p2p/protocol/identify/user_agent.dart';
+import 'package:ipfs_libp2p/core/certified_addr_book.dart';
+import 'package:ipfs_libp2p/core/event/addrs.dart';
+import 'package:ipfs_libp2p/core/event/protocol.dart';
+import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/peer/record.dart';
+import 'package:ipfs_libp2p/core/record/envelope.dart';
+import 'package:ipfs_libp2p/p2p/multiaddr/protocol.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/protocol/identify/id_service.dart';
+import 'package:ipfs_libp2p/p2p/protocol/identify/metrics.dart';
+import 'package:ipfs_libp2p/p2p/protocol/identify/nat_emitter.dart';
+import 'package:ipfs_libp2p/p2p/protocol/identify/observed_addr_manager.dart';
+import 'package:ipfs_libp2p/p2p/protocol/identify/options.dart';
+import 'package:ipfs_libp2p/p2p/protocol/identify/pb/identify.pb.dart';
+import 'package:ipfs_libp2p/core/peer/pb/peer_record.pb.dart' as pr;
+import 'package:ipfs_libp2p/core/crypto/pb/crypto.pb.dart' as crypto;
+import 'package:ipfs_libp2p/p2p/protocol/identify/user_agent.dart';
 
 // TTL constants from peerstore.dart
 const RecentlyConnectedAddrTTL = AddressTTL.recentlyConnectedAddrTTL;
@@ -1144,7 +1144,7 @@ class IdentifyService implements IDService {
         buffer.add(chunk);
       } catch (e) {
         if (accumulated.isNotEmpty) {
-          // Stream closed with data in buffer — try parsing as-is
+          // Stream closed with data in buffer â€” try parsing as-is
           // (fallback for Dart-to-Dart which may not use length framing yet)
           buffer.clear();
           return Uint8List.fromList(accumulated);
@@ -1964,7 +1964,7 @@ class _NetNotifiee implements Notifiee {
     // to prevent bidirectional race conditions where both peers create identify streams simultaneously
     if (conn.stat.stats.direction == Direction.outbound) {
       _log.fine(
-          '🔧 [IDENTIFY-COORDINATION] Outbound connection to $peerId. This peer is the DIALER - initiating identify protocol.');
+          'ðŸ”§ [IDENTIFY-COORDINATION] Outbound connection to $peerId. This peer is the DIALER - initiating identify protocol.');
       // Don't await here to avoid blocking the notifiee callback.
       // identifyWait itself handles its asynchronous nature.
       _ids.identifyWait(conn).catchError((e, st) {
@@ -1974,7 +1974,7 @@ class _NetNotifiee implements Notifiee {
       });
     } else {
       _log.fine(
-          '🔧 [IDENTIFY-COORDINATION] Inbound connection from $peerId. This peer is the LISTENER - waiting for remote to initiate identify protocol.');
+          'ðŸ”§ [IDENTIFY-COORDINATION] Inbound connection from $peerId. This peer is the LISTENER - waiting for remote to initiate identify protocol.');
       // Listener side: Do NOT initiate identify protocol
       // The remote dialer will initiate identify protocol and we'll handle it via handleIdentifyRequest()
     }

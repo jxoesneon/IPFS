@@ -1,7 +1,7 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 
-import 'package:dart_libp2p/dart_libp2p.dart';
+import 'package:ipfs_libp2p/dart_libp2p.dart';
 
 class EchoServer {
   final Host host;
@@ -21,11 +21,11 @@ class EchoServer {
         final message = utf8.decode(data).trim();
         // Display the received message (echo it back to console)
         print(
-            '\n🔊 [ECHO SERVER] Received: "$message" from client [${_truncatePeerId(remotePeer)}]');
+            '\nðŸ”Š [ECHO SERVER] Received: "$message" from client [${_truncatePeerId(remotePeer)}]');
         stdout.write('> ');
       }
     } catch (e) {
-      print('❌ [ECHO SERVER] Error reading from echo stream: $e');
+      print('âŒ [ECHO SERVER] Error reading from echo stream: $e');
     } finally {
       // Close the stream when done
       await stream.close();

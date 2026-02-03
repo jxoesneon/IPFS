@@ -1,13 +1,13 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:dcid/dcid.dart';
 
-import 'package:dart_libp2p/core/discovery.dart';
-import 'package:dart_libp2p/core/peer/addr_info.dart';
-import 'package:dart_libp2p/core/routing/routing.dart';
+import 'package:ipfs_libp2p/core/discovery.dart';
+import 'package:ipfs_libp2p/core/peer/addr_info.dart';
+import 'package:ipfs_libp2p/core/routing/routing.dart';
 
 /// RoutingDiscovery is an implementation of discovery using ContentRouting.
 /// Namespaces are translated to Cids using the SHA256 hash.

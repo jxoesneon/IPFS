@@ -1,15 +1,15 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/p2p/protocol/multistream/multistream.dart';
-import 'package:dart_libp2p/config/multistream_config.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/p2p/protocol/multistream/multistream.dart';
+import 'package:ipfs_libp2p/config/multistream_config.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
 
 /// Mock connection for testing
 class MockConn implements Conn {
@@ -213,7 +213,7 @@ void main() {
 
       stopwatch.stop();
 
-      // Verify the timeout occurred at the expected time (30 seconds ± 1 second tolerance)
+      // Verify the timeout occurred at the expected time (30 seconds Â± 1 second tolerance)
       expect(stopwatch.elapsed.inSeconds, greaterThanOrEqualTo(29));
       expect(stopwatch.elapsed.inSeconds, lessThanOrEqualTo(31));
 

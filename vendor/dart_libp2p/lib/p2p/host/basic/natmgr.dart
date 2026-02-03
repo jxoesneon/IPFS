@@ -1,4 +1,4 @@
-/// NAT manager implementation for the basic host.
+﻿/// NAT manager implementation for the basic host.
 ///
 /// This is a port of the Go implementation from go-libp2p/p2p/host/basic/natmgr.go
 /// to Dart, using native Dart idioms.
@@ -6,17 +6,17 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/network.dart';
-import 'package:dart_libp2p/core/network/notifiee.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/network.dart';
+import 'package:ipfs_libp2p/core/network/notifiee.dart';
 import 'package:logging/logging.dart';
 import 'package:synchronized/synchronized.dart';
 
 import '../../../core/network/conn.dart';
-import 'package:dart_libp2p/p2p/nat/nat_behavior_tracker.dart';
-import 'package:dart_libp2p/p2p/nat/nat_behavior.dart';
-import 'package:dart_libp2p/p2p/nat/nat_traversal_strategy.dart';
-import 'package:dart_libp2p/p2p/nat/stun/stun_client_pool.dart';
+import 'package:ipfs_libp2p/p2p/nat/nat_behavior_tracker.dart';
+import 'package:ipfs_libp2p/p2p/nat/nat_behavior.dart';
+import 'package:ipfs_libp2p/p2p/nat/nat_traversal_strategy.dart';
+import 'package:ipfs_libp2p/p2p/nat/stun/stun_client_pool.dart';
 
 final _log = Logger('natmgr');
 

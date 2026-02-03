@@ -1,8 +1,8 @@
-import 'package:dart_libp2p/p2p/nat/nat_behavior.dart';
-import 'package:dart_libp2p/p2p/nat/nat_behavior_tracker.dart';
-import 'package:dart_libp2p/p2p/nat/nat_status_reporter.dart';
-import 'package:dart_libp2p/p2p/nat/nat_traversal_strategy.dart';
-import 'package:dart_libp2p/p2p/nat/stun/stun_client_pool.dart';
+﻿import 'package:ipfs_libp2p/p2p/nat/nat_behavior.dart';
+import 'package:ipfs_libp2p/p2p/nat/nat_behavior_tracker.dart';
+import 'package:ipfs_libp2p/p2p/nat/nat_status_reporter.dart';
+import 'package:ipfs_libp2p/p2p/nat/nat_traversal_strategy.dart';
+import 'package:ipfs_libp2p/p2p/nat/stun/stun_client_pool.dart';
 import 'package:test/test.dart';
 
 /// A mock implementation of NatBehaviorTracker for testing

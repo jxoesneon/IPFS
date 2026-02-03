@@ -1,18 +1,18 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart'; // Re-enabling Uuid
 import 'package:convert/convert.dart';
 
-import 'package:dart_libp2p/core/connmgr/conn_manager.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/core/network/conn.dart'
+import 'package:ipfs_libp2p/core/connmgr/conn_manager.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart'
     show Conn, ConnState, ConnStats, Stats;
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart'
+import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart'
     show
         ConnScope,
         ScopeStat,
@@ -20,15 +20,15 @@ import 'package:dart_libp2p/core/network/rcmgr.dart'
         ResourceManager,
         ConnManagementScope,
         StreamManagementScope;
-import 'package:dart_libp2p/core/network/stream.dart'
+import 'package:ipfs_libp2p/core/network/stream.dart'
     show P2PStream; // P2PStream might not be directly relevant if this is raw
-import 'package:dart_libp2p/core/network/transport_conn.dart';
-import 'package:dart_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/network/transport_conn.dart';
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
 // We typically don't need to import the concrete PeerId implementation directly if only PeerId is used for types.
 // However, if TCPConnection instantiates PeerId directly (e.g. PeerId.random()), it would need it.
 // For now, assuming PeerId is sufficient for type declarations from the interface.
 // If PeerId concrete class is needed for instantiation, it would be:
-import 'package:dart_libp2p/core/peer/peer_id.dart'
+import 'package:ipfs_libp2p/core/peer/peer_id.dart'
     as concrete_peer; // Alias to avoid conflict if PeerId is also in core/peer_id.dart
 
 // Local relative imports are usually fine if they don't cross major boundaries,

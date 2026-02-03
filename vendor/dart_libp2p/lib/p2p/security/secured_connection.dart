@@ -1,10 +1,10 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:collection';
 
 import 'package:cryptography/cryptography.dart' hide PublicKey;
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 import '../../core/multiaddr.dart';
 import '../../core/network/conn.dart';
 import '../../core/network/transport_conn.dart';
@@ -180,7 +180,7 @@ class SecuredConnection implements TransportConn {
     final completer = Completer<void>();
     _readLockQueue.add(completer);
     _log.fine(
-        'SecuredConnection: 🔒 QUEUED for read lock. Queue length: ${_readLockQueue.length}, Lock held: $_readLockHeld');
+        'SecuredConnection: ðŸ”’ QUEUED for read lock. Queue length: ${_readLockQueue.length}, Lock held: $_readLockHeld');
 
     // Try to grant lock immediately if available
     _tryGrantReadLock();
@@ -188,7 +188,7 @@ class SecuredConnection implements TransportConn {
     // Wait for our turn
     await completer.future;
     _log.fine(
-        'SecuredConnection: 🔒 GRANTED read lock. Queue length: ${_readLockQueue.length}');
+        'SecuredConnection: ðŸ”’ GRANTED read lock. Queue length: ${_readLockQueue.length}');
   }
 
   /// Attempts to grant the read lock to the next waiter if the lock is free.
@@ -198,7 +198,7 @@ class SecuredConnection implements TransportConn {
       _readLockHeld = true;
       final next = _readLockQueue.removeFirst();
       _log.fine(
-          'SecuredConnection: 🔒 GRANTING read lock to next waiter. Remaining queue: ${_readLockQueue.length}');
+          'SecuredConnection: ðŸ”’ GRANTING read lock to next waiter. Remaining queue: ${_readLockQueue.length}');
       next.complete();
     }
   }
@@ -207,7 +207,7 @@ class SecuredConnection implements TransportConn {
   void _releaseReadLock() {
     _readLockHeld = false;
     _log.fine(
-        'SecuredConnection: 🔓 Released read lock. Queue length: ${_readLockQueue.length}');
+        'SecuredConnection: ðŸ”“ Released read lock. Queue length: ${_readLockQueue.length}');
     _tryGrantReadLock();
   }
 
@@ -248,10 +248,10 @@ class SecuredConnection implements TransportConn {
   Future<Uint8List> read([int? length]) async {
     // Acquire read lock to ensure message framing integrity
     _log.fine(
-        'SecuredConnection.read: 🔒 ACQUIRING read lock for length=$length');
+        'SecuredConnection.read: ðŸ”’ ACQUIRING read lock for length=$length');
     await _acquireReadLock();
     _log.fine(
-        'SecuredConnection.read: 🔒 READ LOCK ACQUIRED for length=$length');
+        'SecuredConnection.read: ðŸ”’ READ LOCK ACQUIRED for length=$length');
 
     try {
       _log.finer(
@@ -326,7 +326,7 @@ class SecuredConnection implements TransportConn {
     } finally {
       // Always release the read lock, even if an exception occurs
       _log.fine(
-          'SecuredConnection.read: 🔓 RELEASING read lock for length=$length');
+          'SecuredConnection.read: ðŸ”“ RELEASING read lock for length=$length');
       _releaseReadLock();
     }
   }
@@ -446,7 +446,7 @@ class SecuredConnection implements TransportConn {
     final nonceValue = _recvNonce++;
     final nonce = _getNonce(nonceValue);
     _log.fine(
-        'SecuredConnection: 🔑 DECRYPTING with RECV NONCE=$nonceValue (${nonce.toList()})');
+        'SecuredConnection: ðŸ”‘ DECRYPTING with RECV NONCE=$nonceValue (${nonce.toList()})');
     // ADDED LOGGING for hashCode
     _log.finer(
         'SecuredConnection: Using decryption key (hashCode: ${_decryptionKey.hashCode}): ${await _decryptionKey.extractBytes()}');
@@ -462,11 +462,11 @@ class SecuredConnection implements TransportConn {
         aad: Uint8List(0),
       );
       _log.fine(
-          'SecuredConnection: ✅ DECRYPTION SUCCESS for RECV NONCE=$nonceValue, got ${plaintext.length} bytes');
+          'SecuredConnection: âœ… DECRYPTION SUCCESS for RECV NONCE=$nonceValue, got ${plaintext.length} bytes');
       return Uint8List.fromList(plaintext);
     } catch (e) {
       _log.severe(
-          'SecuredConnection: ❌ DECRYPTION FAILED for RECV NONCE=$nonceValue with error: $e');
+          'SecuredConnection: âŒ DECRYPTION FAILED for RECV NONCE=$nonceValue with error: $e');
       _log.severe('SecuredConnection: Full message details:');
       _log.severe('  - Length prefix: ${lengthBytes.toList()}');
       _log.severe('  - Total data length: $dataLength');
@@ -484,7 +484,7 @@ class SecuredConnection implements TransportConn {
     final algorithm = crypto.Chacha20.poly1305Aead();
     final nonceValue = _sendNonce++;
     final nonce = _getNonce(nonceValue);
-    _log.fine('SecuredConnection: 🔑 ENCRYPTING with SEND NONCE=$nonceValue');
+    _log.fine('SecuredConnection: ðŸ”‘ ENCRYPTING with SEND NONCE=$nonceValue');
 
     final secretBox = await algorithm.encrypt(
       plaintext,

@@ -1,9 +1,9 @@
-/// Exceptions specific to the Identify protocol.
+﻿/// Exceptions specific to the Identify protocol.
 ///
 /// These typed exceptions allow callers to catch and handle specific
 /// identify failure scenarios differently.
 
-import 'package:dart_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
 
 /// Base class for all identify-related exceptions.
 ///

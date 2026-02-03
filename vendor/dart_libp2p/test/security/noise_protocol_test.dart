@@ -1,30 +1,30 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:math';
 
-import 'package:dart_libp2p/core/crypto/keys.dart' as libp2p_keys;
-import 'package:dart_libp2p/core/crypto/keys.dart';
-import 'package:dart_libp2p/core/network/conn.dart';
-import 'package:dart_libp2p/core/network/transport_conn.dart';
-import 'package:dart_libp2p/core/network/context.dart';
-import 'package:dart_libp2p/core/network/stream.dart';
-import 'package:dart_libp2p/core/network/common.dart';
-import 'package:dart_libp2p/core/network/rcmgr.dart'
+import 'package:ipfs_libp2p/core/crypto/keys.dart' as libp2p_keys;
+import 'package:ipfs_libp2p/core/crypto/keys.dart';
+import 'package:ipfs_libp2p/core/network/conn.dart';
+import 'package:ipfs_libp2p/core/network/transport_conn.dart';
+import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/stream.dart';
+import 'package:ipfs_libp2p/core/network/common.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart'
     show ConnScope, ScopeStat, ResourceScopeSpan, ResourceScope;
 // Import the abstract PeerId directly
 // Import the concrete PeerId implementation
-import 'package:dart_libp2p/core/peer/peer_id.dart' as concrete_peer_id;
-import 'package:dart_libp2p/core/peer/peer_id.dart';
-import 'package:dart_libp2p/p2p/crypto/key_generator.dart';
-import 'package:dart_libp2p/p2p/security/secured_connection.dart';
+import 'package:ipfs_libp2p/core/peer/peer_id.dart' as concrete_peer_id;
+import 'package:ipfs_libp2p/core/peer/peer_id.dart';
+import 'package:ipfs_libp2p/p2p/crypto/key_generator.dart';
+import 'package:ipfs_libp2p/p2p/security/secured_connection.dart';
 import 'package:test/test.dart';
-import 'package:dart_libp2p/core/multiaddr.dart';
-import 'package:dart_libp2p/p2p/security/noise/noise_protocol.dart';
-import 'package:dart_libp2p/p2p/security/security_protocol.dart';
-import 'package:dart_libp2p/pb/noise/payload.pb.dart';
+import 'package:ipfs_libp2p/core/multiaddr.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/noise_protocol.dart';
+import 'package:ipfs_libp2p/p2p/security/security_protocol.dart';
+import 'package:ipfs_libp2p/pb/noise/payload.pb.dart';
 import '../mocks/noise_mock_connection.dart';
-import 'package:dart_libp2p/p2p/security/noise/xx_pattern.dart';
+import 'package:ipfs_libp2p/p2p/security/noise/xx_pattern.dart';
 import 'package:collection/collection.dart'; // For ListEquality
 
 /// Simple adapter to make NoiseMockConnection compatible with TransportConn
