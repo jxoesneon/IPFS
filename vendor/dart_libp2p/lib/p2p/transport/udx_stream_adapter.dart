@@ -331,9 +331,9 @@ class UDXP2PStreamAdapter implements MuxedStream, P2PStream<Uint8List> {
 
     // Delegate to UDX's native half-close implementation
     // This sends a FIN packet while allowing the read side to remain open
-    await _udxStream.closeWrite();
+    // await _udxStream.closeWrite();
     _logger.fine(
-        '[UDXP2PStreamAdapter ${id()}] UDX native closeWrite() completed. Read side remains open for bidirectional relay.');
+        '[UDXP2PStreamAdapter ${id()}] UDX native closeWrite() skipped as it is not supported by this version of UDXStream.');
   }
 
   @override

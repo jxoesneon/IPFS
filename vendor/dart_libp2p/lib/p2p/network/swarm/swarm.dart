@@ -814,7 +814,8 @@ class Swarm implements Network {
       final staleConns = <SwarmConn>[];
 
       for (final conn in existingConns) {
-        if (conn.isClosed || !_isConnectionHealthy(conn)) {
+        final isClosed = conn.isClosed;
+        if (isClosed || !_isConnectionHealthy(conn)) {
           staleConns.add(conn);
           _logger.warning(
               'Swarm.dialPeer: Connection ${conn.id} to peer ${peerId.toString()} is stale/closed');
@@ -1578,10 +1579,16 @@ class Swarm implements Network {
         for (final conn in conns) {
           totalConnections++;
 
-          if (conn.isClosed || !_isConnectionHealthy(conn)) {
+          // Enhanced health check considering both closed status and multiplexer state
+          final isClosed = conn.isClosed;
+          if (isClosed) {
             staleConnections.add(conn);
             _logger.fine(
-                'Swarm._cleanupStaleConnections: Found stale connection ${conn.id} to peer $peerIdStr');
+                'Swarm._cleanupStaleConnections: Found stale connection ${conn.id} to peer $peerIdStr (closed)');
+          } else if (!_isConnectionHealthy(conn)) {
+            staleConnections.add(conn);
+            _logger.fine(
+                'Swarm._cleanupStaleConnections: Found stale connection ${conn.id} to peer $peerIdStr (unhealthy)');
           } else {
             healthyConnections++;
           }

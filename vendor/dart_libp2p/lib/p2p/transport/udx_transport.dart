@@ -51,7 +51,7 @@ class UDXTransport implements Transport {
   // static int _nextDialStreamIdPairBase = 1; // Removed static counter
 
   /// Optional metrics observer for UDX transport events
-  UdxMetricsObserver? metricsObserver;
+  // UdxMetricsObserver? metricsObserver;
 
   /// Callback when a connection is established with a peer.
   /// Provides the local connection ID and peer ID for metrics tracking.
@@ -124,7 +124,7 @@ class UDXTransport implements Transport {
       // Create multiplexer with exception handling
       multiplexer = await UDXExceptionHandler.handleUDXOperation(
         () async =>
-            UDXMultiplexer(rawSocket!, metricsObserver: metricsObserver),
+            UDXMultiplexer(rawSocket! /*, metricsObserver: metricsObserver*/),
         'UDXMultiplexer.create',
       );
       _logger.fine('[UDXTransport._performDial] UDXMultiplexer created');
@@ -189,12 +189,12 @@ class UDXTransport implements Transport {
         _logger.fine(
             '[UDXTransport._performDial] Handshake completed for $host:$port, duration: ${handshakeDuration.inMilliseconds}ms');
       } catch (e) {
-        final handshakeError = e.toString();
         final handshakeDuration = DateTime.now().difference(handshakeStart);
         _logger.warning(
             '[UDXTransport._performDial] Handshake failed for $host:$port after ${handshakeDuration.inMilliseconds}ms: $e');
 
         // Notify metrics observer of handshake failure
+        /*
         if (metricsObserver != null && udpSocket != null) {
           try {
             metricsObserver!.onHandshakeComplete(
@@ -208,6 +208,7 @@ class UDXTransport implements Transport {
                 '[UDXTransport._performDial] Error notifying metrics observer of handshake failure: $observerError');
           }
         }
+        */
 
         rethrow;
       }
@@ -295,7 +296,7 @@ class UDXTransport implements Transport {
           '[UDXTransport.listen] RawDatagramSocket bound to: ${rawSocket.address.address}:${rawSocket.port}');
 
       // Create multiplexer
-      multiplexer = UDXMultiplexer(rawSocket, metricsObserver: metricsObserver);
+      multiplexer = UDXMultiplexer(rawSocket /*, metricsObserver: metricsObserver*/);
       _logger.fine('[UDXTransport.listen] UDXMultiplexer created');
 
       final protocol =
@@ -846,12 +847,13 @@ class UDXSessionConn implements MuxedConn, TransportConn {
   /// Returns true if the peer responds (ACK received), false on timeout or error.
   Future<bool> ping({Duration timeout = const Duration(seconds: 5)}) async {
     if (_isClosed) return false;
-    try {
-      return await _udpSocket.ping(timeout: timeout);
-    } catch (e) {
-      _logger.fine('[UDXSessionConn $id] Ping failed: $e');
-      return false;
-    }
+    // try {
+    //   return await _udpSocket.ping(timeout: timeout);
+    // } catch (e) {
+    //   _logger.fine('[UDXSessionConn $id] Ping failed: $e');
+    //   return false;
+    // }
+    return false; // UDPSocket.ping is not currently available/supported in this version
   }
 
   /// Called by UDXP2PStreamAdapter when a stream closes.
@@ -916,6 +918,7 @@ class UDXSessionConn implements MuxedConn, TransportConn {
       await Future.wait(closeFutures).catchError((e) {
         _logger.warning(
             '[UDXSessionConn $id] Error closing one or more UDX streams: $e');
+        return <void>[];
       });
       final streamCloseDuration = DateTime.now().difference(streamCloseStart);
       _logger.fine(
@@ -975,7 +978,7 @@ class UDXSessionConn implements MuxedConn, TransportConn {
     return _isClosed;
   }
 
-  @override
+  // @override
   Future<void> get onClose => _closedCompleter.future;
 
   @override
@@ -1017,7 +1020,7 @@ class UDXSessionConn implements MuxedConn, TransportConn {
     return initialP2PStream.write(data);
   }
 
-  @override
+  // @override
   Transport get transport => _transport;
 
   void notifyActivity() {

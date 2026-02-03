@@ -25,7 +25,7 @@ dependencies:
 
   base_x: ^2.0.0
 
-  dart_udx: any
+  dart_udx: ^0.3.1
 
   dcid: ^1.0.0
 

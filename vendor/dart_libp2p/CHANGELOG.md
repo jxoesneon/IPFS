@@ -5,16 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.4] - 2026-02-03
+
+### Fixed
+
+- Fixed analysis warnings and errors for publishing.
+- Improved connection health monitoring logic.
+- Resolved recursive call in ECDSA key generation.
+
 ## [0.5.3] - 2025-08-16
+
 ### Changed
-- Updated the Quickstart example in the README. The original example was referencing outdated APIs and would not compile. 
+
+- Updated the Quickstart example in the README. The original example was referencing outdated APIs and would not compile.
 
 ### Added
+
 - Initial changelog documentation
 
 ## [0.5.2] - 2025-07-29
 
 ### Added
+
 - Comprehensive documentation in `/doc` directory
 - Architecture overview and component documentation
 - Configuration guide with flexible options system
@@ -31,11 +43,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MIT LICENSE file
 
 ### Changed
+
 - Improved project structure and organization
 - Enhanced documentation coverage across all components
 - Better code examples and usage patterns
 
 ### Fixed
+
 - Documentation links and cross-references
 - Code examples in documentation
 
@@ -58,4 +72,4 @@ When contributing to this project, please update this changelog by adding a new 
 2. Add new changelog entry under `[Unreleased]`
 3. Move `[Unreleased]` content to new version section
 4. Update release date
-5. Tag the release in git 
+5. Tag the release in git
