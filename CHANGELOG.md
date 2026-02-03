@@ -1,6 +1,9 @@
 # Changelog
 
-## [1.9.2] - 2026-02-03
+## [1.9.3] - 2026-02-03
+
+- **Dependencies**: Upgraded `flutter_lints`, `lints`, and `very_good_analysis` to latest major versions.
+- **Maintenance**: Minor dependency bumps for `idb_shim`.
 
 - **Architecture**: Migrated from vendored `dart_libp2p` to hosted `ipfs_libp2p` package.
 - **Cleanup**: Removed `vendor/` directory.
