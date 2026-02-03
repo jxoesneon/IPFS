@@ -299,11 +299,11 @@ Future<void> main(List<String> arguments) async {
       });
 
       if (targetAddrStr != null && listenAddrStr == null) {
-        final currentHostLogId = shortPeerId(host!.id);
+        final currentHostLogId = shortPeerId(host.id);
         print(
             '[$currentHostLogId] Continuously pinging target. Press Ctrl+C to exit.');
       } else if (listenAddrStr != null && targetAddrStr != null) {
-        final currentHostLogId = shortPeerId(host!.id);
+        final currentHostLogId = shortPeerId(host.id);
         print(
             '[$currentHostLogId] Listening and continuously pinging target. Press Ctrl+C to exit.');
       }

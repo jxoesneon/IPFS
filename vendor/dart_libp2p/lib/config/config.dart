@@ -119,7 +119,6 @@ class Config {
   /// encountered (if any).
   Future<void> apply(List<Option> opts) async {
     for (final opt in opts) {
-      if (opt == null) continue;
       await opt(this);
     }
   }
