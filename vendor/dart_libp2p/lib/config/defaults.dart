@@ -9,7 +9,6 @@ import '../p2p/host/autonat/ambient_config.dart'; // For AmbientAutoNATv2Config
 import '../core/crypto/keys.dart'; // For KeyPair, KeyType
 import '../core/crypto/ed25519.dart'
     as crypto_ed25519; // For generateEd25519KeyPair
-import '../p2p/transport/tcp_transport.dart';
 import '../p2p/security/noise/noise_protocol.dart';
 import '../p2p/host/eventbus/basic.dart'; // For BasicBus
 import '../p2p/transport/connection_manager.dart'
