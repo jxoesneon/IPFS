@@ -93,7 +93,9 @@ class LibsodiumSetup {
         return true;
       } else {
         if (verbose) {
-          stdout.writeln('❌ Installation failed (exit code: ${result.exitCode})');
+          stdout.writeln(
+            '❌ Installation failed (exit code: ${result.exitCode})',
+          );
           if (result.stderr.toString().isNotEmpty) {
             stdout.writeln('   Error: ${result.stderr}');
           }

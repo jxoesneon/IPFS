@@ -1,18 +1,21 @@
 # Mock Infrastructure - Phase 1
 
 ## Overview
+
 This directory contains reusable mock implementations for testing complex integrations in the dart_ipfs project.
 
 ## Available Mocks
 
 ### ✅ Core Mocks (Working)
+
 - **InMemoryDatastore** - In-memory Datastore without file operations (PRODUCTION READY)
 - **MockDHTHandler** - Configurable DHT operations mock (PRODUCTION READY)
 
 ### 🔨 In Development
-- **MockSecurityManager** - Security/key management mocking  
+
+- **MockSecurityManager** - Security/key management mocking
 - **MockBlockStore** - Simple block storage interface
--  **MockHTTPClientBuilder** - HTTP request mocking
+- **MockHTTPClientBuilder** - HTTP request mocking
 - **test_helpers.dart** - Test utilities and generation
 
 ## Usage Example
@@ -27,10 +30,10 @@ void main() {
     // Create mocks
     final datastore = InMemoryDatastore();
     await datastore.init();
-    
+
     final dhtHandler = MockDHTHandler();
     await dhtHandler.start();
-    
+
     // Use them in tests...
   });
 }
@@ -51,5 +54,5 @@ void main() {
 
 ---
 
-**Created:** Phase 1 -  Integration Test Mock Infrastructure
+**Created:** Phase 1 - Integration Test Mock Infrastructure
 **Commit:** bbdcaa0

@@ -54,7 +54,7 @@ class IpfsPlatformIO implements IpfsPlatform {
     if (!await dir.exists()) return [];
 
     final entities = await dir.list().toList();
-    return entities.map((e) => e.path).toList();
+    return entities.map((e) => e.path.replaceAll('\\', '/')).toList();
   }
 }
 
