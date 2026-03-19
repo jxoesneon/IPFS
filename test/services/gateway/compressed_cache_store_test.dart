@@ -1,20 +1,19 @@
-// ignore_for_file: avoid_print
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/services/gateway/adaptive_compression_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/compressed_cache_store.dart';
-import 'package:dart_multihash/dart_multihash.dart';
 import 'package:test/test.dart';
+import 'package:path/path.dart' as path;
 
 void main() {
-  group('CompressedCacheStore LZ4', () {
+  group('CompressedCacheStore', () {
     late Directory tempDir;
     late CompressedCacheStore store;
 
     setUp(() {
-      tempDir = Directory.systemTemp.createTempSync('ipfs_lz4_test');
+      tempDir = Directory.systemTemp.createTempSync('ipfs_cache_test_');
       store = CompressedCacheStore(cachePath: tempDir.path);
     });
 
@@ -22,41 +21,41 @@ void main() {
       tempDir.deleteSync(recursive: true);
     });
 
-    test('should store and retrieve LZ4 compressed data', () async {
-      // Force LZ4 for application/octet-stream
-      store = CompressedCacheStore(
-        cachePath: tempDir.path,
-        compressionConfig: CompressionConfig(
-          contentTypeRules: {'application/octet-stream': CompressionType.lz4},
-        ),
-      );
+    final dummyCid = CID.computeForDataSync(
+      Uint8List.fromList(utf8.encode('dummy')),
+    );
 
-      final hash = Multihash.encode('sha2-256', Uint8List(32));
-      final cid = CID.v1('raw', hash);
+    test('storeCompressedData stores data and metadata', () async {
+      final data = Uint8List.fromList(utf8.encode('test data'));
+      await store.storeCompressedData(dummyCid, 'text/plain', data);
+
+      final stats = store.getCompressionStats(tempDir.path);
+      expect(stats.fileCount, 1);
+      expect(stats.totalOriginalSize, data.length);
+    });
+
+    test('getCompressedData retrieves and decompresses data', () async {
       final data = Uint8List.fromList(
-        List.generate(1024 * 1024, (i) => i % 256), // 1MB data
-      );
-      final contentType = 'application/octet-stream';
+        utf8.encode('test data ' * 100),
+      ); // Ensure compressible
+      await store.storeCompressedData(dummyCid, 'text/plain', data);
 
-      try {
-        await store.storeCompressedData(cid, contentType, data);
-        final retrieved = await store.getCompressedData(cid, contentType);
-        expect(retrieved, equals(data));
-      } catch (e) {
-        if (e.toString().contains('Failed to load dynamic library')) {
-          print(
-            'Skipping LZ4 test: Native library not compatible with this architecture.',
-          );
-          return;
-        }
-        rethrow;
-      }
+      final result = await store.getCompressedData(dummyCid, 'text/plain');
+      expect(result, isNotNull);
+      expect(utf8.decode(result!), utf8.decode(data));
+    });
 
-      // Verify compression worked (basic check - compressed size < original for this pattern)
-      // Since pattern is simple repetition (0..255), it should compress well.
-      // However, we need to inspect the metadata file to be 100% sure it used LZ4.
-      // But passing the retrieve check proves the cycle (compress -> decompress) works,
-      // and config proves it should have chosen LZ4.
+    test('getCompressedData returns null for missing file', () async {
+      final result = await store.getCompressedData(dummyCid, 'image/png');
+      expect(result, isNull);
+    });
+
+    test('initialization creates directory if missing', () {
+      final newDir = Directory(path.join(tempDir.path, 'new_cache'));
+      expect(newDir.existsSync(), isFalse);
+
+      CompressedCacheStore(cachePath: newDir.path);
+      expect(newDir.existsSync(), isTrue);
     });
   });
 }

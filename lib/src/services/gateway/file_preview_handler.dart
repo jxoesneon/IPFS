@@ -35,7 +35,7 @@ class FilePreviewHandler {
   }
 
   String _generateImagePreview(Uint8List data) {
-    final base64Data = Uri.encodeFull(String.fromCharCodes(data));
+    final base64Data = base64Encode(data);
     return '''
       <div class="preview-container">
         <img src="data:image/png;base64,$base64Data" alt="Preview" class="preview-image">
@@ -77,9 +77,10 @@ class FilePreviewHandler {
   String _formatJson(String text) {
     try {
       final parsedJson = const JsonDecoder().convert(text);
-      return const JsonEncoder.withIndent('  ').convert(parsedJson);
+      final formatted = const JsonEncoder.withIndent('  ').convert(parsedJson);
+      return _escapeHtml(formatted);
     } catch (_) {
-      return text;
+      return _escapeHtml(text);
     }
   }
 

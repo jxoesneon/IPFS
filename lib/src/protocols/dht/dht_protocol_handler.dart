@@ -5,7 +5,7 @@ import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/types/p2p_types.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 
 /// Kademlia DHT protocol message handler.
 ///
@@ -20,7 +20,7 @@ class DHTProtocolHandler {
   /// Kademlia protocol ID.
   static const String protocolId = '/ipfs/kad/1.0.0';
 
-  final P2plibRouter _router;
+  final RouterInterface _router;
   final Datastore _storage;
 
   void _setupHandlers() {
@@ -80,18 +80,16 @@ class DHTProtocolHandler {
     List<int> key, {
     int numPeers = 20,
   }) async {
-    // Get the routing table from the router
-    final routingTable = _router.getRoutingTable();
+    // TODO: The routing table is P2plibRouter-specific. For now, return connected peers.
+    // In a complete migration, this would be exposed via RouterInterface or
+    // a separate DHT routing abstraction.
 
-    // Find closest peers from the routing table
-    final closestPeers = routingTable.getNearestPeers(key, numPeers);
+    // Get connected peers from router interface
+    final connectedPeers = _router.connectedPeers.take(numPeers);
 
     // Convert to List<kad.Peer>
-    return closestPeers
-        .map(
-          (peer) => kad.Peer()..id = peer.value,
-          //..addrs = [] // Add actual addresses if available
-        )
+    return connectedPeers
+        .map((peerId) => kad.Peer()..id = utf8.encode(peerId))
         .toList();
   }
 }

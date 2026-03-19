@@ -124,4 +124,24 @@ class IPFSPrivateKey implements PrivateKey {
       'ECDSA',
     );
   }
+
+  /// Creates an IPFSPrivateKey from raw bytes (hex-encoded string compatible)
+  static IPFSPrivateKey fromBytes(
+    Uint8List keyBytes, {
+    String algorithm = 'ECDSA',
+  }) {
+    if (algorithm == 'ECDSA') {
+      final d = BigInt.parse(hex.encode(keyBytes), radix: 16);
+      final curve = ECCurve_secp256k1();
+      final point = curve.G * d;
+      final publicKey = ECPublicKey(point, curve);
+      final privateKey = ECPrivateKey(d, curve);
+      return IPFSPrivateKey(
+        AsymmetricKeyPair<ECPublicKey, ECPrivateKey>(publicKey, privateKey),
+        'ECDSA',
+      );
+    } else {
+      throw UnsupportedError('Unsupported algorithm: $algorithm');
+    }
+  }
 }

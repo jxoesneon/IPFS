@@ -1,4 +1,4 @@
-import 'package:dart_ipfs/src/core/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/responses/block_operation_response.dart';
 
 /// Interface for BlockStore CRUD operations.

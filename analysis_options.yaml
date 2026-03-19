@@ -2,9 +2,9 @@ include: package:lints/recommended.yaml
 
 analyzer:
   exclude:
+    - example/**
     - "**"
     - "packages/**"
-    - "example/**"
     - lib/src/proto/generated/**
     - "**/*.g.dart"
     - "**/*.pb.dart"

@@ -112,8 +112,10 @@ class NodeImplementation implements INodeImplementation {
   void setGatewayMode(int modeIndex, String? customUrl) {
     if (_node != null) {
       if (modeIndex >= 0 && modeIndex < GatewayMode.values.length) {
-        _node!.setGatewayMode(GatewayMode.values[modeIndex],
-            customUrl: customUrl);
+        _node!.setGatewayMode(
+          GatewayMode.values[modeIndex],
+          customUrl: customUrl,
+        );
       }
     }
   }
@@ -149,11 +151,13 @@ class NodeImplementation implements INodeImplementation {
       try {
         final links = await _node!.ls(cid);
         return links
-            .map((link) => {
-                  'name': link.name,
-                  'cid': link.cid.toString(),
-                  'size': link.size.toInt(),
-                })
+            .map(
+              (link) => {
+                'name': link.name,
+                'cid': link.cid.toString(),
+                'size': link.size.toInt(),
+              },
+            )
             .toList();
       } catch (e) {
         debugPrint('NodeNative ls error: $e');

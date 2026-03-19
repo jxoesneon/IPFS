@@ -25,13 +25,17 @@ class GatewayServer {
     this.ipnsResolver,
     this.maxRequestsPerIp = 100,
     this.rateLimitWindowSeconds = 60,
-  }) {
+    HttpServerAdapter? httpAdapter,
+  }) : httpAdapter = httpAdapter ?? createHttpServerAdapter() {
     _handler = GatewayHandler(blockStore, ipnsResolver: ipnsResolver);
     _setupRouter();
   }
 
   /// The block store used for content retrieval.
   final BlockStore blockStore;
+
+  /// The adapter for starting the HTTP server.
+  final HttpServerAdapter httpAdapter;
 
   /// The address to listen on.
   final String address;
@@ -107,8 +111,7 @@ class GatewayServer {
         .addHandler(_router.call);
 
     try {
-      final adapter = createHttpServerAdapter();
-      _server = await adapter.serve(handler, address, port);
+      _server = await httpAdapter.serve(handler, address, port);
       _logger.info(
         'Gateway server listening on http://${_server!.host}:${_server!.port}',
       );

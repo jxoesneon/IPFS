@@ -2,28 +2,32 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/core/peer.pb.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
+
+/// Represents a network address (IP + Port).
+/// Replaces p2plib.FullAddress.
+class FullAddress {
+  /// Creates a [FullAddress] with the given [address] and [port].
+  const FullAddress({required this.address, required this.port});
+
+  /// The IP address of the peer.
+  final InternetAddress address;
+
+  /// The port number of the peer.
+  final int port;
+
+  @override
+  String toString() => '/ip4/${address.address}/tcp/$port';
+}
 
 /// Represents a peer node in the IPFS network.
 ///
 /// A Peer encapsulates information about a remote IPFS node, including
 /// its cryptographic identity, network addresses, latency metrics, and
 /// client version information.
-///
-/// Example:
-/// ```dart
-/// // Create from multiaddr
-/// final peer = await Peer.fromMultiaddr('/ip4/127.0.0.1/tcp/4001/p2p/Qm...');
-/// // print('Peer ID: ${peer.id}');
-/// // print('Addresses: ${peer.addresses}');
-/// ```
-///
-/// See also:
-/// - [PeerProto] for protobuf serialization
-/// - [P2plibRouter] for peer communication
 class Peer {
   /// Creates a new Peer with the given properties.
   Peer({
@@ -36,12 +40,12 @@ class Peer {
   /// Creates a [Peer] from its Protobuf representation.
   factory Peer.fromProto(PeerProto proto) {
     return Peer(
-      id: p2p.PeerId(
+      id: PeerId(
         value: Base58().base58Decode(proto.id),
       ), // Convert base58 string back to PeerId
       addresses: proto.addresses
           .map((addr) => parseMultiaddrString(addr))
-          .whereType<p2p.FullAddress>()
+          .whereType<FullAddress>()
           .toList(), // Convert each address string to FullAddress
       latency: proto.latency.toInt(),
       agentVersion: proto.agentVersion,
@@ -51,7 +55,7 @@ class Peer {
   /// Creates a [Peer] with minimal information from a peer ID string.
   factory Peer.fromId(String peerId) {
     return Peer(
-      id: p2p.PeerId(value: Base58().base58Decode(peerId)),
+      id: PeerId(value: Base58().base58Decode(peerId)),
       addresses: [], // Empty list since we don't know addresses yet
       latency: 0, // Default latency
       agentVersion: '', // Empty version since we don't know it yet
@@ -59,10 +63,10 @@ class Peer {
   }
 
   /// The unique cryptographic identifier for this peer.
-  final p2p.PeerId id;
+  final PeerId id;
 
   /// Network addresses where this peer can be reached.
-  final List<p2p.FullAddress> addresses;
+  final List<FullAddress> addresses;
 
   /// Network latency to this peer in milliseconds.
   final int latency;
@@ -99,9 +103,7 @@ class Peer {
         throw FormatException('No peer ID found in multiaddr: $multiaddr');
       }
 
-      final peerId = p2p.PeerId(
-        value: Base58().base58Decode(parts[peerIdIndex]),
-      );
+      final peerId = PeerId(value: Base58().base58Decode(parts[peerIdIndex]));
 
       // Parse the address portion
       final address = parseMultiaddrString(multiaddr);
@@ -122,7 +124,7 @@ class Peer {
 }
 
 /// Helper function to parse a multiaddr string into a FullAddress.
-p2p.FullAddress? parseMultiaddrString(String multiaddrString) {
+FullAddress? parseMultiaddrString(String multiaddrString) {
   try {
     // Basic support for /ip4/<ip>/tcp/<port> format
     final parts = multiaddrString.split('/');
@@ -138,7 +140,7 @@ p2p.FullAddress? parseMultiaddrString(String multiaddrString) {
     if (port == null || port == 0) return null;
 
     final ipAddress = InternetAddress(host);
-    return p2p.FullAddress(address: ipAddress, port: port);
+    return FullAddress(address: ipAddress, port: port);
   } catch (e) {
     // print('Error parsing multiaddr string: $e');
     return null;
@@ -146,7 +148,7 @@ p2p.FullAddress? parseMultiaddrString(String multiaddrString) {
 }
 
 /// Helper to decode binary multiaddr to FullAddress
-p2p.FullAddress? multiaddrFromBytes(Uint8List bytes) {
+FullAddress? multiaddrFromBytes(Uint8List bytes) {
   try {
     var offset = 0;
     // Protocol code 1
@@ -190,7 +192,7 @@ p2p.FullAddress? multiaddrFromBytes(Uint8List bytes) {
     // Ignoring p2p ID part if present for now
 
     if (port != null) {
-      return p2p.FullAddress(address: ip, port: port);
+      return FullAddress(address: ip, port: port);
     }
     return null;
   } catch (e) {
@@ -199,7 +201,7 @@ p2p.FullAddress? multiaddrFromBytes(Uint8List bytes) {
 }
 
 /// Helper to encode FullAddress to binary multiaddr
-Uint8List multiaddrToBytes(p2p.FullAddress address) {
+Uint8List multiaddrToBytes(FullAddress address) {
   final buffer = BytesBuilder();
   if (address.address.type == InternetAddressType.IPv4) {
     buffer.addByte(4); // ip4

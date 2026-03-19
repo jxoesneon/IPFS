@@ -15,13 +15,11 @@ import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
-import 'package:dart_ipfs/src/platform/libsodium_setup.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/storage/hive_datastore.dart';
-import 'package:dart_ipfs/src/transport/circuit_relay_service.dart';
 
 /// Builder for constructing fully-configured [IPFSNode] instances.
 ///
@@ -108,28 +106,7 @@ class IPFSNodeBuilder {
     // Skip network initialization if offline
     if (_config.offline) return;
 
-    // PROACTIVE CHECK: Ensure libsodium is available before importing p2plib
-    // This prevents the FFI hang that occurs when sodium package loads
-    try {
-      final hasLibsodium = await LibsodiumSetup.ensureAvailable(
-        autoInstall: true,
-        verbose: true,
-      );
-
-      if (!hasLibsodium) {
-        throw StateError(
-          '\nlibsodium not available and automatic installation failed.\n\n'
-          'Options:\n'
-          '  1. Install libsodium manually (see error output above)\n'
-          '  2. Use offline mode: IPFSConfig(offline: true)\n',
-        );
-      }
-    } catch (e) {
-      // If check itself fails, continue and let p2plib fail with its own error
-      // (The StateError will be thrown if hasLibsodium is false)
-    }
-
-    // Now safe to create NetworkHandler (which imports p2plib → sodium)
+    // Create NetworkHandler (uses generic router interface)
     _container.registerSingleton(NetworkHandler(_config));
 
     // Get the router from NetworkHandler for other handlers
@@ -138,30 +115,25 @@ class IPFSNodeBuilder {
 
     _container.registerSingleton(MDNSHandler(_config));
 
-    _container.registerSingleton(
-      DHTHandler(_config, networkHandler.p2pRouter, networkHandler),
-    );
+    // Get the router - use the interface for protocol handlers
+    final router = networkHandler.router;
+
+    if (_config.enableDHT) {
+      _container.registerSingleton(DHTHandler(_config, router, networkHandler));
+    }
 
     // Create IpfsNodeNetworkEvents instance
-    final networkEvents = IpfsNodeNetworkEvents(
-      networkHandler.circuitRelayClient,
-      networkHandler.p2pRouter,
-    );
+    final networkEvents = IpfsNodeNetworkEvents(router);
+    networkEvents.start();
+
+    if (_config.enablePubSub) {
+      _container.registerSingleton(
+        PubSubHandler(router, networkHandler.peerID, networkEvents),
+      );
+    }
 
     _container.registerSingleton(
-      PubSubHandler(
-        networkHandler.p2pRouter,
-        networkHandler.peerID,
-        networkEvents, // Pass the IpfsNodeNetworkEvents instance
-      ),
-    );
-
-    _container.registerSingleton(
-      BitswapHandler(
-        _config,
-        _container.get<BlockStore>(),
-        networkHandler.p2pRouter,
-      ),
+      BitswapHandler(_config, _container.get<BlockStore>(), router),
     );
 
     _container.registerSingleton(BootstrapHandler(_config, networkHandler));
@@ -172,6 +144,7 @@ class IPFSNodeBuilder {
     if (_config.offline) return;
 
     final networkHandler = _container.get<NetworkHandler>();
+    final router = networkHandler.router;
 
     _container.registerSingleton(
       ContentRoutingHandler(_config, networkHandler),
@@ -180,32 +153,35 @@ class IPFSNodeBuilder {
     _container.registerSingleton(
       GraphsyncHandler(
         _config,
-        networkHandler.p2pRouter,
+        router,
         _container.get<BitswapHandler>(),
         _container.get<IPLDHandler>(),
         _container.get<BlockStore>(),
       ),
     );
     _container.registerSingleton(AutoNATHandler(_config, networkHandler));
-    _container.registerSingleton(
-      IPNSHandler(
-        _config,
-        _container.get<SecurityManager>(),
-        _container.get<DHTHandler>(),
-        _container.isRegistered(PubSubHandler)
-            ? _container.get<PubSubHandler>()
-            : null,
-      ),
-    );
-
-    if (_config.enableCircuitRelay) {
-      final relayService = CircuitRelayService(
-        networkHandler.p2pRouter,
-        _config,
+    if (_container.isRegistered(DHTHandler)) {
+      _container.registerSingleton(
+        IPNSHandler(
+          _config,
+          _container.get<SecurityManager>(),
+          _container.get<DHTHandler>(),
+          _container.isRegistered(PubSubHandler)
+              ? _container.get<PubSubHandler>()
+              : null,
+        ),
       );
-      relayService.start();
-      _container.registerSingleton(relayService);
     }
+
+    // CircuitRelayService legacy removal
+    // if (_config.enableCircuitRelay) {
+    //   final relayService = CircuitRelayService(
+    //     router,
+    //     _config,
+    //   );
+    //   relayService.start();
+    //   _container.registerSingleton(relayService);
+    // }
   }
 
   /// Registers Graphsync related services in the provided container.
@@ -213,7 +189,7 @@ class IPFSNodeBuilder {
     container.registerSingleton(
       GraphsyncHandler(
         _config,
-        _container.get<NetworkHandler>().p2pRouter,
+        _container.get<NetworkHandler>().router,
         _container.get<BitswapHandler>(),
         _container.get<IPLDHandler>(),
         _container.get<BlockStore>(),

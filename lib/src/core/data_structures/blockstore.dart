@@ -52,6 +52,9 @@ class BlockStore implements IBlockStore {
   /// The filesystem path where blocks are stored.
   final String path;
 
+  /// Returns the pin manager for this blockstore.
+  PinManager get pinManager => _pinManager;
+
   final Logger _logger;
 
   @override

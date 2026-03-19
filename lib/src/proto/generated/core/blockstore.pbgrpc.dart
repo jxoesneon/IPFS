@@ -26,8 +26,6 @@ export 'blockstore.pb.dart';
 /// The BlockStore service definition
 @$pb.GrpcServiceName('ipfs.core.data_structures.BlockStoreService')
 class BlockStoreServiceClient extends $grpc.Client {
-  BlockStoreServiceClient(super.channel, {super.options, super.interceptors});
-
   /// The hostname for this service.
   static const $core.String defaultHost = '';
 
@@ -35,6 +33,8 @@ class BlockStoreServiceClient extends $grpc.Client {
   static const $core.List<$core.String> oauthScopes = [
     '',
   ];
+
+  BlockStoreServiceClient(super.channel, {super.options, super.interceptors});
 
   $grpc.ResponseFuture<$1.AddBlockResponse> addBlock(
     $0.BlockProto request, {
@@ -91,6 +91,8 @@ class BlockStoreServiceClient extends $grpc.Client {
 
 @$pb.GrpcServiceName('ipfs.core.data_structures.BlockStoreService')
 abstract class BlockStoreServiceBase extends $grpc.Service {
+  $core.String get $name => 'ipfs.core.data_structures.BlockStoreService';
+
   BlockStoreServiceBase() {
     $addMethod($grpc.ServiceMethod<$0.BlockProto, $1.AddBlockResponse>(
         'AddBlock',
@@ -121,7 +123,6 @@ abstract class BlockStoreServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) => $3.Empty.fromBuffer(value),
         ($0.BlockProto value) => value.writeToBuffer()));
   }
-  $core.String get $name => 'ipfs.core.data_structures.BlockStoreService';
 
   $async.Future<$1.AddBlockResponse> addBlock_Pre(
       $grpc.ServiceCall $call, $async.Future<$0.BlockProto> $request) async {

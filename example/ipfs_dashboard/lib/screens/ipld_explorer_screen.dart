@@ -65,8 +65,9 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
               try {
                 // Try pretty-print if JSON
                 final decoded = json.decode(rawStr);
-                _dataPreview =
-                    const JsonEncoder.withIndent('  ').convert(decoded);
+                _dataPreview = const JsonEncoder.withIndent(
+                  '  ',
+                ).convert(decoded);
               } catch (_) {
                 _dataPreview = rawStr;
               }
@@ -124,8 +125,10 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
       );
 
       if (link.isEmpty || link['cid'] == null) {
-        setState(() => _error =
-            'Could not resolve path: $target not found in $currentCid');
+        setState(
+          () => _error =
+              'Could not resolve path: $target not found in $currentCid',
+        );
         return;
       }
 
@@ -157,12 +160,15 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
           children: [
             Text(label, style: TextStyle(color: Colors.white24, fontSize: 10)),
             const SizedBox(height: 2),
-            Text(value,
-                style: GoogleFonts.firaCode(
-                    color: color ?? Colors.white70,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold),
-                overflow: TextOverflow.ellipsis),
+            Text(
+              value,
+              style: GoogleFonts.firaCode(
+                color: color ?? Colors.white70,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),
@@ -174,8 +180,10 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A), // Match Dashboard theme
       appBar: AppBar(
-        title: Text('IPLD Explorer',
-            style: GoogleFonts.outfit(color: Colors.white)),
+        title: Text(
+          'IPLD Explorer',
+          style: GoogleFonts.outfit(color: Colors.white),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -191,8 +199,10 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
             Row(
               children: [
                 IconButton(
-                  icon: const Icon(LucideIcons.arrowLeftCircle,
-                      color: Colors.cyanAccent),
+                  icon: const Icon(
+                    LucideIcons.arrowLeftCircle,
+                    color: Colors.cyanAccent,
+                  ),
                   onPressed: _breadcrumbs.length > 1
                       ? () => _navigateToBreadcrumb(_breadcrumbs.length - 2)
                       : null,
@@ -203,10 +213,13 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'Enter CID',
-                      labelStyle:
-                          TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                      prefixIcon:
-                          const Icon(LucideIcons.search, color: Colors.white54),
+                      labelStyle: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                      ),
+                      prefixIcon: const Icon(
+                        LucideIcons.search,
+                        color: Colors.white54,
+                      ),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.05),
                       border: OutlineInputBorder(
@@ -224,9 +237,12 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
                     backgroundColor: Colors.cyanAccent,
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 16),
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
                   ),
                   child: const Text('Go'),
                 ),
@@ -241,9 +257,10 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
                   scrollDirection: Axis.horizontal,
                   itemCount: _breadcrumbs.length,
                   separatorBuilder: (context, index) => Icon(
-                      LucideIcons.chevronRight,
-                      size: 14,
-                      color: Colors.white24),
+                    LucideIcons.chevronRight,
+                    size: 14,
+                    color: Colors.white24,
+                  ),
                   itemBuilder: (context, index) {
                     final b = _breadcrumbs[index];
                     final isLast = index == _breadcrumbs.length - 1;
@@ -256,8 +273,9 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
                           style: TextStyle(
                             color: isLast ? Colors.cyanAccent : Colors.white54,
                             fontSize: 12,
-                            fontWeight:
-                                isLast ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isLast
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
                       ),
@@ -271,13 +289,18 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
             Expanded(
               child: _isLoading
                   ? const Center(
-                      child:
-                          CircularProgressIndicator(color: Colors.cyanAccent))
+                      child: CircularProgressIndicator(
+                        color: Colors.cyanAccent,
+                      ),
+                    )
                   : _error != null
-                      ? Center(
-                          child: Text(_error!,
-                              style: const TextStyle(color: Colors.redAccent)))
-                      : _buildExplorerView(),
+                  ? Center(
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.redAccent),
+                      ),
+                    )
+                  : _buildExplorerView(),
             ),
           ],
         ),
@@ -291,8 +314,11 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(LucideIcons.box,
-                size: 64, color: Colors.white.withValues(alpha: 0.1)),
+            Icon(
+              LucideIcons.box,
+              size: 64,
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
             const SizedBox(height: 16),
             Text(
               'Enter a CID to explore the DAG',
@@ -313,8 +339,9 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
             decoration: BoxDecoration(
               color: Colors.cyanAccent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border:
-                  Border.all(color: Colors.cyanAccent.withValues(alpha: 0.2)),
+              border: Border.all(
+                color: Colors.cyanAccent.withValues(alpha: 0.2),
+              ),
             ),
             child: Row(
               children: [
@@ -323,13 +350,18 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
                 Expanded(
                   child: SelectableText(
                     _currentCid,
-                    style:
-                        GoogleFonts.firaCode(color: Colors.white, fontSize: 13),
+                    style: GoogleFonts.firaCode(
+                      color: Colors.white,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(LucideIcons.copy,
-                      size: 16, color: Colors.white54),
+                  icon: const Icon(
+                    LucideIcons.copy,
+                    size: 16,
+                    color: Colors.white54,
+                  ),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: _currentCid));
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -348,68 +380,79 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
               _buildMetaTile('Links', _links.length.toString()),
               const SizedBox(width: 12),
               _buildMetaTile(
-                  'Size',
-                  _dataPreview?.length != null
-                      ? '${(_dataPreview!.length / 1024).toStringAsFixed(1)} KB'
-                      : 'N/A'),
+                'Size',
+                _dataPreview?.length != null
+                    ? '${(_dataPreview!.length / 1024).toStringAsFixed(1)} KB'
+                    : 'N/A',
+              ),
               const SizedBox(width: 12),
               FutureBuilder<List<String>>(
-                  future: context.read<NodeService>().getPinnedCids(),
-                  builder: (context, snapshot) {
-                    final isPinned =
-                        snapshot.data?.contains(_currentCid) ?? false;
-                    return _buildMetaTile('Pinned', isPinned ? 'Yes' : 'No',
-                        color: isPinned ? Colors.greenAccent : Colors.white24);
-                  }),
+                future: context.read<NodeService>().getPinnedCids(),
+                builder: (context, snapshot) {
+                  final isPinned =
+                      snapshot.data?.contains(_currentCid) ?? false;
+                  return _buildMetaTile(
+                    'Pinned',
+                    isPinned ? 'Yes' : 'No',
+                    color: isPinned ? Colors.greenAccent : Colors.white24,
+                  );
+                },
+              ),
             ],
           ),
           const SizedBox(height: 24),
 
           // Pinned Actions
           FutureBuilder<List<String>>(
-              future: context.read<NodeService>().getPinnedCids(),
-              builder: (context, snapshot) {
-                final isPinned = snapshot.data?.contains(_currentCid) ?? false;
-                return Row(
-                  children: [
-                    Icon(LucideIcons.pin,
-                        size: 16,
-                        color: isPinned ? Colors.greenAccent : Colors.white24),
-                    const SizedBox(width: 8),
-                    Text(
-                      isPinned ? 'Pinned' : 'Not Pinned',
-                      style: TextStyle(
-                          color:
-                              isPinned ? Colors.greenAccent : Colors.white24),
+            future: context.read<NodeService>().getPinnedCids(),
+            builder: (context, snapshot) {
+              final isPinned = snapshot.data?.contains(_currentCid) ?? false;
+              return Row(
+                children: [
+                  Icon(
+                    LucideIcons.pin,
+                    size: 16,
+                    color: isPinned ? Colors.greenAccent : Colors.white24,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    isPinned ? 'Pinned' : 'Not Pinned',
+                    style: TextStyle(
+                      color: isPinned ? Colors.greenAccent : Colors.white24,
                     ),
-                    if (!isPinned)
-                      TextButton(
-                          onPressed: () async {
-                            await context.read<NodeService>().pin(_currentCid);
-                            setState(() {}); // refresh
-                          },
-                          child: const Text('Pin Now'))
-                    else
-                      TextButton(
-                          onPressed: () async {
-                            await context
-                                .read<NodeService>()
-                                .unpin(_currentCid);
-                            setState(() {}); // refresh
-                          },
-                          child: const Text('Unpin'))
-                  ],
-                );
-              }),
+                  ),
+                  if (!isPinned)
+                    TextButton(
+                      onPressed: () async {
+                        await context.read<NodeService>().pin(_currentCid);
+                        setState(() {}); // refresh
+                      },
+                      child: const Text('Pin Now'),
+                    )
+                  else
+                    TextButton(
+                      onPressed: () async {
+                        await context.read<NodeService>().unpin(_currentCid);
+                        setState(() {}); // refresh
+                      },
+                      child: const Text('Unpin'),
+                    ),
+                ],
+              );
+            },
+          ),
           const SizedBox(height: 16),
 
           // Data Preview
           if (_dataPreview != null) ...[
-            Text('DATA',
-                style: GoogleFonts.outfit(
-                    color: Colors.white54,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              'DATA',
+              style: GoogleFonts.outfit(
+                color: Colors.white54,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
@@ -420,8 +463,10 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
               ),
               child: SelectableText(
                 _dataPreview!,
-                style:
-                    GoogleFonts.firaCode(color: Colors.white70, fontSize: 12),
+                style: GoogleFonts.firaCode(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
                 maxLines: 10,
               ),
             ),
@@ -430,11 +475,14 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
 
           // Links
           if (_links.isNotEmpty) ...[
-            Text('LINKS (${_links.length})',
-                style: GoogleFonts.outfit(
-                    color: Colors.white54,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              'LINKS (${_links.length})',
+              style: GoogleFonts.outfit(
+                color: Colors.white54,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 8),
             ListView.builder(
               shrinkWrap: true,
@@ -446,15 +494,26 @@ class _IPLDExplorerScreenState extends State<IPLDExplorerScreen> {
                   color: Colors.white.withValues(alpha: 0.05),
                   margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
-                    leading: const Icon(LucideIcons.link,
-                        color: Colors.cyanAccent, size: 16),
-                    title: Text(link['name'] ?? 'Untitled',
-                        style: const TextStyle(color: Colors.white)),
-                    subtitle: Text(link['cid'] ?? '',
-                        style: GoogleFonts.firaCode(
-                            color: Colors.white38, fontSize: 10)),
-                    trailing: const Icon(LucideIcons.chevronRight,
-                        color: Colors.white24),
+                    leading: const Icon(
+                      LucideIcons.link,
+                      color: Colors.cyanAccent,
+                      size: 16,
+                    ),
+                    title: Text(
+                      link['name'] ?? 'Untitled',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      link['cid'] ?? '',
+                      style: GoogleFonts.firaCode(
+                        color: Colors.white38,
+                        fontSize: 10,
+                      ),
+                    ),
+                    trailing: const Icon(
+                      LucideIcons.chevronRight,
+                      color: Colors.white24,
+                    ),
                     onTap: () {
                       _cidController.text = link['cid'];
                       _explore(link['cid'], label: link['name']);

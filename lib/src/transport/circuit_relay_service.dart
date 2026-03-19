@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart';
@@ -16,7 +16,7 @@ import 'package:fixnum/fixnum.dart';
 class CircuitRelayService {
   /// Creates a new [CircuitRelayService] with the given [_router] and [_config].
   CircuitRelayService(this._router, this._config);
-  final P2plibRouter _router;
+  final RouterInterface _router;
   final IPFSConfig _config;
   final _logger = Logger('CircuitRelayService');
 
@@ -270,6 +270,11 @@ class CircuitRelayService {
         stopProtocolId,
         Uint8List.fromList(stopMsg.writeToBuffer()),
       );
+
+      if (responseBytes == null) {
+        _sendHopStatus(srcPeerId, Status.HOP_CANT_OPEN_DST_STREAM);
+        return;
+      }
 
       final stopResponse = StopMessage.fromBuffer(responseBytes);
 

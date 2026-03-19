@@ -149,8 +149,9 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer =
-          Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (
+        timer,
+      ) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -171,8 +172,9 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer =
-          Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (
+        timer,
+      ) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -195,8 +197,9 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer =
-          Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (
+        timer,
+      ) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -216,8 +219,9 @@ class Dashboard {
         }
       }
       console.hideCursor();
-      _refreshTimer =
-          Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (
+        timer,
+      ) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
@@ -388,10 +392,7 @@ class Dashboard {
       statusMessage = "Starting node...";
       _log("Initializing IPFS node...");
       try {
-        final config = IPFSConfig(
-          offline: false,
-          dataPath: './cli_ipfs_data',
-        );
+        final config = IPFSConfig(offline: false, dataPath: './cli_ipfs_data');
         node = await IPFSNode.create(config);
 
         // Listen to bandwidth
@@ -464,16 +465,19 @@ class Dashboard {
       }
       console.hideCursor();
       // Restart loop
-      _refreshTimer =
-          Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      _refreshTimer = Timer.periodic(const Duration(milliseconds: 100), (
+        timer,
+      ) {
         _draw();
         _spinnerIndex = (_spinnerIndex + 1) % _spinner.length;
       });
     }
 
     if (node != null) {
-      node!.setGatewayMode(_gatewayMode,
-          customUrl: _gatewayMode == GatewayMode.custom ? _customUrl : null);
+      node!.setGatewayMode(
+        _gatewayMode,
+        customUrl: _gatewayMode == GatewayMode.custom ? _customUrl : null,
+      );
       _log("Switched mode to ${_gatewayMode.name}");
     } else {
       _log("Mode set to ${_gatewayMode.name} (will apply on start)");
@@ -508,8 +512,8 @@ class Dashboard {
     console.setBackgroundColor(ConsoleColor.blue);
     console.setForegroundColor(ConsoleColor.white);
 
-    String headerTitle =
-        " dart_ipfs CLI [${_mode.name.toUpperCase()}] ".padRight(width - 40);
+    String headerTitle = " dart_ipfs CLI [${_mode.name.toUpperCase()}] "
+        .padRight(width - 40);
     String stats =
         " IN: ${_formatRate(_inRate)} | OUT: ${_formatRate(_outRate)} ";
     console.write(headerTitle + stats.padLeft(40));
@@ -519,8 +523,11 @@ class Dashboard {
     console.cursorPosition = const Coordinate(1, 0);
     console.setBackgroundColor(ConsoleColor.white);
     console.setForegroundColor(ConsoleColor.black);
-    console.write(" [H]ome | [P]eers | [C]hat | [F]iles | [E]xplorer | [Q]uit "
-        .padRight(width));
+    console.write(
+      " [H]ome | [P]eers | [C]hat | [F]iles | [E]xplorer | [Q]uit ".padRight(
+        width,
+      ),
+    );
     console.resetColorAttributes();
 
     // 3. Main Content Area
@@ -579,7 +586,8 @@ class Dashboard {
     console.cursorPosition = const Coordinate(7, 2);
     console.resetColorAttributes();
     console.write(
-        "[S] Start/Stop   [A] Add File   [M] Mode: ${_gatewayMode.name.toUpperCase()}");
+      "[S] Start/Stop   [A] Add File   [M] Mode: ${_gatewayMode.name.toUpperCase()}",
+    );
 
     // Logs
     console.cursorPosition = const Coordinate(9, 0);
@@ -662,8 +670,10 @@ class Dashboard {
           // Prefix message with username/handle
           final payload = "<CLI_User> $msg";
 
-          final time =
-              DateTime.now().toIso8601String().split('T')[1].substring(0, 5);
+          final time = DateTime.now()
+              .toIso8601String()
+              .split('T')[1]
+              .substring(0, 5);
           _chatMessages.add("[$time] [ME] $msg");
           if (_chatMessages.length > 50) _chatMessages.removeAt(0);
 
@@ -712,8 +722,10 @@ class Dashboard {
 
       // Listen once
       node!.pubsubMessages.listen((msg) {
-        final time =
-            DateTime.now().toIso8601String().split('T')[1].substring(0, 5);
+        final time = DateTime.now()
+            .toIso8601String()
+            .split('T')[1]
+            .substring(0, 5);
         if (msg.topic == _activeTopic) {
           // Don't echo self if we did manual add, or handle dedup.
           // Simple: just show everything. User might see double if we manually added.
@@ -747,9 +759,11 @@ class Dashboard {
     int startMsgIndex = _chatMessages.length - msgsToShow;
     if (startMsgIndex < 0) startMsgIndex = 0;
 
-    for (int i = 0;
-        i < msgsToShow && (startMsgIndex + i) < _chatMessages.length;
-        i++) {
+    for (
+      int i = 0;
+      i < msgsToShow && (startMsgIndex + i) < _chatMessages.length;
+      i++
+    ) {
       console.cursorPosition = Coordinate(startY + i, 2);
       console.write(_chatMessages[startMsgIndex + i]);
     }

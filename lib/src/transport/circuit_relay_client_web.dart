@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:fixnum/fixnum.dart' as fixnum;
 
-import 'p2plib_router.dart';
+import 'router_interface.dart';
 
 /// Handles circuit relay operations for an IPFS node (web stub).
 class CircuitRelayClient {
   /// Creates a new [CircuitRelayClient] using the provided router.
-  CircuitRelayClient(P2plibRouter router);
+  CircuitRelayClient(RouterInterface router);
 
   final StreamController<CircuitRelayConnectionEvent>
   _circuitRelayEventsController =

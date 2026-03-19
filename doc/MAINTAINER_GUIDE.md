@@ -25,6 +25,7 @@ Update the version number (e.g., `1.2.1`) in **ALL** of the following files:
 - [ ] `CHANGELOG.md` (Add new section `## [1.2.1] - YYYY-MM-DD`)
 - [ ] `README.md` (Update any "Installation" or "Usage" references)
 - [ ] `ROADMAP.md` (Update "Current Version" header and status)
+- [ ] `doc/PROTOBUF_COMPATIBILITY.md` (Update if protobuf version changes)
 
 ### 3. Documentation Sync
 - [ ] **Wiki/Docs**: Update `docs/` content if new features were added.
@@ -97,3 +98,13 @@ If you must modify a dependency (e.g., `p2plib`) locally:
     - `NodeService` (Flutter Integration)
     - `CLI` (Terminal Interface)
 - **Documentation**: New public methods MUST have Effective Dart (`///`) documentation before merging.
+
+### 4. Protobuf Compatibility Management
+- **Version Updates**: When updating protobuf dependency:
+  1. Check for breaking changes in protobuf changelog
+  2. Update `PROTOBUF_COMPATIBILITY.md` with migration notes
+  3. Verify all well-known type imports use `package:protobuf/well_known_types/`
+  4. Run comprehensive test suite: `dart test`
+  5. Update CHANGELOG.md with compatibility status
+- **Import Patterns**: Never use local copies of well-known types (`any.pb.dart`, `timestamp.pb.dart`)
+- **Testing**: Always test with both protobuf 6.0.0+ and verify backward compatibility

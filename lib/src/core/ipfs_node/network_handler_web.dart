@@ -5,7 +5,7 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 
 /// Web stub for NetworkHandler.
 ///
@@ -13,14 +13,12 @@ import 'package:dart_ipfs/src/transport/p2plib_router.dart';
 /// where full P2P networking is not available.
 class NetworkHandler {
   /// Creates a NetworkHandler for web platform.
-  NetworkHandler(this._config, {P2plibRouter? router})
-    : _router = router ?? P2plibRouter(_config),
-      _networkEventController = StreamController<NetworkEvent>.broadcast() {
-    _circuitRelayClient = CircuitRelayClient(_router);
-  }
+  NetworkHandler(this._config, {RouterInterface? router})
+    : _router = router,
+      _networkEventController = StreamController<NetworkEvent>.broadcast();
 
-  late final CircuitRelayClient _circuitRelayClient;
-  final P2plibRouter _router;
+  final CircuitRelayClient? _circuitRelayClient = null;
+  final RouterInterface? _router;
 
   /// The IPFS node reference.
   late final IPFSNode ipfsNode;
@@ -69,13 +67,13 @@ class NetworkHandler {
   }
 
   /// Returns the router (stub).
-  dynamic get router => null;
+  RouterInterface? get router => _router;
 
-  /// Returns the P2P router.
-  P2plibRouter get p2pRouter => _router;
+  // Legacy stub for compatibility if needed, but should be removed eventually
+  // RouterInterface? get p2pRouter => _router;
 
   /// Returns the circuit relay client.
-  CircuitRelayClient get circuitRelayClient => _circuitRelayClient;
+  CircuitRelayClient? get circuitRelayClient => _circuitRelayClient;
 
   /// Returns the configuration.
   IPFSConfig get config => _config;

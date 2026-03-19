@@ -8,11 +8,11 @@ import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/ipns/ipns.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/ipns.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'package:dart_ipfs/src/storage/hive_datastore.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
@@ -26,19 +26,31 @@ import 'package:http/http.dart' as http;
 /// to prevent DHT index poisoning attacks.
 class DHTHandler implements IDHTHandler {
   /// Creates a new [DHTHandler] with the given [config], [_router], and [networkHandler].
-  DHTHandler(IPFSConfig config, this._router, NetworkHandler networkHandler)
-    : _keystore = Keystore(),
-      _storage = HiveDatastore(config.datastorePath) {
+  DHTHandler(
+    IPFSConfig config,
+    this._router,
+    NetworkHandler networkHandler, {
+    ds.Datastore? storage,
+    DHTClient? client,
+    Keystore? keystore,
+    http.Client? httpClient,
+  }) : _keystore = keystore ?? Keystore(),
+       _httpClient = httpClient ?? http.Client(),
+       _storage = storage ?? HiveDatastore(config.datastorePath) {
     _logger = Logger('DHTHandler', debug: config.debug);
-    _storage.init();
-    dhtClient = DHTClient(networkHandler: networkHandler, router: _router);
+    if (storage == null) {
+      _storage.init();
+    }
+    dhtClient =
+        client ?? DHTClient(networkHandler: networkHandler, router: _router);
   }
 
   /// The underlying DHT client for network operations.
   late final DHTClient dhtClient;
   final Keystore _keystore;
-  final P2plibRouter _router;
+  final RouterInterface _router;
   final ds.Datastore _storage;
+  final http.Client _httpClient;
   late final Logger _logger;
 
   final Set<String> _activeQueries = {};
@@ -142,7 +154,7 @@ class DHTHandler implements IDHTHandler {
     if (resolvedCid == null) {
       try {
         final url = Uri.parse('https://ipfs.io/ipns/$ipnsName');
-        final response = await http.get(url);
+        final response = await _httpClient.get(url);
         if (response.statusCode == 200) {
           resolvedCid = extractCIDFromResponse(response.body);
           if (resolvedCid != null) {
@@ -250,7 +262,7 @@ class DHTHandler implements IDHTHandler {
   }
 
   /// Returns the underlying P2P router.
-  P2plibRouter get router => _router;
+  RouterInterface get router => _router;
 
   @override
   Future<List<V_PeerInfo>> findPeer(PeerId id) async {
@@ -269,7 +281,7 @@ class DHTHandler implements IDHTHandler {
   @override
   Future<void> provide(CID cid) async {
     try {
-      await dhtClient.addProvider(cid.toString(), _router.peerId.toString());
+      await dhtClient.addProvider(cid.toString(), _router.peerID);
     } catch (e) {
       // print('Error providing CID: $e');
     }
@@ -376,7 +388,18 @@ class DHTHandler implements IDHTHandler {
 
   /// Returns the current status of the DHT handler.
   Future<Map<String, dynamic>> getStatus() async {
+    if (!dhtClient.isInitialized) {
+      return {
+        'status': 'disabled',
+        'active_queries': 0,
+        'routing_table_size': 0,
+        'total_providers': 0,
+        'protocol_version': _protocolVersion,
+      };
+    }
+
     return {
+      'status': 'active',
       'active_queries': _activeQueries.length,
       'routing_table_size': dhtClient.kademliaRoutingTable.peerCount,
       'total_providers': _providers.length,

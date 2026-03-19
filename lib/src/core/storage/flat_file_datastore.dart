@@ -87,7 +87,9 @@ class FlatFileDatastore implements Datastore {
         // Let's assume everything ending in .data is a file we care about.
         if (childPath.endsWith('.data')) {
           final relative = p.relative(childPath, from: path);
-          final keyStr = '/${relative.substring(0, relative.length - 5)}';
+          final normalizedRelative = relative.replaceAll(r'\', '/');
+          final keyStr =
+              '/${normalizedRelative.substring(0, normalizedRelative.length - 5)}';
           final key = Key(keyStr);
 
           // Filter logic reused
@@ -115,11 +117,8 @@ class FlatFileDatastore implements Datastore {
             }
           }
         } else {
-          // Assume dir? try to list?
-          // This recursion logic is fragile without isDirectory check.
-          // But our _files in Web are flat map.
-          // In IO, we might encounter subdirs.
-          // We'll leave recursive walking as TODO/Enhancement for simplicity.
+          // It's likely a directory, add to stack to recurse
+          stack.add(childPath);
         }
       }
     }

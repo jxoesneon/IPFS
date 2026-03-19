@@ -13,7 +13,7 @@ import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_protocol.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_types.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Graphsync protocol handler for efficient DAG transfer.
@@ -37,7 +37,7 @@ class GraphsyncHandler {
       _config = config;
   final BitswapHandler _bitswap;
   final IPLDHandler _ipld;
-  final P2plibRouter _router;
+  final RouterInterface _router;
   final BlockStore _blockStore;
   final Logger _logger;
   final GraphsyncProtocol _protocol;

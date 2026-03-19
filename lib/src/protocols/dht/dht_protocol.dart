@@ -7,7 +7,6 @@ import 'package:dart_ipfs/src/core/types/peer_types.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/peer_store.dart';
 import 'package:dart_ipfs/src/protocols/dht/routing_table.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Implementation of the Kademlia DHT protocol following IPFS specs.
 class DHTProtocol {
@@ -94,6 +93,8 @@ class DHTProtocol {
         request.writeToBuffer(),
       );
 
+      if (response == null) return;
+
       // Parse response
       final findNodeResponse = FindNodeResponse.fromBuffer(response);
 
@@ -107,7 +108,7 @@ class DHTProtocol {
           id: peerId,
           addresses: peerInfo.addrs
               .map((addr) => parseMultiaddrString(addr))
-              .whereType<p2p.FullAddress>()
+              .whereType<FullAddress>()
               .toList(),
           latency: 0, // Default latency
           agentVersion: '', // Default agent version

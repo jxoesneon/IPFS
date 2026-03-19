@@ -17,6 +17,7 @@ class UnixFSBuilder {
   Stream<Block> build(Stream<List<int>> stream) async* {
     final buffer = <int>[];
     final links = <dag_pb.PBLink>[];
+    final logicalBlockSizes = <Int64>[];
     var totalSize = 0;
 
     await for (final chunk in stream) {
@@ -38,6 +39,7 @@ class UnixFSBuilder {
             name: '', // Empty for unnamed links in file
           ),
         );
+        logicalBlockSizes.add(Int64(leafData.length));
         totalSize += leafData.length;
       }
     }
@@ -55,6 +57,7 @@ class UnixFSBuilder {
           name: '',
         ),
       );
+      logicalBlockSizes.add(Int64(leafData.length));
       totalSize += leafData.length;
     }
 
@@ -63,7 +66,7 @@ class UnixFSBuilder {
     final unixFs = unixfs_pb.Data(
       type: unixfs_pb.Data_DataType.File,
       filesize: Int64(totalSize),
-      blocksizes: links.map((e) => e.size).toList(),
+      blocksizes: logicalBlockSizes,
     );
 
     final outerNode = dag_pb.PBNode(data: unixFs.writeToBuffer(), links: links);

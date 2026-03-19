@@ -12,7 +12,7 @@ import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as proto;
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart'
     as bitswap_message;
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
 import 'ledger.dart';
@@ -47,7 +47,7 @@ import 'ledger.dart';
 class Bitswap {
   /// Creates a Bitswap instance with the given dependencies.
   Bitswap(this._router, this._ledger, this._datastore, [this.config]);
-  final P2plibRouter _router;
+  final RouterInterface _router;
   final BitLedger _ledger;
   final Datastore _datastore;
   final Set<LibP2PPeerId> _peers = {};

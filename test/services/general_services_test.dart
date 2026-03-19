@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
@@ -40,6 +41,9 @@ class MockBlockStore implements BlockStore {
   Future<List<Block>> getAllBlocks() async {
     return blocks.values.toList();
   }
+
+  @override
+  PinManager get pinManager => throw UnimplementedError('Mock');
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

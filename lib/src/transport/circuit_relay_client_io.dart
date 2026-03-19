@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart' as pb;
 import 'package:fixnum/fixnum.dart' as fixnum;
 
-import 'p2plib_router.dart';
+import 'router_interface.dart';
 
 /// Handles circuit relay operations for an IPFS node.
 class CircuitRelayClient {
   /// Creates a new [CircuitRelayClient] using the provided [_router].
   CircuitRelayClient(this._router);
   static const String _protocolId = '/libp2p/circuit/relay/0.2.0/hop';
-  final P2plibRouter _router; // Router instance for handling connections
+  final RouterInterface _router; // Router instance for handling connections
   final StreamController<CircuitRelayConnectionEvent>
   _circuitRelayEventsController =
       StreamController<CircuitRelayConnectionEvent>.broadcast();
@@ -91,9 +91,11 @@ class CircuitRelayClient {
             return res;
           });
 
-      await _router.sendDatagram(
-        addresses: addresses,
-        datagram: msg.writeToBuffer(),
+      // Send message using the standard interface method
+      await _router.sendMessage(
+        relayPeerId,
+        msg.writeToBuffer(),
+        protocolId: _protocolId,
       );
 
       // Wait for response or timeout

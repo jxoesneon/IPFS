@@ -1,7 +1,5 @@
-// src/core/ipfs_node/network_handler.dart
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -10,9 +8,9 @@ import 'package:dart_ipfs/src/core/types/peer_id.dart' as dht;
 import 'package:dart_ipfs/src/network/router.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
-import 'package:dart_ipfs/src/transport/p2plib_router.dart';
+import 'package:dart_ipfs/src/transport/libp2p_router.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 
 import 'ipfs_node.dart';
 
@@ -21,8 +19,10 @@ import 'ipfs_node.dart';
 /// Handles network operations for an IPFS node.
 class NetworkHandler {
   /// Creates a network handler with config and optional router.
-  NetworkHandler(this._config, {P2plibRouter? router})
-    : _router = router ?? P2plibRouter(_config),
+  ///
+  /// If [router] is not provided, defaults to [Libp2pRouter].
+  NetworkHandler(this._config, {RouterInterface? router})
+    : _router = router ?? Libp2pRouter(_config),
       _networkEventController = StreamController<NetworkEvent>.broadcast() {
     // Initialize logger
     _logger = Logger(
@@ -42,13 +42,17 @@ class NetworkHandler {
     _logger.debug('NetworkHandler initialization complete');
   }
   late final CircuitRelayClient _circuitRelayClient;
-  final P2plibRouter _router;
+  final RouterInterface _router;
 
   /// Reference to the parent IPFS node.
   late final IPFSNode ipfsNode;
   late final StreamController<NetworkEvent> _networkEventController;
   final IPFSConfig _config;
   late final Logger _logger;
+  final List<StreamSubscription<dynamic>> _subscriptions = [];
+
+  /// Returns the router for protocol use.
+  RouterInterface get router => _router;
 
   /// Starts the network services.
   Future<void> start() async {
@@ -61,6 +65,9 @@ class NetworkHandler {
       _logger.verbose('Initializing circuit relay client...');
       await _circuitRelayClient.start();
       _logger.verbose('Circuit relay client started successfully');
+
+      // Register AutoNAT dialback protocol handler
+      _registerDialbackHandler();
 
       _logger.info('Network services started successfully');
     } catch (e, stackTrace) {
@@ -78,6 +85,13 @@ class NetworkHandler {
 
       await _router.stop();
       _logger.verbose('Router stopped');
+
+      // Cancel all stream subscriptions
+      for (final sub in _subscriptions) {
+        await sub.cancel();
+      }
+      _subscriptions.clear();
+      _logger.verbose('Network event subscriptions canceled');
 
       await _networkEventController.close();
       _logger.verbose('Network event controller closed');
@@ -154,7 +168,7 @@ class NetworkHandler {
   /// Listens for network events and handles them appropriately.
   void _listenForNetworkEvents() {
     _logger.verbose('Setting up network event stream listener');
-    _networkEventController.stream.listen(
+    final sub = _networkEventController.stream.listen(
       (event) {
         try {
           if (event.hasPeerConnected()) {
@@ -166,7 +180,7 @@ class NetworkHandler {
             final peer = dht.PeerId(value: peerIdBytes);
             try {
               _logger.verbose('Adding peer to routing table: $peerId');
-              ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable.addPeer(
+              ipfsNode.dhtHandler?.dhtClient.kademliaRoutingTable.addPeer(
                 peer,
                 peer,
               );
@@ -182,7 +196,7 @@ class NetworkHandler {
             final peerId = dht.PeerId(value: peerIdBytes);
             try {
               _logger.verbose('Removing peer from routing table: $peerIdStr');
-              ipfsNode.dhtHandler.dhtClient.kademliaRoutingTable.removePeer(
+              ipfsNode.dhtHandler?.dhtClient.kademliaRoutingTable.removePeer(
                 peerId,
               );
             } catch (e) {
@@ -198,7 +212,7 @@ class NetworkHandler {
             _logger.warning('Unhandled event type: ${event.runtimeType}');
           }
         } catch (e, stackTrace) {
-          _logger.error('Error processing network event', e, stackTrace);
+          _logger.error('Error running network event listener', e, stackTrace);
         }
       },
       onError: (Object error, StackTrace stackTrace) {
@@ -208,10 +222,11 @@ class NetworkHandler {
         _logger.debug('Network event stream closed');
       },
     );
+    _subscriptions.add(sub);
   }
 
-  /// Returns a Router instance.
-  Router get router => Router(_config);
+  /// Returns a high-level Router instance (for DHT operations).
+  Router get dhtRouter => Router(_config);
 
   /// Sets the parent IPFS node reference.
   void setIpfsNode(IPFSNode node) {
@@ -219,67 +234,13 @@ class NetworkHandler {
   }
 
   /// Sends a request to a peer and waits for a response
-  Future<Uint8List> sendRequest(
+  Future<Uint8List?> sendRequest(
     String peerId,
     String protocolId,
     Uint8List request,
   ) async {
-    try {
-      // Create a completer to handle the async response
-      final completer = Completer<Uint8List>();
-
-      // Generate request ID
-      final requestId = DateTime.now().millisecondsSinceEpoch.toString();
-
-      // Add request ID to message
-      final messageWithId = Uint8List.fromList([
-        ...request,
-        ...utf8.encode(requestId),
-      ]);
-
-      // Set up one-time response handler
-      _router.registerProtocolHandler(protocolId, (packet) {
-        if (packet.srcPeerId.toString() == peerId.toString() &&
-            _extractRequestId(packet.datagram) == requestId) {
-          _router.removeMessageHandler(protocolId);
-          completer.complete(packet.datagram);
-        }
-      });
-
-      // Send the request
-      await _router.sendMessage(peerId.toString(), messageWithId);
-
-      // Wait for response with timeout
-      return await completer.future.timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          _router.removeMessageHandler(protocolId);
-          throw TimeoutException('Request to peer timed out');
-        },
-      );
-    } catch (e) {
-      // print('Error sending request to peer ${peerId.toString()}: $e');
-      rethrow;
-    }
+    return _router.sendRequest(peerId, protocolId, request);
   }
-
-  /// Extracts the request ID from a datagram
-  String _extractRequestId(Uint8List datagram) {
-    try {
-      // The request ID is appended at the end of the datagram
-      // Convert the last portion to UTF-8 string
-      final requestIdBytes = datagram.sublist(
-        datagram.length - 36,
-      ); // UUID is 36 chars
-      return utf8.decode(requestIdBytes);
-    } catch (e) {
-      // print('Error extracting request ID: $e');
-      return ''; // Return empty string on error
-    }
-  }
-
-  /// Gets the P2plibRouter instance
-  P2plibRouter get p2pRouter => _router;
 
   /// Returns the circuit relay client.
   CircuitRelayClient get circuitRelayClient => _circuitRelayClient;
@@ -305,15 +266,21 @@ class NetworkHandler {
   void _setupEventHandlers() {
     _logger.verbose('Setting up network event handlers');
 
-    _router.connectionEvents.listen((event) {
-      _logger.debug('Connection event: ${event.type} - Peer: ${event.peerId}');
-      _handleConnectionEvent(event);
-    });
+    _subscriptions.add(
+      _router.connectionEvents.listen((event) {
+        _logger.debug(
+          'Connection event: ${event.type} - Peer: ${event.peerId}',
+        );
+        _handleConnectionEvent(event);
+      }),
+    );
 
-    _router.messageEvents.listen((event) {
-      _logger.verbose('Message received from: ${event.peerId}');
-      _handleMessageEvent(event);
-    });
+    _subscriptions.add(
+      _router.messageEvents.listen((event) {
+        _logger.verbose('Message received from: ${event.peerId}');
+        _handleMessageEvent(event);
+      }),
+    );
   }
 
   void _handleConnectionEvent(ConnectionEvent event) {
@@ -386,51 +353,6 @@ class NetworkHandler {
     }
   }
 
-  /// Tests a connection using a specific source port
-  Future<String> testConnection({required int sourcePort}) async {
-    late final p2p.TransportUdp tempTransport;
-
-    try {
-      _logger.verbose('Testing connection from source port: $sourcePort');
-
-      // Initialize the transport
-      tempTransport = p2p.TransportUdp(
-        bindAddress: p2p.FullAddress(
-          address: InternetAddress.anyIPv4,
-          port: sourcePort,
-        ),
-        ttl: _router.routerL0.messageTTL.inSeconds,
-      );
-
-      // Add the transport to the router
-      _router.routerL0.transports.add(tempTransport);
-
-      final bootstrapPeer = _config.network.bootstrapPeers.first;
-      await _router.connect(bootstrapPeer);
-
-      final peerId = _router.routerL0.routes.values
-          .firstWhere((r) => r.peerId.toString() == bootstrapPeer)
-          .peerId;
-
-      final addresses = _router.routerL0.resolvePeerId(peerId);
-      if (addresses.isEmpty) {
-        throw StateError('No addresses found for peer');
-      }
-      final externalPort = addresses.first.port.toString();
-
-      await _router.disconnect(bootstrapPeer);
-
-      _logger.debug('Connection test completed. External port: $externalPort');
-      return externalPort;
-    } catch (e, stackTrace) {
-      _logger.error('Error testing connection', e, stackTrace);
-      return '';
-    } finally {
-      // Now tempTransport is accessible here
-      _router.routerL0.transports.remove(tempTransport);
-    }
-  }
-
   /// Tests if the node is reachable from the outside network through dialback
   Future<bool> testDialback() async {
     try {
@@ -442,7 +364,7 @@ class NetworkHandler {
         return false;
       }
       final bootstrapPeer =
-          _config.network.bootstrapPeers[Random().nextInt(
+          _config.network.bootstrapPeers[Random.secure().nextInt(
             _config.network.bootstrapPeers.length,
           )];
 
@@ -466,13 +388,24 @@ class NetworkHandler {
   /// Sends a dialback request to a peer
   Future<bool> _sendDialbackRequest(String peerAddr) async {
     try {
+      // Extract Peer ID from Multiaddr string
+      String targetPeerId = peerAddr;
+      if (peerAddr.contains('/p2p/')) {
+        targetPeerId = peerAddr.split('/p2p/').last;
+      } else if (peerAddr.contains('/ipfs/')) {
+        targetPeerId = peerAddr.split('/ipfs/').last;
+      }
+      if (targetPeerId.contains('/')) {
+        targetPeerId = targetPeerId.split('/').first;
+      }
+
       final response = await _router.sendRequest(
-        peerAddr,
-        '/ipfs/autonat/1.0.0/dialback',
+        targetPeerId,
+        _dialbackProtocolId,
         Uint8List(0), // Empty payload for dialback request
       );
 
-      return response.isNotEmpty;
+      return response != null && response.isNotEmpty;
     } catch (e) {
       _logger.error('Error sending dialback request', e);
       return false;
@@ -484,4 +417,54 @@ class NetworkHandler {
 
   /// Gets the peer ID of this node
   String get peerID => _router.peerID;
+
+  /// Protocol ID for AutoNAT dialback
+  static const String _dialbackProtocolId = '/ipfs/autonat/1.0.0/dialback';
+
+  /// Registers the AutoNAT dialback protocol handler.
+  ///
+  /// This handler responds to incoming dialback requests from peers.
+  /// When a peer sends a dialback request, we respond with a success
+  /// message to confirm that they can reach us.
+  ///
+  /// The response must include the original request ID (last 13 bytes of
+  /// the incoming datagram) so the sender can correlate the response.
+  void _registerDialbackHandler() {
+    _logger.verbose('Registering AutoNAT dialback protocol handler');
+
+    _router.registerProtocolHandler(_dialbackProtocolId, (packet) {
+      _logger.verbose('Received dialback request from ${packet.srcPeerId}');
+
+      try {
+        // Extract request ID from the incoming packet (last 13 chars = timestamp)
+        String requestId = '';
+        if (packet.datagram.length >= 13) {
+          final requestIdBytes = packet.datagram.sublist(
+            packet.datagram.length - 13,
+          );
+          requestId = utf8.decode(requestIdBytes, allowMalformed: true);
+        }
+
+        // Respond with success acknowledgment + request ID for correlation
+        final responsePayload = utf8.encode('OK');
+        final response = Uint8List.fromList([
+          ...responsePayload,
+          ...utf8.encode(requestId),
+        ]);
+
+        _router.sendMessage(
+          packet.srcPeerId.toString(),
+          response,
+          protocolId: _dialbackProtocolId,
+        );
+        _logger.debug(
+          'Sent dialback response to ${packet.srcPeerId} (requestId: $requestId)',
+        );
+      } catch (e) {
+        _logger.error('Error responding to dialback request', e);
+      }
+    });
+
+    _logger.debug('AutoNAT dialback handler registered');
+  }
 }

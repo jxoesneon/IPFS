@@ -133,6 +133,10 @@ class Keystore {
       // Verify the signature
       final isValid = await _ed25519.verify(data, signature: sig);
       return isValid;
+    } on ArgumentError catch (e) {
+      // Invalid key length or format
+      _logger.warning('Invalid key format for verification: ${e.message}');
+      return false;
     } catch (e, stackTrace) {
       _logger.error('Error verifying signature', e, stackTrace);
       return false;
@@ -181,9 +185,15 @@ class Keystore {
     );
     final result = <String, Uint8List>{};
     for (final entry in _keyPairs.entries) {
-      result[entry.key] = Uint8List.fromList(
-        utf8.encode(entry.value.privateKey),
-      );
+      try {
+        // Try base64 decoding first (standard for IPFSPrivateKey)
+        result[entry.key] = base64Url.decode(entry.value.privateKey);
+      } catch (_) {
+        // Fallback to UTF-8 for legacy raw string keys
+        result[entry.key] = Uint8List.fromList(
+          utf8.encode(entry.value.privateKey),
+        );
+      }
     }
     return result;
   }

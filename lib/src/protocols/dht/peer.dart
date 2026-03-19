@@ -1,4 +1,4 @@
-import 'package:p2plib/p2plib.dart' as p2p;
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 
 /// Represents a peer in the DHT network
 class Peer {
@@ -6,7 +6,7 @@ class Peer {
   Peer({required this.id, required this.address, this.metadata});
 
   /// The unique identifier of the peer
-  final p2p.PeerId id;
+  final PeerId id;
 
   /// The multiaddress where this peer can be reached
   final String address;
@@ -19,11 +19,7 @@ class Peer {
   String toString() => 'Peer(id: $id, address: $address)';
 
   /// Creates a copy of this peer with optional parameter updates
-  Peer copyWith({
-    p2p.PeerId? id,
-    String? address,
-    Map<String, dynamic>? metadata,
-  }) {
+  Peer copyWith({PeerId? id, String? address, Map<String, dynamic>? metadata}) {
     return Peer(
       id: id ?? this.id,
       address: address ?? this.address,

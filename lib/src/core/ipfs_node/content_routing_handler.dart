@@ -8,6 +8,7 @@ import 'package:dart_ipfs/src/routing/content_routing.dart';
 import 'package:dart_ipfs/src/routing/delegated_routing.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:http/http.dart' as http;
 
 /// Handles content routing operations with fallback strategies.
 class ContentRoutingHandler {
@@ -17,7 +18,8 @@ class ContentRoutingHandler {
     this._networkHandler, {
     ContentRouting? contentRouting,
     DelegatedRoutingHandler? delegatedRouting,
-  }) {
+    http.Client? dnsClient,
+  }) : _dnsClient = dnsClient {
     _logger = Logger(
       'ContentRoutingHandler',
       debug: _config.debug,
@@ -36,6 +38,7 @@ class ContentRoutingHandler {
   }
   final IPFSConfig _config;
   final NetworkHandler _networkHandler;
+  final http.Client? _dnsClient;
   late final Logger _logger;
   late final ContentRouting _contentRouting;
   late final DelegatedRoutingHandler _delegatedRouting;
@@ -114,7 +117,7 @@ class ContentRoutingHandler {
     try {
       // First try direct DNS resolution
       _logger.verbose('Attempting direct DNSLink resolution');
-      final cid = await DNSLinkResolver.resolve(domainName);
+      final cid = await DNSLinkResolver.resolve(domainName, client: _dnsClient);
 
       if (cid != null) {
         _logger.debug('Resolved DNSLink via DNS: $cid');

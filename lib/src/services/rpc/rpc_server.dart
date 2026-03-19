@@ -60,21 +60,8 @@ class RPCServer {
   late final RPCHandlers _handlers;
   late final Router _router;
 
-  /// Read-only endpoints that don't require authentication
-  static const _publicEndpoints = {
-    '/api/v0/version',
-    '/api/v0/id',
-    '/api/v0/cat',
-    '/api/v0/get',
-    '/api/v0/ls',
-    '/api/v0/dag/get',
-    '/api/v0/block/get',
-    '/api/v0/block/stat',
-    '/api/v0/name/resolve',
-    '/api/v0/swarm/peers',
-    '/api/v0/dht/findprovs',
-    '/api/v0/dht/findpeer',
-  };
+  /// Minimal public endpoints that don't require authentication (SEC-003).
+  static const _publicEndpoints = {'/api/v0/version', '/api/v0/id'};
 
   void _setupRouter() {
     _router = Router();

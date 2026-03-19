@@ -317,7 +317,7 @@ class KademliaTree {
   }
 
   int _generateRequestId() =>
-      DateTime.now().millisecondsSinceEpoch + Random().nextInt(1000000);
+      DateTime.now().millisecondsSinceEpoch + Random.secure().nextInt(1000000);
 
   Future<kad.Message> _sendMessageWithTimeout(
     PeerId peer,

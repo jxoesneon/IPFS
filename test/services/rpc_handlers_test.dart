@@ -6,6 +6,7 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
+import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
@@ -55,6 +56,8 @@ class MockBlockStore implements BlockStore {
       RemoveBlockResponse();
   @override
   Future<Map<String, dynamic>> getStatus() async => {};
+  @override
+  PinManager get pinManager => throw UnimplementedError('Mock');
 }
 
 // Mock DHTClient

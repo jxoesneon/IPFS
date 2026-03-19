@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/core/types/peer_types.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
-import 'package:p2plib/p2plib.dart' as p2p;
 import 'package:test/test.dart';
 
 void main() {
@@ -35,14 +35,14 @@ void main() {
     });
 
     test('toKadPeer converts addresses to binary (TODO case)', () {
-      final peerId = p2p.PeerId(value: Uint8List.fromList(List.filled(64, 1)));
-      final address = p2p.FullAddress(
+      final peerId = PeerId(value: Uint8List.fromList(List.filled(64, 1)));
+      final address = FullAddress(
         address: InternetAddress('127.0.0.1'),
         port: 4001,
       );
 
       final peer = IPFSPeer(
-        id: PeerId(value: peerId.value),
+        id: peerId,
         addresses: [address],
         latency: 0,
         agentVersion: '',

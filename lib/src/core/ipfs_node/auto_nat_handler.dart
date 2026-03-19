@@ -3,12 +3,17 @@ import 'dart:async';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/network/nat_traversal_service.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Handles NAT detection and traversal for an IPFS node.
 class AutoNATHandler {
   /// Creates an AutoNATHandler with the given config and network handler.
-  AutoNATHandler(this._config, this._networkHandler) {
+  AutoNATHandler(
+    this._config,
+    this._networkHandler, {
+    NatTraversalService? natService,
+  }) : _natService = natService ?? NatTraversalService() {
     _logger = Logger(
       'AutoNATHandler',
       debug: _config.debug,
@@ -18,6 +23,7 @@ class AutoNATHandler {
   }
   final IPFSConfig _config;
   final NetworkHandler _networkHandler;
+  final NatTraversalService _natService;
   late final Logger _logger;
   bool _isRunning = false;
   Timer? _dialbackTimer;
@@ -26,6 +32,7 @@ class AutoNATHandler {
   NATType _natType = NATType.unknown;
   bool _reachable = false;
   DateTime? _lastDialbackTest;
+  int? _mappedPort;
 
   static const Duration _dialbackInterval = Duration(minutes: 30);
 
@@ -42,8 +49,15 @@ class AutoNATHandler {
       // Initial NAT detection
       await _detectNATType();
 
-      // Start periodic dialback tests
-      _startDialbackTests();
+      // Attempt port mapping if behind NAT and enabled
+      if (_natType != NATType.none && _config.network.enableNatTraversal) {
+        await _attemptPortMapping();
+      } else if (_natType != NATType.none) {
+        _logger.info('NAT detected but port mapping is disabled in config');
+      }
+
+      // Start periodic dialback tests and perform initial test
+      await _startDialbackTests();
 
       _isRunning = true;
       _logger.info('AutoNATHandler started successfully');
@@ -66,6 +80,14 @@ class AutoNATHandler {
       _dialbackTimer?.cancel();
       _dialbackTimer = null;
 
+      // Clean up port mappings
+      if (_mappedPort != null) {
+        await _natService.unmapPort(_mappedPort!);
+      } else {
+        // Fallback or legacy default
+        await _natService.unmapPort(4001);
+      }
+
       _isRunning = false;
       _logger.info('AutoNATHandler stopped successfully');
     } catch (e, stackTrace) {
@@ -74,7 +96,7 @@ class AutoNATHandler {
     }
   }
 
-  void _startDialbackTests() {
+  Future<void> _startDialbackTests() async {
     _logger.verbose('Starting periodic dialback tests');
 
     _dialbackTimer?.cancel();
@@ -82,8 +104,12 @@ class AutoNATHandler {
       _performDialbackTest();
     });
 
-    // Initial test
-    _performDialbackTest();
+    // Initial test - only if not already performed by port mapping
+    if (_lastDialbackTest == null ||
+        DateTime.now().difference(_lastDialbackTest!) >
+            const Duration(seconds: 5)) {
+      await _performDialbackTest();
+    }
   }
 
   Future<void> _detectNATType() async {
@@ -101,8 +127,10 @@ class AutoNATHandler {
       }
 
       // Test for symmetric NAT
-      final isSymmetric = await _testSymmetricNAT();
-      _natType = isSymmetric ? NATType.symmetric : NATType.restricted;
+      // Note: checkDialback already tests reachability.
+      // Accurate symmetric NAT detection requires binding multiple ports which RouterInterface doesn't expose yet.
+      // Defaulting to restricted for now if not directly reachable.
+      _natType = NATType.restricted;
 
       _logger.debug('NAT type detected: $_natType');
     } catch (e, stackTrace) {
@@ -112,39 +140,22 @@ class AutoNATHandler {
   }
 
   Future<bool> _checkDirectConnectivity() async {
-    try {
-      // Attempt direct connections to bootstrap nodes
-      final bootstrapPeers = _config.network.bootstrapPeers;
-      int successfulConnections = 0;
+    // Attempt direct connections to bootstrap nodes
+    final bootstrapPeers = _config.network.bootstrapPeers;
+    int successfulConnections = 0;
 
-      for (final peer in bootstrapPeers) {
-        if (await _networkHandler.canConnectDirectly(peer)) {
-          successfulConnections++;
-        }
+    for (final peer in bootstrapPeers) {
+      if (await _networkHandler.canConnectDirectly(peer)) {
+        successfulConnections++;
       }
-
-      return successfulConnections >= bootstrapPeers.length ~/ 2;
-    } catch (e) {
-      _logger.error('Error checking direct connectivity', e);
-      return false;
     }
+
+    if (bootstrapPeers.isEmpty) return false;
+    return successfulConnections >= (bootstrapPeers.length + 1) ~/ 2;
   }
 
-  Future<bool> _testSymmetricNAT() async {
-    try {
-      // Test connections from different source ports
-      final results = await Future.wait([
-        _networkHandler.testConnection(sourcePort: 4001),
-        _networkHandler.testConnection(sourcePort: 4002),
-      ]);
-
-      // If external ports are different, it's symmetric NAT
-      return results[0] != results[1];
-    } catch (e) {
-      _logger.error('Error testing symmetric NAT', e);
-      return false;
-    }
-  }
+  // Symmetric NAT test removed as NetworkHandler.testConnection is deprecated.
+  // Future<bool> _testSymmetricNAT() async { ... }
 
   Future<void> _performDialbackTest() async {
     _logger.verbose('Performing dialback test');
@@ -158,6 +169,49 @@ class AutoNATHandler {
     } catch (e) {
       _logger.error('Error performing dialback test', e);
       _reachable = false;
+    }
+  }
+
+  Future<void> _attemptPortMapping() async {
+    _logger.debug('Attempting UPnP/NAT-PMP port mapping...');
+
+    // Extract port from listen addresses
+    int? port;
+    for (final addr in _config.network.listenAddresses) {
+      if (addr.contains('/tcp/') || addr.contains('/udp/')) {
+        final parts = addr.split('/');
+        // Format: /ip4/0.0.0.0/tcp/4001
+        for (var i = 0; i < parts.length - 1; i++) {
+          if (parts[i] == 'tcp' || parts[i] == 'udp') {
+            port = int.tryParse(parts[i + 1]);
+            if (port != null) break;
+          }
+        }
+      }
+      if (port != null) break;
+    }
+
+    if (port == null) {
+      _logger.warning(
+        'Could not determine listening port from config, skipping port mapping',
+      );
+      return;
+    }
+
+    _logger.debug('Identified listening port: $port');
+
+    // Store for unmapping
+    _mappedPort = port;
+
+    final mapped = await _natService.mapPort(port);
+    if (mapped.isNotEmpty) {
+      _logger.info(
+        'Port mapping successful for protocols: ${mapped.join(", ")}',
+      );
+      // Re-check reachability after mapping
+      await _performDialbackTest();
+    } else {
+      _logger.debug('Port mapping failed or no gateway found');
     }
   }
 

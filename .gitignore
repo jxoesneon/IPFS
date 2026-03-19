@@ -88,6 +88,37 @@ pana_report*.txt
 # Coverage
 coverage/
 .test_coverage.dart
+coverage.lcov
+coverage*.txt
+*.lcov
+
+# Test outputs
+test_output*.txt
+test_results.json
+test_node_debug.txt
+test_pin_debug.txt
+test_results_*.txt
+test_failures.txt
+final_test_output.txt
+rpc_test_*.txt
+test_summary.txt
+lib_analysis_errors.txt
+lint_issues.txt
+pub_get_error.txt
+git_status_output.txt
+
+# Temporary backups
+temp_backup/
+
+# Debug/Analysis tools
+# parse_all_coverage.dart
+# tool_coverage.dart
+# tool/
+# test/advanced_coverage_analyzer.dart
+
+# Generated mock files (mockito)
+# *.mocks.dart
+# !test/protocols/ipns/ipns_pubsub_test.mocks.dart
 
 # Environment
 .env
@@ -225,4 +256,8 @@ paket-files/
 
 # Agent Rules
 .agent/
-.windsurf/
+.windsurf/ci_*.log
+
+# Test Artifacts
+ipfs_facade_*
+verify.log

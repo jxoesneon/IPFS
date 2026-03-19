@@ -1,7 +1,7 @@
 // src/core/interfaces/i_network_system.dart
 import 'package:dart_ipfs/src/core/events/network_events.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_core_system.dart';
-import 'package:p2plib/p2plib.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 
 /// Interface for network subsystem operations.
 ///

@@ -4,10 +4,10 @@ import 'dart:io';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/network/mdns_client.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:p2plib/p2plib.dart' as p2p;
 
 /// Handles mDNS (multicast DNS) peer discovery for an IPFS node.
 class MDNSHandler {
@@ -36,6 +36,11 @@ class MDNSHandler {
 
   /// Starts the mDNS discovery service
   Future<void> start() async {
+    if (!_config.network.enableMDNS) {
+      _logger.debug('MDNS disabled by configuration');
+      return;
+    }
+
     if (_isRunning) {
       _logger.warning('MDNSHandler already running');
       return;
@@ -197,10 +202,10 @@ class MDNSHandler {
       }
 
       // Create a FullAddress from the resolved IP
-      final address = p2p.FullAddress(address: addresses.first, port: srv.port);
+      final address = FullAddress(address: addresses.first, port: srv.port);
 
       // Create a PeerId from the TXT record
-      final peerId = p2p.PeerId(value: Base58().base58Decode(txt.text.first));
+      final peerId = PeerId(value: Base58().base58Decode(txt.text.first));
 
       return Peer(
         id: peerId,
