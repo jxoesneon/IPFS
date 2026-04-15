@@ -217,7 +217,7 @@ class BitswapHandler {
     if (hasContent) {
       try {
         final messageBytes = outgoingMessage.toBytes();
-        await _router.sendMessage(fromPeer, messageBytes);
+        await _router.sendMessage(fromPeer, messageBytes, protocolId: _protocolId);
 
         // Update ledger stats
         final ledger = _ledgerManager.getLedger(fromPeer);
@@ -355,7 +355,8 @@ class BitswapHandler {
     for (final peerId in connectedPeers) {
       futures.add(
         Future(() {
-          _router.sendMessage(peerId, messageBytes);
+          _router.sendMessage(peerId, messageBytes,
+              protocolId: _protocolId);
           // print('Want request sent to peer: ${peer.toString()}');
         }).catchError((error) {
           // print(
