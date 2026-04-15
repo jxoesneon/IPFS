@@ -1,8 +1,10 @@
 import 'dart:typed_data';
+import 'package:crypto/crypto.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart' show Block;
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as pb;
-// If needed for int64? priorities are int32.
+import 'package:dart_ipfs/src/utils/encoding.dart';
+import 'package:dart_multihash/dart_multihash.dart';
 
 /// Represents a Bitswap protocol message.
 class Message {
@@ -107,20 +109,24 @@ class Message {
     }
 
     // Parse blocks (Payload - 1.1+)
+    // Bitswap 1.1+ blocks carry a prefix: <cidVersion><codec><mhType><mhLen>
+    // as unsigned varints. Use the prefix to reconstruct the original CID so
+    // that CID format (v0/v1) matches what was requested.
     for (var payloadBlock in pbMessage.payload) {
       try {
-        // Payload has prefix and data.
-        // We need to reconstruct the block.
-        // prefix logic?
-        // Actually usually we just check data matches requested?
-        // Block.fromData(data).
-        final newBlock = await Block.fromData(
-          Uint8List.fromList(payloadBlock.data),
-          format: 'dag-pb', // Assume dag-pb default or infer?
-        );
-        message.addBlock(newBlock);
+        final data = Uint8List.fromList(payloadBlock.data);
+        final prefix = payloadBlock.prefix;
+
+        if (prefix.isNotEmpty) {
+          final cid = _cidFromPrefixAndData(prefix, data);
+          message.addBlock(
+              Block(cid: cid, data: data, format: cid.codec ?? 'raw'));
+        } else {
+          final newBlock = await Block.fromData(data);
+          message.addBlock(newBlock);
+        }
       } catch (e) {
-        // print('Error parsing payload block: $e');
+        // Skip unparseable payload blocks
       }
     }
 
@@ -299,4 +305,58 @@ class BlockPresence {
 
   /// The presence type.
   final BlockPresenceType type;
+}
+
+/// Reconstructs a CID from a Bitswap block prefix and data.
+///
+/// Prefix format: `<cidVersion><codec><mhType><mhLen>` as unsigned varints.
+CID _cidFromPrefixAndData(List<int> prefix, Uint8List data) {
+  var offset = 0;
+
+  int readVarint() {
+    var result = 0;
+    var shift = 0;
+    while (offset < prefix.length) {
+      final byte = prefix[offset++];
+      result |= (byte & 0x7F) << shift;
+      if ((byte & 0x80) == 0) return result;
+      shift += 7;
+    }
+    throw const FormatException('Truncated varint in Bitswap prefix');
+  }
+
+  final cidVersion = readVarint();
+  final codecCode = readVarint();
+  final mhType = readVarint();
+  readVarint(); // mhLen — not needed, we hash the data ourselves
+
+  // Hash the data with the specified function
+  Uint8List hashDigest;
+  if (mhType == 0x12) {
+    // sha2-256
+    hashDigest = Uint8List.fromList(sha256.convert(data).bytes);
+  } else if (mhType == 0x00) {
+    // identity — digest is the data itself
+    hashDigest = data;
+  } else {
+    throw UnsupportedError(
+        'Unsupported multihash type 0x${mhType.toRadixString(16)} in Bitswap prefix');
+  }
+
+  final mhInfo = Multihash.encode(
+    mhType == 0x12 ? 'sha2-256' : 'identity',
+    hashDigest,
+  );
+
+  String codecName;
+  try {
+    codecName = EncodingUtils.getCodecFromCode(codecCode);
+  } catch (_) {
+    codecName = 'raw';
+  }
+
+  if (cidVersion == 0) {
+    return CID.v0(hashDigest);
+  }
+  return CID.v1(codecName, mhInfo);
 }
