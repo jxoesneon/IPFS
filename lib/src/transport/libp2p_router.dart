@@ -252,6 +252,7 @@ class Libp2pRouter implements RouterInterface {
       await _host!.connect(addrInfo);
 
       // _connectedPeers is updated via NotifyBundle in start()
+      _connectedPeers.add(peerIdStr);
       _logger.debug('Connected to peer $peerIdStr');
     } catch (e) {
       _logger.error('Failed to connect to $multiaddress', e);
