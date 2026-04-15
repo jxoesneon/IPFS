@@ -371,11 +371,15 @@ class BitswapHandler {
   // Removed _getPeerAddress as it's no longer needed with new Router API
 
   Future<void> _handlePacket(NetworkPacket packet) async {
-    final msg = await message.Message.fromBytes(packet.datagram);
-    // Annotate message with sender
-    msg.from = packet.srcPeerId;
-
-    await _handleMessage(msg);
+    try {
+      final msg = await message.Message.fromBytes(packet.datagram);
+      // Annotate message with sender
+      msg.from = packet.srcPeerId;
+      await _handleMessage(msg);
+    } catch (e, st) {
+      _logger.error('Failed to handle Bitswap packet from ${packet.srcPeerId}: $e');
+      _logger.error('$st');
+    }
   }
 
   /// Handles an incoming want request for a CID.
