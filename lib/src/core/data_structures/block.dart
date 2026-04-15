@@ -55,8 +55,16 @@ class Block implements IBlock {
   @override
   Future<bool> validate() async {
     try {
+      // Compare multihash bytes directly rather than encoded CID strings,
+      // because CIDv0 and CIDv1 encode differently for the same content.
       final computedCid = await CID.fromContent(data, codec: format);
-      return computedCid.encode() == cid.encode();
+      final computedMh = computedCid.multihash.toBytes();
+      final expectedMh = cid.multihash.toBytes();
+      if (computedMh.length != expectedMh.length) return false;
+      for (var i = 0; i < computedMh.length; i++) {
+        if (computedMh[i] != expectedMh[i]) return false;
+      }
+      return true;
     } catch (e) {
       // If we can't compute the CID, validation fails
       return false;
