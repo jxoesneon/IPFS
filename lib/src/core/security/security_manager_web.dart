@@ -30,6 +30,9 @@ class SecurityManagerWeb implements ISecurityManager {
 
   @override
   Future<void> unlockKeystore(String password, {Uint8List? salt}) async {
+    if (password.isEmpty) {
+      throw ArgumentError('Keystore password cannot be empty');
+    }
     await _encryptedKeystore.unlock(password, salt: salt);
   }
 
@@ -40,6 +43,9 @@ class SecurityManagerWeb implements ISecurityManager {
 
   @override
   Future<SimpleKeyPair> getSecureKey(String keyName) async {
+    if (keyName.isEmpty) {
+      throw ArgumentError('Key name cannot be empty');
+    }
     if (!_encryptedKeystore.isUnlocked) {
       throw StateError('Keystore is locked. Call unlockKeystore() first.');
     }
@@ -48,6 +54,9 @@ class SecurityManagerWeb implements ISecurityManager {
 
   @override
   Future<Uint8List> generateSecureKey(String keyName, {String? label}) async {
+    if (keyName.isEmpty) {
+      throw ArgumentError('Key name cannot be empty');
+    }
     if (!_encryptedKeystore.isUnlocked) {
       throw StateError('Keystore is locked. Call unlockKeystore() first.');
     }
@@ -60,4 +69,12 @@ class SecurityManagerWeb implements ISecurityManager {
   @override
   Uint8List? getSecurePublicKey(String keyName) =>
       _encryptedKeystore.getPublicKey(keyName);
+
+  @override
+  Future<void> start() async {}
+
+  @override
+  Future<void> stop() async {
+    lockKeystore();
+  }
 }

@@ -3,23 +3,28 @@
 import 'dart:convert';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/routing/content_routing.dart';
-import 'package:dart_ipfs/src/utils/dnslink_resolver.dart'; // Import your DNSLinkResolver utility
+import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:http/http.dart' as http;
 
 /// Handles routing operations for an IPFS node.
-class RoutingHandler {
+class RoutingHandler implements ILifecycle {
   /// Creates a routing handler with config and network handler.
   RoutingHandler(
     IPFSConfig config,
     NetworkHandler networkHandler, {
     ContentRouting? contentRouting,
+    http.Client? httpClient,
   }) : _contentRouting =
-           contentRouting ?? ContentRouting(config, networkHandler);
+           contentRouting ?? ContentRouting(config, networkHandler),
+       _httpClient = httpClient ?? http.Client();
   final ContentRouting _contentRouting;
+  final http.Client _httpClient;
 
   /// Starts the routing services.
+  @override
   Future<void> start() async {
     try {
       await _contentRouting.start();
@@ -30,6 +35,7 @@ class RoutingHandler {
   }
 
   /// Stops the routing services.
+  @override
   Future<void> stop() async {
     try {
       await _contentRouting.stop();
@@ -78,7 +84,7 @@ class RoutingHandler {
         final url = Uri.parse(
           'https://dnslink-resolver.example.com/$domainName',
         );
-        final response = await http.get(url);
+        final response = await _httpClient.get(url);
         if (response.statusCode == 200) {
           final resolvedCid = jsonDecode(response.body)['cid'] as String?;
           if (resolvedCid != null) {

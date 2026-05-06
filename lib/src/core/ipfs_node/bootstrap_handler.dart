@@ -3,11 +3,12 @@ import 'dart:async';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
+import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Handles bootstrap peer connections for an IPFS node.
-class BootstrapHandler {
+class BootstrapHandler implements ILifecycle {
   /// Creates a bootstrap handler with the given config and network handler.
   BootstrapHandler(this._config, this._networkHandler) {
     _logger = Logger(
@@ -28,6 +29,7 @@ class BootstrapHandler {
   static const Duration _reconnectionInterval = Duration(minutes: 5);
 
   /// Starts the bootstrap handler
+  @override
   Future<void> start() async {
     if (_isRunning) {
       _logger.warning('BootstrapHandler already running');
@@ -53,6 +55,7 @@ class BootstrapHandler {
   }
 
   /// Stops the bootstrap handler
+  @override
   Future<void> stop() async {
     if (!_isRunning) {
       _logger.warning('BootstrapHandler already stopped');

@@ -1,3 +1,4 @@
+// src/core/ipfs_node/web_block_store.dart
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
@@ -60,9 +61,6 @@ class WebBlockStore implements IBlockStore {
 
   @override
   Future<bool> hasBlock(String cid) async {
-    // Inefficient check (reads whole block), but generic platform verification
-    // requires a generic 'exists' method which isn't guaranteed on all implementations of readBytes
-    // unless we trust readBytes(path) == null means missing.
     final data = await _platform.readBytes('blocks/$cid');
     return data != null;
   }
@@ -73,15 +71,11 @@ class WebBlockStore implements IBlockStore {
       final keys = await _platform.listDirectory('blocks');
       final blocks = <Block>[];
       for (final key in keys) {
-        // Platform returns relative path 'blocks/cid' or just 'cid'?
-        // Implementations vary. Assuming standard behavior (like idb_shim adapter) returns keys.
-        // We'll strip directory if present.
         var cidStr = key;
         if (cidStr.startsWith('blocks/')) {
           cidStr = cidStr.substring(7);
         }
 
-        // Skip non-CID files if any
         if (cidStr.isEmpty) continue;
 
         final data = await _platform.readBytes(key);
@@ -107,10 +101,17 @@ class WebBlockStore implements IBlockStore {
       return {
         'total_blocks': blocks.length,
         'total_size': size,
-        'pinned_blocks': 0, // Pinning not integrated in this simple store yet
+        'pinned_blocks': 0, 
       };
     } catch (_) {
       return {'total_blocks': 0, 'total_size': 0};
     }
+  }
+
+  @override
+  Future<int> gc() async {
+    // Basic GC for WebStore - iterate and remove unreferenced (can be expensive)
+    // Note: This needs logic to check pins. Currently a placeholder.
+    return 0;
   }
 }

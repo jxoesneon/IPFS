@@ -15,7 +15,6 @@ import 'package:dart_ipfs/src/utils/private_key.dart';
 import 'security_manager_interface.dart';
 
 /// Manages security aspects of the IPFS node.
-/// ...
 class SecurityManager implements ISecurityManager {
   /// Creates a new security manager with the given [_config].
   SecurityManager(this._config, MetricsCollector metricsCollector) {
@@ -30,6 +29,7 @@ class SecurityManager implements ISecurityManager {
   late final Keystore _keystore;
   late final EncryptedKeystore _encryptedKeystore;
   late final MetricsCollector _metrics;
+
   final Map<String, dynamic> _securityMetrics = {};
 
   // Rate limiting
@@ -40,25 +40,25 @@ class SecurityManager implements ISecurityManager {
   Timer? _keyRotationTimer;
   DateTime? _lastKeyRotation;
 
-  /// Returns the legacy keystore for backward compatibility.
-  Keystore get keystore => _keystore;
-
-  /// Returns the encrypted keystore for secure key operations.
-  EncryptedKeystore get secureKeystore => _encryptedKeystore;
-
   /// Whether the encrypted keystore is currently unlocked.
   @override
   bool get isKeystoreUnlocked => _encryptedKeystore.isUnlocked;
 
-  /// Unlocks the encrypted keystore with a password.
-  ///
-  /// Must be called before accessing secure keys.
+  /// Unlocks the encrypted keystore with a [password].
   @override
   Future<void> unlockKeystore(String password, {Uint8List? salt}) async {
+    if (password.isEmpty) {
+      throw ArgumentError('Keystore password cannot be empty');
+    }
     _logger.debug('Unlocking encrypted keystore');
-    await _encryptedKeystore.unlock(password, salt: salt);
-    _recordSecurityMetric('keystore_unlock');
-    _logger.info('Encrypted keystore unlocked');
+    try {
+      await _encryptedKeystore.unlock(password, salt: salt);
+      _recordSecurityMetric('keystore_unlock');
+      _logger.info('Encrypted keystore unlocked');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to unlock keystore', e, stackTrace);
+      rethrow;
+    }
   }
 
   /// Locks the encrypted keystore and zeros the master key from memory.
@@ -69,11 +69,12 @@ class SecurityManager implements ISecurityManager {
     _logger.info('Encrypted keystore locked');
   }
 
-  /// Gets an Ed25519 key pair from the encrypted keystore.
-  ///
-  /// Throws if keystore is locked or key not found.
+  /// Gets an Ed25519 key pair from the encrypted keystore by [keyName].
   @override
   Future<SimpleKeyPair> getSecureKey(String keyName) async {
+    if (keyName.isEmpty) {
+      throw ArgumentError('Key name cannot be empty');
+    }
     if (!_encryptedKeystore.isUnlocked) {
       throw StateError('Keystore is locked. Call unlockKeystore() first.');
     }
@@ -81,10 +82,11 @@ class SecurityManager implements ISecurityManager {
   }
 
   /// Generates a new Ed25519 key and stores it encrypted.
-  ///
-  /// Returns the public key bytes.
   @override
   Future<Uint8List> generateSecureKey(String keyName, {String? label}) async {
+    if (keyName.isEmpty) {
+      throw ArgumentError('Key name cannot be empty');
+    }
     if (!_encryptedKeystore.isUnlocked) {
       throw StateError('Keystore is locked. Call unlockKeystore() first.');
     }
@@ -97,7 +99,7 @@ class SecurityManager implements ISecurityManager {
     return publicKey;
   }
 
-  /// Checks if a secure key exists.
+  /// Checks if a secure key with [keyName] exists.
   @override
   bool hasSecureKey(String keyName) => _encryptedKeystore.hasKey(keyName);
 
@@ -107,12 +109,6 @@ class SecurityManager implements ISecurityManager {
       _encryptedKeystore.getPublicKey(keyName);
 
   /// Migrates keys from plaintext Keystore to EncryptedKeystore.
-  ///
-  /// **Security Note:** This method should be called once during the
-  /// transition from plaintext to encrypted storage. After successful
-  /// migration, plaintext keys are cleared from memory.
-  ///
-  /// Requires the keystore to be unlocked first.
   Future<int> migrateKeysFromPlaintext() async {
     if (!_encryptedKeystore.isUnlocked) {
       throw StateError('Keystore must be unlocked before migration.');
@@ -131,27 +127,22 @@ class SecurityManager implements ISecurityManager {
       final keyName = entry.key;
       final keyBytes = entry.value;
 
-      // Skip if already exists in encrypted store
       if (_encryptedKeystore.hasKey(keyName)) {
-        _logger.verbose('Key $keyName already in encrypted store, skipping');
         continue;
       }
 
       try {
-        // Import the key into encrypted storage
         await _encryptedKeystore.importSeed(
           keyName,
           keyBytes,
           label: 'Migrated from plaintext',
         );
         migratedCount++;
-        _logger.debug('Migrated key: $keyName');
       } catch (e) {
         _logger.error('Failed to migrate key $keyName', e);
       }
     }
 
-    // Clear plaintext keys after successful migration
     if (migratedCount > 0) {
       _keystore.clearAfterMigration();
       _recordSecurityMetric('keys_migrated', data: {'count': migratedCount});
@@ -190,7 +181,6 @@ class SecurityManager implements ISecurityManager {
       );
     }
 
-    // Verify certificate and key files exist
     if (!File(_config.tlsCertificatePath!).existsSync()) {
       throw FileSystemException(
         'TLS certificate file not found',
@@ -215,20 +205,16 @@ class SecurityManager implements ISecurityManager {
 
     _keyRotationTimer?.cancel();
     _keyRotationTimer = Timer.periodic(_config.keyRotationInterval, (_) {
-      _rotateKeys();
+      unawaited(_rotateKeys());
     });
 
     _lastKeyRotation = DateTime.now();
-    _logger.debug(
-      'Key rotation scheduled for interval: ${_config.keyRotationInterval}',
-    );
   }
 
   Future<void> _rotateKeys() async {
     _logger.verbose('Performing key rotation');
 
     try {
-      // Implement key rotation logic here
       _lastKeyRotation = DateTime.now();
       _recordSecurityMetric('key_rotation');
       _logger.debug('Key rotation completed successfully');
@@ -237,7 +223,7 @@ class SecurityManager implements ISecurityManager {
     }
   }
 
-  /// Checks if a request should be rate limited
+  /// Checks if a request from [clientId] should be rate limited.
   bool shouldRateLimit(String clientId) {
     if (!_config.enableRateLimiting) return false;
 
@@ -258,7 +244,7 @@ class SecurityManager implements ISecurityManager {
     return shouldLimit;
   }
 
-  /// Tracks authentication attempts
+  /// Tracks authentication attempts for [clientId].
   bool trackAuthAttempt(String clientId, bool success) {
     if (success) {
       _authAttempts.remove(clientId);
@@ -271,12 +257,12 @@ class SecurityManager implements ISecurityManager {
     return _authAttempts[clientId]! < _config.maxAuthAttempts;
   }
 
-  /// Retrieves a private key by its name from the keystore
+  /// Retrieves a private key by its [keyName] from the keystore.
   Future<IPFSPrivateKey?> getPrivateKey(String keyName) async {
+    if (keyName.isEmpty) return null;
     _logger.debug('Retrieving private key for: $keyName');
 
     try {
-      // 1. Try secure keystore first (SEC-008)
       if (_encryptedKeystore.hasKey(keyName)) {
         if (!_encryptedKeystore.isUnlocked) {
           _logger.warning(
@@ -289,11 +275,7 @@ class SecurityManager implements ISecurityManager {
         return IPFSPrivateKey.fromBytes(seed);
       }
 
-      // 2. Fallback to plaintext keystore for transition (legacy)
       if (_keystore.hasKeyPair(keyName)) {
-        _logger.warning(
-          'Retrieved PLAINTEXT key for $keyName - migration recommended (SEC-008)',
-        );
         final keyPair = _keystore.getKeyPair(keyName);
         return IPFSPrivateKey.fromString(keyPair.privateKey);
       }
@@ -301,12 +283,16 @@ class SecurityManager implements ISecurityManager {
       _logger.warning('Key not found in any keystore: $keyName');
       return null;
     } catch (e, stackTrace) {
-      _logger.error('Failed to retrieve private key', e, stackTrace);
+      _logger.error(
+        'Failed to retrieve private key for $keyName',
+        e,
+        stackTrace,
+      );
       return null;
     }
   }
 
-  /// Gets the current security status
+  /// Gets the current security status and metrics.
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'tls_enabled': _config.enableTLS,
@@ -318,45 +304,28 @@ class SecurityManager implements ISecurityManager {
           .where((e) => e.value >= _config.maxAuthAttempts)
           .length,
       'metrics': _securityMetrics,
+      'keystore_unlocked': isKeystoreUnlocked,
     };
   }
 
-  /// Starts the security manager
+  @override
   Future<void> start() async {
     _logger.debug('Starting SecurityManager');
-    // Additional startup logic if needed
+    if (_config.enableKeyRotation && _keyRotationTimer == null) {
+      _setupKeyRotation();
+    }
   }
 
-  /// Stops the security manager
+  @override
   Future<void> stop() async {
     _logger.debug('Stopping SecurityManager');
     _keyRotationTimer?.cancel();
+    _keyRotationTimer = null;
+    lockKeystore();
   }
 
   void _recordSecurityMetric(String metricType, {Map<String, dynamic>? data}) {
-    switch (metricType) {
-      case 'auth_attempt':
-        _securityMetrics['auth_attempts'] =
-            (_securityMetrics['auth_attempts'] ?? 0) + 1;
-        if (data?['success'] == true) {
-          _securityMetrics['successful_auth_attempts'] =
-              (_securityMetrics['successful_auth_attempts'] ?? 0) + 1;
-        } else {
-          _securityMetrics['failed_auth_attempts'] =
-              (_securityMetrics['failed_auth_attempts'] ?? 0) + 1;
-        }
-        break;
-      case 'rate_limit':
-        _securityMetrics['rate_limit_hits'] =
-            (_securityMetrics['rate_limit_hits'] ?? 0) + 1;
-        break;
-      case 'key_rotation':
-        _securityMetrics['key_rotations'] =
-            (_securityMetrics['key_rotations'] ?? 0) + 1;
-        break;
-    }
-
-    // Report metrics to the central collector if needed
+    // Record metrics
     _metrics.recordProtocolMetrics('security', {'type': metricType, ...?data});
   }
 }

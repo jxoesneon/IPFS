@@ -2,13 +2,22 @@
 import 'dart:async';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/network/nat_traversal_service.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Handles NAT detection and traversal for an IPFS node.
-class AutoNATHandler {
+///
+/// This handler periodically performs dialback tests to determine
+/// the node's NAT status and attempts port mapping if needed
+/// to ensure reachability.
+class AutoNATHandler implements ILifecycle {
   /// Creates an AutoNATHandler with the given config and network handler.
+  ///
+  /// @param _config The IPFS configuration.
+  /// @param _networkHandler The network handler.
+  /// @param natService Optional NAT traversal service.
   AutoNATHandler(
     this._config,
     this._networkHandler, {
@@ -37,6 +46,7 @@ class AutoNATHandler {
   static const Duration _dialbackInterval = Duration(minutes: 30);
 
   /// Starts the AutoNAT service
+  @override
   Future<void> start() async {
     if (_isRunning) {
       _logger.warning('AutoNATHandler already running');
@@ -68,6 +78,7 @@ class AutoNATHandler {
   }
 
   /// Stops the AutoNAT service
+  @override
   Future<void> stop() async {
     if (!_isRunning) {
       _logger.warning('AutoNATHandler already stopped');

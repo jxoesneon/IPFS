@@ -68,18 +68,11 @@ class Logger {
             '${record.message}';
 
         if (record.error != null) {
-          // ignore: avoid_print
-          print(
-            '$message\nError: ${record.error}\nStack trace: ${record.stackTrace}',
-          );
           _metrics?.recordError(
             'system',
-            record.loggerName,
-            record.error.toString(),
+            record.error!,
+            record.stackTrace ?? StackTrace.current,
           );
-        } else {
-          // ignore: avoid_print
-          print(message);
         }
 
         // Only write to log file on IO platforms
@@ -106,8 +99,7 @@ class Logger {
         _stringToBytes('$message\n'),
       );
     } catch (e) {
-      // ignore: avoid_print
-      print('Failed to write to log file: $e');
+      // Silently fail if log file write fails to avoid recursive issues or unwanted output
     }
   }
 

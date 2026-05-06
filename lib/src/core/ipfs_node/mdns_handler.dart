@@ -4,13 +4,14 @@ import 'dart:io';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
+import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/network/mdns_client.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Handles mDNS (multicast DNS) peer discovery for an IPFS node.
-class MDNSHandler {
+class MDNSHandler implements ILifecycle {
   /// Creates an mDNS handler with config and optional mDNS client.
   MDNSHandler(this._config, {MDnsClient? mdnsClient}) {
     _logger = Logger(
@@ -35,6 +36,7 @@ class MDNSHandler {
   Timer? _discoveryTimer;
 
   /// Starts the mDNS discovery service
+  @override
   Future<void> start() async {
     if (!_config.network.enableMDNS) {
       _logger.debug('MDNS disabled by configuration');
@@ -77,6 +79,7 @@ class MDNSHandler {
   }
 
   /// Stops the mDNS discovery service
+  @override
   Future<void> stop() async {
     if (!_isRunning) {
       _logger.warning('MDNSHandler already stopped');

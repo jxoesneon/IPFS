@@ -5,20 +5,6 @@ import 'package:fixnum/fixnum.dart';
 import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 
 /// Manages peer connection lifecycle and metrics.
-///
-/// ConnectionManager tracks active peer connections, recording metadata
-/// like connection timestamps, supported protocols, and client versions.
-/// It integrates with [MetricsCollector] to update connection statistics.
-///
-/// Example:
-/// ```dart
-/// final manager = ConnectionManager(metrics);
-/// await manager.handleNewConnection(peerId);
-/// ```
-///
-/// See also:
-/// - [MetricsCollector] for connection metrics
-/// - [ConnectionState] for connection state protobuf
 class ConnectionManager {
   /// Creates a connection manager with the given [_metrics] collector.
   ConnectionManager(this._metrics);
@@ -48,12 +34,12 @@ class ConnectionManager {
   Future<void> _updateMetrics(String peerId) async {
     final metrics = ConnectionMetrics()
       ..peerId = peerId
-      ..messagesSent = _metrics.getMessagesSent(peerId)
-      ..messagesReceived = _metrics.getMessagesReceived(peerId)
-      ..bytesSent = _metrics.getBytesSent(peerId)
-      ..bytesReceived = _metrics.getBytesReceived(peerId)
-      ..averageLatencyMs = _metrics.getAverageLatency(peerId).inMilliseconds;
+      ..messagesSent = Int64(_metrics.getMessagesSent(peerId))
+      ..messagesReceived = Int64(_metrics.getMessagesReceived(peerId))
+      ..bytesSent = Int64(_metrics.getBytesSent(peerId))
+      ..bytesReceived = Int64(_metrics.getBytesReceived(peerId))
+      ..averageLatencyMs = _metrics.getAverageLatency(peerId).toInt();
 
-    await _metrics.updateConnectionMetrics(metrics);
+    _metrics.updateConnectionMetrics(peerId, metrics.toProto3Json() as Map<String, dynamic>);
   }
 }
