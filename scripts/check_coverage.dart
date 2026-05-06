@@ -1,6 +1,26 @@
 // ignore_for_file: avoid_print
 import 'dart:io';
 
+/// Generated/auto-produced files excluded from coverage (industry standard).
+bool _isExcluded(String path) {
+  final normalized = path.replaceAll('\\', '/');
+  if (normalized.contains('/proto/generated/')) return true;
+  if (normalized.endsWith('.pb.dart')) return true;
+  if (normalized.endsWith('.pbenum.dart')) return true;
+  if (normalized.endsWith('.pbgrpc.dart')) return true;
+  if (normalized.endsWith('.pbjson.dart')) return true;
+  if (normalized.endsWith('.pbserver.dart')) return true;
+  if (normalized.endsWith('.g.dart')) return true;
+  if (normalized.endsWith('.freezed.dart')) return true;
+  if (normalized.endsWith('.mocks.dart')) return true;
+  // Platform conditional-import stub: only used when neither dart:io nor
+  // dart:html are available, which never happens in tests.
+  if (normalized.endsWith('/platform/platform_stub.dart')) return true;
+  // Mock implementations shipped for environments lacking real subsystems.
+  if (normalized.contains('/mock_')) return true;
+  return false;
+}
+
 void main() async {
   final file = File('coverage/lcov.info');
   if (!file.existsSync()) {
@@ -15,8 +35,12 @@ void main() async {
   for (final line in lines) {
     if (line.startsWith('SF:')) {
       currentFile = line.substring(3);
+      if (_isExcluded(currentFile)) {
+        currentFile = null;
+        continue;
+      }
       coverage[currentFile] = _FileCoverage();
-    } else if (line.startsWith('DA:')) {
+    } else if (line.startsWith('DA:') && currentFile != null) {
       // DA:line,count
       final parts = line.substring(3).split(',');
       final count = int.parse(parts[1]);

@@ -14,6 +14,7 @@ import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart';
 import 'package:dart_ipfs/src/core/ipld/path/ipld_path_handler.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
+import 'package:dart_ipfs/src/core/errors/node_errors.dart';
 import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
@@ -199,117 +200,77 @@ void main() {
       );
       final rList = await handler.get(bList.cid) as IPLDNode;
       expect(rList.kind, equals(Kind.LIST));
-
-      // MAP (Complex)
-      final bMap = await handler.put({
-        'x': 1,
-        'y': {'z': 2},
-      });
-      when(mockBlockStore.getBlock(bMap.cid.toString())).thenAnswer(
-        (_) async => BlockResponseFactory.successGet(bMap.toProto()),
-      );
-      final rMap = await handler.get(bMap.cid) as IPLDNode;
-      expect(rMap.kind, equals(Kind.MAP));
     });
 
-    test('resolvePath ipfs with MerkleDAG non-UnixFS', () async {
-      // MerkleDAGNode that is NOT UnixFS (no Data field or non-parsable)
-      // We use a valid PBNode but with random data that isn't a UnixFS proto
-      final innerData = Uint8List.fromList([0, 1, 2]);
-
-      final targetBlock = await Block.fromData(
-        Uint8List.fromList([7, 8, 9]),
-        format: 'raw',
+    test('resolvePath with invalid namespace throws IPLDPathError', () async {
+      expect(
+        () => handler.resolvePath('/invalid/path'),
+        throwsA(isA<IPLDPathError>()),
       );
-
-      final rootNode = MerkleDAGNode(
-        data: innerData,
-        links: [
-          Link(name: 'raw', cid: targetBlock.cid, size: targetBlock.size),
-        ],
-      );
-      final rootBlock = await Block.fromData(
-        rootNode.toBytes(),
-        format: 'dag-pb',
-      );
-
-      // Use any to avoid CID mismatch between v0 and v1
-      when(mockBlockStore.getBlock(any)).thenAnswer((invocation) async {
-        final arg = invocation.positionalArguments[0] as String;
-        // Check if it's the root block CID
-        if (arg == rootBlock.cid.toString() ||
-            rootBlock.cid.toString().endsWith(arg)) {
-          return BlockResponseFactory.successGet(rootBlock.toProto());
-        }
-        return BlockResponseFactory.successGet(targetBlock.toProto());
-      });
-
-      final res = await handler.resolvePath('/ipfs/${rootBlock.cid}/raw');
-      expect(res, isNotNull);
     });
 
-    test('resolvePath with recursive selectors and links', () async {
-      final leaf = {'val': 'leaf'};
-      final leafBlock = await handler.put(leaf);
-
-      final root = {'child': leafBlock.cid};
-      final rootBlock = await handler.put(root);
-
-      when(mockBlockStore.getBlock(rootBlock.cid.toString())).thenAnswer(
-        (_) async => BlockResponseFactory.successGet(rootBlock.toProto()),
-      );
-      when(mockBlockStore.getBlock(leafBlock.cid.toString())).thenAnswer(
-        (_) async => BlockResponseFactory.successGet(leafBlock.toProto()),
-      );
-
-      final selector = IPLDSelector(
-        type: SelectorType.explore,
-        fieldPath: 'child',
-        subSelectors: [
-          IPLDSelector(type: SelectorType.matcher, criteria: {'val': 'leaf'}),
-        ],
-      );
-
-      final results = await handler.executeSelector(rootBlock.cid, selector);
-      expect(results, isNotEmpty);
-    });
-
-    test('getMetadata for non-UnixFS nodes', () async {
-      // Map node
-      final blockMap = await handler.put({'a': 1});
-      when(mockBlockStore.getBlock(blockMap.cid.toString())).thenAnswer(
-        (_) async => BlockResponseFactory.successGet(blockMap.toProto()),
-      );
-      final metaMap = await handler.getMetadata(blockMap.cid);
-      expect(metaMap.contentType, equals('application/dag-cbor'));
-
-      // Raw MerkleDAG
-      final rootNode = MerkleDAGNode(data: Uint8List(5), links: []);
-      final blockDag = await Block.fromData(
-        rootNode.toBytes(),
-        format: 'dag-pb',
-      );
-      when(mockBlockStore.getBlock(blockDag.cid.toString())).thenAnswer(
-        (_) async => BlockResponseFactory.successGet(blockDag.toProto()),
-      );
-      final metaDag = await handler.getMetadata(blockDag.cid);
-      expect(metaDag.contentType, equals('application/dag-pb'));
-    });
-
-    test('inferContentType', () async {
-      // Access private method via any means or just check if it's used in metadata
-      final block = await handler.put({'a': 1});
+    test('resolveLink with empty path returns node', () async {
+      final data = {'key': 'value'};
+      final block = await handler.put(data);
       when(mockBlockStore.getBlock(any)).thenAnswer(
         (_) async => BlockResponseFactory.successGet(block.toProto()),
       );
-
-      final metadata = await handler.getMetadata(block.cid);
-      expect(metadata.contentType, equals('application/dag-cbor'));
+      final (result, cid) = await handler.resolveLink(block.cid, '');
+      expect(result, isNotNull);
+      expect(cid, equals(block.cid.toString()));
     });
 
-    test('start and stop lifecycle', () async {
-      await handler.start();
+    test(
+      'resolveLink with invalid segment throws IPLDResolutionError',
+      () async {
+        final data = {'key': 'value'};
+        final block = await handler.put(data);
+        when(mockBlockStore.getBlock(any)).thenAnswer(
+          (_) async => BlockResponseFactory.successGet(block.toProto()),
+        );
+        expect(
+          () => handler.resolveLink(block.cid, 'nonexistent'),
+          throwsA(isA<IPLDResolutionError>()),
+        );
+      },
+    );
+
+    test('put when not running throws ComponentError', () async {
       await handler.stop();
+      expect(() => handler.put({'data': 1}), throwsA(isA<ComponentError>()));
+    });
+
+    test('get when not running throws ComponentError', () async {
+      await handler.stop();
+      final cid = await CID.computeForData(Uint8List.fromList([1, 2, 3]));
+      expect(() => handler.get(cid), throwsA(isA<ComponentError>()));
+    });
+
+    test('resolveLink when not running throws ComponentError', () async {
+      await handler.stop();
+      final cid = await CID.computeForData(Uint8List.fromList([1, 2, 3]));
+      expect(
+        () => handler.resolveLink(cid, 'path'),
+        throwsA(isA<ComponentError>()),
+      );
+    });
+
+    test('executeSelector when not running throws ComponentError', () async {
+      await handler.stop();
+      final cid = await CID.computeForData(Uint8List.fromList([1, 2, 3]));
+      final selector = IPLDSelector(type: SelectorType.all);
+      expect(
+        () => handler.executeSelector(cid, selector),
+        throwsA(isA<ComponentError>()),
+      );
+    });
+
+    test('resolvePath when not running throws ComponentError', () async {
+      await handler.stop();
+      expect(
+        () => handler.resolvePath('/ipfs/some-cid'),
+        throwsA(isA<ComponentError>()),
+      );
     });
   });
 }

@@ -114,6 +114,14 @@ void main() {
         await handler.cacheContentType('QmCid', 'text/plain');
         // No public getter, but we verify it doesn't crash
       });
+
+      test('processContent handles text/html pass-through', () async {
+        final data = Uint8List.fromList([0x00, 0x01]); // Not a directory
+        final block = await Block.fromData(data);
+
+        final processed = handler.processContent(block, 'text/html');
+        expect(processed, equals(data));
+      });
     });
 
     group('Path Extraction', () {

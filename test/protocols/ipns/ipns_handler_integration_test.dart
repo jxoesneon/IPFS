@@ -193,12 +193,13 @@ void main() {
       });
     });
 
-    group('createRecord (deprecated)', () {
+    group('createRecord (deprecated - maintain for compatibility)', () {
       test('creates an unsigned Record', () async {
         final cid = CID.decode(
           'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z',
         );
         final keyBytes = Uint8List.fromList([1, 2, 3, 4]);
+        // ignore: deprecated_member_use
         final record = await handler.createRecord(cid, keyBytes);
 
         expect(record.key, equals(keyBytes));

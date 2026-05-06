@@ -151,6 +151,26 @@ void main() {
       expect(stats['sent'], equals(300));
       expect(stats['received'], equals(150));
     });
+
+    test('printLedgers iterates without throwing', () {
+      final manager = LedgerManager();
+      manager.getLedger('PeerA').addSentBytes(10);
+      // Just make sure the helper does not blow up.
+      manager.printLedgers();
+    });
+  });
+
+  group('BitLedger.toString and receivedMessage', () {
+    test('toString includes ledger numbers', () {
+      final ledger = BitLedger('PeerA');
+      ledger.addSentBytes(50);
+      ledger.addReceivedBytes(20);
+      final str = ledger.toString();
+      expect(str, contains('PeerA'));
+      expect(str, contains('sentBytes=50'));
+      expect(str, contains('receivedBytes=20'));
+      expect(str, contains('debt=30'));
+    });
   });
 
   group('Bitswap Message', () {

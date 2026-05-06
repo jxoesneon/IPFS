@@ -670,6 +670,15 @@ class MockBlockStore extends _i1.Mock implements _i19.BlockStore {
             ),
           )
           as _i10.Future<Map<String, dynamic>>);
+
+  @override
+  _i10.Future<int> gc() =>
+      (super.noSuchMethod(
+            Invocation.method(#gc, []),
+            returnValue: _i10.Future<int>.value(0),
+            returnValueForMissingStub: _i10.Future<int>.value(0),
+          )
+          as _i10.Future<int>);
 }
 
 /// A class which mocks [PubSubHandler].

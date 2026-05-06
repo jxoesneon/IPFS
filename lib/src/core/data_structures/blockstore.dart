@@ -31,12 +31,14 @@ class BlockStore implements IBlockStore {
     _logger.debug('Starting BlockStore at $path...');
     try {
       await _initializeStorage();
-      
+
       // Load pin state
       final pinsFile = p.join(path, 'pins.json');
       await _pinManager.load(pinsFile);
-      
-      _logger.debug('BlockStore started successfully with ${_blocks.length} blocks');
+
+      _logger.debug(
+        'BlockStore started successfully with ${_blocks.length} blocks',
+      );
     } catch (e, stackTrace) {
       _logger.error('Failed to start BlockStore', e, stackTrace);
       rethrow;
@@ -50,7 +52,7 @@ class BlockStore implements IBlockStore {
       // Save pin state
       final pinsFile = p.join(path, 'pins.json');
       await _pinManager.save(pinsFile);
-      
+
       await _cleanup();
       _logger.debug('BlockStore stopped successfully');
     } catch (e, stackTrace) {
@@ -89,17 +91,24 @@ class BlockStore implements IBlockStore {
   Future<AddBlockResponse> putBlock(Block block) async {
     try {
       final cidStr = block.cid.toString();
-      
+
       // Save to disk first
       final blockFile = File(p.join(path, cidStr));
-      if (!await blockFile.exists()) {
+      final alreadyOnDisk = await blockFile.exists();
+      final alreadyIndexed = _blocks.containsKey(cidStr);
+      if (!alreadyOnDisk) {
         await blockFile.parent.create(recursive: true);
         await blockFile.writeAsBytes(block.data);
       }
 
       // Update index
       _blocks[cidStr] = block;
-      
+
+      if (alreadyOnDisk || alreadyIndexed) {
+        _logger.debug('Block already exists: $cidStr');
+        return BlockResponseFactory.successAdd('Block already exists');
+      }
+
       _logger.debug('Block added successfully: $cidStr');
       return BlockResponseFactory.successAdd('Block added successfully');
     } catch (e) {
@@ -112,14 +121,17 @@ class BlockStore implements IBlockStore {
   Future<RemoveBlockResponse> removeBlock(String cid) async {
     try {
       final blockFile = File(p.join(path, cid));
-      if (await blockFile.exists()) {
-        await blockFile.delete();
+      final fileExists = await blockFile.exists();
+      final indexed = _blocks.containsKey(cid);
+
+      if (!fileExists && !indexed) {
+        _logger.debug('Block not found for removal: $cid');
+        return BlockResponseFactory.failureRemove('Block not found: $cid');
       }
 
-      if (!_blocks.containsKey(cid)) {
-        _logger.debug('Block index entry missing but disk file processed: $cid');
+      if (fileExists) {
+        await blockFile.delete();
       }
-      
       _blocks.remove(cid);
       _logger.debug('Block removed successfully: $cid');
       return BlockResponseFactory.successRemove('Block removed successfully');
@@ -175,10 +187,10 @@ class BlockStore implements IBlockStore {
   Future<int> gc() async {
     _logger.info('Starting Garbage Collection...');
     int removedCount = 0;
-    
+
     // Get all CIDs from the current index
     final allCids = _blocks.keys.toList();
-    
+
     for (final cidStr in allCids) {
       try {
         final cid = CID.decode(cidStr);
@@ -190,7 +202,7 @@ class BlockStore implements IBlockStore {
         _logger.warning('Failed to process block $cidStr during GC: $e');
       }
     }
-    
+
     _logger.info('Garbage Collection finished. Removed $removedCount blocks.');
     return removedCount;
   }

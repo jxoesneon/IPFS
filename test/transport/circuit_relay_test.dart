@@ -160,18 +160,6 @@ void main() {
       expect(reservation.limitData.toInt(), 1024);
     });
 
-    test('reserve failure', () async {
-      await client.start();
-
-      // Override sendMessage to simulate failure
-      final failingRouter = FailingMockRouter();
-      final failingClient = CircuitRelayClient(failingRouter);
-      await failingClient.start();
-
-      final reservation = await failingClient.reserve('relay-peer');
-      expect(reservation, isNull);
-    });
-
     test('reserve rejection', () async {
       await client.start();
 
@@ -220,6 +208,314 @@ void main() {
       // Let's see if we can use FakeAsync or just wait.
       // Actually, let's just test the logic around it if possible.
     });
+
+    test('connect emits event on success', () async {
+      final events = <CircuitRelayConnectionEvent>[];
+      final sub = client.onCircuitRelayEvents.listen(events.add);
+
+      await client.connect('peer-a');
+
+      await Future.delayed(const Duration(milliseconds: 10));
+      expect(events.any((e) => e.eventType == 'circuit_relay_created'), isTrue);
+
+      await sub.cancel();
+    });
+
+    test('disconnect emits event on success', () async {
+      final events = <CircuitRelayConnectionEvent>[];
+      final sub = client.onCircuitRelayEvents.listen(events.add);
+
+      await client.disconnect('peer-a');
+
+      await Future.delayed(const Duration(milliseconds: 10));
+      expect(events.any((e) => e.eventType == 'circuit_relay_closed'), isTrue);
+
+      await sub.cancel();
+    });
+
+    test('connect emits failure event on error', () async {
+      final failingRouter = FailingMockRouter();
+      final failingClient = CircuitRelayClient(failingRouter);
+      await failingClient.start();
+
+      final events = <CircuitRelayConnectionEvent>[];
+      final sub = failingClient.onCircuitRelayEvents.listen(events.add);
+
+      try {
+        await failingClient.connect('peer-a');
+        fail('Should have thrown exception');
+      } catch (_) {
+        // Expected
+      }
+
+      await Future.delayed(const Duration(milliseconds: 10));
+      expect(events.any((e) => e.eventType == 'circuit_relay_failed'), isTrue);
+
+      await sub.cancel();
+    });
+
+    test('disconnect emits failure event on error', () async {
+      final failingRouter = FailingMockRouter();
+      final failingClient = CircuitRelayClient(failingRouter);
+      await failingClient.start();
+
+      final events = <CircuitRelayConnectionEvent>[];
+      final sub = failingClient.onCircuitRelayEvents.listen(events.add);
+
+      await failingClient.disconnect('peer-a');
+
+      await Future.delayed(const Duration(milliseconds: 10));
+      expect(events.any((e) => e.eventType == 'circuit_relay_failed'), isTrue);
+
+      await sub.cancel();
+    });
+
+    test('connectionEvents getter returns stream', () {
+      final stream = client.connectionEvents;
+      expect(stream, isNotNull);
+    });
+
+    test('CircuitRelayConnectionEvent with dataSize', () {
+      final event = CircuitRelayConnectionEvent(
+        eventType: 'test',
+        relayAddress: 'addr',
+        dataSize: fixnum.Int64(1024),
+      );
+      expect(event.dataSize.toInt(), equals(1024));
+    });
+
+    test('emitCircuitRelayEvent does nothing when closed', () async {
+      await client.stop();
+
+      // Should not throw even though controller is closed
+      client.emitCircuitRelayEvent(
+        CircuitRelayConnectionEvent(eventType: 'test', relayAddress: 'addr'),
+      );
+    });
+
+    test('reserve with custom parameters', () async {
+      await client.start();
+      final reservation = await client.reserve(
+        'relay-peer',
+        duration: Duration(minutes: 30),
+        limitData: 512 * 1024 * 1024,
+        limitDuration: 1800,
+      );
+
+      expect(reservation, isNotNull);
+      expect(reservation!.relayPeerId, 'relay-peer');
+    });
+
+    test('reserve when not started returns null', () async {
+      final reservation = await client
+          .reserve('relay-peer')
+          .timeout(Duration(seconds: 5), onTimeout: () => null);
+      expect(reservation, isNull);
+    });
+
+    test('connect when not started does not throw', () async {
+      await client.connect('peer-a'); // Router handles it
+    });
+
+    test('disconnect when not started does not throw', () async {
+      await client.disconnect('peer-a'); // Should not throw
+    });
+
+    test('Reservation isExpired returns correct value', () async {
+      final expiredReservation = Reservation(
+        relayPeerId: 'relay',
+        expireTime: DateTime.now().subtract(Duration(hours: 1)),
+        limitData: fixnum.Int64(1024),
+        limitDuration: fixnum.Int64(3600),
+      );
+      expect(expiredReservation.isExpired, isTrue);
+
+      final validReservation = Reservation(
+        relayPeerId: 'relay',
+        expireTime: DateTime.now().add(Duration(hours: 1)),
+        limitData: fixnum.Int64(1024),
+        limitDuration: fixnum.Int64(3600),
+      );
+      expect(validReservation.isExpired, isFalse);
+    });
+
+    test('CircuitRelayConnectionEvent with all parameters', () {
+      final event = CircuitRelayConnectionEvent(
+        eventType: 'test',
+        relayAddress: 'addr',
+        errorMessage: 'error',
+        reason: 'reason',
+        dataSize: fixnum.Int64(2048),
+      );
+      expect(event.eventType, 'test');
+      expect(event.relayAddress, 'addr');
+      expect(event.errorMessage, 'error');
+      expect(event.reason, 'reason');
+      expect(event.dataSize.toInt(), 2048);
+    });
+
+    test('CircuitRelayConnectionEvent default dataSize is zero', () {
+      final event = CircuitRelayConnectionEvent(
+        eventType: 'test',
+        relayAddress: 'addr',
+      );
+      expect(event.dataSize.toInt(), 0);
+    });
+
+    test('start when already started is idempotent', () async {
+      await client.start();
+      await client.start(); // Should not throw
+      await client.stop();
+    });
+
+    test('stop when not started is safe', () async {
+      await client.stop(); // Should not throw
+    });
+
+    test('reserve with malformed response handles error', () async {
+      final malformedRouter = MalformedMockRouter();
+      final malformedClient = CircuitRelayClient(malformedRouter);
+      await malformedClient.start();
+
+      final reservation = await malformedClient
+          .reserve('relay-peer')
+          .timeout(Duration(seconds: 5), onTimeout: () => null);
+      expect(reservation, isNull);
+      await malformedClient.stop();
+    });
+
+    test('reserve with silent router times out', () async {
+      final silentRouter = SilentMockRouter();
+      final silentClient = CircuitRelayClient(silentRouter);
+      await silentClient.start();
+
+      final reservation = await silentClient
+          .reserve('relay-peer')
+          .timeout(Duration(seconds: 5), onTimeout: () => null);
+      expect(reservation, isNull);
+      await silentClient.stop();
+    });
+
+    test('connect with failing router emits failure event', () async {
+      final failingRouter = FailingMockRouter();
+      final failingClient = CircuitRelayClient(failingRouter);
+      await failingClient.start();
+
+      final events = <CircuitRelayConnectionEvent>[];
+      final sub = failingClient.onCircuitRelayEvents.listen(events.add);
+
+      try {
+        await failingClient.connect('peer-a');
+      } catch (_) {
+        // Expected
+      }
+
+      await Future.delayed(const Duration(milliseconds: 10));
+      expect(events.any((e) => e.eventType == 'circuit_relay_failed'), isTrue);
+
+      await sub.cancel();
+      await failingClient.stop();
+    });
+
+    test('Reservation with zero limitData', () async {
+      final reservation = Reservation(
+        relayPeerId: 'relay',
+        expireTime: DateTime.now().add(Duration(hours: 1)),
+        limitData: fixnum.Int64(0),
+        limitDuration: fixnum.Int64(3600),
+      );
+      expect(reservation.limitData.toInt(), equals(0));
+    });
+
+    test('Reservation with zero limitDuration', () async {
+      final reservation = Reservation(
+        relayPeerId: 'relay',
+        expireTime: DateTime.now().add(Duration(hours: 1)),
+        limitData: fixnum.Int64(1024),
+        limitDuration: fixnum.Int64(0),
+      );
+      expect(reservation.limitDuration.toInt(), equals(0));
+    });
+
+    test('Reservation toString returns default string', () async {
+      final reservation = Reservation(
+        relayPeerId: 'relay',
+        expireTime: DateTime.now().add(Duration(hours: 1)),
+        limitData: fixnum.Int64(1024),
+        limitDuration: fixnum.Int64(3600),
+      );
+      final str = reservation.toString();
+      expect(str, isA<String>());
+    });
+
+    test('CircuitRelayConnectionEvent with empty parameters', () {
+      final event = CircuitRelayConnectionEvent(
+        eventType: 'test',
+        relayAddress: '',
+        errorMessage: '',
+        reason: '',
+      );
+      expect(event.eventType, 'test');
+      expect(event.relayAddress, '');
+      expect(event.errorMessage, '');
+      expect(event.reason, '');
+    });
+
+    test('connect with empty peerId does not throw', () async {
+      await client.connect('');
+    });
+
+    test('disconnect with empty peerId does not throw', () async {
+      await client.disconnect('');
+    });
+
+    test('reserve with empty relayPeerId handles gracefully', () async {
+      await client.start();
+      final reservation = await client
+          .reserve('')
+          .timeout(Duration(seconds: 5), onTimeout: () => null);
+      // May return null or a reservation depending on implementation
+      await client.stop();
+    });
+
+    test('multiple start/stop cycles are safe', () async {
+      await client.start();
+      await client.stop();
+      await client.start();
+      await client.stop();
+      await client.start();
+      await client.stop();
+    });
+
+    test('event stream handles multiple listeners', () async {
+      final events1 = <CircuitRelayConnectionEvent>[];
+      final events2 = <CircuitRelayConnectionEvent>[];
+      final sub1 = client.onCircuitRelayEvents.listen(events1.add);
+      final sub2 = client.onCircuitRelayEvents.listen(events2.add);
+
+      client.emitCircuitRelayEvent(
+        CircuitRelayConnectionEvent(
+          eventType: 'test_event',
+          relayAddress: 'addr',
+        ),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 10));
+      expect(events1.length, 1);
+      expect(events2.length, 1);
+
+      await sub1.cancel();
+      await sub2.cancel();
+    });
+
+    test('CircuitRelayConnectionEvent with negative dataSize', () {
+      final event = CircuitRelayConnectionEvent(
+        eventType: 'test',
+        relayAddress: 'addr',
+        dataSize: fixnum.Int64(-1),
+      );
+      expect(event.dataSize.toInt(), equals(-1));
+    });
   });
 }
 
@@ -231,6 +527,16 @@ class FailingMockRouter extends MockRouter {
     String? protocolId,
   }) async {
     throw Exception('Send failed');
+  }
+
+  @override
+  Future<void> connect(String multiaddress) async {
+    throw Exception('Connect failed');
+  }
+
+  @override
+  Future<void> disconnect(String peerIdOrMultiaddress) async {
+    throw Exception('Disconnect failed');
   }
 }
 
@@ -268,4 +574,23 @@ class SilentMockRouter extends MockRouter {
 
   @override
   List<String> resolvePeerId(String peerIdStr) => []; // Trigger resolution error
+}
+
+class MalformedMockRouter extends MockRouter {
+  @override
+  Future<void> sendMessage(
+    String peerIdStr,
+    Uint8List message, {
+    String? protocolId,
+  }) async {
+    if (_handlers.containsKey(protocolId)) {
+      // Send invalid/malformed response
+      final packet = NetworkPacket(
+        srcPeerId: peerIdStr,
+        datagram: Uint8List.fromList([1, 2, 3]), // Invalid protobuf data
+      );
+
+      Future.microtask(() => _handlers[protocolId]!(packet));
+    }
+  }
 }

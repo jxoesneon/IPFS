@@ -143,6 +143,78 @@ void main() {
       });
     });
 
+    group('input validation', () {
+      test('deriveKey rejects empty password', () {
+        expect(
+          () => CryptoUtils.deriveKey(
+            '',
+            CryptoUtils.randomBytes(16),
+            iterations: 100,
+          ),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('deriveKey rejects salts shorter than 8 bytes', () {
+        expect(
+          () => CryptoUtils.deriveKey(
+            'p',
+            Uint8List.fromList([1, 2, 3]),
+            iterations: 100,
+          ),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('decrypt rejects keys of wrong size', () async {
+        final encrypted = EncryptedData(
+          ciphertext: Uint8List(32),
+          nonce: Uint8List(CryptoUtils.nonceSize),
+        );
+        await expectLater(
+          () => CryptoUtils.decrypt(encrypted, Uint8List(16)),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('decrypt rejects ciphertexts shorter than the auth tag', () async {
+        final encrypted = EncryptedData(
+          ciphertext: Uint8List(8),
+          nonce: Uint8List(CryptoUtils.nonceSize),
+        );
+        await expectLater(
+          () => CryptoUtils.decrypt(encrypted, Uint8List(CryptoUtils.keySize)),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('randomBytes rejects non-positive lengths', () {
+        expect(() => CryptoUtils.randomBytes(0), throwsArgumentError);
+        expect(() => CryptoUtils.randomBytes(-3), throwsArgumentError);
+      });
+    });
+
+    group('EncryptedData serialisation', () {
+      test('toBytes/fromBytes round-trip', () {
+        final original = EncryptedData(
+          ciphertext: Uint8List.fromList([10, 20, 30]),
+          nonce: Uint8List.fromList(
+            List.generate(CryptoUtils.nonceSize, (i) => i + 1),
+          ),
+        );
+        final restored = EncryptedData.fromBytes(original.toBytes());
+        expect(restored.nonce, equals(original.nonce));
+        expect(restored.ciphertext, equals(original.ciphertext));
+      });
+
+      test('fromBytes rejects payloads shorter than the nonce', () {
+        expect(
+          () => EncryptedData.fromBytes(Uint8List(CryptoUtils.nonceSize - 1)),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+    });
+
     group('constantTimeEquals', () {
       test('returns true for equal buffers', () {
         final a = Uint8List.fromList([1, 2, 3, 4]);

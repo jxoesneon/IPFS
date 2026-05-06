@@ -3,21 +3,20 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i8;
-import 'dart:typed_data' as _i10;
+import 'dart:async' as _i7;
+import 'dart:typed_data' as _i9;
 
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart' as _i2;
-import 'package:dart_ipfs/src/core/data_structures/link.dart' as _i13;
-import 'package:dart_ipfs/src/core/data_structures/peer.dart' as _i14;
-import 'package:dart_ipfs/src/core/di/service_container.dart' as _i5;
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart' as _i11;
+import 'package:dart_ipfs/src/core/data_structures/link.dart' as _i12;
+import 'package:dart_ipfs/src/core/data_structures/peer.dart' as _i13;
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart' as _i10;
 import 'package:dart_ipfs/src/core/storage/datastore.dart' as _i4;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart' as _i3;
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart' as _i12;
-import 'package:dart_ipfs/src/transport/router_events.dart' as _i9;
-import 'package:dart_ipfs/src/transport/router_interface.dart' as _i6;
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart' as _i11;
+import 'package:dart_ipfs/src/transport/router_events.dart' as _i8;
+import 'package:dart_ipfs/src/transport/router_interface.dart' as _i5;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i7;
+import 'package:mockito/src/dummies.dart' as _i6;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -49,16 +48,10 @@ class _FakeDatastore_2 extends _i1.SmartFake implements _i4.Datastore {
     : super(parent, parentInvocation);
 }
 
-class _FakeServiceContainer_3 extends _i1.SmartFake
-    implements _i5.ServiceContainer {
-  _FakeServiceContainer_3(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
 /// A class which mocks [RouterInterface].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
+class MockRouterInterface extends _i1.Mock implements _i5.RouterInterface {
   MockRouterInterface() {
     _i1.throwOnMissingStub(this);
   }
@@ -67,7 +60,7 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
   String get peerID =>
       (super.noSuchMethod(
             Invocation.getter(#peerID),
-            returnValue: _i7.dummyValue<String>(
+            returnValue: _i6.dummyValue<String>(
               this,
               Invocation.getter(#peerID),
             ),
@@ -93,20 +86,20 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
           as Set<String>);
 
   @override
-  _i8.Stream<_i9.ConnectionEvent> get connectionEvents =>
+  _i7.Stream<_i8.ConnectionEvent> get connectionEvents =>
       (super.noSuchMethod(
             Invocation.getter(#connectionEvents),
-            returnValue: _i8.Stream<_i9.ConnectionEvent>.empty(),
+            returnValue: _i7.Stream<_i8.ConnectionEvent>.empty(),
           )
-          as _i8.Stream<_i9.ConnectionEvent>);
+          as _i7.Stream<_i8.ConnectionEvent>);
 
   @override
-  _i8.Stream<_i9.MessageEvent> get messageEvents =>
+  _i7.Stream<_i8.MessageEvent> get messageEvents =>
       (super.noSuchMethod(
             Invocation.getter(#messageEvents),
-            returnValue: _i8.Stream<_i9.MessageEvent>.empty(),
+            returnValue: _i7.Stream<_i8.MessageEvent>.empty(),
           )
-          as _i8.Stream<_i9.MessageEvent>);
+          as _i7.Stream<_i8.MessageEvent>);
 
   @override
   List<String> get listeningAddresses =>
@@ -117,49 +110,49 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
           as List<String>);
 
   @override
-  _i8.Future<void> initialize() =>
+  _i7.Future<void> initialize() =>
       (super.noSuchMethod(
             Invocation.method(#initialize, []),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<void> start() =>
+  _i7.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<void> stop() =>
+  _i7.Future<void> stop() =>
       (super.noSuchMethod(
             Invocation.method(#stop, []),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<void> connect(String? multiaddress) =>
+  _i7.Future<void> connect(String? multiaddress) =>
       (super.noSuchMethod(
             Invocation.method(#connect, [multiaddress]),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<void> disconnect(String? peerIdOrMultiaddress) =>
+  _i7.Future<void> disconnect(String? peerIdOrMultiaddress) =>
       (super.noSuchMethod(
             Invocation.method(#disconnect, [peerIdOrMultiaddress]),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
   List<String> listConnectedPeers() =>
@@ -178,9 +171,9 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
           as bool);
 
   @override
-  _i8.Future<void> sendMessage(
+  _i7.Future<void> sendMessage(
     String? peerIdStr,
-    _i10.Uint8List? message, {
+    _i9.Uint8List? message, {
     String? protocolId,
   }) =>
       (super.noSuchMethod(
@@ -189,35 +182,35 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
               [peerIdStr, message],
               {#protocolId: protocolId},
             ),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<_i10.Uint8List?> sendRequest(
+  _i7.Future<_i9.Uint8List?> sendRequest(
     String? peerId,
     String? protocolId,
-    _i10.Uint8List? request,
+    _i9.Uint8List? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#sendRequest, [peerId, protocolId, request]),
-            returnValue: _i8.Future<_i10.Uint8List?>.value(),
+            returnValue: _i7.Future<_i9.Uint8List?>.value(),
           )
-          as _i8.Future<_i10.Uint8List?>);
+          as _i7.Future<_i9.Uint8List?>);
 
   @override
-  _i8.Stream<_i10.Uint8List> receiveMessages(String? peerId) =>
+  _i7.Stream<_i9.Uint8List> receiveMessages(String? peerId) =>
       (super.noSuchMethod(
             Invocation.method(#receiveMessages, [peerId]),
-            returnValue: _i8.Stream<_i10.Uint8List>.empty(),
+            returnValue: _i7.Stream<_i9.Uint8List>.empty(),
           )
-          as _i8.Stream<_i10.Uint8List>);
+          as _i7.Stream<_i9.Uint8List>);
 
   @override
   void registerProtocolHandler(
     String? protocolId,
-    void Function(_i9.NetworkPacket)? handler,
+    void Function(_i8.NetworkPacket)? handler,
   ) => super.noSuchMethod(
     Invocation.method(#registerProtocolHandler, [protocolId, handler]),
     returnValueForMissingStub: null,
@@ -236,19 +229,19 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
   );
 
   @override
-  _i8.Future<void> broadcastMessage(
+  _i7.Future<void> broadcastMessage(
     String? protocolId,
-    _i10.Uint8List? message,
+    _i9.Uint8List? message,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#broadcastMessage, [protocolId, message]),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  void emitEvent(String? topic, _i10.Uint8List? data) => super.noSuchMethod(
+  void emitEvent(String? topic, _i9.Uint8List? data) => super.noSuchMethod(
     Invocation.method(#emitEvent, [topic, data]),
     returnValueForMissingStub: null,
   );
@@ -284,18 +277,18 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
 /// A class which mocks [IPFSNode].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockIPFSNode extends _i1.Mock implements _i11.IPFSNode {
+class MockIPFSNode extends _i1.Mock implements _i10.IPFSNode {
   MockIPFSNode() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i11.NodeState get state =>
+  _i10.NodeState get state =>
       (super.noSuchMethod(
             Invocation.getter(#state),
-            returnValue: _i11.NodeState.stopped,
+            returnValue: _i10.NodeState.stopped,
           )
-          as _i11.NodeState);
+          as _i10.NodeState);
 
   @override
   bool get isRunning =>
@@ -306,7 +299,7 @@ class MockIPFSNode extends _i1.Mock implements _i11.IPFSNode {
   String get peerId =>
       (super.noSuchMethod(
             Invocation.getter(#peerId),
-            returnValue: _i7.dummyValue<String>(
+            returnValue: _i6.dummyValue<String>(
               this,
               Invocation.getter(#peerId),
             ),
@@ -314,12 +307,12 @@ class MockIPFSNode extends _i1.Mock implements _i11.IPFSNode {
           as String);
 
   @override
-  _i8.Stream<Map<String, dynamic>> get bandwidthMetrics =>
+  _i7.Stream<Map<String, dynamic>> get bandwidthMetrics =>
       (super.noSuchMethod(
             Invocation.getter(#bandwidthMetrics),
-            returnValue: _i8.Stream<Map<String, dynamic>>.empty(),
+            returnValue: _i7.Stream<Map<String, dynamic>>.empty(),
           )
-          as _i8.Stream<Map<String, dynamic>>);
+          as _i7.Stream<Map<String, dynamic>>);
 
   @override
   List<String> get addresses =>
@@ -349,38 +342,38 @@ class MockIPFSNode extends _i1.Mock implements _i11.IPFSNode {
           as _i3.DHTClient);
 
   @override
-  _i8.Future<List<String>> get connectedPeers =>
+  _i7.Future<List<String>> get connectedPeers =>
       (super.noSuchMethod(
             Invocation.getter(#connectedPeers),
-            returnValue: _i8.Future<List<String>>.value(<String>[]),
+            returnValue: _i7.Future<List<String>>.value(<String>[]),
           )
-          as _i8.Future<List<String>>);
+          as _i7.Future<List<String>>);
 
   @override
-  _i8.Future<String> get publicKey =>
+  _i7.Future<String> get publicKey =>
       (super.noSuchMethod(
             Invocation.getter(#publicKey),
-            returnValue: _i8.Future<String>.value(
-              _i7.dummyValue<String>(this, Invocation.getter(#publicKey)),
+            returnValue: _i7.Future<String>.value(
+              _i6.dummyValue<String>(this, Invocation.getter(#publicKey)),
             ),
           )
-          as _i8.Future<String>);
+          as _i7.Future<String>);
 
   @override
-  _i8.Future<List<String>> get pinnedCids =>
+  _i7.Future<List<String>> get pinnedCids =>
       (super.noSuchMethod(
             Invocation.getter(#pinnedCids),
-            returnValue: _i8.Future<List<String>>.value(<String>[]),
+            returnValue: _i7.Future<List<String>>.value(<String>[]),
           )
-          as _i8.Future<List<String>>);
+          as _i7.Future<List<String>>);
 
   @override
-  _i8.Stream<_i12.PubSubMessage> get pubsubMessages =>
+  _i7.Stream<_i11.PubSubMessage> get pubsubMessages =>
       (super.noSuchMethod(
             Invocation.getter(#pubsubMessages),
-            returnValue: _i8.Stream<_i12.PubSubMessage>.empty(),
+            returnValue: _i7.Stream<_i11.PubSubMessage>.empty(),
           )
-          as _i8.Stream<_i12.PubSubMessage>);
+          as _i7.Stream<_i11.PubSubMessage>);
 
   @override
   _i4.Datastore get datastore =>
@@ -394,7 +387,7 @@ class MockIPFSNode extends _i1.Mock implements _i11.IPFSNode {
   String get peerID =>
       (super.noSuchMethod(
             Invocation.getter(#peerID),
-            returnValue: _i7.dummyValue<String>(
+            returnValue: _i6.dummyValue<String>(
               this,
               Invocation.getter(#peerID),
             ),
@@ -402,23 +395,12 @@ class MockIPFSNode extends _i1.Mock implements _i11.IPFSNode {
           as String);
 
   @override
-  _i8.Stream<String> get onNewContent =>
+  _i7.Stream<String> get onNewContent =>
       (super.noSuchMethod(
             Invocation.getter(#onNewContent),
-            returnValue: _i8.Stream<String>.empty(),
+            returnValue: _i7.Stream<String>.empty(),
           )
-          as _i8.Stream<String>);
-
-  @override
-  _i5.ServiceContainer get container =>
-      (super.noSuchMethod(
-            Invocation.getter(#container),
-            returnValue: _FakeServiceContainer_3(
-              this,
-              Invocation.getter(#container),
-            ),
-          )
-          as _i5.ServiceContainer);
+          as _i7.Stream<String>);
 
   @override
   List<String> resolvePeerId(String? peerIdStr) =>
@@ -429,237 +411,237 @@ class MockIPFSNode extends _i1.Mock implements _i11.IPFSNode {
           as List<String>);
 
   @override
-  _i8.Future<_i10.Uint8List?> cat(String? cid) =>
+  _i7.Future<_i9.Uint8List?> cat(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#cat, [cid]),
-            returnValue: _i8.Future<_i10.Uint8List?>.value(),
+            returnValue: _i7.Future<_i9.Uint8List?>.value(),
           )
-          as _i8.Future<_i10.Uint8List?>);
+          as _i7.Future<_i9.Uint8List?>);
 
   @override
-  _i8.Future<void> connectToPeer(String? multiaddr) =>
+  _i7.Future<void> connectToPeer(String? multiaddr) =>
       (super.noSuchMethod(
             Invocation.method(#connectToPeer, [multiaddr]),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<void> disconnectFromPeer(String? peerIdOrAddr) =>
+  _i7.Future<void> disconnectFromPeer(String? peerIdOrAddr) =>
       (super.noSuchMethod(
             Invocation.method(#disconnectFromPeer, [peerIdOrAddr]),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<String> resolveIPNS(String? name) =>
+  _i7.Future<String> resolveIPNS(String? name) =>
       (super.noSuchMethod(
             Invocation.method(#resolveIPNS, [name]),
-            returnValue: _i8.Future<String>.value(
-              _i7.dummyValue<String>(
+            returnValue: _i7.Future<String>.value(
+              _i6.dummyValue<String>(
                 this,
                 Invocation.method(#resolveIPNS, [name]),
               ),
             ),
           )
-          as _i8.Future<String>);
+          as _i7.Future<String>);
 
   @override
-  _i8.Future<void> subscribe(String? topic) =>
+  _i7.Future<void> subscribe(String? topic) =>
       (super.noSuchMethod(
             Invocation.method(#subscribe, [topic]),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<void> unsubscribe(String? topic) =>
+  _i7.Future<void> unsubscribe(String? topic) =>
       (super.noSuchMethod(
             Invocation.method(#unsubscribe, [topic]),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<void> publish(String? topic, String? message) =>
+  _i7.Future<void> publish(String? topic, String? message) =>
       (super.noSuchMethod(
             Invocation.method(#publish, [topic, message]),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<void> start() =>
+  _i7.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<void> stop() =>
+  _i7.Future<void> stop() =>
       (super.noSuchMethod(
             Invocation.method(#stop, []),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<void> restart() =>
+  _i7.Future<void> restart() =>
       (super.noSuchMethod(
             Invocation.method(#restart, []),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<String> addFile(_i10.Uint8List? data) =>
+  _i7.Future<String> addFile(_i9.Uint8List? data) =>
       (super.noSuchMethod(
             Invocation.method(#addFile, [data]),
-            returnValue: _i8.Future<String>.value(
-              _i7.dummyValue<String>(this, Invocation.method(#addFile, [data])),
+            returnValue: _i7.Future<String>.value(
+              _i6.dummyValue<String>(this, Invocation.method(#addFile, [data])),
             ),
           )
-          as _i8.Future<String>);
+          as _i7.Future<String>);
 
   @override
-  _i8.Future<String> addFileStream(_i8.Stream<List<int>>? dataStream) =>
+  _i7.Future<String> addFileStream(_i7.Stream<List<int>>? dataStream) =>
       (super.noSuchMethod(
             Invocation.method(#addFileStream, [dataStream]),
-            returnValue: _i8.Future<String>.value(
-              _i7.dummyValue<String>(
+            returnValue: _i7.Future<String>.value(
+              _i6.dummyValue<String>(
                 this,
                 Invocation.method(#addFileStream, [dataStream]),
               ),
             ),
           )
-          as _i8.Future<String>);
+          as _i7.Future<String>);
 
   @override
-  _i8.Future<String> addDirectory(Map<String, dynamic>? directoryContent) =>
+  _i7.Future<String> addDirectory(Map<String, dynamic>? directoryContent) =>
       (super.noSuchMethod(
             Invocation.method(#addDirectory, [directoryContent]),
-            returnValue: _i8.Future<String>.value(
-              _i7.dummyValue<String>(
+            returnValue: _i7.Future<String>.value(
+              _i6.dummyValue<String>(
                 this,
                 Invocation.method(#addDirectory, [directoryContent]),
               ),
             ),
           )
-          as _i8.Future<String>);
+          as _i7.Future<String>);
 
   @override
-  void setGatewayMode(_i11.GatewayMode? mode, {String? customUrl}) =>
+  void setGatewayMode(_i10.GatewayMode? mode, {String? customUrl}) =>
       super.noSuchMethod(
         Invocation.method(#setGatewayMode, [mode], {#customUrl: customUrl}),
         returnValueForMissingStub: null,
       );
 
   @override
-  _i8.Future<_i10.Uint8List?> get(String? cid, {String? path = ''}) =>
+  _i7.Future<_i9.Uint8List?> get(String? cid, {String? path = ''}) =>
       (super.noSuchMethod(
             Invocation.method(#get, [cid], {#path: path}),
-            returnValue: _i8.Future<_i10.Uint8List?>.value(),
+            returnValue: _i7.Future<_i9.Uint8List?>.value(),
           )
-          as _i8.Future<_i10.Uint8List?>);
+          as _i7.Future<_i9.Uint8List?>);
 
   @override
-  _i8.Future<List<_i13.Link>> ls(String? cid) =>
+  _i7.Future<List<_i12.Link>> ls(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#ls, [cid]),
-            returnValue: _i8.Future<List<_i13.Link>>.value(<_i13.Link>[]),
+            returnValue: _i7.Future<List<_i12.Link>>.value(<_i12.Link>[]),
           )
-          as _i8.Future<List<_i13.Link>>);
+          as _i7.Future<List<_i12.Link>>);
 
   @override
-  _i8.Future<void> pin(String? cid) =>
+  _i7.Future<void> pin(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#pin, [cid]),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<bool> unpin(String? cid) =>
+  _i7.Future<bool> unpin(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#unpin, [cid]),
-            returnValue: _i8.Future<bool>.value(false),
+            returnValue: _i7.Future<bool>.value(false),
           )
-          as _i8.Future<bool>);
+          as _i7.Future<bool>);
 
   @override
-  _i8.Future<void> publishIPNS(String? cid, {required String? keyName}) =>
+  _i7.Future<void> publishIPNS(String? cid, {required String? keyName}) =>
       (super.noSuchMethod(
             Invocation.method(#publishIPNS, [cid], {#keyName: keyName}),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<void> importCAR(_i10.Uint8List? carFile) =>
+  _i7.Future<void> importCAR(_i9.Uint8List? carFile) =>
       (super.noSuchMethod(
             Invocation.method(#importCAR, [carFile]),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<_i10.Uint8List> exportCAR(String? cid) =>
+  _i7.Future<_i9.Uint8List> exportCAR(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#exportCAR, [cid]),
-            returnValue: _i8.Future<_i10.Uint8List>.value(_i10.Uint8List(0)),
+            returnValue: _i7.Future<_i9.Uint8List>.value(_i9.Uint8List(0)),
           )
-          as _i8.Future<_i10.Uint8List>);
+          as _i7.Future<_i9.Uint8List>);
 
   @override
-  _i8.Future<List<String>> findProviders(String? cid) =>
+  _i7.Future<List<String>> findProviders(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#findProviders, [cid]),
-            returnValue: _i8.Future<List<String>>.value(<String>[]),
+            returnValue: _i7.Future<List<String>>.value(<String>[]),
           )
-          as _i8.Future<List<String>>);
+          as _i7.Future<List<String>>);
 
   @override
-  _i8.Future<void> requestBlock(String? cid, _i14.Peer? peer) =>
+  _i7.Future<void> requestBlock(String? cid, _i13.Peer? peer) =>
       (super.noSuchMethod(
             Invocation.method(#requestBlock, [cid, peer]),
-            returnValue: _i8.Future<void>.value(),
-            returnValueForMissingStub: _i8.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i8.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i8.Future<String> resolveDNSLink(String? domainName) =>
+  _i7.Future<String> resolveDNSLink(String? domainName) =>
       (super.noSuchMethod(
             Invocation.method(#resolveDNSLink, [domainName]),
-            returnValue: _i8.Future<String>.value(
-              _i7.dummyValue<String>(
+            returnValue: _i7.Future<String>.value(
+              _i6.dummyValue<String>(
                 this,
                 Invocation.method(#resolveDNSLink, [domainName]),
               ),
             ),
           )
-          as _i8.Future<String>);
+          as _i7.Future<String>);
 
   @override
-  _i8.Future<Map<String, dynamic>> getHealthStatus() =>
+  _i7.Future<Map<String, dynamic>> getHealthStatus() =>
       (super.noSuchMethod(
             Invocation.method(#getHealthStatus, []),
-            returnValue: _i8.Future<Map<String, dynamic>>.value(
+            returnValue: _i7.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
           )
-          as _i8.Future<Map<String, dynamic>>);
+          as _i7.Future<Map<String, dynamic>>);
 }

@@ -120,18 +120,17 @@ void main() {
       verify(mockRouter.sendMessage('peerB', any)).called(1);
     });
 
-    test(
-      'wantBlock timeout',
-      () async {
-        await handler.start();
-        final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
-        when(mockRouter.connectedPeers).thenReturn({'peerA'});
+    test('wantBlock timeout', () async {
+      await handler.start();
+      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      when(mockRouter.connectedPeers).thenReturn({'peerA'});
 
-        // Request with short timeout
-        // final result = await handler.want([cid], timeout: Duration(milliseconds: 100));
-      },
-      skip: 'want() rethrows TimeoutException but we need to handle it',
-    );
+      // want() rethrows TimeoutException when no peer responds within timeout.
+      await expectLater(
+        handler.want([cid], timeout: const Duration(milliseconds: 100)),
+        throwsA(isA<TimeoutException>()),
+      );
+    });
 
     test('handleBlocks rejects invalid blocks', () async {
       final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
@@ -283,6 +282,88 @@ void main() {
       await capturedHandler(packet);
 
       verify(mockRouter.sendMessage('peerB', any)).called(1);
+    });
+
+    test('start when already running returns early', () async {
+      await handler.start();
+      await handler.start(); // Should return early without error
+      expect(await handler.getStatus(), containsPair('wanted_blocks', 0));
+    });
+
+    test('stop when not running returns early', () async {
+      await handler.stop(); // Should not throw
+    });
+
+    test('start error handling', () async {
+      when(mockRouter.initialize()).thenThrow(Exception('Init error'));
+      await expectLater(handler.start(), throwsException);
+    });
+
+    test('stop error handling', () async {
+      when(mockRouter.stop()).thenThrow(Exception('Stop error'));
+      await handler.stop(); // Should catch error and not throw
+    });
+
+    test('want when not running throws StateError', () async {
+      await expectLater(handler.want(['QmSomeCid']), throwsStateError);
+    });
+
+    test('want with duplicate CID', () async {
+      await handler.start();
+      final data = Uint8List.fromList([1, 2, 3]);
+      final cid = await CID.computeForData(data);
+      final cidStr = cid.encode();
+      when(mockRouter.connectedPeers).thenReturn({'peerA'});
+
+      // Request the same CID twice - second should skip adding duplicate
+      Timer(Duration(milliseconds: 100), () async {
+        await handler.handleBlocks([Block(cid: cid, data: data)]);
+      });
+
+      final results = await handler.want([cidStr, cidStr]);
+      expect(
+        results.length,
+        equals(1),
+      ); // Only one result since duplicate was skipped
+    });
+
+    test('handleWantRequest error handling', () async {
+      await handler.start();
+      when(mockRouter.connectedPeers).thenReturn({});
+
+      await expectLater(
+        handler.handleWantRequest('QmSomeCid'),
+        throwsStateError,
+      );
+    });
+
+    test('wantBlock when not running throws StateError', () async {
+      await expectLater(handler.wantBlock('QmSomeCid'), throwsStateError);
+    });
+
+    test('wantBlock error handling returns null', () async {
+      await handler.start();
+      when(mockRouter.connectedPeers).thenReturn({});
+
+      final result = await handler.wantBlock('QmSomeCid');
+      expect(result, isNull);
+    });
+
+    test('handleWantlist with empty wantlist', () async {
+      await handler.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.last
+              as Function(NetworkPacket);
+
+      final msg = message.Message();
+      // Empty wantlist
+
+      final packet = NetworkPacket(srcPeerId: 'peerA', datagram: msg.toBytes());
+      when(mockRouter.peerID).thenReturn('localPeer');
+
+      await capturedHandler(packet); // Should handle empty wantlist gracefully
     });
   });
 }

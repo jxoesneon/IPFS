@@ -111,5 +111,59 @@ void main() {
       expect(status['total_blocks'], 1);
       expect(status['total_size'], 2);
     });
+
+    test('gc removes unpinned blocks', () async {
+      final block1 = await Block.fromData(Uint8List.fromList([1]));
+      final block2 = await Block.fromData(Uint8List.fromList([2]));
+
+      await store.putBlock(block1);
+      await store.putBlock(block2);
+
+      // gc should remove unpinned blocks
+      final removed = await store.gc();
+      expect(removed, greaterThanOrEqualTo(0));
+    });
+
+    test('putBlock handles already indexed block', () async {
+      final block = await Block.fromData(Uint8List.fromList([1, 2]));
+
+      await store.putBlock(block);
+      final firstResp = await store.putBlock(block);
+
+      expect(firstResp.success, isTrue);
+    });
+
+    test('removeBlock handles non-existent block', () async {
+      final removeResp = await store.removeBlock('non-existent-cid');
+      expect(removeResp.success, isFalse);
+    });
+
+    test('getBlock handles disk-based blocks', () async {
+      final block = await Block.fromData(Uint8List.fromList([1, 2, 3]));
+
+      await store.putBlock(block);
+      await store.stop(); // This saves to disk
+      await store.start(); // This loads from disk
+
+      final getResp = await store.getBlock(block.cid.toString());
+      expect(getResp.found, isTrue);
+
+      await store.stop();
+    });
+
+    test('hasBlock returns false for non-existent', () async {
+      final has = await store.hasBlock('non-existent-cid');
+      expect(has, isFalse);
+    });
+
+    test('getStatus includes pinned blocks count', () async {
+      final status = await store.getStatus();
+      expect(status.containsKey('pinned_blocks'), isTrue);
+    });
+
+    test('getAllBlocks returns empty list when empty', () async {
+      final all = await store.getAllBlocks();
+      expect(all, isEmpty);
+    });
   });
 }

@@ -121,5 +121,84 @@ void main() {
         throwsA(isA<IPLDSchemaError>()),
       );
     });
+
+    test('union accepts any matching representation', () async {
+      final asInt = IPLDNode()
+        ..kind = Kind.INTEGER
+        ..intValue = Int64(1);
+      final asStr = IPLDNode()
+        ..kind = Kind.STRING
+        ..stringValue = 'x';
+      final asBool = IPLDNode()
+        ..kind = Kind.BOOL
+        ..boolValue = true;
+      expect(await schema.validate('MyUnion', asInt), isTrue);
+      expect(await schema.validate('MyUnion', asStr), isTrue);
+      expect(await schema.validate('MyUnion', asBool), isFalse);
+    });
+
+    test('basic-type schemas reject mismatched kinds', () async {
+      final s = IPLDSchema('Basics', {
+        'Bool': {'kind': 'bool'},
+        'Bytes': {
+          'kind': 'bytes',
+          'valueConstraint': {'minLength': 2, 'maxLength': 4},
+        },
+      });
+      final boolNode = IPLDNode()
+        ..kind = Kind.BOOL
+        ..boolValue = false;
+      expect(await s.validate('Bool', boolNode), isTrue);
+      final wrong = IPLDNode()
+        ..kind = Kind.STRING
+        ..stringValue = 'no';
+      expect(await s.validate('Bool', wrong), isFalse);
+
+      final bytesOk = IPLDNode()
+        ..kind = Kind.BYTES
+        ..bytesValue = [1, 2, 3];
+      final bytesShort = IPLDNode()
+        ..kind = Kind.BYTES
+        ..bytesValue = [1];
+      final bytesLong = IPLDNode()
+        ..kind = Kind.BYTES
+        ..bytesValue = [1, 2, 3, 4, 5];
+      expect(await s.validate('Bytes', bytesOk), isTrue);
+      expect(await s.validate('Bytes', bytesShort), isFalse);
+      expect(await s.validate('Bytes', bytesLong), isFalse);
+    });
+
+    test('string schemas honour pattern and maxLength', () async {
+      final s = IPLDSchema('Strings', {
+        'Hex': {
+          'kind': 'string',
+          'valueConstraint': {'pattern': r'^[0-9a-f]+$'},
+        },
+        'Bounded': {
+          'kind': 'string',
+          'valueConstraint': {'maxLength': 3},
+        },
+      });
+      final ok = IPLDNode()
+        ..kind = Kind.STRING
+        ..stringValue = 'abc';
+      final notHex = IPLDNode()
+        ..kind = Kind.STRING
+        ..stringValue = 'ZZZ';
+      final tooLong = IPLDNode()
+        ..kind = Kind.STRING
+        ..stringValue = 'abcd';
+      expect(await s.validate('Hex', ok), isTrue);
+      expect(await s.validate('Hex', notHex), isFalse);
+      expect(await s.validate('Bounded', tooLong), isFalse);
+    });
+
+    test('throws when schema kind is unknown', () async {
+      final s = IPLDSchema('Bad', {
+        'Bad': {'kind': 'mystery'},
+      });
+      final node = IPLDNode()..kind = Kind.NULL;
+      expect(() => s.validate('Bad', node), throwsA(isA<IPLDSchemaError>()));
+    });
   });
 }

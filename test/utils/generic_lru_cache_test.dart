@@ -205,5 +205,66 @@ void main() {
 
       expect(cache.get('key'), equals(42));
     });
+
+    test('clear empties the timestamps and entries', () {
+      final cache = TimedLRUCache<String, int>(
+        capacity: 5,
+        ttl: const Duration(seconds: 10),
+      );
+      cache.put('a', 1);
+      cache.put('b', 2);
+      cache.clear();
+      expect(cache.length, equals(0));
+      expect(cache.get('a'), isNull);
+    });
+  });
+
+  group('GenericLRUCache extras', () {
+    test('isFull reports when at capacity', () {
+      final cache = GenericLRUCache<String, int>(capacity: 2);
+      expect(cache.isFull, isFalse);
+      cache.put('a', 1);
+      cache.put('b', 2);
+      expect(cache.isFull, isTrue);
+    });
+
+    test('getOrComputeSync caches the computed value', () {
+      final cache = GenericLRUCache<String, int>(capacity: 4);
+      var computeCalls = 0;
+      final v1 = cache.getOrComputeSync('k', () {
+        computeCalls++;
+        return 7;
+      });
+      final v2 = cache.getOrComputeSync('k', () {
+        computeCalls++;
+        return 99;
+      });
+      expect(v1, equals(7));
+      expect(v2, equals(7));
+      expect(computeCalls, equals(1));
+    });
+
+    test('keys returns MRU-first order', () {
+      final cache = GenericLRUCache<String, int>(capacity: 4);
+      cache.put('a', 1);
+      cache.put('b', 2);
+      cache.put('c', 3);
+      // Touch 'a' so it becomes most recently used.
+      cache.get('a');
+      expect(cache.keys, equals(['a', 'c', 'b']));
+    });
+
+    test('eviction at capacity removes the LRU node', () {
+      final evictions = <MapEntry<String, int>>[];
+      final cache = GenericLRUCache<String, int>(
+        capacity: 2,
+        onEvict: (k, v) => evictions.add(MapEntry(k, v)),
+      );
+      cache.put('a', 1);
+      cache.put('b', 2);
+      cache.put('c', 3); // evicts 'a'
+      expect(evictions.single.key, equals('a'));
+      expect(cache.containsKey('a'), isFalse);
+    });
   });
 }

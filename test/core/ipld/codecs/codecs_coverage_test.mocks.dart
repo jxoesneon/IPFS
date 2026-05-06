@@ -172,6 +172,14 @@ class MockBlockStore extends _i1.Mock implements _i5.BlockStore {
             ),
           )
           as _i7.Future<Map<String, dynamic>>);
+
+  @override
+  _i7.Future<int> gc() =>
+      (super.noSuchMethod(
+            Invocation.method(#gc, []),
+            returnValue: _i7.Future<int>.value(0),
+          )
+          as _i7.Future<int>);
 }
 
 /// A class which mocks [IPFSPrivateKey].

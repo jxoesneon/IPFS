@@ -11,9 +11,12 @@ import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart'
     as blockstore_pb;
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
+import 'package:dart_ipfs/src/core/errors/node_errors.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
 import 'package:dart_ipfs/src/core/ipld/path/ipld_path_handler.dart';
+import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
+import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart';
 import 'package:dart_multihash/dart_multihash.dart';
 import 'package:test/test.dart';
 import 'package:fixnum/fixnum.dart';
@@ -343,6 +346,588 @@ void main() {
       final retrieved = await handler.get(block.cid);
       expect(retrieved.kind, Kind.LINK);
       expect(retrieved.linkValue.multihash, someCid.multihash.toBytes());
+    });
+
+    test('should throw ComponentError when not running', () async {
+      await handler.stop();
+      final data = {'name': 'test'};
+      expect(
+        () => handler.put(data, codec: 'dag-cbor'),
+        throwsA(isA<ComponentError>()),
+      );
+    });
+
+    test('should throw ComponentError for get when not running', () async {
+      await handler.stop();
+      final cid = await CID.computeForData(utf8.encode('test'));
+      expect(() => handler.get(cid), throwsA(isA<ComponentError>()));
+    });
+
+    test(
+      'should throw ComponentError for resolveLink when not running',
+      () async {
+        await handler.stop();
+        final cid = await CID.computeForData(utf8.encode('test'));
+        expect(
+          () => handler.resolveLink(cid, 'path'),
+          throwsA(isA<ComponentError>()),
+        );
+      },
+    );
+
+    test(
+      'should throw ComponentError for executeSelector when not running',
+      () async {
+        await handler.stop();
+        final cid = await CID.computeForData(utf8.encode('test'));
+        expect(
+          () => handler.executeSelector(cid, IPLDSelector.all()),
+          throwsA(isA<ComponentError>()),
+        );
+      },
+    );
+
+    test(
+      'should throw ComponentError for resolvePath when not running',
+      () async {
+        await handler.stop();
+        expect(
+          () => handler.resolvePath('/ipfs/cid/path'),
+          throwsA(isA<ComponentError>()),
+        );
+      },
+    );
+
+    test('should throw IPLDSchemaError for unknown schema', () async {
+      final data = {'name': 'test'};
+      expect(
+        () => handler.put(data, codec: 'dag-cbor', schemaType: 'unknown'),
+        throwsA(isA<IPLDSchemaError>()),
+      );
+    });
+
+    test('executeSelector with explore selector', () async {
+      final data = {'target': 'value'};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final exploreSelector = IPLDSelector.explore(
+        path: 'target',
+        selector: IPLDSelector.all(),
+      );
+      final results = await handler.executeSelector(block.cid, exploreSelector);
+      // Explore selector might not return results without proper link structure
+      // Just verify it doesn't throw
+      expect(results, isA<List>());
+    });
+
+    test('executeSelector with recursive selector', () async {
+      final data = {
+        'items': [
+          {'name': 'a'},
+          {'name': 'b'},
+        ],
+      };
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final recursiveSelector = IPLDSelector.recursive(
+        selector: IPLDSelector.matcher(criteria: {}),
+        maxDepth: 2,
+        stopAtLink: false,
+      );
+      final results = await handler.executeSelector(
+        block.cid,
+        recursiveSelector,
+      );
+      expect(results, isNotEmpty);
+    });
+
+    test('executeSelector with union selector', () async {
+      final data = {'value': 42};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final unionSelector = IPLDSelector.union([
+        IPLDSelector.matcher(criteria: {'value': 42}),
+        IPLDSelector.matcher(criteria: {'value': 43}),
+      ]);
+      final results = await handler.executeSelector(block.cid, unionSelector);
+      expect(results, isNotEmpty);
+    });
+
+    test('executeSelector with intersection selector', () async {
+      final data = {'value': 42, 'name': 'test'};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final intersectionSelector = IPLDSelector.intersection([
+        IPLDSelector.matcher(criteria: {'value': 42}),
+        IPLDSelector.matcher(criteria: {'name': 'test'}),
+      ]);
+      final results = await handler.executeSelector(
+        block.cid,
+        intersectionSelector,
+      );
+      expect(results, isNotEmpty);
+    });
+
+    test('executeSelector with none selector', () async {
+      final data = {'value': 42};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final noneSelector = IPLDSelector.none();
+      final results = await handler.executeSelector(block.cid, noneSelector);
+      expect(results, isEmpty);
+    });
+
+    test('matcher with exists operator', () async {
+      final data = {'value': 42};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final matcher = IPLDSelector.matcher(
+        criteria: {
+          'value': {r'\$exists': true},
+        },
+      );
+      final results = await handler.executeSelector(block.cid, matcher);
+      // Just verify it doesn't throw
+      expect(results, isA<List>());
+    });
+
+    test('matcher with type operator', () async {
+      final data = {'value': 42};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final matcher = IPLDSelector.matcher(
+        criteria: {
+          'value': {r'\$type': 'number'},
+        },
+      );
+      final results = await handler.executeSelector(block.cid, matcher);
+      // Just verify it doesn't throw
+      expect(results, isA<List>());
+    });
+
+    test('matcher with mod operator', () async {
+      final data = {'value': 10};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final matcher = IPLDSelector.matcher(
+        criteria: {
+          'value': {
+            r'\$mod': [5, 0],
+          },
+        },
+      );
+
+      final results = await handler.executeSelector(block.cid, matcher);
+      // Just verify it doesn't throw
+      expect(results, isA<List>());
+    });
+
+    test('matcher with all operator', () async {
+      final data = {
+        'tags': ['a', 'b', 'c'],
+      };
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final matcher = IPLDSelector.matcher(
+        criteria: {
+          'tags': {
+            r'\$all': ['a', 'b'],
+          },
+        },
+      );
+
+      final results = await handler.executeSelector(block.cid, matcher);
+      // Just verify it doesn't throw
+      expect(results, isA<List>());
+    });
+
+    test('matcher with size operator', () async {
+      final data = {
+        'items': [1, 2, 3],
+      };
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final matcher = IPLDSelector.matcher(
+        criteria: {
+          'items': {r'\$size': 3},
+        },
+      );
+
+      final results = await handler.executeSelector(block.cid, matcher);
+      // Just verify it doesn't throw
+      expect(results, isA<List>());
+    });
+
+    test('matcher with elemMatch operator', () async {
+      final data = {
+        'items': [
+          {'id': 1},
+          {'id': 2},
+        ],
+      };
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final matcher = IPLDSelector.matcher(
+        criteria: {
+          'items': {
+            r'\$elemMatch': {'id': 1},
+          },
+        },
+      );
+
+      final results = await handler.executeSelector(block.cid, matcher);
+      // Just verify it doesn't throw
+      expect(results, isA<List>());
+    });
+
+    test('resolveLink with empty path returns node', () async {
+      final data = {'name': 'test'};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final (resolved, lastCid) = await handler.resolveLink(block.cid, '');
+      expect(resolved.kind, Kind.MAP);
+      expect(lastCid, block.cid.toString());
+    });
+
+    test('resolveLink handles list index out of bounds', () async {
+      final data = [1, 2, 3];
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      expect(
+        () => handler.resolveLink(block.cid, '10'),
+        throwsA(isA<IPLDResolutionError>()),
+      );
+    });
+
+    test('resolvePath with invalid CID throws IPLDPathError', () async {
+      expect(
+        () => handler.resolvePath('/ipfs/invalid-cid/path'),
+        throwsA(isA<IPLDPathError>()),
+      );
+    });
+
+    test('getMetadata for non-UnixFS node', () async {
+      final data = {'name': 'test'};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final metadata = await handler.getMetadata(block.cid);
+      expect(metadata.contentType, isNotNull);
+      expect(metadata.size, isPositive);
+    });
+
+    test('start when already running is idempotent', () async {
+      await handler.start(); // Should not throw
+    });
+
+    test('stop when not running is idempotent', () async {
+      await handler.stop();
+      await handler.stop(); // Should not throw
+    });
+
+    test('registerCodec adds custom codec', () {
+      final customCodec = RawCodec();
+      handler.registerCodec(customCodec);
+      // Should not throw
+    });
+
+    test('registerSchema adds custom schema', () {
+      final schema = IPLDSchema('test', {});
+      handler.registerSchema(schema);
+      // Should not throw
+    });
+
+    test('put with dag-pb codec', () async {
+      final data = {
+        'Data': Uint8List.fromList([1, 2, 3]),
+        'Links': [],
+      };
+      final block = await handler.put(data, codec: 'dag-pb');
+      expect(block, isNotNull);
+      expect(block.cid, isNotNull);
+    });
+
+    test('get with non-existent CID returns empty node', () async {
+      final cid = await CID.computeForData(utf8.encode('nonexistent'));
+      final retrieved = await handler.get(cid);
+      // Returns empty node instead of throwing
+      expect(retrieved.kind, Kind.BYTES);
+      expect(retrieved.bytesValue, isEmpty);
+    });
+
+    test('resolveLink with list path', () async {
+      final data = [1, 2, 3];
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final (resolved, lastCid) = await handler.resolveLink(block.cid, '0');
+      expect(resolved.kind, Kind.INTEGER);
+      expect(resolved.intValue.toInt(), 1);
+    });
+
+    test('resolveLink with nested map path', () async {
+      final data = {
+        'a': {
+          'b': {'c': 'value'},
+        },
+      };
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final (resolved, lastCid) = await handler.resolveLink(block.cid, 'a/b/c');
+      expect(resolved.kind, Kind.STRING);
+      expect(resolved.stringValue, 'value');
+    });
+
+    test('resolveLink with link in list', () async {
+      final leafData = 'leaf';
+      final leafBlock = await handler.put(leafData, codec: 'dag-cbor');
+
+      final data = [leafBlock.cid];
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final (resolved, lastCid) = await handler.resolveLink(block.cid, '0');
+      expect(resolved.kind, Kind.STRING);
+      expect(resolved.stringValue, leafData);
+    });
+
+    test('resolveLink with invalid list index throws error', () async {
+      final data = [1, 2, 3];
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      expect(
+        () => handler.resolveLink(block.cid, 'abc'),
+        throwsA(isA<IPLDResolutionError>()),
+      );
+    });
+
+    test('resolveLink with non-existent map key throws error', () async {
+      final data = {'a': 1};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      expect(
+        () => handler.resolveLink(block.cid, 'nonexistent'),
+        throwsA(isA<IPLDResolutionError>()),
+      );
+    });
+
+    test('resolveLink traverses through multiple links', () async {
+      final leafData = 'final leaf';
+      final leafBlock = await handler.put(leafData, codec: 'dag-cbor');
+
+      final midData = {'link': leafBlock.cid};
+      final midBlock = await handler.put(midData, codec: 'dag-cbor');
+
+      final rootData = {'link': midBlock.cid};
+      final rootBlock = await handler.put(rootData, codec: 'dag-cbor');
+
+      final (resolved, lastCid) = await handler.resolveLink(
+        rootBlock.cid,
+        'link/link',
+      );
+      expect(resolved.kind, Kind.STRING);
+      expect(resolved.stringValue, leafData);
+    });
+
+    test('executeSelector with empty results', () async {
+      final data = {'value': 42};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final matcher = IPLDSelector.matcher(criteria: {'value': 999});
+      final results = await handler.executeSelector(block.cid, matcher);
+      expect(results, isEmpty);
+    });
+
+    test('put with empty data', () async {
+      final data = Uint8List.fromList([]);
+      final block = await handler.put(data, codec: 'raw');
+      expect(block, isNotNull);
+    });
+
+    test('put with large data', () async {
+      final data = Uint8List.fromList(List.filled(10000, 42));
+      final block = await handler.put(data, codec: 'raw');
+      expect(block, isNotNull);
+    });
+
+    test('getMetadata returns correct size', () async {
+      final data = Uint8List.fromList([1, 2, 3, 4, 5]);
+      final block = await handler.put(data, codec: 'raw');
+
+      final metadata = await handler.getMetadata(block.cid);
+      // Size includes encoding overhead
+      expect(metadata.size, greaterThan(0));
+    });
+
+    test('getStatus returns codec count', () async {
+      final status = await handler.getStatus();
+      expect(status['supported_codecs'], isA<List>());
+      expect(status['supported_codecs'].length, greaterThan(0));
+    });
+
+    test('resolvePath with trailing slash', () async {
+      final data = {'name': 'test'};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final result = await handler.resolvePath('/ipfs/${block.cid}/');
+      expect(result.kind, Kind.MAP);
+    });
+
+    test('resolvePath with only CID', () async {
+      final data = {'name': 'test'};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final result = await handler.resolvePath('/ipfs/${block.cid}');
+      expect(result.kind, Kind.MAP);
+    });
+
+    test('executeSelector with recursive selector and maxDepth', () async {
+      final data = {
+        'a': {
+          'b': {
+            'c': {'d': 'value'},
+          },
+        },
+      };
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final recursiveSelector = IPLDSelector.recursive(
+        selector: IPLDSelector.all(),
+        maxDepth: 3,
+        stopAtLink: false,
+      );
+      final results = await handler.executeSelector(
+        block.cid,
+        recursiveSelector,
+      );
+      expect(results, isNotEmpty);
+    });
+
+    test('executeSelector with recursive selector and stopAtLink', () async {
+      final leafData = 'leaf';
+      final leafBlock = await handler.put(leafData, codec: 'dag-cbor');
+
+      final data = {'link': leafBlock.cid};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final recursiveSelector = IPLDSelector.recursive(
+        selector: IPLDSelector.all(),
+        maxDepth: 2,
+        stopAtLink: true,
+      );
+      final results = await handler.executeSelector(
+        block.cid,
+        recursiveSelector,
+      );
+      expect(results, isNotEmpty);
+    });
+
+    test('put with null value', () async {
+      final data = null;
+      final block = await handler.put(data, codec: 'dag-cbor');
+      expect(block, isNotNull);
+
+      final retrieved = await handler.get(block.cid);
+      expect(retrieved.kind, Kind.NULL);
+    });
+
+    test('put with boolean values', () async {
+      final data = {'true': true, 'false': false};
+      final block = await handler.put(data, codec: 'dag-cbor');
+      expect(block, isNotNull);
+
+      final retrieved = await handler.get(block.cid);
+      expect(retrieved.kind, Kind.MAP);
+    });
+
+    test('put with empty map', () async {
+      final data = <String, dynamic>{};
+      final block = await handler.put(data, codec: 'dag-cbor');
+      expect(block, isNotNull);
+
+      final retrieved = await handler.get(block.cid);
+      expect(retrieved.kind, Kind.MAP);
+      expect(retrieved.mapValue.entries, isEmpty);
+    });
+
+    test('put with empty list', () async {
+      final data = <dynamic>[];
+      final block = await handler.put(data, codec: 'dag-cbor');
+      expect(block, isNotNull);
+
+      final retrieved = await handler.get(block.cid);
+      expect(retrieved.kind, Kind.LIST);
+      expect(retrieved.listValue.values, isEmpty);
+    });
+
+    test('resolveLink with complex nested structure', () async {
+      final data = {
+        'items': [
+          {
+            'id': 1,
+            'values': [10, 20, 30],
+          },
+          {
+            'id': 2,
+            'values': [40, 50, 60],
+          },
+        ],
+      };
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final (resolved, lastCid) = await handler.resolveLink(
+        block.cid,
+        'items/1/values/2',
+      );
+      expect(resolved.kind, Kind.INTEGER);
+      expect(resolved.intValue.toInt(), 60);
+    });
+
+    test('executeSelector with complex matcher criteria', () async {
+      final data = {
+        'items': [
+          {'id': 1, 'score': 85, 'active': true},
+          {'id': 2, 'score': 92, 'active': false},
+          {'id': 3, 'score': 78, 'active': true},
+        ],
+      };
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final matcher = IPLDSelector.matcher(
+        criteria: {
+          'items': {
+            r'\$elemMatch': {
+              'score': {r'\$gt': 80},
+              'active': true,
+            },
+          },
+        },
+      );
+      final results = await handler.executeSelector(block.cid, matcher);
+      expect(results, isA<List>());
+    });
+
+    test('get with dag-json codec', () async {
+      final data = {'name': 'test', 'value': 123};
+      final block = await handler.put(data, codec: 'dag-json');
+      expect(block, isNotNull);
+
+      final retrieved = await handler.get(block.cid);
+      expect(retrieved.kind, Kind.MAP);
+    });
+
+    test('resolveLink handles circular references gracefully', () async {
+      final data = {'value': 42};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      // Create a circular reference by putting the CID back into the data
+      final circularData = {'self': block.cid};
+      final circularBlock = await handler.put(circularData, codec: 'dag-cbor');
+
+      // Should not throw infinite recursion error
+      final (resolved, lastCid) = await handler.resolveLink(
+        circularBlock.cid,
+        'self/value',
+      );
+      expect(resolved.kind, Kind.INTEGER);
+      expect(resolved.intValue.toInt(), 42);
     });
   });
 }

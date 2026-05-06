@@ -729,4 +729,13 @@ class MockBlockStore extends _i1.Mock implements _i17.BlockStore {
             ),
           )
           as _i8.Future<Map<String, dynamic>>);
+
+  @override
+  _i8.Future<int> gc() =>
+      (super.noSuchMethod(
+            Invocation.method(#gc, []),
+            returnValue: _i8.Future<int>.value(0),
+            returnValueForMissingStub: _i8.Future<int>.value(0),
+          )
+          as _i8.Future<int>);
 }

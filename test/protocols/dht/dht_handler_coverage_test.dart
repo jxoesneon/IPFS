@@ -250,5 +250,195 @@ void main() {
       final result = await handler.resolveDNSLink(domain);
       expect(result, isNull);
     });
+
+    test('isValidCID validates CID format', () {
+      expect(
+        handler.isValidCID('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        isTrue,
+      );
+      expect(handler.isValidCID(''), isFalse);
+      expect(handler.isValidCID('invalid@cid'), isFalse);
+    });
+
+    test('isValidPeerID validates peer ID format', () {
+      expect(
+        handler.isValidPeerID('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        isTrue,
+      );
+      expect(handler.isValidPeerID(''), isFalse);
+      expect(handler.isValidPeerID('invalid@peer'), isFalse);
+    });
+
+    test('extractCIDFromResponse extracts CID from HTML', () {
+      final response =
+          '<html>QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn</html>';
+      final result = handler.extractCIDFromResponse(response);
+      expect(result, equals('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'));
+    });
+
+    test('extractCIDFromResponse returns null when no CID found', () {
+      final response = '<html>No CID here</html>';
+      final result = handler.extractCIDFromResponse(response);
+      expect(result, isNull);
+    });
+
+    test('router getter returns router', () {
+      expect(handler.router, equals(mockRouter));
+    });
+
+    test('storage getter returns storage', () {
+      expect(handler.storage, equals(mockStorage));
+    });
+
+    test('getValue throws when storage returns null', () async {
+      final key = Key(Uint8List.fromList([1, 1, 1]));
+      when(mockStorage.get(any)).thenAnswer((_) async => null);
+
+      expect(() => handler.getValue(key), throwsA(isA<Exception>()));
+    });
+
+    test('putValue handles storage errors', () async {
+      final key = Key(Uint8List.fromList([1, 1, 1]));
+      final value = Value(Uint8List.fromList([2, 2, 2]));
+      when(mockStorage.put(any, any)).thenThrow(Exception('Storage error'));
+
+      await handler.putValue(key, value);
+      // Should not throw, error is logged
+    });
+
+    test('findProviders handles client errors', () async {
+      final cid = CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
+      when(mockClient.findProviders(any)).thenThrow(Exception('Client error'));
+
+      final providers = await handler.findProviders(cid);
+      expect(providers, isEmpty);
+    });
+
+    test('provide handles client errors', () async {
+      final cid = CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
+      when(mockRouter.peerID).thenReturn('localPeer');
+      when(
+        mockClient.addProvider(any, any),
+      ).thenThrow(Exception('Client error'));
+
+      await handler.provide(cid);
+      // Should not throw, error is logged
+    });
+
+    test('findPeer handles client errors', () async {
+      final peerId = PeerId(value: Uint8List.fromList([1, 2, 3]));
+      when(mockClient.findPeer(peerId)).thenThrow(Exception('Client error'));
+      final results = await handler.findPeer(peerId);
+      expect(results, isEmpty);
+    });
+
+    test('handleRoutingTableUpdate throws on client errors', () async {
+      final peerInfo = V_PeerInfo()..peerId = [1, 2, 3];
+      when(
+        mockRoutingTable.updatePeer(peerInfo),
+      ).thenThrow(Exception('Client error'));
+
+      expect(
+        () => handler.handleRoutingTableUpdate(peerInfo),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('publishIPNS handles keystore errors gracefully', () async {
+      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      final keyName = 'self';
+      when(
+        mockKeystore.getKeyPair(keyName),
+      ).thenThrow(Exception('Key not found'));
+
+      await handler.publishIPNS(cid, keyName: keyName);
+      // Should not throw, error is handled gracefully
+    });
+
+    test('resolveDNSLink handles storage errors', () async {
+      final domain = 'ipfs.io';
+      when(mockStorage.get(any)).thenThrow(Exception('Storage error'));
+
+      final result = await handler.resolveDNSLink(domain);
+      expect(result, isNull);
+    });
+
+    test('resolveDNSLink with HTTP fallback when storage fails', () async {
+      final domain = 'ipfs.io';
+      when(mockStorage.get(any)).thenThrow(Exception('Storage error'));
+      when(mockHttpClient.get(any)).thenAnswer(
+        (_) async => http.Response(
+          '<html>QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn</html>',
+          200,
+        ),
+      );
+
+      final result = await handler.resolveDNSLink(domain);
+      expect(result, isNull); // HTTP fallback may not work for DNSLink
+    });
+
+    test('resolveIPNS with HTTP fallback when storage fails', () async {
+      final ipnsName = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      when(mockStorage.get(any)).thenThrow(Exception('Storage error'));
+      when(mockHttpClient.get(any)).thenAnswer(
+        (_) async => http.Response(
+          '<html>QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn</html>',
+          200,
+        ),
+      );
+
+      final result = await handler.resolveIPNS(ipnsName);
+      expect(result, equals('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'));
+    });
+
+    test('resolveIPNS with empty storage value returns empty string', () async {
+      final ipnsName = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      when(
+        mockStorage.get(any),
+      ).thenAnswer((_) async => Uint8List.fromList([]));
+      when(mockHttpClient.get(any)).thenAnswer(
+        (_) async => http.Response(
+          '<html>QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn</html>',
+          200,
+        ),
+      );
+
+      final result = await handler.resolveIPNS(ipnsName);
+      expect(result, equals(''));
+    });
+
+    test('extractCIDFromResponse handles malformed HTML', () async {
+      final response = 'not valid html at all';
+      final result = handler.extractCIDFromResponse(response);
+      expect(result, isNull);
+    });
+
+    test('isValidCID handles empty string', () {
+      expect(handler.isValidCID(''), isFalse);
+    });
+
+    test('isValidPeerID handles empty string', () {
+      expect(handler.isValidPeerID(''), isFalse);
+    });
+
+    test('getStatus with inactive client', () async {
+      when(mockClient.isInitialized).thenReturn(false);
+      when(mockRoutingTable.peerCount).thenReturn(0);
+
+      final status = await handler.getStatus();
+      expect(status['status'], equals('disabled'));
+      expect(status['routing_table_size'], equals(0));
+    });
+
+    test('handleProvideRequest with same provider is not idempotent', () async {
+      final cid = CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
+      final provider = PeerId(value: Uint8List.fromList([1, 2, 3]));
+
+      await handler.handleProvideRequest(cid, provider);
+      await handler.handleProvideRequest(cid, provider);
+      await handler.handleProvideRequest(cid, provider);
+
+      verify(mockClient.addProvider(any, any)).called(3);
+    });
   });
 }

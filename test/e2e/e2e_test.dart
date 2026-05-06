@@ -38,8 +38,16 @@ void main() {
       } catch (_) {
         // Ignore if already stopped or not started
       }
-      if (await tempDir.exists()) {
-        await tempDir.delete(recursive: true);
+      // On Windows, file handles may briefly outlive node.stop(); retry deletion.
+      for (var attempt = 0; attempt < 10; attempt++) {
+        try {
+          if (await tempDir.exists()) {
+            await tempDir.delete(recursive: true);
+          }
+          break;
+        } on FileSystemException {
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
       }
     });
 

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:cbor/cbor.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -16,6 +17,9 @@ import 'package:test/test.dart';
 class MockBlockStore implements BlockStore {
   final Map<String, GetBlockResponse> _blocks = {};
   bool shouldThrow = false;
+
+  @override
+  late final String path = Directory.systemTemp.createTempSync('mock_bs_').path;
 
   void addBlock(CID cid, String format, List<int> data) {
     final blockProto = BlockProto()
@@ -183,13 +187,7 @@ void main() {
       await manager.pinBlock(cid.toProto(), PinTypeProto.PIN_TYPE_RECURSIVE);
     });
 
-    test('access logs', () {
-      final cid = 'cid';
-      final now = DateTime.now();
-      manager.setBlockAccessTime(cid, now);
-      expect(manager.getBlockAccessTime(cid), equals(now));
-      manager.removeBlockAccessTime(cid);
-    });
+    // Removed: access time methods are no longer part of PinManager API.
 
     test('CBOR nested map extraction', () async {
       final c1 = makeCid('c1');

@@ -59,7 +59,13 @@ void main() {
 
     when(mockNetworkHandler.router).thenReturn(mockRouter);
 
-    manager = NetworkManager(container);
+    manager = NetworkManager(
+      networkHandler: mockNetworkHandler,
+      datastoreHandler: mockDatastoreHandler,
+      dhtHandler: mockDHTHandler,
+      contentRoutingHandler: mockContentRoutingHandler,
+      bitswapHandler: mockBitswapHandler,
+    );
   });
 
   group('NetworkManager', () {
@@ -117,8 +123,7 @@ void main() {
 
     test('missing dependencies return defaults or throw', () async {
       await GetIt.instance.reset(); // Clear services for this test
-      final emptyContainer = ServiceContainer();
-      final emptyManager = NetworkManager(emptyContainer);
+      final emptyManager = NetworkManager();
 
       expect(emptyManager.peerId, equals('offline'));
       expect(await emptyManager.connectedPeers, isEmpty);

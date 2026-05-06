@@ -27,7 +27,17 @@ void main() {
         datastorePath: p.join(repoPath, 'datastore'),
         blockStorePath: p.join(repoPath, 'blocks'),
       );
-      // Ensure paths are set correctly in config if needed
+
+      final builder = IPFSNodeBuilder(config);
+      final node = await builder.build();
+      expect(node, isA<IPFSNode>());
+    });
+
+    test('build node with minimal config', () async {
+      final config = IPFSConfig(
+        datastorePath: p.join(repoPath, 'datastore'),
+        blockStorePath: p.join(repoPath, 'blocks'),
+      );
 
       final builder = IPFSNodeBuilder(config);
       final node = await builder.build();

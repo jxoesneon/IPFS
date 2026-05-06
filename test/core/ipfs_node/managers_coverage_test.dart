@@ -6,6 +6,7 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
+import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/content_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
@@ -13,6 +14,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/protocol_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:mockito/annotations.dart';
@@ -181,7 +183,53 @@ void main() {
     setUp(() {
       networkManager = NetworkManager();
     });
-    // ...
+
+    test('start and stop', () async {
+      await networkManager.start();
+      await networkManager.stop();
+    });
+
+    test('peerId returns offline when no handler', () {
+      expect(networkManager.peerId, equals('offline'));
+    });
+
+    test('connectedPeers returns empty when no handler', () async {
+      final peers = await networkManager.connectedPeers;
+      expect(peers, isEmpty);
+    });
+
+    test('resolvePeerId returns empty when no handler', () {
+      final result = networkManager.resolvePeerId('peer-id');
+      expect(result, isEmpty);
+    });
+
+    test('connectToPeer throws when no handler', () async {
+      expect(
+        () => networkManager.connectToPeer('/ip4/127.0.0.1/tcp/4001'),
+        throwsA(anything),
+      );
+    });
+
+    test('disconnectFromPeer handles no handler gracefully', () async {
+      await networkManager.disconnectFromPeer('peer-id');
+    });
+
+    test('findProviders returns empty when no handler', () async {
+      final providers = await networkManager.findProviders(
+        'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+      );
+      expect(providers, isEmpty);
+    });
+
+    test('requestBlock throws when no handler', () async {
+      final peer = Peer(
+        id: PeerId(value: Uint8List(32)),
+        addresses: [],
+        latency: 0,
+        agentVersion: '1.0.0',
+      );
+      expect(() => networkManager.requestBlock('cid', peer), throwsA(anything));
+    });
   });
 
   group('ProtocolManager', () {
@@ -190,6 +238,44 @@ void main() {
     setUp(() {
       protocolManager = ProtocolManager();
     });
-    // ...
+
+    test('start and stop', () async {
+      await protocolManager.start();
+      await protocolManager.stop();
+    });
+
+    test('subscribe handles no handler gracefully', () async {
+      await protocolManager.subscribe('topic');
+    });
+
+    test('unsubscribe handles no handler gracefully', () async {
+      await protocolManager.unsubscribe('topic');
+    });
+
+    test('publish throws when no handler', () async {
+      expect(
+        () => protocolManager.publish('topic', 'message'),
+        throwsA(anything),
+      );
+    });
+
+    test('pubsubMessages returns empty stream when no handler', () {
+      expect(protocolManager.pubsubMessages, isA<Stream>());
+    });
+
+    test('resolveIPNS throws when no handler', () async {
+      expect(() => protocolManager.resolveIPNS('name'), throwsA(anything));
+    });
+
+    test('publishIPNS throws when no handler', () async {
+      expect(
+        () => protocolManager.publishIPNS('cid', keyName: 'key'),
+        throwsA(anything),
+      );
+    });
+
+    test('resolveDNSLink throws when no handler', () async {
+      expect(() => protocolManager.resolveDNSLink('domain'), throwsA(anything));
+    });
   });
 }

@@ -98,9 +98,45 @@ void main() {
       expect(cid, isNotEmpty);
     });
 
-    // Note: Networking methods (findProviders, requestBlock, PubSub, IPNS)
-    // are harder to test in isolation with just the facade in offline mode,
-    // but they just delegate to IPFSNode which is tested elsewhere.
-    // Calling them might fail or do nothing in offline mode.
+    test('peerID is exposed (offline returns "offline")', () async {
+      await ipfs.start();
+      expect(ipfs.peerID, isNotEmpty);
+    });
+
+    test(
+      'networking facades delegate to underlying node and surface errors',
+      () async {
+        await ipfs.start();
+
+        // CAR roundtrip via the facade.
+        final content = Uint8List.fromList(utf8.encode('CAR Me'));
+        final cid = await ipfs.addFile(content);
+        final carBytes = await ipfs.exportCAR(cid);
+        expect(carBytes, isNotEmpty);
+        await ipfs.importCAR(carBytes);
+
+        // Offline-mode delegations: these either throw or return empty.
+        for (final action in <Future<void> Function()>[
+          () async => ipfs.findProviders(cid),
+          () async => ipfs.requestBlock(cid, 'QmPeer'),
+          () async => ipfs.subscribe('topic'),
+          () async => ipfs.publish('topic', 'msg'),
+          () async => ipfs.resolveIPNS('name'),
+          () async => ipfs.publishIPNS(cid, keyName: 'self'),
+          () async => ipfs.resolveDNSLink('example.com'),
+        ]) {
+          try {
+            await action();
+          } catch (_) {
+            // Tolerated: offline mode causes most of these to throw.
+          }
+        }
+      },
+    );
+
+    test('unpin throws when CID is not pinned', () async {
+      await ipfs.start();
+      await expectLater(() => ipfs.unpin('QmDoesNotExist'), throwsException);
+    });
   });
 }

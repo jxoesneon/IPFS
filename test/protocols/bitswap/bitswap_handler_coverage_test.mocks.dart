@@ -52,24 +52,6 @@ class _FakeRemoveBlockResponse_2 extends _i1.SmartFake
 /// See the documentation for Mockito's code generation for more information.
 class MockIBlockStore extends _i1.Mock implements _i3.IBlockStore {
   @override
-  _i4.Future<void> start() =>
-      (super.noSuchMethod(
-            Invocation.method(#start, []),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
-
-  @override
-  _i4.Future<void> stop() =>
-      (super.noSuchMethod(
-            Invocation.method(#stop, []),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
-
-  @override
   _i4.Future<_i2.GetBlockResponse> getBlock(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#getBlock, [cid]),
@@ -128,6 +110,15 @@ class MockIBlockStore extends _i1.Mock implements _i3.IBlockStore {
           as _i4.Future<_i2.RemoveBlockResponse>);
 
   @override
+  _i4.Future<bool> hasBlock(String? cid) =>
+      (super.noSuchMethod(
+            Invocation.method(#hasBlock, [cid]),
+            returnValue: _i4.Future<bool>.value(false),
+            returnValueForMissingStub: _i4.Future<bool>.value(false),
+          )
+          as _i4.Future<bool>);
+
+  @override
   _i4.Future<List<_i5.Block>> getAllBlocks() =>
       (super.noSuchMethod(
             Invocation.method(#getAllBlocks, []),
@@ -152,13 +143,31 @@ class MockIBlockStore extends _i1.Mock implements _i3.IBlockStore {
           as _i4.Future<Map<String, dynamic>>);
 
   @override
-  _i4.Future<bool> hasBlock(String? cid) =>
+  _i4.Future<int> gc() =>
       (super.noSuchMethod(
-            Invocation.method(#hasBlock, [cid]),
-            returnValue: _i4.Future<bool>.value(false),
-            returnValueForMissingStub: _i4.Future<bool>.value(false),
+            Invocation.method(#gc, []),
+            returnValue: _i4.Future<int>.value(0),
+            returnValueForMissingStub: _i4.Future<int>.value(0),
           )
-          as _i4.Future<bool>);
+          as _i4.Future<int>);
+
+  @override
+  _i4.Future<void> start() =>
+      (super.noSuchMethod(
+            Invocation.method(#start, []),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> stop() =>
+      (super.noSuchMethod(
+            Invocation.method(#stop, []),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 }
 
 /// A class which mocks [RouterInterface].

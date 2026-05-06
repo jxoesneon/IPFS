@@ -3,11 +3,9 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i4;
+import 'dart:async' as _i3;
 
-import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart' as _i3;
-import 'package:dart_ipfs/src/proto/generated/connection.pb.dart' as _i5;
-import 'package:fixnum/fixnum.dart' as _i2;
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -25,135 +23,98 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: subtype_of_sealed_class
 // ignore_for_file: invalid_use_of_internal_member
 
-class _FakeInt64_0 extends _i1.SmartFake implements _i2.Int64 {
-  _FakeInt64_0(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
-class _FakeDuration_1 extends _i1.SmartFake implements Duration {
-  _FakeDuration_1(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
 /// A class which mocks [MetricsCollector].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockMetricsCollector extends _i1.Mock implements _i3.MetricsCollector {
+class MockMetricsCollector extends _i1.Mock implements _i2.MetricsCollector {
   MockMetricsCollector() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i4.Stream<Map<String, dynamic>> get metricsStream =>
+  _i3.Stream<Map<String, dynamic>> get metricsStream =>
       (super.noSuchMethod(
             Invocation.getter(#metricsStream),
-            returnValue: _i4.Stream<Map<String, dynamic>>.empty(),
+            returnValue: _i3.Stream<Map<String, dynamic>>.empty(),
           )
-          as _i4.Stream<Map<String, dynamic>>);
+          as _i3.Stream<Map<String, dynamic>>);
 
   @override
-  _i4.Future<void> start() =>
+  _i3.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
           )
-          as _i4.Future<void>);
+          as _i3.Future<void>);
 
   @override
-  _i4.Future<void> stop() =>
+  _i3.Future<void> stop() =>
       (super.noSuchMethod(
             Invocation.method(#stop, []),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
           )
-          as _i4.Future<void>);
+          as _i3.Future<void>);
 
   @override
-  _i4.Future<Map<String, dynamic>> getStatus() =>
-      (super.noSuchMethod(
-            Invocation.method(#getStatus, []),
-            returnValue: _i4.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
-            ),
-          )
-          as _i4.Future<Map<String, dynamic>>);
-
-  @override
-  void recordError(String? category, String? source, String? message) =>
+  void recordProtocolMetrics(String? protocol, Map<String, dynamic>? metrics) =>
       super.noSuchMethod(
-        Invocation.method(#recordError, [category, source, message]),
+        Invocation.method(#recordProtocolMetrics, [protocol, metrics]),
         returnValueForMissingStub: null,
       );
 
   @override
-  void recordProtocolMetrics(String? protocol, Map<String, dynamic>? data) =>
+  void recordError(String? error, Object? e, StackTrace? st) =>
       super.noSuchMethod(
-        Invocation.method(#recordProtocolMetrics, [protocol, data]),
+        Invocation.method(#recordError, [error, e, st]),
         returnValueForMissingStub: null,
       );
 
   @override
-  _i2.Int64 getMessagesSent(String? peerId) =>
+  int getMessagesSent(String? protocol) =>
       (super.noSuchMethod(
-            Invocation.method(#getMessagesSent, [peerId]),
-            returnValue: _FakeInt64_0(
-              this,
-              Invocation.method(#getMessagesSent, [peerId]),
-            ),
+            Invocation.method(#getMessagesSent, [protocol]),
+            returnValue: 0,
           )
-          as _i2.Int64);
+          as int);
 
   @override
-  _i2.Int64 getMessagesReceived(String? peerId) =>
+  int getMessagesReceived(String? protocol) =>
       (super.noSuchMethod(
-            Invocation.method(#getMessagesReceived, [peerId]),
-            returnValue: _FakeInt64_0(
-              this,
-              Invocation.method(#getMessagesReceived, [peerId]),
-            ),
+            Invocation.method(#getMessagesReceived, [protocol]),
+            returnValue: 0,
           )
-          as _i2.Int64);
+          as int);
 
   @override
-  _i2.Int64 getBytesSent(String? peerId) =>
+  int getBytesSent(String? protocol) =>
       (super.noSuchMethod(
-            Invocation.method(#getBytesSent, [peerId]),
-            returnValue: _FakeInt64_0(
-              this,
-              Invocation.method(#getBytesSent, [peerId]),
-            ),
+            Invocation.method(#getBytesSent, [protocol]),
+            returnValue: 0,
           )
-          as _i2.Int64);
+          as int);
 
   @override
-  _i2.Int64 getBytesReceived(String? peerId) =>
+  int getBytesReceived(String? protocol) =>
       (super.noSuchMethod(
-            Invocation.method(#getBytesReceived, [peerId]),
-            returnValue: _FakeInt64_0(
-              this,
-              Invocation.method(#getBytesReceived, [peerId]),
-            ),
+            Invocation.method(#getBytesReceived, [protocol]),
+            returnValue: 0,
           )
-          as _i2.Int64);
+          as int);
 
   @override
-  Duration getAverageLatency(String? peerId) =>
+  double getAverageLatency(String? protocol) =>
       (super.noSuchMethod(
-            Invocation.method(#getAverageLatency, [peerId]),
-            returnValue: _FakeDuration_1(
-              this,
-              Invocation.method(#getAverageLatency, [peerId]),
-            ),
+            Invocation.method(#getAverageLatency, [protocol]),
+            returnValue: 0.0,
           )
-          as Duration);
+          as double);
 
   @override
-  _i4.Future<void> updateConnectionMetrics(_i5.ConnectionMetrics? metrics) =>
-      (super.noSuchMethod(
-            Invocation.method(#updateConnectionMetrics, [metrics]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  void updateConnectionMetrics(String? peerId, Map<String, dynamic>? metrics) =>
+      super.noSuchMethod(
+        Invocation.method(#updateConnectionMetrics, [peerId, metrics]),
+        returnValueForMissingStub: null,
+      );
 }

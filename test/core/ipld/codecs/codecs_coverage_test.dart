@@ -224,5 +224,126 @@ void main() {
       final codec = CarCodec(mockBlockStore, (data, codec) async => IPLDNode());
       expect(() => codec.decode(Uint8List(0)), throwsUnimplementedError);
     });
+
+    test('DagJoseCodec decode with invalid format throws', () async {
+      final codec = DagJoseCodec(
+        () async => mockPrivateKey,
+        (node) async => [1, 2, 3],
+      );
+
+      final invalidData = Uint8List.fromList([1, 2, 3]);
+      expect(() => codec.decode(invalidData), throwsA(isA<Exception>()));
+    });
+
+    test('DagJoseCodec encode with empty map', () async {
+      final codec = DagJoseCodec(
+        () async => mockPrivateKey,
+        (node) async => [1, 2, 3],
+      );
+
+      final node = IPLDNode()
+        ..kind = Kind.MAP
+        ..mapValue = IPLDMap();
+
+      try {
+        await codec.encode(node);
+      } catch (e) {
+        // Expected to fail due to missing header/payload
+        expect(e, isNotNull);
+      }
+    });
+
+    test('CarCodec encode with empty node', () async {
+      final codec = CarCodec(mockBlockStore, (data, codec) async => IPLDNode());
+
+      final node = IPLDNode()
+        ..kind = Kind.MAP
+        ..mapValue = IPLDMap();
+
+      final encoded = await codec.encode(node);
+      expect(encoded, isNotEmpty);
+    });
+
+    test('CarCodec encode with nested maps', () async {
+      final codec = CarCodec(
+        mockBlockStore,
+        (data, codec) async => IPLDNode()
+          ..kind = Kind.BYTES
+          ..bytesValue = data.toList(),
+      );
+
+      final innerMap = IPLDMap()
+        ..entries.add(
+          MapEntry()
+            ..key = 'inner'
+            ..value = (IPLDNode()
+              ..kind = Kind.STRING
+              ..stringValue = 'value'),
+        );
+
+      final node = IPLDNode()
+        ..kind = Kind.MAP
+        ..mapValue = (IPLDMap()
+          ..entries.add(
+            MapEntry()
+              ..key = 'outer'
+              ..value = (IPLDNode()
+                ..kind = Kind.MAP
+                ..mapValue = innerMap),
+          ));
+
+      final encoded = await codec.encode(node);
+      expect(encoded, isNotEmpty);
+    });
+
+    test('DagJoseCodec encode with string payload', () async {
+      final codec = DagJoseCodec(
+        () async => mockPrivateKey,
+        (node) async => utf8.encode('test-payload'),
+      );
+
+      final node = IPLDNode()
+        ..kind = Kind.MAP
+        ..mapValue = (IPLDMap()
+          ..entries.addAll([
+            MapEntry()
+              ..key = 'header'
+              ..value = (IPLDNode()
+                ..kind = Kind.MAP
+                ..mapValue = (IPLDMap()
+                  ..entries.add(
+                    MapEntry()
+                      ..key = 'alg'
+                      ..value = (IPLDNode()
+                        ..kind = Kind.STRING
+                        ..stringValue = 'HS256'),
+                  ))),
+            MapEntry()
+              ..key = 'payload'
+              ..value = (IPLDNode()
+                ..kind = Kind.STRING
+                ..stringValue = 'test-data'),
+          ]));
+
+      try {
+        await codec.encode(node);
+      } catch (e) {
+        // Expected to fail if signing not fully mocked
+        expect(e, isNotNull);
+      }
+    });
+
+    test('DagJoseCodec identifier is correct', () {
+      final codec = DagJoseCodec(
+        () async => mockPrivateKey,
+        (node) async => [1, 2, 3],
+      );
+      expect(codec.identifier, 'dag-jose');
+    });
+
+    test('CarCodec identifier is correct', () {
+      final codec = CarCodec(mockBlockStore, (data, codec) async => IPLDNode());
+      expect(codec.identifier, 'car');
+    });
   });
 }

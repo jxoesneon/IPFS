@@ -92,5 +92,29 @@ void main() {
 
       expect(result, isFalse);
     });
+
+    test('close closes internal client', () {
+      final client = HttpGatewayClient();
+      expect(() => client.close(), returnsNormally);
+    });
+
+    test('close does not close external client', () {
+      final mockClient = MockClient((request) async {
+        return http.Response('', 200);
+      });
+      final client = HttpGatewayClient(client: mockClient);
+      expect(() => client.close(), returnsNormally);
+    });
+
+    test('get handles 404 from gateway', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Not Found', 404);
+      });
+
+      final client = HttpGatewayClient(client: mockClient);
+      final result = await client.get('QmHash');
+
+      expect(result, isNull);
+    });
   });
 }

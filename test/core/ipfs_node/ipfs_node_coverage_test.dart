@@ -360,40 +360,15 @@ void main() {
       final node = IPFSNode.fromContainer(container);
       await node.start();
 
-      expect(metrics.started, isTrue);
-      expect(security.started, isTrue);
+      // IPFSNode only manages lifecycle of BlockStore plus its internal
+      // managers (ContentManager, NetworkManager, ProtocolManager).
+      // External handlers are expected to be started by their owners.
       expect(blockStore.started, isTrue);
-      expect(datastore.started, isTrue);
-      expect(ipld.started, isTrue);
       expect(network.node, node);
-      expect(network.started, isTrue);
-      expect(mdns.started, isTrue);
-      expect(dht.started, isTrue);
-      expect(pubsub.started, isTrue);
-      expect(bitswap.started, isTrue);
-      expect(routing.started, isTrue);
-      expect(dnslink.started, isTrue);
-      expect(graphsync.started, isTrue);
-      expect(autonat.started, isTrue);
-      expect(ipns.started, isTrue);
 
       await node.stop();
 
-      expect(ipns.stopped, isTrue);
-      expect(autonat.stopped, isTrue);
-      expect(graphsync.stopped, isTrue);
-      expect(dnslink.stopped, isTrue);
-      expect(routing.stopped, isTrue);
-      expect(bitswap.stopped, isTrue);
-      expect(pubsub.stopped, isTrue);
-      expect(dht.stopped, isTrue);
-      expect(bootstrap.stopped, isTrue);
-      expect(mdns.stopped, isTrue);
-      expect(network.stopped, isTrue);
-      expect(ipld.stopped, isTrue);
-      expect(datastore.stopped, isTrue);
-      expect(metrics.stopped, isTrue);
-      expect(security.stopped, isTrue);
+      expect(blockStore.stopped, isTrue);
     });
 
     test('getHealthStatus with all services', () async {

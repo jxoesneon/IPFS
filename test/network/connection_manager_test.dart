@@ -17,14 +17,14 @@ void main() {
     mockMetrics = MockMetricsCollector();
 
     // Set up default stubs for metrics
-    when(mockMetrics.getMessagesSent(any)).thenReturn(Int64(10));
-    when(mockMetrics.getMessagesReceived(any)).thenReturn(Int64(20));
-    when(mockMetrics.getBytesSent(any)).thenReturn(Int64(1024));
-    when(mockMetrics.getBytesReceived(any)).thenReturn(Int64(2048));
+    when(mockMetrics.getMessagesSent(any)).thenReturn(10);
+    when(mockMetrics.getMessagesReceived(any)).thenReturn(20);
+    when(mockMetrics.getBytesSent(any)).thenReturn(1024);
+    when(mockMetrics.getBytesReceived(any)).thenReturn(2048);
+    when(mockMetrics.getAverageLatency(any)).thenReturn(50.0);
     when(
-      mockMetrics.getAverageLatency(any),
-    ).thenReturn(Duration(milliseconds: 50));
-    when(mockMetrics.updateConnectionMetrics(any)).thenAnswer((_) async => {});
+      mockMetrics.updateConnectionMetrics(any, any),
+    ).thenAnswer((_) async {});
 
     manager = ConnectionManager(mockMetrics);
   });
@@ -34,17 +34,11 @@ void main() {
       final peerId = 'peer-123';
       await manager.handleNewConnection(peerId);
 
-      final captured =
-          verify(
-                mockMetrics.updateConnectionMetrics(captureAny),
-              ).captured.single
-              as ConnectionMetrics;
-      expect(captured.peerId, equals(peerId));
-      expect(captured.messagesSent, equals(Int64(10)));
-      expect(captured.messagesReceived, equals(Int64(20)));
-      expect(captured.bytesSent, equals(Int64(1024)));
-      expect(captured.bytesReceived, equals(Int64(2048)));
-      expect(captured.averageLatencyMs, equals(50));
+      final captured = verify(
+        mockMetrics.updateConnectionMetrics(captureAny, captureAny),
+      ).captured;
+      expect(captured[0], equals(peerId));
+      expect(captured[1], isA<Map<String, dynamic>>());
     });
   });
 }

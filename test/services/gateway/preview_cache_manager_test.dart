@@ -63,5 +63,33 @@ void main() {
       result = await cacheManager.getPreview(cid, 'text/plain');
       expect(result, equals(data));
     });
+
+    test('different content types are cached separately', () async {
+      final cid = CID.decode('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z');
+      final imageData = Uint8List.fromList([1, 2, 3]);
+      final textData = Uint8List.fromList([4, 5, 6]);
+
+      await cacheManager.cachePreview(cid, 'image/png', imageData);
+      await cacheManager.cachePreview(cid, 'text/plain', textData);
+
+      final imageResult = await cacheManager.getPreview(cid, 'image/png');
+      final textResult = await cacheManager.getPreview(cid, 'text/plain');
+
+      expect(imageResult, equals(imageData));
+      expect(textResult, equals(textData));
+    });
+
+    test('cache stats updates correctly', () async {
+      final cid = CID.decode('QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z');
+      final data = Uint8List.fromList([7, 8, 9]);
+
+      final initialStats = cacheManager.getCacheStats();
+      expect(initialStats['entries'], equals(0));
+
+      await cacheManager.cachePreview(cid, 'application/json', data);
+
+      final afterStats = cacheManager.getCacheStats();
+      expect(afterStats['entries'], equals(1));
+    });
   });
 }

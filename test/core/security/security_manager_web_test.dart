@@ -58,5 +58,41 @@ void main() {
         throwsA(isA<StateError>()),
       );
     });
+
+    test('unlockKeystore throws on empty password', () async {
+      expect(() => securityManager.unlockKeystore(''), throwsArgumentError);
+    });
+
+    test('generateSecureKey throws on empty key name', () async {
+      await securityManager.unlockKeystore('password');
+      expect(() => securityManager.generateSecureKey(''), throwsArgumentError);
+    });
+
+    test('getSecureKey throws on empty key name', () async {
+      await securityManager.unlockKeystore('password');
+      expect(() => securityManager.getSecureKey(''), throwsArgumentError);
+    });
+
+    test('generateSecureKey accepts label parameter', () async {
+      await securityManager.unlockKeystore('password');
+      final pubKey = await securityManager.generateSecureKey(
+        'test-key',
+        label: 'my-label',
+      );
+      expect(pubKey, isNotNull);
+    });
+
+    test('start method is a no-op', () async {
+      await securityManager.start();
+      expect(securityManager.isKeystoreUnlocked, isFalse);
+    });
+
+    test('stop method locks keystore', () async {
+      await securityManager.unlockKeystore('password');
+      await securityManager.generateSecureKey('test-key');
+
+      await securityManager.stop();
+      expect(securityManager.isKeystoreUnlocked, isFalse);
+    });
   });
 }

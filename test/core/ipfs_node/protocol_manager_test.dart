@@ -32,10 +32,7 @@ void main() {
 
   group('ProtocolManager', () {
     test('subscribe/unsubscribe delegating', () async {
-      manager = ProtocolManager(
-        mockContainer,
-        pubSubHandler: mockPubSubHandler,
-      );
+      manager = ProtocolManager(pubSubHandler: mockPubSubHandler);
       await manager.subscribe('topic1');
       verify(mockPubSubHandler.subscribe('topic1')).called(1);
 
@@ -44,26 +41,20 @@ void main() {
     });
 
     test('publish delegating', () async {
-      manager = ProtocolManager(
-        mockContainer,
-        pubSubHandler: mockPubSubHandler,
-      );
+      manager = ProtocolManager(pubSubHandler: mockPubSubHandler);
       await manager.publish('topic1', 'msg');
       verify(mockPubSubHandler.publish('topic1', 'msg')).called(1);
     });
 
     test('pubsubMessages stream', () {
-      manager = ProtocolManager(
-        mockContainer,
-        pubSubHandler: mockPubSubHandler,
-      );
+      manager = ProtocolManager(pubSubHandler: mockPubSubHandler);
       when(mockPubSubHandler.messages).thenAnswer((_) => Stream.empty());
 
       expect(manager.pubsubMessages, isA<Stream<PubSubMessage>>());
     });
 
     test('resolveIPNS and publishIPNS delegating', () async {
-      manager = ProtocolManager(mockContainer, dhtHandler: mockDHTHandler);
+      manager = ProtocolManager(dhtHandler: mockDHTHandler);
       when(mockDHTHandler.resolveIPNS('name')).thenAnswer((_) async => 'cid');
 
       final result = await manager.resolveIPNS('name');
@@ -74,17 +65,17 @@ void main() {
     });
 
     test('publish throws if PubSubHandler not registered', () async {
-      manager = ProtocolManager(mockContainer);
+      manager = ProtocolManager();
       expect(() => manager.publish('topic', 'msg'), throwsA(isA<StateError>()));
     });
 
     test('resolveIPNS throws if DHTHandler not registered', () async {
-      manager = ProtocolManager(mockContainer);
+      manager = ProtocolManager();
       expect(() => manager.resolveIPNS('name'), throwsA(isA<StateError>()));
     });
 
     test('publishIPNS throws if DHTHandler not registered', () async {
-      manager = ProtocolManager(mockContainer);
+      manager = ProtocolManager();
       expect(
         () => manager.publishIPNS('cid', keyName: 'self'),
         throwsA(isA<StateError>()),
@@ -95,7 +86,6 @@ void main() {
       'resolveDNSLink throws if resolution fails in both handlers',
       () async {
         manager = ProtocolManager(
-          mockContainer,
           contentRoutingHandler: mockContentRoutingHandler,
           dhtHandler: mockDHTHandler,
         );

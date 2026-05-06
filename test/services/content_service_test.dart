@@ -82,5 +82,60 @@ void main() {
       when(mockDatastore.has(any)).thenAnswer((_) async => true);
       expect(await service.hasContent(cid), isTrue);
     });
+
+    test('getContent returns null on error', () async {
+      final cid = await CID.fromContent(Uint8List.fromList([1]));
+      when(mockDatastore.get(any)).thenThrow(Exception('Datastore error'));
+      final retrieved = await service.getContent(cid);
+      expect(retrieved, isNull);
+    });
+
+    test('removeContent success when not pinned', () async {
+      final cid = await CID.fromContent(Uint8List.fromList([1]));
+      when(
+        mockDatastore.has(
+          argThat(predicate((Key k) => k.string.contains('pins'))),
+        ),
+      ).thenAnswer((_) async => false);
+      expect(await service.removeContent(cid), isTrue);
+      verify(mockDatastore.delete(any)).called(1);
+    });
+
+    test('removeContent returns false on error', () async {
+      final cid = await CID.fromContent(Uint8List.fromList([1]));
+      when(mockDatastore.has(any)).thenThrow(Exception('Datastore error'));
+      expect(await service.removeContent(cid), isFalse);
+    });
+
+    test('pinContent returns false on error', () async {
+      final cid = await CID.fromContent(Uint8List.fromList([1]));
+      when(mockDatastore.has(any)).thenThrow(Exception('Datastore error'));
+      expect(await service.pinContent(cid), isFalse);
+    });
+
+    test('unpinContent returns false on error', () async {
+      final cid = await CID.fromContent(Uint8List.fromList([1]));
+      when(mockDatastore.delete(any)).thenThrow(Exception('Datastore error'));
+      expect(await service.unpinContent(cid), isFalse);
+    });
+
+    test('getContentSize returns null when content not found', () async {
+      final cid = await CID.fromContent(Uint8List.fromList([1]));
+      when(mockDatastore.get(any)).thenAnswer((_) async => null);
+      expect(await service.getContentSize(cid), isNull);
+    });
+
+    test('computeHash', () async {
+      final content = [1, 2, 3];
+      final hash = await service.computeHash(content);
+      expect(hash.length, greaterThan(2));
+      expect(hash[0], equals(0x12)); // SHA2-256 identifier
+    });
+
+    test('listPinnedContent empty', () async {
+      when(mockDatastore.query(any)).thenAnswer((_) => Stream.empty());
+      final pins = await service.listPinnedContent();
+      expect(pins, isEmpty);
+    });
   });
 }

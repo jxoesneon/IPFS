@@ -10,6 +10,7 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart' as _i8;
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart' as _i5;
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart' as _i2;
 import 'package:dart_ipfs/src/core/ipld/codecs/ipld_codec.dart' as _i9;
+import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart' as _i11;
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart' as _i3;
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
@@ -167,6 +168,14 @@ class MockBlockStore extends _i1.Mock implements _i5.BlockStore {
             ),
           )
           as _i7.Future<Map<String, dynamic>>);
+
+  @override
+  _i7.Future<int> gc() =>
+      (super.noSuchMethod(
+            Invocation.method(#gc, []),
+            returnValue: _i7.Future<int>.value(0),
+          )
+          as _i7.Future<int>);
 }
 
 /// A class which mocks [IPLDCodec].
@@ -205,4 +214,29 @@ class MockIPLDCodec extends _i1.Mock implements _i9.IPLDCodec {
             ),
           )
           as _i7.Future<_i4.IPLDNode>);
+}
+
+/// A class which mocks [IPLDSchema].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockIPLDSchema extends _i1.Mock implements _i11.IPLDSchema {
+  MockIPLDSchema() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  String get name =>
+      (super.noSuchMethod(
+            Invocation.getter(#name),
+            returnValue: _i6.dummyValue<String>(this, Invocation.getter(#name)),
+          )
+          as String);
+
+  @override
+  _i7.Future<bool> validate(String? typeName, _i4.IPLDNode? node) =>
+      (super.noSuchMethod(
+            Invocation.method(#validate, [typeName, node]),
+            returnValue: _i7.Future<bool>.value(false),
+          )
+          as _i7.Future<bool>);
 }

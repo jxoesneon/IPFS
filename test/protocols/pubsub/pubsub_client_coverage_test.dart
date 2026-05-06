@@ -370,5 +370,398 @@ void main() {
       await Future.delayed(Duration(milliseconds: 10));
       verify(mockRouter.sendMessage('QmSender', any)).called(1);
     });
+
+    test('getNodeStats throws when not available', () async {
+      await expectLater(() => client.getNodeStats(), throwsA(isA<Exception>()));
+    });
+
+    test('publish when not started throws', () async {
+      await expectLater(
+        () => client.publish('topic1', 'msg'),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('duplicate subscribe is idempotent', () async {
+      await client.subscribe('topic1');
+      await client.subscribe('topic1');
+      verify(mockRouter.registerProtocol('topic1')).called(1);
+    });
+
+    test('unsubscribe non-existent topic does nothing', () async {
+      await client.unsubscribe('nonexistent');
+      verifyNever(mockRouter.removeMessageHandler('nonexistent'));
+    });
+
+    test('stop when not stopped is idempotent', () async {
+      await client.stop();
+      await client.stop(); // Should not throw
+    });
+
+    test('_handleIHave with null parameters', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      // Test with null topic
+      final msg1 = {
+        'action': 'ihave',
+        'msgIds': ['id1'],
+        'sender': 'QmSender',
+      };
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmSender',
+          datagram: Uint8List.fromList(utf8.encode(jsonEncode(msg1))),
+        ),
+      );
+
+      // Test with null msgIds
+      final msg2 = {'action': 'ihave', 'topic': 'topic1', 'sender': 'QmSender'};
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmSender',
+          datagram: Uint8List.fromList(utf8.encode(jsonEncode(msg2))),
+        ),
+      );
+
+      // Should not throw
+    });
+
+    test('_handleIWant with null parameters', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      // Test with null topic
+      final msg1 = {
+        'action': 'iwant',
+        'msgIds': ['id1'],
+        'sender': 'QmSender',
+      };
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmSender',
+          datagram: Uint8List.fromList(utf8.encode(jsonEncode(msg1))),
+        ),
+      );
+
+      // Test with null msgIds
+      final msg2 = {'action': 'iwant', 'topic': 'topic1', 'sender': 'QmSender'};
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmSender',
+          datagram: Uint8List.fromList(utf8.encode(jsonEncode(msg2))),
+        ),
+      );
+
+      // Should not throw
+    });
+
+    test('heartbeat maintains mesh', () async {
+      await client.start();
+      client.graftPeer('peer1');
+      client.graftPeer('peer2');
+      client.graftPeer('peer3');
+      client.graftPeer('peer4');
+      client.graftPeer('peer5');
+      client.graftPeer('peer6');
+      client.graftPeer('peer7');
+      client.graftPeer('peer8');
+      client.graftPeer('peer9');
+      client.graftPeer('peer10');
+
+      // Wait for heartbeat to run
+      await Future.delayed(Duration(milliseconds: 1100));
+
+      // Should not throw
+      await client.stop();
+    });
+
+    test('heartbeat prunes low scoring peers', () async {
+      await client.start();
+      client.graftPeer('peer1');
+      client.graftPeer('peer2');
+      client.graftPeer('peer3');
+      client.graftPeer('peer4');
+      client.graftPeer('peer5');
+      client.graftPeer('peer6');
+      client.graftPeer('peer7');
+      client.graftPeer('peer8');
+      client.graftPeer('peer9');
+      client.graftPeer('peer10');
+      client.graftPeer('peer11');
+
+      // Wait for heartbeat to run and prune
+      await Future.delayed(Duration(milliseconds: 1100));
+
+      // Should not throw
+      await client.stop();
+    });
+
+    test('encodePublishRequest includes signature', () {
+      final encoded = client.encodePublishRequest('topic1', 'hello');
+      expect(encoded, isNotEmpty);
+      expect(encoded.length, greaterThan(0));
+    });
+
+    test('decodeMessage handles empty bytes', () {
+      final decoded = client.decodeMessage(Uint8List.fromList([]));
+      expect(decoded, equals(''));
+    });
+
+    test('publish with empty mesh logs warning', () async {
+      await client.start();
+      // Don't graft any peers, mesh is empty
+      await client.publish('topic1', 'msg');
+      // Should not throw even with empty mesh
+      await client.stop();
+    });
+
+    test('message without topic is rejected', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      final msg = {'sender': 'QmSender', 'content': 'hello'};
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmSender',
+          datagram: Uint8List.fromList(utf8.encode(jsonEncode(msg))),
+        ),
+      );
+
+      // Should not throw
+      await client.stop();
+    });
+
+    test('message without content is rejected', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      final msg = {'sender': 'QmSender', 'topic': 'topic1'};
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmSender',
+          datagram: Uint8List.fromList(utf8.encode(jsonEncode(msg))),
+        ),
+      );
+
+      // Should not throw
+      await client.stop();
+    });
+
+    test('message without sender is rejected', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      final msg = {'topic': 'topic1', 'content': 'hello'};
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmSender',
+          datagram: Uint8List.fromList(utf8.encode(jsonEncode(msg))),
+        ),
+      );
+
+      // Should not throw
+      await client.stop();
+    });
+
+    test('message from unconnected peer is not added to stream', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      when(mockRouter.isConnectedPeer('QmSender')).thenReturn(false);
+
+      final msg = {'sender': 'QmSender', 'topic': 'topic1', 'content': 'hello'};
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmSender',
+          datagram: Uint8List.fromList(utf8.encode(jsonEncode(msg))),
+        ),
+      );
+
+      // messageStream should NOT have a message
+      final streamFuture = client.messagesStream.first.timeout(
+        Duration(milliseconds: 100),
+        onTimeout: () =>
+            PubSubMessage(topic: 'timeout', content: '', sender: ''),
+      );
+      final result = await streamFuture;
+      expect(result.topic, equals('timeout'));
+      await client.stop();
+    });
+
+    test('handle unknown action logs warning', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      final msg = {'action': 'unknown', 'sender': 'QmSender'};
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmSender',
+          datagram: Uint8List.fromList(utf8.encode(jsonEncode(msg))),
+        ),
+      );
+
+      // Should not throw
+      await client.stop();
+    });
+
+    test('handle invalid JSON logs error', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      final packet = NetworkPacket(
+        srcPeerId: 'QmSender',
+        datagram: Uint8List.fromList(utf8.encode('invalid json{')),
+      );
+
+      capturedHandler(packet);
+
+      // Should not throw
+      await client.stop();
+    });
+
+    test('subscribe when already started is idempotent', () async {
+      await client.start();
+      await client.subscribe('topic1');
+      verify(mockRouter.registerProtocol('topic1')).called(1);
+      await client.stop();
+    });
+
+    test('publish with null mesh peer does not throw', () async {
+      await client.start();
+      // Don't graft any peers
+      await client.publish('topic1', 'msg');
+      // Should not throw even with empty mesh
+      await client.stop();
+    });
+
+    test('encodeSubscribeRequest returns non-empty bytes', () {
+      final encoded = client.encodeSubscribeRequest('topic1');
+      expect(encoded, isNotEmpty);
+      expect(encoded.length, greaterThan(0));
+    });
+
+    test('encodeUnsubscribeRequest returns non-empty bytes', () {
+      final encoded = client.encodeUnsubscribeRequest('topic1');
+      expect(encoded, isNotEmpty);
+      expect(encoded.length, greaterThan(0));
+    });
+
+    test('decodeMessage handles null bytes', () {
+      final decoded = client.decodeMessage(Uint8List.fromList([0, 0, 0]));
+      expect(decoded, isNotNull);
+    });
+
+    test('message with empty topic is rejected', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      final msg = {'sender': 'QmSender', 'topic': '', 'content': 'hello'};
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmSender',
+          datagram: Uint8List.fromList(utf8.encode(jsonEncode(msg))),
+        ),
+      );
+
+      // Should not throw
+      await client.stop();
+    });
+
+    test('message with empty content is rejected', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      final msg = {'sender': 'QmSender', 'topic': 'topic1', 'content': ''};
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmSender',
+          datagram: Uint8List.fromList(utf8.encode(jsonEncode(msg))),
+        ),
+      );
+
+      // Should not throw
+      await client.stop();
+    });
+
+    test('handleGraft with unknown peer adds to mesh', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      final msg = {'action': 'graft', 'sender': 'QmNewPeer'};
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmNewPeer',
+          datagram: Uint8List.fromList(utf8.encode(jsonEncode(msg))),
+        ),
+      );
+
+      // Should not throw
+      await client.stop();
+    });
+
+    test('handlePrune with unknown peer does not throw', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      final msg = {'action': 'prune', 'sender': 'QmUnknownPeer'};
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmUnknownPeer',
+          datagram: Uint8List.fromList(utf8.encode(jsonEncode(msg))),
+        ),
+      );
+
+      // Should not throw
+      await client.stop();
+    });
   });
 }

@@ -497,5 +497,192 @@ void main() {
       final response = await handlers.handleBlockGet(request);
       expect(response.statusCode, equals(404));
     });
+
+    test('handleDagGet missing arg', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dag/get'),
+      );
+      final response = await handlers.handleDagGet(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleDhtFindProviders missing arg', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dht/findprovs'),
+      );
+      final response = await handlers.handleDhtFindProviders(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleDhtProvide missing arg', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dht/provide'),
+      );
+      final response = await handlers.handleDhtProvide(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleNamePublish missing arg', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/name/publish'),
+      );
+      final response = await handlers.handleNamePublish(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleNameResolve missing arg', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/name/resolve'),
+      );
+      final response = await handlers.handleNameResolve(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleSwarmConnect missing arg', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/swarm/connect'),
+      );
+      final response = await handlers.handleSwarmConnect(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleSwarmDisconnect missing arg', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/swarm/disconnect'),
+      );
+      final response = await handlers.handleSwarmDisconnect(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleBlockStat missing arg', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/block/stat'),
+      );
+      final response = await handlers.handleBlockStat(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleBlockStat not found', () async {
+      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      final pbResp = GetBlockResponse()..found = false;
+      when(mockBlockStore.getBlock(cid)).thenAnswer((_) async => pbResp);
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/block/stat?arg=$cid'),
+      );
+      final response = await handlers.handleBlockStat(request);
+      expect(response.statusCode, equals(404));
+    });
+
+    test('handleDhtFindProviders error', () async {
+      final cid = 'QmHash';
+      when(mockDHTClient.findProviders(cid)).thenThrow(Exception('DHT error'));
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dht/findprovs?arg=$cid'),
+      );
+      final response = await handlers.handleDhtFindProviders(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleDhtProvide error', () async {
+      final cid = 'QmHash';
+      when(
+        mockDHTClient.addProvider(any, any),
+      ).thenThrow(Exception('DHT error'));
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dht/provide?arg=$cid'),
+      );
+      final response = await handlers.handleDhtProvide(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleNamePublish error', () async {
+      final path = '/ipfs/QmHash';
+      when(
+        mockNode.publishIPNS(any, keyName: anyNamed('keyName')),
+      ).thenThrow(Exception('IPNS error'));
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/name/publish?arg=$path'),
+      );
+      final response = await handlers.handleNamePublish(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleNameResolve error', () async {
+      final name = 'QmName';
+      when(mockNode.resolveIPNS(name)).thenThrow(Exception('IPNS error'));
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/name/resolve?arg=$name'),
+      );
+      final response = await handlers.handleNameResolve(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleSwarmConnect error', () async {
+      final addr = '/ip4/1.2.3.4/tcp/4001/p2p/QmPeer';
+      when(mockNode.connectToPeer(addr)).thenThrow(Exception('Connect error'));
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/swarm/connect?arg=$addr'),
+      );
+      final response = await handlers.handleSwarmConnect(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleSwarmDisconnect error', () async {
+      final addr = '/ip4/1.2.3.4/tcp/4001/p2p/QmPeer';
+      when(
+        mockNode.disconnectFromPeer(addr),
+      ).thenThrow(Exception('Disconnect error'));
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/swarm/disconnect?arg=$addr'),
+      );
+      final response = await handlers.handleSwarmDisconnect(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleBlockPut error', () async {
+      when(mockBlockStore.putBlock(any)).thenThrow(Exception('Put error'));
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/block/put'),
+        body: [1, 2, 3, 4],
+      );
+      final response = await handlers.handleBlockPut(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handleBlockStat error', () async {
+      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      when(mockBlockStore.getBlock(cid)).thenThrow(Exception('Stat error'));
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/block/stat?arg=$cid'),
+      );
+      final response = await handlers.handleBlockStat(request);
+      expect(response.statusCode, equals(500));
+    });
   });
 }
