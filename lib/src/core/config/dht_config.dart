@@ -1,4 +1,7 @@
 /// Configuration options for the DHT (Distributed Hash Table)
+///
+/// This class holds settings for Kademlia DHT operations, such as
+/// lookup parallelization, bucket sizes, and request timeouts.
 class DHTConfig {
   /// Creates a new [DHTConfig] with default Kademlia settings.
   const DHTConfig({
@@ -12,7 +15,10 @@ class DHTConfig {
     this.enableValueStorage = true,
   });
 
-  /// Creates a DHTConfig from JSON
+  /// Creates a DHTConfig from JSON.
+  ///
+  /// @param json The JSON map to parse.
+  /// @return A new [DHTConfig] instance.
   factory DHTConfig.fromJson(Map<String, dynamic> json) {
     return DHTConfig(
       protocolId: (json['protocolId'] as String?) ?? '/ipfs/kad/1.0.0',
@@ -29,31 +35,33 @@ class DHTConfig {
     );
   }
 
-  /// Protocol identifier for DHT
+  /// Protocol identifier for DHT.
   final String protocolId;
 
-  /// Number of parallel lookups (alpha value in Kademlia)
+  /// Number of parallel lookups (alpha value in Kademlia).
   final int alpha;
 
-  /// Size of k-buckets
+  /// Size of k-buckets.
   final int bucketSize;
 
-  /// Maximum number of providers to store per key
+  /// Maximum number of providers to store per key.
   final int maxProvidersPerKey;
 
-  /// Time to wait before considering a request as failed
+  /// Time to wait before considering a request as failed.
   final Duration requestTimeout;
 
-  /// Maximum number of records to return per query
+  /// Maximum number of records to return per query.
   final int maxRecordsPerQuery;
 
-  /// Whether to enable provider recording
+  /// Whether to enable provider recording.
   final bool enableProviderRecording;
 
-  /// Whether to enable value storage
+  /// Whether to enable value storage.
   final bool enableValueStorage;
 
-  /// Converts the config to JSON
+  /// Converts the config to JSON.
+  ///
+  /// @return A map representing the configuration.
   Map<String, dynamic> toJson() => {
     'protocolId': protocolId,
     'alpha': alpha,

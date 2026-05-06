@@ -66,8 +66,22 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
   /// Whether the tree is empty.
   bool isEmpty = true;
 
-  /// All entries as key-value pairs.
-  var entries = <MapEntry<K_PeerId, V_PeerInfo>>[];
+  /// Returns all entries in the tree using in-order traversal.
+  List<MapEntry<K_PeerId, V_PeerInfo>> get entries {
+    final result = <MapEntry<K_PeerId, V_PeerInfo>>[];
+    _inOrder(root, result);
+    return result;
+  }
+
+  void _inOrder(
+    RedBlackTreeNode<K_PeerId, V_PeerInfo>? node,
+    List<MapEntry<K_PeerId, V_PeerInfo>> result,
+  ) {
+    if (node == null) return;
+    _inOrder(node.leftChild, result);
+    result.add(MapEntry(node.key, node.value));
+    _inOrder(node.rightChild, result);
+  }
 
   /// Inserts a new node with the given key and value.
   void insert(K_PeerId keyInsert, V_PeerInfo valueInsert) {
@@ -86,6 +100,11 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
     return node?.value;
   }
 
+  /// Returns true if the key is present in the tree.
+  bool containsKey(K_PeerId key) {
+    return _search.searchNode(this, key) != null;
+  }
+
   /// Compares two keys.
   int compare(K_PeerId a, K_PeerId b) => _compare(a, b);
 
@@ -94,7 +113,6 @@ class RedBlackTree<K_PeerId, V_PeerInfo> {
     root = null;
     size = 0;
     isEmpty = true;
-    entries.clear();
   }
 
   /// Sets a value by key (insertion).

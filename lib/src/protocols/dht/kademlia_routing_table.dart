@@ -7,135 +7,145 @@ import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/protocols/dht/connection_statistics.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 
 import 'dht_client.dart';
 import 'kademlia_tree.dart';
 import 'kademlia_tree/kademlia_tree_node.dart';
 import 'red_black_tree.dart';
 
-/// Kademlia DHT routing table with k-buckets.
+/// Kademlia DHT routing table implementation using k-buckets.
 ///
-/// Organizes peers by XOR distance from the local node. Each bucket
-/// holds up to [kBucketSize] peers. Supports bucket splitting,
-/// stale node eviction, periodic refresh, and IP diversity checks.
+/// Organizes peers by their XOR distance from the local node. Each bucket
+/// maintains a fixed capacity and handles splitting as the network grows.
+///
+/// **Security features:**
+/// - IP diversity: Limits peers per IP address to prevent Sybil/Eclipse attacks.
+/// - Stale eviction: Periodically prunes unresponsive nodes.
 class KademliaRoutingTable {
-  /// Creates an uninitialized routing table.
-  /// Call [initialize] before use.
-  KademliaRoutingTable();
+  /// Creates a [KademliaRoutingTable] instance.
+  ///
+  /// The table must be initialized via [initialize] before performing operations.
+  KademliaRoutingTable() : _logger = Logger('KademliaRoutingTable');
 
-  /// The underlying DHT client for network operations.
+  /// The underlying DHT client.
   late final DHTClient dhtClient;
-  late KademliaTree _tree;
+  late final KademliaTree _tree;
+  final Logger _logger;
 
-  /// Maximum peers per bucket.
+  /// Maximum number of peers per k-bucket.
   static const int kBucketSize = 20;
 
-  /// Maximum number of peers allowed from a single IP address.
-  /// Prevents Sybil/Eclipse attacks where one attacker fills the table.
+  /// Maximum allowed peers from a single IP address (Security: Sybil protection).
   static const int maxPeersPerIp = 2;
 
   final Map<PeerId, ConnectionStatistics> _connectionStats = {};
-
-  /// Tracks number of peers per IP address.
   final Map<String, int> _ipCounts = {};
-
-  /// Maps a PeerId to its IP address for quick lookup during removal.
   final Map<PeerId, String> _peerIps = {};
 
-  /// Initializes the routing table with a reference to the DHT client
+  /// Initializes the routing table with the provided [client].
+  ///
+  /// Parameters:
+  /// - [client]: The [DHTClient] that owns this routing table.
   void initialize(DHTClient client) {
     dhtClient = client;
     _tree = KademliaTree(
       client,
       root: KademliaTreeNode(
         client.peerId,
-        0, // Distance to self is 0
+        0,
         client.associatedPeerId,
         lastSeen: DateTime.now().millisecondsSinceEpoch,
       ),
     );
+    _logger.debug('KademliaRoutingTable initialized for peer ${client.peerId}');
   }
 
-  /// Adds a peer to the routing table.
+  /// Adds a peer to the routing table, enforcing security and bucket constraints.
   ///
-  /// Enforces IP diversity limits to prevent Sybil attacks.
+  /// Parameters:
+  /// - [peerId]: The [PeerId] of the peer to add.
+  /// - [associatedPeerId]: The associated PeerID (often same as peerId).
+  /// - [address]: Optional IP address for diversity checks.
   Future<void> addPeer(
     PeerId peerId,
     PeerId associatedPeerId, {
     String? address,
   }) async {
-    // 1. IP Diversity Check
+    // SEC: IP Diversity Check
     if (address != null) {
-      final ip = address; // Assuming address string is the IP or contains it
-      final currentCount = _ipCounts[ip] ?? 0;
+      final String ip = address;
+      final int currentCount = _ipCounts[ip] ?? 0;
 
-      // If peer is not already in the table (check _peerIps map) but limit exceeded
       if (!_peerIps.containsKey(peerId) && currentCount >= maxPeersPerIp) {
-        // print(
-        //   '[Security] Rejected peer $peerId from $ip (Limit: $maxPeersPerIp)',
-        // );
+        _logger.warning(
+          'Security: Rejected peer $peerId from $ip (IP diversity limit reached)',
+        );
         return;
       }
 
-      // Track IP
       if (!_peerIps.containsKey(peerId)) {
         _ipCounts[ip] = currentCount + 1;
         _peerIps[peerId] = ip;
       }
     }
 
-    final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
-    final bucketIndex = _getBucketIndex(distance);
-    final bucket = _getOrCreateBucket(bucketIndex);
+    final int dist = _calculateXorDistance(peerId, _tree.root!.peerId);
+    final int bucketIndex = _getBucketIndex(dist);
+    final RedBlackTree<PeerId, KademliaTreeNode> bucket = _getOrCreateBucket(
+      bucketIndex,
+    );
 
-    if (bucket[peerId] != null) {
-      final existingNode = bucket[peerId]!;
-      bucket[peerId] = existingNode; // Update last seen by re-inserting.
+    final KademliaTreeNode? existingNode = _findNodeInBucket(bucket, peerId);
+    if (existingNode != null) {
+      existingNode.lastSeen = DateTime.now().millisecondsSinceEpoch;
+      _logger.verbose('Updated last seen for peer $peerId');
       return;
     }
 
     if (bucket.size >= kBucketSize) {
       if (!_removeStaleNode(bucket)) {
+        _logger.debug(
+          'Bucket $bucketIndex full and no stale nodes found; dropping peer $peerId',
+        );
         return;
       }
     }
 
     bucket[peerId] = KademliaTreeNode(
       peerId,
-      distance,
+      dist,
       associatedPeerId,
       lastSeen: DateTime.now().millisecondsSinceEpoch,
     );
 
-    // Initialize connection statistics for new peer
-    if (!_connectionStats.containsKey(peerId)) {
-      _connectionStats[peerId] = ConnectionStatistics();
-    }
+    _connectionStats.putIfAbsent(peerId, () => ConnectionStatistics());
+    _logger.debug('Added peer $peerId to routing table');
   }
 
+  /// Determines if a node is considered stale based on network activity.
   bool _isStaleNode(KademliaTreeNode node) {
-    final nodeStats = _getNodeStats(); // Fetch current network statistics
-    final staleThreshold = _calculateStaleThreshold(nodeStats);
+    final NodeStats stats = _getNodeStats();
+    final Duration threshold = _calculateStaleThreshold(stats);
 
     return DateTime.now().difference(
           DateTime.fromMillisecondsSinceEpoch(node.lastSeen),
         ) >
-        staleThreshold;
+        threshold;
   }
 
-  Duration _calculateStaleThreshold(NodeStats nodeStats) {
-    // Example logic: Increase threshold if many peers are connected
-    if (nodeStats.numConnectedPeers > 100) {
-      return const Duration(hours: 2); // More lenient threshold
+  /// Calculates the timeout duration for stale nodes.
+  Duration _calculateStaleThreshold(NodeStats stats) {
+    if (stats.numConnectedPeers > 100) {
+      return const Duration(hours: 2);
     }
-    return const Duration(hours: 1); // Default threshold
+    return const Duration(hours: 1);
   }
 
+  /// Internal placeholder for fetching node statistics.
   NodeStats _getNodeStats() {
-    // Implement logic to fetch current NodeStats
-    // This could be a call to a service or a direct access to a NodeStats instance
     return NodeStats(
-      numBlocks: 0, // Example values
+      numBlocks: 0,
       datastoreSize: 0,
       numConnectedPeers: 50,
       bandwidthSent: 0,
@@ -145,93 +155,109 @@ class KademliaRoutingTable {
 
   /// Removes a peer from the routing table.
   void removePeer(PeerId peerId) {
-    final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
-    final bucketIndex = _getBucketIndex(distance);
-    final bucket = _tree.buckets[bucketIndex];
+    _logger.debug('Removing peer $peerId from routing table');
+    final int dist = _calculateXorDistance(peerId, _tree.root!.peerId);
+    final int bucketIndex = _getBucketIndex(dist);
 
-    // Use _findNode to check existence (now robust)
-    final node = _findNode(peerId);
+    if (bucketIndex >= _tree.buckets.length) return;
+    final RedBlackTree<PeerId, KademliaTreeNode> bucket =
+        _tree.buckets[bucketIndex];
+
+    final KademliaTreeNode? node = _findNode(peerId);
     if (node != null) {
       bucket.remove(peerId);
-      bucket.entries.removeWhere((e) => _peersEqual(e.key, peerId));
+      bucket.entries.removeWhere(
+        (MapEntry<PeerId, KademliaTreeNode> e) => _peersEqual(e.key, peerId),
+      );
       bucket.size = bucket.entries.length;
 
-      // Decrement IP count
-      if (_peerIps.containsKey(peerId)) {
-        final ip = _peerIps[peerId]!;
-        final count = _ipCounts[ip] ?? 0;
-        if (count > 0) {
+      final String? ip = _peerIps.remove(peerId);
+      if (ip != null) {
+        final int count = _ipCounts[ip] ?? 0;
+        if (count > 1) {
           _ipCounts[ip] = count - 1;
-          if (_ipCounts[ip] == 0) _ipCounts.remove(ip);
+        } else {
+          _ipCounts.remove(ip);
         }
-        _peerIps.remove(peerId);
       }
-
-      // Check if bucket needs to be merged after removal
+      _logger.info('Removed peer $peerId from routing table');
     }
   }
 
-  /// Gets the associated peer for a given peer ID.
+  /// Returns the associated PeerID for a given [peerId].
   PeerId? getAssociatedPeer(PeerId peerId) => _tree.getAssociatedPeer(peerId);
 
-  /// Returns true if the routing table contains the peer.
+  /// Checks if the routing table contains the specified [peerId].
   bool containsPeer(PeerId peerId) {
-    for (var bucket in _tree.buckets) {
-      for (var entry in bucket.entries) {
+    for (final bucket in _tree.buckets) {
+      for (final entry in bucket.entries) {
         if (_peersEqual(entry.key, peerId)) return true;
       }
     }
     return false;
   }
 
-  /// Total number of peers in the routing table.
-  int get peerCount => _tree.buckets.fold(
-    0,
-    (sum, bucket) => (sum + bucket.entries.length).toInt(),
-  );
+  /// Total number of peers currently in the routing table.
+  int get peerCount =>
+      _tree.buckets.fold(0, (sum, bucket) => sum + bucket.entries.length);
 
-  /// Clears all peers from the routing table.
+  /// Clears all entries from the routing table.
   void clear() {
+    _logger.info('Clearing routing table');
     for (final bucket in _tree.buckets) {
       bucket.clear();
     }
+    _peerIps.clear();
+    _ipCounts.clear();
+    _connectionStats.clear();
   }
 
-  /// Calculates XOR distance between two peer IDs.
-  int distance(PeerId a, PeerId b) => _calculateXorDistance(a, b);
+  /// Calculates the XOR distance between two peers.
+  int calculateDistance(PeerId a, PeerId b) => _calculateXorDistance(a, b);
 
-  /// Access to the underlying k-buckets.
+  /// Provides access to the underlying buckets.
   List<RedBlackTree<PeerId, KademliaTreeNode>> get buckets => _tree.buckets;
 
-  /// Finds the k closest peers to target.
+  /// Finds the K closest peers to the given [target].
   List<PeerId> findClosestPeers(PeerId target, int k) =>
       _tree.findClosestPeers(target, k);
 
-  /// Performs a node lookup for target.
+  /// Performs an iterative node lookup for [target] across the network.
   Future<List<PeerId>> nodeLookup(PeerId target) async =>
       _tree.nodeLookup(target);
 
-  /// Refreshes stale buckets by querying for random keys.
+  /// Refreshes the routing table by refreshing stale buckets.
   void refresh() {
-    final bucketsNeedingRefresh = <int>[];
-    for (var i = 0; i < buckets.length; i++) {
+    _logger.debug('Refreshing routing table buckets');
+    final List<int> bucketsNeedingRefresh = [];
+    for (int i = 0; i < buckets.length; i++) {
       if (_removeStaleNodesInBucket(i) < kBucketSize / 2) {
         bucketsNeedingRefresh.add(i);
       }
     }
 
-    for (var bucketIndex in bucketsNeedingRefresh) {
+    for (final int bucketIndex in bucketsNeedingRefresh) {
       _refreshBucket(bucketIndex, _tree.root!.peerId);
     }
   }
 
+  /// Refreshes a specific bucket by performing a lookup for a random key in that bucket's range.
+  ///
+  /// This helps keep the routing table fresh and prevents buckets from becoming stale.
   void _refreshBucket(int bucketIndex, PeerId associatedPeerId) {
-    final randomKey = _generateRandomKeyInBucket(bucketIndex);
-    for (var peer in findClosestPeers(randomKey, kBucketSize)) {
-      if (!containsPeer(peer)) addPeerToBucket(peer, associatedPeerId);
+    try {
+      final PeerId randomKey = _generateRandomKeyInBucket(bucketIndex);
+      for (final PeerId peer in findClosestPeers(randomKey, kBucketSize)) {
+        if (!containsPeer(peer)) {
+          addPeerToBucket(peer, associatedPeerId);
+        }
+      }
+    } catch (e) {
+      _logger.debug('Error refreshing bucket $bucketIndex: $e');
     }
   }
 
+  /// Gets an existing bucket or creates new ones up to [bucketIndex].
   RedBlackTree<PeerId, KademliaTreeNode> _getOrCreateBucket(int bucketIndex) {
     while (_tree.buckets.length <= bucketIndex) {
       _tree.buckets.add(
@@ -241,10 +267,13 @@ class KademliaRoutingTable {
     return _tree.buckets[bucketIndex];
   }
 
+  /// Evicts stale nodes from a specific bucket.
+  ///
+  /// Returns the number of nodes removed.
   int _removeStaleNodesInBucket(int index) {
     final bucket = _tree.buckets[index];
-    var removedCount = 0;
-    for (var entry in bucket.entries.toList()) {
+    int removedCount = 0;
+    for (final entry in bucket.entries.toList()) {
       if (_isStaleNode(entry.value)) {
         removePeerFromBucket(entry.key);
         removedCount++;
@@ -253,35 +282,27 @@ class KademliaRoutingTable {
     return removedCount;
   }
 
-  /// Compares two PeerIds for RedBlack Tree ordering.
-  ///
-  /// Primary comparison: XOR distance to root node (ascending order).
-  /// Secondary comparison: byte-by-byte comparison when distances are equal.
-  /// Returns 0 only when both PeerIds are identical (for duplicate detection).
-  Comparator<PeerId> get _xorDistanceComparator => (a, b) {
-    // First, check if they're the exact same peer
+  /// Compares PeerIds for tree ordering based on XOR distance to local root.
+  Comparator<PeerId> get _xorDistanceComparator => (PeerId a, PeerId b) {
     if (_peersEqual(a, b)) return 0;
 
-    // Compare distances to root node
-    final distA = _calculateXorDistance(a, _tree.root!.peerId);
-    final distB = _calculateXorDistance(b, _tree.root!.peerId);
+    final int distA = _calculateXorDistance(a, _tree.root!.peerId);
+    final int distB = _calculateXorDistance(b, _tree.root!.peerId);
 
     if (distA != distB) {
       return distA.compareTo(distB);
     }
 
-    // Same distance - use byte comparison as tiebreaker
-    final length = min(a.value.length, b.value.length);
+    final int length = min(a.value.length, b.value.length);
     for (int i = 0; i < length; i++) {
       if (a.value[i] != b.value[i]) {
         return a.value[i].compareTo(b.value[i]);
       }
     }
-    // If all compared bytes are equal, shorter one comes first
     return a.value.length.compareTo(b.value.length);
   };
 
-  /// Checks if two PeerIds are identical (same bytes).
+  /// Byte-level equality check for [PeerId].
   bool _peersEqual(PeerId a, PeerId b) {
     if (a.value.length != b.value.length) return false;
     for (int i = 0; i < a.value.length; i++) {
@@ -290,22 +311,22 @@ class KademliaRoutingTable {
     return true;
   }
 
+  /// Generates a random [PeerId] for bucket probing.
   PeerId _generateRandomKeyInBucket(int bucketIndex) {
-    final random = Random.secure();
-    final keyBytes = List<int>.generate(32, (i) => random.nextInt(256));
-    return PeerId(value: Uint8List.fromList(keyBytes));
+    final Random random = Random.secure();
+    final Uint8List keyBytes = Uint8List.fromList(
+      List<int>.generate(32, (i) => random.nextInt(256)),
+    );
+    return PeerId(value: keyBytes);
   }
 
+  /// Calculates XOR distance as the first bit position that differs.
   int _calculateXorDistance(PeerId a, PeerId b) {
-    final length = min(a.value.length, b.value.length);
+    final int length = min(a.value.length, b.value.length);
 
-    // Find the first differing byte and calculate distance from there
-    // This prevents integer overflow for large PeerIds
     for (int i = 0; i < length; i++) {
-      int xorByte = a.value[i] ^ b.value[i];
+      final int xorByte = a.value[i] ^ b.value[i];
       if (xorByte != 0) {
-        // Convert position and XOR value to distance
-        // Distance represents the bit position of the first difference
         int leadingZeros = 0;
         int mask = 0x80;
         while ((xorByte & mask) == 0 && mask > 0) {
@@ -315,182 +336,154 @@ class KademliaRoutingTable {
         return (i * 8) + leadingZeros;
       }
     }
-    // If all bytes are the same, distance is 0 (same peer)
     return 0;
   }
 
+  /// Maps a distance to a bucket index (0-255).
   int _getBucketIndex(int distance) {
-    // Distance 0 means same peer - use bucket 0
-    // Otherwise distance represents the bit position, which is the bucket index
     if (distance == 0) return 0;
-    return distance.clamp(0, 255); // Ensure we don't exceed bucket array bounds
+    return distance.clamp(0, 255);
   }
 
+  /// Attempts to remove a single stale node from a bucket to make space.
   bool _removeStaleNode(RedBlackTree<PeerId, KademliaTreeNode> bucket) {
-    for (var entry in bucket.entries.toList()) {
+    for (final entry in bucket.entries.toList()) {
       if (_isStaleNode(entry.value)) {
         bucket.remove(entry.key);
-        return true; // Return true if a stale node was removed
+        _logger.debug('Evicted stale node ${entry.key} from bucket');
+        return true;
       }
     }
-    return false; // Return false if no stale node was found
+    return false;
   }
 
+  /// Locates a node in any bucket.
   KademliaTreeNode? _findNode(PeerId peerId) {
-    for (var bucket in _tree.buckets) {
-      // Use entries scan for reliability
-      for (var entry in bucket.entries) {
-        if (_peersEqual(entry.key, peerId)) {
-          return entry.value;
-        }
-      }
+    for (final bucket in _tree.buckets) {
+      final KademliaTreeNode? node = _findNodeInBucket(bucket, peerId);
+      if (node != null) return node;
     }
     return null;
   }
 
-  /// Adds a peer directly to a bucket (internal).
-  void addPeerToBucket(PeerId peerId, PeerId associatedPeerId) {
-    final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
-    final bucketIndex = _getBucketIndex(distance);
-    final bucket = _getOrCreateBucket(bucketIndex);
-
-    // Check existence via findNode logic (entries) or explicit scan
-    KademliaTreeNode? existingNode;
-    for (var entry in bucket.entries) {
-      if (_peersEqual(entry.key, peerId)) {
-        existingNode = entry.value;
-        break;
-      }
+  /// Locates a node within a specific bucket.
+  KademliaTreeNode? _findNodeInBucket(
+    RedBlackTree<PeerId, KademliaTreeNode> bucket,
+    PeerId peerId,
+  ) {
+    for (final entry in bucket.entries) {
+      if (_peersEqual(entry.key, peerId)) return entry.value;
     }
-
-    if (existingNode != null) {
-      bucket[peerId] = existingNode; // Update last seen by re-inserting.
-      return;
-    }
-
-    if (bucket.size >= kBucketSize) {
-      // Bucket is full, drop the new peer.
-      return;
-    }
-
-    bucket[peerId] = KademliaTreeNode(
-      peerId,
-      distance,
-      associatedPeerId,
-      lastSeen: DateTime.now().millisecondsSinceEpoch,
-    );
-    // Ensure size is synced if insertion worked (it should)
-    // bucket.size auto-updates on insert usually
+    return null;
   }
 
-  /// Removes a peer from its bucket.
-  void removePeerFromBucket(PeerId peerId) {
-    for (var bucket in _tree.buckets) {
-      // Check via scan
-      bool found = false;
-      for (var entry in bucket.entries) {
-        if (_peersEqual(entry.key, peerId)) {
-          found = true;
-          break;
-        }
-      }
+  /// Directly adds a peer to a bucket (internal use).
+  void addPeerToBucket(PeerId peerId, PeerId associatedPeerId) {
+    final int dist = _calculateXorDistance(peerId, _tree.root!.peerId);
+    final int bucketIndex = _getBucketIndex(dist);
+    final RedBlackTree<PeerId, KademliaTreeNode> bucket = _getOrCreateBucket(
+      bucketIndex,
+    );
 
-      if (found) {
+    if (_findNodeInBucket(bucket, peerId) != null) return;
+
+    if (bucket.size < kBucketSize) {
+      bucket[peerId] = KademliaTreeNode(
+        peerId,
+        dist,
+        associatedPeerId,
+        lastSeen: DateTime.now().millisecondsSinceEpoch,
+      );
+    }
+  }
+
+  /// Removes a peer from whichever bucket contains it.
+  void removePeerFromBucket(PeerId peerId) {
+    for (final bucket in _tree.buckets) {
+      if (_findNodeInBucket(bucket, peerId) != null) {
         bucket.remove(peerId);
         bucket.entries.removeWhere((e) => _peersEqual(e.key, peerId));
-        // Force sync size
         bucket.size = bucket.entries.length;
         break;
       }
     }
   }
 
-  /// Updates peer information in the routing table
+  /// Updates peer information and connection statistics.
+  ///
+  /// Throws an [Exception] if the peer is unreachable.
   Future<void> updatePeer(V_PeerInfo peer) async {
-    final peerId = PeerId(value: Uint8List.fromList(peer.peerId));
+    final PeerId peerId = PeerId(value: Uint8List.fromList(peer.peerId));
 
-    // Verify peer is still alive with a ping
     if (!await pingPeer(peerId)) {
+      _logger.warning('Failed to update peer $peerId: Peer unreachable');
       throw Exception('Peer unreachable');
     }
 
-    if (containsPeer(peerId)) {
-      final node = _findNode(peerId);
-      if (node != null) {
-        node.lastSeen = DateTime.now().millisecondsSinceEpoch;
-
-        // Update connection stats
-        if (_connectionStats.containsKey(peerId)) {
-          _connectionStats[peerId]!.updateFromPeerInfo(peer);
-        }
-
-        // Find the bucket containing this node and check if it needs splitting
-        final distance = _calculateXorDistance(peerId, _tree.root!.peerId);
-        // Bucket index calculated for potential future use
-        _getBucketIndex(distance);
-      }
+    final KademliaTreeNode? node = _findNode(peerId);
+    if (node != null) {
+      node.lastSeen = DateTime.now().millisecondsSinceEpoch;
+      _connectionStats[peerId]?.updateFromPeerInfo(peer);
+      _logger.verbose('Updated metadata for peer $peerId');
     } else {
-      // Create an associated PeerId from the peer info
-      final associatedPeerId = PeerId(value: Uint8List.fromList(peer.peerId));
-      await addPeer(peerId, associatedPeerId);
+      await addPeer(peerId, peerId);
     }
   }
 
-  /// Adds a key provider to the routing table
+  /// Registers a provider for a specific DHT key.
   void addKeyProvider(PeerId key, PeerId provider, DateTime timestamp) {
-    // Calculate distance between key and our node
-    final distance = _calculateXorDistance(key, _tree.root!.peerId);
-    final bucketIndex = _getBucketIndex(distance);
-    final bucket = _getOrCreateBucket(bucketIndex);
+    final int dist = _calculateXorDistance(key, _tree.root!.peerId);
+    final int bucketIndex = _getBucketIndex(dist);
+    final RedBlackTree<PeerId, KademliaTreeNode> bucket = _getOrCreateBucket(
+      bucketIndex,
+    );
 
-    // Create or update the key node
-    final keyNode = KademliaTreeNode(
+    bucket[key] = KademliaTreeNode(
       key,
-      distance,
+      dist,
       provider,
       lastSeen: timestamp.millisecondsSinceEpoch,
     );
-
-    bucket[key] = keyNode;
-
-    // Initialize connection stats for provider if needed
-    if (!_connectionStats.containsKey(provider)) {
-      _connectionStats[provider] = ConnectionStatistics();
-    }
+    _connectionStats.putIfAbsent(provider, () => ConnectionStatistics());
   }
 
-  /// Updates the timestamp for a key provider
+  /// Updates the last-seen timestamp for a key provider.
   void updateKeyProviderTimestamp(
     PeerId key,
     PeerId provider,
     DateTime timestamp,
   ) {
-    final node = _findNode(key);
+    final KademliaTreeNode? node = _findNode(key);
     if (node != null && node.associatedPeerId == provider) {
       node.lastSeen = timestamp.millisecondsSinceEpoch;
     }
   }
 
-  /// Pings a peer to check if it's still alive
+  /// Calculates the logarithmic XOR distance between two Peer IDs.
+  int distance(PeerId a, PeerId b) => _calculateXorDistance(a, b);
+
+  /// Pings a peer to verify its online status.
+  ///
+  /// Returns true if the peer responds to the ping.
   Future<bool> pingPeer(PeerId peerId) async {
     try {
-      // Create ping request message
-      final msg = kad.Message()..type = kad.Message_MessageType.PING;
+      final kad.Message msg = kad.Message()
+        ..type = kad.Message_MessageType.PING;
 
-      // Send request through DHT client's network handler
-      final response = await dhtClient.networkHandler.sendRequest(
-        peerId.toBase58(),
-        DHTClient.protocolDht,
-        msg.writeToBuffer(),
-      );
+      final Uint8List? response = await dhtClient.networkHandler
+          .sendRequest(
+            peerId.toBase58(),
+            DHTClient.protocolDht,
+            msg.writeToBuffer(),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response == null) return false;
 
-      // Parse response
-      final pingResponse = kad.Message.fromBuffer(response);
+      final kad.Message pingResponse = kad.Message.fromBuffer(response);
       return pingResponse.type == kad.Message_MessageType.PING;
     } catch (e) {
-      // print('Error pinging peer ${peerId.toString()}: $e');
+      _logger.debug('Ping failed for peer $peerId: $e');
       return false;
     }
   }

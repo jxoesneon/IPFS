@@ -16,12 +16,20 @@ import 'package:dart_ipfs/src/protocols/graphsync/graphsync_types.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
-/// Graphsync protocol handler for efficient DAG transfer.
+/// Graphsync protocol handler for efficient DAG (Directed Acyclic Graph) transfer.
 ///
-/// Handles requests, responses, and coordinates with Bitswap and
-/// IPLD for graph traversal and block fetching.
+/// Implements the Graphsync protocol, allowing peers to request subgraphs
+/// specified by IPLD selectors. Coordinates with Bitswap for block retrieval
+/// and IPLD for graph traversal.
 class GraphsyncHandler {
-  /// Creates a Graphsync handler.
+  /// Creates a new [GraphsyncHandler] with required dependencies.
+  ///
+  /// Parameters:
+  /// - [config]: Global IPFS configuration for debug/logging settings.
+  /// - [_router]: Network router for protocol communication.
+  /// - [_bitswap]: Bitswap handler for fetching individual blocks.
+  /// - [_ipld]: IPLD handler for executing selectors and traversing graphs.
+  /// - [_blockStore]: Local storage for persisted blocks.
   GraphsyncHandler(
     IPFSConfig config,
     this._router,
@@ -35,6 +43,7 @@ class GraphsyncHandler {
       ),
       _protocol = GraphsyncProtocol(),
       _config = config;
+
   final BitswapHandler _bitswap;
   final IPLDHandler _ipld;
   final RouterInterface _router;
@@ -43,276 +52,292 @@ class GraphsyncHandler {
   final GraphsyncProtocol _protocol;
   final IPFSConfig _config;
 
-  /// Starts the Graphsync protocol handler.
+  bool _isRunning = false;
+
+  // Metrics tracking
+  int _activeRequests = 0;
+  int _totalRequestsReceived = 0;
+  int _totalBytesSent = 0;
+  int _totalBytesReceived = 0;
+
+  /// Starts the Graphsync protocol handler and registers it with the router.
   Future<void> start() async {
-    _router.registerProtocol(GraphsyncProtocol.protocolID);
-    _router.registerProtocolHandler(
-      GraphsyncProtocol.protocolID,
-      (packet) => _handleMessage(packet.srcPeerId, packet.datagram),
-    );
+    if (_isRunning) {
+      _logger.warning('GraphsyncHandler is already running.');
+      return;
+    }
 
     _logger.debug('Starting GraphsyncHandler...');
     try {
-      // Initialize graphsync protocol
-      _logger.debug('GraphsyncHandler started successfully');
+      _router.registerProtocol(GraphsyncProtocol.protocolID);
+      _router.registerProtocolHandler(
+        GraphsyncProtocol.protocolID,
+        (NetworkPacket packet) =>
+            _handleMessage(packet.srcPeerId, packet.datagram),
+      );
+      _isRunning = true;
+      _logger.info('GraphsyncHandler started successfully.');
     } catch (e, stackTrace) {
       _logger.error('Failed to start GraphsyncHandler', e, stackTrace);
       rethrow;
     }
   }
 
+  /// Handles incoming Graphsync messages from a peer.
   Future<void> _handleMessage(String peer, Uint8List data) async {
-    final message = GraphsyncMessage.fromBuffer(data);
+    _totalBytesReceived += data.length;
+    try {
+      final GraphsyncMessage message = GraphsyncMessage.fromBuffer(data);
 
-    for (final request in message.requests) {
-      if (request.cancel) {
-        await _handleCancelRequest(request.id);
-      } else if (request.pause) {
-        await _handlePauseRequest(request.id);
-      } else if (request.unpause) {
-        await _handleUnpauseRequest(request.id);
-      } else {
-        await _handleNewRequest(peer, request);
+      for (final GraphsyncRequest request in message.requests) {
+        if (request.cancel) {
+          await _handleCancelRequest(request.id);
+        } else if (request.pause) {
+          await _handlePauseRequest(request.id);
+        } else if (request.unpause) {
+          await _handleUnpauseRequest(request.id);
+        } else {
+          _totalRequestsReceived++;
+          await _handleNewRequest(peer, request);
+        }
       }
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Error processing Graphsync message from $peer',
+        e,
+        stackTrace,
+      );
+      rethrow;
     }
   }
 
-  /// Stops the Graphsync handler.
+  /// Stops the Graphsync handler and unregisters it from the router.
   Future<void> stop() async {
+    if (!_isRunning) return;
+
     _logger.debug('Stopping GraphsyncHandler...');
     try {
-      // Cleanup graphsync connections and resources
-      _logger.debug('GraphsyncHandler stopped successfully');
+      // Unregistration logic would go here if supported by RouterInterface
+      _isRunning = false;
+      _logger.info('GraphsyncHandler stopped successfully.');
     } catch (e, stackTrace) {
       _logger.error('Failed to stop GraphsyncHandler', e, stackTrace);
       rethrow;
     }
   }
 
-  /// Returns the current status of the Graphsync handler.
+  /// Returns the current operational status and metrics of the Graphsync handler.
   Future<Map<String, dynamic>> getStatus() async {
     return {
+      'running': _isRunning,
       'enabled': _config.enableGraphsync,
-      'active_requests': 0, // Add actual metrics here
-      'total_requests': 0,
-      'bytes_received': 0,
-      'bytes_sent': 0,
+      'active_requests': _activeRequests,
+      'total_requests_received': _totalRequestsReceived,
+      'bytes_received': _totalBytesReceived,
+      'bytes_sent': _totalBytesSent,
     };
   }
 
+  /// Handles a request to cancel an ongoing Graphsync operation.
   Future<void> _handleCancelRequest(int requestId) async {
     _logger.debug('Handling cancel request for ID: $requestId');
     try {
-      // Send cancellation response
-      final response = _protocol.createResponse(
+      final GraphsyncMessage response = _protocol.createResponse(
         requestId: requestId,
         status: ResponseStatus.RS_CANCELLED,
         metadata: {'message': 'Request cancelled by peer'},
       );
 
-      // Convert to bytes and send response
-      final responseBytes = response.writeToBuffer();
-      await _router.broadcastMessage(
-        GraphsyncProtocol.protocolID,
-        responseBytes,
-      );
-
-      _logger.debug('Cancel request handled successfully for ID: $requestId');
+      await _sendResponse(response);
+      _logger.debug('Cancel request handled for ID: $requestId');
     } catch (e, stackTrace) {
       _logger.error('Error handling cancel request', e, stackTrace);
       throw RequestHandlingError('Failed to handle cancel request: $e');
     }
   }
 
+  /// Handles a request to pause an ongoing Graphsync operation.
   Future<void> _handlePauseRequest(int requestId) async {
     _logger.debug('Handling pause request for ID: $requestId');
     try {
-      final response = _protocol.createResponse(
+      final GraphsyncMessage response = _protocol.createResponse(
         requestId: requestId,
         status: ResponseStatus.RS_PAUSED,
         metadata: {'message': 'Request paused by peer'},
       );
 
-      final responseBytes = response.writeToBuffer();
-      await _router.broadcastMessage(
-        GraphsyncProtocol.protocolID,
-        responseBytes,
-      );
-
-      _logger.debug('Pause request handled successfully for ID: $requestId');
+      await _sendResponse(response);
     } catch (e, stackTrace) {
       _logger.error('Error handling pause request', e, stackTrace);
       throw RequestHandlingError('Failed to handle pause request: $e');
     }
   }
 
+  /// Handles a request to resume a paused Graphsync operation.
   Future<void> _handleUnpauseRequest(int requestId) async {
     _logger.debug('Handling unpause request for ID: $requestId');
     try {
-      final response = _protocol.createResponse(
+      final GraphsyncMessage response = _protocol.createResponse(
         requestId: requestId,
         status: ResponseStatus.RS_IN_PROGRESS,
         metadata: {'message': 'Request resumed'},
       );
 
-      final responseBytes = response.writeToBuffer();
-      await _router.broadcastMessage(
-        GraphsyncProtocol.protocolID,
-        responseBytes,
-      );
-
-      _logger.debug('Unpause request handled successfully for ID: $requestId');
+      await _sendResponse(response);
     } catch (e, stackTrace) {
       _logger.error('Error handling unpause request', e, stackTrace);
       throw RequestHandlingError('Failed to handle unpause request: $e');
     }
   }
 
+  /// Processes a new Graphsync request from a peer.
+  ///
+  /// Validates the request, acceptance, and initiates graph traversal using
+  /// IPLD selectors. Progress updates are sent back to the requester.
   Future<void> _handleNewRequest(String peer, GraphsyncRequest request) async {
-    _logger.debug('Handling new request ${request.id} from ${peer.toString()}');
+    _logger.debug('Handling new Graphsync request ${request.id} from $peer');
+    _activeRequests++;
 
     try {
-      // Validate request fields
       if (!request.hasRoot() || !request.hasSelector()) {
         throw MessageError('Invalid request: missing root or selector');
       }
 
-      // Create initial response
-      final response = _protocol.createResponse(
-        requestId: request.id,
-        status: ResponseStatus.RS_IN_PROGRESS,
-        metadata: {'message': 'Request accepted'},
+      // Acceptance response
+      await _sendResponse(
+        _protocol.createResponse(
+          requestId: request.id,
+          status: ResponseStatus.RS_IN_PROGRESS,
+          metadata: {'message': 'Request accepted'},
+        ),
       );
 
-      // Send initial response
-      await _router.broadcastMessage(
-        GraphsyncProtocol.protocolID,
-        response.writeToBuffer(),
+      final CID rootCID = CID.fromBytes(Uint8List.fromList(request.root));
+      final IPLDSelector selector = await IPLDSelector.fromBytesAsync(
+        Uint8List.fromList(request.selector),
       );
 
-      // Process the request using IPLD and Bitswap
+      // Traversal and block fetching logic
       try {
-        final rootBytes = Uint8List.fromList(request.root);
-        final selectorBytes = Uint8List.fromList(request.selector);
-
-        // First try to get the root block using Bitswap
-        final rootCID = CID.fromBytes(rootBytes);
-        final rootBlock = await _bitswap.wantBlock(rootCID.toString());
-        if (rootBlock == null) {
-          throw GraphTraversalError('Root block not found');
-        }
-
-        // Now get the root node from IPLD
-        final root = await _ipld.get(rootCID);
-        if (root == null) {
-          throw GraphTraversalError('Root node not found');
-        }
-
-        // Execute selector query
-        final results = await _ipld.executeSelector(
+        final List<SelectorResult> results = await _ipld.executeSelector(
           rootCID,
-          await IPLDSelector.fromBytesAsync(selectorBytes),
+          selector,
         );
 
-        // Process results and fetch missing blocks via Bitswap
-        int processed = 0;
-        final total = results.length;
+        if (results.isEmpty) {
+          throw GraphTraversalError('Root node not found or selector matched nothing: $rootCID');
+        }
 
-        for (final result in results) {
+        int processed = 0;
+        final int total = results.length;
+
+        for (final SelectorResult result in results) {
           processed++;
 
-          // Try to get block via Bitswap if not in local store
+          // Ensure we have the block locally or fetch via Bitswap
           if (!await _blockStore.hasBlock(result.cid.toString())) {
-            final block = await _bitswap.wantBlock(result.cid.toString());
-            if (block != null) {
-              await _blockStore.putBlock(block);
+            final core.Block? fetched = await _bitswap.wantBlock(
+              result.cid.toString(),
+            );
+            if (fetched != null) {
+              await _blockStore.putBlock(fetched);
+            } else {
+              throw BlockNotFoundError(result.cid.toString());
             }
           }
 
-          // Create progress response
-          final progressResponse = _protocol.createProgressResponse(
-            requestId: request.id,
-            blocksProcessed: processed,
-            totalBlocks: total,
-          );
-
-          await _router.broadcastMessage(
-            GraphsyncProtocol.protocolID,
-            progressResponse.writeToBuffer(),
+          // Send progress update
+          await _sendResponse(
+            _protocol.createProgressResponse(
+              requestId: request.id,
+              blocksProcessed: processed,
+              totalBlocks: total,
+            ),
           );
         }
 
-        // Send completion response
-        final completionResponse = _protocol.createResponse(
-          requestId: request.id,
-          status: ResponseStatus.RS_COMPLETED,
-          metadata: {
-            'message': 'Request completed successfully',
-            'blocksProcessed': '$processed',
-            'totalBlocks': '$total',
-          },
-        );
-
-        await _router.broadcastMessage(
-          GraphsyncProtocol.protocolID,
-          completionResponse.writeToBuffer(),
+        // Completion response
+        await _sendResponse(
+          _protocol.createResponse(
+            requestId: request.id,
+            status: ResponseStatus.RS_COMPLETED,
+            metadata: {
+              'message': 'Graph transfer completed',
+              'blocksProcessed': '$processed',
+            },
+          ),
         );
       } catch (e) {
-        // Send error response
-        final errorResponse = _protocol.createResponse(
-          requestId: request.id,
-          status: ResponseStatus.RS_ERROR,
-          metadata: {'error': e.toString()},
-        );
-
-        await _router.broadcastMessage(
-          GraphsyncProtocol.protocolID,
-          errorResponse.writeToBuffer(),
+        await _sendResponse(
+          _protocol.createResponse(
+            requestId: request.id,
+            status: ResponseStatus.RS_ERROR,
+            metadata: {'error': e.toString()},
+          ),
         );
         rethrow;
       }
     } catch (e, stackTrace) {
-      _logger.error('Error handling new request', e, stackTrace);
-      throw GraphTraversalError('Failed to handle new request: $e');
+      _logger.error(
+        'Error handling Graphsync request ${request.id}',
+        e,
+        stackTrace,
+      );
+      rethrow;
+    } finally {
+      _activeRequests--;
     }
   }
 
-  /// Requests a graph by CID with the given selector.
+  /// Requests a graph from the network by its root CID and an IPLD selector.
+  ///
+  /// Parameters:
+  /// - [cidStr]: The string representation of the root CID.
+  /// - [selector]: The selector defining the subgraph to retrieve.
+  ///
+  /// Returns the root [Block] of the graph if successfully retrieved.
   Future<Block?> requestGraph(String cidStr, IPLDSelector selector) async {
-    _logger.debug('Requesting graph for CID: $cidStr with selector');
+    _logger.debug('Initiating Graphsync request for CID: $cidStr');
 
     try {
-      final cid = CID.decode(cidStr);
-      final rootBytes = cid.toBytes();
-      final selectorBytes = await selector.toBytes();
-      final requestId = (DateTime.now().millisecondsSinceEpoch % 2147483647);
+      final CID cid = CID.decode(cidStr);
+      final Uint8List selectorBytes = await selector.toBytes();
+      final int requestId = DateTime.now().millisecondsSinceEpoch & 0x7FFFFFFF;
 
-      final request = _protocol.createRequest(
+      final GraphsyncMessage message = _protocol.createRequest(
         id: requestId,
-        root: rootBytes,
+        root: cid.toBytes(),
         selector: selectorBytes,
         priority: GraphsyncPriority.normal,
       );
 
       await _router.broadcastMessage(
         GraphsyncProtocol.protocolID,
-        request.writeToBuffer(),
+        message.writeToBuffer(),
       );
 
-      // Get block via Bitswap and convert to appropriate type
-      final bitswapBlock = await _bitswap.wantBlock(cidStr);
+      // Fallback to Bitswap for the root block if necessary
+      final core.Block? bitswapBlock = await _bitswap.wantBlock(cidStr);
       if (bitswapBlock != null) {
         await _blockStore.putBlock(bitswapBlock);
-        // Convert Bitswap block to Graphsync block
-        return Future.value(_convertToGraphsyncBlock(bitswapBlock));
+        return _convertToGraphsyncBlock(bitswapBlock);
       }
-      return Future.value(null);
+      return null;
     } catch (e, stackTrace) {
-      _logger.error('Failed to request graph', e, stackTrace);
+      _logger.error('Failed to initiate Graphsync request', e, stackTrace);
       throw GraphTraversalError('Failed to request graph: $e');
     }
   }
 
+  /// Helper to send a Graphsync response via the router.
+  Future<void> _sendResponse(GraphsyncMessage message) async {
+    final Uint8List buffer = message.writeToBuffer();
+    _totalBytesSent += buffer.length;
+
+    await _router.broadcastMessage(GraphsyncProtocol.protocolID, buffer);
+  }
+
+  /// Converts a core [core.Block] to a Graphsync [Block] protobuf.
   Block _convertToGraphsyncBlock(core.Block bitswapBlock) {
     return Block(
       prefix: bitswapBlock.cid.toBytes().sublist(0, 1),

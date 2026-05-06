@@ -4,18 +4,19 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i9;
+import 'dart:convert' as _i14;
 import 'dart:typed_data' as _i12;
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart' as _i6;
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart' as _i2;
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart' as _i8;
-import 'package:dart_ipfs/src/network/router.dart' as _i3;
+import 'package:dart_ipfs/src/network/router.dart' as _i4;
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart'
     as _i10;
 import 'package:dart_ipfs/src/routing/content_routing.dart' as _i13;
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart' as _i5;
-import 'package:dart_ipfs/src/transport/router_interface.dart' as _i4;
-import 'package:dart_ipfs/src/utils/keystore.dart' as _i7;
+import 'package:dart_ipfs/src/transport/router_interface.dart' as _i3;
+import 'package:http/http.dart' as _i7;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i11;
 
@@ -39,14 +40,14 @@ class _FakeIPFSNode_0 extends _i1.SmartFake implements _i2.IPFSNode {
     : super(parent, parentInvocation);
 }
 
-class _FakeRouter_1 extends _i1.SmartFake implements _i3.Router {
-  _FakeRouter_1(Object parent, Invocation parentInvocation)
+class _FakeRouterInterface_1 extends _i1.SmartFake
+    implements _i3.RouterInterface {
+  _FakeRouterInterface_1(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeRouterInterface_2 extends _i1.SmartFake
-    implements _i4.RouterInterface {
-  _FakeRouterInterface_2(Object parent, Invocation parentInvocation)
+class _FakeRouter_2 extends _i1.SmartFake implements _i4.Router {
+  _FakeRouter_2(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
@@ -61,39 +62,14 @@ class _FakeIPFSConfig_4 extends _i1.SmartFake implements _i6.IPFSConfig {
     : super(parent, parentInvocation);
 }
 
-class _FakeNetworkConfig_5 extends _i1.SmartFake implements _i6.NetworkConfig {
-  _FakeNetworkConfig_5(Object parent, Invocation parentInvocation)
+class _FakeResponse_5 extends _i1.SmartFake implements _i7.Response {
+  _FakeResponse_5(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeDHTConfig_6 extends _i1.SmartFake implements _i6.DHTConfig {
-  _FakeDHTConfig_6(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
-class _FakeStorageConfig_7 extends _i1.SmartFake implements _i6.StorageConfig {
-  _FakeStorageConfig_7(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
-class _FakeSecurityConfig_8 extends _i1.SmartFake
-    implements _i6.SecurityConfig {
-  _FakeSecurityConfig_8(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
-class _FakeDuration_9 extends _i1.SmartFake implements Duration {
-  _FakeDuration_9(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
-class _FakeMetricsConfig_10 extends _i1.SmartFake implements _i6.MetricsConfig {
-  _FakeMetricsConfig_10(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
-class _FakeKeystore_11 extends _i1.SmartFake implements _i7.Keystore {
-  _FakeKeystore_11(Object parent, Invocation parentInvocation)
+class _FakeStreamedResponse_6 extends _i1.SmartFake
+    implements _i7.StreamedResponse {
+  _FakeStreamedResponse_6(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
@@ -101,50 +77,63 @@ class _FakeKeystore_11 extends _i1.SmartFake implements _i7.Keystore {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockNetworkHandler extends _i1.Mock implements _i8.NetworkHandler {
-  MockNetworkHandler() {
-    _i1.throwOnMissingStub(this);
-  }
-
   @override
   _i2.IPFSNode get ipfsNode =>
       (super.noSuchMethod(
             Invocation.getter(#ipfsNode),
             returnValue: _FakeIPFSNode_0(this, Invocation.getter(#ipfsNode)),
+            returnValueForMissingStub: _FakeIPFSNode_0(
+              this,
+              Invocation.getter(#ipfsNode),
+            ),
           )
           as _i2.IPFSNode);
+
+  @override
+  _i3.RouterInterface get router =>
+      (super.noSuchMethod(
+            Invocation.getter(#router),
+            returnValue: _FakeRouterInterface_1(
+              this,
+              Invocation.getter(#router),
+            ),
+            returnValueForMissingStub: _FakeRouterInterface_1(
+              this,
+              Invocation.getter(#router),
+            ),
+          )
+          as _i3.RouterInterface);
 
   @override
   _i9.Stream<_i10.NetworkEvent> get networkEvents =>
       (super.noSuchMethod(
             Invocation.getter(#networkEvents),
             returnValue: _i9.Stream<_i10.NetworkEvent>.empty(),
+            returnValueForMissingStub: _i9.Stream<_i10.NetworkEvent>.empty(),
           )
           as _i9.Stream<_i10.NetworkEvent>);
 
   @override
-  _i3.Router get router =>
+  _i4.Router get dhtRouter =>
       (super.noSuchMethod(
-            Invocation.getter(#router),
-            returnValue: _FakeRouter_1(this, Invocation.getter(#router)),
-          )
-          as _i3.Router);
-
-  @override
-  _i4.RouterInterface get p2pRouter =>
-      (super.noSuchMethod(
-            Invocation.getter(#p2pRouter),
-            returnValue: _FakeRouterInterface_2(
+            Invocation.getter(#dhtRouter),
+            returnValue: _FakeRouter_2(this, Invocation.getter(#dhtRouter)),
+            returnValueForMissingStub: _FakeRouter_2(
               this,
-              Invocation.getter(#p2pRouter),
+              Invocation.getter(#dhtRouter),
             ),
           )
-          as _i4.RouterInterface);
+          as _i4.Router);
 
   @override
   _i5.CircuitRelayClient get circuitRelayClient =>
       (super.noSuchMethod(
             Invocation.getter(#circuitRelayClient),
             returnValue: _FakeCircuitRelayClient_3(
+              this,
+              Invocation.getter(#circuitRelayClient),
+            ),
+            returnValueForMissingStub: _FakeCircuitRelayClient_3(
               this,
               Invocation.getter(#circuitRelayClient),
             ),
@@ -156,6 +145,10 @@ class MockNetworkHandler extends _i1.Mock implements _i8.NetworkHandler {
       (super.noSuchMethod(
             Invocation.getter(#config),
             returnValue: _FakeIPFSConfig_4(this, Invocation.getter(#config)),
+            returnValueForMissingStub: _FakeIPFSConfig_4(
+              this,
+              Invocation.getter(#config),
+            ),
           )
           as _i6.IPFSConfig);
 
@@ -164,6 +157,10 @@ class MockNetworkHandler extends _i1.Mock implements _i8.NetworkHandler {
       (super.noSuchMethod(
             Invocation.getter(#peerID),
             returnValue: _i11.dummyValue<String>(
+              this,
+              Invocation.getter(#peerID),
+            ),
+            returnValueForMissingStub: _i11.dummyValue<String>(
               this,
               Invocation.getter(#peerID),
             ),
@@ -217,6 +214,9 @@ class MockNetworkHandler extends _i1.Mock implements _i8.NetworkHandler {
       (super.noSuchMethod(
             Invocation.method(#listConnectedPeers, []),
             returnValue: _i9.Future<List<String>>.value(<String>[]),
+            returnValueForMissingStub: _i9.Future<List<String>>.value(
+              <String>[],
+            ),
           )
           as _i9.Future<List<String>>);
 
@@ -234,6 +234,7 @@ class MockNetworkHandler extends _i1.Mock implements _i8.NetworkHandler {
       (super.noSuchMethod(
             Invocation.method(#receiveMessages, [peerId]),
             returnValue: _i9.Stream<String>.empty(),
+            returnValueForMissingStub: _i9.Stream<String>.empty(),
           )
           as _i9.Stream<String>);
 
@@ -244,16 +245,17 @@ class MockNetworkHandler extends _i1.Mock implements _i8.NetworkHandler {
   );
 
   @override
-  _i9.Future<_i12.Uint8List> sendRequest(
+  _i9.Future<_i12.Uint8List?> sendRequest(
     String? peerId,
     String? protocolId,
     _i12.Uint8List? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#sendRequest, [peerId, protocolId, request]),
-            returnValue: _i9.Future<_i12.Uint8List>.value(_i12.Uint8List(0)),
+            returnValue: _i9.Future<_i12.Uint8List?>.value(),
+            returnValueForMissingStub: _i9.Future<_i12.Uint8List?>.value(),
           )
-          as _i9.Future<_i12.Uint8List>);
+          as _i9.Future<_i12.Uint8List?>);
 
   @override
   _i9.Future<void> initialize() =>
@@ -269,29 +271,16 @@ class MockNetworkHandler extends _i1.Mock implements _i8.NetworkHandler {
       (super.noSuchMethod(
             Invocation.method(#canConnectDirectly, [peerAddress]),
             returnValue: _i9.Future<bool>.value(false),
+            returnValueForMissingStub: _i9.Future<bool>.value(false),
           )
           as _i9.Future<bool>);
-
-  @override
-  _i9.Future<String> testConnection({required int? sourcePort}) =>
-      (super.noSuchMethod(
-            Invocation.method(#testConnection, [], {#sourcePort: sourcePort}),
-            returnValue: _i9.Future<String>.value(
-              _i11.dummyValue<String>(
-                this,
-                Invocation.method(#testConnection, [], {
-                  #sourcePort: sourcePort,
-                }),
-              ),
-            ),
-          )
-          as _i9.Future<String>);
 
   @override
   _i9.Future<bool> testDialback() =>
       (super.noSuchMethod(
             Invocation.method(#testDialback, []),
             returnValue: _i9.Future<bool>.value(false),
+            returnValueForMissingStub: _i9.Future<bool>.value(false),
           )
           as _i9.Future<bool>);
 }
@@ -300,10 +289,6 @@ class MockNetworkHandler extends _i1.Mock implements _i8.NetworkHandler {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockContentRouting extends _i1.Mock implements _i13.ContentRouting {
-  MockContentRouting() {
-    _i1.throwOnMissingStub(this);
-  }
-
   @override
   _i9.Future<void> start() =>
       (super.noSuchMethod(
@@ -327,294 +312,272 @@ class MockContentRouting extends _i1.Mock implements _i13.ContentRouting {
       (super.noSuchMethod(
             Invocation.method(#findProviders, [cid]),
             returnValue: _i9.Future<List<String>>.value(<String>[]),
+            returnValueForMissingStub: _i9.Future<List<String>>.value(
+              <String>[],
+            ),
           )
           as _i9.Future<List<String>>);
+
+  @override
+  _i9.Future<void> provide(String? cid) =>
+      (super.noSuchMethod(
+            Invocation.method(#provide, [cid]),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
+          )
+          as _i9.Future<void>);
 
   @override
   _i9.Future<String?> resolveDNSLink(String? domainName) =>
       (super.noSuchMethod(
             Invocation.method(#resolveDNSLink, [domainName]),
             returnValue: _i9.Future<String?>.value(),
+            returnValueForMissingStub: _i9.Future<String?>.value(),
           )
           as _i9.Future<String?>);
 }
 
-/// A class which mocks [IPFSConfig].
+/// A class which mocks [Client].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockIPFSConfig extends _i1.Mock implements _i6.IPFSConfig {
-  MockIPFSConfig() {
-    _i1.throwOnMissingStub(this);
-  }
-
+class MockClient extends _i1.Mock implements _i7.Client {
   @override
-  _i6.NetworkConfig get network =>
+  _i9.Future<_i7.Response> head(Uri? url, {Map<String, String>? headers}) =>
       (super.noSuchMethod(
-            Invocation.getter(#network),
-            returnValue: _FakeNetworkConfig_5(
-              this,
-              Invocation.getter(#network),
+            Invocation.method(#head, [url], {#headers: headers}),
+            returnValue: _i9.Future<_i7.Response>.value(
+              _FakeResponse_5(
+                this,
+                Invocation.method(#head, [url], {#headers: headers}),
+              ),
+            ),
+            returnValueForMissingStub: _i9.Future<_i7.Response>.value(
+              _FakeResponse_5(
+                this,
+                Invocation.method(#head, [url], {#headers: headers}),
+              ),
             ),
           )
-          as _i6.NetworkConfig);
+          as _i9.Future<_i7.Response>);
 
   @override
-  _i6.DHTConfig get dht =>
+  _i9.Future<_i7.Response> get(Uri? url, {Map<String, String>? headers}) =>
       (super.noSuchMethod(
-            Invocation.getter(#dht),
-            returnValue: _FakeDHTConfig_6(this, Invocation.getter(#dht)),
-          )
-          as _i6.DHTConfig);
-
-  @override
-  _i6.StorageConfig get storage =>
-      (super.noSuchMethod(
-            Invocation.getter(#storage),
-            returnValue: _FakeStorageConfig_7(
-              this,
-              Invocation.getter(#storage),
+            Invocation.method(#get, [url], {#headers: headers}),
+            returnValue: _i9.Future<_i7.Response>.value(
+              _FakeResponse_5(
+                this,
+                Invocation.method(#get, [url], {#headers: headers}),
+              ),
+            ),
+            returnValueForMissingStub: _i9.Future<_i7.Response>.value(
+              _FakeResponse_5(
+                this,
+                Invocation.method(#get, [url], {#headers: headers}),
+              ),
             ),
           )
-          as _i6.StorageConfig);
+          as _i9.Future<_i7.Response>);
 
   @override
-  _i6.SecurityConfig get security =>
+  _i9.Future<_i7.Response> post(
+    Uri? url, {
+    Map<String, String>? headers,
+    Object? body,
+    _i14.Encoding? encoding,
+  }) =>
       (super.noSuchMethod(
-            Invocation.getter(#security),
-            returnValue: _FakeSecurityConfig_8(
-              this,
-              Invocation.getter(#security),
+            Invocation.method(
+              #post,
+              [url],
+              {#headers: headers, #body: body, #encoding: encoding},
+            ),
+            returnValue: _i9.Future<_i7.Response>.value(
+              _FakeResponse_5(
+                this,
+                Invocation.method(
+                  #post,
+                  [url],
+                  {#headers: headers, #body: body, #encoding: encoding},
+                ),
+              ),
+            ),
+            returnValueForMissingStub: _i9.Future<_i7.Response>.value(
+              _FakeResponse_5(
+                this,
+                Invocation.method(
+                  #post,
+                  [url],
+                  {#headers: headers, #body: body, #encoding: encoding},
+                ),
+              ),
             ),
           )
-          as _i6.SecurityConfig);
+          as _i9.Future<_i7.Response>);
 
   @override
-  bool get debug =>
-      (super.noSuchMethod(Invocation.getter(#debug), returnValue: false)
-          as bool);
-
-  @override
-  bool get verboseLogging =>
+  _i9.Future<_i7.Response> put(
+    Uri? url, {
+    Map<String, String>? headers,
+    Object? body,
+    _i14.Encoding? encoding,
+  }) =>
       (super.noSuchMethod(
-            Invocation.getter(#verboseLogging),
-            returnValue: false,
-          )
-          as bool);
-
-  @override
-  bool get enablePubSub =>
-      (super.noSuchMethod(Invocation.getter(#enablePubSub), returnValue: false)
-          as bool);
-
-  @override
-  bool get enableDHT =>
-      (super.noSuchMethod(Invocation.getter(#enableDHT), returnValue: false)
-          as bool);
-
-  @override
-  bool get enableCircuitRelay =>
-      (super.noSuchMethod(
-            Invocation.getter(#enableCircuitRelay),
-            returnValue: false,
-          )
-          as bool);
-
-  @override
-  bool get enableContentRouting =>
-      (super.noSuchMethod(
-            Invocation.getter(#enableContentRouting),
-            returnValue: false,
-          )
-          as bool);
-
-  @override
-  bool get enableDNSLinkResolution =>
-      (super.noSuchMethod(
-            Invocation.getter(#enableDNSLinkResolution),
-            returnValue: false,
-          )
-          as bool);
-
-  @override
-  bool get enableIPLD =>
-      (super.noSuchMethod(Invocation.getter(#enableIPLD), returnValue: false)
-          as bool);
-
-  @override
-  bool get enableGraphsync =>
-      (super.noSuchMethod(
-            Invocation.getter(#enableGraphsync),
-            returnValue: false,
-          )
-          as bool);
-
-  @override
-  bool get enableMetrics =>
-      (super.noSuchMethod(Invocation.getter(#enableMetrics), returnValue: false)
-          as bool);
-
-  @override
-  bool get enableLogging =>
-      (super.noSuchMethod(Invocation.getter(#enableLogging), returnValue: false)
-          as bool);
-
-  @override
-  String get logLevel =>
-      (super.noSuchMethod(
-            Invocation.getter(#logLevel),
-            returnValue: _i11.dummyValue<String>(
-              this,
-              Invocation.getter(#logLevel),
+            Invocation.method(
+              #put,
+              [url],
+              {#headers: headers, #body: body, #encoding: encoding},
+            ),
+            returnValue: _i9.Future<_i7.Response>.value(
+              _FakeResponse_5(
+                this,
+                Invocation.method(
+                  #put,
+                  [url],
+                  {#headers: headers, #body: body, #encoding: encoding},
+                ),
+              ),
+            ),
+            returnValueForMissingStub: _i9.Future<_i7.Response>.value(
+              _FakeResponse_5(
+                this,
+                Invocation.method(
+                  #put,
+                  [url],
+                  {#headers: headers, #body: body, #encoding: encoding},
+                ),
+              ),
             ),
           )
-          as String);
+          as _i9.Future<_i7.Response>);
 
   @override
-  bool get enableQuotaManagement =>
+  _i9.Future<_i7.Response> patch(
+    Uri? url, {
+    Map<String, String>? headers,
+    Object? body,
+    _i14.Encoding? encoding,
+  }) =>
       (super.noSuchMethod(
-            Invocation.getter(#enableQuotaManagement),
-            returnValue: false,
-          )
-          as bool);
-
-  @override
-  int get defaultBandwidthQuota =>
-      (super.noSuchMethod(
-            Invocation.getter(#defaultBandwidthQuota),
-            returnValue: 0,
-          )
-          as int);
-
-  @override
-  String get datastorePath =>
-      (super.noSuchMethod(
-            Invocation.getter(#datastorePath),
-            returnValue: _i11.dummyValue<String>(
-              this,
-              Invocation.getter(#datastorePath),
+            Invocation.method(
+              #patch,
+              [url],
+              {#headers: headers, #body: body, #encoding: encoding},
+            ),
+            returnValue: _i9.Future<_i7.Response>.value(
+              _FakeResponse_5(
+                this,
+                Invocation.method(
+                  #patch,
+                  [url],
+                  {#headers: headers, #body: body, #encoding: encoding},
+                ),
+              ),
+            ),
+            returnValueForMissingStub: _i9.Future<_i7.Response>.value(
+              _FakeResponse_5(
+                this,
+                Invocation.method(
+                  #patch,
+                  [url],
+                  {#headers: headers, #body: body, #encoding: encoding},
+                ),
+              ),
             ),
           )
-          as String);
+          as _i9.Future<_i7.Response>);
 
   @override
-  String get keystorePath =>
+  _i9.Future<_i7.Response> delete(
+    Uri? url, {
+    Map<String, String>? headers,
+    Object? body,
+    _i14.Encoding? encoding,
+  }) =>
       (super.noSuchMethod(
-            Invocation.getter(#keystorePath),
-            returnValue: _i11.dummyValue<String>(
-              this,
-              Invocation.getter(#keystorePath),
+            Invocation.method(
+              #delete,
+              [url],
+              {#headers: headers, #body: body, #encoding: encoding},
+            ),
+            returnValue: _i9.Future<_i7.Response>.value(
+              _FakeResponse_5(
+                this,
+                Invocation.method(
+                  #delete,
+                  [url],
+                  {#headers: headers, #body: body, #encoding: encoding},
+                ),
+              ),
+            ),
+            returnValueForMissingStub: _i9.Future<_i7.Response>.value(
+              _FakeResponse_5(
+                this,
+                Invocation.method(
+                  #delete,
+                  [url],
+                  {#headers: headers, #body: body, #encoding: encoding},
+                ),
+              ),
             ),
           )
-          as String);
+          as _i9.Future<_i7.Response>);
 
   @override
-  String get blockStorePath =>
+  _i9.Future<String> read(Uri? url, {Map<String, String>? headers}) =>
       (super.noSuchMethod(
-            Invocation.getter(#blockStorePath),
-            returnValue: _i11.dummyValue<String>(
-              this,
-              Invocation.getter(#blockStorePath),
+            Invocation.method(#read, [url], {#headers: headers}),
+            returnValue: _i9.Future<String>.value(
+              _i11.dummyValue<String>(
+                this,
+                Invocation.method(#read, [url], {#headers: headers}),
+              ),
+            ),
+            returnValueForMissingStub: _i9.Future<String>.value(
+              _i11.dummyValue<String>(
+                this,
+                Invocation.method(#read, [url], {#headers: headers}),
+              ),
             ),
           )
-          as String);
+          as _i9.Future<String>);
 
   @override
-  bool get enableLibp2pBridge =>
+  _i9.Future<_i12.Uint8List> readBytes(
+    Uri? url, {
+    Map<String, String>? headers,
+  }) =>
       (super.noSuchMethod(
-            Invocation.getter(#enableLibp2pBridge),
-            returnValue: false,
-          )
-          as bool);
-
-  @override
-  String get libp2pListenAddress =>
-      (super.noSuchMethod(
-            Invocation.getter(#libp2pListenAddress),
-            returnValue: _i11.dummyValue<String>(
-              this,
-              Invocation.getter(#libp2pListenAddress),
+            Invocation.method(#readBytes, [url], {#headers: headers}),
+            returnValue: _i9.Future<_i12.Uint8List>.value(_i12.Uint8List(0)),
+            returnValueForMissingStub: _i9.Future<_i12.Uint8List>.value(
+              _i12.Uint8List(0),
             ),
           )
-          as String);
+          as _i9.Future<_i12.Uint8List>);
 
   @override
-  String get nodeId =>
+  _i9.Future<_i7.StreamedResponse> send(_i7.BaseRequest? request) =>
       (super.noSuchMethod(
-            Invocation.getter(#nodeId),
-            returnValue: _i11.dummyValue<String>(
-              this,
-              Invocation.getter(#nodeId),
+            Invocation.method(#send, [request]),
+            returnValue: _i9.Future<_i7.StreamedResponse>.value(
+              _FakeStreamedResponse_6(
+                this,
+                Invocation.method(#send, [request]),
+              ),
+            ),
+            returnValueForMissingStub: _i9.Future<_i7.StreamedResponse>.value(
+              _FakeStreamedResponse_6(
+                this,
+                Invocation.method(#send, [request]),
+              ),
             ),
           )
-          as String);
+          as _i9.Future<_i7.StreamedResponse>);
 
   @override
-  Duration get garbageCollectionInterval =>
-      (super.noSuchMethod(
-            Invocation.getter(#garbageCollectionInterval),
-            returnValue: _FakeDuration_9(
-              this,
-              Invocation.getter(#garbageCollectionInterval),
-            ),
-          )
-          as Duration);
-
-  @override
-  bool get garbageCollectionEnabled =>
-      (super.noSuchMethod(
-            Invocation.getter(#garbageCollectionEnabled),
-            returnValue: false,
-          )
-          as bool);
-
-  @override
-  _i6.MetricsConfig get metrics =>
-      (super.noSuchMethod(
-            Invocation.getter(#metrics),
-            returnValue: _FakeMetricsConfig_10(
-              this,
-              Invocation.getter(#metrics),
-            ),
-          )
-          as _i6.MetricsConfig);
-
-  @override
-  String get dataPath =>
-      (super.noSuchMethod(
-            Invocation.getter(#dataPath),
-            returnValue: _i11.dummyValue<String>(
-              this,
-              Invocation.getter(#dataPath),
-            ),
-          )
-          as String);
-
-  @override
-  _i7.Keystore get keystore =>
-      (super.noSuchMethod(
-            Invocation.getter(#keystore),
-            returnValue: _FakeKeystore_11(this, Invocation.getter(#keystore)),
-          )
-          as _i7.Keystore);
-
-  @override
-  bool get offline =>
-      (super.noSuchMethod(Invocation.getter(#offline), returnValue: false)
-          as bool);
-
-  @override
-  Map<String, dynamic> get customConfig =>
-      (super.noSuchMethod(
-            Invocation.getter(#customConfig),
-            returnValue: <String, dynamic>{},
-          )
-          as Map<String, dynamic>);
-
-  @override
-  Map<String, dynamic> toJson() =>
-      (super.noSuchMethod(
-            Invocation.method(#toJson, []),
-            returnValue: <String, dynamic>{},
-          )
-          as Map<String, dynamic>);
+  void close() => super.noSuchMethod(
+    Invocation.method(#close, []),
+    returnValueForMissingStub: null,
+  );
 }

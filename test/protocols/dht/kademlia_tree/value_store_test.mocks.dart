@@ -363,8 +363,11 @@ class MockKademliaRoutingTable extends _i1.Mock
   );
 
   @override
-  int distance(_i4.PeerId? a, _i4.PeerId? b) =>
-      (super.noSuchMethod(Invocation.method(#distance, [a, b]), returnValue: 0)
+  int calculateDistance(_i4.PeerId? a, _i4.PeerId? b) =>
+      (super.noSuchMethod(
+            Invocation.method(#calculateDistance, [a, b]),
+            returnValue: 0,
+          )
           as int);
 
   @override
@@ -430,6 +433,11 @@ class MockKademliaRoutingTable extends _i1.Mock
     Invocation.method(#updateKeyProviderTimestamp, [key, provider, timestamp]),
     returnValueForMissingStub: null,
   );
+
+  @override
+  int distance(_i4.PeerId? a, _i4.PeerId? b) =>
+      (super.noSuchMethod(Invocation.method(#distance, [a, b]), returnValue: 0)
+          as int);
 
   @override
   _i8.Future<bool> pingPeer(_i4.PeerId? peerId) =>

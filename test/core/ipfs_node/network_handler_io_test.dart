@@ -1,145 +1,176 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/transport/router_events.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-// Mock Router
-class MockRouter implements RouterInterface {
-  final StreamController<ConnectionEvent> _connectionEvents =
-      StreamController<ConnectionEvent>.broadcast();
-  final StreamController<MessageEvent> _messageEvents =
-      StreamController<MessageEvent>.broadcast();
+import 'network_handler_io_test.mocks.dart';
 
-  bool isStarted = false;
-  Map<String, Uint8List> sentMessages = {};
-
-  @override
-  Stream<ConnectionEvent> get connectionEvents => _connectionEvents.stream;
-  @override
-  Stream<MessageEvent> get messageEvents => _messageEvents.stream;
-
-  @override
-  Future<void> start() async {
-    isStarted = true;
-  }
-
-  @override
-  Future<void> stop() async {
-    isStarted = false;
-    await _connectionEvents.close();
-    await _messageEvents.close();
-  }
-
-  @override
-  Future<void> initialize() async {}
-
-  @override
-  Future<void> connect(String multiaddress) async {}
-
-  @override
-  Future<void> disconnect(String peerIdOrMultiaddress) async {}
-
-  @override
-  List<String> listConnectedPeers() => ['peer1', 'peer2'];
-
-  @override
-  Future<void> sendMessage(
-    String peerId,
-    Uint8List message, {
-    String? protocolId,
-  }) async {
-    sentMessages[peerId] = message;
-  }
-
-  @override
-  Future<Uint8List?> sendRequest(
-    String peerId,
-    String protocolId,
-    Uint8List request,
-  ) async {
-    return Uint8List.fromList(utf8.encode('response'));
-  }
-
-  @override
-  void registerProtocolHandler(
-    String protocolId,
-    void Function(NetworkPacket) handler,
-  ) {}
-
-  // Stub other methods as they are required by interface
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class MockIPFSNode extends IPFSNode {
-  MockIPFSNode() : super.fromContainer(ServiceContainer());
-  // Helper to allow generic mocking if needed
-}
-
+@GenerateMocks([RouterInterface, IPFSNode])
 void main() {
   group('NetworkHandler', () {
+    late NetworkHandler handler;
+    late MockRouterInterface mockRouter;
+    late MockIPFSNode mockIPFSNode;
     late IPFSConfig config;
-    late MockRouter mockRouter;
-    late NetworkHandler networkHandler;
+    late StreamController<ConnectionEvent> connectionEventsController;
+    late StreamController<MessageEvent> messageEventsController;
 
-    setUp(() {
-      // Use modifiable list for bootstrap peers
-      final networkConfig = NetworkConfig(
-        bootstrapPeers: List.of([], growable: true),
-        enableMDNS: false,
-      );
-      config = IPFSConfig(offline: false, network: networkConfig);
-      mockRouter = MockRouter();
-      networkHandler = NetworkHandler(config, router: mockRouter);
-      // We need to inject ipfsNode if we want full event handling
-      // networkHandler.setIpfsNode(MockIPFSNode());
+    setUp(() async {
+      mockRouter = MockRouterInterface();
+      mockIPFSNode = MockIPFSNode();
+      config = IPFSConfig(network: NetworkConfig(bootstrapPeers: []));
+
+      connectionEventsController =
+          StreamController<ConnectionEvent>.broadcast();
+      messageEventsController = StreamController<MessageEvent>.broadcast();
+
+      when(
+        mockRouter.connectionEvents,
+      ).thenAnswer((_) => connectionEventsController.stream);
+      when(
+        mockRouter.messageEvents,
+      ).thenAnswer((_) => messageEventsController.stream);
+      when(mockRouter.peerID).thenReturn('local-peer-id');
+      when(mockRouter.hasStarted).thenReturn(true);
+      when(mockRouter.listeningAddresses).thenReturn([]);
+      when(mockRouter.initialize()).thenAnswer((_) async {});
+
+      handler = NetworkHandler(config, router: mockRouter);
+      handler.setIpfsNode(mockIPFSNode);
+      await handler.initialize();
     });
 
-    test('initialization and start', () async {
-      await networkHandler.initialize();
-      await networkHandler.start();
-      expect(mockRouter.isStarted, isTrue);
-      await networkHandler.stop();
-      expect(mockRouter.isStarted, isFalse);
+    tearDown(() {
+      connectionEventsController.close();
+      messageEventsController.close();
     });
 
-    test('listConnectedPeers delegation', () async {
-      final peers = await networkHandler.listConnectedPeers();
+    test('start and stop', () async {
+      when(mockRouter.start()).thenAnswer((_) async {});
+      when(mockRouter.stop()).thenAnswer((_) async {});
+
+      await handler.start();
+      // Called once by handler and once by circuitRelayClient
+      verify(mockRouter.start()).called(1);
+      verify(mockRouter.registerProtocolHandler(any, any)).called(2);
+
+      await handler.stop();
+      verify(mockRouter.stop()).called(1);
+    });
+
+    test('connectToPeer and disconnectFromPeer', () async {
+      await handler.connectToPeer('addr');
+      verify(mockRouter.connect('addr')).called(1);
+
+      await handler.disconnectFromPeer('addr');
+      verify(mockRouter.disconnect('addr')).called(1);
+    });
+
+    test('listConnectedPeers', () async {
+      when(mockRouter.listConnectedPeers()).thenReturn(['peer1', 'peer2']);
+      final peers = await handler.listConnectedPeers();
       expect(peers, equals(['peer1', 'peer2']));
     });
 
-    test('sendMessage encoding', () async {
-      await networkHandler.sendMessage('peer1', 'hello');
-      final sent = mockRouter.sentMessages['peer1'];
-      expect(utf8.decode(sent!), 'hello');
+    test('sendMessage', () async {
+      await handler.sendMessage('peer1', 'hello');
+      verify(mockRouter.sendMessage('peer1', any)).called(1);
     });
 
-    test('connectToPeer and disconnectFromPeer do not throw', () async {
-      // These are void methods that delegate to router
-      await networkHandler.connectToPeer('/ip4/127.0.0.1/tcp/4001');
-      await networkHandler.disconnectFromPeer('peer1');
+    test('receiveMessages', () {
+      final messageStream = StreamController<Uint8List>();
+      when(
+        mockRouter.receiveMessages('peer1'),
+      ).thenAnswer((_) => messageStream.stream);
+
+      final stream = handler.receiveMessages('peer1');
+      expectLater(stream, emitsInOrder(['hello', 'world']));
+
+      messageStream.add(Uint8List.fromList('hello'.codeUnits));
+      messageStream.add(Uint8List.fromList('world'.codeUnits));
+      messageStream.close();
     });
 
-    test('canConnectDirectly returns true on success', () async {
-      final result = await networkHandler.canConnectDirectly(
-        '/ip4/127.0.0.1/tcp/4001',
+    test('handle connection event: connected', () async {
+      final event = ConnectionEvent(
+        type: ConnectionEventType.connected,
+        peerId: 'peer1',
       );
-      expect(result, isTrue);
+
+      // Trigger the internal listener by adding to the controller
+      connectionEventsController.add(event);
+
+      // Verify networkEvents stream
+      final networkEvent = await handler.networkEvents.first;
+      expect(networkEvent.hasPeerConnected(), isTrue);
+      expect(networkEvent.peerConnected.peerId, equals('peer1'));
     });
 
-    test('testDialback usage', () async {
-      // Bootstrap peers are needed for dialback
-      config.network.bootstrapPeers.add('/ip4/127.0.0.1/tcp/4001/p2p/QmBoot');
-      final result = await networkHandler.testDialback();
-      // Our mock returns 'response' which is not null/empty, so should be true
-      expect(result, isTrue);
+    test('handle connection event: disconnected', () async {
+      final event = ConnectionEvent(
+        type: ConnectionEventType.disconnected,
+        peerId: 'peer1',
+      );
+
+      connectionEventsController.add(event);
+
+      final networkEvent = await handler.networkEvents.first;
+      expect(networkEvent.hasPeerDisconnected(), isTrue);
+      expect(networkEvent.peerDisconnected.peerId, equals('peer1'));
+    });
+
+    test('handle message event', () async {
+      final event = MessageEvent(
+        peerId: 'peer1',
+        message: Uint8List.fromList('hello'.codeUnits),
+      );
+
+      messageEventsController.add(event);
+
+      final networkEvent = await handler.networkEvents.first;
+      expect(networkEvent.hasMessageReceived(), isTrue);
+      expect(networkEvent.messageReceived.peerId, equals('peer1'));
+      expect(
+        Uint8List.fromList(networkEvent.messageReceived.messageContent),
+        equals(Uint8List.fromList('hello'.codeUnits)),
+      );
+    });
+
+    test('sendRequest', () async {
+      when(
+        mockRouter.sendRequest(any, any, any),
+      ).thenAnswer((_) async => Uint8List.fromList('response'.codeUnits));
+
+      final response = await handler.sendRequest(
+        'peer1',
+        '/proto',
+        Uint8List(0),
+      );
+      expect(response, equals(Uint8List.fromList('response'.codeUnits)));
+      verify(mockRouter.sendRequest('peer1', '/proto', any)).called(1);
+    });
+
+    test('canConnectDirectly', () async {
+      when(mockRouter.connect(any)).thenAnswer((_) async {});
+      when(mockRouter.disconnect(any)).thenAnswer((_) async {});
+
+      final can = await handler.canConnectDirectly('addr');
+      expect(can, isTrue);
+      verify(mockRouter.connect('addr')).called(1);
+      verify(mockRouter.disconnect('addr')).called(1);
+    });
+
+    test('testDialback returns false when no bootstrap peers', () async {
+      config.network.bootstrapPeers.clear();
+      final result = await handler.testDialback();
+      expect(result, isFalse);
     });
   });
 }

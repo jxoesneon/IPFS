@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.9.6] - 2026-05-04
+
+### Added
+- **Test Coverage**: Increased test coverage for `BootstrapHandler` (>90%) and `IPFSUtils` (100%).
+- **Testing Infrastructure**: Integrated `fake_async` for reliable timer-based testing.
+- **Improved Utilities**: Added comprehensive unit tests for CID validation, PeerID validation, and Base64 operations.
+
+## [2.0.0-dev.1] - 2026-04-30
+
+### Changed
+
+- **Architecture**: Dismantled `IPFSNode` "God Object" into specialized managers: `ContentManager`, `NetworkManager`, and `ProtocolManager`. This improves maintainability and follows the Single Responsibility Principle.
+- **IPLD**: Refactored `IPLDHandler` using a Strategy pattern for codecs. Extracted `RawCodec`, `DagPbCodec`, `DagCborCodec`, `DagJsonCodec`, `DagJoseCodec`, and `CarCodec` into discrete classes.
+- **Code Quality**: Hardened `analysis_options.yaml` by elevating `public_member_api_docs` to `warning` and resolving over 30 static analysis issues. Standardized documentation across the core library.
+- **Dependency Injection**: Centralized service management using `ServiceContainer` within the new manager classes.
+
 ## [1.9.4] - 2026-02-03
 
 - **Dependencies**: Upgraded `flutter_lints`, `lints`, and `very_good_analysis` to latest major versions.

@@ -31,10 +31,12 @@ class Ed25519Signer {
   ///
   /// Optionally accepts a 32-byte [seed] for deterministic key generation.
   /// If no seed is provided, a cryptographically secure random seed is used.
+  ///
+  /// Throws [ArgumentError] if [seed] is not 32 bytes.
   Future<SimpleKeyPair> generateKeyPair({Uint8List? seed}) async {
     if (seed != null) {
       if (seed.length != 32) {
-        throw ArgumentError('Seed must be 32 bytes');
+        throw ArgumentError('Seed must be exactly 32 bytes for Ed25519');
       }
       return await _algorithm.newKeyPairFromSeed(seed);
     }
@@ -44,14 +46,19 @@ class Ed25519Signer {
   /// Creates a key pair from a 32-byte seed.
   ///
   /// Useful for deterministic key recovery from encrypted storage.
+  ///
+  /// Throws [ArgumentError] if [seed] is not 32 bytes.
   Future<SimpleKeyPair> keyPairFromSeed(Uint8List seed) async {
     if (seed.length != 32) {
-      throw ArgumentError('Seed must be 32 bytes');
+      throw ArgumentError('Seed must be exactly 32 bytes for Ed25519');
     }
     return await _algorithm.newKeyPairFromSeed(seed);
   }
 
   /// Signs data using an Ed25519 private key.
+  ///
+  /// [data] - The message to sign.
+  /// [keyPair] - The key pair containing the private key.
   ///
   /// Returns a 64-byte Ed25519 signature.
   Future<Uint8List> sign(Uint8List data, SimpleKeyPair keyPair) async {
@@ -61,12 +68,19 @@ class Ed25519Signer {
 
   /// Verifies an Ed25519 signature.
   ///
+  /// [data] - The signed message.
+  /// [signatureBytes] - The 64-byte signature to verify.
+  /// [publicKey] - The public key corresponding to the signer.
+  ///
   /// Returns `true` if the signature is valid for the given data and public key.
   Future<bool> verify(
     Uint8List data,
     Uint8List signatureBytes,
     SimplePublicKey publicKey,
   ) async {
+    if (signatureBytes.length != 64) {
+      return false;
+    }
     try {
       final signature = Signature(signatureBytes, publicKey: publicKey);
       return await _algorithm.verify(data, signature: signature);
@@ -82,6 +96,8 @@ class Ed25519Signer {
   }
 
   /// Extracts the public key bytes from a key pair.
+  ///
+  /// Returns 32 bytes.
   Future<Uint8List> extractPublicKeyBytes(SimpleKeyPair keyPair) async {
     final publicKey = await keyPair.extractPublicKey();
     return Uint8List.fromList(publicKey.bytes);
@@ -98,9 +114,13 @@ class Ed25519Signer {
   }
 
   /// Creates a public key from raw bytes.
+  ///
+  /// [bytes] - 32-byte public key.
+  ///
+  /// Throws [ArgumentError] if [bytes] is not 32 bytes.
   SimplePublicKey publicKeyFromBytes(Uint8List bytes) {
     if (bytes.length != 32) {
-      throw ArgumentError('Public key must be 32 bytes');
+      throw ArgumentError('Public key must be exactly 32 bytes for Ed25519');
     }
     return SimplePublicKey(bytes, type: KeyPairType.ed25519);
   }

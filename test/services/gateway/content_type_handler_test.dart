@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -23,6 +24,22 @@ void main() {
         final jpegData = Uint8List.fromList([0xFF, 0xD8, 0xFF, 0x00]);
         final jpegBlock = await Block.fromData(jpegData);
         expect(handler.detectContentType(jpegBlock), 'image/jpeg');
+
+        final gifData = Uint8List.fromList([0x47, 0x49, 0x46, 0x38]);
+        final gifBlock = await Block.fromData(gifData);
+        expect(handler.detectContentType(gifBlock), 'image/gif');
+
+        final pdfData = Uint8List.fromList([0x25, 0x50, 0x44, 0x46]);
+        final pdfBlock = await Block.fromData(pdfData);
+        expect(handler.detectContentType(pdfBlock), 'application/pdf');
+      });
+
+      test('detectContentType detects directory', () async {
+        final data = Uint8List.fromList([0x08, 0x01]);
+        // Use a real CID with dag-pb codec
+        final cid = CID.computeForDataSync(data, codec: 'dag-pb');
+        final block = Block(cid: cid, data: data);
+        expect(handler.detectContentType(block), 'text/html');
       });
 
       test('detectContentType falls back to octet-stream', () async {
@@ -33,7 +50,7 @@ void main() {
 
       test('detectContentType detects text', () async {
         final textData = utf8.encode(
-          'Hello world, this is just plain text content.',
+          'Hello world, this is just plain text content. It needs to be long enough to pass the 80% threshold.',
         );
         final block = await Block.fromData(Uint8List.fromList(textData));
         expect(handler.detectContentType(block), 'text/plain');
@@ -45,6 +62,14 @@ void main() {
         expect(
           handler.detectContentType(block, filename: 'test.html'),
           'text/html',
+        );
+        expect(
+          handler.detectContentType(block, filename: 'test.md'),
+          'text/markdown',
+        );
+        expect(
+          handler.detectContentType(block, filename: 'test.car'),
+          'application/vnd.ipfs.car',
         );
       });
     });
@@ -83,6 +108,46 @@ void main() {
 
         final processed = handler.processContent(block, 'application/unknown');
         expect(processed, equals(data));
+      });
+
+      test('cacheContentType stores in memory', () async {
+        await handler.cacheContentType('QmCid', 'text/plain');
+        // No public getter, but we verify it doesn't crash
+      });
+    });
+
+    group('Path Extraction', () {
+      test('extractPathFromRequest handles ipfs prefix', () {
+        runZoned(
+          () {
+            // Internal call to _extractPathFromRequest via _generateDirectoryListing
+            // But _generateDirectoryListing is private.
+            // We can't test it directly easily without making it public or testing the caller.
+            // Let's see if we can trigger it via processContent
+
+            final data = Uint8List.fromList([0x08, 0x01]);
+            final cid = CID.computeForDataSync(data, codec: 'dag-pb');
+            final block = Block(cid: cid, data: data);
+
+            // This will trigger _generateDirectoryListing which calls _extractPathFromRequest
+            final result = handler.processContent(block, 'text/html');
+            expect(result, isNotNull);
+          },
+          zoneValues: {
+            #requestContext: {
+              'uri': Uri.parse('http://localhost/ipfs/QmSomeCid/some/path'),
+            },
+          },
+        );
+      });
+
+      test('extractPathFromRequest handles null context', () {
+        final data = Uint8List.fromList([0x08, 0x01]);
+        final cid = CID.computeForDataSync(data, codec: 'dag-pb');
+        final block = Block(cid: cid, data: data);
+
+        final result = handler.processContent(block, 'text/html');
+        expect(result, isNotNull);
       });
     });
   });

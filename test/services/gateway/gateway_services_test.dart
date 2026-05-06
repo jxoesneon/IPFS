@@ -90,6 +90,9 @@ class MockBlockStore implements BlockStore {
     }
     return blockstore_pb.RemoveBlockResponse()..success = false;
   }
+
+  @override
+  Future<int> gc() async => 0;
 }
 
 class MockFilePreviewHandler implements FilePreviewHandler {

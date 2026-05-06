@@ -102,3 +102,48 @@ class FindValueMessage extends KademliaMessage {
       ..key = key;
   }
 }
+
+/// ADD_PROVIDER message for announcing content availability.
+class AddProviderMessage extends KademliaMessage {
+  /// Creates an add provider message for [key].
+  AddProviderMessage(
+    super.messageId,
+    super.sender,
+    PeerId super.recipient,
+    this.key,
+  );
+
+  /// The content key.
+  final Uint8List key;
+
+  @override
+  kad.Message toDHTMessage() {
+    return kad.Message()
+      ..type = kad.Message_MessageType.ADD_PROVIDER
+      ..key = key
+      ..providerPeers.add(
+        kad.Peer()..id = sender.value,
+      );
+  }
+}
+
+/// GET_PROVIDERS message for finding content providers.
+class GetProvidersMessage extends KademliaMessage {
+  /// Creates a get providers message for [key].
+  GetProvidersMessage(
+    super.messageId,
+    super.sender,
+    PeerId super.recipient,
+    this.key,
+  );
+
+  /// The content key.
+  final Uint8List key;
+
+  @override
+  kad.Message toDHTMessage() {
+    return kad.Message()
+      ..type = kad.Message_MessageType.GET_PROVIDERS
+      ..key = key;
+  }
+}

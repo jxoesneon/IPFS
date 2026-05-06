@@ -17,20 +17,23 @@ void main() {
     test('calculateDistance returns correct XOR distance', () {
       final p1 = PeerId(value: Uint8List.fromList([0, 0, 1]));
       final p2 = PeerId(value: Uint8List.fromList([0, 0, 2]));
-      // [1] ^ [2] = 3
-      expect(calculateDistance(p1, p2), 3);
+      // [1] ^ [2] = 3. bitLength(3) = 2
+      expect(calculateDistance(p1, p2), 2);
 
       final p3 = PeerId(value: Uint8List.fromList([1, 0, 0]));
       final p4 = PeerId(value: Uint8List.fromList([2, 0, 0]));
-      // [1]^ [2] = 3. shifted by 16 bits = 3 * 256^2 = 196608
-      expect(calculateDistance(p3, p4), 196608);
+      // [1]^ [2] = 3. shifted by 16 bits. Total bit length = 16 + bitLength(3) = 18
+      expect(calculateDistance(p3, p4), 18);
     });
 
     test('getBucketIndex returns correct index', () {
       expect(getBucketIndex(0), 0);
-      expect(getBucketIndex(1), 255); // bitLength 1 -> 255 - (1-1) = 255
-      expect(getBucketIndex(2), 254); // bitLength 2 -> 255 - (2-1) = 254
-      expect(getBucketIndex(4), 253); // bitLength 3 -> 255 - (3-1) = 253
+      // distance 1 (bitLength 1) -> (1 - 1) = 0
+      expect(getBucketIndex(1), 0);
+      // distance 2 (bitLength 2) -> (2 - 1) = 1
+      expect(getBucketIndex(2), 1);
+      // distance 18 (bitLength 18) -> (18 - 1) = 17
+      expect(getBucketIndex(18), 17);
     });
 
     test('findClosestNode finds the best node in subtree', () {

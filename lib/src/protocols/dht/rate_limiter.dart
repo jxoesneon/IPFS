@@ -19,7 +19,9 @@ class RateLimiter {
   DateTime _windowStart = DateTime.now();
   final _queue = <Completer<void>>[];
 
-  /// Acquires a permit, blocking if rate limit is exceeded.
+  /// Acquires a permit, blocking if the rate limit is exceeded.
+  ///
+  /// This method returns a [Future] that completes when a permit is available.
   Future<void> acquire() async {
     final now = DateTime.now();
     if (now.difference(_windowStart) >= interval) {
@@ -45,6 +47,8 @@ class RateLimiter {
   }
 
   /// Releases a permit, allowing queued operations to proceed.
+  ///
+  /// If there are queued operations, the next one in line will be completed.
   void release() {
     if (_currentOperations > 0) {
       _currentOperations--;
@@ -57,7 +61,7 @@ class RateLimiter {
     }
   }
 
-  /// Creates a RateLimiter from configuration.
+  /// Creates a [RateLimiter] from a [RateLimitConfig].
   static RateLimiter fromConfig(RateLimitConfig config) {
     return RateLimiter(
       maxOperations: config.maxRequestsPerWindow,

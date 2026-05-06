@@ -19,7 +19,7 @@ export 'router_events.dart'
 /// are compatible with any underlying transport implementation.
 ///
 /// Implementations:
-/// - [Libp2pRouter]: Uses dart_libp2p for standard IPFS networking
+/// - `Libp2pRouter`: Uses dart_libp2p for standard IPFS networking
 abstract class RouterInterface {
   /// The local peer ID string of this node.
   String get peerID;
@@ -56,6 +56,8 @@ abstract class RouterInterface {
   Future<void> connect(String multiaddress);
 
   /// Disconnects from a peer.
+  ///
+  /// [peerIdOrMultiaddress] - The peer ID or multiaddress to disconnect from.
   Future<void> disconnect(String peerIdOrMultiaddress);
 
   /// Returns list of addresses the router is listening on.
@@ -65,6 +67,8 @@ abstract class RouterInterface {
   List<String> listConnectedPeers();
 
   /// Checks if a peer is currently connected.
+  ///
+  /// [peerIdStr] - The peer ID to check.
   bool isConnectedPeer(String peerIdStr);
 
   /// Sends a message to a specific peer.
@@ -80,6 +84,10 @@ abstract class RouterInterface {
 
   /// Sends a request and waits for a response.
   ///
+  /// [peerId] - The target peer's ID.
+  /// [protocolId] - The protocol identifier.
+  /// [request] - The raw request bytes.
+  ///
   /// Returns the response bytes, or null on timeout/failure.
   Future<Uint8List?> sendRequest(
     String peerId,
@@ -89,10 +97,15 @@ abstract class RouterInterface {
 
   /// Receives messages from a specific peer.
   ///
+  /// [peerId] - The peer ID to receive messages from.
+  ///
   /// Returns a stream of message bytes from the specified peer.
   Stream<Uint8List> receiveMessages(String peerId);
 
   /// Registers a handler for a specific protocol.
+  ///
+  /// [protocolId] - The protocol identifier.
+  /// [handler] - The callback function to handle incoming packets.
   ///
   /// When a message with [protocolId] is received, [handler] is called.
   void registerProtocolHandler(
@@ -101,30 +114,52 @@ abstract class RouterInterface {
   );
 
   /// Removes the handler for a specific protocol.
+  ///
+  /// [protocolId] - The protocol identifier to remove the handler for.
   void removeMessageHandler(String protocolId);
 
   /// Registers a protocol without a handler.
+  ///
+  /// [protocolId] - The protocol identifier to register.
   ///
   /// Used to advertise protocol support to peers.
   void registerProtocol(String protocolId);
 
   /// Broadcasts a message to all connected peers.
+  ///
+  /// [protocolId] - The protocol identifier.
+  /// [message] - The raw message bytes to broadcast.
   Future<void> broadcastMessage(String protocolId, Uint8List message);
 
   /// Emits a network event.
+  ///
+  /// [topic] - The event topic.
+  /// [data] - The event payload.
   void emitEvent(String topic, Uint8List data);
 
   /// Registers a handler for network events.
+  ///
+  /// [topic] - The event topic.
+  /// [handler] - The callback function to handle the event.
   void onEvent(String topic, void Function(dynamic) handler);
 
   /// Removes a handler for network events.
+  ///
+  /// [topic] - The event topic.
+  /// [handler] - The callback function to remove.
   void offEvent(String topic, void Function(dynamic) handler);
 
   /// Parses a multiaddress string into address components.
   ///
-  /// Returns null if parsing fails.
-  dynamic parseMultiaddr(String multiaddr);
+  /// [multiaddr] - The multiaddress string to parse.
+  ///
+  /// Returns the parsed multiaddress object, or null if parsing fails.
+  Object? parseMultiaddr(String multiaddr);
 
   /// Resolves a peer ID to available addresses.
+  ///
+  /// [peerIdStr] - The peer ID to resolve.
+  ///
+  /// Returns a list of multiaddresses for the peer.
   List<String> resolvePeerId(String peerIdStr);
 }

@@ -4,94 +4,38 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/builders/ipfs_node_builder.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/data_structures/directory.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
-import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
-import 'package:dart_ipfs/src/core/data_structures/pin.dart';
 import 'package:dart_ipfs/src/core/di/service_container.dart';
+import 'package:dart_ipfs/src/core/errors/node_errors.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/bootstrap_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/content_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/lifecycle_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_manager.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/protocol_manager.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
-import 'package:dart_ipfs/src/transport/http_gateway_client.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:fixnum/fixnum.dart' as fixnum;
 
-import 'datastore_handler.dart';
-import 'network_handler.dart';
-import 'pubsub_handler.dart';
-
-/// The central node orchestrating all IPFS operations.
-///
-/// [IPFSNode] is the main class for interacting with the IPFS network.
-/// It manages storage, networking, and protocol handlers, providing
-/// a high-level API for content operations.
-///
-/// **Creating a Node:**
-/// ```dart
-/// // Offline mode (local storage only)
-/// final node = await IPFSNode.create(IPFSConfig(offline: true));
-/// await node.start();
-///
-/// // P2P mode (full network participation)
-/// final node = await IPFSNode.create(IPFSConfig(offline: false));
-/// await node.start();
-/// // print('Peer ID: ${node.peerID}');
-/// ```
-///
-/// **Adding Content:**
-/// ```dart
-/// final cid = await node.addFile(fileBytes);
-/// // print('Added content: $cid');
-/// ```
-///
-/// **Retrieving Content:**
-/// ```dart
-/// final data = await node.get(cid);
-/// ```
-///
-/// **Lifecycle:**
-/// Always call `start` before using the node and `stop` when done:
-/// ```dart
-/// await node.start();
-/// try {
-///   // Use the node...
-/// } finally {
-///   await node.stop();
-/// }
-/// ```
-///
-/// See also:
-/// - [IPFS] for a simpler high-level wrapper
-/// - [IPFSConfig] for configuration options
-/// - [IPFSNodeBuilder] for advanced node construction
-/// - [IPFSNodeBuilder] for advanced node construction
 /// Modes for retrieving content via the [IPFSNode].
-///
-/// Strategies:
-/// - [internal]: Use the native Dart P2P node (libp2p).
-/// - [public]: Use public HTTP gateways (e.g. ipfs.io).
-/// - [local]: Use a local IPFS daemon (e.g. go-ipfs at localhost:8080).
-/// - [custom]: Use a user-defined HTTP gateway URL.
 enum GatewayMode {
   /// Use internal P2P node (default).
   internal,
@@ -106,25 +50,119 @@ enum GatewayMode {
   custom,
 }
 
+/// Represents the possible states of an [IPFSNode].
+enum NodeState {
+  /// The node is created but not yet started.
+  stopped,
+
+  /// The node is in the process of starting.
+  starting,
+
+  /// The node is fully operational.
+  running,
+
+  /// The node is in the process of stopping.
+  stopping,
+
+  /// The node encountered a fatal error and cannot continue.
+  error,
+}
+
 /// The main IPFS node implementation.
 ///
 /// Provides high-level APIs for content addressing, publishing,
 /// DHT operations, and peer-to-peer networking.
+///
+/// [IPFSNode] acts as a facade, orchestrating specialized managers:
+/// - [ContentManager]: Handles files, directories, pinning, and CAR files.
+/// - [NetworkManager]: Handles peer connectivity and provider discovery.
+/// - [ProtocolManager]: Handles PubSub, IPNS, and DNSLink.
 class IPFSNode {
   /// Creates an IPFSNode from a pre-configured service container.
+  ///
+  /// Throws [NodeInitializationError] if required services are missing.
   IPFSNode.fromContainer(this._container) : _logger = Logger('IPFSNode') {
     _logger.debug('Creating IPFS Node from container');
 
     // Validate required services
     _validateRequiredServices();
+
+    // Initialize managers with constructor injection
+    _contentManager = ContentManager(
+      datastoreHandler: _container.get<DatastoreHandler>(),
+      newContentController: _newContentController,
+      blockStore: _container.get<BlockStore>(),
+      bitswapHandler: _container.isRegistered(BitswapHandler)
+          ? _container.get<BitswapHandler>()
+          : null,
+    );
+
+    _networkManager = NetworkManager(
+      networkHandler: _container.isRegistered<NetworkHandler>()
+          ? _container.get<NetworkHandler>()
+          : null,
+      datastoreHandler: _container.get<DatastoreHandler>(),
+      dhtHandler: _container.isRegistered<DHTHandler>()
+          ? _container.get<DHTHandler>()
+          : null,
+      contentRoutingHandler: _container.isRegistered(ContentRoutingHandler)
+          ? _container.get<ContentRoutingHandler>()
+          : null,
+      bitswapHandler: _container.isRegistered(BitswapHandler)
+          ? _container.get<BitswapHandler>()
+          : null,
+    );
+
+    _protocolManager = ProtocolManager(
+      pubSubHandler: _container.isRegistered(PubSubHandler)
+          ? _container.get<PubSubHandler>()
+          : null,
+      dhtHandler: _container.isRegistered<DHTHandler>()
+          ? _container.get<DHTHandler>()
+          : null,
+      contentRoutingHandler: _container.isRegistered(ContentRoutingHandler)
+          ? _container.get<ContentRoutingHandler>()
+          : null,
+    );
+
+    // Initialize LifecycleManager
+    _lifecycleManager = _container.isRegistered<LifecycleManager>()
+        ? _container.get<LifecycleManager>()
+        : LifecycleManager();
+
+    // Register services for lifecycle management
+    _lifecycleManager.register(_container.get<BlockStore>());
+    _lifecycleManager.register(_contentManager);
+    _lifecycleManager.register(_networkManager);
+    _lifecycleManager.register(_protocolManager);
+
+    // Set back-references for handlers that need the IPFSNode instance
+    if (_container.isRegistered<NetworkHandler>()) {
+      _container.get<NetworkHandler>().setIpfsNode(this);
+    }
   }
+
   final ServiceContainer _container;
   final Logger _logger;
-  final HttpGatewayClient _httpGatewayClient = HttpGatewayClient();
+  late final ContentManager _contentManager;
+  late final NetworkManager _networkManager;
+  late final ProtocolManager _protocolManager;
+  late final LifecycleManager _lifecycleManager;
+
+  NodeState _state = NodeState.stopped;
+
+  /// Returns the current state of the node.
+  NodeState get state => _state;
+
+  /// Whether the node is currently running.
+  bool get isRunning => _state == NodeState.running;
+
   final StreamController<String> _newContentController =
       StreamController<String>.broadcast();
 
   /// Factory method to create and build an IPFS node from configuration.
+  ///
+  /// This is the recommended way to instantiate a node.
   static Future<IPFSNode> create(IPFSConfig config) async {
     final builder = IPFSNodeBuilder(config);
     return await builder.build();
@@ -132,30 +170,23 @@ class IPFSNode {
 
   // Public API Getters for external access
 
-  /// Get the peer ID of this node
-  String get peerId {
-    try {
-      if (!_container.isRegistered(NetworkHandler)) return 'offline';
-      final networkHandler = _container.get<NetworkHandler>();
-      return networkHandler.peerID;
-    } catch (e) {
-      _logger.warning('Failed to get peerId: $e');
-      return 'unknown';
-    }
-  }
+  /// Get the peer ID of this node.
+  ///
+  /// Returns 'offline' if the network is not initialized.
+  String get peerId => _networkManager.peerId;
 
-  /// Broadcast stream of bandwidth metrics
+  /// Broadcast stream of bandwidth metrics.
   Stream<Map<String, dynamic>> get bandwidthMetrics {
-    if (_container.isRegistered(MetricsCollector)) {
+    if (_container.isRegistered<MetricsCollector>()) {
       return _container.get<MetricsCollector>().metricsStream;
     }
     return const Stream.empty();
   }
 
-  /// Get the addresses this node is listening on
+  /// Get the multiaddresses this node is listening on.
   List<String> get addresses {
     try {
-      if (!_container.isRegistered(NetworkHandler)) return [];
+      if (!_container.isRegistered<NetworkHandler>()) return [];
       final networkHandler = _container.get<NetworkHandler>();
       final router = networkHandler.router;
       return router.listeningAddresses;
@@ -165,14 +196,16 @@ class IPFSNode {
     }
   }
 
-  /// Get the block store
+  /// Returns the underlying block store.
   BlockStore get blockStore {
     return _container.get<BlockStore>();
   }
 
-  /// Get the DHT client
+  /// Returns the DHT client for peer and content discovery.
+  ///
+  /// Throws [StateError] if the node is in offline mode or DHT is not available.
   DHTClient get dhtClient {
-    if (!_container.isRegistered(DHTHandler)) {
+    if (!_container.isRegistered<DHTHandler>()) {
       throw StateError('DHT client not available (offline mode)');
     }
     try {
@@ -183,20 +216,10 @@ class IPFSNode {
     }
   }
 
-  /// Get list of connected peers
-  Future<List<String>> get connectedPeers async {
-    try {
-      if (_container.isRegistered(NetworkHandler)) {
-        return await _container.get<NetworkHandler>().listConnectedPeers();
-      }
-      return [];
-    } catch (e) {
-      _logger.warning('Failed to get connected peers: $e');
-      return [];
-    }
-  }
+  /// Returns a list of currently connected peer IDs.
+  Future<List<String>> get connectedPeers => _networkManager.connectedPeers;
 
-  /// Get the public key of this node (base64 encoded)
+  /// Returns the public key of this node as a base64 encoded protobuf.
   Future<String> get publicKey async {
     try {
       if (!_container.isRegistered(SecurityManager)) return '';
@@ -204,12 +227,6 @@ class IPFSNode {
       if (key != null) {
         final keyBytes = key.publicKeyBytes;
         if (keyBytes.isEmpty) return '';
-
-        // Manually construct Protobuf: PublicKey { required KeyType Type = 1; required bytes Data = 2; }
-        // Type 2 = Secp256k1
-        // Tag 1 (Type) = (1 << 3) | 0 = 8. Value = 2. -> [0x08, 0x02]
-        // Tag 2 (Data) = (2 << 3) | 2 = 18 (0x12). Value = length + bytes.
-        // Compressed Secp256k1 is 33 bytes, fits in 1 byte varint.
 
         final protoBytes = <int>[
           0x08, 0x02, // Type: Secp256k1
@@ -226,19 +243,11 @@ class IPFSNode {
     }
   }
 
-  /// Resolve a peer ID to its known addresses (from Routing Table)
-  List<String> resolvePeerId(String peerIdStr) {
-    try {
-      if (!_container.isRegistered(NetworkHandler)) return [];
-      final router = _container.get<NetworkHandler>().router;
-      return router.resolvePeerId(peerIdStr);
-    } catch (e) {
-      _logger.warning('Failed to resolve peer ID $peerIdStr: $e');
-      return [];
-    }
-  }
+  /// Resolves a peer ID to its known multiaddresses.
+  List<String> resolvePeerId(String peerIdStr) =>
+      _networkManager.resolvePeerId(peerIdStr);
 
-  /// Get list of pinned CIDs
+  /// Returns a list of CIDs currently pinned by this node.
   Future<List<String>> get pinnedCids async {
     try {
       if (!_container.isRegistered(DatastoreHandler)) return [];
@@ -252,383 +261,107 @@ class IPFSNode {
 
   // Convenience API Methods
 
-  /// Get content by CID (alias for get method)
-  Future<Uint8List?> cat(String cid) async {
-    return await get(cid);
-  }
+  /// Returns the raw content associated with the given [cid].
+  ///
+  /// This is an alias for [get].
+  Future<Uint8List?> cat(String cid) async => get(cid);
 
-  /// Connect to a peer by multiaddr
-  Future<void> connectToPeer(String multiaddr) async {
-    try {
-      if (!_container.isRegistered(NetworkHandler)) {
-        throw StateError('NetworkHandler not available');
-      }
-      await _container.get<NetworkHandler>().connectToPeer(multiaddr);
-    } catch (e) {
-      _logger.error('Failed to connect to peer: $e');
-      rethrow;
-    }
-  }
+  /// Manually connects to a peer using its [multiaddr].
+  Future<void> connectToPeer(String multiaddr) =>
+      _networkManager.connectToPeer(multiaddr);
 
-  /// Disconnect from a peer
-  Future<void> disconnectFromPeer(String peerIdOrAddr) async {
-    try {
-      if (!_container.isRegistered(NetworkHandler)) return;
-      await _container.get<NetworkHandler>().disconnectFromPeer(peerIdOrAddr);
-    } catch (e) {
-      _logger.error('Failed to disconnect from peer: $e');
-    }
-  }
+  /// Gracefully disconnects from a peer identified by [peerIdOrAddr].
+  Future<void> disconnectFromPeer(String peerIdOrAddr) =>
+      _networkManager.disconnectFromPeer(peerIdOrAddr);
 
-  /// Resolve IPNS name to CID
-  Future<String> resolveIPNS(String name) async {
-    try {
-      final dhtHandler = _container.get<DHTHandler>();
-      final cid = await dhtHandler.resolveIPNS(name);
-      return cid;
-    } catch (e) {
-      _logger.error('Failed to resolve IPNS: $e');
-      rethrow;
-    }
-  }
+  /// Resolves an IPNS [name] to its corresponding CID.
+  Future<String> resolveIPNS(String name) => _protocolManager.resolveIPNS(name);
 
   // PubSub API
 
-  /// Subscribe to a topic
-  Future<void> subscribe(String topic) async {
-    try {
-      if (!_container.isRegistered(PubSubHandler)) return;
-      await _container.get<PubSubHandler>().subscribe(topic);
-    } catch (e) {
-      _logger.error('Failed to subscribe: $e');
-    }
-  }
+  /// Subscribes the node to a PubSub [topic].
+  Future<void> subscribe(String topic) => _protocolManager.subscribe(topic);
 
-  /// Unsubscribe from a topic
-  Future<void> unsubscribe(String topic) async {
-    try {
-      if (!_container.isRegistered(PubSubHandler)) return;
-      await _container.get<PubSubHandler>().unsubscribe(topic);
-    } catch (e) {
-      _logger.error('Failed to unsubscribe: $e');
-    }
-  }
+  /// Unsubscribes the node from a PubSub [topic].
+  Future<void> unsubscribe(String topic) => _protocolManager.unsubscribe(topic);
 
-  /// Publish a message
-  Future<void> publish(String topic, String message) async {
-    try {
-      if (!_container.isRegistered(PubSubHandler)) {
-        throw StateError('PubSubHandler not available');
-      }
-      await _container.get<PubSubHandler>().publish(topic, message);
-    } catch (e) {
-      _logger.error('Failed to publish: $e');
-      rethrow;
-    }
-  }
+  /// Publishes a [message] to a PubSub [topic].
+  Future<void> publish(String topic, String message) =>
+      _protocolManager.publish(topic, message);
 
-  /// Stream of incoming PubSub messages
-  Stream<PubSubMessage> get pubsubMessages {
-    if (_container.isRegistered(PubSubHandler)) {
-      return _container.get<PubSubHandler>().messages;
-    }
-    return const Stream.empty();
-  }
+  /// A stream of incoming PubSub messages for all subscribed topics.
+  Stream<PubSubMessage> get pubsubMessages => _protocolManager.pubsubMessages;
 
   /// Starts the IPFS node and all its subsystems.
+  ///
+  /// Transitions the state from [NodeState.stopped] to [NodeState.running].
+  /// Throws [NodeStateError] if the node is already running or starting.
+  /// Throws [NodeStartupError] if any critical subsystem fails to start.
   Future<void> start() async {
-    _logger.debug('Starting IPFS Node...');
+    if (_state == NodeState.running || _state == NodeState.starting) {
+      throw NodeStateError('Node is already ${_state.name}');
+    }
+
+    _state = NodeState.starting;
+    _logger.info('Starting IPFS Node...');
 
     try {
-      // Start systems in dependency order
-      await _startCoreSystem();
-      await _startStorageLayer();
-      await _startNetworkLayer();
-      await _startServices();
-
+      await _lifecycleManager.startAll();
+      _state = NodeState.running;
       _logger.info('IPFS Node started successfully');
     } catch (e, stackTrace) {
+      _state = NodeState.error;
       _logger.error('Failed to start IPFS Node', e, stackTrace);
-      rethrow;
-    }
-  }
-
-  Future<void> _startCoreSystem() async {
-    _logger.debug('Starting core systems...');
-
-    try {
-      _logger.verbose('Starting core system initialization');
-      await _container.get<MetricsCollector>().start();
-      _logger.debug('Metrics Collector initialized successfully');
-
-      _logger.verbose('Creating Security Manager');
-      await _container.get<SecurityManager>().start();
-      _logger.debug('Security Manager initialized successfully');
-
-      _logger.debug('Core systems initialization complete');
-    } catch (e, stackTrace) {
-      _logger.error('Failed to initialize core systems', e, stackTrace);
-      rethrow;
-    }
-  }
-
-  Future<void> _startStorageLayer() async {
-    _logger.debug('Starting storage layer...');
-
-    try {
-      _logger.verbose('Starting storage layer initialization');
-      await _container.get<BlockStore>().start();
-      _logger.debug('BlockStore initialized successfully');
-
-      _logger.verbose('Creating DatastoreHandler');
-      await _container.get<DatastoreHandler>().start();
-      _logger.debug('DatastoreHandler initialized successfully');
-
-      _logger.verbose('Creating IPLDHandler');
-      await _container.get<IPLDHandler>().start();
-      _logger.debug('IPLDHandler initialized successfully');
-
-      _logger.debug('Storage layer initialization complete');
-    } catch (e, stackTrace) {
-      _logger.error('Failed to initialize storage layer', e, stackTrace);
-      rethrow;
-    }
-  }
-
-  Future<void> _startNetworkLayer() async {
-    _logger.debug('Starting network layer...');
-
-    try {
-      _logger.verbose('Starting network layer initialization');
-
-      if (_container.isRegistered(NetworkHandler)) {
-        // CRITICAL: Set ipfsNode reference before starting any network services
-        _container.get<NetworkHandler>().setIpfsNode(this);
-        await _container.get<NetworkHandler>().start();
-        _logger.debug('NetworkHandler created successfully');
-      }
-
-      _logger.verbose('Initializing peer discovery handlers');
-      if (_container.isRegistered(MDNSHandler)) {
-        await _container.get<MDNSHandler>().start();
-        _logger.debug('MDNSHandler initialized');
-      }
-
-      _logger.verbose('Initializing core network protocols');
-      if (_container.isRegistered(DHTHandler)) {
-        await _container.get<DHTHandler>().start();
-        _logger.debug('DHTHandler initialized');
-      }
-
-      _logger.verbose('Creating PubSubHandler');
-      if (_container.isRegistered(PubSubHandler)) {
-        await _container.get<PubSubHandler>().start();
-        _logger.debug('PubSubHandler initialized');
-      }
-
-      _logger.verbose('Creating BitswapHandler');
-      if (_container.isRegistered(BitswapHandler)) {
-        await _container.get<BitswapHandler>().start();
-        _logger.debug('BitswapHandler initialized');
-      }
-
-      _logger.debug('Network layer initialization complete');
-    } catch (e, stackTrace) {
-      _logger.error('Failed to initialize network layer', e, stackTrace);
-      rethrow;
-    }
-  }
-
-  Future<void> _startServices() async {
-    _logger.debug('Starting high-level services...');
-
-    try {
-      _logger.verbose('Starting services initialization');
-
-      if (_container.isRegistered(ContentRoutingHandler)) {
-        await _container.get<ContentRoutingHandler>().start();
-        _logger.debug('ContentRoutingHandler initialized');
-      }
-
-      if (_container.isRegistered(DNSLinkHandler)) {
-        await _container.get<DNSLinkHandler>().start();
-        _logger.debug('DNSLinkHandler initialized');
-      }
-
-      if (_container.isRegistered(GraphsyncHandler)) {
-        await _container.get<GraphsyncHandler>().start();
-        _logger.debug('GraphsyncHandler initialized');
-      }
-
-      if (_container.isRegistered(AutoNATHandler)) {
-        await _container.get<AutoNATHandler>().start();
-        _logger.debug('AutoNATHandler initialized');
-      }
-
-      if (_container.isRegistered(IPNSHandler)) {
-        await _container.get<IPNSHandler>().start();
-        _logger.debug('IPNSHandler initialized');
-      }
-
-      _logger.debug('High-level services initialization complete');
-    } catch (e, stackTrace) {
-      _logger.error('Failed to initialize high-level services', e, stackTrace);
-      rethrow;
+      throw NodeStartupError('Failed to start IPFS node', details: e);
     }
   }
 
   /// Stops the IPFS node gracefully, releasing all resources.
+  ///
+  /// Transitions the state from [NodeState.running] to [NodeState.stopped].
+  /// Throws [NodeShutdownError] if any critical subsystem fails to stop.
   Future<void> stop() async {
-    _logger.debug('Stopping IPFS Node...');
+    if (_state == NodeState.stopped || _state == NodeState.stopping) {
+      _logger.warning('Node is already ${_state.name}');
+      return;
+    }
+
+    _state = NodeState.stopping;
+    _logger.info('Stopping IPFS Node...');
 
     try {
-      // Stop in reverse order of initialization
-
-      // Stop high-level services
-      if (_container.isRegistered(IPNSHandler)) {
-        await _container.get<IPNSHandler>().stop();
-      }
-      if (_container.isRegistered(AutoNATHandler)) {
-        await _container.get<AutoNATHandler>().stop();
-      }
-      if (_container.isRegistered(GraphsyncHandler)) {
-        await _container.get<GraphsyncHandler>().stop();
-      }
-      if (_container.isRegistered(DNSLinkHandler)) {
-        await _container.get<DNSLinkHandler>().stop();
-      }
-      if (_container.isRegistered(ContentRoutingHandler)) {
-        await _container.get<ContentRoutingHandler>().stop();
-      }
-
-      // Stop network layer
-      if (_container.isRegistered(BitswapHandler)) {
-        await _container.get<BitswapHandler>().stop();
-      }
-      if (_container.isRegistered(PubSubHandler)) {
-        await _container.get<PubSubHandler>().stop();
-      }
-      if (_container.isRegistered(DHTHandler)) {
-        await _container.get<DHTHandler>().stop();
-      }
-      if (_container.isRegistered(BootstrapHandler)) {
-        await _container.get<BootstrapHandler>().stop();
-      }
-      if (_container.isRegistered(MDNSHandler)) {
-        await _container.get<MDNSHandler>().stop();
-      }
-      if (_container.isRegistered(NetworkHandler)) {
-        await _container.get<NetworkHandler>().stop();
-      }
-
-      // Stop storage layer
-      await _container.get<IPLDHandler>().stop();
-      await _container.get<DatastoreHandler>().stop();
-
-      // Stop core systems
-      await _container.get<MetricsCollector>().stop();
-      await _container.get<SecurityManager>().stop();
-
+      await _lifecycleManager.stopAll();
+      _state = NodeState.stopped;
       _logger.info('IPFS Node stopped successfully');
     } catch (e, stackTrace) {
+      _state = NodeState.error;
       _logger.error('Failed to stop IPFS Node', e, stackTrace);
-      rethrow;
+      throw NodeShutdownError('Failed to stop IPFS node', details: e);
     }
+  }
+
+  /// Restarts the IPFS node by performing a stop and then a start.
+  ///
+  /// Throws [NodeShutdownError] if stop fails.
+  /// Throws [NodeStartupError] if start fails.
+  Future<void> restart() async {
+    _logger.info('Restarting IPFS Node...');
+    await stop();
+    await start();
   }
 
   /// Adds a file to IPFS and returns its CID.
-  Future<String> addFile(Uint8List data) async {
-    try {
-      // Create a new block from the file data
-      final block = await Block.fromData(data);
+  Future<String> addFile(Uint8List data) => _contentManager.addFile(data);
 
-      // Store the block in the datastore
-      await _container.get<DatastoreHandler>().putBlock(block);
-
-      // Notify listeners about the new content
-      _newContentController.add(block.cid.toString());
-
-      return block.cid.toString();
-    } catch (e) {
-      // print('Error adding file: $e');
-      rethrow;
-    }
-  }
-
-  /// Adds file content from a stream (memory-efficient for large files)
-  ///
-  /// Collects chunks into a BytesBuilder and then creates a block.
-  /// For truly large files, consider chunking into multiple blocks.
-  Future<String> addFileStream(Stream<List<int>> dataStream) async {
-    try {
-      final builder = BytesBuilder();
-      await for (final chunk in dataStream) {
-        builder.add(chunk);
-      }
-      return addFile(builder.takeBytes());
-    } catch (e) {
-      _logger.error('Error adding file from stream: $e');
-      rethrow;
-    }
-  }
+  /// Adds file content from a stream
+  Future<String> addFileStream(Stream<List<int>> dataStream) =>
+      _contentManager.addFileStream(dataStream);
 
   /// Adds a directory to IPFS and returns its CID.
-  Future<String> addDirectory(Map<String, dynamic> directoryContent) async {
-    // Create a new directory node
-    // Note: Standard UnixFS directories don't store their own name/path internally
-    final directoryManager = IPFSDirectoryManager();
+  Future<String> addDirectory(Map<String, dynamic> directoryContent) =>
+      _contentManager.addDirectory(directoryContent);
 
-    // Process each entry in the directory content
-    for (final entry in directoryContent.entries) {
-      if (entry.value is Uint8List) {
-        // Handle file
-        final cid = await addFile(entry.value as Uint8List);
-        directoryManager.addEntry(
-          IPFSDirectoryEntry(
-            name: entry.key,
-            hash: CID
-                .decode(cid)
-                .toBytes(), // Use toBytes() for binary CID (preserves version/codec)
-            size: fixnum.Int64((entry.value as Uint8List).length),
-            isDirectory: false,
-          ),
-        );
-      } else if (entry.value is Map) {
-        // Handle subdirectory recursively
-        final subDirCid = await addDirectory(
-          entry.value as Map<String, dynamic>,
-        );
-        directoryManager.addEntry(
-          IPFSDirectoryEntry(
-            name: entry.key,
-            hash: CID.decode(subDirCid).toBytes(),
-            size: fixnum.Int64(
-              0,
-            ), // Tsize should ideally be known, but 0 is acceptable if unknown for now
-            isDirectory: true,
-          ),
-        );
-      }
-    }
-
-    // Create a block from the directory data
-    final pbNode = directoryManager.build();
-    final block = await Block.fromData(
-      pbNode.writeToBuffer(),
-      format: 'dag-pb',
-    );
-
-    // Store the directory block
-    await _container.get<DatastoreHandler>().putBlock(block);
-
-    // Return the CID of the directory
-    return block.cid.toString();
-  }
-
-  /// Gets the content of a file or directory from IPFS.
-  ///
-  /// [cid] is the Content Identifier of the file/directory
-  /// [path] is an optional path within the directory
+  /// Sets the mode for retrieving content.
   GatewayMode _gatewayMode = GatewayMode.internal;
   String _customGatewayUrl = '';
 
@@ -645,328 +378,44 @@ class IPFSNode {
   }
 
   /// Gets the content of a file or directory from IPFS.
-  ///
-  /// [cid] is the Content Identifier of the file/directory
-  /// [path] is an optional path within the directory
-  Future<Uint8List?> get(String cid, {String path = ''}) async {
-    try {
-      // MODE: Public / Local / Custom -> Use HTTP Gateway exclusively
-      if (_gatewayMode != GatewayMode.internal) {
-        String url;
-        switch (_gatewayMode) {
-          case GatewayMode.public:
-            url = 'https://ipfs.io/ipfs';
-            break;
-          case GatewayMode.local:
-            url = 'http://127.0.0.1:8080/ipfs';
-            break;
-          case GatewayMode.custom:
-            url = _customGatewayUrl;
-            break;
-          default:
-            url = 'https://ipfs.io/ipfs';
-        }
-        _logger.debug('Retrieving via Gateway ($url): $cid');
-        // Currently HttpGatewayClient is hardcoded to ipfs.io in its implementation?
-        // We might need to update HttpGatewayClient to accept a base URL.
-        // For now, assuming HttpGatewayClient logic will be updated or uses default.
-        // Actually, let's just use the client we have, but we need to tell it where to look.
-        // Since HttpGatewayClient instance is private and hardcoded, we should probably
-        // update HttpGatewayClient to take a baseUrl in `get`.
-        // Let's assume for this step we update HttpGatewayClient first?
-        // Wait, I can't update HttpGatewayClient in this tool call.
-        // I will just call it for now and fix it in next step.
-        return await _httpGatewayClient.get(cid, baseUrl: url);
-      }
-
-      // MODE: Internal -> Use Native P2P
-      // First check if we have the block locally
-      final block = await _container.get<DatastoreHandler>().getBlock(cid);
-
-      if (block != null) {
-        if (path.isEmpty) {
-          // Return the raw data if no path is specified
-          return block.data;
-        } else {
-          // If this is a directory and a path is specified,
-          // traverse the directory structure
-          final node = MerkleDAGNode.fromBytes(block.data);
-          if (node.isDirectory) {
-            return await _resolvePathInDirectory(node, path);
-          }
-        }
-      }
-
-      // If not found locally, try to fetch from the network
-      if (_container.isRegistered(BitswapHandler)) {
-        final networkBlock = await _container.get<BitswapHandler>().wantBlock(
-          cid,
-        );
-        if (networkBlock?.data != null) {
-          return networkBlock!.data;
-        }
-      }
-
-      // 3. HTTP Gateway Fallback (Hybrid Compatibility) - KEEP THIS for Internal Mode too?
-      // Yes, "Hybrid Fallback" is a feature of Internal Mode.
-      _logger.debug(
-        'P2P retrieval failed, attempting HTTP gateway fallback for $cid',
-      );
-      final gatewayData = await _httpGatewayClient.get(cid);
-      if (gatewayData != null) {
-        return gatewayData;
-      }
-
-      return null;
-    } catch (e) {
-      // print('Error retrieving content for CID $cid: $e');
-      return null;
-    }
-  }
-
-  Future<Uint8List?> _resolvePathInDirectory(
-    MerkleDAGNode dirNode,
-    String path,
-  ) async {
-    final pathParts = path.split('/').where((part) => part.isNotEmpty).toList();
-
-    for (final link in dirNode.links) {
-      if (link.name == pathParts[0]) {
-        final childBlock = await _container.get<DatastoreHandler>().getBlock(
-          link.cid.toString(),
-        );
-        if (childBlock == null) return null;
-
-        if (pathParts.length == 1) {
-          return childBlock.data;
-        } else {
-          final childNode = MerkleDAGNode.fromBytes(childBlock.data);
-          return await _resolvePathInDirectory(
-            childNode,
-            pathParts.sublist(1).join('/'),
-          );
-        }
-      }
-    }
-    return null;
-  }
+  Future<Uint8List?> get(String cid, {String path = ''}) => _contentManager.get(
+    cid,
+    path: path,
+    gatewayMode: _gatewayMode,
+    customGatewayUrl: _customGatewayUrl,
+  );
 
   /// Lists the contents of an IPFS directory.
-  Future<List<Link>> ls(String cid) async {
-    try {
-      // Get the block
-      Block? block = await _container.get<DatastoreHandler>().getBlock(cid);
-      if (block == null) {
-        // Try fetching from network if not found locally
-        final data = await _container.get<BitswapHandler>().wantBlock(cid);
-        if (data == null) {
-          throw Exception('Directory not found: $cid');
-        }
-        block = data; // data IS a Block
-      }
-
-      // Parse the directory node using MerkleDAGNode
-      // Note: MerkleDAGNode must parse strict UnixFS to know if it's a directory
-      final node = MerkleDAGNode.fromBytes(block.data);
-
-      if (!node.isDirectory) {
-        throw Exception('CID does not point to a directory: $cid');
-      }
-
-      // Convert directory links to Link objects
-      return node.links;
-    } catch (e) {
-      // print('Error listing directory $cid: $e');
-      return [];
-    }
-  }
+  Future<List<Link>> ls(String cid) => _contentManager.ls(cid);
 
   /// Pins a CID to prevent it from being garbage collected.
-  Future<void> pin(String cid) async {
-    try {
-      // Create a Pin instance
-      final pin = Pin(
-        cid: CID.decode(cid),
-        type: PinTypeProto.PIN_TYPE_RECURSIVE,
-        blockStore: _container.get<BlockStore>(),
-      );
-
-      // Pin the content
-      final success = await pin.pin();
-      if (!success) {
-        throw Exception('Failed to pin CID: $cid');
-      }
-
-      // Update the datastore to mark the CID as pinned
-      await _container.get<DatastoreHandler>().persistPinnedCIDs({cid});
-
-      // print('Successfully pinned CID: $cid');
-    } catch (e) {
-      // print('Error pinning CID $cid: $e');
-      rethrow;
-    }
-  }
+  Future<void> pin(String cid) => _contentManager.pin(cid);
 
   /// Unpins a CID from IPFS.
-  ///
-  /// This allows the content to be garbage collected if no other pins exist.
-  /// Returns true if the unpin was successful, false otherwise.
-  Future<bool> unpin(String cid) async {
-    try {
-      // Create a Pin instance
-      final pin = Pin(
-        cid: CID.decode(cid),
-        type: PinTypeProto.PIN_TYPE_RECURSIVE,
-        blockStore: _container.get<BlockStore>(),
-      );
+  Future<bool> unpin(String cid) => _contentManager.unpin(cid);
 
-      // Attempt to unpin
-      final success = await pin.unpin();
-
-      if (success) {
-        // Remove from pins in datastore using /pins/ key prefix
-        final pinKey = Key('/pins/$cid');
-        await _container.get<DatastoreHandler>().datastore.delete(pinKey);
-      }
-
-      return success;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Add this method to the IPFSNode class
   /// Publishes an IPNS record for the given CID.
-  Future<void> publishIPNS(String cid, {required String keyName}) async {
-    try {
-      // Validate CID
-      if (!_container.get<DHTHandler>().isValidCID(cid)) {
-        throw ArgumentError('Invalid CID: $cid');
-      }
-
-      // Delegate to DHT handler for IPNS record publishing
-      await _container.get<DHTHandler>().publishIPNS(cid, keyName: keyName);
-
-      // print(
-      //   'Successfully published IPNS record for CID: $cid with key: $keyName',
-      // );
-    } catch (e) {
-      // print('Error publishing IPNS record: $e');
-      rethrow;
-    }
-  }
+  Future<void> publishIPNS(String cid, {required String keyName}) =>
+      _protocolManager.publishIPNS(cid, keyName: keyName);
 
   /// Imports a CAR (Content Addressable Archive) file.
-  Future<void> importCAR(Uint8List carFile) async {
-    try {
-      await _container.get<DatastoreHandler>().importCAR(carFile);
-    } catch (e) {
-      // print('Error importing CAR file: $e');
-      rethrow;
-    }
-  }
+  Future<void> importCAR(Uint8List carFile) =>
+      _contentManager.importCAR(carFile);
 
   /// Exports a CAR file for the given CID.
-  Future<Uint8List> exportCAR(String cid) async {
-    try {
-      // Delegate to the datastoreHandler which has the CAR export implementation
-      return await _container.get<DatastoreHandler>().exportCAR(cid);
-    } catch (e) {
-      // print('Error exporting CAR file: $e');
-      rethrow;
-    }
-  }
+  Future<Uint8List> exportCAR(String cid) => _contentManager.exportCAR(cid);
 
   /// Finds providers for a given CID.
-  ///
-  /// Returns a list of peer IDs that can provide the content identified by [cid].
-  Future<List<String>> findProviders(String cid) async {
-    try {
-      // First check if we have the content locally
-      final hasLocal = await _container.get<DatastoreHandler>().hasBlock(cid);
-      if (hasLocal) {
-        // If we have it locally, return our own peer ID
-        return [_container.get<NetworkHandler>().ipfsNode.peerID];
-      }
-
-      // Convert string CID to CID object
-      final cidObj = CID.decode(cid);
-
-      // Try finding providers through DHT
-      final dhtProviders = await _container.get<DHTHandler>().findProviders(
-        cidObj,
-      );
-      if (dhtProviders.isNotEmpty) {
-        // Convert V_PeerInfo to String peer IDs
-        return dhtProviders
-            .map((p) => Base58().encode(Uint8List.fromList(p.peerId)))
-            .toList();
-      }
-
-      // If DHT lookup fails, try finding through routing handler
-      final routingProviders = await _container
-          .get<ContentRoutingHandler>()
-          .findProviders(cid);
-      if (routingProviders.isNotEmpty) {
-        return routingProviders;
-      }
-
-      // No providers found
-      return [];
-    } catch (e) {
-      // print('Error finding providers for CID $cid: $e');
-      return [];
-    }
-  }
+  Future<List<String>> findProviders(String cid) =>
+      _networkManager.findProviders(cid);
 
   /// Requests a specific block from a peer via Bitswap.
-  Future<void> requestBlock(String cid, Peer peer) async {
-    try {
-      // Validate CID format
-      if (!_container.get<DHTHandler>().isValidCID(cid)) {
-        throw ArgumentError('Invalid CID format: $cid');
-      }
-
-      // Use bitswap to request the block
-      final block = await _container.get<BitswapHandler>().wantBlock(cid);
-
-      if (block == null) {
-        throw Exception('Failed to retrieve block from peer');
-      }
-
-      // Store the block in our datastore
-      await _container.get<DatastoreHandler>().putBlock(block);
-    } catch (e) {
-      // print('Error requesting block $cid from peer ${peer.toString()}: $e');
-      rethrow;
-    }
-  }
+  Future<void> requestBlock(String cid, Peer peer) =>
+      _networkManager.requestBlock(cid, peer);
 
   /// Resolves a DNSLink to its corresponding CID.
-  Future<String> resolveDNSLink(String domainName) async {
-    try {
-      // First try resolving through the routing handler
-      final cid = await _container.get<ContentRoutingHandler>().resolveDNSLink(
-        domainName,
-      );
-      if (cid != null) {
-        return cid;
-      }
-
-      // If routing handler fails, try DHT handler
-      final dhtCid = await _container.get<DHTHandler>().resolveDNSLink(
-        domainName,
-      );
-      if (dhtCid != null) {
-        return dhtCid;
-      }
-
-      throw Exception('Failed to resolve DNSLink for domain: $domainName');
-    } catch (e) {
-      // print('Error resolving DNSLink for domain $domainName: $e');
-      rethrow;
-    }
-  }
+  Future<String> resolveDNSLink(String domainName) =>
+      _protocolManager.resolveDNSLink(domainName);
 
   /// Returns a health status map for all subsystems.
   Future<Map<String, dynamic>> getHealthStatus() async {
@@ -997,8 +446,8 @@ class IPFSNode {
     };
   }
 
-  Future<Map<String, dynamic>> _getServiceStatus<T>() async {
-    if (_container.isRegistered(T)) {
+  Future<Map<String, dynamic>> _getServiceStatus<T extends Object>() async {
+    if (_container.isRegistered<T>()) {
       try {
         return await (_container.get<T>() as dynamic).getStatus()
             as Map<String, dynamic>;
@@ -1015,7 +464,7 @@ class IPFSNode {
 
   /// Access to the network router.
   RouterInterface? get router {
-    if (_container.isRegistered(NetworkHandler)) {
+    if (_container.isRegistered<NetworkHandler>()) {
       return _container.get<NetworkHandler>().router;
     }
     return null;
@@ -1031,14 +480,14 @@ class IPFSNode {
 
   /// Access to the DHT handler.
   DHTHandler? get dhtHandler {
-    if (_container.isRegistered(DHTHandler)) {
+    if (_container.isRegistered<DHTHandler>()) {
       return _container.get<DHTHandler>();
     }
     return null;
   }
 
   /// This node's peer ID.
-  String get peerID => _container.get<NetworkHandler>().peerID;
+  String get peerID => _networkManager.peerId;
 
   // Event streams
   /// Stream of new content CIDs added to this node.
@@ -1047,31 +496,11 @@ class IPFSNode {
   /// Validates that all required services are registered in the container
   void _validateRequiredServices() {
     final requiredServices = [
-      // Core systems
       MetricsCollector,
       SecurityManager,
-
-      // Storage layer
       BlockStore,
       DatastoreHandler,
       IPLDHandler,
-
-      // Network layer (Optional for offline mode)
-      /*
-      NetworkHandler,
-      MDNSHandler,
-      DHTHandler,
-      PubSubHandler,
-      BitswapHandler,
-      BootstrapHandler,
-
-      // Services
-      ContentRoutingHandler,
-      DNSLinkHandler,
-      GraphsyncHandler,
-      AutoNATHandler,
-      IPNSHandler,
-      */
     ];
 
     for (final service in requiredServices) {
@@ -1083,7 +512,4 @@ class IPFSNode {
 
     _logger.debug('All required services validated successfully');
   }
-
-  /// Returns the service container for dependency injection.
-  ServiceContainer get container => _container;
 }

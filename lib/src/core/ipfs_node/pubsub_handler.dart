@@ -15,8 +15,12 @@ import '../data_structures/node_stats.dart';
 /// Handles PubSub operations for an IPFS node.
 class PubSubHandler implements IPubSub {
   /// Constructs a [PubSubHandler] with the provided router, peer ID, and network events.
-  PubSubHandler(RouterInterface router, String peerId, this._networkEvents)
-    : _pubSubClient = PubSubClient(router, peerId) {
+  PubSubHandler(
+    RouterInterface router,
+    String peerId,
+    this._networkEvents, {
+    PubSubClient? pubSubClient,
+  }) : _pubSubClient = pubSubClient ?? PubSubClient(router, peerId) {
     // Register the pubsub protocol immediately upon construction
     router.registerProtocol('pubsub');
   }

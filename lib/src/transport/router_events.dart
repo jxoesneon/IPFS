@@ -1,23 +1,23 @@
 import 'dart:typed_data';
 
-/// Interface for router implementations to handle multiaddresses
+/// Interface for router implementations to handle multiaddresses.
 mixin MultiAddressHandler {
-  /// Gets the multiaddress of the router
+  /// Gets the multiaddress of the router.
   String get multiaddr;
 
-  /// Sets the multiaddress of the router
+  /// Sets the multiaddress of the router.
   void setMultiaddr(String addr);
 }
 
-/// A wrapper for raw bytes sent over the network
+/// A wrapper for raw bytes sent over the network.
 class NetworkMessage {
-  /// Creates a new network message from bytes
+  /// Creates a new network message from bytes.
   NetworkMessage(this.data);
 
-  /// The raw data of the message
+  /// The raw data of the message.
   final Uint8List data;
 
-  /// Creates a network message from a byte array
+  /// Creates a network message from a byte array.
   static NetworkMessage fromBytes(Uint8List bytes) {
     return NetworkMessage(bytes);
   }
@@ -38,67 +38,67 @@ class NetworkPacket {
   /// The raw datagram bytes.
   final Uint8List datagram;
 
-  /// Optional responder function for synchronous request/response
+  /// Optional responder function for synchronous request/response.
   final Future<void> Function(Uint8List)? responder;
 }
 
-/// Represents a change in peer connection state
+/// Represents a change in peer connection state.
 class ConnectionEvent {
-  /// Creates a connection event
+  /// Creates a connection event.
   ConnectionEvent({required this.type, required this.peerId});
 
-  /// The type of connection event (connected/disconnected)
+  /// The type of connection event (connected/disconnected).
   final ConnectionEventType type;
 
-  /// The unique identifier of the peer
+  /// The unique identifier of the peer.
   final String peerId;
 }
 
-/// Types of connection events
+/// Types of connection events.
 enum ConnectionEventType {
-  /// Peer connected successfully
+  /// Peer connected successfully.
   connected,
 
-  /// Peer disconnected
+  /// Peer disconnected.
   disconnected,
 }
 
-/// Represents an incoming message from a peer
+/// Represents an incoming message from a peer.
 class MessageEvent {
-  /// Creates a message event
+  /// Creates a message event.
   MessageEvent({required this.peerId, required this.message});
 
-  /// The unique identifier of the sender
+  /// The unique identifier of the sender.
   final String peerId;
 
-  /// The raw message payload
+  /// The raw message payload.
   final Uint8List message;
 }
 
-/// Data from a DHT operation
+/// Data from a DHT operation.
 class DHTEvent {
-  /// Creates a DHT event
+  /// Creates a DHT event.
   DHTEvent({required this.type, required this.data});
 
-  /// The type of DHT event
+  /// The type of DHT event.
   final DHTEventType type;
 
-  /// The payload data returned by the DHT
+  /// The payload data returned by the DHT.
   final Map<String, dynamic> data;
 }
 
-/// Types of DHT search results
+/// Types of DHT search results.
 enum DHTEventType {
-  /// A value was found for the requested key
+  /// A value was found for the requested key.
   valueFound,
 
-  /// A provider was found for the requested CID
+  /// A provider was found for the requested CID.
   providerFound,
 }
 
-/// Content or metadata from a PubSub subscription
+/// Content or metadata from a PubSub subscription.
 class PubSubEvent {
-  /// Creates a PubSub event
+  /// Creates a PubSub event.
   PubSubEvent({
     required this.topic,
     required this.message,
@@ -106,66 +106,66 @@ class PubSubEvent {
     required this.eventType,
   });
 
-  /// The subscription topic
+  /// The subscription topic.
   final String topic;
 
-  /// The raw message payload
+  /// The raw message payload.
   final Uint8List message;
 
-  /// The identifier of the publisher
+  /// The identifier of the publisher.
   final String publisher;
 
-  /// The type of event (e.g., 'message', 'join', 'leave')
+  /// The type of event (e.g., 'message', 'join', 'leave').
   final String eventType;
 }
 
-/// Represents a protocol or network error
+/// Represents a protocol or network error.
 class ErrorEvent {
-  /// Creates an error event
+  /// Creates an error event.
   ErrorEvent({required this.type, required this.message});
 
-  /// The classification of the error
+  /// The classification of the error.
   final ErrorEventType type;
 
-  /// A human-readable error message
+  /// A human-readable error message.
   final String message;
 }
 
-/// Classifications for network errors
+/// Classifications for network errors.
 enum ErrorEventType {
-  /// Failure during connection establishment
+  /// Failure during connection establishment.
   connectionError,
 
-  /// Failure during disconnection
+  /// Failure during disconnection.
   disconnectionError,
 
-  /// Failure during message processing or transport
+  /// Failure during message processing or transport.
   messageError,
 }
 
-/// Lifecycle or data event for a multi-stream
+/// Lifecycle or data event for a multi-stream.
 class StreamEvent {
-  /// Creates a stream event
+  /// Creates a stream event.
   StreamEvent({required this.type, required this.streamId, this.data});
 
-  /// The type of stream event
+  /// The type of stream event.
   final StreamEventType type;
 
-  /// The unique identifier for the stream
+  /// The unique identifier for the stream.
   final String streamId;
 
-  /// Optional data payload for 'data' events
+  /// Optional data payload for 'data' events.
   final Uint8List? data;
 }
 
-/// Types of stream transitions
+/// Types of stream transitions.
 enum StreamEventType {
-  /// Stream was opened by a peer
+  /// Stream was opened by a peer.
   opened,
 
-  /// Stream was closed
+  /// Stream was closed.
   closed,
 
-  /// Data was received on the stream
+  /// Data was received on the stream.
   data,
 }

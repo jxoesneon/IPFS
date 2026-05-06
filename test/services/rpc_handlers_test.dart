@@ -57,6 +57,9 @@ class MockBlockStore implements BlockStore {
   @override
   Future<Map<String, dynamic>> getStatus() async => {};
   @override
+  Future<int> gc() async => 0;
+
+  @override
   PinManager get pinManager => throw UnimplementedError('Mock');
 }
 

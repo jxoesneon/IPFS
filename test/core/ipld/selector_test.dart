@@ -88,7 +88,7 @@ void main() {
 
       expect(results.length, 2);
       // Contains root
-      final rootEntry = results[0].mapValue.entries.firstWhere(
+      final rootEntry = results[0].node.mapValue.entries.firstWhere(
         (e) => e.key == 'link',
       );
       // It might be Kind.MAP (Link Map) or Kind.LINK.
@@ -107,22 +107,12 @@ void main() {
             slashEntry.value.bytesValue,
             rootData['link']!.multihash.toBytes(),
           );
-          // Wait, CID bytes or Multihash bytes?
-          // CID.fromBytes uses full CID bytes. rootData['link'] is CID.
-          // If encoded as CID bytes.
-          // But dag-cbor usually encodes as Tag 42 (CID).
-          // If decoded as Map, it usually holds CID bytes or string?
-          // Actually, standard cbor dag-pb/cbor uses string for JSON, but binary for CBOR.
-          // Let's check what we have. Comparison of bytes or decoding?
-          // simpler: try decoding.
-          // CID.fromBytes(slashEntry.value.bytesValue) == rootData['link']
-          // Or just trust it exists.
         } else if (slashEntry.value.kind == Kind.STRING) {
           expect(slashEntry.value.stringValue, rootData['link']!.toString());
         }
       }
       // Contains child
-      final childName = results[1].mapValue.entries
+      final childName = results[1].node.mapValue.entries
           .firstWhere((e) => e.key == 'name')
           .value
           .stringValue;
@@ -156,7 +146,7 @@ void main() {
 
       final results = await handler.executeSelector(block.cid, selector);
       expect(results.length, 1);
-      final name = results[0].mapValue.entries
+      final name = results[0].node.mapValue.entries
           .firstWhere((e) => e.key == 'name')
           .value
           .stringValue;
@@ -200,7 +190,7 @@ void main() {
 
         final results = await handler.executeSelector(rootBlock.cid, selector);
         expect(results.length, 1);
-        final targetName = results[0].mapValue.entries
+        final targetName = results[0].node.mapValue.entries
             .firstWhere((e) => e.key == 'name')
             .value
             .stringValue;

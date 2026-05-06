@@ -16,8 +16,12 @@ class Block implements IBlock {
     required this.data,
     this.format = 'raw', // Default format if not provided
   });
+
+  /// The content identifier (CID) of this block.
   @override
   final CID cid;
+
+  /// The raw byte data of this block.
   @override
   final Uint8List data;
 
@@ -72,7 +76,9 @@ class Block implements IBlock {
     return true; // Structural check only - use validate() for hash verification
   }
 
-  /// Converts the block to its protobuf representation
+  /// Converts the block to its protobuf representation.
+  ///
+  /// @return A [BlockProto] instance.
   @override
   BlockProto toProto() {
     return BlockProto()
@@ -81,7 +87,10 @@ class Block implements IBlock {
       ..format = format;
   }
 
-  /// Creates a block from its protobuf representation
+  /// Creates a block from its protobuf representation.
+  ///
+  /// @param proto The [BlockProto] to convert.
+  /// @return A new [Block] instance.
   static Block fromProto(BlockProto proto) {
     return Block(
       cid: CID.fromProto(proto.cid),
@@ -90,7 +99,10 @@ class Block implements IBlock {
     );
   }
 
-  /// Creates a block from its Bitswap protobuf representation
+  /// Creates a block from its Bitswap protobuf representation.
+  ///
+  /// @param protoBlock The [proto.Message_Block] to convert.
+  /// @return A new [Block] instance.
   static Future<Block> fromBitswapProto(proto.Message_Block protoBlock) async {
     return Block.fromData(Uint8List.fromList(protoBlock.data));
   }

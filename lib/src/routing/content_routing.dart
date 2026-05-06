@@ -11,11 +11,16 @@ import '../utils/logger.dart';
 /// Handles content routing operations for an IPFS node.
 class ContentRouting {
   /// Creates a content routing handler.
-  ContentRouting(IPFSConfig config, NetworkHandler networkHandler)
-    : _dhtClient = DHTClient(
-        networkHandler: networkHandler,
-        router: networkHandler.router,
-      );
+  ContentRouting(
+    IPFSConfig config,
+    NetworkHandler networkHandler, {
+    DHTClient? dhtClient,
+  }) : _dhtClient =
+           dhtClient ??
+           DHTClient(
+             networkHandler: networkHandler,
+             router: networkHandler.router,
+           );
   final DHTClient _dhtClient;
   final _logger = Logger('ContentRouting');
 
@@ -55,6 +60,18 @@ class ContentRouting {
     } catch (e, stackTrace) {
       _logger.error('Error finding providers for CID $cid', e, stackTrace);
       return [];
+    }
+  }
+
+  /// Announces that the local node provides a given CID.
+  Future<void> provide(String cid) async {
+    try {
+      final peerIdStr = _dhtClient.peerId.toBase58();
+      await _dhtClient.addProvider(cid, peerIdStr);
+      _logger.info('Successfully announced provision of CID $cid');
+    } catch (e, stackTrace) {
+      _logger.error('Error providing CID $cid', e, stackTrace);
+      rethrow;
     }
   }
 

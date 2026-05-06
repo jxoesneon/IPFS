@@ -3,7 +3,6 @@ include: package:lints/recommended.yaml
 analyzer:
   exclude:
     - example/**
-    - "**"
     - "packages/**"
     - lib/src/proto/generated/**
     - "**/*.g.dart"
@@ -22,8 +21,7 @@ analyzer:
     unused_local_variable: error
     dead_code: error
     # Only show documentation lints as info and avoid noise in internal src/
-    public_member_api_docs: info
-    package_api_docs: info
+    public_member_api_docs: warning
 
 linter:
   rules:
@@ -36,5 +34,4 @@ linter:
     - prefer_const_constructors
     - prefer_const_literals_to_create_immutables
     - sort_constructors_first
-    - package_api_docs
     - public_member_api_docs

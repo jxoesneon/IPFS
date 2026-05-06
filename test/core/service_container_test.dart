@@ -1,4 +1,5 @@
 import 'package:dart_ipfs/src/core/di/service_container.dart';
+import 'package:get_it/get_it.dart';
 import 'package:test/test.dart';
 
 class TestService {
@@ -10,7 +11,8 @@ void main() {
   group('ServiceContainer', () {
     late ServiceContainer container;
 
-    setUp(() {
+    setUp(() async {
+      await GetIt.instance.reset();
       container = ServiceContainer();
     });
 
@@ -46,7 +48,7 @@ void main() {
     });
 
     test('should throw if service not registered', () {
-      expect(() => container.get<TestService>(), throwsA(isA<Exception>()));
+      expect(() => container.get<TestService>(), throwsStateError);
       expect(container.isRegistered(TestService), isFalse);
     });
 

@@ -3,24 +3,22 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i10;
-import 'dart:convert' as _i16;
-import 'dart:typed_data' as _i13;
+import 'dart:async' as _i9;
+import 'dart:typed_data' as _i12;
 
-import 'package:dart_ipfs/src/core/cid.dart' as _i15;
+import 'package:dart_ipfs/src/core/cid.dart' as _i14;
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart' as _i6;
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart' as _i2;
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart' as _i9;
-import 'package:dart_ipfs/src/network/router.dart' as _i3;
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart' as _i8;
+import 'package:dart_ipfs/src/network/router.dart' as _i4;
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart'
-    as _i11;
-import 'package:dart_ipfs/src/routing/content_routing.dart' as _i14;
+    as _i10;
+import 'package:dart_ipfs/src/routing/content_routing.dart' as _i13;
 import 'package:dart_ipfs/src/routing/delegated_routing.dart' as _i7;
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart' as _i5;
-import 'package:dart_ipfs/src/transport/router_interface.dart' as _i4;
-import 'package:http/http.dart' as _i8;
+import 'package:dart_ipfs/src/transport/router_interface.dart' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i12;
+import 'package:mockito/src/dummies.dart' as _i11;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -42,14 +40,14 @@ class _FakeIPFSNode_0 extends _i1.SmartFake implements _i2.IPFSNode {
     : super(parent, parentInvocation);
 }
 
-class _FakeRouter_1 extends _i1.SmartFake implements _i3.Router {
-  _FakeRouter_1(Object parent, Invocation parentInvocation)
+class _FakeRouterInterface_1 extends _i1.SmartFake
+    implements _i3.RouterInterface {
+  _FakeRouterInterface_1(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeRouterInterface_2 extends _i1.SmartFake
-    implements _i4.RouterInterface {
-  _FakeRouterInterface_2(Object parent, Invocation parentInvocation)
+class _FakeRouter_2 extends _i1.SmartFake implements _i4.Router {
+  _FakeRouter_2(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
@@ -70,65 +68,67 @@ class _FakeRoutingResponse_5 extends _i1.SmartFake
     : super(parent, parentInvocation);
 }
 
-class _FakeResponse_6 extends _i1.SmartFake implements _i8.Response {
-  _FakeResponse_6(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
-class _FakeStreamedResponse_7 extends _i1.SmartFake
-    implements _i8.StreamedResponse {
-  _FakeStreamedResponse_7(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
 /// A class which mocks [NetworkHandler].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockNetworkHandler extends _i1.Mock implements _i9.NetworkHandler {
-  MockNetworkHandler() {
-    _i1.throwOnMissingStub(this);
-  }
-
+class MockNetworkHandler extends _i1.Mock implements _i8.NetworkHandler {
   @override
   _i2.IPFSNode get ipfsNode =>
       (super.noSuchMethod(
             Invocation.getter(#ipfsNode),
             returnValue: _FakeIPFSNode_0(this, Invocation.getter(#ipfsNode)),
+            returnValueForMissingStub: _FakeIPFSNode_0(
+              this,
+              Invocation.getter(#ipfsNode),
+            ),
           )
           as _i2.IPFSNode);
 
   @override
-  _i10.Stream<_i11.NetworkEvent> get networkEvents =>
-      (super.noSuchMethod(
-            Invocation.getter(#networkEvents),
-            returnValue: _i10.Stream<_i11.NetworkEvent>.empty(),
-          )
-          as _i10.Stream<_i11.NetworkEvent>);
-
-  @override
-  _i3.Router get router =>
+  _i3.RouterInterface get router =>
       (super.noSuchMethod(
             Invocation.getter(#router),
-            returnValue: _FakeRouter_1(this, Invocation.getter(#router)),
-          )
-          as _i3.Router);
-
-  @override
-  _i4.RouterInterface get p2pRouter =>
-      (super.noSuchMethod(
-            Invocation.getter(#p2pRouter),
-            returnValue: _FakeRouterInterface_2(
+            returnValue: _FakeRouterInterface_1(
               this,
-              Invocation.getter(#p2pRouter),
+              Invocation.getter(#router),
+            ),
+            returnValueForMissingStub: _FakeRouterInterface_1(
+              this,
+              Invocation.getter(#router),
             ),
           )
-          as _i4.RouterInterface);
+          as _i3.RouterInterface);
+
+  @override
+  _i9.Stream<_i10.NetworkEvent> get networkEvents =>
+      (super.noSuchMethod(
+            Invocation.getter(#networkEvents),
+            returnValue: _i9.Stream<_i10.NetworkEvent>.empty(),
+            returnValueForMissingStub: _i9.Stream<_i10.NetworkEvent>.empty(),
+          )
+          as _i9.Stream<_i10.NetworkEvent>);
+
+  @override
+  _i4.Router get dhtRouter =>
+      (super.noSuchMethod(
+            Invocation.getter(#dhtRouter),
+            returnValue: _FakeRouter_2(this, Invocation.getter(#dhtRouter)),
+            returnValueForMissingStub: _FakeRouter_2(
+              this,
+              Invocation.getter(#dhtRouter),
+            ),
+          )
+          as _i4.Router);
 
   @override
   _i5.CircuitRelayClient get circuitRelayClient =>
       (super.noSuchMethod(
             Invocation.getter(#circuitRelayClient),
             returnValue: _FakeCircuitRelayClient_3(
+              this,
+              Invocation.getter(#circuitRelayClient),
+            ),
+            returnValueForMissingStub: _FakeCircuitRelayClient_3(
               this,
               Invocation.getter(#circuitRelayClient),
             ),
@@ -140,6 +140,10 @@ class MockNetworkHandler extends _i1.Mock implements _i9.NetworkHandler {
       (super.noSuchMethod(
             Invocation.getter(#config),
             returnValue: _FakeIPFSConfig_4(this, Invocation.getter(#config)),
+            returnValueForMissingStub: _FakeIPFSConfig_4(
+              this,
+              Invocation.getter(#config),
+            ),
           )
           as _i6.IPFSConfig);
 
@@ -147,7 +151,11 @@ class MockNetworkHandler extends _i1.Mock implements _i9.NetworkHandler {
   String get peerID =>
       (super.noSuchMethod(
             Invocation.getter(#peerID),
-            returnValue: _i12.dummyValue<String>(
+            returnValue: _i11.dummyValue<String>(
+              this,
+              Invocation.getter(#peerID),
+            ),
+            returnValueForMissingStub: _i11.dummyValue<String>(
               this,
               Invocation.getter(#peerID),
             ),
@@ -161,65 +169,69 @@ class MockNetworkHandler extends _i1.Mock implements _i9.NetworkHandler {
   );
 
   @override
-  _i10.Future<void> start() =>
+  _i9.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
-            returnValue: _i10.Future<void>.value(),
-            returnValueForMissingStub: _i10.Future<void>.value(),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
           )
-          as _i10.Future<void>);
+          as _i9.Future<void>);
 
   @override
-  _i10.Future<void> stop() =>
+  _i9.Future<void> stop() =>
       (super.noSuchMethod(
             Invocation.method(#stop, []),
-            returnValue: _i10.Future<void>.value(),
-            returnValueForMissingStub: _i10.Future<void>.value(),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
           )
-          as _i10.Future<void>);
+          as _i9.Future<void>);
 
   @override
-  _i10.Future<void> connectToPeer(String? multiaddress) =>
+  _i9.Future<void> connectToPeer(String? multiaddress) =>
       (super.noSuchMethod(
             Invocation.method(#connectToPeer, [multiaddress]),
-            returnValue: _i10.Future<void>.value(),
-            returnValueForMissingStub: _i10.Future<void>.value(),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
           )
-          as _i10.Future<void>);
+          as _i9.Future<void>);
 
   @override
-  _i10.Future<void> disconnectFromPeer(String? multiaddress) =>
+  _i9.Future<void> disconnectFromPeer(String? multiaddress) =>
       (super.noSuchMethod(
             Invocation.method(#disconnectFromPeer, [multiaddress]),
-            returnValue: _i10.Future<void>.value(),
-            returnValueForMissingStub: _i10.Future<void>.value(),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
           )
-          as _i10.Future<void>);
+          as _i9.Future<void>);
 
   @override
-  _i10.Future<List<String>> listConnectedPeers() =>
+  _i9.Future<List<String>> listConnectedPeers() =>
       (super.noSuchMethod(
             Invocation.method(#listConnectedPeers, []),
-            returnValue: _i10.Future<List<String>>.value(<String>[]),
+            returnValue: _i9.Future<List<String>>.value(<String>[]),
+            returnValueForMissingStub: _i9.Future<List<String>>.value(
+              <String>[],
+            ),
           )
-          as _i10.Future<List<String>>);
+          as _i9.Future<List<String>>);
 
   @override
-  _i10.Future<void> sendMessage(String? peerId, String? message) =>
+  _i9.Future<void> sendMessage(String? peerId, String? message) =>
       (super.noSuchMethod(
             Invocation.method(#sendMessage, [peerId, message]),
-            returnValue: _i10.Future<void>.value(),
-            returnValueForMissingStub: _i10.Future<void>.value(),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
           )
-          as _i10.Future<void>);
+          as _i9.Future<void>);
 
   @override
-  _i10.Stream<String> receiveMessages(String? peerId) =>
+  _i9.Stream<String> receiveMessages(String? peerId) =>
       (super.noSuchMethod(
             Invocation.method(#receiveMessages, [peerId]),
-            returnValue: _i10.Stream<String>.empty(),
+            returnValue: _i9.Stream<String>.empty(),
+            returnValueForMissingStub: _i9.Stream<String>.empty(),
           )
-          as _i10.Stream<String>);
+          as _i9.Stream<String>);
 
   @override
   void setIpfsNode(_i2.IPFSNode? node) => super.noSuchMethod(
@@ -228,99 +240,96 @@ class MockNetworkHandler extends _i1.Mock implements _i9.NetworkHandler {
   );
 
   @override
-  _i10.Future<_i13.Uint8List> sendRequest(
+  _i9.Future<_i12.Uint8List?> sendRequest(
     String? peerId,
     String? protocolId,
-    _i13.Uint8List? request,
+    _i12.Uint8List? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#sendRequest, [peerId, protocolId, request]),
-            returnValue: _i10.Future<_i13.Uint8List>.value(_i13.Uint8List(0)),
+            returnValue: _i9.Future<_i12.Uint8List?>.value(),
+            returnValueForMissingStub: _i9.Future<_i12.Uint8List?>.value(),
           )
-          as _i10.Future<_i13.Uint8List>);
+          as _i9.Future<_i12.Uint8List?>);
 
   @override
-  _i10.Future<void> initialize() =>
+  _i9.Future<void> initialize() =>
       (super.noSuchMethod(
             Invocation.method(#initialize, []),
-            returnValue: _i10.Future<void>.value(),
-            returnValueForMissingStub: _i10.Future<void>.value(),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
           )
-          as _i10.Future<void>);
+          as _i9.Future<void>);
 
   @override
-  _i10.Future<bool> canConnectDirectly(String? peerAddress) =>
+  _i9.Future<bool> canConnectDirectly(String? peerAddress) =>
       (super.noSuchMethod(
             Invocation.method(#canConnectDirectly, [peerAddress]),
-            returnValue: _i10.Future<bool>.value(false),
+            returnValue: _i9.Future<bool>.value(false),
+            returnValueForMissingStub: _i9.Future<bool>.value(false),
           )
-          as _i10.Future<bool>);
+          as _i9.Future<bool>);
 
   @override
-  _i10.Future<String> testConnection({required int? sourcePort}) =>
-      (super.noSuchMethod(
-            Invocation.method(#testConnection, [], {#sourcePort: sourcePort}),
-            returnValue: _i10.Future<String>.value(
-              _i12.dummyValue<String>(
-                this,
-                Invocation.method(#testConnection, [], {
-                  #sourcePort: sourcePort,
-                }),
-              ),
-            ),
-          )
-          as _i10.Future<String>);
-
-  @override
-  _i10.Future<bool> testDialback() =>
+  _i9.Future<bool> testDialback() =>
       (super.noSuchMethod(
             Invocation.method(#testDialback, []),
-            returnValue: _i10.Future<bool>.value(false),
+            returnValue: _i9.Future<bool>.value(false),
+            returnValueForMissingStub: _i9.Future<bool>.value(false),
           )
-          as _i10.Future<bool>);
+          as _i9.Future<bool>);
 }
 
 /// A class which mocks [ContentRouting].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockContentRouting extends _i1.Mock implements _i14.ContentRouting {
-  MockContentRouting() {
-    _i1.throwOnMissingStub(this);
-  }
-
+class MockContentRouting extends _i1.Mock implements _i13.ContentRouting {
   @override
-  _i10.Future<void> start() =>
+  _i9.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
-            returnValue: _i10.Future<void>.value(),
-            returnValueForMissingStub: _i10.Future<void>.value(),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
           )
-          as _i10.Future<void>);
+          as _i9.Future<void>);
 
   @override
-  _i10.Future<void> stop() =>
+  _i9.Future<void> stop() =>
       (super.noSuchMethod(
             Invocation.method(#stop, []),
-            returnValue: _i10.Future<void>.value(),
-            returnValueForMissingStub: _i10.Future<void>.value(),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
           )
-          as _i10.Future<void>);
+          as _i9.Future<void>);
 
   @override
-  _i10.Future<List<String>> findProviders(String? cid) =>
+  _i9.Future<List<String>> findProviders(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#findProviders, [cid]),
-            returnValue: _i10.Future<List<String>>.value(<String>[]),
+            returnValue: _i9.Future<List<String>>.value(<String>[]),
+            returnValueForMissingStub: _i9.Future<List<String>>.value(
+              <String>[],
+            ),
           )
-          as _i10.Future<List<String>>);
+          as _i9.Future<List<String>>);
 
   @override
-  _i10.Future<String?> resolveDNSLink(String? domainName) =>
+  _i9.Future<void> provide(String? cid) =>
+      (super.noSuchMethod(
+            Invocation.method(#provide, [cid]),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
+          )
+          as _i9.Future<void>);
+
+  @override
+  _i9.Future<String?> resolveDNSLink(String? domainName) =>
       (super.noSuchMethod(
             Invocation.method(#resolveDNSLink, [domainName]),
-            returnValue: _i10.Future<String?>.value(),
+            returnValue: _i9.Future<String?>.value(),
+            returnValueForMissingStub: _i9.Future<String?>.value(),
           )
-          as _i10.Future<String?>);
+          as _i9.Future<String?>);
 }
 
 /// A class which mocks [DelegatedRoutingHandler].
@@ -328,208 +337,28 @@ class MockContentRouting extends _i1.Mock implements _i14.ContentRouting {
 /// See the documentation for Mockito's code generation for more information.
 class MockDelegatedRoutingHandler extends _i1.Mock
     implements _i7.DelegatedRoutingHandler {
-  MockDelegatedRoutingHandler() {
-    _i1.throwOnMissingStub(this);
-  }
-
   @override
-  _i10.Future<_i7.RoutingResponse> findProviders(_i15.CID? cid) =>
+  _i9.Future<_i7.RoutingResponse> findProviders(_i14.CID? cid) =>
       (super.noSuchMethod(
             Invocation.method(#findProviders, [cid]),
-            returnValue: _i10.Future<_i7.RoutingResponse>.value(
+            returnValue: _i9.Future<_i7.RoutingResponse>.value(
+              _FakeRoutingResponse_5(
+                this,
+                Invocation.method(#findProviders, [cid]),
+              ),
+            ),
+            returnValueForMissingStub: _i9.Future<_i7.RoutingResponse>.value(
               _FakeRoutingResponse_5(
                 this,
                 Invocation.method(#findProviders, [cid]),
               ),
             ),
           )
-          as _i10.Future<_i7.RoutingResponse>);
+          as _i9.Future<_i7.RoutingResponse>);
 
   @override
   void dispose() => super.noSuchMethod(
     Invocation.method(#dispose, []),
-    returnValueForMissingStub: null,
-  );
-}
-
-/// A class which mocks [Client].
-///
-/// See the documentation for Mockito's code generation for more information.
-class MockClient extends _i1.Mock implements _i8.Client {
-  MockClient() {
-    _i1.throwOnMissingStub(this);
-  }
-
-  @override
-  _i10.Future<_i8.Response> head(Uri? url, {Map<String, String>? headers}) =>
-      (super.noSuchMethod(
-            Invocation.method(#head, [url], {#headers: headers}),
-            returnValue: _i10.Future<_i8.Response>.value(
-              _FakeResponse_6(
-                this,
-                Invocation.method(#head, [url], {#headers: headers}),
-              ),
-            ),
-          )
-          as _i10.Future<_i8.Response>);
-
-  @override
-  _i10.Future<_i8.Response> get(Uri? url, {Map<String, String>? headers}) =>
-      (super.noSuchMethod(
-            Invocation.method(#get, [url], {#headers: headers}),
-            returnValue: _i10.Future<_i8.Response>.value(
-              _FakeResponse_6(
-                this,
-                Invocation.method(#get, [url], {#headers: headers}),
-              ),
-            ),
-          )
-          as _i10.Future<_i8.Response>);
-
-  @override
-  _i10.Future<_i8.Response> post(
-    Uri? url, {
-    Map<String, String>? headers,
-    Object? body,
-    _i16.Encoding? encoding,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(
-              #post,
-              [url],
-              {#headers: headers, #body: body, #encoding: encoding},
-            ),
-            returnValue: _i10.Future<_i8.Response>.value(
-              _FakeResponse_6(
-                this,
-                Invocation.method(
-                  #post,
-                  [url],
-                  {#headers: headers, #body: body, #encoding: encoding},
-                ),
-              ),
-            ),
-          )
-          as _i10.Future<_i8.Response>);
-
-  @override
-  _i10.Future<_i8.Response> put(
-    Uri? url, {
-    Map<String, String>? headers,
-    Object? body,
-    _i16.Encoding? encoding,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(
-              #put,
-              [url],
-              {#headers: headers, #body: body, #encoding: encoding},
-            ),
-            returnValue: _i10.Future<_i8.Response>.value(
-              _FakeResponse_6(
-                this,
-                Invocation.method(
-                  #put,
-                  [url],
-                  {#headers: headers, #body: body, #encoding: encoding},
-                ),
-              ),
-            ),
-          )
-          as _i10.Future<_i8.Response>);
-
-  @override
-  _i10.Future<_i8.Response> patch(
-    Uri? url, {
-    Map<String, String>? headers,
-    Object? body,
-    _i16.Encoding? encoding,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(
-              #patch,
-              [url],
-              {#headers: headers, #body: body, #encoding: encoding},
-            ),
-            returnValue: _i10.Future<_i8.Response>.value(
-              _FakeResponse_6(
-                this,
-                Invocation.method(
-                  #patch,
-                  [url],
-                  {#headers: headers, #body: body, #encoding: encoding},
-                ),
-              ),
-            ),
-          )
-          as _i10.Future<_i8.Response>);
-
-  @override
-  _i10.Future<_i8.Response> delete(
-    Uri? url, {
-    Map<String, String>? headers,
-    Object? body,
-    _i16.Encoding? encoding,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(
-              #delete,
-              [url],
-              {#headers: headers, #body: body, #encoding: encoding},
-            ),
-            returnValue: _i10.Future<_i8.Response>.value(
-              _FakeResponse_6(
-                this,
-                Invocation.method(
-                  #delete,
-                  [url],
-                  {#headers: headers, #body: body, #encoding: encoding},
-                ),
-              ),
-            ),
-          )
-          as _i10.Future<_i8.Response>);
-
-  @override
-  _i10.Future<String> read(Uri? url, {Map<String, String>? headers}) =>
-      (super.noSuchMethod(
-            Invocation.method(#read, [url], {#headers: headers}),
-            returnValue: _i10.Future<String>.value(
-              _i12.dummyValue<String>(
-                this,
-                Invocation.method(#read, [url], {#headers: headers}),
-              ),
-            ),
-          )
-          as _i10.Future<String>);
-
-  @override
-  _i10.Future<_i13.Uint8List> readBytes(
-    Uri? url, {
-    Map<String, String>? headers,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(#readBytes, [url], {#headers: headers}),
-            returnValue: _i10.Future<_i13.Uint8List>.value(_i13.Uint8List(0)),
-          )
-          as _i10.Future<_i13.Uint8List>);
-
-  @override
-  _i10.Future<_i8.StreamedResponse> send(_i8.BaseRequest? request) =>
-      (super.noSuchMethod(
-            Invocation.method(#send, [request]),
-            returnValue: _i10.Future<_i8.StreamedResponse>.value(
-              _FakeStreamedResponse_7(
-                this,
-                Invocation.method(#send, [request]),
-              ),
-            ),
-          )
-          as _i10.Future<_i8.StreamedResponse>);
-
-  @override
-  void close() => super.noSuchMethod(
-    Invocation.method(#close, []),
     returnValueForMissingStub: null,
   );
 }

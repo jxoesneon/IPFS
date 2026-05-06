@@ -1,5 +1,7 @@
 // src/core/data_structures/pin_manager.dart
 import 'dart:collection';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cbor/cbor.dart';
@@ -8,37 +10,82 @@ import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:path/path.dart' as p;
 
 /// Manages pinning operations to prevent content from garbage collection.
-///
-/// Supports direct pins (single block) and recursive pins (block + all refs).
-/// Tracks access times for cache eviction policies.
-///
-/// Example:
-/// ```dart
-/// final manager = PinManager(blockStore);
-/// await manager.pinBlock(cidProto, PinTypeProto.PIN_TYPE_RECURSIVE);
-/// ```
 class PinManager {
   /// Creates a pin manager backed by [_blockStore].
-  PinManager(this._blockStore);
+  PinManager(this._blockStore) : _logger = Logger('PinManager');
   final Map<String, PinTypeProto> _pins = {};
   final Map<String, Set<String>> _references = {};
-  final Map<String, DateTime> _accessTimes = {};
   final BlockStore _blockStore;
+  final Logger _logger;
+
+  /// Loads the pin state from a file.
+  Future<void> load(String path) async {
+    try {
+      final file = File(path);
+      if (!await file.exists()) return;
+
+      final content = await file.readAsString();
+      final Map<String, dynamic> data = json.decode(content) as Map<String, dynamic>;
+
+      if (data.containsKey('pins')) {
+        final pinsData = data['pins'] as Map<String, dynamic>;
+        pinsData.forEach((cid, typeIndex) {
+          _pins[cid] = PinTypeProto.valueOf(typeIndex as int) ?? 
+                      PinTypeProto.PIN_TYPE_RECURSIVE;
+        });
+      }
+
+      if (data.containsKey('references')) {
+        final refsData = data['references'] as Map<String, dynamic>;
+        refsData.forEach((cid, refs) {
+          _references[cid] = Set<String>.from(refs as Iterable);
+        });
+      }
+
+      _logger.info('Loaded ${_pins.length} pins from $path');
+    } catch (e) {
+      _logger.error('Failed to load pins from $path', e);
+    }
+  }
+
+  /// Saves the pin state to a file.
+  Future<void> save(String path) async {
+    try {
+      final data = {
+        'pins': _pins.map((k, v) => MapEntry(k, v.value)),
+        'references': _references.map((k, v) => MapEntry(k, v.toList())),
+      };
+      
+      final file = File(path);
+      await file.parent.create(recursive: true);
+      await file.writeAsString(json.encode(data));
+      _logger.debug('Saved ${_pins.length} pins to $path');
+    } catch (e) {
+      _logger.error('Failed to save pins to $path', e);
+    }
+  }
 
   /// Pins a block with the specified type (direct or recursive).
-  ///
-  /// Returns true if pinning succeeded.
   Future<bool> pinBlock(IPFSCIDProto cidProto, PinTypeProto type) async {
     final cidStr = CID.fromProto(cidProto).encode();
+    bool success = false;
+    
     if (type == PinTypeProto.PIN_TYPE_RECURSIVE) {
-      return await _pinRecursive(cidProto);
+      success = await _pinRecursive(cidProto);
     } else if (type == PinTypeProto.PIN_TYPE_DIRECT) {
       _pins[cidStr] = type;
-      return true;
+      success = true;
     }
-    return false;
+
+    if (success) {
+      // Auto-save pin state
+      await save(p.join(_blockStore.path, 'pins.json'));
+    }
+    return success;
   }
 
   Future<bool> _pinRecursive(IPFSCIDProto cid) async {
@@ -77,8 +124,7 @@ class PinManager {
     try {
       final blockResult = await _blockStore.getBlock(cidStr);
 
-      // Early return if block not found or doesn't have a block
-      if (!blockResult.found || !blockResult.hasBlock()) {
+      if (!blockResult.found || blockResult.block.data.isEmpty) {
         return null;
       }
 
@@ -111,7 +157,6 @@ class PinManager {
 
       return references;
     } catch (e) {
-      // print('Error getting block references: $e');
       return null;
     }
   }
@@ -160,8 +205,6 @@ class PinManager {
   }
 
   /// Unpins a block and its recursively pinned references.
-  ///
-  /// Returns true if the block was unpinned.
   Future<bool> unpinBlock(IPFSCIDProto cid) async {
     final cidStr = CID.fromProto(cid).encode();
     if (!_pins.containsKey(cidStr)) {
@@ -180,6 +223,10 @@ class PinManager {
     }
 
     _pins.remove(cidStr);
+    
+    // Auto-save pin state
+    await save(p.join(_blockStore.path, 'pins.json'));
+    
     return true;
   }
 
@@ -193,7 +240,6 @@ class PinManager {
         try {
           pinnedBlocks.add(_stringToIPFSCIDProto(entry.key));
         } catch (e) {
-          // print('Warning: Skipping invalid CID: ${entry.key}');
           continue;
         }
       }
@@ -211,21 +257,6 @@ class PinManager {
     }
   }
 
-  /// Returns the last access time for a block, if tracked.
-  DateTime? getBlockAccessTime(String cidStr) {
-    return _accessTimes[cidStr];
-  }
-
-  /// Records the access time for a block.
-  void setBlockAccessTime(String cidStr, DateTime time) {
-    _accessTimes[cidStr] = time;
-  }
-
-  /// Removes the access time record for a block.
-  void removeBlockAccessTime(String cidStr) {
-    _accessTimes.remove(cidStr);
-  }
-
   /// Returns the total number of pinned blocks
   int get pinnedBlockCount {
     final directPins = _pins.values
@@ -236,7 +267,6 @@ class PinManager {
         )
         .length;
 
-    // Count indirectly pinned blocks from recursive pins that aren't already in _pins
     final indirectPins = _references.entries
         .where((entry) => _pins[entry.key] == PinTypeProto.PIN_TYPE_RECURSIVE)
         .fold<Set<String>>({}, (acc, entry) => acc..addAll(entry.value))

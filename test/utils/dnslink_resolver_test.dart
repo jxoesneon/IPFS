@@ -1,81 +1,54 @@
-// test/utils/dnslink_resolver_test.dart
 import 'package:test/test.dart';
+import 'package:mockito/mockito.dart';
+import 'package:mockito/annotations.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 
-// Note: DNSLinkResolver makes HTTP requests to dnslink.io.
-// These tests focus on unit-testable logic patterns.
+import 'dnslink_resolver_test.mocks.dart';
 
+@GenerateNiceMocks([MockSpec<http.Client>()])
 void main() {
-  group('DNSLinkResolver URL Construction', () {
-    test('URL is correctly formatted', () {
-      const domainName = 'example.com';
-      final url = Uri.parse('https://dnslink.io/$domainName');
+  group('DNSLinkResolver', () {
+    late MockClient mockClient;
 
-      expect(url.toString(), equals('https://dnslink.io/example.com'));
-      expect(url.host, equals('dnslink.io'));
+    setUp(() {
+      mockClient = MockClient();
     });
 
-    test('handles subdomains correctly', () {
-      const domainName = 'docs.ipfs.tech';
-      final url = Uri.parse('https://dnslink.io/$domainName');
+    test('resolve success', () async {
+      final responseBody = json.encode({'cid': 'QmTest'});
+      when(
+        mockClient.get(any),
+      ).thenAnswer((_) async => http.Response(responseBody, 200));
 
-      expect(url.pathSegments.last, equals('docs.ipfs.tech'));
-    });
-  });
-
-  group('DNSLinkResolver Response Parsing', () {
-    test('extracts CID from successful response', () {
-      // Simulated JSON response
-      final jsonResponse = {'cid': 'QmExample123', 'domain': 'example.com'};
-      final cid = jsonResponse['cid'];
-
-      expect(cid, equals('QmExample123'));
+      final result = await DNSLinkResolver.resolve(
+        'example.com',
+        client: mockClient,
+      );
+      expect(result, equals('QmTest'));
     });
 
-    test('returns null for missing CID in response', () {
-      final jsonResponse = {'domain': 'example.com'}; // No 'cid' key
-      final cid = jsonResponse['cid'];
+    test('resolve failure status code', () async {
+      when(
+        mockClient.get(any),
+      ).thenAnswer((_) async => http.Response('Not Found', 404));
 
-      expect(cid, isNull);
-    });
-  });
-
-  group('DNSLinkResolver Error Handling', () {
-    test('returns null on HTTP error (non-200)', () {
-      const statusCode = 404;
-      final result = statusCode == 200 ? 'QmCid' : null;
-
+      final result = await DNSLinkResolver.resolve(
+        'example.com',
+        client: mockClient,
+      );
       expect(result, isNull);
     });
 
-    test('returns null on server error (500)', () {
-      const statusCode = 500;
-      final result = statusCode == 200 ? 'QmCid' : null;
+    test('resolve exception', () async {
+      when(mockClient.get(any)).thenThrow(Exception('Network error'));
 
+      final result = await DNSLinkResolver.resolve(
+        'example.com',
+        client: mockClient,
+      );
       expect(result, isNull);
-    });
-
-    test('returns null on network exception', () {
-      // Simulated: try { ... } catch (e) { return null; }
-      String? result;
-      try {
-        throw Exception('Network unreachable');
-      } catch (e) {
-        result = null;
-      }
-
-      expect(result, isNull);
-    });
-  });
-
-  group('DNSLinkResolver Domain Validation', () {
-    test('handles simple domains', () {
-      const domain = 'ipfs.io';
-      expect(domain.contains('.'), isTrue);
-    });
-
-    test('handles TLD-only domains', () {
-      const domain = 'localhost';
-      expect(domain.isNotEmpty, isTrue);
     });
   });
 }

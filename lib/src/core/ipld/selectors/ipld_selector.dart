@@ -3,6 +3,7 @@
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cbor/enhanced_cbor_handler.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:fixnum/fixnum.dart';
@@ -21,7 +22,7 @@ enum SelectorType {
   /// Match nodes by criteria.
   matcher,
 
-  /// Recursively traverse the DAG.
+  /// Recursive traversal selector.
   recursive,
 
   /// Union of multiple selectors.
@@ -29,6 +30,21 @@ enum SelectorType {
 
   /// Intersection of multiple selectors.
   intersection,
+}
+
+/// Result of a selector execution.
+class SelectorResult {
+  /// Creates a selector result.
+  SelectorResult({required this.cid, required this.node, this.path});
+
+  /// The CID of the matched node.
+  final CID cid;
+
+  /// The matched IPLD node.
+  final IPLDNode node;
+
+  /// The path from the root to this node.
+  final String? path;
 }
 
 /// IPLD Selector for querying and traversing DAG structures.

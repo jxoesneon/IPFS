@@ -30,6 +30,11 @@ class FullAddress {
 /// client version information.
 class Peer {
   /// Creates a new Peer with the given properties.
+  ///
+  /// @param id The peer ID.
+  /// @param addresses List of available network addresses.
+  /// @param latency Latency in milliseconds.
+  /// @param agentVersion The client agent version string.
   Peer({
     required this.id,
     required this.addresses,
@@ -97,13 +102,17 @@ class Peer {
       // Parse the multiaddr to extract peer ID and address
       final parts = multiaddr.split('/');
 
-      // The peer ID is the last component after '/p2p/'
-      final peerIdIndex = parts.indexOf('p2p') + 1;
-      if (peerIdIndex >= parts.length) {
+      // The peer ID is the component after '/p2p/'
+      final p2pIndex = parts.indexOf('p2p');
+      if (p2pIndex == -1 || p2pIndex + 1 >= parts.length) {
         throw FormatException('No peer ID found in multiaddr: $multiaddr');
       }
 
-      final peerId = PeerId(value: Base58().base58Decode(parts[peerIdIndex]));
+      final peerIdStr = parts[p2pIndex + 1];
+      if (peerIdStr.isEmpty) {
+        throw FormatException('Empty peer ID in multiaddr: $multiaddr');
+      }
+      final peerId = PeerId(value: Base58().base58Decode(peerIdStr));
 
       // Parse the address portion
       final address = parseMultiaddrString(multiaddr);
@@ -117,6 +126,8 @@ class Peer {
         latency: 0, // Default latency for new peers
         agentVersion: '', // Empty version since we don't know it yet
       );
+    } on FormatException {
+      rethrow;
     } catch (e) {
       throw FormatException('Error parsing multiaddr: $e');
     }
@@ -126,23 +137,24 @@ class Peer {
 /// Helper function to parse a multiaddr string into a FullAddress.
 FullAddress? parseMultiaddrString(String multiaddrString) {
   try {
-    // Basic support for /ip4/<ip>/tcp/<port> format
+    // Basic support for /ip4/<ip>/tcp/<port> or /ip6/<ip>/tcp/<port>
     final parts = multiaddrString.split('/');
     if (parts.length < 5) return null;
 
     final protocol = parts[1];
     final host = parts[2];
-    // parts[3] should be 'tcp' or 'udp'
+    final transport = parts[3];
     final portStr = parts[4];
-    final port = int.tryParse(portStr);
 
     if (protocol != 'ip4' && protocol != 'ip6') return null;
-    if (port == null || port == 0) return null;
+    if (transport != 'tcp' && transport != 'udp') return null;
+
+    final port = int.tryParse(portStr);
+    if (port == null || port <= 0 || port > 65535) return null;
 
     final ipAddress = InternetAddress(host);
     return FullAddress(address: ipAddress, port: port);
   } catch (e) {
-    // print('Error parsing multiaddr string: $e');
     return null;
   }
 }

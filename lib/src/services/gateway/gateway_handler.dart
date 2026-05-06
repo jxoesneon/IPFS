@@ -148,6 +148,12 @@ class GatewayHandler {
       'Cache-Control': 'public, max-age=29030400, immutable',
     };
 
+    // Handle range requests
+    final rangeHeader = request.headers['range'];
+    if (rangeHeader != null) {
+      return _serveRange(block.data, rangeHeader, headers);
+    }
+
     return Response.ok(block.data, headers: headers);
   }
 

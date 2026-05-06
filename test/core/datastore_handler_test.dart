@@ -162,7 +162,10 @@ void main() {
 
     test('handles putBlock error', () async {
       handler = DatastoreHandler(FailingDatastore());
-      await handler.putBlock(await Block.fromData(Uint8List(0)));
+      await expectLater(
+        () async => await handler.putBlock(await Block.fromData(Uint8List(0))),
+        returnsNormally,
+      );
     });
 
     test('handles getBlock error', () async {
@@ -179,12 +182,12 @@ void main() {
 
     test('handles start error', () async {
       handler = DatastoreHandler(FailingDatastore());
-      await handler.start(); // Should catch exception
+      await expectLater(() async => await handler.start(), throwsStateError);
     });
 
     test('handles stop error', () async {
       handler = DatastoreHandler(FailingDatastore());
-      await handler.stop(); // Should catch exception
+      await expectLater(() async => await handler.stop(), returnsNormally);
     });
 
     test('handles loadPinnedCIDs error', () async {
@@ -195,12 +198,18 @@ void main() {
 
     test('handles persistPinnedCIDs error', () async {
       handler = DatastoreHandler(FailingDatastore());
-      await handler.persistPinnedCIDs({'cid1'}); // Should catch exception
+      await expectLater(
+        () async => await handler.persistPinnedCIDs({'cid1'}),
+        returnsNormally,
+      );
     });
 
     test('handles importCAR error', () async {
       handler = DatastoreHandler(FailingDatastore());
-      await handler.importCAR(Uint8List(0)); // Should catch exception
+      await expectLater(
+        () async => await handler.importCAR(Uint8List(0)),
+        returnsNormally,
+      );
     });
 
     test('handles exportCAR error', () async {

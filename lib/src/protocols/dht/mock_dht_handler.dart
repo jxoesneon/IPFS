@@ -7,11 +7,15 @@ import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 
 /// A mock DHT handler for environments where DHT is not available (e.g. Web).
 class MockDHTHandler implements IDHTHandler {
+  final Map<String, Value> _storage = {};
+
   @override
   Future<void> start() async {}
 
   @override
-  Future<void> stop() async {}
+  Future<void> stop() async {
+    _storage.clear();
+  }
 
   @override
   Future<List<V_PeerInfo>> findPeer(PeerId id) async {
@@ -28,12 +32,16 @@ class MockDHTHandler implements IDHTHandler {
 
   @override
   Future<void> putValue(Key key, Value value) async {
-    // No-op to allow IPNS publish flow
+    _storage[key.toString()] = value;
   }
 
   @override
   Future<Value> getValue(Key key) async {
-    throw UnimplementedError('DHT getValue not supported on Web');
+    final value = _storage[key.toString()];
+    if (value == null) {
+      throw Exception('Value not found for key: ${key.toString()}');
+    }
+    return value;
   }
 
   @override

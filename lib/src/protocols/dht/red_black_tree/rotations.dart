@@ -102,8 +102,8 @@ class Rotations<K_PeerId, V_PeerInfo> {
   // Validate the red-black tree properties
   /// Validates all red-black tree properties.
   bool validateTree(RedBlackTree<K_PeerId, V_PeerInfo> tree) {
-    // 1. The root must be black
-    if (tree.root == null || tree.root!.color != common_tree.NodeColor.BLACK) {
+    // 1. The root must be black (if it exists)
+    if (tree.root != null && tree.root!.color != common_tree.NodeColor.BLACK) {
       return false;
     }
 
@@ -172,7 +172,7 @@ class Rotations<K_PeerId, V_PeerInfo> {
       // Run all validations
       final bool isValid =
           validateRedProperty(tree.root) &&
-          countBlackNodes(tree.root) > 0 &&
+          (tree.root == null || countBlackNodes(tree.root) > 0) &&
           validateNodeColors(tree.root) &&
           validateParentPointers(tree.root, null) &&
           validateBSTProperty(tree.root);

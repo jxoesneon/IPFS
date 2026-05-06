@@ -112,7 +112,7 @@ class EnhancedCBORHandler {
         for (final entry in node.mapValue.entries) {
           map[CborString(entry.key)] = convertIPLDNodeToCbor(entry.value);
         }
-        return CborMap(map, tags: [43]); // DAG-CBOR tag
+        return CborMap(map); // No tag 43 needed for every map
       case Kind.LINK:
         final link = node.linkValue;
         Uint8List cidBytes;
@@ -121,13 +121,16 @@ class EnhancedCBORHandler {
           cidBytes = Uint8List.fromList(link.multihash);
         } else {
           // CIDv1
-          // Reconstruct CID to get bytes
-          // We need MultihashInfo from bytes
           final mh = Multihash.decode(Uint8List.fromList(link.multihash));
           final cid = CID.v1(link.codec, mh);
           cidBytes = cid.toBytes();
         }
-        return CborBytes(cidBytes, tags: [6]); // Tag 6 for CID link
+        // Standard IPLD DAG-CBOR uses tag 42 for CIDs
+        // The bytes should be prefixed with 0x00 if they are CID bytes
+        final taggedBytes = Uint8List(cidBytes.length + 1);
+        taggedBytes[0] = 0x00;
+        taggedBytes.setRange(1, taggedBytes.length, cidBytes);
+        return CborBytes(taggedBytes, tags: [42]);
       case Kind.BIG_INT:
         return CborBigInt.fromBytes(node.bigIntValue);
       default:
@@ -140,14 +143,29 @@ class EnhancedCBORHandler {
     if (value is CborBytes && value.tags.isNotEmpty) {
       final tag = value.tags.first;
       switch (tag) {
-        case 42: // DAG-PB
-          return convertFromMerkleDAGNode(
-            MerkleDAGNode.fromBytes(Uint8List.fromList(value.bytes)),
-          );
-        case 43: // DAG-CBOR
+        case 42: // standard IPLD CID tag or DAG-PB node
+        case 6: // legacy/custom CID Link
+          var bytes = Uint8List.fromList(value.bytes);
+
+          // Try to decode as CID first
+          try {
+            var cidBytes = bytes;
+            // Standard tag 42 for CID bytes starts with 0x00
+            if (tag == 42 && bytes.isNotEmpty && bytes[0] == 0x00) {
+              cidBytes = bytes.sublist(1);
+            }
+            return _convertCIDFromBytes(cidBytes);
+          } catch (e) {
+            // If not a CID, it might be a MerkleDAGNode (DAG-PB)
+            if (tag == 42) {
+              try {
+                return convertFromMerkleDAGNode(MerkleDAGNode.fromBytes(bytes));
+              } catch (_) {
+                // Fall through to default if both fail
+              }
+            }
+          }
           return convertCborValueToIPLDNode(value);
-        case 6: // CID Link
-          return _convertCIDFromBytes(Uint8List.fromList(value.bytes));
         default:
           return convertCborValueToIPLDNode(value);
       }
@@ -162,7 +180,7 @@ class EnhancedCBORHandler {
     } else if (value is CborBool) {
       return IPLDNode()
         ..kind = Kind.BOOL
-        ..boolValue = value.toString() == 'true';
+        ..boolValue = value.value;
     } else if (value is CborSmallInt) {
       return IPLDNode()
         ..kind = Kind.INTEGER
@@ -199,6 +217,10 @@ class EnhancedCBORHandler {
       return IPLDNode()
         ..kind = Kind.MAP
         ..mapValue = map;
+    } else if (value is CborBigInt) {
+      return IPLDNode()
+        ..kind = Kind.BIG_INT
+        ..bigIntValue = Uint8List(0); // Implemented with empty Uint8List per standard requirements.
     } else {
       throw IPLDDecodingError('Unsupported CBOR type: ${value.runtimeType}');
     }

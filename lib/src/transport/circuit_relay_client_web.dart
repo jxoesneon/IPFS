@@ -5,6 +5,8 @@ import 'package:fixnum/fixnum.dart' as fixnum;
 import 'router_interface.dart';
 
 /// Handles circuit relay operations for an IPFS node (web stub).
+///
+/// Note: Circuit relay support on web is limited or not yet implemented.
 class CircuitRelayClient {
   /// Creates a new [CircuitRelayClient] using the provided router.
   CircuitRelayClient(RouterInterface router);
@@ -22,6 +24,13 @@ class CircuitRelayClient {
   }
 
   /// Requests a reservation from a relay peer (Circuit Relay v2 HOP).
+  ///
+  /// [relayPeerId]: The peer ID of the relay.
+  /// [duration]: Requested reservation duration.
+  /// [limitData]: Maximum data allowed in bytes.
+  /// [limitDuration]: Maximum connection duration in seconds.
+  ///
+  /// Throws [UnimplementedError] on web.
   Future<Reservation?> reserve(
     String relayPeerId, {
     Duration duration = const Duration(minutes: 60),
@@ -32,11 +41,17 @@ class CircuitRelayClient {
   }
 
   /// Connects to a peer using a circuit relay.
+  ///
+  /// [peerId]: The target peer ID.
+  ///
+  /// Throws [UnimplementedError] on web.
   Future<void> connect(String peerId) async {
     throw UnimplementedError('Circuit Relay connect not implemented on web');
   }
 
   /// Disconnects from a peer using a circuit relay.
+  ///
+  /// [peerId]: The peer ID to disconnect from.
   Future<void> disconnect(String peerId) async {}
 
   /// Stream of circuit relay connection events.
@@ -48,8 +63,12 @@ class CircuitRelayClient {
       _circuitRelayEventsController.stream;
 
   /// Emits a new circuit relay event.
+  ///
+  /// [event]: The event to emit.
   void emitCircuitRelayEvent(CircuitRelayConnectionEvent event) {
-    _circuitRelayEventsController.add(event);
+    if (!_circuitRelayEventsController.isClosed) {
+      _circuitRelayEventsController.add(event);
+    }
   }
 }
 

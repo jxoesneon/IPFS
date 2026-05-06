@@ -1,16 +1,24 @@
 import 'dart:async';
 
 import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart' as pb;
+import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 
 import 'router_interface.dart';
 
 /// Handles circuit relay operations for an IPFS node.
+///
+/// Implements the Circuit Relay v2 protocol (HOP and STOP).
 class CircuitRelayClient {
   /// Creates a new [CircuitRelayClient] using the provided [_router].
-  CircuitRelayClient(this._router);
+  CircuitRelayClient(this._router) {
+    _logger = Logger('CircuitRelayClient');
+  }
+
   static const String _protocolId = '/libp2p/circuit/relay/0.2.0/hop';
   final RouterInterface _router; // Router instance for handling connections
+  late final Logger _logger;
+
   final StreamController<CircuitRelayConnectionEvent>
   _circuitRelayEventsController =
       StreamController<CircuitRelayConnectionEvent>.broadcast();
@@ -21,36 +29,45 @@ class CircuitRelayClient {
   /// Starts the circuit relay client.
   Future<void> start() async {
     try {
-      // Initialize any necessary resources or connections
-      await _router.start();
+      _logger.debug('Starting CircuitRelayClient...');
+      if (!_router.hasStarted) {
+        await _router.start();
+      }
       _router.registerProtocol(_protocolId);
       _router.registerProtocolHandler(_protocolId, _handlePacket);
-    } catch (e) {
-      // ignore: empty_catches
+    } catch (e, stackTrace) {
+      _logger.error('Failed to start CircuitRelayClient', e, stackTrace);
+      rethrow;
     }
   }
 
   /// Stops the circuit relay client.
   Future<void> stop() async {
     try {
-      // Clean up resources and close connections
-      await _router.stop();
+      _logger.debug('Stopping CircuitRelayClient...');
       await _circuitRelayEventsController.close(); // Close the event stream
-      // print('Circuit Relay Client stopped.');
-    } catch (e) {
-      // ignore: empty_catches
+      _pendingReservations.clear();
+      _logger.info('CircuitRelayClient stopped');
+    } catch (e, stackTrace) {
+      _logger.error('Error stopping CircuitRelayClient', e, stackTrace);
     }
   }
 
   /// Requests a reservation from a relay peer (Circuit Relay v2 HOP).
   ///
-  /// Returns [Reservation] details if successful.
+  /// [relayPeerId]: The peer ID of the relay.
+  /// [duration]: Requested reservation duration.
+  /// [limitData]: Maximum data allowed in bytes.
+  /// [limitDuration]: Maximum connection duration in seconds.
+  ///
+  /// Returns [Reservation] details if successful, null otherwise.
   Future<Reservation?> reserve(
     String relayPeerId, {
     Duration duration = const Duration(minutes: 60),
     int limitData = 1024 * 1024 * 1024, // 1GB default
     int limitDuration = 7200, // 2 hours
   }) async {
+    _logger.debug('Requesting reservation from relay: $relayPeerId');
     try {
       final msg = pb.HopMessage()
         ..type = pb.HopMessage_Type.RESERVE
@@ -62,22 +79,15 @@ class CircuitRelayClient {
       final completer = Completer<Reservation>();
       _pendingReservations[relayPeerId] = completer;
 
-      // Send message
-      final addresses = _router.resolvePeerId(relayPeerId);
-
-      if (addresses.isEmpty) {
-        throw StateError(
-          'Could not resolve address for relay peer: $relayPeerId',
-        );
-      }
-
       // Setup listener before sending to handle synchronous responses in tests
       final responseFuture = completer.future
           .timeout(
             const Duration(seconds: 30),
             onTimeout: () {
               _pendingReservations.remove(relayPeerId);
-              throw TimeoutException('Reservation request timed out');
+              throw TimeoutException(
+                'Reservation request to $relayPeerId timed out',
+              );
             },
           )
           .then((res) {
@@ -100,7 +110,12 @@ class CircuitRelayClient {
 
       // Wait for response or timeout
       return await responseFuture;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Failed to acquire reservation from $relayPeerId',
+        e,
+        stackTrace,
+      );
       _pendingReservations.remove(relayPeerId);
       _circuitRelayEventsController.add(
         CircuitRelayConnectionEvent(
@@ -136,21 +151,27 @@ class CircuitRelayClient {
           } else {
             Future.microtask(
               () => completer.completeError(
-                'Reservation rejected: ${msg.status}',
+                'Reservation rejected by $fromPeer: ${msg.status}',
               ),
             );
           }
         }
       }
       // Handle other types (CONNECT, etc.) if needed in future
-    } catch (e) {
-      // ignore: avoid_print
-      // print('Error handling HOP message: $e');
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Error handling HOP message from ${packet.srcPeerId}',
+        e,
+        stackTrace,
+      );
     }
   }
 
   /// Connects to a peer using a circuit relay.
+  ///
+  /// [peerId]: The target peer ID to connect to via relay.
   Future<void> connect(String peerId) async {
+    _logger.debug('Connecting to peer via relay: $peerId');
     try {
       await _router.connect(peerId);
       _circuitRelayEventsController.add(
@@ -159,7 +180,8 @@ class CircuitRelayClient {
           relayAddress: peerId,
         ),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      _logger.error('Failed to connect via relay to $peerId', e, stackTrace);
       _circuitRelayEventsController.add(
         CircuitRelayConnectionEvent(
           eventType: 'circuit_relay_failed',
@@ -167,11 +189,15 @@ class CircuitRelayClient {
           errorMessage: e.toString(),
         ),
       );
+      rethrow;
     }
   }
 
   /// Disconnects from a peer using a circuit relay.
+  ///
+  /// [peerId]: The peer ID to disconnect from.
   Future<void> disconnect(String peerId) async {
+    _logger.debug('Disconnecting from relayed peer: $peerId');
     try {
       await _router.disconnect(peerId);
       _circuitRelayEventsController.add(
@@ -181,7 +207,12 @@ class CircuitRelayClient {
           reason: 'disconnected',
         ),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Error disconnecting from relayed peer $peerId',
+        e,
+        stackTrace,
+      );
       _circuitRelayEventsController.add(
         CircuitRelayConnectionEvent(
           eventType: 'circuit_relay_failed',
@@ -202,8 +233,12 @@ class CircuitRelayClient {
       _circuitRelayEventsController.stream;
 
   /// Emits a new circuit relay event.
+  ///
+  /// [event]: The event to emit.
   void emitCircuitRelayEvent(CircuitRelayConnectionEvent event) {
-    _circuitRelayEventsController.add(event);
+    if (!_circuitRelayEventsController.isClosed) {
+      _circuitRelayEventsController.add(event);
+    }
   }
 }
 

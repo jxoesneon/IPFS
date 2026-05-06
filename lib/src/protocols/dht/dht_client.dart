@@ -17,6 +17,8 @@ import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 
+import 'package:dart_ipfs/src/utils/logger.dart';
+
 /// Kademlia DHT client implementation for IPFS.
 ///
 /// Implements the [IPFS Kademlia DHT specification](https://github.com/libp2p/specs/tree/master/kad-dht)
@@ -38,7 +40,8 @@ import 'package:dart_ipfs/src/utils/base58.dart';
 class DHTClient {
   /// Creates a new DHT client.
   DHTClient({required this.networkHandler, required RouterInterface router})
-    : _router = router;
+    : _router = router,
+      _logger = Logger('DHTClient');
 
   /// The IPFS node this client belongs to.
   IPFSNode get node => networkHandler.ipfsNode;
@@ -47,6 +50,7 @@ class DHTClient {
   final NetworkHandler networkHandler;
 
   final RouterInterface _router;
+  final Logger _logger;
 
   /// The local peer ID.
   late final PeerId peerId;
@@ -140,6 +144,8 @@ class DHTClient {
 
   // Content Routing API: Find Providers (GET_PROVIDERS)
   /// Finds providers for a CID in the DHT.
+  ///
+  /// This method queries the closest peers to the CID and returns a list of [PeerId]s.
   Future<List<PeerId>> findProviders(String cid) async {
     _checkInitialized();
     final msg = kad.Message()
@@ -178,9 +184,9 @@ class DHTClient {
         }
         // Also checks closerPeers for iterative query (not implemented loop here yet)
       } catch (e) {
-        // print(
-        //   'Error querying peer ${Base58().encode(peer.value)} for providers: $e',
-        // );
+        _logger.debug(
+          'Error querying peer ${Base58().encode(peer.value)} for providers: $e',
+        );
       }
     }
 
@@ -188,6 +194,8 @@ class DHTClient {
   }
 
   /// Finds a peer by its ID in the DHT.
+  ///
+  /// This method queries the network for the specified [id] and returns it if found.
   Future<PeerId?> findPeer(PeerId id) async {
     _checkInitialized();
     final msg = kad.Message()
@@ -214,15 +222,17 @@ class DHTClient {
         }
         // Iterate...
       } catch (e) {
-        // print(
-        //   'Error querying peer ${Base58().encode(peer.value)} for peer lookup: $e',
-        // );
+        _logger.debug(
+          'Error querying peer ${Base58().encode(peer.value)} for peer lookup: $e',
+        );
       }
     }
     return null;
   }
 
-  /// Adds a provider (ADD_PROVIDER)
+  /// Adds a provider (ADD_PROVIDER) to the DHT for a given [cid].
+  ///
+  /// [cid] is the content identifier and [providerId] is the peer ID of the provider.
   Future<void> addProvider(String cid, String providerId) async {
     _checkInitialized();
     final msg = kad.Message()
@@ -245,9 +255,9 @@ class DHTClient {
       try {
         await _sendRequest(peer, protocolDht, msg.writeToBuffer());
       } catch (e) {
-        // print(
-        //   'Error adding provider to peer ${Base58().encode(peer.value)}: $e',
-        // );
+        _logger.debug(
+          'Error adding provider to peer ${Base58().encode(peer.value)}: $e',
+        );
       }
     }
   }
@@ -274,7 +284,7 @@ class DHTClient {
     return successCount > 0;
   }
 
-  /// Stores a value directly on a specific peer.
+  /// Stores a value directly on a specific [peer].
   Future<bool> storeValueToPeer(
     PeerId peer,
     Uint8List key,
@@ -294,14 +304,16 @@ class DHTClient {
       await _sendRequest(peer, protocolDht, msg.writeToBuffer());
       return true;
     } catch (e) {
-      // print('Error storing value with peer ${Base58().encode(peer.value)}: $e');
+      _logger.debug(
+        'Error storing value with peer ${Base58().encode(peer.value)}: $e',
+      );
       return false;
     }
   }
 
   /// Retrieves a value from the DHT (GET_VALUE)
   ///
-  /// Queries the K closest peers to the key and returns the first value found.
+  /// Queries the K closest peers to the [key] and returns the first value found.
   Future<Uint8List?> getValue(Uint8List key) async {
     _checkInitialized();
     final msg = kad.Message()
@@ -327,16 +339,16 @@ class DHTClient {
           return Uint8List.fromList(response.record.value);
         }
       } catch (e) {
-        // print(
-        //   'Error getting value from peer ${Base58().encode(peer.value)}: $e',
-        // );
+        _logger.debug(
+          'Error getting value from peer ${Base58().encode(peer.value)}: $e',
+        );
       }
     }
 
     return null;
   }
 
-  /// Checks if a value exists on a specific peer
+  /// Checks if a value exists on a specific peer.
   ///
   /// Used for replica health checks.
   Future<bool> checkValueOnPeer(PeerId peer, Uint8List key) async {
@@ -354,6 +366,9 @@ class DHTClient {
       final response = kad.Message.fromBuffer(responseBytes);
       return response.hasRecord() && response.record.value.isNotEmpty;
     } catch (e) {
+      _logger.debug(
+        'Error checking value on peer ${Base58().encode(peer.value)}: $e',
+      );
       return false;
     }
   }
@@ -387,6 +402,12 @@ class DHTClient {
       await p2plibRouter.sendMessage(peer.toBase58(), data);
 
       return await completer.future.timeout(const Duration(seconds: 30));
+    } on TimeoutException {
+      _logger.debug('Request to ${peer.toBase58()} timed out');
+      rethrow;
+    } catch (e) {
+      _logger.debug('Error sending request to ${peer.toBase58()}: $e');
+      rethrow;
     } finally {
       // p2plibRouter.removeMessageHandler(protocol); // implementation dependent
     }
@@ -402,7 +423,9 @@ class DHTClient {
       // SEC-005: Verify PoW for DHT Sybil protection
       final difficulty = networkHandler.config.security.dhtDifficulty;
       if (difficulty > 0 && !srcPeerId.verifyPoW(difficulty: difficulty)) {
-        // print('Rejecting DHT message from $peerIdStr: Insufficient PoW');
+        _logger.warning(
+          'Rejecting DHT message from $peerIdStr: Insufficient PoW',
+        );
         return;
       }
 
@@ -438,10 +461,10 @@ class DHTClient {
           _sendResponse(peerIdStr, response);
           break;
         default:
-        // print('Unhandled DHT message type: ${message.type}');
+          _logger.debug('Unhandled DHT message type: ${message.type}');
       }
-    } catch (e) {
-      // print('Error handling DHT packet: $e');
+    } catch (e, st) {
+      _logger.error('Error handling DHT packet', e, st);
     }
   }
 
@@ -449,7 +472,7 @@ class DHTClient {
     node.dhtHandler?.router.sendMessage(peerIdStr, msg.writeToBuffer());
   }
 
-  /// Starts the DHT client and initializes necessary components
+  /// Starts the DHT client and initializes necessary components.
   Future<void> start() async {
     try {
       // Ensure client is initialized before starting
@@ -465,14 +488,14 @@ class DHTClient {
       // Initialize routing table
       await _initializeRoutingTable();
 
-      // print('DHT client started successfully (Standard Kademlia)');
-    } catch (e) {
-      // print('Error starting DHT client: $e');
+      _logger.info('DHT client started successfully (Standard Kademlia)');
+    } catch (e, st) {
+      _logger.error('Error starting DHT client', e, st);
       rethrow;
     }
   }
 
-  /// Stops the DHT client and cleans up resources
+  /// Stops the DHT client and cleans up resources.
   Future<void> stop() async {
     try {
       // Clean up any active requests or connections
@@ -482,14 +505,14 @@ class DHTClient {
       }
       _initialized = false;
 
-      // print('DHT client stopped successfully');
-    } catch (e) {
-      // print('Error stopping DHT client: $e');
+      _logger.info('DHT client stopped successfully');
+    } catch (e, st) {
+      _logger.error('Error stopping DHT client', e, st);
       rethrow;
     }
   }
 
-  /// Initialize the routing table with bootstrap peers
+  /// Initialize the routing table with bootstrap peers.
   Future<void> _initializeRoutingTable() async {
     final bootstrapPeers = networkHandler.config.network.bootstrapPeers;
     for (final peerAddr in bootstrapPeers) {
@@ -499,19 +522,19 @@ class DHTClient {
           await _kademliaRoutingTable.addPeer(peer, peer);
         }
       } catch (e) {
-        // print('Error connecting to bootstrap peer $peerAddr: $e');
+        _logger.debug('Error connecting to bootstrap peer $peerAddr: $e');
       }
     }
   }
 
-  /// Helper method to connect to a peer given their multiaddr
+  /// Helper method to connect to a peer given their multiaddr.
   Future<PeerId?> _connectToPeer(String multiaddr) async {
     try {
       // Implementation of peer connection logic
       // This would use the router to establish connection
       return null; // Replace with actual peer connection logic
     } catch (e) {
-      // print('Error connecting to peer $multiaddr: $e');
+      _logger.debug('Error connecting to peer $multiaddr: $e');
       return null;
     }
   }
@@ -650,7 +673,6 @@ class DHTClient {
       final putValueResponse = PutValueResponse.fromBuffer(response);
       return putValueResponse.success;
     } catch (e) {
-      // print('Error storing value with peer ${Base58().encode(peer.value)}: $e');
       return false;
     }
   }

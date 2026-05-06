@@ -11,204 +11,206 @@ import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_interface.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:fixnum/fixnum.dart';
+import 'package:fixnum/fixnum.dart' as fixnum;
 
 import 'ipns_record.dart';
 
-/// Handles IPNS operations, combining both node-level coordination and protocol-level operations.
+/// Handles IPNS (InterPlanetary Name System) operations.
 ///
-/// **Security (SEC-004):** All IPNS records are signed with Ed25519 and verified
-/// on resolve to prevent record forgery attacks.
+/// Coordinates record publication and resolution across DHT and PubSub
+/// layers, ensuring record authenticity and validity.
+///
+/// **Security (SEC-004):** All IPNS records are cryptographically signed and
+/// verified upon resolution to prevent forgery and MITM attacks.
 class IPNSHandler {
-  // Standard topic
-
-  /// Creates a new [IPNSHandler].
+  /// Creates a new [IPNSHandler] with the required dependencies.
+  ///
+  /// Parameters:
+  /// - [_config]: Global IPFS configuration.
+  /// - [_securityManager]: Manager for secure key access and cryptographic operations.
+  /// - [_dhtHandler]: Handler for DHT-based record storage and retrieval.
+  /// - [_pubSubHandler]: Optional handler for IPNS-over-PubSub updates.
   IPNSHandler(
-    this._config,
+    IPFSConfig config,
     this._securityManager,
     this._dhtHandler, [
     this._pubSubHandler,
-  ]) {
-    _logger = Logger(
-      'IPNSHandler',
-      debug: _config.debug,
-      verbose: _config.verboseLogging,
-    );
-    _logger.debug('IPNSHandler instance created');
+  ]) : _logger = Logger(
+         'IPNSHandler',
+         debug: config.debug,
+         verbose: config.verboseLogging,
+       ) {
+    _logger.debug('IPNSHandler instance initialized');
   }
-  final IPFSConfig _config;
+
   final ISecurityManager _securityManager;
   final IDHTHandler _dhtHandler;
-  final IPubSub? _pubSubHandler; // Optional: May be null if offline
-  late final Logger _logger;
+  final IPubSub? _pubSubHandler;
+  final Logger _logger;
+
   bool _isRunning = false;
 
-  /// Sequence numbers for each key (tracked to ensure monotonic increase)
+  /// Tracks sequence numbers for published keys to ensure monotonic updates.
   final Map<String, int> _sequenceNumbers = {};
 
-  // Cache for resolved IPNS records
+  /// Cache for resolved IPNS records to improve performance and reduce network load.
   final Map<String, _CachedResolution> _resolutionCache = {};
-  static const Duration _cacheDuration = Duration(minutes: 30);
 
+  static const Duration _cacheDuration = Duration(minutes: 30);
   static const String _pubSubTopic = '/ipfs/ipns-1.0.0';
 
-  /// Publishes a SIGNED IPNS record linking a name to a CID.
+  /// Indicates whether the IPNS handler is currently active.
+  bool get isRunning => _isRunning;
+
+  /// Derives the PubSub topic for a given IPNS name (PeerID).
   ///
-  /// SEC-004: Records are signed with Ed25519 to prevent forgery.
-  /// Uses EncryptedKeystore via SecurityManager for secure key access.
-  /// Derives the PubSub topic from the PeerID string (name).
-  /// Decodes Base58 to get raw ID bytes, then key-specific formatting.
+  /// Parameters:
+  /// - [name]: The IPNS name (Base58 encoded PeerID).
+  ///
+  /// Returns the derived PubSub topic string.
   String _getRecordTopic(String name) {
     try {
-      // Decode Base58 string to bytes (Key ID)
-      final bytes = Base58().base58Decode(name);
+      final List<int> bytes = Base58().base58Decode(name);
       return _getTopicFromBytes(Uint8List.fromList(bytes));
     } catch (e) {
-      // Fallback if not Base58 (e.g. testing with simple strings)
-      // Though technically spec requires Multihash/PeerID.
-      final bytes = utf8.encode(name);
+      _logger.debug(
+        'Name is not Base58, using UTF-8 fallback for topic: $name',
+      );
+      final List<int> bytes = utf8.encode(name);
       return _getTopicFromBytes(Uint8List.fromList(bytes));
     }
   }
 
-  /// Derives the PubSub topic from raw Key ID bytes.
-  /// Format: /record/base64url-unpadded(key-id-bytes)
+  /// Derives the PubSub topic from raw Key ID bytes using Base64URL encoding.
   String _getTopicFromBytes(Uint8List keyIdBytes) {
-    final b64 = base64Url.encode(keyIdBytes).replaceAll('=', '');
+    final String b64 = base64Url.encode(keyIdBytes).replaceAll('=', '');
     return '/record/$b64';
   }
 
   /// Derives the Key ID bytes for an Ed25519 public key.
-  /// (Identity Multihash: 0x00 + len + pubKey)
+  ///
+  /// Uses the Identity Multihash format (0x00 + length + publicKey).
   Uint8List _getEd25519KeyId(Uint8List publicKey) {
-    if (publicKey.length != 32) return publicKey; // Should be 32 for Ed25519
+    if (publicKey.length != 32) return publicKey;
 
-    final builder = BytesBuilder();
-    builder.addByte(0x00); // Identity code
+    final BytesBuilder builder = BytesBuilder();
+    builder.addByte(0x00); // Identity multihash code
     builder.addByte(32); // Length
     builder.add(publicKey);
     return builder.toBytes();
   }
 
-  /// Publishes an IPNS record for a CID.
+  /// Publishes a signed IPNS record linking a name to a CID.
+  ///
+  /// Orchestrates record creation, signing via [ISecurityManager], and
+  /// distribution via both DHT and PubSub (if available).
+  ///
+  /// Parameters:
+  /// - [cid]: The Content Identifier to link.
+  /// - [keyName]: The name of the key in the keystore to sign the record with.
+  ///
+  /// Throws:
+  /// - [ArgumentError] if the CID format is invalid.
+  /// - [StateError] if the keystore is locked.
   Future<void> publish(String cid, {required String keyName}) async {
-    _logger.debug('Publishing IPNS record for CID: $cid with key: $keyName');
+    _logger.debug('Publishing IPNS record: $cid with key: $keyName');
 
     try {
-      // Verify CID format
       if (!_isValidCID(cid)) {
-        throw ArgumentError('Invalid CID format');
+        throw ArgumentError('Invalid CID format: $cid');
       }
 
-      // Check if keystore is unlocked
       if (!_securityManager.isKeystoreUnlocked) {
-        throw StateError(
-          'Keystore is locked. Call securityManager.unlockKeystore() first.',
-        );
+        throw StateError('Keystore is locked. Unlock it before publishing.');
       }
 
-      // Get key pair from encrypted keystore
       final keyPair = await _securityManager.getSecureKey(keyName);
 
-      // Get/increment sequence number
-      final sequence = (_sequenceNumbers[keyName] ?? 0) + 1;
+      // Increment sequence number for monotonic updates
+      final int sequence = (_sequenceNumbers[keyName] ?? 0) + 1;
       _sequenceNumbers[keyName] = sequence;
 
-      // Create signed IPNS record
-      final record = await IPNSRecord.create(
+      final IPNSRecord record = await IPNSRecord.create(
         value: CID.decode(cid),
         keyPair: keyPair,
         sequence: sequence,
       );
 
-      // Publish to DHT
+      // Distribute via DHT
       await publishRecord(record);
 
-      // Publish to PubSub (IPNS over PubSub)
+      // Distribute via PubSub (IPNS-over-PubSub)
       if (_pubSubHandler != null) {
-        try {
-          final payload = base64Encode(record.toCBOR());
-
-          // 1. Floodsub Topic (Global)
-          await _pubSubHandler.publish(_pubSubTopic, payload);
-
-          // 2. Key-Specific Topic
-          // Construct Key ID from Public Key (Ed25519 Identity Multihash)
-          // Note: In a real PeerID impl, we'd handle other key types.
-          // ipns_record.dart uses Ed25519Signer, so we handle Ed25519.
-          final keyId = _getEd25519KeyId(record.publicKey);
-          final specificTopic = _getTopicFromBytes(keyId);
-
-          await _pubSubHandler.publish(specificTopic, payload);
-
-          _logger.verbose(
-            'Published IPNS record to topics: $_pubSubTopic, $specificTopic',
-          );
-        } catch (e) {
-          _logger.warning('Failed to publish IPNS record to PubSub: $e');
-        }
+        await _publishToPubSub(record);
       }
 
-      _logger.info('Successfully published signed IPNS record for CID: $cid');
+      _logger.info('Successfully published IPNS record for CID: $cid');
     } catch (e, stackTrace) {
       _logger.error('Failed to publish IPNS record', e, stackTrace);
       rethrow;
     }
   }
 
-  /// Creates a SIGNED IPNS record for the given CID and key.
-  ///
-  /// @deprecated Use [IPNSRecord.create] directly for new code.
-  Future<Record> createRecord(CID cid, Uint8List keyBytes) async {
-    final record = Record()
-      ..key = keyBytes
-      ..value = cid.toBytes()
-      ..sequence = Int64(DateTime.now().millisecondsSinceEpoch);
+  /// Helper to publish a record to relevant PubSub topics.
+  Future<void> _publishToPubSub(IPNSRecord record) async {
+    try {
+      final String payload = base64Encode(record.toCBOR());
 
-    _logger.warning('Using unsigned Record - migrate to IPNSRecord.create()');
-    return record;
+      // 1. Global Floodsub topic
+      await _pubSubHandler!.publish(_pubSubTopic, payload);
+
+      // 2. Key-specific topic
+      final Uint8List keyId = _getEd25519KeyId(record.publicKey);
+      final String specificTopic = _getTopicFromBytes(keyId);
+      await _pubSubHandler.publish(specificTopic, payload);
+
+      _logger.verbose(
+        'Published to PubSub topics: $_pubSubTopic, $specificTopic',
+      );
+    } catch (e) {
+      _logger.warning('IPNS-over-PubSub publication failed: $e');
+    }
   }
 
-  /// Publishes a signed IPNS record to the DHT.
+  /// Publishes a signed [IPNSRecord] directly to the DHT.
   Future<void> publishRecord(IPNSRecord record) async {
     if (!record.isSigned) {
-      throw StateError('Cannot publish unsigned IPNS record');
+      throw StateError('Cannot publish an unsigned IPNS record.');
     }
 
-    // Use public key as DHT key
     await _dhtHandler.putValue(Key(record.publicKey), Value(record.toCBOR()));
   }
 
-  /// Resolves an IPNS record from the DHT
+  /// Resolves an IPNS record from the DHT.
+  ///
+  /// Parameters:
+  /// - [name]: The IPNS name to resolve.
+  ///
+  /// Returns a [Record] protobuf container with the resolved value.
   Future<Record> resolveRecord(String name) async {
-    // keys are usually raw bytes in DHT, so we use name as-is if it implies bytes
-    // However, for consistency with publish, we assume name is the Key
-    final value = await _dhtHandler.getValue(Key.fromString(name));
+    final Value value = await _dhtHandler.getValue(Key.fromString(name));
     return Record()
       ..key = Uint8List.fromList(utf8.encode(name))
       ..value = Uint8List.fromList(value.bytes);
   }
 
-  /// Starts the IPNS handler
+  /// Starts the IPNS handler, initializing DHT and PubSub subscriptions.
   Future<void> start() async {
     if (_isRunning) {
-      _logger.warning('IPNSHandler already running');
+      _logger.warning('IPNSHandler is already running.');
       return;
     }
 
     try {
       _isRunning = true;
-      _logger.verbose('Starting DHT handler...');
       await _dhtHandler.start();
 
       if (_pubSubHandler != null) {
-        _logger.verbose('Subscribing to IPNS PubSub topic $_pubSubTopic...');
         await _pubSubHandler.subscribe(_pubSubTopic);
-        // Listen for incoming IPNS records
         _pubSubHandler.onMessage(_pubSubTopic, _handlePubSubMessage);
       }
 
-      _logger.info('IPNS handler started successfully');
+      _logger.info('IPNS handler started successfully.');
     } catch (e, stackTrace) {
       _logger.error('Failed to start IPNS handler', e, stackTrace);
       _isRunning = false;
@@ -216,12 +218,9 @@ class IPNSHandler {
     }
   }
 
-  /// Stops the IPNS handler
+  /// Stops the IPNS handler, clearing caches and unsubscribing from topics.
   Future<void> stop() async {
-    if (!_isRunning) {
-      _logger.warning('IPNSHandler already stopped');
-      return;
-    }
+    if (!_isRunning) return;
 
     try {
       _isRunning = false;
@@ -233,59 +232,57 @@ class IPNSHandler {
       }
 
       _resolutionCache.clear();
-      _logger.info('IPNS handler stopped successfully');
+      _logger.info('IPNS handler stopped successfully.');
     } catch (e, stackTrace) {
       _logger.error('Failed to stop IPNS handler', e, stackTrace);
       rethrow;
     }
   }
 
-  /// Resolves an IPNS name to its current CID
+  /// Resolves an IPNS name to its current CID.
+  ///
+  /// Utilizes caching and attempts resolution via both DHT and PubSub.
+  ///
+  /// Parameters:
+  /// - [name]: The IPNS name to resolve.
+  ///
+  /// Returns the resolved CID string, or `null` if resolution fails.
   Future<String?> resolve(String name) async {
     _logger.debug('Resolving IPNS name: $name');
 
     try {
-      // Subscribe to key-specific PubSub topic for updates
-      if (_pubSubHandler != null) {
-        final topic = _getRecordTopic(name);
-        // Subscribe if not already subscribed (PubSubHandler handles idempotency ideally,
-        // but we adding a listener requires care not to add duplicates?
-        // onMessage usually adds a stream listener.
-        // We'll just do it; overhead is acceptable for now.)
-        await _pubSubHandler.subscribe(topic);
-        _pubSubHandler.onMessage(topic, _handlePubSubMessage);
+      // Monitor PubSub for real-time updates
+      final pubsub = _pubSubHandler;
+      if (pubsub != null) {
+        final String topic = _getRecordTopic(name);
+        await pubsub.subscribe(topic);
+        pubsub.onMessage(topic, _handlePubSubMessage);
       }
 
       // Check cache first
-      if (_resolutionCache.containsKey(name)) {
-        final cached = _resolutionCache[name]!;
-        if (!cached.isExpired) {
-          _logger.verbose('Returning cached resolution for: $name');
-          return cached.cid;
-        }
-        _resolutionCache.remove(name);
+      final _CachedResolution? cached = _resolutionCache[name];
+      if (cached != null && !cached.isExpired) {
+        _logger.verbose('Returning cached resolution for: $name');
+        return cached.cid;
       }
+      _resolutionCache.remove(name);
 
-      // Resolve through protocol handler
-      final record = await resolveRecord(name);
-      final decodedCid = CID
+      // Perform DHT resolution
+      final Record record = await resolveRecord(name);
+      final String decodedCid = CID
           .fromBytes(Uint8List.fromList(record.value))
           .encode();
 
-      // Cache the result
       _cacheResolution(name, decodedCid);
-
-      _logger.info(
-        'Successfully resolved IPNS name: $name to CID: $decodedCid',
-      );
+      _logger.info('Resolved $name to $decodedCid');
       return decodedCid;
     } catch (e, stackTrace) {
-      _logger.error('Failed to resolve IPNS name', e, stackTrace);
+      _logger.error('Failed to resolve IPNS name: $name', e, stackTrace);
       return null;
     }
   }
 
-  /// Gets the current status of the IPNS handler
+  /// Returns the current status of the IPNS handler.
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'running': _isRunning,
@@ -294,34 +291,46 @@ class IPNSHandler {
     };
   }
 
+  /// Creates an unsigned IPNS record container.
+  ///
+  /// **Deprecated:** Use [publish] for managed publication.
+  @Deprecated('Use publish instead')
+  Future<Record> createRecord(CID value, Uint8List key) async {
+    return Record()
+      ..key = key
+      ..value = value.toBytes()
+      ..sequence = fixnum.Int64(DateTime.now().millisecondsSinceEpoch);
+  }
+
+  /// Basic validation for CID strings.
   bool _isValidCID(String cid) {
     return cid.isNotEmpty && RegExp(r'^[a-zA-Z0-9]+$').hasMatch(cid);
   }
 
+  /// Caches a successful IPNS resolution.
   void _cacheResolution(String name, String cid) {
-    _logger.verbose('Caching IPNS resolution for: $name');
+    _logger.verbose('Caching resolution: $name -> $cid');
     _resolutionCache[name] = _CachedResolution(
       cid: cid,
       timestamp: DateTime.now(),
     );
   }
 
+  /// Handles incoming IPNS records from PubSub, verifying signatures.
   void _handlePubSubMessage(String messageContent) async {
     try {
-      // Decode the message (Base64 -> CBOR Bytes)
-      final recordBytes = base64Decode(messageContent);
+      final Uint8List recordBytes = base64Decode(messageContent);
+      final IPNSRecord record = IPNSRecord.fromCBOR(recordBytes);
 
-      // Parse and Verify Record
-      final record = IPNSRecord.fromCBOR(recordBytes);
       if (!await record.verify()) {
         _logger.warning(
-          'Received invalid IPNS record via PubSub (signature check failed)',
+          'Received invalid IPNS record via PubSub (signature mismatch).',
         );
         return;
       }
 
       _logger.verbose(
-        'Received valid IPNS record via PubSub (Validity: ${record.validity})',
+        'Processed valid IPNS record from PubSub (Validity: ${record.validity})',
       );
     } catch (e) {
       _logger.verbose('Failed to process IPNS PubSub message: $e');
@@ -329,12 +338,14 @@ class IPNSHandler {
   }
 }
 
-/// Helper class for caching IPNS resolutions
+/// Helper class for internal IPNS resolution caching.
 class _CachedResolution {
   _CachedResolution({required this.cid, required this.timestamp});
+
   final String cid;
   final DateTime timestamp;
 
+  /// Whether the cached resolution has exceeded its lifetime.
   bool get isExpired =>
       DateTime.now().difference(timestamp) > IPNSHandler._cacheDuration;
 }

@@ -107,8 +107,10 @@ class TxtResourceRecord extends ResourceRecord {
 
 /// Client for multicast DNS operations following IPFS specifications
 class MDnsClient {
-  /// Creates an mDNS client. An optional [client] can be provided for testing.
-  MDnsClient({mdns.MDnsClient? client}) : _injectedClient = client;
+  /// Creates an mDNS client. An optional [client] or [serverSocket] can be provided for testing.
+  MDnsClient({mdns.MDnsClient? client, RawDatagramSocket? serverSocket})
+    : _injectedClient = client,
+      _serverSocket = serverSocket;
 
   mdns.MDnsClient? _client;
   final mdns.MDnsClient? _injectedClient;
@@ -236,6 +238,7 @@ class MDnsClient {
   }
 
   RawDatagramSocket? _serverSocket;
+  bool _isServerRunning = false;
   final InternetAddress _mdnsGroup = InternetAddress('224.0.0.251');
   final int _mdnsPort = 5353;
 
@@ -249,10 +252,10 @@ class MDnsClient {
     required int port,
     required List<String> txt,
   }) async {
-    if (_serverSocket != null) return; // Already running
+    if (_isServerRunning) return;
 
     try {
-      _serverSocket = await RawDatagramSocket.bind(
+      _serverSocket ??= await RawDatagramSocket.bind(
         InternetAddress.anyIPv4,
         _mdnsPort,
         reuseAddress: true,
@@ -266,6 +269,7 @@ class MDnsClient {
           }
         }
       });
+      _isServerRunning = true;
       _logger.debug('mDNS Responder started on port $_mdnsPort');
     } catch (e) {
       _logger.error('Failed to start mDNS Responder', e);

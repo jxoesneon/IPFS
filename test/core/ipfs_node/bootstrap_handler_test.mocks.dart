@@ -9,11 +9,11 @@ import 'dart:typed_data' as _i11;
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart' as _i6;
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart' as _i2;
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler_io.dart' as _i7;
-import 'package:dart_ipfs/src/network/router.dart' as _i3;
+import 'package:dart_ipfs/src/network/router.dart' as _i4;
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart'
     as _i9;
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart' as _i5;
-import 'package:dart_ipfs/src/transport/router_interface.dart' as _i4;
+import 'package:dart_ipfs/src/transport/router_interface.dart' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i10;
 
@@ -37,14 +37,14 @@ class _FakeIPFSNode_0 extends _i1.SmartFake implements _i2.IPFSNode {
     : super(parent, parentInvocation);
 }
 
-class _FakeRouter_1 extends _i1.SmartFake implements _i3.Router {
-  _FakeRouter_1(Object parent, Invocation parentInvocation)
+class _FakeRouterInterface_1 extends _i1.SmartFake
+    implements _i3.RouterInterface {
+  _FakeRouterInterface_1(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeRouterInterface_2 extends _i1.SmartFake
-    implements _i4.RouterInterface {
-  _FakeRouterInterface_2(Object parent, Invocation parentInvocation)
+class _FakeRouter_2 extends _i1.SmartFake implements _i4.Router {
+  _FakeRouter_2(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
@@ -63,50 +63,63 @@ class _FakeIPFSConfig_4 extends _i1.SmartFake implements _i6.IPFSConfig {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockNetworkHandler extends _i1.Mock implements _i7.NetworkHandler {
-  MockNetworkHandler() {
-    _i1.throwOnMissingStub(this);
-  }
-
   @override
   _i2.IPFSNode get ipfsNode =>
       (super.noSuchMethod(
             Invocation.getter(#ipfsNode),
             returnValue: _FakeIPFSNode_0(this, Invocation.getter(#ipfsNode)),
+            returnValueForMissingStub: _FakeIPFSNode_0(
+              this,
+              Invocation.getter(#ipfsNode),
+            ),
           )
           as _i2.IPFSNode);
+
+  @override
+  _i3.RouterInterface get router =>
+      (super.noSuchMethod(
+            Invocation.getter(#router),
+            returnValue: _FakeRouterInterface_1(
+              this,
+              Invocation.getter(#router),
+            ),
+            returnValueForMissingStub: _FakeRouterInterface_1(
+              this,
+              Invocation.getter(#router),
+            ),
+          )
+          as _i3.RouterInterface);
 
   @override
   _i8.Stream<_i9.NetworkEvent> get networkEvents =>
       (super.noSuchMethod(
             Invocation.getter(#networkEvents),
             returnValue: _i8.Stream<_i9.NetworkEvent>.empty(),
+            returnValueForMissingStub: _i8.Stream<_i9.NetworkEvent>.empty(),
           )
           as _i8.Stream<_i9.NetworkEvent>);
 
   @override
-  _i3.Router get router =>
+  _i4.Router get dhtRouter =>
       (super.noSuchMethod(
-            Invocation.getter(#router),
-            returnValue: _FakeRouter_1(this, Invocation.getter(#router)),
-          )
-          as _i3.Router);
-
-  @override
-  _i4.RouterInterface get p2pRouter =>
-      (super.noSuchMethod(
-            Invocation.getter(#p2pRouter),
-            returnValue: _FakeRouterInterface_2(
+            Invocation.getter(#dhtRouter),
+            returnValue: _FakeRouter_2(this, Invocation.getter(#dhtRouter)),
+            returnValueForMissingStub: _FakeRouter_2(
               this,
-              Invocation.getter(#p2pRouter),
+              Invocation.getter(#dhtRouter),
             ),
           )
-          as _i4.RouterInterface);
+          as _i4.Router);
 
   @override
   _i5.CircuitRelayClient get circuitRelayClient =>
       (super.noSuchMethod(
             Invocation.getter(#circuitRelayClient),
             returnValue: _FakeCircuitRelayClient_3(
+              this,
+              Invocation.getter(#circuitRelayClient),
+            ),
+            returnValueForMissingStub: _FakeCircuitRelayClient_3(
               this,
               Invocation.getter(#circuitRelayClient),
             ),
@@ -118,6 +131,10 @@ class MockNetworkHandler extends _i1.Mock implements _i7.NetworkHandler {
       (super.noSuchMethod(
             Invocation.getter(#config),
             returnValue: _FakeIPFSConfig_4(this, Invocation.getter(#config)),
+            returnValueForMissingStub: _FakeIPFSConfig_4(
+              this,
+              Invocation.getter(#config),
+            ),
           )
           as _i6.IPFSConfig);
 
@@ -126,6 +143,10 @@ class MockNetworkHandler extends _i1.Mock implements _i7.NetworkHandler {
       (super.noSuchMethod(
             Invocation.getter(#peerID),
             returnValue: _i10.dummyValue<String>(
+              this,
+              Invocation.getter(#peerID),
+            ),
+            returnValueForMissingStub: _i10.dummyValue<String>(
               this,
               Invocation.getter(#peerID),
             ),
@@ -179,6 +200,9 @@ class MockNetworkHandler extends _i1.Mock implements _i7.NetworkHandler {
       (super.noSuchMethod(
             Invocation.method(#listConnectedPeers, []),
             returnValue: _i8.Future<List<String>>.value(<String>[]),
+            returnValueForMissingStub: _i8.Future<List<String>>.value(
+              <String>[],
+            ),
           )
           as _i8.Future<List<String>>);
 
@@ -196,6 +220,7 @@ class MockNetworkHandler extends _i1.Mock implements _i7.NetworkHandler {
       (super.noSuchMethod(
             Invocation.method(#receiveMessages, [peerId]),
             returnValue: _i8.Stream<String>.empty(),
+            returnValueForMissingStub: _i8.Stream<String>.empty(),
           )
           as _i8.Stream<String>);
 
@@ -206,16 +231,17 @@ class MockNetworkHandler extends _i1.Mock implements _i7.NetworkHandler {
   );
 
   @override
-  _i8.Future<_i11.Uint8List> sendRequest(
+  _i8.Future<_i11.Uint8List?> sendRequest(
     String? peerId,
     String? protocolId,
     _i11.Uint8List? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#sendRequest, [peerId, protocolId, request]),
-            returnValue: _i8.Future<_i11.Uint8List>.value(_i11.Uint8List(0)),
+            returnValue: _i8.Future<_i11.Uint8List?>.value(),
+            returnValueForMissingStub: _i8.Future<_i11.Uint8List?>.value(),
           )
-          as _i8.Future<_i11.Uint8List>);
+          as _i8.Future<_i11.Uint8List?>);
 
   @override
   _i8.Future<void> initialize() =>
@@ -231,29 +257,16 @@ class MockNetworkHandler extends _i1.Mock implements _i7.NetworkHandler {
       (super.noSuchMethod(
             Invocation.method(#canConnectDirectly, [peerAddress]),
             returnValue: _i8.Future<bool>.value(false),
+            returnValueForMissingStub: _i8.Future<bool>.value(false),
           )
           as _i8.Future<bool>);
-
-  @override
-  _i8.Future<String> testConnection({required int? sourcePort}) =>
-      (super.noSuchMethod(
-            Invocation.method(#testConnection, [], {#sourcePort: sourcePort}),
-            returnValue: _i8.Future<String>.value(
-              _i10.dummyValue<String>(
-                this,
-                Invocation.method(#testConnection, [], {
-                  #sourcePort: sourcePort,
-                }),
-              ),
-            ),
-          )
-          as _i8.Future<String>);
 
   @override
   _i8.Future<bool> testDialback() =>
       (super.noSuchMethod(
             Invocation.method(#testDialback, []),
             returnValue: _i8.Future<bool>.value(false),
+            returnValueForMissingStub: _i8.Future<bool>.value(false),
           )
           as _i8.Future<bool>);
 }

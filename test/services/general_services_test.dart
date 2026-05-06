@@ -46,6 +46,9 @@ class MockBlockStore implements BlockStore {
   PinManager get pinManager => throw UnimplementedError('Mock');
 
   @override
+  Future<int> gc() async => 0;
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -91,6 +94,9 @@ class MockDatastore implements Datastore {
 }
 
 class MockIPFSNode implements IPFSNode {
+  @override
+  Future<int> gc() async => 0;
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -172,6 +178,9 @@ void main() {
 }
 
 class DummyServiceCall extends ServiceCall {
+  @override
+  Future<int> gc() async => 0;
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

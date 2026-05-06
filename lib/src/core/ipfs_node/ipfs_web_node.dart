@@ -70,6 +70,9 @@ class IPFSWebNode {
   /// Access to PubSub client.
   PubSubClient get pubsub => _pubsub;
 
+  /// Access to security manager.
+  SecurityManagerWeb get securityManager => _securityManager;
+
   /// Starts the web node.
   Future<void> start() async {
     if (_started) return;
@@ -88,7 +91,7 @@ class IPFSWebNode {
     );
 
     final delegateUrl = _config.network.delegatedRoutingEndpoint;
-    final IDHTHandler dht;
+    IDHTHandler dht;
 
     if (delegateUrl != null && delegateUrl.isNotEmpty) {
       dht = DelegateDHTHandler(delegateUrl);

@@ -79,6 +79,8 @@ class BitswapHandler {
     if (!_running) return;
     _running = false;
 
+    _logger.debug('Stopping BitswapHandler...');
+
     // Clean up pending requests
     for (final completer in _pendingBlocks.values) {
       completer.completeError('BitswapHandler stopped');
@@ -87,24 +89,19 @@ class BitswapHandler {
     _sessions.clear();
     _connectedPeers.clear();
 
-    await _router.stop();
-    // print('Bitswap handler stopped');
+    try {
+      await _router.stop();
+      _logger.info('BitswapHandler stopped successfully');
+    } catch (e, st) {
+      _logger.error('Error stopping BitswapHandler router', e, st);
+    }
   }
 
   /// Handles incoming Bitswap messages
   Future<void> _handleMessage(message.Message message) async {
     if (!_running) return;
 
-    final fromPeer = message
-        .from; // Note: 'from' field is transient and set by packet handler if passed?
-    // Actually packet handler didn't set it in my previous `message.dart`.
-    // I should check `_handlePacket`.
-
-    // Update peer ledger if peer known
-    if (fromPeer != null) {
-      // final ledger = _ledgerManager.getLedger(fromPeer); // Removed unused variable
-    }
-    // Optimization: If fromPeer is null, we can't update ledger but can still process blocks.
+    final fromPeer = message.from;
 
     if (message.hasWantlist()) {
       final messageWantlist = message.getWantlist();
@@ -126,7 +123,6 @@ class BitswapHandler {
     }
 
     if (message.hasBlocks()) {
-      // Blocks don't strictly require 'fromPeer' to be useful (we verified content hash).
       await _handleBlocks(message.getBlocks());
 
       if (fromPeer != null) {
@@ -225,8 +221,8 @@ class BitswapHandler {
           ledger.addSentBytes(block.data.length);
         }
         _updateBandwidthStats();
-      } catch (error) {
-        // print('Error sending response to peer $fromPeer: $error');
+      } catch (error, st) {
+        _logger.error('Error sending response to peer $fromPeer', error, st);
       }
     }
   }
@@ -241,13 +237,8 @@ class BitswapHandler {
     for (final presence in presences) {
       final cid = presence.cid;
       if (presence.type == message.BlockPresenceType.have) {
-        // Peer has the block.
-        // If we want it, we could prioritize asking them?
-        // For now, logging.
         _logger.verbose('Peer $fromPeer HAVE $cid');
       } else {
-        // Peer DOES NOT have the block.
-        // We should avoid asking them again soon.
         _logger.verbose('Peer $fromPeer DONT_HAVE $cid');
       }
     }
@@ -305,7 +296,6 @@ class BitswapHandler {
     }
 
     final msg = message.Message();
-    // No messageId or Type in Bitswap 1.2+
 
     for (final cid in cids) {
       msg.addWantlistEntry(
@@ -346,7 +336,8 @@ class BitswapHandler {
     final connectedPeers = _router.connectedPeers;
 
     if (connectedPeers.isEmpty) {
-      throw StateError('No connected peers to broadcast want request to');
+      _logger.warning('No connected peers to broadcast want request to');
+      throw StateError('No connected peers available for Bitswap request');
     }
 
     final messageBytes = message.toBytes();
@@ -354,13 +345,15 @@ class BitswapHandler {
 
     for (final peerId in connectedPeers) {
       futures.add(
-        Future(() {
-          _router.sendMessage(peerId, messageBytes);
-          // print('Want request sent to peer: ${peer.toString()}');
-        }).catchError((error) {
-          // print(
-          //   'Error sending want request to peer ${peer.toString()}: $error',
-          // );
+        Future(() async {
+          await _router.sendMessage(peerId, messageBytes);
+          _logger.verbose('Want request sent to peer: $peerId');
+        }).catchError((Object error, StackTrace st) {
+          _logger.error(
+            'Error sending want request to peer $peerId',
+            error,
+            st,
+          );
         }),
       );
     }
@@ -368,14 +361,20 @@ class BitswapHandler {
     await Future.wait(futures);
   }
 
-  // Removed _getPeerAddress as it's no longer needed with new Router API
-
   Future<void> _handlePacket(NetworkPacket packet) async {
-    final msg = await message.Message.fromBytes(packet.datagram);
-    // Annotate message with sender
-    msg.from = packet.srcPeerId;
+    try {
+      final msg = await message.Message.fromBytes(packet.datagram);
+      // Annotate message with sender
+      msg.from = packet.srcPeerId;
 
-    await _handleMessage(msg);
+      await _handleMessage(msg);
+    } catch (e, st) {
+      _logger.error(
+        'Error handling Bitswap packet from ${packet.srcPeerId}',
+        e,
+        st,
+      );
+    }
   }
 
   /// Handles an incoming want request for a CID.
@@ -390,8 +389,8 @@ class BitswapHandler {
       );
 
       await _broadcastWantRequest(customMessage);
-    } catch (e) {
-      // print('Error handling want request: $e');
+    } catch (e, st) {
+      _logger.error('Error handling want request for $cidStr', e, st);
       rethrow;
     }
   }
@@ -416,8 +415,8 @@ class BitswapHandler {
     try {
       final blocks = await want([cid]);
       return blocks.isNotEmpty ? blocks.first : null;
-    } catch (e) {
-      // print('Error requesting block $cid: $e');
+    } catch (e, st) {
+      _logger.error('Error requesting block $cid', e, st);
       return null;
     }
   }

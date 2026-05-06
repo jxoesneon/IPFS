@@ -55,38 +55,48 @@ class Bitswap {
   /// Optional configuration for the Bitswap protocol.
   final dynamic config;
 
-  final _logger = Logger('BitSwap');
+  final Logger _logger = Logger('BitSwap');
 
   /// Maximum length for block prefixes in messages.
   static const int maxPrefixLength = 64;
 
   /// Starts the Bitswap protocol.
   Future<void> start() async {
-    _router.registerProtocolHandler('/ipfs/bitswap/1.2.0', (
-      NetworkPacket packet,
-    ) {
-      _handlePacket(packet);
-    });
-    await _router.start();
-    // print('Bitswap started.');
+    _logger.debug('Starting Bitswap protocol...');
+    try {
+      _router.registerProtocolHandler('/ipfs/bitswap/1.2.0', (
+        NetworkPacket packet,
+      ) {
+        _handlePacket(packet);
+      });
+      await _router.start();
+      _logger.info('Bitswap protocol started successfully');
+    } catch (e, st) {
+      _logger.error('Failed to start Bitswap protocol', e, st);
+      rethrow;
+    }
   }
 
   /// Stops the Bitswap protocol.
   Future<void> stop() async {
-    await _router.stop();
-    // print('Bitswap stopped.');
+    _logger.debug('Stopping Bitswap protocol...');
+    try {
+      await _router.stop();
+      _logger.info('Bitswap protocol stopped successfully');
+    } catch (e, st) {
+      _logger.error('Failed to stop Bitswap protocol', e, st);
+    }
   }
 
   /// Requests a block from the network.
+  ///
+  /// Returns the requested block or null if it cannot be found.
   Future<Block?> wantBlock(String cid) async {
-    // print('Requesting block with CID: $cid');
+    _logger.debug('Requesting block with CID: $cid');
 
     // Create a Wantlist entry for the requested block
     final wantlistEntry = proto.Message_Wantlist_Entry()
-      ..block =
-          Uint8List.fromList(
-            utf8.encode(cid),
-          ) // Entry uses 'block' for cid bytes? Proto says 'block' field 1.
+      ..block = Uint8List.fromList(utf8.encode(cid))
       ..priority = 1
       ..cancel = false
       ..wantType = proto.Message_Wantlist_WantType.Block
@@ -101,9 +111,9 @@ class Bitswap {
     return null;
   }
 
-  /// Provides a block to the network.
+  /// Provides a block to the network by notifying connected peers.
   void provide(String cid) {
-    // print('Providing block with CID: $cid');
+    _logger.debug('Providing block with CID: $cid');
 
     // Notify peers about the available block
     for (var peer in _peers) {
@@ -149,14 +159,14 @@ class Bitswap {
       if (message.hasBlockPresences()) {
         for (final presence in message.getBlockPresences()) {
           if (presence.type == bitswap_message.BlockPresenceType.have) {
-            // print('Peer $peerId has block ${presence.cid}');
+            _logger.verbose('Peer $peerId has block ${presence.cid}');
           } else {
-            // print('Peer $peerId does not have block ${presence.cid}');
+            _logger.verbose('Peer $peerId does not have block ${presence.cid}');
           }
         }
       }
-    } catch (e) {
-      // print('Error handling BitSwap packet: $e');
+    } catch (e, st) {
+      _logger.error('Error handling BitSwap packet', e, st);
     }
   }
 
@@ -164,13 +174,18 @@ class Bitswap {
   Future<void> _handleReceivedBlock(String srcPeerId, Block block) async {
     final blockId = block.cid.toString();
 
-    // Store received block in datastore using Key
-    final key = Key('/blocks/$blockId');
-    await _datastore.put(key, block.data);
+    try {
+      // Store received block in datastore using Key
+      final key = Key('/blocks/$blockId');
+      await _datastore.put(key, block.data);
 
-    // Store block data in ledger and update received bytes
-    _ledger.storeBlockData(blockId, block.data);
-    _ledger.addReceivedBytes(block.data.length);
+      // Store block data in ledger and update received bytes
+      _ledger.storeBlockData(blockId, block.data);
+      _ledger.addReceivedBytes(block.data.length);
+      _logger.debug('Successfully stored received block $blockId');
+    } catch (e, st) {
+      _logger.error('Error handling received block $blockId', e, st);
+    }
   }
 
   /// Handles requests for blocks from peers.
@@ -180,13 +195,21 @@ class Bitswap {
   ) async {
     final blockId = base64.encode(entry.block);
 
-    // Check if we have the requested block locally
-    final key = Key('/blocks/$blockId');
-    final data = await _datastore.get(key);
-    if (data != null) {
-      await sendBlock(peerId, data);
-    } else if (entry.sendDontHave) {
-      await sendDontHave(peerId, entry);
+    try {
+      // Check if we have the requested block locally
+      final key = Key('/blocks/$blockId');
+      final data = await _datastore.get(key);
+      if (data != null) {
+        await sendBlock(peerId, data);
+      } else if (entry.sendDontHave) {
+        await sendDontHave(peerId, entry);
+      }
+    } catch (e, st) {
+      _logger.error(
+        'Error handling want block $blockId for peer $peerId',
+        e,
+        st,
+      );
     }
   }
 
@@ -211,17 +234,17 @@ class Bitswap {
 
   /// Adds a peer to the Bitswap network.
   void addPeer(LibP2PPeerId peerId) {
-    _peers.add(peerId);
-    _logger.debug('Peer $peerId added to Bitswap network');
-    _logger.verbose('Current peer count: ${_peers.length}');
+    if (_peers.add(peerId)) {
+      _logger.debug('Peer $peerId added to Bitswap network');
+      _logger.verbose('Current peer count: ${_peers.length}');
+    }
   }
 
   /// Removes a peer from the Bitswap network.
   void removePeer(LibP2PPeerId peerId) {
-    _peers.remove(peerId);
-    // print(
-    //   'Peer $peerId removed from Bitswap network.',
-    // );
+    if (_peers.remove(peerId)) {
+      _logger.debug('Peer $peerId removed from Bitswap network');
+    }
   }
 
   // --- Handlers for other message types ---
@@ -231,14 +254,20 @@ class Bitswap {
     final blockId = base64.encode(entry.block);
     _logger.verbose('Received have request for block $blockId from $peerId');
 
-    if (_ledger.hasBlock(blockId)) {
-      _logger.debug(
-        'Responding to have request for block $blockId from $peerId',
-      );
-      sendHave(peerId, entry);
-    } else if (entry.sendDontHave) {
-      _logger.debug('Sending dont-have response for block $blockId to $peerId');
-      sendDontHave(peerId, entry);
+    try {
+      if (_ledger.hasBlock(blockId)) {
+        _logger.debug(
+          'Responding to have request for block $blockId from $peerId',
+        );
+        sendHave(peerId, entry);
+      } else if (entry.sendDontHave) {
+        _logger.debug(
+          'Sending dont-have response for block $blockId to $peerId',
+        );
+        sendDontHave(peerId, entry);
+      }
+    } catch (e, st) {
+      _logger.error('Error handling have request $blockId from $peerId', e, st);
     }
   }
 
@@ -246,8 +275,7 @@ class Bitswap {
   void handleCancel(String peerId, proto.Message_Wantlist_Entry entry) {
     final blockId = base64.encode(entry.block);
 
-    // Log the cancellation
-    // print('Received cancel request for block $blockId from $peerId.');
+    _logger.debug('Received cancel request for block $blockId from $peerId');
 
     // Remove the block from our wantlist or any pending requests
     _removeFromWantlist(blockId, peerId);
@@ -258,13 +286,13 @@ class Bitswap {
     try {
       final peer = Peer.fromId(peerId);
       if (_peers.contains(peer.id.toString())) {
-        // print('Removing block $blockId from wantlist for peer $peerId.');
+        _logger.debug('Removing block $blockId from wantlist for peer $peerId');
         // Implement actual removal logic based on your data structures here
       } else {
-        // print('Peer $peerId not found in local peers list.');
+        _logger.warning('Peer $peerId not found in local peers list.');
       }
-    } catch (e) {
-      // print('Error creating peer from ID: $e');
+    } catch (e, st) {
+      _logger.error('Error creating peer from ID: $peerId', e, st);
     }
   }
 
@@ -272,8 +300,8 @@ class Bitswap {
   Future<void> send(String peerId, proto.Message message) async {
     try {
       await _router.sendMessage(peerId, message.writeToBuffer());
-    } catch (e) {
-      // print('Error sending message to $peerId: $e');
+    } catch (e, st) {
+      _logger.error('Error sending message to $peerId', e, st);
     }
   }
 

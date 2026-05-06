@@ -2,9 +2,12 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart' show Block;
 import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as pb;
-// If needed for int64? priorities are int32.
+import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Represents a Bitswap protocol message.
+///
+/// A message can contain a wantlist, data blocks, and block presence
+/// notifications (HAVE/DONT_HAVE).
 class Message {
   /// Creates an empty message.
   Message();
@@ -17,6 +20,9 @@ class Message {
 
   /// Block presences for HAVE/DONT_HAVE responses
   final List<BlockPresence> _blockPresences = [];
+
+  /// Logger for Message parsing errors
+  static final Logger _logger = Logger('BitswapMessage');
 
   /// Transient field: The peer ID of the sender (not part of wire protocol)
   String? from;
@@ -71,7 +77,9 @@ class Message {
   /// Returns true if this message has block presence notifications.
   bool hasBlockPresences() => _blockPresences.isNotEmpty;
 
-  /// Creates a Message from its protobuf byte representation
+  /// Creates a Message from its protobuf byte representation.
+  ///
+  /// Throws an error if the bytes cannot be parsed as a valid Bitswap message.
   static Future<Message> fromBytes(Uint8List bytes) async {
     final pbMessage = pb.Message.fromBuffer(bytes);
     final message = Message();
@@ -82,10 +90,7 @@ class Message {
     // Parse wantlist
     if (pbMessage.hasWantlist()) {
       for (var entry in pbMessage.wantlist.entries) {
-        // Entry block is CID bytes.
-        // We need to convert bytes to CID string for internal storage.
         try {
-          // CID.fromBytes() handles both CIDv0 and CIDv1
           final cidObj = CID.fromBytes(Uint8List.fromList(entry.block));
           final cidStr = cidObj.encode();
 
@@ -100,8 +105,8 @@ class Message {
             wantType: wantType,
             sendDontHave: entry.sendDontHave,
           );
-        } catch (e) {
-          // print('Error parsing wantlist entry CID: $e');
+        } catch (e, st) {
+          _logger.error('Error parsing wantlist entry CID', e, st);
         }
       }
     }
@@ -109,18 +114,13 @@ class Message {
     // Parse blocks (Payload - 1.1+)
     for (var payloadBlock in pbMessage.payload) {
       try {
-        // Payload has prefix and data.
-        // We need to reconstruct the block.
-        // prefix logic?
-        // Actually usually we just check data matches requested?
-        // Block.fromData(data).
         final newBlock = await Block.fromData(
           Uint8List.fromList(payloadBlock.data),
-          format: 'dag-pb', // Assume dag-pb default or infer?
+          format: 'dag-pb',
         );
         message.addBlock(newBlock);
-      } catch (e) {
-        // print('Error parsing payload block: $e');
+      } catch (e, st) {
+        _logger.error('Error parsing payload block', e, st);
       }
     }
 
@@ -132,8 +132,8 @@ class Message {
           format: 'dag-pb',
         );
         message.addBlock(newBlock);
-      } catch (e) {
-        // print('Error parsing legacy block: $e');
+      } catch (e, st) {
+        _logger.error('Error parsing legacy block', e, st);
       }
     }
 
@@ -145,15 +145,15 @@ class Message {
             ? BlockPresenceType.dontHave
             : BlockPresenceType.have;
         message.addBlockPresence(cidObj.encode(), type);
-      } catch (e) {
-        // Ignore invalid block presence
+      } catch (e, st) {
+        _logger.error('Error parsing block presence CID', e, st);
       }
     }
 
     return message;
   }
 
-  /// Converts the message to its protobuf byte representation
+  /// Converts the message to its protobuf byte representation.
   Uint8List toBytes() {
     final pbMessage = pb.Message();
 
@@ -162,14 +162,13 @@ class Message {
     // Add wantlist entries
     if (_wantlist.entries.isNotEmpty) {
       final pbWantlist = pb.Message_Wantlist();
-      pbWantlist.full = false; // Default to partial unless specified?
+      pbWantlist.full = false;
 
       for (var entry in _wantlist.entries.values) {
         final pbEntry = pb.Message_Wantlist_Entry();
-        // Convert CID string to bytes using standard CID class
         try {
           final cidObj = CID.decode(entry.cid);
-          pbEntry.block = cidObj.toBytes(); // Using updated CID class method
+          pbEntry.block = cidObj.toBytes();
           pbEntry.priority = entry.priority;
           pbEntry.cancel = entry.cancel;
           pbEntry.sendDontHave = entry.sendDontHave;
@@ -178,8 +177,12 @@ class Message {
               : pb.Message_Wantlist_WantType.Block;
 
           pbWantlist.entries.add(pbEntry);
-        } catch (e) {
-          // print('Skipping invalid CID in wantlist: ${entry.cid}');
+        } catch (e, st) {
+          _logger.error(
+            'Skipping invalid CID in wantlist: ${entry.cid}',
+            e,
+            st,
+          );
         }
       }
       pbMessage.wantlist = pbWantlist;
@@ -188,15 +191,10 @@ class Message {
     // Add blocks (Payload)
     for (var block in _blocks) {
       final pbBlock = pb.Message_Block();
-      // Prefix? Usually empty for CIDv0. Or part of CIDv1?
-      // Bitswap 1.1: Payload includes prefix and data.
-      // Bitswap 1.1: Payload includes prefix and data.
       pbBlock.data = block.data;
 
-      // Set prefix if needed for proper CID reconstruction on receiver (CIDv1)
       if (block.cid.version == 1) {
         final cidBytes = block.cid.toBytes();
-        // Digest is at the end. Prefix is everything before it.
         final digestSize = block.cid.multihash.digest.length;
         if (cidBytes.length > digestSize) {
           pbBlock.prefix = cidBytes.sublist(0, cidBytes.length - digestSize);
@@ -216,8 +214,12 @@ class Message {
             ? pb.Message_BlockPresence_Type.DontHave
             : pb.Message_BlockPresence_Type.Have;
         pbMessage.blockPresences.add(pbPres);
-      } catch (e) {
-        // Ignore invalid block presence
+      } catch (e, st) {
+        _logger.error(
+          'Skipping invalid CID in block presence: ${pres.cid}',
+          e,
+          st,
+        );
       }
     }
 

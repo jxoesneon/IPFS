@@ -25,21 +25,31 @@ class Deletion<K_PeerId, V_PeerInfo> {
 
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? y = z;
     RedBlackTreeNode<K_PeerId, V_PeerInfo>? x;
+    RedBlackTreeNode<K_PeerId, V_PeerInfo>? xParent;
+    bool isLeft = false;
     var yOriginalColor = y.color;
 
     if (z.leftChild == null) {
       x = z.rightChild;
+      xParent = z.parent;
+      isLeft = (z == z.parent?.leftChild);
       transplant(tree, z, z.rightChild);
     } else if (z.rightChild == null) {
       x = z.leftChild;
+      xParent = z.parent;
+      isLeft = (z == z.parent?.leftChild);
       transplant(tree, z, z.leftChild);
     } else {
       y = minimum(z.rightChild!);
       yOriginalColor = y!.color;
       x = y.rightChild;
       if (y.parent == z) {
-        x?.parent = y;
+        xParent = y;
+        isLeft = false; // x is right child of y
       } else {
+        xParent = y.parent;
+        isLeft =
+            true; // y was a left child, so x becomes the new left child of y's parent
         transplant(tree, y, y.rightChild);
         y.rightChild = z.rightChild;
         y.rightChild?.parent = y;
@@ -54,12 +64,18 @@ class Deletion<K_PeerId, V_PeerInfo> {
     FixViolations<K_PeerId, V_PeerInfo> fixViolations =
         FixViolations<K_PeerId, V_PeerInfo>();
 
-    if (yOriginalColor == common_tree.NodeColor.BLACK && x != null) {
-      fixViolations.fixDeletion(tree, x, x.parent); // Fix any violations
+    if (yOriginalColor == common_tree.NodeColor.BLACK) {
+      fixViolations.fixDeletion(
+        tree,
+        x,
+        xParent,
+        isLeftChild: isLeft,
+      ); // Fix any violations
     }
 
     // Update tree size and entries
     tree.size--;
+    tree.entries.removeWhere((entry) => tree.compare(entry.key, key) == 0);
     if (tree.size == 0) {
       tree.isEmpty = true;
     }

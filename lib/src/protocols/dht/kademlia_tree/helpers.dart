@@ -9,30 +9,32 @@ import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:fixnum/fixnum.dart';
 // lib/src/protocols/dht/kademlia_tree/helpers.dart
 
-/// Calculates the XOR distance between two Peer IDs.
+/// Calculates the logarithmic XOR distance (bit length) between two Peer IDs.
+/// Returns a value between 0 and 256.
 int calculateDistance(PeerId a, PeerId b) {
-  // Get the byte representations of the Peer IDs
-  List<int> bytesA = a.value;
-  List<int> bytesB = b.value;
-
-  // Calculate the XOR distance
-  int distance = 0;
-  int minLength = bytesA.length < bytesB.length ? bytesA.length : bytesB.length;
+  final bytesA = a.value;
+  final bytesB = b.value;
+  final minLength = bytesA.length < bytesB.length
+      ? bytesA.length
+      : bytesB.length;
 
   for (int i = 0; i < minLength; i++) {
-    distance = (distance << 8) | (bytesA[i] ^ bytesB[i]);
+    final xor = bytesA[i] ^ bytesB[i];
+    if (xor != 0) {
+      // (Total bytes - current byte index - 1) * 8 + bit length of XOR result
+      return (minLength - i - 1) * 8 + xor.bitLength;
+    }
   }
 
-  return distance;
+  return 0;
 }
 
-/// Finds the bucket index for a given distance.
+/// Finds the bucket index for a given logarithmic distance.
 int getBucketIndex(int distance) {
-  // Assuming 256 buckets (for 256-bit Peer IDs)
-  // and the distance is represented as an integer
+  // distance is the bit length of the XOR sum (0 to 256)
+  // Standard Mapping: bucketIndex = (bitLength - 1).clamp(0, 255).
   if (distance == 0) return 0;
-  int bucketIndex = 255 - (distance.bitLength - 1);
-  return bucketIndex;
+  return (distance - 1).clamp(0, 255);
 }
 
 /// Finds the closest node to a target peer ID in a given subtree.

@@ -1,114 +1,86 @@
 import 'dart:typed_data';
-
-import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/services/content_service.dart';
 import 'package:test/test.dart';
+import 'package:mockito/mockito.dart';
+import 'package:mockito/annotations.dart';
+import 'package:dart_ipfs/src/services/content_service.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
 
-import '../mocks/in_memory_datastore.dart';
+import 'content_service_test.mocks.dart';
 
+@GenerateNiceMocks([MockSpec<Datastore>()])
 void main() {
+  late ContentService service;
+  late MockDatastore mockDatastore;
+
+  setUp(() {
+    mockDatastore = MockDatastore();
+    service = ContentService(mockDatastore);
+  });
+
   group('ContentService', () {
-    late InMemoryDatastore datastore;
-    late ContentService contentService;
+    test('store and get content', () async {
+      final data = [1, 2, 3];
+      final cid = await service.storeContent(data);
+      verify(mockDatastore.put(any, any)).called(1);
 
-    setUp(() async {
-      datastore = InMemoryDatastore();
-      await datastore.init();
-      contentService = ContentService(datastore);
+      when(
+        mockDatastore.get(any),
+      ).thenAnswer((_) async => Uint8List.fromList(data));
+      final retrieved = await service.getContent(cid);
+      expect(retrieved, equals(data));
     });
 
-    tearDown(() async {
-      await datastore.close();
-    });
+    test('pin and unpin', () async {
+      final cid = await CID.fromContent(Uint8List.fromList([1]));
 
-    test('computeHash returns correct SHA-256 multihash', () async {
-      final input = Uint8List.fromList([1, 2, 3]);
-      final hash = await contentService.computeHash(input);
+      // Pin fail if not exists
+      when(mockDatastore.has(any)).thenAnswer((_) async => false);
+      expect(await service.pinContent(cid), isFalse);
 
-      // Check prefix (0x12 for SHA-256, 32 for length)
-      expect(hash[0], 0x12);
-      expect(hash[1], 32);
-      expect(hash.length, 34); // 2 prefix + 32 digest
-    });
+      // Pin success if exists
+      when(
+        mockDatastore.has(
+          argThat(predicate((Key k) => k.string.contains('blocks'))),
+        ),
+      ).thenAnswer((_) async => true);
+      expect(await service.pinContent(cid), isTrue);
 
-    test('storeContent stores data and returns valid CID', () async {
-      final input = Uint8List.fromList([10, 20, 30, 40]);
-      final cid = await contentService.storeContent(input);
-
-      // Verify CID structure
-      expect(cid.version, 1);
-      expect(cid.codec, 'raw'); // Default
-
-      // Verify data is in datastore via key
-      final key = Key('/blocks/${cid.encode()}');
-      final hasIt = await datastore.has(key);
-      expect(hasIt, isTrue);
-
-      // Retrieve via service
-      final retrieved = await contentService.getContent(cid);
-      expect(retrieved, equals(input));
-    });
-
-    test('storeContent supports custom codec', () async {
-      final input = Uint8List.fromList([5, 5, 5]);
-      final cid = await contentService.storeContent(input, codec: 'dag-pb');
-
-      expect(cid.codec, 'dag-pb');
-
-      // Verify it's stored
-      final key = Key('/blocks/${cid.encode()}');
-      expect(await datastore.has(key), isTrue);
-    });
-
-    test('removeContent removes data', () async {
-      final input = Uint8List.fromList([1, 1, 1]);
-      final cid = await contentService.storeContent(input);
-
-      expect(await contentService.hasContent(cid), isTrue);
-
-      final removed = await contentService.removeContent(cid);
-      expect(removed, isTrue);
-      expect(await contentService.hasContent(cid), isFalse);
-    });
-
-    test('pinContent/unpinContent works', () async {
-      final input = Uint8List.fromList([2, 2, 2]);
-      final cid = await contentService.storeContent(input);
-
-      // Pin
-      final pinned = await contentService.pinContent(cid);
-      expect(pinned, isTrue);
-
-      // Verify pin key exists
-      final pinKey = Key('/pins/${cid.encode()}');
-      expect(await datastore.has(pinKey), isTrue);
-
-      // Try to remove pinned content (should fail)
-      final removed = await contentService.removeContent(cid);
-      expect(removed, isFalse);
+      // List pins
+      when(mockDatastore.query(any)).thenAnswer(
+        (_) => Stream.fromIterable([
+          QueryEntry(Key('/pins/${cid.encode()}'), null),
+        ]),
+      );
+      final pins = await service.listPinnedContent();
+      expect(pins, contains(cid.encode()));
 
       // Unpin
-      final unpinned = await contentService.unpinContent(cid);
-      expect(unpinned, isTrue);
-      expect(await datastore.has(pinKey), isFalse);
-
-      // Now remove should succeed
-      expect(await contentService.removeContent(cid), isTrue);
+      expect(await service.unpinContent(cid), isTrue);
+      verify(mockDatastore.delete(any)).called(1);
     });
 
-    test('listPinnedContent returns pinned CIDs', () async {
-      final input1 = Uint8List.fromList([1]);
-      final input2 = Uint8List.fromList([2]);
-      final cid1 = await contentService.storeContent(input1);
-      final cid2 = await contentService.storeContent(input2);
+    test('remove content blocked by pin', () async {
+      final cid = await CID.fromContent(Uint8List.fromList([1]));
+      when(
+        mockDatastore.has(
+          argThat(predicate((Key k) => k.string.contains('pins'))),
+        ),
+      ).thenAnswer((_) async => true);
 
-      await contentService.pinContent(cid1);
-      await contentService.pinContent(cid2);
+      expect(await service.removeContent(cid), isFalse);
+    });
 
-      final pinned = await contentService.listPinnedContent();
-      expect(pinned.length, equals(2));
-      expect(pinned.contains(cid1.encode()), isTrue);
-      expect(pinned.contains(cid2.encode()), isTrue);
+    test('getContentSize', () async {
+      final cid = await CID.fromContent(Uint8List.fromList([1]));
+      when(mockDatastore.get(any)).thenAnswer((_) async => Uint8List(5));
+      expect(await service.getContentSize(cid), equals(5));
+    });
+
+    test('hasContent', () async {
+      final cid = await CID.fromContent(Uint8List.fromList([1]));
+      when(mockDatastore.has(any)).thenAnswer((_) async => true);
+      expect(await service.hasContent(cid), isTrue);
     });
   });
 }

@@ -22,6 +22,9 @@ import 'package:ipfs_libp2p/p2p/transport/tcp_transport.dart';
 /// This implements [RouterInterface] and provides standard IPFS networking.
 class Libp2pRouter implements RouterInterface {
   /// Creates a Libp2pRouter with the given configuration.
+  ///
+  /// [_config] - The IPFS configuration.
+  /// [seed] - Optional seed for generating the peer identity.
   Libp2pRouter(this._config, {Uint8List? seed}) : _seed = seed {
     _logger = Logger(
       'Libp2pRouter',
@@ -111,10 +114,10 @@ class Libp2pRouter implements RouterInterface {
       }
 
       _isInitialized = true;
-      _logger.debug('Libp2pRouter initialized with identity');
+      _logger.debug('Libp2pRouter initialized with identity: $peerID');
     } catch (e, stackTrace) {
       _logger.error('Failed to initialize Libp2pRouter', e, stackTrace);
-      rethrow;
+      throw StateError('Router initialization failed: $e');
     }
   }
 
@@ -150,7 +153,7 @@ class Libp2pRouter implements RouterInterface {
         ..._buildTransports(resourceManager),
         config.Libp2p.listenAddrs([listenAddr]),
         config.Libp2p.identity(_keyPair!),
-        config.Libp2p.userAgent('dart_ipfs/1.9.0'),
+        config.Libp2p.userAgent('dart_ipfs/2.0.0'),
       ]);
 
       await _host!.start();
@@ -190,7 +193,7 @@ class Libp2pRouter implements RouterInterface {
       await _connectToBootstrapPeers();
     } catch (e, stackTrace) {
       _logger.error('Failed to start Libp2pRouter', e, stackTrace);
-      rethrow;
+      throw StateError('Router failed to start: $e');
     }
   }
 
@@ -214,14 +217,34 @@ class Libp2pRouter implements RouterInterface {
     _logger.debug('Stopping Libp2pRouter...');
 
     try {
-      unawaited(_host?.close());
+      if (_host != null) {
+        await _host!.close().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => _logger.warning('Host close timed out'),
+        );
+      }
       _connectedPeers.clear();
       _hasStarted = false;
-      await _messagePacketController.close();
-      _logger.info('Libp2pRouter stopped');
+
+      // Close internal streams
+      final controllers = [
+        _messagePacketController,
+        _connectionEventsController,
+        _messageEventsController,
+        ..._peerMessageStreams.values,
+      ];
+
+      for (final controller in controllers) {
+        if (!controller.isClosed) {
+          await controller.close();
+        }
+      }
+      _peerMessageStreams.clear();
+
+      _logger.info('Libp2pRouter stopped successfully');
     } catch (e, stackTrace) {
       _logger.error('Error stopping Libp2pRouter', e, stackTrace);
-      rethrow;
+      // Don't rethrow here to allow cleanup to continue in other components
     }
   }
 
@@ -235,7 +258,9 @@ class Libp2pRouter implements RouterInterface {
       // Extract peer ID from multiaddress
       final peerIdStr = _extractPeerIdFromMultiaddr(multiaddress);
       if (peerIdStr == null) {
-        throw ArgumentError('Multiaddress must contain /p2p/<peerId>');
+        throw ArgumentError(
+          'Multiaddress must contain /p2p/<peerId>: $multiaddress',
+        );
       }
 
       // Strip the /p2p/<id> suffix for the transport address
@@ -249,12 +274,17 @@ class Libp2pRouter implements RouterInterface {
       ], const Duration(minutes: 10));
 
       final addrInfo = libp2p.AddrInfo(peerId, [addr]);
-      await _host!.connect(addrInfo);
+      await _host!
+          .connect(addrInfo)
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () =>
+                throw TimeoutException('Connection to $multiaddress timed out'),
+          );
 
-      // _connectedPeers is updated via NotifyBundle in start()
       _logger.debug('Connected to peer $peerIdStr');
-    } catch (e) {
-      _logger.error('Failed to connect to $multiaddress', e);
+    } catch (e, stackTrace) {
+      _logger.error('Failed to connect to $multiaddress', e, stackTrace);
       rethrow;
     }
   }
@@ -263,13 +293,20 @@ class Libp2pRouter implements RouterInterface {
   Future<void> disconnect(String peerIdOrMultiaddress) async {
     _checkStarted();
 
-    final peerId = peerIdOrMultiaddress.contains('/p2p/')
+    final peerIdStr = peerIdOrMultiaddress.contains('/p2p/')
         ? _extractPeerIdFromMultiaddr(peerIdOrMultiaddress)
         : peerIdOrMultiaddress;
 
-    if (peerId != null) {
-      _connectedPeers.remove(peerId);
-      _logger.debug('Disconnected from $peerId');
+    if (peerIdStr != null) {
+      try {
+        // libp2p Host doesn't have a direct 'disconnect' for PeerId,
+        // usually handled via Connection Manager or closing streams.
+        // We remove it from our tracked set.
+        _connectedPeers.remove(peerIdStr);
+        _logger.debug('Disconnected from $peerIdStr');
+      } catch (e) {
+        _logger.warning('Error while disconnecting from $peerIdStr: $e');
+      }
     }
   }
 
@@ -295,15 +332,18 @@ class Libp2pRouter implements RouterInterface {
       final context = libp2p.Context(timeout: const Duration(seconds: 15));
       final stream = await _host!.newStream(peerId, [protocol], context);
 
-      // Write length-prefixed message
-      final lengthPrefix = _encodeLengthPrefix(message.length);
-      await stream.write(Uint8List.fromList([...lengthPrefix, ...message]));
-      await stream.close();
+      try {
+        // Write length-prefixed message
+        final lengthPrefix = _encodeLengthPrefix(message.length);
+        await stream.write(Uint8List.fromList([...lengthPrefix, ...message]));
+      } finally {
+        await stream.close();
+      }
 
       _logger.verbose('Message sent successfully to $peerIdStr');
-    } catch (e) {
-      _logger.error('Failed to send message to $peerIdStr', e);
-      rethrow;
+    } catch (e, stackTrace) {
+      _logger.error('Failed to send message to $peerIdStr', e, stackTrace);
+      throw NetworkException('Failed to send message: $e');
     }
   }
 
@@ -315,22 +355,25 @@ class Libp2pRouter implements RouterInterface {
   ) async {
     _checkStarted();
 
+    _logger.verbose('Sending request to $peerId via $protocolId');
     try {
       final pid = libp2p.PeerId.fromString(peerId);
       final context = libp2p.Context(timeout: const Duration(seconds: 15));
       final stream = await _host!.newStream(pid, [protocolId], context);
 
-      // Write request
-      final lengthPrefix = _encodeLengthPrefix(request.length);
-      await stream.write(Uint8List.fromList([...lengthPrefix, ...request]));
+      try {
+        // Write request
+        final lengthPrefix = _encodeLengthPrefix(request.length);
+        await stream.write(Uint8List.fromList([...lengthPrefix, ...request]));
 
-      // Read response
-      final response = await _readLengthPrefixedMessage(stream);
-      await stream.close();
-
-      return response;
-    } catch (e) {
-      _logger.error('Request to $peerId failed', e);
+        // Read response
+        final response = await _readLengthPrefixedMessage(stream);
+        return response;
+      } finally {
+        await stream.close();
+      }
+    } catch (e, stackTrace) {
+      _logger.error('Request to $peerId failed', e, stackTrace);
       return null;
     }
   }
@@ -345,24 +388,46 @@ class Libp2pRouter implements RouterInterface {
 
     if (_host != null) {
       _host!.setStreamHandler(protocolId, (stream, remotePeerId) async {
+        final remoteIdStr = remotePeerId.toString();
+        _logger.verbose(
+          'Incoming stream from $remoteIdStr for protocol $protocolId',
+        );
+
         try {
           final data = await _readLengthPrefixedMessage(stream);
           if (data != null) {
             final packet = NetworkPacket(
-              srcPeerId: remotePeerId.toString(),
+              srcPeerId: remoteIdStr,
               datagram: data,
               responder: (response) async {
-                final lengthPrefix = _encodeLengthPrefix(response.length);
-                await stream.write(
-                  Uint8List.fromList([...lengthPrefix, ...response]),
-                );
+                try {
+                  final lengthPrefix = _encodeLengthPrefix(response.length);
+                  await stream.write(
+                    Uint8List.fromList([...lengthPrefix, ...response]),
+                  );
+                } catch (e) {
+                  _logger.error('Failed to send response to $remoteIdStr', e);
+                }
               },
             );
             handler(packet);
             _messagePacketController.add(packet);
+          } else {
+            _logger.warning(
+              'Received empty or invalid message from $remoteIdStr on $protocolId',
+            );
           }
-        } catch (e) {
-          _logger.error('Error handling stream for $protocolId', e);
+        } catch (e, stackTrace) {
+          _logger.error(
+            'Error handling stream for $protocolId from $remoteIdStr',
+            e,
+            stackTrace,
+          );
+        } finally {
+          // Note: In some protocols we might want to keep the stream open,
+          // but for basic request/response or one-way we close it here if the handler doesn't.
+          // For now we assume the caller or the responder might close it, or libp2p handles it.
+          // stream.close();
         }
       });
     }
@@ -416,11 +481,11 @@ class Libp2pRouter implements RouterInterface {
   }
 
   @override
-  dynamic parseMultiaddr(String multiaddr) {
+  Object? parseMultiaddr(String multiaddr) {
     try {
       return libp2p.MultiAddr(multiaddr);
     } catch (e) {
-      _logger.warning('Failed to parse multiaddr: $multiaddr');
+      _logger.warning('Failed to parse multiaddr: $multiaddr - $e');
       return null;
     }
   }
@@ -436,7 +501,7 @@ class Libp2pRouter implements RouterInterface {
 
   void _checkStarted() {
     if (!_hasStarted) {
-      throw StateError('Libp2pRouter not started');
+      throw StateError('Libp2pRouter not started. Call start() first.');
     }
   }
 
@@ -464,27 +529,37 @@ class Libp2pRouter implements RouterInterface {
   Future<Uint8List?> _readLengthPrefixedMessage(
     libp2p.P2PStream<dynamic> stream,
   ) async {
-    // Read varint length prefix
-    final lengthBytes = <int>[];
-    while (true) {
-      final byte = await _readByte(stream);
-      if (byte == null) return null;
-      lengthBytes.add(byte);
-      if ((byte & 0x80) == 0) break;
+    try {
+      // Read varint length prefix
+      final lengthBytes = <int>[];
+      while (true) {
+        final byte = await _readByte(stream);
+        if (byte == null) return null;
+        lengthBytes.add(byte);
+        if ((byte & 0x80) == 0) break;
+      }
+
+      final length = _decodeVarint(Uint8List.fromList(lengthBytes));
+      if (length == 0) return Uint8List(0);
+
+      // Read message body
+      final result = <int>[];
+      for (var i = 0; i < length; i++) {
+        final byte = await _readByte(stream);
+        if (byte == null) {
+          _logger.warning(
+            'Stream closed prematurely while reading message body',
+          );
+          return null;
+        }
+        result.add(byte);
+      }
+
+      return Uint8List.fromList(result);
+    } catch (e) {
+      _logger.error('Error reading length-prefixed message', e);
+      return null;
     }
-
-    final length = _decodeVarint(Uint8List.fromList(lengthBytes));
-    if (length == 0) return Uint8List(0);
-
-    // Read message body
-    final result = <int>[];
-    for (var i = 0; i < length; i++) {
-      final byte = await _readByte(stream);
-      if (byte == null) return null;
-      result.add(byte);
-    }
-
-    return Uint8List.fromList(result);
   }
 
   Future<int?> _readByte(libp2p.P2PStream<dynamic> stream) async {
@@ -529,4 +604,16 @@ class Libp2pRouter implements RouterInterface {
 
     return transports;
   }
+}
+
+/// Exception thrown when a network operation fails in the transport layer.
+class NetworkException implements Exception {
+  /// Creates a [NetworkException] with a [message].
+  NetworkException(this.message);
+
+  /// The error message.
+  final String message;
+
+  @override
+  String toString() => 'NetworkException: $message';
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -13,9 +14,12 @@ import 'package:fixnum/fixnum.dart';
 /// It implements:
 /// - HOP protocol: Handling RESERVE requests from peers wanting to serve traffic.
 /// - STOP protocol: Handling CONNECT requests destined for this node.
+///
+/// See: https://github.com/libp2p/specs/tree/master/relay
 class CircuitRelayService {
   /// Creates a new [CircuitRelayService] with the given [_router] and [_config].
   CircuitRelayService(this._router, this._config);
+
   final RouterInterface _router;
   final IPFSConfig _config;
   final _logger = Logger('CircuitRelayService');
@@ -31,14 +35,17 @@ class CircuitRelayService {
   static const transportProtocolId = '/libp2p/circuit/relay/0.2.0/transport';
 
   // State
+  /// Current reservations granted by this relay, keyed by Peer ID.
   final Map<String, Reservation> _reservations = {};
 
-  // Circuit Map: Source PeerId String -> CircuitContext
+  /// Active circuits where we are currently relaying data, keyed by source Peer ID.
   final Map<String, _CircuitContext> _activeCircuits = {};
-  // Reverse Map: Dest PeerId String -> Source PeerId String (for bidirectionality simple lookup)
-  // Note: For full multiplexing, we'd need Circuit IDs.
-  // This MVP assumes one active relayed connection per peer pair direction.
+
+  /// Reverse lookup for active circuits: destination Peer ID -> source Peer ID.
   final Map<String, String> _reverseCircuits = {};
+
+  /// Timer for periodic cleanup of expired reservations and circuits.
+  Timer? _cleanupTimer;
 
   /// Starts the service and registers protocol handlers.
   void start() {
@@ -47,18 +54,31 @@ class CircuitRelayService {
       return;
     }
 
-    _router.registerProtocolHandler(hopProtocolId, _handleHop);
-    _router.registerProtocolHandler(stopProtocolId, _handleStop);
-    _router.registerProtocolHandler(transportProtocolId, _handleTransport);
-    _logger.info('Circuit Relay Service started.');
+    try {
+      _router.registerProtocolHandler(hopProtocolId, _handleHop);
+      _router.registerProtocolHandler(stopProtocolId, _handleStop);
+      _router.registerProtocolHandler(transportProtocolId, _handleTransport);
+
+      _cleanupTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+        _cleanupExpired();
+      });
+
+      _logger.info('Circuit Relay Service started.');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to start Circuit Relay Service', e, stackTrace);
+    }
   }
 
-  /// Stops the service.
+  /// Stops the service and cleans up resources.
   void stop() {
-    // Cleanup logic if needed
+    _logger.debug('Stopping Circuit Relay Service...');
+    _cleanupTimer?.cancel();
+    _cleanupTimer = null;
+
     _reservations.clear();
     _activeCircuits.clear();
     _reverseCircuits.clear();
+    _logger.info('Circuit Relay Service stopped.');
   }
 
   /// Handles relayed traffic packets.
@@ -79,8 +99,6 @@ class CircuitRelayService {
       if (_activeCircuits.containsKey(sourceId)) {
         final context = _activeCircuits[sourceId]!;
         // Forward back to Source
-        // We don't enforce limits strictly on replies in this MVP,
-        // or we share the limit of the circuit.
         _forwardPacket(context.sourcePeerId, packet.datagram, context);
         return;
       }
@@ -101,13 +119,17 @@ class CircuitRelayService {
 
     // Check limits
     if (context.expire < now) {
+      _logger.debug(
+        'Circuit expired: ${context.source} <-> ${context.destination}',
+      );
       _closeCircuit(context);
       return;
     }
 
     if (context.bytesTransferred + payload.length > context.limitData) {
       _logger.debug(
-        'Circuit limit exceeded for ${context.source} -> ${context.destination}',
+        'Circuit limit exceeded for ${context.source} -> ${context.destination} '
+        '(${context.bytesTransferred}/${context.limitData} bytes)',
       );
       _closeCircuit(context);
       return;
@@ -117,16 +139,20 @@ class CircuitRelayService {
     context.bytesTransferred += payload.length;
 
     // Send
-    // Note: In a real v2 implementation, we'd wrap this to indicate source.
-    // Here we forward raw payload on the transport protocol.
-    // The receiver must know context or we imply it by the customized connection.
     try {
-      _router.sendMessage(targetPeerId, payload);
+      _router.sendMessage(
+        targetPeerId,
+        payload,
+        protocolId: transportProtocolId,
+      );
     } catch (e) {
       _logger.warning('Failed to forward packet to $targetPeerId: $e');
+      // If we can't send, should we close the circuit?
+      // Maybe not immediately, might be transient.
     }
   }
 
+  /// Closes an active circuit.
   void _closeCircuit(_CircuitContext context) {
     _activeCircuits.remove(context.source);
     _reverseCircuits.remove(context.destination);
@@ -148,14 +174,19 @@ class CircuitRelayService {
           _handleConnect(packet.srcPeerId, message);
           break;
         case HopMessage_Type.STATUS:
-          // We shouldn't receive status messages as a server usually,
-          // unless checking our own reservation?
+          _logger.verbose(
+            'Received HOP status ${message.status} from ${packet.srcPeerId}',
+          );
           break;
         default:
           _logger.warning('Unknown HOP message type: ${message.type}');
       }
-    } catch (e) {
-      _logger.warning('Failed to handle HOP message: $e');
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Failed to handle HOP message from ${packet.srcPeerId}',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -166,7 +197,6 @@ class CircuitRelayService {
 
       if (message.type == StopMessage_Type.CONNECT) {
         // Someone is connecting TO us via a relay.
-        // We should accept the connection.
         _logger.info(
           'Received relayed connection request (STOP) from ${packet.srcPeerId}',
         );
@@ -178,16 +208,25 @@ class CircuitRelayService {
         _router.sendMessage(
           packet.srcPeerId,
           Uint8List.fromList(response.writeToBuffer()),
+          protocolId: stopProtocolId,
         );
       }
-    } catch (e) {
-      _logger.warning('Failed to handle STOP message: $e');
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Failed to handle STOP message from ${packet.srcPeerId}',
+        e,
+        stackTrace,
+      );
     }
   }
 
   /// Handles a RESERVE request.
   void _handleReserve(String srcPeerId, HopMessage request) {
-    // 1. Create Reservation
+    _logger.debug('Handling RESERVE request from $srcPeerId');
+
+    // Check if we already have a reservation or if we should grant one
+    // In a production system, we'd check peer reputation, ACLs, etc.
+
     final now = DateTime.now().toUtc();
     final expireTime = now.add(const Duration(hours: 2)); // Default 2h
 
@@ -195,20 +234,15 @@ class CircuitRelayService {
     final limit = Limit()
       ..duration =
           Int64(7200) // 2 hours
-      ..data = Int64(1024 * 1024 * 1024); // 1 GB limit for example
+      ..data = Int64(1024 * 1024 * 1024); // 1 GB limit
 
     final reservation = Reservation()
       ..expire = Int64(expireTime.millisecondsSinceEpoch ~/ 1000)
       ..limitDuration = limit.duration
-      ..limitData = limit.data
-    // Add our addresses to the reservation so the client knows how to reach us?
-    // For now, empty or standard addrs managed by router.
-    ;
+      ..limitData = limit.data;
 
     // Store it
-    // Use base58 encoded peerId as key
-    final srcIdStr = srcPeerId;
-    _reservations[srcIdStr] = reservation;
+    _reservations[srcPeerId] = reservation;
 
     // Send Response
     final response = HopMessage()
@@ -217,27 +251,38 @@ class CircuitRelayService {
       ..reservation = reservation
       ..limit = limit;
 
-    _router.sendMessage(
-      srcPeerId,
-      Uint8List.fromList(response.writeToBuffer()),
-    );
-    _logger.verbose('Granted reservation to $srcIdStr');
+    try {
+      _router.sendMessage(
+        srcPeerId,
+        Uint8List.fromList(response.writeToBuffer()),
+        protocolId: hopProtocolId,
+      );
+      _logger.verbose(
+        'Granted reservation to $srcPeerId, expires at $expireTime',
+      );
+    } catch (e) {
+      _logger.error('Failed to send RESERVE response to $srcPeerId', e);
+    }
   }
 
+  /// Handles a CONNECT request.
   Future<void> _handleConnect(String srcPeerId, HopMessage request) async {
     // 1. Validate Destination
     if (!request.hasPeer() || request.peer.id.isEmpty) {
+      _logger.warning(
+        'Invalid CONNECT request from $srcPeerId: missing destination peer',
+      );
       _sendHopStatus(srcPeerId, Status.HOP_SRC_MULTIADDR_INVALID);
       return;
     }
 
     // Convert Dest Peer ID to string for lookup
-    // Assuming request.peer.id is the raw bytes of the PeerId
     final destPeerIdStr = Base58().encode(Uint8List.fromList(request.peer.id));
+    _logger.debug('Handling CONNECT request from $srcPeerId to $destPeerIdStr');
 
-    // 2. Check Reservation
+    // 2. Check Reservation for Destination
     if (!_reservations.containsKey(destPeerIdStr)) {
-      _logger.debug('No reservation found for $destPeerIdStr');
+      _logger.debug('No reservation found for destination $destPeerIdStr');
       _sendHopStatus(srcPeerId, Status.FAILED);
       return;
     }
@@ -246,6 +291,7 @@ class CircuitRelayService {
     // Check expiration
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     if (reservation.expire < now) {
+      _logger.debug('Reservation for $destPeerIdStr has expired');
       _reservations.remove(destPeerIdStr);
       _sendHopStatus(srcPeerId, Status.FAILED);
       return;
@@ -257,10 +303,7 @@ class CircuitRelayService {
 
       final stopMsg = StopMessage()
         ..type = StopMessage_Type.CONNECT
-        ..peer =
-            (Peer()..id = Base58().base58Decode(srcPeerId)
-            // addrs is repeated, so it's initialized as empty list in new Peer()
-            )
+        ..peer = (Peer()..id = Base58().base58Decode(srcPeerId))
         ..limit = (Limit()
           ..duration = reservation.limitDuration
           ..data = reservation.limitData);
@@ -272,6 +315,9 @@ class CircuitRelayService {
       );
 
       if (responseBytes == null) {
+        _logger.warning(
+          'Destination $destPeerIdStr did not respond to STOP request',
+        );
         _sendHopStatus(srcPeerId, Status.HOP_CANT_OPEN_DST_STREAM);
         return;
       }
@@ -284,7 +330,6 @@ class CircuitRelayService {
         );
 
         // 4. Register Active Circuit
-        final srcIdStr = srcPeerId;
         final currentNow = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
         // Use the reservation limits or default
@@ -292,7 +337,7 @@ class CircuitRelayService {
         final dataLimit = reservation.limitData.toInt();
 
         final context = _CircuitContext(
-          source: srcIdStr,
+          source: srcPeerId,
           sourcePeerId: srcPeerId,
           destination: destPeerIdStr,
           destinationPeerId: destPeerIdStr,
@@ -300,32 +345,65 @@ class CircuitRelayService {
           limitData: dataLimit,
         );
 
-        _activeCircuits[srcIdStr] = context;
-        _reverseCircuits[destPeerIdStr] = srcIdStr;
+        _activeCircuits[srcPeerId] = context;
+        _reverseCircuits[destPeerIdStr] = srcPeerId;
 
         // 5. Send Success to Source
         _sendHopStatus(srcPeerId, Status.OK);
       } else {
         _logger.warning(
-          'Destination rejected STOP connection: ${stopResponse.status}',
+          'Destination $destPeerIdStr rejected STOP connection: ${stopResponse.status}',
         );
         _sendHopStatus(srcPeerId, stopResponse.status);
       }
-    } catch (e) {
-      _logger.warning('Failed to connect to destination: $e');
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Failed to establish circuit to $destPeerIdStr',
+        e,
+        stackTrace,
+      );
       _sendHopStatus(srcPeerId, Status.HOP_CANT_OPEN_DST_STREAM);
     }
   }
 
+  /// Sends a HOP status message to a peer.
   void _sendHopStatus(String dest, Status status) {
     final response = HopMessage()
       ..type = HopMessage_Type.STATUS
       ..status = status;
 
-    _router.sendMessage(dest, Uint8List.fromList(response.writeToBuffer()));
+    try {
+      _router.sendMessage(
+        dest,
+        Uint8List.fromList(response.writeToBuffer()),
+        protocolId: hopProtocolId,
+      );
+    } catch (e) {
+      _logger.error('Failed to send HOP status $status to $dest', e);
+    }
+  }
+
+  /// Cleans up expired reservations and circuits.
+  void _cleanupExpired() {
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+    _reservations.removeWhere((id, res) {
+      final expired = res.expire < now;
+      if (expired) _logger.verbose('Cleaning up expired reservation for $id');
+      return expired;
+    });
+
+    final expiredCircuits = _activeCircuits.values
+        .where((ctx) => ctx.expire < now)
+        .toList();
+
+    for (final ctx in expiredCircuits) {
+      _closeCircuit(ctx);
+    }
   }
 }
 
+/// Internal context for an active relayed circuit.
 class _CircuitContext {
   /// Creates a [_CircuitContext].
   _CircuitContext({
@@ -336,11 +414,25 @@ class _CircuitContext {
     required this.expire,
     required this.limitData,
   });
+
+  /// The source peer identifier (usually same as [sourcePeerId]).
   final String source;
+
+  /// The source peer ID.
   final String sourcePeerId;
+
+  /// The destination peer identifier (usually same as [destinationPeerId]).
   final String destination;
+
+  /// The destination peer ID.
   final String destinationPeerId;
+
+  /// Unix timestamp when this circuit expires.
   final int expire;
+
+  /// Maximum number of bytes allowed to be transferred.
   final int limitData;
+
+  /// Total number of bytes transferred in this circuit.
   int bytesTransferred = 0;
 }

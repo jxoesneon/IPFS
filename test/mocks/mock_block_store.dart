@@ -87,7 +87,14 @@ class MockBlockStore implements IBlockStore {
     };
   }
 
+  @override
+  Future<int> gc() async {
+    _recordCall('gc');
+    return 0;
+  }
+
   // ===== Test Helper Methods =====
+
 
   /// Set up a block for testing
   void setupBlock(String cid, Block block) {

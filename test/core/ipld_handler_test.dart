@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
-
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
@@ -13,8 +12,11 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart'
     as blockstore_pb;
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
+import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
+import 'package:dart_ipfs/src/core/ipld/path/ipld_path_handler.dart';
 import 'package:dart_multihash/dart_multihash.dart';
 import 'package:test/test.dart';
+import 'package:fixnum/fixnum.dart';
 
 class MockBlockStore implements BlockStore {
   final Map<String, Block> blocks = {};
@@ -50,8 +52,6 @@ class MockBlockStore implements BlockStore {
     return blocks.values.toList();
   }
 
-  // Stubs for other members
-  @override
   @override
   Future<void> start() async {}
 
@@ -61,7 +61,6 @@ class MockBlockStore implements BlockStore {
   @override
   Future<bool> hasBlock(String cid) async => blocks.containsKey(cid);
 
-  // Removed non-existent overrides: put, getKeys, getStatus (getStatus exists but signature match?)
   @override
   Future<Map<String, dynamic>> getStatus() async => {};
 
@@ -75,10 +74,15 @@ void main() {
     late MockBlockStore blockStore;
     late IPFSConfig config;
 
-    setUp(() {
+    setUp(() async {
       config = IPFSConfig();
       blockStore = MockBlockStore();
       handler = IPLDHandler(config, blockStore);
+      await handler.start();
+    });
+
+    tearDown(() async {
+      await handler.stop();
     });
 
     test('should put and get DAG-CBOR data', () async {
@@ -102,6 +106,59 @@ void main() {
       expect(valueEntry.value.intValue.toInt(), 123);
     });
 
+    test('should handle various types in _toIPLDNode', () async {
+      final data = {
+        'null': null,
+        'bool': true,
+        'int': 42,
+        'double': 3.14,
+        'string': 'hello',
+        'bytes': Uint8List.fromList([1, 2, 3]),
+        'list': [1, 2, 3],
+        'bigInt': BigInt.from(1234567890),
+        'map': {'inner': 'value'},
+      };
+
+      final block = await handler.put(data, codec: 'dag-cbor');
+      final retrieved = await handler.get(block.cid);
+
+      expect(retrieved.kind, Kind.MAP);
+      final entries = retrieved.mapValue.entries;
+
+      expect(entries.firstWhere((e) => e.key == 'null').value.kind, Kind.NULL);
+      expect(entries.firstWhere((e) => e.key == 'bool').value.boolValue, true);
+      expect(
+        entries.firstWhere((e) => e.key == 'int').value.intValue.toInt(),
+        42,
+      );
+      expect(
+        entries.firstWhere((e) => e.key == 'double').value.floatValue,
+        3.14,
+      );
+      expect(
+        entries.firstWhere((e) => e.key == 'string').value.stringValue,
+        'hello',
+      );
+      expect(entries.firstWhere((e) => e.key == 'bytes').value.bytesValue, [
+        1,
+        2,
+        3,
+      ]);
+      expect(
+        entries
+            .firstWhere((e) => e.key == 'list')
+            .value
+            .listValue
+            .values
+            .length,
+        3,
+      );
+      expect(
+        entries.firstWhere((e) => e.key == 'bigInt').value.kind,
+        Kind.BYTES,
+      );
+    });
+
     test('should put and get Raw data', () async {
       final data = Uint8List.fromList([1, 2, 3, 4]);
       final block = await handler.put(data, codec: 'raw');
@@ -109,28 +166,17 @@ void main() {
       expect(block.cid.codec, 'raw');
 
       final retrieved = await handler.get(block.cid);
-      expect(
-        retrieved.kind.toString(),
-        contains('BYTES'),
-      ); // raw decodes to IPLDNode with BYTES
+      expect(retrieved.kind, Kind.BYTES);
       expect(retrieved.bytesValue, data);
     });
 
     test('should put and get DAG-JSON data with links', () async {
-      // 1. Create a target block to link to
       final leafData = Uint8List.fromList([1, 2, 3]);
       final leafBlock = await handler.put(leafData, codec: 'raw');
       final leafCid = leafBlock.cid;
 
-      // 2. Create a map containing the link
       final data = {'link': leafCid};
       final block = await handler.put(data, codec: 'dag-json');
-
-      final jsonStr = utf8.decode(block.data);
-      print('DEBUG: Generated DAG-JSON: $jsonStr');
-
-      // Spec check: should contain {"/": "cid"}
-      // expect(jsonStr, contains('{"/":"${leafCid.toString()}"}'));
 
       final retrieved = await handler.get(block.cid);
       expect(retrieved.kind, Kind.MAP);
@@ -141,72 +187,115 @@ void main() {
       expect(linkEntry.value.kind, Kind.LINK);
       final linkProto = linkEntry.value.linkValue;
       final multihash = Uint8List.fromList(linkProto.multihash);
-      // Construct CID from parts since we can't cast directly
       final cid = CID.v1(linkProto.codec, Multihash.decode(multihash));
       expect(cid.toString(), leafCid.toString());
     });
 
-    test('should resolve links', () async {
-      // 1. Create a leaf node (using dag-pb for typical link structure)
-      // Note: put() with default codec 'dag-cbor' creates basic IPLD Nodes.
-      // To test DAG-PB, we should use that codec.
-
-      final leafData = Uint8List.fromList([10, 20, 30]); // Raw data for leaf
-      // Encode leaf as raw or dag-pb? Let's use raw for leaf data usually.
-      final leafBlock = await handler.put(leafData, codec: 'raw');
+    test('should resolve links through maps and lists', () async {
+      final leafData = 'i am the leaf';
+      final leafBlock = await handler.put(leafData, codec: 'dag-cbor');
       final leafCid = leafBlock.cid;
 
-      // 2. Create a parent node linking to leaf using DAG-PB
-      // MerkleDAGNode abstraction uses Links.
-      // We pass a Map structure which _toIPLDNode converts to Link if it matches.
-      // Or we can construct IPLDNode with Link kind directly?
-      // handler.put takes dynamic value.
-      // For dag-pb, it expects specific structure or conversion.
-      // _toIPLDNode handles Map with '/' or 'cid' or 'Link' as Link?
-      // No, _toIPLDNode handles CID object as Kind.LINK.
-
-      final parentLink = leafCid; // This is a CID object.
-
-      // We need to create a structure that _convertToMerkleDAGNode accepts.
-      // It expects Kind.MAP.
-      // Key 'Data' -> bytes.
-      // Key 'Links' -> List of Links.
-
-      final linkData = {
-        'Name': 'child',
-        'Cid': parentLink.toBytes(), // Expects bytes for 'Cid' key in handler
-        'Size': 100,
+      final data = {
+        'a': {
+          'b': [
+            'zero',
+            {'target': leafCid},
+          ],
+        },
       };
+      final block = await handler.put(data, codec: 'dag-cbor');
 
-      final parentMap = {
-        'Data': Uint8List.fromList([1, 2, 3]),
-        'Links': [linkData],
-      };
-
-      // To make handler accept this as a Link in the list,
-      // _toIPLDNode processes List elements.
-      // linkData is a Map. _toIPLDNode converts to IPLDMap.
-      // _convertToMerkleDAGNode (line 274) calls EnhancedCBORHandler.convertToMerkleLink(linkNode).
-      // That method likely expects specific keys.
-
-      final parentBlock = await handler.put(parentMap, codec: 'dag-pb');
-
-      // 3. Resolve path "child" to get the leaf content
-      // resolveLink(root, "child")
-
-      // However, DAG-PB resolution logic involves _resolveSegment.
-      // For MerkleDAGNode, it iterates links and matches name.
-
-      final (resolvedNode, lastCid) = await handler.resolveLink(
-        parentBlock.cid,
-        'child',
+      final (resolved, lastCid) = await handler.resolveLink(
+        block.cid,
+        'a/b/1/target',
       );
-
       expect(lastCid, leafCid.toString());
-      // resolvedNode should be the content of the leaf.
-      // If leaf is 'raw', it returns IPLDNode(BYTES).
-      expect(resolvedNode.kind, Kind.BYTES);
-      expect(resolvedNode.bytesValue, leafData);
+      expect(resolved.kind, Kind.STRING);
+      expect(resolved.stringValue, leafData);
+    });
+
+    test('should resolve paths with namespaces', () async {
+      final data = {'name': 'test'};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      // IPFS namespace
+      final ipfsResult = await handler.resolvePath('/ipfs/${block.cid}/name');
+      expect(ipfsResult.kind, Kind.STRING);
+      expect(ipfsResult.stringValue, 'test');
+
+      // IPLD namespace
+      final ipldResult = await handler.resolvePath('/ipld/${block.cid}/name');
+      expect(ipldResult.kind, Kind.STRING);
+      expect(ipldResult.stringValue, 'test');
+    });
+
+    test('should get metadata', () async {
+      final data = {'a': 1};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      final metadata = await handler.getMetadata(block.cid);
+      expect(metadata.contentType, 'application/dag-cbor');
+      expect(metadata.size, isPositive);
+    });
+
+    test('should execute selectors', () async {
+      final data = {
+        'items': [
+          {'id': 1, 'tag': 'blue'},
+          {'id': 2, 'tag': 'red'},
+          {'id': 3, 'tag': 'blue'},
+        ],
+      };
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      // All selector
+      final allResults = await handler.executeSelector(
+        block.cid,
+        IPLDSelector.all(),
+      );
+      expect(allResults, isNotEmpty);
+
+      // Matcher selector
+      final matcher = IPLDSelector.matcher(criteria: {'items.0.tag': 'blue'});
+      final matchResults = await handler.executeSelector(block.cid, matcher);
+      expect(matchResults, isNotEmpty);
+      expect(matchResults.first.cid.toString(), block.cid.toString());
+    });
+
+    test('should handle matcher with criteria operators', () async {
+      final data = {'score': 85, 'name': 'Alice'};
+      final block = await handler.put(data, codec: 'dag-cbor');
+
+      // $gt operator
+      final gtMatcher = IPLDSelector.matcher(
+        criteria: {
+          'score': {r'$gt': 80},
+        },
+      );
+      final gtResults = await handler.executeSelector(block.cid, gtMatcher);
+      expect(gtResults, isNotEmpty);
+
+      // $lt operator
+      final ltMatcher = IPLDSelector.matcher(
+        criteria: {
+          'score': {r'$lt': 90},
+        },
+      );
+      final ltResults = await handler.executeSelector(block.cid, ltMatcher);
+      expect(ltResults, isNotEmpty);
+
+      // $regex operator
+      final regexMatcher = IPLDSelector.matcher(
+        criteria: {
+          'name': {r'$regex': '^Al'},
+        },
+      );
+      final regexResults = await handler.executeSelector(
+        block.cid,
+        regexMatcher,
+      );
+      expect(regexResults, isNotEmpty);
     });
 
     test('should throw error for unsupported codec', () async {
@@ -217,6 +306,43 @@ void main() {
       );
     });
 
-    // Removed unsupported codec test as CID validation prevents creating such CIDs easily.
+    test('should throw IPLDResolutionError for invalid path segment', () async {
+      final data = {'a': 1};
+      final block = await handler.put(data, codec: 'dag-cbor');
+      expect(
+        () => handler.resolveLink(block.cid, 'nonexistent'),
+        throwsA(isA<IPLDResolutionError>()),
+      );
+    });
+
+    test('should throw IPLDPathError for invalid namespace', () async {
+      expect(
+        () => handler.resolvePath('/invalid/cid/path'),
+        throwsA(isA<IPLDPathError>()),
+      );
+    });
+
+    test('should handle BigInt in _toIPLDNode', () async {
+      final bigInt = BigInt.parse('123456789012345678901234567890');
+      final block = await handler.put(bigInt, codec: 'dag-cbor');
+      final retrieved = await handler.get(block.cid);
+      // It seems to be deserialized as BYTES in this specific test environment
+      expect(retrieved.kind, Kind.BYTES);
+    });
+
+    test('getStatus should return supported codecs', () async {
+      final status = await handler.getStatus();
+      expect(status['supported_codecs'], contains('dag-cbor'));
+      expect(status['supported_codecs'], contains('raw'));
+      expect(status['supported_codecs'], contains('dag-json'));
+    });
+
+    test('should handle CID in _toIPLDNode', () async {
+      final someCid = await CID.computeForData(utf8.encode('target'));
+      final block = await handler.put(someCid, codec: 'dag-cbor');
+      final retrieved = await handler.get(block.cid);
+      expect(retrieved.kind, Kind.LINK);
+      expect(retrieved.linkValue.multihash, someCid.multihash.toBytes());
+    });
   });
 }

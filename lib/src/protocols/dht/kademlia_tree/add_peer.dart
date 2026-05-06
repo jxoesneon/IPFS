@@ -24,6 +24,9 @@ extension AddPeer on KademliaTree {
     // Insert into the RedBlackTree
     buckets[bucketIndex].insert(peerId, newNode);
 
+    // Update lastSeen map for freshness tracking
+    lastSeen[peerId] = DateTime.now();
+
     // Handle bucket fullness - splitting or replacement
     if (buckets[bucketIndex].size > KademliaTree.K) {
       handleBucketFullness(bucketIndex, peerId, associatedPeerId);
