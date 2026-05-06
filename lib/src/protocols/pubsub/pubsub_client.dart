@@ -207,9 +207,13 @@ class PubSubClient implements IPubSub {
       final List<Future<void>> publishFutures = [];
       for (final String peerId in _mesh) {
         publishFutures.add(
-          _router.sendMessage(peerId, encodedMessage).catchError((Object e) {
-            _logger.debug('Failed to send PubSub message to $peerId: $e');
-          }),
+          (() async {
+            try {
+              await _router.sendMessage(peerId, encodedMessage);
+            } catch (e) {
+              _logger.debug('Failed to send PubSub message to $peerId: $e');
+            }
+          })(),
         );
       }
 
@@ -372,7 +376,7 @@ class PubSubClient implements IPubSub {
   }
 
   /// Handles 'iwant' control messages by serving cached messages.
-  void _handleIWant(Map<String, dynamic> msg) {
+  Future<void> _handleIWant(Map<String, dynamic> msg) async {
     final String? topic = msg['topic'] as String?;
     final List<dynamic>? msgIdsRaw = msg['msgIds'] as List<dynamic>?;
     final String? sender = msg['sender'] as String?;
@@ -386,9 +390,11 @@ class PubSubClient implements IPubSub {
         final String? content = _messageCache[topic]?[id];
         if (content != null) {
           final Uint8List encoded = encodePublishRequest(topic, content);
-          _router.sendMessage(sender, encoded).catchError((Object e) {
+          try {
+            await _router.sendMessage(sender, encoded);
+          } catch (e) {
             _logger.debug('Failed to serve IWANT content to $sender: $e');
-          });
+          }
         }
       }
     } catch (e) {

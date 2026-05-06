@@ -345,16 +345,18 @@ class BitswapHandler {
 
     for (final peerId in connectedPeers) {
       futures.add(
-        Future(() async {
-          await _router.sendMessage(peerId, messageBytes);
-          _logger.verbose('Want request sent to peer: $peerId');
-        }).catchError((Object error, StackTrace st) {
-          _logger.error(
-            'Error sending want request to peer $peerId',
-            error,
-            st,
-          );
-        }),
+        (() async {
+          try {
+            await _router.sendMessage(peerId, messageBytes);
+            _logger.verbose('Want request sent to peer: $peerId');
+          } catch (error, st) {
+            _logger.error(
+              'Error sending want request to peer $peerId',
+              error,
+              st,
+            );
+          }
+        })(),
       );
     }
 
