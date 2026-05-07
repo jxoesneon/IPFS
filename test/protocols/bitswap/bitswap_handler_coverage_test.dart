@@ -57,11 +57,9 @@ void main() {
 
     test('handlePacket processes incoming wantlist', () async {
       await handler.start();
-      final capturedHandler =
-          verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
-              ).captured.last
-              as Function(NetworkPacket);
+      final capturedHandler = verify(
+        mockRouter.registerProtocolHandler(any, captureAny),
+      ).captured.last as Function(NetworkPacket);
 
       final blockData = Uint8List.fromList([4, 5, 6]);
       final cid = await CID.computeForData(blockData);
@@ -85,16 +83,16 @@ void main() {
 
       await capturedHandler(packet);
 
-      verify(mockRouter.sendMessage('peerA', any)).called(1);
+      verify(
+        mockRouter.sendMessage('peerA', any, protocolId: anyNamed('protocolId')),
+      ).called(1);
     });
 
     test('handlePacket processes incoming HAVE wantlist', () async {
       await handler.start();
-      final capturedHandler =
-          verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
-              ).captured.last
-              as Function(NetworkPacket);
+      final capturedHandler = verify(
+        mockRouter.registerProtocolHandler(any, captureAny),
+      ).captured.last as Function(NetworkPacket);
 
       final blockData = Uint8List.fromList([7, 8, 9]);
       final cid = await CID.computeForData(blockData);
@@ -105,19 +103,20 @@ void main() {
         cidStr,
         priority: 10,
         wantType: message.WantType.have,
-        sendDontHave: true,
       );
 
       final packet = NetworkPacket(srcPeerId: 'peerB', datagram: msg.toBytes());
 
-      when(
-        mockBlockStore.getBlock(any),
-      ).thenAnswer((_) async => GetBlockResponse(found: true));
+      when(mockBlockStore.getBlock(any)).thenAnswer(
+        (_) async => GetBlockResponse(found: true),
+      );
       when(mockRouter.peerID).thenReturn('localPeer');
 
       await capturedHandler(packet);
 
-      verify(mockRouter.sendMessage('peerB', any)).called(1);
+      verify(
+        mockRouter.sendMessage('peerB', any, protocolId: anyNamed('protocolId')),
+      ).called(1);
     });
 
     test('wantBlock timeout', () async {
@@ -175,11 +174,9 @@ void main() {
       msg.addBlock(Block(cid: cid, data: data));
 
       final packet = NetworkPacket(srcPeerId: 'peerA', datagram: msg.toBytes());
-      final capturedHandler =
-          verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
-              ).captured.last
-              as Function(NetworkPacket);
+      final capturedHandler = verify(
+        mockRouter.registerProtocolHandler(any, captureAny),
+      ).captured.last as Function(NetworkPacket);
 
       await capturedHandler(packet);
 
@@ -192,11 +189,9 @@ void main() {
       msg.addBlockPresence('QmSomeCid', message.BlockPresenceType.have);
 
       final packet = NetworkPacket(srcPeerId: 'peerA', datagram: msg.toBytes());
-      final capturedHandler =
-          verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
-              ).captured.last
-              as Function(NetworkPacket);
+      final capturedHandler = verify(
+        mockRouter.registerProtocolHandler(any, captureAny),
+      ).captured.last as Function(NetworkPacket);
 
       await capturedHandler(packet);
       // Verify no crash
@@ -207,7 +202,9 @@ void main() {
       when(mockRouter.connectedPeers).thenReturn({'peerA'});
 
       await handler.handleWantRequest('QmSomeCid');
-      verify(mockRouter.sendMessage('peerA', any)).called(1);
+      verify(
+        mockRouter.sendMessage('peerA', any, protocolId: anyNamed('protocolId')),
+      ).called(1);
     });
 
     test('stop clears pending blocks with error', () async {
@@ -225,11 +222,9 @@ void main() {
 
     test('handleWantlist rejects excessive entries', () async {
       await handler.start();
-      final capturedHandler =
-          verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
-              ).captured.last
-              as Function(NetworkPacket);
+      final capturedHandler = verify(
+        mockRouter.registerProtocolHandler(any, captureAny),
+      ).captured.last as Function(NetworkPacket);
 
       final msg = message.Message();
       for (int i = 0; i < 5001; i++) {
@@ -251,11 +246,9 @@ void main() {
 
     test('handleWantlist sends DONT_HAVE if requested', () async {
       await handler.start();
-      final capturedHandler =
-          verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
-              ).captured.last
-              as Function(NetworkPacket);
+      final capturedHandler = verify(
+        mockRouter.registerProtocolHandler(any, captureAny),
+      ).captured.last as Function(NetworkPacket);
 
       // Clear previous calls like registerProtocol, initialize, etc.
       clearInteractions(mockRouter);
@@ -281,7 +274,9 @@ void main() {
 
       await capturedHandler(packet);
 
-      verify(mockRouter.sendMessage('peerB', any)).called(1);
+      verify(
+        mockRouter.sendMessage('peerB', any, protocolId: anyNamed('protocolId')),
+      ).called(1);
     });
 
     test('start when already running returns early', () async {
@@ -351,11 +346,9 @@ void main() {
 
     test('handleWantlist with empty wantlist', () async {
       await handler.start();
-      final capturedHandler =
-          verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
-              ).captured.last
-              as Function(NetworkPacket);
+      final capturedHandler = verify(
+        mockRouter.registerProtocolHandler(any, captureAny),
+      ).captured.last as Function(NetworkPacket);
 
       final msg = message.Message();
       // Empty wantlist
