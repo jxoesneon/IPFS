@@ -282,6 +282,7 @@ class Libp2pRouter implements RouterInterface {
                 throw TimeoutException('Connection to $multiaddress timed out'),
           );
 
+      _connectedPeers.add(peerIdStr);
       _logger.debug('Connected to peer $peerIdStr');
     } catch (e, stackTrace) {
       _logger.error('Failed to connect to $multiaddress', e, stackTrace);

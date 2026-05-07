@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
+import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/ledger.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as message;
 import 'package:dart_ipfs/src/protocols/bitswap/wantlist.dart';
@@ -12,7 +13,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:meta/meta.dart';
 
 /// Handles Bitswap protocol operations for an IPFS node following the Bitswap 1.2.0 specification
-class BitswapHandler {
+class BitswapHandler implements ILifecycle {
   /// Creates a new [BitswapHandler] with the given [config], [_blockStore], and [_router].
   BitswapHandler(IPFSConfig config, this._blockStore, this._router)
     : _logger = Logger(
@@ -46,6 +47,7 @@ class BitswapHandler {
   );
 
   /// Starts the Bitswap handler
+  @override
   Future<void> start() async {
     if (_running) {
       _logger.warning('BitswapHandler already running');
@@ -75,6 +77,7 @@ class BitswapHandler {
   }
 
   /// Stops the Bitswap handler
+  @override
   Future<void> stop() async {
     if (!_running) return;
     _running = false;
@@ -213,7 +216,8 @@ class BitswapHandler {
     if (hasContent) {
       try {
         final messageBytes = outgoingMessage.toBytes();
-        await _router.sendMessage(fromPeer, messageBytes);
+        await _router.sendMessage(fromPeer, messageBytes,
+            protocolId: _protocolId);
 
         // Update ledger stats
         final ledger = _ledgerManager.getLedger(fromPeer);
@@ -347,7 +351,8 @@ class BitswapHandler {
       futures.add(
         (() async {
           try {
-            await _router.sendMessage(peerId, messageBytes);
+            await _router.sendMessage(peerId, messageBytes,
+                protocolId: _protocolId);
             _logger.verbose('Want request sent to peer: $peerId');
           } catch (error, st) {
             _logger.error(
@@ -372,10 +377,8 @@ class BitswapHandler {
       await _handleMessage(msg);
     } catch (e, st) {
       _logger.error(
-        'Error handling Bitswap packet from ${packet.srcPeerId}',
-        e,
-        st,
-      );
+          'Failed to handle Bitswap packet from ${packet.srcPeerId}: $e');
+      _logger.error('$st');
     }
   }
 
