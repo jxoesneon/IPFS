@@ -126,7 +126,8 @@ class Message {
         if (prefix.isNotEmpty) {
           final cid = _cidFromPrefixAndData(prefix, data);
           message.addBlock(
-              Block(cid: cid, data: data, format: cid.codec ?? 'raw'));
+            Block(cid: cid, data: data, format: cid.codec ?? 'raw'),
+          );
         } else {
           final newBlock = await Block.fromData(data);
           message.addBlock(newBlock);
@@ -272,7 +273,8 @@ CID _cidFromPrefixAndData(List<int> prefix, Uint8List data) {
     hashDigest = data;
   } else {
     throw UnsupportedError(
-        'Unsupported multihash type 0x${mhType.toRadixString(16)} in Bitswap prefix');
+      'Unsupported multihash type 0x${mhType.toRadixString(16)} in Bitswap prefix',
+    );
   }
 
   final mhInfo = Multihash.encode(

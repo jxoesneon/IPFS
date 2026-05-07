@@ -216,8 +216,11 @@ class BitswapHandler implements ILifecycle {
     if (hasContent) {
       try {
         final messageBytes = outgoingMessage.toBytes();
-        await _router.sendMessage(fromPeer, messageBytes,
-            protocolId: _protocolId);
+        await _router.sendMessage(
+          fromPeer,
+          messageBytes,
+          protocolId: _protocolId,
+        );
 
         // Update ledger stats
         final ledger = _ledgerManager.getLedger(fromPeer);
@@ -351,8 +354,11 @@ class BitswapHandler implements ILifecycle {
       futures.add(
         (() async {
           try {
-            await _router.sendMessage(peerId, messageBytes,
-                protocolId: _protocolId);
+            await _router.sendMessage(
+              peerId,
+              messageBytes,
+              protocolId: _protocolId,
+            );
             _logger.verbose('Want request sent to peer: $peerId');
           } catch (error, st) {
             _logger.error(
@@ -377,7 +383,8 @@ class BitswapHandler implements ILifecycle {
       await _handleMessage(msg);
     } catch (e, st) {
       _logger.error(
-          'Failed to handle Bitswap packet from ${packet.srcPeerId}: $e');
+        'Failed to handle Bitswap packet from ${packet.srcPeerId}: $e',
+      );
       _logger.error('$st');
     }
   }
