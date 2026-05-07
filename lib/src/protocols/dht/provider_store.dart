@@ -9,7 +9,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 class ProviderStore {
   /// Creates a [ProviderStore].
   ProviderStore() : _logger = Logger('ProviderStore');
-  
+
   final Map<String, Set<PeerId>> _providers = {};
   final Map<String, DateTime> _expiryTimes = {};
   final Logger _logger;
@@ -30,7 +30,7 @@ class ProviderStore {
     final cidStr = cid.toString();
     final providers = _providers[cidStr];
     if (providers == null) return [];
-    
+
     // Check expiry
     final expiry = _expiryTimes[cidStr];
     if (expiry != null && DateTime.now().isAfter(expiry)) {
@@ -38,7 +38,7 @@ class ProviderStore {
       _expiryTimes.remove(cidStr);
       return [];
     }
-    
+
     return providers.toList();
   }
 
@@ -46,7 +46,7 @@ class ProviderStore {
   void gc() {
     final now = DateTime.now();
     final expiredCids = <String>[];
-    
+
     _expiryTimes.forEach((cid, expiry) {
       if (now.isAfter(expiry)) {
         expiredCids.add(cid);
@@ -57,7 +57,7 @@ class ProviderStore {
       _providers.remove(cid);
       _expiryTimes.remove(cid);
     }
-    
+
     if (expiredCids.isNotEmpty) {
       _logger.info('Cleaned up ${expiredCids.length} expired provider records');
     }

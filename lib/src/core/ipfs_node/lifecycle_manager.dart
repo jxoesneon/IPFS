@@ -7,7 +7,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 class LifecycleManager {
   /// Initializes a new LifecycleManager.
   LifecycleManager() : _logger = Logger('LifecycleManager');
-  
+
   final List<ILifecycle> _services = [];
   final Logger _logger;
   bool _isRunning = false;
@@ -15,7 +15,9 @@ class LifecycleManager {
   /// Registers a service for lifecycle management.
   void register(ILifecycle service) {
     if (_isRunning) {
-      _logger.warning('Registering service while node is already running. You must start it manually.');
+      _logger.warning(
+        'Registering service while node is already running. You must start it manually.',
+      );
     }
     _services.add(service);
   }
@@ -24,7 +26,7 @@ class LifecycleManager {
   Future<void> startAll() async {
     if (_isRunning) return;
     _logger.info('Starting all services...');
-    
+
     for (final service in _services) {
       try {
         _logger.debug('Starting ${service.runtimeType}...');
@@ -36,7 +38,7 @@ class LifecycleManager {
         rethrow;
       }
     }
-    
+
     _isRunning = true;
     _logger.info('All services started successfully');
   }
@@ -44,7 +46,7 @@ class LifecycleManager {
   /// Stops all registered services in reverse order.
   Future<void> stopAll() async {
     _logger.info('Stopping all services...');
-    
+
     for (final service in _services.reversed) {
       try {
         _logger.debug('Stopping ${service.runtimeType}...');
@@ -54,7 +56,7 @@ class LifecycleManager {
         // Continue stopping other services even if one fails
       }
     }
-    
+
     _isRunning = false;
     _logger.info('All services stopped');
   }

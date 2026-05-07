@@ -28,10 +28,12 @@ class MetricsCollector implements ILifecycle {
   final IPFSConfig _config;
   late final Logger _logger;
 
-  final StreamController<Map<String, dynamic>> _metricsStreamController = StreamController.broadcast();
+  final StreamController<Map<String, dynamic>> _metricsStreamController =
+      StreamController.broadcast();
 
   /// Returns a stream of metrics data.
-  Stream<Map<String, dynamic>> get metricsStream => _metricsStreamController.stream;
+  Stream<Map<String, dynamic>> get metricsStream =>
+      _metricsStreamController.stream;
 
   @override
   Future<void> start() async {

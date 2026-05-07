@@ -225,7 +225,9 @@ class GraphsyncHandler {
         );
 
         if (results.isEmpty) {
-          throw GraphTraversalError('Root node not found or selector matched nothing: $rootCID');
+          throw GraphTraversalError(
+            'Root node not found or selector matched nothing: $rootCID',
+          );
         }
 
         int processed = 0;

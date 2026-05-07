@@ -104,18 +104,25 @@ class KademliaTree {
   // Public getters for other files in the same package/logic
   /// The root node of the Kademlia tree.
   KademliaTreeNode? get root => _root;
+
   /// The buckets containing peer nodes.
   List<RedBlackTree<PeerId, KademliaTreeNode>> get buckets => _buckets;
+
   /// Maps peers to the time they were last seen.
   Map<PeerId, DateTime> get lastSeen => _lastSeen;
+
   /// A set of recently contacted peers.
   Set<PeerId> get recentContacts => _recentContacts;
+
   /// The history of successful lookups per peer.
   Map<PeerId, List<bool>> get lookupSuccessHistory => _lookupSuccessHistory;
+
   /// Statistics regarding peer connections.
   Map<PeerId, ConnectionStatistics> get connectionStats => _connectionStats;
+
   /// Node statistics.
   Map<PeerId, NodeStats> get nodeStats => _nodeStats;
+
   /// LRU caches for buckets.
   Map<int, LRUCache> get bucketCaches => _bucketCaches;
 
@@ -259,7 +266,10 @@ class KademliaTree {
     _logger.debug('Handling ADD_PROVIDER for key: ${message.key}');
     final cid = CID.fromBytes(Uint8List.fromList(message.key));
     for (final provider in message.providerPeers) {
-      _providerStore.addProvider(cid, PeerId(value: Uint8List.fromList(provider.id)));
+      _providerStore.addProvider(
+        cid,
+        PeerId(value: Uint8List.fromList(provider.id)),
+      );
     }
   }
 
@@ -271,7 +281,7 @@ class KademliaTree {
   Future<void> provide(CID cid) async {
     _logger.info('Providing CID: $cid');
     final closestPeers = await nodeLookup(PeerId(value: cid.toBytes()));
-    
+
     for (final peer in closestPeers) {
       final requestId = _generateRequestId();
       final message = AddProviderMessage(
@@ -280,7 +290,7 @@ class KademliaTree {
         peer,
         cid.toBytes(),
       ).toDHTMessage();
-      
+
       try {
         await _sendMessageWithTimeout(peer, message, requestId);
       } catch (e) {
@@ -311,7 +321,11 @@ class KademliaTree {
       ).toDHTMessage();
 
       try {
-        final response = await _sendMessageWithTimeout(peer, message, requestId);
+        final response = await _sendMessageWithTimeout(
+          peer,
+          message,
+          requestId,
+        );
         if (response.type == kad.Message_MessageType.GET_PROVIDERS) {
           for (final provider in response.providerPeers) {
             allProviders.add(PeerId(value: Uint8List.fromList(provider.id)));
@@ -397,7 +411,9 @@ class KademliaTree {
 
   /// Handles an incoming response from a DHT request.
   void handleResponse(int requestId, kad.Message response) {
-    final Completer<kad.Message>? completer = _pendingRequests.remove(requestId);
+    final Completer<kad.Message>? completer = _pendingRequests.remove(
+      requestId,
+    );
     if (completer != null && !completer.isCompleted) {
       completer.complete(response);
     }
@@ -405,10 +421,13 @@ class KademliaTree {
 
   /// Handles a PING message.
   void _handlePing(kad.Message message) {}
+
   /// Handles a FIND_NODE message.
   void _handleFindNode(kad.Message message) {}
+
   /// Handles a GET_VALUE message.
   void _handleGetValue(kad.Message message) {}
+
   /// Handles a PUT_VALUE message.
   void _handlePutValue(kad.Message message) {}
 
@@ -441,7 +460,11 @@ class KademliaTree {
     ).toDHTMessage();
 
     try {
-      final kad.Message response = await _sendMessageWithTimeout(peer, message, requestId);
+      final kad.Message response = await _sendMessageWithTimeout(
+        peer,
+        message,
+        requestId,
+      );
       return response.type == kad.Message_MessageType.PING;
     } catch (e) {
       return false;
@@ -462,7 +485,11 @@ class KademliaTree {
       ).toDHTMessage();
 
       try {
-        final kad.Message response = await _sendMessageWithTimeout(peer, message, requestId);
+        final kad.Message response = await _sendMessageWithTimeout(
+          peer,
+          message,
+          requestId,
+        );
         return response.type == kad.Message_MessageType.PUT_VALUE;
       } catch (e) {
         return false;
@@ -489,8 +516,13 @@ class KademliaTree {
         ).toDHTMessage();
 
         try {
-          final kad.Message response = await _sendMessageWithTimeout(peer, message, requestId);
-          if (response.type == kad.Message_MessageType.GET_VALUE && response.hasRecord()) {
+          final kad.Message response = await _sendMessageWithTimeout(
+            peer,
+            message,
+            requestId,
+          );
+          if (response.type == kad.Message_MessageType.GET_VALUE &&
+              response.hasRecord()) {
             return (Uint8List.fromList(response.record.value), <PeerId>[]);
           }
           final List<PeerId> closerPeers = _processFindNodeResponse(response);

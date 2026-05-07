@@ -25,7 +25,7 @@ extension RemovePeer on KademliaTree {
         // Note: bucketIndex might now be the index of a different bucket or out of bounds
         // If we merged with previous, the current bucketIndex now points to what was bucketIndex + 1
       }
-      
+
       // 2. Try merging with the next bucket (if still within bounds)
       // We need to re-check the index after the first merge
       int newIndex = bucketIndex > 0 ? bucketIndex - 1 : bucketIndex;

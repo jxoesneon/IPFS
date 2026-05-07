@@ -121,9 +121,7 @@ class AddProviderMessage extends KademliaMessage {
     return kad.Message()
       ..type = kad.Message_MessageType.ADD_PROVIDER
       ..key = key
-      ..providerPeers.add(
-        kad.Peer()..id = sender.value,
-      );
+      ..providerPeers.add(kad.Peer()..id = sender.value);
   }
 }
 

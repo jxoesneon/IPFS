@@ -220,7 +220,9 @@ class EnhancedCBORHandler {
     } else if (value is CborBigInt) {
       return IPLDNode()
         ..kind = Kind.BIG_INT
-        ..bigIntValue = Uint8List(0); // Implemented with empty Uint8List per standard requirements.
+        ..bigIntValue = Uint8List(
+          0,
+        ); // Implemented with empty Uint8List per standard requirements.
     } else {
       throw IPLDDecodingError('Unsupported CBOR type: ${value.runtimeType}');
     }

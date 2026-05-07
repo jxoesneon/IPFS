@@ -29,13 +29,15 @@ class PinManager {
       if (!await file.exists()) return;
 
       final content = await file.readAsString();
-      final Map<String, dynamic> data = json.decode(content) as Map<String, dynamic>;
+      final Map<String, dynamic> data =
+          json.decode(content) as Map<String, dynamic>;
 
       if (data.containsKey('pins')) {
         final pinsData = data['pins'] as Map<String, dynamic>;
         pinsData.forEach((cid, typeIndex) {
-          _pins[cid] = PinTypeProto.valueOf(typeIndex as int) ?? 
-                      PinTypeProto.PIN_TYPE_RECURSIVE;
+          _pins[cid] =
+              PinTypeProto.valueOf(typeIndex as int) ??
+              PinTypeProto.PIN_TYPE_RECURSIVE;
         });
       }
 
@@ -59,7 +61,7 @@ class PinManager {
         'pins': _pins.map((k, v) => MapEntry(k, v.value)),
         'references': _references.map((k, v) => MapEntry(k, v.toList())),
       };
-      
+
       final file = File(path);
       await file.parent.create(recursive: true);
       await file.writeAsString(json.encode(data));
@@ -73,7 +75,7 @@ class PinManager {
   Future<bool> pinBlock(IPFSCIDProto cidProto, PinTypeProto type) async {
     final cidStr = CID.fromProto(cidProto).encode();
     bool success = false;
-    
+
     if (type == PinTypeProto.PIN_TYPE_RECURSIVE) {
       success = await _pinRecursive(cidProto);
     } else if (type == PinTypeProto.PIN_TYPE_DIRECT) {
@@ -223,10 +225,10 @@ class PinManager {
     }
 
     _pins.remove(cidStr);
-    
+
     // Auto-save pin state
     await save(p.join(_blockStore.path, 'pins.json'));
-    
+
     return true;
   }
 

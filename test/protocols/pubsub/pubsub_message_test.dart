@@ -4,11 +4,7 @@ import 'package:test/test.dart';
 void main() {
   group('PubSubMessage', () {
     test('constructs with provided fields', () {
-      final msg = PubSubMessage(
-        topic: 't',
-        content: 'hello',
-        sender: 'p1',
-      );
+      final msg = PubSubMessage(topic: 't', content: 'hello', sender: 'p1');
       expect(msg.topic, 't');
       expect(msg.content, 'hello');
       expect(msg.sender, 'p1');

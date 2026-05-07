@@ -40,6 +40,9 @@ class ConnectionManager {
       ..bytesReceived = Int64(_metrics.getBytesReceived(peerId))
       ..averageLatencyMs = _metrics.getAverageLatency(peerId).toInt();
 
-    _metrics.updateConnectionMetrics(peerId, metrics.toProto3Json() as Map<String, dynamic>);
+    _metrics.updateConnectionMetrics(
+      peerId,
+      metrics.toProto3Json() as Map<String, dynamic>,
+    );
   }
 }

@@ -95,7 +95,6 @@ class MockBlockStore implements IBlockStore {
 
   // ===== Test Helper Methods =====
 
-
   /// Set up a block for testing
   void setupBlock(String cid, Block block) {
     _blocks[cid] = block;

@@ -51,10 +51,10 @@ class IPFSNodeBuilder {
 
   Future<void> _registerCoreServices() async {
     _container.registerSingleton(_config);
-    
+
     final metrics = MetricsCollector(_config);
     _container.registerSingleton(metrics);
-    
+
     _container.registerSingleton(SecurityManager(_config.security, metrics));
 
     final datastore = MemoryDatastore();
@@ -87,7 +87,7 @@ class IPFSNodeBuilder {
 
     if (_config.enablePubSub) {
       _container.registerSingleton(
-        PubSubHandler(router, networkHandler.peerID, networkEvents), 
+        PubSubHandler(router, networkHandler.peerID, networkEvents),
       );
     }
 
@@ -104,7 +104,9 @@ class IPFSNodeBuilder {
     final networkHandler = _container.get<NetworkHandler>();
     final router = networkHandler.router;
 
-    _container.registerSingleton(ContentRoutingHandler(_config, networkHandler));
+    _container.registerSingleton(
+      ContentRoutingHandler(_config, networkHandler),
+    );
     _container.registerSingleton(DNSLinkHandler(_config));
     _container.registerSingleton(
       GraphsyncHandler(
@@ -116,14 +118,16 @@ class IPFSNodeBuilder {
       ),
     );
     _container.registerSingleton(AutoNATHandler(_config, networkHandler));
-    
+
     if (_container.isRegistered(DHTHandler)) {
       _container.registerSingleton(
         IPNSHandler(
           _config,
           _container.get<SecurityManager>(),
           _container.get<DHTHandler>(),
-          _container.isRegistered(PubSubHandler) ? _container.get<PubSubHandler>() : null,
+          _container.isRegistered(PubSubHandler)
+              ? _container.get<PubSubHandler>()
+              : null,
         ),
       );
     }

@@ -69,32 +69,35 @@ void main() {
       expect(result, isTrue);
     });
 
-    test('validate with struct type missing required field returns false', () async {
-      final schema = IPLDSchema('test', {
-        'person': {
-          'kind': 'struct',
-          'fields': {
-            'name': {'kind': 'string'},
-            'age': {'kind': 'int'},
+    test(
+      'validate with struct type missing required field returns false',
+      () async {
+        final schema = IPLDSchema('test', {
+          'person': {
+            'kind': 'struct',
+            'fields': {
+              'name': {'kind': 'string'},
+              'age': {'kind': 'int'},
+            },
+            'required': ['name', 'age'],
           },
-          'required': ['name', 'age'],
-        },
-      });
+        });
 
-      final node = IPLDNode()
-        ..kind = Kind.MAP
-        ..mapValue = (IPLDMap()
-          ..entries.add(
-            MapEntry()
-              ..key = 'name'
-              ..value = (IPLDNode()
-                ..kind = Kind.STRING
-                ..stringValue = 'John'),
-          ));
+        final node = IPLDNode()
+          ..kind = Kind.MAP
+          ..mapValue = (IPLDMap()
+            ..entries.add(
+              MapEntry()
+                ..key = 'name'
+                ..value = (IPLDNode()
+                  ..kind = Kind.STRING
+                  ..stringValue = 'John'),
+            ));
 
-      final result = await schema.validate('person', node);
-      expect(result, isFalse);
-    });
+        final result = await schema.validate('person', node);
+        expect(result, isFalse);
+      },
+    );
 
     test('validate with integer constraint min/max', () async {
       final schema = IPLDSchema('test', {
@@ -176,21 +179,24 @@ void main() {
       expect(result, isTrue);
     });
 
-    test('validate with string constraint minLength violation returns false', () async {
-      final schema = IPLDSchema('test', {
-        'shortString': {
-          'kind': 'string',
-          'valueConstraint': {'minLength': 3},
-        },
-      });
+    test(
+      'validate with string constraint minLength violation returns false',
+      () async {
+        final schema = IPLDSchema('test', {
+          'shortString': {
+            'kind': 'string',
+            'valueConstraint': {'minLength': 3},
+          },
+        });
 
-      final node = IPLDNode()
-        ..kind = Kind.STRING
-        ..stringValue = 'ab';
+        final node = IPLDNode()
+          ..kind = Kind.STRING
+          ..stringValue = 'ab';
 
-      final result = await schema.validate('shortString', node);
-      expect(result, isFalse);
-    });
+        final result = await schema.validate('shortString', node);
+        expect(result, isFalse);
+      },
+    );
 
     test('validate with string constraint maxLength', () async {
       final schema = IPLDSchema('test', {
@@ -208,21 +214,24 @@ void main() {
       expect(result, isTrue);
     });
 
-    test('validate with string constraint maxLength violation returns false', () async {
-      final schema = IPLDSchema('test', {
-        'longString': {
-          'kind': 'string',
-          'valueConstraint': {'maxLength': 10},
-        },
-      });
+    test(
+      'validate with string constraint maxLength violation returns false',
+      () async {
+        final schema = IPLDSchema('test', {
+          'longString': {
+            'kind': 'string',
+            'valueConstraint': {'maxLength': 10},
+          },
+        });
 
-      final node = IPLDNode()
-        ..kind = Kind.STRING
-        ..stringValue = 'this is too long';
+        final node = IPLDNode()
+          ..kind = Kind.STRING
+          ..stringValue = 'this is too long';
 
-      final result = await schema.validate('longString', node);
-      expect(result, isFalse);
-    });
+        final result = await schema.validate('longString', node);
+        expect(result, isFalse);
+      },
+    );
 
     test('validate with bytes constraint minLength', () async {
       final schema = IPLDSchema('test', {
@@ -333,9 +342,7 @@ void main() {
     });
 
     test('validate throws for missing kind in schema', () async {
-      final schema = IPLDSchema('test', {
-        'invalidType': {},
-      });
+      final schema = IPLDSchema('test', {'invalidType': {}});
 
       final node = IPLDNode()
         ..kind = Kind.STRING

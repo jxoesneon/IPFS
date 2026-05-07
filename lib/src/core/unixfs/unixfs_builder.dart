@@ -38,7 +38,7 @@ class UnixFSBuilder {
         );
         logicalBlockSizes.add(Int64(leafData.length));
         totalSize += leafData.length;
-        
+
         if (leafData.length < defaultChunkSize) break;
       }
     } finally {
@@ -54,7 +54,7 @@ class UnixFSBuilder {
 
     final outerNode = dag_pb.PBNode(data: unixFs.writeToBuffer(), links: links);
     final rootData = outerNode.writeToBuffer();
-    
+
     final rootCid = await CID.fromContent(
       rootData,
       codec: 'dag-pb',
@@ -75,7 +75,7 @@ class UnixFSBuilder {
 
     final node = dag_pb.PBNode(data: unixFs.writeToBuffer());
     final encoded = node.writeToBuffer();
-    
+
     final cid = await CID.fromContent(
       encoded,
       codec: 'dag-pb',
@@ -86,4 +86,3 @@ class UnixFSBuilder {
     return Block(cid: cid, data: encoded);
   }
 }
-

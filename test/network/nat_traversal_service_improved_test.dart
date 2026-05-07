@@ -5,10 +5,7 @@ import 'package:port_forwarder/port_forwarder.dart';
 import 'package:dart_ipfs/src/network/nat_traversal_service.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
-@GenerateNiceMocks([
-  MockSpec<Gateway>(),
-  MockSpec<Logger>(),
-])
+@GenerateNiceMocks([MockSpec<Gateway>(), MockSpec<Logger>()])
 import 'nat_traversal_service_improved_test.mocks.dart';
 
 void main() {

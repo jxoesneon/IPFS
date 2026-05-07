@@ -22,7 +22,7 @@ void main() {
       final message = Message();
       final data = Uint8List.fromList([1, 2, 3]);
       final block = await Block.fromData(data);
-      
+
       message.addBlock(block);
       expect(message.hasBlocks(), isTrue);
       expect(message.getBlocks(), hasLength(1));
@@ -31,7 +31,7 @@ void main() {
     test('addWantlistEntry and getWantlist', () {
       final message = Message();
       message.addWantlistEntry('QmTest', priority: 10);
-      
+
       expect(message.hasWantlist(), isTrue);
       final wantlist = message.getWantlist();
       expect(wantlist.entries, hasLength(1));
@@ -47,7 +47,7 @@ void main() {
         wantType: WantType.have,
         sendDontHave: true,
       );
-      
+
       final wantlist = message.getWantlist();
       final entry = wantlist.entries['QmTest'];
       expect(entry?.cancel, isTrue);
@@ -58,7 +58,7 @@ void main() {
     test('addBlockPresence and getBlockPresences', () {
       final message = Message();
       message.addBlockPresence('QmTest', BlockPresenceType.have);
-      
+
       expect(message.hasBlockPresences(), isTrue);
       final presences = message.getBlockPresences();
       expect(presences, hasLength(1));
@@ -108,7 +108,7 @@ void main() {
     test('addEntry and contains', () {
       final wantlist = Wantlist();
       final entry = WantlistEntry(cid: 'QmTest');
-      
+
       wantlist.addEntry(entry);
       expect(wantlist.contains('QmTest'), isTrue);
       expect(wantlist.entries, hasLength(1));
@@ -117,10 +117,10 @@ void main() {
     test('removeEntry', () {
       final wantlist = Wantlist();
       final entry = WantlistEntry(cid: 'QmTest');
-      
+
       wantlist.addEntry(entry);
       expect(wantlist.contains('QmTest'), isTrue);
-      
+
       wantlist.removeEntry('QmTest');
       expect(wantlist.contains('QmTest'), isFalse);
     });
@@ -129,10 +129,10 @@ void main() {
       final wantlist = Wantlist();
       final entry1 = WantlistEntry(cid: 'QmTest', priority: 1);
       final entry2 = WantlistEntry(cid: 'QmTest', priority: 10);
-      
+
       wantlist.addEntry(entry1);
       wantlist.addEntry(entry2);
-      
+
       expect(wantlist.entries, hasLength(1));
       expect(wantlist.entries['QmTest']?.priority, equals(10));
     });

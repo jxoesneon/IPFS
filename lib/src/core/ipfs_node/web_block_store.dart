@@ -101,7 +101,7 @@ class WebBlockStore implements IBlockStore {
       return {
         'total_blocks': blocks.length,
         'total_size': size,
-        'pinned_blocks': 0, 
+        'pinned_blocks': 0,
       };
     } catch (_) {
       return {'total_blocks': 0, 'total_size': 0};
