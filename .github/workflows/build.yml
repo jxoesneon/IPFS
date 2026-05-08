@@ -1,0 +1,73 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-dart:
+    name: Build Dart Executable (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Compile AOT
+        run: dart compile exe example/main.dart -o ipfs_node_${{ matrix.os }}
+
+  build-flutter:
+    name: Build Flutter Dashboard (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: Linux
+            os: ubuntu-latest
+            command: flutter build linux --debug
+          - target: Windows
+            os: windows-latest
+            command: flutter build windows --debug
+          - target: macOS
+            os: macos-latest
+            command: flutter build macos --debug --no-codesign
+          - target: Web
+            os: ubuntu-latest
+            command: flutter build web --debug
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install Linux Build Dependencies
+        if: matrix.target == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libblkid-dev liblzma-dev
+
+      - name: Generate Dependencies
+        run: |
+          cd example/ipfs_dashboard
+          flutter pub get
+
+      - name: Build Dashboard
+        run: |
+          cd example/ipfs_dashboard
+          ${{ matrix.command }}
