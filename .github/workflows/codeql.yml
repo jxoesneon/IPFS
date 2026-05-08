@@ -9,18 +9,13 @@ on:
     - cron: '30 1 * * 5'
 
 jobs:
-  analyze:
-    name: Analyze
+  analyze-linux:
+    name: Analyze (JavaScript)
     runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
       security-events: write
-
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript', 'swift' ]
 
     steps:
     - name: Checkout repository
@@ -29,7 +24,7 @@ jobs:
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
-        languages: ${{ matrix.language }}
+        languages: 'javascript'
         config: |
           paths-ignore:
             - 'doc/api/**'
@@ -42,4 +37,32 @@ jobs:
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
-        category: "/language:${{ matrix.language }}"
+        category: "/language:javascript"
+
+  analyze-macos:
+    name: Analyze (Swift)
+    runs-on: macos-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: 'swift'
+        config: |
+          paths-ignore:
+            - 'example/ipfs_dashboard/macos/Runner/GeneratedPluginRegistrant.swift'
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:swift"
