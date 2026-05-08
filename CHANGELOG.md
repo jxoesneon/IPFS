@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.10.0] - 2026-05-08
+
+### Changed
+- **Architecture**: Unified service lifecycles across all core managers and handlers using the `ILifecycle` interface and a central `LifecycleManager`.
+- **Security**: Hardened IPNS record signing with modern Ed25519 cryptography and integrated multihash-based block validation in Bitswap.
+- **Audit**: Conducted a comprehensive technical audit, remediated architectural debt, and resolved legacy HACK/TODO markers.
+- **Community**: Integrated protocol enhancements and bug fixes from community PRs 27-29.
+- **Stability**: Standardized error handling with modern try-catch patterns and achieved 100% CI stability across all platforms.
+
 ## [1.9.6] - 2026-05-04
 
 ### Added
