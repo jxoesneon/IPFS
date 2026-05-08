@@ -9,7 +9,7 @@ on:
     - cron: '30 1 * * 5'
 
 jobs:
-  analyze:
+  analyze-js:
     name: Analyze (JavaScript)
     runs-on: ubuntu-latest
     permissions:
@@ -29,7 +29,6 @@ jobs:
           paths-ignore:
             - 'doc/api/**'
             - '.dart_tool/**'
-            - 'temp_backup/**'
 
     - name: Autobuild
       uses: github/codeql-action/autobuild@v3
@@ -38,3 +37,40 @@ jobs:
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:javascript"
+
+  analyze-swift:
+    name: Analyze (Swift)
+    runs-on: macos-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+
+    - name: Generate Flutter Dependencies
+      run: |
+        cd example/ipfs_dashboard
+        flutter pub get
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: 'swift'
+
+    - name: Build macOS Dashboard
+      run: |
+        cd example/ipfs_dashboard
+        flutter build macos --debug --no-codesign
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:swift"
