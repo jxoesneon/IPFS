@@ -61,12 +61,12 @@ void main() {
     test('should delete directory contents', () async {
       await platform.writeBytes('cleanup/1.txt', Uint8List(0));
       await platform.writeBytes('cleanup/2.txt', Uint8List(0));
-      
+
       expect(await platform.exists('cleanup/1.txt'), isTrue);
       expect(await platform.exists('cleanup/2.txt'), isTrue);
 
       await platform.delete('cleanup');
-      
+
       expect(await platform.exists('cleanup/1.txt'), isFalse);
       expect(await platform.exists('cleanup/2.txt'), isFalse);
     });
@@ -74,7 +74,7 @@ void main() {
     test('should get file length', () async {
       final data = Uint8List.fromList([1, 2, 3]);
       await platform.writeBytes('length_test.bin', data);
-      
+
       expect(await platform.getLength('length_test.bin'), equals(3));
     });
 

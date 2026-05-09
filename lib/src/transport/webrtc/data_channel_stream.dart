@@ -17,10 +17,10 @@ abstract class DataChannelStream implements libp2p.P2PStream<Uint8List> {
 
   @override
   bool get isWritable => !_isClosed;
-  
+
   @override
   String protocol() => _protocol ?? '';
-  
+
   @override
   Future<void> setProtocol(String protocol) async {
     _protocol = protocol;
@@ -52,21 +52,21 @@ abstract class DataChannelStream implements libp2p.P2PStream<Uint8List> {
   Future<Uint8List> read([int? maxLength]) async {
     final length = maxLength ?? _readBuffer.length;
     if (length == 0) {
-       if (_isClosed && _readBuffer.isEmpty) return Uint8List(0);
-       while (_readBuffer.isEmpty && !_isClosed) {
-         _readCompleter = Completer<void>();
-         await _readCompleter!.future;
-       }
-       return Uint8List(0);
+      if (_isClosed && _readBuffer.isEmpty) return Uint8List(0);
+      while (_readBuffer.isEmpty && !_isClosed) {
+        _readCompleter = Completer<void>();
+        await _readCompleter!.future;
+      }
+      return Uint8List(0);
     }
-    
+
     if (_isClosed && _readBuffer.isEmpty) return Uint8List(0);
 
     while (_readBuffer.length < length && !_isClosed) {
       _readCompleter = Completer<void>();
       await _readCompleter!.future;
     }
-    
+
     if (_readBuffer.isEmpty) return Uint8List(0);
 
     final resultLen = _readBuffer.length < length ? _readBuffer.length : length;

@@ -150,29 +150,29 @@ class Libp2pRouter implements RouterInterface {
         }
       }
 
-    final listenAddr = libp2p.MultiAddr('/ip4/0.0.0.0/tcp/$port');
-    final resourceManager = ResourceManagerImpl(limiter: FixedLimiter());
+      final listenAddr = libp2p.MultiAddr('/ip4/0.0.0.0/tcp/$port');
+      final resourceManager = ResourceManagerImpl(limiter: FixedLimiter());
 
-    final webrtcTransport = WebRTCTransport();
-    final webrtcDirectTransport = WebRTCDirectTransport();
-    final webTransportTransport = WebTransportTransport();
+      final webrtcTransport = WebRTCTransport();
+      final webrtcDirectTransport = WebRTCDirectTransport();
+      final webTransportTransport = WebTransportTransport();
 
-    _host = await config.Libp2p.new_([
-      config.Libp2p.transport(TCPTransport(resourceManager: resourceManager)),
-      if (_config.network.enableWebTransport)
-        config.Libp2p.transport(webTransportTransport),
-      if (_config.network.enableWebRtc) ...[
-        config.Libp2p.transport(webrtcTransport),
-        config.Libp2p.transport(webrtcDirectTransport),
-      ],
-      config.Libp2p.listenAddrs([listenAddr]),
-      config.Libp2p.identity(_keyPair!),
-      config.Libp2p.userAgent('dart_ipfs/2.0.0'),
-    ]);
+      _host = await config.Libp2p.new_([
+        config.Libp2p.transport(TCPTransport(resourceManager: resourceManager)),
+        if (_config.network.enableWebTransport)
+          config.Libp2p.transport(webTransportTransport),
+        if (_config.network.enableWebRtc) ...[
+          config.Libp2p.transport(webrtcTransport),
+          config.Libp2p.transport(webrtcDirectTransport),
+        ],
+        config.Libp2p.listenAddrs([listenAddr]),
+        config.Libp2p.identity(_keyPair!),
+        config.Libp2p.userAgent('dart_ipfs/2.0.0'),
+      ]);
 
-    if (_config.network.enableWebRtc) {
-      webrtcTransport.host = _host;
-    }
+      if (_config.network.enableWebRtc) {
+        webrtcTransport.host = _host;
+      }
 
       // Register WebRTC signaling protocol
       if (_config.network.enableWebRtc) {

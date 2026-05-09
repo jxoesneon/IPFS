@@ -18,8 +18,9 @@ Future<void> main() async {
 
   // Step 1: Create configuration
   print('📝 Creating IPFS configuration...');
-  final enableStructuredLogging = Platform.environment['IPFS_JSON_LOGS'] == 'true';
-  
+  final enableStructuredLogging =
+      Platform.environment['IPFS_JSON_LOGS'] == 'true';
+
   // Use port 4002 to avoid conflict with Dashboard app (4001)
   final config = IPFSConfig(
     network: NetworkConfig(listenAddresses: ['/ip4/0.0.0.0/tcp/4002']),

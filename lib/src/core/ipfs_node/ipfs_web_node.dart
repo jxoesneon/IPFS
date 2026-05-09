@@ -35,12 +35,11 @@ class IPFSWebNode {
   /// Creates a new web IPFS node.
   IPFSWebNode({IPFSConfig? config, this.bootstrapPeers = const []}) {
     _platform = getPlatform();
-    _config = config ?? IPFSConfig(
-      network: NetworkConfig(
-        enableWebTransport: true,
-        enableWebRtc: true,
-      ),
-    );
+    _config =
+        config ??
+        IPFSConfig(
+          network: NetworkConfig(enableWebTransport: true, enableWebRtc: true),
+        );
 
     // Initialize networking components
     _router = Libp2pRouter(_config);
@@ -94,7 +93,8 @@ class IPFSWebNode {
       MetricsCollector(_config),
     );
 
-    final delegateUrl = _config.network.delegatedRoutingEndpoint ?? 'https://delegated-ipfs.io';
+    final delegateUrl =
+        _config.network.delegatedRoutingEndpoint ?? 'https://delegated-ipfs.io';
     IDHTHandler dht = DelegateDHTHandler(delegateUrl);
 
     _ipns = IPNSHandler(_config, _securityManager, dht, _pubsub);

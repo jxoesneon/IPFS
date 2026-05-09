@@ -15,18 +15,18 @@ class SignalingMessage {
   Uint8List encode() {
     final dataBytes = utf8.encode(data);
     final typeValue = type.index;
-    
+
     // Proto encoding:
     // tag 1 (type): 1 << 3 | 0 = 8
     // tag 2 (data): 2 << 3 | 2 = 18
-    
+
     final List<int> result = [];
     result.add(8);
     result.addAll(_encodeVarint(typeValue));
     result.add(18);
     result.addAll(_encodeVarint(dataBytes.length));
     result.addAll(dataBytes);
-    
+
     return Uint8List.fromList(result);
   }
 
@@ -120,11 +120,11 @@ class SignalingProtocol {
         // Protobuf messages in libp2p are often prefixed with varint length
         // but the spec might vary. Usually libp2p-mplex/yamux handles framing.
         // For webrtc signaling, it's a dedicated stream.
-        
-        // Let's assume standard libp2p length-prefixing if needed, 
+
+        // Let's assume standard libp2p length-prefixing if needed,
         // but often the underlying muxer handles it.
         // The spec says "messages are exchanged over the stream".
-        
+
         final lengthPrefix = await _readVarint(stream);
         final messageBytes = await stream.read(lengthPrefix);
         final message = SignalingMessage.decode(messageBytes);
@@ -148,8 +148,11 @@ class SignalingProtocol {
     }
     return result;
   }
-  
-  static Future<void> sendMessage(libp2p.P2PStream<Uint8List> stream, SignalingMessage msg) async {
+
+  static Future<void> sendMessage(
+    libp2p.P2PStream<Uint8List> stream,
+    SignalingMessage msg,
+  ) async {
     final bytes = msg.encode();
     final lenPrefix = SignalingMessage._encodeVarint(bytes.length);
     await stream.write(Uint8List.fromList([...lenPrefix, ...bytes]));

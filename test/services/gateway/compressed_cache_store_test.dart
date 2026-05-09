@@ -14,8 +14,7 @@ void main() {
     late CompressedCacheStore store;
 
     setUp(() async {
-      tempDirPath =
-          await getPlatform().createTempDirectory('ipfs_cache_test_');
+      tempDirPath = await getPlatform().createTempDirectory('ipfs_cache_test_');
       store = CompressedCacheStore(cachePath: tempDirPath);
     });
 
@@ -79,15 +78,17 @@ void main() {
       expect(stats.compressionRatio, equals(0));
     });
 
-    test('getCompressionStats returns empty stats for empty directory',
-        () async {
-      final emptyDirPath = path.join(tempDirPath, 'empty');
-      await getPlatform().createDirectory(emptyDirPath);
+    test(
+      'getCompressionStats returns empty stats for empty directory',
+      () async {
+        final emptyDirPath = path.join(tempDirPath, 'empty');
+        await getPlatform().createDirectory(emptyDirPath);
 
-      final stats = await store.getCompressionStats(emptyDirPath);
-      expect(stats.fileCount, equals(0));
-      expect(stats.totalOriginalSize, equals(0));
-    });
+        final stats = await store.getCompressionStats(emptyDirPath);
+        expect(stats.fileCount, equals(0));
+        expect(stats.totalOriginalSize, equals(0));
+      },
+    );
 
     test('storeCompressedData with small data uses no compression', () async {
       final data = Uint8List.fromList(utf8.encode('small'));

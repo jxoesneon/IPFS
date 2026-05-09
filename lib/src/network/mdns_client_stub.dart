@@ -31,4 +31,5 @@ class MDnsClientStub implements MDnsClient {
 }
 
 /// Creates an mDNS client stub.
-MDnsClient createMDnsClient({dynamic client, dynamic serverSocket}) => MDnsClientStub();
+MDnsClient createMDnsClient({dynamic client, dynamic serverSocket}) =>
+    MDnsClientStub();

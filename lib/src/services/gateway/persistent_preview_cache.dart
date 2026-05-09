@@ -40,7 +40,10 @@ class PersistentPreviewCache {
 
   /// Retrieves a cached preview for the given CID and content type.
   Future<Uint8List?> getPreview(CID cid, String contentType) async {
-    final cacheFilePath = path.join(cachePath, _getCacheFileName(cid, contentType));
+    final cacheFilePath = path.join(
+      cachePath,
+      _getCacheFileName(cid, contentType),
+    );
 
     if (await getPlatform().exists(cacheFilePath)) {
       try {
@@ -60,7 +63,10 @@ class PersistentPreviewCache {
   ) async {
     if (preview.length > _maxCacheSize) return;
 
-    final cacheFilePath = path.join(cachePath, _getCacheFileName(cid, contentType));
+    final cacheFilePath = path.join(
+      cachePath,
+      _getCacheFileName(cid, contentType),
+    );
 
     // Check if we need to free up space
     if (_currentCacheSize + preview.length > _maxCacheSize) {

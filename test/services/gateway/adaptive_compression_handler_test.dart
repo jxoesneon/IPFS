@@ -23,8 +23,9 @@ void main() {
     late String tempDirPath;
 
     setUp(() async {
-      tempDirPath =
-          await getPlatform().createTempDirectory('ipfs_test_compression');
+      tempDirPath = await getPlatform().createTempDirectory(
+        'ipfs_test_compression',
+      );
       mockBlockStore = MockBlockStore();
       when(mockBlockStore.path).thenReturn(tempDirPath);
 

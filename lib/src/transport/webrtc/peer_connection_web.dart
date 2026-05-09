@@ -7,27 +7,40 @@ import 'data_channel_stream.dart';
 
 class PeerConnectionWeb implements PeerConnection {
   final web.RTCPeerConnection _pc;
-  final StreamController<RTCIceCandidateInit> _iceController = StreamController.broadcast();
-  final StreamController<DataChannelStream> _dataChannelController = StreamController.broadcast();
+  final StreamController<RTCIceCandidateInit> _iceController =
+      StreamController.broadcast();
+  final StreamController<DataChannelStream> _dataChannelController =
+      StreamController.broadcast();
 
   PeerConnectionWeb(List<String> iceServers)
-      : _pc = web.RTCPeerConnection(web.RTCConfiguration(
-          iceServers: iceServers.map((s) {
-            return web.RTCIceServer(urls: s.toJS);
-          }).toList().toJS as JSArray<web.RTCIceServer>,
-        )) {
+    : _pc = web.RTCPeerConnection(
+        web.RTCConfiguration(
+          iceServers:
+              iceServers
+                      .map((s) {
+                        return web.RTCIceServer(urls: s.toJS);
+                      })
+                      .toList()
+                      .toJS
+                  as JSArray<web.RTCIceServer>,
+        ),
+      ) {
     _pc.onicecandidate = ((web.RTCPeerConnectionIceEvent ev) {
       if (ev.candidate != null) {
-        _iceController.add(RTCIceCandidateInit(
-          ev.candidate!.candidate,
-          ev.candidate!.sdpMid,
-          ev.candidate!.sdpMLineIndex,
-        ));
+        _iceController.add(
+          RTCIceCandidateInit(
+            ev.candidate!.candidate,
+            ev.candidate!.sdpMid,
+            ev.candidate!.sdpMLineIndex,
+          ),
+        );
       }
     }).toJS;
 
     _pc.ondatachannel = ((web.RTCDataChannelEvent ev) {
-      _dataChannelController.add(_WebDataChannelStream(ev.channel, incoming: true));
+      _dataChannelController.add(
+        _WebDataChannelStream(ev.channel, incoming: true),
+      );
     }).toJS;
   }
 
@@ -56,28 +69,39 @@ class PeerConnectionWeb implements PeerConnection {
   }
 
   @override
-  Future<void> setLocalDescription(RTCSessionDescriptionInit description) async {
-    await _pc.setLocalDescription(web.RTCLocalSessionDescriptionInit(
-      type: description.type as web.RTCSdpType,
-      sdp: description.sdp,
-    )).toDart;
+  Future<void> setLocalDescription(
+    RTCSessionDescriptionInit description,
+  ) async {
+    await _pc
+        .setLocalDescription(
+          web.RTCLocalSessionDescriptionInit(
+            type: description.type as web.RTCSdpType,
+            sdp: description.sdp,
+          ),
+        )
+        .toDart;
   }
 
   @override
   Future<void> setRemoteDescription(String type, String sdp) async {
-    await _pc.setRemoteDescription(web.RTCSessionDescriptionInit(
-      type: type as web.RTCSdpType,
-      sdp: sdp,
-    )).toDart;
+    await _pc
+        .setRemoteDescription(
+          web.RTCSessionDescriptionInit(type: type as web.RTCSdpType, sdp: sdp),
+        )
+        .toDart;
   }
 
   @override
   Future<void> addIceCandidate(RTCIceCandidateInit candidate) async {
-    await _pc.addIceCandidate(web.RTCIceCandidateInit(
-      candidate: candidate.candidate,
-      sdpMid: candidate.sdpMid,
-      sdpMLineIndex: candidate.sdpMLineIndex,
-    )).toDart;
+    await _pc
+        .addIceCandidate(
+          web.RTCIceCandidateInit(
+            candidate: candidate.candidate,
+            sdpMid: candidate.sdpMid,
+            sdpMLineIndex: candidate.sdpMLineIndex,
+          ),
+        )
+        .toDart;
   }
 
   @override
@@ -97,7 +121,8 @@ class PeerConnectionWeb implements PeerConnection {
 class _WebDataChannelStream extends DataChannelStream {
   final web.RTCDataChannel _channel;
 
-  _WebDataChannelStream(this._channel, {bool incoming = false}) : super(incoming: incoming) {
+  _WebDataChannelStream(this._channel, {bool incoming = false})
+    : super(incoming: incoming) {
     _channel.binaryType = 'arraybuffer';
     _channel.onmessage = ((web.MessageEvent ev) {
       final buffer = ev.data as JSArrayBuffer;
@@ -107,7 +132,7 @@ class _WebDataChannelStream extends DataChannelStream {
     _channel.onclose = (() {
       onClosed();
     }).toJS;
-    
+
     _channel.onerror = ((web.Event ev) {
       onClosed();
     }).toJS;
@@ -128,4 +153,5 @@ class _WebDataChannelStream extends DataChannelStream {
   }
 }
 
-PeerConnection createPC(List<String> iceServers) => PeerConnectionWeb(iceServers);
+PeerConnection createPC(List<String> iceServers) =>
+    PeerConnectionWeb(iceServers);

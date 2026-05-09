@@ -10,13 +10,13 @@ abstract class PeerConnection {
   Future<RTCSessionDescriptionInit> createAnswer();
   Future<void> setLocalDescription(RTCSessionDescriptionInit description);
   Future<void> addIceCandidate(RTCIceCandidateInit candidate);
-  
+
   Stream<RTCIceCandidateInit> get onIceCandidate;
   Stream<DataChannelStream> get onDataChannel;
-  
+
   Future<DataChannelStream> createDataChannel(String label);
   Future<void> close();
-  
+
   String? get localDescriptionSdp;
   String? get remoteDescriptionSdp;
 }
@@ -32,7 +32,7 @@ class RTCIceCandidateInit {
   final String? sdpMid;
   final int? sdpMLineIndex;
   RTCIceCandidateInit(this.candidate, this.sdpMid, this.sdpMLineIndex);
-  
+
   Map<String, dynamic> toJson() => {
     'candidate': candidate,
     'sdpMid': sdpMid,
@@ -40,4 +40,5 @@ class RTCIceCandidateInit {
   };
 }
 
-PeerConnection createPeerConnection(List<String> iceServers) => createPC(iceServers);
+PeerConnection createPeerConnection(List<String> iceServers) =>
+    createPC(iceServers);

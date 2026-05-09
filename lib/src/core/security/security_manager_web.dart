@@ -86,9 +86,6 @@ class SecurityManagerWeb implements ISecurityManager {
 
   @override
   Future<Map<String, dynamic>> getStatus() async {
-    return {
-      'keystore_unlocked': isKeystoreUnlocked,
-      'platform': 'web',
-    };
+    return {'keystore_unlocked': isKeystoreUnlocked, 'platform': 'web'};
   }
 }

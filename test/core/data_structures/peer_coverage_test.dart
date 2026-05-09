@@ -78,10 +78,7 @@ void main() {
     });
 
     test('multiaddrToBytes unsupported type', () {
-      final invalidAddr = FullAddress(
-        address: 'invalid',
-        port: 4001,
-      );
+      final invalidAddr = FullAddress(address: 'invalid', port: 4001);
       final bytes = multiaddrToBytes(invalidAddr);
       expect(bytes, isEmpty);
     });

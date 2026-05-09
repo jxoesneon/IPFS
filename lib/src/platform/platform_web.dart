@@ -28,11 +28,14 @@ class IpfsPlatformWeb implements IpfsPlatform {
 
   Future<Database> _getDb() async {
     if (_db != null) return _db!;
-    _db = await idbFactoryBrowser.open(_dbName, version: 1,
-        onUpgradeNeeded: (VersionChangeEvent e) {
-      final db = e.database;
-      db.createObjectStore(_storeName);
-    });
+    _db = await idbFactoryBrowser.open(
+      _dbName,
+      version: 1,
+      onUpgradeNeeded: (VersionChangeEvent e) {
+        final db = e.database;
+        db.createObjectStore(_storeName);
+      },
+    );
     return _db!;
   }
 
@@ -81,16 +84,21 @@ class IpfsPlatformWeb implements IpfsPlatform {
     final range = KeyRange.lowerBound(path);
     var found = false;
     final completer = Completer<bool>();
-    
-    store.openCursor(range: range, direction: idbDirectionNext).listen((cursor) {
-      if (cursor.key.toString().startsWith('$path/')) {
-        found = true;
-      }
-      completer.complete(found);
-    }, onDone: () {
-      if (!completer.isCompleted) completer.complete(false);
-    });
-    
+
+    store
+        .openCursor(range: range, direction: idbDirectionNext)
+        .listen(
+          (cursor) {
+            if (cursor.key.toString().startsWith('$path/')) {
+              found = true;
+            }
+            completer.complete(found);
+          },
+          onDone: () {
+            if (!completer.isCompleted) completer.complete(false);
+          },
+        );
+
     return completer.future;
   }
 
@@ -99,24 +107,29 @@ class IpfsPlatformWeb implements IpfsPlatform {
     final db = await _getDb();
     final txn = db.transaction(_storeName, idbModeReadWrite);
     final store = txn.objectStore(_storeName);
-    
+
     // Delete file
     await store.delete(path);
-    
+
     // Delete "directory" contents
     final range = KeyRange.lowerBound('$path/');
     final completer = Completer<void>();
-    
-    store.openKeyCursor(range: range).listen((cursor) {
-      if (cursor.key.toString().startsWith('$path/')) {
-        cursor.delete();
-        cursor.next();
-      } else {
-        completer.complete();
-      }
-    }, onDone: () {
-      if (!completer.isCompleted) completer.complete();
-    });
+
+    store
+        .openKeyCursor(range: range)
+        .listen(
+          (cursor) {
+            if (cursor.key.toString().startsWith('$path/')) {
+              cursor.delete();
+              cursor.next();
+            } else {
+              completer.complete();
+            }
+          },
+          onDone: () {
+            if (!completer.isCompleted) completer.complete();
+          },
+        );
 
     await completer.future;
     await txn.completed;
@@ -144,17 +157,22 @@ class IpfsPlatformWeb implements IpfsPlatform {
     final completer = Completer<List<String>>();
 
     final range = KeyRange.lowerBound(prefix);
-    store.openKeyCursor(range: range).listen((cursor) {
-      final key = cursor.key.toString();
-      if (key.startsWith(prefix)) {
-        results.add(key);
-        cursor.next();
-      } else {
-        completer.complete(results);
-      }
-    }, onDone: () {
-      if (!completer.isCompleted) completer.complete(results);
-    });
+    store
+        .openKeyCursor(range: range)
+        .listen(
+          (cursor) {
+            final key = cursor.key.toString();
+            if (key.startsWith(prefix)) {
+              results.add(key);
+              cursor.next();
+            } else {
+              completer.complete(results);
+            }
+          },
+          onDone: () {
+            if (!completer.isCompleted) completer.complete(results);
+          },
+        );
 
     return completer.future;
   }

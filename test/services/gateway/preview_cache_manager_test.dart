@@ -10,8 +10,9 @@ void main() {
   late PreviewCacheManager cacheManager;
 
   setUp(() async {
-    tempDirPath =
-        await getPlatform().createTempDirectory('preview_cache_test_');
+    tempDirPath = await getPlatform().createTempDirectory(
+      'preview_cache_test_',
+    );
     cacheManager = PreviewCacheManager(
       cachePath: tempDirPath,
       maxMemoryEntries: 10,

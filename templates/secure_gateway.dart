@@ -1,7 +1,7 @@
 import 'package:dart_ipfs/dart_ipfs.dart';
 
 /// Template: Secure Gateway Node
-/// 
+///
 /// A production-ready node optimized for HTTP Gateway service.
 /// Includes:
 /// - SecurityManager with Encrypted Keystore
@@ -36,7 +36,7 @@ void main() async {
 
   // 4. Start the services
   await node.start();
-  
+
   print('Secure Gateway running at: http://localhost:8080');
   print('Health status available at: http://localhost:8080/health');
   print('Peer ID: ${node.peerID}');

@@ -8,7 +8,7 @@ import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Handles IPNS (InterPlanetary Name System) operations.
-/// 
+///
 /// Supported backends:
 /// - DHT (Distributed Hash Table)
 /// - PubSub (for real-time updates)
@@ -32,7 +32,7 @@ class IPNSHandler {
   final dynamic _dhtHandler;
   // ignore: unused_field
   final dynamic _pubsubHandler;
-  
+
   final Map<String, IPNSRecord> _cache;
   final int _maxCacheSize;
   final Logger _logger;
@@ -56,12 +56,15 @@ class IPNSHandler {
 
     // Resolve via DHT (Mocked for now)
     final resolvedCid = await _resolveViaDHT(name);
-    
+
     // Cache the result
-    _addToCache(name, IPNSRecord.internal(
-      value: Uint8List.fromList(utf8.encode(resolvedCid)),
-      validity: DateTime.now().add(const Duration(hours: 1)),
-    ));
+    _addToCache(
+      name,
+      IPNSRecord.internal(
+        value: Uint8List.fromList(utf8.encode(resolvedCid)),
+        validity: DateTime.now().add(const Duration(hours: 1)),
+      ),
+    );
 
     return resolvedCid;
   }
@@ -69,15 +72,18 @@ class IPNSHandler {
   /// Publishes a [cid] to IPNS under the given [name].
   Future<void> publish(String name, String cid, {String? keyName}) async {
     _logger.info('Publishing IPNS record: $name -> $cid (key: $keyName)');
-    
+
     // Implementation for publishing to DHT
     await _publishToDHT(name, cid);
 
     // Update cache
-    _addToCache(name, IPNSRecord.internal(
-      value: Uint8List.fromList(utf8.encode(cid)),
-      validity: DateTime.now().add(const Duration(hours: 24)),
-    ));
+    _addToCache(
+      name,
+      IPNSRecord.internal(
+        value: Uint8List.fromList(utf8.encode(cid)),
+        validity: DateTime.now().add(const Duration(hours: 24)),
+      ),
+    );
   }
 
   void _addToCache(String name, IPNSRecord record) {
@@ -100,9 +106,6 @@ class IPNSHandler {
 
   /// Returns the current status of the IPNS handler.
   Future<Map<String, dynamic>> getStatus() async {
-    return {
-      'cache_size': _cache.length,
-      'max_cache_size': _maxCacheSize,
-    };
+    return {'cache_size': _cache.length, 'max_cache_size': _maxCacheSize};
   }
 }

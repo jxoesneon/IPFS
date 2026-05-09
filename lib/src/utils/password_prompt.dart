@@ -10,14 +10,18 @@ class PasswordPrompt {
   /// Prompts the user for a password without echoing to the terminal.
   ///
   /// Returns null if running in a non-interactive environment.
-  static Future<String?> prompt([String message = 'Enter keystore password: ']) async {
+  static Future<String?> prompt([
+    String message = 'Enter keystore password: ',
+  ]) async {
     return await getPlatform().promptPassword(message);
   }
 
   /// Prompts for a new password with confirmation.
   ///
   /// Returns the password if both entries match, null otherwise.
-  static Future<String?> promptNew([String message = 'Create keystore password: ']) async {
+  static Future<String?> promptNew([
+    String message = 'Create keystore password: ',
+  ]) async {
     final password = await prompt(message);
     if (password == null || password.isEmpty) {
       return null;

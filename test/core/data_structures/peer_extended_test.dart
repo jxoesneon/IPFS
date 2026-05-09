@@ -10,10 +10,7 @@ void main() {
     final peerIdStr = Base58().encode(peerIdBytes);
 
     test('FullAddress toString', () {
-      final addr = FullAddress(
-        address: '127.0.0.1',
-        port: 4001,
-      );
+      final addr = FullAddress(address: '127.0.0.1', port: 4001);
       expect(addr.toString(), equals('/ip4/127.0.0.1/tcp/4001'));
     });
 
@@ -28,9 +25,7 @@ void main() {
     test('Peer.toString', () {
       final peer = Peer(
         id: PeerId(value: peerIdBytes),
-        addresses: [
-          FullAddress(address: '127.0.0.1', port: 4001),
-        ],
+        addresses: [FullAddress(address: '127.0.0.1', port: 4001)],
         latency: 50,
         agentVersion: 'ipfs/1.0.0',
       );
@@ -80,10 +75,7 @@ void main() {
     });
 
     test('multiaddrToBytes and multiaddrFromBytes IPv4', () {
-      final addr = FullAddress(
-        address: '127.0.0.1',
-        port: 4001,
-      );
+      final addr = FullAddress(address: '127.0.0.1', port: 4001);
       final bytes = multiaddrToBytes(addr);
       expect(bytes, isNotEmpty);
       expect(bytes[0], equals(4)); // ip4

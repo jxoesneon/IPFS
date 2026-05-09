@@ -4,7 +4,7 @@ import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 /// Helper for parsing WebTransport multiaddresses.
 class WebTransportMultiaddrParser {
   /// Parses a multiaddr and extracts WebTransport specific components.
-  /// 
+  ///
   /// Format: /ip4/1.2.3.4/udp/4001/quic-v1/webtransport/certhash/<mh1>/certhash/<mh2>
   static WebTransportInfo? parse(libp2p.MultiAddr addr) {
     final stringAddr = addr.toString();
@@ -37,11 +37,7 @@ class WebTransportMultiaddrParser {
       return null;
     }
 
-    return WebTransportInfo(
-      ip: ip,
-      port: port,
-      certHashes: certHashes,
-    );
+    return WebTransportInfo(ip: ip, port: port, certHashes: certHashes);
   }
 }
 
@@ -58,5 +54,6 @@ class WebTransportInfo {
   });
 
   @override
-  String toString() => 'WebTransportInfo(ip: $ip, port: $port, hashes: ${certHashes.length})';
+  String toString() =>
+      'WebTransportInfo(ip: $ip, port: $port, hashes: ${certHashes.length})';
 }

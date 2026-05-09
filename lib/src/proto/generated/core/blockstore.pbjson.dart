@@ -17,7 +17,8 @@ import 'dart:typed_data' as $typed_data;
 
 import 'block.pbjson.dart' as $0;
 import 'cid.pbjson.dart' as $1;
-import 'package:protobuf/well_known_types/google/protobuf/empty.pbjson.dart' as $2;
+import 'package:protobuf/well_known_types/google/protobuf/empty.pbjson.dart'
+    as $2;
 
 @$core.Deprecated('Use addBlockResponseDescriptor instead')
 const AddBlockResponse$json = {

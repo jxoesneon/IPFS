@@ -11,11 +11,11 @@ class HealthCheckService {
   /// Returns a summary health status of the node.
   Future<Map<String, dynamic>> checkHealth() async {
     final detailedStatus = await _node.getHealthStatus();
-    
+
     // Determine overall status
     final isRunning = _node.isRunning;
     final hasErrors = _containsErrors(detailedStatus);
-    
+
     String overallStatus = 'healthy';
     if (!isRunning) {
       overallStatus = 'starting';
@@ -28,7 +28,9 @@ class HealthCheckService {
       'timestamp': DateTime.now().toIso8601String(),
       'peerId': _node.peerID,
       'version': '1.10.0',
-      'uptime_seconds': _node.isRunning ? DateTime.now().difference(_startTime).inSeconds : 0,
+      'uptime_seconds': _node.isRunning
+          ? DateTime.now().difference(_startTime).inSeconds
+          : 0,
       'metrics': {
         'peers': (await _node.connectedPeers).length,
 

@@ -240,7 +240,7 @@ Uint8List multiaddrToBytes(FullAddress address) {
   } else if (address.address.contains(':') || address.address == '::1') {
     // IPv6
     buffer.add(41); // ip6
-    
+
     // Handle special cases like ::1
     String expanded = address.address;
     if (expanded == '::1') {

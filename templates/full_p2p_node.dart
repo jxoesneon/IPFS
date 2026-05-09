@@ -1,7 +1,7 @@
 import 'package:dart_ipfs/dart_ipfs.dart';
 
 /// Template: Full P2P Node
-/// 
+///
 /// A standard IPFS node with all major protocols enabled.
 /// Best for participating in the global IPFS network or building P2P apps.
 void main() async {
@@ -9,8 +9,8 @@ void main() async {
   final config = IPFSConfig(
     dataPath: './ipfs_data',
     offline: false,
-    enableDHT: true,      // Peer and content routing
-    enablePubSub: true,   // Real-time messaging
+    enableDHT: true, // Peer and content routing
+    enablePubSub: true, // Real-time messaging
     network: NetworkConfig(
       bootstrapPeers: [
         // Standard libp2p bootstrap nodes
@@ -25,11 +25,11 @@ void main() async {
 
   // 3. Optional: Subscribe to a PubSub topic for real-time data
   await node.subscribe('network-updates');
-  
+
   node.pubsubMessages.listen((message) {
-     if (message.topic == 'network-updates') {
-       print('Received P2P message: ${message.content}');
-     }
+    if (message.topic == 'network-updates') {
+      print('Received P2P message: ${message.content}');
+    }
   });
 
   // 4. Start the node
@@ -40,7 +40,7 @@ void main() async {
   // Example: Find providers for a known CID
   const targetCid = 'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z';
   print('Searching for providers of $targetCid...');
-  
+
   final providers = await node.findProviders(targetCid);
   for (final peer in providers) {
     print('Found provider: $peer');

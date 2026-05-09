@@ -46,20 +46,25 @@ class MFSManager {
     final parts = _splitPath(path);
     if (parts.isEmpty) return;
 
-    await _modifyPath(parts, (currentCid) async {
-      if (currentCid != null) {
-        // Directory already exists
-        return currentCid;
-      }
-      final dirManager = IPFSDirectoryManager();
-      final node = dirManager.build();
-      final data = node.writeToBuffer();
-      final cid = await CID.fromContent(data, codec: 'dag-pb');
-      await _blockStore.putBlock(
-        Block(cid: cid, data: data, format: 'dag-pb'),
-      );
-      return cid;
-    }, recursive: recursive, isDirectory: true);
+    await _modifyPath(
+      parts,
+      (currentCid) async {
+        if (currentCid != null) {
+          // Directory already exists
+          return currentCid;
+        }
+        final dirManager = IPFSDirectoryManager();
+        final node = dirManager.build();
+        final data = node.writeToBuffer();
+        final cid = await CID.fromContent(data, codec: 'dag-pb');
+        await _blockStore.putBlock(
+          Block(cid: cid, data: data, format: 'dag-pb'),
+        );
+        return cid;
+      },
+      recursive: recursive,
+      isDirectory: true,
+    );
   }
 
   /// Copies a file or directory from [src] to [dest].
@@ -90,19 +95,25 @@ class MFSManager {
       if (!parentBlock.found) throw Exception('Parent block not found');
 
       final parentNode = PBNode.fromBuffer(parentBlock.block.data);
-      final newLinks = parentNode.links.where((l) => l.name != nameToRemove).toList();
-      
+      final newLinks = parentNode.links
+          .where((l) => l.name != nameToRemove)
+          .toList();
+
       if (!recursive && parentNode.links.length != newLinks.length) {
-          // Check if it was a directory
-          final removedLink = parentNode.links.firstWhere((l) => l.name == nameToRemove);
-          final removedBlock = await _blockStore.getBlock(CID.fromBytes(Uint8List.fromList(removedLink.hash)).encode());
-          if (removedBlock.found) {
-              final removedNode = PBNode.fromBuffer(removedBlock.block.data);
-              final unixData = Data.fromBuffer(removedNode.data);
-              if (unixData.type == Data_DataType.Directory && !recursive) {
-                  throw Exception('Directory not empty');
-              }
+        // Check if it was a directory
+        final removedLink = parentNode.links.firstWhere(
+          (l) => l.name == nameToRemove,
+        );
+        final removedBlock = await _blockStore.getBlock(
+          CID.fromBytes(Uint8List.fromList(removedLink.hash)).encode(),
+        );
+        if (removedBlock.found) {
+          final removedNode = PBNode.fromBuffer(removedBlock.block.data);
+          final unixData = Data.fromBuffer(removedNode.data);
+          if (unixData.type == Data_DataType.Directory && !recursive) {
+            throw Exception('Directory not empty');
           }
+        }
       }
 
       parentNode.links.clear();
@@ -110,7 +121,9 @@ class MFSManager {
 
       final newData = parentNode.writeToBuffer();
       final newCid = await CID.fromContent(newData, codec: 'dag-pb');
-      await _blockStore.putBlock(Block(cid: newCid, data: newData, format: 'dag-pb'));
+      await _blockStore.putBlock(
+        Block(cid: newCid, data: newData, format: 'dag-pb'),
+      );
       return newCid;
     });
   }
@@ -144,15 +157,21 @@ class MFSManager {
       'cid': cid.encode(),
       'type': unixData.type.toString(),
       'size': unixData.filesize.toInt(),
-      'cumulativeSize': block.block.data.length + node.links.fold<int>(0, (sum, l) => sum + l.size.toInt()),
+      'cumulativeSize':
+          block.block.data.length +
+          node.links.fold<int>(0, (sum, l) => sum + l.size.toInt()),
       'blocks': node.links.length,
     };
   }
 
   /// Writes [data] to a file at the given [path].
-  Future<void> write(String path, Stream<List<int>> data, {bool create = true}) async {
+  Future<void> write(
+    String path,
+    Stream<List<int>> data, {
+    bool create = true,
+  }) async {
     final parts = _splitPath(path);
-    
+
     // Build the file UnixFS DAG
     final builder = UnixFSBuilder();
     Block? rootBlock;
@@ -178,29 +197,38 @@ class MFSManager {
     if (cid == null) throw Exception('Path not found: $path');
 
     final controller = StreamController<List<int>>();
-    
+
     // ignore: unawaited_futures
-    _readRecursive(cid, controller).then((_) => controller.close()).catchError((Object e) => controller.addError(e));
-    
+    _readRecursive(cid, controller)
+        .then((_) => controller.close())
+        .catchError((Object e) => controller.addError(e));
+
     return controller.stream;
   }
 
-  Future<void> _readRecursive(CID cid, StreamController<List<int>> controller) async {
+  Future<void> _readRecursive(
+    CID cid,
+    StreamController<List<int>> controller,
+  ) async {
     final block = await _blockStore.getBlock(cid.encode());
     if (!block.found) throw Exception('Block not found');
 
     final node = PBNode.fromBuffer(block.block.data);
     final unixData = Data.fromBuffer(node.data);
 
-    if (unixData.type == Data_DataType.File || unixData.type == Data_DataType.Raw) {
-        if (unixData.hasData()) {
-            controller.add(unixData.data);
-        }
-        for (final link in node.links) {
-            await _readRecursive(CID.fromBytes(Uint8List.fromList(link.hash)), controller);
-        }
+    if (unixData.type == Data_DataType.File ||
+        unixData.type == Data_DataType.Raw) {
+      if (unixData.hasData()) {
+        controller.add(unixData.data);
+      }
+      for (final link in node.links) {
+        await _readRecursive(
+          CID.fromBytes(Uint8List.fromList(link.hash)),
+          controller,
+        );
+      }
     } else {
-        throw Exception('Not a file');
+      throw Exception('Not a file');
     }
   }
 
@@ -217,7 +245,10 @@ class MFSManager {
     final node = PBNode.fromBuffer(block.block.data);
     for (final link in node.links) {
       if (link.name == parts[0]) {
-        return _resolvePath(CID.fromBytes(Uint8List.fromList(link.hash)), parts.sublist(1));
+        return _resolvePath(
+          CID.fromBytes(Uint8List.fromList(link.hash)),
+          parts.sublist(1),
+        );
       }
     }
     return null;
@@ -230,7 +261,13 @@ class MFSManager {
     bool recursive = false,
     bool isDirectory = false,
   }) async {
-    _rootCid = await _modifyRecursive(_rootCid!, parts, transform, recursive, isDirectory);
+    _rootCid = await _modifyRecursive(
+      _rootCid!,
+      parts,
+      transform,
+      recursive,
+      isDirectory,
+    );
     await _datastore.put(Key(_rootKey), _rootCid!.toBytes());
   }
 
@@ -264,33 +301,53 @@ class MFSManager {
       if (parts.length > 1 && !recursive) {
         throw Exception('Path not found: $name');
       }
-      
+
       if (parts.length == 1) {
-          final newChildCid = await transform(null);
-          if (newChildCid == null) return currentCid;
-          nextCid = newChildCid;
+        final newChildCid = await transform(null);
+        if (newChildCid == null) return currentCid;
+        nextCid = newChildCid;
       } else {
-          // Create intermediate directory
-          final dirManager = IPFSDirectoryManager();
-          final emptyDirNode = dirManager.build();
-          final emptyDirData = emptyDirNode.writeToBuffer();
-          final emptyDirCid = await CID.fromContent(emptyDirData, codec: 'dag-pb');
-          await _blockStore.putBlock(Block(cid: emptyDirCid, data: emptyDirData, format: 'dag-pb'));
-          
-          nextCid = await _modifyRecursive(emptyDirCid, parts.sublist(1), transform, recursive, isDirectory);
+        // Create intermediate directory
+        final dirManager = IPFSDirectoryManager();
+        final emptyDirNode = dirManager.build();
+        final emptyDirData = emptyDirNode.writeToBuffer();
+        final emptyDirCid = await CID.fromContent(
+          emptyDirData,
+          codec: 'dag-pb',
+        );
+        await _blockStore.putBlock(
+          Block(cid: emptyDirCid, data: emptyDirData, format: 'dag-pb'),
+        );
+
+        nextCid = await _modifyRecursive(
+          emptyDirCid,
+          parts.sublist(1),
+          transform,
+          recursive,
+          isDirectory,
+        );
       }
     } else {
-      nextCid = await _modifyRecursive(CID.fromBytes(Uint8List.fromList(foundLink.hash)), parts.sublist(1), transform, recursive, isDirectory);
+      nextCid = await _modifyRecursive(
+        CID.fromBytes(Uint8List.fromList(foundLink.hash)),
+        parts.sublist(1),
+        transform,
+        recursive,
+        isDirectory,
+      );
     }
 
     // Update current node with new link to nextCid
     final nextBlock = await _blockStore.getBlock(nextCid.encode());
     final nextNode = PBNode.fromBuffer(nextBlock.block.data);
-    
+
     final newLink = PBLink()
       ..name = name
       ..hash = nextCid.toBytes()
-      ..size = Int64(nextBlock.block.data.length + nextNode.links.fold<int>(0, (sum, l) => sum + l.size.toInt()));
+      ..size = Int64(
+        nextBlock.block.data.length +
+            nextNode.links.fold<int>(0, (sum, l) => sum + l.size.toInt()),
+      );
 
     final newLinks = node.links.where((l) => l.name != name).toList();
     newLinks.add(newLink);
@@ -301,8 +358,10 @@ class MFSManager {
 
     final newData = node.writeToBuffer();
     final updatedCid = await CID.fromContent(newData, codec: 'dag-pb');
-    await _blockStore.putBlock(Block(cid: updatedCid, data: newData, format: 'dag-pb'));
-    
+    await _blockStore.putBlock(
+      Block(cid: updatedCid, data: newData, format: 'dag-pb'),
+    );
+
     return updatedCid;
   }
 }

@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
 
 /// Template: Minimal Web Node
-/// 
+///
 /// A bare-bones node designed for browser environments.
 /// Uses IndexedDB for storage and relies on relay peers for networking.
 void main() async {

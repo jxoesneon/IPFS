@@ -330,8 +330,8 @@ class BitswapHandler implements ILifecycle {
       // Clean up pending requests that failed
       for (final cid in completers.keys) {
         if (_pendingBlocks[cid]?.isCompleted == false) {
-           _pendingBlocks.remove(cid);
-           _wantlist.remove(cid);
+          _pendingBlocks.remove(cid);
+          _wantlist.remove(cid);
         }
       }
       rethrow;
@@ -343,20 +343,26 @@ class BitswapHandler implements ILifecycle {
       return;
     }
 
-    while (_activeRequests < _maxConcurrentRequests && _requestQueue.isNotEmpty) {
+    while (_activeRequests < _maxConcurrentRequests &&
+        _requestQueue.isNotEmpty) {
       final cid = _requestQueue.removeAt(0);
       _activeRequests++;
-      
-      unawaited(_sendWantRequest(cid).then((_) {
-        // We don't decrement _activeRequests here because Bitswap is async.
-        // The request is 'active' until the block is received or times out.
-        // For simplicity in this implementation, we'll just throttle the initial sending.
-      }).catchError((Object e) {
-        _logger.error('Failed to send want request for $cid: $Object e');
-      }).whenComplete(() {
-         _activeRequests--;
-         unawaited(_processQueue());
-      }));
+
+      unawaited(
+        _sendWantRequest(cid)
+            .then((_) {
+              // We don't decrement _activeRequests here because Bitswap is async.
+              // The request is 'active' until the block is received or times out.
+              // For simplicity in this implementation, we'll just throttle the initial sending.
+            })
+            .catchError((Object e) {
+              _logger.error('Failed to send want request for $cid: $Object e');
+            })
+            .whenComplete(() {
+              _activeRequests--;
+              unawaited(_processQueue());
+            }),
+      );
     }
   }
 

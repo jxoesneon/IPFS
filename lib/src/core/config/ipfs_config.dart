@@ -160,7 +160,8 @@ class IPFSConfig {
       enableGraphsync: json['enableGraphsync'] as bool? ?? true,
       enableMetrics: json['enableMetrics'] as bool? ?? true,
       enableLogging: json['enableLogging'] as bool? ?? true,
-      enableStructuredLogging: json['enableStructuredLogging'] as bool? ?? false,
+      enableStructuredLogging:
+          json['enableStructuredLogging'] as bool? ?? false,
       logLevel: json['logLevel'] as String? ?? 'info',
       enableQuotaManagement: json['enableQuotaManagement'] as bool? ?? true,
       defaultBandwidthQuota: json['defaultBandwidthQuota'] as int? ?? 1048576,

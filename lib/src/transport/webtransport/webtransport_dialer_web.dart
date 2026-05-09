@@ -17,15 +17,20 @@ class WebTransportDialerWeb implements WebTransportDialer {
     }
 
     final url = 'https://${info.ip}:${info.port}';
-    
+
     // Configure WebTransport with serverCertificateHashes if provided
     final options = web.WebTransportOptions(
-      serverCertificateHashes: info.certHashes.map((h) {
-        final hash = web.WebTransportHash();
-        hash.algorithm = 'sha-256';
-        hash.value = Uint8List(32).toJS;
-        return hash;
-      }).toList().toJS as JSArray<web.WebTransportHash>,
+      serverCertificateHashes:
+          info.certHashes
+                  .map((h) {
+                    final hash = web.WebTransportHash();
+                    hash.algorithm = 'sha-256';
+                    hash.value = Uint8List(32).toJS;
+                    return hash;
+                  })
+                  .toList()
+                  .toJS
+              as JSArray<web.WebTransportHash>,
     );
 
     final transport = web.WebTransport(url, options);
@@ -34,7 +39,12 @@ class WebTransportDialerWeb implements WebTransportDialer {
     final p2pPart = addr.toString().split('/p2p/').last;
     final remotePeerId = libp2p.PeerId.fromString(p2pPart);
 
-    return WebTransportConnectionWeb(transport, addr, await libp2p.PeerId.random(), remotePeerId);
+    return WebTransportConnectionWeb(
+      transport,
+      addr,
+      await libp2p.PeerId.random(),
+      remotePeerId,
+    );
   }
 }
 
@@ -44,7 +54,12 @@ class WebTransportConnectionWeb implements libp2p.Conn {
   final libp2p.PeerId _localPeer;
   final libp2p.PeerId _remotePeer;
 
-  WebTransportConnectionWeb(this._transport, this._remoteAddr, this._localPeer, this._remotePeer);
+  WebTransportConnectionWeb(
+    this._transport,
+    this._remoteAddr,
+    this._localPeer,
+    this._remotePeer,
+  );
 
   @override
   libp2p.PeerId get localPeer => _localPeer;
@@ -53,7 +68,8 @@ class WebTransportConnectionWeb implements libp2p.Conn {
   libp2p.PeerId get remotePeer => _remotePeer;
 
   @override
-  libp2p.MultiAddr get localMultiaddr => libp2p.MultiAddr('/ip4/127.0.0.1/udp/0/quic-v1/webtransport');
+  libp2p.MultiAddr get localMultiaddr =>
+      libp2p.MultiAddr('/ip4/127.0.0.1/udp/0/quic-v1/webtransport');
 
   @override
   libp2p.MultiAddr get remoteMultiaddr => _remoteAddr;
@@ -61,14 +77,17 @@ class WebTransportConnectionWeb implements libp2p.Conn {
   @override
   Future<libp2p.P2PStream<Uint8List>> newStream(libp2p.Context context) async {
     final webStream = await _transport.createBidirectionalStream().toDart;
-    return WebTransportStreamWeb(this, webStream as web.WebTransportBidirectionalStream);
+    return WebTransportStreamWeb(
+      this,
+      webStream as web.WebTransportBidirectionalStream,
+    );
   }
 
   @override
   Future<void> close() async {
     _transport.close();
   }
-  
+
   @override
   bool get isClosed => false;
 
@@ -100,7 +119,7 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   final WebTransportConnectionWeb _conn;
   final web.WebTransportBidirectionalStream _webStream;
   String? _proto;
-  
+
   WebTransportStreamWeb(this._conn, this._webStream);
 
   @override
@@ -113,9 +132,11 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   @override
   Future<Uint8List> read([int? len]) async {
     final reader = (_webStream.readable as web.ReadableStream).getReader();
-    final result = await (reader as web.ReadableStreamDefaultReader).read().toDart;
+    final result = await (reader as web.ReadableStreamDefaultReader)
+        .read()
+        .toDart;
     (reader as web.ReadableStreamDefaultReader).releaseLock();
-    
+
     if (result == null || (result as dynamic).done == true) return Uint8List(0);
     final value = (result as dynamic).value as JSArrayBuffer;
     return value.toDart.asUint8List();

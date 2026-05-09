@@ -60,10 +60,7 @@ void main() {
     test('should serialize to/from protobuf', () {
       final bytes = Uint8List.fromList(List.filled(64, 1));
       final id = PeerId(value: bytes);
-      final address = FullAddress(
-        address: '127.0.0.1',
-        port: 4001,
-      );
+      final address = FullAddress(address: '127.0.0.1', port: 4001);
 
       final peer = Peer(
         id: id,

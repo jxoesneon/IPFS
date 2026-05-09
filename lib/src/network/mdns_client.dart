@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'mdns_client_stub.dart'
     if (dart.library.io) 'mdns_client_io.dart'
-    if (dart.library.html) 'mdns_client_web.dart' as platform;
+    if (dart.library.html) 'mdns_client_web.dart'
+    as platform;
 
 /// Base class for mDNS resource records.
 abstract class ResourceRecord {
@@ -74,7 +75,7 @@ enum ResourceRecordType {
   a,
 
   /// IPv6 address record.
-  aaaa
+  aaaa,
 }
 
 /// Query class for mDNS resource records.

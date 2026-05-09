@@ -3,7 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 import 'package:ipfs_libp2p/p2p/transport/transport.dart' as libp2p_trans;
 import 'package:ipfs_libp2p/p2p/transport/listener.dart' as libp2p_listener;
-import 'package:ipfs_libp2p/p2p/transport/transport_config.dart' as libp2p_config;
+import 'package:ipfs_libp2p/p2p/transport/transport_config.dart'
+    as libp2p_config;
 import 'peer_connection.dart';
 import 'webrtc_transport.dart';
 import 'data_channel_stream.dart';
@@ -35,7 +36,7 @@ class WebRTCDirectTransport implements libp2p_trans.Transport {
     final peerId = libp2p.PeerId.fromString(peerIdStr);
 
     final pc = createPeerConnection(['stun:stun.l.google.com:19302']);
-    
+
     // Create offer
     final offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
@@ -43,7 +44,7 @@ class WebRTCDirectTransport implements libp2p_trans.Transport {
     // Exchange SDP via HTTP POST to the server's UDP-over-HTTP port or dedicated endpoint
     final url = Uri.parse('http://$ip:$port/libp2p-webrtc');
     final response = await http.post(url, body: offer.sdp);
-    
+
     if (response.statusCode != 200) {
       throw Exception('Failed to exchange SDP: ${response.statusCode}');
     }
@@ -55,7 +56,15 @@ class WebRTCDirectTransport implements libp2p_trans.Transport {
 
     pc.onDataChannel.listen((DataChannelStream channel) async {
       if (!completer.isCompleted) {
-        completer.complete(WebRTCConnection(pc, channel, addr, await libp2p.PeerId.random(), peerId));
+        completer.complete(
+          WebRTCConnection(
+            pc,
+            channel,
+            addr,
+            await libp2p.PeerId.random(),
+            peerId,
+          ),
+        );
       }
     });
 
@@ -65,7 +74,9 @@ class WebRTCDirectTransport implements libp2p_trans.Transport {
 
   @override
   Future<libp2p_listener.Listener> listen(libp2p.MultiAddr addr) async {
-    throw UnimplementedError('WebRTCDirect listener only supported on native platforms');
+    throw UnimplementedError(
+      'WebRTCDirect listener only supported on native platforms',
+    );
   }
 
   @override

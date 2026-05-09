@@ -1,7 +1,7 @@
 import 'package:dart_ipfs/dart_ipfs.dart';
 
 /// Base class for all IPFS plugins.
-/// 
+///
 /// Plugins can extend the functionality of the IPFS node by:
 /// - Registering new protocol handlers.
 /// - Adding custom configuration.

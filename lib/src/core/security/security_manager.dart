@@ -182,11 +182,15 @@ class SecurityManager implements ISecurityManager {
     }
 
     if (!await getPlatform().exists(_config.tlsCertificatePath!)) {
-      throw StateError('TLS certificate file not found: ${_config.tlsCertificatePath}');
+      throw StateError(
+        'TLS certificate file not found: ${_config.tlsCertificatePath}',
+      );
     }
 
     if (!await getPlatform().exists(_config.tlsPrivateKeyPath!)) {
-      throw StateError('TLS private key file not found: ${_config.tlsPrivateKeyPath}');
+      throw StateError(
+        'TLS private key file not found: ${_config.tlsPrivateKeyPath}',
+      );
     }
 
     _logger.debug(
