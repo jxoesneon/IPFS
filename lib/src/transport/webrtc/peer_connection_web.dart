@@ -90,7 +90,7 @@ class PeerConnectionWeb implements PeerConnection {
   Future<void> setRemoteDescription(String type, String sdp) async {
     await _pc
         .setRemoteDescription(
-          web.RTCSessionDescriptionInit(type: type as web.RTCSdpType, sdp: sdp),
+          web.RTCSessionDescriptionInit(type: type, sdp: sdp),
         )
         .toDart;
   }
