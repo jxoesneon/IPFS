@@ -1,13 +1,15 @@
 import 'dart:async';
+
 import 'package:http/http.dart' as http;
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
-import 'package:ipfs_libp2p/p2p/transport/transport.dart' as libp2p_trans;
 import 'package:ipfs_libp2p/p2p/transport/listener.dart' as libp2p_listener;
+import 'package:ipfs_libp2p/p2p/transport/transport.dart' as libp2p_trans;
 import 'package:ipfs_libp2p/p2p/transport/transport_config.dart'
     as libp2p_config;
+
+import 'data_channel_stream.dart';
 import 'peer_connection_web.dart';
 import 'webrtc_transport.dart';
-import 'data_channel_stream.dart';
 
 /// WebRTC Direct transport implementation for libp2p.
 class WebRTCDirectTransport implements libp2p_trans.Transport {
