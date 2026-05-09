@@ -143,8 +143,7 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
         .toDart;
     (reader as web.ReadableStreamDefaultReader).releaseLock();
 
-    if (result == null || result.done) return Uint8List(0);
-    final value = result.value as JSArrayBuffer;
+    final value = result!.value as JSArrayBuffer;
     return value.toDart.asUint8List();
   }
 
