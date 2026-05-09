@@ -20,7 +20,8 @@ class WebRTCTransport implements libp2p_trans.Transport {
   libp2p.Host? host;
 
   @override
-  libp2p_config.TransportConfig get config => libp2p_config.TransportConfig();
+  libp2p_config.TransportConfig get config =>
+      const libp2p_config.TransportConfig();
 
   @override
   bool canDial(libp2p.MultiAddr addr) {
