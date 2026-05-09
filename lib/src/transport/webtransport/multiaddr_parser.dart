@@ -66,10 +66,7 @@ class WebTransportMultiaddrParser {
         } catch (_) {
           // If multihash decode fails, just store the bytes as value
           certHashes.add(
-            WebTransportCertHash(
-              algorithm: 'sha-256',
-              value: mhBytes,
-            ),
+            WebTransportCertHash(algorithm: 'sha-256', value: mhBytes),
           );
         }
       }
