@@ -73,7 +73,7 @@ class WebTransportConnectionWeb implements libp2p.Conn {
 
   @override
   libp2p.MultiAddr get localMultiaddr =>
-      libp2p.MultiAddr('/ip4/127.0.0.1/udp/0/quic-v1/webtransport');
+      const libp2p.MultiAddr('/ip4/127.0.0.1/udp/0/quic-v1/webtransport');
 
   @override
   libp2p.MultiAddr get remoteMultiaddr => _remoteAddr;
