@@ -81,10 +81,7 @@ class WebTransportConnectionWeb implements libp2p.Conn {
   @override
   Future<libp2p.P2PStream<Uint8List>> newStream(libp2p.Context context) async {
     final webStream = await _transport.createBidirectionalStream().toDart;
-    return WebTransportStreamWeb(
-      this,
-      webStream as web.WebTransportBidirectionalStream,
-    );
+    return WebTransportStreamWeb(this, webStream);
   }
 
   @override
@@ -125,36 +122,38 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   WebTransportStreamWeb(this._conn, this._webStream);
 
   final WebTransportConnectionWeb _conn;
-  final web.WebTransportBidirectionalStream _webStream;
+  final JSObject _webStream;
   String? _proto;
 
   @override
   Future<void> write(Uint8List data) async {
-    final writer = (_webStream.writable as web.WritableStream).getWriter();
-    await (writer as web.WritableStreamDefaultWriter).write(data.toJS).toDart;
-    (writer as web.WritableStreamDefaultWriter).releaseLock();
+    final dynamic stream = _webStream;
+    final writer = stream.writable.getWriter();
+    await writer.write(data.toJS).toDart;
+    writer.releaseLock();
   }
 
   @override
   Future<Uint8List> read([int? len]) async {
-    final reader = (_webStream.readable as web.ReadableStream).getReader();
-    final result = await (reader as web.ReadableStreamDefaultReader)
-        .read()
-        .toDart;
-    (reader as web.ReadableStreamDefaultReader).releaseLock();
+    final dynamic stream = _webStream;
+    final reader = stream.readable.getReader();
+    final result = await reader.read().toDart;
+    reader.releaseLock();
 
-    final value = result!.value as JSArrayBuffer;
+    final value = result.value as JSArrayBuffer;
     return value.toDart.asUint8List();
   }
 
   @override
   Future<void> close() async {
-    await (_webStream.writable as web.WritableStream).close().toDart;
+    final dynamic stream = _webStream;
+    await stream.writable.close().toDart;
   }
 
   @override
   Future<void> reset() async {
-    await (_webStream.writable as web.WritableStream).abort().toDart;
+    final dynamic stream = _webStream;
+    await stream.writable.abort().toDart;
   }
 
   @override
