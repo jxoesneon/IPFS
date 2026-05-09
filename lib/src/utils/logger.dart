@@ -81,7 +81,7 @@ class Logger {
           if (record.stackTrace != null) {
             logMap['stackTrace'] = record.stackTrace.toString();
           }
-          message = 'JSON_LOG:' + jsonEncode(logMap);
+          message = 'JSON_LOG:${jsonEncode(logMap)}';
         } else {
           message =
               '$timestamp [${record.level.name}] [${record.loggerName}] '

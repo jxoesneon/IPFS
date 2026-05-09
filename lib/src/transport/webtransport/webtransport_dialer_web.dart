@@ -82,7 +82,10 @@ class WebTransportConnectionWeb implements libp2p.Conn {
   @override
   Future<libp2p.P2PStream<Uint8List>> newStream(libp2p.Context context) async {
     final webStream = await _transport.createBidirectionalStream().toDart;
-    return WebTransportStreamWeb(this, webStream as web.WebTransportBidirectionalStream);
+    return WebTransportStreamWeb(
+      this,
+      webStream as web.WebTransportBidirectionalStream,
+    );
   }
 
   @override
@@ -136,7 +139,8 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   @override
   Future<Uint8List> read([int? len]) async {
     final reader = (_webStream.readable as web.ReadableStream).getReader();
-    final result = await (reader as web.ReadableStreamDefaultReader).read().toDart;
+    final result =
+        await (reader as web.ReadableStreamDefaultReader).read().toDart;
     (reader as web.ReadableStreamDefaultReader).releaseLock();
 
     if (result == null || result.done) return Uint8List(0);
@@ -177,10 +181,10 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
     await close();
   }
 
-  @override
+  /// Gets the stream.
   Stream<Uint8List> get stream => throw UnimplementedError();
 
-  @override
+  /// Flushes the stream.
   Future<void> flush() async {}
 
   @override

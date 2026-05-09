@@ -19,7 +19,7 @@ class PeerConnectionWeb implements PeerConnection {
                     return web.RTCIceServer(urls: s.toJS);
                   })
                   .toList()
-                  .toJS as JSArray<web.RTCIceServer>,
+                  .toJS,
         ),
       ) {
     _pc.onicecandidate =
