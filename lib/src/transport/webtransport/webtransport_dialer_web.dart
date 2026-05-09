@@ -33,7 +33,7 @@ class WebTransportDialerWeb implements WebTransportDialer {
                 return hash;
               })
               .toList()
-              .toJS as JSArray<web.WebTransportHash>,
+              .toJS,
     );
 
     final transport = web.WebTransport(url, options);

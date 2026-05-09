@@ -37,7 +37,7 @@ class WebRTCDirectTransport implements libp2p_trans.Transport {
     final peerIdStr = parts.last;
     final peerId = libp2p.PeerId.fromString(peerIdStr);
 
-    final pc = createPC(['stun:stun.l.google.com:19302']);
+    final pc = createPC(const ['stun:stun.l.google.com:19302']);
 
     // Create offer
     final offer = await pc.createOffer();
@@ -77,12 +77,11 @@ class WebRTCDirectTransport implements libp2p_trans.Transport {
   @override
   Future<libp2p_listener.Listener> listen(libp2p.MultiAddr addr) async {
     throw UnimplementedError(
-      'WebRTCDirect listener only supported on native platforms',
-    );
+        'WebRTCDirect listener only supported on native platforms');
   }
 
   @override
-  List<String> get protocols => ['/webrtc-direct'];
+  List<String> get protocols => const ['/webrtc-direct'];
 
   @override
   Future<void> dispose() async {}

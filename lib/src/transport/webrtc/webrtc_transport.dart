@@ -11,11 +11,11 @@ import 'data_channel_stream.dart';
 
 /// WebRTC transport implementation for libp2p.
 class WebRTCTransport implements libp2p_trans.Transport {
-  /// The libp2p host associated with this transport.
-  libp2p.Host? host;
-
   /// Creates a new [WebRTCTransport].
   WebRTCTransport({this.host});
+
+  /// The libp2p host associated with this transport.
+  libp2p.Host? host;
 
   @override
   libp2p_config.TransportConfig get config => libp2p_config.TransportConfig();
@@ -64,7 +64,7 @@ class WebRTCTransport implements libp2p_trans.Transport {
     signaling.handleStream(signalingStream as libp2p.P2PStream<Uint8List>);
 
     // 3. Setup WebRTC PeerConnection
-    final pc = createPeerConnection(['stun:stun.l.google.com:19302']);
+    final pc = createPeerConnection(const ['stun:stun.l.google.com:19302']);
 
     final completer = Completer<libp2p.Conn>();
 
@@ -116,7 +116,7 @@ class WebRTCTransport implements libp2p_trans.Transport {
   }
 
   @override
-  List<String> get protocols => ['/webrtc'];
+  List<String> get protocols => const ['/webrtc'];
 
   @override
   Future<void> dispose() async {
@@ -126,13 +126,6 @@ class WebRTCTransport implements libp2p_trans.Transport {
 
 /// WebRTC connection implementation for libp2p.
 class WebRTCConnection implements libp2p.Conn {
-  final PeerConnection _pc;
-  // ignore: unused_field
-  final DataChannelStream _baseChannel;
-  final libp2p.MultiAddr _remoteAddr;
-  final libp2p.PeerId _localPeer;
-  final libp2p.PeerId _remotePeer;
-
   /// Creates a new [WebRTCConnection].
   WebRTCConnection(
     this._pc,
@@ -141,6 +134,13 @@ class WebRTCConnection implements libp2p.Conn {
     this._localPeer,
     this._remotePeer,
   );
+
+  final PeerConnection _pc;
+  // ignore: unused_field
+  final DataChannelStream _baseChannel;
+  final libp2p.MultiAddr _remoteAddr;
+  final libp2p.PeerId _localPeer;
+  final libp2p.PeerId _remotePeer;
 
   @override
   libp2p.PeerId get localPeer => _localPeer;
@@ -195,11 +195,6 @@ class WebRTCConnection implements libp2p.Conn {
 
 /// WebRTC listener implementation for libp2p.
 class WebRTCListener implements libp2p_listener.Listener {
-  final libp2p.MultiAddr _addr;
-  final libp2p.Host? _host;
-  final StreamController<libp2p.TransportConn> _connController =
-      StreamController.broadcast();
-
   /// Creates a new [WebRTCListener].
   WebRTCListener(this._addr, this._host) {
     final currentHost = _host;
@@ -210,7 +205,7 @@ class WebRTCListener implements libp2p_listener.Listener {
           final signaling = SignalingProtocol();
           signaling.handleStream(stream as libp2p.P2PStream<Uint8List>);
 
-          final pc = createPeerConnection(['stun:stun.l.google.com:19302']);
+          final pc = createPeerConnection(const ['stun:stun.l.google.com:19302']);
 
           pc.onIceCandidate.listen((candidate) {
             SignalingProtocol.sendMessage(
@@ -254,6 +249,11 @@ class WebRTCListener implements libp2p_listener.Listener {
       );
     }
   }
+
+  final libp2p.MultiAddr _addr;
+  final libp2p.Host? _host;
+  final StreamController<libp2p.TransportConn> _connController =
+      StreamController.broadcast();
 
   @override
   Future<void> close() async {

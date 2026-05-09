@@ -5,15 +5,15 @@ import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 
 /// Base class for WebRTC DataChannel-backed streams.
 abstract class DataChannelStream implements libp2p.P2PStream<Uint8List> {
+  /// Creates a new [DataChannelStream].
+  DataChannelStream({bool incoming = false}) : _isIncoming = incoming;
+
   final ListQueue<int> _readBuffer = ListQueue<int>();
   Completer<void>? _readCompleter;
   bool _isClosed = false;
   String? _protocol;
   // ignore: unused_field
   final bool _isIncoming;
-
-  /// Creates a new [DataChannelStream].
-  DataChannelStream({bool incoming = false}) : _isIncoming = incoming;
 
   @override
   libp2p.P2PStream<Uint8List> get incoming => this;

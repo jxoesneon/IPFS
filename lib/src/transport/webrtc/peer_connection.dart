@@ -42,18 +42,21 @@ abstract class PeerConnection {
 
 /// Initialization parameters for an [RTCSessionDescription].
 class RTCSessionDescriptionInit {
+  /// Creates a new [RTCSessionDescriptionInit].
+  RTCSessionDescriptionInit(this.type, this.sdp);
+
   /// The type of the session description (offer, answer, etc.).
   final String type;
 
   /// The SDP string.
   final String sdp;
-
-  /// Creates a new [RTCSessionDescriptionInit].
-  RTCSessionDescriptionInit(this.type, this.sdp);
 }
 
 /// Initialization parameters for an [RTCIceCandidate].
 class RTCIceCandidateInit {
+  /// Creates a new [RTCIceCandidateInit].
+  RTCIceCandidateInit(this.candidate, this.sdpMid, this.sdpMLineIndex);
+
   /// The ICE candidate string.
   final String candidate;
 
@@ -62,9 +65,6 @@ class RTCIceCandidateInit {
 
   /// The SDP m-line index.
   final int? sdpMLineIndex;
-
-  /// Creates a new [RTCIceCandidateInit].
-  RTCIceCandidateInit(this.candidate, this.sdpMid, this.sdpMLineIndex);
 
   /// Converts this candidate to a JSON-compatible map.
   Map<String, dynamic> toJson() => {

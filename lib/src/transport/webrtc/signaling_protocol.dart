@@ -13,19 +13,19 @@ enum SignalingMessageType {
   answer,
 
   /// ICE candidate.
-  candidate,
+  candidate
 }
 
 /// A message exchanged over the WebRTC signaling protocol.
 class SignalingMessage {
+  /// Creates a new [SignalingMessage].
+  SignalingMessage(this.type, this.data);
+
   /// The type of message.
   final SignalingMessageType type;
 
   /// The message data (SDP or ICE candidate string).
   final String data;
-
-  /// Creates a new [SignalingMessage].
-  SignalingMessage(this.type, this.data);
 
   /// Encodes this message into a protobuf-compatible byte array.
   Uint8List encode() {
@@ -110,13 +110,16 @@ class SignalingMessage {
 }
 
 class _VarintResult {
+  _VarintResult(this.value, this.newOffset);
   final int value;
   final int newOffset;
-  _VarintResult(this.value, this.newOffset);
 }
 
 /// Implementation of the WebRTC signaling protocol for libp2p.
 class SignalingProtocol {
+  /// Creates a new [SignalingProtocol] handler.
+  SignalingProtocol();
+
   /// The protocol identifier.
   static const String id = '/libp2p/webrtc/signaling/0.0.1';
 
@@ -132,9 +135,6 @@ class SignalingProtocol {
 
   final StreamController<SignalingMessage> _messageController =
       StreamController<SignalingMessage>.broadcast();
-
-  /// Creates a new [SignalingProtocol] handler.
-  SignalingProtocol();
 
   /// Stream of signaling messages received.
   Stream<SignalingMessage> get messages => _messageController.stream;
