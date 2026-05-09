@@ -77,4 +77,18 @@ class SecurityManagerWeb implements ISecurityManager {
   Future<void> stop() async {
     lockKeystore();
   }
+
+  @override
+  bool shouldRateLimit(String clientId) => false;
+
+  @override
+  bool trackAuthAttempt(String clientId, bool success) => true;
+
+  @override
+  Future<Map<String, dynamic>> getStatus() async {
+    return {
+      'keystore_unlocked': isKeystoreUnlocked,
+      'platform': 'web',
+    };
+  }
 }

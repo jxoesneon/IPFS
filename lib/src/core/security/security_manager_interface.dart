@@ -43,4 +43,13 @@ abstract class ISecurityManager implements ILifecycle {
   ///
   /// Returns `null` if the key is not found.
   Uint8List? getSecurePublicKey(String keyName);
+
+  /// Checks if a client should be rate limited.
+  bool shouldRateLimit(String clientId);
+
+  /// Tracks an authentication attempt and returns true if allowed.
+  bool trackAuthAttempt(String clientId, bool success);
+
+  /// Gets the security status of the node.
+  Future<Map<String, dynamic>> getStatus();
 }

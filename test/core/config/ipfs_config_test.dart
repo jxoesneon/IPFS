@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -52,11 +52,11 @@ network:
   listenAddresses:
     - /ip4/127.0.0.1/tcp/4001
 ''';
-      final file = File('test_config.yaml');
-      await file.writeAsString(yamlContent);
+      const testFilePath = 'test_config.yaml';
+      await getPlatform().writeString(testFilePath, yamlContent);
 
       try {
-        final config = await IPFSConfig.fromFile('test_config.yaml');
+        final config = await IPFSConfig.fromFile(testFilePath);
         expect(config.offline, isTrue);
         expect(config.logLevel, equals('warning'));
         expect(
@@ -64,7 +64,9 @@ network:
           contains('/ip4/127.0.0.1/tcp/4001'),
         );
       } finally {
-        if (await file.exists()) await file.delete();
+        if (await getPlatform().exists(testFilePath)) {
+          await getPlatform().delete(testFilePath);
+        }
       }
     });
 

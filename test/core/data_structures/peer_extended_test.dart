@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
@@ -12,7 +11,7 @@ void main() {
 
     test('FullAddress toString', () {
       final addr = FullAddress(
-        address: InternetAddress('127.0.0.1'),
+        address: '127.0.0.1',
         port: 4001,
       );
       expect(addr.toString(), equals('/ip4/127.0.0.1/tcp/4001'));
@@ -30,7 +29,7 @@ void main() {
       final peer = Peer(
         id: PeerId(value: peerIdBytes),
         addresses: [
-          FullAddress(address: InternetAddress('127.0.0.1'), port: 4001),
+          FullAddress(address: '127.0.0.1', port: 4001),
         ],
         latency: 50,
         agentVersion: 'ipfs/1.0.0',
@@ -62,7 +61,7 @@ void main() {
     test('parseMultiaddrString IPv6', () {
       final addr = parseMultiaddrString('/ip6/::1/tcp/4001');
       expect(addr, isNotNull);
-      expect(addr!.address.type, equals(InternetAddressType.IPv6));
+      expect(addr!.address, equals('::1'));
       expect(addr.port, equals(4001));
     });
 
@@ -82,7 +81,7 @@ void main() {
 
     test('multiaddrToBytes and multiaddrFromBytes IPv4', () {
       final addr = FullAddress(
-        address: InternetAddress('127.0.0.1'),
+        address: '127.0.0.1',
         port: 4001,
       );
       final bytes = multiaddrToBytes(addr);
@@ -91,19 +90,19 @@ void main() {
 
       final decoded = multiaddrFromBytes(bytes);
       expect(decoded, isNotNull);
-      expect(decoded!.address.address, equals('127.0.0.1'));
+      expect(decoded!.address, equals('127.0.0.1'));
       expect(decoded.port, equals(4001));
     });
 
     test('multiaddrToBytes and multiaddrFromBytes IPv6', () {
-      final addr = FullAddress(address: InternetAddress('::1'), port: 4001);
+      final addr = FullAddress(address: '::1', port: 4001);
       final bytes = multiaddrToBytes(addr);
       expect(bytes, isNotEmpty);
       expect(bytes[0], equals(41)); // ip6
 
       final decoded = multiaddrFromBytes(bytes);
       expect(decoded, isNotNull);
-      expect(decoded!.address.type, equals(InternetAddressType.IPv6));
+      expect(decoded!.address, equals('::1'));
       expect(decoded.port, equals(4001));
     });
 

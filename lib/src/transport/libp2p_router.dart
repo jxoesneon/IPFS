@@ -11,6 +11,10 @@ import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
 import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
 import 'package:ipfs_libp2p/p2p/transport/tcp_transport.dart';
+import 'package:dart_ipfs/src/transport/webrtc/webrtc_transport.dart';
+import 'package:dart_ipfs/src/transport/webrtc/webrtc_direct_transport.dart';
+import 'package:dart_ipfs/src/transport/webtransport/webtransport_transport.dart';
+import 'package:dart_ipfs/src/transport/webrtc/signaling_protocol.dart';
 
 /// Native libp2p router implementation.
 ///
@@ -146,15 +150,34 @@ class Libp2pRouter implements RouterInterface {
         }
       }
 
-      final listenAddr = libp2p.MultiAddr('/ip4/0.0.0.0/tcp/$port');
-      final resourceManager = ResourceManagerImpl(limiter: FixedLimiter());
+    final listenAddr = libp2p.MultiAddr('/ip4/0.0.0.0/tcp/$port');
+    final resourceManager = ResourceManagerImpl(limiter: FixedLimiter());
 
-      _host = await config.Libp2p.new_([
-        ..._buildTransports(resourceManager),
-        config.Libp2p.listenAddrs([listenAddr]),
-        config.Libp2p.identity(_keyPair!),
-        config.Libp2p.userAgent('dart_ipfs/2.0.0'),
-      ]);
+    final webrtcTransport = WebRTCTransport();
+    final webrtcDirectTransport = WebRTCDirectTransport();
+    final webTransportTransport = WebTransportTransport();
+
+    _host = await config.Libp2p.new_([
+      config.Libp2p.transport(TCPTransport(resourceManager: resourceManager)),
+      if (_config.network.enableWebTransport)
+        config.Libp2p.transport(webTransportTransport),
+      if (_config.network.enableWebRtc) ...[
+        config.Libp2p.transport(webrtcTransport),
+        config.Libp2p.transport(webrtcDirectTransport),
+      ],
+      config.Libp2p.listenAddrs([listenAddr]),
+      config.Libp2p.identity(_keyPair!),
+      config.Libp2p.userAgent('dart_ipfs/2.0.0'),
+    ]);
+
+    if (_config.network.enableWebRtc) {
+      webrtcTransport.host = _host;
+    }
+
+      // Register WebRTC signaling protocol
+      if (_config.network.enableWebRtc) {
+        SignalingProtocol.register(this);
+      }
 
       await _host!.start();
 
@@ -582,28 +605,6 @@ class Libp2pRouter implements RouterInterface {
       shift += 7;
     }
     return result;
-  }
-
-  /// Builds a list of libp2p transports based on configuration.
-  ///
-  /// Currently supports TCP. Phase 1 will expand this to include
-  /// WebTransport and WebRTC.
-  List<config.Option> _buildTransports(libp2p.ResourceManager resourceManager) {
-    final transports = <config.Option>[];
-
-    // Always include TCP for now (standard IPFS / Amino compatibility)
-    transports.add(
-      config.Libp2p.transport(TCPTransport(resourceManager: resourceManager)),
-    );
-
-    // TODO: Add WebTransport and WebRTC based on config (Phase 1)
-    /*
-    if (_config.network.useWebTransport) {
-      transports.add(config.Libp2p.transport(WebTransport()));
-    }
-    */
-
-    return transports;
   }
 }
 

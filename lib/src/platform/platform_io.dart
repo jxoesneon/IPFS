@@ -15,6 +15,12 @@ class IpfsPlatformIO implements IpfsPlatform {
   String get pathSeparator => Platform.pathSeparator;
 
   @override
+  String get operatingSystem => Platform.operatingSystem;
+
+  @override
+  String get version => Platform.version;
+
+  @override
   Future<void> writeBytes(String path, Uint8List bytes) async {
     final file = File(path);
     await file.parent.create(recursive: true);
@@ -22,10 +28,24 @@ class IpfsPlatformIO implements IpfsPlatform {
   }
 
   @override
+  Future<void> writeString(String path, String content) async {
+    final file = File(path);
+    await file.parent.create(recursive: true);
+    await file.writeAsString(content, flush: true);
+  }
+
+  @override
   Future<Uint8List?> readBytes(String path) async {
     final file = File(path);
     if (!await file.exists()) return null;
     return await file.readAsBytes();
+  }
+
+  @override
+  Future<String?> readString(String path) async {
+    final file = File(path);
+    if (!await file.exists()) return null;
+    return await file.readAsString();
   }
 
   @override
@@ -49,12 +69,38 @@ class IpfsPlatformIO implements IpfsPlatform {
   }
 
   @override
+  Future<String> createTempDirectory([String? prefix]) async {
+    final dir = await Directory.systemTemp.createTemp(prefix ?? 'ipfs_');
+    return dir.path;
+  }
+
+  @override
   Future<List<String>> listDirectory(String path) async {
     final dir = Directory(path);
     if (!await dir.exists()) return [];
 
     final entities = await dir.list().toList();
     return entities.map((e) => e.path.replaceAll('\\', '/')).toList();
+  }
+
+  @override
+  Future<int> getLength(String path) async {
+    return await File(path).length();
+  }
+
+  @override
+  Future<String?> promptPassword(String message) async {
+    if (!stdin.hasTerminal) return null;
+    stdout.write(message);
+    final previousEcho = stdin.echoMode;
+    stdin.echoMode = false;
+    try {
+      final input = stdin.readLineSync();
+      stdout.writeln();
+      return input;
+    } finally {
+      stdin.echoMode = previousEcho;
+    }
   }
 }
 

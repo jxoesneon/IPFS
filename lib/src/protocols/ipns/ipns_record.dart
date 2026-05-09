@@ -65,6 +65,26 @@ class IPNSRecord {
   /// Whether this record has been signed.
   bool get isSigned => _signature != null;
 
+  /// Whether this record has expired.
+  bool get isExpired => DateTime.now().isAfter(validity);
+
+  /// Creates a record for internal use (e.g. caching).
+  factory IPNSRecord.internal({
+    required Uint8List value,
+    required DateTime validity,
+    int sequence = 0,
+    Duration ttl = const Duration(hours: 1),
+    Uint8List? publicKey,
+  }) {
+    return IPNSRecord._(
+      value: value,
+      validity: validity,
+      sequence: sequence,
+      ttl: ttl,
+      publicKey: publicKey ?? Uint8List(0),
+    );
+  }
+
   /// Creates and signs a new IPNS record.
   ///
   /// [value] - The CID this name points to

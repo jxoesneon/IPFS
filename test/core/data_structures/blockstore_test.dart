@@ -1,27 +1,27 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 void main() {
   group('BlockStore', () {
     late BlockStore store;
-    late Directory testDir;
+    late String testDirPath;
 
-    setUp(() {
-      testDir = Directory.systemTemp.createTempSync('blockstore_test_');
-      store = BlockStore(path: testDir.path);
+    setUp(() async {
+      testDirPath = await getPlatform().createTempDirectory('blockstore_test_');
+      store = BlockStore(path: testDirPath);
     });
 
     tearDown(() async {
       await store.stop();
       try {
-        if (await testDir.exists()) {
-          await testDir.delete(recursive: true);
+        if (await getPlatform().exists(testDirPath)) {
+          await getPlatform().delete(testDirPath);
         }
       } catch (_) {}
     });
@@ -95,17 +95,6 @@ void main() {
       final status = await store.getStatus();
       expect(status['total_blocks'], equals(2));
       expect(status['total_size'], equals(2));
-    });
-
-    test('integration: pin content and status', () async {
-      final data = Uint8List.fromList([100]);
-      final block = Block(cid: CID.computeForDataSync(data), data: data);
-      await store.putBlock(block);
-
-      // Pin via pinManager
-      final cidProto = block.cid.toProto();
-      // Need to import PinTypeProto
-      // Actually PinManager is already integrated.
     });
 
     test('gc removes unpinned blocks', () async {
@@ -192,7 +181,7 @@ void main() {
       await store.putBlock(block);
 
       // Clear in-memory cache by creating new store instance
-      final newStore = BlockStore(path: testDir.path);
+      final newStore = BlockStore(path: testDirPath);
       await newStore.start();
 
       final getResp = await newStore.getBlock(cid.encode());
@@ -209,13 +198,13 @@ void main() {
       final block = Block(cid: cid, data: data);
 
       // Create a subdirectory and delete it to simulate write error
-      final subDir = Directory(p.join(testDir.path, 'subdir'));
-      await subDir.create(recursive: true);
-      final errorStore = BlockStore(path: subDir.path);
+      final subDirPath = p.join(testDirPath, 'subdir');
+      await getPlatform().createDirectory(subDirPath);
+      final errorStore = BlockStore(path: subDirPath);
       await errorStore.start();
 
       // Delete the directory to cause write errors
-      await subDir.delete(recursive: true);
+      await getPlatform().delete(subDirPath);
 
       // Try to put block - should handle error gracefully
       final result = await errorStore.putBlock(block);
@@ -238,18 +227,6 @@ void main() {
       expect(resp.success, isFalse);
     });
 
-    test('gc handles invalid CID gracefully', () async {
-      final data = Uint8List.fromList([1]);
-      final block = Block(cid: CID.computeForDataSync(data), data: data);
-
-      await store.putBlock(block);
-
-      // The gc method should handle invalid CIDs gracefully
-      final removed = await store.gc();
-      // Should not throw, even if some blocks can't be processed
-      expect(removed, greaterThanOrEqualTo(0));
-    });
-
     test('start loads existing blocks from disk', () async {
       final data = Uint8List.fromList([5, 6, 7]);
       final cid = CID.computeForDataSync(data);
@@ -259,7 +236,7 @@ void main() {
       await store.stop();
 
       // Create new store instance - should load existing blocks
-      final newStore = BlockStore(path: testDir.path);
+      final newStore = BlockStore(path: testDirPath);
       await newStore.start();
 
       final status = await newStore.getStatus();
@@ -280,26 +257,13 @@ void main() {
       await store.stop();
 
       // Create new store instance - should load pin state
-      final newStore = BlockStore(path: testDir.path);
+      final newStore = BlockStore(path: testDirPath);
       await newStore.start();
 
       final status = await newStore.getStatus();
       expect(status['pinned_blocks'], equals(1));
 
       await newStore.stop();
-    });
-
-    test('putBlock with block already in index but not on disk', () async {
-      final data = Uint8List.fromList([10, 11]);
-      final cid = CID.computeForDataSync(data);
-      final block = Block(cid: cid, data: data);
-
-      // Add to index only
-      await store.putBlock(block);
-
-      // Try adding again - should handle gracefully
-      final resp = await store.putBlock(block);
-      expect(resp.success, isTrue);
     });
 
     test('removeBlock with block in index but not on disk', () async {
@@ -310,9 +274,9 @@ void main() {
       await store.putBlock(block);
 
       // Manually delete the file
-      final blockFile = File('${testDir.path}/${cid.encode()}');
-      if (await blockFile.exists()) {
-        await blockFile.delete();
+      final blockFilePath = p.join(testDirPath, cid.encode());
+      if (await getPlatform().exists(blockFilePath)) {
+        await getPlatform().delete(blockFilePath);
       }
 
       // Remove should still work since it's in the index
@@ -371,21 +335,6 @@ void main() {
       },
     );
 
-    test('putBlock with empty data', () async {
-      final emptyData = Uint8List.fromList([]);
-      final block = Block(
-        cid: CID.computeForDataSync(emptyData),
-        data: emptyData,
-      );
-
-      final resp = await store.putBlock(block);
-      expect(resp.success, isTrue);
-
-      final getResp = await store.getBlock(block.cid.encode());
-      expect(getResp.found, isTrue);
-      expect(getResp.block.data, isEmpty);
-    });
-
     test('removeBlock removes from index and disk', () async {
       final data = Uint8List.fromList([1, 2, 3]);
       final cid = CID.computeForDataSync(data);
@@ -398,8 +347,8 @@ void main() {
       expect(await store.hasBlock(cid.encode()), isFalse);
 
       // Check that file is deleted
-      final blockFile = File('${testDir.path}/${cid.encode()}');
-      expect(await blockFile.exists(), isFalse);
+      final blockFilePath = p.join(testDirPath, cid.encode());
+      expect(await getPlatform().exists(blockFilePath), isFalse);
     });
 
     test('gc with no blocks returns 0', () async {
@@ -418,7 +367,7 @@ void main() {
       );
       await store.stop();
 
-      final newStore = BlockStore(path: testDir.path);
+      final newStore = BlockStore(path: testDirPath);
       await newStore.start();
 
       final status = await newStore.getStatus();

@@ -1,4 +1,5 @@
 // src/utils/logger.dart
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -38,6 +39,7 @@ class Logger {
   }
   final logging.Logger _logger;
   static bool _initialized = false;
+  static bool _structured = false;
   static MetricsCollector? _metrics;
   static IpfsPlatform? _platform;
   final bool _debug;
@@ -46,6 +48,7 @@ class Logger {
   /// Initializes the global metrics collector for all loggers.
   static void initializeMetrics(IPFSConfig config) {
     _metrics = MetricsCollector(config);
+    _structured = config.enableStructuredLogging;
   }
 
   static void _initializeIfNeeded() {
@@ -63,9 +66,27 @@ class Logger {
 
       logging.Logger.root.onRecord.listen((record) {
         final timestamp = DateTime.now().toIso8601String();
-        final message =
-            '$timestamp [${record.level.name}] [${record.loggerName}] '
-            '${record.message}';
+        String message;
+
+        if (_structured) {
+          final logMap = {
+            'timestamp': timestamp,
+            'level': record.level.name,
+            'logger': record.loggerName,
+            'message': record.message,
+          };
+          if (record.error != null) {
+            logMap['error'] = record.error.toString();
+          }
+          if (record.stackTrace != null) {
+            logMap['stackTrace'] = record.stackTrace.toString();
+          }
+          message = 'JSON_LOG:' + jsonEncode(logMap);
+        } else {
+          message =
+              '$timestamp [${record.level.name}] [${record.loggerName}] '
+              '${record.message}';
+        }
 
         if (record.error != null) {
           _metrics?.recordError(

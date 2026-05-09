@@ -1,4 +1,4 @@
-// test/transport/libp2p_transport_test.dart
+@TestOn("vm")
 import 'dart:io';
 import 'dart:typed_data';
 

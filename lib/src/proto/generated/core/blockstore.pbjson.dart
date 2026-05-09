@@ -15,6 +15,10 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
+import 'block.pbjson.dart' as $0;
+import 'cid.pbjson.dart' as $1;
+import 'package:protobuf/well_known_types/google/protobuf/empty.pbjson.dart' as $2;
+
 @$core.Deprecated('Use addBlockResponseDescriptor instead')
 const AddBlockResponse$json = {
   '1': 'AddBlockResponse',
@@ -63,3 +67,38 @@ const RemoveBlockResponse$json = {
 final $typed_data.Uint8List removeBlockResponseDescriptor = $convert.base64Decode(
     'ChNSZW1vdmVCbG9ja1Jlc3BvbnNlEhgKB3N1Y2Nlc3MYASABKAhSB3N1Y2Nlc3MSGAoHbWVzc2'
     'FnZRgCIAEoCVIHbWVzc2FnZQ==');
+
+const BlockStoreServiceBase$json = {
+  '1': 'BlockStoreService',
+  '2': [
+    {
+      '1': 'AddBlock',
+      '2': '.ipfs.core.data_structures.BlockProto',
+      '3': '.ipfs.core.data_structures.AddBlockResponse'
+    },
+    {
+      '1': 'GetBlock',
+      '2': '.ipfs.core.data_structures.IPFSCIDProto',
+      '3': '.ipfs.core.data_structures.GetBlockResponse'
+    },
+    {
+      '1': 'RemoveBlock',
+      '2': '.ipfs.core.data_structures.IPFSCIDProto',
+      '3': '.ipfs.core.data_structures.RemoveBlockResponse'
+    },
+    {
+      '1': 'GetAllBlocks',
+      '2': '.google.protobuf.Empty',
+      '3': '.ipfs.core.data_structures.BlockProto'
+    },
+  ],
+};
+
+const BlockStoreServiceBase$messageJson = {
+  '.ipfs.core.data_structures.BlockProto': $0.BlockProto$json,
+  '.ipfs.core.data_structures.AddBlockResponse': AddBlockResponse$json,
+  '.ipfs.core.data_structures.IPFSCIDProto': $1.IPFSCIDProto$json,
+  '.ipfs.core.data_structures.GetBlockResponse': GetBlockResponse$json,
+  '.ipfs.core.data_structures.RemoveBlockResponse': RemoveBlockResponse$json,
+  '.google.protobuf.Empty': $2.Empty$json,
+};

@@ -1,5 +1,8 @@
 // lib/src/services/gateway/gateway_server.dart
+import 'dart:convert';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/services/health_check_service.dart';
 import 'package:dart_ipfs/src/platform/http_server.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
@@ -16,6 +19,7 @@ class GatewayServer {
   /// Creates a new [GatewayServer] with the given configuration.
   GatewayServer({
     required this.blockStore,
+    this.node,
     this.address = 'localhost',
     this.port = 8080,
     this.corsOrigins = const [
@@ -28,11 +32,17 @@ class GatewayServer {
     HttpServerAdapter? httpAdapter,
   }) : httpAdapter = httpAdapter ?? createHttpServerAdapter() {
     _handler = GatewayHandler(blockStore, ipnsResolver: ipnsResolver);
+    if (node != null) {
+      _healthCheckService = HealthCheckService(node!);
+    }
     _setupRouter();
   }
 
   /// The block store used for content retrieval.
   final BlockStore blockStore;
+
+  /// The IPFS node (optional, for health checks).
+  final IPFSNode? node;
 
   /// The adapter for starting the HTTP server.
   final HttpServerAdapter httpAdapter;
@@ -60,6 +70,7 @@ class GatewayServer {
   IpfsHttpServerInstance? _server;
   late final GatewayHandler _handler;
   late final Router _router;
+  HealthCheckService? _healthCheckService;
 
   /// Tracks request counts per IP for rate limiting
   final Map<String, List<DateTime>> _requestLog = {};
@@ -92,7 +103,14 @@ class GatewayServer {
     });
 
     // Health check
-    _router.get('/health', (Request request) {
+    _router.get('/health', (Request request) async {
+      if (_healthCheckService != null) {
+        final status = await _healthCheckService!.checkHealth();
+        return Response.ok(
+          jsonEncode(status),
+          headers: {'Content-Type': 'application/json'},
+        );
+      }
       return Response.ok('OK');
     });
   }

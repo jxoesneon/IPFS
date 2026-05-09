@@ -1,25 +1,26 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/services/gateway/preview_cache_manager.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late Directory tempDir;
+  late String tempDirPath;
   late PreviewCacheManager cacheManager;
 
   setUp(() async {
-    tempDir = await Directory.systemTemp.createTemp('preview_cache_test_');
+    tempDirPath =
+        await getPlatform().createTempDirectory('preview_cache_test_');
     cacheManager = PreviewCacheManager(
-      cachePath: tempDir.path,
+      cachePath: tempDirPath,
       maxMemoryEntries: 10,
     );
   });
 
   tearDown(() async {
-    if (await tempDir.exists()) {
-      await tempDir.delete(recursive: true);
+    if (await getPlatform().exists(tempDirPath)) {
+      await getPlatform().delete(tempDirPath);
     }
   });
 

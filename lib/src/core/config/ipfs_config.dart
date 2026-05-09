@@ -1,19 +1,21 @@
 // src/core/config/ipfs_config.dart
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/dht_config.dart';
+import 'package:dart_ipfs/src/core/config/gateway_config.dart';
 import 'package:dart_ipfs/src/core/config/metrics_config.dart';
 import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:dart_ipfs/src/core/config/security_config.dart';
 import 'package:dart_ipfs/src/core/config/storage_config.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:yaml/yaml.dart';
 
 export 'package:dart_ipfs/src/core/config/dht_config.dart';
+export 'package:dart_ipfs/src/core/config/gateway_config.dart';
 export 'package:dart_ipfs/src/core/config/metrics_config.dart';
 export 'package:dart_ipfs/src/core/config/network_config.dart';
 export 'package:dart_ipfs/src/core/config/security_config.dart';
@@ -79,6 +81,7 @@ class IPFSConfig {
     DHTConfig? dht,
     StorageConfig? storage,
     SecurityConfig? security,
+    GatewayConfig? gateway,
     this.debug = true,
     this.verboseLogging = true,
     this.enablePubSub = true,
@@ -90,9 +93,12 @@ class IPFSConfig {
     this.enableGraphsync = true,
     this.enableMetrics = true,
     this.enableLogging = true,
+    this.enableStructuredLogging = false,
+    this.ipnsCacheSize = 1000,
     this.logLevel = 'info',
     this.enableQuotaManagement = true,
     this.defaultBandwidthQuota = 1048576,
+    this.maxConcurrentBitswapRequests = 10,
     this.datastorePath = './ipfs_data',
     this.keystorePath = './ipfs_keystore',
     this.blockStorePath = 'blocks',
@@ -110,6 +116,7 @@ class IPFSConfig {
        dht = dht ?? const DHTConfig(),
        storage = storage ?? const StorageConfig(),
        security = security ?? const SecurityConfig(),
+       gateway = gateway ?? const GatewayConfig(),
        nodeId = nodeId ?? _generateDefaultNodeId(),
        keystore = keystore ?? Keystore();
 
@@ -153,9 +160,12 @@ class IPFSConfig {
       enableGraphsync: json['enableGraphsync'] as bool? ?? true,
       enableMetrics: json['enableMetrics'] as bool? ?? true,
       enableLogging: json['enableLogging'] as bool? ?? true,
+      enableStructuredLogging: json['enableStructuredLogging'] as bool? ?? false,
       logLevel: json['logLevel'] as String? ?? 'info',
       enableQuotaManagement: json['enableQuotaManagement'] as bool? ?? true,
       defaultBandwidthQuota: json['defaultBandwidthQuota'] as int? ?? 1048576,
+      maxConcurrentBitswapRequests:
+          json['maxConcurrentBitswapRequests'] as int? ?? 10,
     );
   }
 
@@ -170,6 +180,9 @@ class IPFSConfig {
 
   /// Security and identity configuration.
   final SecurityConfig security;
+
+  /// HTTP Gateway configuration.
+  final GatewayConfig gateway;
 
   /// Enable debug mode.
   final bool debug;
@@ -204,6 +217,12 @@ class IPFSConfig {
   /// Enable system-wide logging.
   final bool enableLogging;
 
+  /// Enable structured (JSON) logging.
+  final bool enableStructuredLogging;
+
+  /// The size of the IPNS resolution cache.
+  final int ipnsCacheSize;
+
   /// The logging level (e.g., 'info', 'debug', 'error').
   final String logLevel;
 
@@ -212,6 +231,9 @@ class IPFSConfig {
 
   /// Default bandwidth quota in bytes.
   final int defaultBandwidthQuota;
+
+  /// Maximum concurrent bitswap requests.
+  final int maxConcurrentBitswapRequests;
 
   /// Path to the datastore.
   final String datastorePath;
@@ -263,8 +285,11 @@ class IPFSConfig {
 
   /// Loads configuration from a YAML file
   static Future<IPFSConfig> fromFile(String path) async {
-    final file = File(path);
-    final yaml = loadYaml(await file.readAsString());
+    final content = await getPlatform().readString(path);
+    if (content == null) {
+      throw Exception('Configuration file not found: $path');
+    }
+    final yaml = loadYaml(content);
     return IPFSConfig.fromJson(
       json.decode(json.encode(yaml)) as Map<String, dynamic>,
     );

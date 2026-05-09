@@ -1,25 +1,26 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/services/gateway/compressed_cache_store.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:test/test.dart';
 import 'package:path/path.dart' as path;
 
 void main() {
   group('CompressedCacheStore', () {
-    late Directory tempDir;
+    late String tempDirPath;
     late CompressedCacheStore store;
 
-    setUp(() {
-      tempDir = Directory.systemTemp.createTempSync('ipfs_cache_test_');
-      store = CompressedCacheStore(cachePath: tempDir.path);
+    setUp(() async {
+      tempDirPath =
+          await getPlatform().createTempDirectory('ipfs_cache_test_');
+      store = CompressedCacheStore(cachePath: tempDirPath);
     });
 
-    tearDown(() {
-      tempDir.deleteSync(recursive: true);
+    tearDown(() async {
+      await getPlatform().delete(tempDirPath);
     });
 
     final dummyCid = CID.computeForDataSync(
@@ -30,7 +31,7 @@ void main() {
       final data = Uint8List.fromList(utf8.encode('test data'));
       await store.storeCompressedData(dummyCid, 'text/plain', data);
 
-      final stats = store.getCompressionStats(tempDir.path);
+      final stats = await store.getCompressionStats(tempDirPath);
       expect(stats.fileCount, 1);
       expect(stats.totalOriginalSize, data.length);
     });
@@ -51,12 +52,14 @@ void main() {
       expect(result, isNull);
     });
 
-    test('initialization creates directory if missing', () {
-      final newDir = Directory(path.join(tempDir.path, 'new_cache'));
-      expect(newDir.existsSync(), isFalse);
+    test('initialization creates directory if missing', () async {
+      final newDirPath = path.join(tempDirPath, 'new_cache');
+      expect(await getPlatform().exists(newDirPath), isFalse);
 
-      CompressedCacheStore(cachePath: newDir.path);
-      expect(newDir.existsSync(), isTrue);
+      CompressedCacheStore(cachePath: newDirPath);
+      // Initialization is async, but we can check shortly after
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(await getPlatform().exists(newDirPath), isTrue);
     });
 
     test('CompressionStats calculates compression ratio', () {
@@ -76,11 +79,12 @@ void main() {
       expect(stats.compressionRatio, equals(0));
     });
 
-    test('getCompressionStats returns empty stats for empty directory', () {
-      final emptyDir = Directory(path.join(tempDir.path, 'empty'));
-      emptyDir.createSync();
+    test('getCompressionStats returns empty stats for empty directory',
+        () async {
+      final emptyDirPath = path.join(tempDirPath, 'empty');
+      await getPlatform().createDirectory(emptyDirPath);
 
-      final stats = store.getCompressionStats(emptyDir.path);
+      final stats = await store.getCompressionStats(emptyDirPath);
       expect(stats.fileCount, equals(0));
       expect(stats.totalOriginalSize, equals(0));
     });
@@ -113,23 +117,26 @@ void main() {
       final hash = sha256
           .convert(utf8.encode('${dummyCid.encode()}_text/plain'))
           .toString();
-      final cacheFile = File('${tempDir.path}/$hash.cache');
-      final metadataFile = File('${cacheFile.path}.meta');
-      await metadataFile.writeAsString('invalid json');
+      final cacheFilePath = path.join(tempDirPath, '$hash.cache');
+      final metadataFilePath = '$cacheFilePath.meta';
+      await getPlatform().writeString(metadataFilePath, 'invalid json');
 
       final result = await store.getCompressedData(dummyCid, 'text/plain');
       // Returns data with default compression handling
       expect(result, isNotNull);
     });
 
-    test('getCompressionStats handles corrupted metadata files', () {
-      final cacheFile = File('${tempDir.path}/test.cache');
-      cacheFile.writeAsBytesSync(Uint8List.fromList([1, 2, 3]));
+    test('getCompressionStats handles corrupted metadata files', () async {
+      final cacheFilePath = path.join(tempDirPath, 'test.cache');
+      await getPlatform().writeBytes(
+        cacheFilePath,
+        Uint8List.fromList([1, 2, 3]),
+      );
 
-      final metadataFile = File('${cacheFile.path}.meta');
-      metadataFile.writeAsStringSync('invalid json');
+      final metadataFilePath = '$cacheFilePath.meta';
+      await getPlatform().writeString(metadataFilePath, 'invalid json');
 
-      final stats = store.getCompressionStats(tempDir.path);
+      final stats = await store.getCompressionStats(tempDirPath);
       // Handles gracefully by treating as zero sizes
       expect(stats.fileCount, equals(1));
       expect(stats.totalOriginalSize, equals(0));
@@ -149,9 +156,9 @@ void main() {
       final hash = sha256
           .convert(utf8.encode('${dummyCid.encode()}_text/plain'))
           .toString();
-      final cacheFile = File('${tempDir.path}/$hash.cache');
-      final metadataFile = File('${cacheFile.path}.meta');
-      metadataFile.deleteSync();
+      final cacheFilePath = path.join(tempDirPath, '$hash.cache');
+      final metadataFilePath = '$cacheFilePath.meta';
+      await getPlatform().delete(metadataFilePath);
 
       final result = await store.getCompressedData(dummyCid, 'text/plain');
       // Should handle gracefully with default compression type

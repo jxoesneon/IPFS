@@ -1,12 +1,12 @@
 // lib/src/services/rpc/rpc_handlers.dart
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:http_parser/http_parser.dart'; // For MediaType
 import 'package:mime/mime.dart';
@@ -28,8 +28,8 @@ class RPCHandlers {
       'Version': 'dart_ipfs/0.1.0',
       'Commit': 'phase3-gateway-rpc',
       'Repo': '1',
-      'System': Platform.operatingSystem,
-      'Golang': 'Dart ${Platform.version}',
+      'System': getPlatform().operatingSystem,
+      'Golang': 'Dart ${getPlatform().version}',
     };
 
     return _jsonResponse(response);

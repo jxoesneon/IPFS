@@ -1,13 +1,12 @@
 // src/core/security/security_manager.dart
 import 'dart:async';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:dart_ipfs/src/core/config/security_config.dart';
-import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
 import 'package:dart_ipfs/src/core/crypto/encrypted_keystore.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
@@ -22,7 +21,6 @@ class SecurityManager implements ISecurityManager {
     _keystore = Keystore();
     _encryptedKeystore = EncryptedKeystore();
     _metrics = metricsCollector;
-    _initializeSecurity();
   }
   final SecurityConfig _config;
   late final Logger _logger;
@@ -40,11 +38,11 @@ class SecurityManager implements ISecurityManager {
   Timer? _keyRotationTimer;
   DateTime? _lastKeyRotation;
 
-  /// Whether the encrypted keystore is currently unlocked.
+  /// Returns the current status of the encrypted keystore.
   @override
   bool get isKeystoreUnlocked => _encryptedKeystore.isUnlocked;
 
-  /// Unlocks the encrypted keystore with a [password].
+  /// Returns a [Future] that completes when the encrypted keystore is unlocked with the given [password].
   @override
   Future<void> unlockKeystore(String password, {Uint8List? salt}) async {
     if (password.isEmpty) {
@@ -69,7 +67,7 @@ class SecurityManager implements ISecurityManager {
     _logger.info('Encrypted keystore locked');
   }
 
-  /// Gets an Ed25519 key pair from the encrypted keystore by [keyName].
+  /// Returns a [Future] that resolves to an Ed25519 [SimpleKeyPair] from the encrypted keystore by [keyName].
   @override
   Future<SimpleKeyPair> getSecureKey(String keyName) async {
     if (keyName.isEmpty) {
@@ -81,7 +79,7 @@ class SecurityManager implements ISecurityManager {
     return await _encryptedKeystore.getKey(keyName);
   }
 
-  /// Generates a new Ed25519 key and stores it encrypted.
+  /// Returns a [Future] that resolves to the public key bytes of a newly generated Ed25519 key stored encrypted.
   @override
   Future<Uint8List> generateSecureKey(String keyName, {String? label}) async {
     if (keyName.isEmpty) {
@@ -99,16 +97,16 @@ class SecurityManager implements ISecurityManager {
     return publicKey;
   }
 
-  /// Checks if a secure key with [keyName] exists.
+  /// Returns `true` if a secure key with [keyName] exists.
   @override
   bool hasSecureKey(String keyName) => _encryptedKeystore.hasKey(keyName);
 
-  /// Gets the public key for a stored secure key.
+  /// Returns the public key bytes for a stored secure key [keyName].
   @override
   Uint8List? getSecurePublicKey(String keyName) =>
       _encryptedKeystore.getPublicKey(keyName);
 
-  /// Migrates keys from plaintext Keystore to EncryptedKeystore.
+  /// Returns a [Future] that resolves to the number of keys successfully migrated from plaintext Keystore to EncryptedKeystore.
   Future<int> migrateKeysFromPlaintext() async {
     if (!_encryptedKeystore.isUnlocked) {
       throw StateError('Keystore must be unlocked before migration.');
@@ -152,12 +150,13 @@ class SecurityManager implements ISecurityManager {
     return migratedCount;
   }
 
-  void _initializeSecurity() {
+  /// Returns a [Future] that completes when security subsystems are initialized.
+  Future<void> _initializeSecurity() async {
     _logger.debug('Initializing SecurityManager');
 
     try {
       if (_config.enableTLS) {
-        _initializeTLS();
+        await _initializeTLS();
       }
 
       if (_config.enableKeyRotation) {
@@ -171,7 +170,8 @@ class SecurityManager implements ISecurityManager {
     }
   }
 
-  void _initializeTLS() {
+  /// Returns a [Future] that completes when TLS is initialized.
+  Future<void> _initializeTLS() async {
     _logger.verbose('Initializing TLS');
 
     if (_config.tlsCertificatePath == null ||
@@ -181,18 +181,12 @@ class SecurityManager implements ISecurityManager {
       );
     }
 
-    if (!File(_config.tlsCertificatePath!).existsSync()) {
-      throw FileSystemException(
-        'TLS certificate file not found',
-        _config.tlsCertificatePath,
-      );
+    if (!await getPlatform().exists(_config.tlsCertificatePath!)) {
+      throw StateError('TLS certificate file not found: ${_config.tlsCertificatePath}');
     }
 
-    if (!File(_config.tlsPrivateKeyPath!).existsSync()) {
-      throw FileSystemException(
-        'TLS private key file not found',
-        _config.tlsPrivateKeyPath,
-      );
+    if (!await getPlatform().exists(_config.tlsPrivateKeyPath!)) {
+      throw StateError('TLS private key file not found: ${_config.tlsPrivateKeyPath}');
     }
 
     _logger.debug(
@@ -200,132 +194,131 @@ class SecurityManager implements ISecurityManager {
     );
   }
 
+  /// Sets up periodic key rotation.
   void _setupKeyRotation() {
     _logger.verbose('Setting up key rotation');
 
     _keyRotationTimer?.cancel();
-    _keyRotationTimer = Timer.periodic(_config.keyRotationInterval, (_) {
-      unawaited(_rotateKeys());
+    _keyRotationTimer = Timer.periodic(_config.keyRotationInterval, (timer) {
+      _rotateKeys();
     });
-
-    _lastKeyRotation = DateTime.now();
   }
 
+  /// Returns a [Future] that completes when security keys are rotated.
   Future<void> _rotateKeys() async {
-    _logger.verbose('Performing key rotation');
-
-    try {
-      _lastKeyRotation = DateTime.now();
-      _recordSecurityMetric('key_rotation');
-      _logger.debug('Key rotation completed successfully');
-    } catch (e, stackTrace) {
-      _logger.error('Failed to rotate keys', e, stackTrace);
-    }
+    _logger.info('Rotating security keys');
+    // Implementation would involve generating new session keys
+    _lastKeyRotation = DateTime.now();
+    _recordSecurityMetric('key_rotation');
   }
 
-  /// Checks if a request from [clientId] should be rate limited.
+  @override
+  /// Returns `true` if the given [clientId] should be rate limited.
   bool shouldRateLimit(String clientId) {
     if (!_config.enableRateLimiting) return false;
 
     final now = DateTime.now();
+    final windowStart = now.subtract(const Duration(minutes: 1));
+
     _requestLog.putIfAbsent(clientId, () => []);
+    final clientLog = _requestLog[clientId]!;
 
-    _requestLog[clientId]!.removeWhere(
-      (time) => now.difference(time) > const Duration(minutes: 1),
-    );
+    // Clean up old entries
+    clientLog.removeWhere((dt) => dt.isBefore(windowStart));
 
-    _requestLog[clientId]!.add(now);
-
-    final shouldLimit =
-        _requestLog[clientId]!.length > _config.maxRequestsPerMinute;
-    if (shouldLimit) {
-      _recordSecurityMetric('rate_limit');
-    }
-    return shouldLimit;
-  }
-
-  /// Tracks authentication attempts for [clientId].
-  bool trackAuthAttempt(String clientId, bool success) {
-    if (success) {
-      _authAttempts.remove(clientId);
-      _recordSecurityMetric('auth_attempt', data: {'success': true});
+    if (clientLog.length >= _config.maxRequestsPerMinute) {
+      _recordSecurityMetric('rate_limit', data: {'clientId': clientId});
       return true;
     }
 
-    _authAttempts[clientId] = (_authAttempts[clientId] ?? 0) + 1;
-    _recordSecurityMetric('auth_attempt', data: {'success': false});
-    return _authAttempts[clientId]! < _config.maxAuthAttempts;
-  }
-
-  /// Retrieves a private key by its [keyName] from the keystore.
-  Future<IPFSPrivateKey?> getPrivateKey(String keyName) async {
-    if (keyName.isEmpty) return null;
-    _logger.debug('Retrieving private key for: $keyName');
-
-    try {
-      if (_encryptedKeystore.hasKey(keyName)) {
-        if (!_encryptedKeystore.isUnlocked) {
-          _logger.warning(
-            'Encrypted key requested but keystore is locked: $keyName',
-          );
-          return null;
-        }
-        final keyPair = await _encryptedKeystore.getKey(keyName);
-        final seed = await keyPair.extractSeedAndZero();
-        return IPFSPrivateKey.fromBytes(seed);
-      }
-
-      if (_keystore.hasKeyPair(keyName)) {
-        final keyPair = _keystore.getKeyPair(keyName);
-        return IPFSPrivateKey.fromString(keyPair.privateKey);
-      }
-
-      _logger.warning('Key not found in any keystore: $keyName');
-      return null;
-    } catch (e, stackTrace) {
-      _logger.error(
-        'Failed to retrieve private key for $keyName',
-        e,
-        stackTrace,
-      );
-      return null;
-    }
-  }
-
-  /// Gets the current security status and metrics.
-  Future<Map<String, dynamic>> getStatus() async {
-    return {
-      'tls_enabled': _config.enableTLS,
-      'key_rotation_enabled': _config.enableKeyRotation,
-      'last_key_rotation': _lastKeyRotation?.toIso8601String(),
-      'rate_limiting_enabled': _config.enableRateLimiting,
-      'active_rate_limits': _requestLog.length,
-      'blocked_clients': _authAttempts.entries
-          .where((e) => e.value >= _config.maxAuthAttempts)
-          .length,
-      'metrics': _securityMetrics,
-      'keystore_unlocked': isKeystoreUnlocked,
-    };
+    clientLog.add(now);
+    return false;
   }
 
   @override
+  /// Returns `true` if the authentication attempt for [clientId] is allowed to proceed.
+  bool trackAuthAttempt(String clientId, bool success) {
+    if (success) {
+      _authAttempts.remove(clientId);
+      return true;
+    }
+
+    final attempts = (_authAttempts[clientId] ?? 0) + 1;
+    _authAttempts[clientId] = attempts;
+
+    if (attempts >= _config.maxAuthAttempts) {
+      _recordSecurityMetric('auth_blocked', data: {'clientId': clientId});
+      return false;
+    }
+
+    return true;
+  }
+
+  @override
+  /// Returns a [Future] that completes when the [SecurityManager] has started.
   Future<void> start() async {
-    _logger.debug('Starting SecurityManager');
-    if (_config.enableKeyRotation && _keyRotationTimer == null) {
-      _setupKeyRotation();
-    }
+    _logger.info('Starting SecurityManager');
+    await _initializeSecurity();
   }
 
   @override
+  /// Returns a [Future] that completes when the [SecurityManager] has stopped.
   Future<void> stop() async {
-    _logger.debug('Stopping SecurityManager');
+    _logger.info('Stopping SecurityManager');
     _keyRotationTimer?.cancel();
     _keyRotationTimer = null;
     lockKeystore();
   }
 
-  void _recordSecurityMetric(String metricType, {Map<String, dynamic>? data}) {
-    // Record metrics
-    _metrics.recordProtocolMetrics('security', {'type': metricType, ...?data});
+  @override
+  /// Returns a [Future] that resolves to a status map for the [SecurityManager].
+  Future<Map<String, dynamic>> getStatus() async {
+    return {
+      'tls_enabled': _config.enableTLS,
+      'key_rotation_enabled': _config.enableKeyRotation,
+      'last_key_rotation': _lastKeyRotation?.toIso8601String(),
+      'keystore_unlocked': isKeystoreUnlocked,
+      'active_rate_limits': _requestLog.length,
+      'blocked_clients': _authAttempts.entries
+          .where((e) => e.value >= _config.maxAuthAttempts)
+          .length,
+      'metrics': _securityMetrics,
+    };
+  }
+
+  /// Records a security metric of the given [type].
+  void _recordSecurityMetric(String type, {Map<String, dynamic>? data}) {
+    final metric = {
+      'type': type,
+      'timestamp': DateTime.now().toIso8601String(),
+      if (data != null) ...data,
+    };
+
+    _securityMetrics[type] = metric;
+    _metrics.recordProtocolMetrics('security', metric);
+  }
+
+  /// Compatibility method for existing Keystore users.
+  ///
+  /// Returns a [Future] that resolves to the [IPFSPrivateKey] for the given [keyName], or `null` if not found.
+  Future<IPFSPrivateKey?> getPrivateKey(String keyName) async {
+    if (keyName.isEmpty) return null;
+
+    if (isKeystoreUnlocked && hasSecureKey(keyName)) {
+      try {
+        final keyPair = await getSecureKey(keyName);
+        final bytes = await keyPair.extractPrivateKeyBytes();
+        return IPFSPrivateKey.fromBytes(Uint8List.fromList(bytes));
+      } catch (e) {
+        _logger.error('Failed to extract private key for $keyName', e);
+      }
+    }
+
+    // Fallback to legacy keystore if it still has it
+    if (_keystore.hasKeyPair(keyName)) {
+      final pair = _keystore.getKeyPair(keyName);
+      return IPFSPrivateKey.fromString(pair.privateKey);
+    }
+    return null;
   }
 }

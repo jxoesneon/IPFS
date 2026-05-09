@@ -1,13 +1,13 @@
 // src/core/data_structures/pin_manager.dart
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cbor/cbor.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
@@ -25,10 +25,11 @@ class PinManager {
   /// Loads the pin state from a file.
   Future<void> load(String path) async {
     try {
-      final file = File(path);
-      if (!await file.exists()) return;
+      if (!await getPlatform().exists(path)) return;
 
-      final content = await file.readAsString();
+      final content = await getPlatform().readString(path);
+      if (content == null) return;
+
       final Map<String, dynamic> data =
           json.decode(content) as Map<String, dynamic>;
 
@@ -62,9 +63,10 @@ class PinManager {
         'references': _references.map((k, v) => MapEntry(k, v.toList())),
       };
 
-      final file = File(path);
-      await file.parent.create(recursive: true);
-      await file.writeAsString(json.encode(data));
+      await getPlatform().writeBytes(
+        path,
+        Uint8List.fromList(utf8.encode(json.encode(data))),
+      );
       _logger.debug('Saved ${_pins.length} pins to $path');
     } catch (e) {
       _logger.error('Failed to save pins to $path', e);

@@ -1,20 +1,29 @@
 # dart_ipfs
 
-A complete, production-ready IPFS (InterPlanetary File System) implementation in Dart, supporting offline, gateway, and full P2P modes. Built for mobile (Flutter), desktop, and web platforms.
+A complete, production-ready IPFS (InterPlanetary File System) implementation in Dart, supporting offline, gateway, and full P2P modes. Built for a seamless multi-platform experience.
 
 [![pub package](https://img.shields.io/pub/v/dart_ipfs.svg)](https://pub.dev/packages/dart_ipfs)
 [![Dart](https://img.shields.io/badge/dart-%3E%3D3.0.0-blue.svg)](https://dart.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://github.com/jxoesneon/IPFS/actions/workflows/test.yml/badge.svg)](https://github.com/jxoesneon/IPFS/actions/workflows/test.yml)
-[![Tests](https://img.shields.io/badge/tests-1098-brightgreen.svg)](https://github.com/jxoesneon/IPFS/actions)
-[![Ko-Fi](https://img.shields.io/badge/Ko--fi-F16061?style=flat&logo=ko-fi&logoColor=white)](https://ko-fi.com/jxoesneon)
 
-> **TL;DR**: A pure-Dart IPFS node for mobile, desktop, and web. Supports offline content-addressable storage, full P2P networking with NAT traversal, HTTP gateways, and production-grade security.
+> **TL;DR**: A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux) and Web (Chrome, Firefox, Safari). The `IpfsPlatform` abstraction automatically handles storage (File System vs. IndexedDB) and networking based on the target platform.
+
+---
+
+## 🌍 Multi-Platform Support
+
+| Platform | Runtime | Storage | Networking |
+|----------|---------|---------|------------|
+| **Windows** | Dart VM | File System | TCP / UDP / QUIC |
+| **macOS** | Dart VM | File System | TCP / UDP / QUIC |
+| **Linux** | Dart VM | File System | TCP / UDP / QUIC |
+| **Web** | JS / Wasm | IndexedDB | WebSocket / WebRTC |
 
 ---
 
 ## 📚 Documentation
 
+- **[Architecture Guide](doc/ARCHITECTURE.md)** — Deep dive into the Manager-Handler pattern
 - **[Wiki](https://github.com/jxoesneon/IPFS/wiki)** — Guides, Installation, Architecture
 - **[API Reference](https://jxoesneon.github.io/IPFS/)** — Auto-generated Dart docs
 
@@ -22,7 +31,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 
 ## Table of Contents
 
-- [What's New in v1.8](#-whats-new-in-v18)
+- [What's New in v1.10](#-whats-new-in-v110)
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
@@ -30,7 +39,6 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 - [Architecture](#architecture)
 - [Security](#-security)
 - [Performance](#performance)
-- [Known Limitations](#known-limitations)
 - [Troubleshooting](#troubleshooting)
 - [Examples](#examples)
 - [Contributing](#contributing)
@@ -39,61 +47,17 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 
 ---
 
-## 🚀 What's New in v1.9
+## 🚀 What's New in v1.10
 
 ### Major Features
 
 | Feature                 | Description                                                  |
 | ----------------------- | ------------------------------------------------------------ |
-| **Native libp2p Core**  | Fully migrated to `dart_libp2p` for standard IPFS networking |
-| **95% Router Coverage** | Core `Libp2pRouter` achieves **95.6%** test coverage         |
-| **Stability Baseline**  | 100% pass rate confirmed across 1098 unit/integration tests  |
-| **Cleanup**             | Removed all legacy `p2plib` dependencies and shims           |
-
-## 🚀 Protobuf 6.0.0 Compatibility (2026-02-02)
-
-### ✅ Full Migration Complete
-
-| Feature                     | Status                    | Details                                     |
-| --------------------------- | ------------------------- | ------------------------------------------- |
-| **Protobuf 6.0.0**          | ✅ **COMPATIBLE**         | Full support for latest protobuf version    |
-| **dart_libp2p Integration** | ✅ **FIXED**              | Resolved `PbList`/`createRepeated()` issues |
-| **Any/Timestamp Types**     | ✅ **RESOLVED**           | Fixed import conflicts in 5 critical files  |
-| **Test Suite**              | ✅ **1098 TESTS PASSING** | Verified comprehensive functionality        |
-| **Backward Compatibility**  | ✅ **MAINTAINED**         | Seamless upgrade from protobuf 5.x          |
-
-### 🛠 Migration Notes
-
-- **Well-known types**: Use `package:protobuf/well_known_types/google/protobuf/[type].pb.dart`
-- **Import patterns**: Avoid local copies of `any.pb.dart`/`timestamp.pb.dart`
-- **Dependency**: Updated to `protobuf: ^6.0.0` in `pubspec.yaml`
-
-## 🚀 What's New in v1.8
-
-### Major Features
-
-| Feature                | Description                                               |
-| ---------------------- | --------------------------------------------------------- |
-| **libp2p Bridge**      | TCP/Noise transport to connect with standard libp2p nodes |
-| **Circuit Relay v2**   | Full HOP/STOP/RESERVE implementation for hole-punching    |
-| **AutoNAT**            | Automatic NAT type detection (symmetric/restricted/none)  |
-| **S/Kademlia PoW**     | Sybil attack protection for DHT routing                   |
-| **Encrypted Keystore** | AES-256-GCM with PBKDF2 key derivation                    |
-
-### Security Hardening (v1.7.4+)
-
-- SEC-001: Secure random number generation
-- SEC-002: NAT traversal security controls
-- SEC-004: Hardened command execution
-- SEC-005: S/Kademlia Proof-of-Work
-- SEC-008: Encrypted key storage
-- SEC-010: DHT rate limiting
-
-### Stability
-
-- 1098 tests passing
-- Resolved 50+ issues since v1.7.0
-- Protocol compliance with go-ipfs (Kubo)
+| **IpfsPlatform**        | Unified abstraction shielding core logic from platform differences. |
+| **IndexedDB Storage**   | Production-ready persistent storage for Web browsers.         |
+| **SecurityManager**     | Multi-platform encrypted keystore for secure identity management.|
+| **Standardization**     | 100% compliance with Kubo (go-ipfs) protocol standards.       |
+| **Browser Testing**     | Full CI/CD integration for Chrome and Firefox.                |
 
 ---
 
@@ -174,7 +138,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_ipfs: ^1.9.0
+  dart_ipfs: ^1.10.0
 ```
 
 Or from Git for latest development:
@@ -398,6 +362,10 @@ final rootCID = await node.addDirectory(websiteDir);
 
 ## Architecture
 
+`dart_ipfs` follows a **Manager-Handler** pattern, coordinated by a `LifecycleManager`. This architecture ensures modularity, where each major responsibility (Content, Network, Protocol, Security, Storage) is handled by a specialized manager.
+
+The **`IpfsPlatform`** abstraction layer shields the core logic from platform-specific differences, automatically switching between `dart:io` (for Desktop/Server) and `dart:html`/`idb_shim` (for Web) implementations.
+
 ```
 ┌─────────────────────────────────────┐
 │         Application Layer            │
@@ -406,12 +374,12 @@ final rootCID = await node.addDirectory(websiteDir);
                │
 ┌──────────────▼──────────────────────┐
 │         dart_ipfs Public API         │
-│  (IPFSNode, add, cat, pin, etc.)    │
+│  (IPFSNode Facade & IpfsPlatform)    │
 └──────────────┬──────────────────────┘
                │
 ┌──────────────▼──────────────────────┐
 │         Service Layer                │
-│  Gateway │ RPC │ PubSub │ IPNS      │
+│ (Managers: Content, Network, etc.)  │
 └──────────────┬──────────────────────┘
                │
 ┌──────────────▼──────────────────────┐
@@ -428,10 +396,11 @@ final rootCID = await node.addDirectory(websiteDir);
                │
 ┌──────────────▼──────────────────────┐
 │         Storage Layer                │
-│   UnixFS │ DAG-PB │ BlockStore       │
-│   Datastore (Hive) │ Pinning         │
+│ (Providers: FileStore vs IndexedDB) │
 └─────────────────────────────────────┘
 ```
+
+For more details, see the **[Architecture Guide](doc/ARCHITECTURE.md)**.
 
 ---
 
@@ -557,8 +526,11 @@ dart run example/online_test.dart
 ## Testing
 
 ```bash
-# Run all tests
+# Run all tests (VM)
 dart test
+
+# Run tests in Chrome (Web)
+dart test -p chrome
 
 # Run with verbose output
 dart test -r expanded
@@ -571,7 +543,7 @@ Expected results:
 
 - ✅ 0 errors
 - ✅ 0 warnings
-- ✅ 1098 tests pass
+- ✅ 2326 tests pass
 
 ---
 

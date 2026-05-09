@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
@@ -22,9 +21,9 @@ void main() {
       final peer = Peer.fromProto(proto);
       expect(peer.id.value, equals(peerIdBytes));
       expect(peer.addresses, hasLength(2));
-      expect(peer.addresses[0].address.address, equals('127.0.0.1'));
+      expect(peer.addresses[0].address, equals('127.0.0.1'));
       expect(peer.addresses[0].port, equals(4001));
-      expect(peer.addresses[1].address.type, equals(InternetAddressType.IPv6));
+      expect(peer.addresses[1].address, equals('::1'));
       expect(peer.addresses[1].port, equals(5001));
       expect(peer.latency, equals(100));
       expect(peer.agentVersion, equals('dart-ipfs/1.0.0'));
@@ -42,7 +41,7 @@ void main() {
 
       expect(peer.id.value, equals(peerIdBytes));
       expect(peer.addresses, hasLength(1));
-      expect(peer.addresses[0].address.address, equals('127.0.0.1'));
+      expect(peer.addresses[0].address, equals('127.0.0.1'));
       expect(peer.addresses[0].port, equals(4001));
     });
 
@@ -51,7 +50,7 @@ void main() {
       final peer = await Peer.fromMultiaddr(multiaddr);
 
       expect(peer.id.value, equals(peerIdBytes));
-      expect(peer.addresses[0].address.type, equals(InternetAddressType.IPv6));
+      expect(peer.addresses[0].address, equals('::1'));
     });
 
     test('Peer.fromMultiaddr error cases', () async {
@@ -75,28 +74,16 @@ void main() {
       expect(parseMultiaddrString('/ip4/127.0.0.1/tcp/-1'), isNull);
 
       // Invalid IP
-      // InternetAddress constructor might throw if invalid format depending on platform,
-      // but parseMultiaddrString has a try-catch.
       expect(parseMultiaddrString('/ip4/999.999.999.999/tcp/4001'), isNull);
     });
 
     test('multiaddrToBytes unsupported type', () {
-      // We need an InternetAddress that is neither IPv4 nor IPv6 if possible,
-      // or just mock it if we can't easily create one.
-      // InternetAddressType.unix is one possibility if supported.
-      try {
-        final unixAddr = FullAddress(
-          address: InternetAddress(
-            '/tmp/socket',
-            type: InternetAddressType.unix,
-          ),
-          port: 4001,
-        );
-        final bytes = multiaddrToBytes(unixAddr);
-        expect(bytes, isEmpty);
-      } catch (e) {
-        // Unix address might not be supported on all platforms, skip if so
-      }
+      final invalidAddr = FullAddress(
+        address: 'invalid',
+        port: 4001,
+      );
+      final bytes = multiaddrToBytes(invalidAddr);
+      expect(bytes, isEmpty);
     });
 
     test('multiaddrFromBytes edge cases', () {

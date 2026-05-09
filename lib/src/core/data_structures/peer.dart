@@ -1,5 +1,4 @@
 // src/core/data_structures/peer.dart
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
@@ -13,14 +12,14 @@ class FullAddress {
   /// Creates a [FullAddress] with the given [address] and [port].
   const FullAddress({required this.address, required this.port});
 
-  /// The IP address of the peer.
-  final InternetAddress address;
+  /// The IP address of the peer (string representation).
+  final String address;
 
   /// The port number of the peer.
   final int port;
 
   @override
-  String toString() => '/ip4/${address.address}/tcp/$port';
+  String toString() => '/ip4/$address/tcp/$port';
 }
 
 /// Represents a peer node in the IPFS network.
@@ -149,11 +148,23 @@ FullAddress? parseMultiaddrString(String multiaddrString) {
     if (protocol != 'ip4' && protocol != 'ip6') return null;
     if (transport != 'tcp' && transport != 'udp') return null;
 
+    // Basic IP validation
+    if (protocol == 'ip4') {
+      final ipParts = host.split('.');
+      if (ipParts.length != 4) return null;
+      for (final part in ipParts) {
+        final val = int.tryParse(part);
+        if (val == null || val < 0 || val > 255) return null;
+      }
+    } else if (protocol == 'ip6') {
+      if (!host.contains(':') && host != '::1') return null;
+      // Simple validation for IPv6
+    }
+
     final port = int.tryParse(portStr);
     if (port == null || port <= 0 || port > 65535) return null;
 
-    final ipAddress = InternetAddress(host);
-    return FullAddress(address: ipAddress, port: port);
+    return FullAddress(address: host, port: port);
   } catch (e) {
     return null;
   }
@@ -166,20 +177,28 @@ FullAddress? multiaddrFromBytes(Uint8List bytes) {
     // Protocol code 1
     final p1 = bytes[offset++];
 
-    InternetAddress? ip;
+    String? ip;
     int? port;
 
     if (p1 == 4) {
       // ip4
       if (bytes.length < offset + 4) return null;
-      final ipBytes = bytes.sublist(offset, offset + 4);
-      ip = InternetAddress.fromRawAddress(ipBytes);
+      ip = bytes.sublist(offset, offset + 4).join('.');
       offset += 4;
     } else if (p1 == 41) {
       // ip6
       if (bytes.length < offset + 16) return null;
-      final ipBytes = bytes.sublist(offset, offset + 16);
-      ip = InternetAddress.fromRawAddress(ipBytes);
+      // Simple hex conversion for IPv6
+      final hex = bytes
+          .sublist(offset, offset + 16)
+          .map((b) => b.toRadixString(16).padLeft(2, '0'))
+          .toList();
+      final groups = <String>[];
+      for (var i = 0; i < 16; i += 2) {
+        groups.add('${hex[i]}${hex[i + 1]}');
+      }
+      ip = groups.join(':');
+      if (ip == '0000:0000:0000:0000:0000:0000:0000:0001') ip = '::1';
       offset += 16;
     } else {
       return null; // Unsupported transport
@@ -201,7 +220,6 @@ FullAddress? multiaddrFromBytes(Uint8List bytes) {
       port = (portBytes[0] << 8) | portBytes[1];
       offset += 2;
     }
-    // Ignoring p2p ID part if present for now
 
     if (port != null) {
       return FullAddress(address: ip, port: port);
@@ -214,21 +232,43 @@ FullAddress? multiaddrFromBytes(Uint8List bytes) {
 
 /// Helper to encode FullAddress to binary multiaddr
 Uint8List multiaddrToBytes(FullAddress address) {
-  final buffer = BytesBuilder();
-  if (address.address.type == InternetAddressType.IPv4) {
-    buffer.addByte(4); // ip4
-    buffer.add(address.address.rawAddress);
-  } else if (address.address.type == InternetAddressType.IPv6) {
-    buffer.addByte(41); // ip6
-    buffer.add(address.address.rawAddress);
+  final buffer = <int>[];
+  if (address.address.contains('.')) {
+    // IPv4
+    buffer.add(4); // ip4
+    buffer.addAll(address.address.split('.').map(int.parse));
+  } else if (address.address.contains(':') || address.address == '::1') {
+    // IPv6
+    buffer.add(41); // ip6
+    
+    // Handle special cases like ::1
+    String expanded = address.address;
+    if (expanded == '::1') {
+      expanded = '0000:0000:0000:0000:0000:0000:0000:0001';
+    } else if (expanded.contains('::')) {
+      // Simple expansion for ::
+      final parts = expanded.split('::');
+      final left = parts[0].isEmpty ? <String>[] : parts[0].split(':');
+      final right = parts[1].isEmpty ? <String>[] : parts[1].split(':');
+      final missing = 8 - (left.length + right.length);
+      final mid = List.filled(missing, '0000');
+      expanded = (left + mid + right).join(':');
+    }
+
+    final groups = expanded.split(':');
+    for (final group in groups) {
+      final val = int.parse(group.isEmpty ? '0' : group, radix: 16);
+      buffer.add((val >> 8) & 0xFF);
+      buffer.add(val & 0xFF);
+    }
   } else {
     return Uint8List(0); // Unsupported
   }
 
   // Assuming TCP (6) by default for FullAddress as we don't have protocol field
-  buffer.addByte(6); // tcp
-  buffer.addByte((address.port >> 8) & 0xFF);
-  buffer.addByte(address.port & 0xFF);
+  buffer.add(6); // tcp
+  buffer.add((address.port >> 8) & 0xFF);
+  buffer.add(address.port & 0xFF);
 
-  return buffer.toBytes();
+  return Uint8List.fromList(buffer);
 }

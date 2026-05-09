@@ -1,11 +1,11 @@
 // lib/src/services/rpc/rpc_server.dart
-import 'dart:io';
-
+import 'dart:convert';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/services/health_check_service.dart';
+import 'package:dart_ipfs/src/platform/http_server.dart';
 import 'package:dart_ipfs/src/services/rpc/rpc_handlers.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:shelf/shelf.dart';
-import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
 
 /// IPFS HTTP RPC API Server
@@ -29,6 +29,7 @@ class RPCServer {
     this.apiKey,
   }) {
     _handlers = RPCHandlers(node);
+    _healthCheckService = HealthCheckService(node);
     _setupRouter();
     if (apiKey != null) {
       _logger.info('RPC server configured with API key authentication');
@@ -56,12 +57,13 @@ class RPCServer {
   final String? apiKey;
 
   final _logger = Logger('RPCServer');
-  HttpServer? _server;
+  IpfsHttpServerInstance? _server;
   late final RPCHandlers _handlers;
   late final Router _router;
+  late final HealthCheckService _healthCheckService;
 
   /// Minimal public endpoints that don't require authentication (SEC-003).
-  static const _publicEndpoints = {'/api/v0/version', '/api/v0/id'};
+  static const _publicEndpoints = {'/api/v0/version', '/api/v0/id', '/health'};
 
   void _setupRouter() {
     _router = Router();
@@ -69,6 +71,15 @@ class RPCServer {
     // Core endpoints
     _router.post('/api/v0/version', _handlers.handleVersion);
     _router.post('/api/v0/id', _handlers.handleId);
+
+    // Health check (GET for easy monitoring)
+    _router.get('/health', (Request request) async {
+      final status = await _healthCheckService.checkHealth();
+      return Response.ok(
+        jsonEncode(status),
+        headers: {'Content-Type': 'application/json'},
+      );
+    });
 
     // Content endpoints
     _router.post('/api/v0/add', _handlers.handleAdd);
@@ -114,9 +125,9 @@ class RPCServer {
         .addHandler(_router.call);
 
     try {
-      _server = await shelf_io.serve(handler, address, port);
+      _server = await createHttpServerAdapter().serve(handler, address, port);
       _logger.info(
-        'RPC server listening on http://${_server!.address.host}:${_server!.port}',
+        'RPC server listening on http://${_server!.host}:${_server!.port}',
       );
     } catch (e, stackTrace) {
       _logger.error('Failed to start RPC server', e, stackTrace);
@@ -236,6 +247,6 @@ class RPCServer {
 
   /// Returns the server URL
   String get url => _server != null
-      ? 'http://${_server!.address.host}:${_server!.port}'
+      ? 'http://${_server!.host}:${_server!.port}'
       : 'http://$address:$port (not started)';
 }

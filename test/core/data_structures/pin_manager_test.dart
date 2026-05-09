@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:cbor/cbor.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -12,14 +11,20 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:test/test.dart';
 
 class MockBlockStore implements BlockStore {
   final Map<String, GetBlockResponse> _blocks = {};
   bool shouldThrow = false;
+  late final String _path;
 
   @override
-  late final String path = Directory.systemTemp.createTempSync('mock_bs_').path;
+  String get path => _path;
+
+  Future<void> init() async {
+    _path = await getPlatform().createTempDirectory('mock_bs_');
+  }
 
   void addBlock(CID cid, String format, List<int> data) {
     final blockProto = BlockProto()
@@ -44,8 +49,9 @@ void main() {
     late MockBlockStore mockStore;
     late PinManager manager;
 
-    setUp(() {
+    setUp(() async {
       mockStore = MockBlockStore();
+      await mockStore.init();
       manager = PinManager(mockStore);
     });
 

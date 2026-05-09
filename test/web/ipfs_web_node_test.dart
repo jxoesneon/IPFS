@@ -3,19 +3,16 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
 import 'package:test/test.dart';
-import 'dart:io';
 
 @TestOn('vm || browser')
 void main() {
   group('IPFSWebNode', () {
     late IPFSWebNode node;
-    late Directory tempDir;
 
     setUp(() async {
-      tempDir = Directory.systemTemp.createTempSync('ipfs_web_node_test_');
       final config = IPFSConfig(
-        blockStorePath: tempDir.path,
-        datastorePath: tempDir.path,
+        blockStorePath: 'test_blocks',
+        datastorePath: 'test_data',
       );
       node = IPFSWebNode(config: config);
       await node.start();
@@ -24,11 +21,6 @@ void main() {
     tearDown(() async {
       if (node.isRunning) {
         await node.stop();
-      }
-      if (tempDir.existsSync()) {
-        try {
-          tempDir.deleteSync(recursive: true);
-        } catch (_) {}
       }
     });
 

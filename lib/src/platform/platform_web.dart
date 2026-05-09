@@ -5,52 +5,8 @@ import 'package:idb_shim/idb_browser.dart';
 
 import 'platform_stub.dart';
 
-/// Web implementation of the IPFS platform interface.
-///
-/// Uses IndexedDB for persistent storage in browsers.
+/// Web implementation of the IPFS platform interface using IndexedDB.
 class IpfsPlatformWeb implements IpfsPlatform {
-  /// Creates a new web platform instance and initializes IndexedDB.
-  IpfsPlatformWeb() {
-    _initDatabase();
-  }
-
-  static const String _dbName = 'ipfs_storage';
-  static const String _filesStore = 'files';
-  static const int _dbVersion = 1;
-
-  Database? _db;
-  final Completer<void> _dbReady = Completer<void>();
-
-  // Fallback in-memory storage while DB initializes
-  final Map<String, Uint8List> _memoryCache = {};
-  final Set<String> _directories = {};
-
-  Future<void> _initDatabase() async {
-    try {
-      final factory = idbFactoryBrowser;
-      _db = await factory.open(
-        _dbName,
-        version: _dbVersion,
-        onUpgradeNeeded: (VersionChangeEvent event) {
-          final db = event.database;
-          if (!db.objectStoreNames.contains(_filesStore)) {
-            db.createObjectStore(_filesStore);
-          }
-        },
-      );
-      _dbReady.complete();
-    } catch (e) {
-      // If IndexedDB fails, fall back to memory
-      _dbReady.complete();
-    }
-  }
-
-  Future<void> _ensureReady() async {
-    if (!_dbReady.isCompleted) {
-      await _dbReady.future;
-    }
-  }
-
   @override
   bool get isWeb => true;
 
@@ -61,123 +17,158 @@ class IpfsPlatformWeb implements IpfsPlatform {
   String get pathSeparator => '/';
 
   @override
+  String get operatingSystem => 'web';
+
+  @override
+  String get version => 'browser';
+
+  static const String _dbName = 'ipfs_storage';
+  static const String _storeName = 'files';
+  Database? _db;
+
+  Future<Database> _getDb() async {
+    if (_db != null) return _db!;
+    _db = await idbFactoryBrowser.open(_dbName, version: 1,
+        onUpgradeNeeded: (VersionChangeEvent e) {
+      final db = e.database;
+      db.createObjectStore(_storeName);
+    });
+    return _db!;
+  }
+
+  @override
   Future<void> writeBytes(String path, Uint8List bytes) async {
-    await _ensureReady();
+    final db = await _getDb();
+    final txn = db.transaction(_storeName, idbModeReadWrite);
+    final store = txn.objectStore(_storeName);
+    await store.put(bytes, path);
+    await txn.completed;
+  }
 
-    // Always update memory cache
-    _memoryCache[path] = bytes;
-
-    // Auto-create directories
-    final lastSlash = path.lastIndexOf('/');
-    if (lastSlash != -1) {
-      _directories.add(path.substring(0, lastSlash));
-    }
-
-    // Persist to IndexedDB if available
-    if (_db != null) {
-      try {
-        final txn = _db!.transaction(_filesStore, idbModeReadWrite);
-        final store = txn.objectStore(_filesStore);
-        await store.put(bytes, path);
-        await txn.completed;
-      } catch (e) {
-        // Ignore IndexedDB errors, data is in memory cache
-      }
-    }
+  @override
+  Future<void> writeString(String path, String content) async {
+    final bytes = Uint8List.fromList(content.codeUnits);
+    await writeBytes(path, bytes);
   }
 
   @override
   Future<Uint8List?> readBytes(String path) async {
-    await _ensureReady();
-
-    // Check memory cache first
-    if (_memoryCache.containsKey(path)) {
-      return _memoryCache[path];
-    }
-
-    // Try IndexedDB
-    if (_db != null) {
-      try {
-        final txn = _db!.transaction(_filesStore, idbModeReadOnly);
-        final store = txn.objectStore(_filesStore);
-        final result = await store.getObject(path);
-        if (result != null) {
-          final bytes = Uint8List.fromList(List<int>.from(result as List));
-          _memoryCache[path] = bytes; // Cache for faster access
-          return bytes;
-        }
-      } catch (e) {
-        // Ignore IndexedDB errors
-      }
-    }
-
+    final db = await _getDb();
+    final txn = db.transaction(_storeName, idbModeReadOnly);
+    final store = txn.objectStore(_storeName);
+    final dynamic data = await store.getObject(path);
+    if (data is Uint8List) return data;
+    if (data is List<int>) return Uint8List.fromList(data);
     return null;
   }
 
   @override
+  Future<String?> readString(String path) async {
+    final bytes = await readBytes(path);
+    if (bytes == null) return null;
+    return String.fromCharCodes(bytes);
+  }
+
+  @override
   Future<bool> exists(String path) async {
-    await _ensureReady();
+    final db = await _getDb();
+    final txn = db.transaction(_storeName, idbModeReadOnly);
+    final store = txn.objectStore(_storeName);
+    final count = await store.count(path);
+    if (count > 0) return true;
 
-    if (_memoryCache.containsKey(path) || _directories.contains(path)) {
-      return true;
-    }
-
-    // Check IndexedDB
-    if (_db != null) {
-      try {
-        final txn = _db!.transaction(_filesStore, idbModeReadOnly);
-        final store = txn.objectStore(_filesStore);
-        final result = await store.getObject(path);
-        return result != null;
-      } catch (e) {
-        // Ignore IndexedDB errors
+    // Check if it's a "directory"
+    final range = KeyRange.lowerBound(path);
+    var found = false;
+    final completer = Completer<bool>();
+    
+    store.openCursor(range: range, direction: idbDirectionNext).listen((cursor) {
+      if (cursor.key.toString().startsWith('$path/')) {
+        found = true;
       }
-    }
-
-    return false;
+      completer.complete(found);
+    }, onDone: () {
+      if (!completer.isCompleted) completer.complete(false);
+    });
+    
+    return completer.future;
   }
 
   @override
   Future<void> delete(String path) async {
-    await _ensureReady();
-
-    _memoryCache.remove(path);
-    _directories.remove(path);
-
-    if (_db != null) {
-      try {
-        final txn = _db!.transaction(_filesStore, idbModeReadWrite);
-        final store = txn.objectStore(_filesStore);
-        await store.delete(path);
-        await txn.completed;
-      } catch (e) {
-        // Ignore IndexedDB errors
+    final db = await _getDb();
+    final txn = db.transaction(_storeName, idbModeReadWrite);
+    final store = txn.objectStore(_storeName);
+    
+    // Delete file
+    await store.delete(path);
+    
+    // Delete "directory" contents
+    final range = KeyRange.lowerBound('$path/');
+    final completer = Completer<void>();
+    
+    store.openKeyCursor(range: range).listen((cursor) {
+      if (cursor.key.toString().startsWith('$path/')) {
+        cursor.delete();
+        cursor.next();
+      } else {
+        completer.complete();
       }
-    }
+    }, onDone: () {
+      if (!completer.isCompleted) completer.complete();
+    });
+
+    await completer.future;
+    await txn.completed;
   }
 
   @override
   Future<void> createDirectory(String path) async {
-    _directories.add(path);
+    // Directories are implicit in our key-value storage
+  }
+
+  @override
+  Future<String> createTempDirectory([String? prefix]) async {
+    final path = '${prefix ?? 'tmp'}_${DateTime.now().millisecondsSinceEpoch}';
+    await createDirectory(path);
+    return path;
   }
 
   @override
   Future<List<String>> listDirectory(String path) async {
-    await _ensureReady();
+    final db = await _getDb();
+    final txn = db.transaction(_storeName, idbModeReadOnly);
+    final store = txn.objectStore(_storeName);
+    final prefix = path.endsWith('/') ? path : '$path/';
+    final results = <String>[];
+    final completer = Completer<List<String>>();
 
-    final entries = <String>{};
-
-    // From memory cache
-    for (final k in _memoryCache.keys) {
-      if (k.startsWith(path)) {
-        entries.add(k);
+    final range = KeyRange.lowerBound(prefix);
+    store.openKeyCursor(range: range).listen((cursor) {
+      final key = cursor.key.toString();
+      if (key.startsWith(prefix)) {
+        results.add(key);
+        cursor.next();
+      } else {
+        completer.complete(results);
       }
-    }
+    }, onDone: () {
+      if (!completer.isCompleted) completer.complete(results);
+    });
 
-    // From IndexedDB - would need cursor iteration for full list
-    // For now, rely on memory cache which should contain written files
+    return completer.future;
+  }
 
-    return entries.toList();
+  @override
+  Future<int> getLength(String path) async {
+    final bytes = await readBytes(path);
+    return bytes?.length ?? 0;
+  }
+
+  @override
+  Future<String?> promptPassword(String message) async {
+    // In a browser, we could use window.prompt, but it's not secure
+    return null;
   }
 }
 

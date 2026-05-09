@@ -1,6 +1,5 @@
 // src/core/ipfs_node/mdns_handler.dart
 import 'dart:async';
-import 'dart:io';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
@@ -197,15 +196,11 @@ class MDNSHandler implements ILifecycle {
         return null;
       }
 
-      // Resolve the .local hostname to an IP address
-      final addresses = await InternetAddress.lookup(srv.target);
-      if (addresses.isEmpty) {
-        _logger.warning('Failed to resolve hostname: ${srv.target}');
-        return null;
-      }
-
-      // Create a FullAddress from the resolved IP
-      final address = FullAddress(address: addresses.first, port: srv.port);
+      // Use target from SRV record. In mDNS this is often a .local hostname.
+      // On platforms without full mDNS support, we might not be able to resolve this
+      // to an IP address easily without dart:io.
+      // For now, we use the target string directly in FullAddress.
+      final address = FullAddress(address: srv.target, port: srv.port);
 
       // Create a PeerId from the TXT record
       final peerId = PeerId(value: Base58().base58Decode(txt.text.first));
@@ -216,16 +211,7 @@ class MDNSHandler implements ILifecycle {
         latency: 0, // Default latency for new peers
         agentVersion: '', // Empty version since we don't know it yet
       );
-    } on SocketException catch (e) {
-      // Failed .local hostname lookups are expected on platforms without mDNS support
-      // (Windows without Bonjour, Linux without avahi-daemon)
-      _logger.verbose(
-        'Could not resolve mDNS hostname: $domainName '
-        '(OS Error: ${e.osError?.message ?? "Unknown"})',
-      );
-      return null;
     } catch (e) {
-      // Unexpected errors might indicate real problems
       _logger.warning(
         'Unexpected error resolving peer info for $domainName: $e',
       );

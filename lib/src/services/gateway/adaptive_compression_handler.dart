@@ -1,11 +1,12 @@
 // src/services/gateway/adaptive_compression_handler.dart
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart' hide CompressionType;
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/services/gateway/compressed_cache_store.dart';
 
 import 'package:dart_lz4/dart_lz4.dart';
@@ -120,10 +121,11 @@ class AdaptiveCompressionHandler {
       case CompressionType.none:
         return data;
       case CompressionType.gzip:
-        return Uint8List.fromList(gzip.encode(data));
+        final encoded = const GZipEncoder().encode(data);
+        return Uint8List.fromList(encoded);
       case CompressionType.zlib:
-        return Uint8List.fromList(zlib.encode(data));
-
+        final encoded = const ZLibEncoder().encode(data);
+        return Uint8List.fromList(encoded);
       case CompressionType.lz4:
         return lz4FrameEncode(data);
     }
@@ -133,9 +135,11 @@ class AdaptiveCompressionHandler {
     CID cid,
     Map<String, String> metadata,
   ) async {
-    final metadataFile = File('$_metadataPath/${cid.encode()}.json');
-    await metadataFile.parent.create(recursive: true);
-    await metadataFile.writeAsString(jsonEncode(metadata));
+    final path = '$_metadataPath/${cid.encode()}.json';
+    await getPlatform().writeBytes(
+      path,
+      Uint8List.fromList(utf8.encode(jsonEncode(metadata))),
+    );
   }
 
   /// Analyzes compression efficiency across algorithms.

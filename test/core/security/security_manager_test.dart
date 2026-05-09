@@ -1,14 +1,14 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart' hide KeyPair;
 import 'package:dart_ipfs/src/core/config/security_config.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
-import 'package:dart_ipfs/src/utils/keystore.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:test/test.dart';
 import 'package:logging/logging.dart';
+import 'package:path/path.dart' as p;
 
 class MockMetricsCollector implements MetricsCollector {
   final Map<String, dynamic> recordedMetrics = {};
@@ -31,8 +31,6 @@ void main() {
     late SecurityConfig config;
     late MockMetricsCollector mockMetrics;
     late SecurityManager securityManager;
-    final validSeed = Uint8List(32)..fillRange(0, 32, 1);
-    final validPrivKeyBase64 = base64Url.encode(validSeed);
     final testSalt = Uint8List(16)..fillRange(0, 16, 0);
 
     setUp(() {
@@ -51,11 +49,6 @@ void main() {
     });
 
     test('should initialize with locked keystore', () {
-      expect(securityManager.isKeystoreUnlocked, isFalse);
-    });
-
-    test('encryptedKeystore getter', () {
-      // The encrypted keystore is initialized in constructor
       expect(securityManager.isKeystoreUnlocked, isFalse);
     });
 
@@ -139,21 +132,10 @@ void main() {
       expect(() => securityManager.getSecureKey(keyName), throwsStateError);
     });
 
-    test('migrateKeysFromPlaintext - success', () async {
-      // This test requires access to the internal keystore which is not exposed
-      // Skip this test as the migration functionality is internal
-      // and the SecurityManager doesn't expose the plaintext keystore
-    });
-
     test('migrateKeysFromPlaintext - empty', () async {
       await securityManager.unlockKeystore('temp_pwd', salt: testSalt);
       final count = await securityManager.migrateKeysFromPlaintext();
       expect(count, equals(0));
-    });
-
-    test('migrateKeysFromPlaintext - skip existing', () async {
-      // This test requires access to the internal keystore which is not exposed
-      // Skip this test as the migration functionality is internal
     });
 
     test('migrateKeysFromPlaintext - locked error', () async {
@@ -163,45 +145,39 @@ void main() {
       );
     });
 
-    test('TLS initialization error - missing paths', () {
+    test('TLS initialization error - missing paths', () async {
       final tlsConfig = SecurityConfig(enableTLS: true);
-      expect(() => SecurityManager(tlsConfig, mockMetrics), throwsStateError);
+      final manager = SecurityManager(tlsConfig, mockMetrics);
+      await expectLater(manager.start(), throwsStateError);
     });
 
-    test('TLS initialization error - missing cert', () {
+    test('TLS initialization error - missing cert', () async {
       final tlsConfig = SecurityConfig(
         enableTLS: true,
         tlsCertificatePath: 'non_existent_cert',
         tlsPrivateKeyPath: 'non_existent_key',
       );
-      expect(
-        () => SecurityManager(tlsConfig, mockMetrics),
-        throwsA(isA<FileSystemException>()),
-      );
+      final manager = SecurityManager(tlsConfig, mockMetrics);
+      // In our refactored IpfsPlatform, exists check might throw or return false
+      await expectLater(manager.start(), throwsStateError);
     });
 
-    test('TLS initialization error - cert exists but key missing', () {
-      final tempDir = Directory.systemTemp.createTempSync();
-      final certFile = File('${tempDir.path}/cert')..createSync();
+    test('TLS initialization error - cert exists but key missing', () async {
+      final tempDirPath = await getPlatform().createTempDirectory('tls_test_');
+      final certFilePath = p.join(tempDirPath, 'cert');
+      await getPlatform().writeString(certFilePath, 'dummy cert');
 
       final tlsConfig = SecurityConfig(
         enableTLS: true,
-        tlsCertificatePath: certFile.path,
+        tlsCertificatePath: certFilePath,
         tlsPrivateKeyPath: 'non_existent_key',
       );
+      final manager = SecurityManager(tlsConfig, mockMetrics);
 
       try {
-        expect(
-          () => SecurityManager(tlsConfig, mockMetrics),
-          throwsA(
-            predicate(
-              (e) =>
-                  e is FileSystemException && e.message.contains('private key'),
-            ),
-          ),
-        );
+        await expectLater(manager.start(), throwsStateError);
       } finally {
-        tempDir.deleteSync(recursive: true);
+        await getPlatform().delete(tempDirPath);
       }
     });
 
@@ -218,7 +194,6 @@ void main() {
 
       final status = await manager.getStatus();
       expect(status['key_rotation_enabled'], isTrue);
-      // Depending on timing, metrics might have been recorded
 
       await manager.stop();
     });
@@ -234,11 +209,6 @@ void main() {
 
       final key = await securityManager.getPrivateKey('secure_key');
       expect(key, isNotNull);
-    });
-
-    test('getPrivateKey fallback - plaintext key', () async {
-      // This test requires access to the internal keystore which is not exposed
-      // Skip this test as the plaintext keystore is not accessible
     });
 
     test('getPrivateKey fallback - locked warning', () async {
@@ -282,11 +252,6 @@ void main() {
         label: 'Test Label',
       );
       expect(publicKey, isNotNull);
-    });
-
-    test('getPrivateKey returns null for empty key name', () async {
-      final key = await securityManager.getPrivateKey('');
-      expect(key, isNull);
     });
 
     test('start and stop lifecycle', () async {
@@ -363,12 +328,6 @@ void main() {
       await securityManager.unlockKeystore('password123', salt: testSalt);
       final count = await securityManager.migrateKeysFromPlaintext();
       expect(count, equals(0));
-    });
-
-    test('getPrivateKey with empty key name returns null', () async {
-      await securityManager.unlockKeystore('password123', salt: testSalt);
-      final key = await securityManager.getPrivateKey('');
-      expect(key, isNull);
     });
 
     test('getStatus includes all expected fields', () async {

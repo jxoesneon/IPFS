@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
@@ -10,6 +9,8 @@ import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
+import 'package:path/path.dart' as p;
 
 import 'adaptive_compression_handler_test.mocks.dart';
 
@@ -19,19 +20,20 @@ void main() {
     late AdaptiveCompressionHandler handler;
     late MockBlockStore mockBlockStore;
     late CompressionConfig config;
-    late Directory tempDir;
+    late String tempDirPath;
 
-    setUp(() {
-      tempDir = Directory.systemTemp.createTempSync('ipfs_test_compression');
+    setUp(() async {
+      tempDirPath =
+          await getPlatform().createTempDirectory('ipfs_test_compression');
       mockBlockStore = MockBlockStore();
-      when(mockBlockStore.path).thenReturn(tempDir.path);
+      when(mockBlockStore.path).thenReturn(tempDirPath);
 
       config = CompressionConfig(enabled: true);
       handler = AdaptiveCompressionHandler(mockBlockStore, config);
     });
 
-    tearDown(() {
-      tempDir.deleteSync(recursive: true);
+    tearDown(() async {
+      await getPlatform().delete(tempDirPath);
     });
 
     test('getOptimalCompression selects correct type', () {
@@ -79,9 +81,9 @@ void main() {
       expect(result.size, lessThan(block.size));
       verify(mockBlockStore.putBlock(any)).called(1);
 
-      // Verify metadata file exists
-      final metadataDir = Directory('${tempDir.path}/metadata');
-      expect(metadataDir.existsSync(), isTrue);
+      // Verify metadata directory exists
+      final metadataDirPath = p.join(tempDirPath, 'metadata');
+      expect(await getPlatform().exists(metadataDirPath), isTrue);
     });
 
     test('compressBlock skips compression if not beneficial', () async {

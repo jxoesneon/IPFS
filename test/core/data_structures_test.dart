@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -45,14 +44,14 @@ void main() {
 
   group('Peer Tests', () {
     test('should create from multiaddr', () async {
-      // Generate a 64-byte ID to satisfy PeerId expectation (p2plib requirement?)
+      // Generate a 64-byte ID to satisfy PeerId expectation
       final bytes = Uint8List.fromList(List.filled(64, 1));
       final peerIdStr = Base58().encode(bytes);
       final multiaddr = '/ip4/127.0.0.1/tcp/4001/p2p/$peerIdStr';
 
       final peer = await Peer.fromMultiaddr(multiaddr);
 
-      // Verify bytes match (toString might be Base64 or other format)
+      // Verify bytes match
       expect(peer.id.value, equals(bytes));
       expect(peer.addresses.length, 1);
       expect(peer.addresses.first.port, 4001);
@@ -62,7 +61,7 @@ void main() {
       final bytes = Uint8List.fromList(List.filled(64, 1));
       final id = PeerId(value: bytes);
       final address = FullAddress(
-        address: InternetAddress('127.0.0.1'),
+        address: '127.0.0.1',
         port: 4001,
       );
 
@@ -80,7 +79,6 @@ void main() {
       final reconstructed = Peer.fromProto(proto);
       expect(reconstructed.latency, 100);
       expect(reconstructed.agentVersion, 'v1.0.0');
-      // Note: Address reconstruction might depend on exact string format matching
     });
 
     test('validates multiaddr parsing', () {
@@ -109,8 +107,6 @@ void main() {
       );
 
       expect(pin.type, PinTypeProto.PIN_TYPE_RECURSIVE);
-      // Note: isPinned() requires pinManager which isn't mocked
-      // Just verify proto serialization works
 
       final proto = pin.toProto();
       expect(proto.type, PinTypeProto.PIN_TYPE_RECURSIVE);

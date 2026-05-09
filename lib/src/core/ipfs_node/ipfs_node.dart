@@ -24,6 +24,8 @@ import 'package:dart_ipfs/src/core/ipfs_node/network_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/protocol_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/mfs/mfs_manager.dart';
+import 'package:dart_ipfs/src/core/plugins/ipfs_plugin.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
@@ -72,6 +74,10 @@ enum NodeState {
 ///
 /// Provides high-level APIs for content addressing, publishing,
 /// DHT operations, and peer-to-peer networking.
+///
+/// **Platform Note**: Storage behavior is platform-dependent. On VM platforms,
+/// it uses the local file system. On Web platforms, it uses IndexedDB via the
+/// [IpfsPlatform] abstraction.
 ///
 /// [IPFSNode] acts as a facade, orchestrating specialized managers:
 /// - [ContentManager]: Handles files, directories, pinning, and CAR files.
@@ -125,7 +131,13 @@ class IPFSNode {
           : null,
     );
 
-    // Initialize LifecycleManager
+    _mfsManager = MFSManager(
+      _container.get<BlockStore>(),
+      _container.get<DatastoreHandler>().datastore,
+    );
+
+    _pluginManager = PluginManager(this);
+
     _lifecycleManager = _container.isRegistered<LifecycleManager>()
         ? _container.get<LifecycleManager>()
         : LifecycleManager();
@@ -148,11 +160,22 @@ class IPFSNode {
   late final NetworkManager _networkManager;
   late final ProtocolManager _protocolManager;
   late final LifecycleManager _lifecycleManager;
+  late final MFSManager _mfsManager;
+  late final PluginManager _pluginManager;
 
   NodeState _state = NodeState.stopped;
 
   /// Returns the current state of the node.
   NodeState get state => _state;
+
+  /// Returns the Mutable File System (MFS) manager.
+  MFSManager get mfs => _mfsManager;
+
+  /// Returns the Plugin manager.
+  PluginManager get plugins => _pluginManager;
+
+  /// Returns the SecurityManager.
+  SecurityManager get securityManager => _container.get<SecurityManager>();
 
   /// Whether the node is currently running.
   bool get isRunning => _state == NodeState.running;
@@ -160,7 +183,7 @@ class IPFSNode {
   final StreamController<String> _newContentController =
       StreamController<String>.broadcast();
 
-  /// Factory method to create and build an IPFS node from configuration.
+  /// Returns a [Future] that resolves to an [IPFSNode] built from the [config].
   ///
   /// This is the recommended way to instantiate a node.
   static Future<IPFSNode> create(IPFSConfig config) async {
@@ -170,12 +193,12 @@ class IPFSNode {
 
   // Public API Getters for external access
 
-  /// Get the peer ID of this node.
+  /// Returns the peer ID of this node.
   ///
   /// Returns 'offline' if the network is not initialized.
   String get peerId => _networkManager.peerId;
 
-  /// Broadcast stream of bandwidth metrics.
+  /// Returns a [Stream] of bandwidth metrics as a [Map].
   Stream<Map<String, dynamic>> get bandwidthMetrics {
     if (_container.isRegistered<MetricsCollector>()) {
       return _container.get<MetricsCollector>().metricsStream;
@@ -183,7 +206,7 @@ class IPFSNode {
     return const Stream.empty();
   }
 
-  /// Get the multiaddresses this node is listening on.
+  /// Returns a [List] of multiaddresses this node is listening on.
   List<String> get addresses {
     try {
       if (!_container.isRegistered<NetworkHandler>()) return [];
@@ -196,12 +219,12 @@ class IPFSNode {
     }
   }
 
-  /// Returns the underlying block store.
+  /// Returns the underlying [BlockStore].
   BlockStore get blockStore {
     return _container.get<BlockStore>();
   }
 
-  /// Returns the DHT client for peer and content discovery.
+  /// Returns the [DHTClient] for peer and content discovery.
   ///
   /// Throws [StateError] if the node is in offline mode or DHT is not available.
   DHTClient get dhtClient {
@@ -216,10 +239,10 @@ class IPFSNode {
     }
   }
 
-  /// Returns a list of currently connected peer IDs.
+  /// Returns a [Future] that resolves to a [List] of currently connected peer IDs.
   Future<List<String>> get connectedPeers => _networkManager.connectedPeers;
 
-  /// Returns the public key of this node as a base64 encoded protobuf.
+  /// Returns a [Future] that resolves to the public key of this node as a base64 encoded protobuf.
   Future<String> get publicKey async {
     try {
       if (!_container.isRegistered(SecurityManager)) return '';
@@ -243,11 +266,11 @@ class IPFSNode {
     }
   }
 
-  /// Resolves a peer ID to its known multiaddresses.
+  /// Resolves a [peerIdStr] to its known multiaddresses.
   List<String> resolvePeerId(String peerIdStr) =>
       _networkManager.resolvePeerId(peerIdStr);
 
-  /// Returns a list of CIDs currently pinned by this node.
+  /// Returns a [Future] that resolves to a [List] of CIDs currently pinned by this node.
   Future<List<String>> get pinnedCids async {
     try {
       if (!_container.isRegistered(DatastoreHandler)) return [];
@@ -261,38 +284,38 @@ class IPFSNode {
 
   // Convenience API Methods
 
-  /// Returns the raw content associated with the given [cid].
+  /// Returns a [Future] that resolves to the raw content associated with the given [cid].
   ///
   /// This is an alias for [get].
   Future<Uint8List?> cat(String cid) async => get(cid);
 
-  /// Manually connects to a peer using its [multiaddr].
+  /// Returns a [Future] that completes when the node manually connects to a peer using its [multiaddr].
   Future<void> connectToPeer(String multiaddr) =>
       _networkManager.connectToPeer(multiaddr);
 
-  /// Gracefully disconnects from a peer identified by [peerIdOrAddr].
+  /// Returns a [Future] that completes when the node gracefully disconnects from a peer identified by [peerIdOrAddr].
   Future<void> disconnectFromPeer(String peerIdOrAddr) =>
       _networkManager.disconnectFromPeer(peerIdOrAddr);
 
-  /// Resolves an IPNS [name] to its corresponding CID.
+  /// Returns a [Future] that resolves to the CID corresponding to the IPNS [name].
   Future<String> resolveIPNS(String name) => _protocolManager.resolveIPNS(name);
 
   // PubSub API
 
-  /// Subscribes the node to a PubSub [topic].
+  /// Returns a [Future] that completes when the node subscribes to a PubSub [topic].
   Future<void> subscribe(String topic) => _protocolManager.subscribe(topic);
 
-  /// Unsubscribes the node from a PubSub [topic].
+  /// Returns a [Future] that completes when the node unsubscribes from a PubSub [topic].
   Future<void> unsubscribe(String topic) => _protocolManager.unsubscribe(topic);
 
-  /// Publishes a [message] to a PubSub [topic].
+  /// Returns a [Future] that completes when the node publishes a [message] to a PubSub [topic].
   Future<void> publish(String topic, String message) =>
       _protocolManager.publish(topic, message);
 
-  /// A stream of incoming PubSub messages for all subscribed topics.
+  /// Returns a [Stream] of incoming [PubSubMessage]s for all subscribed topics.
   Stream<PubSubMessage> get pubsubMessages => _protocolManager.pubsubMessages;
 
-  /// Starts the IPFS node and all its subsystems.
+  /// Returns a [Future] that completes when the IPFS node and all its subsystems have started.
   ///
   /// Transitions the state from [NodeState.stopped] to [NodeState.running].
   /// Throws [NodeStateError] if the node is already running or starting.
@@ -307,6 +330,9 @@ class IPFSNode {
 
     try {
       await _lifecycleManager.startAll();
+      await _mfsManager.init();
+      await _pluginManager.initAll();
+      await _pluginManager.startAll();
       _state = NodeState.running;
       _logger.info('IPFS Node started successfully');
     } catch (e, stackTrace) {
@@ -316,7 +342,7 @@ class IPFSNode {
     }
   }
 
-  /// Stops the IPFS node gracefully, releasing all resources.
+  /// Returns a [Future] that completes when the IPFS node has stopped gracefully, releasing all resources.
   ///
   /// Transitions the state from [NodeState.running] to [NodeState.stopped].
   /// Throws [NodeShutdownError] if any critical subsystem fails to stop.
@@ -330,6 +356,7 @@ class IPFSNode {
     _logger.info('Stopping IPFS Node...');
 
     try {
+      await _pluginManager.stopAll();
       await _lifecycleManager.stopAll();
       _state = NodeState.stopped;
       _logger.info('IPFS Node stopped successfully');
@@ -340,7 +367,7 @@ class IPFSNode {
     }
   }
 
-  /// Restarts the IPFS node by performing a stop and then a start.
+  /// Returns a [Future] that completes when the IPFS node has restarted by performing a stop and then a start.
   ///
   /// Throws [NodeShutdownError] if stop fails.
   /// Throws [NodeStartupError] if start fails.
@@ -350,14 +377,14 @@ class IPFSNode {
     await start();
   }
 
-  /// Adds a file to IPFS and returns its CID.
+  /// Returns a [Future] that resolves to the CID of the added file [data].
   Future<String> addFile(Uint8List data) => _contentManager.addFile(data);
 
-  /// Adds file content from a stream
+  /// Returns a [Future] that resolves to the CID of the added file from [dataStream].
   Future<String> addFileStream(Stream<List<int>> dataStream) =>
       _contentManager.addFileStream(dataStream);
 
-  /// Adds a directory to IPFS and returns its CID.
+  /// Returns a [Future] that resolves to the CID of the added [directoryContent].
   Future<String> addDirectory(Map<String, dynamic> directoryContent) =>
       _contentManager.addDirectory(directoryContent);
 
@@ -377,7 +404,7 @@ class IPFSNode {
     _logger.info('Switched Gateway Mode to: $mode');
   }
 
-  /// Gets the content of a file or directory from IPFS.
+  /// Returns a [Future] that resolves to the content of a file or directory associated with the given [cid].
   Future<Uint8List?> get(String cid, {String path = ''}) => _contentManager.get(
     cid,
     path: path,
@@ -385,39 +412,39 @@ class IPFSNode {
     customGatewayUrl: _customGatewayUrl,
   );
 
-  /// Lists the contents of an IPFS directory.
+  /// Returns a [Future] that resolves to a [List] of [Link]s representing the contents of an IPFS directory.
   Future<List<Link>> ls(String cid) => _contentManager.ls(cid);
 
-  /// Pins a CID to prevent it from being garbage collected.
+  /// Returns a [Future] that completes when the given [cid] is pinned to prevent it from being garbage collected.
   Future<void> pin(String cid) => _contentManager.pin(cid);
 
-  /// Unpins a CID from IPFS.
+  /// Returns a [Future] that resolves to `true` if the given [cid] was successfully unpinned from IPFS.
   Future<bool> unpin(String cid) => _contentManager.unpin(cid);
 
-  /// Publishes an IPNS record for the given CID.
+  /// Returns a [Future] that completes when an IPNS record is published for the given [cid].
   Future<void> publishIPNS(String cid, {required String keyName}) =>
       _protocolManager.publishIPNS(cid, keyName: keyName);
 
-  /// Imports a CAR (Content Addressable Archive) file.
+  /// Returns a [Future] that completes when the given CAR (Content Addressable Archive) file [carFile] is imported.
   Future<void> importCAR(Uint8List carFile) =>
       _contentManager.importCAR(carFile);
 
-  /// Exports a CAR file for the given CID.
+  /// Returns a [Future] that resolves to the CAR file bytes for the given [cid].
   Future<Uint8List> exportCAR(String cid) => _contentManager.exportCAR(cid);
 
-  /// Finds providers for a given CID.
+  /// Returns a [Future] that resolves to a [List] of multiaddresses for providers of the given [cid].
   Future<List<String>> findProviders(String cid) =>
       _networkManager.findProviders(cid);
 
-  /// Requests a specific block from a peer via Bitswap.
+  /// Returns a [Future] that completes when a specific block associated with [cid] is requested from a [peer] via Bitswap.
   Future<void> requestBlock(String cid, Peer peer) =>
       _networkManager.requestBlock(cid, peer);
 
-  /// Resolves a DNSLink to its corresponding CID.
+  /// Returns a [Future] that resolves to the CID corresponding to the given [domainName] via DNSLink.
   Future<String> resolveDNSLink(String domainName) =>
       _protocolManager.resolveDNSLink(domainName);
 
-  /// Returns a health status map for all subsystems.
+  /// Returns a [Future] that resolves to a health status map for all subsystems.
   Future<Map<String, dynamic>> getHealthStatus() async {
     return {
       'core': {
@@ -446,6 +473,7 @@ class IPFSNode {
     };
   }
 
+  /// Returns a [Future] that resolves to the status map of the given service [T].
   Future<Map<String, dynamic>> _getServiceStatus<T extends Object>() async {
     if (_container.isRegistered<T>()) {
       try {
@@ -459,10 +487,10 @@ class IPFSNode {
   }
 
   // Core getters
-  /// Access to the underlying datastore.
+  /// Returns the underlying [Datastore].
   Datastore get datastore => _container.get<DatastoreHandler>().datastore;
 
-  /// Access to the network router.
+  /// Returns the [RouterInterface] used for networking, or `null` if not available.
   RouterInterface? get router {
     if (_container.isRegistered<NetworkHandler>()) {
       return _container.get<NetworkHandler>().router;
@@ -470,7 +498,7 @@ class IPFSNode {
     return null;
   }
 
-  /// Access to the Bitswap handler.
+  /// Returns the [BitswapHandler] instance, or `null` if not registered.
   BitswapHandler? get bitswap {
     if (_container.isRegistered(BitswapHandler)) {
       return _container.get<BitswapHandler>();
@@ -478,7 +506,7 @@ class IPFSNode {
     return null;
   }
 
-  /// Access to the DHT handler.
+  /// Returns the [DHTHandler] instance, or `null` if not registered.
   DHTHandler? get dhtHandler {
     if (_container.isRegistered<DHTHandler>()) {
       return _container.get<DHTHandler>();
@@ -486,11 +514,11 @@ class IPFSNode {
     return null;
   }
 
-  /// This node's peer ID.
+  /// Returns the peer ID of this node.
   String get peerID => _networkManager.peerId;
 
   // Event streams
-  /// Stream of new content CIDs added to this node.
+  /// Returns a [Stream] of new content CIDs added to this node.
   Stream<String> get onNewContent => _newContentController.stream;
 
   /// Validates that all required services are registered in the container

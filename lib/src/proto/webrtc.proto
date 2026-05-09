@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package ipfs.webrtc;
+
+message Message {
+  oneof msg {
+    string offer = 1;
+    string answer = 2;
+    string candidate = 3;
+  }
+}

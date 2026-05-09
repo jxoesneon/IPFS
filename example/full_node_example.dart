@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 // example/full_node_example.dart
+import 'dart:io';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
@@ -17,9 +18,12 @@ Future<void> main() async {
 
   // Step 1: Create configuration
   print('📝 Creating IPFS configuration...');
+  final enableStructuredLogging = Platform.environment['IPFS_JSON_LOGS'] == 'true';
+  
   // Use port 4002 to avoid conflict with Dashboard app (4001)
   final config = IPFSConfig(
     network: NetworkConfig(listenAddresses: ['/ip4/0.0.0.0/tcp/4002']),
+    enableStructuredLogging: enableStructuredLogging,
   );
 
   // Step 2: Initialize IPFS node
@@ -37,6 +41,7 @@ Future<void> main() async {
   print('🌐 Starting HTTP Gateway...');
   final gateway = GatewayServer(
     blockStore: node.blockStore,
+    node: node,
     address: '0.0.0.0',
     port: 8080,
     corsOrigins: ['*'],

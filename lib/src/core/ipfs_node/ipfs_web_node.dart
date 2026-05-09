@@ -15,9 +15,9 @@ import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/delegate_dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/mock_dht_handler.dart'; // Web doesn't support DHT yet, use mock or stub
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
+import 'package:dart_ipfs/src/transport/libp2p_router.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 
 import 'web_block_store.dart';
@@ -35,11 +35,15 @@ class IPFSWebNode {
   /// Creates a new web IPFS node.
   IPFSWebNode({IPFSConfig? config, this.bootstrapPeers = const []}) {
     _platform = getPlatform();
-    _config = config ?? IPFSConfig();
+    _config = config ?? IPFSConfig(
+      network: NetworkConfig(
+        enableWebTransport: true,
+        enableWebRtc: true,
+      ),
+    );
 
     // Initialize networking components
-    // Use WebStubRouter for now as Libp2pRouter is TCP-only
-    _router = WebStubRouter();
+    _router = Libp2pRouter(_config);
     _blockStore = WebBlockStore(_platform);
 
     // Other components initialized in start()
@@ -90,14 +94,8 @@ class IPFSWebNode {
       MetricsCollector(_config),
     );
 
-    final delegateUrl = _config.network.delegatedRoutingEndpoint;
-    IDHTHandler dht;
-
-    if (delegateUrl != null && delegateUrl.isNotEmpty) {
-      dht = DelegateDHTHandler(delegateUrl);
-    } else {
-      dht = MockDHTHandler();
-    }
+    final delegateUrl = _config.network.delegatedRoutingEndpoint ?? 'https://delegated-ipfs.io';
+    IDHTHandler dht = DelegateDHTHandler(delegateUrl);
 
     _ipns = IPNSHandler(_config, _securityManager, dht, _pubsub);
 
@@ -234,7 +232,7 @@ class IPFSWebNode {
   /// Publishes an IPNS record.
   Future<void> publishIPNS(String cid, {required String keyName}) async {
     if (!_started) throw StateError('Node not started');
-    await _ipns.publish(cid, keyName: keyName);
+    await _ipns.publish(keyName, cid);
   }
 
   /// Resolves an IPNS name.
@@ -242,97 +240,4 @@ class IPFSWebNode {
     if (!_started) throw StateError('Node not started');
     return _ipns.resolve(name);
   }
-}
-
-/// Stub router for Web until Libp2p supports WebSockets/WebRTC
-class WebStubRouter implements RouterInterface {
-  @override
-  // Use a known valid Base58 string
-  String get peerID => 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
-
-  @override
-  bool get hasStarted => true;
-
-  @override
-  bool get isInitialized => true;
-
-  @override
-  Set<String> get connectedPeers => {};
-
-  @override
-  List<String> get listeningAddresses => [];
-
-  @override
-  Stream<ConnectionEvent> get connectionEvents => const Stream.empty();
-
-  @override
-  Stream<MessageEvent> get messageEvents => const Stream.empty();
-
-  @override
-  Future<void> initialize() async {}
-
-  @override
-  Future<void> start() async {}
-
-  @override
-  Future<void> stop() async {}
-
-  @override
-  Future<void> connect(String multiaddress) async {}
-
-  @override
-  Future<void> disconnect(String peerIdOrMultiaddress) async {}
-
-  @override
-  List<String> listConnectedPeers() => [];
-
-  @override
-  bool isConnectedPeer(String peerIdStr) => false;
-
-  @override
-  Future<void> sendMessage(
-    String peerId,
-    Uint8List message, {
-    String? protocolId,
-  }) async {}
-
-  @override
-  Future<Uint8List?> sendRequest(
-    String peerId,
-    String protocolId,
-    Uint8List request,
-  ) async => null;
-
-  @override
-  Stream<Uint8List> receiveMessages(String peerId) => const Stream.empty();
-
-  @override
-  void registerProtocolHandler(
-    String protocolId,
-    void Function(NetworkPacket) handler,
-  ) {}
-
-  @override
-  void removeMessageHandler(String protocolId) {}
-
-  @override
-  void registerProtocol(String protocolId) {}
-
-  @override
-  Future<void> broadcastMessage(String protocolId, Uint8List message) async {}
-
-  @override
-  void emitEvent(String topic, Uint8List data) {}
-
-  @override
-  void onEvent(String topic, void Function(dynamic) handler) {}
-
-  @override
-  void offEvent(String topic, void Function(dynamic) handler) {}
-
-  @override
-  dynamic parseMultiaddr(String multiaddr) => null;
-
-  @override
-  List<String> resolvePeerId(String peerIdStr) => [];
 }

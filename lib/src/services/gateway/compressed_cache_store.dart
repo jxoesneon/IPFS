@@ -1,12 +1,12 @@
 // lib/src/services/gateway/compressed_cache_store.dart
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:archive/archive.dart';
+import 'package:archive/archive.dart' hide CompressionType;
 import 'package:crypto/crypto.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_lz4/dart_lz4.dart';
 
 import '../../utils/logger.dart';
@@ -16,37 +16,37 @@ import 'adaptive_compression_handler.dart';
 class CompressedCacheStore {
   /// Creates a compressed cache store at [cachePath].
   CompressedCacheStore({
-    required String cachePath,
+    required this.cachePath,
     CompressionConfig? compressionConfig,
-  }) : _cacheDir = Directory(cachePath),
-       _compressionHandler = AdaptiveCompressionHandler(
+  }) : _compressionHandler = AdaptiveCompressionHandler(
          BlockStore(path: cachePath),
          compressionConfig ?? CompressionConfig(),
        ) {
     _initializeStore();
   }
 
-  final Directory _cacheDir;
+  /// The path to the cache directory.
+  final String cachePath;
   final AdaptiveCompressionHandler _compressionHandler;
   final _logger = Logger('CompressedCacheStore');
 
-  void _initializeStore() {
-    if (!_cacheDir.existsSync()) {
-      _cacheDir.createSync(recursive: true);
+  Future<void> _initializeStore() async {
+    if (!await getPlatform().exists(cachePath)) {
+      await getPlatform().createDirectory(cachePath);
     }
   }
 
   /// Gets compressed data for a CID, decompressing before returning.
   Future<Uint8List?> getCompressedData(CID cid, String contentType) async {
-    final cacheFile = File(
-      '${_cacheDir.path}/${_getCacheFileName(cid, contentType)}',
-    );
+    final cacheFilePath = '$cachePath/${_getCacheFileName(cid, contentType)}';
 
-    if (!await cacheFile.exists()) return null;
+    if (!await getPlatform().exists(cacheFilePath)) return null;
 
     try {
-      final compressedData = await cacheFile.readAsBytes();
-      final metadata = await _readMetadata(cacheFile.path);
+      final compressedData = await getPlatform().readBytes(cacheFilePath);
+      if (compressedData == null) return null;
+
+      final metadata = await _readMetadata(cacheFilePath);
       final compressionType = _parseCompressionType(
         metadata['compression'] ?? 'gzip',
       );
@@ -83,7 +83,7 @@ class CompressedCacheStore {
       'compression': compressionType.name,
       'originalSize': data.length.toString(),
       'compressedSize': compressedData.length.toString(),
-      'compressionRatio': analysis.compressionRatios[compressionType]
+      'compressionRatio': (analysis.compressionRatios[compressionType] ?? 1.0)
           .toString(),
       'timestamp': DateTime.now().toIso8601String(),
     });
@@ -98,14 +98,12 @@ class CompressedCacheStore {
           final encoded = const GZipEncoder().encode(data);
           return Uint8List.fromList(encoded);
         case CompressionType.zlib:
-          return Uint8List.fromList(const ZLibEncoder().encode(data));
+          final encoded = const ZLibEncoder().encode(data);
+          return Uint8List.fromList(encoded);
         case CompressionType.lz4:
           return lz4FrameEncode(data);
       }
     } catch (e) {
-      if (type == CompressionType.lz4) {
-        // lz4FrameEncode throws if validation fails, catch below handles it
-      }
       rethrow;
     }
   }
@@ -119,28 +117,23 @@ class CompressedCacheStore {
           return Uint8List.fromList(const GZipDecoder().decodeBytes(data));
         case CompressionType.zlib:
           return Uint8List.fromList(const ZLibDecoder().decodeBytes(data));
-
         case CompressionType.lz4:
           return lz4FrameDecode(data);
       }
     } catch (e) {
-      // If decompression fails (especially LZ4), we can't really fallback
-      // because the data IS compressed with that algorithm.
-      // But we should catch the FFI error to prevent a hard crash.
-      // But we should catch the FFI error to prevent a hard crash.
       _logger.error('Decompression failed for type: ${type.name}', e);
       throw FormatException('Failed to decompress data: ${e.toString()}');
     }
   }
 
   /// Returns compression statistics for the cache.
-  CompressionStats getCompressionStats(String cachePath) {
+  Future<CompressionStats> getCompressionStats(String cachePath) async {
     final stats = CompressionStats();
-    final dir = Directory(cachePath);
+    final files = await getPlatform().listDirectory(cachePath);
 
-    for (var file in dir.listSync(recursive: true)) {
-      if (file is File && file.path.endsWith('.cache')) {
-        final metadata = _readMetadataSync(file.path);
+    for (var filePath in files) {
+      if (filePath.endsWith('.cache')) {
+        final metadata = await _readMetadata(filePath);
         final originalSize = int.parse(metadata['originalSize'] ?? '0');
         final compressedSize = int.parse(metadata['compressedSize'] ?? '0');
 
@@ -159,30 +152,14 @@ class CompressedCacheStore {
   }
 
   Future<Map<String, String>> _readMetadata(String filePath) async {
-    final metadataFile = File('$filePath.meta');
-    if (!await metadataFile.exists()) {
+    final metadataPath = '$filePath.meta';
+    if (!await getPlatform().exists(metadataPath)) {
       return {};
     }
 
     try {
-      final content = await metadataFile.readAsString();
-      return Map<String, String>.from(
-        json.decode(content) as Map<dynamic, dynamic>,
-      );
-    } catch (e, stackTrace) {
-      _logger.error('Error reading metadata file', e, stackTrace);
-      return {};
-    }
-  }
-
-  Map<String, String> _readMetadataSync(String filePath) {
-    final metadataFile = File('$filePath.meta');
-    if (!metadataFile.existsSync()) {
-      return {};
-    }
-
-    try {
-      final content = metadataFile.readAsStringSync();
+      final content = await getPlatform().readString(metadataPath);
+      if (content == null) return {};
       return Map<String, String>.from(
         json.decode(content) as Map<dynamic, dynamic>,
       );
@@ -198,13 +175,14 @@ class CompressedCacheStore {
     Uint8List data,
     Map<String, String> metadata,
   ) async {
-    final cacheFile = File(
-      '${_cacheDir.path}/${_getCacheFileName(cid, contentType)}',
-    );
-    await cacheFile.writeAsBytes(data);
+    final cacheFilePath = '$cachePath/${_getCacheFileName(cid, contentType)}';
+    await getPlatform().writeBytes(cacheFilePath, data);
 
-    final metadataFile = File('${cacheFile.path}.meta');
-    await metadataFile.writeAsString(json.encode(metadata));
+    final metadataPath = '$cacheFilePath.meta';
+    await getPlatform().writeBytes(
+      metadataPath,
+      Uint8List.fromList(utf8.encode(json.encode(metadata))),
+    );
   }
 
   CompressionType _parseCompressionType(String name) {

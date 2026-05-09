@@ -1,3 +1,4 @@
+@TestOn("vm")
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/platform/platform_io.dart';

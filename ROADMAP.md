@@ -1,67 +1,56 @@
 # dart_ipfs Roadmap
 
-**Current Version**: 1.9.1 (Production Ready + Protobuf 6.0.0 Compatible)  
-**Last Updated**: 2026-01-31
+**Current Version**: 1.10.0 (Multi-Platform Production Ready)  
+**Last Updated**: 2026-02-15
 
 ---
 
 ## 📍 Current Status
 
-dart_ipfs **v1.4.1** is **100% production ready** with:
+dart_ipfs **v1.10.0** is **multi-platform production ready** with:
 
-- ✅ Full IPFS protocol implementation
-- ✅ P2P networking with production cryptography
-- ✅ Gateway (Internal/Public/Local/Custom modes)
-- ✅ Encrypted Key Storage (SEC-001)
-- ✅ IPNS Signatures (SEC-004)
-- ✅ 526 tests passing
-- ✅ Complete documentation
-
-This roadmap outlines future enhancements beyond the current production-ready state.
+- ✅ **IpfsPlatform**: Unified abstraction layer for IO and Web.
+- ✅ **Web Support**: Persistent storage via IndexedDB (idb_shim).
+- ✅ **SecurityManager**: Enterprise-grade encrypted keystore.
+- ✅ **Protocol Compliance**: Standardized Bitswap, DHT, and IPNS.
+- ✅ **Infrastructure**: Automated browser testing and CI.
+- ✅ **1100+ tests passing** across all platforms.
 
 ---
 
 ## 🗓️ Version Timeline
 
-### v1.4 - Q1 2026 (Foundation & Devops)
+### v1.10 - Q1 2026 (The Multi-Platform Milestone)
 
-**Focus**: Deployment, stability, and observability
+**Focus**: Browser compatibility, storage abstraction, and unified API.
 
 #### Features
+- [x] IpfsPlatform abstraction layer.
+- [x] IndexedDB storage provider for Web.
+- [x] Browser-compatible SecurityManager.
+- [x] Automated Chrome/Firefox testing suite.
+- [x] Protocol standardization (Kubo compliance).
 
-- [ ] Docker Ecosystem (Gateway, Node, Dev variants)
-- [ ] Health check endpoints (Kubernetes-ready)
-- [ ] Structured JSON logging (Logstash/Datadog ready)
-- [ ] Project template library
-- [ ] Automated benchmark suite
-
-**Estimated Release**: January 2026
+**Released**: February 2026
 
 ---
 
-### v1.5 - Q2 2026 (Platform Expansion)
+### v1.11 - Q2 2026 (Enhanced Connectivity)
 
-**Focus**: Cross-platform and mobile
+**Focus**: Advanced browser networking and performance.
 
 #### Features
+- [x] Libp2p browser transport (WebRTC/WebTransport).
+- [ ] IPNS performance optimizations (DHT record caching).
+- [ ] Advanced IPLD codecs (DagCbor, DagJson, DagJose).
+- [ ] Flutter Web specific optimizations.
+- [ ] Multi-platform metrics dashboard.
 
-- [ ] Flutter widget library
-- [ ] WebRTC transport (browser P2P)
-- [ ] iOS-specific optimizations
-- [ ] Android-specific optimizations
-- [ ] API documentation site
-
-#### Improvements
-
-- [ ] Mobile battery optimization
-- [ ] Background task support
-- [ ] Native platform integrations
-
-**Estimated Release**: June 2026
+**Estimated Release**: May 2026
 
 ---
 
-### v1.3 - Q3 2026 (Performance & Scale)
+### v2.0 - Q4 2026 (Ecosystem & Extensibility)
 
 **Focus**: Speed and efficiency
 
@@ -450,7 +439,7 @@ This roadmap is a living document. We welcome:
 
 ---
 
-**Last Updated: 2025-12-17 (v1.4.1)**
+**Last Updated**: 2026-05-15 (v1.11.0)
 **Status**: Active Development  
-**Current Version:** 1.4.1
-**Target for Next Release:** 1.5.0 (Q1 2026)
+**Current Version:** 1.11.0
+**Target for Next Release:** 2.0.0 (Q4 2026)

@@ -16,7 +16,8 @@ import 'package:meta/meta.dart';
 class BitswapHandler implements ILifecycle {
   /// Creates a new [BitswapHandler] with the given [config], [_blockStore], and [_router].
   BitswapHandler(IPFSConfig config, this._blockStore, this._router)
-    : _logger = Logger(
+    : _maxConcurrentRequests = config.maxConcurrentBitswapRequests,
+      _logger = Logger(
         'BitswapHandler',
         debug: config.debug,
         verbose: config.verboseLogging,
@@ -29,6 +30,11 @@ class BitswapHandler implements ILifecycle {
   final Wantlist _wantlist = Wantlist();
   final LedgerManager _ledgerManager = LedgerManager();
   final Map<String, Completer<Block>> _pendingBlocks = {};
+  // ignore: unused_field
+  final Map<String, Set<String>> _providersForBlock = {};
+  final List<String> _requestQueue = [];
+  int _activeRequests = 0;
+  final int _maxConcurrentRequests;
   static const String _protocolId = '/ipfs/bitswap/1.2.0';
   bool _running = false;
   final Logger _logger;
@@ -299,23 +305,15 @@ class BitswapHandler implements ILifecycle {
         _pendingBlocks[cid] = completer;
         completers[cid] = completer;
         _wantlist.add(cid, priority: priority);
+        _requestQueue.add(cid);
+      } else {
+        completers[cid] = _pendingBlocks[cid]!;
       }
     }
 
-    final msg = message.Message();
-
-    for (final cid in cids) {
-      msg.addWantlistEntry(
-        cid,
-        priority: priority,
-        wantType: message.WantType.block,
-        sendDontHave: true, // Enable Bitswap 1.2 optimization
-      );
-    }
+    unawaited(_processQueue());
 
     try {
-      await _broadcastWantRequest(msg);
-
       final futures = completers.values
           .map(
             (completer) => completer.future.timeout(
@@ -331,11 +329,46 @@ class BitswapHandler implements ILifecycle {
     } catch (e) {
       // Clean up pending requests that failed
       for (final cid in completers.keys) {
-        _pendingBlocks.remove(cid);
-        _wantlist.remove(cid);
+        if (_pendingBlocks[cid]?.isCompleted == false) {
+           _pendingBlocks.remove(cid);
+           _wantlist.remove(cid);
+        }
       }
       rethrow;
     }
+  }
+
+  Future<void> _processQueue() async {
+    if (_activeRequests >= _maxConcurrentRequests || _requestQueue.isEmpty) {
+      return;
+    }
+
+    while (_activeRequests < _maxConcurrentRequests && _requestQueue.isNotEmpty) {
+      final cid = _requestQueue.removeAt(0);
+      _activeRequests++;
+      
+      unawaited(_sendWantRequest(cid).then((_) {
+        // We don't decrement _activeRequests here because Bitswap is async.
+        // The request is 'active' until the block is received or times out.
+        // For simplicity in this implementation, we'll just throttle the initial sending.
+      }).catchError((Object e) {
+        _logger.error('Failed to send want request for $cid: $Object e');
+      }).whenComplete(() {
+         _activeRequests--;
+         unawaited(_processQueue());
+      }));
+    }
+  }
+
+  Future<void> _sendWantRequest(String cid) async {
+    final msg = message.Message();
+    msg.addWantlistEntry(
+      cid,
+      priority: 1, // Default priority for queue processing
+      wantType: message.WantType.block,
+      sendDontHave: true,
+    );
+    await _broadcastWantRequest(msg);
   }
 
   /// Broadcasts want request to connected peers
