@@ -2,19 +2,22 @@ import 'dart:async';
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 import 'package:ipfs_libp2p/p2p/transport/listener.dart' as libp2p_listener;
 
+/// WebTransport listener implementation for libp2p.
 class WebTransportListener implements libp2p_listener.Listener {
   final libp2p.MultiAddr _addr;
   final StreamController<libp2p.TransportConn> _connController =
       StreamController.broadcast();
 
+  /// Creates a new [WebTransportListener].
   WebTransportListener(this._addr);
 
+  /// Starts listening for incoming WebTransport connections.
   Future<void> listen() async {
     // WebTransport listening is generally not possible in browsers.
     // This would be implemented on the server-side (Go/Rust node).
+    // ignore: avoid_print
     print(
-      'WebTransport listening on $_addr (Note: Browser nodes typically only dial)',
-    );
+        'WebTransport listening on $_addr (Note: Browser nodes typically only dial)');
   }
 
   @override

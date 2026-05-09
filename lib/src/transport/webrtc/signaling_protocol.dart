@@ -4,14 +4,30 @@ import 'dart:typed_data';
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 
-enum SignalingMessageType { offer, answer, candidate }
+/// The type of a signaling message.
+enum SignalingMessageType {
+  /// SDP offer.
+  offer,
 
+  /// SDP answer.
+  answer,
+
+  /// ICE candidate.
+  candidate
+}
+
+/// A message exchanged over the WebRTC signaling protocol.
 class SignalingMessage {
+  /// The type of message.
   final SignalingMessageType type;
+
+  /// The message data (SDP or ICE candidate string).
   final String data;
 
+  /// Creates a new [SignalingMessage].
   SignalingMessage(this.type, this.data);
 
+  /// Encodes this message into a protobuf-compatible byte array.
   Uint8List encode() {
     final dataBytes = utf8.encode(data);
     final typeValue = type.index;
@@ -30,6 +46,7 @@ class SignalingMessage {
     return Uint8List.fromList(result);
   }
 
+  /// Decodes a signaling message from a protobuf-compatible byte array.
   static SignalingMessage decode(Uint8List bytes) {
     var offset = 0;
     SignalingMessageType? type;
@@ -81,13 +98,14 @@ class SignalingMessage {
   static _VarintResult _decodeVarint(Uint8List bytes, int offset) {
     var result = 0;
     var shift = 0;
+    var currentOffset = offset;
     while (true) {
-      final byte = bytes[offset++];
+      final byte = bytes[currentOffset++];
       result |= (byte & 0x7F) << shift;
       if (byte < 0x80) break;
       shift += 7;
     }
-    return _VarintResult(result, offset);
+    return _VarintResult(result, currentOffset);
   }
 }
 
@@ -97,9 +115,12 @@ class _VarintResult {
   _VarintResult(this.value, this.newOffset);
 }
 
+/// Implementation of the WebRTC signaling protocol for libp2p.
 class SignalingProtocol {
+  /// The protocol identifier.
   static const String id = '/libp2p/webrtc/signaling/0.0.1';
 
+  /// Registers the protocol handler with the given router.
   static void register(RouterInterface router) {
     router.registerProtocolHandler(id, (packet) {
       // The Libp2pRouter.registerProtocolHandler already sets up a stream handler
@@ -112,19 +133,16 @@ class SignalingProtocol {
   final StreamController<SignalingMessage> _messageController =
       StreamController<SignalingMessage>.broadcast();
 
+  /// Creates a new [SignalingProtocol] handler.
+  SignalingProtocol();
+
+  /// Stream of signaling messages received.
   Stream<SignalingMessage> get messages => _messageController.stream;
 
+  /// Handles an incoming signaling stream.
   void handleStream(libp2p.P2PStream<Uint8List> stream) async {
     try {
       while (!stream.isClosed) {
-        // Protobuf messages in libp2p are often prefixed with varint length
-        // but the spec might vary. Usually libp2p-mplex/yamux handles framing.
-        // For webrtc signaling, it's a dedicated stream.
-
-        // Let's assume standard libp2p length-prefixing if needed,
-        // but often the underlying muxer handles it.
-        // The spec says "messages are exchanged over the stream".
-
         final lengthPrefix = await _readVarint(stream);
         final messageBytes = await stream.read(lengthPrefix);
         final message = SignalingMessage.decode(messageBytes);
@@ -133,7 +151,7 @@ class SignalingProtocol {
     } catch (e) {
       // Stream closed or error
     } finally {
-      _messageController.close();
+      unawaited(_messageController.close());
     }
   }
 
@@ -141,7 +159,9 @@ class SignalingProtocol {
     var result = 0;
     var shift = 0;
     while (true) {
-      final byte = (await stream.read(1))[0];
+      final bytes = await stream.read(1);
+      if (bytes.isEmpty) throw Exception('Stream closed while reading varint');
+      final byte = bytes[0];
       result |= (byte & 0x7F) << shift;
       if (byte < 0x80) break;
       shift += 7;
@@ -149,6 +169,7 @@ class SignalingProtocol {
     return result;
   }
 
+  /// Sends a signaling message over the given stream.
   static Future<void> sendMessage(
     libp2p.P2PStream<Uint8List> stream,
     SignalingMessage msg,

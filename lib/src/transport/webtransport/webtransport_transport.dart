@@ -12,6 +12,7 @@ import 'webtransport_listener.dart';
 class WebTransportTransport implements libp2p_trans.Transport {
   final WebTransportDialer _dialer = WebTransportDialer();
 
+  /// Creates a new [WebTransportTransport].
   WebTransportTransport();
 
   @override
@@ -46,18 +47,16 @@ class WebTransportTransport implements libp2p_trans.Transport {
   Future<void> dispose() async {}
 }
 
+/// WebTransport connection implementation.
 class WebTransportConnection implements libp2p.Conn {
   final libp2p.MultiAddr _localAddr;
   final libp2p.MultiAddr _remoteAddr;
   final libp2p.PeerId _localPeer;
   final libp2p.PeerId _remotePeer;
 
+  /// Creates a new [WebTransportConnection].
   WebTransportConnection(
-    this._localAddr,
-    this._remoteAddr,
-    this._localPeer,
-    this._remotePeer,
-  );
+      this._localAddr, this._remoteAddr, this._localPeer, this._remotePeer);
 
   @override
   libp2p.PeerId get localPeer => _localPeer;
@@ -77,7 +76,7 @@ class WebTransportConnection implements libp2p.Conn {
   }
 
   @override
-  Future<List<libp2p.P2PStream>> get streams => Future.value([]);
+  Future<List<libp2p.P2PStream<Uint8List>>> get streams => Future.value([]);
 
   @override
   Future<void> close() async {}
@@ -99,9 +98,9 @@ class WebTransportConnection implements libp2p.Conn {
 
   @override
   libp2p.ConnState get state => libp2p.ConnState(
-    streamMultiplexer: '/quic/1.0.0',
-    security: '/quic/1.0.0',
-    transport: 'webtransport',
-    usedEarlyMuxerNegotiation: true,
-  );
+        streamMultiplexer: '/quic/1.0.0',
+        security: '/quic/1.0.0',
+        transport: 'webtransport',
+        usedEarlyMuxerNegotiation: true,
+      );
 }

@@ -9,9 +9,12 @@ import 'peer_connection.dart';
 import 'signaling_protocol.dart';
 import 'data_channel_stream.dart';
 
+/// WebRTC transport implementation for libp2p.
 class WebRTCTransport implements libp2p_trans.Transport {
+  /// The libp2p host associated with this transport.
   libp2p.Host? host;
 
+  /// Creates a new [WebRTCTransport].
   WebRTCTransport({this.host});
 
   @override
@@ -19,8 +22,8 @@ class WebRTCTransport implements libp2p_trans.Transport {
 
   @override
   bool canDial(libp2p.MultiAddr addr) {
-    return addr.toString().contains('/webrtc') &&
-        !addr.toString().contains('/webrtc-direct');
+    final addrStr = addr.toString();
+    return addrStr.contains('/webrtc') && !addrStr.contains('/webrtc-direct');
   }
 
   @override
@@ -30,13 +33,16 @@ class WebRTCTransport implements libp2p_trans.Transport {
 
   @override
   Future<libp2p.Conn> dial(libp2p.MultiAddr addr, {Duration? timeout}) async {
-    if (host == null) throw Exception('Host required for WebRTC relay dialing');
+    if (host == null) {
+      throw Exception('Host required for WebRTC relay dialing');
+    }
 
     // addr: /ip4/RELAY_IP/udp/RELAY_PORT/quic-v1/webtransport/p2p/RELAY_ID/p2p-circuit/webrtc/p2p/REMOTE_ID
     final addrStr = addr.toString();
     final p2pCircuitIndex = addrStr.indexOf('/p2p-circuit');
-    if (p2pCircuitIndex == -1)
+    if (p2pCircuitIndex == -1) {
       throw Exception('Invalid WebRTC multiaddr: missing /p2p-circuit');
+    }
 
     final relayAddr = libp2p.MultiAddr(addrStr.substring(0, p2pCircuitIndex));
     final remotePeerIdStr = addrStr.split('/p2p/').last;
@@ -50,9 +56,8 @@ class WebRTCTransport implements libp2p_trans.Transport {
 
     // 2. Open signaling stream to remote peer via relay
     final context = libp2p.Context(timeout: dialTimeout);
-    final signalingStream = await host!.newStream(remotePeerId, [
-      SignalingProtocol.id,
-    ], context);
+    final signalingStream =
+        await host!.newStream(remotePeerId, [SignalingProtocol.id], context);
 
     final signaling = SignalingProtocol();
     signaling.handleStream(signalingStream as libp2p.P2PStream<Uint8List>);
@@ -65,7 +70,10 @@ class WebRTCTransport implements libp2p_trans.Transport {
     pc.onIceCandidate.listen((candidate) {
       SignalingProtocol.sendMessage(
         signalingStream,
-        SignalingMessage(SignalingMessageType.candidate, candidate.candidate),
+        SignalingMessage(
+          SignalingMessageType.candidate,
+          candidate.candidate,
+        ),
       );
     });
 
@@ -82,7 +90,10 @@ class WebRTCTransport implements libp2p_trans.Transport {
     await pc.setLocalDescription(offer);
     await SignalingProtocol.sendMessage(
       signalingStream,
-      SignalingMessage(SignalingMessageType.offer, offer.sdp),
+      SignalingMessage(
+        SignalingMessageType.offer,
+        offer.sdp,
+      ),
     );
 
     // Wait for data channel
@@ -112,6 +123,7 @@ class WebRTCTransport implements libp2p_trans.Transport {
   }
 }
 
+/// WebRTC connection implementation for libp2p.
 class WebRTCConnection implements libp2p.Conn {
   final PeerConnection _pc;
   // ignore: unused_field
@@ -120,6 +132,7 @@ class WebRTCConnection implements libp2p.Conn {
   final libp2p.PeerId _localPeer;
   final libp2p.PeerId _remotePeer;
 
+  /// Creates a new [WebRTCConnection].
   WebRTCConnection(
     this._pc,
     this._baseChannel,
@@ -148,7 +161,7 @@ class WebRTCConnection implements libp2p.Conn {
   }
 
   @override
-  Future<List<libp2p.P2PStream>> get streams => Future.value([]);
+  Future<List<libp2p.P2PStream<Uint8List>>> get streams => Future.value([]);
 
   @override
   Future<void> close() async {
@@ -172,67 +185,71 @@ class WebRTCConnection implements libp2p.Conn {
 
   @override
   libp2p.ConnState get state => libp2p.ConnState(
-    streamMultiplexer: '/webrtc/1.0.0',
-    security: '/webrtc/1.0.0',
-    transport: 'webrtc',
-    usedEarlyMuxerNegotiation: true,
-  );
+        streamMultiplexer: '/webrtc/1.0.0',
+        security: '/webrtc/1.0.0',
+        transport: 'webrtc',
+        usedEarlyMuxerNegotiation: true,
+      );
 }
 
+/// WebRTC listener implementation for libp2p.
 class WebRTCListener implements libp2p_listener.Listener {
   final libp2p.MultiAddr _addr;
   final libp2p.Host? _host;
   final StreamController<libp2p.TransportConn> _connController =
       StreamController.broadcast();
 
+  /// Creates a new [WebRTCListener].
   WebRTCListener(this._addr, this._host) {
     if (_host != null) {
-      _host!.setStreamHandler(SignalingProtocol.id, (
-        stream,
-        remotePeerId,
-      ) async {
-        final signaling = SignalingProtocol();
-        signaling.handleStream(stream as libp2p.P2PStream<Uint8List>);
+      _host!.setStreamHandler(
+        SignalingProtocol.id,
+        (stream, remotePeerId) async {
+          final signaling = SignalingProtocol();
+          signaling.handleStream(stream as libp2p.P2PStream<Uint8List>);
 
-        final pc = createPeerConnection(['stun:stun.l.google.com:19302']);
+          final pc = createPeerConnection(['stun:stun.l.google.com:19302']);
 
-        pc.onIceCandidate.listen((candidate) {
-          SignalingProtocol.sendMessage(
-            stream,
-            SignalingMessage(
-              SignalingMessageType.candidate,
-              candidate.candidate,
-            ),
-          );
-        });
-
-        signaling.messages.listen((msg) async {
-          if (msg.type == SignalingMessageType.offer) {
-            await pc.setRemoteDescription('offer', msg.data);
-            final answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            await SignalingProtocol.sendMessage(
+          pc.onIceCandidate.listen((candidate) {
+            SignalingProtocol.sendMessage(
               stream,
-              SignalingMessage(SignalingMessageType.answer, answer.sdp),
+              SignalingMessage(
+                SignalingMessageType.candidate,
+                candidate.candidate,
+              ),
             );
-          } else if (msg.type == SignalingMessageType.candidate) {
-            await pc.addIceCandidate(RTCIceCandidateInit(msg.data, null, null));
-          }
-        });
+          });
 
-        pc.onDataChannel.listen((DataChannelStream channel) {
-          _connController.add(
-            WebRTCConnection(
-                  pc,
-                  channel,
-                  stream.conn.remoteMultiaddr,
-                  _host!.id,
-                  stream.conn.remotePeer,
-                )
-                as libp2p.TransportConn,
-          );
-        });
-      });
+          signaling.messages.listen((msg) async {
+            if (msg.type == SignalingMessageType.offer) {
+              await pc.setRemoteDescription('offer', msg.data);
+              final answer = await pc.createAnswer();
+              await pc.setLocalDescription(answer);
+              await SignalingProtocol.sendMessage(
+                stream,
+                SignalingMessage(
+                  SignalingMessageType.answer,
+                  answer.sdp,
+                ),
+              );
+            } else if (msg.type == SignalingMessageType.candidate) {
+              await pc.addIceCandidate(RTCIceCandidateInit(msg.data, null, null));
+            }
+          });
+
+          pc.onDataChannel.listen((DataChannelStream channel) {
+            _connController.add(
+              WebRTCConnection(
+                pc,
+                channel,
+                stream.conn.remoteMultiaddr,
+                _host!.id,
+                stream.conn.remotePeer,
+              ) as libp2p.TransportConn,
+            );
+          });
+        },
+      );
     }
   }
 
@@ -256,6 +273,5 @@ class WebRTCListener implements libp2p_listener.Listener {
   bool get isClosed => _connController.isClosed;
 
   @override
-  bool supportsAddr(libp2p.MultiAddr addr) =>
-      addr.toString().contains('/webrtc');
+  bool supportsAddr(libp2p.MultiAddr addr) => addr.toString().contains('/webrtc');
 }

@@ -5,6 +5,7 @@ import 'package:web/web.dart' as web;
 import 'peer_connection.dart';
 import 'data_channel_stream.dart';
 
+/// Web implementation of [PeerConnection] using `package:web`.
 class PeerConnectionWeb implements PeerConnection {
   final web.RTCPeerConnection _pc;
   final StreamController<RTCIceCandidateInit> _iceController =
@@ -12,35 +13,26 @@ class PeerConnectionWeb implements PeerConnection {
   final StreamController<DataChannelStream> _dataChannelController =
       StreamController.broadcast();
 
+  /// Creates a new [PeerConnectionWeb].
   PeerConnectionWeb(List<String> iceServers)
-    : _pc = web.RTCPeerConnection(
-        web.RTCConfiguration(
-          iceServers:
-              iceServers
-                      .map((s) {
-                        return web.RTCIceServer(urls: s.toJS);
-                      })
-                      .toList()
-                      .toJS
-                  as JSArray<web.RTCIceServer>,
-        ),
-      ) {
+      : _pc = web.RTCPeerConnection(web.RTCConfiguration(
+          iceServers: iceServers.map((s) {
+            return web.RTCIceServer(urls: s.toJS);
+          }).toList().toJS as JSArray<web.RTCIceServer>,
+        )) {
     _pc.onicecandidate = ((web.RTCPeerConnectionIceEvent ev) {
       if (ev.candidate != null) {
-        _iceController.add(
-          RTCIceCandidateInit(
-            ev.candidate!.candidate,
-            ev.candidate!.sdpMid,
-            ev.candidate!.sdpMLineIndex,
-          ),
-        );
+        _iceController.add(RTCIceCandidateInit(
+          ev.candidate!.candidate,
+          ev.candidate!.sdpMid,
+          ev.candidate!.sdpMLineIndex,
+        ));
       }
     }).toJS;
 
     _pc.ondatachannel = ((web.RTCDataChannelEvent ev) {
-      _dataChannelController.add(
-        _WebDataChannelStream(ev.channel, incoming: true),
-      );
+      _dataChannelController
+          .add(_WebDataChannelStream(ev.channel, incoming: true));
     }).toJS;
   }
 
@@ -59,48 +51,45 @@ class PeerConnectionWeb implements PeerConnection {
   @override
   Future<RTCSessionDescriptionInit> createOffer() async {
     final offer = await _pc.createOffer().toDart;
-    return RTCSessionDescriptionInit(offer!.type.toString(), offer!.sdp);
+    if (offer == null) throw Exception('Failed to create offer');
+    return RTCSessionDescriptionInit(offer.type, offer.sdp);
   }
 
   @override
   Future<RTCSessionDescriptionInit> createAnswer() async {
     final answer = await _pc.createAnswer().toDart;
-    return RTCSessionDescriptionInit(answer!.type.toString(), answer!.sdp);
+    if (answer == null) throw Exception('Failed to create answer');
+    return RTCSessionDescriptionInit(answer.type, answer.sdp);
   }
 
   @override
-  Future<void> setLocalDescription(
-    RTCSessionDescriptionInit description,
-  ) async {
+  Future<void> setLocalDescription(RTCSessionDescriptionInit description) async {
     await _pc
-        .setLocalDescription(
-          web.RTCLocalSessionDescriptionInit(
-            type: description.type as web.RTCSdpType,
-            sdp: description.sdp,
-          ),
-        )
+        .setLocalDescription(web.RTCLocalSessionDescriptionInit(
+          type: description.type,
+          sdp: description.sdp,
+        ))
         .toDart;
   }
 
   @override
   Future<void> setRemoteDescription(String type, String sdp) async {
     await _pc
-        .setRemoteDescription(
-          web.RTCSessionDescriptionInit(type: type as web.RTCSdpType, sdp: sdp),
-        )
+        .setRemoteDescription(web.RTCSessionDescriptionInit(
+          type: type as web.RTCSdpType,
+          sdp: sdp,
+        ))
         .toDart;
   }
 
   @override
   Future<void> addIceCandidate(RTCIceCandidateInit candidate) async {
     await _pc
-        .addIceCandidate(
-          web.RTCIceCandidateInit(
-            candidate: candidate.candidate,
-            sdpMid: candidate.sdpMid,
-            sdpMLineIndex: candidate.sdpMLineIndex,
-          ),
-        )
+        .addIceCandidate(web.RTCIceCandidateInit(
+          candidate: candidate.candidate,
+          sdpMid: candidate.sdpMid,
+          sdpMLineIndex: candidate.sdpMLineIndex,
+        ))
         .toDart;
   }
 
@@ -122,7 +111,7 @@ class _WebDataChannelStream extends DataChannelStream {
   final web.RTCDataChannel _channel;
 
   _WebDataChannelStream(this._channel, {bool incoming = false})
-    : super(incoming: incoming) {
+      : super(incoming: incoming) {
     _channel.binaryType = 'arraybuffer';
     _channel.onmessage = ((web.MessageEvent ev) {
       final buffer = ev.data as JSArrayBuffer;
@@ -153,5 +142,6 @@ class _WebDataChannelStream extends DataChannelStream {
   }
 }
 
+/// Factory for creating a [PeerConnectionWeb].
 PeerConnection createPC(List<String> iceServers) =>
     PeerConnectionWeb(iceServers);

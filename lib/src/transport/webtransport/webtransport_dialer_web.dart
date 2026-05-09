@@ -6,8 +6,10 @@ import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 import 'webtransport_dialer.dart';
 import 'multiaddr_parser.dart';
 
+/// Creates a web-specific WebTransport dialer.
 WebTransportDialer createDialer() => WebTransportDialerWeb();
 
+/// Web implementation of [WebTransportDialer] using the browser's WebTransport API.
 class WebTransportDialerWeb implements WebTransportDialer {
   @override
   Future<libp2p.Conn> dial(libp2p.MultiAddr addr) async {
@@ -20,17 +22,12 @@ class WebTransportDialerWeb implements WebTransportDialer {
 
     // Configure WebTransport with serverCertificateHashes if provided
     final options = web.WebTransportOptions(
-      serverCertificateHashes:
-          info.certHashes
-                  .map((h) {
-                    final hash = web.WebTransportHash();
-                    hash.algorithm = 'sha-256';
-                    hash.value = Uint8List(32).toJS;
-                    return hash;
-                  })
-                  .toList()
-                  .toJS
-              as JSArray<web.WebTransportHash>,
+      serverCertificateHashes: info.certHashes.map((h) {
+        final hash = web.WebTransportHash();
+        hash.algorithm = 'sha-256';
+        hash.value = Uint8List(32).toJS;
+        return hash;
+      }).toList().toJS as JSArray<web.WebTransportHash>,
     );
 
     final transport = web.WebTransport(url, options);
@@ -40,26 +37,20 @@ class WebTransportDialerWeb implements WebTransportDialer {
     final remotePeerId = libp2p.PeerId.fromString(p2pPart);
 
     return WebTransportConnectionWeb(
-      transport,
-      addr,
-      await libp2p.PeerId.random(),
-      remotePeerId,
-    );
+        transport, addr, await libp2p.PeerId.random(), remotePeerId);
   }
 }
 
+/// Web implementation of a WebTransport connection.
 class WebTransportConnectionWeb implements libp2p.Conn {
   final web.WebTransport _transport;
   final libp2p.MultiAddr _remoteAddr;
   final libp2p.PeerId _localPeer;
   final libp2p.PeerId _remotePeer;
 
+  /// Creates a new [WebTransportConnectionWeb].
   WebTransportConnectionWeb(
-    this._transport,
-    this._remoteAddr,
-    this._localPeer,
-    this._remotePeer,
-  );
+      this._transport, this._remoteAddr, this._localPeer, this._remotePeer);
 
   @override
   libp2p.PeerId get localPeer => _localPeer;
@@ -78,9 +69,7 @@ class WebTransportConnectionWeb implements libp2p.Conn {
   Future<libp2p.P2PStream<Uint8List>> newStream(libp2p.Context context) async {
     final webStream = await _transport.createBidirectionalStream().toDart;
     return WebTransportStreamWeb(
-      this,
-      webStream as web.WebTransportBidirectionalStream,
-    );
+        this, webStream as web.WebTransportBidirectionalStream);
   }
 
   @override
@@ -105,21 +94,23 @@ class WebTransportConnectionWeb implements libp2p.Conn {
 
   @override
   libp2p.ConnState get state => libp2p.ConnState(
-    streamMultiplexer: '/quic/1.0.0',
-    security: '/quic/1.0.0',
-    transport: 'webtransport',
-    usedEarlyMuxerNegotiation: true,
-  );
+        streamMultiplexer: '/quic/1.0.0',
+        security: '/quic/1.0.0',
+        transport: 'webtransport',
+        usedEarlyMuxerNegotiation: true,
+      );
 
   @override
-  Future<List<libp2p.P2PStream>> get streams => Future.value([]);
+  Future<List<libp2p.P2PStream<Uint8List>>> get streams => Future.value([]);
 }
 
+/// Web implementation of a WebTransport stream.
 class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   final WebTransportConnectionWeb _conn;
   final web.WebTransportBidirectionalStream _webStream;
   String? _proto;
 
+  /// Creates a new [WebTransportStreamWeb].
   WebTransportStreamWeb(this._conn, this._webStream);
 
   @override
@@ -132,13 +123,12 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   @override
   Future<Uint8List> read([int? len]) async {
     final reader = (_webStream.readable as web.ReadableStream).getReader();
-    final result = await (reader as web.ReadableStreamDefaultReader)
-        .read()
-        .toDart;
+    final result =
+        await (reader as web.ReadableStreamDefaultReader).read().toDart;
     (reader as web.ReadableStreamDefaultReader).releaseLock();
 
-    if (result == null || (result as dynamic).done == true) return Uint8List(0);
-    final value = (result as dynamic).value as JSArrayBuffer;
+    if (result == null || result.done) return Uint8List(0);
+    final value = result.value as JSArrayBuffer;
     return value.toDart.asUint8List();
   }
 

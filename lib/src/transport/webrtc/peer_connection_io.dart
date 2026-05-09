@@ -2,6 +2,7 @@ import 'dart:async';
 import 'peer_connection.dart';
 import 'data_channel_stream.dart';
 
+/// IO implementation of [PeerConnection] (placeholder).
 class PeerConnectionIO implements PeerConnection {
   @override
   Future<void> addIceCandidate(RTCIceCandidateInit candidate) async {
@@ -39,9 +40,7 @@ class PeerConnectionIO implements PeerConnection {
   String? get remoteDescriptionSdp => null;
 
   @override
-  Future<void> setLocalDescription(
-    RTCSessionDescriptionInit description,
-  ) async {
+  Future<void> setLocalDescription(RTCSessionDescriptionInit description) async {
     throw UnimplementedError();
   }
 
@@ -51,4 +50,5 @@ class PeerConnectionIO implements PeerConnection {
   }
 }
 
+/// Factory for creating an IO-specific [PeerConnection].
 PeerConnection createPC(List<String> iceServers) => PeerConnectionIO();

@@ -3,13 +3,16 @@ import 'dart:collection';
 import 'dart:typed_data';
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 
+/// Base class for WebRTC DataChannel-backed streams.
 abstract class DataChannelStream implements libp2p.P2PStream<Uint8List> {
   final ListQueue<int> _readBuffer = ListQueue<int>();
   Completer<void>? _readCompleter;
   bool _isClosed = false;
   String? _protocol;
+  // ignore: unused_field
   final bool _isIncoming;
 
+  /// Creates a new [DataChannelStream].
   DataChannelStream({bool incoming = false}) : _isIncoming = incoming;
 
   @override
@@ -32,8 +35,10 @@ abstract class DataChannelStream implements libp2p.P2PStream<Uint8List> {
   @override
   libp2p.Conn get conn => throw UnimplementedError();
 
+  /// The label of the data channel.
   String get label;
 
+  /// Called when a message is received on the data channel.
   void onMessage(Uint8List data) {
     _readBuffer.addAll(data);
     if (_readCompleter != null && !_readCompleter!.isCompleted) {
@@ -41,6 +46,7 @@ abstract class DataChannelStream implements libp2p.P2PStream<Uint8List> {
     }
   }
 
+  /// Called when the data channel is closed.
   void onClosed() {
     _isClosed = true;
     if (_readCompleter != null && !_readCompleter!.isCompleted) {

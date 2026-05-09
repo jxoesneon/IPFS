@@ -4,6 +4,10 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
+import 'package:dart_ipfs/src/transport/webrtc/signaling_protocol.dart';
+import 'package:dart_ipfs/src/transport/webrtc/webrtc_direct_transport.dart';
+import 'package:dart_ipfs/src/transport/webrtc/webrtc_transport.dart';
+import 'package:dart_ipfs/src/transport/webtransport/webtransport_transport.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:ipfs_libp2p/config/config.dart' as config;
 import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto;
@@ -11,10 +15,6 @@ import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
 import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
 import 'package:ipfs_libp2p/p2p/transport/tcp_transport.dart';
-import 'package:dart_ipfs/src/transport/webrtc/webrtc_transport.dart';
-import 'package:dart_ipfs/src/transport/webrtc/webrtc_direct_transport.dart';
-import 'package:dart_ipfs/src/transport/webtransport/webtransport_transport.dart';
-import 'package:dart_ipfs/src/transport/webrtc/signaling_protocol.dart';
 
 /// Native libp2p router implementation.
 ///
@@ -242,9 +242,9 @@ class Libp2pRouter implements RouterInterface {
     try {
       if (_host != null) {
         await _host!.close().timeout(
-          const Duration(seconds: 5),
-          onTimeout: () => _logger.warning('Host close timed out'),
-        );
+              const Duration(seconds: 5),
+              onTimeout: () => _logger.warning('Host close timed out'),
+            );
       }
       _connectedPeers.clear();
       _hasStarted = false;
@@ -292,14 +292,16 @@ class Libp2pRouter implements RouterInterface {
       final peerId = libp2p.PeerId.fromString(peerIdStr);
 
       // Explicitly add address to peer store to ensure dial can find it
-      await _host!.peerStore.addrBook.addAddrs(peerId, [
-        addr,
-      ], const Duration(minutes: 10));
+      await _host!.peerStore.addrBook.addAddrs(
+        peerId,
+        [
+          addr,
+        ],
+        const Duration(minutes: 10),
+      );
 
       final addrInfo = libp2p.AddrInfo(peerId, [addr]);
-      await _host!
-          .connect(addrInfo)
-          .timeout(
+      await _host!.connect(addrInfo).timeout(
             const Duration(seconds: 30),
             onTimeout: () =>
                 throw TimeoutException('Connection to $multiaddress timed out'),

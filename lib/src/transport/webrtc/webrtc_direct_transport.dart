@@ -5,11 +5,13 @@ import 'package:ipfs_libp2p/p2p/transport/transport.dart' as libp2p_trans;
 import 'package:ipfs_libp2p/p2p/transport/listener.dart' as libp2p_listener;
 import 'package:ipfs_libp2p/p2p/transport/transport_config.dart'
     as libp2p_config;
-import 'peer_connection.dart';
+import 'peer_connection_web.dart';
 import 'webrtc_transport.dart';
 import 'data_channel_stream.dart';
 
+/// WebRTC Direct transport implementation for libp2p.
 class WebRTCDirectTransport implements libp2p_trans.Transport {
+  /// Creates a new [WebRTCDirectTransport].
   WebRTCDirectTransport();
 
   @override
@@ -35,7 +37,7 @@ class WebRTCDirectTransport implements libp2p_trans.Transport {
     final peerIdStr = parts.last;
     final peerId = libp2p.PeerId.fromString(peerIdStr);
 
-    final pc = createPeerConnection(['stun:stun.l.google.com:19302']);
+    final pc = createPC(['stun:stun.l.google.com:19302']);
 
     // Create offer
     final offer = await pc.createOffer();
@@ -75,8 +77,7 @@ class WebRTCDirectTransport implements libp2p_trans.Transport {
   @override
   Future<libp2p_listener.Listener> listen(libp2p.MultiAddr addr) async {
     throw UnimplementedError(
-      'WebRTCDirect listener only supported on native platforms',
-    );
+        'WebRTCDirect listener only supported on native platforms');
   }
 
   @override
