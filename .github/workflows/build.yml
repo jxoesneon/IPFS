@@ -43,7 +43,7 @@ jobs:
             command: flutter build windows --debug
           - target: macOS
             os: macos-latest
-            command: flutter build macos --debug --no-codesign
+            command: flutter build macos --debug
           - target: Web
             os: ubuntu-latest
             command: flutter build web --debug
