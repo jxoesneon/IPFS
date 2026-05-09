@@ -5,6 +5,7 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
+import 'package:dart_ipfs/src/transport/libp2p_router.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 
 /// Web stub for NetworkHandler.
@@ -14,11 +15,11 @@ import 'package:dart_ipfs/src/transport/router_interface.dart';
 class NetworkHandler {
   /// Creates a NetworkHandler for web platform.
   NetworkHandler(this._config, {RouterInterface? router})
-    : _router = router,
+    : _router = router ?? Libp2pRouter(_config),
       _networkEventController = StreamController<NetworkEvent>.broadcast();
 
   final CircuitRelayClient? _circuitRelayClient = null;
-  final RouterInterface? _router;
+  final RouterInterface _router;
 
   /// The IPFS node reference.
   late final IPFSNode ipfsNode;
@@ -67,7 +68,7 @@ class NetworkHandler {
   }
 
   /// Returns the router (stub).
-  RouterInterface? get router => _router;
+  RouterInterface get router => _router;
 
   // Legacy stub for compatibility if needed, but should be removed eventually
   // RouterInterface? get p2pRouter => _router;
@@ -79,7 +80,7 @@ class NetworkHandler {
   IPFSConfig get config => _config;
 
   /// Returns the peer ID (stub).
-  String get peerID => 'web_node';
+  String get peerID => _router.peerID;
 
   /// Checks if direct connection is possible (stub).
   Future<bool> canConnectDirectly(String peerAddress) async => false;
