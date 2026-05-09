@@ -1,50 +1,53 @@
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
+
 import 'package:web/web.dart' as web;
-import 'peer_connection.dart';
+
 import 'data_channel_stream.dart';
+import 'peer_connection.dart';
 
 /// Web implementation of [PeerConnection] using `package:web`.
 class PeerConnectionWeb implements PeerConnection {
-  final web.RTCPeerConnection _pc;
-  final StreamController<RTCIceCandidateInit> _iceController =
-      StreamController.broadcast();
-  final StreamController<DataChannelStream> _dataChannelController =
-      StreamController.broadcast();
-
   /// Creates a new [PeerConnectionWeb].
   PeerConnectionWeb(List<String> iceServers)
     : _pc = web.RTCPeerConnection(
         web.RTCConfiguration(
           iceServers:
               iceServers
-                      .map((s) {
-                        return web.RTCIceServer(urls: s.toJS);
-                      })
-                      .toList()
-                      .toJS
-                  as JSArray<web.RTCIceServer>,
+                  .map((s) {
+                    return web.RTCIceServer(urls: s.toJS);
+                  })
+                  .toList()
+                  .toJS as JSArray<web.RTCIceServer>,
         ),
       ) {
-    _pc.onicecandidate = ((web.RTCPeerConnectionIceEvent ev) {
-      if (ev.candidate != null) {
-        _iceController.add(
-          RTCIceCandidateInit(
-            ev.candidate!.candidate,
-            ev.candidate!.sdpMid,
-            ev.candidate!.sdpMLineIndex,
-          ),
-        );
-      }
-    }).toJS;
+    _pc.onicecandidate =
+        ((web.RTCPeerConnectionIceEvent ev) {
+          if (ev.candidate != null) {
+            _iceController.add(
+              RTCIceCandidateInit(
+                ev.candidate!.candidate,
+                ev.candidate!.sdpMid,
+                ev.candidate!.sdpMLineIndex,
+              ),
+            );
+          }
+        }).toJS;
 
-    _pc.ondatachannel = ((web.RTCDataChannelEvent ev) {
-      _dataChannelController.add(
-        _WebDataChannelStream(ev.channel, incoming: true),
-      );
-    }).toJS;
+    _pc.ondatachannel =
+        ((web.RTCDataChannelEvent ev) {
+          _dataChannelController.add(
+            _WebDataChannelStream(ev.channel, incoming: true),
+          );
+        }).toJS;
   }
+
+  final web.RTCPeerConnection _pc;
+  final StreamController<RTCIceCandidateInit> _iceController =
+      StreamController.broadcast();
+  final StreamController<DataChannelStream> _dataChannelController =
+      StreamController.broadcast();
 
   @override
   Stream<RTCIceCandidateInit> get onIceCandidate => _iceController.stream;
@@ -123,24 +126,26 @@ class PeerConnectionWeb implements PeerConnection {
 }
 
 class _WebDataChannelStream extends DataChannelStream {
-  final web.RTCDataChannel _channel;
-
-  _WebDataChannelStream(this._channel, {bool incoming = false})
-    : super(incoming: incoming) {
+  _WebDataChannelStream(this._channel, {super.incoming}) {
     _channel.binaryType = 'arraybuffer';
-    _channel.onmessage = ((web.MessageEvent ev) {
-      final buffer = ev.data as JSArrayBuffer;
-      onMessage(buffer.toDart.asUint8List());
-    }).toJS;
+    _channel.onmessage =
+        ((web.MessageEvent ev) {
+          final buffer = ev.data as JSArrayBuffer;
+          onMessage(buffer.toDart.asUint8List());
+        }).toJS;
 
-    _channel.onclose = (() {
-      onClosed();
-    }).toJS;
+    _channel.onclose =
+        (() {
+          onClosed();
+        }).toJS;
 
-    _channel.onerror = ((web.Event ev) {
-      onClosed();
-    }).toJS;
+    _channel.onerror =
+        ((web.Event ev) {
+          onClosed();
+        }).toJS;
   }
+
+  final web.RTCDataChannel _channel;
 
   @override
   String get label => _channel.label;

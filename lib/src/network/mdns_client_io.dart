@@ -126,8 +126,9 @@ class MDnsClientIO implements MDnsClient {
       _serverSocket!.listen((event) {
         if (event == RawSocketEvent.read) {
           final packet = _serverSocket!.receive();
-          if (packet != null)
+          if (packet != null) {
             _handlePacket(packet, serviceType, instanceName, port, txt);
+          }
         }
       });
       _isServerRunning = true;

@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
-import 'package:web/web.dart' as web;
+
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
-import 'webtransport_dialer.dart';
+import 'package:web/web.dart' as web;
+
 import 'multiaddr_parser.dart';
+import 'webtransport_dialer.dart';
 
 /// Creates a web-specific WebTransport dialer.
 WebTransportDialer createDialer() => WebTransportDialerWeb();
@@ -24,15 +26,14 @@ class WebTransportDialerWeb implements WebTransportDialer {
     final options = web.WebTransportOptions(
       serverCertificateHashes:
           info.certHashes
-                  .map((h) {
-                    final hash = web.WebTransportHash();
-                    hash.algorithm = 'sha-256';
-                    hash.value = Uint8List(32).toJS;
-                    return hash;
-                  })
-                  .toList()
-                  .toJS
-              as JSArray<web.WebTransportHash>,
+              .map((h) {
+                final hash = web.WebTransportHash();
+                hash.algorithm = 'sha-256';
+                hash.value = Uint8List(32).toJS;
+                return hash;
+              })
+              .toList()
+              .toJS as JSArray<web.WebTransportHash>,
     );
 
     final transport = web.WebTransport(url, options);
@@ -52,11 +53,6 @@ class WebTransportDialerWeb implements WebTransportDialer {
 
 /// Web implementation of a WebTransport connection.
 class WebTransportConnectionWeb implements libp2p.Conn {
-  final web.WebTransport _transport;
-  final libp2p.MultiAddr _remoteAddr;
-  final libp2p.PeerId _localPeer;
-  final libp2p.PeerId _remotePeer;
-
   /// Creates a new [WebTransportConnectionWeb].
   WebTransportConnectionWeb(
     this._transport,
@@ -64,6 +60,11 @@ class WebTransportConnectionWeb implements libp2p.Conn {
     this._localPeer,
     this._remotePeer,
   );
+
+  final web.WebTransport _transport;
+  final libp2p.MultiAddr _remoteAddr;
+  final libp2p.PeerId _localPeer;
+  final libp2p.PeerId _remotePeer;
 
   @override
   libp2p.PeerId get localPeer => _localPeer;
@@ -81,10 +82,7 @@ class WebTransportConnectionWeb implements libp2p.Conn {
   @override
   Future<libp2p.P2PStream<Uint8List>> newStream(libp2p.Context context) async {
     final webStream = await _transport.createBidirectionalStream().toDart;
-    return WebTransportStreamWeb(
-      this,
-      webStream as web.WebTransportBidirectionalStream,
-    );
+    return WebTransportStreamWeb(this, webStream as web.WebTransportBidirectionalStream);
   }
 
   @override
@@ -121,12 +119,12 @@ class WebTransportConnectionWeb implements libp2p.Conn {
 
 /// Web implementation of a WebTransport stream.
 class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
+  /// Creates a new [WebTransportStreamWeb].
+  WebTransportStreamWeb(this._conn, this._webStream);
+
   final WebTransportConnectionWeb _conn;
   final web.WebTransportBidirectionalStream _webStream;
   String? _proto;
-
-  /// Creates a new [WebTransportStreamWeb].
-  WebTransportStreamWeb(this._conn, this._webStream);
 
   @override
   Future<void> write(Uint8List data) async {
@@ -138,9 +136,7 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   @override
   Future<Uint8List> read([int? len]) async {
     final reader = (_webStream.readable as web.ReadableStream).getReader();
-    final result = await (reader as web.ReadableStreamDefaultReader)
-        .read()
-        .toDart;
+    final result = await (reader as web.ReadableStreamDefaultReader).read().toDart;
     (reader as web.ReadableStreamDefaultReader).releaseLock();
 
     if (result == null || result.done) return Uint8List(0);

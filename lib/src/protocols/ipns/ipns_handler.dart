@@ -25,6 +25,7 @@ class IPNSHandler {
     _logger.info('Initializing IPNSHandler');
   }
 
+  // ignore: unused_field
   final IPFSConfig _config;
   // ignore: unused_field
   final dynamic _securityManager;
