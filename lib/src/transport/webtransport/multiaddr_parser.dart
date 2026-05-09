@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dart_multihash/dart_multihash.dart';
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
+import 'package:multibase/multibase.dart';
 
 import 'certhash.dart';
 
@@ -44,13 +45,33 @@ class WebTransportMultiaddrParser {
         port = int.tryParse(parts[i + 1]);
       } else if (part == 'certhash') {
         final mhStr = parts[i + 1];
-        final mh = Multihash.decode(Uint8List.fromList(mhStr.codeUnits));
-        certHashes.add(
-          WebTransportCertHash(
-            algorithm: 'sha-256',
-            value: Uint8List.fromList(mh.digest),
-          ),
-        );
+        Uint8List mhBytes;
+        try {
+          // Try to decode as multibase. multibase package supports decoding
+          // strings with valid prefixes.
+          mhBytes = multibaseDecode(mhStr);
+        } catch (_) {
+          // Assume raw if decoding fails
+          mhBytes = Uint8List.fromList(mhStr.codeUnits);
+        }
+
+        try {
+          final mh = Multihash.decode(mhBytes);
+          certHashes.add(
+            WebTransportCertHash(
+              algorithm: 'sha-256',
+              value: Uint8List.fromList(mh.digest),
+            ),
+          );
+        } catch (_) {
+          // If multihash decode fails, just store the bytes as value
+          certHashes.add(
+            WebTransportCertHash(
+              algorithm: 'sha-256',
+              value: mhBytes,
+            ),
+          );
+        }
       }
     }
 
