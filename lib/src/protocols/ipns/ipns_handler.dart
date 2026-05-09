@@ -19,7 +19,7 @@ class IPNSHandler {
     this._securityManager,
     this._dhtHandler,
     this._pubsubHandler,
-  ]) : _cache = LinkedHashMap<String, IPNSRecord>(),
+  ]) : _cache = <String, IPNSRecord>{},
        _maxCacheSize = _config.ipnsCacheSize,
        _logger = Logger('IPNSHandler') {
     _logger.info('Initializing IPNSHandler');

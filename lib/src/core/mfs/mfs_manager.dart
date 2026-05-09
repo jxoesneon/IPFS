@@ -198,9 +198,11 @@ class MFSManager {
 
     final controller = StreamController<List<int>>();
 
-    unawaited(_readRecursive(cid, controller)
-        .then((_) => controller.close())
-        .catchError((Object e) => controller.addError(e)));
+    unawaited(
+      _readRecursive(cid, controller)
+          .then((_) => controller.close())
+          .catchError((Object e) => controller.addError(e)),
+    );
 
     return controller.stream;
   }

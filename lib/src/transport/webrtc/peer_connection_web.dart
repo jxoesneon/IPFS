@@ -13,34 +13,31 @@ class PeerConnectionWeb implements PeerConnection {
   PeerConnectionWeb(List<String> iceServers)
     : _pc = web.RTCPeerConnection(
         web.RTCConfiguration(
-          iceServers:
-              iceServers
-                  .map((s) {
-                    return web.RTCIceServer(urls: s.toJS);
-                  })
-                  .toList()
-                  .toJS,
+          iceServers: iceServers
+              .map((s) {
+                return web.RTCIceServer(urls: s.toJS);
+              })
+              .toList()
+              .toJS,
         ),
       ) {
-    _pc.onicecandidate =
-        ((web.RTCPeerConnectionIceEvent ev) {
-          if (ev.candidate != null) {
-            _iceController.add(
-              RTCIceCandidateInit(
-                ev.candidate!.candidate,
-                ev.candidate!.sdpMid,
-                ev.candidate!.sdpMLineIndex,
-              ),
-            );
-          }
-        }).toJS;
+    _pc.onicecandidate = ((web.RTCPeerConnectionIceEvent ev) {
+      if (ev.candidate != null) {
+        _iceController.add(
+          RTCIceCandidateInit(
+            ev.candidate!.candidate,
+            ev.candidate!.sdpMid,
+            ev.candidate!.sdpMLineIndex,
+          ),
+        );
+      }
+    }).toJS;
 
-    _pc.ondatachannel =
-        ((web.RTCDataChannelEvent ev) {
-          _dataChannelController.add(
-            _WebDataChannelStream(ev.channel, incoming: true),
-          );
-        }).toJS;
+    _pc.ondatachannel = ((web.RTCDataChannelEvent ev) {
+      _dataChannelController.add(
+        _WebDataChannelStream(ev.channel, incoming: true),
+      );
+    }).toJS;
   }
 
   final web.RTCPeerConnection _pc;
@@ -128,21 +125,18 @@ class PeerConnectionWeb implements PeerConnection {
 class _WebDataChannelStream extends DataChannelStream {
   _WebDataChannelStream(this._channel, {super.incoming}) {
     _channel.binaryType = 'arraybuffer';
-    _channel.onmessage =
-        ((web.MessageEvent ev) {
-          final buffer = ev.data as JSArrayBuffer;
-          onMessage(buffer.toDart.asUint8List());
-        }).toJS;
+    _channel.onmessage = ((web.MessageEvent ev) {
+      final buffer = ev.data as JSArrayBuffer;
+      onMessage(buffer.toDart.asUint8List());
+    }).toJS;
 
-    _channel.onclose =
-        (() {
-          onClosed();
-        }).toJS;
+    _channel.onclose = (() {
+      onClosed();
+    }).toJS;
 
-    _channel.onerror =
-        ((web.Event ev) {
-          onClosed();
-        }).toJS;
+    _channel.onerror = ((web.Event ev) {
+      onClosed();
+    }).toJS;
   }
 
   final web.RTCDataChannel _channel;

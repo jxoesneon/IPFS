@@ -40,6 +40,23 @@ class IPNSRecord {
     Uint8List? signature,
   }) : _signature = signature;
 
+  /// Creates a record for internal use (e.g. caching).
+  factory IPNSRecord.internal({
+    required Uint8List value,
+    required DateTime validity,
+    int sequence = 0,
+    Duration ttl = const Duration(hours: 1),
+    Uint8List? publicKey,
+  }) {
+    return IPNSRecord._(
+      value: value,
+      validity: validity,
+      sequence: sequence,
+      ttl: ttl,
+      publicKey: publicKey ?? Uint8List(0),
+    );
+  }
+
   /// The value this IPNS name points to (typically /ipfs/CID).
   final Uint8List value;
 
@@ -67,23 +84,6 @@ class IPNSRecord {
 
   /// Whether this record has expired.
   bool get isExpired => DateTime.now().isAfter(validity);
-
-  /// Creates a record for internal use (e.g. caching).
-  factory IPNSRecord.internal({
-    required Uint8List value,
-    required DateTime validity,
-    int sequence = 0,
-    Duration ttl = const Duration(hours: 1),
-    Uint8List? publicKey,
-  }) {
-    return IPNSRecord._(
-      value: value,
-      validity: validity,
-      sequence: sequence,
-      ttl: ttl,
-      publicKey: publicKey ?? Uint8List(0),
-    );
-  }
 
   /// Creates and signs a new IPNS record.
   ///

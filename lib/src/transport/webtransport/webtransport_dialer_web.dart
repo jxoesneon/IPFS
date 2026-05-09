@@ -24,16 +24,15 @@ class WebTransportDialerWeb implements WebTransportDialer {
 
     // Configure WebTransport with serverCertificateHashes if provided
     final options = web.WebTransportOptions(
-      serverCertificateHashes:
-          info.certHashes
-              .map((h) {
-                final hash = web.WebTransportHash();
-                hash.algorithm = 'sha-256';
-                hash.value = Uint8List(32).toJS;
-                return hash;
-              })
-              .toList()
-              .toJS,
+      serverCertificateHashes: info.certHashes
+          .map((h) {
+            final hash = web.WebTransportHash();
+            hash.algorithm = 'sha-256';
+            hash.value = Uint8List(32).toJS;
+            return hash;
+          })
+          .toList()
+          .toJS,
     );
 
     final transport = web.WebTransport(url, options);
@@ -139,8 +138,9 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   @override
   Future<Uint8List> read([int? len]) async {
     final reader = (_webStream.readable as web.ReadableStream).getReader();
-    final result =
-        await (reader as web.ReadableStreamDefaultReader).read().toDart;
+    final result = await (reader as web.ReadableStreamDefaultReader)
+        .read()
+        .toDart;
     (reader as web.ReadableStreamDefaultReader).releaseLock();
 
     if (result == null || result.done) return Uint8List(0);
