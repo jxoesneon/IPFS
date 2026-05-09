@@ -25,10 +25,7 @@ class CertHash {
 
     final mhStr = String.fromCharCodes(mhBytes);
 
-    return CertHash(
-      sha256Hash.toString(),
-      mhStr,
-    );
+    return CertHash(sha256Hash.toString(), mhStr);
   }
 
   /// Validates a certificate hash from a MultiAddr.

@@ -22,12 +22,17 @@ class WebTransportDialerWeb implements WebTransportDialer {
 
     // Configure WebTransport with serverCertificateHashes if provided
     final options = web.WebTransportOptions(
-      serverCertificateHashes: info.certHashes.map((h) {
-        final hash = web.WebTransportHash();
-        hash.algorithm = 'sha-256';
-        hash.value = Uint8List(32).toJS;
-        return hash;
-      }).toList().toJS as JSArray<web.WebTransportHash>,
+      serverCertificateHashes:
+          info.certHashes
+                  .map((h) {
+                    final hash = web.WebTransportHash();
+                    hash.algorithm = 'sha-256';
+                    hash.value = Uint8List(32).toJS;
+                    return hash;
+                  })
+                  .toList()
+                  .toJS
+              as JSArray<web.WebTransportHash>,
     );
 
     final transport = web.WebTransport(url, options);
@@ -37,7 +42,11 @@ class WebTransportDialerWeb implements WebTransportDialer {
     final remotePeerId = libp2p.PeerId.fromString(p2pPart);
 
     return WebTransportConnectionWeb(
-        transport, addr, await libp2p.PeerId.random(), remotePeerId);
+      transport,
+      addr,
+      await libp2p.PeerId.random(),
+      remotePeerId,
+    );
   }
 }
 
@@ -50,7 +59,11 @@ class WebTransportConnectionWeb implements libp2p.Conn {
 
   /// Creates a new [WebTransportConnectionWeb].
   WebTransportConnectionWeb(
-      this._transport, this._remoteAddr, this._localPeer, this._remotePeer);
+    this._transport,
+    this._remoteAddr,
+    this._localPeer,
+    this._remotePeer,
+  );
 
   @override
   libp2p.PeerId get localPeer => _localPeer;
@@ -69,7 +82,9 @@ class WebTransportConnectionWeb implements libp2p.Conn {
   Future<libp2p.P2PStream<Uint8List>> newStream(libp2p.Context context) async {
     final webStream = await _transport.createBidirectionalStream().toDart;
     return WebTransportStreamWeb(
-        this, webStream as web.WebTransportBidirectionalStream);
+      this,
+      webStream as web.WebTransportBidirectionalStream,
+    );
   }
 
   @override
@@ -94,11 +109,11 @@ class WebTransportConnectionWeb implements libp2p.Conn {
 
   @override
   libp2p.ConnState get state => libp2p.ConnState(
-        streamMultiplexer: '/quic/1.0.0',
-        security: '/quic/1.0.0',
-        transport: 'webtransport',
-        usedEarlyMuxerNegotiation: true,
-      );
+    streamMultiplexer: '/quic/1.0.0',
+    security: '/quic/1.0.0',
+    transport: 'webtransport',
+    usedEarlyMuxerNegotiation: true,
+  );
 
   @override
   Future<List<libp2p.P2PStream<Uint8List>>> get streams => Future.value([]);
@@ -123,8 +138,9 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   @override
   Future<Uint8List> read([int? len]) async {
     final reader = (_webStream.readable as web.ReadableStream).getReader();
-    final result =
-        await (reader as web.ReadableStreamDefaultReader).read().toDart;
+    final result = await (reader as web.ReadableStreamDefaultReader)
+        .read()
+        .toDart;
     (reader as web.ReadableStreamDefaultReader).releaseLock();
 
     if (result == null || result.done) return Uint8List(0);

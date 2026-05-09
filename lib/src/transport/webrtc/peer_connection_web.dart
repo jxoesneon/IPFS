@@ -15,24 +15,34 @@ class PeerConnectionWeb implements PeerConnection {
 
   /// Creates a new [PeerConnectionWeb].
   PeerConnectionWeb(List<String> iceServers)
-      : _pc = web.RTCPeerConnection(web.RTCConfiguration(
-          iceServers: iceServers.map((s) {
-            return web.RTCIceServer(urls: s.toJS);
-          }).toList().toJS as JSArray<web.RTCIceServer>,
-        )) {
+    : _pc = web.RTCPeerConnection(
+        web.RTCConfiguration(
+          iceServers:
+              iceServers
+                      .map((s) {
+                        return web.RTCIceServer(urls: s.toJS);
+                      })
+                      .toList()
+                      .toJS
+                  as JSArray<web.RTCIceServer>,
+        ),
+      ) {
     _pc.onicecandidate = ((web.RTCPeerConnectionIceEvent ev) {
       if (ev.candidate != null) {
-        _iceController.add(RTCIceCandidateInit(
-          ev.candidate!.candidate,
-          ev.candidate!.sdpMid,
-          ev.candidate!.sdpMLineIndex,
-        ));
+        _iceController.add(
+          RTCIceCandidateInit(
+            ev.candidate!.candidate,
+            ev.candidate!.sdpMid,
+            ev.candidate!.sdpMLineIndex,
+          ),
+        );
       }
     }).toJS;
 
     _pc.ondatachannel = ((web.RTCDataChannelEvent ev) {
-      _dataChannelController
-          .add(_WebDataChannelStream(ev.channel, incoming: true));
+      _dataChannelController.add(
+        _WebDataChannelStream(ev.channel, incoming: true),
+      );
     }).toJS;
   }
 
@@ -63,33 +73,38 @@ class PeerConnectionWeb implements PeerConnection {
   }
 
   @override
-  Future<void> setLocalDescription(RTCSessionDescriptionInit description) async {
+  Future<void> setLocalDescription(
+    RTCSessionDescriptionInit description,
+  ) async {
     await _pc
-        .setLocalDescription(web.RTCLocalSessionDescriptionInit(
-          type: description.type,
-          sdp: description.sdp,
-        ))
+        .setLocalDescription(
+          web.RTCLocalSessionDescriptionInit(
+            type: description.type,
+            sdp: description.sdp,
+          ),
+        )
         .toDart;
   }
 
   @override
   Future<void> setRemoteDescription(String type, String sdp) async {
     await _pc
-        .setRemoteDescription(web.RTCSessionDescriptionInit(
-          type: type as web.RTCSdpType,
-          sdp: sdp,
-        ))
+        .setRemoteDescription(
+          web.RTCSessionDescriptionInit(type: type as web.RTCSdpType, sdp: sdp),
+        )
         .toDart;
   }
 
   @override
   Future<void> addIceCandidate(RTCIceCandidateInit candidate) async {
     await _pc
-        .addIceCandidate(web.RTCIceCandidateInit(
-          candidate: candidate.candidate,
-          sdpMid: candidate.sdpMid,
-          sdpMLineIndex: candidate.sdpMLineIndex,
-        ))
+        .addIceCandidate(
+          web.RTCIceCandidateInit(
+            candidate: candidate.candidate,
+            sdpMid: candidate.sdpMid,
+            sdpMLineIndex: candidate.sdpMLineIndex,
+          ),
+        )
         .toDart;
   }
 
@@ -111,7 +126,7 @@ class _WebDataChannelStream extends DataChannelStream {
   final web.RTCDataChannel _channel;
 
   _WebDataChannelStream(this._channel, {bool incoming = false})
-      : super(incoming: incoming) {
+    : super(incoming: incoming) {
     _channel.binaryType = 'arraybuffer';
     _channel.onmessage = ((web.MessageEvent ev) {
       final buffer = ev.data as JSArrayBuffer;

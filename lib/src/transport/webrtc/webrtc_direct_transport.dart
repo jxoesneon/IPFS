@@ -77,7 +77,8 @@ class WebRTCDirectTransport implements libp2p_trans.Transport {
   @override
   Future<libp2p_listener.Listener> listen(libp2p.MultiAddr addr) async {
     throw UnimplementedError(
-        'WebRTCDirect listener only supported on native platforms');
+      'WebRTCDirect listener only supported on native platforms',
+    );
   }
 
   @override

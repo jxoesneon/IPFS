@@ -56,7 +56,11 @@ class WebTransportConnection implements libp2p.Conn {
 
   /// Creates a new [WebTransportConnection].
   WebTransportConnection(
-      this._localAddr, this._remoteAddr, this._localPeer, this._remotePeer);
+    this._localAddr,
+    this._remoteAddr,
+    this._localPeer,
+    this._remotePeer,
+  );
 
   @override
   libp2p.PeerId get localPeer => _localPeer;
@@ -98,9 +102,9 @@ class WebTransportConnection implements libp2p.Conn {
 
   @override
   libp2p.ConnState get state => libp2p.ConnState(
-        streamMultiplexer: '/quic/1.0.0',
-        security: '/quic/1.0.0',
-        transport: 'webtransport',
-        usedEarlyMuxerNegotiation: true,
-      );
+    streamMultiplexer: '/quic/1.0.0',
+    security: '/quic/1.0.0',
+    transport: 'webtransport',
+    usedEarlyMuxerNegotiation: true,
+  );
 }

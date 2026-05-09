@@ -13,7 +13,7 @@ enum SignalingMessageType {
   answer,
 
   /// ICE candidate.
-  candidate
+  candidate,
 }
 
 /// A message exchanged over the WebRTC signaling protocol.

@@ -40,7 +40,9 @@ class PeerConnectionIO implements PeerConnection {
   String? get remoteDescriptionSdp => null;
 
   @override
-  Future<void> setLocalDescription(RTCSessionDescriptionInit description) async {
+  Future<void> setLocalDescription(
+    RTCSessionDescriptionInit description,
+  ) async {
     throw UnimplementedError();
   }
 

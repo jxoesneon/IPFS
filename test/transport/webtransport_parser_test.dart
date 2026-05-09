@@ -6,18 +6,23 @@ void main() {
   group('WebTransportMultiaddrParser', () {
     test('should parse valid WebTransport multiaddr', () {
       final addr = libp2p.MultiAddr(
-          '/ip4/127.0.0.1/udp/4001/quic-v1/webtransport/certhash/uEiC_S8_XW-XhX_X_X_X_X_X_X_X_X_X_X_X_X_X_X_X');
+        '/ip4/127.0.0.1/udp/4001/quic-v1/webtransport/certhash/uEiC_S8_XW-XhX_X_X_X_X_X_X_X_X_X_X_X_X_X_X_X',
+      );
       final info = WebTransportMultiaddrParser.parse(addr);
 
       expect(info, isNotNull);
       expect(info!.ip, equals('127.0.0.1'));
       expect(info.port, equals(4001));
-      expect(info.certHashes, contains('uEiC_S8_XW-XhX_X_X_X_X_X_X_X_X_X_X_X_X_X_X_X'));
+      expect(
+        info.certHashes,
+        contains('uEiC_S8_XW-XhX_X_X_X_X_X_X_X_X_X_X_X_X_X_X_X'),
+      );
     });
 
     test('should parse multiaddr with multiple certhashes', () {
       final addr = libp2p.MultiAddr(
-          '/ip4/127.0.0.1/udp/4001/quic-v1/webtransport/certhash/hash1/certhash/hash2');
+        '/ip4/127.0.0.1/udp/4001/quic-v1/webtransport/certhash/hash1/certhash/hash2',
+      );
       final info = WebTransportMultiaddrParser.parse(addr);
 
       expect(info, isNotNull);

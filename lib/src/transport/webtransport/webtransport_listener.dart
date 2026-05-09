@@ -17,7 +17,8 @@ class WebTransportListener implements libp2p_listener.Listener {
     // This would be implemented on the server-side (Go/Rust node).
     // ignore: avoid_print
     print(
-        'WebTransport listening on $_addr (Note: Browser nodes typically only dial)');
+      'WebTransport listening on $_addr (Note: Browser nodes typically only dial)',
+    );
   }
 
   @override
