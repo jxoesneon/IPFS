@@ -46,7 +46,10 @@ class WebTransportMultiaddrParser {
         final mhStr = parts[i + 1];
         final mh = Multihash.decode(Uint8List.fromList(mhStr.codeUnits));
         certHashes.add(
-          WebTransportCertHash(algorithm: 'sha-256', value: mh.digest),
+          WebTransportCertHash(
+            algorithm: 'sha-256',
+            value: Uint8List.fromList(mh.digest),
+          ),
         );
       }
     }
