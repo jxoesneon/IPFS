@@ -1,56 +1,52 @@
 import 'dart:async';
-import 'peer_connection.dart';
+
 import 'data_channel_stream.dart';
+import 'peer_connection.dart';
 
-/// IO implementation of [PeerConnection] (placeholder).
+/// IO implementation of [PeerConnection] (stub for now).
 class PeerConnectionIO implements PeerConnection {
-  @override
-  Future<void> addIceCandidate(RTCIceCandidateInit candidate) async {
-    throw UnimplementedError('Native WebRTC not yet implemented');
-  }
+  /// Creates a new [PeerConnectionIO].
+  PeerConnectionIO(List<String> iceServers);
 
   @override
-  Future<void> close() async {}
+  Stream<RTCIceCandidateInit> get onIceCandidate => throw UnimplementedError();
 
   @override
-  Future<RTCSessionDescriptionInit> createAnswer() {
-    throw UnimplementedError();
-  }
+  Stream<DataChannelStream> get onDataChannel => throw UnimplementedError();
 
   @override
-  Future<DataChannelStream> createDataChannel(String label) {
-    throw UnimplementedError();
-  }
+  String? get localDescriptionSdp => throw UnimplementedError();
 
   @override
-  Future<RTCSessionDescriptionInit> createOffer() {
-    throw UnimplementedError();
-  }
+  String? get remoteDescriptionSdp => throw UnimplementedError();
 
   @override
-  String? get localDescriptionSdp => null;
+  Future<RTCSessionDescriptionInit> createOffer() => throw UnimplementedError();
 
   @override
-  Stream<DataChannelStream> get onDataChannel => const Stream.empty();
+  Future<RTCSessionDescriptionInit> createAnswer() =>
+      throw UnimplementedError();
 
   @override
-  Stream<RTCIceCandidateInit> get onIceCandidate => const Stream.empty();
+  Future<void> setLocalDescription(RTCSessionDescriptionInit description) =>
+      throw UnimplementedError();
 
   @override
-  String? get remoteDescriptionSdp => null;
+  Future<void> setRemoteDescription(String type, String sdp) =>
+      throw UnimplementedError();
 
   @override
-  Future<void> setLocalDescription(
-    RTCSessionDescriptionInit description,
-  ) async {
-    throw UnimplementedError();
-  }
+  Future<void> addIceCandidate(RTCIceCandidateInit candidate) =>
+      throw UnimplementedError();
 
   @override
-  Future<void> setRemoteDescription(String type, String sdp) async {
-    throw UnimplementedError();
-  }
+  Future<DataChannelStream> createDataChannel(String label) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> close() => throw UnimplementedError();
 }
 
-/// Factory for creating an IO-specific [PeerConnection].
-PeerConnection createPC(List<String> iceServers) => PeerConnectionIO();
+/// Factory for creating a [PeerConnectionIO].
+PeerConnection createPC(List<String> iceServers) =>
+    PeerConnectionIO(iceServers);

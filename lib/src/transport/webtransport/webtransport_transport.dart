@@ -1,17 +1,16 @@
 import 'dart:async';
-import 'dart:typed_data';
+
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
-import 'package:ipfs_libp2p/p2p/transport/transport.dart' as libp2p_trans;
 import 'package:ipfs_libp2p/p2p/transport/listener.dart' as libp2p_listener;
+import 'package:ipfs_libp2p/p2p/transport/transport.dart' as libp2p_trans;
 import 'package:ipfs_libp2p/p2p/transport/transport_config.dart'
     as libp2p_config;
+
 import 'webtransport_dialer.dart';
 import 'webtransport_listener.dart';
 
-/// WebTransport implementation of libp2p Transport.
+/// WebTransport transport implementation for libp2p.
 class WebTransportTransport implements libp2p_trans.Transport {
-  final WebTransportDialer _dialer = WebTransportDialer();
-
   /// Creates a new [WebTransportTransport].
   WebTransportTransport();
 
@@ -20,7 +19,7 @@ class WebTransportTransport implements libp2p_trans.Transport {
 
   @override
   bool canDial(libp2p.MultiAddr addr) {
-    return addr.toString().contains('/quic-v1/webtransport');
+    return addr.toString().contains('/webtransport');
   }
 
   @override
@@ -30,81 +29,19 @@ class WebTransportTransport implements libp2p_trans.Transport {
 
   @override
   Future<libp2p.Conn> dial(libp2p.MultiAddr addr, {Duration? timeout}) async {
-    return _dialer.dial(addr);
+    final dialer = createWebTransportDialer();
+    final dialTimeout = timeout ?? const Duration(seconds: 30);
+    return dialer.dial(addr).timeout(dialTimeout);
   }
 
   @override
   Future<libp2p_listener.Listener> listen(libp2p.MultiAddr addr) async {
-    final listener = WebTransportListener(addr);
-    await listener.listen();
-    return listener;
+    return WebTransportListener(addr);
   }
 
   @override
-  List<String> get protocols => ['/quic-v1/webtransport'];
+  List<String> get protocols => const ['/webtransport'];
 
   @override
   Future<void> dispose() async {}
-}
-
-/// WebTransport connection implementation.
-class WebTransportConnection implements libp2p.Conn {
-  final libp2p.MultiAddr _localAddr;
-  final libp2p.MultiAddr _remoteAddr;
-  final libp2p.PeerId _localPeer;
-  final libp2p.PeerId _remotePeer;
-
-  /// Creates a new [WebTransportConnection].
-  WebTransportConnection(
-    this._localAddr,
-    this._remoteAddr,
-    this._localPeer,
-    this._remotePeer,
-  );
-
-  @override
-  libp2p.PeerId get localPeer => _localPeer;
-
-  @override
-  libp2p.PeerId get remotePeer => _remotePeer;
-
-  @override
-  libp2p.MultiAddr get localMultiaddr => _localAddr;
-
-  @override
-  libp2p.MultiAddr get remoteMultiaddr => _remoteAddr;
-
-  @override
-  Future<libp2p.P2PStream<Uint8List>> newStream(libp2p.Context context) async {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<List<libp2p.P2PStream<Uint8List>>> get streams => Future.value([]);
-
-  @override
-  Future<void> close() async {}
-
-  @override
-  bool get isClosed => false;
-
-  @override
-  libp2p.ConnStats get stat => throw UnimplementedError();
-
-  @override
-  libp2p.ConnScope get scope => throw UnimplementedError();
-
-  @override
-  String get id => _remotePeer.toString();
-
-  @override
-  Future<libp2p.PublicKey?> get remotePublicKey => Future.value(null);
-
-  @override
-  libp2p.ConnState get state => libp2p.ConnState(
-    streamMultiplexer: '/quic/1.0.0',
-    security: '/quic/1.0.0',
-    transport: 'webtransport',
-    usedEarlyMuxerNegotiation: true,
-  );
 }

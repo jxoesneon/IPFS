@@ -1,65 +1,62 @@
-// lib/src/transport/webtransport/multiaddr_parser.dart
+import 'dart:typed_data';
+
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
+import 'package:multiformats/multiformats.dart';
 
-/// Helper for parsing WebTransport multiaddresses.
-class WebTransportMultiaddrParser {
-  /// Parses a multiaddr and extracts WebTransport specific components.
-  ///
-  /// Format: `/ip4/1.2.3.4/udp/4001/quic-v1/webtransport/certhash/&lt;mh1&gt;/certhash/&lt;mh2&gt;`
-  static WebTransportInfo? parse(libp2p.MultiAddr addr) {
-    final stringAddr = addr.toString();
-    if (!stringAddr.contains('/webtransport')) {
-      return null;
-    }
+import 'certhash.dart';
 
-    final parts = stringAddr.split('/');
-    String? ip;
-    int? port;
-    bool isQuicV1 = false;
-    final certHashes = <String>[];
-
-    for (var i = 0; i < parts.length; i++) {
-      final part = parts[i];
-      if (part == 'ip4' || part == 'ip6' || part == 'dns4' || part == 'dns6') {
-        ip = parts[i + 1];
-      } else if (part == 'udp') {
-        port = int.tryParse(parts[i + 1]);
-      } else if (part == 'quic-v1') {
-        isQuicV1 = true;
-      } else if (part == 'certhash') {
-        if (i + 1 < parts.length) {
-          certHashes.add(parts[i + 1]);
-        }
-      }
-    }
-
-    if (ip == null || port == null || !isQuicV1) {
-      return null;
-    }
-
-    return WebTransportInfo(ip: ip, port: port, certHashes: certHashes);
-  }
-}
-
-/// Container for WebTransport connection information.
-class WebTransportInfo {
-  /// The IP address or hostname.
-  final String ip;
-
-  /// The UDP port.
-  final int port;
-
-  /// The list of certificate hashes.
-  final List<String> certHashes;
-
-  /// Creates a new [WebTransportInfo].
-  WebTransportInfo({
+/// Information parsed from a WebTransport multiaddr.
+class WebTransportMultiaddrInfo {
+  /// Creates a new [WebTransportMultiaddrInfo].
+  WebTransportMultiaddrInfo({
     required this.ip,
     required this.port,
     required this.certHashes,
   });
 
-  @override
-  String toString() =>
-      'WebTransportInfo(ip: $ip, port: $port, hashes: ${certHashes.length})';
+  /// The IP address.
+  final String ip;
+
+  /// The port.
+  final int port;
+
+  /// The certificate hashes.
+  final List<WebTransportCertHash> certHashes;
+}
+
+/// Parser for WebTransport multiaddrs.
+class WebTransportMultiaddrParser {
+  /// Parses a WebTransport multiaddr.
+  static WebTransportMultiaddrInfo? parse(libp2p.MultiAddr addr) {
+    // addr example: /ip4/1.2.3.4/udp/443/quic-v1/webtransport/certhash/MH1/certhash/MH2
+    final addrStr = addr.toString();
+    final parts = addrStr.split('/');
+
+    String? ip;
+    int? port;
+    final certHashes = <WebTransportCertHash>[];
+
+    for (var i = 0; i < parts.length; i++) {
+      final part = parts[i];
+      if (part == 'ip4' || part == 'ip6') {
+        ip = parts[i + 1];
+      } else if (part == 'udp') {
+        port = int.tryParse(parts[i + 1]);
+      } else if (part == 'certhash') {
+        final mhStr = parts[i + 1];
+        final mh = Multihash.decode(Uint8List.fromList(mhStr.codeUnits));
+        certHashes.add(
+          WebTransportCertHash(algorithm: 'sha-256', value: mh.digest),
+        );
+      }
+    }
+
+    if (ip == null || port == null) return null;
+
+    return WebTransportMultiaddrInfo(
+      ip: ip,
+      port: port,
+      certHashes: certHashes,
+    );
+  }
 }
