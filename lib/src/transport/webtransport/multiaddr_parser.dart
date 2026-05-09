@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:dart_multihash/dart_multihash.dart';
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
-import 'package:multiformats/multiformats.dart';
 
 import 'certhash.dart';
 
