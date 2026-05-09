@@ -8,7 +8,7 @@ import 'package:ipfs_libp2p/p2p/transport/transport_config.dart'
     as libp2p_config;
 
 import 'data_channel_stream.dart';
-import 'peer_connection_web.dart';
+import 'peer_connection.dart';
 import 'webrtc_transport.dart';
 
 /// WebRTC Direct transport implementation for libp2p.
@@ -40,7 +40,7 @@ class WebRTCDirectTransport implements libp2p_trans.Transport {
     final peerIdStr = parts.last;
     final peerId = libp2p.PeerId.fromString(peerIdStr);
 
-    final pc = createPC(const ['stun:stun.l.google.com:19302']);
+    final pc = createPeerConnection(const ['stun:stun.l.google.com:19302']);
 
     // Create offer
     final offer = await pc.createOffer();
