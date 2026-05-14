@@ -160,10 +160,10 @@ class MDNSHandler implements ILifecycle {
             }
           }
         }
-      } on SocketException catch (e) {
-        _logger.warning('mDNS discovery skipped (SocketException): ${e.message}');
-      }
-
+      } catch (e) {
+        // We catch all exceptions here because CI runners often restrict
+        // multicast traffic (SocketException: No route to host)
+        _logger.warning('mDNS discovery skipped or failed: $e');
       }
     } catch (e, stackTrace) {
       _logger.error('Error during peer discovery', e, stackTrace);

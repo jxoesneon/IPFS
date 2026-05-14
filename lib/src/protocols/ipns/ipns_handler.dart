@@ -142,7 +142,10 @@ class IPNSHandler {
 
     // Broadcast via PubSub if available
     if (_pubsubHandler != null) {
-      await _pubsubHandler.publish('/ipfs/ipns-1.0.0', base64Encode(utf8.encode(cid)));
+      await _pubsubHandler.publish(
+        '/ipfs/ipns-1.0.0',
+        base64Encode(utf8.encode(cid)),
+      );
     }
   }
 
@@ -156,11 +159,12 @@ class IPNSHandler {
   /// Publishes a Record (legacy compatibility).
   Future<void> publishRecord(dynamic record) async {
     if (record is IPNSRecord) {
-      if (!record.isSigned && (record.signature == null || record.signature!.isEmpty)) {
+      if (!record.isSigned &&
+          (record.signature == null || record.signature!.isEmpty)) {
         throw StateError('Cannot publish unsigned IPNS record');
       }
     } else if (record is! _LegacyRecord) {
-        // Handle other types if necessary or just ignore for stub
+      // Handle other types if necessary or just ignore for stub
     }
   }
 
