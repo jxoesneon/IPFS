@@ -119,7 +119,7 @@ class IPNSHandler {
     // If keystore is locked and keyName is provided, it should throw StateError
     // matching test expectations (though our stub here is simple).
     if (_securityManager != null && keyName != null) {
-      if (!_securityManager.isKeystoreUnlocked) {
+      if (_securityManager.isKeystoreUnlocked == false) {
         throw StateError('Keystore is locked');
       }
     }

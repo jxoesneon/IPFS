@@ -17,7 +17,9 @@ class MockNetworkHandler extends NetworkHandler {
 void main() {
   group('LifecycleManager Integration', () {
     test('Should successfully start and stop registered services', () async {
-      final config = IPFSConfig();
+      final config = IPFSConfig(
+        network: NetworkConfig(enableMDNS: false),
+      );
       final lifecycleManager = LifecycleManager();
 
       final mdns = MDNSHandler(config);
