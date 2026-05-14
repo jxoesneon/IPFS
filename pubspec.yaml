@@ -84,3 +84,7 @@ assets:
 
 # Example entry point for running the application.
 example: main.dart
+
+macos:
+  signing:
+    enable: false

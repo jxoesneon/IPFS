@@ -68,7 +68,7 @@ jobs:
     - name: Build macOS Dashboard
       run: |
         cd example/ipfs_dashboard
-        flutter build macos --debug --no-codesign
+        flutter build macos --debug
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
