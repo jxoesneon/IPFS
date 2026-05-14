@@ -298,6 +298,10 @@ class BitswapHandler implements ILifecycle {
       throw StateError('BitswapHandler is not running');
     }
 
+    if (_router.connectedPeers.isEmpty) {
+      throw StateError('No connected peers available for Bitswap request');
+    }
+
     final completers = <String, Completer<Block>>{};
     for (final cid in cids) {
       if (!_pendingBlocks.containsKey(cid)) {

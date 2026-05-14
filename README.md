@@ -567,6 +567,8 @@ Contributions welcome! Please:
 - Offline, Gateway, and P2P modes
 - Production cryptography
 - Web platform support
+  - WebSocket, WebRTC, and WebTransport
+  - WebRTC-Direct for browser-to-browser P2P
 - libp2p core migration
 - Circuit Relay v2
 - AutoNAT
@@ -577,12 +579,12 @@ Contributions welcome! Please:
 ### 🔄 In Progress
 
 - Mobile optimization (Flutter performance)
-- QUIC transport (native, beyond libp2p bridge)
+- Native QUIC transport (Desktop/Server)
 
 ### 📋 Planned
 
-- Full WebRTC transport
 - Filecoin integration
+- IPFS Pinning Service API (Remote Pinning)
 
 ---
 

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
@@ -18,8 +19,11 @@ import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
@@ -73,12 +77,51 @@ class TestPrivateKey implements IPFSPrivateKey {
 class MockBlockStore implements BlockStore {
   bool started = false;
   bool stopped = false;
+  final Map<String, Block> _blocks = {};
+
   @override
   Future<void> start() async => started = true;
   @override
   Future<void> stop() async => stopped = true;
   @override
   Future<Map<String, dynamic>> getStatus() async => {'status': 'active'};
+
+  @override
+  String get path => '/tmp/mock';
+
+  @override
+  PinManager get pinManager => throw UnimplementedError();
+
+  @override
+  Future<AddBlockResponse> putBlock(Block block) async {
+    _blocks[block.cid.toString()] = block;
+    return BlockResponseFactory.successAdd('OK');
+  }
+
+  @override
+  Future<GetBlockResponse> getBlock(String cid) async {
+    final block = _blocks[cid];
+    if (block != null) {
+      return BlockResponseFactory.successGet(block.toProto());
+    }
+    return BlockResponseFactory.notFound();
+  }
+
+  @override
+  Future<bool> hasBlock(String cid) async => _blocks.containsKey(cid);
+
+  @override
+  Future<RemoveBlockResponse> removeBlock(String cid) async {
+    _blocks.remove(cid);
+    return BlockResponseFactory.successRemove('OK');
+  }
+
+  @override
+  Future<List<Block>> getAllBlocks() async => _blocks.values.toList();
+
+  @override
+  Future<int> gc() async => 0;
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -86,6 +129,8 @@ class MockBlockStore implements BlockStore {
 class MockDatastoreHandler implements DatastoreHandler {
   bool started = false;
   bool stopped = false;
+  final MemoryDatastore _memDatastore = MemoryDatastore();
+
   @override
   Future<void> start() async => started = true;
   @override
@@ -96,7 +141,7 @@ class MockDatastoreHandler implements DatastoreHandler {
   Future<Map<String, dynamic>> getStatus() async => {'status': 'active'};
 
   @override
-  Datastore get datastore => throw UnimplementedError();
+  Datastore get datastore => _memDatastore;
 
   @override
   Future<Block?> getBlock(String cid) async => null;

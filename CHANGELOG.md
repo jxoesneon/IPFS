@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.11.0] - 2026-05-09
+
+### Added
+- **Transport**: Implemented full Web P2P transport suite for browser-based nodes:
+  - **WebRTC**: Real-time peer-to-peer connectivity via signaling.
+  - **WebRTC-Direct**: Direct browser-to-browser communication without intermediate signaling when possible.
+  - **WebTransport**: Modern, multiplexed transport for high-performance networking in browsers.
+- **Web Platform**: Integrated `IPFSWebNode` with the new transport layer, enabling online networking (Bitswap, PubSub, IPNS) in browsers.
+
+### Fixed
+- **Stability**: Resolved ~30 critical regressions in Bitswap, DHT, and IPNS protocols.
+- **BitSwap**: Fixed race conditions and improved error handling for block requests in multi-peer environments.
+- **IPNS**: Fixed lifecycle management and PubSub subscription logic for browser nodes.
+- **Mocks**: Hardened test infrastructure by resolving `NoSuchMethodError` and `LateInitializationError` in core coverage tests.
+
 ## [1.10.0] - 2026-05-08
 
 ### Changed

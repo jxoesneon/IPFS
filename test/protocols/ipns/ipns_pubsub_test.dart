@@ -66,6 +66,7 @@ void main() {
       // Create a dummy CID
       final validCid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
 
+      await ipnsHandler.start();
       await ipnsHandler.publish(validCid, keyName: 'self');
 
       verify(

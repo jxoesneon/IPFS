@@ -164,10 +164,12 @@ void main() {
       await node.stop();
     });
 
-    test('peerID getter returns router peer ID', () {
+    test('peerID getter returns router peer ID', () async {
       final node = IPFSWebNode();
+      await node.start();
       expect(node.peerID, isNotNull);
       expect(node.peerID, isNotEmpty);
+      await node.stop();
     });
 
     test('bitswap getter throws Error when not started', () {

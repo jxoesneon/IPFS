@@ -19,6 +19,8 @@ import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
+import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
 
 class MockBlockStore implements BlockStore {
   @override
@@ -53,10 +55,14 @@ class MockBlockStore implements BlockStore {
 }
 
 class MockDatastoreHandler implements DatastoreHandler {
+  final MemoryDatastore _memDatastore = MemoryDatastore();
+
   @override
   Future<void> start() async {}
   @override
   Future<void> stop() async {}
+  @override
+  Datastore get datastore => _memDatastore;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

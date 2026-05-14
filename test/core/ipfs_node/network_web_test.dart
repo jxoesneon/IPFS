@@ -21,6 +21,7 @@ void main() {
 
     setUp(() {
       mockRouter = MockRouterInterface();
+      when(mockRouter.peerID).thenReturn('web_node');
       mockIPFSNode = MockIPFSNode();
       config = IPFSConfig();
       handler = NetworkHandler(config, router: mockRouter);

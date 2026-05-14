@@ -40,8 +40,45 @@ class MockBlockStore extends BlockStore {
   Future<Map<String, dynamic>> getStatus() async => {'status': 'mock_ok'};
 }
 
-// Mock Datastore for MockDatastoreHandler - uses noSuchMethod for all interface methods
+// Mock Datastore for MockDatastoreHandler
 class _MockDatastore implements Datastore {
+  final Map<Key, Uint8List> _storage = {};
+
+  @override
+  Future<void> init() async {}
+
+  @override
+  Future<void> put(Key key, Uint8List value) async {
+    _storage[key] = value;
+  }
+
+  @override
+  Future<Uint8List?> get(Key key) async {
+    return _storage[key];
+  }
+
+  @override
+  Future<bool> has(Key key) async {
+    return _storage.containsKey(key);
+  }
+
+  @override
+  Future<void> delete(Key key) async {
+    _storage.remove(key);
+  }
+
+  @override
+  Stream<QueryEntry> query(Query q) async* {
+    for (final entry in _storage.entries) {
+      if (q.prefix == null || entry.key.toString().startsWith(q.prefix!)) {
+        yield QueryEntry(entry.key, q.keysOnly ? null : entry.value);
+      }
+    }
+  }
+
+  @override
+  Future<void> close() async {}
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

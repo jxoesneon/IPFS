@@ -102,6 +102,7 @@ class IPFSWebNode {
     await _router.start();
     await _bitswap.start();
     await _pubsub.start();
+    await _ipns.start();
 
     // Connect to bootstrap peers
     for (final peer in bootstrapPeers) {
@@ -120,6 +121,7 @@ class IPFSWebNode {
   Future<void> stop() async {
     if (!_started) return;
 
+    await _ipns.stop();
     await _pubsub.stop();
     await _bitswap.stop();
     await _router.stop();
@@ -232,7 +234,7 @@ class IPFSWebNode {
   /// Publishes an IPNS record.
   Future<void> publishIPNS(String cid, {required String keyName}) async {
     if (!_started) throw StateError('Node not started');
-    await _ipns.publish(keyName, cid);
+    await _ipns.publish(cid, keyName: keyName);
   }
 
   /// Resolves an IPNS name.
