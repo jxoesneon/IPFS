@@ -145,19 +145,25 @@ class MDNSHandler implements ILifecycle {
     try {
       _logger.verbose('Performing peer discovery');
 
-      await for (final PtrResourceRecord ptr
-          in _mdnsClient.lookup<PtrResourceRecord>(
-            ResourceRecordQuery.serverPointer(_serviceType),
-          )) {
-        if (!_discoveredPeers.contains(ptr.domainName)) {
-          _logger.debug('New peer discovered: ${ptr.domainName}');
+      try {
+        await for (final PtrResourceRecord ptr
+            in _mdnsClient.lookup<PtrResourceRecord>(
+              ResourceRecordQuery.serverPointer(_serviceType),
+            )) {
+          if (!_discoveredPeers.contains(ptr.domainName)) {
+            _logger.debug('New peer discovered: ${ptr.domainName}');
 
-          final peerInfo = await _resolvePeerInfo(ptr.domainName);
-          if (peerInfo != null) {
-            _discoveredPeers.add(ptr.domainName);
-            _peerDiscoveryController.add(peerInfo);
+            final peerInfo = await _resolvePeerInfo(ptr.domainName);
+            if (peerInfo != null) {
+              _discoveredPeers.add(ptr.domainName);
+              _peerDiscoveryController.add(peerInfo);
+            }
           }
         }
+      } on SocketException catch (e) {
+        _logger.warning('mDNS discovery skipped (SocketException): ${e.message}');
+      }
+
       }
     } catch (e, stackTrace) {
       _logger.error('Error during peer discovery', e, stackTrace);
