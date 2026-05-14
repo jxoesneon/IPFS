@@ -68,7 +68,7 @@ jobs:
     - name: Build macOS Dashboard
       run: |
         cd example/ipfs_dashboard
-        flutter build macos --debug --target-platform=darwin-x64
+        flutter build macos --debug --config-only
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
