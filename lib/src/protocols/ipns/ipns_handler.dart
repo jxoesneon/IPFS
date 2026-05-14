@@ -15,17 +15,16 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 class IPNSHandler {
   /// Creates a new [IPNSHandler].
   IPNSHandler(
-    this._config, [
+    IPFSConfig config, [
     this._securityManager,
     this._dhtHandler,
     this._pubsubHandler,
   ]) : _cache = <String, IPNSRecord>{},
-       _maxCacheSize = _config.ipnsCacheSize,
+       _maxCacheSize = config.ipnsCacheSize,
        _logger = Logger('IPNSHandler') {
     _logger.info('Initializing IPNSHandler');
   }
 
-  final IPFSConfig _config;
   final dynamic _securityManager;
   final dynamic _dhtHandler;
   final dynamic _pubsubHandler;
@@ -159,8 +158,9 @@ class IPNSHandler {
   /// Publishes a Record (legacy compatibility).
   Future<void> publishRecord(dynamic record) async {
     if (record is IPNSRecord) {
-      if (!record.isSigned &&
-          (record.signature == null || record.signature!.isEmpty)) {
+      final ipnsRecord = record;
+      if (!ipnsRecord.isSigned &&
+          (ipnsRecord.signature == null || ipnsRecord.signature!.isEmpty)) {
         throw StateError('Cannot publish unsigned IPNS record');
       }
     } else if (record is! _LegacyRecord) {
@@ -180,8 +180,10 @@ class IPNSHandler {
   Future<String> _resolveViaDHT(String name) async {
     if (_dhtHandler != null) {
       try {
-        final value = await _dhtHandler.getValue(name);
-        return utf8.decode(value.bytes);
+        final dynamic value = await _dhtHandler.getValue(name);
+        if (value != null && value.bytes != null) {
+          return utf8.decode(value.bytes as List<int>);
+        }
       } catch (e) {
         _logger.warning('DHT resolution failed for $name: $e');
       }
