@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.1] - 2026-05-14
+
+### Changed
+- **CI/CD**: Refined CodeQL Swift analysis by moving to direct `xcodebuild` targeting and simplified destination.
+- **CI/CD**: Resolved `SocketException` in `MDNSHandler` by adding robust network error handling for constrained environments.
+- **CI/CD**: Disabled MDNS in lifecycle integration tests to ensure CI stability.
+
+### Fixed
+- **Stability**: Fixed static analysis errors in `IPNSHandler` related to dynamic boolean checks and type casting.
+- **Stability**: Standardized codebase formatting.
+- **Bug Fix**: Corrected syntax errors and removed platform-specific `dart:io` dependency in `MDNSHandler` to maintain web platform parity.
+
 ## [1.11.0] - 2026-05-09
 
 ### Added

@@ -1,5 +1,5 @@
 name: dart_ipfs
-version: 1.11.0
+version: 1.11.1
 description: A comprehensive IPFS implementation in Dart, supporting CID, Bitswap, UnixFS, and DHT.
 homepage: https://github.com/jxoesneon/IPFS
 repository: https://github.com/jxoesneon/IPFS
