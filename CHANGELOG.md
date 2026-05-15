@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.11.2] - 2026-05-15
+
+### Fixed
+- **Publishing**: Restored `.gitignore` rules for internal folders (`.gemini/`, `.fastembed_cache/`) and removed them from git tracking to comply with `pub.dev` publishing rules.
+- **Publishing**: Added `.pubignore` to explicitly exclude development-only artifacts from the published package.
+
 ## [1.11.1] - 2026-05-14
 
 ### Changed
