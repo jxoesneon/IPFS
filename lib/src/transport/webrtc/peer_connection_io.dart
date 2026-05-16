@@ -11,7 +11,6 @@ class PeerConnectionIO implements PeerConnection {
   @override
   Stream<RTCIceCandidateInit> get onIceCandidate => const Stream.empty();
 
-
   @override
   Stream<DataChannelStream> get onDataChannel => const Stream.empty();
 

@@ -22,10 +22,11 @@ void main() {
       final path = line.substring(3);
       // Normalized path for cross-platform matching
       final normalizedPath = path.replaceAll('\\', '/');
-      isIgnoring = normalizedPath.contains('lib/src/proto/generated') ||
-                   normalizedPath.contains('.pb.') ||
-                   normalizedPath.contains('.g.dart') ||
-                   normalizedPath.contains('.mocks.dart');
+      isIgnoring =
+          normalizedPath.contains('lib/src/proto/generated') ||
+          normalizedPath.contains('.pb.') ||
+          normalizedPath.contains('.g.dart') ||
+          normalizedPath.contains('.mocks.dart');
       if (!isIgnoring) {
         currentStat = _FileStat(path);
         fileCoverage[path] = currentStat;

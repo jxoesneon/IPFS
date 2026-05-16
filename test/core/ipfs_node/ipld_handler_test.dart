@@ -287,20 +287,33 @@ void main() {
         final unixFsData = Data()
           ..type = Data_DataType.Directory
           ..filesize = Int64(0);
-        
-        final leafCid = await CID.computeForData(Uint8List.fromList([1, 2, 3]), format: 'raw');
-        final leafBlock = Block(cid: leafCid, data: Uint8List.fromList([1, 2, 3]));
+
+        final leafCid = await CID.computeForData(
+          Uint8List.fromList([1, 2, 3]),
+          format: 'raw',
+        );
+        final leafBlock = Block(
+          cid: leafCid,
+          data: Uint8List.fromList([1, 2, 3]),
+        );
 
         final rootNode = MerkleDAGNode(
           data: unixFsData.writeToBuffer(),
-          links: [
-            Link(name: 'file.txt', size: 3, cid: leafCid),
-          ],
+          links: [Link(name: 'file.txt', size: 3, cid: leafCid)],
         );
-        final rootCid = await CID.computeForData(rootNode.toBytes(), format: 'dag-pb');
+        final rootCid = await CID.computeForData(
+          rootNode.toBytes(),
+          format: 'dag-pb',
+        );
 
         when(mockBlockStore.getBlock(rootCid.toString())).thenAnswer(
-          (_) async => BlockResponseFactory.successGet(Block(cid: rootCid, data: rootNode.toBytes(), format: 'dag-pb').toProto()),
+          (_) async => BlockResponseFactory.successGet(
+            Block(
+              cid: rootCid,
+              data: rootNode.toBytes(),
+              format: 'dag-pb',
+            ).toProto(),
+          ),
         );
         when(mockBlockStore.getBlock(leafCid.toString())).thenAnswer(
           (_) async => BlockResponseFactory.successGet(leafBlock.toProto()),
@@ -315,7 +328,8 @@ void main() {
         final unixFsData = Data()
           ..type = Data_DataType.File
           ..filesize = Int64(1234)
-          ..mode = 493 // 0755 octal
+          ..mode =
+              493 // 0755 octal
           ..mtime = Int64(now.millisecondsSinceEpoch ~/ 1000)
           ..mtimeNsecs = (now.millisecondsSinceEpoch % 1000) * 1000000;
 
@@ -323,12 +337,17 @@ void main() {
         final cid = await CID.computeForData(node.toBytes(), format: 'dag-pb');
 
         when(mockBlockStore.getBlock(cid.toString())).thenAnswer(
-          (_) async => BlockResponseFactory.successGet(Block(cid: cid, data: node.toBytes(), format: 'dag-pb').toProto()),
+          (_) async => BlockResponseFactory.successGet(
+            Block(cid: cid, data: node.toBytes(), format: 'dag-pb').toProto(),
+          ),
         );
 
         final metadata = await handler.getMetadata(cid);
         expect(metadata.size, equals(1234));
-        expect(metadata.properties['mode'], equals('493')); // 0755 octal is 493 decimal
+        expect(
+          metadata.properties['mode'],
+          equals('493'),
+        ); // 0755 octal is 493 decimal
         expect(metadata.contentType, equals('application/ipfs-unixfs'));
       });
     });

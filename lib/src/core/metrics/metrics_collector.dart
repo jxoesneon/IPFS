@@ -77,9 +77,6 @@ class MetricsCollector implements ILifecycle {
 
   /// Returns the current status of the metrics collector.
   Future<Map<String, dynamic>> getStatus() async {
-    return {
-      'status': 'active',
-      'enabled': _config.metrics.enabled,
-    };
+    return {'status': 'active', 'enabled': _config.metrics.enabled};
   }
 }

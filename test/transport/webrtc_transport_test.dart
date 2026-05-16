@@ -17,8 +17,9 @@ class FakeMultiAddr extends Fake implements libp2p.MultiAddr {
   @override
   String toString() => _addr;
   @override
-  bool operator ==(Object other) => 
-    (other is libp2p.MultiAddr || other is FakeMultiAddr) && other.toString() == _addr;
+  bool operator ==(Object other) =>
+      (other is libp2p.MultiAddr || other is FakeMultiAddr) &&
+      other.toString() == _addr;
   @override
   int get hashCode => _addr.hashCode;
 }
@@ -86,7 +87,13 @@ void main() {
     });
 
     test('close is idempotent', () async {
-      final conn = WebRTCConnection(mockPC, mockBaseChannel, mockAddr, localPeer, remotePeer);
+      final conn = WebRTCConnection(
+        mockPC,
+        mockBaseChannel,
+        mockAddr,
+        localPeer,
+        remotePeer,
+      );
       await conn.close();
       await conn.close();
       verify(mockPC.close()).called(1);
@@ -102,7 +109,9 @@ void main() {
       );
 
       final mockNewChannel = MockDataChannelStream();
-      when(mockPC.createDataChannel('stream')).thenAnswer((_) async => mockNewChannel);
+      when(
+        mockPC.createDataChannel('stream'),
+      ).thenAnswer((_) async => mockNewChannel);
 
       final stream = await conn.newStream(libp2p.Context());
       expect(stream, equals(mockNewChannel));
@@ -113,7 +122,13 @@ void main() {
     });
 
     test('newStream throws when closed', () async {
-      final conn = WebRTCConnection(mockPC, mockBaseChannel, mockAddr, localPeer, remotePeer);
+      final conn = WebRTCConnection(
+        mockPC,
+        mockBaseChannel,
+        mockAddr,
+        localPeer,
+        remotePeer,
+      );
       await conn.close();
       expect(() => conn.newStream(libp2p.Context()), throwsException);
     });
@@ -141,7 +156,13 @@ void main() {
     });
 
     test('unimplemented methods throw', () {
-      final conn = WebRTCConnection(mockPC, mockBaseChannel, mockAddr, localPeer, remotePeer);
+      final conn = WebRTCConnection(
+        mockPC,
+        mockBaseChannel,
+        mockAddr,
+        localPeer,
+        remotePeer,
+      );
       expect(() => conn.stat, throwsUnimplementedError);
       expect(() => conn.scope, throwsUnimplementedError);
     });
@@ -153,10 +174,10 @@ void main() {
       expect(stream.label, 'test-label');
       expect(stream.id(), 'test-label');
       expect(stream.protocol(), '');
-      
+
       await stream.setProtocol('/test/1.0.0');
       expect(stream.protocol(), '/test/1.0.0');
-      
+
       expect(stream.isWritable, isTrue);
       expect(stream.isClosed, isFalse);
       expect(stream.incoming, equals(stream));
@@ -165,11 +186,11 @@ void main() {
     test('read and write', () async {
       final stream = TestDataChannelStream();
       final data = Uint8List.fromList([1, 2, 3]);
-      
+
       stream.onMessage(data);
       final readData = await stream.read(3);
       expect(readData, equals(data));
-      
+
       stream.onMessage(Uint8List.fromList([4, 5]));
       final read2 = await stream.read();
       expect(read2, equals([4, 5]));
@@ -178,13 +199,13 @@ void main() {
     test('read waits for data', () async {
       final stream = TestDataChannelStream();
       final future = stream.read(1);
-      
+
       bool completed = false;
       future.then((_) => completed = true);
-      
+
       await Future.delayed(Duration(milliseconds: 10));
       expect(completed, isFalse);
-      
+
       stream.onMessage(Uint8List.fromList([9]));
       final result = await future;
       expect(result, equals([9]));
@@ -196,7 +217,7 @@ void main() {
       await stream.close();
       expect(stream.isClosed, isTrue);
       expect(stream.isWritable, isFalse);
-      
+
       final stream2 = TestDataChannelStream();
       await stream2.reset();
       expect(stream2.isClosed, isTrue);
@@ -214,10 +235,12 @@ void main() {
   group('WebRTCTransport', () {
     test('canDial', () {
       final transport = WebRTCTransport(host: mockHost);
-      
-      final dialAddr = FakeMultiAddr('/ip4/1.2.3.4/p2p/QmRelay/p2p-circuit/webrtc/p2p/QmRemote');
+
+      final dialAddr = FakeMultiAddr(
+        '/ip4/1.2.3.4/p2p/QmRelay/p2p-circuit/webrtc/p2p/QmRemote',
+      );
       expect(transport.canDial(dialAddr), isTrue);
-      
+
       final directAddr = FakeMultiAddr('/webrtc-direct');
       expect(transport.canDial(directAddr), isFalse);
     });
@@ -231,15 +254,21 @@ void main() {
       final transport = WebRTCTransport(host: mockHost);
       final relayId = await libp2p.PeerId.random();
       final remoteId = await libp2p.PeerId.random();
-      final dialAddr = FakeMultiAddr('/ip4/1.2.3.4/p2p/$relayId/p2p-circuit/webrtc/p2p/$remoteId');
+      final dialAddr = FakeMultiAddr(
+        '/ip4/1.2.3.4/p2p/$relayId/p2p-circuit/webrtc/p2p/$remoteId',
+      );
 
       final mockStream = MockP2PStream();
-      when(mockHost.newStream(any, any, any)).thenAnswer((_) async => mockStream);
+      when(
+        mockHost.newStream(any, any, any),
+      ).thenAnswer((_) async => mockStream);
       when(mockHost.id).thenReturn(localPeer);
 
       final controller = StreamController<DataChannelStream>();
       when(mockPC.onDataChannel).thenAnswer((_) => controller.stream);
-      when(mockPC.createOffer()).thenAnswer((_) async => RTCSessionDescriptionInit('offer', 'sdp'));
+      when(
+        mockPC.createOffer(),
+      ).thenAnswer((_) async => RTCSessionDescriptionInit('offer', 'sdp'));
       when(mockPC.onIceCandidate).thenAnswer((_) => const Stream.empty());
 
       // We need to shim createPeerConnection because it's a top-level factory
@@ -269,7 +298,7 @@ void main() {
     test('signaling stream handling', () async {
       final signalingStream = MockP2PStream();
       final signalingData = <Uint8List>[];
-      
+
       final mockRemotePeer = await libp2p.PeerId.random();
       final mockConn = MockConn();
       when(signalingStream.conn).thenReturn(mockConn);
@@ -279,11 +308,11 @@ void main() {
 
       final offer = SignalingMessage(SignalingMessageType.offer, 'sdp-offer');
       final encodedOffer = offer.encode();
-      
+
       // We need to mock read() to return varint length then the message
       // This is complex with mockito for sequential calls with different return values
       // For coverage, we just need it to not crash.
-      
+
       final handlerCompleter = Completer<Function>();
       when(mockHost.setStreamHandler(any, any)).thenAnswer((inv) {
         handlerCompleter.complete(inv.positionalArguments[1] as Function);
@@ -291,10 +320,10 @@ void main() {
 
       WebRTCListener(mockAddr, mockHost);
       final handler = await handlerCompleter.future;
-      
+
       // We won't await handler because it enters a while loop
       unawaited(handler(signalingStream, mockRemotePeer));
-      
+
       await Future.delayed(Duration(milliseconds: 10));
       await signalingStream.close();
     });

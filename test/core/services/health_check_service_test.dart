@@ -26,14 +26,15 @@ void main() {
     test('checkHealth returns healthy when everything is fine', () async {
       when(mockNode.isRunning).thenReturn(true);
       when(mockNode.peerID).thenReturn('test-peer');
-      when(mockNode.getHealthStatus()).thenAnswer((_) async => {
-        'network': {'status': 'ok'},
-      });
+      when(mockNode.getHealthStatus()).thenAnswer(
+        (_) async => {
+          'network': {'status': 'ok'},
+        },
+      );
       when(mockNode.connectedPeers).thenAnswer((_) async => []);
-      when(mockBlockStore.getStatus()).thenAnswer((_) async => {
-        'total_blocks': 10,
-        'pinned_blocks': 2,
-      });
+      when(
+        mockBlockStore.getStatus(),
+      ).thenAnswer((_) async => {'total_blocks': 10, 'pinned_blocks': 2});
 
       final result = await healthCheckService.checkHealth();
       expect(result['status'], equals('healthy'));
@@ -54,11 +55,13 @@ void main() {
 
     test('checkHealth returns degraded when errors are present', () async {
       when(mockNode.isRunning).thenReturn(true);
-      when(mockNode.getHealthStatus()).thenAnswer((_) async => {
-        'storage': {
-          'disk': {'status': 'error', 'message': 'disk full'}
+      when(mockNode.getHealthStatus()).thenAnswer(
+        (_) async => {
+          'storage': {
+            'disk': {'status': 'error', 'message': 'disk full'},
+          },
         },
-      });
+      );
       when(mockNode.connectedPeers).thenAnswer((_) async => []);
       when(mockBlockStore.getStatus()).thenAnswer((_) async => {});
 
