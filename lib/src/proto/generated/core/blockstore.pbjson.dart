@@ -101,5 +101,5 @@ const BlockStoreServiceBase$messageJson = {
   '.ipfs.core.data_structures.IPFSCIDProto': $1.IPFSCIDProto$json,
   '.ipfs.core.data_structures.GetBlockResponse': GetBlockResponse$json,
   '.ipfs.core.data_structures.RemoveBlockResponse': RemoveBlockResponse$json,
-  '.google.protobuf.Empty': $2.Empty$json,
+  '.google.protobuf.Empty': $2.Empty$json, // ignore: deprecated_member_use
 };

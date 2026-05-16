@@ -48,7 +48,7 @@ Rules for keeping the repository "squeaky clean".
 
 ### Weekly Checks
 - [ ] **Issues Triage**:
-    - Close stale issues (>30 days inactive) with a polite message.
+    - Close stale issues (`> 30 days` inactive) with a polite message.
     - Label new issues (`bug`, `enhancement`, `question`).
     - Add `good first issue` to simple tasks for contributors.
 - [ ] **Pull Requests**:
@@ -84,6 +84,7 @@ Rules for keeping the repository "squeaky clean".
 ### 1. Dependency Management (Vendoring)
 If you must modify a dependency (e.g., `p2plib`) locally:
 1. Place it in `packages/<package_name>`.
+
 2. Add `dependency_overrides` in `pubspec.yaml`.
 3. **CRITICAL**: Remove the `.git` directory from the vendored package (`rm -rf packages/p2plib/.git`).
 4. Commit the entire folder as source code.

@@ -42,7 +42,8 @@
 ///   ),
 /// );
 /// await node.start();
-/// // Access at http://localhost:8080/ipfs/<CID>
+/// // Access at `http://localhost:8080/ipfs/<CID>`
+
 /// ```
 ///
 /// ### Full P2P Mode

@@ -10,7 +10,7 @@
 ///
 /// Example:
 /// ```dart
-/// final cache = GenericLRUCache<String, int>(capacity: 100);
+/// `final cache = GenericLRUCache<String, int>(capacity: 100);`
 /// cache.put('key1', 42);
 /// final value = cache.get('key1'); // 42
 /// ```

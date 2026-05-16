@@ -217,7 +217,7 @@ final node = await IPFSNode.create(
 
 await node.start();
 print('Gateway running at http://localhost:8080');
-// Access content at: http://localhost:8080/ipfs/<CID>
+// Access content at: `http://localhost:8080/ipfs/<CID>`
 ```
 
 #### P2P Network Mode (Full Node)
@@ -355,7 +355,7 @@ await node.pubsub.publish('my-topic', 'Hello, peers!');
 ```dart
 final websiteDir = Directory('./my-website');
 final rootCID = await node.addDirectory(websiteDir);
-// Access via: http://gateway/ipfs/<rootCID>/index.html
+// Access via: `http://gateway/ipfs/<rootCID>/index.html`
 ```
 
 ---

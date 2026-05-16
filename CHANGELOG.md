@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.3] - 2026-05-15
+
+### Fixed
+- **Static Analysis**: Resolved `pana` static analysis issues to achieve 160/160 score.
+- **Documentation**: Escaped or backticked angle brackets in `README.md`, `CHANGELOG.md`, and doc comments to prevent them from being interpreted as HTML.
+- **Generated Code**: Added `ignore: deprecated_member_use` to generated protobuf files to satisfy analysis rules.
+
 ## [1.11.2] - 2026-05-15
 
 ### Fixed
@@ -45,7 +52,7 @@
 ## [1.9.6] - 2026-05-04
 
 ### Added
-- **Test Coverage**: Increased test coverage for `BootstrapHandler` (>90%) and `IPFSUtils` (100%).
+- **Test Coverage**: Increased test coverage for `BootstrapHandler` (`>90%`) and `IPFSUtils` (100%).
 - **Testing Infrastructure**: Integrated `fake_async` for reliable timer-based testing.
 - **Improved Utilities**: Added comprehensive unit tests for CID validation, PeerID validation, and Base64 operations.
 
@@ -298,7 +305,7 @@ This release brings the Web implementation of `dart_ipfs` to near-parity with th
 
 - **Web IPNS Support**: Implemented `SecurityManagerWeb` and adapter stack to enable IPNS record publishing and resolution in browsers.
 - **Web DHT Delegate**: Added `DelegateDHTHandler` to perform content routing and peer discovery via IPFS HTTP Delegates (Kubo RPC), bridging the browser DHT gap.
-- **Web Performance**: Implemented `UnixFSBuilder` and `IPFSWebNode.addStream` for chunked streaming of large files (>1GB) with minimal memory footprint.
+- **Web Performance**: Implemented `UnixFSBuilder` and `IPFSWebNode.addStream` for chunked streaming of large files (`>1GB`) with minimal memory footprint.
 - **Improved UX**: Added `IPFSWebNode.addFile` convenience method.
 
 ### Fixed
@@ -696,7 +703,7 @@ The web implementation (`IPFSWebNode`) has been upgraded from an offline sandbox
 
 ### Technical Details
 
-- **Language**: Dart >=3.5.4 <4.0.0
+- **Language**: Dart `>=3.5.4 <4.0.0`
 - **Platform Support**: Mobile (Flutter), Web, Desktop
 - **Security**: Added `p2plib` Sybil protection (Max 5 peers/IP).
 - **Core**: Enabled LZ4 compression for Gateway cache (via `es_compression`).

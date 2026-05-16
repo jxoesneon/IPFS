@@ -12,7 +12,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 /// final bus = EventBus();
 ///
 /// // Subscribe to peer connections
-/// bus.subscribe<PeerConnectedEvent>().listen((event) {
+/// `bus.subscribe<PeerConnectedEvent>().listen((event) {`
 ///   // print('Peer connected: ${event.peerId}');
 /// });
 ///
