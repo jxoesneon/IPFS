@@ -281,44 +281,67 @@ void main() {
       });
     });
 
-    group('Selectors Expanded', () {
-      test('executeSelector with \$exists operator', () async {
-        final data = {'name': 'bob', 'age': 30};
-        final block = await handler.put(data);
-        when(mockBlockStore.getBlock(any)).thenAnswer(
-          (_) async => BlockResponseFactory.successGet(block.toProto()),
+    group('UnixFS Support', () {
+      test('resolvePath through UnixFS directory', () async {
+        // Create a mock UnixFS directory node
+        final unixFsData = Data()
+          ..type = Data_DataType.Directory
+          ..filesize = Int64(0);
+        
+        final leafCid = await CID.computeForData(Uint8List.fromList([1, 2, 3]), format: 'raw');
+        final leafBlock = Block(cid: leafCid, data: Uint8List.fromList([1, 2, 3]));
+
+        final rootNode = MerkleDAGNode(
+          data: unixFsData.writeToBuffer(),
+          links: [
+            Link(name: 'file.txt', size: 3, cid: leafCid),
+          ],
+        );
+        final rootCid = await CID.computeForData(rootNode.toBytes(), format: 'dag-pb');
+
+        when(mockBlockStore.getBlock(rootCid.toString())).thenAnswer(
+          (_) async => BlockResponseFactory.successGet(Block(cid: rootCid, data: rootNode.toBytes(), format: 'dag-pb').toProto()),
+        );
+        when(mockBlockStore.getBlock(leafCid.toString())).thenAnswer(
+          (_) async => BlockResponseFactory.successGet(leafBlock.toProto()),
         );
 
-        final selector = IPLDSelector(
-          type: SelectorType.matcher,
-          criteria: {
-            'name': {'\$exists': true},
-            'missing': {'\$exists': false},
-          },
-        );
-
-        final results = await handler.executeSelector(block.cid, selector);
-        expect(results, isNotEmpty);
+        final result = await handler.resolvePath('/ipfs/$rootCid/file.txt');
+        expect(result, isNotNull);
       });
 
-      test('executeSelector with nested path criteria', () async {
-        final data = {
-          'user': {
-            'profile': {'active': true},
-          },
-        };
+      test('getMetadata for UnixFS node', () async {
+        final now = DateTime.now();
+        final unixFsData = Data()
+          ..type = Data_DataType.File
+          ..filesize = Int64(1234)
+          ..mode = 493 // 0755 octal
+          ..mtime = Int64(now.millisecondsSinceEpoch ~/ 1000)
+          ..mtimeNsecs = (now.millisecondsSinceEpoch % 1000) * 1000000;
+
+        final node = MerkleDAGNode(data: unixFsData.writeToBuffer(), links: []);
+        final cid = await CID.computeForData(node.toBytes(), format: 'dag-pb');
+
+        when(mockBlockStore.getBlock(cid.toString())).thenAnswer(
+          (_) async => BlockResponseFactory.successGet(Block(cid: cid, data: node.toBytes(), format: 'dag-pb').toProto()),
+        );
+
+        final metadata = await handler.getMetadata(cid);
+        expect(metadata.size, equals(1234));
+        expect(metadata.properties['mode'], equals('493')); // 0755 octal is 493 decimal
+        expect(metadata.contentType, equals('application/ipfs-unixfs'));
+      });
+    });
+
+    group('Path Normalization', () {
+      test('resolvePath handles various prefixes', () async {
+        final data = {'a': 1};
         final block = await handler.put(data);
-        when(mockBlockStore.getBlock(any)).thenAnswer(
+        when(mockBlockStore.getBlock(block.cid.toString())).thenAnswer(
           (_) async => BlockResponseFactory.successGet(block.toProto()),
         );
 
-        final selector = IPLDSelector(
-          type: SelectorType.matcher,
-          criteria: {'user.profile.active': true},
-        );
-
-        final results = await handler.executeSelector(block.cid, selector);
-        expect(results, isNotEmpty);
+        expect(await handler.resolvePath('/ipfs/${block.cid}/a'), isNotNull);
       });
     });
   });

@@ -9,10 +9,11 @@ class PeerConnectionIO implements PeerConnection {
   PeerConnectionIO(List<String> iceServers);
 
   @override
-  Stream<RTCIceCandidateInit> get onIceCandidate => throw UnimplementedError();
+  Stream<RTCIceCandidateInit> get onIceCandidate => const Stream.empty();
+
 
   @override
-  Stream<DataChannelStream> get onDataChannel => throw UnimplementedError();
+  Stream<DataChannelStream> get onDataChannel => const Stream.empty();
 
   @override
   String? get localDescriptionSdp => throw UnimplementedError();

@@ -48,6 +48,36 @@ class MockIpfsPlatform extends _i1.Mock implements _i2.IpfsPlatform {
           as bool);
 
   @override
+  String get operatingSystem =>
+      (super.noSuchMethod(
+            Invocation.getter(#operatingSystem),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#operatingSystem),
+            ),
+            returnValueForMissingStub: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#operatingSystem),
+            ),
+          )
+          as String);
+
+  @override
+  String get version =>
+      (super.noSuchMethod(
+            Invocation.getter(#version),
+            returnValue: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#version),
+            ),
+            returnValueForMissingStub: _i3.dummyValue<String>(
+              this,
+              Invocation.getter(#version),
+            ),
+          )
+          as String);
+
+  @override
   String get pathSeparator =>
       (super.noSuchMethod(
             Invocation.getter(#pathSeparator),
@@ -72,6 +102,15 @@ class MockIpfsPlatform extends _i1.Mock implements _i2.IpfsPlatform {
           as _i4.Future<void>);
 
   @override
+  _i4.Future<void> writeString(String? path, String? content) =>
+      (super.noSuchMethod(
+            Invocation.method(#writeString, [path, content]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   _i4.Future<_i5.Uint8List?> readBytes(String? path) =>
       (super.noSuchMethod(
             Invocation.method(#readBytes, [path]),
@@ -79,6 +118,15 @@ class MockIpfsPlatform extends _i1.Mock implements _i2.IpfsPlatform {
             returnValueForMissingStub: _i4.Future<_i5.Uint8List?>.value(),
           )
           as _i4.Future<_i5.Uint8List?>);
+
+  @override
+  _i4.Future<String?> readString(String? path) =>
+      (super.noSuchMethod(
+            Invocation.method(#readString, [path]),
+            returnValue: _i4.Future<String?>.value(),
+            returnValueForMissingStub: _i4.Future<String?>.value(),
+          )
+          as _i4.Future<String?>);
 
   @override
   _i4.Future<bool> exists(String? path) =>
@@ -108,6 +156,25 @@ class MockIpfsPlatform extends _i1.Mock implements _i2.IpfsPlatform {
           as _i4.Future<void>);
 
   @override
+  _i4.Future<String> createTempDirectory([String? prefix]) =>
+      (super.noSuchMethod(
+            Invocation.method(#createTempDirectory, [prefix]),
+            returnValue: _i4.Future<String>.value(
+              _i3.dummyValue<String>(
+                this,
+                Invocation.method(#createTempDirectory, [prefix]),
+              ),
+            ),
+            returnValueForMissingStub: _i4.Future<String>.value(
+              _i3.dummyValue<String>(
+                this,
+                Invocation.method(#createTempDirectory, [prefix]),
+              ),
+            ),
+          )
+          as _i4.Future<String>);
+
+  @override
   _i4.Future<List<String>> listDirectory(String? path) =>
       (super.noSuchMethod(
             Invocation.method(#listDirectory, [path]),
@@ -117,4 +184,22 @@ class MockIpfsPlatform extends _i1.Mock implements _i2.IpfsPlatform {
             ),
           )
           as _i4.Future<List<String>>);
+
+  @override
+  _i4.Future<int> getLength(String? path) =>
+      (super.noSuchMethod(
+            Invocation.method(#getLength, [path]),
+            returnValue: _i4.Future<int>.value(0),
+            returnValueForMissingStub: _i4.Future<int>.value(0),
+          )
+          as _i4.Future<int>);
+
+  @override
+  _i4.Future<String?> promptPassword(String? message) =>
+      (super.noSuchMethod(
+            Invocation.method(#promptPassword, [message]),
+            returnValue: _i4.Future<String?>.value(),
+            returnValueForMissingStub: _i4.Future<String?>.value(),
+          )
+          as _i4.Future<String?>);
 }

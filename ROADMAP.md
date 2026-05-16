@@ -1,20 +1,19 @@
 # dart_ipfs Roadmap
 
-**Current Version**: 1.10.0 (Multi-Platform Production Ready)  
-**Last Updated**: 2026-02-15
+**Current Version**: 1.11.4 (Multi-Platform Production Ready)  
+**Last Updated**: 2026-05-15
 
 ---
 
 ## 📍 Current Status
 
-dart_ipfs **v1.10.0** is **multi-platform production ready** with:
+dart_ipfs **v1.11.4** is **multi-platform production ready** with:
 
 - ✅ **IpfsPlatform**: Unified abstraction layer for IO and Web.
-- ✅ **Web Support**: Persistent storage via IndexedDB (idb_shim).
-- ✅ **SecurityManager**: Enterprise-grade encrypted keystore.
-- ✅ **Protocol Compliance**: Standardized Bitswap, DHT, and IPNS.
-- ✅ **Infrastructure**: Automated browser testing and CI.
-- ✅ **1100+ tests passing** across all platforms.
+- ✅ **WebRTC Multiplexing**: Native p2p connectivity for browsers with standard libp2p stream support.
+- ✅ **Bitswap Smart Routing**: Efficient block exchange with provider tracking.
+- ✅ **90% Code Coverage**: Robust test suite with cross-platform validation.
+- ✅ **Security Parity**: Unified security management across IO and Web platforms.
 
 ---
 
@@ -41,12 +40,12 @@ dart_ipfs **v1.10.0** is **multi-platform production ready** with:
 
 #### Features
 - [x] Libp2p browser transport (WebRTC/WebTransport).
-- [ ] IPNS performance optimizations (DHT record caching).
-- [ ] Advanced IPLD codecs (DagCbor, DagJson, DagJose).
-- [ ] Flutter Web specific optimizations.
-- [ ] Multi-platform metrics dashboard.
+- [x] IPNS performance optimizations (DHT record caching).
+- [x] Advanced IPLD codecs (DagCbor, DagJson, DagJose).
+- [x] Flutter Web specific optimizations.
+- [x] Multi-platform metrics dashboard.
 
-**Estimated Release**: May 2026
+**Released**: May 2026
 
 ---
 
@@ -439,7 +438,7 @@ This roadmap is a living document. We welcome:
 
 ---
 
-**Last Updated**: 2026-05-15 (v1.11.0)
+**Last Updated**: 2026-05-15 (v1.11.4)
 **Status**: Active Development  
-**Current Version:** 1.11.0
+**Current Version:** 1.11.4
 **Target for Next Release:** 2.0.0 (Q4 2026)

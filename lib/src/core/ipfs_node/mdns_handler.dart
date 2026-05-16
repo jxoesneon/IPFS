@@ -1,5 +1,6 @@
 // src/core/ipfs_node/mdns_handler.dart
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
@@ -49,6 +50,14 @@ class MDNSHandler implements ILifecycle {
 
     try {
       _logger.debug('Starting MDNSHandler...');
+
+      if (Platform.isWindows) {
+        _logger.verbose(
+          'Tip: If you see a "Program Compatibility Assistant" popup about mdnsNSP.dll, '
+          'it is a known issue with Bonjour on Windows 11. You can safely ignore it, '
+          'update Bonjour, or disable mDNS in your config.',
+        );
+      }
 
       await _mdnsClient.start();
       _logger.verbose('MDNS client started');

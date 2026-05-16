@@ -152,7 +152,14 @@ class WebRTCConnection implements libp2p.Conn {
   libp2p.PeerId get remotePeer => _remotePeer;
 
   @override
-  libp2p.MultiAddr get localMultiaddr => libp2p.MultiAddr('/webrtc');
+  libp2p.MultiAddr get localMultiaddr {
+    try {
+      return libp2p.MultiAddr('/webrtc');
+    } catch (_) {
+      // Fallback for MultiAddr parsers that don't support /webrtc yet
+      return libp2p.MultiAddr('/p2p-circuit');
+    }
+  }
 
   @override
   libp2p.MultiAddr get remoteMultiaddr => _remoteAddr;

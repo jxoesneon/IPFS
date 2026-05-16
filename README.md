@@ -47,6 +47,20 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 
 ---
 
+## 🚀 What's New in v1.11
+
+### Major Features
+
+| Feature                 | Description                                                  |
+| ----------------------- | ------------------------------------------------------------ |
+| **WebRTC Multiplexing** | Native p2p connectivity for browsers with standard libp2p stream support. |
+| **Bitswap 1.2.0**       | Smart routing via provider tracking and `HAVE` message support. |
+| **Advanced IPLD**       | Native support for DagCbor, DagJson, and DagJose codecs.      |
+| **90% Coverage**        | Industrial-grade stability with >90% code coverage.           |
+| **Security Parity**     | Enterprise security features now unified across IO and Web.  |
+
+---
+
 ## 🚀 What's New in v1.10
 
 ### Major Features
@@ -138,7 +152,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_ipfs: ^1.10.0
+  dart_ipfs: ^1.11.4
 ```
 
 Or from Git for latest development:
@@ -468,6 +482,22 @@ None.
 ```powershell
 winget install jedisct1.libsodium
 ```
+
+### Bonjour "Blocked from Local Security Authority" Popup (Windows 11)
+
+**Symptom**: A popup appears stating `mdnsNSP.dll` is blocked from loading into the Local Security Authority.
+
+**Reason**: This is a known compatibility issue between older versions of Apple Bonjour and Windows 11's "LSA Protection" security feature. It happens when the IPFS node attempts local peer discovery via mDNS.
+
+**Solution**:
+1.  **Update Bonjour**: Ensure you have the latest version of Bonjour installed.
+2.  **Uninstall Bonjour**: If you don't need it (it's often installed with iTunes or older Apple software), you can uninstall it.
+3.  **Disable mDNS**: If you don't need local peer discovery, disable it in your configuration:
+    ```dart
+    IPFSConfig(
+      network: NetworkConfig(enableMDNS: false),
+    )
+    ```
 
 ### AutoNAT Reports "Symmetric"
 

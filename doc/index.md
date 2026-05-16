@@ -5,9 +5,9 @@ Welcome to the documentation for **dart_ipfs**, a production-ready IPFS implemen
 ## Guides
 
 - [Getting Started](../README.md#quick-start)
-- [Architecture](../README.md#architecture)
-- [Gateway Selector](../README.md#gateway-selector-new-in-120)
-- [Protobuf 6.0.0 Compatibility](PROTOBUF_COMPATIBILITY.md) - **NEW**
+- [Architecture](ARCHITECTURE.md)
+- [WebRTC Transport](../README.md#networking--nat-traversal)
+- [Protobuf 6.0.0 Compatibility](PROTOBUF_COMPATIBILITY.md)
 
 ## API Reference
 

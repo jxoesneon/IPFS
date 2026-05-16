@@ -163,24 +163,6 @@ class MockSecurityManager extends _i1.Mock implements _i8.SecurityManager {
           as bool);
 
   @override
-  _i9.Future<_i11.IPFSPrivateKey?> getPrivateKey(String? keyName) =>
-      (super.noSuchMethod(
-            Invocation.method(#getPrivateKey, [keyName]),
-            returnValue: _i9.Future<_i11.IPFSPrivateKey?>.value(),
-          )
-          as _i9.Future<_i11.IPFSPrivateKey?>);
-
-  @override
-  _i9.Future<Map<String, dynamic>> getStatus() =>
-      (super.noSuchMethod(
-            Invocation.method(#getStatus, []),
-            returnValue: _i9.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
-            ),
-          )
-          as _i9.Future<Map<String, dynamic>>);
-
-  @override
   _i9.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
@@ -197,6 +179,24 @@ class MockSecurityManager extends _i1.Mock implements _i8.SecurityManager {
             returnValueForMissingStub: _i9.Future<void>.value(),
           )
           as _i9.Future<void>);
+
+  @override
+  _i9.Future<Map<String, dynamic>> getStatus() =>
+      (super.noSuchMethod(
+            Invocation.method(#getStatus, []),
+            returnValue: _i9.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i9.Future<Map<String, dynamic>>);
+
+  @override
+  _i9.Future<_i11.IPFSPrivateKey?> getPrivateKey(String? keyName) =>
+      (super.noSuchMethod(
+            Invocation.method(#getPrivateKey, [keyName]),
+            returnValue: _i9.Future<_i11.IPFSPrivateKey?>.value(),
+          )
+          as _i9.Future<_i11.IPFSPrivateKey?>);
 }
 
 /// A class which mocks [DHTHandler].

@@ -3,26 +3,29 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i13;
-import 'dart:typed_data' as _i15;
+import 'dart:async' as _i16;
+import 'dart:typed_data' as _i18;
 
-import 'package:dart_ipfs/src/core/data_structures/block.dart' as _i18;
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart' as _i2;
-import 'package:dart_ipfs/src/core/data_structures/link.dart' as _i16;
-import 'package:dart_ipfs/src/core/data_structures/peer.dart' as _i17;
-import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart' as _i5;
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart' as _i7;
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart' as _i8;
-import 'package:dart_ipfs/src/core/storage/datastore.dart' as _i4;
-import 'package:dart_ipfs/src/core/types/peer_id.dart' as _i9;
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart' as _i6;
-import 'package:dart_ipfs/src/protocols/dht/dht_client.dart' as _i3;
+import 'package:dart_ipfs/src/core/data_structures/block.dart' as _i21;
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart' as _i5;
+import 'package:dart_ipfs/src/core/data_structures/link.dart' as _i19;
+import 'package:dart_ipfs/src/core/data_structures/peer.dart' as _i20;
+import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart' as _i8;
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart' as _i10;
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart' as _i11;
+import 'package:dart_ipfs/src/core/mfs/mfs_manager.dart' as _i2;
+import 'package:dart_ipfs/src/core/plugins/ipfs_plugin.dart' as _i3;
+import 'package:dart_ipfs/src/core/security/security_manager.dart' as _i4;
+import 'package:dart_ipfs/src/core/storage/datastore.dart' as _i7;
+import 'package:dart_ipfs/src/core/types/peer_id.dart' as _i12;
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart' as _i9;
+import 'package:dart_ipfs/src/protocols/dht/dht_client.dart' as _i6;
 import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart'
-    as _i10;
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart' as _i14;
-import 'package:dart_ipfs/src/transport/router_interface.dart' as _i11;
+    as _i13;
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart' as _i17;
+import 'package:dart_ipfs/src/transport/router_interface.dart' as _i14;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i12;
+import 'package:mockito/src/dummies.dart' as _i15;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -39,84 +42,142 @@ import 'package:mockito/src/dummies.dart' as _i12;
 // ignore_for_file: subtype_of_sealed_class
 // ignore_for_file: invalid_use_of_internal_member
 
-class _FakeBlockStore_0 extends _i1.SmartFake implements _i2.BlockStore {
-  _FakeBlockStore_0(Object parent, Invocation parentInvocation)
+class _FakeMFSManager_0 extends _i1.SmartFake implements _i2.MFSManager {
+  _FakeMFSManager_0(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeDHTClient_1 extends _i1.SmartFake implements _i3.DHTClient {
-  _FakeDHTClient_1(Object parent, Invocation parentInvocation)
+class _FakePluginManager_1 extends _i1.SmartFake implements _i3.PluginManager {
+  _FakePluginManager_1(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeDatastore_2 extends _i1.SmartFake implements _i4.Datastore {
-  _FakeDatastore_2(Object parent, Invocation parentInvocation)
+class _FakeSecurityManager_2 extends _i1.SmartFake
+    implements _i4.SecurityManager {
+  _FakeSecurityManager_2(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakePinManager_3 extends _i1.SmartFake implements _i5.PinManager {
-  _FakePinManager_3(Object parent, Invocation parentInvocation)
+class _FakeBlockStore_3 extends _i1.SmartFake implements _i5.BlockStore {
+  _FakeBlockStore_3(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeGetBlockResponse_4 extends _i1.SmartFake
-    implements _i6.GetBlockResponse {
-  _FakeGetBlockResponse_4(Object parent, Invocation parentInvocation)
+class _FakeDHTClient_4 extends _i1.SmartFake implements _i6.DHTClient {
+  _FakeDHTClient_4(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeAddBlockResponse_5 extends _i1.SmartFake
-    implements _i6.AddBlockResponse {
-  _FakeAddBlockResponse_5(Object parent, Invocation parentInvocation)
+class _FakeDatastore_5 extends _i1.SmartFake implements _i7.Datastore {
+  _FakeDatastore_5(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeRemoveBlockResponse_6 extends _i1.SmartFake
-    implements _i6.RemoveBlockResponse {
-  _FakeRemoveBlockResponse_6(Object parent, Invocation parentInvocation)
+class _FakePinManager_6 extends _i1.SmartFake implements _i8.PinManager {
+  _FakePinManager_6(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeIPFSNode_7 extends _i1.SmartFake implements _i7.IPFSNode {
-  _FakeIPFSNode_7(Object parent, Invocation parentInvocation)
+class _FakeGetBlockResponse_7 extends _i1.SmartFake
+    implements _i9.GetBlockResponse {
+  _FakeGetBlockResponse_7(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeNetworkHandler_8 extends _i1.SmartFake
-    implements _i8.NetworkHandler {
-  _FakeNetworkHandler_8(Object parent, Invocation parentInvocation)
+class _FakeAddBlockResponse_8 extends _i1.SmartFake
+    implements _i9.AddBlockResponse {
+  _FakeAddBlockResponse_8(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakePeerId_9 extends _i1.SmartFake implements _i9.PeerId {
-  _FakePeerId_9(Object parent, Invocation parentInvocation)
+class _FakeRemoveBlockResponse_9 extends _i1.SmartFake
+    implements _i9.RemoveBlockResponse {
+  _FakeRemoveBlockResponse_9(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeKademliaRoutingTable_10 extends _i1.SmartFake
-    implements _i10.KademliaRoutingTable {
-  _FakeKademliaRoutingTable_10(Object parent, Invocation parentInvocation)
+class _FakeIPFSNode_10 extends _i1.SmartFake implements _i10.IPFSNode {
+  _FakeIPFSNode_10(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeRouterInterface_11 extends _i1.SmartFake
-    implements _i11.RouterInterface {
-  _FakeRouterInterface_11(Object parent, Invocation parentInvocation)
+class _FakeNetworkHandler_11 extends _i1.SmartFake
+    implements _i11.NetworkHandler {
+  _FakeNetworkHandler_11(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakePeerId_12 extends _i1.SmartFake implements _i12.PeerId {
+  _FakePeerId_12(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeKademliaRoutingTable_13 extends _i1.SmartFake
+    implements _i13.KademliaRoutingTable {
+  _FakeKademliaRoutingTable_13(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeRouterInterface_14 extends _i1.SmartFake
+    implements _i14.RouterInterface {
+  _FakeRouterInterface_14(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
 /// A class which mocks [IPFSNode].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockIPFSNode extends _i1.Mock implements _i7.IPFSNode {
+class MockIPFSNode extends _i1.Mock implements _i10.IPFSNode {
   @override
-  _i7.NodeState get state =>
+  _i10.NodeState get state =>
       (super.noSuchMethod(
             Invocation.getter(#state),
-            returnValue: _i7.NodeState.stopped,
-            returnValueForMissingStub: _i7.NodeState.stopped,
+            returnValue: _i10.NodeState.stopped,
+            returnValueForMissingStub: _i10.NodeState.stopped,
           )
-          as _i7.NodeState);
+          as _i10.NodeState);
+
+  @override
+  _i2.MFSManager get mfs =>
+      (super.noSuchMethod(
+            Invocation.getter(#mfs),
+            returnValue: _FakeMFSManager_0(this, Invocation.getter(#mfs)),
+            returnValueForMissingStub: _FakeMFSManager_0(
+              this,
+              Invocation.getter(#mfs),
+            ),
+          )
+          as _i2.MFSManager);
+
+  @override
+  _i3.PluginManager get plugins =>
+      (super.noSuchMethod(
+            Invocation.getter(#plugins),
+            returnValue: _FakePluginManager_1(
+              this,
+              Invocation.getter(#plugins),
+            ),
+            returnValueForMissingStub: _FakePluginManager_1(
+              this,
+              Invocation.getter(#plugins),
+            ),
+          )
+          as _i3.PluginManager);
+
+  @override
+  _i4.SecurityManager get securityManager =>
+      (super.noSuchMethod(
+            Invocation.getter(#securityManager),
+            returnValue: _FakeSecurityManager_2(
+              this,
+              Invocation.getter(#securityManager),
+            ),
+            returnValueForMissingStub: _FakeSecurityManager_2(
+              this,
+              Invocation.getter(#securityManager),
+            ),
+          )
+          as _i4.SecurityManager);
 
   @override
   bool get isRunning =>
@@ -131,11 +192,11 @@ class MockIPFSNode extends _i1.Mock implements _i7.IPFSNode {
   String get peerId =>
       (super.noSuchMethod(
             Invocation.getter(#peerId),
-            returnValue: _i12.dummyValue<String>(
+            returnValue: _i15.dummyValue<String>(
               this,
               Invocation.getter(#peerId),
             ),
-            returnValueForMissingStub: _i12.dummyValue<String>(
+            returnValueForMissingStub: _i15.dummyValue<String>(
               this,
               Invocation.getter(#peerId),
             ),
@@ -143,14 +204,14 @@ class MockIPFSNode extends _i1.Mock implements _i7.IPFSNode {
           as String);
 
   @override
-  _i13.Stream<Map<String, dynamic>> get bandwidthMetrics =>
+  _i16.Stream<Map<String, dynamic>> get bandwidthMetrics =>
       (super.noSuchMethod(
             Invocation.getter(#bandwidthMetrics),
-            returnValue: _i13.Stream<Map<String, dynamic>>.empty(),
+            returnValue: _i16.Stream<Map<String, dynamic>>.empty(),
             returnValueForMissingStub:
-                _i13.Stream<Map<String, dynamic>>.empty(),
+                _i16.Stream<Map<String, dynamic>>.empty(),
           )
-          as _i13.Stream<Map<String, dynamic>>);
+          as _i16.Stream<Map<String, dynamic>>);
 
   @override
   List<String> get addresses =>
@@ -162,97 +223,97 @@ class MockIPFSNode extends _i1.Mock implements _i7.IPFSNode {
           as List<String>);
 
   @override
-  _i2.BlockStore get blockStore =>
+  _i5.BlockStore get blockStore =>
       (super.noSuchMethod(
             Invocation.getter(#blockStore),
-            returnValue: _FakeBlockStore_0(
+            returnValue: _FakeBlockStore_3(
               this,
               Invocation.getter(#blockStore),
             ),
-            returnValueForMissingStub: _FakeBlockStore_0(
+            returnValueForMissingStub: _FakeBlockStore_3(
               this,
               Invocation.getter(#blockStore),
             ),
           )
-          as _i2.BlockStore);
+          as _i5.BlockStore);
 
   @override
-  _i3.DHTClient get dhtClient =>
+  _i6.DHTClient get dhtClient =>
       (super.noSuchMethod(
             Invocation.getter(#dhtClient),
-            returnValue: _FakeDHTClient_1(this, Invocation.getter(#dhtClient)),
-            returnValueForMissingStub: _FakeDHTClient_1(
+            returnValue: _FakeDHTClient_4(this, Invocation.getter(#dhtClient)),
+            returnValueForMissingStub: _FakeDHTClient_4(
               this,
               Invocation.getter(#dhtClient),
             ),
           )
-          as _i3.DHTClient);
+          as _i6.DHTClient);
 
   @override
-  _i13.Future<List<String>> get connectedPeers =>
+  _i16.Future<List<String>> get connectedPeers =>
       (super.noSuchMethod(
             Invocation.getter(#connectedPeers),
-            returnValue: _i13.Future<List<String>>.value(<String>[]),
-            returnValueForMissingStub: _i13.Future<List<String>>.value(
+            returnValue: _i16.Future<List<String>>.value(<String>[]),
+            returnValueForMissingStub: _i16.Future<List<String>>.value(
               <String>[],
             ),
           )
-          as _i13.Future<List<String>>);
+          as _i16.Future<List<String>>);
 
   @override
-  _i13.Future<String> get publicKey =>
+  _i16.Future<String> get publicKey =>
       (super.noSuchMethod(
             Invocation.getter(#publicKey),
-            returnValue: _i13.Future<String>.value(
-              _i12.dummyValue<String>(this, Invocation.getter(#publicKey)),
+            returnValue: _i16.Future<String>.value(
+              _i15.dummyValue<String>(this, Invocation.getter(#publicKey)),
             ),
-            returnValueForMissingStub: _i13.Future<String>.value(
-              _i12.dummyValue<String>(this, Invocation.getter(#publicKey)),
+            returnValueForMissingStub: _i16.Future<String>.value(
+              _i15.dummyValue<String>(this, Invocation.getter(#publicKey)),
             ),
           )
-          as _i13.Future<String>);
+          as _i16.Future<String>);
 
   @override
-  _i13.Future<List<String>> get pinnedCids =>
+  _i16.Future<List<String>> get pinnedCids =>
       (super.noSuchMethod(
             Invocation.getter(#pinnedCids),
-            returnValue: _i13.Future<List<String>>.value(<String>[]),
-            returnValueForMissingStub: _i13.Future<List<String>>.value(
+            returnValue: _i16.Future<List<String>>.value(<String>[]),
+            returnValueForMissingStub: _i16.Future<List<String>>.value(
               <String>[],
             ),
           )
-          as _i13.Future<List<String>>);
+          as _i16.Future<List<String>>);
 
   @override
-  _i13.Stream<_i14.PubSubMessage> get pubsubMessages =>
+  _i16.Stream<_i17.PubSubMessage> get pubsubMessages =>
       (super.noSuchMethod(
             Invocation.getter(#pubsubMessages),
-            returnValue: _i13.Stream<_i14.PubSubMessage>.empty(),
-            returnValueForMissingStub: _i13.Stream<_i14.PubSubMessage>.empty(),
+            returnValue: _i16.Stream<_i17.PubSubMessage>.empty(),
+            returnValueForMissingStub: _i16.Stream<_i17.PubSubMessage>.empty(),
           )
-          as _i13.Stream<_i14.PubSubMessage>);
+          as _i16.Stream<_i17.PubSubMessage>);
 
   @override
-  _i4.Datastore get datastore =>
+  _i7.Datastore get datastore =>
       (super.noSuchMethod(
             Invocation.getter(#datastore),
-            returnValue: _FakeDatastore_2(this, Invocation.getter(#datastore)),
-            returnValueForMissingStub: _FakeDatastore_2(
+            returnValue: _FakeDatastore_5(this, Invocation.getter(#datastore)),
+            returnValueForMissingStub: _FakeDatastore_5(
               this,
               Invocation.getter(#datastore),
             ),
           )
-          as _i4.Datastore);
+          as _i7.Datastore);
 
   @override
   String get peerID =>
       (super.noSuchMethod(
             Invocation.getter(#peerID),
-            returnValue: _i12.dummyValue<String>(
+            returnValue: _i15.dummyValue<String>(
               this,
               Invocation.getter(#peerID),
             ),
-            returnValueForMissingStub: _i12.dummyValue<String>(
+            returnValueForMissingStub: _i15.dummyValue<String>(
               this,
               Invocation.getter(#peerID),
             ),
@@ -260,13 +321,13 @@ class MockIPFSNode extends _i1.Mock implements _i7.IPFSNode {
           as String);
 
   @override
-  _i13.Stream<String> get onNewContent =>
+  _i16.Stream<String> get onNewContent =>
       (super.noSuchMethod(
             Invocation.getter(#onNewContent),
-            returnValue: _i13.Stream<String>.empty(),
-            returnValueForMissingStub: _i13.Stream<String>.empty(),
+            returnValue: _i16.Stream<String>.empty(),
+            returnValueForMissingStub: _i16.Stream<String>.empty(),
           )
-          as _i13.Stream<String>);
+          as _i16.Stream<String>);
 
   @override
   List<String> resolvePeerId(String? peerIdStr) =>
@@ -278,302 +339,302 @@ class MockIPFSNode extends _i1.Mock implements _i7.IPFSNode {
           as List<String>);
 
   @override
-  _i13.Future<_i15.Uint8List?> cat(String? cid) =>
+  _i16.Future<_i18.Uint8List?> cat(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#cat, [cid]),
-            returnValue: _i13.Future<_i15.Uint8List?>.value(),
-            returnValueForMissingStub: _i13.Future<_i15.Uint8List?>.value(),
+            returnValue: _i16.Future<_i18.Uint8List?>.value(),
+            returnValueForMissingStub: _i16.Future<_i18.Uint8List?>.value(),
           )
-          as _i13.Future<_i15.Uint8List?>);
+          as _i16.Future<_i18.Uint8List?>);
 
   @override
-  _i13.Future<void> connectToPeer(String? multiaddr) =>
+  _i16.Future<void> connectToPeer(String? multiaddr) =>
       (super.noSuchMethod(
             Invocation.method(#connectToPeer, [multiaddr]),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<void> disconnectFromPeer(String? peerIdOrAddr) =>
+  _i16.Future<void> disconnectFromPeer(String? peerIdOrAddr) =>
       (super.noSuchMethod(
             Invocation.method(#disconnectFromPeer, [peerIdOrAddr]),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<String> resolveIPNS(String? name) =>
+  _i16.Future<String> resolveIPNS(String? name) =>
       (super.noSuchMethod(
             Invocation.method(#resolveIPNS, [name]),
-            returnValue: _i13.Future<String>.value(
-              _i12.dummyValue<String>(
+            returnValue: _i16.Future<String>.value(
+              _i15.dummyValue<String>(
                 this,
                 Invocation.method(#resolveIPNS, [name]),
               ),
             ),
-            returnValueForMissingStub: _i13.Future<String>.value(
-              _i12.dummyValue<String>(
+            returnValueForMissingStub: _i16.Future<String>.value(
+              _i15.dummyValue<String>(
                 this,
                 Invocation.method(#resolveIPNS, [name]),
               ),
             ),
           )
-          as _i13.Future<String>);
+          as _i16.Future<String>);
 
   @override
-  _i13.Future<void> subscribe(String? topic) =>
+  _i16.Future<void> subscribe(String? topic) =>
       (super.noSuchMethod(
             Invocation.method(#subscribe, [topic]),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<void> unsubscribe(String? topic) =>
+  _i16.Future<void> unsubscribe(String? topic) =>
       (super.noSuchMethod(
             Invocation.method(#unsubscribe, [topic]),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<void> publish(String? topic, String? message) =>
+  _i16.Future<void> publish(String? topic, String? message) =>
       (super.noSuchMethod(
             Invocation.method(#publish, [topic, message]),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<void> start() =>
+  _i16.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<void> stop() =>
+  _i16.Future<void> stop() =>
       (super.noSuchMethod(
             Invocation.method(#stop, []),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<void> restart() =>
+  _i16.Future<void> restart() =>
       (super.noSuchMethod(
             Invocation.method(#restart, []),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<String> addFile(_i15.Uint8List? data) =>
+  _i16.Future<String> addFile(_i18.Uint8List? data) =>
       (super.noSuchMethod(
             Invocation.method(#addFile, [data]),
-            returnValue: _i13.Future<String>.value(
-              _i12.dummyValue<String>(
+            returnValue: _i16.Future<String>.value(
+              _i15.dummyValue<String>(
                 this,
                 Invocation.method(#addFile, [data]),
               ),
             ),
-            returnValueForMissingStub: _i13.Future<String>.value(
-              _i12.dummyValue<String>(
+            returnValueForMissingStub: _i16.Future<String>.value(
+              _i15.dummyValue<String>(
                 this,
                 Invocation.method(#addFile, [data]),
               ),
             ),
           )
-          as _i13.Future<String>);
+          as _i16.Future<String>);
 
   @override
-  _i13.Future<String> addFileStream(_i13.Stream<List<int>>? dataStream) =>
+  _i16.Future<String> addFileStream(_i16.Stream<List<int>>? dataStream) =>
       (super.noSuchMethod(
             Invocation.method(#addFileStream, [dataStream]),
-            returnValue: _i13.Future<String>.value(
-              _i12.dummyValue<String>(
+            returnValue: _i16.Future<String>.value(
+              _i15.dummyValue<String>(
                 this,
                 Invocation.method(#addFileStream, [dataStream]),
               ),
             ),
-            returnValueForMissingStub: _i13.Future<String>.value(
-              _i12.dummyValue<String>(
+            returnValueForMissingStub: _i16.Future<String>.value(
+              _i15.dummyValue<String>(
                 this,
                 Invocation.method(#addFileStream, [dataStream]),
               ),
             ),
           )
-          as _i13.Future<String>);
+          as _i16.Future<String>);
 
   @override
-  _i13.Future<String> addDirectory(Map<String, dynamic>? directoryContent) =>
+  _i16.Future<String> addDirectory(Map<String, dynamic>? directoryContent) =>
       (super.noSuchMethod(
             Invocation.method(#addDirectory, [directoryContent]),
-            returnValue: _i13.Future<String>.value(
-              _i12.dummyValue<String>(
+            returnValue: _i16.Future<String>.value(
+              _i15.dummyValue<String>(
                 this,
                 Invocation.method(#addDirectory, [directoryContent]),
               ),
             ),
-            returnValueForMissingStub: _i13.Future<String>.value(
-              _i12.dummyValue<String>(
+            returnValueForMissingStub: _i16.Future<String>.value(
+              _i15.dummyValue<String>(
                 this,
                 Invocation.method(#addDirectory, [directoryContent]),
               ),
             ),
           )
-          as _i13.Future<String>);
+          as _i16.Future<String>);
 
   @override
-  void setGatewayMode(_i7.GatewayMode? mode, {String? customUrl}) =>
+  void setGatewayMode(_i10.GatewayMode? mode, {String? customUrl}) =>
       super.noSuchMethod(
         Invocation.method(#setGatewayMode, [mode], {#customUrl: customUrl}),
         returnValueForMissingStub: null,
       );
 
   @override
-  _i13.Future<_i15.Uint8List?> get(String? cid, {String? path = ''}) =>
+  _i16.Future<_i18.Uint8List?> get(String? cid, {String? path = ''}) =>
       (super.noSuchMethod(
             Invocation.method(#get, [cid], {#path: path}),
-            returnValue: _i13.Future<_i15.Uint8List?>.value(),
-            returnValueForMissingStub: _i13.Future<_i15.Uint8List?>.value(),
+            returnValue: _i16.Future<_i18.Uint8List?>.value(),
+            returnValueForMissingStub: _i16.Future<_i18.Uint8List?>.value(),
           )
-          as _i13.Future<_i15.Uint8List?>);
+          as _i16.Future<_i18.Uint8List?>);
 
   @override
-  _i13.Future<List<_i16.Link>> ls(String? cid) =>
+  _i16.Future<List<_i19.Link>> ls(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#ls, [cid]),
-            returnValue: _i13.Future<List<_i16.Link>>.value(<_i16.Link>[]),
-            returnValueForMissingStub: _i13.Future<List<_i16.Link>>.value(
-              <_i16.Link>[],
+            returnValue: _i16.Future<List<_i19.Link>>.value(<_i19.Link>[]),
+            returnValueForMissingStub: _i16.Future<List<_i19.Link>>.value(
+              <_i19.Link>[],
             ),
           )
-          as _i13.Future<List<_i16.Link>>);
+          as _i16.Future<List<_i19.Link>>);
 
   @override
-  _i13.Future<void> pin(String? cid) =>
+  _i16.Future<void> pin(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#pin, [cid]),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<bool> unpin(String? cid) =>
+  _i16.Future<bool> unpin(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#unpin, [cid]),
-            returnValue: _i13.Future<bool>.value(false),
-            returnValueForMissingStub: _i13.Future<bool>.value(false),
+            returnValue: _i16.Future<bool>.value(false),
+            returnValueForMissingStub: _i16.Future<bool>.value(false),
           )
-          as _i13.Future<bool>);
+          as _i16.Future<bool>);
 
   @override
-  _i13.Future<void> publishIPNS(String? cid, {required String? keyName}) =>
+  _i16.Future<void> publishIPNS(String? cid, {required String? keyName}) =>
       (super.noSuchMethod(
             Invocation.method(#publishIPNS, [cid], {#keyName: keyName}),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<void> importCAR(_i15.Uint8List? carFile) =>
+  _i16.Future<void> importCAR(_i18.Uint8List? carFile) =>
       (super.noSuchMethod(
             Invocation.method(#importCAR, [carFile]),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<_i15.Uint8List> exportCAR(String? cid) =>
+  _i16.Future<_i18.Uint8List> exportCAR(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#exportCAR, [cid]),
-            returnValue: _i13.Future<_i15.Uint8List>.value(_i15.Uint8List(0)),
-            returnValueForMissingStub: _i13.Future<_i15.Uint8List>.value(
-              _i15.Uint8List(0),
+            returnValue: _i16.Future<_i18.Uint8List>.value(_i18.Uint8List(0)),
+            returnValueForMissingStub: _i16.Future<_i18.Uint8List>.value(
+              _i18.Uint8List(0),
             ),
           )
-          as _i13.Future<_i15.Uint8List>);
+          as _i16.Future<_i18.Uint8List>);
 
   @override
-  _i13.Future<List<String>> findProviders(String? cid) =>
+  _i16.Future<List<String>> findProviders(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#findProviders, [cid]),
-            returnValue: _i13.Future<List<String>>.value(<String>[]),
-            returnValueForMissingStub: _i13.Future<List<String>>.value(
+            returnValue: _i16.Future<List<String>>.value(<String>[]),
+            returnValueForMissingStub: _i16.Future<List<String>>.value(
               <String>[],
             ),
           )
-          as _i13.Future<List<String>>);
+          as _i16.Future<List<String>>);
 
   @override
-  _i13.Future<void> requestBlock(String? cid, _i17.Peer? peer) =>
+  _i16.Future<void> requestBlock(String? cid, _i20.Peer? peer) =>
       (super.noSuchMethod(
             Invocation.method(#requestBlock, [cid, peer]),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<String> resolveDNSLink(String? domainName) =>
+  _i16.Future<String> resolveDNSLink(String? domainName) =>
       (super.noSuchMethod(
             Invocation.method(#resolveDNSLink, [domainName]),
-            returnValue: _i13.Future<String>.value(
-              _i12.dummyValue<String>(
+            returnValue: _i16.Future<String>.value(
+              _i15.dummyValue<String>(
                 this,
                 Invocation.method(#resolveDNSLink, [domainName]),
               ),
             ),
-            returnValueForMissingStub: _i13.Future<String>.value(
-              _i12.dummyValue<String>(
+            returnValueForMissingStub: _i16.Future<String>.value(
+              _i15.dummyValue<String>(
                 this,
                 Invocation.method(#resolveDNSLink, [domainName]),
               ),
             ),
           )
-          as _i13.Future<String>);
+          as _i16.Future<String>);
 
   @override
-  _i13.Future<Map<String, dynamic>> getHealthStatus() =>
+  _i16.Future<Map<String, dynamic>> getHealthStatus() =>
       (super.noSuchMethod(
             Invocation.method(#getHealthStatus, []),
-            returnValue: _i13.Future<Map<String, dynamic>>.value(
+            returnValue: _i16.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
-            returnValueForMissingStub: _i13.Future<Map<String, dynamic>>.value(
+            returnValueForMissingStub: _i16.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
           )
-          as _i13.Future<Map<String, dynamic>>);
+          as _i16.Future<Map<String, dynamic>>);
 }
 
 /// A class which mocks [BlockStore].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockBlockStore extends _i1.Mock implements _i2.BlockStore {
+class MockBlockStore extends _i1.Mock implements _i5.BlockStore {
   @override
   String get path =>
       (super.noSuchMethod(
             Invocation.getter(#path),
-            returnValue: _i12.dummyValue<String>(
+            returnValue: _i15.dummyValue<String>(
               this,
               Invocation.getter(#path),
             ),
-            returnValueForMissingStub: _i12.dummyValue<String>(
+            returnValueForMissingStub: _i15.dummyValue<String>(
               this,
               Invocation.getter(#path),
             ),
@@ -581,226 +642,226 @@ class MockBlockStore extends _i1.Mock implements _i2.BlockStore {
           as String);
 
   @override
-  _i5.PinManager get pinManager =>
+  _i8.PinManager get pinManager =>
       (super.noSuchMethod(
             Invocation.getter(#pinManager),
-            returnValue: _FakePinManager_3(
+            returnValue: _FakePinManager_6(
               this,
               Invocation.getter(#pinManager),
             ),
-            returnValueForMissingStub: _FakePinManager_3(
+            returnValueForMissingStub: _FakePinManager_6(
               this,
               Invocation.getter(#pinManager),
             ),
           )
-          as _i5.PinManager);
+          as _i8.PinManager);
 
   @override
-  _i13.Future<void> start() =>
+  _i16.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<void> stop() =>
+  _i16.Future<void> stop() =>
       (super.noSuchMethod(
             Invocation.method(#stop, []),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<_i6.GetBlockResponse> getBlock(String? cid) =>
+  _i16.Future<_i9.GetBlockResponse> getBlock(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#getBlock, [cid]),
-            returnValue: _i13.Future<_i6.GetBlockResponse>.value(
-              _FakeGetBlockResponse_4(
+            returnValue: _i16.Future<_i9.GetBlockResponse>.value(
+              _FakeGetBlockResponse_7(
                 this,
                 Invocation.method(#getBlock, [cid]),
               ),
             ),
-            returnValueForMissingStub: _i13.Future<_i6.GetBlockResponse>.value(
-              _FakeGetBlockResponse_4(
+            returnValueForMissingStub: _i16.Future<_i9.GetBlockResponse>.value(
+              _FakeGetBlockResponse_7(
                 this,
                 Invocation.method(#getBlock, [cid]),
               ),
             ),
           )
-          as _i13.Future<_i6.GetBlockResponse>);
+          as _i16.Future<_i9.GetBlockResponse>);
 
   @override
-  _i13.Future<_i6.AddBlockResponse> putBlock(_i18.Block? block) =>
+  _i16.Future<_i9.AddBlockResponse> putBlock(_i21.Block? block) =>
       (super.noSuchMethod(
             Invocation.method(#putBlock, [block]),
-            returnValue: _i13.Future<_i6.AddBlockResponse>.value(
-              _FakeAddBlockResponse_5(
+            returnValue: _i16.Future<_i9.AddBlockResponse>.value(
+              _FakeAddBlockResponse_8(
                 this,
                 Invocation.method(#putBlock, [block]),
               ),
             ),
-            returnValueForMissingStub: _i13.Future<_i6.AddBlockResponse>.value(
-              _FakeAddBlockResponse_5(
+            returnValueForMissingStub: _i16.Future<_i9.AddBlockResponse>.value(
+              _FakeAddBlockResponse_8(
                 this,
                 Invocation.method(#putBlock, [block]),
               ),
             ),
           )
-          as _i13.Future<_i6.AddBlockResponse>);
+          as _i16.Future<_i9.AddBlockResponse>);
 
   @override
-  _i13.Future<_i6.RemoveBlockResponse> removeBlock(String? cid) =>
+  _i16.Future<_i9.RemoveBlockResponse> removeBlock(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#removeBlock, [cid]),
-            returnValue: _i13.Future<_i6.RemoveBlockResponse>.value(
-              _FakeRemoveBlockResponse_6(
+            returnValue: _i16.Future<_i9.RemoveBlockResponse>.value(
+              _FakeRemoveBlockResponse_9(
                 this,
                 Invocation.method(#removeBlock, [cid]),
               ),
             ),
             returnValueForMissingStub:
-                _i13.Future<_i6.RemoveBlockResponse>.value(
-                  _FakeRemoveBlockResponse_6(
+                _i16.Future<_i9.RemoveBlockResponse>.value(
+                  _FakeRemoveBlockResponse_9(
                     this,
                     Invocation.method(#removeBlock, [cid]),
                   ),
                 ),
           )
-          as _i13.Future<_i6.RemoveBlockResponse>);
+          as _i16.Future<_i9.RemoveBlockResponse>);
 
   @override
-  _i13.Future<bool> hasBlock(String? cid) =>
+  _i16.Future<bool> hasBlock(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#hasBlock, [cid]),
-            returnValue: _i13.Future<bool>.value(false),
-            returnValueForMissingStub: _i13.Future<bool>.value(false),
+            returnValue: _i16.Future<bool>.value(false),
+            returnValueForMissingStub: _i16.Future<bool>.value(false),
           )
-          as _i13.Future<bool>);
+          as _i16.Future<bool>);
 
   @override
-  _i13.Future<List<_i18.Block>> getAllBlocks() =>
+  _i16.Future<List<_i21.Block>> getAllBlocks() =>
       (super.noSuchMethod(
             Invocation.method(#getAllBlocks, []),
-            returnValue: _i13.Future<List<_i18.Block>>.value(<_i18.Block>[]),
-            returnValueForMissingStub: _i13.Future<List<_i18.Block>>.value(
-              <_i18.Block>[],
+            returnValue: _i16.Future<List<_i21.Block>>.value(<_i21.Block>[]),
+            returnValueForMissingStub: _i16.Future<List<_i21.Block>>.value(
+              <_i21.Block>[],
             ),
           )
-          as _i13.Future<List<_i18.Block>>);
+          as _i16.Future<List<_i21.Block>>);
 
   @override
-  _i13.Future<Map<String, dynamic>> getStatus() =>
+  _i16.Future<Map<String, dynamic>> getStatus() =>
       (super.noSuchMethod(
             Invocation.method(#getStatus, []),
-            returnValue: _i13.Future<Map<String, dynamic>>.value(
+            returnValue: _i16.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
-            returnValueForMissingStub: _i13.Future<Map<String, dynamic>>.value(
+            returnValueForMissingStub: _i16.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
           )
-          as _i13.Future<Map<String, dynamic>>);
+          as _i16.Future<Map<String, dynamic>>);
 
   @override
-  _i13.Future<int> gc() =>
+  _i16.Future<int> gc() =>
       (super.noSuchMethod(
             Invocation.method(#gc, []),
-            returnValue: _i13.Future<int>.value(0),
-            returnValueForMissingStub: _i13.Future<int>.value(0),
+            returnValue: _i16.Future<int>.value(0),
+            returnValueForMissingStub: _i16.Future<int>.value(0),
           )
-          as _i13.Future<int>);
+          as _i16.Future<int>);
 }
 
 /// A class which mocks [DHTClient].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockDHTClient extends _i1.Mock implements _i3.DHTClient {
+class MockDHTClient extends _i1.Mock implements _i6.DHTClient {
   @override
-  _i7.IPFSNode get node =>
+  _i10.IPFSNode get node =>
       (super.noSuchMethod(
             Invocation.getter(#node),
-            returnValue: _FakeIPFSNode_7(this, Invocation.getter(#node)),
-            returnValueForMissingStub: _FakeIPFSNode_7(
+            returnValue: _FakeIPFSNode_10(this, Invocation.getter(#node)),
+            returnValueForMissingStub: _FakeIPFSNode_10(
               this,
               Invocation.getter(#node),
             ),
           )
-          as _i7.IPFSNode);
+          as _i10.IPFSNode);
 
   @override
-  _i8.NetworkHandler get networkHandler =>
+  _i11.NetworkHandler get networkHandler =>
       (super.noSuchMethod(
             Invocation.getter(#networkHandler),
-            returnValue: _FakeNetworkHandler_8(
+            returnValue: _FakeNetworkHandler_11(
               this,
               Invocation.getter(#networkHandler),
             ),
-            returnValueForMissingStub: _FakeNetworkHandler_8(
+            returnValueForMissingStub: _FakeNetworkHandler_11(
               this,
               Invocation.getter(#networkHandler),
             ),
           )
-          as _i8.NetworkHandler);
+          as _i11.NetworkHandler);
 
   @override
-  _i9.PeerId get peerId =>
+  _i12.PeerId get peerId =>
       (super.noSuchMethod(
             Invocation.getter(#peerId),
-            returnValue: _FakePeerId_9(this, Invocation.getter(#peerId)),
-            returnValueForMissingStub: _FakePeerId_9(
+            returnValue: _FakePeerId_12(this, Invocation.getter(#peerId)),
+            returnValueForMissingStub: _FakePeerId_12(
               this,
               Invocation.getter(#peerId),
             ),
           )
-          as _i9.PeerId);
+          as _i12.PeerId);
 
   @override
-  _i9.PeerId get associatedPeerId =>
+  _i12.PeerId get associatedPeerId =>
       (super.noSuchMethod(
             Invocation.getter(#associatedPeerId),
-            returnValue: _FakePeerId_9(
+            returnValue: _FakePeerId_12(
               this,
               Invocation.getter(#associatedPeerId),
             ),
-            returnValueForMissingStub: _FakePeerId_9(
+            returnValueForMissingStub: _FakePeerId_12(
               this,
               Invocation.getter(#associatedPeerId),
             ),
           )
-          as _i9.PeerId);
+          as _i12.PeerId);
 
   @override
-  _i10.KademliaRoutingTable get kademliaRoutingTable =>
+  _i13.KademliaRoutingTable get kademliaRoutingTable =>
       (super.noSuchMethod(
             Invocation.getter(#kademliaRoutingTable),
-            returnValue: _FakeKademliaRoutingTable_10(
+            returnValue: _FakeKademliaRoutingTable_13(
               this,
               Invocation.getter(#kademliaRoutingTable),
             ),
-            returnValueForMissingStub: _FakeKademliaRoutingTable_10(
+            returnValueForMissingStub: _FakeKademliaRoutingTable_13(
               this,
               Invocation.getter(#kademliaRoutingTable),
             ),
           )
-          as _i10.KademliaRoutingTable);
+          as _i13.KademliaRoutingTable);
 
   @override
-  _i11.RouterInterface get router =>
+  _i14.RouterInterface get router =>
       (super.noSuchMethod(
             Invocation.getter(#router),
-            returnValue: _FakeRouterInterface_11(
+            returnValue: _FakeRouterInterface_14(
               this,
               Invocation.getter(#router),
             ),
-            returnValueForMissingStub: _FakeRouterInterface_11(
+            returnValueForMissingStub: _FakeRouterInterface_14(
               this,
               Invocation.getter(#router),
             ),
           )
-          as _i11.RouterInterface);
+          as _i14.RouterInterface);
 
   @override
   bool get isInitialized =>
@@ -812,127 +873,127 @@ class MockDHTClient extends _i1.Mock implements _i3.DHTClient {
           as bool);
 
   @override
-  set peerId(_i9.PeerId? value) => super.noSuchMethod(
+  set peerId(_i12.PeerId? value) => super.noSuchMethod(
     Invocation.setter(#peerId, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set associatedPeerId(_i9.PeerId? value) => super.noSuchMethod(
+  set associatedPeerId(_i12.PeerId? value) => super.noSuchMethod(
     Invocation.setter(#associatedPeerId, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  _i13.Future<void> initialize() =>
+  _i16.Future<void> initialize() =>
       (super.noSuchMethod(
             Invocation.method(#initialize, []),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i9.PeerId getRoutingKey(String? cidStr) =>
+  _i12.PeerId getRoutingKey(String? cidStr) =>
       (super.noSuchMethod(
             Invocation.method(#getRoutingKey, [cidStr]),
-            returnValue: _FakePeerId_9(
+            returnValue: _FakePeerId_12(
               this,
               Invocation.method(#getRoutingKey, [cidStr]),
             ),
-            returnValueForMissingStub: _FakePeerId_9(
+            returnValueForMissingStub: _FakePeerId_12(
               this,
               Invocation.method(#getRoutingKey, [cidStr]),
             ),
           )
-          as _i9.PeerId);
+          as _i12.PeerId);
 
   @override
-  _i13.Future<List<_i9.PeerId>> findProviders(String? cid) =>
+  _i16.Future<List<_i12.PeerId>> findProviders(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#findProviders, [cid]),
-            returnValue: _i13.Future<List<_i9.PeerId>>.value(<_i9.PeerId>[]),
-            returnValueForMissingStub: _i13.Future<List<_i9.PeerId>>.value(
-              <_i9.PeerId>[],
+            returnValue: _i16.Future<List<_i12.PeerId>>.value(<_i12.PeerId>[]),
+            returnValueForMissingStub: _i16.Future<List<_i12.PeerId>>.value(
+              <_i12.PeerId>[],
             ),
           )
-          as _i13.Future<List<_i9.PeerId>>);
+          as _i16.Future<List<_i12.PeerId>>);
 
   @override
-  _i13.Future<_i9.PeerId?> findPeer(_i9.PeerId? id) =>
+  _i16.Future<_i12.PeerId?> findPeer(_i12.PeerId? id) =>
       (super.noSuchMethod(
             Invocation.method(#findPeer, [id]),
-            returnValue: _i13.Future<_i9.PeerId?>.value(),
-            returnValueForMissingStub: _i13.Future<_i9.PeerId?>.value(),
+            returnValue: _i16.Future<_i12.PeerId?>.value(),
+            returnValueForMissingStub: _i16.Future<_i12.PeerId?>.value(),
           )
-          as _i13.Future<_i9.PeerId?>);
+          as _i16.Future<_i12.PeerId?>);
 
   @override
-  _i13.Future<void> addProvider(String? cid, String? providerId) =>
+  _i16.Future<void> addProvider(String? cid, String? providerId) =>
       (super.noSuchMethod(
             Invocation.method(#addProvider, [cid, providerId]),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<bool> storeValue(_i15.Uint8List? key, _i15.Uint8List? value) =>
+  _i16.Future<bool> storeValue(_i18.Uint8List? key, _i18.Uint8List? value) =>
       (super.noSuchMethod(
             Invocation.method(#storeValue, [key, value]),
-            returnValue: _i13.Future<bool>.value(false),
-            returnValueForMissingStub: _i13.Future<bool>.value(false),
+            returnValue: _i16.Future<bool>.value(false),
+            returnValueForMissingStub: _i16.Future<bool>.value(false),
           )
-          as _i13.Future<bool>);
+          as _i16.Future<bool>);
 
   @override
-  _i13.Future<bool> storeValueToPeer(
-    _i9.PeerId? peer,
-    _i15.Uint8List? key,
-    _i15.Uint8List? value,
+  _i16.Future<bool> storeValueToPeer(
+    _i12.PeerId? peer,
+    _i18.Uint8List? key,
+    _i18.Uint8List? value,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#storeValueToPeer, [peer, key, value]),
-            returnValue: _i13.Future<bool>.value(false),
-            returnValueForMissingStub: _i13.Future<bool>.value(false),
+            returnValue: _i16.Future<bool>.value(false),
+            returnValueForMissingStub: _i16.Future<bool>.value(false),
           )
-          as _i13.Future<bool>);
+          as _i16.Future<bool>);
 
   @override
-  _i13.Future<_i15.Uint8List?> getValue(_i15.Uint8List? key) =>
+  _i16.Future<_i18.Uint8List?> getValue(_i18.Uint8List? key) =>
       (super.noSuchMethod(
             Invocation.method(#getValue, [key]),
-            returnValue: _i13.Future<_i15.Uint8List?>.value(),
-            returnValueForMissingStub: _i13.Future<_i15.Uint8List?>.value(),
+            returnValue: _i16.Future<_i18.Uint8List?>.value(),
+            returnValueForMissingStub: _i16.Future<_i18.Uint8List?>.value(),
           )
-          as _i13.Future<_i15.Uint8List?>);
+          as _i16.Future<_i18.Uint8List?>);
 
   @override
-  _i13.Future<bool> checkValueOnPeer(_i9.PeerId? peer, _i15.Uint8List? key) =>
+  _i16.Future<bool> checkValueOnPeer(_i12.PeerId? peer, _i18.Uint8List? key) =>
       (super.noSuchMethod(
             Invocation.method(#checkValueOnPeer, [peer, key]),
-            returnValue: _i13.Future<bool>.value(false),
-            returnValueForMissingStub: _i13.Future<bool>.value(false),
+            returnValue: _i16.Future<bool>.value(false),
+            returnValueForMissingStub: _i16.Future<bool>.value(false),
           )
-          as _i13.Future<bool>);
+          as _i16.Future<bool>);
 
   @override
-  _i13.Future<void> start() =>
+  _i16.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
-  _i13.Future<void> stop() =>
+  _i16.Future<void> stop() =>
       (super.noSuchMethod(
             Invocation.method(#stop, []),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 
   @override
   bool listsEqual(List<int>? a, List<int>? b) =>
@@ -944,22 +1005,22 @@ class MockDHTClient extends _i1.Mock implements _i3.DHTClient {
           as bool);
 
   @override
-  _i13.Future<List<String>> getAllStoredKeys() =>
+  _i16.Future<List<String>> getAllStoredKeys() =>
       (super.noSuchMethod(
             Invocation.method(#getAllStoredKeys, []),
-            returnValue: _i13.Future<List<String>>.value(<String>[]),
-            returnValueForMissingStub: _i13.Future<List<String>>.value(
+            returnValue: _i16.Future<List<String>>.value(<String>[]),
+            returnValueForMissingStub: _i16.Future<List<String>>.value(
               <String>[],
             ),
           )
-          as _i13.Future<List<String>>);
+          as _i16.Future<List<String>>);
 
   @override
-  _i13.Future<void> updateKeyRepublishTime(String? key) =>
+  _i16.Future<void> updateKeyRepublishTime(String? key) =>
       (super.noSuchMethod(
             Invocation.method(#updateKeyRepublishTime, [key]),
-            returnValue: _i13.Future<void>.value(),
-            returnValueForMissingStub: _i13.Future<void>.value(),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
           )
-          as _i13.Future<void>);
+          as _i16.Future<void>);
 }

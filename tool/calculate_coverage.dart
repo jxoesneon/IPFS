@@ -20,7 +20,12 @@ void main() {
   for (final line in lines) {
     if (line.startsWith('SF:')) {
       final path = line.substring(3);
-      isIgnoring = path.contains('lib/src/proto/generated');
+      // Normalized path for cross-platform matching
+      final normalizedPath = path.replaceAll('\\', '/');
+      isIgnoring = normalizedPath.contains('lib/src/proto/generated') ||
+                   normalizedPath.contains('.pb.') ||
+                   normalizedPath.contains('.g.dart') ||
+                   normalizedPath.contains('.mocks.dart');
       if (!isIgnoring) {
         currentStat = _FileStat(path);
         fileCoverage[path] = currentStat;

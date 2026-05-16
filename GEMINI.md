@@ -1,4 +1,4 @@
-# dart_ipfs v2.0.0 Roadmap & Architecture
+# dart_ipfs v1.11.4 Roadmap & Architecture
 
 ## Core Lifecycle Pattern
 - **Pattern**: Every major IPFS service MUST implement the `ILifecycle` interface from `package:dart_ipfs/src/core/interfaces/i_lifecycle.dart`.
