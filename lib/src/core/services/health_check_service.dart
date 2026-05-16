@@ -27,7 +27,7 @@ class HealthCheckService {
       'status': overallStatus,
       'timestamp': DateTime.now().toIso8601String(),
       'peerId': _node.peerID,
-      'version': '1.10.0',
+      'version': '1.11.4',
       'uptime_seconds': _node.isRunning
           ? DateTime.now().difference(_startTime).inSeconds
           : 0,

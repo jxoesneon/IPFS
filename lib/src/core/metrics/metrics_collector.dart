@@ -74,4 +74,12 @@ class MetricsCollector implements ILifecycle {
 
   /// Updates connection metrics for a peer.
   void updateConnectionMetrics(String peerId, Map<String, dynamic> metrics) {}
+
+  /// Returns the current status of the metrics collector.
+  Future<Map<String, dynamic>> getStatus() async {
+    return {
+      'status': 'active',
+      'enabled': _config.metrics.enabled,
+    };
+  }
 }
