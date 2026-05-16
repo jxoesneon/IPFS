@@ -1,4 +1,3 @@
-// ignore_for_file: prefer_const_constructors
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:typed_data';
@@ -106,7 +105,7 @@ class WebTransportConnectionWeb implements libp2p.Conn {
   Future<libp2p.PublicKey?> get remotePublicKey => Future.value(null);
 
   @override
-  libp2p.ConnState get state => libp2p.ConnState(
+  libp2p.ConnState get state => const libp2p.ConnState(
     streamMultiplexer: '/quic/1.0.0',
     security: '/quic/1.0.0',
     transport: 'webtransport',
