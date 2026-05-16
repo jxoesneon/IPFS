@@ -1,4 +1,3 @@
-// ignore_for_file: prefer_const_constructors
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -128,18 +127,23 @@ class WebRTCConnection implements libp2p.Conn {
   /// Creates a new [WebRTCConnection].
   WebRTCConnection(
     this._pc,
-    this._baseChannel,
+    DataChannelStream baseChannel,
     this._remoteAddr,
     this._localPeer,
     this._remotePeer,
-  );
+  ) {
+    _streams.add(baseChannel);
+    _pc.onDataChannel.listen((channel) {
+      _streams.add(channel);
+    });
+  }
 
   final PeerConnection _pc;
-  // ignore: unused_field
-  final DataChannelStream _baseChannel;
+  final List<libp2p.P2PStream<Uint8List>> _streams = [];
   final libp2p.MultiAddr _remoteAddr;
   final libp2p.PeerId _localPeer;
   final libp2p.PeerId _remotePeer;
+  bool _isClosed = false;
 
   @override
   libp2p.PeerId get localPeer => _localPeer;
@@ -155,21 +159,30 @@ class WebRTCConnection implements libp2p.Conn {
 
   @override
   Future<libp2p.P2PStream<Uint8List>> newStream(libp2p.Context context) async {
+    if (_isClosed) throw Exception('Connection closed');
     // In libp2p WebRTC, we create new DataChannels for each stream
     final channel = await _pc.createDataChannel('stream');
+    _streams.add(channel);
     return channel;
   }
 
   @override
-  Future<List<libp2p.P2PStream<Uint8List>>> get streams => Future.value([]);
+  Future<List<libp2p.P2PStream<Uint8List>>> get streams =>
+      Future.value(List.unmodifiable(_streams));
 
   @override
   Future<void> close() async {
+    if (_isClosed) return;
+    _isClosed = true;
+    for (final stream in _streams) {
+      unawaited(stream.close());
+    }
+    _streams.clear();
     await _pc.close();
   }
 
   @override
-  bool get isClosed => false; // Implement proper check if needed
+  bool get isClosed => _isClosed;
 
   @override
   libp2p.ConnStats get stat => throw UnimplementedError();
@@ -184,7 +197,7 @@ class WebRTCConnection implements libp2p.Conn {
   Future<libp2p.PublicKey?> get remotePublicKey => Future.value(null);
 
   @override
-  libp2p.ConnState get state => libp2p.ConnState(
+  libp2p.ConnState get state => const libp2p.ConnState(
     streamMultiplexer: '/webrtc/1.0.0',
     security: '/webrtc/1.0.0',
     transport: 'webrtc',
@@ -206,6 +219,7 @@ class WebRTCListener implements libp2p_listener.Listener {
         signaling.handleStream(stream as libp2p.P2PStream<Uint8List>);
 
         final pc = createPeerConnection(const ['stun:stun.l.google.com:19302']);
+        WebRTCConnection? activeConn;
 
         pc.onIceCandidate.listen((candidate) {
           SignalingProtocol.sendMessage(
@@ -232,16 +246,17 @@ class WebRTCListener implements libp2p_listener.Listener {
         });
 
         pc.onDataChannel.listen((DataChannelStream channel) {
-          _connController.add(
-            WebRTCConnection(
-                  pc,
-                  channel,
-                  stream.conn.remoteMultiaddr,
-                  currentHost.id,
-                  stream.conn.remotePeer,
-                )
-                as libp2p.TransportConn,
-          );
+          if (activeConn == null) {
+            activeConn = WebRTCConnection(
+              pc,
+              channel,
+              stream.conn.remoteMultiaddr,
+              currentHost.id,
+              stream.conn.remotePeer,
+            );
+            _connController.add(activeConn! as libp2p.TransportConn);
+          }
+          // Subsequent channels are automatically handled by activeConn's listener
         });
       });
     }

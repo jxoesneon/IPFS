@@ -30,7 +30,6 @@ class BitswapHandler implements ILifecycle {
   final Wantlist _wantlist = Wantlist();
   final LedgerManager _ledgerManager = LedgerManager();
   final Map<String, Completer<Block>> _pendingBlocks = {};
-  // ignore: unused_field
   final Map<String, Set<String>> _providersForBlock = {};
   final List<String> _requestQueue = [];
   int _activeRequests = 0;
@@ -251,8 +250,12 @@ class BitswapHandler implements ILifecycle {
       final cid = presence.cid;
       if (presence.type == message.BlockPresenceType.have) {
         _logger.verbose('Peer $fromPeer HAVE $cid');
+        // Track this peer as a provider for the block
+        _providersForBlock.putIfAbsent(cid, () => {}).add(fromPeer);
       } else {
         _logger.verbose('Peer $fromPeer DONT_HAVE $cid');
+        // Remove this peer from providers for the block
+        _providersForBlock[cid]?.remove(fromPeer);
       }
     }
   }
@@ -393,7 +396,36 @@ class BitswapHandler implements ILifecycle {
     final messageBytes = message.toBytes();
     final futures = <Future<void>>[];
 
-    for (final peerId in connectedPeers) {
+    // Determine target peers
+    Set<String> targets = {};
+
+    // For Bitswap 1.2 smart routing: check if we know providers for any requested CIDs
+    for (final entry in message.getWantlist().entries.values) {
+      final providers = _providersForBlock[entry.cid];
+      if (providers != null && providers.isNotEmpty) {
+        // Intersect known providers with currently connected peers
+        for (final provider in providers) {
+          if (connectedPeers.contains(provider)) {
+            targets.add(provider);
+          }
+        }
+      }
+    }
+
+    // If no specific providers found or connected, broadcast to all
+    bool isBroadcast = false;
+    if (targets.isEmpty) {
+      targets = connectedPeers;
+      isBroadcast = true;
+    }
+
+    _logger.debug(
+      isBroadcast
+          ? 'Broadcasting want request to ${targets.length} peers'
+          : 'Sending targeted want request to ${targets.length} providers',
+    );
+
+    for (final peerId in targets) {
       futures.add(
         (() async {
           try {
