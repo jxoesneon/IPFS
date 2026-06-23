@@ -13,7 +13,7 @@ import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/helpers.dart'
     as helpers;
 
 @GenerateMocks([DHTClient, RouterInterface])
-import 'bucket_management_test.mocks.dart';
+import 'remove_peer_test.mocks.dart';
 
 void main() {
   group('RemovePeer Extension', () {
