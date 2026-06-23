@@ -28,8 +28,20 @@ class FlatFileDatastore implements Datastore {
     if (keyStr.startsWith('/')) {
       keyStr = keyStr.substring(1);
     }
-    // Cross-platform path join
-    return p.join(path, '$keyStr.data');
+
+    // Reject path traversal attempts
+    if (keyStr.contains('..') || keyStr.contains('~') || keyStr.contains(':')) {
+      throw ArgumentError('Invalid key: contains forbidden characters');
+    }
+
+    // Cross-platform path join and ensure it stays within the datastore
+    final normalized = p.normalize(p.join(path, '$keyStr.data'));
+    final basePath = p.normalize(path);
+    if (!normalized.startsWith(basePath)) {
+      throw ArgumentError('Key resolves outside datastore directory');
+    }
+
+    return normalized;
   }
 
   @override

@@ -8,6 +8,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:http_parser/http_parser.dart'; // For MediaType
 import 'package:mime/mime.dart';
 import 'package:shelf/shelf.dart';
@@ -21,6 +22,8 @@ class RPCHandlers {
 
   /// The IPFS node to control via RPC.
   final IPFSNode node;
+
+  final _logger = Logger('RPCHandlers');
 
   /// GET /api/v0/version - Get IPFS version
   Future<Response> handleVersion(Request request) async {
@@ -51,8 +54,9 @@ class RPCHandlers {
       };
 
       return _jsonResponse(response);
-    } catch (e) {
-      return _errorResponse('Failed to get node ID: $e');
+    } catch (e, st) {
+      _logger.error('Failed to get node ID', e, st);
+      return _errorResponse('Failed to get node ID');
     }
   }
 
@@ -75,17 +79,28 @@ class RPCHandlers {
       final parts = transformer.bind(request.read());
 
       final results = <Map<String, dynamic>>[];
+      var totalSize = 0;
+      const maxRequestSize = 1024 * 1024 * 1024; // 1 GB
+      const maxFileSize = 256 * 1024 * 1024; // 256 MB
 
       await for (final part in parts) {
         // We only care about file content parts
         // Real IPFS add supports ignoring some parts, wrapping directories, etc.
         // For basic functionality, we treat every part as a file to add.
 
-        // Collect bytes in memory - for truly large files, consider chunking
-        // into multiple blocks using UnixFS chunking strategy
+        // Collect bytes in memory with size limits
         final content = await part.fold<BytesBuilder>(
           BytesBuilder(),
-          (builder, chunk) => builder..add(chunk),
+          (builder, chunk) {
+            totalSize += chunk.length;
+            if (totalSize > maxRequestSize) {
+              throw ArgumentError('Total request size exceeded limit');
+            }
+            if (builder.length + chunk.length > maxFileSize) {
+              throw ArgumentError('File size exceeded limit');
+            }
+            return builder..add(chunk);
+          },
         );
 
         // Add to IPFS node
@@ -126,8 +141,9 @@ class RPCHandlers {
           // 'X-Stream-Output': '1', // Optional
         },
       );
-    } catch (e) {
-      return _errorResponse('Add failed: $e');
+    } catch (e, st) {
+      _logger.error('Add failed', e, st);
+      return _errorResponse('Add failed');
     }
   }
 
@@ -146,8 +162,9 @@ class RPCHandlers {
 
       final content = await node.cat(cid);
       return Response.ok(content);
-    } catch (e) {
-      return _errorResponse('Cat failed: $e');
+    } catch (e, st) {
+      _logger.error('Cat failed for cid: $cid', e, st);
+      return _errorResponse('Cat failed');
     }
   }
 
@@ -184,8 +201,9 @@ class RPCHandlers {
       };
 
       return _jsonResponse(response);
-    } catch (e) {
-      return _errorResponse('Ls failed: $e');
+    } catch (e, st) {
+      _logger.error('Ls failed for path: $path', e, st);
+      return _errorResponse('Ls failed');
     }
   }
 
@@ -205,8 +223,9 @@ class RPCHandlers {
 
       // Return raw block data (could be enhanced to parse UnixFS/CBOR)
       return Response.ok(block.block.data);
-    } catch (e) {
-      return _errorResponse('DAG get failed: $e');
+    } catch (e, st) {
+      _logger.error('DAG get failed for cid: $cid', e, st);
+      return _errorResponse('DAG get failed');
     }
   }
 
@@ -241,8 +260,9 @@ class RPCHandlers {
         responses,
         headers: {'Content-Type': 'application/json', 'X-Stream-Output': '1'},
       );
-    } catch (e) {
-      return _errorResponse('DHT findprovs failed: $e');
+    } catch (e, st) {
+      _logger.error('DHT findprovs failed for cid: $cid', e, st);
+      return _errorResponse('DHT findprovs failed');
     }
   }
 
@@ -270,8 +290,9 @@ class RPCHandlers {
       } else {
         return _errorResponse('Peer not found');
       }
-    } catch (e) {
-      return _errorResponse('DHT findpeer failed: $e');
+    } catch (e, st) {
+      _logger.error('DHT findpeer failed for peer: $peerId', e, st);
+      return _errorResponse('DHT findpeer failed');
     }
   }
 
@@ -285,8 +306,9 @@ class RPCHandlers {
     try {
       await node.dhtClient.addProvider(cid, node.peerId);
       return _jsonResponse({'Success': true});
-    } catch (e) {
-      return _errorResponse('DHT provide failed: $e');
+    } catch (e, st) {
+      _logger.error('DHT provide failed for cid: $cid', e, st);
+      return _errorResponse('DHT provide failed');
     }
   }
 
@@ -300,8 +322,9 @@ class RPCHandlers {
     try {
       await node.publishIPNS(path, keyName: 'self');
       return _jsonResponse({'Name': 'self', 'Value': path});
-    } catch (e) {
-      return _errorResponse('Name publish failed: $e');
+    } catch (e, st) {
+      _logger.error('Name publish failed for path: $path', e, st);
+      return _errorResponse('Name publish failed');
     }
   }
 
@@ -315,8 +338,9 @@ class RPCHandlers {
     try {
       final path = await node.resolveIPNS(name);
       return _jsonResponse({'Path': path});
-    } catch (e) {
-      return _errorResponse('Name resolve failed: $e');
+    } catch (e, st) {
+      _logger.error('Name resolve failed for name: $name', e, st);
+      return _errorResponse('Name resolve failed');
     }
   }
 
@@ -327,8 +351,9 @@ class RPCHandlers {
       final peerList = peers.map((p) => {'Peer': p, 'Addr': ''}).toList();
 
       return _jsonResponse({'Peers': peerList});
-    } catch (e) {
-      return _errorResponse('Swarm peers failed: $e');
+    } catch (e, st) {
+      _logger.error('Swarm peers failed', e, st);
+      return _errorResponse('Swarm peers failed');
     }
   }
 
@@ -344,8 +369,9 @@ class RPCHandlers {
       return _jsonResponse({
         'Strings': ['connect $addr success'],
       });
-    } catch (e) {
-      return _errorResponse('Swarm connect failed: $e');
+    } catch (e, st) {
+      _logger.error('Swarm connect failed for addr: $addr', e, st);
+      return _errorResponse('Swarm connect failed');
     }
   }
 
@@ -361,8 +387,9 @@ class RPCHandlers {
       return _jsonResponse({
         'Strings': ['disconnect $addr success'],
       });
-    } catch (e) {
-      return _errorResponse('Swarm disconnect failed: $e');
+    } catch (e, st) {
+      _logger.error('Swarm disconnect failed for addr: $addr', e, st);
+      return _errorResponse('Swarm disconnect failed');
     }
   }
 
@@ -380,8 +407,9 @@ class RPCHandlers {
       }
 
       return Response.ok(block.block.data);
-    } catch (e) {
-      return _errorResponse('Block get failed: $e');
+    } catch (e, st) {
+      _logger.error('Block get failed for cid: $cid', e, st);
+      return _errorResponse('Block get failed');
     }
   }
 
@@ -399,8 +427,9 @@ class RPCHandlers {
       await node.blockStore.putBlock(block);
 
       return _jsonResponse({'Key': cid.encode(), 'Size': bytes.length});
-    } catch (e) {
-      return _errorResponse('Block put failed: $e');
+    } catch (e, st) {
+      _logger.error('Block put failed', e, st);
+      return _errorResponse('Block put failed');
     }
   }
 
@@ -418,8 +447,9 @@ class RPCHandlers {
       }
 
       return _jsonResponse({'Key': cid, 'Size': block.block.data.length});
-    } catch (e) {
-      return _errorResponse('Block stat failed: $e');
+    } catch (e, st) {
+      _logger.error('Block stat failed for cid: $cid', e, st);
+      return _errorResponse('Block stat failed');
     }
   }
 

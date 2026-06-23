@@ -99,15 +99,34 @@ class Keystore {
 
   /// Deserializes the keystore from JSON format (optional).
   void deserialize(String jsonString) {
-    final Map<String, dynamic> jsonMap =
-        jsonDecode(jsonString) as Map<String, dynamic>;
-    for (final entry in jsonMap.entries) {
-      final name = entry.key;
+    final dynamic decoded;
+    try {
+      decoded = jsonDecode(jsonString);
+    } catch (e) {
+      throw FormatException('Keystore JSON is invalid: $e');
+    }
+
+    if (decoded is! Map<String, dynamic>) {
+      throw FormatException('Keystore must be a JSON object');
+    }
+
+    for (final entry in decoded.entries) {
+      if (entry.value is! Map<String, dynamic>) {
+        throw FormatException(
+          'Keystore entry "${entry.key}" must be a JSON object',
+        );
+      }
       final keys = entry.value as Map<String, dynamic>;
-      addKeyPair(
-        name,
-        KeyPair(keys['publicKey'] as String, keys['privateKey'] as String),
-      );
+      final publicKey = keys['publicKey'];
+      final privateKey = keys['privateKey'];
+
+      if (publicKey is! String || privateKey is! String) {
+        throw FormatException(
+          'Keystore entry "${entry.key}" must contain string publicKey and privateKey',
+        );
+      }
+
+      addKeyPair(entry.key, KeyPair(publicKey, privateKey));
     }
     _logger.info('Keystore deserialized from JSON.');
   }
