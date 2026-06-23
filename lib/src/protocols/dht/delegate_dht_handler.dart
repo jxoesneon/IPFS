@@ -141,8 +141,9 @@ class DelegateDHTHandler implements IDHTHandler {
         }
       }
       throw Exception('Not found');
-    } catch (e) {
-      throw Exception('Delegate getValue failed: $e');
+    } catch (e, st) {
+      _logger.error('Delegate getValue failed', e, st);
+      throw Exception('Delegate getValue failed');
     }
   }
 
