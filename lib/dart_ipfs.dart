@@ -119,5 +119,6 @@ library;
 export 'src/core/cid.dart';
 export 'src/core/config/ipfs_config.dart';
 export 'src/core/ipfs_node/ipfs_node.dart';
+export 'src/core/ipfs_node/ipfs_web_node.dart';
 export 'src/ipfs.dart';
 export 'src/protocols/pubsub/pubsub_message.dart';

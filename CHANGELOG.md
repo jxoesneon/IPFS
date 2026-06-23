@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.11.5] - 2026-06-23
+
+### Fixed
+- **CI/CD**: Fixed failing Test workflow on `remove_peer_test.dart` by correcting the generated mock import.
+- **Build**: Replaced abandoned `lucide_icons ^0.257.0` with `lucide_icons_flutter ^3.1.14+2` in the example dashboard to resolve the `IconData` final-class error on Flutter 3.44+.
+- **CodeQL**: Removed the Swift analysis job because the repository contains no Swift source; kept JavaScript analysis.
+- **Tests**: Hardened `test/e2e/e2e_test.dart` teardown to prevent a Hive datastore file-handle race on macOS.
+
+### Changed
+- **Dependencies**: Merged Dependabot updates for `actions/checkout` (v4 → v7), `github/codeql-action` (v3 → v4), and `peaceiris/actions-gh-pages` (v3 → v4).
+
 ## [1.11.4] - 2026-05-15
 
 ### Fixed
