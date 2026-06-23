@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:http/http.dart' as http;
 
 /// Response from a routing request.
@@ -38,6 +39,7 @@ class DelegatedRoutingHandler {
   static const String _defaultDelegateEndpoint = 'https://delegated-ipfs.dev';
   final String _delegateEndpoint;
   final http.Client _httpClient;
+  final _logger = Logger('DelegatedRoutingHandler');
 
   /// Finds providers for a given CID using the delegated routing API
   Future<RoutingResponse> findProviders(CID cid) async {
@@ -90,8 +92,9 @@ class DelegatedRoutingHandler {
           'Failed to find providers: HTTP ${response.statusCode}',
         );
       }
-    } catch (e) {
-      return RoutingResponse.error('Error finding providers: $e');
+    } catch (e, st) {
+      _logger.error('Error finding providers', e, st);
+      return RoutingResponse.error('Error finding providers');
     }
   }
 

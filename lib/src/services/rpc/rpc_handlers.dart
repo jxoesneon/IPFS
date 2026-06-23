@@ -250,7 +250,10 @@ class RPCHandlers {
             (p) => json.encode({
               'Type': 4, // Provider type
               'Responses': [
-                {'ID': p.toString(), 'Addrs': node.resolvePeerId(p.toString())},
+                {
+                  'ID': p.toString(),
+                  'Addrs': node.resolvePeerId(p.toString()),
+                },
               ],
             }),
           )

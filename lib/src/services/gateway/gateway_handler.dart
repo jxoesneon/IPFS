@@ -250,7 +250,11 @@ class GatewayHandler {
         ? int.tryParse(endStr)
         : data.length - 1;
 
-    if (start == null || end == null || start < 0 || end < 0 || start > end) {
+    if (start == null ||
+        end == null ||
+        start < 0 ||
+        end < 0 ||
+        start > end) {
       return Response(416, body: 'Range not satisfiable');
     }
 

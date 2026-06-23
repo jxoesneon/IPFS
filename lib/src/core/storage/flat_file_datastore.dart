@@ -31,7 +31,9 @@ class FlatFileDatastore implements Datastore {
 
     // Reject path traversal attempts
     if (keyStr.contains('..') || keyStr.contains('~') || keyStr.contains(':')) {
-      throw ArgumentError('Invalid key: contains forbidden characters');
+      throw ArgumentError(
+        'Invalid key: contains forbidden characters',
+      );
     }
 
     // Cross-platform path join and ensure it stays within the datastore

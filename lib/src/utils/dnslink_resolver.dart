@@ -6,7 +6,8 @@ import 'package:http/http.dart' as http;
 /// A utility class for resolving DNSLink to CID.
 class DNSLinkResolver {
   static final _domainRegex = RegExp(
-    r'^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$',
+    r'^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*'
+    r'[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$',
   );
 
   /// Resolves a DNSLink for the given domain name.

@@ -122,7 +122,8 @@ class Keystore {
 
       if (publicKey is! String || privateKey is! String) {
         throw FormatException(
-          'Keystore entry "${entry.key}" must contain string publicKey and privateKey',
+          'Keystore entry "${entry.key}" must contain string '
+          'publicKey and privateKey',
         );
       }
 

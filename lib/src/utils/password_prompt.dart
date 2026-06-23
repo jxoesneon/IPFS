@@ -44,11 +44,19 @@ class PasswordPrompt {
     if (!password.contains(RegExp(r'[A-Z]'))) return false;
     if (!password.contains(RegExp(r'[a-z]'))) return false;
     if (!password.contains(RegExp(r'[0-9]'))) return false;
-    if (!password.contains(RegExp(r'[!@#$%^&*()_+\-=\[\]{};:\'",.<>?/\\|`~]'))) {
+    if (!password.contains(
+      RegExp(r'[!@#$%^&*()_+\-=\[\]{};:\'",.<>?/\\|`~]'),
+    )) {
       return false;
     }
 
-    const commonPatterns = ['password', '123456', 'qwerty', 'admin', 'letmein'];
+    const commonPatterns = [
+      'password',
+      '123456',
+      'qwerty',
+      'admin',
+      'letmein',
+    ];
     if (commonPatterns.any((p) => password.toLowerCase().contains(p))) {
       return false;
     }
