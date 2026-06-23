@@ -24,8 +24,7 @@ analysis_errors.txt
 all_tests_green.txt
 all_tests_final.txt
 current_test_output.txt
-project.mermaid
+doc/project.mermaid
+doc/specifications.yaml
 regenerate_all_protos.ps1
-parse_all_coverage.dart
-tool_coverage.dart
 tool/
