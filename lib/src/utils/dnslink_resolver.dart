@@ -24,9 +24,8 @@ class DNSLinkResolver {
         'https://dnslink.io/${Uri.encodeComponent(domainName)}',
       );
       final httpClient = client ?? http.Client();
-      final response = await httpClient
-          .get(url)
-          .timeout(const Duration(seconds: 5));
+      final response =
+          await httpClient.get(url).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         final dynamic decoded;

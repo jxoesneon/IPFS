@@ -216,9 +216,8 @@ class GatewayHandler {
   ) async {
     final pathParts = subPath.split('/');
     final targetName = pathParts[0];
-    final remainingPath = pathParts.length > 1
-        ? pathParts.sublist(1).join('/')
-        : '';
+    final remainingPath =
+        pathParts.length > 1 ? pathParts.sublist(1).join('/') : '';
 
     // Find the link with matching name
     for (final link in directory.links) {
@@ -250,11 +249,7 @@ class GatewayHandler {
         ? int.tryParse(endStr)
         : data.length - 1;
 
-    if (start == null ||
-        end == null ||
-        start < 0 ||
-        end < 0 ||
-        start > end) {
+    if (start == null || end == null || start < 0 || end < 0 || start > end) {
       return Response(416, body: 'Range not satisfiable');
     }
 

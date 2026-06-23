@@ -13,7 +13,7 @@ import 'package:http/http.dart' as http;
 class DelegateDHTHandler implements IDHTHandler {
   /// Creates a [DelegateDHTHandler] using the specified [delegateUrl].
   DelegateDHTHandler(this.delegateUrl, {http.Client? client})
-    : _client = client ?? http.Client() {
+      : _client = client ?? http.Client() {
     _logger = Logger('DelegateDHTHandler');
   }
 
@@ -127,9 +127,7 @@ class DelegateDHTHandler implements IDHTHandler {
         for (final line in lines) {
           if (line.isNotEmpty) {
             final json = jsonDecode(line);
-            if (json is Map &&
-                json['Type'] == 5 &&
-                json['Extra'] is String) {
+            if (json is Map && json['Type'] == 5 && json['Extra'] is String) {
               final extra = json['Extra'] as String;
               return Value.fromBytes(
                 Uint8List.fromList(utf8.encode(extra)),

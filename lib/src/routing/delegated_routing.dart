@@ -33,8 +33,8 @@ class RoutingResponse {
 class DelegatedRoutingHandler {
   /// Creates a handler with optional custom endpoint and HTTP client.
   DelegatedRoutingHandler({String? delegateEndpoint, http.Client? httpClient})
-    : _delegateEndpoint = delegateEndpoint ?? _defaultDelegateEndpoint,
-      _httpClient = httpClient ?? http.Client();
+      : _delegateEndpoint = delegateEndpoint ?? _defaultDelegateEndpoint,
+        _httpClient = httpClient ?? http.Client();
 
   static const String _defaultDelegateEndpoint = 'https://delegated-ipfs.dev';
   final String _delegateEndpoint;
