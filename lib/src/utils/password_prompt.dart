@@ -50,13 +50,7 @@ class PasswordPrompt {
       return false;
     }
 
-    const commonPatterns = [
-      'password',
-      '123456',
-      'qwerty',
-      'admin',
-      'letmein',
-    ];
+    const commonPatterns = ['password', '123456', 'qwerty', 'admin', 'letmein'];
     if (commonPatterns.any((p) => password.toLowerCase().contains(p))) {
       return false;
     }

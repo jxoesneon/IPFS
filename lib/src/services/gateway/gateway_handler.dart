@@ -216,8 +216,9 @@ class GatewayHandler {
   ) async {
     final pathParts = subPath.split('/');
     final targetName = pathParts[0];
-    final remainingPath =
-        pathParts.length > 1 ? pathParts.sublist(1).join('/') : '';
+    final remainingPath = pathParts.length > 1
+        ? pathParts.sublist(1).join('/')
+        : '';
 
     // Find the link with matching name
     for (final link in directory.links) {

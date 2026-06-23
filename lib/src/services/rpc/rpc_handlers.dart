@@ -89,19 +89,19 @@ class RPCHandlers {
         // For basic functionality, we treat every part as a file to add.
 
         // Collect bytes in memory with size limits
-        final content = await part.fold<BytesBuilder>(
-          BytesBuilder(),
-          (builder, chunk) {
-            totalSize += chunk.length;
-            if (totalSize > maxRequestSize) {
-              throw ArgumentError('Total request size exceeded limit');
-            }
-            if (builder.length + chunk.length > maxFileSize) {
-              throw ArgumentError('File size exceeded limit');
-            }
-            return builder..add(chunk);
-          },
-        );
+        final content = await part.fold<BytesBuilder>(BytesBuilder(), (
+          builder,
+          chunk,
+        ) {
+          totalSize += chunk.length;
+          if (totalSize > maxRequestSize) {
+            throw ArgumentError('Total request size exceeded limit');
+          }
+          if (builder.length + chunk.length > maxFileSize) {
+            throw ArgumentError('File size exceeded limit');
+          }
+          return builder..add(chunk);
+        });
 
         // Add to IPFS node
         final cid = await node.addFile(content.takeBytes());
@@ -250,10 +250,7 @@ class RPCHandlers {
             (p) => json.encode({
               'Type': 4, // Provider type
               'Responses': [
-                {
-                  'ID': p.toString(),
-                  'Addrs': node.resolvePeerId(p.toString()),
-                },
+                {'ID': p.toString(), 'Addrs': node.resolvePeerId(p.toString())},
               ],
             }),
           )

@@ -13,7 +13,7 @@ import 'package:http/http.dart' as http;
 class DelegateDHTHandler implements IDHTHandler {
   /// Creates a [DelegateDHTHandler] using the specified [delegateUrl].
   DelegateDHTHandler(this.delegateUrl, {http.Client? client})
-      : _client = client ?? http.Client() {
+    : _client = client ?? http.Client() {
     _logger = Logger('DelegateDHTHandler');
   }
 
@@ -45,13 +45,15 @@ class DelegateDHTHandler implements IDHTHandler {
         '$delegateUrl/api/v0/dht/findprovs',
       ).replace(queryParameters: {'arg': cid.encode()});
 
-      final response = await _client.post(uri).timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          _logger.warning('Delegate DHT request timeout');
-          throw TimeoutException('Delegate DHT request timed out');
-        },
-      );
+      final response = await _client
+          .post(uri)
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              _logger.warning('Delegate DHT request timeout');
+              throw TimeoutException('Delegate DHT request timed out');
+            },
+          );
 
       if (response.statusCode != 200) {
         _logger.warning(
@@ -90,13 +92,15 @@ class DelegateDHTHandler implements IDHTHandler {
       final uri = Uri.parse(
         '$delegateUrl/api/v0/dht/findpeer',
       ).replace(queryParameters: {'arg': id.toString()});
-      final response = await _client.post(uri).timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          _logger.warning('Delegate DHT request timeout');
-          throw TimeoutException('Delegate DHT request timed out');
-        },
-      );
+      final response = await _client
+          .post(uri)
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              _logger.warning('Delegate DHT request timeout');
+              throw TimeoutException('Delegate DHT request timed out');
+            },
+          );
 
       if (response.statusCode == 200) {
         return [];
@@ -114,13 +118,15 @@ class DelegateDHTHandler implements IDHTHandler {
         '$delegateUrl/api/v0/dht/get',
       ).replace(queryParameters: {'arg': key.toString()});
 
-      final response = await _client.post(uri).timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          _logger.warning('Delegate DHT request timeout');
-          throw TimeoutException('Delegate DHT request timed out');
-        },
-      );
+      final response = await _client
+          .post(uri)
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              _logger.warning('Delegate DHT request timeout');
+              throw TimeoutException('Delegate DHT request timed out');
+            },
+          );
 
       if (response.statusCode == 200) {
         final lines = const LineSplitter().convert(response.body);
@@ -129,9 +135,7 @@ class DelegateDHTHandler implements IDHTHandler {
             final json = jsonDecode(line);
             if (json is Map && json['Type'] == 5 && json['Extra'] is String) {
               final extra = json['Extra'] as String;
-              return Value.fromBytes(
-                Uint8List.fromList(utf8.encode(extra)),
-              );
+              return Value.fromBytes(Uint8List.fromList(utf8.encode(extra)));
             }
           }
         }
