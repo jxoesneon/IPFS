@@ -154,12 +154,12 @@ class RPCHandlers {
 
   /// POST /api/v0/cat - Get file content
   Future<Response> handleCat(Request request) async {
-    try {
-      final cid = request.url.queryParameters['arg'];
-      if (cid == null || cid.isEmpty) {
-        return _errorResponse('Missing argument: cid');
-      }
+    final cid = request.url.queryParameters['arg'];
+    if (cid == null || cid.isEmpty) {
+      return _errorResponse('Missing argument: cid');
+    }
 
+    try {
       final content = await node.cat(cid);
       return Response.ok(content);
     } catch (e, st) {
@@ -176,12 +176,12 @@ class RPCHandlers {
 
   /// POST /api/v0/ls - List directory
   Future<Response> handleLs(Request request) async {
-    try {
-      final path = request.url.queryParameters['arg'];
-      if (path == null || path.isEmpty) {
-        return _errorResponse('Missing argument: path');
-      }
+    final path = request.url.queryParameters['arg'];
+    if (path == null || path.isEmpty) {
+      return _errorResponse('Missing argument: path');
+    }
 
+    try {
       final entries = await node.ls(path);
       final objects = entries
           .map(
