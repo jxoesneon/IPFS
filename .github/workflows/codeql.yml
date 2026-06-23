@@ -69,8 +69,7 @@ jobs:
       run: |
         cd example/ipfs_dashboard
         flutter pub get
-        flutter build macos --debug --config-only
-        xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner -configuration Debug -destination "platform=macOS" CODE_SIGNING_ALLOWED=NO build
+        flutter build macos --debug
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
