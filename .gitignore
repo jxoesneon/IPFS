@@ -263,3 +263,7 @@ paket-files/
 # Test Artifacts
 ipfs_facade_*
 verify.log
+
+# Ciel local domain
+.ciel/
+.mempalace/
