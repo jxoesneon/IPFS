@@ -222,3 +222,34 @@ subscribe(topic: String): void
 
 publish(topic: String, message: String): void
   # ... (implementation)
+
+# --- v2.0+ Parity & Superiority Backlog (2026-06-25) ---
+# The items below are Council-of-Five approved specifications for making dart_ipfs
+# a spec-compliant, superior IPFS implementation. Detailed specs live in:
+#   - doc/specs/PROTOCOL_COMPLIANCE_SPEC.md
+#   - doc/specs/NETWORKING_P2P_SPEC.md
+#   - doc/specs/SERVICES_APIS_SPEC.md
+#   - doc/specs/OPERATIONS_ECOSYSTEM_SPEC.md
+
+# v2.0 Protocol Compliance & Core Data Layer
+# P0: Standard CAR v1/v2 format, UnixFS basic directories, DAG-CBOR, IPLD selectors
+# P1: UnixFS HAMT + symlinks, consolidated DAG-JSON
+# P2: Full IPLD Schema DSL validation (deferred)
+
+# v2.0 Services & APIs
+# P0: MFS completeness, trustless gateway, real metrics
+# P1: Subdomain gateway, content blocking, reprovide strategies, DHT provide sweep
+# P2: OpenTelemetry (deferred)
+
+# v2.1 Networking, Naming & Full P2P
+# P0: QUIC transport, Gossipsub compliance, Amino DHT integration, IPNS DHT-first records,
+#     circuit relay v2 client dialing
+# P1: Browser transport hardening, server-side GraphSync MVP, Bitswap HTTP fallback,
+#     AutoTLS / TLS for WSS gateway
+# P2: Badger / Pebble datastore backends (deferred)
+
+# v2.2 Operations, Modularity & Ecosystem
+# P0: CLI / daemon binary, Docker & multi-arch images, interoperability test suite
+# P1: Kubernetes manifests & Helm chart, package modularization (dart_ipfs_core),
+#     plugin ecosystem phase 1
+# P2: WASM build, FUSE mount, reference WebUI (deferred / modified)
