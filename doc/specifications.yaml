@@ -246,6 +246,14 @@ publish(topic: String, message: String): void
 #   Operations & Ecosystem: CLI_SPEC.md, DOCKER_SPEC.md, KUBERNETES_SPEC.md,
 #                           INTEROP_TESTS_SPEC.md, MODULARIZATION_SPEC.md,
 #                           PLUGINS_SPEC.md
+#
+# Council of Five audit reports in doc/specs/audits/:
+#   - COUNCIL_AUDIT_MASTER.md
+#   - COUNCIL_AUDIT_CORE_DATA_LAYER.md
+#   - COUNCIL_AUDIT_SERVICES_APIS.md
+#   - COUNCIL_AUDIT_NETWORKING_P2P_1.md
+#   - COUNCIL_AUDIT_NETWORKING_P2P_2.md
+#   - COUNCIL_AUDIT_OPERATIONS_ECOSYSTEM.md
 
 # v2.0 Protocol Compliance & Core Data Layer
 # P0: Standard CAR v1/v2 format, UnixFS basic directories, DAG-CBOR, IPLD selectors

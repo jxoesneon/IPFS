@@ -61,6 +61,17 @@ Research-backed, standalone specifications for every approved/modified backlog i
 - [Package Modularization](specs/features/MODULARIZATION_SPEC.md)
 - [Plugin Ecosystem](specs/features/PLUGINS_SPEC.md)
 
+## Council of Five Audit Reports
+
+Each per-feature spec was audited by the five Ciel Council lenses (Coherence, Capability, Safety, Efficiency, Evolution). Scores and verdicts are captured below.
+
+- [Master Audit Report](specs/audits/COUNCIL_AUDIT_MASTER.md)
+- [Core Data Layer Audit](specs/audits/COUNCIL_AUDIT_CORE_DATA_LAYER.md)
+- [Services & APIs Audit](specs/audits/COUNCIL_AUDIT_SERVICES_APIS.md)
+- [Networking & P2P Audit (Part 1)](specs/audits/COUNCIL_AUDIT_NETWORKING_P2P_1.md)
+- [Networking & P2P Audit (Part 2)](specs/audits/COUNCIL_AUDIT_NETWORKING_P2P_2.md)
+- [Operations & Ecosystem Audit](specs/audits/COUNCIL_AUDIT_OPERATIONS_ECOSYSTEM.md)
+
 ## API Reference
 
 - [Pub.dev Documentation](https://pub.dev/documentation/dart_ipfs/latest/)
