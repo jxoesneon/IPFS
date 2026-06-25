@@ -225,11 +225,27 @@ publish(topic: String, message: String): void
 
 # --- v2.0+ Parity & Superiority Backlog (2026-06-25) ---
 # The items below are Council-of-Five approved specifications for making dart_ipfs
-# a spec-compliant, superior IPFS implementation. Detailed specs live in:
+# a spec-compliant, superior IPFS implementation.
+#
+# Category-level specs:
 #   - doc/specs/PROTOCOL_COMPLIANCE_SPEC.md
 #   - doc/specs/NETWORKING_P2P_SPEC.md
 #   - doc/specs/SERVICES_APIS_SPEC.md
 #   - doc/specs/OPERATIONS_ECOSYSTEM_SPEC.md
+#
+# Per-feature deep specs in doc/specs/features/:
+#   Core Data Layer: CAR_FORMAT_SPEC.md, UNIXFS_SPEC.md, DAG_CBOR_SPEC.md,
+#                    DAG_JSON_SPEC.md, IPLD_SELECTORS_SPEC.md
+#   Services & APIs: MFS_SPEC.md, METRICS_SPEC.md, SUBDOMAIN_GATEWAY_SPEC.md,
+#                    TRUSTLESS_GATEWAY_SPEC.md, CONTENT_BLOCKING_SPEC.md,
+#                    REPROVIDE_SPEC.md
+#   Networking & P2P: QUIC_SPEC.md, GOSSIPSUB_SPEC.md, DHT_INTEGRATION_SPEC.md,
+#                     IPNS_SPEC.md, CIRCUIT_RELAY_SPEC.md, BROWSER_TRANSPORTS_SPEC.md,
+#                     GRAPHSYNC_SPEC.md, BITSWAP_HTTP_FALLBACK_SPEC.md,
+#                     GATEWAY_TLS_SPEC.md
+#   Operations & Ecosystem: CLI_SPEC.md, DOCKER_SPEC.md, KUBERNETES_SPEC.md,
+#                           INTEROP_TESTS_SPEC.md, MODULARIZATION_SPEC.md,
+#                           PLUGINS_SPEC.md
 
 # v2.0 Protocol Compliance & Core Data Layer
 # P0: Standard CAR v1/v2 format, UnixFS basic directories, DAG-CBOR, IPLD selectors
