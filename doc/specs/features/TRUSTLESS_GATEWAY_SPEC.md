@@ -46,7 +46,7 @@ The gateway implementation is in `lib/src/services/gateway/gateway_handler.dart`
 - `ContentTypeHandler` detects `application/vnd.ipfs.car` files but `_processCarArchive` converts the CAR bytes into an HTML warning page instead of returning the archive. This breaks programmatic clients that request CAR archives.
 - There is no support for `Accept: application/vnd.ipfs.raw-block`, `application/vnd.ipfs.ipns-record`, `application/vnd.ipld.dag-json`, or `application/vnd.ipld.dag-cbor`.
 - `GatewayHandler` does not parse `?format=` query parameters.
-- CAR generation code exists in `lib/src/core/data_structures/car.dart` but is not integrated into the gateway response path.
+- CAR responses must be generated with the standard `CarWriter` API defined in `doc/specs/features/CAR_FORMAT_SPEC.md` and approved by `doc/specs/decisions/COUNCIL_DECISION_CAR_MIGRATION.md`. The old `CAR` class in `lib/src/core/data_structures/car.dart` uses a protobuf-based custom format that is not IPLD CAR v1 compliant and must not be used for gateway CAR responses.
 
 ---
 
@@ -74,12 +74,13 @@ If both `?format=` and `Accept` are present, `?format=` wins. If `Accept` contai
 
 ### 4.3 CAR Response Requirements
 
-- Generate a **CAR v1** archive with a single root CID equal to the requested CID.
+- Generate a **CAR v1** archive using the standard `CarWriter` from `CAR_FORMAT_SPEC.md`, with a single root CID equal to the requested CID.
 - Include all blocks reachable from the root CID through the requested sub-path (if any) up to the full DAG.
 - Use varint-prefixed CID+block frames per the CAR v1 spec.
 - Set `Content-Disposition: attachment; filename="<cid>.car"`.
 - Do **not** convert CAR data to HTML under any trustless request.
 - If the root block is not found locally, attempt Bitswap retrieval before returning `404 Not Found`.
+- CAR traversal must be bounded by a configurable maximum DAG depth and/or total block count to avoid unbounded resource consumption for large DAGs; when a bound is exceeded, return `416` Range Not Satisfiable or `413` Payload Too Large per the implementation policy.
 
 ### 4.4 Raw Block Response Requirements
 
@@ -190,7 +191,7 @@ Spin up a Kubo v0.42.0+ node and a dart_ipfs node in CI and verify:
 
 | Dependency | Reason |
 |------------|--------|
-| CAR generation (`lib/src/core/data_structures/car.dart`) | Required for CAR responses. |
+| Standard CAR implementation (`CarReader` / `CarWriter` from `CAR_FORMAT_SPEC.md`) | Required for CAR responses; the old `CAR` class in `lib/src/core/data_structures/car.dart` must not be used. |
 | Bitswap retrieval | Required for missing-block fallback. |
 | IPNS record store / DHT handler | Required for `ipns-record` responses. |
 | DAG-JSON and DAG-CBOR codecs | Required for `dag-json`/`dag-cbor` responses. |
@@ -213,6 +214,6 @@ Trustless gateway is the first Phase 1 P0 foundation item because it unblocks al
 ## 9. Backward Compatibility Notes
 
 - Default path-gateway behavior (HTML directory listings, MIME detection, file serving) remains unchanged when no trustless format is requested.
-- `ContentTypeHandler` may continue to render CAR files as HTML for non-trustless browser requests, but it must not do so when a trustless format is detected.
+- The trustless bypass lives in `GatewayHandler`; `ContentTypeHandler` is not currently used by `GatewayHandler._serveContent`. `ContentTypeHandler._processCarArchive` may continue to render CAR files as HTML for non-trustless browser requests, but it must not be invoked when a trustless format is detected.
 - Existing public API on `GatewayHandler` is additive only; no method signatures are removed.
 - Clients that already request `/ipfs/<cid>` without `Accept` or `?format=` will continue to receive the same HTML or MIME-detected response.

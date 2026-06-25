@@ -1,4 +1,4 @@
-# Browser Transport Hardening Specification for dart_ipfs
+# WebTransport Browser Dialer + WebRTC STUN/TURN Hardening Specification for dart_ipfs
 
 **Document:** `BROWSER_TRANSPORTS_SPEC.md`  
 **Location:** `C:\Users\josee\IPFS\doc\specs\features\BROWSER_TRANSPORTS_SPEC.md`  
@@ -6,7 +6,7 @@
 **Date:** 2026-06-25  
 **Authority:** Ciel Council of Five verdicts (2026-06-25)  
 **Status:** P1 Modified — implementation pending  
-**Scope:** WebTransport listener/dialer completion, certhash validation, configurable WebRTC STUN/TURN, and elimination of `UnimplementedError` from `Conn` metadata.
+**Scope:** WebTransport browser dialer completion (certhash validation), configurable WebRTC STUN/TURN, and elimination of `UnimplementedError` from `libp2p.Conn` fields (`stat`, `scope`, etc.).
 
 ---
 
@@ -14,19 +14,20 @@
 
 ### 1.1 Goal
 
-Implement WebTransport IO listener/dialer, validate certhash in the web dialer, replace the hardcoded Google STUN server with configurable STUN/TURN servers, and implement all missing `Conn` metadata without throwing `UnimplementedError`. This makes dart_ipfs viable in browser and browser-adjacent deployments while removing production-inappropriate defaults.
+Validate certhash in the browser WebTransport dialer, replace the hardcoded Google STUN server with configurable STUN/TURN servers, and implement all missing `libp2p.Conn` fields (`stat`, `scope`, etc.) without throwing `UnimplementedError`. This makes dart_ipfs viable in browser deployments while removing production-inappropriate defaults. The non-web WebTransport IO listener is deferred to a separate P2 spec because standard Dart/IO does not provide a WebTransport API.
 
 ### 1.2 Scope
 
-- WebTransport dialer with certhash validation.
-- WebTransport IO listener for non-web platforms.
-- WebTransport `Conn` metadata implementation.
+- WebTransport browser dialer with certhash validation.
+- WebTransport `libp2p.Conn` field implementation (`stat`, `scope`, etc.).
 - WebRTC configurable STUN/TURN servers.
-- WebRTC `Conn` metadata implementation.
+- WebRTC `libp2p.Conn` field implementation.
 - `NetworkConfig` fields for browser transport settings.
+- Fixing the dummy certhash value in `lib/src/transport/webtransport/webtransport_dialer_web.dart:31`.
 
 ### 1.3 Non-Goals
 
+- Non-web WebTransport IO listener is deferred to a P2 spec; standard Dart/IO does not provide a WebTransport API and no mature dependency exists in the project.
 - Full WebRTC maturity is replaced by this hardening effort; advanced WebRTC features are deferred.
 - WebSocket transport is assumed to already exist; only WebTransport and WebRTC are addressed here.
 - Browser-specific UI integration is out of scope.
@@ -50,16 +51,20 @@ Implement WebTransport IO listener/dialer, validate certhash in the web dialer, 
 
 ### 3.1 Files
 
-- WebTransport dialer/listener files (existing but incomplete).
-- WebRTC transport implementation (existing but hardcoded STUN).
+- `lib/src/transport/webtransport/webtransport_dialer_web.dart` — browser dialer; currently sets `hash.value = Uint8List(32).toJS` (line 31) instead of the decoded certhash.
+- `lib/src/transport/webtransport/webtransport_dialer_io.dart` — IO stub; no production WebTransport API available.
+- `lib/src/transport/webtransport/webtransport_listener.dart` — stub listener; non-web WebTransport IO listener is not feasible with current Dart/IO.
+- `lib/src/transport/webtransport/webtransport_transport.dart` — transport wrapper.
+- `lib/src/transport/webrtc/webrtc_transport.dart` — WebRTC transport; hardcodes Google STUN (`stun:stun.l.google.com:19302`) at lines 71 and 228.
 - `lib/src/core/config/network_config.dart` — no STUN/TURN fields.
 
 ### 3.2 Gaps
 
-- WebTransport IO listener and certhash validation are incomplete.
-- WebTransport `Conn` metadata throws `UnimplementedError`.
-- WebRTC hardcodes Google STUN (`stun:stun.l.google.com:19302`) with no TURN fallback.
-- WebRTC connection metadata is incomplete.
+- WebTransport browser dialer does not decode or validate the multiaddr certhash; it passes a dummy 32-byte hash.
+- WebTransport `libp2p.Conn` fields (`stat`, `scope`) throw `UnimplementedError`.
+- WebRTC hardcodes Google STUN with no TURN fallback.
+- WebRTC `libp2p.Conn` fields are incomplete.
+- Non-web WebTransport IO listener cannot be implemented with current Dart/IO dependencies and is deferred.
 
 ---
 
@@ -87,40 +92,45 @@ bool validateCerthash(WebTransportConnection conn, List<String> expectedCerthash
 
 If certhash validation fails, close the connection and log a security error.
 
-### 4.3 WebTransport IO Listener
+### 4.3 WebTransport IO Listener (Deferred)
 
-Implement `WebTransportListener` for non-web platforms:
+A non-web `WebTransportListener` is **not** in scope for this specification. Standard Dart/IO does not provide a WebTransport API, and no mature QUIC + WebTransport dependency exists in the project.
 
-```dart
-class WebTransportListener {
-  Future<void> listen(String multiaddr);
-  Future<void> close();
-  Stream<WebTransportConnection> get onConnection;
-}
-```
-
-The IO listener should bind to a local UDP socket and accept QUIC WebTransport sessions. If platform APIs are unavailable, stub cleanly and return a `NotSupportedException` rather than `UnimplementedError`.
+- If a browser-only environment is detected, use the browser WebTransport API.
+- On non-web platforms, throw `NotSupportedException` from the stub listener and defer a full IO listener to a P2 specification once a dependency is available.
 
 ### 4.4 WebTransport Conn Metadata
 
+`WebTransportConnectionWeb` must implement `libp2p.Conn` without throwing `UnimplementedError`. The following fields must be implemented and return sensible values rather than a custom `metadata` map:
+
 ```dart
-class WebTransportConn implements Conn {
+class WebTransportConnectionWeb implements libp2p.Conn {
   @override
-  String get remoteAddr => _connection.remoteAddress;
+  libp2p.PeerId get localPeer;
   @override
-  String get localAddr => _connection.localAddress;
+  libp2p.PeerId get remotePeer;
+  @override
+  libp2p.MultiAddr get localMultiaddr;
+  @override
+  libp2p.MultiAddr get remoteMultiaddr;
+  @override
+  Future<libp2p.P2PStream<Uint8List>> newStream(libp2p.Context context);
   @override
   Future<void> close();
   @override
-  Stream<Uint8List> get readable;
+  bool get isClosed;
   @override
-  Future<void> write(Uint8List data);
+  libp2p.ConnStats get stat;          // must return real stats, not throw
   @override
-  Map<String, dynamic> get metadata => {
-    'transport': 'webtransport',
-    'security': 'quic',
-    'remotePeer': remotePeerId,
-  };
+  libp2p.ConnScope get scope;         // must return real scope, not throw
+  @override
+  String get id;
+  @override
+  Future<libp2p.PublicKey?> get remotePublicKey;
+  @override
+  libp2p.ConnState get state;
+  @override
+  Future<List<libp2p.P2PStream<Uint8List>>> get streams;
 }
 ```
 
@@ -146,19 +156,40 @@ Default STUN should be empty or configurable; do not hardcode Google STUN in pro
 
 ### 4.6 WebRTC Connection Metadata
 
-Implement all `RTCPeerConnection` metadata fields:
+The WebRTC connection wrapper must implement `libp2p.Conn` and return real values for the standard `libp2p.Conn` fields. ICE/signaling state may be exposed as additional read-only properties, but they must not replace the required `libp2p.Conn` API:
 
 ```dart
-class WebRTCConn implements Conn {
-  String get remoteAddr;
-  String get localAddr;
-  String get transport => 'webrtc';
-  Map<String, dynamic> get metadata => {
-    'iceState': _pc.iceConnectionState,
-    'signalingState': _pc.signalingState,
-    'localDescription': _pc.localDescription?.toMap(),
-    'remoteDescription': _pc.remoteDescription?.toMap(),
-  };
+class WebRTCConn implements libp2p.Conn {
+  @override
+  libp2p.PeerId get localPeer;
+  @override
+  libp2p.PeerId get remotePeer;
+  @override
+  libp2p.MultiAddr get localMultiaddr;
+  @override
+  libp2p.MultiAddr get remoteMultiaddr;
+  @override
+  Future<libp2p.P2PStream<Uint8List>> newStream(libp2p.Context context);
+  @override
+  Future<void> close();
+  @override
+  bool get isClosed;
+  @override
+  libp2p.ConnStats get stat;          // must return real stats, not throw
+  @override
+  libp2p.ConnScope get scope;         // must return real scope, not throw
+  @override
+  String get id;
+  @override
+  Future<libp2p.PublicKey?> get remotePublicKey;
+  @override
+  libp2p.ConnState get state;
+  @override
+  Future<List<libp2p.P2PStream<Uint8List>>> get streams;
+
+  // Additional diagnostics (optional)
+  String? get iceConnectionState;
+  String? get signalingState;
 }
 ```
 
@@ -179,12 +210,12 @@ network:
 
 ## 5. Detailed Acceptance Criteria
 
-- WebTransport dialer validates certhash and fails closed on mismatch.
-- WebTransport IO listener can accept a connection on a non-web platform (or cleanly report `NotSupportedException`).
-- No `UnimplementedError` is thrown from `Conn` metadata.
-- WebRTC uses configurable STUN/TURN; no hardcoded Google STUN remains in production code.
-- WebRTC metadata includes ICE and signaling state.
-- WebTransport listener can be started with `/ip4/0.0.0.0/udp/4002/quic-v1/webtransport`.
+- WebTransport browser dialer decodes the multiaddr certhash, passes the real hash to the browser API, and fails closed on mismatch.
+- WebTransport browser dialer rejects the connection when the server certhash does not match the multiaddr.
+- No `UnimplementedError` is thrown from `libp2p.Conn` fields (`stat`, `scope`, etc.) on WebTransport or WebRTC connections.
+- WebRTC uses configurable STUN/TURN; no hardcoded `stun.l.google.com` string remains in production code.
+- WebRTC exposes ICE and signaling state through optional diagnostic properties while still implementing the required `libp2p.Conn` interface.
+- The non-web WebTransport IO listener throws `NotSupportedException` and is not a P1 requirement.
 
 ---
 
@@ -204,17 +235,17 @@ network:
 ### 7.1 Unit Tests (target coverage ≥80%)
 
 - Certhash multibase decoding and validation success/failure.
-- WebTransport multiaddr parsing and listener address synthesis.
-- WebTransport `Conn` metadata completeness.
+- WebTransport multiaddr parsing.
+- WebTransport `libp2p.Conn` field completeness (`stat`, `scope`, etc.).
 - WebRTC STUN/TURN configuration parsing and ICE server list construction.
-- WebRTC `Conn` metadata completeness.
-- `NotSupportedException` behavior when platform APIs are unavailable.
+- WebRTC `libp2p.Conn` field completeness.
+- `NotSupportedException` behavior when the non-web WebTransport IO listener is used.
 
 ### 7.2 Local Network Tests
 
 - Start a local WebTransport-capable peer (Kubo or Helia) and verify dart_ipfs can dial it with a matching certhash.
 - Verify certhash mismatch causes immediate connection close.
-- Start a WebTransport IO listener on a non-web platform and accept one connection.
+- Verify the non-web WebTransport IO listener reports `NotSupportedException` cleanly.
 
 ### 7.3 Interop Tests with Kubo / Helia
 
@@ -235,8 +266,8 @@ network:
 
 ### 8.1 Blockers
 
-- QUIC transport must be implemented because WebTransport builds on QUIC.
-- Dart WebTransport API or FFI bindings must be available.
+- QUIC transport is a prerequisite for WebTransport but is itself blocked on dependency availability (see `QUIC_SPEC.md`).
+- A browser Dart WebTransport API wrapper is available via `package:web` / `dart:js_interop`; a non-web IO listener is not available and is deferred.
 
 ### 8.2 Order Relative to Other Features
 
@@ -256,5 +287,5 @@ network:
 
 - `NetworkConfig` gains new optional `stunServers` and `turnServers` fields; existing configs continue to work.
 - Removal of the hardcoded Google STUN is a behavior change. Nodes that previously relied on it must explicitly configure `stunServers: ['stun:stun.l.google.com:19302']` to retain the old behavior.
-- `UnimplementedError` must be replaced by `NotSupportedException` or implemented behavior; this is an API change for callers that catch `UnimplementedError`.
-- WebTransport IO listener is additive; existing WebSocket transport is unaffected.
+- `UnimplementedError` in `libp2p.Conn` fields must be replaced by implemented values or `NotSupportedException` for genuinely unsupported operations; this is an API change for callers that catch `UnimplementedError`.
+- The non-web WebTransport IO listener is deferred; existing WebSocket transport is unaffected.

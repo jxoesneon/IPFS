@@ -76,7 +76,7 @@ k8s/
 │   ├── secret.yaml                 # optional keys / bootstrap secrets
 │   ├── serviceaccount.yaml
 │   ├── rbac.yaml                   # minimal Role/RoleBinding if needed
-│   ├── deployment.yaml             # single-node StatefulSet or Deployment
+│   ├── statefulset.yaml            # single-node StatefulSet
 │   ├── service.yaml                # API, gateway, swarm (LoadBalancer/ClusterIP)
 │   ├── headless-service.yaml       # for peer discovery
 │   └── ingress.yaml                # optional gateway ingress
@@ -91,13 +91,11 @@ k8s/
     │   ├── values-production.yaml
     │   └── templates/
     │       ├── _helpers.tpl
-    │       ├── deployment.yaml
+    │       ├── statefulset.yaml
     │       ├── service.yaml
     │       ├── ingress.yaml
     │       ├── configmap.yaml
     │       ├── secret.yaml
-    │       ├── pdb.yaml
-    │       ├── hpa.yaml
     │       └── serviceaccount.yaml
     └── README.md
 ```
@@ -106,13 +104,14 @@ k8s/
 
 - Use a **StatefulSet** for the base manifest because the IPFS repository is stateful and benefits from stable network identity and persistent volume binding.
 - `replicaCount` defaults to 1 and must be explicitly set to 1 in all overlays for v2.2. Clustering is not supported.
+- **Helm is the primary, documented installation path.** Kustomize is retained as the reference/CI path and is documented with a lighter maintenance cadence.
 
 ### 4.3 Helm Chart Values
 
 | Value | Default | Description |
 |-------|---------|-------------|
 | `image.repository` | `ghcr.io/dart-ipfs/dart-ipfs` | Image registry/name. |
-| `image.tag` | `Chart appVersion` | Image tag. |
+| `image.tag` | `Chart appVersion` | Image tag. The chart `appVersion` matches `pubspec.yaml` (currently `1.11.5`). |
 | `image.pullPolicy` | `IfNotPresent` | Pull policy. |
 | `replicaCount` | `1` | Single-node only in v2.2. |
 | `service.api.port` | `5001` | RPC API port. |
@@ -129,11 +128,20 @@ k8s/
 | `affinity` | `{}` | Anti-affinity rules. |
 | `metrics.enabled` | `false` | Prometheus ServiceMonitor. |
 
+**Recommended starting resource sizing:**
+
+| Environment | CPU request | CPU limit | Memory request | Memory limit |
+|-------------|-------------|-----------|----------------|--------------|
+| Default / dev | `100m` | `500m` | `256Mi` | `512Mi` |
+| Production | `200m` | `1000m` | `512Mi` | `1Gi` |
+
+These are starting points and must be tuned based on workload.
+
 ### 4.4 Services
 
 - **API service:** ClusterIP by default; expose port 5001.
 - **Gateway service:** ClusterIP or LoadBalancer depending on overlay; expose port 8080.
-- **Swarm service:** NodePort or LoadBalancer for port 4001/tcp and 4001/udp to allow external peers to dial in.
+- **Swarm service:** NodePort or LoadBalancer for port 4001/tcp **and** 4001/udp to allow external peers to dial in. Some cloud load balancers do not support UDP; document this limitation.
 - **Headless service:** For stable peer identity within the StatefulSet.
 
 ### 4.5 Ingress
@@ -148,6 +156,46 @@ k8s/
 - `secret.yaml` holds optional bootstrap keys or RPC auth tokens. Secrets must not be placed in ConfigMaps.
 - Sensitive config must be mounted as files or injected from Kubernetes Secrets, never baked into the image.
 
+### 4.7 Production Values Snippet
+
+`values-production.yaml` must set:
+
+```yaml
+replicaCount: 1
+
+image:
+  repository: ghcr.io/dart-ipfs/dart-ipfs
+  tag: "1.11.5"
+  pullPolicy: IfNotPresent
+
+persistence:
+  enabled: true
+  size: 10Gi
+
+podSecurityContext:
+  runAsNonRoot: true
+  fsGroup: 1000
+
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+ingress:
+  enabled: false
+```
+
 ---
 
 ## 5. Detailed Acceptance Criteria
@@ -161,7 +209,10 @@ k8s/
 7. Nodes in different clusters can dial each other via the published swarm port.
 8. The production overlay uses a `StatefulSet` with a `PersistentVolumeClaim` and a read-only root filesystem.
 9. Gateway ingress is disabled by default and must be explicitly enabled.
-10. CI validates every manifest change with `helm lint`, `helm template`, `kustomize build`, and a minikube smoke test.
+10. `helm template` with default values renders a `StatefulSet` with `replicas: 1`, `securityContext.runAsNonRoot: true`, and `securityContext.readOnlyRootFilesystem: true`.
+11. Gateway ingress is disabled by default and requires `ingress.enabled=true` plus an explicit `ingress.hosts` entry to be created.
+12. `helm upgrade` does not delete or recreate the existing PVC (verified by `helm.sh/resource-policy: keep` or equivalent annotation).
+13. CI validates every manifest change with `helm lint`, `helm template`, `kustomize build`, and a minikube smoke test. The Kubernetes CI is **non-blocking for v2.2.0** and becomes release-blocking only after the first successful minikube smoke run on `main`.
 
 ---
 
@@ -204,7 +255,7 @@ k8s/
   - `helm lint` and `helm template`.
   - `kustomize build` for all overlays.
   - Minikube smoke test with a published or locally built `edge` image.
-- Once the chart is merged, this pipeline becomes release-blocking.
+- The pipeline is **non-blocking for v2.2.0** and becomes release-blocking only after the first successful minikube smoke run on `main`.
 
 ---
 
@@ -213,6 +264,7 @@ k8s/
 - **Prerequisites:**
   - Docker image built and published automatically (see `DOCKER_SPEC.md`).
   - CLI binary stable (see `CLI_SPEC.md`).
+  - Chart `appVersion` matches the package version (`1.11.5` at the time of writing).
 - **Order:** Kubernetes is P1 and must start **after** Docker CI is complete and images are auto-published. It is part of the v2.2 rc / optional v2.2.x phase.
 - **Downstream consumers:**
   - Production deployment guides in `doc/deploy.md` (to be created).

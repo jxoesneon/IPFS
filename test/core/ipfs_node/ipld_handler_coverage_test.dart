@@ -58,6 +58,8 @@ void main() {
 
       test('registerCodec works correctly', () async {
         final mockCodec = MockIPLDCodec();
+        when(mockCodec.name).thenReturn('custom');
+        when(mockCodec.code).thenReturn(0x55); // raw, so CID computation works
         when(mockCodec.identifier).thenReturn('custom');
         handler.registerCodec(mockCodec);
 

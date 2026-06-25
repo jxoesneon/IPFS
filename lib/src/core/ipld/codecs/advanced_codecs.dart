@@ -23,7 +23,10 @@ class DagJoseCodec implements IPLDCodec {
   final Future<List<int>> Function(IPLDNode) recipientKeyProvider;
 
   @override
-  String get identifier => 'dag-jose';
+  String get name => 'dag-jose';
+
+  @override
+  int get code => 0x85;
 
   @override
   Future<Uint8List> encode(IPLDNode node) async {
@@ -63,11 +66,9 @@ class DagJoseCodec implements IPLDCodec {
   Future<IPLDNode> decode(Uint8List data) async {
     final joseData = json.decode(utf8.decode(data)) as Map<String, dynamic>;
 
-    final header =
-        json.decode(
-              utf8.decode(base64Url.decode(joseData['protected'] as String)),
-            )
-            as Map<String, dynamic>;
+    final header = json.decode(
+      utf8.decode(base64Url.decode(joseData['protected'] as String)),
+    ) as Map<String, dynamic>;
     final payload = base64Url.decode(joseData['payload'] as String);
 
     return IPLDNode()
@@ -95,7 +96,11 @@ class DagJoseCodec implements IPLDCodec {
   }
 }
 
-/// Codec for 'car'.
+/// Non-standard legacy codec for 'car'.
+///
+/// This class is deprecated and will be removed once the standard CAR v1/v2
+/// implementation in `lib/src/core/data_structures/car.dart` is complete.
+@Deprecated('Use the standard CarReader/CarWriter API instead')
 class CarCodec implements IPLDCodec {
   /// Creates a [CarCodec] with the given [blockStore] and [decoder].
   CarCodec(this.blockStore, this.decoder);
@@ -107,7 +112,10 @@ class CarCodec implements IPLDCodec {
   final Future<IPLDNode> Function(Uint8List, String) decoder;
 
   @override
-  String get identifier => 'car';
+  String get name => 'car';
+
+  @override
+  int get code => 0x0202;
 
   @override
   Future<Uint8List> encode(IPLDNode node) async {

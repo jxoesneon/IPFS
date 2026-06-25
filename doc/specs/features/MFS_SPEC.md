@@ -36,7 +36,7 @@ Out of scope: UnixFS chunking algorithm changes, write-back caching, remote MFS,
 
 ## 3. Current State in dart_ipfs
 
-The current MFS implementation is in `lib/src/core/mfs/mfs_manager.dart` and persists its root CID via `/mfs/root` in the datastore. The following methods exist today:
+The current MFS implementation is in `lib/src/core/mfs/mfs_manager.dart` and persists its root CID via `/mfs/root` in the datastore. The `MFSManager` constructor is at lines 17–19 and `init()` is at lines 28–42; the constructor takes an `IBlockStore` and a `Datastore`, and `init()` loads the root CID from `/mfs/root` or creates an empty root directory. The following methods exist today:
 
 - `mkdir(String path, {bool recursive = false})`
 - `cp(String src, String dest)`
@@ -83,15 +83,17 @@ MFSManager
 └── Future<void> chcid(String path, {String? cid, String? hash = 'sha2-256'})
 ```
 
+`MFSManager` is constructed with an `IBlockStore` and a `Datastore` and must be registered as an `ILifecycle` service in `LifecycleManager`. RPC handlers obtain the shared instance from `IPFSNode` (or a service locator) so that internal API tests can instantiate `MFSManager` directly without starting the RPC server.
+
 **Semantics:**
 
-- `flush([path])` materializes the in-memory MFS delta for `path` (default `/`) to the blockstore and returns the resulting root CID. If `path` is provided, only the ancestors from `path` to the root are re-hashed and updated; the root CID is persisted to `/mfs/root`.
+- `flush([path])` ensures the current MFS state is persisted and returns the current root CID. The existing implementation already persists the root CID after every mutation (`_modifyPath` at lines 259–273), so `flush` is effectively a synchronous root-CID accessor that may return the existing root without re-hashing. If a future implementation introduces a write-back cache, `flush` must force any pending mutations to the blockstore and persist the root CID to `/mfs/root` before returning.
 - `flushAll()` is equivalent to `flush('/')`.
 - `sync()` waits for all in-flight MFS operations to complete and ensures the root CID is persisted. It returns `void` and does not guarantee a new CID if no writes are pending.
 - `stat` returns Kubo-compatible metadata with field names `Hash`, `Size`, `CumulativeSize`, `Blocks`, `Type`, and optional `WithLocal`, `Local`, `Mode`, `Mtime`.
 - `ls` returns entries with `Name`, `Type` (0=raw, 1=directory, 2=file per Kubo), `Size`, `Hash`, and optional `Mode`/`Mtime` when `long=true`.
-- `write` supports `offset` for partial writes, `truncate=true` to replace existing content, and `truncate=false` with `offset=0` to require an existing file. Throws `ArgumentError` if `offset` is beyond file size and `truncate=false`.
-- `chcid` re-hashes the CID for a path (or the whole MFS root if `path='/'`) using the requested multihash function. Only re-hashing of already-present data is supported; data re-layout is out of scope.
+- `write` supports `offset` for partial writes, `truncate=true` to replace existing content, and `truncate=false` with `offset=0` to require an existing file. Throws `ArgumentError` if `offset` is beyond file size and `truncate=false`. For `truncate=false`, the implementation must read the existing UnixFS file, replace the affected byte range, and re-chunk only the modified segment if possible; unmodified bytes should preserve existing chunk boundaries and CIDs to the extent the chunking algorithm allows, which is required for Kubo parity.
+- `chcid` re-hashes the CID for a path (or the whole MFS root if `path='/'`) using the requested multihash function. The current `CID.fromContent` accepts a `hashType` parameter but only supports `sha2-256` (it throws `UnsupportedError` for other hashes). Therefore, changing the hash function to anything other than `sha2-256` requires a full re-encode/re-layout pass of the affected DAG. Re-hashing with `sha2-256` is effectively a no-op for already-present data.
 
 ### 4.2 Data Models
 
@@ -154,7 +156,10 @@ Register the following handlers in `lib/src/services/rpc/rpc_handlers.dart` and 
 - [ ] No existing MFS public API signatures are removed; only additive changes are allowed.
 - [ ] `stat` cumulative size matches the Kubo definition for both files and directories.
 - [ ] `write` with `offset` and `truncate=false` correctly patches existing file content without changing unmodified bytes.
+- [ ] `write` with `offset` and `truncate=false` is validated against Kubo (not only unit tests) and preserves unmodified chunk CIDs where possible.
 - [ ] `mkdir` with `parents=true` creates missing intermediate directories.
+- [ ] `flush` on an already-persistent MFS returns the same root CID idempotently.
+- [ ] `MFSManager` remains usable without RPC (internal API tests are standalone).
 
 ---
 
@@ -226,6 +231,6 @@ MFS completeness is a Phase 1 P0 foundation item and can be implemented in paral
 ## 9. Backward Compatibility Notes
 
 - All existing `MFSManager` public method signatures must remain source-compatible. New parameters must be optional with sensible defaults.
-- Existing behavior that immediately materializes mutations may continue to do so internally, but `flush` and `sync` must still be callable and return the correct values.
+- Existing behavior that immediately persists the root CID after every mutation (`_modifyPath` at lines 259–273) may continue to do so internally. In this mode `flush` and `sync` are synchronous root-CID accessors that return the current root CID without introducing a separate in-memory delta layer.
 - No existing MFS RPC endpoints exist today, so no RPC backward compatibility constraint applies.
 - If a future implementation introduces a write-back cache, `flush`/`sync` must still force persistence to the blockstore and must not change the public API.

@@ -12,8 +12,8 @@ This specification defines the work required to consolidate dart_ipfs DAG-JSON s
 
 Scope includes:
 
-- Removal or deprecation of the duplicate `dag_json_codec.dart` implementation and its duplicate `IPLDCodec` interface.
-- Promotion of `DagJsonCodec` in `lib/src/codec/standard_codecs.dart` to be the single, spec-compliant DAG-JSON codec.
+- Removal or deprecation of the duplicate `lib/src/core/ipld/dag_json_codec.dart` implementation and its duplicate `IPLDCodec` interface.
+- Promotion of `DagJsonCodec` in `lib/src/core/ipld/codecs/standard_codecs.dart` to be the single, spec-compliant DAG-JSON codec, implementing the unified `IPLDCodec` interface from `COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md` (`name`, `code`, and async `encode`/`decode` on `IPLDNode`).
 - Implementation of the reserved namespace encoding for bytes and CID links.
 - Canonical key sorting, whitespace stripping, and correct integer/float distinction.
 - Strict validation of reserved-namespace maps during decode.
@@ -47,15 +47,15 @@ Reference implementations for interoperability verification:
 
 ## 3. Current State in dart_ipfs
 
-The current DAG-JSON implementation is fragmented and not spec-compliant.
+The current DAG-JSON implementation is fragmented and not spec-compliant. Consolidation must follow the unified `IPLDCodec` interface defined in `COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md`.
 
-- **File:** `lib/src/codec/dag_json_codec.dart` defines a duplicate `IPLDCodec` interface and a separate DAG-JSON codec implementation. This duplicates the work in `lib/src/codec/standard_codecs.dart` and confuses consumers.
-- **File:** `lib/src/codec/standard_codecs.dart` contains a `DagJsonCodec` class that is closer to the spec but still incomplete.
+- **File:** `lib/src/core/ipld/dag_json_codec.dart` defines a duplicate `IPLDCodec` interface and a separate DAG-JSON codec implementation. This file will be deleted; its interface is rejected in favor of the unified `IPLDCodec` in `lib/src/core/ipld/codecs/ipld_codec.dart`.
+- **File:** `lib/src/core/ipld/codecs/standard_codecs.dart` contains the single `DagJsonCodec` class that will be made spec-compliant. It must implement the unified interface: `name = 'dag-json'`, `code = 0x0129`, and async `encode`/`decode` on `IPLDNode`.
 - **Gap:** Two competing implementations exist. The Council of Five verdict is to remove the duplicate and consolidate on the standard codecs file.
 - **Gap:** The reserved namespace for bytes and CID links is not implemented correctly.
 - **Gap:** Object keys are not sorted canonically, and whitespace is not stripped, leading to non-canonical strings and different CIDs when hashing.
 - **Gap:** Integers and floats are not distinguished correctly (e.g., `1.0` may encode as `1`).
-- **Dependency:** DAG-JSON shares the same `IPLDNode` data model as DAG-CBOR. The DAG-CBOR codec should be solid before DAG-JSON is consolidated, so that cross-codec tests can be run against the same node types.
+- **Dependency:** DAG-JSON shares the same `IPLDNode` data model as DAG-CBOR. The DAG-JSON consolidation lands **after** the DAG-CBOR codec is spec-compliant, so cross-codec tests can be run against the same node types.
 
 ---
 
@@ -66,7 +66,7 @@ The current DAG-JSON implementation is fragmented and not spec-compliant.
 The encoder must produce canonical DAG-JSON strings that match the IPLD specification and the reference implementations.
 
 - **Whitespace:** No whitespace is emitted. The output is a compact JSON string with no line breaks, indentation, or spaces outside string values. Keys are sorted by the raw UTF-8 bytes of the string, first by length and then lexicographically, matching the IPLD canonical map ordering.
-- **Integers:** Encoded as JSON numbers without fractional or exponent notation. Dart `int` is arbitrary precision, but the encoder must only emit a plain JSON number when the value is within the safe integer range recognized by the DAG-JSON spec (i.e., values that can be represented without loss in a JSON number). For values outside that range, the encoder must either emit a BigInt-aware representation that preserves precision or fail with a clear `DagJsonIntegerRangeError` if the underlying JSON library cannot represent the value without loss. The decoded value must round-trip as an integer.
+- **Integers:** Encoded as plain JSON numbers without fractional or exponent notation. Dart `int` is arbitrary precision, but the encoder must only emit a plain JSON number when the value is within the safe integer range recognized by the DAG-JSON spec (i.e., values that can be represented without loss in a JSON number). Values outside that range must fail with a clear `DagJsonIntegerRangeError`. The decoded value must round-trip as an integer.
 - **Floats:** Encoded with a decimal point (e.g., `1.0`) even when there is no fractional component, so they are distinguishable from integers on decode. Values such as `1e10` are represented in JSON scientific notation, which is unambiguously a float. `NaN` and `Infinity` are not representable in JSON and must be rejected.
 - **Bytes:** Encoded as the reserved namespace `{ "/": { "bytes": "<base64url-no-padding>" } }`. The base64url encoding follows RFC 4648 Section 5 with no padding characters (`=`). The decoder must reject any padding or incorrect alphabet characters.
 - **CID links:** Encoded as `{ "/": "<cid-string>" }`.
@@ -94,30 +94,31 @@ The decoder must parse a JSON string into an `IPLDNode` and must strictly valida
 - **`String encodeDagJson(IPLDNode node)`** — Returns the compact canonical DAG-JSON string. Throws `DagJsonEncodingError` for unsupported values (e.g., non-finite floats, invalid reserved-namespace maps, unsupported integer values).
 - **`IPLDNode decodeDagJson(String json, {bool strict = true})`** — Returns the IPLD data-model node represented by the JSON string. In strict mode, rejects invalid reserved-namespace maps, duplicate keys, and unsupported JSON features. In lenient mode, relaxes some rules but still validates CID and bytes forms.
 - **`CID computeCidDagJson(IPLDNode node)`** — Convenience that encodes the node as DAG-JSON and hashes the UTF-8 bytes with the DAG-JSON multicodec (`0x0129`) and the default hash function (sha2-256 unless configured otherwise). For nodes that can also be represented as DAG-CBOR, the CID will differ from the DAG-CBOR CID because the codec code is different, but the logical content is equivalent.
-- **Codec identity:** The public codec must expose `codecCode = 0x0129` and `name = 'dag-json'`.
+- **Codec identity:** The public codec must implement the unified `IPLDCodec` interface with `name = 'dag-json'` and `code = 0x0129`.
 - **Cross-codec helper:** `IPLDNode fromDagCbor(Uint8List bytes)` and `Uint8List toDagCbor(IPLDNode node)` helpers may be provided, but the DAG-JSON codec itself must only deal with JSON strings.
 
 ### 4.4 Consolidation Requirements
 
-- `lib/src/codec/dag_json_codec.dart` is deleted, or its body is replaced by a deprecated re-export that points to `lib/src/codec/standard_codecs.dart`.
-- The duplicate `IPLDCodec` interface defined in `dag_json_codec.dart` is removed.
-- `lib/src/codec/standard_codecs.dart` is the single source of truth for the `DagJsonCodec` class.
+- `lib/src/core/ipld/dag_json_codec.dart` is deleted, or its body is replaced by a deprecated re-export that points to `lib/src/core/ipld/codecs/standard_codecs.dart`.
+- The duplicate `IPLDCodec` interface defined in `dag_json_codec.dart` is removed. The single interface is the unified `IPLDCodec` in `lib/src/core/ipld/codecs/ipld_codec.dart` (`name`, `code`, async `encode`/`decode` on `IPLDNode`).
+- `lib/src/core/ipld/codecs/standard_codecs.dart` is the single source of truth for the `DagJsonCodec` class.
 - All internal imports of `dag_json_codec.dart` are updated to import from `standard_codecs.dart`.
 - If external consumers depend on the old `IPLDCodec` interface, a short compatibility shim may be introduced in v2.0.0-rc and removed in v2.1.
+- The consolidation lands **after** the DAG-CBOR codec is spec-compliant, so cross-codec fixtures can be validated against the same `IPLDNode` types.
 
 ---
 
 ## 5. Acceptance Criteria
 
-1. **Consolidation:** `lib/src/codec/dag_json_codec.dart` is deleted or its body is replaced by a deprecated re-export of `standard_codecs.dart`. The duplicate `IPLDCodec` interface is removed.
+1. **Consolidation:** `lib/src/core/ipld/dag_json_codec.dart` is deleted or its body is replaced by a deprecated re-export of `standard_codecs.dart`. The duplicate `IPLDCodec` interface is removed; the unified `IPLDCodec` interface in `lib/src/core/ipld/codecs/ipld_codec.dart` is the only one.
 2. **Cross-codec fixtures:** All DAG-JSON cross-codec fixtures from the IPLD specs round-trip and match the reference CIDs or logical content produced by go-ipld-prime and js-ipld-dag-json.
 3. **Bytes and CID links:** Encoding bytes and CID links produces the exact reserved-namespace forms described above. Decoding those forms returns the original bytes and CID values.
 4. **Invalid reserved namespace:** Invalid reserved-namespace maps are rejected during decode. Examples include maps with a `/` key and other keys, maps with `{ "/": { "bytes": "...", "extra": "..." } }`, and maps with `{ "/": { "not-bytes": "..." } }`.
 5. **Integer/float distinction:** A float `1.0` encodes with a decimal point; an integer `1` encodes without; decoding distinguishes them.
 6. **Canonical output:** Two maps with the same logical content but different key insertion order produce identical canonical strings and the same CID.
 7. **Whitespace:** The encoded string contains no whitespace characters outside of string values.
-8. **Codec identity:** The codec reports `codecCode = 0x0129` and `name = 'dag-json'`.
-9. **Internal imports:** All internal code that previously imported `dag_json_codec.dart` now imports `standard_codecs.dart` and uses the spec-compliant `DagJsonCodec`.
+8. **Codec identity:** The codec implements the unified `IPLDCodec` interface with `name = 'dag-json'` and `code = 0x0129`.
+9. **Internal imports:** All internal code that previously imported `dag_json_codec.dart` now imports `lib/src/core/ipld/codecs/standard_codecs.dart` and uses the spec-compliant `DagJsonCodec`.
 
 ---
 
@@ -164,13 +165,15 @@ Use fixed fixtures from the IPLD specs for determinism, and add a smaller set of
 
 ### 7.4 Regression Tests
 
-- Add a test that asserts `lib/src/codec/dag_json_codec.dart` no longer contains a competing implementation or that it re-exports `standard_codecs.dart`.
-- Add a test that asserts the duplicate `IPLDCodec` interface is removed.
+- Add a test that asserts `lib/src/core/ipld/dag_json_codec.dart` no longer contains a competing implementation or that it re-exports `lib/src/core/ipld/codecs/standard_codecs.dart`.
+- Add a test that asserts the duplicate `IPLDCodec` interface is removed and that the unified `IPLDCodec` interface in `lib/src/core/ipld/codecs/ipld_codec.dart` is the only one.
 - Regenerate any JSON fixtures that were previously produced by the old implementation and verify they now match the canonical forms.
 
 ---
 
 ## 8. Dependencies and Ordering
+
+The DAG-JSON consolidation described in this specification lands **after** the DAG-CBOR codec is spec-compliant. This ordering ensures that cross-codec fixtures can be validated against the same `IPLDNode` types and that the unified `IPLDCodec` interface is stable before the final DAG-JSON work is merged.
 
 1. **IPLD Data Model types (prerequisite):** The same `IPLDNode` types used by DAG-CBOR must be used by DAG-JSON.
 2. **DAG-CBOR P0 (prerequisite):** The DAG-JSON consolidation should land after DAG-CBOR is solid so that cross-codec tests can be run against the same node types and the same data-model semantics.
@@ -185,7 +188,7 @@ Use fixed fixtures from the IPLD specs for determinism, and add a smaller set of
 
 ## 9. Backward Compatibility Notes
 
-- **v2.0 breaking change:** The duplicate `dag_json_codec.dart` implementation and its `IPLDCodec` interface are removed. Any code that imported `dag_json_codec.dart` must import the `DagJsonCodec` from `lib/src/codec/standard_codecs.dart`. Document this in `CHANGELOG.md` and the migration guide.
+- **v2.0 breaking change:** The duplicate `lib/src/core/ipld/dag_json_codec.dart` implementation and its `IPLDCodec` interface are removed. Any code that imported it must import the `DagJsonCodec` from `lib/src/core/ipld/codecs/standard_codecs.dart`. Document this in `CHANGELOG.md` and the migration guide.
 - **Compatibility shim:** If external consumers depend on the old `IPLDCodec` interface, introduce a short compatibility shim in v2.0.0-rc that re-exports the new interface under the old name, and remove it in v2.1. The shim must be clearly marked as deprecated.
 - **Canonical output change:** The old `DagJsonCodec` may have emitted whitespace or non-canonical key ordering. The new output will be compact and canonical. Any stored DAG-JSON strings that were hashed or compared as strings will need to be regenerated.
 - **Internal consumers:** Update all internal callers that previously used the old DAG-JSON implementation. This includes RPC handlers, logging, and any configuration files that use DAG-JSON for IPLD data.

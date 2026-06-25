@@ -14,7 +14,7 @@
 
 ### 1.1 Goal
 
-Respond to a single requesting peer with selected blocks in `GraphsyncMessage.blocks`, enforce selector depth, block-count, and byte budgets, and fall back to Bitswap for missing blocks. Stop broadcasting responses to all peers and defer bidirectional pause/resume and client-side response matching until the router supports unicast response streams.
+Respond to a single requesting peer with selected blocks in `GraphsyncMessage.blocks`, enforce selector depth, block-count, and byte budgets, and fall back to Bitswap for missing blocks. Stop broadcasting responses to all peers; use the existing `RouterInterface.sendMessage` unicast method. Bidirectional pause/resume and client-side response matching are deferred.
 
 ### 1.2 Scope
 
@@ -28,8 +28,8 @@ Respond to a single requesting peer with selected blocks in `GraphsyncMessage.bl
 ### 1.3 Non-Goals
 
 - Bidirectional GraphSync pause/resume is deferred.
-- Client-side response matching and request state machine are deferred until the router supports unicast response streams.
-- GraphSync 2.0 full selector support is optional and depends on IPLD selector implementation.
+- Client-side response matching and request state machine are deferred; this spec covers server-side responses only.
+- GraphSync 2.0 full selector support is optional and depends on the P0 IPLD selector implementation (`IPLD_SELECTORS_SPEC.md`).
 
 ---
 
@@ -89,6 +89,8 @@ message Block {
 }
 ```
 
+`Block.prefix` must contain the CID prefix bytes (version + codec + hash function + hash length), not the full CID. For example, call `cid.toPrefixBytes()` if available, or construct the prefix from the CID header fields.
+
 ### 4.3 Request Handling
 
 ```dart
@@ -112,13 +114,13 @@ Future<void> _handleNewRequest(String peer, GraphsyncRequest request) async {
       selector,
       budget,
       onBlock: (cid, data) {
-        blocks.add(Block(prefix: cid.toBytes(), data: data));
+        blocks.add(Block(prefix: cid.toPrefixBytes(), data: data));
       },
       onMissing: (cid) async {
-        // Fall back to Bitswap for missing blocks.
-        final block = await _bitswap.getBlock(cid);
+        // Fall back to Bitswap for missing blocks using the existing API.
+        final block = await _bitswap.wantBlock(cid.toString());
         if (block != null) {
-          blocks.add(Block(prefix: cid.toBytes(), data: block.data));
+          blocks.add(Block(prefix: cid.toPrefixBytes(), data: block.data));
         }
       },
     );
@@ -158,9 +160,13 @@ class SelectorBudget {
     if (++_currentDepth > maxDepth) throw BudgetExceededError('depth');
   }
 
-  void leaveDepth() => _currentDepth--;
+  void leaveDepth() {
+    if (_currentDepth > 0) _currentDepth--;
+  }
 }
 ```
+
+Depth tracking must increment when entering a nested DAG node and decrement when leaving it; it must not count every visited block as a new depth level.
 
 Default budgets:
 
@@ -170,16 +176,11 @@ Default budgets:
 
 ### 4.5 Unicast Response Requirement
 
-`GraphsyncHandler` must send responses only to the requesting peer. If `RouterInterface` does not support unicast, add a helper:
+`GraphsyncHandler` must send responses only to the requesting peer. `RouterInterface.sendMessage(String peerIdStr, Uint8List message, {String? protocolId})` is already a unicast method, so the handler uses it directly. Broadcast fallback is prohibited.
 
 ```dart
 Future<void> _sendResponseToPeer(String peer, GraphsyncMessage response) async {
-  if (_router.supportsUnicast) {
-    await _router.sendMessage(peer, response.writeToBuffer(), protocolId: protocolId);
-  } else {
-    // Defer: broadcast fallback is prohibited; log and drop.
-    _logger.warning('Cannot unicast GraphSync response; deferring until router supports unicast.');
-  }
+  await _router.sendMessage(peer, response.writeToBuffer(), protocolId: protocolId);
 }
 ```
 
@@ -238,7 +239,7 @@ class GraphsyncHandler {
 - Selector traversal with simple recursive selectors.
 - Budget enforcement at depth, block count, and byte limits.
 - Bitswap fallback path and missing block handling.
-- Unicast routing helper behavior when `supportsUnicast` is true/false.
+- Unicast routing via `RouterInterface.sendMessage` with a specific peer.
 - Invalid request handling.
 
 ### 7.2 Local Network Tests
@@ -266,15 +267,15 @@ class GraphsyncHandler {
 
 ### 8.1 Blockers
 
-- `RouterInterface` must support unicast message sending by protocol ID, or the unicast requirement must be deferred.
-- IPLD selector parsing must be available.
-- Bitswap handler must be functional for fallback.
+- **P0 IPLD selector implementation:** `IPLDSelector.fromBytesAsync` and selector execution must be implemented per `IPLD_SELECTORS_SPEC.md` before GraphSync can traverse DAGs correctly. GraphSync is sequenced after the selector implementation is complete.
+- `RouterInterface.sendMessage(String peerIdStr, Uint8List message, {String? protocolId})` already provides unicast delivery; no new `supportsUnicast` guard is needed.
+- `BitswapHandler.wantBlock` / `want` must be available for fallback.
 
 ### 8.2 Order Relative to Other Features
 
 - **Before**: Client-side GraphSync (deferred).
-- **Parallel with**: Bitswap HTTP Fallback.
-- **After**: Bitswap P2P, DHT, Circuit Relay.
+- **Parallel with**: Bitswap HTTP Fallback (after the P0 IPLD selector is complete).
+- **After**: Bitswap P2P, DHT, Circuit Relay, and the P0 IPLD selector implementation.
 
 ### 8.3 External Dependencies
 

@@ -21,6 +21,7 @@ import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart';
 import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
+import 'package:dart_ipfs/src/utils/encoding.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_multihash/dart_multihash.dart' as multihash_lib;
 import 'package:fixnum/fixnum.dart';
@@ -40,6 +41,7 @@ class IPLDHandler implements ILifecycle {
   final BlockStore _blockStore;
   final Map<String, IPLDSchema> _schemas = {};
   final Map<String, IPLDCodec> _codecs = {};
+  final Map<int, IPLDCodec> _codecsByCode = {};
   late final Logger _logger;
   bool _isRunning = true;
 
@@ -57,11 +59,14 @@ class IPLDHandler implements ILifecycle {
         (node) async => _getRecipientKey(node),
       ),
     );
-    _registerCodec(CarCodec(_blockStore, _decodeData));
+    // CarCodec is intentionally not registered as an IPLD codec; CAR is a
+    // transport archive, not a block codec. The standard CarReader/CarWriter
+    // API replaces the legacy CarCodec.
   }
 
   void _registerCodec(IPLDCodec codec) {
-    _codecs[codec.identifier] = codec;
+    _codecs[codec.name] = codec;
+    _codecsByCode[codec.code] = codec;
   }
 
   /// Registers a codec for IPLD data.
@@ -169,7 +174,10 @@ class IPLDHandler implements ILifecycle {
 
     try {
       final encoded = await codec.encode(node);
-      final cid = await CID.computeForData(encoded, format: codecId);
+      // Use the codec's multicodec code for the CID and the codec name for the
+      // block format metadata, per COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md.
+      final format = EncodingUtils.getCodecFromCode(codec.code);
+      final cid = await CID.computeForData(encoded, format: format);
       return (encoded, cid);
     } catch (e) {
       throw IPLDEncodingError('Failed to encode $codecId: $e');
@@ -223,6 +231,7 @@ class IPLDHandler implements ILifecycle {
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'supported_codecs': _codecs.keys.toList(),
+      'supported_codec_codes': _codecsByCode.keys.toList(),
       'enabled': _config.enableIPLD,
       'running': _isRunning,
     };
@@ -662,9 +671,8 @@ class IPLDHandler implements ILifecycle {
   }
 
   Future<List<int>> _getRecipientKey(IPLDNode node) async {
-    final header = node.mapValue.entries
-        .firstWhere((e) => e.key == 'header')
-        .value;
+    final header =
+        node.mapValue.entries.firstWhere((e) => e.key == 'header').value;
     final recipientEntry = header.mapValue.entries.firstWhere(
       (e) => e.key == 'recipient',
     );

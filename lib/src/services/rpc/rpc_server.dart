@@ -1,5 +1,6 @@
 // lib/src/services/rpc/rpc_server.dart
 import 'dart:convert';
+import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/services/health_check_service.dart';
 import 'package:dart_ipfs/src/platform/http_server.dart';
@@ -16,7 +17,7 @@ import 'package:shelf_router/shelf_router.dart';
 /// **Security (SEC-003):** When [apiKey] is provided, all write operations
 /// require the `X-API-Key` header to match. Read-only operations like
 /// `version`, `id`, and `cat` are allowed without authentication.
-class RPCServer {
+class RPCServer implements ILifecycle {
   /// Creates a new [RPCServer] for the given [node].
   RPCServer({
     required this.node,

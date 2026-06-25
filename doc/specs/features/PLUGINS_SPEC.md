@@ -17,16 +17,16 @@ Scope for v2.2:
 
 - Define a `PluginCapability` taxonomy and `PluginManifest` schema.
 - Implement a `PluginHost` runtime that loads plugins, validates manifests, enforces capability ACLs, and routes lifecycle events.
-- Implement a `PluginSandbox` boundary using Dart `Isolate`s with capability gating.
+- Implement an `Isolate`-based execution boundary for memory isolation and crash containment. **Dart Isolates are not a security sandbox;** capability gating and trust policy are the real controls.
 - Add Ed25519 manifest signing and signature verification.
-- Ship 2–3 in-repo example plugins signed with a repository development key.
+- Ship 1–2 simple in-repo example plugins (e.g., a metrics emitter and a logging observer) signed with a CI-generated ephemeral key.
 - Document the plugin API in `doc/plugins.md`.
 
 Out of scope for v2.2:
 
 - A public plugin registry or marketplace.
 - Hot-reload of plugins in production (plugins are loaded at startup).
-- True OS-level sandboxing ( Isolate-only in v2.2).
+- True OS-level sandboxing (Isolates are not a security boundary; operators must use containers/VMs for untrusted plugins).
 - Dynamic plugin installation over the network.
 
 ---
@@ -63,7 +63,7 @@ Key files to create or extend:
 - `lib/src/plugin/capability_blockstore.dart`
 - `lib/src/plugin/capability_metrics.dart`
 - `plugins/` or `examples/plugins/` directory for in-repo examples.
-- `tool/plugin_dev_key.pem` (repository dev key, not for production).
+- `tool/sign_examples.dart` (test-only helper that generates an ephemeral CI key and signs example plugins).
 - `doc/plugins.md`
 - `test/plugin/` tests.
 
@@ -79,8 +79,8 @@ Key files to create or extend:
 | `PluginManifest` | JSON/YAML file bundled with the plugin: `id`, `name`, `version`, `capabilities`, `hooks`, `author`, `signature`, `checksums`. |
 | `PluginLifecycle` | Interface with `initialize`, `start`, `stop`, `onConfigChanged`, `onPeerConnected`, `onBlockStored`. |
 | `PluginHost` | Runtime service that loads plugins, validates manifests, enforces capability ACLs, and routes lifecycle events. |
-| `PluginSandbox` | Execution boundary for untrusted plugins. In v2.2 this is Dart `Isolate`-based with capability gating; true OS sandboxing is deferred. |
-| `Signature` | Ed25519 signature of the plugin package manifest (tar/gz archive) by a trusted author or the in-repo key. |
+| `PluginSandbox` | `Isolate`-based execution boundary for memory isolation and crash containment. **Not a security sandbox.** |
+| `Signature` | Ed25519 signature of the plugin package manifest (tar/gz archive) by a trusted author. |
 
 ### 4.2 Manifest Schema (YAML)
 
@@ -126,23 +126,43 @@ Requirements:
 
 ### 4.4 Signing and Trust
 
-- In-repo example plugins are signed with a repository dev key stored in `tool/plugin_dev_key.pem`. This key is **not for production use**.
-- Production deployments may supply a trusted-keys file via config (`plugin.trustedKeysPath`).
-- Unsigned plugins may only be loaded if `plugin.allowUnsigned` is explicitly set to `true` in the node configuration (default: `false`).
+- **No private signing key is committed to the repository.** The `tool/plugin_dev_key.pem` approach is rejected.
+- In-repo example plugins are signed with a **CI-generated ephemeral Ed25519 key pair** for each test run. The ephemeral public key is loaded as the only trusted key for the test; the private key is discarded after the run and never stored in the repo, CI logs, or artifacts.
+- Local development may use a well-marked test-only public key fixture (public key only, never the private key).
+- `tool/sign_examples.dart` is a test-only helper that generates the ephemeral key and re-signs example manifests.
+- Production deployments must supply a trusted-keys file via config (`plugin.trustedKeysPath`) pointing to author public keys managed outside the repository.
+- Unsigned plugins may only be loaded if `plugin.allowUnsigned` is explicitly set to `true` in the node configuration (default: `false`). A warning is logged at startup, and the audit log marks the plugin as unsigned.
 - Signature verification must cover the manifest and the archive checksum. If the archive is tampered with, loading fails.
+- Unsigned plugin loading is **deprecated** in v2.2.0 and will be removed or restricted to a development-mode build in v3.0.0.
 
-### 4.5 Example Plugins
+### 4.5 Capability-to-Service Mapping
+
+The host must never expose raw `IPFSNode`, `BlockStore`, `NetworkHandler`, or `SecurityManager` references to a plugin. Instead, it provides capability-gated adapters:
+
+| Capability | Gated Adapter | Backing Service | Permitted Operations |
+|------------|---------------|-----------------|----------------------|
+| `blockstore.read` | `CapabilityBlockStore` | `BlockStore` | `hasBlock`, `getBlock` |
+| `blockstore.write` | `CapabilityBlockStore` | `BlockStore` | `putBlock` |
+| `network.bitswap.observe` | `CapabilityBitswapObserver` | `BitswapHandler` | subscribe to wantlist/have events |
+| `metrics.emit` | `CapabilityMetricsEmitter` | `MetricsCollector` | emit counters/histograms |
+| `gateway.observe` | `CapabilityGatewayObserver` | `GatewayServer` | observe request metadata |
+| `pin.add` | `CapabilityPinManager` | `ContentManager` | pin a CID |
+
+### 4.6 Example Plugins
+
+Phase 1 examples are limited to simple, read-only observers:
 
 | Plugin ID | Purpose | Capabilities |
 |-----------|---------|--------------|
-| `org.dart-ipfs.examples.bitswap-logger` | Logs all Bitswap wantlist/have messages to a local file. | `network.bitswap.observe`, `metrics.emit` |
-| `org.dart-ipfs.examples.pin-policy` | Auto-pins CIDs matching a configured allowlist. | `blockstore.read`, `blockstore.write`, `pin.add` |
-| `org.dart-ipfs.examples.gateway-metrics` | Emits gateway request counts/histograms to a custom backend. | `gateway.observe`, `metrics.emit` |
+| `org.dart-ipfs.examples.metrics-emitter` | Emits a custom counter/histogram to the metrics collector. | `metrics.emit` |
+| `org.dart-ipfs.examples.bitswap-logger` | Logs Bitswap wantlist/have messages to the configured log destination. | `network.bitswap.observe`, `metrics.emit` |
+
+The `pin-policy` and `gateway-metrics` examples are deferred until pinning and gateway internals are stable.
 
 Each example must:
 
 - Include a `plugin.yaml` manifest.
-- Be signed with the dev key.
+- Be signed with the CI-generated ephemeral key.
 - Include unit tests demonstrating capability behavior.
 - Be loaded successfully by the `PluginHost` in CI.
 
@@ -150,30 +170,33 @@ Each example must:
 
 ## 5. Detailed Acceptance Criteria
 
-1. `PluginHost` loads all three example plugins in CI.
-2. Removing a capability from a manifest causes the plugin to fail to load.
-3. The logging plugin records a Bitswap message when two nodes exchange a block.
-4. The pin-policy plugin successfully pins a CID matching the configured allowlist.
-5. An unsigned plugin fails to load unless `allowUnsigned: true` is set in the node configuration.
-6. A tampered plugin archive fails signature verification.
-7. The plugin API is documented in `doc/plugins.md` with a manifest schema, capability list, and migration guide.
-8. Capability-gated adapters throw `CapabilityException` when a plugin attempts an ungranted action.
-9. Plugin lifecycle events (`initialize`, `start`, `stop`) are routed correctly and logged.
-10. Plugin audit logs include plugin ID, capability exercised, timestamp, and outcome.
+1. `PluginHost` loads the two Phase 1 example plugins in CI.
+2. The plugin host is optional and disabled by default; it does not block node startup when disabled.
+3. Removing a capability from a manifest causes the plugin to fail to load.
+4. The metrics-emitter plugin emits a counter when invoked.
+5. The bitswap-logger plugin records a Bitswap message when two nodes exchange a block.
+6. An unsigned plugin fails to load unless `allowUnsigned: true` is set in the node configuration, and a warning is logged.
+7. A tampered plugin archive fails signature verification before any code is loaded or initialized.
+8. The plugin API is documented in `doc/plugins.md` with a manifest schema, capability list, and migration guide.
+9. Capability-gated adapters throw `CapabilityException` when a plugin attempts an ungranted action; the plugin is disabled and the node continues running.
+10. Plugin lifecycle events (`initialize`, `start`, `stop`) are routed correctly and logged.
+11. Plugin audit logs include plugin ID, capability exercised, timestamp, and outcome.
+12. A plugin attempting filesystem or network access outside its granted capabilities is blocked by the capability layer, not by the Isolate boundary.
 
 ---
 
 ## 6. Security Considerations
 
-- Plugins run in Dart `Isolate`s with no shared mutable state with the host.
-- The capability model is deny-by-default; host services must never expose raw references to node internals.
+- Dart `Isolate`s provide memory isolation and crash containment, but they are **not a security sandbox**. A malicious plugin can still access the filesystem, network, environment, and native libraries via `dart:io` and `dart:ffi` because it runs in the same OS process as the host.
+- The v2.2 security model is **trust-based, capability-based, and audit-based**: plugins must be signed by a trusted key; capabilities are deny-by-default; host services expose only capability-gated adapters; every capability exercise is audited.
+- Host services must never expose raw `IPFSNode`, `BlockStore`, `NetworkHandler`, or `SecurityManager` references to a plugin.
 - Unsigned plugins fail to load unless explicitly allowed, and a warning is emitted.
 - Signed plugins must verify the manifest signature against a trusted key list.
 - Plugin audit logs are written to the configured log destination and must not be truncated or skipped on failure.
-- In v2.2, plugins cannot escalate to OS-level operations. FUSE and raw socket access are blocked by capability design.
-- The repository dev key (`tool/plugin_dev_key.pem`) must be clearly marked as not for production use in documentation and comments.
+- Operators who need to load untrusted or third-party plugins must run the node inside an OS-level sandbox (container, VM, seccomp, etc.).
 - The plugin archive checksum must be verified before loading, and the signature must cover the checksum.
 - Plugin configuration from the node config must be validated against a schema to prevent injection of unsafe paths or commands.
+- No private signing key is committed to the repository.
 
 ---
 
@@ -189,10 +212,9 @@ Each example must:
 
 ### 7.2 Integration Tests
 
-- Load all three example plugins in a real node and exercise their documented behaviors.
-- Verify the logging plugin captures a Bitswap message during a block exchange.
-- Verify the pin-policy plugin pins content matching the allowlist and ignores content that does not match.
-- Verify the gateway-metrics plugin emits a metric when a gateway request is served.
+- Load the two Phase 1 example plugins in a real node and exercise their documented behaviors.
+- Verify the metrics-emitter plugin emits a counter when invoked.
+- Verify the bitswap-logger plugin captures a Bitswap message during a block exchange.
 
 ### 7.3 CI Pipeline
 
@@ -235,5 +257,6 @@ Each example must:
 |------|---------------|------------|
 | Unsigned plugin loading (default) | v2.2.0 | v3.0.0 (require signing) |
 | Pre-v2.2 plugin loader (if any) | v2.2.0 | v3.0.0 |
+| `PluginSandbox` as a security claim | v2.2.0 | v3.0.0 (replaced by OS-level sandbox) |
 
 - True OS-level sandboxing may be added in v3.0; the v2.2 Isolate sandbox is the supported boundary for Phase 1.

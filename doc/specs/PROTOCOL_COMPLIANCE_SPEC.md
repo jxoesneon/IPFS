@@ -45,10 +45,10 @@ All implementation must be driven by the current versions of these specification
 
 The following gaps were identified in the v1.11.5 baseline and must be closed by v2.0.
 
-1. **CAR serialization is custom.** `lib/src/codec/advanced_codecs.dart` contains a `CarCodec` that uses a protobuf `CarProto` message. The output is not a valid CAR v1/v2 file and is rejected by Kubo/Helia.
+1. **CAR serialization is custom.** `lib/src/core/ipld/codecs/advanced_codecs.dart` contains a `CarCodec` that uses a protobuf `CarProto` message. The output is not a valid CAR v1/v2 file and is rejected by Kubo/Helia.
 2. **UnixFS directory construction is incomplete.** Under `lib/src/core/unixfs/`, directory PBNodes can be created but cumulative `Tsize` values are wrong or missing, and path resolution is not fully integrated with the block store.
-3. **DAG-CBOR is not spec-compliant.** `lib/src/codec/cbor/EnhancedCBORHandler.dart` encodes raw bytes with the non-standard CBOR tag 45, encodes CIDs incorrectly, and does not enforce canonical key ordering or big-integer support.
-4. **DAG-JSON has two competing implementations.** `lib/src/codec/dag_json_codec.dart` defines a duplicate `IPLDCodec` interface and is not spec-compliant. `lib/src/codec/standard_codecs.dart` has a `DagJsonCodec` that is closer but still incomplete.
+3. **DAG-CBOR is not spec-compliant.** `lib/src/core/cbor/enhanced_cbor_handler.dart` encodes raw bytes with the non-standard CBOR tag 45, encodes CIDs incorrectly, and does not enforce canonical key ordering or big-integer support.
+4. **DAG-JSON has two competing implementations.** `lib/src/core/ipld/dag_json_codec.dart` defines a duplicate `IPLDCodec` interface and is not spec-compliant. `lib/src/core/ipld/codecs/standard_codecs.dart` has a `DagJsonCodec` that is closer but still incomplete. The Council decision in `COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md` selects the unified `IPLDCodec` interface (`name`, `code`, and async `encode`/`decode` on `IPLDNode`) and removes the duplicate file.
 5. **IPLD selectors are custom.** `lib/src/core/ipld/ipld_handler.dart` uses a hand-rolled `SelectorType` model that does not match the official selector vocabulary and cannot be serialized as DAG-CBOR. GraphSync currently cannot attach blocks based on a selector.
 6. **IPLD Schema DSL validation is absent.** Only a lightweight stopgap exists; full schema validation is out of scope for v2.0.
 
@@ -227,7 +227,7 @@ Make `EnhancedCBORHandler` (or its successor) fully compliant with the DAG-CBOR 
 ### 4.4 P1 — Consolidated DAG-JSON Codec
 
 #### Scope
-Do not introduce a third DAG-JSON implementation. Remove/deprecate `dag_json_codec.dart` and its duplicate `IPLDCodec` interface. Update `DagJsonCodec` in `standard_codecs.dart` so it is the single, spec-compliant DAG-JSON codec.
+Do not introduce a third DAG-JSON implementation. Remove/deprecate `lib/src/core/ipld/dag_json_codec.dart` and its duplicate `IPLDCodec` interface. Consolidate on the unified `IPLDCodec` interface from `COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md` (`name`, `code`, and async `encode`/`decode` on `IPLDNode`). Update `DagJsonCodec` in `lib/src/core/ipld/codecs/standard_codecs.dart` so it is the single, spec-compliant DAG-JSON codec.
 
 #### Encoding Rules
 
@@ -246,10 +246,11 @@ Do not introduce a third DAG-JSON implementation. Remove/deprecate `dag_json_cod
 - `String encodeDagJson(IPLDNode node)` — compact canonical string.
 - `IPLDNode decodeDagJson(String json)` — returns data-model node.
 - `CID computeCidDagJson(IPLDNode node)` — uses codec code `0x0129` (dag-json) with the default hash.
+- The `DagJsonCodec` class implements the unified `IPLDCodec` interface with `name = 'dag-json'` and `code = 0x0129`.
 
 #### Acceptance Criteria
 
-1. `lib/src/codec/dag_json_codec.dart` is deleted or its body is replaced by a deprecated re-export of `standard_codecs.dart`. The duplicate `IPLDCodec` interface is removed.
+1. `lib/src/core/ipld/dag_json_codec.dart` is deleted or its body is replaced by a deprecated re-export of `lib/src/core/ipld/codecs/standard_codecs.dart`. The duplicate `IPLDCodec` interface is removed and the unified `IPLDCodec` interface (`name`, `code`, async `encode`/`decode` on `IPLDNode`) is the only one.
 2. All DAG-JSON cross-codec fixtures round-trip and match reference CIDs.
 3. Encoding bytes and CID links produces the exact reserved-namespace forms described above.
 4. Invalid reserved-namespace maps are rejected during decode.
@@ -402,7 +403,7 @@ Use fixed test fixtures for determinism; add a smaller set of randomized propert
 - **Versioning:** this work is targeted at v2.0. The v1.x line may keep the old custom CAR/JSON code for emergency compatibility, but v2.0 removes or deprecates it.
 - **Custom CAR files:** any CAR files produced by the legacy `CarCodec` are not valid CAR v1. Provide a migration note in the release notes: users must re-export content using the new CAR writer; there is no automatic conversion because the legacy format is implementation-specific.
 - **API contract changes:** the in-memory CAR API will keep the same conceptual names (`CarReader`, `CarWriter`, `sections`, `roots`) but the underlying byte format changes. Document this in `CHANGELOG.md` and pin the breaking change to the v2.0 major version.
-- **DagJsonCodec:** `lib/src/codec/dag_json_codec.dart` is removed. Any code that imported it must import the `DagJsonCodec` from `standard_codecs.dart`. If external consumers depend on the old `IPLDCodec` interface, introduce a short compatibility shim in v2.0.0-rc and remove it in v2.1.
+- **DagJsonCodec:** `lib/src/core/ipld/dag_json_codec.dart` is removed. Any code that imported it must import the `DagJsonCodec` from `lib/src/core/ipld/codecs/standard_codecs.dart`. If external consumers depend on the old `IPLDCodec` interface, introduce a short compatibility shim in v2.0.0-rc and remove it in v2.1.
 - **Selector model:** the custom `SelectorType` is replaced by the official selector model. Any stored selector JSON/CBOR must be re-encoded. If the project serializes selectors in configuration, a migration script should convert the old format to the new one or fail loudly.
 - **Interop default:** after landing, the default CI checks must pass against the latest Kubo and Helia stable versions. This is the source of truth for compatibility; any future regression that breaks interoperability is a release blocker.
 
@@ -417,7 +418,7 @@ The following priorities and scope decisions are extracted from the Council of F
 | Standard CAR v1/v2 format | P0 | APPROVED |
 | UnixFS basic directories | P0 | APPROVED; HAMT + symlinks P1 |
 | Full DAG-CBOR codec | P0 | APPROVED |
-| Consolidated DAG-JSON codec | P1 | MODIFIED: remove duplicate `dag_json_codec.dart`, make `DagJsonCodec` in `standard_codecs.dart` spec-compliant |
+| Consolidated DAG-JSON codec | P1 | MODIFIED: remove duplicate `lib/src/core/ipld/dag_json_codec.dart`, make `DagJsonCodec` in `lib/src/core/ipld/codecs/standard_codecs.dart` spec-compliant and implement the unified `IPLDCodec` interface |
 | Spec-compliant IPLD selector execution | P0 | APPROVED; wire into `IPLDHandler` and GraphSync |
 | Full IPLD Schema DSL validation | P2 | DEFERRED |
 

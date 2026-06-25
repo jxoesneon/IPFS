@@ -73,10 +73,11 @@ Key files to update or create:
 
 | Variant | Tag Pattern | Base | Purpose | Notes |
 |---------|-------------|------|---------|-------|
-| `runtime` | `ghcr.io/dart-ipfs/dart-ipfs:<semver>` | `gcr.io/distroless/base` or `cgr.dev/chainguard/static` | Production daemon | Non-root, no shell, minimal attack surface. |
+| `runtime` | `ghcr.io/dart-ipfs/dart-ipfs:<semver>` | `cgr.dev/chainguard/glibc-dynamic` | Production daemon | Non-root, no shell, minimal attack surface; satisfies `libsodium` glibc requirement. |
 | `runtime` | `ghcr.io/dart-ipfs/dart-ipfs:<semver>-<arch>` | Same as above | Per-arch digest | Used by multi-arch manifest. |
+| `static` | `ghcr.io/dart-ipfs/dart-ipfs:<semver>-static` | `cgr.dev/chainguard/static` or `scratch` | Experimental minimal runtime | **Non-blocking.** Only published if `libsodium` is statically linked or removed and the binary passes runtime tests. |
 | `builder` | `ghcr.io/dart-ipfs/dart-ipfs:<semver>-builder` | `dart:stable-sdk` or pinned `dart:<version>` | CI / build verification | Contains Dart SDK, protoc, build tools. Not for production. |
-| `debug` | `ghcr.io/dart-ipfs/dart-ipfs:<semver>-debug` | `gcr.io/distroless/base:debug` or `cgr.dev/chainguard/bash` | Troubleshooting | Includes shell; must not be the default. |
+| `debug` | `ghcr.io/dart-ipfs/dart-ipfs:<semver>-debug` | `cgr.dev/chainguard/bash` or `gcr.io/distroless/base:debug` | Troubleshooting | Includes shell; must not be the default. |
 | `latest` | `ghcr.io/dart-ipfs/dart-ipfs:latest` | Multi-arch runtime | Rolling pointer to latest release | Updated only on stable releases, not every CI build. |
 | `edge` | `ghcr.io/dart-ipfs/dart-ipfs:edge` | Multi-arch runtime | Latest successful `main` build | Mutable; for early adopters. |
 
@@ -84,12 +85,13 @@ Key files to update or create:
 
 - Use a multi-stage build: `build` -> `test` (optional) -> `runtime`.
 - `build` stage: install the Dart SDK, dependencies, and compile `bin/ipfs.dart` to `build/ipfs` using `dart compile exe`.
-- `runtime` stage: copy the compiled binary into a distroless or Chainguard static image.
+- `runtime` stage: copy the compiled binary into a hardened glibc base image (`cgr.dev/chainguard/glibc-dynamic`). This base satisfies the `libsodium` runtime dependency that `package:sodium` pulls in without a package manager or shell.
 - Set `ENTRYPOINT ["/app/ipfs"]` and `CMD ["daemon"]`.
 - Add OCI labels per the OCI Image Specification: `org.opencontainers.image.source`, `.version`, `.revision`, `.description`, `.license`.
 - Expose only the documented ports: `4001/tcp` and `4001/udp` (libp2p swarm), `5001` (RPC API), `8080` (gateway), and `8081` (metrics, if enabled).
 - Create a non-root user (`uid=1000`, `gid=1000`) and run the daemon under that identity.
 - Remove package managers, setuid binaries, and shells from the runtime stage.
+- Document the `libsodium` dynamic library path in `tool/compile_cli.dart` so that the binary can resolve it on the glibc base.
 
 ### 4.3 Multi-Architecture Build
 
@@ -111,26 +113,37 @@ Key files to update or create:
 
 ### 4.5 docker-compose.yml
 
-- Reference the new image tag `ghcr.io/dart-ipfs/dart-ipfs:<version>`.
+- Reference the new image tag `ghcr.io/dart-ipfs/dart-ipfs:<version>` (or by digest in production examples).
 - Mount a persistent volume for the IPFS repo path (e.g., `/data/ipfs`).
 - Expose the documented ports.
 - Add a health check that invokes `ipfs id` or `/api/v0/id`.
 - Default the API address to localhost inside the container unless overridden by environment variable.
+- **Reconcile the existing `nginx` reverse proxy:** remove it from the default developer compose; keep it as an **optional production overlay** with mTLS or an equivalent authenticated proxy. The default `docker compose up` must start only the daemon.
+
+### 4.6 Native Dependency (`libsodium`)
+
+- `pubspec.yaml` declares `sodium: ^4.0.2+1`, which wraps the native `libsodium` library. `libsodium` requires glibc at runtime.
+- The default runtime image therefore uses `cgr.dev/chainguard/glibc-dynamic` (or `debian:12-slim` as a fallback) until the dependency can be removed or statically linked.
+- A non-blocking experimental `static` variant may be built only if the binary is demonstrated to run on `cgr.dev/chainguard/static` or `scratch` across both `linux/amd64` and `linux/arm64`.
+- Before v2.2.0, run a transitive dependency audit to determine whether `sodium` is actually loaded at runtime; if not, schedule its removal in a v2.2.x follow-up.
 
 ---
 
 ## 5. Detailed Acceptance Criteria
 
-1. `docker buildx build --platform linux/amd64,linux/arm64 -t dart-ipfs:v2.2.0 .` succeeds from a clean checkout.
-2. The runtime image has no shell and no root user (`docker run --rm <image> whoami` fails; `id` inspection shows `uid=1000`).
-3. `docker run --rm dart-ipfs:v2.2.0 version` prints the correct semantic version and supported protocol versions.
-4. `docker run --rm dart-ipfs:v2.2.0 daemon --api-addr /ip4/0.0.0.0/tcp/5001` starts and responds to `curl http://localhost:5001/api/v0/id`.
-5. CI publishes the `edge` tag on every merge to `main` and a semver tag on every GitHub release.
-6. Published images are signed with `cosign` and have SBOMs attached.
-7. Container scans in CI report no CRITICAL vulnerabilities and no HIGH vulnerabilities without an approved exception.
-8. `docker compose up` from the repository root starts the daemon and the health check succeeds.
-9. The `builder` image can be used in CI to reproduce the release build.
-10. The `debug` image includes a shell and is clearly labeled as not for production use.
+1. `docker buildx build --platform linux/amd64,linux/arm64 -t dart-ipfs:1.11.5 .` succeeds from a clean checkout.
+2. The runtime image has no shell, no package manager, and no root user (`docker run --rm <image> sh` fails; `docker run --rm <image> id` shows `uid=1000`).
+3. The runtime image has a read-only root filesystem; `docker run --rm --read-only <image> id` succeeds and a writable volume is used for the repo path.
+4. `docker run --rm dart-ipfs:1.11.5 version` prints the correct semantic version (`1.11.5`) and supported protocol versions.
+5. `docker run --rm dart-ipfs:1.11.5 daemon --api-addr /ip4/0.0.0.0/tcp/5001` starts and responds to `curl http://localhost:5001/api/v0/id`.
+6. The compressed runtime image size is under **80 MB** for the glibc variant in v2.2. The static variant targets **50 MB** once proven.
+7. CI publishes the `edge` tag on every merge to `main` and a semver tag on every GitHub release.
+8. Published images are signed with `cosign` and have SBOMs attached.
+9. Container scans in CI report no CRITICAL vulnerabilities and no HIGH vulnerabilities without an approved exception, including the builder stage.
+10. `docker compose up` from the repository root starts the daemon and the health check succeeds; the default compose does not include nginx.
+11. The `builder` image can be used in CI to reproduce the release build.
+12. The `debug` image includes a shell and is clearly labeled as not for production use.
+13. Production `docker-compose.yml` and Helm values reference the image by digest, not by mutable `latest` or `edge` tags.
 
 ---
 
@@ -140,9 +153,10 @@ Key files to update or create:
 - Do not embed secrets, private keys, or `.env` files in images. Use runtime-mounted secrets or environment variables for sensitive configuration.
 - Bind the API to localhost by default inside the container; require explicit configuration to bind to `0.0.0.0`.
 - Only expose documented ports. Disable any debug or pprof endpoints unless explicitly enabled.
-- Keep the final image small to reduce attack surface. Distroless and Chainguard static images are preferred.
+- Keep the final image small to reduce attack surface. The hardened glibc base (`cgr.dev/chainguard/glibc-dynamic`) is the preferred default because it satisfies the `libsodium` runtime requirement without a package manager or shell.
 - Use image signing and SBOMs so consumers can verify provenance and contents.
-- Scan all images before publishing; gate releases on vulnerability findings.
+- Scan all images before publishing; gate releases on vulnerability findings, including CRITICAL/HIGH in the builder stage.
+- Consumers must verify the image digest before deploying; production examples reference images by digest, not by mutable tags.
 - Do not run as root; use `USER` directive and a writable volume for the repo path.
 - Avoid `setuid` binaries and package managers in the runtime image.
 
@@ -154,7 +168,7 @@ Key files to update or create:
 
 - Verify the multi-arch build succeeds in CI on every Dockerfile change.
 - Inspect the runtime image for shell absence and non-root user.
-- Verify image size targets (e.g., runtime < 50 MB excluding the binary).
+- Verify compressed image size targets: runtime < 80 MB for the glibc variant; static variant targets < 50 MB once proven.
 
 ### 7.2 Container Runtime Tests
 
@@ -185,7 +199,7 @@ Key files to update or create:
 
 - **Prerequisites:**
   - CLI binary (`bin/ipfs.dart`) and `tool/compile_cli.dart` must be stable (see `CLI_SPEC.md`).
-  - Release versioning and tagging strategy.
+  - Release versioning and tagging strategy (image tags match `pubspec.yaml`, currently `1.11.5`).
   - GitHub Container Registry access configured for the repository.
 - **Order:** Docker is a P0 foundation item and must be completed in the alpha phase, before Kubernetes manifests and interop tests depend on published images.
 - **Downstream consumers:**

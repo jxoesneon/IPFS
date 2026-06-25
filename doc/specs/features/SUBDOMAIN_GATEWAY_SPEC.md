@@ -59,7 +59,7 @@ GatewayConfig
   gatewayDomain: String?          // e.g. "ipfs.example.com"; null means subdomain gateway disabled except localhost
   enableSubdomainGateway: bool    // default false
   subdomainDNSLinkResolver: bool  // default true
-  subdomainTLSRedirect: bool      // default true for production domains
+  subdomainTLSRedirect: bool      // default false; operators must opt in explicitly
 ```
 
 `GatewayServer` must pass these values to `GatewayHandler` during construction. Default values must keep existing behavior unchanged (subdomain gateway disabled) unless the operator explicitly opts in.
@@ -70,14 +70,15 @@ Given the configured `gatewayDomain` (e.g., `localhost` for local development, o
 
 | Host pattern | Namespace | Identifier | Subpath |
 |--------------|-----------|------------|---------|
-| `<cid>.ipfs.<gatewayDomain>` | ipfs | valid CID (v0 or v1) | `request.url.path` |
-| `<cid>.ipfs.localhost` | ipfs | valid CID | `request.url.path` |
+| `<cid>.ipfs.<gatewayDomain>` | ipfs | base32-encoded CIDv1 (CIDv0 must be converted to CIDv1 base32) | `request.url.path` |
+| `<cid>.ipfs.localhost` | ipfs | base32-encoded CIDv1 | `request.url.path` |
 | `<name>.ipns.<gatewayDomain>` | ipns | PeerId, DNSLink domain, or IPNS key | `request.url.path` |
 
 Requirements:
 
 - The host must contain exactly one namespace label (`ipfs` or `ipns`) immediately before the configured domain/TLD.
-- For `ipfs`, the leftmost label must be a valid, decodable CID. Invalid CIDs must return `400 Bad Request` with `Content-Type: text/plain; charset=utf-8` and body `Invalid CID in subdomain`.
+- DNS labels are case-insensitive and cannot contain CIDv0 base58btc characters, so the leftmost `ipfs` label must be a CIDv1 encoded in base32. CIDv0 or other encodings must return `400 Bad Request` with `Content-Type: text/plain; charset=utf-8` and body `Invalid CID in subdomain`.
+- Production deployments require a wildcard DNS record (`*.ipfs.<gatewayDomain>` and `*.ipns.<gatewayDomain>`) and a TLS certificate covering that wildcard (or per-subdomain certificates). `localhost` development uses `*.ipfs.localhost` and does not require TLS.
 - For `ipns`, the leftmost label must be either a valid PeerId (base58btc), a DNSLink-compatible DNS name (e.g., `docs.ipfs.io`), or an IPNS key resolved via the configured IPNS resolver. Invalid names return `400 Bad Request`.
 - The gateway must reject requests to bare `<gatewayDomain>` that do not match a subdomain namespace; fallback to the path gateway remains handled by the existing `/ipfs/<path|.*>` and `/ipns/<path|.*>` routes.
 - Localhost subdomain requests (`*.ipfs.localhost`) must be supported regardless of the configured `gatewayDomain`.
@@ -105,7 +106,7 @@ SubdomainRequest
 - Add `X-IPFS-Path: /ipfs/<cid>` or `/ipns/<name>` to responses.
 - For IPNS names, add `Cache-Control: public, max-age=<ttl>` where TTL is the resolved IPNS record TTL (default 1 minute if unavailable).
 - For DNSLink domains, add `X-IPFS-DNSLink: <domain>` header.
-- For production domains where `subdomainTLSRedirect` is true, HTTP requests may be redirected to HTTPS with a `301 Moved Permanently` and `Location: https://<same-host><path>`. This must be configurable and off by default for `localhost`.
+- `subdomainTLSRedirect` is `false` by default. When explicitly set to `true`, `gatewayDomain` is non-null, and the domain is not `localhost` or `127.0.0.1`, HTTP requests may be redirected to HTTPS with a `301 Moved Permanently` and `Location: https://<same-host><path>`. TLS redirect must never be enabled for `localhost` or unspecified domains to avoid accidental redirect loops in local development.
 
 ### 4.5 DNSLink Resolution
 
@@ -116,7 +117,7 @@ When `subdomainDNSLinkResolver` is true and the leftmost label is a DNS name:
 3. If the value points to `/ipns/<name>`, resolve it via the IPNS resolver.
 4. If the value points to `/ipfs/<cid>`, use that CID as the content root.
 5. Cache the resolved CID for the TTL returned by the DNS record (minimum 1 minute, maximum 1 hour).
-6. On resolution failure, return `400 Bad Request` with body `Invalid IPNS name in subdomain` or a suitable DNS error message.
+6. On resolution failure, return `400 Bad Request` with body `Invalid IPNS name in subdomain` or `502 Bad Gateway` with a suitable DNS error message; the choice must be consistent per implementation and must not crash the gateway.
 
 ---
 
@@ -133,6 +134,9 @@ When `subdomainDNSLinkResolver` is true and the leftmost label is a DNS name:
 - [ ] Subdomain responses do not set `Access-Control-Allow-Credentials: true`.
 - [ ] Blocked content via the denylist returns `451 Unavailable For Legal Reasons` on subdomain requests.
 - [ ] The gateway domain is validated against a configurable allow-list to prevent arbitrary `Host` header injection.
+- [ ] Requests to `Host: <gatewayDomain>` (bare domain) fall back to the path gateway and are not treated as a subdomain error.
+- [ ] CORS headers on subdomain responses do not include `Access-Control-Allow-Credentials: true`.
+- [ ] DNSLink resolution failures return `400` or `502` consistently and do not crash the gateway.
 
 ---
 
@@ -144,7 +148,7 @@ When `subdomainDNSLinkResolver` is true and the leftmost label is a DNS name:
 - CID validation: the leftmost label must be parsed and validated as a CID before any content lookup. Invalid CIDs must not be passed to downstream resolvers.
 - DNSLink resolution: DNS responses must be validated and TTL-bound. Avoid cache poisoning by capping TTL and requiring explicit `dnslink=` prefix.
 - Denylist: when the content blocking service is enabled, `isBlockedByCidString` must be checked before serving content from any subdomain.
-- TLS redirect: only enabled for production domains; `localhost` and unspecified domains must not redirect to HTTPS.
+- TLS redirect: only enabled when `subdomainTLSRedirect=true`, `gatewayDomain` is non-null, and the domain is not `localhost`/`127.0.0.1`; operators must opt in explicitly to avoid accidental redirect loops in local development.
 
 ---
 

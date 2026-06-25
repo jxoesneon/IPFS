@@ -5,7 +5,7 @@
 **Version:** v2.1  
 **Date:** 2026-06-25  
 **Authority:** Ciel Council of Five verdicts (2026-06-25)  
-**Status:** P0 Approved — implementation pending  
+**Status:** CONDITIONAL — implementation pending on QUIC dependency availability  
 **Scope:** Native QUIC transport integration into the dart_ipfs libp2p router, with TCP fallback and configurable preference.
 
 ---
@@ -49,11 +49,13 @@ Add a native QUIC transport to dart_ipfs, wire it into `Libp2pRouter`, advertise
 
 ### 3.1 Files
 
-- `lib/src/transport/libp2p_router.dart` — only configures `TCPTransport` from `package:ipfs_libp2p`.
+- `lib/src/transport/libp2p_router.dart` — configures `TCPTransport`, `WebTransportTransport`, `WebRTCTransport`, and `WebRTCDirectTransport` from `package:ipfs_libp2p`; it does **not** instantiate a QUIC transport.
 - `lib/src/core/config/network_config.dart` — has `defaultListenAddresses` including `/udp/4002/quic-v1/webtransport` but no QUIC-specific flags.
+- `package:ipfs_libp2p` — current imports (`lib/src/transport/libp2p_router.dart`) do not include a QUIC transport class; QUIC availability in this dependency is unverified.
 
 ### 3.2 Gaps
 
+- `package:ipfs_libp2p` does not expose a known QUIC transport; a dependency spike must confirm exported symbols before implementation.
 - `Libp2pRouter` does not instantiate a QUIC transport even when the config advertises a UDP address.
 - QUIC addresses are not emitted in `listeningAddresses`.
 - There is no transport-preference logic; TCP is always used first.
@@ -78,10 +80,10 @@ Extend `NetworkConfig` with the following fields:
 ```dart
 NetworkConfig({
   ...
-  this.enableQuic = true,       // default true
+  this.enableQuic = false,      // default false until interop is proven in CI
   this.quicListenPort = 4002,   // default
   this.quicMaxStreams = 100,
-  this.preferQuic = true,       // dial QUIC before TCP if both advertised
+  this.preferQuic = false,      // opt-in until Kubo/Helia interop passes in CI
 });
 ```
 
@@ -89,17 +91,17 @@ YAML/JSON keys:
 
 ```yaml
 network:
-  enableQuic: true
+  enableQuic: false      # opt-in until QUIC interop is proven in CI
   quicListenPort: 4002
-  preferQuic: true
+  preferQuic: false     # dial QUIC before TCP only when explicitly enabled
 ```
 
 ### 4.3 Implementation Requirements
 
-1. Add a `QuicTransport` wrapper around the QUIC transport exposed by `package:ipfs_libp2p`, or a custom Dart QUIC binding if the package does not expose one. Select the most mature dependency available.
-2. In `Libp2pRouter.start()`, conditionally add `Libp2p.transport(QuicTransport(...))` when `enableQuic` is true.
+1. Verify that `package:ipfs_libp2p` exports a QUIC transport class. If it does not, defer QUIC implementation or create a separate `QUIC_TRANSPORT_RFC.md` evaluating FFI options; do not implement a custom Dart QUIC binding inside this feature.
+2. In `Libp2pRouter.start()`, conditionally add `Libp2p.transport(QuicTransport(...))` only when `enableQuic` is true **and** a QUIC transport is available.
 3. Build listen addresses from `NetworkConfig.listenAddresses` and synthesize `/ip4/0.0.0.0/udp/$quicListenPort/quic-v1` and `/ip6/::/udp/$quicListenPort/quic-v1` if not already present.
-4. If `package:ipfs_libp2p` does not expose QUIC, fall back to TCP-only and log a warning at startup.
+4. If `enableQuic` is true but the QUIC dependency is missing at runtime, fall back to TCP-only mode with a logged warning and do not crash startup.
 
 ### 4.4 State Machine
 
@@ -120,10 +122,11 @@ network:
 abstract class RouterInterface {
   ...
   List<String> get listeningAddresses;
-  bool get supportsQuic;
-  Future<bool> connect(String multiaddr); // must understand /quic-v1
+  Future<void> connect(String multiaddr); // existing contract unchanged
 }
 ```
+
+Capability queries such as `supportsQuic` and transport-specific dial status are localized to `Libp2pRouter`; they must not change the abstract `RouterInterface.connect()` contract, which returns `Future<void>`.
 
 ### 4.6 Transport Selection and Fallback
 
@@ -135,11 +138,13 @@ abstract class RouterInterface {
 
 ## 5. Detailed Acceptance Criteria
 
-- `Libp2pRouter.listeningAddresses` contains at least one `/quic-v1` address when `enableQuic` is true.
-- A dart_ipfs node can be dialed by Kubo over QUIC (`ipfs swarm connect /udp/.../quic-v1/p2p/<dart-peer-id>`).
-- TCP fallback remains operational when QUIC fails or is disabled.
-- `connect()` accepts `/quic-v1` multiaddrs and returns success when the peer is reachable.
-- `supportsQuic` reflects the actual runtime state (false if dependency missing or disabled).
+- A dependency spike documents the exported symbols of `package:ipfs_libp2p` and confirms whether a QUIC transport class exists.
+- `Libp2pRouter.listeningAddresses` contains at least one `/quic-v1` address when `enableQuic` is true and a QUIC transport is available.
+- A dart_ipfs node can be dialed by Kubo over QUIC (`ipfs swarm connect /udp/.../quic-v1/p2p/<dart-peer-id>`) once the dependency is proven.
+- TCP fallback remains operational when QUIC fails, is disabled, or the dependency is missing.
+- `connect()` accepts `/quic-v1` multiaddrs when a QUIC transport is available.
+- `Libp2pRouter.supportsQuic` (if added) reflects the actual runtime state (`false` if the dependency is missing or disabled).
+- If `enableQuic` is true but the dependency is missing, startup logs a warning and continues in TCP-only mode.
 
 ---
 
@@ -185,18 +190,20 @@ abstract class RouterInterface {
 
 ### 8.1 Blockers
 
-- Availability of a mature Dart QUIC package or QUIC bindings in `package:ipfs_libp2p`.
+- **Dependency spike:** confirm the exported symbols of `package:ipfs_libp2p` and verify whether a QUIC transport class exists. QUIC is blocked until this is proven.
+- If no mature Dart QUIC package or QUIC bindings in `package:ipfs_libp2p` are available, this feature must be deferred or moved to a separate `QUIC_TRANSPORT_RFC.md` evaluating FFI to `quiche`/`ngtcp2`.
 - `Libp2pRouter` must expose a clean transport registration API.
 
 ### 8.2 Order Relative to Other Features
 
-- **Before**: Browser Transport Hardening (WebTransport builds on QUIC), DHT Integration (DHT queries benefit from QUIC dial), Circuit Relay (relay can be reached over QUIC).
-- **Parallel with**: Gossipsub, IPNS (no direct dependency).
-- **After**: TCP baseline already exists.
+- **Before**: Browser Transport Hardening (WebTransport builds on QUIC), Circuit Relay (relay can be reached over QUIC).
+- **Parallel with**: IPNS (no direct dependency).
+- **After**: TCP baseline, DHT Integration, and Gossipsub are stable; transport failures will mask DHT and PubSub interop failures during debugging.
 
 ### 8.3 External Dependencies
 
-- `package:ipfs_libp2p` or a Dart QUIC library (`package:quic` if available, FFI bindings to `quiche`/`ngtcp2` otherwise).
+- `package:ipfs_libp2p` must expose a QUIC transport class; if not, this spec is blocked.
+- A Dart QUIC library (`package:quic` if available) or FFI bindings to `quiche`/`ngtcp2` only as a separate RFC, not as an inline fallback.
 - `package:libp2p_noise` or equivalent for Noise handshake.
 
 ---
@@ -205,5 +212,5 @@ abstract class RouterInterface {
 
 - `NetworkConfig` gains new optional fields with sensible defaults; existing YAML configs continue to work without modification.
 - TCP-only deployments are unaffected when `enableQuic` is false.
-- `preferQuic` defaulting to true may change dial ordering; downstream callers that assume TCP first must update expectations or set `preferQuic: false`.
+- `preferQuic` defaults to `false` to preserve TCP-first dial ordering until QUIC interop is proven in CI.
 - No wire-format breaking changes are introduced; QUIC is an additive transport.

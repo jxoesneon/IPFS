@@ -20,6 +20,8 @@ void main() {
   group('Standard Codecs', () {
     test('RawCodec encode/decode', () async {
       final codec = RawCodec();
+      expect(codec.name, 'raw');
+      expect(codec.code, 0x55);
       expect(codec.identifier, 'raw');
 
       final data = Uint8List.fromList([1, 2, 3]);
@@ -42,6 +44,8 @@ void main() {
 
     test('DagCborCodec encode/decode', () async {
       final codec = DagCborCodec();
+      expect(codec.name, 'dag-cbor');
+      expect(codec.code, 0x71);
       expect(codec.identifier, 'dag-cbor');
 
       final node = IPLDNode()
@@ -66,6 +70,8 @@ void main() {
 
     test('DagJsonCodec encode/decode', () async {
       final codec = DagJsonCodec();
+      expect(codec.name, 'dag-json');
+      expect(codec.code, 0x0129);
       expect(codec.identifier, 'dag-json');
 
       final node = IPLDNode()
@@ -106,6 +112,8 @@ void main() {
           ..kind = Kind.BYTES
           ..bytesValue = data.toList(),
       );
+      expect(codec.name, 'car');
+      expect(codec.code, 0x0202);
       expect(codec.identifier, 'car');
 
       final node = IPLDNode()
@@ -162,6 +170,8 @@ void main() {
         () async => mockPrivateKey,
         (node) async => [1, 2, 3],
       );
+      expect(codec.name, 'dag-jose');
+      expect(codec.code, 0x85);
       expect(codec.identifier, 'dag-jose');
 
       final node = IPLDNode()
@@ -333,16 +343,20 @@ void main() {
       }
     });
 
-    test('DagJoseCodec identifier is correct', () {
+    test('DagJoseCodec reports correct name and code', () {
       final codec = DagJoseCodec(
         () async => mockPrivateKey,
         (node) async => [1, 2, 3],
       );
+      expect(codec.name, 'dag-jose');
+      expect(codec.code, 0x85);
       expect(codec.identifier, 'dag-jose');
     });
 
-    test('CarCodec identifier is correct', () {
+    test('CarCodec reports correct name and code', () {
       final codec = CarCodec(mockBlockStore, (data, codec) async => IPLDNode());
+      expect(codec.name, 'car');
+      expect(codec.code, 0x0202);
       expect(codec.identifier, 'car');
     });
   });

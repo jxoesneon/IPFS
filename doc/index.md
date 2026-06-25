@@ -72,6 +72,19 @@ Each per-feature spec was audited by the five Ciel Council lenses (Coherence, Ca
 - [Networking & P2P Audit (Part 2)](specs/audits/COUNCIL_AUDIT_NETWORKING_P2P_2.md)
 - [Operations & Ecosystem Audit](specs/audits/COUNCIL_AUDIT_OPERATIONS_ECOSYSTEM.md)
 
+## Council of Five Decisions
+
+Binding architectural decisions produced by the Ciel Council of Five to resolve cross-cutting audit findings and unblock implementation.
+
+- [CAR Migration — Delete legacy protobuf CAR and adopt standard CarReader/CarWriter](specs/decisions/COUNCIL_DECISION_CAR_MIGRATION.md)
+- [IPFSConfig Serialization & Lifecycle Wiring — JSON canonical format, round-trip config, and builder-managed RPC/gateway services](specs/decisions/COUNCIL_DECISION_CONFIG_LIFECYCLE.md)
+- [Docker Base Image Strategy — Hardened glibc default (`cgr.dev/chainguard/glibc-dynamic`) with experimental static variant](specs/decisions/COUNCIL_DECISION_DOCKER_BASE.md)
+- [Interop Test Scope — P0 release-blocking CAR/Bitswap/gateway only; DHT/IPNS P1 allowed-to-fail; Helia nightly](specs/decisions/COUNCIL_DECISION_INTEROP_SCOPE.md)
+- [IPLDCodec Reconciliation — Unified codec interface with `name`/`code` and a `MulticodecRegistry`](specs/decisions/COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md)
+- [Plugin Security Model — Trust-based, capability-gated, auditable runtime; no committed signing keys](specs/decisions/COUNCIL_DECISION_PLUGIN_SECURITY.md)
+
+- [Aggregate Resolution Report](specs/RESOLUTIONS_AGGREGATE.md)
+
 ## API Reference
 
 - [Pub.dev Documentation](https://pub.dev/documentation/dart_ipfs/latest/)

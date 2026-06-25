@@ -167,22 +167,13 @@ bool isValidProviderRecord(PeerId provider, String cid, DateTime? ttl) {
 }
 ```
 
-### 4.6 Reprovide Sweep
+### 4.6 Reprovide Sweep (Owned by `REPROVIDE_SPEC.md`)
+
+The periodic reprovide sweep is specified in `REPROVIDE_SPEC.md`. `DHT_INTEGRATION_SPEC.md` provides the primitive DHT operations (`ADD_PROVIDER`, iterative `GET_PROVIDERS`, etc.) that the reprovider consumes. Do not duplicate reprovide strategy logic here.
+
+`DHTConfig` may expose the primitives the reprovider needs:
 
 ```dart
-class ReproviderService {
-  Future<void> start();
-  Future<void> stop();
-
-  /// Re-announce all pinned roots and MFS roots every `reprovideInterval`.
-  Future<void> sweep();
-}
-```
-
-Config additions in `DHTConfig`:
-
-```dart
-final Duration reprovideInterval;
 final int maxProvidersPerKey;
 final bool validateProviderRecords;
 ```
@@ -207,8 +198,8 @@ class DHTClient {
 - dart_ipfs can query `GET_PROVIDERS` iteratively and find providers for a CID published by Kubo.
 - `ADD_PROVIDER` uses XOR-ordered closest peers and batching.
 - Invalid provider records are dropped and not returned to callers.
-- Reprovide sweep runs periodically and logs success/failure per key.
 - Request/response correlation matches every outbound DHT request to its inbound response.
+- The primitive operations required by the reprovider (see `REPROVIDE_SPEC.md`) are available and correctly wired.
 - `Peer` addresses are encoded as multiaddr bytes, not UTF-8 strings.
 - `findPeer` returns a reachable peer via iterative peer routing.
 
@@ -233,7 +224,6 @@ class DHTClient {
 - Request/response correlation including timeout and cleanup.
 - Provider record validation (valid, expired, malformed addresses).
 - Multiaddr byte encoding round-trip.
-- Reprovide sweep scheduling and error logging.
 
 ### 7.2 Local DHT Network Tests
 

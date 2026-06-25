@@ -15,11 +15,12 @@ The goal of this specification is to ensure that `dart_ipfs` behaves correctly w
 
 Scope for v2.2:
 
-- Automated interoperability tests against **Kubo** for CAR exchange, Bitswap fetch, gateway retrieval, DHT provide/find, and IPNS resolution.
+- **P0 release-blocking** automated interoperability tests against **Kubo** for CAR exchange, Bitswap fetch, and gateway retrieval.
+- **P1 required-but-allowed-to-fail** tests against **Kubo** for DHT provide/find and IPNS resolution until the underlying networking specs are stable.
 - A Docker Compose network that includes a `dart_ipfs` node and a pinned Kubo node.
 - Dart test harnesses under `test/interop/` with thin RPC clients for both implementations.
-- CI job that blocks PRs touching protocol or service code when P0 scenarios fail.
-- Helia (Node.js) test jobs scaffolded as P1+; they may report results but are allowed to fail until stabilized.
+- PR CI job that blocks merging of PRs touching protocol or service code when P0 scenarios fail.
+- **Helia (Node.js)** test jobs scaffolded as a **separate nightly workflow**; they report results but never block PRs or releases.
 
 Out of scope for v2.2:
 
@@ -76,28 +77,31 @@ Key files to create or extend:
 
 ### 4.1 Test Matrix
 
-| Scenario | dart_ipfs Role | Peer(s) | Verdict | Test Steps |
-|----------|----------------|---------|---------|------------|
-| **CAR exchange** | exporter / importer | Kubo | P0 | 1. Add file to dart_ipfs. 2. Kubo `ipfs dag export` vs. dart_ipfs `/api/v0/dag/export`. 3. Compare CID roots and block contents. 4. Import Kubo CAR into dart_ipfs and verify. |
-| **Bitswap fetch** | provider / requester | Kubo | P0 | 1. Add file to dart_ipfs. 2. Kubo `ipfs block get <cid>` and `ipfs cat <cid>`. 3. Reverse direction. 4. Assert bytes match. |
-| **Gateway retrieval** | gateway / client | Kubo or `curl` | P0 | 1. Add file to dart_ipfs. 2. `curl http://dart-ipfs-gateway:8080/ipfs/<cid>` returns correct bytes and content type. 3. Test `?format=raw` and `?format=car` trustless modes. |
-| **DHT provide / find** | provider / finder | Kubo | P0 | 1. dart_ipfs provides a CID. 2. Kubo `ipfs dht findprovs <cid>` lists the dart_ipfs peer. 3. Reverse direction. 4. Timeout < 60 s in CI. |
-| **IPNS resolution** | publisher / resolver | Kubo | P0 | 1. dart_ipfs publishes signed IPNS record to DHT. 2. Kubo `ipfs name resolve <ipns-key>` returns the CID. 3. Reverse direction. |
-| **Helia Bitswap** | requester / provider | Helia (Node.js) | P1+ | Repeat Bitswap scenario with a Helia node. Optional for v2.2 but CI job must be scaffolded. |
-| **Helia CAR** | exporter / importer | Helia | P1+ | Repeat CAR scenario with Helia. Optional for v2.2. |
+| Scenario | dart_ipfs Role | Peer(s) | Priority | CI treatment | Test Steps |
+|----------|----------------|---------|----------|--------------|------------|
+| **CAR exchange** | exporter / importer | Kubo | **P0** | Must pass | 1. Add file to dart_ipfs. 2. Kubo `ipfs dag export` vs. dart_ipfs `/api/v0/dag/export` or library export. 3. Compare CID roots and block contents. 4. Import Kubo CAR into dart_ipfs and verify. |
+| **Bitswap fetch** | provider / requester | Kubo | **P0** | Must pass | 1. Add file to dart_ipfs. 2. Kubo `ipfs block get <cid>` and `ipfs cat <cid>`. 3. Reverse direction. 4. Assert bytes match. |
+| **Gateway retrieval** | gateway / client | Kubo or `curl` | **P0** | Must pass | 1. Add file to dart_ipfs. 2. `curl http://dart-ipfs-gateway:8080/ipfs/<cid>` returns correct bytes and content type. 3. Test `?format=raw` and `?format=car` trustless modes. |
+| **DHT provide / find** | provider / finder | Kubo | **P1** | `continue-on-error: true` | 1. dart_ipfs provides a CID. 2. Kubo `ipfs dht findprovs <cid>` lists the dart_ipfs peer. 3. Reverse direction. 4. Timeout 60 s in CI. |
+| **IPNS resolution** | publisher / resolver | Kubo | **P1** | `allowed-to-skip` or `continue-on-error: true` | 1. dart_ipfs publishes signed IPNS record to DHT. 2. Kubo `ipfs name resolve <ipns-key>` returns the CID. 3. Reverse direction. |
+| **Helia Bitswap** | requester / provider | Helia (Node.js) | **P1** | Nightly only | Repeat Bitswap scenario with a Helia node. |
+| **Helia CAR** | exporter / importer | Helia | **P1** | Nightly only | Repeat CAR scenario with Helia. |
 
 ### 4.2 CI Architecture
 
 - Create `.github/workflows/interop.yml` triggered:
   - On every PR touching `lib/src/protocols/`, `lib/src/services/`, or `bin/`.
   - Nightly against `main`.
+- The PR job is capped at **10 minutes total**.
 - Run a lightweight Docker network in CI:
-  - `docker compose -f test/interop/docker-compose.yml up -d` with dart_ipfs, Kubo, and optionally Helia services.
+  - `docker compose -f test/interop/docker-compose.yml up -d` with dart_ipfs and Kubo services. The network is created with `internal: true` and does not publish host ports.
   - Wait for health checks.
   - Execute the Dart test suite in `test/interop/`.
 - Pin the Kubo version in `test/interop/.kubo-version` and track updates via Renovate or Dependabot.
 - Default to a recent stable Kubo release at the time of implementation.
-- Helia tests run in a separate job matrix entry and are allowed to fail (`continue-on-error: true`) until stabilized.
+- **P0 scenarios** fail the build on any failure.
+- **P1 scenarios** run with `continue-on-error: true` and report results as a separate status check (e.g., `interop-p1 / kubo-dht-ipns`). A P1 failure cannot block merge.
+- **Helia scenarios** run in a separate `.github/workflows/interop-nightly.yml` workflow. They never block PRs or releases.
 
 ### 4.3 Test Harness Layout
 
@@ -126,25 +130,27 @@ test/interop/
 | CAR export/import | Byte-exact CAR; root CID matches. | 3 retries, 60 s timeout. |
 | Bitswap | Both directions return exact bytes. | 3 retries, 120 s timeout. |
 | Gateway | Correct body, headers, trustless format. | 10 retries, 30 s timeout. |
-| DHT provide/find | Peer ID appears in provider list. | 5 retries, 120 s timeout. |
-| IPNS | Resolved CID matches published record. | 5 retries, 180 s timeout. |
-| Helia Bitswap | Same as Kubo Bitswap. | Allowed to fail. |
-| Helia CAR | Same as Kubo CAR. | Allowed to fail. |
+| DHT provide/find | Peer ID appears in provider list. | 5 retries, 60 s timeout (P1). |
+| IPNS | Resolved CID matches published record. | 5 retries, 60 s timeout (P1) or skip if primitives are missing. |
+| Helia Bitswap | Same as Kubo Bitswap. | Nightly only; allowed to fail. |
+| Helia CAR | Same as Kubo CAR. | Nightly only; allowed to fail. |
 
 ---
 
 ## 5. Detailed Acceptance Criteria
 
-1. Interop CI passes against Kubo for all P0 scenarios before the v2.2 release.
-2. Test failures block merging of PRs that modify protocol or service code.
-3. Helia jobs exist in CI and report results even if allowed to fail.
-4. Every scenario asserts the exact bytes match between implementations, not just CID equality.
-5. Logs and packet captures are retained as CI artifacts on failure.
-6. Kubo version is pinned in `test/interop/.kubo-version` and documented in release notes.
-7. The Docker Compose network starts both nodes and a health check succeeds before tests run.
-8. The Dart test harness provides clear, actionable failure messages per scenario.
-9. A pinned version of Kubo is used; Renovate or Dependabot tracks updates.
-10. IPNS tests publish and resolve in both directions and verify the returned CID.
+1. Interop CI passes against Kubo for all P0 scenarios (CAR, Bitswap, gateway) before the v2.2 release.
+2. P0 failures block merging of PRs that modify protocol or service code.
+3. P1 DHT/IPNS scenarios exist in CI but do not fail the overall run or block merging; results are surfaced in a dedicated status check.
+4. Helia jobs exist in a separate nightly workflow and report results; they never block PRs or releases.
+5. Every P0 scenario asserts the exact bytes match between implementations, not just CID equality.
+6. Logs and packet captures are retained as CI artifacts on failure for a maximum of 7 days; test data must be synthetic and non-sensitive.
+7. Kubo version is pinned in `test/interop/.kubo-version` and documented in release notes.
+8. The Docker Compose network is created with `internal: true`, does not publish host ports, and passes a health check before tests run.
+9. The Dart test harness provides clear, actionable failure messages per scenario.
+10. A pinned version of Kubo is used; Renovate or Dependabot tracks updates.
+11. `/api/v0/dag/export` and `/api/v0/dag/import` RPC handlers are available as prerequisites to the CAR exchange scenario, or the test uses an equivalent library export path.
+12. The PR interop job total runtime is capped at 10 minutes.
 
 ---
 
@@ -154,8 +160,8 @@ test/interop/
 - Do not use production keys, bootstrap secrets, or real-world data in tests.
 - Pin all container images used in the test network (Kubo, Helia, test runners) by digest or semver tag to avoid supply-chain drift.
 - Tests must not require privileged containers or host networking.
-- Packet captures retained as artifacts must be purged according to repository retention policies and must not contain real user data.
-- RPC API endpoints used in tests should be bound to the test network only.
+- Packet captures retained as artifacts must be purged after **7 days** by repository retention policy and must not contain real user data.
+- RPC API endpoints used in tests are bound to the test network only.
 
 ---
 
@@ -192,7 +198,16 @@ test/interop/
 
 ---
 
-## 8. Dependencies and Ordering
+## 8. Promotion Preconditions
+
+DHT/IPNS scenarios may be promoted from P1 to P0 release-blocking only after all of the following are complete:
+
+1. `DHT_INTEGRATION_SPEC.md` is fully implemented and the DHT client supports iterative queries with request/response correlation.
+2. `IPNS_SPEC.md` is fully implemented, the hardcoded `QmResolvedCid` fallback is removed, and `PeerId` supports base36 encode/decode.
+3. The P1 scenarios pass consistently in CI for at least two consecutive release-candidate cycles.
+4. The Council of Five reviews and approves the promotion in a follow-up decision document.
+
+## 9. Dependencies and Ordering
 
 - **Prerequisites:**
   - CLI binary (`bin/ipfs.dart`) from `CLI_SPEC.md` to operate the dart_ipfs node in the network.

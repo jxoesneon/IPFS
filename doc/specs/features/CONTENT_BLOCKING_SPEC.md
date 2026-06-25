@@ -12,6 +12,8 @@
 
 The goal of this specification is to add an operator-controlled content denylist service to dart_ipfs that can block CID or multihash retrieval at the gateway and RPC layers. The service must be default-off, auditable, and independent from the existing authentication and rate-limiting logic in `SecurityManager`. It must support the BadBits-style compact denylist format used by many public IPFS gateway operators.
 
+This is a **denylist** (block list) service, not a general content-filtering or classification engine. The operator is solely responsible for maintaining and updating the list; dart_ipfs does not ship, curate, or automatically update any denylist entries. List updates are performed only through the operator-configured local file path or HTTP(S) URL on the configured refresh interval.
+
 Scope includes:
 
 - Configuration additions to `SecurityConfig` for enabling and tuning the denylist.
@@ -43,7 +45,7 @@ The current security layer is in `lib/src/core/security/security_manager.dart` a
 - `SecurityConfig` has no `enableDenylist`, `denylistPath`, `denylistRefreshInterval`, `denylistCompactFormat`, or `denylistDefaultAction` fields.
 - `RPCHandlers` (in `lib/src/services/rpc/rpc_handlers.dart`) has `handleCat`, `handleBlockGet`, `handleDagGet`, and `handleDhtProvide` methods that do not check any denylist.
 - `GatewayHandler` (in `lib/src/services/gateway/gateway_handler.dart`) does not check CIDs against a denylist before serving content.
-- `DHTHandler.handleProvideRequest` does not reject provider announcements for blocked CIDs.
+- `DHTHandler.handleProvideRequest` in `lib/src/protocols/dht/dht_handler.dart` does not reject provider announcements for blocked CIDs.
 
 ---
 
@@ -95,23 +97,29 @@ DenylistAuditEvent
   String? reason      // optional operator-provided reason from list metadata
 ```
 
+`DenylistService` is constructed with `SecurityConfig` and `MetricsCollector`, must be registered as an `ILifecycle` service in `LifecycleManager`, and must be started/stopped by `LifecycleManager`. Gateway, RPC, and DHT handlers access the same shared instance through `IPFSNode` (or a service locator).
+
 ### 4.3 Compact Denylist Format
 
 Support the BadBits-style compact format:
 
 - A text file with one entry per line.
-- Each line is either:
-  - a base32-encoded multihash (lowercase), or
-  - a CID string (base32 or base58btc), or
-  - a JSON comment line starting with `#` containing metadata such as `{"reason": "...", "cid": "..."}`.
+- The parser must classify each line in this exact order:
+  1. Skip empty lines and lines that begin with a plain `#` comment (e.g., `# List updated 2026-01-25`).
+  2. If a line begins with `#` and the remainder is valid JSON, parse it as a JSON comment containing metadata (e.g., `{"reason": "...", "cid": "..."}`). Store any `reason` and `cid` metadata for audit events.
+  3. Attempt to decode the line as a CID string. If successful, extract the multihash and match both the CID and the underlying multihash.
+  4. Attempt to decode the line as a base32-encoded multihash (lowercase). If successful, match against any CID that contains the same multihash regardless of codec or version.
+  5. If none of the above succeed, skip the line, count it as a refresh warning, and continue processing.
 - When `denylistCompactFormat=true`, entries may be sorted and deduplicated for binary-search lookup.
 - Also support plain text lists of CID strings for backward compatibility.
+- Maximum line length: 4096 characters; longer lines are skipped and counted as a refresh warning.
+- Maximum denylist size: 1,000,000 entries or 256 MiB (whichever is reached first); exceeding this fails the refresh atomically and keeps the previous list active.
 
 For CID entries, the service must extract the multihash and match both the CID and the underlying multihash. For base32 multihash entries, the service must decode and match against any CID that contains the same multihash regardless of codec or version.
 
 ### 4.4 Gateway and RPC Integration
 
-- In `GatewayHandler.handlePath` and `GatewayHandler.handleSubdomain`, check `DenylistService.isBlockedByCidString(cidStr)` before serving. If blocked and `denylistDefaultAction="block"`, return `451 Unavailable For Legal Reasons` with body `Content blocked by operator policy`. If `denylistDefaultAction="log"`, serve the content but emit a `denylist_logged` security event via `MetricsCollector.recordSecurityEvent("denylist_logged")` and record the audit event.
+- In `GatewayHandler.handlePath` and `GatewayHandler.handleSubdomain`, check `DenylistService.isBlockedByCidString(cidStr)` before serving. If blocked and `denylistDefaultAction="block"`, return `451 Unavailable For Legal Reasons` with body `Content blocked by operator policy`. If `denylistDefaultAction="log"`, serve the content but record an audit event with `action="logged"` and emit `MetricsCollector.recordSecurityEvent("denylist_logged")`. Logged events do not increment `refreshErrors`.
 - In `RPCHandlers.handleCat`, `handleBlockGet`, `handleDagGet`, and `handleDhtProvide`, check the denylist before processing. Return Kubo-style error JSON with `Code: 451` and `Message: Content blocked by operator policy` when blocked.
 - In `DHTHandler.handleProvideRequest`, reject provider announcements for blocked CIDs. The method should not store the provider record and should log a `denylist_blocked` security event.
 
@@ -120,7 +128,8 @@ For CID entries, the service must extract the multihash and match both the CID a
 - Denylist hits must be recorded in `DenylistService.auditLog` with a maximum size of 10,000 entries and FIFO eviction.
 - On `start()`, load the initial list and schedule a refresh timer based on `denylistRefreshInterval`.
 - On `stop()`, cancel the refresh timer.
-- On refresh, reload the list atomically: build a new in-memory set, then swap it in. Do not drop requests during refresh.
+- On refresh, reload the list atomically: build a new in-memory set from a complete successful parse, then swap it in. Do not drop requests during refresh.
+- Partial or corrupt denylist refreshes must be rejected atomically: if any line fails parsing or exceeds the configured limits, the entire refresh is discarded and the previously loaded list remains active.
 - Failed URL refreshes must increment `refreshErrors`, log a warning, and continue using the previously loaded list. They must not crash the node.
 - On startup, when enabled, log a warning that includes the source path and the number of loaded entries.
 
@@ -137,7 +146,11 @@ For CID entries, the service must extract the multihash and match both the CID a
 - [ ] Failed URL refreshes increment `refreshErrors` and log a warning but do not crash the node.
 - [ ] No hardcoded denylist entries are shipped in the package.
 - [ ] DHT provider announcements for blocked CIDs are rejected.
-- [ ] `denylistDefaultAction="log"` serves the content but emits a `denylist_logged` security event.
+- [ ] `denylistDefaultAction="log"` records an audit event with `action="logged"` and does not increment `refreshErrors`.
+- [ ] Denylist refreshes are atomic; a partial or corrupt refresh keeps the previous list active.
+- [ ] The parser skips malformed lines, lines longer than 4096 characters, and invalid base32/base58 strings without crashing.
+- [ ] `DenylistService` is registered as an `ILifecycle` service and started/stopped by `LifecycleManager`.
+- [ ] The maximum denylist size (1,000,000 entries or 256 MiB) and maximum line length (4096 characters) are enforced.
 
 ---
 

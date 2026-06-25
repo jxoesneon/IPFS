@@ -42,7 +42,7 @@ The current metrics implementation spans three files:
 - `lib/src/core/metrics/network_metrics.dart` — `NetworkMetrics` has `Map<LibP2PPeerId, PeerMetrics>` and `Map<String, ProtocolMetrics>` but `recordMessageSent` does `peerMetrics[peer]?.messagesSent++` on a null entry, which has no effect. The same bug applies to bytes and protocol counters.
 - `lib/src/core/config/metrics_config.dart` — `MetricsConfig` already defines `enablePrometheusExport`, `prometheusEndpoint`, and `collectionIntervalSeconds`, but these values are not consumed by `GatewayServer` or `RPCServer`.
 
-In addition, the `prometheus_client` package is already listed in `pubspec.yaml` (`prometheus_client: ^1.0.0+1`) but is not used by the current implementation.
+In addition, the `prometheus_client` package is already listed in `pubspec.yaml` at line 38 (`prometheus_client: ^1.0.0+1`) but is not used by the current implementation.
 
 ---
 
@@ -96,7 +96,11 @@ MetricsCollector
   reset() → void   // test-only
 ```
 
-All methods must be O(1) and thread-safe. When `MetricsConfig.enabled == false`, every method should perform at most a single boolean check and return immediately.
+The existing `metricsStream` broadcast stream remains available as a legacy/secondary event channel; production telemetry should use the Prometheus exposition endpoint and the new `record*` methods. Legacy getters must return real accumulated values.
+
+The `method` parameter in `recordRpcRequest` is retained for logging/debugging but is not included in the `ipfs_rpc_request_duration_seconds` histogram; only the `endpoint` label is used there.
+
+All methods must be O(1) and thread-safe. The authoritative gate is `IPFSConfig.metrics.enabled` (the existing `MetricsCollector` constructor receives `IPFSConfig` and reads `_config.metrics.enabled`). When metrics are disabled, every method should perform at most a single boolean check and return immediately.
 
 ### 4.3 Endpoint Wiring
 
@@ -107,7 +111,7 @@ All methods must be O(1) and thread-safe. When `MetricsConfig.enabled == false`,
 
 ### 4.4 Collection Intervals
 
-- When `MetricsConfig.enabled` is true, `MetricsCollector.start()` starts a periodic timer with `collectionIntervalSeconds`.
+- When `IPFSConfig.metrics.enabled` is true, `MetricsCollector.start()` starts a periodic timer with `collectionIntervalSeconds`.
 - The timer collects blockstore statistics and routing table size, then updates the corresponding gauges.
 - The timer is cancelled in `MetricsCollector.stop()`.
 
@@ -126,10 +130,14 @@ All methods must be O(1) and thread-safe. When `MetricsConfig.enabled == false`,
 - [ ] `ipfs_gateway_requests_total` and `ipfs_rpc_requests_total` increment on every request with correct labels.
 - [ ] Histograms use the default buckets `[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]`.
 - [ ] Metrics collection does not block request handling; all increments are O(1).
-- [ ] Disabled metrics (`MetricsConfig.enabled=false`) imposes zero overhead beyond a single boolean check.
+- [ ] Disabled metrics (`IPFSConfig.metrics.enabled=false`) imposes zero overhead beyond a single boolean check.
 - [ ] `recordSecurityEvent` covers `rate_limit`, `blocked_cid`, and `auth_failure` types.
 - [ ] `recordDhtProvide` increments both `success` and `failure` labels.
 - [ ] `recordReprovide` records both `status` and `strategy` labels.
+- [ ] The `/metrics` body parses without error using the official `prometheus_client` parser.
+- [ ] `LifecycleManager` calls `start()` and `stop()` on `MetricsCollector`, and the periodic collection timer is cancelled cleanly in `stop()`.
+- [ ] A microbenchmark demonstrates that disabled metrics do not allocate per request (zero overhead beyond a single boolean check).
+- [ ] No metric label contains `\n`, `\`, or `"` characters after sanitization.
 
 ---
 
@@ -199,4 +207,4 @@ Real metrics collection is a Phase 1 P0 foundation item and must be completed be
 - The existing `metricsStream` broadcast stream on `MetricsCollector` may be retained for backward compatibility, but the primary output becomes the Prometheus exposition endpoint.
 - Legacy getter methods (`getMessagesSent`, `getMessagesReceived`, `getBytesSent`, `getBytesReceived`, `getAverageLatency`) must be reimplemented to return real values, not zeros. Their signatures must not change.
 - `MetricsConfig` fields already exist and must be consumed as specified. No new required configuration fields are introduced.
-- When `MetricsConfig.enabled` is false, the existing public API must continue to behave as no-ops, but the implementation must guarantee near-zero overhead rather than allocating maps or timers.
+- When `IPFSConfig.metrics.enabled` is false, the existing public API must continue to behave as no-ops, but the implementation must guarantee near-zero overhead rather than allocating maps or timers.

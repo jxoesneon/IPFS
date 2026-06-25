@@ -255,6 +255,16 @@ publish(topic: String, message: String): void
 #   - COUNCIL_AUDIT_NETWORKING_P2P_2.md
 #   - COUNCIL_AUDIT_OPERATIONS_ECOSYSTEM.md
 
+# Council of Five binding decisions in doc/specs/decisions/:
+#   - COUNCIL_DECISION_CAR_MIGRATION.md
+#   - COUNCIL_DECISION_CONFIG_LIFECYCLE.md
+#   - COUNCIL_DECISION_DOCKER_BASE.md
+#   - COUNCIL_DECISION_INTEROP_SCOPE.md
+#   - COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md
+#   - COUNCIL_DECISION_PLUGIN_SECURITY.md
+# Aggregate resolution report:
+#   - doc/specs/RESOLUTIONS_AGGREGATE.md
+
 # v2.0 Protocol Compliance & Core Data Layer
 # P0: Standard CAR v1/v2 format, UnixFS basic directories, DAG-CBOR, IPLD selectors
 # P1: UnixFS HAMT + symlinks, consolidated DAG-JSON

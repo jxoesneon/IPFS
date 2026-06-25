@@ -62,6 +62,7 @@ Make dart_ipfs a full IPNS participant: derive names from Ed25519 public keys, p
 - `publish()` broadcasts a base64-encoded CID via PubSub without a signed IPNS record.
 - IPNS names are not derived from public keys; the handler treats arbitrary `keyName` strings as names.
 - Signature verification is not required during resolve.
+- `PeerId` (`lib/src/core/types/peer_id.dart`) is missing `fromPublicKey`, `toBase36()`, and `fromBase36()`; these primitives are required for IPNS name derivation.
 
 ---
 
@@ -77,6 +78,8 @@ String deriveIpnsName(Uint8List publicKey) {
   return peerId.toBase36(); // e.g., k51qzi5uqu5...
 }
 ```
+
+**Prerequisite:** `PeerId` must implement `fromPublicKey(Uint8List publicKey, {required String type})`, `toBase36()`, and `fromBase36(String name)` before IPNS implementation begins.
 
 ### 4.2 Record Format
 
@@ -146,12 +149,30 @@ Future<IPNSRecord> resolve(String name) async {
   _cache.put(name, record);
   return record;
 }
-```
 
-### 4.5 Publish Algorithm
+### 4.5 Name/Public-Key Matching
 
 ```dart
-Future<void> publish(CID cid, SimpleKeyPair keyPair, {int? sequence}) async {
+bool nameMatchesPublicKey(String name, Uint8List publicKey) {
+  final expected = PeerId.fromPublicKey(publicKey, type: 'Ed25519').toBase36();
+  return name == expected;
+}
+```
+
+### 4.6 Publish Algorithms
+
+Keep the existing keystore-based API for backward compatibility and add the key-pair overload for advanced callers:
+
+```dart
+// v2.1 convenience API (loads key from SecurityManager)
+Future<void> publish(String cid, {String? keyName}) async {
+  final resolvedKeyName = keyName ?? 'self';
+  final keyPair = await _securityManager.loadKey(resolvedKeyName);
+  return publishWithKeyPair(CID.decode(cid), keyPair);
+}
+
+// Advanced API for callers that already have a key pair
+Future<void> publishWithKeyPair(CID cid, SimpleKeyPair keyPair, {int? sequence}) async {
   final publicKey = await _extractPublicKey(keyPair);
   final name = deriveIpnsName(publicKey);
 
@@ -173,9 +194,16 @@ Future<void> publish(CID cid, SimpleKeyPair keyPair, {int? sequence}) async {
     await _gossipsub.publish('/ipns/$name', record.toCBOR());
   }
 }
+
+Future<void> publishRecord(IPNSRecord record) async {
+  await _dhtClient.storeValue(
+    Uint8List.fromList(utf8.encode('/ipns/${record.name}')),
+    record.toCBOR(),
+  );
+}
 ```
 
-### 4.6 Configuration
+### 4.7 Configuration
 
 ```dart
 class IPNSConfig {
@@ -187,14 +215,16 @@ class IPNSConfig {
 }
 ```
 
-### 4.7 APIs
+### 4.8 APIs
 
 ```dart
 class IPNSHandler {
   Future<void> start();
   Future<void> stop();
   Future<IPNSRecord> resolve(String name);
-  Future<void> publish(CID cid, SimpleKeyPair keyPair, {int? sequence});
+  Future<String> resolveAsString(String name);   // compatibility helper
+  Future<void> publish(String cid, {String? keyName});               // existing API
+  Future<void> publishWithKeyPair(CID cid, SimpleKeyPair keyPair, {int? sequence});
   Future<void> publishRecord(IPNSRecord record);
   Future<Map<String, dynamic>> getStatus();
 }
@@ -210,6 +240,8 @@ class IPNSHandler {
 - The hardcoded fallback CID `QmResolvedCid` is removed from `resolve`.
 - PubSub path is not used unless `enablePubSubNotifications` is true and `GossipsubHandler` is compliant.
 - `publishRecord` can store a pre-constructed record for advanced callers.
+- `PeerId` supports `fromPublicKey`, `toBase36()`, and `fromBase36()` before IPNS implementation begins.
+- Existing `publish(String, {String? keyName})` callers continue to compile and work during v2.1.
 
 ---
 
@@ -229,11 +261,13 @@ class IPNSHandler {
 ### 7.1 Unit Tests (target coverage ≥85%)
 
 - Name derivation from Ed25519 public keys and base36 encoding.
+- `PeerId.fromBase36` / `PeerId.toBase36` round-trip.
 - CBOR record encode/decode round-trip.
 - Signable data construction and signature verification.
 - Resolve flow with cache hit, DHT miss, expired record, invalid signature, and mismatched key.
 - Publish flow sequence increment and DHT store call.
-- `_nameMatchesPublicKey` validation.
+- `nameMatchesPublicKey` validation.
+- Backward compatibility of the existing `publish(String, {String? keyName})` API.
 
 ### 7.2 Local Network Tests
 
@@ -260,6 +294,7 @@ class IPNSHandler {
 
 ### 8.1 Blockers
 
+- `PeerId` must implement `fromPublicKey`, `toBase36()`, and `fromBase36()` (hard blocker; see acceptance criteria).
 - `DHTClient.storeValue` and `DHTClient.getValue` must be implemented (DHT Integration feature).
 - Ed25519 key support must be available in the crypto layer.
 - `GossipsubHandler` must be compliant before PubSub notifications can be enabled.
@@ -267,8 +302,8 @@ class IPNSHandler {
 ### 8.2 Order Relative to Other Features
 
 - **Before**: IPNS PubSub notifications (optional, requires Gossipsub).
-- **Parallel with**: Gossipsub.
-- **After**: DHT Integration.
+- **Parallel with**: Gossipsub (only after DHT Integration is stable).
+- **After**: DHT Integration and the missing `PeerId` base36 primitives.
 
 ### 8.3 External Dependencies
 
@@ -280,8 +315,8 @@ class IPNSHandler {
 
 ## 9. Backward Compatibility Notes
 
-- `IPNSHandler.publish(String cid, {String? keyName})` is deprecated in v2.1 and will be removed in v2.3.
-- `IPNSHandler.resolve(String name)` will return `IPNSRecord` instead of `String CID` in a future version; during v2.1 keep a `resolveAsString` helper for compatibility.
+- `IPNSHandler.publish(String cid, {String? keyName})` remains a convenience wrapper during v2.1; it is deprecated and will be removed in v2.3.
+- `IPNSHandler.resolve(String name)` returns `IPNSRecord`; keep `resolveAsString(String name)` as a compatibility helper during v2.1.
 - Existing IPNS cache format remains compatible; no migration needed.
 - The removal of the hardcoded fallback CID may break tests that relied on `QmResolvedCid`; those tests must be updated to use real signed records.
 - Custom JSON/HMAC PubSub broadcast for IPNS is removed; real-time notifications use Gossipsub only when enabled.

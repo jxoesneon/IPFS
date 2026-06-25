@@ -50,9 +50,9 @@ Reference implementations for interoperability verification:
 
 The current selector implementation is custom and not compatible with the official vocabulary.
 
-- **File:** `lib/src/core/ipld/ipld_handler.dart` uses a hand-rolled `SelectorType` model that does not match the official selector schema.
+- **File:** `lib/src/core/ipfs_node/ipld_handler.dart` uses a hand-rolled `SelectorType` model that does not match the official selector schema.
 - **Gap:** The custom selector model cannot be serialized as DAG-CBOR or DAG-JSON, so it cannot be exchanged with Kubo, Helia, or any other IPLD implementation.
-- **Gap:** `GraphsyncHandler` cannot attach blocks based on a selector because there is no interpreter that can traverse a selector and produce a set of blocks.
+- **Gap:** The custom selector model cannot be traversed to produce a set of blocks, so `GraphsyncHandler` cannot use it for selective block retrieval.
 - **Gap:** The selector vocabulary does not include `exploreRecursive`, `exploreInterpretAs`, `matcher`, `limit`, or `condition`, which are required for GraphSync.
 - **Gap:** There is no budget enforcement for recursion depth or node count, so a malicious selector could exhaust memory or CPU.
 - **Dependency:** IPLD selectors are encoded as DAG-CBOR nodes, so this backlog item depends on the DAG-CBOR codec being spec-compliant. GraphSync integration also depends on the CAR v1/v2 codec for block payload framing.
@@ -75,7 +75,7 @@ The implementation must support the official selector types used by IPFS and Gra
 - **`exploreInterpretAs`** — Traverse with an Advanced Data Layout (ADL) interpretation. The selector contains a string `adl` (e.g., `"hamt/sha3-256"` or similar) and a `next` selector. This is required for traversing HAMT-sharded UnixFS directories in P1.
 - **`matcher`** — Select the current node and return it. This is the leaf selector that causes nodes to be yielded by the interpreter.
 - **`limit`** — Recursion limit helpers. The official vocabulary includes `depth` limits and the `recursiveEdge` sentinel. The implementation must parse and enforce `limit` nodes correctly.
-- **`condition`** — Optional selector that includes or excludes nodes based on a condition. The implementation should include this if required by the GraphSync selector fixtures, but it may be deferred if no P0 fixture depends on it. If included, it must support the official condition forms.
+- **`condition`** — P1 selector that includes or excludes nodes based on a condition. It may be deferred until GraphSync P1 fixtures require it, but if implemented it must support the official condition forms.
 
 Example selector shapes:
 

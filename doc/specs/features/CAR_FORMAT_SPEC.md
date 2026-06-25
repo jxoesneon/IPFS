@@ -15,7 +15,7 @@ Scope includes:
 - Full CAR v1 encoder and decoder with correct varint framing, DAG-CBOR header, and CID-prefixed sections.
 - Full CAR v2 encoder and decoder, including the 11-byte pragma, 40-byte header, optional padding, embedded CARv1 payload, and optional IndexSorted / MultihashIndexSorted index payloads.
 - A public Dart API that preserves the conceptual shape of the current in-memory CAR API while delegating all byte serialization to the standard formats.
-- Removal or deprecation of the legacy `CarCodec` in `lib/src/codec/advanced_codecs.dart` and elimination of the protobuf `CarProto` generated code from the build.
+- Removal or deprecation of the legacy `CarCodec` in `lib/src/core/ipld/codecs/advanced_codecs.dart` and elimination of the protobuf `CarProto` generated code from the build.
 - Integration with the block store so that CAR import/export can be used by MFS, the trustless gateway, and GraphSync responses.
 
 Out of scope for this backlog item: CAR v3 or future transport extensions; content routing; GraphSync message encoding itself (only the CAR payload contract is defined here).
@@ -46,14 +46,15 @@ Reference implementations for interoperability verification:
 
 ## 3. Current State in dart_ipfs
 
-The current implementation uses a custom protobuf-based CAR codec that is not wire-compatible with any other IPFS implementation.
+The current implementation uses a custom protobuf-based CAR codec that is not wire-compatible with any other IPFS implementation. The old in-memory CAR model will be deleted and replaced by the standard API described in this specification.
 
-- **File:** `lib/src/codec/advanced_codecs.dart` contains a `CarCodec` class that serializes CAR data through a generated protobuf `CarProto` message.
+- **File:** `lib/src/core/ipld/codecs/advanced_codecs.dart` contains a non-standard `CarCodec` class that serializes CAR data through a generated protobuf `CarProto` message. This class is slated for removal as part of the migration.
+- **File:** `lib/src/core/data_structures/car.dart` contains the legacy `CAR`, `CarHeader`, and `CarIndex` classes, which are also backed by the protobuf `CarProto` message. These classes will be deleted and replaced by the standard `CarReader` / `CarWriter` / `CarHeader` / `CarSection` / `IndexBuilder` API defined in this specification, per `COUNCIL_DECISION_CAR_MIGRATION.md`.
 - **Gap:** The output bytes do not match CAR v1 or v2 and are rejected by `kubo dag import` and Helia's `@helia/car`.
 - **Gap:** No support for the CAR v2 pragma, header, or index payload.
 - **Gap:** CAR sections are not framed as `[varint | CID | Block]` and the header is not DAG-CBOR.
 - **Gap:** The in-memory CAR API exists but is built on top of the custom serialization, so it cannot be reused without replacing the byte layer.
-- **Dependency:** CAR v2 headers are DAG-CBOR maps, so this backlog item depends on the DAG-CBOR codec being spec-compliant before CAR v2 can be fully landed.
+- **Dependency:** CAR v2 headers are DAG-CBOR maps, so this backlog item depends on the DAG-CBOR codec being spec-compliant before CAR v2 can be fully landed. This specification assumes the unified `IPLDCodec` interface from `COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md` is in place.
 
 ---
 
@@ -110,7 +111,7 @@ The public API must keep the same conceptual shape as the current in-memory CAR 
   - `CarReader.fromStream(Stream<Uint8List> stream)`
   - `Future<CarHeader> get header`
   - `Stream<CarSection> sections()` — yields each section in file order.
-  - `Future<CID?> findCID(CID cid)` for CAR v2 with index — returns the offset of the section containing the CID, or `null` if not present. Must use the index if available; otherwise falls back to streaming scan.
+  - `Future<int?> findCID(CID cid)` for CAR v2 with index — returns the byte offset of the section containing the CID, or `null` if not present. Must use the index if available; otherwise falls back to a streaming scan.
 - **`CarWriter`** — Append-only writer:
   - `CarWriter({required List<CID> roots, bool v2 = false, bool index = false, ...})`
   - `Future<void> write(CID cid, Uint8List block)` — writes a single section; for CAR v2 with index, records the section offset and multihash digest.
@@ -125,7 +126,7 @@ The public API must keep the same conceptual shape as the current in-memory CAR 
 
 - A `BlockStore.exportCar(CID root, {bool v2 = false, bool recursive = true})` helper should produce a CAR containing the root and, when `recursive` is true, every reachable block.
 - A `BlockStore.importCar(Stream<CarSection>)` helper should store every section and return the list of roots from the CAR header.
-- The trustless gateway must use the CAR writer to produce `application/vnd.ipfs.ipns.record` and `application/vnd.ipld.car` responses.
+- The trustless gateway must use the CAR writer to produce `application/vnd.ipld.car` responses. IPNS record responses use a separate MIME type and are not emitted by the CAR writer.
 - GraphSync responses must be able to attach blocks from a CAR-like stream (the exact GraphSync message format is defined in the networking backlog, but the block payload must be standard CID/block pairs).
 
 ---
@@ -135,7 +136,7 @@ The public API must keep the same conceptual shape as the current in-memory CAR 
 1. **Kubo import (CAR v1):** A CAR v1 file written by dart_ipfs can be imported by `kubo dag import` and `kubo car import` without error, and the roots declared in the header are preserved in Kubo's output.
 2. **Kubo export (CAR v1):** A CAR v1 file exported by `kubo car export` can be read by dart_ipfs, and every `(CID, block)` pair matches the expected multihash.
 3. **CAR v2 round-trip:** The same import/export test works for CAR v2 files with and without an index, using both Kubo's `kubo car` commands and Helia's `@helia/car`.
-4. **Legacy removal:** The `CarCodec` class is removed from `lib/src/codec/advanced_codecs.dart` or marked `@deprecated` with a no-op body, and the build does not depend on the old `CarProto` generated code.
+4. **Legacy removal:** The non-standard `CarCodec` class is removed from `lib/src/core/ipld/codecs/advanced_codecs.dart` or marked `@deprecated` with a no-op body, and the build no longer depends on the old protobuf `CarProto` generated code.
 5. **Malformed input rejection:** The CAR reader rejects invalid varints, missing roots, roots that are not present in the data section, truncated sections, unknown CAR versions, and malformed CAR v2 headers. Each error must produce a distinct exception class with a clear message.
 6. **Index correctness:** For CAR v2 with an index, `findCID` returns the correct offset for every CID in the file, and returns `null` for CIDs not present. The index must be sorted and must be parseable by go-car v2.
 7. **Zero-copy extraction:** CAR v2 to CAR v1 extraction is performed by slicing the underlying byte buffer without re-encoding when the input is a byte buffer.

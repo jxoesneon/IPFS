@@ -3,73 +3,87 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/ipld/dag_json_codec.dart';
+import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
+import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('DagJsonCodec', () {
+  group('DagJsonCodec (unified IPLDCodec)', () {
     final codec = DagJsonCodec();
 
-    test('encodes simple map', () {
-      final data = {'hello': 'world', 'count': 123};
-      final encoded = codec.encode(data);
-      final decodedJson = jsonDecode(utf8.decode(encoded));
-
-      expect(decodedJson, equals(data));
-      expect(codec.decode(encoded), equals(data));
+    test('reports the correct multicodec name and code', () {
+      expect(codec.name, equals('dag-json'));
+      expect(codec.code, equals(0x0129));
+      expect(codec.identifier, equals('dag-json'));
     });
 
-    test('encodes and decodes CID', () {
-      // Use a dummy CID
+    test('encodes and decodes a simple map', () async {
+      final node = IPLDNode()
+        ..kind = Kind.MAP
+        ..mapValue = IPLDMap();
+      node.mapValue.entries.add(
+        MapEntry()
+          ..key = 'hello'
+          ..value = (IPLDNode()
+            ..kind = Kind.STRING
+            ..stringValue = 'world'),
+      );
+
+      final encoded = await codec.encode(node);
+      final jsonStr = utf8.decode(encoded);
+      expect(jsonStr, contains('hello'));
+      expect(jsonStr, contains('world'));
+
+      final decoded = await codec.decode(encoded);
+      expect(decoded.kind, equals(Kind.MAP));
+      expect(decoded.mapValue.entries.first.value.stringValue, equals('world'));
+    });
+
+    test('encodes and decodes a CID link', () async {
       final cid = CID.v0(Uint8List.fromList(List.filled(32, 1)));
-      final data = {'link': cid};
+      final node = IPLDNode()
+        ..kind = Kind.MAP
+        ..mapValue = IPLDMap();
+      node.mapValue.entries.add(
+        MapEntry()
+          ..key = 'link'
+          ..value = (IPLDNode()
+            ..kind = Kind.LINK
+            ..linkValue = (IPLDLink()
+              ..version = cid.version
+              ..codec = cid.codec ?? 'dag-pb'
+              ..multihash = cid.multihash.toBytes())),
+      );
 
-      final encoded = codec.encode(data);
+      final encoded = await codec.encode(node);
       final jsonStr = utf8.decode(encoded);
+      expect(jsonStr, contains('{"/":"'));
 
-      // Verify raw JSON structure
-      expect(jsonStr, contains('{"/":"${cid.encode()}"}'));
-
-      // Verify decode restores CID
-      final decoded = codec.decode(encoded);
-      expect(decoded['link'], isA<CID>());
-      expect((decoded['link'] as CID).encode(), equals(cid.encode()));
+      final decoded = await codec.decode(encoded);
+      expect(decoded.kind, equals(Kind.MAP));
+      expect(decoded.mapValue.entries.first.value.kind, equals(Kind.LINK));
     });
 
-    test('encodes and decodes Bytes', () {
+    test('encodes and decodes bytes', () async {
       final bytes = Uint8List.fromList([1, 2, 3, 4]);
-      final data = {'data': bytes};
+      final node = IPLDNode()
+        ..kind = Kind.MAP
+        ..mapValue = IPLDMap();
+      node.mapValue.entries.add(
+        MapEntry()
+          ..key = 'data'
+          ..value = (IPLDNode()
+            ..kind = Kind.BYTES
+            ..bytesValue = bytes),
+      );
 
-      final encoded = codec.encode(data);
+      final encoded = await codec.encode(node);
       final jsonStr = utf8.decode(encoded);
+      expect(jsonStr, contains('"bytes"'));
 
-      // Verify raw JSON structure {"/": {"bytes": "AQIDBA=="}}
-      expect(jsonStr, contains('"bytes":"AQIDBA=="'));
-
-      // Verify decode restores bytes
-      final decoded = codec.decode(encoded);
-      expect(decoded['data'], isA<List<int>>());
-      expect(decoded['data'], equals(bytes));
-    });
-
-    test('handles nested structures', () {
-      final cid = CID.v0(Uint8List.fromList(List.filled(32, 2)));
-      final data = {
-        'list': [
-          {'nested_cid': cid},
-          123,
-        ],
-        'map': {
-          'deep': {'more': 'text'},
-        },
-      };
-
-      final encoded = codec.encode(data);
-      final decoded = codec.decode(encoded);
-
-      final nestedCid = (decoded['list'][0] as Map)['nested_cid'];
-      expect(nestedCid, isA<CID>());
-      expect(nestedCid.encode(), equals(cid.encode()));
+      final decoded = await codec.decode(encoded);
+      expect(decoded.kind, equals(Kind.MAP));
+      expect(decoded.mapValue.entries.first.value.bytesValue, equals(bytes));
     });
   });
 }

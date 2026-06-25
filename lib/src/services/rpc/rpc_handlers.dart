@@ -9,6 +9,7 @@ import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:dart_ipfs/src/version.dart';
 import 'package:http_parser/http_parser.dart'; // For MediaType
 import 'package:mime/mime.dart';
 import 'package:shelf/shelf.dart';
@@ -28,9 +29,9 @@ class RPCHandlers {
   /// GET /api/v0/version - Get IPFS version
   Future<Response> handleVersion(Request request) async {
     final response = {
-      'Version': 'dart_ipfs/0.1.0',
+      'Version': agentVersion,
       'Commit': 'phase3-gateway-rpc',
-      'Repo': '1',
+      'Repo': repoVersion,
       'System': getPlatform().operatingSystem,
       'Golang': 'Dart ${getPlatform().version}',
     };
@@ -48,7 +49,7 @@ class RPCHandlers {
         'ID': peerId,
         'PublicKey': await node.publicKey,
         'Addresses': addresses,
-        'AgentVersion': 'dart_ipfs/0.1.0',
+        'AgentVersion': agentVersion,
         'ProtocolVersion': 'ipfs/0.1.0',
         'Protocols': ['/ipfs/kad/1.0.0', '/ipfs/bitswap/1.2.0'],
       };

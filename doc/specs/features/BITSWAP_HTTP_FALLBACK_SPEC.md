@@ -49,8 +49,8 @@ Allow dart_ipfs to fetch blocks from HTTP gateways when P2P Bitswap fails or tim
 ### 3.1 Files
 
 - `lib/src/protocols/bitswap/bitswap_handler.dart` — current P2P-only Bitswap handler.
-- `lib/src/services/gateway/http_gateway_client.dart` — HTTP gateway client (to be integrated).
-- `lib/src/core/config/ipfs_config.dart` — configuration where fallback settings should live.
+- `lib/src/transport/http_gateway_client.dart` — existing HTTP gateway client; it currently has `get(String cid, {String? baseUrl})` and does not support `?format=raw`.
+- `lib/src/core/config/ipfs_config.dart` — configuration where fallback settings should live; `BitswapConfig` does not yet exist and must be created.
 - `lib/src/storage/blockstore.dart` — local blockstore for caching verified blocks.
 
 ### 3.2 Gaps
@@ -78,9 +78,9 @@ Future<Block?> _getBlock(String cidStr, {Duration? p2pTimeout}) async {
   final local = await _blockStore.getBlock(cidStr);
   if (local.found) return local.block;
 
-  // 2. Try P2P Bitswap.
+  // 2. Try P2P Bitswap using the existing API.
   try {
-    final p2p = await _getBlockFromBitswap(cidStr).timeout(p2pTimeout ?? _config.p2pTimeout);
+    final p2p = await _bitswap.wantBlock(cidStr).timeout(p2pTimeout ?? _config.p2pTimeout);
     if (p2p != null) return p2p;
   } catch (e) {
     _logger.debug('P2P Bitswap failed for $cidStr: $e');
@@ -107,16 +107,16 @@ Future<Block?> _getBlock(String cidStr, {Duration? p2pTimeout}) async {
 ```dart
 bool _verifyBlock(Block block, String expectedCidStr) {
   final expectedCid = CID.decode(expectedCidStr);
-  final actualHash = _hash(expectedCid.codec, block.data);
+  final actualHash = _hash(expectedCid.multihash.code, block.data);
   return _listEquals(actualHash, expectedCid.multihash.digest);
 }
 ```
 
-If the codec is raw (`0x55`), verify the hash directly. If the codec is DAG-PB/DAG-CBOR/etc., verify the serialized block hash matches the CID multihash.
+Look up the multihash function from the CID's multihash code (e.g., SHA-256) and hash the raw block bytes. The result must match the CID multihash digest. This works for raw (`0x55`), DAG-PB (`0x70`), DAG-CBOR (`0x71`), and any other content-addressed block. Verification is unconditional in production.
 
 ### 4.4 Configuration
 
-Extend `BitswapConfig`:
+Create `BitswapConfig` and integrate it into `IPFSConfig` (or extend `NetworkConfig`). Migrate `maxConcurrentBitswapRequests` from `IPFSConfig` into `BitswapConfig` if appropriate:
 
 ```dart
 class BitswapConfig {
@@ -124,7 +124,8 @@ class BitswapConfig {
   final List<String> httpFallbackGateways; // e.g., ['https://gateway.ipfs.io']
   final Duration p2pTimeout;
   final Duration httpTimeout;
-  final bool verifyHttpBlocks;
+  @visibleForTesting
+  final bool verifyHttpBlocks; // default true; test-only override, never false in production
 }
 ```
 
@@ -139,7 +140,7 @@ class BitswapHandler {
 
 ### 4.6 HTTP Gateway Client Requirements
 
-- `fetchRawBlock(String gatewayUrl, String cidStr)` must issue a GET to `$gatewayUrl/ipfs/$cidStr?format=raw`.
+- Add `HttpGatewayClient.fetchRawBlock(String gatewayUrl, String cidStr)` that issues a GET to `$gatewayUrl/ipfs/$cidStr?format=raw` (trustless gateway raw block endpoint).
 - Respect `httpTimeout`.
 - Return raw bytes or `null` on failure.
 - Support CAR fallback only if the gateway does not support raw block format.
@@ -154,7 +155,7 @@ class BitswapHandler {
 - Verified HTTP blocks are stored in the local blockstore.
 - The next request for the same CID returns the cached block without re-fetching.
 - Gateway failures are retried against the next configured gateway.
-- `verifyHttpBlocks` defaults to true and cannot be disabled in production builds.
+- Verification is unconditional in production; `verifyHttpBlocks` is a test-only override and is not exposed to operators.
 
 ---
 
@@ -203,7 +204,8 @@ class BitswapHandler {
 
 ### 8.1 Blockers
 
-- `HttpGatewayClient` must support `fetchRawBlock`.
+- `BitswapConfig` must be created and wired into `IPFSConfig`.
+- `HttpGatewayClient` must support `fetchRawBlock`; the current `get(String, {String? baseUrl})` only uses `/ipfs/<cid>` without `?format=raw`.
 - Blockstore must support `getBlock`/`putBlock`.
 - CID and multihash verification utilities must be available.
 
@@ -222,7 +224,7 @@ class BitswapHandler {
 
 ## 9. Backward Compatibility Notes
 
-- `BitswapConfig` gains new optional fields; existing configs continue to work with P2P-only behavior.
+- `BitswapConfig` is new and gains optional fields; existing configs continue to work with P2P-only behavior until the config is migrated.
 - `getBlock` gains an optional `useHttpFallback` parameter defaulting to true; callers that previously assumed pure P2P can set it to false.
 - The HTTP fallback introduces a new trust assumption (the gateway) but mitigates it with mandatory CID verification. Document this for operators.
 - No wire-format changes to P2P Bitswap.

@@ -22,6 +22,8 @@ import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
+import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
+import 'package:dart_ipfs/src/services/rpc/rpc_server.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 
 /// Builder for constructing an [IPFSNode] with customized configuration.
@@ -42,7 +44,9 @@ class IPFSNodeBuilder {
       await _registerNetworkServices();
       await _initializeServices();
 
-      return IPFSNode.fromContainer(_container);
+      final node = IPFSNode.fromContainer(_container);
+      await _registerServerLifecycleServices(node);
+      return node;
     } catch (e, stackTrace) {
       _logger.error('Failed to build IPFS Node', e, stackTrace);
       rethrow;
@@ -134,5 +138,30 @@ class IPFSNodeBuilder {
 
     // Register LifecycleManager
     _container.registerSingleton(LifecycleManager());
+  }
+
+  Future<void> _registerServerLifecycleServices(IPFSNode node) async {
+    final lifecycleManager = _container.get<LifecycleManager>();
+
+    if (_config.enableRPC) {
+      final rpcServer = RPCServer(
+        node: node,
+        address: 'localhost',
+        port: 5001,
+      );
+      _container.registerSingleton(rpcServer);
+      lifecycleManager.register(rpcServer);
+    }
+
+    if (_config.gateway.enabled) {
+      final gatewayServer = GatewayServer(
+        blockStore: _container.get<BlockStore>(),
+        node: node,
+        address: _config.gateway.address,
+        port: _config.gateway.port,
+      );
+      _container.registerSingleton(gatewayServer);
+      lifecycleManager.register(gatewayServer);
+    }
   }
 }

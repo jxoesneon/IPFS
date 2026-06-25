@@ -131,13 +131,13 @@ MFSManager
 
 **Semantics:**
 
-- `flush([path])`: materialize the in-memory MFS delta for `path` (default `/`) to the blockstore and return the root CID. If `path` is provided, only ancestors from `path` to root are updated; the root CID is persisted.
+- `flush([path])`: ensures the current MFS state is persisted and returns the current root CID. The existing implementation persists the root CID after every mutation (`_modifyPath` in `lib/src/core/mfs/mfs_manager.dart`), so `flush` is effectively a synchronous root-CID accessor that may return the existing root without re-hashing. If a future implementation introduces a write-back cache, `flush` must force any pending mutations to the blockstore and persist the root CID before returning.
 - `flushAll()`: equivalent to `flush('/')`.
 - `sync()`: wait for all in-flight MFS operations to complete and persist the root CID; returns `void` (no new CID guaranteed if no writes are pending).
 - `stat`: return Kubo-compatible metadata including `Hash`, `Size`, `CumulativeSize`, `Blocks`, `Type`, `WithLocal` (if requested), and `Local`.
 - `ls`: return entries with `Name`, `Type`, `Size`, `Hash`, and optional `Mode`/`Mtime` when `long=true`.
-- `write`: support `offset` for partial writes (Kubo `offset` parameter); `truncate=true` replaces existing content; `truncate=false` with `offset=0` requires existing file. Throws `ArgumentError` if offset is beyond file size and `truncate=false`.
-- `chcid`: change the CID hash function for a path (or the whole MFS if `path='/'`). Only supports re-hashing the current root with the requested multihash if the data is already present.
+- `write`: support `offset` for partial writes (Kubo `offset` parameter); `truncate=true` replaces existing content; `truncate=false` with `offset=0` requires existing file. Throws `ArgumentError` if offset is beyond file size and `truncate=false`. For `truncate=false`, the implementation must read the existing UnixFS file, replace the affected byte range, and re-chunk only the modified segment if possible, preserving unmodified chunk CIDs where the chunking algorithm allows.
+- `chcid`: re-hashes the CID for a path (or the whole MFS root if `path='/'`) using the requested multihash function. The current `CID.fromContent` only supports `sha2-256`; changing to any other hash function requires a full re-encode/re-layout pass of the affected DAG.
 
 #### 4.1.3 Data Models
 
@@ -220,6 +220,8 @@ Register the following handlers in `lib/src/services/rpc/rpc_handlers.dart` and 
 - [ ] Path validation rejects traversal outside the MFS root (`../` must be normalized and blocked at root).
 - [ ] Multipart `files/write` supports the same file-size limits and boundary parsing as `handleAdd`.
 - [ ] No existing MFS public API signatures are removed; only additive changes are allowed.
+- [ ] `flush` on an already-persistent MFS returns the same root CID idempotently.
+- [ ] `MFSManager` remains usable without RPC (internal API tests are standalone).
 
 ---
 
@@ -235,14 +237,15 @@ Given the configured `gatewayDomain` (e.g., `localhost` for local development, o
 
 | Host pattern | Namespace | Identifier | Subpath |
 |--------------|-----------|------------|---------|
-| `<cid>.ipfs.<gatewayDomain>` | ipfs | valid CID (v0 or v1) | `request.url.path` |
-| `<cid>.ipfs.localhost` | ipfs | valid CID | `request.url.path` |
+| `<cid>.ipfs.<gatewayDomain>` | ipfs | base32-encoded CIDv1 (CIDv0 must be converted to CIDv1 base32) | `request.url.path` |
+| `<cid>.ipfs.localhost` | ipfs | base32-encoded CIDv1 | `request.url.path` |
 | `<name>.ipns.<gatewayDomain>` | ipns | PeerId, DNSLink domain, or IPNS key | `request.url.path` |
 
 Requirements:
 
 - The host must contain exactly one namespace label (`ipfs` or `ipns`) immediately before the configured domain/TLD.
-- For `ipfs`, the leftmost label must be a valid, decodable CID. Invalid CIDs must return `400 Bad Request` with `Content-Type: text/plain; charset=utf-8` and body `Invalid CID in subdomain`.
+- DNS labels are case-insensitive and cannot contain CIDv0 base58btc characters, so the leftmost `ipfs` label must be a CIDv1 encoded in base32. CIDv0 or other encodings must return `400 Bad Request` with `Content-Type: text/plain; charset=utf-8` and body `Invalid CID in subdomain`.
+- Production deployments require a wildcard DNS record (`*.ipfs.<gatewayDomain>` and `*.ipns.<gatewayDomain>`) and a TLS certificate covering that wildcard (or per-subdomain certificates). `localhost` development uses `*.ipfs.localhost` and does not require TLS.
 - For `ipns`, the leftmost label must be either a valid PeerId (base58btc), a DNSLink-compatible DNS name (e.g., `docs.ipfs.io`), or an IPNS key resolved via the configured IPNS resolver. Invalid names return `400 Bad Request`.
 - The gateway must reject requests to bare `<gatewayDomain>` that do not match a subdomain namespace; fallback to path gateway remains handled by the existing `/ipfs/<path|.*>` and `/ipns/<path|.*>` routes.
 - Localhost subdomain requests (`*.ipfs.localhost`) must be supported regardless of the configured `gatewayDomain`.
@@ -256,7 +259,7 @@ GatewayConfig
   gatewayDomain: String?          // e.g. "ipfs.example.com"; null means subdomain gateway disabled except localhost
   enableSubdomainGateway: bool   // default false
   subdomainDNSLinkResolver: bool  // default true
-  subdomainTLSRedirect: bool      // default true for production domains
+  subdomainTLSRedirect: bool      // default false; operators must opt in explicitly
 ```
 
 `GatewayServer` must pass these values to `GatewayHandler`.
@@ -286,6 +289,7 @@ SubdomainRequest
 - Add `X-IPFS-Path: /ipfs/<cid>` or `/ipns/<name>` to responses.
 - For IPNS names, add `Cache-Control: public, max-age=<ttl>` where TTL is the resolved IPNS record TTL (default 1 minute if unavailable).
 - For DNSLink domains, add `X-IPFS-DNSLink: <domain>` header.
+- `subdomainTLSRedirect` is `false` by default. When explicitly set to `true`, `gatewayDomain` is non-null, and the domain is not `localhost`/`127.0.0.1`, HTTP requests may be redirected to HTTPS with a `301 Moved Permanently` and `Location: https://<same-host><path>`. TLS redirect must never be enabled for `localhost` or unspecified domains.
 
 #### 4.2.6 Security / Origin Isolation
 
@@ -301,6 +305,9 @@ SubdomainRequest
 - [ ] DNSLink subdomains resolve via `DNSLinkResolver` and serve content.
 - [ ] Path-gateway fallback remains unchanged for non-subdomain hosts.
 - [ ] All existing gateway tests continue to pass.
+- [ ] Requests to `Host: <gatewayDomain>` (bare domain) fall back to the path gateway and are not treated as a subdomain error.
+- [ ] CORS headers on subdomain responses do not include `Access-Control-Allow-Credentials: true`.
+- [ ] DNSLink resolution failures return `400` or `502` consistently and do not crash the gateway.
 
 ---
 
@@ -332,11 +339,12 @@ If both `?format=` and `Accept` are present, `?format=` wins. If `Accept` contai
 
 #### 4.3.4 CAR Response Requirements
 
-- Generate a **CAR v1** archive with a single root CID equal to the requested CID.
+- Generate a **CAR v1** archive using the standard `CarWriter` from `CAR_FORMAT_SPEC.md`, with a single root CID equal to the requested CID.
 - Include all blocks reachable from the root CID through the requested sub-path (if any) up to the full DAG.
 - Use varint-prefixed CID+block frames per the CAR v1 spec.
 - Set `Content-Disposition: attachment; filename="<cid>.car"`.
 - Do **not** convert CAR data to HTML under any trustless request.
+- CAR traversal must be bounded by a configurable maximum DAG depth and/or total block count; when a bound is exceeded, return `416` or `413` per the implementation policy.
 
 #### 4.3.5 Raw Block Response Requirements
 
@@ -445,7 +453,9 @@ MetricsCollector
   reset() → void                         // test-only
 ```
 
-Use the existing `prometheus_client` dependency (already in `pubspec.yaml`).
+Use the existing `prometheus_client` dependency (already in `pubspec.yaml` at line 38).
+
+The existing `metricsStream` broadcast stream remains a legacy/secondary event channel; production telemetry should use the Prometheus exposition endpoint and the new `record*` methods. The `method` parameter in `recordRpcRequest` is retained for logging/debugging but is not included in the `ipfs_rpc_request_duration_seconds` histogram; only the `endpoint` label is used there.
 
 #### 4.4.5 Endpoint Wiring
 
@@ -456,7 +466,7 @@ Use the existing `prometheus_client` dependency (already in `pubspec.yaml`).
 
 #### 4.4.6 Collection Intervals
 
-- When `MetricsConfig.enabled` is true, start a periodic collection timer in `MetricsCollector.start()` with `collectionIntervalSeconds`.
+- When `IPFSConfig.metrics.enabled` is true, start a periodic collection timer in `MetricsCollector.start()` with `collectionIntervalSeconds`.
 - The timer must collect blockstore and routing table statistics, and update gauges.
 - The timer must be cancelled in `stop()`.
 
@@ -468,7 +478,10 @@ Use the existing `prometheus_client` dependency (already in `pubspec.yaml`).
 - [ ] `ipfs_gateway_requests_total` and `ipfs_rpc_requests_total` increment on every request.
 - [ ] Histograms have default buckets `[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]`.
 - [ ] Metrics collection does not block request handling; all increments are O(1).
-- [ ] Disabled metrics (`MetricsConfig.enabled=false`) imposes zero overhead beyond a single boolean check.
+- [ ] Disabled metrics (`IPFSConfig.metrics.enabled=false`) imposes zero overhead beyond a single boolean check.
+- [ ] The `/metrics` body parses without error using the official `prometheus_client` parser.
+- [ ] `LifecycleManager` calls `start()` and `stop()` on `MetricsCollector`, and the periodic collection timer is cancelled cleanly in `stop()`.
+- [ ] No metric label contains `\n`, `\`, or `"` characters after sanitization.
 
 ---
 
@@ -549,16 +562,20 @@ DenylistAuditEvent
 Support the BadBits-style compact format:
 
 - A text file with one entry per line.
-- Each line is either:
-  - a base32-encoded multihash (lowercase), or
-  - a CID string (base32 or base58btc), or
-  - a JSON comment line starting with `#` containing metadata such as `{"reason": "...", "cid": "..."}`.
+- The parser must classify each line in this exact order:
+  1. Skip empty lines and lines that begin with a plain `#` comment.
+  2. If a line begins with `#` and the remainder is valid JSON, parse it as a JSON comment containing metadata such as `{"reason": "...", "cid": "..."}`.
+  3. Attempt to decode the line as a CID string.
+  4. Attempt to decode the line as a base32-encoded multihash (lowercase).
+  5. If none of the above succeed, skip the line and count it as a refresh warning.
 - When `denylistCompactFormat=true`, entries may be sorted and deduplicated for binary-search lookup.
 - Also support plain text lists of CID strings for backward compatibility.
+- Maximum line length: 4096 characters; longer lines are skipped and counted as a refresh warning.
+- Maximum denylist size: 1,000,000 entries or 256 MiB; exceeding this fails the refresh atomically and keeps the previous list active.
 
 #### 4.6.5 Gateway and RPC Integration
 
-- In `GatewayHandler.handlePath` and `GatewayHandler.handleSubdomain`, check `DenylistService.isBlockedByCidString(cidStr)` before serving. If blocked and `defaultAction="block"`, return `451 Unavailable For Legal Reasons` with body `Content blocked by operator policy`. If `defaultAction="log"`, serve the content but emit a `denylist_logged` security event.
+- In `GatewayHandler.handlePath` and `GatewayHandler.handleSubdomain`, check `DenylistService.isBlockedByCidString(cidStr)` before serving. If blocked and `defaultAction="block"`, return `451 Unavailable For Legal Reasons` with body `Content blocked by operator policy`. If `defaultAction="log"`, serve the content but record an audit event with `action="logged"` and emit `MetricsCollector.recordSecurityEvent("denylist_logged")`. Logged events do not increment `refreshErrors`.
 - In `RPCHandlers.handleCat`, `handleBlockGet`, `handleDagGet`, and `handleDhtProvide`, check the denylist before processing. Return Kubo-style error JSON with `Code: 451` and `Message: Content blocked by operator policy` when blocked.
 - In `DHTHandler.handleProvideRequest`, reject provider announcements for blocked CIDs.
 
@@ -568,6 +585,7 @@ Support the BadBits-style compact format:
 - The denylist must be **default-off**; enabling it requires explicit operator configuration.
 - No hardcoded denylist entries are allowed in the package.
 - The service must log a warning on startup when enabled, including the source path and entry count.
+- Refreshes must be atomic: a new in-memory set is built from a complete successful parse, then swapped in. Partial or corrupt refreshes are discarded and the previously loaded list remains active.
 
 #### 4.6.7 Acceptance Criteria
 
@@ -577,6 +595,10 @@ Support the BadBits-style compact format:
 - [ ] Audit log records every blocked/logged request with timestamp and source.
 - [ ] Refresh interval reloads the list without dropping requests.
 - [ ] Failed URL refreshes increment `refreshErrors` and log a warning but do not crash the node.
+- [ ] `denylistDefaultAction="log"` records an audit event with `action="logged"` and does not increment `refreshErrors`.
+- [ ] Denylist refreshes are atomic; a partial or corrupt refresh keeps the previous list active.
+- [ ] `DenylistService` is registered as an `ILifecycle` service and started/stopped by `LifecycleManager`.
+- [ ] The maximum denylist size (1,000,000 entries or 256 MiB) and maximum line length (4096 characters) are enforced.
 
 ---
 

@@ -1,7 +1,7 @@
 # dart_ipfs Roadmap
 
 **Current Version**: 1.11.5 (Multi-Platform Production Ready)  
-**Last Updated**: 2026-06-23
+**Last Updated**: 2026-06-25
 
 ---
 
@@ -237,11 +237,11 @@ The items below were identified by comparing dart_ipfs v1.11.5 against Kubo v0.4
 
 Focus: close the highest-impact interoperability gaps. Ciel Council verdicts: **APPROVED** unless noted.
 
-- [ ] **P0 — Standard CAR v1/v2 format** ✅ Approved. Replace the custom protobuf `CarProto` with the spec binary format (CBOR header + varint CID/block frames). Add CARv2 index/footer. Maintain the in-memory `CAR` API.
+- [ ] **P0 — Standard CAR v1/v2 format** ✅ Approved. Delete the old protobuf-based `CAR`/`CarHeader`/`CarIndex` classes and replace them with the standard `CarReader`/`CarWriter`/`CarHeader`/`CarSection`/`IndexBuilder` API (CBOR header + varint CID/block frames, CARv2 pragma/header/index/footer). See `COUNCIL_DECISION_CAR_MIGRATION.md`.
 - [ ] **P0 — UnixFS basic directories** ✅ Approved. Fix directory node creation, cumulative `Tsize`, and path resolution integration. (HAMT sharding + symlinks split to P1 below.)
 - [ ] **P1 — UnixFS HAMT sharding + symlinks** ✅ Approved. Add large-directory HAMT builder/walker and symlink node creation with cycle guards.
 - [ ] **P0 — Full DAG-CBOR codec** ✅ Approved. Make `EnhancedCBORHandler` spec-compliant: CID links as tag `42` with `0x00` prefix, raw bytes without tag `45`, canonical key ordering, big-int support, and strict rejection of non-IPLD CBOR tags.
-- [ ] **P1 — Consolidated DAG-JSON codec** 🔧 Modified. Do not add a third implementation. Remove/deprecate `dag_json_codec.dart` and its duplicate `IPLDCodec` interface; make `DagJsonCodec` in `standard_codecs.dart` spec-compliant (safe integers, bytes, CID links, `"/"` escape).
+- [ ] **P1 — Consolidated DAG-JSON codec** 🔧 Modified. Replace both existing `IPLDCodec` interfaces with a single unified interface exposing `name`/`code` and async typed `encode`/`decode` on `IPLDNode`. Delete `dag_json_codec.dart`, make `DagJsonCodec` in `standard_codecs.dart` spec-compliant (safe integers, bytes, CID links, `"/"` escape), and introduce a `MulticodecRegistry` in `IPLDHandler`. See `COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md`.
 - [ ] **P0 — Spec-compliant IPLD selector execution** ✅ Approved. Replace the custom selector model with the official vocabulary (`exploreAll`, `exploreFields`, `exploreIndex`, `exploreRange`, `exploreRecursive`, `exploreUnion`, `matcher`, etc.) serialized as DAG-CBOR. Wire into `IPLDHandler` and GraphSync.
 - [ ] **P2 — Full IPLD Schema DSL validation** ⏸ Deferred. Keep the lightweight `IPLDSchema` stopgap; revisit after core data codecs are spec-compliant.
 - [ ] **P0 — MFS completeness** ✅ Approved. Add `flush`/`sync`, complete `/api/v0/files/*` RPC coverage, and ensure `read/write/stat/ls` semantics match Kubo.
@@ -273,12 +273,12 @@ Focus: make the node a credible participant in the public IPFS network. Ciel Cou
 
 Focus: production deployment and library adoption at scale. Ciel Council verdicts: **APPROVED** unless noted.
 
-- [ ] **P0 — CLI / daemon binary** ✅ Approved. Create `bin/ipfs.dart` with `daemon`, `add`, `cat`, `ls`, `pin`, `id`, `swarm`, `config`, `version` subcommands. Make the Docker image use this binary.
-- [ ] **P0 — Docker & multi-arch images** ✅ Approved. Fix stale image tag, add CI build/publish, multi-arch support, and supply-chain hardening.
+- [ ] **P0 — CLI / daemon binary** ✅ Approved. Create `bin/ipfs.dart` with `daemon`, `add`, `cat`, `ls`, `pin`, `id`, `swarm`, `config`, `version` subcommands. Canonical config is JSON (`$IPFS_PATH/config.json`) with YAML read-fallback; `IPFSNodeBuilder` registers `RPCServer` and `GatewayServer` with `LifecycleManager`. See `COUNCIL_DECISION_CONFIG_LIFECYCLE.md`.
+- [ ] **P0 — Docker & multi-arch images** ✅ Approved. Fix stale image tag, add CI build/publish, multi-arch support, and supply-chain hardening. Default runtime base: `cgr.dev/chainguard/glibc-dynamic` (hardened glibc) to satisfy the `libsodium` dependency; experimental static variant only if static linking is proven. See `COUNCIL_DECISION_DOCKER_BASE.md`.
 - [ ] **P1 — Kubernetes manifests & Helm chart** ✅ Approved. Add a `k8s/` base manifest set after Docker CI is complete.
-- [ ] **P0 — Interoperability test suite** ✅ Approved. Add CI jobs that spin Kubo (and later Helia) nodes and test CAR exchange, Bitswap, gateway retrieval, DHT provide/find, and IPNS resolution.
+- [ ] **P0 — Interoperability test suite** ✅ Approved. P0 release-blocking: Kubo CAR exchange, Bitswap fetch, and gateway retrieval. P1 allowed-to-fail/allowed-to-skip: DHT provide/find and IPNS resolution until networking specs stabilize. Helia tests move to a separate nightly workflow. See `COUNCIL_DECISION_INTEROP_SCOPE.md`.
 - [ ] **P1 — Package modularization (phase 1)** 🔧 Modified. Create the `packages/` monorepo scaffold and extract only the stable `dart_ipfs_core` layer (CID, multibase, block interfaces, common codecs). Keep protocol/service layers in the umbrella package until v2.1 stabilizes; maintain backward-compatible re-exports.
-- [ ] **P1 — Plugin ecosystem (phase 1)** 🔧 Modified. Harden the plugin API with capability manifest, lifecycle hooks, and code signing; ship 2–3 in-repo example plugins. Defer a public registry to v3.0.
+- [ ] **P1 — Plugin ecosystem (phase 1)** 🔧 Modified. Harden the plugin API with a trust-based, capability-gated, auditable runtime. Ship one or two simple read-only example plugins (e.g., metrics emitter, logging observer). No committed signing keys; use CI-generated ephemeral keys for tests. Defer a public registry to v3.0. See `COUNCIL_DECISION_PLUGIN_SECURITY.md`.
 - [ ] **P2 — WASM build** ⏸ Deferred. Keep web code wasm-clean, but do not ship a production wasm node in v2.2; revisit v3.0.
 - [ ] **P2 — FUSE mount** ⏸ Deferred. Revisit only after CLI, Docker, and interoperability parity are solid.
 - [ ] **P2 — Reference WebUI** 🔧 Modified. Promote the existing `example/ipfs_dashboard` and `web/` demo as the maintained, optional reference WebUI; add a web build CI target and documentation. Do not create a separate productized WebUI in v2.2.

@@ -2,7 +2,7 @@
 
 **Document ID:** `MODULARIZATION_SPEC`  
 **Version:** 1.0-draft  
-**Target Release:** dart_ipfs v2.2  
+**Target Release:** dart_ipfs v2.2.x / release-candidate (not a v2.2.0 blocker)  
 **Status:** Draft specification for implementation  
 **Council Priority:** P1 MODIFIED  
 **Source:** `OPERATIONS_ECOSYSTEM_SPEC` section 4.5
@@ -13,13 +13,14 @@
 
 The goal of this specification is to begin transforming `dart_ipfs` from a single umbrella package into a maintainable monorepo. Phase 1 extracts only the **stable core primitives** into a new package named `dart_ipfs_core` under `packages/`. Protocol and service layers remain in the umbrella package until they stabilize, and the umbrella package continues to re-export all public APIs so existing consumers are not broken.
 
-Scope for v2.2:
+Scope for v2.2.x:
 
 - Create a `packages/` monorepo scaffold.
 - Extract `dart_ipfs_core` containing stable data primitives: CID, multibase, multicodec, multihash, block abstractions, blockstore interfaces/implementations, common codecs, and key utilities.
 - Maintain backward-compatible umbrella re-exports from `package:dart_ipfs/dart_ipfs.dart`.
-- Add workspace tooling (Melos or `pubspec_overrides.yaml`) to simplify cross-package development.
+- Adopt workspace tooling: **Melos** is the recommended choice for bootstrapping, versioning, and cross-package testing. Native Dart workspaces (`pubspec_overrides.yaml`) may be used only if the team explicitly opts out of Melos.
 - Document the monorepo layout and stability tiers.
+- This work is intentionally **not a v2.2.0 release blocker**; it ships in the v2.2.x / release-candidate window once core interfaces are stable.
 
 Out of scope for v2.2:
 
@@ -121,11 +122,22 @@ export 'package:dart_ipfs_core/dart_ipfs_core.dart'
 - The umbrella package depends on `dart_ipfs_core` (path dependency during development; published version constraint after release).
 - No other `packages/` entries are created in v2.2 unless explicitly approved by a new Council deliberation.
 
-### 4.5 Workspace Tooling
+### 4.6 Versioning Policy
 
-- Evaluate Melos for bootstrapping, versioning, and cross-package testing.
-- If Melos is not adopted, use `pubspec_overrides.yaml` in the umbrella package to point to the local core package during development.
-- Ensure `dart pub get` works in each package independently.
+- `dart_ipfs_core` follows the umbrella package version exactly (**single release train**). Both packages share a `CHANGELOG.md` entry and a single semver tag.
+- The umbrella package depends on the published version of `dart_ipfs_core` after release; during development it uses a Melos workspace or path override.
+
+### 4.7 Consumer Rationale and Migration
+
+- The primary consumers of `dart_ipfs_core` in the v2.2 window are in-repo plugin examples and the future `dart_ipfs_cli` package (v3.0). This justifies the extraction without over-engineering the split.
+- Deep imports (`package:dart_ipfs/src/...`) are deprecated in v2.2.0 and will be removed in v3.0.0.
+- Provide a migration table:
+
+| Old import | New import |
+|------------|------------|
+| `package:dart_ipfs/src/core/cid.dart` | `package:dart_ipfs/dart_ipfs.dart` (public re-export) or `package:dart_ipfs_core/dart_ipfs_core.dart` |
+| `package:dart_ipfs/src/core/data_structures/block.dart` | `package:dart_ipfs/dart_ipfs.dart` or `package:dart_ipfs_core/dart_ipfs_core.dart` |
+| `package:dart_ipfs/src/core/crypto/ed25519_signer.dart` | `package:dart_ipfs_core/dart_ipfs_core.dart` |
 
 ---
 
@@ -138,9 +150,11 @@ export 'package:dart_ipfs_core/dart_ipfs_core.dart'
 5. README documents the monorepo layout and stability tiers.
 6. All public classes previously available from `package:dart_ipfs/dart_ipfs.dart` remain available after the move.
 7. No new dependencies are added from `dart_ipfs_core` back to the umbrella package.
-8. The `CHANGELOG.md` warns that deep `lib/src/` imports are deprecated and will be removed in v3.0.0.
-9. `analysis_options.yaml` is consistent across the root package and `dart_ipfs_core`.
-10. Documentation in `doc/monorepo.md` (or equivalent) explains how to add packages in future phases.
+8. A dependency graph check (e.g., `dart run dependency_validator`) reports zero forbidden dependencies from `dart_ipfs_core` back to the umbrella package.
+9. The `CHANGELOG.md` warns that deep `lib/src/` imports are deprecated and will be removed in v3.0.0.
+10. `analysis_options.yaml` is consistent across the root package and `dart_ipfs_core`.
+11. Documentation in `doc/monorepo.md` (or equivalent) explains how to add packages in future phases.
+12. A consumer test proves that `package:dart_ipfs/dart_ipfs.dart` and `package:dart_ipfs_core/dart_ipfs_core.dart` expose the same CID/multihash API for the moved classes.
 
 ---
 
@@ -185,7 +199,7 @@ export 'package:dart_ipfs_core/dart_ipfs_core.dart'
 - **Prerequisites:**
   - Stable core modules identified in the table above.
   - A clear public API surface for `lib/dart_ipfs.dart`.
-- **Order:** Modularization is a P1 item and is part of the v2.2 rc / optional v2.2.x phase. It should not delay the P0 release but can ship in the same release window.
+- **Order:** Modularization is a P1 item and is part of the v2.2.x / release-candidate phase. It should not delay the v2.2.0 P0 release. The workspace tooling decision (Melos) is made before any files are moved.
 - **Downstream consumers:**
   - `PLUGINS_SPEC.md` — the plugin API depends on stable `BlockStore` and key interfaces from `dart_ipfs_core`.
   - `CLI_SPEC.md` and `DOCKER_SPEC.md` — these should remain functional regardless of whether modularization lands.

@@ -12,7 +12,10 @@ import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 /// Codec for 'raw' data.
 class RawCodec implements IPLDCodec {
   @override
-  String get identifier => 'raw';
+  String get name => 'raw';
+
+  @override
+  int get code => 0x55;
 
   @override
   Future<Uint8List> encode(IPLDNode node) async {
@@ -33,7 +36,10 @@ class RawCodec implements IPLDCodec {
 /// Codec for 'dag-pb' (Protobuf).
 class DagPbCodec implements IPLDCodec {
   @override
-  String get identifier => 'dag-pb';
+  String get name => 'dag-pb';
+
+  @override
+  int get code => 0x70;
 
   @override
   Future<Uint8List> encode(IPLDNode node) async {
@@ -52,16 +58,17 @@ class DagPbCodec implements IPLDCodec {
       throw ArgumentError('Cannot convert non-map to MerkleDAGNode');
     }
 
-    final data = node.mapValue.entries
-        .firstWhere((e) => e.key == 'Data', orElse: () => MapEntry())
-        .value
-        .bytesValue;
+    final dataEntry = node.mapValue.entries
+        .firstWhere((e) => e.key == 'Data', orElse: () => MapEntry());
+
+    final data = dataEntry.value?.bytesValue ?? Uint8List(0);
 
     final linkEntries = node.mapValue.entries
-        .firstWhere((e) => e.key == 'Links', orElse: () => MapEntry())
-        .value
-        .listValue
-        .values;
+            .firstWhere((e) => e.key == 'Links', orElse: () => MapEntry())
+            .value
+            ?.listValue
+            ?.values ??
+        [];
 
     final List<Link> links = linkEntries.map((linkNode) {
       if (linkNode.kind != Kind.MAP) {
@@ -73,8 +80,6 @@ class DagPbCodec implements IPLDCodec {
     return MerkleDAGNode(
       links: links,
       data: Uint8List.fromList(data),
-      mtime: DateTime.now().millisecondsSinceEpoch,
-      isDirectory: false,
     );
   }
 }
@@ -82,7 +87,10 @@ class DagPbCodec implements IPLDCodec {
 /// Codec for 'dag-cbor' (CBOR).
 class DagCborCodec implements IPLDCodec {
   @override
-  String get identifier => 'dag-cbor';
+  String get name => 'dag-cbor';
+
+  @override
+  int get code => 0x71;
 
   @override
   Future<Uint8List> encode(IPLDNode node) async {
@@ -98,7 +106,10 @@ class DagCborCodec implements IPLDCodec {
 /// Codec for 'dag-json' (JSON).
 class DagJsonCodec implements IPLDCodec {
   @override
-  String get identifier => 'dag-json';
+  String get name => 'dag-json';
+
+  @override
+  int get code => 0x0129;
 
   @override
   Future<Uint8List> encode(IPLDNode node) async {
