@@ -1,0 +1,18 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+pubspec.lock
+build/
+
+# Test artifacts
+test_tmp/
+*.log
+
+# Native library build artifacts are intentionally tracked for this
+# foundation package so that tests can run without a Rust toolchain. For
+# production, migrate to Dart native_assets and build from source per platform.
+# If you prefer not to commit binaries, remove the files below and run the
+# build instructions in README.md.
+# !native/quiche.dll
+# !native/libquiche.so
+# !native/libquiche.dylib

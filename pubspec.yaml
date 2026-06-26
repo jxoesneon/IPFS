@@ -58,6 +58,10 @@ dependencies:
   dart_ipfs_core:
     path: packages/dart_ipfs_core
 
+  # Optional native QUIC transport (monorepo)
+  dart_ipfs_quic:
+    path: packages/dart_ipfs_quic
+
   # Common packages
   args: ^2.6.0
   yaml: ^3.1.3

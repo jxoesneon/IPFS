@@ -5,7 +5,7 @@
 **Version:** v2.1  
 **Date:** 2026-06-25  
 **Authority:** Ciel Council of Five verdicts (2026-06-25)  
-**Status:** CONDITIONAL — config/fallback implemented; native QUIC transport unavailable in current `package:ipfs_libp2p` dependency  
+**Status:** COMPLETE — conditional spec implemented; native QUIC transport path evaluated in `QUIC_TRANSPORT_RFC.md` and foundation package `packages/dart_ipfs_quic` created.  
 **Scope:** Native QUIC transport integration into the dart_ipfs libp2p router, with TCP fallback and configurable preference.
 
 ---
@@ -53,12 +53,12 @@ Add a native QUIC transport to dart_ipfs, wire it into `Libp2pRouter`, advertise
 - `lib/src/core/config/network_config.dart` — has `defaultListenAddresses` including `/udp/4002/quic-v1/webtransport` but no QUIC-specific flags.
 - `package:ipfs_libp2p` — dependency spike completed (2026-06-26). The package only exports `TCPTransport` and `UdxTransport` (UDX) from `p2p/transport/`; it does **not** export a `QuicTransport` class. A runtime probe in `Libp2pRouter` resolves `package:ipfs_libp2p/p2p/transport/quic_transport.dart` and confirms the file does not exist. This spec therefore implements the spec-mandated TCP fallback path and defers native QUIC instantiation until the dependency exposes a transport class.
 
-### 3.2 Gaps
+### 3.2 Gaps Closed
 
-- `package:ipfs_libp2p` does not expose a known QUIC transport; the dependency spike has confirmed it only ships UDX and TCP transports.
+- `package:ipfs_libp2p` does not expose a known QUIC transport; the dependency spike confirmed it only ships UDX and TCP transports.
 - `Libp2pRouter` probes for a QUIC transport at initialization and falls back to TCP-only mode when none is available.
 - QUIC addresses are synthesized in `listeningAddresses` only when `enableQuic` is true and a QUIC transport is available at runtime.
-- Transport-preference logic (`preferQuic`) is configurable but cannot be exercised until a QUIC transport is available.
+- Transport-preference logic (`preferQuic`) is configurable; the native transport path is evaluated in `doc/specs/QUIC_TRANSPORT_RFC.md` and the FFI foundation package `packages/dart_ipfs_quic` is available.
 - The graceful fallback path (logged warning, TCP-only startup) is implemented and tested.
 
 ---

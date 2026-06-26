@@ -1,0 +1,17 @@
+name: QuicheBindings
+description: FFI bindings for Cloudflare quiche
+output: lib/src/generated/quiche_bindings.dart
+headers:
+  entry-points:
+    - native/quiche.h
+compiler-opts:
+  - "-I"
+  - "native"
+preamble: |
+  // Copyright (c) 2024, Cloudflare, Inc.
+  // SPDX-License-Identifier: BSD-2-Clause
+comments: false
+functions:
+  expose-typedefs:
+    include:
+      - "quiche_.*"
