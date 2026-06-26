@@ -26,6 +26,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/mfs/mfs_manager.dart';
 import 'package:dart_ipfs/src/core/plugins/ipfs_plugin.dart';
+import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
@@ -102,6 +103,9 @@ class IPFSNode {
       bitswapHandler: _container.isRegistered(BitswapHandler)
           ? _container.get<BitswapHandler>()
           : null,
+      denylistService: _container.isRegistered<DenylistService>()
+          ? _container.get<DenylistService>()
+          : null,
     );
 
     _networkManager = NetworkManager(
@@ -135,6 +139,9 @@ class IPFSNode {
     _mfsManager = MFSManager(
       _container.get<BlockStore>(),
       _container.get<DatastoreHandler>().datastore,
+      denylistService: _container.isRegistered<DenylistService>()
+          ? _container.get<DenylistService>()
+          : null,
     );
 
     // Wire up the periodic reprovider when DHT and config are available.
@@ -164,6 +171,9 @@ class IPFSNode {
     _lifecycleManager.register(_protocolManager);
     if (_reprovider != null) {
       _lifecycleManager.register(_reprovider!);
+    }
+    if (_container.isRegistered<DenylistService>()) {
+      _lifecycleManager.register(_container.get<DenylistService>());
     }
 
     // Set back-references for handlers that need the IPFSNode instance
@@ -198,6 +208,14 @@ class IPFSNode {
 
   /// Returns the SecurityManager.
   SecurityManager get securityManager => _container.get<SecurityManager>();
+
+  /// Returns the [DenylistService] instance, or `null` if not registered.
+  DenylistService? get denylistService {
+    if (_container.isRegistered<DenylistService>()) {
+      return _container.get<DenylistService>();
+    }
+    return null;
+  }
 
   /// Whether the node is currently running.
   bool get isRunning => _state == NodeState.running;

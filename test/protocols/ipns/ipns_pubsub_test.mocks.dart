@@ -326,6 +326,18 @@ class MockDHTHandler extends _i1.Mock implements _i12.DHTHandler {
           as bool);
 
   @override
+  bool isValidProviderRecord(
+    _i16.PeerId? provider,
+    String? cid,
+    DateTime? ttl,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#isValidProviderRecord, [provider, cid, ttl]),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
   String? extractCIDFromResponse(String? responseBody) =>
       (super.noSuchMethod(
             Invocation.method(#extractCIDFromResponse, [responseBody]),
@@ -346,6 +358,15 @@ class MockDHTHandler extends _i1.Mock implements _i12.DHTHandler {
   _i9.Future<void> provide(_i14.CID? cid) =>
       (super.noSuchMethod(
             Invocation.method(#provide, [cid]),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
+          )
+          as _i9.Future<void>);
+
+  @override
+  _i9.Future<void> provideAll(List<_i14.CID>? cids) =>
+      (super.noSuchMethod(
+            Invocation.method(#provideAll, [cids]),
             returnValue: _i9.Future<void>.value(),
             returnValueForMissingStub: _i9.Future<void>.value(),
           )

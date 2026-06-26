@@ -16,6 +16,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
@@ -65,6 +66,15 @@ class IPFSNodeBuilder {
     _container.registerSingleton(metrics);
     lifecycleManager.register(metrics);
 
+    final denylistService = DenylistService(
+      _config.security,
+      metrics,
+      storagePath: _config.security.denylistStoragePath ??
+          '${_config.dataPath}/denylist_cache.txt',
+    );
+    _container.registerSingleton(denylistService);
+    lifecycleManager.register(denylistService);
+
     _container.registerSingleton(SecurityManager(_config.security, metrics));
 
     final datastore = MemoryDatastore();
@@ -91,11 +101,15 @@ class IPFSNodeBuilder {
 
     if (_config.enableDHT) {
       final metrics = _container.get<MetricsCollector>();
+      final denylistService = _container.isRegistered<DenylistService>()
+          ? _container.get<DenylistService>()
+          : null;
       final dhtHandler = DHTHandler(
         _config,
         router,
         networkHandler,
         metrics: metrics,
+        denylistService: denylistService,
       );
       _container.registerSingleton(dhtHandler);
 
@@ -116,8 +130,16 @@ class IPFSNodeBuilder {
       );
     }
 
+    final denylistService = _container.isRegistered<DenylistService>()
+        ? _container.get<DenylistService>()
+        : null;
     _container.registerSingleton(
-      BitswapHandler(_config, _container.get<BlockStore>(), router),
+      BitswapHandler(
+        _config,
+        _container.get<BlockStore>(),
+        router,
+        denylistService: denylistService,
+      ),
     );
 
     _container.registerSingleton(BootstrapHandler(_config, networkHandler));
@@ -178,6 +200,9 @@ class IPFSNodeBuilder {
       final ipnsHandler = _container.isRegistered<IPNSHandler>()
           ? _container.get<IPNSHandler>()
           : null;
+      final denylistService = _container.isRegistered<DenylistService>()
+          ? _container.get<DenylistService>()
+          : null;
       final gatewayServer = GatewayServer(
         blockStore: _container.get<BlockStore>(),
         node: node,
@@ -185,6 +210,7 @@ class IPFSNodeBuilder {
         port: _config.gateway.port,
         metricsCollector: metrics,
         metricsConfig: _config.metrics,
+        denylistService: denylistService,
         ipnsResolver: ipnsHandler != null
             ? (String name) async => ipnsHandler.resolve(name)
             : null,

@@ -6,6 +6,7 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
@@ -37,9 +38,11 @@ class DHTHandler implements IDHTHandler {
     Keystore? keystore,
     http.Client? httpClient,
     MetricsCollector? metrics,
+    DenylistService? denylistService,
   })  : _keystore = keystore ?? Keystore(),
         _httpClient = httpClient ?? http.Client(),
-        _storage = storage ?? HiveDatastore(config.datastorePath) {
+        _storage = storage ?? HiveDatastore(config.datastorePath),
+        _denylistService = denylistService {
     _logger = Logger('DHTHandler', debug: config.debug);
     if (storage == null) {
       _storage.init();
@@ -73,6 +76,8 @@ class DHTHandler implements IDHTHandler {
 
   /// Track provider announcements per peer for rate limiting
   final Map<String, List<DateTime>> _providerAnnouncements = {};
+
+  final DenylistService? _denylistService;
 
   /// Starts the DHT client.
   @override
@@ -383,6 +388,18 @@ class DHTHandler implements IDHTHandler {
     final cidStr = cid.toString();
 
     try {
+      final denylist = _denylistService;
+      if (denylist != null &&
+          denylist.configuredEnabled &&
+          denylist.isBlocked(cid)) {
+        denylist.recordHit(cidStr, source: 'dht');
+        _logger.warning(
+          'Denylist: rejected provider announcement for blocked CID $cidStr '
+          'from $providerStr',
+        );
+        return;
+      }
+
       // SEC-010: Validate provider record before rate limiting.
       if (!isValidProviderRecord(provider, cidStr, null)) {
         _logger.warning(

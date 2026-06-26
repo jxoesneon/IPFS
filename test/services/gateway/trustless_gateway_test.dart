@@ -2,8 +2,10 @@ import 'dart:typed_data';
 
 import 'package:cbor/cbor.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/config/security_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/car.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
@@ -17,6 +19,18 @@ import 'package:test/test.dart';
 
 import 'gateway_handler_test.mocks.dart';
 import 'trustless_gateway_test.mocks.dart';
+
+class _MockMetrics implements MetricsCollector {
+  final List<Map<String, dynamic>> securityEvents = [];
+
+  @override
+  void recordSecurityEvent(String type) {
+    securityEvents.add({'type': type});
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 @GenerateMocks([BitswapHandler])
 void main() {
@@ -329,11 +343,9 @@ void main() {
       test('detects trustless format in subdomain request', () async {
         final block = makeBlock();
         final cid = CID.decode(cidStr);
-        final subdomainCid = CID.v1(
-          cid.codec ?? 'dag-pb',
-          cid.multihash,
-          base: Multibase.base32,
-        ).encode();
+        final subdomainCid = CID
+            .v1(cid.codec ?? 'dag-pb', cid.multihash, base: Multibase.base32)
+            .encode();
         when(
           mockBlockStore.getBlock(subdomainCid),
         ).thenAnswer((_) async => foundResponse(block));
@@ -357,7 +369,10 @@ void main() {
 
     group('denylist', () {
       test('returns 451 for blocked CID with ?format=raw', () async {
-        final denylist = DenylistService();
+        final denylist = DenylistService(
+          const SecurityConfig(enableDenylist: true),
+          _MockMetrics(),
+        );
         denylist.blockCidString(cidStr);
 
         handler = GatewayHandler(mockBlockStore, denylistService: denylist);
@@ -369,11 +384,14 @@ void main() {
         final response = await handler.handlePath(request);
         expect(response.statusCode, equals(451));
         final body = await response.readAsString();
-        expect(body, equals('Unavailable For Legal Reasons'));
+        expect(body, equals('Content blocked by operator policy'));
       });
 
       test('returns 451 for blocked CID via path', () async {
-        final denylist = DenylistService();
+        final denylist = DenylistService(
+          const SecurityConfig(enableDenylist: true),
+          _MockMetrics(),
+        );
         denylist.blockCidString(cidStr);
 
         handler = GatewayHandler(mockBlockStore, denylistService: denylist);
@@ -387,7 +405,10 @@ void main() {
       });
 
       test('returns 451 for blocked IPNS name', () async {
-        final denylist = DenylistService();
+        final denylist = DenylistService(
+          const SecurityConfig(enableDenylist: true),
+          _MockMetrics(),
+        );
         denylist.blockCidString('blocked.local');
 
         handler = GatewayHandler(mockBlockStore, denylistService: denylist);

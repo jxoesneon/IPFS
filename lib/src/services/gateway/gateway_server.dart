@@ -7,9 +7,12 @@ import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/services/health_check_service.dart';
 import 'package:dart_ipfs/src/platform/http_server.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
+import 'package:dart_ipfs/src/services/gateway/gateway_tls_manager.dart';
+import 'package:dart_ipfs/src/services/gateway/gateway_wss_handler.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/version.dart';
 import 'package:prometheus_client/format.dart' as format;
@@ -29,6 +32,7 @@ class GatewayServer implements ILifecycle {
     this.node,
     this.address = 'localhost',
     this.port = 8080,
+    this.tlsPort = 443,
     this.corsOrigins = const [
       'http://localhost',
       'http://127.0.0.1',
@@ -39,14 +43,18 @@ class GatewayServer implements ILifecycle {
     this.rateLimitWindowSeconds = 60,
     this.metricsCollector,
     this.metricsConfig,
+    this.denylistService,
     this.gatewayConfig = const GatewayConfig(),
     HttpServerAdapter? httpAdapter,
-  }) : httpAdapter = httpAdapter ?? createHttpServerAdapter() {
+    GatewayTlsManager? tlsManager,
+  })  : httpAdapter = httpAdapter ?? createHttpServerAdapter(),
+        tlsManager = tlsManager ?? GatewayTlsManager(gatewayConfig) {
     _handler = GatewayHandler(
       blockStore,
       ipnsResolver: ipnsResolver,
       ipnsRecordResolver: ipnsRecordResolver,
       metricsCollector: metricsCollector,
+      denylistService: denylistService,
       gatewayDomain: gatewayConfig.gatewayDomain,
       enableSubdomainGateway: gatewayConfig.enableSubdomainGateway,
       subdomainDNSLinkResolver: gatewayConfig.subdomainDNSLinkResolver,
@@ -73,6 +81,9 @@ class GatewayServer implements ILifecycle {
   /// The port to listen on.
   final int port;
 
+  /// The TLS port to listen on when TLS is enabled.
+  final int tlsPort;
+
   /// List of allowed CORS origins.
   final List<String> corsOrigins;
 
@@ -94,12 +105,20 @@ class GatewayServer implements ILifecycle {
   /// Optional metrics configuration controlling the Prometheus endpoint.
   final MetricsConfig? metricsConfig;
 
+  /// Optional denylist service for content blocking.
+  final DenylistService? denylistService;
+
   /// Gateway configuration including subdomain gateway settings.
   final GatewayConfig gatewayConfig;
+
+  /// TLS certificate and AutoTLS manager.
+  final GatewayTlsManager tlsManager;
 
   final _logger = Logger('GatewayServer');
 
   IpfsHttpServerInstance? _server;
+  IpfsHttpServerInstance? _tlsServer;
+  IpfsHttpServerInstance? _redirectServer;
   late final GatewayHandler _handler;
   late final Router _router;
   HealthCheckService? _healthCheckService;
@@ -136,6 +155,11 @@ class GatewayServer implements ILifecycle {
         }),
         headers: {'Content-Type': 'application/json'},
       );
+    });
+
+    // WebSocket Secure upgrade endpoint (WSS gateway)
+    _router.get('/ws', (Request request) async {
+      return handleGatewayWebSocket(request, _logger);
     });
 
     // Health check
@@ -176,7 +200,7 @@ class GatewayServer implements ILifecycle {
   /// Starts the gateway server.
   @override
   Future<void> start() async {
-    if (_server != null) {
+    if (_server != null || _tlsServer != null || _redirectServer != null) {
       throw StateError('Server is already running');
     }
 
@@ -190,25 +214,59 @@ class GatewayServer implements ILifecycle {
         .addHandler(_router.call);
 
     try {
-      _server = await httpAdapter.serve(handler, address, port);
-      _logger.info(
-        'Gateway server listening on http://${_server!.host}:${_server!.port}',
-      );
+      if (gatewayConfig.enableTls || gatewayConfig.autoTls) {
+        final effectiveTlsPort =
+            gatewayConfig.tlsPort > 0 ? gatewayConfig.tlsPort : tlsPort;
+        final context = await tlsManager.loadSecurityContext();
+        _tlsServer = await httpAdapter.serveSecure(
+          handler,
+          address,
+          effectiveTlsPort,
+          context,
+        );
+        tlsManager.markActive();
+        _logger.info(
+          'Gateway TLS server listening on https://${_tlsServer!.host}:${_tlsServer!.port}',
+        );
+
+        if (gatewayConfig.redirectHttpToHttps) {
+          _redirectServer = await httpAdapter.serve(
+            _redirectToHttpsHandler(effectiveTlsPort),
+            address,
+            port,
+          );
+          _logger.info(
+            'HTTP redirect server listening on http://${_redirectServer!.host}:${_redirectServer!.port}',
+          );
+        } else {
+          _server = await httpAdapter.serve(handler, address, port);
+          _logger.info(
+            'Gateway server listening on http://${_server!.host}:${_server!.port}',
+          );
+        }
+      } else {
+        _server = await httpAdapter.serve(handler, address, port);
+        _logger.info(
+          'Gateway server listening on http://${_server!.host}:${_server!.port}',
+        );
+      }
     } catch (e, stackTrace) {
       _logger.error('Failed to start gateway server', e, stackTrace);
       rethrow;
     }
   }
 
-  /// Stops the gateway server.
+  /// Stops the gateway server and any TLS or redirect listeners.
   @override
   Future<void> stop() async {
-    if (_server == null) {
-      return;
-    }
-
-    await _server!.close(force: true);
+    await _server?.close(force: true);
     _server = null;
+    await _tlsServer?.close(force: true);
+    _tlsServer = null;
+    await _redirectServer?.close(force: true);
+    _redirectServer = null;
+    tlsManager.markInactive();
+    await tlsManager.dispose();
     _requestLog.clear();
     _logger.info('Gateway server stopped');
   }
@@ -353,11 +411,39 @@ class GatewayServer implements ILifecycle {
     };
   }
 
-  /// Returns true if the server is running
-  bool get isRunning => _server != null;
+  /// Returns true if the TLS listener is active and a certificate is loaded.
+  Future<bool> isTlsActive() async =>
+      _tlsServer != null && tlsManager.isActive && tlsManager.isContextLoaded;
 
-  /// Returns the server URL
-  String get url => _server != null
-      ? 'http://${_server!.host}:${_server!.port}'
-      : 'http://$address:$port (not started)';
+  /// Returns the not-after expiry of the loaded TLS certificate, if known.
+  Future<DateTime?> certificateExpiry() async => tlsManager.certificateExpiry;
+
+  /// Returns true if the server is running
+  bool get isRunning =>
+      _server != null || _tlsServer != null || _redirectServer != null;
+
+  /// Returns the server URL.
+  ///
+  /// Prefer HTTPS when the TLS listener is active.
+  String get url {
+    if (_tlsServer != null) {
+      return 'https://${_tlsServer!.host}:${_tlsServer!.port}';
+    }
+    if (_server != null) {
+      return 'http://${_server!.host}:${_server!.port}';
+    }
+    return 'http://$address:$port (not started)';
+  }
+
+  /// Handler that redirects every request to the HTTPS listener.
+  Handler _redirectToHttpsHandler(int targetTlsPort) {
+    return (Request request) {
+      final host = request.headers['host'] ?? request.url.host;
+      final domain = host.contains(':') ? host.split(':').first : host;
+      final location =
+          'https://$domain${targetTlsPort == 443 ? '' : ':$targetTlsPort'}${request.url}';
+      _logger.info('Redirecting HTTP request to HTTPS: $location');
+      return Response.movedPermanently(location);
+    };
+  }
 }

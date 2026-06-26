@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/config/bitswap_config.dart';
 import 'package:dart_ipfs/src/core/config/dht_config.dart';
 import 'package:dart_ipfs/src/core/config/gateway_config.dart';
+import 'package:dart_ipfs/src/core/config/graphsync_config.dart';
 import 'package:dart_ipfs/src/core/config/metrics_config.dart';
 import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:dart_ipfs/src/core/config/security_config.dart';
@@ -18,6 +19,7 @@ import 'package:yaml/yaml.dart';
 export 'package:dart_ipfs/src/core/config/bitswap_config.dart';
 export 'package:dart_ipfs/src/core/config/dht_config.dart';
 export 'package:dart_ipfs/src/core/config/gateway_config.dart';
+export 'package:dart_ipfs/src/core/config/graphsync_config.dart';
 export 'package:dart_ipfs/src/core/config/metrics_config.dart';
 export 'package:dart_ipfs/src/core/config/network_config.dart';
 export 'package:dart_ipfs/src/core/config/security_config.dart';
@@ -85,6 +87,7 @@ class IPFSConfig {
     SecurityConfig? security,
     GatewayConfig? gateway,
     BitswapConfig? bitswap,
+    GraphsyncConfig? graphsync,
     this.debug = true,
     this.verboseLogging = true,
     this.enablePubSub = true,
@@ -119,14 +122,15 @@ class IPFSConfig {
     this.maxSelectorDepth = 32,
     this.maxSelectorNodes = 10000,
     this.customConfig = const {},
-  })  : network = network ?? NetworkConfig(),
-        dht = dht ?? const DHTConfig(),
-        storage = storage ?? const StorageConfig(),
-        security = security ?? const SecurityConfig(),
-        gateway = gateway ?? const GatewayConfig(),
-        bitswap = bitswap ?? const BitswapConfig(),
-        nodeId = nodeId ?? _generateDefaultNodeId(),
-        keystore = keystore ?? Keystore();
+  }) : network = network ?? NetworkConfig(),
+       dht = dht ?? const DHTConfig(),
+       storage = storage ?? const StorageConfig(),
+       security = security ?? const SecurityConfig(),
+       gateway = gateway ?? const GatewayConfig(),
+       bitswap = bitswap ?? const BitswapConfig(),
+       graphsync = graphsync ?? const GraphsyncConfig(),
+       nodeId = nodeId ?? _generateDefaultNodeId(),
+       keystore = keystore ?? Keystore();
 
   /// Creates a new IPFSConfig with a generated nodeId
   factory IPFSConfig.withDefaults() {
@@ -167,6 +171,11 @@ class IPFSConfig {
               Map<String, dynamic>.from(json['bitswap'] as Map),
             )
           : const BitswapConfig(),
+      graphsync: json['graphsync'] != null
+          ? GraphsyncConfig.fromJson(
+              Map<String, dynamic>.from(json['graphsync'] as Map),
+            )
+          : const GraphsyncConfig(),
       debug: json['debug'] as bool? ?? false,
       verboseLogging: json['verboseLogging'] as bool? ?? false,
       enablePubSub: json['enablePubSub'] as bool? ?? true,
@@ -234,6 +243,9 @@ class IPFSConfig {
 
   /// Bitswap protocol configuration.
   final BitswapConfig bitswap;
+
+  /// Graphsync protocol configuration.
+  final GraphsyncConfig graphsync;
 
   /// Enable debug mode.
   final bool debug;
@@ -370,47 +382,48 @@ class IPFSConfig {
 
   /// Converts to JSON representation.
   Map<String, dynamic> toJson() => {
-        'offline': offline,
-        'network': network.toJson(),
-        'dht': dht.toJson(),
-        'storage': storage.toJson(),
-        'security': security.toJson(),
-        'gateway': gateway.toJson(),
-        'bitswap': bitswap.toJson(),
-        'debug': debug,
-        'verboseLogging': verboseLogging,
-        'enablePubSub': enablePubSub,
-        'enableDHT': enableDHT,
-        'enableRPC': enableRPC,
-        'enableCircuitRelay': enableCircuitRelay,
-        'enableContentRouting': enableContentRouting,
-        'enableDNSLinkResolution': enableDNSLinkResolution,
-        'enableIPLD': enableIPLD,
-        'enableGraphsync': enableGraphsync,
-        'enableMetrics': enableMetrics,
-        'enableIpnsPubSub': enableIpnsPubSub,
-        'enableLogging': enableLogging,
-        'enableStructuredLogging': enableStructuredLogging,
-        'logLevel': logLevel,
-        'enableQuotaManagement': enableQuotaManagement,
-        'defaultBandwidthQuota': defaultBandwidthQuota,
-        'maxConcurrentBitswapRequests': maxConcurrentBitswapRequests,
-        'maxSelectorDepth': maxSelectorDepth,
-        'maxSelectorNodes': maxSelectorNodes,
-        'ipnsCacheSize': ipnsCacheSize,
-        'garbageCollectionInterval': garbageCollectionInterval.inSeconds,
-        'garbageCollectionEnabled': garbageCollectionEnabled,
-        'datastorePath': datastorePath,
-        'keystorePath': keystorePath,
-        'blockStorePath': blockStorePath,
-        'dataPath': dataPath,
-        'enableLibp2pBridge': enableLibp2pBridge,
-        'libp2pListenAddress': libp2pListenAddress,
-        'nodeId': nodeId,
-        'libp2pIdentitySeed': libp2pIdentitySeed != null
-            ? base64Encode(libp2pIdentitySeed!)
-            : null,
-        'metrics': metrics.toJson(),
-        'customConfig': customConfig,
-      };
+    'offline': offline,
+    'network': network.toJson(),
+    'dht': dht.toJson(),
+    'storage': storage.toJson(),
+    'security': security.toJson(),
+    'gateway': gateway.toJson(),
+    'bitswap': bitswap.toJson(),
+    'graphsync': graphsync.toJson(),
+    'debug': debug,
+    'verboseLogging': verboseLogging,
+    'enablePubSub': enablePubSub,
+    'enableDHT': enableDHT,
+    'enableRPC': enableRPC,
+    'enableCircuitRelay': enableCircuitRelay,
+    'enableContentRouting': enableContentRouting,
+    'enableDNSLinkResolution': enableDNSLinkResolution,
+    'enableIPLD': enableIPLD,
+    'enableGraphsync': enableGraphsync,
+    'enableMetrics': enableMetrics,
+    'enableIpnsPubSub': enableIpnsPubSub,
+    'enableLogging': enableLogging,
+    'enableStructuredLogging': enableStructuredLogging,
+    'logLevel': logLevel,
+    'enableQuotaManagement': enableQuotaManagement,
+    'defaultBandwidthQuota': defaultBandwidthQuota,
+    'maxConcurrentBitswapRequests': maxConcurrentBitswapRequests,
+    'maxSelectorDepth': maxSelectorDepth,
+    'maxSelectorNodes': maxSelectorNodes,
+    'ipnsCacheSize': ipnsCacheSize,
+    'garbageCollectionInterval': garbageCollectionInterval.inSeconds,
+    'garbageCollectionEnabled': garbageCollectionEnabled,
+    'datastorePath': datastorePath,
+    'keystorePath': keystorePath,
+    'blockStorePath': blockStorePath,
+    'dataPath': dataPath,
+    'enableLibp2pBridge': enableLibp2pBridge,
+    'libp2pListenAddress': libp2pListenAddress,
+    'nodeId': nodeId,
+    'libp2pIdentitySeed': libp2pIdentitySeed != null
+        ? base64Encode(libp2pIdentitySeed!)
+        : null,
+    'metrics': metrics.toJson(),
+    'customConfig': customConfig,
+  };
 }

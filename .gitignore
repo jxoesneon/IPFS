@@ -80,6 +80,8 @@ test_data/
 tmp/
 temp/
 .tmp/
+test_blocks/
+test_blocks_log/
 
 # Logs
 logs/

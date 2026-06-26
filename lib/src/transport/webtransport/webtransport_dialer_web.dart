@@ -22,13 +22,15 @@ class WebTransportDialerWeb implements WebTransportDialer {
 
     final url = 'https://${info.ip}:${info.port}';
 
-    // Configure WebTransport with serverCertificateHashes if provided
+    // Configure WebTransport with serverCertificateHashes if provided.
+    // The browser will validate these hashes before the connection becomes
+    // ready; if they do not match, `ready` will reject and we fail closed.
     final options = web.WebTransportOptions(
       serverCertificateHashes: info.certHashes
-          .map((h) {
+          .map((certHash) {
             final hash = web.WebTransportHash();
-            hash.algorithm = 'sha-256';
-            hash.value = Uint8List(32).toJS;
+            hash.algorithm = certHash.algorithm;
+            hash.value = certHash.value.toJS;
             return hash;
           })
           .toList()
@@ -36,7 +38,16 @@ class WebTransportDialerWeb implements WebTransportDialer {
     );
 
     final transport = web.WebTransport(url, options);
-    await transport.ready.toDart;
+
+    try {
+      await transport.ready.toDart;
+    } catch (e) {
+      // Fail closed on certificate mismatch or any ready failure.
+      transport.close();
+      throw Exception(
+        'WebTransport certhash validation failed for $addr: $e',
+      );
+    }
 
     final p2pPart = addr.toString().split('/p2p/').last;
     final remotePeerId = libp2p.PeerId.fromString(p2pPart);
@@ -64,6 +75,8 @@ class WebTransportConnectionWeb implements libp2p.Conn {
   final libp2p.MultiAddr _remoteAddr;
   final libp2p.PeerId _localPeer;
   final libp2p.PeerId _remotePeer;
+  bool _isClosed = false;
+  final DateTime _opened = DateTime.now();
 
   @override
   libp2p.PeerId get localPeer => _localPeer;
@@ -86,17 +99,24 @@ class WebTransportConnectionWeb implements libp2p.Conn {
 
   @override
   Future<void> close() async {
+    _isClosed = true;
     _transport.close();
   }
 
   @override
-  bool get isClosed => false;
+  bool get isClosed => _isClosed;
 
   @override
-  libp2p.ConnStats get stat => throw UnimplementedError();
+  libp2p.ConnStats get stat => _WebTransportConnStats(
+        stats: libp2p.Stats(
+          direction: libp2p.Direction.outbound,
+          opened: _opened,
+        ),
+        numStreams: 0,
+      );
 
   @override
-  libp2p.ConnScope get scope => throw UnimplementedError();
+  libp2p.ConnScope get scope => libp2p.NullScope();
 
   @override
   String get id => _remotePeer.toString();
@@ -106,14 +126,24 @@ class WebTransportConnectionWeb implements libp2p.Conn {
 
   @override
   libp2p.ConnState get state => const libp2p.ConnState(
-    streamMultiplexer: '/quic/1.0.0',
-    security: '/quic/1.0.0',
-    transport: 'webtransport',
-    usedEarlyMuxerNegotiation: true,
-  );
+        streamMultiplexer: '/quic/1.0.0',
+        security: '/quic/1.0.0',
+        transport: 'webtransport',
+        usedEarlyMuxerNegotiation: true,
+      );
 
   @override
   Future<List<libp2p.P2PStream<Uint8List>>> get streams => Future.value([]);
+}
+
+/// Simple implementation of [libp2p.ConnStats] for WebTransport connections.
+class _WebTransportConnStats implements libp2p.ConnStats {
+  _WebTransportConnStats({required this.stats, required this.numStreams});
+
+  @override
+  final libp2p.Stats stats;
+  @override
+  final int numStreams;
 }
 
 /// Web implementation of a WebTransport stream.
@@ -124,6 +154,7 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   final WebTransportConnectionWeb _conn;
   final JSObject _webStream;
   String? _proto;
+  final DateTime _opened = DateTime.now();
 
   @override
   Future<void> write(Uint8List data) async {
@@ -163,13 +194,13 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   libp2p.Conn get conn => _conn;
 
   @override
-  bool get isClosed => false;
+  bool get isClosed => _conn.isClosed;
 
   @override
   String id() => 'wt-stream';
 
   @override
-  libp2p.StreamManagementScope scope() => throw UnimplementedError();
+  libp2p.StreamManagementScope scope() => libp2p.NullScope();
 
   @override
   Future<void> closeRead() async {}
@@ -200,11 +231,14 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   }
 
   @override
-  libp2p.StreamStats stat() => throw UnimplementedError();
+  libp2p.StreamStats stat() => libp2p.StreamStats(
+        direction: libp2p.Direction.outbound,
+        opened: _opened,
+      );
 
   @override
   libp2p.P2PStream<Uint8List> get incoming => this;
 
   @override
-  bool get isWritable => true;
+  bool get isWritable => !_conn.isClosed;
 }

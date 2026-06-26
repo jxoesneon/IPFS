@@ -5,22 +5,32 @@ import 'dart:typed_data';
 import 'package:web/web.dart' as web;
 
 import 'data_channel_stream.dart';
+import 'ice_server.dart';
 import 'peer_connection.dart';
 
 /// Web implementation of [PeerConnection] using `package:web`.
 class PeerConnectionWeb implements PeerConnection {
   /// Creates a new [PeerConnectionWeb].
-  PeerConnectionWeb(List<String> iceServers)
-    : _pc = web.RTCPeerConnection(
-        web.RTCConfiguration(
-          iceServers: iceServers
-              .map((s) {
-                return web.RTCIceServer(urls: s.toJS);
-              })
-              .toList()
-              .toJS,
-        ),
-      ) {
+  PeerConnectionWeb(List<IceServer> iceServers)
+      : _pc = web.RTCPeerConnection(
+          web.RTCConfiguration(
+            iceServers: iceServers
+                .map((s) {
+                  final username = s.username;
+                  final credential = s.credential;
+                  if (username != null && credential != null) {
+                    return web.RTCIceServer(
+                      urls: s.urls.toJS,
+                      username: username,
+                      credential: credential,
+                    );
+                  }
+                  return web.RTCIceServer(urls: s.urls.toJS);
+                })
+                .toList()
+                .toJS,
+          ),
+        ) {
     _pc.onicecandidate = ((web.RTCPeerConnectionIceEvent ev) {
       if (ev.candidate != null) {
         _iceController.add(
@@ -57,6 +67,12 @@ class PeerConnectionWeb implements PeerConnection {
 
   @override
   String? get remoteDescriptionSdp => _pc.remoteDescription?.sdp;
+
+  @override
+  String? get iceConnectionState => _pc.iceConnectionState;
+
+  @override
+  String? get signalingState => _pc.signalingState;
 
   @override
   Future<RTCSessionDescriptionInit> createOffer() async {
@@ -157,5 +173,5 @@ class _WebDataChannelStream extends DataChannelStream {
 }
 
 /// Factory for creating a [PeerConnectionWeb].
-PeerConnection createPC(List<String> iceServers) =>
+PeerConnection createPC(List<IceServer> iceServers) =>
     PeerConnectionWeb(iceServers);

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/core/config/network_config.dart';
+
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 import 'package:ipfs_libp2p/p2p/transport/listener.dart' as libp2p_listener;
 import 'package:ipfs_libp2p/p2p/transport/transport.dart' as libp2p_trans;
@@ -8,16 +10,24 @@ import 'package:ipfs_libp2p/p2p/transport/transport_config.dart'
     as libp2p_config;
 
 import 'data_channel_stream.dart';
+import 'ice_server.dart';
 import 'peer_connection.dart';
 import 'signaling_protocol.dart';
 
 /// WebRTC transport implementation for libp2p.
 class WebRTCTransport implements libp2p_trans.Transport {
   /// Creates a new [WebRTCTransport].
-  WebRTCTransport({this.host});
+  WebRTCTransport({this.host, NetworkConfig? networkConfig})
+      : _networkConfig = networkConfig;
 
   /// The libp2p host associated with this transport.
   libp2p.Host? host;
+
+  final NetworkConfig? _networkConfig;
+
+  List<IceServer> get _iceServers => _networkConfig != null
+      ? buildIceServersFromNetworkConfig(_networkConfig)
+      : const [];
 
   @override
   libp2p_config.TransportConfig get config =>
@@ -60,15 +70,18 @@ class WebRTCTransport implements libp2p_trans.Transport {
 
     // 2. Open signaling stream to remote peer via relay
     final context = libp2p.Context(timeout: dialTimeout);
-    final signalingStream = await currentHost.newStream(remotePeerId, [
-      SignalingProtocol.id,
-    ], context);
+    final signalingStream = await currentHost.newStream(
+        remotePeerId,
+        [
+          SignalingProtocol.id,
+        ],
+        context);
 
     final signaling = SignalingProtocol();
     signaling.handleStream(signalingStream as libp2p.P2PStream<Uint8List>);
 
-    // 3. Setup WebRTC PeerConnection
-    final pc = createPeerConnection(const ['stun:stun.l.google.com:19302']);
+    // 3. Setup WebRTC PeerConnection with configurable ICE servers
+    final pc = createPeerConnection(_iceServers);
 
     final completer = Completer<libp2p.Conn>();
 
@@ -110,7 +123,7 @@ class WebRTCTransport implements libp2p_trans.Transport {
   @override
   Future<libp2p_listener.Listener> listen(libp2p.MultiAddr addr) async {
     // Browsers don't listen directly for WebRTC p2p, they reserve on relay
-    return WebRTCListener(addr, host);
+    return WebRTCListener(addr, host, networkConfig: _networkConfig);
   }
 
   @override
@@ -192,10 +205,16 @@ class WebRTCConnection implements libp2p.Conn {
   bool get isClosed => _isClosed;
 
   @override
-  libp2p.ConnStats get stat => throw UnimplementedError();
+  libp2p.ConnStats get stat => _WebRTCConnStats(
+        stats: libp2p.Stats(
+          direction: libp2p.Direction.outbound,
+          opened: _opened,
+        ),
+        numStreams: _streams.length,
+      );
 
   @override
-  libp2p.ConnScope get scope => throw UnimplementedError();
+  libp2p.ConnScope get scope => libp2p.NullScope();
 
   @override
   String get id => _remotePeer.toString();
@@ -205,17 +224,41 @@ class WebRTCConnection implements libp2p.Conn {
 
   @override
   libp2p.ConnState get state => const libp2p.ConnState(
-    streamMultiplexer: '/webrtc/1.0.0',
-    security: '/webrtc/1.0.0',
-    transport: 'webrtc',
-    usedEarlyMuxerNegotiation: true,
-  );
+        streamMultiplexer: '/webrtc/1.0.0',
+        security: '/webrtc/1.0.0',
+        transport: 'webrtc',
+        usedEarlyMuxerNegotiation: true,
+      );
+
+  /// The ICE connection state reported by the underlying peer connection, if any.
+  String? get iceConnectionState => _pc.iceConnectionState;
+
+  /// The signaling state reported by the underlying peer connection, if any.
+  String? get signalingState => _pc.signalingState;
+
+  final DateTime _opened = DateTime.now();
+}
+
+/// Simple implementation of [libp2p.ConnStats] for WebRTC connections.
+class _WebRTCConnStats implements libp2p.ConnStats {
+  _WebRTCConnStats({required this.stats, required this.numStreams});
+
+  @override
+  final libp2p.Stats stats;
+  @override
+  final int numStreams;
 }
 
 /// WebRTC listener implementation for libp2p.
 class WebRTCListener implements libp2p_listener.Listener {
   /// Creates a new [WebRTCListener].
-  WebRTCListener(this._addr, this._host) {
+  WebRTCListener(
+    this._addr,
+    this._host, {
+    NetworkConfig? networkConfig,
+  }) : _iceServers = networkConfig != null
+            ? buildIceServersFromNetworkConfig(networkConfig)
+            : const [] {
     final currentHost = _host;
     if (currentHost != null) {
       currentHost.setStreamHandler(SignalingProtocol.id, (
@@ -225,7 +268,7 @@ class WebRTCListener implements libp2p_listener.Listener {
         final signaling = SignalingProtocol();
         signaling.handleStream(stream as libp2p.P2PStream<Uint8List>);
 
-        final pc = createPeerConnection(const ['stun:stun.l.google.com:19302']);
+        final pc = createPeerConnection(_iceServers);
         WebRTCConnection? activeConn;
 
         pc.onIceCandidate.listen((candidate) {
@@ -271,6 +314,7 @@ class WebRTCListener implements libp2p_listener.Listener {
 
   final libp2p.MultiAddr _addr;
   final libp2p.Host? _host;
+  final List<IceServer> _iceServers;
   final StreamController<libp2p.TransportConn> _connController =
       StreamController.broadcast();
 

@@ -2,12 +2,12 @@
 
 ## Executive Summary
 
-This inventory assesses the implementation status of the 24 feature specifications for `dart_ipfs`. As of the latest implementation pass, the P0 networking and naming specs—**DAG_CBOR_SPEC**, **METRICS_SPEC**, **MFS_SPEC**, **TRUSTLESS_GATEWAY_SPEC**, **IPLD_SELECTORS_SPEC**, **DHT_INTEGRATION_SPEC**, **GOSSIPSUB_SPEC**, **IPNS_SPEC**, **UNIXFS_SPEC**, and **CIRCUIT_RELAY_SPEC**—and the first wave of P1 specs—**REPROVIDE_SPEC**, **DAG_JSON_SPEC**, **SUBDOMAIN_GATEWAY_SPEC**, and **BITSWAP_HTTP_FALLBACK_SPEC**—have been implemented to a testable, spec-compliant state. Remaining work is primarily the remaining P1/P2 features and exact HAMT CID parity with Kubo/Helia.
+This inventory assesses the implementation status of the 24 feature specifications for `dart_ipfs`. As of the latest implementation pass, the P0 networking and naming specs—**DAG_CBOR_SPEC**, **METRICS_SPEC**, **MFS_SPEC**, **TRUSTLESS_GATEWAY_SPEC**, **IPLD_SELECTORS_SPEC**, **DHT_INTEGRATION_SPEC**, **GOSSIPSUB_SPEC**, **IPNS_SPEC**, **UNIXFS_SPEC**, and **CIRCUIT_RELAY_SPEC**—and the P1 specs—**REPROVIDE_SPEC**, **DAG_JSON_SPEC**, **SUBDOMAIN_GATEWAY_SPEC**, **BITSWAP_HTTP_FALLBACK_SPEC**, **BROWSER_TRANSPORTS_SPEC**, **CONTENT_BLOCKING_SPEC**, **GATEWAY_TLS_SPEC**, and **GRAPHSYNC_SPEC**—have been implemented to a testable, spec-compliant state. Remaining work is primarily the P2 features and exact HAMT CID parity with Kubo/Helia.
 
 **Status Distribution:**
-- **Complete**: 11 specs (46%)
-- **Partial**: 6 specs (25%)
-- **Missing**: 7 specs (29%)
+- **Complete**: 19 specs (79%)
+- **Partial**: 2 specs (8%)
+- **Missing**: 3 specs (13%)
 
 ## Specification Status Table
 
@@ -27,12 +27,12 @@ This inventory assesses the implementation status of the 24 feature specificatio
 | **TRUSTLESS_GATEWAY_SPEC** | P0 | Complete | `lib/src/services/gateway/gateway_handler.dart`, `lib/src/core/security/denylist_service.dart` | Format negotiation, CAR/raw/DAG-JSON/DAG-CBOR/IPNS-record responses, Bitswap fallback, 451 denylist. |
 | **UNIXFS_SPEC** | P0 | Complete | `lib/src/core/unixfs/` | Directory construction with correct `Tsize`, path resolution, HAMT sharding, symlinks, cycle detection. Exact CID parity with Kubo/Helia for HAMT may need fixture verification. |
 | **BITSWAP_HTTP_FALLBACK_SPEC** | P1 | Complete | `lib/src/protocols/bitswap/bitswap_handler.dart`, `lib/src/core/config/bitswap_config.dart`, `lib/src/transport/http_gateway_client.dart` | HTTP gateway block fallback for Bitswap, configurable gateways, timeout, block verification, private-gateway gating, and retry logic. |
-| **BROWSER_TRANSPORTS_SPEC** | P1 | Partial | `lib/src/transport/webtransport/` | Dummy certhash, hardcoded STUN, incomplete `libp2p.Conn` fields. |
+| **BROWSER_TRANSPORTS_SPEC** | P1 | Complete | `lib/src/transport/webrtc/`, `lib/src/transport/webtransport/`, `lib/src/transport/libp2p_router.dart` | Configurable STUN/TURN, ICE server helper, WebRTC stat/scope, WebTransport certhash decoding and stat/scope, no hardcoded STUN. |
 | **CIRCUIT_RELAY_SPEC** | P0 | Complete | `lib/src/transport/circuit_relay_client_io.dart`, `lib/src/core/config/network_config.dart` | CONNECT flow, reservation refresh, `CircuitRelayConfig`, max-circuits enforcement, router relayed-connection registration. |
-| **CONTENT_BLOCKING_SPEC** | P1 | Partial | `lib/src/core/security/denylist_service.dart` | Basic denylist service and gateway 451 responses implemented; full RPC/security integration missing. |
-| **GATEWAY_TLS_SPEC** | P1 | Missing | N/A | No TLS fields, SecurityContext, or AutoTLS. |
+| **CONTENT_BLOCKING_SPEC** | P1 | Complete | `lib/src/core/security/denylist_service.dart`, `lib/src/services/gateway/gateway_handler.dart`, `lib/src/services/rpc/rpc_handlers.dart`, `lib/src/protocols/dht/dht_handler.dart`, `lib/src/protocols/bitswap/bitswap_handler.dart` | BadBits-style compact parser, CID/multihash blocking, gateway/RPC/DHT/Bitswap/MFS 451 integration, persistence and audit log. |
+| **GATEWAY_TLS_SPEC** | P1 | Complete | `lib/src/core/config/gateway_config.dart`, `lib/src/services/gateway/gateway_tls_manager.dart`, `lib/src/platform/http_server_adapter_io.dart` | TLS/AutoTLS config fields, `serveSecure`, TLS manager with AutoTLS flow, gateway server wiring. |
 | **GOSSIPSUB_SPEC** | P0 | Complete | `lib/src/protocols/pubsub/gossipsub/` | v1.1 protobuf, handler, config, message signing, message cache, peer scoring. Legacy `PubSubClient` untouched. |
-| **GRAPHSYNC_SPEC** | P1 | Partial | `lib/src/protocols/graphsync/graphsync_handler.dart` | Server-side MVP with selector execution and Bitswap fallback; bidirectional pause/resume deferred. |
+| **GRAPHSYNC_SPEC** | P1 | Complete | `lib/src/protocols/graphsync/graphsync_handler.dart`, `lib/src/core/config/graphsync_config.dart`, `lib/src/protocols/graphsync/graphsync_budget.dart` | Unicast responses, budget enforcement, CID prefix helpers, client `requestGraph`, bidirectional pause/resume/cancel, Bitswap fallback. |
 | **INTEROP_TESTS_SPEC** | P0 | Complete | `.github/workflows/interop.yml`, `test/interop/` | P0/P1 workflows, Kubo/Helia compose harnesses, interop test scaffolding. |
 | **IPNS_SPEC** | P0 | Complete | `lib/src/protocols/ipns/ipns_handler.dart`, `lib/src/protocols/ipns/ipns_record.dart` | DHT-first signed CBOR records, base36 name derivation, signature verification, optional PubSub subscription gating. |
 | **KUBERNETES_SPEC** | P1 | Missing | N/A | No k8s manifests or Helm chart. |
@@ -125,18 +125,10 @@ Using Dart SDK 3.12.2:
 
 ## Recommended Next Phase
 
-The remaining P0 blockers and the first P1 wave (REPROVIDE, DAG-JSON, Subdomain Gateway, Bitswap HTTP Fallback) for full protocol compliance are resolved. The next recommended phase is the remaining P1/P2 features and hardening:
-1. **BROWSER_TRANSPORTS_SPEC** — WebTransport hardening and `libp2p.Conn` completeness.
-2. **CONTENT_BLOCKING_SPEC** — RPC/security integration.
-3. **GATEWAY_TLS_SPEC** — TLS fields, SecurityContext, and AutoTLS.
-4. **GRAPHSYNC_SPEC** — bidirectional pause/resume and full client support.
-5. **KUBERNETES_SPEC** — k8s manifests and Helm chart.
-6. **MODULARIZATION_SPEC** — packages/ monorepo structure.
-7. **QUIC_SPEC** — QUIC transport if dependency availability is confirmed.
-8. Exact HAMT CID parity with Kubo/Helia via fixture verification.
-7. **GATEWAY_TLS_SPEC** — TLS and AutoTLS.
-8. **GRAPHSYNC_SPEC** — bidirectional pause/resume state machine.
-9. **KUBERNETES_SPEC** — k8s manifests and Helm chart.
-10. **MODULARIZATION_SPEC** — packages/ monorepo.
-11. **QUIC_SPEC** — QUIC transport (dependency availability permitting).
+The remaining P0 blockers and the P1 wave for full protocol compliance are resolved. The next recommended phase is the remaining P2 features and hardening:
+1. **KUBERNETES_SPEC** — k8s manifests and Helm chart.
+2. **MODULARIZATION_SPEC** — packages/ monorepo structure.
+3. **QUIC_SPEC** — QUIC transport if dependency availability is confirmed.
+4. Exact HAMT CID parity with Kubo/Helia via fixture verification.
+5. Hardening CLI coverage and production operational tooling.
 12. **UNIXFS HAMT parity** — verify/fix exact CID parity with Kubo/Helia using fixtures.

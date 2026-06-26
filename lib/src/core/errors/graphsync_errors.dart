@@ -56,3 +56,10 @@ class RequestHandlingError extends GraphsyncError {
   RequestHandlingError(String message, [dynamic cause])
     : super('Failed to handle request: $message', cause);
 }
+
+/// Error when a selector traversal exceeds its configured budget.
+class BudgetExceededError extends GraphsyncError {
+  /// Creates a budget exceeded error with [budgetType].
+  BudgetExceededError(String budgetType)
+    : super('Budget exceeded: $budgetType');
+}

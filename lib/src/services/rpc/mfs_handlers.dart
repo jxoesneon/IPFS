@@ -25,6 +25,25 @@ class MFSHandlers {
 
   final _logger = Logger('MFSHandlers');
 
+  Response? _checkDenylistForPath(String path) {
+    final service = node.denylistService;
+    if (service == null || !service.configuredEnabled) return null;
+    if (!service.isBlockedPath(path)) return null;
+
+    final action = service.recordHit(path, source: 'rpc');
+    if (action == 'log') return null;
+
+    return Response(
+      451,
+      body: json.encode({
+        'Message': 'Content blocked by operator policy',
+        'Code': 451,
+        'Type': 'error',
+      }),
+      headers: {'Content-Type': 'application/json'},
+    );
+  }
+
   /// POST /api/v0/files/ls
   ///
   /// Query parameters: `arg` (path), `long`, `U` (unsorted).
@@ -222,6 +241,11 @@ class MFSHandlers {
       return _errorResponse('Missing arguments: source and destination');
     }
 
+    final blocked = _checkDenylistForPath(args[0]);
+    if (blocked != null) {
+      return blocked;
+    }
+
     try {
       await node.mfs.cp(args[0], args[1]);
       return Response.ok('');
@@ -238,6 +262,11 @@ class MFSHandlers {
     final args = _allArgs(request);
     if (args.length < 2) {
       return _errorResponse('Missing arguments: source and destination');
+    }
+
+    final blocked = _checkDenylistForPath(args[0]);
+    if (blocked != null) {
+      return blocked;
     }
 
     try {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
@@ -30,8 +31,14 @@ class MockHttpServerAdapter implements HttpServerAdapter {
   Handler? lastHandler;
   String? lastAddress;
   int? lastPort;
+  Handler? lastSecureHandler;
+  String? lastSecureAddress;
+  int? lastSecurePort;
+  SecurityContext? lastSecureContext;
   Completer<IpfsHttpServerInstance> completer = Completer();
+  Completer<IpfsHttpServerInstance> secureCompleter = Completer();
   bool shouldFail = false;
+  bool shouldFailSecure = false;
 
   @override
   Future<IpfsHttpServerInstance> serve(
@@ -47,6 +54,24 @@ class MockHttpServerAdapter implements HttpServerAdapter {
       completer.complete(MockIpfsHttpServerInstance());
     }
     return completer.future;
+  }
+
+  @override
+  Future<IpfsHttpServerInstance> serveSecure(
+    Handler handler,
+    String address,
+    int port,
+    covariant SecurityContext context,
+  ) async {
+    lastSecureHandler = handler;
+    lastSecureAddress = address;
+    lastSecurePort = port;
+    lastSecureContext = context;
+    if (shouldFailSecure) throw Exception('Secure serve failed');
+    if (!secureCompleter.isCompleted) {
+      secureCompleter.complete(MockIpfsHttpServerInstance());
+    }
+    return secureCompleter.future;
   }
 }
 

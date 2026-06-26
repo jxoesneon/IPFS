@@ -6,7 +6,7 @@ import 'package:dart_ipfs/src/utils/base58.dart';
 /// Network configuration for the IPFS node.
 ///
 /// Defines listen addresses, bootstrap peers, connection limits,
-/// and other networking parameters.
+/// STUN/TURN servers for WebRTC, and other networking parameters.
 ///
 /// Example:
 /// ```dart
@@ -27,6 +27,8 @@ class NetworkConfig {
     this.enableWebTransport = true,
     this.enableWebRtc = true,
     this.circuitRelay = const CircuitRelayConfig(),
+    this.stunServers = const [],
+    this.turnServers = const [],
     String? nodeId,
     this.delegatedRoutingEndpoint,
   }) : nodeId = nodeId ?? _generateDefaultNodeId();
@@ -42,6 +44,8 @@ class NetworkConfig {
     bool enableWebTransport = true,
     bool enableWebRtc = true,
     CircuitRelayConfig? circuitRelay,
+    List<String> stunServers = const [],
+    List<TurnServer> turnServers = const [],
   }) {
     return NetworkConfig(
       listenAddresses: listenAddresses,
@@ -53,6 +57,8 @@ class NetworkConfig {
       enableWebTransport: enableWebTransport,
       enableWebRtc: enableWebRtc,
       circuitRelay: circuitRelay ?? const CircuitRelayConfig(),
+      stunServers: stunServers,
+      turnServers: turnServers,
       nodeId: _generateDefaultNodeId(),
     );
   }
@@ -75,6 +81,12 @@ class NetworkConfig {
               Map<String, dynamic>.from(json['circuitRelay'] as Map),
             )
           : const CircuitRelayConfig(),
+      stunServers: (json['stunServers'] as List?)?.cast<String>() ?? const [],
+      turnServers: (json['turnServers'] as List?)
+              ?.map((e) =>
+                  TurnServer.fromJson(Map<String, dynamic>.from(e as Map)))
+              .toList() ??
+          const [],
       nodeId: json['nodeId'] as String?,
       delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'] as String?,
     );
@@ -119,6 +131,13 @@ class NetworkConfig {
   /// Whether to enable WebRTC.
   final bool enableWebRtc;
 
+  /// STUN servers for WebRTC ICE negotiation. Default is empty; no
+  /// production STUN servers are hardcoded.
+  final List<String> stunServers;
+
+  /// TURN servers for WebRTC relay fallback. Default is empty.
+  final List<TurnServer> turnServers;
+
   /// Circuit relay client configuration.
   final CircuitRelayConfig circuitRelay;
 
@@ -130,18 +149,20 @@ class NetworkConfig {
 
   /// Converts the network configuration to a JSON map.
   Map<String, dynamic> toJson() => {
-    'listenAddresses': listenAddresses,
-    'bootstrapPeers': bootstrapPeers,
-    'maxConnections': maxConnections,
-    'connectionTimeoutSeconds': connectionTimeout.inSeconds,
-    'enableNatTraversal': enableNatTraversal,
-    'enableMDNS': enableMDNS,
-    'enableWebTransport': enableWebTransport,
-    'enableWebRtc': enableWebRtc,
-    'circuitRelay': circuitRelay.toJson(),
-    'nodeId': nodeId,
-    'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
-  };
+        'listenAddresses': listenAddresses,
+        'bootstrapPeers': bootstrapPeers,
+        'maxConnections': maxConnections,
+        'connectionTimeoutSeconds': connectionTimeout.inSeconds,
+        'enableNatTraversal': enableNatTraversal,
+        'enableMDNS': enableMDNS,
+        'enableWebTransport': enableWebTransport,
+        'enableWebRtc': enableWebRtc,
+        'stunServers': stunServers,
+        'turnServers': turnServers.map((e) => e.toJson()).toList(),
+        'circuitRelay': circuitRelay.toJson(),
+        'nodeId': nodeId,
+        'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
+      };
 
   static String _generateDefaultNodeId() {
     final random = Random.secure();
@@ -188,8 +209,8 @@ class CircuitRelayConfig {
       reservationTimeout: json['reservationTimeoutSeconds'] != null
           ? Duration(seconds: json['reservationTimeoutSeconds'] as int)
           : const Duration(seconds: 30),
-      reservationRefreshInterval:
-          json['reservationRefreshIntervalSeconds'] != null
+      reservationRefreshInterval: json['reservationRefreshIntervalSeconds'] !=
+              null
           ? Duration(seconds: json['reservationRefreshIntervalSeconds'] as int)
           : const Duration(minutes: 5),
       maxCircuits: json['maxCircuits'] as int? ?? 8,
@@ -213,10 +234,57 @@ class CircuitRelayConfig {
 
   /// Converts this configuration to a JSON map.
   Map<String, dynamic> toJson() => {
-    'enabled': enabled,
-    'staticRelays': staticRelays,
-    'reservationTimeoutSeconds': reservationTimeout.inSeconds,
-    'reservationRefreshIntervalSeconds': reservationRefreshInterval.inSeconds,
-    'maxCircuits': maxCircuits,
-  };
+        'enabled': enabled,
+        'staticRelays': staticRelays,
+        'reservationTimeoutSeconds': reservationTimeout.inSeconds,
+        'reservationRefreshIntervalSeconds':
+            reservationRefreshInterval.inSeconds,
+        'maxCircuits': maxCircuits,
+      };
+}
+
+/// Configuration for a TURN server used by WebRTC ICE.
+class TurnServer {
+  /// Creates a new [TurnServer].
+  const TurnServer({
+    required this.url,
+    required this.username,
+    required this.credential,
+  });
+
+  /// Creates a [TurnServer] from a JSON map.
+  factory TurnServer.fromJson(Map<String, dynamic> json) {
+    return TurnServer(
+      url: json['url'] as String,
+      username: json['username'] as String,
+      credential: json['credential'] as String,
+    );
+  }
+
+  /// TURN URL, e.g. `turn:turn.example.com:3478`.
+  final String url;
+
+  /// Username for TURN authentication.
+  final String username;
+
+  /// Credential (password) for TURN authentication.
+  final String credential;
+
+  /// Converts this server to a JSON map.
+  Map<String, dynamic> toJson() => {
+        'url': url,
+        'username': username,
+        'credential': credential,
+      };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TurnServer &&
+          other.url == url &&
+          other.username == username &&
+          other.credential == credential;
+
+  @override
+  int get hashCode => Object.hash(url, username, credential);
 }

@@ -153,8 +153,10 @@ class Libp2pRouter implements RouterInterface {
       final listenAddr = libp2p.MultiAddr('/ip4/0.0.0.0/tcp/$port');
       final resourceManager = ResourceManagerImpl(limiter: FixedLimiter());
 
-      final webrtcTransport = WebRTCTransport();
-      final webrtcDirectTransport = WebRTCDirectTransport();
+      final webrtcTransport = WebRTCTransport(networkConfig: _config.network);
+      final webrtcDirectTransport = WebRTCDirectTransport(
+        networkConfig: _config.network,
+      );
       final webTransportTransport = WebTransportTransport();
 
       _host = await config.Libp2p.new_([
@@ -242,9 +244,9 @@ class Libp2pRouter implements RouterInterface {
     try {
       if (_host != null) {
         await _host!.close().timeout(
-          const Duration(seconds: 5),
-          onTimeout: () => _logger.warning('Host close timed out'),
-        );
+              const Duration(seconds: 5),
+              onTimeout: () => _logger.warning('Host close timed out'),
+            );
       }
       _connectedPeers.clear();
       _hasStarted = false;
@@ -292,14 +294,15 @@ class Libp2pRouter implements RouterInterface {
       final peerId = libp2p.PeerId.fromString(peerIdStr);
 
       // Explicitly add address to peer store to ensure dial can find it
-      await _host!.peerStore.addrBook.addAddrs(peerId, [
-        addr,
-      ], const Duration(minutes: 10));
+      await _host!.peerStore.addrBook.addAddrs(
+          peerId,
+          [
+            addr,
+          ],
+          const Duration(minutes: 10));
 
       final addrInfo = libp2p.AddrInfo(peerId, [addr]);
-      await _host!
-          .connect(addrInfo)
-          .timeout(
+      await _host!.connect(addrInfo).timeout(
             const Duration(seconds: 30),
             onTimeout: () =>
                 throw TimeoutException('Connection to $multiaddress timed out'),

@@ -5,6 +5,7 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
+import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/ledger.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as message;
 import 'package:dart_ipfs/src/protocols/bitswap/wantlist.dart';
@@ -26,6 +27,7 @@ class BitswapHandler implements ILifecycle {
     this._blockStore,
     this._router, {
     HttpGatewayClient? httpGatewayClient,
+    DenylistService? denylistService,
   })  : _maxConcurrentRequests = config.maxConcurrentBitswapRequests,
         _bitswapConfig = config.bitswap,
         _httpGatewayClient = config.bitswap.enableHttpFallback
@@ -33,6 +35,7 @@ class BitswapHandler implements ILifecycle {
             : null,
         _internalHttpClient =
             config.bitswap.enableHttpFallback && httpGatewayClient == null,
+        _denylistService = denylistService,
         _logger = Logger(
           'BitswapHandler',
           debug: config.debug,
@@ -46,6 +49,7 @@ class BitswapHandler implements ILifecycle {
   final BitswapConfig _bitswapConfig;
   final HttpGatewayClient? _httpGatewayClient;
   final bool _internalHttpClient;
+  final DenylistService? _denylistService;
   final Wantlist _wantlist = Wantlist();
   final LedgerManager _ledgerManager = LedgerManager();
   final Map<String, Completer<Block>> _pendingBlocks = {};
@@ -534,6 +538,17 @@ class BitswapHandler implements ILifecycle {
 
   Future<Block?> _getBlock(String cidStr,
       {required bool useHttpFallback}) async {
+    final denylist = _denylistService;
+    if (denylist != null &&
+        denylist.configuredEnabled &&
+        denylist.isBlockedByCidString(cidStr)) {
+      final action = denylist.recordHit(cidStr, source: 'rpc');
+      if (action == 'block') {
+        _logger.warning('Denylist: rejected Bitswap retrieval for $cidStr');
+        return null;
+      }
+    }
+
     // 1. Try local blockstore.
     final localResponse = await _blockStore.getBlock(cidStr);
     if (localResponse.found && localResponse.hasBlock()) {

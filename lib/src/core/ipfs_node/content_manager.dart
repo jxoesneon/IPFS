@@ -13,6 +13,7 @@ import 'package:dart_ipfs/src/core/errors/node_errors.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
@@ -28,15 +29,18 @@ class ContentManager implements ILifecycle {
     required StreamController<String> newContentController,
     BlockStore? blockStore,
     BitswapHandler? bitswapHandler,
-  }) : _datastoreHandler = datastoreHandler,
-       _newContentController = newContentController,
-       _blockStore = blockStore,
-       _bitswapHandler = bitswapHandler,
-       _logger = Logger('ContentManager');
+    DenylistService? denylistService,
+  })  : _datastoreHandler = datastoreHandler,
+        _newContentController = newContentController,
+        _blockStore = blockStore,
+        _bitswapHandler = bitswapHandler,
+        _denylistService = denylistService,
+        _logger = Logger('ContentManager');
 
   final DatastoreHandler _datastoreHandler;
   final BlockStore? _blockStore;
   final BitswapHandler? _bitswapHandler;
+  final DenylistService? _denylistService;
   final Logger _logger;
   final HttpGatewayClient _httpGatewayClient = HttpGatewayClient();
   final StreamController<String> _newContentController;
@@ -138,6 +142,14 @@ class ContentManager implements ILifecycle {
     String customGatewayUrl = '',
   }) async {
     try {
+      final denylist = _denylistService;
+      if (denylist != null && denylist.isBlockedByCidString(cid)) {
+        final action = denylist.recordHit(cid, source: 'rpc');
+        if (action == 'block') {
+          throw StateError('Content blocked by operator policy');
+        }
+      }
+
       if (gatewayMode != GatewayMode.internal) {
         return await _getViaGateway(cid, gatewayMode, customGatewayUrl);
       }

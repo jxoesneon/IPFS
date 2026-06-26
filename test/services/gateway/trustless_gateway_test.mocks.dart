@@ -103,6 +103,21 @@ class MockBitswapHandler extends _i1.Mock implements _i2.BitswapHandler {
           as _i3.Future<_i4.Block?>);
 
   @override
+  _i3.Future<_i4.Block?> getBlock(
+    String? cidStr, {
+    bool? useHttpFallback = true,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #getBlock,
+              [cidStr],
+              {#useHttpFallback: useHttpFallback},
+            ),
+            returnValue: _i3.Future<_i4.Block?>.value(),
+          )
+          as _i3.Future<_i4.Block?>);
+
+  @override
   _i3.Future<Map<String, dynamic>> getStatus() =>
       (super.noSuchMethod(
             Invocation.method(#getStatus, []),

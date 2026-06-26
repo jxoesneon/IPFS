@@ -6,6 +6,7 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/directory.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
+import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
@@ -145,9 +146,14 @@ class MFSPathError extends Error {
 /// Manages the Mutable File System (MFS) for an IPFS node.
 class MFSManager implements ILifecycle {
   /// Creates a new [MFSManager] with the given [blockStore] and [datastore].
-  MFSManager(this._blockStore, this._datastore);
+  MFSManager(
+    this._blockStore,
+    this._datastore, {
+    DenylistService? denylistService,
+  }) : _denylistService = denylistService;
   final IBlockStore _blockStore;
   final Datastore _datastore;
+  final DenylistService? _denylistService;
   static const String _rootKey = '/mfs/root';
   CID? _rootCid;
   final Lock _mutationLock = Lock();
@@ -189,6 +195,12 @@ class MFSManager implements ILifecycle {
     if (!_started) return;
     await sync();
     _started = false;
+  }
+
+  bool _pathLooksBlocked(String path) {
+    final denylist = _denylistService;
+    if (denylist == null) return false;
+    return denylist.isBlockedPath(path);
   }
 
   /// Creates a directory at the given [path].
@@ -236,6 +248,11 @@ class MFSManager implements ILifecycle {
 
   /// Copies a file or directory from [src] to [dst].
   Future<void> cp(String src, String dst) async {
+    final denylist = _denylistService;
+    if (denylist != null && _pathLooksBlocked(src)) {
+      throw StateError('Content blocked by operator policy');
+    }
+
     final srcParts = _splitPath(src);
     final srcCid = await _resolvePath(_rootCid!, srcParts);
     if (srcCid == null) {
@@ -283,9 +300,8 @@ class MFSManager implements ILifecycle {
         }
 
         final parentNode = PBNode.fromBuffer(parentBlock.block.data);
-        final newLinks = parentNode.links
-            .where((l) => l.name != nameToRemove)
-            .toList();
+        final newLinks =
+            parentNode.links.where((l) => l.name != nameToRemove).toList();
 
         if (newLinks.length == parentNode.links.length) {
           // Nothing removed
@@ -407,9 +423,8 @@ class MFSManager implements ILifecycle {
     if (unixData.hasMode()) mode = unixData.mode.toInt();
     if (unixData.hasMtime()) mtime = unixData.mtime.toInt();
 
-    final hashString = cidBase != null
-        ? cid.encodeWithBaseName(cidBase)
-        : cid.encode();
+    final hashString =
+        cidBase != null ? cid.encodeWithBaseName(cidBase) : cid.encode();
 
     return MFSStat(
       hash: hashString,
@@ -502,9 +517,8 @@ class MFSManager implements ILifecycle {
         rawLeaves: rawLeaves ?? false,
         hashType: hash ?? 'sha2-256',
       );
-      final blocks = await builder
-          .build(Stream.fromIterable([updatedBytes]))
-          .toList();
+      final blocks =
+          await builder.build(Stream.fromIterable([updatedBytes])).toList();
       if (blocks.isEmpty) {
         throw Exception('Failed to build UnixFS DAG');
       }

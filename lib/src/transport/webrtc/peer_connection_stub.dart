@@ -1,12 +1,13 @@
 import 'dart:async';
 
 import 'data_channel_stream.dart';
+import 'ice_server.dart';
 import 'peer_connection.dart';
 
 /// Stub implementation of [PeerConnection] for non-supported platforms.
 class PeerConnectionStub implements PeerConnection {
   /// Creates a new [PeerConnectionStub].
-  PeerConnectionStub(List<String> iceServers);
+  PeerConnectionStub(List<IceServer> iceServers);
 
   @override
   Stream<RTCIceCandidateInit> get onIceCandidate => throw UnimplementedError();
@@ -19,6 +20,12 @@ class PeerConnectionStub implements PeerConnection {
 
   @override
   String? get remoteDescriptionSdp => throw UnimplementedError();
+
+  @override
+  String? get iceConnectionState => null;
+
+  @override
+  String? get signalingState => null;
 
   @override
   Future<RTCSessionDescriptionInit> createOffer() => throw UnimplementedError();
@@ -48,5 +55,5 @@ class PeerConnectionStub implements PeerConnection {
 }
 
 /// Factory for creating a [PeerConnectionStub].
-PeerConnection createPC(List<String> iceServers) =>
+PeerConnection createPC(List<IceServer> iceServers) =>
     PeerConnectionStub(iceServers);

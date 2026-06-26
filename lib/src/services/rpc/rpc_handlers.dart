@@ -157,11 +157,42 @@ class RPCHandlers {
     return parameters['boundary'];
   }
 
+  Response? _checkDenylist(String cidOrPath, {String source = 'rpc'}) {
+    final service = node.denylistService;
+    if (service == null || !service.configuredEnabled) {
+      return null;
+    }
+    if (!service.isBlockedByCidString(cidOrPath) &&
+        !service.isBlockedPath(cidOrPath)) {
+      return null;
+    }
+
+    final action = service.recordHit(cidOrPath, source: source);
+    if (action == 'log') {
+      return null;
+    }
+
+    return Response(
+      451,
+      body: json.encode({
+        'Message': 'Content blocked by operator policy',
+        'Code': 451,
+        'Type': 'error',
+      }),
+      headers: {'Content-Type': 'application/json'},
+    );
+  }
+
   /// POST /api/v0/cat - Get file content
   Future<Response> handleCat(Request request) async {
     final cid = request.url.queryParameters['arg'];
     if (cid == null || cid.isEmpty) {
       return _errorResponse('Missing argument: cid');
+    }
+
+    final blocked = _checkDenylist(cid);
+    if (blocked != null) {
+      return blocked;
     }
 
     try {
@@ -217,6 +248,11 @@ class RPCHandlers {
     final cid = request.url.queryParameters['arg'];
     if (cid == null) {
       return _errorResponse('Missing argument: cid');
+    }
+
+    final blocked = _checkDenylist(cid);
+    if (blocked != null) {
+      return blocked;
     }
 
     try {
@@ -306,6 +342,11 @@ class RPCHandlers {
     final cid = request.url.queryParameters['arg'];
     if (cid == null) {
       return _errorResponse('Missing argument: cid');
+    }
+
+    final blocked = _checkDenylist(cid, source: 'rpc');
+    if (blocked != null) {
+      return blocked;
     }
 
     try {
@@ -403,6 +444,11 @@ class RPCHandlers {
     final cid = request.url.queryParameters['arg'];
     if (cid == null) {
       return _errorResponse('Missing argument: cid');
+    }
+
+    final blocked = _checkDenylist(cid);
+    if (blocked != null) {
+      return blocked;
     }
 
     try {

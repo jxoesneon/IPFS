@@ -1,19 +1,32 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/gateway_config.dart';
+import 'package:dart_ipfs/src/core/config/security_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
+import 'package:dart_ipfs/src/platform/http_server.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
-import 'package:dart_ipfs/src/platform/http_server.dart';
 import 'package:multibase/multibase.dart';
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
 
-import 'gateway_handler_test.mocks.dart';
+class _MockMetrics implements MetricsCollector {
+  final List<Map<String, dynamic>> securityEvents = [];
+
+  @override
+  void recordSecurityEvent(String type) {
+    securityEvents.add({'type': type});
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 class _MemoryBlockStore implements BlockStore {
   final _blocks = <String, Block>{};
@@ -57,6 +70,17 @@ class _MockHttpServerAdapter implements HttpServerAdapter {
     Handler handler,
     String address,
     int port,
+  ) async {
+    lastHandler = handler;
+    return _MockIpfsHttpServerInstance();
+  }
+
+  @override
+  Future<IpfsHttpServerInstance> serveSecure(
+    Handler handler,
+    String address,
+    int port,
+    covariant SecurityContext context,
   ) async {
     lastHandler = handler;
     return _MockIpfsHttpServerInstance();
@@ -173,7 +197,9 @@ void main() {
         final response = await handler.handleSubdomain(request);
         expect(response.statusCode, equals(400));
         expect(
-            await response.readAsString(), equals('Invalid CID in subdomain'));
+          await response.readAsString(),
+          equals('Invalid CID in subdomain'),
+        );
         expect(
           response.headers['content-type'],
           equals('text/plain; charset=utf-8'),
@@ -196,12 +222,11 @@ void main() {
         );
         final response = await handler.handleSubdomain(request);
         expect(response.statusCode, equals(200));
-        expect(response.headers['x-ipfs-path'],
-            equals('/ipns/k51qzi5uqu5dip5q.k'));
         expect(
-          response.headers['cache-control'],
-          contains('max-age=60'),
+          response.headers['x-ipfs-path'],
+          equals('/ipns/k51qzi5uqu5dip5q.k'),
         );
+        expect(response.headers['cache-control'], contains('max-age=60'));
       });
 
       test('DNSLink ipns subdomain resolves via dnsLinkResolver', () async {
@@ -223,10 +248,7 @@ void main() {
         );
         final response = await handler.handleSubdomain(request);
         expect(response.statusCode, equals(200));
-        expect(
-          response.headers['x-ipfs-path'],
-          equals('/ipns/docs.ipfs.io'),
-        );
+        expect(response.headers['x-ipfs-path'], equals('/ipns/docs.ipfs.io'));
         expect(response.headers['x-ipfs-dnslink'], equals('docs.ipfs.io'));
       });
 
@@ -307,11 +329,11 @@ void main() {
 
     group('denylist', () {
       test('blocked CID returns 451', () async {
-        final denylist = DenylistService()..blockCidString(cidV1Base32);
-        handler = GatewayHandler(
-          blockStore,
-          denylistService: denylist,
-        );
+        final denylist = DenylistService(
+          const SecurityConfig(enableDenylist: true),
+          _MockMetrics(),
+        )..blockCidString(cidV1Base32);
+        handler = GatewayHandler(blockStore, denylistService: denylist);
         final request = Request(
           'GET',
           Uri.parse('http://localhost/'),
@@ -322,7 +344,10 @@ void main() {
       });
 
       test('blocked IPNS name returns 451 before resolution', () async {
-        final denylist = DenylistService()..blockCidString('blocked.ipns');
+        final denylist = DenylistService(
+          const SecurityConfig(enableDenylist: true),
+          _MockMetrics(),
+        )..blockCidString('blocked.ipns');
         handler = GatewayHandler(
           blockStore,
           denylistService: denylist,
@@ -379,10 +404,7 @@ void main() {
       });
 
       test('TLS redirect never triggers for localhost', () async {
-        handler = GatewayHandler(
-          blockStore,
-          subdomainTLSRedirect: true,
-        );
+        handler = GatewayHandler(blockStore, subdomainTLSRedirect: true);
         final request = Request(
           'GET',
           Uri.parse('http://localhost/'),

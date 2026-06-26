@@ -6,6 +6,7 @@
 import 'dart:async' as _i16;
 import 'dart:typed_data' as _i18;
 
+import 'package:dart_ipfs/src/core/cid.dart' as _i22;
 import 'package:dart_ipfs/src/core/data_structures/block.dart' as _i21;
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart' as _i5;
 import 'package:dart_ipfs/src/core/data_structures/link.dart' as _i19;
@@ -938,6 +939,15 @@ class MockDHTClient extends _i1.Mock implements _i6.DHTClient {
           as _i16.Future<void>);
 
   @override
+  _i16.Future<void> addProviders(List<_i22.CID>? cids, String? providerId) =>
+      (super.noSuchMethod(
+            Invocation.method(#addProviders, [cids, providerId]),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
+          )
+          as _i16.Future<void>);
+
+  @override
   _i16.Future<bool> storeValue(_i18.Uint8List? key, _i18.Uint8List? value) =>
       (super.noSuchMethod(
             Invocation.method(#storeValue, [key, value]),
@@ -1014,6 +1024,15 @@ class MockDHTClient extends _i1.Mock implements _i6.DHTClient {
             ),
           )
           as _i16.Future<List<String>>);
+
+  @override
+  _i16.Future<void> reprovide() =>
+      (super.noSuchMethod(
+            Invocation.method(#reprovide, []),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
+          )
+          as _i16.Future<void>);
 
   @override
   _i16.Future<void> updateKeyRepublishTime(String? key) =>

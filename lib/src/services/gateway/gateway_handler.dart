@@ -149,22 +149,28 @@ class GatewayHandler {
 
   /// Returns a 451 response if the CID or path is blocked by the denylist.
   ///
-  /// Returns `null` when the content is not blocked or no denylist is
-  /// configured.
-  Response? _checkDenylist(String pathOrCid) {
+  /// Returns `null` when the content is not blocked, no denylist is configured,
+  /// or the configured policy is to log hits rather than block them.
+  Response? _checkDenylist(String pathOrCid, {String source = 'gateway'}) {
     final service = denylistService;
-    if (service == null || !service.isEnabled) {
+    if (service == null || !service.configuredEnabled) {
       return null;
     }
-    if (service.isBlockedByCidString(pathOrCid) ||
-        service.isBlockedPath(pathOrCid)) {
-      return Response(
-        451,
-        body: 'Unavailable For Legal Reasons',
-        headers: {'Content-Type': 'text/plain'},
-      );
+    if (!service.isBlockedByCidString(pathOrCid) &&
+        !service.isBlockedPath(pathOrCid)) {
+      return null;
     }
-    return null;
+
+    final action = service.recordHit(pathOrCid, source: source);
+    if (action == 'log') {
+      return null;
+    }
+
+    return Response(
+      451,
+      body: 'Content blocked by operator policy',
+      headers: {'Content-Type': 'text/plain'},
+    );
   }
 
   /// Records a gateway request metric if a [MetricsCollector] is available.
