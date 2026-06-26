@@ -121,7 +121,8 @@ class GatewayServer implements ILifecycle {
     });
   }
 
-  /// Starts the gateway server
+  /// Starts the gateway server.
+  @override
   Future<void> start() async {
     if (_server != null) {
       throw StateError('Server is already running');
@@ -145,7 +146,8 @@ class GatewayServer implements ILifecycle {
     }
   }
 
-  /// Stops the gateway server
+  /// Stops the gateway server.
+  @override
   Future<void> stop() async {
     if (_server == null) {
       return;

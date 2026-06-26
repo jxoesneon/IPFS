@@ -15,6 +15,9 @@ class RawCodec implements IPLDCodec {
   String get name => 'raw';
 
   @override
+  String get identifier => name;
+
+  @override
   int get code => 0x55;
 
   @override
@@ -39,6 +42,9 @@ class DagPbCodec implements IPLDCodec {
   String get name => 'dag-pb';
 
   @override
+  String get identifier => name;
+
+  @override
   int get code => 0x70;
 
   @override
@@ -61,21 +67,23 @@ class DagPbCodec implements IPLDCodec {
     final dataEntry = node.mapValue.entries
         .firstWhere((e) => e.key == 'Data', orElse: () => MapEntry());
 
-    final data = dataEntry.value?.bytesValue ?? Uint8List(0);
+    final data = dataEntry.value.bytesValue;
 
     final linkEntries = node.mapValue.entries
-            .firstWhere((e) => e.key == 'Links', orElse: () => MapEntry())
-            .value
-            ?.listValue
-            ?.values ??
-        [];
+        .firstWhere((e) => e.key == 'Links', orElse: () => MapEntry())
+        .value
+        .listValue
+        .values;
 
-    final List<Link> links = linkEntries.map((linkNode) {
-      if (linkNode.kind != Kind.MAP) {
-        throw ArgumentError('Invalid link format');
-      }
-      return EnhancedCBORHandler.convertToMerkleLink(linkNode);
-    }).toList();
+    final List<Link> links = linkEntries
+        .cast<IPLDNode>()
+        .map((linkNode) {
+          if (linkNode.kind != Kind.MAP) {
+            throw ArgumentError('Invalid link format');
+          }
+          return EnhancedCBORHandler.convertToMerkleLink(linkNode);
+        })
+        .toList();
 
     return MerkleDAGNode(
       links: links,
@@ -88,6 +96,9 @@ class DagPbCodec implements IPLDCodec {
 class DagCborCodec implements IPLDCodec {
   @override
   String get name => 'dag-cbor';
+
+  @override
+  String get identifier => name;
 
   @override
   int get code => 0x71;
@@ -107,6 +118,9 @@ class DagCborCodec implements IPLDCodec {
 class DagJsonCodec implements IPLDCodec {
   @override
   String get name => 'dag-json';
+
+  @override
+  String get identifier => name;
 
   @override
   int get code => 0x0129;

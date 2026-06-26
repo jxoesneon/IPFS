@@ -195,7 +195,7 @@ class IPFSConfig {
           ? MetricsConfig.fromJson(
               Map<String, dynamic>.from(json['metrics'] as Map),
             )
-          : null,
+          : const MetricsConfig(),
       customConfig: Map<String, dynamic>.from(
         json['customConfig'] as Map? ?? const {},
       ),

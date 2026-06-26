@@ -59,9 +59,6 @@ class IPLDHandler implements ILifecycle {
         (node) async => _getRecipientKey(node),
       ),
     );
-    // CarCodec is intentionally not registered as an IPLD codec; CAR is a
-    // transport archive, not a block codec. The standard CarReader/CarWriter
-    // API replaces the legacy CarCodec.
   }
 
   void _registerCodec(IPLDCodec codec) {

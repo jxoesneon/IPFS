@@ -383,7 +383,7 @@ Harden the plugin API with capability manifests, lifecycle hooks, and code signi
 | `PluginLifecycle` | Interface with `initialize`, `start`, `stop`, `onConfigChanged`, `onPeerConnected`, `onBlockStored`. |
 | `PluginHost` | Runtime service that loads plugins, validates manifests, enforces capability ACLs, and routes lifecycle events. |
 | `PluginSandbox` | Execution boundary for untrusted plugins. In v2.2 this is Dart `Isolate`-based with capability gating; true OS sandboxing is deferred. |
-| `Signature` | Ed25519 signature of the plugin package manifest (tar/gz archive) by a trusted author or the in-repo key. |
+| `Signature` | Ed25519 signature over the canonical manifest bytes (including the `archive_sha256` checksum of the plugin code), so the signature covers the plugin package content, not just the manifest. |
 
 #### 4.6.3 Manifest Schema (YAML)
 

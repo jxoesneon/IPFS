@@ -12,7 +12,7 @@ This specification defines the work required to make the dart_ipfs DAG-CBOR code
 
 Scope includes:
 
-- Replacement or correction of the current `EnhancedCBORHandler` in `lib/src/codec/cbor/EnhancedCBORHandler.dart` so that it follows the official DAG-CBOR encoding rules.
+- Replacement or correction of the current `EnhancedCBORHandler` in `lib/src/core/cbor/enhanced_cbor_handler.dart` so that it follows the official DAG-CBOR encoding rules.
 - Correct encoding of CIDs as CBOR tag 42 on a prefixed byte string.
 - Correct encoding of raw bytes as plain CBOR byte strings, with no non-standard tag 45.
 - Support for canonical map key ordering, big integers, and strict decoding rules.
@@ -48,7 +48,7 @@ Reference implementations for interoperability verification:
 
 The current DAG-CBOR implementation is not spec-compliant and produces different bytes and CIDs than reference implementations.
 
-- **File:** `lib/src/codec/cbor/EnhancedCBORHandler.dart` contains the existing DAG-CBOR encoder/decoder.
+- **File:** `lib/src/core/cbor/enhanced_cbor_handler.dart` contains the existing DAG-CBOR encoder/decoder.
 - **Gap:** CIDs are encoded incorrectly; they are not serialized as CBOR tag 42 on a byte string prefixed with `0x00` followed by the raw CID bytes.
 - **Gap:** Raw bytes are encoded with the non-standard CBOR tag 45, which is not recognized by any other IPLD implementation. The tag 45 behavior must be removed entirely.
 - **Gap:** Canonical map key ordering is not enforced, so maps with the same logical content but different key insertion order produce different CIDs.
@@ -118,7 +118,7 @@ The implementation must define an `IPLDNode` type or set of types that directly 
 6. **Float handling:** Finite floats round-trip; non-finite floats (`NaN`, `Infinity`, `-Infinity`) are rejected.
 7. **Strict decoding:** Unsupported tags, duplicate map keys, indefinite-length strings, and indefinite-length arrays/maps are rejected in strict mode.
 8. **Codec identity:** The codec reports `codecCode = 0x71` and `name = 'dag-cbor'`.
-9. **Legacy removal:** The old tag-45 encoding logic is removed from `EnhancedCBORHandler.dart` and from any other files that may reference it. No test fixture expects tag 45.
+9. **Legacy removal:** The old tag-45 encoding logic is removed from `enhanced_cbor_handler.dart` and from any other files that may reference it. No test fixture expects tag 45.
 
 ---
 

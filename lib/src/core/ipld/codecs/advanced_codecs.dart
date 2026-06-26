@@ -2,14 +2,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/cbor/enhanced_cbor_handler.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/ipld/codecs/ipld_codec.dart';
 import 'package:dart_ipfs/src/core/ipld/jose_cose_handler.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
-import 'package:dart_multihash/dart_multihash.dart' as multihash_lib;
 
 /// Codec for 'dag-jose'.
 class DagJoseCodec implements IPLDCodec {
@@ -24,6 +20,9 @@ class DagJoseCodec implements IPLDCodec {
 
   @override
   String get name => 'dag-jose';
+
+  @override
+  String get identifier => name;
 
   @override
   int get code => 0x85;
@@ -93,96 +92,5 @@ class DagJoseCodec implements IPLDCodec {
               ..kind = Kind.BYTES
               ..bytesValue = payload),
         ]));
-  }
-}
-
-/// Non-standard legacy codec for 'car'.
-///
-/// This class is deprecated and will be removed once the standard CAR v1/v2
-/// implementation in `lib/src/core/data_structures/car.dart` is complete.
-@Deprecated('Use the standard CarReader/CarWriter API instead')
-class CarCodec implements IPLDCodec {
-  /// Creates a [CarCodec] with the given [blockStore] and [decoder].
-  CarCodec(this.blockStore, this.decoder);
-
-  /// The blockstore to retrieve linked blocks from.
-  final BlockStore blockStore;
-
-  /// The decoder used for linked blocks.
-  final Future<IPLDNode> Function(Uint8List, String) decoder;
-
-  @override
-  String get name => 'car';
-
-  @override
-  int get code => 0x0202;
-
-  @override
-  Future<Uint8List> encode(IPLDNode node) async {
-    final output = BytesBuilder();
-
-    // Write CAR header (version 1)
-    output.addByte(1); // version
-    output.addByte(1); // characteristics
-
-    final rootCid = await CID.computeForData(
-      await EnhancedCBORHandler.encodeCbor(node),
-      format: 'dag-cbor',
-    );
-
-    output.addByte(1);
-    output.add(rootCid.toBytes());
-
-    await _writeCarBlock(node, output);
-    return output.toBytes();
-  }
-
-  Future<void> _writeCarBlock(IPLDNode node, BytesBuilder output) async {
-    final encoded = await EnhancedCBORHandler.encodeCbor(node);
-    final cid = await CID.computeForData(encoded, format: 'dag-cbor');
-
-    final cidBytes = cid.toBytes();
-    output.add(_encodeVarint(cidBytes.length));
-    output.add(cidBytes);
-
-    output.add(_encodeVarint(encoded.length));
-    output.add(encoded);
-
-    if (node.kind == Kind.MAP) {
-      for (final entry in node.mapValue.entries) {
-        if (entry.value.kind == Kind.LINK) {
-          final link = entry.value.linkValue;
-          final cidStr = CID
-              .v1(
-                link.codec,
-                multihash_lib.Multihash.decode(
-                  Uint8List.fromList(link.multihash),
-                ),
-              )
-              .toString();
-          final linkedBlock = await blockStore.getBlock(cidStr);
-          final linkedNode = await decoder(
-            Uint8List.fromList(linkedBlock.block.data),
-            link.codec,
-          );
-          await _writeCarBlock(linkedNode, output);
-        }
-      }
-    }
-  }
-
-  List<int> _encodeVarint(int value) {
-    final bytes = <int>[];
-    while (value >= 0x80) {
-      bytes.add((value & 0x7f) | 0x80);
-      value >>= 7;
-    }
-    bytes.add(value & 0x7f);
-    return bytes;
-  }
-
-  @override
-  Future<IPLDNode> decode(Uint8List data) async {
-    throw UnimplementedError('CAR decoding not implemented in this codec');
   }
 }

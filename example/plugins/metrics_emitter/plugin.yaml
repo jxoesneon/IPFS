@@ -1,0 +1,17 @@
+plugin:
+  id: org.dart-ipfs.examples.metrics-emitter
+  name: Metrics Emitter
+  version: 1.0.0
+  dart_ipfs_version: ">=2.2.0 <2.3.0"
+  author: "Dart IPFS Contributors <security@dart-ipfs.invalid>"
+  capabilities:
+    - metrics.emit
+  hooks:
+    - on_metrics_flush
+  entrypoint: main.dart
+  signature:
+    algorithm: ed25519
+    public_key: "mtPKOzIUIdC42ckrt6YDt7eGw42RRFQNcurHKXkquZQ="
+    signature: "MEt+sD1eYs9uemvBIh0Nv/Xh4nGZ7H+IQHRXpc5a2jOIFUmj1AVcuGHqVdmMo+dQjO5X3x2b1NsIlqPqUVb6AA=="
+  checksums:
+    archive_sha256: "4feac748f622477cb5623bc3356ccc900cd138d7443974e82b883f4d5686afd3"

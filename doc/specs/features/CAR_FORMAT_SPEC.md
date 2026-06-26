@@ -46,15 +46,15 @@ Reference implementations for interoperability verification:
 
 ## 3. Current State in dart_ipfs
 
-The current implementation uses a custom protobuf-based CAR codec that is not wire-compatible with any other IPFS implementation. The old in-memory CAR model will be deleted and replaced by the standard API described in this specification.
+The custom protobuf-based CAR codec has been replaced with the standard API described in this specification.
 
-- **File:** `lib/src/core/ipld/codecs/advanced_codecs.dart` contains a non-standard `CarCodec` class that serializes CAR data through a generated protobuf `CarProto` message. This class is slated for removal as part of the migration.
-- **File:** `lib/src/core/data_structures/car.dart` contains the legacy `CAR`, `CarHeader`, and `CarIndex` classes, which are also backed by the protobuf `CarProto` message. These classes will be deleted and replaced by the standard `CarReader` / `CarWriter` / `CarHeader` / `CarSection` / `IndexBuilder` API defined in this specification, per `COUNCIL_DECISION_CAR_MIGRATION.md`.
-- **Gap:** The output bytes do not match CAR v1 or v2 and are rejected by `kubo dag import` and Helia's `@helia/car`.
-- **Gap:** No support for the CAR v2 pragma, header, or index payload.
-- **Gap:** CAR sections are not framed as `[varint | CID | Block]` and the header is not DAG-CBOR.
-- **Gap:** The in-memory CAR API exists but is built on top of the custom serialization, so it cannot be reused without replacing the byte layer.
-- **Dependency:** CAR v2 headers are DAG-CBOR maps, so this backlog item depends on the DAG-CBOR codec being spec-compliant before CAR v2 can be fully landed. This specification assumes the unified `IPLDCodec` interface from `COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md` is in place.
+- **File:** `lib/src/core/ipld/codecs/advanced_codecs.dart` previously contained a non-standard `CarCodec` class that serialized CAR data through a generated protobuf `CarProto` message. That class has been removed and is no longer registered in `IPLDHandler`.
+- **File:** `lib/src/core/data_structures/car.dart` now implements the standard `CarHeader`, `CarSection`, and `IndexBuilder` data model instead of the legacy protobuf `CarProto` message. The legacy `CAR`, `CarHeader`, and `CarIndex` classes have been replaced by the standard `CarReader` / `CarWriter` / `CarHeader` / `CarSection` / `IndexBuilder` API defined in this specification, per `COUNCIL_DECISION_CAR_MIGRATION.md`.
+- **Resolved:** The output bytes now conform to CAR v1/v2 and are accepted by `kubo dag import` and Helia's `@helia/car`.
+- **Resolved:** CAR v2 pragma, header, index payload, and footer are now supported.
+- **Resolved:** CAR sections are framed as `[varint | CID | Block]` and the header is DAG-CBOR.
+- **Resolved:** The in-memory CAR API is built on top of the standard byte layer and is reusable.
+- **Dependency:** CAR v2 headers are DAG-CBOR maps, so this backlog item depends on the DAG-CBOR codec being spec-compliant. The unified `IPLDCodec` interface from `COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md` is in place.
 
 ---
 

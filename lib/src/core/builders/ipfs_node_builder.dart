@@ -56,6 +56,10 @@ class IPFSNodeBuilder {
   Future<void> _registerCoreServices() async {
     _container.registerSingleton(_config);
 
+    // Register LifecycleManager early so that any core service, server, or
+    // offline-mode node can resolve it from the container.
+    _container.registerSingleton(LifecycleManager());
+
     final metrics = MetricsCollector(_config);
     _container.registerSingleton(metrics);
 
@@ -135,9 +139,6 @@ class IPFSNodeBuilder {
         ),
       );
     }
-
-    // Register LifecycleManager
-    _container.registerSingleton(LifecycleManager());
   }
 
   Future<void> _registerServerLifecycleServices(IPFSNode node) async {

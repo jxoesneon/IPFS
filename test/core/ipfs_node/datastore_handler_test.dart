@@ -7,7 +7,6 @@ import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_proto;
-import 'package:dart_ipfs/src/core/data_structures/car.dart';
 import 'package:dart_ipfs/src/utils/car_writer.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
@@ -137,19 +136,14 @@ void main() {
     });
 
     test('importCAR calls putBlock', () async {
-      // We need a minimal CAR file. Since we don't have a builder here easily,
-      // we can mock CarReader if we want, but importCAR calls CarReader.readCar(carFile).
-      // CarReader.readCar is static.
-      // Instead, we can use a real CarWriter to create a CAR.
+      // Build a minimal standard CAR v1 using the new CarWriter API.
       final block = Block(
         cid: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
         data: Uint8List.fromList([1, 2, 3]),
       );
-      final car = CAR(
-        blocks: [block],
-        header: CarHeader(version: 1, roots: [block.cid]),
-      );
-      final carData = await CarWriter.writeCar(car);
+      final writer = CarWriter(roots: [block.cid]);
+      await writer.write(block.cid, block.data);
+      final carData = await writer.close();
 
       await handler.importCAR(carData);
       verify(mockDatastore.put(any, any)).called(1);

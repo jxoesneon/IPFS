@@ -80,7 +80,7 @@ Key files to create or extend:
 | `PluginLifecycle` | Interface with `initialize`, `start`, `stop`, `onConfigChanged`, `onPeerConnected`, `onBlockStored`. |
 | `PluginHost` | Runtime service that loads plugins, validates manifests, enforces capability ACLs, and routes lifecycle events. |
 | `PluginSandbox` | `Isolate`-based execution boundary for memory isolation and crash containment. **Not a security sandbox.** |
-| `Signature` | Ed25519 signature of the plugin package manifest (tar/gz archive) by a trusted author. |
+| `Signature` | Ed25519 signature over the canonical manifest bytes (including the `archive_sha256` checksum of the plugin code), so the signature covers the plugin package content, not just the manifest. |
 
 ### 4.2 Manifest Schema (YAML)
 
@@ -259,4 +259,4 @@ Each example must:
 | Pre-v2.2 plugin loader (if any) | v2.2.0 | v3.0.0 |
 | `PluginSandbox` as a security claim | v2.2.0 | v3.0.0 (replaced by OS-level sandbox) |
 
-- True OS-level sandboxing may be added in v3.0; the v2.2 Isolate sandbox is the supported boundary for Phase 1.
+- True OS-level sandboxing may be added in v3.0; the v2.2 Isolate execution boundary is the supported isolation boundary for Phase 1.

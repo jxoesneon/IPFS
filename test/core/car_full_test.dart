@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/car.dart';
@@ -18,115 +19,136 @@ void main() {
       ];
     });
 
-    test('CAR constructor and basic properties', () {
-      final header = CarHeader(version: 1);
-      final car = CAR(blocks: testBlocks, header: header, version: 1);
-      expect(car.version, equals(1));
-      expect(car.blocks, equals(testBlocks));
-      expect(car.index, isNull);
+    test('CarWriter constructor and basic properties', () async {
+      final writer = CarWriter(roots: [testBlocks.first.cid]);
+      expect(writer.roots, equals([testBlocks.first.cid]));
+      expect(writer.v2, isFalse);
+      expect(writer.index, isFalse);
     });
 
-    test('CAR.v2WithIndex with empty blocks', () {
-      final car = CAR.v2WithIndex([]);
-      expect(car.version, equals(2));
-      expect(car.blocks, isEmpty);
-      expect(car.header.roots, isEmpty);
-    });
-
-    test('loadSelected full verification', () async {
-      final car = CAR.v2WithIndex(testBlocks);
-
-      // Select first block
-      final selected1 = await car.loadSelected([
-        testBlocks.first.cid.toString(),
-      ]);
-      expect(selected1.blocks.length, equals(1));
-      expect(selected1.blocks.first.cid, equals(testBlocks.first.cid));
-
-      // Select non-existent CID
-      final selectedNone = await car.loadSelected(['non-existent']);
-      expect(selectedNone.blocks, isEmpty);
-
-      // Without index throws
-      final carNoIndex = CAR(blocks: testBlocks, header: CarHeader(version: 1));
-      expect(() => carNoIndex.loadSelected([]), throwsUnsupportedError);
-    });
-
-    test('CarHeader toProto verification', () {
-      final header = CarHeader(
-        version: 1,
+    test('CarWriter v2 with index', () async {
+      final writer = CarWriter(
         roots: [testBlocks.first.cid],
-        characteristics: ['test-char'],
-        pragma: {'foo': 'bar'},
+        v2: true,
+        index: true,
       );
-      final proto = header.toProto();
-      expect(proto.version, equals(1));
-      expect(proto.characteristics, contains('test-char'));
-      expect(proto.roots.length, equals(1));
-      expect(proto.pragma.containsKey('foo'), isTrue);
+      expect(writer.v2, isTrue);
+      expect(writer.index, isTrue);
     });
 
-    test('CarIndex manual entries and methods', () {
-      final index = CarIndex();
-      index.addEntry('cid1', 10, 20);
-      index.addEntry('cid2', 30, 40);
-
-      expect(index.getOffset('cid1'), equals(10));
-      expect(index.getLength('cid1'), equals(20));
-      expect(index.getOffset('undefined'), isNull);
-
-      final proto = index.toProto();
-      expect(proto.entries.length, equals(2));
-    });
-
-    test('CAR fromBytes/toBytes roundtrip with index and pragma', () {
-      final header = CarHeader(version: 2, pragma: {'meta': 'data'});
-      final car = CAR(
-        blocks: testBlocks,
-        header: header,
-        index: CarIndex.generate(testBlocks),
-        version: 2,
-      );
-
-      final bytes = car.toBytes();
-      final decoded = CAR.fromBytes(bytes);
-
-      expect(decoded.version, equals(2));
-      expect(decoded.blocks.length, equals(2));
-      expect(decoded.header.pragma['meta'], equals('data'));
-      expect(decoded.index, isNotNull);
+    test('CarWriter rejects index without v2', () {
       expect(
-        decoded.getBlockOffset(testBlocks.first.cid.toString()),
-        equals(0),
+        () => CarWriter(roots: [testBlocks.first.cid], index: true),
+        throwsArgumentError,
       );
     });
 
-    test('CarReader/Writer edge cases', () async {
-      final car = CAR.v2WithIndex(testBlocks);
-      final carData = await CarWriter.writeCar(car);
+    test('CarWriter rejects empty roots', () async {
+      final writer = CarWriter(roots: []);
+      expect(writer.close(), throwsA(isA<CarHeaderException>()));
+    });
 
-      final blocks = await CarReader.extractBlocks(carData);
-      expect(blocks.length, equals(2));
+    test('CarReader/Writer roundtrip v1', () async {
+      final writer = CarWriter(roots: [testBlocks.first.cid]);
+      for (final block in testBlocks) {
+        await writer.write(block.cid, block.data);
+      }
+      final bytes = await writer.close();
+
+      final reader = CarReader.fromBytes(bytes);
+      expect((await reader.header).version, equals(1));
+      expect((await reader.header).roots, equals([testBlocks.first.cid]));
+
+      final sections = await reader.sections().toList();
+      expect(sections.length, equals(testBlocks.length));
+      for (var i = 0; i < testBlocks.length; i++) {
+        expect(sections[i].cid, equals(testBlocks[i].cid));
+        expect(sections[i].bytes, equals(testBlocks[i].data));
+      }
+    });
+
+    test('CarReader/Writer roundtrip v2 with index', () async {
+      final writer = CarWriter(
+        roots: [testBlocks.first.cid],
+        v2: true,
+        index: true,
+      );
+      for (final block in testBlocks) {
+        await writer.write(block.cid, block.data);
+      }
+      final bytes = await writer.close();
+
+      final reader = CarReader.fromBytes(bytes);
+      expect((await reader.header).version, equals(1));
+
+      final sections = await reader.sections().toList();
+      expect(sections.length, equals(testBlocks.length));
+
+      final firstOffset = await reader.findCID(testBlocks.first.cid);
+      final secondOffset = await reader.findCID(testBlocks.last.cid);
+      expect(firstOffset, isNotNull);
+      expect(secondOffset, isNotNull);
+      expect(secondOffset, greaterThan(firstOffset!));
+    });
+
+    test('CarReader findCID falls back to linear scan for CAR v1', () async {
+      final writer = CarWriter(roots: [testBlocks.first.cid]);
+      for (final block in testBlocks) {
+        await writer.write(block.cid, block.data);
+      }
+      final bytes = await writer.close();
+
+      final reader = CarReader.fromBytes(bytes);
+      final offset = await reader.findCID(testBlocks.last.cid);
+      expect(offset, isNotNull);
+    });
+
+    test('CarWriter closeStream yields equivalent bytes', () async {
+      final writer = CarWriter(roots: [testBlocks.first.cid]);
+      for (final block in testBlocks) {
+        await writer.write(block.cid, block.data);
+      }
+      final streamedBytes = await writer.closeStream().fold<BytesBuilder>(
+        BytesBuilder(),
+        (builder, chunk) => builder..add(chunk),
+      );
+      final bytes = await writer.close();
+
+      expect(streamedBytes.toBytes(), equals(bytes));
+    });
+
+    test('CarWriter file roundtrip', () async {
+      final writer = CarWriter(roots: [testBlocks.first.cid]);
+      for (final block in testBlocks) {
+        await writer.write(block.cid, block.data);
+      }
+      final carData = await writer.close();
 
       final tempDir = await Directory.systemTemp.createTemp('car_io_test');
       final path = '${tempDir.path}/test.car';
       try {
-        await CarWriter.writeCarToFile(car, path);
-        final file = File(path);
-        expect(await file.exists(), isTrue);
-        final readData = await file.readAsBytes();
+        await File(path).writeAsBytes(carData);
+        final readData = await File(path).readAsBytes();
         expect(readData, equals(carData));
       } finally {
         await tempDir.delete(recursive: true);
       }
     });
 
-    test('CarIndex.generate loop coverage', () {
-      final car = CAR.v2WithIndex(testBlocks);
-      expect(car.index, isNotNull);
-      // Ensure second block has a non-zero offset
-      final offset2 = car.getBlockOffset(testBlocks.last.cid.toString());
-      expect(offset2, equals(testBlocks.first.size));
+    test('CarReader/Writer preserve cid and block bytes', () async {
+      final writer = CarWriter(roots: [testBlocks.first.cid]);
+      await writer.write(testBlocks.first.cid, testBlocks.first.data);
+      final bytes = await writer.close();
+
+      final reader = CarReader.fromBytes(bytes);
+      final section = await reader.sections().first;
+      expect(section.cid, equals(testBlocks.first.cid));
+      expect(section.bytes, equals(testBlocks.first.data));
+    });
+
+    test('CarHeader toString is descriptive', () {
+      final header = CarHeader(version: 1, roots: [testBlocks.first.cid]);
+      expect(header.toString(), contains('version: 1'));
     });
   });
 }

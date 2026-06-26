@@ -1,68 +1,60 @@
-version: '3.8'
-
+# docker-compose.yml
+# Default dart_ipfs daemon deployment.
+#
+# The nginx reverse proxy overlay is available in docker-compose.override.yml
+# under the `nginx` profile (`docker compose --profile nginx up`).
+#
+# The daemon binds the RPC API and gateway to 0.0.0.0 so the optional nginx
+# overlay can reach them. The binary's default is localhost; the command below
+# overrides it with explicit multiaddrs.
 services:
-  nginx:
-    image: nginx:alpine-slim
-    container_name: dart_ipfs_proxy
-    ports:
-      # Public/Host access now goes through Nginx
-      # Swarm (4001) is handled directly by default for P2P
-      - "127.0.0.1:5001:5001" # API
-      - "127.0.0.1:8080:8080" # Gateway
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - dart_ipfs
-    networks:
-      - ipfs_net
-
   dart_ipfs:
-    build: .
-    image: dart_ipfs:1.2.4-secure
-    container_name: dart_ipfs_sandbox
+    build:
+      context: .
+      target: runtime
+    image: ${DART_IPFS_IMAGE:-ghcr.io/jxoesneon/dart-ipfs:1.11.5}
+    container_name: dart_ipfs_daemon
 
-    # 8.2.3 Network Segmentation: Internal Network Only
-    # Ports are NOT exposed to host, only to ipfs_net
-    # 8.2.3 Network Segmentation: Internal Network Only
-    # Ports are NOT exposed to host, only to ipfs_net
     ports:
-      - "4001:4001" #/tcp
-      - "4001:4001/udp" #/udp (Swarm)
+      - "4001:4001/tcp"
+      - "4001:4001/udp"
+
     expose:
       - "5001"
       - "8080"
+      - "8081"
 
-    # 8.2.2 Runtime Sandboxing
-    read_only: true # Immutable Filesystem
-    user: "10001:10001" # Non-root user
+    read_only: true
+    user: "1000:1000"
 
     volumes:
-      # Isolate data directory (writeable)
-      - ./ipfs_data:/data/ipfs
-      # Prevent writing to tmp
-      - /tmp
+      - ipfs_data:/data/ipfs
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 100M
 
-    # Resource Limits
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-
-    # Drop all capabilities
     cap_drop:
       - ALL
 
     environment:
-      - IPFS_JSON_LOGS=true
       - IPFS_DATA_DIR=/data/ipfs
+      - IPFS_JSON_LOGS=true
+      - IPFS_API_ADDR=/ip4/0.0.0.0/tcp/5001
+
+    command:
+      - "daemon"
+      - "--api-addr"
+      - "/ip4/0.0.0.0/tcp/5001"
+      - "--gateway-addr"
+      - "/ip4/0.0.0.0/tcp/8080"
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "/app/ipfs", "healthcheck"]
       interval: 30s
-      timeout: 10s
+      timeout: 15s
       retries: 3
-      start_period: 10s
+      start_period: 20s
 
     networks:
       - ipfs_net
@@ -70,3 +62,6 @@ services:
 networks:
   ipfs_net:
     driver: bridge
+
+volumes:
+  ipfs_data:

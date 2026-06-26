@@ -1,0 +1,20 @@
+{
+  "name": "dart-ipfs-helia-interop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minimal Helia interop harness for dart_ipfs nightly tests",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@helia/http": "^2.0.0",
+    "@helia/bitswap": "^2.0.0",
+    "@helia/car": "^4.0.0",
+    "@helia/json": "^4.0.0",
+    "@helia/strings": "^4.0.0",
+    "helia": "^5.0.0",
+    "libp2p": "^2.0.0",
+    "express": "^4.21.0"
+  }
+}

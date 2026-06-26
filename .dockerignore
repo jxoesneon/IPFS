@@ -4,3 +4,15 @@
 build/
 coverage/
 pubspec.lock
+
+# Documentation, examples, and tests are not needed for the runtime image.
+doc/
+example/
+test/
+
+# CI/ops files are not needed for the runtime image.
+.github/
+nginx/
+docker-compose*.yml
+Dockerfile
+*.md

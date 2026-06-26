@@ -1,21 +1,16 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/ipld/codecs/advanced_codecs.dart';
 import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
 import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
-import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
 
 import 'codecs_coverage_test.mocks.dart';
 
-@GenerateMocks([BlockStore, IPFSPrivateKey])
+@GenerateMocks([IPFSPrivateKey])
 void main() {
   group('Standard Codecs', () {
     test('RawCodec encode/decode', () async {
@@ -97,72 +92,10 @@ void main() {
   });
 
   group('Advanced Codecs', () {
-    late MockBlockStore mockBlockStore;
     late MockIPFSPrivateKey mockPrivateKey;
 
     setUp(() {
-      mockBlockStore = MockBlockStore();
       mockPrivateKey = MockIPFSPrivateKey();
-    });
-
-    test('CarCodec encode basic', () async {
-      final codec = CarCodec(
-        mockBlockStore,
-        (data, codec) async => IPLDNode()
-          ..kind = Kind.BYTES
-          ..bytesValue = data.toList(),
-      );
-      expect(codec.name, 'car');
-      expect(codec.code, 0x0202);
-      expect(codec.identifier, 'car');
-
-      final node = IPLDNode()
-        ..kind = Kind.MAP
-        ..mapValue = (IPLDMap()
-          ..entries.add(
-            MapEntry()
-              ..key = 'data'
-              ..value = (IPLDNode()
-                ..kind = Kind.BYTES
-                ..bytesValue = Uint8List.fromList([1, 2, 3])),
-          ));
-
-      final encoded = await codec.encode(node);
-      expect(encoded, isNotEmpty);
-      expect(encoded[0], 1); // version
-    });
-
-    test('CarCodec encode with links', () async {
-      final leafCid = await CID.computeForData(Uint8List.fromList([4, 5, 6]));
-
-      final codec = CarCodec(mockBlockStore, (data, codec) async {
-        return IPLDNode()
-          ..kind = Kind.BYTES
-          ..bytesValue = data.toList();
-      });
-
-      final node = IPLDNode()
-        ..kind = Kind.MAP
-        ..mapValue = (IPLDMap()
-          ..entries.add(
-            MapEntry()
-              ..key = 'link'
-              ..value = (IPLDNode()
-                ..kind = Kind.LINK
-                ..linkValue = (IPLDLink()
-                  ..version = leafCid.version
-                  ..codec = leafCid.codec ?? 'raw'
-                  ..multihash = leafCid.multihash.toBytes())),
-          ));
-
-      final leafBlock = await Block.fromData(Uint8List.fromList([4, 5, 6]));
-      when(mockBlockStore.getBlock(leafCid.toString())).thenAnswer(
-        (_) async => BlockResponseFactory.successGet(leafBlock.toProto()),
-      );
-
-      final encoded = await codec.encode(node);
-      expect(encoded, isNotEmpty);
-      verify(mockBlockStore.getBlock(leafCid.toString())).called(1);
     });
 
     test('DagJoseCodec encode JWS', () async {
@@ -230,11 +163,6 @@ void main() {
       expect(result.mapValue.entries.any((e) => e.key == 'payload'), isTrue);
     });
 
-    test('CarCodec decode throws UnimplementedError', () {
-      final codec = CarCodec(mockBlockStore, (data, codec) async => IPLDNode());
-      expect(() => codec.decode(Uint8List(0)), throwsUnimplementedError);
-    });
-
     test('DagJoseCodec decode with invalid format throws', () async {
       final codec = DagJoseCodec(
         () async => mockPrivateKey,
@@ -261,49 +189,6 @@ void main() {
         // Expected to fail due to missing header/payload
         expect(e, isNotNull);
       }
-    });
-
-    test('CarCodec encode with empty node', () async {
-      final codec = CarCodec(mockBlockStore, (data, codec) async => IPLDNode());
-
-      final node = IPLDNode()
-        ..kind = Kind.MAP
-        ..mapValue = IPLDMap();
-
-      final encoded = await codec.encode(node);
-      expect(encoded, isNotEmpty);
-    });
-
-    test('CarCodec encode with nested maps', () async {
-      final codec = CarCodec(
-        mockBlockStore,
-        (data, codec) async => IPLDNode()
-          ..kind = Kind.BYTES
-          ..bytesValue = data.toList(),
-      );
-
-      final innerMap = IPLDMap()
-        ..entries.add(
-          MapEntry()
-            ..key = 'inner'
-            ..value = (IPLDNode()
-              ..kind = Kind.STRING
-              ..stringValue = 'value'),
-        );
-
-      final node = IPLDNode()
-        ..kind = Kind.MAP
-        ..mapValue = (IPLDMap()
-          ..entries.add(
-            MapEntry()
-              ..key = 'outer'
-              ..value = (IPLDNode()
-                ..kind = Kind.MAP
-                ..mapValue = innerMap),
-          ));
-
-      final encoded = await codec.encode(node);
-      expect(encoded, isNotEmpty);
     });
 
     test('DagJoseCodec encode with string payload', () async {
@@ -353,11 +238,5 @@ void main() {
       expect(codec.identifier, 'dag-jose');
     });
 
-    test('CarCodec reports correct name and code', () {
-      final codec = CarCodec(mockBlockStore, (data, codec) async => IPLDNode());
-      expect(codec.name, 'car');
-      expect(codec.code, 0x0202);
-      expect(codec.identifier, 'car');
-    });
   });
 }

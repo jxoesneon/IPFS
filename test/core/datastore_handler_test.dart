@@ -3,6 +3,7 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
+import 'package:dart_ipfs/src/core/errors/node_errors.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/utils/car_reader.dart';
@@ -153,9 +154,10 @@ void main() {
       expect(carData, isNotEmpty);
 
       // Verify CAR contains both blocks
-      final reader = await CarReader.readCar(carData);
-      expect(reader.blocks.length, equals(2));
-      final cids = reader.blocks.map((b) => b.cid.encode()).toList();
+      final reader = CarReader.fromBytes(carData);
+      final sections = await reader.sections().toList();
+      expect(sections.length, equals(2));
+      final cids = sections.map((s) => s.cid.encode()).toList();
       expect(cids, contains(leafBlock.cid.encode()));
       expect(cids, contains(parentBlock.cid.encode()));
     });
@@ -208,7 +210,7 @@ void main() {
       handler = DatastoreHandler(FailingDatastore());
       await expectLater(
         () async => await handler.importCAR(Uint8List(0)),
-        returnsNormally,
+        throwsA(isA<ComponentError>()),
       );
     });
 

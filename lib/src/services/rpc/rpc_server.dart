@@ -112,7 +112,8 @@ class RPCServer implements ILifecycle {
     _router.post('/api/v0/block/stat', _handlers.handleBlockStat);
   }
 
-  /// Starts the RPC server
+  /// Starts the RPC server.
+  @override
   Future<void> start() async {
     if (_server != null) {
       throw StateError('RPC server is already running');
@@ -136,7 +137,8 @@ class RPCServer implements ILifecycle {
     }
   }
 
-  /// Stops the RPC server
+  /// Stops the RPC server.
+  @override
   Future<void> stop() async {
     if (_server == null) {
       return;
