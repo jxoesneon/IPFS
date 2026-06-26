@@ -17,8 +17,8 @@ message PBLink {
 // PBNode represents a DAG node
 message PBNode {
   // refs to other objects
-  repeated PBLink links = 2;
+  repeated PBLink links = 1;
 
   // opaque user data content
-  bytes data = 1;
+  bytes data = 2;
 } 

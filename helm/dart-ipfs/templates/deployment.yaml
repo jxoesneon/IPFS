@@ -1,0 +1,159 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dart-ipfs.fullname" . }}
+  labels:
+    {{- include "dart-ipfs.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "dart-ipfs.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secrets: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "dart-ipfs.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "dart-ipfs.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ include "dart-ipfs.imageTag" . }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /app/ipfs
+            - daemon
+            - --api-addr
+            - /ip4/0.0.0.0/tcp/{{ .Values.service.api.port }}
+            - --gateway-addr
+            - /ip4/0.0.0.0/tcp/{{ .Values.service.gateway.port }}
+          ports:
+            - name: swarm-tcp
+              containerPort: {{ .Values.service.swarm.port }}
+              protocol: TCP
+            - name: swarm-udp
+              containerPort: {{ .Values.service.swarm.port }}
+              protocol: UDP
+            - name: api
+              containerPort: {{ .Values.service.api.port }}
+              protocol: TCP
+            - name: gateway
+              containerPort: {{ .Values.service.gateway.port }}
+              protocol: TCP
+            - name: metrics
+              containerPort: {{ .Values.service.metrics.port }}
+              protocol: TCP
+          env:
+            - name: IPFS_DATA_DIR
+              value: /data/ipfs
+            - name: IPFS_CONFIG_PATH
+              value: /etc/dart-ipfs/config.json
+            - name: IPFS_API_ADDR
+              value: /ip4/0.0.0.0/tcp/{{ .Values.service.api.port }}
+            - name: IPFS_GATEWAY_ADDR
+              value: /ip4/0.0.0.0/tcp/{{ .Values.service.gateway.port }}
+            - name: IPFS_JSON_LOGS
+              value: "true"
+            - name: LIBP2P_IDENTITY_SEED
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "dart-ipfs.secretName" . }}
+                  key: libp2p-identity-seed
+                  optional: true
+            - name: IPFS_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "dart-ipfs.secretName" . }}
+                  key: api-auth-token
+                  optional: true
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data/ipfs
+            - name: config
+              mountPath: /etc/dart-ipfs
+              readOnly: true
+            - name: secrets
+              mountPath: /etc/dart-ipfs/secrets
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "dart-ipfs.fullname" . }}-data
+        {{- else }}
+        - name: data
+          emptyDir:
+            sizeLimit: 10Gi
+        {{- end }}
+        - name: config
+          configMap:
+            name: {{ include "dart-ipfs.fullname" . }}-config
+            items:
+              - key: config.json
+                path: config.json
+        - name: secrets
+          secret:
+            secretName: {{ include "dart-ipfs.secretName" . }}
+            optional: true
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 100Mi
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

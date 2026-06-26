@@ -1,0 +1,18 @@
+apiVersion: v2
+name: dart-ipfs
+description: A Helm chart for deploying the dart_ipfs daemon on Kubernetes.
+type: application
+version: 0.1.0
+appVersion: "1.11.5"
+home: https://github.com/jxoesneon/IPFS
+sources:
+  - https://github.com/jxoesneon/IPFS
+maintainers:
+  - name: dart-ipfs maintainers
+    url: https://github.com/jxoesneon/IPFS
+keywords:
+  - ipfs
+  - dart
+  - p2p
+  - distributed-storage
+  - web3

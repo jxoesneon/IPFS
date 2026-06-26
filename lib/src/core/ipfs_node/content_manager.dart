@@ -30,12 +30,12 @@ class ContentManager implements ILifecycle {
     BlockStore? blockStore,
     BitswapHandler? bitswapHandler,
     DenylistService? denylistService,
-  })  : _datastoreHandler = datastoreHandler,
-        _newContentController = newContentController,
-        _blockStore = blockStore,
-        _bitswapHandler = bitswapHandler,
-        _denylistService = denylistService,
-        _logger = Logger('ContentManager');
+  }) : _datastoreHandler = datastoreHandler,
+       _newContentController = newContentController,
+       _blockStore = blockStore,
+       _bitswapHandler = bitswapHandler,
+       _denylistService = denylistService,
+       _logger = Logger('ContentManager');
 
   final DatastoreHandler _datastoreHandler;
   final BlockStore? _blockStore;
@@ -60,6 +60,7 @@ class ContentManager implements ILifecycle {
     try {
       final block = await Block.fromData(data);
       await _datastoreHandler.putBlock(block);
+      await _blockStore?.putBlock(block);
       _newContentController.add(block.cid.toString());
       _logger.info('Added file with CID: ${block.cid}');
       return block.cid.toString();
@@ -126,6 +127,7 @@ class ContentManager implements ILifecycle {
       );
 
       await _datastoreHandler.putBlock(block);
+      await _blockStore?.putBlock(block);
       _logger.info('Added directory with CID: ${block.cid}');
       return block.cid.toString();
     } catch (e, stackTrace) {
@@ -157,14 +159,15 @@ class ContentManager implements ILifecycle {
       final block = await _datastoreHandler.getBlock(cid);
 
       if (block != null) {
-        if (path.isEmpty) {
-          return block.data;
-        } else {
-          final node = MerkleDAGNode.fromBytes(block.data);
-          if (node.isDirectory) {
-            return await _resolvePathInDirectory(node, path);
-          }
-        }
+        return await _extractBlockData(block, path);
+      }
+
+      final blockResult = await _blockStore?.getBlock(cid);
+      if (blockResult != null && blockResult.found) {
+        return await _extractBlockData(
+          Block.fromProto(blockResult.block),
+          path,
+        );
       }
 
       if (_bitswapHandler != null) {
@@ -209,6 +212,18 @@ class ContentManager implements ILifecycle {
     return await _httpGatewayClient.get(cid, baseUrl: url);
   }
 
+  Future<Uint8List?> _extractBlockData(Block block, String path) async {
+    if (path.isEmpty) {
+      return block.data;
+    } else {
+      final node = MerkleDAGNode.fromBytes(block.data);
+      if (node.isDirectory) {
+        return await _resolvePathInDirectory(node, path);
+      }
+    }
+    return null;
+  }
+
   Future<Uint8List?> _resolvePathInDirectory(
     MerkleDAGNode dirNode,
     String path,
@@ -244,6 +259,13 @@ class ContentManager implements ILifecycle {
 
       if (block == null && _bitswapHandler != null) {
         block = await _bitswapHandler.wantBlock(cid);
+      }
+
+      if (block == null) {
+        final blockResult = await _blockStore?.getBlock(cid);
+        if (blockResult != null && blockResult.found) {
+          block = Block.fromProto(blockResult.block);
+        }
       }
 
       if (block == null) {

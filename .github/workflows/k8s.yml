@@ -1,0 +1,95 @@
+name: Kubernetes Manifests & Helm Chart
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - k8s/**
+      - helm/dart-ipfs/**
+      - .github/workflows/k8s.yml
+  pull_request:
+    branches: [master]
+    paths:
+      - k8s/**
+      - helm/dart-ipfs/**
+      - .github/workflows/k8s.yml
+  workflow_dispatch:
+
+jobs:
+  k8s-lint:
+    name: Lint and validate Kubernetes manifests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install kubeconform
+        run: |
+          mkdir -p "${HOME}/bin"
+          curl -sL "https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz" | tar xz -C "${HOME}/bin"
+          echo "${HOME}/bin" >> "${GITHUB_PATH}"
+
+      - name: Validate Kustomize base with kubeconform
+        run: |
+          kubeconform -strict -summary -ignore-missing-schemas k8s/base/*.yaml
+
+  kustomize-build:
+    name: Build Kustomize overlays
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Kustomize
+        run: |
+          mkdir -p "${HOME}/bin"
+          curl -sL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz" | tar xz -C "${HOME}/bin"
+          echo "${HOME}/bin" >> "${GITHUB_PATH}"
+
+      - name: Build development overlay
+        run: |
+          kustomize build k8s/overlays/development/ > /tmp/dart-ipfs-dev.yaml
+          echo "Development overlay built successfully"
+
+      - name: Build production overlay
+        run: |
+          kustomize build k8s/overlays/production/ > /tmp/dart-ipfs-prod.yaml
+          echo "Production overlay built successfully"
+
+  helm-lint:
+    name: Lint and template Helm chart
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Helm
+        uses: azure/setup-helm@b9e44407d93fafbc795a178f4ff20f7f7e8ee0e0 # v4.3.0
+        with:
+          version: v3.15.4
+
+      - name: Helm lint
+        run: |
+          helm lint ./helm/dart-ipfs
+
+      - name: Helm template
+        run: |
+          helm template dart-ipfs ./helm/dart-ipfs > /tmp/dart-ipfs-helm.yaml
+          echo "Helm chart templated successfully"
+
+      - name: Helm template with ingress
+        run: |
+          helm template dart-ipfs ./helm/dart-ipfs \
+            --set ingress.enabled=true \
+            --set ingress.className=nginx \
+            --set swarmService.enabled=true \
+            --set secrets.create=true \
+            --set secrets.libp2pIdentitySeed="$(openssl rand -base64 32)" \
+            > /tmp/dart-ipfs-helm-full.yaml
+          echo "Helm chart with options templated successfully"

@@ -1,4 +1,5 @@
 // src/core/unixfs/unixfs_hamt.dart
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -50,6 +51,7 @@ List<int> _murmur3X64Hash128(List<int> bytes, {int seed = 0}) {
     h1 ^= k1;
 
     h1 = _rotl64(h1, 27);
+    h1 = _mask64(h1 + h2);
     h1 = _mask64(h1 * 5 + 0x52dce729);
 
     k2 = _mask64(k2 * c2);
@@ -58,6 +60,7 @@ List<int> _murmur3X64Hash128(List<int> bytes, {int seed = 0}) {
     h2 ^= k2;
 
     h2 = _rotl64(h2, 31);
+    h2 = _mask64(h2 + h1);
     h2 = _mask64(h2 * 5 + 0x38495ab5);
   }
 
@@ -154,8 +157,8 @@ class UnixFSHAMTBuilder {
   UnixFSHAMTBuilder({
     this.fanout = kUnixFSHAMTFanout,
     this.shardThreshold = 256,
-    this.maxBucketSize = 10,
-    this.cidVersion = 0,
+    this.maxBucketSize = 1,
+    this.cidVersion = 1,
     this.hashType = 'sha2-256',
   }) {
     if (fanout <= 0 || (fanout & (fanout - 1)) != 0) {
@@ -293,7 +296,7 @@ class UnixFSHAMTBuilder {
   }
 
   int _prefixIndex(String name, int level) {
-    final hash = murmur3X64Hash64(name.codeUnits);
+    final hash = murmur3X64Hash64(utf8.encode(name));
     final shift = level * _log2Fanout;
     final mask = (1 << _log2Fanout) - 1;
     return (hash >>> shift) & mask;
@@ -317,7 +320,7 @@ dag_pb.PBLink? resolveHAMTSegment(UnixFSNode node, String name, int level) {
   if (!node.isHAMTShard) return null;
   final log2Fanout = _log2(node.fanout);
   final prefixWidth = log2Fanout ~/ 4;
-  final hash = murmur3X64Hash64(name.codeUnits);
+  final hash = murmur3X64Hash64(utf8.encode(name));
   final shift = level * log2Fanout;
   final mask = (1 << log2Fanout) - 1;
   final index = (hash >>> shift) & mask;

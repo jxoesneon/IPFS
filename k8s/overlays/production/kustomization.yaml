@@ -1,0 +1,59 @@
+# k8s/overlays/production/kustomization.yaml
+# Production overlay for dart_ipfs.
+# Uses a pinned image tag and exposes the libp2p swarm port via LoadBalancer
+# so external peers can dial the node. Gateway ingress remains optional and is
+# not enabled by default; enable it only in a dedicated overlay.
+#
+# Deploy with:
+#   kubectl apply -k k8s/overlays/production/
+#   kubectl -n dart-ipfs-prod port-forward svc/dart-ipfs 5001:5001
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: dart-ipfs-prod
+
+labels:
+  - pairs:
+      environment: production
+    includeSelectors: true
+    includeTemplates: true
+
+resources:
+  - ../../base
+  - swarm-service.yaml
+
+images:
+  - name: ghcr.io/jxoesneon/dart-ipfs
+    newTag: "1.11.5"
+
+replicas:
+  - name: dart-ipfs
+    count: 1
+
+patches:
+  # Increase resource requests/limits for production workloads.
+  - target:
+      kind: Deployment
+      name: dart-ipfs
+    patch: |
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+
+  # Increase storage for production.
+  - target:
+      kind: PersistentVolumeClaim
+      name: dart-ipfs-data
+    patch: |
+      - op: replace
+        path: /spec/resources/requests/storage
+        value: 50Gi
+      - op: add
+        path: /spec/storageClassName
+        value: standard-rwo

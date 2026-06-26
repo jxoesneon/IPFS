@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -482,11 +483,68 @@ void main() {
       );
     });
 
-    test('murmur3X64Hash64 produces deterministic output', () {
-      final h1 = murmur3X64Hash64('hello'.codeUnits);
-      final h2 = murmur3X64Hash64('hello'.codeUnits);
-      expect(h1, h2);
-      expect(h1, isNot(murmur3X64Hash64('world'.codeUnits)));
+    String hashToHex(int v) {
+      final b = ByteData(8)..setUint64(0, v);
+      return b.buffer
+          .asUint8List()
+          .map((e) => e.toRadixString(16).padLeft(2, '0'))
+          .join()
+          .toUpperCase();
+    }
+
+    test('murmur3X64Hash64 matches reference vectors', () {
+      expect(hashToHex(murmur3X64Hash64(utf8.encode(''))), '0000000000000000');
+      expect(
+        hashToHex(murmur3X64Hash64(utf8.encode('hello'))),
+        'CBD8A7B341BD9B02',
+      );
+      expect(
+        hashToHex(murmur3X64Hash64(utf8.encode('hello, world'))),
+        '342FAC623A5EBC8E',
+      );
+      expect(
+        hashToHex(
+          murmur3X64Hash64(
+            utf8.encode('The quick brown fox jumps over the lazy dog.'),
+          ),
+        ),
+        'CD99481F9EE902C9',
+      );
+    });
+
+    test('HAMT root CID matches spec reference for two entries', () async {
+      final fileA = await createRawFile([1, 2, 3]);
+      final fileB = await createRawFile([4, 5, 6]);
+      final root =
+          await UnixFSHAMTBuilder(
+            fanout: 256,
+            shardThreshold: 1,
+            maxBucketSize: 1,
+            cidVersion: 1,
+            hashType: 'sha2-256',
+          ).build(store, [
+            UnixFSDirectoryEntry(name: 'a.txt', cid: fileA.cid, tsize: 0),
+            UnixFSDirectoryEntry(name: 'b.txt', cid: fileB.cid, tsize: 0),
+          ]);
+
+      expect(
+        root.cid.toString(),
+        'bboajcafhyttkjdrizhwn5w427v2o5ysld6xxjmsqldw3qk7ft3xpk3nbn',
+      );
+      expect(root.pbNode.links.length, 2);
+      expect(root.pbNode.links[0].name, '4Ab.txt');
+      expect(root.pbNode.links[1].name, '89a.txt');
+      expect(root.pbNode.links[0].size.toInt(), 3);
+      expect(root.pbNode.links[1].size.toInt(), 3);
+    });
+
+    test('HAMT root CID matches spec reference for 257 entries', () async {
+      final root = await buildHAMT();
+      expect(
+        root.cid.toString(),
+        'bboajcae2tsjan6hju663mamy2gfjvjgyogsdlsls32hqgepv6syiee2np',
+      );
+      expect(root.pbNode.links.length, 168);
     });
   });
 }

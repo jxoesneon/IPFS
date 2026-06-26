@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dart-ipfs.fullname" . }}
+  labels:
+    {{- include "dart-ipfs.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.swarm.port }}
+      targetPort: swarm-tcp
+      protocol: TCP
+      name: swarm-tcp
+    - port: {{ .Values.service.swarm.port }}
+      targetPort: swarm-udp
+      protocol: UDP
+      name: swarm-udp
+    - port: {{ .Values.service.api.port }}
+      targetPort: api
+      protocol: TCP
+      name: api
+    - port: {{ .Values.service.gateway.port }}
+      targetPort: gateway
+      protocol: TCP
+      name: gateway
+    - port: {{ .Values.service.metrics.port }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+  selector:
+    {{- include "dart-ipfs.selectorLabels" . | nindent 4 }}
+{{- if .Values.swarmService.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dart-ipfs.fullname" . }}-swarm
+  labels:
+    {{- include "dart-ipfs.labels" . | nindent 4 }}
+  {{- with .Values.swarmService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.swarmService.type }}
+  ports:
+    - port: {{ .Values.service.swarm.port }}
+      targetPort: swarm-tcp
+      protocol: TCP
+      name: swarm-tcp
+    - port: {{ .Values.service.swarm.port }}
+      targetPort: swarm-udp
+      protocol: UDP
+      name: swarm-udp
+  selector:
+    {{- include "dart-ipfs.selectorLabels" . | nindent 4 }}
+{{- end }}
