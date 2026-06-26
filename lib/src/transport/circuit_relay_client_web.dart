@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 
 import 'router_interface.dart';
@@ -9,7 +10,7 @@ import 'router_interface.dart';
 /// Note: Circuit relay support on web is limited or not yet implemented.
 class CircuitRelayClient {
   /// Creates a new [CircuitRelayClient] using the provided router.
-  CircuitRelayClient(RouterInterface router);
+  CircuitRelayClient(RouterInterface router, {CircuitRelayConfig? config});
 
   final StreamController<CircuitRelayConnectionEvent>
   _circuitRelayEventsController =
@@ -33,12 +34,25 @@ class CircuitRelayClient {
   /// Throws [UnimplementedError] on web.
   Future<Reservation?> reserve(
     String relayPeerId, {
-    Duration duration = const Duration(minutes: 60),
-    int limitData = 1024 * 1024 * 1024,
-    int limitDuration = 7200,
+    Duration? duration,
+    int? limitData,
+    int? limitDuration,
   }) async {
     throw UnimplementedError('Circuit Relay not implemented on web');
   }
+
+  /// Connects to [targetPeerId] through a circuit relay at [relayAddr].
+  ///
+  /// Throws [UnimplementedError] on web.
+  Future<RelayedConnection> connectThroughRelay(
+    String relayAddr,
+    String targetPeerId,
+  ) async {
+    throw UnimplementedError('Circuit Relay connect not implemented on web');
+  }
+
+  /// List of relay addresses for which we hold an active reservation.
+  List<String> get activeRelayAddrs => const [];
 
   /// Connects to a peer using a circuit relay.
   ///
@@ -107,10 +121,14 @@ class Reservation {
     required this.expireTime,
     required this.limitData,
     required this.limitDuration,
+    this.relayAddr = '',
   });
 
   /// The relay peer ID.
   final String relayPeerId;
+
+  /// The relay address (or peer ID) used to reach the relay.
+  final String relayAddr;
 
   /// When this reservation expires.
   final DateTime expireTime;
@@ -123,4 +141,42 @@ class Reservation {
 
   /// Returns true if this reservation has expired.
   bool get isExpired => DateTime.now().isAfter(expireTime);
+}
+
+/// Represents an active relayed connection (web stub; never instantiated).
+class RelayedConnection {
+  /// Creates a [RelayedConnection].
+  RelayedConnection({
+    required this.relayAddr,
+    required this.relayPeerId,
+    required this.targetPeerId,
+    required this.reservation,
+  });
+
+  /// The relay address used for this connection.
+  final String relayAddr;
+
+  /// The relay peer ID.
+  final String relayPeerId;
+
+  /// The target peer reached through the relay.
+  final String targetPeerId;
+
+  /// The reservation that keeps this circuit alive.
+  final Reservation reservation;
+
+  /// When the connection was established.
+  final DateTime connectedAt = DateTime.now();
+}
+
+/// Exception thrown by [CircuitRelayClient] operations.
+class CircuitRelayException implements Exception {
+  /// Creates a [CircuitRelayException] with the given [message].
+  CircuitRelayException(this.message);
+
+  /// The error message.
+  final String message;
+
+  @override
+  String toString() => 'CircuitRelayException: $message';
 }

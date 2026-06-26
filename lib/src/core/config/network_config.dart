@@ -26,6 +26,7 @@ class NetworkConfig {
     this.enableMDNS = true,
     this.enableWebTransport = true,
     this.enableWebRtc = true,
+    this.circuitRelay = const CircuitRelayConfig(),
     String? nodeId,
     this.delegatedRoutingEndpoint,
   }) : nodeId = nodeId ?? _generateDefaultNodeId();
@@ -40,6 +41,7 @@ class NetworkConfig {
     bool enableMDNS = true,
     bool enableWebTransport = true,
     bool enableWebRtc = true,
+    CircuitRelayConfig? circuitRelay,
   }) {
     return NetworkConfig(
       listenAddresses: listenAddresses,
@@ -50,6 +52,7 @@ class NetworkConfig {
       enableMDNS: enableMDNS,
       enableWebTransport: enableWebTransport,
       enableWebRtc: enableWebRtc,
+      circuitRelay: circuitRelay ?? const CircuitRelayConfig(),
       nodeId: _generateDefaultNodeId(),
     );
   }
@@ -67,6 +70,11 @@ class NetworkConfig {
       enableMDNS: json['enableMDNS'] as bool? ?? true,
       enableWebTransport: json['enableWebTransport'] as bool? ?? true,
       enableWebRtc: json['enableWebRtc'] as bool? ?? true,
+      circuitRelay: json['circuitRelay'] != null
+          ? CircuitRelayConfig.fromJson(
+              Map<String, dynamic>.from(json['circuitRelay'] as Map),
+            )
+          : const CircuitRelayConfig(),
       nodeId: json['nodeId'] as String?,
       delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'] as String?,
     );
@@ -111,6 +119,9 @@ class NetworkConfig {
   /// Whether to enable WebRTC.
   final bool enableWebRtc;
 
+  /// Circuit relay client configuration.
+  final CircuitRelayConfig circuitRelay;
+
   /// Unique identifier for this node.
   final String nodeId;
 
@@ -127,6 +138,7 @@ class NetworkConfig {
     'enableMDNS': enableMDNS,
     'enableWebTransport': enableWebTransport,
     'enableWebRtc': enableWebRtc,
+    'circuitRelay': circuitRelay.toJson(),
     'nodeId': nodeId,
     'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
   };
@@ -155,4 +167,56 @@ class ProtocolConfig {
 
   /// Maximum number of retries per message.
   final int maxRetries;
+}
+
+/// Configuration for the circuit relay client.
+class CircuitRelayConfig {
+  /// Creates a new [CircuitRelayConfig].
+  const CircuitRelayConfig({
+    this.enabled = true,
+    this.staticRelays = const <String>[],
+    this.reservationTimeout = const Duration(seconds: 30),
+    this.reservationRefreshInterval = const Duration(minutes: 5),
+    this.maxCircuits = 8,
+  });
+
+  /// Creates a [CircuitRelayConfig] from a JSON map.
+  factory CircuitRelayConfig.fromJson(Map<String, dynamic> json) {
+    return CircuitRelayConfig(
+      enabled: json['enabled'] as bool? ?? true,
+      staticRelays: (json['staticRelays'] as List?)?.cast<String>() ?? const [],
+      reservationTimeout: json['reservationTimeoutSeconds'] != null
+          ? Duration(seconds: json['reservationTimeoutSeconds'] as int)
+          : const Duration(seconds: 30),
+      reservationRefreshInterval:
+          json['reservationRefreshIntervalSeconds'] != null
+          ? Duration(seconds: json['reservationRefreshIntervalSeconds'] as int)
+          : const Duration(minutes: 5),
+      maxCircuits: json['maxCircuits'] as int? ?? 8,
+    );
+  }
+
+  /// Whether circuit relay support is enabled.
+  final bool enabled;
+
+  /// Static relay multiaddresses to use when no dynamic relay is available.
+  final List<String> staticRelays;
+
+  /// Timeout for reservation and CONNECT requests.
+  final Duration reservationTimeout;
+
+  /// Interval before a reservation expires at which to refresh it.
+  final Duration reservationRefreshInterval;
+
+  /// Maximum number of concurrent relayed circuits.
+  final int maxCircuits;
+
+  /// Converts this configuration to a JSON map.
+  Map<String, dynamic> toJson() => {
+    'enabled': enabled,
+    'staticRelays': staticRelays,
+    'reservationTimeoutSeconds': reservationTimeout.inSeconds,
+    'reservationRefreshIntervalSeconds': reservationRefreshInterval.inSeconds,
+    'maxCircuits': maxCircuits,
+  };
 }

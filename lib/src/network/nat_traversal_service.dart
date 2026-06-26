@@ -5,12 +5,17 @@ import 'package:port_forwarder/port_forwarder.dart';
 /// Manages NAT traversal and port forwarding operations.
 class NatTraversalService {
   /// Creates a new NatTraversalService.
-  NatTraversalService({Logger? logger, Gateway? gateway})
-    : _logger = logger ?? Logger('NatTraversalService'),
-      _gateway = gateway;
+  NatTraversalService({
+    Logger? logger,
+    Gateway? gateway,
+    Future<Gateway?> Function()? gatewayDiscoverer,
+  }) : _logger = logger ?? Logger('NatTraversalService'),
+       _gateway = gateway,
+       _gatewayDiscoverer = gatewayDiscoverer ?? Gateway.discover;
 
   final Logger _logger;
   Gateway? _gateway;
+  final Future<Gateway?> Function() _gatewayDiscoverer;
 
   /// Attempts to map the specified [port] for both TCP and UDP.
   ///
@@ -23,7 +28,7 @@ class NatTraversalService {
       // Discover gateway if not already found
       if (_gateway == null) {
         _logger.debug('Discovering gateway...');
-        _gateway = await Gateway.discover();
+        _gateway = await _gatewayDiscoverer();
       }
 
       final gateway = _gateway;

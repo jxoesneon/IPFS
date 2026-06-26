@@ -116,6 +116,9 @@ class _FakeRouter implements RouterInterface {
   @override
   List<String> resolvePeerId(String peerIdStr) => [];
 
+  @override
+  void registerRelayedConnection(String targetPeerId, String relayAddr) {}
+
   void addPeer(String peerId) {
     _peers.add(peerId);
     _connectionEvents.add(

@@ -521,6 +521,14 @@ class Libp2pRouter implements RouterInterface {
     return [];
   }
 
+  @override
+  void registerRelayedConnection(String targetPeerId, String relayAddr) {
+    _connectedPeers.add(targetPeerId);
+    _logger.debug(
+      'Registered relayed connection to $targetPeerId via $relayAddr',
+    );
+  }
+
   // Helper methods
 
   void _checkStarted() {

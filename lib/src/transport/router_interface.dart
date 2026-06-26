@@ -162,4 +162,12 @@ abstract class RouterInterface {
   ///
   /// Returns a list of multiaddresses for the peer.
   List<String> resolvePeerId(String peerIdStr);
+
+  /// Registers a virtual relayed connection so that higher-level protocols
+  /// can treat [targetPeerId] as connected through [relayAddr].
+  ///
+  /// The default implementation is a no-op for transports that do not maintain
+  /// a virtual peer set. Routers that expose [connectedPeers] should add the
+  /// target peer to that set.
+  void registerRelayedConnection(String targetPeerId, String relayAddr) {}
 }

@@ -35,7 +35,10 @@ class NetworkHandler {
 
     // Initialize CircuitRelayClient after _router is initialized
     _logger.verbose('Creating CircuitRelayClient with router instance');
-    _circuitRelayClient = CircuitRelayClient(_router);
+    _circuitRelayClient = CircuitRelayClient(
+      _router,
+      config: _config.network.circuitRelay,
+    );
 
     _logger.verbose('Setting up network event listeners');
     _listenForNetworkEvents();

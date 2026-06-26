@@ -173,6 +173,8 @@ class MockRouter implements RouterInterface {
   dynamic parseMultiaddr(String multiaddr) => null;
   @override
   List<String> resolvePeerId(String peerIdStr) => [];
+  @override
+  void registerRelayedConnection(String targetPeerId, String relayAddr) {}
 }
 
 class MockCircuitRelayClient extends CircuitRelayClient {
