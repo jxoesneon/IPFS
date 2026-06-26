@@ -1,3 +1,5 @@
+// ignore_for_file: directives_ordering, deprecated_member_use_from_same_package, inference_failure_on_function_return_type, prefer_const_constructors
+
 import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
@@ -8,10 +10,11 @@ import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart' as core;
 import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart';
-import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
+import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart' as ipld;
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/core/errors/graphsync_errors.dart';
 
@@ -63,7 +66,7 @@ void main() {
 
     test('requestGraph sends message and returns block', () async {
       final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
-      final selector = IPLDSelector(type: SelectorType.all);
+      final selector = ipld.IPLDSelector(type: ipld.SelectorType.all);
       final decodedCid = CID.decode(cid);
       final dummyBlock = core.Block(
         cid: decodedCid,
@@ -96,8 +99,8 @@ void main() {
       final rootCid = CID.decode(
         'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
       );
-      final selector = IPLDSelector(type: SelectorType.all);
-      final selectorBytes = await selector.toBytes();
+      final selector = ipld.ExploreAll(next: ipld.Matcher());
+      final selectorBytes = await ipld.encodeSelectorDagCbor(selector);
 
       final request = GraphsyncRequest()
         ..id = 1
@@ -117,24 +120,28 @@ void main() {
         data: Uint8List.fromList([4, 5, 6]),
       );
       when(mockBitswap.wantBlock(any)).thenAnswer((_) async => dummyBlock);
-      when(mockIpld.get(rootCid)).thenAnswer(
-        (_) async => IPLDNode()
-          ..kind = Kind.BYTES
-          ..bytesValue = dummyBlock.data,
-      );
 
       final resultNode = IPLDNode()
         ..kind = Kind.BYTES
         ..bytesValue = dummyBlock.data;
-      final result = SelectorResult(
+      final result = ipld.SelectedNode(
         cid: rootCid,
         node: resultNode,
         path: 'some/path',
+        remainingDepth: 32,
       );
       when(
-        mockIpld.executeSelector(any, any),
-      ).thenAnswer((_) async => [result]);
+        mockIpld.executeSelectorStream(
+          any,
+          any,
+          maxDepth: anyNamed('maxDepth'),
+          maxNodes: anyNamed('maxNodes'),
+        ),
+      ).thenAnswer((_) => Stream.fromIterable([result]));
       when(mockBlockStore.hasBlock(any)).thenAnswer((_) async => false);
+      when(mockBlockStore.getBlock(any)).thenAnswer(
+        (_) async => BlockResponseFactory.successGet(dummyBlock.toProto()),
+      );
 
       await capturedHandler(packet);
 
@@ -230,11 +237,11 @@ void main() {
       final rootCid = CID.decode(
         'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
       );
-      final selector = IPLDSelector(type: SelectorType.all);
+      final selector = ipld.ExploreAll(next: ipld.Matcher());
       final request = GraphsyncRequest()
         ..id = 5
         ..root = rootCid.toBytes()
-        ..selector = await selector.toBytes();
+        ..selector = await ipld.encodeSelectorDagCbor(selector);
 
       final message = GraphsyncMessage()..requests.add(request);
       final packet = NetworkPacket(
@@ -243,8 +250,15 @@ void main() {
       );
 
       when(mockBitswap.wantBlock(any)).thenAnswer((_) async => null);
-      when(mockIpld.executeSelector(any, any)).thenAnswer(
-        (_) async => [SelectorResult(cid: rootCid, node: IPLDNode(), path: '')],
+      when(mockIpld.executeSelectorStream(any, any)).thenAnswer(
+        (_) => Stream.fromIterable([
+          ipld.SelectedNode(
+            cid: rootCid,
+            node: IPLDNode(),
+            path: '',
+            remainingDepth: 32,
+          ),
+        ]),
       );
 
       await expectLater(
@@ -264,11 +278,11 @@ void main() {
       final rootCid = CID.decode(
         'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
       );
-      final selector = IPLDSelector(type: SelectorType.all);
+      final selector = ipld.ExploreAll(next: ipld.Matcher());
       final request = GraphsyncRequest()
         ..id = 6
         ..root = rootCid.toBytes()
-        ..selector = await selector.toBytes();
+        ..selector = await ipld.encodeSelectorDagCbor(selector);
 
       final message = GraphsyncMessage()..requests.add(request);
       final packet = NetworkPacket(
@@ -281,7 +295,9 @@ void main() {
         data: Uint8List.fromList([4, 5, 6]),
       );
       when(mockBitswap.wantBlock(any)).thenAnswer((_) async => dummyBlock);
-      when(mockIpld.get(rootCid)).thenAnswer((_) async => null);
+      when(
+        mockIpld.executeSelectorStream(any, any),
+      ).thenAnswer((_) => Stream.empty());
 
       await expectLater(
         () => capturedHandler(packet),

@@ -33,6 +33,7 @@ class GatewayServer implements ILifecycle {
       'http://127.0.0.1',
     ], // SEC-006: Restrict CORS
     this.ipnsResolver,
+    this.ipnsRecordResolver,
     this.maxRequestsPerIp = 100,
     this.rateLimitWindowSeconds = 60,
     this.metricsCollector,
@@ -42,6 +43,7 @@ class GatewayServer implements ILifecycle {
     _handler = GatewayHandler(
       blockStore,
       ipnsResolver: ipnsResolver,
+      ipnsRecordResolver: ipnsRecordResolver,
       metricsCollector: metricsCollector,
     );
     if (node != null) {
@@ -70,6 +72,9 @@ class GatewayServer implements ILifecycle {
 
   /// Optional IPNS resolver for /ipns/ paths.
   final IpnsResolver? ipnsResolver;
+
+  /// Optional resolver for signed IPNS record bytes.
+  final IpnsRecordResolver? ipnsRecordResolver;
 
   /// Maximum requests per IP per time window (SEC-007)
   final int maxRequestsPerIp;

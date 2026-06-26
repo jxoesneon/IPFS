@@ -1,4 +1,6 @@
 // src/protocols/graphsync/graphsync_handler.dart
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -213,39 +215,40 @@ class GraphsyncHandler {
       );
 
       final CID rootCID = CID.fromBytes(Uint8List.fromList(request.root));
-      final IPLDSelector selector = await IPLDSelector.fromBytesAsync(
+      final Selector selector = await decodeSelectorBytes(
         Uint8List.fromList(request.selector),
       );
 
       // Traversal and block fetching logic
       try {
-        final List<SelectorResult> results = await _ipld.executeSelector(
-          rootCID,
-          selector,
-        );
+        final selected = await _ipld
+            .executeSelectorStream(
+              rootCID,
+              selector,
+              maxDepth: _config.maxSelectorDepth,
+              maxNodes: _config.maxSelectorNodes,
+            )
+            .toList();
 
-        if (results.isEmpty) {
+        if (selected.isEmpty) {
           throw GraphTraversalError(
             'Root node not found or selector matched nothing: $rootCID',
           );
         }
 
-        int processed = 0;
-        final int total = results.length;
+        // Always include the root block in the response.
+        final blocks = <Block>[await _fetchGraphsyncBlock(rootCID)];
+        final blockCids = <String>{rootCID.toString()};
 
-        for (final SelectorResult result in results) {
+        int processed = 0;
+        final int total = selected.length;
+
+        for (final result in selected) {
           processed++;
 
-          // Ensure we have the block locally or fetch via Bitswap
-          if (!await _blockStore.hasBlock(result.cid.toString())) {
-            final core.Block? fetched = await _bitswap.wantBlock(
-              result.cid.toString(),
-            );
-            if (fetched != null) {
-              await _blockStore.putBlock(fetched);
-            } else {
-              throw BlockNotFoundError(result.cid.toString());
-            }
+          if (!blockCids.contains(result.cid.toString())) {
+            blocks.add(await _fetchGraphsyncBlock(result.cid));
+            blockCids.add(result.cid.toString());
           }
 
           // Send progress update
@@ -267,6 +270,7 @@ class GraphsyncHandler {
               'message': 'Graph transfer completed',
               'blocksProcessed': '$processed',
             },
+            blocks: blocks,
           ),
         );
       } catch (e) {
@@ -303,7 +307,8 @@ class GraphsyncHandler {
 
     try {
       final CID cid = CID.decode(cidStr);
-      final Uint8List selectorBytes = await selector.toBytes();
+      final specSelector = selector.toSpecSelector();
+      final Uint8List selectorBytes = await encodeSelectorDagCbor(specSelector);
       final int requestId = DateTime.now().millisecondsSinceEpoch & 0x7FFFFFFF;
 
       final GraphsyncMessage message = _protocol.createRequest(
@@ -339,11 +344,28 @@ class GraphsyncHandler {
     await _router.broadcastMessage(GraphsyncProtocol.protocolID, buffer);
   }
 
+  /// Fetches a block from the local store or via Bitswap and converts it to a
+  /// Graphsync [Block] protobuf.
+  Future<Block> _fetchGraphsyncBlock(CID cid) async {
+    if (!await _blockStore.hasBlock(cid.toString())) {
+      final core.Block? fetched = await _bitswap.wantBlock(cid.toString());
+      if (fetched != null) {
+        await _blockStore.putBlock(fetched);
+      } else {
+        throw BlockNotFoundError(cid.toString());
+      }
+    }
+
+    final response = await _blockStore.getBlock(cid.toString());
+    if (!response.found) {
+      throw BlockNotFoundError(cid.toString());
+    }
+    final core.Block block = core.Block.fromProto(response.block);
+    return _convertToGraphsyncBlock(block);
+  }
+
   /// Converts a core [core.Block] to a Graphsync [Block] protobuf.
   Block _convertToGraphsyncBlock(core.Block bitswapBlock) {
-    return Block(
-      prefix: bitswapBlock.cid.toBytes().sublist(0, 1),
-      data: bitswapBlock.data,
-    );
+    return Block(prefix: bitswapBlock.cid.toBytes(), data: bitswapBlock.data);
   }
 }

@@ -14,7 +14,6 @@ import 'package:http/http.dart' as http;
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/kademlia_tree.dart';
 import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/ipns.pb.dart';
@@ -53,6 +52,7 @@ void main() {
     config = IPFSConfig();
 
     when(mockClient.kademliaRoutingTable).thenReturn(mockRoutingTable);
+    when(mockRouter.resolvePeerId(any)).thenReturn(['/ip4/127.0.0.1/tcp/4001']);
 
     handler = DHTHandler(
       config,

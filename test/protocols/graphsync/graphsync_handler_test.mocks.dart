@@ -546,6 +546,29 @@ class MockIPLDHandler extends _i1.Mock implements _i12.IPLDHandler {
           as _i8.Future<List<_i16.SelectorResult>>);
 
   @override
+  _i8.Stream<_i16.SelectedNode> executeSelectorStream(
+    _i15.CID? root,
+    _i16.Selector? selector, {
+    int? maxDepth,
+    int? maxNodes,
+    bool includePath = false,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #executeSelectorStream,
+              [root, selector],
+              {
+                #maxDepth: maxDepth,
+                #maxNodes: maxNodes,
+                #includePath: includePath,
+              },
+            ),
+            returnValue: _i8.Stream<_i16.SelectedNode>.empty(),
+            returnValueForMissingStub: _i8.Stream<_i16.SelectedNode>.empty(),
+          )
+          as _i8.Stream<_i16.SelectedNode>);
+
+  @override
   _i8.Future<dynamic> resolvePath(String? path) =>
       (super.noSuchMethod(
             Invocation.method(#resolvePath, [path]),

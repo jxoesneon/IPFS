@@ -175,6 +175,9 @@ class IPFSNodeBuilder {
     }
 
     if (_config.gateway.enabled) {
+      final ipnsHandler = _container.isRegistered<IPNSHandler>()
+          ? _container.get<IPNSHandler>()
+          : null;
       final gatewayServer = GatewayServer(
         blockStore: _container.get<BlockStore>(),
         node: node,
@@ -182,6 +185,12 @@ class IPFSNodeBuilder {
         port: _config.gateway.port,
         metricsCollector: metrics,
         metricsConfig: _config.metrics,
+        ipnsResolver: ipnsHandler != null
+            ? (String name) async => ipnsHandler.resolve(name)
+            : null,
+        ipnsRecordResolver: ipnsHandler != null
+            ? (String name) async => ipnsHandler.getRecordBytes(name)
+            : null,
       );
       _container.registerSingleton(gatewayServer);
       lifecycleManager.register(gatewayServer);

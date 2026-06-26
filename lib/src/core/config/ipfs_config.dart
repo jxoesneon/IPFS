@@ -93,6 +93,7 @@ class IPFSConfig {
     this.enableIPLD = true,
     this.enableGraphsync = true,
     this.enableMetrics = true,
+    this.enableIpnsPubSub = false,
     this.enableLogging = true,
     this.enableStructuredLogging = false,
     this.ipnsCacheSize = 1000,
@@ -112,6 +113,8 @@ class IPFSConfig {
     this.metrics = const MetricsConfig(),
     this.dataPath = './ipfs_data',
     Keystore? keystore,
+    this.maxSelectorDepth = 32,
+    this.maxSelectorNodes = 10000,
     this.customConfig = const {},
   }) : network = network ?? NetworkConfig(),
        dht = dht ?? const DHTConfig(),
@@ -166,6 +169,7 @@ class IPFSConfig {
       enableIPLD: json['enableIPLD'] as bool? ?? true,
       enableGraphsync: json['enableGraphsync'] as bool? ?? true,
       enableMetrics: json['enableMetrics'] as bool? ?? true,
+      enableIpnsPubSub: json['enableIpnsPubSub'] as bool? ?? false,
       enableLogging: json['enableLogging'] as bool? ?? true,
       enableStructuredLogging:
           json['enableStructuredLogging'] as bool? ?? false,
@@ -174,6 +178,8 @@ class IPFSConfig {
       defaultBandwidthQuota: json['defaultBandwidthQuota'] as int? ?? 1048576,
       maxConcurrentBitswapRequests:
           json['maxConcurrentBitswapRequests'] as int? ?? 10,
+      maxSelectorDepth: json['maxSelectorDepth'] as int? ?? 32,
+      maxSelectorNodes: json['maxSelectorNodes'] as int? ?? 10000,
       ipnsCacheSize: json['ipnsCacheSize'] as int? ?? 1000,
       garbageCollectionInterval: Duration(
         seconds: json['garbageCollectionInterval'] as int? ?? 86400,
@@ -250,6 +256,9 @@ class IPFSConfig {
   /// Enable metrics collection.
   final bool enableMetrics;
 
+  /// Enable IPNS PubSub notifications (requires a Gossipsub-compliant handler).
+  final bool enableIpnsPubSub;
+
   /// Enable system-wide logging.
   final bool enableLogging;
 
@@ -270,6 +279,12 @@ class IPFSConfig {
 
   /// Maximum concurrent bitswap requests.
   final int maxConcurrentBitswapRequests;
+
+  /// Maximum recursion depth for IPLD selector execution.
+  final int maxSelectorDepth;
+
+  /// Maximum number of nodes to visit during IPLD selector execution.
+  final int maxSelectorNodes;
 
   /// Path to the datastore.
   final String datastorePath;
@@ -360,12 +375,15 @@ class IPFSConfig {
     'enableIPLD': enableIPLD,
     'enableGraphsync': enableGraphsync,
     'enableMetrics': enableMetrics,
+    'enableIpnsPubSub': enableIpnsPubSub,
     'enableLogging': enableLogging,
     'enableStructuredLogging': enableStructuredLogging,
     'logLevel': logLevel,
     'enableQuotaManagement': enableQuotaManagement,
     'defaultBandwidthQuota': defaultBandwidthQuota,
     'maxConcurrentBitswapRequests': maxConcurrentBitswapRequests,
+    'maxSelectorDepth': maxSelectorDepth,
+    'maxSelectorNodes': maxSelectorNodes,
     'ipnsCacheSize': ipnsCacheSize,
     'garbageCollectionInterval': garbageCollectionInterval.inSeconds,
     'garbageCollectionEnabled': garbageCollectionEnabled,

@@ -20,6 +20,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:http/http.dart' as http;
+import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 
 /// Handles DHT operations for an IPFS node.
 ///
@@ -277,6 +278,35 @@ class DHTHandler implements IDHTHandler {
   bool isValidPeerID(String peerId) =>
       peerId.isNotEmpty && RegExp(r'^[a-zA-Z0-9]+$').hasMatch(peerId);
 
+  /// Validates a provider record for a given [provider], [cid], and optional [ttl].
+  ///
+  /// Checks required by the DHT integration spec:
+  /// - Provider ID is a valid, non-empty peer ID.
+  /// - The CID is valid.
+  /// - At least one address for the provider is a parseable multiaddr.
+  /// - If [ttl] is provided, it must be in the future.
+  bool isValidProviderRecord(PeerId provider, String cid, DateTime? ttl) {
+    if (provider.value.isEmpty) return false;
+    if (!isValidCID(cid)) return false;
+
+    final addrs = _router.resolvePeerId(provider.toBase58());
+    if (addrs.isEmpty) return false;
+
+    final hasValidAddr = addrs.any((addr) {
+      try {
+        libp2p.MultiAddr(addr);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    });
+    if (!hasValidAddr) return false;
+
+    if (ttl != null && ttl.isBefore(DateTime.now())) return false;
+
+    return true;
+  }
+
   /// Extracts a CID from an HTTP response body.
   String? extractCIDFromResponse(String responseBody) {
     final match = RegExp(
@@ -343,6 +373,15 @@ class DHTHandler implements IDHTHandler {
     final cidStr = cid.toString();
 
     try {
+      // SEC-010: Validate provider record before rate limiting.
+      if (!isValidProviderRecord(provider, cidStr, null)) {
+        _logger.warning(
+          'SEC-010: Rejected invalid provider record from $providerStr '
+          'for CID $cidStr',
+        );
+        return;
+      }
+
       // SEC-010: Rate limit check
       final now = DateTime.now();
       final announcements = _providerAnnouncements[providerStr] ?? [];

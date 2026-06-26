@@ -13,6 +13,7 @@ class DHTConfig {
     this.maxRecordsPerQuery = 20,
     this.enableProviderRecording = true,
     this.enableValueStorage = true,
+    this.validateProviderRecords = true,
   });
 
   /// Creates a DHTConfig from JSON.
@@ -32,6 +33,8 @@ class DHTConfig {
       enableProviderRecording:
           (json['enableProviderRecording'] as bool?) ?? true,
       enableValueStorage: (json['enableValueStorage'] as bool?) ?? true,
+      validateProviderRecords:
+          (json['validateProviderRecords'] as bool?) ?? true,
     );
   }
 
@@ -59,6 +62,10 @@ class DHTConfig {
   /// Whether to enable value storage.
   final bool enableValueStorage;
 
+  /// Whether to validate incoming provider records for address sanity and
+  /// freshness before trusting them.
+  final bool validateProviderRecords;
+
   /// Converts the config to JSON.
   ///
   /// @return A map representing the configuration.
@@ -71,5 +78,6 @@ class DHTConfig {
     'maxRecordsPerQuery': maxRecordsPerQuery,
     'enableProviderRecording': enableProviderRecording,
     'enableValueStorage': enableValueStorage,
+    'validateProviderRecords': validateProviderRecords,
   };
 }
