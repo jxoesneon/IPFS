@@ -9,13 +9,16 @@ import 'package:dart_ipfs/src/core/data_structures/car.dart';
 import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
+import 'package:dart_ipfs/src/utils/dnslink_resolver.dart' as utils_dnslink;
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:mime/mime.dart';
+import 'package:multibase/multibase.dart';
 import 'package:shelf/shelf.dart';
 
 /// Resolver function for IPNS names (returns CID).
@@ -23,6 +26,44 @@ typedef IpnsResolver = Future<String> Function(String name);
 
 /// Resolver function for IPNS record bytes (returns signed record bytes).
 typedef IpnsRecordResolver = Future<Uint8List?> Function(String name);
+
+/// Resolver function for DNSLink domains (returns a resolved IPFS/IPNS path).
+typedef DnsLinkResolver = Future<DnsLinkResult?> Function(String domain);
+
+/// Result of a DNSLink resolution.
+class DnsLinkResult {
+  /// Creates a DNSLink result with a resolved [path] and optional [ttlSeconds].
+  DnsLinkResult(this.path, {this.ttlSeconds = 60});
+
+  /// The resolved path, either `/ipfs/<cid>` or `/ipns/<name>`.
+  final String path;
+
+  /// The TTL in seconds to cache the result.
+  final int ttlSeconds;
+}
+
+/// A request parsed from a subdomain-style gateway host.
+class SubdomainRequest {
+  /// Creates a subdomain request descriptor.
+  SubdomainRequest(
+    this.namespace,
+    this.identifier,
+    this.subPath,
+    this.gatewayDomain,
+  );
+
+  /// The namespace, either `ipfs` or `ipns`.
+  final String namespace;
+
+  /// The identifier (CID for `ipfs`, PeerId/DNSLink/IPNS key for `ipns`).
+  final String identifier;
+
+  /// The remaining path inside the content root.
+  final String subPath;
+
+  /// The configured gateway domain that was matched.
+  final String gatewayDomain;
+}
 
 /// Supported trustless gateway response formats.
 enum TrustlessFormat {
@@ -53,6 +94,11 @@ class GatewayHandler {
     this.bitswapHandler,
     this.denylistService,
     this.metricsCollector,
+    this.gatewayDomain,
+    this.enableSubdomainGateway = false,
+    this.subdomainDNSLinkResolver = true,
+    this.subdomainTLSRedirect = false,
+    this.dnsLinkResolver,
   });
 
   /// The block store for retrieving content.
@@ -76,6 +122,21 @@ class GatewayHandler {
   /// `ipfs_gateway_requests_total` counter rather than reusing the generic
   /// protocol metrics stream.
   final MetricsCollector? metricsCollector;
+
+  /// Configured gateway domain for subdomain requests (e.g. `ipfs.example.com`).
+  final String? gatewayDomain;
+
+  /// Whether subdomain gateway support is enabled.
+  final bool enableSubdomainGateway;
+
+  /// Whether DNSLink resolution is enabled for `.ipns` subdomains.
+  final bool subdomainDNSLinkResolver;
+
+  /// Whether HTTP subdomain requests should be redirected to HTTPS.
+  final bool subdomainTLSRedirect;
+
+  /// Optional resolver for DNSLink domains.
+  final DnsLinkResolver? dnsLinkResolver;
 
   final _logger = Logger('GatewayHandler');
 
@@ -734,9 +795,8 @@ class GatewayHandler {
   ) async {
     final pathParts = subPath.split('/');
     final targetName = pathParts[0];
-    final remainingPath = pathParts.length > 1
-        ? pathParts.sublist(1).join('/')
-        : '';
+    final remainingPath =
+        pathParts.length > 1 ? pathParts.sublist(1).join('/') : '';
 
     // Find the link with matching name
     for (final link in directory.links) {
@@ -785,47 +845,358 @@ class GatewayHandler {
     return Response(206, body: rangeData, headers: headers); // Partial Content
   }
 
-  /// Handles subdomain-based gateway requests (CID.ipfs.localhost)
-  Future<Response> handleSubdomain(Request request) async {
+  /// Returns `true` if [request] is addressed to a subdomain-style gateway host.
+  bool isSubdomainRequest(Request request) {
     final host = request.headers['host'];
-    if (host == null) return Response.badRequest(body: 'Missing host header');
+    if (host == null) return false;
+    return _parseSubdomainHost(host) != null;
+  }
 
-    // Parse CID from subdomain
-    final parts = host.split('.');
-    if (parts.length >= 3 && parts[parts.length - 2] == 'ipfs') {
-      final cidStr = parts[0];
-      final path = request.url.path;
-      Response response;
+  /// Parses a subdomain-style gateway host into a [SubdomainRequest].
+  ///
+  /// Returns `null` when the host does not match a configured subdomain pattern,
+  /// allowing callers to fall back to the path gateway.
+  SubdomainRequest? _parseSubdomainHost(String host) {
+    final hostLower = host.toLowerCase();
 
-      try {
-        final cid = CID.decode(cidStr);
-        final format = _detectTrustlessFormat(request);
-        if (format != null) {
-          // Subdomain requests only have a root CID, so the sub-path is empty.
-          response = await _serveTrustless(cid, path, format, request);
-        } else {
-          response = await _serveContent(cidStr, path, request);
-        }
-      } on FormatException catch (e) {
-        _logger.warning('Invalid CID in subdomain: $cidStr ($e)');
-        response = Response.badRequest(body: 'Invalid CID');
-      } catch (e, stackTrace) {
-        _logger.error(
-          'Error serving content for subdomain $cidStr',
-          e,
-          stackTrace,
-        );
-        response = Response.internalServerError(body: 'Internal server error');
-      }
-      _recordGatewayRequest(
-        request.method,
-        request.url.path,
-        response.statusCode,
-      );
-      return response;
+    // Localhost subdomain requests are always supported.
+    if (hostLower.endsWith('.ipfs.localhost') ||
+        hostLower.endsWith('.ipns.localhost')) {
+      return _parseSubdomainHostWithDomain(host, 'localhost');
     }
 
-    return Response.badRequest(body: 'Invalid IPFS subdomain');
+    // Production subdomain requests require a configured gateway domain.
+    final domain = gatewayDomain?.toLowerCase();
+    if (domain == null || domain.isEmpty) return null;
+
+    if (hostLower == domain) return null; // bare gateway domain
+
+    if (!hostLower.endsWith('.$domain')) return null;
+
+    return _parseSubdomainHostWithDomain(host, domain);
+  }
+
+  SubdomainRequest? _parseSubdomainHostWithDomain(String host, String domain) {
+    final domainParts = domain.split('.');
+    final hostParts = host.split('.');
+    final hostPartsLower = host.toLowerCase().split('.');
+    if (hostParts.length <= domainParts.length + 1) return null;
+
+    final namespaceIndex = hostParts.length - domainParts.length - 1;
+    final namespace = hostPartsLower[namespaceIndex];
+    if (namespace != 'ipfs' && namespace != 'ipns') return null;
+
+    final identifierParts = hostParts.sublist(0, namespaceIndex);
+    if (identifierParts.isEmpty) return null;
+
+    // For `ipfs` subdomains, the identifier must be a single DNS label.
+    if (namespace == 'ipfs' && identifierParts.length != 1) return null;
+
+    final identifier = identifierParts.join('.');
+    if (identifier.isEmpty) return null;
+
+    return SubdomainRequest(
+      namespace,
+      identifier,
+      '',
+      domain,
+    );
+  }
+
+  /// Validates the leftmost label of an `ipfs` subdomain as a CID.
+  ///
+  /// CIDv0 is converted to CIDv1 base32 so it can be represented as a DNS label.
+  /// Returns `null` if [cidStr] cannot be parsed as a CID.
+  CID? _validateSubdomainCid(String cidStr) {
+    if (cidStr.isEmpty) return null;
+    try {
+      final cid = CID.decode(cidStr);
+      if (cid.version == 0) {
+        // Convert CIDv0 to CIDv1 base32 for DNS-label compatibility.
+        return CID.v1(
+          cid.codec ?? 'dag-pb',
+          cid.multihash,
+          base: Multibase.base32,
+        );
+      }
+      return cid;
+    } on FormatException {
+      return null;
+    } on ArgumentError {
+      return null;
+    } catch (e) {
+      _logger.warning('CID validation failed for $cidStr: $e');
+      return null;
+    }
+  }
+
+  /// Resolves an `ipns` subdomain identifier to a CID string.
+  ///
+  /// The identifier may be a PeerId/IPNS key, or a DNSLink-compatible domain.
+  /// DNSLink values pointing to `/ipns/<name>` are recursively resolved via
+  /// [ipnsResolver]. Throws [Exception] on failure.
+  Future<String> _resolveSubdomainIpns(
+    String name, {
+    String? dnsLinkDomain,
+  }) async {
+    // 1. Try IPNS resolver for PeerId/IPNS key names.
+    if (ipnsResolver != null && _looksLikeIpnsName(name)) {
+      try {
+        return await ipnsResolver!(name);
+      } catch (e) {
+        _logger.warning('IPNS resolver failed for $name: $e');
+        // Continue to DNSLink fallback for DNS-like names.
+        if (!_looksLikeDnsName(name)) rethrow;
+      }
+    }
+
+    // 2. Try DNSLink resolution for DNS-like names.
+    if (subdomainDNSLinkResolver && _looksLikeDnsName(name)) {
+      final resolver = dnsLinkResolver ?? _defaultDnsLinkResolver;
+      final result = await resolver(name);
+      if (result != null) {
+        final path = result.path;
+        if (path.startsWith('/ipfs/')) {
+          final cidStr = path.substring(6);
+          // Validate the CID before returning it.
+          final cid = _validateSubdomainCid(cidStr);
+          if (cid == null) {
+            throw Exception('DNSLink resolved to invalid CID: $cidStr');
+          }
+          return cid.encode();
+        } else if (path.startsWith('/ipns/')) {
+          final innerName = path.substring(6);
+          if (ipnsResolver == null) {
+            throw Exception('IPNS resolver unavailable for DNSLink /ipns path');
+          }
+          return await ipnsResolver!(innerName);
+        }
+      }
+    }
+
+    throw Exception('Invalid IPNS name in subdomain');
+  }
+
+  bool _looksLikeIpnsName(String name) {
+    // IPNS peer IDs are base36 (k...) or base58btc strings. Base36 multibase
+    // peer IDs may be represented in subdomain form with a trailing '.k' suffix.
+    if (name.isEmpty) return false;
+    final dotCount = '.'.allMatches(name).length;
+    if (dotCount > 1) return false;
+    if (name.startsWith('k')) {
+      if (dotCount == 0) return true;
+      if (name.endsWith('.k')) return true;
+    }
+    if (dotCount == 0) {
+      return _isBase58btcPeerId(name);
+    }
+    return false;
+  }
+
+  bool _isBase58btcPeerId(String name) {
+    try {
+      PeerId.fromBase58(name);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  bool _looksLikeDnsName(String name) {
+    // A DNS name contains at least one dot and only DNS-label characters.
+    if (name.isEmpty || !name.contains('.')) return false;
+    final dnsLabelRegex = RegExp(r'^[a-zA-Z0-9][a-zA-Z0-9-]*$');
+    for (final label in name.split('.')) {
+      if (label.isEmpty) return false;
+      if (!dnsLabelRegex.hasMatch(label)) return false;
+      if (label.length > 63) return false;
+    }
+    return name.length <= 253;
+  }
+
+  Future<DnsLinkResult?> _defaultDnsLinkResolver(String domain) async {
+    final cid = await utils_dnslink.DNSLinkResolver.resolve(domain);
+    if (cid != null && cid.isNotEmpty) {
+      return DnsLinkResult('/ipfs/$cid', ttlSeconds: 60);
+    }
+    return null;
+  }
+
+  /// Handles subdomain-based gateway requests (`{cid}.ipfs.{gateway}` or
+  /// `{name}.ipns.{gateway}`).
+  Future<Response> handleSubdomain(Request request) async {
+    final host = request.headers['host'];
+    if (host == null) {
+      return _invalidSubdomainResponse('Missing host header');
+    }
+
+    final sub = _parseSubdomainHost(host);
+    if (sub == null) {
+      return _invalidSubdomainResponse('Invalid IPFS subdomain');
+    }
+
+    // Optional TLS redirect for non-localhost production domains.
+    final redirect = _subdomainTlsRedirect(request, sub);
+    if (redirect != null) {
+      _recordGatewayRequest(
+          request.method, request.url.path, redirect.statusCode);
+      return redirect;
+    }
+
+    Response response;
+    String? ipnsPath;
+    int? ipnsTtl;
+    String? dnsLinkDomain;
+
+    try {
+      if (sub.namespace == 'ipfs') {
+        final cid = _validateSubdomainCid(sub.identifier);
+        if (cid == null) {
+          response = _invalidCidResponse();
+        } else {
+          final cidStr = cid.encode();
+          ipnsPath = '/ipfs/${sub.identifier}';
+          final denylisted = _checkDenylist('/ipfs/$cidStr');
+          if (denylisted != null) {
+            response = denylisted;
+          } else {
+            final format = _detectTrustlessFormat(request);
+            if (format != null) {
+              response =
+                  await _serveTrustless(cid, sub.subPath, format, request);
+            } else {
+              response = await _serveContent(cidStr, sub.subPath, request);
+            }
+          }
+        }
+      } else {
+        // ipns
+        ipnsPath = '/ipns/${sub.identifier}';
+        final denylisted = _checkDenylist(ipnsPath);
+        if (denylisted != null) {
+          response = denylisted;
+        } else {
+          final cidStr = await _resolveSubdomainIpns(
+            sub.identifier,
+            dnsLinkDomain:
+                _looksLikeDnsName(sub.identifier) ? sub.identifier : null,
+          );
+          final cid = _validateSubdomainCid(cidStr);
+          if (cid == null) {
+            response = _badGatewayResponse('Invalid IPNS resolution result');
+          } else {
+            if (_looksLikeDnsName(sub.identifier)) {
+              dnsLinkDomain = sub.identifier;
+            }
+            ipnsTtl = _defaultIpnsTtlSeconds;
+            final format = _detectTrustlessFormat(request);
+            if (format != null) {
+              response = await _serveTrustless(
+                cid,
+                sub.subPath,
+                format,
+                request,
+                ipnsPath: ipnsPath,
+              );
+            } else {
+              response = await _serveContent(cidStr, sub.subPath, request);
+            }
+          }
+        }
+      }
+    } on FormatException catch (e) {
+      _logger.warning('Invalid CID in subdomain: ${sub.identifier} ($e)');
+      response = _invalidCidResponse();
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Error serving content for subdomain ${sub.identifier}',
+        e,
+        stackTrace,
+      );
+      response = _badGatewayResponse(e.toString());
+    }
+
+    response = _applySubdomainResponseHeaders(
+      response,
+      sub,
+      ipnsPath: ipnsPath,
+      ipnsTtl: ipnsTtl,
+      dnsLinkDomain: dnsLinkDomain,
+    );
+
+    _recordGatewayRequest(
+      request.method,
+      request.url.path,
+      response.statusCode,
+    );
+    return response;
+  }
+
+  Response? _subdomainTlsRedirect(Request request, SubdomainRequest sub) {
+    if (!subdomainTLSRedirect) return null;
+    if (sub.gatewayDomain == 'localhost' || sub.gatewayDomain == '127.0.0.1') {
+      return null;
+    }
+
+    // Determine whether the request was made over HTTP. shelf's [Request.url]
+    // strips the origin, so the original scheme is read from requestedUri.
+    final forwardedProto = request.headers['x-forwarded-proto'];
+    final scheme = request.requestedUri.scheme;
+    if ((forwardedProto != null && forwardedProto != 'http') ||
+        (forwardedProto == null && scheme != 'http')) {
+      return null;
+    }
+
+    final host = request.headers['host'] ?? sub.gatewayDomain;
+    final path = request.url.path;
+    final location = 'https://$host${path.startsWith('/') ? path : '/$path'}';
+    return Response.movedPermanently(location);
+  }
+
+  Response _applySubdomainResponseHeaders(
+    Response response,
+    SubdomainRequest sub, {
+    String? ipnsPath,
+    int? ipnsTtl,
+    String? dnsLinkDomain,
+  }) {
+    final headers = Map<String, String>.from(response.headers);
+    headers['Access-Control-Allow-Origin'] = '*';
+    // Never set Access-Control-Allow-Credentials for subdomain origins.
+    headers.remove('Access-Control-Allow-Credentials');
+    headers['X-IPFS-Path'] = ipnsPath ?? '/${sub.namespace}/${sub.identifier}';
+    if (sub.namespace == 'ipns') {
+      headers['Cache-Control'] =
+          'public, max-age=${ipnsTtl ?? _defaultIpnsTtlSeconds}';
+    }
+    if (dnsLinkDomain != null && dnsLinkDomain.isNotEmpty) {
+      headers['X-IPFS-DNSLink'] = dnsLinkDomain;
+    }
+    return response.change(headers: headers);
+  }
+
+  Response _invalidCidResponse() {
+    return Response(
+      400,
+      body: 'Invalid CID in subdomain',
+      headers: {'Content-Type': 'text/plain; charset=utf-8'},
+    );
+  }
+
+  Response _invalidSubdomainResponse(String body) {
+    return Response(
+      400,
+      body: body,
+      headers: {'Content-Type': 'text/plain; charset=utf-8'},
+    );
+  }
+
+  Response _badGatewayResponse(String message) {
+    return Response(
+      502,
+      body: 'Bad Gateway: $message',
+      headers: {'Content-Type': 'text/plain; charset=utf-8'},
+    );
   }
 
   /// Detects content type from file data

@@ -116,5 +116,50 @@ void main() {
 
       expect(result, isNull);
     });
+
+    test('fetchRawBlock uses ?format=raw endpoint', () async {
+      final mockClient = MockClient((request) async {
+        expect(request.url.queryParameters['format'], equals('raw'));
+        return http.Response('raw block', 200);
+      });
+
+      final client = HttpGatewayClient(client: mockClient);
+      final result = await client.fetchRawBlock(
+        'https://ipfs.io',
+        'QmHash',
+      );
+
+      expect(result, isNotNull);
+      expect(utf8.decode(result!), 'raw block');
+    });
+
+    test('fetchRawBlock returns null on 404', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Not Found', 404);
+      });
+
+      final client = HttpGatewayClient(client: mockClient);
+      final result = await client.fetchRawBlock(
+        'https://ipfs.io',
+        'QmHash',
+      );
+
+      expect(result, isNull);
+    });
+
+    test('fetchRawBlock respects maxBlockSize', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response.bytes(Uint8List(1024), 200);
+      });
+
+      final client = HttpGatewayClient(client: mockClient);
+      final result = await client.fetchRawBlock(
+        'https://ipfs.io',
+        'QmHash',
+        maxBlockSize: 512,
+      );
+
+      expect(result, isNull);
+    });
   });
 }

@@ -11,6 +11,7 @@ import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:multibase/multibase.dart';
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
 
@@ -327,8 +328,14 @@ void main() {
     group('subdomain gateway', () {
       test('detects trustless format in subdomain request', () async {
         final block = makeBlock();
+        final cid = CID.decode(cidStr);
+        final subdomainCid = CID.v1(
+          cid.codec ?? 'dag-pb',
+          cid.multihash,
+          base: Multibase.base32,
+        ).encode();
         when(
-          mockBlockStore.getBlock(cidStr),
+          mockBlockStore.getBlock(subdomainCid),
         ).thenAnswer((_) async => foundResponse(block));
 
         final request = Request(

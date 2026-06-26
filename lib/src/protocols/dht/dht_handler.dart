@@ -37,15 +37,14 @@ class DHTHandler implements IDHTHandler {
     Keystore? keystore,
     http.Client? httpClient,
     MetricsCollector? metrics,
-  }) : _keystore = keystore ?? Keystore(),
-       _httpClient = httpClient ?? http.Client(),
-       _storage = storage ?? HiveDatastore(config.datastorePath) {
+  })  : _keystore = keystore ?? Keystore(),
+        _httpClient = httpClient ?? http.Client(),
+        _storage = storage ?? HiveDatastore(config.datastorePath) {
     _logger = Logger('DHTHandler', debug: config.debug);
     if (storage == null) {
       _storage.init();
     }
-    dhtClient =
-        client ??
+    dhtClient = client ??
         DHTClient(
           networkHandler: networkHandler,
           router: _router,
@@ -177,9 +176,8 @@ class DHTHandler implements IDHTHandler {
     if (resolvedCid == null) {
       try {
         final url = Uri.parse('https://ipfs.io/ipns/$ipnsName');
-        final response = await _httpClient
-            .get(url)
-            .timeout(const Duration(seconds: 10));
+        final response =
+            await _httpClient.get(url).timeout(const Duration(seconds: 10));
         if (response.statusCode == 200) {
           resolvedCid = extractCIDFromResponse(response.body);
           if (resolvedCid != null) {
@@ -227,9 +225,8 @@ class DHTHandler implements IDHTHandler {
       final valuePath = utf8.encode('/ipfs/$cid');
 
       // Validity: RFC3339 format, 24 hours from now
-      final validityDate = DateTime.now()
-          .add(const Duration(hours: 24))
-          .toUtc();
+      final validityDate =
+          DateTime.now().add(const Duration(hours: 24)).toUtc();
       final validity = utf8.encode(validityDate.toIso8601String());
       final validityType = IpnsEntry_ValidityType.EOL;
 
@@ -342,6 +339,19 @@ class DHTHandler implements IDHTHandler {
       await dhtClient.addProvider(cid.toString(), _router.peerID);
     } catch (e, st) {
       _logger.error('Error providing CID: $cid', e, st);
+    }
+  }
+
+  /// Announces that this node provides content for a batch of [cids].
+  ///
+  /// Uses the DHT client's batch provider announcement when available.
+  @override
+  Future<void> provideAll(List<CID> cids) async {
+    _logger.debug('Announcing as provider for ${cids.length} CIDs');
+    try {
+      await dhtClient.addProviders(cids, _router.peerID);
+    } catch (e, st) {
+      _logger.error('Error providing ${cids.length} CIDs', e, st);
     }
   }
 

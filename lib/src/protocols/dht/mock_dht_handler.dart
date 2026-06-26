@@ -26,6 +26,13 @@ class MockDHTHandler implements IDHTHandler {
   Future<void> provide(CID cid) async {}
 
   @override
+  Future<void> provideAll(List<CID> cids) async {
+    for (final cid in cids) {
+      await provide(cid);
+    }
+  }
+
+  @override
   Future<List<V_PeerInfo>> findProviders(CID cid) async {
     return [];
   }

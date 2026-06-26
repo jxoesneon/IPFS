@@ -31,6 +31,7 @@ import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/reprovider.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
@@ -136,6 +137,20 @@ class IPFSNode {
       _container.get<DatastoreHandler>().datastore,
     );
 
+    // Wire up the periodic reprovider when DHT and config are available.
+    if (_container.isRegistered<DHTHandler>() &&
+        _container.isRegistered<IPFSConfig>()) {
+      _reprovider = Reprovider(
+        config: _container.get<IPFSConfig>().dht,
+        dhtHandler: _container.get<DHTHandler>(),
+        pinManager: _container.get<BlockStore>().pinManager,
+        mfsManager: _mfsManager,
+        metrics: _container.isRegistered<MetricsCollector>()
+            ? _container.get<MetricsCollector>()
+            : null,
+      );
+    }
+
     _pluginManager = PluginManager(this);
 
     _lifecycleManager = _container.isRegistered<LifecycleManager>()
@@ -147,6 +162,9 @@ class IPFSNode {
     _lifecycleManager.register(_contentManager);
     _lifecycleManager.register(_networkManager);
     _lifecycleManager.register(_protocolManager);
+    if (_reprovider != null) {
+      _lifecycleManager.register(_reprovider!);
+    }
 
     // Set back-references for handlers that need the IPFSNode instance
     if (_container.isRegistered<NetworkHandler>()) {
@@ -162,6 +180,7 @@ class IPFSNode {
   late final LifecycleManager _lifecycleManager;
   late final MFSManager _mfsManager;
   late final PluginManager _pluginManager;
+  Reprovider? _reprovider;
 
   NodeState _state = NodeState.stopped;
 
@@ -170,6 +189,9 @@ class IPFSNode {
 
   /// Returns the Mutable File System (MFS) manager.
   MFSManager get mfs => _mfsManager;
+
+  /// Returns the periodic [Reprovider] service, if DHT is enabled.
+  Reprovider? get reprovider => _reprovider;
 
   /// Returns the Plugin manager.
   PluginManager get plugins => _pluginManager;
@@ -406,11 +428,11 @@ class IPFSNode {
 
   /// Returns a [Future] that resolves to the content of a file or directory associated with the given [cid].
   Future<Uint8List?> get(String cid, {String path = ''}) => _contentManager.get(
-    cid,
-    path: path,
-    gatewayMode: _gatewayMode,
-    customGatewayUrl: _customGatewayUrl,
-  );
+        cid,
+        path: path,
+        gatewayMode: _gatewayMode,
+        customGatewayUrl: _customGatewayUrl,
+      );
 
   /// Returns a [Future] that resolves to a [List] of [Link]s representing the contents of an IPFS directory.
   Future<List<Link>> ls(String cid) => _contentManager.ls(cid);

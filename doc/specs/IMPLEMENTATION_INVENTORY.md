@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This inventory assesses the implementation status of the 24 feature specifications for `dart_ipfs`. As of the latest implementation pass, the P0 networking and naming specs—**DAG_CBOR_SPEC**, **METRICS_SPEC**, **MFS_SPEC**, **TRUSTLESS_GATEWAY_SPEC**, **IPLD_SELECTORS_SPEC**, **DHT_INTEGRATION_SPEC**, **GOSSIPSUB_SPEC**, **IPNS_SPEC**, **UNIXFS_SPEC**, and **CIRCUIT_RELAY_SPEC**—have been implemented to a testable, spec-compliant state. Remaining work is primarily P1/P2 features and exact HAMT CID parity with Kubo/Helia.
+This inventory assesses the implementation status of the 24 feature specifications for `dart_ipfs`. As of the latest implementation pass, the P0 networking and naming specs—**DAG_CBOR_SPEC**, **METRICS_SPEC**, **MFS_SPEC**, **TRUSTLESS_GATEWAY_SPEC**, **IPLD_SELECTORS_SPEC**, **DHT_INTEGRATION_SPEC**, **GOSSIPSUB_SPEC**, **IPNS_SPEC**, **UNIXFS_SPEC**, and **CIRCUIT_RELAY_SPEC**—and the first wave of P1 specs—**REPROVIDE_SPEC**, **DAG_JSON_SPEC**, **SUBDOMAIN_GATEWAY_SPEC**, and **BITSWAP_HTTP_FALLBACK_SPEC**—have been implemented to a testable, spec-compliant state. Remaining work is primarily the remaining P1/P2 features and exact HAMT CID parity with Kubo/Helia.
 
 **Status Distribution:**
 - **Complete**: 11 specs (46%)
@@ -16,17 +16,17 @@ This inventory assesses the implementation status of the 24 feature specificatio
 | **CAR_FORMAT_SPEC** | P0 | Complete | `lib/src/core/data_structures/car.dart` | Standard CAR v1/v2 API implemented; passes cross-codec round-trip tests. |
 | **CLI_SPEC** | P0 | Partial | `bin/ipfs.dart` | Basic CLI exists; missing most subcommands (add, cat, ls, pin, swarm, config). |
 | **DAG_CBOR_SPEC** | P0 | Complete | `lib/src/core/cbor/enhanced_cbor_handler.dart`, `lib/src/core/ipld/codecs/standard_codecs.dart` | Tag-42 CIDs, canonical map ordering, big-int tags 2/3, strict decoding, `-2^64` boundary fix. |
-| **DAG_JSON_SPEC** | P1 | Partial | `lib/src/core/ipld/codecs/standard_codecs.dart` | Unified `DagJsonCodec`; reserved namespace and strict canonical sorting not fully implemented. |
+| **DAG_JSON_SPEC** | P1 | Complete | `lib/src/core/ipld/dag_json_handler.dart`, `lib/src/core/ipld/codecs/standard_codecs.dart` | Spec-compliant DAG-JSON codec: reserved namespace handling, canonical key sorting, unpadded base64url bytes, strict decoding. |
 | **DHT_INTEGRATION_SPEC** | P0 | Complete | `lib/src/protocols/dht/dht_client.dart`, `lib/src/protocols/dht/dht_envelope.dart` | `DHTEnvelope` framing, iterative Kademlia `findProviders`/`findPeer`/`getValue`, provider validation, metrics, request/response correlation. |
 | **DOCKER_SPEC** | P0 | Complete | `Dockerfile` | Multi-stage Dockerfile with hardened runtime; multi-arch support documented. |
 | **IPLD_SELECTORS_SPEC** | P0 | Complete | `lib/src/core/ipld/selectors/selector_ast.dart`, `lib/src/core/ipld/selectors/selector_executor.dart`, `lib/src/core/ipfs_node/ipld_handler.dart` | Official selector vocabulary, transparent link following, GraphSync integration. |
 | **METRICS_SPEC** | P0 | Complete | `lib/src/core/metrics/metrics_collector.dart`, `lib/src/services/gateway/gateway_server.dart`, `lib/src/services/rpc/rpc_server.dart` | Prometheus counters/gauges/histograms, `/metrics` endpoint, lifecycle wiring, request instrumentation. |
 | **MFS_SPEC** | P0 | Complete | `lib/src/core/mfs/mfs_manager.dart`, `lib/src/services/rpc/mfs_handlers.dart`, `lib/src/services/rpc/rpc_server.dart` | flush, mv, chcid, stat/ls, write offset/truncate, RPC routes, lifecycle registration. |
-| **REPROVIDE_SPEC** | P1 | Missing | N/A | No periodic Reprovider service. |
-| **SUBDOMAIN_GATEWAY_SPEC** | P1 | Partial | `lib/src/services/gateway/gateway_handler.dart` | Trustless format detection added; full DNSLink/CORS validation still missing. |
+| **REPROVIDE_SPEC** | P1 | Complete | `lib/src/protocols/dht/reprovider.dart`, `lib/src/core/ipfs_node/ipfs_node.dart` | Periodic Reprovider service with multiple strategies (`pinned`, `roots`, `all`, `pinned+mfs`, `entities`), batching, sweep optimization, and lifecycle integration. |
+| **SUBDOMAIN_GATEWAY_SPEC** | P1 | Complete | `lib/src/services/gateway/gateway_handler.dart`, `lib/src/core/config/gateway_config.dart`, `lib/src/services/gateway/gateway_server.dart` | Subdomain detection, CIDv0-to-CIDv1 conversion, DNSLink/IPNS resolution, CORS headers, TLS redirect, denylist integration, and trustless format negotiation. |
 | **TRUSTLESS_GATEWAY_SPEC** | P0 | Complete | `lib/src/services/gateway/gateway_handler.dart`, `lib/src/core/security/denylist_service.dart` | Format negotiation, CAR/raw/DAG-JSON/DAG-CBOR/IPNS-record responses, Bitswap fallback, 451 denylist. |
 | **UNIXFS_SPEC** | P0 | Complete | `lib/src/core/unixfs/` | Directory construction with correct `Tsize`, path resolution, HAMT sharding, symlinks, cycle detection. Exact CID parity with Kubo/Helia for HAMT may need fixture verification. |
-| **BITSWAP_HTTP_FALLBACK_SPEC** | P1 | Missing | N/A | No HTTP fallback. |
+| **BITSWAP_HTTP_FALLBACK_SPEC** | P1 | Complete | `lib/src/protocols/bitswap/bitswap_handler.dart`, `lib/src/core/config/bitswap_config.dart`, `lib/src/transport/http_gateway_client.dart` | HTTP gateway block fallback for Bitswap, configurable gateways, timeout, block verification, private-gateway gating, and retry logic. |
 | **BROWSER_TRANSPORTS_SPEC** | P1 | Partial | `lib/src/transport/webtransport/` | Dummy certhash, hardcoded STUN, incomplete `libp2p.Conn` fields. |
 | **CIRCUIT_RELAY_SPEC** | P0 | Complete | `lib/src/transport/circuit_relay_client_io.dart`, `lib/src/core/config/network_config.dart` | CONNECT flow, reservation refresh, `CircuitRelayConfig`, max-circuits enforcement, router relayed-connection registration. |
 | **CONTENT_BLOCKING_SPEC** | P1 | Partial | `lib/src/core/security/denylist_service.dart` | Basic denylist service and gateway 451 responses implemented; full RPC/security integration missing. |
@@ -125,13 +125,15 @@ Using Dart SDK 3.12.2:
 
 ## Recommended Next Phase
 
-The remaining P0 blockers for full protocol compliance are resolved. The next recommended phase is P1/P2 features and hardening:
-1. **REPROVIDE_SPEC** — periodic Reprovider service for DHT provider records.
-2. **DAG_JSON_SPEC** — reserved namespace and strict canonical sorting.
-3. **SUBDOMAIN_GATEWAY_SPEC** — DNSLink/CORS validation.
-4. **BITSWAP_HTTP_FALLBACK_SPEC** — HTTP block fallback.
-5. **BROWSER_TRANSPORTS_SPEC** — WebTransport hardening and `libp2p.Conn` completeness.
-6. **CONTENT_BLOCKING_SPEC** — RPC/security integration.
+The remaining P0 blockers and the first P1 wave (REPROVIDE, DAG-JSON, Subdomain Gateway, Bitswap HTTP Fallback) for full protocol compliance are resolved. The next recommended phase is the remaining P1/P2 features and hardening:
+1. **BROWSER_TRANSPORTS_SPEC** — WebTransport hardening and `libp2p.Conn` completeness.
+2. **CONTENT_BLOCKING_SPEC** — RPC/security integration.
+3. **GATEWAY_TLS_SPEC** — TLS fields, SecurityContext, and AutoTLS.
+4. **GRAPHSYNC_SPEC** — bidirectional pause/resume and full client support.
+5. **KUBERNETES_SPEC** — k8s manifests and Helm chart.
+6. **MODULARIZATION_SPEC** — packages/ monorepo structure.
+7. **QUIC_SPEC** — QUIC transport if dependency availability is confirmed.
+8. Exact HAMT CID parity with Kubo/Helia via fixture verification.
 7. **GATEWAY_TLS_SPEC** — TLS and AutoTLS.
 8. **GRAPHSYNC_SPEC** — bidirectional pause/resume state machine.
 9. **KUBERNETES_SPEC** — k8s manifests and Helm chart.

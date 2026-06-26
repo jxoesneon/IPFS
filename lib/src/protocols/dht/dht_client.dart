@@ -49,9 +49,9 @@ class DHTClient {
     required this.networkHandler,
     required RouterInterface router,
     MetricsCollector? metricsCollector,
-  }) : _router = router,
-       _metrics = metricsCollector,
-       _logger = Logger('DHTClient');
+  })  : _router = router,
+        _metrics = metricsCollector,
+        _logger = Logger('DHTClient');
 
   /// The IPFS node this client belongs to.
   IPFSNode get node => networkHandler.ipfsNode;
@@ -339,6 +339,80 @@ class DHTClient {
     }
 
     _metrics?.recordDhtProvide(successCount > 0);
+  }
+
+  /// Announces a batch of [cids] as provided by [providerId] to the DHT.
+  ///
+  /// Computes the closest peers for each CID, groups CIDs by target peer, and
+  /// sends [ADD_PROVIDER] messages for the batch. Concurrency is limited by
+  /// [DHTConfig.reproviderConcurrency] when available, otherwise by [alpha].
+  Future<void> addProviders(List<CID> cids, String providerId) async {
+    _checkInitialized();
+    if (cids.isEmpty) return;
+
+    final k = _config.bucketSize;
+    final concurrency = _config.reproviderConcurrency > 0
+        ? _config.reproviderConcurrency
+        : _config.alpha;
+
+    final providerPeer = _convertPeerIdToKadPeer(PeerId.fromBase58(providerId));
+
+    // Map target peer -> list of CIDs to announce.
+    final peerCids = <PeerId, List<CID>>{};
+
+    for (final cid in cids) {
+      final target = getRoutingKey(cid.toString());
+      final closest = _kademliaRoutingTable.findClosestPeers(target, k);
+      closest.sort(
+        (a, b) => _kademliaRoutingTable
+            .calculateDistance(target, a)
+            .compareTo(_kademliaRoutingTable.calculateDistance(target, b)),
+      );
+      for (final peer in closest) {
+        peerCids.putIfAbsent(peer, () => []).add(cid);
+      }
+    }
+
+    if (peerCids.isEmpty) {
+      _logger.debug('No peers available to announce ${cids.length} CIDs');
+      return;
+    }
+
+    final pending = <Future<bool>>[];
+    var successCount = 0;
+    var attemptedCount = 0;
+
+    for (final entry in peerCids.entries) {
+      final peer = entry.key;
+      final peerCidList = entry.value;
+
+      for (final cid in peerCidList) {
+        attemptedCount++;
+        final msg = kad.Message()
+          ..type = kad.Message_MessageType.ADD_PROVIDER
+          ..key = cid.multihash.toBytes()
+          ..providerPeers.add(providerPeer);
+
+        final future = _sendAddProvider(peer, msg);
+        pending.add(future);
+
+        if (pending.length >= concurrency) {
+          final results = await Future.wait(pending);
+          successCount += results.where((success) => success).length;
+          pending.clear();
+        }
+      }
+    }
+
+    if (pending.isNotEmpty) {
+      final results = await Future.wait(pending);
+      successCount += results.where((success) => success).length;
+    }
+
+    _metrics?.recordDhtProvide(successCount > 0);
+    _logger.debug(
+      'addProviders completed: $successCount/$attemptedCount succeeded',
+    );
   }
 
   Future<bool> _sendAddProvider(PeerId peer, kad.Message msg) async {

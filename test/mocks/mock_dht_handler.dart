@@ -68,6 +68,20 @@ class MockDHTHandler implements IDHTHandler {
   }
 
   @override
+  Future<void> provideAll(List<CID> cids) async {
+    _checkAndThrow('provideAll');
+    _ensureRunning();
+    await _simulateDelay();
+
+    _recordCall('provideAll:${cids.length}');
+    for (final cid in cids) {
+      _providers
+          .putIfAbsent(cid.toString(), () => [])
+          .add(_createMockPeerInfo());
+    }
+  }
+
+  @override
   Future<List<V_PeerInfo>> findProviders(CID cid) async {
     _checkAndThrow('findProviders');
     _ensureRunning();

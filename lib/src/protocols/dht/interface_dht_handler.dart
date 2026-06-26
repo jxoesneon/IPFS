@@ -15,6 +15,16 @@ abstract class IDHTHandler {
   /// Announces that this node provides content for a CID.
   Future<void> provide(CID cid);
 
+  /// Announces that this node provides content for a batch of CIDs.
+  ///
+  /// The default implementation calls [provide] for each CID; implementations
+  /// may override this with a more efficient batch announcement.
+  Future<void> provideAll(List<CID> cids) async {
+    for (final cid in cids) {
+      await provide(cid);
+    }
+  }
+
   /// Finds providers for a given CID.
   Future<List<V_PeerInfo>> findProviders(CID cid);
 

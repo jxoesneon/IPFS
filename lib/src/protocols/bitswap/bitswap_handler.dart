@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
@@ -7,6 +8,7 @@ import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/ledger.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/message.dart' as message;
 import 'package:dart_ipfs/src/protocols/bitswap/wantlist.dart';
+import 'package:dart_ipfs/src/transport/http_gateway_client.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/generic_lru_cache.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
@@ -15,18 +17,35 @@ import 'package:meta/meta.dart';
 /// Handles Bitswap protocol operations for an IPFS node following the Bitswap 1.2.0 specification
 class BitswapHandler implements ILifecycle {
   /// Creates a new [BitswapHandler] with the given [config], [_blockStore], and [_router].
-  BitswapHandler(IPFSConfig config, this._blockStore, this._router)
-    : _maxConcurrentRequests = config.maxConcurrentBitswapRequests,
-      _logger = Logger(
-        'BitswapHandler',
-        debug: config.debug,
-        verbose: config.verboseLogging,
-      ) {
+  ///
+  /// An optional [httpGatewayClient] can be injected for testing or to share a
+  /// single HTTP client across the node. If the config enables HTTP fallback
+  /// and no client is provided, a new [HttpGatewayClient] is created.
+  BitswapHandler(
+    IPFSConfig config,
+    this._blockStore,
+    this._router, {
+    HttpGatewayClient? httpGatewayClient,
+  })  : _maxConcurrentRequests = config.maxConcurrentBitswapRequests,
+        _bitswapConfig = config.bitswap,
+        _httpGatewayClient = config.bitswap.enableHttpFallback
+            ? (httpGatewayClient ?? HttpGatewayClient())
+            : null,
+        _internalHttpClient =
+            config.bitswap.enableHttpFallback && httpGatewayClient == null,
+        _logger = Logger(
+          'BitswapHandler',
+          debug: config.debug,
+          verbose: config.verboseLogging,
+        ) {
     _logger.info('Initializing BitswapHandler');
     _setupHandlers();
   }
   final IBlockStore _blockStore;
   final RouterInterface _router;
+  final BitswapConfig _bitswapConfig;
+  final HttpGatewayClient? _httpGatewayClient;
+  final bool _internalHttpClient;
   final Wantlist _wantlist = Wantlist();
   final LedgerManager _ledgerManager = LedgerManager();
   final Map<String, Completer<Block>> _pendingBlocks = {};
@@ -102,6 +121,11 @@ class BitswapHandler implements ILifecycle {
       _logger.info('BitswapHandler stopped successfully');
     } catch (e, st) {
       _logger.error('Error stopping BitswapHandler router', e, st);
+    }
+
+    if (_internalHttpClient) {
+      _httpGatewayClient?.close();
+      _logger.debug('HTTP gateway client closed');
     }
   }
 
@@ -350,25 +374,22 @@ class BitswapHandler implements ILifecycle {
       return;
     }
 
-    while (_activeRequests < _maxConcurrentRequests &&
-        _requestQueue.isNotEmpty) {
+    while (
+        _activeRequests < _maxConcurrentRequests && _requestQueue.isNotEmpty) {
       final cid = _requestQueue.removeAt(0);
       _activeRequests++;
 
       unawaited(
-        _sendWantRequest(cid)
-            .then((_) {
-              // We don't decrement _activeRequests here because Bitswap is async.
-              // The request is 'active' until the block is received or times out.
-              // For simplicity in this implementation, we'll just throttle the initial sending.
-            })
-            .catchError((Object e) {
-              _logger.error('Failed to send want request for $cid: $Object e');
-            })
-            .whenComplete(() {
-              _activeRequests--;
-              unawaited(_processQueue());
-            }),
+        _sendWantRequest(cid).then((_) {
+          // We don't decrement _activeRequests here because Bitswap is async.
+          // The request is 'active' until the block is received or times out.
+          // For simplicity in this implementation, we'll just throttle the initial sending.
+        }).catchError((Object e) {
+          _logger.error('Failed to send want request for $cid: $Object e');
+        }).whenComplete(() {
+          _activeRequests--;
+          unawaited(_processQueue());
+        }),
       );
     }
   }
@@ -493,19 +514,150 @@ class BitswapHandler implements ILifecycle {
     _logger.info('Bitswap protocol handlers initialized');
   }
 
-  /// Requests a single block by CID.
-  Future<Block?> wantBlock(String cid) async {
+  /// Requests a single block by CID, checking the local blockstore, P2P
+  /// Bitswap, and finally configured HTTP gateways.
+  Future<Block?> wantBlock(String cid) async =>
+      getBlock(cid, useHttpFallback: true);
+
+  /// Fetches a single block by CID, checking the local blockstore, P2P Bitswap,
+  /// and finally configured HTTP gateways.
+  ///
+  /// If [useHttpFallback] is `false`, the HTTP gateway fallback is skipped even
+  /// if it is enabled in the configuration.
+  Future<Block?> getBlock(String cidStr, {bool useHttpFallback = true}) async {
     if (!_running) {
       throw StateError('BitswapHandler is not running');
     }
 
+    return _getBlock(cidStr, useHttpFallback: useHttpFallback);
+  }
+
+  Future<Block?> _getBlock(String cidStr,
+      {required bool useHttpFallback}) async {
+    // 1. Try local blockstore.
+    final localResponse = await _blockStore.getBlock(cidStr);
+    if (localResponse.found && localResponse.hasBlock()) {
+      try {
+        return Block.fromProto(localResponse.block);
+      } catch (e, st) {
+        _logger.warning(
+          'Failed to deserialize cached block for $cidStr',
+          e,
+          st,
+        );
+      }
+    }
+
+    // 2. Try P2P Bitswap.
     try {
-      final blocks = await want([cid]);
-      return blocks.isNotEmpty ? blocks.first : null;
-    } catch (e, st) {
-      _logger.error('Error requesting block $cid', e, st);
+      final blocks = await want([cidStr]).timeout(_bitswapConfig.p2pTimeout);
+      if (blocks.isNotEmpty) {
+        return blocks.first;
+      }
+    } catch (e) {
+      _logger.debug('P2P Bitswap failed for $cidStr: $e');
+    }
+
+    // 3. Try HTTP gateway fallback.
+    if (!useHttpFallback ||
+        !_bitswapConfig.enableHttpFallback ||
+        _httpGatewayClient == null) {
       return null;
     }
+
+    for (final gateway in _bitswapConfig.httpFallbackGateways) {
+      if (!_isValidGatewayUrl(gateway)) {
+        _logger.warning('Skipping invalid HTTP gateway URL: $gateway');
+        continue;
+      }
+
+      try {
+        final bytes = await _httpGatewayClient.fetchRawBlock(
+          gateway,
+          cidStr,
+          timeout: _bitswapConfig.httpTimeout,
+          maxBlockSize: _bitswapConfig.maxHttpBlockSize,
+        );
+        if (bytes == null) {
+          continue;
+        }
+
+        final block = Block(cid: CID.decode(cidStr), data: bytes);
+        final valid =
+            _bitswapConfig.verifyHttpBlocks ? await block.validate() : true;
+        if (!valid) {
+          _logger.warning(
+            'HTTP fallback returned invalid block for $cidStr from $gateway',
+          );
+          continue;
+        }
+
+        final putResponse = await _blockStore.putBlock(block);
+        if (!putResponse.success) {
+          _logger.warning(
+            'Failed to cache verified HTTP block for $cidStr: ${putResponse.message}',
+          );
+        }
+        return block;
+      } catch (e) {
+        _logger.warning(
+          'HTTP fallback failed for $cidStr from $gateway: $e',
+        );
+      }
+    }
+
+    return null;
+  }
+
+  bool _isValidGatewayUrl(String url) {
+    Uri uri;
+    try {
+      uri = Uri.parse(url);
+    } catch (_) {
+      return false;
+    }
+
+    if (uri.scheme != 'http' && uri.scheme != 'https') {
+      _logger.warning('Invalid gateway URL scheme: $url');
+      return false;
+    }
+
+    if (uri.scheme == 'http') {
+      _logger.warning('Using insecure HTTP gateway: $url');
+    }
+
+    if (!_bitswapConfig.allowPrivateGateways &&
+        _isPrivateOrLoopbackHost(uri.host)) {
+      _logger.warning('Rejecting private/loopback gateway URL: $url');
+      return false;
+    }
+
+    return true;
+  }
+
+  bool _isPrivateOrLoopbackHost(String host) {
+    if (host.isEmpty) return true;
+    if (host == 'localhost' || host == '127.0.0.1' || host == '::1') {
+      return true;
+    }
+    if (host.startsWith('127.')) return true;
+    if (host.startsWith('10.') ||
+        host.startsWith('192.168.') ||
+        host.startsWith('169.254.')) {
+      return true;
+    }
+    if (host.startsWith('172.')) {
+      final parts = host.split('.');
+      if (parts.length > 1) {
+        final second = int.tryParse(parts[1]);
+        if (second != null && second >= 16 && second <= 31) {
+          return true;
+        }
+      }
+    }
+    // IPv6 unique local addresses (fc00::/7) and loopback (::1).
+    if (host.startsWith('fc') || host.startsWith('fd')) return true;
+    return false;
   }
 
   /// Total bytes sent.

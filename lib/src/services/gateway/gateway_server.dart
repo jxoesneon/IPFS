@@ -1,6 +1,7 @@
 // lib/src/services/gateway/gateway_server.dart
 import 'dart:convert';
 
+import 'package:dart_ipfs/src/core/config/gateway_config.dart';
 import 'package:dart_ipfs/src/core/config/metrics_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
@@ -38,6 +39,7 @@ class GatewayServer implements ILifecycle {
     this.rateLimitWindowSeconds = 60,
     this.metricsCollector,
     this.metricsConfig,
+    this.gatewayConfig = const GatewayConfig(),
     HttpServerAdapter? httpAdapter,
   }) : httpAdapter = httpAdapter ?? createHttpServerAdapter() {
     _handler = GatewayHandler(
@@ -45,6 +47,10 @@ class GatewayServer implements ILifecycle {
       ipnsResolver: ipnsResolver,
       ipnsRecordResolver: ipnsRecordResolver,
       metricsCollector: metricsCollector,
+      gatewayDomain: gatewayConfig.gatewayDomain,
+      enableSubdomainGateway: gatewayConfig.enableSubdomainGateway,
+      subdomainDNSLinkResolver: gatewayConfig.subdomainDNSLinkResolver,
+      subdomainTLSRedirect: gatewayConfig.subdomainTLSRedirect,
     );
     if (node != null) {
       _healthCheckService = HealthCheckService(node!);
@@ -87,6 +93,9 @@ class GatewayServer implements ILifecycle {
 
   /// Optional metrics configuration controlling the Prometheus endpoint.
   final MetricsConfig? metricsConfig;
+
+  /// Gateway configuration including subdomain gateway settings.
+  final GatewayConfig gatewayConfig;
 
   final _logger = Logger('GatewayServer');
 
@@ -146,8 +155,7 @@ class GatewayServer implements ILifecycle {
 
   void _setupMetricsRoute() {
     final endpoint = metricsConfig?.prometheusEndpoint ?? '/metrics';
-    final enabled =
-        metricsConfig?.enablePrometheusExport == true &&
+    final enabled = metricsConfig?.enablePrometheusExport == true &&
         metricsCollector != null;
 
     if (enabled) {
@@ -174,6 +182,7 @@ class GatewayServer implements ILifecycle {
 
     // Build middleware pipeline with rate limiting (SEC-007)
     final handler = const Pipeline()
+        .addMiddleware(_subdomainMiddleware())
         .addMiddleware(_corsMiddleware())
         .addMiddleware(_rateLimitMiddleware())
         .addMiddleware(_metricsMiddleware())
@@ -211,8 +220,7 @@ class GatewayServer implements ILifecycle {
     return (Handler handler) {
       return (Request request) async {
         // Extract client IP
-        final clientIp =
-            request.headers['x-forwarded-for']?.split(',').first ??
+        final clientIp = request.headers['x-forwarded-for']?.split(',').first ??
             request.headers['x-real-ip'] ??
             'unknown';
 
@@ -247,30 +255,51 @@ class GatewayServer implements ILifecycle {
     };
   }
 
+  /// Subdomain gateway middleware.
+  ///
+  /// Intercepts requests addressed to `*.ipfs.{gatewayDomain}` or
+  /// `*.ipns.{gatewayDomain}` before they reach the path-gateway router.
+  Middleware _subdomainMiddleware() {
+    return (Handler handler) {
+      return (Request request) async {
+        if (_handler.isSubdomainRequest(request)) {
+          return _handler.handleSubdomain(request);
+        }
+        return handler(request);
+      };
+    };
+  }
+
   /// CORS middleware
   Middleware _corsMiddleware() {
     return (Handler handler) {
       return (Request request) async {
+        final isSubdomain = _handler.isSubdomainRequest(request);
+        final headers = _corsHeaders(isSubdomain: isSubdomain);
+
         // Handle preflight OPTIONS request
         if (request.method == 'OPTIONS') {
-          return Response.ok('', headers: _corsHeaders());
+          return Response.ok('', headers: headers);
         }
 
         // Process request and add CORS headers to response
         final response = await handler(request);
-        return response.change(headers: _corsHeaders());
+        return response.change(headers: headers);
       };
     };
   }
 
   /// CORS headers
-  Map<String, String> _corsHeaders() {
+  Map<String, String> _corsHeaders({bool isSubdomain = false}) {
+    // Subdomain origins use a public wildcard; path-gateway origins keep the
+    // configured allow-list (SEC-006).
+    final origin = isSubdomain ? '*' : corsOrigins.join(',');
     return {
-      'Access-Control-Allow-Origin': corsOrigins.join(','),
+      'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Range',
       'Access-Control-Expose-Headers':
-          'Content-Range, X-IPFS-Path, X-IPFS-Roots',
+          'Content-Range, X-IPFS-Path, X-IPFS-Roots, X-IPFS-DNSLink',
       'Access-Control-Max-Age': '86400',
     };
   }

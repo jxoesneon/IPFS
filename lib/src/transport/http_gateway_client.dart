@@ -16,8 +16,8 @@ class HttpGatewayClient {
   /// If [client] is not provided, a default [http.Client] is created.
   /// Remember to call [close] when finished to release resources.
   HttpGatewayClient({http.Client? client})
-    : _client = client ?? http.Client(),
-      _internalClient = client == null;
+      : _client = client ?? http.Client(),
+        _internalClient = client == null;
 
   final Logger _logger = Logger('HttpGatewayClient');
   final http.Client _client;
@@ -30,6 +30,63 @@ class HttpGatewayClient {
     'https://gateway.pinata.cloud/ipfs/',
     'https://cloudflare-ipfs.com/ipfs/',
   ];
+
+  /// Fetches a raw block for a CID from a specific trustless gateway.
+  ///
+  /// The request is sent to `$gatewayUrl/ipfs/$cidStr?format=raw`.
+  ///
+  /// Returns the raw block bytes if the response is valid, or `null` on failure.
+  /// If [maxBlockSize] is provided and the response exceeds it, the block is
+  /// discarded and `null` is returned.
+  Future<Uint8List?> fetchRawBlock(
+    String gatewayUrl,
+    String cidStr, {
+    Duration? timeout,
+    int? maxBlockSize,
+  }) async {
+    try {
+      final cleanBase = gatewayUrl.endsWith('/')
+          ? gatewayUrl.substring(0, gatewayUrl.length - 1)
+          : gatewayUrl;
+      final url = Uri.parse('$cleanBase/ipfs/$cidStr?format=raw');
+      _logger.debug('Fetching raw block from gateway: $url');
+
+      final response = await _client
+          .get(url)
+          .timeout(timeout ?? const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final bytes = response.bodyBytes;
+        if (maxBlockSize != null && bytes.length > maxBlockSize) {
+          _logger.warning(
+            'Gateway $gatewayUrl returned block larger than $maxBlockSize bytes for CID $cidStr',
+          );
+          return null;
+        }
+        _logger.info(
+          'Successfully retrieved raw block CID $cidStr from $gatewayUrl',
+        );
+        return bytes;
+      } else if (response.statusCode == 404) {
+        _logger.debug('CID $cidStr not found on gateway $gatewayUrl (404)');
+      } else {
+        _logger.warning(
+          'Gateway $gatewayUrl returned status code ${response.statusCode} for CID $cidStr',
+        );
+      }
+    } on TimeoutException {
+      _logger.debug(
+        'Gateway $gatewayUrl timed out while fetching raw block CID $cidStr',
+      );
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Error fetching raw block CID $cidStr from $gatewayUrl',
+        e,
+        stackTrace,
+      );
+    }
+    return null;
+  }
 
   /// Fetches raw data for a CID from available gateways.
   ///
@@ -65,9 +122,8 @@ class HttpGatewayClient {
       final url = Uri.parse('$cleanBase$cid');
       _logger.debug('Fetching from gateway: $url');
 
-      final response = await _client
-          .get(url)
-          .timeout(const Duration(seconds: 10));
+      final response =
+          await _client.get(url).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         _logger.info('Successfully retrieved CID $cid from $gateway');

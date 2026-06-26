@@ -7,6 +7,7 @@ import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import 'package:multibase/multibase.dart';
 import 'package:shelf/shelf.dart';
 
 import 'gateway_handler_test.mocks.dart';
@@ -66,7 +67,15 @@ void main() {
     });
 
     test('handleSubdomain', () async {
-      final cidStr = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      final cidV0 =
+          CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
+      final cidStr = CID
+          .v1(
+            'dag-pb',
+            cidV0.multihash,
+            base: Multibase.base32,
+          )
+          .encode();
       final request = Request(
         'GET',
         Uri.parse('http://localhost/'),
@@ -153,7 +162,15 @@ void main() {
     });
 
     test('handleSubdomain block not found', () async {
-      final cidStr = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      final cidV0 =
+          CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
+      final cidStr = CID
+          .v1(
+            'dag-pb',
+            cidV0.multihash,
+            base: Multibase.base32,
+          )
+          .encode();
       final request = Request(
         'GET',
         Uri.parse('http://localhost/'),
