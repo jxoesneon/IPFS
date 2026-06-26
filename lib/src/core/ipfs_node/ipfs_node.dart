@@ -506,6 +506,22 @@ class IPFSNode {
     return null;
   }
 
+  /// Returns the [IPNSHandler] instance, or `null` if not registered.
+  IPNSHandler? get ipns {
+    if (_container.isRegistered<IPNSHandler>()) {
+      return _container.get<IPNSHandler>();
+    }
+    return null;
+  }
+
+  /// Returns the [MetricsCollector] instance, or `null` if not registered.
+  MetricsCollector? get metricsCollector {
+    if (_container.isRegistered<MetricsCollector>()) {
+      return _container.get<MetricsCollector>();
+    }
+    return null;
+  }
+
   /// Returns the [DHTHandler] instance, or `null` if not registered.
   DHTHandler? get dhtHandler {
     if (_container.isRegistered<DHTHandler>()) {

@@ -1,11 +1,14 @@
 // lib/src/services/rpc/rpc_server.dart
 import 'dart:convert';
+import 'package:dart_ipfs/src/core/config/metrics_config.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/services/health_check_service.dart';
 import 'package:dart_ipfs/src/platform/http_server.dart';
 import 'package:dart_ipfs/src/services/rpc/rpc_handlers.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:prometheus_client/format.dart' as format;
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
@@ -28,9 +31,19 @@ class RPCServer implements ILifecycle {
       'http://127.0.0.1',
     ], // SEC-006: Restrict CORS
     this.apiKey,
+    this.metricsCollector,
+    this.metricsConfig,
   }) {
     _handlers = RPCHandlers(node);
     _healthCheckService = HealthCheckService(node);
+    _publicEndpoints = {
+      '/api/v0/version',
+      '/api/v0/id',
+      '/health',
+      if (metricsConfig?.enablePrometheusExport == true &&
+          metricsCollector != null)
+        '/metrics',
+    };
     _setupRouter();
     if (apiKey != null) {
       _logger.info('RPC server configured with API key authentication');
@@ -57,6 +70,12 @@ class RPCServer implements ILifecycle {
   /// When set, write operations require `X-API-Key` header.
   final String? apiKey;
 
+  /// Optional metrics collector for RPC instrumentation.
+  final MetricsCollector? metricsCollector;
+
+  /// Optional metrics configuration controlling the Prometheus endpoint.
+  final MetricsConfig? metricsConfig;
+
   final _logger = Logger('RPCServer');
   IpfsHttpServerInstance? _server;
   late final RPCHandlers _handlers;
@@ -64,7 +83,7 @@ class RPCServer implements ILifecycle {
   late final HealthCheckService _healthCheckService;
 
   /// Minimal public endpoints that don't require authentication (SEC-003).
-  static const _publicEndpoints = {'/api/v0/version', '/api/v0/id', '/health'};
+  late final Set<String> _publicEndpoints;
 
   void _setupRouter() {
     _router = Router();
@@ -110,6 +129,28 @@ class RPCServer implements ILifecycle {
     _router.post('/api/v0/block/get', _handlers.handleBlockGet);
     _router.post('/api/v0/block/put', _handlers.handleBlockPut);
     _router.post('/api/v0/block/stat', _handlers.handleBlockStat);
+
+    _setupMetricsRoute();
+  }
+
+  void _setupMetricsRoute() {
+    final enabled =
+        metricsConfig?.enablePrometheusExport == true &&
+        metricsCollector != null;
+
+    if (enabled) {
+      _router.get('/metrics', (Request request) async {
+        final metrics = await metricsCollector!.getPrometheusMetrics();
+        return Response.ok(
+          metrics,
+          headers: {'Content-Type': format.contentType},
+        );
+      });
+    } else {
+      _router.get('/metrics', (Request request) {
+        return Response.notFound('Metrics endpoint disabled');
+      });
+    }
   }
 
   /// Starts the RPC server.
@@ -123,6 +164,7 @@ class RPCServer implements ILifecycle {
     final handler = const Pipeline()
         .addMiddleware(_corsMiddleware())
         .addMiddleware(_authMiddleware())
+        .addMiddleware(_metricsMiddleware())
         .addMiddleware(_loggingMiddleware())
         .addHandler(_router.call);
 
@@ -225,6 +267,30 @@ class RPCServer implements ILifecycle {
       'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
       'Access-Control-Max-Age': '86400',
+    };
+  }
+
+  /// Metrics instrumentation middleware.
+  ///
+  /// Records every RPC request with endpoint, HTTP method, status code, and
+  /// duration.
+  Middleware _metricsMiddleware() {
+    return (Handler handler) {
+      return (Request request) async {
+        final start = DateTime.now();
+        final response = await handler(request);
+        final duration = DateTime.now().difference(start);
+
+        final endpoint = '/${request.url.path}';
+        metricsCollector?.recordRpcRequest(
+          endpoint,
+          request.method,
+          response.statusCode,
+          duration,
+        );
+
+        return response;
+      };
     };
   }
 

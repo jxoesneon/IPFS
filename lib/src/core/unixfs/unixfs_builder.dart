@@ -11,8 +11,24 @@ import 'package:fixnum/fixnum.dart';
 
 /// Builds a UnixFS DAG from a stream of bytes.
 class UnixFSBuilder {
+  /// Creates a builder with optional CID formatting.
+  UnixFSBuilder({
+    this.cidVersion = 0,
+    this.rawLeaves = false,
+    this.hashType = 'sha2-256',
+  });
+
   /// Default chunk size (256KB).
   static const int defaultChunkSize = 256 * 1024;
+
+  /// CID version to use for generated blocks (0 or 1).
+  final int cidVersion;
+
+  /// Whether to store leaf nodes as raw blocks instead of UnixFS file nodes.
+  final bool rawLeaves;
+
+  /// Multihash function to use (currently only `sha2-256` is supported).
+  final String hashType;
 
   /// Chunks a stream of bytes and yields Blocks for leaf nodes.
   Stream<Block> build(Stream<List<int>> stream) async* {
@@ -58,14 +74,24 @@ class UnixFSBuilder {
     final rootCid = await CID.fromContent(
       rootData,
       codec: 'dag-pb',
-      hashType: 'sha2-256',
-      version: 0,
+      hashType: hashType,
+      version: cidVersion,
     );
 
     yield Block(cid: rootCid, data: rootData);
   }
 
   Future<Block> _createLeaf(Uint8List data) async {
+    if (rawLeaves) {
+      final cid = await CID.fromContent(
+        data,
+        codec: 'raw',
+        hashType: hashType,
+        version: cidVersion == 0 ? 1 : cidVersion,
+      );
+      return Block(cid: cid, data: data);
+    }
+
     // Leaf node: UnixFS Data of type File
     final unixFs = unixfs_pb.Data(
       type: unixfs_pb.Data_DataType.File,
@@ -79,8 +105,8 @@ class UnixFSBuilder {
     final cid = await CID.fromContent(
       encoded,
       codec: 'dag-pb',
-      hashType: 'sha2-256',
-      version: 0,
+      hashType: hashType,
+      version: cidVersion,
     );
 
     return Block(cid: cid, data: encoded);

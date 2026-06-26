@@ -72,6 +72,29 @@ class IPNSHandler {
     }
     _logger.debug('Resolving IPNS name: $name');
 
+    final record = await _resolveRecord(name);
+    return utf8.decode(record.value);
+  }
+
+  /// Resolves an IPNS [name] and returns the signed record bytes.
+  ///
+  /// Returns `null` if no record is available. The bytes are CBOR-encoded
+  /// according to the IPNS record specification.
+  Future<Uint8List?> getRecordBytes(String name) async {
+    if (!_isRunning) {
+      return null;
+    }
+
+    try {
+      final record = await _resolveRecord(name);
+      return record.toCBOR();
+    } catch (e, stackTrace) {
+      _logger.warning('Failed to resolve IPNS record for $name', e, stackTrace);
+      return null;
+    }
+  }
+
+  Future<IPNSRecord> _resolveRecord(String name) async {
     // Check cache first
     if (_cache.containsKey(name)) {
       final record = _cache[name]!;
@@ -80,7 +103,7 @@ class IPNSHandler {
         // Move to end (MRU)
         _cache.remove(name);
         _cache[name] = record;
-        return utf8.decode(record.value);
+        return record;
       }
       _cache.remove(name);
     }
@@ -89,20 +112,18 @@ class IPNSHandler {
     final resolvedCid = await _resolveViaDHT(name);
 
     // Cache the result
-    _addToCache(
-      name,
-      IPNSRecord.internal(
-        value: Uint8List.fromList(utf8.encode(resolvedCid)),
-        validity: DateTime.now().add(const Duration(hours: 1)),
-      ),
+    final record = IPNSRecord.internal(
+      value: Uint8List.fromList(utf8.encode(resolvedCid)),
+      validity: DateTime.now().add(const Duration(hours: 1)),
     );
+    _addToCache(name, record);
 
     // Subscribe to updates via PubSub if available
     if (_pubsubHandler != null) {
       await _pubsubHandler.subscribe('/ipfs/ipns/$name');
     }
 
-    return resolvedCid;
+    return record;
   }
 
   /// Publishes a [cid] to IPNS.

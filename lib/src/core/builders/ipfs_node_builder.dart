@@ -58,10 +58,12 @@ class IPFSNodeBuilder {
 
     // Register LifecycleManager early so that any core service, server, or
     // offline-mode node can resolve it from the container.
-    _container.registerSingleton(LifecycleManager());
+    final lifecycleManager = LifecycleManager();
+    _container.registerSingleton(lifecycleManager);
 
     final metrics = MetricsCollector(_config);
     _container.registerSingleton(metrics);
+    lifecycleManager.register(metrics);
 
     _container.registerSingleton(SecurityManager(_config.security, metrics));
 
@@ -71,6 +73,7 @@ class IPFSNodeBuilder {
 
     final blockStore = BlockStore(path: _config.blockStorePath);
     _container.registerSingleton(blockStore);
+    metrics.registerBlockStore(blockStore);
 
     _container.registerSingleton(IPLDHandler(_config, blockStore));
   }
@@ -87,7 +90,21 @@ class IPFSNodeBuilder {
     final router = networkHandler.router;
 
     if (_config.enableDHT) {
-      _container.registerSingleton(DHTHandler(_config, router, networkHandler));
+      final metrics = _container.get<MetricsCollector>();
+      final dhtHandler = DHTHandler(
+        _config,
+        router,
+        networkHandler,
+        metrics: metrics,
+      );
+      _container.registerSingleton(dhtHandler);
+
+      // Provide the routing table size to the metrics collector once the DHT
+      // handler is available. The provider is invoked later by the periodic
+      // timer, so initialization order at this point is not critical.
+      metrics.registerRoutingTableProvider(
+        () => dhtHandler.dhtClient.kademliaRoutingTable.peerCount,
+      );
     }
 
     // Create IpfsNodeNetworkEvents instance
@@ -143,12 +160,15 @@ class IPFSNodeBuilder {
 
   Future<void> _registerServerLifecycleServices(IPFSNode node) async {
     final lifecycleManager = _container.get<LifecycleManager>();
+    final metrics = _container.get<MetricsCollector>();
 
     if (_config.enableRPC) {
       final rpcServer = RPCServer(
         node: node,
         address: 'localhost',
         port: 5001,
+        metricsCollector: metrics,
+        metricsConfig: _config.metrics,
       );
       _container.registerSingleton(rpcServer);
       lifecycleManager.register(rpcServer);
@@ -160,6 +180,8 @@ class IPFSNodeBuilder {
         node: node,
         address: _config.gateway.address,
         port: _config.gateway.port,
+        metricsCollector: metrics,
+        metricsConfig: _config.metrics,
       );
       _container.registerSingleton(gatewayServer);
       lifecycleManager.register(gatewayServer);

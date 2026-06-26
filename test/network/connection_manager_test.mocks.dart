@@ -3,10 +3,13 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i3;
+import 'dart:async' as _i4;
 
-import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart' as _i2;
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart' as _i2;
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart' as _i5;
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
+import 'package:mockito/src/dummies.dart' as _i6;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -23,39 +26,157 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: subtype_of_sealed_class
 // ignore_for_file: invalid_use_of_internal_member
 
+class _FakeMetricsConfig_0 extends _i1.SmartFake implements _i2.MetricsConfig {
+  _FakeMetricsConfig_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
 /// A class which mocks [MetricsCollector].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockMetricsCollector extends _i1.Mock implements _i2.MetricsCollector {
+class MockMetricsCollector extends _i1.Mock implements _i3.MetricsCollector {
   MockMetricsCollector() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Stream<Map<String, dynamic>> get metricsStream =>
+  _i4.Stream<Map<String, dynamic>> get metricsStream =>
       (super.noSuchMethod(
             Invocation.getter(#metricsStream),
-            returnValue: _i3.Stream<Map<String, dynamic>>.empty(),
+            returnValue: _i4.Stream<Map<String, dynamic>>.empty(),
           )
-          as _i3.Stream<Map<String, dynamic>>);
+          as _i4.Stream<Map<String, dynamic>>);
 
   @override
-  _i3.Future<void> start() =>
+  _i2.MetricsConfig get metricsConfig =>
+      (super.noSuchMethod(
+            Invocation.getter(#metricsConfig),
+            returnValue: _FakeMetricsConfig_0(
+              this,
+              Invocation.getter(#metricsConfig),
+            ),
+          )
+          as _i2.MetricsConfig);
+
+  @override
+  _i4.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<void> stop() =>
+  _i4.Future<void> stop() =>
       (super.noSuchMethod(
             Invocation.method(#stop, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
+
+  @override
+  void registerBlockStore(_i5.BlockStore? blockStore) => super.noSuchMethod(
+    Invocation.method(#registerBlockStore, [blockStore]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void registerRoutingTableProvider(int Function()? provider) =>
+      super.noSuchMethod(
+        Invocation.method(#registerRoutingTableProvider, [provider]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void recordMessageSent(String? protocol, int? bytes) => super.noSuchMethod(
+    Invocation.method(#recordMessageSent, [protocol, bytes]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void recordMessageReceived(String? protocol, int? bytes) =>
+      super.noSuchMethod(
+        Invocation.method(#recordMessageReceived, [protocol, bytes]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void recordLatency(String? protocol, Duration? latency) => super.noSuchMethod(
+    Invocation.method(#recordLatency, [protocol, latency]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void recordPeerConnected() => super.noSuchMethod(
+    Invocation.method(#recordPeerConnected, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void recordPeerDisconnected() => super.noSuchMethod(
+    Invocation.method(#recordPeerDisconnected, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void recordRoutingTableSize(int? size) => super.noSuchMethod(
+    Invocation.method(#recordRoutingTableSize, [size]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void recordBlockstoreStats(int? blocks, int? bytes) => super.noSuchMethod(
+    Invocation.method(#recordBlockstoreStats, [blocks, bytes]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void recordGatewayRequest(
+    String? namespace,
+    String? method,
+    int? status,
+    Duration? duration,
+  ) => super.noSuchMethod(
+    Invocation.method(#recordGatewayRequest, [
+      namespace,
+      method,
+      status,
+      duration,
+    ]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void recordRpcRequest(
+    String? endpoint,
+    String? method,
+    int? status,
+    Duration? duration,
+  ) => super.noSuchMethod(
+    Invocation.method(#recordRpcRequest, [endpoint, method, status, duration]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void recordDhtProvide(bool? success) => super.noSuchMethod(
+    Invocation.method(#recordDhtProvide, [success]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void recordReprovide(String? strategy, bool? success, Duration? duration) =>
+      super.noSuchMethod(
+        Invocation.method(#recordReprovide, [strategy, success, duration]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void recordSecurityEvent(String? type) => super.noSuchMethod(
+    Invocation.method(#recordSecurityEvent, [type]),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void recordProtocolMetrics(String? protocol, Map<String, dynamic>? metrics) =>
@@ -72,41 +193,41 @@ class MockMetricsCollector extends _i1.Mock implements _i2.MetricsCollector {
       );
 
   @override
-  int getMessagesSent(String? protocol) =>
+  int getMessagesSent(String? key) =>
       (super.noSuchMethod(
-            Invocation.method(#getMessagesSent, [protocol]),
+            Invocation.method(#getMessagesSent, [key]),
             returnValue: 0,
           )
           as int);
 
   @override
-  int getMessagesReceived(String? protocol) =>
+  int getMessagesReceived(String? key) =>
       (super.noSuchMethod(
-            Invocation.method(#getMessagesReceived, [protocol]),
+            Invocation.method(#getMessagesReceived, [key]),
             returnValue: 0,
           )
           as int);
 
   @override
-  int getBytesSent(String? protocol) =>
+  int getBytesSent(String? key) =>
       (super.noSuchMethod(
-            Invocation.method(#getBytesSent, [protocol]),
+            Invocation.method(#getBytesSent, [key]),
             returnValue: 0,
           )
           as int);
 
   @override
-  int getBytesReceived(String? protocol) =>
+  int getBytesReceived(String? key) =>
       (super.noSuchMethod(
-            Invocation.method(#getBytesReceived, [protocol]),
+            Invocation.method(#getBytesReceived, [key]),
             returnValue: 0,
           )
           as int);
 
   @override
-  double getAverageLatency(String? protocol) =>
+  double getAverageLatency(String? key) =>
       (super.noSuchMethod(
-            Invocation.method(#getAverageLatency, [protocol]),
+            Invocation.method(#getAverageLatency, [key]),
             returnValue: 0.0,
           )
           as double);
@@ -117,4 +238,33 @@ class MockMetricsCollector extends _i1.Mock implements _i2.MetricsCollector {
         Invocation.method(#updateConnectionMetrics, [peerId, metrics]),
         returnValueForMissingStub: null,
       );
+
+  @override
+  _i4.Future<Map<String, dynamic>> getStatus() =>
+      (super.noSuchMethod(
+            Invocation.method(#getStatus, []),
+            returnValue: _i4.Future<Map<String, dynamic>>.value(
+              <String, dynamic>{},
+            ),
+          )
+          as _i4.Future<Map<String, dynamic>>);
+
+  @override
+  _i4.Future<String> getPrometheusMetrics() =>
+      (super.noSuchMethod(
+            Invocation.method(#getPrometheusMetrics, []),
+            returnValue: _i4.Future<String>.value(
+              _i6.dummyValue<String>(
+                this,
+                Invocation.method(#getPrometheusMetrics, []),
+              ),
+            ),
+          )
+          as _i4.Future<String>);
+
+  @override
+  void reset() => super.noSuchMethod(
+    Invocation.method(#reset, []),
+    returnValueForMissingStub: null,
+  );
 }

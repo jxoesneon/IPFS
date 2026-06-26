@@ -34,8 +34,7 @@ void main() {
 
       final sections = await reader.sections().toList();
       expect(sections.length, equals(2));
-      expect(sections.map((s) => s.cid).toSet(),
-          equals({root.cid, child.cid}));
+      expect(sections.map((s) => s.cid).toSet(), equals({root.cid, child.cid}));
     });
 
     test('CarWriter creates a valid CAR v2 archive with index', () async {
@@ -46,11 +45,7 @@ void main() {
         Uint8List.fromList(utf8.encode('child')),
       );
 
-      final writer = CarWriter(
-        roots: [root.cid],
-        v2: true,
-        index: true,
-      );
+      final writer = CarWriter(roots: [root.cid], v2: true, index: true);
       await writer.write(root.cid, root.data);
       await writer.write(child.cid, child.data);
       final bytes = await writer.close();
@@ -60,9 +55,19 @@ void main() {
       expect(
         bytes.sublist(0, 11),
         equals(
-          Uint8List.fromList(
-            [0x0a, 0xa1, 0x67, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x02],
-          ),
+          Uint8List.fromList([
+            0x0a,
+            0xa1,
+            0x67,
+            0x76,
+            0x65,
+            0x72,
+            0x73,
+            0x69,
+            0x6f,
+            0x6e,
+            0x02,
+          ]),
         ),
       );
 
@@ -144,8 +149,10 @@ void main() {
       builder.add(b.cid, 100);
       final index = builder.build();
 
-      expect(index.sublist(0, 4),
-          equals(Uint8List.fromList([0x00, 0x04, 0x00, 0x00])));
+      expect(
+        index.sublist(0, 4),
+        equals(Uint8List.fromList([0x00, 0x04, 0x00, 0x00])),
+      );
     });
 
     test('IndexBuilder emits sorted MultihashIndexSorted index', () async {
@@ -154,8 +161,10 @@ void main() {
       builder.add(a.cid, 0);
       final index = builder.build();
 
-      expect(index.sublist(0, 4),
-          equals(Uint8List.fromList([0x01, 0x04, 0x00, 0x00])));
+      expect(
+        index.sublist(0, 4),
+        equals(Uint8List.fromList([0x01, 0x04, 0x00, 0x00])),
+      );
     });
 
     test('CarWriter rejects missing roots', () async {
@@ -168,9 +177,19 @@ void main() {
     });
 
     test('CarReader rejects CAR v2 with invalid pragma', () async {
-      final badPragma = Uint8List.fromList(
-        [0x0a, 0xa1, 0x67, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x03],
-      );
+      final badPragma = Uint8List.fromList([
+        0x0a,
+        0xa1,
+        0x67,
+        0x76,
+        0x65,
+        0x72,
+        0x73,
+        0x69,
+        0x6f,
+        0x6e,
+        0x03,
+      ]);
       final bytes = Uint8List.fromList(badPragma + List.filled(40, 0));
       final reader = CarReader.fromBytes(bytes);
       expect(reader.sections().toList(), throwsA(isA<CarV2Exception>()));

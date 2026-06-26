@@ -7,6 +7,7 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
+import 'package:dart_ipfs/src/services/rpc/mfs_handlers.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/version.dart';
@@ -19,10 +20,13 @@ import 'package:shelf/shelf.dart';
 /// Implements Kubo-compatible RPC methods
 class RPCHandlers {
   /// Creates a new [RPCHandlers] with the given [node].
-  RPCHandlers(this.node);
+  RPCHandlers(this.node) : mfsHandlers = MFSHandlers(node);
 
   /// The IPFS node to control via RPC.
   final IPFSNode node;
+
+  /// Handlers for the `/api/v0/files/*` MFS endpoint surface.
+  final MFSHandlers mfsHandlers;
 
   final _logger = Logger('RPCHandlers');
 

@@ -376,8 +376,9 @@ class IPFSConfig {
     'enableLibp2pBridge': enableLibp2pBridge,
     'libp2pListenAddress': libp2pListenAddress,
     'nodeId': nodeId,
-    'libp2pIdentitySeed':
-        libp2pIdentitySeed != null ? base64Encode(libp2pIdentitySeed!) : null,
+    'libp2pIdentitySeed': libp2pIdentitySeed != null
+        ? base64Encode(libp2pIdentitySeed!)
+        : null,
     'metrics': metrics.toJson(),
     'customConfig': customConfig,
   };

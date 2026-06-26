@@ -1,26 +1,25 @@
-@TestOn("vm")
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
+@TestOn('vm')
+library;
 
+import 'dart:convert';
+
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 import 'package:dart_ipfs/src/core/di/service_container.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart';
+import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
+import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/services/rpc/rpc_server.dart';
 import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
-
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
-import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
-import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart';
 
 class MockBlockStore implements BlockStore {
   @override
@@ -32,11 +31,8 @@ class MockBlockStore implements BlockStore {
   @override
   Future<RemoveBlockResponse> removeBlock(String cid) async =>
       RemoveBlockResponse();
-  @override
   Stream<CID> get storedBlocks => const Stream.empty();
-  @override
   Future<void> clear() async {}
-  @override
   Future<void> close() async {}
   @override
   Future<List<Block>> getAllBlocks() async => [];
@@ -109,11 +105,30 @@ void main() {
   group('RPCServer', () {
     late RPCServer server;
     late MockIPFSNode mockNode;
+    late MetricsCollector metricsCollector;
     final int port = 8081; // Use a different port to avoid conflicts
 
     setUp(() async {
       mockNode = MockIPFSNode();
-      server = RPCServer(node: mockNode, port: port, apiKey: 'secret-key');
+      metricsCollector = MetricsCollector(
+        IPFSConfig(
+          metrics: const MetricsConfig(
+            enabled: true,
+            enablePrometheusExport: true,
+            collectionIntervalSeconds: 60,
+          ),
+        ),
+      );
+      server = RPCServer(
+        node: mockNode,
+        port: port,
+        apiKey: 'secret-key',
+        metricsCollector: metricsCollector,
+        metricsConfig: const MetricsConfig(
+          enabled: true,
+          enablePrometheusExport: true,
+        ),
+      );
       await server.start();
     });
 
@@ -121,6 +136,7 @@ void main() {
       if (server.isRunning) {
         await server.stop();
       }
+      await metricsCollector.stop();
     });
 
     test('should return version details', () async {
@@ -167,6 +183,20 @@ void main() {
         headers: {'X-API-Key': 'wrong-key'},
       );
       expect(response.statusCode, 403);
+    });
+
+    test('should expose /metrics as Prometheus text', () async {
+      // Make a request so the metrics middleware records something.
+      await http.post(Uri.parse('http://localhost:$port/api/v0/version'));
+
+      final response = await http.get(
+        Uri.parse('http://localhost:$port/metrics'),
+      );
+      expect(response.statusCode, 200);
+      expect(response.headers['content-type'], contains('text/plain'));
+      expect(response.body, contains('ipfs_rpc_requests_total'));
+      expect(response.body, contains('ipfs_rpc_request_duration_seconds'));
+      expect(response.body, contains('endpoint="/api/v0/version"'));
     });
   });
 }

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
@@ -34,6 +35,7 @@ class DHTHandler implements IDHTHandler {
     DHTClient? client,
     Keystore? keystore,
     http.Client? httpClient,
+    MetricsCollector? metrics,
   }) : _keystore = keystore ?? Keystore(),
        _httpClient = httpClient ?? http.Client(),
        _storage = storage ?? HiveDatastore(config.datastorePath) {
@@ -42,7 +44,12 @@ class DHTHandler implements IDHTHandler {
       _storage.init();
     }
     dhtClient =
-        client ?? DHTClient(networkHandler: networkHandler, router: _router);
+        client ??
+        DHTClient(
+          networkHandler: networkHandler,
+          router: _router,
+          metricsCollector: metrics,
+        );
   }
 
   /// The underlying DHT client for network operations.

@@ -36,7 +36,8 @@ class DartIpfsClient {
       final body = await response.transform(utf8.decoder).join();
       if (response.statusCode != 200) {
         throw HttpException(
-            'dart_ipfs RPC $command returned ${response.statusCode}: $body');
+          'dart_ipfs RPC $command returned ${response.statusCode}: $body',
+        );
       }
       return body;
     } finally {

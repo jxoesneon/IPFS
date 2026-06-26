@@ -668,8 +668,9 @@ class IPLDHandler implements ILifecycle {
   }
 
   Future<List<int>> _getRecipientKey(IPLDNode node) async {
-    final header =
-        node.mapValue.entries.firstWhere((e) => e.key == 'header').value;
+    final header = node.mapValue.entries
+        .firstWhere((e) => e.key == 'header')
+        .value;
     final recipientEntry = header.mapValue.entries.firstWhere(
       (e) => e.key == 'recipient',
     );

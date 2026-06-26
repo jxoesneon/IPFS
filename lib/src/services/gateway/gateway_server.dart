@@ -1,13 +1,17 @@
 // lib/src/services/gateway/gateway_server.dart
 import 'dart:convert';
+
+import 'package:dart_ipfs/src/core/config/metrics_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/services/health_check_service.dart';
 import 'package:dart_ipfs/src/platform/http_server.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/version.dart';
+import 'package:prometheus_client/format.dart' as format;
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
@@ -31,9 +35,15 @@ class GatewayServer implements ILifecycle {
     this.ipnsResolver,
     this.maxRequestsPerIp = 100,
     this.rateLimitWindowSeconds = 60,
+    this.metricsCollector,
+    this.metricsConfig,
     HttpServerAdapter? httpAdapter,
   }) : httpAdapter = httpAdapter ?? createHttpServerAdapter() {
-    _handler = GatewayHandler(blockStore, ipnsResolver: ipnsResolver);
+    _handler = GatewayHandler(
+      blockStore,
+      ipnsResolver: ipnsResolver,
+      metricsCollector: metricsCollector,
+    );
     if (node != null) {
       _healthCheckService = HealthCheckService(node!);
     }
@@ -66,6 +76,12 @@ class GatewayServer implements ILifecycle {
 
   /// Time window for rate limiting in seconds
   final int rateLimitWindowSeconds;
+
+  /// Optional metrics collector for gateway instrumentation.
+  final MetricsCollector? metricsCollector;
+
+  /// Optional metrics configuration controlling the Prometheus endpoint.
+  final MetricsConfig? metricsConfig;
 
   final _logger = Logger('GatewayServer');
 
@@ -119,6 +135,29 @@ class GatewayServer implements ILifecycle {
       }
       return Response.ok('OK');
     });
+
+    _setupMetricsRoute();
+  }
+
+  void _setupMetricsRoute() {
+    final endpoint = metricsConfig?.prometheusEndpoint ?? '/metrics';
+    final enabled =
+        metricsConfig?.enablePrometheusExport == true &&
+        metricsCollector != null;
+
+    if (enabled) {
+      _router.get(endpoint, (Request request) async {
+        final metrics = await metricsCollector!.getPrometheusMetrics();
+        return Response.ok(
+          metrics,
+          headers: {'Content-Type': format.contentType},
+        );
+      });
+    } else {
+      _router.get('/metrics', (Request request) {
+        return Response.notFound('Metrics endpoint disabled');
+      });
+    }
   }
 
   /// Starts the gateway server.
@@ -132,6 +171,7 @@ class GatewayServer implements ILifecycle {
     final handler = const Pipeline()
         .addMiddleware(_corsMiddleware())
         .addMiddleware(_rateLimitMiddleware())
+        .addMiddleware(_metricsMiddleware())
         .addMiddleware(_loggingMiddleware())
         .addHandler(_router.call);
 
@@ -228,6 +268,38 @@ class GatewayServer implements ILifecycle {
           'Content-Range, X-IPFS-Path, X-IPFS-Roots',
       'Access-Control-Max-Age': '86400',
     };
+  }
+
+  /// Metrics instrumentation middleware.
+  ///
+  /// Records every gateway request with namespace, HTTP method, status code,
+  /// and duration.
+  Middleware _metricsMiddleware() {
+    return (Handler handler) {
+      return (Request request) async {
+        final start = DateTime.now();
+        final response = await handler(request);
+        final duration = DateTime.now().difference(start);
+
+        final namespace = _namespaceFor(request.url.path);
+        metricsCollector?.recordGatewayRequest(
+          namespace,
+          request.method,
+          response.statusCode,
+          duration,
+        );
+
+        return response;
+      };
+    };
+  }
+
+  /// Maps a request path to a gateway namespace for metrics.
+  static String _namespaceFor(String path) {
+    if (path.startsWith('ipfs/')) return 'ipfs';
+    if (path.startsWith('ipns/')) return 'ipns';
+    if (path.startsWith('api/')) return 'api';
+    return 'other';
   }
 
   /// Logging middleware

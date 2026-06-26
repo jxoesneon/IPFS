@@ -7,6 +7,7 @@ import 'package:crypto/crypto.dart'; // For SHA256
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_proto;
@@ -39,9 +40,13 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 /// ```
 class DHTClient {
   /// Creates a new DHT client.
-  DHTClient({required this.networkHandler, required RouterInterface router})
-    : _router = router,
-      _logger = Logger('DHTClient');
+  DHTClient({
+    required this.networkHandler,
+    required RouterInterface router,
+    MetricsCollector? metricsCollector,
+  }) : _router = router,
+       _metrics = metricsCollector,
+       _logger = Logger('DHTClient');
 
   /// The IPFS node this client belongs to.
   IPFSNode get node => networkHandler.ipfsNode;
@@ -50,6 +55,7 @@ class DHTClient {
   final NetworkHandler networkHandler;
 
   final RouterInterface _router;
+  final MetricsCollector? _metrics;
   final Logger _logger;
 
   /// The local peer ID.
@@ -251,15 +257,19 @@ class DHTClient {
       20,
     );
 
+    var successCount = 0;
     for (final peer in closestPeers) {
       try {
         await _sendRequest(peer, protocolDht, msg.writeToBuffer());
+        successCount++;
       } catch (e) {
         _logger.debug(
           'Error adding provider to peer ${Base58().encode(peer.value)}: $e',
         );
       }
     }
+
+    _metrics?.recordDhtProvide(successCount > 0);
   }
 
   /// Stores a value in the DHT (PUT_VALUE)

@@ -100,7 +100,8 @@ class ContentTypeHandler {
       final markdownText = String.fromCharCodes(data);
 
       // Convert markdown to HTML using the markdown package
-      final html = '''
+      final html =
+          '''
         <!DOCTYPE html>
         <html>
           <head>

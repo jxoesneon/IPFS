@@ -179,7 +179,13 @@ class CID {
   }
 
   /// Encodes the CID to its string representation.
-  String encode() {
+  String encode() => encodeWithBase(multibaseType);
+
+  /// Encodes the CID using the requested [base].
+  ///
+  /// CIDv0 is always returned as base58btc regardless of the requested base.
+  /// CIDv1 defaults to base32 when [base] is null.
+  String encodeWithBase(Multibase? base) {
     if (version == 0) {
       // CIDv0: base58-encoded multihash (no prefix)
       final mhBytes = multihash.toBytes();
@@ -190,8 +196,44 @@ class CID {
 
     // CIDv1: <version><codec><multihash>
     final bytes = toBytes();
-    final baseType = multibaseType ?? Multibase.base32;
+    final baseType = base ?? multibaseType ?? Multibase.base32;
     return multibaseEncode(baseType, bytes);
+  }
+
+  /// Encodes the CID using the base identified by [baseName].
+  ///
+  /// Common names: `base58`, `base58btc`, `base32`, `base32upper`, `base16`,
+  /// `base16upper`, `base64`, `base64url`, `base64urlpad`. Unknown names fall
+  /// back to the CID's default encoding.
+  String encodeWithBaseName(String baseName) {
+    final base = _multibaseFromName(baseName);
+    return encodeWithBase(base);
+  }
+
+  static Multibase _multibaseFromName(String name) {
+    switch (name.toLowerCase()) {
+      case 'base16':
+      case 'base16lower':
+        return Multibase.base16;
+      case 'base16upper':
+        return Multibase.base16upper;
+      case 'base32':
+      case 'base32lower':
+        return Multibase.base32;
+      case 'base32upper':
+        return Multibase.base32upper;
+      case 'base58':
+      case 'base58btc':
+        return Multibase.base58btc;
+      case 'base64':
+        return Multibase.base64;
+      case 'base64url':
+        return Multibase.base64url;
+      case 'base64urlpad':
+        return Multibase.base64urlpad;
+      default:
+        return Multibase.base32;
+    }
   }
 
   /// Converts the CID to its binary representation.

@@ -63,12 +63,14 @@ Future<void> _printId() async {
   final config = await _buildConfig();
   final node = await IPFSNode.create(config);
   final publicKey = await node.publicKey;
-  print(jsonEncode({
-    'ID': node.peerID,
-    'PublicKey': publicKey,
-    'Addresses': node.addresses,
-    'AgentVersion': agentVersion,
-  }));
+  print(
+    jsonEncode({
+      'ID': node.peerID,
+      'PublicKey': publicKey,
+      'Addresses': node.addresses,
+      'AgentVersion': agentVersion,
+    }),
+  );
   await node.stop();
 }
 
@@ -83,11 +85,7 @@ Future<void> _runHealthcheck() async {
 
   final client = HttpClient();
   try {
-    final request = await client.post(
-      '127.0.0.1',
-      endpoint.port,
-      '/api/v0/id',
-    );
+    final request = await client.post('127.0.0.1', endpoint.port, '/api/v0/id');
     final response = await request.close();
     final body = await response.transform(utf8.decoder).join();
     if (response.statusCode == 200) {
@@ -109,10 +107,12 @@ Future<void> _runDaemon(List<String> args) async {
   final enableStructuredLogging =
       Platform.environment['IPFS_JSON_LOGS'] == 'true';
 
-  final apiAddr = _parseAddrArg(args, '--api-addr') ??
+  final apiAddr =
+      _parseAddrArg(args, '--api-addr') ??
       Platform.environment['IPFS_API_ADDR'] ??
       '/ip4/127.0.0.1/tcp/5001';
-  final gatewayAddr = _parseAddrArg(args, '--gateway-addr') ??
+  final gatewayAddr =
+      _parseAddrArg(args, '--gateway-addr') ??
       Platform.environment['IPFS_GATEWAY_ADDR'] ??
       '/ip4/0.0.0.0/tcp/8080';
 
@@ -169,13 +169,15 @@ Future<void> _runDaemon(List<String> args) async {
   print('RPC API running at: ${rpc.url}');
 
   if (enableStructuredLogging) {
-    print(jsonEncode({
-      'level': 'info',
-      'message': 'daemon ready',
-      'peer_id': node.peerID,
-      'gateway_url': gateway.url,
-      'rpc_url': rpc.url,
-    }));
+    print(
+      jsonEncode({
+        'level': 'info',
+        'message': 'daemon ready',
+        'peer_id': node.peerID,
+        'gateway_url': gateway.url,
+        'rpc_url': rpc.url,
+      }),
+    );
   }
 
   // Wait for SIGTERM / SIGINT

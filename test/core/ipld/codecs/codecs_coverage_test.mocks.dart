@@ -3,17 +3,12 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i7;
-import 'dart:typed_data' as _i10;
+import 'dart:typed_data' as _i5;
 
-import 'package:dart_ipfs/src/core/data_structures/block.dart' as _i8;
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart' as _i5;
-import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart' as _i2;
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart' as _i3;
-import 'package:dart_ipfs/src/utils/private_key.dart' as _i9;
+import 'package:dart_ipfs/src/utils/private_key.dart' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i6;
-import 'package:pointycastle/export.dart' as _i4;
+import 'package:mockito/src/dummies.dart' as _i4;
+import 'package:pointycastle/export.dart' as _i2;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -30,162 +25,20 @@ import 'package:pointycastle/export.dart' as _i4;
 // ignore_for_file: subtype_of_sealed_class
 // ignore_for_file: invalid_use_of_internal_member
 
-class _FakePinManager_0 extends _i1.SmartFake implements _i2.PinManager {
-  _FakePinManager_0(Object parent, Invocation parentInvocation)
+class _FakeECPublicKey_0 extends _i1.SmartFake implements _i2.ECPublicKey {
+  _FakeECPublicKey_0(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakeGetBlockResponse_1 extends _i1.SmartFake
-    implements _i3.GetBlockResponse {
-  _FakeGetBlockResponse_1(Object parent, Invocation parentInvocation)
+class _FakeECPrivateKey_1 extends _i1.SmartFake implements _i2.ECPrivateKey {
+  _FakeECPrivateKey_1(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
-}
-
-class _FakeAddBlockResponse_2 extends _i1.SmartFake
-    implements _i3.AddBlockResponse {
-  _FakeAddBlockResponse_2(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
-class _FakeRemoveBlockResponse_3 extends _i1.SmartFake
-    implements _i3.RemoveBlockResponse {
-  _FakeRemoveBlockResponse_3(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
-class _FakeECPublicKey_4 extends _i1.SmartFake implements _i4.ECPublicKey {
-  _FakeECPublicKey_4(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
-class _FakeECPrivateKey_5 extends _i1.SmartFake implements _i4.ECPrivateKey {
-  _FakeECPrivateKey_5(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
-}
-
-/// A class which mocks [BlockStore].
-///
-/// See the documentation for Mockito's code generation for more information.
-class MockBlockStore extends _i1.Mock implements _i5.BlockStore {
-  MockBlockStore() {
-    _i1.throwOnMissingStub(this);
-  }
-
-  @override
-  String get path =>
-      (super.noSuchMethod(
-            Invocation.getter(#path),
-            returnValue: _i6.dummyValue<String>(this, Invocation.getter(#path)),
-          )
-          as String);
-
-  @override
-  _i2.PinManager get pinManager =>
-      (super.noSuchMethod(
-            Invocation.getter(#pinManager),
-            returnValue: _FakePinManager_0(
-              this,
-              Invocation.getter(#pinManager),
-            ),
-          )
-          as _i2.PinManager);
-
-  @override
-  _i7.Future<void> start() =>
-      (super.noSuchMethod(
-            Invocation.method(#start, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
-
-  @override
-  _i7.Future<void> stop() =>
-      (super.noSuchMethod(
-            Invocation.method(#stop, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
-
-  @override
-  _i7.Future<_i3.GetBlockResponse> getBlock(String? cid) =>
-      (super.noSuchMethod(
-            Invocation.method(#getBlock, [cid]),
-            returnValue: _i7.Future<_i3.GetBlockResponse>.value(
-              _FakeGetBlockResponse_1(
-                this,
-                Invocation.method(#getBlock, [cid]),
-              ),
-            ),
-          )
-          as _i7.Future<_i3.GetBlockResponse>);
-
-  @override
-  _i7.Future<_i3.AddBlockResponse> putBlock(_i8.Block? block) =>
-      (super.noSuchMethod(
-            Invocation.method(#putBlock, [block]),
-            returnValue: _i7.Future<_i3.AddBlockResponse>.value(
-              _FakeAddBlockResponse_2(
-                this,
-                Invocation.method(#putBlock, [block]),
-              ),
-            ),
-          )
-          as _i7.Future<_i3.AddBlockResponse>);
-
-  @override
-  _i7.Future<_i3.RemoveBlockResponse> removeBlock(String? cid) =>
-      (super.noSuchMethod(
-            Invocation.method(#removeBlock, [cid]),
-            returnValue: _i7.Future<_i3.RemoveBlockResponse>.value(
-              _FakeRemoveBlockResponse_3(
-                this,
-                Invocation.method(#removeBlock, [cid]),
-              ),
-            ),
-          )
-          as _i7.Future<_i3.RemoveBlockResponse>);
-
-  @override
-  _i7.Future<bool> hasBlock(String? cid) =>
-      (super.noSuchMethod(
-            Invocation.method(#hasBlock, [cid]),
-            returnValue: _i7.Future<bool>.value(false),
-          )
-          as _i7.Future<bool>);
-
-  @override
-  _i7.Future<List<_i8.Block>> getAllBlocks() =>
-      (super.noSuchMethod(
-            Invocation.method(#getAllBlocks, []),
-            returnValue: _i7.Future<List<_i8.Block>>.value(<_i8.Block>[]),
-          )
-          as _i7.Future<List<_i8.Block>>);
-
-  @override
-  _i7.Future<Map<String, dynamic>> getStatus() =>
-      (super.noSuchMethod(
-            Invocation.method(#getStatus, []),
-            returnValue: _i7.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
-            ),
-          )
-          as _i7.Future<Map<String, dynamic>>);
-
-  @override
-  _i7.Future<int> gc() =>
-      (super.noSuchMethod(
-            Invocation.method(#gc, []),
-            returnValue: _i7.Future<int>.value(0),
-          )
-          as _i7.Future<int>);
 }
 
 /// A class which mocks [IPFSPrivateKey].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockIPFSPrivateKey extends _i1.Mock implements _i9.IPFSPrivateKey {
+class MockIPFSPrivateKey extends _i1.Mock implements _i3.IPFSPrivateKey {
   MockIPFSPrivateKey() {
     _i1.throwOnMissingStub(this);
   }
@@ -194,7 +47,7 @@ class MockIPFSPrivateKey extends _i1.Mock implements _i9.IPFSPrivateKey {
   String get algorithm =>
       (super.noSuchMethod(
             Invocation.getter(#algorithm),
-            returnValue: _i6.dummyValue<String>(
+            returnValue: _i4.dummyValue<String>(
               this,
               Invocation.getter(#algorithm),
             ),
@@ -202,47 +55,47 @@ class MockIPFSPrivateKey extends _i1.Mock implements _i9.IPFSPrivateKey {
           as String);
 
   @override
-  _i4.ECPublicKey get publicKey =>
+  _i2.ECPublicKey get publicKey =>
       (super.noSuchMethod(
             Invocation.getter(#publicKey),
-            returnValue: _FakeECPublicKey_4(
+            returnValue: _FakeECPublicKey_0(
               this,
               Invocation.getter(#publicKey),
             ),
           )
-          as _i4.ECPublicKey);
+          as _i2.ECPublicKey);
 
   @override
-  _i4.ECPrivateKey get privateKey =>
+  _i2.ECPrivateKey get privateKey =>
       (super.noSuchMethod(
             Invocation.getter(#privateKey),
-            returnValue: _FakeECPrivateKey_5(
+            returnValue: _FakeECPrivateKey_1(
               this,
               Invocation.getter(#privateKey),
             ),
           )
-          as _i4.ECPrivateKey);
+          as _i2.ECPrivateKey);
 
   @override
-  _i10.Uint8List get publicKeyBytes =>
+  _i5.Uint8List get publicKeyBytes =>
       (super.noSuchMethod(
             Invocation.getter(#publicKeyBytes),
-            returnValue: _i10.Uint8List(0),
+            returnValue: _i5.Uint8List(0),
           )
-          as _i10.Uint8List);
+          as _i5.Uint8List);
 
   @override
-  _i10.Uint8List sign(_i10.Uint8List? data) =>
+  _i5.Uint8List sign(_i5.Uint8List? data) =>
       (super.noSuchMethod(
             Invocation.method(#sign, [data]),
-            returnValue: _i10.Uint8List(0),
+            returnValue: _i5.Uint8List(0),
           )
-          as _i10.Uint8List);
+          as _i5.Uint8List);
 
   @override
   bool verify(
-    _i10.Uint8List? data,
-    _i10.Uint8List? signature, {
+    _i5.Uint8List? data,
+    _i5.Uint8List? signature, {
     String? algorithm,
   }) =>
       (super.noSuchMethod(
