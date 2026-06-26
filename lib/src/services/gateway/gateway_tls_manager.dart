@@ -48,9 +48,7 @@ abstract class AutoTlsProvider {
 /// never issues certificates silently.
 class LetsEncryptAutoTlsProvider implements AutoTlsProvider {
   /// Creates a Let's Encrypt/ZeroSSL ACME provider.
-  LetsEncryptAutoTlsProvider({
-    this.staging = false,
-  });
+  LetsEncryptAutoTlsProvider({this.staging = false});
 
   /// Whether to use the ACME provider's staging endpoint.
   final bool staging;
@@ -112,10 +110,8 @@ class GatewayTlsManager {
   ///
   /// A custom [provider] may be injected for testing or for a production ACME
   /// implementation.
-  GatewayTlsManager(
-    this.config, {
-    AutoTlsProvider? provider,
-  }) : _provider = provider;
+  GatewayTlsManager(this.config, {AutoTlsProvider? provider})
+    : _provider = provider;
 
   /// Gateway configuration including TLS settings.
   final GatewayConfig config;
@@ -166,10 +162,7 @@ class GatewayTlsManager {
 
     final context = SecurityContext()
       ..useCertificateChain(certPath)
-      ..usePrivateKey(
-        keyPath,
-        password: config.certificatePassword,
-      );
+      ..usePrivateKey(keyPath, password: config.certificatePassword);
 
     try {
       _certificateExpiry = _extractExpiry(await certFile.readAsBytes());

@@ -69,7 +69,8 @@ class IPFSNodeBuilder {
     final denylistService = DenylistService(
       _config.security,
       metrics,
-      storagePath: _config.security.denylistStoragePath ??
+      storagePath:
+          _config.security.denylistStoragePath ??
           '${_config.dataPath}/denylist_cache.txt',
     );
     _container.registerSingleton(denylistService);

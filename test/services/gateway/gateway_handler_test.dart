@@ -67,14 +67,11 @@ void main() {
     });
 
     test('handleSubdomain', () async {
-      final cidV0 =
-          CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
+      final cidV0 = CID.decode(
+        'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+      );
       final cidStr = CID
-          .v1(
-            'dag-pb',
-            cidV0.multihash,
-            base: Multibase.base32,
-          )
+          .v1('dag-pb', cidV0.multihash, base: Multibase.base32)
           .encode();
       final request = Request(
         'GET',
@@ -162,14 +159,11 @@ void main() {
     });
 
     test('handleSubdomain block not found', () async {
-      final cidV0 =
-          CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
+      final cidV0 = CID.decode(
+        'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+      );
       final cidStr = CID
-          .v1(
-            'dag-pb',
-            cidV0.multihash,
-            base: Multibase.base32,
-          )
+          .v1('dag-pb', cidV0.multihash, base: Multibase.base32)
           .encode();
       final request = Request(
         'GET',

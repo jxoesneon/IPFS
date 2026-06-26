@@ -110,9 +110,9 @@ abstract class DataChannelStream implements libp2p.P2PStream<Uint8List> {
 
   @override
   libp2p.StreamStats stat() => libp2p.StreamStats(
-        direction: libp2p.Direction.outbound,
-        opened: DateTime.now(),
-      );
+    direction: libp2p.Direction.outbound,
+    opened: DateTime.now(),
+  );
 
   @override
   Future<void> setDeadline(DateTime? deadline) async {}

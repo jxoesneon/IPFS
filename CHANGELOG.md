@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- **Monorepo**: Created `packages/dart_ipfs_core/` as a stable core package containing CID, multibase, multicodec, multihash, block, block store, codec, and crypto primitives.
+- **Workspace**: Added `melos.yaml` for monorepo management.
+- **Documentation**: Added `doc/monorepo.md` explaining the monorepo layout and stability tiers.
+
+### Changed
+- **Dependencies**: Root `pubspec.yaml` now depends on `dart_ipfs_core` via a path dependency during development.
+- **Exports**: `lib/dart_ipfs.dart` re-exports the public API of `dart_ipfs_core` so existing consumers are not broken.
+
+### Deprecated
+- **Deep imports**: Imports of `package:dart_ipfs/src/...` are deprecated as of v2.2.0 and will be removed in v3.0.0. Use `package:dart_ipfs/dart_ipfs.dart` (stable umbrella re-export) or `package:dart_ipfs_core/dart_ipfs_core.dart` for core primitives.
+
 ## [1.11.5] - 2026-06-23
 
 ### Fixed

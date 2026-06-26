@@ -300,8 +300,9 @@ class MFSManager implements ILifecycle {
         }
 
         final parentNode = PBNode.fromBuffer(parentBlock.block.data);
-        final newLinks =
-            parentNode.links.where((l) => l.name != nameToRemove).toList();
+        final newLinks = parentNode.links
+            .where((l) => l.name != nameToRemove)
+            .toList();
 
         if (newLinks.length == parentNode.links.length) {
           // Nothing removed
@@ -423,8 +424,9 @@ class MFSManager implements ILifecycle {
     if (unixData.hasMode()) mode = unixData.mode.toInt();
     if (unixData.hasMtime()) mtime = unixData.mtime.toInt();
 
-    final hashString =
-        cidBase != null ? cid.encodeWithBaseName(cidBase) : cid.encode();
+    final hashString = cidBase != null
+        ? cid.encodeWithBaseName(cidBase)
+        : cid.encode();
 
     return MFSStat(
       hash: hashString,
@@ -517,8 +519,9 @@ class MFSManager implements ILifecycle {
         rawLeaves: rawLeaves ?? false,
         hashType: hash ?? 'sha2-256',
       );
-      final blocks =
-          await builder.build(Stream.fromIterable([updatedBytes])).toList();
+      final blocks = await builder
+          .build(Stream.fromIterable([updatedBytes]))
+          .toList();
       if (blocks.isEmpty) {
         throw Exception('Failed to build UnixFS DAG');
       }

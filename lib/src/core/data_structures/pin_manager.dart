@@ -39,7 +39,8 @@ class PinManager {
       if (data.containsKey('pins')) {
         final pinsData = data['pins'] as Map<String, dynamic>;
         pinsData.forEach((cid, typeIndex) {
-          _pins[cid] = PinTypeProto.valueOf(typeIndex as int) ??
+          _pins[cid] =
+              PinTypeProto.valueOf(typeIndex as int) ??
               PinTypeProto.PIN_TYPE_RECURSIVE;
         });
       }

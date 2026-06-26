@@ -28,19 +28,19 @@ class BitswapHandler implements ILifecycle {
     this._router, {
     HttpGatewayClient? httpGatewayClient,
     DenylistService? denylistService,
-  })  : _maxConcurrentRequests = config.maxConcurrentBitswapRequests,
-        _bitswapConfig = config.bitswap,
-        _httpGatewayClient = config.bitswap.enableHttpFallback
-            ? (httpGatewayClient ?? HttpGatewayClient())
-            : null,
-        _internalHttpClient =
-            config.bitswap.enableHttpFallback && httpGatewayClient == null,
-        _denylistService = denylistService,
-        _logger = Logger(
-          'BitswapHandler',
-          debug: config.debug,
-          verbose: config.verboseLogging,
-        ) {
+  }) : _maxConcurrentRequests = config.maxConcurrentBitswapRequests,
+       _bitswapConfig = config.bitswap,
+       _httpGatewayClient = config.bitswap.enableHttpFallback
+           ? (httpGatewayClient ?? HttpGatewayClient())
+           : null,
+       _internalHttpClient =
+           config.bitswap.enableHttpFallback && httpGatewayClient == null,
+       _denylistService = denylistService,
+       _logger = Logger(
+         'BitswapHandler',
+         debug: config.debug,
+         verbose: config.verboseLogging,
+       ) {
     _logger.info('Initializing BitswapHandler');
     _setupHandlers();
   }
@@ -378,22 +378,25 @@ class BitswapHandler implements ILifecycle {
       return;
     }
 
-    while (
-        _activeRequests < _maxConcurrentRequests && _requestQueue.isNotEmpty) {
+    while (_activeRequests < _maxConcurrentRequests &&
+        _requestQueue.isNotEmpty) {
       final cid = _requestQueue.removeAt(0);
       _activeRequests++;
 
       unawaited(
-        _sendWantRequest(cid).then((_) {
-          // We don't decrement _activeRequests here because Bitswap is async.
-          // The request is 'active' until the block is received or times out.
-          // For simplicity in this implementation, we'll just throttle the initial sending.
-        }).catchError((Object e) {
-          _logger.error('Failed to send want request for $cid: $Object e');
-        }).whenComplete(() {
-          _activeRequests--;
-          unawaited(_processQueue());
-        }),
+        _sendWantRequest(cid)
+            .then((_) {
+              // We don't decrement _activeRequests here because Bitswap is async.
+              // The request is 'active' until the block is received or times out.
+              // For simplicity in this implementation, we'll just throttle the initial sending.
+            })
+            .catchError((Object e) {
+              _logger.error('Failed to send want request for $cid: $Object e');
+            })
+            .whenComplete(() {
+              _activeRequests--;
+              unawaited(_processQueue());
+            }),
       );
     }
   }
@@ -536,8 +539,10 @@ class BitswapHandler implements ILifecycle {
     return _getBlock(cidStr, useHttpFallback: useHttpFallback);
   }
 
-  Future<Block?> _getBlock(String cidStr,
-      {required bool useHttpFallback}) async {
+  Future<Block?> _getBlock(
+    String cidStr, {
+    required bool useHttpFallback,
+  }) async {
     final denylist = _denylistService;
     if (denylist != null &&
         denylist.configuredEnabled &&
@@ -598,8 +603,9 @@ class BitswapHandler implements ILifecycle {
         }
 
         final block = Block(cid: CID.decode(cidStr), data: bytes);
-        final valid =
-            _bitswapConfig.verifyHttpBlocks ? await block.validate() : true;
+        final valid = _bitswapConfig.verifyHttpBlocks
+            ? await block.validate()
+            : true;
         if (!valid) {
           _logger.warning(
             'HTTP fallback returned invalid block for $cidStr from $gateway',
@@ -615,9 +621,7 @@ class BitswapHandler implements ILifecycle {
         }
         return block;
       } catch (e) {
-        _logger.warning(
-          'HTTP fallback failed for $cidStr from $gateway: $e',
-        );
+        _logger.warning('HTTP fallback failed for $cidStr from $gateway: $e');
       }
     }
 

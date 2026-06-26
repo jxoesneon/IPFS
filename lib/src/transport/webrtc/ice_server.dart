@@ -8,11 +8,7 @@ import 'package:dart_ipfs/src/core/config/network_config.dart';
 /// implementation can pass them to the browser/native peer connection.
 class IceServer {
   /// Creates a new [IceServer].
-  const IceServer({
-    required this.urls,
-    this.username,
-    this.credential,
-  });
+  const IceServer({required this.urls, this.username, this.credential});
 
   /// Creates a STUN-only ICE server from a URL string such as
   /// `stun:stun.example.com:19302`.
@@ -20,10 +16,10 @@ class IceServer {
 
   /// Creates a TURN ICE server from a [TurnServer] configuration.
   factory IceServer.fromTurn(TurnServer server) => IceServer(
-        urls: server.url,
-        username: server.username,
-        credential: server.credential,
-      );
+    urls: server.url,
+    username: server.username,
+    credential: server.credential,
+  );
 
   /// The ICE server URL, e.g. `stun:stun.example.com:19302` or
   /// `turn:turn.example.com:3478`.

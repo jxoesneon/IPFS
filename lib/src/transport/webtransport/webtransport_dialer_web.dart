@@ -44,9 +44,7 @@ class WebTransportDialerWeb implements WebTransportDialer {
     } catch (e) {
       // Fail closed on certificate mismatch or any ready failure.
       transport.close();
-      throw Exception(
-        'WebTransport certhash validation failed for $addr: $e',
-      );
+      throw Exception('WebTransport certhash validation failed for $addr: $e');
     }
 
     final p2pPart = addr.toString().split('/p2p/').last;
@@ -108,12 +106,9 @@ class WebTransportConnectionWeb implements libp2p.Conn {
 
   @override
   libp2p.ConnStats get stat => _WebTransportConnStats(
-        stats: libp2p.Stats(
-          direction: libp2p.Direction.outbound,
-          opened: _opened,
-        ),
-        numStreams: 0,
-      );
+    stats: libp2p.Stats(direction: libp2p.Direction.outbound, opened: _opened),
+    numStreams: 0,
+  );
 
   @override
   libp2p.ConnScope get scope => libp2p.NullScope();
@@ -126,11 +121,11 @@ class WebTransportConnectionWeb implements libp2p.Conn {
 
   @override
   libp2p.ConnState get state => const libp2p.ConnState(
-        streamMultiplexer: '/quic/1.0.0',
-        security: '/quic/1.0.0',
-        transport: 'webtransport',
-        usedEarlyMuxerNegotiation: true,
-      );
+    streamMultiplexer: '/quic/1.0.0',
+    security: '/quic/1.0.0',
+    transport: 'webtransport',
+    usedEarlyMuxerNegotiation: true,
+  );
 
   @override
   Future<List<libp2p.P2PStream<Uint8List>>> get streams => Future.value([]);
@@ -231,10 +226,8 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   }
 
   @override
-  libp2p.StreamStats stat() => libp2p.StreamStats(
-        direction: libp2p.Direction.outbound,
-        opened: _opened,
-      );
+  libp2p.StreamStats stat() =>
+      libp2p.StreamStats(direction: libp2p.Direction.outbound, opened: _opened);
 
   @override
   libp2p.P2PStream<Uint8List> get incoming => this;

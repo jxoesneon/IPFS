@@ -30,9 +30,9 @@ void main() {
 
     // Default to a local block miss so tests that exercise P2P/HTTP paths
     // do not trigger unstubbed mock fakes.
-    when(mockBlockStore.getBlock(any)).thenAnswer(
-      (_) async => GetBlockResponse(found: false),
-    );
+    when(
+      mockBlockStore.getBlock(any),
+    ).thenAnswer((_) async => GetBlockResponse(found: false));
   });
 
   group('BitswapHandler', () {

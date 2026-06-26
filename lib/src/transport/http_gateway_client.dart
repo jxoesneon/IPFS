@@ -16,8 +16,8 @@ class HttpGatewayClient {
   /// If [client] is not provided, a default [http.Client] is created.
   /// Remember to call [close] when finished to release resources.
   HttpGatewayClient({http.Client? client})
-      : _client = client ?? http.Client(),
-        _internalClient = client == null;
+    : _client = client ?? http.Client(),
+      _internalClient = client == null;
 
   final Logger _logger = Logger('HttpGatewayClient');
   final http.Client _client;
@@ -122,8 +122,9 @@ class HttpGatewayClient {
       final url = Uri.parse('$cleanBase$cid');
       _logger.debug('Fetching from gateway: $url');
 
-      final response =
-          await _client.get(url).timeout(const Duration(seconds: 10));
+      final response = await _client
+          .get(url)
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         _logger.info('Successfully retrieved CID $cid from $gateway');

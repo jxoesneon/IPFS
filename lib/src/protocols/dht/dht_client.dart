@@ -49,9 +49,9 @@ class DHTClient {
     required this.networkHandler,
     required RouterInterface router,
     MetricsCollector? metricsCollector,
-  })  : _router = router,
-        _metrics = metricsCollector,
-        _logger = Logger('DHTClient');
+  }) : _router = router,
+       _metrics = metricsCollector,
+       _logger = Logger('DHTClient');
 
   /// The IPFS node this client belongs to.
   IPFSNode get node => networkHandler.ipfsNode;

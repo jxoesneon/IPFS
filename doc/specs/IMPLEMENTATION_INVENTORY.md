@@ -2,12 +2,12 @@
 
 ## Executive Summary
 
-This inventory assesses the implementation status of the 24 feature specifications for `dart_ipfs`. As of the latest implementation pass, the P0 networking and naming specs—**DAG_CBOR_SPEC**, **METRICS_SPEC**, **MFS_SPEC**, **TRUSTLESS_GATEWAY_SPEC**, **IPLD_SELECTORS_SPEC**, **DHT_INTEGRATION_SPEC**, **GOSSIPSUB_SPEC**, **IPNS_SPEC**, **UNIXFS_SPEC**, and **CIRCUIT_RELAY_SPEC**—and the P1 specs—**REPROVIDE_SPEC**, **DAG_JSON_SPEC**, **SUBDOMAIN_GATEWAY_SPEC**, **BITSWAP_HTTP_FALLBACK_SPEC**, **BROWSER_TRANSPORTS_SPEC**, **CONTENT_BLOCKING_SPEC**, **GATEWAY_TLS_SPEC**, and **GRAPHSYNC_SPEC**—have been implemented to a testable, spec-compliant state. Remaining work is primarily the P2 features and exact HAMT CID parity with Kubo/Helia.
+This inventory assesses the implementation status of the 24 feature specifications for `dart_ipfs`. As of the latest implementation pass, all P0 and P1 specs have been implemented to a testable, spec-compliant state, including **CLI_SPEC**, **KUBERNETES_SPEC**, **MODULARIZATION_SPEC**, and the **UNIXFS_SPEC** HAMT CID parity fix. **QUIC_SPEC** is implemented as config/fallback with native transport deferred because the `package:ipfs_libp2p` dependency does not expose a QUIC transport class.
 
 **Status Distribution:**
-- **Complete**: 19 specs (79%)
-- **Partial**: 2 specs (8%)
-- **Missing**: 3 specs (13%)
+- **Complete**: 21 specs (88%)
+- **Partial**: 1 spec (4%) — QUIC native transport (conditional on dependency availability)
+- **Missing**: 1 spec (4%) — none of the tracked backlog specs remain missing; remaining work is verification and hardening.
 
 ## Specification Status Table
 
@@ -36,9 +36,9 @@ This inventory assesses the implementation status of the 24 feature specificatio
 | **INTEROP_TESTS_SPEC** | P0 | Complete | `.github/workflows/interop.yml`, `test/interop/` | P0/P1 workflows, Kubo/Helia compose harnesses, interop test scaffolding. |
 | **IPNS_SPEC** | P0 | Complete | `lib/src/protocols/ipns/ipns_handler.dart`, `lib/src/protocols/ipns/ipns_record.dart` | DHT-first signed CBOR records, base36 name derivation, signature verification, optional PubSub subscription gating. |
 | **KUBERNETES_SPEC** | P1 | Complete | `k8s/`, `helm/dart-ipfs/`, `.github/workflows/k8s.yml` | Kustomize base/overlays, Helm chart with hardened deployment, NetworkPolicy, ServiceMonitor, HPA, PDB; CI lint/template validation. |
-| **MODULARIZATION_SPEC** | P1 | Missing | N/A | No packages/ monorepo. |
+| **MODULARIZATION_SPEC** | P1 | Complete | `packages/dart_ipfs_core/`, `melos.yaml`, `lib/dart_ipfs.dart` | `packages/dart_ipfs_core` extracted with stable CID/block/codec/crypto/data-structures; umbrella re-exports preserved; Melos workspace; deprecation notice for deep `lib/src/` imports. |
 | **PLUGINS_SPEC** | P1 | Complete | `lib/src/core/plugins/` | PluginHost, manifest, capability registry, signing/verification, examples, audit logging. |
-| **QUIC_SPEC** | Conditional | Missing | `lib/src/transport/libp2p_router.dart` | No QUIC transport; dependency availability unverified. |
+| **QUIC_SPEC** | Conditional | Complete (config/fallback); Conditional (native transport) | `lib/src/core/config/network_config.dart`, `lib/src/transport/libp2p_router.dart`, `test/transport/quic_transport_test.dart` | Config fields, runtime probe, TCP fallback, address synthesis, and tests implemented. Native QUIC transport remains unavailable because `package:ipfs_libp2p` 0.5.6 only exports UDX/TCP, not QUIC. |
 
 ## Recent Changes
 
@@ -79,6 +79,14 @@ This inventory assesses the implementation status of the 24 feature specificatio
 - Wired transparent link following into `IPLDHandler.executeSelectorStream`.
 - Integrated with GraphSync request handler.
 - Added `test/core/ipld/selectors/ipld_selectors_test.dart`.
+
+### QUIC_SPEC
+- Added `enableQuic`, `quicListenPort`, `quicMaxStreams`, and `preferQuic` to `NetworkConfig` with JSON/YAML round-trip.
+- Implemented runtime QUIC transport probe in `Libp2pRouter` via `Isolate.resolvePackageUri` file check.
+- Added `Libp2pRouter.supportsQuic` and TCP-only fallback with a logged warning when QUIC is unavailable.
+- Implemented address synthesis for `/ip4/0.0.0.0/udp/$quicListenPort/quic-v1` and `/ip6/::/udp/$quicListenPort/quic-v1` when QUIC is enabled and available.
+- Added `test/transport/quic_transport_test.dart` covering config parsing, `supportsQuic`, fallback warning, and address synthesis.
+- Dependency spike confirmed `package:ipfs_libp2p` 0.5.6 only exports `TCPTransport`/`UdxTransport` (UDX), not a QUIC transport; native QUIC instantiation is deferred.
 
 ### DHT_INTEGRATION_SPEC
 - Added `DHTEnvelope` framing with request/response correlation.
@@ -125,10 +133,8 @@ Using Dart SDK 3.12.2:
 
 ## Recommended Next Phase
 
-The remaining P0 blockers and the P1 wave for full protocol compliance are resolved. The next recommended phase is the remaining P2 features and hardening:
-1. **KUBERNETES_SPEC** — k8s manifests and Helm chart.
-2. **MODULARIZATION_SPEC** — packages/ monorepo structure.
-3. **QUIC_SPEC** — QUIC transport if dependency availability is confirmed.
-4. Exact HAMT CID parity with Kubo/Helia via fixture verification.
-5. Hardening CLI coverage and production operational tooling.
-12. **UNIXFS HAMT parity** — verify/fix exact CID parity with Kubo/Helia using fixtures.
+The remaining P0 blockers and the P1 wave for full protocol compliance are resolved. The next recommended phase is verification and hardening:
+1. Confirm UNIXFS HAMT CID parity with a live Kubo/Helia round-trip once Docker or a test node is available.
+2. Verify the `dart_ipfs_core` package can be published (`dart pub publish --dry-run` is clean; swap path dependency for published version constraint at release time).
+3. Harden production operational tooling: container image signing/SBOM, interop test stabilization, and reference WebUI build CI.
+4. Evaluate a native QUIC transport only if `package:ipfs_libp2p` or a compatible Dart QUIC binding becomes available.

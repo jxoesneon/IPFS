@@ -39,15 +39,16 @@ class DHTHandler implements IDHTHandler {
     http.Client? httpClient,
     MetricsCollector? metrics,
     DenylistService? denylistService,
-  })  : _keystore = keystore ?? Keystore(),
-        _httpClient = httpClient ?? http.Client(),
-        _storage = storage ?? HiveDatastore(config.datastorePath),
-        _denylistService = denylistService {
+  }) : _keystore = keystore ?? Keystore(),
+       _httpClient = httpClient ?? http.Client(),
+       _storage = storage ?? HiveDatastore(config.datastorePath),
+       _denylistService = denylistService {
     _logger = Logger('DHTHandler', debug: config.debug);
     if (storage == null) {
       _storage.init();
     }
-    dhtClient = client ??
+    dhtClient =
+        client ??
         DHTClient(
           networkHandler: networkHandler,
           router: _router,
@@ -181,8 +182,9 @@ class DHTHandler implements IDHTHandler {
     if (resolvedCid == null) {
       try {
         final url = Uri.parse('https://ipfs.io/ipns/$ipnsName');
-        final response =
-            await _httpClient.get(url).timeout(const Duration(seconds: 10));
+        final response = await _httpClient
+            .get(url)
+            .timeout(const Duration(seconds: 10));
         if (response.statusCode == 200) {
           resolvedCid = extractCIDFromResponse(response.body);
           if (resolvedCid != null) {
@@ -230,8 +232,9 @@ class DHTHandler implements IDHTHandler {
       final valuePath = utf8.encode('/ipfs/$cid');
 
       // Validity: RFC3339 format, 24 hours from now
-      final validityDate =
-          DateTime.now().add(const Duration(hours: 24)).toUtc();
+      final validityDate = DateTime.now()
+          .add(const Duration(hours: 24))
+          .toUtc();
       final validity = utf8.encode(validityDate.toIso8601String());
       final validityType = IpnsEntry_ValidityType.EOL;
 

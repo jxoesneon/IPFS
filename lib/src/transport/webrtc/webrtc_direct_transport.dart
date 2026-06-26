@@ -17,7 +17,7 @@ import 'webrtc_transport.dart';
 class WebRTCDirectTransport implements libp2p_trans.Transport {
   /// Creates a new [WebRTCDirectTransport].
   WebRTCDirectTransport({NetworkConfig? networkConfig})
-      : _networkConfig = networkConfig;
+    : _networkConfig = networkConfig;
 
   final NetworkConfig? _networkConfig;
 

@@ -92,20 +92,20 @@ class SecurityConfig {
 
   /// Converts this configuration to a JSON map.
   Map<String, dynamic> toJson() => {
-        'enableTLS': enableTLS,
-        'tlsCertificatePath': tlsCertificatePath,
-        'tlsPrivateKeyPath': tlsPrivateKeyPath,
-        'enableKeyRotation': enableKeyRotation,
-        'keyRotationDays': keyRotationInterval.inDays,
-        'maxAuthAttempts': maxAuthAttempts,
-        'enableRateLimiting': enableRateLimiting,
-        'maxRequestsPerMinute': maxRequestsPerMinute,
-        'dhtDifficulty': dhtDifficulty,
-        'enableDenylist': enableDenylist,
-        'denylistPath': denylistPath,
-        'denylistStoragePath': denylistStoragePath,
-        'denylistRefreshIntervalSeconds': denylistRefreshInterval.inSeconds,
-        'denylistCompactFormat': denylistCompactFormat,
-        'denylistDefaultAction': denylistDefaultAction,
-      };
+    'enableTLS': enableTLS,
+    'tlsCertificatePath': tlsCertificatePath,
+    'tlsPrivateKeyPath': tlsPrivateKeyPath,
+    'enableKeyRotation': enableKeyRotation,
+    'keyRotationDays': keyRotationInterval.inDays,
+    'maxAuthAttempts': maxAuthAttempts,
+    'enableRateLimiting': enableRateLimiting,
+    'maxRequestsPerMinute': maxRequestsPerMinute,
+    'dhtDifficulty': dhtDifficulty,
+    'enableDenylist': enableDenylist,
+    'denylistPath': denylistPath,
+    'denylistStoragePath': denylistStoragePath,
+    'denylistRefreshIntervalSeconds': denylistRefreshInterval.inSeconds,
+    'denylistCompactFormat': denylistCompactFormat,
+    'denylistDefaultAction': denylistDefaultAction,
+  };
 }

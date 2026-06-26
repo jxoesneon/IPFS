@@ -82,6 +82,7 @@ temp/
 .tmp/
 test_blocks/
 test_blocks_log/
+test_tmp/
 
 # Logs
 logs/

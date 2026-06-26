@@ -104,20 +104,20 @@ class DHTConfig {
   ///
   /// @return A map representing the configuration.
   Map<String, dynamic> toJson() => {
-        'protocolId': protocolId,
-        'alpha': alpha,
-        'bucketSize': bucketSize,
-        'maxProvidersPerKey': maxProvidersPerKey,
-        'requestTimeoutSeconds': requestTimeout.inSeconds,
-        'maxRecordsPerQuery': maxRecordsPerQuery,
-        'enableProviderRecording': enableProviderRecording,
-        'enableValueStorage': enableValueStorage,
-        'validateProviderRecords': validateProviderRecords,
-        'reproviderEnabled': reproviderEnabled,
-        'reproviderIntervalSeconds': reproviderInterval.inSeconds,
-        'reproviderStrategy': reproviderStrategy,
-        'reproviderBatchSize': reproviderBatchSize,
-        'reproviderConcurrency': reproviderConcurrency,
-        'reproviderSweepOptimization': reproviderSweepOptimization,
-      };
+    'protocolId': protocolId,
+    'alpha': alpha,
+    'bucketSize': bucketSize,
+    'maxProvidersPerKey': maxProvidersPerKey,
+    'requestTimeoutSeconds': requestTimeout.inSeconds,
+    'maxRecordsPerQuery': maxRecordsPerQuery,
+    'enableProviderRecording': enableProviderRecording,
+    'enableValueStorage': enableValueStorage,
+    'validateProviderRecords': validateProviderRecords,
+    'reproviderEnabled': reproviderEnabled,
+    'reproviderIntervalSeconds': reproviderInterval.inSeconds,
+    'reproviderStrategy': reproviderStrategy,
+    'reproviderBatchSize': reproviderBatchSize,
+    'reproviderConcurrency': reproviderConcurrency,
+    'reproviderSweepOptimization': reproviderSweepOptimization,
+  };
 }

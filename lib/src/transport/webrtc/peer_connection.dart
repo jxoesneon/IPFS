@@ -80,10 +80,10 @@ class RTCIceCandidateInit {
 
   /// Converts this candidate to a JSON-compatible map.
   Map<String, dynamic> toJson() => {
-        'candidate': candidate,
-        'sdpMid': sdpMid,
-        'sdpMLineIndex': sdpMLineIndex,
-      };
+    'candidate': candidate,
+    'sdpMid': sdpMid,
+    'sdpMLineIndex': sdpMLineIndex,
+  };
 }
 
 /// Factory for creating a platform-specific [PeerConnection].

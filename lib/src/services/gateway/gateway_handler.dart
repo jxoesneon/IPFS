@@ -801,8 +801,9 @@ class GatewayHandler {
   ) async {
     final pathParts = subPath.split('/');
     final targetName = pathParts[0];
-    final remainingPath =
-        pathParts.length > 1 ? pathParts.sublist(1).join('/') : '';
+    final remainingPath = pathParts.length > 1
+        ? pathParts.sublist(1).join('/')
+        : '';
 
     // Find the link with matching name
     for (final link in directory.links) {
@@ -901,12 +902,7 @@ class GatewayHandler {
     final identifier = identifierParts.join('.');
     if (identifier.isEmpty) return null;
 
-    return SubdomainRequest(
-      namespace,
-      identifier,
-      '',
-      domain,
-    );
+    return SubdomainRequest(namespace, identifier, '', domain);
   }
 
   /// Validates the leftmost label of an `ipfs` subdomain as a CID.
@@ -1045,7 +1041,10 @@ class GatewayHandler {
     final redirect = _subdomainTlsRedirect(request, sub);
     if (redirect != null) {
       _recordGatewayRequest(
-          request.method, request.url.path, redirect.statusCode);
+        request.method,
+        request.url.path,
+        redirect.statusCode,
+      );
       return redirect;
     }
 
@@ -1068,8 +1067,12 @@ class GatewayHandler {
           } else {
             final format = _detectTrustlessFormat(request);
             if (format != null) {
-              response =
-                  await _serveTrustless(cid, sub.subPath, format, request);
+              response = await _serveTrustless(
+                cid,
+                sub.subPath,
+                format,
+                request,
+              );
             } else {
               response = await _serveContent(cidStr, sub.subPath, request);
             }
@@ -1084,8 +1087,9 @@ class GatewayHandler {
         } else {
           final cidStr = await _resolveSubdomainIpns(
             sub.identifier,
-            dnsLinkDomain:
-                _looksLikeDnsName(sub.identifier) ? sub.identifier : null,
+            dnsLinkDomain: _looksLikeDnsName(sub.identifier)
+                ? sub.identifier
+                : null,
           );
           final cid = _validateSubdomainCid(cidStr);
           if (cid == null) {

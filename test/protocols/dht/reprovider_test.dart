@@ -56,7 +56,8 @@ void main() {
   });
 
   Reprovider _createReprovider({DHTConfig? dhtConfig}) {
-    config = dhtConfig ??
+    config =
+        dhtConfig ??
         const DHTConfig(
           reproviderEnabled: false,
           reproviderStrategy: 'pinned',

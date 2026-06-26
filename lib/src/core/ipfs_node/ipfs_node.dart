@@ -446,11 +446,11 @@ class IPFSNode {
 
   /// Returns a [Future] that resolves to the content of a file or directory associated with the given [cid].
   Future<Uint8List?> get(String cid, {String path = ''}) => _contentManager.get(
-        cid,
-        path: path,
-        gatewayMode: _gatewayMode,
-        customGatewayUrl: _customGatewayUrl,
-      );
+    cid,
+    path: path,
+    gatewayMode: _gatewayMode,
+    customGatewayUrl: _customGatewayUrl,
+  );
 
   /// Returns a [Future] that resolves to a [List] of [Link]s representing the contents of an IPFS directory.
   Future<List<Link>> ls(String cid) => _contentManager.ls(cid);

@@ -124,10 +124,7 @@ void main() {
       });
 
       final client = HttpGatewayClient(client: mockClient);
-      final result = await client.fetchRawBlock(
-        'https://ipfs.io',
-        'QmHash',
-      );
+      final result = await client.fetchRawBlock('https://ipfs.io', 'QmHash');
 
       expect(result, isNotNull);
       expect(utf8.decode(result!), 'raw block');
@@ -139,10 +136,7 @@ void main() {
       });
 
       final client = HttpGatewayClient(client: mockClient);
-      final result = await client.fetchRawBlock(
-        'https://ipfs.io',
-        'QmHash',
-      );
+      final result = await client.fetchRawBlock('https://ipfs.io', 'QmHash');
 
       expect(result, isNull);
     });

@@ -26,6 +26,10 @@ class NetworkConfig {
     this.enableMDNS = true,
     this.enableWebTransport = true,
     this.enableWebRtc = true,
+    this.enableQuic = false,
+    this.quicListenPort = 4002,
+    this.quicMaxStreams = 100,
+    this.preferQuic = false,
     this.circuitRelay = const CircuitRelayConfig(),
     this.stunServers = const [],
     this.turnServers = const [],
@@ -43,6 +47,10 @@ class NetworkConfig {
     bool enableMDNS = true,
     bool enableWebTransport = true,
     bool enableWebRtc = true,
+    bool enableQuic = false,
+    int quicListenPort = 4002,
+    int quicMaxStreams = 100,
+    bool preferQuic = false,
     CircuitRelayConfig? circuitRelay,
     List<String> stunServers = const [],
     List<TurnServer> turnServers = const [],
@@ -56,6 +64,10 @@ class NetworkConfig {
       enableMDNS: enableMDNS,
       enableWebTransport: enableWebTransport,
       enableWebRtc: enableWebRtc,
+      enableQuic: enableQuic,
+      quicListenPort: quicListenPort,
+      quicMaxStreams: quicMaxStreams,
+      preferQuic: preferQuic,
       circuitRelay: circuitRelay ?? const CircuitRelayConfig(),
       stunServers: stunServers,
       turnServers: turnServers,
@@ -76,15 +88,21 @@ class NetworkConfig {
       enableMDNS: json['enableMDNS'] as bool? ?? true,
       enableWebTransport: json['enableWebTransport'] as bool? ?? true,
       enableWebRtc: json['enableWebRtc'] as bool? ?? true,
+      enableQuic: json['enableQuic'] as bool? ?? false,
+      quicListenPort: json['quicListenPort'] as int? ?? 4002,
+      quicMaxStreams: json['quicMaxStreams'] as int? ?? 100,
+      preferQuic: json['preferQuic'] as bool? ?? false,
       circuitRelay: json['circuitRelay'] != null
           ? CircuitRelayConfig.fromJson(
               Map<String, dynamic>.from(json['circuitRelay'] as Map),
             )
           : const CircuitRelayConfig(),
       stunServers: (json['stunServers'] as List?)?.cast<String>() ?? const [],
-      turnServers: (json['turnServers'] as List?)
-              ?.map((e) =>
-                  TurnServer.fromJson(Map<String, dynamic>.from(e as Map)))
+      turnServers:
+          (json['turnServers'] as List?)
+              ?.map(
+                (e) => TurnServer.fromJson(Map<String, dynamic>.from(e as Map)),
+              )
               .toList() ??
           const [],
       nodeId: json['nodeId'] as String?,
@@ -131,6 +149,25 @@ class NetworkConfig {
   /// Whether to enable WebRTC.
   final bool enableWebRtc;
 
+  /// Whether to enable the native QUIC transport.
+  ///
+  /// Defaults to `false` because the current `package:ipfs_libp2p` dependency
+  /// does not expose a QUIC transport class; enabling this currently logs a
+  /// warning and falls back to TCP-only mode.
+  final bool enableQuic;
+
+  /// UDP port the QUIC transport will listen on when enabled and available.
+  final int quicListenPort;
+
+  /// Maximum number of concurrent QUIC streams per connection.
+  final int quicMaxStreams;
+
+  /// Whether to prefer QUIC over TCP when dialing a peer that advertises both.
+  ///
+  /// This is honored only when [enableQuic] is true and a QUIC transport is
+  /// available at runtime.
+  final bool preferQuic;
+
   /// STUN servers for WebRTC ICE negotiation. Default is empty; no
   /// production STUN servers are hardcoded.
   final List<String> stunServers;
@@ -149,20 +186,24 @@ class NetworkConfig {
 
   /// Converts the network configuration to a JSON map.
   Map<String, dynamic> toJson() => {
-        'listenAddresses': listenAddresses,
-        'bootstrapPeers': bootstrapPeers,
-        'maxConnections': maxConnections,
-        'connectionTimeoutSeconds': connectionTimeout.inSeconds,
-        'enableNatTraversal': enableNatTraversal,
-        'enableMDNS': enableMDNS,
-        'enableWebTransport': enableWebTransport,
-        'enableWebRtc': enableWebRtc,
-        'stunServers': stunServers,
-        'turnServers': turnServers.map((e) => e.toJson()).toList(),
-        'circuitRelay': circuitRelay.toJson(),
-        'nodeId': nodeId,
-        'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
-      };
+    'listenAddresses': listenAddresses,
+    'bootstrapPeers': bootstrapPeers,
+    'maxConnections': maxConnections,
+    'connectionTimeoutSeconds': connectionTimeout.inSeconds,
+    'enableNatTraversal': enableNatTraversal,
+    'enableMDNS': enableMDNS,
+    'enableWebTransport': enableWebTransport,
+    'enableWebRtc': enableWebRtc,
+    'enableQuic': enableQuic,
+    'quicListenPort': quicListenPort,
+    'quicMaxStreams': quicMaxStreams,
+    'preferQuic': preferQuic,
+    'stunServers': stunServers,
+    'turnServers': turnServers.map((e) => e.toJson()).toList(),
+    'circuitRelay': circuitRelay.toJson(),
+    'nodeId': nodeId,
+    'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
+  };
 
   static String _generateDefaultNodeId() {
     final random = Random.secure();
@@ -209,8 +250,8 @@ class CircuitRelayConfig {
       reservationTimeout: json['reservationTimeoutSeconds'] != null
           ? Duration(seconds: json['reservationTimeoutSeconds'] as int)
           : const Duration(seconds: 30),
-      reservationRefreshInterval: json['reservationRefreshIntervalSeconds'] !=
-              null
+      reservationRefreshInterval:
+          json['reservationRefreshIntervalSeconds'] != null
           ? Duration(seconds: json['reservationRefreshIntervalSeconds'] as int)
           : const Duration(minutes: 5),
       maxCircuits: json['maxCircuits'] as int? ?? 8,
@@ -234,13 +275,12 @@ class CircuitRelayConfig {
 
   /// Converts this configuration to a JSON map.
   Map<String, dynamic> toJson() => {
-        'enabled': enabled,
-        'staticRelays': staticRelays,
-        'reservationTimeoutSeconds': reservationTimeout.inSeconds,
-        'reservationRefreshIntervalSeconds':
-            reservationRefreshInterval.inSeconds,
-        'maxCircuits': maxCircuits,
-      };
+    'enabled': enabled,
+    'staticRelays': staticRelays,
+    'reservationTimeoutSeconds': reservationTimeout.inSeconds,
+    'reservationRefreshIntervalSeconds': reservationRefreshInterval.inSeconds,
+    'maxCircuits': maxCircuits,
+  };
 }
 
 /// Configuration for a TURN server used by WebRTC ICE.
@@ -272,10 +312,10 @@ class TurnServer {
 
   /// Converts this server to a JSON map.
   Map<String, dynamic> toJson() => {
-        'url': url,
-        'username': username,
-        'credential': credential,
-      };
+    'url': url,
+    'username': username,
+    'credential': credential,
+  };
 
   @override
   bool operator ==(Object other) =>

@@ -13,8 +13,8 @@ import 'gateway_server_test.dart';
 
 class _MockIpfsHttpServerInstance implements IpfsHttpServerInstance {
   _MockIpfsHttpServerInstance({String host = 'localhost', int port = 8080})
-      : _host = host,
-        _port = port;
+    : _host = host,
+      _port = port;
 
   bool closed = false;
   final String _host;
@@ -34,8 +34,8 @@ class _MockIpfsHttpServerInstance implements IpfsHttpServerInstance {
 
 class _MockHttpServerAdapter implements HttpServerAdapter {
   _MockHttpServerAdapter({int securePort = 8443, int plainPort = 8080})
-      : _securePort = securePort,
-        _plainPort = plainPort;
+    : _securePort = securePort,
+      _plainPort = plainPort;
 
   Handler? lastHandler;
   String? lastAddress;
@@ -183,11 +183,13 @@ void main() {
     });
 
     test('throws when certificate files are missing', () async {
-      final manager = GatewayTlsManager(const GatewayConfig(
-        enableTls: true,
-        certificatePath: '/nonexistent/cert.pem',
-        privateKeyPath: '/nonexistent/key.pem',
-      ));
+      final manager = GatewayTlsManager(
+        const GatewayConfig(
+          enableTls: true,
+          certificatePath: '/nonexistent/cert.pem',
+          privateKeyPath: '/nonexistent/key.pem',
+        ),
+      );
       await expectLater(
         manager.loadSecurityContext(),
         throwsA(isA<StateError>()),
@@ -201,19 +203,18 @@ void main() {
         return;
       }
 
-      final manager = GatewayTlsManager(GatewayConfig(
-        enableTls: true,
-        certificatePath: cert.certPath,
-        privateKeyPath: cert.keyPath,
-      ));
+      final manager = GatewayTlsManager(
+        GatewayConfig(
+          enableTls: true,
+          certificatePath: cert.certPath,
+          privateKeyPath: cert.keyPath,
+        ),
+      );
       final context = await manager.loadSecurityContext();
       expect(context, isNotNull);
       expect(manager.isContextLoaded, isTrue);
       expect(manager.certificateExpiry, isNotNull);
-      expect(
-        manager.certificateExpiry!.isAfter(DateTime.now()),
-        isTrue,
-      );
+      expect(manager.certificateExpiry!.isAfter(DateTime.now()), isTrue);
       expect(manager.isActive, isTrue);
     });
 
@@ -299,42 +300,44 @@ void main() {
       expect(server.url, startsWith('https://'));
     });
 
-    test('starts HTTP redirect server when redirectHttpToHttps is true',
-        () async {
-      final cert = await _generateSelfSignedCertificate(tempDir.path);
-      if (cert == null) return;
+    test(
+      'starts HTTP redirect server when redirectHttpToHttps is true',
+      () async {
+        final cert = await _generateSelfSignedCertificate(tempDir.path);
+        if (cert == null) return;
 
-      server = GatewayServer(
-        blockStore: blockStore,
-        httpAdapter: mockAdapter,
-        gatewayConfig: GatewayConfig(
-          enableTls: true,
-          certificatePath: cert.certPath,
-          privateKeyPath: cert.keyPath,
-          tlsPort: 8443,
-          redirectHttpToHttps: true,
-          port: 8080,
-        ),
-      );
-      await server.start();
+        server = GatewayServer(
+          blockStore: blockStore,
+          httpAdapter: mockAdapter,
+          gatewayConfig: GatewayConfig(
+            enableTls: true,
+            certificatePath: cert.certPath,
+            privateKeyPath: cert.keyPath,
+            tlsPort: 8443,
+            redirectHttpToHttps: true,
+            port: 8080,
+          ),
+        );
+        await server.start();
 
-      expect(mockAdapter.lastSecurePort, equals(8443));
-      expect(mockAdapter.lastPort, equals(8080));
-      expect(mockAdapter.lastHandler, isNotNull);
+        expect(mockAdapter.lastSecurePort, equals(8443));
+        expect(mockAdapter.lastPort, equals(8080));
+        expect(mockAdapter.lastHandler, isNotNull);
 
-      final redirectHandler = mockAdapter.lastHandler!;
-      final request = Request(
-        'GET',
-        Uri.parse('http://localhost/ipfs/QmSomeCid'),
-        headers: {'host': 'gateway.example.com'},
-      );
-      final response = await redirectHandler(request);
-      expect(response.statusCode, equals(301));
-      expect(
-        response.headers['location'],
-        equals('https://gateway.example.com/ipfs/QmSomeCid'),
-      );
-    });
+        final redirectHandler = mockAdapter.lastHandler!;
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/QmSomeCid'),
+          headers: {'host': 'gateway.example.com'},
+        );
+        final response = await redirectHandler(request);
+        expect(response.statusCode, equals(301));
+        expect(
+          response.headers['location'],
+          equals('https://gateway.example.com/ipfs/QmSomeCid'),
+        );
+      },
+    );
 
     test('binds plain HTTP when TLS is disabled', () async {
       server = GatewayServer(
@@ -393,10 +396,7 @@ void main() {
       await server.start();
       final handler = mockAdapter.lastHandler!;
 
-      final request = Request(
-        'GET',
-        Uri.parse('http://localhost/ws'),
-      );
+      final request = Request('GET', Uri.parse('http://localhost/ws'));
       final response = await handler(request);
       expect(response.statusCode, equals(426));
     });

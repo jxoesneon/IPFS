@@ -23,7 +23,7 @@ class BitswapConfig {
       maxConcurrentRequests: json['maxConcurrentRequests'] as int? ?? 10,
       httpFallbackGateways:
           (json['httpFallbackGateways'] as List?)?.cast<String>() ??
-              const <String>[],
+          const <String>[],
       p2pTimeout: json['p2pTimeoutSeconds'] != null
           ? Duration(seconds: json['p2pTimeoutSeconds'] as int)
           : const Duration(seconds: 30),
@@ -68,12 +68,12 @@ class BitswapConfig {
 
   /// Converts this configuration to a JSON map.
   Map<String, dynamic> toJson() => {
-        'maxConcurrentRequests': maxConcurrentRequests,
-        'httpFallbackGateways': httpFallbackGateways,
-        'p2pTimeoutSeconds': p2pTimeout.inSeconds,
-        'httpTimeoutSeconds': httpTimeout.inSeconds,
-        'enableHttpFallback': enableHttpFallback,
-        'maxHttpBlockSize': maxHttpBlockSize,
-        'allowPrivateGateways': allowPrivateGateways,
-      };
+    'maxConcurrentRequests': maxConcurrentRequests,
+    'httpFallbackGateways': httpFallbackGateways,
+    'p2pTimeoutSeconds': p2pTimeout.inSeconds,
+    'httpTimeoutSeconds': httpTimeout.inSeconds,
+    'enableHttpFallback': enableHttpFallback,
+    'maxHttpBlockSize': maxHttpBlockSize,
+    'allowPrivateGateways': allowPrivateGateways,
+  };
 }

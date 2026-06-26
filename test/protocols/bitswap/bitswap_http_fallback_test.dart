@@ -28,9 +28,9 @@ void main() {
     setUp(() {
       mockBlockStore = MockIBlockStore();
       mockRouter = MockRouterInterface();
-      when(mockBlockStore.putBlock(any)).thenAnswer(
-        (_) async => BlockResponseFactory.successAdd('stored'),
-      );
+      when(
+        mockBlockStore.putBlock(any),
+      ).thenAnswer((_) async => BlockResponseFactory.successAdd('stored'));
     });
 
     IPFSConfig _fallbackConfig(
@@ -39,18 +39,17 @@ void main() {
       bool allowPrivate = false,
       int maxBlockSize = 2 * 1024 * 1024,
       bool enabled = true,
-    }) =>
-        IPFSConfig(
-          bitswap: BitswapConfig(
-            enableHttpFallback: enabled,
-            httpFallbackGateways: gateways,
-            p2pTimeout: const Duration(milliseconds: 50),
-            httpTimeout: const Duration(milliseconds: 100),
-            maxHttpBlockSize: maxBlockSize,
-            allowPrivateGateways: allowPrivate,
-            verifyHttpBlocks: verify,
-          ),
-        );
+    }) => IPFSConfig(
+      bitswap: BitswapConfig(
+        enableHttpFallback: enabled,
+        httpFallbackGateways: gateways,
+        p2pTimeout: const Duration(milliseconds: 50),
+        httpTimeout: const Duration(milliseconds: 100),
+        maxHttpBlockSize: maxBlockSize,
+        allowPrivateGateways: allowPrivate,
+        verifyHttpBlocks: verify,
+      ),
+    );
 
     Future<Block> _validBlock() async {
       final data = Uint8List.fromList(utf8.encode('hello http fallback'));
@@ -59,10 +58,9 @@ void main() {
 
     test('returns cached block without P2P or HTTP', () async {
       final block = await _validBlock();
-      when(
-        mockBlockStore.getBlock(any),
-      ).thenAnswer(
-          (_) async => BlockResponseFactory.successGet(block.toProto()));
+      when(mockBlockStore.getBlock(any)).thenAnswer(
+        (_) async => BlockResponseFactory.successGet(block.toProto()),
+      );
       when(mockRouter.connectedPeers).thenReturn(<String>{});
 
       final config = _fallbackConfig([], enabled: false);
@@ -72,8 +70,9 @@ void main() {
       final result = await handler.wantBlock(block.cid.encode());
       expect(result, isNotNull);
       expect(result!.data, equals(block.data));
-      verify(mockBlockStore.getBlock(block.cid.encode()))
-          .called(greaterThan(0));
+      verify(
+        mockBlockStore.getBlock(block.cid.encode()),
+      ).called(greaterThan(0));
       verifyNever(
         mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
       );
@@ -245,37 +244,39 @@ void main() {
       await handler.stop();
     });
 
-    test('verifyHttpBlocks false skips verification and stores bad block',
-        () async {
-      final block = await _validBlock();
-      final cidStr = block.cid.encode();
-      final badData = Uint8List.fromList([0, 1, 2]);
-      when(
-        mockBlockStore.getBlock(any),
-      ).thenAnswer((_) async => BlockResponseFactory.notFound());
-      when(mockRouter.connectedPeers).thenReturn(<String>{});
+    test(
+      'verifyHttpBlocks false skips verification and stores bad block',
+      () async {
+        final block = await _validBlock();
+        final cidStr = block.cid.encode();
+        final badData = Uint8List.fromList([0, 1, 2]);
+        when(
+          mockBlockStore.getBlock(any),
+        ).thenAnswer((_) async => BlockResponseFactory.notFound());
+        when(mockRouter.connectedPeers).thenReturn(<String>{});
 
-      final mockHttp = MockClient((request) async {
-        return http.Response.bytes(badData, 200);
-      });
-      final httpClient = HttpGatewayClient(client: mockHttp);
+        final mockHttp = MockClient((request) async {
+          return http.Response.bytes(badData, 200);
+        });
+        final httpClient = HttpGatewayClient(client: mockHttp);
 
-      final config = _fallbackConfig(['https://ipfs.io'], verify: false);
-      final handler = BitswapHandler(
-        config,
-        mockBlockStore,
-        mockRouter,
-        httpGatewayClient: httpClient,
-      );
-      await handler.start();
+        final config = _fallbackConfig(['https://ipfs.io'], verify: false);
+        final handler = BitswapHandler(
+          config,
+          mockBlockStore,
+          mockRouter,
+          httpGatewayClient: httpClient,
+        );
+        await handler.start();
 
-      final result = await handler.wantBlock(cidStr);
-      expect(result, isNotNull);
-      expect(result!.data, equals(badData));
-      verify(mockBlockStore.putBlock(any)).called(1);
+        final result = await handler.wantBlock(cidStr);
+        expect(result, isNotNull);
+        expect(result!.data, equals(badData));
+        verify(mockBlockStore.putBlock(any)).called(1);
 
-      await handler.stop();
-    });
+        await handler.stop();
+      },
+    );
 
     test('rejects private gateway unless allowed', () async {
       final block = await _validBlock();
@@ -290,10 +291,9 @@ void main() {
       });
       final httpClient = HttpGatewayClient(client: mockHttp);
 
-      final deniedConfig = _fallbackConfig(
-        ['http://127.0.0.1:8080'],
-        allowPrivate: false,
-      );
+      final deniedConfig = _fallbackConfig([
+        'http://127.0.0.1:8080',
+      ], allowPrivate: false);
       final deniedHandler = BitswapHandler(
         deniedConfig,
         mockBlockStore,
@@ -305,10 +305,9 @@ void main() {
       expect(denied, isNull);
       await deniedHandler.stop();
 
-      final allowedConfig = _fallbackConfig(
-        ['http://127.0.0.1:8080'],
-        allowPrivate: true,
-      );
+      final allowedConfig = _fallbackConfig([
+        'http://127.0.0.1:8080',
+      ], allowPrivate: true);
       final allowedHandler = BitswapHandler(
         allowedConfig,
         mockBlockStore,
@@ -335,10 +334,7 @@ void main() {
       });
       final httpClient = HttpGatewayClient(client: mockHttp);
 
-      final config = _fallbackConfig(
-        ['https://ipfs.io'],
-        maxBlockSize: 512,
-      );
+      final config = _fallbackConfig(['https://ipfs.io'], maxBlockSize: 512);
       final handler = BitswapHandler(
         config,
         mockBlockStore,
@@ -391,33 +387,35 @@ void main() {
       await handler.stop();
     });
 
-    test('getBlock useHttpFallback=false skips HTTP after P2P failure',
-        () async {
-      final block = await _validBlock();
-      final cidStr = block.cid.encode();
-      when(
-        mockBlockStore.getBlock(any),
-      ).thenAnswer((_) async => BlockResponseFactory.notFound());
-      when(mockRouter.connectedPeers).thenReturn(<String>{});
+    test(
+      'getBlock useHttpFallback=false skips HTTP after P2P failure',
+      () async {
+        final block = await _validBlock();
+        final cidStr = block.cid.encode();
+        when(
+          mockBlockStore.getBlock(any),
+        ).thenAnswer((_) async => BlockResponseFactory.notFound());
+        when(mockRouter.connectedPeers).thenReturn(<String>{});
 
-      final mockHttp = MockClient((request) async {
-        return http.Response.bytes(block.data, 200);
-      });
-      final httpClient = HttpGatewayClient(client: mockHttp);
+        final mockHttp = MockClient((request) async {
+          return http.Response.bytes(block.data, 200);
+        });
+        final httpClient = HttpGatewayClient(client: mockHttp);
 
-      final config = _fallbackConfig(['https://ipfs.io']);
-      final handler = BitswapHandler(
-        config,
-        mockBlockStore,
-        mockRouter,
-        httpGatewayClient: httpClient,
-      );
-      await handler.start();
+        final config = _fallbackConfig(['https://ipfs.io']);
+        final handler = BitswapHandler(
+          config,
+          mockBlockStore,
+          mockRouter,
+          httpGatewayClient: httpClient,
+        );
+        await handler.start();
 
-      final result = await handler.getBlock(cidStr, useHttpFallback: false);
-      expect(result, isNull);
+        final result = await handler.getBlock(cidStr, useHttpFallback: false);
+        expect(result, isNull);
 
-      await handler.stop();
-    });
+        await handler.stop();
+      },
+    );
   });
 }

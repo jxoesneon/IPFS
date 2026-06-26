@@ -59,7 +59,10 @@ class Ed25519MessageSigner {
     payload.setAll(_signPrefix.length, bytes);
 
     try {
-      final publicKeyObj = SimplePublicKey(publicKey, type: KeyPairType.ed25519);
+      final publicKeyObj = SimplePublicKey(
+        publicKey,
+        type: KeyPairType.ed25519,
+      );
       final sig = Signature(signature, publicKey: publicKeyObj);
       return await _ed25519.verify(payload, signature: sig);
     } on ArgumentError {

@@ -54,6 +54,10 @@ dependencies:
   mime: ^2.0.0
   http_parser: ^4.1.2
 
+  # Core package (monorepo)
+  dart_ipfs_core:
+    path: packages/dart_ipfs_core
+
   # Common packages
   args: ^2.6.0
   yaml: ^3.1.3

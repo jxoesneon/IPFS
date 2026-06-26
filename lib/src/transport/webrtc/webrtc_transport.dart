@@ -18,7 +18,7 @@ import 'signaling_protocol.dart';
 class WebRTCTransport implements libp2p_trans.Transport {
   /// Creates a new [WebRTCTransport].
   WebRTCTransport({this.host, NetworkConfig? networkConfig})
-      : _networkConfig = networkConfig;
+    : _networkConfig = networkConfig;
 
   /// The libp2p host associated with this transport.
   libp2p.Host? host;
@@ -70,12 +70,9 @@ class WebRTCTransport implements libp2p_trans.Transport {
 
     // 2. Open signaling stream to remote peer via relay
     final context = libp2p.Context(timeout: dialTimeout);
-    final signalingStream = await currentHost.newStream(
-        remotePeerId,
-        [
-          SignalingProtocol.id,
-        ],
-        context);
+    final signalingStream = await currentHost.newStream(remotePeerId, [
+      SignalingProtocol.id,
+    ], context);
 
     final signaling = SignalingProtocol();
     signaling.handleStream(signalingStream as libp2p.P2PStream<Uint8List>);
@@ -206,12 +203,9 @@ class WebRTCConnection implements libp2p.Conn {
 
   @override
   libp2p.ConnStats get stat => _WebRTCConnStats(
-        stats: libp2p.Stats(
-          direction: libp2p.Direction.outbound,
-          opened: _opened,
-        ),
-        numStreams: _streams.length,
-      );
+    stats: libp2p.Stats(direction: libp2p.Direction.outbound, opened: _opened),
+    numStreams: _streams.length,
+  );
 
   @override
   libp2p.ConnScope get scope => libp2p.NullScope();
@@ -224,11 +218,11 @@ class WebRTCConnection implements libp2p.Conn {
 
   @override
   libp2p.ConnState get state => const libp2p.ConnState(
-        streamMultiplexer: '/webrtc/1.0.0',
-        security: '/webrtc/1.0.0',
-        transport: 'webrtc',
-        usedEarlyMuxerNegotiation: true,
-      );
+    streamMultiplexer: '/webrtc/1.0.0',
+    security: '/webrtc/1.0.0',
+    transport: 'webrtc',
+    usedEarlyMuxerNegotiation: true,
+  );
 
   /// The ICE connection state reported by the underlying peer connection, if any.
   String? get iceConnectionState => _pc.iceConnectionState;
@@ -252,13 +246,10 @@ class _WebRTCConnStats implements libp2p.ConnStats {
 /// WebRTC listener implementation for libp2p.
 class WebRTCListener implements libp2p_listener.Listener {
   /// Creates a new [WebRTCListener].
-  WebRTCListener(
-    this._addr,
-    this._host, {
-    NetworkConfig? networkConfig,
-  }) : _iceServers = networkConfig != null
-            ? buildIceServersFromNetworkConfig(networkConfig)
-            : const [] {
+  WebRTCListener(this._addr, this._host, {NetworkConfig? networkConfig})
+    : _iceServers = networkConfig != null
+          ? buildIceServersFromNetworkConfig(networkConfig)
+          : const [] {
     final currentHost = _host;
     if (currentHost != null) {
       currentHost.setStreamHandler(SignalingProtocol.id, (

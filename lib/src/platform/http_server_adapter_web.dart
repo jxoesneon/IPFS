@@ -43,9 +43,7 @@ class HttpServerAdapterWeb implements HttpServerAdapter {
     Object context,
   ) async {
     // On web, secure TCP binding is not supported.
-    throw UnimplementedError(
-      'HTTPS server not supported on web platform',
-    );
+    throw UnimplementedError('HTTPS server not supported on web platform');
   }
 }
 

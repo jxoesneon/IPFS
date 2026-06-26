@@ -47,8 +47,8 @@ class GatewayServer implements ILifecycle {
     this.gatewayConfig = const GatewayConfig(),
     HttpServerAdapter? httpAdapter,
     GatewayTlsManager? tlsManager,
-  })  : httpAdapter = httpAdapter ?? createHttpServerAdapter(),
-        tlsManager = tlsManager ?? GatewayTlsManager(gatewayConfig) {
+  }) : httpAdapter = httpAdapter ?? createHttpServerAdapter(),
+       tlsManager = tlsManager ?? GatewayTlsManager(gatewayConfig) {
     _handler = GatewayHandler(
       blockStore,
       ipnsResolver: ipnsResolver,
@@ -179,7 +179,8 @@ class GatewayServer implements ILifecycle {
 
   void _setupMetricsRoute() {
     final endpoint = metricsConfig?.prometheusEndpoint ?? '/metrics';
-    final enabled = metricsConfig?.enablePrometheusExport == true &&
+    final enabled =
+        metricsConfig?.enablePrometheusExport == true &&
         metricsCollector != null;
 
     if (enabled) {
@@ -215,8 +216,9 @@ class GatewayServer implements ILifecycle {
 
     try {
       if (gatewayConfig.enableTls || gatewayConfig.autoTls) {
-        final effectiveTlsPort =
-            gatewayConfig.tlsPort > 0 ? gatewayConfig.tlsPort : tlsPort;
+        final effectiveTlsPort = gatewayConfig.tlsPort > 0
+            ? gatewayConfig.tlsPort
+            : tlsPort;
         final context = await tlsManager.loadSecurityContext();
         _tlsServer = await httpAdapter.serveSecure(
           handler,
@@ -278,7 +280,8 @@ class GatewayServer implements ILifecycle {
     return (Handler handler) {
       return (Request request) async {
         // Extract client IP
-        final clientIp = request.headers['x-forwarded-for']?.split(',').first ??
+        final clientIp =
+            request.headers['x-forwarded-for']?.split(',').first ??
             request.headers['x-real-ip'] ??
             'unknown';
 

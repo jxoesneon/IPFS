@@ -1,5 +1,7 @@
 // lib/src/transport/libp2p_router.dart
 import 'dart:async';
+import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -15,6 +17,7 @@ import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
 import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
 import 'package:ipfs_libp2p/p2p/transport/tcp_transport.dart';
+import 'package:ipfs_libp2p/p2p/transport/transport.dart' as libp2p_transport;
 
 /// Native libp2p router implementation.
 ///
@@ -45,6 +48,22 @@ class Libp2pRouter implements RouterInterface {
   libp2p.KeyPair? _keyPair;
   bool _hasStarted = false;
   bool _isInitialized = false;
+  libp2p_transport.Transport? _quicTransport;
+
+  /// Test-only factory override for the QUIC transport dependency.
+  ///
+  /// When non-null, [supportsQuic] and address synthesis use this factory
+  /// instead of probing the actual `package:ipfs_libp2p` dependency.
+  static libp2p_transport.Transport? Function()? _quicTransportFactory;
+
+  /// Set the QUIC transport factory used for testing.
+  ///
+  /// Passing `null` clears any override and restores the runtime probe.
+  static void setQuicTransportFactoryForTesting(
+    libp2p_transport.Transport? Function()? factory,
+  ) {
+    _quicTransportFactory = factory;
+  }
 
   final Set<String> _connectedPeers = {};
   final Set<String> _registeredProtocols = {};
@@ -81,8 +100,16 @@ class Libp2pRouter implements RouterInterface {
     if (_hasStarted && _host != null) {
       return _host!.network.listenAddresses.map((a) => a.toString()).toList();
     }
-    return _config.network.listenAddresses;
+    return _buildListenAddresses().map((a) => a.toString()).toList();
   }
+
+  /// True when the QUIC transport is enabled in config and available at runtime.
+  ///
+  /// This is `false` when [NetworkConfig.enableQuic] is false, or when the
+  /// current `package:ipfs_libp2p` dependency does not expose a QUIC transport
+  /// class (the current state for ipfs_libp2p 0.5.6, which only ships UDX and
+  /// TCP transports).
+  bool get supportsQuic => _config.network.enableQuic && _quicTransport != null;
 
   @override
   Stream<ConnectionEvent> get connectionEvents =>
@@ -117,6 +144,11 @@ class Libp2pRouter implements RouterInterface {
         _keyPair = await crypto.generateEd25519KeyPair();
       }
 
+      // Probe for an available QUIC transport from the libp2p dependency.
+      // This is done during initialization so that [supportsQuic] is stable
+      // before [start()] builds the listen-address list.
+      _quicTransport = await _probeQuicTransport();
+
       _isInitialized = true;
       _logger.debug('Libp2pRouter initialized with identity: $peerID');
     } catch (e, stackTrace) {
@@ -139,18 +171,7 @@ class Libp2pRouter implements RouterInterface {
     _logger.debug('Starting Libp2pRouter...');
 
     try {
-      // Determine listen address from config
-      int port = 4001; // Default IPFS port
-      for (final addr in _config.network.listenAddresses) {
-        final parts = addr.split('/');
-        final tcpIndex = parts.indexOf('tcp');
-        if (tcpIndex != -1 && tcpIndex + 1 < parts.length) {
-          port = int.tryParse(parts[tcpIndex + 1]) ?? port;
-          break;
-        }
-      }
-
-      final listenAddr = libp2p.MultiAddr('/ip4/0.0.0.0/tcp/$port');
+      final listenAddresses = _buildListenAddresses();
       final resourceManager = ResourceManagerImpl(limiter: FixedLimiter());
 
       final webrtcTransport = WebRTCTransport(networkConfig: _config.network);
@@ -159,15 +180,35 @@ class Libp2pRouter implements RouterInterface {
       );
       final webTransportTransport = WebTransportTransport();
 
-      _host = await config.Libp2p.new_([
+      // Assemble transports. TCP is always present; QUIC is added only when
+      // enabled and the dependency actually exposes a transport class.
+      final transports = <config.Option>[
         config.Libp2p.transport(TCPTransport(resourceManager: resourceManager)),
-        if (_config.network.enableWebTransport)
-          config.Libp2p.transport(webTransportTransport),
-        if (_config.network.enableWebRtc) ...[
-          config.Libp2p.transport(webrtcTransport),
-          config.Libp2p.transport(webrtcDirectTransport),
-        ],
-        config.Libp2p.listenAddrs([listenAddr]),
+      ];
+
+      if (_config.network.enableQuic) {
+        if (supportsQuic) {
+          _logger.debug('Adding QUIC transport to Libp2p host');
+          transports.add(config.Libp2p.transport(_quicTransport!));
+        } else {
+          _logger.warning(
+            'QUIC enabled but no QUIC transport is available in '
+            'package:ipfs_libp2p; falling back to TCP-only mode.',
+          );
+        }
+      }
+
+      if (_config.network.enableWebTransport) {
+        transports.add(config.Libp2p.transport(webTransportTransport));
+      }
+      if (_config.network.enableWebRtc) {
+        transports.add(config.Libp2p.transport(webrtcTransport));
+        transports.add(config.Libp2p.transport(webrtcDirectTransport));
+      }
+
+      _host = await config.Libp2p.new_([
+        ...transports,
+        config.Libp2p.listenAddrs(listenAddresses),
         config.Libp2p.identity(_keyPair!),
         config.Libp2p.userAgent('dart_ipfs/2.0.0'),
       ]);
@@ -212,7 +253,9 @@ class Libp2pRouter implements RouterInterface {
       );
 
       _hasStarted = true;
-      _logger.info('Libp2pRouter started on $listenAddr with ID: ${_host!.id}');
+      _logger.info(
+        'Libp2pRouter started on ${listenAddresses.first} with ID: ${_host!.id}',
+      );
 
       // Connect to bootstrap peers
       await _connectToBootstrapPeers();
@@ -244,9 +287,9 @@ class Libp2pRouter implements RouterInterface {
     try {
       if (_host != null) {
         await _host!.close().timeout(
-              const Duration(seconds: 5),
-              onTimeout: () => _logger.warning('Host close timed out'),
-            );
+          const Duration(seconds: 5),
+          onTimeout: () => _logger.warning('Host close timed out'),
+        );
       }
       _connectedPeers.clear();
       _hasStarted = false;
@@ -294,15 +337,14 @@ class Libp2pRouter implements RouterInterface {
       final peerId = libp2p.PeerId.fromString(peerIdStr);
 
       // Explicitly add address to peer store to ensure dial can find it
-      await _host!.peerStore.addrBook.addAddrs(
-          peerId,
-          [
-            addr,
-          ],
-          const Duration(minutes: 10));
+      await _host!.peerStore.addrBook.addAddrs(peerId, [
+        addr,
+      ], const Duration(minutes: 10));
 
       final addrInfo = libp2p.AddrInfo(peerId, [addr]);
-      await _host!.connect(addrInfo).timeout(
+      await _host!
+          .connect(addrInfo)
+          .timeout(
             const Duration(seconds: 30),
             onTimeout: () =>
                 throw TimeoutException('Connection to $multiaddress timed out'),
@@ -616,6 +658,84 @@ class Libp2pRouter implements RouterInterface {
       shift += 7;
     }
     return result;
+  }
+
+  /// Probes the `package:ipfs_libp2p` dependency for an exported QUIC
+  /// transport class.
+  ///
+  /// The current ipfs_libp2p 0.5.6 package only ships `TCPTransport` and
+  /// `UdxTransport` (UDX), not a QUIC transport. If the package ever exposes a
+  /// `QuicTransport` class in `p2p/transport/quic_transport.dart`, the probe can
+  /// be updated to import and instantiate it.
+  Future<libp2p_transport.Transport?> _probeQuicTransport() async {
+    // Test override takes precedence.
+    if (_quicTransportFactory != null) {
+      return _quicTransportFactory!();
+    }
+
+    try {
+      final quicUri = Uri.parse(
+        'package:ipfs_libp2p/p2p/transport/quic_transport.dart',
+      );
+      final resolved = await Isolate.resolvePackageUri(quicUri);
+      if (resolved == null) return null;
+
+      final file = File.fromUri(resolved);
+      if (!file.existsSync()) return null;
+
+      // A QUIC transport file exists in the package but is not imported here.
+      // Future work: import `package:ipfs_libp2p/p2p/transport/quic_transport.dart`
+      // and instantiate the exported class.
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Builds the list of listen addresses that will be passed to the libp2p host.
+  ///
+  /// - Parses the configured [NetworkConfig.listenAddresses].
+  /// - Ensures a default TCP address is present if no valid TCP address is
+  ///   configured.
+  /// - Synthesizes `/ip4/0.0.0.0/udp/$quicListenPort/quic-v1` and
+  ///   `/ip6/::/udp/$quicListenPort/quic-v1` when [supportsQuic] is true and
+  ///   they are not already present.
+  List<libp2p.MultiAddr> _buildListenAddresses() {
+    final addresses = <libp2p.MultiAddr>[];
+    var hasTcp = false;
+
+    for (final addrStr in _config.network.listenAddresses) {
+      try {
+        final addr = libp2p.MultiAddr(addrStr);
+        addresses.add(addr);
+        if (addr.hasProtocol('tcp')) hasTcp = true;
+      } catch (e) {
+        _logger.warning('Skipping invalid listen address: $addrStr');
+      }
+    }
+
+    // Ensure a TCP listen address is always present.
+    if (!hasTcp) {
+      addresses.add(libp2p.MultiAddr('/ip4/0.0.0.0/tcp/4001'));
+    }
+
+    // Synthesize QUIC addresses when the transport is available.
+    if (supportsQuic) {
+      final quicPort = _config.network.quicListenPort;
+      final synthesized = [
+        '/ip4/0.0.0.0/udp/$quicPort/quic-v1',
+        '/ip6/::/udp/$quicPort/quic-v1',
+      ];
+
+      for (final addrStr in synthesized) {
+        final addr = libp2p.MultiAddr(addrStr);
+        if (!addresses.any((existing) => existing.equals(addr))) {
+          addresses.add(addr);
+        }
+      }
+    }
+
+    return addresses;
   }
 }
 

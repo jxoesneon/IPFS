@@ -96,8 +96,7 @@ IPLDNode decodeDagJson(
   String json, {
   bool strict = true,
   DagJsonDecodeOptions? options,
-}) =>
-    DAGJsonHandler.decode(json, strict: strict, options: options);
+}) => DAGJsonHandler.decode(json, strict: strict, options: options);
 
 /// Convenience that encodes [node] as DAG-JSON and hashes the UTF-8 bytes with
 /// SHA2-256 under the DAG-JSON multicodec (0x0129).
@@ -215,8 +214,9 @@ class DAGJsonHandler {
           version: link.version,
           multihash: multihash,
           codec: link.codec.isEmpty ? 'dag-pb' : link.codec,
-          multibaseType:
-              link.version == 0 ? Multibase.base58btc : Multibase.base32,
+          multibaseType: link.version == 0
+              ? Multibase.base58btc
+              : Multibase.base32,
         );
         final cidStr = cid.encode();
         buffer.write('{');
@@ -426,7 +426,9 @@ class _DagJsonParser {
     }
     var b64 = entry.value.stringValue;
     if (b64.contains('=')) {
-      throw DagJsonDecodingError('Bytes base64url string must not contain padding');
+      throw DagJsonDecodingError(
+        'Bytes base64url string must not contain padding',
+      );
     }
     // DAG-JSON uses unpadded base64url; Dart's decoder requires padding.
     b64 = base64Url.normalize(b64);
@@ -451,7 +453,10 @@ class _DagJsonParser {
     if (_pos < _input.length && _input.codeUnitAt(_pos) == 0x5d) {
       _pos++;
       _depth--;
-      return IPLDNode(kind: Kind.LIST, listValue: IPLDList(values: values));
+      return IPLDNode(
+        kind: Kind.LIST,
+        listValue: IPLDList(values: values),
+      );
     }
 
     while (true) {
@@ -477,7 +482,10 @@ class _DagJsonParser {
     }
 
     _depth--;
-    return IPLDNode(kind: Kind.LIST, listValue: IPLDList(values: values));
+    return IPLDNode(
+      kind: Kind.LIST,
+      listValue: IPLDList(values: values),
+    );
   }
 
   IPLDNode _parseStringValue() {

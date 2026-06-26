@@ -5,10 +5,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:shelf/shelf.dart';
 
 /// Handles a WebSocket upgrade request on the IO platform.
-Future<Response> handleGatewayWebSocket(
-  Request request,
-  Logger logger,
-) async {
+Future<Response> handleGatewayWebSocket(Request request, Logger logger) async {
   final rawRequest = request.context['shelf.io.request'] as HttpRequest?;
   if (rawRequest == null) {
     return Response(
@@ -30,9 +27,7 @@ Future<Response> handleGatewayWebSocket(
     return Response.ok('');
   } catch (e, stackTrace) {
     logger.error('WebSocket upgrade failed', e, stackTrace);
-    return Response.internalServerError(
-      body: 'WebSocket upgrade failed',
-    );
+    return Response.internalServerError(body: 'WebSocket upgrade failed');
   }
 }
 

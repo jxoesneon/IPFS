@@ -487,9 +487,7 @@ void main() {
       final results = await handler
           .executeSelectorStream(
             root,
-            ipld.ExploreAll(
-              next: ipld.ExploreAll(next: const ipld.Matcher()),
-            ),
+            ipld.ExploreAll(next: ipld.ExploreAll(next: const ipld.Matcher())),
           )
           .toList();
 

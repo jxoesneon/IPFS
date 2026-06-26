@@ -3,10 +3,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:shelf/shelf.dart';
 
 /// Web stub for WebSocket upgrade requests.
-Future<Response> handleGatewayWebSocket(
-  Request request,
-  Logger logger,
-) async {
+Future<Response> handleGatewayWebSocket(Request request, Logger logger) async {
   return Response(
     426,
     body: 'WebSocket upgrade not available on web platform',

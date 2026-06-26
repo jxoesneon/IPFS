@@ -12,25 +12,25 @@ import 'peer_connection.dart';
 class PeerConnectionWeb implements PeerConnection {
   /// Creates a new [PeerConnectionWeb].
   PeerConnectionWeb(List<IceServer> iceServers)
-      : _pc = web.RTCPeerConnection(
-          web.RTCConfiguration(
-            iceServers: iceServers
-                .map((s) {
-                  final username = s.username;
-                  final credential = s.credential;
-                  if (username != null && credential != null) {
-                    return web.RTCIceServer(
-                      urls: s.urls.toJS,
-                      username: username,
-                      credential: credential,
-                    );
-                  }
-                  return web.RTCIceServer(urls: s.urls.toJS);
-                })
-                .toList()
-                .toJS,
-          ),
-        ) {
+    : _pc = web.RTCPeerConnection(
+        web.RTCConfiguration(
+          iceServers: iceServers
+              .map((s) {
+                final username = s.username;
+                final credential = s.credential;
+                if (username != null && credential != null) {
+                  return web.RTCIceServer(
+                    urls: s.urls.toJS,
+                    username: username,
+                    credential: credential,
+                  );
+                }
+                return web.RTCIceServer(urls: s.urls.toJS);
+              })
+              .toList()
+              .toJS,
+        ),
+      ) {
     _pc.onicecandidate = ((web.RTCPeerConnectionIceEvent ev) {
       if (ev.candidate != null) {
         _iceController.add(

@@ -51,17 +51,17 @@ class ReproviderResult {
 
   /// Converts this result to a JSON-compatible map.
   Map<String, dynamic> toJson() => {
-        'strategy': strategy,
-        'attempted': attempted,
-        'succeeded': succeeded,
-        'failed': failed,
-        'duration_ms': duration.inMilliseconds,
-        'errors': errors,
-        'groupedCids': groupedCids?.map(
-          (peer, cids) =>
-              MapEntry(peer.toBase58(), cids.map((c) => c.toString()).toList()),
-        ),
-      };
+    'strategy': strategy,
+    'attempted': attempted,
+    'succeeded': succeeded,
+    'failed': failed,
+    'duration_ms': duration.inMilliseconds,
+    'errors': errors,
+    'groupedCids': groupedCids?.map(
+      (peer, cids) =>
+          MapEntry(peer.toBase58(), cids.map((c) => c.toString()).toList()),
+    ),
+  };
 }
 
 /// Status snapshot of the [Reprovider] service.
@@ -92,12 +92,12 @@ class ReproviderStatus {
 
   /// Converts this status to a JSON-compatible map.
   Map<String, dynamic> toJson() => {
-        'lastRun': lastRun?.toIso8601String(),
-        'nextRun': nextRun?.toIso8601String(),
-        'strategy': strategy,
-        'running': running,
-        'lastResult': lastResult?.toJson(),
-      };
+    'lastRun': lastRun?.toIso8601String(),
+    'nextRun': nextRun?.toIso8601String(),
+    'strategy': strategy,
+    'running': running,
+    'lastResult': lastResult?.toJson(),
+  };
 }
 
 /// Periodic service that re-announces local content to the DHT.
@@ -112,13 +112,13 @@ class Reprovider implements ILifecycle {
     required PinManager pinManager,
     required MFSManager mfsManager,
     MetricsCollector? metrics,
-  })  : _config = config,
-        _dhtHandler = dhtHandler,
-        _pinManager = pinManager,
-        _mfsManager = mfsManager,
-        _metrics = metrics,
-        _logger = Logger('Reprovider'),
-        _strategy = config.reproviderStrategy;
+  }) : _config = config,
+       _dhtHandler = dhtHandler,
+       _pinManager = pinManager,
+       _mfsManager = mfsManager,
+       _metrics = metrics,
+       _logger = Logger('Reprovider'),
+       _strategy = config.reproviderStrategy;
 
   final DHTConfig _config;
   final IDHTHandler _dhtHandler;
@@ -257,7 +257,8 @@ class Reprovider implements ILifecycle {
       final cids = await _collectCids(_strategy);
       final deduped = _deduplicate(cids);
       _logger.debug(
-          'Reproviding ${deduped.length} CIDs using strategy $_strategy');
+        'Reproviding ${deduped.length} CIDs using strategy $_strategy',
+      );
 
       if (_config.reproviderSweepOptimization) {
         groupedCids = _groupByClosestPeers(deduped);
@@ -365,10 +366,7 @@ class Reprovider implements ILifecycle {
   Future<List<CID>> _allBlockCids() async {
     final blockStore = _pinManager.blockStore;
     final blocks = await blockStore.getAllBlocks();
-    return blocks
-        .map((block) => block.cid)
-        .whereType<CID>()
-        .toList();
+    return blocks.map((block) => block.cid).whereType<CID>().toList();
   }
 
   CID? _parseCid(String cidStr) {
@@ -399,8 +397,10 @@ class Reprovider implements ILifecycle {
     sorted.sort((a, b) {
       final keyA = _routingKey(a);
       final keyB = _routingKey(b);
-      return _xorDistance(keyA, localPeerId)
-          .compareTo(_xorDistance(keyB, localPeerId));
+      return _xorDistance(
+        keyA,
+        localPeerId,
+      ).compareTo(_xorDistance(keyB, localPeerId));
     });
 
     final grouped = <PeerId, List<CID>>{};
@@ -424,8 +424,9 @@ class Reprovider implements ILifecycle {
   BigInt _xorDistance(PeerId a, PeerId b) {
     final aBytes = a.value;
     final bBytes = b.value;
-    final length =
-        aBytes.length > bBytes.length ? aBytes.length : bBytes.length;
+    final length = aBytes.length > bBytes.length
+        ? aBytes.length
+        : bBytes.length;
     var result = BigInt.zero;
     for (var i = 0; i < length; i++) {
       final aByte = i < aBytes.length ? aBytes[i] : 0;
