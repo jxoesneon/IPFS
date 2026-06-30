@@ -8,7 +8,7 @@ import 'package:logging/logging.dart' as logging;
 import 'package:test/test.dart';
 
 /// A minimal transport that advertises QUIC support for testing address
-/// synthesis and [Libp2pRouter.supportsQuic].
+/// synthesis and [Libp2pRouter.supportsQuic] with a deterministic factory.
 class _FakeQuicTransport extends TCPTransport {
   _FakeQuicTransport()
     : super(resourceManager: ResourceManagerImpl(limiter: FixedLimiter()));
@@ -75,7 +75,7 @@ void main() {
       expect(json['preferQuic'], isTrue);
     });
 
-    test('supportsQuic is false when QUIC dependency is unavailable', () async {
+    test('supportsQuic is true when QUIC is enabled and available', () async {
       final config = IPFSConfig(
         network: NetworkConfig(
           listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
@@ -84,8 +84,9 @@ void main() {
       );
       final router = Libp2pRouter(config);
       await router.initialize();
+      addTearDown(() => router.stop());
 
-      expect(router.supportsQuic, isFalse);
+      expect(router.supportsQuic, isTrue);
     });
 
     test('supportsQuic is false when enableQuic is false', () async {
@@ -97,38 +98,42 @@ void main() {
       );
       final router = Libp2pRouter(config);
       await router.initialize();
-
-      expect(router.supportsQuic, isFalse);
-    });
-
-    test('logs warning and falls back to TCP when enableQuic is true '
-        'but no QUIC transport is available', () async {
-      final logs = <String>[];
-      final subscription = logging.Logger('Libp2pRouter').onRecord.listen((
-        record,
-      ) {
-        logs.add(record.message);
-      });
-      addTearDown(() => subscription.cancel());
-
-      final config = IPFSConfig(
-        network: NetworkConfig(
-          listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
-          enableQuic: true,
-          bootstrapPeers: [],
-        ),
-      );
-      final router = Libp2pRouter(config);
-      await router.start();
       addTearDown(() => router.stop());
 
       expect(router.supportsQuic, isFalse);
-      expect(
-        logs,
-        anyElement(contains('falling back')),
-        reason: 'Expected fallback warning in logs',
-      );
     });
+
+    test(
+      'does not log fallback warning when QUIC is enabled and available',
+      () async {
+        final logs = <String>[];
+        final subscription = logging.Logger('Libp2pRouter').onRecord.listen((
+          record,
+        ) {
+          logs.add(record.message);
+        });
+        addTearDown(() => subscription.cancel());
+
+        final config = IPFSConfig(
+          network: NetworkConfig(
+            listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
+            enableQuic: true,
+            bootstrapPeers: [],
+          ),
+        );
+        final router = Libp2pRouter(config);
+        await router.start();
+        addTearDown(() => router.stop());
+
+        expect(router.supportsQuic, isTrue);
+        expect(
+          logs.any(
+            (m) => m.contains('QUIC enabled') && m.contains('falling back'),
+          ),
+          isFalse,
+        );
+      },
+    );
 
     test('does not log fallback warning when QUIC is disabled', () async {
       final logs = <String>[];
@@ -173,6 +178,7 @@ void main() {
       );
       final router = Libp2pRouter(config);
       await router.initialize();
+      addTearDown(() => router.stop());
 
       expect(router.supportsQuic, isTrue);
       expect(
@@ -193,6 +199,7 @@ void main() {
         );
         final router = Libp2pRouter(config);
         await router.initialize();
+        addTearDown(() => router.stop());
 
         expect(router.supportsQuic, isFalse);
         expect(

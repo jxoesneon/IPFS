@@ -1,12 +1,15 @@
-/// Native QUIC transport for dart_ipfs using Cloudflare quiche FFI.
+/// Pure-Dart QUIC transport for dart_ipfs backed by the [quic_lib] package.
 ///
-/// This package is optional: when the native quiche library is available,
-/// [Libp2pRouter] can instantiate [QuicTransport] and advertise `/quic` and
-/// `/quic-v1` multiaddresses. When the library is unavailable, the router
-/// falls back to TCP-only mode with a logged warning, exactly as documented
-/// in QUIC_SPEC.
+/// This package provides a libp2p-compatible [Transport] implementation that
+/// can be registered with [Libp2pRouter] when `enableQuic` is true. It avoids
+/// native FFI dependencies by using the pure-Dart QUIC stack in [quic_lib].
+///
+/// Exported symbols:
+/// - [QuicTransport] — implements `package:ipfs_libp2p`'s [Transport] interface.
+/// - [QuicConnection] — wraps a [quic_lib] libp2p QUIC connection.
+/// - [QuicListener] — accepts incoming QUIC connections.
 library;
 
-export 'src/quiche/quiche_library.dart';
-export 'src/quiche/quiche_config.dart';
-export 'src/quiche/quiche_connection.dart';
+export 'src/quic_transport.dart' show QuicTransport, QuicConnection;
+export 'src/quic_listener.dart' show QuicListener;
+export 'src/quic_p2p_stream.dart' show QuicP2PStream;

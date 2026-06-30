@@ -1,41 +1,21 @@
 # dart_ipfs_quic
 
-Native QUIC transport foundation for `dart_ipfs`, built on the Cloudflare
-[quiche](https://github.com/cloudflare/quiche) C API via Dart FFI.
+Pure-Dart QUIC transport foundation for `dart_ipfs`, built on the
+[quic_lib](https://github.com/jxoesneon/quic_lib) package.
 
 ## Status
 
-This is a **foundation package**. It provides:
+This is a **foundation package**. It provides a `package:ipfs_libp2p`
+-compatible `Transport` implementation that can be registered with
+`Libp2pRouter` when `enableQuic` is true.
 
-- Hand-written FFI bindings to the quiche C API (`lib/src/generated/`).
-- A runtime library loader (`QuicheLibrary.probe()`).
-- Dart wrappers for quiche config and connection objects.
-- Unit tests verifying the native library can be loaded and configured.
+- No native DLLs or `dart:ffi` dependencies.
+- Backed by the pure-Dart QUIC stack in `quic_lib`.
+- Advertises `/udp/.../quic-v1` listen addresses.
+- Dial and listen APIs are wired to `quic_lib`'s `Libp2pQuicTransport`.
 
-A full libp2p QUIC transport (UDP I/O loop, `package:ipfs_libp2p` `Transport`
-wrapper, libp2p TLS 1.3 certificate handshake) is planned per
-[`doc/specs/QUIC_TRANSPORT_RFC.md`](../../doc/specs/QUIC_TRANSPORT_RFC.md).
-
-## Building the Native Library
-
-### Windows
-
-```powershell
-$env:PATH = "C:\path\to\nasm;$env:PATH"
-git clone --branch 0.23.0 --recursive https://github.com/cloudflare/quiche.git
-cd quiche
-cargo build --package quiche --release --features ffi
-copy target\release\quiche.dll ..\packages\dart_ipfs_quic\native\quiche.dll
-```
-
-### Linux / macOS
-
-```bash
-git clone --branch 0.23.0 --recursive https://github.com/cloudflare/quiche.git
-cd quiche
-cargo build --package quiche --release --features ffi
-cp target/release/libquiche.* ../packages/dart_ipfs_quic/native/
-```
+A full Kubo/Helia-interoperable QUIC transport (complete libp2p TLS 1.3
+handshake, stream multiplexing, and interop tests) is still being hardened.
 
 ## Usage
 
@@ -43,22 +23,16 @@ cp target/release/libquiche.* ../packages/dart_ipfs_quic/native/
 import 'package:dart_ipfs_quic/dart_ipfs_quic.dart';
 
 void main() {
-  final lib = QuicheLibrary.probe();
-  if (!lib.isAvailable) {
-    print('quiche library not available: ${lib.error}');
-    return;
-  }
-  print('quiche ${lib.version} loaded');
-
-  final config = QuicheConfig()..applyDefaults();
-  try {
-    // Use config to create connections...
-  } finally {
-    config.dispose();
-  }
+  final transport = QuicTransport();
+  print('QUIC transport available: ${transport.protocols}');
+  transport.dispose();
 }
 ```
 
+## Building
+
+No native library build is required. `quic_lib` is pure Dart.
+
 ## License
 
-MIT — see the root `LICENSE` file. The quiche native library is BSD-2-Clause.
+MIT — see the root `LICENSE` file.
