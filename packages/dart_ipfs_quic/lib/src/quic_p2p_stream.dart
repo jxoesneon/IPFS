@@ -40,13 +40,12 @@ class QuicP2PStream implements libp2p.P2PStream<Uint8List> {
     _startReading();
   }
 
-  quic_lib.QuicConnection get _quicConn {
-    final conn = _parentConnection.quicConnection;
-    if (conn is quic_lib.QuicConnection) return conn;
-    throw StateError('Underlying QUIC connection is not a QuicConnection');
-  }
+  dynamic get _quicConn => _parentConnection.quicConnection;
 
-  dynamic get _streamManager => _quicConn.streamManager;
+  dynamic get _streamManager {
+    final conn = _quicConn;
+    return conn?.streamManager;
+  }
 
   quic_lib.QuicStream? get _quicStream {
     final manager = _streamManager;
@@ -88,10 +87,8 @@ class QuicP2PStream implements libp2p.P2PStream<Uint8List> {
       (data) {
         if (_incomingController.isClosed) return;
         _incomingController.add(Uint8List.fromList(data));
-        if (_readBuffer.isNotEmpty || _readCompleter.isNotEmpty) {
-          _readBuffer.add(Uint8List.fromList(data));
-          _drainReadBuffer();
-        }
+        _readBuffer.add(Uint8List.fromList(data));
+        _drainReadBuffer();
       },
       onError: (Object error) {
         if (!_incomingController.isClosed) {

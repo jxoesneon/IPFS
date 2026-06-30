@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:dart_ipfs_quic/dart_ipfs_quic.dart';
 import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
 import 'package:ipfs_libp2p/p2p/transport/transport.dart';
 import 'package:quic_lib/quic_lib.dart' as quic_lib;
 import 'package:test/test.dart';
@@ -102,6 +105,10 @@ void main() {
         () => transport.dial(MultiAddr('/ip4/127.0.0.1/udp/12345/quic-v1')),
         throwsStateError,
       );
+      expect(
+        () => transport.listen(MultiAddr('/ip4/127.0.0.1/udp/0/quic-v1')),
+        throwsStateError,
+      );
     });
   });
 
@@ -188,6 +195,165 @@ void main() {
       addTearDown(() => conn.close());
 
       expect(await conn.verifyPeerFromHandshake(), isFalse);
+    });
+
+    test('remotePeer throws when peerId is not set', () {
+      final quicConn = _createQuicConnection();
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.handshaking);
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.established);
+      final libp2pConn = quic_lib.Libp2pQuicConnection(quicConn);
+      final conn = QuicConnection(
+        libp2pConn,
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      expect(() => conn.remotePeer, throwsStateError);
+    });
+
+    test('verifyPeer returns true when peerId is set', () async {
+      final keyPair = await _generateEd25519KeyPair();
+      final generator = quic_lib.Libp2pCertificateGenerator(
+        quic_lib.DefaultCryptoBackend(),
+      );
+      final chain = await generator.generate(
+        hostIdentityPrivateKey: keyPair.privateKey,
+        hostPublicKeyBytes: keyPair.publicKeyBytes,
+      );
+      final certBytes = chain.certs.first.rawBytes;
+
+      final quicConn = _createQuicConnection();
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.handshaking);
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.established);
+      quicConn.negotiatedAlpn = 'libp2p';
+      final libp2pConn = quic_lib.Libp2pQuicConnection(quicConn);
+      await libp2pConn.verifyPeerCertificate(
+        certBytes,
+        backend: quic_lib.DefaultCryptoBackend(),
+      );
+      final conn = QuicConnection(
+        libp2pConn,
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      expect(conn.verifyPeer(), isTrue);
+    });
+
+    test('close is idempotent', () async {
+      final quicConn = _createQuicConnection();
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.handshaking);
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.established);
+      final conn = QuicConnection(
+        quic_lib.Libp2pQuicConnection(quicConn),
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      await conn.close();
+      await conn.close();
+      expect(conn.isClosed, isTrue);
+    });
+
+    test('raw read and write throw UnsupportedError', () async {
+      final quicConn = _createQuicConnection();
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.handshaking);
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.established);
+      final conn = QuicConnection(
+        quic_lib.Libp2pQuicConnection(quicConn),
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      expect(() => conn.read(), throwsUnsupportedError);
+      expect(() => conn.write(Uint8List(0)), throwsUnsupportedError);
+      expect(() => conn.socket, throwsUnsupportedError);
+    });
+
+    test('newStream throws when underlying connection is not a QuicConnection',
+        () async {
+      final conn = QuicConnection(
+        quic_lib.Libp2pQuicConnection('fake'),
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+      await expectLater(
+        () => conn.newStream(Context()),
+        throwsStateError,
+      );
+    });
+
+    test(
+        'streams returns empty when underlying connection is not a QuicConnection',
+        () async {
+      final conn = QuicConnection(
+        quic_lib.Libp2pQuicConnection('fake'),
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+      expect(await conn.streams, isEmpty);
+    });
+
+    test('exposes connection metadata', () async {
+      final quicConn = _createQuicConnection();
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.handshaking);
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.established);
+      final conn = QuicConnection(
+        quic_lib.Libp2pQuicConnection(quicConn),
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      expect(conn.id, isNotEmpty);
+      expect(conn.localPeer, isNotNull);
+      expect(await conn.remotePublicKey, isNull);
+      expect(conn.localMultiaddr.toString(), contains('/quic-v1'));
+      expect(conn.remoteMultiaddr.toString(), contains('/quic-v1'));
+      expect(conn.state.transport, 'quic-v1');
+      expect(conn.state.security, '/tls/1.3');
+      expect(conn.stat.numStreams, 0);
+      expect(conn.scope, isA<NullScope>());
+      conn.setReadTimeout(Duration(seconds: 1));
+      conn.setWriteTimeout(Duration(seconds: 1));
+      conn.notifyActivity();
+    });
+
+    test('streams returns inbound P2PStreams for receive streams', () async {
+      final quicConn = _createQuicConnection();
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.handshaking);
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.established);
+      // Register a receive stream in the manager.
+      quicConn.streamManager.onStreamFrame(
+        quic_lib.StreamFrame(
+          streamId: 0,
+          offset: 0,
+          data: Uint8List.fromList([1, 2, 3]),
+          fin: false,
+        ),
+      );
+      final conn = QuicConnection(
+        quic_lib.Libp2pQuicConnection(quicConn),
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      final streams = await conn.streams;
+      expect(streams, hasLength(1));
+      expect(streams.first, isA<QuicP2PStream>());
     });
   });
 
