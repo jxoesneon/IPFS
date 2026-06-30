@@ -148,13 +148,17 @@ as a normal `pub` dependency.
 
 ### Dependency
 
-`packages/dart_ipfs_quic/pubspec.yaml` references `quic_lib` as a hosted
-pub.dev dependency:
+`packages/dart_ipfs_quic/pubspec.yaml` references `quic_lib` as a path
+dependency to the local checkout during development:
 
 ```yaml
 dependencies:
-  quic_lib: ^1.10.0
+  quic_lib:
+    path: ../../../dart_quic
 ```
+
+Production releases use the hosted pub.dev package (`quic_lib: ^1.10.0` or
+newer).
 
 ### CI
 

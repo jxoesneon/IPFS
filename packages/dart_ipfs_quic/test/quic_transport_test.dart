@@ -171,6 +171,24 @@ void main() {
       expect(await conn.verifyPeerCertificate(certBytes), isTrue);
       expect(conn.remotePeer, isNotNull);
     });
+
+    test(
+        'verifyPeerFromHandshake returns false when no handshake cert captured',
+        () async {
+      final quicConn = _createQuicConnection();
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.handshaking);
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.established);
+      final libp2pConn = quic_lib.Libp2pQuicConnection(quicConn);
+      final conn = QuicConnection(
+        libp2pConn,
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      expect(await conn.verifyPeerFromHandshake(), isFalse);
+    });
   });
 
   group('QuicP2PStream', () {

@@ -11,7 +11,8 @@ environment:
 
 dependencies:
   ipfs_libp2p: ^0.5.6
-  quic_lib: ^1.10.0
+  quic_lib:
+    path: ../../../dart_quic
 
   dart_ipfs_core:
     path:

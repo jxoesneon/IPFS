@@ -17,6 +17,10 @@ This is a **foundation package**. It provides a `package:ipfs_libp2p`
 A full Kubo/Helia-interoperable QUIC transport (complete libp2p TLS 1.3
 handshake, stream multiplexing, and interop tests) is still being hardened.
 
+For development, this package depends on the local `quic_lib` checkout one
+level above the repository root. The production dependency is `quic_lib` from
+pub.dev.
+
 ## Usage
 
 ```dart

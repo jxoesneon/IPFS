@@ -6,9 +6,10 @@
 - Added `QuicTransport` implementing `package:ipfs_libp2p`'s `Transport` interface.
 - Added `QuicConnection`, `QuicListener`, and `QuicP2PStream` adapters around `quic_lib`.
 - `QuicConnection.newStream` opens real QUIC bidirectional streams.
-- Added `verifyPeer()` and `verifyPeerCertificate()` for libp2p TLS extension verification.
+- Added `verifyPeer()`, `verifyPeerCertificate()`, and `verifyPeerFromHandshake()` for libp2p TLS extension verification.
 - Removed native `quiche.dll`/`quiche.h` and `ffigen` configuration.
 - Updated tests to verify transport interface compliance without native deps.
+- Development dependency now points to the local `quic_lib` checkout; production releases use the hosted pub.dev package.
 
 ## 0.1.0
 

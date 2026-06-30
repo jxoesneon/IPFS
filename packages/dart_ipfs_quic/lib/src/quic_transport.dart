@@ -214,6 +214,19 @@ class QuicConnection implements libp2p.TransportConn {
     );
   }
 
+  /// Verifies the peer using the certificate captured during the QUIC
+  /// handshake.
+  ///
+  /// Returns true if the handshake captured a peer certificate and it
+  /// validates successfully. The remote [PeerId] is then available through
+  /// [remotePeer].
+  Future<bool> verifyPeerFromHandshake() async {
+    final backend = quic_lib.DefaultCryptoBackend();
+    return _delegate.verifyPeerCertificateFromHandshake(
+      backend: backend,
+    );
+  }
+
   @override
   libp2p.MultiAddr get localMultiaddr => _localAddr;
 
