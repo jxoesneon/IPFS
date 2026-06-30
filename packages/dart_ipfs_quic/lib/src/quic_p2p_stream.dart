@@ -214,9 +214,6 @@ class QuicP2PStream implements libp2p.P2PStream<Uint8List> {
     while (!_isClosed && !_readClosed) {
       final stream = _quicStream;
       if (stream is quic_lib.QuicReceiveStream) {
-        if (_receiveSubscription == null) {
-          _attachToReceiveStream(stream);
-        }
         break;
       }
       await Future.delayed(const Duration(milliseconds: 5));

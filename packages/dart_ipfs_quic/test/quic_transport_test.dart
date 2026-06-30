@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:dart_ipfs_quic/dart_ipfs_quic.dart';
+import 'package:dart_ipfs_quic/src/quic_p2p_stream.dart';
 import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:ipfs_libp2p/core/network/context.dart';
 import 'package:ipfs_libp2p/core/network/rcmgr.dart';
@@ -355,6 +356,91 @@ void main() {
       expect(streams, hasLength(1));
       expect(streams.first, isA<QuicP2PStream>());
     });
+
+    test('quicConnection exposes underlying delegate', () async {
+      final quicConn = _createQuicConnection();
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.handshaking);
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.established);
+      final libp2pConn = quic_lib.Libp2pQuicConnection(quicConn);
+      final conn = QuicConnection(
+        libp2pConn,
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      expect(conn.quicConnection, equals(quicConn));
+    });
+
+    test('isEstablished delegates to QuicConnectionAdapter', () async {
+      final fakeAdapter = _FakeQuicConnectionAdapter(
+        streams: {},
+        isEstablished: false,
+      );
+      final conn = QuicConnection(
+        quic_lib.Libp2pQuicConnection(fakeAdapter),
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      expect(conn.isEstablished, isFalse);
+      fakeAdapter.isEstablished = true;
+      expect(conn.isEstablished, isTrue);
+    });
+
+    test('openBidirectionalStream delegates to QuicConnectionAdapter',
+        () async {
+      final fakeAdapter = _FakeQuicConnectionAdapter(
+        streams: {},
+        nextStreamId: 42,
+      );
+      final conn = QuicConnection(
+        quic_lib.Libp2pQuicConnection(fakeAdapter),
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      expect(conn.openBidirectionalStream(), equals(42));
+      expect(fakeAdapter.openBidirectionalStreamCalls, equals(1));
+    });
+
+    test('openBidirectionalStream throws when not a QuicConnectionAdapter',
+        () async {
+      final conn = QuicConnection(
+        quic_lib.Libp2pQuicConnection('not-a-connection'),
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      expect(
+        () => conn.openBidirectionalStream(),
+        throwsStateError,
+      );
+    });
+
+    test('newStream waits for adapter handshake before opening stream',
+        () async {
+      final fakeAdapter = _TransitioningQuicConnectionAdapter(streamId: 7);
+      final conn = QuicConnection(
+        quic_lib.Libp2pQuicConnection(fakeAdapter),
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      final stream = await conn.newStream(Context());
+      expect(stream, isA<QuicP2PStream>());
+      expect(stream.stat().extra, containsPair('quicStreamId', 7));
+      expect(fakeAdapter.isEstablished, isTrue);
+    });
   });
 
   group('QuicP2PStream', () {
@@ -378,4 +464,54 @@ void main() {
       expect(stream.protocol(), '/test/1.0.0');
     });
   });
+}
+
+class _FakeQuicConnectionAdapter implements QuicConnectionAdapter {
+  final Map<int, quic_lib.QuicStream> _streams;
+  @override
+  bool isEstablished;
+  int nextStreamId;
+  int openBidirectionalStreamCalls = 0;
+
+  _FakeQuicConnectionAdapter({
+    required Map<int, quic_lib.QuicStream> streams,
+    this.isEstablished = true,
+    this.nextStreamId = 0,
+  }) : _streams = streams;
+
+  @override
+  quic_lib.QuicStream? getQuicStream(int id) => _streams[id];
+
+  @override
+  int openBidirectionalStream() {
+    openBidirectionalStreamCalls++;
+    return nextStreamId;
+  }
+
+  @override
+  Future<void> close() async {}
+}
+
+class _TransitioningQuicConnectionAdapter implements QuicConnectionAdapter {
+  final int streamId;
+  bool _isEstablished = false;
+
+  _TransitioningQuicConnectionAdapter({required this.streamId}) {
+    // Transition to established after the first isEstablished check.
+    Future.delayed(const Duration(milliseconds: 25), () {
+      _isEstablished = true;
+    });
+  }
+
+  @override
+  bool get isEstablished => _isEstablished;
+
+  @override
+  quic_lib.QuicStream? getQuicStream(int id) => null;
+
+  @override
+  int openBidirectionalStream() => streamId;
+
+  @override
+  Future<void> close() async {}
 }

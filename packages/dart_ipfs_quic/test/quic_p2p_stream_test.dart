@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:ipfs_libp2p/core/multiaddr.dart';
 import 'package:ipfs_libp2p/core/network/common.dart';
 import 'package:ipfs_libp2p/core/network/context.dart';
+import 'package:ipfs_libp2p/core/network/rcmgr.dart';
 import 'package:quic_lib/quic_lib.dart' as quic_lib;
 import 'package:test/test.dart';
 
@@ -333,6 +334,122 @@ void main() {
       await Future.delayed(Duration.zero);
       expect(errors, hasLength(1));
     });
+
+    test('scope returns NullScope', () async {
+      final fakeConn = _FakeQuicConnectionAdapter(streams: {});
+      final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
+      addTearDown(() => conn.close());
+
+      final stream = QuicP2PStream(conn, 0, Direction.inbound, '');
+      expect(stream.scope(), isA<NullScope>());
+    });
+
+    test('read attaches via fallback when receive stream appears later',
+        () async {
+      final receiveStream = quic_lib.QuicReceiveStream(
+        0,
+        stateMachine: quic_lib.ReceiveStateMachine(),
+      );
+      final fakeConn = _TransitioningQuicConnectionAdapter(
+        initialStreams: {},
+        finalStreams: {0: receiveStream},
+      );
+      final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
+      addTearDown(() => conn.close());
+
+      final stream = QuicP2PStream(conn, 0, Direction.inbound, '');
+      final readFuture = stream.read();
+      // Allow the read() wait loop to spin once before the stream appears.
+      await Future.delayed(const Duration(milliseconds: 8));
+      receiveStream.deliver(Uint8List.fromList([7, 8, 9]));
+      final data = await readFuture;
+      expect(data, equals(Uint8List.fromList([7, 8, 9])));
+    });
+
+    test('read throws when stream is closed while waiting for receive stream',
+        () async {
+      final fakeConn = _FakeQuicConnectionAdapter(streams: {});
+      final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
+      addTearDown(() => conn.close());
+
+      final stream = QuicP2PStream(conn, 0, Direction.inbound, '');
+      final readFuture = stream.read();
+      await Future.delayed(const Duration(milliseconds: 8));
+      await stream.close();
+      await expectLater(
+        () => readFuture,
+        throwsStateError,
+      );
+    });
+
+    test('read with maxLength keeps whole remaining chunks', () async {
+      final receiveStream = quic_lib.QuicReceiveStream(
+        0,
+        stateMachine: quic_lib.ReceiveStateMachine(),
+      );
+      final fakeConn = _FakeQuicConnectionAdapter(
+        streams: {0: receiveStream},
+      );
+      final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
+      addTearDown(() => conn.close());
+
+      final stream = QuicP2PStream(conn, 0, Direction.inbound, '');
+      receiveStream.deliver(Uint8List.fromList([1, 2]));
+      receiveStream.deliver(Uint8List.fromList([3, 4, 5]));
+      await Future.delayed(const Duration(milliseconds: 20));
+      final data = await stream.read(2);
+      expect(data, equals(Uint8List.fromList([1, 2])));
+      final rest = await stream.read();
+      expect(rest, equals(Uint8List.fromList([3, 4, 5])));
+    });
+
+    test('incoming getter returns the stream itself', () async {
+      final fakeConn = _FakeQuicConnectionAdapter(streams: {});
+      final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
+      addTearDown(() => conn.close());
+
+      final stream = QuicP2PStream(conn, 0, Direction.inbound, '');
+      expect(stream.incoming, same(stream));
+    });
+
+    test('drain recursively serves multiple pending read requests', () async {
+      final receiveStream = quic_lib.QuicReceiveStream(
+        0,
+        stateMachine: quic_lib.ReceiveStateMachine(),
+      );
+      final fakeConn = _FakeQuicConnectionAdapter(
+        streams: {0: receiveStream},
+      );
+      final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
+      addTearDown(() => conn.close());
+
+      final stream = QuicP2PStream(conn, 0, Direction.inbound, '');
+      final first = stream.read(2);
+      final second = stream.read(2);
+      receiveStream.deliver(Uint8List.fromList([1, 2, 3, 4]));
+      expect(await first, equals(Uint8List.fromList([1, 2])));
+      expect(await second, equals(Uint8List.fromList([3, 4])));
+    });
+
+    test('read with maxLength zero leaves all chunks in buffer', () async {
+      final receiveStream = quic_lib.QuicReceiveStream(
+        0,
+        stateMachine: quic_lib.ReceiveStateMachine(),
+      );
+      final fakeConn = _FakeQuicConnectionAdapter(
+        streams: {0: receiveStream},
+      );
+      final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
+      addTearDown(() => conn.close());
+
+      final stream = QuicP2PStream(conn, 0, Direction.inbound, '');
+      final emptyFuture = stream.read(0);
+      receiveStream.deliver(Uint8List.fromList([1, 2, 3]));
+      final empty = await emptyFuture;
+      expect(empty, equals(Uint8List(0)));
+      final data = await stream.read();
+      expect(data, equals(Uint8List.fromList([1, 2, 3])));
+    });
   });
 }
 
@@ -359,6 +476,31 @@ class _FakeQuicConnectionAdapter implements QuicConnectionAdapter {
   _FakeQuicConnectionAdapter({
     required Map<int, quic_lib.QuicStream> streams,
   }) : _streams = streams;
+
+  @override
+  quic_lib.QuicStream? getQuicStream(int id) => _streams[id];
+
+  @override
+  bool get isEstablished => true;
+
+  @override
+  int openBidirectionalStream() => 0;
+
+  @override
+  Future<void> close() async {}
+}
+
+class _TransitioningQuicConnectionAdapter implements QuicConnectionAdapter {
+  final Map<int, quic_lib.QuicStream> _streams;
+
+  _TransitioningQuicConnectionAdapter({
+    required Map<int, quic_lib.QuicStream> initialStreams,
+    required Map<int, quic_lib.QuicStream> finalStreams,
+  }) : _streams = Map<int, quic_lib.QuicStream>.from(initialStreams) {
+    Future.delayed(const Duration(milliseconds: 5), () {
+      _streams.addAll(finalStreams);
+    });
+  }
 
   @override
   quic_lib.QuicStream? getQuicStream(int id) => _streams[id];

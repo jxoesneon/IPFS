@@ -76,10 +76,20 @@ The work satisfies the Iron Law of verification (80%+ coverage, all tests passin
 4. **Document the security invariant** that peer certificate bytes are captured but not validated until `verifyPeerCertificate()` / `verifyPeerFromHandshake()` is called.
 5. **Keep coverage above 80%** on `quic_transport.dart`, `quic_p2p_stream.dart`, and `quic_listener.dart` in all future PRs.
 
-### Recommended (non-blocking)
+### Recommended (non-blocking) — COMPLETED
 
-- Add a negative test for a malformed `Certificate` message in `quic_lib`.
-- Add a test verifying that `QuicP2PStream.read(maxLength)` returns exactly `maxLength` bytes from a fresh delivery.
+- [x] Add a negative test for a malformed `Certificate` message in `quic_lib` — added in `quic_lib` commit `ae9cfe2`.
+- [x] Add a test verifying that `QuicP2PStream.read(maxLength)` returns exactly `maxLength` bytes from a fresh delivery — added in `IPFS` commit `cadee1f`.
+
+## Final coverage
+
+| File | Coverage |
+| --- | --- |
+| `quic_lib/lib/src/crypto/tls/crypto_frame_handler.dart` | **100%** |
+| `quic_lib/lib/src/libp2p/libp2p_quic_transport.dart` | **100%** |
+| `dart_ipfs_quic/lib/src/quic_transport.dart` | **100%** |
+| `dart_ipfs_quic/lib/src/quic_p2p_stream.dart` | **100%** |
+| `dart_ipfs_quic/lib/src/quic_listener.dart` | **100%** |
 
 ## Scores
 
