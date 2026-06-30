@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the deriveKey method from the CryptoUtils class, for the Dart programming language.">
+  <title>deriveKey method - CryptoUtils class - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li><a href="../../dart_ipfs/CryptoUtils-class.html">CryptoUtils</a></li>
+    <li class="self-crumb">deriveKey static method</li>
+  </ol>
+  <div class="self-name">deriveKey</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="dart_ipfs&#47;CryptoUtils-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">deriveKey</span> static method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="https://api.dart.dev/stable/3.12.2/dart-typed_data/Uint8List-class.html">Uint8List</a></span>
+<span class="name ">deriveKey</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="deriveKey-param-password"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">password</span>, </span></li>
+<li><span class="parameter" id="deriveKey-param-salt"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-typed_data/Uint8List-class.html">Uint8List</a></span> <span class="parameter-name">salt</span>, {</span></li>
+<li><span class="parameter" id="deriveKey-param-iterations"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/int-class.html">int</a></span> <span class="parameter-name">iterations</span> = <span class="default-value">defaultIterations</span>, </span></li>
+<li><span class="parameter" id="deriveKey-param-keyLength"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/int-class.html">int</a></span> <span class="parameter-name">keyLength</span> = <span class="default-value">keySize</span>, </span></li>
+</ol>})
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Derives a key from a password using PBKDF2-HMAC-SHA256.</p>
+<p><code>password</code> - The password to derive from (must not be empty)
+<code>salt</code> - Random salt (must be at least 8 bytes, use <a href="../../dart_ipfs/CryptoUtils/generateSalt.html">generateSalt</a>)
+<code>iterations</code> - PBKDF2 iterations (default <a href="../../dart_ipfs/CryptoUtils/defaultIterations-constant.html">defaultIterations</a>)
+<code>keyLength</code> - Output key length in bytes (default <a href="../../dart_ipfs/CryptoUtils/keySize-constant.html">keySize</a>)</p>
+<p>Returns the derived key as a <a href="https://api.dart.dev/stable/3.12.2/dart-typed_data/Uint8List-class.html">Uint8List</a>.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">static Uint8List deriveKey(
+  String password,
+  Uint8List salt, {
+  int iterations = defaultIterations,
+  int keyLength = keySize,
+}) {
+  if (password.isEmpty) {
+    throw ArgumentError(&#39;Password cannot be empty&#39;);
+  }
+  if (salt.length &lt; 8) {
+    throw ArgumentError(&#39;Salt must be at least 8 bytes&#39;);
+  }
+
+  final pbkdf2 = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64));
+  pbkdf2.init(Pbkdf2Parameters(salt, iterations, keyLength));
+
+  final passwordBytes = Uint8List.fromList(utf8.encode(password));
+  final key = Uint8List(keyLength);
+  pbkdf2.deriveKey(passwordBytes, 0, key, 0);
+
+  &#47;&#47; Zero password bytes
+  zeroMemory(passwordBytes);
+
+  return key;
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/CryptoUtils-class.html">CryptoUtils</a></li>
+    <li class="self-crumb">deriveKey static method</li>
+</ol>
+
+    <h5>CryptoUtils class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.11.5
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the IPFSWebNode class from the dart_ipfs library, for the Dart programming language.">
+  <title>IPFSWebNode class - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li class="self-crumb">IPFSWebNode class</li>
+  </ol>
+  <div class="self-name">IPFSWebNode</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="dart_ipfs&#47;dart_ipfs-library-sidebar.html"
+    data-below-sidebar="dart_ipfs&#47;IPFSWebNode-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">IPFSWebNode</span> class 
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>A minimal IPFS node for web browsers.</p>
+<p>This provides offline IPFS functionality without P2P networking:</p>
+<ul>
+<li>Add content and get CID</li>
+<li>Retrieve content by CID</li>
+<li>Local storage via IndexedDB</li>
+</ul>
+<p>For full P2P functionality, run on native platforms (iOS, Android, desktop)
+or use a WebRTC/WebSocket relay supported by the router.</p>
+</section>
+
+
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+    <dl class="constructor-summary-list">
+        <dt id="IPFSWebNode.new" class="callable">
+          <span class="name"><a href="../dart_ipfs/IPFSWebNode/IPFSWebNode.html">IPFSWebNode</a></span><span class="signature">({<span class="parameter" id="param-config"><span class="type-annotation"><a href="../dart_ipfs/IPFSConfig-class.html">IPFSConfig</a>?</span> <span class="parameter-name">config</span>, </span><span class="parameter" id="param-bootstrapPeers"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span>&gt;</span></span> <span class="parameter-name">bootstrapPeers</span> = <span class="default-value">const []</span></span>})</span>
+        </dt>
+        <dd>
+          Creates a new web IPFS node.
+        </dd>
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
+        <dt id="bitswap" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/bitswap.html">bitswap</a></span>
+  <span class="signature">&#8594; BitswapHandler</span>
+  
+
+</dt>
+<dd>
+  Access to Bitswap handler.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="bootstrapPeers" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/bootstrapPeers.html">bootstrapPeers</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  List of bootstrap peers (WebSocket URLs) to connect to on startup.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="isRunning" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/isRunning.html">isRunning</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Whether the node is running.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="peerID" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/peerID.html">peerID</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span>
+  
+
+</dt>
+<dd>
+  The node's peer ID.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="pubsub" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/pubsub.html">pubsub</a></span>
+  <span class="signature">&#8594; PubSubClient</span>
+  
+
+</dt>
+<dd>
+  Access to PubSub client.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="securityManager" class="property">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/securityManager.html">securityManager</a></span>
+  <span class="signature">&#8594; SecurityManagerWeb</span>
+  
+
+</dt>
+<dd>
+  Access to security manager.
+  <div class="features"><span class="feature">no setter</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="add" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/add.html">add</a></span><span class="signature">(<wbr><span class="parameter" id="add-param-data"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-typed_data/Uint8List-class.html">Uint8List</a></span> <span class="parameter-name">data</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">CID</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds data and returns its CID.
+  
+
+</dd>
+
+        <dt id="addFile" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/addFile.html">addFile</a></span><span class="signature">(<wbr><span class="parameter" id="addFile-param-file"><span class="type-annotation">dynamic</span> <span class="parameter-name">file</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">CID</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds a file to IPFS using chunked streaming.
+  
+
+</dd>
+
+        <dt id="addStream" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/addStream.html">addStream</a></span><span class="signature">(<wbr><span class="parameter" id="addStream-param-stream"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-async/Stream-class.html">Stream</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-core/int-class.html">int</a></span>&gt;</span></span>&gt;</span></span> <span class="parameter-name">stream</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">CID</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Adds data from a stream and returns the root CID.
+  
+
+</dd>
+
+        <dt id="cat" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/cat.html">cat</a></span><span class="signature">(<wbr><span class="parameter" id="cat-param-cid"><span class="type-annotation">CID</span> <span class="parameter-name">cid</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-typed_data/Uint8List-class.html">Uint8List</a>?</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets data by CID object.
+  
+
+</dd>
+
+        <dt id="get" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/get.html">get</a></span><span class="signature">(<wbr><span class="parameter" id="get-param-cidString"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">cidString</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-typed_data/Uint8List-class.html">Uint8List</a>?</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets data by CID string.
+  
+
+</dd>
+
+        <dt id="listPins" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/listPins.html">listPins</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Lists all pinned CIDs.
+  
+
+</dd>
+
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="pin" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/pin.html">pin</a></span><span class="signature">(<wbr><span class="parameter" id="pin-param-cid"><span class="type-annotation">CID</span> <span class="parameter-name">cid</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Pins a CID (marks it as persistent).
+  
+
+</dd>
+
+        <dt id="publishIPNS" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/publishIPNS.html">publishIPNS</a></span><span class="signature">(<wbr><span class="parameter" id="publishIPNS-param-cid"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">cid</span>, {</span><span class="parameter" id="publishIPNS-param-keyName"><span>required</span> <span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">keyName</span></span>})
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Publishes an IPNS record.
+  
+
+</dd>
+
+        <dt id="resolveIPNS" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/resolveIPNS.html">resolveIPNS</a></span><span class="signature">(<wbr><span class="parameter" id="resolveIPNS-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a>?</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Resolves an IPNS name.
+  
+
+</dd>
+
+        <dt id="start" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/start.html">start</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Starts the web node.
+  
+
+</dd>
+
+        <dt id="stop" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/stop.html">stop</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Stops the web node.
+  
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Object/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A string representation of this object.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="unpin" class="callable">
+  <span class="name"><a href="../dart_ipfs/IPFSWebNode/unpin.html">unpin</a></span><span class="signature">(<wbr><span class="parameter" id="unpin-param-cid"><span class="type-annotation">CID</span> <span class="parameter-name">cid</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Unpins a CID.
+  
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+    
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs</a></li>
+    <li class="self-crumb">IPFSWebNode class</li>
+</ol>
+
+    <h5>dart_ipfs library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.11.5
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

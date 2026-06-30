@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the BitswapConfig class from the dart_ipfs library, for the Dart programming language.">
+  <title>BitswapConfig class - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li class="self-crumb">BitswapConfig class</li>
+  </ol>
+  <div class="self-name">BitswapConfig</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="dart_ipfs&#47;dart_ipfs-library-sidebar.html"
+    data-below-sidebar="dart_ipfs&#47;BitswapConfig-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">BitswapConfig</span> class 
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>Configuration for the Bitswap protocol, including the optional HTTP
+gateway fallback used when P2P block exchange fails.</p>
+</section>
+
+
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+    <dl class="constructor-summary-list">
+        <dt id="BitswapConfig.new" class="callable">
+          <span class="name"><a href="../dart_ipfs/BitswapConfig/BitswapConfig.html">BitswapConfig</a></span><span class="signature">({<span class="parameter" id="param-maxConcurrentRequests"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/int-class.html">int</a></span> <span class="parameter-name">maxConcurrentRequests</span> = <span class="default-value">10</span>, </span><span class="parameter" id="param-httpFallbackGateways"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span>&gt;</span></span> <span class="parameter-name">httpFallbackGateways</span> = <span class="default-value">const &lt;String&gt;[]</span>, </span><span class="parameter" id="param-p2pTimeout"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Duration-class.html">Duration</a></span> <span class="parameter-name">p2pTimeout</span> = <span class="default-value">const Duration(seconds: 30)</span>, </span><span class="parameter" id="param-httpTimeout"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Duration-class.html">Duration</a></span> <span class="parameter-name">httpTimeout</span> = <span class="default-value">const Duration(seconds: 10)</span>, </span><span class="parameter" id="param-enableHttpFallback"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">enableHttpFallback</span> = <span class="default-value">false</span>, </span><span class="parameter" id="param-maxHttpBlockSize"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/int-class.html">int</a></span> <span class="parameter-name">maxHttpBlockSize</span> = <span class="default-value">2 * 1024 * 1024</span>, </span><span class="parameter" id="param-allowPrivateGateways"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">allowPrivateGateways</span> = <span class="default-value">false</span>, </span><span class="parameter" id="param-verifyHttpBlocks"><span>@<a href="https://pub.dev/documentation/meta/1.18.3/meta/visibleForTesting-constant.html">visibleForTesting</a></span> <span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">verifyHttpBlocks</span> = <span class="default-value">true</span></span>})</span>
+        </dt>
+        <dd>
+          Creates a new <a href="../dart_ipfs/BitswapConfig-class.html">BitswapConfig</a>.
+            <div class="constructor-modifier features">const</div>
+        </dd>
+        <dt id="BitswapConfig.fromJson" class="callable">
+          <span class="name"><a href="../dart_ipfs/BitswapConfig/BitswapConfig.fromJson.html">BitswapConfig.fromJson</a></span><span class="signature">(<span class="parameter" id="fromJson-param-json"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span> <span class="parameter-name">json</span></span>)</span>
+        </dt>
+        <dd>
+          Creates a <a href="../dart_ipfs/BitswapConfig-class.html">BitswapConfig</a> from a JSON map.
+            <div class="constructor-modifier features">factory</div>
+        </dd>
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
+        <dt id="allowPrivateGateways" class="property">
+  <span class="name"><a href="../dart_ipfs/BitswapConfig/allowPrivateGateways.html">allowPrivateGateways</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Whether private/loopback gateway URLs (e.g. <code>127.0.0.1</code>) are allowed.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="enableHttpFallback" class="property">
+  <span class="name"><a href="../dart_ipfs/BitswapConfig/enableHttpFallback.html">enableHttpFallback</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Whether the HTTP gateway fallback is enabled.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="httpFallbackGateways" class="property">
+  <span class="name"><a href="../dart_ipfs/BitswapConfig/httpFallbackGateways.html">httpFallbackGateways</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Ordered list of HTTP gateway base URLs to use as a fallback.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="httpTimeout" class="property">
+  <span class="name"><a href="../dart_ipfs/BitswapConfig/httpTimeout.html">httpTimeout</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/Duration-class.html">Duration</a></span>
+  
+
+</dt>
+<dd>
+  Timeout applied to each HTTP fallback request.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="maxConcurrentRequests" class="property">
+  <span class="name"><a href="../dart_ipfs/BitswapConfig/maxConcurrentRequests.html">maxConcurrentRequests</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd>
+  Maximum number of concurrent P2P Bitswap requests.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="maxHttpBlockSize" class="property">
+  <span class="name"><a href="../dart_ipfs/BitswapConfig/maxHttpBlockSize.html">maxHttpBlockSize</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd>
+  Maximum allowed HTTP block response size in bytes.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="p2pTimeout" class="property">
+  <span class="name"><a href="../dart_ipfs/BitswapConfig/p2pTimeout.html">p2pTimeout</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/Duration-class.html">Duration</a></span>
+  
+
+</dt>
+<dd>
+  Timeout applied to each P2P Bitswap request attempt.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="verifyHttpBlocks" class="property">
+  <span class="name"><a href="../dart_ipfs/BitswapConfig/verifyHttpBlocks.html">verifyHttpBlocks</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd>
+  Whether to verify HTTP-fetched blocks against their CID.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="toJson" class="callable">
+  <span class="name"><a href="../dart_ipfs/BitswapConfig/toJson.html">toJson</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Converts this configuration to a JSON map.
+  
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Object/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A string representation of this object.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.12.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.12.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+    
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs</a></li>
+    <li class="self-crumb">BitswapConfig class</li>
+</ol>
+
+    <h5>dart_ipfs library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.11.5
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
