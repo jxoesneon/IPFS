@@ -158,8 +158,8 @@ void main() {
         0,
         stateMachine: quic_lib.ReceiveStateMachine(),
       );
-      final fakeConn = _FakeQuicConnectionForRead(
-        streamManager: _FakeStreamManager({0: receiveStream}),
+      final fakeConn = _FakeQuicConnectionAdapter(
+        streams: {0: receiveStream},
       );
       final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
       addTearDown(() => conn.close());
@@ -175,8 +175,8 @@ void main() {
         0,
         stateMachine: quic_lib.ReceiveStateMachine(),
       );
-      final fakeConn = _FakeQuicConnectionForRead(
-        streamManager: _FakeStreamManager({0: receiveStream}),
+      final fakeConn = _FakeQuicConnectionAdapter(
+        streams: {0: receiveStream},
       );
       final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
       addTearDown(() => conn.close());
@@ -193,8 +193,8 @@ void main() {
         0,
         stateMachine: quic_lib.ReceiveStateMachine(),
       );
-      final fakeConn = _FakeQuicConnectionForRead(
-        streamManager: _FakeStreamManager({0: receiveStream}),
+      final fakeConn = _FakeQuicConnectionAdapter(
+        streams: {0: receiveStream},
       );
       final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
       addTearDown(() => conn.close());
@@ -210,8 +210,8 @@ void main() {
         0,
         stateMachine: quic_lib.ReceiveStateMachine(),
       );
-      final fakeConn = _FakeQuicConnectionForRead(
-        streamManager: _FakeStreamManager({0: receiveStream}),
+      final fakeConn = _FakeQuicConnectionAdapter(
+        streams: {0: receiveStream},
       );
       final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
       addTearDown(() => conn.close());
@@ -228,8 +228,8 @@ void main() {
         0,
         stateMachine: quic_lib.SendStateMachine(),
       );
-      final fakeConn = _FakeQuicConnectionForRead(
-        streamManager: _FakeStreamManager({0: sendStream}),
+      final fakeConn = _FakeQuicConnectionAdapter(
+        streams: {0: sendStream},
       );
       final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
       addTearDown(() => conn.close());
@@ -240,8 +240,8 @@ void main() {
     });
 
     test('write throws when no send stream is available', () async {
-      final fakeConn = _FakeQuicConnectionForRead(
-        streamManager: _FakeStreamManager({}),
+      final fakeConn = _FakeQuicConnectionAdapter(
+        streams: {},
       );
       final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
       addTearDown(() => conn.close());
@@ -258,8 +258,8 @@ void main() {
         0,
         stateMachine: quic_lib.ReceiveStateMachine(),
       );
-      final fakeConn = _FakeQuicConnectionForRead(
-        streamManager: _FakeStreamManager({0: receiveStream}),
+      final fakeConn = _FakeQuicConnectionAdapter(
+        streams: {0: receiveStream},
       );
       final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
       addTearDown(() => conn.close());
@@ -273,13 +273,34 @@ void main() {
       expect(rest, equals(Uint8List.fromList([3, 4, 5])));
     });
 
+    test('read with maxLength from fresh delivery splits and keeps remainder',
+        () async {
+      final receiveStream = quic_lib.QuicReceiveStream(
+        0,
+        stateMachine: quic_lib.ReceiveStateMachine(),
+      );
+      final fakeConn = _FakeQuicConnectionAdapter(
+        streams: {0: receiveStream},
+      );
+      final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
+      addTearDown(() => conn.close());
+
+      final stream = QuicP2PStream(conn, 0, Direction.inbound, '');
+      final readFuture = stream.read(2);
+      receiveStream.deliver(Uint8List.fromList([1, 2, 3, 4, 5]));
+      final data = await readFuture;
+      expect(data, equals(Uint8List.fromList([1, 2])));
+      final rest = await stream.read();
+      expect(rest, equals(Uint8List.fromList([3, 4, 5])));
+    });
+
     test('reset calls reset on receive stream', () async {
       final receiveStream = quic_lib.QuicReceiveStream(
         0,
         stateMachine: quic_lib.ReceiveStateMachine(),
       );
-      final fakeConn = _FakeQuicConnectionForRead(
-        streamManager: _FakeStreamManager({0: receiveStream}),
+      final fakeConn = _FakeQuicConnectionAdapter(
+        streams: {0: receiveStream},
       );
       final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
       addTearDown(() => conn.close());
@@ -296,8 +317,8 @@ void main() {
         0,
         stateMachine: quic_lib.ReceiveStateMachine(),
       );
-      final fakeConn = _FakeQuicConnectionForRead(
-        streamManager: _FakeStreamManager({0: receiveStream}),
+      final fakeConn = _FakeQuicConnectionAdapter(
+        streams: {0: receiveStream},
       );
       final conn = _createConnection(quic_lib.Libp2pQuicConnection(fakeConn));
       addTearDown(() => conn.close());
@@ -332,20 +353,22 @@ class _FakeQuicReceiveStream extends quic_lib.QuicReceiveStream {
   void addError(Object error) => _dataController.addError(error);
 }
 
-class _FakeStreamManager {
+class _FakeQuicConnectionAdapter implements QuicConnectionAdapter {
   final Map<int, quic_lib.QuicStream> _streams;
 
-  _FakeStreamManager(this._streams);
+  _FakeQuicConnectionAdapter({
+    required Map<int, quic_lib.QuicStream> streams,
+  }) : _streams = streams;
 
-  quic_lib.QuicStream? getStream(int streamId) => _streams[streamId];
-}
+  @override
+  quic_lib.QuicStream? getQuicStream(int id) => _streams[id];
 
-class _FakeQuicConnectionForRead {
-  final _FakeStreamManager streamManager;
-  bool isEstablished = true;
+  @override
+  bool get isEstablished => true;
 
-  _FakeQuicConnectionForRead({required this.streamManager});
-
+  @override
   int openBidirectionalStream() => 0;
-  void close() {}
+
+  @override
+  Future<void> close() async {}
 }

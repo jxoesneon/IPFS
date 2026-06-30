@@ -174,6 +174,13 @@ Run `dart pub get` followed by `dart test` for both `quic_lib` and
 - The transport should only be enabled explicitly (`enableQuic: true`) and the
   router must fall back to TCP if the transport fails to load or the handshake
   cannot complete.
+- **Captured-but-unverified peer certificate invariant:** During the QUIC
+  handshake, the peer's certificate bytes are captured by the underlying
+  `quic_lib` stack but are not validated automatically. The application must
+  call `verifyPeerCertificate()` or `verifyPeerFromHandshake()` before trusting
+  `QuicConnection.remotePeer`. Until one of those methods completes successfully,
+  `remotePeer` throws because the peer identity has been received but not
+  cryptographically verified.
 
 ## Recommended Next Steps
 

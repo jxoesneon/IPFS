@@ -10,6 +10,32 @@ import 'package:uuid/uuid.dart';
 
 import 'quic_transport.dart';
 
+/// Adapter interface for the underlying QUIC connection used by [QuicP2PStream].
+///
+/// This abstraction removes the need for dynamic access to `streamManager` and
+/// other QUIC connection internals, and allows tests to inject a fake connection.
+abstract class QuicConnectionAdapter {
+  /// Returns the QUIC stream with the given [id], or `null` if it does not exist.
+  quic_lib.QuicStream? getQuicStream(int id);
+
+  /// Whether the QUIC handshake is complete.
+  bool get isEstablished;
+
+  /// Opens a new bidirectional stream and returns its stream ID.
+  int openBidirectionalStream();
+
+  /// Closes the underlying connection.
+  Future<void> close();
+}
+
+/// Internal read request that pairs a completer with the maximum number of
+/// bytes the caller asked for, so the pull path can split fresh deliveries.
+class _ReadRequest {
+  final Completer<Uint8List> completer;
+  final int? maxLength;
+  _ReadRequest(this.completer, this.maxLength);
+}
+
 /// A [P2PStream] implementation backed by a single QUIC bidirectional stream.
 ///
 /// The stream opens a bidirectional QUIC stream via the underlying
@@ -28,7 +54,7 @@ class QuicP2PStream implements libp2p.P2PStream<Uint8List> {
   final _incomingController = StreamController<Uint8List>.broadcast();
   StreamSubscription<Uint8List>? _receiveSubscription;
   final _readBuffer = <Uint8List>[];
-  final _readCompleter = <Completer<Uint8List>>[];
+  final _readRequests = <_ReadRequest>[];
   Completer<void>? _receiveDone;
 
   QuicP2PStream(
@@ -40,22 +66,8 @@ class QuicP2PStream implements libp2p.P2PStream<Uint8List> {
     _startReading();
   }
 
-  dynamic get _quicConn => _parentConnection.quicConnection;
-
-  dynamic get _streamManager {
-    final conn = _quicConn;
-    return conn?.streamManager;
-  }
-
-  quic_lib.QuicStream? get _quicStream {
-    final manager = _streamManager;
-    try {
-      final stream = manager.getStream(_streamId) as quic_lib.QuicStream?;
-      return stream;
-    } catch (_) {
-      return null;
-    }
-  }
+  quic_lib.QuicStream? get _quicStream =>
+      _parentConnection.getQuicStream(_streamId);
 
   void _startReading() {
     _pollForReceiveStream();
@@ -102,10 +114,14 @@ class QuicP2PStream implements libp2p.P2PStream<Uint8List> {
     );
   }
 
+  /// Drains the read buffer to satisfy waiting read requests.
+  ///
+  /// When a request specifies [maxLength] and the buffered data exceeds it,
+  /// only [maxLength] bytes are consumed and the remainder is left in the
+  /// buffer for the next read.
   void _drainReadBuffer() {
-    if (_readCompleter.isEmpty) return;
+    if (_readRequests.isEmpty) return;
 
-    // Combine all buffered chunks into a single buffer.
     var totalLength = 0;
     for (final chunk in _readBuffer) {
       totalLength += chunk.length;
@@ -113,25 +129,48 @@ class QuicP2PStream implements libp2p.P2PStream<Uint8List> {
     if (totalLength == 0) {
       // If the receive stream is done and nothing is buffered, complete with empty.
       if (_receiveDone?.isCompleted ?? false) {
-        final completers = List<Completer<Uint8List>>.from(_readCompleter);
-        _readCompleter.clear();
-        for (final c in completers) {
-          c.complete(Uint8List(0));
+        final requests = List<_ReadRequest>.from(_readRequests);
+        _readRequests.clear();
+        for (final request in requests) {
+          request.completer.complete(Uint8List(0));
         }
       }
       return;
     }
 
-    final combined = Uint8List(totalLength);
+    final request = _readRequests.first;
+    final maxLength = request.maxLength;
+    final takeLength =
+        maxLength == null || maxLength > totalLength ? totalLength : maxLength;
+
+    final result = Uint8List(takeLength);
     var offset = 0;
+    final remaining = <Uint8List>[];
     for (final chunk in _readBuffer) {
-      combined.setRange(offset, offset + chunk.length, chunk);
-      offset += chunk.length;
+      if (offset >= takeLength) {
+        remaining.add(chunk);
+        continue;
+      }
+      final need = takeLength - offset;
+      if (chunk.length <= need) {
+        result.setRange(offset, offset + chunk.length, chunk);
+        offset += chunk.length;
+      } else {
+        result.setRange(offset, takeLength, chunk);
+        remaining.add(Uint8List.sublistView(chunk, need));
+        offset = takeLength;
+      }
     }
     _readBuffer.clear();
+    _readBuffer.addAll(remaining);
 
-    final completer = _readCompleter.removeAt(0);
-    completer.complete(combined);
+    _readRequests.removeAt(0);
+    request.completer.complete(result);
+
+    // If there is still buffered data and more requests are waiting, drain again.
+    if (_readBuffer.isNotEmpty && _readRequests.isNotEmpty) {
+      _drainReadBuffer();
+    }
   }
 
   quic_lib.QuicSendStream? get _sendStream {
@@ -221,7 +260,7 @@ class QuicP2PStream implements libp2p.P2PStream<Uint8List> {
 
     // Wait for next chunk.
     final completer = Completer<Uint8List>();
-    _readCompleter.add(completer);
+    _readRequests.add(_ReadRequest(completer, maxLength));
 
     // Set up a one-time listener if not already attached.
     _receiveSubscription ??=

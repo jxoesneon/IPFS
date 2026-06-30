@@ -121,7 +121,7 @@ class QuicTransport implements libp2p.Transport {
 /// multiplexing are handled internally by [quic_lib]; this adapter exposes the
 /// connection lifecycle and metadata required by the libp2p transport
 /// interface.
-class QuicConnection implements libp2p.TransportConn {
+class QuicConnection implements libp2p.TransportConn, QuicConnectionAdapter {
   final quic_lib.Libp2pQuicConnection _delegate;
   final libp2p.MultiAddr _localAddr;
   final libp2p.MultiAddr _remoteAddr;
@@ -160,8 +160,50 @@ class QuicConnection implements libp2p.TransportConn {
   Object get quicConnection => _delegate.quicConnection;
 
   @override
+  quic_lib.QuicStream? getQuicStream(int id) {
+    final quicConn = _delegate.quicConnection;
+    if (quicConn is quic_lib.QuicConnection) {
+      return quicConn.streamManager.getStream(id);
+    }
+    if (quicConn is QuicConnectionAdapter) {
+      return quicConn.getQuicStream(id);
+    }
+    return null;
+  }
+
+  @override
+  bool get isEstablished {
+    final quicConn = _delegate.quicConnection;
+    if (quicConn is quic_lib.QuicConnection) {
+      return quicConn.isEstablished;
+    }
+    if (quicConn is QuicConnectionAdapter) {
+      return quicConn.isEstablished;
+    }
+    return false;
+  }
+
+  @override
+  int openBidirectionalStream() {
+    final quicConn = _delegate.quicConnection;
+    if (quicConn is quic_lib.QuicConnection) {
+      return quicConn.openBidirectionalStream();
+    }
+    if (quicConn is QuicConnectionAdapter) {
+      return quicConn.openBidirectionalStream();
+    }
+    throw StateError('Underlying QUIC connection is not a QuicConnection');
+  }
+
+  @override
   libp2p.PeerId get localPeer => _localPeer;
 
+  /// The remote peer identity for this QUIC connection.
+  ///
+  /// The peer's certificate bytes are captured during the handshake but are
+  /// not validated until [verifyPeerCertificate] or [verifyPeerFromHandshake]
+  /// is called. This getter throws [StateError] until verification has been
+  /// performed and the remote [PeerId] has been established.
   @override
   libp2p.PeerId get remotePeer {
     final quicPeerId = _delegate.peerId;
@@ -196,8 +238,10 @@ class QuicConnection implements libp2p.TransportConn {
   /// Verifies the peer's certificate using the libp2p TLS extension.
   ///
   /// [certBytes] is the raw DER-encoded X.509 certificate received from the
-  /// peer during the TLS handshake. When [expectedPeerId] is provided, the
-  /// derived peer identity must match it.
+  /// peer during the TLS handshake. The bytes are captured during the
+  /// handshake but are not validated until this method is called.
+  /// When [expectedPeerId] is provided, the derived peer identity must match
+  /// it.
   ///
   /// Returns true if the certificate contains the libp2p extension, the
   /// signature is valid, and the derived peer identity matches
@@ -217,9 +261,10 @@ class QuicConnection implements libp2p.TransportConn {
   /// Verifies the peer using the certificate captured during the QUIC
   /// handshake.
   ///
-  /// Returns true if the handshake captured a peer certificate and it
-  /// validates successfully. The remote [PeerId] is then available through
-  /// [remotePeer].
+  /// The peer's certificate bytes are captured during the handshake but are
+  /// not validated until this method is called. Returns true if the handshake
+  /// captured a peer certificate and it validates successfully. The remote
+  /// [PeerId] is then available through [remotePeer].
   Future<bool> verifyPeerFromHandshake() async {
     final backend = quic_lib.DefaultCryptoBackend();
     return _delegate.verifyPeerCertificateFromHandshake(
@@ -257,14 +302,15 @@ class QuicConnection implements libp2p.TransportConn {
   @override
   Future<libp2p.P2PStream> newStream(libp2p.Context context) async {
     final quicConn = _delegate.quicConnection;
-    if (quicConn is! quic_lib.QuicConnection) {
+    if (quicConn is! quic_lib.QuicConnection &&
+        quicConn is! QuicConnectionAdapter) {
       throw StateError('Underlying QUIC connection is not a QuicConnection');
     }
     // Wait for the handshake to complete before opening a stream.
-    while (!quicConn.isEstablished) {
+    while (!isEstablished) {
       await Future.delayed(const Duration(milliseconds: 10));
     }
-    final streamId = quicConn.openBidirectionalStream();
+    final streamId = openBidirectionalStream();
     return QuicP2PStream(
       this,
       streamId,
