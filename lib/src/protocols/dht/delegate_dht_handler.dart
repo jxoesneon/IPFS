@@ -45,7 +45,15 @@ class DelegateDHTHandler implements IDHTHandler {
         '$delegateUrl/api/v0/dht/findprovs',
       ).replace(queryParameters: {'arg': cid.encode()});
 
-      final response = await _client.post(uri);
+      final response = await _client
+          .post(uri)
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              _logger.warning('Delegate DHT request timeout');
+              throw TimeoutException('Delegate DHT request timed out');
+            },
+          );
 
       if (response.statusCode != 200) {
         _logger.warning(
@@ -84,7 +92,15 @@ class DelegateDHTHandler implements IDHTHandler {
       final uri = Uri.parse(
         '$delegateUrl/api/v0/dht/findpeer',
       ).replace(queryParameters: {'arg': id.toString()});
-      final response = await _client.post(uri);
+      final response = await _client
+          .post(uri)
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              _logger.warning('Delegate DHT request timeout');
+              throw TimeoutException('Delegate DHT request timed out');
+            },
+          );
 
       if (response.statusCode == 200) {
         return [];
@@ -102,24 +118,32 @@ class DelegateDHTHandler implements IDHTHandler {
         '$delegateUrl/api/v0/dht/get',
       ).replace(queryParameters: {'arg': key.toString()});
 
-      final response = await _client.post(uri);
+      final response = await _client
+          .post(uri)
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              _logger.warning('Delegate DHT request timeout');
+              throw TimeoutException('Delegate DHT request timed out');
+            },
+          );
 
       if (response.statusCode == 200) {
         final lines = const LineSplitter().convert(response.body);
         for (final line in lines) {
           if (line.isNotEmpty) {
             final json = jsonDecode(line);
-            if (json['Type'] == 5 && json['Extra'] != null) {
-              return Value.fromBytes(
-                Uint8List.fromList(utf8.encode(json['Extra'] as String)),
-              );
+            if (json is Map && json['Type'] == 5 && json['Extra'] is String) {
+              final extra = json['Extra'] as String;
+              return Value.fromBytes(Uint8List.fromList(utf8.encode(extra)));
             }
           }
         }
       }
       throw Exception('Not found');
-    } catch (e) {
-      throw Exception('Delegate getValue failed: $e');
+    } catch (e, st) {
+      _logger.error('Delegate getValue failed', e, st);
+      throw Exception('Delegate getValue failed');
     }
   }
 

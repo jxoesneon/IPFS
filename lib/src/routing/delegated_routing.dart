@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:http/http.dart' as http;
 
 /// Response from a routing request.
@@ -38,6 +39,7 @@ class DelegatedRoutingHandler {
   static const String _defaultDelegateEndpoint = 'https://delegated-ipfs.dev';
   final String _delegateEndpoint;
   final http.Client _httpClient;
+  final _logger = Logger('DelegatedRoutingHandler');
 
   /// Finds providers for a given CID using the delegated routing API
   Future<RoutingResponse> findProviders(CID cid) async {
@@ -58,21 +60,30 @@ class DelegatedRoutingHandler {
 
       if (response.statusCode == 200) {
         // Parse the response
-        final Map<String, dynamic> data =
-            json.decode(response.body) as Map<String, dynamic>;
+        final dynamic decoded;
+        try {
+          decoded = json.decode(response.body);
+        } on FormatException catch (e) {
+          return RoutingResponse.error('Invalid JSON response: $e');
+        }
 
-        if (data.containsKey('Providers')) {
-          final List<dynamic> providersList =
-              data['Providers'] as List<dynamic>;
+        if (decoded is! Map<String, dynamic>) {
+          return RoutingResponse.error('Invalid response format');
+        }
+
+        final providersList = decoded['Providers'];
+        if (providersList is List) {
           final providers = providersList
-              .map((provider) => provider['ID'] as String)
-              .where((id) => id.isNotEmpty)
+              .where((provider) => provider is Map<String, dynamic>)
+              .map((provider) => (provider as Map<String, dynamic>)['ID'])
+              .where((id) => id is String && id.isNotEmpty)
+              .cast<String>()
               .toList();
 
           return RoutingResponse.success(providers);
-        } else {
-          return RoutingResponse.success([]);
         }
+
+        return RoutingResponse.success([]);
       } else if (response.statusCode == 404) {
         // No providers found is a valid response
         return RoutingResponse.success([]);
@@ -81,8 +92,9 @@ class DelegatedRoutingHandler {
           'Failed to find providers: HTTP ${response.statusCode}',
         );
       }
-    } catch (e) {
-      return RoutingResponse.error('Error finding providers: $e');
+    } catch (e, st) {
+      _logger.error('Error finding providers', e, st);
+      return RoutingResponse.error('Error finding providers');
     }
   }
 

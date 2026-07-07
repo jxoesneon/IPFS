@@ -42,7 +42,7 @@ class GatewayHandler {
         return await _serveContent(cidStr, subPath, request);
       } catch (e, stackTrace) {
         _logger.error('Error serving content for $cidStr', e, stackTrace);
-        return Response.internalServerError(body: 'Error: $e');
+        return Response.internalServerError(body: 'Internal server error');
       }
     }
 
@@ -244,20 +244,25 @@ class GatewayHandler {
       return Response(416, body: 'Invalid range'); // Range Not Satisfiable
     }
 
-    final start = int.parse(rangeMatch.group(1)!);
+    final start = int.tryParse(rangeMatch.group(1) ?? '');
     final endStr = rangeMatch.group(2);
     final end = endStr != null && endStr.isNotEmpty
-        ? int.parse(endStr)
+        ? int.tryParse(endStr)
         : data.length - 1;
 
-    if (start >= data.length || end >= data.length || start > end) {
+    if (start == null || end == null || start < 0 || end < 0 || start > end) {
       return Response(416, body: 'Range not satisfiable');
     }
 
-    final rangeData = data.sublist(start, end + 1);
+    if (start >= data.length) {
+      return Response(416, body: 'Range not satisfiable');
+    }
+
+    final effectiveEnd = end < data.length ? end : data.length - 1;
+    final rangeData = data.sublist(start, effectiveEnd + 1);
     final headers = Map<String, String>.from(baseHeaders);
     headers['Content-Length'] = rangeData.length.toString();
-    headers['Content-Range'] = 'bytes $start-$end/${data.length}';
+    headers['Content-Range'] = 'bytes $start-$effectiveEnd/${data.length}';
 
     return Response(206, body: rangeData, headers: headers); // Partial Content
   }
@@ -276,7 +281,8 @@ class GatewayHandler {
       try {
         return await _serveContent(cidStr, path, request);
       } catch (e) {
-        return Response.internalServerError(body: 'Error: $e');
+        _logger.error('Error serving content for subdomain $cidStr', e);
+        return Response.internalServerError(body: 'Internal server error');
       }
     }
 

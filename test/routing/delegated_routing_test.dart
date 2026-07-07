@@ -74,7 +74,7 @@ void main() {
 
       final result = await handler.findProviders(cid);
       expect(result.isSuccess, isFalse);
-      expect(result.error, contains('Network error'));
+      expect(result.error, isNot(contains('Network error')));
     });
 
     test('dispose closes client', () {
