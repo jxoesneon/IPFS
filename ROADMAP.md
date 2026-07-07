@@ -1,13 +1,13 @@
 # dart_ipfs Roadmap
 
-**Current Version**: 1.11.4 (Multi-Platform Production Ready)  
-**Last Updated**: 2026-05-15
+**Current Version**: 1.11.5 (Multi-Platform Production Ready)  
+**Last Updated**: 2026-06-23
 
 ---
 
 ## 📍 Current Status
 
-dart_ipfs **v1.11.4** is **multi-platform production ready** with:
+dart_ipfs **v1.11.5** is **multi-platform production ready** with:
 
 - ✅ **IpfsPlatform**: Unified abstraction layer for IO and Web.
 - ✅ **WebRTC Multiplexing**: Native p2p connectivity for browsers with standard libp2p stream support.
@@ -55,7 +55,7 @@ dart_ipfs **v1.11.4** is **multi-platform production ready** with:
 
 #### Features
 
-- [ ] MFS (Mutable File System)
+- [x] MFS (Mutable File System)
 - [ ] Parallel block fetching
 - [ ] Smart caching with ML
 - [ ] Connection pooling
@@ -72,7 +72,7 @@ dart_ipfs **v1.11.4** is **multi-platform production ready** with:
 
 ---
 
-### v2.0 - Q4 2026 (Advanced Features)
+### v2.1 - Q1 2027 (Advanced Features)
 
 **Focus**: Ecosystem and extensibility
 
@@ -90,7 +90,7 @@ dart_ipfs **v1.11.4** is **multi-platform production ready** with:
 - Plugin-based architecture (optional)
 - Enhanced type safety
 
-**Estimated Release**: December 2026
+**Estimated Release**: March 2027
 
 ---
 
@@ -176,10 +176,10 @@ dart_ipfs **v1.11.4** is **multi-platform production ready** with:
 
 #### 3. Mutable File System (MFS)
 
-- **v1.3**: Full MFS implementation
+- **v1.11.5**: Full MFS implementation
 - **Why**: Familiar file system interface, better DX
 - **Effort**: 6-8 weeks
-- **Status**: Planned
+- **Status**: ✅ Completed
 
 #### 4. Plugin System
 
@@ -438,7 +438,7 @@ This roadmap is a living document. We welcome:
 
 ---
 
-**Last Updated**: 2026-05-15 (v1.11.4)
+**Last Updated**: 2026-06-23 (v1.11.5)
 **Status**: Active Development  
-**Current Version:** 1.11.4
+**Current Version:** 1.11.5
 **Target for Next Release:** 2.0.0 (Q4 2026)

@@ -108,6 +108,9 @@ lib_analysis_errors.txt
 lint_issues.txt
 pub_get_error.txt
 git_status_output.txt
+all_tests_*.txt
+analysis_errors.txt
+current_test_output.txt
 
 # Temporary backups
 temp_backup/
@@ -263,3 +266,7 @@ paket-files/
 # Test Artifacts
 ipfs_facade_*
 verify.log
+
+# Ciel local domain
+.ciel/
+.mempalace/

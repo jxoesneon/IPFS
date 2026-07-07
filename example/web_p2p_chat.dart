@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
+import 'package:dart_ipfs/dart_ipfs.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/config/network_config.dart';
 

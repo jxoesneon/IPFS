@@ -1,0 +1,224 @@
+# IPFS Server Specification
+
+# Core Data Structures
+# These represent the fundamental data units in IPFS
+
+Block:
+  data: Uint8List
+  cid: String # Multihash format (e.g., "Qm...")
+
+Node:
+  nodeType: NodeType # FILE or DIRECTORY
+  links: List[Link]
+  data: Uint8List? # For FILE nodes only
+
+Link:
+  name: String
+  cid: String
+  size: int
+
+# IPFS Node Class
+# This defines the main server class and its components
+
+IPFSNode:
+  # Core components
+  blockStore: Map<String, Block>
+  datastore: Datastore
+  keystore: Keystore
+  config: IPFSConfig
+
+  # Networking and communication
+  router: Router
+  peerID: String # PeerID in Multihash format
+
+  # Protocols and services
+  bitswap: Bitswap
+  dht: DHTClient
+  pubsub: PubSubClient
+  circuitRelay: CircuitRelayClient
+  contentRouting: ContentRouting
+  graphsync: Graphsync
+
+  # Utilities and resolvers
+  ipld: IPLDResolver
+  dnslinkResolver: DNSLinkResolver 
+
+  # Monitoring and management
+  metrics: MetricsCollector
+
+  # --- Internal State and Event Handling ---
+  # These are not directly exposed in the YAML, but are important for the implementation
+
+  # Set of pinned CIDs
+  pinnedCIDs: Set<String>
+
+  # Stream controllers for various events
+  # (These will be used to expose events to users of the package)
+  _newContentController: StreamController<String>
+  _contentUpdatedController: StreamController<ContentUpdate>
+  _peerJoinedController: StreamController<String>
+  _peerLeftController: StreamController<String>
+  _nodeEventsController: StreamController<NodeEvent>
+  _peerEventsController: StreamController<PeerEvent>
+  _networkEventsController: StreamController<NetworkEvent>
+  _bandwidthEventsController: StreamController<BandwidthEvent>
+  _pinningEventsController: StreamController<PinningEvent>
+  _blockEventsController: StreamController<BlockEvent>
+  _datastoreEventsController: StreamController<DatastoreEvent>
+  _applicationMessageController: StreamController<ApplicationMessage>
+
+
+# Sub-Components and Modules
+# These define the functionality of the individual components
+
+# Bitswap (Block Exchange Protocol)
+Bitswap:
+  wantlist: Set<String>
+  ledger: Map<PeerId, int>
+  # ... (other Bitswap state variables, e.g., block priorities)
+  # ... (methods for handling Bitswap messages, e.g., handleWantBlock, handleWantHave)
+
+# Datastore (Persistent Storage)
+Datastore:
+  # Functions for putting and getting blocks (by CID)
+  put(cid: String, block: Block): void
+  get(cid: String): Block?
+  # ... (other datastore operations, e.g., delete, has)
+  # ... (methods for managing pinned CIDs, e.g., persistPinnedCIDs, loadPinnedCIDs)
+
+# Keystore (IPNS Key Management)
+Keystore:
+  # Functions for managing IPNS key pairs
+  generateKeyPair(name: String): void
+  getKeyPair(name: String): KeyPair
+  # ... (other key management functions, e.g., listKeys, deleteKey)
+
+# IPFSConfig (Server Configuration)
+IPFSConfig:
+  # Addresses and ports to listen on
+  addresses: List<String> # e.g., ["/ip4/0.0.0.0/tcp/4001", "/ip6/::/tcp/4001"]
+  # Bootstrap peers (addresses of known IPFS nodes)
+  bootstrapPeers: List<String>
+  # Datastore location (path to the datastore directory)
+  datastorePath: String
+  # Security settings
+  security: 
+    tlsEnabled: boolean
+    # ... (other security-related settings)
+  # Connection manager settings
+  connectionManager:
+    maxConnections: int
+    # ... (other connection management settings)
+  # Garbage collection settings
+  garbageCollection:
+    enabled: boolean
+    interval: Duration
+    # ... (other garbage collection settings)
+  # Logging settings
+  logging:
+    level: string  # e.g., "debug", "info", "warning", "error"
+    # ... (other logging settings)
+  # Quota manager settings
+  quotaManager:
+    enabled: boolean
+    defaultDiskQuota: int  # in bytes
+    defaultBandwidthQuota: int # in bytes per second
+    # ... (other quota settings)
+  # ... (other configuration options, e.g., swarm settings)
+
+# DHTClient (Distributed Hash Table)
+DHTClient:
+  # ... (DHT-related functions, e.g., findProviders, provide)
+  # ... (method for handling DHT messages, e.g., handleDHTMessage)
+
+# PubSubClient (Publish-Subscribe)
+PubSubClient:
+  # ... (PubSub functions, e.g., subscribe, publish)
+  # ... (method for handling incoming messages, e.g., onMessage)
+
+# CircuitRelayClient (Circuit Relay)
+CircuitRelayClient:
+  # ... (Circuit relay functions, e.g., relayEnable, relayHop) 
+
+# ContentRouting (Content Routing)
+ContentRouting:
+  # ... (Functions for different routing strategies)
+
+# MetricsCollector (Metrics and Monitoring)
+MetricsCollector:
+  # ... (Functions for collecting and exposing metrics)
+
+# IPLDResolver (InterPlanetary Linked Data)
+IPLDResolver:
+  # ... (IPLD-related functions, e.g., resolve, get, put)
+
+# Graphsync (Graph Synchronization Protocol)
+Graphsync:
+  # ... (Graphsync functions, e.g., request, response)
+
+# DNSLinkResolver (DNSLink Name Resolution)
+DNSLinkResolver:
+  # ... (DNSLink resolution functions)
+
+# Server Functions
+# These define the main operations the server can perform
+
+# Content Management
+addDirectory(directoryContent: Map<String, dynamic>): String
+  # ... (implementation)
+
+ls(cid: String): List[Link]
+  # ... (implementation)
+
+get(cid: String, path: str = ''): Uint8List?
+  # ... (implementation)
+
+addFile(data: Uint8List): String
+  # ... (implementation)
+
+importCAR(carFile: Uint8List): void
+  # ... (implementation)
+
+exportCAR(cid: String): Uint8List
+  # ... (implementation)
+
+# Network and Peer Interaction
+start(): void
+  # ... (implementation)
+
+stop(): void
+  # ... (implementation)
+
+sendBlock(cid: String, peer: Peer): void
+  # ... (implementation)
+
+requestBlock(String cid, peer: Peer): void
+  # ... (implementation)
+
+findProviders(cid: String): List<Peer>
+  # ... (implementation, using DHT or other peer routing)
+
+# IPNS and Naming
+resolveIPNS(ipnsName: String): String
+  # ... (implementation)
+
+publishIPNS(cid: String, keyName: String): void 
+  # ... (implementation using the `keystore`)
+
+# Pinning and Garbage Collection
+pin(cid: String): void
+  # ... (implementation, potentially using the `datastore` for persistence)
+
+unpin(cid: String): void
+  # ... (implementation)
+
+# Server Management and Monitoring
+stats(): NodeStats
+  # ... (implementation)
+
+# PubSub
+subscribe(topic: String): void
+  # ... (implementation)
+
+publish(topic: String, message: String): void
+  # ... (implementation)

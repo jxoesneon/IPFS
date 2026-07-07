@@ -18,7 +18,7 @@ Each major functional area of IPFS is encapsulated within a dedicated manager:
 - **NetworkManager**: Manages P2P connectivity, Bitswap block exchange, and DHT routing.
 - **ProtocolManager**: Orchestrates high-level protocols like PubSub, IPNS, and DNSLink resolution.
 - **SecurityManager**: Handles identity (PeerId), cryptographic keys, and the encrypted keystore.
-- **StorageManager**: Coordinates block storage and metadata persistence.
+- **DatastoreHandler**: Coordinates block storage and metadata persistence through the configured `BlockStore` and `Datastore`.
 
 ### 3. Platform Abstraction (IpfsPlatform)
 The `IpfsPlatform` class is the key to multi-platform support. It provides a unified interface for platform-specific operations, shielding the core logic from the differences between `dart:io` (VM) and `dart:html`/`idb_shim` (Web).
@@ -55,8 +55,8 @@ This allows the project to support new protocols or codecs by simply registering
 
 ## Data Flow: Adding a File
 
-1. **API**: User calls `IPFSNode.add(data)`.
+1. **API**: User calls `IPFSNode.addFile(data)`.
 2. **ContentManager**: Chunks the data according to the UnixFS strategy.
-3. **StorageManager**: Computes the CID and stores the blocks in the local `BlockStore`.
+3. **DatastoreHandler**: Computes the CID and stores the blocks in the local `BlockStore`.
 4. **NetworkManager**: Announces the new CID to the DHT so other peers can find it.
 5. **Bitswap**: Serves the blocks to requesting peers.

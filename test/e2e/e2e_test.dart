@@ -39,15 +39,17 @@ void main() {
       } catch (_) {
         // Ignore if already stopped or not started
       }
-      // On Windows, file handles may briefly outlive node.stop(); retry deletion.
-      for (var attempt = 0; attempt < 10; attempt++) {
+      // Allow background file handles (e.g. Hive boxes) to close before cleanup.
+      await Future.delayed(const Duration(milliseconds: 500));
+      // On Windows/macOS, file handles may briefly outlive node.stop(); retry deletion.
+      for (var attempt = 0; attempt < 20; attempt++) {
         try {
           if (await tempDir.exists()) {
             await tempDir.delete(recursive: true);
           }
           break;
         } on FileSystemException {
-          await Future.delayed(const Duration(milliseconds: 100));
+          await Future.delayed(const Duration(milliseconds: 200));
         }
       }
     });

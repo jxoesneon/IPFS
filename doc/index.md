@@ -18,6 +18,10 @@ Welcome to the documentation for **dart_ipfs**, a production-ready IPFS implemen
 - [Flutter Dashboard](../example/ipfs_dashboard/README.md)
 - [CLI Dashboard](../example/cli_dashboard/README.md)
 
+## Development
+
+- [Development Guidelines](../GEMINI.md)
+
 ## Maintenance
 
 - [Maintainer Guide](MAINTAINER_GUIDE.md)

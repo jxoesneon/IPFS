@@ -31,7 +31,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 
 ## Table of Contents
 
-- [What's New in v1.10](#-whats-new-in-v110)
+- [What's New in v1.11](#-whats-new-in-v111)
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
@@ -152,7 +152,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_ipfs: ^1.11.4
+  dart_ipfs: ^1.11.5
 ```
 
 Or from Git for latest development:
@@ -196,7 +196,7 @@ import 'package:dart_ipfs/dart_ipfs.dart';
 void main() async {
   final node = await IPFSNode.create(
     IPFSConfig(
-      dataDir: './ipfs_data',
+      dataPath: './ipfs_data',
       offline: true,  // No P2P networking
     ),
   );
@@ -204,12 +204,17 @@ void main() async {
   await node.start();
 
   // Add content
-  final cid = await node.add('Hello, IPFS!');
+  import 'dart:convert';
+  final cid = await node.addFile(
+    Uint8List.fromList(utf8.encode('Hello, IPFS!')),
+  );
   print('Added with CID: $cid');
 
   // Retrieve content
   final retrieved = await node.cat(cid);
-  print('Retrieved: $retrieved');
+  if (retrieved != null) {
+    print('Retrieved: ${utf8.decode(retrieved)}');
+  }
 
   await node.stop();
 }
@@ -220,7 +225,7 @@ void main() async {
 ```dart
 final node = await IPFSNode.create(
   IPFSConfig(
-    dataDir: './gateway_data',
+    dataPath: './gateway_data',
     offline: true,
     gateway: GatewayConfig(
       enabled: true,
@@ -239,7 +244,7 @@ print('Gateway running at http://localhost:8080');
 ```dart
 final node = await IPFSNode.create(
   IPFSConfig(
-    dataDir: './p2p_data',
+    dataPath: './p2p_data',
     offline: false,  // Enable P2P networking
     network: NetworkConfig(
       bootstrapPeers: [
@@ -258,7 +263,7 @@ print('P2P Node ID: ${node.peerID}');
 #### Web Platform (Browser)
 
 ```dart
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
+import 'package:dart_ipfs/dart_ipfs.dart';
 
 void main() async {
   final node = IPFSWebNode(
@@ -269,7 +274,7 @@ void main() async {
   final cid = await node.add(Uint8List.fromList('Hello Web!'.codeUnits));
   print('Added: $cid');
 
-  final data = await node.get(cid.encode());
+  final data = await node.get(cid.toString());
   print('Retrieved: ${String.fromCharCodes(data!)}');
 }
 ```
@@ -283,7 +288,7 @@ void main() async {
 ```dart
 IPFSConfig(
   // Storage
-  dataDir: './ipfs_data',
+  dataPath: './ipfs_data',
 
   // Networking
   offline: false,
@@ -336,7 +341,7 @@ IPFSConfig(
 ```dart
 final file = File('document.pdf');
 final bytes = await file.readAsBytes();
-final cid = await node.addBytes(bytes);
+final cid = await node.addFile(bytes);
 print('Document CID: $cid');
 // Content is permanently addressable
 ```
@@ -467,7 +472,10 @@ SecurityConfig(
 
 ## Known Limitations
 
-None.
+- **Web Platform**: Browser-to-browser P2P requires WebRTC signaling or a relay; direct TCP/UDP listening is not available in browsers.
+- **Mobile**: Not yet optimized for iOS/Android battery and background execution.
+- **QUIC Transport**: Available via configuration but still stabilizing for production workloads.
+- **MFS**: Basic operations are implemented; advanced filesystem semantics are planned for v2.0.
 
 ---
 
