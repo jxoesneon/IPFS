@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'data_channel_stream.dart';
+import 'ice_server.dart';
 import 'peer_connection_stub.dart'
     if (dart.library.js_interop) 'peer_connection_web.dart'
     if (dart.library.io) 'peer_connection_io.dart';
@@ -38,6 +40,16 @@ abstract class PeerConnection {
 
   /// The remote SDP description.
   String? get remoteDescriptionSdp;
+
+  /// The ICE connection state, if available.
+  ///
+  /// Defaults to `null` on platforms that do not expose this diagnostic.
+  String? get iceConnectionState => null;
+
+  /// The signaling state, if available.
+  ///
+  /// Defaults to `null` on platforms that do not expose this diagnostic.
+  String? get signalingState => null;
 }
 
 /// Initialization parameters for an [RTCSessionDescription].
@@ -75,5 +87,5 @@ class RTCIceCandidateInit {
 }
 
 /// Factory for creating a platform-specific [PeerConnection].
-PeerConnection createPeerConnection(List<String> iceServers) =>
+PeerConnection createPeerConnection(List<IceServer> iceServers) =>
     createPC(iceServers);

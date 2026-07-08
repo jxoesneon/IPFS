@@ -1,0 +1,216 @@
+# Default values for dart-ipfs.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Number of replicas. dart_ipfs is not horizontally clustered in v2.2; keep 1.
+replicaCount: 1
+
+image:
+  # -- Image registry and repository.
+  repository: ghcr.io/jxoesneon/dart-ipfs
+  # -- Image tag. Defaults to the chart's appVersion when empty.
+  tag: ""
+  # -- Image pull policy.
+  pullPolicy: IfNotPresent
+
+# -- Override the chart name.
+nameOverride: ""
+# -- Override the full name.
+fullnameOverride: ""
+
+# -- Pod annotations.
+podAnnotations: {}
+# -- Pod labels merged into the selector labels.
+podLabels: {}
+
+serviceAccount:
+  # -- Specifies whether a ServiceAccount should be created.
+  create: true
+  # -- Automatically mount a ServiceAccount's API credentials.
+  automount: false
+  # -- Annotations to add to the ServiceAccount.
+  annotations: {}
+  # -- The name of the ServiceAccount to use.
+  name: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  # -- Service type for the combined API/gateway/metrics/swarm service.
+  type: ClusterIP
+  api:
+    port: 5001
+  gateway:
+    port: 8080
+  swarm:
+    # -- Expose the libp2p swarm port on the main service.
+    port: 4001
+  metrics:
+    port: 8081
+
+# -- Optional dedicated swarm service. Use LoadBalancer or NodePort here if you
+# want external peers to dial the node without exposing the API/gateway.
+swarmService:
+  enabled: false
+  type: LoadBalancer
+  annotations: {}
+
+# -- Ingress for the gateway. The RPC API is never exposed via Ingress.
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: gateway.dart-ipfs.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# -- Persistence for the IPFS repository.
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  annotations: {}
+
+# -- Node configuration supplied to the container via ConfigMap.
+config:
+  offline: false
+  enableDHT: true
+  enablePubSub: true
+  enableRPC: true
+  enableMetrics: true
+  enableCircuitRelay: true
+  enableContentRouting: true
+  enableDNSLinkResolution: true
+  enableIPLD: true
+  enableGraphsync: false
+  enableIpnsPubSub: false
+  logLevel: info
+  enableStructuredLogging: true
+  network:
+    bootstrapPeers:
+      - "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN"
+      - "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2iUDbD9uMdt3m6Jorh6Y1YCDYNP5E4p"
+
+# -- Secrets for keys and optional RPC auth.
+secrets:
+  # -- Set to true to create the placeholder Secret.
+  create: false
+  # -- Existing secret name to mount. If set, the chart will not create a Secret.
+  existingSecret: ""
+  # -- Base64-encoded 32-byte libp2p identity seed. Regenerate per deployment.
+  libp2pIdentitySeed: ""
+  # -- Optional RPC API bearer token.
+  apiAuthToken: ""
+  # -- Optional keystore password.
+  keystorePassword: ""
+
+# -- Resource requests and limits.
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+
+# -- Liveness probe configuration.
+livenessProbe:
+  exec:
+    command:
+      - /app/ipfs
+      - healthcheck
+  initialDelaySeconds: 30
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+# -- Readiness probe configuration.
+readinessProbe:
+  exec:
+    command:
+      - /app/ipfs
+      - healthcheck
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# -- Startup probe configuration.
+startupProbe:
+  exec:
+    command:
+      - /app/ipfs
+      - healthcheck
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+
+# -- Horizontal Pod Autoscaler. Disabled by default because v2.2 is single-node.
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+  behavior: {}
+
+# -- Pod Disruption Budget.
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+# -- NetworkPolicy configuration.
+networkPolicy:
+  enabled: true
+  # -- Allow API access from these namespace labels.
+  apiIngressNamespaces: []
+
+# -- Prometheus ServiceMonitor.
+metrics:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    namespace: ""
+    interval: 30s
+    scrapeTimeout: 10s
+    labels: {}
+
+# -- Node selector.
+nodeSelector: {}
+
+# -- Tolerations.
+tolerations: []
+
+# -- Affinity.
+affinity: {}
+
+# -- Extra environment variables.
+extraEnv: []
+
+# -- Extra volume mounts.
+extraVolumeMounts: []
+
+# -- Extra volumes.
+extraVolumes: []

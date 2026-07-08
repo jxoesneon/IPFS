@@ -43,18 +43,23 @@ Future<void> main(List<String> args) async {
   print('');
   print('Runtime dependency: libsodium');
   print(
-      '  glibc dynamic base image (default): cgr.dev/chainguard/glibc-dynamic');
+    '  glibc dynamic base image (default): cgr.dev/chainguard/glibc-dynamic',
+  );
   print('  expected library soname:            libsodium.so.23');
   print(
-      '  common Debian path:                 /usr/lib/x86_64-linux-gnu/libsodium.so.23');
+    '  common Debian path:                 /usr/lib/x86_64-linux-gnu/libsodium.so.23',
+  );
   print('  common Chainguard path:             /usr/lib/libsodium.so.23');
   print('');
 
-  final result = await Process.run(
-    'dart',
-    ['compile', 'exe', entrypoint, '-o', output, '--verbosity=info'],
-    runInShell: true,
-  );
+  final result = await Process.run('dart', [
+    'compile',
+    'exe',
+    entrypoint,
+    '-o',
+    output,
+    '--verbosity=info',
+  ], runInShell: true);
 
   stdout.write(result.stdout);
   stderr.write(result.stderr);

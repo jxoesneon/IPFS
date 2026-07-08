@@ -158,7 +158,7 @@ void main() {
       );
       expect(
         entries.firstWhere((e) => e.key == 'bigInt').value.kind,
-        Kind.BYTES,
+        Kind.INTEGER,
       );
     });
 
@@ -329,8 +329,7 @@ void main() {
       final bigInt = BigInt.parse('123456789012345678901234567890');
       final block = await handler.put(bigInt, codec: 'dag-cbor');
       final retrieved = await handler.get(block.cid);
-      // It seems to be deserialized as BYTES in this specific test environment
-      expect(retrieved.kind, Kind.BYTES);
+      expect(retrieved.kind, Kind.BIG_INT);
     });
 
     test('getStatus should return supported codecs', () async {

@@ -291,6 +291,16 @@ class MockRouterInterface extends _i1.Mock implements _i8.RouterInterface {
             returnValue: <String>[],
           )
           as List<String>);
+
+  @override
+  void registerRelayedConnection(String? targetPeerId, String? relayAddr) =>
+      super.noSuchMethod(
+        Invocation.method(#registerRelayedConnection, [
+          targetPeerId,
+          relayAddr,
+        ]),
+        returnValueForMissingStub: null,
+      );
 }
 
 /// A class which mocks [IPFSNode].

@@ -175,12 +175,17 @@ class PluginManifest {
     if (signatureBytes.length != 64) return false;
 
     final signer = Ed25519Signer();
-    final publicKey = signer.publicKeyFromBytes(Uint8List.fromList(publicKeyBytes));
+    final publicKey = signer.publicKeyFromBytes(
+      Uint8List.fromList(publicKeyBytes),
+    );
 
     // Check that the signing public key is in the trusted set.
     final isTrusted = trustedKeys.any((key) {
       if (key.type != publicKey.type) return false;
-      return _constantTimeListEquals(Uint8List.fromList(key.bytes), publicKeyBytes);
+      return _constantTimeListEquals(
+        Uint8List.fromList(key.bytes),
+        publicKeyBytes,
+      );
     });
     if (!isTrusted) return false;
 
@@ -215,7 +220,8 @@ class PluginManifest {
       'entrypoint': pluginMap['entrypoint'],
       if (checksums != null)
         'checksums': {
-          for (final entry in checksums.entries) entry.key.toString(): entry.value.toString(),
+          for (final entry in checksums.entries)
+            entry.key.toString(): entry.value.toString(),
         },
     };
     return utf8.encode(jsonEncode({'plugin': ordered}));
@@ -242,7 +248,8 @@ class PluginManifest {
 
   static bool _looksLikeReverseDns(String id) {
     // Allow reverse-DNS style with dashes and dots; e.g. org.dart-ipfs.examples.x
-    return id.split('.').length >= 2 && RegExp(r'^[a-zA-Z0-9_.-]+$').hasMatch(id);
+    return id.split('.').length >= 2 &&
+        RegExp(r'^[a-zA-Z0-9_.-]+$').hasMatch(id);
   }
 
   static bool _constantTimeListEquals(Uint8List a, Uint8List b) {

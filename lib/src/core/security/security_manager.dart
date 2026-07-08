@@ -232,6 +232,7 @@ class SecurityManager implements ISecurityManager {
 
     if (clientLog.length >= _config.maxRequestsPerMinute) {
       _recordSecurityMetric('rate_limit', data: {'clientId': clientId});
+      _metrics.recordSecurityEvent('rate_limit');
       return true;
     }
 
@@ -252,6 +253,7 @@ class SecurityManager implements ISecurityManager {
 
     if (attempts >= _config.maxAuthAttempts) {
       _recordSecurityMetric('auth_blocked', data: {'clientId': clientId});
+      _metrics.recordSecurityEvent('auth_failure');
       return false;
     }
 

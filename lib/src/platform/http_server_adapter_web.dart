@@ -34,6 +34,17 @@ class HttpServerAdapterWeb implements HttpServerAdapter {
     // This is a stub that mainly allows compilation.
     return IpfsHttpServerInstanceWeb(address, port);
   }
+
+  @override
+  Future<IpfsHttpServerInstance> serveSecure(
+    Handler handler,
+    String address,
+    int port,
+    Object context,
+  ) async {
+    // On web, secure TCP binding is not supported.
+    throw UnimplementedError('HTTPS server not supported on web platform');
+  }
 }
 
 /// Factory for conditional imports.

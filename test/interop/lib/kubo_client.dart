@@ -36,7 +36,8 @@ class KuboClient {
       final body = await response.transform(utf8.decoder).join();
       if (response.statusCode != 200) {
         throw HttpException(
-            'Kubo RPC $command returned ${response.statusCode}: $body');
+          'Kubo RPC $command returned ${response.statusCode}: $body',
+        );
       }
       return body;
     } finally {

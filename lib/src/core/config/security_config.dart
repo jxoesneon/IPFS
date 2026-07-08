@@ -11,6 +11,12 @@ class SecurityConfig {
     this.enableRateLimiting = true,
     this.maxRequestsPerMinute = 100,
     this.dhtDifficulty = 0, // SEC-005: Default disabled
+    this.enableDenylist = false,
+    this.denylistPath,
+    this.denylistStoragePath,
+    this.denylistRefreshInterval = const Duration(hours: 1),
+    this.denylistCompactFormat = true,
+    this.denylistDefaultAction = 'block',
   });
 
   /// Creates a [SecurityConfig] from a JSON map.
@@ -27,6 +33,15 @@ class SecurityConfig {
       enableRateLimiting: json['enableRateLimiting'] as bool? ?? true,
       maxRequestsPerMinute: json['maxRequestsPerMinute'] as int? ?? 100,
       dhtDifficulty: json['dhtDifficulty'] as int? ?? 0,
+      enableDenylist: json['enableDenylist'] as bool? ?? false,
+      denylistPath: json['denylistPath'] as String?,
+      denylistStoragePath: json['denylistStoragePath'] as String?,
+      denylistRefreshInterval: json['denylistRefreshIntervalSeconds'] != null
+          ? Duration(seconds: json['denylistRefreshIntervalSeconds'] as int)
+          : const Duration(hours: 1),
+      denylistCompactFormat: json['denylistCompactFormat'] as bool? ?? true,
+      denylistDefaultAction:
+          json['denylistDefaultAction'] as String? ?? 'block',
     );
   }
 
@@ -57,6 +72,24 @@ class SecurityConfig {
   /// SEC-005: Static PoW difficulty for DHT Sybil protection (number of zero bits)
   final int dhtDifficulty;
 
+  /// Whether the operator-controlled content denylist is enabled.
+  final bool enableDenylist;
+
+  /// Local file path or HTTP(S) URL to the denylist source.
+  final String? denylistPath;
+
+  /// Optional local path for a persistent cached copy of the denylist.
+  final String? denylistStoragePath;
+
+  /// Interval between automatic denylist refreshes.
+  final Duration denylistRefreshInterval;
+
+  /// Whether the denylist source uses the BadBits-style compact format.
+  final bool denylistCompactFormat;
+
+  /// Default action for denylist hits: `"block"` or `"log"`.
+  final String denylistDefaultAction;
+
   /// Converts this configuration to a JSON map.
   Map<String, dynamic> toJson() => {
     'enableTLS': enableTLS,
@@ -68,5 +101,11 @@ class SecurityConfig {
     'enableRateLimiting': enableRateLimiting,
     'maxRequestsPerMinute': maxRequestsPerMinute,
     'dhtDifficulty': dhtDifficulty,
+    'enableDenylist': enableDenylist,
+    'denylistPath': denylistPath,
+    'denylistStoragePath': denylistStoragePath,
+    'denylistRefreshIntervalSeconds': denylistRefreshInterval.inSeconds,
+    'denylistCompactFormat': denylistCompactFormat,
+    'denylistDefaultAction': denylistDefaultAction,
   };
 }

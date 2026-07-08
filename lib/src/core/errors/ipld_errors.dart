@@ -58,3 +58,16 @@ class IPLDSchemaError extends IPLDError {
   /// Creates a schema error with the given message.
   IPLDSchemaError(String message) : super('IPLD schema error: $message');
 }
+
+/// Error when a selector cannot be parsed or is malformed.
+class SelectorParseError extends IPLDError {
+  /// Creates a selector parse error with the given message.
+  SelectorParseError(String message) : super('Selector parse error: $message');
+}
+
+/// Error when a selector execution exceeds its configured budget.
+class SelectorBudgetExceeded extends IPLDError {
+  /// Creates a selector budget error with the given message.
+  SelectorBudgetExceeded(String message)
+    : super('Selector budget exceeded: $message');
+}

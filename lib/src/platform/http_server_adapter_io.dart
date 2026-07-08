@@ -32,7 +32,20 @@ class HttpServerAdapterIO implements HttpServerAdapter {
     String address,
     int port,
   ) async {
-    final server = await shelf_io.serve(handler, address, port);
+    final server = await HttpServer.bind(address, port);
+    shelf_io.serveRequests(server, handler);
+    return IpfsHttpServerInstanceIO(server);
+  }
+
+  @override
+  Future<IpfsHttpServerInstance> serveSecure(
+    Handler handler,
+    String address,
+    int port,
+    covariant SecurityContext context,
+  ) async {
+    final server = await HttpServer.bindSecure(address, port, context);
+    shelf_io.serveRequests(server, handler);
     return IpfsHttpServerInstanceIO(server);
   }
 }

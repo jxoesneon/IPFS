@@ -4,18 +4,19 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i8;
-import 'dart:typed_data' as _i9;
+import 'dart:typed_data' as _i10;
 
+import 'package:dart_ipfs/src/core/cid.dart' as _i9;
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart' as _i2;
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart' as _i3;
 import 'package:dart_ipfs/src/core/types/peer_id.dart' as _i4;
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
-    as _i12;
+    as _i13;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart' as _i7;
 import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart' as _i5;
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_tree_node.dart'
-    as _i11;
-import 'package:dart_ipfs/src/protocols/dht/red_black_tree.dart' as _i10;
+    as _i12;
+import 'package:dart_ipfs/src/protocols/dht/red_black_tree.dart' as _i11;
 import 'package:dart_ipfs/src/transport/router_interface.dart' as _i6;
 import 'package:mockito/mockito.dart' as _i1;
 
@@ -198,7 +199,16 @@ class MockDHTClient extends _i1.Mock implements _i7.DHTClient {
           as _i8.Future<void>);
 
   @override
-  _i8.Future<bool> storeValue(_i9.Uint8List? key, _i9.Uint8List? value) =>
+  _i8.Future<void> addProviders(List<_i9.CID>? cids, String? providerId) =>
+      (super.noSuchMethod(
+            Invocation.method(#addProviders, [cids, providerId]),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
+
+  @override
+  _i8.Future<bool> storeValue(_i10.Uint8List? key, _i10.Uint8List? value) =>
       (super.noSuchMethod(
             Invocation.method(#storeValue, [key, value]),
             returnValue: _i8.Future<bool>.value(false),
@@ -208,8 +218,8 @@ class MockDHTClient extends _i1.Mock implements _i7.DHTClient {
   @override
   _i8.Future<bool> storeValueToPeer(
     _i4.PeerId? peer,
-    _i9.Uint8List? key,
-    _i9.Uint8List? value,
+    _i10.Uint8List? key,
+    _i10.Uint8List? value,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#storeValueToPeer, [peer, key, value]),
@@ -218,15 +228,15 @@ class MockDHTClient extends _i1.Mock implements _i7.DHTClient {
           as _i8.Future<bool>);
 
   @override
-  _i8.Future<_i9.Uint8List?> getValue(_i9.Uint8List? key) =>
+  _i8.Future<_i10.Uint8List?> getValue(_i10.Uint8List? key) =>
       (super.noSuchMethod(
             Invocation.method(#getValue, [key]),
-            returnValue: _i8.Future<_i9.Uint8List?>.value(),
+            returnValue: _i8.Future<_i10.Uint8List?>.value(),
           )
-          as _i8.Future<_i9.Uint8List?>);
+          as _i8.Future<_i10.Uint8List?>);
 
   @override
-  _i8.Future<bool> checkValueOnPeer(_i4.PeerId? peer, _i9.Uint8List? key) =>
+  _i8.Future<bool> checkValueOnPeer(_i4.PeerId? peer, _i10.Uint8List? key) =>
       (super.noSuchMethod(
             Invocation.method(#checkValueOnPeer, [peer, key]),
             returnValue: _i8.Future<bool>.value(false),
@@ -268,6 +278,15 @@ class MockDHTClient extends _i1.Mock implements _i7.DHTClient {
           as _i8.Future<List<String>>);
 
   @override
+  _i8.Future<void> reprovide() =>
+      (super.noSuchMethod(
+            Invocation.method(#reprovide, []),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
+
+  @override
   _i8.Future<void> updateKeyRepublishTime(String? key) =>
       (super.noSuchMethod(
             Invocation.method(#updateKeyRepublishTime, [key]),
@@ -300,13 +319,13 @@ class MockKademliaRoutingTable extends _i1.Mock
           as int);
 
   @override
-  List<_i10.RedBlackTree<_i4.PeerId, _i11.KademliaTreeNode>> get buckets =>
+  List<_i11.RedBlackTree<_i4.PeerId, _i12.KademliaTreeNode>> get buckets =>
       (super.noSuchMethod(
             Invocation.getter(#buckets),
             returnValue:
-                <_i10.RedBlackTree<_i4.PeerId, _i11.KademliaTreeNode>>[],
+                <_i11.RedBlackTree<_i4.PeerId, _i12.KademliaTreeNode>>[],
           )
-          as List<_i10.RedBlackTree<_i4.PeerId, _i11.KademliaTreeNode>>);
+          as List<_i11.RedBlackTree<_i4.PeerId, _i12.KademliaTreeNode>>);
 
   @override
   set dhtClient(_i7.DHTClient? value) => super.noSuchMethod(
@@ -406,7 +425,7 @@ class MockKademliaRoutingTable extends _i1.Mock
   );
 
   @override
-  _i8.Future<void> updatePeer(_i12.V_PeerInfo? peer) =>
+  _i8.Future<void> updatePeer(_i13.V_PeerInfo? peer) =>
       (super.noSuchMethod(
             Invocation.method(#updatePeer, [peer]),
             returnValue: _i8.Future<void>.value(),

@@ -1,5 +1,26 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- **Monorepo**: Created `packages/dart_ipfs_core/` as a stable core package containing CID, multibase, multicodec, multihash, block, block store, codec, and crypto primitives.
+- **Workspace**: Added `melos.yaml` for monorepo management.
+- **Documentation**: Added `doc/monorepo.md` explaining the monorepo layout and stability tiers.
+- **QUIC Foundation**: Created `packages/dart_ipfs_quic/` with hand-written FFI bindings to Cloudflare quiche 0.23.0, runtime library loader (`QuicheLibrary.probe()`), and Dart wrappers for config/connection objects.
+- **QUIC RFC**: Added `doc/specs/QUIC_TRANSPORT_RFC.md` evaluating native QUIC transport options (quiche FFI, msquic, flutter_quic, pure Dart) and laying out a phased implementation plan.
+- **KUBERNETES_SPEC**: Added Kustomize manifests, Helm chart, and CI workflow.
+- **CLI_SPEC**: Hardened `bin/ipfs.dart` with `CommandRunner`, `add`, `cat`, `ls`, `pin`, `unpin`, `swarm`, `config` subcommands, and clean shutdown.
+- **UNIXFS_SPEC**: Fixed HAMT CID parity with Kubo/Helia (DAG-PB wire order, MurmurHash3 mixing, UTF-8 names, CIDv1 defaults) and added fixture tests.
+
+### Changed
+- **Dependencies**: Root `pubspec.yaml` now depends on `dart_ipfs_core` and `dart_ipfs_quic` via path dependencies during development.
+- **Exports**: `lib/dart_ipfs.dart` re-exports the public APIs of `dart_ipfs_core` and `dart_ipfs_quic` so existing consumers are not broken.
+- **QUIC_SPEC**: Status updated to Complete; conditional config/fallback is fully implemented and native transport path is documented in the RFC.
+- **IMPLEMENTATION_INVENTORY**: Now reports 26 Complete / 0 Partial / 0 Missing.
+
+### Deprecated
+- **Deep imports**: Imports of `package:dart_ipfs/src/...` are deprecated as of v2.2.0 and will be removed in v3.0.0. Use `package:dart_ipfs/dart_ipfs.dart` (stable umbrella re-export) or `package:dart_ipfs_core/dart_ipfs_core.dart` for core primitives.
+
 ## [1.11.5] - 2026-06-23
 
 ### Fixed

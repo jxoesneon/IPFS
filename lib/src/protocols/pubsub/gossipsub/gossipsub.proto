@@ -1,0 +1,63 @@
+syntax = "proto2";
+
+package gossipsub;
+
+// RPC envelope exchanged between Gossipsub peers.
+message RPC {
+  repeated Subscription subscriptions = 1;
+  repeated Message publish = 2;
+  optional ControlMessage control = 3;
+}
+
+// Subscription announcement.
+message Subscription {
+  optional bool subscribe = 1;
+  optional string topicid = 2;
+}
+
+// PubSub message.
+message Message {
+  optional bytes from = 1;
+  optional bytes data = 2;
+  optional bytes seqno = 3;
+  optional string topic = 4;
+  optional bytes signature = 5;
+  optional bytes key = 6;
+}
+
+// Control message container.
+message ControlMessage {
+  repeated ControlIHave ihave = 1;
+  repeated ControlIWant iwant = 2;
+  repeated ControlGraft graft = 3;
+  repeated ControlPrune prune = 4;
+}
+
+// IHAVE control message.
+message ControlIHave {
+  optional string topicID = 1;
+  repeated string messageIDs = 2;
+}
+
+// IWANT control message.
+message ControlIWant {
+  repeated string messageIDs = 1;
+}
+
+// GRAFT control message.
+message ControlGraft {
+  optional string topicID = 1;
+}
+
+// PRUNE control message.
+message ControlPrune {
+  optional string topicID = 1;
+  repeated PeerInfo peers = 2;
+  optional uint64 backoff = 3;
+}
+
+// Peer info used in PRUNE peer exchange.
+message PeerInfo {
+  optional bytes peerID = 1;
+  optional bytes signedPeerRecord = 2;
+}

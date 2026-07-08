@@ -147,6 +147,7 @@ void main() {
       final natServiceNoGateway = NatTraversalService(
         logger: mockLogger,
         gateway: null,
+        gatewayDiscoverer: () async => null,
       );
 
       final results = await natServiceNoGateway
@@ -208,10 +209,15 @@ void main() {
 
   group('NatTraversalService Error Handling', () {
     test('handles top-level exception in mapPort', () async {
-      // Triggering the catch-all block in mapPort
-      // We can trigger this if Gateway.discover() throws.
-      // Since we can't mock Gateway.discover(), this might be hard to cover unless
-      // we modify the code to take a factory.
+      final natService = NatTraversalService(
+        logger: mockLogger,
+        gateway: null,
+        gatewayDiscoverer: () async => throw Exception('discovery failed'),
+      );
+
+      final results = await natService.mapPort(4001);
+      expect(results, isEmpty);
+      verify(mockLogger.error(any, any)).called(1);
     });
   });
 }

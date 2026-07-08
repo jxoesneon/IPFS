@@ -13,6 +13,13 @@ class DHTConfig {
     this.maxRecordsPerQuery = 20,
     this.enableProviderRecording = true,
     this.enableValueStorage = true,
+    this.validateProviderRecords = true,
+    this.reproviderEnabled = true,
+    this.reproviderInterval = const Duration(hours: 12),
+    this.reproviderStrategy = 'pinned',
+    this.reproviderBatchSize = 100,
+    this.reproviderConcurrency = 10,
+    this.reproviderSweepOptimization = true,
   });
 
   /// Creates a DHTConfig from JSON.
@@ -32,6 +39,17 @@ class DHTConfig {
       enableProviderRecording:
           (json['enableProviderRecording'] as bool?) ?? true,
       enableValueStorage: (json['enableValueStorage'] as bool?) ?? true,
+      validateProviderRecords:
+          (json['validateProviderRecords'] as bool?) ?? true,
+      reproviderEnabled: (json['reproviderEnabled'] as bool?) ?? true,
+      reproviderInterval: Duration(
+        seconds: (json['reproviderIntervalSeconds'] as int?) ?? 43200,
+      ),
+      reproviderStrategy: (json['reproviderStrategy'] as String?) ?? 'pinned',
+      reproviderBatchSize: (json['reproviderBatchSize'] as int?) ?? 100,
+      reproviderConcurrency: (json['reproviderConcurrency'] as int?) ?? 10,
+      reproviderSweepOptimization:
+          (json['reproviderSweepOptimization'] as bool?) ?? true,
     );
   }
 
@@ -59,6 +77,29 @@ class DHTConfig {
   /// Whether to enable value storage.
   final bool enableValueStorage;
 
+  /// Whether to validate incoming provider records for address sanity and
+  /// freshness before trusting them.
+  final bool validateProviderRecords;
+
+  /// Whether the periodic reprovider service is enabled.
+  final bool reproviderEnabled;
+
+  /// Interval between automatic reprovide runs.
+  final Duration reproviderInterval;
+
+  /// Reprovide strategy name (e.g. `pinned`, `roots`, `all`, `pinned+mfs`,
+  /// `unique`, `entities`).
+  final String reproviderStrategy;
+
+  /// Maximum number of CIDs to announce in a single batch.
+  final int reproviderBatchSize;
+
+  /// Maximum number of concurrent in-flight provide announcements.
+  final int reproviderConcurrency;
+
+  /// Whether to enable XOR-ordered proximity grouping for reprovides.
+  final bool reproviderSweepOptimization;
+
   /// Converts the config to JSON.
   ///
   /// @return A map representing the configuration.
@@ -71,5 +112,12 @@ class DHTConfig {
     'maxRecordsPerQuery': maxRecordsPerQuery,
     'enableProviderRecording': enableProviderRecording,
     'enableValueStorage': enableValueStorage,
+    'validateProviderRecords': validateProviderRecords,
+    'reproviderEnabled': reproviderEnabled,
+    'reproviderIntervalSeconds': reproviderInterval.inSeconds,
+    'reproviderStrategy': reproviderStrategy,
+    'reproviderBatchSize': reproviderBatchSize,
+    'reproviderConcurrency': reproviderConcurrency,
+    'reproviderSweepOptimization': reproviderSweepOptimization,
   };
 }

@@ -113,15 +113,15 @@ class CID {
     // CIDv1 check
     if (bytes[0] == 0x01) {
       var index = 1;
-      final (codecLen, codecCode) = _readVarint(bytes, index);
+      final (codecLen, codecCode) = readVarint(bytes, index);
       index += codecLen;
 
       // Parse the multihash prefix to determine the exact multihash byte
       // boundary so the decoder does not see trailing block bytes.
       final mhStart = index;
-      final (codeLen, _) = _readVarint(bytes, index);
+      final (codeLen, _) = readVarint(bytes, index);
       index += codeLen;
-      final (lenLen, digestLen) = _readVarint(bytes, index);
+      final (lenLen, digestLen) = readVarint(bytes, index);
       index += lenLen;
       final mhEnd = index + digestLen;
       if (mhEnd > bytes.length) {
@@ -179,7 +179,27 @@ class CID {
   }
 
   /// Encodes the CID to its string representation.
-  String encode() {
+  String encode() => encodeWithBase(multibaseType);
+
+  /// Returns the CID prefix bytes (version + codec + multihash function + hash
+  /// length), omitting the digest itself.
+  ///
+  /// This is the format used by Bitswap/GraphSync [Block.prefix] to allow the
+  /// receiver to reconstruct the CID from the prefix and block data.
+  Uint8List toPrefixBytes() {
+    final bytes = toBytes();
+    final digestLength = multihash.size;
+    if (bytes.length <= digestLength) {
+      return bytes;
+    }
+    return Uint8List.fromList(bytes.sublist(0, bytes.length - digestLength));
+  }
+
+  /// Encodes the CID using the requested [base].
+  ///
+  /// CIDv0 is always returned as base58btc regardless of the requested base.
+  /// CIDv1 defaults to base32 when [base] is null.
+  String encodeWithBase(Multibase? base) {
     if (version == 0) {
       // CIDv0: base58-encoded multihash (no prefix)
       final mhBytes = multihash.toBytes();
@@ -190,8 +210,44 @@ class CID {
 
     // CIDv1: <version><codec><multihash>
     final bytes = toBytes();
-    final baseType = multibaseType ?? Multibase.base32;
+    final baseType = base ?? multibaseType ?? Multibase.base32;
     return multibaseEncode(baseType, bytes);
+  }
+
+  /// Encodes the CID using the base identified by [baseName].
+  ///
+  /// Common names: `base58`, `base58btc`, `base32`, `base32upper`, `base16`,
+  /// `base16upper`, `base64`, `base64url`, `base64urlpad`. Unknown names fall
+  /// back to the CID's default encoding.
+  String encodeWithBaseName(String baseName) {
+    final base = _multibaseFromName(baseName);
+    return encodeWithBase(base);
+  }
+
+  static Multibase _multibaseFromName(String name) {
+    switch (name.toLowerCase()) {
+      case 'base16':
+      case 'base16lower':
+        return Multibase.base16;
+      case 'base16upper':
+        return Multibase.base16upper;
+      case 'base32':
+      case 'base32lower':
+        return Multibase.base32;
+      case 'base32upper':
+        return Multibase.base32upper;
+      case 'base58':
+      case 'base58btc':
+        return Multibase.base58btc;
+      case 'base64':
+        return Multibase.base64;
+      case 'base64url':
+        return Multibase.base64url;
+      case 'base64urlpad':
+        return Multibase.base64urlpad;
+      default:
+        return Multibase.base32;
+    }
   }
 
   /// Converts the CID to its binary representation.
@@ -225,6 +281,35 @@ class CID {
     buffer.add(multihash.toBytes());
 
     return buffer.toBytes();
+  }
+
+  /// Reconstructs a CID from a [prefix] (version + codec + multihash function
+  /// + hash length) and the raw block [data].
+  ///
+  /// The digest is computed from [data] using the provided [hashType]. The
+  /// resulting CID is only valid if the computed prefix matches the supplied
+  /// prefix, which is verified by [validate].
+  static Future<CID> fromPrefixBytes(
+    Uint8List prefix,
+    Uint8List data, {
+    String hashType = 'sha2-256',
+  }) async {
+    final codec = _codecFromPrefixBytes(prefix);
+    return fromContent(data, codec: codec, hashType: hashType);
+  }
+
+  static String _codecFromPrefixBytes(Uint8List prefix) {
+    if (prefix.isEmpty) return 'raw';
+    if (prefix[0] == 0x01) {
+      final (codecLen, codecCode) = readVarint(prefix, 1);
+      try {
+        return EncodingUtils.getCodecFromCode(codecCode);
+      } catch (_) {
+        return 'unknown';
+      }
+    }
+    // CIDv0 is always dag-pb.
+    return 'dag-pb';
   }
 
   /// Validates the CID.
@@ -270,7 +355,11 @@ class CID {
     return Uint8List.fromList(bytes);
   }
 
-  static (int, int) _readVarint(Uint8List bytes, int offset) {
+  /// Reads a protobuf-style varint from [bytes] starting at [offset].
+  ///
+  /// Returns a tuple `(length, value)` where [length] is the number of bytes
+  /// consumed and [value] is the decoded integer.
+  static (int, int) readVarint(Uint8List bytes, int offset) {
     var value = 0;
     var shift = 0;
     for (var i = 0; i < 10; i++) {

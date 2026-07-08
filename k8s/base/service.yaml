@@ -1,0 +1,44 @@
+# service.yaml
+# Cluster services for the dart_ipfs daemon.
+#   - swarm-tcp:  libp2p swarm TCP traffic (port 4001).
+#   - swarm-udp:  libp2p swarm UDP traffic (port 4001).
+#   - api:        RPC API (port 5001).  Not exposed via Ingress by default.
+#   - gateway:    HTTP gateway (port 8080).
+#   - metrics:    Prometheus metrics (port 8081).
+#
+# Overlays may change the swarm service type to LoadBalancer/NodePort to allow
+# external peers to dial the node, or keep ClusterIP for private deployments.
+apiVersion: v1
+kind: Service
+metadata:
+  name: dart-ipfs
+  namespace: dart-ipfs
+  labels:
+    app.kubernetes.io/name: dart-ipfs
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: dart-ipfs
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: dart-ipfs
+  ports:
+    - name: swarm-tcp
+      port: 4001
+      targetPort: swarm-tcp
+      protocol: TCP
+    - name: swarm-udp
+      port: 4001
+      targetPort: swarm-udp
+      protocol: UDP
+    - name: api
+      port: 5001
+      targetPort: api
+      protocol: TCP
+    - name: gateway
+      port: 8080
+      targetPort: gateway
+      protocol: TCP
+    - name: metrics
+      port: 8081
+      targetPort: metrics
+      protocol: TCP

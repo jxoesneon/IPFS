@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
@@ -19,6 +21,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:http/http.dart' as http;
+import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 
 /// Handles DHT operations for an IPFS node.
 ///
@@ -34,15 +37,23 @@ class DHTHandler implements IDHTHandler {
     DHTClient? client,
     Keystore? keystore,
     http.Client? httpClient,
+    MetricsCollector? metrics,
+    DenylistService? denylistService,
   }) : _keystore = keystore ?? Keystore(),
        _httpClient = httpClient ?? http.Client(),
-       _storage = storage ?? HiveDatastore(config.datastorePath) {
+       _storage = storage ?? HiveDatastore(config.datastorePath),
+       _denylistService = denylistService {
     _logger = Logger('DHTHandler', debug: config.debug);
     if (storage == null) {
       _storage.init();
     }
     dhtClient =
-        client ?? DHTClient(networkHandler: networkHandler, router: _router);
+        client ??
+        DHTClient(
+          networkHandler: networkHandler,
+          router: _router,
+          metricsCollector: metrics,
+        );
   }
 
   /// The underlying DHT client for network operations.
@@ -66,6 +77,8 @@ class DHTHandler implements IDHTHandler {
 
   /// Track provider announcements per peer for rate limiting
   final Map<String, List<DateTime>> _providerAnnouncements = {};
+
+  final DenylistService? _denylistService;
 
   /// Starts the DHT client.
   @override
@@ -270,6 +283,35 @@ class DHTHandler implements IDHTHandler {
   bool isValidPeerID(String peerId) =>
       peerId.isNotEmpty && RegExp(r'^[a-zA-Z0-9]+$').hasMatch(peerId);
 
+  /// Validates a provider record for a given [provider], [cid], and optional [ttl].
+  ///
+  /// Checks required by the DHT integration spec:
+  /// - Provider ID is a valid, non-empty peer ID.
+  /// - The CID is valid.
+  /// - At least one address for the provider is a parseable multiaddr.
+  /// - If [ttl] is provided, it must be in the future.
+  bool isValidProviderRecord(PeerId provider, String cid, DateTime? ttl) {
+    if (provider.value.isEmpty) return false;
+    if (!isValidCID(cid)) return false;
+
+    final addrs = _router.resolvePeerId(provider.toBase58());
+    if (addrs.isEmpty) return false;
+
+    final hasValidAddr = addrs.any((addr) {
+      try {
+        libp2p.MultiAddr(addr);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    });
+    if (!hasValidAddr) return false;
+
+    if (ttl != null && ttl.isBefore(DateTime.now())) return false;
+
+    return true;
+  }
+
   /// Extracts a CID from an HTTP response body.
   String? extractCIDFromResponse(String responseBody) {
     final match = RegExp(
@@ -308,6 +350,19 @@ class DHTHandler implements IDHTHandler {
     }
   }
 
+  /// Announces that this node provides content for a batch of [cids].
+  ///
+  /// Uses the DHT client's batch provider announcement when available.
+  @override
+  Future<void> provideAll(List<CID> cids) async {
+    _logger.debug('Announcing as provider for ${cids.length} CIDs');
+    try {
+      await dhtClient.addProviders(cids, _router.peerID);
+    } catch (e, st) {
+      _logger.error('Error providing ${cids.length} CIDs', e, st);
+    }
+  }
+
   /// Handles routing table updates when peer information changes.
   @override
   Future<void> handleRoutingTableUpdate(V_PeerInfo peer) async {
@@ -336,6 +391,27 @@ class DHTHandler implements IDHTHandler {
     final cidStr = cid.toString();
 
     try {
+      final denylist = _denylistService;
+      if (denylist != null &&
+          denylist.configuredEnabled &&
+          denylist.isBlocked(cid)) {
+        denylist.recordHit(cidStr, source: 'dht');
+        _logger.warning(
+          'Denylist: rejected provider announcement for blocked CID $cidStr '
+          'from $providerStr',
+        );
+        return;
+      }
+
+      // SEC-010: Validate provider record before rate limiting.
+      if (!isValidProviderRecord(provider, cidStr, null)) {
+        _logger.warning(
+          'SEC-010: Rejected invalid provider record from $providerStr '
+          'for CID $cidStr',
+        );
+        return;
+      }
+
       // SEC-010: Rate limit check
       final now = DateTime.now();
       final announcements = _providerAnnouncements[providerStr] ?? [];

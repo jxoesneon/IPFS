@@ -2,11 +2,12 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cbor/cbor.dart';
+import 'package:cryptography/cryptography.dart';
 
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
 import 'package:dart_ipfs/src/core/security/security_manager_interface.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
@@ -25,6 +26,7 @@ class MockSecurityManager implements ISecurityManager {
 
 class MockDHTHandler implements IDHTHandler {
   bool started = false;
+  String storedCid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
 
   @override
   Future<void> start() async {
@@ -38,9 +40,8 @@ class MockDHTHandler implements IDHTHandler {
 
   @override
   Future<Value> getValue(Key key) async {
-    return Value(
-      Uint8List.fromList([18, 32, ...List.filled(32, 0)]),
-    ); // Fake CID bytes
+    // Return a valid raw CID string as the legacy fallback value.
+    return Value.fromString(storedCid);
   }
 
   @override
@@ -76,6 +77,21 @@ class MockPubSub implements IPubSub {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// Generates a deterministic Ed25519 key pair for testing.
+Future<SimpleKeyPair> _testKeyPair() async {
+  final signer = Ed25519Signer();
+  return signer.generateKeyPair(
+    seed: Uint8List.fromList(List.generate(32, (i) => i)),
+  );
+}
+
+/// Generates a valid base36 IPNS name from a test key pair.
+Future<String> _testIpnsName() async {
+  final keyPair = await _testKeyPair();
+  final publicKey = await keyPair.extractPublicKey();
+  return deriveIpnsName(Uint8List.fromList(publicKey.bytes));
+}
+
 void main() {
   group('IPNSHandler', () {
     late IPFSConfig config;
@@ -96,10 +112,6 @@ void main() {
       test('start initializes handler and starts DHT', () async {
         await handler.start();
         expect(mockDHT.started, isTrue);
-        expect(
-          mockPubSub.subscribedTopics.contains('/ipfs/ipns-1.0.0'),
-          isTrue,
-        );
       });
 
       test('start is idempotent', () async {
@@ -108,16 +120,8 @@ void main() {
         expect(mockDHT.started, isTrue);
       });
 
-      test('stop clears cache and unsubscribes', () async {
+      test('stop clears cache and is idempotent', () async {
         await handler.start();
-        await handler.stop();
-        expect(
-          mockPubSub.subscribedTopics.contains('/ipfs/ipns-1.0.0'),
-          isFalse,
-        );
-      });
-
-      test('stop is idempotent', () async {
         await handler.stop();
         await handler.stop(); // Should not throw
       });
@@ -143,16 +147,20 @@ void main() {
     group('resolve', () {
       test('resolves IPNS name to CID', () async {
         await handler.start();
-        final result = await handler.resolve('test-name');
-        // MockDHTHandler returns a fake CID, so result should be non-null
+        final name = await _testIpnsName();
+        final result = await handler.resolve(name);
+        // MockDHTHandler returns a valid raw CID, so result should be non-null
         expect(result, isNotNull);
       });
 
-      test('subscribes to topic when resolving with PubSub', () async {
+      test('resolves IPNS name with valid base36 format', () async {
         await handler.start();
-        await handler.resolve('12D3KooWNxnY1oMhGCX');
-        // Should have subscribed to key-specific topic
-        expect(mockPubSub.subscribedTopics.length, greaterThanOrEqualTo(2));
+        final name = await _testIpnsName();
+        final result = await handler.resolve(name);
+        expect(
+          result,
+          equals('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        );
       });
     });
 
@@ -187,7 +195,8 @@ void main() {
       test('resolve works without PubSub', () async {
         final offlineHandler = IPNSHandler(config, mockSecurity, mockDHT, null);
         await offlineHandler.start();
-        final result = await offlineHandler.resolve('test-name');
+        final name = await _testIpnsName();
+        final result = await offlineHandler.resolve(name);
         expect(result, isNotNull);
         await offlineHandler.stop();
       });
@@ -222,12 +231,14 @@ void main() {
       test('caches resolution and returns cached value', () async {
         await handler.start();
 
+        final name = await _testIpnsName();
+
         // First resolve
-        final result1 = await handler.resolve('cached-name');
+        final result1 = await handler.resolve(name);
         expect(result1, isNotNull);
 
         // Second resolve should return cached value
-        final result2 = await handler.resolve('cached-name');
+        final result2 = await handler.resolve(name);
         expect(result2, equals(result1));
 
         await handler.stop();
@@ -242,7 +253,7 @@ Uint8List _createUnsignedRecordCBOR() {
   // Simple approach: just return enough bytes to parse
   final value = utf8.encode('/ipfs/QmTest');
   final validity = utf8.encode(
-    DateTime.now().add(Duration(hours: 1)).toUtc().toIso8601String(),
+    DateTime.now().add(const Duration(hours: 1)).toUtc().toIso8601String(),
   );
   final publicKey = Uint8List(32); // Empty public key
 

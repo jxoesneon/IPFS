@@ -45,10 +45,7 @@ PluginHost _createHost({
     trustedKeysPath: trustedKeysPath,
     allowUnsigned: allowUnsigned,
   );
-  return PluginHost(
-    config: config,
-    metrics: MetricsCollector(IPFSConfig()),
-  );
+  return PluginHost(config: config, metrics: MetricsCollector(IPFSConfig()));
 }
 
 const _unsignedMetricsManifest = '''
@@ -109,7 +106,8 @@ class TempPlugin {}
     'entrypoint': 'main.dart',
   };
 
-  final yaml = '''
+  final yaml =
+      '''
 plugin:
   id: $id
   name: Temp Plugin
@@ -147,13 +145,25 @@ Future<String> _signPluginManifest(
     'checksums': {'archive_sha256': checksum},
   };
   final canonicalBytes = PluginManifest.canonicalBytes(manifestMapWithChecksum);
-  final signature = await signer.sign(Uint8List.fromList(canonicalBytes), keyPair);
+  final signature = await signer.sign(
+    Uint8List.fromList(canonicalBytes),
+    keyPair,
+  );
   final publicKey = await signer.extractPublicKeyBytes(keyPair);
 
   return manifestYaml
-      .replaceAll(RegExp(r'public_key: "[^"]*"'), 'public_key: "${base64Encode(publicKey)}"')
-      .replaceAll(RegExp(r'signature: "[^"]*"'), 'signature: "${base64Encode(signature)}"')
-      .replaceAll(RegExp(r'archive_sha256: "[^"]*"'), 'archive_sha256: "$checksum"');
+      .replaceAll(
+        RegExp(r'public_key: "[^"]*"'),
+        'public_key: "${base64Encode(publicKey)}"',
+      )
+      .replaceAll(
+        RegExp(r'signature: "[^"]*"'),
+        'signature: "${base64Encode(signature)}"',
+      )
+      .replaceAll(
+        RegExp(r'archive_sha256: "[^"]*"'),
+        'archive_sha256: "$checksum"',
+      );
 }
 
 /// Computes a stable SHA-256 checksum of all plugin files except the manifest.
@@ -164,7 +174,9 @@ Future<String> _computeArchiveChecksum(String pluginDir) async {
       .whereType<File>()
       .where((f) => p.basename(f.path) != 'plugin.yaml')
       .toList();
-  files.sort((a, b) => _relativePath(root, a).compareTo(_relativePath(root, b)));
+  files.sort(
+    (a, b) => _relativePath(root, a).compareTo(_relativePath(root, b)),
+  );
   final builder = BytesBuilder();
   for (final file in files) {
     final relativePath = _relativePath(root, file);
@@ -183,11 +195,10 @@ String _relativePath(Directory root, File file) {
 void main() {
   group('PluginHost signed plugin trust', () {
     test('signed plugin loads when trusted', () async {
-      final fixture = _fixturePath('test/fixtures/plugin_test_public_key.base64');
-      final host = _createHost(
-        enabled: true,
-        trustedKeysPath: fixture,
+      final fixture = _fixturePath(
+        'test/fixtures/plugin_test_public_key.base64',
       );
+      final host = _createHost(enabled: true, trustedKeysPath: fixture);
       await host.initialize();
 
       final pluginDir = _fixturePath('example/plugins/metrics_emitter');
@@ -198,7 +209,9 @@ void main() {
       expect(loaded.disabled, isFalse);
       expect(loaded.grantedCapabilities, contains('metrics.emit'));
 
-      final audit = host.auditLog.forPlugin('org.dart-ipfs.examples.metrics-emitter');
+      final audit = host.auditLog.forPlugin(
+        'org.dart-ipfs.examples.metrics-emitter',
+      );
       expect(audit.last.outcome, 'loaded-signed');
     });
 
@@ -215,7 +228,9 @@ void main() {
 
   group('PluginHost archive checksum verification', () {
     test('tampered plugin archive fails after valid signature', () async {
-      final tempDir = await Directory.systemTemp.createTemp('plugin_security_test');
+      final tempDir = await Directory.systemTemp.createTemp(
+        'plugin_security_test',
+      );
       final pluginDir = Directory('${tempDir.path}/temp_plugin');
 
       final plugin = await _createTempPlugin(
@@ -251,7 +266,9 @@ void main() {
 
       // Tamper with the plugin code.
       final mainFile = File('${pluginDir.path}/main.dart');
-      await mainFile.writeAsString('// tampered\n${await mainFile.readAsString()}');
+      await mainFile.writeAsString(
+        '// tampered\n${await mainFile.readAsString()}',
+      );
 
       // A new host should now reject the plugin because the archive checksum
       // no longer matches the signed manifest.
@@ -278,64 +295,84 @@ void main() {
       final loaded = await host.loadPluginFromYaml(_unsignedMetricsManifest);
 
       expect(loaded, isNull);
-      final audit = host.auditLog.forPlugin('org.dart-ipfs.examples.unsigned-metrics-emitter');
+      final audit = host.auditLog.forPlugin(
+        'org.dart-ipfs.examples.unsigned-metrics-emitter',
+      );
       expect(audit.last.outcome, 'rejected');
       expect(audit.last.reason, 'unsigned plugin not allowed');
     });
 
-    test('unsigned plugin loads with allowUnsigned=true and logs a warning', () async {
-      final host = _createHost(enabled: true, allowUnsigned: true);
-      await host.initialize();
+    test(
+      'unsigned plugin loads with allowUnsigned=true and logs a warning',
+      () async {
+        final host = _createHost(enabled: true, allowUnsigned: true);
+        await host.initialize();
 
-      final loaded = await host.loadPluginFromYaml(_unsignedMetricsManifest);
+        final loaded = await host.loadPluginFromYaml(_unsignedMetricsManifest);
 
-      expect(loaded, isNotNull);
-      expect(loaded!.manifest.id, 'org.dart-ipfs.examples.unsigned-metrics-emitter');
-      expect(loaded.disabled, isFalse);
+        expect(loaded, isNotNull);
+        expect(
+          loaded!.manifest.id,
+          'org.dart-ipfs.examples.unsigned-metrics-emitter',
+        );
+        expect(loaded.disabled, isFalse);
 
-      final audit = host.auditLog.forPlugin('org.dart-ipfs.examples.unsigned-metrics-emitter');
-      expect(audit.last.outcome, 'loaded-unsigned');
-      expect(audit.last.reason, 'allowUnsigned=true');
-    });
+        final audit = host.auditLog.forPlugin(
+          'org.dart-ipfs.examples.unsigned-metrics-emitter',
+        );
+        expect(audit.last.outcome, 'loaded-unsigned');
+        expect(audit.last.reason, 'allowUnsigned=true');
+      },
+    );
   });
 
   group('PluginHost capability enforcement', () {
-    test('capability violation throws CapabilityException and disables the plugin', () async {
-      final host = _createHost(enabled: true, allowUnsigned: true);
-      await host.initialize();
+    test(
+      'capability violation throws CapabilityException and disables the plugin',
+      () async {
+        final host = _createHost(enabled: true, allowUnsigned: true);
+        await host.initialize();
 
-      // Load a plugin that does NOT have metrics.emit.
-      final loaded = await host.loadPluginFromYaml(_unsignedNoMetricsManifest);
-      expect(loaded, isNotNull);
-      expect(loaded!.manifest.id, 'org.dart-ipfs.examples.no-metrics');
-      expect(loaded.grantedCapabilities, isNot(contains('metrics.emit')));
+        // Load a plugin that does NOT have metrics.emit.
+        final loaded = await host.loadPluginFromYaml(
+          _unsignedNoMetricsManifest,
+        );
+        expect(loaded, isNotNull);
+        expect(loaded!.manifest.id, 'org.dart-ipfs.examples.no-metrics');
+        expect(loaded.grantedCapabilities, isNot(contains('metrics.emit')));
 
-      final emitter = host.metricsEmitterFor('org.dart-ipfs.examples.no-metrics');
-      expect(emitter, isNotNull);
+        final emitter = host.metricsEmitterFor(
+          'org.dart-ipfs.examples.no-metrics',
+        );
+        expect(emitter, isNotNull);
 
-      expect(
-        () => emitter!.emitCounter('test_counter'),
-        throwsA(isA<CapabilityException>()),
-      );
+        expect(
+          () => emitter!.emitCounter('test_counter'),
+          throwsA(isA<CapabilityException>()),
+        );
 
-      expect(loaded.disabled, isTrue);
-      final audit = host.auditLog.forPlugin('org.dart-ipfs.examples.no-metrics');
-      expect(audit.any((e) => e.outcome == 'disabled'), isTrue);
-    });
+        expect(loaded.disabled, isTrue);
+        final audit = host.auditLog.forPlugin(
+          'org.dart-ipfs.examples.no-metrics',
+        );
+        expect(audit.any((e) => e.outcome == 'disabled'), isTrue);
+      },
+    );
 
     test('granted capability allows metric emission', () async {
-      final fixture = _fixturePath('test/fixtures/plugin_test_public_key.base64');
-      final host = _createHost(
-        enabled: true,
-        trustedKeysPath: fixture,
+      final fixture = _fixturePath(
+        'test/fixtures/plugin_test_public_key.base64',
       );
+      final host = _createHost(enabled: true, trustedKeysPath: fixture);
       await host.initialize();
 
       final pluginDir = _fixturePath('example/plugins/metrics_emitter');
       final loaded = await host.loadPluginFromDirectory(pluginDir);
       expect(loaded, isNotNull);
 
-      final emitter = host.metricsEmitterFor('org.dart-ipfs.examples.metrics-emitter');
+      final emitter = host.metricsEmitterFor(
+        'org.dart-ipfs.examples.metrics-emitter',
+      );
       expect(emitter, isNotNull);
 
       expect(() => emitter!.emitCounter('allowed_counter'), returnsNormally);
@@ -346,14 +383,23 @@ void main() {
   group('CapabilityRegistry', () {
     test('unknown capabilities are rejected', () {
       final registry = CapabilityRegistry();
-      expect(registry.unknownCapabilities(['metrics.emit', 'invalid.capability']), equals(['invalid.capability']));
+      expect(
+        registry.unknownCapabilities(['metrics.emit', 'invalid.capability']),
+        equals(['invalid.capability']),
+      );
     });
 
     test('require throws CapabilityException for ungranted capability', () {
       final registry = CapabilityRegistry();
       expect(
         () => registry.require('test-plugin', 'metrics.emit', {}),
-        throwsA(isA<CapabilityException>().having((e) => e.outcome, 'outcome', 'denied')),
+        throwsA(
+          isA<CapabilityException>().having(
+            (e) => e.outcome,
+            'outcome',
+            'denied',
+          ),
+        ),
       );
     });
   });

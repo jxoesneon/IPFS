@@ -34,12 +34,15 @@ void main() {
       );
     });
 
-    test('start() subscribes to PubSub topic', () async {
+    test('start() subscribes to PubSub topic when enabled', () async {
+      ipnsHandler = IPNSHandler(
+        IPFSConfig(offline: false, enableIpnsPubSub: true),
+        mockSecurityManager,
+        mockDHTHandler,
+        mockPubSubHandler,
+      );
       when(mockDHTHandler.start()).thenAnswer((_) async {});
       when(mockPubSubHandler.subscribe(any)).thenAnswer((_) async {});
-
-      // Stub the void method onMessage? It returns void.
-      // Mockito stubbing for void methods works via when(...) but since it's void return, just verify calls.
 
       await ipnsHandler.start();
 
@@ -47,7 +50,7 @@ void main() {
       verify(mockPubSubHandler.onMessage('/ipfs/ipns-1.0.0', any)).called(1);
     });
 
-    test('publish() broadcasts record via PubSub', () async {
+    test('publish() stores signed record via DHT', () async {
       // Setup successful keystore access
       when(mockSecurityManager.isKeystoreUnlocked).thenReturn(true);
 
@@ -69,12 +72,11 @@ void main() {
       await ipnsHandler.start();
       await ipnsHandler.publish(validCid, keyName: 'self');
 
-      verify(
-        mockPubSubHandler.publish(
-          '/ipfs/ipns-1.0.0',
-          any, // We expect a base64 string
-        ),
-      ).called(1);
+      // DHT store should be invoked via the legacy putValue fallback.
+      verify(mockDHTHandler.putValue(any, any)).called(1);
+
+      // The legacy base64 PubSub broadcast has been removed.
+      verifyNever(mockPubSubHandler.publish('/ipfs/ipns-1.0.0', any));
     });
   });
 }

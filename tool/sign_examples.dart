@@ -61,9 +61,14 @@ Future<void> main() async {
       ...manifestMap,
       'checksums': {'archive_sha256': archiveChecksum},
     };
-    final canonicalBytes = PluginManifest.canonicalBytes(manifestMapWithChecksum);
+    final canonicalBytes = PluginManifest.canonicalBytes(
+      manifestMapWithChecksum,
+    );
 
-    final signature = await signer.sign(Uint8List.fromList(canonicalBytes), keyPair);
+    final signature = await signer.sign(
+      Uint8List.fromList(canonicalBytes),
+      keyPair,
+    );
     final signatureBase64 = base64Encode(signature);
 
     // Update the YAML with the ephemeral public key, signature, and checksum.
@@ -91,7 +96,9 @@ String _findRepoRoot(String start) {
     }
     final parent = dir.parent;
     if (parent.path == dir.path) {
-      throw StateError('Could not find repository root containing pubspec.yaml');
+      throw StateError(
+        'Could not find repository root containing pubspec.yaml',
+      );
     }
     dir = parent;
   }
@@ -134,7 +141,9 @@ Future<String> _computeArchiveChecksum(String pluginDirectory) async {
       .whereType<File>()
       .where((f) => p.basename(f.path) != 'plugin.yaml')
       .toList();
-  files.sort((a, b) => _relativePath(root, a).compareTo(_relativePath(root, b)));
+  files.sort(
+    (a, b) => _relativePath(root, a).compareTo(_relativePath(root, b)),
+  );
 
   final builder = BytesBuilder();
   for (final file in files) {
@@ -160,16 +169,10 @@ String _replaceSignatureAndChecksum(
   required String archiveSha256,
 }) {
   return yaml
-    .replaceAll(
-      RegExp(r'public_key: "[^"]*"'),
-      'public_key: "$publicKey"',
-    )
-    .replaceAll(
-      RegExp(r'signature: "[^"]*"'),
-      'signature: "$signature"',
-    )
-    .replaceAll(
-      RegExp(r'archive_sha256: "[^"]*"'),
-      'archive_sha256: "$archiveSha256"',
-    );
+      .replaceAll(RegExp(r'public_key: "[^"]*"'), 'public_key: "$publicKey"')
+      .replaceAll(RegExp(r'signature: "[^"]*"'), 'signature: "$signature"')
+      .replaceAll(
+        RegExp(r'archive_sha256: "[^"]*"'),
+        'archive_sha256: "$archiveSha256"',
+      );
 }

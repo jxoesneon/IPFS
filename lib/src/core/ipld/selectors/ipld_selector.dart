@@ -8,7 +8,15 @@ import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:fixnum/fixnum.dart';
 
+import 'selector_ast.dart';
+import 'selector_executor.dart';
+
+export 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
+export 'selector_ast.dart';
+export 'selector_executor.dart';
+
 /// Types of IPLD selectors for DAG traversal.
+@Deprecated('Use the official Selector vocabulary from selector_ast.dart')
 enum SelectorType {
   /// Select all nodes.
   all,
@@ -33,6 +41,7 @@ enum SelectorType {
 }
 
 /// Result of a selector execution.
+@Deprecated('Use SelectedNode from selector_ast.dart')
 class SelectorResult {
   /// Creates a selector result.
   SelectorResult({required this.cid, required this.node, this.path});
@@ -51,6 +60,7 @@ class SelectorResult {
 ///
 /// Selectors define patterns for matching and extracting subsets
 /// of IPLD DAGs, used in Graphsync for efficient data transfer.
+@Deprecated('Use the official Selector vocabulary from selector_ast.dart')
 class IPLDSelector {
   /// Creates a selector with the given parameters.
   IPLDSelector({
@@ -416,5 +426,56 @@ class IPLDSelector {
           .value
           .boolValue,
     );
+  }
+
+  /// Best-effort conversion to the official [Selector] vocabulary.
+  ///
+  /// This is provided for backward compatibility with the legacy
+  /// [IPLDSelector] API. Complex criteria and intersection semantics are
+  /// approximated or dropped.
+  Selector toSpecSelector() {
+    switch (type) {
+      case SelectorType.all:
+        return const ExploreAll(next: Matcher());
+      case SelectorType.none:
+        return ExploreFields(fields: <String, Selector>{});
+      case SelectorType.matcher:
+        return const Matcher();
+      case SelectorType.recursive:
+        final sub =
+            subSelectors?.firstOrNull?.toSpecSelector() ?? const Matcher();
+        return ExploreRecursive(
+          limit: DepthRecursionLimit(maxDepth ?? defaultSelectorMaxDepth),
+          sequence: sub,
+        );
+      case SelectorType.union:
+        return ExploreUnion(
+          members:
+              subSelectors?.map((s) => s.toSpecSelector()).toList() ?? const [],
+        );
+      case SelectorType.intersection:
+        // Intersection is not part of the official vocabulary; approximate
+        // with the first member.
+        return subSelectors?.firstOrNull?.toSpecSelector() ?? const Matcher();
+      case SelectorType.explore:
+        final sub =
+            subSelectors?.firstOrNull?.toSpecSelector() ?? const Matcher();
+        final segments = (fieldPath ?? '')
+            .split('/')
+            .where((s) => s.isNotEmpty)
+            .toList();
+        if (segments.isEmpty) return sub;
+        Selector current = sub;
+        for (var i = segments.length - 1; i >= 0; i--) {
+          final segment = segments[i];
+          final index = int.tryParse(segment);
+          if (index != null) {
+            current = ExploreIndex(index: index, next: current);
+          } else {
+            current = ExploreFields(fields: {segment: current});
+          }
+        }
+        return current;
+    }
   }
 }

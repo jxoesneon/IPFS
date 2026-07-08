@@ -133,6 +133,9 @@ class MockRouter implements RouterInterface {
   List<String> resolvePeerId(String peerIdStr) => [
     '/ip4/127.0.0.1/tcp/4001/p2p/$peerIdStr',
   ];
+
+  @override
+  void registerRelayedConnection(String targetPeerId, String relayAddr) {}
 }
 
 void main() {

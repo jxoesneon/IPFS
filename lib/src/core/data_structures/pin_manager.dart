@@ -22,6 +22,9 @@ class PinManager {
   final BlockStore _blockStore;
   final Logger _logger;
 
+  /// Returns the underlying block store.
+  BlockStore get blockStore => _blockStore;
+
   /// Loads the pin state from a file.
   Future<void> load(String path) async {
     try {
@@ -250,6 +253,34 @@ class PinManager {
     }
 
     return pinnedBlocks;
+  }
+
+  /// Returns the CID strings of all recursive pins.
+  List<String> getRecursivePins() {
+    return _pins.entries
+        .where((entry) => entry.value == PinTypeProto.PIN_TYPE_RECURSIVE)
+        .map((entry) => entry.key)
+        .toList();
+  }
+
+  /// Returns the CID strings of top-level recursive pins.
+  ///
+  /// A top-level recursive pin is a recursive pin that is not referenced by
+  /// any other recursive pin.
+  List<String> getRecursivePinRoots() {
+    final recursivePins = getRecursivePins().toSet();
+    if (recursivePins.isEmpty) return [];
+
+    final referencedByRecursive = <String>{};
+    for (final entry in _references.entries) {
+      if (recursivePins.contains(entry.key)) {
+        referencedByRecursive.addAll(entry.value);
+      }
+    }
+
+    return recursivePins
+        .where((cid) => !referencedByRecursive.contains(cid))
+        .toList();
   }
 
   IPFSCIDProto _stringToIPFSCIDProto(String cidStr) {

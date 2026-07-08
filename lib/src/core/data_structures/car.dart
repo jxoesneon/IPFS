@@ -96,19 +96,18 @@ class CarHeader {
     }
 
     final rootsList = IPLDList()
-      ..values.addAll(roots.map((cid) {
-        final link = IPLDLink(
-          version: cid.version,
-          codec: cid.codec ?? 'raw',
-          multihash: cid.multihash.toBytes(),
-        );
-        return IPLDNode(kind: Kind.LINK, linkValue: link);
-      }));
+      ..values.addAll(
+        roots.map((cid) {
+          final link = IPLDLink(
+            version: cid.version,
+            codec: cid.codec ?? 'raw',
+            multihash: cid.multihash.toBytes(),
+          );
+          return IPLDNode(kind: Kind.LINK, linkValue: link);
+        }),
+      );
 
-    final versionNode = IPLDNode(
-      kind: Kind.INTEGER,
-      intValue: Int64(version),
-    );
+    final versionNode = IPLDNode(kind: Kind.INTEGER, intValue: Int64(version));
 
     final map = IPLDMap()
       ..entries.add(
@@ -294,9 +293,7 @@ class _IndexEntry {
 /// Streaming/iterable reader for CAR v1 and v2 archives.
 class CarReader {
   /// Parses a CAR archive from the given byte data.
-  CarReader.fromBytes(Uint8List bytes)
-      : _bytes = bytes,
-        _stream = null;
+  CarReader.fromBytes(Uint8List bytes) : _bytes = bytes, _stream = null;
 
   /// Parses a CAR archive from a stream of byte chunks.
   ///
@@ -305,8 +302,8 @@ class CarReader {
   /// keeping the parser simple; future work can replace the accumulator with a
   /// true incremental parser.
   CarReader.fromStream(Stream<Uint8List> stream)
-      : _bytes = null,
-        _stream = stream;
+    : _bytes = null,
+      _stream = stream;
 
   final Uint8List? _bytes;
   final Stream<Uint8List>? _stream;
@@ -487,9 +484,7 @@ class CarReader {
       final (offsetLenLen, sectionOffset) = _readVarint(_indexPayload!, offset);
       offset += offsetLenLen;
 
-      entries.add(
-        _IndexedEntry(digest, sectionOffset, multihashCode),
-      );
+      entries.add(_IndexedEntry(digest, sectionOffset, multihashCode));
     }
 
     return entries;
@@ -645,9 +640,7 @@ class CarWriter {
     final writtenCids = _pending.map((s) => s.cid.encode()).toSet();
     for (final root in rootSet) {
       if (!writtenCids.contains(root)) {
-        throw CarHeaderException(
-          'Root CID $root must be written as a section',
-        );
+        throw CarHeaderException('Root CID $root must be written as a section');
       }
     }
 
@@ -686,7 +679,9 @@ class CarWriter {
     builder.add(_encodeVarint(headerBytes.length));
     builder.add(headerBytes);
 
-    final indexBuilder = index ? IndexBuilder(multihashSorted: multihashIndex) : null;
+    final indexBuilder = index
+        ? IndexBuilder(multihashSorted: multihashIndex)
+        : null;
     var offset = builder.length;
 
     for (final section in _pending) {
@@ -824,6 +819,16 @@ bool _bytesEqual(Uint8List a, Uint8List b) {
 // CAR v2 constants
 // ---------------------------------------------------------------------------
 
-final _carV2Pragma = Uint8List.fromList(
-  [0x0a, 0xa1, 0x67, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x02],
-);
+final _carV2Pragma = Uint8List.fromList([
+  0x0a,
+  0xa1,
+  0x67,
+  0x76,
+  0x65,
+  0x72,
+  0x73,
+  0x69,
+  0x6f,
+  0x6e,
+  0x02,
+]);

@@ -155,7 +155,7 @@ void main() {
       await controller.close();
     });
 
-    test('unimplemented methods throw', () {
+    test('stat and scope return sensible values', () {
       final conn = WebRTCConnection(
         mockPC,
         mockBaseChannel,
@@ -163,8 +163,11 @@ void main() {
         localPeer,
         remotePeer,
       );
-      expect(() => conn.stat, throwsUnimplementedError);
-      expect(() => conn.scope, throwsUnimplementedError);
+      expect(conn.stat, isA<libp2p.ConnStats>());
+      expect(conn.stat.numStreams, 1); // base channel is tracked
+      expect(conn.scope, isA<libp2p.ConnScope>());
+      expect(conn.iceConnectionState, isNull);
+      expect(conn.signalingState, isNull);
     });
   });
 

@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'dart:convert';
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
@@ -13,8 +12,39 @@ import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_proto;
+import 'package:dart_ipfs/src/protocols/dht/dht_envelope.dart';
+import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 
 import 'dht_client_coverage_test.mocks.dart';
+
+/// Mocks [router].sendMessage by echoing the captured request id back inside a
+/// [DHTEnvelope] so the DHT client's request/response correlation can match
+/// the response to the outstanding request.
+void _mockEnvelopeResponse(
+  MockRouterInterface router,
+  String srcPeerId,
+  kad.Message response,
+) {
+  final capturedHandlers = verify(
+    router.registerProtocolHandler(any, captureAny),
+  ).captured;
+  final lastHandler = capturedHandlers.last as void Function(NetworkPacket);
+  when(router.sendMessage(any, any)).thenAnswer((invocation) async {
+    final data = invocation.positionalArguments[1] as Uint8List;
+    final envelope = DHTEnvelope.fromBytes(data);
+    Future<void>.delayed(const Duration(milliseconds: 1), () {
+      lastHandler(
+        NetworkPacket(
+          srcPeerId: srcPeerId,
+          datagram: DHTEnvelope(
+            requestId: envelope.requestId,
+            payload: response.writeToBuffer(),
+          ).toBytes(),
+        ),
+      );
+    });
+  });
+}
 
 @GenerateNiceMocks([
   MockSpec<RouterInterface>(),
@@ -73,7 +103,6 @@ void main() {
     test('findProviders sends request to closest peers', () async {
       await client.initialize();
 
-      final targetPeer = PeerId(value: Uint8List(32));
       // kademliaRoutingTable is private but I can use findClosestPeers if it was public or I just wait for the calls
       // Actually I should have used a mock for RoutingTable too but it's created internally.
       // For now I'll just check that it tries to find closest peers and sends messages.
@@ -95,9 +124,17 @@ void main() {
         // Find the response handler registered by _sendRequest
         // This is tricky because _sendRequest registers it and wait for it.
         // We can simulate the response by calling the handler directly if we can capture it.
+
+        // Avoid unused variable warnings while keeping the intent visible.
+        expect(dst, isNotEmpty);
+        expect(data, isNotEmpty);
+        expect(cid, isNotEmpty);
       });
 
       // Instead of deep mocking the iterative query, let's test simpler things first.
+      await client
+          .findProviders(cid)
+          .timeout(const Duration(milliseconds: 100), onTimeout: () => []);
     });
 
     test('storeValueToPeer success', () async {
@@ -119,8 +156,8 @@ void main() {
       // For coverage of the failure path:
       final result = await client
           .storeValueToPeer(peer, key, value)
-          .timeout(Duration(milliseconds: 100), onTimeout: () => false);
-      // expect(result, isFalse); // It should time out and return false in the catch block if we let it
+          .timeout(const Duration(milliseconds: 100), onTimeout: () => false);
+      expect(result, isFalse);
     });
 
     test('listsEqual', () {
@@ -145,24 +182,13 @@ void main() {
       );
       final responseMsg = kad.Message()
         ..type = kad.Message_MessageType.GET_PROVIDERS
-        ..providerPeers.add(kad.Peer()..id = providerPeer.value);
+        ..providerPeers.add(
+          kad.Peer()
+            ..id = providerPeer.value
+            ..addrs.add(libp2p.MultiAddr('/ip4/127.0.0.1/tcp/4001').toBytes()),
+        );
 
-      when(mockRouter.sendMessage(any, any)).thenAnswer((invocation) async {
-        final capturedHandlers = verify(
-          mockRouter.registerProtocolHandler(any, captureAny),
-        ).captured;
-        final lastHandler =
-            capturedHandlers.last as void Function(NetworkPacket);
-
-        Future.delayed(Duration(milliseconds: 1), () {
-          lastHandler(
-            NetworkPacket(
-              srcPeerId: otherPeer.toBase58(),
-              datagram: responseMsg.writeToBuffer(),
-            ),
-          );
-        });
-      });
+      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
 
       final providers = await client.findProviders(
         'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
@@ -210,14 +236,15 @@ void main() {
 
       final packet = NetworkPacket(
         srcPeerId: 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
-        datagram: (kad.Message()..type = kad.Message_MessageType.PING)
-            .writeToBuffer(),
+        datagram: DHTEnvelope(
+          requestId: '',
+          payload: (kad.Message()..type = kad.Message_MessageType.PING)
+              .writeToBuffer(),
+        ).toBytes(),
       );
 
       capturedHandler(packet);
-      await Future.delayed(
-        Duration(milliseconds: 10),
-      ); // Give async handler time to run
+      await Future<void>.delayed(const Duration(milliseconds: 100));
       verify(mockRouter.sendMessage(any, any)).called(1);
     });
 
@@ -231,17 +258,18 @@ void main() {
 
       final packet = NetworkPacket(
         srcPeerId: 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
-        datagram:
-            (kad.Message()
-                  ..type = kad.Message_MessageType.FIND_NODE
-                  ..key = Uint8List(32))
-                .writeToBuffer(),
+        datagram: DHTEnvelope(
+          requestId: '',
+          payload:
+              (kad.Message()
+                    ..type = kad.Message_MessageType.FIND_NODE
+                    ..key = Uint8List(32))
+                  .writeToBuffer(),
+        ).toBytes(),
       );
 
       capturedHandler(packet);
-      await Future.delayed(
-        Duration(milliseconds: 10),
-      ); // Give async handler time to run
+      await Future<void>.delayed(const Duration(milliseconds: 100));
       verify(mockRouter.sendMessage(any, any)).called(1);
     });
 
@@ -255,22 +283,7 @@ void main() {
       final responseMsg = kad.Message()
         ..type = kad.Message_MessageType.ADD_PROVIDER;
 
-      when(mockRouter.sendMessage(any, any)).thenAnswer((invocation) async {
-        final capturedHandlers = verify(
-          mockRouter.registerProtocolHandler(any, captureAny),
-        ).captured;
-        final lastHandler =
-            capturedHandlers.last as void Function(NetworkPacket);
-
-        Future.delayed(Duration(milliseconds: 1), () {
-          lastHandler(
-            NetworkPacket(
-              srcPeerId: otherPeer.toBase58(),
-              datagram: responseMsg.writeToBuffer(),
-            ),
-          );
-        });
-      });
+      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
 
       await client.addProvider(
         'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
@@ -289,22 +302,7 @@ void main() {
         ..type = kad.Message_MessageType.GET_VALUE
         ..record = (dht_proto.Record()..value = Uint8List.fromList([1, 2, 3]));
 
-      when(mockRouter.sendMessage(any, any)).thenAnswer((invocation) async {
-        final capturedHandlers = verify(
-          mockRouter.registerProtocolHandler(any, captureAny),
-        ).captured;
-        final lastHandler =
-            capturedHandlers.last as void Function(NetworkPacket);
-
-        Future.delayed(Duration(milliseconds: 1), () {
-          lastHandler(
-            NetworkPacket(
-              srcPeerId: otherPeer.toBase58(),
-              datagram: responseMsg.writeToBuffer(),
-            ),
-          );
-        });
-      });
+      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
 
       final result = await client.checkValueOnPeer(otherPeer, Uint8List(32));
       expect(result, isTrue);
@@ -320,22 +318,7 @@ void main() {
       final responseMsg = kad.Message()
         ..type = kad.Message_MessageType.PUT_VALUE;
 
-      when(mockRouter.sendMessage(any, any)).thenAnswer((invocation) async {
-        final capturedHandlers = verify(
-          mockRouter.registerProtocolHandler(any, captureAny),
-        ).captured;
-        final lastHandler =
-            capturedHandlers.last as void Function(NetworkPacket);
-
-        Future.delayed(Duration(milliseconds: 1), () {
-          lastHandler(
-            NetworkPacket(
-              srcPeerId: otherPeer.toBase58(),
-              datagram: responseMsg.writeToBuffer(),
-            ),
-          );
-        });
-      });
+      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
 
       final result = await client.storeValue(Uint8List(32), Uint8List(10));
       expect(result, isTrue);
@@ -353,22 +336,7 @@ void main() {
         ..type = kad.Message_MessageType.GET_VALUE
         ..record = (dht_proto.Record()..value = value);
 
-      when(mockRouter.sendMessage(any, any)).thenAnswer((invocation) async {
-        final capturedHandlers = verify(
-          mockRouter.registerProtocolHandler(any, captureAny),
-        ).captured;
-        final lastHandler =
-            capturedHandlers.last as void Function(NetworkPacket);
-
-        Future.delayed(Duration(milliseconds: 1), () {
-          lastHandler(
-            NetworkPacket(
-              srcPeerId: otherPeer.toBase58(),
-              datagram: responseMsg.writeToBuffer(),
-            ),
-          );
-        });
-      });
+      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
 
       final result = await client.getValue(Uint8List(32));
       expect(result, equals(value));
@@ -385,22 +353,7 @@ void main() {
         ..type = kad.Message_MessageType.FIND_NODE
         ..closerPeers.add(kad.Peer()..id = otherPeer.value);
 
-      when(mockRouter.sendMessage(any, any)).thenAnswer((invocation) async {
-        final capturedHandlers = verify(
-          mockRouter.registerProtocolHandler(any, captureAny),
-        ).captured;
-        final lastHandler =
-            capturedHandlers.last as void Function(NetworkPacket);
-
-        Future.delayed(Duration(milliseconds: 1), () {
-          lastHandler(
-            NetworkPacket(
-              srcPeerId: otherPeer.toBase58(),
-              datagram: responseMsg.writeToBuffer(),
-            ),
-          );
-        });
-      });
+      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
 
       final result = await client.findPeer(otherPeer);
       expect(result?.toBase58(), equals(otherPeer.toBase58()));
@@ -435,39 +388,30 @@ void main() {
 
       final result = await client
           .getValue(Uint8List(32))
-          .timeout(Duration(milliseconds: 100), onTimeout: () => Uint8List(0));
+          .timeout(
+            const Duration(milliseconds: 100),
+            onTimeout: () => Uint8List(0),
+          );
       expect(result, isEmpty);
     });
 
     test('findPeer with no closer peers returns null', () async {
       await client.initialize();
-      final otherPeer = PeerId.fromBase58(
+      final knownPeer = PeerId.fromBase58(
         'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
       );
-      await client.kademliaRoutingTable.addPeer(otherPeer, otherPeer);
+      final target = PeerId.fromBase58(
+        'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w',
+      );
+      await client.kademliaRoutingTable.addPeer(knownPeer, knownPeer);
 
       final responseMsg = kad.Message()
         ..type = kad.Message_MessageType.FIND_NODE
         ..closerPeers.clear(); // No closer peers
 
-      when(mockRouter.sendMessage(any, any)).thenAnswer((invocation) async {
-        final capturedHandlers = verify(
-          mockRouter.registerProtocolHandler(any, captureAny),
-        ).captured;
-        final lastHandler =
-            capturedHandlers.last as void Function(NetworkPacket);
+      _mockEnvelopeResponse(mockRouter, knownPeer.toBase58(), responseMsg);
 
-        Future.delayed(Duration(milliseconds: 1), () {
-          lastHandler(
-            NetworkPacket(
-              srcPeerId: otherPeer.toBase58(),
-              datagram: responseMsg.writeToBuffer(),
-            ),
-          );
-        });
-      });
-
-      final result = await client.findPeer(otherPeer);
+      final result = await client.findPeer(target);
       expect(result, isNull);
     });
 
@@ -481,18 +425,21 @@ void main() {
 
       final packet = NetworkPacket(
         srcPeerId: 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
-        datagram: Uint8List.fromList([1, 2, 3]), // Invalid message
+        datagram: DHTEnvelope(
+          requestId: '',
+          payload: Uint8List.fromList([1, 2, 3]), // Invalid message
+        ).toBytes(),
       );
 
       // Should not throw
       capturedHandler(packet);
-      await Future.delayed(Duration(milliseconds: 10));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
     });
 
     test('getAllStoredKeys with empty storage returns empty', () async {
       await client.initialize();
 
-      when(mockStorage.query(any)).thenAnswer((_) => Stream.empty());
+      when(mockStorage.query(any)).thenAnswer((_) => const Stream.empty());
 
       final keys = await client.getAllStoredKeys();
       expect(keys, isEmpty);
@@ -515,22 +462,7 @@ void main() {
       final responseMsg = kad.Message()
         ..type = kad.Message_MessageType.GET_VALUE;
 
-      when(mockRouter.sendMessage(any, any)).thenAnswer((invocation) async {
-        final capturedHandlers = verify(
-          mockRouter.registerProtocolHandler(any, captureAny),
-        ).captured;
-        final lastHandler =
-            capturedHandlers.last as void Function(NetworkPacket);
-
-        Future.delayed(Duration(milliseconds: 1), () {
-          lastHandler(
-            NetworkPacket(
-              srcPeerId: otherPeer.toBase58(),
-              datagram: responseMsg.writeToBuffer(),
-            ),
-          );
-        });
-      });
+      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
 
       final result = await client.checkValueOnPeer(otherPeer, Uint8List(32));
       expect(result, isFalse);

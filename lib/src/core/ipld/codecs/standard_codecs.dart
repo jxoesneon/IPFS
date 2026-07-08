@@ -64,8 +64,10 @@ class DagPbCodec implements IPLDCodec {
       throw ArgumentError('Cannot convert non-map to MerkleDAGNode');
     }
 
-    final dataEntry = node.mapValue.entries
-        .firstWhere((e) => e.key == 'Data', orElse: () => MapEntry());
+    final dataEntry = node.mapValue.entries.firstWhere(
+      (e) => e.key == 'Data',
+      orElse: () => MapEntry(),
+    );
 
     final data = dataEntry.value.bytesValue;
 
@@ -75,20 +77,14 @@ class DagPbCodec implements IPLDCodec {
         .listValue
         .values;
 
-    final List<Link> links = linkEntries
-        .cast<IPLDNode>()
-        .map((linkNode) {
-          if (linkNode.kind != Kind.MAP) {
-            throw ArgumentError('Invalid link format');
-          }
-          return EnhancedCBORHandler.convertToMerkleLink(linkNode);
-        })
-        .toList();
+    final List<Link> links = linkEntries.cast<IPLDNode>().map((linkNode) {
+      if (linkNode.kind != Kind.MAP) {
+        throw ArgumentError('Invalid link format');
+      }
+      return EnhancedCBORHandler.convertToMerkleLink(linkNode);
+    }).toList();
 
-    return MerkleDAGNode(
-      links: links,
-      data: Uint8List.fromList(data),
-    );
+    return MerkleDAGNode(links: links, data: Uint8List.fromList(data));
   }
 }
 

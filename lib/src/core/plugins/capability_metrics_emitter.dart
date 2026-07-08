@@ -44,39 +44,29 @@ class CapabilityMetricsEmitter {
   /// `metrics.emit`. The plugin is disabled on violation.
   void emitCounter(String name, {int value = 1, Map<String, String>? labels}) {
     _require();
-    _metrics.recordProtocolMetrics(
-      'plugin',
-      {
-        'pluginId': _pluginId,
-        'metricType': 'counter',
-        'name': name,
-        'value': value,
-        // ignore: use_null_aware_elements
-        if (labels != null) 'labels': labels,
-      },
-    );
+    _metrics.recordProtocolMetrics('plugin', {
+      'pluginId': _pluginId,
+      'metricType': 'counter',
+      'name': name,
+      'value': value,
+      // ignore: use_null_aware_elements
+      if (labels != null) 'labels': labels,
+    });
   }
 
   /// Emits a named histogram metric.
   ///
   /// Throws [CapabilityException] if the plugin was not granted
   /// `metrics.emit`. The plugin is disabled on violation.
-  void emitHistogram(
-    String name,
-    double value, {
-    Map<String, String>? labels,
-  }) {
+  void emitHistogram(String name, double value, {Map<String, String>? labels}) {
     _require();
-    _metrics.recordProtocolMetrics(
-      'plugin',
-      {
-        'pluginId': _pluginId,
-        'metricType': 'histogram',
-        'name': name,
-        'value': value,
-        // ignore: use_null_aware_elements
-        if (labels != null) 'labels': labels,
-      },
-    );
+    _metrics.recordProtocolMetrics('plugin', {
+      'pluginId': _pluginId,
+      'metricType': 'histogram',
+      'name': name,
+      'value': value,
+      // ignore: use_null_aware_elements
+      if (labels != null) 'labels': labels,
+    });
   }
 }

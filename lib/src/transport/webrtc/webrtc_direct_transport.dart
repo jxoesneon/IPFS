@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:http/http.dart' as http;
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 import 'package:ipfs_libp2p/p2p/transport/listener.dart' as libp2p_listener;
@@ -8,13 +9,21 @@ import 'package:ipfs_libp2p/p2p/transport/transport_config.dart'
     as libp2p_config;
 
 import 'data_channel_stream.dart';
+import 'ice_server.dart';
 import 'peer_connection.dart';
 import 'webrtc_transport.dart';
 
 /// WebRTC Direct transport implementation for libp2p.
 class WebRTCDirectTransport implements libp2p_trans.Transport {
   /// Creates a new [WebRTCDirectTransport].
-  WebRTCDirectTransport();
+  WebRTCDirectTransport({NetworkConfig? networkConfig})
+    : _networkConfig = networkConfig;
+
+  final NetworkConfig? _networkConfig;
+
+  List<IceServer> get _iceServers => _networkConfig != null
+      ? buildIceServersFromNetworkConfig(_networkConfig)
+      : const [];
 
   @override
   libp2p_config.TransportConfig get config =>
@@ -40,7 +49,7 @@ class WebRTCDirectTransport implements libp2p_trans.Transport {
     final peerIdStr = parts.last;
     final peerId = libp2p.PeerId.fromString(peerIdStr);
 
-    final pc = createPeerConnection(const ['stun:stun.l.google.com:19302']);
+    final pc = createPeerConnection(_iceServers);
 
     // Create offer
     final offer = await pc.createOffer();

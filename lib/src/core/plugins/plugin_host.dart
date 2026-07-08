@@ -40,7 +40,8 @@ class PluginHostConfig {
       enabled: json['enabled'] as bool? ?? false,
       trustedKeysPath: json['trustedKeysPath'] as String?,
       allowUnsigned: json['allowUnsigned'] as bool? ?? false,
-      pluginDirectories: (json['pluginDirectories'] as List<dynamic>?)
+      pluginDirectories:
+          (json['pluginDirectories'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const [],
@@ -103,10 +104,10 @@ class PluginHost {
     PluginAuditLog? auditLog,
     CapabilityRegistry? capabilityRegistry,
     Ed25519Signer? signer,
-  })  : _metrics = metrics,
-        _auditLog = auditLog ?? PluginAuditLog(),
-        _signer = signer ?? Ed25519Signer(),
-        _logger = Logger('PluginHost', debug: true) {
+  }) : _metrics = metrics,
+       _auditLog = auditLog ?? PluginAuditLog(),
+       _signer = signer ?? Ed25519Signer(),
+       _logger = Logger('PluginHost', debug: true) {
     _registry = capabilityRegistry ?? CapabilityRegistry(auditLog: _auditLog);
   }
 
@@ -184,7 +185,10 @@ class PluginHost {
   ///
   /// If [directory] is provided, the archive checksum is verified against the
   /// files on disk (excluding the manifest itself).
-  Future<LoadedPlugin?> loadPluginFromYaml(String yaml, {String? directory}) async {
+  Future<LoadedPlugin?> loadPluginFromYaml(
+    String yaml, {
+    String? directory,
+  }) async {
     late final PluginManifest manifest;
     try {
       manifest = PluginManifest.fromYaml(yaml);
@@ -244,9 +248,7 @@ class PluginHost {
     if (directory != null) {
       final archiveValid = await _verifyArchiveChecksum(directory, manifest);
       if (!archiveValid) {
-        _logger.warning(
-          'Plugin ${manifest.id} archive checksum mismatch',
-        );
+        _logger.warning('Plugin ${manifest.id} archive checksum mismatch');
         _registry.recordLoadOutcome(
           manifest.id,
           outcome: 'rejected',
@@ -353,7 +355,9 @@ class PluginHost {
       try {
         final bytes = base64Decode(line);
         if (bytes.length == 32) {
-          _trustedKeys.add(_signer.publicKeyFromBytes(Uint8List.fromList(bytes)));
+          _trustedKeys.add(
+            _signer.publicKeyFromBytes(Uint8List.fromList(bytes)),
+          );
         } else {
           _logger.warning('Invalid trusted key length: ${bytes.length}');
         }
@@ -380,7 +384,10 @@ class PluginHost {
   /// Verifies the plugin archive checksum declared in [manifest] against the
   /// files in [directory]. The manifest file (`plugin.yaml`) is excluded from
   /// the hash so the signature can cover the checksum without circularity.
-  Future<bool> _verifyArchiveChecksum(String directory, PluginManifest manifest) async {
+  Future<bool> _verifyArchiveChecksum(
+    String directory,
+    PluginManifest manifest,
+  ) async {
     final checksum = manifest.checksums?['archive_sha256'];
     if (checksum == null || checksum.isEmpty) {
       return true;
@@ -398,7 +405,9 @@ class PluginHost {
         .where((entity) => entity is File)
         .cast<File>()
         .toList();
-    files.sort((a, b) => _relativePath(dir, a).compareTo(_relativePath(dir, b)));
+    files.sort(
+      (a, b) => _relativePath(dir, a).compareTo(_relativePath(dir, b)),
+    );
 
     for (final file in files) {
       final relativePath = _relativePath(dir, file);

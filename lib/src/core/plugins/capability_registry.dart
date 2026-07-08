@@ -9,11 +9,9 @@ import 'plugin_audit_log.dart';
 /// Deny-by-default registry for plugin capabilities.
 class CapabilityRegistry {
   /// Creates a registry with the optional [auditLog] and [knownCapabilities].
-  CapabilityRegistry({
-    PluginAuditLog? auditLog,
-    Set<String>? knownCapabilities,
-  })  : _auditLog = auditLog ?? PluginAuditLog(),
-        _knownCapabilities = knownCapabilities ?? _defaultCapabilities;
+  CapabilityRegistry({PluginAuditLog? auditLog, Set<String>? knownCapabilities})
+    : _auditLog = auditLog ?? PluginAuditLog(),
+      _knownCapabilities = knownCapabilities ?? _defaultCapabilities;
 
   final PluginAuditLog _auditLog;
   final Set<String> _knownCapabilities;

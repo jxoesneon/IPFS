@@ -336,6 +336,16 @@ class MockRouterInterface extends _i1.Mock implements _i8.RouterInterface {
             returnValue: <String>[],
           )
           as List<String>);
+
+  @override
+  void registerRelayedConnection(String? targetPeerId, String? relayAddr) =>
+      super.noSuchMethod(
+        Invocation.method(#registerRelayedConnection, [
+          targetPeerId,
+          relayAddr,
+        ]),
+        returnValueForMissingStub: null,
+      );
 }
 
 /// A class which mocks [IPFSNode].
@@ -870,6 +880,18 @@ class MockDHTHandler extends _i1.Mock implements _i21.DHTHandler {
           as bool);
 
   @override
+  bool isValidProviderRecord(
+    _i12.PeerId? provider,
+    String? cid,
+    DateTime? ttl,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#isValidProviderRecord, [provider, cid, ttl]),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
   String? extractCIDFromResponse(String? responseBody) =>
       (super.noSuchMethod(
             Invocation.method(#extractCIDFromResponse, [responseBody]),
@@ -890,6 +912,15 @@ class MockDHTHandler extends _i1.Mock implements _i21.DHTHandler {
   _i15.Future<void> provide(_i23.CID? cid) =>
       (super.noSuchMethod(
             Invocation.method(#provide, [cid]),
+            returnValue: _i15.Future<void>.value(),
+            returnValueForMissingStub: _i15.Future<void>.value(),
+          )
+          as _i15.Future<void>);
+
+  @override
+  _i15.Future<void> provideAll(List<_i23.CID>? cids) =>
+      (super.noSuchMethod(
+            Invocation.method(#provideAll, [cids]),
             returnValue: _i15.Future<void>.value(),
             returnValueForMissingStub: _i15.Future<void>.value(),
           )
@@ -1066,6 +1097,15 @@ class MockDHTClient extends _i1.Mock implements _i6.DHTClient {
           as _i15.Future<void>);
 
   @override
+  _i15.Future<void> addProviders(List<_i23.CID>? cids, String? providerId) =>
+      (super.noSuchMethod(
+            Invocation.method(#addProviders, [cids, providerId]),
+            returnValue: _i15.Future<void>.value(),
+            returnValueForMissingStub: _i15.Future<void>.value(),
+          )
+          as _i15.Future<void>);
+
+  @override
   _i15.Future<bool> storeValue(_i17.Uint8List? key, _i17.Uint8List? value) =>
       (super.noSuchMethod(
             Invocation.method(#storeValue, [key, value]),
@@ -1134,6 +1174,15 @@ class MockDHTClient extends _i1.Mock implements _i6.DHTClient {
             returnValue: _i15.Future<List<String>>.value(<String>[]),
           )
           as _i15.Future<List<String>>);
+
+  @override
+  _i15.Future<void> reprovide() =>
+      (super.noSuchMethod(
+            Invocation.method(#reprovide, []),
+            returnValue: _i15.Future<void>.value(),
+            returnValueForMissingStub: _i15.Future<void>.value(),
+          )
+          as _i15.Future<void>);
 
   @override
   _i15.Future<void> updateKeyRepublishTime(String? key) =>

@@ -16,6 +16,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
@@ -58,10 +59,22 @@ class IPFSNodeBuilder {
 
     // Register LifecycleManager early so that any core service, server, or
     // offline-mode node can resolve it from the container.
-    _container.registerSingleton(LifecycleManager());
+    final lifecycleManager = LifecycleManager();
+    _container.registerSingleton(lifecycleManager);
 
     final metrics = MetricsCollector(_config);
     _container.registerSingleton(metrics);
+    lifecycleManager.register(metrics);
+
+    final denylistService = DenylistService(
+      _config.security,
+      metrics,
+      storagePath:
+          _config.security.denylistStoragePath ??
+          '${_config.dataPath}/denylist_cache.txt',
+    );
+    _container.registerSingleton(denylistService);
+    lifecycleManager.register(denylistService);
 
     _container.registerSingleton(SecurityManager(_config.security, metrics));
 
@@ -71,6 +84,7 @@ class IPFSNodeBuilder {
 
     final blockStore = BlockStore(path: _config.blockStorePath);
     _container.registerSingleton(blockStore);
+    metrics.registerBlockStore(blockStore);
 
     _container.registerSingleton(IPLDHandler(_config, blockStore));
   }
@@ -87,7 +101,25 @@ class IPFSNodeBuilder {
     final router = networkHandler.router;
 
     if (_config.enableDHT) {
-      _container.registerSingleton(DHTHandler(_config, router, networkHandler));
+      final metrics = _container.get<MetricsCollector>();
+      final denylistService = _container.isRegistered<DenylistService>()
+          ? _container.get<DenylistService>()
+          : null;
+      final dhtHandler = DHTHandler(
+        _config,
+        router,
+        networkHandler,
+        metrics: metrics,
+        denylistService: denylistService,
+      );
+      _container.registerSingleton(dhtHandler);
+
+      // Provide the routing table size to the metrics collector once the DHT
+      // handler is available. The provider is invoked later by the periodic
+      // timer, so initialization order at this point is not critical.
+      metrics.registerRoutingTableProvider(
+        () => dhtHandler.dhtClient.kademliaRoutingTable.peerCount,
+      );
     }
 
     // Create IpfsNodeNetworkEvents instance
@@ -99,8 +131,16 @@ class IPFSNodeBuilder {
       );
     }
 
+    final denylistService = _container.isRegistered<DenylistService>()
+        ? _container.get<DenylistService>()
+        : null;
     _container.registerSingleton(
-      BitswapHandler(_config, _container.get<BlockStore>(), router),
+      BitswapHandler(
+        _config,
+        _container.get<BlockStore>(),
+        router,
+        denylistService: denylistService,
+      ),
     );
 
     _container.registerSingleton(BootstrapHandler(_config, networkHandler));
@@ -143,23 +183,41 @@ class IPFSNodeBuilder {
 
   Future<void> _registerServerLifecycleServices(IPFSNode node) async {
     final lifecycleManager = _container.get<LifecycleManager>();
+    final metrics = _container.get<MetricsCollector>();
 
     if (_config.enableRPC) {
       final rpcServer = RPCServer(
         node: node,
         address: 'localhost',
         port: 5001,
+        metricsCollector: metrics,
+        metricsConfig: _config.metrics,
       );
       _container.registerSingleton(rpcServer);
       lifecycleManager.register(rpcServer);
     }
 
     if (_config.gateway.enabled) {
+      final ipnsHandler = _container.isRegistered<IPNSHandler>()
+          ? _container.get<IPNSHandler>()
+          : null;
+      final denylistService = _container.isRegistered<DenylistService>()
+          ? _container.get<DenylistService>()
+          : null;
       final gatewayServer = GatewayServer(
         blockStore: _container.get<BlockStore>(),
         node: node,
         address: _config.gateway.address,
         port: _config.gateway.port,
+        metricsCollector: metrics,
+        metricsConfig: _config.metrics,
+        denylistService: denylistService,
+        ipnsResolver: ipnsHandler != null
+            ? (String name) async => ipnsHandler.resolve(name)
+            : null,
+        ipnsRecordResolver: ipnsHandler != null
+            ? (String name) async => ipnsHandler.getRecordBytes(name)
+            : null,
       );
       _container.registerSingleton(gatewayServer);
       lifecycleManager.register(gatewayServer);

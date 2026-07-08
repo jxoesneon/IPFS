@@ -1,0 +1,69 @@
+# k8s/overlays/development/kustomization.yaml
+# Development overlay for local clusters (e.g., kind, minikube, Docker Desktop).
+# Uses the rolling `edge` image tag and exposes the swarm and gateway ports via
+# NodePort for easy testing.
+#
+# Deploy with:
+#   kubectl apply -k k8s/overlays/development/
+#   kubectl -n dart-ipfs-dev port-forward svc/dart-ipfs 8080:8080
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: dart-ipfs-dev
+
+labels:
+  - pairs:
+      environment: development
+    includeSelectors: true
+    includeTemplates: true
+
+resources:
+  - ../../base
+
+images:
+  - name: ghcr.io/jxoesneon/dart-ipfs
+    newTag: edge
+
+replicas:
+  - name: dart-ipfs
+    count: 1
+
+patches:
+  # Expose the swarm and gateway services via NodePort for local testing.
+  - target:
+      kind: Service
+      name: dart-ipfs
+    patch: |
+      - op: replace
+        path: /spec/type
+        value: NodePort
+      - op: add
+        path: /spec/ports/0/nodePort
+        value: 30001
+      - op: add
+        path: /spec/ports/3/nodePort
+        value: 30080
+
+  # Reduce resource footprint for development clusters.
+  - target:
+      kind: Deployment
+      name: dart-ipfs
+    patch: |
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+
+  # Smaller PVC for development.
+  - target:
+      kind: PersistentVolumeClaim
+      name: dart-ipfs-data
+    patch: |
+      - op: replace
+        path: /spec/resources/requests/storage
+        value: 2Gi

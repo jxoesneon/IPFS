@@ -293,6 +293,22 @@ class MockBitswapHandler extends _i1.Mock implements _i13.BitswapHandler {
           as _i10.Future<_i11.Block?>);
 
   @override
+  _i10.Future<_i11.Block?> getBlock(
+    String? cidStr, {
+    bool? useHttpFallback = true,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #getBlock,
+              [cidStr],
+              {#useHttpFallback: useHttpFallback},
+            ),
+            returnValue: _i10.Future<_i11.Block?>.value(),
+            returnValueForMissingStub: _i10.Future<_i11.Block?>.value(),
+          )
+          as _i10.Future<_i11.Block?>);
+
+  @override
   _i10.Future<Map<String, dynamic>> getStatus() =>
       (super.noSuchMethod(
             Invocation.method(#getStatus, []),
@@ -455,6 +471,19 @@ class MockDHTHandler extends _i1.Mock implements _i14.DHTHandler {
           as bool);
 
   @override
+  bool isValidProviderRecord(
+    _i18.PeerId? provider,
+    String? cid,
+    DateTime? ttl,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#isValidProviderRecord, [provider, cid, ttl]),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
+
+  @override
   String? extractCIDFromResponse(String? responseBody) =>
       (super.noSuchMethod(
             Invocation.method(#extractCIDFromResponse, [responseBody]),
@@ -479,6 +508,15 @@ class MockDHTHandler extends _i1.Mock implements _i14.DHTHandler {
   _i10.Future<void> provide(_i16.CID? cid) =>
       (super.noSuchMethod(
             Invocation.method(#provide, [cid]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
+
+  @override
+  _i10.Future<void> provideAll(List<_i16.CID>? cids) =>
+      (super.noSuchMethod(
+            Invocation.method(#provideAll, [cids]),
             returnValue: _i10.Future<void>.value(),
             returnValueForMissingStub: _i10.Future<void>.value(),
           )

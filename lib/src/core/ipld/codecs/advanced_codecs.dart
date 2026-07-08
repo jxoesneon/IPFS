@@ -65,9 +65,11 @@ class DagJoseCodec implements IPLDCodec {
   Future<IPLDNode> decode(Uint8List data) async {
     final joseData = json.decode(utf8.decode(data)) as Map<String, dynamic>;
 
-    final header = json.decode(
-      utf8.decode(base64Url.decode(joseData['protected'] as String)),
-    ) as Map<String, dynamic>;
+    final header =
+        json.decode(
+              utf8.decode(base64Url.decode(joseData['protected'] as String)),
+            )
+            as Map<String, dynamic>;
     final payload = base64Url.decode(joseData['payload'] as String);
 
     return IPLDNode()

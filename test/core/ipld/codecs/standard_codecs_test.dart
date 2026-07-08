@@ -358,5 +358,65 @@ void main() {
       final decoded = await codec.decode(encoded);
       expect(decoded.kind, equals(Kind.NULL));
     });
+
+    test('encode is deterministic/canonical for maps', () async {
+      final node1 = IPLDNode()
+        ..kind = Kind.MAP
+        ..mapValue = IPLDMap();
+      node1.mapValue.entries.add(
+        MapEntry()
+          ..key = 'b'
+          ..value = (IPLDNode()
+            ..kind = Kind.STRING
+            ..stringValue = 'second'),
+      );
+      node1.mapValue.entries.add(
+        MapEntry()
+          ..key = 'aa'
+          ..value = (IPLDNode()
+            ..kind = Kind.STRING
+            ..stringValue = 'third'),
+      );
+      node1.mapValue.entries.add(
+        MapEntry()
+          ..key = 'a'
+          ..value = (IPLDNode()
+            ..kind = Kind.STRING
+            ..stringValue = 'first'),
+      );
+
+      final node2 = IPLDNode()
+        ..kind = Kind.MAP
+        ..mapValue = IPLDMap();
+      node2.mapValue.entries.add(
+        MapEntry()
+          ..key = 'a'
+          ..value = (IPLDNode()
+            ..kind = Kind.STRING
+            ..stringValue = 'first'),
+      );
+      node2.mapValue.entries.add(
+        MapEntry()
+          ..key = 'b'
+          ..value = (IPLDNode()
+            ..kind = Kind.STRING
+            ..stringValue = 'second'),
+      );
+      node2.mapValue.entries.add(
+        MapEntry()
+          ..key = 'aa'
+          ..value = (IPLDNode()
+            ..kind = Kind.STRING
+            ..stringValue = 'third'),
+      );
+
+      final encoded1 = await codec.encode(node1);
+      final encoded2 = await codec.encode(node2);
+      expect(encoded1, equals(encoded2));
+
+      final decoded = await codec.decode(encoded1);
+      expect(decoded.kind, equals(Kind.MAP));
+      expect(decoded.mapValue.entries.first.key, equals('a'));
+    });
   });
 }

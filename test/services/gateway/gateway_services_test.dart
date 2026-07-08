@@ -171,9 +171,15 @@ void main() {
     });
 
     test('should return 404 for missing block', () async {
+      final missingCid = CID
+          .computeForDataSync(
+            Uint8List.fromList([0xde, 0xad, 0xbe, 0xef]),
+            codec: 'raw',
+          )
+          .encode();
       final request = Request(
         'GET',
-        Uri.parse('http://localhost:8080/ipfs/QmMissing'),
+        Uri.parse('http://localhost:8080/ipfs/$missingCid'),
       );
       final response = await gatewayHandler.handlePath(request);
 

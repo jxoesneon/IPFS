@@ -21,8 +21,10 @@ const kRetryDelay = Duration(seconds: 2);
 
 Future<void> main() async {
   final kubo = KuboClient(host: kKuboApiHost, port: kKuboApiPort);
-  final dartIpfs =
-      DartIpfsClient(host: kDartIpfsApiHost, port: kDartIpfsApiPort);
+  final dartIpfs = DartIpfsClient(
+    host: kDartIpfsApiHost,
+    port: kDartIpfsApiPort,
+  );
 
   await _waitForPeer('Kubo', () => kubo.id());
   await _waitForPeer('dart_ipfs', () => dartIpfs.id());
@@ -58,5 +60,6 @@ Future<void> _waitForPeer(String name, Future<dynamic> Function() probe) async {
     }
   }
   throw StateError(
-      '$name did not become reachable within the bootstrap window.');
+    '$name did not become reachable within the bootstrap window.',
+  );
 }

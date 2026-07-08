@@ -29,8 +29,13 @@ void main() {
         defaultBandwidthQuota: 500,
         enableRPC: true,
         gateway: GatewayConfig(enabled: true, port: 9090),
-        metrics: const MetricsConfig(enabled: true, prometheusEndpoint: '/prom'),
-        customConfig: {'plugin': {'enabled': true}},
+        metrics: const MetricsConfig(
+          enabled: true,
+          prometheusEndpoint: '/prom',
+        ),
+        customConfig: {
+          'plugin': {'enabled': true},
+        },
         ipnsCacheSize: 500,
         enableStructuredLogging: true,
         garbageCollectionInterval: const Duration(hours: 12),
@@ -50,7 +55,12 @@ void main() {
       expect(json['keystore'], isNull); // Do not serialize key material
       expect(json['gateway'], isNotNull);
       expect(json['metrics'], isNotNull);
-      expect(json['customConfig'], equals({'plugin': {'enabled': true}}));
+      expect(
+        json['customConfig'],
+        equals({
+          'plugin': {'enabled': true},
+        }),
+      );
 
       final config2 = IPFSConfig.fromJson(json);
       expect(config2.offline, isTrue);
@@ -61,7 +71,12 @@ void main() {
       expect(config2.gateway.port, equals(9090));
       expect(config2.metrics.enabled, isTrue);
       expect(config2.metrics.prometheusEndpoint, equals('/prom'));
-      expect(config2.customConfig, equals({'plugin': {'enabled': true}}));
+      expect(
+        config2.customConfig,
+        equals({
+          'plugin': {'enabled': true},
+        }),
+      );
       expect(config2.ipnsCacheSize, equals(500));
       expect(config2.enableStructuredLogging, isTrue);
       expect(
@@ -75,16 +90,13 @@ void main() {
       expect(config2.dataPath, equals('/tmp/data'));
       expect(config2.maxConcurrentBitswapRequests, equals(20));
       expect(config2.enableLibp2pBridge, isTrue);
-      expect(
-        config2.libp2pListenAddress,
-        equals('/ip4/127.0.0.1/tcp/4002'),
-      );
+      expect(config2.libp2pListenAddress, equals('/ip4/127.0.0.1/tcp/4002'));
       expect(config2.nodeId, equals('QmNodeId'));
+      expect(config2.libp2pIdentitySeed, equals(Uint8List.fromList([1, 2, 3])));
       expect(
-        config2.libp2pIdentitySeed,
-        equals(Uint8List.fromList([1, 2, 3])),
-      );
-      expect(config2.keystore, isNotNull); // Runtime keystore is loaded separately
+        config2.keystore,
+        isNotNull,
+      ); // Runtime keystore is loaded separately
     });
 
     test('fromJson with empty Map', () {

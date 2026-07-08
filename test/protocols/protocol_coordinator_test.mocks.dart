@@ -3,20 +3,22 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i5;
+import 'dart:async' as _i6;
 
-import 'package:dart_ipfs/src/core/cid.dart' as _i12;
+import 'package:dart_ipfs/src/core/cid.dart' as _i9;
 import 'package:dart_ipfs/src/core/data_structures/block.dart' as _i2;
-import 'package:dart_ipfs/src/core/data_structures/metadata.dart' as _i3;
-import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart' as _i9;
-import 'package:dart_ipfs/src/core/ipld/codecs/ipld_codec.dart' as _i10;
-import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart' as _i11;
-import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart' as _i8;
+import 'package:dart_ipfs/src/core/data_structures/metadata.dart' as _i4;
+import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart' as _i12;
+import 'package:dart_ipfs/src/core/ipld/codecs/ipld_codec.dart' as _i13;
+import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart' as _i14;
+import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart' as _i10;
 import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart'
-    as _i7;
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart' as _i4;
+    as _i8;
+import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart' as _i3;
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart' as _i5;
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart'
-    as _i6;
+    as _i7;
+import 'package:dart_ipfs/src/protocols/graphsync/graphsync_types.dart' as _i11;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -39,15 +41,20 @@ class _FakeBlock_0 extends _i1.SmartFake implements _i2.Block {
     : super(parent, parentInvocation);
 }
 
-class _FakeIPLDMetadata_1 extends _i1.SmartFake implements _i3.IPLDMetadata {
-  _FakeIPLDMetadata_1(Object parent, Invocation parentInvocation)
+class _FakeIPLDNode_1 extends _i1.SmartFake implements _i3.IPLDNode {
+  _FakeIPLDNode_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeIPLDMetadata_2 extends _i1.SmartFake implements _i4.IPLDMetadata {
+  _FakeIPLDMetadata_2(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
 /// A class which mocks [BitswapHandler].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockBitswapHandler extends _i1.Mock implements _i4.BitswapHandler {
+class MockBitswapHandler extends _i1.Mock implements _i5.BitswapHandler {
   @override
   int get bandwidthSent =>
       (super.noSuchMethod(
@@ -67,34 +74,34 @@ class MockBitswapHandler extends _i1.Mock implements _i4.BitswapHandler {
           as int);
 
   @override
-  _i5.Future<void> start() =>
+  _i6.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
           )
-          as _i5.Future<void>);
+          as _i6.Future<void>);
 
   @override
-  _i5.Future<void> stop() =>
+  _i6.Future<void> stop() =>
       (super.noSuchMethod(
             Invocation.method(#stop, []),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
           )
-          as _i5.Future<void>);
+          as _i6.Future<void>);
 
   @override
-  _i5.Future<void> handleBlocks(List<_i2.Block>? blocks) =>
+  _i6.Future<void> handleBlocks(List<_i2.Block>? blocks) =>
       (super.noSuchMethod(
             Invocation.method(#handleBlocks, [blocks]),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
           )
-          as _i5.Future<void>);
+          as _i6.Future<void>);
 
   @override
-  _i5.Future<List<_i2.Block>> want(
+  _i6.Future<List<_i2.Block>> want(
     List<String>? cids, {
     int? priority = 1,
     Duration? timeout = const Duration(seconds: 30),
@@ -105,97 +112,201 @@ class MockBitswapHandler extends _i1.Mock implements _i4.BitswapHandler {
               [cids],
               {#priority: priority, #timeout: timeout},
             ),
-            returnValue: _i5.Future<List<_i2.Block>>.value(<_i2.Block>[]),
-            returnValueForMissingStub: _i5.Future<List<_i2.Block>>.value(
+            returnValue: _i6.Future<List<_i2.Block>>.value(<_i2.Block>[]),
+            returnValueForMissingStub: _i6.Future<List<_i2.Block>>.value(
               <_i2.Block>[],
             ),
           )
-          as _i5.Future<List<_i2.Block>>);
+          as _i6.Future<List<_i2.Block>>);
 
   @override
-  _i5.Future<void> handleWantRequest(String? cidStr) =>
+  _i6.Future<void> handleWantRequest(String? cidStr) =>
       (super.noSuchMethod(
             Invocation.method(#handleWantRequest, [cidStr]),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
           )
-          as _i5.Future<void>);
+          as _i6.Future<void>);
 
   @override
-  _i5.Future<_i2.Block?> wantBlock(String? cid) =>
+  _i6.Future<_i2.Block?> wantBlock(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#wantBlock, [cid]),
-            returnValue: _i5.Future<_i2.Block?>.value(),
-            returnValueForMissingStub: _i5.Future<_i2.Block?>.value(),
+            returnValue: _i6.Future<_i2.Block?>.value(),
+            returnValueForMissingStub: _i6.Future<_i2.Block?>.value(),
           )
-          as _i5.Future<_i2.Block?>);
+          as _i6.Future<_i2.Block?>);
 
   @override
-  _i5.Future<Map<String, dynamic>> getStatus() =>
+  _i6.Future<_i2.Block?> getBlock(
+    String? cidStr, {
+    bool? useHttpFallback = true,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #getBlock,
+              [cidStr],
+              {#useHttpFallback: useHttpFallback},
+            ),
+            returnValue: _i6.Future<_i2.Block?>.value(),
+            returnValueForMissingStub: _i6.Future<_i2.Block?>.value(),
+          )
+          as _i6.Future<_i2.Block?>);
+
+  @override
+  _i6.Future<Map<String, dynamic>> getStatus() =>
       (super.noSuchMethod(
             Invocation.method(#getStatus, []),
-            returnValue: _i5.Future<Map<String, dynamic>>.value(
+            returnValue: _i6.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
-            returnValueForMissingStub: _i5.Future<Map<String, dynamic>>.value(
+            returnValueForMissingStub: _i6.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
           )
-          as _i5.Future<Map<String, dynamic>>);
+          as _i6.Future<Map<String, dynamic>>);
 }
 
 /// A class which mocks [GraphsyncHandler].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockGraphsyncHandler extends _i1.Mock implements _i6.GraphsyncHandler {
+class MockGraphsyncHandler extends _i1.Mock implements _i7.GraphsyncHandler {
   @override
-  _i5.Future<void> start() =>
+  _i6.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
           )
-          as _i5.Future<void>);
+          as _i6.Future<void>);
 
   @override
-  _i5.Future<void> stop() =>
+  _i6.Future<void> stop() =>
       (super.noSuchMethod(
             Invocation.method(#stop, []),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
           )
-          as _i5.Future<void>);
+          as _i6.Future<void>);
 
   @override
-  _i5.Future<Map<String, dynamic>> getStatus() =>
+  _i6.Future<Map<String, dynamic>> getStatus() =>
       (super.noSuchMethod(
             Invocation.method(#getStatus, []),
-            returnValue: _i5.Future<Map<String, dynamic>>.value(
+            returnValue: _i6.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
-            returnValueForMissingStub: _i5.Future<Map<String, dynamic>>.value(
+            returnValueForMissingStub: _i6.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
           )
-          as _i5.Future<Map<String, dynamic>>);
+          as _i6.Future<Map<String, dynamic>>);
 
   @override
-  _i5.Future<_i7.Block?> requestGraph(
+  _i6.Future<_i6.Stream<_i8.GraphsyncResponse>> requestGraphFromPeer(
+    String? peer,
+    _i9.CID? root,
+    _i10.Selector? selector, {
+    _i11.GraphsyncPriority? priority = _i11.GraphsyncPriority.normal,
+    int? maxDepth,
+    int? maxBlocks,
+    int? maxBytes,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #requestGraphFromPeer,
+              [peer, root, selector],
+              {
+                #priority: priority,
+                #maxDepth: maxDepth,
+                #maxBlocks: maxBlocks,
+                #maxBytes: maxBytes,
+              },
+            ),
+            returnValue: _i6.Future<_i6.Stream<_i8.GraphsyncResponse>>.value(
+              _i6.Stream<_i8.GraphsyncResponse>.empty(),
+            ),
+            returnValueForMissingStub:
+                _i6.Future<_i6.Stream<_i8.GraphsyncResponse>>.value(
+                  _i6.Stream<_i8.GraphsyncResponse>.empty(),
+                ),
+          )
+          as _i6.Future<_i6.Stream<_i8.GraphsyncResponse>>);
+
+  @override
+  _i6.Future<List<_i2.Block>> fetchGraphFromPeer(
+    String? peer,
+    _i9.CID? root,
+    _i10.Selector? selector, {
+    _i11.GraphsyncPriority? priority = _i11.GraphsyncPriority.normal,
+    int? maxDepth,
+    int? maxBlocks,
+    int? maxBytes,
+    Duration? timeout = const Duration(seconds: 60),
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #fetchGraphFromPeer,
+              [peer, root, selector],
+              {
+                #priority: priority,
+                #maxDepth: maxDepth,
+                #maxBlocks: maxBlocks,
+                #maxBytes: maxBytes,
+                #timeout: timeout,
+              },
+            ),
+            returnValue: _i6.Future<List<_i2.Block>>.value(<_i2.Block>[]),
+            returnValueForMissingStub: _i6.Future<List<_i2.Block>>.value(
+              <_i2.Block>[],
+            ),
+          )
+          as _i6.Future<List<_i2.Block>>);
+
+  @override
+  _i6.Future<_i2.Block?> requestGraph(
     String? cidStr,
-    _i8.IPLDSelector? selector,
+    _i10.IPLDSelector? selector,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#requestGraph, [cidStr, selector]),
-            returnValue: _i5.Future<_i7.Block?>.value(),
-            returnValueForMissingStub: _i5.Future<_i7.Block?>.value(),
+            returnValue: _i6.Future<_i2.Block?>.value(),
+            returnValueForMissingStub: _i6.Future<_i2.Block?>.value(),
           )
-          as _i5.Future<_i7.Block?>);
+          as _i6.Future<_i2.Block?>);
+
+  @override
+  _i6.Future<void> pauseRequest(int? requestId, String? peer) =>
+      (super.noSuchMethod(
+            Invocation.method(#pauseRequest, [requestId, peer]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> resumeRequest(int? requestId, String? peer) =>
+      (super.noSuchMethod(
+            Invocation.method(#resumeRequest, [requestId, peer]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> cancelRequest(int? requestId, String? peer) =>
+      (super.noSuchMethod(
+            Invocation.method(#cancelRequest, [requestId, peer]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
 }
 
 /// A class which mocks [IPLDHandler].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockIPLDHandler extends _i1.Mock implements _i9.IPLDHandler {
+class MockIPLDHandler extends _i1.Mock implements _i12.IPLDHandler {
   @override
   bool get isRunning =>
       (super.noSuchMethod(
@@ -206,19 +317,19 @@ class MockIPLDHandler extends _i1.Mock implements _i9.IPLDHandler {
           as bool);
 
   @override
-  void registerCodec(_i10.IPLDCodec? codec) => super.noSuchMethod(
+  void registerCodec(_i13.IPLDCodec? codec) => super.noSuchMethod(
     Invocation.method(#registerCodec, [codec]),
     returnValueForMissingStub: null,
   );
 
   @override
-  void registerSchema(_i11.IPLDSchema? schema) => super.noSuchMethod(
+  void registerSchema(_i14.IPLDSchema? schema) => super.noSuchMethod(
     Invocation.method(#registerSchema, [schema]),
     returnValueForMissingStub: null,
   );
 
   @override
-  _i5.Future<_i2.Block> put(
+  _i6.Future<_i2.Block> put(
     dynamic value, {
     String? codec = 'dag-cbor',
     String? schemaType,
@@ -229,7 +340,7 @@ class MockIPLDHandler extends _i1.Mock implements _i9.IPLDHandler {
               [value],
               {#codec: codec, #schemaType: schemaType},
             ),
-            returnValue: _i5.Future<_i2.Block>.value(
+            returnValue: _i6.Future<_i2.Block>.value(
               _FakeBlock_0(
                 this,
                 Invocation.method(
@@ -239,7 +350,7 @@ class MockIPLDHandler extends _i1.Mock implements _i9.IPLDHandler {
                 ),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i2.Block>.value(
+            returnValueForMissingStub: _i6.Future<_i2.Block>.value(
               _FakeBlock_0(
                 this,
                 Invocation.method(
@@ -250,118 +361,154 @@ class MockIPLDHandler extends _i1.Mock implements _i9.IPLDHandler {
               ),
             ),
           )
-          as _i5.Future<_i2.Block>);
+          as _i6.Future<_i2.Block>);
 
   @override
-  _i5.Future<dynamic> get(_i12.CID? cid) =>
+  _i6.Future<dynamic> get(_i9.CID? cid) =>
       (super.noSuchMethod(
             Invocation.method(#get, [cid]),
-            returnValue: _i5.Future<dynamic>.value(),
-            returnValueForMissingStub: _i5.Future<dynamic>.value(),
+            returnValue: _i6.Future<dynamic>.value(),
+            returnValueForMissingStub: _i6.Future<dynamic>.value(),
           )
-          as _i5.Future<dynamic>);
+          as _i6.Future<dynamic>);
 
   @override
-  _i5.Future<(dynamic, String?)> resolveLink(_i12.CID? root, String? path) =>
+  _i6.Future<_i3.IPLDNode> getNode(_i9.CID? cid) =>
+      (super.noSuchMethod(
+            Invocation.method(#getNode, [cid]),
+            returnValue: _i6.Future<_i3.IPLDNode>.value(
+              _FakeIPLDNode_1(this, Invocation.method(#getNode, [cid])),
+            ),
+            returnValueForMissingStub: _i6.Future<_i3.IPLDNode>.value(
+              _FakeIPLDNode_1(this, Invocation.method(#getNode, [cid])),
+            ),
+          )
+          as _i6.Future<_i3.IPLDNode>);
+
+  @override
+  _i6.Future<(dynamic, String?)> resolveLink(_i9.CID? root, String? path) =>
       (super.noSuchMethod(
             Invocation.method(#resolveLink, [root, path]),
-            returnValue: _i5.Future<(dynamic, String?)>.value((null, null)),
-            returnValueForMissingStub: _i5.Future<(dynamic, String?)>.value((
+            returnValue: _i6.Future<(dynamic, String?)>.value((null, null)),
+            returnValueForMissingStub: _i6.Future<(dynamic, String?)>.value((
               null,
               null,
             )),
           )
-          as _i5.Future<(dynamic, String?)>);
+          as _i6.Future<(dynamic, String?)>);
 
   @override
-  _i5.Future<void> start() =>
+  _i6.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
           )
-          as _i5.Future<void>);
+          as _i6.Future<void>);
 
   @override
-  _i5.Future<void> stop() =>
+  _i6.Future<void> stop() =>
       (super.noSuchMethod(
             Invocation.method(#stop, []),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
           )
-          as _i5.Future<void>);
+          as _i6.Future<void>);
 
   @override
-  _i5.Future<Map<String, dynamic>> getStatus() =>
+  _i6.Future<Map<String, dynamic>> getStatus() =>
       (super.noSuchMethod(
             Invocation.method(#getStatus, []),
-            returnValue: _i5.Future<Map<String, dynamic>>.value(
+            returnValue: _i6.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
-            returnValueForMissingStub: _i5.Future<Map<String, dynamic>>.value(
+            returnValueForMissingStub: _i6.Future<Map<String, dynamic>>.value(
               <String, dynamic>{},
             ),
           )
-          as _i5.Future<Map<String, dynamic>>);
+          as _i6.Future<Map<String, dynamic>>);
 
   @override
-  _i5.Future<List<_i8.SelectorResult>> executeSelector(
-    _i12.CID? rootCid,
-    _i8.IPLDSelector? selector,
+  _i6.Future<List<_i10.SelectorResult>> executeSelector(
+    _i9.CID? rootCid,
+    _i10.IPLDSelector? selector,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#executeSelector, [rootCid, selector]),
-            returnValue: _i5.Future<List<_i8.SelectorResult>>.value(
-              <_i8.SelectorResult>[],
+            returnValue: _i6.Future<List<_i10.SelectorResult>>.value(
+              <_i10.SelectorResult>[],
             ),
             returnValueForMissingStub:
-                _i5.Future<List<_i8.SelectorResult>>.value(
-                  <_i8.SelectorResult>[],
+                _i6.Future<List<_i10.SelectorResult>>.value(
+                  <_i10.SelectorResult>[],
                 ),
           )
-          as _i5.Future<List<_i8.SelectorResult>>);
+          as _i6.Future<List<_i10.SelectorResult>>);
 
   @override
-  _i5.Future<dynamic> resolvePath(String? path) =>
+  _i6.Stream<_i10.SelectedNode> executeSelectorStream(
+    _i9.CID? root,
+    _i10.Selector? selector, {
+    int? maxDepth,
+    int? maxNodes,
+    bool? includePath = false,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #executeSelectorStream,
+              [root, selector],
+              {
+                #maxDepth: maxDepth,
+                #maxNodes: maxNodes,
+                #includePath: includePath,
+              },
+            ),
+            returnValue: _i6.Stream<_i10.SelectedNode>.empty(),
+            returnValueForMissingStub: _i6.Stream<_i10.SelectedNode>.empty(),
+          )
+          as _i6.Stream<_i10.SelectedNode>);
+
+  @override
+  _i6.Future<dynamic> resolvePath(String? path) =>
       (super.noSuchMethod(
             Invocation.method(#resolvePath, [path]),
-            returnValue: _i5.Future<dynamic>.value(),
-            returnValueForMissingStub: _i5.Future<dynamic>.value(),
+            returnValue: _i6.Future<dynamic>.value(),
+            returnValueForMissingStub: _i6.Future<dynamic>.value(),
           )
-          as _i5.Future<dynamic>);
+          as _i6.Future<dynamic>);
 
   @override
-  _i5.Future<_i3.IPLDMetadata> getMetadata(_i12.CID? cid) =>
+  _i6.Future<_i4.IPLDMetadata> getMetadata(_i9.CID? cid) =>
       (super.noSuchMethod(
             Invocation.method(#getMetadata, [cid]),
-            returnValue: _i5.Future<_i3.IPLDMetadata>.value(
-              _FakeIPLDMetadata_1(this, Invocation.method(#getMetadata, [cid])),
+            returnValue: _i6.Future<_i4.IPLDMetadata>.value(
+              _FakeIPLDMetadata_2(this, Invocation.method(#getMetadata, [cid])),
             ),
-            returnValueForMissingStub: _i5.Future<_i3.IPLDMetadata>.value(
-              _FakeIPLDMetadata_1(this, Invocation.method(#getMetadata, [cid])),
+            returnValueForMissingStub: _i6.Future<_i4.IPLDMetadata>.value(
+              _FakeIPLDMetadata_2(this, Invocation.method(#getMetadata, [cid])),
             ),
           )
-          as _i5.Future<_i3.IPLDMetadata>);
+          as _i6.Future<_i4.IPLDMetadata>);
 
   @override
-  _i5.Future<(dynamic, _i3.IPLDMetadata)> resolveWithMetadata(String? path) =>
+  _i6.Future<(dynamic, _i4.IPLDMetadata)> resolveWithMetadata(String? path) =>
       (super.noSuchMethod(
             Invocation.method(#resolveWithMetadata, [path]),
-            returnValue: _i5.Future<(dynamic, _i3.IPLDMetadata)>.value((
+            returnValue: _i6.Future<(dynamic, _i4.IPLDMetadata)>.value((
               null,
-              _FakeIPLDMetadata_1(
+              _FakeIPLDMetadata_2(
                 this,
                 Invocation.method(#resolveWithMetadata, [path]),
               ),
             )),
             returnValueForMissingStub:
-                _i5.Future<(dynamic, _i3.IPLDMetadata)>.value((
+                _i6.Future<(dynamic, _i4.IPLDMetadata)>.value((
                   null,
-                  _FakeIPLDMetadata_1(
+                  _FakeIPLDMetadata_2(
                     this,
                     Invocation.method(#resolveWithMetadata, [path]),
                   ),
                 )),
           )
-          as _i5.Future<(dynamic, _i3.IPLDMetadata)>);
+          as _i6.Future<(dynamic, _i4.IPLDMetadata)>);
 }

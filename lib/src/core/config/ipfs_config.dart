@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/core/config/bitswap_config.dart';
 import 'package:dart_ipfs/src/core/config/dht_config.dart';
 import 'package:dart_ipfs/src/core/config/gateway_config.dart';
+import 'package:dart_ipfs/src/core/config/graphsync_config.dart';
 import 'package:dart_ipfs/src/core/config/metrics_config.dart';
 import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:dart_ipfs/src/core/config/security_config.dart';
@@ -14,8 +16,10 @@ import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:yaml/yaml.dart';
 
+export 'package:dart_ipfs/src/core/config/bitswap_config.dart';
 export 'package:dart_ipfs/src/core/config/dht_config.dart';
 export 'package:dart_ipfs/src/core/config/gateway_config.dart';
+export 'package:dart_ipfs/src/core/config/graphsync_config.dart';
 export 'package:dart_ipfs/src/core/config/metrics_config.dart';
 export 'package:dart_ipfs/src/core/config/network_config.dart';
 export 'package:dart_ipfs/src/core/config/security_config.dart';
@@ -82,6 +86,8 @@ class IPFSConfig {
     StorageConfig? storage,
     SecurityConfig? security,
     GatewayConfig? gateway,
+    BitswapConfig? bitswap,
+    GraphsyncConfig? graphsync,
     this.debug = true,
     this.verboseLogging = true,
     this.enablePubSub = true,
@@ -93,6 +99,7 @@ class IPFSConfig {
     this.enableIPLD = true,
     this.enableGraphsync = true,
     this.enableMetrics = true,
+    this.enableIpnsPubSub = false,
     this.enableLogging = true,
     this.enableStructuredLogging = false,
     this.ipnsCacheSize = 1000,
@@ -112,12 +119,16 @@ class IPFSConfig {
     this.metrics = const MetricsConfig(),
     this.dataPath = './ipfs_data',
     Keystore? keystore,
+    this.maxSelectorDepth = 32,
+    this.maxSelectorNodes = 10000,
     this.customConfig = const {},
   }) : network = network ?? NetworkConfig(),
        dht = dht ?? const DHTConfig(),
        storage = storage ?? const StorageConfig(),
        security = security ?? const SecurityConfig(),
        gateway = gateway ?? const GatewayConfig(),
+       bitswap = bitswap ?? const BitswapConfig(),
+       graphsync = graphsync ?? const GraphsyncConfig(),
        nodeId = nodeId ?? _generateDefaultNodeId(),
        keystore = keystore ?? Keystore();
 
@@ -155,6 +166,16 @@ class IPFSConfig {
               Map<String, dynamic>.from(json['gateway'] as Map),
             )
           : null,
+      bitswap: json['bitswap'] != null
+          ? BitswapConfig.fromJson(
+              Map<String, dynamic>.from(json['bitswap'] as Map),
+            )
+          : const BitswapConfig(),
+      graphsync: json['graphsync'] != null
+          ? GraphsyncConfig.fromJson(
+              Map<String, dynamic>.from(json['graphsync'] as Map),
+            )
+          : const GraphsyncConfig(),
       debug: json['debug'] as bool? ?? false,
       verboseLogging: json['verboseLogging'] as bool? ?? false,
       enablePubSub: json['enablePubSub'] as bool? ?? true,
@@ -166,6 +187,7 @@ class IPFSConfig {
       enableIPLD: json['enableIPLD'] as bool? ?? true,
       enableGraphsync: json['enableGraphsync'] as bool? ?? true,
       enableMetrics: json['enableMetrics'] as bool? ?? true,
+      enableIpnsPubSub: json['enableIpnsPubSub'] as bool? ?? false,
       enableLogging: json['enableLogging'] as bool? ?? true,
       enableStructuredLogging:
           json['enableStructuredLogging'] as bool? ?? false,
@@ -174,6 +196,8 @@ class IPFSConfig {
       defaultBandwidthQuota: json['defaultBandwidthQuota'] as int? ?? 1048576,
       maxConcurrentBitswapRequests:
           json['maxConcurrentBitswapRequests'] as int? ?? 10,
+      maxSelectorDepth: json['maxSelectorDepth'] as int? ?? 32,
+      maxSelectorNodes: json['maxSelectorNodes'] as int? ?? 10000,
       ipnsCacheSize: json['ipnsCacheSize'] as int? ?? 1000,
       garbageCollectionInterval: Duration(
         seconds: json['garbageCollectionInterval'] as int? ?? 86400,
@@ -217,6 +241,12 @@ class IPFSConfig {
   /// HTTP Gateway configuration.
   final GatewayConfig gateway;
 
+  /// Bitswap protocol configuration.
+  final BitswapConfig bitswap;
+
+  /// Graphsync protocol configuration.
+  final GraphsyncConfig graphsync;
+
   /// Enable debug mode.
   final bool debug;
 
@@ -250,6 +280,9 @@ class IPFSConfig {
   /// Enable metrics collection.
   final bool enableMetrics;
 
+  /// Enable IPNS PubSub notifications (requires a Gossipsub-compliant handler).
+  final bool enableIpnsPubSub;
+
   /// Enable system-wide logging.
   final bool enableLogging;
 
@@ -270,6 +303,12 @@ class IPFSConfig {
 
   /// Maximum concurrent bitswap requests.
   final int maxConcurrentBitswapRequests;
+
+  /// Maximum recursion depth for IPLD selector execution.
+  final int maxSelectorDepth;
+
+  /// Maximum number of nodes to visit during IPLD selector execution.
+  final int maxSelectorNodes;
 
   /// Path to the datastore.
   final String datastorePath;
@@ -349,6 +388,8 @@ class IPFSConfig {
     'storage': storage.toJson(),
     'security': security.toJson(),
     'gateway': gateway.toJson(),
+    'bitswap': bitswap.toJson(),
+    'graphsync': graphsync.toJson(),
     'debug': debug,
     'verboseLogging': verboseLogging,
     'enablePubSub': enablePubSub,
@@ -360,12 +401,15 @@ class IPFSConfig {
     'enableIPLD': enableIPLD,
     'enableGraphsync': enableGraphsync,
     'enableMetrics': enableMetrics,
+    'enableIpnsPubSub': enableIpnsPubSub,
     'enableLogging': enableLogging,
     'enableStructuredLogging': enableStructuredLogging,
     'logLevel': logLevel,
     'enableQuotaManagement': enableQuotaManagement,
     'defaultBandwidthQuota': defaultBandwidthQuota,
     'maxConcurrentBitswapRequests': maxConcurrentBitswapRequests,
+    'maxSelectorDepth': maxSelectorDepth,
+    'maxSelectorNodes': maxSelectorNodes,
     'ipnsCacheSize': ipnsCacheSize,
     'garbageCollectionInterval': garbageCollectionInterval.inSeconds,
     'garbageCollectionEnabled': garbageCollectionEnabled,
@@ -376,8 +420,9 @@ class IPFSConfig {
     'enableLibp2pBridge': enableLibp2pBridge,
     'libp2pListenAddress': libp2pListenAddress,
     'nodeId': nodeId,
-    'libp2pIdentitySeed':
-        libp2pIdentitySeed != null ? base64Encode(libp2pIdentitySeed!) : null,
+    'libp2pIdentitySeed': libp2pIdentitySeed != null
+        ? base64Encode(libp2pIdentitySeed!)
+        : null,
     'metrics': metrics.toJson(),
     'customConfig': customConfig,
   };

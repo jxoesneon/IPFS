@@ -4,31 +4,32 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i14;
-import 'dart:convert' as _i19;
-import 'dart:typed_data' as _i15;
+import 'dart:convert' as _i20;
+import 'dart:typed_data' as _i16;
 
+import 'package:dart_ipfs/src/core/cid.dart' as _i15;
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart' as _i9;
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart' as _i2;
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart' as _i3;
-import 'package:dart_ipfs/src/core/storage/datastore.dart' as _i18;
+import 'package:dart_ipfs/src/core/storage/datastore.dart' as _i19;
 import 'package:dart_ipfs/src/core/types/peer_id.dart' as _i4;
 import 'package:dart_ipfs/src/network/router.dart' as _i7;
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart'
-    as _i22;
+    as _i23;
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart'
-    as _i17;
+    as _i18;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart' as _i13;
 import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart' as _i5;
 import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_tree_node.dart'
-    as _i21;
-import 'package:dart_ipfs/src/protocols/dht/red_black_tree.dart' as _i20;
+    as _i22;
+import 'package:dart_ipfs/src/protocols/dht/red_black_tree.dart' as _i21;
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart' as _i8;
 import 'package:dart_ipfs/src/transport/router_interface.dart' as _i6;
 import 'package:dart_ipfs/src/utils/keystore.dart' as _i11;
 import 'package:dart_ipfs/src/utils/private_key.dart' as _i10;
 import 'package:http/http.dart' as _i12;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i16;
+import 'package:mockito/src/dummies.dart' as _i17;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -279,7 +280,16 @@ class MockDHTClient extends _i1.Mock implements _i13.DHTClient {
           as _i14.Future<void>);
 
   @override
-  _i14.Future<bool> storeValue(_i15.Uint8List? key, _i15.Uint8List? value) =>
+  _i14.Future<void> addProviders(List<_i15.CID>? cids, String? providerId) =>
+      (super.noSuchMethod(
+            Invocation.method(#addProviders, [cids, providerId]),
+            returnValue: _i14.Future<void>.value(),
+            returnValueForMissingStub: _i14.Future<void>.value(),
+          )
+          as _i14.Future<void>);
+
+  @override
+  _i14.Future<bool> storeValue(_i16.Uint8List? key, _i16.Uint8List? value) =>
       (super.noSuchMethod(
             Invocation.method(#storeValue, [key, value]),
             returnValue: _i14.Future<bool>.value(false),
@@ -290,8 +300,8 @@ class MockDHTClient extends _i1.Mock implements _i13.DHTClient {
   @override
   _i14.Future<bool> storeValueToPeer(
     _i4.PeerId? peer,
-    _i15.Uint8List? key,
-    _i15.Uint8List? value,
+    _i16.Uint8List? key,
+    _i16.Uint8List? value,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#storeValueToPeer, [peer, key, value]),
@@ -301,16 +311,16 @@ class MockDHTClient extends _i1.Mock implements _i13.DHTClient {
           as _i14.Future<bool>);
 
   @override
-  _i14.Future<_i15.Uint8List?> getValue(_i15.Uint8List? key) =>
+  _i14.Future<_i16.Uint8List?> getValue(_i16.Uint8List? key) =>
       (super.noSuchMethod(
             Invocation.method(#getValue, [key]),
-            returnValue: _i14.Future<_i15.Uint8List?>.value(),
-            returnValueForMissingStub: _i14.Future<_i15.Uint8List?>.value(),
+            returnValue: _i14.Future<_i16.Uint8List?>.value(),
+            returnValueForMissingStub: _i14.Future<_i16.Uint8List?>.value(),
           )
-          as _i14.Future<_i15.Uint8List?>);
+          as _i14.Future<_i16.Uint8List?>);
 
   @override
-  _i14.Future<bool> checkValueOnPeer(_i4.PeerId? peer, _i15.Uint8List? key) =>
+  _i14.Future<bool> checkValueOnPeer(_i4.PeerId? peer, _i16.Uint8List? key) =>
       (super.noSuchMethod(
             Invocation.method(#checkValueOnPeer, [peer, key]),
             returnValue: _i14.Future<bool>.value(false),
@@ -357,6 +367,15 @@ class MockDHTClient extends _i1.Mock implements _i13.DHTClient {
           as _i14.Future<List<String>>);
 
   @override
+  _i14.Future<void> reprovide() =>
+      (super.noSuchMethod(
+            Invocation.method(#reprovide, []),
+            returnValue: _i14.Future<void>.value(),
+            returnValueForMissingStub: _i14.Future<void>.value(),
+          )
+          as _i14.Future<void>);
+
+  @override
   _i14.Future<void> updateKeyRepublishTime(String? key) =>
       (super.noSuchMethod(
             Invocation.method(#updateKeyRepublishTime, [key]),
@@ -374,11 +393,11 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
   String get peerID =>
       (super.noSuchMethod(
             Invocation.getter(#peerID),
-            returnValue: _i16.dummyValue<String>(
+            returnValue: _i17.dummyValue<String>(
               this,
               Invocation.getter(#peerID),
             ),
-            returnValueForMissingStub: _i16.dummyValue<String>(
+            returnValueForMissingStub: _i17.dummyValue<String>(
               this,
               Invocation.getter(#peerID),
             ),
@@ -505,7 +524,7 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
   @override
   _i14.Future<void> sendMessage(
     String? peerIdStr,
-    _i15.Uint8List? message, {
+    _i16.Uint8List? message, {
     String? protocolId,
   }) =>
       (super.noSuchMethod(
@@ -520,26 +539,26 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
           as _i14.Future<void>);
 
   @override
-  _i14.Future<_i15.Uint8List?> sendRequest(
+  _i14.Future<_i16.Uint8List?> sendRequest(
     String? peerId,
     String? protocolId,
-    _i15.Uint8List? request,
+    _i16.Uint8List? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#sendRequest, [peerId, protocolId, request]),
-            returnValue: _i14.Future<_i15.Uint8List?>.value(),
-            returnValueForMissingStub: _i14.Future<_i15.Uint8List?>.value(),
+            returnValue: _i14.Future<_i16.Uint8List?>.value(),
+            returnValueForMissingStub: _i14.Future<_i16.Uint8List?>.value(),
           )
-          as _i14.Future<_i15.Uint8List?>);
+          as _i14.Future<_i16.Uint8List?>);
 
   @override
-  _i14.Stream<_i15.Uint8List> receiveMessages(String? peerId) =>
+  _i14.Stream<_i16.Uint8List> receiveMessages(String? peerId) =>
       (super.noSuchMethod(
             Invocation.method(#receiveMessages, [peerId]),
-            returnValue: _i14.Stream<_i15.Uint8List>.empty(),
-            returnValueForMissingStub: _i14.Stream<_i15.Uint8List>.empty(),
+            returnValue: _i14.Stream<_i16.Uint8List>.empty(),
+            returnValueForMissingStub: _i14.Stream<_i16.Uint8List>.empty(),
           )
-          as _i14.Stream<_i15.Uint8List>);
+          as _i14.Stream<_i16.Uint8List>);
 
   @override
   void registerProtocolHandler(
@@ -565,7 +584,7 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
   @override
   _i14.Future<void> broadcastMessage(
     String? protocolId,
-    _i15.Uint8List? message,
+    _i16.Uint8List? message,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#broadcastMessage, [protocolId, message]),
@@ -575,7 +594,7 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
           as _i14.Future<void>);
 
   @override
-  void emitEvent(String? topic, _i15.Uint8List? data) => super.noSuchMethod(
+  void emitEvent(String? topic, _i16.Uint8List? data) => super.noSuchMethod(
     Invocation.method(#emitEvent, [topic, data]),
     returnValueForMissingStub: null,
   );
@@ -610,6 +629,16 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
             returnValueForMissingStub: <String>[],
           )
           as List<String>);
+
+  @override
+  void registerRelayedConnection(String? targetPeerId, String? relayAddr) =>
+      super.noSuchMethod(
+        Invocation.method(#registerRelayedConnection, [
+          targetPeerId,
+          relayAddr,
+        ]),
+        returnValueForMissingStub: null,
+      );
 }
 
 /// A class which mocks [NetworkHandler].
@@ -644,13 +673,13 @@ class MockNetworkHandler extends _i1.Mock implements _i3.NetworkHandler {
           as _i6.RouterInterface);
 
   @override
-  _i14.Stream<_i17.NetworkEvent> get networkEvents =>
+  _i14.Stream<_i18.NetworkEvent> get networkEvents =>
       (super.noSuchMethod(
             Invocation.getter(#networkEvents),
-            returnValue: _i14.Stream<_i17.NetworkEvent>.empty(),
-            returnValueForMissingStub: _i14.Stream<_i17.NetworkEvent>.empty(),
+            returnValue: _i14.Stream<_i18.NetworkEvent>.empty(),
+            returnValueForMissingStub: _i14.Stream<_i18.NetworkEvent>.empty(),
           )
-          as _i14.Stream<_i17.NetworkEvent>);
+          as _i14.Stream<_i18.NetworkEvent>);
 
   @override
   _i7.Router get dhtRouter =>
@@ -695,11 +724,11 @@ class MockNetworkHandler extends _i1.Mock implements _i3.NetworkHandler {
   String get peerID =>
       (super.noSuchMethod(
             Invocation.getter(#peerID),
-            returnValue: _i16.dummyValue<String>(
+            returnValue: _i17.dummyValue<String>(
               this,
               Invocation.getter(#peerID),
             ),
-            returnValueForMissingStub: _i16.dummyValue<String>(
+            returnValueForMissingStub: _i17.dummyValue<String>(
               this,
               Invocation.getter(#peerID),
             ),
@@ -784,17 +813,17 @@ class MockNetworkHandler extends _i1.Mock implements _i3.NetworkHandler {
   );
 
   @override
-  _i14.Future<_i15.Uint8List?> sendRequest(
+  _i14.Future<_i16.Uint8List?> sendRequest(
     String? peerId,
     String? protocolId,
-    _i15.Uint8List? request,
+    _i16.Uint8List? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#sendRequest, [peerId, protocolId, request]),
-            returnValue: _i14.Future<_i15.Uint8List?>.value(),
-            returnValueForMissingStub: _i14.Future<_i15.Uint8List?>.value(),
+            returnValue: _i14.Future<_i16.Uint8List?>.value(),
+            returnValueForMissingStub: _i14.Future<_i16.Uint8List?>.value(),
           )
-          as _i14.Future<_i15.Uint8List?>);
+          as _i14.Future<_i16.Uint8List?>);
 
   @override
   _i14.Future<void> initialize() =>
@@ -827,7 +856,7 @@ class MockNetworkHandler extends _i1.Mock implements _i3.NetworkHandler {
 /// A class which mocks [Datastore].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockDatastore extends _i1.Mock implements _i18.Datastore {
+class MockDatastore extends _i1.Mock implements _i19.Datastore {
   @override
   _i14.Future<void> init() =>
       (super.noSuchMethod(
@@ -838,7 +867,7 @@ class MockDatastore extends _i1.Mock implements _i18.Datastore {
           as _i14.Future<void>);
 
   @override
-  _i14.Future<void> put(_i18.Key? key, _i15.Uint8List? value) =>
+  _i14.Future<void> put(_i19.Key? key, _i16.Uint8List? value) =>
       (super.noSuchMethod(
             Invocation.method(#put, [key, value]),
             returnValue: _i14.Future<void>.value(),
@@ -847,16 +876,16 @@ class MockDatastore extends _i1.Mock implements _i18.Datastore {
           as _i14.Future<void>);
 
   @override
-  _i14.Future<_i15.Uint8List?> get(_i18.Key? key) =>
+  _i14.Future<_i16.Uint8List?> get(_i19.Key? key) =>
       (super.noSuchMethod(
             Invocation.method(#get, [key]),
-            returnValue: _i14.Future<_i15.Uint8List?>.value(),
-            returnValueForMissingStub: _i14.Future<_i15.Uint8List?>.value(),
+            returnValue: _i14.Future<_i16.Uint8List?>.value(),
+            returnValueForMissingStub: _i14.Future<_i16.Uint8List?>.value(),
           )
-          as _i14.Future<_i15.Uint8List?>);
+          as _i14.Future<_i16.Uint8List?>);
 
   @override
-  _i14.Future<bool> has(_i18.Key? key) =>
+  _i14.Future<bool> has(_i19.Key? key) =>
       (super.noSuchMethod(
             Invocation.method(#has, [key]),
             returnValue: _i14.Future<bool>.value(false),
@@ -865,7 +894,7 @@ class MockDatastore extends _i1.Mock implements _i18.Datastore {
           as _i14.Future<bool>);
 
   @override
-  _i14.Future<void> delete(_i18.Key? key) =>
+  _i14.Future<void> delete(_i19.Key? key) =>
       (super.noSuchMethod(
             Invocation.method(#delete, [key]),
             returnValue: _i14.Future<void>.value(),
@@ -874,13 +903,13 @@ class MockDatastore extends _i1.Mock implements _i18.Datastore {
           as _i14.Future<void>);
 
   @override
-  _i14.Stream<_i18.QueryEntry> query(_i18.Query? q) =>
+  _i14.Stream<_i19.QueryEntry> query(_i19.Query? q) =>
       (super.noSuchMethod(
             Invocation.method(#query, [q]),
-            returnValue: _i14.Stream<_i18.QueryEntry>.empty(),
-            returnValueForMissingStub: _i14.Stream<_i18.QueryEntry>.empty(),
+            returnValue: _i14.Stream<_i19.QueryEntry>.empty(),
+            returnValueForMissingStub: _i14.Stream<_i19.QueryEntry>.empty(),
           )
-          as _i14.Stream<_i18.QueryEntry>);
+          as _i14.Stream<_i19.QueryEntry>);
 
   @override
   _i14.Future<void> close() =>
@@ -960,11 +989,11 @@ class MockKeystore extends _i1.Mock implements _i11.Keystore {
   String serialize() =>
       (super.noSuchMethod(
             Invocation.method(#serialize, []),
-            returnValue: _i16.dummyValue<String>(
+            returnValue: _i17.dummyValue<String>(
               this,
               Invocation.method(#serialize, []),
             ),
-            returnValueForMissingStub: _i16.dummyValue<String>(
+            returnValueForMissingStub: _i17.dummyValue<String>(
               this,
               Invocation.method(#serialize, []),
             ),
@@ -980,8 +1009,8 @@ class MockKeystore extends _i1.Mock implements _i11.Keystore {
   @override
   _i14.Future<bool> verifySignature(
     String? publicKey,
-    _i15.Uint8List? data,
-    _i15.Uint8List? signature,
+    _i16.Uint8List? data,
+    _i16.Uint8List? signature,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#verifySignature, [publicKey, data, signature]),
@@ -991,13 +1020,13 @@ class MockKeystore extends _i1.Mock implements _i11.Keystore {
           as _i14.Future<bool>);
 
   @override
-  Map<String, _i15.Uint8List> exportKeysForMigration() =>
+  Map<String, _i16.Uint8List> exportKeysForMigration() =>
       (super.noSuchMethod(
             Invocation.method(#exportKeysForMigration, []),
-            returnValue: <String, _i15.Uint8List>{},
-            returnValueForMissingStub: <String, _i15.Uint8List>{},
+            returnValue: <String, _i16.Uint8List>{},
+            returnValueForMissingStub: <String, _i16.Uint8List>{},
           )
-          as Map<String, _i15.Uint8List>);
+          as Map<String, _i16.Uint8List>);
 
   @override
   void clearAfterMigration() => super.noSuchMethod(
@@ -1053,7 +1082,7 @@ class MockClient extends _i1.Mock implements _i12.Client {
     Uri? url, {
     Map<String, String>? headers,
     Object? body,
-    _i19.Encoding? encoding,
+    _i20.Encoding? encoding,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -1089,7 +1118,7 @@ class MockClient extends _i1.Mock implements _i12.Client {
     Uri? url, {
     Map<String, String>? headers,
     Object? body,
-    _i19.Encoding? encoding,
+    _i20.Encoding? encoding,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -1125,7 +1154,7 @@ class MockClient extends _i1.Mock implements _i12.Client {
     Uri? url, {
     Map<String, String>? headers,
     Object? body,
-    _i19.Encoding? encoding,
+    _i20.Encoding? encoding,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -1161,7 +1190,7 @@ class MockClient extends _i1.Mock implements _i12.Client {
     Uri? url, {
     Map<String, String>? headers,
     Object? body,
-    _i19.Encoding? encoding,
+    _i20.Encoding? encoding,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -1197,13 +1226,13 @@ class MockClient extends _i1.Mock implements _i12.Client {
       (super.noSuchMethod(
             Invocation.method(#read, [url], {#headers: headers}),
             returnValue: _i14.Future<String>.value(
-              _i16.dummyValue<String>(
+              _i17.dummyValue<String>(
                 this,
                 Invocation.method(#read, [url], {#headers: headers}),
               ),
             ),
             returnValueForMissingStub: _i14.Future<String>.value(
-              _i16.dummyValue<String>(
+              _i17.dummyValue<String>(
                 this,
                 Invocation.method(#read, [url], {#headers: headers}),
               ),
@@ -1212,18 +1241,18 @@ class MockClient extends _i1.Mock implements _i12.Client {
           as _i14.Future<String>);
 
   @override
-  _i14.Future<_i15.Uint8List> readBytes(
+  _i14.Future<_i16.Uint8List> readBytes(
     Uri? url, {
     Map<String, String>? headers,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#readBytes, [url], {#headers: headers}),
-            returnValue: _i14.Future<_i15.Uint8List>.value(_i15.Uint8List(0)),
-            returnValueForMissingStub: _i14.Future<_i15.Uint8List>.value(
-              _i15.Uint8List(0),
+            returnValue: _i14.Future<_i16.Uint8List>.value(_i16.Uint8List(0)),
+            returnValueForMissingStub: _i14.Future<_i16.Uint8List>.value(
+              _i16.Uint8List(0),
             ),
           )
-          as _i14.Future<_i15.Uint8List>);
+          as _i14.Future<_i16.Uint8List>);
 
   @override
   _i14.Future<_i12.StreamedResponse> send(_i12.BaseRequest? request) =>
@@ -1278,15 +1307,15 @@ class MockKademliaRoutingTable extends _i1.Mock
           as int);
 
   @override
-  List<_i20.RedBlackTree<_i4.PeerId, _i21.KademliaTreeNode>> get buckets =>
+  List<_i21.RedBlackTree<_i4.PeerId, _i22.KademliaTreeNode>> get buckets =>
       (super.noSuchMethod(
             Invocation.getter(#buckets),
             returnValue:
-                <_i20.RedBlackTree<_i4.PeerId, _i21.KademliaTreeNode>>[],
+                <_i21.RedBlackTree<_i4.PeerId, _i22.KademliaTreeNode>>[],
             returnValueForMissingStub:
-                <_i20.RedBlackTree<_i4.PeerId, _i21.KademliaTreeNode>>[],
+                <_i21.RedBlackTree<_i4.PeerId, _i22.KademliaTreeNode>>[],
           )
-          as List<_i20.RedBlackTree<_i4.PeerId, _i21.KademliaTreeNode>>);
+          as List<_i21.RedBlackTree<_i4.PeerId, _i22.KademliaTreeNode>>);
 
   @override
   set dhtClient(_i13.DHTClient? value) => super.noSuchMethod(
@@ -1395,7 +1424,7 @@ class MockKademliaRoutingTable extends _i1.Mock
   );
 
   @override
-  _i14.Future<void> updatePeer(_i22.V_PeerInfo? peer) =>
+  _i14.Future<void> updatePeer(_i23.V_PeerInfo? peer) =>
       (super.noSuchMethod(
             Invocation.method(#updatePeer, [peer]),
             returnValue: _i14.Future<void>.value(),

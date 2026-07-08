@@ -82,10 +82,10 @@ class _Header extends StatelessWidget {
     return Row(
       children: [
         Icon(
-          LucideIcons.globe,
-          color: Theme.of(context).colorScheme.primary,
-          size: 32,
-        )
+              LucideIcons.globe,
+              color: Theme.of(context).colorScheme.primary,
+              size: 32,
+            )
             .animate(onPlay: (c) => c.repeat())
             .shimmer(duration: 2000.ms, color: Colors.cyanAccent),
         const SizedBox(width: 16),
@@ -199,8 +199,9 @@ class _Header extends StatelessWidget {
               Consumer<NodeService>(
                 builder: (context, node, _) => CircleAvatar(
                   radius: 4,
-                  backgroundColor:
-                      node.isOnline ? Colors.greenAccent : Colors.redAccent,
+                  backgroundColor: node.isOnline
+                      ? Colors.greenAccent
+                      : Colors.redAccent,
                 ),
               ),
               const SizedBox(width: 8),
@@ -512,8 +513,9 @@ class _FileManagerState extends State<_FileManager> {
                   ),
                 ),
                 ElevatedButton.icon(
-                  onPressed:
-                      context.watch<NodeService>().isOnline ? _pickFile : null,
+                  onPressed: context.watch<NodeService>().isOnline
+                      ? _pickFile
+                      : null,
                   icon: const Icon(LucideIcons.uploadCloud, size: 16),
                   label: const Text('Add File'),
                   style: ElevatedButton.styleFrom(
@@ -1176,8 +1178,10 @@ class _ChatViewState extends State<_ChatView> {
             'from': displayFrom,
             'peerId': from,
             'content': displayContent,
-            'time':
-                DateTime.now().toIso8601String().split('T')[1].substring(0, 5),
+            'time': DateTime.now()
+                .toIso8601String()
+                .split('T')[1]
+                .substring(0, 5),
           });
         });
 
@@ -1341,8 +1345,9 @@ class _ChatViewState extends State<_ChatView> {
                   final isMe =
                       msg['peerId'] == context.read<NodeService>().peerId;
                   return Align(
-                    alignment:
-                        isMe ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment: isMe
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       padding: const EdgeInsets.all(12),

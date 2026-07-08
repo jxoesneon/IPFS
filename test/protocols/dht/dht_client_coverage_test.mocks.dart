@@ -356,6 +356,16 @@ class MockRouterInterface extends _i1.Mock implements _i3.RouterInterface {
             returnValueForMissingStub: <String>[],
           )
           as List<String>);
+
+  @override
+  void registerRelayedConnection(String? targetPeerId, String? relayAddr) =>
+      super.noSuchMethod(
+        Invocation.method(#registerRelayedConnection, [
+          targetPeerId,
+          relayAddr,
+        ]),
+        returnValueForMissingStub: null,
+      );
 }
 
 /// A class which mocks [NetworkHandler].
@@ -1217,6 +1227,19 @@ class MockDHTHandler extends _i1.Mock implements _i23.DHTHandler {
           as bool);
 
   @override
+  bool isValidProviderRecord(
+    _i26.PeerId? provider,
+    String? cid,
+    DateTime? ttl,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#isValidProviderRecord, [provider, cid, ttl]),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
+
+  @override
   String? extractCIDFromResponse(String? responseBody) =>
       (super.noSuchMethod(
             Invocation.method(#extractCIDFromResponse, [responseBody]),
@@ -1241,6 +1264,15 @@ class MockDHTHandler extends _i1.Mock implements _i23.DHTHandler {
   _i15.Future<void> provide(_i25.CID? cid) =>
       (super.noSuchMethod(
             Invocation.method(#provide, [cid]),
+            returnValue: _i15.Future<void>.value(),
+            returnValueForMissingStub: _i15.Future<void>.value(),
+          )
+          as _i15.Future<void>);
+
+  @override
+  _i15.Future<void> provideAll(List<_i25.CID>? cids) =>
+      (super.noSuchMethod(
+            Invocation.method(#provideAll, [cids]),
             returnValue: _i15.Future<void>.value(),
             returnValueForMissingStub: _i15.Future<void>.value(),
           )

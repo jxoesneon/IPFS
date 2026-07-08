@@ -175,6 +175,13 @@ class DelegateDHTHandler implements IDHTHandler {
   }
 
   @override
+  Future<void> provideAll(List<CID> cids) async {
+    for (final cid in cids) {
+      await provide(cid);
+    }
+  }
+
+  @override
   Future<void> handleRoutingTableUpdate(V_PeerInfo peer) async {}
 
   @override

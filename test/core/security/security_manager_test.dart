@@ -21,6 +21,11 @@ class MockMetricsCollector implements MetricsCollector {
   }
 
   @override
+  void recordSecurityEvent(String type) {
+    metricHistory.add({'method': 'recordSecurityEvent', 'type': type});
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 

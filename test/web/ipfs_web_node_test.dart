@@ -2,6 +2,8 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:test/test.dart';
 
 @TestOn('vm || browser')
@@ -118,13 +120,13 @@ void main() {
 
       await node.publishIPNS(cid, keyName: 'self');
 
-      // For resolution, we need to use the public key as the name,
-      // but IPNSHandler.resolve expects a name that it can resolve to a key.
-      // In this mock, we just want to ensure the flow works.
-      final resolved = await node.resolveIPNS(String.fromCharCodes(pubKey));
+      // Resolve using the spec-compliant base36 name derived from the key.
+      final name = deriveIpnsName(pubKey);
+      final resolved = await node.resolveIPNS(name);
 
-      // resolution might still return null if key matching is strict,
-      // but we care about coverage and no 'Keystore is locked' error.
+      // The mock environment does not persist the DHT record, so resolution
+      // will fail at the DHT lookup. We only care about coverage and that the
+      // name validation does not throw.
       expect(resolved, anyOf(isNull, isA<String>()));
     });
 

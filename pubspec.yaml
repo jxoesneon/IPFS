@@ -54,7 +54,16 @@ dependencies:
   mime: ^2.0.0
   http_parser: ^4.1.2
 
+  # Core package (monorepo)
+  dart_ipfs_core:
+    path: packages/dart_ipfs_core
+
+  # Optional native QUIC transport (monorepo)
+  dart_ipfs_quic:
+    path: packages/dart_ipfs_quic
+
   # Common packages
+  args: ^2.6.0
   yaml: ^3.1.3
   meta: ^1.17.0
   shelf: ^1.4.2

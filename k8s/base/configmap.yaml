@@ -1,0 +1,51 @@
+# configmap.yaml
+# Default node configuration for dart_ipfs.
+# Mounts to /etc/dart-ipfs/config.json and is referenced by IPFS_CONFIG_PATH.
+# Sensitive material (keys, seeds) must be supplied via the Secret, not here.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dart-ipfs-config
+  namespace: dart-ipfs
+  labels:
+    app.kubernetes.io/name: dart-ipfs
+    app.kubernetes.io/component: config
+    app.kubernetes.io/part-of: dart-ipfs
+data:
+  config.json: |
+    {
+      "offline": false,
+      "enableDHT": true,
+      "enablePubSub": true,
+      "enableRPC": true,
+      "enableMetrics": true,
+      "enableCircuitRelay": true,
+      "enableContentRouting": true,
+      "enableDNSLinkResolution": true,
+      "enableIPLD": true,
+      "enableGraphsync": false,
+      "enableIpnsPubSub": false,
+      "logLevel": "info",
+      "enableStructuredLogging": true,
+      "dataPath": "/data/ipfs",
+      "datastorePath": "/data/ipfs/datastore",
+      "blockStorePath": "/data/ipfs/blocks",
+      "keystorePath": "/data/ipfs/keystore",
+      "libp2pListenAddress": "/ip4/0.0.0.0/tcp/4001",
+      "network": {
+        "bootstrapPeers": [
+          "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+          "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2iUDbD9uMdt3m6Jorh6Y1YCDYNP5E4p"
+        ]
+      },
+      "gateway": {
+        "enabled": true,
+        "port": 8080,
+        "corsOrigins": ["*"]
+      },
+      "metrics": {
+        "enabled": true,
+        "port": 8081,
+        "path": "/metrics"
+      }
+    }

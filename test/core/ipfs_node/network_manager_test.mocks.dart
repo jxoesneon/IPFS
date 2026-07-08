@@ -555,6 +555,16 @@ class MockRouterInterface extends _i1.Mock implements _i3.RouterInterface {
             returnValueForMissingStub: <String>[],
           )
           as List<String>);
+
+  @override
+  void registerRelayedConnection(String? targetPeerId, String? relayAddr) =>
+      super.noSuchMethod(
+        Invocation.method(#registerRelayedConnection, [
+          targetPeerId,
+          relayAddr,
+        ]),
+        returnValueForMissingStub: null,
+      );
 }
 
 /// A class which mocks [DHTHandler].
@@ -706,6 +716,19 @@ class MockDHTHandler extends _i1.Mock implements _i17.DHTHandler {
           as bool);
 
   @override
+  bool isValidProviderRecord(
+    _i10.PeerId? provider,
+    String? cid,
+    DateTime? ttl,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#isValidProviderRecord, [provider, cid, ttl]),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
+
+  @override
   String? extractCIDFromResponse(String? responseBody) =>
       (super.noSuchMethod(
             Invocation.method(#extractCIDFromResponse, [responseBody]),
@@ -730,6 +753,15 @@ class MockDHTHandler extends _i1.Mock implements _i17.DHTHandler {
   _i13.Future<void> provide(_i19.CID? cid) =>
       (super.noSuchMethod(
             Invocation.method(#provide, [cid]),
+            returnValue: _i13.Future<void>.value(),
+            returnValueForMissingStub: _i13.Future<void>.value(),
+          )
+          as _i13.Future<void>);
+
+  @override
+  _i13.Future<void> provideAll(List<_i19.CID>? cids) =>
+      (super.noSuchMethod(
+            Invocation.method(#provideAll, [cids]),
             returnValue: _i13.Future<void>.value(),
             returnValueForMissingStub: _i13.Future<void>.value(),
           )
@@ -1032,6 +1064,22 @@ class MockBitswapHandler extends _i1.Mock implements _i23.BitswapHandler {
   _i13.Future<_i22.Block?> wantBlock(String? cid) =>
       (super.noSuchMethod(
             Invocation.method(#wantBlock, [cid]),
+            returnValue: _i13.Future<_i22.Block?>.value(),
+            returnValueForMissingStub: _i13.Future<_i22.Block?>.value(),
+          )
+          as _i13.Future<_i22.Block?>);
+
+  @override
+  _i13.Future<_i22.Block?> getBlock(
+    String? cidStr, {
+    bool? useHttpFallback = true,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #getBlock,
+              [cidStr],
+              {#useHttpFallback: useHttpFallback},
+            ),
             returnValue: _i13.Future<_i22.Block?>.value(),
             returnValueForMissingStub: _i13.Future<_i22.Block?>.value(),
           )

@@ -9,6 +9,7 @@
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
 // ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: public_member_api_docs
 
 import 'dart:core' as $core;
 
@@ -127,9 +128,9 @@ class PBNode extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'ipfs.core.data_structures'),
       createEmptyInstance: create)
+    ..pPM<PBLink>(1, _omitFieldNames ? '' : 'links', subBuilder: PBLink.create)
     ..a<$core.List<$core.int>>(
-        1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
-    ..pPM<PBLink>(2, _omitFieldNames ? '' : 'links', subBuilder: PBLink.create)
+        2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -150,19 +151,19 @@ class PBNode extends $pb.GeneratedMessage {
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PBNode>(create);
   static PBNode? _defaultInstance;
 
-  /// opaque user data content
-  @$pb.TagNumber(1)
-  $core.List<$core.int> get data => $_getN(0);
-  @$pb.TagNumber(1)
-  set data($core.List<$core.int> value) => $_setBytes(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasData() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearData() => $_clearField(1);
-
   /// refs to other objects
+  @$pb.TagNumber(1)
+  $pb.PbList<PBLink> get links => $_getList(0);
+
+  /// opaque user data content
   @$pb.TagNumber(2)
-  $pb.PbList<PBLink> get links => $_getList(1);
+  $core.List<$core.int> get data => $_getN(1);
+  @$pb.TagNumber(2)
+  set data($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasData() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearData() => $_clearField(2);
 }
 
 const $core.bool _omitFieldNames =

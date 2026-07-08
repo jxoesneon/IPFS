@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart' as pb;
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 
@@ -11,20 +13,39 @@ import 'router_interface.dart';
 /// Implements the Circuit Relay v2 protocol (HOP and STOP).
 class CircuitRelayClient {
   /// Creates a new [CircuitRelayClient] using the provided [_router].
-  CircuitRelayClient(this._router) {
+  CircuitRelayClient(this._router, {CircuitRelayConfig? config})
+    : _config = config ?? const CircuitRelayConfig() {
     _logger = Logger('CircuitRelayClient');
   }
 
   static const String _protocolId = '/libp2p/circuit/relay/0.2.0/hop';
-  final RouterInterface _router; // Router instance for handling connections
+  final RouterInterface _router;
   late final Logger _logger;
+  final CircuitRelayConfig _config;
 
   final StreamController<CircuitRelayConnectionEvent>
   _circuitRelayEventsController =
       StreamController<CircuitRelayConnectionEvent>.broadcast();
 
-  // Pending reservations keyed by Relay Peer ID
+  // Pending reservations keyed by relay Peer ID.
   final Map<String, Completer<Reservation>> _pendingReservations = {};
+
+  // Pending CONNECT requests keyed by relay Peer ID.
+  final Map<String, _PendingConnect> _pendingConnects = {};
+
+  // Active reservations keyed by relay Peer ID.
+  final Map<String, Reservation> _reservations = {};
+
+  // Refresh timers keyed by relay Peer ID.
+  final Map<String, Timer> _refreshTimers = {};
+
+  // Active relayed circuits keyed by target Peer ID.
+  final Map<String, RelayedConnection> _activeCircuits = {};
+
+  // Completers waiting for an available circuit slot.
+  final List<Completer<void>> _pendingCircuitSlots = [];
+
+  StreamSubscription<ConnectionEvent>? _connectionEventsSubscription;
 
   /// Starts the circuit relay client.
   Future<void> start() async {
@@ -35,6 +56,13 @@ class CircuitRelayClient {
       }
       _router.registerProtocol(_protocolId);
       _router.registerProtocolHandler(_protocolId, _handlePacket);
+
+      await _connectionEventsSubscription?.cancel();
+      _connectionEventsSubscription = _router.connectionEvents.listen((event) {
+        if (event.type == ConnectionEventType.disconnected) {
+          _onPeerDisconnected(event.peerId);
+        }
+      });
     } catch (e, stackTrace) {
       _logger.error('Failed to start CircuitRelayClient', e, stackTrace);
       rethrow;
@@ -45,8 +73,37 @@ class CircuitRelayClient {
   Future<void> stop() async {
     try {
       _logger.debug('Stopping CircuitRelayClient...');
-      await _circuitRelayEventsController.close(); // Close the event stream
+      await _connectionEventsSubscription?.cancel();
+      _connectionEventsSubscription = null;
+
+      for (final timer in _refreshTimers.values) {
+        timer.cancel();
+      }
+      _refreshTimers.clear();
+
+      for (final completer in _pendingReservations.values) {
+        if (!completer.isCompleted) {
+          completer.completeError('Client stopped');
+        }
+      }
       _pendingReservations.clear();
+
+      for (final pending in _pendingConnects.values) {
+        if (!pending.completer.isCompleted) {
+          pending.completer.completeError('Client stopped');
+        }
+      }
+      _pendingConnects.clear();
+
+      for (final slot in _pendingCircuitSlots) {
+        if (!slot.isCompleted) {
+          slot.completeError('Client stopped');
+        }
+      }
+      _pendingCircuitSlots.clear();
+
+      _activeCircuits.clear();
+      await _circuitRelayEventsController.close();
       _logger.info('CircuitRelayClient stopped');
     } catch (e, stackTrace) {
       _logger.error('Error stopping CircuitRelayClient', e, stackTrace);
@@ -55,34 +112,44 @@ class CircuitRelayClient {
 
   /// Requests a reservation from a relay peer (Circuit Relay v2 HOP).
   ///
-  /// [relayPeerId]: The peer ID of the relay.
-  /// [duration]: Requested reservation duration.
+  /// [relayAddrOrPeerId]: The relay multiaddress or peer ID of the relay.
+  /// [duration]: Requested reservation duration (legacy; kept for compatibility).
   /// [limitData]: Maximum data allowed in bytes.
   /// [limitDuration]: Maximum connection duration in seconds.
   ///
   /// Returns [Reservation] details if successful, null otherwise.
   Future<Reservation?> reserve(
-    String relayPeerId, {
-    Duration duration = const Duration(minutes: 60),
-    int limitData = 1024 * 1024 * 1024, // 1GB default
-    int limitDuration = 7200, // 2 hours
+    String relayAddrOrPeerId, {
+    Duration? duration,
+    int? limitData,
+    int? limitDuration,
   }) async {
+    if (!_config.enabled) {
+      _logger.debug('Circuit relay is disabled; skipping reservation');
+      return null;
+    }
+
+    final info = _parseRelayAddrOrPeerId(relayAddrOrPeerId);
+    final relayPeerId = info.relayPeerId;
+    final relayAddr = info.relayAddr;
     _logger.debug('Requesting reservation from relay: $relayPeerId');
+
+    final reqLimitData = limitData ?? 1024 * 1024 * 1024; // 1GB default
+    final reqLimitDuration = limitDuration ?? 7200; // 2 hours
+
     try {
       final msg = pb.HopMessage()
         ..type = pb.HopMessage_Type.RESERVE
         ..limit = (pb.Limit()
-          ..duration = fixnum.Int64(limitDuration)
-          ..data = fixnum.Int64(limitData));
+          ..duration = fixnum.Int64(reqLimitDuration)
+          ..data = fixnum.Int64(reqLimitData));
 
-      // Create completer for response
       final completer = Completer<Reservation>();
       _pendingReservations[relayPeerId] = completer;
 
-      // Setup listener before sending to handle synchronous responses in tests
       final responseFuture = completer.future
           .timeout(
-            const Duration(seconds: 30),
+            _config.reservationTimeout,
             onTimeout: () {
               _pendingReservations.remove(relayPeerId);
               throw TimeoutException(
@@ -91,24 +158,24 @@ class CircuitRelayClient {
             },
           )
           .then((res) {
+            _reservations[relayPeerId] = res;
+            _scheduleReservationRefresh(relayPeerId, res);
             _circuitRelayEventsController.add(
               CircuitRelayConnectionEvent(
                 eventType: 'circuit_relay_reservation',
-                relayAddress: relayPeerId,
+                relayAddress: relayAddr,
                 reason: 'Reservation acquired',
               ),
             );
             return res;
           });
 
-      // Send message using the standard interface method
       await _router.sendMessage(
         relayPeerId,
         msg.writeToBuffer(),
         protocolId: _protocolId,
       );
 
-      // Wait for response or timeout
       return await responseFuture;
     } catch (e, stackTrace) {
       _logger.error(
@@ -120,7 +187,7 @@ class CircuitRelayClient {
       _circuitRelayEventsController.add(
         CircuitRelayConnectionEvent(
           eventType: 'circuit_relay_failed',
-          relayAddress: relayPeerId,
+          relayAddress: relayAddr,
           errorMessage: 'Reservation failed: $e',
         ),
       );
@@ -128,48 +195,155 @@ class CircuitRelayClient {
     }
   }
 
-  /// Handles incoming HOP messages
-  void _handlePacket(NetworkPacket packet) {
-    try {
-      final msg = pb.HopMessage.fromBuffer(packet.datagram);
-      final fromPeer = packet.srcPeerId;
+  /// Connects to [targetPeerId] through a circuit relay at [relayAddr].
+  ///
+  /// Sends a CONNECT HopMessage, waits for a SUCCESS status, and exposes the
+  /// resulting virtual connection through the router.
+  Future<RelayedConnection> connectThroughRelay(
+    String relayAddr,
+    String targetPeerId,
+  ) async {
+    if (!_config.enabled) {
+      throw CircuitRelayException('Circuit relay is disabled');
+    }
+    if (targetPeerId.isEmpty) {
+      throw CircuitRelayException('targetPeerId must not be empty');
+    }
+    _logger.debug('Connecting to $targetPeerId via relay $relayAddr');
 
-      if (msg.type == pb.HopMessage_Type.STATUS) {
-        if (_pendingReservations.containsKey(fromPeer)) {
-          final completer = _pendingReservations.remove(fromPeer)!;
+    final info = _parseRelayAddrOrPeerId(relayAddr);
+    final relayPeerId = info.relayPeerId;
+    final normalizedRelayAddr = info.relayAddr;
+    if (relayPeerId.isEmpty) {
+      throw CircuitRelayException(
+        'Could not extract relay peer ID from $relayAddr',
+      );
+    }
 
-          if (msg.status == pb.Status.OK) {
-            final res = Reservation(
-              relayPeerId: fromPeer,
-              expireTime: DateTime.fromMillisecondsSinceEpoch(
-                msg.reservation.expire.toInt() * 1000,
-              ),
-              limitData: msg.reservation.limitData,
-              limitDuration: msg.reservation.limitDuration,
-            );
-            Future.microtask(() => completer.complete(res));
-          } else {
-            Future.microtask(
-              () => completer.completeError(
-                'Reservation rejected by $fromPeer: ${msg.status}',
-              ),
-            );
-          }
-        }
+    // Ensure we have a valid, non-expired reservation.
+    var reservation = _reservations[relayPeerId];
+    if (reservation == null || reservation.isExpired) {
+      _logger.debug('No valid reservation for $relayPeerId; acquiring one');
+      final newReservation = await reserve(relayAddr);
+      if (newReservation == null) {
+        throw CircuitRelayException(
+          'Failed to acquire reservation for relay $relayPeerId',
+        );
       }
-      // Handle other types (CONNECT, etc.) if needed in future
+      reservation = newReservation;
+    }
+
+    // Respect the configured circuit limit.
+    await _acquireCircuitSlot();
+
+    try {
+      final msg = pb.HopMessage()
+        ..type = pb.HopMessage_Type.CONNECT
+        ..peer = (pb.Peer()..id = Base58().base58Decode(targetPeerId))
+        ..limit = (pb.Limit()
+          ..duration = reservation.limitDuration
+          ..data = reservation.limitData);
+
+      final completer = Completer<pb.Status>();
+      _pendingConnects[relayPeerId] = _PendingConnect(completer, targetPeerId);
+
+      final responseFuture = completer.future.timeout(
+        _config.reservationTimeout,
+        onTimeout: () {
+          _pendingConnects.remove(relayPeerId);
+          throw TimeoutException(
+            'CONNECT request to $relayPeerId for $targetPeerId timed out',
+          );
+        },
+      );
+
+      await _router.sendMessage(
+        relayPeerId,
+        msg.writeToBuffer(),
+        protocolId: _protocolId,
+      );
+
+      final status = await responseFuture;
+
+      if (status != pb.Status.OK) {
+        _releaseCircuitSlot();
+        _circuitRelayEventsController.add(
+          CircuitRelayConnectionEvent(
+            eventType: 'circuit_relay_failed',
+            relayAddress: normalizedRelayAddr,
+            errorMessage: 'CONNECT rejected by $relayPeerId: $status',
+          ),
+        );
+        throw CircuitRelayException(
+          'CONNECT rejected by $relayPeerId: $status',
+        );
+      }
+
+      // Expose the relayed connection through the router so that higher-level
+      // protocols see the target peer as connected.
+      final relayedMultiaddr = _buildRelayedMultiaddr(
+        normalizedRelayAddr,
+        targetPeerId,
+      );
+      try {
+        await _router.connect(relayedMultiaddr);
+      } catch (e, stackTrace) {
+        _logger.warning(
+          'Router could not connect to relayed multiaddr $relayedMultiaddr; '
+          'registering as relayed peer instead',
+          e,
+          stackTrace,
+        );
+      }
+      _router.registerRelayedConnection(targetPeerId, normalizedRelayAddr);
+
+      final connection = RelayedConnection(
+        relayAddr: normalizedRelayAddr,
+        relayPeerId: relayPeerId,
+        targetPeerId: targetPeerId,
+        reservation: reservation,
+      );
+      _activeCircuits[targetPeerId] = connection;
+
+      _circuitRelayEventsController.add(
+        CircuitRelayConnectionEvent(
+          eventType: 'circuit_relay_created',
+          relayAddress: normalizedRelayAddr,
+          reason: 'Connected to $targetPeerId',
+        ),
+      );
+
+      return connection;
     } catch (e, stackTrace) {
+      _releaseCircuitSlot();
       _logger.error(
-        'Error handling HOP message from ${packet.srcPeerId}',
+        'Failed to connect via relay to $targetPeerId',
         e,
         stackTrace,
       );
+      _circuitRelayEventsController.add(
+        CircuitRelayConnectionEvent(
+          eventType: 'circuit_relay_failed',
+          relayAddress: normalizedRelayAddr,
+          errorMessage: e.toString(),
+        ),
+      );
+      rethrow;
     }
   }
+
+  /// List of relay addresses for which we hold an active reservation.
+  List<String> get activeRelayAddrs => _reservations.values
+      .where((r) => !r.isExpired)
+      .map((r) => r.relayAddr)
+      .toList();
 
   /// Connects to a peer using a circuit relay.
   ///
   /// [peerId]: The target peer ID to connect to via relay.
+  ///
+  /// This is the legacy one-step API. Prefer [connectThroughRelay] for full
+  /// Circuit Relay v2 flow.
   Future<void> connect(String peerId) async {
     _logger.debug('Connecting to peer via relay: $peerId');
     try {
@@ -200,6 +374,9 @@ class CircuitRelayClient {
     _logger.debug('Disconnecting from relayed peer: $peerId');
     try {
       await _router.disconnect(peerId);
+      if (_activeCircuits.remove(peerId) != null) {
+        _releaseCircuitSlot();
+      }
       _circuitRelayEventsController.add(
         CircuitRelayConnectionEvent(
           eventType: 'circuit_relay_closed',
@@ -224,7 +401,6 @@ class CircuitRelayClient {
   }
 
   /// Listens for incoming circuit relay events.
-  /// Stream of circuit relay connection events.
   Stream<CircuitRelayConnectionEvent> get onCircuitRelayEvents =>
       _circuitRelayEventsController.stream;
 
@@ -240,6 +416,162 @@ class CircuitRelayClient {
       _circuitRelayEventsController.add(event);
     }
   }
+
+  /// Handles incoming HOP messages.
+  void _handlePacket(NetworkPacket packet) {
+    try {
+      final msg = pb.HopMessage.fromBuffer(packet.datagram);
+      final fromPeer = packet.srcPeerId;
+
+      if (msg.type == pb.HopMessage_Type.STATUS) {
+        if (msg.hasReservation() &&
+            _pendingReservations.containsKey(fromPeer)) {
+          // Successful reservation response.
+          final completer = _pendingReservations.remove(fromPeer)!;
+          final relayAddr = _reservations.containsKey(fromPeer)
+              ? _reservations[fromPeer]!.relayAddr
+              : fromPeer;
+          final res = Reservation(
+            relayPeerId: fromPeer,
+            relayAddr: relayAddr,
+            expireTime: DateTime.fromMillisecondsSinceEpoch(
+              msg.reservation.expire.toInt() * 1000,
+            ),
+            limitData: msg.reservation.limitData,
+            limitDuration: msg.reservation.limitDuration,
+          );
+          Future.microtask(() => completer.complete(res));
+        } else if (_pendingConnects.containsKey(fromPeer)) {
+          // CONNECT status (OK or failure).
+          final pending = _pendingConnects.remove(fromPeer)!;
+          Future.microtask(() => pending.completer.complete(msg.status));
+        }
+
+        if (msg.status != pb.Status.OK &&
+            _pendingReservations.containsKey(fromPeer)) {
+          final completer = _pendingReservations.remove(fromPeer)!;
+          Future.microtask(
+            () => completer.completeError(
+              'Reservation rejected by $fromPeer: ${msg.status}',
+            ),
+          );
+        }
+      }
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Error handling HOP message from ${packet.srcPeerId}',
+        e,
+        stackTrace,
+      );
+    }
+  }
+
+  void _scheduleReservationRefresh(
+    String relayPeerId,
+    Reservation reservation,
+  ) {
+    _refreshTimers[relayPeerId]?.cancel();
+    final refreshAt = reservation.expireTime.subtract(
+      _config.reservationRefreshInterval,
+    );
+    final delay = refreshAt.difference(DateTime.now());
+    final timer = Timer(
+      delay > Duration.zero ? delay : Duration.zero,
+      () async {
+        _logger.debug('Refreshing reservation for relay $relayPeerId');
+        await reserve(relayPeerId);
+      },
+    );
+    _refreshTimers[relayPeerId] = timer;
+  }
+
+  Future<void> _acquireCircuitSlot() async {
+    if (_activeCircuits.length < _config.maxCircuits) {
+      return;
+    }
+    _logger.debug(
+      'Max circuits reached (${_config.maxCircuits}); queuing new attempt',
+    );
+    final completer = Completer<void>();
+    _pendingCircuitSlots.add(completer);
+    await completer.future.timeout(
+      _config.reservationTimeout,
+      onTimeout: () {
+        _pendingCircuitSlots.remove(completer);
+        throw CircuitRelayException(
+          'Timed out waiting for an available circuit slot',
+        );
+      },
+    );
+  }
+
+  void _releaseCircuitSlot() {
+    if (_pendingCircuitSlots.isNotEmpty) {
+      final next = _pendingCircuitSlots.removeAt(0);
+      if (!next.isCompleted) {
+        next.complete();
+      }
+    }
+  }
+
+  void _onPeerDisconnected(String peerId) {
+    if (_activeCircuits.remove(peerId) != null) {
+      _releaseCircuitSlot();
+      _circuitRelayEventsController.add(
+        CircuitRelayConnectionEvent(
+          eventType: 'circuit_relay_closed',
+          relayAddress: peerId,
+          reason: 'peer disconnected',
+        ),
+      );
+    }
+  }
+
+  ({String relayPeerId, String relayAddr}) _parseRelayAddrOrPeerId(
+    String input,
+  ) {
+    if (input.contains('/')) {
+      final peerId = _extractPeerIdFromRelayAddr(input);
+      return (relayPeerId: peerId ?? '', relayAddr: input);
+    }
+    return (relayPeerId: input, relayAddr: input);
+  }
+
+  String? _extractPeerIdFromRelayAddr(String relayAddr) {
+    final parts = relayAddr.split('/');
+    final p2pCircuitIndex = parts.indexOf('p2p-circuit');
+    if (p2pCircuitIndex <= 0) {
+      // For addresses without /p2p-circuit, use the last /p2p/ segment.
+      final p2pIndex = parts.lastIndexOf('p2p');
+      if (p2pIndex != -1 && p2pIndex + 1 < parts.length) {
+        return parts[p2pIndex + 1];
+      }
+      return null;
+    }
+    // Find /p2p/ immediately before /p2p-circuit.
+    for (var i = p2pCircuitIndex - 2; i >= 0; i -= 2) {
+      if (parts[i] == 'p2p' && i + 1 < parts.length) {
+        return parts[i + 1];
+      }
+    }
+    return null;
+  }
+
+  String _buildRelayedMultiaddr(String relayAddr, String targetPeerId) {
+    final base = relayAddr.endsWith('/')
+        ? relayAddr.substring(0, relayAddr.length - 1)
+        : relayAddr;
+    if (base.endsWith('/p2p-circuit')) {
+      return '$base/p2p/$targetPeerId';
+    }
+    return '$base/p2p-circuit/p2p/$targetPeerId';
+  }
+}
+
+class _PendingConnect {
+  _PendingConnect(this.completer, this.targetPeerId);
+  final Completer<pb.Status> completer;
+  final String targetPeerId;
 }
 
 /// Represents a circuit relay event.
@@ -277,10 +609,14 @@ class Reservation {
     required this.expireTime,
     required this.limitData,
     required this.limitDuration,
+    this.relayAddr = '',
   });
 
   /// The relay peer ID.
   final String relayPeerId;
+
+  /// The relay address (or peer ID) used to reach the relay.
+  final String relayAddr;
 
   /// When this reservation expires.
   final DateTime expireTime;
@@ -293,4 +629,42 @@ class Reservation {
 
   /// Returns true if this reservation has expired.
   bool get isExpired => DateTime.now().isAfter(expireTime);
+}
+
+/// Represents an active relayed connection.
+class RelayedConnection {
+  /// Creates a [RelayedConnection].
+  RelayedConnection({
+    required this.relayAddr,
+    required this.relayPeerId,
+    required this.targetPeerId,
+    required this.reservation,
+  });
+
+  /// The relay address used for this connection.
+  final String relayAddr;
+
+  /// The relay peer ID.
+  final String relayPeerId;
+
+  /// The target peer reached through the relay.
+  final String targetPeerId;
+
+  /// The reservation that keeps this circuit alive.
+  final Reservation reservation;
+
+  /// When the connection was established.
+  final DateTime connectedAt = DateTime.now();
+}
+
+/// Exception thrown by [CircuitRelayClient] operations.
+class CircuitRelayException implements Exception {
+  /// Creates a [CircuitRelayException] with the given [message].
+  CircuitRelayException(this.message);
+
+  /// The error message.
+  final String message;
+
+  @override
+  String toString() => 'CircuitRelayException: $message';
 }

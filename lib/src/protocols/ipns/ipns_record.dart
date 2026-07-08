@@ -9,6 +9,7 @@ import 'package:cbor/cbor.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 
 /// IPNS V2 Record with Ed25519 signature.
 ///
@@ -40,13 +41,14 @@ class IPNSRecord {
     Uint8List? signature,
   }) : _signature = signature;
 
-  /// Creates a record for internal use (e.g. caching).
+  /// Creates a record for internal use (e.g. caching or testing).
   factory IPNSRecord.internal({
     required Uint8List value,
     required DateTime validity,
     int sequence = 0,
     Duration ttl = const Duration(hours: 1),
     Uint8List? publicKey,
+    Uint8List? signature,
   }) {
     return IPNSRecord._(
       value: value,
@@ -54,6 +56,7 @@ class IPNSRecord {
       sequence: sequence,
       ttl: ttl,
       publicKey: publicKey ?? Uint8List(0),
+      signature: signature,
     );
   }
 
@@ -84,6 +87,9 @@ class IPNSRecord {
 
   /// Whether this record has expired.
   bool get isExpired => DateTime.now().isAfter(validity);
+
+  /// The IPNS name derived from this record's public key.
+  String get name => deriveIpnsName(publicKey);
 
   /// Creates and signs a new IPNS record.
   ///
@@ -259,4 +265,12 @@ class IPNSRecord {
         'valid: ${validity.toIso8601String()}, '
         'signed: $isSigned)';
   }
+}
+
+/// Derives an IPNS name from an Ed25519 public key.
+///
+/// The name is the multibase base36-encoded peer ID derived from the key.
+String deriveIpnsName(Uint8List publicKey) {
+  final peerId = PeerId.fromPublicKey(publicKey, type: 'Ed25519');
+  return peerId.toBase36();
 }

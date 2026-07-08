@@ -1,0 +1,183 @@
+# deployment.yaml
+# Base Deployment for the dart_ipfs daemon.
+#
+# Notes:
+#   - Single-replica only. dart_ipfs is not horizontally clustered in v2.2.
+#   - For production, consider replacing this with a StatefulSet for stable
+#     libp2p identity and network addressing.
+#   - The root filesystem is read-only; all writable paths are explicit volumes.
+#   - The RPC API is bound to 0.0.0.0 for the healthcheck but is not exposed
+#     externally by default (see NetworkPolicy and Ingress settings).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dart-ipfs
+  namespace: dart-ipfs
+  labels:
+    app.kubernetes.io/name: dart-ipfs
+    app.kubernetes.io/component: daemon
+    app.kubernetes.io/part-of: dart-ipfs
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dart-ipfs
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dart-ipfs
+        app.kubernetes.io/component: daemon
+        app.kubernetes.io/part-of: dart-ipfs
+    spec:
+      serviceAccountName: dart-ipfs
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: dart-ipfs
+          image: ghcr.io/jxoesneon/dart-ipfs:1.11.5
+          imagePullPolicy: IfNotPresent
+          command:
+            - /app/ipfs
+            - daemon
+            - --api-addr
+            - /ip4/0.0.0.0/tcp/5001
+            - --gateway-addr
+            - /ip4/0.0.0.0/tcp/8080
+          ports:
+            - name: swarm-tcp
+              containerPort: 4001
+              protocol: TCP
+            - name: swarm-udp
+              containerPort: 4001
+              protocol: UDP
+            - name: api
+              containerPort: 5001
+              protocol: TCP
+            - name: gateway
+              containerPort: 8080
+              protocol: TCP
+            - name: metrics
+              containerPort: 8081
+              protocol: TCP
+          env:
+            - name: IPFS_DATA_DIR
+              value: /data/ipfs
+            - name: IPFS_CONFIG_PATH
+              value: /etc/dart-ipfs/config.json
+            - name: IPFS_API_ADDR
+              value: /ip4/0.0.0.0/tcp/5001
+            - name: IPFS_GATEWAY_ADDR
+              value: /ip4/0.0.0.0/tcp/8080
+            - name: IPFS_JSON_LOGS
+              value: "true"
+            - name: LIBP2P_IDENTITY_SEED
+              valueFrom:
+                secretKeyRef:
+                  name: dart-ipfs-keys
+                  key: libp2p-identity-seed
+                  optional: true
+            - name: IPFS_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: dart-ipfs-keys
+                  key: api-auth-token
+                  optional: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+          volumeMounts:
+            - name: data
+              mountPath: /data/ipfs
+            - name: config
+              mountPath: /etc/dart-ipfs
+              readOnly: true
+            - name: secrets
+              mountPath: /etc/dart-ipfs/secrets
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          livenessProbe:
+            exec:
+              command:
+                - /app/ipfs
+                - healthcheck
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /app/ipfs
+                - healthcheck
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            exec:
+              command:
+                - /app/ipfs
+                - healthcheck
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: dart-ipfs-data
+        - name: config
+          configMap:
+            name: dart-ipfs-config
+            items:
+              - key: config.json
+                path: config.json
+        - name: secrets
+          secret:
+            secretName: dart-ipfs-keys
+            optional: true
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 100Mi
+---
+# PersistentVolumeClaim for the IPFS repository.
+# Overlays may adjust the storage class and size.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dart-ipfs-data
+  namespace: dart-ipfs
+  labels:
+    app.kubernetes.io/name: dart-ipfs
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: dart-ipfs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

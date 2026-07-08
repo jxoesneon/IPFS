@@ -7,6 +7,7 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
+import 'package:dart_ipfs/src/services/rpc/mfs_handlers.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/version.dart';
@@ -19,10 +20,13 @@ import 'package:shelf/shelf.dart';
 /// Implements Kubo-compatible RPC methods
 class RPCHandlers {
   /// Creates a new [RPCHandlers] with the given [node].
-  RPCHandlers(this.node);
+  RPCHandlers(this.node) : mfsHandlers = MFSHandlers(node);
 
   /// The IPFS node to control via RPC.
   final IPFSNode node;
+
+  /// Handlers for the `/api/v0/files/*` MFS endpoint surface.
+  final MFSHandlers mfsHandlers;
 
   final _logger = Logger('RPCHandlers');
 
@@ -153,11 +157,42 @@ class RPCHandlers {
     return parameters['boundary'];
   }
 
+  Response? _checkDenylist(String cidOrPath, {String source = 'rpc'}) {
+    final service = node.denylistService;
+    if (service == null || !service.configuredEnabled) {
+      return null;
+    }
+    if (!service.isBlockedByCidString(cidOrPath) &&
+        !service.isBlockedPath(cidOrPath)) {
+      return null;
+    }
+
+    final action = service.recordHit(cidOrPath, source: source);
+    if (action == 'log') {
+      return null;
+    }
+
+    return Response(
+      451,
+      body: json.encode({
+        'Message': 'Content blocked by operator policy',
+        'Code': 451,
+        'Type': 'error',
+      }),
+      headers: {'Content-Type': 'application/json'},
+    );
+  }
+
   /// POST /api/v0/cat - Get file content
   Future<Response> handleCat(Request request) async {
     final cid = request.url.queryParameters['arg'];
     if (cid == null || cid.isEmpty) {
       return _errorResponse('Missing argument: cid');
+    }
+
+    final blocked = _checkDenylist(cid);
+    if (blocked != null) {
+      return blocked;
     }
 
     try {
@@ -213,6 +248,11 @@ class RPCHandlers {
     final cid = request.url.queryParameters['arg'];
     if (cid == null) {
       return _errorResponse('Missing argument: cid');
+    }
+
+    final blocked = _checkDenylist(cid);
+    if (blocked != null) {
+      return blocked;
     }
 
     try {
@@ -302,6 +342,11 @@ class RPCHandlers {
     final cid = request.url.queryParameters['arg'];
     if (cid == null) {
       return _errorResponse('Missing argument: cid');
+    }
+
+    final blocked = _checkDenylist(cid, source: 'rpc');
+    if (blocked != null) {
+      return blocked;
     }
 
     try {
@@ -399,6 +444,11 @@ class RPCHandlers {
     final cid = request.url.queryParameters['arg'];
     if (cid == null) {
       return _errorResponse('Missing argument: cid');
+    }
+
+    final blocked = _checkDenylist(cid);
+    if (blocked != null) {
+      return blocked;
     }
 
     try {

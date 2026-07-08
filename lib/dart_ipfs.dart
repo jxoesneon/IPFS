@@ -116,7 +116,36 @@
 /// - [API Documentation](https://pub.dev/documentation/dart_ipfs/latest/)
 library;
 
-export 'src/core/cid.dart';
+// Stable core primitives re-exported from the dart_ipfs_core package.
+export 'package:dart_ipfs_core/dart_ipfs_core.dart'
+    show
+        CID,
+        MultibaseUtils,
+        Multicodec,
+        MultihashInfo,
+        MultihashUtils,
+        Block,
+        IBlock,
+        BlockStoreResult,
+        IBlockStore,
+        InMemoryBlockStore,
+        IPLDCodec,
+        RawCodec,
+        DagCborCodec,
+        DagJsonCodec,
+        CryptoUtils,
+        EncryptedData,
+        Ed25519Signer,
+        KeyPairExtensions,
+        ImmutableBytes,
+        TypedMap;
+
+// Optional native QUIC transport primitives from the dart_ipfs_quic package.
+// The library is only loaded when QuicheLibrary.probe() is invoked; importing
+// this file does not attempt to load the native quiche library by itself.
+export 'package:dart_ipfs_quic/dart_ipfs_quic.dart'
+    show QuicheLibrary, QuicheConfig, QuicheConnection;
+
 export 'src/core/config/ipfs_config.dart';
 export 'src/core/ipfs_node/ipfs_node.dart';
 export 'src/core/ipfs_node/ipfs_web_node.dart';

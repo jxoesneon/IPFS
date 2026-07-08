@@ -237,6 +237,5 @@ void main() {
       expect(codec.code, 0x85);
       expect(codec.identifier, 'dag-jose');
     });
-
   });
 }

@@ -1,0 +1,12 @@
+# namespace.yaml
+# Base namespace for dart_ipfs deployments.
+# Overlays may override the namespace name for environment-specific isolation.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dart-ipfs
+  labels:
+    app.kubernetes.io/name: dart-ipfs
+    app.kubernetes.io/component: namespace
+    app.kubernetes.io/part-of: dart-ipfs
+    app.kubernetes.io/managed-by: kustomize

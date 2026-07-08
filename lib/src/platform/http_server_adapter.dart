@@ -20,4 +20,17 @@ abstract class HttpServerAdapter {
     String address,
     int port,
   );
+
+  /// Starts serving with the given handler over TLS at the specified address
+  /// and port using the provided [context].
+  ///
+  /// The [context] is typed as [Object] to keep the platform adapter abstract
+  /// and avoid importing `dart:io` on web platforms. IO implementations are
+  /// expected to receive a [SecurityContext] instance.
+  Future<IpfsHttpServerInstance> serveSecure(
+    Handler handler,
+    String address,
+    int port,
+    Object context,
+  );
 }

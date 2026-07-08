@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "dart-ipfs.fullname" . }}-config
+  labels:
+    {{- include "dart-ipfs.labels" . | nindent 4 }}
+data:
+  config.json: |
+    {
+      "offline": {{ .Values.config.offline }},
+      "enableDHT": {{ .Values.config.enableDHT }},
+      "enablePubSub": {{ .Values.config.enablePubSub }},
+      "enableRPC": {{ .Values.config.enableRPC }},
+      "enableMetrics": {{ .Values.config.enableMetrics }},
+      "enableCircuitRelay": {{ .Values.config.enableCircuitRelay }},
+      "enableContentRouting": {{ .Values.config.enableContentRouting }},
+      "enableDNSLinkResolution": {{ .Values.config.enableDNSLinkResolution }},
+      "enableIPLD": {{ .Values.config.enableIPLD }},
+      "enableGraphsync": {{ .Values.config.enableGraphsync }},
+      "enableIpnsPubSub": {{ .Values.config.enableIpnsPubSub }},
+      "logLevel": "{{ .Values.config.logLevel }}",
+      "enableStructuredLogging": true,
+      "dataPath": "/data/ipfs",
+      "datastorePath": "/data/ipfs/datastore",
+      "blockStorePath": "/data/ipfs/blocks",
+      "keystorePath": "/data/ipfs/keystore",
+      "libp2pListenAddress": "/ip4/0.0.0.0/tcp/{{ .Values.service.swarm.port }}",
+      "network": {
+        "bootstrapPeers": [
+          {{- range $i, $peer := .Values.config.network.bootstrapPeers }}
+          {{- if $i }},{{ end }}
+          "{{ $peer }}"
+          {{- end }}
+        ]
+      },
+      "gateway": {
+        "enabled": true,
+        "port": {{ .Values.service.gateway.port }},
+        "corsOrigins": ["*"]
+      },
+      "metrics": {
+        "enabled": {{ .Values.config.enableMetrics }},
+        "port": {{ .Values.service.metrics.port }},
+        "path": "/metrics"
+      }
+    }

@@ -1,0 +1,25 @@
+# swarm-service.yaml
+# Dedicated LoadBalancer service for the libp2p swarm port in production.
+# Keeps the RPC API and gateway on the internal ClusterIP service only.
+apiVersion: v1
+kind: Service
+metadata:
+  name: dart-ipfs-swarm
+  namespace: dart-ipfs-prod
+  labels:
+    app.kubernetes.io/name: dart-ipfs
+    app.kubernetes.io/component: swarm-service
+    app.kubernetes.io/part-of: dart-ipfs
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: dart-ipfs
+  ports:
+    - name: swarm-tcp
+      port: 4001
+      targetPort: swarm-tcp
+      protocol: TCP
+    - name: swarm-udp
+      port: 4001
+      targetPort: swarm-udp
+      protocol: UDP
