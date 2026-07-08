@@ -69,7 +69,7 @@ void main() {
         );
         expect(
           handler.detectContentType(block, filename: 'test.car'),
-          'application/vnd.ipfs.car',
+          'application/vnd.ipld.car',
         );
       });
     });
@@ -88,18 +88,15 @@ void main() {
         expect(html, contains('<!DOCTYPE html>'));
       });
 
-      test('processContent handles CAR files', () async {
+      test('processContent passes through CAR files', () async {
         final data = Uint8List.fromList([1, 2, 3]); // Fake CAR data
         final block = await Block.fromData(data);
 
         final processed = handler.processContent(
           block,
-          'application/vnd.ipfs.car',
+          'application/vnd.ipld.car',
         );
-        final html = utf8.decode(processed);
-
-        expect(html, contains('CAR Archive Preview'));
-        expect(html, contains('3 B')); // Size check
+        expect(processed, equals(data));
       });
 
       test('processContent calls pass-through for unknown types', () async {

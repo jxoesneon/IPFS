@@ -1,21 +1,21 @@
 // lib/src/utils/car_writer.dart
 
-import 'dart:typed_data';
-import 'package:dart_ipfs/src/platform/platform.dart';
-import '../core/data_structures/car.dart';
+/// Re-export of the standard CAR v1/v2 API from
+/// [package:dart_ipfs/src/core/data_structures/car.dart].
+///
+/// The previous transitional [CarWriter] wrapper that delegated to the legacy
+/// protobuf-based [CAR] class has been removed in favor of the standard
+/// append-only writer defined in `doc/specs/features/CAR_FORMAT_SPEC.md`.
+library;
 
-/// Utility class for writing CAR files.
-class CarWriter {
-  /// Writes the given [CAR] object to bytes.
-  static Future<Uint8List> writeCar(CAR car) async {
-    // Serialize the CAR to bytes
-    return car.toBytes();
-  }
-
-  /// Writes the blocks from a CAR to a file (optional).
-  static Future<void> writeCarToFile(CAR car, String filePath) async {
-    final carData = await writeCar(car);
-    // Write the serialized data to a file via platform abstraction
-    await getPlatform().writeBytes(filePath, carData);
-  }
-}
+export 'package:dart_ipfs/src/core/data_structures/car.dart'
+    show
+        CarException,
+        CarHeaderException,
+        CarSectionException,
+        CarV2Exception,
+        CarIndexException,
+        CarHeader,
+        CarSection,
+        CarWriter,
+        IndexBuilder;

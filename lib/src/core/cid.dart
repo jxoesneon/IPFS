@@ -101,10 +101,10 @@ class CID {
 
     // CIDv0 check (SHA2-256)
     // 0x12 0x20 ... (34 bytes total)
-    if (bytes.length == 34 && bytes[0] == 0x12 && bytes[1] == 0x20) {
+    if (bytes.length >= 34 && bytes[0] == 0x12 && bytes[1] == 0x20) {
       return CID(
         version: 0,
-        multihash: Multihash.decode(bytes),
+        multihash: Multihash.decode(bytes.sublist(0, 34)),
         codec: 'dag-pb',
         multibaseType: Multibase.base58btc,
       );
@@ -112,20 +112,22 @@ class CID {
 
     // CIDv1 check
     if (bytes[0] == 0x01) {
-      int index = 1;
-      int codecCode = 0;
-      int shift = 0;
-      while (true) {
-        if (index >= bytes.length) {
-          throw const FormatException('Invalid CID bytes');
-        }
-        int byte = bytes[index++];
-        codecCode |= (byte & 0x7f) << shift;
-        if ((byte & 0x80) == 0) break;
-        shift += 7;
-      }
+      var index = 1;
+      final (codecLen, codecCode) = _readVarint(bytes, index);
+      index += codecLen;
 
-      final mh = Multihash.decode(bytes.sublist(index));
+      // Parse the multihash prefix to determine the exact multihash byte
+      // boundary so the decoder does not see trailing block bytes.
+      final mhStart = index;
+      final (codeLen, _) = _readVarint(bytes, index);
+      index += codeLen;
+      final (lenLen, digestLen) = _readVarint(bytes, index);
+      index += lenLen;
+      final mhEnd = index + digestLen;
+      if (mhEnd > bytes.length) {
+        throw const FormatException('Invalid CID bytes: multihash truncated');
+      }
+      final mh = Multihash.decode(bytes.sublist(mhStart, mhEnd));
 
       String codecStr;
       try {
@@ -266,6 +268,23 @@ class CID {
     }
     bytes.add(value & 0x7f);
     return Uint8List.fromList(bytes);
+  }
+
+  static (int, int) _readVarint(Uint8List bytes, int offset) {
+    var value = 0;
+    var shift = 0;
+    for (var i = 0; i < 10; i++) {
+      if (offset + i >= bytes.length) {
+        throw const FormatException('Truncated varint');
+      }
+      final b = bytes[offset + i];
+      value |= (b & 0x7f) << shift;
+      if ((b & 0x80) == 0) {
+        return (i + 1, value);
+      }
+      shift += 7;
+    }
+    throw const FormatException('Varint too long');
   }
 
   /// Converts the CID to a Protobuf representation.

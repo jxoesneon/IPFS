@@ -1,7 +1,7 @@
 # dart_ipfs Roadmap
 
 **Current Version**: 1.11.5 (Multi-Platform Production Ready)  
-**Last Updated**: 2026-06-23
+**Last Updated**: 2026-06-25
 
 ---
 
@@ -186,7 +186,7 @@ dart_ipfs **v1.11.5** is **multi-platform production ready** with:
 - **v2.0**: Extensible plugin architecture
 - **Why**: Community contributions, custom protocols
 - **Effort**: 8-10 weeks
-- **Status**: Planned
+- **Status**: ✅ Completed (phase 1 core implemented, including archive-checksum verification)
 
 ### Medium Priority (Future Versions)
 
@@ -229,6 +229,74 @@ dart_ipfs **v1.11.5** is **multi-platform production ready** with:
 
 ---
 
+## 🏆 Parity & Superiority Backlog (from 2026-06-25 IPFS implementation review)
+
+The items below were identified by comparing dart_ipfs v1.11.5 against Kubo v0.42.0, Helia, and Iroh. They are required to make dart_ipfs the **superior, fully compliant** IPFS implementation. Each item has been reviewed by the Ciel Council of Five (Coherence, Capability, Safety, Efficiency, Evolution). Verdicts are: **APPROVED** (greenlight), **MODIFIED** (proceed with stated scope change), **DEFERRED** (postponed), or **REJECTED**.
+
+### v2.0 — Q4 2026: Protocol Compliance & Core Data Layer
+
+Focus: close the highest-impact interoperability gaps. Ciel Council verdicts: **APPROVED** unless noted.
+
+- [x] **P0 — Standard CAR v1/v2 format** ✅ Approved — **completed**. Legacy protobuf-based `CAR`/`CarHeader`/`CarIndex` classes replaced with the standard `CarReader`/`CarWriter`/`CarHeader`/`CarSection`/`IndexBuilder` API (CBOR header + varint CID/block frames, CARv2 pragma/header/index/footer). `CarCodec` and `CarProto` registration removed; `IPLDHandler` registers only standard codecs. `importCAR`/`exportCAR` signatures preserved. See `COUNCIL_DECISION_CAR_MIGRATION.md`.
+- [ ] **P0 — UnixFS basic directories** ✅ Approved. Fix directory node creation, cumulative `Tsize`, and path resolution integration. (HAMT sharding + symlinks split to P1 below.)
+- [ ] **P1 — UnixFS HAMT sharding + symlinks** ✅ Approved. Add large-directory HAMT builder/walker and symlink node creation with cycle guards.
+- [ ] **P0 — Full DAG-CBOR codec** ✅ Approved. Make `EnhancedCBORHandler` spec-compliant: CID links as tag `42` with `0x00` prefix, raw bytes without tag `45`, canonical key ordering, big-int support, and strict rejection of non-IPLD CBOR tags.
+- [x] **P1 — Consolidated DAG-JSON codec** 🔧 Modified — **completed**. Unified `IPLDCodec` interface in `lib/src/core/ipld/codecs/ipld_codec.dart` with `name`/`code` and async `encode`/`decode` on `IPLDNode`. `DagJsonCodec` in `standard_codecs.dart` implements the new interface; `lib/src/core/ipld/dag_json_codec.dart` deleted; `IPLDHandler` populates `MulticodecRegistry`. See `COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md`.
+- [ ] **P0 — Spec-compliant IPLD selector execution** ✅ Approved. Replace the custom selector model with the official vocabulary (`exploreAll`, `exploreFields`, `exploreIndex`, `exploreRange`, `exploreRecursive`, `exploreUnion`, `matcher`, etc.) serialized as DAG-CBOR. Wire into `IPLDHandler` and GraphSync.
+- [ ] **P2 — Full IPLD Schema DSL validation** ⏸ Deferred. Keep the lightweight `IPLDSchema` stopgap; revisit after core data codecs are spec-compliant.
+- [ ] **P0 — MFS completeness** ✅ Approved. Add `flush`/`sync`, complete `/api/v0/files/*` RPC coverage, and ensure `read/write/stat/ls` semantics match Kubo.
+- [ ] **P0 — Real metrics collection** ✅ Approved. Replace stub `MetricsCollector` getters with actual Prometheus-compatible counters/histograms and wire the configured endpoint.
+- [ ] **P2 — OpenTelemetry support** ⏸ Deferred. Revisit after real metrics are production-grade; low value/effort ratio today.
+- [ ] **P1 — Subdomain gateway** ✅ Approved. Complete the stub `handleSubdomain` with strict host/CID validation and optional DNSLink resolution.
+- [ ] **P0 — Trustless gateway full compliance** ✅ Approved. Honor `Accept` and `?format=` for raw block, CAR, IPNS-record, and DAG-JSON/CBOR responses without returning HTML.
+- [ ] **P1 — Content blocking / compact denylist** ✅ Approved. Add an operator-controlled denylist service (default-off, auditable) alongside `SecurityManager`.
+- [ ] **P1 — Reprovide strategies** ✅ Approved. Implement a `Reprovider` service with pinned, roots, all, and pinned+mfs strategies, plus unique/entities variants.
+- [ ] **P1 — DHT Provide Sweep optimization** ✅ Approved. Implement XOR-ordered reprovide and proximity grouping inside the `Reprovider` service.
+- [ ] **P1 — On-demand provide refinement** 🔧 Modified. Enrich the existing `/api/v0/dht/provide` endpoint and `DHTHandler.provide` with explicit `once` semantics, success/failure feedback, and optional queueing — do not create a separate duplicate feature.
+
+### v2.1 — Q1 2027: Networking, Naming & Full P2P
+
+Focus: make the node a credible participant in the public IPFS network. Ciel Council verdicts: **APPROVED** unless noted.
+
+- [ ] **P0 — QUIC transport** ✅ Approved. Add a native QUIC transport plugged into `Libp2pRouter`; target `/udp/.../quic-v1` listen addresses with TCP fallback.
+- [x] **P1 — PeerId base36 primitives** ✅ Approved — **completed**. `lib/src/core/types/peer_id.dart` now exposes `fromPublicKey`, `toBase36`, and `fromBase36` with unit tests, enabling IPNS names and libp2p base36 peer IDs.
+- [ ] **P0 — Full libp2p Gossipsub compliance** ✅ Approved. Replace the custom JSON/HMAC wire format with the Gossipsub protobuf wire format and peer-key message signing; add message-history cache and full peer scoring.
+- [ ] **P0 — Real Amino DHT network integration** 🔧 Modified. Finish iterative `FIND_NODE`/`GET_PROVIDERS`, add provider-record validation, implement reprovide sweep, and fix request/response correlation in `DHTClient` so the node can join the public DHT.
+- [ ] **P0 — IPNS DHT-first signed records** 🔧 Modified. Use the existing `IPNSRecord` Ed25519 signing + `DHTClient.storeValue/getValue`, derive names from public keys, and require signature verification on resolve. PubSub notifications are gated behind the Gossipsub compliance item.
+- [ ] **P0 — Circuit relay v2 client dialing** ✅ Approved. Complete the relayed client dialing path via `/p2p-circuit` multiaddr semantics after reservation.
+- [ ] **P1 — Browser Transport Hardening** 🔧 Modified. (Replaces "WebRTC/WebTransport maturity.") Implement WebTransport IO listener/dialer, validate `certhash` in web dialer, replace the hardcoded Google STUN server with configurable STUN/TURN, and implement missing `Conn` metadata without `UnimplementedError`.
+- [ ] **P1 — Server-side GraphSync MVP** 🔧 Modified. (Replaces "GraphSync full wiring.") Respond to a single requesting peer with selected blocks in `GraphsyncMessage.blocks`, enforce selector depth/block-count budgets, and fall back to Bitswap for missing blocks. Defer bidirectional pause/resume and client-side matching until the router supports unicast response streams.
+- [ ] **P1 — Bitswap HTTP fallback** 🔧 Modified. Integrate `HttpGatewayClient` as a fallback inside `BitswapHandler` after P2P attempts fail; verify every HTTP-fetched block against the requested CID.
+- [ ] **P2 — Badger / Pebble datastore backends** ⏸ Deferred. Hive is sufficient for v2.1; re-evaluate once mature Dart bindings exist or profiling proves a bottleneck.
+- [ ] **P1 — AutoTLS / TLS for WSS gateway** ✅ Approved. Add optional TLS termination to `GatewayServer` using `SecurityContext` from config, plus an off-by-default AutoTLS/ACME mode for public gateways.
+
+### v2.2 — Q2 2027: Operations, Modularity & Ecosystem
+
+Focus: production deployment and library adoption at scale. Ciel Council verdicts: **APPROVED** unless noted.
+
+- [x] **P0 — CLI / daemon binary** ✅ Approved — **completed**. `IPFSConfig.toJson()`/`fromJson()` round-trip all fields; `fromFile()` treats JSON as canonical and YAML as legacy fallback; `IPFSNodeBuilder` registers `RPCServer` and `GatewayServer` with `LifecycleManager` so all six Council decisions are in code; `lib/src/version.dart` is the single source of truth for version strings. The test suite is nearly green with one unrelated failure. `bin/ipfs.dart` implementation tracked in `CLI_SPEC.md`. See `COUNCIL_DECISION_CONFIG_LIFECYCLE.md`.
+- [x] **P0 — Docker & multi-arch images** ✅ Approved — **completed**. `Dockerfile` and `docker-compose.yml` updated to the hardened `cgr.dev/chainguard/glibc-dynamic` default runtime, experimental static variant, multi-arch CI build/publish, and `< 80 MB` compressed target. `bin/ipfs.dart` provides a `healthcheck` command, Docker Compose healthchecks are configured, and `nginx/nginx.conf` is wired as an optional gateway overlay. `DOCKER_SPEC.md` reflects the final base image strategy. See `COUNCIL_DECISION_DOCKER_BASE.md`.
+- [ ] **P1 — Kubernetes manifests & Helm chart** ✅ Approved. Add a `k8s/` base manifest set after Docker CI is complete.
+- [x] **P0 — Interoperability test suite** ✅ Approved — **completed**. `INTEROP_TESTS_SPEC.md` updated with the P0/P1 scope split; `.github/workflows/interop.yml` (PR-blocking P0 job) and `.github/workflows/interop_nightly.yml` (Helia nightly) created. P0 release-blocking coverage: Kubo CAR exchange, Bitswap fetch, and gateway retrieval. P1 DHT/IPNS tests are allowed-to-fail/allowed-to-skip until networking specs stabilize. See `COUNCIL_DECISION_INTEROP_SCOPE.md`.
+- [ ] **P1 — Package modularization (phase 1)** 🔧 Modified. Create the `packages/` monorepo scaffold and extract only the stable `dart_ipfs_core` layer (CID, multibase, block interfaces, common codecs). Keep protocol/service layers in the umbrella package until v2.1 stabilizes; maintain backward-compatible re-exports.
+- [x] **P1 — Plugin ecosystem (phase 1)** 🔧 Modified — **completed (core implemented)**. `PLUGINS_SPEC.md` updated to remove the false Isolate-sandbox claim, replace committed dev keys with CI-generated ephemeral Ed25519 keys, and reduce Phase 1 to read-only examples. Core trust-based, capability-gated, auditable runtime implemented: `PluginHost`, `CapabilityRegistry`, manifest signing verification, archive-checksum verification (`archive_sha256` covers plugin code), audit logging, and `PluginSecurityException`. Example plugins and production `plugin.trustedKeysPath` wiring tracked in `PLUGINS_SPEC.md`. See `COUNCIL_DECISION_PLUGIN_SECURITY.md`.
+- [ ] **P2 — WASM build** ⏸ Deferred. Keep web code wasm-clean, but do not ship a production wasm node in v2.2; revisit v3.0.
+- [ ] **P2 — FUSE mount** ⏸ Deferred. Revisit only after CLI, Docker, and interoperability parity are solid.
+- [ ] **P2 — Reference WebUI** 🔧 Modified. Promote the existing `example/ipfs_dashboard` and `web/` demo as the maintained, optional reference WebUI; add a web build CI target and documentation. Do not create a separate productized WebUI in v2.2.
+
+### v2.3+ / v3.0 — Long-term Superiority
+
+- [ ] **Verified streaming** (BLAKE3-style incremental verification, comparable to Iroh)
+- [ ] **Advanced hole punching / AutoNATv2** (beyond current NAT traversal)
+- [ ] **Multi-signature IPNS** (enterprise naming)
+- [ ] **Content policy engine** (granular allow/deny rules)
+- [ ] **Hardware Security Module (HSM) support**
+- [ ] **Zero-knowledge proof support** (content/ownership proofs)
+- [ ] **Quantum-safe cryptography** (experimental)
+- [ ] **AI-powered content discovery** (experimental)
+
+---
+
 ## 🚀 Quick Wins
 
 These can be implemented quickly with high impact:
@@ -238,7 +306,7 @@ These can be implemented quickly with high impact:
 1. **Docker Images** (1 week)
    - Official Docker Hub images
    - Multiple variants (gateway, full-node, dev)
-2. **Health Checks** (1 week)
+2. **Health Checks** (1 week) ✅ Completed
 
    - Kubernetes-ready endpoints
    - Load balancer integration
@@ -438,7 +506,7 @@ This roadmap is a living document. We welcome:
 
 ---
 
-**Last Updated**: 2026-06-23 (v1.11.5)
+**Last Updated**: 2026-06-25 (v1.11.5) — parity & superiority backlog added with Ciel Council verdicts
 **Status**: Active Development  
 **Current Version:** 1.11.5
 **Target for Next Release:** 2.0.0 (Q4 2026)

@@ -33,30 +33,30 @@ import 'package:mockito/src/dummies.dart' as _i6;
 
 class _FakePinManager_0 extends _i1.SmartFake implements _i2.PinManager {
   _FakePinManager_0(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+      : super(parent, parentInvocation);
 }
 
 class _FakeGetBlockResponse_1 extends _i1.SmartFake
     implements _i3.GetBlockResponse {
   _FakeGetBlockResponse_1(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+      : super(parent, parentInvocation);
 }
 
 class _FakeAddBlockResponse_2 extends _i1.SmartFake
     implements _i3.AddBlockResponse {
   _FakeAddBlockResponse_2(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+      : super(parent, parentInvocation);
 }
 
 class _FakeRemoveBlockResponse_3 extends _i1.SmartFake
     implements _i3.RemoveBlockResponse {
   _FakeRemoveBlockResponse_3(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+      : super(parent, parentInvocation);
 }
 
 class _FakeIPLDNode_4 extends _i1.SmartFake implements _i4.IPLDNode {
   _FakeIPLDNode_4(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+      : super(parent, parentInvocation);
 }
 
 /// A class which mocks [BlockStore].
@@ -68,114 +68,94 @@ class MockBlockStore extends _i1.Mock implements _i5.BlockStore {
   }
 
   @override
-  String get path =>
-      (super.noSuchMethod(
-            Invocation.getter(#path),
-            returnValue: _i6.dummyValue<String>(this, Invocation.getter(#path)),
-          )
-          as String);
+  String get path => (super.noSuchMethod(
+        Invocation.getter(#path),
+        returnValue: _i6.dummyValue<String>(this, Invocation.getter(#path)),
+      ) as String);
 
   @override
-  _i2.PinManager get pinManager =>
-      (super.noSuchMethod(
-            Invocation.getter(#pinManager),
-            returnValue: _FakePinManager_0(
-              this,
-              Invocation.getter(#pinManager),
-            ),
-          )
-          as _i2.PinManager);
+  _i2.PinManager get pinManager => (super.noSuchMethod(
+        Invocation.getter(#pinManager),
+        returnValue: _FakePinManager_0(
+          this,
+          Invocation.getter(#pinManager),
+        ),
+      ) as _i2.PinManager);
 
   @override
-  _i7.Future<void> start() =>
-      (super.noSuchMethod(
-            Invocation.method(#start, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
+  _i7.Future<void> start() => (super.noSuchMethod(
+        Invocation.method(#start, []),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
 
   @override
-  _i7.Future<void> stop() =>
-      (super.noSuchMethod(
-            Invocation.method(#stop, []),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
-          )
-          as _i7.Future<void>);
+  _i7.Future<void> stop() => (super.noSuchMethod(
+        Invocation.method(#stop, []),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
 
   @override
-  _i7.Future<_i3.GetBlockResponse> getBlock(String? cid) =>
-      (super.noSuchMethod(
+  _i7.Future<_i3.GetBlockResponse> getBlock(String? cid) => (super.noSuchMethod(
+        Invocation.method(#getBlock, [cid]),
+        returnValue: _i7.Future<_i3.GetBlockResponse>.value(
+          _FakeGetBlockResponse_1(
+            this,
             Invocation.method(#getBlock, [cid]),
-            returnValue: _i7.Future<_i3.GetBlockResponse>.value(
-              _FakeGetBlockResponse_1(
-                this,
-                Invocation.method(#getBlock, [cid]),
-              ),
-            ),
-          )
-          as _i7.Future<_i3.GetBlockResponse>);
+          ),
+        ),
+      ) as _i7.Future<_i3.GetBlockResponse>);
 
   @override
   _i7.Future<_i3.AddBlockResponse> putBlock(_i8.Block? block) =>
       (super.noSuchMethod(
+        Invocation.method(#putBlock, [block]),
+        returnValue: _i7.Future<_i3.AddBlockResponse>.value(
+          _FakeAddBlockResponse_2(
+            this,
             Invocation.method(#putBlock, [block]),
-            returnValue: _i7.Future<_i3.AddBlockResponse>.value(
-              _FakeAddBlockResponse_2(
-                this,
-                Invocation.method(#putBlock, [block]),
-              ),
-            ),
-          )
-          as _i7.Future<_i3.AddBlockResponse>);
+          ),
+        ),
+      ) as _i7.Future<_i3.AddBlockResponse>);
 
   @override
   _i7.Future<_i3.RemoveBlockResponse> removeBlock(String? cid) =>
       (super.noSuchMethod(
+        Invocation.method(#removeBlock, [cid]),
+        returnValue: _i7.Future<_i3.RemoveBlockResponse>.value(
+          _FakeRemoveBlockResponse_3(
+            this,
             Invocation.method(#removeBlock, [cid]),
-            returnValue: _i7.Future<_i3.RemoveBlockResponse>.value(
-              _FakeRemoveBlockResponse_3(
-                this,
-                Invocation.method(#removeBlock, [cid]),
-              ),
-            ),
-          )
-          as _i7.Future<_i3.RemoveBlockResponse>);
+          ),
+        ),
+      ) as _i7.Future<_i3.RemoveBlockResponse>);
 
   @override
-  _i7.Future<bool> hasBlock(String? cid) =>
-      (super.noSuchMethod(
-            Invocation.method(#hasBlock, [cid]),
-            returnValue: _i7.Future<bool>.value(false),
-          )
-          as _i7.Future<bool>);
+  _i7.Future<bool> hasBlock(String? cid) => (super.noSuchMethod(
+        Invocation.method(#hasBlock, [cid]),
+        returnValue: _i7.Future<bool>.value(false),
+      ) as _i7.Future<bool>);
 
   @override
-  _i7.Future<List<_i8.Block>> getAllBlocks() =>
-      (super.noSuchMethod(
-            Invocation.method(#getAllBlocks, []),
-            returnValue: _i7.Future<List<_i8.Block>>.value(<_i8.Block>[]),
-          )
-          as _i7.Future<List<_i8.Block>>);
+  _i7.Future<List<_i8.Block>> getAllBlocks() => (super.noSuchMethod(
+        Invocation.method(#getAllBlocks, []),
+        returnValue: _i7.Future<List<_i8.Block>>.value(<_i8.Block>[]),
+      ) as _i7.Future<List<_i8.Block>>);
 
   @override
-  _i7.Future<Map<String, dynamic>> getStatus() =>
-      (super.noSuchMethod(
-            Invocation.method(#getStatus, []),
-            returnValue: _i7.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
-            ),
-          )
-          as _i7.Future<Map<String, dynamic>>);
+  _i7.Future<Map<String, dynamic>> getStatus() => (super.noSuchMethod(
+        Invocation.method(#getStatus, []),
+        returnValue: _i7.Future<Map<String, dynamic>>.value(
+          <String, dynamic>{},
+        ),
+      ) as _i7.Future<Map<String, dynamic>>);
 
   @override
-  _i7.Future<int> gc() =>
-      (super.noSuchMethod(
-            Invocation.method(#gc, []),
-            returnValue: _i7.Future<int>.value(0),
-          )
-          as _i7.Future<int>);
+  _i7.Future<int> gc() => (super.noSuchMethod(
+        Invocation.method(#gc, []),
+        returnValue: _i7.Future<int>.value(0),
+      ) as _i7.Future<int>);
 }
 
 /// A class which mocks [IPLDCodec].
@@ -187,33 +167,42 @@ class MockIPLDCodec extends _i1.Mock implements _i9.IPLDCodec {
   }
 
   @override
-  String get identifier =>
-      (super.noSuchMethod(
-            Invocation.getter(#identifier),
-            returnValue: _i6.dummyValue<String>(
-              this,
-              Invocation.getter(#identifier),
-            ),
-          )
-          as String);
+  String get identifier => (super.noSuchMethod(
+        Invocation.getter(#identifier),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.getter(#identifier),
+        ),
+      ) as String);
 
   @override
-  _i7.Future<_i10.Uint8List> encode(_i4.IPLDNode? node) =>
-      (super.noSuchMethod(
-            Invocation.method(#encode, [node]),
-            returnValue: _i7.Future<_i10.Uint8List>.value(_i10.Uint8List(0)),
-          )
-          as _i7.Future<_i10.Uint8List>);
+  String get name => (super.noSuchMethod(
+        Invocation.getter(#name),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.getter(#name),
+        ),
+      ) as String);
 
   @override
-  _i7.Future<_i4.IPLDNode> decode(_i10.Uint8List? data) =>
-      (super.noSuchMethod(
-            Invocation.method(#decode, [data]),
-            returnValue: _i7.Future<_i4.IPLDNode>.value(
-              _FakeIPLDNode_4(this, Invocation.method(#decode, [data])),
-            ),
-          )
-          as _i7.Future<_i4.IPLDNode>);
+  int get code => (super.noSuchMethod(
+        Invocation.getter(#code),
+        returnValue: 0,
+      ) as int);
+
+  @override
+  _i7.Future<_i10.Uint8List> encode(_i4.IPLDNode? node) => (super.noSuchMethod(
+        Invocation.method(#encode, [node]),
+        returnValue: _i7.Future<_i10.Uint8List>.value(_i10.Uint8List(0)),
+      ) as _i7.Future<_i10.Uint8List>);
+
+  @override
+  _i7.Future<_i4.IPLDNode> decode(_i10.Uint8List? data) => (super.noSuchMethod(
+        Invocation.method(#decode, [data]),
+        returnValue: _i7.Future<_i4.IPLDNode>.value(
+          _FakeIPLDNode_4(this, Invocation.method(#decode, [data])),
+        ),
+      ) as _i7.Future<_i4.IPLDNode>);
 }
 
 /// A class which mocks [IPLDSchema].
@@ -225,18 +214,15 @@ class MockIPLDSchema extends _i1.Mock implements _i11.IPLDSchema {
   }
 
   @override
-  String get name =>
-      (super.noSuchMethod(
-            Invocation.getter(#name),
-            returnValue: _i6.dummyValue<String>(this, Invocation.getter(#name)),
-          )
-          as String);
+  String get name => (super.noSuchMethod(
+        Invocation.getter(#name),
+        returnValue: _i6.dummyValue<String>(this, Invocation.getter(#name)),
+      ) as String);
 
   @override
   _i7.Future<bool> validate(String? typeName, _i4.IPLDNode? node) =>
       (super.noSuchMethod(
-            Invocation.method(#validate, [typeName, node]),
-            returnValue: _i7.Future<bool>.value(false),
-          )
-          as _i7.Future<bool>);
+        Invocation.method(#validate, [typeName, node]),
+        returnValue: _i7.Future<bool>.value(false),
+      ) as _i7.Future<bool>);
 }

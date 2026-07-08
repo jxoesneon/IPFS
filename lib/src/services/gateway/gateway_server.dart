@@ -2,10 +2,12 @@
 import 'dart:convert';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/services/health_check_service.dart';
 import 'package:dart_ipfs/src/platform/http_server.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:dart_ipfs/src/version.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
@@ -15,7 +17,7 @@ import 'package:shelf_router/shelf_router.dart';
 /// Compliant with IPFS Gateway specifications.
 ///
 /// **Security (SEC-007):** Rate limiting is enabled by default to prevent DoS.
-class GatewayServer {
+class GatewayServer implements ILifecycle {
   /// Creates a new [GatewayServer] with the given configuration.
   GatewayServer({
     required this.blockStore,
@@ -97,7 +99,11 @@ class GatewayServer {
     // Version endpoint
     _router.get('/api/v0/version', (Request request) {
       return Response.ok(
-        '{"Version":"dart_ipfs/0.1.0","Commit":"phase3","Repo":"1"}',
+        jsonEncode({
+          'Version': agentVersion,
+          'Commit': 'phase3',
+          'Repo': repoVersion,
+        }),
         headers: {'Content-Type': 'application/json'},
       );
     });
@@ -115,7 +121,8 @@ class GatewayServer {
     });
   }
 
-  /// Starts the gateway server
+  /// Starts the gateway server.
+  @override
   Future<void> start() async {
     if (_server != null) {
       throw StateError('Server is already running');
@@ -139,7 +146,8 @@ class GatewayServer {
     }
   }
 
-  /// Stops the gateway server
+  /// Stops the gateway server.
+  @override
   Future<void> stop() async {
     if (_server == null) {
       return;

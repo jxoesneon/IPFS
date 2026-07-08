@@ -1,0 +1,87 @@
+services:
+  dart_ipfs:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+      target: debug
+    image: dart_ipfs:interop
+    container_name: dart_ipfs_interop
+    networks:
+      - ipfs_interop_net
+    expose:
+      - "4001"
+      - "4002"
+      - "5001"
+      - "8080"
+    environment:
+      - IPFS_API_ADDR=/ip4/0.0.0.0/tcp/5001
+      - IPFS_GATEWAY_ADDR=/ip4/0.0.0.0/tcp/8080
+    volumes:
+      - ./:/app/test/interop:ro
+      - dart_ipfs_data:/data/ipfs
+    healthcheck:
+      test: ["CMD", "bash", "/app/test/interop/dart_ipfs_healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  kubo:
+    image: ipfs/kubo:${KUBO_VERSION:-v0.42.0}
+    container_name: kubo_interop
+    networks:
+      - ipfs_interop_net
+    expose:
+      - "4001"
+      - "5001"
+      - "8080"
+    volumes:
+      - kubo_data:/data/ipfs
+      - ./kubo-init.sh:/container-init.d/001-init.sh:ro
+      - ./swarm.key:/key/swarm.key:ro
+    healthcheck:
+      test: ["CMD", "ipfs", "id"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+
+  helia:
+    build:
+      context: ../..
+      dockerfile: test/interop/helia.Dockerfile
+    image: helia_interop:latest
+    container_name: helia_interop
+    networks:
+      - ipfs_interop_net
+    expose:
+      - "4001"
+      - "5001"
+    profiles:
+      - helia
+
+  test-runner:
+    image: dart:stable
+    container_name: dart_test_runner
+    working_dir: /app
+    environment:
+      - PUB_CACHE=/tmp/interop-pub-cache
+    volumes:
+      - ../..:/app
+      - /tmp/interop-pub-cache:/tmp/interop-pub-cache
+    networks:
+      - ipfs_interop_net
+    depends_on:
+      dart_ipfs:
+        condition: service_healthy
+      kubo:
+        condition: service_healthy
+    command: ["tail", "-f", "/dev/null"]
+
+networks:
+  ipfs_interop_net:
+    internal: true
+
+volumes:
+  dart_ipfs_data:
+  kubo_data:

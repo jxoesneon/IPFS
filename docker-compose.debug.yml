@@ -1,0 +1,68 @@
+# docker-compose.debug.yml
+# Debug variant of the dart_ipfs daemon.
+#
+# This compose file uses the `debug` Dockerfile target, which is based on
+# cgr.dev/chainguard/bash and includes a shell for troubleshooting. It is not
+# intended for production.
+#
+# To run the debug variant:
+#   docker compose -f docker-compose.debug.yml up
+#
+# To open an interactive shell in the debug image:
+#   docker run --rm --entrypoint /bin/bash -it ghcr.io/jxoesneon/dart-ipfs:1.11.5-debug
+services:
+  dart_ipfs:
+    build:
+      context: .
+      target: debug
+    image: ${DART_IPFS_IMAGE:-ghcr.io/jxoesneon/dart-ipfs:1.11.5-debug}
+    container_name: dart_ipfs_daemon_debug
+
+    ports:
+      - "4001:4001/tcp"
+      - "4001:4001/udp"
+      - "127.0.0.1:5001:5001/tcp"
+      - "127.0.0.1:8080:8080/tcp"
+      - "127.0.0.1:8081:8081/tcp"
+
+    read_only: true
+    user: "1000:1000"
+
+    volumes:
+      - ipfs_data:/data/ipfs
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 100M
+
+    cap_drop:
+      - ALL
+
+    environment:
+      - IPFS_DATA_DIR=/data/ipfs
+      - IPFS_JSON_LOGS=true
+      - IPFS_API_ADDR=/ip4/0.0.0.0/tcp/5001
+
+    command:
+      - "daemon"
+      - "--api-addr"
+      - "/ip4/0.0.0.0/tcp/5001"
+      - "--gateway-addr"
+      - "/ip4/0.0.0.0/tcp/8080"
+
+    healthcheck:
+      test: ["CMD", "/app/ipfs", "healthcheck"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 20s
+
+    networks:
+      - ipfs_net
+
+networks:
+  ipfs_net:
+    driver: bridge
+
+volumes:
+  ipfs_data:

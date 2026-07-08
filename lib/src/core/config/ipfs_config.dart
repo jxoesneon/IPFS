@@ -86,6 +86,7 @@ class IPFSConfig {
     this.verboseLogging = true,
     this.enablePubSub = true,
     this.enableDHT = true,
+    this.enableRPC = false,
     this.enableCircuitRelay = true,
     this.enableContentRouting = true,
     this.enableDNSLinkResolution = true,
@@ -149,10 +150,16 @@ class IPFSConfig {
             ? Map<String, dynamic>.from(json['security'] as Map)
             : {},
       ),
+      gateway: json['gateway'] != null
+          ? GatewayConfig.fromJson(
+              Map<String, dynamic>.from(json['gateway'] as Map),
+            )
+          : null,
       debug: json['debug'] as bool? ?? false,
       verboseLogging: json['verboseLogging'] as bool? ?? false,
       enablePubSub: json['enablePubSub'] as bool? ?? true,
       enableDHT: json['enableDHT'] as bool? ?? true,
+      enableRPC: json['enableRPC'] as bool? ?? false,
       enableCircuitRelay: json['enableCircuitRelay'] as bool? ?? true,
       enableContentRouting: json['enableContentRouting'] as bool? ?? true,
       enableDNSLinkResolution: json['enableDNSLinkResolution'] as bool? ?? true,
@@ -167,6 +174,31 @@ class IPFSConfig {
       defaultBandwidthQuota: json['defaultBandwidthQuota'] as int? ?? 1048576,
       maxConcurrentBitswapRequests:
           json['maxConcurrentBitswapRequests'] as int? ?? 10,
+      ipnsCacheSize: json['ipnsCacheSize'] as int? ?? 1000,
+      garbageCollectionInterval: Duration(
+        seconds: json['garbageCollectionInterval'] as int? ?? 86400,
+      ),
+      garbageCollectionEnabled:
+          json['garbageCollectionEnabled'] as bool? ?? true,
+      datastorePath: json['datastorePath'] as String? ?? './ipfs_data',
+      keystorePath: json['keystorePath'] as String? ?? './ipfs_keystore',
+      blockStorePath: json['blockStorePath'] as String? ?? 'blocks',
+      dataPath: json['dataPath'] as String? ?? './ipfs_data',
+      enableLibp2pBridge: json['enableLibp2pBridge'] as bool? ?? false,
+      libp2pListenAddress:
+          json['libp2pListenAddress'] as String? ?? '/ip4/0.0.0.0/tcp/4001',
+      nodeId: json['nodeId'] as String?,
+      libp2pIdentitySeed: json['libp2pIdentitySeed'] != null
+          ? base64Decode(json['libp2pIdentitySeed'] as String)
+          : null,
+      metrics: json['metrics'] != null
+          ? MetricsConfig.fromJson(
+              Map<String, dynamic>.from(json['metrics'] as Map),
+            )
+          : const MetricsConfig(),
+      customConfig: Map<String, dynamic>.from(
+        json['customConfig'] as Map? ?? const {},
+      ),
     );
   }
 
@@ -196,6 +228,9 @@ class IPFSConfig {
 
   /// Enable DHT protocols.
   final bool enableDHT;
+
+  /// Enable the RPC API server.
+  final bool enableRPC;
 
   /// Enable Circuit Relay support.
   final bool enableCircuitRelay;
@@ -284,16 +319,26 @@ class IPFSConfig {
     return Base58().encode(Uint8List.fromList(bytes));
   }
 
-  /// Loads configuration from a YAML file
+  /// Loads configuration from a JSON or YAML file.
+  ///
+  /// JSON is the canonical on-disk format. Files ending in `.yaml` or `.yml`
+  /// are parsed as YAML and round-tripped through JSON for compatibility.
   static Future<IPFSConfig> fromFile(String path) async {
     final content = await getPlatform().readString(path);
     if (content == null) {
       throw Exception('Configuration file not found: $path');
     }
-    final yaml = loadYaml(content);
-    return IPFSConfig.fromJson(
-      json.decode(json.encode(yaml)) as Map<String, dynamic>,
-    );
+
+    final lower = path.toLowerCase();
+    final Map<String, dynamic> jsonMap;
+    if (lower.endsWith('.yaml') || lower.endsWith('.yml')) {
+      final yaml = loadYaml(content);
+      jsonMap = json.decode(json.encode(yaml)) as Map<String, dynamic>;
+    } else {
+      jsonMap = json.decode(content) as Map<String, dynamic>;
+    }
+
+    return IPFSConfig.fromJson(jsonMap);
   }
 
   /// Converts to JSON representation.
@@ -303,10 +348,12 @@ class IPFSConfig {
     'dht': dht.toJson(),
     'storage': storage.toJson(),
     'security': security.toJson(),
+    'gateway': gateway.toJson(),
     'debug': debug,
     'verboseLogging': verboseLogging,
     'enablePubSub': enablePubSub,
     'enableDHT': enableDHT,
+    'enableRPC': enableRPC,
     'enableCircuitRelay': enableCircuitRelay,
     'enableContentRouting': enableContentRouting,
     'enableDNSLinkResolution': enableDNSLinkResolution,
@@ -314,10 +361,24 @@ class IPFSConfig {
     'enableGraphsync': enableGraphsync,
     'enableMetrics': enableMetrics,
     'enableLogging': enableLogging,
+    'enableStructuredLogging': enableStructuredLogging,
     'logLevel': logLevel,
     'enableQuotaManagement': enableQuotaManagement,
     'defaultBandwidthQuota': defaultBandwidthQuota,
+    'maxConcurrentBitswapRequests': maxConcurrentBitswapRequests,
+    'ipnsCacheSize': ipnsCacheSize,
+    'garbageCollectionInterval': garbageCollectionInterval.inSeconds,
+    'garbageCollectionEnabled': garbageCollectionEnabled,
+    'datastorePath': datastorePath,
+    'keystorePath': keystorePath,
+    'blockStorePath': blockStorePath,
+    'dataPath': dataPath,
     'enableLibp2pBridge': enableLibp2pBridge,
     'libp2pListenAddress': libp2pListenAddress,
+    'nodeId': nodeId,
+    'libp2pIdentitySeed':
+        libp2pIdentitySeed != null ? base64Encode(libp2pIdentitySeed!) : null,
+    'metrics': metrics.toJson(),
+    'customConfig': customConfig,
   };
 }

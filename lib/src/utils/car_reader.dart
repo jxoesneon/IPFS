@@ -1,25 +1,21 @@
 // lib/src/utils/car_reader.dart
 
-import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/core/data_structures/car.dart';
+/// Re-export of the standard CAR v1/v2 API from
+/// [package:dart_ipfs/src/core/data_structures/car.dart].
+///
+/// The previous transitional [CarReader] wrapper that delegated to the legacy
+/// protobuf-based [CAR] class has been removed in favor of the standard
+/// streaming API defined in `doc/specs/features/CAR_FORMAT_SPEC.md`.
+library;
 
-/// Utility class for reading CAR files.
-class CarReader {
-  /// Reads a CAR file from the given byte data and returns a [CAR] object.
-  static Future<CAR> readCar(Uint8List carData) async {
-    // Deserialize the CAR from bytes
-    final car = CAR.fromBytes(carData);
-
-    // Perform any additional processing or validation if necessary
-    // For example, you might want to verify the integrity of the blocks
-
-    return car;
-  }
-
-  /// Extracts blocks from a CAR file and returns them as a list.
-  static Future<List<Block>> extractBlocks(Uint8List carData) async {
-    final car = await readCar(carData);
-    return car.blocks;
-  }
-}
+export 'package:dart_ipfs/src/core/data_structures/car.dart'
+    show
+        CarException,
+        CarHeaderException,
+        CarSectionException,
+        CarV2Exception,
+        CarIndexException,
+        CarHeader,
+        CarSection,
+        CarReader,
+        IndexBuilder;

@@ -1,0 +1,180 @@
+name: Interop
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'lib/src/protocols/**'
+      - 'lib/src/services/**'
+      - 'bin/**'
+      - 'test/interop/**'
+      - '.github/workflows/interop.yml'
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+env:
+  KUBO_VERSION: ${{ vars.KUBO_VERSION || 'v0.42.0' }}
+
+jobs:
+  interop-p0:
+    name: P0 Kubo Interop (release-blocking)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Read pinned Kubo version
+        id: kubo_version
+        run: |
+          if [ -f test/interop/.kubo-version ]; then
+            echo "KUBO_VERSION=$(cat test/interop/.kubo-version)" >> "$GITHUB_OUTPUT"
+          else
+            echo "KUBO_VERSION=${{ env.KUBO_VERSION }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start interop network
+        env:
+          KUBO_VERSION: ${{ steps.kubo_version.outputs.KUBO_VERSION }}
+        run: |
+          docker compose -f test/interop/docker-compose.yml build --build-arg KUBO_VERSION="$KUBO_VERSION" dart_ipfs
+          docker compose -f test/interop/docker-compose.yml up -d dart_ipfs kubo
+
+      - name: Populate pub cache on host
+        run: |
+          mkdir -p /tmp/interop-pub-cache
+          PUB_CACHE=/tmp/interop-pub-cache dart pub get
+
+      - name: Install Dart dependencies (offline)
+        run: |
+          docker compose -f test/interop/docker-compose.yml run --rm test-runner \
+            dart pub get --offline
+
+      - name: Wait for peers and bootstrap connectivity
+        env:
+          KUBO_VERSION: ${{ steps.kubo_version.outputs.KUBO_VERSION }}
+        run: |
+          docker compose -f test/interop/docker-compose.yml run --rm test-runner \
+            dart run --enable-experiment=native-assets test/interop/bin/setup.dart
+
+      - name: Run P0 interop tests (CAR, Bitswap, Gateway)
+        env:
+          KUBO_VERSION: ${{ steps.kubo_version.outputs.KUBO_VERSION }}
+        run: |
+          docker compose -f test/interop/docker-compose.yml run --rm test-runner \
+            dart test --enable-experiment=native-assets --tags p0 --reporter expanded
+
+      - name: Collect container logs on failure
+        if: failure()
+        run: |
+          mkdir -p /tmp/interop-logs
+          docker compose -f test/interop/docker-compose.yml logs --no-color > /tmp/interop-logs/containers.log 2>&1 || true
+
+      - name: Upload P0 logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interop-p0-logs
+          path: /tmp/interop-logs/
+          retention-days: 7
+
+      - name: Tear down interop network
+        if: always()
+        run: |
+          docker compose -f test/interop/docker-compose.yml down --volumes --remove-orphans
+
+  interop-p1:
+    name: P1 Kubo Interop (non-blocking)
+    runs-on: ubuntu-latest
+    needs: interop-p0
+    if: always()
+    timeout-minutes: 10
+    continue-on-error: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Read pinned Kubo version
+        id: kubo_version
+        run: |
+          if [ -f test/interop/.kubo-version ]; then
+            echo "KUBO_VERSION=$(cat test/interop/.kubo-version)" >> "$GITHUB_OUTPUT"
+          else
+            echo "KUBO_VERSION=${{ env.KUBO_VERSION }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start interop network
+        env:
+          KUBO_VERSION: ${{ steps.kubo_version.outputs.KUBO_VERSION }}
+        run: |
+          docker compose -f test/interop/docker-compose.yml build --build-arg KUBO_VERSION="$KUBO_VERSION" dart_ipfs
+          docker compose -f test/interop/docker-compose.yml up -d dart_ipfs kubo
+
+      - name: Populate pub cache on host
+        run: |
+          mkdir -p /tmp/interop-pub-cache
+          PUB_CACHE=/tmp/interop-pub-cache dart pub get
+
+      - name: Install Dart dependencies (offline)
+        run: |
+          docker compose -f test/interop/docker-compose.yml run --rm test-runner \
+            dart pub get --offline
+
+      - name: Wait for peers and bootstrap connectivity
+        env:
+          KUBO_VERSION: ${{ steps.kubo_version.outputs.KUBO_VERSION }}
+        run: |
+          docker compose -f test/interop/docker-compose.yml run --rm test-runner \
+            dart run --enable-experiment=native-assets test/interop/bin/setup.dart
+
+      - name: Run P1 interop tests (DHT, IPNS)
+        id: p1_tests
+        env:
+          KUBO_VERSION: ${{ steps.kubo_version.outputs.KUBO_VERSION }}
+        run: |
+          docker compose -f test/interop/docker-compose.yml run --rm test-runner \
+            dart test --enable-experiment=native-assets --tags p1 --reporter expanded
+
+      - name: Collect container logs
+        if: always()
+        run: |
+          mkdir -p /tmp/interop-logs
+          docker compose -f test/interop/docker-compose.yml logs --no-color > /tmp/interop-logs/containers.log 2>&1 || true
+
+      - name: Upload P1 logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interop-p1-logs
+          path: /tmp/interop-logs/
+          retention-days: 7
+
+      - name: Report P1 status
+        if: always()
+        run: |
+          echo "P1 interop status: ${{ steps.p1_tests.outcome }}"
+          echo "P1 failures are allowed and do not block merge."
+
+      - name: Tear down interop network
+        if: always()
+        run: |
+          docker compose -f test/interop/docker-compose.yml down --volumes --remove-orphans

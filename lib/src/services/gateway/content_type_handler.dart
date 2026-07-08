@@ -14,8 +14,8 @@ class ContentTypeHandler {
   static const _defaultType = 'application/octet-stream';
   static final _mimeResolver = MimeTypeResolver()
     ..addExtension('md', 'text/markdown')
-    ..addExtension('ipfs', 'application/vnd.ipfs.car')
-    ..addExtension('car', 'application/vnd.ipfs.car');
+    ..addExtension('ipfs', 'application/vnd.ipld.car')
+    ..addExtension('car', 'application/vnd.ipld.car');
 
   final _directoryParser = DirectoryParser();
   final _logger = Logger('ContentTypeHandler');
@@ -56,7 +56,11 @@ class ContentTypeHandler {
         return _processMarkdown(block.data);
 
       case 'application/vnd.ipfs.car':
-        return _processCarArchive(block.data);
+      case 'application/vnd.ipld.car':
+        // Trustless gateway requests must receive the raw CAR bytes, not an
+        // HTML preview. The standard CAR writer is responsible for producing
+        // these payloads.
+        return block.data;
 
       default:
         return block.data;
@@ -96,8 +100,7 @@ class ContentTypeHandler {
       final markdownText = String.fromCharCodes(data);
 
       // Convert markdown to HTML using the markdown package
-      final html =
-          '''
+      final html = '''
         <!DOCTYPE html>
         <html>
           <head>
@@ -140,70 +143,6 @@ class ContentTypeHandler {
     }
   }
 
-  /// Processes CAR (Content Addressable aRchive) archive content
-  Uint8List _processCarArchive(Uint8List data) {
-    try {
-      // Generate a simple HTML viewer for CAR archive contents
-      final html =
-          '''
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <title>CAR Archive Preview</title>
-            <style>
-              body {
-                font-family: system-ui, -apple-system, sans-serif;
-                padding: 20px;
-                max-width: 980px;
-                margin: 0 auto;
-              }
-              .car-info {
-                background: #f5f5f5;
-                padding: 20px;
-                border-radius: 8px;
-                margin-bottom: 20px;
-              }
-              .warning {
-                color: #856404;
-                background-color: #fff3cd;
-                border: 1px solid #ffeeba;
-                padding: 12px;
-                border-radius: 4px;
-                margin-bottom: 20px;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="car-info">
-              <h2>CAR Archive</h2>
-              <p>Size: ${_formatSize(data.length)}</p>
-            </div>
-            <div class="warning">
-              This is a CAR (Content Addressable aRchive) file. 
-              It contains IPFS blocks and should be processed by an IPFS node.
-            </div>
-          </body>
-        </html>
-      ''';
-
-      return Uint8List.fromList(html.codeUnits);
-    } catch (e, stackTrace) {
-      _logger.error('Error processing CAR archive', e, stackTrace);
-      return data; // Return original data if processing fails
-    }
-  }
-
-  String _formatSize(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    }
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
-  }
-
-  /// Detects MIME type from content using magic numbers
   String? _detectFromContent(Uint8List data) {
     if (data.length < 4) return null;
 

@@ -1,0 +1,19 @@
+plugin:
+  id: org.dart-ipfs.examples.bitswap-logger
+  name: Bitswap Logger
+  version: 1.0.0
+  dart_ipfs_version: ">=2.2.0 <2.3.0"
+  author: "Dart IPFS Contributors <security@dart-ipfs.invalid>"
+  capabilities:
+    - network.bitswap.observe
+    - metrics.emit
+  hooks:
+    - on_bitswap_message
+    - on_metrics_flush
+  entrypoint: main.dart
+  signature:
+    algorithm: ed25519
+    public_key: "mtPKOzIUIdC42ckrt6YDt7eGw42RRFQNcurHKXkquZQ="
+    signature: "JICM67QpZPfIdn6pgew0SRFRhWUOr3Mi4mVJ4x60sNNXPjyUY9ftXzhwmBTp2tZeGZYadahnjy9ZReSmsAPZDQ=="
+  checksums:
+    archive_sha256: "eede1a2267efdadd91c70b8213488c4e2081808589c66f8dba48f7f8642f9aab"
