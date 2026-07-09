@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0
+
+- Replaced Cloudflare quiche FFI backend with the pure-Dart `quic_lib` package from pub.dev.
+- Added `QuicTransport` implementing `package:ipfs_libp2p`'s `Transport` interface.
+- Added `QuicConnection`, `QuicListener`, and `QuicP2PStream` adapters around `quic_lib`.
+- `QuicConnection.newStream` opens real QUIC bidirectional streams.
+- Added `verifyPeer()`, `verifyPeerCertificate()`, and `verifyPeerFromHandshake()` for libp2p TLS extension verification.
+- Removed native `quiche.dll`/`quiche.h` and `ffigen` configuration.
+- Updated tests to verify transport interface compliance without native deps.
+- Development dependency now points to the local `quic_lib` checkout; production releases use the hosted pub.dev package.
+- Fixed `QuicP2PStream.read()` buffering so incoming data is always buffered and `maxLength` reads work correctly.
+- Added comprehensive tests for `QuicListener`, `QuicP2PStream` read/write/close/reset, and `QuicConnection` metadata.
+
 ## 0.1.0
 
 - Initial foundation package.

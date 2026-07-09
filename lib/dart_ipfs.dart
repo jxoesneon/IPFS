@@ -140,11 +140,11 @@ export 'package:dart_ipfs_core/dart_ipfs_core.dart'
         ImmutableBytes,
         TypedMap;
 
-// Optional native QUIC transport primitives from the dart_ipfs_quic package.
-// The library is only loaded when QuicheLibrary.probe() is invoked; importing
-// this file does not attempt to load the native quiche library by itself.
+// Optional pure-Dart QUIC transport from the dart_ipfs_quic package.
+// This transport is backed by quic_lib and is only active when
+// NetworkConfig.enableQuic is true.
 export 'package:dart_ipfs_quic/dart_ipfs_quic.dart'
-    show QuicheLibrary, QuicheConfig, QuicheConnection;
+    show QuicTransport, QuicConnection, QuicListener;
 
 export 'src/core/config/ipfs_config.dart';
 export 'src/core/ipfs_node/ipfs_node.dart';

@@ -1,7 +1,5 @@
 // lib/src/transport/libp2p_router.dart
 import 'dart:async';
-import 'dart:io';
-import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -11,6 +9,7 @@ import 'package:dart_ipfs/src/transport/webrtc/webrtc_direct_transport.dart';
 import 'package:dart_ipfs/src/transport/webrtc/webrtc_transport.dart';
 import 'package:dart_ipfs/src/transport/webtransport/webtransport_transport.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:dart_ipfs_quic/dart_ipfs_quic.dart' as dart_ipfs_quic;
 import 'package:ipfs_libp2p/config/config.dart' as config;
 import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto;
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
@@ -660,13 +659,12 @@ class Libp2pRouter implements RouterInterface {
     return result;
   }
 
-  /// Probes the `package:ipfs_libp2p` dependency for an exported QUIC
-  /// transport class.
+  /// Probes for an available QUIC transport.
   ///
-  /// The current ipfs_libp2p 0.5.6 package only ships `TCPTransport` and
-  /// `UdxTransport` (UDX), not a QUIC transport. If the package ever exposes a
-  /// `QuicTransport` class in `p2p/transport/quic_transport.dart`, the probe can
-  /// be updated to import and instantiate it.
+  /// Returns the pure-Dart [dart_ipfs_quic.QuicTransport] adapter backed by
+  /// [quic_lib]. When the adapter cannot be instantiated (e.g., the package is
+  /// missing), the router falls back to TCP-only mode as documented in
+  /// QUIC_SPEC.
   Future<libp2p_transport.Transport?> _probeQuicTransport() async {
     // Test override takes precedence.
     if (_quicTransportFactory != null) {
@@ -674,20 +672,9 @@ class Libp2pRouter implements RouterInterface {
     }
 
     try {
-      final quicUri = Uri.parse(
-        'package:ipfs_libp2p/p2p/transport/quic_transport.dart',
-      );
-      final resolved = await Isolate.resolvePackageUri(quicUri);
-      if (resolved == null) return null;
-
-      final file = File.fromUri(resolved);
-      if (!file.existsSync()) return null;
-
-      // A QUIC transport file exists in the package but is not imported here.
-      // Future work: import `package:ipfs_libp2p/p2p/transport/quic_transport.dart`
-      // and instantiate the exported class.
-      return null;
+      return dart_ipfs_quic.QuicTransport();
     } catch (e) {
+      _logger.warning('Failed to instantiate QUIC transport: $e');
       return null;
     }
   }

@@ -15,7 +15,12 @@
 ### Changed
 - **Dependencies**: Root `pubspec.yaml` now depends on `dart_ipfs_core` and `dart_ipfs_quic` via path dependencies during development.
 - **Exports**: `lib/dart_ipfs.dart` re-exports the public APIs of `dart_ipfs_core` and `dart_ipfs_quic` so existing consumers are not broken.
-- **QUIC_SPEC**: Status updated to Complete; conditional config/fallback is fully implemented and native transport path is documented in the RFC.
+- **QUIC Transport**: `packages/dart_ipfs_quic` now uses the pure-Dart `quic_lib` package from pub.dev instead of Cloudflare quiche FFI. Removed native `quiche.dll`, `quiche.h`, `ffigen`, and `ffi` dependency.
+- **QUIC Streams**: Added `QuicP2PStream` implementing `package:ipfs_libp2p`'s `P2PStream` over QUIC bidirectional streams; `QuicConnection.newStream` now opens real streams.
+- **QUIC Security**: Added `verifyPeer()`, `verifyPeerCertificate()`, and `verifyPeerFromHandshake()` on `QuicConnection`, wiring `quic_lib`'s libp2p TLS extension parsing and certificate generator.
+- **QUIC Dependency**: `dart_ipfs_quic` now uses a local path dependency on the `quic_lib` checkout for development.
+- **QUIC_SPEC**: Status updated to Complete; conditional config/fallback is fully implemented and the native transport path now uses `quic_lib`.
+- **QUIC_TRANSPORT_RFC**: Updated to reflect the `quic_lib` selection and the remaining work (stream adapter, TLS handshake, interop tests).
 - **IMPLEMENTATION_INVENTORY**: Now reports 26 Complete / 0 Partial / 0 Missing.
 
 ### Deprecated
