@@ -18,15 +18,18 @@ if [ -f /key/swarm.key ]; then
   cp /key/swarm.key /data/ipfs/swarm.key
 fi
 
+# Disable AutoConf; it cannot use the default mainnet URL on a private network.
+ipfs config --json AutoConf.Enabled false
+
 # Disable connection to public bootstrap nodes for a private network.
-ipfs config Bootstrap '[]'
+ipfs config --json Bootstrap '[]'
 
 # Allow CORS for the test runner.
 ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
 ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["POST", "GET"]'
 
-# Shorten reprovide interval for faster DHT tests.
-ipfs config --json Reprovider.Interval '"1m0s"'
+# Shorten reprovide interval for faster DHT tests (Kubo >=0.42 uses Provide.DHT.Interval).
+ipfs config --json Provide.DHT.Interval '"1m0s"'
 
 # Enable the experimental bitswap HTTP client (if available) for additional test paths.
 ipfs config --json Experimental.BitswapHTTPClient true 2>/dev/null || true

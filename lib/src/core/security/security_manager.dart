@@ -3,14 +3,14 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
-import 'package:dart_ipfs/src/core/config/security_config.dart';
-import 'package:dart_ipfs/src/core/crypto/encrypted_keystore.dart';
-import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
-import 'package:dart_ipfs/src/platform/platform.dart';
-import 'package:dart_ipfs/src/utils/keystore.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:dart_ipfs/src/utils/private_key.dart';
 
+import '../../platform/platform.dart';
+import '../../utils/keystore.dart';
+import '../../utils/logger.dart';
+import '../../utils/private_key.dart';
+import '../config/security_config.dart';
+import '../crypto/encrypted_keystore.dart';
+import '../metrics/metrics_collector.dart';
 import 'security_manager_interface.dart';
 
 /// Manages security aspects of the IPFS node.
@@ -297,7 +297,7 @@ class SecurityManager implements ISecurityManager {
     final metric = {
       'type': type,
       'timestamp': DateTime.now().toIso8601String(),
-      if (data != null) ...data,
+      ...?data,
     };
 
     _securityMetrics[type] = metric;

@@ -1,4 +1,4 @@
-// Bootstrap script for the dart_ipfs / Kubo interop network.
+// Bootstrap script for the dart_ipfs / Kubo / Helia interop network.
 // This script is executed by the CI workflow before the tagged test suite runs.
 //
 // TODO: Implement actual peer discovery / bootstrap connectivity checks once the
@@ -11,11 +11,15 @@ import 'dart:io';
 import '../lib/dart_ipfs_client.dart';
 // ignore: avoid_relative_lib_imports
 import '../lib/kubo_client.dart';
+// ignore: avoid_relative_lib_imports
+import '../lib/helia_client.dart';
 
 const kKuboApiHost = 'kubo';
 const kKuboApiPort = 5001;
 const kDartIpfsApiHost = 'dart_ipfs';
 const kDartIpfsApiPort = 5001;
+const kHeliaApiHost = 'helia';
+const kHeliaApiPort = 5001;
 const kMaxRetries = 30;
 const kRetryDelay = Duration(seconds: 2);
 
@@ -25,9 +29,11 @@ Future<void> main() async {
     host: kDartIpfsApiHost,
     port: kDartIpfsApiPort,
   );
+  final helia = HeliaClient(host: kHeliaApiHost, port: kHeliaApiPort);
 
   await _waitForPeer('Kubo', () => kubo.id());
   await _waitForPeer('dart_ipfs', () => dartIpfs.id());
+  await _waitForPeer('Helia', () => helia.id());
 
   // Attempt to bootstrap mutual connectivity. This is best-effort; if the
   // underlying swarm connect command is not yet stable, the tests can still
@@ -35,11 +41,17 @@ Future<void> main() async {
   try {
     final kuboId = await kubo.id();
     final dartIpfsId = await dartIpfs.id();
+    final heliaId = await helia.id();
     final kuboPeerId = kuboId['ID'] as String;
     final dartIpfsPeerId = dartIpfsId['ID'] as String;
+    final heliaPeerId = heliaId['ID'] as String;
 
     await kubo.swarmConnect('/dns4/dart_ipfs/tcp/4001/p2p/$dartIpfsPeerId');
+    await kubo.swarmConnect('/dns4/helia/tcp/4001/p2p/$heliaPeerId');
     await dartIpfs.swarmConnect('/dns4/kubo/tcp/4001/p2p/$kuboPeerId');
+    await dartIpfs.swarmConnect('/dns4/helia/tcp/4001/p2p/$heliaPeerId');
+    await helia.swarmConnect('/dns4/kubo/tcp/4001/p2p/$kuboPeerId');
+    await helia.swarmConnect('/dns4/dart_ipfs/tcp/4001/p2p/$dartIpfsPeerId');
     stdout.writeln('Bootstrap swarm connect attempted.');
   } catch (e) {
     stderr.writeln('Best-effort bootstrap failed: $e');

@@ -1,6 +1,6 @@
 // src/core/ipld/codecs/ipld_codec.dart
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
+import '../../../proto/generated/ipld/data_model.pb.dart';
 
 /// Interface for all IPLD codecs in dart_ipfs.
 ///

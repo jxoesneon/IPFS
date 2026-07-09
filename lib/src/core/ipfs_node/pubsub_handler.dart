@@ -2,15 +2,14 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_interface.dart';
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
-import 'package:dart_ipfs/src/transport/router_interface.dart';
-import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
-
+import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
+import '../../protocols/pubsub/pubsub_client.dart';
+import '../../protocols/pubsub/pubsub_interface.dart';
+import '../../protocols/pubsub/pubsub_message.dart';
+import '../../transport/router_interface.dart';
+import '../../utils/dnslink_resolver.dart';
 import '../data_structures/node_stats.dart';
+import 'ipfs_node_network_events.dart';
 
 /// Handles PubSub operations for an IPFS node.
 class PubSubHandler implements IPubSub {

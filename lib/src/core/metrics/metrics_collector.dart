@@ -1,13 +1,14 @@
 // src/core/metrics/metrics_collector.dart
 import 'dart:async';
 
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
-import 'package:dart_ipfs/src/core/metrics/network_metrics.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:prometheus_client/format.dart' as format;
 import 'package:prometheus_client/prometheus_client.dart';
+
+import '../../utils/logger.dart';
+import '../config/ipfs_config.dart';
+import '../data_structures/blockstore.dart';
+import '../interfaces/i_lifecycle.dart';
+import 'network_metrics.dart';
 
 /// Collects and manages metrics about IPFS node operations.
 ///
@@ -450,6 +451,22 @@ class MetricsCollector implements ILifecycle {
         _networkMetrics.peerMetrics[key]?.bytesReceived ??
         _networkMetrics.protocolMetrics[key]?.bytesReceived ??
         0;
+  }
+
+  /// Returns total bytes sent across all protocols.
+  ///
+  /// This is the aggregate outbound bandwidth used by the node since it
+  /// started. It is useful for client dashboards and notifications.
+  int get totalBytesSent {
+    return _protocolBytesSent.values.fold(0, (sum, bytes) => sum + bytes);
+  }
+
+  /// Returns total bytes received across all protocols.
+  ///
+  /// This is the aggregate inbound bandwidth used by the node since it
+  /// started. It is useful for client dashboards and notifications.
+  int get totalBytesReceived {
+    return _protocolBytesReceived.values.fold(0, (sum, bytes) => sum + bytes);
   }
 
   /// Returns average latency in milliseconds for a protocol or peer identifier.

@@ -49,18 +49,17 @@ dependencies:
   synchronized: ^3.4.0
   multicast_dns: ^0.3.3
   ipfs_libp2p: ^0.5.6
+  cipherlib: ^0.7.1
 
   jose: ^0.3.5
   mime: ^2.0.0
   http_parser: ^4.1.2
 
-  # Core package (monorepo)
-  dart_ipfs_core:
-    path: packages/dart_ipfs_core
+  # Core package (hosted)
+  dart_ipfs_core: ^1.11.5
 
-  # Optional native QUIC transport (monorepo)
-  dart_ipfs_quic:
-    path: packages/dart_ipfs_quic
+  # Optional native QUIC transport adapter (hosted)
+  dart_ipfs_quic: ^0.2.0
 
   # Common packages
   args: ^2.6.0
@@ -70,12 +69,11 @@ dependencies:
   path: ^1.9.1
   grpc: ^5.1.0
   cryptography: ^2.9.0
-  # Security Overrides (Audit 2025-12-15)
-  sodium: ^4.0.2+1
 
   dart_lz4: ^1.0.0
   port_forwarder: ^1.0.0
   get_it: ^9.2.1
+  base32: ^2.2.0
 
 dev_dependencies:
   test: ^1.28.0 # For unit and integration tests
@@ -98,6 +96,11 @@ macos:
   signing:
     enable: false
 
+# Security-critical dependency overrides documented in SECURITY.md
 dependency_overrides:
+  # xml ^7.0.1: Required for security fixes and compatibility with latest dependencies
+  # Resolves potential XML parsing vulnerabilities and ensures proper encoding support
   xml: ^7.0.1
+  # dart_udx ^2.0.3: Required for UDP transport stability and security patches
+  # Fixes buffer overflow issues in UDP datagram handling and improves rate limiting
   dart_udx: ^2.0.3

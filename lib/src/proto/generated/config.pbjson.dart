@@ -69,13 +69,15 @@ const RateLimitConfig$json = {
       '10': 'maxRequestsPerWindow'
     },
     {'1': 'window_seconds', '3': 2, '4': 1, '5': 13, '10': 'windowSeconds'},
+    {'1': 'max_queue_size', '3': 3, '4': 1, '5': 13, '10': 'maxQueueSize'},
   ],
 };
 
 /// Descriptor for `RateLimitConfig`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List rateLimitConfigDescriptor = $convert.base64Decode(
     'Cg9SYXRlTGltaXRDb25maWcSNQoXbWF4X3JlcXVlc3RzX3Blcl93aW5kb3cYASABKA1SFG1heF'
-    'JlcXVlc3RzUGVyV2luZG93EiUKDndpbmRvd19zZWNvbmRzGAIgASgNUg13aW5kb3dTZWNvbmRz');
+    'JlcXVlc3RzUGVyV2luZG93EiUKDndpbmRvd19zZWNvbmRzGAIgASgNUg13aW5kb3dTZWNvbmRz'
+    'EiQKDm1heF9xdWV1ZV9zaXplGAMgASgNUgxtYXhRdWV1ZVNpemU=');
 
 @$core.Deprecated('Use circuitBreakerConfigDescriptor instead')
 const CircuitBreakerConfig$json = {

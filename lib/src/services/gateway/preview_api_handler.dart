@@ -1,11 +1,12 @@
 import 'dart:convert';
 
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/services/gateway/cached_preview_generator.dart';
-import 'package:dart_ipfs/src/services/gateway/content_type_handler.dart';
-import 'package:dart_ipfs/src/services/gateway/lazy_preview_handler.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
+
+import '../../core/data_structures/block.dart';
+import 'cached_preview_generator.dart';
+import 'content_type_handler.dart';
+import 'lazy_preview_handler.dart';
 
 /// HTTP API handler for preview requests.
 ///

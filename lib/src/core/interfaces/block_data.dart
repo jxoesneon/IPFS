@@ -1,6 +1,7 @@
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/utils/encoding.dart';
+
+import '../../utils/encoding.dart';
+import '../cid.dart';
 
 /// Abstract interface for block data access.
 ///

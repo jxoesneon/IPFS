@@ -1,11 +1,13 @@
 // src/utils/logger.dart
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
-import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:logging/logging.dart' as logging;
+
+import '../core/config/ipfs_config.dart';
+import '../core/metrics/metrics_collector.dart';
+import '../platform/platform.dart';
 
 /// A hierarchical logging system for IPFS operations.
 ///
@@ -112,9 +114,11 @@ class Logger {
     if (_platform == null || !_platform!.isIO) return;
 
     try {
-      // Use platform abstraction for file writing
+      // Use platform abstraction for file writing. Use a per-process log file
+      // to avoid conflicts when multiple tests/nodes run in parallel.
+      final logFile = Platform.environment['IPFS_LOG_FILE'] ?? 'ipfs_$pid.log';
       _platform!.writeBytes(
-        'ipfs.log',
+        logFile,
         // Append mode not directly supported, so we read + write
         // For simplicity, just log to console on web
         _stringToBytes('$message\n'),

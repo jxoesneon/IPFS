@@ -3,11 +3,12 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_multihash/dart_multihash.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:multibase/multibase.dart';
+
+import '../../proto/generated/ipld/data_model.pb.dart';
+import '../cid.dart';
 
 /// The upper inclusive bound of the JSON safe integer range (2^53).
 const int _maxSafeInteger = 0x20000000000000;

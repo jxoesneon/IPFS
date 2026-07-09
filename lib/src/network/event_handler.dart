@@ -1,10 +1,11 @@
 import 'dart:async';
 
-import 'package:dart_ipfs/src/core/types/p2p_types.dart';
-import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/metrics.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
+
+import '../core/types/p2p_types.dart';
+import '../proto/generated/base_messages.pb.dart';
+import '../proto/generated/metrics.pb.dart';
 
 /// Handles network events and broadcasts them to listeners.
 ///
@@ -69,4 +70,9 @@ class NetworkEventHandler {
 
   /// Stream of network events for listeners.
   Stream<NetworkEvent> get events => _eventController.stream;
+
+  /// Disposes of the event handler and closes the event stream.
+  Future<void> dispose() async {
+    await _eventController.close();
+  }
 }

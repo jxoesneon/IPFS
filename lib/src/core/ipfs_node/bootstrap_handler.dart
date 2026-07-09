@@ -1,11 +1,11 @@
 // src/core/ipfs_node/bootstrap_handler.dart
 import 'dart:async';
 
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/data_structures/peer.dart';
-import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
+import '../../utils/logger.dart';
+import '../config/ipfs_config.dart';
+import '../data_structures/peer.dart';
+import '../interfaces/i_lifecycle.dart';
+import 'network_handler.dart';
 
 /// Handles bootstrap peer connections for an IPFS node.
 class BootstrapHandler implements ILifecycle {

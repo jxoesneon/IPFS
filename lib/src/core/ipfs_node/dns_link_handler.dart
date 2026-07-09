@@ -2,9 +2,10 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:http/http.dart' as http;
+
+import '../../utils/logger.dart';
+import '../config/ipfs_config.dart';
 
 /// Handles DNSLink resolution with caching and multiple resolution strategies.
 class DNSLinkHandler {

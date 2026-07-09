@@ -4,14 +4,15 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cbor/cbor.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
-import 'package:dart_ipfs/src/platform/platform.dart';
-import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:path/path.dart' as p;
+
+import '../../platform/platform.dart';
+import '../../proto/generated/core/cid.pb.dart';
+import '../../proto/generated/core/pin.pb.dart';
+import '../../utils/logger.dart';
+import '../cid.dart';
+import 'blockstore.dart';
+import 'merkle_dag_node.dart';
 
 /// Manages pinning operations to prevent content from garbage collection.
 class PinManager {
@@ -311,3 +312,4 @@ class PinManager {
     return directPins + indirectPins;
   }
 }
+

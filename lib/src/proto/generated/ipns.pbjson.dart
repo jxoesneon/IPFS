@@ -33,6 +33,8 @@ const IpnsEntry$json = {
     {'1': 'sequence', '3': 5, '4': 1, '5': 4, '10': 'sequence'},
     {'1': 'ttl', '3': 6, '4': 1, '5': 4, '10': 'ttl'},
     {'1': 'pubKey', '3': 7, '4': 1, '5': 12, '10': 'pubKey'},
+    {'1': 'signatureV2', '3': 8, '4': 1, '5': 12, '10': 'signatureV2'},
+    {'1': 'data', '3': 9, '4': 1, '5': 12, '10': 'data'},
   ],
   '4': [IpnsEntry_ValidityType$json],
 };
@@ -51,4 +53,5 @@ final $typed_data.Uint8List ipnsEntryDescriptor = $convert.base64Decode(
     'lnbmF0dXJlEkUKDHZhbGlkaXR5VHlwZRgDIAEoDjIhLmlwZnMuaXBucy5JcG5zRW50cnkuVmFs'
     'aWRpdHlUeXBlUgx2YWxpZGl0eVR5cGUSGgoIdmFsaWRpdHkYBCABKAxSCHZhbGlkaXR5EhoKCH'
     'NlcXVlbmNlGAUgASgEUghzZXF1ZW5jZRIQCgN0dGwYBiABKARSA3R0bBIWCgZwdWJLZXkYByAB'
-    'KAxSBnB1YktleSIXCgxWYWxpZGl0eVR5cGUSBwoDRU9MEAA=');
+    'KAxSBnB1YktleRIgCgtzaWduYXR1cmVWMhgIIAEoDFILc2lnbmF0dXJlVjISEgoEZGF0YRgJIA'
+    'EoDFIEZGF0YSIXCgxWYWxpZGl0eVR5cGUSBwoDRU9MEAA=');

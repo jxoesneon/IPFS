@@ -110,6 +110,8 @@ class RPCServer implements ILifecycle {
     // DAG endpoints
     _router.post('/api/v0/dag/get', _handlers.handleDagGet);
     _router.post('/api/v0/dag/put', _handlers.handleDagPut);
+    _router.post('/api/v0/dag/export', _handlers.handleDagExport);
+    _router.post('/api/v0/dag/import', _handlers.handleDagImport);
 
     // DHT endpoints
     _router.post('/api/v0/dht/findprovs', _handlers.handleDhtFindProviders);

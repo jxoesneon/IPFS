@@ -5,6 +5,7 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_errors.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_hamt.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
@@ -45,13 +46,20 @@ class UnixFSDirectoryEntry {
 /// values and stores it in the block store.
 class UnixFSDirectoryBuilder {
   /// Creates a builder with the requested [cidVersion] and [hashType].
-  UnixFSDirectoryBuilder({this.cidVersion = 0, this.hashType = 'sha2-256'});
+  UnixFSDirectoryBuilder({
+    this.cidVersion = 0,
+    this.hashType = 'sha2-256',
+    this.shardThreshold = 0,
+  });
 
   /// CID version to use for the resulting directory block.
   final int cidVersion;
 
   /// Multihash function to use for the directory block.
   final String hashType;
+
+  /// Threshold at which the directory should be sharded.
+  final int shardThreshold;
 
   /// Builds a directory from the provided [entries].
   ///
@@ -85,6 +93,27 @@ class UnixFSDirectoryBuilder {
     final block = Block(cid: cid, data: bytes, format: 'dag-pb');
     await unixfsPutBlock(store, block);
     return UnixFSNode.fromBlock(block);
+  }
+
+  /// Builds a directory, automatically sharding when the number of [entries]
+  /// exceeds [shardThreshold].
+  ///
+  /// If [shardThreshold] is zero or the entry count is below the threshold,
+  /// a plain directory is returned. Otherwise a HAMT-sharded directory is
+  /// built using fanout 256 and the murmur3-x64-64 hash function.
+  Future<UnixFSNode> buildAutoSharded(
+    IBlockStore store,
+    List<UnixFSDirectoryEntry> entries,
+  ) async {
+    if (shardThreshold <= 0 || entries.length <= shardThreshold) {
+      return build(store, entries);
+    }
+    return UnixFSHAMTBuilder(
+      fanout: 256,
+      shardThreshold: shardThreshold,
+      cidVersion: cidVersion,
+      hashType: hashType,
+    ).build(store, entries);
   }
 }
 
@@ -177,6 +206,7 @@ Future<UnixFSNode> createDirectory(
   List<UnixFSDirectoryEntry> entries, {
   int cidVersion = 0,
   String hashType = 'sha2-256',
+  int shardThreshold = 0,
 }) async {
   final sizedEntries = <UnixFSDirectoryEntry>[];
   for (final entry in entries) {
@@ -188,7 +218,8 @@ Future<UnixFSNode> createDirectory(
   return UnixFSDirectoryBuilder(
     cidVersion: cidVersion,
     hashType: hashType,
-  ).build(store, sizedEntries);
+    shardThreshold: shardThreshold,
+  ).buildAutoSharded(store, sizedEntries);
 }
 
 /// Adds or replaces a child named [name] in the directory identified by
@@ -204,6 +235,7 @@ Future<UnixFSNode> addChildToDirectory(
   int? childTsize,
   int cidVersion = 0,
   String hashType = 'sha2-256',
+  int shardThreshold = 0,
 }) async {
   if (name.contains('/')) {
     throw ArgumentError('Directory entry name must not contain "/": $name');
@@ -238,5 +270,6 @@ Future<UnixFSNode> addChildToDirectory(
   return UnixFSDirectoryBuilder(
     cidVersion: cidVersion,
     hashType: hashType,
-  ).build(store, entries);
+    shardThreshold: shardThreshold,
+  ).buildAutoSharded(store, entries);
 }

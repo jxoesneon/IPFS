@@ -13,6 +13,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_routing_table_interface.dart' show DHTRoutingTable;
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/network/router.dart';
@@ -175,6 +176,20 @@ class MockRouter implements RouterInterface {
   List<String> resolvePeerId(String peerIdStr) => [];
   @override
   void registerRelayedConnection(String targetPeerId, String relayAddr) {}
+
+  @override
+  void unregisterProtocolHandler(String protocolId) {}
+
+  @override
+  Future<Uint8List> sendMessageWithResponse(
+    String peerId,
+    Uint8List message, {
+    String? protocolId,
+    Duration? timeout,
+  }) async => Uint8List(0);
+
+  @override
+  DHTRoutingTable? get dhtRoutingTable => null;
 }
 
 class MockCircuitRelayClient extends CircuitRelayClient {
@@ -412,7 +427,7 @@ void main() {
       await node.start();
 
       final res = await node.resolveIPNS('QmSomeNodeId');
-      expect(res, 'QmResolvedCID');
+      expect(res, '/ipfs/QmResolvedCID');
     });
 
     test('should handle pubsub subscribe and publish', () async {

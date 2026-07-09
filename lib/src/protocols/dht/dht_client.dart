@@ -5,23 +5,26 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart'; // For SHA256
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
-import 'package:dart_ipfs/src/core/types/peer_id.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_proto;
-import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart'
-    as ipfs_node_network_events;
-import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
-import 'package:dart_ipfs/src/protocols/dht/dht_envelope.dart';
-import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
-import 'package:dart_ipfs/src/transport/router_interface.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
+
+import '../../core/cid.dart';
+import '../../core/config/ipfs_config.dart';
+import '../../core/ipfs_node/ipfs_node.dart';
+import '../../core/ipfs_node/network_handler.dart';
+import '../../core/metrics/metrics_collector.dart';
+import '../../core/storage/datastore.dart' as ds;
+import '../../core/types/peer_id.dart';
+import '../../proto/generated/dht/dht.pb.dart' as dht_proto;
+import '../../proto/generated/dht/ipfs_node_network_events.pb.dart'
+    as ipfs_node_network_events;
+import '../../proto/generated/dht/kademlia.pb.dart' as kad;
+import '../../transport/libp2p_router.dart';
+import '../../transport/router_interface.dart';
+import '../../utils/base58.dart';
+import '../../utils/logger.dart';
+import 'dht_envelope.dart';
+import 'kademlia_routing_adapter.dart';
+import 'kademlia_routing_table.dart';
 
 /// Kademlia DHT client implementation for IPFS.
 ///
@@ -72,13 +75,18 @@ class DHTClient {
   late final KademliaRoutingTable _kademliaRoutingTable;
   late final DHTConfig _config;
   bool _initialized = false;
+  final Set<String> _bootstrappedPeers = {};
+  StreamSubscription<ConnectionEvent>? _connectionEventSub;
 
   final Map<String, Completer<Uint8List>> _pendingRequests = {};
   final Random _random = Random.secure();
   int _requestCounter = 0;
 
-  /// Protocol identifier for Kademlia DHT.
+  /// Protocol identifier for Kademlia DHT (WAN).
   static const String protocolDht = '/ipfs/kad/1.0.0';
+
+  /// Protocol identifier for LAN Kademlia DHT (used by private networks).
+  static const String protocolDhtLan = '/ipfs/lan/kad/1.0.0';
 
   /// Initializes the DHT client.
   Future<void> initialize() async {
@@ -100,9 +108,23 @@ class DHTClient {
     _kademliaRoutingTable = KademliaRoutingTable();
     _kademliaRoutingTable.initialize(this);
 
+    // Expose the routing table via the router interface for DHT protocol handlers
+    final routingAdapter = KademliaRoutingAdapter(_kademliaRoutingTable);
+    if (_router is Libp2pRouter) {
+      (_router).setDHTRoutingTable(routingAdapter);
+    }
+
     // Register protocols and handlers
     _registerProtocols();
     _setupHandlers();
+
+    // Bootstrap newly-connected peers so that small/private networks converge
+    // even without explicit bootstrap peer lists.
+    _connectionEventSub = _router.connectionEvents.listen((event) {
+      if (event.type == ConnectionEventType.connected) {
+        unawaited(_bootstrapConnectedPeer(event.peerId));
+      }
+    });
 
     _initialized = true;
   }
@@ -110,11 +132,13 @@ class DHTClient {
   void _registerProtocols() {
     // Add protocol registration logic here
     _router.registerProtocol(protocolDht);
+    _router.registerProtocol(protocolDhtLan);
   }
 
   void _setupHandlers() {
     // Register handlers for each protocol
     _router.registerProtocolHandler(protocolDht, _handlePacket);
+    _router.registerProtocolHandler(protocolDhtLan, _handlePacket);
   }
 
   // Helper: Convert kad.Peer to PeerId
@@ -192,6 +216,44 @@ class DHTClient {
   /// validated [PeerId]s.
   Future<List<PeerId>> findProviders(String cid) async {
     _checkInitialized();
+    if (_kademliaRoutingTable.peerCount == 0) {
+      await _seedConnectedPeers();
+    }
+
+    // Fast path: if a provider record was already announced to us locally,
+    // return it immediately. This covers the interop case where Kubo/Helia
+    // send ADD_PROVIDER messages and we need to report them without relying on
+    // a full iterative query over the wire.
+    var localProviders = node.dhtHandler?.getLocalProvidersForCid(cid);
+    // ignore: avoid_print
+    print('findProviders($cid) local=${localProviders?.length ?? -1}');
+    if (localProviders != null && localProviders.isNotEmpty) {
+      return localProviders;
+    }
+
+    // In small/private networks a peer may have just announced itself as a
+    // provider but the ADD_PROVIDER hasn't been processed yet. Poll briefly
+    // for a local record before falling back to network queries.
+    if (_router.connectedPeers.isNotEmpty) {
+      for (var i = 0; i < 5; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        localProviders = node.dhtHandler?.getLocalProvidersForCid(cid);
+        if (localProviders != null && localProviders.isNotEmpty) {
+          // ignore: avoid_print
+          print('findProviders($cid) local after poll=${localProviders.length}');
+          return localProviders;
+        }
+      }
+    }
+
+    // Fallback for small/private networks: ask directly connected peers for
+    // providers. Kubo/Helia may not have propagated the record through a full
+    // iterative lookup yet, but they can answer a direct GET_PROVIDERS query.
+    final directProviders = await _queryConnectedPeersForProviders(cid);
+    if (directProviders.isNotEmpty) {
+      return directProviders;
+    }
+
     final target = getRoutingKey(cid);
     final alpha = _config.alpha;
     final k = _config.bucketSize;
@@ -307,6 +369,9 @@ class DHTClient {
   /// [alpha] for concurrency.
   Future<void> addProvider(String cid, String providerId) async {
     _checkInitialized();
+    if (_kademliaRoutingTable.peerCount == 0) {
+      await _seedConnectedPeers();
+    }
     final target = getRoutingKey(cid);
     final alpha = _config.alpha;
     final k = _config.bucketSize;
@@ -417,7 +482,15 @@ class DHTClient {
 
   Future<bool> _sendAddProvider(PeerId peer, kad.Message msg) async {
     try {
-      await _sendRequest(peer, protocolDht, msg.writeToBuffer());
+      // ADD_PROVIDER is a fire-and-forget message in libp2p-kad-dht. Send the
+      // raw protobuf without our envelope framing so Kubo/Helia can parse it.
+      final p2plibRouter = node.dhtHandler?.router;
+      if (p2plibRouter == null) return false;
+      await p2plibRouter.sendMessage(
+        peer.toBase58(),
+        msg.writeToBuffer(),
+        protocolId: protocolDht,
+      );
       return true;
     } catch (e) {
       _logger.debug(
@@ -555,6 +628,66 @@ class DHTClient {
     return null;
   }
 
+  /// Stores a raw DHT value on connected peers using unframed Kademlia
+  /// messages. This is required for interop with Kubo/Helia, which do not
+  /// understand the internal DHTEnvelope framing.
+  Future<bool> storeValueRaw(Uint8List key, Uint8List value) async {
+    _checkInitialized();
+    final router = node.dhtHandler?.router;
+    if (router == null) return false;
+
+    final record = dht_proto.Record()
+      ..key = key
+      ..value = value;
+    final msg = kad.Message()
+      ..type = kad.Message_MessageType.PUT_VALUE
+      ..key = key
+      ..record = record;
+    final msgBytes = msg.writeToBuffer();
+
+    var successCount = 0;
+    for (final peerIdStr in router.connectedPeers) {
+      try {
+        await router.sendMessage(peerIdStr, msgBytes, protocolId: protocolDht);
+        successCount++;
+      } catch (e) {
+        _logger.debug('Raw PUT_VALUE to $peerIdStr failed: $e');
+      }
+    }
+    return successCount > 0;
+  }
+
+  /// Retrieves a raw DHT value from connected peers using unframed Kademlia
+  /// messages. Returns the first value found.
+  Future<Uint8List?> getValueRaw(Uint8List key) async {
+    _checkInitialized();
+    final router = node.dhtHandler?.router;
+    if (router == null) return null;
+
+    final request = kad.Message()
+      ..type = kad.Message_MessageType.GET_VALUE
+      ..key = key;
+    final requestBytes = request.writeToBuffer();
+
+    for (final peerIdStr in router.connectedPeers) {
+      try {
+        final responseBytes = await router.sendRequest(
+          peerIdStr,
+          protocolDht,
+          requestBytes,
+        );
+        if (responseBytes == null) continue;
+        final response = kad.Message.fromBuffer(responseBytes);
+        if (response.hasRecord() && response.record.value.isNotEmpty) {
+          return Uint8List.fromList(response.record.value);
+        }
+      } catch (e) {
+        _logger.debug('Raw GET_VALUE from $peerIdStr failed: $e');
+      }
+    }
+    return null;
+  }
+
   /// Checks if a value exists on a specific peer.
   ///
   /// Used for replica health checks.
@@ -597,7 +730,67 @@ class DHTClient {
     }
   }
 
+  /// Directly queries all connected peers for providers of [cid].
+  ///
+  /// This bypasses iterative Kademlia expansion and is used as a fast path in
+  /// small/private networks where we are directly connected to a provider.
+  Future<List<PeerId>> _queryConnectedPeersForProviders(String cid) async {
+    final providers = <PeerId>{};
+    final request = kad.Message()
+      ..type = kad.Message_MessageType.GET_PROVIDERS
+      ..key = CID.decode(cid).multihash.toBytes()
+      ..clusterLevelRaw = 0;
+    final requestBytes = request.writeToBuffer();
+
+    final router = node.dhtHandler?.router;
+    if (router == null) {
+      // ignore: avoid_print
+      print('_queryConnectedPeersForProviders: no router');
+      return [];
+    }
+    // ignore: avoid_print
+    print('_queryConnectedPeersForProviders: connected=${router.connectedPeers.length}');
+
+    for (final peerIdStr in router.connectedPeers) {
+      // ignore: avoid_print
+      print('  querying $peerIdStr');
+      try {
+        // In private networks Kubo/Helia use the LAN DHT protocol; try it
+        // first, then fall back to the WAN protocol.
+        Uint8List? responseBytes;
+        for (final proto in [protocolDhtLan, protocolDht]) {
+          responseBytes = await router.sendRequest(peerIdStr, proto, requestBytes);
+          if (responseBytes != null) break;
+        }
+        // ignore: avoid_print
+        print('  response from $peerIdStr: ${responseBytes?.length ?? -1} bytes');
+        if (responseBytes == null) continue;
+        final response = kad.Message.fromBuffer(responseBytes);
+        for (final provider in response.providerPeers) {
+          if (_isValidProviderRecord(provider)) {
+            providers.add(_convertKadPeerToPeerId(provider));
+          }
+        }
+      } catch (e) {
+        // ignore: avoid_print
+        print('  query $peerIdStr failed: $e');
+        _logger.debug('Direct provider query to $peerIdStr failed: $e');
+      }
+    }
+
+    // ignore: avoid_print
+    print('_queryConnectedPeersForProviders result: ${providers.length}');
+    return providers.toList();
+  }
+
   // Helper method for sending protocol requests with correlation.
+  /// Sends a raw DHT message payload to [peer] over the kad protocol.
+  ///
+  /// Used by collaborators (e.g. [OptimisticProvider]) that compose their own
+  /// kad [kad.Message] bytes and only need the transport dispatch.
+  Future<void> sendMessageRaw(PeerId peer, Uint8List msgBytes) =>
+      _sendRequest(peer, protocolDht, msgBytes);
+
   Future<Uint8List> _sendRequest(
     PeerId peer,
     String protocol,
@@ -615,7 +808,11 @@ class DHTClient {
 
     final envelope = DHTEnvelope(requestId: requestId, payload: data);
     try {
-      await p2plibRouter.sendMessage(peer.toBase58(), envelope.toBytes());
+      await p2plibRouter.sendMessage(
+        peer.toBase58(),
+        envelope.toBytes(),
+        protocolId: protocol,
+      );
     } catch (e) {
       _pendingRequests.remove(requestId);
       _logger.debug('Error sending DHT request to ${peer.toBase58()}: $e');
@@ -632,16 +829,30 @@ class DHTClient {
 
   // Main Handle Packet
   void _handlePacket(NetworkPacket packet) async {
+    // ignore: avoid_print
+    print('DHT packet from ${packet.srcPeerId}, ${packet.datagram.length} bytes');
     try {
-      DHTEnvelope envelope;
+      late final kad.Message message;
+      late final DHTEnvelope envelope;
+      // Kubo and other libp2p-kad-dht implementations send raw protobuf
+      // messages without an envelope. Our internal transport uses a thin
+      // DHTEnvelope for correlation. Try raw first; if it fails, fall back
+      // to envelope parsing.
       try {
-        envelope = DHTEnvelope.fromBytes(packet.datagram);
-      } on FormatException {
-        // Legacy fallback: treat raw datagram as an unenveloped DHT message.
-        envelope = DHTEnvelope(
-          requestId: '',
-          payload: Uint8List.fromList(packet.datagram),
-        );
+        message = kad.Message.fromBuffer(packet.datagram);
+        envelope = DHTEnvelope(requestId: '', payload: packet.datagram);
+        // ignore: avoid_print
+        print('DHT raw parsed: type=${message.type}, key=${message.key.length} bytes');
+      } catch (_) {
+        try {
+          envelope = DHTEnvelope.fromBytes(packet.datagram);
+        } on FormatException {
+          envelope = DHTEnvelope(
+            requestId: '',
+            payload: Uint8List.fromList(packet.datagram),
+          );
+        }
+        message = kad.Message.fromBuffer(envelope.payload);
       }
 
       // If this is a correlated response, complete the pending request.
@@ -653,7 +864,6 @@ class DHTClient {
         }
       }
 
-      final message = kad.Message.fromBuffer(envelope.payload);
       final peerIdStr = packet.srcPeerId;
       final srcPeerId = PeerId.fromBase58(peerIdStr);
 
@@ -685,23 +895,43 @@ class DHTClient {
           final response = kad.Message()
             ..type = kad.Message_MessageType.FIND_NODE
             ..closerPeers.addAll(closer.map((p) => _convertPeerIdToKadPeer(p)));
-          _sendResponse(peerIdStr, envelope.requestId, response);
+          _sendResponse(peerIdStr, envelope.requestId, response, packet.responder);
           break;
         case kad.Message_MessageType.GET_VALUE:
           // Check local storage for record
-          await _handleGetValue(peerIdStr, envelope.requestId, message);
+          await _handleGetValue(
+            peerIdStr,
+            envelope.requestId,
+            message,
+            packet.responder,
+          );
+          break;
+        case kad.Message_MessageType.PUT_VALUE:
+          await _handlePutValue(
+            peerIdStr,
+            envelope.requestId,
+            message,
+            packet.responder,
+          );
           break;
         case kad.Message_MessageType.GET_PROVIDERS:
-          await _handleGetProviders(peerIdStr, envelope.requestId, message);
+          await _handleGetProviders(
+            peerIdStr,
+            envelope.requestId,
+            message,
+            packet.responder,
+          );
           break;
         case kad.Message_MessageType.ADD_PROVIDER:
           await _handleAddProvider(peerIdStr, message);
           break;
         case kad.Message_MessageType.PING:
           final response = kad.Message()..type = kad.Message_MessageType.PING;
-          _sendResponse(peerIdStr, envelope.requestId, response);
+          _sendResponse(peerIdStr, envelope.requestId, response, packet.responder);
           break;
         default:
+          // ignore: avoid_print
+          print('Unhandled DHT message type: ${message.type}');
           _logger.debug('Unhandled DHT message type: ${message.type}');
       }
     } catch (e, st) {
@@ -713,10 +943,11 @@ class DHTClient {
     String peerIdStr,
     String requestId,
     kad.Message message,
+    Future<void> Function(Uint8List)? send,
   ) async {
     final storage = node.dhtHandler?.storage;
     if (storage == null) {
-      _sendResponse(peerIdStr, requestId, kad.Message()..type = message.type);
+      _sendResponse(peerIdStr, requestId, kad.Message()..type = message.type, send);
       return;
     }
 
@@ -728,6 +959,8 @@ class DHTClient {
       final response = kad.Message()
         ..type = message.type
         ..key = message.key;
+      // ignore: avoid_print
+      print('DHT GET_VALUE from $peerIdStr key=${message.key.length} found=${data != null && data.isNotEmpty}');
       if (data != null && data.isNotEmpty) {
         response.record = dht_proto.Record()
           ..key = message.key
@@ -742,10 +975,10 @@ class DHTClient {
           closer.map((p) => _convertPeerIdToKadPeer(p)),
         );
       }
-      _sendResponse(peerIdStr, requestId, response);
+      _sendResponse(peerIdStr, requestId, response, send);
     } catch (e) {
       _logger.debug('Error handling GET_VALUE from $peerIdStr: $e');
-      _sendResponse(peerIdStr, requestId, kad.Message()..type = message.type);
+      _sendResponse(peerIdStr, requestId, kad.Message()..type = message.type, send);
     }
   }
 
@@ -753,6 +986,7 @@ class DHTClient {
     String peerIdStr,
     String requestId,
     kad.Message message,
+    Future<void> Function(Uint8List)? send,
   ) async {
     final handler = node.dhtHandler;
     final response = kad.Message()
@@ -780,7 +1014,7 @@ class DHTClient {
     );
     response.closerPeers.addAll(closer.map((p) => _convertPeerIdToKadPeer(p)));
 
-    _sendResponse(peerIdStr, requestId, response);
+    _sendResponse(peerIdStr, requestId, response, send);
   }
 
   Future<void> _handleAddProvider(String peerIdStr, kad.Message message) async {
@@ -789,29 +1023,90 @@ class DHTClient {
 
     try {
       final cidStr = Base58().encode(Uint8List.fromList(message.key));
+      // ignore: avoid_print
+      print('ADD_PROVIDER from $peerIdStr for $cidStr, ${message.providerPeers.length} peers');
       final cid = CID.decode(cidStr);
       for (final provider in message.providerPeers) {
         final providerId = _convertKadPeerToPeerId(provider);
+        // ignore: avoid_print
+        print('  provider ${providerId.toBase58()}, addrs=${provider.addrs.length}');
         if (_isValidProviderRecord(provider)) {
           await handler.handleProvideRequest(cid, providerId);
+          // ignore: avoid_print
+          print('  stored provider for $cidStr');
         } else {
           _metrics?.recordSecurityEvent('invalid_provider_record');
+          // ignore: avoid_print
+          print('  rejected invalid ADD_PROVIDER from $peerIdStr for $cidStr');
           _logger.debug(
             'Rejected invalid ADD_PROVIDER from $peerIdStr for $cidStr',
           );
         }
       }
     } catch (e) {
+      // ignore: avoid_print
+      print('Error handling ADD_PROVIDER from $peerIdStr: $e');
       _logger.debug('Error handling ADD_PROVIDER from $peerIdStr: $e');
     }
   }
 
-  void _sendResponse(String peerIdStr, String requestId, kad.Message msg) {
-    final envelope = DHTEnvelope(
-      requestId: requestId,
-      payload: msg.writeToBuffer(),
-    );
-    node.dhtHandler?.router.sendMessage(peerIdStr, envelope.toBytes());
+  Future<void> _handlePutValue(
+    String peerIdStr,
+    String requestId,
+    kad.Message message,
+    Future<void> Function(Uint8List)? send,
+  ) async {
+    final storage = node.dhtHandler?.storage;
+    if (storage == null) return;
+
+    try {
+      if (message.hasRecord()) {
+        final key = ds.Key(
+          '/dht/values/${Base58().encode(Uint8List.fromList(message.key))}',
+        );
+        await storage.put(
+          key,
+          Uint8List.fromList(message.record.value),
+        );
+        _logger.debug('Stored DHT value for key ${Base58().encode(Uint8List.fromList(message.key))}');
+      }
+
+      final response = kad.Message()
+        ..type = message.type
+        ..key = message.key;
+      if (message.hasRecord()) {
+        response.record = dht_proto.Record()
+          ..key = message.key
+          ..value = message.record.value;
+      }
+      _sendResponse(peerIdStr, requestId, response, send);
+    } catch (e) {
+      _logger.debug('Error handling PUT_VALUE from $peerIdStr: $e');
+    }
+  }
+
+  void _sendResponse(
+    String peerIdStr,
+    String requestId,
+    kad.Message msg,
+    Future<void> Function(Uint8List)? send,
+  ) {
+    final payload = msg.writeToBuffer();
+    final Uint8List bytesToSend;
+    if (requestId.isEmpty) {
+      // Interop with Kubo: raw Kademlia messages, no envelope.
+      bytesToSend = payload;
+    } else {
+      bytesToSend = DHTEnvelope(
+        requestId: requestId,
+        payload: payload,
+      ).toBytes();
+    }
+    if (send != null) {
+      unawaited(send(bytesToSend));
+    } else {
+      node.dhtHandler?.router.sendMessage(peerIdStr, bytesToSend);
+    }
   }
 
   /// Starts the DHT client and initializes necessary components.
@@ -852,6 +1147,9 @@ class DHTClient {
         _kademliaRoutingTable.clear();
       }
       _initialized = false;
+      _bootstrappedPeers.clear();
+      await _connectionEventSub?.cancel();
+      _connectionEventSub = null;
 
       _logger.info('DHT client stopped successfully');
     } catch (e, st) {
@@ -860,7 +1158,24 @@ class DHTClient {
     }
   }
 
-  /// Initialize the routing table with bootstrap peers.
+  /// Bootstraps a single connected peer by adding it to the routing table and
+  /// sending a self-lookup FIND_NODE so that the peer learns about us.
+  Future<void> _bootstrapConnectedPeer(String peerIdStr) async {
+    if (!_initialized) return;
+    // ignore: avoid_print
+    print('DHT bootstrap connected peer $peerIdStr');
+    try {
+      final peer = PeerId.fromBase58(peerIdStr);
+      if (_bootstrappedPeers.add(peerIdStr)) {
+        await _kademliaRoutingTable.addPeer(peer, peer);
+        await _bootstrapPeer(peer);
+      }
+    } catch (e) {
+      _logger.debug('Error bootstrapping connected peer $peerIdStr: $e');
+    }
+  }
+
+  /// Initialize the routing table with bootstrap and already-connected peers.
   Future<void> _initializeRoutingTable() async {
     final bootstrapPeers = networkHandler.config.network.bootstrapPeers;
     for (final peerAddr in bootstrapPeers) {
@@ -872,6 +1187,53 @@ class DHTClient {
       } catch (e) {
         _logger.debug('Error connecting to bootstrap peer $peerAddr: $e');
       }
+    }
+
+    // In small/private networks there may be no bootstrap list, but the node
+    // is already connected to peers via swarmConnect. Seed the routing table
+    // with them so that provide/find operations have somewhere to send.
+    await _seedConnectedPeers();
+  }
+
+  /// Adds currently connected peers to the Kademlia routing table and sends
+  /// a self-lookup FIND_NODE to each newly-seeded peer so that they learn about
+  /// us (bootstrap) and we learn about their closest peers.
+  Future<void> _seedConnectedPeers() async {
+    try {
+      for (final peerIdStr in _router.connectedPeers) {
+        if (!_bootstrappedPeers.add(peerIdStr)) continue;
+        try {
+          final peer = PeerId.fromBase58(peerIdStr);
+          await _kademliaRoutingTable.addPeer(peer, peer);
+          unawaited(_bootstrapPeer(peer));
+        } catch (e) {
+          _logger.debug('Error adding connected peer $peerIdStr to DHT table: $e');
+        }
+      }
+    } catch (e) {
+      _logger.debug('Error seeding DHT routing table from connected peers: $e');
+    }
+  }
+
+  /// Sends a FIND_NODE for our own peer ID to [peer]. This is a minimal
+  /// bootstrap interaction: the peer will add us to its routing table on receipt.
+  Future<void> _bootstrapPeer(PeerId peer) async {
+    // ignore: avoid_print
+    print('DHT bootstrap FIND_NODE to ${peer.toBase58()}');
+    try {
+      final request = kad.Message()
+        ..type = kad.Message_MessageType.FIND_NODE
+        ..key = peerId.value;
+      final p2plibRouter = node.dhtHandler?.router;
+      if (p2plibRouter != null) {
+        await p2plibRouter.sendMessage(
+          peer.toBase58(),
+          request.writeToBuffer(),
+          protocolId: protocolDht,
+        );
+      }
+    } catch (e) {
+      _logger.debug('Error bootstrapping DHT peer ${peer.toBase58()}: $e');
     }
   }
 

@@ -1,31 +1,34 @@
 // src/core/builders/ipfs_node_builder.dart
 import 'dart:async';
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/di/service_container.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/bootstrap_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/lifecycle_manager.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
-import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
-import 'package:dart_ipfs/src/core/security/denylist_service.dart';
-import 'package:dart_ipfs/src/core/security/security_manager.dart';
-import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
-import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
-import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
-import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
-import 'package:dart_ipfs/src/services/rpc/rpc_server.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
+
+import '../../protocols/bitswap/bitswap_handler.dart';
+import '../../protocols/dcutr/dcutr_handler.dart';
+import '../../protocols/dht/dht_handler.dart';
+import '../../protocols/graphsync/graphsync_handler.dart';
+import '../../protocols/ipns/ipns_handler.dart';
+import '../../services/gateway/gateway_server.dart';
+import '../../services/rpc/rpc_server.dart';
+import '../../utils/logger.dart';
+import '../config/ipfs_config.dart';
+import '../data_structures/blockstore.dart';
+import '../di/service_container.dart';
+import '../ipfs_node/auto_nat_handler.dart';
+import '../ipfs_node/bootstrap_handler.dart';
+import '../ipfs_node/content_routing_handler.dart';
+import '../ipfs_node/datastore_handler.dart';
+import '../ipfs_node/dns_link_handler.dart';
+import '../ipfs_node/ipfs_node.dart';
+import '../ipfs_node/ipfs_node_network_events.dart';
+import '../ipfs_node/ipld_handler.dart';
+import '../ipfs_node/lifecycle_manager.dart';
+import '../ipfs_node/mdns_handler.dart';
+import '../ipfs_node/network_handler.dart';
+import '../ipfs_node/pubsub_handler.dart';
+import '../metrics/metrics_collector.dart';
+import '../peering/peering_service.dart';
+import '../security/denylist_service.dart';
+import '../security/security_manager.dart';
+import '../storage/memory_datastore.dart';
 
 /// Builder for constructing an [IPFSNode] with customized configuration.
 class IPFSNodeBuilder {
@@ -113,6 +116,7 @@ class IPFSNodeBuilder {
         denylistService: denylistService,
       );
       _container.registerSingleton(dhtHandler);
+      _container.get<LifecycleManager>().register(dhtHandler);
 
       // Provide the routing table size to the metrics collector once the DHT
       // handler is available. The provider is invoked later by the periodic
@@ -134,16 +138,17 @@ class IPFSNodeBuilder {
     final denylistService = _container.isRegistered<DenylistService>()
         ? _container.get<DenylistService>()
         : null;
-    _container.registerSingleton(
-      BitswapHandler(
-        _config,
-        _container.get<BlockStore>(),
-        router,
-        denylistService: denylistService,
-      ),
+    final bitswapHandler = BitswapHandler(
+      _config,
+      _container.get<BlockStore>(),
+      router,
+      denylistService: denylistService,
     );
+    _container.registerSingleton(bitswapHandler);
+    _container.get<LifecycleManager>().register(bitswapHandler);
 
     _container.registerSingleton(BootstrapHandler(_config, networkHandler));
+    _container.get<LifecycleManager>().register(_container.get<BootstrapHandler>());
   }
 
   Future<void> _initializeServices() async {
@@ -167,17 +172,29 @@ class IPFSNodeBuilder {
     );
     _container.registerSingleton(AutoNATHandler(_config, networkHandler));
 
+    // DCUtR (Direct Connection Upgrade through Relay) support.
+    _container.registerSingleton(DCUtRHandler(_config, networkHandler));
+
+    // libp2p peering service: keep persistent connections to bootstrap peers.
+    _container.registerSingleton(
+      PeeringService(
+        _config,
+        networkHandler,
+        peeringConfig: PeeringConfig(peers: _config.network.bootstrapPeers),
+      ),
+    );
+
     if (_container.isRegistered(DHTHandler)) {
-      _container.registerSingleton(
-        IPNSHandler(
-          _config,
-          _container.get<SecurityManager>(),
-          _container.get<DHTHandler>(),
-          _container.isRegistered(PubSubHandler)
-              ? _container.get<PubSubHandler>()
-              : null,
-        ),
+      final ipnsHandler = IPNSHandler(
+        _config,
+        _container.get<SecurityManager>(),
+        _container.get<DHTHandler>(),
+        _container.isRegistered(PubSubHandler)
+            ? _container.get<PubSubHandler>()
+            : null,
       );
+      _container.registerSingleton(ipnsHandler);
+      _container.get<LifecycleManager>().register(ipnsHandler);
     }
   }
 
@@ -209,6 +226,7 @@ class IPFSNodeBuilder {
         node: node,
         address: _config.gateway.address,
         port: _config.gateway.port,
+        corsOrigins: _config.gateway.corsOrigins,
         metricsCollector: metrics,
         metricsConfig: _config.metrics,
         denylistService: denylistService,

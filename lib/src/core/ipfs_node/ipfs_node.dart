@@ -3,41 +3,43 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/builders/ipfs_node_builder.dart';
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/data_structures/link.dart';
-import 'package:dart_ipfs/src/core/data_structures/peer.dart';
-import 'package:dart_ipfs/src/core/di/service_container.dart';
-import 'package:dart_ipfs/src/core/errors/node_errors.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/bootstrap_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/content_manager.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/lifecycle_manager.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_manager.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/protocol_manager.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
-import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
-import 'package:dart_ipfs/src/core/mfs/mfs_manager.dart';
-import 'package:dart_ipfs/src/core/plugins/ipfs_plugin.dart';
-import 'package:dart_ipfs/src/core/security/denylist_service.dart';
-import 'package:dart_ipfs/src/core/security/security_manager.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/reprovider.dart';
-import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
-import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
-import 'package:dart_ipfs/src/transport/router_interface.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
+import '../../protocols/bitswap/bitswap_handler.dart';
+import '../../protocols/dcutr/dcutr_handler.dart';
+import '../../protocols/dht/dht_client.dart';
+import '../../protocols/dht/dht_handler.dart';
+import '../../protocols/dht/reprovider.dart';
+import '../../protocols/graphsync/graphsync_handler.dart';
+import '../../protocols/ipns/ipns_handler.dart';
+import '../../protocols/pubsub/pubsub_message.dart';
+import '../../transport/router_interface.dart';
+import '../../utils/logger.dart';
+import '../builders/ipfs_node_builder.dart';
+import '../config/ipfs_config.dart';
+import '../data_structures/blockstore.dart';
+import '../data_structures/link.dart';
+import '../data_structures/peer.dart';
+import '../di/service_container.dart';
+import '../errors/node_errors.dart';
+import '../metrics/metrics_collector.dart';
+import '../mfs/mfs_manager.dart';
+import '../peering/peering_service.dart';
+import '../plugins/ipfs_plugin.dart';
+import '../security/denylist_service.dart';
+import '../security/security_manager.dart';
+import '../storage/datastore.dart';
+import 'auto_nat_handler.dart';
+import 'bootstrap_handler.dart';
+import 'content_manager.dart';
+import 'content_routing_handler.dart';
+import 'datastore_handler.dart';
+import 'dns_link_handler.dart';
+import 'ipld_handler.dart';
+import 'lifecycle_manager.dart';
+import 'mdns_handler.dart';
+import 'network_handler.dart';
+import 'network_manager.dart';
+import 'protocol_manager.dart';
+import 'pubsub_handler.dart';
 
 /// Modes for retrieving content via the [IPFSNode].
 enum GatewayMode {
@@ -131,6 +133,9 @@ class IPFSNode {
       dhtHandler: _container.isRegistered<DHTHandler>()
           ? _container.get<DHTHandler>()
           : null,
+      ipnsHandler: _container.isRegistered<IPNSHandler>()
+          ? _container.get<IPNSHandler>()
+          : null,
       contentRoutingHandler: _container.isRegistered(ContentRoutingHandler)
           ? _container.get<ContentRoutingHandler>()
           : null,
@@ -172,8 +177,24 @@ class IPFSNode {
     if (_reprovider != null) {
       _lifecycleManager.register(_reprovider!);
     }
+    if (_container.isRegistered<BitswapHandler>()) {
+      _lifecycleManager.register(_container.get<BitswapHandler>());
+    }
     if (_container.isRegistered<DenylistService>()) {
       _lifecycleManager.register(_container.get<DenylistService>());
+    }
+
+    // Register NAT traversal and peering services with lifecycle management.
+    // These depend on the network handler, so they are registered after the
+    // network manager so they start/stop in the correct order.
+    if (_container.isRegistered<AutoNATHandler>()) {
+      _lifecycleManager.register(_container.get<AutoNATHandler>());
+    }
+    if (_container.isRegistered<DCUtRHandler>()) {
+      _lifecycleManager.register(_container.get<DCUtRHandler>());
+    }
+    if (_container.isRegistered<PeeringService>()) {
+      _lifecycleManager.register(_container.get<PeeringService>());
     }
 
     // Set back-references for handlers that need the IPFSNode instance
@@ -244,6 +265,39 @@ class IPFSNode {
       return _container.get<MetricsCollector>().metricsStream;
     }
     return const Stream.empty();
+  }
+
+  /// Returns total bytes sent by the P2P node since it started.
+  ///
+  /// Returns `0` if metrics collection is disabled or the node is offline.
+  int get bandwidthOut {
+    final collector = metricsCollector;
+    if (collector == null) return 0;
+    return collector.totalBytesSent;
+  }
+
+  /// Returns total bytes received by the P2P node since it started.
+  ///
+  /// Returns `0` if metrics collection is disabled or the node is offline.
+  int get bandwidthIn {
+    final collector = metricsCollector;
+    if (collector == null) return 0;
+    return collector.totalBytesReceived;
+  }
+
+  /// Returns the number of peers currently in the Kademlia DHT routing table.
+  ///
+  /// Returns `0` if the DHT is not available or the routing table is not
+  /// initialized.
+  int get dhtPeerCount {
+    try {
+      if (!_container.isRegistered<DHTHandler>()) return 0;
+      final dhtHandler = _container.get<DHTHandler>();
+      return dhtHandler.dhtClient.kademliaRoutingTable.peerCount;
+    } catch (e) {
+      _logger.warning('Failed to get DHT peer count: $e');
+      return 0;
+    }
   }
 
   /// Returns a [List] of multiaddresses this node is listening on.
@@ -398,6 +452,7 @@ class IPFSNode {
     try {
       await _pluginManager.stopAll();
       await _lifecycleManager.stopAll();
+      await _newContentController.close();
       _state = NodeState.stopped;
       _logger.info('IPFS Node stopped successfully');
     } catch (e, stackTrace) {
@@ -461,8 +516,9 @@ class IPFSNode {
   /// Returns a [Future] that resolves to `true` if the given [cid] was successfully unpinned from IPFS.
   Future<bool> unpin(String cid) => _contentManager.unpin(cid);
 
-  /// Returns a [Future] that completes when an IPNS record is published for the given [cid].
-  Future<void> publishIPNS(String cid, {required String keyName}) =>
+  /// Returns a [Future] that resolves to the IPNS name (base36-encoded peer ID)
+  /// published for the given [cid].
+  Future<String> publishIPNS(String cid, {required String keyName}) =>
       _protocolManager.publishIPNS(cid, keyName: keyName);
 
   /// Returns a [Future] that completes when the given CAR (Content Addressable Archive) file [carFile] is imported.

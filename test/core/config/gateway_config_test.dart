@@ -48,5 +48,22 @@ void main() {
       expect(json['enableCache'], isFalse);
       expect(json['cacheSize'], equals(1000));
     });
+
+    test('corsOrigins defaults to localhost', () {
+      final config = GatewayConfig();
+      expect(
+        config.corsOrigins,
+        equals(['http://localhost', 'http://127.0.0.1']),
+      );
+    });
+
+    test('corsOrigins round-trips through json', () {
+      final config = GatewayConfig(corsOrigins: ['*', 'http://example.com']);
+      final json = config.toJson();
+      expect(json['corsOrigins'], equals(['*', 'http://example.com']));
+
+      final parsed = GatewayConfig.fromJson(json);
+      expect(parsed.corsOrigins, equals(['*', 'http://example.com']));
+    });
   });
 }

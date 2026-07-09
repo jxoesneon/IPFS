@@ -1,6 +1,6 @@
 // src/core/ipld/path/ipld_path_handler.dart
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
+import '../../cid.dart';
+import '../../errors/ipld_errors.dart';
 
 /// Error for invalid IPLD/IPFS paths.
 class IPLDPathError extends IPLDError {

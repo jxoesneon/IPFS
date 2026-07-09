@@ -84,8 +84,8 @@ void main() {
       await handler.start();
       verify(
         mockRouter.start(),
-      ).called(1); // once by handler, once by circuitRelayClient
-      verify(mockRouter.registerProtocolHandler(any, any)).called(2);
+      ).called(1); // once by handler
+      verify(mockRouter.registerProtocolHandler(any, any)).called(3); // circuitRelayClient HOP + STOP + AutoNAT dialback
     });
 
     test('Stop cancels subscriptions and closes controller', () async {

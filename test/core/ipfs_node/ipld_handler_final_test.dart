@@ -13,8 +13,7 @@ import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
 import 'package:dart_ipfs/src/core/ipld/schema/ipld_schema.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
-    as unixfs_proto;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs_proto;
 import 'package:fixnum/fixnum.dart';
 import 'package:dart_multihash/dart_multihash.dart';
 

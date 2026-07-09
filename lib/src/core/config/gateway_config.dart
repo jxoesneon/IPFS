@@ -24,6 +24,11 @@ class GatewayConfig {
     this.autoTlsSANs = const [],
     this.tlsPort = 443,
     this.redirectHttpToHttps = false,
+    this.corsOrigins = const ['http://localhost', 'http://127.0.0.1'],
+    this.autoTlsAccountKeyPath,
+    this.autoTlsCertificatePath,
+    this.autoTlsPrivateKeyPath,
+    this.autoTlsRenewalThresholdDays = 30,
   });
 
   /// Creates a [GatewayConfig] from a JSON map.
@@ -53,6 +58,14 @@ class GatewayConfig {
           (json['autoTlsSANs'] as List<dynamic>?)?.cast<String>() ?? const [],
       tlsPort: json['tlsPort'] as int? ?? 443,
       redirectHttpToHttps: json['redirectHttpToHttps'] as bool? ?? false,
+      corsOrigins:
+          (json['corsOrigins'] as List<dynamic>?)?.cast<String>() ??
+          const ['http://localhost', 'http://127.0.0.1'],
+      autoTlsAccountKeyPath: json['autoTlsAccountKeyPath'] as String?,
+      autoTlsCertificatePath: json['autoTlsCertificatePath'] as String?,
+      autoTlsPrivateKeyPath: json['autoTlsPrivateKeyPath'] as String?,
+      autoTlsRenewalThresholdDays:
+          json['autoTlsRenewalThresholdDays'] as int? ?? 30,
     );
   }
 
@@ -129,6 +142,25 @@ class GatewayConfig {
   /// Only meaningful when [enableTls] is true.
   final bool redirectHttpToHttps;
 
+  /// Allowed CORS origins for the HTTP gateway.
+  ///
+  /// Defaults to `['http://localhost', 'http://127.0.0.1']` to allow local
+  /// clients such as X-Seed while keeping the default secure. Subdomain-style
+  /// gateway requests still use `*` as required by the gateway specs.
+  final List<String> corsOrigins;
+
+  /// Filesystem path to the ACME account key for AutoTLS.
+  final String? autoTlsAccountKeyPath;
+
+  /// Filesystem path to the AutoTLS certificate.
+  final String? autoTlsCertificatePath;
+
+  /// Filesystem path to the AutoTLS private key.
+  final String? autoTlsPrivateKeyPath;
+
+  /// Number of days before certificate expiration to trigger renewal.
+  final int autoTlsRenewalThresholdDays;
+
   /// Converts this configuration to a JSON map.
   Map<String, dynamic> toJson() => {
     'enabled': enabled,
@@ -153,5 +185,10 @@ class GatewayConfig {
     'autoTlsSANs': autoTlsSANs,
     'tlsPort': tlsPort,
     'redirectHttpToHttps': redirectHttpToHttps,
+    'corsOrigins': corsOrigins,
+    'autoTlsAccountKeyPath': autoTlsAccountKeyPath,
+    'autoTlsCertificatePath': autoTlsCertificatePath,
+    'autoTlsPrivateKeyPath': autoTlsPrivateKeyPath,
+    'autoTlsRenewalThresholdDays': autoTlsRenewalThresholdDays,
   };
 }

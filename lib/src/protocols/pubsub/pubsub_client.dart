@@ -3,14 +3,15 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
-import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
-import 'package:dart_ipfs/src/core/types/peer_id.dart';
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_interface.dart';
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
-import 'package:dart_ipfs/src/transport/router_interface.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:http/http.dart' as http;
+
+import '../../core/data_structures/node_stats.dart';
+import '../../core/types/peer_id.dart';
+import '../../transport/router_interface.dart';
+import '../../utils/base58.dart';
+import '../../utils/logger.dart';
+import 'pubsub_interface.dart';
+import 'pubsub_message.dart';
 
 /// Handles PubSub operations for an IPFS node with Gossipsub-like features.
 ///

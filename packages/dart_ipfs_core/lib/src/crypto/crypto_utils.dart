@@ -7,8 +7,8 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart' as dart_crypto;
 import 'package:cryptography/cryptography.dart' as crypto;
-import 'package:pointycastle/export.dart';
 
 /// Result of AES-GCM encryption containing ciphertext and nonce.
 ///
@@ -77,7 +77,7 @@ class CryptoUtils {
   /// AES-GCM authentication tag size in bytes (128 bits).
   static const int tagSize = 16;
 
-  /// Derives a key from a password using PBKDF2-HMAC-SHA256.
+  /// Derives a key from a password using PBKDF2-HMAC-SHA256 (RFC 2898).
   ///
   /// [password] - The password to derive from (must not be empty)
   /// [salt] - Random salt (must be at least 8 bytes, use [generateSalt])
@@ -98,17 +98,70 @@ class CryptoUtils {
       throw ArgumentError('Salt must be at least 8 bytes');
     }
 
-    final pbkdf2 = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64));
-    pbkdf2.init(Pbkdf2Parameters(salt, iterations, keyLength));
-
     final passwordBytes = Uint8List.fromList(utf8.encode(password));
-    final key = Uint8List(keyLength);
-    pbkdf2.deriveKey(passwordBytes, 0, key, 0);
+    final key = _pbkdf2HmacSha256(passwordBytes, salt, iterations, keyLength);
 
     // Zero password bytes
     zeroMemory(passwordBytes);
 
     return key;
+  }
+
+  /// PBKDF2 key derivation using HMAC-SHA256 (RFC 2898 / PKCS#5 v2.0).
+  ///
+  /// Implements the standard PBKDF2 algorithm:
+  ///   DK = T_1 || T_2 || ... || T_l  (truncated to [keyLength])
+  ///
+  /// where each block T_i = F(Password, Salt, c, i) is computed as:
+  ///   U_1 = HMAC(Password, Salt || INT_32_BE(i))
+  ///   U_2 = HMAC(Password, U_1)
+  ///   ...
+  ///   U_c = HMAC(Password, U_{c-1})
+  ///   T_i = U_1 XOR U_2 XOR ... XOR U_c
+  static Uint8List _pbkdf2HmacSha256(
+    Uint8List password,
+    Uint8List salt,
+    int iterations,
+    int keyLength,
+  ) {
+    const int hLen = 32; // SHA-256 output length in bytes
+    final numBlocks = (keyLength + hLen - 1) ~/ hLen; // ceil(keyLength / hLen)
+    final result = BytesBuilder();
+
+    for (var blockIndex = 1; blockIndex <= numBlocks; blockIndex++) {
+      // First iteration: U_1 = HMAC(Password, Salt || INT_32_BE(blockIndex))
+      final saltWithIndex = Uint8List.fromList([
+        ...salt,
+        ..._int32Be(blockIndex),
+      ]);
+      var u = dart_crypto.Hmac(
+        dart_crypto.sha256,
+        password,
+      ).convert(saltWithIndex).bytes;
+      final t = List<int>.from(u);
+
+      // Subsequent iterations: U_j = HMAC(Password, U_{j-1})
+      for (var j = 1; j < iterations; j++) {
+        u = dart_crypto.Hmac(dart_crypto.sha256, password).convert(u).bytes;
+        for (var k = 0; k < t.length; k++) {
+          t[k] ^= u[k];
+        }
+      }
+
+      result.add(t);
+    }
+
+    return Uint8List.fromList(result.toBytes().sublist(0, keyLength));
+  }
+
+  /// Encodes a 32-bit integer as a 4-byte big-endian [Uint8List].
+  static Uint8List _int32Be(int value) {
+    return Uint8List.fromList([
+      (value >> 24) & 0xFF,
+      (value >> 16) & 0xFF,
+      (value >> 8) & 0xFF,
+      value & 0xFF,
+    ]);
   }
 
   /// Encrypts data using AES-256-GCM.

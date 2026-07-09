@@ -4,9 +4,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
-import 'package:dart_ipfs/src/utils/private_key.dart';
 
 import 'logger.dart';
+import 'private_key.dart';
 
 /// Represents a public/private key pair for cryptographic operations.
 class KeyPair {
@@ -107,7 +107,7 @@ class Keystore {
     }
 
     if (decoded is! Map<String, dynamic>) {
-      throw FormatException('Keystore must be a JSON object');
+      throw const FormatException('Keystore must be a JSON object');
     }
 
     for (final entry in decoded.entries) {

@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler_io.dart'; // import IO version for testing
 import 'package:dart_ipfs/src/network/nat_traversal_service.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
-import 'package:dart_ipfs/src/transport/router_events.dart'; // Needed for NetworkPacket
-import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
+import 'package:test/test.dart';
+
+import '../fakes/fake_router.dart';
 
 // --- Mocks ---
 
@@ -46,10 +48,10 @@ class MockRouterInterface extends Mock implements RouterInterface {
   String get peerID => 'QmLocalNode';
 
   @override
-  Stream<ConnectionEvent> get connectionEvents => Stream.empty();
+  Stream<ConnectionEvent> get connectionEvents => const Stream<ConnectionEvent>.empty();
 
   @override
-  Stream<MessageEvent> get messageEvents => Stream.empty();
+  Stream<MessageEvent> get messageEvents => const Stream<MessageEvent>.empty();
 
   @override
   void registerProtocolHandler(
@@ -90,13 +92,11 @@ class StubNetworkHandler extends Fake implements NetworkHandler {
   IPFSConfig get config => IPFSConfig(network: NetworkConfig()); // Dummy config if accessed
 
   @override
-  Future<bool> canConnectDirectly(String peerAddress) async {
-    return false; // Simulate NOT reachable directly
-  }
+  RouterInterface get router => FakeRouter();
 
   @override
-  Future<String> testConnection({required int sourcePort}) async {
-    return '1.2.3.4'; // Simulate fixed external IP
+  Future<bool> canConnectDirectly(String peerAddress) async {
+    return false; // Simulate NOT reachable directly
   }
 
   @override

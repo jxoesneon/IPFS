@@ -1,0 +1,632 @@
+- generic [active] [ref=f25e1]:
+  - generic [ref=f25e2]:
+    - link "Go to the landing page of pub.dev" [ref=f25e3] [cursor=pointer]:
+      - /url: /
+    - textbox "Search" [ref=f25e6] [cursor=pointer]:
+      - /placeholder: New search...
+    - navigation [ref=f25e7]:
+      - button "My pub.dev" [ref=f25e9] [cursor=pointer]
+      - button "Help" [ref=f25e11] [cursor=pointer]
+      - button "Profile Image" [ref=f25e13] [cursor=pointer]
+    - button "light/dark theme toggle" [ref=f25e14] [cursor=pointer]
+  - main [ref=f25e15]:
+    - generic [ref=f25e16]:
+      - generic [ref=f25e20]:
+        - 'heading "quic_lib 1.13.0 copy \"quic_lib: ^1.13.0\" to clipboard" [level=1] [ref=f25e21]':
+          - text: quic_lib 1.13.0
+          - 'img "copy \"quic_lib: ^1.13.0\" to clipboard" [ref=f25e23] [cursor=pointer]'
+        - generic [ref=f25e24]:
+          - text: Published
+          - button "18 hours ago" [ref=f25e26] [cursor=pointer]
+        - generic [ref=f25e27]:
+          - generic [ref=f25e28]:
+            - generic [ref=f25e29]:
+              - generic [ref=f25e30]: SDK
+              - link "Dart" [ref=f25e31] [cursor=pointer]:
+                - /url: /packages?q=sdk%3Adart
+              - link "Flutter" [ref=f25e32] [cursor=pointer]:
+                - /url: /packages?q=sdk%3Aflutter
+            - generic [ref=f25e33]:
+              - generic [ref=f25e34]: Platform
+              - link "Android" [ref=f25e35] [cursor=pointer]:
+                - /url: /packages?q=platform%3Aandroid
+              - link "iOS" [ref=f25e36] [cursor=pointer]:
+                - /url: /packages?q=platform%3Aios
+              - link "Linux" [ref=f25e37] [cursor=pointer]:
+                - /url: /packages?q=platform%3Alinux
+              - link "macOS" [ref=f25e38] [cursor=pointer]:
+                - /url: /packages?q=platform%3Amacos
+              - link "Windows" [ref=f25e39] [cursor=pointer]:
+                - /url: /packages?q=platform%3Awindows
+          - generic [ref=f25e40]:
+            - 'button "liked status: inactive" [ref=f25e41] [cursor=pointer]':
+              - 'img "liked status: inactive" [ref=f25e42]'
+            - generic [ref=f25e43]: "0"
+      - generic [ref=f25e44]:
+        - generic [ref=f25e45]:
+          - list [ref=f25e48]:
+            - listitem [ref=f25e49] [cursor=pointer]: Readme
+            - listitem [ref=f25e50]:
+              - button "Changelog" [ref=f25e51] [cursor=pointer]
+            - listitem [ref=f25e52]:
+              - button "Example" [ref=f25e53] [cursor=pointer]
+            - listitem [ref=f25e54]:
+              - button "Installing" [ref=f25e55] [cursor=pointer]
+            - listitem [ref=f25e56]:
+              - button "Versions" [ref=f25e57] [cursor=pointer]
+            - listitem [ref=f25e58]:
+              - button "Scores" [ref=f25e59] [cursor=pointer]
+            - listitem "For authorized users only." [ref=f25e60]:
+              - button "Admin" [ref=f25e61] [cursor=pointer]
+            - listitem "For authorized users only." [ref=f25e62]:
+              - button "Activity log" [ref=f25e63] [cursor=pointer]
+          - generic [ref=f25e66]:
+            - heading "quic_lib" [level=1] [ref=f25e67]
+            - paragraph [ref=f25e68]:
+              - link "pub package" [ref=f25e69] [cursor=pointer]:
+                - /url: https://pub.dev/packages/quic_lib
+                - img "pub package" [ref=f25e70]
+              - img "pub points" [ref=f25e71]
+              - link "Build Status" [ref=f25e72] [cursor=pointer]:
+                - /url: https://github.com/jxoesneon/quic_lib/actions
+                - img "Build Status" [ref=f25e73]
+              - 'link "License: MIT" [ref=f25e74] [cursor=pointer]':
+                - /url: https://opensource.org/licenses/MIT
+                - 'img "License: MIT" [ref=f25e75]'
+            - paragraph [ref=f25e76]: A pure-Dart implementation of QUIC, HTTP/3, WebTransport, and libp2p QUIC transport.
+            - paragraph [ref=f25e77]:
+              - code [ref=f25e78]: quic_lib
+              - text: is a pure-Dart implementation of
+              - link "QUIC" [ref=f25e79] [cursor=pointer]:
+                - /url: https://www.rfc-editor.org/rfc/rfc9000.html
+              - text: (RFC 9000),
+              - link "HTTP/3" [ref=f25e80] [cursor=pointer]:
+                - /url: https://www.rfc-editor.org/rfc/rfc9114.html
+              - text: (RFC 9114),
+              - link "WebTransport" [ref=f25e81] [cursor=pointer]:
+                - /url: https://www.rfc-editor.org/rfc/rfc9220.html
+              - text: (RFC 9220), and libp2p QUIC transport. The codebase is fully implemented with comprehensive tests and security hardening — zero native dependencies, zero
+              - code [ref=f25e82]: dart:ffi
+              - text: .
+            - heading "Table of contents" [level=2] [ref=f25e83]
+            - list [ref=f25e84]:
+              - listitem [ref=f25e85]:
+                - link "Features" [ref=f25e86] [cursor=pointer]:
+                  - /url: "#features"
+              - listitem [ref=f25e87]:
+                - link "Platform support" [ref=f25e88] [cursor=pointer]:
+                  - /url: "#platform-support"
+              - listitem [ref=f25e89]:
+                - link "Installation" [ref=f25e90] [cursor=pointer]:
+                  - /url: "#installation"
+              - listitem [ref=f25e91]:
+                - link "Package structure" [ref=f25e92] [cursor=pointer]:
+                  - /url: "#package-structure"
+              - listitem [ref=f25e93]:
+                - link "Quickstart" [ref=f25e94] [cursor=pointer]:
+                  - /url: "#quickstart"
+                - list [ref=f25e95]:
+                  - listitem [ref=f25e96]:
+                    - link "QUIC transport" [ref=f25e97] [cursor=pointer]:
+                      - /url: "#quic-transport"
+                  - listitem [ref=f25e98]:
+                    - link "HTTP/3 request" [ref=f25e99] [cursor=pointer]:
+                      - /url: "#http3-request"
+                  - listitem [ref=f25e100]:
+                    - link "WebTransport" [ref=f25e101] [cursor=pointer]:
+                      - /url: "#webtransport"
+                  - listitem [ref=f25e102]:
+                    - link "libp2p" [ref=f25e103] [cursor=pointer]:
+                      - /url: "#libp2p"
+              - listitem [ref=f25e104]:
+                - link "Feature matrix" [ref=f25e105] [cursor=pointer]:
+                  - /url: "#feature-matrix"
+              - listitem [ref=f25e106]:
+                - link "API documentation" [ref=f25e107] [cursor=pointer]:
+                  - /url: "#api-documentation"
+              - listitem [ref=f25e108]:
+                - link "Testing" [ref=f25e109] [cursor=pointer]:
+                  - /url: "#testing"
+              - listitem [ref=f25e110]:
+                - link "Contributing" [ref=f25e111] [cursor=pointer]:
+                  - /url: "#contributing"
+              - listitem [ref=f25e112]:
+                - link "Changelog" [ref=f25e113] [cursor=pointer]:
+                  - /url: https://github.com/jxoesneon/quic_lib/blob/main/CHANGELOG.md
+              - listitem [ref=f25e114]:
+                - link "License" [ref=f25e115] [cursor=pointer]:
+                  - /url: "#license"
+            - heading "Features" [level=2] [ref=f25e116]
+            - list [ref=f25e117]:
+              - listitem [ref=f25e118]:
+                - strong [ref=f25e119]: QUIC transport
+                - text: (RFC 9000, RFC 9001, RFC 9002) — wire encoding, packet protection, handshake, streams, flow control, congestion control.
+              - listitem [ref=f25e120]:
+                - strong [ref=f25e121]: HTTP/3
+                - text: (RFC 9114) — mapping HTTP semantics onto QUIC with QPACK header compression.
+              - listitem [ref=f25e122]:
+                - strong [ref=f25e123]: WebTransport
+                - text: (RFC 9220) — datagrams, bidirectional and unidirectional streams over HTTP/3.
+              - listitem [ref=f25e124]:
+                - strong [ref=f25e125]: libp2p QUIC
+                - text: integration — multiaddr formats, security handshake, stream mapping.
+              - listitem [ref=f25e126]:
+                - strong [ref=f25e127]: Dart-native API
+                - text: design —
+                - code [ref=f25e128]: dart:io
+                - text: integration,
+                - code [ref=f25e129]: Stream
+                - text: /
+                - code [ref=f25e130]: Future
+                - text: idioms, no native dependencies.
+            - heading "Advanced features" [level=3] [ref=f25e131]
+            - list [ref=f25e132]:
+              - listitem [ref=f25e133]:
+                - strong [ref=f25e134]: QPACK encoder/decoder stream instructions
+                - text: (RFC 9204) — dynamic table capacity updates, insertions with name references, and duplicate instructions.
+              - listitem [ref=f25e135]:
+                - strong [ref=f25e136]: ORIGIN and PRIORITY_UPDATE frames
+                - text: (RFC 9412 / RFC 9218) — origin management and priority signalling for HTTP/3.
+              - listitem [ref=f25e137]:
+                - strong [ref=f25e138]: RFC 9368 Compatible Version Negotiation
+                - text: — negotiate QUIC versions without breaking the handshake.
+              - listitem [ref=f25e139]:
+                - strong [ref=f25e140]: CUBIC congestion control
+                - text: (RFC 8312) — production-grade congestion controller with pacing.
+              - listitem [ref=f25e141]:
+                - strong [ref=f25e142]: QUIC bit greasing
+                - text: (RFC 9287) — reserved bit randomisation for future extensibility.
+              - listitem [ref=f25e143]:
+                - strong [ref=f25e144]: ECN processing
+                - text: (RFC 9000 Section 13.4) — explicit congestion notification on supported paths.
+              - listitem [ref=f25e145]:
+                - strong [ref=f25e146]: libp2p multistream-select and certificate generation
+                - text: — TLS extension with Ed25519 peer authentication and ephemeral self-signed certificate generation.
+              - listitem [ref=f25e147]:
+                - strong [ref=f25e148]: WebTransport session support
+                - text: (RFC 9220) — Extended CONNECT, capsule protocol, and session establishment over HTTP/3.
+            - heading "Platform support" [level=2] [ref=f25e149]
+            - table [ref=f25e150]:
+              - rowgroup [ref=f25e151]:
+                - row "Platform Support Notes" [ref=f25e152]:
+                  - columnheader "Platform" [ref=f25e153]
+                  - columnheader "Support" [ref=f25e154]
+                  - columnheader "Notes" [ref=f25e155]
+              - rowgroup [ref=f25e156]:
+                - row "Android ✅ Full Native UDP sockets, isolates, full QUIC stack" [ref=f25e157]:
+                  - cell "Android" [ref=f25e158]
+                  - cell "✅ Full" [ref=f25e159]
+                  - cell "Native UDP sockets, isolates, full QUIC stack" [ref=f25e160]
+                - row "iOS ✅ Full Native UDP sockets, isolates, full QUIC stack" [ref=f25e161]:
+                  - cell "iOS" [ref=f25e162]
+                  - cell "✅ Full" [ref=f25e163]
+                  - cell "Native UDP sockets, isolates, full QUIC stack" [ref=f25e164]
+                - row "Linux ✅ Full Native UDP sockets, isolates, full QUIC stack" [ref=f25e165]:
+                  - cell "Linux" [ref=f25e166]
+                  - cell "✅ Full" [ref=f25e167]
+                  - cell "Native UDP sockets, isolates, full QUIC stack" [ref=f25e168]
+                - row "macOS ✅ Full Native UDP sockets, isolates, full QUIC stack" [ref=f25e169]:
+                  - cell "macOS" [ref=f25e170]
+                  - cell "✅ Full" [ref=f25e171]
+                  - cell "Native UDP sockets, isolates, full QUIC stack" [ref=f25e172]
+                - row "Windows ✅ Full Native UDP sockets, isolates, full QUIC stack" [ref=f25e173]:
+                  - cell "Windows" [ref=f25e174]
+                  - cell "✅ Full" [ref=f25e175]
+                  - cell "Native UDP sockets, isolates, full QUIC stack" [ref=f25e176]
+            - paragraph [ref=f25e177]:
+              - text: Requires Dart SDK
+              - code [ref=f25e178]: ^3.0.0
+              - text: .
+            - blockquote [ref=f25e179]:
+              - paragraph [ref=f25e180]:
+                - strong [ref=f25e181]: Why no Web / WASM?
+              - paragraph [ref=f25e182]:
+                - code [ref=f25e183]: quic_lib
+                - text: is a
+                - emphasis [ref=f25e184]: wire-format
+                - text: QUIC implementation — it encodes packets, manages connection IDs, runs the handshake state machine, and handles UDP I/O directly. Browsers intentionally do
+                - strong [ref=f25e185]: not
+                - text: "expose raw UDP sockets to web applications because of fundamental security risks: UDP can be used for DDoS amplification attacks, port scanning, DNS cache poisoning, and firewall bypassing. The web security model requires the browser to own the network stack."
+              - paragraph [ref=f25e186]:
+                - text: If you need QUIC-like functionality in a browser, use the
+                - strong [ref=f25e187]: WebTransport API
+                - text: (built into Chrome, Firefox, and Safari). The browser handles the QUIC wire protocol internally and exposes a high-level API. See
+                - link "doc/WEB_AND_WASM.md" [ref=f25e188] [cursor=pointer]:
+                  - /url: https://github.com/jxoesneon/quic_lib/blob/main/doc/WEB_AND_WASM.md
+                - text: for a full explanation of the limitation and recommended alternatives.
+            - heading "Installation" [level=2] [ref=f25e189]
+            - paragraph [ref=f25e190]:
+              - text: Add
+              - code [ref=f25e191]: quic_lib
+              - text: to your
+              - code [ref=f25e192]: pubspec.yaml
+              - text: ":"
+            - generic [ref=f25e193]:
+              - code [ref=f25e195]: "dependencies: quic_lib: ^1.12.3"
+              - generic "copy to clipboard" [ref=f25e196] [cursor=pointer]
+            - paragraph [ref=f25e197]:
+              - text: Then run
+              - code [ref=f25e198]: dart pub get
+              - text: .
+            - heading "Package structure" [level=2] [ref=f25e199]
+            - paragraph [ref=f25e200]: "The library is organised into five barrel files so you can import only what you need:"
+            - table [ref=f25e201]:
+              - rowgroup [ref=f25e202]:
+                - row "Import What you get When to use" [ref=f25e203]:
+                  - columnheader "Import" [ref=f25e204]
+                  - columnheader "What you get" [ref=f25e205]
+                  - columnheader "When to use" [ref=f25e206]
+              - rowgroup [ref=f25e207]:
+                - row "package:quic_lib/quic_lib.dart Full public API — wire format, crypto, TLS, connection, streams, recovery, HTTP/3, WebTransport, libp2p You need everything or aren't sure which subset you need." [ref=f25e208]:
+                  - cell "package:quic_lib/quic_lib.dart" [ref=f25e209]:
+                    - code [ref=f25e210]: package:quic_lib/quic_lib.dart
+                  - cell "Full public API — wire format, crypto, TLS, connection, streams, recovery, HTTP/3, WebTransport, libp2p" [ref=f25e211]:
+                    - strong [ref=f25e212]: Full public API
+                    - text: — wire format, crypto, TLS, connection, streams, recovery, HTTP/3, WebTransport, libp2p
+                  - cell "You need everything or aren't sure which subset you need." [ref=f25e213]
+                - row "package:quic_lib/quic.dart QUIC transport core — QuicEndpoint, QuicConnection, stream scheduler, isolates You are building a custom protocol directly on QUIC." [ref=f25e214]:
+                  - cell "package:quic_lib/quic.dart" [ref=f25e215]:
+                    - code [ref=f25e216]: package:quic_lib/quic.dart
+                  - cell "QUIC transport core — QuicEndpoint, QuicConnection, stream scheduler, isolates" [ref=f25e217]:
+                    - text: QUIC transport core —
+                    - code [ref=f25e218]: QuicEndpoint
+                    - text: ","
+                    - code [ref=f25e219]: QuicConnection
+                    - text: ", stream scheduler, isolates"
+                  - cell "You are building a custom protocol directly on QUIC." [ref=f25e220]
+                - row "package:quic_lib/http3.dart HTTP/3 layer — Http3Connection, request/response, frames, QPACK You are building an HTTP/3 client or server." [ref=f25e221]:
+                  - cell "package:quic_lib/http3.dart" [ref=f25e222]:
+                    - code [ref=f25e223]: package:quic_lib/http3.dart
+                  - cell "HTTP/3 layer — Http3Connection, request/response, frames, QPACK" [ref=f25e224]:
+                    - text: HTTP/3 layer —
+                    - code [ref=f25e225]: Http3Connection
+                    - text: ", request/response, frames, QPACK"
+                  - cell "You are building an HTTP/3 client or server." [ref=f25e226]
+                - row "package:quic_lib/webtransport.dart WebTransport — sessions, capsules, stream types You need unreliable datagrams or WebTransport sessions." [ref=f25e227]:
+                  - cell "package:quic_lib/webtransport.dart" [ref=f25e228]:
+                    - code [ref=f25e229]: package:quic_lib/webtransport.dart
+                  - cell "WebTransport — sessions, capsules, stream types" [ref=f25e230]
+                  - cell "You need unreliable datagrams or WebTransport sessions." [ref=f25e231]
+                - row "package:quic_lib/libp2p.dart libp2p transport — Libp2pQuicTransport, Multiaddr, PeerId You are integrating with a libp2p network." [ref=f25e232]:
+                  - cell "package:quic_lib/libp2p.dart" [ref=f25e233]:
+                    - code [ref=f25e234]: package:quic_lib/libp2p.dart
+                  - cell "libp2p transport — Libp2pQuicTransport, Multiaddr, PeerId" [ref=f25e235]:
+                    - text: libp2p transport —
+                    - code [ref=f25e236]: Libp2pQuicTransport
+                    - text: ","
+                    - code [ref=f25e237]: Multiaddr
+                    - text: ","
+                    - code [ref=f25e238]: PeerId
+                  - cell "You are integrating with a libp2p network." [ref=f25e239]
+            - heading "Quickstart" [level=2] [ref=f25e240]
+            - heading "QUIC transport" [level=3] [ref=f25e241]
+            - paragraph [ref=f25e242]: "Bind an endpoint, connect to a remote peer, open a stream, and send data:"
+            - generic [ref=f25e243]:
+              - code [ref=f25e245]:
+                - text: "import 'dart:io'; import 'dart:typed_data'; import 'package:quic_lib/quic_lib.dart'; Future<void> main() async { // 1. Bind to an ephemeral local port. final endpoint = await QuicEndpoint.bind(InternetAddress.anyIPv4, 0); // 2. Connect to a remote server. final connection = await endpoint.connect( InternetAddress.loopbackIPv4, 4433, ); // 3. Open a client-initiated bidirectional stream. final streamId = connection.openBidirectionalStream(); // 4. Build a STREAM frame and packetize it. final frame = StreamFrame( streamId: streamId, data: Uint8List.fromList([1, 2, 3]), fin: true, ); final packet = await PacketSender.buildPacket( frames: [frame], space: PacketNumberSpace.application, dcid: [], packetNumber: connection.allocatePacketNumber(PacketNumberSpace.application), ); print("
+                - generic [ref=f25e246]: "'Prepared ${packet.length} byte packet for stream $streamId'"
+                - text: "); // 5. Clean up. connection.close(); endpoint.close(); }"
+              - generic "copy to clipboard" [ref=f25e247] [cursor=pointer]
+            - paragraph [ref=f25e248]:
+              - text: See
+              - code [ref=f25e249]: example/echo_client.dart
+              - text: and
+              - code [ref=f25e250]: example/echo_server.dart
+              - text: for complete runnable examples.
+            - heading "HTTP/3 request" [level=3] [ref=f25e251]
+            - paragraph [ref=f25e252]: "Import the HTTP/3 barrel and send a request over an existing QUIC connection:"
+            - generic [ref=f25e253]:
+              - code [ref=f25e255]:
+                - text: "import 'dart:io'; import 'dart:typed_data'; import 'package:quic_lib/quic.dart'; import 'package:quic_lib/http3.dart'; Future<void> main() async { // 1. Establish a QUIC connection. final endpoint = await QuicEndpoint.bind(InternetAddress.anyIPv4, 0); final quicConn = await endpoint.connect( InternetAddress.loopbackIPv4, 4433, ); // 2. Wrap it in an HTTP/3 connection. final http3 = Http3Connection(quicConnection: quicConn); http3.sendSettings(); // 3. Build and send a request. final request = Http3Request( method: 'GET', path: '/', headers: {'host': 'example.com', 'user-agent': 'quic_lib/1.12.3'}, ); final streamId = await http3.sendRequest(request); print("
+                - generic [ref=f25e256]: "'Sent request on stream $streamId'"
+                - text: "); // 4. Read the response once frames are received. final response = http3.getResponse(streamId); if (response != null) { print("
+                - generic [ref=f25e257]: "'Status: ${response.statusCode}'"
+                - text: "); } endpoint.close(); }"
+              - generic "copy to clipboard" [ref=f25e258] [cursor=pointer]
+            - heading "WebTransport" [level=3] [ref=f25e259]
+            - paragraph [ref=f25e260]: "Create a WebTransport session and exchange capsules:"
+            - generic [ref=f25e261]:
+              - code [ref=f25e263]:
+                - text: "import 'dart:typed_data'; import 'package:quic_lib/webtransport.dart'; void main() { // 1. Create a session manager. final manager = WebTransportSessionManager(); // 2. Create a new session on a bidirectional stream ID. final session = manager.createSession(0); // 3. Send a datagram capsule. final datagram = session.sendDatagram(Uint8List.fromList([0xDE, 0xAD])); print("
+                - generic [ref=f25e264]: "'Datagram capsule type: ${datagram.type}'"
+                - text: "); // 4. Gracefully close the session. final closeCapsule = session.initiateClose(errorCode: 0); manager.routeCapsule(session.sessionId, closeCapsule); // 5. Clean up inactive sessions. manager.cleanupInactiveSessions(); }"
+              - generic "copy to clipboard" [ref=f25e265] [cursor=pointer]
+            - heading "libp2p" [level=3] [ref=f25e266]
+            - paragraph [ref=f25e267]: "Dial or listen using libp2p multiaddrs:"
+            - generic [ref=f25e268]:
+              - code [ref=f25e270]:
+                - text: "import 'package:quic_lib/libp2p.dart'; Future<void> main() async { // 1. Create the transport. final transport = Libp2pQuicTransport(); // 2. Listen on a multiaddr. final local = Multiaddr.parse('/ip4/0.0.0.0/udp/0/quic-v1'); final incoming = await transport.listen(local); incoming.listen((conn) { print('Incoming libp2p connection'); conn.close(); }); // 3. Dial a remote peer. final remote = Multiaddr.parse('/ip4/127.0.0.1/udp/4433/quic-v1'); final conn = await transport.dial(remote); print("
+                - generic [ref=f25e271]: "'Dialed peer, quic connection: ${conn.quicConnection}'"
+                - text: "); // 4. Close the transport. await transport.close(); }"
+              - generic "copy to clipboard" [ref=f25e272] [cursor=pointer]
+            - heading "Feature matrix" [level=2] [ref=f25e273]
+            - table [ref=f25e274]:
+              - rowgroup [ref=f25e275]:
+                - row "Feature Status Notes" [ref=f25e276]:
+                  - columnheader "Feature" [ref=f25e277]
+                  - columnheader "Status" [ref=f25e278]
+                  - columnheader "Notes" [ref=f25e279]
+              - rowgroup [ref=f25e280]:
+                - row "QUIC wire format (RFC 9000) ✅ Complete Long/short headers, all frame types, version negotiation" [ref=f25e281]:
+                  - cell "QUIC wire format (RFC 9000)" [ref=f25e282]
+                  - cell "✅ Complete" [ref=f25e283]
+                  - cell "Long/short headers, all frame types, version negotiation" [ref=f25e284]
+                - row "TLS 1.3 handshake (RFC 9001) ✅ Complete Client/server hello, certificate verify, finished" [ref=f25e285]:
+                  - cell "TLS 1.3 handshake (RFC 9001)" [ref=f25e286]
+                  - cell "✅ Complete" [ref=f25e287]
+                  - cell "Client/server hello, certificate verify, finished" [ref=f25e288]
+                - row "Packet protection (AES-GCM, ChaCha20-Poly1305) ✅ Complete Header protection, key update, retry integrity" [ref=f25e289]:
+                  - cell "Packet protection (AES-GCM, ChaCha20-Poly1305)" [ref=f25e290]
+                  - cell "✅ Complete" [ref=f25e291]
+                  - cell "Header protection, key update, retry integrity" [ref=f25e292]
+                - row "Stream multiplexing & flow control ✅ Complete Bidirectional & unidirectional streams" [ref=f25e293]:
+                  - cell "Stream multiplexing & flow control" [ref=f25e294]
+                  - cell "✅ Complete" [ref=f25e295]
+                  - cell "Bidirectional & unidirectional streams" [ref=f25e296]
+                - row "Connection migration ✅ Complete Path challenge/response, NAT rebinding" [ref=f25e297]:
+                  - cell "Connection migration" [ref=f25e298]
+                  - cell "✅ Complete" [ref=f25e299]
+                  - cell "Path challenge/response, NAT rebinding" [ref=f25e300]
+                - row "Congestion control ✅ Complete NewReno, CUBIC (RFC 8312), BBR, Hystart; pacing" [ref=f25e301]:
+                  - cell "Congestion control" [ref=f25e302]
+                  - cell "✅ Complete" [ref=f25e303]
+                  - cell "NewReno, CUBIC (RFC 8312), BBR, Hystart; pacing" [ref=f25e304]
+                - row "Loss detection & recovery ✅ Complete RttEstimator, LossDetector, PTO scheduler, persistent congestion" [ref=f25e305]:
+                  - cell "Loss detection & recovery" [ref=f25e306]
+                  - cell "✅ Complete" [ref=f25e307]
+                  - cell "RttEstimator, LossDetector, PTO scheduler, persistent congestion" [ref=f25e308]
+                - 'row "ECN processing ✅ Complete (validation) AckEcnFrame parsing & ECN count validation (RFC 9000 §13.4); IP-layer ECT codepoint marking deferred to v2.0.0 (Issue #10, blocked on Dart SDK IP_TOS/IPV6_TCLASS)" [ref=f25e309]':
+                  - cell "ECN processing" [ref=f25e310]
+                  - cell "✅ Complete (validation)" [ref=f25e311]
+                  - 'cell "AckEcnFrame parsing & ECN count validation (RFC 9000 §13.4); IP-layer ECT codepoint marking deferred to v2.0.0 (Issue #10, blocked on Dart SDK IP_TOS/IPV6_TCLASS)" [ref=f25e312]':
+                    - text: "AckEcnFrame parsing & ECN count validation (RFC 9000 §13.4); IP-layer ECT codepoint marking deferred to v2.0.0 (Issue #10, blocked on Dart SDK"
+                    - code [ref=f25e313]: IP_TOS
+                    - text: /
+                    - code [ref=f25e314]: IPV6_TCLASS
+                    - text: )
+                - row "HTTP/3 framing (RFC 9114) ✅ Complete HEADERS, DATA, SETTINGS, GOAWAY, CANCEL_PUSH, ORIGIN (RFC 9412), PRIORITY_UPDATE (RFC 9218)" [ref=f25e315]:
+                  - cell "HTTP/3 framing (RFC 9114)" [ref=f25e316]
+                  - cell "✅ Complete" [ref=f25e317]
+                  - cell "HEADERS, DATA, SETTINGS, GOAWAY, CANCEL_PUSH, ORIGIN (RFC 9412), PRIORITY_UPDATE (RFC 9218)" [ref=f25e318]
+                - row "QPACK header compression ✅ Complete Static table, encoder/decoder, stream instructions (RFC 9204)" [ref=f25e319]:
+                  - cell "QPACK header compression" [ref=f25e320]
+                  - cell "✅ Complete" [ref=f25e321]
+                  - cell "Static table, encoder/decoder, stream instructions (RFC 9204)" [ref=f25e322]
+                - row "WebTransport capsules (RFC 9220) ✅ Complete CLOSE, DRAIN, GOAWAY, REGISTER_BIDIRECTIONAL/UNIDIRECTIONAL_STREAM, DATAGRAM" [ref=f25e323]:
+                  - cell "WebTransport capsules (RFC 9220)" [ref=f25e324]
+                  - cell "✅ Complete" [ref=f25e325]
+                  - cell "CLOSE, DRAIN, GOAWAY, REGISTER_BIDIRECTIONAL/UNIDIRECTIONAL_STREAM, DATAGRAM" [ref=f25e326]
+                - row "Compatible version negotiation (RFC 9368) ✅ Complete VersionInformation, version greasing" [ref=f25e327]:
+                  - cell "Compatible version negotiation (RFC 9368)" [ref=f25e328]
+                  - cell "✅ Complete" [ref=f25e329]
+                  - cell "VersionInformation, version greasing" [ref=f25e330]
+                - row "libp2p multiaddr parsing ✅ Complete ip4, ip6, tcp, udp, dns, dns4, dns6, ws, wss, quic, quic-v1, tls, p2p" [ref=f25e331]:
+                  - cell "libp2p multiaddr parsing" [ref=f25e332]
+                  - cell "✅ Complete" [ref=f25e333]
+                  - cell "ip4, ip6, tcp, udp, dns, dns4, dns6, ws, wss, quic, quic-v1, tls, p2p" [ref=f25e334]
+                - row "libp2p TLS extension ✅ Complete Ed25519 peer authentication, certificate generator" [ref=f25e335]:
+                  - cell "libp2p TLS extension" [ref=f25e336]
+                  - cell "✅ Complete" [ref=f25e337]
+                  - cell "Ed25519 peer authentication, certificate generator" [ref=f25e338]
+                - row "libp2p multistream-select ✅ Complete /multistream/1.0.0 protocol negotiation" [ref=f25e339]:
+                  - cell "libp2p multistream-select" [ref=f25e340]
+                  - cell "✅ Complete" [ref=f25e341]
+                  - cell "/multistream/1.0.0 protocol negotiation" [ref=f25e342]:
+                    - code [ref=f25e343]: /multistream/1.0.0
+                    - text: protocol negotiation
+                - row "libp2p PeerId (base58/base36) ✅ Complete Encoding, decoding, equality" [ref=f25e344]:
+                  - cell "libp2p PeerId (base58/base36)" [ref=f25e345]
+                  - cell "✅ Complete" [ref=f25e346]
+                  - cell "Encoding, decoding, equality" [ref=f25e347]
+                - row "0-RTT ✅ Complete (wire protocol) Key derivation (RFC 9001), NewSessionTicket (RFC 8446), buildZeroRttPacket, earlyData TP" [ref=f25e348]:
+                  - cell "0-RTT" [ref=f25e349]
+                  - cell "✅ Complete (wire protocol)" [ref=f25e350]
+                  - cell "Key derivation (RFC 9001), NewSessionTicket (RFC 8446), buildZeroRttPacket, earlyData TP" [ref=f25e351]:
+                    - text: Key derivation (RFC 9001),
+                    - code [ref=f25e352]: NewSessionTicket
+                    - text: (RFC 8446),
+                    - code [ref=f25e353]: buildZeroRttPacket
+                    - text: ","
+                    - code [ref=f25e354]: earlyData
+                    - text: TP
+                - row "Server push (HTTP/3) ✅ Complete PUSH_PROMISE, CANCEL_PUSH, MAX_PUSH_ID frames; registerPushPromise / hasPushPromise API" [ref=f25e355]:
+                  - cell "Server push (HTTP/3)" [ref=f25e356]
+                  - cell "✅ Complete" [ref=f25e357]
+                  - cell "PUSH_PROMISE, CANCEL_PUSH, MAX_PUSH_ID frames; registerPushPromise / hasPushPromise API" [ref=f25e358]:
+                    - code [ref=f25e359]: PUSH_PROMISE
+                    - text: ","
+                    - code [ref=f25e360]: CANCEL_PUSH
+                    - text: ","
+                    - code [ref=f25e361]: MAX_PUSH_ID
+                    - text: frames;
+                    - code [ref=f25e362]: registerPushPromise
+                    - text: /
+                    - code [ref=f25e363]: hasPushPromise
+                    - text: API
+            - heading "API documentation" [level=2] [ref=f25e364]
+            - paragraph [ref=f25e365]: "Full API reference is available at:"
+            - list [ref=f25e366]:
+              - listitem [ref=f25e367]:
+                - strong [ref=f25e368]: pub.dev
+                - text: — browse the generated docs after each release.
+              - listitem [ref=f25e369]:
+                - strong [ref=f25e370]: Local
+                - text: — run
+                - code [ref=f25e371]: dart doc
+                - text: in the package root to generate
+                - code [ref=f25e372]: doc/api
+                - text: .
+            - paragraph [ref=f25e373]: "Key classes to explore:"
+            - list [ref=f25e374]:
+              - listitem [ref=f25e375]:
+                - text: Transport —
+                - code [ref=f25e376]: QuicEndpoint
+                - text: ","
+                - code [ref=f25e377]: QuicConnection
+              - listitem [ref=f25e378]:
+                - text: HTTP/3 —
+                - code [ref=f25e379]: Http3Connection
+                - text: ","
+                - code [ref=f25e380]: Http3Request
+              - listitem [ref=f25e381]:
+                - text: WebTransport —
+                - code [ref=f25e382]: WebTransportSession
+                - text: ","
+                - code [ref=f25e383]: WebTransportSessionManager
+              - listitem [ref=f25e384]:
+                - text: libp2p —
+                - code [ref=f25e385]: Libp2pQuicTransport
+                - text: ","
+                - code [ref=f25e386]: Multiaddr
+            - heading "Testing" [level=2] [ref=f25e387]
+            - paragraph [ref=f25e388]: "Run the full test suite:"
+            - generic [ref=f25e389]:
+              - code [ref=f25e391]: dart test
+              - generic "copy to clipboard" [ref=f25e392] [cursor=pointer]
+            - paragraph [ref=f25e393]: "Run with coverage:"
+            - generic [ref=f25e394]:
+              - code [ref=f25e396]: dart test --coverage=coverage dart run coverage:format_coverage --in=coverage --out=coverage/lcov.info --lcov
+              - generic "copy to clipboard" [ref=f25e397] [cursor=pointer]
+            - paragraph [ref=f25e398]:
+              - strong [ref=f25e399]: 1,960+ passing tests
+              - text: cover QUIC wire format, crypto, connection management, recovery, HTTP/3, WebTransport, and libp2p transport.
+            - heading "Contributing" [level=2] [ref=f25e400]
+            - paragraph [ref=f25e401]:
+              - text: Contributions are welcome. Please read the architecture overview in
+              - code [ref=f25e402]: ARCHITECTURE.md
+              - text: and security guidelines in
+              - code [ref=f25e403]: SECURITY.md
+              - text: "before submitting changes. All PRs must pass:"
+            - list [ref=f25e404]:
+              - listitem [ref=f25e405]:
+                - code [ref=f25e406]: dart analyze
+                - text: — zero issues.
+              - listitem [ref=f25e407]:
+                - code [ref=f25e408]: dart test
+                - text: — all tests green.
+              - listitem [ref=f25e409]:
+                - code [ref=f25e410]: dart format --set-exit-if-changed
+                - text: — formatting clean.
+            - heading "Known limitations" [level=2] [ref=f25e411]
+            - paragraph [ref=f25e412]: "The following item is tracked for a future release and does not affect typical short-lived connections:"
+            - list [ref=f25e413]:
+              - listitem [ref=f25e414]:
+                - strong [ref=f25e415]:
+                  - text: HTTP/3
+                  - code [ref=f25e416]: Capsule
+                  - text: vs WebTransport
+                  - code [ref=f25e417]: Capsule
+                  - text: naming
+                - text: — as of v1.10.0, the WebTransport class is renamed to
+                - code [ref=f25e418]: WebTransportCapsule
+                - text: to avoid ambiguity with the HTTP/3
+                - code [ref=f25e419]: Capsule
+                - text: class. The old
+                - code [ref=f25e420]: Capsule
+                - text: name remains available as a deprecated alias for backwards compatibility and will be removed in a future major release.
+            - heading "Changelog" [level=2] [ref=f25e421]
+            - paragraph [ref=f25e422]:
+              - text: See
+              - link "CHANGELOG.md" [ref=f25e423] [cursor=pointer]:
+                - /url: https://github.com/jxoesneon/quic_lib/blob/main/CHANGELOG.md
+              - text: for a complete history of releases and fixes.
+            - heading "License" [level=2] [ref=f25e424]
+            - paragraph [ref=f25e425]:
+              - text: MIT — see
+              - code [ref=f25e426]: LICENSE
+              - text: .
+        - complementary [ref=f25e427]:
+          - link "0 likes 160 points 716 downloads" [ref=f25e428] [cursor=pointer]:
+            - /url: /packages/quic_lib/score
+            - generic [ref=f25e429]:
+              - generic [ref=f25e430]: "0"
+              - generic [ref=f25e431]: likes
+            - generic [ref=f25e432]:
+              - generic [ref=f25e433]: "160"
+              - generic [ref=f25e434]: points
+            - generic "Number of downloads of this package during the past 30 days" [ref=f25e435]:
+              - generic [ref=f25e436]: "716"
+              - generic [ref=f25e437]: downloads
+          - heading "Documentation" [level=3] [ref=f25e438]
+          - paragraph [ref=f25e439]:
+            - link "API reference" [ref=f25e440] [cursor=pointer]:
+              - /url: /documentation/quic_lib/latest/
+          - heading "Publisher" [level=3] [ref=f25e441]
+          - paragraph [ref=f25e442]: unverified uploader
+          - heading "Weekly Downloads" [level=3] [ref=f25e443]
+          - generic [ref=f25e444]:
+            - img [ref=f25e445]
+            - generic [ref=f25e451]: 2025.08.10 - 2026.07.05
+          - heading "Metadata" [level=3] [ref=f25e452]
+          - paragraph [ref=f25e453]: A pure-Dart QUIC, HTTP/3, WebTransport, and libp2p transport stack.
+          - paragraph [ref=f25e454]:
+            - link "Repository (GitHub)" [ref=f25e455] [cursor=pointer]:
+              - /url: https://github.com/jxoesneon/quic_lib
+            - link "View/report issues" [ref=f25e456] [cursor=pointer]:
+              - /url: https://github.com/jxoesneon/quic_lib/issues
+            - link "Contributing" [ref=f25e457] [cursor=pointer]:
+              - /url: https://github.com/jxoesneon/quic_lib/blob/main/CONTRIBUTING.md
+          - heading "Topics" [level=3] [ref=f25e458]
+          - paragraph [ref=f25e459]:
+            - link "#networking" [ref=f25e460] [cursor=pointer]:
+              - /url: /packages?q=topic%3Anetworking
+            - link "#quic" [ref=f25e461] [cursor=pointer]:
+              - /url: /packages?q=topic%3Aquic
+            - link "#http3" [ref=f25e462] [cursor=pointer]:
+              - /url: /packages?q=topic%3Ahttp3
+            - link "#webtransport" [ref=f25e463] [cursor=pointer]:
+              - /url: /packages?q=topic%3Awebtransport
+            - link "#libp2p" [ref=f25e464] [cursor=pointer]:
+              - /url: /packages?q=topic%3Alibp2p
+          - heading "License" [level=3] [ref=f25e465]
+          - paragraph [ref=f25e466]:
+            - text: MIT (
+            - link "license" [ref=f25e467] [cursor=pointer]:
+              - /url: /packages/quic_lib/license
+            - text: )
+          - heading "Dependencies" [level=3] [ref=f25e468]
+          - paragraph [ref=f25e469]:
+            - link "asn1lib" [ref=f25e470] [cursor=pointer]:
+              - /url: /packages/asn1lib
+            - text: ","
+            - link "cryptography" [ref=f25e471] [cursor=pointer]:
+              - /url: /packages/cryptography
+            - text: ","
+            - link "logging" [ref=f25e472] [cursor=pointer]:
+              - /url: /packages/logging
+            - text: ","
+            - link "meta" [ref=f25e473] [cursor=pointer]:
+              - /url: /packages/meta
+            - text: ","
+            - link "pointycastle" [ref=f25e474] [cursor=pointer]:
+              - /url: /packages/pointycastle
+            - text: ","
+            - link "x509" [ref=f25e475] [cursor=pointer]:
+              - /url: /packages/x509
+          - heading "More" [level=3] [ref=f25e476]
+          - paragraph [ref=f25e477]:
+            - link "Packages that depend on quic_lib" [ref=f25e478] [cursor=pointer]:
+              - /url: /packages?q=dependency%3Aquic_lib
+  - contentinfo [ref=f25e479]:
+    - link "Dart language" [ref=f25e480] [cursor=pointer]:
+      - /url: https://dart.dev/
+    - link "Report package" [ref=f25e481] [cursor=pointer]:
+      - /url: /report?subject=package%3Aquic_lib&url=https%3A%2F%2Fpub.dev%2Fpackages%2Fquic_lib
+    - link "Policy" [ref=f25e482] [cursor=pointer]:
+      - /url: /policy
+    - link "Terms" [ref=f25e483] [cursor=pointer]:
+      - /url: https://www.google.com/intl/en/policies/terms/
+    - link "API Terms" [ref=f25e484] [cursor=pointer]:
+      - /url: https://developers.google.com/terms/
+    - link "Security" [ref=f25e485] [cursor=pointer]:
+      - /url: /security
+    - link "Privacy" [ref=f25e486] [cursor=pointer]:
+      - /url: https://www.google.com/intl/en/policies/privacy/
+    - link "Help" [ref=f25e487] [cursor=pointer]:
+      - /url: /help
+    - link "RSS" [ref=f25e488] [cursor=pointer]:
+      - /url: /feed.atom
+      - img "RSS" [ref=f25e489]
+    - link "bug report" [ref=f25e490] [cursor=pointer]:
+      - /url: https://github.com/dart-lang/pub-dev/issues/new?body=URL%3A+https%3A%2F%2Fpub.dev%2Fpackages%2Fquic_lib%0A%0A%3CDescribe+your+issue+or+suggestion+here%3E&title=%3CSummarize+your+issues+here%3E&labels=Area%3A+site+feedback
+      - img "bug report" [ref=f25e491]

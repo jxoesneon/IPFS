@@ -19,6 +19,7 @@ services:
     volumes:
       - ./:/app/test/interop:ro
       - dart_ipfs_data:/data/ipfs
+      - ./swarm.key:/data/ipfs/swarm.key:ro
     healthcheck:
       test: ["CMD", "bash", "/app/test/interop/dart_ipfs_healthcheck.sh"]
       interval: 10s
@@ -35,6 +36,8 @@ services:
       - "4001"
       - "5001"
       - "8080"
+    environment:
+      - GOLOG_LOG_LEVEL=debug
     volumes:
       - kubo_data:/data/ipfs
       - ./kubo-init.sh:/container-init.d/001-init.sh:ro
@@ -57,8 +60,15 @@ services:
     expose:
       - "4001"
       - "5001"
-    profiles:
-      - helia
+    environment:
+      - PORT=5001
+      - LIBP2P_PORT=4001
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
 
   test-runner:
     image: dart:stable
@@ -76,11 +86,12 @@ services:
         condition: service_healthy
       kubo:
         condition: service_healthy
+      helia:
+        condition: service_healthy
     command: ["tail", "-f", "/dev/null"]
 
 networks:
   ipfs_interop_net:
-    internal: true
 
 volumes:
   dart_ipfs_data:

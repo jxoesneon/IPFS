@@ -1,5 +1,5 @@
-import 'package:dart_ipfs/src/core/messages/network_messages.dart';
-import 'package:dart_ipfs/src/core/types/p2p_types.dart';
+import '../messages/network_messages.dart';
+import '../types/p2p_types.dart';
 
 /// Base class for network-related events.
 ///

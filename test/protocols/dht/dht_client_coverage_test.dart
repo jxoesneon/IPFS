@@ -29,7 +29,7 @@ void _mockEnvelopeResponse(
     router.registerProtocolHandler(any, captureAny),
   ).captured;
   final lastHandler = capturedHandlers.last as void Function(NetworkPacket);
-  when(router.sendMessage(any, any)).thenAnswer((invocation) async {
+  when(router.sendMessage(any, any, protocolId: anyNamed('protocolId'))).thenAnswer((invocation) async {
     final data = invocation.positionalArguments[1] as Uint8List;
     final envelope = DHTEnvelope.fromBytes(data);
     Future<void>.delayed(const Duration(milliseconds: 1), () {
@@ -91,7 +91,7 @@ void main() {
         client.peerId.toBase58(),
         equals('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
       );
-      verify(mockRouter.registerProtocol(any)).called(1);
+      verify(mockRouter.registerProtocol(any)).called(2);
     });
 
     test('getRoutingKey', () {
@@ -117,7 +117,7 @@ void main() {
       await client.kademliaRoutingTable.addPeer(otherPeer, otherPeer);
 
       // Mock router to capture the message and trigger a response
-      when(mockRouter.sendMessage(any, any)).thenAnswer((invocation) async {
+      when(mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId'))).thenAnswer((invocation) async {
         final dst = invocation.positionalArguments[0] as String;
         final data = invocation.positionalArguments[1] as Uint8List;
 
@@ -150,7 +150,7 @@ void main() {
       // let's at least verify it tries to send a message.
 
       // Mocking node.dhtHandler?.router
-      when(mockRouter.sendMessage(any, any)).thenAnswer((_) async {});
+      when(mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId'))).thenAnswer((_) async {});
 
       // This will timeout unless we trigger the responseHandler.
       // For coverage of the failure path:
@@ -231,7 +231,7 @@ void main() {
       final capturedHandler =
           verify(
                 mockRouter.registerProtocolHandler(any, captureAny),
-              ).captured.single
+              ).captured.last
               as void Function(NetworkPacket);
 
       final packet = NetworkPacket(
@@ -245,7 +245,7 @@ void main() {
 
       capturedHandler(packet);
       await Future<void>.delayed(const Duration(milliseconds: 100));
-      verify(mockRouter.sendMessage(any, any)).called(1);
+      verify(mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId'))).called(1);
     });
 
     test('handlePacket FIND_NODE', () async {
@@ -253,7 +253,7 @@ void main() {
       final capturedHandler =
           verify(
                 mockRouter.registerProtocolHandler(any, captureAny),
-              ).captured.single
+              ).captured.last
               as void Function(NetworkPacket);
 
       final packet = NetworkPacket(
@@ -270,7 +270,7 @@ void main() {
 
       capturedHandler(packet);
       await Future<void>.delayed(const Duration(milliseconds: 100));
-      verify(mockRouter.sendMessage(any, any)).called(1);
+      verify(mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId'))).called(1);
     });
 
     test('addProvider success', () async {
@@ -289,7 +289,7 @@ void main() {
         'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
         'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
       );
-      verify(mockRouter.sendMessage(any, any)).called(1);
+      verify(mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId'))).called(1);
     });
 
     test('checkValueOnPeer success', () async {
@@ -384,7 +384,7 @@ void main() {
       await client.kademliaRoutingTable.addPeer(otherPeer, otherPeer);
 
       // Don't mock a response, so it will timeout
-      when(mockRouter.sendMessage(any, any)).thenAnswer((_) async {});
+      when(mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId'))).thenAnswer((_) async {});
 
       final result = await client
           .getValue(Uint8List(32))
@@ -420,7 +420,7 @@ void main() {
       final capturedHandler =
           verify(
                 mockRouter.registerProtocolHandler(any, captureAny),
-              ).captured.single
+              ).captured.last
               as void Function(NetworkPacket);
 
       final packet = NetworkPacket(

@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
-import 'package:dart_ipfs/src/core/config/security_config.dart';
-import 'package:dart_ipfs/src/core/crypto/encrypted_keystore.dart';
-import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import '../config/security_config.dart';
+import '../crypto/encrypted_keystore.dart';
+import '../metrics/metrics_collector.dart';
 
 import 'security_manager_interface.dart';
 
@@ -127,7 +127,7 @@ class SecurityManagerWeb implements ISecurityManager {
     final metric = {
       'type': type,
       'timestamp': DateTime.now().toIso8601String(),
-      if (data != null) ...data,
+      ...?data,
     };
 
     _securityMetrics[type] = metric;

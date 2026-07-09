@@ -92,11 +92,22 @@ void main() {
     test('fromConfig', () {
       final config = RateLimitConfig()
         ..maxRequestsPerWindow = 10
-        ..windowSeconds = 60;
+        ..windowSeconds = 60
+        ..maxQueueSize = 50;
 
       final limiter = RateLimiter.fromConfig(config);
       expect(limiter.maxOperations, 10);
       expect(limiter.interval.inSeconds, 60);
+      expect(limiter.maxQueueSize, 50);
+    });
+
+    test('fromConfig uses default queue size when not set', () {
+      final config = RateLimitConfig()
+        ..maxRequestsPerWindow = 10
+        ..windowSeconds = 60;
+
+      final limiter = RateLimiter.fromConfig(config);
+      expect(limiter.maxQueueSize, 1000);
     });
 
     test('Burst handling (all at once)', () async {

@@ -9,10 +9,10 @@ import 'dart:typed_data';
 
 import 'package:dart_multihash/dart_multihash.dart';
 
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
-import 'package:dart_ipfs/src/core/ipld/selectors/selector_ast.dart';
-import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
+import '../../cid.dart';
+import '../../errors/ipld_errors.dart';
+import 'selector_ast.dart';
+import '../../../proto/generated/ipld/data_model.pb.dart';
 
 /// Default safe depth budget for selector execution.
 const int defaultSelectorMaxDepth = 32;

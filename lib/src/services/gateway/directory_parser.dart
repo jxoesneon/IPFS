@@ -1,9 +1,10 @@
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
-import 'package:dart_ipfs/src/services/gateway/file_preview_handler.dart';
-import 'package:dart_ipfs/src/services/gateway/lazy_preview_handler.dart';
 import 'package:intl/intl.dart';
+
+import '../../core/data_structures/block.dart';
+import '../../proto/generated/core/dag.pb.dart';
+import '../../proto/generated/unixfs/unixfs.pb.dart';
+import 'file_preview_handler.dart';
+import 'lazy_preview_handler.dart';
 
 /// Handles directory operations and metadata for IPFS directory listings.
 class DirectoryHandler {

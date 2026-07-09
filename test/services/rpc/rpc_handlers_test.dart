@@ -328,7 +328,7 @@ void main() {
       );
       final response = await handlers.handleNamePublish(request);
       expect(response.statusCode, equals(200));
-      verify(mockNode.publishIPNS(path, keyName: 'self')).called(1);
+      verify(mockNode.publishIPNS('QmHash', keyName: 'self')).called(1);
     });
 
     test('handleNameResolve', () async {

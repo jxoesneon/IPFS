@@ -1,6 +1,6 @@
 // src/protocols/graphsync/graphsync_budget.dart
 
-import 'package:dart_ipfs/src/core/errors/graphsync_errors.dart';
+import '../../core/errors/graphsync_errors.dart';
 
 /// Budget for a single Graphsync selector traversal.
 ///

@@ -3,15 +3,14 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/types/peer_id.dart' as dht;
-import 'package:dart_ipfs/src/network/router.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
-import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
-import 'package:dart_ipfs/src/transport/libp2p_router.dart';
-import 'package:dart_ipfs/src/transport/router_interface.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
-
+import '../../network/router.dart';
+import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
+import '../../transport/circuit_relay_client.dart';
+import '../../transport/libp2p_router.dart';
+import '../../transport/router_interface.dart';
+import '../../utils/logger.dart';
+import '../config/ipfs_config.dart';
+import '../types/peer_id.dart' as dht;
 import 'ipfs_node.dart';
 
 // lib/src/core/ipfs_node/network_handler.dart

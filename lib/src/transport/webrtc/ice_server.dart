@@ -1,5 +1,5 @@
 // lib/src/transport/webrtc/ice_server.dart
-import 'package:dart_ipfs/src/core/config/network_config.dart';
+import '../../core/config/network_config.dart';
 
 /// A generic WebRTC ICE server configuration.
 ///

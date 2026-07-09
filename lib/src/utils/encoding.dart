@@ -211,6 +211,82 @@ class EncodingUtils {
     return codec;
   }
 
+  static const _base32LowerAlphabet = 'abcdefghijklmnopqrstuvwxyz234567';
+
+  /// Encodes [data] to a lowercase, unpadded RFC 4648 base32 string.
+  static String base32LowerEncode(Uint8List data) {
+    if (data.isEmpty) return '';
+    final result = StringBuffer();
+    var i = 0;
+    final full = (data.length ~/ 5) * 5;
+    while (i < full) {
+      final v1 = data[i++];
+      final v2 = data[i++];
+      final v3 = data[i++];
+      final v4 = data[i++];
+      final v5 = data[i++];
+      result.write(_base32LowerAlphabet[v1 >> 3]);
+      result.write(_base32LowerAlphabet[(v1 << 2 | v2 >> 6) & 31]);
+      result.write(_base32LowerAlphabet[(v2 >> 1) & 31]);
+      result.write(_base32LowerAlphabet[(v2 << 4 | v3 >> 4) & 31]);
+      result.write(_base32LowerAlphabet[(v3 << 1 | v4 >> 7) & 31]);
+      result.write(_base32LowerAlphabet[(v4 >> 2) & 31]);
+      result.write(_base32LowerAlphabet[(v4 << 3 | v5 >> 5) & 31]);
+      result.write(_base32LowerAlphabet[v5 & 31]);
+    }
+
+    final remain = data.length - full;
+    if (remain == 0) return result.toString();
+
+    final v1 = data[i];
+    result.write(_base32LowerAlphabet[v1 >> 3]);
+    if (remain == 1) {
+      result.write(_base32LowerAlphabet[(v1 << 2) & 31]);
+      return result.toString();
+    }
+
+    final v2 = data[i + 1];
+    result.write(_base32LowerAlphabet[(v1 << 2 | v2 >> 6) & 31]);
+    result.write(_base32LowerAlphabet[(v2 >> 1) & 31]);
+    if (remain == 2) {
+      result.write(_base32LowerAlphabet[(v2 << 4) & 31]);
+      return result.toString();
+    }
+
+    final v3 = data[i + 2];
+    result.write(_base32LowerAlphabet[(v2 << 4 | v3 >> 4) & 31]);
+    result.write(_base32LowerAlphabet[(v3 << 1) & 31]);
+    if (remain == 3) return result.toString();
+
+    final v4 = data[i + 3];
+    result.write(_base32LowerAlphabet[(v3 << 1 | v4 >> 7) & 31]);
+    result.write(_base32LowerAlphabet[(v4 >> 2) & 31]);
+    result.write(_base32LowerAlphabet[(v4 << 3) & 31]);
+    return result.toString();
+  }
+
+  /// Decodes a lowercase, unpadded RFC 4648 base32 string to bytes.
+  static Uint8List base32LowerDecode(String encoded) {
+    if (encoded.isEmpty) return Uint8List(0);
+    final out = <int>[];
+    var buffer = 0;
+    var bits = 0;
+    for (var i = 0; i < encoded.length; i++) {
+      final c = encoded[i];
+      final value = _base32LowerAlphabet.indexOf(c);
+      if (value < 0) {
+        throw FormatException('Invalid base32 character: $c');
+      }
+      buffer = (buffer << 5) | value;
+      bits += 5;
+      if (bits >= 8) {
+        bits -= 8;
+        out.add((buffer >> bits) & 0xFF);
+      }
+    }
+    return Uint8List.fromList(out);
+  }
+
   /// Get code number from codec string
   static int getCodeFromCodec(String codec) {
     final code = _supportedCodecs[codec];

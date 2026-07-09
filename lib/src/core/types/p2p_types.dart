@@ -1,4 +1,4 @@
-import 'package:dart_ipfs/src/transport/router_events.dart';
+import '../../transport/router_events.dart';
 
 /// Type aliases for commonly used p2plib types.
 ///

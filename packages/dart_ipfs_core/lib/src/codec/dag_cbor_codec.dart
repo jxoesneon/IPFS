@@ -35,6 +35,7 @@ class DagCborCodec implements IPLDCodec {
     if (value == null) return const cbor.CborNull();
     if (value is bool) return cbor.CborBool(value);
     if (value is int) return cbor.CborValue(value);
+    if (value is BigInt) return _toCborBigInt(value);
     if (value is double) return cbor.CborValue(value);
     if (value is String) return cbor.CborString(value);
     if (value is Uint8List) return cbor.CborBytes(value);
@@ -55,23 +56,63 @@ class DagCborCodec implements IPLDCodec {
           return cbor.CborBytes(taggedBytes, tags: const [42]);
         }
       }
-      return cbor.CborMap({
-        for (final entry in value.entries)
-          cbor.CborValue(entry.key.toString()): _toCbor(entry.value),
-      });
+      return _toCborMap(value);
     }
     throw ArgumentError(
       'Unsupported value type for DAG-CBOR: ${value.runtimeType}',
     );
   }
 
+  /// Converts a Dart [Map] into a canonically-ordered [cbor.CborMap].
+  ///
+  /// Map entries are sorted by the byte-wise lexicographic order of their
+  /// encoded CBOR keys, as required by canonical DAG-CBOR.
+  cbor.CborMap _toCborMap(Map<dynamic, dynamic> value) {
+    final entries = value.entries.toList();
+    entries.sort((a, b) {
+      final aBytes = cbor.cborEncode(_toCbor(a.key));
+      final bBytes = cbor.cborEncode(_toCbor(b.key));
+      final minLength = aBytes.length < bBytes.length ? aBytes.length : bBytes.length;
+      for (var i = 0; i < minLength; i++) {
+        final cmp = aBytes[i] - bBytes[i];
+        if (cmp != 0) return cmp;
+      }
+      return aBytes.length - bBytes.length;
+    });
+
+    return cbor.CborMap.fromEntries(
+      entries.map(
+        (entry) => MapEntry(
+          _toCbor(entry.key),
+          _toCbor(entry.value),
+        ),
+      ),
+    );
+  }
+
+  /// Converts a [BigInt] to a CBOR value.
+  ///
+  /// Values inside the signed 64-bit range become regular CBOR ints, while
+  /// values outside that range become CBOR bignums (tag 2 or 3).
+  cbor.CborValue _toCborBigInt(BigInt value) {
+    const minInt64 = -9223372036854775808;
+    const maxInt64 = 9223372036854775807;
+    if (value.compareTo(BigInt.from(minInt64)) >= 0 &&
+        value.compareTo(BigInt.from(maxInt64)) <= 0) {
+      return cbor.CborInt(value);
+    }
+    return cbor.CborBigInt(value);
+  }
+
   /// Converts a [cbor.CborValue] back to a Dart value.
   dynamic _fromCbor(cbor.CborValue value) {
     if (value is cbor.CborNull) return null;
     if (value is cbor.CborBool) return value.value;
-    if (value is cbor.CborInt) return value.toInt();
     if (value is cbor.CborFloat) return value.value;
     if (value is cbor.CborString) return value.toString();
+    if (value is cbor.CborBigInt) {
+      return value.toBigInt();
+    }
     if (value is cbor.CborBytes) {
       final bytes = Uint8List.fromList(value.bytes);
       // CID link tag 42
@@ -90,6 +131,7 @@ class DagCborCodec implements IPLDCodec {
           _fromCbor(entry.key).toString(): _fromCbor(entry.value),
       };
     }
+    if (value is cbor.CborInt) return value.toInt();
     return value.toObject();
   }
 }

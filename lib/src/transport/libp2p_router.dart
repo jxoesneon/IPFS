@@ -2,13 +2,6 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/transport/router_interface.dart';
-import 'package:dart_ipfs/src/transport/webrtc/signaling_protocol.dart';
-import 'package:dart_ipfs/src/transport/webrtc/webrtc_direct_transport.dart';
-import 'package:dart_ipfs/src/transport/webrtc/webrtc_transport.dart';
-import 'package:dart_ipfs/src/transport/webtransport/webtransport_transport.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs_quic/dart_ipfs_quic.dart' as dart_ipfs_quic;
 import 'package:ipfs_libp2p/config/config.dart' as config;
 import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto;
@@ -17,6 +10,20 @@ import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
 import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
 import 'package:ipfs_libp2p/p2p/transport/tcp_transport.dart';
 import 'package:ipfs_libp2p/p2p/transport/transport.dart' as libp2p_transport;
+import 'package:pointycastle/export.dart';
+
+import '../core/config/ipfs_config.dart';
+import '../core/crypto/ecdsa_signer.dart';
+import '../core/crypto/rsa_signer.dart';
+import '../protocols/dht/dht_routing_table_interface.dart';
+import '../utils/logger.dart';
+import 'pnet/pnet_transport_wrapper.dart';
+import 'pnet/swarm_key_loader.dart';
+import 'router_interface.dart';
+import 'webrtc/signaling_protocol.dart';
+import 'webrtc/webrtc_direct_transport.dart';
+import 'webrtc/webrtc_transport.dart';
+import 'webtransport/webtransport_transport.dart';
 
 /// Native libp2p router implementation.
 ///
@@ -49,6 +56,9 @@ class Libp2pRouter implements RouterInterface {
   bool _isInitialized = false;
   libp2p_transport.Transport? _quicTransport;
 
+  /// Key type for peer identity (ed25519, rsa, ecdsa).
+  final String _keyType = 'ed25519';
+
   /// Test-only factory override for the QUIC transport dependency.
   ///
   /// When non-null, [supportsQuic] and address synthesis use this factory
@@ -65,10 +75,14 @@ class Libp2pRouter implements RouterInterface {
   }
 
   final Set<String> _connectedPeers = {};
+  final Map<String, List<String>> _peerAddresses = {};
   final Set<String> _registeredProtocols = {};
   final Map<String, void Function(NetworkPacket)> _protocolHandlers = {};
   final Map<String, List<void Function(dynamic)>> _eventHandlers = {};
   final Map<String, StreamController<Uint8List>> _peerMessageStreams = {};
+
+  // DHT routing table for distance-based peer selection
+  DHTRoutingTable? _dhtRoutingTable;
 
   // Stream controllers for events
   final _messagePacketController = StreamController<NetworkPacket>.broadcast();
@@ -118,6 +132,18 @@ class Libp2pRouter implements RouterInterface {
   Stream<MessageEvent> get messageEvents => _messageEventsController.stream;
 
   @override
+  DHTRoutingTable? get dhtRoutingTable => _dhtRoutingTable;
+
+  /// Sets the DHT routing table for distance-based peer selection.
+  ///
+  /// This should be called by the DHT protocol handler when it initializes
+  /// its routing table, allowing the router to expose it via the interface.
+  void setDHTRoutingTable(DHTRoutingTable routingTable) {
+    _dhtRoutingTable = routingTable;
+    _logger.debug('DHT routing table set on router');
+  }
+
+  @override
   Stream<Uint8List> receiveMessages(String peerId) {
     return _peerMessageStreams
         .putIfAbsent(peerId, () => StreamController<Uint8List>.broadcast())
@@ -134,13 +160,13 @@ class Libp2pRouter implements RouterInterface {
     _logger.debug('Initializing Libp2pRouter...');
 
     try {
-      // Generate or derive key pair
+      // Generate or derive key pair based on key type
       if (_seed != null) {
-        _logger.debug('Deriving Ed25519 identity from seed');
-        _keyPair = await crypto.generateEd25519KeyPairFromSeed(_seed);
+        _logger.debug('Deriving $_keyType identity from seed');
+        _keyPair = await _generateKeyPairFromSeed(_seed);
       } else {
-        _logger.debug('Generating new Ed25519 identity');
-        _keyPair = await crypto.generateEd25519KeyPair();
+        _logger.debug('Generating new $_keyType identity');
+        _keyPair = await _generateKeyPair();
       }
 
       // Probe for an available QUIC transport from the libp2p dependency.
@@ -154,6 +180,54 @@ class Libp2pRouter implements RouterInterface {
       _logger.error('Failed to initialize Libp2pRouter', e, stackTrace);
       throw StateError('Router initialization failed: $e');
     }
+  }
+
+  /// Generates a key pair based on the configured key type.
+  Future<libp2p.KeyPair> _generateKeyPair() async {
+    switch (_keyType.toLowerCase()) {
+      case 'rsa':
+        _logger.warning('RSA keys not directly supported by ipfs_libp2p, using Ed25519');
+        return await crypto.generateEd25519KeyPair();
+      case 'ecdsa':
+        _logger.warning('ECDSA keys not directly supported by ipfs_libp2p, using Ed25519');
+        return await crypto.generateEd25519KeyPair();
+      case 'ed25519':
+      default:
+        return await crypto.generateEd25519KeyPair();
+    }
+  }
+
+  /// Derives a key pair from a seed based on the configured key type.
+  Future<libp2p.KeyPair> _generateKeyPairFromSeed(Uint8List seed) async {
+    switch (_keyType.toLowerCase()) {
+      case 'rsa':
+        _logger.warning('RSA keys not directly supported by ipfs_libp2p, using Ed25519');
+        return await crypto.generateEd25519KeyPairFromSeed(seed);
+      case 'ecdsa':
+        _logger.warning('ECDSA keys not directly supported by ipfs_libp2p, using Ed25519');
+        return await crypto.generateEd25519KeyPairFromSeed(seed);
+      case 'ed25519':
+      default:
+        return await crypto.generateEd25519KeyPairFromSeed(seed);
+    }
+  }
+
+  /// Derives a peer ID from an RSA public key.
+  ///
+  /// This is a utility method for interoperability with peers using RSA keys.
+  /// The router itself uses Ed25519, but can validate RSA peer IDs from other peers.
+  String derivePeerIdFromRSA(RSAPublicKey publicKey) {
+    final signer = RsaSigner();
+    return signer.derivePeerId(publicKey);
+  }
+
+  /// Derives a peer ID from an ECDSA public key.
+  ///
+  /// This is a utility method for interoperability with peers using ECDSA keys.
+  /// The router itself uses Ed25519, but can validate ECDSA peer IDs from other peers.
+  String derivePeerIdFromECDSA(ECPublicKey publicKey) {
+    final signer = EcdsaSigner();
+    return signer.derivePeerId(publicKey);
   }
 
   @override
@@ -170,6 +244,15 @@ class Libp2pRouter implements RouterInterface {
     _logger.debug('Starting Libp2pRouter...');
 
     try {
+      final psk = await _loadPrivateNetworkPsk();
+      if (psk != null) {
+        _logger.info(
+          'Private network PNET pre-shared key loaded; TCP transport will be wrapped',
+        );
+      } else {
+        _logger.info('No private network PNET key configured; using public TCP');
+      }
+
       final listenAddresses = _buildListenAddresses();
       final resourceManager = ResourceManagerImpl(limiter: FixedLimiter());
 
@@ -181,8 +264,12 @@ class Libp2pRouter implements RouterInterface {
 
       // Assemble transports. TCP is always present; QUIC is added only when
       // enabled and the dependency actually exposes a transport class.
+      final tcpTransport = TCPTransport(resourceManager: resourceManager);
+      final wrappedTcpTransport = psk != null
+          ? PnetTransportWrapper(inner: tcpTransport, psk: psk)
+          : tcpTransport;
       final transports = <config.Option>[
-        config.Libp2p.transport(TCPTransport(resourceManager: resourceManager)),
+        config.Libp2p.transport(wrappedTcpTransport),
       ];
 
       if (_config.network.enableQuic) {
@@ -229,6 +316,11 @@ class Libp2pRouter implements RouterInterface {
           connectedF: (net, conn, {dialLatency}) {
             final remotePeerId = conn.remotePeer.toString();
             _connectedPeers.add(remotePeerId);
+            try {
+              _peerAddresses[remotePeerId] = [conn.remoteMultiaddr.toString()];
+            } catch (_) {
+              // Remote address may not always be available.
+            }
             _connectionEventsController.add(
               ConnectionEvent(
                 peerId: remotePeerId,
@@ -240,6 +332,7 @@ class Libp2pRouter implements RouterInterface {
           disconnectedF: (net, conn) {
             final remotePeerId = conn.remotePeer.toString();
             _connectedPeers.remove(remotePeerId);
+            _peerAddresses.remove(remotePeerId);
             _connectionEventsController.add(
               ConnectionEvent(
                 peerId: remotePeerId,
@@ -350,6 +443,7 @@ class Libp2pRouter implements RouterInterface {
           );
 
       _connectedPeers.add(peerIdStr);
+      _peerAddresses[peerIdStr] = [multiaddress];
       _logger.debug('Connected to peer $peerIdStr');
     } catch (e, stackTrace) {
       _logger.error('Failed to connect to $multiaddress', e, stackTrace);
@@ -371,6 +465,13 @@ class Libp2pRouter implements RouterInterface {
         // usually handled via Connection Manager or closing streams.
         // We remove it from our tracked set.
         _connectedPeers.remove(peerIdStr);
+
+        // Close the peer's message stream controller to emit done event.
+        final controller = _peerMessageStreams.remove(peerIdStr);
+        if (controller != null) {
+          await controller.close();
+        }
+
         _logger.debug('Disconnected from $peerIdStr');
       } catch (e) {
         _logger.warning('Error while disconnecting from $peerIdStr: $e');
@@ -447,6 +548,44 @@ class Libp2pRouter implements RouterInterface {
   }
 
   @override
+  Future<Uint8List> sendMessageWithResponse(
+    String peerId,
+    Uint8List message, {
+    String? protocolId,
+    Duration? timeout,
+  }) async {
+    _checkStarted();
+
+    final protocol = protocolId ?? '/ipfs/1.0.0';
+    final effectiveTimeout = timeout ?? const Duration(seconds: 30);
+
+    _logger.verbose('Sending message with response to $peerId via $protocol');
+    try {
+      final pid = libp2p.PeerId.fromString(peerId);
+      final context = libp2p.Context(timeout: effectiveTimeout);
+      final stream = await _host!.newStream(pid, [protocol], context);
+
+      try {
+        // Write request
+        final lengthPrefix = _encodeLengthPrefix(message.length);
+        await stream.write(Uint8List.fromList([...lengthPrefix, ...message]));
+
+        // Read response
+        final response = await _readLengthPrefixedMessage(stream);
+        if (response == null) {
+          throw TimeoutException('No response received from $peerId');
+        }
+        return response;
+      } finally {
+        await stream.close();
+      }
+    } catch (e, stackTrace) {
+      _logger.error('Message with response to $peerId failed', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  @override
   void registerProtocolHandler(
     String protocolId,
     void Function(NetworkPacket) handler,
@@ -462,8 +601,20 @@ class Libp2pRouter implements RouterInterface {
         );
 
         try {
-          final data = await _readLengthPrefixedMessage(stream);
-          if (data != null) {
+          // Some protocols (e.g. Bitswap) send multiple length-prefixed
+          // messages on a single stream, so read until the stream is closed.
+          while (true) {
+            final data = await _readLengthPrefixedMessage(stream);
+            if (data == null) {
+              break;
+            }
+            if (data.isEmpty) {
+              _logger.warning(
+                'Received empty message from $remoteIdStr on $protocolId',
+              );
+              continue;
+            }
+
             final packet = NetworkPacket(
               srcPeerId: remoteIdStr,
               datagram: data,
@@ -480,10 +631,6 @@ class Libp2pRouter implements RouterInterface {
             );
             handler(packet);
             _messagePacketController.add(packet);
-          } else {
-            _logger.warning(
-              'Received empty or invalid message from $remoteIdStr on $protocolId',
-            );
           }
         } catch (e, stackTrace) {
           _logger.error(
@@ -492,15 +639,22 @@ class Libp2pRouter implements RouterInterface {
             stackTrace,
           );
         } finally {
-          // Note: In some protocols we might want to keep the stream open,
-          // but for basic request/response or one-way we close it here if the handler doesn't.
-          // For now we assume the caller or the responder might close it, or libp2p handles it.
-          // stream.close();
+          // Close the stream once the peer is done sending messages.
+          try {
+            await stream.close();
+          } catch (_) {}
         }
       });
     }
 
     _logger.debug('Registered protocol handler for $protocolId');
+  }
+
+  @override
+  void unregisterProtocolHandler(String protocolId) {
+    _protocolHandlers.remove(protocolId);
+    _registeredProtocols.remove(protocolId);
+    _logger.debug('Unregistered protocol handler for $protocolId');
   }
 
   @override
@@ -560,8 +714,13 @@ class Libp2pRouter implements RouterInterface {
 
   @override
   List<String> resolvePeerId(String peerIdStr) {
-    // standard libp2p doesn't have a built-in peer resolution cache here.
-    // Return empty for now - DHT can be used for resolution
+    if (peerIdStr == peerID) {
+      return listeningAddresses;
+    }
+    final addrs = _peerAddresses[peerIdStr];
+    if (addrs != null && addrs.isNotEmpty) {
+      return List.unmodifiable(addrs);
+    }
     return [];
   }
 
@@ -677,6 +836,44 @@ class Libp2pRouter implements RouterInterface {
       _logger.warning('Failed to instantiate QUIC transport: $e');
       return null;
     }
+  }
+
+  /// Loads the private-network pre-shared key if one is configured.
+  ///
+  /// The key source precedence is:
+  /// 1. [NetworkConfig.privateNetworkPsk] if already populated.
+  /// 2. [NetworkConfig.swarmKeyPath] if set.
+  /// 3. The default `/data/ipfs/swarm.key` path if it exists.
+  ///
+  /// On success the loaded bytes are stored on [NetworkConfig.privateNetworkPsk]
+  /// so subsequent logic can inspect the same value.
+  Future<Uint8List?> _loadPrivateNetworkPsk() async {
+    if (_config.network.privateNetworkPsk != null) {
+      return _config.network.privateNetworkPsk;
+    }
+
+    final path = _config.network.swarmKeyPath;
+    if (path != null && path.isNotEmpty) {
+      _logger.info('Loading swarm key from $path');
+      final psk = await loadSwarmKey(path);
+      if (psk != null) {
+        _config.network.privateNetworkPsk = psk;
+        _logger.info('Loaded swarm key from $path');
+        return psk;
+      }
+      _logger.warning('Failed to load swarm key from configured path: $path');
+    }
+
+    const defaultPath = '/data/ipfs/swarm.key';
+    _logger.info('Checking default swarm key path: $defaultPath');
+    final defaultPsk = await loadSwarmKey(defaultPath);
+    if (defaultPsk != null) {
+      _config.network.privateNetworkPsk = defaultPsk;
+      _logger.info('Loaded default swarm key from $defaultPath');
+      return defaultPsk;
+    }
+
+    return null;
   }
 
   /// Builds the list of listen addresses that will be passed to the libp2p host.

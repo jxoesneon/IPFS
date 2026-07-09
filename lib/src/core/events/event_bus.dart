@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:dart_ipfs/src/utils/logger.dart';
+import '../../utils/logger.dart';
 
 /// A type-safe publish-subscribe event bus for IPFS network events.
 ///

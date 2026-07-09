@@ -35,3 +35,7 @@ linter:
     - prefer_const_literals_to_create_immutables
     - sort_constructors_first
     - public_member_api_docs
+
+# NOTE: Deep imports into package:dart_ipfs/src/ are prohibited.
+# All exports should go through lib/dart_ipfs.dart.
+# To check for deep imports, run: grep -r "package:dart_ipfs/src/" lib/

@@ -14,6 +14,7 @@ message ProtocolConfig {
 message RateLimitConfig {
   uint32 max_requests_per_window = 1;
   uint32 window_seconds = 2;
+  uint32 max_queue_size = 3;  // Maximum pending waiters before FIFO eviction (default: 1000)
 }
 
 message CircuitBreakerConfig {

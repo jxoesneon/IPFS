@@ -1,6 +1,8 @@
 import 'dart:async';
-import 'package:dart_ipfs/src/utils/logger.dart';
+
 import 'package:port_forwarder/port_forwarder.dart';
+
+import '../utils/logger.dart';
 
 /// Manages NAT traversal and port forwarding operations.
 class NatTraversalService {

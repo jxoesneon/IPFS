@@ -59,6 +59,19 @@ class MockMetricsCollector extends _i1.Mock implements _i3.MetricsCollector {
           as _i2.MetricsConfig);
 
   @override
+  int get totalBytesSent =>
+      (super.noSuchMethod(Invocation.getter(#totalBytesSent), returnValue: 0)
+          as int);
+
+  @override
+  int get totalBytesReceived =>
+      (super.noSuchMethod(
+            Invocation.getter(#totalBytesReceived),
+            returnValue: 0,
+          )
+          as int);
+
+  @override
   _i4.Future<void> start() =>
       (super.noSuchMethod(
             Invocation.method(#start, []),

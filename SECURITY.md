@@ -58,9 +58,27 @@ Dependencies are regularly audited. Security-critical overrides are documented i
 
 ```yaml
 dependency_overrides:
-  archive: ^3.3.8 # CVE-2023-39139 mitigation
-  http: ^1.1.0 # CVE-2020-35669 mitigation
+  # xml ^7.0.1: Required for security fixes and compatibility with latest dependencies
+  # Resolves potential XML parsing vulnerabilities and ensures proper encoding support
+  xml: ^7.0.1
+  # dart_udx ^2.0.3: Required for UDP transport stability and security patches
+  # Fixes buffer overflow issues in UDP datagram handling and improves rate limiting
+  dart_udx: ^2.0.3
 ```
+
+### Cryptography Dependency Consolidation (2026-01)
+
+The `sodium` FFI bindings package (`libsodium` wrapper) was removed from direct
+dependencies. No Dart code in the project imported `package:sodium`; the native
+`libsodium` library was only checked at runtime by platform setup helpers. This
+removal eliminates the FFI dependency that blocked `dart2wasm` compilation.
+
+The project now uses three crypto libraries (down from four):
+
+- **`crypto`** — SHA-256, HMAC (lightweight dart core crypto)
+- **`cryptography`** — Ed25519, AES-256-GCM, X25519 (modern, WASM-compatible)
+- **`pointycastle`** — RSA, ECDSA, ASN.1 (pure-Dart implementations for
+  peer-ID key types and ACME/TLS operations)
 
 ## Disclosure Timeline
 

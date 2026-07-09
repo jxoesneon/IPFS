@@ -27,12 +27,12 @@ class FakeDHTHandler implements IDHTHandler {
 
   @override
   Future<void> putValue(Key key, Value value) async {
-    _values[key.toString()] = Uint8List.fromList(value.bytes);
+    _values[base64Encode(key.bytes)] = Uint8List.fromList(value.bytes);
   }
 
   @override
   Future<Value> getValue(Key key) async {
-    final bytes = _values[key.toString()];
+    final bytes = _values[base64Encode(key.bytes)];
     if (bytes == null) {
       throw Exception('Value not found for key ${key.toString()}');
     }
@@ -53,6 +53,16 @@ Future<SimpleKeyPair> _testKeyPair() async {
 Future<String> _testIpnsName(SimpleKeyPair keyPair) async {
   final publicKey = await keyPair.extractPublicKey();
   return deriveIpnsName(Uint8List.fromList(publicKey.bytes));
+}
+
+Uint8List _ipnsDhtKey(String name) {
+  // Match Kubo: the DHT key is '/ipns/' + the identity multihash bytes
+  // embedded in the CIDv1 libp2p-key name.
+  final cidBytes = PeerId.fromBase36(name).value;
+  return Uint8List.fromList([
+    ...utf8.encode('/ipns/'),
+    ...cidBytes.sublist(2),
+  ]);
 }
 
 void main() {
@@ -165,11 +175,11 @@ void main() {
 
       await handler.publishWithKeyPair(cid, keyPair, sequence: 1);
 
-      final key = Key.fromString('/ipns/$name');
+      final key = Key(_ipnsDhtKey(name));
       final stored = await dht.getValue(key);
       expect(stored.bytes, isNotEmpty);
 
-      final record = IPNSRecord.fromCBOR(stored.bytes);
+      final record = IPNSRecord.decode(stored.bytes, name: name);
       expect(record.valueCID, equals(cid));
       expect(record.name, equals(name));
       expect(await record.verify(), isTrue);
@@ -218,7 +228,7 @@ void main() {
       );
 
       await dht.putValue(
-        Key.fromString('/ipns/$name'),
+        Key(_ipnsDhtKey(name)),
         Value(unsignedRecord.toCBOR()),
       );
 
@@ -236,7 +246,7 @@ void main() {
         validity: const Duration(seconds: -1),
       );
 
-      await dht.putValue(Key.fromString('/ipns/$name'), Value(record.toCBOR()));
+      await dht.putValue(Key(_ipnsDhtKey(name)), Value(record.toCBOR()));
 
       expect(() => handler.resolve(name), throwsA(isA<IpnsValidationError>()));
     });
@@ -252,7 +262,7 @@ void main() {
         sequence: 1,
       );
 
-      await dht.putValue(Key.fromString('/ipns/$name'), Value(record.toCBOR()));
+      await dht.putValue(Key(_ipnsDhtKey(name)), Value(record.toCBOR()));
 
       expect(() => handler.resolve(name), throwsA(isA<IpnsValidationError>()));
     });

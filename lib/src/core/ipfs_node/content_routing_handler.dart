@@ -1,14 +1,17 @@
 // src/core/ipfs_node/content_routing_handler.dart
 import 'dart:async';
 
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/routing/content_routing.dart';
-import 'package:dart_ipfs/src/routing/delegated_routing.dart';
-import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:http/http.dart' as http;
+
+import '../../routing/content_routing.dart';
+import '../../routing/delegated_routing.dart';
+import '../../routing/ipni_client.dart';
+import '../../routing/reframe_routing.dart';
+import '../../utils/dnslink_resolver.dart';
+import '../../utils/logger.dart';
+import '../cid.dart';
+import '../config/ipfs_config.dart';
+import 'network_handler.dart';
 
 /// Handles content routing operations with fallback strategies.
 class ContentRoutingHandler {
@@ -18,6 +21,8 @@ class ContentRoutingHandler {
     this._networkHandler, {
     ContentRouting? contentRouting,
     DelegatedRoutingHandler? delegatedRouting,
+    IPNIClient? ipniClient,
+    ReframeRoutingClient? reframeClient,
     http.Client? dnsClient,
   }) : _dnsClient = dnsClient {
     _logger = Logger(
@@ -33,6 +38,8 @@ class ContentRoutingHandler {
         DelegatedRoutingHandler(
           delegateEndpoint: _config.network.delegatedRoutingEndpoint,
         );
+    _ipniClient = ipniClient ?? _createIpniClient();
+    _reframeClient = reframeClient ?? _createReframeClient();
 
     _logger.debug('ContentRoutingHandler instance created');
   }
@@ -42,6 +49,21 @@ class ContentRoutingHandler {
   late final Logger _logger;
   late final ContentRouting _contentRouting;
   late final DelegatedRoutingHandler _delegatedRouting;
+  IPNIClient? _ipniClient;
+  ReframeRoutingClient? _reframeClient;
+
+  IPNIClient? _createIpniClient() {
+    if (_config.network.ipniEndpoints.isEmpty) return null;
+    return IPNIClient(endpoints: _config.network.ipniEndpoints);
+  }
+
+  ReframeRoutingClient? _createReframeClient() {
+    if (_config.network.reframeEndpoints.isEmpty) return null;
+    return ReframeRoutingClient(
+      endpoints: _config.network.reframeEndpoints,
+      useGetApi: true,
+    );
+  }
 
   /// Starts the content routing services
   Future<void> start() async {
@@ -66,6 +88,12 @@ class ContentRoutingHandler {
       await _contentRouting.stop();
       _logger.verbose('DHT-based content routing stopped');
 
+      _ipniClient?.dispose();
+      _ipniClient = null;
+      _reframeClient?.dispose();
+      _reframeClient = null;
+      _delegatedRouting.dispose();
+
       _logger.debug('ContentRoutingHandler stopped successfully');
     } catch (e, stackTrace) {
       _logger.error('Failed to stop ContentRoutingHandler', e, stackTrace);
@@ -87,11 +115,45 @@ class ContentRoutingHandler {
         return dhtProviders;
       }
 
-      // If DHT fails, try delegated routing
-      _logger.verbose('DHT lookup failed, trying delegated routing');
-      // Convert string CID to CID object
+      // Convert string CID to CID object once for HTTP-based routers.
       final cidObj = CID.decode(cid);
 
+      // Try IPNI next if configured.
+      final ipniClient = _ipniClient;
+      if (ipniClient != null) {
+        _logger.verbose('DHT lookup empty, trying IPNI');
+        try {
+          final ipniResponse = await ipniClient.findProviders(cidObj);
+          if (ipniResponse.isSuccess && ipniResponse.providers.isNotEmpty) {
+            final providers =
+                ipniResponse.providers.map((p) => p.peerId).toList();
+            _logger.debug('Found ${providers.length} providers via IPNI');
+            return providers;
+          }
+        } catch (e, stackTrace) {
+          _logger.warning('IPNI lookup failed', e, stackTrace);
+        }
+      }
+
+      // Try Reframe if configured.
+      final reframeClient = _reframeClient;
+      if (reframeClient != null) {
+        _logger.verbose('IPNI empty, trying Reframe');
+        try {
+          final reframeResponse = await reframeClient.findProviders(cidObj);
+          if (reframeResponse.isSuccess && reframeResponse.providers.isNotEmpty) {
+            final providers =
+                reframeResponse.providers.map((p) => p.peerId).toList();
+            _logger.debug('Found ${providers.length} providers via Reframe');
+            return providers;
+          }
+        } catch (e, stackTrace) {
+          _logger.warning('Reframe lookup failed', e, stackTrace);
+        }
+      }
+
+      // If IPNI/Reframe are not configured or also empty, try delegated routing
+      _logger.verbose('Trying delegated routing');
       final delegatedResponse = await _delegatedRouting.findProviders(cidObj);
 
       if (delegatedResponse.isSuccess &&
@@ -145,6 +207,10 @@ class ContentRoutingHandler {
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'dht_routing_enabled': true,
+      'ipni_routing_enabled': _ipniClient != null,
+      'ipni_endpoints': _config.network.ipniEndpoints,
+      'reframe_routing_enabled': _reframeClient != null,
+      'reframe_endpoints': _config.network.reframeEndpoints,
       'delegated_routing_enabled':
           _config.network.delegatedRoutingEndpoint != null,
       'delegated_endpoint': _config.network.delegatedRoutingEndpoint,

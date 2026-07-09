@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_routing_table_interface.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/gossipsub/gossipsub.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:test/test.dart';
@@ -87,12 +88,28 @@ class _FakeRouter implements RouterInterface {
   }
 
   @override
+  void unregisterProtocolHandler(String protocolId) {
+    removeMessageHandler(protocolId);
+  }
+
+  @override
   void removeMessageHandler(String protocolId) {
     _handlers.remove(protocolId);
   }
 
   @override
+  Future<Uint8List> sendMessageWithResponse(
+    String peerId,
+    Uint8List message, {
+    String? protocolId,
+    Duration? timeout,
+  }) async => Uint8List(0);
+
+  @override
   void registerProtocol(String protocolId) {}
+
+  @override
+  DHTRoutingTable? get dhtRoutingTable => null;
 
   @override
   Future<void> broadcastMessage(String protocolId, Uint8List message) async {

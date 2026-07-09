@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/events/network_events.dart';
-import 'package:dart_ipfs/src/core/messages/network_messages.dart';
-import 'package:dart_ipfs/src/core/protocol_handlers/protocol_handler.dart';
-import 'package:dart_ipfs/src/transport/router_interface.dart';
+import '../core/events/network_events.dart';
+import '../core/messages/network_messages.dart';
+import '../core/protocol_handlers/protocol_handler.dart';
+import '../transport/router_interface.dart';
 
 /// Manages network message routing and protocol handler dispatch.
 ///
@@ -54,4 +54,9 @@ class NetworkManager {
 
   /// Stream of network events.
   Stream<NetworkEvent> get events => _eventController.stream;
+
+  /// Disposes of the network manager and closes the event stream.
+  Future<void> dispose() async {
+    await _eventController.close();
+  }
 }

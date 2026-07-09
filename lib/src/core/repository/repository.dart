@@ -1,11 +1,12 @@
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
-import 'package:dart_ipfs/src/core/data_structures/node.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart' as proto;
 import 'package:fixnum/fixnum.dart' as fixnum;
+
+import '../../proto/generated/bitswap/bitswap.pb.dart' as proto;
+import '../data_structures/block.dart';
+import '../data_structures/merkle_dag_node.dart';
+import '../data_structures/node.dart';
+import '../storage/datastore.dart';
 
 /// Repository handles the storage and retrieval of IPFS data structures
 class Repository {

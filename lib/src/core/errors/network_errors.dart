@@ -1,4 +1,4 @@
-import 'package:dart_ipfs/src/core/types/p2p_types.dart';
+import '../types/p2p_types.dart';
 
 /// Base class for network-related errors.
 ///

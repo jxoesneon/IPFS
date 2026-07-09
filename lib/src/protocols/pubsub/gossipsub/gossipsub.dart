@@ -7,6 +7,7 @@ library;
 export 'gossipsub.pb.dart';
 export 'gossipsub_config.dart';
 export 'gossipsub_handler.dart';
+export 'gossipsub_pubsub_adapter.dart';
 export 'message_cache.dart';
 export 'message_signing.dart';
 export 'peer_score.dart';

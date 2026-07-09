@@ -1,6 +1,6 @@
 // src/utils/password_prompt.dart
 import 'dart:async';
-import 'package:dart_ipfs/src/platform/platform.dart';
+import '../platform/platform.dart';
 
 /// Utility for securely prompting passwords from the terminal.
 ///

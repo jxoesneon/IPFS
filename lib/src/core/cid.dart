@@ -7,6 +7,26 @@ import 'package:dart_ipfs/src/utils/encoding.dart';
 import 'package:dart_multihash/dart_multihash.dart';
 import 'package:multibase/multibase.dart';
 
+/// Decodes a multibase-encoded string, using a corrected base32 lower decoder
+/// because package:multibase mishandles unpadded base32 strings that start with
+/// a leading zero data character (e.g. canonical `bafk...` CIDs).
+Uint8List _decodeMultibase(String cidStr) {
+  if (cidStr.isEmpty) throw ArgumentError('Empty CID string');
+  if (cidStr.startsWith('b')) {
+    return EncodingUtils.base32LowerDecode(cidStr.substring(1));
+  }
+  return multibaseDecode(cidStr);
+}
+
+/// Encodes bytes using the requested multibase encoding. Base32 lower is
+/// produced with the corrected, unpadded RFC 4648 encoder.
+String _encodeMultibase(Multibase base, Uint8List bytes) {
+  if (base == Multibase.base32) {
+    return 'b${EncodingUtils.base32LowerEncode(bytes)}';
+  }
+  return multibaseEncode(base, bytes);
+}
+
 /// A Content Identifier (CID) for content-addressed data in IPFS.
 ///
 /// CIDs are self-describing content addresses used to uniquely identify
@@ -167,14 +187,14 @@ class CID {
     // Check if it's a CIDv0 (base58, starts with 'Qm')
     if (cidStr.startsWith('Qm')) {
       // Decode base58
-      final decoded = multibaseDecode(
+      final decoded = _decodeMultibase(
         'z$cidStr',
       ); // Add 'z' prefix for base58btc
       return fromBytes(decoded);
     }
 
     // CIDv1: multibase encoded
-    final decoded = multibaseDecode(cidStr);
+    final decoded = _decodeMultibase(cidStr);
     return fromBytes(decoded);
   }
 
@@ -203,7 +223,7 @@ class CID {
     if (version == 0) {
       // CIDv0: base58-encoded multihash (no prefix)
       final mhBytes = multihash.toBytes();
-      final encoded = multibaseEncode(Multibase.base58btc, mhBytes);
+      final encoded = _encodeMultibase(Multibase.base58btc, mhBytes);
       // Remove the 'z' prefix for CIDv0
       return encoded.substring(1);
     }
@@ -211,7 +231,7 @@ class CID {
     // CIDv1: <version><codec><multihash>
     final bytes = toBytes();
     final baseType = base ?? multibaseType ?? Multibase.base32;
-    return multibaseEncode(baseType, bytes);
+    return _encodeMultibase(baseType, bytes);
   }
 
   /// Encodes the CID using the base identified by [baseName].

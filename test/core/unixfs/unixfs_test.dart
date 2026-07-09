@@ -12,8 +12,7 @@ import 'package:dart_ipfs/src/core/unixfs/unixfs_hamt.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_resolver.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
-    as unixfs_pb;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs_pb;
 import 'package:fixnum/fixnum.dart';
 import 'package:test/test.dart';
 
@@ -529,7 +528,7 @@ void main() {
 
       expect(
         root.cid.toString(),
-        'bboajcafhyttkjdrizhwn5w427v2o5ysld6xxjmsqldw3qk7ft3xpk3nbn',
+        'bafybeiau7conjeofde6zxw3tl6xj3xcjmp265fskbmo3obl4wpo55lnufu',
       );
       expect(root.pbNode.links.length, 2);
       expect(root.pbNode.links[0].name, '4Ab.txt');
@@ -542,7 +541,7 @@ void main() {
       final root = await buildHAMT();
       expect(
         root.cid.toString(),
-        'bboajcae2tsjan6hju663mamy2gfjvjgyogsdlsls32hqgepv6syiee2np',
+        'bafybeiatkojebxy5gt33nqbtdiyvgve3by2inojolpi6ayr6x2lbaqtjv4',
       );
       expect(root.pbNode.links.length, 168);
     });

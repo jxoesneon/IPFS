@@ -2,12 +2,13 @@
 
 import 'dart:convert';
 
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/routing/content_routing.dart';
-import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:http/http.dart' as http;
+
+import '../../routing/content_routing.dart';
+import '../../utils/dnslink_resolver.dart';
+import '../config/ipfs_config.dart';
+import '../interfaces/i_lifecycle.dart';
+import 'network_handler.dart';
 
 /// Handles routing operations for an IPFS node.
 class RoutingHandler implements ILifecycle {

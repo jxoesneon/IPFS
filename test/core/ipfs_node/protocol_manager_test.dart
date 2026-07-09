@@ -58,7 +58,7 @@ void main() {
       when(mockDHTHandler.resolveIPNS('name')).thenAnswer((_) async => 'cid');
 
       final result = await manager.resolveIPNS('name');
-      expect(result, equals('cid'));
+      expect(result, equals('/ipfs/cid'));
 
       await manager.publishIPNS('cid', keyName: 'self');
       verify(mockDHTHandler.publishIPNS('cid', keyName: 'self')).called(1);

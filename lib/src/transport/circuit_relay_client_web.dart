@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 
+import '../core/config/network_config.dart';
 import 'router_interface.dart';
 
 /// Handles circuit relay operations for an IPFS node (web stub).

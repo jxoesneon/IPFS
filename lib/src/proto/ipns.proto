@@ -14,5 +14,8 @@ message IpnsEntry {
 	uint64 sequence = 5;
 	uint64 ttl = 6;
 	bytes pubKey = 7;
-    // data field is sometimes used? No, spec says value.
+	// Kubo encodes the V2 signature in field 8 and the DAG-CBOR data in field 9
+	// (swapped relative to the textual IPNS spec).
+	bytes signatureV2 = 8;
+	bytes data = 9;
 }

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart' as pb;
+import 'package:dart_ipfs/src/protocols/dht/dht_routing_table_interface.dart' show DHTRoutingTable;
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
@@ -86,6 +87,10 @@ class _MockRouter implements RouterInterface {
     sentMessages.add(message);
 
     if (_handlers.containsKey(protocolId)) {
+      const hopProtocolId = '/libp2p/circuit/relay/0.2.0/hop';
+      if (protocolId != hopProtocolId) {
+        return;
+      }
       final msg = pb.HopMessage.fromBuffer(message);
       if (msg.type == pb.HopMessage_Type.RESERVE) {
         final response = pb.HopMessage()
@@ -102,7 +107,7 @@ class _MockRouter implements RouterInterface {
           srcPeerId: peerIdStr,
           datagram: response.writeToBuffer(),
         );
-        Future.microtask(() => _handlers[protocolId]!(packet));
+        unawaited(Future.microtask(() => _handlers[protocolId]!(packet)));
       } else if (msg.type == pb.HopMessage_Type.CONNECT) {
         final response = pb.HopMessage()
           ..type = pb.HopMessage_Type.STATUS
@@ -111,7 +116,7 @@ class _MockRouter implements RouterInterface {
           srcPeerId: peerIdStr,
           datagram: response.writeToBuffer(),
         );
-        Future.microtask(() => _handlers[protocolId]!(packet));
+        unawaited(Future.microtask(() => _handlers[protocolId]!(packet)));
       }
     }
   }
@@ -168,6 +173,22 @@ class _MockRouter implements RouterInterface {
     _connectedPeers.add(targetPeerId);
   }
 
+  @override
+  void unregisterProtocolHandler(String protocolId) {
+    removeMessageHandler(protocolId);
+  }
+
+  @override
+  Future<Uint8List> sendMessageWithResponse(
+    String peerId,
+    Uint8List message, {
+    String? protocolId,
+    Duration? timeout,
+  }) async => Uint8List(0);
+
+  @override
+  DHTRoutingTable? get dhtRoutingTable => null;
+
   void setConnectStatus(pb.Status status) {
     _connectStatus = status;
   }
@@ -185,6 +206,14 @@ class _MockRouter implements RouterInterface {
       return parts[p2pIndex + 1];
     }
     return null;
+  }
+
+  void deliverStopMessage(String peerId, Uint8List datagram) {
+    const stopProtocolId = '/libp2p/circuit/relay/0.2.0/stop';
+    final handler = _handlers[stopProtocolId];
+    if (handler != null) {
+      handler(NetworkPacket(srcPeerId: peerId, datagram: datagram));
+    }
   }
 }
 
@@ -401,7 +430,7 @@ void main() {
       final events = <CircuitRelayConnectionEvent>[];
       final sub = client.onCircuitRelayEvents.listen(events.add);
       await client.connectThroughRelay(relayAddr, targetPeerId);
-      await Future.delayed(const Duration(milliseconds: 10));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(events.any((e) => e.eventType == 'circuit_relay_created'), isTrue);
       await sub.cancel();
     });
@@ -433,7 +462,7 @@ void main() {
       try {
         await client.connectThroughRelay(relayAddr, targetPeerId);
       } catch (_) {}
-      await Future.delayed(const Duration(milliseconds: 10));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(events.any((e) => e.eventType == 'circuit_relay_failed'), isTrue);
       await sub.cancel();
     });
@@ -477,7 +506,7 @@ void main() {
       expect(conn2.targetPeerId, '12');
 
       final pending = client.connectThroughRelay(relayAddr, '13');
-      await Future.delayed(const Duration(milliseconds: 10));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(router.connectedPeers, isNot(contains('13')));
 
       await client.disconnect('11');
@@ -517,13 +546,46 @@ void main() {
       final events = <CircuitRelayConnectionEvent>[];
       final sub = client.onCircuitRelayEvents.listen(events.add);
       router.emitPeerDisconnected(targetPeerId);
-      await Future.delayed(const Duration(milliseconds: 10));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(
         events.any(
           (e) =>
               e.eventType == 'circuit_relay_closed' &&
               e.relayAddress == targetPeerId,
         ),
+        isTrue,
+      );
+      await sub.cancel();
+    });
+  });
+
+  group('CircuitRelayClient STOP handling', () {
+    late _MockRouter router;
+    late CircuitRelayClient client;
+
+    setUp(() async {
+      router = _MockRouter();
+      client = CircuitRelayClient(router);
+      await client.start();
+    });
+
+    test('incoming STOP CONNECT replies with STATUS OK and emits event', () async {
+      final events = <CircuitRelayConnectionEvent>[];
+      final sub = client.onCircuitRelayEvents.listen(events.add);
+
+      final stopMsg = pb.StopMessage()
+        ..type = pb.StopMessage_Type.CONNECT
+        ..peer = (pb.Peer()..id = [1, 2, 3]);
+      router.deliverStopMessage('relay-peer', stopMsg.writeToBuffer());
+
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(router.sentPeers, contains('relay-peer'));
+      final response = pb.StopMessage.fromBuffer(router.sentMessages.last);
+      expect(response.type, pb.StopMessage_Type.STATUS);
+      expect(response.status, pb.Status.OK);
+      expect(
+        events.any((e) => e.eventType == 'circuit_relay_incoming'),
         isTrue,
       );
       await sub.cancel();

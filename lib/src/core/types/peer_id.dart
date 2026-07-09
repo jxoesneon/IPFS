@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart' as crypto;
-import 'package:dart_ipfs/src/utils/base58.dart';
+import '../../utils/base58.dart';
 
 /// Represents a peer identifier in the IPFS network.
 class PeerId {

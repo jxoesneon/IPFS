@@ -3,27 +3,28 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/config/bitswap_config.dart';
-import 'package:dart_ipfs/src/core/config/dht_config.dart';
-import 'package:dart_ipfs/src/core/config/gateway_config.dart';
-import 'package:dart_ipfs/src/core/config/graphsync_config.dart';
-import 'package:dart_ipfs/src/core/config/metrics_config.dart';
-import 'package:dart_ipfs/src/core/config/network_config.dart';
-import 'package:dart_ipfs/src/core/config/security_config.dart';
-import 'package:dart_ipfs/src/core/config/storage_config.dart';
-import 'package:dart_ipfs/src/platform/platform.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:yaml/yaml.dart';
 
-export 'package:dart_ipfs/src/core/config/bitswap_config.dart';
-export 'package:dart_ipfs/src/core/config/dht_config.dart';
-export 'package:dart_ipfs/src/core/config/gateway_config.dart';
-export 'package:dart_ipfs/src/core/config/graphsync_config.dart';
-export 'package:dart_ipfs/src/core/config/metrics_config.dart';
-export 'package:dart_ipfs/src/core/config/network_config.dart';
-export 'package:dart_ipfs/src/core/config/security_config.dart';
-export 'package:dart_ipfs/src/core/config/storage_config.dart';
+import '../../platform/platform.dart';
+import '../../utils/base58.dart';
+import '../../utils/keystore.dart';
+import 'bitswap_config.dart';
+import 'dht_config.dart';
+import 'gateway_config.dart';
+import 'graphsync_config.dart';
+import 'metrics_config.dart';
+import 'network_config.dart';
+import 'security_config.dart';
+import 'storage_config.dart';
+
+export 'bitswap_config.dart';
+export 'dht_config.dart';
+export 'gateway_config.dart';
+export 'graphsync_config.dart';
+export 'metrics_config.dart';
+export 'network_config.dart';
+export 'security_config.dart';
+export 'storage_config.dart';
 
 /// Configuration for an IPFS node.
 ///
@@ -122,6 +123,8 @@ class IPFSConfig {
     this.maxSelectorDepth = 32,
     this.maxSelectorNodes = 10000,
     this.customConfig = const {},
+    this.swarmKeyPath,
+    this.privateNetworkPsk,
   }) : network = network ?? NetworkConfig(),
        dht = dht ?? const DHTConfig(),
        storage = storage ?? const StorageConfig(),
@@ -130,7 +133,12 @@ class IPFSConfig {
        bitswap = bitswap ?? const BitswapConfig(),
        graphsync = graphsync ?? const GraphsyncConfig(),
        nodeId = nodeId ?? _generateDefaultNodeId(),
-       keystore = keystore ?? Keystore();
+       keystore = keystore ?? Keystore() {
+    // Sync top-level PNET fields into the nested network config so the
+    // router only has to inspect [network].
+    this.network.swarmKeyPath ??= swarmKeyPath;
+    this.network.privateNetworkPsk ??= privateNetworkPsk;
+  }
 
   /// Creates a new IPFSConfig with a generated nodeId
   factory IPFSConfig.withDefaults() {
@@ -223,6 +231,8 @@ class IPFSConfig {
       customConfig: Map<String, dynamic>.from(
         json['customConfig'] as Map? ?? const {},
       ),
+      swarmKeyPath: json['swarmKeyPath'] as String?,
+      privateNetworkPsk: null,
     );
   }
 
@@ -352,6 +362,14 @@ class IPFSConfig {
   /// Key-value pair for custom configuration options.
   final Map<String, dynamic> customConfig;
 
+  /// Optional path to a libp2p private-network swarm key file.
+  final String? swarmKeyPath;
+
+  /// The 32-byte pre-shared key loaded from [swarmKeyPath].
+  ///
+  /// This is populated at runtime and is intentionally not serialized.
+  final Uint8List? privateNetworkPsk;
+
   static String _generateDefaultNodeId() {
     final random = Random.secure();
     final bytes = List<int>.generate(32, (i) => random.nextInt(256));
@@ -425,5 +443,7 @@ class IPFSConfig {
         : null,
     'metrics': metrics.toJson(),
     'customConfig': customConfig,
+    'swarmKeyPath': swarmKeyPath,
+    // privateNetworkPsk is intentionally not serialized.
   };
 }

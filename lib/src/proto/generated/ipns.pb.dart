@@ -30,6 +30,8 @@ class IpnsEntry extends $pb.GeneratedMessage {
     $fixnum.Int64? sequence,
     $fixnum.Int64? ttl,
     $core.List<$core.int>? pubKey,
+    $core.List<$core.int>? signatureV2,
+    $core.List<$core.int>? data,
   }) {
     final result = create();
     if (value != null) result.value = value;
@@ -39,6 +41,8 @@ class IpnsEntry extends $pb.GeneratedMessage {
     if (sequence != null) result.sequence = sequence;
     if (ttl != null) result.ttl = ttl;
     if (pubKey != null) result.pubKey = pubKey;
+    if (signatureV2 != null) result.signatureV2 = signatureV2;
+    if (data != null) result.data = data;
     return result;
   }
 
@@ -71,6 +75,11 @@ class IpnsEntry extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(
         7, _omitFieldNames ? '' : 'pubKey', $pb.PbFieldType.OY,
         protoName: 'pubKey')
+    ..a<$core.List<$core.int>>(
+        8, _omitFieldNames ? '' : 'signatureV2', $pb.PbFieldType.OY,
+        protoName: 'signatureV2')
+    ..a<$core.List<$core.int>>(
+        9, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -153,6 +162,26 @@ class IpnsEntry extends $pb.GeneratedMessage {
   $core.bool hasPubKey() => $_has(6);
   @$pb.TagNumber(7)
   void clearPubKey() => $_clearField(7);
+
+  /// Kubo encodes the V2 signature in field 8 and the DAG-CBOR data in field 9
+  /// (swapped relative to the textual IPNS spec).
+  @$pb.TagNumber(8)
+  $core.List<$core.int> get signatureV2 => $_getN(7);
+  @$pb.TagNumber(8)
+  set signatureV2($core.List<$core.int> value) => $_setBytes(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasSignatureV2() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearSignatureV2() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.List<$core.int> get data => $_getN(8);
+  @$pb.TagNumber(9)
+  set data($core.List<$core.int> value) => $_setBytes(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasData() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearData() => $_clearField(9);
 }
 
 const $core.bool _omitFieldNames =

@@ -1,5 +1,5 @@
-import 'package:dart_ipfs/src/proto/generated/core/block.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import '../../proto/generated/core/block.pb.dart';
+import '../../proto/generated/core/blockstore.pb.dart';
 
 /// Base class for block operation responses.
 ///

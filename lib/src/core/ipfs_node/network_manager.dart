@@ -2,17 +2,17 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/data_structures/peer.dart';
-import 'package:dart_ipfs/src/core/errors/node_errors.dart';
-import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
+import '../../protocols/bitswap/bitswap_handler.dart';
+import '../../protocols/dht/dht_handler.dart';
+import '../../utils/base58.dart';
+import '../../utils/logger.dart';
+import '../cid.dart';
+import '../data_structures/peer.dart';
+import '../errors/node_errors.dart';
+import '../interfaces/i_lifecycle.dart';
+import 'content_routing_handler.dart';
+import 'datastore_handler.dart';
+import 'network_handler.dart';
 
 /// Manages network-related operations for the IPFS node.
 class NetworkManager implements ILifecycle {
@@ -40,6 +40,14 @@ class NetworkManager implements ILifecycle {
   @override
   Future<void> start() async {
     _logger.debug('Starting NetworkManager...');
+
+    final handler = _networkHandler;
+    if (handler != null) {
+      _logger.debug('Starting underlying network handler...');
+
+      await handler.start();
+
+    }
   }
 
   @override

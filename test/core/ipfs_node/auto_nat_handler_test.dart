@@ -8,6 +8,7 @@ import 'package:dart_ipfs/src/network/nat_traversal_service.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 
 import 'auto_nat_handler_test.mocks.dart';
+import '../../fakes/fake_router.dart';
 
 @GenerateNiceMocks([
   MockSpec<NetworkHandler>(),
@@ -22,6 +23,7 @@ void main() {
   setUp(() {
     mockNetworkHandler = MockNetworkHandler();
     mockNatService = MockNatTraversalService();
+    when(mockNetworkHandler.router).thenReturn(FakeRouter());
     // Initialize config with NAT traversal enabled and some bootstrap peers
     config = IPFSConfig(
       network: NetworkConfig(

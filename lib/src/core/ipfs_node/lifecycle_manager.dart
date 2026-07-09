@@ -1,7 +1,8 @@
 // src/core/ipfs_node/lifecycle_manager.dart
 import 'dart:async';
-import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
+
+import '../../utils/logger.dart';
+import '../interfaces/i_lifecycle.dart';
 
 /// Orchestrates the startup and shutdown sequence of all node services.
 class LifecycleManager {

@@ -1,13 +1,14 @@
 // src/core/ipfs_node/protocol_manager.dart
 import 'dart:async';
 
-import 'package:dart_ipfs/src/core/errors/node_errors.dart';
-import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
-import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
+import '../../protocols/dht/dht_handler.dart';
+import '../../protocols/ipns/ipns_handler.dart';
+import '../../protocols/pubsub/pubsub_message.dart';
+import '../../utils/logger.dart';
+import '../errors/node_errors.dart';
+import '../interfaces/i_lifecycle.dart';
+import 'content_routing_handler.dart';
+import 'pubsub_handler.dart';
 
 /// Manages protocol-related operations for the IPFS node.
 class ProtocolManager implements ILifecycle {
@@ -15,14 +16,17 @@ class ProtocolManager implements ILifecycle {
   ProtocolManager({
     PubSubHandler? pubSubHandler,
     DHTHandler? dhtHandler,
+    IPNSHandler? ipnsHandler,
     ContentRoutingHandler? contentRoutingHandler,
   }) : _pubSubHandler = pubSubHandler,
        _dhtHandler = dhtHandler,
+       _ipnsHandler = ipnsHandler,
        _contentRoutingHandler = contentRoutingHandler,
        _logger = Logger('ProtocolManager');
 
   final PubSubHandler? _pubSubHandler;
   final DHTHandler? _dhtHandler;
+  final IPNSHandler? _ipnsHandler;
   final ContentRoutingHandler? _contentRoutingHandler;
   final Logger _logger;
 
@@ -84,16 +88,22 @@ class ProtocolManager implements ILifecycle {
     return _pubSubHandler?.messages ?? const Stream.empty();
   }
 
-  /// Resolves an IPNS [name] to its corresponding CID.
+  /// Resolves an IPNS [name] to its corresponding content path.
   Future<String> resolveIPNS(String name) async {
     try {
+      if (_ipnsHandler != null) {
+        _logger.debug('Resolving IPNS name: $name');
+        final path = await _ipnsHandler.resolvePath(name);
+        _logger.info('Resolved IPNS $name to $path');
+        return path;
+      }
       if (_dhtHandler == null) {
-        throw ComponentError('DHTHandler', 'Required for IPNS resolution');
+        throw ComponentError('IPNSHandler', 'Required for IPNS resolution');
       }
       _logger.debug('Resolving IPNS name: $name');
       final cid = await _dhtHandler.resolveIPNS(name);
       _logger.info('Resolved IPNS $name to $cid');
-      return cid;
+      return '/ipfs/$cid';
     } catch (e, stackTrace) {
       _logger.error('Failed to resolve IPNS name $name', e, stackTrace);
       rethrow;
@@ -101,16 +111,24 @@ class ProtocolManager implements ILifecycle {
   }
 
   /// Publishes an IPNS record for the given [cid] using the specified [keyName].
-  Future<void> publishIPNS(String cid, {required String keyName}) async {
+  ///
+  /// Returns the IPNS name (base36-encoded peer ID) that was published.
+  Future<String> publishIPNS(String cid, {required String keyName}) async {
     try {
+      if (_ipnsHandler != null) {
+        _logger.info('Publishing IPNS record for $cid with key $keyName');
+        final name = await _ipnsHandler.publish(cid, keyName: keyName);
+        return name;
+      }
       if (_dhtHandler == null) {
         throw ComponentError(
-          'DHTHandler',
+          'IPNSHandler',
           'Required for publishing IPNS records',
         );
       }
       _logger.info('Publishing IPNS record for $cid with key $keyName');
       await _dhtHandler.publishIPNS(cid, keyName: keyName);
+      return '';
     } catch (e, stackTrace) {
       _logger.error('Failed to publish IPNS record for $cid', e, stackTrace);
       rethrow;

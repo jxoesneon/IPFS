@@ -1,7 +1,7 @@
 // src/core/interfaces/i_network_system.dart
-import 'package:dart_ipfs/src/core/events/network_events.dart';
-import 'package:dart_ipfs/src/core/interfaces/i_core_system.dart';
-import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import '../events/network_events.dart';
+import '../types/peer_id.dart';
+import 'i_core_system.dart';
 
 /// Interface for network subsystem operations.
 ///

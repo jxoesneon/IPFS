@@ -5,14 +5,15 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/config/security_config.dart';
-import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
-import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_multihash/dart_multihash.dart';
 import 'package:http/http.dart' as http;
 import 'package:multibase/multibase.dart';
+
+import '../../utils/logger.dart';
+import '../cid.dart';
+import '../config/security_config.dart';
+import '../interfaces/i_lifecycle.dart';
+import '../metrics/metrics_collector.dart';
 
 /// Statistics describing the current state of a denylist refresh.
 class DenylistStats {

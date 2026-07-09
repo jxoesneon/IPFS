@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
+
 import 'package:markdown/markdown.dart' as md;
+
+import '../../core/data_structures/block.dart';
 
 /// Handles file preview generation for supported file types
 class FilePreviewHandler {

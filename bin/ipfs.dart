@@ -63,7 +63,8 @@ class DaemonCommand extends IpfsCommand {
       ..addOption(
         'api-addr',
         help: 'RPC API bind address',
-        defaultsTo: '/ip4/127.0.0.1/tcp/5001',
+        defaultsTo: Platform.environment['IPFS_API_ADDR'] ??
+            '/ip4/127.0.0.1/tcp/5001',
       )
       ..addOption(
         'gateway-addr',
@@ -718,6 +719,18 @@ Future<IPFSConfig> _buildConfig({String? configPath}) async {
 
   IPFSConfig baseConfig;
   if (effectiveConfigPath != null) {
+    final configFile = File(effectiveConfigPath);
+    if (!await configFile.exists()) {
+      // Auto-initialize a minimal default config so CLI commands can run
+      // even when the expected config file has not been created yet.
+      await configFile.parent.create(recursive: true);
+      await configFile.writeAsString(
+        jsonEncode(<String, dynamic>{
+          'offline': true,
+          'customConfig': <String, dynamic>{},
+        }),
+      );
+    }
     baseConfig = await IPFSConfig.fromFile(effectiveConfigPath);
   } else {
     baseConfig = IPFSConfig();

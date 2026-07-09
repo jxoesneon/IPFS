@@ -1,5 +1,5 @@
 // lib/src/core/services/health_check_service.dart
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import '../ipfs_node/ipfs_node.dart';
 
 /// Service responsible for monitoring and reporting the health of IPFS node components.
 class HealthCheckService {

@@ -1,8 +1,9 @@
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
-import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
+
+import '../../proto/generated/core/pin.pb.dart';
+import '../cid.dart';
+import 'blockstore.dart';
+import 'pin_manager.dart';
 
 /// A pin that prevents content from being garbage collected.
 ///
@@ -89,3 +90,4 @@ class Pin {
     return blockStore.pinManager.isBlockPinned(cid.toProto());
   }
 }
+

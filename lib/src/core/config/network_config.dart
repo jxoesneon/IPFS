@@ -1,7 +1,7 @@
 // src/core/config/network_config.dart
 import 'dart:math';
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/utils/base58.dart';
+import '../../utils/base58.dart';
 
 /// Network configuration for the IPFS node.
 ///
@@ -35,6 +35,10 @@ class NetworkConfig {
     this.turnServers = const [],
     String? nodeId,
     this.delegatedRoutingEndpoint,
+    this.ipniEndpoints = const <String>[],
+    this.reframeEndpoints = const <String>[],
+    this.swarmKeyPath,
+    this.privateNetworkPsk,
   }) : nodeId = nodeId ?? _generateDefaultNodeId();
 
   /// Creates a network configuration with the given options and a generated Peer ID.
@@ -54,6 +58,8 @@ class NetworkConfig {
     CircuitRelayConfig? circuitRelay,
     List<String> stunServers = const [],
     List<TurnServer> turnServers = const [],
+    String? swarmKeyPath,
+    Uint8List? privateNetworkPsk,
   }) {
     return NetworkConfig(
       listenAddresses: listenAddresses,
@@ -72,6 +78,8 @@ class NetworkConfig {
       stunServers: stunServers,
       turnServers: turnServers,
       nodeId: _generateDefaultNodeId(),
+      swarmKeyPath: swarmKeyPath,
+      privateNetworkPsk: privateNetworkPsk,
     );
   }
 
@@ -107,8 +115,22 @@ class NetworkConfig {
           const [],
       nodeId: json['nodeId'] as String?,
       delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'] as String?,
+      ipniEndpoints: (json['ipniEndpoints'] as List?)?.cast<String>() ??
+          const [],
+      reframeEndpoints: (json['reframeEndpoints'] as List?)?.cast<String>() ??
+          const <String>[],
+      swarmKeyPath: json['swarmKeyPath'] as String?,
+      privateNetworkPsk: null,
     );
   }
+
+  /// Default IPNI endpoints used when no custom endpoints are configured.
+  static const defaultIpniEndpoints = [
+    'https://cid.contact',
+  ];
+
+  /// Default Reframe endpoints used when no custom endpoints are configured.
+  static const defaultReframeEndpoints = <String>[];
 
   /// Default multiaddr listen addresses for TCP.
   static const defaultListenAddresses = [
@@ -184,6 +206,20 @@ class NetworkConfig {
   /// Optional HTTP endpoint for delegated routing.
   final String? delegatedRoutingEndpoint;
 
+  /// Optional IPNI endpoints for content routing.
+  final List<String> ipniEndpoints;
+
+  /// Optional Reframe endpoints for delegated routing.
+  final List<String> reframeEndpoints;
+
+  /// Optional path to a libp2p private-network swarm key file.
+  String? swarmKeyPath;
+
+  /// The 32-byte pre-shared key loaded from [swarmKeyPath].
+  ///
+  /// This is populated at runtime and is intentionally not serialized.
+  Uint8List? privateNetworkPsk;
+
   /// Converts the network configuration to a JSON map.
   Map<String, dynamic> toJson() => {
     'listenAddresses': listenAddresses,
@@ -203,6 +239,10 @@ class NetworkConfig {
     'circuitRelay': circuitRelay.toJson(),
     'nodeId': nodeId,
     'delegatedRoutingEndpoint': delegatedRoutingEndpoint,
+    'ipniEndpoints': ipniEndpoints,
+    'reframeEndpoints': reframeEndpoints,
+    'swarmKeyPath': swarmKeyPath,
+    // privateNetworkPsk is intentionally not serialized.
   };
 
   static String _generateDefaultNodeId() {

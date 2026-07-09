@@ -1,6 +1,7 @@
-import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 import 'package:fixnum/fixnum.dart';
+
+import '../../proto/generated/core/dag.pb.dart';
+import '../../proto/generated/unixfs/unixfs.pb.dart';
 
 // lib/src/core/data_structures/directory.dart
 

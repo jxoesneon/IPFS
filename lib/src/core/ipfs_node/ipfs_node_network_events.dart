@@ -2,9 +2,8 @@
 
 import 'dart:async';
 
-import 'package:dart_ipfs/src/transport/router_interface.dart';
-
 import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
+import '../../transport/router_interface.dart';
 
 /// Handles network events for an IPFS node.
 class IpfsNodeNetworkEvents {

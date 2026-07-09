@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
-import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
-import 'package:dart_ipfs/src/transport/libp2p_router.dart';
-import 'package:dart_ipfs/src/transport/router_interface.dart';
+import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
+import '../../transport/circuit_relay_client.dart';
+import '../../transport/libp2p_router.dart';
+import '../../transport/router_interface.dart';
+import '../config/ipfs_config.dart';
+import 'ipfs_node.dart';
 
 /// Web stub for NetworkHandler.
 ///

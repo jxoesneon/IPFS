@@ -1,7 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/proto/base_message.dart';
 import 'package:protobuf/protobuf.dart';
+
+import '../base_message.dart';
 
 /// Bitswap protocol message for block exchange.
 class BitswapMessage extends BaseProtoMessage {

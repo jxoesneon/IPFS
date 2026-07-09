@@ -1,0 +1,11 @@
+name: interop_tests
+description: Interoperability tests for dart_ipfs with Kubo and Helia
+publish_to: none
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  dart_ipfs:
+    path: ../..
+  test: ^1.24.0

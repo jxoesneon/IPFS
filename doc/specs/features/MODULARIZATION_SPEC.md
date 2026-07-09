@@ -3,7 +3,7 @@
 **Document ID:** `MODULARIZATION_SPEC`  
 **Version:** 1.0-draft  
 **Target Release:** dart_ipfs v2.2.x / release-candidate (not a v2.2.0 blocker)  
-**Status:** Draft specification for implementation  
+**Status:** Deferred by Council of Five decision (2026-07-09)  
 **Council Priority:** P1 MODIFIED  
 **Source:** `OPERATIONS_ECOSYSTEM_SPEC` section 4.5
 
@@ -220,3 +220,81 @@ export 'package:dart_ipfs_core/dart_ipfs_core.dart'
 | Single-package monorepo | v2.2.0 | v3.0.0 (full package split) |
 
 - In v3.0, additional protocol and service packages may be extracted, and the umbrella package may become a pure facade. Phase 1 intentionally avoids that scope to minimize disruption.
+
+---
+
+## 10. Council of Five Decision — 2026-07-09
+
+### 10.1 Initial deliberation
+
+A first Council of Five deliberation was held for WP-07 (core modularization redesign). The proposal presented three options:
+
+1. Extend `dart_ipfs_core` CID API and migrate incrementally.
+2. Defer WP-07 and keep the monolithic core.
+3. Create a compatibility adapter/extension layer.
+
+| Council Member | Option 1 | Option 2 | Option 3 | Preferred |
+|----------------|----------|----------|----------|-----------|
+| Coherence      | 6        | 8        | 4        | Option 2  |
+| Capability     | 7        | 3        | 4        | Option 1  |
+| Safety         | 6        | 9        | 4        | Option 2  |
+| Efficiency     | 4        | 9        | 3        | Option 2  |
+| Evolution      | 8        | 3        | 5        | Option 1  |
+| **Total**      | **31**   | **32**   | **20**   |           |
+
+**Initial verdict:** Option 2 — Defer WP-07 indefinitely and keep the monolithic core (3 of 5 votes).
+
+### 10.2 Strategic research and final decision
+
+Following the initial verdict, an agentic-loop research phase investigated how other IPFS implementations modularize, what the Dart ecosystem expects, whether any downstream consumer needs `dart_ipfs_core`, and where the official specs place the CID/protobuf boundary. The findings were:
+
+- **Kubo, Helia, rust-ipfs, js-ipfs, and go-libp2p** all keep CID/multihash/multibase in protocol-agnostic packages with **no** protobuf dependency.
+- The official **CID specification** defines only binary and multibase-string encodings. Protobuf is a **protocol container**, not a CID encoding.
+- The reference `go-cid` library exposes `Bytes()`, `Cast()`, `Decode()`, `String()` — but **no** `fromProto()`/`toProto()`.
+- `dart_ipfs` has **0 pub.dev dependents**; no GitHub issues, discussions, StackOverflow questions, Reddit threads, or blogs request modularization or core-only imports.
+- The Dart/Flutter IPFS community overwhelmingly uses **HTTP API clients**, not full nodes.
+
+A second Council of Five deliberation was convened with three revised options:
+
+- **Option A:** Defer WP-07 indefinitely (status quo).
+- **Option B:** Redesign WP-07 into a proper spec-aligned modularization (protobuf-free core, protobuf methods in protocol packages).
+- **Option C:** Abandon WP-07 and redirect effort to adoption (docs, examples, HTTP API wrapper, community outreach).
+
+| Council Member | Option A | Option B | Option C | Preferred |
+|----------------|----------|----------|----------|-----------|
+| Coherence      | 6        | 4        | 9        | **C**     |
+| Capability     | 6        | 3        | 9        | **C**     |
+| Safety         | 6        | 3        | 8        | **C**     |
+| Efficiency     | 8        | 2        | 9        | **C**     |
+| Evolution      | 3        | 7        | 8        | **C**     |
+| **Total**      | **29**   | **19**   | **43**   |           |
+
+**Final verdict:** Unanimous — **Option C**. WP-07 is abandoned as originally specified. The project will pursue an **adoption-first strategy**.
+
+### 10.3 Rationale
+
+1. The original WP-07 plan would have moved protobuf-specific CID methods into `dart_ipfs_core`, violating the boundary that every other IPFS implementation respects.
+2. A proper spec-aligned modularization (Option B) is architecturally correct but high-risk and premature: it would touch ~43 source files and ~260 test files with zero current beneficiaries.
+3. `dart_ipfs` has no downstream consumers today. The highest-leverage use of effort is to build adoption, not to refactor for hypothetical users.
+4. The Dart/Flutter ecosystem's actual demand is for lightweight HTTP API clients, not full IPFS nodes.
+
+### 10.4 Conditions for revisiting modularization
+
+Reconsider WP-07 only when one or more of the following are true:
+
+- `dart_ipfs` reaches **≥5 pub.dev dependents** (or a similarly concrete adoption signal).
+- A downstream package explicitly requests protocol-agnostic CID/multihash/multibase primitives without the full IPFS protocol stack.
+- The project has the resources to execute Option B correctly: a protobuf-free `dart_ipfs_core` and protobuf methods in protocol-specific packages.
+
+If modularization is revisited, the original WP-07 design is **discredited**. The new design must follow the go-cid / js-multiformats / rust-cid pattern:
+
+- `dart_ipfs_core` contains only protocol-agnostic primitives: `CID.fromBytes()`, `CID.toBytes()`, `CID.fromString()`, `CID.toString()`, `version`, `codec`, `multihash`, plus Multihash/Multibase/Multicodec and Block/BlockStore interfaces.
+- `CID.fromProto()` / `CID.toProto()` are **not** in core. They live in protocol-specific packages or remain in the umbrella as convenience helpers.
+
+### 10.5 Decision record
+
+Full Council context, research synthesis, and member rationales are recorded in the Obsidian vault:
+
+- `ciel/kg/decisions/2026-07-09-wp07-council-decision.md` (initial deliberation)
+- `ciel/kg/decisions/2026-07-09-wp07-research-synthesis.md`
+- `ciel/kg/decisions/2026-07-09-wp07-final-decision.md`

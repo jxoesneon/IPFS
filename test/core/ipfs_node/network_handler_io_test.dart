@@ -57,9 +57,9 @@ void main() {
       when(mockRouter.stop()).thenAnswer((_) async {});
 
       await handler.start();
-      // Called once by handler and once by circuitRelayClient
+      // Called once by handler, once by circuitRelayClient (HOP + STOP), and once by AutoNAT dialback.
       verify(mockRouter.start()).called(1);
-      verify(mockRouter.registerProtocolHandler(any, any)).called(2);
+      verify(mockRouter.registerProtocolHandler(any, any)).called(3);
 
       await handler.stop();
       verify(mockRouter.stop()).called(1);

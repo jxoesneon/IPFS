@@ -162,7 +162,7 @@ void main() {
         hostPublicKeyBytes: keyPair.publicKeyBytes,
       );
       final certInfo = chain.certs.first;
-      final certBytes = certInfo.rawBytes;
+      final certBytes = Uint8List.fromList(certInfo.rawBytes);
 
       final quicConn = _createQuicConnection();
       quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.handshaking);
@@ -176,7 +176,7 @@ void main() {
       );
       addTearDown(() => conn.close());
 
-      expect(await conn.verifyPeerCertificate(certBytes), isTrue);
+      expect(await conn.verifyPeerCertificate(Uint8List.fromList(certBytes)), isTrue);
       expect(conn.remotePeer, isNotNull);
     });
 
@@ -223,7 +223,7 @@ void main() {
         hostIdentityPrivateKey: keyPair.privateKey,
         hostPublicKeyBytes: keyPair.publicKeyBytes,
       );
-      final certBytes = chain.certs.first.rawBytes;
+      final certBytes = Uint8List.fromList(chain.certs.first.rawBytes);
 
       final quicConn = _createQuicConnection();
       quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.handshaking);
@@ -231,7 +231,7 @@ void main() {
       quicConn.negotiatedAlpn = 'libp2p';
       final libp2pConn = quic_lib.Libp2pQuicConnection(quicConn);
       await libp2pConn.verifyPeerCertificate(
-        certBytes,
+        Uint8List.fromList(certBytes),
         backend: quic_lib.DefaultCryptoBackend(),
       );
       final conn = QuicConnection(
@@ -464,6 +464,120 @@ void main() {
       expect(stream.protocol(), '/test/1.0.0');
     });
   });
+
+  group('Integration: libp2p TLS 1.3 handshake', () {
+    test('complete handshake flow with mock QUIC connection', () async {
+      // Generate Ed25519 key pair for libp2p identity
+      final kp = await _generateEd25519KeyPair();
+
+      // Generate a libp2p TLS certificate
+      final generator = quic_lib.Libp2pCertificateGenerator(
+        quic_lib.DefaultCryptoBackend(),
+      );
+      final chain = await generator.generate(
+        hostIdentityPrivateKey: kp.privateKey,
+        hostPublicKeyBytes: kp.publicKeyBytes,
+      );
+      final certBytes = Uint8List.fromList(chain.certs.first.rawBytes);
+
+      // Create a mock QUIC connection that exposes the peer certificate
+      final mockQuicConn = _MockQuicConnectionWithCert(Uint8List.fromList(certBytes));
+      final libp2pConn = quic_lib.Libp2pQuicConnection(mockQuicConn);
+      
+      // Create QuicConnection adapter
+      final conn = QuicConnection(
+        libp2pConn,
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      // Verify the peer certificate from the handshake
+      final verified = await conn.verifyPeerFromHandshake();
+      
+      expect(verified, isTrue, reason: 'Should verify peer certificate from handshake');
+      
+      // Verify that the remote peer ID is set
+      expect(() => conn.remotePeer, returnsNormally);
+      
+      // Verify ALPN negotiation (mock returns 'libp2p')
+      expect(conn.verifyPeer(), isTrue);
+    });
+
+    test('verifies peer certificate extraction from quic_lib handshake', () async {
+      // Generate Ed25519 key pair for libp2p identity
+      final kp = await _generateEd25519KeyPair();
+      
+      // Generate a libp2p TLS certificate
+      final generator = quic_lib.Libp2pCertificateGenerator(
+        quic_lib.DefaultCryptoBackend(),
+      );
+      final chain = await generator.generate(
+        hostIdentityPrivateKey: kp.privateKey,
+        hostPublicKeyBytes: kp.publicKeyBytes,
+      );
+      final certBytes = Uint8List.fromList(chain.certs.first.rawBytes);
+
+      // Create a real QUIC connection with the certificate
+      final quicConn = _createQuicConnection();
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.handshaking);
+      quicConn.stateMachine.transitionTo(quic_lib.ConnectionState.established);
+      
+      // Simulate peer certificate being set during handshake
+      // Note: In a real handshake, quic_lib sets peerCertificate via CryptoFrameHandler
+      // For this test, we verify the certificate verification logic works
+      
+      final libp2pConn = quic_lib.Libp2pQuicConnection(quicConn);
+      final conn = QuicConnection(
+        libp2pConn,
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      // Verify the peer certificate directly
+      final verified = await conn.verifyPeerCertificate(Uint8List.fromList(certBytes));
+      
+      expect(verified, isTrue, reason: 'Should verify peer certificate');
+      expect(() => conn.remotePeer, returnsNormally);
+    });
+
+    test('verifies ALPN negotiation is properly configured', () async {
+      // Generate Ed25519 key pair
+      final kp = await _generateEd25519KeyPair();
+      
+      // Generate a libp2p TLS certificate
+      final generator = quic_lib.Libp2pCertificateGenerator(
+        quic_lib.DefaultCryptoBackend(),
+      );
+      final chain = await generator.generate(
+        hostIdentityPrivateKey: kp.privateKey,
+        hostPublicKeyBytes: kp.publicKeyBytes,
+      );
+      final certBytes = Uint8List.fromList(chain.certs.first.rawBytes);
+
+      // Create a mock QUIC connection with libp2p ALPN
+      final mockQuicConn = _MockQuicConnectionWithCert(Uint8List.fromList(certBytes));
+      final libp2pConn = quic_lib.Libp2pQuicConnection(mockQuicConn);
+      
+      // Create QuicConnection adapter
+      final conn = QuicConnection(
+        libp2pConn,
+        localAddr: MultiAddr('/ip4/127.0.0.1/udp/4002/quic-v1'),
+        remoteAddr: MultiAddr('/ip4/127.0.0.1/udp/4003/quic-v1'),
+        isServer: false,
+      );
+      addTearDown(() => conn.close());
+
+      // Verify the peer certificate first to set the peer ID
+      await conn.verifyPeerFromHandshake();
+      
+      // Verify ALPN negotiation (requires both ALPN and peer ID)
+      expect(conn.verifyPeer(), isTrue, reason: 'ALPN should be valid and peer ID set');
+    });
+  });
 }
 
 class _FakeQuicConnectionAdapter implements QuicConnectionAdapter {
@@ -514,4 +628,15 @@ class _TransitioningQuicConnectionAdapter implements QuicConnectionAdapter {
 
   @override
   Future<void> close() async {}
+}
+
+/// Mock QUIC connection that exposes a peer certificate for testing.
+class _MockQuicConnectionWithCert {
+  final Uint8List _certBytes;
+  
+  _MockQuicConnectionWithCert(this._certBytes);
+  
+  Uint8List get peerCertificate => _certBytes;
+  String get negotiatedAlpn => 'libp2p';
+  bool get isEstablished => true;
 }

@@ -2,24 +2,25 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/data_structures/directory.dart';
-import 'package:dart_ipfs/src/core/data_structures/link.dart';
-import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
-import 'package:dart_ipfs/src/core/data_structures/pin.dart';
-import 'package:dart_ipfs/src/core/errors/node_errors.dart';
-import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/core/security/denylist_service.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-import 'package:dart_ipfs/src/transport/http_gateway_client.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
+
+import '../../proto/generated/core/pin.pb.dart';
+import '../../protocols/bitswap/bitswap_handler.dart';
+import '../../transport/http_gateway_client.dart';
+import '../../utils/logger.dart';
+import '../cid.dart';
+import '../data_structures/block.dart';
+import '../data_structures/blockstore.dart';
+import '../data_structures/directory.dart';
+import '../data_structures/link.dart';
+import '../data_structures/merkle_dag_node.dart';
+import '../data_structures/pin.dart';
+import '../errors/node_errors.dart';
+import '../interfaces/i_lifecycle.dart';
+import '../security/denylist_service.dart';
+import '../storage/datastore.dart';
+import 'datastore_handler.dart';
+import 'ipfs_node.dart';
 
 /// Manages content-related operations for the IPFS node.
 class ContentManager implements ILifecycle {

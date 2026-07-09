@@ -1,14 +1,13 @@
 // src/ipfs.dart
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-
 import 'core/config/ipfs_config.dart';
 import 'core/data_structures/link.dart';
 import 'core/data_structures/node_stats.dart';
 import 'core/data_structures/peer.dart';
 import 'core/ipfs_node/ipfs_node.dart';
 import 'core/storage/datastore.dart';
+import 'protocols/bitswap/bitswap_handler.dart';
 import 'transport/router_interface.dart';
 
 /// Main entry point for the IPFS (InterPlanetary File System) implementation.
@@ -180,7 +179,8 @@ class IPFS {
   /// Publishes an IPNS record.
   ///
   /// Requires an IPNS key to be configured in the keystore.
-  Future<void> publishIPNS(String cid, {required String keyName}) async {
+  /// Returns the IPNS name (base36-encoded peer ID) that was published.
+  Future<String> publishIPNS(String cid, {required String keyName}) async {
     return _node.publishIPNS(cid, keyName: keyName);
   }
 

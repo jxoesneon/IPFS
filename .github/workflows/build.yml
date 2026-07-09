@@ -26,7 +26,7 @@ jobs:
         run: dart pub get
 
       - name: Compile AOT
-        run: dart compile exe example/main.dart -o ipfs_node_${{ matrix.os }}
+        run: dart compile exe example/dart_ipfs_example.dart -o ipfs_node_${{ matrix.os }}
 
   build-flutter:
     name: Build Flutter Dashboard (${{ matrix.target }})

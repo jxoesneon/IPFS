@@ -1,7 +1,7 @@
 // src/core/interfaces/i_storage_system.dart
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/core/interfaces/i_core_system.dart';
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import '../../proto/generated/core/blockstore.pb.dart';
+import '../data_structures/block.dart';
+import 'i_core_system.dart';
 
 /// Interface for block storage subsystem operations.
 ///

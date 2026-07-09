@@ -136,7 +136,7 @@ class MockIPFSNode implements IPFSNode {
   Future<void> disconnectFromPeer(String peerId) async {}
 
   @override
-  Future<void> publishIPNS(String cid, {required String keyName}) async {}
+  Future<String> publishIPNS(String cid, {required String keyName}) async => 'k51ipns';
 
   @override
   Future<String> resolveIPNS(String name) async => '/ipfs/QmResolved';

@@ -297,5 +297,33 @@ void main() {
       // (depends on implementation - may throw or be idempotent)
       await node.stop();
     });
+
+    test('bandwidthIn and bandwidthOut return zero with no traffic', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+      expect(node.bandwidthIn, equals(0));
+      expect(node.bandwidthOut, equals(0));
+      await node.stop();
+    });
+
+    test('bandwidthIn and bandwidthOut aggregate metrics', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+      final metrics = container.get<MetricsCollector>();
+      metrics.recordMessageReceived('bitswap', 100);
+      metrics.recordMessageReceived('dht', 50);
+      metrics.recordMessageSent('bitswap', 200);
+
+      expect(node.bandwidthIn, equals(150));
+      expect(node.bandwidthOut, equals(200));
+      await node.stop();
+    });
+
+    test('dhtPeerCount returns zero when offline', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+      expect(node.dhtPeerCount, equals(0));
+      await node.stop();
+    });
   });
 }

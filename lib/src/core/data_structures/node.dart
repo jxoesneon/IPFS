@@ -1,16 +1,17 @@
 import 'dart:async';
 
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/routing_handler.dart';
-import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
-import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:fixnum/fixnum.dart';
+
+import '../../protocols/bitswap/bitswap_handler.dart';
+import '../../protocols/dht/dht_handler.dart';
+import '../../transport/router_interface.dart';
+import '../cid.dart';
+import '../config/ipfs_config.dart';
+import '../ipfs_node/datastore_handler.dart';
+import '../ipfs_node/network_handler.dart';
+import '../ipfs_node/pubsub_handler.dart';
+import '../ipfs_node/routing_handler.dart';
+import '../storage/datastore.dart';
 
 /// Types of IPFS nodes in the UnixFS data model.
 enum IPFSNodeType {
@@ -93,6 +94,13 @@ class IPFSDataNode {
 
   /// Stream of new content CIDs.
   Stream<String> get onNewContent => _newContentController.stream;
+
+  /// Disposes of the node's resources.
+  void dispose() {
+    if (!_newContentController.isClosed) {
+      _newContentController.close();
+    }
+  }
 
   late final String _peerID;
 

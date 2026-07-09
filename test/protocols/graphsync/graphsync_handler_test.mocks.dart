@@ -267,6 +267,32 @@ class MockRouterInterface extends _i1.Mock implements _i7.RouterInterface {
   );
 
   @override
+  void unregisterProtocolHandler(String? protocolId) => super.noSuchMethod(
+    Invocation.method(#unregisterProtocolHandler, [protocolId]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  _i9.Future<_i11.Uint8List> sendMessageWithResponse(
+    String? peerId,
+    _i11.Uint8List? message, {
+    String? protocolId,
+    Duration? timeout,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #sendMessageWithResponse,
+              [peerId, message],
+              {#protocolId: protocolId, #timeout: timeout},
+            ),
+            returnValue: _i9.Future<_i11.Uint8List>.value(_i11.Uint8List(0)),
+            returnValueForMissingStub: _i9.Future<_i11.Uint8List>.value(
+              _i11.Uint8List(0),
+            ),
+          )
+          as _i9.Future<_i11.Uint8List>);
+
+  @override
   void registerProtocol(String? protocolId) => super.noSuchMethod(
     Invocation.method(#registerProtocol, [protocolId]),
     returnValueForMissingStub: null,

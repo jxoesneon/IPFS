@@ -74,8 +74,8 @@ class DelegatedRoutingHandler {
         final providersList = decoded['Providers'];
         if (providersList is List) {
           final providers = providersList
-              .where((provider) => provider is Map<String, dynamic>)
-              .map((provider) => (provider as Map<String, dynamic>)['ID'])
+              .whereType<Map<String, dynamic>>()
+              .map((provider) => (provider)['ID'])
               .where((id) => id is String && id.isNotEmpty)
               .cast<String>()
               .toList();

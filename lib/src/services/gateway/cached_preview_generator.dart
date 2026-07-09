@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/services/gateway/content_type_handler.dart';
-import 'package:dart_ipfs/src/services/gateway/file_preview_handler.dart';
-import 'package:dart_ipfs/src/services/gateway/preview_cache_manager.dart';
+import '../../core/data_structures/block.dart';
+import 'content_type_handler.dart';
+import 'file_preview_handler.dart';
+import 'preview_cache_manager.dart';
 
 /// Generates and caches content previews for gateway responses.
 ///

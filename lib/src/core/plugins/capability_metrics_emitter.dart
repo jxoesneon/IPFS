@@ -4,7 +4,7 @@
 // `metrics.emit` capability can emit counters/histograms without receiving
 // a raw reference to the underlying [MetricsCollector].
 
-import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
+import '../metrics/metrics_collector.dart';
 
 import 'capability_exception.dart';
 import 'capability_registry.dart';

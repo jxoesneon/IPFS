@@ -24,7 +24,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 ## 📚 Documentation
 
 - **[Architecture Guide](doc/ARCHITECTURE.md)** — Deep dive into the Manager-Handler pattern
-- **[Wiki](https://github.com/jxoesneon/IPFS/wiki)** — Guides, Installation, Architecture
+- **[ACME Certificate Issuance](doc/ACME_CERTIFICATE_ISSUANCE.md)** — Automatic TLS certificate management
 - **[API Reference](https://jxoesneon.github.io/IPFS/)** — Auto-generated Dart docs
 
 ---
@@ -238,6 +238,8 @@ await node.start();
 print('Gateway running at http://localhost:8080');
 // Access content at: `http://localhost:8080/ipfs/<CID>`
 ```
+
+**Automatic TLS with ACME**: The gateway supports automatic certificate issuance via Let's Encrypt/ZeroSSL. See [ACME Certificate Issuance](doc/ACME_CERTIFICATE_ISSUANCE.md) for configuration details.
 
 #### P2P Network Mode (Full Node)
 

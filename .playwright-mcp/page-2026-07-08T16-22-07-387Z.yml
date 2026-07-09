@@ -1,0 +1,289 @@
+- generic [ref=f16e1]:
+  - generic [ref=f16e2]:
+    - navigation [ref=f16e3]:
+      - generic [ref=f16e4]:
+        - button "My pub.dev" [active] [ref=f16e5] [cursor=pointer]
+        - generic [ref=f16e257]:
+          - link "Publishers" [ref=f16e258] [cursor=pointer]:
+            - /url: /my-publishers
+          - link "Packages" [ref=f16e259] [cursor=pointer]:
+            - /url: /my-packages
+          - link "Likes" [ref=f16e260] [cursor=pointer]:
+            - /url: /my-liked-packages
+          - link "Activity log" [ref=f16e261] [cursor=pointer]:
+            - /url: /my-activity-log
+          - link "Create publisher" [ref=f16e262] [cursor=pointer]:
+            - /url: /create-publisher
+      - button "Help" [ref=f16e7] [cursor=pointer]
+      - button "Profile Image" [ref=f16e9] [cursor=pointer]
+    - button "light/dark theme toggle" [ref=f16e10] [cursor=pointer]
+  - generic [ref=f16e12]:
+    - heading "pub.dev package manager" [level=2] [ref=f16e13]
+    - searchbox "Search" [ref=f16e15]
+    - paragraph [ref=f16e17]:
+      - text: The official package repository for
+      - link "Dart" [ref=f16e18] [cursor=pointer]:
+        - /url: https://dart.dev/
+      - text: and
+      - link "Flutter" [ref=f16e19] [cursor=pointer]:
+        - /url: https://flutter.dev/
+      - text: apps.
+    - img "Supported by Google" [ref=f16e20]
+  - main [ref=f16e21]:
+    - generic [ref=f16e23]:
+      - heading "Flutter Favorites" [level=1] [ref=f16e24]
+      - paragraph [ref=f16e25]:
+        - text: Some of the packages that demonstrate the
+        - link "highest levels of quality" [ref=f16e26] [cursor=pointer]:
+          - /url: https://flutter.dev/docs/development/packages-and-plugins/favorites
+        - text: ", selected by the Flutter Ecosystem Committee"
+      - generic [ref=f16e27]:
+        - generic [ref=f16e28]:
+          - link "connectivity_plus" [ref=f16e29] [cursor=pointer]:
+            - /url: /packages/connectivity_plus
+            - heading "connectivity_plus" [level=2] [ref=f16e30]
+          - paragraph [ref=f16e32]: Flutter plugin for discovering the state of the network (WiFi & mobile/cellular) connectivity on Android and iOS.
+          - generic [ref=f16e34]:
+            - img "verified publisher" [ref=f16e35]
+            - link "fluttercommunity.dev" [ref=f16e36] [cursor=pointer]:
+              - /url: /publishers/fluttercommunity.dev
+        - generic [ref=f16e37]:
+          - link "cloud_functions" [ref=f16e38] [cursor=pointer]:
+            - /url: /packages/cloud_functions
+            - heading "cloud_functions" [level=2] [ref=f16e39]
+          - paragraph [ref=f16e41]: A Flutter plugin allowing you to use Firebase Cloud Functions.
+          - generic [ref=f16e43]:
+            - img "verified publisher" [ref=f16e44]
+            - link "firebase.google.com" [ref=f16e45] [cursor=pointer]:
+              - /url: /publishers/firebase.google.com
+        - generic [ref=f16e46]:
+          - link "infinite_scroll_pagination" [ref=f16e47] [cursor=pointer]:
+            - /url: /packages/infinite_scroll_pagination
+            - heading "infinite_scroll_pagination" [level=2] [ref=f16e48]
+          - paragraph [ref=f16e50]: Lazily load and display pages of items as the user scrolls down your screen.
+          - generic [ref=f16e52]:
+            - img "verified publisher" [ref=f16e53]
+            - link "edsonbueno.com" [ref=f16e54] [cursor=pointer]:
+              - /url: /publishers/edsonbueno.com
+        - generic [ref=f16e55]:
+          - link "rxdart" [ref=f16e56] [cursor=pointer]:
+            - /url: /packages/rxdart
+            - heading "rxdart" [level=2] [ref=f16e57]
+          - paragraph [ref=f16e59]: RxDart is an implementation of the popular ReactiveX api for asynchronous programming, leveraging the native Dart Streams api.
+          - generic [ref=f16e61]:
+            - img "verified publisher" [ref=f16e62]
+            - link "fluttercommunity.dev" [ref=f16e63] [cursor=pointer]:
+              - /url: /publishers/fluttercommunity.dev
+      - link "View all" [ref=f16e65] [cursor=pointer]:
+        - /url: /packages?q=is%3Aflutter-favorite
+    - generic [ref=f16e67]:
+      - heading "Trending packages" [level=1] [ref=f16e68]
+      - paragraph [ref=f16e69]: Top trending packages in the last 30 days
+      - generic [ref=f16e70]:
+        - generic [ref=f16e71]:
+          - link "mixpanel_flutter_common" [ref=f16e72] [cursor=pointer]:
+            - /url: /packages/mixpanel_flutter_common
+            - heading "mixpanel_flutter_common" [level=2] [ref=f16e73]
+          - paragraph [ref=f16e75]: Shared common library for the Mixpanel Flutter SDK family.
+        - generic [ref=f16e76]:
+          - link "isolated_object" [ref=f16e77] [cursor=pointer]:
+            - /url: /packages/isolated_object
+            - heading "isolated_object" [level=2] [ref=f16e78]
+          - paragraph [ref=f16e80]: Wraps an object in a dedicated isolate and forwards method calls to it, so timer- or event-loop-driven work (e.g. progress spinners) keeps running even when the calling isolate's event loop is blocked [...]
+          - generic [ref=f16e82]:
+            - img "verified publisher" [ref=f16e83]
+            - link "serverpod.dev" [ref=f16e84] [cursor=pointer]:
+              - /url: /publishers/serverpod.dev
+        - generic [ref=f16e85]:
+          - link "serverpod_logging" [ref=f16e86] [cursor=pointer]:
+            - /url: /packages/serverpod_logging
+            - heading "serverpod_logging" [level=2] [ref=f16e87]
+          - paragraph [ref=f16e89]: Shared serverpod logging utilities.
+          - generic [ref=f16e91]:
+            - img "verified publisher" [ref=f16e92]
+            - link "serverpod.dev" [ref=f16e93] [cursor=pointer]:
+              - /url: /publishers/serverpod.dev
+        - generic [ref=f16e94]:
+          - link "serverpod_logging_cli" [ref=f16e95] [cursor=pointer]:
+            - /url: /packages/serverpod_logging_cli
+            - heading "serverpod_logging_cli" [level=2] [ref=f16e96]
+          - paragraph [ref=f16e98]: A cli_tools.Logger bridge for the serverpod_logging architecture, rendering scoped logs and progress to the terminal.
+          - generic [ref=f16e100]:
+            - img "verified publisher" [ref=f16e101]
+            - link "serverpod.dev" [ref=f16e102] [cursor=pointer]:
+              - /url: /publishers/serverpod.dev
+        - generic [ref=f16e103]:
+          - link "passkeys_platform_interface" [ref=f16e104] [cursor=pointer]:
+            - /url: /packages/passkeys_platform_interface
+            - heading "passkeys_platform_interface" [level=2] [ref=f16e105]
+          - paragraph [ref=f16e107]: A common platform interface for the passkeys plugin. Must be implemented to support passkeys for a new platform.
+          - generic [ref=f16e109]:
+            - img "verified publisher" [ref=f16e110]
+            - link "corbado.com" [ref=f16e111] [cursor=pointer]:
+              - /url: /publishers/corbado.com
+        - generic [ref=f16e112]:
+          - link "flutter_usabilla" [ref=f16e113] [cursor=pointer]:
+            - /url: /packages/flutter_usabilla
+            - heading "flutter_usabilla" [level=2] [ref=f16e114]
+          - paragraph [ref=f16e116]: Flutter Usabilla SDK is a flutter plugin/wrapper based on Usabilla native Android / iOS SDK, providing you to collect feedback from your users with great ease and flexibility.
+      - link "View all" [ref=f16e118] [cursor=pointer]:
+        - /url: /packages?sort=trending
+    - generic [ref=f16e120]:
+      - heading "Top Flutter packages" [level=1] [ref=f16e121]
+      - paragraph [ref=f16e122]: Some of the top packages that extend Flutter with new features
+      - generic [ref=f16e123]:
+        - generic [ref=f16e124]:
+          - link "path_provider" [ref=f16e125] [cursor=pointer]:
+            - /url: /packages/path_provider
+            - heading "path_provider" [level=2] [ref=f16e126]
+          - paragraph [ref=f16e128]: Flutter plugin for getting commonly used locations on host platform file systems, such as the temp and app data directories.
+          - generic [ref=f16e130]:
+            - img "verified publisher" [ref=f16e131]
+            - link "flutter.dev" [ref=f16e132] [cursor=pointer]:
+              - /url: /publishers/flutter.dev
+        - generic [ref=f16e133]:
+          - link "widgetbook" [ref=f16e134] [cursor=pointer]:
+            - /url: /packages/widgetbook
+            - heading "widgetbook" [level=2] [ref=f16e135]
+          - paragraph [ref=f16e137]: Widgetbook is a sandbox for building widgets and screens in isolation. It helps you develop hard-to-reach states and edge cases without needing to run your app.
+          - generic [ref=f16e139]:
+            - img "verified publisher" [ref=f16e140]
+            - link "widgetbook.io" [ref=f16e141] [cursor=pointer]:
+              - /url: /publishers/widgetbook.io
+        - generic [ref=f16e142]:
+          - link "font_awesome_flutter" [ref=f16e143] [cursor=pointer]:
+            - /url: /packages/font_awesome_flutter
+            - heading "font_awesome_flutter" [level=2] [ref=f16e144]
+          - paragraph [ref=f16e146]: The Font Awesome Icon pack available as Flutter Icons. Provides 2000 additional icons to use in your apps.
+          - generic [ref=f16e148]:
+            - img "verified publisher" [ref=f16e149]
+            - link "fluttercommunity.dev" [ref=f16e150] [cursor=pointer]:
+              - /url: /publishers/fluttercommunity.dev
+        - generic [ref=f16e151]:
+          - link "sqflite" [ref=f16e152] [cursor=pointer]:
+            - /url: /packages/sqflite
+            - heading "sqflite" [level=2] [ref=f16e153]
+          - paragraph [ref=f16e155]: Flutter plugin for SQLite, a self-contained, high-reliability, embedded, SQL database engine.
+          - generic [ref=f16e157]:
+            - img "verified publisher" [ref=f16e158]
+            - link "tekartik.com" [ref=f16e159] [cursor=pointer]:
+              - /url: /publishers/tekartik.com
+        - generic [ref=f16e160]:
+          - link "ffi" [ref=f16e161] [cursor=pointer]:
+            - /url: /packages/ffi
+            - heading "ffi" [level=2] [ref=f16e162]
+          - paragraph [ref=f16e164]: Utilities for working with Foreign Function Interface (FFI) code.
+          - generic [ref=f16e166]:
+            - img "verified publisher" [ref=f16e167]
+            - link "dart.dev" [ref=f16e168] [cursor=pointer]:
+              - /url: /publishers/dart.dev
+        - generic [ref=f16e169]:
+          - link "json_serializable" [ref=f16e170] [cursor=pointer]:
+            - /url: /packages/json_serializable
+            - heading "json_serializable" [level=2] [ref=f16e171]
+          - paragraph [ref=f16e173]: Automatically generate code for converting to and from JSON by annotating Dart classes.
+          - generic [ref=f16e175]:
+            - img "verified publisher" [ref=f16e176]
+            - link "google.dev" [ref=f16e177] [cursor=pointer]:
+              - /url: /publishers/google.dev
+      - link "View all" [ref=f16e179] [cursor=pointer]:
+        - /url: /packages?q=sdk%3Aflutter
+    - generic [ref=f16e181]:
+      - heading "Top Dart packages" [level=1] [ref=f16e182]
+      - paragraph [ref=f16e183]: Some of the top packages for any Dart-based app or program
+      - generic [ref=f16e184]:
+        - generic [ref=f16e185]:
+          - link "http" [ref=f16e186] [cursor=pointer]:
+            - /url: /packages/http
+            - heading "http" [level=2] [ref=f16e187]
+          - paragraph [ref=f16e189]: A composable, multi-platform, Future-based API for HTTP requests.
+          - generic [ref=f16e191]:
+            - img "verified publisher" [ref=f16e192]
+            - link "dart.dev" [ref=f16e193] [cursor=pointer]:
+              - /url: /publishers/dart.dev
+        - generic [ref=f16e194]:
+          - link "email_validator" [ref=f16e195] [cursor=pointer]:
+            - /url: /packages/email_validator
+            - heading "email_validator" [level=2] [ref=f16e196]
+          - paragraph [ref=f16e198]: A simple (but correct) dart class for validating email addresses
+        - generic [ref=f16e199]:
+          - link "crypto" [ref=f16e200] [cursor=pointer]:
+            - /url: /packages/crypto
+            - heading "crypto" [level=2] [ref=f16e201]
+          - paragraph [ref=f16e203]: Implementations of SHA, MD5, and HMAC cryptographic functions.
+          - generic [ref=f16e205]:
+            - img "verified publisher" [ref=f16e206]
+            - link "dart.dev" [ref=f16e207] [cursor=pointer]:
+              - /url: /publishers/dart.dev
+        - generic [ref=f16e208]:
+          - link "postgres" [ref=f16e209] [cursor=pointer]:
+            - /url: /packages/postgres
+            - heading "postgres" [level=2] [ref=f16e210]
+          - paragraph [ref=f16e212]: PostgreSQL database driver. Supports binary protocol, connection pooling and statement reuse.
+          - generic [ref=f16e214]:
+            - img "verified publisher" [ref=f16e215]
+            - link "agilord.com" [ref=f16e216] [cursor=pointer]:
+              - /url: /publishers/agilord.com
+        - generic [ref=f16e217]:
+          - link "xml" [ref=f16e218] [cursor=pointer]:
+            - /url: /packages/xml
+            - heading "xml" [level=2] [ref=f16e219]
+          - paragraph [ref=f16e221]: Full-featured XML for Dart — DOM parsing, SAX streaming, XPath 3 querying, and a fluent builder API.
+          - generic [ref=f16e223]:
+            - img "verified publisher" [ref=f16e224]
+            - link "lukas-renggli.ch" [ref=f16e225] [cursor=pointer]:
+              - /url: /publishers/lukas-renggli.ch
+        - generic [ref=f16e226]:
+          - link "convert" [ref=f16e227] [cursor=pointer]:
+            - /url: /packages/convert
+            - heading "convert" [level=2] [ref=f16e228]
+          - paragraph [ref=f16e230]: Utilities for converting between data representations. Provides a number of Sink, Codec, Decoder, and Encoder types.
+          - generic [ref=f16e232]:
+            - img "verified publisher" [ref=f16e233]
+            - link "dart.dev" [ref=f16e234] [cursor=pointer]:
+              - /url: /publishers/dart.dev
+      - link "View all" [ref=f16e236] [cursor=pointer]:
+        - /url: /packages?q=sdk%3Adart
+    - generic [ref=f16e238]:
+      - heading "Package of the Week" [level=1] [ref=f16e239]
+      - paragraph [ref=f16e240]: Package of the Week is a series of quick, animated videos, each of which covers a particular package
+      - generic [ref=f16e241]:
+        - generic:
+          - link "dart_mcp (Package of the Week)":
+            - /url: https://youtube.com/watch?v=tSWu58CX3Ic&list=PLjxrf2q8roU1quF6ny8oFHJ2gBdrYN_AK
+            - img "dart_mcp (Package of the Week)"
+        - generic:
+          - link "firebase_ai (Package of the Week)":
+            - /url: https://youtube.com/watch?v=tp7Ojf7dPVI&list=PLjxrf2q8roU1quF6ny8oFHJ2gBdrYN_AK
+            - img "firebase_ai (Package of the Week)"
+        - generic:
+          - link "sqflite (Flutter Package of the Week)":
+            - /url: https://youtube.com/watch?v=HefHf5B1YM0&list=PLjxrf2q8roU1quF6ny8oFHJ2gBdrYN_AK
+            - img "sqflite (Flutter Package of the Week)"
+        - generic:
+          - link "Firestore (Package of the Week)":
+            - /url: https://youtube.com/watch?v=-wAL46TFwQU&list=PLjxrf2q8roU1quF6ny8oFHJ2gBdrYN_AK
+            - img "Firestore (Package of the Week)"
+      - link "View playlist" [ref=f16e243] [cursor=pointer]:
+        - /url: https://www.youtube.com/playlist?list=PLjxrf2q8roU1quF6ny8oFHJ2gBdrYN_AK
+  - contentinfo [ref=f16e244]:
+    - link "Dart language" [ref=f16e245] [cursor=pointer]:
+      - /url: https://dart.dev/
+    - link "Policy" [ref=f16e246] [cursor=pointer]:
+      - /url: /policy
+    - link "Terms" [ref=f16e247] [cursor=pointer]:
+      - /url: https://www.google.com/intl/en/policies/terms/
+    - link "API Terms" [ref=f16e248] [cursor=pointer]:
+      - /url: https://developers.google.com/terms/
+    - link "Security" [ref=f16e249] [cursor=pointer]:
+      - /url: /security
+    - link "Privacy" [ref=f16e250] [cursor=pointer]:
+      - /url: https://www.google.com/intl/en/policies/privacy/
+    - link "Help" [ref=f16e251] [cursor=pointer]:
+      - /url: /help
+    - link "RSS" [ref=f16e252] [cursor=pointer]:
+      - /url: /feed.atom
+      - img "RSS" [ref=f16e253]
+    - link "bug report" [ref=f16e254] [cursor=pointer]:
+      - /url: https://github.com/dart-lang/pub-dev/issues/new?body=URL%3A+https%3A%2F%2Fpub.dev%2F%0A%0A%3CDescribe+your+issue+or+suggestion+here%3E&title=%3CSummarize+your+issues+here%3E&labels=Area%3A+site+feedback
+      - img "bug report" [ref=f16e255]

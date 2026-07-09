@@ -1,7 +1,7 @@
 // src/protocols/graphsync/graphsync_protocol.dart
 import 'dart:typed_data';
-import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart';
-import 'package:dart_ipfs/src/protocols/graphsync/graphsync_types.dart';
+import '../../proto/generated/graphsync/graphsync.pb.dart';
+import 'graphsync_types.dart';
 
 /// Graphsync protocol message factory.
 ///

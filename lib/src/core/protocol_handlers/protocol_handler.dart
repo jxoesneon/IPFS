@@ -1,5 +1,5 @@
-import 'package:dart_ipfs/src/core/messages/network_messages.dart';
-import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import '../messages/network_messages.dart';
+import '../types/peer_id.dart';
 
 /// Base class for protocol-specific message handlers.
 ///

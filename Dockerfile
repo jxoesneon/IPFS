@@ -43,6 +43,7 @@ RUN mkdir -p build && \
 # minimal runtime base without needing a shell there.
 RUN mkdir -p /image/data/ipfs /image/tmp /image/etc && \
     echo "ipfs:x:1000:1000:ipfs:/data/ipfs:/nonexistent" > /image/etc/passwd && \
+    echo "ipfs:x:1000:" > /image/etc/group && \
     chown -R 1000:1000 /image && \
     chmod 755 /image /image/data /image/data/ipfs /image/tmp
 
@@ -56,8 +57,9 @@ LABEL org.opencontainers.image.source="https://github.com/jxoesneon/IPFS"
 LABEL org.opencontainers.image.description="dart_ipfs daemon (hardened glibc runtime)"
 LABEL org.opencontainers.image.licenses="MIT"
 
-# Copy minimal /etc/passwd entry so the non-root user is named and resolvable
+# Copy minimal /etc/passwd and /etc/group entries so the non-root user is named and resolvable
 COPY --from=builder --chown=1000:1000 /image/etc/passwd /etc/passwd
+COPY --from=builder --chown=1000:1000 /image/etc/group /etc/group
 
 # Copy writable directories with non-root ownership
 COPY --from=builder --chown=1000:1000 /image/data/ipfs /data/ipfs
@@ -93,6 +95,7 @@ LABEL org.opencontainers.image.description="dart_ipfs daemon (debug shell varian
 LABEL org.opencontainers.image.licenses="MIT"
 
 COPY --from=builder --chown=1000:1000 /image/etc/passwd /etc/passwd
+COPY --from=builder --chown=1000:1000 /image/etc/group /etc/group
 COPY --from=builder --chown=1000:1000 /image/data/ipfs /data/ipfs
 COPY --from=builder --chown=1000:1000 /image/tmp /tmp
 COPY --from=builder /usr/lib/*-linux-gnu/libsodium.so* /usr/lib/

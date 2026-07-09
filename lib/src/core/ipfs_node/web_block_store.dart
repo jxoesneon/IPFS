@@ -1,10 +1,10 @@
 // src/core/ipfs_node/web_block_store.dart
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
-import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
-import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
-import 'package:dart_ipfs/src/platform/platform.dart';
-import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import '../../platform/platform.dart';
+import '../../proto/generated/core/blockstore.pb.dart';
+import '../cid.dart';
+import '../data_structures/block.dart';
+import '../interfaces/i_block_store.dart';
+import '../responses/block_response_factory.dart';
 
 /// Web-compatible implementation of IBlockStore using IpfsPlatform storage.
 class WebBlockStore implements IBlockStore {

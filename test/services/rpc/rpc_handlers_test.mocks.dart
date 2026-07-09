@@ -215,6 +215,33 @@ class MockIPFSNode extends _i1.Mock implements _i10.IPFSNode {
           as _i16.Stream<Map<String, dynamic>>);
 
   @override
+  int get bandwidthOut =>
+      (super.noSuchMethod(
+            Invocation.getter(#bandwidthOut),
+            returnValue: 0,
+            returnValueForMissingStub: 0,
+          )
+          as int);
+
+  @override
+  int get bandwidthIn =>
+      (super.noSuchMethod(
+            Invocation.getter(#bandwidthIn),
+            returnValue: 0,
+            returnValueForMissingStub: 0,
+          )
+          as int);
+
+  @override
+  int get dhtPeerCount =>
+      (super.noSuchMethod(
+            Invocation.getter(#dhtPeerCount),
+            returnValue: 0,
+            returnValueForMissingStub: 0,
+          )
+          as int);
+
+  @override
   List<String> get addresses =>
       (super.noSuchMethod(
             Invocation.getter(#addresses),
@@ -542,13 +569,23 @@ class MockIPFSNode extends _i1.Mock implements _i10.IPFSNode {
           as _i16.Future<bool>);
 
   @override
-  _i16.Future<void> publishIPNS(String? cid, {required String? keyName}) =>
+  _i16.Future<String> publishIPNS(String? cid, {required String? keyName}) =>
       (super.noSuchMethod(
             Invocation.method(#publishIPNS, [cid], {#keyName: keyName}),
-            returnValue: _i16.Future<void>.value(),
-            returnValueForMissingStub: _i16.Future<void>.value(),
+            returnValue: _i16.Future<String>.value(
+              _i15.dummyValue<String>(
+                this,
+                Invocation.method(#publishIPNS, [cid], {#keyName: keyName}),
+              ),
+            ),
+            returnValueForMissingStub: _i16.Future<String>.value(
+              _i15.dummyValue<String>(
+                this,
+                Invocation.method(#publishIPNS, [cid], {#keyName: keyName}),
+              ),
+            ),
           )
-          as _i16.Future<void>);
+          as _i16.Future<String>);
 
   @override
   _i16.Future<void> importCAR(_i18.Uint8List? carFile) =>
@@ -979,6 +1016,24 @@ class MockDHTClient extends _i1.Mock implements _i6.DHTClient {
           as _i16.Future<_i18.Uint8List?>);
 
   @override
+  _i16.Future<bool> storeValueRaw(_i18.Uint8List? key, _i18.Uint8List? value) =>
+      (super.noSuchMethod(
+            Invocation.method(#storeValueRaw, [key, value]),
+            returnValue: _i16.Future<bool>.value(false),
+            returnValueForMissingStub: _i16.Future<bool>.value(false),
+          )
+          as _i16.Future<bool>);
+
+  @override
+  _i16.Future<_i18.Uint8List?> getValueRaw(_i18.Uint8List? key) =>
+      (super.noSuchMethod(
+            Invocation.method(#getValueRaw, [key]),
+            returnValue: _i16.Future<_i18.Uint8List?>.value(),
+            returnValueForMissingStub: _i16.Future<_i18.Uint8List?>.value(),
+          )
+          as _i16.Future<_i18.Uint8List?>);
+
+  @override
   _i16.Future<bool> checkValueOnPeer(_i12.PeerId? peer, _i18.Uint8List? key) =>
       (super.noSuchMethod(
             Invocation.method(#checkValueOnPeer, [peer, key]),
@@ -986,6 +1041,18 @@ class MockDHTClient extends _i1.Mock implements _i6.DHTClient {
             returnValueForMissingStub: _i16.Future<bool>.value(false),
           )
           as _i16.Future<bool>);
+
+  @override
+  _i16.Future<void> sendMessageRaw(
+    _i12.PeerId? peer,
+    _i18.Uint8List? msgBytes,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#sendMessageRaw, [peer, msgBytes]),
+            returnValue: _i16.Future<void>.value(),
+            returnValueForMissingStub: _i16.Future<void>.value(),
+          )
+          as _i16.Future<void>);
 
   @override
   _i16.Future<void> start() =>

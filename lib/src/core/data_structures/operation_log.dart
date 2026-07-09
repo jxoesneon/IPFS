@@ -1,12 +1,12 @@
 import 'dart:collection';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 
 import '../../proto/generated/core/cid.pb.dart';
 import '../../proto/generated/core/node_type.pbenum.dart';
 import '../../proto/generated/core/operation_log.pb.dart';
+import '../cid.dart';
 
 /// A single entry in the operation log.
 ///
@@ -116,3 +116,4 @@ class OperationLog {
     return _logEntries.map((entry) => entry.toString()).join('\n');
   }
 }
+

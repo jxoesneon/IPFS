@@ -391,6 +391,14 @@ class MockDHTHandler extends _i1.Mock implements _i12.DHTHandler {
           as _i9.Future<void>);
 
   @override
+  List<_i16.PeerId> getLocalProvidersForCid(String? cidStr) =>
+      (super.noSuchMethod(
+            Invocation.method(#getLocalProvidersForCid, [cidStr]),
+            returnValue: <_i16.PeerId>[],
+          )
+          as List<_i16.PeerId>);
+
+  @override
   _i9.Future<String?> resolveDNSLink(String? domainName) =>
       (super.noSuchMethod(
             Invocation.method(#resolveDNSLink, [domainName]),

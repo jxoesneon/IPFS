@@ -1,0 +1,15 @@
+.git
+.dart_tool
+.idea
+build/
+coverage/
+pubspec.lock
+doc/
+example/
+.github/
+nginx/
+docker-compose*.yml
+Dockerfile
+*.md
+node_modules/
+package-lock.json

@@ -10,10 +10,10 @@ import 'dart:typed_data';
 
 import 'package:fixnum/fixnum.dart';
 
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
-import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
-import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
+import '../../cid.dart';
+import '../../errors/ipld_errors.dart';
+import '../codecs/standard_codecs.dart';
+import '../../../proto/generated/ipld/data_model.pb.dart';
 
 /// Base class for all official IPLD selectors.
 abstract class Selector {

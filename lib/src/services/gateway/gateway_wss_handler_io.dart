@@ -1,8 +1,9 @@
 // lib/src/services/gateway/gateway_wss_handler_io.dart
 import 'dart:io';
 
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:shelf/shelf.dart';
+
+import '../../utils/logger.dart';
 
 /// Handles a WebSocket upgrade request on the IO platform.
 Future<Response> handleGatewayWebSocket(Request request, Logger logger) async {

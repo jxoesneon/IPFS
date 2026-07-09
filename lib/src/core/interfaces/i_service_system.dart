@@ -1,5 +1,5 @@
 // src/core/interfaces/i_service_system.dart
-import 'package:dart_ipfs/src/core/interfaces/i_core_system.dart';
+import 'i_core_system.dart';
 
 /// Interface for service-layer systems with identity and status.
 ///

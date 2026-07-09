@@ -162,6 +162,21 @@ class MockIPFSNode extends _i1.Mock implements _i10.IPFSNode {
           as _i12.Stream<Map<String, dynamic>>);
 
   @override
+  int get bandwidthOut =>
+      (super.noSuchMethod(Invocation.getter(#bandwidthOut), returnValue: 0)
+          as int);
+
+  @override
+  int get bandwidthIn =>
+      (super.noSuchMethod(Invocation.getter(#bandwidthIn), returnValue: 0)
+          as int);
+
+  @override
+  int get dhtPeerCount =>
+      (super.noSuchMethod(Invocation.getter(#dhtPeerCount), returnValue: 0)
+          as int);
+
+  @override
   List<String> get addresses =>
       (super.noSuchMethod(
             Invocation.getter(#addresses),
@@ -430,13 +445,17 @@ class MockIPFSNode extends _i1.Mock implements _i10.IPFSNode {
           as _i12.Future<bool>);
 
   @override
-  _i12.Future<void> publishIPNS(String? cid, {required String? keyName}) =>
+  _i12.Future<String> publishIPNS(String? cid, {required String? keyName}) =>
       (super.noSuchMethod(
             Invocation.method(#publishIPNS, [cid], {#keyName: keyName}),
-            returnValue: _i12.Future<void>.value(),
-            returnValueForMissingStub: _i12.Future<void>.value(),
+            returnValue: _i12.Future<String>.value(
+              _i11.dummyValue<String>(
+                this,
+                Invocation.method(#publishIPNS, [cid], {#keyName: keyName}),
+              ),
+            ),
           )
-          as _i12.Future<void>);
+          as _i12.Future<String>);
 
   @override
   _i12.Future<void> importCAR(_i14.Uint8List? carFile) =>

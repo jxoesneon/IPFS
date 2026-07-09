@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
-import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
+import '../interfaces/i_lifecycle.dart';
 
 /// Interface for SecurityManager to allow platform-agnostic implementations.
 ///

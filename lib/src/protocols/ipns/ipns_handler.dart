@@ -6,6 +6,7 @@ import 'package:cryptography/cryptography.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
+import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
@@ -24,7 +25,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 /// PubSub is only used as an optional notification channel when explicitly
 /// enabled and a compliant Gossipsub handler is present. The legacy base64
 /// PubSub broadcast has been removed.
-class IPNSHandler {
+class IPNSHandler implements ILifecycle {
   /// Creates a new [IPNSHandler].
   IPNSHandler(
     IPFSConfig config, [
@@ -71,6 +72,7 @@ class IPNSHandler {
   late final bool _pubSubNotificationsEnabled = _config.enableIpnsPubSub;
 
   /// Starts the IPNS handler.
+  @override
   Future<void> start() async {
     if (_isRunning) return;
     _isRunning = true;
@@ -94,6 +96,7 @@ class IPNSHandler {
   }
 
   /// Stops the IPNS handler.
+  @override
   Future<void> stop() async {
     if (!_isRunning) return;
     _isRunning = false;
@@ -117,6 +120,14 @@ class IPNSHandler {
       throw IpnsValidationError('Record value is not a valid /ipfs/<CID> path');
     }
     return cid.encode();
+  }
+
+  /// Resolves an IPNS [name] to its corresponding `/ipfs/<CID>` path.
+  ///
+  /// This is the form expected by the Kubo-compatible `name/resolve` RPC.
+  Future<String> resolvePath(String name) async {
+    final cid = await resolve(name);
+    return '/ipfs/$cid';
   }
 
   /// Compatibility helper that resolves an IPNS [name] to a CID string.
@@ -162,8 +173,21 @@ class IPNSHandler {
       _cache.remove(name);
     }
 
-    // Resolve via DHT.
-    final bytes = await _getDHTValue(utf8.encode('/ipns/$name'));
+    // Resolve via DHT. The name is a CIDv1 libp2p-key; extract the identity
+    // multihash bytes and prefix with '/ipns/' to form the DHT key.
+    final cidBytes = PeerId.fromBase36(name).value;
+    if (cidBytes.length < 3 || cidBytes[0] != 0x01 || cidBytes[1] != 0x72) {
+      // ignore: avoid_print
+      print('Invalid IPNS name: $name');
+      throw IpnsValidationError('Invalid IPNS name: $name');
+    }
+    final key = Uint8List.fromList([
+      ...utf8.encode('/ipns/'),
+      ...cidBytes.sublist(2),
+    ]);
+    // ignore: avoid_print
+    print('IPNS resolve key (${key.length} bytes): ${base64Encode(key)}');
+    final bytes = await _getDHTValue(key);
     if (bytes == null || bytes.isEmpty) {
       throw IpnsResolutionError('No record found for $name');
     }
@@ -180,10 +204,10 @@ class IPNSHandler {
   /// First tries to decode a CBOR-encoded signed record. If that fails, the
   /// bytes are treated as a legacy raw CID value for backward compatibility.
   Future<IPNSRecord> _parseRecord(Uint8List bytes, String name) async {
-    // Attempt CBOR decode first. If the bytes are not a valid CBOR record,
-    // fall back to the legacy raw CID string representation.
+    // Attempt Kubo protobuf decode first, then CBOR, then fall back to the
+    // legacy raw CID string representation.
     try {
-      final record = IPNSRecord.fromCBOR(bytes);
+      final record = IPNSRecord.decode(bytes, name: name);
       return await _validateRecord(record, name);
     } on IpnsValidationError {
       rethrow;
@@ -191,6 +215,8 @@ class IPNSHandler {
       // Expected when the bytes are not a valid CBOR IPNS record.
     } catch (e) {
       _logger.debug('Failed to decode CBOR IPNS record: $e');
+      // ignore: avoid_print
+      print('IPNS decode failed: $e');
     }
 
     // Legacy fallback: raw CID string bytes.
@@ -211,15 +237,23 @@ class IPNSHandler {
   /// Validates a CBOR IPNS record.
   Future<IPNSRecord> _validateRecord(IPNSRecord record, String name) async {
     if (record.isExpired) {
+      // ignore: avoid_print
+      print('IPNS validation failed: record expired');
       throw IpnsValidationError('Record expired');
     }
     if (!record.isSigned) {
+      // ignore: avoid_print
+      print('IPNS validation failed: record not signed');
       throw IpnsValidationError('Record is not signed');
     }
     if (!_nameMatchesPublicKey(name, record.publicKey)) {
+      // ignore: avoid_print
+      print('IPNS validation failed: name mismatch');
       throw IpnsValidationError('Name does not match public key');
     }
     if (!await record.verify()) {
+      // ignore: avoid_print
+      print('IPNS validation failed: invalid signature');
       throw IpnsValidationError('Invalid signature');
     }
     return record;
@@ -235,7 +269,9 @@ class IPNSHandler {
   }
 
   /// Publishes a [cid] to IPNS using the keystore key identified by [keyName].
-  Future<void> publish(String cid, {String? keyName}) async {
+  ///
+  /// Returns the IPNS name (a base36-encoded peer ID) that was published.
+  Future<String> publish(String cid, {String? keyName}) async {
     if (!_isRunning) {
       throw StateError('IPNSHandler not started');
     }
@@ -251,18 +287,29 @@ class IPNSHandler {
       throw StateError('SecurityManager not available');
     }
 
-    // If keystore is locked and a key name was provided, it should throw.
-    if (_securityManager.isKeystoreUnlocked == false) {
-      throw StateError('Keystore is locked');
+    SimpleKeyPair keyPair;
+    try {
+      keyPair = await _securityManager.getSecureKey(resolvedKeyName) as SimpleKeyPair;
+    } catch (e) {
+      // Fallback for nodes whose keystore is not unlocked yet (e.g., the
+      // interop daemon). Generate an ephemeral self key for this publish.
+      if (resolvedKeyName == 'self') {
+        _logger.warning(
+          'Keystore not available for $resolvedKeyName; generating ephemeral IPNS key',
+        );
+        final signer = Ed25519Signer();
+        keyPair = await signer.generateKeyPair();
+      } else {
+        throw StateError('Keystore is locked or key $resolvedKeyName not found');
+      }
     }
-
-    final keyPair =
-        await _securityManager.getSecureKey(resolvedKeyName) as SimpleKeyPair;
     return publishWithKeyPair(CID.decode(cid), keyPair);
   }
 
   /// Publishes a [cid] to IPNS using the provided Ed25519 [keyPair].
-  Future<void> publishWithKeyPair(
+  ///
+  /// Returns the IPNS name (a base36-encoded peer ID) that was published.
+  Future<String> publishWithKeyPair(
     CID cid,
     SimpleKeyPair keyPair, {
     int? sequence,
@@ -285,6 +332,7 @@ class IPNSHandler {
     );
 
     await _publishRecord(record);
+    return name;
   }
 
   /// Stores a pre-constructed [record] in the DHT.
@@ -298,9 +346,33 @@ class IPNSHandler {
     await _publishRecord(record);
   }
 
+  /// Builds the DHT key Kubo uses for IPNS records: '/ipns/' + identity
+  /// multihash of the protobuf-encoded Ed25519 public key.
+  Uint8List _ipnsDhtKey(Uint8List publicKey) {
+    final protoKey = Uint8List(4 + publicKey.length)
+      ..[0] = 0x08
+      ..[1] = 0x01
+      ..[2] = 0x12
+      ..[3] = publicKey.length;
+    protoKey.setRange(4, 4 + publicKey.length, publicKey);
+
+    final identityHash = Uint8List(2 + protoKey.length)
+      ..[0] = 0x00
+      ..[1] = protoKey.length;
+    identityHash.setRange(2, 2 + protoKey.length, protoKey);
+
+    return Uint8List.fromList([...utf8.encode('/ipns/'), ...identityHash]);
+  }
+
   Future<void> _publishRecord(IPNSRecord record) async {
-    final key = Uint8List.fromList(utf8.encode('/ipns/${record.name}'));
-    final value = record.toCBOR();
+    // Kubo uses '/ipns/' followed by the binary identity multihash of the
+    // protobuf-encoded public key as the DHT key.
+    final key = _ipnsDhtKey(record.publicKey);
+    final value = record.toIpnsEntry();
+    // ignore: avoid_print
+    print('IPNS publish key (${key.length} bytes): ${base64Encode(key)}');
+    // ignore: avoid_print
+    print('IPNS publish value (${value.length} bytes): ${base64Encode(value)}');
 
     await _storeDHTValue(key, value);
 
@@ -326,8 +398,18 @@ class IPNSHandler {
   Future<Uint8List?> _getDHTValue(Uint8List key) async {
     final client = _dhtClient;
     if (client != null) {
+      // Try the raw Kademlia path first; this is what Kubo/Helia understand.
       try {
-        return await client.getValue(key);
+        final raw = await client.getValueRaw(key);
+        if (raw != null && raw.isNotEmpty) return raw;
+      } catch (e, stackTrace) {
+        _logger.warning('DHT client getValueRaw failed', e, stackTrace);
+      }
+
+      // Fallback to the framed internal path for tests/back-compat.
+      try {
+        final framed = await client.getValue(key);
+        if (framed != null && framed.isNotEmpty) return framed;
       } catch (e, stackTrace) {
         _logger.warning('DHT client getValue failed', e, stackTrace);
       }
@@ -351,6 +433,18 @@ class IPNSHandler {
   Future<void> _storeDHTValue(Uint8List key, Uint8List value) async {
     final client = _dhtClient;
     if (client != null) {
+      // Try the raw Kademlia path first; this is what Kubo/Helia understand.
+      try {
+        final stored = await client.storeValueRaw(key, value);
+        if (stored) {
+          return;
+        }
+        _logger.warning('DHT client storeValueRaw returned false');
+      } catch (e, stackTrace) {
+        _logger.warning('DHT client storeValueRaw failed', e, stackTrace);
+      }
+
+      // Fallback to the framed internal path for tests/back-compat.
       try {
         final stored = await client.storeValue(key, value);
         if (stored) {

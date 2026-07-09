@@ -320,6 +320,24 @@ class MockDHTClient extends _i1.Mock implements _i13.DHTClient {
           as _i14.Future<_i16.Uint8List?>);
 
   @override
+  _i14.Future<bool> storeValueRaw(_i16.Uint8List? key, _i16.Uint8List? value) =>
+      (super.noSuchMethod(
+            Invocation.method(#storeValueRaw, [key, value]),
+            returnValue: _i14.Future<bool>.value(false),
+            returnValueForMissingStub: _i14.Future<bool>.value(false),
+          )
+          as _i14.Future<bool>);
+
+  @override
+  _i14.Future<_i16.Uint8List?> getValueRaw(_i16.Uint8List? key) =>
+      (super.noSuchMethod(
+            Invocation.method(#getValueRaw, [key]),
+            returnValue: _i14.Future<_i16.Uint8List?>.value(),
+            returnValueForMissingStub: _i14.Future<_i16.Uint8List?>.value(),
+          )
+          as _i14.Future<_i16.Uint8List?>);
+
+  @override
   _i14.Future<bool> checkValueOnPeer(_i4.PeerId? peer, _i16.Uint8List? key) =>
       (super.noSuchMethod(
             Invocation.method(#checkValueOnPeer, [peer, key]),
@@ -327,6 +345,18 @@ class MockDHTClient extends _i1.Mock implements _i13.DHTClient {
             returnValueForMissingStub: _i14.Future<bool>.value(false),
           )
           as _i14.Future<bool>);
+
+  @override
+  _i14.Future<void> sendMessageRaw(
+    _i4.PeerId? peer,
+    _i16.Uint8List? msgBytes,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#sendMessageRaw, [peer, msgBytes]),
+            returnValue: _i14.Future<void>.value(),
+            returnValueForMissingStub: _i14.Future<void>.value(),
+          )
+          as _i14.Future<void>);
 
   @override
   _i14.Future<void> start() =>
@@ -574,6 +604,32 @@ class MockRouterInterface extends _i1.Mock implements _i6.RouterInterface {
     Invocation.method(#removeMessageHandler, [protocolId]),
     returnValueForMissingStub: null,
   );
+
+  @override
+  void unregisterProtocolHandler(String? protocolId) => super.noSuchMethod(
+    Invocation.method(#unregisterProtocolHandler, [protocolId]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  _i14.Future<_i16.Uint8List> sendMessageWithResponse(
+    String? peerId,
+    _i16.Uint8List? message, {
+    String? protocolId,
+    Duration? timeout,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #sendMessageWithResponse,
+              [peerId, message],
+              {#protocolId: protocolId, #timeout: timeout},
+            ),
+            returnValue: _i14.Future<_i16.Uint8List>.value(_i16.Uint8List(0)),
+            returnValueForMissingStub: _i14.Future<_i16.Uint8List>.value(
+              _i16.Uint8List(0),
+            ),
+          )
+          as _i14.Future<_i16.Uint8List>);
 
   @override
   void registerProtocol(String? protocolId) => super.noSuchMethod(

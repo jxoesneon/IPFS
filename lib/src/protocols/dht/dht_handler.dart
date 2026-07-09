@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
@@ -27,7 +28,7 @@ import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 ///
 /// **Security (SEC-010):** Provider records are verified before storage
 /// to prevent DHT index poisoning attacks.
-class DHTHandler implements IDHTHandler {
+class DHTHandler implements IDHTHandler, ILifecycle {
   /// Creates a new [DHTHandler] with the given [config], [_router], and [networkHandler].
   DHTHandler(
     IPFSConfig config,
@@ -451,6 +452,26 @@ class DHTHandler implements IDHTHandler {
     } catch (e, st) {
       _logger.error('Error handling provide request', e, st);
     }
+  }
+
+  /// Returns the locally-stored provider peer IDs for [cidStr] without
+  /// performing a network lookup. Used to satisfy interop/provider tests and
+  /// as a fast path before an iterative DHT query.
+  List<PeerId> getLocalProvidersForCid(String cidStr) {
+    final providerIds = _providers[cidStr];
+    if (providerIds == null || providerIds.isEmpty) {
+      return [];
+    }
+    return providerIds
+        .map((id) {
+          try {
+            return PeerId.fromBase58(id);
+          } catch (_) {
+            return null;
+          }
+        })
+        .whereType<PeerId>()
+        .toList();
   }
 
   /// Resolves a DNSLink for the given [domainName] to its corresponding CID.

@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:hive/hive.dart';
+
+import '../core/storage/datastore.dart';
+import '../utils/logger.dart';
 
 /// Hive-based implementation of the [Datastore] interface.
 ///

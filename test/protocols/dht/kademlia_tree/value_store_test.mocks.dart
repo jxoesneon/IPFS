@@ -236,12 +236,37 @@ class MockDHTClient extends _i1.Mock implements _i7.DHTClient {
           as _i8.Future<_i10.Uint8List?>);
 
   @override
+  _i8.Future<bool> storeValueRaw(_i10.Uint8List? key, _i10.Uint8List? value) =>
+      (super.noSuchMethod(
+            Invocation.method(#storeValueRaw, [key, value]),
+            returnValue: _i8.Future<bool>.value(false),
+          )
+          as _i8.Future<bool>);
+
+  @override
+  _i8.Future<_i10.Uint8List?> getValueRaw(_i10.Uint8List? key) =>
+      (super.noSuchMethod(
+            Invocation.method(#getValueRaw, [key]),
+            returnValue: _i8.Future<_i10.Uint8List?>.value(),
+          )
+          as _i8.Future<_i10.Uint8List?>);
+
+  @override
   _i8.Future<bool> checkValueOnPeer(_i4.PeerId? peer, _i10.Uint8List? key) =>
       (super.noSuchMethod(
             Invocation.method(#checkValueOnPeer, [peer, key]),
             returnValue: _i8.Future<bool>.value(false),
           )
           as _i8.Future<bool>);
+
+  @override
+  _i8.Future<void> sendMessageRaw(_i4.PeerId? peer, _i10.Uint8List? msgBytes) =>
+      (super.noSuchMethod(
+            Invocation.method(#sendMessageRaw, [peer, msgBytes]),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
 
   @override
   _i8.Future<void> start() =>

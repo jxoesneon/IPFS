@@ -2,12 +2,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/cbor/enhanced_cbor_handler.dart';
-import 'package:dart_ipfs/src/core/data_structures/link.dart';
-import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
-import 'package:dart_ipfs/src/core/ipld/codecs/ipld_codec.dart';
-import 'package:dart_ipfs/src/core/ipld/dag_json_handler.dart';
-import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
+import '../../../proto/generated/ipld/data_model.pb.dart';
+import '../../cbor/enhanced_cbor_handler.dart';
+import '../../data_structures/link.dart';
+import '../../data_structures/merkle_dag_node.dart';
+import '../dag_json_handler.dart';
+import 'ipld_codec.dart';
 
 /// Codec for 'raw' data.
 class RawCodec implements IPLDCodec {

@@ -7,6 +7,8 @@ import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/routing/content_routing.dart';
 import 'package:dart_ipfs/src/routing/delegated_routing.dart';
+import 'package:dart_ipfs/src/routing/ipni_client.dart';
+import 'package:dart_ipfs/src/routing/reframe_routing.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 
 import 'content_routing_handler_test.mocks.dart';
@@ -101,5 +103,111 @@ void main() {
       expect(status, isA<Map<String, dynamic>>());
       expect(status['dht_routing_enabled'], isTrue);
     });
+
+    test('findProviders DHT empty -> IPNI success', () async {
+      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      when(mockContentRouting.findProviders(cid))
+          .thenAnswer((_) async => []);
+      when(mockDelegatedRouting.findProviders(any))
+          .thenAnswer((_) async => RoutingResponse.success([]));
+
+      final ipniClient = _FakeIPNIClient(
+        result: IPNIResponse.success([
+          IPNIProvider(peerId: 'ipni-peer', multiaddrs: ['/ip4/1.2.3.4/tcp/4001']),
+        ]),
+      );
+      final handlerWithIpni = ContentRoutingHandler(
+        IPFSConfig(network: NetworkConfig(ipniEndpoints: ['https://cid.contact'])),
+        mockNetworkHandler,
+        contentRouting: mockContentRouting,
+        delegatedRouting: mockDelegatedRouting,
+        ipniClient: ipniClient,
+      );
+
+      final providers = await handlerWithIpni.findProviders(cid);
+      expect(providers, equals(['ipni-peer']));
+      verifyNever(mockDelegatedRouting.findProviders(any));
+    });
+
+    test('findProviders DHT empty -> IPNI empty -> Reframe success', () async {
+      final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      when(mockContentRouting.findProviders(cid))
+          .thenAnswer((_) async => []);
+      when(mockDelegatedRouting.findProviders(any))
+          .thenAnswer((_) async => RoutingResponse.success([]));
+
+      final ipniClient = _FakeIPNIClient(result: IPNIResponse.success([]));
+      final reframeClient = _FakeReframeClient(
+        result: ReframeResponse.success([
+          ReframeProvider(peerId: 'reframe-peer', multiaddrs: ['/ip4/5.6.7.8/tcp/4001']),
+        ]),
+      );
+      final handlerWithReframe = ContentRoutingHandler(
+        IPFSConfig(
+          network: NetworkConfig(
+            ipniEndpoints: ['https://cid.contact'],
+            reframeEndpoints: ['https://reframe.example.com'],
+          ),
+        ),
+        mockNetworkHandler,
+        contentRouting: mockContentRouting,
+        delegatedRouting: mockDelegatedRouting,
+        ipniClient: ipniClient,
+        reframeClient: reframeClient,
+      );
+
+      final providers = await handlerWithReframe.findProviders(cid);
+      expect(providers, equals(['reframe-peer']));
+    });
+
+    test('getStatus reflects IPNI and Reframe configuration', () async {
+      final ipniClient = _FakeIPNIClient();
+      final reframeClient = _FakeReframeClient();
+      final handlerWithExtras = ContentRoutingHandler(
+        IPFSConfig(
+          network: NetworkConfig(
+            ipniEndpoints: ['https://cid.contact'],
+            reframeEndpoints: ['https://reframe.example.com'],
+          ),
+        ),
+        mockNetworkHandler,
+        contentRouting: mockContentRouting,
+        delegatedRouting: mockDelegatedRouting,
+        ipniClient: ipniClient,
+        reframeClient: reframeClient,
+      );
+
+      final status = await handlerWithExtras.getStatus();
+      expect(status['ipni_routing_enabled'], isTrue);
+      expect(status['reframe_routing_enabled'], isTrue);
+      expect(status['ipni_endpoints'], contains('https://cid.contact'));
+      expect(status['reframe_endpoints'], contains('https://reframe.example.com'));
+    });
   });
+}
+
+class _FakeIPNIClient extends IPNIClient {
+  _FakeIPNIClient({this.result}) : super(endpoints: []);
+
+  final IPNIResponse? result;
+
+  @override
+  Future<IPNIResponse> findProviders(CID cid) async =>
+      result ?? IPNIResponse.success([]);
+
+  @override
+  void dispose() {}
+}
+
+class _FakeReframeClient extends ReframeRoutingClient {
+  _FakeReframeClient({this.result}) : super(endpoints: []);
+
+  final ReframeResponse? result;
+
+  @override
+  Future<ReframeResponse> findProviders(CID cid) async =>
+      result ?? ReframeResponse.success([]);
+
+  @override
+  void dispose() {}
 }

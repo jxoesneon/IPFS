@@ -1,0 +1,21 @@
+# dart_test.yaml: skip Docker-dependent interop tests by default.
+# In the docker-compose environment run `dart test --preset interop` to execute them.
+tags:
+  p0:
+    skip: "requires Kubo/Helia interop services (run via test/interop)"
+    presets:
+      interop:
+        skip: false
+  p1:
+    skip: "requires Kubo/Helia interop services (run via test/interop)"
+    presets:
+      interop:
+        skip: false
+  helia:
+    skip: "requires Helia interop services (run via test/interop)"
+    presets:
+      interop:
+        skip: false
+  cli:
+    # CLI tests spawn subprocesses and are slower under coverage instrumentation.
+    timeout: 2x

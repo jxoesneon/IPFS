@@ -66,6 +66,19 @@ void main() {
       expect(collector.getBytesReceived('bitswap'), 300);
     });
 
+    test('totalBytesSent aggregates bytes across all protocols', () {
+      collector.recordMessageSent('bitswap', 128);
+      collector.recordMessageSent('bitswap', 64);
+      collector.recordMessageSent('dht', 32);
+      expect(collector.totalBytesSent, equals(224));
+    });
+
+    test('totalBytesReceived aggregates bytes across all protocols', () {
+      collector.recordMessageReceived('bitswap', 256);
+      collector.recordMessageReceived('dht', 44);
+      expect(collector.totalBytesReceived, equals(300));
+    });
+
     test('recordLatency records observations and average latency', () {
       collector.recordLatency('bitswap', const Duration(milliseconds: 100));
       collector.recordLatency('bitswap', const Duration(milliseconds: 200));

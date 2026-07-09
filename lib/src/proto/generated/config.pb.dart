@@ -143,11 +143,13 @@ class RateLimitConfig extends $pb.GeneratedMessage {
   factory RateLimitConfig({
     $core.int? maxRequestsPerWindow,
     $core.int? windowSeconds,
+    $core.int? maxQueueSize,
   }) {
     final result = create();
     if (maxRequestsPerWindow != null)
       result.maxRequestsPerWindow = maxRequestsPerWindow;
     if (windowSeconds != null) result.windowSeconds = windowSeconds;
+    if (maxQueueSize != null) result.maxQueueSize = maxQueueSize;
     return result;
   }
 
@@ -167,6 +169,8 @@ class RateLimitConfig extends $pb.GeneratedMessage {
     ..aI(1, _omitFieldNames ? '' : 'maxRequestsPerWindow',
         fieldType: $pb.PbFieldType.OU3)
     ..aI(2, _omitFieldNames ? '' : 'windowSeconds',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(3, _omitFieldNames ? '' : 'maxQueueSize',
         fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
@@ -206,6 +210,15 @@ class RateLimitConfig extends $pb.GeneratedMessage {
   $core.bool hasWindowSeconds() => $_has(1);
   @$pb.TagNumber(2)
   void clearWindowSeconds() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.int get maxQueueSize => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set maxQueueSize($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasMaxQueueSize() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearMaxQueueSize() => $_clearField(3);
 }
 
 class CircuitBreakerConfig extends $pb.GeneratedMessage {

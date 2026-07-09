@@ -1,6 +1,6 @@
 // src/core/ipld/schema/ipld_schema.dart
-import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
-import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
+import '../../../proto/generated/ipld/data_model.pb.dart';
+import '../../errors/ipld_errors.dart';
 
 /// IPLD schema validator for structured data validation.
 ///

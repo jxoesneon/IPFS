@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:dart_ipfs/src/core/config/network_config.dart';
-import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart' as pb;
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
 
+import '../core/config/network_config.dart';
+import '../proto/generated/circuit_relay.pb.dart' as pb;
+import '../utils/base58.dart';
+import '../utils/logger.dart';
 import 'router_interface.dart';
 
 /// Handles circuit relay operations for an IPFS node.
@@ -19,6 +19,7 @@ class CircuitRelayClient {
   }
 
   static const String _protocolId = '/libp2p/circuit/relay/0.2.0/hop';
+  static const String _stopProtocolId = '/libp2p/circuit/relay/0.2.0/stop';
   final RouterInterface _router;
   late final Logger _logger;
   final CircuitRelayConfig _config;
@@ -56,6 +57,8 @@ class CircuitRelayClient {
       }
       _router.registerProtocol(_protocolId);
       _router.registerProtocolHandler(_protocolId, _handlePacket);
+      _router.registerProtocol(_stopProtocolId);
+      _router.registerProtocolHandler(_stopProtocolId, _handleStopPacket);
 
       await _connectionEventsSubscription?.cancel();
       _connectionEventsSubscription = _router.connectionEvents.listen((event) {
@@ -460,6 +463,43 @@ class CircuitRelayClient {
     } catch (e, stackTrace) {
       _logger.error(
         'Error handling HOP message from ${packet.srcPeerId}',
+        e,
+        stackTrace,
+      );
+    }
+  }
+
+  /// Handles incoming STOP messages for relayed connections.
+  void _handleStopPacket(NetworkPacket packet) {
+    try {
+      final msg = pb.StopMessage.fromBuffer(packet.datagram);
+      final fromPeer = packet.srcPeerId;
+
+      if (msg.type == pb.StopMessage_Type.CONNECT) {
+        // An incoming relayed connection request. Accept it and reply with OK.
+        final response = pb.StopMessage()
+          ..type = pb.StopMessage_Type.STATUS
+          ..status = pb.Status.OK;
+
+        unawaited(
+          _router.sendMessage(
+            fromPeer,
+            response.writeToBuffer(),
+            protocolId: _stopProtocolId,
+          ),
+        );
+
+        _circuitRelayEventsController.add(
+          CircuitRelayConnectionEvent(
+            eventType: 'circuit_relay_incoming',
+            relayAddress: fromPeer,
+            reason: 'Incoming relayed connection',
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Error handling STOP message from ${packet.srcPeerId}',
         e,
         stackTrace,
       );

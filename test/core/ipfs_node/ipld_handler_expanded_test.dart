@@ -17,8 +17,7 @@ import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/core/errors/node_errors.dart';
 import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
-    as unixfs_proto;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs_proto;
 import 'package:fixnum/fixnum.dart';
 
 import 'ipld_handler_expanded_test.mocks.dart';

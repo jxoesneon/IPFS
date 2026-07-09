@@ -1,17 +1,18 @@
 // src/core/ipfs_node/auto_nat_handler.dart
 import 'dart:async';
 
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/network/nat_traversal_service.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
+import '../../network/nat_traversal_service.dart';
+import '../../protocols/autonat/autonat_protocol.dart';
+import '../../utils/logger.dart';
+import '../config/ipfs_config.dart';
+import '../interfaces/i_lifecycle.dart';
+import 'network_handler.dart';
 
 /// Handles NAT detection and traversal for an IPFS node.
 ///
-/// This handler periodically performs dialback tests to determine
-/// the node's NAT status and attempts port mapping if needed
-/// to ensure reachability.
+/// This handler uses the spec-compliant AutoNAT protocol to determine
+/// the node's NAT status by asking peers to dial back. It also attempts
+/// port mapping if needed to ensure reachability.
 class AutoNATHandler implements ILifecycle {
   /// Creates an AutoNATHandler with the given config and network handler.
   ///
@@ -37,6 +38,10 @@ class AutoNATHandler implements ILifecycle {
   bool _isRunning = false;
   Timer? _dialbackTimer;
 
+  // AutoNAT service and server
+  AutoNATService? _autonatService;
+  AutoNATServer? _autonatServer;
+
   // NAT status
   NATType _natType = NATType.unknown;
   bool _reachable = false;
@@ -56,7 +61,15 @@ class AutoNATHandler implements ILifecycle {
     try {
       _logger.debug('Starting AutoNATHandler...');
 
-      // Initial NAT detection
+      // Initialize AutoNAT service and server
+      final router = _networkHandler.router;
+      _autonatService = AutoNATService(router, _config);
+      _autonatServer = AutoNATServer(router, _config);
+
+      // Start the AutoNAT server to handle incoming dialback requests
+      _autonatServer!.start();
+
+      // Initial NAT detection using spec-compliant protocol
       await _detectNATType();
 
       // Attempt port mapping if behind NAT and enabled
@@ -91,6 +104,11 @@ class AutoNATHandler implements ILifecycle {
       _dialbackTimer?.cancel();
       _dialbackTimer = null;
 
+      // Stop AutoNAT server
+      _autonatServer?.stop();
+      _autonatServer = null;
+      _autonatService = null;
+
       // Clean up port mappings
       if (_mappedPort != null) {
         await _natService.unmapPort(_mappedPort!);
@@ -124,7 +142,58 @@ class AutoNATHandler implements ILifecycle {
   }
 
   Future<void> _detectNATType() async {
-    _logger.debug('Detecting NAT type...');
+    _logger.debug('Detecting NAT type using AutoNAT protocol...');
+
+    try {
+      // Use spec-compliant AutoNAT protocol to determine NAT status
+      if (_autonatService == null) {
+        _logger.warning('AutoNAT service not initialized, using fallback');
+        await _fallbackDetectNATType();
+        return;
+      }
+
+      // Update observed addresses from our listening addresses
+      final observedAddrs = _networkHandler.router.listeningAddresses;
+      _autonatService!.updateObservedAddrs(observedAddrs);
+
+      // Try to perform dialback with a connected peer
+      final connectedPeers = _networkHandler.router.listConnectedPeers();
+      if (connectedPeers.isEmpty) {
+        _logger.debug('No connected peers for AutoNAT, using fallback');
+        await _fallbackDetectNATType();
+        return;
+      }
+
+      // Try with the first connected peer
+      final peerId = connectedPeers.first;
+      final natStatus = await _autonatService!.performDialback(peerId);
+
+      // Map AutoNAT NATStatus to our NATType
+      switch (natStatus) {
+        case NATStatus.public:
+          _natType = NATType.none;
+          _reachable = true;
+          _logger.debug('Node is publicly reachable (no NAT)');
+          break;
+        case NATStatus.private:
+          _natType = NATType.restricted;
+          _reachable = false;
+          _logger.debug('Node is behind NAT');
+          break;
+        case NATStatus.unknown:
+          _logger.debug('NAT status unknown, using fallback');
+          await _fallbackDetectNATType();
+          break;
+      }
+    } catch (e, stackTrace) {
+      _logger.error('Error detecting NAT type with AutoNAT', e, stackTrace);
+      await _fallbackDetectNATType();
+    }
+  }
+
+  /// Fallback NAT detection when AutoNAT is not available.
+  Future<void> _fallbackDetectNATType() async {
+    _logger.debug('Using fallback NAT detection...');
 
     try {
       // Try to establish direct connections
@@ -137,10 +206,7 @@ class AutoNATHandler implements ILifecycle {
         return;
       }
 
-      // Test for symmetric NAT
-      // Note: checkDialback already tests reachability.
-      // Accurate symmetric NAT detection requires binding multiple ports which RouterInterface doesn't expose yet.
-      // Defaulting to restricted for now if not directly reachable.
+      // Default to restricted if not directly reachable
       _natType = NATType.restricted;
 
       _logger.debug('NAT type detected: $_natType');

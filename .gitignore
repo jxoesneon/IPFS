@@ -7,7 +7,7 @@
 build/
 
 # Lockfile (consider committing if it's an application)
-pubspec.lock
+# Note: dart_ipfs is a library package, so we commit pubspec.lock for reproducible builds
 
 # Miscellaneous
 *.class
@@ -20,6 +20,7 @@ pubspec.lock
 .history
 .svn/
 migrate_working_dir/
+scratch/
 
 # IntelliJ related
 *.iml
@@ -83,6 +84,7 @@ temp/
 test_blocks/
 test_blocks_log/
 test_tmp/
+test/interop/swarm.key
 
 # Logs
 logs/

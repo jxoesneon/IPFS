@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/transport/router_interface.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:fixnum/fixnum.dart';
 
+import '../../../transport/router_interface.dart';
+import '../../../utils/base58.dart';
+import '../../../utils/logger.dart';
 import 'gossipsub.pb.dart';
 import 'gossipsub_config.dart';
 import 'message_cache.dart';

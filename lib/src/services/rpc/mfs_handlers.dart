@@ -3,11 +3,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:shelf/shelf.dart';
+
+import '../../core/ipfs_node/ipfs_node.dart';
+import '../../utils/logger.dart';
 
 /// Maximum allowed multipart body size for `files/write` (100 MiB).
 const _maxMultipartSize = 100 * 1024 * 1024;

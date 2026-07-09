@@ -1,22 +1,18 @@
 name: dart_ipfs_quic
 description: Native QUIC transport for dart_ipfs backed by the pure-Dart quic_lib package.
 version: 0.2.0
-homepage: https://github.com/joseerrojas/dart_ipfs
-repository: https://github.com/joseerrojas/dart_ipfs
-
-publish_to: none
+homepage: https://github.com/jxoesneon/IPFS
+repository: https://github.com/jxoesneon/IPFS
+issue_tracker: https://github.com/jxoesneon/IPFS/issues
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
 
 dependencies:
   ipfs_libp2p: ^0.5.6
-  quic_lib:
-    path: ../../../dart_quic
+  quic_lib: ^1.13.0
 
-  dart_ipfs_core:
-    path:
-      ../dart_ipfs_core
+  dart_ipfs_core: ^1.11.5
 
   collection: ^1.18.0
   meta: ^1.12.0

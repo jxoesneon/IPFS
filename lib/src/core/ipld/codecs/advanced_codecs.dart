@@ -2,10 +2,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/ipld/codecs/ipld_codec.dart';
-import 'package:dart_ipfs/src/core/ipld/jose_cose_handler.dart';
-import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
-import 'package:dart_ipfs/src/utils/private_key.dart';
+import '../../../proto/generated/ipld/data_model.pb.dart';
+import '../../../utils/private_key.dart';
+import '../jose_cose_handler.dart';
+import 'ipld_codec.dart';
 
 /// Codec for 'dag-jose'.
 class DagJoseCodec implements IPLDCodec {

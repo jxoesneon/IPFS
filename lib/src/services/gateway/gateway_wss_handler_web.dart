@@ -1,6 +1,7 @@
 // lib/src/services/gateway/gateway_wss_handler_web.dart
-import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:shelf/shelf.dart';
+
+import '../../utils/logger.dart';
 
 /// Web stub for WebSocket upgrade requests.
 Future<Response> handleGatewayWebSocket(Request request, Logger logger) async {

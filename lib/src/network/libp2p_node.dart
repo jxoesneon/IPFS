@@ -1,4 +1,4 @@
-import 'package:dart_ipfs/src/core/protocol_handlers/protocol_handler.dart';
+import '../core/protocol_handlers/protocol_handler.dart';
 
 /// libp2p node abstraction for protocol, transport, and security configuration.
 ///

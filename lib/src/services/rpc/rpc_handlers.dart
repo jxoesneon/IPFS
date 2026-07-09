@@ -4,9 +4,11 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/car.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/services/rpc/mfs_handlers.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
@@ -55,7 +57,11 @@ class RPCHandlers {
         'Addresses': addresses,
         'AgentVersion': agentVersion,
         'ProtocolVersion': 'ipfs/0.1.0',
-        'Protocols': ['/ipfs/kad/1.0.0', '/ipfs/bitswap/1.2.0'],
+        'Protocols': [
+          '/ipfs/kad/1.0.0',
+          '/ipfs/lan/kad/1.0.0',
+          '/ipfs/bitswap/1.2.0',
+        ],
       };
 
       return _jsonResponse(response);
@@ -275,6 +281,112 @@ class RPCHandlers {
     return Response(501, body: 'Not implemented');
   }
 
+  /// POST /api/v0/dag/export - Export the reachable DAG of [cid] as a CAR v1.
+  Future<Response> handleDagExport(Request request) async {
+    final cid = request.url.queryParameters['arg'];
+    if (cid == null) {
+      return _errorResponse('Missing argument: cid');
+    }
+
+    final blocked = _checkDenylist(cid);
+    if (blocked != null) {
+      return blocked;
+    }
+
+    try {
+      final carData = await _exportCar(cid);
+      return Response.ok(
+        carData,
+        headers: {
+          'Content-Type': 'application/vnd.ipld.car',
+          'Content-Length': carData.length.toString(),
+        },
+      );
+    } catch (e, st) {
+      _logger.error('DAG export failed for cid: $cid', e, st);
+      return _errorResponse('DAG export failed: $e');
+    }
+  }
+
+  /// POST /api/v0/dag/import - Import a CAR v1/v2 archive into the blockstore.
+  Future<Response> handleDagImport(Request request) async {
+    try {
+      final builder = BytesBuilder();
+      await for (final chunk in request.read()) {
+        builder.add(chunk);
+      }
+      final body = builder.toBytes();
+      final reader = CarReader.fromBytes(body);
+      final roots = (await reader.header).roots;
+      var count = 0;
+      await for (final section in reader.sections()) {
+        final block = Block(
+          cid: section.cid,
+          data: section.bytes,
+          format: _codecToFormat(section.cid.codec ?? 'raw'),
+        );
+        await node.blockStore.putBlock(block);
+        count++;
+      }
+
+      return _jsonResponse({
+        'Root': roots.isEmpty ? '' : roots.first.toString(),
+        'Blocks': count,
+      });
+    } catch (e, st) {
+      _logger.error('DAG import failed', e, st);
+      return _errorResponse('DAG import failed: $e');
+    }
+  }
+
+  String _codecToFormat(String codec) {
+    switch (codec) {
+      case 'dag-pb':
+        return 'dag-pb';
+      case 'raw':
+        return 'raw';
+      case 'dag-cbor':
+        return 'dag-cbor';
+      case 'dag-json':
+        return 'dag-json';
+      default:
+        return 'raw';
+    }
+  }
+
+  Future<Uint8List> _exportCar(String rootCidStr) async {
+    final root = CID.decode(rootCidStr);
+    final writer = CarWriter(roots: [root]);
+    final visited = <String>{};
+    await _exportBlock(root, writer, visited);
+    return writer.close();
+  }
+
+  Future<void> _exportBlock(
+    CID cid,
+    CarWriter writer,
+    Set<String> visited,
+  ) async {
+    final key = cid.toString();
+    if (visited.contains(key)) return;
+    visited.add(key);
+
+    final response = await node.blockStore.getBlock(key);
+    if (!response.found) {
+      throw StateError('Block not found: $key');
+    }
+    final block = Block.fromProto(response.block);
+    await writer.write(cid, block.data);
+
+    if (block.format == 'dag-pb') {
+      final pbNode = dag_pb.PBNode.fromBuffer(block.data);
+      for (final link in pbNode.links) {
+        final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
+        await _exportBlock(linkCid, writer, visited);
+      }
+    }
+  }
+
   /// POST /api/v0/dht/findprovs - Find providers for CID
   Future<Response> handleDhtFindProviders(Request request) async {
     final cid = request.url.queryParameters['arg'];
@@ -282,8 +394,12 @@ class RPCHandlers {
       return _errorResponse('Missing argument: cid');
     }
 
+    // ignore: avoid_print
+    print('handleDhtFindProviders called for cid=$cid');
     try {
       final providers = await node.dhtClient.findProviders(cid);
+      // ignore: avoid_print
+      print('handleDhtFindProviders: ${providers.length} providers for $cid');
 
       // Stream response (ndjson format)
       final responses = providers
@@ -353,6 +469,8 @@ class RPCHandlers {
       await node.dhtClient.addProvider(cid, node.peerId);
       return _jsonResponse({'Success': true});
     } catch (e, st) {
+      // ignore: avoid_print
+      print('DHT provide error: $e\n$st');
       _logger.error('DHT provide failed for cid: $cid', e, st);
       return _errorResponse('DHT provide failed');
     }
@@ -366,9 +484,16 @@ class RPCHandlers {
     }
 
     try {
-      await node.publishIPNS(path, keyName: 'self');
-      return _jsonResponse({'Name': 'self', 'Value': path});
+      // name/publish accepts an IPFS path; extract the CID if needed.
+      var cid = path;
+      if (path.startsWith('/ipfs/')) {
+        cid = path.substring(6);
+      }
+      final name = await node.publishIPNS(cid, keyName: 'self');
+      return _jsonResponse({'Name': name, 'Value': path});
     } catch (e, st) {
+      // ignore: avoid_print
+      print('Name publish error: $e\n$st');
       _logger.error('Name publish failed for path: $path', e, st);
       return _errorResponse('Name publish failed');
     }
@@ -385,6 +510,8 @@ class RPCHandlers {
       final path = await node.resolveIPNS(name);
       return _jsonResponse({'Path': path});
     } catch (e, st) {
+      // ignore: avoid_print
+      print('Name resolve failed for name: $name: $e\n$st');
       _logger.error('Name resolve failed for name: $name', e, st);
       return _errorResponse('Name resolve failed');
     }
@@ -452,8 +579,19 @@ class RPCHandlers {
     }
 
     try {
-      final block = await node.blockStore.getBlock(cid);
+      var block = await node.blockStore.getBlock(cid);
+
       if (!block.found) {
+        // Try fetching the block via Bitswap from connected peers.
+        final bitswap = node.bitswap;
+        if (bitswap != null) {
+          _logger.debug('Block $cid not found locally, trying Bitswap');
+          final networkBlock = await bitswap.wantBlock(cid);
+          if (networkBlock != null) {
+            await node.blockStore.putBlock(networkBlock);
+            return Response.ok(networkBlock.data);
+          }
+        }
         return _errorResponse('Block not found', code: 404);
       }
 

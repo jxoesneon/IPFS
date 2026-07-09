@@ -502,6 +502,32 @@ class MockRouterInterface extends _i1.Mock implements _i3.RouterInterface {
   );
 
   @override
+  void unregisterProtocolHandler(String? protocolId) => super.noSuchMethod(
+    Invocation.method(#unregisterProtocolHandler, [protocolId]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  _i13.Future<_i16.Uint8List> sendMessageWithResponse(
+    String? peerId,
+    _i16.Uint8List? message, {
+    String? protocolId,
+    Duration? timeout,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #sendMessageWithResponse,
+              [peerId, message],
+              {#protocolId: protocolId, #timeout: timeout},
+            ),
+            returnValue: _i13.Future<_i16.Uint8List>.value(_i16.Uint8List(0)),
+            returnValueForMissingStub: _i13.Future<_i16.Uint8List>.value(
+              _i16.Uint8List(0),
+            ),
+          )
+          as _i13.Future<_i16.Uint8List>);
+
+  @override
   void registerProtocol(String? protocolId) => super.noSuchMethod(
     Invocation.method(#registerProtocol, [protocolId]),
     returnValueForMissingStub: null,
@@ -787,6 +813,15 @@ class MockDHTHandler extends _i1.Mock implements _i17.DHTHandler {
             returnValueForMissingStub: _i13.Future<void>.value(),
           )
           as _i13.Future<void>);
+
+  @override
+  List<_i10.PeerId> getLocalProvidersForCid(String? cidStr) =>
+      (super.noSuchMethod(
+            Invocation.method(#getLocalProvidersForCid, [cidStr]),
+            returnValue: <_i10.PeerId>[],
+            returnValueForMissingStub: <_i10.PeerId>[],
+          )
+          as List<_i10.PeerId>);
 
   @override
   _i13.Future<String?> resolveDNSLink(String? domainName) =>

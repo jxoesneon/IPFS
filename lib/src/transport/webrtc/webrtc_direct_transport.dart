@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:http/http.dart' as http;
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 import 'package:ipfs_libp2p/p2p/transport/listener.dart' as libp2p_listener;
@@ -8,6 +7,7 @@ import 'package:ipfs_libp2p/p2p/transport/transport.dart' as libp2p_trans;
 import 'package:ipfs_libp2p/p2p/transport/transport_config.dart'
     as libp2p_config;
 
+import '../../core/config/network_config.dart';
 import 'data_channel_stream.dart';
 import 'ice_server.dart';
 import 'peer_connection.dart';

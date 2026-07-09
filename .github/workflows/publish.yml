@@ -22,6 +22,11 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
+      - name: Run pana score check
+        run: |
+          dart pub global activate pana
+          dart pub global run pana:pana . --no-warning
+
       - name: Publish - dry run
         run: dart pub publish --dry-run
 

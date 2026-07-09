@@ -1,10 +1,11 @@
 // src/core/data_structures/peer.dart
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/types/peer_id.dart';
-import 'package:dart_ipfs/src/proto/generated/core/peer.pb.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:fixnum/fixnum.dart';
+
+import '../../proto/generated/core/peer.pb.dart';
+import '../../utils/base58.dart';
+import '../types/peer_id.dart';
 
 /// Represents a network address (IP + Port).
 /// Replaces p2plib.FullAddress.
@@ -272,3 +273,4 @@ Uint8List multiaddrToBytes(FullAddress address) {
 
   return Uint8List.fromList(buffer);
 }
+

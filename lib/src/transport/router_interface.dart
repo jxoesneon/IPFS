@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import '../protocols/dht/dht_routing_table_interface.dart' show DHTRoutingTable;
 import 'router_events.dart';
 
 // Re-export NetworkPacket and event types for convenience
@@ -118,6 +119,28 @@ abstract class RouterInterface {
   /// [protocolId] - The protocol identifier to remove the handler for.
   void removeMessageHandler(String protocolId);
 
+  /// Unregisters a protocol handler.
+  ///
+  /// [protocolId] - The protocol identifier to unregister.
+  void unregisterProtocolHandler(String protocolId) {
+    removeMessageHandler(protocolId);
+  }
+
+  /// Sends a message and waits for a response with timeout.
+  ///
+  /// [peerId] - The target peer's ID.
+  /// [message] - The raw message bytes.
+  /// [protocolId] - Optional protocol identifier for multiplexing.
+  /// [timeout] - Maximum time to wait for response.
+  ///
+  /// Returns the response bytes.
+  Future<Uint8List> sendMessageWithResponse(
+    String peerId,
+    Uint8List message, {
+    String? protocolId,
+    Duration? timeout,
+  });
+
   /// Registers a protocol without a handler.
   ///
   /// [protocolId] - The protocol identifier to register.
@@ -170,4 +193,11 @@ abstract class RouterInterface {
   /// a virtual peer set. Routers that expose [connectedPeers] should add the
   /// target peer to that set.
   void registerRelayedConnection(String targetPeerId, String relayAddr) {}
+
+  /// Returns the DHT routing table for distance-based peer selection.
+  ///
+  /// This provides access to the Kademlia routing table for DHT protocol handlers
+  /// to perform true distance-based peer selection. Returns null if the router
+  /// does not support DHT routing operations.
+  DHTRoutingTable? get dhtRoutingTable;
 }

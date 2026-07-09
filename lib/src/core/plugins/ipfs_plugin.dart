@@ -1,4 +1,4 @@
-import 'package:dart_ipfs/dart_ipfs.dart';
+import '../../../dart_ipfs.dart';
 
 /// Base class for all IPFS plugins.
 ///

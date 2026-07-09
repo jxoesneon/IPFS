@@ -1,12 +1,12 @@
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/data_structures/peer.dart';
-import 'package:dart_ipfs/src/core/types/peer_id.dart';
-import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:fixnum/fixnum.dart';
 
 import '../../proto/generated/core/peer.pb.dart';
 import '../../proto/generated/dht/kademlia.pb.dart' as kad;
+import '../../utils/base58.dart';
+import '../data_structures/peer.dart';
+import 'peer_id.dart';
 
 /// Core peer representation used throughout the application.
 class IPFSPeer {
