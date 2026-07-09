@@ -4,7 +4,7 @@
 **Location:** `C:\Users\josee\IPFS\doc\specs\features\BROWSER_TRANSPORTS_SPEC.md`  
 **Version:** v2.1  
 **Date:** 2026-06-25  
-**Authority:** Ciel Council of Five verdicts (2026-06-25)  
+**Authority:** Maintainer review (2026-06-25)  
 **Status:** P1 Modified — implementation pending  
 **Scope:** WebTransport browser dialer completion (certhash validation), configurable WebRTC STUN/TURN, and elimination of `UnimplementedError` from `libp2p.Conn` fields (`stat`, `scope`, etc.).
 

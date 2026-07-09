@@ -1,0 +1,3 @@
+# Keep plugin example manifests and sources as LF so checksum/signature tests are deterministic.
+example/plugins/**/plugin.yaml text eol=lf
+example/plugins/**/main.dart text eol=lf

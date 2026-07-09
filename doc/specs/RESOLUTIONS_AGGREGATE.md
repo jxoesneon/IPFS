@@ -1,16 +1,16 @@
-# Ciel Council of Five — Aggregate Resolution Report
+# Project Review — Aggregate Resolution Report
 
 **Date:** 2026-06-25  
 **Repository:** `C:\Users\josee\IPFS` (dart_ipfs)  
-**Scope:** Aggregate resolution status for the six Council-of-Five decision documents produced after the v2.0+ per-feature spec audits.
+**Scope:** Aggregate resolution status for the six maintainer decision documents produced after the v2.0+ per-feature spec audits.
 
 ---
 
 ## Executive Summary
 
-The five Council of Five audit reports (`doc/specs/audits/COUNCIL_AUDIT_*.md`) identified cross-cutting blockers across the 26 per-feature specifications for dart_ipfs v2.0/v2.1/v2.2. To resolve these, six binding decision documents were produced in `doc/specs/decisions/`.
+The five maintainer audit reports (`doc/specs/audits/MAINTAINER_AUDIT_*.md`) identified cross-cutting blockers across the 26 per-feature specifications for dart_ipfs v2.0/v2.1/v2.2. To resolve these, six binding decision documents were produced in `doc/specs/decisions/`.
 
-As of this inspection, the **other subagents have completed the bulk of their expected edits**. The working tree shows 40+ modified files and new untracked items:
+As of this inspection, the **other contributors have completed the bulk of their expected edits**. The working tree shows 40+ modified files and new untracked items:
 
 - **Documentation indices updated:** `doc/index.md`, `doc/specifications.yaml`, `ROADMAP.md`.
 - **Decision documents added:** `doc/specs/decisions/` (6 files).
@@ -23,37 +23,37 @@ As of this inspection, the **other subagents have completed the bulk of their ex
 - **Example plugins added:** `example/plugins/` directory with one or two simple read-only example plugins for Phase 1.
 - **Interop test harness added:** `test/interop/` directory with the P0/P1 split-tier test harness.
 
-**Remaining gaps:** The CAR migration, plugin security core, interop CI workflow, and Docker base image updates are now completed in the working tree. The `IPLD_SELECTORS_SPEC.md` path/scope issue and the `pubspec.yaml`/`temp_dart_sdk` cleanup were resolved during the final review. `DAG_CBOR_SPEC.md` no longer contains stale `lib/src/codec/cbor/EnhancedCBORHandler.dart` references. The latest agent finalized the DI/LifecycleManager wiring so all six Council-of-Five decisions are in code; the test suite is now nearly green with one unrelated failure. The plugin security model was further hardened: the plugin manifest signature now covers the `archive_sha256` checksum of the plugin code, so tampering with plugin files after signing is detected. Docker/nginx and runtime healthchecks were also finalized: the `bin/ipfs.dart` CLI includes a `healthcheck` command, `docker-compose.yml` and `docker-compose.debug.yml` declare Docker healthchecks, and `nginx/nginx.conf` is wired as an optional gateway overlay. `ROADMAP.md` has been updated to mark the CAR migration, plugin security, interop workflow, Docker updates, IPLDCodec reconciliation, config/lifecycle, PeerId base36, and healthcheck work as completed.
+**Remaining gaps:** The CAR migration, plugin security core, interop CI workflow, and Docker base image updates are now completed in the working tree. The `IPLD_SELECTORS_SPEC.md` path/scope issue and the `pubspec.yaml`/`temp_dart_sdk` cleanup were resolved during the final review. `DAG_CBOR_SPEC.md` no longer contains stale `lib/src/codec/cbor/EnhancedCBORHandler.dart` references. The latest contributor finalized the DI/LifecycleManager wiring so all six maintainer decisions are in code; the test suite is now nearly green with one unrelated failure. The plugin security model was further hardened: the plugin manifest signature now covers the `archive_sha256` checksum of the plugin code, so tampering with plugin files after signing is detected. Docker/nginx and runtime healthchecks were also finalized: the `bin/ipfs.dart` CLI includes a `healthcheck` command, `docker-compose.yml` and `docker-compose.debug.yml` declare Docker healthchecks, and `nginx/nginx.conf` is wired as an optional gateway overlay. `ROADMAP.md` has been updated to mark the CAR migration, plugin security, interop workflow, Docker updates, IPLDCodec reconciliation, config/lifecycle, PeerId base36, and healthcheck work as completed.
 
 **Automated verification:** `dart pub get` / `dart analyze` cannot run in this environment. The available Dart SDK is 3.5.4, which is below the project's `^3.10.0` constraint. The direct dependency `sodium: ^4.0.2+1` requires `>=3.6.0`, so `dart pub get` fails before `dart analyze`/`dart test` can run. The `dart` wrapper from the Flutter SDK initially failed because the Flutter repository (`C:/tools/flutter`) is owned by `BUILTIN/Administrators` while the current user is `LEGIONDEXINIA/josee`, causing `git rev-parse HEAD` to abort with "detected dubious ownership"; this was fixed by adding the directory to the git safe directory list, but the SDK version mismatch remains.
 
 ---
 
-## Council Decisions Overview
+## Maintainer Decisions Overview
 
-### 1. CAR Migration (`COUNCIL_DECISION_CAR_MIGRATION.md`)
+### 1. CAR Migration (`MAINTAINER_DECISION_CAR_MIGRATION.md`)
 **Verdict:** Adopt **Option A** — delete the legacy `CAR`/`CarHeader`/`CarIndex` classes and replace them with the standard `CarReader`/`CarWriter`/`CarHeader`/`CarSection`/`IndexBuilder` API from `CAR_FORMAT_SPEC.md`. The old protobuf-based `CarCodec` and its `ipld_handler.dart` registration are removed; `lib/src/proto/core/car.proto` and generated `car.pb*.dart` files are deleted once consumers are migrated. The public `importCAR`/`exportCAR` signatures remain unchanged.
 
-### 2. IPFSConfig Serialization & Lifecycle Wiring (`COUNCIL_DECISION_CONFIG_LIFECYCLE.md`)
+### 2. IPFSConfig Serialization & Lifecycle Wiring (`MAINTAINER_DECISION_CONFIG_LIFECYCLE.md`)
 **Verdict:** **APPROVED** with binding design decisions. JSON is the canonical on-disk config format (`$IPFS_PATH/config.json`), with YAML retained as a read-only fallback. `IPFSConfig.toJson()`/`fromJson()` must round-trip all non-secret constructor fields, including `gateway`, `metrics`, `customConfig`, path fields, and `libp2pIdentitySeed` (base64). `IPFSNodeBuilder` shall register `RPCServer` and `GatewayServer` with `LifecycleManager` after making both implement `ILifecycle`.
 
-### 3. Docker Base Image Strategy (`COUNCIL_DECISION_DOCKER_BASE.md`)
+### 3. Docker Base Image Strategy (`MAINTAINER_DECISION_DOCKER_BASE.md`)
 **Verdict:** Adopt **Option D** — the default runtime image uses a hardened glibc base (`cgr.dev/chainguard/glibc-dynamic`) to satisfy the `sodium`/`libsodium` runtime dependency. An experimental static variant may be built only if static linking is proven across `linux/amd64` and `linux/arm64`. A debug variant remains available. The `DOCKER_SPEC.md` size target is relaxed to `< 80 MB` compressed for the glibc runtime.
 
-### 4. Interoperability Test Scope (`COUNCIL_DECISION_INTEROP_SCOPE.md`)
+### 4. Interoperability Test Scope (`MAINTAINER_DECISION_INTEROP_SCOPE.md`)
 **Verdict:** **CONDITIONAL APPROVED** with mandatory scope split. The interop CI job is P0 required, but only **CAR exchange, Bitswap fetch, and gateway retrieval** are P0 release-blocking. **DHT provide/find and IPNS resolution** are P1 allowed-to-fail/allowed-to-skip until networking specs stabilize. **Helia** tests move to a separate nightly workflow. The P0 PR job is capped at 10 minutes.
 
-### 5. IPLDCodec Reconciliation (`COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md`)
+### 5. IPLDCodec Reconciliation (`MAINTAINER_DECISION_IPLDCODEC_RECONCILIATION.md`)
 **Verdict:** Adopt **Option C** — a new unified `IPLDCodec` interface that combines `name`/`code` with async typed `encode`/`decode` on `IPLDNode`. The duplicate `IPLDCodec` interface in `lib/src/core/ipld/dag_json_codec.dart` is removed. A `MulticodecRegistry` is introduced in `IPLDHandler` and populated from registered codecs. A deprecated `identifier` alias is provided during v2.0.0-rc.
 
-### 6. Plugin Security Model (`COUNCIL_DECISION_PLUGIN_SECURITY.md`)
+### 6. Plugin Security Model (`MAINTAINER_DECISION_PLUGIN_SECURITY.md`)
 **Verdict:** **APPROVED with mandatory amendments**. The v2.2 plugin runtime is trust-based, capability-gated, and audit-based. Dart Isolates are explicitly **not** a security sandbox. No private signing key may be committed to the repository; in-repo examples are signed with CI-generated ephemeral Ed25519 keys. Production uses an external `plugin.trustedKeysPath`. Unsigned plugins require explicit `plugin.allowUnsigned=true` and are deprecated for v3.0. Phase 1 examples are reduced to one or two simple read-only plugins.
 
 ---
 
 ## Per-Audit Resolution Status
 
-### Master Audit (`COUNCIL_AUDIT_MASTER.md`)
+### Master Audit (`MAINTAINER_AUDIT_MASTER.md`)
 
 | Cross-cutting issue | Status | Notes |
 |---|---|---|
@@ -63,7 +63,7 @@ As of this inspection, the **other subagents have completed the bulk of their ex
 | `IPFSConfig` / lifecycle model gaps | **Resolved in code and specs** | `IPFSConfig` round-trips, JSON/YAML handling, `enableRPC`, and `IPFSNodeBuilder` registration of `RPCServer`/`GatewayServer` are implemented. |
 | Over-promising (AutoTLS full ACME, WebTransport native listener, plugin sandboxing) | **Deferred/Amended** | `BROWSER_TRANSPORTS_SPEC.md` defers the non-web WebTransport IO listener. `QUIC_SPEC.md` gates QUIC on dependency verification. `PLUGINS_SPEC.md` now correctly states that Dart Isolates are not a security sandbox and replaces the committed dev-key plan with CI-generated ephemeral keys. |
 
-### Core Data Layer Audit (`COUNCIL_AUDIT_CORE_DATA_LAYER.md`)
+### Core Data Layer Audit (`MAINTAINER_AUDIT_CORE_DATA_LAYER.md`)
 
 | Issue | Status | Notes |
 |---|---|---|
@@ -77,7 +77,7 @@ As of this inspection, the **other subagents have completed the bulk of their ex
 | DAG-JSON non-standard BigInt representation paragraph | **Resolved** | `DAG_JSON_SPEC.md` line 69 now requires plain JSON numbers for safe integers and a clear `DagJsonIntegerRangeError` for out-of-range values. |
 | IPLD selectors `condition` P0/P1 ambiguity | **Pending** | `IPLD_SELECTORS_SPEC.md` keeps `condition` as "optional / may be deferred" without an explicit P0/P1 placement. |
 
-### Services & APIs Audit (`COUNCIL_AUDIT_SERVICES_APIS.md`)
+### Services & APIs Audit (`MAINTAINER_AUDIT_SERVICES_APIS.md`)
 
 | Issue | Status | Notes |
 |---|---|---|
@@ -87,7 +87,7 @@ As of this inspection, the **other subagents have completed the bulk of their ex
 | Subdomain gateway `localhost` precedence and TLS redirect defaults | **Resolved in spec** | `SUBDOMAIN_GATEWAY_SPEC.md` and `SERVICES_APIS_SPEC.md` add explicit `localhost`/`127.0.0.1` bypass, require CIDv1 base32 for the `ipfs` label, and make `subdomainTLSRedirect` default `false`. |
 | Content blocking parser ambiguity (base32 multihash vs CID, JSON comments) | **Resolved in spec** | `CONTENT_BLOCKING_SPEC.md` and `SERVICES_APIS_SPEC.md` define a deterministic line-type detection order, atomic refresh, maximum size/line length, and exact `denylist_logged` semantics. |
 
-### Networking & P2P Audit — Batch 1 (`COUNCIL_AUDIT_NETWORKING_P2P_1.md`)
+### Networking & P2P Audit — Batch 1 (`MAINTAINER_AUDIT_NETWORKING_P2P_1.md`)
 
 | Issue | Status | Notes |
 |---|---|---|
@@ -100,7 +100,7 @@ As of this inspection, the **other subagents have completed the bulk of their ex
 | IPNS publish API vs. `SecurityManager` keystore key name | **Resolved in spec** | `IPNS_SPEC.md` now preserves the existing `publish(String, {String? keyName})` convenience and adds overloads. |
 | `DHT_INTEGRATION_SPEC.md` overlap with `REPROVIDE_SPEC.md` | **Resolved in spec** | `DHT_INTEGRATION_SPEC.md` now removes the reprovide sweep and references `REPROVIDE_SPEC.md` as the owner. |
 
-### Networking & P2P Audit — Batch 2 (`COUNCIL_AUDIT_NETWORKING_P2P_2.md`)
+### Networking & P2P Audit — Batch 2 (`MAINTAINER_AUDIT_NETWORKING_P2P_2.md`)
 
 | Issue | Status | Notes |
 |---|---|---|
@@ -112,7 +112,7 @@ As of this inspection, the **other subagents have completed the bulk of their ex
 | Bitswap HTTP fallback `BitswapConfig` / `HttpGatewayClient.fetchRawBlock` missing | **Resolved in spec** | `BITSWAP_HTTP_FALLBACK_SPEC.md` now creates `BitswapConfig`, defines `fetchRawBlock`, and mandates CID verification. |
 | Gateway TLS / AutoTLS ACME client dependency | **Unchanged** | `GATEWAY_TLS_SPEC.md` was not modified; the missing Dart ACME client remains a dependency risk. |
 
-### Operations & Ecosystem Audit (`COUNCIL_AUDIT_OPERATIONS_ECOSYSTEM.md`)
+### Operations & Ecosystem Audit (`MAINTAINER_AUDIT_OPERATIONS_ECOSYSTEM.md`)
 
 | Issue | Status | Notes |
 |---|---|---|
@@ -120,8 +120,8 @@ As of this inspection, the **other subagents have completed the bulk of their ex
 | `IPFSConfig.toJson()` omits `gateway`, `metrics`, `keystore`, `customConfig`, etc. | **Resolved in code** | `toJson()`/`fromJson()` now round-trip these fields. |
 | Config file format JSON/YAML inconsistency | **Resolved in code** | `fromFile()` now detects extension and parses JSON directly or YAML via round-trip. |
 | Version string drift across `rpc_handlers.dart`, `gateway_server.dart`, `Dockerfile`, `pubspec.yaml` | **Resolved** | New `lib/src/version.dart` provides a single source of truth; `gateway_server.dart`, `rpc_handlers.dart`, and the updated `Dockerfile` now use it. |
-| `libsodium` runtime dependency blocking distroless/static base | **Resolved** | `COUNCIL_DECISION_DOCKER_BASE.md` resolves the strategy. `DOCKER_SPEC.md` uses `cgr.dev/chainguard/glibc-dynamic` default, the experimental static variant, and the `< 80 MB` compressed target. The `Dockerfile` and `docker-compose.yml` have been updated accordingly. |
-| Interop test scope too broad for P0 | **Resolved** | `COUNCIL_DECISION_INTEROP_SCOPE.md` resolves the split. `INTEROP_TESTS_SPEC.md` treats CAR/Bitswap/gateway as P0 release-blocking, DHT/IPNS as P1 allowed-to-fail/allowed-to-skip, and Helia as a separate nightly workflow. `.github/workflows/interop.yml` and `.github/workflows/interop_nightly.yml` are created, and the `test/interop/` harness is in place. |
+| `libsodium` runtime dependency blocking distroless/static base | **Resolved** | `MAINTAINER_DECISION_DOCKER_BASE.md` resolves the strategy. `DOCKER_SPEC.md` uses `cgr.dev/chainguard/glibc-dynamic` default, the experimental static variant, and the `< 80 MB` compressed target. The `Dockerfile` and `docker-compose.yml` have been updated accordingly. |
+| Interop test scope too broad for P0 | **Resolved** | `MAINTAINER_DECISION_INTEROP_SCOPE.md` resolves the split. `INTEROP_TESTS_SPEC.md` treats CAR/Bitswap/gateway as P0 release-blocking, DHT/IPNS as P1 allowed-to-fail/allowed-to-skip, and Helia as a separate nightly workflow. `.github/workflows/interop.yml` and `.github/workflows/interop_nightly.yml` are created, and the `test/interop/` harness is in place. |
 | Plugin spec false Isolate-sandbox claim | **Resolved** | `PLUGINS_SPEC.md` correctly states that Dart Isolates are not a security sandbox and replaces the committed dev-key plan with CI-generated ephemeral keys. The core plugin runtime (`PluginHost`, `CapabilityRegistry`, `PluginManifest`, `PluginAuditLog`, `CapabilityException`, `CapabilityMetricsEmitter`) is implemented. |
 | `tool/plugin_dev_key.pem` committed key risk | **Resolved in spec** | `PLUGINS_SPEC.md` now requires CI-generated ephemeral keys and no committed private key. |
 | Modularization workspace tooling undecided | **Resolved in spec** | `MODULARIZATION_SPEC.md` now chooses Melos, defines a single release train, adds a consumer rationale, and treats modularization as a v2.2.x deliverable rather than a v2.2.0 blocker. |
@@ -130,7 +130,7 @@ As of this inspection, the **other subagents have completed the bulk of their ex
 
 ## Code Changes Summary
 
-The code-fixing subagent implemented the **config/lifecycle**, **IPLDCodec interface**, **PeerId base36**, **CAR migration**, **plugin security core**, **interop CI workflows**, and **Docker base image** changes. The gateway CAR response path returns raw CAR bytes for trustless requests. All six Council decisions are now reflected in code and documentation.
+The code-fixing contributor implemented the **config/lifecycle**, **IPLDCodec interface**, **PeerId base36**, **CAR migration**, **plugin security core**, **interop CI workflows**, and **Docker base image** changes. The gateway CAR response path returns raw CAR bytes for trustless requests. All six maintainer decisions are now reflected in code and documentation.
 
 | File | Status | Required / implemented change | Decision |
 |---|---|---|---|
@@ -152,7 +152,7 @@ The code-fixing subagent implemented the **config/lifecycle**, **IPLDCodec inter
 | `test/core/ipld/codecs/standard_codecs_test.dart` | **Done** | Asserts `name`, `code`, and `identifier` for each standard codec. | IPLDCodec Reconciliation |
 | `test/core/ipld/codecs/codecs_coverage_test.dart` | **Done** | Asserts `name` and `code` for standard and advanced codecs. | IPLDCodec Reconciliation |
 | `test/services/gateway/content_type_handler_test.dart` | **Done** | Updated MIME type to `application/vnd.ipld.car` and asserts raw CAR pass-through. | CAR Migration |
-| `pubspec.yaml` | **Restored to HEAD** | The subagent's temporary SDK-constraint relaxation and `dependency_overrides` additions were reverted so the project accurately reflects its requirements (`sdk: ^3.10.0`). The local SDK mismatch is an environment issue, not a project change. | Tooling |
+| `pubspec.yaml` | **Restored to HEAD** | The contributor's temporary SDK-constraint relaxation and `dependency_overrides` additions were reverted so the project accurately reflects its requirements (`sdk: ^3.10.0`). The local SDK mismatch is an environment issue, not a project change. | Tooling |
 | `lib/src/core/ipld/dag_json_codec.dart` | **Done** | Deleted. The unified `IPLDCodec` interface in `lib/src/core/ipld/codecs/ipld_codec.dart` is the only one. | IPLDCodec Reconciliation |
 | `lib/src/core/data_structures/car.dart` | **Done** | Rewritten to the standard `CarHeader`/`CarSection`/`IndexBuilder` data model (no protobuf). | CAR Migration |
 | `lib/src/utils/car_reader.dart` | **Done** | Implements the standard `CarReader`/`CarSection`/`header`/`findCID` API on the standard data model. | CAR Migration |
@@ -179,7 +179,7 @@ The code-fixing subagent implemented the **config/lifecycle**, **IPLDCodec inter
 1. **One spec gap was resolved during the final review:**
    - `IPLD_SELECTORS_SPEC.md`: the path was corrected to `lib/src/core/ipfs_node/ipld_handler.dart`, the GraphSync block-attachment claim was reworded, and `condition` was explicitly placed in P1. This is now reflected in the working tree.
 
-2. **All six Council-of-Five decisions are now resolved in documentation and code**, and the latest agent closed the remaining implementation gaps:
+2. **All six maintainer decisions are now resolved in documentation and code**, and the latest contributor closed the remaining implementation gaps:
    - CAR migration, config/lifecycle, Docker base image, interop scope, IPLDCodec reconciliation, and plugin security model are implemented and tracked in the relevant specs.
    - **DI/LifecycleManager:** The `LifecycleManager` wiring and service registration paths are complete; the test suite is now nearly green with one unrelated failure.
    - **Plugin archive-checksum:** The plugin manifest signature now covers the `archive_sha256` checksum of the plugin code (computed from all files in the plugin directory except `plugin.yaml`), so tampering with plugin code after signing is detected. `tool/sign_examples.dart` and the example plugin manifests were updated to include this checksum.
@@ -194,7 +194,7 @@ The code-fixing subagent implemented the **config/lifecycle**, **IPLDCodec inter
    - `.temp_dart_sdk/` was removed during an earlier review; it contained in-progress Dart SDK downloads and should not be committed.
    - In this cleanup pass, none of the listed stray files (`.dart-sdk/`, `.temp_dart_sdk/`, `deps.txt`, `test_output.txt`, `tmp_*.dart`, `test_results.json`) were present in the working tree.
 
-5. **Minor `pubspec.yaml` cleanup:** the subagent's temporary SDK-constraint relaxation and `dependency_overrides` additions were reverted so `pubspec.yaml` matches HEAD. The local SDK mismatch is an environment issue.
+5. **Minor `pubspec.yaml` cleanup:** the contributor's temporary SDK-constraint relaxation and `dependency_overrides` additions were reverted so `pubspec.yaml` matches HEAD. The local SDK mismatch is an environment issue.
 
 ---
 

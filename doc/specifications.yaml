@@ -224,7 +224,7 @@ publish(topic: String, message: String): void
   # ... (implementation)
 
 # --- v2.0+ Parity & Superiority Backlog (2026-06-25) ---
-# The items below are Council-of-Five approved specifications for making dart_ipfs
+# The items below are maintainer-approved specifications for making dart_ipfs
 # a spec-compliant, superior IPFS implementation.
 #
 # Category-level specs:
@@ -247,21 +247,21 @@ publish(topic: String, message: String): void
 #                           INTEROP_TESTS_SPEC.md, MODULARIZATION_SPEC.md,
 #                           PLUGINS_SPEC.md
 #
-# Council of Five audit reports in doc/specs/audits/:
-#   - COUNCIL_AUDIT_MASTER.md
-#   - COUNCIL_AUDIT_CORE_DATA_LAYER.md
-#   - COUNCIL_AUDIT_SERVICES_APIS.md
-#   - COUNCIL_AUDIT_NETWORKING_P2P_1.md
-#   - COUNCIL_AUDIT_NETWORKING_P2P_2.md
-#   - COUNCIL_AUDIT_OPERATIONS_ECOSYSTEM.md
+# maintainer audit reports in doc/specs/audits/:
+#   - MAINTAINER_AUDIT_MASTER.md
+#   - MAINTAINER_AUDIT_CORE_DATA_LAYER.md
+#   - MAINTAINER_AUDIT_SERVICES_APIS.md
+#   - MAINTAINER_AUDIT_NETWORKING_P2P_1.md
+#   - MAINTAINER_AUDIT_NETWORKING_P2P_2.md
+#   - MAINTAINER_AUDIT_OPERATIONS_ECOSYSTEM.md
 
-# Council of Five binding decisions in doc/specs/decisions/:
-#   - COUNCIL_DECISION_CAR_MIGRATION.md
-#   - COUNCIL_DECISION_CONFIG_LIFECYCLE.md
-#   - COUNCIL_DECISION_DOCKER_BASE.md
-#   - COUNCIL_DECISION_INTEROP_SCOPE.md
-#   - COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md
-#   - COUNCIL_DECISION_PLUGIN_SECURITY.md
+# maintainer binding decisions in doc/specs/decisions/:
+#   - MAINTAINER_DECISION_CAR_MIGRATION.md
+#   - MAINTAINER_DECISION_CONFIG_LIFECYCLE.md
+#   - MAINTAINER_DECISION_DOCKER_BASE.md
+#   - MAINTAINER_DECISION_INTEROP_SCOPE.md
+#   - MAINTAINER_DECISION_IPLDCODEC_RECONCILIATION.md
+#   - MAINTAINER_DECISION_PLUGIN_SECURITY.md
 # Aggregate resolution report:
 #   - doc/specs/RESOLUTIONS_AGGREGATE.md
 

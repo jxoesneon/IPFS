@@ -4,14 +4,14 @@
 **Version:** 1.0-draft  
 **Target Release:** dart_ipfs v2.0  
 **Repository:** `C:\Users\josee\IPFS`  
-**Approved by:** Ciel Council of Five (2026-06-25)  
+**Approved by:** Maintainer review (2026-06-25)  
 **Status:** Draft specification for implementation  
 
 ---
 
 ## 1. Overview / Goal
 
-This specification closes the highest-impact **service and API interoperability gaps** between dart_ipfs v1.11.5 and the public IPFS ecosystem (Kubo v0.42.0+, Helia, and Iroh). It is scoped to the backlog items that were deliberated and approved by the Ciel Council of Five on 2026-06-25 and is the single source of truth for their implementation.
+This specification closes the highest-impact **service and API interoperability gaps** between dart_ipfs v1.11.5 and the public IPFS ecosystem (Kubo v0.42.0+, Helia, and Iroh). It is scoped to the backlog items that were deliberated and approved by the project maintainers on 2026-06-25 and is the single source of truth for their implementation.
 
 The goal is to make dart_ipfs a **fully credible, Kubo-compatible IPFS node** for the service layer while preserving its Dart-native architecture and cross-platform (VM/Web) constraints. The work is divided into three priority tiers:
 
@@ -19,8 +19,7 @@ The goal is to make dart_ipfs a **fully credible, Kubo-compatible IPFS node** fo
 - **P1** — Should ship in v2.0; important for network participation and operator control.
 - **P2** — Deferred until the v2.0 foundation is production-grade.
 
-### Council verdicts covered by this document
-
+### Maintainer decisions covered by this document
 | Priority | Verdict | Item |
 |----------|---------|------|
 | P0 | APPROVED | MFS completeness: `flush`/`sync`, full `/api/v0/files/*` RPC coverage, Kubo-matching `read/write/stat/ls` semantics. |
@@ -99,7 +98,7 @@ The goal is to make dart_ipfs a **fully credible, Kubo-compatible IPFS node** fo
 
 ## 4. Detailed Per-Item Specification
 
-All items below must be implemented **without expanding scope** beyond what is specified. Any deviation requires a new Ciel Council deliberation.
+All items below must be implemented **without expanding scope** beyond what is specified. Any deviation requires a new project maintainers deliberation.
 
 ---
 
@@ -973,9 +972,9 @@ Spin up Kubo (v0.42.0+) and dart_ipfs nodes in CI and verify:
 
 ---
 
-## 9. Open Questions / Future Council Items
+## 9. Open Questions / Future maintainers Items
 
-The following are explicitly **out of scope** for v2.0 and require a separate Council deliberation if needed:
+The following are explicitly **out of scope** for v2.0 and require a separate maintainer review if needed:
 
 - Web UI gateway management of denylist.
 - Fine-grained per-user allow/deny rules (ACLs).

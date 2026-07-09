@@ -6,11 +6,11 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 [![Dart](https://img.shields.io/badge/dart-%3E%3D3.0.0-blue.svg)](https://dart.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **TL;DR**: A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux) and Web (Chrome, Firefox, Safari). The `IpfsPlatform` abstraction automatically handles storage (File System vs. IndexedDB) and networking based on the target platform.
+A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux) and Web (Chrome, Firefox, Safari). The `IpfsPlatform` abstraction automatically handles storage (File System vs. IndexedDB) and networking based on the target platform.
 
 ---
 
-## 🌍 Multi-Platform Support
+## Multi-Platform Support
 
 | Platform | Runtime | Storage | Networking |
 |----------|---------|---------|------------|
@@ -21,7 +21,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 - **[Architecture Guide](doc/ARCHITECTURE.md)** — Deep dive into the Manager-Handler pattern
 - **[ACME Certificate Issuance](doc/ACME_CERTIFICATE_ISSUANCE.md)** — Automatic TLS certificate management
@@ -47,7 +47,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 
 ---
 
-## 🚀 What's New in v1.11
+## What's New in v1.11
 
 ### Major Features
 
@@ -61,7 +61,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 
 ---
 
-## 🚀 What's New in v1.10
+## What's New in v1.10
 
 ### Major Features
 
@@ -77,7 +77,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 
 ## Features
 
-### ✅ Core IPFS Functionality
+### Core IPFS Functionality
 
 - **Content-Addressable Storage**: CID v0 and v1 support
 - **UnixFS**: Full file system implementation with chunking
@@ -85,7 +85,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 - **CAR Files**: Import/export support
 - **Pinning**: Content persistence management
 
-### ✅ Networking & NAT Traversal
+### Networking & NAT Traversal
 
 - **Bitswap 1.2.0**: Efficient block exchange with wantlist management
 - **Kademlia DHT**: Distributed hash table for peer/content routing
@@ -103,7 +103,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 - **mDNS**: Local peer discovery
 - **Bootstrap Peers**: Network connectivity initialization
 
-### ✅ Services
+### Services
 
 - **HTTP Gateway**: Read-only and writable modes
 - **RPC API**: Compatible with go-ipfs API
@@ -112,7 +112,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
 - **GraphSync**: Efficient graph synchronization protocol
 - **Metrics**: Prometheus-compatible monitoring
 
-### ✅ Security
+### Security
 
 - **Production Cryptography**
   - secp256k1 key exchange (128-bit security)
@@ -135,7 +135,7 @@ A complete, production-ready IPFS (InterPlanetary File System) implementation in
   - Merkle tree verification
   - Block integrity checks
 
-### ✅ Web Platform
+### Web Platform
 
 - **`IPFSWebNode`**: Browser-compatible implementation
 - **IndexedDB Storage**: Persistent local storage
@@ -174,7 +174,7 @@ dart pub get
 
 **Important**: On Windows, P2P networking requires `libsodium` for cryptography.
 
-**✅ Automatic Setup**: dart_ipfs automatically detects and installs libsodium via `winget` on first run.
+**Automatic Setup**: dart_ipfs automatically detects and installs libsodium via `winget` on first run.
 
 **Manual Installation** (if auto-install fails):
 
@@ -425,7 +425,7 @@ For more details, see the **[Architecture Guide](doc/ARCHITECTURE.md)**.
 
 ---
 
-## 🛡️ Security
+## Security
 
 > **IMPORTANT**: Production use requires strict sandboxing.
 > See `docker-compose.yml` for a secure reference implementation.
@@ -541,8 +541,8 @@ await node.pin(cid);
 
 See the `example/` directory for full applications:
 
-- **[📱 Premium Dashboard](example/ipfs_dashboard)**: Flutter desktop app with glassmorphism UI
-- **[📟 CLI Dashboard](example/cli_dashboard)**: Matrix-style terminal interface
+- **[Premium Dashboard](example/ipfs_dashboard)**: Flutter desktop app with glassmorphism UI
+- **[CLI Dashboard](example/cli_dashboard)**: Matrix-style terminal interface
 
 Other examples:
 
@@ -581,9 +581,9 @@ dart analyze
 
 Expected results:
 
-- ✅ 0 errors
-- ✅ 0 warnings
-- ✅ 2326 tests pass
+- 0 errors
+- 0 warnings
+- 2326 tests pass
 
 ---
 
@@ -601,7 +601,7 @@ Contributions welcome! Please:
 
 ## Roadmap
 
-### ✅ Done
+### Completed
 
 - Core IPFS protocols (Bitswap, DHT, PubSub)
 - Offline, Gateway, and P2P modes
@@ -616,12 +616,12 @@ Contributions welcome! Please:
 - S/Kademlia PoW
 - 95%+ Router Coverage
 
-### 🔄 In Progress
+### In Progress
 
 - Mobile optimization (Flutter performance)
 - Native QUIC transport (Desktop/Server)
 
-### 📋 Planned
+### Planned
 
 - Filecoin integration
 - IPFS Pinning Service API (Remote Pinning)
@@ -632,21 +632,21 @@ Contributions welcome! Please:
 
 | Feature          | dart_ipfs   | go-ipfs (Kubo) |
 | ---------------- | ----------- | -------------- |
-| Content Storage  | ✅          | ✅             |
-| UnixFS           | ✅          | ✅             |
-| CID v0/v1        | ✅          | ✅             |
-| Bitswap 1.2.0    | ✅          | ✅             |
-| Kademlia DHT     | ✅          | ✅             |
-| HTTP Gateway     | ✅          | ✅             |
-| RPC API          | ✅          | ✅             |
-| PubSub           | ✅          | ✅             |
-| IPNS             | ✅          | ✅             |
-| GraphSync        | ✅          | ✅             |
-| Circuit Relay v2 | ✅          | ✅             |
-| AutoNAT          | ✅          | ✅             |
+| Content Storage  | Yes         | Yes            |
+| UnixFS           | Yes         | Yes            |
+| CID v0/v1        | Yes         | Yes            |
+| Bitswap 1.2.0    | Yes         | Yes            |
+| Kademlia DHT     | Yes         | Yes            |
+| HTTP Gateway     | Yes         | Yes            |
+| RPC API          | Yes         | Yes            |
+| PubSub           | Yes         | Yes            |
+| IPNS             | Yes         | Yes            |
+| GraphSync        | Yes         | Yes            |
+| Circuit Relay v2 | Yes         | Yes            |
+| AutoNAT          | Yes         | Yes            |
 | Language         | Dart        | Go             |
-| Mobile Support   | ✅ Flutter  | ❌             |
-| Web Support      | ✅ Dart Web | ❌             |
+| Mobile Support   | Yes (Flutter) | No           |
+| Web Support      | Yes (Dart Web) | No          |
 
 ---
 
@@ -680,4 +680,4 @@ Inspired by:
 
 ---
 
-**Ready to build decentralized applications? Get started with dart_ipfs today!** 🚀
+For more information, see the [GitHub repository](https://github.com/jxoesneon/IPFS).

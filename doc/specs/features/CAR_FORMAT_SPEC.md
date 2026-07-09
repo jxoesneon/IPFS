@@ -1,6 +1,6 @@
 # dart_ipfs v2.0 — CAR v1/v2 Format Specification
 
-**Status:** Council of Five Approved P0 Backlog  
+**Status:** Maintainer-approved P0 Backlog  
 **Target Release:** v2.0  
 **Priority:** P0 — Blocker for trustless gateway, MFS import/export, and GraphSync  
 
@@ -49,12 +49,12 @@ Reference implementations for interoperability verification:
 The custom protobuf-based CAR codec has been replaced with the standard API described in this specification.
 
 - **File:** `lib/src/core/ipld/codecs/advanced_codecs.dart` previously contained a non-standard `CarCodec` class that serialized CAR data through a generated protobuf `CarProto` message. That class has been removed and is no longer registered in `IPLDHandler`.
-- **File:** `lib/src/core/data_structures/car.dart` now implements the standard `CarHeader`, `CarSection`, and `IndexBuilder` data model instead of the legacy protobuf `CarProto` message. The legacy `CAR`, `CarHeader`, and `CarIndex` classes have been replaced by the standard `CarReader` / `CarWriter` / `CarHeader` / `CarSection` / `IndexBuilder` API defined in this specification, per `COUNCIL_DECISION_CAR_MIGRATION.md`.
+- **File:** `lib/src/core/data_structures/car.dart` now implements the standard `CarHeader`, `CarSection`, and `IndexBuilder` data model instead of the legacy protobuf `CarProto` message. The legacy `CAR`, `CarHeader`, and `CarIndex` classes have been replaced by the standard `CarReader` / `CarWriter` / `CarHeader` / `CarSection` / `IndexBuilder` API defined in this specification, per `MAINTAINER_DECISION_CAR_MIGRATION.md`.
 - **Resolved:** The output bytes now conform to CAR v1/v2 and are accepted by `kubo dag import` and Helia's `@helia/car`.
 - **Resolved:** CAR v2 pragma, header, index payload, and footer are now supported.
 - **Resolved:** CAR sections are framed as `[varint | CID | Block]` and the header is DAG-CBOR.
 - **Resolved:** The in-memory CAR API is built on top of the standard byte layer and is reusable.
-- **Dependency:** CAR v2 headers are DAG-CBOR maps, so this backlog item depends on the DAG-CBOR codec being spec-compliant. The unified `IPLDCodec` interface from `COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md` is in place.
+- **Dependency:** CAR v2 headers are DAG-CBOR maps, so this backlog item depends on the DAG-CBOR codec being spec-compliant. The unified `IPLDCodec` interface from `MAINTAINER_DECISION_IPLDCODEC_RECONCILIATION.md` is in place.
 
 ---
 

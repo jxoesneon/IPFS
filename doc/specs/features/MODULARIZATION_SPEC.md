@@ -3,8 +3,8 @@
 **Document ID:** `MODULARIZATION_SPEC`  
 **Version:** 1.0-draft  
 **Target Release:** dart_ipfs v2.2.x / release-candidate (not a v2.2.0 blocker)  
-**Status:** Deferred by Council of Five decision (2026-07-09)  
-**Council Priority:** P1 MODIFIED  
+**Status:** Deferred by maintainer decision (2026-07-09)  
+**Maintainer Priority:** P1 MODIFIED  
 **Source:** `OPERATIONS_ECOSYSTEM_SPEC` section 4.5
 
 ---
@@ -120,7 +120,7 @@ export 'package:dart_ipfs_core/dart_ipfs_core.dart'
 
 - `dart_ipfs_core` has **no** dependency on the umbrella package.
 - The umbrella package depends on `dart_ipfs_core` (path dependency during development; published version constraint after release).
-- No other `packages/` entries are created in v2.2 unless explicitly approved by a new Council deliberation.
+- No other `packages/` entries are created in v2.2 unless explicitly approved by a new maintainer review.
 
 ### 4.6 Versioning Policy
 
@@ -223,17 +223,17 @@ export 'package:dart_ipfs_core/dart_ipfs_core.dart'
 
 ---
 
-## 10. Council of Five Decision — 2026-07-09
+## 10. Maintainer Decision — 2026-07-09
 
 ### 10.1 Initial deliberation
 
-A first Council of Five deliberation was held for WP-07 (core modularization redesign). The proposal presented three options:
+A first maintainer review was held for WP-07 (core modularization redesign). The proposal presented three options:
 
 1. Extend `dart_ipfs_core` CID API and migrate incrementally.
 2. Defer WP-07 and keep the monolithic core.
 3. Create a compatibility adapter/extension layer.
 
-| Council Member | Option 1 | Option 2 | Option 3 | Preferred |
+| Reviewer | Option 1 | Option 2 | Option 3 | Preferred |
 |----------------|----------|----------|----------|-----------|
 | Coherence      | 6        | 8        | 4        | Option 2  |
 | Capability     | 7        | 3        | 4        | Option 1  |
@@ -246,7 +246,7 @@ A first Council of Five deliberation was held for WP-07 (core modularization red
 
 ### 10.2 Strategic research and final decision
 
-Following the initial verdict, an agentic-loop research phase investigated how other IPFS implementations modularize, what the Dart ecosystem expects, whether any downstream consumer needs `dart_ipfs_core`, and where the official specs place the CID/protobuf boundary. The findings were:
+Following the initial verdict, a research phase investigated how other IPFS implementations modularize, what the Dart ecosystem expects, whether any downstream consumer needs `dart_ipfs_core`, and where the official specs place the CID/protobuf boundary. The findings were:
 
 - **Kubo, Helia, rust-ipfs, js-ipfs, and go-libp2p** all keep CID/multihash/multibase in protocol-agnostic packages with **no** protobuf dependency.
 - The official **CID specification** defines only binary and multibase-string encodings. Protobuf is a **protocol container**, not a CID encoding.
@@ -254,13 +254,13 @@ Following the initial verdict, an agentic-loop research phase investigated how o
 - `dart_ipfs` has **0 pub.dev dependents**; no GitHub issues, discussions, StackOverflow questions, Reddit threads, or blogs request modularization or core-only imports.
 - The Dart/Flutter IPFS community overwhelmingly uses **HTTP API clients**, not full nodes.
 
-A second Council of Five deliberation was convened with three revised options:
+A second maintainer review was convened with three revised options:
 
 - **Option A:** Defer WP-07 indefinitely (status quo).
 - **Option B:** Redesign WP-07 into a proper spec-aligned modularization (protobuf-free core, protobuf methods in protocol packages).
 - **Option C:** Abandon WP-07 and redirect effort to adoption (docs, examples, HTTP API wrapper, community outreach).
 
-| Council Member | Option A | Option B | Option C | Preferred |
+| Reviewer | Option A | Option B | Option C | Preferred |
 |----------------|----------|----------|----------|-----------|
 | Coherence      | 6        | 4        | 9        | **C**     |
 | Capability     | 6        | 3        | 9        | **C**     |
@@ -293,8 +293,4 @@ If modularization is revisited, the original WP-07 design is **discredited**. Th
 
 ### 10.5 Decision record
 
-Full Council context, research synthesis, and member rationales are recorded in the Obsidian vault:
-
-- `ciel/kg/decisions/2026-07-09-wp07-council-decision.md` (initial deliberation)
-- `ciel/kg/decisions/2026-07-09-wp07-research-synthesis.md`
-- `ciel/kg/decisions/2026-07-09-wp07-final-decision.md`
+Full decision context, research synthesis, and reviewer rationales are recorded in the project decision log.

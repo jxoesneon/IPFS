@@ -46,7 +46,7 @@ The gateway implementation is in `lib/src/services/gateway/gateway_handler.dart`
 - `ContentTypeHandler` detects `application/vnd.ipfs.car` files but `_processCarArchive` converts the CAR bytes into an HTML warning page instead of returning the archive. This breaks programmatic clients that request CAR archives.
 - There is no support for `Accept: application/vnd.ipfs.raw-block`, `application/vnd.ipfs.ipns-record`, `application/vnd.ipld.dag-json`, or `application/vnd.ipld.dag-cbor`.
 - `GatewayHandler` does not parse `?format=` query parameters.
-- CAR responses must be generated with the standard `CarWriter` API defined in `doc/specs/features/CAR_FORMAT_SPEC.md` and approved by `doc/specs/decisions/COUNCIL_DECISION_CAR_MIGRATION.md`. The old `CAR` class in `lib/src/core/data_structures/car.dart` uses a protobuf-based custom format that is not IPLD CAR v1 compliant and must not be used for gateway CAR responses.
+- CAR responses must be generated with the standard `CarWriter` API defined in `doc/specs/features/CAR_FORMAT_SPEC.md` and approved by `doc/specs/decisions/MAINTAINER_DECISION_CAR_MIGRATION.md`. The old `CAR` class in `lib/src/core/data_structures/car.dart` uses a protobuf-based custom format that is not IPLD CAR v1 compliant and must not be used for gateway CAR responses.
 
 ---
 

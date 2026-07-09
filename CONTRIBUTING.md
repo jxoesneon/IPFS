@@ -1,37 +1,40 @@
-# Contributing to IPFS
+# Contributing to dart_ipfs
 
-First off, thanks for taking the time to contribute! 🎉
+Thank you for contributing to dart_ipfs. This document describes the guidelines for submitting bug reports, proposing changes, and maintaining code quality.
 
-The following is a set of guidelines for contributing to **IPFS** (Dart/Flutter implementation). These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
+## Reporting Bugs
 
-## How Can I Contribute?
+When submitting a bug report, include the following information:
 
-### Reporting Bugs
+- A clear, descriptive title that identifies the problem.
+- Exact steps to reproduce the issue, with as much detail as possible.
+- Specific examples or code snippets that demonstrate the behavior.
+- The expected behavior and the actual behavior.
+- The Dart/Flutter version and platform where the issue occurs.
 
-This section guides you through submitting a bug report. Following these guidelines helps maintainers and the community understand your report, reproduce the behavior, and find related reports.
+## Proposing Changes
 
-- **Use a clear and descriptive title** for the issue to identify the problem.
-- **Describe the exact steps which reproduce the problem** in as much detail as possible.
-- **Provide specific examples** to demonstrate the steps.
-
-### Pull Requests
-
-1.  Fork the repo and create your branch from `master`.
-2.  If you've added code that should be tested, add tests.
-3.  Ensure the test suite passes.
-4.  Make sure your code lints.
-5.  Issue that pull request!
+1. Fork the repository and create a branch from `master`.
+2. Add or update tests for any code changes.
+3. Ensure the test suite passes locally (`dart test`).
+4. Ensure static analysis reports no issues (`dart analyze`).
+5. Format the code with `dart format .` before committing.
+6. Open a pull request with a clear description of the change and the problem it solves.
 
 ## Styleguides
 
 ### Dart Style
 
-- We follow the official [Dart Style Guide](https://dart.dev/guides/language/effective-dart/style).
-- Run `dart format .` before committing to ensure consistent formatting.
+- Follow the [Dart Style Guide](https://dart.dev/guides/language/effective-dart/style).
+- Run `dart format .` before committing.
+- Maintain or improve test coverage for new and modified code.
 
-### Commits
+### Commit Messages
 
-- Use the present tense ("Add feature" not "Added feature").
-- Use the imperative mood ("Move cursor to..." not "Moves cursor to...").
+- Use the present tense ("Add feature" rather than "Added feature").
+- Use the imperative mood ("Move cursor to..." rather than "Moves cursor to...").
+- Keep the first line concise and summarize the change.
 
-Thank you for your contributions!
+## Questions and Discussions
+
+For general questions, design discussions, or feature proposals, use [GitHub Discussions](https://github.com/jxoesneon/IPFS/discussions).

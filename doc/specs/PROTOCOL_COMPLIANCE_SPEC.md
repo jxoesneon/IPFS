@@ -1,6 +1,6 @@
 # dart_ipfs v2.0 — Protocol Compliance & Core Data Layer Specification
 
-**Status:** Council of Five Approved Backlog (P0/P1/P2)  
+**Status:** Maintainer-approved Backlog (P0/P1/P2)  
 **Repository:** `C:\Users\josee\IPFS` (dart_ipfs)  
 **Target Release:** v2.0  
 
@@ -48,7 +48,7 @@ The following gaps were identified in the v1.11.5 baseline and must be closed by
 1. **CAR serialization is custom.** `lib/src/core/ipld/codecs/advanced_codecs.dart` contains a `CarCodec` that uses a protobuf `CarProto` message. The output is not a valid CAR v1/v2 file and is rejected by Kubo/Helia.
 2. **UnixFS directory construction is incomplete.** Under `lib/src/core/unixfs/`, directory PBNodes can be created but cumulative `Tsize` values are wrong or missing, and path resolution is not fully integrated with the block store.
 3. **DAG-CBOR is not spec-compliant.** `lib/src/core/cbor/enhanced_cbor_handler.dart` encodes raw bytes with the non-standard CBOR tag 45, encodes CIDs incorrectly, and does not enforce canonical key ordering or big-integer support.
-4. **DAG-JSON has two competing implementations.** `lib/src/core/ipld/dag_json_codec.dart` defines a duplicate `IPLDCodec` interface and is not spec-compliant. `lib/src/core/ipld/codecs/standard_codecs.dart` has a `DagJsonCodec` that is closer but still incomplete. The Council decision in `COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md` selects the unified `IPLDCodec` interface (`name`, `code`, and async `encode`/`decode` on `IPLDNode`) and removes the duplicate file.
+4. **DAG-JSON has two competing implementations.** `lib/src/core/ipld/dag_json_codec.dart` defines a duplicate `IPLDCodec` interface and is not spec-compliant. `lib/src/core/ipld/codecs/standard_codecs.dart` has a `DagJsonCodec` that is closer but still incomplete. the maintainer decision in `MAINTAINER_DECISION_IPLDCODEC_RECONCILIATION.md` selects the unified `IPLDCodec` interface (`name`, `code`, and async `encode`/`decode` on `IPLDNode`) and removes the duplicate file.
 5. **IPLD selectors are custom.** `lib/src/core/ipld/ipld_handler.dart` uses a hand-rolled `SelectorType` model that does not match the official selector vocabulary and cannot be serialized as DAG-CBOR. GraphSync currently cannot attach blocks based on a selector.
 6. **IPLD Schema DSL validation is absent.** Only a lightweight stopgap exists; full schema validation is out of scope for v2.0.
 
@@ -227,7 +227,7 @@ Make `EnhancedCBORHandler` (or its successor) fully compliant with the DAG-CBOR 
 ### 4.4 P1 — Consolidated DAG-JSON Codec
 
 #### Scope
-Do not introduce a third DAG-JSON implementation. Remove/deprecate `lib/src/core/ipld/dag_json_codec.dart` and its duplicate `IPLDCodec` interface. Consolidate on the unified `IPLDCodec` interface from `COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md` (`name`, `code`, and async `encode`/`decode` on `IPLDNode`). Update `DagJsonCodec` in `lib/src/core/ipld/codecs/standard_codecs.dart` so it is the single, spec-compliant DAG-JSON codec.
+Do not introduce a third DAG-JSON implementation. Remove/deprecate `lib/src/core/ipld/dag_json_codec.dart` and its duplicate `IPLDCodec` interface. Consolidate on the unified `IPLDCodec` interface from `MAINTAINER_DECISION_IPLDCODEC_RECONCILIATION.md` (`name`, `code`, and async `encode`/`decode` on `IPLDNode`). Update `DagJsonCodec` in `lib/src/core/ipld/codecs/standard_codecs.dart` so it is the single, spec-compliant DAG-JSON codec.
 
 #### Encoding Rules
 
@@ -409,9 +409,9 @@ Use fixed test fixtures for determinism; add a smaller set of randomized propert
 
 ---
 
-## Appendix A — Council of Five Verdict Summary
+## Appendix A — maintainer review Summary
 
-The following priorities and scope decisions are extracted from the Council of Five verdicts provided for this backlog.
+The following priorities and scope decisions are extracted from the maintainer reviews provided for this backlog.
 
 | Item | Priority | Verdict |
 |------|----------|---------|

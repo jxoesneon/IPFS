@@ -31,6 +31,7 @@ scratch/
 # VS Code related
 .vscode/
 .gemini/
+.playwright-mcp/
 .fastembed_cache/
 
 # Flutter/Dart/Pub related
@@ -84,6 +85,7 @@ temp/
 test_blocks/
 test_blocks_log/
 test_tmp/
+test_repo/
 test/interop/swarm.key
 
 # Logs

@@ -4,7 +4,7 @@ import '../../../proto/generated/ipld/data_model.pb.dart';
 
 /// Interface for all IPLD codecs in dart_ipfs.
 ///
-/// This is the unified interface from `COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md`:
+/// This is the unified interface from the IPLD codec reconciliation decision:
 /// every codec self-declares its multicodec [name] and [code], and operates
 /// asynchronously on [IPLDNode] values.
 abstract class IPLDCodec {

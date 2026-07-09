@@ -1,6 +1,6 @@
 # dart_ipfs v2.0 — UnixFS Specification
 
-**Status:** Council of Five Approved Backlog  
+**Status:** Maintainer-approved Backlog  
 **Target Release:** v2.0 (basic directories P0; HAMT sharding and symlinks P1)  
 **Priority:** P0 — Blocker for MFS, gateway path resolution, and content import/export  
 

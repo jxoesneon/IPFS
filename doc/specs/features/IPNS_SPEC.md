@@ -4,7 +4,7 @@
 **Location:** `C:\Users\josee\IPFS\doc\specs\features\IPNS_SPEC.md`  
 **Version:** v2.1  
 **Date:** 2026-06-25  
-**Authority:** Ciel Council of Five verdicts (2026-06-25)  
+**Authority:** Maintainer review (2026-06-25)  
 **Status:** P0 Modified — implementation pending  
 **Scope:** DHT-first IPNS record publishing and resolution with Ed25519 signed records, name derivation from public keys, and optional PubSub notifications gated behind Gossipsub compliance.
 

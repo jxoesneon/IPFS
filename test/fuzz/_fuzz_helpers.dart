@@ -17,7 +17,7 @@ math.Random makeRandom([int? seed]) {
       int.tryParse(
         const String.fromEnvironment('FUZZ_SEED', defaultValue: ''),
       ) ??
-      0xC1E1; // "Ciel" inspired default seed.
+      0xC1E1; // Default deterministic fuzz seed.
   return math.Random(s);
 }
 

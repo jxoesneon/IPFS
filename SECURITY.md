@@ -18,7 +18,7 @@ If you discover a security vulnerability in dart_ipfs, please report it responsi
 - Potential impact assessment
 - Suggested fix (optional)
 
-We will acknowledge receipt within 48 hours and provide a timeline for resolution.
+Reports will be acknowledged within 48 hours, and a timeline for resolution will be provided.
 
 ## Supported Versions
 
@@ -90,6 +90,4 @@ The project now uses three crypto libraries (down from four):
 
 ## Hall of Fame
 
-We appreciate security researchers who help keep dart_ipfs secure:
-
-_No reports yet - be the first!_
+Security researchers who report valid vulnerabilities will be listed here once coordinated disclosure is complete.

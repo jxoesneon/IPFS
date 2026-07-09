@@ -1,6 +1,6 @@
 # dart_ipfs v2.0 — DAG-CBOR Codec Specification
 
-**Status:** Council of Five Approved P0 Backlog  
+**Status:** Maintainer-approved P0 Backlog  
 **Target Release:** v2.0  
 **Priority:** P0 — Foundation for CAR headers, IPLD selectors, and content-addressed data  
 

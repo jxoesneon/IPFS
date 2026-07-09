@@ -95,7 +95,7 @@ Future phases may extract additional packages:
 
 Each new package must:
 
-1. Be approved by a Council deliberation.
+1. Be approved by a maintainer review.
 2. Depend only on stable packages (`dart_ipfs_core` and other approved packages).
 3. Never depend on the umbrella package.
 4. Include its own `README.md`, `analysis_options.yaml`, and tests.

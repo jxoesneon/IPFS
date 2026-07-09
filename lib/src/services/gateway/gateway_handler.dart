@@ -118,7 +118,7 @@ class GatewayHandler {
 
   /// Optional metrics collector for gateway request telemetry.
   ///
-  /// TODO: coordinate with the metrics subagent to add a dedicated
+  /// TODO: coordinate with the metrics module to add a dedicated
   /// `ipfs_gateway_requests_total` counter rather than reusing the generic
   /// protocol metrics stream.
   final MetricsCollector? metricsCollector;
@@ -177,7 +177,7 @@ class GatewayHandler {
   ///
   /// This is intentionally a thin wrapper around the existing collector to
   /// avoid duplicating metrics implementation. A dedicated counter API should
-  /// be added by the metrics subagent.
+  /// be added by the metrics module.
   void _recordGatewayRequest(String method, String path, int statusCode) {
     final metrics = metricsCollector;
     if (metrics == null) {

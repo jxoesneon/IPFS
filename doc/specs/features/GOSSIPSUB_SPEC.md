@@ -4,7 +4,7 @@
 **Location:** `C:\Users\josee\IPFS\doc\specs\features\GOSSIPSUB_SPEC.md`  
 **Version:** v2.1  
 **Date:** 2026-06-25  
-**Authority:** Ciel Council of Five verdicts (2026-06-25)  
+**Authority:** Maintainer review (2026-06-25)  
 **Status:** P0 Approved — implementation pending  
 **Scope:** Full libp2p Gossipsub v1.1 compliance, replacing the existing custom JSON/HMAC PubSub implementation.
 

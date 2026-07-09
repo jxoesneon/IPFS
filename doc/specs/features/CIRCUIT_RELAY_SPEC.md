@@ -4,7 +4,7 @@
 **Location:** `C:\Users\josee\IPFS\doc\specs\features\CIRCUIT_RELAY_SPEC.md`  
 **Version:** v2.1  
 **Date:** 2026-06-25  
-**Authority:** Ciel Council of Five verdicts (2026-06-25)  
+**Authority:** Maintainer review (2026-06-25)  
 **Status:** P0 Approved — implementation pending  
 **Scope:** Client-side Circuit Relay v2 support, including reservation, relayed dialing, and transparent integration into the router's peer connection set.
 

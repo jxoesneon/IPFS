@@ -4,7 +4,7 @@
 **Location:** `C:\Users\josee\IPFS\doc\specs\features\GRAPHSYNC_SPEC.md`  
 **Version:** v2.1  
 **Date:** 2026-06-25  
-**Authority:** Ciel Council of Five verdicts (2026-06-25)  
+**Authority:** Maintainer review (2026-06-25)  
 **Status:** P1 Modified — implementation pending  
 **Scope:** Server-side response to GraphSync requests with selected blocks, selector budgets, Bitswap fallback, and unicast-only responses. Client-side matching and bidirectional pause/resume are deferred.
 

@@ -4,7 +4,7 @@
 **Location:** `C:\Users\josee\IPFS\doc\specs\NETWORKING_P2P_SPEC.md`  
 **Version:** v2.1  
 **Date:** 2026-06-25  
-**Authority:** Ciel Council of Five verdicts (2026-06-25)  
+**Authority:** Maintainer review (2026-06-25)  
 **Status:** Draft specification — implementation pending  
 **Scope:** P2P transport layer, libp2p protocol compliance, DHT, IPNS, Gossipsub, Circuit Relay v2, browser transports, GraphSync, Bitswap fallbacks, and gateway TLS.
 
@@ -1360,7 +1360,7 @@ class GatewayServer {
 
 | Date | Version | Change |
 |------|---------|--------|
-| 2026-06-25 | v2.1 | Initial specification from Ciel Council of Five verdicts |
+| 2026-06-25 | v2.1 | Initial specification from maintainer review |
 
 ---
 

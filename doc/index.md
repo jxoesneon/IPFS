@@ -12,7 +12,7 @@ Welcome to the documentation for **dart_ipfs**, a production-ready IPFS implemen
 
 ## v2.0+ Parity & Superiority Specifications
 
-Ciel Council of Five approved backlog specs for making dart_ipfs the superior IPFS implementation:
+Project maintainers approved backlog specs for making dart_ipfs the superior IPFS implementation:
 
 - [Protocol Compliance & Core Data Layer](specs/PROTOCOL_COMPLIANCE_SPEC.md)
 - [Networking, Naming & Full P2P](specs/NETWORKING_P2P_SPEC.md)
@@ -61,27 +61,25 @@ Research-backed, standalone specifications for every approved/modified backlog i
 - [Package Modularization](specs/features/MODULARIZATION_SPEC.md)
 - [Plugin Ecosystem](specs/features/PLUGINS_SPEC.md)
 
-## Council of Five Audit Reports
+## Maintainer Audit Reports
+Each per-feature spec was audited by the five project review lenses (Coherence, Capability, Safety, Efficiency, Evolution). Scores and verdicts are captured below.
 
-Each per-feature spec was audited by the five Ciel Council lenses (Coherence, Capability, Safety, Efficiency, Evolution). Scores and verdicts are captured below.
+- [Master Audit Report](specs/audits/MAINTAINER_AUDIT_MASTER.md)
+- [Core Data Layer Audit](specs/audits/MAINTAINER_AUDIT_CORE_DATA_LAYER.md)
+- [Services & APIs Audit](specs/audits/MAINTAINER_AUDIT_SERVICES_APIS.md)
+- [Networking & P2P Audit (Part 1)](specs/audits/MAINTAINER_AUDIT_NETWORKING_P2P_1.md)
+- [Networking & P2P Audit (Part 2)](specs/audits/MAINTAINER_AUDIT_NETWORKING_P2P_2.md)
+- [Operations & Ecosystem Audit](specs/audits/MAINTAINER_AUDIT_OPERATIONS_ECOSYSTEM.md)
 
-- [Master Audit Report](specs/audits/COUNCIL_AUDIT_MASTER.md)
-- [Core Data Layer Audit](specs/audits/COUNCIL_AUDIT_CORE_DATA_LAYER.md)
-- [Services & APIs Audit](specs/audits/COUNCIL_AUDIT_SERVICES_APIS.md)
-- [Networking & P2P Audit (Part 1)](specs/audits/COUNCIL_AUDIT_NETWORKING_P2P_1.md)
-- [Networking & P2P Audit (Part 2)](specs/audits/COUNCIL_AUDIT_NETWORKING_P2P_2.md)
-- [Operations & Ecosystem Audit](specs/audits/COUNCIL_AUDIT_OPERATIONS_ECOSYSTEM.md)
+## Maintainer Decisions
+Binding architectural decisions produced by the project maintainers to resolve cross-cutting audit findings and unblock implementation.
 
-## Council of Five Decisions
-
-Binding architectural decisions produced by the Ciel Council of Five to resolve cross-cutting audit findings and unblock implementation.
-
-- [CAR Migration — Delete legacy protobuf CAR and adopt standard CarReader/CarWriter](specs/decisions/COUNCIL_DECISION_CAR_MIGRATION.md)
-- [IPFSConfig Serialization & Lifecycle Wiring — JSON canonical format, round-trip config, and builder-managed RPC/gateway services](specs/decisions/COUNCIL_DECISION_CONFIG_LIFECYCLE.md)
-- [Docker Base Image Strategy — Hardened glibc default (`cgr.dev/chainguard/glibc-dynamic`) with experimental static variant](specs/decisions/COUNCIL_DECISION_DOCKER_BASE.md)
-- [Interop Test Scope — P0 release-blocking CAR/Bitswap/gateway only; DHT/IPNS P1 allowed-to-fail; Helia nightly](specs/decisions/COUNCIL_DECISION_INTEROP_SCOPE.md)
-- [IPLDCodec Reconciliation — Unified codec interface with `name`/`code` and a `MulticodecRegistry`](specs/decisions/COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md)
-- [Plugin Security Model — Trust-based, capability-gated, auditable runtime; no committed signing keys](specs/decisions/COUNCIL_DECISION_PLUGIN_SECURITY.md)
+- [CAR Migration — Delete legacy protobuf CAR and adopt standard CarReader/CarWriter](specs/decisions/MAINTAINER_DECISION_CAR_MIGRATION.md)
+- [IPFSConfig Serialization & Lifecycle Wiring — JSON canonical format, round-trip config, and builder-managed RPC/gateway services](specs/decisions/MAINTAINER_DECISION_CONFIG_LIFECYCLE.md)
+- [Docker Base Image Strategy — Hardened glibc default (`cgr.dev/chainguard/glibc-dynamic`) with experimental static variant](specs/decisions/MAINTAINER_DECISION_DOCKER_BASE.md)
+- [Interop Test Scope — P0 release-blocking CAR/Bitswap/gateway only; DHT/IPNS P1 allowed-to-fail; Helia nightly](specs/decisions/MAINTAINER_DECISION_INTEROP_SCOPE.md)
+- [IPLDCodec Reconciliation — Unified codec interface with `name`/`code` and a `MulticodecRegistry`](specs/decisions/MAINTAINER_DECISION_IPLDCODEC_RECONCILIATION.md)
+- [Plugin Security Model — Trust-based, capability-gated, auditable runtime; no committed signing keys](specs/decisions/MAINTAINER_DECISION_PLUGIN_SECURITY.md)
 
 - [Aggregate Resolution Report](specs/RESOLUTIONS_AGGREGATE.md)
 

@@ -4,7 +4,7 @@
 **Location:** `C:\Users\josee\IPFS\doc\specs\features\GATEWAY_TLS_SPEC.md`  
 **Version:** v2.1  
 **Date:** 2026-06-25  
-**Authority:** Ciel Council of Five verdicts (2026-06-25)  
+**Authority:** Maintainer review (2026-06-25)  
 **Status:** P1 Approved — implementation pending  
 **Scope:** Optional TLS termination in `GatewayServer` using `SecurityContext` from config, and off-by-default AutoTLS/ACME mode for public gateways.
 

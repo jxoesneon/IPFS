@@ -33,10 +33,9 @@ Goal: provide a native QUIC transport without requiring changes to
 | **msquic FFI** | MIT (msquic) | Microsoft maintained, C API | C API is `msquic.h` (C headers) but bindings are C++/C# oriented; less Rust/Dart ecosystem precedent | Alternative |
 | Implement QUIC from scratch in Dart | MIT | No native dependency | High security risk, high maintenance | Superseded by quic_lib |
 
-## Council of Five Decision
-
-The Ciel Council of Five deliberated on native QUIC strategy. After the user
-provided the `quic_lib` package, the Council updated its verdict:
+## Maintainer Decision
+The project maintainers deliberated on native QUIC strategy. After the user
+provided the `quic_lib` package, the maintainers updated their verdict:
 
 - **Coherence**: 9/10 for `quic_lib` — pure-Dart aligns with the project's
   goal of minimizing native build/toolchain dependencies for consumers.

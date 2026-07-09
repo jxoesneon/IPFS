@@ -1,6 +1,6 @@
 # dart_ipfs v2.0 — IPLD Selector Execution Specification
 
-**Status:** Council of Five Approved P0 Backlog  
+**Status:** Maintainer-approved P0 Backlog  
 **Target Release:** v2.0  
 **Priority:** P0 — Blocker for GraphSync responses and selective DAG retrieval  
 

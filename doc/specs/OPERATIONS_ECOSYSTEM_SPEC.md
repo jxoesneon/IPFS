@@ -4,7 +4,7 @@
 **Version:** 1.0-draft  
 **Target Release:** dart_ipfs v2.2  
 **Repository:** `C:\Users\josee\IPFS`  
-**Approved by:** Ciel Council of Five (2026-06-25)  
+**Approved by:** Maintainer review (2026-06-25)  
 **Status:** Draft specification for implementation  
 
 ---
@@ -81,7 +81,7 @@ This specification is the single source of truth for scope, acceptance criteria,
 
 ## 4. Detailed Per-Item Specification
 
-All items are tagged with the Council priority and verdict (APPROVED, MODIFIED, DEFERRED). Implementation is **not** allowed to expand scope beyond what is specified here unless a new Council deliberation is held.
+All items are tagged with the maintainer priority and verdict (APPROVED, MODIFIED, DEFERRED). Implementation is **not** allowed to expand scope beyond what is specified here unless a new maintainer review is held.
 
 ---
 
@@ -358,7 +358,7 @@ Existing import paths `package:dart_ipfs/src/core/...` are **not** guaranteed to
 #### 4.5.5 Dependency Direction
 - `dart_ipfs_core` has **no** dependency on the umbrella package.
 - Umbrella package depends on `dart_ipfs_core` (path dependency during development; published version constraint after release).
-- No other `packages/` entries are created in v2.2 unless explicitly approved by a new Council deliberation.
+- No other `packages/` entries are created in v2.2 unless explicitly approved by a new maintainer review.
 
 #### 4.5.6 Acceptance Criteria
 - `dart run melos bootstrap` (or `dart pub get` in each package) succeeds.
@@ -502,7 +502,7 @@ plugin:
 
 ## 5. Implementation Sequence
 
-The Council recommends the following order. P0 items must be completed before v2.2 release; P1 items may ship in v2.2 but must not delay release if they are not complete; P2 items are explicitly deferred or kept as non-blocking CI/docs.
+The maintainers recommend the following order. P0 items must be completed before v2.2 release; P1 items may ship in v2.2 but must not delay release if they are not complete; P2 items are explicitly deferred or kept as non-blocking CI/docs.
 
 ### Phase 1 — P0 Foundations (v2.2.0-alpha)
 1. **CLI / daemon binary** (`bin/ipfs.dart`) — implement all required subcommands and add `dart compile exe` tooling.

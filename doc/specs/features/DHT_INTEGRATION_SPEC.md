@@ -4,7 +4,7 @@
 **Location:** `C:\Users\josee\IPFS\doc\specs\features\DHT_INTEGRATION_SPEC.md`  
 **Version:** v2.1  
 **Date:** 2026-06-25  
-**Authority:** Ciel Council of Five verdicts (2026-06-25)  
+**Authority:** Maintainer review (2026-06-25)  
 **Status:** P0 Modified — implementation pending  
 **Scope:** Iterative Kademlia DHT queries, provider-record validation, and reprovide sweep for public Amino DHT participation.
 

@@ -198,7 +198,7 @@ class IPLDHandler implements ILifecycle {
     try {
       final encoded = await codec.encode(node);
       // Use the codec's multicodec code for the CID and the codec name for the
-      // block format metadata, per COUNCIL_DECISION_IPLDCODEC_RECONCILIATION.md.
+      // block format metadata, per the IPLD codec reconciliation decision.
       final format = EncodingUtils.getCodecFromCode(codec.code);
       final cid = await CID.computeForData(encoded, format: format);
       return (encoded, cid);

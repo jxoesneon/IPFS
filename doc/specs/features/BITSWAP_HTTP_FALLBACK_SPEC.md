@@ -4,7 +4,7 @@
 **Location:** `C:\Users\josee\IPFS\doc\specs\features\BITSWAP_HTTP_FALLBACK_SPEC.md`  
 **Version:** v2.1  
 **Date:** 2026-06-25  
-**Authority:** Ciel Council of Five verdicts (2026-06-25)  
+**Authority:** Maintainer review (2026-06-25)  
 **Status:** P1 Modified — implementation pending  
 **Scope:** Integrate `HttpGatewayClient` as a fallback inside `BitswapHandler` after P2P attempts fail, and verify every HTTP-fetched block against its CID before storage.
 

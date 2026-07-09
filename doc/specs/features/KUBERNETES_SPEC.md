@@ -4,7 +4,7 @@
 **Version:** 1.0-draft  
 **Target Release:** dart_ipfs v2.2  
 **Status:** Draft specification for implementation  
-**Council Priority:** P1 APPROVED  
+**Maintainer Priority:** P1 APPROVED  
 **Source:** `OPERATIONS_ECOSYSTEM_SPEC` section 4.3
 
 ---

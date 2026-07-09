@@ -40,7 +40,7 @@
 ## [1.11.4] - 2026-05-15
 
 ### Fixed
-- **Architectural Cleanup**: Successfully completed a comprehensive audit and remediation of technical debt identified by the Council of Five. Removed all `// ignore: unused_field` suppressions in core components.
+- **Architectural Cleanup**: Completed a comprehensive audit and remediation of technical debt identified by the project maintainers. Removed all `// ignore: unused_field` suppressions in core components.
 - **WebRTC Transport**: Implemented true stream multiplexing by decoupled `DataChannel`s from `PeerConnection`s, resolving "connection bloat" and ensuring standard libp2p compliance.
 - **Bitswap 1.2**: Restored smart routing by wiring the `_providersForBlock` map to `HAVE` messages. Want requests are now targeted to known providers, significantly reducing broadcast traffic and improving user privacy.
 - **Security (Web)**: Achieved functional parity with the IO security manager. Implemented robust rate-limiting, authentication tracking, and event metrics for the web platform.

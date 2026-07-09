@@ -4,7 +4,7 @@
 **Version:** 1.0-draft  
 **Target Release:** dart_ipfs v2.2  
 **Status:** Draft specification for implementation  
-**Council Priority:** P0 APPROVED  
+**Maintainer Priority:** P0 APPROVED  
 **Source:** `OPERATIONS_ECOSYSTEM_SPEC` section 4.4
 
 ---
@@ -205,7 +205,7 @@ DHT/IPNS scenarios may be promoted from P1 to P0 release-blocking only after all
 1. `DHT_INTEGRATION_SPEC.md` is fully implemented and the DHT client supports iterative queries with request/response correlation.
 2. `IPNS_SPEC.md` is fully implemented, the hardcoded `QmResolvedCid` fallback is removed, and `PeerId` supports base36 encode/decode.
 3. The P1 scenarios pass consistently in CI for at least two consecutive release-candidate cycles.
-4. The Council of Five reviews and approves the promotion in a follow-up decision document.
+4. The maintainer reviews and approves the promotion in a follow-up decision document.
 
 ## 9. Dependencies and Ordering
 

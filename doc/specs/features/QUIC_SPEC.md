@@ -4,7 +4,7 @@
 **Location:** `C:\Users\josee\IPFS\doc\specs\features\QUIC_SPEC.md`  
 **Version:** v2.1  
 **Date:** 2026-06-25  
-**Authority:** Ciel Council of Five verdicts (2026-06-25)  
+**Authority:** Maintainer review (2026-06-25)  
 **Status:** COMPLETE — conditional spec implemented; native QUIC transport path now uses the pure-Dart `quic_lib` package via the `packages/dart_ipfs_quic` adapter. Kubo/Helia interop remains pending the libp2p TLS 1.3 handshake completion.  
 **Scope:** Native QUIC transport integration into the dart_ipfs libp2p router, with TCP fallback and configurable preference.
 
