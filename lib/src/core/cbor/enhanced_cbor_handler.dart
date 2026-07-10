@@ -864,8 +864,8 @@ class EnhancedCBORHandler {
   static final BigInt _int255 = BigInt.from(255);
   static final BigInt _int65535 = BigInt.from(65535);
   static final BigInt _int4294967295 = BigInt.from(4294967295);
-  static final BigInt _maxInt64 = BigInt.from(9223372036854775807);
-  static final BigInt _minInt64 = BigInt.from(-9223372036854775808);
+  static final BigInt _maxInt64 = BigInt.parse('9223372036854775807');
+  static final BigInt _minInt64 = BigInt.parse('-9223372036854775808');
   static final BigInt _maxUnsignedInt64 = BigInt.parse('18446744073709551615');
   static final BigInt _byteMask = BigInt.from(0xff);
 }

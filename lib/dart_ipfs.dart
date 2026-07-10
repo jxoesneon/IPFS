@@ -142,8 +142,10 @@ export 'package:dart_ipfs_core/dart_ipfs_core.dart'
 
 // Optional pure-Dart QUIC transport from the dart_ipfs_quic package.
 // This transport is backed by quic_lib and is only active when
-// NetworkConfig.enableQuic is true.
+// NetworkConfig.enableQuic is true. On the web a stub is exported so that
+// importing dart_ipfs does not pull the non-web-compatible quic_lib bundle.
 export 'package:dart_ipfs_quic/dart_ipfs_quic.dart'
+    if (dart.library.html) 'src/transport/quic_stub_public.dart'
     show QuicTransport, QuicConnection, QuicListener;
 
 export 'src/core/config/ipfs_config.dart';

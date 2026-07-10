@@ -95,10 +95,10 @@ class DagCborCodec implements IPLDCodec {
   /// Values inside the signed 64-bit range become regular CBOR ints, while
   /// values outside that range become CBOR bignums (tag 2 or 3).
   cbor.CborValue _toCborBigInt(BigInt value) {
-    const minInt64 = -9223372036854775808;
-    const maxInt64 = 9223372036854775807;
-    if (value.compareTo(BigInt.from(minInt64)) >= 0 &&
-        value.compareTo(BigInt.from(maxInt64)) <= 0) {
+    final minInt64 = BigInt.parse('-9223372036854775808');
+    final maxInt64 = BigInt.parse('9223372036854775807');
+    if (value.compareTo(minInt64) >= 0 &&
+        value.compareTo(maxInt64) <= 0) {
       return cbor.CborInt(value);
     }
     return cbor.CborBigInt(value);

@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs_quic/dart_ipfs_quic.dart' as dart_ipfs_quic;
 import 'package:ipfs_libp2p/config/config.dart' as config;
 import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto;
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
@@ -19,6 +18,7 @@ import '../protocols/dht/dht_routing_table_interface.dart';
 import '../utils/logger.dart';
 import 'pnet/pnet_transport_wrapper.dart';
 import 'pnet/swarm_key_loader.dart';
+import 'quic_transport_probe.dart' if (dart.library.html) 'quic_transport_probe_web.dart' as quic_probe;
 import 'router_interface.dart';
 import 'webrtc/signaling_protocol.dart';
 import 'webrtc/webrtc_direct_transport.dart';
@@ -820,22 +820,17 @@ class Libp2pRouter implements RouterInterface {
 
   /// Probes for an available QUIC transport.
   ///
-  /// Returns the pure-Dart [dart_ipfs_quic.QuicTransport] adapter backed by
-  /// [quic_lib]. When the adapter cannot be instantiated (e.g., the package is
-  /// missing), the router falls back to TCP-only mode as documented in
-  /// QUIC_SPEC.
+  /// Returns the pure-Dart QUIC transport adapter backed by [quic_lib] on
+  /// native platforms. On the web the probe always returns `null` so the router
+  /// falls back to TCP-only mode as documented in QUIC_SPEC.
   Future<libp2p_transport.Transport?> _probeQuicTransport() async {
-    // Test override takes precedence.
-    if (_quicTransportFactory != null) {
-      return _quicTransportFactory!();
+    final transport = await quic_probe.probeQuicTransport(_quicTransportFactory);
+    if (transport == null && _config.network.enableQuic) {
+      _logger.warning(
+        'QUIC transport is not available on this platform; falling back to TCP.',
+      );
     }
-
-    try {
-      return dart_ipfs_quic.QuicTransport();
-    } catch (e) {
-      _logger.warning('Failed to instantiate QUIC transport: $e');
-      return null;
-    }
+    return transport;
   }
 
   /// Loads the private-network pre-shared key if one is configured.
