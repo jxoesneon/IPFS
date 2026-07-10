@@ -444,7 +444,7 @@ class GatewayServer implements ILifecycle {
       final host = request.headers['host'] ?? request.url.host;
       final domain = host.contains(':') ? host.split(':').first : host;
       final location =
-          'https://$domain${targetTlsPort == 443 ? '' : ':$targetTlsPort'}${request.url}';
+          'https://$domain${targetTlsPort == 443 ? '' : ':$targetTlsPort'}/${request.url}';
       _logger.info('Redirecting HTTP request to HTTPS: $location');
       return Response.movedPermanently(location);
     };
