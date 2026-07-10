@@ -41,7 +41,7 @@ jobs:
           fi
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Start interop network
         env:
@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload P0 logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: interop-p0-logs
           path: /tmp/interop-logs/
@@ -120,7 +120,7 @@ jobs:
           fi
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Start interop network
         env:
@@ -162,7 +162,7 @@ jobs:
 
       - name: Upload P1 logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: interop-p1-logs
           path: /tmp/interop-logs/
