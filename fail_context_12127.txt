@@ -1,0 +1,30 @@
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:55.9557379Z Γ£à test/mocks/mock_integration_test.dart: Mock Infrastructure Integration MockDHTHandler simulates errors
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:55.9580697Z Γ£à test/mocks/mock_integration_test.dart: Mock Infrastructure Integration MockDHTHandler resets state correctly
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:55.9603601Z Γ£à test/mocks/mock_integration_test.dart: Mock Infrastructure Integration Mock infrastructure works together
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:55.9707435Z Γ£à test/mocks/mock_integration_test.dart: Mock Infrastructure Integration Multiple test blocks can be created and stored
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:55.9725151Z Γ£à test/mocks/mock_integration_test.dart: Mock Infrastructure Integration InMemoryDatastore pin functionality via key prefix
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:55.9737411Z Γ£à test/mocks/mock_integration_test.dart: Test Helpers createTestBlock creates valid blocks
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:55.9757732Z Γ£à test/mocks/mock_integration_test.dart: Test Helpers createTestBlocks creates multiple blocks
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:56.0428469Z Γ£à test/mocks/mock_integration_test.dart: Test Helpers generateTestPrivateKey creates a key
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:56.0467971Z Γ£à test/mocks/mock_integration_test.dart: Test Helpers TestBlockGraph.create creates linked blocks
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:56.2160283Z Γ£à test/mocks/mock_block_store_test.dart: MockBlockStore lifecycle operations record calls
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:56.2385711Z Γ£à test/mocks/mock_block_store_test.dart: MockBlockStore putBlock returns success and records call
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:56.2469464Z Γ£à test/mocks/mock_block_store_test.dart: MockBlockStore getBlock returns block if exists
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:56.2480653Z Γ£à test/mocks/mock_block_store_test.dart: MockBlockStore getBlock returns not found if missing
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:56.2501821Z Γ£à test/mocks/mock_block_store_test.dart: MockBlockStore removeBlock removes and returns success
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:56.2520417Z Γ£à test/mocks/mock_block_store_test.dart: MockBlockStore removeBlock returns error if not found
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:56.2534683Z Γ£à test/mocks/mock_block_store_test.dart: MockBlockStore operations fail when not started
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:56.2548786Z Γ£à test/mocks/mock_block_store_test.dart: MockBlockStore reset clears all state
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:56.2565249Z Γ£à test/mocks/mock_block_store_test.dart: MockBlockStore getStatus returns correct metadata
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:58.8879209Z Γ£à test/transport/libp2p_router_coverage_test.dart: Libp2pRouter Coverage sendRequest should receive response
+Test (ubuntu-latest)	Run tests	2026-07-10T21:15:58.8928907Z Γ£à test/transport/libp2p_router_coverage_test.dart: Libp2pRouter Coverage getters and basic methods
+Test (ubuntu-latest)	Run tests	2026-07-10T21:16:03.9155091Z Γ£à test/transport/libp2p_router_coverage_test.dart: Libp2pRouter Coverage broadcastMessage should handle failure for some peers
+Test (ubuntu-latest)	Run tests	2026-07-10T21:16:11.1520336Z Γ£à test/transport/libp2p_router_coverage_test.dart: Libp2pRouter Coverage sendMessage should handle large messages
+Test (ubuntu-latest)	Run tests	2026-07-10T21:16:16.1729155Z Γ£à test/transport/libp2p_router_coverage_test.dart: Libp2pRouter Coverage stop should handle multiple calls
+Test (ubuntu-latest)	Run tests	2026-07-10T21:16:16.1753219Z Γ£à test/transport/libp2p_router_coverage_test.dart: Libp2pRouter Coverage receiveMessages should return same stream
+Test (ubuntu-latest)	Run tests	2026-07-10T21:16:16.1770298Z Γ£à test/transport/libp2p_router_coverage_test.dart: Libp2pRouter Coverage event methods management
+Test (ubuntu-latest)	Run tests	2026-07-10T21:16:16.1786238Z Γ£à test/transport/libp2p_router_coverage_test.dart: Libp2pRouter Coverage parseMultiaddr and resolvePeerId
+Test (ubuntu-latest)	Run tests	2026-07-10T21:16:16.1800496Z Γ£à test/transport/libp2p_router_coverage_test.dart: Libp2pRouter Coverage methods should throw if not started
+Test (ubuntu-latest)	Run tests	2026-07-10T21:16:16.1817677Z Γ£à test/transport/libp2p_router_coverage_test.dart: Libp2pRouter Coverage protocol management
+Test (ubuntu-latest)	Run tests	2026-07-10T21:16:16.1932296Z ##[endgroup]
+Test (ubuntu-latest)	Run tests	2026-07-10T21:16:16.1932584Z 

@@ -34,4 +34,4 @@ jobs:
         run: dart analyze lib test
 
       - name: Run tests
-        run: dart test
+        run: dart test --reporter=expanded
