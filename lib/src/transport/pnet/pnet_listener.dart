@@ -31,8 +31,8 @@ class PnetListener implements Listener {
 
   @override
   Stream<TransportConn> get connectionStream => inner.connectionStream.asyncMap(
-        (conn) => PnetTransportConn.create(conn, psk, isInitiator: false),
-      );
+    (conn) => PnetTransportConn.create(conn, psk, isInitiator: false),
+  );
 
   @override
   Future<TransportConn?> accept() async {

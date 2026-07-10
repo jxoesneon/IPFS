@@ -20,8 +20,8 @@ const kDartIpfsGatewayPort = 8080;
 
 Future<bool> _isHostReachable(String host, int port) async {
   try {
-    final socket = await Socket.connect(host, port,
-        timeout: const Duration(seconds: 2));
+    final socket =
+        await Socket.connect(host, port, timeout: const Duration(seconds: 2));
     socket.destroy();
     return true;
   } catch (_) {
@@ -37,8 +37,8 @@ void main() {
 
     setUpAll(() async {
       // Check if hosts are reachable (e.g., running in Docker network)
-      final dartIpfsReachable = await _isHostReachable(
-          kDartIpfsApiHost, kDartIpfsApiPort);
+      final dartIpfsReachable =
+          await _isHostReachable(kDartIpfsApiHost, kDartIpfsApiPort);
       final kuboReachable = await _isHostReachable(kKuboApiHost, kKuboApiPort);
       hostsReachable = dartIpfsReachable && kuboReachable;
 

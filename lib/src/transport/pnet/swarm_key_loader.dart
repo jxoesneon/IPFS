@@ -49,14 +49,10 @@ Uint8List decodeV1Psk(Uint8List bytes) {
     );
   }
   if (lines[0] != '/key/swarm/psk/1.0.0/') {
-    throw FormatException(
-      'Unexpected swarm key version marker: ${lines[0]}',
-    );
+    throw FormatException('Unexpected swarm key version marker: ${lines[0]}');
   }
   if (lines[1] != '/base16/') {
-    throw FormatException(
-      'Unexpected swarm key encoding marker: ${lines[1]}',
-    );
+    throw FormatException('Unexpected swarm key encoding marker: ${lines[1]}');
   }
 
   final hex = lines[2];

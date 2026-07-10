@@ -125,8 +125,9 @@ class ContentRoutingHandler {
         try {
           final ipniResponse = await ipniClient.findProviders(cidObj);
           if (ipniResponse.isSuccess && ipniResponse.providers.isNotEmpty) {
-            final providers =
-                ipniResponse.providers.map((p) => p.peerId).toList();
+            final providers = ipniResponse.providers
+                .map((p) => p.peerId)
+                .toList();
             _logger.debug('Found ${providers.length} providers via IPNI');
             return providers;
           }
@@ -141,9 +142,11 @@ class ContentRoutingHandler {
         _logger.verbose('IPNI empty, trying Reframe');
         try {
           final reframeResponse = await reframeClient.findProviders(cidObj);
-          if (reframeResponse.isSuccess && reframeResponse.providers.isNotEmpty) {
-            final providers =
-                reframeResponse.providers.map((p) => p.peerId).toList();
+          if (reframeResponse.isSuccess &&
+              reframeResponse.providers.isNotEmpty) {
+            final providers = reframeResponse.providers
+                .map((p) => p.peerId)
+                .toList();
             _logger.debug('Found ${providers.length} providers via Reframe');
             return providers;
           }

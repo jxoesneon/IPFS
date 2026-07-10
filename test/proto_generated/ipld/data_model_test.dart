@@ -8,7 +8,18 @@ import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 void main() {
   group('IPLDNode', () {
     test('round-trips and accessors work', () {
-      final original = IPLDNode(kind: Kind.values.first, boolValue: true, intValue: $fixnum.Int64(1), floatValue: 1.2, stringValue: 'a', bytesValue: const [0, 1, 2], listValue: IPLDList.create(), mapValue: IPLDMap.create(), linkValue: IPLDLink.create(), bigIntValue: const [0, 1, 2]);
+      final original = IPLDNode(
+        kind: Kind.values.first,
+        boolValue: true,
+        intValue: $fixnum.Int64(1),
+        floatValue: 1.2,
+        stringValue: 'a',
+        bytesValue: const [0, 1, 2],
+        listValue: IPLDList.create(),
+        mapValue: IPLDMap.create(),
+        linkValue: IPLDLink.create(),
+        bigIntValue: const [0, 1, 2],
+      );
       original.kind;
       original.boolValue;
       original.intValue;
@@ -49,7 +60,7 @@ void main() {
       final restored = IPLDNode.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(IPLDNode.fromJson(json), isNotNull);
@@ -67,7 +78,7 @@ void main() {
       final restored = IPLDList.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(IPLDList.fromJson(json), isNotNull);
@@ -85,7 +96,7 @@ void main() {
       final restored = IPLDMap.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(IPLDMap.fromJson(json), isNotNull);
@@ -108,7 +119,7 @@ void main() {
       final restored = MapEntry.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(MapEntry.fromJson(json), isNotNull);
@@ -117,7 +128,11 @@ void main() {
 
   group('IPLDLink', () {
     test('round-trips and accessors work', () {
-      final original = IPLDLink(version: 1, codec: 'a', multihash: const [0, 1, 2]);
+      final original = IPLDLink(
+        version: 1,
+        codec: 'a',
+        multihash: const [0, 1, 2],
+      );
       expect(original.version, 1);
       expect(original.codec, 'a');
       expect(original.multihash, const [0, 1, 2]);
@@ -133,11 +148,10 @@ void main() {
       final restored = IPLDLink.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(IPLDLink.fromJson(json), isNotNull);
     });
   });
-
 }

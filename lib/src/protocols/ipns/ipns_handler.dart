@@ -289,7 +289,8 @@ class IPNSHandler implements ILifecycle {
 
     SimpleKeyPair keyPair;
     try {
-      keyPair = await _securityManager.getSecureKey(resolvedKeyName) as SimpleKeyPair;
+      keyPair =
+          await _securityManager.getSecureKey(resolvedKeyName) as SimpleKeyPair;
     } catch (e) {
       // Fallback for nodes whose keystore is not unlocked yet (e.g., the
       // interop daemon). Generate an ephemeral self key for this publish.
@@ -300,7 +301,9 @@ class IPNSHandler implements ILifecycle {
         final signer = Ed25519Signer();
         keyPair = await signer.generateKeyPair();
       } else {
-        throw StateError('Keystore is locked or key $resolvedKeyName not found');
+        throw StateError(
+          'Keystore is locked or key $resolvedKeyName not found',
+        );
       }
     }
     return publishWithKeyPair(CID.decode(cid), keyPair);

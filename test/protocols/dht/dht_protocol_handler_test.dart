@@ -219,8 +219,7 @@ void main() {
       DHTProtocolHandler(router, datastore, rateLimiter: rateLimiter);
       final handler = router._handlers[DHTProtocolHandler.protocolId]!;
 
-      final request = kad.Message()
-        ..type = kad.Message_MessageType.PING;
+      final request = kad.Message()..type = kad.Message_MessageType.PING;
       final packet = NetworkPacket(
         srcPeerId: 'peer2',
         datagram: request.writeToBuffer(),
@@ -243,8 +242,7 @@ void main() {
       DHTProtocolHandler(router, datastore, rateLimiter: rateLimiter);
       final handler = router._handlers[DHTProtocolHandler.protocolId]!;
 
-      final request = kad.Message()
-        ..type = kad.Message_MessageType.PING;
+      final request = kad.Message()..type = kad.Message_MessageType.PING;
       final packet = NetworkPacket(
         srcPeerId: 'peer3',
         datagram: request.writeToBuffer(),

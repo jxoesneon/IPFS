@@ -3,7 +3,8 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs_proto;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
+    as unixfs_proto;
 import 'package:fixnum/fixnum.dart';
 import 'package:test/test.dart';
 

@@ -3,7 +3,8 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:dart_ipfs/src/proto/generated/circuit_relay.pb.dart' as pb;
-import 'package:dart_ipfs/src/protocols/dht/dht_routing_table_interface.dart' show DHTRoutingTable;
+import 'package:dart_ipfs/src/protocols/dht/dht_routing_table_interface.dart'
+    show DHTRoutingTable;
 import 'package:dart_ipfs/src/transport/circuit_relay_client.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:fixnum/fixnum.dart' as fixnum;
@@ -569,26 +570,29 @@ void main() {
       await client.start();
     });
 
-    test('incoming STOP CONNECT replies with STATUS OK and emits event', () async {
-      final events = <CircuitRelayConnectionEvent>[];
-      final sub = client.onCircuitRelayEvents.listen(events.add);
+    test(
+      'incoming STOP CONNECT replies with STATUS OK and emits event',
+      () async {
+        final events = <CircuitRelayConnectionEvent>[];
+        final sub = client.onCircuitRelayEvents.listen(events.add);
 
-      final stopMsg = pb.StopMessage()
-        ..type = pb.StopMessage_Type.CONNECT
-        ..peer = (pb.Peer()..id = [1, 2, 3]);
-      router.deliverStopMessage('relay-peer', stopMsg.writeToBuffer());
+        final stopMsg = pb.StopMessage()
+          ..type = pb.StopMessage_Type.CONNECT
+          ..peer = (pb.Peer()..id = [1, 2, 3]);
+        router.deliverStopMessage('relay-peer', stopMsg.writeToBuffer());
 
-      await Future<void>.delayed(const Duration(milliseconds: 10));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
 
-      expect(router.sentPeers, contains('relay-peer'));
-      final response = pb.StopMessage.fromBuffer(router.sentMessages.last);
-      expect(response.type, pb.StopMessage_Type.STATUS);
-      expect(response.status, pb.Status.OK);
-      expect(
-        events.any((e) => e.eventType == 'circuit_relay_incoming'),
-        isTrue,
-      );
-      await sub.cancel();
-    });
+        expect(router.sentPeers, contains('relay-peer'));
+        final response = pb.StopMessage.fromBuffer(router.sentMessages.last);
+        expect(response.type, pb.StopMessage_Type.STATUS);
+        expect(response.status, pb.Status.OK);
+        expect(
+          events.any((e) => e.eventType == 'circuit_relay_incoming'),
+          isTrue,
+        );
+        await sub.cancel();
+      },
+    );
   });
 }

@@ -16,7 +16,7 @@ void main() {
       final restored = BitFieldProto_SetBitRequest.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(BitFieldProto_SetBitRequest.fromJson(json), isNotNull);
@@ -35,7 +35,7 @@ void main() {
       final restored = BitFieldProto_ClearBitRequest.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(BitFieldProto_ClearBitRequest.fromJson(json), isNotNull);
@@ -54,7 +54,7 @@ void main() {
       final restored = BitFieldProto_GetBitRequest.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(BitFieldProto_GetBitRequest.fromJson(json), isNotNull);
@@ -73,7 +73,7 @@ void main() {
       final restored = BitFieldProto_BitResponse.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(BitFieldProto_BitResponse.fromJson(json), isNotNull);
@@ -95,11 +95,10 @@ void main() {
       final restored = BitFieldProto.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(BitFieldProto.fromJson(json), isNotNull);
     });
   });
-
 }

@@ -16,7 +16,6 @@ import 'pinning_service_api.dart';
 
 /// Configuration for a registered pinning service.
 class PinningServiceConfig {
-
   /// Parses from a JSON map.
   factory PinningServiceConfig.fromJson(Map<String, dynamic> json) {
     return PinningServiceConfig(
@@ -25,6 +24,7 @@ class PinningServiceConfig {
       token: json['token'] as String,
     );
   }
+
   /// Creates a [PinningServiceConfig].
   const PinningServiceConfig({
     required this.name,

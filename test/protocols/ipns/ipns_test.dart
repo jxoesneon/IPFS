@@ -59,10 +59,7 @@ Uint8List _ipnsDhtKey(String name) {
   // Match Kubo: the DHT key is '/ipns/' + the identity multihash bytes
   // embedded in the CIDv1 libp2p-key name.
   final cidBytes = PeerId.fromBase36(name).value;
-  return Uint8List.fromList([
-    ...utf8.encode('/ipns/'),
-    ...cidBytes.sublist(2),
-  ]);
+  return Uint8List.fromList([...utf8.encode('/ipns/'), ...cidBytes.sublist(2)]);
 }
 
 void main() {

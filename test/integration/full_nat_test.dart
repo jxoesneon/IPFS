@@ -48,7 +48,8 @@ class MockRouterInterface extends Mock implements RouterInterface {
   String get peerID => 'QmLocalNode';
 
   @override
-  Stream<ConnectionEvent> get connectionEvents => const Stream<ConnectionEvent>.empty();
+  Stream<ConnectionEvent> get connectionEvents =>
+      const Stream<ConnectionEvent>.empty();
 
   @override
   Stream<MessageEvent> get messageEvents => const Stream<MessageEvent>.empty();

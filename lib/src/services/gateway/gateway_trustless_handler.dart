@@ -181,7 +181,10 @@ class GatewayTrustlessHandler {
       case TrustlessFormat.dagCbor:
         return serveDagCbor(cid, request);
       case TrustlessFormat.ipnsRecord:
-        return Response(400, body: 'IPNS record format not supported for /ipfs/ paths');
+        return Response(
+          400,
+          body: 'IPNS record format not supported for /ipfs/ paths',
+        );
     }
   }
 

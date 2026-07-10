@@ -23,12 +23,9 @@ class DHTProtocolHandler {
   /// [rateLimiter] controls how many incoming DHT messages are processed per
   /// time window. When the limit is exceeded, messages are queued; when the
   /// queue is full they are dropped with a warning.
-  DHTProtocolHandler(
-    this._router,
-    this._storage, {
-    RateLimiter? rateLimiter,
-  })  : _rateLimiter = rateLimiter,
-        _logger = Logger('DHTProtocolHandler') {
+  DHTProtocolHandler(this._router, this._storage, {RateLimiter? rateLimiter})
+    : _rateLimiter = rateLimiter,
+      _logger = Logger('DHTProtocolHandler') {
     _setupHandlers();
   }
 
@@ -148,12 +145,17 @@ class DHTProtocolHandler {
     final routingTable = _router.dhtRoutingTable;
     if (routingTable != null) {
       try {
-        final closestPeerIds = routingTable.findClosestPeersToKey(key, k: numPeers);
+        final closestPeerIds = routingTable.findClosestPeersToKey(
+          key,
+          k: numPeers,
+        );
         return closestPeerIds
             .map((peerId) => kad.Peer()..id = peerId.value)
             .toList();
       } catch (e) {
-        _logger.warning('Failed to use DHT routing table, falling back to connected peers: $e');
+        _logger.warning(
+          'Failed to use DHT routing table, falling back to connected peers: $e',
+        );
       }
     }
 

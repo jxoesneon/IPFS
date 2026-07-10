@@ -80,10 +80,7 @@ void main() {
       final context = SecurityContext();
       final provider = _FakeProvider(context: context, expiry: DateTime(2026));
       final manager = GatewayTlsManager(
-        const GatewayConfig(
-          autoTls: true,
-          autoTlsAcceptTos: true,
-        ),
+        const GatewayConfig(autoTls: true, autoTlsAcceptTos: true),
         provider: provider,
       );
       await manager.loadSecurityContext();
@@ -166,7 +163,10 @@ void main() {
     });
 
     test('obtainCertificate falls back to ACME when no valid cert', () async {
-      final persistence = _FakePersistence(validCertificate: false, needsRenew: true);
+      final persistence = _FakePersistence(
+        validCertificate: false,
+        needsRenew: true,
+      );
       final provider = LetsEncryptAutoTlsProvider(
         staging: true,
         persistence: persistence,

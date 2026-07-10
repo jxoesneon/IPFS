@@ -34,8 +34,9 @@ void main() {
           PeerId(value: Uint8List.fromList([9, 10, 11, 12])),
         ];
 
-        when(mockRoutingTable.findClosestPeers(target, 20))
-            .thenReturn(expectedPeers);
+        when(
+          mockRoutingTable.findClosestPeers(target, 20),
+        ).thenReturn(expectedPeers);
 
         final result = adapter.findClosestPeers(target, k: 20);
 
@@ -45,8 +46,7 @@ void main() {
 
       test('uses default k value', () {
         final target = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
-        when(mockRoutingTable.findClosestPeers(target, 20))
-            .thenReturn([]);
+        when(mockRoutingTable.findClosestPeers(target, 20)).thenReturn([]);
 
         adapter.findClosestPeers(target);
 
@@ -61,8 +61,9 @@ void main() {
           PeerId(value: Uint8List.fromList([5, 6, 7, 8])),
         ];
 
-        when(mockRoutingTable.findClosestPeers(any, 20))
-            .thenReturn(expectedPeers);
+        when(
+          mockRoutingTable.findClosestPeers(any, 20),
+        ).thenReturn(expectedPeers);
 
         final result = adapter.findClosestPeersToKey(key, k: 20);
 
@@ -72,8 +73,7 @@ void main() {
 
       test('uses default k value', () {
         final key = [1, 2, 3, 4];
-        when(mockRoutingTable.findClosestPeers(any, 20))
-            .thenReturn([]);
+        when(mockRoutingTable.findClosestPeers(any, 20)).thenReturn([]);
 
         adapter.findClosestPeersToKey(key);
 
@@ -84,29 +84,37 @@ void main() {
     group('addPeer', () {
       test('delegates to underlying routing table', () async {
         final peerId = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
-        final associatedPeerId = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
+        final associatedPeerId = PeerId(
+          value: Uint8List.fromList([1, 2, 3, 4]),
+        );
         final address = '192.168.1.1';
 
-        when(mockRoutingTable.addPeer(peerId, associatedPeerId, address: address))
-            .thenAnswer((_) async {});
+        when(
+          mockRoutingTable.addPeer(peerId, associatedPeerId, address: address),
+        ).thenAnswer((_) async {});
 
         await adapter.addPeer(peerId, associatedPeerId, address: address);
 
-        verify(mockRoutingTable.addPeer(peerId, associatedPeerId, address: address))
-            .called(1);
+        verify(
+          mockRoutingTable.addPeer(peerId, associatedPeerId, address: address),
+        ).called(1);
       });
 
       test('handles null address', () async {
         final peerId = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
-        final associatedPeerId = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
+        final associatedPeerId = PeerId(
+          value: Uint8List.fromList([1, 2, 3, 4]),
+        );
 
-        when(mockRoutingTable.addPeer(peerId, associatedPeerId, address: null))
-            .thenAnswer((_) async {});
+        when(
+          mockRoutingTable.addPeer(peerId, associatedPeerId, address: null),
+        ).thenAnswer((_) async {});
 
         await adapter.addPeer(peerId, associatedPeerId);
 
-        verify(mockRoutingTable.addPeer(peerId, associatedPeerId, address: null))
-            .called(1);
+        verify(
+          mockRoutingTable.addPeer(peerId, associatedPeerId, address: null),
+        ).called(1);
       });
     });
 

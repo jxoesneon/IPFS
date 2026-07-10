@@ -14,8 +14,8 @@ import '../../utils/logger.dart';
 class DomainValidator {
   /// Creates a domain validator.
   DomainValidator({this.expectedIp, http.Client? client})
-      : _client = client,
-        _logger = Logger('DomainValidator');
+    : _client = client,
+      _logger = Logger('DomainValidator');
 
   /// Optional HTTP client for testing. If not provided, a new [http.Client] is
   /// created per request.
@@ -53,10 +53,7 @@ class DomainValidator {
     return DomainValidationResult(
       success: true,
       message: 'Domain $domain is ready for ACME validation',
-      details: {
-        'dns': dnsResult.details,
-        'http': httpResult.details,
-      },
+      details: {'dns': dnsResult.details, 'http': httpResult.details},
     );
   }
 
@@ -83,12 +80,10 @@ class DomainValidator {
         if (!matches) {
           return DomainValidationResult(
             success: false,
-            message: 'Domain $domain resolves to $resolvedIps, '
+            message:
+                'Domain $domain resolves to $resolvedIps, '
                 'but expected $expectedIp',
-            details: {
-              'resolved_ips': resolvedIps,
-              'expected_ip': expectedIp,
-            },
+            details: {'resolved_ips': resolvedIps, 'expected_ip': expectedIp},
           );
         }
       }
@@ -123,15 +118,13 @@ class DomainValidator {
       final client = _client ?? http.Client();
       try {
         final response = await client
-            .get(
-              Uri.http(domain, '/'),
-            )
-            .timeout(
-              const Duration(seconds: 10),
-            );
+            .get(Uri.http(domain, '/'))
+            .timeout(const Duration(seconds: 10));
 
         // We don't care about the response code, just that we got a response
-        _logger.info('HTTP accessibility check successful: ${response.statusCode}');
+        _logger.info(
+          'HTTP accessibility check successful: ${response.statusCode}',
+        );
 
         return DomainValidationResult(
           success: true,
@@ -142,7 +135,10 @@ class DomainValidator {
         return DomainValidationResult(
           success: false,
           message: 'Cannot connect to $domain:80 - ${e.message}',
-          details: {'error': e.message, 'hint': 'Check firewall and port forwarding'},
+          details: {
+            'error': e.message,
+            'hint': 'Check firewall and port forwarding',
+          },
         );
       } on HttpException {
         // HTTP exception is OK - it means we connected but got an HTTP error
@@ -212,5 +208,6 @@ class DomainValidationResult {
   final Map<String, dynamic> details;
 
   @override
-  String toString() => 'DomainValidationResult(success: $success, message: $message)';
+  String toString() =>
+      'DomainValidationResult(success: $success, message: $message)';
 }

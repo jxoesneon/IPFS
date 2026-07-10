@@ -149,10 +149,7 @@ enum DialResponseStatus {
 /// ```
 class DialResponse {
   /// Creates a DialResponse.
-  DialResponse({
-    required this.status,
-    this.statusText,
-  });
+  DialResponse({required this.status, this.statusText});
 
   /// The dial status.
   final DialResponseStatus status;
@@ -480,11 +477,7 @@ class AutoNATServer {
   void _sendResponse(String peerId, DialResponse response) {
     try {
       final responseBytes = response.encode();
-      _router.sendMessage(
-        peerId,
-        responseBytes,
-        protocolId: autonatProtocolId,
-      );
+      _router.sendMessage(peerId, responseBytes, protocolId: autonatProtocolId);
       _logger.verbose('Sent dialback response to $peerId');
     } catch (e) {
       _logger.error('Error sending dialback response', e);

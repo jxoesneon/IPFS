@@ -46,7 +46,6 @@ class NetworkManager implements ILifecycle {
       _logger.debug('Starting underlying network handler...');
 
       await handler.start();
-
     }
   }
 

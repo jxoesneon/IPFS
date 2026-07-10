@@ -16,7 +16,7 @@ class KademliaRoutingAdapter implements DHTRoutingTable {
   ///
   /// [routingTable] - The underlying KademliaRoutingTable to adapt.
   KademliaRoutingAdapter(this._routingTable)
-      : _distanceMetric = const XorDistanceMetric();
+    : _distanceMetric = const XorDistanceMetric();
 
   /// The underlying Kademlia routing table.
   final KademliaRoutingTable _routingTable;

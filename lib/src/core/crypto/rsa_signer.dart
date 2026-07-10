@@ -56,9 +56,9 @@ const String _sha256DigestIdentifierHex = '0609608648016503040201';
 /// final peerId = signer.derivePeerId(keyPair.publicKey);
 /// ```
 class RsaSigner {
-
   /// Creates an RSA signer.
   RsaSigner();
+
   /// Minimum RSA key size in bits.
   static const int minKeySize = 2048;
 

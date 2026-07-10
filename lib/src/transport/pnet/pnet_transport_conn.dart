@@ -7,8 +7,7 @@ import 'dart:typed_data';
 import 'package:cipherlib/cipherlib.dart' show Nonce64, XSalsa20;
 import 'package:ipfs_libp2p/core/crypto/keys.dart';
 import 'package:ipfs_libp2p/core/multiaddr.dart';
-import 'package:ipfs_libp2p/core/network/conn.dart'
-    show ConnState, ConnStats;
+import 'package:ipfs_libp2p/core/network/conn.dart' show ConnState, ConnStats;
 import 'package:ipfs_libp2p/core/network/context.dart';
 import 'package:ipfs_libp2p/core/network/rcmgr.dart' show ConnScope;
 import 'package:ipfs_libp2p/core/network/stream.dart' show P2PStream;
@@ -26,9 +25,7 @@ const _blockSize = 64;
 /// encrypting a leading run of zero bytes and discarding the corresponding
 /// keystream prefix.
 class _PnetCipher {
-  _PnetCipher(Uint8List psk, Uint8List nonce)
-      : _psk = psk,
-        _nonce = nonce;
+  _PnetCipher(Uint8List psk, Uint8List nonce) : _psk = psk, _nonce = nonce;
 
   final Uint8List _psk;
   final Uint8List _nonce;
@@ -76,8 +73,8 @@ class PnetTransportConn implements TransportConn {
     Uint8List psk,
     Uint8List localNonce,
     Uint8List remoteNonce,
-  )   : _outbound = _PnetCipher(psk, localNonce),
-        _inbound = _PnetCipher(psk, remoteNonce);
+  ) : _outbound = _PnetCipher(psk, localNonce),
+      _inbound = _PnetCipher(psk, remoteNonce);
 
   /// Creates a new PNET-wrapped connection after performing the handshake.
   ///
@@ -117,12 +114,7 @@ class PnetTransportConn implements TransportConn {
       await inner.write(localNonce);
     }
 
-    return PnetTransportConn._(
-      inner,
-      psk,
-      localNonce,
-      remoteNonce,
-    );
+    return PnetTransportConn._(inner, psk, localNonce, remoteNonce);
   }
 
   final TransportConn _inner;
@@ -204,4 +196,3 @@ class PnetTransportConn implements TransportConn {
   @override
   ConnScope get scope => _inner.scope;
 }
-

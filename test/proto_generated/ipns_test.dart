@@ -8,7 +8,15 @@ import 'package:dart_ipfs/src/proto/generated/ipns.pb.dart';
 void main() {
   group('IpnsEntry', () {
     test('round-trips and accessors work', () {
-      final original = IpnsEntry(value: const [0, 1, 2], signature: const [0, 1, 2], validityType: IpnsEntry_ValidityType.values.first, validity: const [0, 1, 2], sequence: $fixnum.Int64(1), ttl: $fixnum.Int64(1), pubKey: const [0, 1, 2]);
+      final original = IpnsEntry(
+        value: const [0, 1, 2],
+        signature: const [0, 1, 2],
+        validityType: IpnsEntry_ValidityType.values.first,
+        validity: const [0, 1, 2],
+        sequence: $fixnum.Int64(1),
+        ttl: $fixnum.Int64(1),
+        pubKey: const [0, 1, 2],
+      );
       expect(original.value, const [0, 1, 2]);
       expect(original.signature, const [0, 1, 2]);
       expect(original.validityType, isNotNull);
@@ -36,11 +44,10 @@ void main() {
       final restored = IpnsEntry.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(IpnsEntry.fromJson(json), isNotNull);
     });
   });
-
 }

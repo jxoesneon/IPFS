@@ -1,7 +1,8 @@
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs_proto;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
+    as unixfs_proto;
 import 'package:dart_multihash/dart_multihash.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:test/test.dart';

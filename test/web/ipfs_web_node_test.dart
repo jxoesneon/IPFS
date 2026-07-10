@@ -1,10 +1,17 @@
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:test/test.dart';
+
+IPFSConfig _localConfig() => IPFSConfig(
+  blockStorePath: 'test_blocks',
+  datastorePath: 'test_data',
+  network: NetworkConfig(listenAddresses: ['/ip4/127.0.0.1/tcp/0']),
+);
 
 @TestOn('vm || browser')
 void main() {
@@ -12,11 +19,7 @@ void main() {
     late IPFSWebNode node;
 
     setUp(() async {
-      final config = IPFSConfig(
-        blockStorePath: 'test_blocks',
-        datastorePath: 'test_data',
-      );
-      node = IPFSWebNode(config: config);
+      node = IPFSWebNode(config: _localConfig());
       await node.start();
     });
 
@@ -149,6 +152,7 @@ void main() {
 
     test('start with bootstrap peers', () async {
       final nodeWithBootstrap = IPFSWebNode(
+        config: _localConfig(),
         bootstrapPeers: ['/dns4/example.com/tcp/443/wss'],
       );
       await nodeWithBootstrap.start();

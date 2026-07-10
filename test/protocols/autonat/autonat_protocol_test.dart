@@ -70,7 +70,12 @@ class _FakeRouter extends FakeRouter {
 }
 
 class _SendMessageWithResponseCall {
-  _SendMessageWithResponseCall(this.peerId, this.message, this.protocolId, this.timeout);
+  _SendMessageWithResponseCall(
+    this.peerId,
+    this.message,
+    this.protocolId,
+    this.timeout,
+  );
 
   final String peerId;
   final Uint8List message;
@@ -108,8 +113,14 @@ void main() {
     test('decode skips unknown fields', () {
       // Field 2, wire type 0, value 42
       final unknown = Uint8List.fromList([0x10, 0x2a]);
-      final request = DialRequest(addrs: [Uint8List.fromList([1])]);
-      final bytes = Uint8List.fromList(request.encode().followedBy(unknown).toList());
+      final request = DialRequest(
+        addrs: [
+          Uint8List.fromList([1]),
+        ],
+      );
+      final bytes = Uint8List.fromList(
+        request.encode().followedBy(unknown).toList(),
+      );
       final decoded = DialRequest.decode(bytes);
       expect(decoded.addrs.length, equals(1));
       expect(decoded.addrs.first, equals(Uint8List.fromList([1])));
@@ -140,7 +151,9 @@ void main() {
       );
       // Field 3, wire type 0, value 7
       final unknown = Uint8List.fromList([0x18, 0x07]);
-      final bytes = Uint8List.fromList(response.encode().followedBy(unknown).toList());
+      final bytes = Uint8List.fromList(
+        response.encode().followedBy(unknown).toList(),
+      );
       final decoded = DialResponse.decode(bytes);
       expect(decoded.status, equals(DialResponseStatus.dialRefused));
       expect(decoded.statusText, equals('busy'));
@@ -153,10 +166,7 @@ void main() {
 
     setUp(() {
       router = _FakeRouter();
-      service = AutoNATService(
-        router,
-        IPFSConfig(network: NetworkConfig()),
-      );
+      service = AutoNATService(router, IPFSConfig(network: NetworkConfig()));
     });
 
     test('initial status is unknown', () {
@@ -169,11 +179,14 @@ void main() {
       expect(service.observedAddrs, equals(['/ip4/1.2.3.4/tcp/4001']));
     });
 
-    test('performDialback returns unknown with no observed addresses', () async {
-      final status = await service.performDialback('QmPeer');
-      expect(status, equals(NATStatus.unknown));
-      expect(router.responseCalls, isEmpty);
-    });
+    test(
+      'performDialback returns unknown with no observed addresses',
+      () async {
+        final status = await service.performDialback('QmPeer');
+        expect(status, equals(NATStatus.unknown));
+        expect(router.responseCalls, isEmpty);
+      },
+    );
 
     test('performDialback returns unknown on exception', () async {
       service.updateObservedAddrs(['/ip4/1.2.3.4/tcp/4001']);
@@ -242,10 +255,7 @@ void main() {
 
     setUp(() {
       router = _FakeRouter();
-      server = AutoNATServer(
-        router,
-        IPFSConfig(network: NetworkConfig()),
-      );
+      server = AutoNATServer(router, IPFSConfig(network: NetworkConfig()));
     });
 
     test('start and stop register/unregister handler', () {
@@ -323,7 +333,11 @@ void main() {
       }
       await Future<void>.delayed(Duration.zero);
       final refused = router.sentMessages
-          .where((m) => DialResponse.decode(m.message).status == DialResponseStatus.dialRefused)
+          .where(
+            (m) =>
+                DialResponse.decode(m.message).status ==
+                DialResponseStatus.dialRefused,
+          )
           .length;
       expect(refused, equals(1));
     });

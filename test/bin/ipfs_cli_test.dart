@@ -222,10 +222,12 @@ void main() {
         await runCli(['pin', cid], dataDir: dataDir);
         final result = await runCli(['unpin', cid], dataDir: dataDir);
         expect(result.exitCode, equals(0));
-        final json = jsonDecode(result.stdout as String) as Map<String, dynamic>;
+        final json =
+            jsonDecode(result.stdout as String) as Map<String, dynamic>;
         expect(json['Pins'], contains(cid));
       },
-      skip: 'Flaky CLI subprocess test hangs/times out when starting a node in a separate process; tracked separately.',
+      skip:
+          'Flaky CLI subprocess test hangs/times out when starting a node in a separate process; tracked separately.',
     );
   });
 

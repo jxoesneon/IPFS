@@ -7,7 +7,14 @@ import 'package:dart_ipfs/src/proto/generated/graphsync/graphsync.pb.dart';
 void main() {
   group('GraphsyncMessage', () {
     test('round-trips and accessors work', () {
-      final original = GraphsyncMessage(requests: [GraphsyncRequest.create()], responses: [GraphsyncResponse.create()], blocks: [Block.create()], extensions: [MapEntry('k', [0, 1])]);
+      final original = GraphsyncMessage(
+        requests: [GraphsyncRequest.create()],
+        responses: [GraphsyncResponse.create()],
+        blocks: [Block.create()],
+        extensions: [
+          MapEntry('k', [0, 1]),
+        ],
+      );
       expect(original.requests.length, 1);
       expect(original.responses.length, 1);
       expect(original.blocks.length, 1);
@@ -23,7 +30,7 @@ void main() {
       final restored = GraphsyncMessage.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(GraphsyncMessage.fromJson(json), isNotNull);
@@ -32,7 +39,18 @@ void main() {
 
   group('GraphsyncRequest', () {
     test('round-trips and accessors work', () {
-      final original = GraphsyncRequest(id: 1, root: const [0, 1, 2], selector: const [0, 1, 2], priority: 1, extensions: [MapEntry('k', [0, 1])], cancel: true, pause: true, unpause: true);
+      final original = GraphsyncRequest(
+        id: 1,
+        root: const [0, 1, 2],
+        selector: const [0, 1, 2],
+        priority: 1,
+        extensions: [
+          MapEntry('k', [0, 1]),
+        ],
+        cancel: true,
+        pause: true,
+        unpause: true,
+      );
       expect(original.id, 1);
       expect(original.root, const [0, 1, 2]);
       expect(original.selector, const [0, 1, 2]);
@@ -63,7 +81,7 @@ void main() {
       final restored = GraphsyncRequest.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(GraphsyncRequest.fromJson(json), isNotNull);
@@ -72,7 +90,14 @@ void main() {
 
   group('GraphsyncResponse', () {
     test('round-trips and accessors work', () {
-      final original = GraphsyncResponse(id: 1, status: ResponseStatus.values.first, extensions: [MapEntry('k', [0, 1])], metadata: [MapEntry('k', 'v')]);
+      final original = GraphsyncResponse(
+        id: 1,
+        status: ResponseStatus.values.first,
+        extensions: [
+          MapEntry('k', [0, 1]),
+        ],
+        metadata: [MapEntry('k', 'v')],
+      );
       expect(original.id, 1);
       expect(original.status, isNotNull);
       expect(original.extensions['k'], isNotNull);
@@ -91,7 +116,7 @@ void main() {
       final restored = GraphsyncResponse.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(GraphsyncResponse.fromJson(json), isNotNull);
@@ -113,11 +138,10 @@ void main() {
       final restored = Block.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(Block.fromJson(json), isNotNull);
     });
   });
-
 }

@@ -1,13 +1,23 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:test/test.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/config/network_config.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
+
+IPFSConfig _localConfig() => IPFSConfig(
+  nodeId: 'test-node',
+  network: NetworkConfig(listenAddresses: ['/ip4/127.0.0.1/tcp/0']),
+);
 
 void main() {
   group('IPFSWebNode Coverage', () {
     test('start with bootstrap peers', () async {
-      final node = IPFSWebNode(bootstrapPeers: ['ws://localhost:1234']);
+      final node = IPFSWebNode(
+        config: _localConfig(),
+        bootstrapPeers: ['ws://localhost:1234'],
+      );
       // Should not throw even if connection fails
       await node.start();
       expect(node.isRunning, isTrue);
@@ -341,7 +351,10 @@ void main() {
     });
 
     test('bootstrap peer connection failure is handled', () async {
-      final node = IPFSWebNode(bootstrapPeers: ['ws://invalid-peer:1234']);
+      final node = IPFSWebNode(
+        config: _localConfig(),
+        bootstrapPeers: ['ws://invalid-peer:1234'],
+      );
       await node.start();
       expect(node.isRunning, isTrue);
       await node.stop();
@@ -349,6 +362,7 @@ void main() {
 
     test('multiple bootstrap peers', () async {
       final node = IPFSWebNode(
+        config: _localConfig(),
         bootstrapPeers: [
           'ws://peer1:1234',
           'ws://peer2:1234',

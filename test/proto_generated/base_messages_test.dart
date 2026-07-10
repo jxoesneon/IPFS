@@ -1,14 +1,22 @@
 // Auto-generated proto coverage tests. Do not hand-edit.
 
 import 'package:test/test.dart';
-import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart' as $0;
+import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart'
+    as $0;
 import 'package:dart_ipfs/src/proto/generated/base_messages.pbenum.dart';
 import 'package:dart_ipfs/src/proto/generated/base_messages.pb.dart';
 
 void main() {
   group('IPFSMessage', () {
     test('round-trips and accessors work', () {
-      final original = IPFSMessage(protocolId: 'a', payload: const [0, 1, 2], timestamp: $0.Timestamp.create(), senderId: 'a', type: IPFSMessage_MessageType.values.first, requestId: 'a');
+      final original = IPFSMessage(
+        protocolId: 'a',
+        payload: const [0, 1, 2],
+        timestamp: $0.Timestamp.create(),
+        senderId: 'a',
+        type: IPFSMessage_MessageType.values.first,
+        requestId: 'a',
+      );
       expect(original.protocolId, 'a');
       expect(original.payload, const [0, 1, 2]);
       expect(original.timestamp, isNotNull);
@@ -33,7 +41,7 @@ void main() {
       final restored = IPFSMessage.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(IPFSMessage.fromJson(json), isNotNull);
@@ -42,7 +50,12 @@ void main() {
 
   group('NetworkEvent', () {
     test('round-trips and accessors work', () {
-      final original = NetworkEvent(timestamp: $0.Timestamp.create(), eventType: 'a', peerId: 'a', data: const [0, 1, 2]);
+      final original = NetworkEvent(
+        timestamp: $0.Timestamp.create(),
+        eventType: 'a',
+        peerId: 'a',
+        data: const [0, 1, 2],
+      );
       expect(original.timestamp, isNotNull);
       expect(original.eventType, 'a');
       expect(original.peerId, 'a');
@@ -61,11 +74,10 @@ void main() {
       final restored = NetworkEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(NetworkEvent.fromJson(json), isNotNull);
     });
   });
-
 }

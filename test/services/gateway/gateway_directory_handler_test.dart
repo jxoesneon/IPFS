@@ -9,7 +9,8 @@ import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_directory.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_hamt.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
-import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' show PBNode, PBLink;
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart'
+    show PBNode, PBLink;
 import 'package:dart_ipfs/src/services/gateway/gateway_directory_handler.dart';
 import 'package:fixnum/fixnum.dart' show Int64;
 import 'package:shelf/shelf.dart';
@@ -284,23 +285,26 @@ void main() {
     });
 
     group('renderDirectory extras', () {
-      test('includes parent directory link when parentPath is provided', () async {
-        final pbNode = PBNode();
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/ipfs/$cidStr'),
-        );
-        final response = handler.renderDirectory(
-          cidStr,
-          pbNode,
-          request,
-          parentPath: '/ipfs/$cidStr',
-        );
-        final body = await response.readAsString();
+      test(
+        'includes parent directory link when parentPath is provided',
+        () async {
+          final pbNode = PBNode();
+          final request = Request(
+            'GET',
+            Uri.parse('http://localhost/ipfs/$cidStr'),
+          );
+          final response = handler.renderDirectory(
+            cidStr,
+            pbNode,
+            request,
+            parentPath: '/ipfs/$cidStr',
+          );
+          final body = await response.readAsString();
 
-        expect(body, contains('../'));
-        expect(body, contains('/ipfs/$cidStr'));
-      });
+          expect(body, contains('../'));
+          expect(body, contains('/ipfs/$cidStr'));
+        },
+      );
 
       test('findIndexHtml returns CID for index.html child', () async {
         final link = PBLink()
@@ -328,7 +332,10 @@ void main() {
       });
 
       Future<CID> _addRaw(String name, List<int> data) async {
-        final cid = await CID.fromContent(Uint8List.fromList(data), codec: 'raw');
+        final cid = await CID.fromContent(
+          Uint8List.fromList(data),
+          codec: 'raw',
+        );
         await store.putBlock(Block(cid: cid, data: Uint8List.fromList(data)));
         return cid;
       }

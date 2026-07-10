@@ -1,7 +1,8 @@
 // Auto-generated proto coverage tests. Do not hand-edit.
 
 import 'package:test/test.dart';
-import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart' as $0;
+import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart'
+    as $0;
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pbenum.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 
@@ -18,7 +19,7 @@ void main() {
       final restored = RBTreePeerId.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(RBTreePeerId.fromJson(json), isNotNull);
@@ -27,7 +28,10 @@ void main() {
 
   group('Node', () {
     test('round-trips and accessors work', () {
-      final original = Node(peerId: RBTreePeerId.create(), data: const [0, 1, 2]);
+      final original = Node(
+        peerId: RBTreePeerId.create(),
+        data: const [0, 1, 2],
+      );
       expect(original.peerId, isNotNull);
       expect(original.data, const [0, 1, 2]);
       original.hasPeerId();
@@ -41,7 +45,7 @@ void main() {
       final restored = Node.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(Node.fromJson(json), isNotNull);
@@ -60,7 +64,7 @@ void main() {
       final restored = K_PeerId.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(K_PeerId.fromJson(json), isNotNull);
@@ -69,7 +73,19 @@ void main() {
 
   group('V_PeerInfo', () {
     test('round-trips and accessors work', () {
-      final original = V_PeerInfo(peerId: const [0, 1, 2], ipAddress: 'a', port: 1, protocols: ['a'], latency: 1, connectionStatus: V_PeerInfo_ConnectionStatus.values.first, lastSeen: $0.Timestamp.create(), agentVersion: 'a', publicKey: const [0, 1, 2], addresses: ['a'], observedAddr: 'a');
+      final original = V_PeerInfo(
+        peerId: const [0, 1, 2],
+        ipAddress: 'a',
+        port: 1,
+        protocols: ['a'],
+        latency: 1,
+        connectionStatus: V_PeerInfo_ConnectionStatus.values.first,
+        lastSeen: $0.Timestamp.create(),
+        agentVersion: 'a',
+        publicKey: const [0, 1, 2],
+        addresses: ['a'],
+        observedAddr: 'a',
+      );
       expect(original.peerId, const [0, 1, 2]);
       expect(original.ipAddress, 'a');
       expect(original.port, 1);
@@ -107,11 +123,10 @@ void main() {
       final restored = V_PeerInfo.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(V_PeerInfo.fromJson(json), isNotNull);
     });
   });
-
 }

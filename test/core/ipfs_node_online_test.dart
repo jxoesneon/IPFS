@@ -13,7 +13,8 @@ import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_routing_table_interface.dart' show DHTRoutingTable;
+import 'package:dart_ipfs/src/protocols/dht/dht_routing_table_interface.dart'
+    show DHTRoutingTable;
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/network/router.dart';

@@ -16,10 +16,7 @@ class GossipsubPubSubAdapter implements IPubSub {
   ///
   /// The adapter does not own the handler's lifecycle unless [manageLifecycle]
   /// is true, in which case [start] and [stop] are propagated.
-  GossipsubPubSubAdapter(
-    this._handler, {
-    this.manageLifecycle = true,
-  });
+  GossipsubPubSubAdapter(this._handler, {this.manageLifecycle = true});
 
   final GossipsubHandler _handler;
 

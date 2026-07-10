@@ -2,14 +2,20 @@
 
 import 'package:test/test.dart';
 import 'package:fixnum/fixnum.dart' as $fixnum;
-import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart' as $0;
+import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart'
+    as $0;
 import 'package:dart_ipfs/src/proto/generated/connection.pbenum.dart';
 import 'package:dart_ipfs/src/proto/generated/connection.pb.dart';
 
 void main() {
   group('ConnectionState', () {
     test('round-trips and accessors work', () {
-      final original = ConnectionState(peerId: 'a', status: ConnectionState_Status.values.first, connectedAt: $0.Timestamp.create(), metadata: [MapEntry('k', 'v')]);
+      final original = ConnectionState(
+        peerId: 'a',
+        status: ConnectionState_Status.values.first,
+        connectedAt: $0.Timestamp.create(),
+        metadata: [MapEntry('k', 'v')],
+      );
       expect(original.peerId, 'a');
       expect(original.status, isNotNull);
       expect(original.connectedAt, isNotNull);
@@ -28,7 +34,7 @@ void main() {
       final restored = ConnectionState.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(ConnectionState.fromJson(json), isNotNull);
@@ -37,7 +43,14 @@ void main() {
 
   group('ConnectionMetrics', () {
     test('round-trips and accessors work', () {
-      final original = ConnectionMetrics(peerId: 'a', messagesSent: $fixnum.Int64(1), messagesReceived: $fixnum.Int64(1), bytesSent: $fixnum.Int64(1), bytesReceived: $fixnum.Int64(1), averageLatencyMs: 1);
+      final original = ConnectionMetrics(
+        peerId: 'a',
+        messagesSent: $fixnum.Int64(1),
+        messagesReceived: $fixnum.Int64(1),
+        bytesSent: $fixnum.Int64(1),
+        bytesReceived: $fixnum.Int64(1),
+        averageLatencyMs: 1,
+      );
       expect(original.peerId, 'a');
       expect(original.messagesSent, $fixnum.Int64(1));
       expect(original.messagesReceived, $fixnum.Int64(1));
@@ -62,11 +75,10 @@ void main() {
       final restored = ConnectionMetrics.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(ConnectionMetrics.fromJson(json), isNotNull);
     });
   });
-
 }

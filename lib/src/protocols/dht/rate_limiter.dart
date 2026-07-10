@@ -49,7 +49,9 @@ class RateLimiter {
   /// [RateLimitExceededError] and the new waiter is enqueued.
   Future<void> acquire() async {
     if (maxOperations <= 0) {
-      throw RateLimitExceededError('rate limit is disabled (maxOperations <= 0)');
+      throw RateLimitExceededError(
+        'rate limit is disabled (maxOperations <= 0)',
+      );
     }
 
     final now = DateTime.now();
@@ -76,9 +78,11 @@ class RateLimiter {
 
     // Evict the oldest waiter if the queue is at capacity.
     if (_queue.length >= maxQueueSize) {
-      _queue.removeAt(0).completeError(
-        RateLimitExceededError('queue is full; oldest waiter evicted'),
-      );
+      _queue
+          .removeAt(0)
+          .completeError(
+            RateLimitExceededError('queue is full; oldest waiter evicted'),
+          );
     }
 
     // Queue the operation

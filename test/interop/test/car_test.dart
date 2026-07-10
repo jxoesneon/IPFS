@@ -15,8 +15,10 @@ import 'package:dart_ipfs/src/core/data_structures/car.dart';
 
 const kKuboApiHost = String.fromEnvironment('KUBO_HOST', defaultValue: 'kubo');
 const kKuboApiPort = int.fromEnvironment('KUBO_PORT', defaultValue: 5001);
-const kDartIpfsApiHost = String.fromEnvironment('DART_IPFS_HOST', defaultValue: 'dart_ipfs');
-const kDartIpfsApiPort = int.fromEnvironment('DART_IPFS_PORT', defaultValue: 5001);
+const kDartIpfsApiHost =
+    String.fromEnvironment('DART_IPFS_HOST', defaultValue: 'dart_ipfs');
+const kDartIpfsApiPort =
+    int.fromEnvironment('DART_IPFS_PORT', defaultValue: 5001);
 
 void main() {
   group('P0 CAR exchange with Kubo', () {
@@ -111,9 +113,12 @@ void main() {
 
     test('CAR with multiple blocks exports and imports correctly', () async {
       // Create multiple blocks
-      final block1 = await Block.fromData(Uint8List.fromList(utf8.encode('block1')));
-      final block2 = await Block.fromData(Uint8List.fromList(utf8.encode('block2')));
-      final block3 = await Block.fromData(Uint8List.fromList(utf8.encode('block3')));
+      final block1 =
+          await Block.fromData(Uint8List.fromList(utf8.encode('block1')));
+      final block2 =
+          await Block.fromData(Uint8List.fromList(utf8.encode('block2')));
+      final block3 =
+          await Block.fromData(Uint8List.fromList(utf8.encode('block3')));
 
       // Export to CAR with block1 as root
       final writer = CarWriter(roots: [block1.cid]);

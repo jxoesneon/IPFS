@@ -70,11 +70,11 @@ void main() {
         final peerA = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
         final peerB = PeerId(value: Uint8List.fromList([5, 6, 7, 8]));
         final peerC = PeerId(value: Uint8List.fromList([9, 10, 11, 12]));
-        
+
         final distanceAC = metric.calculateDistance(peerA, peerC);
         final distanceAB = metric.calculateDistance(peerA, peerB);
         final distanceBC = metric.calculateDistance(peerB, peerC);
-        
+
         // Triangle inequality: distance(a,c) <= distance(a,b) + distance(b,c)
         // Note: XOR distance doesn't strictly satisfy triangle inequality,
         // but it should be reasonably close for practical purposes
@@ -115,10 +115,13 @@ void main() {
       test('symmetric with calculateDistance when key is peer ID', () {
         final peerA = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
         final peerB = PeerId(value: Uint8List.fromList([5, 6, 7, 8]));
-        
-        final distanceViaKey = metric.calculateDistanceToKey(peerA, peerB.value);
+
+        final distanceViaKey = metric.calculateDistanceToKey(
+          peerA,
+          peerB.value,
+        );
         final distanceDirect = metric.calculateDistance(peerA, peerB);
-        
+
         expect(distanceViaKey, equals(distanceDirect));
       });
     });
@@ -126,15 +129,17 @@ void main() {
     group('distance ordering', () {
       test('correctly orders peers by distance', () {
         final target = PeerId(value: Uint8List.fromList([10, 0, 0, 0]));
-        
+
         final peerA = PeerId(value: Uint8List.fromList([0, 0, 0, 0])); // Far
         final peerB = PeerId(value: Uint8List.fromList([9, 0, 0, 0])); // Close
-        final peerC = PeerId(value: Uint8List.fromList([11, 0, 0, 0])); // Very close
-        
+        final peerC = PeerId(
+          value: Uint8List.fromList([11, 0, 0, 0]),
+        ); // Very close
+
         final distanceA = metric.calculateDistance(target, peerA);
         final distanceB = metric.calculateDistance(target, peerB);
         final distanceC = metric.calculateDistance(target, peerC);
-        
+
         // peerC should be closest (distance = 1)
         // peerB should be next (distance = 3)
         // peerA should be farthest (distance = 10)
@@ -146,10 +151,10 @@ void main() {
         final peerA = PeerId(value: Uint8List.fromList([1, 2, 3, 4]));
         final peerB = PeerId(value: Uint8List.fromList([1, 2, 3, 5]));
         final peerC = PeerId(value: Uint8List.fromList([10, 20, 30, 40]));
-        
+
         final distanceAB = metric.calculateDistance(peerA, peerB);
         final distanceAC = metric.calculateDistance(peerA, peerC);
-        
+
         expect(distanceAB, lessThan(distanceAC));
       });
     });

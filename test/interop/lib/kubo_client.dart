@@ -57,7 +57,8 @@ class KuboClient {
     final client = HttpClient();
     try {
       final request = await client.postUrl(uri);
-      final boundary = '----KuboDagImport${DateTime.now().millisecondsSinceEpoch}';
+      final boundary =
+          '----KuboDagImport${DateTime.now().millisecondsSinceEpoch}';
       request.headers.contentType = ContentType(
         'multipart',
         'form-data',
@@ -113,7 +114,8 @@ class KuboClient {
     final client = HttpClient();
     try {
       final request = await client.postUrl(uri);
-      final boundary = '----KuboBlockPut${DateTime.now().millisecondsSinceEpoch}';
+      final boundary =
+          '----KuboBlockPut${DateTime.now().millisecondsSinceEpoch}';
       request.headers.contentType = ContentType(
         'multipart',
         'form-data',
@@ -163,8 +165,10 @@ class KuboClient {
     return jsonDecode(response) as Map<String, dynamic>;
   }
 
-  Future<List<int>> gatewayGetRaw(String gatewayHost, int gatewayPort, String cid) async {
-    final uri = Uri.http('$gatewayHost:$gatewayPort', '/ipfs/$cid', {'format': 'raw'});
+  Future<List<int>> gatewayGetRaw(
+      String gatewayHost, int gatewayPort, String cid) async {
+    final uri =
+        Uri.http('$gatewayHost:$gatewayPort', '/ipfs/$cid', {'format': 'raw'});
     final client = HttpClient();
     try {
       final request = await client.getUrl(uri);
@@ -182,8 +186,10 @@ class KuboClient {
     }
   }
 
-  Future<List<int>> gatewayGetCar(String gatewayHost, int gatewayPort, String cid) async {
-    final uri = Uri.http('$gatewayHost:$gatewayPort', '/ipfs/$cid', {'format': 'car'});
+  Future<List<int>> gatewayGetCar(
+      String gatewayHost, int gatewayPort, String cid) async {
+    final uri =
+        Uri.http('$gatewayHost:$gatewayPort', '/ipfs/$cid', {'format': 'car'});
     final client = HttpClient();
     try {
       final request = await client.getUrl(uri);
@@ -201,7 +207,8 @@ class KuboClient {
     }
   }
 
-  Future<List<int>> gatewayGetDefault(String gatewayHost, int gatewayPort, String cid) async {
+  Future<List<int>> gatewayGetDefault(
+      String gatewayHost, int gatewayPort, String cid) async {
     final uri = Uri.http('$gatewayHost:$gatewayPort', '/ipfs/$cid');
     final client = HttpClient();
     try {

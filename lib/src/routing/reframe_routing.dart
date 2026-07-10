@@ -23,9 +23,9 @@ class ReframeRoutingClient {
     List<String>? endpoints,
     http.Client? httpClient,
     bool useGetApi = false,
-  })  : _endpoints = List<String>.from(endpoints ?? const []),
-        _httpClient = httpClient ?? http.Client(),
-        _useGetApi = useGetApi;
+  }) : _endpoints = List<String>.from(endpoints ?? const []),
+       _httpClient = httpClient ?? http.Client(),
+       _useGetApi = useGetApi;
 
   final List<String> _endpoints;
   final http.Client _httpClient;
@@ -105,16 +105,11 @@ class ReframeRoutingClient {
   Future<http.Response> _queryEndpoint(String endpoint, CID cid) async {
     final url = Uri.parse('$endpoint/routing/v1/providers/${cid.toString()}');
     if (_useGetApi) {
-      return _httpClient.get(
-        url,
-        headers: {'Accept': 'application/json'},
-      );
+      return _httpClient.get(url, headers: {'Accept': 'application/json'});
     }
 
     final body = jsonEncode({
-      'FindProviders': {
-        'Key': cid.toString(),
-      },
+      'FindProviders': {'Key': cid.toString()},
     });
     return _httpClient.post(
       url,
@@ -144,21 +139,25 @@ class ReframeRoutingClient {
       final peerId = (item['ID'] as String? ?? '').trim();
       if (peerId.isEmpty) continue;
 
-      final addrs = (item['Addrs'] as List<dynamic>?)
+      final addrs =
+          (item['Addrs'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           <String>[];
 
-      final protocols = (item['Protocols'] as List<dynamic>?)
+      final protocols =
+          (item['Protocols'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           <String>[];
 
-      providers.add(ReframeProvider(
-        peerId: peerId,
-        multiaddrs: addrs,
-        protocols: protocols,
-      ));
+      providers.add(
+        ReframeProvider(
+          peerId: peerId,
+          multiaddrs: addrs,
+          protocols: protocols,
+        ),
+      );
     }
 
     return providers;
@@ -172,8 +171,8 @@ class ReframeProvider {
     required this.peerId,
     List<String>? multiaddrs,
     List<String>? protocols,
-  })  : multiaddrs = List<String>.unmodifiable(multiaddrs ?? []),
-        protocols = List<String>.unmodifiable(protocols ?? []);
+  }) : multiaddrs = List<String>.unmodifiable(multiaddrs ?? []),
+       protocols = List<String>.unmodifiable(protocols ?? []);
 
   /// The provider's peer ID.
   final String peerId;
@@ -186,10 +185,10 @@ class ReframeProvider {
 
   /// Serializes this provider to the Reframe JSON representation.
   Map<String, dynamic> toJson() => {
-        'ID': peerId,
-        'Addrs': List<String>.from(multiaddrs),
-        'Protocols': List<String>.from(protocols),
-      };
+    'ID': peerId,
+    'Addrs': List<String>.from(multiaddrs),
+    'Protocols': List<String>.from(protocols),
+  };
 }
 
 /// The result of a Reframe provider query.

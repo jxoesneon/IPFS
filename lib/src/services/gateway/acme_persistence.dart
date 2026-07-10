@@ -28,11 +28,9 @@ class AcmePersistence {
   ///
   /// [baseDirectory] defaults to `./data/acme` and is mainly exposed for
   /// testing so that tests do not rely on the global working directory.
-  AcmePersistence(
-    this.config, {
-    String? baseDirectory,
-  }) : _baseDirectory = baseDirectory ?? _defaultDataDir,
-       _logger = Logger('AcmePersistence');
+  AcmePersistence(this.config, {String? baseDirectory})
+    : _baseDirectory = baseDirectory ?? _defaultDataDir,
+      _logger = Logger('AcmePersistence');
 
   /// Gateway configuration containing storage path settings.
   final GatewayConfig config;

@@ -133,8 +133,12 @@ class LetsEncryptAutoTlsProvider implements AutoTlsProvider {
         final context = SecurityContext();
         // Write temporary files for SecurityContext to load
         final tempDir = Directory.systemTemp;
-        final certFile = File('${tempDir.path}/acme_cert_${DateTime.now().millisecondsSinceEpoch}.pem');
-        final keyFile = File('${tempDir.path}/acme_key_${DateTime.now().millisecondsSinceEpoch}.pem');
+        final certFile = File(
+          '${tempDir.path}/acme_cert_${DateTime.now().millisecondsSinceEpoch}.pem',
+        );
+        final keyFile = File(
+          '${tempDir.path}/acme_key_${DateTime.now().millisecondsSinceEpoch}.pem',
+        );
         try {
           await certFile.writeAsString(certPem);
           await keyFile.writeAsString(keyPem);
@@ -160,15 +164,10 @@ class LetsEncryptAutoTlsProvider implements AutoTlsProvider {
 
       // Create ACME client (account key will be generated if not provided)
       final directoryUrl = _getDirectoryUrl(config.autoTlsProvider);
-      _acmeClient = AcmeClient(
-        directoryUrl: directoryUrl,
-      );
+      _acmeClient = AcmeClient(directoryUrl: directoryUrl);
 
       // Build domain list
-      final domains = <String>[
-        config.autoTlsDomain!,
-        ...config.autoTlsSANs,
-      ];
+      final domains = <String>[config.autoTlsDomain!, ...config.autoTlsSANs];
 
       _state = AutoTlsState.validating;
 
@@ -211,8 +210,12 @@ class LetsEncryptAutoTlsProvider implements AutoTlsProvider {
       // Create SecurityContext from the result
       final context = SecurityContext();
       final tempDir = Directory.systemTemp;
-      final certFile = File('${tempDir.path}/acme_cert_${DateTime.now().millisecondsSinceEpoch}.pem');
-      final keyFile = File('${tempDir.path}/acme_key_${DateTime.now().millisecondsSinceEpoch}.pem');
+      final certFile = File(
+        '${tempDir.path}/acme_cert_${DateTime.now().millisecondsSinceEpoch}.pem',
+      );
+      final keyFile = File(
+        '${tempDir.path}/acme_key_${DateTime.now().millisecondsSinceEpoch}.pem',
+      );
       try {
         await certFile.writeAsString(result.certificatePem);
         await keyFile.writeAsString(result.privateKeyPem);

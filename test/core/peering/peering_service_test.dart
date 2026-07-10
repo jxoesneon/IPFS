@@ -51,7 +51,10 @@ void main() {
       expect(parsed.enabled, equals(config.enabled));
       expect(parsed.peers, equals(config.peers));
       expect(parsed.checkInterval, equals(config.checkInterval));
-      expect(parsed.initialReconnectDelay, equals(config.initialReconnectDelay));
+      expect(
+        parsed.initialReconnectDelay,
+        equals(config.initialReconnectDelay),
+      );
       expect(parsed.maxReconnectDelay, equals(config.maxReconnectDelay));
       expect(parsed.maxReconnectAttempts, equals(config.maxReconnectAttempts));
     });
@@ -167,9 +170,7 @@ void main() {
       final service = PeeringService(
         config,
         networkHandler,
-        peeringConfig: const PeeringConfig(
-          checkInterval: Duration(hours: 1),
-        ),
+        peeringConfig: const PeeringConfig(checkInterval: Duration(hours: 1)),
       );
       await service.start();
       service.addPeer('/ip4/1.2.3.4/tcp/4001/p2p/QmAdded');
@@ -241,9 +242,7 @@ void main() {
       final service = PeeringService(
         config,
         networkHandler,
-        peeringConfig: const PeeringConfig(
-          peers: [peerAddr],
-        ),
+        peeringConfig: const PeeringConfig(peers: [peerAddr]),
       );
       await service.start();
       await service.stop();
@@ -268,7 +267,10 @@ void main() {
       await service.start();
       fakeRouter.setConnected('QmPeer', false);
       await Future<void>.delayed(const Duration(milliseconds: 50));
-      expect(events.any((e) => e.type == PeeringEventType.disconnected), isTrue);
+      expect(
+        events.any((e) => e.type == PeeringEventType.disconnected),
+        isTrue,
+      );
       await service.stop();
     });
   });

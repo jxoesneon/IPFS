@@ -48,12 +48,17 @@ void main() {
     });
 
     test('varint too long throws', () {
-      final reader = CarReader.fromBytes(Uint8List.fromList(List.filled(11, 0x80)));
+      final reader = CarReader.fromBytes(
+        Uint8List.fromList(List.filled(11, 0x80)),
+      );
       expect(() async => reader.header, throwsA(isA<CarSectionException>()));
     });
 
     test('truncated section throws CarSectionException', () async {
-      final block = await Block.fromData(Uint8List.fromList([1, 2, 3]), format: 'raw');
+      final block = await Block.fromData(
+        Uint8List.fromList([1, 2, 3]),
+        format: 'raw',
+      );
       final writer = CarWriter(roots: [block.cid]);
       await writer.write(block.cid, block.data);
       final bytes = await writer.close();
@@ -86,19 +91,46 @@ void main() {
 
     test('CAR v2 invalid pragma throws', () {
       final invalidPragma = Uint8List.fromList([
-        0x0a, 0xa1, 0x67, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x03,
+        0x0a,
+        0xa1,
+        0x67,
+        0x76,
+        0x65,
+        0x72,
+        0x73,
+        0x69,
+        0x6f,
+        0x6e,
+        0x03,
       ]);
       final reader = CarReader.fromBytes(invalidPragma);
       expect(() async => reader.header, throwsA(isA<CarV2Exception>()));
     });
 
     test('CAR v2 header too short throws', () {
-      final reader = CarReader.fromBytes(Uint8List.fromList([0x0a, 0xa1, 0x67, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x02]));
+      final reader = CarReader.fromBytes(
+        Uint8List.fromList([
+          0x0a,
+          0xa1,
+          0x67,
+          0x76,
+          0x65,
+          0x72,
+          0x73,
+          0x69,
+          0x6f,
+          0x6e,
+          0x02,
+        ]),
+      );
       expect(() async => reader.header, throwsA(isA<CarV2Exception>()));
     });
 
     test('CAR v2 characteristics must be zero', () async {
-      final block = await Block.fromData(Uint8List.fromList([1]), format: 'raw');
+      final block = await Block.fromData(
+        Uint8List.fromList([1]),
+        format: 'raw',
+      );
       final writer = CarWriter(roots: [block.cid], v2: true);
       await writer.write(block.cid, block.data);
       final bytes = await writer.close();
@@ -109,7 +141,10 @@ void main() {
     });
 
     test('CAR v2 index unknown format throws', () async {
-      final block = await Block.fromData(Uint8List.fromList([1]), format: 'raw');
+      final block = await Block.fromData(
+        Uint8List.fromList([1]),
+        format: 'raw',
+      );
       final writer = CarWriter(roots: [block.cid], v2: true, index: true);
       await writer.write(block.cid, block.data);
       final bytes = await writer.close();
@@ -141,7 +176,10 @@ void main() {
 
     test('missing root CID throws CarHeaderException', () async {
       final root = await Block.fromData(Uint8List.fromList([1]), format: 'raw');
-      final other = await Block.fromData(Uint8List.fromList([2]), format: 'raw');
+      final other = await Block.fromData(
+        Uint8List.fromList([2]),
+        format: 'raw',
+      );
       final writer = CarWriter(roots: [root.cid]);
       await writer.write(other.cid, other.data);
       expect(writer.close(), throwsA(isA<CarHeaderException>()));
@@ -149,7 +187,10 @@ void main() {
 
     test('rejects index without v2', () {
       expect(
-        () => CarWriter(roots: [CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')], index: true),
+        () => CarWriter(
+          roots: [CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')],
+          index: true,
+        ),
         throwsArgumentError,
       );
     });
@@ -157,20 +198,32 @@ void main() {
 
   group('IndexBuilder', () {
     test('builds sorted index with multihash sorting', () async {
-      final block = await Block.fromData(Uint8List.fromList([1]), format: 'raw');
+      final block = await Block.fromData(
+        Uint8List.fromList([1]),
+        format: 'raw',
+      );
       final builder = IndexBuilder(multihashSorted: true);
       builder.add(block.cid, 0);
       final index = builder.build();
       expect(index.length, greaterThan(4));
-      expect(index[0] | (index[1] << 8) | (index[2] << 16) | (index[3] << 24), equals(0x0401));
+      expect(
+        index[0] | (index[1] << 8) | (index[2] << 16) | (index[3] << 24),
+        equals(0x0401),
+      );
     });
 
     test('builds sorted index without multihash sorting', () async {
-      final block = await Block.fromData(Uint8List.fromList([1]), format: 'raw');
+      final block = await Block.fromData(
+        Uint8List.fromList([1]),
+        format: 'raw',
+      );
       final builder = IndexBuilder();
       builder.add(block.cid, 0);
       final index = builder.build();
-      expect(index[0] | (index[1] << 8) | (index[2] << 16) | (index[3] << 24), equals(0x0400));
+      expect(
+        index[0] | (index[1] << 8) | (index[2] << 16) | (index[3] << 24),
+        equals(0x0400),
+      );
     });
   });
 }

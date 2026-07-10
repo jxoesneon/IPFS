@@ -14,11 +14,11 @@ class IPNIClient {
   /// If [endpoints] is omitted, a single default endpoint (`https://cid.contact`)
   /// is used. A custom [httpClient] may be supplied for testing or connection
   /// reuse.
-  IPNIClient({
-    List<String>? endpoints,
-    http.Client? httpClient,
-  })  : _endpoints = List<String>.from(endpoints ?? const ['https://cid.contact']),
-        _httpClient = httpClient ?? http.Client();
+  IPNIClient({List<String>? endpoints, http.Client? httpClient})
+    : _endpoints = List<String>.from(
+        endpoints ?? const ['https://cid.contact'],
+      ),
+      _httpClient = httpClient ?? http.Client();
 
   final List<String> _endpoints;
   final http.Client _httpClient;
@@ -64,9 +64,10 @@ class IPNIClient {
     for (final endpoint in _endpoints) {
       try {
         final url = Uri.parse('$endpoint/cid/${cid.toString()}');
-        final response = await _httpClient.get(url, headers: {
-          'Accept': 'application/json',
-        });
+        final response = await _httpClient.get(
+          url,
+          headers: {'Accept': 'application/json'},
+        );
 
         if (response.statusCode == 404) {
           continue;
@@ -88,12 +89,14 @@ class IPNIClient {
           final peerId = (item['ID'] as String? ?? '').trim();
           if (peerId.isEmpty) continue;
 
-          final addrs = (item['Addrs'] as List<dynamic>?)
+          final addrs =
+              (item['Addrs'] as List<dynamic>?)
                   ?.map((e) => e.toString())
                   .toList() ??
               <String>[];
 
-          final metadata = (item['Metadata'] as List<dynamic>?)
+          final metadata =
+              (item['Metadata'] as List<dynamic>?)
                   ?.whereType<Map<String, dynamic>>()
                   .map(
                     (md) => IPNIProviderMetadata(
@@ -106,7 +109,10 @@ class IPNIClient {
 
           final existing = providersById[peerId];
           if (existing != null) {
-            final mergedAddrs = <String>{...existing.multiaddrs, ...addrs}.toList();
+            final mergedAddrs = <String>{
+              ...existing.multiaddrs,
+              ...addrs,
+            }.toList();
             providersById[peerId] = IPNIProvider(
               peerId: peerId,
               multiaddrs: mergedAddrs,
@@ -138,8 +144,8 @@ class IPNIProvider {
     required this.peerId,
     List<String>? multiaddrs,
     List<IPNIProviderMetadata>? metadata,
-  })  : multiaddrs = List<String>.unmodifiable(multiaddrs ?? []),
-        metadata = List<IPNIProviderMetadata>.unmodifiable(metadata ?? []);
+  }) : multiaddrs = List<String>.unmodifiable(multiaddrs ?? []),
+       metadata = List<IPNIProviderMetadata>.unmodifiable(metadata ?? []);
 
   /// The provider's peer ID.
   final String peerId;
@@ -152,10 +158,10 @@ class IPNIProvider {
 
   /// Serializes this provider to the IPNI JSON representation.
   Map<String, dynamic> toJson() => {
-        'ID': peerId,
-        'Addrs': List<String>.from(multiaddrs),
-        'Metadata': metadata.map((m) => m.toJson()).toList(),
-      };
+    'ID': peerId,
+    'Addrs': List<String>.from(multiaddrs),
+    'Metadata': metadata.map((m) => m.toJson()).toList(),
+  };
 }
 
 /// Metadata attached to an IPNI provider entry.
@@ -171,9 +177,9 @@ class IPNIProviderMetadata {
 
   /// Serializes this metadata entry to the IPNI JSON representation.
   Map<String, dynamic> toJson() => {
-        'Protocol': protocol,
-        if (manifest.isNotEmpty) 'Manifest': manifest,
-      };
+    'Protocol': protocol,
+    if (manifest.isNotEmpty) 'Manifest': manifest,
+  };
 }
 
 /// The result of an IPNI provider query.

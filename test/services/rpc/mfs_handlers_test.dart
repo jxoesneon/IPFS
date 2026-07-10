@@ -55,7 +55,15 @@ class FakeMFSManager extends Fake implements MFSManager {
     String? cidBase,
   }) async {
     _throwIfNeeded();
-    final base = statResult ?? MFSStat(hash: 'QmEmpty', size: 0, cumulativeSize: 0, blocks: 0, type: 'directory');
+    final base =
+        statResult ??
+        MFSStat(
+          hash: 'QmEmpty',
+          size: 0,
+          cumulativeSize: 0,
+          blocks: 0,
+          type: 'directory',
+        );
     if (withLocal) {
       return MFSStat(
         hash: base.hash,
@@ -75,7 +83,9 @@ class FakeMFSManager extends Fake implements MFSManager {
     _throwIfNeeded();
     final data = readBytes ?? [];
     final start = offset ?? 0;
-    final end = count == null ? data.length : (start + count).clamp(0, data.length);
+    final end = count == null
+        ? data.length
+        : (start + count).clamp(0, data.length);
     return Stream.fromIterable([data.sublist(start, end)]);
   }
 
@@ -228,12 +238,8 @@ MFSStat _makeStat({bool? hash, bool? size}) => MFSStat(
   sizeOnly: size,
 );
 
-MFSListEntry _makeEntry(String name) => MFSListEntry(
-  name: name,
-  type: 2,
-  size: 10,
-  hash: 'QmEntry',
-);
+MFSListEntry _makeEntry(String name) =>
+    MFSListEntry(name: name, type: 2, size: 10, hash: 'QmEntry');
 
 void main() {
   group('MFSHandlers', () {
@@ -316,7 +322,9 @@ void main() {
     test('handleFilesRead returns octet stream', () async {
       final request = Request(
         'POST',
-        Uri.parse('http://localhost/api/v0/files/read?arg=/file&offset=0&count=2'),
+        Uri.parse(
+          'http://localhost/api/v0/files/read?arg=/file&offset=0&count=2',
+        ),
       );
       final response = await handlers.handleFilesRead(request);
       expect(response.statusCode, equals(200));
@@ -365,7 +373,9 @@ void main() {
           '--$boundary--\r\n';
       final request = Request(
         'POST',
-        Uri.parse('http://localhost/api/v0/files/write?arg=/test&create=true&truncate=true'),
+        Uri.parse(
+          'http://localhost/api/v0/files/write?arg=/test&create=true&truncate=true',
+        ),
         headers: {'content-type': 'multipart/form-data; boundary=$boundary'},
         body: body,
       );
@@ -377,7 +387,10 @@ void main() {
     });
 
     test('handleFilesWrite missing path', () async {
-      final request = Request('POST', Uri.parse('http://localhost/api/v0/files/write'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/write'),
+      );
       final response = await handlers.handleFilesWrite(request);
       expect(response.statusCode, equals(500));
       expect(fakeMfs.writes, isEmpty);
@@ -395,7 +408,9 @@ void main() {
     test('handleFilesWrite invalid cid-version', () async {
       final request = Request(
         'POST',
-        Uri.parse('http://localhost/api/v0/files/write?arg=/test&cid-version=2'),
+        Uri.parse(
+          'http://localhost/api/v0/files/write?arg=/test&cid-version=2',
+        ),
       );
       final response = await handlers.handleFilesWrite(request);
       expect(response.statusCode, equals(400));
@@ -462,7 +477,9 @@ void main() {
     test('handleFilesMkdir success', () async {
       final request = Request(
         'POST',
-        Uri.parse('http://localhost/api/v0/files/mkdir?arg=/new&parents=true&recursive=true'),
+        Uri.parse(
+          'http://localhost/api/v0/files/mkdir?arg=/new&parents=true&recursive=true',
+        ),
       );
       final response = await handlers.handleFilesMkdir(request);
       expect(response.statusCode, equals(200));
@@ -470,7 +487,10 @@ void main() {
     });
 
     test('handleFilesMkdir missing path', () async {
-      final request = Request('POST', Uri.parse('http://localhost/api/v0/files/mkdir'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/mkdir'),
+      );
       final response = await handlers.handleFilesMkdir(request);
       expect(response.statusCode, equals(500));
     });
@@ -478,7 +498,9 @@ void main() {
     test('handleFilesMkdir invalid cid-version', () async {
       final request = Request(
         'POST',
-        Uri.parse('http://localhost/api/v0/files/mkdir?arg=/new&cid-version=-1'),
+        Uri.parse(
+          'http://localhost/api/v0/files/mkdir?arg=/new&cid-version=-1',
+        ),
       );
       final response = await handlers.handleFilesMkdir(request);
       expect(response.statusCode, equals(400));
@@ -600,7 +622,9 @@ void main() {
     test('handleFilesRm success', () async {
       final request = Request(
         'POST',
-        Uri.parse('http://localhost/api/v0/files/rm?arg=/file&recursive=true&force=true'),
+        Uri.parse(
+          'http://localhost/api/v0/files/rm?arg=/file&recursive=true&force=true',
+        ),
       );
       final response = await handlers.handleFilesRm(request);
       expect(response.statusCode, equals(200));
@@ -608,7 +632,10 @@ void main() {
     });
 
     test('handleFilesRm missing path', () async {
-      final request = Request('POST', Uri.parse('http://localhost/api/v0/files/rm'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/rm'),
+      );
       final response = await handlers.handleFilesRm(request);
       expect(response.statusCode, equals(500));
     });
@@ -631,7 +658,10 @@ void main() {
       final response = await handlers.handleFilesFlush(request);
       expect(response.statusCode, equals(200));
       final body = json.decode(await response.readAsString());
-      expect(body['Hash'], equals('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'));
+      expect(
+        body['Hash'],
+        equals('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+      );
     });
 
     test('handleFilesFlush error path', () async {
@@ -647,7 +677,9 @@ void main() {
     test('handleFilesChcid success', () async {
       final request = Request(
         'POST',
-        Uri.parse('http://localhost/api/v0/files/chcid?arg=/test&cid-version=1&hash=sha2-256'),
+        Uri.parse(
+          'http://localhost/api/v0/files/chcid?arg=/test&cid-version=1&hash=sha2-256',
+        ),
       );
       final response = await handlers.handleFilesChcid(request);
       expect(response.statusCode, equals(200));
@@ -656,7 +688,10 @@ void main() {
     });
 
     test('handleFilesChcid missing path', () async {
-      final request = Request('POST', Uri.parse('http://localhost/api/v0/files/chcid'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/files/chcid'),
+      );
       final response = await handlers.handleFilesChcid(request);
       expect(response.statusCode, equals(500));
     });
@@ -664,7 +699,9 @@ void main() {
     test('handleFilesChcid invalid cid-version', () async {
       final request = Request(
         'POST',
-        Uri.parse('http://localhost/api/v0/files/chcid?arg=/test&cid-version=2'),
+        Uri.parse(
+          'http://localhost/api/v0/files/chcid?arg=/test&cid-version=2',
+        ),
       );
       final response = await handlers.handleFilesChcid(request);
       expect(response.statusCode, equals(400));

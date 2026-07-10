@@ -45,9 +45,9 @@ class IPNSRecord {
     Uint8List? signature,
     Uint8List? signatureV2,
     Uint8List? dataBytes,
-  })  : _signature = signature,
-        _signatureV2 = signatureV2,
-        _dataBytes = dataBytes;
+  }) : _signature = signature,
+       _signatureV2 = signatureV2,
+       _dataBytes = dataBytes;
 
   /// Creates a record for internal use (e.g. caching or testing).
   factory IPNSRecord.internal({
@@ -254,7 +254,8 @@ class IPNSRecord {
       CborString('TTL'): CborSmallInt(ttl.inMicroseconds),
       CborString('PublicKey'): CborBytes(publicKey),
       if (_signature != null) CborString('Signature'): CborBytes(_signature!),
-      if (_signatureV2 != null) CborString('SignatureV2'): CborBytes(_signatureV2!),
+      if (_signatureV2 != null)
+        CborString('SignatureV2'): CborBytes(_signatureV2!),
     });
 
     return Uint8List.fromList(cbor.encode(cborValue));
@@ -354,9 +355,7 @@ class IPNSRecord {
       value: Uint8List.fromList(entry.value),
       validity: DateTime.parse(utf8.decode(entry.validity)),
       sequence: entry.sequence.toInt(),
-      ttl: Duration(
-        microseconds: (entry.ttl ~/ Int64(1000)).toInt(),
-      ),
+      ttl: Duration(microseconds: (entry.ttl ~/ Int64(1000)).toInt()),
       publicKey: publicKey,
       signature: entry.signature.isNotEmpty
           ? Uint8List.fromList(entry.signature)
@@ -364,9 +363,7 @@ class IPNSRecord {
       signatureV2: entry.signatureV2.isNotEmpty
           ? Uint8List.fromList(entry.signatureV2)
           : null,
-      dataBytes: entry.data.isNotEmpty
-          ? Uint8List.fromList(entry.data)
-          : null,
+      dataBytes: entry.data.isNotEmpty ? Uint8List.fromList(entry.data) : null,
     );
   }
 
@@ -416,7 +413,8 @@ class IPNSRecord {
     final mi = utc.minute.toString().padLeft(2, '0');
     final s = utc.second.toString().padLeft(2, '0');
     final us = utc.microsecond.toString().padLeft(6, '0');
-    return '$y-$mo-${d}T$h:$mi:$s.$us' '000Z';
+    return '$y-$mo-${d}T$h:$mi:$s.$us'
+        '000Z';
   }
 
   /// Extracts the raw Ed25519 public key from a libp2p PublicKey protobuf.
@@ -464,9 +462,12 @@ class IPNSRecord {
 String deriveIpnsName(Uint8List publicKey) {
   // libp2p PublicKey protobuf: field 1 (type) = Ed25519 (1), field 2 (data).
   final protoKey = Uint8List(4 + publicKey.length)
-    ..[0] = 0x08 // field 1, wire type 0 (varint)
-    ..[1] = 0x01 // Ed25519 key type
-    ..[2] = 0x12 // field 2, wire type 2 (length-delimited)
+    ..[0] =
+        0x08 // field 1, wire type 0 (varint)
+    ..[1] =
+        0x01 // Ed25519 key type
+    ..[2] =
+        0x12 // field 2, wire type 2 (length-delimited)
     ..[3] = publicKey.length;
   protoKey.setRange(4, 4 + publicKey.length, publicKey);
 

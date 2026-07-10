@@ -12,7 +12,8 @@ import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_resolver.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs_pb;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
+    as unixfs_pb;
 import 'package:fixnum/fixnum.dart';
 import 'package:test/test.dart';
 

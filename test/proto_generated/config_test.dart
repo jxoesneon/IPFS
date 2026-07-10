@@ -6,7 +6,14 @@ import 'package:dart_ipfs/src/proto/generated/config.pb.dart';
 void main() {
   group('ProtocolConfig', () {
     test('round-trips and accessors work', () {
-      final original = ProtocolConfig(protocolId: 'a', messageTimeoutSeconds: 1, maxRetries: 1, maxMessageSize: 1, rateLimit: RateLimitConfig.create(), circuitBreaker: CircuitBreakerConfig.create());
+      final original = ProtocolConfig(
+        protocolId: 'a',
+        messageTimeoutSeconds: 1,
+        maxRetries: 1,
+        maxMessageSize: 1,
+        rateLimit: RateLimitConfig.create(),
+        circuitBreaker: CircuitBreakerConfig.create(),
+      );
       expect(original.protocolId, 'a');
       expect(original.messageTimeoutSeconds, 1);
       expect(original.maxRetries, 1);
@@ -33,7 +40,7 @@ void main() {
       final restored = ProtocolConfig.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(ProtocolConfig.fromJson(json), isNotNull);
@@ -42,7 +49,11 @@ void main() {
 
   group('RateLimitConfig', () {
     test('round-trips and accessors work', () {
-      final original = RateLimitConfig(maxRequestsPerWindow: 1, windowSeconds: 1, maxQueueSize: 1);
+      final original = RateLimitConfig(
+        maxRequestsPerWindow: 1,
+        windowSeconds: 1,
+        maxQueueSize: 1,
+      );
       expect(original.maxRequestsPerWindow, 1);
       expect(original.windowSeconds, 1);
       expect(original.maxQueueSize, 1);
@@ -58,7 +69,7 @@ void main() {
       final restored = RateLimitConfig.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(RateLimitConfig.fromJson(json), isNotNull);
@@ -67,7 +78,11 @@ void main() {
 
   group('CircuitBreakerConfig', () {
     test('round-trips and accessors work', () {
-      final original = CircuitBreakerConfig(resetTimeoutSeconds: 1, failureThreshold: 1, halfOpenTimeoutSeconds: 1);
+      final original = CircuitBreakerConfig(
+        resetTimeoutSeconds: 1,
+        failureThreshold: 1,
+        halfOpenTimeoutSeconds: 1,
+      );
       expect(original.resetTimeoutSeconds, 1);
       expect(original.failureThreshold, 1);
       expect(original.halfOpenTimeoutSeconds, 1);
@@ -83,11 +98,10 @@ void main() {
       final restored = CircuitBreakerConfig.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(CircuitBreakerConfig.fromJson(json), isNotNull);
     });
   });
-
 }

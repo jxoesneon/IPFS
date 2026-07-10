@@ -62,7 +62,9 @@ void main() {
     void Function(NetworkPacket)? handler,
   }) {
     final lastHandler = handler ?? _captureHandler(router);
-    when(router.sendMessage(any, any, protocolId: anyNamed('protocolId'))).thenAnswer((invocation) async {
+    when(
+      router.sendMessage(any, any, protocolId: anyNamed('protocolId')),
+    ).thenAnswer((invocation) async {
       final data = invocation.positionalArguments[1] as Uint8List;
       final envelope = DHTEnvelope.fromBytes(data);
       Future<void>.delayed(const Duration(milliseconds: 1), () {
@@ -96,7 +98,9 @@ void main() {
         ..type = kad.Message_MessageType.FIND_NODE
         ..closerPeers.add(kad.Peer()..id = target.value);
 
-      when(mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId'))).thenAnswer((invocation) async {
+      when(
+        mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
+      ).thenAnswer((invocation) async {
         final data = invocation.positionalArguments[1] as Uint8List;
         final envelope = DHTEnvelope.fromBytes(data);
         capturedRequestId = envelope.requestId;
@@ -185,7 +189,9 @@ void main() {
       );
       var requestCount = 0;
 
-      when(mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId'))).thenAnswer((invocation) async {
+      when(
+        mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
+      ).thenAnswer((invocation) async {
         requestCount++;
         final data = invocation.positionalArguments[1] as Uint8List;
         final envelope = DHTEnvelope.fromBytes(data);
@@ -269,7 +275,11 @@ void main() {
       );
 
       final captured = verify(
-        mockRouter.sendMessage(captureAny, captureAny, protocolId: anyNamed('protocolId')),
+        mockRouter.sendMessage(
+          captureAny,
+          captureAny,
+          protocolId: anyNamed('protocolId'),
+        ),
       ).captured;
       final msg = kad.Message.fromBuffer(captured.last as Uint8List);
       expect(msg.providerPeers, isNotEmpty);
@@ -300,7 +310,9 @@ void main() {
       }
 
       final sentTo = <String>{};
-      when(mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId'))).thenAnswer((invocation) async {
+      when(
+        mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
+      ).thenAnswer((invocation) async {
         sentTo.add(invocation.positionalArguments[0] as String);
       });
 

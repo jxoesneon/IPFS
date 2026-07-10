@@ -25,7 +25,8 @@ import 'package:test/test.dart';
 void main() {
   group('Swarm key loader', () {
     test('decodeV1Psk parses the test swarm key', () {
-      const keyText = '/key/swarm/psk/1.0.0/\n/base16/\n'
+      const keyText =
+          '/key/swarm/psk/1.0.0/\n/base16/\n'
           '5842d22f5df5b6efd95eb1293e30ef82284654d53d4d4956333ad9437bcabdb4\n';
       final psk = decodeV1Psk(Uint8List.fromList(keyText.codeUnits));
 
@@ -34,17 +35,46 @@ void main() {
         psk,
         equals(
           Uint8List.fromList([
-            0x58, 0x42, 0xd2, 0x2f, 0x5d, 0xf5, 0xb6, 0xef,
-            0xd9, 0x5e, 0xb1, 0x29, 0x3e, 0x30, 0xef, 0x82,
-            0x28, 0x46, 0x54, 0xd5, 0x3d, 0x4d, 0x49, 0x56,
-            0x33, 0x3a, 0xd9, 0x43, 0x7b, 0xca, 0xbd, 0xb4,
+            0x58,
+            0x42,
+            0xd2,
+            0x2f,
+            0x5d,
+            0xf5,
+            0xb6,
+            0xef,
+            0xd9,
+            0x5e,
+            0xb1,
+            0x29,
+            0x3e,
+            0x30,
+            0xef,
+            0x82,
+            0x28,
+            0x46,
+            0x54,
+            0xd5,
+            0x3d,
+            0x4d,
+            0x49,
+            0x56,
+            0x33,
+            0x3a,
+            0xd9,
+            0x43,
+            0x7b,
+            0xca,
+            0xbd,
+            0xb4,
           ]),
         ),
       );
     });
 
     test('decodeV1Psk rejects an invalid version marker', () {
-      const badKey = '/key/swarm/psk/2.0.0/\n/base16/\n'
+      const badKey =
+          '/key/swarm/psk/2.0.0/\n/base16/\n'
           '5842d22f5df5b6efd95eb1293e30ef82284654d53d4d4956333ad9437bcabdb4';
       expect(
         () => decodeV1Psk(Uint8List.fromList(badKey.codeUnits)),
@@ -53,7 +83,8 @@ void main() {
     });
 
     test('decodeV1Psk rejects a wrong-length hex key', () {
-      const badKey = '/key/swarm/psk/1.0.0/\n/base16/\n'
+      const badKey =
+          '/key/swarm/psk/1.0.0/\n/base16/\n'
           '5842d22f5df5b6efd95eb1293e30ef82284654d53d4d4956333ad9437bcabdb';
       expect(
         () => decodeV1Psk(Uint8List.fromList(badKey.codeUnits)),
@@ -63,51 +94,53 @@ void main() {
   });
 
   group('PNET handshake and cipher state', () {
-    test('handshake produces matching keystreams and round-trips data', () async {
-      final psk = Uint8List.fromList(List<int>.generate(32, (i) => i));
+    test(
+      'handshake produces matching keystreams and round-trips data',
+      () async {
+        final psk = Uint8List.fromList(List<int>.generate(32, (i) => i));
 
-      final pair = _ConnectedFakeConns();
-      final aFuture = PnetTransportConn.create(
-        pair.a,
-        psk,
-        isInitiator: true,
-      );
-      final bFuture = PnetTransportConn.create(
-        pair.b,
-        psk,
-        isInitiator: false,
-      );
-      final a = await aFuture;
-      final b = await bFuture;
+        final pair = _ConnectedFakeConns();
+        final aFuture = PnetTransportConn.create(
+          pair.a,
+          psk,
+          isInitiator: true,
+        );
+        final bFuture = PnetTransportConn.create(
+          pair.b,
+          psk,
+          isInitiator: false,
+        );
+        final a = await aFuture;
+        final b = await bFuture;
 
-      final messages = [
-        Uint8List.fromList([1, 2, 3, 4, 5]),
-        Uint8List.fromList(List<int>.generate(100, (i) => i % 256)),
-        Uint8List.fromList(List<int>.generate(137, (i) => (i * 7) % 256)),
-        Uint8List.fromList([0xff, 0xfe, 0xfd]),
-      ];
+        final messages = [
+          Uint8List.fromList([1, 2, 3, 4, 5]),
+          Uint8List.fromList(List<int>.generate(100, (i) => i % 256)),
+          Uint8List.fromList(List<int>.generate(137, (i) => (i * 7) % 256)),
+          Uint8List.fromList([0xff, 0xfe, 0xfd]),
+        ];
 
-      for (final message in messages) {
-        await a.write(message);
-        final received = await b.read(message.length);
-        expect(received, equals(message),
-            reason: 'message length ${message.length} did not round-trip');
-      }
+        for (final message in messages) {
+          await a.write(message);
+          final received = await b.read(message.length);
+          expect(
+            received,
+            equals(message),
+            reason: 'message length ${message.length} did not round-trip',
+          );
+        }
 
-      await a.close();
-      await b.close();
-    });
+        await a.close();
+        await b.close();
+      },
+    );
 
     test('mismatched PSKs fail the handshake or corrupt data', () async {
       final pskA = Uint8List.fromList(List<int>.generate(32, (i) => i));
       final pskB = Uint8List.fromList(List<int>.generate(32, (i) => i + 1));
 
       final pair = _ConnectedFakeConns();
-      final aFuture = PnetTransportConn.create(
-        pair.a,
-        pskA,
-        isInitiator: true,
-      );
+      final aFuture = PnetTransportConn.create(pair.a, pskA, isInitiator: true);
       final bFuture = PnetTransportConn.create(
         pair.b,
         pskB,
@@ -166,14 +199,8 @@ class _ConnectedFakeConns {
     final aToB = StreamController<Uint8List>();
     final bToA = StreamController<Uint8List>();
 
-    a = _FakeTransportConn(
-      outgoing: aToB.sink,
-      incoming: bToA.stream,
-    );
-    b = _FakeTransportConn(
-      outgoing: bToA.sink,
-      incoming: aToB.stream,
-    );
+    a = _FakeTransportConn(outgoing: aToB.sink, incoming: bToA.stream);
+    b = _FakeTransportConn(outgoing: bToA.sink, incoming: aToB.stream);
   }
 
   late final _FakeTransportConn a;
@@ -295,11 +322,11 @@ class _FakeTransportConn implements TransportConn {
 
   @override
   ConnState get state => const ConnState(
-        streamMultiplexer: '',
-        security: '',
-        transport: 'fake',
-        usedEarlyMuxerNegotiation: false,
-      );
+    streamMultiplexer: '',
+    security: '',
+    transport: 'fake',
+    usedEarlyMuxerNegotiation: false,
+  );
 
   @override
   MultiAddr get localMultiaddr => MultiAddr('/ip4/127.0.0.1/tcp/0');

@@ -116,4 +116,3 @@ class OperationLog {
     return _logEntries.map((entry) => entry.toString()).join('\n');
   }
 }
-

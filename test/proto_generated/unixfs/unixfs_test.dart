@@ -8,7 +8,17 @@ import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
 void main() {
   group('Data', () {
     test('round-trips and accessors work', () {
-      final original = Data(type: Data_DataType.values.first, data: const [0, 1, 2], filesize: $fixnum.Int64(1), blocksizes: [$fixnum.Int64(1)], hashType: $fixnum.Int64(1), fanout: $fixnum.Int64(1), mode: 1, mtime: $fixnum.Int64(1), mtimeNsecs: 1);
+      final original = Data(
+        type: Data_DataType.values.first,
+        data: const [0, 1, 2],
+        filesize: $fixnum.Int64(1),
+        blocksizes: [$fixnum.Int64(1)],
+        hashType: $fixnum.Int64(1),
+        fanout: $fixnum.Int64(1),
+        mode: 1,
+        mtime: $fixnum.Int64(1),
+        mtimeNsecs: 1,
+      );
       expect(original.type, isNotNull);
       expect(original.data, const [0, 1, 2]);
       expect(original.filesize, $fixnum.Int64(1));
@@ -41,7 +51,7 @@ void main() {
       final restored = Data.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(Data.fromJson(json), isNotNull);
@@ -50,7 +60,11 @@ void main() {
 
   group('Metadata', () {
     test('round-trips and accessors work', () {
-      final original = Metadata(mimeType: 'a', size: $fixnum.Int64(1), properties: [MapEntry('k', 'v')]);
+      final original = Metadata(
+        mimeType: 'a',
+        size: $fixnum.Int64(1),
+        properties: [MapEntry('k', 'v')],
+      );
       expect(original.mimeType, 'a');
       expect(original.size, $fixnum.Int64(1));
       expect(original.properties['k'], isNotNull);
@@ -66,11 +80,10 @@ void main() {
       final restored = Metadata.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(Metadata.fromJson(json), isNotNull);
     });
   });
-
 }

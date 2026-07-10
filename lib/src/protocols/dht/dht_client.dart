@@ -240,7 +240,9 @@ class DHTClient {
         localProviders = node.dhtHandler?.getLocalProvidersForCid(cid);
         if (localProviders != null && localProviders.isNotEmpty) {
           // ignore: avoid_print
-          print('findProviders($cid) local after poll=${localProviders.length}');
+          print(
+            'findProviders($cid) local after poll=${localProviders.length}',
+          );
           return localProviders;
         }
       }
@@ -749,7 +751,9 @@ class DHTClient {
       return [];
     }
     // ignore: avoid_print
-    print('_queryConnectedPeersForProviders: connected=${router.connectedPeers.length}');
+    print(
+      '_queryConnectedPeersForProviders: connected=${router.connectedPeers.length}',
+    );
 
     for (final peerIdStr in router.connectedPeers) {
       // ignore: avoid_print
@@ -759,11 +763,17 @@ class DHTClient {
         // first, then fall back to the WAN protocol.
         Uint8List? responseBytes;
         for (final proto in [protocolDhtLan, protocolDht]) {
-          responseBytes = await router.sendRequest(peerIdStr, proto, requestBytes);
+          responseBytes = await router.sendRequest(
+            peerIdStr,
+            proto,
+            requestBytes,
+          );
           if (responseBytes != null) break;
         }
         // ignore: avoid_print
-        print('  response from $peerIdStr: ${responseBytes?.length ?? -1} bytes');
+        print(
+          '  response from $peerIdStr: ${responseBytes?.length ?? -1} bytes',
+        );
         if (responseBytes == null) continue;
         final response = kad.Message.fromBuffer(responseBytes);
         for (final provider in response.providerPeers) {
@@ -830,7 +840,9 @@ class DHTClient {
   // Main Handle Packet
   void _handlePacket(NetworkPacket packet) async {
     // ignore: avoid_print
-    print('DHT packet from ${packet.srcPeerId}, ${packet.datagram.length} bytes');
+    print(
+      'DHT packet from ${packet.srcPeerId}, ${packet.datagram.length} bytes',
+    );
     try {
       late final kad.Message message;
       late final DHTEnvelope envelope;
@@ -842,7 +854,9 @@ class DHTClient {
         message = kad.Message.fromBuffer(packet.datagram);
         envelope = DHTEnvelope(requestId: '', payload: packet.datagram);
         // ignore: avoid_print
-        print('DHT raw parsed: type=${message.type}, key=${message.key.length} bytes');
+        print(
+          'DHT raw parsed: type=${message.type}, key=${message.key.length} bytes',
+        );
       } catch (_) {
         try {
           envelope = DHTEnvelope.fromBytes(packet.datagram);
@@ -895,7 +909,12 @@ class DHTClient {
           final response = kad.Message()
             ..type = kad.Message_MessageType.FIND_NODE
             ..closerPeers.addAll(closer.map((p) => _convertPeerIdToKadPeer(p)));
-          _sendResponse(peerIdStr, envelope.requestId, response, packet.responder);
+          _sendResponse(
+            peerIdStr,
+            envelope.requestId,
+            response,
+            packet.responder,
+          );
           break;
         case kad.Message_MessageType.GET_VALUE:
           // Check local storage for record
@@ -927,7 +946,12 @@ class DHTClient {
           break;
         case kad.Message_MessageType.PING:
           final response = kad.Message()..type = kad.Message_MessageType.PING;
-          _sendResponse(peerIdStr, envelope.requestId, response, packet.responder);
+          _sendResponse(
+            peerIdStr,
+            envelope.requestId,
+            response,
+            packet.responder,
+          );
           break;
         default:
           // ignore: avoid_print
@@ -947,7 +971,12 @@ class DHTClient {
   ) async {
     final storage = node.dhtHandler?.storage;
     if (storage == null) {
-      _sendResponse(peerIdStr, requestId, kad.Message()..type = message.type, send);
+      _sendResponse(
+        peerIdStr,
+        requestId,
+        kad.Message()..type = message.type,
+        send,
+      );
       return;
     }
 
@@ -960,7 +989,9 @@ class DHTClient {
         ..type = message.type
         ..key = message.key;
       // ignore: avoid_print
-      print('DHT GET_VALUE from $peerIdStr key=${message.key.length} found=${data != null && data.isNotEmpty}');
+      print(
+        'DHT GET_VALUE from $peerIdStr key=${message.key.length} found=${data != null && data.isNotEmpty}',
+      );
       if (data != null && data.isNotEmpty) {
         response.record = dht_proto.Record()
           ..key = message.key
@@ -978,7 +1009,12 @@ class DHTClient {
       _sendResponse(peerIdStr, requestId, response, send);
     } catch (e) {
       _logger.debug('Error handling GET_VALUE from $peerIdStr: $e');
-      _sendResponse(peerIdStr, requestId, kad.Message()..type = message.type, send);
+      _sendResponse(
+        peerIdStr,
+        requestId,
+        kad.Message()..type = message.type,
+        send,
+      );
     }
   }
 
@@ -1024,12 +1060,16 @@ class DHTClient {
     try {
       final cidStr = Base58().encode(Uint8List.fromList(message.key));
       // ignore: avoid_print
-      print('ADD_PROVIDER from $peerIdStr for $cidStr, ${message.providerPeers.length} peers');
+      print(
+        'ADD_PROVIDER from $peerIdStr for $cidStr, ${message.providerPeers.length} peers',
+      );
       final cid = CID.decode(cidStr);
       for (final provider in message.providerPeers) {
         final providerId = _convertKadPeerToPeerId(provider);
         // ignore: avoid_print
-        print('  provider ${providerId.toBase58()}, addrs=${provider.addrs.length}');
+        print(
+          '  provider ${providerId.toBase58()}, addrs=${provider.addrs.length}',
+        );
         if (_isValidProviderRecord(provider)) {
           await handler.handleProvideRequest(cid, providerId);
           // ignore: avoid_print
@@ -1064,11 +1104,10 @@ class DHTClient {
         final key = ds.Key(
           '/dht/values/${Base58().encode(Uint8List.fromList(message.key))}',
         );
-        await storage.put(
-          key,
-          Uint8List.fromList(message.record.value),
+        await storage.put(key, Uint8List.fromList(message.record.value));
+        _logger.debug(
+          'Stored DHT value for key ${Base58().encode(Uint8List.fromList(message.key))}',
         );
-        _logger.debug('Stored DHT value for key ${Base58().encode(Uint8List.fromList(message.key))}');
       }
 
       final response = kad.Message()
@@ -1207,7 +1246,9 @@ class DHTClient {
           await _kademliaRoutingTable.addPeer(peer, peer);
           unawaited(_bootstrapPeer(peer));
         } catch (e) {
-          _logger.debug('Error adding connected peer $peerIdStr to DHT table: $e');
+          _logger.debug(
+            'Error adding connected peer $peerIdStr to DHT table: $e',
+          );
         }
       }
     } catch (e) {

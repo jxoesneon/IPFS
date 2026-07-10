@@ -82,10 +82,10 @@ void main() {
 
     test('Initialization and start', () async {
       await handler.start();
+      verify(mockRouter.start()).called(1); // once by handler
       verify(
-        mockRouter.start(),
-      ).called(1); // once by handler
-      verify(mockRouter.registerProtocolHandler(any, any)).called(3); // circuitRelayClient HOP + STOP + AutoNAT dialback
+        mockRouter.registerProtocolHandler(any, any),
+      ).called(3); // circuitRelayClient HOP + STOP + AutoNAT dialback
     });
 
     test('Stop cancels subscriptions and closes controller', () async {

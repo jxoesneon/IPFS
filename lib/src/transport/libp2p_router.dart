@@ -18,7 +18,9 @@ import '../protocols/dht/dht_routing_table_interface.dart';
 import '../utils/logger.dart';
 import 'pnet/pnet_transport_wrapper.dart';
 import 'pnet/swarm_key_loader.dart';
-import 'quic_transport_probe.dart' if (dart.library.html) 'quic_transport_probe_web.dart' as quic_probe;
+import 'quic_transport_probe.dart'
+    if (dart.library.html) 'quic_transport_probe_web.dart'
+    as quic_probe;
 import 'router_interface.dart';
 import 'webrtc/signaling_protocol.dart';
 import 'webrtc/webrtc_direct_transport.dart';
@@ -186,10 +188,14 @@ class Libp2pRouter implements RouterInterface {
   Future<libp2p.KeyPair> _generateKeyPair() async {
     switch (_keyType.toLowerCase()) {
       case 'rsa':
-        _logger.warning('RSA keys not directly supported by ipfs_libp2p, using Ed25519');
+        _logger.warning(
+          'RSA keys not directly supported by ipfs_libp2p, using Ed25519',
+        );
         return await crypto.generateEd25519KeyPair();
       case 'ecdsa':
-        _logger.warning('ECDSA keys not directly supported by ipfs_libp2p, using Ed25519');
+        _logger.warning(
+          'ECDSA keys not directly supported by ipfs_libp2p, using Ed25519',
+        );
         return await crypto.generateEd25519KeyPair();
       case 'ed25519':
       default:
@@ -201,10 +207,14 @@ class Libp2pRouter implements RouterInterface {
   Future<libp2p.KeyPair> _generateKeyPairFromSeed(Uint8List seed) async {
     switch (_keyType.toLowerCase()) {
       case 'rsa':
-        _logger.warning('RSA keys not directly supported by ipfs_libp2p, using Ed25519');
+        _logger.warning(
+          'RSA keys not directly supported by ipfs_libp2p, using Ed25519',
+        );
         return await crypto.generateEd25519KeyPairFromSeed(seed);
       case 'ecdsa':
-        _logger.warning('ECDSA keys not directly supported by ipfs_libp2p, using Ed25519');
+        _logger.warning(
+          'ECDSA keys not directly supported by ipfs_libp2p, using Ed25519',
+        );
         return await crypto.generateEd25519KeyPairFromSeed(seed);
       case 'ed25519':
       default:
@@ -250,7 +260,9 @@ class Libp2pRouter implements RouterInterface {
           'Private network PNET pre-shared key loaded; TCP transport will be wrapped',
         );
       } else {
-        _logger.info('No private network PNET key configured; using public TCP');
+        _logger.info(
+          'No private network PNET key configured; using public TCP',
+        );
       }
 
       final listenAddresses = _buildListenAddresses();
@@ -824,7 +836,9 @@ class Libp2pRouter implements RouterInterface {
   /// native platforms. On the web the probe always returns `null` so the router
   /// falls back to TCP-only mode as documented in QUIC_SPEC.
   Future<libp2p_transport.Transport?> _probeQuicTransport() async {
-    final transport = await quic_probe.probeQuicTransport(_quicTransportFactory);
+    final transport = await quic_probe.probeQuicTransport(
+      _quicTransportFactory,
+    );
     if (transport == null && _config.network.enableQuic) {
       _logger.warning(
         'QUIC transport is not available on this platform; falling back to TCP.',

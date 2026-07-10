@@ -134,10 +134,7 @@ void main() {
       expect(await persistence.loadPrivateKey(), isNull);
       expect(await persistence.loadMetadata(), isNull);
       expect(await persistence.loadAccountKeyPem(), isNull);
-      expect(
-        Directory('${tempDir.path}').existsSync(),
-        isFalse,
-      );
+      expect(Directory('${tempDir.path}').existsSync(), isFalse);
     });
 
     test('loadCertificate returns null when file is not readable', () async {
@@ -151,8 +148,7 @@ void main() {
     });
 
     test('loadPrivateKey returns null when file is not readable', () async {
-      Directory('${tempDir.path}/private_key.pem')
-          .createSync(recursive: true);
+      Directory('${tempDir.path}/private_key.pem').createSync(recursive: true);
       expect(await persistence.loadPrivateKey(), isNull);
     });
 
@@ -164,8 +160,7 @@ void main() {
     });
 
     test('loadAccountKeyPem returns null when file is not readable', () async {
-      Directory('${tempDir.path}/account_key.pem')
-          .createSync(recursive: true);
+      Directory('${tempDir.path}/account_key.pem').createSync(recursive: true);
       expect(await persistence.loadAccountKeyPem(), isNull);
     });
 

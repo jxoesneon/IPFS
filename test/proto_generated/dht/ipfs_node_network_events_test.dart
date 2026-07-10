@@ -8,7 +8,42 @@ import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.da
 void main() {
   group('NetworkEvent', () {
     test('round-trips and accessors work', () {
-      final original = NetworkEvent(peerConnected: PeerConnectedEvent.create(), peerDisconnected: PeerDisconnectedEvent.create(), connectionAttempted: ConnectionAttemptedEvent.create(), connectionFailed: ConnectionFailedEvent.create(), messageReceived: MessageReceivedEvent.create(), messageSent: MessageSentEvent.create(), blockReceived: BlockReceivedEvent.create(), blockSent: BlockSentEvent.create(), dhtQueryStarted: DHTQueryStartedEvent.create(), dhtQueryCompleted: DHTQueryCompletedEvent.create(), dhtValueFound: DHTValueFoundEvent.create(), dhtValueProvided: DHTValueProvidedEvent.create(), dhtValueNotFound: DHTValueNotFoundEvent.create(), pubsubMessagePublished: PubsubMessagePublishedEvent.create(), pubsubMessageReceived: PubsubMessageReceivedEvent.create(), pubsubSubscriptionCreated: PubsubSubscriptionCreatedEvent.create(), pubsubSubscriptionCancelled: PubsubSubscriptionCancelledEvent.create(), circuitRelayCreated: CircuitRelayCreatedEvent.create(), circuitRelayClosed: CircuitRelayClosedEvent.create(), circuitRelayTraffic: CircuitRelayTrafficEvent.create(), circuitRelayFailed: CircuitRelayFailedEvent.create(), nodeStarted: NodeStartedEvent.create(), nodeStopped: NodeStoppedEvent.create(), error: NodeErrorEvent.create(), networkChanged: NetworkStatusChangedEvent.create(), dhtProviderAdded: DHTProviderAddedEvent.create(), dhtProviderQueried: DHTProviderQueriedEvent.create(), streamStarted: StreamStartedEvent.create(), streamEnded: StreamEndedEvent.create(), peerDiscovered: PeerDiscoveredEvent.create(), circuitRelayDataReceived: CircuitRelayDataReceivedEvent.create(), circuitRelayDataSent: CircuitRelayDataSentEvent.create(), resourceLimitExceeded: ResourceLimitExceededEvent.create(), systemAlert: SystemAlertEvent.create());
+      final original = NetworkEvent(
+        peerConnected: PeerConnectedEvent.create(),
+        peerDisconnected: PeerDisconnectedEvent.create(),
+        connectionAttempted: ConnectionAttemptedEvent.create(),
+        connectionFailed: ConnectionFailedEvent.create(),
+        messageReceived: MessageReceivedEvent.create(),
+        messageSent: MessageSentEvent.create(),
+        blockReceived: BlockReceivedEvent.create(),
+        blockSent: BlockSentEvent.create(),
+        dhtQueryStarted: DHTQueryStartedEvent.create(),
+        dhtQueryCompleted: DHTQueryCompletedEvent.create(),
+        dhtValueFound: DHTValueFoundEvent.create(),
+        dhtValueProvided: DHTValueProvidedEvent.create(),
+        dhtValueNotFound: DHTValueNotFoundEvent.create(),
+        pubsubMessagePublished: PubsubMessagePublishedEvent.create(),
+        pubsubMessageReceived: PubsubMessageReceivedEvent.create(),
+        pubsubSubscriptionCreated: PubsubSubscriptionCreatedEvent.create(),
+        pubsubSubscriptionCancelled: PubsubSubscriptionCancelledEvent.create(),
+        circuitRelayCreated: CircuitRelayCreatedEvent.create(),
+        circuitRelayClosed: CircuitRelayClosedEvent.create(),
+        circuitRelayTraffic: CircuitRelayTrafficEvent.create(),
+        circuitRelayFailed: CircuitRelayFailedEvent.create(),
+        nodeStarted: NodeStartedEvent.create(),
+        nodeStopped: NodeStoppedEvent.create(),
+        error: NodeErrorEvent.create(),
+        networkChanged: NetworkStatusChangedEvent.create(),
+        dhtProviderAdded: DHTProviderAddedEvent.create(),
+        dhtProviderQueried: DHTProviderQueriedEvent.create(),
+        streamStarted: StreamStartedEvent.create(),
+        streamEnded: StreamEndedEvent.create(),
+        peerDiscovered: PeerDiscoveredEvent.create(),
+        circuitRelayDataReceived: CircuitRelayDataReceivedEvent.create(),
+        circuitRelayDataSent: CircuitRelayDataSentEvent.create(),
+        resourceLimitExceeded: ResourceLimitExceededEvent.create(),
+        systemAlert: SystemAlertEvent.create(),
+      );
       original.peerConnected;
       original.peerDisconnected;
       original.connectionAttempted;
@@ -152,7 +187,7 @@ void main() {
       final restored = NetworkEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(NetworkEvent.fromJson(json), isNotNull);
@@ -174,7 +209,7 @@ void main() {
       final restored = PeerConnectedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(PeerConnectedEvent.fromJson(json), isNotNull);
@@ -196,7 +231,7 @@ void main() {
       final restored = PeerDisconnectedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(PeerDisconnectedEvent.fromJson(json), isNotNull);
@@ -218,7 +253,7 @@ void main() {
       final restored = ConnectionAttemptedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(ConnectionAttemptedEvent.fromJson(json), isNotNull);
@@ -240,7 +275,7 @@ void main() {
       final restored = ConnectionFailedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(ConnectionFailedEvent.fromJson(json), isNotNull);
@@ -249,7 +284,10 @@ void main() {
 
   group('MessageReceivedEvent', () {
     test('round-trips and accessors work', () {
-      final original = MessageReceivedEvent(peerId: 'a', messageContent: const [0, 1, 2]);
+      final original = MessageReceivedEvent(
+        peerId: 'a',
+        messageContent: const [0, 1, 2],
+      );
       expect(original.peerId, 'a');
       expect(original.messageContent, const [0, 1, 2]);
       original.hasPeerId();
@@ -262,7 +300,7 @@ void main() {
       final restored = MessageReceivedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(MessageReceivedEvent.fromJson(json), isNotNull);
@@ -271,7 +309,10 @@ void main() {
 
   group('MessageSentEvent', () {
     test('round-trips and accessors work', () {
-      final original = MessageSentEvent(peerId: 'a', messageContent: const [0, 1, 2]);
+      final original = MessageSentEvent(
+        peerId: 'a',
+        messageContent: const [0, 1, 2],
+      );
       expect(original.peerId, 'a');
       expect(original.messageContent, const [0, 1, 2]);
       original.hasPeerId();
@@ -284,7 +325,7 @@ void main() {
       final restored = MessageSentEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(MessageSentEvent.fromJson(json), isNotNull);
@@ -306,7 +347,7 @@ void main() {
       final restored = BlockReceivedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(BlockReceivedEvent.fromJson(json), isNotNull);
@@ -328,7 +369,7 @@ void main() {
       final restored = BlockSentEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(BlockSentEvent.fromJson(json), isNotNull);
@@ -350,7 +391,7 @@ void main() {
       final restored = DHTQueryStartedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(DHTQueryStartedEvent.fromJson(json), isNotNull);
@@ -359,7 +400,11 @@ void main() {
 
   group('DHTQueryCompletedEvent', () {
     test('round-trips and accessors work', () {
-      final original = DHTQueryCompletedEvent(queryType: 'a', targetKey: 'a', results: ['a']);
+      final original = DHTQueryCompletedEvent(
+        queryType: 'a',
+        targetKey: 'a',
+        results: ['a'],
+      );
       expect(original.queryType, 'a');
       expect(original.targetKey, 'a');
       expect(original.results, ['a']);
@@ -374,7 +419,7 @@ void main() {
       final restored = DHTQueryCompletedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(DHTQueryCompletedEvent.fromJson(json), isNotNull);
@@ -383,7 +428,11 @@ void main() {
 
   group('DHTValueFoundEvent', () {
     test('round-trips and accessors work', () {
-      final original = DHTValueFoundEvent(key: 'a', value: const [0, 1, 2], peerId: 'a');
+      final original = DHTValueFoundEvent(
+        key: 'a',
+        value: const [0, 1, 2],
+        peerId: 'a',
+      );
       expect(original.key, 'a');
       expect(original.value, const [0, 1, 2]);
       expect(original.peerId, 'a');
@@ -399,7 +448,7 @@ void main() {
       final restored = DHTValueFoundEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(DHTValueFoundEvent.fromJson(json), isNotNull);
@@ -418,7 +467,7 @@ void main() {
       final restored = DHTValueNotFoundEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(DHTValueNotFoundEvent.fromJson(json), isNotNull);
@@ -440,7 +489,7 @@ void main() {
       final restored = DHTValueProvidedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(DHTValueProvidedEvent.fromJson(json), isNotNull);
@@ -462,7 +511,7 @@ void main() {
       final restored = DHTProviderAddedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(DHTProviderAddedEvent.fromJson(json), isNotNull);
@@ -483,7 +532,7 @@ void main() {
       final restored = DHTProviderQueriedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(DHTProviderQueriedEvent.fromJson(json), isNotNull);
@@ -492,7 +541,10 @@ void main() {
 
   group('PubsubMessagePublishedEvent', () {
     test('round-trips and accessors work', () {
-      final original = PubsubMessagePublishedEvent(topic: 'a', messageContent: const [0, 1, 2]);
+      final original = PubsubMessagePublishedEvent(
+        topic: 'a',
+        messageContent: const [0, 1, 2],
+      );
       expect(original.topic, 'a');
       expect(original.messageContent, const [0, 1, 2]);
       original.hasTopic();
@@ -505,7 +557,7 @@ void main() {
       final restored = PubsubMessagePublishedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(PubsubMessagePublishedEvent.fromJson(json), isNotNull);
@@ -514,7 +566,11 @@ void main() {
 
   group('PubsubMessageReceivedEvent', () {
     test('round-trips and accessors work', () {
-      final original = PubsubMessageReceivedEvent(topic: 'a', messageContent: const [0, 1, 2], peerId: 'a');
+      final original = PubsubMessageReceivedEvent(
+        topic: 'a',
+        messageContent: const [0, 1, 2],
+        peerId: 'a',
+      );
       expect(original.topic, 'a');
       expect(original.messageContent, const [0, 1, 2]);
       expect(original.peerId, 'a');
@@ -530,7 +586,7 @@ void main() {
       final restored = PubsubMessageReceivedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(PubsubMessageReceivedEvent.fromJson(json), isNotNull);
@@ -549,7 +605,7 @@ void main() {
       final restored = PubsubSubscriptionCreatedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(PubsubSubscriptionCreatedEvent.fromJson(json), isNotNull);
@@ -568,7 +624,7 @@ void main() {
       final restored = PubsubSubscriptionCancelledEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(PubsubSubscriptionCancelledEvent.fromJson(json), isNotNull);
@@ -587,7 +643,7 @@ void main() {
       final restored = CircuitRelayCreatedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(CircuitRelayCreatedEvent.fromJson(json), isNotNull);
@@ -609,7 +665,7 @@ void main() {
       final restored = CircuitRelayClosedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(CircuitRelayClosedEvent.fromJson(json), isNotNull);
@@ -618,7 +674,10 @@ void main() {
 
   group('CircuitRelayTrafficEvent', () {
     test('round-trips and accessors work', () {
-      final original = CircuitRelayTrafficEvent(relayAddress: 'a', dataSize: $fixnum.Int64(1));
+      final original = CircuitRelayTrafficEvent(
+        relayAddress: 'a',
+        dataSize: $fixnum.Int64(1),
+      );
       expect(original.relayAddress, 'a');
       expect(original.dataSize, $fixnum.Int64(1));
       original.hasRelayAddress();
@@ -631,7 +690,7 @@ void main() {
       final restored = CircuitRelayTrafficEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(CircuitRelayTrafficEvent.fromJson(json), isNotNull);
@@ -640,7 +699,10 @@ void main() {
 
   group('CircuitRelayDataReceivedEvent', () {
     test('round-trips and accessors work', () {
-      final original = CircuitRelayDataReceivedEvent(relayAddress: 'a', dataSize: $fixnum.Int64(1));
+      final original = CircuitRelayDataReceivedEvent(
+        relayAddress: 'a',
+        dataSize: $fixnum.Int64(1),
+      );
       expect(original.relayAddress, 'a');
       expect(original.dataSize, $fixnum.Int64(1));
       original.hasRelayAddress();
@@ -653,7 +715,7 @@ void main() {
       final restored = CircuitRelayDataReceivedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(CircuitRelayDataReceivedEvent.fromJson(json), isNotNull);
@@ -662,7 +724,10 @@ void main() {
 
   group('CircuitRelayDataSentEvent', () {
     test('round-trips and accessors work', () {
-      final original = CircuitRelayDataSentEvent(relayAddress: 'a', dataSize: $fixnum.Int64(1));
+      final original = CircuitRelayDataSentEvent(
+        relayAddress: 'a',
+        dataSize: $fixnum.Int64(1),
+      );
       expect(original.relayAddress, 'a');
       expect(original.dataSize, $fixnum.Int64(1));
       original.hasRelayAddress();
@@ -675,7 +740,7 @@ void main() {
       final restored = CircuitRelayDataSentEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(CircuitRelayDataSentEvent.fromJson(json), isNotNull);
@@ -697,7 +762,7 @@ void main() {
       final restored = CircuitRelayFailedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(CircuitRelayFailedEvent.fromJson(json), isNotNull);
@@ -719,7 +784,7 @@ void main() {
       final restored = StreamStartedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(StreamStartedEvent.fromJson(json), isNotNull);
@@ -728,7 +793,11 @@ void main() {
 
   group('StreamEndedEvent', () {
     test('round-trips and accessors work', () {
-      final original = StreamEndedEvent(streamId: 'a', peerId: 'a', reason: 'a');
+      final original = StreamEndedEvent(
+        streamId: 'a',
+        peerId: 'a',
+        reason: 'a',
+      );
       expect(original.streamId, 'a');
       expect(original.peerId, 'a');
       expect(original.reason, 'a');
@@ -744,7 +813,7 @@ void main() {
       final restored = StreamEndedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(StreamEndedEvent.fromJson(json), isNotNull);
@@ -763,7 +832,7 @@ void main() {
       final restored = PeerDiscoveredEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(PeerDiscoveredEvent.fromJson(json), isNotNull);
@@ -772,7 +841,12 @@ void main() {
 
   group('NodeErrorEvent', () {
     test('round-trips and accessors work', () {
-      final original = NodeErrorEvent(errorType: NodeErrorEvent_ErrorType.values.first, message: 'a', stackTrace: 'a', source: 'a');
+      final original = NodeErrorEvent(
+        errorType: NodeErrorEvent_ErrorType.values.first,
+        message: 'a',
+        stackTrace: 'a',
+        source: 'a',
+      );
       expect(original.errorType, isNotNull);
       expect(original.message, 'a');
       expect(original.stackTrace, 'a');
@@ -791,7 +865,7 @@ void main() {
       final restored = NodeErrorEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(NodeErrorEvent.fromJson(json), isNotNull);
@@ -800,7 +874,9 @@ void main() {
 
   group('NetworkStatusChangedEvent', () {
     test('round-trips and accessors work', () {
-      final original = NetworkStatusChangedEvent(changeType: NetworkStatusChangedEvent_ChangeType.values.first);
+      final original = NetworkStatusChangedEvent(
+        changeType: NetworkStatusChangedEvent_ChangeType.values.first,
+      );
       expect(original.changeType, isNotNull);
       original.hasChangeType();
       original.clearChangeType();
@@ -810,7 +886,7 @@ void main() {
       final restored = NetworkStatusChangedEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(NetworkStatusChangedEvent.fromJson(json), isNotNull);
@@ -819,7 +895,10 @@ void main() {
 
   group('ResourceLimitExceededEvent', () {
     test('round-trips and accessors work', () {
-      final original = ResourceLimitExceededEvent(resourceType: 'a', message: 'a');
+      final original = ResourceLimitExceededEvent(
+        resourceType: 'a',
+        message: 'a',
+      );
       expect(original.resourceType, 'a');
       expect(original.message, 'a');
       original.hasResourceType();
@@ -832,7 +911,7 @@ void main() {
       final restored = ResourceLimitExceededEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(ResourceLimitExceededEvent.fromJson(json), isNotNull);
@@ -854,11 +933,10 @@ void main() {
       final restored = SystemAlertEvent.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(SystemAlertEvent.fromJson(json), isNotNull);
     });
   });
-
 }

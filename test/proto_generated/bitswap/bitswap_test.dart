@@ -7,7 +7,13 @@ import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart';
 void main() {
   group('Message_Wantlist_Entry', () {
     test('round-trips and accessors work', () {
-      final original = Message_Wantlist_Entry(block: const [0, 1, 2], priority: 1, cancel: true, wantType: Message_Wantlist_WantType.values.first, sendDontHave: true);
+      final original = Message_Wantlist_Entry(
+        block: const [0, 1, 2],
+        priority: 1,
+        cancel: true,
+        wantType: Message_Wantlist_WantType.values.first,
+        sendDontHave: true,
+      );
       expect(original.block, const [0, 1, 2]);
       expect(original.priority, 1);
       expect(original.cancel, true);
@@ -29,7 +35,7 @@ void main() {
       final restored = Message_Wantlist_Entry.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(Message_Wantlist_Entry.fromJson(json), isNotNull);
@@ -38,7 +44,10 @@ void main() {
 
   group('Message_Wantlist', () {
     test('round-trips and accessors work', () {
-      final original = Message_Wantlist(entries: [Message_Wantlist_Entry.create()], full: true);
+      final original = Message_Wantlist(
+        entries: [Message_Wantlist_Entry.create()],
+        full: true,
+      );
       expect(original.entries.length, 1);
       expect(original.full, true);
       original.entries.clear();
@@ -50,7 +59,7 @@ void main() {
       final restored = Message_Wantlist.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(Message_Wantlist.fromJson(json), isNotNull);
@@ -59,7 +68,10 @@ void main() {
 
   group('Message_Block', () {
     test('round-trips and accessors work', () {
-      final original = Message_Block(prefix: const [0, 1, 2], data: const [0, 1, 2]);
+      final original = Message_Block(
+        prefix: const [0, 1, 2],
+        data: const [0, 1, 2],
+      );
       expect(original.prefix, const [0, 1, 2]);
       expect(original.data, const [0, 1, 2]);
       original.hasPrefix();
@@ -72,7 +84,7 @@ void main() {
       final restored = Message_Block.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(Message_Block.fromJson(json), isNotNull);
@@ -81,7 +93,10 @@ void main() {
 
   group('Message_BlockPresence', () {
     test('round-trips and accessors work', () {
-      final original = Message_BlockPresence(cid: const [0, 1, 2], type: Message_BlockPresence_Type.values.first);
+      final original = Message_BlockPresence(
+        cid: const [0, 1, 2],
+        type: Message_BlockPresence_Type.values.first,
+      );
       expect(original.cid, const [0, 1, 2]);
       expect(original.type, isNotNull);
       original.hasCid();
@@ -94,7 +109,7 @@ void main() {
       final restored = Message_BlockPresence.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(Message_BlockPresence.fromJson(json), isNotNull);
@@ -103,9 +118,19 @@ void main() {
 
   group('Message', () {
     test('round-trips and accessors work', () {
-      final original = Message(wantlist: Message_Wantlist.create(), blocks: [[0, 1]], payload: [Message_Block.create()], blockPresences: [Message_BlockPresence.create()], pendingBytes: 1);
+      final original = Message(
+        wantlist: Message_Wantlist.create(),
+        blocks: [
+          [0, 1],
+        ],
+        payload: [Message_Block.create()],
+        blockPresences: [Message_BlockPresence.create()],
+        pendingBytes: 1,
+      );
       expect(original.wantlist, isNotNull);
-      expect(original.blocks, [[0, 1]]);
+      expect(original.blocks, [
+        [0, 1],
+      ]);
       expect(original.payload.length, 1);
       expect(original.blockPresences.length, 1);
       expect(original.pendingBytes, 1);
@@ -123,11 +148,10 @@ void main() {
       final restored = Message.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(Message.fromJson(json), isNotNull);
     });
   });
-
 }

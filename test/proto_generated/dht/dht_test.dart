@@ -19,7 +19,7 @@ void main() {
       final restored = DHTPeer.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(DHTPeer.fromJson(json), isNotNull);
@@ -28,7 +28,12 @@ void main() {
 
   group('Record', () {
     test('round-trips and accessors work', () {
-      final original = Record(key: const [0, 1, 2], value: const [0, 1, 2], publisher: DHTPeer.create(), sequence: $fixnum.Int64(1));
+      final original = Record(
+        key: const [0, 1, 2],
+        value: const [0, 1, 2],
+        publisher: DHTPeer.create(),
+        sequence: $fixnum.Int64(1),
+      );
       expect(original.key, const [0, 1, 2]);
       expect(original.value, const [0, 1, 2]);
       expect(original.publisher, isNotNull);
@@ -48,7 +53,7 @@ void main() {
       final restored = Record.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(Record.fromJson(json), isNotNull);
@@ -70,7 +75,7 @@ void main() {
       final restored = FindProvidersRequest.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(FindProvidersRequest.fromJson(json), isNotNull);
@@ -79,7 +84,10 @@ void main() {
 
   group('FindProvidersResponse', () {
     test('round-trips and accessors work', () {
-      final original = FindProvidersResponse(providers: [DHTPeer.create()], closerPeers: true);
+      final original = FindProvidersResponse(
+        providers: [DHTPeer.create()],
+        closerPeers: true,
+      );
       expect(original.providers.length, 1);
       expect(original.closerPeers, true);
       original.providers.clear();
@@ -91,7 +99,7 @@ void main() {
       final restored = FindProvidersResponse.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(FindProvidersResponse.fromJson(json), isNotNull);
@@ -100,7 +108,10 @@ void main() {
 
   group('ProvideRequest', () {
     test('round-trips and accessors work', () {
-      final original = ProvideRequest(key: const [0, 1, 2], provider: DHTPeer.create());
+      final original = ProvideRequest(
+        key: const [0, 1, 2],
+        provider: DHTPeer.create(),
+      );
       expect(original.key, const [0, 1, 2]);
       expect(original.provider, isNotNull);
       original.hasKey();
@@ -114,7 +125,7 @@ void main() {
       final restored = ProvideRequest.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(ProvideRequest.fromJson(json), isNotNull);
@@ -133,7 +144,7 @@ void main() {
       final restored = ProvideResponse.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(ProvideResponse.fromJson(json), isNotNull);
@@ -152,7 +163,7 @@ void main() {
       final restored = FindValueRequest.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(FindValueRequest.fromJson(json), isNotNull);
@@ -161,7 +172,10 @@ void main() {
 
   group('FindValueResponse', () {
     test('round-trips and accessors work', () {
-      final original = FindValueResponse(value: const [0, 1, 2], closerPeers: [DHTPeer.create()]);
+      final original = FindValueResponse(
+        value: const [0, 1, 2],
+        closerPeers: [DHTPeer.create()],
+      );
       expect(original.value, const [0, 1, 2]);
       expect(original.closerPeers.length, 1);
       original.hasValue();
@@ -173,7 +187,7 @@ void main() {
       final restored = FindValueResponse.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(FindValueResponse.fromJson(json), isNotNull);
@@ -182,7 +196,10 @@ void main() {
 
   group('PutValueRequest', () {
     test('round-trips and accessors work', () {
-      final original = PutValueRequest(key: const [0, 1, 2], value: const [0, 1, 2]);
+      final original = PutValueRequest(
+        key: const [0, 1, 2],
+        value: const [0, 1, 2],
+      );
       expect(original.key, const [0, 1, 2]);
       expect(original.value, const [0, 1, 2]);
       original.hasKey();
@@ -195,7 +212,7 @@ void main() {
       final restored = PutValueRequest.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(PutValueRequest.fromJson(json), isNotNull);
@@ -214,7 +231,7 @@ void main() {
       final restored = PutValueResponse.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(PutValueResponse.fromJson(json), isNotNull);
@@ -233,7 +250,7 @@ void main() {
       final restored = FindNodeRequest.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(FindNodeRequest.fromJson(json), isNotNull);
@@ -251,11 +268,10 @@ void main() {
       final restored = FindNodeResponse.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(FindNodeResponse.fromJson(json), isNotNull);
     });
   });
-
 }

@@ -334,7 +334,7 @@ void main() {
         expect(response.statusCode, equals(301));
         expect(
           response.headers['location'],
-          equals('https://gateway.example.com/ipfs/QmSomeCid'),
+          equals('https://gateway.example.com:8443/ipfs/QmSomeCid'),
         );
       },
     );

@@ -12,9 +12,12 @@ import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_pb;
 import 'package:fixnum/fixnum.dart';
 
-import 'murmur_hash.dart' if (dart.library.html) 'murmur_hash_web.dart' as murmur;
+import 'murmur_hash.dart'
+    if (dart.library.html) 'murmur_hash_web.dart'
+    as murmur;
 
-export 'murmur_hash.dart' if (dart.library.html) 'murmur_hash_web.dart'
+export 'murmur_hash.dart'
+    if (dart.library.html) 'murmur_hash_web.dart'
     show murmur3X64Hash64;
 
 /// Multihash code for murmur3-x64-64, the only supported HAMT hash function.

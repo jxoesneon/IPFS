@@ -148,7 +148,9 @@ class IPFSNodeBuilder {
     _container.get<LifecycleManager>().register(bitswapHandler);
 
     _container.registerSingleton(BootstrapHandler(_config, networkHandler));
-    _container.get<LifecycleManager>().register(_container.get<BootstrapHandler>());
+    _container.get<LifecycleManager>().register(
+      _container.get<BootstrapHandler>(),
+    );
   }
 
   Future<void> _initializeServices() async {

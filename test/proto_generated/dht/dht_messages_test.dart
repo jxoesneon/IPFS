@@ -1,7 +1,8 @@
 // Auto-generated proto coverage tests. Do not hand-edit.
 
 import 'package:test/test.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/common_kademlia.pb.dart' as $0;
+import 'package:dart_ipfs/src/proto/generated/dht/common_kademlia.pb.dart'
+    as $0;
 import 'package:dart_ipfs/src/proto/generated/dht/dht_messages.pb.dart';
 
 void main() {
@@ -17,7 +18,7 @@ void main() {
       final restored = PingRequest.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(PingRequest.fromJson(json), isNotNull);
@@ -26,7 +27,10 @@ void main() {
 
   group('PingResponse', () {
     test('round-trips and accessors work', () {
-      final original = PingResponse(peerId: $0.KademliaId.create(), success: true);
+      final original = PingResponse(
+        peerId: $0.KademliaId.create(),
+        success: true,
+      );
       expect(original.peerId, isNotNull);
       expect(original.success, true);
       original.hasPeerId();
@@ -39,11 +43,10 @@ void main() {
       final restored = PingResponse.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(PingResponse.fromJson(json), isNotNull);
     });
   });
-
 }

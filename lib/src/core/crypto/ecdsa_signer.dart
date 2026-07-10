@@ -52,9 +52,9 @@ const int _sha256MultihashCode = 0x12;
 /// final peerId = signer.derivePeerId(keyPair.publicKey);
 /// ```
 class EcdsaSigner {
-
   /// Creates an ECDSA signer.
   EcdsaSigner();
+
   /// The P-256 domain parameters.
   final ECDomainParameters domainParams = ECDomainParameters('secp256r1');
 

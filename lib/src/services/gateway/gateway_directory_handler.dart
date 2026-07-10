@@ -45,9 +45,7 @@ class GatewayDirectoryHandler {
     html.writeln('</style></head><body>');
     html.writeln('<h1>Index of /ipfs/$cidStr</h1>');
     html.writeln('<table>');
-    html.writeln(
-      '<thead><tr><th>Name</th><th>Size</th></tr></thead>',
-    );
+    html.writeln('<thead><tr><th>Name</th><th>Size</th></tr></thead>');
     html.writeln('<tbody>');
 
     if (parentPath.isNotEmpty) {
@@ -101,8 +99,12 @@ class GatewayDirectoryHandler {
     PBNode pbNode,
     String subPath,
     Request request, {
-    required Future<Response> Function(String cidStr, String subPath, Request request)
-        serveContentCallback,
+    required Future<Response> Function(
+      String cidStr,
+      String subPath,
+      Request request,
+    )
+    serveContentCallback,
     BlockResolver? resolveBlock,
   }) async {
     final pathParts = subPath.split('/').where((p) => p.isNotEmpty).toList();
@@ -110,11 +112,12 @@ class GatewayDirectoryHandler {
       return renderDirectory(cidStr, pbNode, request);
     }
 
-    final block = Block(
-      cid: CID.decode(cidStr),
-      data: pbNode.writeToBuffer(),
+    final block = Block(cid: CID.decode(cidStr), data: pbNode.writeToBuffer());
+    final childCid = await findChildCid(
+      block,
+      pathParts.first,
+      resolveBlock: resolveBlock,
     );
-    final childCid = await findChildCid(block, pathParts.first, resolveBlock: resolveBlock);
     if (childCid == null) {
       return Response.notFound('Path not found: $subPath');
     }

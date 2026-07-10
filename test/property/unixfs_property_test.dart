@@ -11,7 +11,8 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
-import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart' as unixfs_pb;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
+    as unixfs_pb;
 import 'package:test/test.dart';
 
 import '../fuzz/_fuzz_helpers.dart';

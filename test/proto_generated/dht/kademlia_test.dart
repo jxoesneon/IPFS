@@ -8,7 +8,14 @@ import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart';
 void main() {
   group('Message', () {
     test('round-trips and accessors work', () {
-      final original = Message(type: Message_MessageType.values.first, key: const [0, 1, 2], record: $0.Record.create(), closerPeers: [Peer.create()], providerPeers: [Peer.create()], clusterLevelRaw: 1);
+      final original = Message(
+        type: Message_MessageType.values.first,
+        key: const [0, 1, 2],
+        record: $0.Record.create(),
+        closerPeers: [Peer.create()],
+        providerPeers: [Peer.create()],
+        clusterLevelRaw: 1,
+      );
       expect(original.type, isNotNull);
       expect(original.key, const [0, 1, 2]);
       expect(original.record, isNotNull);
@@ -31,7 +38,7 @@ void main() {
       final restored = Message.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(Message.fromJson(json), isNotNull);
@@ -40,9 +47,17 @@ void main() {
 
   group('Peer', () {
     test('round-trips and accessors work', () {
-      final original = Peer(id: const [0, 1, 2], addrs: [[0, 1]], connection: ConnectionType.values.first);
+      final original = Peer(
+        id: const [0, 1, 2],
+        addrs: [
+          [0, 1],
+        ],
+        connection: ConnectionType.values.first,
+      );
       expect(original.id, const [0, 1, 2]);
-      expect(original.addrs, [[0, 1]]);
+      expect(original.addrs, [
+        [0, 1],
+      ]);
       expect(original.connection, isNotNull);
       original.hasId();
       original.clearId();
@@ -55,11 +70,10 @@ void main() {
       final restored = Peer.fromBuffer(buffer);
       expect(restored, isNotNull);
       expect(original.clone(), isNotNull);
-      original.copyWith((m) { });
+      original.copyWith((m) {});
       expect(original.toString(), isA<String>());
       final json = original.writeToJson();
       expect(Peer.fromJson(json), isNotNull);
     });
   });
-
 }

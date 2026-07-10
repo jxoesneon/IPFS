@@ -106,18 +106,23 @@ void main() {
 
     test('findProviders DHT empty -> IPNI success', () async {
       final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
-      when(mockContentRouting.findProviders(cid))
-          .thenAnswer((_) async => []);
-      when(mockDelegatedRouting.findProviders(any))
-          .thenAnswer((_) async => RoutingResponse.success([]));
+      when(mockContentRouting.findProviders(cid)).thenAnswer((_) async => []);
+      when(
+        mockDelegatedRouting.findProviders(any),
+      ).thenAnswer((_) async => RoutingResponse.success([]));
 
       final ipniClient = _FakeIPNIClient(
         result: IPNIResponse.success([
-          IPNIProvider(peerId: 'ipni-peer', multiaddrs: ['/ip4/1.2.3.4/tcp/4001']),
+          IPNIProvider(
+            peerId: 'ipni-peer',
+            multiaddrs: ['/ip4/1.2.3.4/tcp/4001'],
+          ),
         ]),
       );
       final handlerWithIpni = ContentRoutingHandler(
-        IPFSConfig(network: NetworkConfig(ipniEndpoints: ['https://cid.contact'])),
+        IPFSConfig(
+          network: NetworkConfig(ipniEndpoints: ['https://cid.contact']),
+        ),
         mockNetworkHandler,
         contentRouting: mockContentRouting,
         delegatedRouting: mockDelegatedRouting,
@@ -131,15 +136,18 @@ void main() {
 
     test('findProviders DHT empty -> IPNI empty -> Reframe success', () async {
       final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
-      when(mockContentRouting.findProviders(cid))
-          .thenAnswer((_) async => []);
-      when(mockDelegatedRouting.findProviders(any))
-          .thenAnswer((_) async => RoutingResponse.success([]));
+      when(mockContentRouting.findProviders(cid)).thenAnswer((_) async => []);
+      when(
+        mockDelegatedRouting.findProviders(any),
+      ).thenAnswer((_) async => RoutingResponse.success([]));
 
       final ipniClient = _FakeIPNIClient(result: IPNIResponse.success([]));
       final reframeClient = _FakeReframeClient(
         result: ReframeResponse.success([
-          ReframeProvider(peerId: 'reframe-peer', multiaddrs: ['/ip4/5.6.7.8/tcp/4001']),
+          ReframeProvider(
+            peerId: 'reframe-peer',
+            multiaddrs: ['/ip4/5.6.7.8/tcp/4001'],
+          ),
         ]),
       );
       final handlerWithReframe = ContentRoutingHandler(
@@ -181,7 +189,10 @@ void main() {
       expect(status['ipni_routing_enabled'], isTrue);
       expect(status['reframe_routing_enabled'], isTrue);
       expect(status['ipni_endpoints'], contains('https://cid.contact'));
-      expect(status['reframe_endpoints'], contains('https://reframe.example.com'));
+      expect(
+        status['reframe_endpoints'],
+        contains('https://reframe.example.com'),
+      );
     });
   });
 }

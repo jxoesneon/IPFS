@@ -383,11 +383,7 @@ void main() {
           codec: 'dag-pb',
         );
         await store.putBlock(
-          Block(
-            cid: dirCid,
-            data: dirPbNode.writeToBuffer(),
-            format: 'dag-pb',
-          ),
+          Block(cid: dirCid, data: dirPbNode.writeToBuffer(), format: 'dag-pb'),
         );
 
         final handler = GatewayContentHandler(
@@ -398,7 +394,11 @@ void main() {
           'GET',
           Uri.parse('http://localhost/ipfs/${dirCid.encode()}'),
         );
-        final response = await handler.serveContent(dirCid.encode(), '', request);
+        final response = await handler.serveContent(
+          dirCid.encode(),
+          '',
+          request,
+        );
 
         expect(response.statusCode, equals(200));
         // Should serve the file content, not the directory listing.
@@ -474,7 +474,9 @@ void main() {
         );
         final request = Request(
           'GET',
-          Uri.parse('http://localhost/ipfs/${dirNode.cid.encode()}/file_42.txt'),
+          Uri.parse(
+            'http://localhost/ipfs/${dirNode.cid.encode()}/file_42.txt',
+          ),
         );
         final response = await handler.serveContent(
           dirNode.cid.encode(),

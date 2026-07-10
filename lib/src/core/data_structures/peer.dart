@@ -273,4 +273,3 @@ Uint8List multiaddrToBytes(FullAddress address) {
 
   return Uint8List.fromList(buffer);
 }
-

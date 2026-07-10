@@ -115,9 +115,10 @@ class NetworkConfig {
           const [],
       nodeId: json['nodeId'] as String?,
       delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'] as String?,
-      ipniEndpoints: (json['ipniEndpoints'] as List?)?.cast<String>() ??
-          const [],
-      reframeEndpoints: (json['reframeEndpoints'] as List?)?.cast<String>() ??
+      ipniEndpoints:
+          (json['ipniEndpoints'] as List?)?.cast<String>() ?? const [],
+      reframeEndpoints:
+          (json['reframeEndpoints'] as List?)?.cast<String>() ??
           const <String>[],
       swarmKeyPath: json['swarmKeyPath'] as String?,
       privateNetworkPsk: null,
@@ -125,9 +126,7 @@ class NetworkConfig {
   }
 
   /// Default IPNI endpoints used when no custom endpoints are configured.
-  static const defaultIpniEndpoints = [
-    'https://cid.contact',
-  ];
+  static const defaultIpniEndpoints = ['https://cid.contact'];
 
   /// Default Reframe endpoints used when no custom endpoints are configured.
   static const defaultReframeEndpoints = <String>[];

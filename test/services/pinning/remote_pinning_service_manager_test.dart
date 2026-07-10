@@ -49,7 +49,11 @@ void main() {
     test('addService duplicate throws', () {
       service.addService(name: 'pinata', endpoint: 'https://a', token: 't');
       expect(
-        () => service.addService(name: 'pinata', endpoint: 'https://b', token: 't'),
+        () => service.addService(
+          name: 'pinata',
+          endpoint: 'https://b',
+          token: 't',
+        ),
         throwsArgumentError,
       );
     });
@@ -62,33 +66,32 @@ void main() {
     });
 
     test('load and listRemotePins filter', () async {
-      configFile.writeAsStringSync(jsonEncode({
-        'services': [
-          {'name': 'pinata', 'endpoint': 'https://a', 'token': 't'},
-        ],
-        'remotePins': [
-          {
-            'cid': 'QmA',
-            'serviceName': 'pinata',
-            'requestId': 'req1',
-            'status': 'queued',
-            'name': 'pin-a',
-          },
-          {
-            'cid': 'QmB',
-            'serviceName': 'pinata',
-            'requestId': 'req2',
-            'status': 'pinned',
-          },
-        ],
-      }));
+      configFile.writeAsStringSync(
+        jsonEncode({
+          'services': [
+            {'name': 'pinata', 'endpoint': 'https://a', 'token': 't'},
+          ],
+          'remotePins': [
+            {
+              'cid': 'QmA',
+              'serviceName': 'pinata',
+              'requestId': 'req1',
+              'status': 'queued',
+              'name': 'pin-a',
+            },
+            {
+              'cid': 'QmB',
+              'serviceName': 'pinata',
+              'requestId': 'req2',
+              'status': 'pinned',
+            },
+          ],
+        }),
+      );
       await service.load();
       expect(service.remotePins, hasLength(2));
       expect(service.listRemotePins(serviceName: 'pinata'), hasLength(2));
-      expect(
-        service.listRemotePins(status: PinStatus.pinned),
-        hasLength(1),
-      );
+      expect(service.listRemotePins(status: PinStatus.pinned), hasLength(1));
       final pin = service.listRemotePins(status: PinStatus.pinned).first;
       expect(pin.cid, equals('QmB'));
       expect(pin.toJson()['status'], equals('pinned'));
@@ -100,7 +103,8 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 50));
       await service.load();
       expect(configFile.existsSync(), isTrue);
-      final content = jsonDecode(configFile.readAsStringSync()) as Map<String, dynamic>;
+      final content =
+          jsonDecode(configFile.readAsStringSync()) as Map<String, dynamic>;
       expect(content['services'], hasLength(1));
     });
 
