@@ -13,6 +13,7 @@ void main() {
       node = IPFSWebNode(
         config: IPFSConfig(
           nodeId: 'test-node',
+          offline: true,
           network: NetworkConfig(listenAddresses: ['/ip4/127.0.0.1/tcp/0']),
         ),
       );

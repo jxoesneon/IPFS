@@ -20,10 +20,7 @@ void main() {
 
     setUpAll(() async {
       kubo = KuboClient(host: kKuboApiHost, port: kKuboApiPort);
-      dartIpfs = DartIpfsClient(
-        host: kDartIpfsApiHost,
-        port: kDartIpfsApiPort,
-      );
+      dartIpfs = DartIpfsClient(host: kDartIpfsApiHost, port: kDartIpfsApiPort);
 
       // Ensure both nodes are ready
       await kubo.id();

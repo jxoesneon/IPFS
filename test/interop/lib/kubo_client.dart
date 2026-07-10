@@ -67,8 +67,11 @@ class KuboClient {
       );
       final body = BytesBuilder()
         ..add(utf8.encode('--$boundary\r\n'))
-        ..add(utf8.encode(
-            'Content-Disposition: form-data; name="file"; filename="import.car"\r\n'))
+        ..add(
+          utf8.encode(
+            'Content-Disposition: form-data; name="file"; filename="import.car"\r\n',
+          ),
+        )
         ..add(utf8.encode('Content-Type: application/vnd.ipld.car\r\n\r\n'))
         ..add(carData)
         ..add(utf8.encode('\r\n--$boundary--\r\n'));
@@ -124,8 +127,11 @@ class KuboClient {
       );
       final body = BytesBuilder()
         ..add(utf8.encode('--$boundary\r\n'))
-        ..add(utf8.encode(
-            'Content-Disposition: form-data; name="data"; filename="block"\r\n'))
+        ..add(
+          utf8.encode(
+            'Content-Disposition: form-data; name="data"; filename="block"\r\n',
+          ),
+        )
         ..add(utf8.encode('Content-Type: application/octet-stream\r\n\r\n'))
         ..add(data)
         ..add(utf8.encode('\r\n--$boundary--\r\n'));
@@ -166,9 +172,13 @@ class KuboClient {
   }
 
   Future<List<int>> gatewayGetRaw(
-      String gatewayHost, int gatewayPort, String cid) async {
-    final uri =
-        Uri.http('$gatewayHost:$gatewayPort', '/ipfs/$cid', {'format': 'raw'});
+    String gatewayHost,
+    int gatewayPort,
+    String cid,
+  ) async {
+    final uri = Uri.http('$gatewayHost:$gatewayPort', '/ipfs/$cid', {
+      'format': 'raw',
+    });
     final client = HttpClient();
     try {
       final request = await client.getUrl(uri);
@@ -187,9 +197,13 @@ class KuboClient {
   }
 
   Future<List<int>> gatewayGetCar(
-      String gatewayHost, int gatewayPort, String cid) async {
-    final uri =
-        Uri.http('$gatewayHost:$gatewayPort', '/ipfs/$cid', {'format': 'car'});
+    String gatewayHost,
+    int gatewayPort,
+    String cid,
+  ) async {
+    final uri = Uri.http('$gatewayHost:$gatewayPort', '/ipfs/$cid', {
+      'format': 'car',
+    });
     final client = HttpClient();
     try {
       final request = await client.getUrl(uri);
@@ -208,7 +222,10 @@ class KuboClient {
   }
 
   Future<List<int>> gatewayGetDefault(
-      String gatewayHost, int gatewayPort, String cid) async {
+    String gatewayHost,
+    int gatewayPort,
+    String cid,
+  ) async {
     final uri = Uri.http('$gatewayHost:$gatewayPort', '/ipfs/$cid');
     final client = HttpClient();
     try {

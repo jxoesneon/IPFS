@@ -35,11 +35,7 @@ class IPFSWebNode {
   /// Creates a new web IPFS node.
   IPFSWebNode({IPFSConfig? config, this.bootstrapPeers = const []}) {
     _platform = getPlatform();
-    _config =
-        config ??
-        IPFSConfig(
-          network: NetworkConfig(enableWebTransport: true, enableWebRtc: true),
-        );
+    _config = config ?? IPFSConfig(offline: true);
 
     // Initialize networking components
     _router = Libp2pRouter(_config);
@@ -99,18 +95,22 @@ class IPFSWebNode {
 
     _ipns = IPNSHandler(_config, _securityManager, dht, _pubsub);
 
-    await _router.start();
-    await _bitswap.start();
-    await _pubsub.start();
+    if (!_config.offline) {
+      await _router.start();
+      await _bitswap.start();
+      await _pubsub.start();
+    }
     await _ipns.start();
 
     // Connect to bootstrap peers
-    for (final peer in bootstrapPeers) {
-      try {
-        await _router.connect(peer);
-      } catch (e) {
-        // Log error but continue
-        // print('Failed to connect to bootstrap peer $peer: $e');
+    if (!_config.offline) {
+      for (final peer in bootstrapPeers) {
+        try {
+          await _router.connect(peer);
+        } catch (e) {
+          // Log error but continue
+          // print('Failed to connect to bootstrap peer $peer: $e');
+        }
       }
     }
 

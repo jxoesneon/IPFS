@@ -10,15 +10,20 @@ import 'package:test/test.dart';
 import '../lib/dart_ipfs_client.dart';
 // ignore: avoid_relative_lib_imports
 import '../lib/kubo_client.dart';
+
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/car.dart';
 
 const kKuboApiHost = String.fromEnvironment('KUBO_HOST', defaultValue: 'kubo');
 const kKuboApiPort = int.fromEnvironment('KUBO_PORT', defaultValue: 5001);
-const kDartIpfsApiHost =
-    String.fromEnvironment('DART_IPFS_HOST', defaultValue: 'dart_ipfs');
-const kDartIpfsApiPort =
-    int.fromEnvironment('DART_IPFS_PORT', defaultValue: 5001);
+const kDartIpfsApiHost = String.fromEnvironment(
+  'DART_IPFS_HOST',
+  defaultValue: 'dart_ipfs',
+);
+const kDartIpfsApiPort = int.fromEnvironment(
+  'DART_IPFS_PORT',
+  defaultValue: 5001,
+);
 
 void main() {
   group('P0 CAR exchange with Kubo', () {
@@ -28,10 +33,7 @@ void main() {
 
     setUpAll(() async {
       kubo = KuboClient(host: kKuboApiHost, port: kKuboApiPort);
-      dartIpfs = DartIpfsClient(
-        host: kDartIpfsApiHost,
-        port: kDartIpfsApiPort,
-      );
+      dartIpfs = DartIpfsClient(host: kDartIpfsApiHost, port: kDartIpfsApiPort);
 
       try {
         await kubo.id();
@@ -42,49 +44,41 @@ void main() {
       }
     });
 
-    test(
-      'dart_ipfs can export a CAR that Kubo can import',
-      () async {
-        if (!servicesAvailable) return;
-        // 1. Create test data in dart_ipfs
-        final testData = utf8.encode('Hello from dart_ipfs CAR test!');
-        final cid = await dartIpfs.blockPut(testData);
+    test('dart_ipfs can export a CAR that Kubo can import', () async {
+      if (!servicesAvailable) return;
+      // 1. Create test data in dart_ipfs
+      final testData = utf8.encode('Hello from dart_ipfs CAR test!');
+      final cid = await dartIpfs.blockPut(testData);
 
-        // 2. Export CAR from dart_ipfs
-        final carData = await dartIpfs.dagExport(cid);
-        expect(carData.isNotEmpty, isTrue);
+      // 2. Export CAR from dart_ipfs
+      final carData = await dartIpfs.dagExport(cid);
+      expect(carData.isNotEmpty, isTrue);
 
-        // 3. Import CAR into Kubo
-        await kubo.dagImport(carData);
+      // 3. Import CAR into Kubo
+      await kubo.dagImport(carData);
 
-        // 4. Verify the block is accessible in Kubo
-        final retrievedData = await kubo.blockGet(cid);
-        expect(retrievedData, equals(testData));
-      },
-      timeout: const Timeout(Duration(seconds: 60)),
-    );
+      // 4. Verify the block is accessible in Kubo
+      final retrievedData = await kubo.blockGet(cid);
+      expect(retrievedData, equals(testData));
+    }, timeout: const Timeout(Duration(seconds: 60)));
 
-    test(
-      'Kubo can export a CAR that dart_ipfs can import',
-      () async {
-        if (!servicesAvailable) return;
-        // 1. Create test data in Kubo
-        final testData = utf8.encode('Hello from Kubo CAR test!');
-        final cid = await kubo.blockPut(testData);
+    test('Kubo can export a CAR that dart_ipfs can import', () async {
+      if (!servicesAvailable) return;
+      // 1. Create test data in Kubo
+      final testData = utf8.encode('Hello from Kubo CAR test!');
+      final cid = await kubo.blockPut(testData);
 
-        // 2. Export CAR from Kubo
-        final carData = await kubo.dagExport(cid);
-        expect(carData.isNotEmpty, isTrue);
+      // 2. Export CAR from Kubo
+      final carData = await kubo.dagExport(cid);
+      expect(carData.isNotEmpty, isTrue);
 
-        // 3. Import CAR into dart_ipfs
-        await dartIpfs.dagImport(carData);
+      // 3. Import CAR into dart_ipfs
+      await dartIpfs.dagImport(carData);
 
-        // 4. Verify the block is accessible in dart_ipfs
-        final retrievedData = await dartIpfs.blockGet(cid);
-        expect(retrievedData, equals(testData));
-      },
-      timeout: const Timeout(Duration(seconds: 60)),
-    );
+      // 4. Verify the block is accessible in dart_ipfs
+      final retrievedData = await dartIpfs.blockGet(cid);
+      expect(retrievedData, equals(testData));
+    }, timeout: const Timeout(Duration(seconds: 60)));
   });
 
   group('CAR format validation', () {
@@ -113,12 +107,15 @@ void main() {
 
     test('CAR with multiple blocks exports and imports correctly', () async {
       // Create multiple blocks
-      final block1 =
-          await Block.fromData(Uint8List.fromList(utf8.encode('block1')));
-      final block2 =
-          await Block.fromData(Uint8List.fromList(utf8.encode('block2')));
-      final block3 =
-          await Block.fromData(Uint8List.fromList(utf8.encode('block3')));
+      final block1 = await Block.fromData(
+        Uint8List.fromList(utf8.encode('block1')),
+      );
+      final block2 = await Block.fromData(
+        Uint8List.fromList(utf8.encode('block2')),
+      );
+      final block3 = await Block.fromData(
+        Uint8List.fromList(utf8.encode('block3')),
+      );
 
       // Export to CAR with block1 as root
       final writer = CarWriter(roots: [block1.cid]);

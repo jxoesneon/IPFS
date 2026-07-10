@@ -8,6 +8,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
 
 IPFSConfig _localConfig() => IPFSConfig(
   nodeId: 'test-node',
+  offline: true,
   network: NetworkConfig(listenAddresses: ['/ip4/127.0.0.1/tcp/0']),
 );
 

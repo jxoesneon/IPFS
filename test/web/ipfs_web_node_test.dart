@@ -10,6 +10,7 @@ import 'package:test/test.dart';
 IPFSConfig _localConfig() => IPFSConfig(
   blockStorePath: 'test_blocks',
   datastorePath: 'test_data',
+  offline: true,
   network: NetworkConfig(listenAddresses: ['/ip4/127.0.0.1/tcp/0']),
 );
 
