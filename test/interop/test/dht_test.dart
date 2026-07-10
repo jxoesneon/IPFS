@@ -40,47 +40,55 @@ void main() {
       }
     });
 
-    test('dart_ipfs provides a CID and Kubo finds it as a provider', () async {
-      // Use a well-known CID for testing
-      final testCid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+    test(
+      'dart_ipfs provides a CID and Kubo finds it as a provider',
+      () async {
+        // Use a well-known CID for testing
+        final testCid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
 
-      // dart_ipfs announces as provider
-      final provideResponse = await dartIpfs.dhtProvide(testCid);
-      expect(provideResponse, isNotEmpty);
+        // dart_ipfs announces as provider
+        final provideResponse = await dartIpfs.dhtProvide(testCid);
+        expect(provideResponse, isNotEmpty);
 
-      // Wait for DHT propagation
-      await Future<void>.delayed(const Duration(seconds: 5));
+        // Wait for DHT propagation
+        await Future<void>.delayed(const Duration(seconds: 5));
 
-      // Kubo finds providers
-      final findResponse = await kubo.dhtFindProviders(testCid);
-      expect(findResponse, isNotEmpty);
+        // Kubo finds providers
+        final findResponse = await kubo.dhtFindProviders(testCid);
+        expect(findResponse, isNotEmpty);
 
-      // Verify the response contains provider information
-      // Kubo returns NDJSON, so we check if the peer ID appears in the response
-      final dartIpfsId = await dartIpfs.id();
-      final peerId = dartIpfsId['ID'] as String;
-      expect(findResponse, contains(peerId));
-    }, timeout: const Timeout(Duration(seconds: 60)));
+        // Verify the response contains provider information
+        // Kubo returns NDJSON, so we check if the peer ID appears in the response
+        final dartIpfsId = await dartIpfs.id();
+        final peerId = dartIpfsId['ID'] as String;
+        expect(findResponse, contains(peerId));
+      },
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
 
-    test('Kubo provides a CID and dart_ipfs finds it as a provider', () async {
-      // Use a well-known CID for testing
-      final testCid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+    test(
+      'Kubo provides a CID and dart_ipfs finds it as a provider',
+      () async {
+        // Use a well-known CID for testing
+        final testCid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
 
-      // Kubo announces as provider (Kubo v0.42 returns an empty body on success)
-      await kubo.dhtProvide(testCid);
+        // Kubo announces as provider (Kubo v0.42 returns an empty body on success)
+        await kubo.dhtProvide(testCid);
 
-      // Wait for DHT propagation
-      await Future<void>.delayed(const Duration(seconds: 20));
+        // Wait for DHT propagation
+        await Future<void>.delayed(const Duration(seconds: 20));
 
-      // dart_ipfs finds providers
-      final findResponse = await dartIpfs.dhtFindProviders(testCid);
-      expect(findResponse, isNotEmpty);
+        // dart_ipfs finds providers
+        final findResponse = await dartIpfs.dhtFindProviders(testCid);
+        expect(findResponse, isNotEmpty);
 
-      // Verify the response contains provider information
-      // dart_ipfs returns NDJSON, so we check if the peer ID appears in the response
-      final kuboId = await kubo.id();
-      final peerId = kuboId['ID'] as String;
-      expect(findResponse, contains(peerId));
-    }, timeout: const Timeout(Duration(seconds: 60)));
+        // Verify the response contains provider information
+        // dart_ipfs returns NDJSON, so we check if the peer ID appears in the response
+        final kuboId = await kubo.id();
+        final peerId = kuboId['ID'] as String;
+        expect(findResponse, contains(peerId));
+      },
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
   });
 }

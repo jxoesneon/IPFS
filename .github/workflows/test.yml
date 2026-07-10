@@ -27,9 +27,7 @@ jobs:
 
       - name: Verify formatting
         if: matrix.os == 'ubuntu-latest'
-        run: |
-          dart format --output=write lib test
-          git diff --exit-code
+        run: dart format --output=none --set-exit-if-changed lib test
 
       - name: Analyze project source
         if: matrix.os == 'ubuntu-latest'
