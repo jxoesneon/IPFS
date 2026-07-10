@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload P0 logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: interop-p0-logs
           path: /tmp/interop-logs/
@@ -162,7 +162,7 @@ jobs:
 
       - name: Upload P1 logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: interop-p1-logs
           path: /tmp/interop-logs/
