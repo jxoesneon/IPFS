@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.11.7] - 2026-07-11
+
+### Fixed
+- **Publishing**: Removed direct `xml` and `dart_udx` dependencies that were accidentally declared in 1.11.6; they conflicted with downstream consumers such as `port_forwarder`. Security pins remain as `dependency_overrides` for local development and CI.
+
 ## [1.11.6] - 2026-07-11
 
 ### Fixed

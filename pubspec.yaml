@@ -1,5 +1,5 @@
 name: dart_ipfs
-version: 1.11.6
+version: 1.11.7
 description: A comprehensive IPFS implementation in Dart, supporting CID, Bitswap, UnixFS, and DHT.
 homepage: https://github.com/jxoesneon/IPFS
 repository: https://github.com/jxoesneon/IPFS
@@ -43,13 +43,6 @@ dependencies:
   archive: ^4.0.7
   murmurhash: ^1.0.1
   cbor: ^6.3.7
-
-  # Security-pinned transitive dependencies. These are declared directly so that
-  # pub resolves them to the patched versions even when upstream packages allow
-  # older, vulnerable releases.
-  xml: ^7.0.1
-  dart_udx: ^2.0.3
-
   shelf_router: ^1.1.4
   intl: ^0.20.2
   markdown: ^7.3.0
@@ -103,11 +96,12 @@ macos:
   signing:
     enable: false
 
-# Security-critical dependency overrides documented in SECURITY.md
-# These are required because upstream packages still allow older, vulnerable
-# releases. They must be removed before `dart pub publish`; the publish workflow
-# re-adds them after the dry-run/pana steps if needed, or publishes from a
-# temporary copy without overrides.
+# Security-critical dependency overrides documented in SECURITY.md.
+# These are required during local development and CI because upstream packages
+# (e.g. port_forwarder) still allow older, vulnerable releases. Overrides are
+# not visible to package consumers, so the published package does not declare
+# these transitive dependencies directly. The publish workflow runs with these
+# overrides in place and accepts the resulting hints.
 dependency_overrides:
   # xml ^7.0.1: Required for security fixes and compatibility with latest dependencies
   # Resolves potential XML parsing vulnerabilities and ensures proper encoding support
