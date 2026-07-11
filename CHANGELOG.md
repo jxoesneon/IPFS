@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [1.11.6] - 2026-07-11
+
+### Fixed
+- **CI/Test**: Made `IPFSWebNode` start offline by default and updated web/core tests to use `offline: true`, eliminating platform-specific router startup failures in CI.
+- **Gateway**: Fixed HTTPS redirect `Location` header to include the leading slash in the request path (`/${request.url}`).
+- **Formatting**: Re-formatted `test/interop` test files to match the Linux CI `dart format` style.
+- **Web compatibility**: Preserved Flutter web compilation by keeping conditional imports for `Int64` literal and native QUIC paths.
+
+### Changed
+- **CI/CD**: Test workflow is now green on Ubuntu, macOS, and Windows (3477 passed, 8 skipped).
+
+## [1.11.5] - 2026-06-23
+
 ### Added
 - **Monorepo**: Created `packages/dart_ipfs_core/` as a stable core package containing CID, multibase, multicodec, multihash, block, block store, codec, and crypto primitives.
 - **Workspace**: Added `melos.yaml` for monorepo management.
@@ -25,8 +38,6 @@
 
 ### Deprecated
 - **Deep imports**: Imports of `package:dart_ipfs/src/...` are deprecated as of v2.2.0 and will be removed in v3.0.0. Use `package:dart_ipfs/dart_ipfs.dart` (stable umbrella re-export) or `package:dart_ipfs_core/dart_ipfs_core.dart` for core primitives.
-
-## [1.11.5] - 2026-06-23
 
 ### Fixed
 - **CI/CD**: Fixed failing Test workflow on `remove_peer_test.dart` by correcting the generated mock import.

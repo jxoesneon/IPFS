@@ -1,6 +1,8 @@
 # Exclude internal/tooling directories from pub package
 .gemini/
 .fastembed_cache/
+.mempalace/
+.ciel/
 test_tmp/
 test_data/
 ipfs_data/
@@ -28,3 +30,23 @@ doc/project.mermaid
 doc/specifications.yaml
 regenerate_all_protos.ps1
 tool/
+
+# Tests and monorepo packages are not part of the umbrella package distribution
+/test/
+/packages/
+
+# CI/infrastructure files
+/.github/
+/k8s/
+/helm/
+/web/
+
+# Container/orchestration files
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.override.yml
+docker-compose.debug.yml
+
+# Misc top-level scripts
+*.ps1
