@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="dart_ipfs library API docs, for the Dart programming language.">
+  <title>dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li class="self-crumb">dart_ipfs.dart</li>
+  </ol>
+  <div class="self-name">dart_ipfs</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar=""
+    data-below-sidebar="dart_ipfs&#47;dart_ipfs-library-sidebar.html">
+  
+    <div>
+      
+
+      <h1>
+        <span class="kind-library">dart_ipfs</span>
+        library 
+ 
+
+      </h1>
+    </div>
+
+    
+<section class="desc markdown">
+  <p>Production-ready IPFS (InterPlanetary File System) implementation in Dart.</p>
+<p>This library provides a complete IPFS implementation with support for:</p>
+<ul>
+<li>Full IPFS protocol compliance (CID, UnixFS, DAG-PB, Bitswap, DHT)</li>
+<li>P2P networking with production-grade cryptography</li>
+<li>Multiple deployment modes (offline, gateway, full P2P)</li>
+<li>HTTP Gateway and RPC API</li>
+<li>Mobile (Flutter) and web platform support</li>
+</ul>
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="offline-mode-local-storage">Offline Mode (Local Storage)</h3>
+<pre class="language-dart"><code class="language-dart">import 'package:dart_ipfs/dart_ipfs.dart';
+
+void main() async {
+  final node = await IPFSNode.create(
+    IPFSConfig(offline: true),
+  );
+  await node.start();
+
+  // Add content
+  final cid = await node.addFile(data);
+  // print('Added: $cid');
+
+  // Retrieve content
+  final content = await node.get(cid);
+
+  await node.stop();
+}
+</code></pre>
+<h3 id="gateway-mode-http-server">Gateway Mode (HTTP Server)</h3>
+<pre class="language-dart"><code class="language-dart">final node = await IPFSNode.create(
+  IPFSConfig(
+    offline: true,
+    gateway: GatewayConfig(
+      enabled: true,
+      port: 8080,
+    ),
+  ),
+);
+await node.start();
+// Access at `http://localhost:8080/ipfs/&lt;CID&gt;`
+</code></pre>
+<h3 id="full-p2p-mode">Full P2P Mode</h3>
+<pre class="language-dart"><code class="language-dart">final node = await IPFSNode.create(
+  IPFSConfig(offline: false),
+);
+await node.start();
+// print('Peer ID: ${node.peerID}');
+</code></pre>
+<h2 id="features">Features</h2>
+<h3 id="core-ipfs">Core IPFS</h3>
+<ul>
+<li><strong>CID v0/v1</strong>: Content identifier support</li>
+<li><strong>UnixFS</strong>: File system with chunking</li>
+<li><strong>DAG-PB</strong>: MerkleDAG operations</li>
+<li><strong>Pinning</strong>: Content persistence</li>
+<li><strong>CAR Files</strong>: Import/export</li>
+</ul>
+<h3 id="networking">Networking</h3>
+<ul>
+<li><strong>Bitswap 1.2.0</strong>: Block exchange protocol</li>
+<li><strong>Kademlia DHT</strong>: Distributed routing</li>
+<li><strong>PubSub</strong>: Real-time messaging</li>
+<li><strong>MDNS</strong>: Local peer discovery</li>
+<li><strong>Circuit Relay</strong>: NAT traversal</li>
+</ul>
+<h3 id="services">Services</h3>
+<ul>
+<li><strong>HTTP Gateway</strong>: Content serving</li>
+<li><strong>RPC API</strong>: go-ipfs compatible</li>
+<li><strong>IPNS</strong>: Mutable naming</li>
+<li><strong>DNSLink</strong>: Domain resolution</li>
+<li><strong>Metrics</strong>: Prometheus compatible</li>
+</ul>
+<h2 id="architecture">Architecture</h2>
+<p>The library is organized into layers:</p>
+<ul>
+<li><strong>Core</strong>: CID, blocks, data structures</li>
+<li><strong>Protocols</strong>: Bitswap, DHT, PubSub</li>
+<li><strong>Services</strong>: Gateway, RPC, IPNS</li>
+<li><strong>Transport</strong>: P2P networking</li>
+<li><strong>Storage</strong>: Local datastore</li>
+</ul>
+<h2 id="security">Security</h2>
+<p>Production-grade cryptography:</p>
+<ul>
+<li><strong>secp256k1</strong>: Elliptic curve (128-bit security)</li>
+<li><strong>ChaCha20-Poly1305</strong>: AEAD encryption</li>
+<li><strong>SHA-256</strong>: Content hashing</li>
+</ul>
+<h2 id="platform-support">Platform Support</h2>
+<ul>
+<li>✅ Mobile (Flutter iOS/Android)</li>
+<li>✅ Web (Dart Web)</li>
+<li>✅ Desktop (Windows/macOS/Linux)</li>
+<li>✅ Server (Dart VM)</li>
+</ul>
+<h2 id="examples">Examples</h2>
+<p>See the <code>example/</code> directory for:</p>
+<ul>
+<li>Offline content publishing</li>
+<li>P2P networking</li>
+<li>HTTP gateway</li>
+<li>Full node operation</li>
+</ul>
+<h2 id="learn-more">Learn More</h2>
+<ul>
+<li><a href="https://github.com/jxoesneon/IPFS">GitHub Repository</a></li>
+<li><a href="https://specs.ipfs.tech/">IPFS Specifications</a></li>
+<li><a href="https://pub.dev/documentation/dart_ipfs/latest/">API Documentation</a></li>
+</ul>
+</section>
+
+
+    <section class="summary offset-anchor" id="classes">
+      <h2>Classes</h2>
+      <dl>
+          <dt id="BitswapConfig">
+  <span class="name "><a href="../dart_ipfs/BitswapConfig-class.html">BitswapConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration for the Bitswap protocol, including the optional HTTP
+gateway fallback used when P2P block exchange fails.
+</dd>
+
+          <dt id="Block">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/Block-class.html">Block</a></span> 
+
+</dt>
+<dd>
+  Represents an IPFS block.
+</dd>
+
+          <dt id="BlockStoreResult">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/BlockStoreResult-class.html">BlockStoreResult</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> 
+
+</dt>
+<dd>
+  A generic result returned by block store operations.
+</dd>
+
+          <dt id="CarHeader">
+  <span class="name "><a href="../dart_ipfs/CarHeader-class.html">CarHeader</a></span> 
+
+</dt>
+<dd>
+  Immutable CAR file header.
+</dd>
+
+          <dt id="CarReader">
+  <span class="name "><a href="../dart_ipfs/CarReader-class.html">CarReader</a></span> 
+
+</dt>
+<dd>
+  Streaming/iterable reader for CAR v1 and v2 archives.
+</dd>
+
+          <dt id="CarSection">
+  <span class="name "><a href="../dart_ipfs/CarSection-class.html">CarSection</a></span> 
+
+</dt>
+<dd>
+  A single CID/block section within a CAR archive.
+</dd>
+
+          <dt id="CarWriter">
+  <span class="name "><a href="../dart_ipfs/CarWriter-class.html">CarWriter</a></span> 
+
+</dt>
+<dd>
+  Append-only writer for CAR v1 and v2 archives.
+</dd>
+
+          <dt id="CID">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/CID-class.html">CID</a></span> 
+
+</dt>
+<dd>
+  A Content Identifier (CID) for content-addressed data in IPFS.
+</dd>
+
+          <dt id="CircuitRelayConfig">
+  <span class="name "><a href="../dart_ipfs/CircuitRelayConfig-class.html">CircuitRelayConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration for the circuit relay client.
+</dd>
+
+          <dt id="CryptoUtils">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/CryptoUtils-class.html">CryptoUtils</a></span> 
+
+</dt>
+<dd>
+  Cryptographic utilities for secure key management.
+</dd>
+
+          <dt id="DagCborCodec">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/DagCborCodec-class.html">DagCborCodec</a></span> 
+
+</dt>
+<dd>
+  Codec for DAG-CBOR.
+</dd>
+
+          <dt id="DagJsonCodec">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/DagJsonCodec-class.html">DagJsonCodec</a></span> 
+
+</dt>
+<dd>
+  Codec for DAG-JSON.
+</dd>
+
+          <dt id="DHTConfig">
+  <span class="name "><a href="../dart_ipfs/DHTConfig-class.html">DHTConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration options for the DHT (Distributed Hash Table)
+</dd>
+
+          <dt id="Ed25519Signer">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/Ed25519Signer-class.html">Ed25519Signer</a></span> 
+
+</dt>
+<dd>
+  Unified Ed25519 signing service.
+</dd>
+
+          <dt id="EncryptedData">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/EncryptedData-class.html">EncryptedData</a></span> 
+
+</dt>
+<dd>
+  Result of AES-GCM encryption containing ciphertext and nonce.
+</dd>
+
+          <dt id="GatewayConfig">
+  <span class="name "><a href="../dart_ipfs/GatewayConfig-class.html">GatewayConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration for the IPFS HTTP Gateway.
+</dd>
+
+          <dt id="GraphsyncConfig">
+  <span class="name "><a href="../dart_ipfs/GraphsyncConfig-class.html">GraphsyncConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration for the Graphsync protocol handler.
+</dd>
+
+          <dt id="IBlock">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/IBlock-class.html">IBlock</a></span> 
+
+</dt>
+<dd>
+  Interface for content-addressed data blocks.
+</dd>
+
+          <dt id="IBlockStore">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/IBlockStore-class.html">IBlockStore</a></span> 
+
+</dt>
+<dd>
+  Interface for block storage operations.
+</dd>
+
+          <dt id="ImmutableBytes">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/ImmutableBytes-class.html">ImmutableBytes</a></span> 
+
+</dt>
+<dd>
+  An immutable wrapper around a <a href="https://api.dart.dev/stable/3.12.2/dart-typed_data/Uint8List-class.html">Uint8List</a> with value-based equality.
+</dd>
+
+          <dt id="IndexBuilder">
+  <span class="name "><a href="../dart_ipfs/IndexBuilder-class.html">IndexBuilder</a></span> 
+
+</dt>
+<dd>
+  Builder for CAR v2 index payloads.
+</dd>
+
+          <dt id="InMemoryBlockStore">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/InMemoryBlockStore-class.html">InMemoryBlockStore</a></span> 
+
+</dt>
+<dd>
+  A simple in-memory block store implementation.
+</dd>
+
+          <dt id="IPFS">
+  <span class="name "><a href="../dart_ipfs/IPFS-class.html">IPFS</a></span> 
+
+</dt>
+<dd>
+  Main entry point for the IPFS (InterPlanetary File System) implementation.
+</dd>
+
+          <dt id="IPFSConfig">
+  <span class="name "><a href="../dart_ipfs/IPFSConfig-class.html">IPFSConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration for an IPFS node.
+</dd>
+
+          <dt id="IPFSNode">
+  <span class="name "><a href="../dart_ipfs/IPFSNode-class.html">IPFSNode</a></span> 
+
+</dt>
+<dd>
+  The main IPFS node implementation.
+</dd>
+
+          <dt id="IPFSWebNode">
+  <span class="name "><a href="../dart_ipfs/IPFSWebNode-class.html">IPFSWebNode</a></span> 
+
+</dt>
+<dd>
+  A minimal IPFS node for web browsers.
+</dd>
+
+          <dt id="IPLDCodec">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/IPLDCodec-class.html">IPLDCodec</a></span> 
+
+</dt>
+<dd>
+  Interface for all IPLD codecs in dart_ipfs_core.
+</dd>
+
+          <dt id="MetricsConfig">
+  <span class="name "><a href="../dart_ipfs/MetricsConfig-class.html">MetricsConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration options for telemetry and metrics collection.
+</dd>
+
+          <dt id="MultibaseUtils">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/MultibaseUtils-class.html">MultibaseUtils</a></span> 
+
+</dt>
+<dd>
+  Helpers for multibase encoding/decoding used by CID and other multiformats.
+</dd>
+
+          <dt id="Multicodec">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/Multicodec-class.html">Multicodec</a></span> 
+
+</dt>
+<dd>
+  Multicodec registry helpers for core IPLD and IPFS codecs.
+</dd>
+
+          <dt id="MultihashUtils">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/MultihashUtils-class.html">MultihashUtils</a></span> 
+
+</dt>
+<dd>
+  Helpers for computing and decoding multihashes.
+</dd>
+
+          <dt id="NetworkConfig">
+  <span class="name "><a href="../dart_ipfs/NetworkConfig-class.html">NetworkConfig</a></span> 
+
+</dt>
+<dd>
+  Network configuration for the IPFS node.
+</dd>
+
+          <dt id="ProtocolConfig">
+  <span class="name "><a href="../dart_ipfs/ProtocolConfig-class.html">ProtocolConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration for a specific protocol.
+</dd>
+
+          <dt id="PubSubMessage">
+  <span class="name "><a href="../dart_ipfs/PubSubMessage-class.html">PubSubMessage</a></span> 
+
+</dt>
+<dd>
+  Represents a message published on a PubSub topic.
+</dd>
+
+          <dt id="QuicConnection">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_quic/0.2.0/dart_ipfs_quic/QuicConnection-class.html">QuicConnection</a></span> 
+
+</dt>
+<dd>
+  Adapter implementing <a href="https://pub.dev/documentation/ipfs_libp2p/0.5.6/core_network_transport_conn/TransportConn-class.html">libp2p.TransportConn</a> around a <a href="https://pub.dev/documentation/quic_lib/1.13.0/quic_lib/">quic_lib</a>
+<a href="https://pub.dev/documentation/quic_lib/1.13.0/quic_lib/Libp2pQuicConnection-class.html">Libp2pQuicConnection</a>.
+</dd>
+
+          <dt id="QuicListener">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_quic/0.2.0/dart_ipfs_quic/QuicListener-class.html">QuicListener</a></span> 
+
+</dt>
+<dd>
+  libp2p <a href="https://pub.dev/documentation/ipfs_libp2p/0.5.6/p2p_transport_listener/Listener-class.html">Listener</a> implementation that wraps a <a href="https://pub.dev/documentation/quic_lib/1.13.0/libp2p/">quic_lib</a> incoming
+connection stream.
+</dd>
+
+          <dt id="QuicTransport">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_quic/0.2.0/dart_ipfs_quic/QuicTransport-class.html">QuicTransport</a></span> 
+
+</dt>
+<dd>
+  libp2p <a href="https://pub.dev/documentation/ipfs_libp2p/0.5.6/p2p_transport_transport/Transport-class.html">Transport</a> implementation backed by the pure-Dart <a href="https://pub.dev/documentation/quic_lib/1.13.0/quic_lib/">quic_lib</a>
+package.
+</dd>
+
+          <dt id="RawCodec">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/RawCodec-class.html">RawCodec</a></span> 
+
+</dt>
+<dd>
+  Codec for raw binary data.
+</dd>
+
+          <dt id="SecurityConfig">
+  <span class="name "><a href="../dart_ipfs/SecurityConfig-class.html">SecurityConfig</a></span> 
+
+</dt>
+<dd>
+  Security-related configuration options for IPFS node
+</dd>
+
+          <dt id="StorageConfig">
+  <span class="name "><a href="../dart_ipfs/StorageConfig-class.html">StorageConfig</a></span> 
+
+</dt>
+<dd>
+  Configuration options for IPFS storage.
+</dd>
+
+          <dt id="TurnServer">
+  <span class="name "><a href="../dart_ipfs/TurnServer-class.html">TurnServer</a></span> 
+
+</dt>
+<dd>
+  Configuration for a TURN server used by WebRTC ICE.
+</dd>
+
+          <dt id="TypedMap">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/TypedMap-class.html">TypedMap</a></span> 
+
+</dt>
+<dd>
+  An immutable, type-safe wrapper around a plain <a href="https://api.dart.dev/stable/3.12.2/dart-core/Map-class.html">Map&lt;String, dynamic&gt;</a>.
+</dd>
+
+      </dl>
+    </section>
+
+    <section class="summary offset-anchor" id="enums">
+      <h2>Enums</h2>
+      <dl>
+          <dt id="GatewayMode">
+  <span class="name "><a href="../dart_ipfs/GatewayMode.html">GatewayMode</a></span> 
+
+</dt>
+<dd>
+  Modes for retrieving content via the <a href="../dart_ipfs/IPFSNode-class.html">IPFSNode</a>.
+</dd>
+
+          <dt id="NodeState">
+  <span class="name "><a href="../dart_ipfs/NodeState.html">NodeState</a></span> 
+
+</dt>
+<dd>
+  Represents the possible states of an <a href="../dart_ipfs/IPFSNode-class.html">IPFSNode</a>.
+</dd>
+
+      </dl>
+    </section>
+
+
+
+    <section class="summary offset-anchor" id="extensions">
+      <h2>Extensions</h2>
+      <dl>
+          <dt id="KeyPairExtensions">
+  <span class="name "><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/KeyPairExtensions.html">KeyPairExtensions</a></span>
+  on <a href="https://pub.dev/documentation/cryptography/2.9.0/cryptography/SimpleKeyPair-class.html">SimpleKeyPair</a>
+  
+
+</dt>
+<dd>
+  Extension to help with key pair management and cleanup.
+</dd>
+
+      </dl>
+    </section>
+
+
+
+
+    <section class="summary offset-anchor" id="typedefs">
+      <h2>Typedefs</h2>
+      <dl>
+          
+  <dt id="MultihashInfo" class="">
+  <span class="name"><a href="https://pub.dev/documentation/dart_ipfs_core/1.11.5/dart_ipfs_core/MultihashInfo.html">MultihashInfo</a></span>
+    = <a href="https://pub.dev/documentation/dart_multihash/1.0.1/dart_multihash/MultihashInfo-class.html">MultihashInfo</a>
+  </span>
+  
+
+</dt>
+<dd>
+  Re-export of the underlying multihash info type from <code>dart_multihash</code>.
+  
+
+</dd>
+
+
+      </dl>
+    </section>
+
+    <section class="summary offset-anchor" id="exceptions">
+      <h2>Exceptions / Errors</h2>
+      <dl>
+          <dt id="CarException">
+  <span class="name "><a href="../dart_ipfs/CarException-class.html">CarException</a></span> 
+
+</dt>
+<dd>
+  Base class for CAR parsing errors.
+</dd>
+
+          <dt id="CarHeaderException">
+  <span class="name "><a href="../dart_ipfs/CarHeaderException-class.html">CarHeaderException</a></span> 
+
+</dt>
+<dd>
+  Thrown when a CAR header is malformed or violates the CAR specification.
+</dd>
+
+          <dt id="CarIndexException">
+  <span class="name "><a href="../dart_ipfs/CarIndexException-class.html">CarIndexException</a></span> 
+
+</dt>
+<dd>
+  Thrown when a CAR index is malformed or inconsistent with the data payload.
+</dd>
+
+          <dt id="CarSectionException">
+  <span class="name "><a href="../dart_ipfs/CarSectionException-class.html">CarSectionException</a></span> 
+
+</dt>
+<dd>
+  Thrown when a CAR section is malformed or truncated.
+</dd>
+
+          <dt id="CarV2Exception">
+  <span class="name "><a href="../dart_ipfs/CarV2Exception-class.html">CarV2Exception</a></span> 
+
+</dt>
+<dd>
+  Thrown when a CAR v2 pragma or header is invalid.
+</dd>
+
+      </dl>
+    </section>
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li class="self-crumb">dart_ipfs.dart</li>
+</ol>
+
+    <h5><span class="package-name">dart_ipfs</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="../dart_ipfs/">dart_ipfs</a></li>
+</ol>
+
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+    <h5>dart_ipfs library</h5>
+  </div><!--/sidebar-offcanvas-right-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.11.7
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

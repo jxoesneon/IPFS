@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the closeStream method from the CarWriter class, for the Dart programming language.">
+  <title>closeStream method - CarWriter class - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li><a href="../../dart_ipfs/CarWriter-class.html">CarWriter</a></li>
+    <li class="self-crumb">closeStream method</li>
+  </ol>
+  <div class="self-name">closeStream</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="dart_ipfs&#47;CarWriter-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">closeStream</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="https://api.dart.dev/stable/3.12.2/dart-async/Stream-class.html">Stream</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.12.2/dart-typed_data/Uint8List-class.html">Uint8List</a></span>&gt;</span></span>
+<span class="name ">closeStream</span>(<wbr>)
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Emits the complete file as a stream of byte chunks.</p>
+<p>For CAR v2 with <a href="../../dart_ipfs/CarWriter/index.html">index</a> the entire payload is still materialised in
+memory to build the index; the data is yielded as a stream for API
+consistency.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Stream&lt;Uint8List&gt; closeStream() async* {
+  if (roots.isEmpty) {
+    throw CarHeaderException(&#39;CAR writer requires at least one root&#39;);
+  }
+
+  &#47;&#47; Validate that every root is present in the data section.
+  final rootSet = roots.map((r) =&gt; r.encode()).toSet();
+  final writtenCids = _pending.map((s) =&gt; s.cid.encode()).toSet();
+  for (final root in rootSet) {
+    if (!writtenCids.contains(root)) {
+      throw CarHeaderException(&#39;Root CID $root must be written as a section&#39;);
+    }
+  }
+
+  &#47;&#47; Build the CAR v1 payload first so we can compute offsets and index.
+  final v1Payload = await _buildV1Payload();
+
+  if (v2) {
+    &#47;&#47; Pragma + CAR v2 header + data payload.
+    const pragmaSize = 11;
+    const v2HeaderSize = 40;
+    final dataOffset = pragmaSize + v2HeaderSize;
+    final dataSize = v1Payload.length;
+
+    var indexOffset = 0;
+    Uint8List? indexBytes;
+    if (index) {
+      indexBytes = _buildIndex(v1Payload);
+      indexOffset = dataOffset + dataSize;
+    }
+
+    yield _carV2Pragma;
+    yield _buildV2Header(dataOffset, dataSize, indexOffset);
+    yield v1Payload;
+    if (indexBytes != null) {
+      yield indexBytes;
+    }
+  } else {
+    yield v1Payload;
+  }
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/CarWriter-class.html">CarWriter</a></li>
+    <li class="self-crumb">closeStream method</li>
+</ol>
+
+    <h5>CarWriter class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.11.7
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

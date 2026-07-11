@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the build method from the IndexBuilder class, for the Dart programming language.">
+  <title>build method - IndexBuilder class - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li><a href="../../dart_ipfs/IndexBuilder-class.html">IndexBuilder</a></li>
+    <li class="self-crumb">build method</li>
+  </ol>
+  <div class="self-name">build</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="dart_ipfs&#47;IndexBuilder-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">build</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="https://api.dart.dev/stable/3.12.2/dart-typed_data/Uint8List-class.html">Uint8List</a></span>
+<span class="name ">build</span>(<wbr>)
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Builds and returns the sorted index payload bytes.</p>
+<p>The payload starts with the 4-byte little-endian format code, followed by
+sorted records. For <code>IndexSorted</code> each record is
+<code>[varint digest length | digest bytes | varint offset]</code>. For
+<code>MultihashIndexSorted</code> each record is prefixed with the multihash code
+as <code>[varint multihash code | varint digest length | digest bytes | varint offset]</code>.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Uint8List build() {
+  final sorted = List&lt;_IndexEntry&gt;.from(_entries)
+    ..sort((a, b) =&gt; _compareBytes(a.digest, b.digest));
+
+  final builder = BytesBuilder();
+  final formatCode = multihashSorted ? 0x0401 : 0x0400;
+  builder.add(_encodeUint32le(formatCode));
+
+  for (final entry in sorted) {
+    final digest = entry.digest;
+    if (multihashSorted) {
+      builder.add(_encodeVarint(entry.multihashCode));
+    }
+    builder.add(_encodeVarint(digest.length));
+    builder.add(digest);
+    builder.add(_encodeVarint(entry.offset));
+  }
+
+  return builder.toBytes();
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/IndexBuilder-class.html">IndexBuilder</a></li>
+    <li class="self-crumb">build method</li>
+</ol>
+
+    <h5>IndexBuilder class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.11.7
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
