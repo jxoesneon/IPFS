@@ -191,6 +191,7 @@ jobs:
           image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-runtime.outputs.digest }}
           format: spdx-json
           output-file: sbom-runtime.spdx.json
+          upload-release-assets: false
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
