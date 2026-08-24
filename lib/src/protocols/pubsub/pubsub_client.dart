@@ -15,12 +15,38 @@ import 'pubsub_message.dart';
 
 /// Handles PubSub operations for an IPFS node with Gossipsub-like features.
 ///
-/// Implements message propagation, peer mesh maintenance, and message signing
-/// to ensure authenticity and prevent spoofing.
+/// Implements message propagation, peer mesh maintenance, and message
+/// tagging via [_computeSignature].
 ///
-/// **Security (SEC-008):** All outgoing messages are signed with HMAC-SHA256
-/// using the sender's PeerID as the key. Incoming messages are verified
-/// against this signature.
+/// **Security (SEC-008) — KNOWN LIMITATION, NOT AN AUTHENTICITY GUARANTEE:**
+/// Outgoing messages carry an HMAC-SHA256 tag computed with the sender's own
+/// PeerID string as the HMAC key. Because the PeerID is public by design
+/// (it is meant to be shared so other nodes can dial the peer) and is
+/// re-transmitted in cleartext in the very same message as the `sender`
+/// field, this "signature" is **not** a secret-backed MAC: any party can
+/// recompute the identical tag for any sender + any content using only
+/// information the message itself discloses. It does **not** prevent
+/// message spoofing/impersonation and must not be relied on as an
+/// authenticity or anti-spoofing control — despite being described that way
+/// in earlier revisions of this file, README.md, and SECURITY.md. Treat it
+/// as a message-integrity/dedup tag only (it does catch accidental bit
+/// corruption and lets peers dedupe by tag), not as proof of who sent a
+/// message.
+///
+/// A real fix needs asymmetric signing: sign with the sender's actual
+/// Ed25519 identity private key (already obtainable via
+/// `SecurityManager.getSecureKey()`) and verify against that peer's known
+/// Ed25519 *public* key. That public key cannot be derived from the PeerID
+/// in this codebase — [PeerId.fromPublicKey] hashes it with SHA-256, which
+/// is one-way — so verification additionally needs a peer public-key
+/// registry populated when peers are first seen (e.g. from the Identify
+/// protocol response in `IdentifyHandler`, which currently sends this
+/// node's own public key but does not appear to persist a received peer's
+/// public key anywhere lookup-able). A correct, spec-compliant Ed25519
+/// signer already exists at
+/// `lib/src/protocols/pubsub/gossipsub/message_signing.dart`
+/// (`Ed25519MessageSigner`) but is not wired into this class or into the
+/// default `PubSubHandler` construction path.
 class PubSubClient implements IPubSub {
   /// Creates a [PubSubClient] with the provided [_router] and peer identifier.
   ///
@@ -124,7 +150,11 @@ class PubSubClient implements IPubSub {
         return;
       }
 
-      // SEC-008: Verify message signature for authenticity
+      // SEC-008: This only checks that the tag matches _computeSignature's
+      // output; since that function's "key" is the public sender field
+      // carried in this same message, this rejects corrupted/mismatched
+      // tags but does NOT authenticate that `sender` actually sent this
+      // message. See the class-level doc comment above for details.
       final String? signature = msgMap['signature'] as String?;
       if (signature != null) {
         final String expectedSig = _computeSignature(sender, content, topic);
@@ -248,9 +278,10 @@ class PubSubClient implements IPubSub {
     return Uint8List.fromList(utf8.encode('unsubscribe:$topic'));
   }
 
-  /// Encodes a content message for publishing, including security signatures.
+  /// Encodes a content message for publishing, tagged via [_computeSignature].
   ///
-  /// SEC-008: Signs the message with HMAC-SHA256.
+  /// SEC-008: The HMAC-SHA256 tag added here is NOT an authenticity
+  /// signature — see the class-level doc comment for why.
   Uint8List encodePublishRequest(String topic, String message) {
     final String senderStr = Base58().encode(_peerId.value);
     final String signature = _computeSignature(senderStr, message, topic);
@@ -264,7 +295,13 @@ class PubSubClient implements IPubSub {
     return Uint8List.fromList(utf8.encode(jsonEncode(messageWithSender)));
   }
 
-  /// Computes an HMAC-SHA256 signature for message integrity and authenticity.
+  /// Computes an HMAC-SHA256 tag for message integrity — NOT authenticity.
+  ///
+  /// The HMAC key is `sender`, i.e. the public PeerID string, which is also
+  /// transmitted in cleartext in the message this tag accompanies. Since
+  /// the "key" is not secret, this tag can be recomputed by anyone for any
+  /// (sender, topic, content) triple; it only guards against accidental
+  /// corruption, not deliberate forgery. See the class-level doc comment.
   String _computeSignature(String sender, String content, String topic) {
     final List<int> key = utf8.encode(sender);
     final List<int> data = utf8.encode('$topic:$content');
