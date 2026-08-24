@@ -53,6 +53,10 @@ void main() {
     receiverClient = PubSubClient(mockRouter, receiverPeerId);
   });
 
+  tearDown(() async {
+    if (receiverClient.isStarted) await receiverClient.stop();
+  });
+
   group('SEC-008: PubSub message tag is forgeable (known limitation)', () {
     test(
       'an unrelated attacker can impersonate a connected victim peer '
