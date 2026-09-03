@@ -24,6 +24,7 @@ Reports will be acknowledged within 48 hours, and a timeline for resolution will
 
 | Version |          Supported |
 | ------- | -----------------: |
+| 1.12.x  | :white_check_mark: |
 | 1.11.x  | :white_check_mark: |
 | 1.10.x  | :white_check_mark: |
 | 1.4.x   | :white_check_mark: |

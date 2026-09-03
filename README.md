@@ -60,6 +60,20 @@ A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) a
 
 ---
 
+## What's New in v1.12 (current: v1.12.0)
+
+### Major Features & Security
+
+| Feature | Description |
+| ------- | ----------- |
+| **SEC-008 Ed25519 PubSub Auth** | Asymmetric Ed25519 digital signatures in `PubSubClient` and `GossipsubHandler`, eliminating peer message spoofing. |
+| **PeerKeyRegistry** | Cryptographic validation binding peer public keys to Peer IDs with identify protocol key ingestion. |
+| **Signature Downgrade Protection** | Rejects unauthenticated or legacy HMAC messages in strict authentication mode. |
+| **Helia Interop Suite** | Dedicated Helia HTTP RPC interop server (`test/interop/helia/server.js`) and profile-based Docker interop testing. |
+| **Platform Test Resilience** | Multi-platform CI stabilization with `FileSystemException` handling and resilient test runner orchestration. |
+
+---
+
 ## What's New in v1.11 (current: v1.11.6)
 
 ### Major Features

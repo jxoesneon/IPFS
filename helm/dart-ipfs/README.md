@@ -12,7 +12,7 @@ helm install dart-ipfs ./helm/dart-ipfs
 
 - Kubernetes 1.24+
 - Helm 3.12+
-- A published `dart_ipfs` container image (default: `ghcr.io/jxoesneon/dart-ipfs:1.11.5`)
+- A published `dart_ipfs` container image (default: `ghcr.io/jxoesneon/dart-ipfs:1.12.0`)
 
 ## Installing
 

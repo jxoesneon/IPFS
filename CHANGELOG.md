@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-09-03
+
+### Security
+- **SEC-008: PubSub Cryptographic Authentication & Peer Spoofing Remediation**:
+  - Replaced legacy symmetric HMAC tags with asymmetric **Ed25519 digital signatures** in `PubSubClient`, preventing message forgery by peers with knowledge of sender Peer IDs.
+  - Implemented `PeerKeyRegistry` for strict public-key-to-PeerID cryptographic binding validation.
+  - Integrated public key discovery and caching into `IdentifyHandler` on peer connection.
+  - Enforced author identity cryptographic binding in `GossipsubHandler` message pipeline.
+  - Implemented signature downgrade prevention and strict authentication modes (`strictPubSubAuth`).
+  - Added comprehensive test suites verifying signature tampering resistance, downgrade rejection, and author validation.
+
+### Fixed
+- **Test Infrastructure**: Resolved macOS `FileSystemException: Directory not empty` (POSIX errno 66 ENOTEMPTY) race condition during temp directory deletion in `remote_pinning_service_manager_test.dart` and `acme_persistence_test.dart`.
+- **Gateway Tests**: Marked external network-dependent integration test in `gateway_selector_test.dart` as skipped in CI to prevent false-positive failures.
+- **Static Analysis**: Resolved analyzer warnings across project source and mocks.
+
+### Added
+- **Helia Interop Server**: Added `test/interop/helia/server.js` exposing standard Helia HTTP RPC endpoints (`/api/v0/id`, `/api/v0/version`, `/api/v0/swarm/connect`, `/api/v0/add`, `/api/v0/cat`, `/api/v0/dag/export`, `/api/v0/dag/import`).
+- **Profile-Based Docker Compose**: Isolated `helia` container behind `profiles: ["helia"]` in `test/interop/docker-compose.yml`, decoupling test runner dependencies during PR P0/P1 interop runs.
+- **Resilient Interop Setup**: Updated `test/interop/bin/setup.dart` with conditional socket probing to safely detect container presence across network profiles.
+
+### Changed
+- **Dependencies**: Bumped `qs` to 6.16.0, `undici` to 6.28.0, and updated `image-size` to patched `image-size-next@2.1.1` in `test/interop/helia`.
+- **CI Workflows**: Upgraded GitHub Actions (`actions/checkout` v7, `github/codeql-action` v4.37.7, `cosign-installer` v4.1.2, `trivy-action` v0.36.0, `docker/login-action` v4.6.0).
+
 ## [1.11.7] - 2026-07-11
 
 ### Fixed

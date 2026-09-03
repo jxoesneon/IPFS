@@ -9,13 +9,13 @@
 #   docker compose -f docker-compose.debug.yml up
 #
 # To open an interactive shell in the debug image:
-#   docker run --rm --entrypoint /bin/bash -it ghcr.io/jxoesneon/dart-ipfs:1.11.5-debug
+#   docker run --rm --entrypoint /bin/bash -it ghcr.io/jxoesneon/dart-ipfs:1.12.0-debug
 services:
   dart_ipfs:
     build:
       context: .
       target: debug
-    image: ${DART_IPFS_IMAGE:-ghcr.io/jxoesneon/dart-ipfs:1.11.5-debug}
+    image: ${DART_IPFS_IMAGE:-ghcr.io/jxoesneon/dart-ipfs:1.12.0-debug}
     container_name: dart_ipfs_daemon_debug
 
     ports:
