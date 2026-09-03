@@ -24,8 +24,8 @@ void main() {
       if (tempDir.existsSync()) {
         try {
           tempDir.deleteSync(recursive: true);
-        } on PathAccessException {
-          // Windows may keep the temp directory locked briefly; system cleanup
+        } on FileSystemException {
+          // OS may keep the temp directory locked briefly; system cleanup
           // will handle it.
         }
       }

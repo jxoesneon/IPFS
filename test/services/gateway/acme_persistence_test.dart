@@ -28,8 +28,8 @@ void main() {
       if (tempDir.existsSync()) {
         try {
           tempDir.deleteSync(recursive: true);
-        } on PathAccessException {
-          // Windows sometimes keeps the directory locked briefly; leaving the
+        } on FileSystemException {
+          // OS sometimes keeps the directory locked briefly; leaving the
           // temporary directory for system cleanup is acceptable.
         }
       }
