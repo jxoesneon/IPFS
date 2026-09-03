@@ -50,7 +50,7 @@ This project implements the following security measures:
 
 - **Block Validation:** CID hash verification on all received blocks
 - **IPNS Records:** Ed25519 signatures with expiration timestamps
-- **PubSub:** HMAC-SHA256 message tag for integrity/dedup only. This does **not** authenticate the sender: the HMAC key is derived from the message's own public `sender` field, so the tag is reproducible by any party without a secret. Tracked as a known limitation (see `PubSubClient`'s class-level doc comment) — a real fix needs asymmetric Ed25519 signing plus a peer public-key registry.
+- **PubSub (SEC-008):** Asymmetric Ed25519 message signatures with cryptographic PeerID binding and peer public-key validation via `PeerKeyRegistry`. Rejects spoofed authors, enforces downgrade protection against forged legacy tags, and validates key derivation across both JSON PubSub and Gossipsub.
 
 ## Dependency Security
 

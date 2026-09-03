@@ -23,6 +23,7 @@ import '../ipfs_node/ipld_handler.dart';
 import '../ipfs_node/lifecycle_manager.dart';
 import '../ipfs_node/mdns_handler.dart';
 import '../ipfs_node/network_handler.dart';
+import '../crypto/peer_key_registry.dart';
 import '../ipfs_node/pubsub_handler.dart';
 import '../metrics/metrics_collector.dart';
 import '../peering/peering_service.dart';
@@ -129,9 +130,17 @@ class IPFSNodeBuilder {
     // Create IpfsNodeNetworkEvents instance
     final networkEvents = IpfsNodeNetworkEvents(router);
 
+    final keyRegistry = PeerKeyRegistry();
+    _container.registerSingleton(keyRegistry);
+
     if (_config.enablePubSub) {
       _container.registerSingleton(
-        PubSubHandler(router, networkHandler.peerID, networkEvents),
+        PubSubHandler(
+          router,
+          networkHandler.peerID,
+          networkEvents,
+          keyRegistry: keyRegistry,
+        ),
       );
     }
 

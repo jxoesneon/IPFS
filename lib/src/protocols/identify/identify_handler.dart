@@ -16,6 +16,7 @@ import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 
+import '../../core/crypto/peer_key_registry.dart';
 import '../../core/peer/peer_record.dart';
 import '../../core/peer/peer_record_pb.dart';
 import '../../transport/router_interface.dart';
@@ -51,12 +52,14 @@ class IdentifyHandler {
     required Uint8List peerIdBytes,
     List<String> protocols = const [],
     PeerRecordSigner? peerRecordSigner,
+    PeerKeyRegistry? keyRegistry,
     Logger? logger,
   }) : _router = router,
        _publicKeyBytes = publicKeyBytes,
        _peerIdBytes = peerIdBytes,
        _protocols = List<String>.from(protocols),
        _peerRecordSigner = peerRecordSigner,
+       _keyRegistry = keyRegistry,
        _logger = logger ?? Logger('IdentifyHandler');
 
   final RouterInterface _router;
@@ -64,7 +67,11 @@ class IdentifyHandler {
   final Uint8List _peerIdBytes;
   final List<String> _protocols;
   final PeerRecordSigner? _peerRecordSigner;
+  final PeerKeyRegistry? _keyRegistry;
   final Logger _logger;
+
+  /// The peer key registry, if configured.
+  PeerKeyRegistry? get keyRegistry => _keyRegistry;
 
   bool _started = false;
 
@@ -199,6 +206,23 @@ class IdentifyHandler {
         'Received identify from $peerId: '
         'agent=${message.agentVersion}, protocols=${message.protocols.length}',
       );
+
+      if (message.publicKey.isNotEmpty && _keyRegistry != null) {
+        try {
+          final pubKeyPb = PublicKeyPb.decode(message.publicKey);
+          if (pubKeyPb.type == KeyType.ed25519 && pubKeyPb.data.length == 32) {
+            final registered = _keyRegistry!.registerPublicKey(peerId, pubKeyPb.data);
+            if (registered) {
+              _logger.debug('Registered verified Ed25519 public key for $peerId');
+            } else {
+              _logger.warning('Identify public key from $peerId failed peer binding verification');
+            }
+          }
+        } catch (e) {
+          _logger.warning('Failed to parse public key from $peerId: $e');
+        }
+      }
+
       return message;
     } catch (e, st) {
       _logger.error('Identify query failed for $peerId', e, st);
