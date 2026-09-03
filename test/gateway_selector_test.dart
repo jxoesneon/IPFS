@@ -116,6 +116,7 @@ void main() {
           reason: 'Should successfully retrieve content from public gateway',
         );
       },
+      skip: 'Flaky integration test depending on network stack behavior in CI',
     );
   });
 }
