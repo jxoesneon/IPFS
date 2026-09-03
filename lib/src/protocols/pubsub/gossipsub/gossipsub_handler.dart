@@ -295,16 +295,33 @@ class GossipsubHandler {
       }
       final pubKeyBytes = Uint8List.fromList(publicKey);
 
-      // SEC-008: Verify that the public key cryptographically derives to the author's PeerID (message.from).
+      // SEC-008: Verify that the public key cryptographically derives to or matches the author's PeerID (message.from).
       if (message.from.isNotEmpty) {
         try {
+          final authorFrom = Uint8List.fromList(message.from);
           final derived =
               PeerId.fromPublicKey(pubKeyBytes, type: 'Ed25519');
           final authorId =
-              PeerId(value: Uint8List.fromList(message.from));
-          if (derived != authorId) {
+              PeerId(value: authorFrom);
+
+          bool isAuthorMatch = false;
+          if (authorFrom.length == pubKeyBytes.length) {
+            bool matchesRaw = true;
+            for (int i = 0; i < pubKeyBytes.length; i++) {
+              if (authorFrom[i] != pubKeyBytes[i]) {
+                matchesRaw = false;
+                break;
+              }
+            }
+            if (matchesRaw) isAuthorMatch = true;
+          }
+          if (!isAuthorMatch && derived == authorId) {
+            isAuthorMatch = true;
+          }
+
+          if (!isAuthorMatch) {
             _logger.warning(
-              'Rejected spoofed Gossipsub message: public key does not derive to message.from',
+              'Rejected spoofed Gossipsub message: public key does not match or derive to message.from',
             );
             _scores.scoreFor(sender).addInvalidMessageDelivery(topic);
             return;

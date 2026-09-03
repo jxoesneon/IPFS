@@ -161,7 +161,8 @@ void main() {
     });
 
     test('rejects message when content is tampered with after signing', () async {
-      final client = PubSubClient(mockRouter, 'QmLocalReceiver123');
+      final client =
+          PubSubClient(mockRouter, 'QmReceiver9K7mNpQrStUvWxYzABCDEFGH123');
       await client.start();
 
       final capturedHandler =

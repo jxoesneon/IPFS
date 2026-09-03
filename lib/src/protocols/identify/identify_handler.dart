@@ -208,12 +208,13 @@ class IdentifyHandler {
       );
 
       final pubKey = message.publicKey;
-      if (pubKey != null && pubKey.isNotEmpty && _keyRegistry != null) {
+      final keyRegistry = _keyRegistry;
+      if (pubKey != null && pubKey.isNotEmpty && keyRegistry != null) {
         try {
           final pubKeyPb = PublicKeyPb.decode(pubKey);
           final data = pubKeyPb.data;
-          if (pubKeyPb.type == KeyType.ed25519 && data != null && data.length == 32) {
-            final registered = _keyRegistry!.registerPublicKey(peerId, data);
+          if (pubKeyPb.type == KeyType.ed25519 && data.length == 32) {
+            final registered = keyRegistry.registerPublicKey(peerId, data);
             if (registered) {
               _logger.debug('Registered verified Ed25519 public key for $peerId');
             } else {

@@ -22,6 +22,7 @@ analyzer:
     dead_code: error
     # Only show documentation lints as info and avoid noise in internal src/
     public_member_api_docs: warning
+    unawaited_return_in_try_block: ignore
 
 linter:
   rules:

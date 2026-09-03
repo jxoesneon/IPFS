@@ -102,13 +102,15 @@ class PubSubClient implements IPubSub {
 
     _isStarted = true;
 
-    if (_keyPair != null) {
+    final keyPair = _keyPair;
+    if (keyPair != null) {
       try {
-        _cachedPublicKeyBytes =
-            await _ed25519Signer.extractPublicKeyBytes(_keyPair!);
+        final pubKeyBytes =
+            await _ed25519Signer.extractPublicKeyBytes(keyPair);
+        _cachedPublicKeyBytes = pubKeyBytes;
         _keyRegistry.registerPublicKey(
           Base58().encode(_peerId.value),
-          _cachedPublicKeyBytes!,
+          pubKeyBytes,
         );
       } catch (e) {
         _logger.warning('Failed to extract public key from local keyPair: $e');
@@ -151,7 +153,7 @@ class PubSubClient implements IPubSub {
             _handleIHave(msgMap);
             return;
           case 'iwant':
-            _handleIWant(msgMap);
+            await _handleIWant(msgMap);
             return;
           case 'graft':
             graftPeer(sender);
@@ -447,11 +449,12 @@ class PubSubClient implements IPubSub {
   }
 
   Future<Uint8List?> _signPayload(String payload) async {
-    if (_keyPair == null) return null;
+    final keyPair = _keyPair;
+    if (keyPair == null) return null;
     try {
       return await _ed25519Signer.sign(
         Uint8List.fromList(utf8.encode(payload)),
-        _keyPair!,
+        keyPair,
       );
     } catch (_) {
       return null;
@@ -459,10 +462,12 @@ class PubSubClient implements IPubSub {
   }
 
   Future<Uint8List?> _getLocalPublicKeyBytes() async {
-    if (_cachedPublicKeyBytes != null) return _cachedPublicKeyBytes;
-    if (_keyPair == null) return null;
+    final cached = _cachedPublicKeyBytes;
+    if (cached != null) return cached;
+    final keyPair = _keyPair;
+    if (keyPair == null) return null;
     _cachedPublicKeyBytes =
-        await _ed25519Signer.extractPublicKeyBytes(_keyPair!);
+        await _ed25519Signer.extractPublicKeyBytes(keyPair);
     return _cachedPublicKeyBytes;
   }
 
