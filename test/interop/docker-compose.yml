@@ -55,6 +55,8 @@ services:
       dockerfile: test/interop/helia.Dockerfile
     image: helia_interop:latest
     container_name: helia_interop
+    profiles:
+      - helia
     networks:
       - ipfs_interop_net
     expose:
@@ -85,8 +87,6 @@ services:
       dart_ipfs:
         condition: service_healthy
       kubo:
-        condition: service_healthy
-      helia:
         condition: service_healthy
     command: ["tail", "-f", "/dev/null"]
 

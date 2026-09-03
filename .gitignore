@@ -144,6 +144,7 @@ temp_backup/
 *.js_
 *.js.deps
 *.js.map
+!test/interop/**/*.js
 
 
 # Visual Studio Code settings
