@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:fixnum/fixnum.dart';
 
+import '../../../core/types/peer_id.dart';
 import '../../../transport/router_interface.dart';
 import '../../../utils/base58.dart';
 import '../../../utils/logger.dart';
@@ -292,9 +293,51 @@ class GossipsubHandler {
         _scores.scoreFor(sender).addInvalidMessageDelivery(topic);
         return;
       }
+      final pubKeyBytes = Uint8List.fromList(publicKey);
+
+      // SEC-008: Verify that the public key cryptographically derives to or matches the author's PeerID (message.from).
+      if (message.from.isNotEmpty) {
+        try {
+          final authorFrom = Uint8List.fromList(message.from);
+          final derived =
+              PeerId.fromPublicKey(pubKeyBytes, type: 'Ed25519');
+          final authorId =
+              PeerId(value: authorFrom);
+
+          bool isAuthorMatch = false;
+          if (authorFrom.length == pubKeyBytes.length) {
+            bool matchesRaw = true;
+            for (int i = 0; i < pubKeyBytes.length; i++) {
+              if (authorFrom[i] != pubKeyBytes[i]) {
+                matchesRaw = false;
+                break;
+              }
+            }
+            if (matchesRaw) isAuthorMatch = true;
+          }
+          if (!isAuthorMatch && derived == authorId) {
+            isAuthorMatch = true;
+          }
+
+          if (!isAuthorMatch) {
+            _logger.warning(
+              'Rejected spoofed Gossipsub message: public key does not match or derive to message.from',
+            );
+            _scores.scoreFor(sender).addInvalidMessageDelivery(topic);
+            return;
+          }
+        } catch (_) {
+          _logger.warning(
+            'Invalid public key format for signed message from $sender',
+          );
+          _scores.scoreFor(sender).addInvalidMessageDelivery(topic);
+          return;
+        }
+      }
+
       final valid = await _signer.verifyMessage(
         message,
-        Uint8List.fromList(publicKey),
+        pubKeyBytes,
       );
       if (!valid) {
         _logger.warning('Invalid signature from $sender on topic $topic');

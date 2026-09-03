@@ -10,6 +10,7 @@ import '../../services/gateway/gateway_server.dart';
 import '../../services/rpc/rpc_server.dart';
 import '../../utils/logger.dart';
 import '../config/ipfs_config.dart';
+import '../crypto/peer_key_registry.dart';
 import '../data_structures/blockstore.dart';
 import '../di/service_container.dart';
 import '../ipfs_node/auto_nat_handler.dart';
@@ -129,9 +130,17 @@ class IPFSNodeBuilder {
     // Create IpfsNodeNetworkEvents instance
     final networkEvents = IpfsNodeNetworkEvents(router);
 
+    final keyRegistry = PeerKeyRegistry();
+    _container.registerSingleton(keyRegistry);
+
     if (_config.enablePubSub) {
       _container.registerSingleton(
-        PubSubHandler(router, networkHandler.peerID, networkEvents),
+        PubSubHandler(
+          router,
+          networkHandler.peerID,
+          networkEvents,
+          keyRegistry: keyRegistry,
+        ),
       );
     }
 

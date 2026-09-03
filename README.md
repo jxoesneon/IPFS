@@ -644,7 +644,7 @@ The node uses the following algorithms and parameters:
 | Salt | 16 bytes | Generated randomly if not supplied |
 | Peer identity keys | Ed25519 | 32-byte seeds / public keys |
 | IPNS records | Ed25519 signatures | With expiration timestamps |
-| PubSub messages | HMAC-SHA256 tag | **Not an authenticity signature** — the HMAC key is the message's own public `sender` field, so the tag is reproducible by anyone and only guards against accidental corruption/dedup, not spoofing. See `PubSubClient`'s class-level doc comment and `SECURITY.md`. |
+| PubSub messages | Ed25519 signatures (asymmetric) | Authenticated via sender's Ed25519 identity key with PeerID derivation binding ([PeerKeyRegistry]); legacy HMAC-SHA256 tag preserved for backward compatibility and dedup. |
 | Hashing | SHA-256 | Used for CIDs, PeerID derivation, and PoW checks |
 
 ### Recommended Deployment

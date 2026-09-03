@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:cryptography/cryptography.dart' show SimpleKeyPair;
 import 'package:http/http.dart' as http;
 
+import '../../core/crypto/ed25519_signer.dart';
+import '../../core/crypto/peer_key_registry.dart';
 import '../../core/data_structures/node_stats.dart';
 import '../../core/types/peer_id.dart';
 import '../../transport/router_interface.dart';
@@ -15,53 +18,60 @@ import 'pubsub_message.dart';
 
 /// Handles PubSub operations for an IPFS node with Gossipsub-like features.
 ///
-/// Implements message propagation, peer mesh maintenance, and message
-/// tagging via [_computeSignature].
+/// Implements message propagation, peer mesh maintenance, and message signing.
 ///
-/// **Security (SEC-008) — KNOWN LIMITATION, NOT AN AUTHENTICITY GUARANTEE:**
-/// Outgoing messages carry an HMAC-SHA256 tag computed with the sender's own
-/// PeerID string as the HMAC key. Because the PeerID is public by design
-/// (it is meant to be shared so other nodes can dial the peer) and is
-/// re-transmitted in cleartext in the very same message as the `sender`
-/// field, this "signature" is **not** a secret-backed MAC: any party can
-/// recompute the identical tag for any sender + any content using only
-/// information the message itself discloses. It does **not** prevent
-/// message spoofing/impersonation and must not be relied on as an
-/// authenticity or anti-spoofing control — despite being described that way
-/// in earlier revisions of this file, README.md, and SECURITY.md. Treat it
-/// as a message-integrity/dedup tag only (it does catch accidental bit
-/// corruption and lets peers dedupe by tag), not as proof of who sent a
-/// message.
+/// **Security (SEC-008):**
+/// PubSubClient supports genuine cryptographic authenticity using asymmetric
+/// Ed25519 signatures. Outgoing messages signed with the node's Ed25519
+/// [SimpleKeyPair] carry an `ed25519_signature` and the sender's `pubkey`.
 ///
-/// A real fix needs asymmetric signing: sign with the sender's actual
-/// Ed25519 identity private key (already obtainable via
-/// `SecurityManager.getSecureKey()`) and verify against that peer's known
-/// Ed25519 *public* key. That public key cannot be derived from the PeerID
-/// in this codebase — [PeerId.fromPublicKey] hashes it with SHA-256, which
-/// is one-way — so verification additionally needs a peer public-key
-/// registry populated when peers are first seen (e.g. from the Identify
-/// protocol response in `IdentifyHandler`, which currently sends this
-/// node's own public key but does not appear to persist a received peer's
-/// public key anywhere lookup-able). A correct, spec-compliant Ed25519
-/// signer already exists at
-/// `lib/src/protocols/pubsub/gossipsub/message_signing.dart`
-/// (`Ed25519MessageSigner`) but is not wired into this class or into the
-/// default `PubSubHandler` construction path.
+/// Receiving nodes verify that:
+/// 1. The message's `pubkey` cryptographically derives to the claimed `sender`
+///    [PeerId] via [PeerKeyRegistry.verifyPeerBinding] (preventing impersonation).
+/// 2. The Ed25519 signature is valid for `$topic:$content`.
+/// 3. If a peer's Ed25519 public key is known or [strictAuthentication] is active,
+///    unauthenticated or forged legacy HMAC tags are rejected (downgrade prevention).
+///
+/// Legacy messages carrying only HMAC tags remain supported in non-strict mode
+/// for backward compatibility with older nodes, functioning as bit-corruption
+/// and deduplication tags only.
 class PubSubClient implements IPubSub {
   /// Creates a [PubSubClient] with the provided [_router] and peer identifier.
   ///
   /// Parameters:
   /// - [_router]: The network router for sending and receiving protocol messages.
   /// - [peerIdStr]: The Base58 encoded string representation of the local PeerID.
-  PubSubClient(this._router, String peerIdStr)
-    : _peerId = PeerId(value: Base58().base58Decode(peerIdStr)),
-      _logger = Logger('PubSubClient');
+  /// - [keyPair]: Optional Ed25519 key pair for authentic message signing.
+  /// - [keyRegistry]: Optional peer key registry for caching and validating peer public keys.
+  /// - [strictAuthentication]: If `true`, requires valid Ed25519 signatures on all messages.
+  PubSubClient(
+    this._router,
+    String peerIdStr, {
+    SimpleKeyPair? keyPair,
+    PeerKeyRegistry? keyRegistry,
+    bool strictAuthentication = false,
+  })  : _peerId = PeerId(value: Base58().base58Decode(peerIdStr)),
+        _keyPair = keyPair,
+        _keyRegistry = keyRegistry ?? PeerKeyRegistry(),
+        _strictAuthentication = strictAuthentication,
+        _logger = Logger('PubSubClient');
 
   final RouterInterface _router;
   final StreamController<PubSubMessage> _messageController =
       StreamController<PubSubMessage>.broadcast();
   final PeerId _peerId;
   final Logger _logger;
+  final SimpleKeyPair? _keyPair;
+  final PeerKeyRegistry _keyRegistry;
+  final bool _strictAuthentication;
+  final Ed25519Signer _ed25519Signer = Ed25519Signer();
+  Uint8List? _cachedPublicKeyBytes;
+
+  /// The peer key registry used by this client.
+  PeerKeyRegistry get keyRegistry => _keyRegistry;
+
+  /// Whether strict Ed25519 authentication is enforced.
+  bool get isStrictAuthentication => _strictAuthentication;
 
   // Gossipsub state
   final Set<String> _mesh = {};
@@ -91,6 +101,22 @@ class PubSubClient implements IPubSub {
     }
 
     _isStarted = true;
+
+    final keyPair = _keyPair;
+    if (keyPair != null) {
+      try {
+        final pubKeyBytes =
+            await _ed25519Signer.extractPublicKeyBytes(keyPair);
+        _cachedPublicKeyBytes = pubKeyBytes;
+        _keyRegistry.registerPublicKey(
+          Base58().encode(_peerId.value),
+          pubKeyBytes,
+        );
+      } catch (e) {
+        _logger.warning('Failed to extract public key from local keyPair: $e');
+      }
+    }
+
     _router.registerProtocolHandler(_protocolName, (packet) {
       if (packet.datagram.isNotEmpty) {
         _processIncomingPacket(packet);
@@ -105,7 +131,7 @@ class PubSubClient implements IPubSub {
   }
 
   /// Processes an incoming network packet for the PubSub protocol.
-  void _processIncomingPacket(NetworkPacket packet) {
+  Future<void> _processIncomingPacket(NetworkPacket packet) async {
     try {
       final String decodedData = utf8.decode(packet.datagram);
       final Map<String, dynamic> msgMap =
@@ -127,7 +153,7 @@ class PubSubClient implements IPubSub {
             _handleIHave(msgMap);
             return;
           case 'iwant':
-            _handleIWant(msgMap);
+            await _handleIWant(msgMap);
             return;
           case 'graft':
             graftPeer(sender);
@@ -150,28 +176,105 @@ class PubSubClient implements IPubSub {
         return;
       }
 
-      // SEC-008: This only checks that the tag matches _computeSignature's
-      // output; since that function's "key" is the public sender field
-      // carried in this same message, this rejects corrupted/mismatched
-      // tags but does NOT authenticate that `sender` actually sent this
-      // message. See the class-level doc comment above for details.
+      // SEC-008: Authenticate message origin and verify integrity
+      final String? ed25519SigBase64 =
+          (msgMap['ed25519_signature'] ?? msgMap['ed25519Signature'])
+              as String?;
+      final String? pubKeyBase64 =
+          (msgMap['pubkey'] ?? msgMap['publicKey']) as String?;
       final String? signature = msgMap['signature'] as String?;
-      if (signature != null) {
-        final String expectedSig = _computeSignature(sender, content, topic);
-        if (signature != expectedSig) {
+
+      if (ed25519SigBase64 != null && ed25519SigBase64.isNotEmpty) {
+        // --- Asymmetric Ed25519 verification path ---
+        Uint8List? pubKeyBytes;
+        if (pubKeyBase64 != null && pubKeyBase64.isNotEmpty) {
+          try {
+            pubKeyBytes = base64Decode(pubKeyBase64);
+          } catch (_) {
+            _logger.warning(
+              'Malformed base64 public key in message from $sender',
+            );
+            return;
+          }
+          // Validate that public key cryptographically derives to claimed sender PeerID
+          if (!PeerKeyRegistry.verifyPeerBinding(sender, pubKeyBytes)) {
+            _logger.warning(
+              'Rejected spoofed message: public key does not derive to claimed sender $sender',
+            );
+            return;
+          }
+          _keyRegistry.registerPublicKey(sender, pubKeyBytes);
+        } else {
+          pubKeyBytes = _keyRegistry.getPublicKey(sender);
+          if (pubKeyBytes == null) {
+            _logger.warning(
+              'Rejected message: Ed25519 signature present but missing public key for $sender',
+            );
+            return;
+          }
+        }
+
+        Uint8List sigBytes;
+        try {
+          sigBytes = base64Decode(ed25519SigBase64);
+        } catch (_) {
           _logger.warning(
-            'Rejected message with invalid signature from $sender on topic $topic',
+            'Malformed base64 Ed25519 signature in message from $sender',
           );
           return;
         }
-      } else {
-        _logger.verbose(
-          'Received unsigned message from $sender on topic $topic',
+
+        final bool isValid = await _verifyEd25519Signature(
+          pubKeyBytes,
+          sigBytes,
+          '$topic:$content',
         );
+        if (!isValid) {
+          _logger.warning(
+            'Rejected message with invalid Ed25519 signature from $sender on topic $topic',
+          );
+          return;
+        }
+        _logger.debug(
+          'Verified authentic Ed25519 signature from $sender on topic $topic',
+        );
+      } else {
+        // --- Unauthenticated / legacy HMAC path ---
+        // If a verified Ed25519 public key is already known for this sender,
+        // reject unauthenticated messages to prevent downgrade attacks.
+        if (_keyRegistry.hasPublicKey(sender)) {
+          _logger.warning(
+            'Rejected unauthenticated message: peer $sender has a known Ed25519 key (downgrade attack prevention)',
+          );
+          return;
+        }
+
+        if (_strictAuthentication) {
+          _logger.warning(
+            'Rejected unauthenticated message from $sender in strict authentication mode',
+          );
+          return;
+        }
+
+        // Check legacy HMAC tag (guards against bit corruption only, NOT spoofing)
+        if (signature != null) {
+          final String expectedSig = _computeSignature(sender, content, topic);
+          if (signature != expectedSig) {
+            _logger.warning(
+              'Rejected message with invalid signature from $sender on topic $topic',
+            );
+            return;
+          }
+        } else {
+          _logger.verbose(
+            'Received unsigned message from $sender on topic $topic',
+          );
+        }
       }
 
       // Dedup messages
-      final String msgId = signature ?? content.hashCode.toString();
+      final String msgId =
+          ed25519SigBase64 ?? signature ?? content.hashCode.toString();
       if (_seenMessages[topic]?.contains(msgId) ?? false) {
         return;
       }
@@ -229,7 +332,8 @@ class PubSubClient implements IPubSub {
     }
 
     try {
-      final Uint8List encodedMessage = encodePublishRequest(topic, message);
+      final Uint8List encodedMessage =
+          await encodeSignedPublishRequest(topic, message);
 
       if (_mesh.isEmpty) {
         _logger.warning('No peers in mesh to publish message to topic: $topic');
@@ -278,21 +382,93 @@ class PubSubClient implements IPubSub {
     return Uint8List.fromList(utf8.encode('unsubscribe:$topic'));
   }
 
-  /// Encodes a content message for publishing, tagged via [_computeSignature].
+  /// Encodes a content message for publishing.
   ///
-  /// SEC-008: The HMAC-SHA256 tag added here is NOT an authenticity
-  /// signature — see the class-level doc comment for why.
-  Uint8List encodePublishRequest(String topic, String message) {
+  /// Includes the legacy HMAC-SHA256 tag for backward compatibility and,
+  /// when available, an authentic Ed25519 signature and public key.
+  Uint8List encodePublishRequest(
+    String topic,
+    String message, {
+    Uint8List? ed25519Signature,
+    Uint8List? publicKey,
+  }) {
     final String senderStr = Base58().encode(_peerId.value);
     final String signature = _computeSignature(senderStr, message, topic);
 
-    final Map<String, String> messageWithSender = {
+    final Map<String, dynamic> messageWithSender = {
       'sender': senderStr,
       'topic': topic,
       'content': message,
       'signature': signature,
     };
+
+    if (ed25519Signature != null && ed25519Signature.isNotEmpty) {
+      messageWithSender['ed25519_signature'] = base64Encode(ed25519Signature);
+    }
+    final effectivePubKey = publicKey ?? _cachedPublicKeyBytes;
+    if (effectivePubKey != null && effectivePubKey.isNotEmpty) {
+      messageWithSender['pubkey'] = base64Encode(effectivePubKey);
+    }
+
     return Uint8List.fromList(utf8.encode(jsonEncode(messageWithSender)));
+  }
+
+  /// Asynchronously prepares and encodes an authentic, Ed25519-signed publish request.
+  Future<Uint8List> encodeSignedPublishRequest(
+    String topic,
+    String message,
+  ) async {
+    if (_keyPair != null) {
+      final pubKey = await _getLocalPublicKeyBytes();
+      final sig = await _signPayload('$topic:$message');
+      return encodePublishRequest(
+        topic,
+        message,
+        ed25519Signature: sig,
+        publicKey: pubKey,
+      );
+    }
+    return encodePublishRequest(topic, message);
+  }
+
+  Future<bool> _verifyEd25519Signature(
+    Uint8List publicKeyBytes,
+    Uint8List signatureBytes,
+    String payload,
+  ) async {
+    try {
+      final publicKey = _ed25519Signer.publicKeyFromBytes(publicKeyBytes);
+      return await _ed25519Signer.verify(
+        Uint8List.fromList(utf8.encode(payload)),
+        signatureBytes,
+        publicKey,
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<Uint8List?> _signPayload(String payload) async {
+    final keyPair = _keyPair;
+    if (keyPair == null) return null;
+    try {
+      return await _ed25519Signer.sign(
+        Uint8List.fromList(utf8.encode(payload)),
+        keyPair,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Uint8List?> _getLocalPublicKeyBytes() async {
+    final cached = _cachedPublicKeyBytes;
+    if (cached != null) return cached;
+    final keyPair = _keyPair;
+    if (keyPair == null) return null;
+    _cachedPublicKeyBytes =
+        await _ed25519Signer.extractPublicKeyBytes(keyPair);
+    return _cachedPublicKeyBytes;
   }
 
   /// Computes an HMAC-SHA256 tag for message integrity — NOT authenticity.

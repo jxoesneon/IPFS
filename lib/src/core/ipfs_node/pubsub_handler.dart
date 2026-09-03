@@ -2,12 +2,15 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cryptography/cryptography.dart';
+
 import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
 import '../../protocols/pubsub/pubsub_client.dart';
 import '../../protocols/pubsub/pubsub_interface.dart';
 import '../../protocols/pubsub/pubsub_message.dart';
 import '../../transport/router_interface.dart';
 import '../../utils/dnslink_resolver.dart';
+import '../crypto/peer_key_registry.dart';
 import '../data_structures/node_stats.dart';
 import 'ipfs_node_network_events.dart';
 
@@ -19,7 +22,17 @@ class PubSubHandler implements IPubSub {
     String peerId,
     this._networkEvents, {
     PubSubClient? pubSubClient,
-  }) : _pubSubClient = pubSubClient ?? PubSubClient(router, peerId) {
+    SimpleKeyPair? keyPair,
+    PeerKeyRegistry? keyRegistry,
+    bool strictAuthentication = false,
+  }) : _pubSubClient = pubSubClient ??
+            PubSubClient(
+              router,
+              peerId,
+              keyPair: keyPair,
+              keyRegistry: keyRegistry,
+              strictAuthentication: strictAuthentication,
+            ) {
     // Register the pubsub protocol immediately upon construction
     router.registerProtocol('pubsub');
   }

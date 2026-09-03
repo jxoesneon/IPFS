@@ -11,6 +11,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart'
     as _i8;
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart'
     as _i9;
+import 'package:dart_ipfs/src/core/crypto/peer_key_registry.dart' as _i12;
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart' as _i10;
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart' as _i11;
 import 'package:dart_ipfs/src/transport/router_events.dart' as _i6;
@@ -440,9 +441,21 @@ class MockPubSubClient extends _i1.Mock implements _i10.PubSubClient {
           as _i7.Uint8List);
 
   @override
-  _i7.Uint8List encodePublishRequest(String? topic, String? message) =>
+  _i7.Uint8List encodePublishRequest(
+    String? topic,
+    String? message, {
+    _i7.Uint8List? ed25519Signature,
+    _i7.Uint8List? publicKey,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#encodePublishRequest, [topic, message]),
+            Invocation.method(
+              #encodePublishRequest,
+              [topic, message],
+              {
+                #ed25519Signature: ed25519Signature,
+                #publicKey: publicKey,
+              },
+            ),
             returnValue: _i7.Uint8List(0),
             returnValueForMissingStub: _i7.Uint8List(0),
           )
@@ -487,4 +500,36 @@ class MockPubSubClient extends _i1.Mock implements _i10.PubSubClient {
     Invocation.method(#prunePeer, [peerId]),
     returnValueForMissingStub: null,
   );
+
+  @override
+  _i5.Future<_i7.Uint8List> encodeSignedPublishRequest(
+    String? topic,
+    String? message,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#encodeSignedPublishRequest, [topic, message]),
+            returnValue: _i5.Future<_i7.Uint8List>.value(_i7.Uint8List(0)),
+            returnValueForMissingStub: _i5.Future<_i7.Uint8List>.value(
+              _i7.Uint8List(0),
+            ),
+          )
+          as _i5.Future<_i7.Uint8List>);
+
+  @override
+  bool get isStrictAuthentication =>
+      (super.noSuchMethod(
+            Invocation.getter(#isStrictAuthentication),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
+
+  @override
+  _i12.PeerKeyRegistry get keyRegistry =>
+      (super.noSuchMethod(
+            Invocation.getter(#keyRegistry),
+            returnValue: _i12.PeerKeyRegistry(),
+            returnValueForMissingStub: _i12.PeerKeyRegistry(),
+          )
+          as _i12.PeerKeyRegistry);
 }
