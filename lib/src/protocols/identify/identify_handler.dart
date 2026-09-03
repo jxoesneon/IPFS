@@ -207,11 +207,13 @@ class IdentifyHandler {
         'agent=${message.agentVersion}, protocols=${message.protocols.length}',
       );
 
-      if (message.publicKey.isNotEmpty && _keyRegistry != null) {
+      final pubKey = message.publicKey;
+      if (pubKey != null && pubKey.isNotEmpty && _keyRegistry != null) {
         try {
-          final pubKeyPb = PublicKeyPb.decode(message.publicKey);
-          if (pubKeyPb.type == KeyType.ed25519 && pubKeyPb.data.length == 32) {
-            final registered = _keyRegistry!.registerPublicKey(peerId, pubKeyPb.data);
+          final pubKeyPb = PublicKeyPb.decode(pubKey);
+          final data = pubKeyPb.data;
+          if (pubKeyPb.type == KeyType.ed25519 && data != null && data.length == 32) {
+            final registered = _keyRegistry!.registerPublicKey(peerId, data);
             if (registered) {
               _logger.debug('Registered verified Ed25519 public key for $peerId');
             } else {

@@ -128,7 +128,7 @@ void main() {
       );
 
       var delivered = false;
-      handler.messages.listen((_) => delivered = true);
+      handler.onMessage('general').listen((_) => delivered = true);
 
       capturedHandler(packet);
       await Future.delayed(const Duration(milliseconds: 50));
