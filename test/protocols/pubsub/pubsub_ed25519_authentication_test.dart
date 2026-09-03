@@ -18,7 +18,7 @@ import 'package:test/test.dart';
 import 'pubsub_client_coverage_test.mocks.dart';
 
 void main() {
-  group(''PeerKeyRegistry'', () {
+  group('PeerKeyRegistry', () {
     late Ed25519Signer signer;
     late SimpleKeyPair keyPair;
     late Uint8List pubKeyBytes;
@@ -28,21 +28,21 @@ void main() {
       signer = Ed25519Signer();
       keyPair = await signer.generateKeyPair();
       pubKeyBytes = await signer.extractPublicKeyBytes(keyPair);
-      peerIdStr = PeerId.fromPublicKey(pubKeyBytes, type: ''Ed25519'').toBase58();
+      peerIdStr = PeerId.fromPublicKey(pubKeyBytes, type: 'Ed25519').toBase58();
     });
 
-    test(''verifies correct peer binding'', () {
+    test('verifies correct peer binding', () {
       expect(PeerKeyRegistry.verifyPeerBinding(peerIdStr, pubKeyBytes), isTrue);
     });
 
-    test(''rejects binding when public key does not match peer ID'', () async {
+    test('rejects binding when public key does not match peer ID', () async {
       final otherKeyPair = await signer.generateKeyPair();
       final otherPubKey = await signer.extractPublicKeyBytes(otherKeyPair);
 
       expect(PeerKeyRegistry.verifyPeerBinding(peerIdStr, otherPubKey), isFalse);
     });
 
-    test(''rejects invalid key lengths'', () {
+    test('rejects invalid key lengths', () {
       expect(
         PeerKeyRegistry.verifyPeerBinding(peerIdStr, Uint8List(16)),
         isFalse,
@@ -53,7 +53,7 @@ void main() {
       );
     });
 
-    test(''registers and retrieves valid public keys'', () {
+    test('registers and retrieves valid public keys', () {
       final registry = PeerKeyRegistry();
       expect(registry.hasPublicKey(peerIdStr), isFalse);
 
@@ -68,7 +68,7 @@ void main() {
     });
   });
 
-  group(''GossipsubHandler Author Cryptographic Binding (SEC-008)'', () {
+  group('GossipsubHandler Author Cryptographic Binding (SEC-008)', () {
     late MockRouterInterface mockRouter;
     late SimpleKeyPair localKeyPair;
     late Ed25519MessageSigner localSigner;
@@ -80,7 +80,7 @@ void main() {
       localKeyPair = await Ed25519().newKeyPair();
       localSigner = Ed25519MessageSigner(localKeyPair);
       final pubKey = await localSigner.publicKey;
-      localPeerIdBytes = PeerId.fromPublicKey(pubKey, type: ''Ed25519'').value;
+      localPeerIdBytes = PeerId.fromPublicKey(pubKey, type: 'Ed25519').value;
 
       handler = GossipsubHandler(
         router: mockRouter,
@@ -90,7 +90,7 @@ void main() {
       );
     });
 
-    test(''rejects message when message.key does not derive to message.from'', () async {
+    test('rejects message when message.key does not derive to message.from', () async {
       await handler.start();
 
       final capturedHandler =
@@ -103,7 +103,7 @@ void main() {
       final victimPubKey = await victimKeyPair.extractPublicKey();
       final victimPeerIdBytes = PeerId.fromPublicKey(
         Uint8List.fromList(victimPubKey.bytes),
-        type: ''Ed25519'',
+        type: 'Ed25519',
       ).value;
 
       // Attacker identity
@@ -114,8 +114,8 @@ void main() {
       // Attacker crafts a message claiming from = victim, but key = attackerPubKey
       final message = Message()
         ..from = victimPeerIdBytes
-        ..topic = ''general''
-        ..data = utf8.encode(''Attacker forged payload'')
+        ..topic = 'general'
+        ..data = utf8.encode('Attacker forged payload')
         ..seqno = Uint8List.fromList([0, 0, 0, 0, 0, 0, 0, 1])
         ..key = attackerPubKey;
 
@@ -123,7 +123,7 @@ void main() {
 
       final rpc = RPC()..publish.add(message);
       final packet = NetworkPacket(
-        srcPeerId: ''sender-peer'',
+        srcPeerId: 'sender-peer',
         datagram: rpc.writeToBuffer(),
       );
 
@@ -137,12 +137,12 @@ void main() {
         delivered,
         isFalse,
         reason:
-            ''GossipsubHandler must drop messages where key does not derive to message.from'',
+            'GossipsubHandler must drop messages where key does not derive to message.from',
       );
     });
   });
 
-  group(''PubSubClient Tamper Resistance'', () {
+  group('PubSubClient Tamper Resistance', () {
     late MockRouterInterface mockRouter;
     late SimpleKeyPair senderKeyPair;
     late Uint8List senderPubKeyBytes;
@@ -156,12 +156,12 @@ void main() {
       senderPubKeyBytes = await signer.extractPublicKeyBytes(senderKeyPair);
       senderPeerId = PeerId.fromPublicKey(
         senderPubKeyBytes,
-        type: ''Ed25519'',
+        type: 'Ed25519',
       ).toBase58();
     });
 
-    test(''rejects message when content is tampered with after signing'', () async {
-      final client = PubSubClient(mockRouter, ''QmLocalReceiver123'');
+    test('rejects message when content is tampered with after signing', () async {
+      final client = PubSubClient(mockRouter, 'QmLocalReceiver123');
       await client.start();
 
       final capturedHandler =
@@ -171,26 +171,26 @@ void main() {
 
       when(mockRouter.isConnectedPeer(senderPeerId)).thenReturn(true);
 
-      const topic = ''trade-signals'';
-      const originalContent = ''Buy order 100 shares'';
-      const tamperedContent = ''Sell order 1000 shares'';
+      const topic = 'trade-signals';
+      const originalContent = 'Buy order 100 shares';
+      const tamperedContent = 'Sell order 1000 shares';
 
       final validSig = await signer.sign(
-        Uint8List.fromList(utf8.encode(''$topic:$originalContent'')),
+        Uint8List.fromList(utf8.encode('$topic:$originalContent')),
         senderKeyPair,
       );
 
       // Tampered packet: signature was for originalContent, but content was changed
       final tamperedPacket = NetworkPacket(
-        srcPeerId: ''relay'',
+        srcPeerId: 'relay',
         datagram: Uint8List.fromList(
           utf8.encode(
             jsonEncode({
-              ''sender'': senderPeerId,
-              ''topic'': topic,
-              ''content'': tamperedContent,
-              ''ed25519_signature'': base64Encode(validSig),
-              ''pubkey'': base64Encode(senderPubKeyBytes),
+              'sender': senderPeerId,
+              'topic': topic,
+              'content': tamperedContent,
+              'ed25519_signature': base64Encode(validSig),
+              'pubkey': base64Encode(senderPubKeyBytes),
             }),
           ),
         ),
@@ -205,7 +205,7 @@ void main() {
       expect(
         delivered,
         isFalse,
-        reason: ''Must reject message when content does not match signature'',
+        reason: 'Must reject message when content does not match signature',
       );
       await sub.cancel();
       await client.stop();

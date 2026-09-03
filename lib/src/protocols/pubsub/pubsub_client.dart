@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
-import 'package:cryptography/cryptography.dart';
+import 'package:cryptography/cryptography.dart' show SimpleKeyPair;
 import 'package:http/http.dart' as http;
 
 import '../../core/crypto/ed25519_signer.dart';
