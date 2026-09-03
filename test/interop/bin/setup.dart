@@ -33,7 +33,20 @@ Future<void> main() async {
 
   await _waitForPeer('Kubo', () => kubo.id());
   await _waitForPeer('dart_ipfs', () => dartIpfs.id());
-  await _waitForPeer('Helia', () => helia.id());
+
+  bool heliaPresent = false;
+  try {
+    final socket = await Socket.connect(
+      kHeliaApiHost,
+      kHeliaApiPort,
+      timeout: const Duration(seconds: 2),
+    );
+    await socket.close();
+    await _waitForPeer('Helia', () => helia.id());
+    heliaPresent = true;
+  } catch (_) {
+    stdout.writeln('Helia container not running in this interop profile, skipping.');
+  }
 
   // Attempt to bootstrap mutual connectivity. This is best-effort; if the
   // underlying swarm connect command is not yet stable, the tests can still
@@ -41,17 +54,20 @@ Future<void> main() async {
   try {
     final kuboId = await kubo.id();
     final dartIpfsId = await dartIpfs.id();
-    final heliaId = await helia.id();
     final kuboPeerId = kuboId['ID'] as String;
     final dartIpfsPeerId = dartIpfsId['ID'] as String;
-    final heliaPeerId = heliaId['ID'] as String;
 
     await kubo.swarmConnect('/dns4/dart_ipfs/tcp/4001/p2p/$dartIpfsPeerId');
-    await kubo.swarmConnect('/dns4/helia/tcp/4001/p2p/$heliaPeerId');
     await dartIpfs.swarmConnect('/dns4/kubo/tcp/4001/p2p/$kuboPeerId');
-    await dartIpfs.swarmConnect('/dns4/helia/tcp/4001/p2p/$heliaPeerId');
-    await helia.swarmConnect('/dns4/kubo/tcp/4001/p2p/$kuboPeerId');
-    await helia.swarmConnect('/dns4/dart_ipfs/tcp/4001/p2p/$dartIpfsPeerId');
+
+    if (heliaPresent) {
+      final heliaId = await helia.id();
+      final heliaPeerId = heliaId['ID'] as String;
+      await kubo.swarmConnect('/dns4/helia/tcp/4001/p2p/$heliaPeerId');
+      await dartIpfs.swarmConnect('/dns4/helia/tcp/4001/p2p/$heliaPeerId');
+      await helia.swarmConnect('/dns4/kubo/tcp/4001/p2p/$kuboPeerId');
+      await helia.swarmConnect('/dns4/dart_ipfs/tcp/4001/p2p/$dartIpfsPeerId');
+    }
     stdout.writeln('Bootstrap swarm connect attempted.');
   } catch (e) {
     stderr.writeln('Best-effort bootstrap failed: $e');
