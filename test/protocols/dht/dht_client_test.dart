@@ -66,7 +66,8 @@ void main() {
       router.sendMessage(any, any, protocolId: anyNamed('protocolId')),
     ).thenAnswer((invocation) async {
       final data = invocation.positionalArguments[1] as Uint8List;
-      final envelope = DHTEnvelope.fromBytes(data);
+      final envelope = DHTEnvelope.tryParse(data);
+      if (envelope == null) return;
       Future<void>.delayed(const Duration(milliseconds: 1), () {
         lastHandler(
           NetworkPacket(
@@ -194,7 +195,8 @@ void main() {
       ).thenAnswer((invocation) async {
         requestCount++;
         final data = invocation.positionalArguments[1] as Uint8List;
-        final envelope = DHTEnvelope.fromBytes(data);
+        final envelope = DHTEnvelope.tryParse(data);
+        if (envelope == null) return;
 
         final response = kad.Message()
           ..type = kad.Message_MessageType.GET_PROVIDERS;

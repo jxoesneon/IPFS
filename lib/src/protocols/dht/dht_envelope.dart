@@ -32,6 +32,16 @@ class DHTEnvelope {
     return DHTEnvelope(requestId: utf8.decode(idBytes), payload: payload);
   }
 
+  /// Attempts to decode a [DHTEnvelope] from [data]. Returns null if [data]
+  /// is not a valid envelope.
+  static DHTEnvelope? tryParse(Uint8List data) {
+    try {
+      return DHTEnvelope.fromBytes(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// The opaque request identifier echoed by the responder.
   final String requestId;
 
