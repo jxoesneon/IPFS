@@ -287,5 +287,27 @@ void main() {
       await reprovider.start();
       expect(reprovider.getStatus().nextRun, isNull);
     });
+
+    test('pause stops timer and resume restarts it', () async {
+      reprovider = _createReprovider(
+        dhtConfig: const DHTConfig(
+          reproviderEnabled: true,
+          reproviderInterval: Duration(milliseconds: 500),
+          reproviderStrategy: 'pinned',
+        ),
+      );
+
+      await reprovider.start();
+      expect(reprovider.isPaused, isFalse);
+      expect(reprovider.getStatus().nextRun, isNotNull);
+
+      reprovider.pause();
+      expect(reprovider.isPaused, isTrue);
+      expect(reprovider.getStatus().nextRun, isNull);
+
+      reprovider.resume();
+      expect(reprovider.isPaused, isFalse);
+      expect(reprovider.getStatus().nextRun, isNotNull);
+    });
   });
 }

@@ -152,5 +152,7 @@ export 'src/core/config/ipfs_config.dart';
 export 'src/core/data_structures/car.dart';
 export 'src/core/ipfs_node/ipfs_node.dart';
 export 'src/core/ipfs_node/ipfs_web_node.dart';
+export 'src/core/lifecycle/mobile_lifecycle_adapter.dart';
+export 'src/core/lifecycle/mobile_lifecycle_coordinator.dart';
 export 'src/ipfs.dart';
 export 'src/protocols/pubsub/pubsub_message.dart';

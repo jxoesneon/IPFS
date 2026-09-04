@@ -20,6 +20,7 @@ import '../data_structures/link.dart';
 import '../data_structures/peer.dart';
 import '../di/service_container.dart';
 import '../errors/node_errors.dart';
+import '../lifecycle/mobile_lifecycle_coordinator.dart';
 import '../metrics/metrics_collector.dart';
 import '../mfs/mfs_manager.dart';
 import '../peering/peering_service.dart';
@@ -234,6 +235,20 @@ class IPFSNode {
   DenylistService? get denylistService {
     if (_container.isRegistered<DenylistService>()) {
       return _container.get<DenylistService>();
+    }
+    return null;
+  }
+
+  /// Returns the underlying [NetworkManager].
+  NetworkManager get networkManager => _networkManager;
+
+  /// Returns the underlying [BlockStore].
+  BlockStore get blockStore => _container.get<BlockStore>();
+
+  /// Returns the [MobileLifecycleCoordinator], or `null` if not registered.
+  MobileLifecycleCoordinator? get mobileCoordinator {
+    if (_container.isRegistered<MobileLifecycleCoordinator>()) {
+      return _container.get<MobileLifecycleCoordinator>();
     }
     return null;
   }

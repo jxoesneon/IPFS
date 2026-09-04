@@ -68,6 +68,19 @@ class BlockStore implements IBlockStore {
     }
   }
 
+  /// Flushes in-memory metadata and pin state to persistent storage.
+  Future<void> flush() async {
+    _logger.debug('Flushing BlockStore state to disk...');
+    try {
+      final pinsFile = p.join(path, 'pins.json');
+      await _pinManager.save(pinsFile);
+      _logger.debug('BlockStore flush completed successfully');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to flush BlockStore state', e, stackTrace);
+      rethrow;
+    }
+  }
+
   @override
   /// Returns a [Future] that resolves to a [GetBlockResponse] for the given [cid].
   Future<GetBlockResponse> getBlock(String cid) async {

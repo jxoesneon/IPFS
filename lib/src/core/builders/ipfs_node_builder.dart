@@ -25,6 +25,8 @@ import '../ipfs_node/lifecycle_manager.dart';
 import '../ipfs_node/mdns_handler.dart';
 import '../ipfs_node/network_handler.dart';
 import '../ipfs_node/pubsub_handler.dart';
+import '../lifecycle/mobile_lifecycle_adapter.dart';
+import '../lifecycle/mobile_lifecycle_coordinator.dart';
 import '../metrics/metrics_collector.dart';
 import '../peering/peering_service.dart';
 import '../security/denylist_service.dart';
@@ -39,6 +41,13 @@ class IPFSNodeBuilder {
   final IPFSConfig _config;
   final ServiceContainer _container;
   final Logger _logger = Logger('IPFSNodeBuilder');
+  MobileLifecycleAdapter? _mobileLifecycleAdapter;
+
+  /// Configures an optional [MobileLifecycleAdapter] for mobile battery & lifecycle management.
+  IPFSNodeBuilder withMobileLifecycle(MobileLifecycleAdapter adapter) {
+    _mobileLifecycleAdapter = adapter;
+    return this;
+  }
 
   /// Builds and initializes an [IPFSNode].
   Future<IPFSNode> build() async {
@@ -51,6 +60,7 @@ class IPFSNodeBuilder {
 
       final node = IPFSNode.fromContainer(_container);
       await _registerServerLifecycleServices(node);
+      await _registerMobileLifecycleServices(node);
       return node;
     } catch (e, stackTrace) {
       _logger.error('Failed to build IPFS Node', e, stackTrace);
@@ -250,6 +260,20 @@ class IPFSNodeBuilder {
       );
       _container.registerSingleton(gatewayServer);
       lifecycleManager.register(gatewayServer);
+    }
+  }
+
+  Future<void> _registerMobileLifecycleServices(IPFSNode node) async {
+    final adapter = _mobileLifecycleAdapter;
+    if (adapter != null) {
+      final coordinator = MobileLifecycleCoordinator(
+        adapter: adapter,
+        reprovider: node.reprovider,
+        networkManager: node.networkManager,
+        blockStore: node.blockStore,
+      );
+      _container.registerSingleton(coordinator);
+      _container.get<LifecycleManager>().register(coordinator);
     }
   }
 }

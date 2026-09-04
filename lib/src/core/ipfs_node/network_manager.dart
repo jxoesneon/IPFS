@@ -102,6 +102,33 @@ class NetworkManager implements ILifecycle {
     }
   }
 
+  /// Trims active swarm connections down to at most [maxConnections].
+  ///
+  /// Returns the number of disconnected peers.
+  Future<int> trimConnections({int maxConnections = 2}) async {
+    try {
+      final peers = await connectedPeers;
+      if (peers.length <= maxConnections) return 0;
+
+      final excessCount = peers.length - maxConnections;
+      final peersToDisconnect = peers.take(excessCount).toList();
+      var disconnectedCount = 0;
+
+      for (final peerId in peersToDisconnect) {
+        await disconnectFromPeer(peerId);
+        disconnectedCount++;
+      }
+
+      _logger.info(
+        'Trimmed $disconnectedCount connections (target max: $maxConnections)',
+      );
+      return disconnectedCount;
+    } catch (e, stackTrace) {
+      _logger.error('Failed to trim connections', e, stackTrace);
+      return 0;
+    }
+  }
+
   /// Resolves a peer ID to its known addresses from the routing table.
   List<String> resolvePeerId(String peerIdStr) {
     try {

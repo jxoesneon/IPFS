@@ -5,9 +5,9 @@
 This inventory assesses the implementation status of the 28 tracked feature specifications for `dart_ipfs`. As of the latest implementation pass, **all P0, P1, and conditional specs have been implemented** to a testable, spec-compliant state, including **CLI_SPEC**, **KUBERNETES_SPEC**, **MODULARIZATION_SPEC**, the **UNIXFS_SPEC** HAMT CID parity fix, and **QUIC_SPEC** (config/fallback + native transport RFC + foundation package). No specifications remain missing or as placeholders.
 
 **Status Distribution:**
-- **Complete**: 26 specs (93%)
-- **In Progress**: 1 spec (3.5%)
-- **Planned**: 1 spec (3.5%)
+- **Complete**: 27 specs (96.4%)
+- **In Progress**: 0 specs (0%)
+- **Planned**: 1 spec (3.6%)
 **Total Tracked**: 28 specs
 
 ## Specification Status Table
@@ -40,10 +40,18 @@ This inventory assesses the implementation status of the 28 tracked feature spec
 | **MODULARIZATION_SPEC** | P1 | Complete | `packages/dart_ipfs_core/`, `melos.yaml`, `lib/dart_ipfs.dart` | `packages/dart_ipfs_core` extracted with stable CID/block/codec/crypto/data-structures; umbrella re-exports preserved; Melos workspace; deprecation notice for deep `lib/src/` imports. |
 | **PLUGINS_SPEC** | P1 | Complete | `lib/src/core/plugins/` | PluginHost, manifest, capability registry, signing/verification, examples, audit logging. |
 | **QUIC_SPEC** | Conditional | Complete | `lib/src/core/config/network_config.dart`, `lib/src/transport/libp2p_router.dart`, `test/transport/quic_transport_test.dart`, `packages/dart_ipfs_quic/`, `doc/specs/QUIC_TRANSPORT_RFC.md` | Config fields, runtime probe, TCP fallback, address synthesis, and tests implemented. Native transport path evaluated in RFC; foundation package `dart_ipfs_quic` with quiche FFI bindings created. |
-| **MOBILE_LIFECYCLE_BATTERY_SPEC** | P0 | In Progress | `doc/specs/features/MOBILE_LIFECYCLE_BATTERY_SPEC.md` | MobileLifecycleCoordinator, power states (fullActive, lowPower, suspendedMesh), swarm connection trimming, background watchdog compliance. |
+| **MOBILE_LIFECYCLE_BATTERY_SPEC** | P0 | Complete | `lib/src/core/lifecycle/`, `test/core/lifecycle/` | MobileLifecycleCoordinator, power states (fullActive, lowPower, suspendedMesh), swarm connection trimming, blockstore disk flushing, background watchdog compliance. |
 | **FLUTTER_REACTIVE_BINDINGS_SPEC** | P1 | Planned | `doc/specs/features/FLUTTER_REACTIVE_BINDINGS_SPEC.md` | High-level declarative UI bindings (`IpfsScope`, `IpfsImage`, `IpfsBuilder`), zero-overhead architecture, multi-tier memory/blockstore LRU caching. |
 
 ## Recent Changes
+
+### MOBILE_LIFECYCLE_BATTERY_SPEC
+- Implemented `MobileLifecycleCoordinator` and `ManualMobileLifecycleAdapter` in `lib/src/core/lifecycle/`.
+- Supported power modes (`fullActive`, `lowPower`, `suspendedMesh`) and lifecycle states (`resumed`, `inactive`, `paused`, `detached`).
+- Enhanced `Reprovider` with `pause()` and `resume()` to suspend background DHT reprovide passes during mobile sleep.
+- Enhanced `BlockStore` with `flush()` to persist pins and index metadata prior to process suspension.
+- Enhanced `NetworkManager` with `trimConnections()` to downscale swarm peer connections.
+- Added comprehensive unit and integration test suite in `test/core/lifecycle/mobile_lifecycle_coordinator_test.dart`.
 
 ### DAG_CBOR_SPEC
 - Fixed canonical tag encoding for big integers (tags 2/3 use single-byte `0xc2`/`0xc3`).

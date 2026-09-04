@@ -134,6 +134,10 @@ class Reprovider implements ILifecycle {
   DateTime? _nextRun;
   ReproviderResult? _lastResult;
   Future<ReproviderResult>? _currentRun;
+  bool _isPaused = false;
+
+  /// Whether the reprovider has been paused (e.g. by mobile lifecycle management).
+  bool get isPaused => _isPaused;
 
   /// Supported reprovide strategy names.
   static const List<String> supportedStrategies = [
@@ -150,6 +154,7 @@ class Reprovider implements ILifecycle {
   /// If the reprovider is disabled in configuration, no timer is scheduled.
   @override
   Future<void> start() async {
+    _isPaused = false;
     if (!_config.reproviderEnabled) {
       _logger.info('Reprovider is disabled by configuration');
       return;
@@ -161,9 +166,29 @@ class Reprovider implements ILifecycle {
     _scheduleTimer();
   }
 
+  /// Pauses the periodic reprovide timer without clearing historical state.
+  void pause() {
+    _isPaused = true;
+    _timer?.cancel();
+    _timer = null;
+    _nextRun = null;
+    _logger.info('Reprovider paused');
+  }
+
+  /// Resumes the periodic reprovider timer if enabled in configuration.
+  void resume() {
+    if (!_isPaused) return;
+    _isPaused = false;
+    if (_config.reproviderEnabled) {
+      _logger.info('Reprovider resumed');
+      _scheduleTimer();
+    }
+  }
+
   /// Stops the periodic timer and waits for any in-flight run.
   @override
   Future<void> stop() async {
+    _isPaused = false;
     _logger.info('Stopping Reprovider...');
     _timer?.cancel();
     _timer = null;
