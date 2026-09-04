@@ -103,12 +103,14 @@ class MobileLifecycleCoordinator implements ILifecycle {
 
     _lifecycleSub = adapter.lifecycleStream.listen(
       (state) => unawaited(handleLifecycleChange(state)),
-      onError: (e, st) => _logger.error('Error in lifecycle stream', e, st),
+      onError: (Object e, StackTrace st) =>
+          _logger.error('Error in lifecycle stream', e, st),
     );
 
     _batterySub = adapter.lowBatteryStream.listen(
       (isLow) => unawaited(handleBatteryState(isLow)),
-      onError: (e, st) => _logger.error('Error in battery stream', e, st),
+      onError: (Object e, StackTrace st) =>
+          _logger.error('Error in battery stream', e, st),
     );
 
     _logger.debug('MobileLifecycleCoordinator started successfully');

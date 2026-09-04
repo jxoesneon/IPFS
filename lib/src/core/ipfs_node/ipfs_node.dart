@@ -242,9 +242,6 @@ class IPFSNode {
   /// Returns the underlying [NetworkManager].
   NetworkManager get networkManager => _networkManager;
 
-  /// Returns the underlying [BlockStore].
-  BlockStore get blockStore => _container.get<BlockStore>();
-
   /// Returns the [MobileLifecycleCoordinator], or `null` if not registered.
   MobileLifecycleCoordinator? get mobileCoordinator {
     if (_container.isRegistered<MobileLifecycleCoordinator>()) {
