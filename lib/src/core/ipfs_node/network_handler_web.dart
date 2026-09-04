@@ -21,8 +21,10 @@ class NetworkHandler {
   final CircuitRelayClient? _circuitRelayClient = null;
   final RouterInterface _router;
 
+  IPFSNode? _ipfsNode;
+
   /// The IPFS node reference.
-  late final IPFSNode ipfsNode;
+  IPFSNode get ipfsNode => _ipfsNode!;
 
   final StreamController<NetworkEvent> _networkEventController;
   final IPFSConfig _config;
@@ -55,7 +57,7 @@ class NetworkHandler {
 
   /// Sets the IPFS node reference.
   void setIpfsNode(IPFSNode node) {
-    ipfsNode = node;
+    _ipfsNode = node;
   }
 
   /// Sends a request to a peer (stub).
