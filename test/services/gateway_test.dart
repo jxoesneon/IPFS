@@ -58,6 +58,8 @@ class MockBlockStore implements BlockStore {
   PinManager get pinManager => throw UnimplementedError('Mock');
   @override
   Future<int> gc() async => 0;
+  @override
+  Future<void> flush() async {}
 }
 
 void main() {

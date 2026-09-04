@@ -93,6 +93,9 @@ class MockBlockStore implements BlockStore {
 
   @override
   Future<int> gc() async => 0;
+
+  @override
+  Future<void> flush() async {}
 }
 
 class MockFilePreviewHandler implements FilePreviewHandler {
