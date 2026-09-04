@@ -7,116 +7,78 @@
 
 ## Current Status
 
-dart_ipfs **v1.11.5** is **multi-platform production ready** with:
+dart_ipfs **v1.12.0** is **multi-platform production ready** with:
 
 - **IpfsPlatform**: Unified abstraction layer for IO and Web.
 - **WebRTC Multiplexing**: Native p2p connectivity for browsers with standard libp2p stream support.
-- **Bitswap Smart Routing**: Efficient block exchange with provider tracking.
-- **90% Code Coverage**: Robust test suite with cross-platform validation.
-- **Security Parity**: Unified security management across IO and Web platforms.
+- **Bitswap 1.2.0**: Efficient block exchange with smart provider tracking.
+- **SEC-008 Cryptographic Security**: Asymmetric Ed25519 PubSub message signing, PeerKeyRegistry binding validation, and downgrade prevention.
+- **Helia & Kubo Interop**: Complete HTTP RPC test harness and profile-based Docker Compose verification.
+- **90%+ Code Coverage**: 3,470+ automated tests passing across macOS, Windows, and Ubuntu.
 
 ---
 
 ## Version Timeline
 
-### v1.10 - Q1 2026 (The Multi-Platform Milestone)
-
-**Focus**: Browser compatibility, storage abstraction, and unified API.
-
-#### Features
-
+### v1.10 - Q1 2026 (The Multi-Platform Milestone) [SHIPPED]
 - [x] IpfsPlatform abstraction layer.
 - [x] IndexedDB storage provider for Web.
 - [x] Browser-compatible SecurityManager.
-- [x] Automated Chrome/Firefox testing suite.
 - [x] Protocol standardization (Kubo compliance).
-
-**Released**: February 2026
 
 ---
 
-### v1.11 - Q2 2026 (Enhanced Connectivity)
-
-**Focus**: Advanced browser networking and performance.
-
-#### Features
-
+### v1.11 - Q2 2026 (Enhanced Connectivity) [SHIPPED]
 - [x] Libp2p browser transport (WebRTC/WebTransport).
 - [x] IPNS performance optimizations (DHT record caching).
 - [x] Advanced IPLD codecs (DagCbor, DagJson, DagJose).
-- [x] Flutter Web specific optimizations.
-- [x] Multi-platform metrics dashboard.
-
-**Released**: May 2026
+- [x] Mutable File System (MFS) and Hamt directory sharding.
+- [x] QUIC transport foundation (`dart_ipfs_quic`).
 
 ---
 
-### v2.0 - Q4 2026 (Ecosystem & Extensibility)
-
-**Focus**: Speed and efficiency
-
-#### Features
-
-- [x] MFS (Mutable File System)
-- [ ] Parallel block fetching
-- [ ] Smart caching with ML
-- [ ] Connection pooling
-- [ ] Bandwidth shaping
-
-#### Improvements
-
-- [ ] Content routing optimization
-- [ ] Multi-algorithm compression
-- [ ] Binary size optimization
-- [ ] Memory usage improvements
-
-**Estimated Release**: September 2026
+### v1.12 - Q3 2026 (Cryptographic Authentication & Interop) [SHIPPED]
+- [x] **SEC-008**: Full Ed25519 asymmetric message signing in PubSub/Gossipsub.
+- [x] `PeerKeyRegistry`: Cryptographic public key to Peer ID binding validation.
+- [x] `IdentifyHandler` public key caching and signature downgrade protection.
+- [x] Complete Helia HTTP RPC interop server (`server.js`) with Bitswap & CAR support.
+- [x] Multi-platform test harness stabilization (`FileSystemException` tearDown resilience).
 
 ---
 
-### v2.1 - Q1 2027 (Advanced Features)
+### v1.13 - Q3 2026 (Mobile Battery Shield & Delegated Routing) [IN PROGRESS]
+**Focus**: Mobile OS background compliance and power-aware connectivity (`MOBILE_LIFECYCLE_BATTERY_SPEC`).
 
-**Focus**: Ecosystem and extensibility
-
-#### Major Features
-
-- [ ] Plugin system architecture
-- [ ] QUIC transport
-- [ ] Native Ed25519/X25519 crypto
-- [ ] Advanced hole punching
-- [ ] Chaos engineering framework
-
-#### Breaking Changes
-
-- Improved configuration API (more structured)
-- Plugin-based architecture (optional)
-- Enhanced type safety
-
-**Estimated Release**: March 2027
+#### Key Deliverables
+- [ ] `MobileLifecycleCoordinator`: Automatic lifecycle state detection (`resumed`, `paused`, `detached`).
+- [ ] `IpfsPowerMode`: Adaptive power scaling (`fullActive`, `lowPower`, `suspendedMesh`).
+- [ ] Automatic connection trimming on mobile app pause (reducing swarm sockets from 50+ to 2).
+- [ ] Delegated Routing priority: Reframe & IPNI routing preference on battery/mobile to eliminate heavy DHT walks.
+- [ ] Automatic blockstore cache flush to disk before OS process sleep.
 
 ---
 
-### v2.1 - Q1 2027 (Security & Privacy)
+### v1.14 - Q4 2026 (Flutter Reactive Developer Kit & Local-First Sync) [PLANNED]
+**Focus**: Developer ergonomics and declarative UI bindings (`FLUTTER_REACTIVE_BINDINGS_SPEC`).
 
-**Focus**: Enterprise and privacy features
-
-#### Features
-
-- [ ] HSM (Hardware Security Module) support
-- [ ] Content policy engine
-- [ ] Multi-signature IPNS
-- [ ] Zero-knowledge proof support
-- [ ] Enhanced audit logging
-
-#### Improvements
-
-- [ ] Enterprise compliance features
-- [ ] Advanced access control
-- [ ] Privacy-preserving routing
-
-**Estimated Release**: March 2027
+#### Key Deliverables
+- [ ] `IpfsScope`: InheritedWidget for ambient `IpfsNode` dependency injection.
+- [ ] `IpfsImage`: Declarative image widget with progressive placeholders, memory cache eviction, and CID addressing.
+- [ ] `IpfsBuilder<T>`: Reactive widget binding content-addressed streams to Flutter widgets.
+- [ ] Local-First CAR State Sync: Drift / Hive integration templates for offline-first mobile apps.
+- [ ] Production sample apps: "Offline-First Mobile Photo Vault" and "Encrypted P2P Gossipsub Mesh".
 
 ---
+
+### v2.0 - Q1 2027 (Pure-Dart WasmGC & Modular Core) [PLANNED]
+**Focus**: Zero deep imports, browser WasmGC compilation, and published monorepo packages.
+
+#### Key Deliverables
+- [ ] Elimination of deep imports (resolving C4 deprecation debt repo-wide).
+- [ ] Pure-Dart WasmGC browser compilation (`dart compile wasm`) with zero FFI stubs.
+- [ ] Independent publishing of `dart_ipfs_core` on pub.dev.
+- [ ] 64-bit HAMT directory sharding optimization.
+- [ ] Parallel multi-peer block streaming in Bitswap.
 
 ### v2.2 - Q2 2027 (Developer Tools)
 

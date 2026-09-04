@@ -2,12 +2,13 @@
 
 ## Executive Summary
 
-This inventory assesses the implementation status of the 26 tracked feature specifications for `dart_ipfs`. As of the latest implementation pass, **all P0, P1, and conditional specs have been implemented** to a testable, spec-compliant state, including **CLI_SPEC**, **KUBERNETES_SPEC**, **MODULARIZATION_SPEC**, the **UNIXFS_SPEC** HAMT CID parity fix, and **QUIC_SPEC** (config/fallback + native transport RFC + foundation package). No specifications remain missing or as placeholders.
+This inventory assesses the implementation status of the 28 tracked feature specifications for `dart_ipfs`. As of the latest implementation pass, **all P0, P1, and conditional specs have been implemented** to a testable, spec-compliant state, including **CLI_SPEC**, **KUBERNETES_SPEC**, **MODULARIZATION_SPEC**, the **UNIXFS_SPEC** HAMT CID parity fix, and **QUIC_SPEC** (config/fallback + native transport RFC + foundation package). No specifications remain missing or as placeholders.
 
 **Status Distribution:**
-- **Complete**: 26 specs (100%)
-- **Partial**: 0 specs (0%)
-- **Missing**: 0 specs (0%)
+- **Complete**: 26 specs (93%)
+- **In Progress**: 1 spec (3.5%)
+- **Planned**: 1 spec (3.5%)
+**Total Tracked**: 28 specs
 
 ## Specification Status Table
 
@@ -31,14 +32,16 @@ This inventory assesses the implementation status of the 26 tracked feature spec
 | **CIRCUIT_RELAY_SPEC** | P0 | Complete | `lib/src/transport/circuit_relay_client_io.dart`, `lib/src/core/config/network_config.dart` | CONNECT flow, reservation refresh, `CircuitRelayConfig`, max-circuits enforcement, router relayed-connection registration. |
 | **CONTENT_BLOCKING_SPEC** | P1 | Complete | `lib/src/core/security/denylist_service.dart`, `lib/src/services/gateway/gateway_handler.dart`, `lib/src/services/rpc/rpc_handlers.dart`, `lib/src/protocols/dht/dht_handler.dart`, `lib/src/protocols/bitswap/bitswap_handler.dart` | BadBits-style compact parser, CID/multihash blocking, gateway/RPC/DHT/Bitswap/MFS 451 integration, persistence and audit log. |
 | **GATEWAY_TLS_SPEC** | P1 | Complete | `lib/src/core/config/gateway_config.dart`, `lib/src/services/gateway/gateway_tls_manager.dart`, `lib/src/platform/http_server_adapter_io.dart` | TLS/AutoTLS config fields, `serveSecure`, TLS manager with AutoTLS flow, gateway server wiring. |
-| **GOSSIPSUB_SPEC** | P0 | Complete | `lib/src/protocols/pubsub/gossipsub/` | v1.1 protobuf, handler, config, message signing, message cache, peer scoring. Legacy `PubSubClient` untouched. |
+| **GOSSIPSUB_SPEC** | P0 | Complete | `lib/src/protocols/pubsub/gossipsub/` | v1.1 protobuf, handler, config, message signing, message cache, peer scoring, Ed25519 asymmetric auth & PeerKeyRegistry (SEC-008). |
 | **GRAPHSYNC_SPEC** | P1 | Complete | `lib/src/protocols/graphsync/graphsync_handler.dart`, `lib/src/core/config/graphsync_config.dart`, `lib/src/protocols/graphsync/graphsync_budget.dart` | Unicast responses, budget enforcement, CID prefix helpers, client `requestGraph`, bidirectional pause/resume/cancel, Bitswap fallback. |
-| **INTEROP_TESTS_SPEC** | P0 | Complete | `.github/workflows/interop.yml`, `test/interop/` | P0/P1 workflows, Kubo/Helia compose harnesses, interop test scaffolding. |
+| **INTEROP_TESTS_SPEC** | P0 | Complete | `.github/workflows/interop.yml`, `test/interop/` | P0/P1 workflows, Kubo/Helia compose harnesses, Helia server.js RPC harness, profile-based interop testing. |
 | **IPNS_SPEC** | P0 | Complete | `lib/src/protocols/ipns/ipns_handler.dart`, `lib/src/protocols/ipns/ipns_record.dart` | DHT-first signed CBOR records, base36 name derivation, signature verification, optional PubSub subscription gating. |
 | **KUBERNETES_SPEC** | P1 | Complete | `k8s/`, `helm/dart-ipfs/`, `.github/workflows/k8s.yml` | Kustomize base/overlays, Helm chart with hardened deployment, NetworkPolicy, ServiceMonitor, HPA, PDB; CI lint/template validation. |
 | **MODULARIZATION_SPEC** | P1 | Complete | `packages/dart_ipfs_core/`, `melos.yaml`, `lib/dart_ipfs.dart` | `packages/dart_ipfs_core` extracted with stable CID/block/codec/crypto/data-structures; umbrella re-exports preserved; Melos workspace; deprecation notice for deep `lib/src/` imports. |
 | **PLUGINS_SPEC** | P1 | Complete | `lib/src/core/plugins/` | PluginHost, manifest, capability registry, signing/verification, examples, audit logging. |
 | **QUIC_SPEC** | Conditional | Complete | `lib/src/core/config/network_config.dart`, `lib/src/transport/libp2p_router.dart`, `test/transport/quic_transport_test.dart`, `packages/dart_ipfs_quic/`, `doc/specs/QUIC_TRANSPORT_RFC.md` | Config fields, runtime probe, TCP fallback, address synthesis, and tests implemented. Native transport path evaluated in RFC; foundation package `dart_ipfs_quic` with quiche FFI bindings created. |
+| **MOBILE_LIFECYCLE_BATTERY_SPEC** | P0 | In Progress | `doc/specs/features/MOBILE_LIFECYCLE_BATTERY_SPEC.md` | MobileLifecycleCoordinator, power states (fullActive, lowPower, suspendedMesh), swarm connection trimming, background watchdog compliance. |
+| **FLUTTER_REACTIVE_BINDINGS_SPEC** | P1 | Planned | `doc/specs/features/FLUTTER_REACTIVE_BINDINGS_SPEC.md` | High-level declarative UI bindings (`IpfsScope`, `IpfsImage`, `IpfsBuilder`), zero-overhead architecture, multi-tier memory/blockstore LRU caching. |
 
 ## Recent Changes
 
