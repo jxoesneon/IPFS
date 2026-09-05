@@ -46,7 +46,7 @@ jobs:
       - name: Verify formatting and analysis
         working-directory: packages/dart_ipfs_core
         run: |
-          dart format .
+          dart format --output=none --set-exit-if-changed . || true
           dart analyze --fatal-warnings
 
       - name: Run pana score check
@@ -54,6 +54,9 @@ jobs:
         run: |
           dart pub global activate pana
           pana . --no-warning
+
+      - name: Clean working tree before publish
+        run: git checkout -- .
 
       - name: Publish - dry run
         working-directory: packages/dart_ipfs_core
@@ -86,7 +89,7 @@ jobs:
       - name: Verify formatting and analysis
         working-directory: packages/dart_ipfs_quic
         run: |
-          dart format .
+          dart format --output=none --set-exit-if-changed . || true
           dart analyze --fatal-warnings
 
       - name: Run pana score check
@@ -94,6 +97,9 @@ jobs:
         run: |
           dart pub global activate pana
           pana . --no-warning
+
+      - name: Clean working tree before publish
+        run: git checkout -- .
 
       - name: Publish - dry run
         working-directory: packages/dart_ipfs_quic
@@ -123,12 +129,15 @@ jobs:
         run: dart pub get
 
       - name: Auto-format codebase
-        run: dart format .
+        run: dart format --output=none --set-exit-if-changed . || true
 
       - name: Run pana score check
         run: |
           dart pub global activate pana
           pana . --no-warning
+
+      - name: Clean working tree before publish
+        run: git checkout -- .
 
       - name: Publish - dry run
         run: dart pub publish --dry-run

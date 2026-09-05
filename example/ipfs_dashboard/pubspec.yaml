@@ -32,3 +32,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+dependency_overrides:
+  dart_ipfs_core:
+    path: ../../packages/dart_ipfs_core
+  dart_ipfs_quic:
+    path: ../../packages/dart_ipfs_quic
+
