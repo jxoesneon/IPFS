@@ -19,7 +19,7 @@ void main() {
                 return const Text('Waiting');
               }
               if (snapshot.hasData) {
-                return Text('Got: ');
+                return const Text('Got Data');
               }
               return const SizedBox();
             },
@@ -32,7 +32,7 @@ void main() {
       completer.complete('Hello IPFS');
       await tester.pumpAndSettle();
 
-      expect(find.text('Got: Hello IPFS'), findsOneWidget);
+      expect(find.text('Got Data'), findsOneWidget);
     });
 
     testWidgets('IpfsStreamBuilder updates on new events', (tester) async {

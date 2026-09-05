@@ -8,6 +8,7 @@ import 'ipfs_scope.dart';
 
 /// A declarative Flutter widget that resolves and displays text content from IPFS by CID.
 class IpfsText extends StatefulWidget {
+  /// Creates an [IpfsText] widget.
   const IpfsText({
     super.key,
     required this.cid,

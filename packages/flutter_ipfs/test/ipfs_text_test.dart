@@ -1,5 +1,5 @@
-import 'dart:typed_data';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:dart_ipfs/dart_ipfs.dart';
 import 'package:flutter/widgets.dart';
@@ -15,7 +15,7 @@ class _MockIPFSNode implements IPFSNode {
     GatewayMode gatewayMode = GatewayMode.internal,
     String customGatewayUrl = '',
   }) async {
-    final key = path.isEmpty ? cid : '$cid/$path';
+    final key = path.isEmpty ? cid : '/';
     return storage[key];
   }
 
@@ -32,11 +32,11 @@ void main() {
       await tester.pumpWidget(
         IpfsScope(
           node: mockNode,
-          child: const Directionality(
+          child: Directionality(
             textDirection: TextDirection.ltr,
             child: IpfsText(
               cid: 'bafytext1',
-              placeholder: (context) => Text('Loading text...'),
+              placeholder: (context) => const Text('Loading text...'),
             ),
           ),
         ),

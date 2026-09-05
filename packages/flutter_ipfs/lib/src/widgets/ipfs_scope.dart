@@ -16,6 +16,7 @@ import 'package:flutter/widgets.dart';
 /// )
 /// `
 class IpfsScope extends InheritedWidget {
+  /// Creates an [IpfsScope] providing [node] to descendants.
   const IpfsScope({
     super.key,
     required this.node,
@@ -45,8 +46,7 @@ class IpfsScope extends InheritedWidget {
   }
 
   /// Retrieves the ambient [IPFSNode] from the nearest [IpfsScope] ancestor,
-  /// or 
-ull if none exists.
+  /// or null if none exists.
   static IPFSNode? maybeOf(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<IpfsScope>();
     return scope?.node;
