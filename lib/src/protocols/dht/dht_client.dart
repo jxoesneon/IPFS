@@ -852,7 +852,7 @@ class DHTClient {
       // Check for a correlated DHTEnvelope first; if not present or malformed,
       // parse as a raw protobuf kad.Message.
       final parsedEnvelope = DHTEnvelope.tryParse(packet.datagram);
-      if (parsedEnvelope != null && parsedEnvelope.requestId.isNotEmpty) {
+      if (parsedEnvelope != null) {
         envelope = parsedEnvelope;
         try {
           message = kad.Message.fromBuffer(envelope.payload);
