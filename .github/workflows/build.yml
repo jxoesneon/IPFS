@@ -67,6 +67,14 @@ jobs:
           cd example/ipfs_dashboard
           flutter pub get
 
+      - name: Test and Analyze flutter_ipfs
+        if: matrix.target == 'Linux'
+        run: |
+          cd packages/flutter_ipfs
+          flutter pub get
+          flutter analyze
+          flutter test
+
       - name: Build Dashboard
         run: |
           cd example/ipfs_dashboard

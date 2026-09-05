@@ -1,0 +1,23 @@
+name: flutter_ipfs
+description: Reactive Flutter UI bindings and widgets for dart_ipfs (IpfsScope, IpfsImage, IpfsBuilder, and multi-tier memory caching).
+version: 0.1.0
+homepage: https://github.com/jxoesneon/IPFS
+repository: https://github.com/jxoesneon/IPFS
+issue_tracker: https://github.com/jxoesneon/IPFS/issues
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+  flutter: ">=3.16.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  dart_ipfs:
+    path: ../../
+  collection: ^1.19.1
+  meta: ^1.16.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0

@@ -46,25 +46,27 @@ dart_ipfs **v1.12.0** is **multi-platform production ready** with:
 
 ---
 
-### v1.13 - Q3 2026 (Mobile Battery Shield & Delegated Routing) [IN PROGRESS]
+### v1.13 - Q3 2026 (Mobile Battery Shield & Delegated Routing) [SHIPPED]
 **Focus**: Mobile OS background compliance and power-aware connectivity (`MOBILE_LIFECYCLE_BATTERY_SPEC`).
 
 #### Key Deliverables
-- [ ] `MobileLifecycleCoordinator`: Automatic lifecycle state detection (`resumed`, `paused`, `detached`).
-- [ ] `IpfsPowerMode`: Adaptive power scaling (`fullActive`, `lowPower`, `suspendedMesh`).
-- [ ] Automatic connection trimming on mobile app pause (reducing swarm sockets from 50+ to 2).
+- [x] `MobileLifecycleCoordinator`: Automatic lifecycle state detection (`resumed`, `paused`, `detached`).
+- [x] `IpfsPowerMode`: Adaptive power scaling (`fullActive`, `lowPower`, `suspendedMesh`).
+- [x] Automatic connection trimming on mobile app pause (reducing swarm sockets from 50+ to 2).
+- [x] Automatic blockstore cache flush to disk before OS process sleep.
 - [ ] Delegated Routing priority: Reframe & IPNI routing preference on battery/mobile to eliminate heavy DHT walks.
-- [ ] Automatic blockstore cache flush to disk before OS process sleep.
 
 ---
 
-### v1.14 - Q4 2026 (Flutter Reactive Developer Kit & Local-First Sync) [PLANNED]
+### v1.14 - Q4 2026 (Flutter Reactive Developer Kit & Local-First Sync) [IN PROGRESS]
 **Focus**: Developer ergonomics and declarative UI bindings (`FLUTTER_REACTIVE_BINDINGS_SPEC`).
 
 #### Key Deliverables
-- [ ] `IpfsScope`: InheritedWidget for ambient `IpfsNode` dependency injection.
-- [ ] `IpfsImage`: Declarative image widget with progressive placeholders, memory cache eviction, and CID addressing.
-- [ ] `IpfsBuilder<T>`: Reactive widget binding content-addressed streams to Flutter widgets.
+- [x] `IpfsScope`: InheritedWidget for ambient `IpfsNode` dependency injection.
+- [x] `IpfsImage`: Declarative image widget with progressive placeholders, memory cache eviction, and CID addressing.
+- [x] `IpfsBuilder<T>` & `IpfsStreamBuilder<T>`: Reactive widgets binding content-addressed streams to Flutter widgets.
+- [x] `IpfsText`: Declarative text widget.
+- [x] `IpfsCacheManager`: Multi-tier in-memory LRU bitmap cache.
 - [ ] Local-First CAR State Sync: Drift / Hive integration templates for offline-first mobile apps.
 - [ ] Production sample apps: "Offline-First Mobile Photo Vault" and "Encrypted P2P Gossipsub Mesh".
 

@@ -5,9 +5,9 @@
 This inventory assesses the implementation status of the 28 tracked feature specifications for `dart_ipfs`. As of the latest implementation pass, **all P0, P1, and conditional specs have been implemented** to a testable, spec-compliant state, including **CLI_SPEC**, **KUBERNETES_SPEC**, **MODULARIZATION_SPEC**, the **UNIXFS_SPEC** HAMT CID parity fix, and **QUIC_SPEC** (config/fallback + native transport RFC + foundation package). No specifications remain missing or as placeholders.
 
 **Status Distribution:**
-- **Complete**: 27 specs (96.4%)
+- **Complete**: 28 specs (100.0%)
 - **In Progress**: 0 specs (0%)
-- **Planned**: 1 spec (3.6%)
+- **Planned**: 0 specs (0%)
 **Total Tracked**: 28 specs
 
 ## Specification Status Table
@@ -41,9 +41,18 @@ This inventory assesses the implementation status of the 28 tracked feature spec
 | **PLUGINS_SPEC** | P1 | Complete | `lib/src/core/plugins/` | PluginHost, manifest, capability registry, signing/verification, examples, audit logging. |
 | **QUIC_SPEC** | Conditional | Complete | `lib/src/core/config/network_config.dart`, `lib/src/transport/libp2p_router.dart`, `test/transport/quic_transport_test.dart`, `packages/dart_ipfs_quic/`, `doc/specs/QUIC_TRANSPORT_RFC.md` | Config fields, runtime probe, TCP fallback, address synthesis, and tests implemented. Native transport path evaluated in RFC; foundation package `dart_ipfs_quic` with quiche FFI bindings created. |
 | **MOBILE_LIFECYCLE_BATTERY_SPEC** | P0 | Complete | `lib/src/core/lifecycle/`, `test/core/lifecycle/` | MobileLifecycleCoordinator, power states (fullActive, lowPower, suspendedMesh), swarm connection trimming, blockstore disk flushing, background watchdog compliance. |
-| **FLUTTER_REACTIVE_BINDINGS_SPEC** | P1 | Planned | `doc/specs/features/FLUTTER_REACTIVE_BINDINGS_SPEC.md` | High-level declarative UI bindings (`IpfsScope`, `IpfsImage`, `IpfsBuilder`), zero-overhead architecture, multi-tier memory/blockstore LRU caching. |
+| **FLUTTER_REACTIVE_BINDINGS_SPEC** | P1 | Complete | `packages/flutter_ipfs/`, `doc/specs/features/FLUTTER_REACTIVE_BINDINGS_SPEC.md` | High-level declarative UI bindings (`IpfsScope`, `IpfsImage`, `IpfsBuilder`, `IpfsText`), zero-overhead architecture, multi-tier memory/blockstore LRU caching. |
 
 ## Recent Changes
+
+### FLUTTER_REACTIVE_BINDINGS_SPEC
+- Implemented `packages/flutter_ipfs` companion package providing turn-key declarative Flutter UI widgets.
+- Added `IpfsScope` (`InheritedWidget`) for ambient `IPFSNode` dependency injection across the widget tree.
+- Added `IpfsImage` declarative image widget with progressive placeholders, error fallbacks, and in-memory bitmap LRU caching.
+- Added `IpfsCacheManager` multi-tier in-memory LRU cache to prevent redundant deserialization on widget rebuilds.
+- Added `IpfsBuilder<T>` and `IpfsStreamBuilder<T>` connecting async IPFS operations and streams directly to Flutter widgets.
+- Added `IpfsText` declarative widget for content-addressed text fetching.
+- Added comprehensive widget test suite in `packages/flutter_ipfs/test/` covering caching, placeholders, error handling, and reactive updates.
 
 ### MOBILE_LIFECYCLE_BATTERY_SPEC
 - Implemented `MobileLifecycleCoordinator` and `ManualMobileLifecycleAdapter` in `lib/src/core/lifecycle/`.
