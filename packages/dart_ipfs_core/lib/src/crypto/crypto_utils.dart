@@ -60,7 +60,7 @@ class EncryptedData {
 /// - Constant-time comparison
 class CryptoUtils {
   /// Creates a new [CryptoUtils] instance.
-  const CryptoUtils();
+  CryptoUtils();
 
   /// Default PBKDF2 iteration count.
   ///

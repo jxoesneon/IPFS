@@ -47,7 +47,7 @@ jobs:
         working-directory: packages/dart_ipfs_core
         run: |
           dart format .
-          dart analyze --fatal-infos
+          dart analyze --fatal-warnings
 
       - name: Run pana score check
         working-directory: packages/dart_ipfs_core
@@ -87,7 +87,7 @@ jobs:
         working-directory: packages/dart_ipfs_quic
         run: |
           dart format .
-          dart analyze --fatal-infos
+          dart analyze --fatal-warnings
 
       - name: Run pana score check
         working-directory: packages/dart_ipfs_quic

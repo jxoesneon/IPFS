@@ -13,7 +13,7 @@ import 'codec.dart';
 /// `0x00`, matching the IPLD DAG-CBOR specification.
 class DagCborCodec implements IPLDCodec {
   /// Creates a new [DagCborCodec] instance.
-  const DagCborCodec();
+  DagCborCodec();
 
   @override
   String get name => 'dag-cbor';

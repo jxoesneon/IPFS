@@ -7,8 +7,8 @@ import '../cid/cid.dart';
 ///
 /// A block is the fundamental unit of data in IPFS, identified by its CID.
 abstract class IBlock {
-  /// Default const constructor for subclasses of [IBlock].
-  const IBlock();
+  /// Default constructor for subclasses of [IBlock].
+  IBlock();
 
   /// The raw binary data of this block.
   Uint8List get data;

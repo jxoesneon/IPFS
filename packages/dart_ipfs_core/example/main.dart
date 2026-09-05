@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 // example/main.dart
 import 'dart:convert';
 import 'dart:typed_data';

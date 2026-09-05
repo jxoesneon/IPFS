@@ -12,7 +12,7 @@ import 'codec.dart';
 /// as `{'/': '<cid-string>'}` maps, matching the DAG-JSON spec.
 class DagJsonCodec implements IPLDCodec {
   /// Creates a new [DagJsonCodec] instance.
-  const DagJsonCodec();
+  DagJsonCodec();
 
   @override
   String get name => 'dag-json';

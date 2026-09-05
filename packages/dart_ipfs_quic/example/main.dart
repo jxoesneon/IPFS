@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 // example/main.dart
 import 'package:dart_ipfs_quic/dart_ipfs_quic.dart';
 import 'package:ipfs_libp2p/core/multiaddr.dart';

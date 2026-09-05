@@ -31,9 +31,9 @@ doc/specifications.yaml
 regenerate_all_protos.ps1
 tool/
 
-# Tests and monorepo packages are not part of the umbrella package distribution
+# Tests and internal packages not part of the umbrella package distribution
 /test/
-/packages/
+/packages/flutter_ipfs/
 
 # CI/infrastructure files
 /.github/
