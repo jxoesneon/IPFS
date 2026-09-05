@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Excised dead native `quiche.dll` binary (3.2 MB), `quiche.h` C headers, and legacy `ffigen.yaml` configuration.
+- Bumped `dart_ipfs_core` dependency constraint to `^1.11.6`.
+
 ## 0.2.0
 
 - Replaced Cloudflare quiche FFI backend with the pure-Dart `quic_lib` package from pub.dev.
