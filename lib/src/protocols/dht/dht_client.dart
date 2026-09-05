@@ -846,27 +846,30 @@ class DHTClient {
     try {
       late final kad.Message message;
       late final DHTEnvelope envelope;
-      // Kubo and other libp2p-kad-dht implementations send raw protobuf
-      // messages without an envelope. Our internal transport uses a thin
-      // DHTEnvelope for correlation. Try raw first; if it fails, fall back
-      // to envelope parsing.
-      try {
-        message = kad.Message.fromBuffer(packet.datagram);
-        envelope = DHTEnvelope(requestId: '', payload: packet.datagram);
-        // ignore: avoid_print
-        print(
-          'DHT raw parsed: type=${message.type}, key=${message.key.length} bytes',
-        );
-      } catch (_) {
+      // Our internal transport uses a thin DHTEnvelope for request/response
+      // correlation. Kubo and other libp2p-kad-dht implementations send raw
+      // protobuf messages without an envelope.
+      // Check for a correlated DHTEnvelope first; if not present or malformed,
+      // parse as a raw protobuf kad.Message.
+      final parsedEnvelope = DHTEnvelope.tryParse(packet.datagram);
+      if (parsedEnvelope != null && parsedEnvelope.requestId.isNotEmpty) {
+        envelope = parsedEnvelope;
         try {
-          envelope = DHTEnvelope.fromBytes(packet.datagram);
-        } on FormatException {
-          envelope = DHTEnvelope(
-            requestId: '',
-            payload: Uint8List.fromList(packet.datagram),
-          );
+          message = kad.Message.fromBuffer(envelope.payload);
+        } catch (_) {
+          return;
         }
-        message = kad.Message.fromBuffer(envelope.payload);
+      } else {
+        try {
+          message = kad.Message.fromBuffer(packet.datagram);
+          envelope = DHTEnvelope(requestId: '', payload: packet.datagram);
+          // ignore: avoid_print
+          print(
+            'DHT raw parsed: type=${message.type}, key=${message.key.length} bytes',
+          );
+        } catch (_) {
+          return;
+        }
       }
 
       // If this is a correlated response, complete the pending request.

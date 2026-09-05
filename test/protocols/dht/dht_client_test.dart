@@ -182,7 +182,6 @@ void main() {
         'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w',
       );
       await client.kademliaRoutingTable.addPeer(seedPeer, seedPeer);
-      await client.kademliaRoutingTable.addPeer(closerPeer, closerPeer);
       final handler = _captureHandler(mockRouter);
 
       final provider = PeerId.fromBase58(
@@ -194,6 +193,7 @@ void main() {
         mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
       ).thenAnswer((invocation) async {
         requestCount++;
+        final dst = invocation.positionalArguments[0] as String;
         final data = invocation.positionalArguments[1] as Uint8List;
         final envelope = DHTEnvelope.tryParse(data);
         if (envelope == null) return;
@@ -201,8 +201,8 @@ void main() {
         final response = kad.Message()
           ..type = kad.Message_MessageType.GET_PROVIDERS;
 
-        // On the first request, return a closer peer. On the second request,
-        // return the provider. This demonstrates iterative expansion.
+        // On the first request (to seedPeer), return closerPeer.
+        // On the second request (to closerPeer), return provider.
         if (requestCount == 1) {
           response.closerPeers.add(kad.Peer()..id = closerPeer.value);
         } else {
@@ -218,7 +218,7 @@ void main() {
         Future<void>.delayed(const Duration(milliseconds: 1), () {
           handler(
             NetworkPacket(
-              srcPeerId: seedPeer.toBase58(),
+              srcPeerId: dst,
               datagram: DHTEnvelope(
                 requestId: envelope.requestId,
                 payload: response.writeToBuffer(),

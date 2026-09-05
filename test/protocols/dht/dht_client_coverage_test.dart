@@ -32,13 +32,14 @@ void _mockEnvelopeResponse(
   when(
     router.sendMessage(any, any, protocolId: anyNamed('protocolId')),
   ).thenAnswer((invocation) async {
+    final dst = invocation.positionalArguments[0] as String;
     final data = invocation.positionalArguments[1] as Uint8List;
     final envelope = DHTEnvelope.tryParse(data);
     if (envelope == null) return;
     Future<void>.delayed(const Duration(milliseconds: 1), () {
       lastHandler(
         NetworkPacket(
-          srcPeerId: srcPeerId,
+          srcPeerId: dst.isNotEmpty ? dst : srcPeerId,
           datagram: DHTEnvelope(
             requestId: envelope.requestId,
             payload: response.writeToBuffer(),
