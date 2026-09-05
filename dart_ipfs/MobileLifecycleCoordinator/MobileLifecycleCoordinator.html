@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the MobileLifecycleCoordinator.new constructor from Class MobileLifecycleCoordinator from the dart_ipfs library, for the Dart programming language.">
+  <title>MobileLifecycleCoordinator.new constructor - MobileLifecycleCoordinator - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li><a href="../../dart_ipfs/MobileLifecycleCoordinator-class.html">MobileLifecycleCoordinator</a></li>
+    <li class="self-crumb">MobileLifecycleCoordinator.new constructor</li>
+  </ol>
+  <div class="self-name">MobileLifecycleCoordinator.new</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="dart_ipfs&#47;MobileLifecycleCoordinator-class-sidebar.html"
+      data-below-sidebar="">
+      <div>
+<h1><span class="kind-constructor">MobileLifecycleCoordinator</span> constructor 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+      <span class="name ">MobileLifecycleCoordinator</span>(<wbr>{<ol class="parameter-list"> <li><span class="parameter" id="param-adapter"><span>required</span> <span class="type-annotation"><a href="../../dart_ipfs/MobileLifecycleAdapter-class.html">MobileLifecycleAdapter</a></span> <span class="parameter-name">adapter</span>, </span></li>
+<li><span class="parameter" id="param-reprovider"><span class="type-annotation">Reprovider?</span> <span class="parameter-name">reprovider</span>, </span></li>
+<li><span class="parameter" id="param-networkManager"><span class="type-annotation">NetworkManager?</span> <span class="parameter-name">networkManager</span>, </span></li>
+<li><span class="parameter" id="param-blockStore"><span class="type-annotation">BlockStore?</span> <span class="parameter-name">blockStore</span>, </span></li>
+<li><span class="parameter" id="param-onDetached"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.3/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span> <span class="parameter-name">onDetached</span>()?, </span></li>
+<li><span class="parameter" id="param-autoScaleSwarm"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.3/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">autoScaleSwarm</span> = <span class="default-value">true</span>, </span></li>
+<li><span class="parameter" id="param-maxForegroundConnections"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.3/dart-core/int-class.html">int</a></span> <span class="parameter-name">maxForegroundConnections</span> = <span class="default-value">50</span>, </span></li>
+<li><span class="parameter" id="param-maxLowPowerConnections"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.3/dart-core/int-class.html">int</a></span> <span class="parameter-name">maxLowPowerConnections</span> = <span class="default-value">15</span>, </span></li>
+<li><span class="parameter" id="param-maxBackgroundConnections"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.3/dart-core/int-class.html">int</a></span> <span class="parameter-name">maxBackgroundConnections</span> = <span class="default-value">2</span>, </span></li>
+<li><span class="parameter" id="param-pauseReproviderOnBackground"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.3/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">pauseReproviderOnBackground</span> = <span class="default-value">true</span>, </span></li>
+<li><span class="parameter" id="param-flushBlockStoreOnBackground"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.3/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">flushBlockStoreOnBackground</span> = <span class="default-value">true</span>, </span></li>
+<li><span class="parameter" id="param-requestBackgroundExtensionOnPause"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.3/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">requestBackgroundExtensionOnPause</span> = <span class="default-value">true</span>, </span></li>
+<li><span class="parameter" id="param-backgroundExtensionDuration"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.13.3/dart-core/Duration-class.html">Duration</a></span> <span class="parameter-name">backgroundExtensionDuration</span> = <span class="default-value">const Duration(seconds: 30)</span>, </span></li>
+</ol>})
+    </section>
+    
+<section class="desc markdown">
+  <p>Creates a new <a href="../../dart_ipfs/MobileLifecycleCoordinator-class.html">MobileLifecycleCoordinator</a>.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">MobileLifecycleCoordinator({
+  required this.adapter,
+  this.reprovider,
+  this.networkManager,
+  this.blockStore,
+  this.onDetached,
+  this.autoScaleSwarm = true,
+  this.maxForegroundConnections = 50,
+  this.maxLowPowerConnections = 15,
+  this.maxBackgroundConnections = 2,
+  this.pauseReproviderOnBackground = true,
+  this.flushBlockStoreOnBackground = true,
+  this.requestBackgroundExtensionOnPause = true,
+  this.backgroundExtensionDuration = const Duration(seconds: 30),
+}) : _logger = Logger(&#39;MobileLifecycleCoordinator&#39;);</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/">dart_ipfs</a></li>
+    <li><a href="../../dart_ipfs/MobileLifecycleCoordinator-class.html">MobileLifecycleCoordinator</a></li>
+    <li class="self-crumb">MobileLifecycleCoordinator.new constructor</li>
+</ol>
+
+    <h5>MobileLifecycleCoordinator class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-left-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.14.0
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
