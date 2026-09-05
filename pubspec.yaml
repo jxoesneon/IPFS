@@ -109,5 +109,11 @@ dependency_overrides:
   # dart_udx ^2.0.3: Required for UDP transport stability and security patches
   # Fixes buffer overflow issues in UDP datagram handling and improves rate limiting
   dart_udx: ^2.0.3
+  # Monorepo path overrides for unreleased satellite packages
+  dart_ipfs_core:
+    path: packages/dart_ipfs_core
+  dart_ipfs_quic:
+    path: packages/dart_ipfs_quic
+
 
 

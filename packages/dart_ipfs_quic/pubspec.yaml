@@ -22,3 +22,8 @@ dependencies:
 dev_dependencies:
   test: ^1.25.0
   lints: ^4.0.0
+
+dependency_overrides:
+  dart_ipfs_core:
+    path: ../dart_ipfs_core
+

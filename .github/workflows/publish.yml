@@ -4,14 +4,114 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+*"
+      - "core-v[0-9]+.[0-9]+.[0-9]+*"
+      - "quic-v[0-9]+.[0-9]+.[0-9]+*"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target package to publish (core, quic, umbrella, all)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - core
+          - quic
+          - umbrella
+      dry_run:
+        description: 'Dry run only (do not actually publish)'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
-  publish:
+  publish-core:
+    name: Publish dart_ipfs_core
+    if: inputs.target == 'core' || inputs.target == 'all' || startsWith(github.ref, 'refs/tags/core-v') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write # Required for authentication using OIDC
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
 
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies
+        working-directory: packages/dart_ipfs_core
+        run: dart pub get
+
+      - name: Verify formatting and analysis
+        working-directory: packages/dart_ipfs_core
+        run: |
+          dart format --set-exit-if-changed .
+          dart analyze --fatal-infos
+
+      - name: Run pana score check
+        working-directory: packages/dart_ipfs_core
+        run: |
+          dart pub global activate pana
+          pana . --no-warning
+
+      - name: Publish - dry run
+        working-directory: packages/dart_ipfs_core
+        run: dart pub publish --dry-run
+
+      - name: Publish to pub.dev
+        if: inputs.dry_run != true
+        working-directory: packages/dart_ipfs_core
+        run: dart pub publish -f
+
+  publish-quic:
+    name: Publish dart_ipfs_quic
+    needs: [publish-core]
+    if: always() && (inputs.target == 'quic' || inputs.target == 'all' || startsWith(github.ref, 'refs/tags/quic-v') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies
+        working-directory: packages/dart_ipfs_quic
+        run: dart pub get
+
+      - name: Verify formatting and analysis
+        working-directory: packages/dart_ipfs_quic
+        run: |
+          dart format --set-exit-if-changed .
+          dart analyze --fatal-infos
+
+      - name: Run pana score check
+        working-directory: packages/dart_ipfs_quic
+        run: |
+          dart pub global activate pana
+          pana . --no-warning
+
+      - name: Publish - dry run
+        working-directory: packages/dart_ipfs_quic
+        run: dart pub publish --dry-run
+
+      - name: Publish to pub.dev
+        if: inputs.dry_run != true
+        working-directory: packages/dart_ipfs_quic
+        run: dart pub publish -f
+
+  publish-umbrella:
+    name: Publish dart_ipfs (Umbrella)
+    needs: [publish-quic]
+    if: always() && (inputs.target == 'umbrella' || inputs.target == 'all' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v7
 
@@ -25,10 +125,11 @@ jobs:
       - name: Run pana score check
         run: |
           dart pub global activate pana
-          dart pub global run pana:pana . --no-warning
+          pana . --no-warning
 
       - name: Publish - dry run
         run: dart pub publish --dry-run
 
       - name: Publish to pub.dev
+        if: inputs.dry_run != true
         run: dart pub publish -f

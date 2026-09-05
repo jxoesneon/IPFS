@@ -1,0 +1,7 @@
+.dart_tool/
+.packages
+build/
+coverage/
+*.log
+*.txt
+doc/api/
