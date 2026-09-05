@@ -54,6 +54,7 @@ void main() {
       expect(find.text('Count: 0'), findsOneWidget);
 
       controller.add(42);
+      await tester.idle();
       await tester.pump();
 
       expect(find.text('Count: 42'), findsOneWidget);

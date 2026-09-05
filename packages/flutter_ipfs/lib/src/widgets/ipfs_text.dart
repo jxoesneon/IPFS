@@ -78,7 +78,7 @@ class _IpfsTextState extends State<IpfsText> {
   }
 
   void _initFetch() {
-    final cacheKey = widget.path.isEmpty ? widget.cid : '/';
+    final cacheKey = widget.path.isEmpty ? widget.cid : '${widget.cid}/${widget.path}';
     if (_currentKey == cacheKey && _fetchFuture != null) return;
 
     _currentKey = cacheKey;
@@ -114,7 +114,7 @@ class _IpfsTextState extends State<IpfsText> {
           if (text == null) {
             return widget.errorWidget?.call(
                   context,
-                  StateError('No content found for CID: '),
+                  StateError('No content found for CID: ${widget.cid}'),
                 ) ??
                 const SizedBox.shrink();
           }
