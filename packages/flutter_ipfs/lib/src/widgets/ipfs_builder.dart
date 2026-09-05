@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 /// A reactive widget that evaluates an IPFS asynchronous operation (e.g. content fetch,
 /// DAG node resolution, IPNS name lookup) and rebuilds on state changes.
 class IpfsBuilder<T> extends StatelessWidget {
+  /// Creates an [IpfsBuilder] widget.
   const IpfsBuilder({
     super.key,
     required this.future,
@@ -32,6 +33,7 @@ class IpfsBuilder<T> extends StatelessWidget {
 /// A reactive widget that listens to an IPFS [Stream] (e.g. PubSub topic messages,
 /// bandwidth metrics, peer events) and rebuilds whenever a new item is emitted.
 class IpfsStreamBuilder<T> extends StatelessWidget {
+  /// Creates an [IpfsStreamBuilder] widget.
   const IpfsStreamBuilder({
     super.key,
     required this.stream,

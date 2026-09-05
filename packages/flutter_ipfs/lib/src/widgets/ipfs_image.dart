@@ -15,6 +15,7 @@ import 'ipfs_scope.dart';
 /// - Error handling with customizable [errorWidget].
 /// - Pure declarative interface.
 class IpfsImage extends StatefulWidget {
+  /// Creates an [IpfsImage] widget.
   const IpfsImage({
     super.key,
     required this.cid,

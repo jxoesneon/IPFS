@@ -7,6 +7,7 @@ import 'dart:typed_data';
 /// Cache eviction occurs on a Least-Recently-Used (LRU) basis when capacity limits
 /// are reached.
 class IpfsCacheManager {
+  /// Creates an [IpfsCacheManager] with the specified capacity limits.
   IpfsCacheManager({
     this.maxEntries = 100,
     this.maxSizeBytes = 50 * 1024 * 1024, // 50 MB
@@ -24,8 +25,7 @@ class IpfsCacheManager {
   /// Returns the singleton default cache instance.
   static final IpfsCacheManager defaultCache = IpfsCacheManager();
 
-  /// Returns cached bytes for [key] (typically a CID or CID/subpath), or 
-ull.
+  /// Returns cached bytes for [key] (typically a CID or CID/subpath), or null.
   Uint8List? get(String key) {
     final value = _cache.remove(key);
     if (value != null) {

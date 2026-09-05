@@ -45,7 +45,7 @@ void main() {
             stream: controller.stream,
             initialData: 0,
             builder: (context, snapshot) {
-              return Text('Count: ');
+              return Text('Count: \');
             },
           ),
         ),

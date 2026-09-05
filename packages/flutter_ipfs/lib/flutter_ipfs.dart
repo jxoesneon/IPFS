@@ -8,7 +8,7 @@
 /// - [IpfsStreamBuilder] — Reactive stream builder for IPFS events (PubSub, bandwidth).
 /// - [IpfsText] — Declarative text widget.
 /// - [IpfsCacheManager] — In-memory LRU cache manager for immutable IPFS content.
-library flutter_ipfs;
+library;
 
 export 'src/cache/ipfs_cache_manager.dart';
 export 'src/widgets/ipfs_builder.dart';
