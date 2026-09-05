@@ -149,6 +149,7 @@ export 'package:dart_ipfs_quic/dart_ipfs_quic.dart'
     show QuicTransport, QuicConnection, QuicListener;
 
 export 'src/core/config/ipfs_config.dart';
+export 'src/core/crypto/peer_key_registry.dart';
 export 'src/core/data_structures/car.dart';
 export 'src/core/ipfs_node/ipfs_node.dart';
 export 'src/core/ipfs_node/ipfs_web_node.dart';

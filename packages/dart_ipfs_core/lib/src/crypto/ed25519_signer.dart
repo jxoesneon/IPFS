@@ -27,6 +27,9 @@ import 'crypto_utils.dart';
 /// final isValid = await signer.verify(data, signature, keyPair.publicKey);
 /// ```
 class Ed25519Signer {
+  /// Creates a new [Ed25519Signer] instance.
+  Ed25519Signer();
+
   final Ed25519 _algorithm = Ed25519();
 
   /// Generates a new Ed25519 key pair.

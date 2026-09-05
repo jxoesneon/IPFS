@@ -12,6 +12,9 @@ import 'codec.dart';
 /// CID links are represented as CBOR tag 42 with the CID bytes prefixed by
 /// `0x00`, matching the IPLD DAG-CBOR specification.
 class DagCborCodec implements IPLDCodec {
+  /// Creates a new [DagCborCodec] instance.
+  const DagCborCodec();
+
   @override
   String get name => 'dag-cbor';
 

@@ -19,11 +19,11 @@ void main() async {
   await store.start();
 
   final putResult = await store.putBlock(block);
-  print('Put Block: ${putResult.isSuccess} (${block.size} bytes)');
+  print('Put Block: ${putResult.succeeded} (${block.size} bytes)');
 
   final getResult = await store.getBlock(cid);
-  if (getResult.isSuccess && getResult.data != null) {
-    final retrieved = getResult.data!;
+  if (getResult.succeeded && getResult.value != null) {
+    final retrieved = getResult.value!;
     print('Retrieved Block Payload: "${utf8.decode(retrieved.data)}"');
   }
 
@@ -47,7 +47,8 @@ void main() async {
   final keyPair = await signer.generateKeyPair();
   final message = Uint8List.fromList(utf8.encode('Verify peer identity'));
   final signature = await signer.sign(message, keyPair);
-  final isValid = await signer.verify(message, signature, await keyPair.extractPublicKey());
+  final pubKey = await signer.extractPublicKey(keyPair);
+  final isValid = await signer.verify(message, signature, pubKey);
   print('Ed25519 Signature Verified: $isValid');
 
   await store.stop();

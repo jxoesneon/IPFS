@@ -13,6 +13,8 @@ import '../../protocols/ipns/ipns_handler.dart';
 import '../../protocols/pubsub/pubsub_message.dart';
 import '../../transport/router_interface.dart';
 import '../../utils/logger.dart';
+import '../../platform/platform.dart';
+export '../../platform/platform.dart' show IpfsPlatform;
 import '../builders/ipfs_node_builder.dart';
 import '../config/ipfs_config.dart';
 import '../data_structures/blockstore.dart';

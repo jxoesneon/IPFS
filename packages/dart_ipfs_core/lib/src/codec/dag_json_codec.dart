@@ -11,6 +11,9 @@ import 'codec.dart';
 /// This implementation handles the standard JSON types. CID links are encoded
 /// as `{'/': '<cid-string>'}` maps, matching the DAG-JSON spec.
 class DagJsonCodec implements IPLDCodec {
+  /// Creates a new [DagJsonCodec] instance.
+  const DagJsonCodec();
+
   @override
   String get name => 'dag-json';
 

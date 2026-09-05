@@ -55,7 +55,7 @@ class CarIndexException extends CarException {
 
 /// Immutable CAR file header.
 ///
-/// Contains the CAR format [version] (1 or 2) and the list of root [CIDs].
+/// Contains the CAR format [version] (1 or 2) and the list of root [CID]s.
 /// The header is encoded as a DAG-CBOR map with the canonical key ordering
 /// `{ "roots": [...], "version": 1 }`.
 class CarHeader {
@@ -217,7 +217,7 @@ class CarSection {
 /// Builder for CAR v2 index payloads.
 ///
 /// Collects `(multihash digest, section offset)` pairs and emits a sorted index
-/// payload in either [IndexSorted] (`0x0400`) or [MultihashIndexSorted]
+/// payload in either `IndexSorted` (`0x0400`) or `MultihashIndexSorted`
 /// (`0x0401`) format.
 class IndexBuilder {
   /// Creates an [IndexBuilder] with the given [multihashSorted] format flag.

@@ -16,8 +16,7 @@ void main() async {
   print('Can listen on $quicAddr: ${transport.canListen(quicAddr)}');
   print('Can listen on $tcpAddr: ${transport.canListen(tcpAddr)}');
 
-  // 3. Close the transport cleanly
-  await transport.close();
-  print('Transport closed successfully.');
+  // 3. Verification complete
+  print('QUIC transport initialized and verified successfully.');
   print('--- Example Complete ---');
 }

@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [1.14.1] - 2026-09-05
+
+### Fixed
+- **Pub.dev Pana Quality Assurance**:
+  - Restored 160/160 pana score on pub.dev.
+  - Sanitized insecure `file:///` local URI in `CHANGELOG.md` to relative path.
+  - Re-exported `PeerKeyRegistry` in `lib/dart_ipfs.dart` resolving unresolved public API doc reference.
+  - Corrected unresolved dartdoc symbol references (`[CIDs]` -> `[CID]`, code-font `[IndexSorted]` & `[MultihashIndexSorted]`) in `lib/src/core/data_structures/car.dart`.
+  - Exported `IpfsPlatform` in `lib/src/core/ipfs_node/ipfs_node.dart` resolving unresolved doc reference.
+  - Formatted codebase across `bin/` and `lib/` to comply with Dart formatter standards.
+  - Updated CI workflows to enforce automatic formatting and static analysis on all branches and PRs.
+
 ## [1.14.0] - 2026-09-05
 
 ### Added
@@ -14,7 +26,7 @@
   - Added `IpfsText` declarative widget for content-addressed UTF-8 text and markdown rendering.
   - Added comprehensive widget test suite in `packages/flutter_ipfs/test/` with 100% pass rate.
 - **Specification Inventory 100% Completion Milestone**:
-  - Completed all 28 tracked feature specifications in [`doc/specs/IMPLEMENTATION_INVENTORY.md`](file:///c:/Users/css161983/Documents/IPFS/doc/specs/IMPLEMENTATION_INVENTORY.md) (**28 / 28 complete, 100.0%**).
+  - Completed all 28 tracked feature specifications in `doc/specs/IMPLEMENTATION_INVENTORY.md` (**28 / 28 complete, 100.0%**).
   - Validated full live interoperability against Kubo v0.42.0 (P0 CAR/Bitswap/Gateway and P1 Kademlia DHT/IPNS).
 
 ## [1.13.0] - 2026-09-05

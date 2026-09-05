@@ -59,6 +59,9 @@ class EncryptedData {
 /// - Cryptographically secure random generation
 /// - Constant-time comparison
 class CryptoUtils {
+  /// Creates a new [CryptoUtils] instance.
+  const CryptoUtils();
+
   /// Default PBKDF2 iteration count.
   ///
   /// 100,000 iterations provides a good balance between security and performance
