@@ -156,4 +156,5 @@ export 'src/core/ipfs_node/ipfs_web_node.dart';
 export 'src/core/lifecycle/mobile_lifecycle_adapter.dart';
 export 'src/core/lifecycle/mobile_lifecycle_coordinator.dart';
 export 'src/ipfs.dart';
+export 'src/platform/platform.dart' show IpfsPlatform;
 export 'src/protocols/pubsub/pubsub_message.dart';
