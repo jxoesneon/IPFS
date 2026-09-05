@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-09-05
+
+### Added
+- **Mobile Lifecycle & Battery Shield (`MOBILE_LIFECYCLE_BATTERY_SPEC`)**:
+  - Implemented `MobileLifecycleCoordinator` managing active node resources, connection pruning, and write cache durability across OS states.
+  - Implemented `MobileLifecycleAdapter` abstract contract with `ManualMobileLifecycleAdapter` for decoupled, pure-Dart lifecycle event delivery.
+  - Added power management state models: `NodeLifecycleState` (`resumed`, `inactive`, `paused`, `detached`) and `IpfsPowerMode` (`fullActive`, `lowPower`, `suspendedMesh`).
+  - Added `IPFSNodeBuilder.withMobileLifecycle()` for fluent integration into DI and lifecycle management.
+  - Added `Reprovider.pause()` and `resume()` to pause background DHT provider re-announcements during low power or background modes.
+  - Added `BlockStore.flush()` for synchronous write-cache durability flushes before application suspension.
+  - Added `NetworkManager.trimConnections()` supporting active connection shedding down to configurable thresholds.
+  - Added comprehensive test coverage in `test/core/lifecycle/mobile_lifecycle_coordinator_test.dart` verifying state transitions, rapid oscillation concurrency, error isolation, and connection downscaling.
+- **Specifications & Architectural Blueprints**:
+  - Created `doc/specs/features/MOBILE_LIFECYCLE_BATTERY_SPEC.md` detailing power modes, lifecycle contracts, and OS constraints.
+  - Created `doc/specs/features/FLUTTER_REACTIVE_BINDINGS_SPEC.md` specifying reactive Stream/ValueNotifier wrappers and provider patterns.
+  - Updated `doc/specs/IMPLEMENTATION_INVENTORY.md` tracking completed milestones (**27 / 28 specs complete, 96.4%**).
+
+### Fixed
+- **DHT Wire & Protocol Framing**:
+  - Unpacked `DHTEnvelope` payload whenever `tryParse` succeeds in `DHTClient._handlePacket`, resolving silent drop of inbound requests framed with empty request IDs.
+  - Preserved raw protobuf fallback parsing for unframed WAN messages (Kubo/Helia).
+  - Fixed mock router request handling in iterative DHT lookup unit tests.
+- **Static Analysis & Types**:
+  - Resolved strict typing analyzer warnings across mobile lifecycle and mock implementations.
+  - Removed duplicate `blockStore` getter in `MobileLifecycleCoordinator`.
+- **Infrastructure**:
+  - Updated `azure/setup-helm` to v4.3.0 in Kubernetes deployment workflows.
+
 ## [1.12.0] - 2026-09-03
 
 ### Security
