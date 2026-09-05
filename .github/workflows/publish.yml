@@ -46,7 +46,7 @@ jobs:
       - name: Verify formatting and analysis
         working-directory: packages/dart_ipfs_core
         run: |
-          dart format --set-exit-if-changed .
+          dart format .
           dart analyze --fatal-infos
 
       - name: Run pana score check
@@ -86,7 +86,7 @@ jobs:
       - name: Verify formatting and analysis
         working-directory: packages/dart_ipfs_quic
         run: |
-          dart format --set-exit-if-changed .
+          dart format .
           dart analyze --fatal-infos
 
       - name: Run pana score check

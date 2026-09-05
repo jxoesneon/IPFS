@@ -29,6 +29,7 @@ RUN apt-get update && \
 
 # Cache dependencies first for faster rebuilds
 COPY pubspec.* ./
+COPY packages/ packages/
 RUN dart pub get
 
 # Copy source tree
