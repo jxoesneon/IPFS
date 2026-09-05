@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-09-05
+
+### Added
+- **Flutter Reactive Developer Kit (`FLUTTER_REACTIVE_BINDINGS_SPEC`)**:
+  - Implemented `packages/flutter_ipfs` companion package providing turn-key declarative widgets for Flutter developers without pulling Flutter UI dependencies into pure-Dart core/CLI nodes.
+  - Added `IpfsScope` (`InheritedWidget`) providing ambient `IPFSNode` dependency injection throughout Flutter widget subtrees (`IpfsScope.of(context)`).
+  - Added `IpfsImage` declarative widget for resolving CIDs to `Image.memory` with customizable `placeholder`, `errorWidget`, layout sizing, and accessibility labels.
+  - Added `IpfsCacheManager` multi-tier in-memory LRU decoded bitmap cache with dual capacity bounds (entry count and total byte budget) ensuring 60fps list scrolling without repeated block decoding.
+  - Added `IpfsBuilder<T>` and `IpfsStreamBuilder<T>` reactive widgets binding asynchronous IPFS operations (`cat`, DAG traversal) and live streams (PubSub topics, metrics) directly to Flutter widget trees.
+  - Added `IpfsText` declarative widget for content-addressed UTF-8 text and markdown rendering.
+  - Added comprehensive widget test suite in `packages/flutter_ipfs/test/` with 100% pass rate.
+- **Specification Inventory 100% Completion Milestone**:
+  - Completed all 28 tracked feature specifications in [`doc/specs/IMPLEMENTATION_INVENTORY.md`](file:///c:/Users/css161983/Documents/IPFS/doc/specs/IMPLEMENTATION_INVENTORY.md) (**28 / 28 complete, 100.0%**).
+  - Validated full live interoperability against Kubo v0.42.0 (P0 CAR/Bitswap/Gateway and P1 Kademlia DHT/IPNS).
+
 ## [1.13.0] - 2026-09-05
 
 ### Added
