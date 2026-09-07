@@ -16,6 +16,15 @@ async function getHelia() {
   return heliaInstance;
 }
 
+function getSingleStringArg(queryArg) {
+  if (!queryArg) return null;
+  if (typeof queryArg === "string") return queryArg.trim();
+  if (Array.isArray(queryArg) && queryArg.length > 0 && typeof queryArg[0] === "string") {
+    return queryArg[0].trim();
+  }
+  return null;
+}
+
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
@@ -47,9 +56,9 @@ app.post("/api/v0/version", async (req, res) => {
 });
 
 app.post("/api/v0/swarm/connect", async (req, res) => {
-  const target = req.query.arg;
+  const target = getSingleStringArg(req.query.arg);
   if (!target) {
-    return res.status(400).json({ Error: "Missing arg query parameter" });
+    return res.status(400).json({ Error: "Missing or invalid arg query parameter" });
   }
   try {
     const helia = await getHelia();
@@ -81,9 +90,9 @@ app.post(
 );
 
 app.get("/api/v0/cat", async (req, res) => {
-  const cidStr = req.query.arg;
+  const cidStr = getSingleStringArg(req.query.arg);
   if (!cidStr) {
-    return res.status(400).json({ Error: "Missing arg query parameter" });
+    return res.status(400).json({ Error: "Missing or invalid arg query parameter" });
   }
   try {
     const helia = await getHelia();
@@ -96,9 +105,9 @@ app.get("/api/v0/cat", async (req, res) => {
 });
 
 app.get("/api/v0/dag/export", async (req, res) => {
-  const cidStr = req.query.arg;
+  const cidStr = getSingleStringArg(req.query.arg);
   if (!cidStr) {
-    return res.status(400).json({ Error: "Missing arg query parameter" });
+    return res.status(400).json({ Error: "Missing or invalid arg query parameter" });
   }
   try {
     const helia = await getHelia();
