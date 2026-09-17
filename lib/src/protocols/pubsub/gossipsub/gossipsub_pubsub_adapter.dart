@@ -81,6 +81,13 @@ class GossipsubPubSubAdapter implements IPubSub {
     _subscriptions[topic] = subscription;
   }
 
+  @override
+  List<String> get subscribedTopics =>
+      List<String>.unmodifiable(_handler.subscriptions);
+
+  @override
+  Set<String> peersForTopic(String topic) => _handler.peersForTopic(topic);
+
   Future<void> _ensureStarted() async {
     if (!manageLifecycle) return;
     if (!_started) {

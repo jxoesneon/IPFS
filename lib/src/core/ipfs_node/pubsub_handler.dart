@@ -25,14 +25,15 @@ class PubSubHandler implements IPubSub {
     SimpleKeyPair? keyPair,
     PeerKeyRegistry? keyRegistry,
     bool strictAuthentication = false,
-  }) : _pubSubClient = pubSubClient ??
-            PubSubClient(
-              router,
-              peerId,
-              keyPair: keyPair,
-              keyRegistry: keyRegistry,
-              strictAuthentication: strictAuthentication,
-            ) {
+  }) : _pubSubClient =
+           pubSubClient ??
+           PubSubClient(
+             router,
+             peerId,
+             keyPair: keyPair,
+             keyRegistry: keyRegistry,
+             strictAuthentication: strictAuthentication,
+           ) {
     // Register the pubsub protocol immediately upon construction
     router.registerProtocol('pubsub');
   }
@@ -45,6 +46,14 @@ class PubSubHandler implements IPubSub {
 
   /// Stream of incoming PubSub messages.
   Stream<PubSubMessage> get messages => _messageController.stream;
+
+  /// Returns the topics this node is currently subscribed to.
+  @override
+  List<String> get subscribedTopics => _pubSubClient.subscribedTopics;
+
+  /// Returns the peers known to be subscribed to [topic].
+  @override
+  Set<String> peersForTopic(String topic) => _pubSubClient.peersForTopic(topic);
 
   /// Starts the PubSub client and listens for incoming messages.
   Future<void> start() async {

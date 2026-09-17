@@ -225,8 +225,9 @@ class DHTClient {
     // send ADD_PROVIDER messages and we need to report them without relying on
     // a full iterative query over the wire.
     var localProviders = node.dhtHandler?.getLocalProvidersForCid(cid);
-    // ignore: avoid_print
-    print('findProviders($cid) local=${localProviders?.length ?? -1}');
+    _logger.verbose(
+      'findProviders($cid) local=${localProviders?.length ?? -1}',
+    );
     if (localProviders != null && localProviders.isNotEmpty) {
       return localProviders;
     }
@@ -239,8 +240,7 @@ class DHTClient {
         await Future<void>.delayed(const Duration(milliseconds: 500));
         localProviders = node.dhtHandler?.getLocalProvidersForCid(cid);
         if (localProviders != null && localProviders.isNotEmpty) {
-          // ignore: avoid_print
-          print(
+          _logger.verbose(
             'findProviders($cid) local after poll=${localProviders.length}',
           );
           return localProviders;
@@ -746,18 +746,15 @@ class DHTClient {
 
     final router = node.dhtHandler?.router;
     if (router == null) {
-      // ignore: avoid_print
-      print('_queryConnectedPeersForProviders: no router');
+      _logger.debug('_queryConnectedPeersForProviders: no router');
       return [];
     }
-    // ignore: avoid_print
-    print(
+    _logger.debug(
       '_queryConnectedPeersForProviders: connected=${router.connectedPeers.length}',
     );
 
     for (final peerIdStr in router.connectedPeers) {
-      // ignore: avoid_print
-      print('  querying $peerIdStr');
+      _logger.verbose('  querying $peerIdStr');
       try {
         // In private networks Kubo/Helia use the LAN DHT protocol; try it
         // first, then fall back to the WAN protocol.
@@ -770,8 +767,7 @@ class DHTClient {
           );
           if (responseBytes != null) break;
         }
-        // ignore: avoid_print
-        print(
+        _logger.verbose(
           '  response from $peerIdStr: ${responseBytes?.length ?? -1} bytes',
         );
         if (responseBytes == null) continue;
@@ -782,14 +778,13 @@ class DHTClient {
           }
         }
       } catch (e) {
-        // ignore: avoid_print
-        print('  query $peerIdStr failed: $e');
         _logger.debug('Direct provider query to $peerIdStr failed: $e');
       }
     }
 
-    // ignore: avoid_print
-    print('_queryConnectedPeersForProviders result: ${providers.length}');
+    _logger.debug(
+      '_queryConnectedPeersForProviders result: ${providers.length}',
+    );
     return providers.toList();
   }
 
@@ -839,8 +834,7 @@ class DHTClient {
 
   // Main Handle Packet
   void _handlePacket(NetworkPacket packet) async {
-    // ignore: avoid_print
-    print(
+    _logger.verbose(
       'DHT packet from ${packet.srcPeerId}, ${packet.datagram.length} bytes',
     );
     try {
@@ -863,8 +857,7 @@ class DHTClient {
         try {
           message = kad.Message.fromBuffer(packet.datagram);
           envelope = DHTEnvelope(requestId: '', payload: packet.datagram);
-          // ignore: avoid_print
-          print(
+          _logger.verbose(
             'DHT raw parsed: type=${message.type}, key=${message.key.length} bytes',
           );
         } catch (_) {
@@ -957,8 +950,6 @@ class DHTClient {
           );
           break;
         default:
-          // ignore: avoid_print
-          print('Unhandled DHT message type: ${message.type}');
           _logger.debug('Unhandled DHT message type: ${message.type}');
       }
     } catch (e, st) {
@@ -991,8 +982,7 @@ class DHTClient {
       final response = kad.Message()
         ..type = message.type
         ..key = message.key;
-      // ignore: avoid_print
-      print(
+      _logger.debug(
         'DHT GET_VALUE from $peerIdStr key=${message.key.length} found=${data != null && data.isNotEmpty}',
       );
       if (data != null && data.isNotEmpty) {
@@ -1062,33 +1052,26 @@ class DHTClient {
 
     try {
       final cidStr = Base58().encode(Uint8List.fromList(message.key));
-      // ignore: avoid_print
-      print(
+      _logger.debug(
         'ADD_PROVIDER from $peerIdStr for $cidStr, ${message.providerPeers.length} peers',
       );
       final cid = CID.decode(cidStr);
       for (final provider in message.providerPeers) {
         final providerId = _convertKadPeerToPeerId(provider);
-        // ignore: avoid_print
-        print(
+        _logger.debug(
           '  provider ${providerId.toBase58()}, addrs=${provider.addrs.length}',
         );
         if (_isValidProviderRecord(provider)) {
           await handler.handleProvideRequest(cid, providerId);
-          // ignore: avoid_print
-          print('  stored provider for $cidStr');
+          _logger.debug('  stored provider for $cidStr');
         } else {
           _metrics?.recordSecurityEvent('invalid_provider_record');
-          // ignore: avoid_print
-          print('  rejected invalid ADD_PROVIDER from $peerIdStr for $cidStr');
           _logger.debug(
             'Rejected invalid ADD_PROVIDER from $peerIdStr for $cidStr',
           );
         }
       }
     } catch (e) {
-      // ignore: avoid_print
-      print('Error handling ADD_PROVIDER from $peerIdStr: $e');
       _logger.debug('Error handling ADD_PROVIDER from $peerIdStr: $e');
     }
   }
@@ -1204,8 +1187,7 @@ class DHTClient {
   /// sending a self-lookup FIND_NODE so that the peer learns about us.
   Future<void> _bootstrapConnectedPeer(String peerIdStr) async {
     if (!_initialized) return;
-    // ignore: avoid_print
-    print('DHT bootstrap connected peer $peerIdStr');
+    _logger.debug('DHT bootstrap connected peer $peerIdStr');
     try {
       final peer = PeerId.fromBase58(peerIdStr);
       if (_bootstrappedPeers.add(peerIdStr)) {
@@ -1262,8 +1244,7 @@ class DHTClient {
   /// Sends a FIND_NODE for our own peer ID to [peer]. This is a minimal
   /// bootstrap interaction: the peer will add us to its routing table on receipt.
   Future<void> _bootstrapPeer(PeerId peer) async {
-    // ignore: avoid_print
-    print('DHT bootstrap FIND_NODE to ${peer.toBase58()}');
+    _logger.debug('DHT bootstrap FIND_NODE to ${peer.toBase58()}');
     try {
       final request = kad.Message()
         ..type = kad.Message_MessageType.FIND_NODE

@@ -177,16 +177,16 @@ class IPNSHandler implements ILifecycle {
     // multihash bytes and prefix with '/ipns/' to form the DHT key.
     final cidBytes = PeerId.fromBase36(name).value;
     if (cidBytes.length < 3 || cidBytes[0] != 0x01 || cidBytes[1] != 0x72) {
-      // ignore: avoid_print
-      print('Invalid IPNS name: $name');
+      _logger.warning('Invalid IPNS name: $name');
       throw IpnsValidationError('Invalid IPNS name: $name');
     }
     final key = Uint8List.fromList([
       ...utf8.encode('/ipns/'),
       ...cidBytes.sublist(2),
     ]);
-    // ignore: avoid_print
-    print('IPNS resolve key (${key.length} bytes): ${base64Encode(key)}');
+    _logger.debug(
+      'IPNS resolve key (${key.length} bytes): ${base64Encode(key)}',
+    );
     final bytes = await _getDHTValue(key);
     if (bytes == null || bytes.isEmpty) {
       throw IpnsResolutionError('No record found for $name');
@@ -215,8 +215,6 @@ class IPNSHandler implements ILifecycle {
       // Expected when the bytes are not a valid CBOR IPNS record.
     } catch (e) {
       _logger.debug('Failed to decode CBOR IPNS record: $e');
-      // ignore: avoid_print
-      print('IPNS decode failed: $e');
     }
 
     // Legacy fallback: raw CID string bytes.
@@ -237,23 +235,19 @@ class IPNSHandler implements ILifecycle {
   /// Validates a CBOR IPNS record.
   Future<IPNSRecord> _validateRecord(IPNSRecord record, String name) async {
     if (record.isExpired) {
-      // ignore: avoid_print
-      print('IPNS validation failed: record expired');
+      _logger.warning('IPNS validation failed: record expired');
       throw IpnsValidationError('Record expired');
     }
     if (!record.isSigned) {
-      // ignore: avoid_print
-      print('IPNS validation failed: record not signed');
+      _logger.warning('IPNS validation failed: record not signed');
       throw IpnsValidationError('Record is not signed');
     }
     if (!_nameMatchesPublicKey(name, record.publicKey)) {
-      // ignore: avoid_print
-      print('IPNS validation failed: name mismatch');
+      _logger.warning('IPNS validation failed: name mismatch');
       throw IpnsValidationError('Name does not match public key');
     }
     if (!await record.verify()) {
-      // ignore: avoid_print
-      print('IPNS validation failed: invalid signature');
+      _logger.warning('IPNS validation failed: invalid signature');
       throw IpnsValidationError('Invalid signature');
     }
     return record;
@@ -372,10 +366,12 @@ class IPNSHandler implements ILifecycle {
     // protobuf-encoded public key as the DHT key.
     final key = _ipnsDhtKey(record.publicKey);
     final value = record.toIpnsEntry();
-    // ignore: avoid_print
-    print('IPNS publish key (${key.length} bytes): ${base64Encode(key)}');
-    // ignore: avoid_print
-    print('IPNS publish value (${value.length} bytes): ${base64Encode(value)}');
+    _logger.debug(
+      'IPNS publish key (${key.length} bytes): ${base64Encode(key)}',
+    );
+    _logger.debug(
+      'IPNS publish value (${value.length} bytes): ${base64Encode(value)}',
+    );
 
     await _storeDHTValue(key, value);
 

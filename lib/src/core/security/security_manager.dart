@@ -42,6 +42,16 @@ class SecurityManager implements ISecurityManager {
   @override
   bool get isKeystoreUnlocked => _encryptedKeystore.isUnlocked;
 
+  /// Returns the legacy plaintext [Keystore].
+  ///
+  /// **Security Note:** Prefer [secureKeystore]; the plaintext store is
+  /// retained for migration compatibility only.
+  Keystore get keystore => _keystore;
+
+  /// Returns the [EncryptedKeystore] holding the named keys that
+  /// [getSecureKey] resolves (e.g., for IPNS publishing).
+  EncryptedKeystore get secureKeystore => _encryptedKeystore;
+
   /// Returns a [Future] that completes when the encrypted keystore is unlocked with the given [password].
   @override
   Future<void> unlockKeystore(String password, {Uint8List? salt}) async {

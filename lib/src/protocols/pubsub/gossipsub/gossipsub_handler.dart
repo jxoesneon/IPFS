@@ -208,6 +208,19 @@ class GossipsubHandler {
   /// Returns the list of subscribed topics.
   Set<String> get subscriptions => Set<String>.from(_subscriptions);
 
+  /// Returns the peers known to be subscribed to [topic].
+  ///
+  /// Peer membership is learned from inbound subscription announcements.
+  /// When no announcements have been observed for [topic], the topic's
+  /// mesh peers are returned as the best available approximation.
+  Set<String> peersForTopic(String topic) {
+    final Set<String>? peers = _peerSubscriptions[topic];
+    if (peers == null) {
+      return Set<String>.from(_mesh[topic] ?? const <String>{});
+    }
+    return Set<String>.from(peers);
+  }
+
   // --- Internal message creation ---
 
   Future<Message> _createMessage(String topic, Uint8List data) async {
@@ -299,10 +312,8 @@ class GossipsubHandler {
       if (message.from.isNotEmpty) {
         try {
           final authorFrom = Uint8List.fromList(message.from);
-          final derived =
-              PeerId.fromPublicKey(pubKeyBytes, type: 'Ed25519');
-          final authorId =
-              PeerId(value: authorFrom);
+          final derived = PeerId.fromPublicKey(pubKeyBytes, type: 'Ed25519');
+          final authorId = PeerId(value: authorFrom);
 
           bool isAuthorMatch = false;
           if (authorFrom.length == pubKeyBytes.length) {
@@ -335,10 +346,7 @@ class GossipsubHandler {
         }
       }
 
-      final valid = await _signer.verifyMessage(
-        message,
-        pubKeyBytes,
-      );
+      final valid = await _signer.verifyMessage(message, pubKeyBytes);
       if (!valid) {
         _logger.warning('Invalid signature from $sender on topic $topic');
         _scores.scoreFor(sender).addInvalidMessageDelivery(topic);

@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-09-17
+
+### Added
+- **IPFS Facade Parity** (fixes #67, #68, #69): exposed previously node-only APIs on the high-level `IPFS` facade — `connectedPeers`, `connectToPeer`, `disconnectFromPeer`, `addresses`, `provide`, `addFileStream`, `restart`, `bandwidthMetrics`, `bandwidthIn`, `bandwidthOut`, `dhtPeerCount`, `pinnedCids`, `cat`, `publicKey`, `resolvePeerId`, `getHealthStatus`, and `setGatewayMode`.
+- **Key Management API** (fixes #71): added `keyGen`, `keyList`, `keyImport`, `keyExport`, and `keyRm` on `IPFS` and `IPFSNode`, backed by the encrypted keystore; named keys can now be created and used with `publishIPNS`. `keyExport` returns unencrypted private key material and is documented as sensitive.
+- **PubSub Introspection** (fixes #73): added `pubsubLs` and `pubsubPeers` on `IPFS`, `IPFSNode`, and `ProtocolManager`, backed by per-topic peer tracking in the pubsub client and gossipsub handler. `pubsubPeers` falls back to the global mesh when no per-topic data has been observed.
+- **Typed Transport Error**: added `TransportUnavailableException`, exported from `dart_ipfs.dart`.
+
+### Changed
+- **Transport Registration** (fixes #70): transports without a working backend on the current platform are no longer registered by default, and explicitly enabled dials on missing backends throw `TransportUnavailableException` instead of `UnimplementedError`. Web backends are unaffected.
+- **Logging** (fixes #72): routed 25 stray `print` calls in `dht_client.dart`, `ipns_handler.dart`, and `rpc_handlers.dart` through `Logger`; removed 8 that duplicated adjacent log statements.
+
 ## [1.15.0] - 2026-09-17
 
 ### Added

@@ -254,6 +254,34 @@ class EncryptedKeystore {
     return keyPair;
   }
 
+  /// Exports the raw 32-byte Ed25519 seed for a stored key.
+  ///
+  /// [name] - Name of the key to export.
+  ///
+  /// Returns the decrypted private key seed.
+  ///
+  /// **Security Warning:** The returned bytes are unencrypted private key
+  /// material. The caller is responsible for protecting them in transit and
+  /// zeroing them after use (see [CryptoUtils.zeroMemory]).
+  ///
+  /// Throws [ArgumentError] if [name] is not found.
+  /// Throws [StateError] if locked.
+  Future<Uint8List> exportSeed(String name) async {
+    _requireUnlocked();
+
+    final entry = _keys[name];
+    if (entry == null) {
+      throw ArgumentError('Key not found: $name');
+    }
+
+    // Decrypt the seed
+    final encrypted = EncryptedData(
+      ciphertext: entry.encryptedSeed,
+      nonce: entry.nonce,
+    );
+    return CryptoUtils.decrypt(encrypted, _masterKey!);
+  }
+
   /// Gets the public key for a stored key.
   ///
   /// Returns `null` if the key is not found.
