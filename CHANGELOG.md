@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-09-17
+
+### Added
+- **IPFS Facade PubSub Inbound Stream** (fixes #64):
+  - Exposed `IPFS.pubsubMessages` (`Stream<PubSubMessage>`) delegating to the node's inbound pubsub stream — facade consumers can now observe incoming messages on all subscribed topics without dropping down to `IPFSNode`.
+  - Added `IPFS.messagesFor(String topic)` filtered convenience stream for single-topic listeners.
+
+### Changed
+- **CI/CD Supply-Chain Hardening**: Pinned all GitHub Actions references to immutable commit SHAs across every workflow (Dependabot-compatible `# vX.Y.Z` comments retained).
+- **Dependency Maintenance**: Bumped `github/codeql-action` 4.37.9→4.38.0, `azure/setup-helm` 4.3.0→5.0.1, `docker/setup-qemu-action` 4.2.0→4.3.0, `very_good_analysis` 10.3.0→11.0.0.
+
+### Fixed
+- **Interop Test Harness**: Validated query argument types in the Helia interop test server to prevent parameter tampering type confusion (CWE-843).
+
 ## [1.14.1] - 2026-09-05
 
 ### Fixed
