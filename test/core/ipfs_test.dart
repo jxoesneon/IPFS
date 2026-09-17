@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/ipfs.dart';
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -133,6 +134,20 @@ void main() {
         }
       },
     );
+
+    test('pubsubMessages exposes inbound pubsub stream', () async {
+      await ipfs.start();
+      expect(ipfs.pubsubMessages, isA<Stream<PubSubMessage>>());
+      // Offline mode: stream completes without emitting messages.
+      expect(await ipfs.pubsubMessages.toList(), isEmpty);
+    });
+
+    test('messagesFor filters inbound messages by topic', () async {
+      await ipfs.start();
+      expect(ipfs.messagesFor('topic-a'), isA<Stream<PubSubMessage>>());
+      // Offline mode: filtered stream completes without emitting messages.
+      expect(await ipfs.messagesFor('topic-a').toList(), isEmpty);
+    });
 
     test('unpin throws when CID is not pinned', () async {
       await ipfs.start();
