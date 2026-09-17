@@ -272,7 +272,7 @@ paket-files/
 .windsurf/ci_*.log
 
 # Test Artifacts
-ipfs_facade_*
+/ipfs_facade_*
 verify.log
 
 # Ciel local domain
