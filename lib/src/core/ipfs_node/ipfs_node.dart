@@ -10,8 +10,10 @@ import '../../protocols/dht/dht_handler.dart';
 import '../../protocols/dht/reprovider.dart';
 import '../../protocols/graphsync/graphsync_handler.dart';
 import '../../protocols/ipns/ipns_handler.dart';
+import '../../protocols/ipns/ipns_record.dart';
 import '../../protocols/pubsub/pubsub_message.dart';
 import '../../transport/router_interface.dart';
+import '../../utils/keystore.dart';
 import '../../utils/logger.dart';
 import '../../platform/platform.dart';
 export '../../platform/platform.dart' show IpfsPlatform;
@@ -423,6 +425,13 @@ class IPFSNode {
   /// Returns a [Stream] of incoming [PubSubMessage]s for all subscribed topics.
   Stream<PubSubMessage> get pubsubMessages => _protocolManager.pubsubMessages;
 
+  /// Returns a [List] of topics this node is currently subscribed to.
+  List<String> pubsubLs() => _protocolManager.pubsubLs();
+
+  /// Returns a [Future] that resolves to the peers known to be subscribed to [topic].
+  Future<List<String>> pubsubPeers(String topic) =>
+      _protocolManager.pubsubPeers(topic);
+
   /// Returns a [Future] that completes when the IPFS node and all its subsystems have started.
   ///
   /// Transitions the state from [NodeState.stopped] to [NodeState.running].
@@ -534,6 +543,93 @@ class IPFSNode {
   /// published for the given [cid].
   Future<String> publishIPNS(String cid, {required String keyName}) =>
       _protocolManager.publishIPNS(cid, keyName: keyName);
+
+  // Key management API
+
+  /// Returns a [Future] that resolves to the IPNS name (base36-encoded
+  /// libp2p-key CID) of a newly generated Ed25519 key stored under [name].
+  ///
+  /// [type] currently only accepts `'ed25519'`; [size] is accepted for
+  /// compatibility but ignored for Ed25519 keys.
+  ///
+  /// The key is stored in the node's encrypted keystore, which must be
+  /// unlocked first (see [SecurityManager.unlockKeystore]). Once stored, the
+  /// key can be used by passing [name] as `keyName` to [publishIPNS].
+  ///
+  /// Throws [ArgumentError] if [type] is unsupported.
+  /// Throws [StateError] if the keystore is locked or [name] already exists.
+  Future<String> keyGen(
+    String name, {
+    String type = 'ed25519',
+    int? size,
+  }) async {
+    if (type.toLowerCase() != 'ed25519') {
+      throw ArgumentError.value(
+        type,
+        'type',
+        'Only ed25519 keys are supported for IPNS publishing',
+      );
+    }
+    final publicKey = await _container.get<SecurityManager>().generateSecureKey(
+      name,
+    );
+    return deriveIpnsName(publicKey);
+  }
+
+  /// Returns a [Future] that resolves to a [List] of key names stored in the
+  /// node's encrypted keystore.
+  ///
+  /// Any listed name can be passed as `keyName` to [publishIPNS].
+  Future<List<String>> keyList() async =>
+      _container.get<SecurityManager>().secureKeystore.keyNames;
+
+  /// Returns a [Future] that resolves to the IPNS name of the key imported
+  /// under [name].
+  ///
+  /// [privateKey] must be the raw 32-byte Ed25519 seed, e.g. bytes previously
+  /// returned by [keyExport]. The keystore must be unlocked.
+  ///
+  /// Throws [ArgumentError] if [privateKey] is not a valid seed.
+  /// Throws [StateError] if the keystore is locked or [name] already exists.
+  Future<String> keyImport(String name, Uint8List privateKey) async {
+    final publicKey = await _container
+        .get<SecurityManager>()
+        .secureKeystore
+        .importSeed(name, privateKey);
+    return deriveIpnsName(publicKey);
+  }
+
+  /// Returns a [Future] that resolves to the raw 32-byte Ed25519 private key
+  /// seed stored under [name].
+  ///
+  /// **Security Warning:** The returned bytes are unencrypted private key
+  /// material. Handle them as sensitive and zero them after use.
+  ///
+  /// Throws [ArgumentError] if [name] is not found.
+  /// Throws [StateError] if the keystore is locked.
+  Future<Uint8List> keyExport(String name) =>
+      _container.get<SecurityManager>().secureKeystore.exportSeed(name);
+
+  /// Returns a [Future] that completes when the key stored under [name] is
+  /// removed from the keystore.
+  ///
+  /// The default `'self'` key cannot be removed.
+  ///
+  /// Throws [ArgumentError] if [name] is `'self'` or not found.
+  Future<void> keyRm(String name) async {
+    if (name == Keystore.defaultKeyName) {
+      throw ArgumentError.value(
+        name,
+        'name',
+        "Refusing to remove the default 'self' key",
+      );
+    }
+    final keystore = _container.get<SecurityManager>().secureKeystore;
+    if (!keystore.hasKey(name)) {
+      throw ArgumentError('Key not found: $name');
+    }
+    keystore.removeKey(name);
+  }
 
   /// Returns a [Future] that completes when the given CAR (Content Addressable Archive) file [carFile] is imported.
   Future<void> importCAR(Uint8List carFile) =>

@@ -88,6 +88,20 @@ class ProtocolManager implements ILifecycle {
     return _pubSubHandler?.messages ?? const Stream.empty();
   }
 
+  /// Lists the PubSub topics this node is currently subscribed to.
+  ///
+  /// Returns an empty list when PubSub support is disabled.
+  List<String> pubsubLs() {
+    return _pubSubHandler?.subscribedTopics ?? const [];
+  }
+
+  /// Lists the peers known to be subscribed to the PubSub [topic].
+  ///
+  /// Returns an empty list when PubSub support is disabled.
+  Future<List<String>> pubsubPeers(String topic) async {
+    return _pubSubHandler?.peersForTopic(topic).toList() ?? const [];
+  }
+
   /// Resolves an IPNS [name] to its corresponding content path.
   Future<String> resolveIPNS(String name) async {
     try {

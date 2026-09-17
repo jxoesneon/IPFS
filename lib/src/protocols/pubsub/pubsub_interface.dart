@@ -13,4 +13,16 @@ abstract class IPubSub {
 
   /// Listens for messages on a specific topic.
   void onMessage(String topic, void Function(String) handler);
+
+  /// Returns the topics this node is currently subscribed to.
+  ///
+  /// Implementations that track subscriptions should override this getter;
+  /// the default implementation returns an empty list.
+  List<String> get subscribedTopics => const [];
+
+  /// Returns the peers known to be subscribed to [topic].
+  ///
+  /// Implementations that track per-topic peers should override this
+  /// method; the default implementation returns an empty set.
+  Set<String> peersForTopic(String topic) => const {};
 }

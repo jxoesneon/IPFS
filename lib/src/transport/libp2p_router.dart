@@ -14,6 +14,7 @@ import 'package:pointycastle/export.dart';
 import '../core/config/ipfs_config.dart';
 import '../core/crypto/ecdsa_signer.dart';
 import '../core/crypto/rsa_signer.dart';
+import '../platform/platform.dart';
 import '../protocols/dht/dht_routing_table_interface.dart';
 import '../utils/logger.dart';
 import 'pnet/pnet_transport_wrapper.dart';
@@ -125,6 +126,39 @@ class Libp2pRouter implements RouterInterface {
   /// class (the current state for ipfs_libp2p 0.5.6, which only ships UDX and
   /// TCP transports).
   bool get supportsQuic => _config.network.enableQuic && _quicTransport != null;
+
+  /// True when the current platform provides working backends for the
+  /// browser-based transports (WebTransport, WebRTC, and WebRTC-direct).
+  ///
+  /// These transports rely on browser APIs, so on platforms without a
+  /// backend (such as the Dart VM/IO platform) the `enableWebTransport` and
+  /// `enableWebRtc` flags are ignored and the transports are skipped at
+  /// startup instead of being registered as stubs that throw
+  /// `TransportUnavailableException` on use.
+  bool get supportsBrowserTransports {
+    final override = _browserTransportsSupportedOverride;
+    if (override != null) return override;
+    try {
+      return getPlatform().isWeb;
+    } catch (_) {
+      // No platform implementation resolved; there is no usable backend.
+      return false;
+    }
+  }
+
+  /// Test-only override for the browser-transport platform check.
+  ///
+  /// When non-null, [supportsBrowserTransports] returns this value instead
+  /// of probing the platform, allowing tests to exercise both the
+  /// registration and the skip paths.
+  static bool? _browserTransportsSupportedOverride;
+
+  /// Sets the browser-transport availability override used for testing.
+  ///
+  /// Passing `null` clears any override and restores platform detection.
+  static void setBrowserTransportsSupportedForTesting(bool? supported) {
+    _browserTransportsSupportedOverride = supported;
+  }
 
   @override
   Stream<ConnectionEvent> get connectionEvents =>
@@ -268,12 +302,6 @@ class Libp2pRouter implements RouterInterface {
       final listenAddresses = _buildListenAddresses();
       final resourceManager = ResourceManagerImpl(limiter: FixedLimiter());
 
-      final webrtcTransport = WebRTCTransport(networkConfig: _config.network);
-      final webrtcDirectTransport = WebRTCDirectTransport(
-        networkConfig: _config.network,
-      );
-      final webTransportTransport = WebTransportTransport();
-
       // Assemble transports. TCP is always present; QUIC is added only when
       // enabled and the dependency actually exposes a transport class.
       final tcpTransport = TCPTransport(resourceManager: resourceManager);
@@ -296,12 +324,37 @@ class Libp2pRouter implements RouterInterface {
         }
       }
 
+      // The WebTransport/WebRTC transports are browser-based and only have
+      // working backends on the web platform. On platforms without a backend
+      // they are skipped even when enabled so that the default-on flags do
+      // not register stubs that throw TransportUnavailableException on use.
+      WebRTCTransport? webrtcTransport;
+
       if (_config.network.enableWebTransport) {
-        transports.add(config.Libp2p.transport(webTransportTransport));
+        if (supportsBrowserTransports) {
+          transports.add(config.Libp2p.transport(WebTransportTransport()));
+        } else {
+          _logger.info(
+            'WebTransport enabled but no backend exists on this platform; '
+            'skipping transport registration.',
+          );
+        }
       }
       if (_config.network.enableWebRtc) {
-        transports.add(config.Libp2p.transport(webrtcTransport));
-        transports.add(config.Libp2p.transport(webrtcDirectTransport));
+        if (supportsBrowserTransports) {
+          webrtcTransport = WebRTCTransport(networkConfig: _config.network);
+          transports.add(config.Libp2p.transport(webrtcTransport));
+          transports.add(
+            config.Libp2p.transport(
+              WebRTCDirectTransport(networkConfig: _config.network),
+            ),
+          );
+        } else {
+          _logger.info(
+            'WebRTC enabled but no backend exists on this platform; '
+            'skipping transport registration.',
+          );
+        }
       }
 
       _host = await config.Libp2p.new_([
@@ -311,12 +364,10 @@ class Libp2pRouter implements RouterInterface {
         config.Libp2p.userAgent('dart_ipfs/2.0.0'),
       ]);
 
-      if (_config.network.enableWebRtc) {
+      // Wire up the WebRTC host dependency and register the signaling
+      // protocol only when the transport was actually registered.
+      if (webrtcTransport != null) {
         webrtcTransport.host = _host;
-      }
-
-      // Register WebRTC signaling protocol
-      if (_config.network.enableWebRtc) {
         SignalingProtocol.register(this);
       }
 

@@ -1,10 +1,14 @@
 import 'dart:async';
 
+import '../../core/errors/transport_errors.dart';
 import 'data_channel_stream.dart';
 import 'ice_server.dart';
 import 'peer_connection.dart';
 
-/// IO implementation of [PeerConnection] (stub for now).
+/// IO implementation of [PeerConnection].
+///
+/// WebRTC relies on browser APIs and has no IO backend, so operations that
+/// require a real peer connection throw [TransportUnavailableException].
 class PeerConnectionIO implements PeerConnection {
   /// Creates a new [PeerConnectionIO].
   PeerConnectionIO(List<IceServer> iceServers);
@@ -16,10 +20,12 @@ class PeerConnectionIO implements PeerConnection {
   Stream<DataChannelStream> get onDataChannel => const Stream.empty();
 
   @override
-  String? get localDescriptionSdp => throw UnimplementedError();
+  String? get localDescriptionSdp =>
+      throw TransportUnavailableException.forPlatform('WebRTC', 'IO');
 
   @override
-  String? get remoteDescriptionSdp => throw UnimplementedError();
+  String? get remoteDescriptionSdp =>
+      throw TransportUnavailableException.forPlatform('WebRTC', 'IO');
 
   @override
   String? get iceConnectionState => null;
@@ -28,30 +34,32 @@ class PeerConnectionIO implements PeerConnection {
   String? get signalingState => null;
 
   @override
-  Future<RTCSessionDescriptionInit> createOffer() => throw UnimplementedError();
+  Future<RTCSessionDescriptionInit> createOffer() =>
+      throw TransportUnavailableException.forPlatform('WebRTC', 'IO');
 
   @override
   Future<RTCSessionDescriptionInit> createAnswer() =>
-      throw UnimplementedError();
+      throw TransportUnavailableException.forPlatform('WebRTC', 'IO');
 
   @override
   Future<void> setLocalDescription(RTCSessionDescriptionInit description) =>
-      throw UnimplementedError();
+      throw TransportUnavailableException.forPlatform('WebRTC', 'IO');
 
   @override
   Future<void> setRemoteDescription(String type, String sdp) =>
-      throw UnimplementedError();
+      throw TransportUnavailableException.forPlatform('WebRTC', 'IO');
 
   @override
   Future<void> addIceCandidate(RTCIceCandidateInit candidate) =>
-      throw UnimplementedError();
+      throw TransportUnavailableException.forPlatform('WebRTC', 'IO');
 
   @override
   Future<DataChannelStream> createDataChannel(String label) =>
-      throw UnimplementedError();
+      throw TransportUnavailableException.forPlatform('WebRTC', 'IO');
 
   @override
-  Future<void> close() => throw UnimplementedError();
+  Future<void> close() =>
+      throw TransportUnavailableException.forPlatform('WebRTC', 'IO');
 }
 
 /// Factory for creating a [PeerConnectionIO].

@@ -8,6 +8,7 @@ import 'package:ipfs_libp2p/p2p/transport/transport_config.dart'
     as libp2p_config;
 
 import '../../core/config/network_config.dart';
+import '../../core/errors/transport_errors.dart';
 import 'data_channel_stream.dart';
 import 'ice_server.dart';
 import 'peer_connection.dart';
@@ -88,8 +89,8 @@ class WebRTCDirectTransport implements libp2p_trans.Transport {
 
   @override
   Future<libp2p_listener.Listener> listen(libp2p.MultiAddr addr) async {
-    throw UnimplementedError(
-      'WebRTCDirect listener only supported on native platforms',
+    throw TransportUnavailableException(
+      'WebRTCDirect listener is not available on this platform',
     );
   }
 

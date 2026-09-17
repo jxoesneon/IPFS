@@ -50,11 +50,11 @@ class PubSubClient implements IPubSub {
     SimpleKeyPair? keyPair,
     PeerKeyRegistry? keyRegistry,
     bool strictAuthentication = false,
-  })  : _peerId = PeerId(value: Base58().base58Decode(peerIdStr)),
-        _keyPair = keyPair,
-        _keyRegistry = keyRegistry ?? PeerKeyRegistry(),
-        _strictAuthentication = strictAuthentication,
-        _logger = Logger('PubSubClient');
+  }) : _peerId = PeerId(value: Base58().base58Decode(peerIdStr)),
+       _keyPair = keyPair,
+       _keyRegistry = keyRegistry ?? PeerKeyRegistry(),
+       _strictAuthentication = strictAuthentication,
+       _logger = Logger('PubSubClient');
 
   final RouterInterface _router;
   final StreamController<PubSubMessage> _messageController =
@@ -80,6 +80,12 @@ class PubSubClient implements IPubSub {
   final Map<String, Map<String, String>> _messageCache = {};
   final Set<String> _subscriptions = {};
 
+  /// Remote peers known to be subscribed to each topic.
+  ///
+  /// Populated from inbound subscribe announcements and GRAFT control
+  /// messages; entries are removed on unsubscribe announcements and PRUNE.
+  final Map<String, Set<String>> _topicPeers = {};
+
   bool _isStarted = false;
   Timer? _heartbeatTimer;
 
@@ -90,6 +96,30 @@ class PubSubClient implements IPubSub {
 
   /// Indicates whether the PubSub client is currently active.
   bool get isStarted => _isStarted;
+
+  /// Returns the topics this node is currently subscribed to.
+  ///
+  /// The returned list is an unmodifiable snapshot; subsequent [subscribe]
+  /// and [unsubscribe] calls do not affect it.
+  @override
+  List<String> get subscribedTopics =>
+      List<String>.unmodifiable(_subscriptions);
+
+  /// Returns the peers known to be subscribed to [topic].
+  ///
+  /// Topic peers are learned from inbound subscribe announcements and
+  /// GRAFT control messages. When no per-topic information has been
+  /// recorded for [topic], the global gossipsub mesh is returned instead,
+  /// as mesh peers are the best available approximation of that topic's
+  /// peer set.
+  @override
+  Set<String> peersForTopic(String topic) {
+    final Set<String>? peers = _topicPeers[topic];
+    if (peers == null) {
+      return Set<String>.unmodifiable(_mesh);
+    }
+    return Set<String>.unmodifiable(peers);
+  }
 
   /// Starts the PubSub client, registering protocol handlers and starting heartbeat.
   ///
@@ -105,8 +135,7 @@ class PubSubClient implements IPubSub {
     final keyPair = _keyPair;
     if (keyPair != null) {
       try {
-        final pubKeyBytes =
-            await _ed25519Signer.extractPublicKeyBytes(keyPair);
+        final pubKeyBytes = await _ed25519Signer.extractPublicKeyBytes(keyPair);
         _cachedPublicKeyBytes = pubKeyBytes;
         _keyRegistry.registerPublicKey(
           Base58().encode(_peerId.value),
@@ -134,6 +163,24 @@ class PubSubClient implements IPubSub {
   Future<void> _processIncomingPacket(NetworkPacket packet) async {
     try {
       final String decodedData = utf8.decode(packet.datagram);
+
+      // Plain-text subscription announcements produced by
+      // [encodeSubscribeRequest] and [encodeUnsubscribeRequest].
+      if (decodedData.startsWith('subscribe:')) {
+        _trackTopicPeer(
+          packet.srcPeerId,
+          decodedData.substring('subscribe:'.length),
+        );
+        return;
+      }
+      if (decodedData.startsWith('unsubscribe:')) {
+        _untrackTopicPeer(
+          packet.srcPeerId,
+          decodedData.substring('unsubscribe:'.length),
+        );
+        return;
+      }
+
       final Map<String, dynamic> msgMap =
           jsonDecode(decodedData) as Map<String, dynamic>;
 
@@ -157,9 +204,17 @@ class PubSubClient implements IPubSub {
             return;
           case 'graft':
             graftPeer(sender);
+            _trackTopicPeer(sender, topic);
             return;
           case 'prune':
             prunePeer(sender);
+            _untrackTopicPeer(sender, topic);
+            return;
+          case 'subscribe':
+            _trackTopicPeer(sender, topic);
+            return;
+          case 'unsubscribe':
+            _untrackTopicPeer(sender, topic);
             return;
         }
       }
@@ -332,8 +387,10 @@ class PubSubClient implements IPubSub {
     }
 
     try {
-      final Uint8List encodedMessage =
-          await encodeSignedPublishRequest(topic, message);
+      final Uint8List encodedMessage = await encodeSignedPublishRequest(
+        topic,
+        message,
+      );
 
       if (_mesh.isEmpty) {
         _logger.warning('No peers in mesh to publish message to topic: $topic');
@@ -466,8 +523,7 @@ class PubSubClient implements IPubSub {
     if (cached != null) return cached;
     final keyPair = _keyPair;
     if (keyPair == null) return null;
-    _cachedPublicKeyBytes =
-        await _ed25519Signer.extractPublicKeyBytes(keyPair);
+    _cachedPublicKeyBytes = await _ed25519Signer.extractPublicKeyBytes(keyPair);
     return _cachedPublicKeyBytes;
   }
 
@@ -553,6 +609,24 @@ class PubSubClient implements IPubSub {
     }
   }
 
+  /// Records that [peerId] is subscribed to [topic].
+  ///
+  /// Called when a subscribe announcement or GRAFT control message
+  /// referencing [topic] is received from [peerId].
+  void _trackTopicPeer(String peerId, String? topic) {
+    if (topic == null || topic.isEmpty) return;
+    _topicPeers.putIfAbsent(topic, () => {}).add(peerId);
+  }
+
+  /// Records that [peerId] is no longer subscribed to [topic].
+  ///
+  /// Called when an unsubscribe announcement or PRUNE control message
+  /// referencing [topic] is received from [peerId].
+  void _untrackTopicPeer(String peerId, String? topic) {
+    if (topic == null || topic.isEmpty) return;
+    _topicPeers[topic]?.remove(peerId);
+  }
+
   /// Handles 'ihave' control messages by requesting missing messages.
   void _handleIHave(Map<String, dynamic> msg) {
     final String? topic = msg['topic'] as String?;
@@ -560,6 +634,9 @@ class PubSubClient implements IPubSub {
     final String? sender = msg['sender'] as String?;
 
     if (topic == null || msgIdsRaw == null || sender == null) return;
+
+    // A peer gossiping messages for a topic participates in that topic.
+    _trackTopicPeer(sender, topic);
 
     final List<String> msgIds = msgIdsRaw.cast<String>();
     final List<String> wantIds = [];

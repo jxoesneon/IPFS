@@ -3,6 +3,8 @@ import 'dart:collection';
 import 'dart:typed_data';
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 
+import '../../core/errors/transport_errors.dart';
+
 /// Base class for WebRTC DataChannel-backed streams.
 abstract class DataChannelStream implements libp2p.P2PStream<Uint8List> {
   /// Creates a new [DataChannelStream].
@@ -31,7 +33,9 @@ abstract class DataChannelStream implements libp2p.P2PStream<Uint8List> {
   bool get isClosed => _isClosed;
 
   @override
-  libp2p.Conn get conn => throw UnimplementedError();
+  libp2p.Conn get conn => throw TransportUnavailableException(
+    'DataChannelStream.conn is not available on this platform',
+  );
 
   /// The label of the data channel.
   String get label;

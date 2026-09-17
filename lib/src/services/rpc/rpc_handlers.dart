@@ -394,12 +394,12 @@ class RPCHandlers {
       return _errorResponse('Missing argument: cid');
     }
 
-    // ignore: avoid_print
-    print('handleDhtFindProviders called for cid=$cid');
+    _logger.debug('handleDhtFindProviders called for cid=$cid');
     try {
       final providers = await node.dhtClient.findProviders(cid);
-      // ignore: avoid_print
-      print('handleDhtFindProviders: ${providers.length} providers for $cid');
+      _logger.debug(
+        'handleDhtFindProviders: ${providers.length} providers for $cid',
+      );
 
       // Stream response (ndjson format)
       final responses = providers
@@ -469,8 +469,6 @@ class RPCHandlers {
       await node.dhtClient.addProvider(cid, node.peerId);
       return _jsonResponse({'Success': true});
     } catch (e, st) {
-      // ignore: avoid_print
-      print('DHT provide error: $e\n$st');
       _logger.error('DHT provide failed for cid: $cid', e, st);
       return _errorResponse('DHT provide failed');
     }
@@ -492,8 +490,6 @@ class RPCHandlers {
       final name = await node.publishIPNS(cid, keyName: 'self');
       return _jsonResponse({'Name': name, 'Value': path});
     } catch (e, st) {
-      // ignore: avoid_print
-      print('Name publish error: $e\n$st');
       _logger.error('Name publish failed for path: $path', e, st);
       return _errorResponse('Name publish failed');
     }
@@ -510,8 +506,6 @@ class RPCHandlers {
       final path = await node.resolveIPNS(name);
       return _jsonResponse({'Path': path});
     } catch (e, st) {
-      // ignore: avoid_print
-      print('Name resolve failed for name: $name: $e\n$st');
       _logger.error('Name resolve failed for name: $name', e, st);
       return _errorResponse('Name resolve failed');
     }

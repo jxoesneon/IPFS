@@ -1,6 +1,7 @@
 // src/ipfs.dart
 import 'dart:typed_data';
 
+import 'core/cid.dart';
 import 'core/config/ipfs_config.dart';
 import 'core/data_structures/link.dart';
 import 'core/data_structures/node_stats.dart';
@@ -81,6 +82,11 @@ class IPFS {
     await _node.stop();
   }
 
+  /// Restarts the IPFS node.
+  ///
+  /// This performs a graceful [stop] followed by [start].
+  Future<void> restart() => _node.restart();
+
   /// Gets the node's statistics.
   Future<NodeStats> stats() async {
     // Gather the actual statistics from the node's components
@@ -113,11 +119,50 @@ class IPFS {
     );
   }
 
+  /// Gets the health status of all node subsystems.
+  ///
+  /// Returns a nested map of subsystem names to status maps.
+  Future<Map<String, dynamic>> getHealthStatus() => _node.getHealthStatus();
+
+  /// Stream of bandwidth metrics for this node.
+  ///
+  /// In offline mode this stream emits no events.
+  Stream<Map<String, dynamic>> get bandwidthMetrics => _node.bandwidthMetrics;
+
+  /// Total bytes received by the node since it started.
+  int get bandwidthIn => _node.bandwidthIn;
+
+  /// Total bytes sent by the node since it started.
+  int get bandwidthOut => _node.bandwidthOut;
+
+  /// Number of peers currently in the DHT routing table.
+  int get dhtPeerCount => _node.dhtPeerCount;
+
   /// Stream of new content CIDs added to the node.
   Stream<String> get onNewContent => _node.onNewContent;
 
   /// Gets the peer ID of the IPFS node.
   String get peerID => _node.peerID;
+
+  /// Currently connected swarm peer IDs.
+  Future<List<String>> get connectedPeers => _node.connectedPeers;
+
+  /// Multiaddresses this node is listening on.
+  List<String> get addresses => _node.addresses;
+
+  /// The public key of this node as a base64-encoded protobuf.
+  Future<String> get publicKey => _node.publicKey;
+
+  /// Connects to a peer using its [multiaddr].
+  Future<void> connectToPeer(String multiaddr) =>
+      _node.connectToPeer(multiaddr);
+
+  /// Gracefully disconnects from the peer identified by [peerIdOrAddr].
+  Future<void> disconnectFromPeer(String peerIdOrAddr) =>
+      _node.disconnectFromPeer(peerIdOrAddr);
+
+  /// Resolves a [peerId] to its known multiaddresses.
+  List<String> resolvePeerId(String peerId) => _node.resolvePeerId(peerId);
 
   /// Adds a file to the IPFS network from its raw data.
   ///
@@ -125,6 +170,12 @@ class IPFS {
   Future<String> addFile(Uint8List data) async {
     return _node.addFile(data);
   }
+
+  /// Adds a file to the IPFS network from a stream of bytes.
+  ///
+  /// Returns the CID of the added file as a string.
+  Future<String> addFileStream(Stream<List<int>> dataStream) =>
+      _node.addFileStream(dataStream);
 
   /// Adds a directory to IPFS.
   ///
@@ -147,6 +198,17 @@ class IPFS {
     return _node.get(cid, path: path);
   }
 
+  /// Gets the raw content associated with the given [cid].
+  ///
+  /// This is an alias for [get].
+  Future<Uint8List?> cat(String cid) => _node.cat(cid);
+
+  /// Sets the mode used for retrieving content.
+  ///
+  /// [customUrl] is required when [mode] is [GatewayMode.custom].
+  void setGatewayMode(GatewayMode mode, {String? customUrl}) =>
+      _node.setGatewayMode(mode, customUrl: customUrl);
+
   /// Lists the contents of a directory in IPFS.
   ///
   /// Returns a list of [Link] objects representing the directory entries.
@@ -167,6 +229,9 @@ class IPFS {
     }
   }
 
+  /// CIDs currently pinned by this node.
+  Future<List<String>> get pinnedCids => _node.pinnedCids;
+
   /// Resolves an IPNS name to its corresponding CID.
   Future<String> resolveIPNS(String ipnsName) async {
     final dht = _node.dhtHandler;
@@ -185,6 +250,34 @@ class IPFS {
     return _node.publishIPNS(cid, keyName: keyName);
   }
 
+  /// Generates a new Ed25519 key pair stored under [name] and returns its
+  /// IPNS name (base36-encoded libp2p-key CID).
+  ///
+  /// [type] currently only accepts `'ed25519'`; [size] is accepted for
+  /// compatibility but ignored for Ed25519 keys. The node's keystore must be
+  /// unlocked first. Once stored, [name] can be passed as `keyName` to
+  /// [publishIPNS].
+  Future<String> keyGen(String name, {String type = 'ed25519', int? size}) =>
+      _node.keyGen(name, type: type, size: size);
+
+  /// Lists the key names stored in the node's keystore.
+  Future<List<String>> keyList() => _node.keyList();
+
+  /// Imports a raw 32-byte Ed25519 private key seed under [name] and returns
+  /// its IPNS name.
+  Future<String> keyImport(String name, Uint8List privateKey) =>
+      _node.keyImport(name, privateKey);
+
+  /// Returns the raw 32-byte Ed25519 private key seed stored under [name].
+  ///
+  /// The returned bytes are unencrypted private key material and must be
+  /// handled as sensitive.
+  Future<Uint8List> keyExport(String name) => _node.keyExport(name);
+
+  /// Removes the key stored under [name]. The default `'self'` key cannot be
+  /// removed.
+  Future<void> keyRm(String name) => _node.keyRm(name);
+
   /// Imports a CAR file.
   Future<void> importCAR(Uint8List carFile) async {
     return _node.importCAR(carFile);
@@ -200,6 +293,15 @@ class IPFS {
     return _node
         .findProviders(cid)
         .then((peers) => peers.map((peer) => peer.toString()).toList());
+  }
+
+  /// Announces to the network that this node provides the given [cid].
+  Future<void> provide(String cid) async {
+    final dht = _node.dhtHandler;
+    if (dht == null) {
+      throw Exception('DHT not available (offline)');
+    }
+    return dht.provide(CID.decode(cid));
   }
 
   /// Requests a block from the network using Bitswap.
@@ -226,6 +328,15 @@ class IPFS {
   /// Stream of incoming [PubSubMessage]s filtered to a single [topic].
   Stream<PubSubMessage> messagesFor(String topic) =>
       pubsubMessages.where((message) => message.topic == topic);
+
+  /// Topics this node is currently subscribed to.
+  List<String> pubsubLs() => _node.pubsubLs();
+
+  /// Peers known to be subscribed to [topic].
+  ///
+  /// Falls back to the global gossipsub mesh when no per-topic
+  /// subscription data has been observed.
+  Future<List<String>> pubsubPeers(String topic) => _node.pubsubPeers(topic);
 
   /// Resolves a DNSLink to its corresponding CID.
   Future<String> resolveDNSLink(String domainName) async {
