@@ -8,6 +8,7 @@ import 'core/data_structures/peer.dart';
 import 'core/ipfs_node/ipfs_node.dart';
 import 'core/storage/datastore.dart';
 import 'protocols/bitswap/bitswap_handler.dart';
+import 'protocols/pubsub/pubsub_message.dart';
 import 'transport/router_interface.dart';
 
 /// Main entry point for the IPFS (InterPlanetary File System) implementation.
@@ -216,6 +217,15 @@ class IPFS {
   Future<void> publish(String topic, String message) async {
     return _node.publish(topic, message);
   }
+
+  /// Stream of incoming [PubSubMessage]s for all subscribed topics.
+  ///
+  /// In offline mode this stream emits no events.
+  Stream<PubSubMessage> get pubsubMessages => _node.pubsubMessages;
+
+  /// Stream of incoming [PubSubMessage]s filtered to a single [topic].
+  Stream<PubSubMessage> messagesFor(String topic) =>
+      pubsubMessages.where((message) => message.topic == topic);
 
   /// Resolves a DNSLink to its corresponding CID.
   Future<String> resolveDNSLink(String domainName) async {
