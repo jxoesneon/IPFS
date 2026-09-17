@@ -264,6 +264,35 @@ void main() {
       expect(() => handler.resolve(name), throwsA(isA<IpnsValidationError>()));
     });
 
+    test('resolve rejects a record with an invalid signature', () async {
+      final name = await _testIpnsName(keyPair);
+      final publicKey = await keyPair.extractPublicKey();
+      final cid = CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
+
+      final record = await IPNSRecord.create(
+        value: cid,
+        keyPair: keyPair,
+        sequence: 1,
+      );
+
+      // Corrupt the signature while keeping a valid name/public key binding
+      // and a future validity, so validation reaches signature verification.
+      final badSignature = Uint8List.fromList(record.signature!);
+      badSignature[0] ^= 0xff;
+      final tampered = IPNSRecord.internal(
+        value: record.value,
+        validity: record.validity,
+        sequence: record.sequence,
+        ttl: record.ttl,
+        publicKey: Uint8List.fromList(publicKey.bytes),
+        signature: badSignature,
+      );
+
+      await dht.putValue(Key(_ipnsDhtKey(name)), Value(tampered.toCBOR()));
+
+      expect(() => handler.resolve(name), throwsA(isA<IpnsValidationError>()));
+    });
+
     test('publishRecord stores a pre-constructed signed record', () async {
       final cid = CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
       final name = await _testIpnsName(keyPair);

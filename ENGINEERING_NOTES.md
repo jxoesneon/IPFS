@@ -35,6 +35,8 @@ awk '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END {printf "%.2f%%\n", lh/lf*100}' coverage/
 ```
 Target: 80% line coverage. As of 2026-07-09: 85.79% achieved.
 
+**Release gate (since 1.16.0):** after implementation and before publishing or tagging, new and changed code must be at ~100% line coverage. Scope the check to the diff: run `dart test --coverage=coverage` over the affected test trees, then compute per-file coverage for the files changed in the release. Close any gaps with focused tests before tagging; do not publish with uncovered new lines.
+
 ## Work-Package Boundaries
 
 When planning recovery or implementation work, scope each effort to one work-package and forbid broad import sweeps:

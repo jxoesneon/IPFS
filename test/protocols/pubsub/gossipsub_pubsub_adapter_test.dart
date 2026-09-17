@@ -203,5 +203,39 @@ void main() {
       await adapter.unsubscribe('test-topic');
       expect(handler.subscriptions, isNot(contains('test-topic')));
     });
+
+    test('subscribedTopics reflects handler subscriptions', () async {
+      await adapter.start();
+
+      expect(adapter.subscribedTopics, isEmpty);
+
+      await adapter.subscribe('topic-a');
+      await adapter.subscribe('topic-b');
+      expect(
+        adapter.subscribedTopics,
+        containsAll(<String>['topic-a', 'topic-b']),
+      );
+
+      // The returned list is an unmodifiable snapshot.
+      expect(
+        () => adapter.subscribedTopics.add('topic-x'),
+        throwsUnsupportedError,
+      );
+    });
+
+    test('peersForTopic delegates to the handler', () async {
+      await adapter.start();
+      await adapter.subscribe('tracked-topic');
+
+      // peer1 announces a subscription to 'tracked-topic'.
+      final sub = RPC()
+        ..subscriptions.add(
+          Subscription(subscribe: true, topicid: 'tracked-topic'),
+        );
+      router.deliverMessage('peer1', sub.writeToBuffer());
+
+      expect(adapter.peersForTopic('tracked-topic'), contains('peer1'));
+      expect(adapter.peersForTopic('unknown-topic'), isEmpty);
+    });
   });
 }

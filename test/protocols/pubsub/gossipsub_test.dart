@@ -543,6 +543,72 @@ void main() {
     });
   });
 
+  group('peersForTopic', () {
+    test('returns tracked peers when subscription data exists', () async {
+      final handler = await _createHandler(router);
+      await handler.start();
+
+      // Announce peer1 is subscribed to 't1'.
+      final sub = RPC()
+        ..subscriptions.add(Subscription(subscribe: true, topicid: 't1'));
+      router.deliverMessage('peer1', sub.writeToBuffer());
+
+      expect(handler.peersForTopic('t1'), contains('peer1'));
+      await handler.stop();
+    });
+
+    test('does not fall back to mesh once topic data exists', () async {
+      router.addPeer('peer1');
+      final handler = await _createHandler(router);
+      await handler.start();
+      await handler.subscribe('mesh-only');
+
+      // Put peer1 in the mesh for 'mesh-only' via GRAFT.
+      final graft = RPC()
+        ..control = (ControlMessage()
+          ..graft.add(ControlGraft(topicID: 'mesh-only')));
+      router.deliverMessage('peer1', graft.writeToBuffer());
+      await Future<void>.delayed(Duration.zero);
+      expect(handler.meshPeers('mesh-only'), contains('peer1'));
+
+      // Record (then empty) per-topic data for 't1'.
+      final sub = RPC()
+        ..subscriptions.add(Subscription(subscribe: true, topicid: 't1'));
+      router.deliverMessage('peer2', sub.writeToBuffer());
+      final unsub = RPC()
+        ..subscriptions.add(Subscription(subscribe: false, topicid: 't1'));
+      router.deliverMessage('peer2', unsub.writeToBuffer());
+
+      expect(handler.peersForTopic('t1'), isEmpty);
+      await handler.stop();
+    });
+
+    test('falls back to mesh peers when no subscription data exists', () async {
+      router.addPeer('peer1');
+      final handler = await _createHandler(router);
+      await handler.start();
+      await handler.subscribe('mesh-topic');
+
+      // GRAFT populates the mesh but not _peerSubscriptions.
+      final graft = RPC()
+        ..control = (ControlMessage()
+          ..graft.add(ControlGraft(topicID: 'mesh-topic')));
+      router.deliverMessage('peer1', graft.writeToBuffer());
+      await Future<void>.delayed(Duration.zero);
+
+      expect(handler.peersForTopic('mesh-topic'), contains('peer1'));
+      await handler.stop();
+    });
+
+    test('returns an empty set for an unknown topic', () async {
+      final handler = await _createHandler(router);
+      await handler.start();
+
+      expect(handler.peersForTopic('never-seen'), isEmpty);
+      await handler.stop();
+    });
+  });
+
   group('heartbeat', () {
     test('mesh maintenance grafts new peers', () async {
       final handler = await _createHandler(router);

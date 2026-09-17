@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
+import 'package:dart_ipfs/src/core/crypto/peer_key_registry.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/protocol_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:test/test.dart';
@@ -232,6 +235,34 @@ void main() {
       expect(await manager.pubsubPeers('t2'), contains('peer-1'));
 
       await handler.stop();
+    });
+  });
+
+  group('PubSubClient keyPair startup', () {
+    test('start extracts and registers the local public key', () async {
+      final signer = Ed25519Signer();
+      final keyPair = await signer.generateKeyPair();
+      final pubKeyBytes = await signer.extractPublicKeyBytes(keyPair);
+      final keyedPeerId = PeerId.fromPublicKey(
+        pubKeyBytes,
+        type: 'Ed25519',
+      ).toBase58();
+
+      final registry = PeerKeyRegistry();
+      final keyedClient = PubSubClient(
+        router,
+        keyedPeerId,
+        keyPair: keyPair,
+        keyRegistry: registry,
+      );
+
+      await keyedClient.start();
+
+      expect(keyedClient.isStarted, isTrue);
+      expect(registry.hasPublicKey(keyedPeerId), isTrue);
+      expect(registry.getPublicKey(keyedPeerId), equals(pubKeyBytes));
+
+      await keyedClient.stop();
     });
   });
 }

@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:dart_ipfs/src/core/errors/transport_errors.dart';
 import 'package:dart_ipfs/src/transport/libp2p_router.dart';
 import 'package:dart_ipfs/src/transport/webrtc/data_channel_stream.dart';
@@ -40,6 +39,38 @@ void main() {
       );
       expect(exception, isA<Exception>());
       expect(exception, isNot(isA<UnimplementedError>()));
+    });
+
+    test('forPlatform produces the expected message text', () {
+      expect(
+        TransportUnavailableException.forPlatform('WebRTC', 'VM').message,
+        equals('WebRTC is not available on VM platforms'),
+      );
+      expect(
+        TransportUnavailableException.forPlatform('WebTransport', 'native')
+            .message,
+        equals('WebTransport is not available on native platforms'),
+      );
+    });
+
+    test('toString includes the exception name and message', () {
+      final exception = TransportUnavailableException.forPlatform(
+        'WebRTC',
+        'IO',
+      );
+
+      expect(
+        exception.toString(),
+        equals(
+          'TransportUnavailableException: '
+          'WebRTC is not available on IO platforms',
+        ),
+      );
+      expect(
+        TransportUnavailableException('custom message').toString(),
+        equals('TransportUnavailableException: custom message'),
+      );
+      expect(exception.toString(), contains(exception.message));
     });
   });
 
@@ -113,11 +144,50 @@ void main() {
         () => pc.createOffer(),
         throwsA(isA<TransportUnavailableException>()),
       );
+      expect(
+        () => pc.createAnswer(),
+        throwsA(isA<TransportUnavailableException>()),
+      );
+      expect(
+        () => pc.setLocalDescription(RTCSessionDescriptionInit('offer', 'sdp')),
+        throwsA(isA<TransportUnavailableException>()),
+      );
+      expect(
+        () => pc.setRemoteDescription('answer', 'sdp'),
+        throwsA(isA<TransportUnavailableException>()),
+      );
+      expect(
+        () => pc.addIceCandidate(RTCIceCandidateInit('candidate', null, null)),
+        throwsA(isA<TransportUnavailableException>()),
+      );
+      expect(
+        () => pc.createDataChannel('data'),
+        throwsA(isA<TransportUnavailableException>()),
+      );
       expect(() => pc.close(), throwsA(isA<TransportUnavailableException>()));
       expect(
         () => pc.onIceCandidate,
         throwsA(isA<TransportUnavailableException>()),
       );
+      expect(
+        () => pc.onDataChannel,
+        throwsA(isA<TransportUnavailableException>()),
+      );
+      expect(
+        () => pc.localDescriptionSdp,
+        throwsA(isA<TransportUnavailableException>()),
+      );
+      expect(
+        () => pc.remoteDescriptionSdp,
+        throwsA(isA<TransportUnavailableException>()),
+      );
+    });
+
+    test('PeerConnectionStub state getters return null', () {
+      final pc = PeerConnectionStub(const []);
+
+      expect(pc.iceConnectionState, isNull);
+      expect(pc.signalingState, isNull);
     });
 
     test(

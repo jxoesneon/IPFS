@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
@@ -512,5 +514,221 @@ void main() {
         throwsA(isA<Exception>()),
       );
     });
+  });
+
+  group('DHTClient provider polling and bootstrap paths', () {
+    test('findProviders returns local providers discovered while polling',
+        () async {
+      const connectedPeerStr =
+          'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
+      // A non-empty connected peer set enables the local-record poll loop and
+      // seeds the routing table (which also triggers _bootstrapPeer).
+      when(mockRouter.connectedPeers).thenReturn({connectedPeerStr});
+
+      final providerPeer = PeerId.fromBase58(
+        'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w',
+      );
+      var lookupCount = 0;
+      when(mockDhtHandler.getLocalProvidersForCid(any)).thenAnswer((_) {
+        lookupCount++;
+        // First lookup (before polling) is empty; the record appears while
+        // the poll loop is waiting.
+        return lookupCount < 2 ? <PeerId>[] : <PeerId>[providerPeer];
+      });
+
+      await client.initialize();
+      final providers = await client.findProviders(
+        'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+      );
+      expect(
+        providers.map((p) => p.toBase58()),
+        contains(providerPeer.toBase58()),
+      );
+    });
+
+    test('findProviders returns empty when the p2p router is unavailable',
+        () async {
+      // node.dhtHandler == null => _queryConnectedPeersForProviders sees no
+      // router and bails out early.
+      when(mockNode.dhtHandler).thenReturn(null);
+
+      await client.initialize();
+      final providers = await client.findProviders(
+        'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+      );
+      expect(providers, isEmpty);
+    });
+
+    test('findProviders queries directly connected peers for providers',
+        () async {
+      const directPeerStr = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
+      const silentPeerStr = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w';
+      final providerPeer = PeerId.fromBase58(
+        'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+      );
+
+      // The internal _router stays empty so the poll loop is skipped, while
+      // the handler's p2p router reports directly connected peers.
+      final p2pRouter = MockRouterInterface();
+      when(mockDhtHandler.router).thenReturn(p2pRouter);
+      when(
+        p2pRouter.connectedPeers,
+      ).thenReturn({directPeerStr, silentPeerStr});
+      when(p2pRouter.sendRequest(any, any, any)).thenAnswer((invocation) async {
+        if (invocation.positionalArguments[0] != directPeerStr) {
+          return null;
+        }
+        return (kad.Message()
+              ..type = kad.Message_MessageType.GET_PROVIDERS
+              ..providerPeers.add(
+                kad.Peer()
+                  ..id = providerPeer.value
+                  ..addrs.add(
+                    libp2p.MultiAddr('/ip4/127.0.0.1/tcp/4001').toBytes(),
+                  ),
+              ))
+            .writeToBuffer();
+      });
+
+      await client.initialize();
+      final providers = await client.findProviders(
+        'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+      );
+      expect(
+        providers.map((p) => p.toBase58()),
+        contains(providerPeer.toBase58()),
+      );
+      // Both peers were queried on the LAN protocol first.
+      verify(
+        p2pRouter.sendRequest(directPeerStr, DHTClient.protocolDhtLan, any),
+      ).called(1);
+      verify(
+        p2pRouter.sendRequest(silentPeerStr, DHTClient.protocolDhtLan, any),
+      ).called(1);
+    });
+
+    test('connection event bootstraps the newly connected peer', () async {
+      final controller = StreamController<ConnectionEvent>();
+      addTearDown(controller.close);
+      when(
+        mockRouter.connectionEvents,
+      ).thenAnswer((_) => controller.stream);
+
+      await client.initialize();
+
+      const peerStr = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
+      controller.add(
+        ConnectionEvent(type: ConnectionEventType.connected, peerId: peerStr),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(
+        client.kademliaRoutingTable.containsPeer(PeerId.fromBase58(peerStr)),
+        isTrue,
+      );
+      // _bootstrapPeer sent a self-lookup FIND_NODE to the peer.
+      verify(
+        mockRouter.sendMessage(
+          peerStr,
+          any,
+          protocolId: DHTClient.protocolDht,
+        ),
+      ).called(1);
+    });
+  });
+
+  group('DHTClient packet handlers', () {
+    test('handlePacket parses a raw GET_VALUE and serves it from storage',
+        () async {
+      await client.initialize();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.last
+              as void Function(NetworkPacket);
+
+      when(
+        mockStorage.get(any),
+      ).thenAnswer((_) async => Uint8List.fromList([7, 8, 9]));
+
+      final responses = <Uint8List>[];
+      final datagram =
+          (kad.Message()
+                ..type = kad.Message_MessageType.GET_VALUE
+                // The leading 0xFF makes the datagram undecodable as a
+                // DHTEnvelope, forcing the raw protobuf parse path.
+                ..key = Uint8List.fromList([0xFF, 0x01, 0x02]))
+              .writeToBuffer();
+
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+          datagram: datagram,
+          responder: (bytes) async {
+            responses.add(bytes);
+          },
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      verify(mockStorage.get(any)).called(1);
+      expect(responses, hasLength(1));
+      // requestId is empty for raw packets, so the response is unframed.
+      final response = kad.Message.fromBuffer(responses.single);
+      expect(response.hasRecord(), isTrue);
+      expect(response.record.value, equals([7, 8, 9]));
+    });
+
+    test(
+      'handlePacket ADD_PROVIDER stores valid and rejects invalid records',
+      () async {
+        await client.initialize();
+        final capturedHandler =
+            verify(
+                  mockRouter.registerProtocolHandler(any, captureAny),
+                ).captured.last
+                as void Function(NetworkPacket);
+
+        final cid = CID.decode(
+          'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+        );
+        final providerPeer = PeerId.fromBase58(
+          'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+        );
+        when(
+          mockDhtHandler.handleProvideRequest(any, any),
+        ).thenAnswer((_) async {});
+
+        final message =
+            kad.Message()
+              ..type = kad.Message_MessageType.ADD_PROVIDER
+              ..key = cid.multihash.toBytes()
+              ..providerPeers.addAll([
+                // Valid record: non-empty id and a parseable multiaddr.
+                kad.Peer()
+                  ..id = providerPeer.value
+                  ..addrs.add(
+                    libp2p.MultiAddr('/ip4/127.0.0.1/tcp/4001').toBytes(),
+                  ),
+                // Invalid record: no addresses at all.
+                kad.Peer()..id = Uint8List.fromList([1, 2, 3]),
+              ]);
+
+        capturedHandler(
+          NetworkPacket(
+            srcPeerId: 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+            datagram:
+                DHTEnvelope(
+                  requestId: '',
+                  payload: message.writeToBuffer(),
+                ).toBytes(),
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        // Only the valid provider record was stored.
+        verify(mockDhtHandler.handleProvideRequest(any, any)).called(1);
+      },
+    );
   });
 }
