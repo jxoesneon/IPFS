@@ -39,6 +39,19 @@ jobs:
         with:
           sdk: stable
 
+      - name: Check if version already published
+        id: version-check
+        working-directory: packages/dart_ipfs_core
+        run: |
+          NAME=$(awk '/^name:/{print $2; exit}' pubspec.yaml)
+          VERSION=$(awk '/^version:/{print $2; exit}' pubspec.yaml)
+          if curl -sf "https://pub.dev/api/packages/${NAME}" | jq -e --arg v "$VERSION" '.versions[] | select(.version == $v)' > /dev/null; then
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::${NAME} ${VERSION} is already on pub.dev — publish steps will be skipped"
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install dependencies
         working-directory: packages/dart_ipfs_core
         run: dart pub get
@@ -59,11 +72,12 @@ jobs:
         run: git checkout -- .
 
       - name: Publish - dry run
+        if: steps.version-check.outputs.already_published != 'true'
         working-directory: packages/dart_ipfs_core
         run: dart pub publish --dry-run
 
       - name: Publish to pub.dev
-        if: inputs.dry_run != true
+        if: inputs.dry_run != true && steps.version-check.outputs.already_published != 'true'
         working-directory: packages/dart_ipfs_core
         run: dart pub publish -f
 
@@ -82,6 +96,19 @@ jobs:
         with:
           sdk: stable
 
+      - name: Check if version already published
+        id: version-check
+        working-directory: packages/dart_ipfs_quic
+        run: |
+          NAME=$(awk '/^name:/{print $2; exit}' pubspec.yaml)
+          VERSION=$(awk '/^version:/{print $2; exit}' pubspec.yaml)
+          if curl -sf "https://pub.dev/api/packages/${NAME}" | jq -e --arg v "$VERSION" '.versions[] | select(.version == $v)' > /dev/null; then
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::${NAME} ${VERSION} is already on pub.dev — publish steps will be skipped"
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install dependencies
         working-directory: packages/dart_ipfs_quic
         run: dart pub get
@@ -102,11 +129,12 @@ jobs:
         run: git checkout -- .
 
       - name: Publish - dry run
+        if: steps.version-check.outputs.already_published != 'true'
         working-directory: packages/dart_ipfs_quic
         run: dart pub publish --dry-run
 
       - name: Publish to pub.dev
-        if: inputs.dry_run != true
+        if: inputs.dry_run != true && steps.version-check.outputs.already_published != 'true'
         working-directory: packages/dart_ipfs_quic
         run: dart pub publish -f
 
@@ -125,6 +153,18 @@ jobs:
         with:
           sdk: stable
 
+      - name: Check if version already published
+        id: version-check
+        run: |
+          NAME=$(awk '/^name:/{print $2; exit}' pubspec.yaml)
+          VERSION=$(awk '/^version:/{print $2; exit}' pubspec.yaml)
+          if curl -sf "https://pub.dev/api/packages/${NAME}" | jq -e --arg v "$VERSION" '.versions[] | select(.version == $v)' > /dev/null; then
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::${NAME} ${VERSION} is already on pub.dev — publish steps will be skipped"
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install dependencies
         run: dart pub get
 
@@ -140,8 +180,9 @@ jobs:
         run: git checkout -- .
 
       - name: Publish - dry run
+        if: steps.version-check.outputs.already_published != 'true'
         run: dart pub publish --dry-run
 
       - name: Publish to pub.dev
-        if: inputs.dry_run != true
+        if: inputs.dry_run != true && steps.version-check.outputs.already_published != 'true'
         run: dart pub publish -f
