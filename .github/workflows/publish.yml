@@ -25,8 +25,27 @@ on:
         type: boolean
 
 jobs:
+  release-gate:
+    name: Release surface gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1
+        with:
+          sdk: stable
+
+      - name: Verify release surfaces and tag
+        run: |
+          TAG_ARG=""
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG_ARG="--tag ${GITHUB_REF#refs/tags/}"
+          fi
+          dart run tool/release_surfaces.dart --check $TAG_ARG
+
   publish-core:
     name: Publish dart_ipfs_core
+    needs: [release-gate]
     if: inputs.target == 'core' || inputs.target == 'all' || startsWith(github.ref, 'refs/tags/core-v') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     permissions:
@@ -83,8 +102,8 @@ jobs:
 
   publish-quic:
     name: Publish dart_ipfs_quic
-    needs: [publish-core]
-    if: always() && (inputs.target == 'quic' || inputs.target == 'all' || startsWith(github.ref, 'refs/tags/quic-v') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
+    needs: [release-gate, publish-core]
+    if: always() && needs.release-gate.result == 'success' && (inputs.target == 'quic' || inputs.target == 'all' || startsWith(github.ref, 'refs/tags/quic-v') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -140,8 +159,8 @@ jobs:
 
   publish-umbrella:
     name: Publish dart_ipfs (Umbrella)
-    needs: [publish-quic]
-    if: always() && (inputs.target == 'umbrella' || inputs.target == 'all' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
+    needs: [release-gate, publish-quic]
+    if: always() && needs.release-gate.result == 'success' && (inputs.target == 'umbrella' || inputs.target == 'all' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
     runs-on: ubuntu-latest
     permissions:
       contents: read

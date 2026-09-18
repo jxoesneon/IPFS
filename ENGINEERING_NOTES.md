@@ -39,6 +39,21 @@ Target: 80% line coverage. As of 2026-07-09: 85.79% achieved.
 
 **Release sign-off:** tagging/publishing requires a maintainer review sign-off on the release diff — correctness, coverage, security-sensitive surface (key material handling, auth, transport changes), and changelog accuracy. Record the sign-off in the PR or release notes before tagging. Checklist addition: verify new test files are actually tracked (`git check-ignore -v <file>` must return nothing) — an unanchored gitignore pattern once excluded test sources.
 
+### Release surfaces
+
+`version` in `pubspec.yaml` is the single source of truth. `tool/release_surfaces.dart` manages every version-bearing file — after bumping pubspec run `make release-sync`, and gate releases with `make release-check` (also runs as the `release-gate` job in `publish.yml`, including tag-vs-pubspec verification for `v*`, `core-v*`, and `quic-v*` tags).
+
+Automated surfaces (do not hand-edit versions in these):
+
+- `lib/src/version.dart` (`packageVersion`; `agentVersion` derives from it and feeds the CLI, RPC `/api/v0/version`, gateway `Version`, identify, libp2p user agent, and health check — never hardcode `dart_ipfs/x.y.z` literals, the gate rejects them)
+- `docker-compose.yml`, `docker-compose.debug.yml` (image tags)
+- `helm/dart-ipfs/Chart.yaml` (`appVersion`), `helm/dart-ipfs/README.md`
+- `k8s/base/deployment.yaml`, `k8s/base/kustomization.yaml`, `k8s/overlays/production/kustomization.yaml`
+- `README.md` (install snippet + "(current: vX.Y.Z)" marker), `ROADMAP.md` (current version fields)
+- `CHANGELOG.md` must contain a `## [X.Y.Z]` section for the release version (presence is gated; content is authored)
+
+Still manual on each publish: the CHANGELOG entry itself, README "What's New" narrative, ROADMAP prose, the git tag + GitHub release notes, the coverage gate above, and maintainer sign-off. Sub-packages (`dart_ipfs_core`, `dart_ipfs_quic`) are versioned independently — their tags only gate their own `pubspec.yaml` + `CHANGELOG.md`.
+
 ## Work-Package Boundaries
 
 When planning recovery or implementation work, scope each effort to one work-package and forbid broad import sweeps:

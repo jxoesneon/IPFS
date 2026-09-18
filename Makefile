@@ -1,7 +1,7 @@
 # Makefile for dart_ipfs
 # Centralized development task automation
 
-.PHONY: all analyze test doc clean format protos pub-get
+.PHONY: all analyze test doc clean format protos pub-get release-check release-sync
 
 # Proto path configurations
 PROTO_PATH = lib/src/proto
@@ -29,6 +29,14 @@ doc:
 # Format code
 format:
 	dart format .
+
+# Verify every release surface matches the pubspec version
+release-check:
+	dart run tool/release_surfaces.dart --check
+
+# Rewrite every release surface to the pubspec version
+release-sync:
+	dart run tool/release_surfaces.dart --sync
 
 # Compile Protocol Buffers
 protos: clean-protos
