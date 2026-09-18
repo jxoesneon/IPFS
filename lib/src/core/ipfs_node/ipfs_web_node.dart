@@ -38,7 +38,7 @@ class IPFSWebNode {
     _config = config ?? IPFSConfig(offline: true);
 
     // Initialize networking components
-    _router = Libp2pRouter(_config);
+    _router = Libp2pRouter(_config, seed: _config.libp2pIdentitySeed);
     _blockStore = WebBlockStore(_platform);
 
     // Other components initialized in start()

@@ -21,7 +21,8 @@ class NetworkHandler {
   ///
   /// If [router] is not provided, defaults to [Libp2pRouter].
   NetworkHandler(this._config, {RouterInterface? router})
-    : _router = router ?? Libp2pRouter(_config),
+    : _router =
+          router ?? Libp2pRouter(_config, seed: _config.libp2pIdentitySeed),
       _networkEventController = StreamController<NetworkEvent>.broadcast() {
     // Initialize logger
     _logger = Logger(
