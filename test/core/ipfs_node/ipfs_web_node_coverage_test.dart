@@ -19,6 +19,20 @@ class _PeerConnectedRouter extends FakeRouter {
   Set<String> get connectedPeers => const {'QmRemotePeer'};
 }
 
+class _AddrRouter extends FakeRouter {
+  final List<String> dialed = [];
+
+  @override
+  List<String> get listeningAddresses => const [
+    '/ip4/127.0.0.1/tcp/4001/p2p/QmFakeRouter',
+  ];
+
+  @override
+  Future<void> connect(String multiaddress) async {
+    dialed.add(multiaddress);
+  }
+}
+
 class _ServingBitswap extends BitswapHandler {
   _ServingBitswap(
     IPFSConfig config,
@@ -110,6 +124,20 @@ void main() {
       // the raw block payload served by the injected peer-side handler.
       final result = await node.get(cid.encode());
       expect(result, equals(content));
+
+      await node.stop();
+    });
+
+    test('addresses and connectToPeer delegate to the router', () async {
+      final router = _AddrRouter();
+      final node = IPFSWebNode(config: _localConfig(), router: router);
+      expect(node.addresses, isEmpty);
+
+      await node.start();
+      expect(node.addresses, hasLength(1));
+
+      await node.connectToPeer('/ip4/127.0.0.1/tcp/4002/p2p/QmOther');
+      expect(router.dialed, contains('/ip4/127.0.0.1/tcp/4002/p2p/QmOther'));
 
       await node.stop();
     });

@@ -164,12 +164,8 @@ void main() {
     test(
       'PeerId base36 round-trip: toBase36 -> fromBase36 -> equals original',
       () {
-        // The base36 encoding uses BigInt which drops leading zero bytes, so
-        // we only test peer IDs without leading zeros. This is a known
-        // limitation of the current implementation.
         for (var i = 0; i < 500; i++) {
           final bytes = randomBytes(rng, 32);
-          if (bytes[0] == 0) continue; // Skip leading-zero peer IDs.
           final id = PeerId(value: bytes);
           final encoded = id.toBase36();
           final decoded = PeerId.fromBase36(encoded);
@@ -178,17 +174,14 @@ void main() {
       },
     );
 
-    test('PeerId base36 with leading zeros: documents known limitation', () {
-      // Peer IDs with leading zero bytes lose those zeros in base36 encoding
-      // because BigInt conversion drops them. This test documents the
-      // behavior rather than asserting round-trip equality.
+    test('PeerId base36 preserves leading zeros', () {
+      // Peer IDs whose bytes begin with 0x00 (notably the identity-multihash
+      // prefix on libp2p peer IDs) round-trip through base36 with the zeros
+      // preserved as leading '0' characters.
       final bytes = Uint8List.fromList([0, 1, 2, 3, 4, 5]);
       final id = PeerId(value: bytes);
-      final encoded = id.toBase36();
-      final decoded = PeerId.fromBase36(encoded);
-      // The decoded value will have the leading zero stripped.
-      expect(decoded.value.length, lessThan(id.value.length));
-      expect(decoded.value, equals(Uint8List.fromList([1, 2, 3, 4, 5])));
+      final decoded = PeerId.fromBase36(id.toBase36());
+      expect(decoded, equals(id));
     });
 
     test('PeerId equality: same bytes -> equal', () {
