@@ -148,6 +148,13 @@ abstract class RouterInterface {
   /// Used to advertise protocol support to peers.
   void registerProtocol(String protocolId);
 
+  /// Set of protocol IDs registered on this router.
+  ///
+  /// Includes every protocol registered via [registerProtocol] or
+  /// [registerProtocolHandler]; used by the identify protocol to advertise
+  /// the node's live protocol support.
+  Set<String> get supportedProtocols => const {};
+
   /// Broadcasts a message to all connected peers.
   ///
   /// [protocolId] - The protocol identifier.

@@ -1,5 +1,7 @@
 // lib/src/transport/libp2p_router.dart
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:ipfs_libp2p/config/config.dart' as config;
@@ -9,6 +11,7 @@ import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
 import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
 import 'package:ipfs_libp2p/p2p/transport/tcp_transport.dart';
 import 'package:ipfs_libp2p/p2p/transport/transport.dart' as libp2p_transport;
+import 'package:meta/meta.dart';
 import 'package:pointycastle/export.dart';
 
 import '../core/config/ipfs_config.dart';
@@ -52,6 +55,7 @@ class Libp2pRouter implements RouterInterface {
 
   final IPFSConfig _config;
   final Uint8List? _seed;
+  Uint8List? _identitySeed;
   late final Logger _logger;
 
   libp2p.Host? _host;
@@ -105,6 +109,39 @@ class Libp2pRouter implements RouterInterface {
 
   @override
   bool get hasStarted => _hasStarted;
+
+  /// The underlying libp2p host, available after [start] completes.
+  ///
+  /// Exposed for protocol handlers (e.g. DCUtR) that need direct access to
+  /// host services such as the hole-punch service.
+  libp2p.Host? get host => _host;
+
+  /// Raw public key bytes of this node's identity, or null before
+  /// [initialize] has derived the key pair.
+  Uint8List? get identityPublicKeyBytes {
+    final keyPair = _keyPair;
+    if (keyPair == null) return null;
+    return Uint8List.fromList(keyPair.publicKey.raw);
+  }
+
+  /// Marshalled peer ID bytes of this node's identity, or null before
+  /// [initialize] has derived the key pair.
+  Uint8List? get peerIdBytes {
+    final keyPair = _keyPair;
+    if (keyPair == null) return null;
+    return libp2p.PeerId.fromPublicKey(keyPair.publicKey).toBytes();
+  }
+
+  /// The seed backing this node's identity (32 bytes for Ed25519), or null
+  /// when the identity is ephemeral or not seed-derived.
+  ///
+  /// Exposed so node services (e.g. PubSub signing) can reconstruct the same
+  /// identity key material under `package:cryptography` types.
+  Uint8List? get identitySeed {
+    final seed = _identitySeed;
+    if (seed == null) return null;
+    return Uint8List.fromList(seed);
+  }
 
   @override
   bool get isInitialized => _isInitialized;
@@ -200,10 +237,19 @@ class Libp2pRouter implements RouterInterface {
       // Generate or derive key pair based on key type
       if (_seed != null) {
         _logger.debug('Deriving $_keyType identity from seed');
+        _identitySeed = _seed;
         _keyPair = await _generateKeyPairFromSeed(_seed);
       } else {
-        _logger.debug('Generating new $_keyType identity');
-        _keyPair = await _generateKeyPair();
+        // Without an explicit seed, reuse the persisted identity seed so the
+        // peer ID is stable across restarts (Kubo 'ipfs init' semantics).
+        final persistedSeed = await _loadOrCreateIdentitySeed();
+        if (persistedSeed != null) {
+          _identitySeed = persistedSeed;
+          _keyPair = await _generateKeyPairFromSeed(persistedSeed);
+        } else {
+          _logger.debug('Generating new $_keyType identity');
+          _keyPair = await _generateKeyPair();
+        }
       }
 
       // Probe for an available QUIC transport from the libp2p dependency.
@@ -216,6 +262,47 @@ class Libp2pRouter implements RouterInterface {
     } catch (e, stackTrace) {
       _logger.error('Failed to initialize Libp2pRouter', e, stackTrace);
       throw StateError('Router initialization failed: $e');
+    }
+  }
+
+  /// Loads the persisted identity seed, generating and storing one on first
+  /// start.
+  ///
+  /// Returns `null` when persistence is unavailable (web platform or I/O
+  /// failure); the caller then falls back to an ephemeral identity.
+  Future<Uint8List?> _loadOrCreateIdentitySeed() async {
+    final platform = getPlatform();
+    if (platform.isWeb) return null;
+
+    final seedPath = '${_config.dataPath}/identity';
+    try {
+      if (await platform.exists(seedPath)) {
+        final encoded = (await platform.readString(seedPath))?.trim();
+        if (encoded != null && encoded.isNotEmpty) {
+          try {
+            final seed = base64Decode(encoded);
+            if (seed.length == 32) {
+              _logger.debug('Loaded persisted identity seed from $seedPath');
+              return Uint8List.fromList(seed);
+            }
+          } on FormatException {
+            // Malformed file: fall through and replace it below.
+          }
+          _logger.warning('Replacing malformed identity seed at $seedPath');
+        }
+      }
+
+      // First start: generate a fresh seed and persist it so subsequent
+      // launches derive the same peer identity.
+      final seed = Uint8List.fromList(
+        List.generate(32, (_) => Random.secure().nextInt(256)),
+      );
+      await platform.writeString(seedPath, base64Encode(seed));
+      _logger.debug('Persisted new identity seed to $seedPath');
+      return seed;
+    } catch (e) {
+      _logger.warning('Identity seed persistence unavailable: $e');
+      return null;
     }
   }
 
@@ -450,13 +537,10 @@ class Libp2pRouter implements RouterInterface {
       _connectedPeers.clear();
       _hasStarted = false;
 
-      // Close internal streams
-      final controllers = [
-        _messagePacketController,
-        _connectionEventsController,
-        _messageEventsController,
-        ..._peerMessageStreams.values,
-      ];
+      // Close per-peer stream controllers. The long-lived event controllers
+      // stay open: they are `final`, emit nothing while stopped, and must
+      // keep working if the router is started again.
+      final controllers = [..._peerMessageStreams.values];
 
       for (final controller in controllers) {
         if (!controller.isClosed) {
@@ -734,6 +818,9 @@ class Libp2pRouter implements RouterInterface {
   }
 
   @override
+  Set<String> get supportedProtocols => Set.unmodifiable(_registeredProtocols);
+
+  @override
   Future<void> broadcastMessage(String protocolId, Uint8List message) async {
     _checkStarted();
 
@@ -813,6 +900,18 @@ class Libp2pRouter implements RouterInterface {
     return null;
   }
 
+  /// Maximum size in bytes of a varint length prefix (u64).
+  static const int _maxVarintBytes = 10;
+
+  /// Maximum inbound message body size accepted on protocol streams.
+  static const int _maxInboundMessageSize = 4 * 1024 * 1024;
+
+  /// Maximum bytes requested per bulk read on inbound streams.
+  static const int _readChunkSize = 64 * 1024;
+
+  /// Idle deadline applied to each read on an inbound stream.
+  static const Duration _inboundReadIdleTimeout = Duration(seconds: 30);
+
   Uint8List _encodeLengthPrefix(int length) {
     // Simple varint encoding for length prefix
     final result = <int>[];
@@ -829,52 +928,87 @@ class Libp2pRouter implements RouterInterface {
     libp2p.P2PStream<dynamic> stream,
   ) async {
     try {
-      // Read varint length prefix
-      final lengthBytes = <int>[];
-      while (true) {
-        final byte = await _readByte(stream);
-        if (byte == null) return null;
-        lengthBytes.add(byte);
-        if ((byte & 0x80) == 0) break;
-      }
-
-      final length = _decodeVarint(Uint8List.fromList(lengthBytes));
-      if (length == 0) return Uint8List(0);
-
-      // Read message body
-      final result = <int>[];
-      for (var i = 0; i < length; i++) {
-        final byte = await _readByte(stream);
-        if (byte == null) {
-          _logger.warning(
-            'Stream closed prematurely while reading message body',
-          );
-          return null;
-        }
-        result.add(byte);
-      }
-
-      return Uint8List.fromList(result);
+      return await readLengthPrefixedMessage(
+        (size) => _readChunk(stream, size),
+      );
+    } on FormatException catch (e) {
+      _logger.warning('Rejected malformed inbound message: $e');
+      return null;
     } catch (e) {
       _logger.error('Error reading length-prefixed message', e);
       return null;
     }
   }
 
-  Future<int?> _readByte(libp2p.P2PStream<dynamic> stream) async {
+  /// Reads one varint-length-prefixed message, pulling body bytes through
+  /// [read]. Returns `null` when the source closes before a complete
+  /// message arrives. Throws [FormatException] when the varint prefix
+  /// exceeds [_maxVarintBytes] or the advertised length exceeds
+  /// [_maxInboundMessageSize].
+  @visibleForTesting
+  static Future<Uint8List?> readLengthPrefixedMessage(
+    Future<Uint8List?> Function(int size) read,
+  ) async {
+    // Read varint length prefix, bounded to u64 width.
+    final lengthBytes = <int>[];
+    while (true) {
+      final chunk = await read(1);
+      if (chunk == null || chunk.isEmpty) return null;
+      lengthBytes.add(chunk[0]);
+      if ((chunk[0] & 0x80) == 0) break;
+      if (lengthBytes.length >= _maxVarintBytes) {
+        throw const FormatException(
+          'Varint length prefix exceeds maximum size',
+        );
+      }
+    }
+
+    final length = decodeVarint(Uint8List.fromList(lengthBytes));
+    if (length == 0) return Uint8List(0);
+    if (length < 0 || length > _maxInboundMessageSize) {
+      throw FormatException(
+        'Inbound message length $length exceeds $_maxInboundMessageSize',
+      );
+    }
+
+    // Read message body in bounded chunks.
+    final builder = BytesBuilder(copy: false);
+    var remaining = length;
+    while (remaining > 0) {
+      final chunk = await read(
+        remaining > _readChunkSize ? _readChunkSize : remaining,
+      );
+      if (chunk == null || chunk.isEmpty) return null;
+      final take = chunk.length > remaining ? remaining : chunk.length;
+      builder.add(Uint8List.fromList(chunk.sublist(0, take)));
+      remaining -= take;
+    }
+    return builder.takeBytes();
+  }
+
+  Future<Uint8List?> _readChunk(
+    libp2p.P2PStream<dynamic> stream,
+    int size,
+  ) async {
     try {
-      final data = await stream.read(1);
+      final data = await stream.read(size).timeout(_inboundReadIdleTimeout);
       if (data.isEmpty) return null;
-      return data[0];
+      return Uint8List.fromList(data);
     } catch (e) {
       return null;
     }
   }
 
-  int _decodeVarint(Uint8List bytes) {
+  /// Decodes a u64 varint. Throws [FormatException] when the encoding
+  /// would exceed 64 bits.
+  @visibleForTesting
+  static int decodeVarint(Uint8List bytes) {
     var result = 0;
     var shift = 0;
     for (final byte in bytes) {
+      if (shift >= 64) {
+        throw const FormatException('Varint exceeds 64 bits');
+      }
       result |= (byte & 0x7F) << shift;
       if ((byte & 0x80) == 0) break;
       shift += 7;
@@ -949,7 +1083,14 @@ class Libp2pRouter implements RouterInterface {
     final addresses = <libp2p.MultiAddr>[];
     var hasTcp = false;
 
-    for (final addrStr in _config.network.listenAddresses) {
+    // `network.listenAddresses` is canonical; `libp2pListenAddress` is the
+    // legacy single-address surface (e.g. CLI --swarm-addr) and is honored
+    // only when the network list is empty.
+    final configured = _config.network.listenAddresses.isNotEmpty
+        ? _config.network.listenAddresses
+        : [_config.libp2pListenAddress];
+
+    for (final addrStr in configured) {
       try {
         final addr = libp2p.MultiAddr(addrStr);
         addresses.add(addr);

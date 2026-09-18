@@ -143,20 +143,35 @@ class KademliaTree {
     }
   }
 
+  final List<Timer> _timers = [];
+
+  /// Cancels all periodic maintenance tasks. Call when the owning DHT client
+  /// stops; the tree must not outlive it.
+  void stop() {
+    for (final timer in _timers) {
+      timer.cancel();
+    }
+    _timers.clear();
+  }
+
   void _startPeriodicTasks() {
-    Timer.periodic(refreshInterval, (_) => refresh());
-    Timer.periodic(republishInterval, (_) => _republishKeys());
-    Timer.periodic(const Duration(hours: 1), (_) => _providerStore.gc());
+    _timers.addAll([
+      Timer.periodic(refreshInterval, (_) => refresh()),
+      Timer.periodic(republishInterval, (_) => _republishKeys()),
+      Timer.periodic(const Duration(hours: 1), (_) => _providerStore.gc()),
+    ]);
   }
 
   void _startValueMaintenanceTasks() {
-    Timer.periodic(republishInterval, (_) async {
-      try {
-        await _valueStore.republishValues();
-      } catch (e) {
-        _logger.error('Failed to republish values during maintenance', e);
-      }
-    });
+    _timers.add(
+      Timer.periodic(republishInterval, (_) async {
+        try {
+          await _valueStore.republishValues();
+        } catch (e) {
+          _logger.error('Failed to republish values during maintenance', e);
+        }
+      }),
+    );
   }
 
   /// Performs an iterative node lookup to find the K closest peers to [target].

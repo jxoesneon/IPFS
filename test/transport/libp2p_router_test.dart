@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -16,8 +17,11 @@ void main() {
     late IPFSConfig configB;
 
     setUp(() async {
+      final repoDir = Directory.systemTemp.createTempSync('ipfs_router_pair_');
+
       // Config for Node A (Port 0 for dynamic assignment)
       configA = IPFSConfig(
+        dataPath: '${repoDir.path}/a',
         network: NetworkConfig(
           listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
           bootstrapPeers: [],
@@ -26,6 +30,7 @@ void main() {
 
       // Config for Node B (Port 0 for dynamic assignment)
       configB = IPFSConfig(
+        dataPath: '${repoDir.path}/b',
         network: NetworkConfig(
           listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
           bootstrapPeers: [],

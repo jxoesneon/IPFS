@@ -212,6 +212,12 @@ class KademliaRoutingTable {
     _connectionStats.clear();
   }
 
+  /// Cancels the routing table's periodic maintenance timers. Called when the
+  /// owning DHT client stops so the tree does not outlive it.
+  void stop() {
+    _tree.stop();
+  }
+
   /// Calculates the XOR distance between two peers.
   int calculateDistance(PeerId a, PeerId b) => _calculateXorDistance(a, b);
 

@@ -54,14 +54,14 @@ Out of scope for v2.2:
 | Signing | None. | No way to verify plugin integrity or authorship. |
 | Examples | None. | No reference implementations for plugin authors. |
 
-Key files to create or extend:
+Key files created:
 
-- `lib/src/plugin/plugin_host.dart`
-- `lib/src/plugin/plugin_manifest.dart`
-- `lib/src/plugin/plugin_lifecycle.dart`
-- `lib/src/plugin/plugin_sandbox.dart`
-- `lib/src/plugin/capability_blockstore.dart`
-- `lib/src/plugin/capability_metrics.dart`
+- `lib/src/core/plugins/plugin_host.dart`
+- `lib/src/core/plugins/plugin_manifest.dart`
+- `lib/src/core/plugins/capability_registry.dart`
+- `lib/src/core/plugins/plugin_audit_log.dart`
+- `lib/src/core/plugins/capability_metrics_emitter.dart`
+- `lib/src/core/plugins/capability_exception.dart`
 - `plugins/` or `examples/plugins/` directory for in-repo examples.
 - `tool/sign_examples.dart` (test-only helper that generates an ephemeral CI key and signs example plugins).
 - `doc/plugins.md`

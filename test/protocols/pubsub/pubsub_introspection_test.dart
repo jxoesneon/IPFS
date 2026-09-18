@@ -42,6 +42,9 @@ class _StubRouter implements RouterInterface {
   bool isConnectedPeer(String peerIdStr) => connected.contains(peerIdStr);
 
   @override
+  Set<String> get connectedPeers => Set<String>.unmodifiable(connected);
+
+  @override
   Future<void> sendMessage(
     String peerIdStr,
     Uint8List message, {

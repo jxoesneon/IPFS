@@ -10,6 +10,10 @@
 ///   enableGC: true,
 /// );
 /// ```
+@Deprecated(
+  'StorageConfig is never read; use IPFSConfig.datastorePath, '
+  'IPFSConfig.blockStorePath, and IPFSConfig.keystorePath instead.',
+)
 class StorageConfig {
   /// Creates a new [StorageConfig] with default paths and limits.
   const StorageConfig({

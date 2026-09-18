@@ -272,6 +272,59 @@ void main() {
       await expectLater(handler.want(['QmSomeCid']), throwsStateError);
     });
 
+    test('remote wantlist does not enter the local wantlist', () async {
+      await handler.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.last
+              as Function(NetworkPacket);
+
+      final msg = message.Message();
+      msg.addWantlistEntry('QmRemoteWantedCid', priority: 5);
+      final packet = NetworkPacket(srcPeerId: 'peerA', datagram: msg.toBytes());
+      await capturedHandler(packet);
+
+      // The remote peer's want must not inflate our local wantlist.
+      final status = await handler.getStatus();
+      expect(status['wanted_blocks'], equals(0));
+    });
+
+    test('received blocks are forwarded to interested peers', () async {
+      await handler.start();
+      when(mockRouter.connectedPeers).thenReturn({'peerA'});
+      when(mockRouter.peerID).thenReturn('localPeer');
+
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.last
+              as Function(NetworkPacket);
+
+      final blockData = Uint8List.fromList([9, 9, 9]);
+      final cid = await CID.computeForData(blockData);
+      final cidStr = cid.encode();
+
+      // peerA announces a want for the block
+      final wantMsg = message.Message();
+      wantMsg.addWantlistEntry(cidStr, priority: 10);
+      await capturedHandler(
+        NetworkPacket(srcPeerId: 'peerA', datagram: wantMsg.toBytes()),
+      );
+
+      // The block arrives from the network
+      await handler.handleBlocks([Block(cid: cid, data: blockData)]);
+
+      // The handler should forward the block to peerA
+      verify(
+        mockRouter.sendMessage(
+          'peerA',
+          any,
+          protocolId: anyNamed('protocolId'),
+        ),
+      );
+    });
+
     test('handleWantlist sends DONT_HAVE if requested', () async {
       await handler.start();
       final capturedHandler =

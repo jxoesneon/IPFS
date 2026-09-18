@@ -38,6 +38,8 @@ A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) a
 
 ## Table of Contents
 
+- [What's New in v1.16](#whats-new-in-v116-current-v1162)
+- [What's New in v1.12](#whats-new-in-v112)
 - [What's New in v1.11](#whats-new-in-v111)
 - [What's New in v1.10](#whats-new-in-v110)
 - [Features](#features)
@@ -68,7 +70,7 @@ A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) a
 | ------- | ----------- |
 | **IPFS Facade Parity** | Node-only APIs are now exposed on the high-level `IPFS` facade — `connectedPeers`, `connectToPeer`, `addresses`, `provide`, `bandwidthMetrics`, `pinnedCids`, `cat`, `publicKey`, `getHealthStatus`, and more. |
 | **Key Management API** | `keyGen`, `keyList`, `keyImport`, `keyExport`, and `keyRm` backed by the encrypted keystore; named keys can be used with `publishIPNS`. |
-| **PubSub Introspection** | `pubsubLs` and `pubsubPeers` backed by per-topic peer tracking in the pubsub client and gossipsub handler. |
+| **PubSub Introspection** | `pubsubLs` and `pubsubPeers` backed by per-topic peer tracking in the pubsub client. |
 | **Deterministic Node Identity** | `IPFSConfig.libp2pIdentitySeed` produces a stable peer ID across launches on IO and web. |
 | **Helia Interop Hardening** | Pinned peer-store dependency and validated raw request bodies in the interop harness. |
 
@@ -80,7 +82,7 @@ A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) a
 
 | Feature | Description |
 | ------- | ----------- |
-| **SEC-008 Ed25519 PubSub Auth** | Asymmetric Ed25519 digital signatures in `PubSubClient` and `GossipsubHandler`, eliminating peer message spoofing. |
+| **SEC-008 Ed25519 PubSub Auth** | Asymmetric Ed25519 digital signatures in `PubSubClient`, eliminating peer message spoofing. |
 | **PeerKeyRegistry** | Cryptographic validation binding peer public keys to Peer IDs with identify protocol key ingestion. |
 | **Signature Downgrade Protection** | Rejects unauthenticated or legacy HMAC messages in strict authentication mode. |
 | **Helia Interop Suite** | Dedicated Helia HTTP RPC interop server (`test/interop/helia/server.js`) and profile-based Docker interop testing. |
@@ -141,12 +143,11 @@ A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) a
   - STOP protocol (connection handling)
   - Transport forwarding
 - **libp2p Core**: Native TCP/Noise transport; optional QUIC probe, WebRTC, WebTransport; PNET private-network support
-- **PubSub**: Gossipsub real-time messaging
+- **PubSub**: Topic-based real-time messaging with Ed25519-signed messages
 - **mDNS**: Local peer discovery
 - **Bootstrap Peers**: Network connectivity initialization
 - **Identify Protocol**: Peer metadata exchange (`/ipfs/id/1.0.0`)
 - **DCUtR / Hole Punching**: Direct connection upgrade through relay
-- **Connection Manager (Cuttlefish)**: Tagged, prioritized connection pruning
 
 ### Services
 
@@ -154,6 +155,7 @@ A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) a
   - Writable gateway mode not yet implemented
 - **Trustless Gateway Response Formats**: `raw`, `car`, `ipns-record`, `dag-json`, `dag-cbor`
 - **RPC API**: Kubo-compatible subset with API-key authentication
+  - Set `IPFSConfig.rpcApiKey` or the `DART_IPFS_API_KEY` environment variable (env var takes precedence). When configured, non-public endpoints require the `X-API-Key` header; requests without a valid key are rejected with `403`. Keys are compared in constant time.
 - **IPNS**: Mutable naming system with Ed25519 signatures
 - **DNSLink**: Domain-based content resolution
 - **GraphSync**: Efficient graph synchronization protocol with IPLD selector support
@@ -171,7 +173,7 @@ A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) a
   - AES-256-GCM encryption
   - PBKDF2 key derivation
   - Memory zeroing on lock
-  - Configurable key rotation (rotation logic partially stubbed)
+  - Configurable key rotation (not implemented — enabling it fails fast)
 - **Sybil Protection (SEC-005)**
   - Static Proof-of-Work difficulty check on PeerId
   - Configurable difficulty via `SecurityConfig.dhtDifficulty`
@@ -368,9 +370,9 @@ IPFSConfig(
   enableGraphsync: true,
   enableMetrics: true,
   enableIpnsPubSub: false,
-  enableLogging: true,
+  enableLogging: true, // Always on; control verbosity via logLevel
   enableStructuredLogging: false,
-  enableQuotaManagement: true,
+  enableQuotaManagement: true, // Deprecated: no quota subsystem exists
 
   // Storage paths
   dataPath: './ipfs_data',
@@ -384,15 +386,15 @@ IPFSConfig(
   logLevel: 'info',
 
   // Quotas and limits
-  defaultBandwidthQuota: 1048576,
+  defaultBandwidthQuota: 1048576, // Deprecated: no quota subsystem exists
   maxConcurrentBitswapRequests: 10,
-  maxSelectorDepth: 32,
-  maxSelectorNodes: 10000,
+  maxSelectorDepth: 32, // Deprecated: use GraphsyncConfig budget fields
+  maxSelectorNodes: 10000, // Deprecated: use GraphsyncConfig budget fields
   ipnsCacheSize: 1000,
 
   // Garbage collection
-  garbageCollectionEnabled: true,
-  garbageCollectionInterval: Duration(hours: 24),
+  garbageCollectionEnabled: true, // Deprecated: no repository GC loop exists
+  garbageCollectionInterval: Duration(hours: 24), // Deprecated: see above
 
   // Networking
   network: NetworkConfig(
@@ -429,7 +431,8 @@ IPFSConfig(
     reproviderStrategy: 'pinned',
   ),
 
-  // Storage
+  // Storage — deprecated: not wired to runtime storage. Use the top-level
+  // dataPath/datastorePath/keystorePath/blockStorePath options instead.
   storage: StorageConfig(
     baseDir: '.ipfs',
     blocksDir: 'blocks',
@@ -444,7 +447,7 @@ IPFSConfig(
   // Security
   security: SecurityConfig(
     enableTLS: false,
-    enableKeyRotation: true,
+    enableKeyRotation: false, // Not implemented: throws if enabled
     keyRotationInterval: Duration(days: 30),
     maxAuthAttempts: 3,
     enableRateLimiting: true,
@@ -606,7 +609,7 @@ The **`IpfsPlatform`** abstraction layer shields the core logic from platform-sp
                │
 ┌──────────────▼──────────────────────┐
 │         Storage Layer                │
-│  VM:  BlockStore + HiveDatastore     │
+│  VM:  BlockStore + FlatFileDatastore │
 │       (filesystem-backed)              │
 │  Web: WebBlockStore + IndexedDB      │
 │       (via IpfsPlatformWeb)          │
@@ -625,11 +628,11 @@ The **`IpfsPlatform`** abstraction layer shields the core logic from platform-sp
   - `DatastoreHandler` (`lib/src/core/ipfs_node/datastore_handler.dart`) — Wraps the lower-level `Datastore`/`BlockStore` for block persistence and CAR operations.
   - `MFSManager` (`lib/src/core/mfs/mfs_manager.dart`) — Mutable File System operations.
 - **Protocol handlers** (`lib/src/protocols/`)
-  - `BitswapHandler`, `DHTHandler`, `GraphSyncHandler`, `IPNSHandler`, `PubSubHandler`, `IdentifyHandler`, `PingHandler`, `AutoNATHandler`, `DCUtRHandler`, `PeeringService` / `PeeringHandler`, and `CuttlefishConnectionManager`.
+  - `BitswapHandler`, `DHTHandler`, `GraphSyncHandler`, `IPNSHandler`, `PubSubHandler`, `IdentifyHandler`, `PingHandler`, `AutoNATHandler`, `DCUtRHandler`, and `PeeringService` (`lib/src/core/peering/`).
 - **Transport** (`lib/src/transport/`)
   - `Libp2pRouter` uses `package:ipfs_libp2p` with Ed25519 identity, Noise encryption, TCP, WebSocket, WebRTC, WebTransport, and Circuit Relay v2. A private-network transport wrapper is also available via `pnet/`.
 - **Storage** (`lib/src/core/data_structures/blockstore.dart`, `lib/src/storage/hive_datastore.dart`, `lib/src/core/ipfs_node/web_block_store.dart`)
-  - VM: `BlockStore` (in-memory index with filesystem persistence) plus `HiveDatastore` for key-value metadata.
+  - VM: `BlockStore` (on-disk block files with a bounded in-memory LRU cache) plus `FlatFileDatastore`/`HiveDatastore` for key-value metadata.
   - Web: `WebBlockStore` backed by `IpfsPlatformWeb` / IndexedDB.
 
 For more details, see the **[Architecture Guide](doc/ARCHITECTURE.md)**.
@@ -644,7 +647,7 @@ For more details, see the **[Architecture Guide](doc/ARCHITECTURE.md)**.
 | --------------- | ------------------------ | ------ |
 | Content Hashing | ~50 MB/s (SHA-256)       | Depends on chunk size, Dart VM vs. web, and whether multihash/codec overhead is included. Actual throughput on web will be lower. |
 | Block Storage   | ~1000 ops/sec (Hive)     | Measured locally on a Hive-backed `Datastore`/`BlockStore`. Performance drops with larger blocks, concurrent writers, or filesystem latency. |
-| Gateway Latency | <10ms (local cache hit)  | Only when content is already in the in-memory `BlockStore` index. First fetch over HTTP or P2P is orders of magnitude slower. |
+| Gateway Latency | <10ms (local cache hit)  | Only when content is already in the `BlockStore` LRU cache or on local disk. First fetch over HTTP or P2P is orders of magnitude slower. |
 | P2P Handshake   | <100ms (secp256k1 ECDH)  | Misleading: the transport layer currently defaults to **Ed25519** identity and **Noise** for encryption. Handshake latency varies with NAT, relay, and key-type negotiation. |
 | Memory Baseline | ~50MB + content cache    | Rough VM baseline observed in local runs. Web builds and large caches will consume significantly more memory. |
 
@@ -712,7 +715,7 @@ SecurityConfig(
 
 ### Key Rotation & Rate Limiting
 
-- `SecurityConfig.enableKeyRotation` defaults to `true` with a 30-day interval; the scheduler is active but the current `_rotateKeys()` implementation records metrics only and does not rotate stored keys.
+- `SecurityConfig.enableKeyRotation` is not implemented: the scheduler records metrics only and does not rotate stored keys. Enabling it fails fast at node setup with an explicit error rather than silently pretending to protect keys. Leave it `false`.
 - Rate limiting defaults to `maxRequestsPerMinute: 100` with a 1-minute window.
 - Authentication throttling defaults to `maxAuthAttempts: 3` before a client is blocked.
 
@@ -904,7 +907,7 @@ Contributions welcome! Please:
 
 ### Completed
 
-- Core IPFS protocols (Bitswap, DHT, PubSub/Gossipsub)
+- Core IPFS protocols (Bitswap, DHT, PubSub)
 - Offline, Gateway, and P2P modes
 - Production cryptography
 - Web platform support
@@ -928,7 +931,6 @@ Contributions welcome! Please:
 - Native QUIC transport (foundation implemented in `packages/dart_ipfs_quic`; Kubo interop still hardening)
 - Mobile optimization (Flutter performance, battery, and background execution)
 - GraphSync server-side MVP hardening
-- Gossipsub protobuf wire-format compliance
 
 ### Planned
 
@@ -955,7 +957,7 @@ Contributions welcome! Please:
 | Kademlia DHT           | Yes                   | Yes            |
 | HTTP Gateway           | Yes                   | Yes            |
 | RPC API                | Yes                   | Yes            |
-| PubSub                 | Yes (Gossipsub)       | Yes            |
+| PubSub                 | Yes                   | Yes            |
 | IPNS                   | Yes                   | Yes            |
 | GraphSync              | Yes (server-side MVP) | Yes            |
 | Circuit Relay v2       | Yes                   | Yes            |

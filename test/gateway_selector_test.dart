@@ -36,7 +36,11 @@ void main() {
       });
 
       // Initialize IPFS Node with unique data path
-      final config = IPFSConfig(offline: true, dataPath: tempDir.path);
+      final config = IPFSConfig(
+        offline: true,
+        dataPath: tempDir.path,
+        datastorePath: '${tempDir.path}/datastore',
+      );
       node = await IPFSNode.create(config);
       await node.start(); // Ensure services (Datastore) are initialized
     });

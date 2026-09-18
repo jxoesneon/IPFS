@@ -7,6 +7,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
 import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
 
@@ -46,6 +47,25 @@ void main() {
 
       await handler.stop();
       verify(mockPubSubClient.stop()).called(1);
+    });
+
+    test('bridges client messagesStream into messages', () async {
+      final bridge = StreamController<PubSubMessage>();
+      when(mockPubSubClient.messagesStream).thenAnswer((_) => bridge.stream);
+
+      await handler.start();
+
+      final receivedFuture = handler.messages.first;
+      bridge.add(
+        PubSubMessage(topic: 'topic1', content: 'hello', sender: 'peer1'),
+      );
+
+      final received = await receivedFuture;
+      expect(received.content, equals('hello'));
+      expect(received.topic, equals('topic1'));
+
+      await bridge.close();
+      await handler.stop();
     });
 
     test('subscribe and unsubscribe', () async {
@@ -121,47 +141,45 @@ void main() {
       expect(status['messages_published'], equals(1));
     });
 
-    test('start error handling', () async {
+    test('start error propagates', () async {
       when(mockPubSubClient.start()).thenThrow(Exception('Start failed'));
-      // Should not throw
-      await handler.start();
+      await expectLater(handler.start(), throwsException);
       verify(mockPubSubClient.start()).called(1);
     });
 
-    test('stop error handling', () async {
+    test('stop error propagates', () async {
       when(mockPubSubClient.stop()).thenThrow(Exception('Stop failed'));
-      // Should not throw
-      await handler.stop();
+      await expectLater(handler.stop(), throwsException);
       verify(mockPubSubClient.stop()).called(1);
     });
 
-    test('subscribe error handling', () async {
+    test('subscribe error propagates', () async {
       when(mockPubSubClient.subscribe(any)).thenThrow(Exception('Sub failed'));
-      await handler.subscribe('topic1');
+      await expectLater(handler.subscribe('topic1'), throwsException);
       verify(mockPubSubClient.subscribe('topic1')).called(1);
     });
 
-    test('unsubscribe error handling', () async {
+    test('unsubscribe error propagates', () async {
       when(
         mockPubSubClient.unsubscribe(any),
       ).thenThrow(Exception('Unsub failed'));
-      await handler.unsubscribe('topic1');
+      await expectLater(handler.unsubscribe('topic1'), throwsException);
       verify(mockPubSubClient.unsubscribe('topic1')).called(1);
     });
 
-    test('publish error handling', () async {
+    test('publish error propagates', () async {
       when(
         mockPubSubClient.publish(any, any),
       ).thenThrow(Exception('Pub failed'));
-      await handler.publish('topic1', 'msg');
+      await expectLater(handler.publish('topic1', 'msg'), throwsException);
       verify(mockPubSubClient.publish('topic1', 'msg')).called(1);
     });
 
-    test('onMessage error handling', () async {
+    test('onMessage error propagates', () {
       when(
         mockPubSubClient.onMessage(any, any),
       ).thenThrow(Exception('onMessage failed'));
-      handler.onMessage('topic1', (msg) {});
+      expect(() => handler.onMessage('topic1', (msg) {}), throwsException);
       verify(mockPubSubClient.onMessage(any, any)).called(1);
     });
 

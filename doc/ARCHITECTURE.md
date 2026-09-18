@@ -23,12 +23,12 @@ Each major functional area of IPFS is encapsulated within a dedicated manager:
 ### 3. Platform Abstraction (IpfsPlatform)
 The `IpfsPlatform` class is the key to multi-platform support. It provides a unified interface for platform-specific operations, shielding the core logic from the differences between `dart:io` (VM) and `dart:html`/`idb_shim` (Web).
 
-- **IOPlatform**: Implementation for Windows, macOS, and Linux using `dart:io`.
-- **WebPlatform**: Implementation for browsers using `idb_shim` and `package:http`.
+- **IpfsPlatformIO**: Implementation for Windows, macOS, Linux, iOS, and Android using `dart:io`.
+- **IpfsPlatformWeb**: Implementation for browsers using `idb_shim` and `package:http`.
 
 ### 4. Storage Providers
 Storage is decoupled from the core through the `BlockStore` and `Datastore` interfaces.
-- **FileStore (IO)**: Persists blocks as individual files or within a consolidated database (Hive) on the local filesystem.
+- **IO**: `BlockStore` persists blocks as individual files under `blockStorePath` (with a bounded in-memory LRU cache), while `FlatFileDatastore` persists key-value metadata under `datastorePath`.
 - **IndexedDB (Web)**: Uses the browser's IndexedDB via `idb_shim` for persistent, high-performance storage in a web environment.
 
 ---

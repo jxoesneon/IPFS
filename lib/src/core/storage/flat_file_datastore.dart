@@ -72,18 +72,8 @@ class FlatFileDatastore implements Datastore {
 
   @override
   Stream<QueryEntry> query(Query q) async* {
-    // Note: Recursive listing not strictly in platform stub yet,
-    // but listDirectory returns top level.
-    // For now we might need to implement a simple walker or
-    // add recursive support to Platform interface if needed.
-    // Given the simplicity, let's just query flat for now or assume simple structure.
-
-    // Improvement: We can just list path?
-    // The previous implementation used recursive list.
-    // Let's rely on listDirectory (which might need to be recursive in platform impl).
-    // For now, let's assume flat structure or implement a walker.
-
-    // Naive walker
+    // Depth-first walk over the datastore directory. Every value is written
+    // to a '<key>.data' file; other entries are traversed as subdirectories.
     final stack = [path];
 
     while (stack.isNotEmpty) {
@@ -91,46 +81,41 @@ class FlatFileDatastore implements Datastore {
       final children = await _platform.listDirectory(current);
 
       for (final childPath in children) {
-        // Is it a file or dir? Platform interface listDirectory returns strings.
-        // We check exists/is-dir?
-        // In platform_io, listDirectory mapped entities to paths.
+        // Everything the datastore writes ends in '.data'; any other entry
+        // is a subdirectory that must be traversed.
+        if (!childPath.endsWith('.data')) {
+          stack.add(childPath);
+          continue;
+        }
+        final relative = p.relative(childPath, from: path);
+        final normalizedRelative = relative.replaceAll(r'\', '/');
+        final keyStr =
+            '/${normalizedRelative.substring(0, normalizedRelative.length - 5)}';
+        final key = Key(keyStr);
 
-        // To properly walk, we need to know if it's a dir.
-        // Let's assume everything ending in .data is a file we care about.
-        if (childPath.endsWith('.data')) {
-          final relative = p.relative(childPath, from: path);
-          final normalizedRelative = relative.replaceAll(r'\', '/');
-          final keyStr =
-              '/${normalizedRelative.substring(0, normalizedRelative.length - 5)}';
-          final key = Key(keyStr);
+        // Filter logic reused
+        bool match = true;
+        if (q.prefix != null && !keyStr.startsWith(q.prefix!)) match = false;
 
-          // Filter logic reused
-          bool match = true;
-          if (q.prefix != null && !keyStr.startsWith(q.prefix!)) match = false;
+        if (match) {
+          Uint8List? value;
+          if (!q.keysOnly || (q.filters != null && q.filters!.isNotEmpty)) {
+            value = await _platform.readBytes(childPath);
+          }
 
-          if (match) {
-            Uint8List? value;
-            if (!q.keysOnly || (q.filters != null && q.filters!.isNotEmpty)) {
-              value = await _platform.readBytes(childPath);
-            }
-
-            if (value != null && q.filters != null) {
-              final entry = MapEntry(key, value);
-              for (final filter in q.filters!) {
-                if (!filter.filter(entry)) {
-                  match = false;
-                  break;
-                }
+          if (value != null && q.filters != null) {
+            final entry = MapEntry(key, value);
+            for (final filter in q.filters!) {
+              if (!filter.filter(entry)) {
+                match = false;
+                break;
               }
             }
-
-            if (match) {
-              yield QueryEntry(key, value);
-            }
           }
-        } else {
-          // It's likely a directory, add to stack to recurse
-          stack.add(childPath);
+
+          if (match) {
+            yield QueryEntry(key, value);
+          }
         }
       }
     }

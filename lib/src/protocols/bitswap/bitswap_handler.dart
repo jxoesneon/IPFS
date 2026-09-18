@@ -55,6 +55,25 @@ class BitswapHandler implements ILifecycle {
   final Map<String, Completer<Block>> _pendingBlocks = {};
   final Map<String, Set<String>> _providersForBlock = {};
   final List<String> _requestQueue = [];
+
+  /// Remote wantlist demand per peer: peer ID → (CID → priority). Remote
+  /// wants are tracked separately so they never pollute the local wantlist.
+  final Map<String, Map<String, int>> _peerWants = {};
+
+  /// Maximum peers whose remote wantlists are tracked.
+  static const int _maxPeerWantsPeers = 256;
+
+  /// Maximum wanted CIDs tracked per peer.
+  static const int _maxPeerWantsPerPeer = 512;
+
+  /// Maximum CIDs with recorded block providers.
+  static const int _maxProviderCids = 4096;
+
+  /// Maximum provider peer IDs recorded per CID.
+  static const int _maxProvidersPerCid = 32;
+
+  /// Maximum outstanding local block requests.
+  static const int _maxPendingBlocks = 2048;
   int _activeRequests = 0;
   final int _maxConcurrentRequests;
   static const String _protocolId = '/ipfs/bitswap/1.2.0';
@@ -204,8 +223,9 @@ class BitswapHandler implements ILifecycle {
       final cidStr = entry.key;
       final wantEntry = entry.value;
 
-      // Add to our local wantlist with the received priority
-      _wantlist.add(cidStr, priority: wantEntry.priority);
+      // Track remote demand separately — the local wantlist holds only
+      // blocks this node wants.
+      _recordPeerWant(fromPeer, cidStr, wantEntry.priority);
 
       // Bitswap 1.2: Check if peer wants just 'HAVE' or full block
       if (wantEntry.wantType == message.WantType.have) {
@@ -278,8 +298,13 @@ class BitswapHandler implements ILifecycle {
       final cid = presence.cid;
       if (presence.type == message.BlockPresenceType.have) {
         _logger.verbose('Peer $fromPeer HAVE $cid');
-        // Track this peer as a provider for the block
-        _providersForBlock.putIfAbsent(cid, () => {}).add(fromPeer);
+        // Track this peer as a provider for the block (bounded)
+        final providers = _providersForBlock.putIfAbsent(cid, () => {});
+        if (providers.length < _maxProvidersPerCid ||
+            providers.contains(fromPeer)) {
+          providers.add(fromPeer);
+        }
+        _boundProviderCids(cid);
       } else {
         _logger.verbose('Peer $fromPeer DONT_HAVE $cid');
         // Remove this peer from providers for the block
@@ -316,6 +341,62 @@ class BitswapHandler implements ILifecycle {
       if (_wantlist.contains(cidStr)) {
         _wantlist.remove(cidStr);
       }
+
+      // Forward the block to connected peers that requested it
+      unawaited(_forwardBlockToInterestedPeers(cidStr, block));
+    }
+  }
+
+  /// Records a remote peer's want for [cid], bounded per peer and overall.
+  void _recordPeerWant(String peerId, String cid, int priority) {
+    var wants = _peerWants[peerId];
+    if (wants == null) {
+      if (_peerWants.length >= _maxPeerWantsPeers) {
+        _peerWants.remove(_peerWants.keys.first);
+      }
+      wants = <String, int>{};
+      _peerWants[peerId] = wants;
+    } else {
+      wants.remove(cid); // Refresh recency
+    }
+    if (wants.length >= _maxPeerWantsPerPeer) {
+      wants.remove(wants.keys.first);
+    }
+    wants[cid] = priority;
+  }
+
+  /// Evicts the oldest CID entries from [_providersForBlock] when the map
+  /// exceeds [_maxProviderCids], keeping the most recently updated entry.
+  void _boundProviderCids(String mostRecentCid) {
+    final providers = _providersForBlock.remove(mostRecentCid);
+    if (providers != null) {
+      _providersForBlock[mostRecentCid] = providers;
+    }
+    while (_providersForBlock.length > _maxProviderCids) {
+      _providersForBlock.remove(_providersForBlock.keys.first);
+    }
+  }
+
+  /// Sends a newly arrived block to connected peers that listed it in their
+  /// wantlist, then clears their want for it.
+  Future<void> _forwardBlockToInterestedPeers(String cid, Block block) async {
+    final interested = <String>[];
+    for (final entry in _peerWants.entries) {
+      if (entry.value.remove(cid) != null &&
+          _router.connectedPeers.contains(entry.key)) {
+        interested.add(entry.key);
+      }
+    }
+    if (interested.isEmpty) return;
+
+    final outgoing = message.Message()..addBlock(block);
+    final bytes = outgoing.toBytes();
+    for (final peerId in interested) {
+      try {
+        await _router.sendMessage(peerId, bytes, protocolId: _protocolId);
+      } catch (e, st) {
+        _logger.error('Failed to forward block $cid to $peerId', e, st);
+      }
     }
   }
 
@@ -331,6 +412,12 @@ class BitswapHandler implements ILifecycle {
 
     if (_router.connectedPeers.isEmpty) {
       throw StateError('No connected peers available for Bitswap request');
+    }
+
+    if (_pendingBlocks.length >= _maxPendingBlocks) {
+      throw StateError(
+        'Bitswap pending-block limit reached ($_maxPendingBlocks)',
+      );
     }
 
     final completers = <String, Completer<Block>>{};
@@ -646,37 +733,12 @@ class BitswapHandler implements ILifecycle {
     }
 
     if (!_bitswapConfig.allowPrivateGateways &&
-        _isPrivateOrLoopbackHost(uri.host)) {
+        HttpGatewayClient.isPrivateOrLoopbackHost(uri.host)) {
       _logger.warning('Rejecting private/loopback gateway URL: $url');
       return false;
     }
 
     return true;
-  }
-
-  bool _isPrivateOrLoopbackHost(String host) {
-    if (host.isEmpty) return true;
-    if (host == 'localhost' || host == '127.0.0.1' || host == '::1') {
-      return true;
-    }
-    if (host.startsWith('127.')) return true;
-    if (host.startsWith('10.') ||
-        host.startsWith('192.168.') ||
-        host.startsWith('169.254.')) {
-      return true;
-    }
-    if (host.startsWith('172.')) {
-      final parts = host.split('.');
-      if (parts.length > 1) {
-        final second = int.tryParse(parts[1]);
-        if (second != null && second >= 16 && second <= 31) {
-          return true;
-        }
-      }
-    }
-    // IPv6 unique local addresses (fc00::/7) and loopback (::1).
-    if (host.startsWith('fc') || host.startsWith('fd')) return true;
-    return false;
   }
 
   /// Total bytes sent.

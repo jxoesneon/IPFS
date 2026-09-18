@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -47,8 +48,10 @@ void main() {
         equals('WebRTC is not available on VM platforms'),
       );
       expect(
-        TransportUnavailableException.forPlatform('WebTransport', 'native')
-            .message,
+        TransportUnavailableException.forPlatform(
+          'WebTransport',
+          'native',
+        ).message,
         equals('WebTransport is not available on native platforms'),
       );
     });
@@ -213,6 +216,7 @@ void main() {
     late Libp2pRouter router;
 
     IPFSConfig makeConfig() => IPFSConfig(
+      dataPath: Directory.systemTemp.createTempSync('ipfs_browser_gate_').path,
       network: NetworkConfig(
         listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
         bootstrapPeers: const [],

@@ -11,9 +11,11 @@ void main() {
     late RPCHandlers rpcHandlers;
 
     setUp(() async {
+      final dataPath =
+          './test_data_rpc_bug/${DateTime.now().millisecondsSinceEpoch}';
       final config = IPFSConfig(
-        dataPath:
-            './test_data_rpc_bug/${DateTime.now().millisecondsSinceEpoch}',
+        dataPath: dataPath,
+        datastorePath: '$dataPath/datastore',
         offline: true,
       );
       node = await IPFSNode.create(config);

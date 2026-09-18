@@ -67,6 +67,7 @@ fileshare_data/
 cdn_data/
 ipfs_data/
 *_data/
+ipfs_keystore
 
 # IPFS Storage
 *.hive

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/transport/libp2p_router.dart';
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
@@ -26,10 +28,16 @@ class _FakeQuicTransport extends TCPTransport {
       addr.hasProtocol('udp') && addr.hasProtocol('quic-v1');
 }
 
+late Directory _repoDir;
+var _nodeCounter = 0;
+
+String _nodePath() => '${_repoDir.path}/node${_nodeCounter++}';
+
 void main() {
   group('QUIC transport', () {
     setUpAll(() {
       logging.hierarchicalLoggingEnabled = true;
+      _repoDir = Directory.systemTemp.createTempSync('ipfs_quic_repo_');
     });
 
     tearDown(() {
@@ -77,6 +85,7 @@ void main() {
 
     test('supportsQuic is true when QUIC is enabled and available', () async {
       final config = IPFSConfig(
+        dataPath: _nodePath(),
         network: NetworkConfig(
           listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
           enableQuic: true,
@@ -91,6 +100,7 @@ void main() {
 
     test('supportsQuic is false when enableQuic is false', () async {
       final config = IPFSConfig(
+        dataPath: _nodePath(),
         network: NetworkConfig(
           listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
           enableQuic: false,
@@ -115,6 +125,7 @@ void main() {
         addTearDown(() => subscription.cancel());
 
         final config = IPFSConfig(
+          dataPath: _nodePath(),
           network: NetworkConfig(
             listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
             enableQuic: true,
@@ -145,6 +156,7 @@ void main() {
       addTearDown(() => subscription.cancel());
 
       final config = IPFSConfig(
+        dataPath: _nodePath(),
         network: NetworkConfig(
           listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
           enableQuic: false,
@@ -170,6 +182,7 @@ void main() {
       );
 
       final config = IPFSConfig(
+        dataPath: _nodePath(),
         network: NetworkConfig(
           listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
           enableQuic: true,
@@ -192,6 +205,7 @@ void main() {
       'does not synthesize QUIC listen addresses when QUIC is disabled',
       () async {
         final config = IPFSConfig(
+          dataPath: _nodePath(),
           network: NetworkConfig(
             listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
             enableQuic: false,

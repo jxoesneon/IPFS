@@ -9,6 +9,7 @@ import '../../protocols/bitswap/bitswap_handler.dart';
 import '../../transport/http_gateway_client.dart';
 import '../../utils/logger.dart';
 import '../cid.dart';
+import '../config/bitswap_config.dart';
 import '../data_structures/block.dart';
 import '../data_structures/blockstore.dart';
 import '../data_structures/directory.dart';
@@ -31,17 +32,20 @@ class ContentManager implements ILifecycle {
     BlockStore? blockStore,
     BitswapHandler? bitswapHandler,
     DenylistService? denylistService,
+    BitswapConfig? bitswapConfig,
   }) : _datastoreHandler = datastoreHandler,
        _newContentController = newContentController,
        _blockStore = blockStore,
        _bitswapHandler = bitswapHandler,
        _denylistService = denylistService,
+       _bitswapConfig = bitswapConfig ?? const BitswapConfig(),
        _logger = Logger('ContentManager');
 
   final DatastoreHandler _datastoreHandler;
   final BlockStore? _blockStore;
   final BitswapHandler? _bitswapHandler;
   final DenylistService? _denylistService;
+  final BitswapConfig _bitswapConfig;
   final Logger _logger;
   final HttpGatewayClient _httpGatewayClient = HttpGatewayClient();
   final StreamController<String> _newContentController;
@@ -144,15 +148,17 @@ class ContentManager implements ILifecycle {
     GatewayMode gatewayMode = GatewayMode.internal,
     String customGatewayUrl = '',
   }) async {
-    try {
-      final denylist = _denylistService;
-      if (denylist != null && denylist.isBlockedByCidString(cid)) {
-        final action = denylist.recordHit(cid, source: 'rpc');
-        if (action == 'block') {
-          throw StateError('Content blocked by operator policy');
-        }
+    // Policy blocks must propagate; a swallowed StateError would be
+    // indistinguishable from "content not found".
+    final denylist = _denylistService;
+    if (denylist != null && denylist.isBlockedByCidString(cid)) {
+      final action = denylist.recordHit(cid, source: 'rpc');
+      if (action == 'block') {
+        throw StateError('Content blocked by operator policy');
       }
+    }
 
+    try {
       if (gatewayMode != GatewayMode.internal) {
         return await _getViaGateway(cid, gatewayMode, customGatewayUrl);
       }
@@ -180,10 +186,7 @@ class ContentManager implements ILifecycle {
         }
       }
 
-      _logger.debug(
-        'P2P retrieval failed, attempting HTTP gateway fallback for $cid',
-      );
-      return await _httpGatewayClient.get(cid);
+      return await _getViaHttpFallback(cid);
     } catch (e, stackTrace) {
       _logger.error('Error retrieving content for CID $cid', e, stackTrace);
       return null;
@@ -211,6 +214,50 @@ class ContentManager implements ILifecycle {
     }
     _logger.debug('Retrieving via Gateway ($url): $cid');
     return await _httpGatewayClient.get(cid, baseUrl: url);
+  }
+
+  /// Opt-in HTTP gateway fallback.
+  ///
+  /// Disabled unless [BitswapConfig.enableHttpFallback] is set. Fetches
+  /// raw blocks only from the configured gateways, honoring
+  /// [BitswapConfig.allowPrivateGateways], and hash-verifies every
+  /// fetched block against the requested CID before it is cached or
+  /// returned — a malicious gateway cannot inject arbitrary content.
+  Future<Uint8List?> _getViaHttpFallback(String cid) async {
+    if (!_bitswapConfig.enableHttpFallback) return null;
+
+    _logger.debug(
+      'P2P retrieval failed, attempting HTTP gateway fallback for $cid',
+    );
+    for (final gateway in _bitswapConfig.httpFallbackGateways) {
+      final uri = Uri.tryParse(gateway);
+      if (uri == null ||
+          (uri.scheme != 'http' && uri.scheme != 'https') ||
+          (!_bitswapConfig.allowPrivateGateways &&
+              HttpGatewayClient.isPrivateOrLoopbackHost(uri.host))) {
+        _logger.warning('Skipping invalid HTTP gateway URL: $gateway');
+        continue;
+      }
+
+      final bytes = await _httpGatewayClient.fetchRawBlock(
+        gateway,
+        cid,
+        timeout: _bitswapConfig.httpTimeout,
+        maxBlockSize: _bitswapConfig.maxHttpBlockSize,
+      );
+      if (bytes == null) continue;
+
+      final block = Block(cid: CID.decode(cid), data: bytes);
+      if (!await block.validate()) {
+        _logger.warning(
+          'HTTP fallback returned invalid block for $cid from $gateway',
+        );
+        continue;
+      }
+      await _datastoreHandler.putBlock(block);
+      return block.data;
+    }
+    return null;
   }
 
   Future<Uint8List?> _extractBlockData(Block block, String path) async {

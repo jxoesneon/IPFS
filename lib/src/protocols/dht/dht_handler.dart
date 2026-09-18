@@ -76,6 +76,12 @@ class DHTHandler implements IDHTHandler, ILifecycle {
   /// Rate limit: max provider announcements per peer per minute
   static const int maxProviderAnnouncementsPerMinute = 10;
 
+  /// Maximum CIDs tracked in the local provider index.
+  static const int maxProviderCids = 4096;
+
+  /// Maximum peers tracked for announcement rate limiting.
+  static const int maxAnnouncementPeers = 1024;
+
   /// Track provider announcements per peer for rate limiting
   final Map<String, List<DateTime>> _providerAnnouncements = {};
 
@@ -441,10 +447,17 @@ class DHTHandler implements IDHTHandler, ILifecycle {
       // Track this announcement
       announcements.add(now);
       _providerAnnouncements[providerStr] = announcements;
+      while (_providerAnnouncements.length > maxAnnouncementPeers) {
+        _providerAnnouncements.remove(_providerAnnouncements.keys.first);
+      }
 
       // Track provider locally
       existingProviders.add(providerStr);
+      _providers.remove(cidStr); // Refresh recency before reinserting
       _providers[cidStr] = existingProviders;
+      while (_providers.length > maxProviderCids) {
+        _providers.remove(_providers.keys.first);
+      }
 
       // Add to DHT
       await dhtClient.addProvider(cidStr, providerStr);

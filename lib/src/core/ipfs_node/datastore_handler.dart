@@ -59,6 +59,7 @@ class DatastoreHandler implements ILifecycle {
       _logger.verbose('Stored block with CID: ${block.cid}');
     } catch (e, stackTrace) {
       _logger.error('Error storing block with CID ${block.cid}', e, stackTrace);
+      rethrow;
     }
   }
 
@@ -124,16 +125,11 @@ class DatastoreHandler implements ILifecycle {
 
   /// Persists the given set of [pinnedCIDs] to the datastore.
   ///
-  /// This operation is currently destructive and replaces all existing pins.
+  /// This operation is additive: pins are written (or rewritten) under
+  /// `/pins/<cid>` without removing pins already stored. Removal happens
+  /// exclusively through the unpin path, which deletes the individual key.
   Future<void> persistPinnedCIDs(Set<String> pinnedCIDs) async {
     try {
-      // 1. Delete all existing pins
-      final q = Query(prefix: '/pins/', keysOnly: true);
-      await for (final entry in _datastore.query(q)) {
-        await _datastore.delete(entry.key);
-      }
-
-      // 2. Add new pins
       for (final cid in pinnedCIDs) {
         final key = Key('/pins/$cid');
         await _datastore.put(
@@ -159,11 +155,21 @@ class DatastoreHandler implements ILifecycle {
           data: section.bytes,
           format: section.cid.codec ?? 'raw',
         );
+        // CAR bytes are untrusted: the section header maps data to a CID,
+        // so every block must hash-verify before it reaches the store.
+        if (!await block.validate()) {
+          throw ComponentError(
+            'Datastore',
+            'CAR import rejected: block data does not match CID ${section.cid}',
+          );
+        }
         await putBlock(block);
         count++;
         _logger.verbose('Imported block with CID: ${section.cid}');
       }
       _logger.info('Imported $count blocks from CAR file');
+    } on ComponentError {
+      rethrow;
     } catch (e, stackTrace) {
       _logger.error('Error importing CAR file', e, stackTrace);
       throw ComponentError(
@@ -204,7 +210,7 @@ class DatastoreHandler implements ILifecycle {
       return carData;
     } catch (e, stackTrace) {
       _logger.error('Error exporting CAR file for CID $cid', e, stackTrace);
-      return Uint8List(0);
+      rethrow;
     }
   }
 

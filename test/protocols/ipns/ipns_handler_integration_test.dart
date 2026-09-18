@@ -40,8 +40,13 @@ class MockDHTHandler implements IDHTHandler {
 
   @override
   Future<Value> getValue(Key key) async {
-    // Return a valid raw CID string as the legacy fallback value.
-    return Value.fromString(storedCid);
+    // Serve a signed IPNS record owned by the deterministic test key pair.
+    final record = await IPNSRecord.create(
+      value: CID.decode(storedCid),
+      keyPair: await _testKeyPair(),
+      sequence: 1,
+    );
+    return Value(record.toIpnsEntry());
   }
 
   @override

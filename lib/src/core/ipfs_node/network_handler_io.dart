@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import '../../network/router.dart';
 import '../../proto/generated/dht/ipfs_node_network_events.pb.dart';
 import '../../transport/circuit_relay_client.dart';
 import '../../transport/libp2p_router.dart';
@@ -115,9 +114,9 @@ class NetworkHandler {
   Future<void> connectToPeer(String multiaddress) async {
     try {
       await _router.connect(multiaddress);
-      // print('Connected to peer at $multiaddress.');
-    } catch (e) {
-      // print('Error connecting to peer at $multiaddress: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error connecting to peer at $multiaddress', e, stackTrace);
+      rethrow;
     }
   }
 
@@ -125,49 +124,37 @@ class NetworkHandler {
   Future<void> disconnectFromPeer(String multiaddress) async {
     try {
       await _router.disconnect(multiaddress);
-      // print('Disconnected from peer at $multiaddress.');
-    } catch (e) {
-      // print('Error disconnecting from peer at $multiaddress: $e');
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Error disconnecting from peer at $multiaddress',
+        e,
+        stackTrace,
+      );
+      rethrow;
     }
   }
 
   /// Lists all connected peers.
   Future<List<String>> listConnectedPeers() async {
-    try {
-      final peers = _router.listConnectedPeers();
-      // print('Connected peers: ${peers.length}');
-      return peers;
-    } catch (e) {
-      // print('Error listing connected peers: $e');
-      return [];
-    }
+    return _router.listConnectedPeers();
   }
 
   /// Sends a message to a specific peer.
   Future<void> sendMessage(String peerId, String message) async {
+    final messageBytes = Uint8List.fromList(utf8.encode(message));
     try {
-      // Convert String message to Uint8List
-      Uint8List messageBytes = Uint8List.fromList(utf8.encode(message));
-
       await _router.sendMessage(peerId, messageBytes);
-      // print('Message sent to peer $peerId.');
-    } catch (e) {
-      // print('Error sending message to peer $peerId: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error sending message to peer $peerId', e, stackTrace);
+      rethrow;
     }
   }
 
   /// Receives messages from a specific peer.
   Stream<String> receiveMessages(String peerId) {
-    try {
-      // Assuming _router.receiveMessage returns a Stream<Uint8List>
-      return _router.receiveMessages(peerId).map((messageBytes) {
-        // Convert Uint8List back to String
-        return utf8.decode(messageBytes as List<int>);
-      });
-    } catch (e) {
-      // print('Error receiving messages from peer $peerId: $e');
-      return const Stream.empty();
-    }
+    return _router.receiveMessages(peerId).map((messageBytes) {
+      return utf8.decode(messageBytes as List<int>);
+    });
   }
 
   /// Listens for network events and handles them appropriately.
@@ -181,13 +168,15 @@ class NetworkHandler {
             final multiaddress = event.peerConnected.multiaddress;
             _logger.info('Peer connected: $peerId at address: $multiaddress');
 
-            final peerIdBytes = Uint8List.fromList(utf8.encode(peerId));
-            final peer = dht.PeerId(value: peerIdBytes);
+            final peer = dht.PeerId.fromBase58(peerId);
             try {
               _logger.verbose('Adding peer to routing table: $peerId');
               ipfsNode.dhtHandler?.dhtClient.kademliaRoutingTable.addPeer(
                 peer,
                 peer,
+                address: RegExp(
+                  r'/ip[46]/([^/]+)',
+                ).firstMatch(multiaddress)?.group(1),
               );
             } catch (e) {
               _logger.debug('DHT not ready yet, skipping routing table update');
@@ -197,8 +186,7 @@ class NetworkHandler {
             final reason = event.peerDisconnected.reason;
             _logger.info('Peer disconnected: $peerIdStr. Reason: $reason');
 
-            final peerIdBytes = Uint8List.fromList(utf8.encode(peerIdStr));
-            final peerId = dht.PeerId(value: peerIdBytes);
+            final peerId = dht.PeerId.fromBase58(peerIdStr);
             try {
               _logger.verbose('Removing peer from routing table: $peerIdStr');
               ipfsNode.dhtHandler?.dhtClient.kademliaRoutingTable.removePeer(
@@ -229,9 +217,6 @@ class NetworkHandler {
     );
     _subscriptions.add(sub);
   }
-
-  /// Returns a high-level Router instance (for DHT operations).
-  Router get dhtRouter => Router(_config);
 
   /// Sets the parent IPFS node reference.
   void setIpfsNode(IPFSNode node) {

@@ -7,7 +7,7 @@
 
 ## Current Status
 
-dart_ipfs **v1.16.1** is **multi-platform production ready** with:
+dart_ipfs **v1.16.2** is **multi-platform production ready** with:
 
 - **IpfsPlatform**: Unified abstraction layer for IO and Web.
 - **WebRTC Multiplexing**: Native p2p connectivity for browsers with standard libp2p stream support.
@@ -38,7 +38,7 @@ dart_ipfs **v1.16.1** is **multi-platform production ready** with:
 ---
 
 ### v1.12 - Q3 2026 (Cryptographic Authentication & Interop) [SHIPPED]
-- [x] **SEC-008**: Full Ed25519 asymmetric message signing in PubSub/Gossipsub.
+- [x] **SEC-008**: Full Ed25519 asymmetric message signing in PubSub.
 - [x] `PeerKeyRegistry`: Cryptographic public key to Peer ID binding validation.
 - [x] `IdentifyHandler` public key caching and signature downgrade protection.
 - [x] Complete Helia HTTP RPC interop server (`server.js`) with Bitswap & CAR support.
@@ -68,7 +68,7 @@ dart_ipfs **v1.16.1** is **multi-platform production ready** with:
 - [x] `IpfsText`: Declarative text widget.
 - [x] `IpfsCacheManager`: Multi-tier in-memory LRU bitmap cache.
 - [ ] Local-First CAR State Sync: Drift / Hive integration templates for offline-first mobile apps.
-- [ ] Production sample apps: "Offline-First Mobile Photo Vault" and "Encrypted P2P Gossipsub Mesh".
+- [ ] Production sample apps: "Offline-First Mobile Photo Vault" and "Encrypted P2P PubSub Mesh".
 
 ---
 

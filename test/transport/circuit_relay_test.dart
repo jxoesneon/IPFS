@@ -27,6 +27,10 @@ class MockRouter implements RouterInterface {
   Set<String> get connectedPeers => {'relay-peer'};
 
   @override
+  Set<String> get supportedProtocols =>
+      Set<String>.unmodifiable(_handlers.keys);
+
+  @override
   Stream<ConnectionEvent> get connectionEvents => const Stream.empty();
 
   @override

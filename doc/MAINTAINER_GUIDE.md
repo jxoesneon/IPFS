@@ -20,12 +20,22 @@ Copy this checklist for every release cycle.
 - [ ] **Test Suite**: Run `dart test` and verify critical paths (e.g., `gateway_selector_test.dart`).
 
 ### 2. Version Bump
-Update the version number (e.g., `1.2.1`) in **ALL** of the following files:
-- [ ] `pubspec.yaml` (`version:`)
-- [ ] `CHANGELOG.md` (Add new section `## [1.2.1] - YYYY-MM-DD`)
-- [ ] `README.md` (Update any "Installation" or "Usage" references)
-- [ ] `ROADMAP.md` (Update "Current Version" header and status)
-- [ ] `doc/PROTOBUF_COMPATIBILITY.md` (Update if protobuf version changes)
+`pubspec.yaml` (`version:`) is the single source of truth. All other version-bearing
+surfaces are synchronized and validated by tooling — do **not** edit them by hand:
+
+1. Bump `version:` in `pubspec.yaml`.
+2. Add a `## [X.Y.Z] - YYYY-MM-DD` section to `CHANGELOG.md` (manual; the gate requires it).
+3. Run `make release-sync` — rewrites `lib/src/version.dart`, `docker-compose*.yml`,
+   `helm/dart-ipfs/Chart.yaml` + `README.md`, `k8s/**/kustomization.yaml`,
+   `k8s/base/deployment.yaml`, `README.md`, and `ROADMAP.md` from `pubspec.yaml`.
+4. Run `make release-check` — validates every surface, the CHANGELOG section, and
+   (when on a tag) that the tag matches `pubspec.yaml`. This is the same check the
+   publish workflow runs as a fail-closed gate.
+5. Update `doc/PROTOBUF_COMPATIBILITY.md` only if the protobuf dependency changed.
+
+Still manual per release: the CHANGELOG entry content, README "What's New" /
+ROADMAP narrative, the git tag itself, the changed-code coverage gate, and
+maintainer sign-off. See `ENGINEERING_NOTES.md` for the full surface list.
 
 ### 3. Documentation Sync
 - [ ] **Wiki/Docs**: Update `docs/` content if new features were added.
@@ -39,6 +49,9 @@ Update the version number (e.g., `1.2.1`) in **ALL** of the following files:
     1. Push `master` first: `git push origin master`
     2. Create tag: `git tag v1.2.1`
     3. Push tag: `git push origin v1.2.1`
+    4. The `publish.yml` workflow then runs automatically: the release gate
+       verifies surfaces/tag/CHANGELOG, the package publishes to pub.dev,
+       and a GitHub Release is created from the CHANGELOG section.
 
 ---
 

@@ -14,7 +14,16 @@ class LifecycleManager {
   bool _isRunning = false;
 
   /// Registers a service for lifecycle management.
+  ///
+  /// Registering the same instance twice is a no-op: a service must never be
+  /// started or stopped more than once per lifecycle pass.
   void register(ILifecycle service) {
+    if (_services.contains(service)) {
+      _logger.debug(
+        'Ignoring duplicate registration of ${service.runtimeType}',
+      );
+      return;
+    }
     if (_isRunning) {
       _logger.warning(
         'Registering service while node is already running. You must start it manually.',

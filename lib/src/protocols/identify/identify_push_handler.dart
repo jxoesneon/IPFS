@@ -13,6 +13,7 @@
 
 import 'dart:async';
 
+import '../../core/interfaces/i_lifecycle.dart';
 import '../../transport/router_interface.dart';
 import '../../utils/logger.dart';
 import 'identify_handler.dart';
@@ -41,7 +42,7 @@ class IdentifyPushEvent {
 ///
 /// Receives pushed identify updates from remote peers and can push this
 /// node's updated info to all connected peers.
-class IdentifyPushHandler {
+class IdentifyPushHandler implements ILifecycle {
   /// Creates an identify-push handler.
   ///
   /// [router] provides the underlying P2P transport.
@@ -71,6 +72,7 @@ class IdentifyPushHandler {
   bool get isStarted => _started;
 
   /// Starts the handler by registering the protocol with the router.
+  @override
   Future<void> start() async {
     if (_started) return;
     _started = true;
@@ -80,6 +82,7 @@ class IdentifyPushHandler {
   }
 
   /// Stops the handler.
+  @override
   Future<void> stop() async {
     if (!_started) return;
     _started = false;

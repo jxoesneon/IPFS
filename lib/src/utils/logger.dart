@@ -163,20 +163,34 @@ class Logger {
 
   /// Set the log level
   void setLevel(String level) {
+    _logger.level = _levelFor(level);
+  }
+
+  /// Sets the root logger level, affecting every [Logger] that has not had
+  /// [setLevel] called on it. Unknown values fall back to `info` and emit a
+  /// warning rather than failing.
+  static void setGlobalLevel(String level) {
+    _initializeIfNeeded();
+    logging.Logger.root.level = _levelFor(level, fallback: true);
+  }
+
+  static logging.Level _levelFor(String level, {bool fallback = false}) {
     switch (level.toLowerCase()) {
       case 'debug':
-        _logger.level = logging.Level.FINE;
-        break;
+        return logging.Level.FINE;
       case 'info':
-        _logger.level = logging.Level.INFO;
-        break;
+        return logging.Level.INFO;
       case 'warning':
-        _logger.level = logging.Level.WARNING;
-        break;
+        return logging.Level.WARNING;
       case 'error':
-        _logger.level = logging.Level.SEVERE;
-        break;
+        return logging.Level.SEVERE;
       default:
+        if (fallback) {
+          logging.Logger.root.warning(
+            'Unknown log level "$level"; falling back to info',
+          );
+          return logging.Level.INFO;
+        }
         throw ArgumentError('Invalid log level: $level');
     }
   }

@@ -84,6 +84,8 @@ class IPFSConfig {
     this.offline = false,
     NetworkConfig? network,
     DHTConfig? dht,
+    @Deprecated('StorageConfig is never read; use the top-level path fields.')
+    // ignore: deprecated_member_use_from_same_package
     StorageConfig? storage,
     SecurityConfig? security,
     GatewayConfig? gateway,
@@ -94,39 +96,56 @@ class IPFSConfig {
     this.enablePubSub = true,
     this.enableDHT = true,
     this.enableRPC = false,
+    this.rpcApiKey,
     this.enableCircuitRelay = true,
     this.enableContentRouting = true,
     this.enableDNSLinkResolution = true,
+    @Deprecated(
+      'IPLD is a core dependency and cannot be disabled; this flag is ignored.',
+    )
     this.enableIPLD = true,
     this.enableGraphsync = true,
     this.enableMetrics = true,
     this.enableIpnsPubSub = false,
+    @Deprecated('Logging is always enabled; use logLevel to control verbosity.')
     this.enableLogging = true,
     this.enableStructuredLogging = false,
     this.ipnsCacheSize = 1000,
     this.logLevel = 'info',
+    @Deprecated('No bandwidth quota subsystem exists; this flag is ignored.')
     this.enableQuotaManagement = true,
+    @Deprecated('No bandwidth quota subsystem exists; this flag is ignored.')
     this.defaultBandwidthQuota = 1048576,
     this.maxConcurrentBitswapRequests = 10,
     this.datastorePath = './ipfs_data',
     this.keystorePath = './ipfs_keystore',
     this.blockStorePath = 'blocks',
+    @Deprecated('No libp2p bridge transport exists; this flag is ignored.')
     this.enableLibp2pBridge = false,
     this.libp2pListenAddress = '/ip4/0.0.0.0/tcp/4001',
     this.libp2pIdentitySeed,
     String? nodeId,
+    @Deprecated(
+      'No repository garbage-collection loop exists; this flag is ignored.',
+    )
     this.garbageCollectionInterval = const Duration(hours: 24),
+    @Deprecated(
+      'No repository garbage-collection loop exists; this flag is ignored.',
+    )
     this.garbageCollectionEnabled = true,
     this.metrics = const MetricsConfig(),
     this.dataPath = './ipfs_data',
     Keystore? keystore,
+    @Deprecated('Use GraphsyncConfig.defaultMaxDepth; this flag is ignored.')
     this.maxSelectorDepth = 32,
+    @Deprecated('Use GraphsyncConfig.defaultMaxBlocks; this flag is ignored.')
     this.maxSelectorNodes = 10000,
     this.customConfig = const {},
     this.swarmKeyPath,
     this.privateNetworkPsk,
   }) : network = network ?? NetworkConfig(),
        dht = dht ?? const DHTConfig(),
+       // ignore: deprecated_member_use_from_same_package
        storage = storage ?? const StorageConfig(),
        security = security ?? const SecurityConfig(),
        gateway = gateway ?? const GatewayConfig(),
@@ -159,6 +178,7 @@ class IPFSConfig {
             ? Map<String, dynamic>.from(json['dht'] as Map)
             : {},
       ),
+      // ignore: deprecated_member_use_from_same_package
       storage: StorageConfig.fromJson(
         json['storage'] != null
             ? Map<String, dynamic>.from(json['storage'] as Map)
@@ -184,38 +204,48 @@ class IPFSConfig {
               Map<String, dynamic>.from(json['graphsync'] as Map),
             )
           : const GraphsyncConfig(),
-      debug: json['debug'] as bool? ?? false,
-      verboseLogging: json['verboseLogging'] as bool? ?? false,
+      debug: json['debug'] as bool? ?? true,
+      verboseLogging: json['verboseLogging'] as bool? ?? true,
       enablePubSub: json['enablePubSub'] as bool? ?? true,
       enableDHT: json['enableDHT'] as bool? ?? true,
       enableRPC: json['enableRPC'] as bool? ?? false,
+      rpcApiKey: json['rpcApiKey'] as String?,
       enableCircuitRelay: json['enableCircuitRelay'] as bool? ?? true,
       enableContentRouting: json['enableContentRouting'] as bool? ?? true,
       enableDNSLinkResolution: json['enableDNSLinkResolution'] as bool? ?? true,
+      // ignore: deprecated_member_use_from_same_package
       enableIPLD: json['enableIPLD'] as bool? ?? true,
       enableGraphsync: json['enableGraphsync'] as bool? ?? true,
       enableMetrics: json['enableMetrics'] as bool? ?? true,
       enableIpnsPubSub: json['enableIpnsPubSub'] as bool? ?? false,
+      // ignore: deprecated_member_use_from_same_package
       enableLogging: json['enableLogging'] as bool? ?? true,
       enableStructuredLogging:
           json['enableStructuredLogging'] as bool? ?? false,
       logLevel: json['logLevel'] as String? ?? 'info',
+      // ignore: deprecated_member_use_from_same_package
       enableQuotaManagement: json['enableQuotaManagement'] as bool? ?? true,
+      // ignore: deprecated_member_use_from_same_package
       defaultBandwidthQuota: json['defaultBandwidthQuota'] as int? ?? 1048576,
       maxConcurrentBitswapRequests:
           json['maxConcurrentBitswapRequests'] as int? ?? 10,
+      // ignore: deprecated_member_use_from_same_package
       maxSelectorDepth: json['maxSelectorDepth'] as int? ?? 32,
+      // ignore: deprecated_member_use_from_same_package
       maxSelectorNodes: json['maxSelectorNodes'] as int? ?? 10000,
       ipnsCacheSize: json['ipnsCacheSize'] as int? ?? 1000,
+      // ignore: deprecated_member_use_from_same_package
       garbageCollectionInterval: Duration(
         seconds: json['garbageCollectionInterval'] as int? ?? 86400,
       ),
+      // ignore: deprecated_member_use_from_same_package
       garbageCollectionEnabled:
           json['garbageCollectionEnabled'] as bool? ?? true,
       datastorePath: json['datastorePath'] as String? ?? './ipfs_data',
       keystorePath: json['keystorePath'] as String? ?? './ipfs_keystore',
       blockStorePath: json['blockStorePath'] as String? ?? 'blocks',
       dataPath: json['dataPath'] as String? ?? './ipfs_data',
+      // ignore: deprecated_member_use_from_same_package
       enableLibp2pBridge: json['enableLibp2pBridge'] as bool? ?? false,
       libp2pListenAddress:
           json['libp2pListenAddress'] as String? ?? '/ip4/0.0.0.0/tcp/4001',
@@ -243,6 +273,7 @@ class IPFSConfig {
   final DHTConfig dht;
 
   /// Storage and datastore configuration.
+  // ignore: deprecated_member_use_from_same_package
   final StorageConfig storage;
 
   /// Security and identity configuration.
@@ -272,6 +303,13 @@ class IPFSConfig {
   /// Enable the RPC API server.
   final bool enableRPC;
 
+  /// Optional API key required by the RPC server for protected endpoints.
+  ///
+  /// When set, clients must send `X-API-Key: <key>` on all non-public RPC
+  /// calls. The daemon also honors the `DART_IPFS_API_KEY` environment
+  /// variable.
+  final String? rpcApiKey;
+
   /// Enable Circuit Relay support.
   final bool enableCircuitRelay;
 
@@ -282,6 +320,8 @@ class IPFSConfig {
   final bool enableDNSLinkResolution;
 
   /// Enable IPLD support.
+  ///
+  /// Ignored: IPLD is a core dependency and is always enabled.
   final bool enableIPLD;
 
   /// Enable Graphsync protocol.
@@ -294,6 +334,8 @@ class IPFSConfig {
   final bool enableIpnsPubSub;
 
   /// Enable system-wide logging.
+  ///
+  /// Ignored: logging is always enabled; use [logLevel] to control verbosity.
   final bool enableLogging;
 
   /// Enable structured (JSON) logging.
@@ -306,18 +348,26 @@ class IPFSConfig {
   final String logLevel;
 
   /// Enable bandwidth quota management.
+  ///
+  /// Ignored: no bandwidth quota subsystem exists.
   final bool enableQuotaManagement;
 
   /// Default bandwidth quota in bytes.
+  ///
+  /// Ignored: no bandwidth quota subsystem exists.
   final int defaultBandwidthQuota;
 
   /// Maximum concurrent bitswap requests.
   final int maxConcurrentBitswapRequests;
 
   /// Maximum recursion depth for IPLD selector execution.
+  ///
+  /// Ignored: use [GraphsyncConfig.defaultMaxDepth] instead.
   final int maxSelectorDepth;
 
   /// Maximum number of nodes to visit during IPLD selector execution.
+  ///
+  /// Ignored: use [GraphsyncConfig.defaultMaxBlocks] instead.
   final int maxSelectorNodes;
 
   /// Path to the datastore.
@@ -330,9 +380,14 @@ class IPFSConfig {
   final String blockStorePath;
 
   /// Whether to enable the libp2p bridge transport.
+  ///
+  /// Ignored: no libp2p bridge transport exists.
   final bool enableLibp2pBridge;
 
-  /// The listen address for the libp2p bridge.
+  /// Legacy single listen address for the libp2p host.
+  ///
+  /// Honored only when [NetworkConfig.listenAddresses] is empty; the
+  /// network listen-address list is the canonical surface.
   final String libp2pListenAddress;
 
   /// Optional seed for persistent libp2p identity.
@@ -342,9 +397,13 @@ class IPFSConfig {
   final String nodeId;
 
   /// Interval for garbage collection.
+  ///
+  /// Ignored: no repository garbage-collection loop exists.
   final Duration garbageCollectionInterval;
 
   /// Enable automatic garbage collection.
+  ///
+  /// Ignored: no repository garbage-collection loop exists.
   final bool garbageCollectionEnabled;
 
   /// Metrics collection configuration.
@@ -413,6 +472,7 @@ class IPFSConfig {
     'enablePubSub': enablePubSub,
     'enableDHT': enableDHT,
     'enableRPC': enableRPC,
+    'rpcApiKey': rpcApiKey,
     'enableCircuitRelay': enableCircuitRelay,
     'enableContentRouting': enableContentRouting,
     'enableDNSLinkResolution': enableDNSLinkResolution,

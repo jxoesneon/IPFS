@@ -339,24 +339,33 @@ class IPNSRecord {
 
   /// Decodes an IPNS record from the Kubo `IpnsEntry` protobuf format.
   ///
-  /// If the embedded `pubKey` is empty and [name] is provided, the public key
-  /// is recovered from the CIDv1 libp2p-key name.
-  static IPNSRecord fromIpnsEntry(Uint8List data, {String? name}) {
+  /// If the embedded `pubKey` is empty, the public key is taken from
+  /// [publicKey] when provided (e.g. recovered from the DHT key), then from
+  /// the CIDv1 libp2p-key [name] when provided.
+  static IPNSRecord fromIpnsEntry(
+    Uint8List data, {
+    String? name,
+    Uint8List? publicKey,
+  }) {
     final entry = IpnsEntry.fromBuffer(data);
-    Uint8List publicKey;
+    final Uint8List resolvedKey;
     if (entry.pubKey.isNotEmpty) {
-      publicKey = _extractPublicKeyFromProto(Uint8List.fromList(entry.pubKey));
+      resolvedKey = _extractPublicKeyFromProto(
+        Uint8List.fromList(entry.pubKey),
+      );
+    } else if (publicKey != null) {
+      resolvedKey = publicKey;
     } else if (name != null) {
-      publicKey = _publicKeyFromName(name);
+      resolvedKey = _publicKeyFromName(name);
     } else {
-      publicKey = Uint8List(0);
+      resolvedKey = Uint8List(0);
     }
     return IPNSRecord._(
       value: Uint8List.fromList(entry.value),
       validity: DateTime.parse(utf8.decode(entry.validity)),
       sequence: entry.sequence.toInt(),
       ttl: Duration(microseconds: (entry.ttl ~/ Int64(1000)).toInt()),
-      publicKey: publicKey,
+      publicKey: resolvedKey,
       signature: entry.signature.isNotEmpty
           ? Uint8List.fromList(entry.signature)
           : null,
@@ -381,10 +390,15 @@ class IPNSRecord {
   /// Decodes a record, trying the Kubo protobuf format first and falling back
   /// to the internal CBOR format.
   ///
-  /// Pass [name] when decoding Kubo protobuf that omits the public key.
-  static IPNSRecord decode(Uint8List data, {String? name}) {
+  /// Pass [name] or [publicKey] when decoding Kubo protobuf that omits the
+  /// public key; [publicKey] is typically recovered from the DHT key.
+  static IPNSRecord decode(
+    Uint8List data, {
+    String? name,
+    Uint8List? publicKey,
+  }) {
     try {
-      return fromIpnsEntry(data, name: name);
+      return fromIpnsEntry(data, name: name, publicKey: publicKey);
     } catch (_) {
       return fromCBOR(data);
     }
@@ -452,6 +466,47 @@ class IPNSRecord {
         'seq: $sequence, '
         'valid: ${validity.toIso8601String()}, '
         'signed: $isSigned)';
+  }
+}
+
+/// Builds the DHT key Kubo uses for IPNS records: `'/ipns/'` followed by the
+/// identity multihash of the protobuf-encoded Ed25519 public key.
+Uint8List ipnsDhtKey(Uint8List publicKey) {
+  final protoKey = Uint8List(4 + publicKey.length)
+    ..[0] = 0x08
+    ..[1] = 0x01
+    ..[2] = 0x12
+    ..[3] = publicKey.length;
+  protoKey.setRange(4, 4 + publicKey.length, publicKey);
+
+  final identityHash = Uint8List(2 + protoKey.length)
+    ..[0] = 0x00
+    ..[1] = protoKey.length;
+  identityHash.setRange(2, 2 + protoKey.length, protoKey);
+
+  return Uint8List.fromList([...utf8.encode('/ipns/'), ...identityHash]);
+}
+
+/// Recovers the raw Ed25519 public key encoded in an `/ipns/` DHT key.
+///
+/// Returns `null` if [key] is not a well-formed IPNS DHT key. This is the
+/// inverse of [ipnsDhtKey]: the key is `'/ipns/' + identity multihash +
+/// protobuf-encoded public key`.
+Uint8List? ipnsPublicKeyFromDhtKey(Uint8List key) {
+  const prefixLen = 6; // '/ipns/'
+  if (key.length <= prefixLen + 2) return null;
+  for (var i = 0; i < prefixLen; i++) {
+    if (key[i] != '/ipns/'.codeUnitAt(i)) return null;
+  }
+  if (key[prefixLen] != 0x00) return null; // identity multihash
+  final len = key[prefixLen + 1];
+  if (key.length != prefixLen + 2 + len) return null;
+  try {
+    return IPNSRecord._extractPublicKeyFromProto(
+      Uint8List.fromList(key.sublist(prefixLen + 2)),
+    );
+  } catch (_) {
+    return null;
   }
 }
 

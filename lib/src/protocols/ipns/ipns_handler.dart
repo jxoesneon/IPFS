@@ -217,19 +217,8 @@ class IPNSHandler implements ILifecycle {
       _logger.debug('Failed to decode CBOR IPNS record: $e');
     }
 
-    // Legacy fallback: raw CID string bytes.
-    _logger.debug('Falling back to legacy raw CID value for $name');
-    try {
-      final valueStr = utf8.decode(bytes);
-      return IPNSRecord.internal(
-        value: Uint8List.fromList(utf8.encode('/ipfs/$valueStr')),
-        validity: DateTime.now().add(_recordValidity),
-        sequence: 0,
-        ttl: _recordTtl,
-      );
-    } on FormatException {
-      throw IpnsValidationError('Invalid IPNS record format');
-    }
+    // Arbitrary DHT bytes are untrusted: unsigned records must never resolve.
+    throw IpnsValidationError('Invalid IPNS record format');
   }
 
   /// Validates a CBOR IPNS record.
@@ -345,21 +334,7 @@ class IPNSHandler implements ILifecycle {
 
   /// Builds the DHT key Kubo uses for IPNS records: '/ipns/' + identity
   /// multihash of the protobuf-encoded Ed25519 public key.
-  Uint8List _ipnsDhtKey(Uint8List publicKey) {
-    final protoKey = Uint8List(4 + publicKey.length)
-      ..[0] = 0x08
-      ..[1] = 0x01
-      ..[2] = 0x12
-      ..[3] = publicKey.length;
-    protoKey.setRange(4, 4 + publicKey.length, publicKey);
-
-    final identityHash = Uint8List(2 + protoKey.length)
-      ..[0] = 0x00
-      ..[1] = protoKey.length;
-    identityHash.setRange(2, 2 + protoKey.length, protoKey);
-
-    return Uint8List.fromList([...utf8.encode('/ipns/'), ...identityHash]);
-  }
+  Uint8List _ipnsDhtKey(Uint8List publicKey) => ipnsDhtKey(publicKey);
 
   Future<void> _publishRecord(IPNSRecord record) async {
     // Kubo uses '/ipns/' followed by the binary identity multihash of the

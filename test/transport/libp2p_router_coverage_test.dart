@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -13,9 +14,11 @@ void main() {
   group('Libp2pRouter Coverage', () {
     late Libp2pRouter router;
     late IPFSConfig config;
+    late Directory repoDir;
 
     IPFSConfig createConfig([int port = 0]) {
       return IPFSConfig(
+        dataPath: '${repoDir.path}/node_$port',
         network: NetworkConfig(
           listenAddresses: ['/ip4/127.0.0.1/tcp/$port'],
           bootstrapPeers: [],
@@ -24,6 +27,7 @@ void main() {
     }
 
     setUp(() {
+      repoDir = Directory.systemTemp.createTempSync('ipfs_router_repo_');
       config = createConfig();
       router = Libp2pRouter(config);
     });
@@ -56,7 +60,10 @@ void main() {
 
     test('start should handle empty listen addresses', () async {
       final emptyRouter = Libp2pRouter(
-        IPFSConfig(network: NetworkConfig(listenAddresses: [])),
+        IPFSConfig(
+          dataPath: '${repoDir.path}/empty',
+          network: NetworkConfig(listenAddresses: []),
+        ),
       );
       await emptyRouter.start();
       expect(emptyRouter.hasStarted, isTrue);
@@ -66,6 +73,7 @@ void main() {
     test('start should handle invalid port in listen addresses', () async {
       final invalidRouter = Libp2pRouter(
         IPFSConfig(
+          dataPath: '${repoDir.path}/invalid',
           network: NetworkConfig(
             listenAddresses: ['/ip4/127.0.0.1/tcp/invalid'],
           ),

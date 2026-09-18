@@ -22,6 +22,7 @@ import '../../transport/libp2p_router.dart';
 import '../../transport/router_interface.dart';
 import '../../utils/base58.dart';
 import '../../utils/logger.dart';
+import '../ipns/ipns_record.dart';
 import 'dht_envelope.dart';
 import 'kademlia_routing_adapter.dart';
 import 'kademlia_routing_table.dart';
@@ -87,6 +88,9 @@ class DHTClient {
 
   /// Protocol identifier for LAN Kademlia DHT (used by private networks).
   static const String protocolDhtLan = '/ipfs/lan/kad/1.0.0';
+
+  /// Maximum size of a DHT value accepted from remote peers (1 MiB).
+  static const int _maxDhtValueSize = 1024 * 1024;
 
   /// Initializes the DHT client.
   Future<void> initialize() async {
@@ -508,6 +512,7 @@ class DHTClient {
   /// Returns true if at least one peer successfully stored the value.
   Future<bool> storeValue(Uint8List key, Uint8List value) async {
     _checkInitialized();
+    final storedLocally = await _storeValueLocally(key, value);
     final target = getRoutingKey(Base58().encode(key));
     final alpha = _config.alpha;
     final k = _config.bucketSize;
@@ -540,7 +545,9 @@ class DHTClient {
       successCount += results.where((success) => success).length;
     }
 
-    return successCount > 0;
+    // A node always counts as a replica of its own records: a local store
+    // suffices even when no remote peer acknowledges the write.
+    return storedLocally || successCount > 0;
   }
 
   Future<bool> _sendStoreValue(PeerId peer, Uint8List msgBytes) async {
@@ -588,6 +595,14 @@ class DHTClient {
   /// first value found.
   Future<Uint8List?> getValue(Uint8List key) async {
     _checkInitialized();
+    final keyBytes = Uint8List.fromList(key);
+    final isIpns = _isIpnsKey(keyBytes);
+    // Locally stored records (published by this node) resolve without peers.
+    // For IPNS keys the local record enters the sequence comparison rather
+    // than winning outright, so a newer remote record can still prevail.
+    final local = await _getValueLocally(keyBytes);
+    if (local != null && !isIpns) return local;
+
     final target = getRoutingKey(Base58().encode(key));
     final alpha = _config.alpha;
     final k = _config.bucketSize;
@@ -596,6 +611,16 @@ class DHTClient {
     final request = kad.Message()
       ..type = kad.Message_MessageType.GET_VALUE
       ..key = key;
+
+    Uint8List? bestIpnsValue;
+    var bestIpnsSequence = -1;
+    if (isIpns && local != null) {
+      final localSeq = await _ipnsSequenceIfValid(keyBytes, local);
+      if (localSeq > bestIpnsSequence) {
+        bestIpnsSequence = localSeq;
+        bestIpnsValue = local;
+      }
+    }
 
     final queried = <PeerId>{};
     final closest = _SortedPeerQueue(target, _kademliaRoutingTable);
@@ -617,7 +642,14 @@ class DHTClient {
         if (response == null) continue;
 
         if (response.hasRecord() && response.record.value.isNotEmpty) {
-          return Uint8List.fromList(response.record.value);
+          final value = Uint8List.fromList(response.record.value);
+          if (!isIpns) return value;
+          final sequence = await _ipnsSequenceIfValid(keyBytes, value);
+          if (sequence > bestIpnsSequence) {
+            bestIpnsSequence = sequence;
+            bestIpnsValue = value;
+          }
+          continue;
         }
 
         for (final closer in response.closerPeers) {
@@ -627,7 +659,7 @@ class DHTClient {
       }
     }
 
-    return null;
+    return isIpns ? bestIpnsValue : null;
   }
 
   /// Stores a raw DHT value on connected peers using unframed Kademlia
@@ -635,8 +667,9 @@ class DHTClient {
   /// understand the internal DHTEnvelope framing.
   Future<bool> storeValueRaw(Uint8List key, Uint8List value) async {
     _checkInitialized();
+    final storedLocally = await _storeValueLocally(key, value);
     final router = node.dhtHandler?.router;
-    if (router == null) return false;
+    if (router == null) return storedLocally;
 
     final record = dht_proto.Record()
       ..key = key
@@ -656,20 +689,39 @@ class DHTClient {
         _logger.debug('Raw PUT_VALUE to $peerIdStr failed: $e');
       }
     }
-    return successCount > 0;
+    return storedLocally || successCount > 0;
   }
 
   /// Retrieves a raw DHT value from connected peers using unframed Kademlia
   /// messages. Returns the first value found.
   Future<Uint8List?> getValueRaw(Uint8List key) async {
     _checkInitialized();
+    final keyBytes = Uint8List.fromList(key);
+    final isIpns = _isIpnsKey(keyBytes);
+
+    // Locally stored records (published by this node) resolve without peers.
+    // For IPNS keys the local record enters the sequence comparison rather
+    // than winning outright, so a newer remote record can still prevail.
+    final local = await _getValueLocally(keyBytes);
+    if (local != null && !isIpns) return local;
+
     final router = node.dhtHandler?.router;
-    if (router == null) return null;
+    if (router == null) return local;
 
     final request = kad.Message()
       ..type = kad.Message_MessageType.GET_VALUE
       ..key = key;
     final requestBytes = request.writeToBuffer();
+
+    Uint8List? bestIpnsValue;
+    var bestIpnsSequence = -1;
+    if (isIpns && local != null) {
+      final localSeq = await _ipnsSequenceIfValid(keyBytes, local);
+      if (localSeq > bestIpnsSequence) {
+        bestIpnsSequence = localSeq;
+        bestIpnsValue = local;
+      }
+    }
 
     for (final peerIdStr in router.connectedPeers) {
       try {
@@ -680,14 +732,73 @@ class DHTClient {
         );
         if (responseBytes == null) continue;
         final response = kad.Message.fromBuffer(responseBytes);
-        if (response.hasRecord() && response.record.value.isNotEmpty) {
-          return Uint8List.fromList(response.record.value);
+        if (!response.hasRecord() || response.record.value.isEmpty) continue;
+        final value = Uint8List.fromList(response.record.value);
+        if (!isIpns) {
+          // Non-IPNS values are unordered: first answer wins.
+          return value;
+        }
+        // IPNS records: prefer the highest-sequence valid record across
+        // all answers rather than trusting the first peer that responds.
+        final sequence = await _ipnsSequenceIfValid(keyBytes, value);
+        if (sequence > bestIpnsSequence) {
+          bestIpnsSequence = sequence;
+          bestIpnsValue = value;
         }
       } catch (e) {
         _logger.debug('Raw GET_VALUE from $peerIdStr failed: $e');
       }
     }
-    return null;
+    return bestIpnsValue;
+  }
+
+  /// Stores [value] under [key] in the local DHT value store.
+  ///
+  /// A node always keeps a copy of records it publishes — required for IPNS
+  /// records to survive restarts and to be served to peers from storage.
+  /// Returns whether the local write succeeded.
+  Future<bool> _storeValueLocally(Uint8List key, Uint8List value) async {
+    try {
+      final storage = node.dhtHandler?.storage;
+      if (storage == null) return false;
+      await storage.put(ds.Key('/dht/values/${Base58().encode(key)}'), value);
+      return true;
+    } catch (e) {
+      _logger.debug('Failed to store DHT value locally: $e');
+      return false;
+    }
+  }
+
+  /// Returns the locally stored value for [key], or `null` when absent.
+  Future<Uint8List?> _getValueLocally(Uint8List key) async {
+    try {
+      final storage = node.dhtHandler?.storage;
+      if (storage == null) return null;
+      final value = await storage.get(
+        ds.Key('/dht/values/${Base58().encode(key)}'),
+      );
+      if (value == null) return null;
+      return Uint8List.fromList(value as List<int>);
+    } catch (e) {
+      _logger.debug('Failed to read local DHT value: $e');
+      return null;
+    }
+  }
+
+  /// Returns the sequence number of [value] if it is a signed, unexpired,
+  /// signature-verified IPNS record bound to [key], or -1 otherwise.
+  Future<int> _ipnsSequenceIfValid(Uint8List key, Uint8List value) async {
+    try {
+      final record = IPNSRecord.decode(
+        value,
+        publicKey: ipnsPublicKeyFromDhtKey(key),
+      );
+      if (!record.isSigned || record.isExpired) return -1;
+      if (!await record.verify()) return -1;
+      return record.sequence;
+    } catch (_) {
+      return -1;
+    }
   }
 
   /// Checks if a value exists on a specific peer.
@@ -1087,13 +1198,20 @@ class DHTClient {
 
     try {
       if (message.hasRecord()) {
-        final key = ds.Key(
-          '/dht/values/${Base58().encode(Uint8List.fromList(message.key))}',
-        );
-        await storage.put(key, Uint8List.fromList(message.record.value));
-        _logger.debug(
-          'Stored DHT value for key ${Base58().encode(Uint8List.fromList(message.key))}',
-        );
+        final keyBytes = Uint8List.fromList(message.key);
+        final valueBytes = Uint8List.fromList(message.record.value);
+        if (await _validateInboundDhtValue(keyBytes, valueBytes, storage)) {
+          final key = ds.Key('/dht/values/${Base58().encode(keyBytes)}');
+          await storage.put(key, valueBytes);
+          _logger.debug(
+            'Stored DHT value for key ${Base58().encode(keyBytes)}',
+          );
+        } else {
+          _logger.warning(
+            'Rejected invalid DHT value from $peerIdStr for key '
+            '${Base58().encode(keyBytes)}',
+          );
+        }
       }
 
       final response = kad.Message()
@@ -1108,6 +1226,68 @@ class DHTClient {
     } catch (e) {
       _logger.debug('Error handling PUT_VALUE from $peerIdStr: $e');
     }
+  }
+
+  /// Whether [key] is an IPNS record key (`'/ipns/' + identity multihash`).
+  static bool _isIpnsKey(Uint8List key) {
+    const prefix = '/ipns/';
+    if (key.length <= prefix.length) return false;
+    for (var i = 0; i < prefix.length; i++) {
+      if (key[i] != prefix.codeUnitAt(i)) return false;
+    }
+    return true;
+  }
+
+  /// Validates an inbound PUT_VALUE record before storage.
+  ///
+  /// Generic values are bounded by [_maxDhtValueSize]. `/ipns/` records must
+  /// additionally decode, be signed, be unexpired, verify their signature,
+  /// match the DHT key derived from their public key, and carry a sequence
+  /// number higher than any record already stored for the key.
+  Future<bool> _validateInboundDhtValue(
+    Uint8List key,
+    Uint8List value,
+    dynamic storage,
+  ) async {
+    if (value.isEmpty || value.length > _maxDhtValueSize) return false;
+    if (!_isIpnsKey(key)) return true;
+
+    // Kubo-style records omit the embedded public key; recover it from the
+    // DHT key itself ('/ipns/' + identity multihash of the public key).
+    final recoveredKey = ipnsPublicKeyFromDhtKey(key);
+    if (recoveredKey == null) return false;
+
+    IPNSRecord record;
+    try {
+      record = IPNSRecord.decode(value, publicKey: recoveredKey);
+    } catch (_) {
+      return false;
+    }
+    if (!record.isSigned || record.isExpired) return false;
+
+    // The record's public key must derive the very key it was stored under.
+    final expectedKey = ipnsDhtKey(record.publicKey);
+    if (expectedKey.length != key.length) return false;
+    for (var i = 0; i < key.length; i++) {
+      if (expectedKey[i] != key[i]) return false;
+    }
+
+    if (!await record.verify()) return false;
+
+    // A stored record with an equal or higher sequence wins.
+    final existingKey = ds.Key('/dht/values/${Base58().encode(key)}');
+    final existing = await storage.get(existingKey);
+    if (existing != null) {
+      try {
+        final stored = IPNSRecord.decode(
+          Uint8List.fromList(existing as List<int>),
+        );
+        if (record.sequence <= stored.sequence) return false;
+      } catch (_) {
+        // Undecodable stored bytes do not block a valid record.
+      }
+    }
+    return true;
   }
 
   void _sendResponse(
@@ -1170,6 +1350,7 @@ class DHTClient {
       // Clear routing table
       if (_initialized) {
         _kademliaRoutingTable.clear();
+        _kademliaRoutingTable.stop();
       }
       _initialized = false;
       _bootstrappedPeers.clear();

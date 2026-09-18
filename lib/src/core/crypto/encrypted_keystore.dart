@@ -92,6 +92,14 @@ class EncryptedKeystore {
   /// Salt used for PBKDF2 derivation.
   Uint8List? _salt;
 
+  /// Encrypted known-plaintext blob used to verify the master password on
+  /// unlock. Without it, a wrong password would derive a wrong master key
+  /// silently and corrupt newly stored keys.
+  EncryptedData? _passwordVerifier;
+
+  /// Plaintext expected when [_passwordVerifier] decrypts correctly.
+  static const String _verifierPlaintext = 'dart_ipfs-keystore-verifier-v1';
+
   /// Encrypted key entries indexed by name.
   final Map<String, EncryptedKeyEntry> _keys = {};
 
@@ -103,6 +111,18 @@ class EncryptedKeystore {
 
   /// List of all key names in the keystore.
   List<String> get keyNames => _keys.keys.toList();
+
+  /// Optional callback invoked after every state mutation while unlocked.
+  ///
+  /// Receives the current [serialize] output, allowing callers to persist
+  /// the encrypted keystore to durable storage.
+  void Function(String serialized)? onChanged;
+
+  void _notifyChanged() {
+    if (isUnlocked) {
+      onChanged?.call(serialize());
+    }
+  }
 
   /// Unlocks the keystore with a password.
   ///
@@ -122,11 +142,50 @@ class EncryptedKeystore {
     }
 
     _salt = salt ?? _salt ?? CryptoUtils.generateSalt();
-    _masterKey = CryptoUtils.deriveKey(
+    final masterKey = CryptoUtils.deriveKey(
       password,
       _salt!,
       iterations: iterations,
     );
+
+    if (_passwordVerifier != null) {
+      // Verify the password before accepting the unlock: AES-GCM decryption
+      // of the verifier fails (auth tag) or yields unexpected plaintext
+      // whenever the derived key is wrong.
+      Uint8List? plaintext;
+      try {
+        plaintext = await CryptoUtils.decrypt(_passwordVerifier!, masterKey);
+      } catch (_) {
+        plaintext = null;
+      }
+      if (plaintext == null || utf8.decode(plaintext) != _verifierPlaintext) {
+        CryptoUtils.zeroMemory(masterKey);
+        throw ArgumentError('Incorrect keystore password');
+      }
+    } else {
+      // Legacy keystore without a verifier: when keys exist, trial-decrypt
+      // one so a wrong password is still detected, then establish the
+      // verifier so subsequent unlocks verify directly.
+      if (_keys.isNotEmpty) {
+        final entry = _keys.values.first;
+        try {
+          await CryptoUtils.decrypt(
+            EncryptedData(ciphertext: entry.encryptedSeed, nonce: entry.nonce),
+            masterKey,
+          );
+        } catch (_) {
+          CryptoUtils.zeroMemory(masterKey);
+          throw ArgumentError('Incorrect keystore password');
+        }
+      }
+      _passwordVerifier = await CryptoUtils.encrypt(
+        Uint8List.fromList(utf8.encode(_verifierPlaintext)),
+        masterKey,
+      );
+    }
+
+    _masterKey = masterKey;
+    _notifyChanged();
   }
 
   /// Locks the keystore and zeros the master key from memory.
@@ -174,6 +233,7 @@ class EncryptedKeystore {
       createdAt: DateTime.now(),
       label: label,
     );
+    _notifyChanged();
 
     return publicKey;
   }
@@ -220,6 +280,7 @@ class EncryptedKeystore {
       createdAt: DateTime.now(),
       label: label,
     );
+    _notifyChanged();
 
     return publicKey;
   }
@@ -295,6 +356,7 @@ class EncryptedKeystore {
   /// Removes a key from the keystore.
   void removeKey(String name) {
     _keys.remove(name);
+    _notifyChanged();
   }
 
   /// Serializes the keystore to encrypted JSON format.
@@ -305,6 +367,9 @@ class EncryptedKeystore {
     final json = {
       'version': 1,
       'salt': _salt != null ? base64Encode(_salt!) : null,
+      'verifier': _passwordVerifier != null
+          ? base64Encode(_passwordVerifier!.toBytes())
+          : null,
       'keys': _keys.map((name, entry) => MapEntry(name, entry.toJson())),
     };
     return jsonEncode(json);
@@ -332,6 +397,13 @@ class EncryptedKeystore {
     final saltStr = json['salt'] as String?;
     if (saltStr != null) {
       keystore._salt = base64Decode(saltStr);
+    }
+
+    final verifierStr = json['verifier'] as String?;
+    if (verifierStr != null) {
+      keystore._passwordVerifier = EncryptedData.fromBytes(
+        base64Decode(verifierStr),
+      );
     }
 
     final keysJson = json['keys'] as Map<String, dynamic>?;

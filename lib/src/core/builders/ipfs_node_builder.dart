@@ -1,15 +1,24 @@
 // src/core/builders/ipfs_node_builder.dart
 import 'dart:async';
 
+import 'package:cryptography/cryptography.dart';
+
+import '../../platform/platform.dart';
+
 import '../../protocols/bitswap/bitswap_handler.dart';
 import '../../protocols/dcutr/dcutr_handler.dart';
 import '../../protocols/dht/dht_handler.dart';
 import '../../protocols/graphsync/graphsync_handler.dart';
+import '../../protocols/identify/identify_handler.dart';
+import '../../protocols/identify/identify_push_handler.dart';
 import '../../protocols/ipns/ipns_handler.dart';
+import '../../protocols/ping/ping_handler.dart';
 import '../../services/gateway/gateway_server.dart';
 import '../../services/rpc/rpc_server.dart';
+import '../../transport/libp2p_router.dart';
 import '../../utils/logger.dart';
 import '../config/ipfs_config.dart';
+import '../crypto/ed25519_signer.dart';
 import '../crypto/peer_key_registry.dart';
 import '../data_structures/blockstore.dart';
 import '../di/service_container.dart';
@@ -31,6 +40,8 @@ import '../metrics/metrics_collector.dart';
 import '../peering/peering_service.dart';
 import '../security/denylist_service.dart';
 import '../security/security_manager.dart';
+import '../storage/datastore.dart';
+import '../storage/flat_file_datastore.dart';
 import '../storage/memory_datastore.dart';
 
 /// Builder for constructing an [IPFSNode] with customized configuration.
@@ -51,6 +62,7 @@ class IPFSNodeBuilder {
 
   /// Builds and initializes an [IPFSNode].
   Future<IPFSNode> build() async {
+    Logger.setGlobalLevel(_config.logLevel);
     _logger.info('Building IPFS Node...');
 
     try {
@@ -90,11 +102,23 @@ class IPFSNodeBuilder {
     _container.registerSingleton(denylistService);
     lifecycleManager.register(denylistService);
 
-    _container.registerSingleton(SecurityManager(_config.security, metrics));
+    final securityManager = SecurityManager(
+      _config.security,
+      metrics,
+      keystorePath: _config.keystorePath,
+    );
+    _container.registerSingleton(securityManager);
+    lifecycleManager.register(securityManager);
 
-    final datastore = MemoryDatastore();
+    // Persist the datastore under the configured path so pins and blocks
+    // survive restarts. Web targets keep an in-memory store (the platform
+    // filesystem API is unavailable there).
+    final Datastore datastore = getPlatform().isWeb
+        ? MemoryDatastore()
+        : FlatFileDatastore(_config.datastorePath);
     final datastoreHandler = DatastoreHandler(datastore);
     _container.registerSingleton(datastoreHandler);
+    lifecycleManager.register(datastoreHandler);
 
     final blockStore = BlockStore(path: _config.blockStorePath);
     _container.registerSingleton(blockStore);
@@ -110,9 +134,12 @@ class IPFSNodeBuilder {
     _container.registerSingleton(networkHandler);
     await networkHandler.initialize();
 
-    _container.registerSingleton(MDNSHandler(_config));
+    final mdnsHandler = MDNSHandler(_config);
+    _container.registerSingleton(mdnsHandler);
+    _container.get<LifecycleManager>().register(mdnsHandler);
 
     final router = networkHandler.router;
+    final lifecycleManager = _container.get<LifecycleManager>();
 
     if (_config.enableDHT) {
       final metrics = _container.get<MetricsCollector>();
@@ -125,6 +152,11 @@ class IPFSNodeBuilder {
         networkHandler,
         metrics: metrics,
         denylistService: denylistService,
+        // Persist DHT values (e.g. IPNS records) in the node's datastore
+        // directory with the same flat-file engine as the primary store.
+        storage: getPlatform().isWeb
+            ? MemoryDatastore()
+            : FlatFileDatastore(_config.datastorePath),
       );
       _container.registerSingleton(dhtHandler);
       _container.get<LifecycleManager>().register(dhtHandler);
@@ -143,15 +175,53 @@ class IPFSNodeBuilder {
     final keyRegistry = PeerKeyRegistry();
     _container.registerSingleton(keyRegistry);
 
-    if (_config.enablePubSub) {
-      _container.registerSingleton(
-        PubSubHandler(
-          router,
-          networkHandler.peerID,
-          networkEvents,
+    // Standard libp2p housekeeping protocols: ping is transport-agnostic;
+    // identify requires the libp2p identity material, so it is only wired
+    // when the router exposes it.
+    final pingHandler = PingHandler(router: router);
+    _container.registerSingleton(pingHandler);
+    lifecycleManager.register(pingHandler);
+
+    if (router is Libp2pRouter) {
+      final publicKeyBytes = router.identityPublicKeyBytes;
+      final peerIdBytes = router.peerIdBytes;
+      if (publicKeyBytes != null && peerIdBytes != null) {
+        final identifyHandler = IdentifyHandler(
+          router: router,
+          publicKeyBytes: publicKeyBytes,
+          peerIdBytes: peerIdBytes,
           keyRegistry: keyRegistry,
-        ),
+        );
+        _container.registerSingleton(identifyHandler);
+        lifecycleManager.register(identifyHandler);
+
+        final identifyPushHandler = IdentifyPushHandler(
+          router: router,
+          identifyHandler: identifyHandler,
+        );
+        _container.registerSingleton(identifyPushHandler);
+        lifecycleManager.register(identifyPushHandler);
+      }
+    }
+
+    if (_config.enablePubSub) {
+      // Derive the PubSub signing key from the node's identity seed so
+      // published messages carry an Ed25519 signature bound to this peer ID.
+      SimpleKeyPair? pubsubKeyPair;
+      final identitySeed = router is Libp2pRouter ? router.identitySeed : null;
+      if (identitySeed != null) {
+        pubsubKeyPair = await Ed25519Signer().keyPairFromSeed(identitySeed);
+      }
+
+      final pubSubHandler = PubSubHandler(
+        router,
+        networkHandler.peerID,
+        networkEvents,
+        keyPair: pubsubKeyPair,
+        keyRegistry: keyRegistry,
       );
+      _container.registerSingleton(pubSubHandler);
+      lifecycleManager.register(pubSubHandler);
     }
 
     final denylistService = _container.isRegistered<DenylistService>()
@@ -178,19 +248,30 @@ class IPFSNodeBuilder {
     final networkHandler = _container.get<NetworkHandler>();
     final router = networkHandler.router;
 
-    _container.registerSingleton(
-      ContentRoutingHandler(_config, networkHandler),
-    );
-    _container.registerSingleton(DNSLinkHandler(_config));
-    _container.registerSingleton(
-      GraphsyncHandler(
+    if (_config.enableContentRouting) {
+      final contentRoutingHandler = ContentRoutingHandler(
+        _config,
+        networkHandler,
+      );
+      _container.registerSingleton(contentRoutingHandler);
+      _container.get<LifecycleManager>().register(contentRoutingHandler);
+    }
+
+    if (_config.enableDNSLinkResolution) {
+      _container.registerSingleton(DNSLinkHandler(_config));
+    }
+
+    if (_config.enableGraphsync) {
+      final graphsyncHandler = GraphsyncHandler(
         _config,
         router,
         _container.get<BitswapHandler>(),
         _container.get<IPLDHandler>(),
         _container.get<BlockStore>(),
-      ),
-    );
+      );
+      _container.registerSingleton(graphsyncHandler);
+      _container.get<LifecycleManager>().register(graphsyncHandler);
+    }
     _container.registerSingleton(AutoNATHandler(_config, networkHandler));
 
     // DCUtR (Direct Connection Upgrade through Relay) support.
@@ -228,6 +309,7 @@ class IPFSNodeBuilder {
         node: node,
         address: 'localhost',
         port: 5001,
+        apiKey: _config.rpcApiKey,
         metricsCollector: metrics,
         metricsConfig: _config.metrics,
       );
@@ -251,6 +333,7 @@ class IPFSNodeBuilder {
         metricsCollector: metrics,
         metricsConfig: _config.metrics,
         denylistService: denylistService,
+        gatewayConfig: _config.gateway,
         ipnsResolver: ipnsHandler != null
             ? (String name) async => ipnsHandler.resolve(name)
             : null,

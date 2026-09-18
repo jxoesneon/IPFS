@@ -7,6 +7,7 @@ import 'package:dart_ipfs/src/core/errors/node_errors.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/utils/car_reader.dart';
+import 'package:dart_ipfs/src/utils/car_writer.dart';
 import 'package:test/test.dart';
 
 import '../mocks/in_memory_datastore.dart';
@@ -86,11 +87,11 @@ void main() {
       // Verify in underlying datastore
       expect(await datastore.has(Key('/pins/cid1')), isTrue);
 
-      // Update pins (should clear old ones)
+      // Persisting additional pins is additive: existing pins are kept.
       await handler.persistPinnedCIDs({'cid4'});
       final updatedPins = await handler.loadPinnedCIDs();
-      expect(updatedPins, equals({'cid4'}));
-      expect(await datastore.has(Key('/pins/cid1')), isFalse);
+      expect(updatedPins, equals({'cid1', 'cid2', 'cid3', 'cid4'}));
+      expect(await datastore.has(Key('/pins/cid1')), isTrue);
     });
 
     test('should report status', () async {
@@ -162,11 +163,11 @@ void main() {
       expect(cids, contains(parentBlock.cid.encode()));
     });
 
-    test('handles putBlock error', () async {
+    test('propagates putBlock errors', () async {
       handler = DatastoreHandler(FailingDatastore());
       await expectLater(
         () async => await handler.putBlock(await Block.fromData(Uint8List(0))),
-        returnsNormally,
+        throwsException,
       );
     });
 
@@ -206,6 +207,22 @@ void main() {
       );
     });
 
+    test('rejects a CAR section whose data does not match its CID', () async {
+      // Craft a CAR claiming honest content under an unrelated CID.
+      final honestBlock = await Block.fromData(
+        Uint8List.fromList([1, 2, 3, 4]),
+      );
+      final writer = CarWriter(roots: [honestBlock.cid]);
+      await writer.write(honestBlock.cid, Uint8List.fromList([9, 9, 9, 9]));
+      final carData = await writer.close();
+
+      await expectLater(
+        () async => await handler.importCAR(carData),
+        throwsA(isA<ComponentError>()),
+      );
+      expect(await handler.hasBlock(honestBlock.cid.toString()), isFalse);
+    });
+
     test('handles importCAR error', () async {
       handler = DatastoreHandler(FailingDatastore());
       await expectLater(
@@ -214,10 +231,12 @@ void main() {
       );
     });
 
-    test('handles exportCAR error', () async {
+    test('exportCAR throws when the root block is missing', () async {
       handler = DatastoreHandler(FailingDatastore());
-      final result = await handler.exportCAR('QmSomeCid');
-      expect(result, isEmpty);
+      await expectLater(
+        () async => await handler.exportCAR('QmSomeCid'),
+        throwsArgumentError,
+      );
     });
   });
 }

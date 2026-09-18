@@ -14,9 +14,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:cryptography/cryptography.dart';
-
 import '../../core/crypto/peer_key_registry.dart';
+import '../../core/interfaces/i_lifecycle.dart';
 import '../../core/peer/peer_record.dart';
 import '../../core/peer/peer_record_pb.dart';
 import '../../transport/router_interface.dart';
@@ -37,18 +36,16 @@ const String identifyAgentVersion = agentVersion;
 ///
 /// Responds to incoming identify requests with this node's information.
 /// Also provides a [identify] method to query remote peers.
-class IdentifyHandler {
+class IdentifyHandler implements ILifecycle {
   /// Creates an identify handler.
   ///
   /// [router] provides the underlying P2P transport.
-  /// [keyPair] is the node's Ed25519 key pair used to derive the public key.
   /// [publicKeyBytes] is the 32-byte Ed25519 public key.
   /// [peerIdBytes] is the marshalled peer ID bytes.
   /// [protocols] is the list of protocol IDs this node supports.
   /// [peerRecordSigner] optionally provides signed peer record generation.
   IdentifyHandler({
     required RouterInterface router,
-    required SimpleKeyPair keyPair,
     required Uint8List publicKeyBytes,
     required Uint8List peerIdBytes,
     List<String> protocols = const [],
@@ -95,6 +92,7 @@ class IdentifyHandler {
   }
 
   /// Starts the handler by registering the protocol with the router.
+  @override
   Future<void> start() async {
     if (_started) return;
     _started = true;
@@ -104,6 +102,7 @@ class IdentifyHandler {
   }
 
   /// Stops the handler.
+  @override
   Future<void> stop() async {
     if (!_started) return;
     _started = false;
@@ -173,10 +172,14 @@ class IdentifyHandler {
       }
     }
 
+    // Advertise the router's live protocol set alongside the static list so
+    // the response reflects protocols registered after construction.
+    final advertisedProtocols = {..._protocols, ..._router.supportedProtocols};
+
     return IdentifyPb(
       publicKey: publicKeyBytes,
       listenAddrs: listenAddrs,
-      protocols: List<String>.from(_protocols),
+      protocols: advertisedProtocols.toList(),
       observedAddr: observedAddr,
       protocolVersion: identifyProtocolVersion,
       agentVersion: identifyAgentVersion,
@@ -217,9 +220,13 @@ class IdentifyHandler {
           if (pubKeyPb.type == KeyType.ed25519 && data.length == 32) {
             final registered = keyRegistry.registerPublicKey(peerId, data);
             if (registered) {
-              _logger.debug('Registered verified Ed25519 public key for $peerId');
+              _logger.debug(
+                'Registered verified Ed25519 public key for $peerId',
+              );
             } else {
-              _logger.warning('Identify public key from $peerId failed peer binding verification');
+              _logger.warning(
+                'Identify public key from $peerId failed peer binding verification',
+              );
             }
           }
         } catch (e) {

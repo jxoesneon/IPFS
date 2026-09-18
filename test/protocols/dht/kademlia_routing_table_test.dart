@@ -386,5 +386,14 @@ void main() {
       // Verify pStart still there
       expect(table.containsPeer(pStart), isTrue);
     });
+
+    test('stop cancels periodic maintenance timers', () {
+      // initialize() spawns refresh/republish/GC timers on the tree; stop()
+      // must cancel them so the tree does not outlive the DHT client.
+      expect(() => table.stop(), returnsNormally);
+      // The table remains queryable for cleanup after stop.
+      table.clear();
+      expect(table.peerCount, 0);
+    });
   });
 }

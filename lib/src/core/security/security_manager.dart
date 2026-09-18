@@ -16,16 +16,25 @@ import 'security_manager_interface.dart';
 /// Manages security aspects of the IPFS node.
 class SecurityManager implements ISecurityManager {
   /// Creates a new security manager with the given [_config].
-  SecurityManager(this._config, MetricsCollector metricsCollector) {
+  ///
+  /// [keystorePath] optionally points at a file where the encrypted keystore
+  /// is persisted; when set, [unlockKeystore] loads it if present and every
+  /// keystore mutation rewrites it.
+  SecurityManager(
+    this._config,
+    MetricsCollector metricsCollector, {
+    String? keystorePath,
+  }) : _keystorePath = keystorePath {
     _logger = Logger('SecurityManager');
     _keystore = Keystore();
-    _encryptedKeystore = EncryptedKeystore();
+    _encryptedKeystore = EncryptedKeystore()..onChanged = _persistKeystore;
     _metrics = metricsCollector;
   }
   final SecurityConfig _config;
+  final String? _keystorePath;
   late final Logger _logger;
   late final Keystore _keystore;
-  late final EncryptedKeystore _encryptedKeystore;
+  late EncryptedKeystore _encryptedKeystore;
   late final MetricsCollector _metrics;
 
   final Map<String, dynamic> _securityMetrics = {};
@@ -60,6 +69,22 @@ class SecurityManager implements ISecurityManager {
     }
     _logger.debug('Unlocking encrypted keystore');
     try {
+      final path = _keystorePath;
+      if (path != null &&
+          !getPlatform().isWeb &&
+          await getPlatform().exists(path)) {
+        final serialized = await getPlatform().readString(path);
+        if (serialized != null && serialized.isNotEmpty) {
+          _encryptedKeystore = await EncryptedKeystore.loadAndUnlock(
+            serialized,
+            password,
+          );
+          _encryptedKeystore.onChanged = _persistKeystore;
+          _recordSecurityMetric('keystore_unlock');
+          _logger.info('Encrypted keystore loaded and unlocked');
+          return;
+        }
+      }
       await _encryptedKeystore.unlock(password, salt: salt);
       _recordSecurityMetric('keystore_unlock');
       _logger.info('Encrypted keystore unlocked');
@@ -68,6 +93,30 @@ class SecurityManager implements ISecurityManager {
       rethrow;
     }
   }
+
+  Future<void> _pendingKeystoreWrite = Future.value();
+
+  /// Persists the serialized encrypted keystore to [_keystorePath].
+  ///
+  /// Invoked by [EncryptedKeystore.onChanged] after every mutation; writes
+  /// are queued sequentially so a rapid series of mutations cannot leave the
+  /// file holding a torn or stale state. Write failures are logged but never
+  /// thrown so keystore operations cannot be broken by a filesystem error.
+  void _persistKeystore(String serialized) {
+    final path = _keystorePath;
+    if (path == null || getPlatform().isWeb) return;
+    _pendingKeystoreWrite = _pendingKeystoreWrite.then(
+      (_) => getPlatform().writeString(path, serialized).catchError((Object e) {
+        _logger.warning('Failed to persist keystore to $path: $e');
+      }),
+    );
+  }
+
+  /// Completes when every queued keystore write has finished.
+  ///
+  /// Await before process shutdown or when asserting persisted state in
+  /// tests; keystore mutations otherwise persist asynchronously.
+  Future<void> get keystoreWritesIdle => _pendingKeystoreWrite;
 
   /// Locks the encrypted keystore and zeros the master key from memory.
   @override
@@ -169,6 +218,7 @@ class SecurityManager implements ISecurityManager {
         await _initializeTLS();
       }
 
+      // ignore: deprecated_member_use_from_same_package
       if (_config.enableKeyRotation) {
         _setupKeyRotation();
       }
@@ -210,9 +260,13 @@ class SecurityManager implements ISecurityManager {
 
   /// Sets up periodic key rotation.
   void _setupKeyRotation() {
-    _logger.verbose('Setting up key rotation');
+    _logger.warning(
+      'enableKeyRotation is enabled but key rotation is not implemented; '
+      'no keys will actually be rotated.',
+    );
 
     _keyRotationTimer?.cancel();
+    // ignore: deprecated_member_use_from_same_package
     _keyRotationTimer = Timer.periodic(_config.keyRotationInterval, (timer) {
       _rotateKeys();
     });
@@ -291,6 +345,7 @@ class SecurityManager implements ISecurityManager {
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'tls_enabled': _config.enableTLS,
+      // ignore: deprecated_member_use_from_same_package
       'key_rotation_enabled': _config.enableKeyRotation,
       'last_key_rotation': _lastKeyRotation?.toIso8601String(),
       'keystore_unlocked': isKeystoreUnlocked,

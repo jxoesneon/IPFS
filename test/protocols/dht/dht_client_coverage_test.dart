@@ -15,6 +15,9 @@ import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_proto;
 import 'package:dart_ipfs/src/protocols/dht/dht_envelope.dart';
+import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
+import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
+import 'package:cryptography/cryptography.dart';
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 
 import 'dht_client_coverage_test.mocks.dart';
@@ -486,12 +489,17 @@ void main() {
       expect(result, isFalse);
     });
 
-    test('storeValue with no peers returns false', () async {
-      await client.initialize();
+    test(
+      'storeValue with no peers still succeeds via the local replica',
+      () async {
+        await client.initialize();
 
-      final result = await client.storeValue(Uint8List(32), Uint8List(10));
-      expect(result, isFalse);
-    });
+        // A node always counts as a replica of its own records: a successful
+        // local store suffices even when no remote peer acknowledges.
+        final result = await client.storeValue(Uint8List(32), Uint8List(10));
+        expect(result, isTrue);
+      },
+    );
 
     test('addProvider with no peers does nothing', () async {
       await client.initialize();
@@ -517,102 +525,107 @@ void main() {
   });
 
   group('DHTClient provider polling and bootstrap paths', () {
-    test('findProviders returns local providers discovered while polling',
-        () async {
-      const connectedPeerStr =
-          'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
-      // A non-empty connected peer set enables the local-record poll loop and
-      // seeds the routing table (which also triggers _bootstrapPeer).
-      when(mockRouter.connectedPeers).thenReturn({connectedPeerStr});
+    test(
+      'findProviders returns local providers discovered while polling',
+      () async {
+        const connectedPeerStr = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
+        // A non-empty connected peer set enables the local-record poll loop and
+        // seeds the routing table (which also triggers _bootstrapPeer).
+        when(mockRouter.connectedPeers).thenReturn({connectedPeerStr});
 
-      final providerPeer = PeerId.fromBase58(
-        'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w',
-      );
-      var lookupCount = 0;
-      when(mockDhtHandler.getLocalProvidersForCid(any)).thenAnswer((_) {
-        lookupCount++;
-        // First lookup (before polling) is empty; the record appears while
-        // the poll loop is waiting.
-        return lookupCount < 2 ? <PeerId>[] : <PeerId>[providerPeer];
-      });
+        final providerPeer = PeerId.fromBase58(
+          'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w',
+        );
+        var lookupCount = 0;
+        when(mockDhtHandler.getLocalProvidersForCid(any)).thenAnswer((_) {
+          lookupCount++;
+          // First lookup (before polling) is empty; the record appears while
+          // the poll loop is waiting.
+          return lookupCount < 2 ? <PeerId>[] : <PeerId>[providerPeer];
+        });
 
-      await client.initialize();
-      final providers = await client.findProviders(
-        'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
-      );
-      expect(
-        providers.map((p) => p.toBase58()),
-        contains(providerPeer.toBase58()),
-      );
-    });
+        await client.initialize();
+        final providers = await client.findProviders(
+          'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+        );
+        expect(
+          providers.map((p) => p.toBase58()),
+          contains(providerPeer.toBase58()),
+        );
+      },
+    );
 
-    test('findProviders returns empty when the p2p router is unavailable',
-        () async {
-      // node.dhtHandler == null => _queryConnectedPeersForProviders sees no
-      // router and bails out early.
-      when(mockNode.dhtHandler).thenReturn(null);
+    test(
+      'findProviders returns empty when the p2p router is unavailable',
+      () async {
+        // node.dhtHandler == null => _queryConnectedPeersForProviders sees no
+        // router and bails out early.
+        when(mockNode.dhtHandler).thenReturn(null);
 
-      await client.initialize();
-      final providers = await client.findProviders(
-        'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
-      );
-      expect(providers, isEmpty);
-    });
+        await client.initialize();
+        final providers = await client.findProviders(
+          'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+        );
+        expect(providers, isEmpty);
+      },
+    );
 
-    test('findProviders queries directly connected peers for providers',
-        () async {
-      const directPeerStr = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
-      const silentPeerStr = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w';
-      final providerPeer = PeerId.fromBase58(
-        'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
-      );
+    test(
+      'findProviders queries directly connected peers for providers',
+      () async {
+        const directPeerStr = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
+        const silentPeerStr = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w';
+        final providerPeer = PeerId.fromBase58(
+          'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+        );
 
-      // The internal _router stays empty so the poll loop is skipped, while
-      // the handler's p2p router reports directly connected peers.
-      final p2pRouter = MockRouterInterface();
-      when(mockDhtHandler.router).thenReturn(p2pRouter);
-      when(
-        p2pRouter.connectedPeers,
-      ).thenReturn({directPeerStr, silentPeerStr});
-      when(p2pRouter.sendRequest(any, any, any)).thenAnswer((invocation) async {
-        if (invocation.positionalArguments[0] != directPeerStr) {
-          return null;
-        }
-        return (kad.Message()
-              ..type = kad.Message_MessageType.GET_PROVIDERS
-              ..providerPeers.add(
-                kad.Peer()
-                  ..id = providerPeer.value
-                  ..addrs.add(
-                    libp2p.MultiAddr('/ip4/127.0.0.1/tcp/4001').toBytes(),
-                  ),
-              ))
-            .writeToBuffer();
-      });
+        // The internal _router stays empty so the poll loop is skipped, while
+        // the handler's p2p router reports directly connected peers.
+        final p2pRouter = MockRouterInterface();
+        when(mockDhtHandler.router).thenReturn(p2pRouter);
+        when(
+          p2pRouter.connectedPeers,
+        ).thenReturn({directPeerStr, silentPeerStr});
+        when(p2pRouter.sendRequest(any, any, any)).thenAnswer((
+          invocation,
+        ) async {
+          if (invocation.positionalArguments[0] != directPeerStr) {
+            return null;
+          }
+          return (kad.Message()
+                ..type = kad.Message_MessageType.GET_PROVIDERS
+                ..providerPeers.add(
+                  kad.Peer()
+                    ..id = providerPeer.value
+                    ..addrs.add(
+                      libp2p.MultiAddr('/ip4/127.0.0.1/tcp/4001').toBytes(),
+                    ),
+                ))
+              .writeToBuffer();
+        });
 
-      await client.initialize();
-      final providers = await client.findProviders(
-        'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
-      );
-      expect(
-        providers.map((p) => p.toBase58()),
-        contains(providerPeer.toBase58()),
-      );
-      // Both peers were queried on the LAN protocol first.
-      verify(
-        p2pRouter.sendRequest(directPeerStr, DHTClient.protocolDhtLan, any),
-      ).called(1);
-      verify(
-        p2pRouter.sendRequest(silentPeerStr, DHTClient.protocolDhtLan, any),
-      ).called(1);
-    });
+        await client.initialize();
+        final providers = await client.findProviders(
+          'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+        );
+        expect(
+          providers.map((p) => p.toBase58()),
+          contains(providerPeer.toBase58()),
+        );
+        // Both peers were queried on the LAN protocol first.
+        verify(
+          p2pRouter.sendRequest(directPeerStr, DHTClient.protocolDhtLan, any),
+        ).called(1);
+        verify(
+          p2pRouter.sendRequest(silentPeerStr, DHTClient.protocolDhtLan, any),
+        ).called(1);
+      },
+    );
 
     test('connection event bootstraps the newly connected peer', () async {
       final controller = StreamController<ConnectionEvent>();
       addTearDown(controller.close);
-      when(
-        mockRouter.connectionEvents,
-      ).thenAnswer((_) => controller.stream);
+      when(mockRouter.connectionEvents).thenAnswer((_) => controller.stream);
 
       await client.initialize();
 
@@ -628,56 +641,54 @@ void main() {
       );
       // _bootstrapPeer sent a self-lookup FIND_NODE to the peer.
       verify(
-        mockRouter.sendMessage(
-          peerStr,
-          any,
-          protocolId: DHTClient.protocolDht,
-        ),
+        mockRouter.sendMessage(peerStr, any, protocolId: DHTClient.protocolDht),
       ).called(1);
     });
   });
 
   group('DHTClient packet handlers', () {
-    test('handlePacket parses a raw GET_VALUE and serves it from storage',
-        () async {
-      await client.initialize();
-      final capturedHandler =
-          verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
-              ).captured.last
-              as void Function(NetworkPacket);
+    test(
+      'handlePacket parses a raw GET_VALUE and serves it from storage',
+      () async {
+        await client.initialize();
+        final capturedHandler =
+            verify(
+                  mockRouter.registerProtocolHandler(any, captureAny),
+                ).captured.last
+                as void Function(NetworkPacket);
 
-      when(
-        mockStorage.get(any),
-      ).thenAnswer((_) async => Uint8List.fromList([7, 8, 9]));
+        when(
+          mockStorage.get(any),
+        ).thenAnswer((_) async => Uint8List.fromList([7, 8, 9]));
 
-      final responses = <Uint8List>[];
-      final datagram =
-          (kad.Message()
-                ..type = kad.Message_MessageType.GET_VALUE
-                // The leading 0xFF makes the datagram undecodable as a
-                // DHTEnvelope, forcing the raw protobuf parse path.
-                ..key = Uint8List.fromList([0xFF, 0x01, 0x02]))
-              .writeToBuffer();
+        final responses = <Uint8List>[];
+        final datagram =
+            (kad.Message()
+                  ..type = kad.Message_MessageType.GET_VALUE
+                  // The leading 0xFF makes the datagram undecodable as a
+                  // DHTEnvelope, forcing the raw protobuf parse path.
+                  ..key = Uint8List.fromList([0xFF, 0x01, 0x02]))
+                .writeToBuffer();
 
-      capturedHandler(
-        NetworkPacket(
-          srcPeerId: 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
-          datagram: datagram,
-          responder: (bytes) async {
-            responses.add(bytes);
-          },
-        ),
-      );
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+        capturedHandler(
+          NetworkPacket(
+            srcPeerId: 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+            datagram: datagram,
+            responder: (bytes) async {
+              responses.add(bytes);
+            },
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 100));
 
-      verify(mockStorage.get(any)).called(1);
-      expect(responses, hasLength(1));
-      // requestId is empty for raw packets, so the response is unframed.
-      final response = kad.Message.fromBuffer(responses.single);
-      expect(response.hasRecord(), isTrue);
-      expect(response.record.value, equals([7, 8, 9]));
-    });
+        verify(mockStorage.get(any)).called(1);
+        expect(responses, hasLength(1));
+        // requestId is empty for raw packets, so the response is unframed.
+        final response = kad.Message.fromBuffer(responses.single);
+        expect(response.hasRecord(), isTrue);
+        expect(response.record.value, equals([7, 8, 9]));
+      },
+    );
 
     test(
       'handlePacket ADD_PROVIDER stores valid and rejects invalid records',
@@ -699,29 +710,27 @@ void main() {
           mockDhtHandler.handleProvideRequest(any, any),
         ).thenAnswer((_) async {});
 
-        final message =
-            kad.Message()
-              ..type = kad.Message_MessageType.ADD_PROVIDER
-              ..key = cid.multihash.toBytes()
-              ..providerPeers.addAll([
-                // Valid record: non-empty id and a parseable multiaddr.
-                kad.Peer()
-                  ..id = providerPeer.value
-                  ..addrs.add(
-                    libp2p.MultiAddr('/ip4/127.0.0.1/tcp/4001').toBytes(),
-                  ),
-                // Invalid record: no addresses at all.
-                kad.Peer()..id = Uint8List.fromList([1, 2, 3]),
-              ]);
+        final message = kad.Message()
+          ..type = kad.Message_MessageType.ADD_PROVIDER
+          ..key = cid.multihash.toBytes()
+          ..providerPeers.addAll([
+            // Valid record: non-empty id and a parseable multiaddr.
+            kad.Peer()
+              ..id = providerPeer.value
+              ..addrs.add(
+                libp2p.MultiAddr('/ip4/127.0.0.1/tcp/4001').toBytes(),
+              ),
+            // Invalid record: no addresses at all.
+            kad.Peer()..id = Uint8List.fromList([1, 2, 3]),
+          ]);
 
         capturedHandler(
           NetworkPacket(
             srcPeerId: 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
-            datagram:
-                DHTEnvelope(
-                  requestId: '',
-                  payload: message.writeToBuffer(),
-                ).toBytes(),
+            datagram: DHTEnvelope(
+              requestId: '',
+              payload: message.writeToBuffer(),
+            ).toBytes(),
           ),
         );
         await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -730,5 +739,228 @@ void main() {
         verify(mockDhtHandler.handleProvideRequest(any, any)).called(1);
       },
     );
+  });
+
+  group('DHTClient PUT_VALUE validation', () {
+    Future<void Function(NetworkPacket)> capturedPacketHandler() async {
+      await client.initialize();
+      return verify(
+            mockRouter.registerProtocolHandler(any, captureAny),
+          ).captured.last
+          as void Function(NetworkPacket);
+    }
+
+    Future<SimpleKeyPair> keyPair(int seed) => Ed25519Signer().generateKeyPair(
+      seed: Uint8List.fromList(List.filled(32, seed)),
+    );
+
+    Future<Uint8List> publicKeyBytes(SimpleKeyPair kp) async =>
+        Uint8List.fromList((await kp.extractPublicKey()).bytes);
+
+    void deliverPutValue(
+      void Function(NetworkPacket) handler,
+      Uint8List key,
+      Uint8List value,
+    ) {
+      final message = kad.Message()
+        ..type = kad.Message_MessageType.PUT_VALUE
+        ..key = key
+        ..record = (dht_proto.Record()
+          ..key = key
+          ..value = value);
+      handler(
+        NetworkPacket(
+          srcPeerId: 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+          datagram: DHTEnvelope(
+            requestId: '',
+            payload: message.writeToBuffer(),
+          ).toBytes(),
+        ),
+      );
+    }
+
+    test('stores a valid signed IPNS record under its DHT key', () async {
+      final handler = await capturedPacketHandler();
+      final kp = await keyPair(1);
+      final dhtKey = ipnsDhtKey(await publicKeyBytes(kp));
+      final record = await IPNSRecord.create(
+        value: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        keyPair: kp,
+        sequence: 5,
+      );
+
+      deliverPutValue(handler, dhtKey, record.toIpnsEntry());
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      verify(mockStorage.put(any, any)).called(1);
+    });
+
+    test('rejects an undecodable value under an /ipns/ key', () async {
+      final handler = await capturedPacketHandler();
+      final kp = await keyPair(1);
+      final dhtKey = ipnsDhtKey(await publicKeyBytes(kp));
+
+      deliverPutValue(handler, dhtKey, Uint8List.fromList([1, 2, 3]));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      verifyNever(mockStorage.put(any, any));
+    });
+
+    test('rejects a valid record stored under the wrong /ipns/ key', () async {
+      final handler = await capturedPacketHandler();
+      final kp = await keyPair(1);
+      final otherKp = await keyPair(2);
+      // Record signed by kp but stored under otherKp's key.
+      final wrongKey = ipnsDhtKey(await publicKeyBytes(otherKp));
+      final record = await IPNSRecord.create(
+        value: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        keyPair: kp,
+        sequence: 5,
+      );
+
+      deliverPutValue(handler, wrongKey, record.toIpnsEntry());
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      verifyNever(mockStorage.put(any, any));
+    });
+
+    test('rejects a record whose sequence does not advance', () async {
+      final handler = await capturedPacketHandler();
+      final kp = await keyPair(1);
+      final pubKey = await publicKeyBytes(kp);
+      final dhtKey = ipnsDhtKey(pubKey);
+
+      // A newer record (seq 10) is already stored.
+      final newer = await IPNSRecord.create(
+        value: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        keyPair: kp,
+        sequence: 10,
+      );
+      when(mockStorage.get(any)).thenAnswer((_) async => newer.toIpnsEntry());
+
+      final stale = await IPNSRecord.create(
+        value: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        keyPair: kp,
+        sequence: 5,
+      );
+      deliverPutValue(handler, dhtKey, stale.toIpnsEntry());
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      verifyNever(mockStorage.put(any, any));
+    });
+
+    test('stores a generic non-IPNS value', () async {
+      final handler = await capturedPacketHandler();
+      deliverPutValue(
+        handler,
+        Uint8List.fromList([0x01, 0x02, 0x03]),
+        Uint8List.fromList([9, 9, 9]),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      verify(mockStorage.put(any, any)).called(1);
+    });
+
+    test('rejects an oversized value', () async {
+      final handler = await capturedPacketHandler();
+      deliverPutValue(
+        handler,
+        Uint8List.fromList([0x01, 0x02, 0x03]),
+        Uint8List(1024 * 1024 + 1),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      verifyNever(mockStorage.put(any, any));
+    });
+  });
+
+  group('DHTClient getValueRaw IPNS selection', () {
+    test('returns the highest-sequence valid record across peers', () async {
+      final kp = await Ed25519Signer().generateKeyPair(
+        seed: Uint8List.fromList(List.filled(32, 3)),
+      );
+      final pubKey = Uint8List.fromList((await kp.extractPublicKey()).bytes);
+      final dhtKey = ipnsDhtKey(pubKey);
+
+      final oldRecord = await IPNSRecord.create(
+        value: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        keyPair: kp,
+        sequence: 3,
+      );
+      final newRecord = await IPNSRecord.create(
+        value: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        keyPair: kp,
+        sequence: 9,
+      );
+
+      const peerA = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
+      const peerB = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w';
+      final p2pRouter = MockRouterInterface();
+      when(mockDhtHandler.router).thenReturn(p2pRouter);
+      when(p2pRouter.connectedPeers).thenReturn({peerA, peerB});
+      when(p2pRouter.sendRequest(any, any, any)).thenAnswer((inv) async {
+        final record = inv.positionalArguments[0] == peerA
+            ? oldRecord
+            : newRecord;
+        return (kad.Message()
+              ..type = kad.Message_MessageType.GET_VALUE
+              ..record = (dht_proto.Record()
+                ..key = dhtKey
+                ..value = record.toIpnsEntry()))
+            .writeToBuffer();
+      });
+
+      await client.initialize();
+      final result = await client.getValueRaw(dhtKey);
+
+      expect(result, equals(newRecord.toIpnsEntry()));
+    });
+
+    test('ignores unsigned or invalid IPNS answers', () async {
+      final kp = await Ed25519Signer().generateKeyPair(
+        seed: Uint8List.fromList(List.filled(32, 4)),
+      );
+      final pubKey = Uint8List.fromList((await kp.extractPublicKey()).bytes);
+      final dhtKey = ipnsDhtKey(pubKey);
+
+      const peerA = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
+      final p2pRouter = MockRouterInterface();
+      when(mockDhtHandler.router).thenReturn(p2pRouter);
+      when(p2pRouter.connectedPeers).thenReturn({peerA});
+      when(p2pRouter.sendRequest(any, any, any)).thenAnswer(
+        (_) async =>
+            (kad.Message()
+                  ..type = kad.Message_MessageType.GET_VALUE
+                  ..record = (dht_proto.Record()
+                    ..key = dhtKey
+                    ..value = Uint8List.fromList([1, 2, 3])))
+                .writeToBuffer(),
+      );
+
+      await client.initialize();
+      final result = await client.getValueRaw(dhtKey);
+
+      expect(result, isNull);
+    });
+
+    test('returns the first answer for non-IPNS keys', () async {
+      const peerA = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
+      final p2pRouter = MockRouterInterface();
+      when(mockDhtHandler.router).thenReturn(p2pRouter);
+      when(p2pRouter.connectedPeers).thenReturn({peerA});
+      when(p2pRouter.sendRequest(any, any, any)).thenAnswer(
+        (_) async =>
+            (kad.Message()
+                  ..type = kad.Message_MessageType.GET_VALUE
+                  ..record = (dht_proto.Record()
+                    ..value = Uint8List.fromList([7, 7, 7])))
+                .writeToBuffer(),
+      );
+
+      await client.initialize();
+      final result = await client.getValueRaw(Uint8List.fromList([1, 2, 3]));
+
+      expect(result, equals([7, 7, 7]));
+    });
   });
 }

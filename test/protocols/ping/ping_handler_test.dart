@@ -124,6 +124,9 @@ class MockPingRouter implements RouterInterface {
   void registerProtocol(String protocolId) {}
 
   @override
+  Set<String> get supportedProtocols => const {};
+
+  @override
   Future<void> broadcastMessage(String protocolId, Uint8List message) async {}
 
   @override
@@ -489,6 +492,9 @@ class _EchoRouter implements RouterInterface {
   void registerProtocol(String protocolId) {}
 
   @override
+  Set<String> get supportedProtocols => const {};
+
+  @override
   Future<void> broadcastMessage(String protocolId, Uint8List message) async {}
 
   @override
@@ -605,6 +611,9 @@ class _SlowRouter implements RouterInterface {
 
   @override
   void registerProtocol(String protocolId) {}
+
+  @override
+  Set<String> get supportedProtocols => const {};
 
   @override
   Future<void> broadcastMessage(String protocolId, Uint8List message) async {}

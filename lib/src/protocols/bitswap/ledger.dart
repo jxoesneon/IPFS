@@ -24,6 +24,10 @@ class BitLedger {
   /// Total bytes received from this peer.
   int receivedBytes = 0;
 
+  /// Maximum number of block-data entries retained per ledger; oldest are
+  /// evicted first.
+  static const int maxBlockDataEntries = 128;
+
   final Map<String, Uint8List> _blockData = {};
 
   /// Record bytes sent to the peer.
@@ -47,6 +51,10 @@ class BitLedger {
   /// Add new methods for block data management
   /// Stores block data for a CID.
   void storeBlockData(String cid, Uint8List data) {
+    if (!_blockData.containsKey(cid) &&
+        _blockData.length >= maxBlockDataEntries) {
+      _blockData.remove(_blockData.keys.first);
+    }
     _blockData[cid] = data;
   }
 
@@ -86,10 +94,18 @@ class BitLedger {
 
 /// Manages multiple [BitLedger] instances for different peers.
 class LedgerManager {
+  /// Maximum number of peer ledgers retained; oldest entries are evicted.
+  static const int maxLedgers = 1024;
+
   final Map<String, BitLedger> _ledgers = {};
 
   /// Retrieve the ledger for a given peer. If it doesn't exist, create it.
   BitLedger getLedger(String peerId) {
+    final existing = _ledgers[peerId];
+    if (existing != null) return existing;
+    if (_ledgers.length >= maxLedgers) {
+      _ledgers.remove(_ledgers.keys.first);
+    }
     return _ledgers.putIfAbsent(peerId, () => BitLedger(peerId));
   }
 

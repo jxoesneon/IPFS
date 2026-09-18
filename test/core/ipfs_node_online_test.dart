@@ -164,6 +164,8 @@ class MockRouter implements RouterInterface {
   @override
   void registerProtocol(String protocolId) {}
   @override
+  Set<String> get supportedProtocols => const {};
+  @override
   Future<void> broadcastMessage(String protocolId, Uint8List message) async {}
   @override
   void emitEvent(String topic, Uint8List data) {}

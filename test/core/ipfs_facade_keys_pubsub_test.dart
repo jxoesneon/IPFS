@@ -49,6 +49,7 @@ IPFSConfig _offlineConfig(String tag) {
   return IPFSConfig(
     datastorePath: './test_tmp/ipfs_keys_pubsub_${tag}_$stamp',
     blockStorePath: './test_tmp/ipfs_keys_pubsub_${tag}_blocks_$stamp',
+    keystorePath: './test_tmp/ipfs_keys_pubsub_${tag}_keystore_$stamp',
     offline: true,
   );
 }
@@ -57,9 +58,10 @@ IPFSConfig _offlineConfig(String tag) {
 /// expose the node, but [ServiceContainer] wraps the shared `GetIt` instance,
 /// so the singleton registered during `IPFS.create` is reachable.
 Future<void> _unlockKeystore() {
-  return ServiceContainer()
-      .get<SecurityManager>()
-      .unlockKeystore('test-password', salt: Uint8List(16));
+  return ServiceContainer().get<SecurityManager>().unlockKeystore(
+    'test-password',
+    salt: Uint8List(16),
+  );
 }
 
 void main() {
@@ -227,15 +229,18 @@ void main() {
       await GetIt.instance.unregister<DHTHandler>();
     });
 
-    test('provide delegates to DHTHandler.provide with the decoded CID', () async {
-      await ipfs.start();
-      final cid = await ipfs.addFile(
-        Uint8List.fromList(utf8.encode('Provide via stub')),
-      );
+    test(
+      'provide delegates to DHTHandler.provide with the decoded CID',
+      () async {
+        await ipfs.start();
+        final cid = await ipfs.addFile(
+          Uint8List.fromList(utf8.encode('Provide via stub')),
+        );
 
-      await ipfs.provide(cid);
+        await ipfs.provide(cid);
 
-      expect(dht.providedCids, contains(cid));
-    });
+        expect(dht.providedCids, contains(cid));
+      },
+    );
   });
 }

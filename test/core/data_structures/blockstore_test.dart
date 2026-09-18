@@ -375,5 +375,58 @@ void main() {
 
       await newStore.stop();
     });
+
+    test('restart indexes blocks from disk without eager loading', () async {
+      final b1 = Block(
+        cid: CID.computeForDataSync(Uint8List.fromList([11])),
+        data: Uint8List.fromList([11]),
+      );
+      final b2 = Block(
+        cid: CID.computeForDataSync(Uint8List.fromList([22, 33])),
+        data: Uint8List.fromList([22, 33]),
+      );
+      await store.start();
+      await store.putBlock(b1);
+      await store.putBlock(b2);
+      await store.stop();
+
+      // A fresh store rebuilds the index from filenames only.
+      final newStore = BlockStore(path: testDirPath);
+      await newStore.start();
+
+      final status = await newStore.getStatus();
+      expect(status['total_blocks'], equals(2));
+      expect(status['total_size'], equals(3));
+
+      // Blocks are still retrievable via lazy disk reads.
+      final resp = await newStore.getBlock(b2.cid.encode());
+      expect(resp.found, isTrue);
+      expect(resp.block.data, equals([22, 33]));
+
+      final all = await newStore.getAllBlocks();
+      expect(all.length, equals(2));
+
+      await newStore.stop();
+    });
+
+    test('gc collects uncached blocks after restart', () async {
+      final b1 = Block(
+        cid: CID.computeForDataSync(Uint8List.fromList([1])),
+        data: Uint8List.fromList([1]),
+      );
+      await store.start();
+      await store.putBlock(b1);
+      await store.stop();
+
+      // Restart so the block exists on disk but not in the cache.
+      final newStore = BlockStore(path: testDirPath);
+      await newStore.start();
+
+      final removed = await newStore.gc();
+      expect(removed, equals(1));
+      expect(await newStore.hasBlock(b1.cid.encode()), isFalse);
+
+      await newStore.stop();
+    });
   });
 }

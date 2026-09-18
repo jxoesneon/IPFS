@@ -94,6 +94,18 @@ class PubSubClient implements IPubSub {
   static const Duration _heartbeatInterval = Duration(seconds: 1);
   static const String _protocolName = 'pubsub';
 
+  /// Maximum message IDs retained per topic for dedup and IWANT serving.
+  static const int _maxEntriesPerTopic = 512;
+
+  /// Maximum topics tracked in peer/dedup state before the oldest are dropped.
+  static const int _maxTrackedTopics = 256;
+
+  /// Maximum peers retained per topic.
+  static const int _maxPeersPerTopic = 128;
+
+  /// Maximum peer score entries retained; lowest-scored peers are evicted.
+  static const int _maxScoredPeers = 1024;
+
   /// Indicates whether the PubSub client is currently active.
   bool get isStarted => _isStarted;
 
@@ -333,14 +345,25 @@ class PubSubClient implements IPubSub {
       if (_seenMessages[topic]?.contains(msgId) ?? false) {
         return;
       }
-      _seenMessages.putIfAbsent(topic, () => {}).add(msgId);
+      _boundedSetAdd(_seenMessages, topic, msgId, _maxEntriesPerTopic);
 
       // Update peer score and process message if from a connected peer
       if (_router.isConnectedPeer(sender)) {
         _scores[sender] = (_scores[sender] ?? 0.0) + 1.0;
+        _evictLowestScores();
 
         // Cache message for IWANT requests
-        _messageCache.putIfAbsent(topic, () => {})[msgId] = content;
+        final cache = _messageCache.putIfAbsent(
+          topic,
+          () => <String, String>{},
+        );
+        cache[msgId] = content;
+        while (cache.length > _maxEntriesPerTopic) {
+          cache.remove(cache.keys.first);
+        }
+        while (_messageCache.length > _maxTrackedTopics) {
+          _messageCache.remove(_messageCache.keys.first);
+        }
 
         _messageController.add(
           PubSubMessage(topic: topic, content: content, sender: sender),
@@ -357,7 +380,13 @@ class PubSubClient implements IPubSub {
 
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
-    await _messageController.close();
+    _seenMessages.clear();
+    _messageCache.clear();
+    _scores.clear();
+    _topicPeers.clear();
+    _mesh.clear();
+    // _messageController is `final` and must survive a stop/start cycle; it
+    // is released with the client.
     _isStarted = false;
     _logger.info('PubSub client stopped.');
   }
@@ -368,6 +397,15 @@ class PubSubClient implements IPubSub {
 
     _subscriptions.add(topic);
     _router.registerProtocol(topic);
+
+    // Peers already known to subscribe to this topic become mesh candidates:
+    // without this, the mesh stays empty forever (no dart_ipfs peer emits
+    // GRAFT) and publish has nowhere to send.
+    for (final peerId in _topicPeers[topic] ?? const <String>{}) {
+      graftPeer(peerId);
+    }
+
+    await _announce(encodeSubscribeRequest(topic));
     _logger.debug('Subscribed to topic: $topic');
   }
 
@@ -377,7 +415,26 @@ class PubSubClient implements IPubSub {
 
     _subscriptions.remove(topic);
     _router.removeMessageHandler(topic);
+    await _announce(encodeUnsubscribeRequest(topic));
     _logger.debug('Unsubscribed from topic: $topic');
+  }
+
+  /// Broadcasts a control announcement to every connected peer.
+  ///
+  /// Announcement failures are logged but never thrown: subscription state
+  /// is local truth, and a single unreachable peer must not break it.
+  Future<void> _announce(Uint8List announcement) async {
+    for (final peerId in _router.connectedPeers) {
+      try {
+        await _router.sendMessage(
+          peerId,
+          announcement,
+          protocolId: _protocolName,
+        );
+      } catch (e) {
+        _logger.debug('Failed to announce to $peerId: $e');
+      }
+    }
   }
 
   @override
@@ -392,16 +449,24 @@ class PubSubClient implements IPubSub {
         message,
       );
 
-      if (_mesh.isEmpty) {
+      // Fanout: mesh peers plus every peer known to subscribe to the topic.
+      // Mesh alone is insufficient — a peer that announced its subscription
+      // but has not been grafted would otherwise never receive the message.
+      final targets = {..._mesh, ...?_topicPeers[topic]};
+      if (targets.isEmpty) {
         _logger.warning('No peers in mesh to publish message to topic: $topic');
       }
 
       final List<Future<void>> publishFutures = [];
-      for (final String peerId in _mesh) {
+      for (final String peerId in targets) {
         publishFutures.add(
           (() async {
             try {
-              await _router.sendMessage(peerId, encodedMessage);
+              await _router.sendMessage(
+                peerId,
+                encodedMessage,
+                protocolId: _protocolName,
+              );
             } catch (e) {
               _logger.debug('Failed to send PubSub message to $peerId: $e');
             }
@@ -598,6 +663,7 @@ class PubSubClient implements IPubSub {
     if (!_mesh.contains(peerId)) {
       _mesh.add(peerId);
       _scores[peerId] = (_scores[peerId] ?? 0.0) + 10.0;
+      _evictLowestScores();
       _logger.verbose('Grafted peer $peerId into mesh');
     }
   }
@@ -615,7 +681,41 @@ class PubSubClient implements IPubSub {
   /// referencing [topic] is received from [peerId].
   void _trackTopicPeer(String peerId, String? topic) {
     if (topic == null || topic.isEmpty) return;
-    _topicPeers.putIfAbsent(topic, () => {}).add(peerId);
+    _boundedSetAdd(_topicPeers, topic, peerId, _maxPeersPerTopic);
+  }
+
+  /// Adds [value] to the insertion-ordered set stored under [key] in [map],
+  /// evicting the oldest values beyond [maxPerKey] and dropping the oldest
+  /// keys beyond [_maxTrackedTopics].
+  static void _boundedSetAdd<K>(
+    Map<String, Set<K>> map,
+    String key,
+    K value,
+    int maxPerKey,
+  ) {
+    final set = map.putIfAbsent(key, () => <K>{});
+    set.add(value);
+    while (set.length > maxPerKey) {
+      set.remove(set.first);
+    }
+    while (map.length > _maxTrackedTopics) {
+      map.remove(map.keys.first);
+    }
+  }
+
+  /// Evicts the lowest-scored peers when the score table exceeds
+  /// [_maxScoredPeers].
+  void _evictLowestScores() {
+    while (_scores.length > _maxScoredPeers) {
+      String? lowest;
+      for (final entry in _scores.entries) {
+        if (lowest == null || entry.value < _scores[lowest]!) {
+          lowest = entry.key;
+        }
+      }
+      if (lowest == null) break;
+      _scores.remove(lowest);
+    }
   }
 
   /// Records that [peerId] is no longer subscribed to [topic].
@@ -659,6 +759,7 @@ class PubSubClient implements IPubSub {
         _router.sendMessage(
           sender,
           Uint8List.fromList(utf8.encode(jsonEncode(iwant))),
+          protocolId: _protocolName,
         );
       } catch (e) {
         _logger.warning('Failed to send IWANT request to $sender: $e');
@@ -682,7 +783,11 @@ class PubSubClient implements IPubSub {
         if (content != null) {
           final Uint8List encoded = encodePublishRequest(topic, content);
           try {
-            await _router.sendMessage(sender, encoded);
+            await _router.sendMessage(
+              sender,
+              encoded,
+              protocolId: _protocolName,
+            );
           } catch (e) {
             _logger.debug('Failed to serve IWANT content to $sender: $e');
           }

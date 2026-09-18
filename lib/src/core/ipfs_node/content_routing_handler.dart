@@ -11,10 +11,11 @@ import '../../utils/dnslink_resolver.dart';
 import '../../utils/logger.dart';
 import '../cid.dart';
 import '../config/ipfs_config.dart';
+import '../interfaces/i_lifecycle.dart';
 import 'network_handler.dart';
 
 /// Handles content routing operations with fallback strategies.
-class ContentRoutingHandler {
+class ContentRoutingHandler implements ILifecycle {
   /// Creates a content routing handler with config and network handler.
   ContentRoutingHandler(
     this._config,
@@ -66,6 +67,7 @@ class ContentRoutingHandler {
   }
 
   /// Starts the content routing services
+  @override
   Future<void> start() async {
     _logger.debug('Starting ContentRoutingHandler...');
 
@@ -81,6 +83,7 @@ class ContentRoutingHandler {
   }
 
   /// Stops the content routing services
+  @override
   Future<void> stop() async {
     _logger.debug('Stopping ContentRoutingHandler...');
 

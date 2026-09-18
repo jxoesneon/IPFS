@@ -47,6 +47,10 @@ class MetricsCollector implements ILifecycle {
   final IPFSConfig _config;
   late final Logger _logger;
 
+  /// Metrics are recorded only when both the top-level [IPFSConfig.enableMetrics]
+  /// flag and the nested [MetricsConfig.enabled] flag permit it.
+  bool get _metricsEnabled => _config.enableMetrics && _config.metrics.enabled;
+
   final _registry = CollectorRegistry();
   final StreamController<Map<String, dynamic>> _metricsStreamController =
       StreamController.broadcast();
@@ -199,7 +203,7 @@ class MetricsCollector implements ILifecycle {
   @override
   Future<void> start() async {
     _logger.debug('Starting MetricsCollector...');
-    if (!_config.metrics.enabled) {
+    if (!_metricsEnabled) {
       return;
     }
 
@@ -216,7 +220,8 @@ class MetricsCollector implements ILifecycle {
     _logger.debug('Stopping MetricsCollector...');
     _collectionTimer?.cancel();
     _collectionTimer = null;
-    await _metricsStreamController.close();
+    // _metricsStreamController is `final` and must survive a stop/start
+    // cycle; it is released with the collector.
   }
 
   /// Registers a [BlockStore] to be queried by the periodic collector.
@@ -230,7 +235,7 @@ class MetricsCollector implements ILifecycle {
   }
 
   Future<void> _collect() async {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
 
     try {
       if (_blockStore != null && _config.metrics.collectStorageMetrics) {
@@ -255,7 +260,7 @@ class MetricsCollector implements ILifecycle {
 
   /// Records a P2P message sent via [protocol] with [bytes] payload.
   void recordMessageSent(String protocol, int bytes) {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
 
     _messagesSent.labels([protocol]).inc();
     _bytesSent.labels([protocol]).inc(bytes.toDouble());
@@ -268,7 +273,7 @@ class MetricsCollector implements ILifecycle {
 
   /// Records a P2P message received via [protocol] with [bytes] payload.
   void recordMessageReceived(String protocol, int bytes) {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
 
     _messagesReceived.labels([protocol]).inc();
     _bytesReceived.labels([protocol]).inc(bytes.toDouble());
@@ -282,7 +287,7 @@ class MetricsCollector implements ILifecycle {
 
   /// Records a round-trip latency observation for [protocol].
   void recordLatency(String protocol, Duration latency) {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
 
     final seconds = latency.inMicroseconds / 1e6;
     _latency.labels([protocol]).observe(seconds);
@@ -300,27 +305,27 @@ class MetricsCollector implements ILifecycle {
 
   /// Records that a peer has connected.
   void recordPeerConnected() {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
     _connectedPeers.inc();
     _emit('recordPeerConnected', {});
   }
 
   /// Records that a peer has disconnected.
   void recordPeerDisconnected() {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
     _connectedPeers.dec();
     _emit('recordPeerDisconnected', {});
   }
 
   /// Records the current routing table [size].
   void recordRoutingTableSize(int size) {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
     _routingTableSize.value = size.toDouble();
   }
 
   /// Records blockstore statistics: number of [blocks] and total [bytes].
   void recordBlockstoreStats(int blocks, int bytes) {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
     _blockstoreBlocks.value = blocks.toDouble();
     _blockstoreBytes.value = bytes.toDouble();
   }
@@ -332,7 +337,7 @@ class MetricsCollector implements ILifecycle {
     int status,
     Duration duration,
   ) {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
 
     final statusLabel = status.toString();
     _gatewayRequests.labels([namespace, method, statusLabel]).inc();
@@ -355,7 +360,7 @@ class MetricsCollector implements ILifecycle {
     int status,
     Duration duration,
   ) {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
 
     final statusLabel = status.toString();
     _rpcRequests.labels([method, endpoint, statusLabel]).inc();
@@ -373,7 +378,7 @@ class MetricsCollector implements ILifecycle {
   ///
   /// [success] indicates whether the announcement succeeded.
   void recordDhtProvide(bool success) {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
     _dhtProvides.labels([success ? 'success' : 'failure']).inc();
     _emit('recordDhtProvide', {'success': success});
   }
@@ -383,7 +388,7 @@ class MetricsCollector implements ILifecycle {
   /// [strategy] is the reprovide strategy name, [success] indicates whether the
   /// run succeeded, and [duration] is the time it took.
   void recordReprovide(String strategy, bool success, Duration duration) {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
 
     _dhtReprovideRuns.labels([strategy, success ? 'success' : 'failure']).inc();
     _dhtReprovideDuration
@@ -401,7 +406,7 @@ class MetricsCollector implements ILifecycle {
   ///
   /// Common types include `rate_limit`, `blocked_cid`, and `auth_failure`.
   void recordSecurityEvent(String type) {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
     _securityEvents.labels([type]).inc();
     _emit('recordSecurityEvent', {'type': type});
   }
@@ -485,7 +490,7 @@ class MetricsCollector implements ILifecycle {
 
   /// Updates connection metrics for a peer.
   void updateConnectionMetrics(String peerId, Map<String, dynamic> metrics) {
-    if (!_config.metrics.enabled) return;
+    if (!_metricsEnabled) return;
 
     final peer = _networkMetrics.peerMetrics.putIfAbsent(
       peerId,
@@ -525,7 +530,7 @@ class MetricsCollector implements ILifecycle {
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'status': 'active',
-      'enabled': _config.metrics.enabled,
+      'enabled': _metricsEnabled,
       'prometheus_export_enabled': _config.metrics.enablePrometheusExport,
     };
   }
@@ -534,7 +539,7 @@ class MetricsCollector implements ILifecycle {
   ///
   /// Returns an empty string when metrics collection is disabled.
   Future<String> getPrometheusMetrics() async {
-    if (!_config.metrics.enabled) return '';
+    if (!_metricsEnabled) return '';
 
     final buffer = StringBuffer();
     final samples = await _registry.collectMetricFamilySamples();

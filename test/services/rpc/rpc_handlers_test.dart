@@ -12,6 +12,7 @@ import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
+import 'package:dart_ipfs/src/utils/car_writer.dart';
 import 'package:shelf/shelf.dart';
 import 'dart:typed_data';
 
@@ -684,5 +685,40 @@ void main() {
       final response = await handlers.handleBlockStat(request);
       expect(response.statusCode, equals(500));
     });
+
+    test('handleDagImport stores blocks that hash-verify', () async {
+      final block = await Block.fromData(Uint8List.fromList([1, 2, 3, 4]));
+      final writer = CarWriter(roots: [block.cid]);
+      await writer.write(block.cid, block.data);
+      final carData = await writer.close();
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dag/import'),
+        body: carData,
+      );
+      final response = await handlers.handleDagImport(request);
+      expect(response.statusCode, equals(200));
+      verify(mockBlockStore.putBlock(any)).called(1);
+    });
+
+    test(
+      'handleDagImport rejects block whose data does not match CID',
+      () async {
+        final block = await Block.fromData(Uint8List.fromList([1, 2, 3, 4]));
+        final writer = CarWriter(roots: [block.cid]);
+        await writer.write(block.cid, Uint8List.fromList([9, 9, 9, 9]));
+        final carData = await writer.close();
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/dag/import'),
+          body: carData,
+        );
+        final response = await handlers.handleDagImport(request);
+        expect(response.statusCode, equals(500));
+        verifyNever(mockBlockStore.putBlock(any));
+      },
+    );
   });
 }

@@ -211,25 +211,22 @@ void main() {
       expect(result, isFalse);
     });
 
-    test('sendMessage error handling', () async {
+    test('sendMessage propagates errors', () async {
       when(
         mockRouter.sendMessage(any, any),
       ).thenThrow(Exception('Send failed'));
-      // Should not throw
-      await handler.sendMessage('peer1', 'msg');
+      await expectLater(
+        () async => await handler.sendMessage('peer1', 'msg'),
+        throwsException,
+      );
       verify(mockRouter.sendMessage('peer1', any)).called(1);
     });
 
-    test('receiveMessages error handling', () async {
+    test('receiveMessages propagates errors', () async {
       when(
         mockRouter.receiveMessages(any),
       ).thenThrow(Exception('Stream failed'));
-      final stream = handler.receiveMessages('peer1');
-      expect(await stream.isEmpty, isTrue);
-    });
-
-    test('dhtRouter getter', () {
-      expect(handler.dhtRouter, isNotNull);
+      expect(() => handler.receiveMessages('peer1'), throwsException);
     });
 
     test('circuitRelayClient getter', () {

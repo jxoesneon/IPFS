@@ -89,7 +89,7 @@ void main() {
     });
 
     test('persistPinnedCIDs', () async {
-      // Clear existing
+      // Persist is additive: pre-existing pins are preserved, never cleared.
       final entries = [QueryEntry(Key('/pins/old'), Uint8List(0))];
       when(
         mockDatastore.query(any),
@@ -97,7 +97,7 @@ void main() {
 
       await handler.persistPinnedCIDs({'new1', 'new2'});
 
-      verify(mockDatastore.delete(any)).called(1);
+      verifyNever(mockDatastore.delete(any));
       verify(mockDatastore.put(any, any)).called(2);
     });
 
@@ -110,8 +110,10 @@ void main() {
 
     test('exportCAR errors when root missing', () async {
       when(mockDatastore.get(any)).thenAnswer((_) async => null);
-      final car = await handler.exportCAR('missing');
-      expect(car, isEmpty);
+      await expectLater(
+        () async => await handler.exportCAR('missing'),
+        throwsArgumentError,
+      );
     });
 
     test('exportCAR with links', () async {
@@ -136,11 +138,10 @@ void main() {
     });
 
     test('importCAR calls putBlock', () async {
-      // Build a minimal standard CAR v1 using the new CarWriter API.
-      final block = Block(
-        cid: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
-        data: Uint8List.fromList([1, 2, 3]),
-      );
+      // Build a minimal standard CAR v1 using the new CarWriter API. The CID
+      // must match the block bytes: import validates content authenticity.
+      final data = Uint8List.fromList([1, 2, 3]);
+      final block = Block(cid: await CID.fromContent(data), data: data);
       final writer = CarWriter(roots: [block.cid]);
       await writer.write(block.cid, block.data);
       final carData = await writer.close();

@@ -325,6 +325,13 @@ class RPCHandlers {
           data: section.bytes,
           format: _codecToFormat(section.cid.codec ?? 'raw'),
         );
+        // CAR bytes are untrusted: hash-verify every section before
+        // storing so a crafted archive cannot poison the blockstore.
+        if (!await block.validate()) {
+          return _errorResponse(
+            'DAG import rejected: block data does not match CID ${section.cid}',
+          );
+        }
         await node.blockStore.putBlock(block);
         count++;
       }

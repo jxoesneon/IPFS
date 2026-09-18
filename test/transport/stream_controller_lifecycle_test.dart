@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/dart_ipfs.dart';
@@ -14,7 +15,9 @@ void main() {
     late IPFSConfig config;
 
     setUp(() async {
+      final repoDir = Directory.systemTemp.createTempSync('ipfs_streams_');
       config = IPFSConfig(
+        dataPath: '${repoDir.path}/node',
         network: NetworkConfig(
           listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
           bootstrapPeers: [],

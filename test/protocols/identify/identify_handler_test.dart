@@ -135,6 +135,9 @@ class MockRouter implements RouterInterface {
   }
 
   @override
+  Set<String> get supportedProtocols => _protocols;
+
+  @override
   Future<void> broadcastMessage(String protocolId, Uint8List message) async {}
 
   @override
@@ -229,7 +232,6 @@ void main() {
     test('start registers protocol handler', () async {
       final handler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
         protocols: ['/ipfs/bitswap/1.2.0', '/ipfs/ping/1.0.0'],
@@ -255,7 +257,6 @@ void main() {
     test('stop removes protocol handler', () async {
       final handler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );
@@ -275,7 +276,6 @@ void main() {
 
       final handler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
         protocols: ['/ipfs/id/1.0.0'],
@@ -296,7 +296,6 @@ void main() {
     test('response includes public key', () async {
       final handler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );
@@ -317,7 +316,6 @@ void main() {
 
       final handler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
         protocols: ['/ipfs/ping/1.0.0'],
@@ -341,7 +339,6 @@ void main() {
     test('response works without signed peer record', () async {
       final handler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );
@@ -357,7 +354,6 @@ void main() {
     test('addProtocol and removeProtocol modify supported list', () async {
       final handler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
         protocols: ['/ipfs/ping/1.0.0'],
@@ -390,7 +386,6 @@ void main() {
 
       final handler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );
@@ -406,7 +401,6 @@ void main() {
 
       final handler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );
@@ -420,7 +414,6 @@ void main() {
 
       final handler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );
@@ -434,7 +427,6 @@ void main() {
 
       final handler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
         protocols: ['/ipfs/ping/1.0.0'],
@@ -450,7 +442,6 @@ void main() {
     test('peerIdBytes getter returns copy', () async {
       final handler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );
@@ -466,7 +457,6 @@ void main() {
     test('start registers push protocol handler', () async {
       final identifyHandler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
         protocols: ['/ipfs/ping/1.0.0'],
@@ -483,7 +473,6 @@ void main() {
     test('stop cleans up', () async {
       final identifyHandler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );
@@ -500,7 +489,6 @@ void main() {
     test('receives push from remote peer and emits event', () async {
       final identifyHandler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );
@@ -538,7 +526,6 @@ void main() {
     test('ignores empty push message', () async {
       final identifyHandler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );
@@ -564,7 +551,6 @@ void main() {
 
       final identifyHandler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
         protocols: ['/ipfs/ping/1.0.0'],
@@ -588,7 +574,6 @@ void main() {
 
       final identifyHandler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );
@@ -606,7 +591,6 @@ void main() {
     test('pushUpdate warns when not started', () async {
       final identifyHandler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );
@@ -625,7 +609,6 @@ void main() {
 
       final identifyHandler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );
@@ -645,7 +628,6 @@ void main() {
     test('pushToPeer warns when not started', () async {
       final identifyHandler = IdentifyHandler(
         router: router,
-        keyPair: keyPair,
         publicKeyBytes: publicKeyBytes,
         peerIdBytes: peerIdBytes,
       );

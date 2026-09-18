@@ -52,6 +52,12 @@ class NetworkManager implements ILifecycle {
   @override
   Future<void> stop() async {
     _logger.debug('Stopping NetworkManager...');
+
+    final handler = _networkHandler;
+    if (handler != null) {
+      _logger.debug('Stopping underlying network handler...');
+      await handler.stop();
+    }
   }
 
   /// Returns the peer ID of this node.

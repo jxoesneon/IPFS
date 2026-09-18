@@ -5,7 +5,15 @@ class SecurityConfig {
     this.enableTLS = false,
     this.tlsCertificatePath,
     this.tlsPrivateKeyPath,
+    @Deprecated(
+      'Key rotation only records a timestamp; no keys are rotated. '
+      'This flag is ignored.',
+    )
     this.enableKeyRotation = true,
+    @Deprecated(
+      'Key rotation only records a timestamp; no keys are rotated. '
+      'This flag is ignored.',
+    )
     this.keyRotationInterval = const Duration(days: 30),
     this.maxAuthAttempts = 3,
     this.enableRateLimiting = true,
@@ -25,7 +33,9 @@ class SecurityConfig {
       enableTLS: json['enableTLS'] as bool? ?? false,
       tlsCertificatePath: json['tlsCertificatePath'] as String?,
       tlsPrivateKeyPath: json['tlsPrivateKeyPath'] as String?,
+      // ignore: deprecated_member_use_from_same_package
       enableKeyRotation: json['enableKeyRotation'] as bool? ?? true,
+      // ignore: deprecated_member_use_from_same_package
       keyRotationInterval: Duration(
         days: json['keyRotationDays'] as int? ?? 30,
       ),
@@ -55,9 +65,14 @@ class SecurityConfig {
   final String? tlsPrivateKeyPath;
 
   /// Whether to enable key rotation
+  ///
+  /// Ignored: key rotation is not implemented; enabling it only schedules a
+  /// timestamp update and logs a warning at startup.
   final bool enableKeyRotation;
 
   /// Key rotation interval
+  ///
+  /// Ignored: see [enableKeyRotation].
   final Duration keyRotationInterval;
 
   /// Maximum number of authentication attempts

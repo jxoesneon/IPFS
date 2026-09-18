@@ -63,8 +63,8 @@ class DaemonCommand extends IpfsCommand {
       ..addOption(
         'api-addr',
         help: 'RPC API bind address',
-        defaultsTo: Platform.environment['IPFS_API_ADDR'] ??
-            '/ip4/127.0.0.1/tcp/5001',
+        defaultsTo:
+            Platform.environment['IPFS_API_ADDR'] ?? '/ip4/127.0.0.1/tcp/5001',
       )
       ..addOption(
         'gateway-addr',
@@ -138,6 +138,7 @@ class DaemonCommand extends IpfsCommand {
       address: gatewayEndpoint.address,
       port: gatewayEndpoint.port,
       corsOrigins: ['*'],
+      gatewayConfig: mergedConfig.gateway,
     );
     await gateway.start();
     print('Gateway running at: ${gateway.url}');
@@ -146,7 +147,8 @@ class DaemonCommand extends IpfsCommand {
       node: node,
       address: apiEndpoint.address,
       port: apiEndpoint.port,
-      corsOrigins: ['*'],
+      apiKey:
+          Platform.environment['DART_IPFS_API_KEY'] ?? mergedConfig.rpcApiKey,
     );
     await rpc.start();
     print('RPC API running at: ${rpc.url}');
@@ -210,6 +212,7 @@ class IdCommand extends IpfsCommand {
   Future<void> run() async {
     final config = await buildConfig();
     final node = await IPFSNode.create(config);
+    await node.start();
     try {
       printJson({
         'ID': node.peerID,
@@ -316,6 +319,7 @@ class AddCommand extends IpfsCommand {
 
     final config = await buildConfig();
     final node = await IPFSNode.create(config);
+    await node.start();
     try {
       final file = File(path);
       final directory = Directory(path);
@@ -394,6 +398,7 @@ class CatCommand extends IpfsCommand {
 
     final config = await buildConfig();
     final node = await IPFSNode.create(config);
+    await node.start();
     try {
       final content = await node.cat(cid);
       if (content == null) {
@@ -430,6 +435,7 @@ class LsCommand extends IpfsCommand {
     final cid = cids.first;
     final config = await buildConfig();
     final node = await IPFSNode.create(config);
+    await node.start();
     try {
       final entries = await node.ls(cid);
       final links = entries
@@ -552,6 +558,7 @@ class SwarmPeersCommand extends _SwarmBaseCommand {
   Future<void> run() async {
     final config = await buildConfig();
     final node = await IPFSNode.create(config);
+    await node.start();
     try {
       final peers = await node.connectedPeers;
       final peerList = peers.map((p) => {'Peer': p, 'Addr': ''}).toList();
@@ -579,6 +586,7 @@ class SwarmConnectCommand extends _SwarmBaseCommand {
 
     final config = await buildConfig();
     final node = await IPFSNode.create(config);
+    await node.start();
     try {
       for (final addr in addrs) {
         await node.connectToPeer(addr);
@@ -607,6 +615,7 @@ class SwarmDisconnectCommand extends _SwarmBaseCommand {
 
     final config = await buildConfig();
     final node = await IPFSNode.create(config);
+    await node.start();
     try {
       for (final addr in addrs) {
         await node.disconnectFromPeer(addr);

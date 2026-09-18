@@ -32,7 +32,7 @@ This inventory assesses the implementation status of the 28 tracked feature spec
 | **CIRCUIT_RELAY_SPEC** | P0 | Complete | `lib/src/transport/circuit_relay_client_io.dart`, `lib/src/core/config/network_config.dart` | CONNECT flow, reservation refresh, `CircuitRelayConfig`, max-circuits enforcement, router relayed-connection registration. |
 | **CONTENT_BLOCKING_SPEC** | P1 | Complete | `lib/src/core/security/denylist_service.dart`, `lib/src/services/gateway/gateway_handler.dart`, `lib/src/services/rpc/rpc_handlers.dart`, `lib/src/protocols/dht/dht_handler.dart`, `lib/src/protocols/bitswap/bitswap_handler.dart` | BadBits-style compact parser, CID/multihash blocking, gateway/RPC/DHT/Bitswap/MFS 451 integration, persistence and audit log. |
 | **GATEWAY_TLS_SPEC** | P1 | Complete | `lib/src/core/config/gateway_config.dart`, `lib/src/services/gateway/gateway_tls_manager.dart`, `lib/src/platform/http_server_adapter_io.dart` | TLS/AutoTLS config fields, `serveSecure`, TLS manager with AutoTLS flow, gateway server wiring. |
-| **GOSSIPSUB_SPEC** | P0 | Complete | `lib/src/protocols/pubsub/gossipsub/` | v1.1 protobuf, handler, config, message signing, message cache, peer scoring, Ed25519 asymmetric auth & PeerKeyRegistry (SEC-008). |
+| **GOSSIPSUB_SPEC** | P0 | Removed | ~~`lib/src/protocols/pubsub/gossipsub/`~~ | The spec-compliant reference stack (v1.1 protobuf, handler, config, message signing, message cache, peer scoring) was never wired into production — `PubSubClient` remains the production PubSub path with Ed25519 auth (SEC-008) and `PeerKeyRegistry`. The dead stack was removed in the 2026-09 dead-code audit; full libp2p Gossipsub wire compliance remains an approved P0 item on the roadmap. |
 | **GRAPHSYNC_SPEC** | P1 | Complete | `lib/src/protocols/graphsync/graphsync_handler.dart`, `lib/src/core/config/graphsync_config.dart`, `lib/src/protocols/graphsync/graphsync_budget.dart` | Unicast responses, budget enforcement, CID prefix helpers, client `requestGraph`, bidirectional pause/resume/cancel, Bitswap fallback. |
 | **INTEROP_TESTS_SPEC** | P0 | Complete | `.github/workflows/interop.yml`, `test/interop/` | P0/P1 workflows, Kubo/Helia compose harnesses, Helia server.js RPC harness, profile-based interop testing. |
 | **IPNS_SPEC** | P0 | Complete | `lib/src/protocols/ipns/ipns_handler.dart`, `lib/src/protocols/ipns/ipns_record.dart` | DHT-first signed CBOR records, base36 name derivation, signature verification, optional PubSub subscription gating. |
@@ -118,6 +118,7 @@ This inventory assesses the implementation status of the 28 tracked feature spec
 - Added v1.1 protobuf under `lib/src/protocols/pubsub/gossipsub/` (regenerated for `protobuf: ^6.0.0`).
 - Implemented spec-compliant handler, config, message signing, message cache, and peer scoring.
 - Added `test/protocols/pubsub/gossipsub_test.dart`.
+- Removed in the 2026-09 dead-code audit: the stack had no production importers; `PubSubClient` is the production PubSub path.
 
 ### IPNS_SPEC
 - DHT-first signed CBOR records using `IPNSRecord` Ed25519 signing.

@@ -32,6 +32,34 @@ class HttpGatewayClient {
     'https://cloudflare-ipfs.com/ipfs/',
   ];
 
+  /// Returns `true` when [host] is a loopback, private-range, or
+  /// link-local address. Gateway URLs resolving to these hosts are
+  /// rejected unless the operator explicitly allows private gateways.
+  static bool isPrivateOrLoopbackHost(String host) {
+    if (host.isEmpty) return true;
+    if (host == 'localhost' || host == '127.0.0.1' || host == '::1') {
+      return true;
+    }
+    if (host.startsWith('127.')) return true;
+    if (host.startsWith('10.') ||
+        host.startsWith('192.168.') ||
+        host.startsWith('169.254.')) {
+      return true;
+    }
+    if (host.startsWith('172.')) {
+      final parts = host.split('.');
+      if (parts.length > 1) {
+        final second = int.tryParse(parts[1]);
+        if (second != null && second >= 16 && second <= 31) {
+          return true;
+        }
+      }
+    }
+    // IPv6 unique local addresses (fc00::/7) and loopback (::1).
+    if (host.startsWith('fc') || host.startsWith('fd')) return true;
+    return false;
+  }
+
   /// Fetches a raw block for a CID from a specific trustless gateway.
   ///
   /// The request is sent to `$gatewayUrl/ipfs/$cidStr?format=raw`.

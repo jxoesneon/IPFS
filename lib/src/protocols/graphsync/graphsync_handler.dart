@@ -10,6 +10,7 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart' as core;
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/errors/graphsync_errors.dart';
 import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
+import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/ipld/selectors/ipld_selector.dart' as ipld;
 import 'package:dart_ipfs/src/core/ipld/selectors/selector_ast.dart';
@@ -28,7 +29,7 @@ import 'package:dart_ipfs/src/utils/logger.dart';
 /// responses are unicast to the requester, enforce selector budgets, and fall
 /// back to Bitswap for missing blocks. Client-side requests can be sent to a
 /// specific peer and support bidirectional pause/resume.
-class GraphsyncHandler {
+class GraphsyncHandler implements ILifecycle {
   /// Creates a new [GraphsyncHandler] with required dependencies.
   ///
   /// Parameters:
@@ -78,6 +79,7 @@ class GraphsyncHandler {
   final Map<int, _ClientRequestContext> _clientRequests = {};
 
   /// Starts the Graphsync protocol handler and registers it with the router.
+  @override
   Future<void> start() async {
     if (_isRunning) {
       _logger.warning('GraphsyncHandler is already running.');
@@ -101,6 +103,7 @@ class GraphsyncHandler {
   }
 
   /// Stops the Graphsync handler and unregisters it from the router.
+  @override
   Future<void> stop() async {
     if (!_isRunning) return;
 

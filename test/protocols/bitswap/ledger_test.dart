@@ -142,5 +142,36 @@ void main() {
       expect(stats['sent'], equals(0));
       expect(stats['received'], equals(0));
     });
+
+    test('ledgers are bounded and evict oldest peers', () {
+      final manager = LedgerManager();
+      manager.getLedger('peer-oldest').addSentBytes(42);
+      for (int i = 0; i < LedgerManager.maxLedgers; i++) {
+        manager.getLedger('peer-$i');
+      }
+      // The oldest peer was evicted to stay within the bound — a fresh
+      // ledger comes back with zeroed stats.
+      expect(manager.getLedger('peer-oldest').sentBytes, equals(0));
+      // A mid-range peer survives (its stats persisted).
+      manager.getLedger('peer-500').addSentBytes(7);
+      expect(manager.getLedger('peer-500').sentBytes, equals(7));
+    });
+
+    test('block data storage is bounded per ledger', () {
+      final ledger = BitLedger('peer1');
+      for (int i = 0; i < BitLedger.maxBlockDataEntries + 5; i++) {
+        ledger.storeBlockData(
+          'cid-$i',
+          Uint8List.fromList([i & 0xff]),
+        );
+      }
+      // The first entry was evicted once the bound was exceeded.
+      expect(ledger.hasBlock('cid-0'), isFalse);
+      // Recent entries remain available.
+      expect(
+        ledger.hasBlock('cid-${BitLedger.maxBlockDataEntries + 4}'),
+        isTrue,
+      );
+    });
   });
 }

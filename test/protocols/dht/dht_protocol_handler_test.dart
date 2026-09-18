@@ -29,6 +29,9 @@ class _FakeRouter implements RouterInterface {
   Set<String> get connectedPeers => {};
 
   @override
+  Set<String> get supportedProtocols => const {};
+
+  @override
   Stream<ConnectionEvent> get connectionEvents => const Stream.empty();
 
   @override

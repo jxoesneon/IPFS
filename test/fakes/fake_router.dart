@@ -93,6 +93,9 @@ class FakeRouter implements RouterInterface {
   void registerProtocol(String protocolId) {}
 
   @override
+  Set<String> get supportedProtocols => const {};
+
+  @override
   Future<void> broadcastMessage(String protocolId, Uint8List message) async {}
 
   @override

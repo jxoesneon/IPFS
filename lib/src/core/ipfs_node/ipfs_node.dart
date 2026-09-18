@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../../platform/platform.dart';
 import '../../protocols/bitswap/bitswap_handler.dart';
 import '../../protocols/dcutr/dcutr_handler.dart';
 import '../../protocols/dht/dht_client.dart';
@@ -15,8 +16,6 @@ import '../../protocols/pubsub/pubsub_message.dart';
 import '../../transport/router_interface.dart';
 import '../../utils/keystore.dart';
 import '../../utils/logger.dart';
-import '../../platform/platform.dart';
-export '../../platform/platform.dart' show IpfsPlatform;
 import '../builders/ipfs_node_builder.dart';
 import '../config/ipfs_config.dart';
 import '../data_structures/blockstore.dart';
@@ -45,6 +44,8 @@ import 'network_handler.dart';
 import 'network_manager.dart';
 import 'protocol_manager.dart';
 import 'pubsub_handler.dart';
+
+export '../../platform/platform.dart' show IpfsPlatform;
 
 /// Modes for retrieving content via the [IPFSNode].
 enum GatewayMode {
@@ -113,6 +114,9 @@ class IPFSNode {
       denylistService: _container.isRegistered<DenylistService>()
           ? _container.get<DenylistService>()
           : null,
+      bitswapConfig: _container.isRegistered(IPFSConfig)
+          ? _container.get<IPFSConfig>().bitswap
+          : null,
     );
 
     _networkManager = NetworkManager(
@@ -179,6 +183,7 @@ class IPFSNode {
     _lifecycleManager.register(_contentManager);
     _lifecycleManager.register(_networkManager);
     _lifecycleManager.register(_protocolManager);
+    _lifecycleManager.register(_mfsManager);
     if (_reprovider != null) {
       _lifecycleManager.register(_reprovider!);
     }
@@ -475,7 +480,8 @@ class IPFSNode {
     try {
       await _pluginManager.stopAll();
       await _lifecycleManager.stopAll();
-      await _newContentController.close();
+      // _newContentController is `final` and must survive restart(); it is
+      // released with the node.
       _state = NodeState.stopped;
       _logger.info('IPFS Node stopped successfully');
     } catch (e, stackTrace) {

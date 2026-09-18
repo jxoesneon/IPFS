@@ -14,6 +14,7 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
+import '../../core/interfaces/i_lifecycle.dart';
 import '../../transport/router_interface.dart';
 import '../../utils/logger.dart';
 
@@ -58,7 +59,7 @@ class PingResult {
 ///
 /// On the server side, it echoes back 32-byte payloads. On the client side,
 /// it sends 32 random bytes and measures the RTT.
-class PingHandler {
+class PingHandler implements ILifecycle {
   /// Creates a ping handler.
   ///
   /// [router] provides the underlying P2P transport.
@@ -75,6 +76,7 @@ class PingHandler {
   bool get isStarted => _started;
 
   /// Starts the handler by registering the protocol with the router.
+  @override
   Future<void> start() async {
     if (_started) return;
     _started = true;
@@ -83,6 +85,7 @@ class PingHandler {
   }
 
   /// Stops the handler.
+  @override
   Future<void> stop() async {
     if (!_started) return;
     _started = false;

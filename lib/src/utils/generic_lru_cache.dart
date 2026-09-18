@@ -190,6 +190,11 @@ class TimedLRUCache<K, V> extends GenericLRUCache<K, V> {
   void put(K key, V value) {
     super.put(key, value);
     _timestamps[key] = DateTime.now();
+    // Prune timestamps of entries evicted by the parent's LRU policy so the
+    // timestamp map cannot grow beyond capacity.
+    if (_timestamps.length > capacity) {
+      _timestamps.removeWhere((k, _) => !containsKey(k));
+    }
   }
 
   @override

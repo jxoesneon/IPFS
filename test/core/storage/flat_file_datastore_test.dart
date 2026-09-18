@@ -137,6 +137,41 @@ void main() {
         // keysOnly may still return value if filters are applied
         // In this case no filters, so value could be null
       });
+
+      test('walks deeply nested keys across multiple directories', () async {
+        await datastore.put(Key('/pins/cid-abc'), Uint8List.fromList([1]));
+        await datastore.put(
+          Key('/dht/values/somekey'),
+          Uint8List.fromList([2]),
+        );
+        await datastore.put(Key('/mfs/root'), Uint8List.fromList([3]));
+
+        final all = await datastore.query(Query()).toList();
+        expect(all.length, equals(3));
+
+        final pins = await datastore.query(Query(prefix: '/pins')).toList();
+        expect(pins.single.key.toString(), equals('/pins/cid-abc'));
+
+        final dht = await datastore
+            .query(Query(prefix: '/dht/values/', keysOnly: true))
+            .toList();
+        expect(dht.single.key.toString(), equals('/dht/values/somekey'));
+      });
+    });
+
+    group('persistence', () {
+      test('data survives closing and reopening the datastore', () async {
+        final key = Key('/pins/persisted');
+        final value = Uint8List.fromList([9, 8, 7]);
+        await datastore.put(key, value);
+        await datastore.close();
+
+        // Simulate a restart: a new instance over the same directory.
+        final reopened = FlatFileDatastore(tempDir.path);
+        await reopened.init();
+        expect(await reopened.get(key), equals(value));
+        await reopened.close();
+      });
     });
 
     group('close', () {

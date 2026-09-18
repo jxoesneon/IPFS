@@ -10,12 +10,14 @@ import '../../protocols/pubsub/pubsub_interface.dart';
 import '../../protocols/pubsub/pubsub_message.dart';
 import '../../transport/router_interface.dart';
 import '../../utils/dnslink_resolver.dart';
+import '../../utils/logger.dart';
 import '../crypto/peer_key_registry.dart';
 import '../data_structures/node_stats.dart';
+import '../interfaces/i_lifecycle.dart';
 import 'ipfs_node_network_events.dart';
 
 /// Handles PubSub operations for an IPFS node.
-class PubSubHandler implements IPubSub {
+class PubSubHandler implements IPubSub, ILifecycle {
   /// Constructs a [PubSubHandler] with the provided router, peer ID, and network events.
   PubSubHandler(
     RouterInterface router,
@@ -42,6 +44,9 @@ class PubSubHandler implements IPubSub {
   final Map<String, Set<void Function(String)>> _subscriptions = {};
   final StreamController<PubSubMessage> _messageController =
       StreamController<PubSubMessage>.broadcast();
+  final Logger _logger = Logger('PubSubHandler');
+  StreamSubscription<PubSubMessage>? _messageBridge;
+  StreamSubscription<NetworkEvent>? _networkEventSub;
   int _messageCount = 0;
 
   /// Stream of incoming PubSub messages.
@@ -56,78 +61,69 @@ class PubSubHandler implements IPubSub {
   Set<String> peersForTopic(String topic) => _pubSubClient.peersForTopic(topic);
 
   /// Starts the PubSub client and listens for incoming messages.
+  @override
   Future<void> start() async {
     try {
       await _pubSubClient.start();
-      // print('PubSub client started.');
-
-      // Listen for various network events
-      _networkEvents.networkEvents.listen((event) {
-        if (event.hasPubsubMessageReceived()) {
-          _handlePubsubMessage(event.pubsubMessageReceived);
-        }
-        // Add more event handlers as needed
-      });
-    } catch (e) {
-      // print('Error starting PubSub client: $e');
+    } catch (e, stackTrace) {
+      _logger.error('Error starting PubSub client', e, stackTrace);
+      rethrow;
     }
+
+    // Bridge inbound client messages into the public [messages] stream.
+    // Without this, publish works but subscribers can never observe a
+    // message through the handler.
+    _messageBridge = _pubSubClient.messagesStream.listen(
+      _messageController.add,
+      onError: _messageController.addError,
+    );
+
+    // Listen for various network events
+    _networkEventSub = _networkEvents.networkEvents.listen((event) {
+      if (event.hasPubsubMessageReceived()) {
+        _handlePubsubMessage(event.pubsubMessageReceived);
+      }
+      // Add more event handlers as needed
+    });
   }
 
   /// Stops the PubSub client.
+  @override
   Future<void> stop() async {
-    try {
-      await _pubSubClient.stop();
-      await _messageController.close();
-      // print('PubSub client stopped.');
-    } catch (e) {
-      // print('Error stopping PubSub client: $e');
-    }
+    await _messageBridge?.cancel();
+    _messageBridge = null;
+    await _networkEventSub?.cancel();
+    _networkEventSub = null;
+    await _pubSubClient.stop();
+    // _messageController is `final` and must survive a stop/start cycle; it
+    // is released with the handler.
   }
 
   /// Subscribes to a PubSub topic.
   @override
   Future<void> subscribe(String topic) async {
-    try {
-      await _pubSubClient.subscribe(topic);
-      _subscriptions[topic] = <void Function(String)>{};
-      // print('Subscribed to topic: $topic');
-    } catch (e) {
-      // print('Error subscribing to topic $topic: $e');
-    }
+    await _pubSubClient.subscribe(topic);
+    _subscriptions[topic] = <void Function(String)>{};
   }
 
   /// Unsubscribes from a PubSub topic.
   @override
   Future<void> unsubscribe(String topic) async {
-    try {
-      await _pubSubClient.unsubscribe(topic);
-      _subscriptions.remove(topic);
-      // print('Unsubscribed from topic: $topic');
-    } catch (e) {
-      // print('Error unsubscribing from topic $topic: $e');
-    }
+    await _pubSubClient.unsubscribe(topic);
+    _subscriptions.remove(topic);
   }
 
   /// Publishes a message to a PubSub topic.
   @override
   Future<void> publish(String topic, String message) async {
-    try {
-      await _pubSubClient.publish(topic, message);
-      _messageCount++;
-      // print('Published message to topic: $topic');
-    } catch (e) {
-      // print('Error publishing message to topic $topic: $e');
-    }
+    await _pubSubClient.publish(topic, message);
+    _messageCount++;
   }
 
   /// Handles incoming messages on a subscribed topic.
   @override
   void onMessage(String topic, void Function(String) handler) {
-    try {
-      _pubSubClient.onMessage(topic, handler);
-    } catch (e) {
-      // print('Error setting handler for messages on topic $topic: $e');
-    }
+    _pubSubClient.onMessage(topic, handler);
   }
 
   /// Resolves a DNSLink to its corresponding CID.

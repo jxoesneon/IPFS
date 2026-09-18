@@ -43,7 +43,13 @@ void main() {
       client.graftPeer('peer1');
 
       await client.publish('topic1', 'hello');
-      verify(mockRouter.sendMessage('peer1', any)).called(1);
+      verify(
+        mockRouter.sendMessage(
+          'peer1',
+          any,
+          protocolId: anyNamed('protocolId'),
+        ),
+      ).called(1);
     });
 
     test('handle incoming publish message', () async {
@@ -113,7 +119,13 @@ void main() {
 
       // Verify and capture in one go
       final capturedMsg =
-          verify(mockRouter.sendMessage(sender, captureAny)).captured.single
+          verify(
+                mockRouter.sendMessage(
+                  sender,
+                  captureAny,
+                  protocolId: anyNamed('protocolId'),
+                ),
+              ).captured.single
               as Uint8List;
       final decoded = jsonDecode(utf8.decode(capturedMsg));
       expect(decoded['action'], equals('iwant'));
@@ -170,7 +182,13 @@ void main() {
       );
 
       await Future.delayed(Duration(milliseconds: 10));
-      verify(mockRouter.sendMessage('QmAnother', any)).called(1);
+      verify(
+        mockRouter.sendMessage(
+          'QmAnother',
+          any,
+          protocolId: anyNamed('protocolId'),
+        ),
+      ).called(1);
     });
 
     test('graft and prune', () async {
@@ -200,7 +218,13 @@ void main() {
 
       // Peer should be in mesh now. Verify by publishing.
       await client.publish('topic1', 'msg');
-      verify(mockRouter.sendMessage('QmSender', any)).called(1);
+      verify(
+        mockRouter.sendMessage(
+          'QmSender',
+          any,
+          protocolId: anyNamed('protocolId'),
+        ),
+      ).called(1);
     });
 
     test('handle prune action', () async {
@@ -225,7 +249,13 @@ void main() {
       // Peer should be removed from mesh.
       clearInteractions(mockRouter);
       await client.publish('topic1', 'msg');
-      verifyNever(mockRouter.sendMessage('QmSender', any));
+      verifyNever(
+        mockRouter.sendMessage(
+          'QmSender',
+          any,
+          protocolId: anyNamed('protocolId'),
+        ),
+      );
     });
 
     test('onMessage registers handler', () async {
@@ -368,7 +398,13 @@ void main() {
       );
 
       await Future.delayed(Duration(milliseconds: 10));
-      verify(mockRouter.sendMessage('QmSender', any)).called(1);
+      verify(
+        mockRouter.sendMessage(
+          'QmSender',
+          any,
+          protocolId: anyNamed('protocolId'),
+        ),
+      ).called(1);
     });
 
     test('getNodeStats throws when not available', () async {
@@ -391,6 +427,116 @@ void main() {
     test('unsubscribe non-existent topic does nothing', () async {
       await client.unsubscribe('nonexistent');
       verifyNever(mockRouter.removeMessageHandler('nonexistent'));
+    });
+
+    test('subscribe announces to connected peers on pubsub protocol', () async {
+      when(mockRouter.connectedPeers).thenReturn({'peer1', 'peer2'});
+      await client.subscribe('topic1');
+
+      for (final peer in ['peer1', 'peer2']) {
+        final sent =
+            verify(
+                  mockRouter.sendMessage(
+                    peer,
+                    captureAny,
+                    protocolId: 'pubsub',
+                  ),
+                ).captured.single
+                as Uint8List;
+        expect(utf8.decode(sent), equals('subscribe:topic1'));
+      }
+    });
+
+    test('unsubscribe announces to connected peers', () async {
+      when(mockRouter.connectedPeers).thenReturn({'peer1'});
+      await client.subscribe('topic1');
+      clearInteractions(mockRouter);
+      when(mockRouter.connectedPeers).thenReturn({'peer1'});
+
+      await client.unsubscribe('topic1');
+
+      final sent =
+          verify(
+                mockRouter.sendMessage(
+                  'peer1',
+                  captureAny,
+                  protocolId: 'pubsub',
+                ),
+              ).captured.single
+              as Uint8List;
+      expect(utf8.decode(sent), equals('unsubscribe:topic1'));
+    });
+
+    test('announcement failure to one peer does not break subscribe', () async {
+      when(mockRouter.connectedPeers).thenReturn({'peer1', 'peer2'});
+      when(
+        mockRouter.sendMessage(
+          'peer1',
+          any,
+          protocolId: anyNamed('protocolId'),
+        ),
+      ).thenThrow(Exception('unreachable'));
+
+      await client.subscribe('topic1');
+      verify(
+        mockRouter.sendMessage(
+          'peer2',
+          any,
+          protocolId: anyNamed('protocolId'),
+        ),
+      ).called(1);
+    });
+
+    test('inbound subscribe announcement records topic peer', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmAnnouncer',
+          datagram: Uint8List.fromList(utf8.encode('subscribe:topic1')),
+        ),
+      );
+      await Future.delayed(Duration(milliseconds: 10));
+
+      expect(client.peersForTopic('topic1'), contains('QmAnnouncer'));
+    });
+
+    test('publish fans out to topic peers outside the mesh', () async {
+      await client.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as void Function(NetworkPacket);
+
+      // 'QmAnnouncer' subscribes to the topic but is never grafted.
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmAnnouncer',
+          datagram: Uint8List.fromList(utf8.encode('subscribe:topic1')),
+        ),
+      );
+      await Future.delayed(Duration(milliseconds: 10));
+
+      await client.publish('topic1', 'hello');
+      verify(
+        mockRouter.sendMessage('QmAnnouncer', any, protocolId: 'pubsub'),
+      ).called(1);
+    });
+
+    test('publish sends on the pubsub protocol', () async {
+      await client.start();
+      client.graftPeer('peer1');
+
+      await client.publish('topic1', 'hello');
+      verify(
+        mockRouter.sendMessage('peer1', any, protocolId: 'pubsub'),
+      ).called(1);
     });
 
     test('stop when not stopped is idempotent', () async {
