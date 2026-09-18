@@ -303,6 +303,8 @@ class IPFSNodeBuilder {
       );
       _container.registerSingleton(ipnsHandler);
       _container.get<LifecycleManager>().register(ipnsHandler);
+      _container.get<IPLDHandler>().ipnsResolver = (name) =>
+          ipnsHandler.resolve(name);
     }
   }
 

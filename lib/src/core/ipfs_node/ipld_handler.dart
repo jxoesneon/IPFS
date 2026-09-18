@@ -46,6 +46,12 @@ class IPLDHandler implements ILifecycle {
   late final Logger _logger;
   bool _isRunning = true;
 
+  /// Optional IPNS name resolver used by [resolvePath] for `/ipns/` paths.
+  ///
+  /// Wired to the node's IPNS handler when IPNS support is configured; when
+  /// absent, `/ipns/` paths fail with an [IPLDPathError].
+  Future<String> Function(String name)? ipnsResolver;
+
   /// Whether the IPLD handler is currently running.
   bool get isRunning => _isRunning;
 
@@ -773,6 +779,15 @@ class IPLDHandler implements ILifecycle {
       throw ComponentError('IPLDHandler', 'Handler is not running');
     }
     path = IPLDPathHandler.normalizePath(path);
+
+    // IPNS names are opaque (peer IDs in base36 or DNSLink domains) — they
+    // are not CIDs, so the /ipns/ namespace is handled before parsePath's
+    // CID validation.
+    final segments = path.split('/').where((p) => p.isNotEmpty).toList();
+    if (segments.isNotEmpty && segments.first == 'ipns') {
+      return _resolveIPNSPath(segments);
+    }
+
     final (namespace, rootCid, remainingPath) = IPLDPathHandler.parsePath(path);
 
     dynamic result;
@@ -783,13 +798,27 @@ class IPLDHandler implements ILifecycle {
       case 'ipld':
         result = await _resolveIPLDPath(rootCid, remainingPath);
         break;
-      case 'ipns':
-        throw UnimplementedError('IPNS resolution not yet implemented');
       default:
         throw IPLDPathError('Unsupported namespace: $namespace');
     }
 
     return result;
+  }
+
+  /// Resolves an `/ipns/<name>[/sub/path]` path via the wired [ipnsResolver].
+  Future<dynamic> _resolveIPNSPath(List<String> segments) async {
+    final resolver = ipnsResolver;
+    if (resolver == null) {
+      throw IPLDPathError('IPNS resolution is not available on this node');
+    }
+    if (segments.length < 2) {
+      throw IPLDPathError('Missing IPNS name in path');
+    }
+    final resolvedCid = await resolver(segments[1]);
+    final remainingPath = segments.length > 2
+        ? segments.sublist(2).join('/')
+        : null;
+    return _resolveIPFSPath(CID.decode(resolvedCid), remainingPath);
   }
 
   Future<dynamic> _resolveIPFSPath(CID rootCid, String? remainingPath) async {

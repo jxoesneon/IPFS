@@ -315,6 +315,11 @@ class IPFS {
     return _node.subscribe(topic);
   }
 
+  /// Unsubscribes from a PubSub topic.
+  Future<void> unsubscribe(String topic) async {
+    return _node.unsubscribe(topic);
+  }
+
   /// Publishes a message to a PubSub topic.
   Future<void> publish(String topic, String message) async {
     return _node.publish(topic, message);

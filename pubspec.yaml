@@ -56,7 +56,7 @@ dependencies:
   http_parser: ^4.1.2
 
   # Core package (hosted)
-  dart_ipfs_core: ^1.11.6
+  dart_ipfs_core: ^1.11.7
 
   # Optional native QUIC transport adapter (hosted)
   dart_ipfs_quic: ^0.2.1

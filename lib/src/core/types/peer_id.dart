@@ -31,10 +31,10 @@ class PeerId {
   ///
   /// [type] must be `'Ed25519'` for this simplified implementation. The peer
   /// ID follows the libp2p spec: the public key is protobuf-encoded as
-  /// `PublicKey{key_type: Ed25519, data: pubkey}` and hashed with an
-  /// identity multihash when the marshalled key fits in [_maxInlineKeyLength]
-  /// bytes (always true for Ed25519), otherwise a sha2-256 multihash. This
-  /// matches the peer IDs libp2p hosts derive for the same key material.
+  /// `PublicKey{key_type: Ed25519, data: pubkey}` and inlined in an identity
+  /// multihash — the marshalled Ed25519 key (36 bytes) always fits the 42-byte
+  /// inline limit. This matches the peer IDs libp2p hosts derive for the same
+  /// key material.
   factory PeerId.fromPublicKey(Uint8List publicKey, {required String type}) {
     if (type != 'Ed25519') {
       throw UnsupportedError('Only Ed25519 public keys are supported');
@@ -54,36 +54,10 @@ class PeerId {
       0x20,
       ...publicKey,
     ]);
-    final multihash = marshalled.length <= _maxInlineKeyLength
-        ? _multihashEncode(0x00, marshalled)
-        : _multihashEncode(0x12, _sha256(marshalled));
-    return PeerId(value: multihash);
-  }
-
-  /// Maximum marshalled public-key length inlined via identity multihash.
-  static const int _maxInlineKeyLength = 42;
-
-  /// Encodes [digest] as a multihash: uvarint(code) + uvarint(len) + digest.
-  static Uint8List _multihashEncode(int code, List<int> digest) {
-    final out = <int>[];
-    for (var n = code; ; n >>= 7) {
-      if (n >= 0x80) {
-        out.add((n & 0x7F) | 0x80);
-      } else {
-        out.add(n);
-        break;
-      }
-    }
-    for (var n = digest.length; ; n >>= 7) {
-      if (n >= 0x80) {
-        out.add((n & 0x7F) | 0x80);
-      } else {
-        out.add(n);
-        break;
-      }
-    }
-    out.addAll(digest);
-    return Uint8List.fromList(out);
+    // Identity multihash: code 0x00 and length 36 are single-byte uvarints.
+    return PeerId(
+      value: Uint8List.fromList([0x00, marshalled.length, ...marshalled]),
+    );
   }
 
   /// The raw bytes of the peer ID.

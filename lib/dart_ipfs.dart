@@ -150,12 +150,17 @@ export 'package:dart_ipfs_quic/dart_ipfs_quic.dart'
 
 export 'src/core/config/ipfs_config.dart';
 export 'src/core/crypto/peer_key_registry.dart';
+export 'src/core/data_structures/blockstore.dart';
 export 'src/core/data_structures/car.dart';
+export 'src/core/data_structures/link.dart';
+export 'src/core/data_structures/merkle_dag_node.dart';
+export 'src/core/data_structures/peer.dart';
 export 'src/core/errors/transport_errors.dart';
 export 'src/core/ipfs_node/ipfs_node.dart';
 export 'src/core/ipfs_node/ipfs_web_node.dart';
 export 'src/core/lifecycle/mobile_lifecycle_adapter.dart';
 export 'src/core/lifecycle/mobile_lifecycle_coordinator.dart';
+export 'src/core/storage/datastore.dart';
 export 'src/ipfs.dart';
 export 'src/platform/platform.dart' show IpfsPlatform;
 export 'src/protocols/pubsub/pubsub_message.dart';

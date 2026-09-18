@@ -333,6 +333,102 @@ void main() {
           throwsA(isA<IPLDPathError>()),
         );
       });
+
+      test(
+        'resolvePath resolves /ipns/ names through the wired resolver',
+        () async {
+          final fileData = Uint8List.fromList(utf8.encode('named content'));
+          final unixfsFile = Data()
+            ..type = Data_DataType.File
+            ..data = fileData;
+          final fileNode = MerkleDAGNode(
+            data: unixfsFile.writeToBuffer(),
+            links: [],
+          );
+          final fileBlock = await Block.fromData(
+            fileNode.toBytes(),
+            format: 'dag-pb',
+          );
+
+          final unixfsDir = Data()..type = Data_DataType.Directory;
+          final dirNode = MerkleDAGNode(
+            data: unixfsDir.writeToBuffer(),
+            links: [
+              Link(name: 'test.txt', cid: fileBlock.cid, size: fileBlock.size),
+            ],
+          );
+          final dirBlock = await Block.fromData(
+            dirNode.toBytes(),
+            format: 'dag-pb',
+          );
+
+          when(mockBlockStore.getBlock(dirBlock.cid.toString())).thenAnswer(
+            (_) async => BlockResponseFactory.successGet(dirBlock.toProto()),
+          );
+          when(mockBlockStore.getBlock(fileBlock.cid.toString())).thenAnswer(
+            (_) async => BlockResponseFactory.successGet(fileBlock.toProto()),
+          );
+
+          var resolvedName = '';
+          handler.ipnsResolver = (name) async {
+            resolvedName = name;
+            return dirBlock.cid.encode();
+          };
+
+          // The /ipns/ path segment decodes as a libp2p-key CID in
+          // production; any valid CID string exercises the wiring. The
+          // resolver returns a different CID than the name segment, proving
+          // the resolved target is what gets traversed.
+          final result = await handler.resolvePath(
+            '/ipns/${fileBlock.cid}/test.txt',
+          );
+          expect(resolvedName, equals(fileBlock.cid.toString()));
+          expect(result, equals(fileData));
+        },
+      );
+
+      test(
+        'resolvePath resolves DNS-style /ipns/ names without CID parsing',
+        () async {
+          final fileData = Uint8List.fromList(utf8.encode('dns named'));
+          final unixfsFile = Data()
+            ..type = Data_DataType.File
+            ..data = fileData;
+          final fileNode = MerkleDAGNode(
+            data: unixfsFile.writeToBuffer(),
+            links: [],
+          );
+          final fileBlock = await Block.fromData(
+            fileNode.toBytes(),
+            format: 'dag-pb',
+          );
+
+          when(mockBlockStore.getBlock(fileBlock.cid.toString())).thenAnswer(
+            (_) async => BlockResponseFactory.successGet(fileBlock.toProto()),
+          );
+
+          var resolvedName = '';
+          handler.ipnsResolver = (name) async {
+            resolvedName = name;
+            return fileBlock.cid.encode();
+          };
+
+          // DNSLink-style names are opaque strings, not CIDs — they must
+          // reach the resolver untouched. A bare /ipns/<name> path resolves
+          // to the root node of the resolved DAG.
+          final result = await handler.resolvePath('/ipns/docs.example.dev');
+          expect(resolvedName, equals('docs.example.dev'));
+          expect(result, isA<IPLDNode>());
+        },
+      );
+
+      test('resolvePath rejects /ipns/ paths missing a name', () async {
+        handler.ipnsResolver = (name) async => name;
+        await expectLater(
+          () => handler.resolvePath('/ipns/'),
+          throwsA(isA<IPLDPathError>()),
+        );
+      });
     });
 
     group('executeSelector edge cases', () {

@@ -93,6 +93,8 @@ test/interop/swarm.key
 logs/
 *.log
 *.log.*
+*_logs*.txt
+*_log.txt
 pana_report*.txt
 
 # Coverage

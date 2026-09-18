@@ -43,9 +43,91 @@ jobs:
           fi
           dart run tool/release_surfaces.dart --check $TAG_ARG
 
+  quality-gate:
+    name: Quality gate (analyze + test + coverage)
+    needs: [release-gate]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1
+        with:
+          sdk: stable
+
+      - name: Resolve coverage base ref
+        id: base
+        run: |
+          git fetch origin '+refs/tags/v*:refs/tags/v*' || true
+          BASE=$(git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD^ 2>/dev/null || true)
+          if [ -z "$BASE" ]; then
+            BASE=$(git rev-parse origin/main 2>/dev/null || git rev-parse HEAD^)
+          fi
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "Coverage base ref: $BASE"
+
+      - name: Install dependencies (umbrella)
+        run: dart pub get
+
+      - name: Analyze umbrella
+        run: dart analyze --fatal-warnings
+
+      - name: Test umbrella (with coverage)
+        run: dart test --coverage=coverage --reporter=expanded
+
+      - name: Changed-line coverage gate (umbrella)
+        run: |
+          dart pub global activate coverage
+          dart pub global run coverage:format_coverage \
+            --lcov --in=coverage --out=coverage/lcov.info \
+            --packages=.dart_tool/package_config.json --report-on=lib
+          dart run tool/changed_line_coverage.dart \
+            --base="${{ steps.base.outputs.base }}" --lcov=coverage/lcov.info
+
+      - name: Install dependencies (core)
+        working-directory: packages/dart_ipfs_core
+        run: dart pub get
+
+      - name: Analyze + test core (with coverage)
+        working-directory: packages/dart_ipfs_core
+        run: |
+          dart analyze --fatal-warnings
+          dart test --coverage=coverage --reporter=expanded
+          dart pub global run coverage:format_coverage \
+            --lcov --in=coverage --out=coverage/lcov.info \
+            --packages=.dart_tool/package_config.json --report-on=lib
+
+      - name: Changed-line coverage gate (core)
+        run: |
+          dart run tool/changed_line_coverage.dart \
+            --base="${{ steps.base.outputs.base }}" \
+            --lcov=packages/dart_ipfs_core/coverage/lcov.info \
+            --prefix=packages/dart_ipfs_core
+
+      - name: Install dependencies (quic)
+        working-directory: packages/dart_ipfs_quic
+        run: dart pub get
+
+      - name: Analyze + test quic (with coverage)
+        working-directory: packages/dart_ipfs_quic
+        run: |
+          dart analyze --fatal-warnings
+          dart test --coverage=coverage --reporter=expanded
+          dart pub global run coverage:format_coverage \
+            --lcov --in=coverage --out=coverage/lcov.info \
+            --packages=.dart_tool/package_config.json --report-on=lib
+
+      - name: Changed-line coverage gate (quic)
+        run: |
+          dart run tool/changed_line_coverage.dart \
+            --base="${{ steps.base.outputs.base }}" \
+            --lcov=packages/dart_ipfs_quic/coverage/lcov.info \
+            --prefix=packages/dart_ipfs_quic
+
   publish-core:
     name: Publish dart_ipfs_core
-    needs: [release-gate]
+    needs: [release-gate, quality-gate]
     if: inputs.target == 'core' || inputs.target == 'all' || startsWith(github.ref, 'refs/tags/core-v') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     permissions:
@@ -102,8 +184,8 @@ jobs:
 
   publish-quic:
     name: Publish dart_ipfs_quic
-    needs: [release-gate, publish-core]
-    if: always() && needs.release-gate.result == 'success' && (inputs.target == 'quic' || inputs.target == 'all' || startsWith(github.ref, 'refs/tags/quic-v') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
+    needs: [release-gate, quality-gate, publish-core]
+    if: always() && needs.release-gate.result == 'success' && needs.quality-gate.result == 'success' && (needs.publish-core.result == 'success' || needs.publish-core.result == 'skipped') && (inputs.target == 'quic' || inputs.target == 'all' || startsWith(github.ref, 'refs/tags/quic-v') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -159,8 +241,8 @@ jobs:
 
   publish-umbrella:
     name: Publish dart_ipfs (Umbrella)
-    needs: [release-gate, publish-quic]
-    if: always() && needs.release-gate.result == 'success' && (inputs.target == 'umbrella' || inputs.target == 'all' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
+    needs: [release-gate, quality-gate, publish-quic]
+    if: always() && needs.release-gate.result == 'success' && needs.quality-gate.result == 'success' && (needs.publish-quic.result == 'success' || needs.publish-quic.result == 'skipped') && (inputs.target == 'umbrella' || inputs.target == 'all' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -189,6 +271,9 @@ jobs:
 
       - name: Auto-format codebase
         run: dart format --output=none --set-exit-if-changed . || true
+
+      - name: Analyze umbrella
+        run: dart analyze --fatal-warnings
 
       - name: Run pana score check
         run: |
