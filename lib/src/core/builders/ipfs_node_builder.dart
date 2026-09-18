@@ -252,6 +252,12 @@ class IPFSNodeBuilder {
       final contentRoutingHandler = ContentRoutingHandler(
         _config,
         networkHandler,
+        // Share the node's DHT client: a second DHTClient would re-register
+        // the kad protocol handlers on the same router and shadow the
+        // DHTHandler's client, silently dropping inbound DHT traffic.
+        dhtClient: _container.isRegistered<DHTHandler>()
+            ? _container.get<DHTHandler>().dhtClient
+            : null,
       );
       _container.registerSingleton(contentRoutingHandler);
       _container.get<LifecycleManager>().register(contentRoutingHandler);

@@ -771,8 +771,33 @@ class Libp2pRouter implements RouterInterface {
         'Incoming stream from $remoteIdStr for protocol $protocolId',
       );
 
+      Future<void> respond(Uint8List response) async {
+        try {
+          final lengthPrefix = _encodeLengthPrefix(response.length);
+          await stream.write(
+            Uint8List.fromList([...lengthPrefix, ...response]),
+          );
+        } catch (e) {
+          _logger.error('Failed to send response to $remoteIdStr', e);
+        }
+      }
+
       final streamDeadline = DateTime.now().add(_maxStreamLifetime);
       try {
+        // Some protocols (e.g. libp2p identify) speak response-first: the
+        // dialer opens the stream and waits without sending a request.
+        // Dispatch a synthetic empty packet so the handler can respond;
+        // the read loop still runs for peers that send follow-ups.
+        if (_respondFirstProtocols.contains(protocolId)) {
+          final packet = NetworkPacket(
+            srcPeerId: remoteIdStr,
+            datagram: Uint8List(0),
+            responder: respond,
+          );
+          handler(packet);
+          _messagePacketController.add(packet);
+        }
+
         // Some protocols (e.g. Bitswap) send multiple length-prefixed
         // messages on a single stream, so read until the stream is closed.
         while (true) {
@@ -797,16 +822,7 @@ class Libp2pRouter implements RouterInterface {
           final packet = NetworkPacket(
             srcPeerId: remoteIdStr,
             datagram: data,
-            responder: (response) async {
-              try {
-                final lengthPrefix = _encodeLengthPrefix(response.length);
-                await stream.write(
-                  Uint8List.fromList([...lengthPrefix, ...response]),
-                );
-              } catch (e) {
-                _logger.error('Failed to send response to $remoteIdStr', e);
-              }
-            },
+            responder: respond,
           );
           handler(packet);
           _messagePacketController.add(packet);
@@ -944,6 +960,12 @@ class Libp2pRouter implements RouterInterface {
   /// stream open indefinitely by sending a byte inside each idle window
   /// (drip-feed DoS). Multi-message protocols get a generous bound.
   static const Duration _maxStreamLifetime = Duration(minutes: 5);
+
+  /// Protocols where the responder speaks first — the dialer opens the
+  /// stream and waits for a message without sending a request. Inbound
+  /// streams on these protocols get a synthetic empty packet dispatched
+  /// immediately so the handler can respond.
+  static const Set<String> _respondFirstProtocols = {'/ipfs/id/1.0.0'};
 
   Uint8List _encodeLengthPrefix(int length) {
     // Simple varint encoding for length prefix

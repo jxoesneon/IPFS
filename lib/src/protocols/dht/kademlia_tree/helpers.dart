@@ -7,6 +7,7 @@ import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia_node.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:fixnum/fixnum.dart';
+
 // lib/src/protocols/dht/kademlia_tree/helpers.dart
 
 /// Calculates the logarithmic XOR distance (bit length) between two Peer IDs.

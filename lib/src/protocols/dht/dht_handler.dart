@@ -16,6 +16,7 @@ import 'package:dart_ipfs/src/proto/generated/ipns.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
@@ -55,6 +56,9 @@ class DHTHandler implements IDHTHandler, ILifecycle {
           router: _router,
           metricsCollector: metrics,
         );
+    // Wire the back-reference so the client reaches this handler directly
+    // rather than through the shared container's lazy resolution.
+    dhtClient.handler = this;
   }
 
   /// The underlying DHT client for network operations.
@@ -354,6 +358,7 @@ class DHTHandler implements IDHTHandler, ILifecycle {
     _logger.debug('Announcing as provider for CID: $cid');
     try {
       await dhtClient.addProvider(cid.toString(), _router.peerID);
+      _recordLocalProvider(cid.toString(), _router.peerID);
     } catch (e, st) {
       _logger.error('Error providing CID: $cid', e, st);
     }
@@ -367,8 +372,40 @@ class DHTHandler implements IDHTHandler, ILifecycle {
     _logger.debug('Announcing as provider for ${cids.length} CIDs');
     try {
       await dhtClient.addProviders(cids, _router.peerID);
+      for (final cid in cids) {
+        _recordLocalProvider(cid.toString(), _router.peerID);
+      }
     } catch (e, st) {
       _logger.error('Error providing ${cids.length} CIDs', e, st);
+    }
+  }
+
+  /// Normalizes [cidStr] to the canonical provider-index key.
+  ///
+  /// Provider records travel on the wire keyed by multihash only — the
+  /// CID version and codec are not transmitted — so the local index must
+  /// compare multihash form regardless of the CID string a caller or a
+  /// remote peer supplied.
+  String _providerKey(String cidStr) {
+    try {
+      return Base58().encode(CID.decode(cidStr).multihash.toBytes());
+    } catch (_) {
+      return cidStr;
+    }
+  }
+
+  /// Records [providerStr] as a provider of [cidStr] in the local index.
+  ///
+  /// Self-provides are recorded so this node can answer GET_PROVIDERS for
+  /// records it announced, matching Kubo's local provider manager.
+  void _recordLocalProvider(String cidStr, String providerStr) {
+    final key = _providerKey(cidStr);
+    final providers = _providers[key] ?? <String>{};
+    providers.add(providerStr);
+    _providers.remove(key); // Refresh recency before reinserting
+    _providers[key] = providers;
+    while (_providers.length > maxProviderCids) {
+      _providers.remove(_providers.keys.first);
     }
   }
 
@@ -437,7 +474,7 @@ class DHTHandler implements IDHTHandler, ILifecycle {
       }
 
       // SEC-010: Max providers per CID check
-      final existingProviders = _providers[cidStr] ?? <String>{};
+      final existingProviders = _providers[_providerKey(cidStr)] ?? <String>{};
       if (existingProviders.length >= maxProvidersPerCid &&
           !existingProviders.contains(providerStr)) {
         _logger.warning(
@@ -453,16 +490,10 @@ class DHTHandler implements IDHTHandler, ILifecycle {
         _providerAnnouncements.remove(_providerAnnouncements.keys.first);
       }
 
-      // Track provider locally
-      existingProviders.add(providerStr);
-      _providers.remove(cidStr); // Refresh recency before reinserting
-      _providers[cidStr] = existingProviders;
-      while (_providers.length > maxProviderCids) {
-        _providers.remove(_providers.keys.first);
-      }
-
-      // Add to DHT
-      await dhtClient.addProvider(cidStr, providerStr);
+      // Track provider locally under the canonical multihash key. The
+      // record is stored only — re-announcing inbound ADD_PROVIDER messages
+      // would amplify announcements across the network.
+      _recordLocalProvider(cidStr, providerStr);
       _logger.verbose('Added verified provider $providerStr for CID $cidStr');
     } catch (e, st) {
       _logger.error('Error handling provide request', e, st);
@@ -473,7 +504,7 @@ class DHTHandler implements IDHTHandler, ILifecycle {
   /// performing a network lookup. Used to satisfy interop/provider tests and
   /// as a fast path before an iterative DHT query.
   List<PeerId> getLocalProvidersForCid(String cidStr) {
-    final providerIds = _providers[cidStr];
+    final providerIds = _providers[_providerKey(cidStr)];
     if (providerIds == null || providerIds.isEmpty) {
       return [];
     }

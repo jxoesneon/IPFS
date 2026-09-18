@@ -30,9 +30,11 @@ class PeerId {
   /// Creates a PeerId from a public key.
   ///
   /// [type] must be `'Ed25519'` for this simplified implementation. The peer
-  /// ID is derived as the SHA-256 digest of the raw public key bytes. A full
-  /// libp2p implementation would use the protobuf-encoded public key and the
-  /// identity multihash for Ed25519 keys.
+  /// ID follows the libp2p spec: the public key is protobuf-encoded as
+  /// `PublicKey{key_type: Ed25519, data: pubkey}` and hashed with an
+  /// identity multihash when the marshalled key fits in [_maxInlineKeyLength]
+  /// bytes (always true for Ed25519), otherwise a sha2-256 multihash. This
+  /// matches the peer IDs libp2p hosts derive for the same key material.
   factory PeerId.fromPublicKey(Uint8List publicKey, {required String type}) {
     if (type != 'Ed25519') {
       throw UnsupportedError('Only Ed25519 public keys are supported');
@@ -42,7 +44,46 @@ class PeerId {
         'Ed25519 public key must be 32 bytes, got ${publicKey.length}',
       );
     }
-    return PeerId(value: _sha256(publicKey));
+    // Protobuf encoding of PublicKey{key_type: Ed25519(1), data: pubkey}:
+    // field 1 varint tag+value (0x08 0x01), field 2 length-delimited
+    // tag+len (0x12 0x20) followed by the 32 key bytes.
+    final marshalled = Uint8List.fromList([
+      0x08,
+      0x01,
+      0x12,
+      0x20,
+      ...publicKey,
+    ]);
+    final multihash = marshalled.length <= _maxInlineKeyLength
+        ? _multihashEncode(0x00, marshalled)
+        : _multihashEncode(0x12, _sha256(marshalled));
+    return PeerId(value: multihash);
+  }
+
+  /// Maximum marshalled public-key length inlined via identity multihash.
+  static const int _maxInlineKeyLength = 42;
+
+  /// Encodes [digest] as a multihash: uvarint(code) + uvarint(len) + digest.
+  static Uint8List _multihashEncode(int code, List<int> digest) {
+    final out = <int>[];
+    for (var n = code; ; n >>= 7) {
+      if (n >= 0x80) {
+        out.add((n & 0x7F) | 0x80);
+      } else {
+        out.add(n);
+        break;
+      }
+    }
+    for (var n = digest.length; ; n >>= 7) {
+      if (n >= 0x80) {
+        out.add((n & 0x7F) | 0x80);
+      } else {
+        out.add(n);
+        break;
+      }
+    }
+    out.addAll(digest);
+    return Uint8List.fromList(out);
   }
 
   /// The raw bytes of the peer ID.
@@ -128,44 +169,55 @@ const _base36Alphabet = '0123456789abcdefghijklmnopqrstuvwxyz';
 
 /// Encodes a non-negative big integer, represented as big-endian bytes, to a
 /// base36 string using the lowercase alphabet `0-9a-z`.
+///
+/// Leading `0x00` bytes are preserved as leading `0` characters, the same
+/// convention base58btc uses with `1` — without it the identity multihash
+/// prefix (`0x00`) on real libp2p peer IDs would be lost.
 String _encodeBase36(Uint8List data) {
   if (data.isEmpty) return '0';
+  var zeros = 0;
+  while (zeros < data.length && data[zeros] == 0) {
+    zeros++;
+  }
   var value = BigInt.zero;
-  for (final byte in data) {
+  for (final byte in data.sublist(zeros)) {
     value = (value << 8) | BigInt.from(byte);
   }
-  if (value == BigInt.zero) return '0';
   final buffer = StringBuffer();
-  final base = BigInt.from(36);
-  while (value > BigInt.zero) {
-    final remainder = value % base;
-    buffer.write(_base36Alphabet[remainder.toInt()]);
-    value = value ~/ base;
+  if (value > BigInt.zero) {
+    final base = BigInt.from(36);
+    while (value > BigInt.zero) {
+      final remainder = value % base;
+      buffer.write(_base36Alphabet[remainder.toInt()]);
+      value = value ~/ base;
+    }
   }
-  return buffer.toString().split('').reversed.join();
+  return '0' * zeros + buffer.toString().split('').reversed.join();
 }
 
-/// Decodes a base36 string (lowercase `0-9a-z`) to big-endian bytes.
+/// Decodes a base36 string (lowercase `0-9a-z`) to big-endian bytes,
+/// restoring leading `0` characters as `0x00` bytes.
 Uint8List _decodeBase36(String encoded) {
   if (encoded.isEmpty) {
     throw ArgumentError('Empty base36 string');
   }
+  var zeros = 0;
+  while (zeros < encoded.length && encoded[zeros] == '0') {
+    zeros++;
+  }
   var value = BigInt.zero;
   final base = BigInt.from(36);
-  for (final ch in encoded.toLowerCase().split('')) {
+  for (final ch in encoded.substring(zeros).toLowerCase().split('')) {
     final index = _base36Alphabet.indexOf(ch);
     if (index == -1) {
       throw ArgumentError('Invalid base36 character: $ch');
     }
     value = value * base + BigInt.from(index);
   }
-  if (value == BigInt.zero) {
-    return Uint8List(0);
-  }
   final bytes = <int>[];
   while (value > BigInt.zero) {
     bytes.add((value & BigInt.from(0xff)).toInt());
     value = value >> 8;
   }
-  return Uint8List.fromList(bytes.reversed.toList());
+  return Uint8List.fromList([...List.filled(zeros, 0), ...bytes.reversed]);
 }

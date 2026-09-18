@@ -610,14 +610,12 @@ void main() {
           'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
         );
 
-        // The internal _router stays empty so the poll loop is skipped, while
-        // the handler's p2p router reports directly connected peers.
-        final p2pRouter = MockRouterInterface();
-        when(mockDhtHandler.router).thenReturn(p2pRouter);
+        // The injected router reports the directly connected peers that the
+        // fast-path query iterates.
         when(
-          p2pRouter.connectedPeers,
+          mockRouter.connectedPeers,
         ).thenReturn({directPeerStr, silentPeerStr});
-        when(p2pRouter.sendRequest(any, any, any)).thenAnswer((
+        when(mockRouter.sendRequest(any, any, any)).thenAnswer((
           invocation,
         ) async {
           if (invocation.positionalArguments[0] != directPeerStr) {
@@ -645,10 +643,10 @@ void main() {
         );
         // Both peers were queried on the LAN protocol first.
         verify(
-          p2pRouter.sendRequest(directPeerStr, DHTClient.protocolDhtLan, any),
+          mockRouter.sendRequest(directPeerStr, DHTClient.protocolDhtLan, any),
         ).called(1);
         verify(
-          p2pRouter.sendRequest(silentPeerStr, DHTClient.protocolDhtLan, any),
+          mockRouter.sendRequest(silentPeerStr, DHTClient.protocolDhtLan, any),
         ).called(1);
       },
     );
@@ -926,10 +924,8 @@ void main() {
 
       const peerA = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
       const peerB = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w';
-      final p2pRouter = MockRouterInterface();
-      when(mockDhtHandler.router).thenReturn(p2pRouter);
-      when(p2pRouter.connectedPeers).thenReturn({peerA, peerB});
-      when(p2pRouter.sendRequest(any, any, any)).thenAnswer((inv) async {
+      when(mockRouter.connectedPeers).thenReturn({peerA, peerB});
+      when(mockRouter.sendRequest(any, any, any)).thenAnswer((inv) async {
         final record = inv.positionalArguments[0] == peerA
             ? oldRecord
             : newRecord;
@@ -955,10 +951,8 @@ void main() {
       final dhtKey = ipnsDhtKey(pubKey);
 
       const peerA = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
-      final p2pRouter = MockRouterInterface();
-      when(mockDhtHandler.router).thenReturn(p2pRouter);
-      when(p2pRouter.connectedPeers).thenReturn({peerA});
-      when(p2pRouter.sendRequest(any, any, any)).thenAnswer(
+      when(mockRouter.connectedPeers).thenReturn({peerA});
+      when(mockRouter.sendRequest(any, any, any)).thenAnswer(
         (_) async =>
             (kad.Message()
                   ..type = kad.Message_MessageType.GET_VALUE
@@ -976,10 +970,8 @@ void main() {
 
     test('returns the first answer for non-IPNS keys', () async {
       const peerA = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
-      final p2pRouter = MockRouterInterface();
-      when(mockDhtHandler.router).thenReturn(p2pRouter);
-      when(p2pRouter.connectedPeers).thenReturn({peerA});
-      when(p2pRouter.sendRequest(any, any, any)).thenAnswer(
+      when(mockRouter.connectedPeers).thenReturn({peerA});
+      when(mockRouter.sendRequest(any, any, any)).thenAnswer(
         (_) async =>
             (kad.Message()
                   ..type = kad.Message_MessageType.GET_VALUE

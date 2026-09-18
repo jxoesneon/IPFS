@@ -34,7 +34,10 @@ void main() {
       final pid1 = PeerId.fromPublicKey(publicKey, type: 'Ed25519');
       final pid2 = PeerId.fromPublicKey(publicKey, type: 'Ed25519');
       expect(pid1, equals(pid2));
-      expect(pid1.value.length, equals(32));
+      // libp2p identity multihash: 0x00 + uvarint(36) + 36-byte protobuf
+      // PublicKey{key_type, data} wrapping the 32-byte Ed25519 key.
+      expect(pid1.value.length, equals(38));
+      expect(pid1.toBase58(), startsWith('12D3KooW'));
     });
 
     test('fromPublicKey requires Ed25519 type and 32-byte key', () {

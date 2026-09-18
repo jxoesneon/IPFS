@@ -24,6 +24,7 @@ import '../../utils/base58.dart';
 import '../../utils/logger.dart';
 import '../ipns/ipns_record.dart';
 import 'dht_envelope.dart';
+import 'dht_handler.dart';
 import 'kademlia_routing_adapter.dart';
 import 'kademlia_routing_table.dart';
 
@@ -60,6 +61,17 @@ class DHTClient {
   /// The IPFS node this client belongs to.
   IPFSNode get node => networkHandler.ipfsNode;
 
+  /// The owning [DHTHandler], wired by its constructor. Lookups must go
+  /// through this back-reference rather than `node.dhtHandler`, which
+  /// resolves lazily through the shared service container and returns the
+  /// most recently registered handler — the wrong node when several
+  /// IPFSNode instances share one isolate.
+  DHTHandler? handler;
+
+  /// The owning handler, falling back to `node.dhtHandler` for standalone
+  /// clients that were never wired to a [DHTHandler] (e.g. unit tests).
+  DHTHandler? get _effectiveHandler => handler ?? node.dhtHandler;
+
   /// Handler for network operations.
   final NetworkHandler networkHandler;
 
@@ -68,13 +80,15 @@ class DHTClient {
   final Logger _logger;
 
   /// The local peer ID.
-  late final PeerId peerId;
+  late PeerId peerId;
 
   /// The associated peer ID.
-  late final PeerId associatedPeerId;
+  late PeerId associatedPeerId;
 
-  late final KademliaRoutingTable _kademliaRoutingTable;
-  late final DHTConfig _config;
+  // Re-assigned on every initialize() so the client survives a node
+  // restart (stop() clears _initialized and start() re-runs initialize()).
+  late KademliaRoutingTable _kademliaRoutingTable;
+  late DHTConfig _config;
   bool _initialized = false;
   final Set<String> _bootstrappedPeers = {};
   StreamSubscription<ConnectionEvent>? _connectionEventSub;
@@ -228,7 +242,7 @@ class DHTClient {
     // return it immediately. This covers the interop case where Kubo/Helia
     // send ADD_PROVIDER messages and we need to report them without relying on
     // a full iterative query over the wire.
-    var localProviders = node.dhtHandler?.getLocalProvidersForCid(cid);
+    var localProviders = _effectiveHandler?.getLocalProvidersForCid(cid);
     _logger.verbose(
       'findProviders($cid) local=${localProviders?.length ?? -1}',
     );
@@ -242,7 +256,7 @@ class DHTClient {
     if (_router.connectedPeers.isNotEmpty) {
       for (var i = 0; i < 5; i++) {
         await Future<void>.delayed(const Duration(milliseconds: 500));
-        localProviders = node.dhtHandler?.getLocalProvidersForCid(cid);
+        localProviders = _effectiveHandler?.getLocalProvidersForCid(cid);
         if (localProviders != null && localProviders.isNotEmpty) {
           _logger.verbose(
             'findProviders($cid) local after poll=${localProviders.length}',
@@ -306,7 +320,9 @@ class DHTClient {
 
         for (final closer in response.closerPeers) {
           if (closer.id.isEmpty) continue;
-          closest.add(_convertKadPeerToPeerId(closer));
+          final closerPeerId = _convertKadPeerToPeerId(closer);
+          if (listsEqual(closerPeerId.value, peerId.value)) continue;
+          closest.add(closerPeerId);
         }
       }
     }
@@ -358,7 +374,8 @@ class DHTClient {
           if (listsEqual(closerPeerId.value, id.value)) {
             return id;
           }
-          if (closer.id.isNotEmpty) {
+          if (closer.id.isNotEmpty &&
+              !listsEqual(closerPeerId.value, peerId.value)) {
             closest.add(closerPeerId);
           }
         }
@@ -490,9 +507,7 @@ class DHTClient {
     try {
       // ADD_PROVIDER is a fire-and-forget message in libp2p-kad-dht. Send the
       // raw protobuf without our envelope framing so Kubo/Helia can parse it.
-      final p2plibRouter = node.dhtHandler?.router;
-      if (p2plibRouter == null) return false;
-      await p2plibRouter.sendMessage(
+      await _router.sendMessage(
         peer.toBase58(),
         msg.writeToBuffer(),
         protocolId: protocolDht,
@@ -654,7 +669,9 @@ class DHTClient {
 
         for (final closer in response.closerPeers) {
           if (closer.id.isEmpty) continue;
-          closest.add(_convertKadPeerToPeerId(closer));
+          final closerPeerId = _convertKadPeerToPeerId(closer);
+          if (listsEqual(closerPeerId.value, peerId.value)) continue;
+          closest.add(closerPeerId);
         }
       }
     }
@@ -668,8 +685,7 @@ class DHTClient {
   Future<bool> storeValueRaw(Uint8List key, Uint8List value) async {
     _checkInitialized();
     final storedLocally = await _storeValueLocally(key, value);
-    final router = node.dhtHandler?.router;
-    if (router == null) return storedLocally;
+    final router = _router;
 
     final record = dht_proto.Record()
       ..key = key
@@ -705,8 +721,7 @@ class DHTClient {
     final local = await _getValueLocally(keyBytes);
     if (local != null && !isIpns) return local;
 
-    final router = node.dhtHandler?.router;
-    if (router == null) return local;
+    final router = _router;
 
     final request = kad.Message()
       ..type = kad.Message_MessageType.GET_VALUE
@@ -759,7 +774,7 @@ class DHTClient {
   /// Returns whether the local write succeeded.
   Future<bool> _storeValueLocally(Uint8List key, Uint8List value) async {
     try {
-      final storage = node.dhtHandler?.storage;
+      final storage = _effectiveHandler?.storage;
       if (storage == null) return false;
       await storage.put(ds.Key('/dht/values/${Base58().encode(key)}'), value);
       return true;
@@ -772,7 +787,7 @@ class DHTClient {
   /// Returns the locally stored value for [key], or `null` when absent.
   Future<Uint8List?> _getValueLocally(Uint8List key) async {
     try {
-      final storage = node.dhtHandler?.storage;
+      final storage = _effectiveHandler?.storage;
       if (storage == null) return null;
       final value = await storage.get(
         ds.Key('/dht/values/${Base58().encode(key)}'),
@@ -865,11 +880,7 @@ class DHTClient {
       ..clusterLevelRaw = 0;
     final requestBytes = request.writeToBuffer();
 
-    final router = node.dhtHandler?.router;
-    if (router == null) {
-      _logger.debug('_queryConnectedPeersForProviders: no router');
-      return [];
-    }
+    final router = _router;
     _logger.debug(
       '_queryConnectedPeersForProviders: connected=${router.connectedPeers.length}',
     );
@@ -926,11 +937,7 @@ class DHTClient {
     final completer = Completer<Uint8List>();
     _pendingRequests[requestId] = completer;
 
-    final p2plibRouter = node.dhtHandler?.router;
-    if (p2plibRouter == null) {
-      _pendingRequests.remove(requestId);
-      throw Exception('DHT Offline: Router not available');
-    }
+    final p2plibRouter = _router;
 
     final envelope = DHTEnvelope(requestId: requestId, payload: data);
     try {
@@ -1017,10 +1024,12 @@ class DHTClient {
         return;
       }
 
-      // Update routing table with IP diversity check
-      if (_initialized) {
+      // Update routing table with IP diversity check. Never insert self —
+      // peers report us in their closer-peer lists and a self entry leads to
+      // dial-self failures during iterative queries.
+      if (_initialized && !listsEqual(srcPeerId.value, peerId.value)) {
         await _kademliaRoutingTable.addPeer(srcPeerId, srcPeerId);
-      } else {
+      } else if (!_initialized) {
         return;
       }
 
@@ -1093,7 +1102,7 @@ class DHTClient {
     kad.Message message,
     Future<void> Function(Uint8List)? send,
   ) async {
-    final storage = node.dhtHandler?.storage;
+    final storage = _effectiveHandler?.storage;
     if (storage == null) {
       _sendResponse(
         peerIdStr,
@@ -1147,7 +1156,7 @@ class DHTClient {
     kad.Message message,
     Future<void> Function(Uint8List)? send,
   ) async {
-    final handler = node.dhtHandler;
+    final handler = _effectiveHandler;
     final response = kad.Message()
       ..type = message.type
       ..key = message.key;
@@ -1155,11 +1164,13 @@ class DHTClient {
     if (handler != null) {
       try {
         final cidStr = Base58().encode(Uint8List.fromList(message.key));
-        final providers = await handler.findProviders(CID.decode(cidStr));
-        for (final peerInfo in providers) {
-          response.providerPeers.add(
-            kad.Peer()..id = Uint8List.fromList(peerInfo.peerId),
-          );
+        // Answer from the local provider index only. A full network
+        // findProviders here would recursively query the requester back.
+        final providers = handler.getLocalProvidersForCid(cidStr);
+        for (final providerId in providers) {
+          // Attach resolved addresses — validating consumers drop provider
+          // records that carry no parseable multiaddr.
+          response.providerPeers.add(_convertPeerIdToKadPeer(providerId));
         }
       } catch (e) {
         _logger.debug('Error handling GET_PROVIDERS from $peerIdStr: $e');
@@ -1177,7 +1188,7 @@ class DHTClient {
   }
 
   Future<void> _handleAddProvider(String peerIdStr, kad.Message message) async {
-    final handler = node.dhtHandler;
+    final handler = _effectiveHandler;
     if (handler == null) return;
 
     try {
@@ -1212,7 +1223,7 @@ class DHTClient {
     kad.Message message,
     Future<void> Function(Uint8List)? send,
   ) async {
-    final storage = node.dhtHandler?.storage;
+    final storage = _effectiveHandler?.storage;
     if (storage == null) return;
 
     try {
@@ -1333,7 +1344,7 @@ class DHTClient {
     if (send != null) {
       unawaited(send(bytesToSend));
     } else {
-      node.dhtHandler?.router.sendMessage(peerIdStr, bytesToSend);
+      _router.sendMessage(peerIdStr, bytesToSend);
     }
   }
 
@@ -1347,7 +1358,7 @@ class DHTClient {
       await _router.start();
 
       // Register protocol handlers
-      node.dhtHandler?.router.registerProtocol(protocolDht);
+      _router.registerProtocol(protocolDht);
 
       // Initialize routing table
       await _initializeRoutingTable();
@@ -1453,14 +1464,11 @@ class DHTClient {
       final request = kad.Message()
         ..type = kad.Message_MessageType.FIND_NODE
         ..key = peerId.value;
-      final p2plibRouter = node.dhtHandler?.router;
-      if (p2plibRouter != null) {
-        await p2plibRouter.sendMessage(
-          peer.toBase58(),
-          request.writeToBuffer(),
-          protocolId: protocolDht,
-        );
-      }
+      await _router.sendMessage(
+        peer.toBase58(),
+        request.writeToBuffer(),
+        protocolId: protocolDht,
+      );
     } catch (e) {
       _logger.debug('Error bootstrapping DHT peer ${peer.toBase58()}: $e');
     }
@@ -1501,7 +1509,7 @@ class DHTClient {
       final query = ds.Query(prefix: '/dht/values/', keysOnly: true);
       // Use nullable handler access and default to empty stream
       final stream =
-          node.dhtHandler?.storage.query(query) ?? const Stream.empty();
+          _effectiveHandler?.storage.query(query) ?? const Stream.empty();
       await for (final entry in stream) {
         final key = entry.key.toString();
         // Remove the prefix to get the actual key
@@ -1573,7 +1581,7 @@ class DHTClient {
       );
 
       // Update the timestamp in DHT storage
-      await node.dhtHandler?.storage.put(metadataKey, timestampData);
+      await _effectiveHandler?.storage.put(metadataKey, timestampData);
 
       // Update routing table metadata
       try {
@@ -1594,10 +1602,7 @@ class DHTClient {
         ..key = key
         ..value = utf8.encode(timestamp.toString());
 
-      node.dhtHandler?.router.emitEvent(
-        'dht:key:republished',
-        event.writeToBuffer(),
-      );
+      _router.emitEvent('dht:key:republished', event.writeToBuffer());
     } catch (e) {
       rethrow;
     }

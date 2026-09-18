@@ -421,7 +421,8 @@ class Reprovider implements ILifecycle {
     // Routing keys are SHA-256 derivations — hoist them out of the
     // comparator so each CID is hashed once instead of O(n·log n) times.
     final keyed = [
-      for (final cid in cids) (cid, _xorDistance(_routingKey(cid), localPeerId)),
+      for (final cid in cids)
+        (cid, _xorDistance(_routingKey(cid), localPeerId)),
     ];
     keyed.sort((a, b) => a.$2.compareTo(b.$2));
     final sorted = [for (final entry in keyed) entry.$1];

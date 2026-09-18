@@ -17,6 +17,7 @@ import 'package:dart_ipfs/src/protocols/identify/identify_push_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_routing_table_interface.dart';
 import 'package:dart_ipfs/src/transport/router_events.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
+import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 import 'package:test/test.dart';
 
 /// A mock router for testing protocol handlers.
@@ -289,8 +290,11 @@ void main() {
 
       final identify = IdentifyPb.decode(router.lastResponse!);
       expect(identify.listenAddrs.length, equals(2));
+      // Listen addrs are binary multiaddrs per the libp2p identify spec.
       expect(
-        utf8.decode(identify.listenAddrs[0]),
+        libp2p.MultiAddr.fromBytes(
+          Uint8List.fromList(identify.listenAddrs[0]),
+        ).toString(),
         equals('/ip4/0.0.0.0/tcp/4001'),
       );
     });

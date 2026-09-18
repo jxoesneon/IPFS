@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:http/http.dart' as http;
 
+import '../../protocols/dht/dht_client.dart';
 import '../../routing/content_routing.dart';
 import '../../routing/delegated_routing.dart';
 import '../../routing/ipni_client.dart';
@@ -21,6 +22,7 @@ class ContentRoutingHandler implements ILifecycle {
     this._config,
     this._networkHandler, {
     ContentRouting? contentRouting,
+    DHTClient? dhtClient,
     DelegatedRoutingHandler? delegatedRouting,
     IPNIClient? ipniClient,
     ReframeRoutingClient? reframeClient,
@@ -33,7 +35,8 @@ class ContentRoutingHandler implements ILifecycle {
     );
 
     _contentRouting =
-        contentRouting ?? ContentRouting(_config, _networkHandler);
+        contentRouting ??
+        ContentRouting(_config, _networkHandler, dhtClient: dhtClient);
     _delegatedRouting =
         delegatedRouting ??
         DelegatedRoutingHandler(

@@ -205,7 +205,10 @@ void main() {
         await handler.handleProvideRequest(cid, provider);
       }
 
-      verify(mockClient.addProvider(any, any)).called(10);
+      // Announcements are stored locally only — they are never
+      // re-broadcast, so no addProvider calls reach the client.
+      verifyNever(mockClient.addProvider(any, any));
+      expect(handler.getLocalProvidersForCid(cid.toString()), hasLength(1));
     });
 
     test('handleProvideRequest max providers check', () async {
@@ -220,7 +223,12 @@ void main() {
       final provider21 = PeerId(value: Uint8List.fromList([21]));
       await handler.handleProvideRequest(cid, provider21);
 
-      verify(mockClient.addProvider(any, any)).called(20);
+      final stored = handler.getLocalProvidersForCid(cid.toString());
+      expect(stored, hasLength(20));
+      expect(
+        stored.map((p) => p.toBase58()),
+        isNot(contains(provider21.toBase58())),
+      );
     });
 
     test('getStatus returns correct info', () async {
@@ -432,7 +440,7 @@ void main() {
       expect(status['routing_table_size'], equals(0));
     });
 
-    test('handleProvideRequest with same provider is not idempotent', () async {
+    test('handleProvideRequest with same provider deduplicates', () async {
       final cid = CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
       final provider = PeerId(value: Uint8List.fromList([1, 2, 3]));
 
@@ -440,7 +448,8 @@ void main() {
       await handler.handleProvideRequest(cid, provider);
       await handler.handleProvideRequest(cid, provider);
 
-      verify(mockClient.addProvider(any, any)).called(3);
+      verifyNever(mockClient.addProvider(any, any));
+      expect(handler.getLocalProvidersForCid(cid.toString()), hasLength(1));
     });
 
     test(
@@ -497,7 +506,7 @@ void main() {
 
       await handler.handleProvideRequest(cid, provider);
 
-      verify(mockClient.addProvider(any, any)).called(1);
+      verifyNever(mockClient.addProvider(any, any));
       final localProviders = handler.getLocalProvidersForCid(cid.toString());
       expect(
         localProviders.map((peer) => peer.toBase58()),

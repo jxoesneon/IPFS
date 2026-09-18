@@ -106,12 +106,18 @@ void main() {
       when(
         mockRouter.resolvePeerId(provider.toBase58()),
       ).thenReturn(['/ip4/127.0.0.1/tcp/4001']);
-      when(mockClient.addProvider(any, any)).thenAnswer((_) async {});
 
       await handler.handleProvideRequest(cid, provider);
-      verify(
-        mockClient.addProvider(cid.toString(), provider.toBase58()),
-      ).called(1);
+
+      // Accepted announcements are recorded in the local provider index
+      // only; they are not re-announced to the network.
+      verifyNever(mockClient.addProvider(any, any));
+      expect(
+        handler
+            .getLocalProvidersForCid(cid.toString())
+            .map((p) => p.toBase58()),
+        contains(provider.toBase58()),
+      );
     });
   });
 }

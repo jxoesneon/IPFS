@@ -11,8 +11,9 @@
 //
 // Spec: https://github.com/libp2p/specs/blob/master/identify/README.md
 
-import 'dart:convert';
 import 'dart:typed_data';
+
+import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 
 import '../../core/crypto/peer_key_registry.dart';
 import '../../core/interfaces/i_lifecycle.dart';
@@ -156,10 +157,16 @@ class IdentifyHandler implements ILifecycle {
     );
     final publicKeyBytes = publicKeyPb.encode();
 
-    // Get listen addresses as multiaddr bytes.
-    final listenAddrs = _router.listeningAddresses
-        .map((addr) => Uint8List.fromList(utf8.encode(addr)))
-        .toList();
+    // Get listen addresses as binary multiaddrs — the Identify protocol
+    // carries addrs in binary form, not UTF-8 strings.
+    final listenAddrs = <Uint8List>[];
+    for (final addr in _router.listeningAddresses) {
+      try {
+        listenAddrs.add(Uint8List.fromList(libp2p.MultiAddr(addr).toBytes()));
+      } catch (_) {
+        _logger.warning('Skipping unparseable listen address: $addr');
+      }
+    }
 
     // Build signed peer record if a signer is available.
     Uint8List? signedPeerRecordBytes;
