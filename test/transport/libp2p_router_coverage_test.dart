@@ -583,6 +583,12 @@ void main() {
           await connected.future.timeout(const Duration(seconds: 10));
           expect(rB.isConnectedPeer(rA.peerID), isTrue);
 
+          // Let the post-connect identify exchange settle — tearing the
+          // connection down mid-response makes the remote's Yamux write
+          // race the dead session (observed as an unhandled async error
+          // on Windows CI).
+          await Future.delayed(const Duration(seconds: 1));
+
           // Simulate the connection dying: recording a closure on the
           // SwarmConn's health metrics transitions it to failed, so the
           // swarm removes the connection and fires disconnectedF (which
