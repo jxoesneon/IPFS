@@ -1,6 +1,6 @@
 # dart_ipfs Roadmap
 
-**Current Version**: 1.16.4 (Multi-Platform Production Ready)  
+**Current Version**: 1.16.5 (Multi-Platform Production Ready)  
 **Last Updated**: 2026-09-17
 
 ---
@@ -467,7 +467,7 @@ This roadmap is updated as priorities change. Feedback is welcome on:
 
 ---
 
-**Last Updated**: 2026-09-17 (v1.16.4) — parity and superiority backlog added
+**Last Updated**: 2026-09-17 (v1.16.5) — parity and superiority backlog added
 **Status**: Active Development  
-**Current Version:** 1.16.4
+**Current Version:** 1.16.5
 **Target for Next Release:** 2.0.0 (Q4 2026)

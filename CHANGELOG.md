@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+## [1.16.5] - 2026-09-18
+
+### Security
+- **DHT provider-record validation**: provider records embedded in GET_PROVIDERS responses are validated before use; malformed records are dropped and counted as security events instead of being trusted.
+- **Self-peer filtering**: peer IDs reported in closer-peer lists are deduplicated and the node's own ID is never inserted into the routing table or query queue, preventing dial-self failures and reflection in iterative lookups.
+
+### Fixed
+- **`dart_ipfs_core` multibase is now RFC 4648-compliant** (requires `dart_ipfs_core` ≥1.11.7): base16/base32/base64 variants previously used a big-integer base-x codec, so `CID.encode()` produced non-standard strings and `CID.decode()` could not parse standard CIDv1 strings such as `bafkrei...`. Base58btc behavior is unchanged.
+- **`CID.hashCode` contract** (dart_ipfs_core ≥1.11.7): equal CIDs now share a hash code, fixing sets/maps keyed by CID.
+- **Peer IDs now follow the libp2p spec**: `PeerId.fromPublicKey` derives the identity-multihash inline peer ID from the protobuf-marshalled public key instead of a plain SHA-256 digest, and base36 encoding preserves leading zero bytes. Note: the peer ID derived from the same key material differs from 1.16.4 — the new form is the one libp2p hosts derive.
+- **`/ipns/` path resolution**: `resolvePath('/ipns/<name>[/sub]')` resolves opaque IPNS names (base36 peer IDs and DNSLink domains) through the node's IPNS handler instead of throwing `UnimplementedError`; paths without a configured resolver fail with `IPLDPathError`.
+- **`IPFSWebNode.get` returns file content**, reassembling UnixFS DAGs and raw linked children, instead of serialized DAG-PB bytes; `listPins` returns pinned CIDs rather than internal storage paths.
+- **CAR public API is usable through the umbrella package**: `CarWriter`/`CarReader` now consume the exported `dart_ipfs_core` CID type, fixing the type mismatch that made CAR export/import unreachable through `dart_ipfs`.
+- **Bandwidth counters account for Bitswap traffic**: `IPFSNode.bandwidthIn`/`bandwidthOut` aggregate the protocol metrics collector and the Bitswap ledger.
+- **Identify on response-first streams**: inbound `/ipfs/id/1.0.0` streams now dispatch immediately so the handler can respond before the dialer sends data, matching the libp2p identify handshake.
+- **Package hygiene**: stale coverage and runtime artifacts no longer ship in the pub.dev archive (tarball ~14 MB → ~1 MB); tracked interop log files removed.
+
+### Added
+- **`IPFS.unsubscribe`** for PubSub topic parity with the node API.
+- **Public API reachability**: `Peer`, `Link`, `MerkleDAGNode`, `Datastore`, and `BlockStore` are exported from `dart_ipfs` so every type in public signatures is nameable.
+- **`IPFSWebNode.addresses` and `IPFSWebNode.connectToPeer`**, plus injectable router/bitswap seams for testing.
+- **Release quality gate**: the publish workflow now runs analysis, the full test suite, and changed-line coverage for `dart_ipfs`, `dart_ipfs_core`, and `dart_ipfs_quic` before any publish step; package publishes are ordered core → quic → umbrella and fail closed.
+
 ## [1.16.4] - 2026-09-18
 
 ### Fixed
