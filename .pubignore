@@ -12,6 +12,11 @@ datastore/
 pins/
 test_results/
 coverage/
+coverage_*/
+test_blocks/
+test_blocks_log/
+*.vm.json
+*.lcov
 .dart_tool/
 .packages
 build/
