@@ -1,15 +1,16 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dart_ipfs/dart_ipfs.dart';
+import 'package:dart_ipfs/src/core/cid.dart' as ipfs_cid;
 import 'package:test/test.dart';
 
-@Timeout(Duration(minutes: 2))
-@Skip('Flaky integration tests depending on network stack behavior in CI')
 void main() {
   group('Gateway Selector Integration', () {
     late HttpServer server;
     late String serverUrl;
     late IPFSNode node;
+    late String testCid;
     bool serverHit = false;
 
     late Directory tempDir;
@@ -17,6 +18,12 @@ void main() {
     setUp(() async {
       // Create a temp directory for this test run
       tempDir = await Directory.systemTemp.createTemp('ipfs_test_');
+
+      // The node hash-verifies fetched blocks, so the CID must match the
+      // served payload.
+      testCid = (await ipfs_cid.CID.computeForData(
+        Uint8List.fromList([1, 2, 3]),
+      )).toString();
 
       // Start a mock HTTP Gateway
       server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -26,7 +33,7 @@ void main() {
       server.listen((HttpRequest request) {
         serverHit = true;
         final cid = request.uri.path.split('/').last;
-        if (cid == 'test_cid') {
+        if (cid == testCid) {
           request.response.statusCode = HttpStatus.ok;
           request.response.add([1, 2, 3]);
         } else {
@@ -56,7 +63,7 @@ void main() {
     test('GatewayMode.custom uses the provided URL', () async {
       node.setGatewayMode(GatewayMode.custom, customUrl: serverUrl);
 
-      final result = await node.cat('test_cid');
+      final result = await node.cat(testCid);
 
       expect(
         serverHit,
