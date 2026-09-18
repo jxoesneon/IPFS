@@ -6,7 +6,10 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/car.dart';
+import 'package:dart_ipfs_core/dart_ipfs_core.dart' as core;
 import 'package:test/test.dart';
+
+core.CID coreCid(CID cid) => core.CID.fromBytes(cid.toBytes());
 
 void main() {
   group('CAR Format', () {
@@ -18,9 +21,9 @@ void main() {
         Uint8List.fromList(utf8.encode('child')),
       );
 
-      final writer = CarWriter(roots: [root.cid]);
-      await writer.write(root.cid, root.data);
-      await writer.write(child.cid, child.data);
+      final writer = CarWriter(roots: [coreCid(root.cid)]);
+      await writer.write(coreCid(root.cid), root.data);
+      await writer.write(coreCid(child.cid), child.data);
       final bytes = await writer.close();
 
       expect(bytes.isNotEmpty, isTrue);
@@ -30,11 +33,14 @@ void main() {
       final reader = CarReader.fromBytes(bytes);
       final header = await reader.header;
       expect(header.version, equals(1));
-      expect(header.roots, equals([root.cid]));
+      expect(header.roots, equals([coreCid(root.cid)]));
 
       final sections = await reader.sections().toList();
       expect(sections.length, equals(2));
-      expect(sections.map((s) => s.cid).toSet(), equals({root.cid, child.cid}));
+      expect(
+        sections.map((s) => s.cid).toSet(),
+        equals({coreCid(root.cid), coreCid(child.cid)}),
+      );
     });
 
     test('CarWriter creates a valid CAR v2 archive with index', () async {
@@ -45,9 +51,13 @@ void main() {
         Uint8List.fromList(utf8.encode('child')),
       );
 
-      final writer = CarWriter(roots: [root.cid], v2: true, index: true);
-      await writer.write(root.cid, root.data);
-      await writer.write(child.cid, child.data);
+      final writer = CarWriter(
+        roots: [coreCid(root.cid)],
+        v2: true,
+        index: true,
+      );
+      await writer.write(coreCid(root.cid), root.data);
+      await writer.write(coreCid(child.cid), child.data);
       final bytes = await writer.close();
 
       expect(bytes.isNotEmpty, isTrue);
@@ -74,14 +84,14 @@ void main() {
       final reader = CarReader.fromBytes(bytes);
       final header = await reader.header;
       expect(header.version, equals(1));
-      expect(header.roots, equals([root.cid]));
+      expect(header.roots, equals([coreCid(root.cid)]));
 
       final sections = await reader.sections().toList();
       expect(sections.length, equals(2));
 
-      final rootOffset = await reader.findCID(root.cid);
+      final rootOffset = await reader.findCID(coreCid(root.cid));
       expect(rootOffset, isNotNull);
-      final childOffset = await reader.findCID(child.cid);
+      final childOffset = await reader.findCID(coreCid(child.cid));
       expect(childOffset, isNotNull);
       expect(childOffset, isNot(equals(rootOffset)));
     });
@@ -90,8 +100,8 @@ void main() {
       final block = await Block.fromData(
         Uint8List.fromList(utf8.encode('streamed')),
       );
-      final writer = CarWriter(roots: [block.cid]);
-      await writer.write(block.cid, block.data);
+      final writer = CarWriter(roots: [coreCid(block.cid)]);
+      await writer.write(coreCid(block.cid), block.data);
       final bytes = await writer.close();
 
       final reader = CarReader.fromStream(
@@ -101,10 +111,10 @@ void main() {
         ]),
       );
       final header = await reader.header;
-      expect(header.roots, equals([block.cid]));
+      expect(header.roots, equals([coreCid(block.cid)]));
       final sections = await reader.sections().toList();
       expect(sections.length, equals(1));
-      expect(sections.first.cid, equals(block.cid));
+      expect(sections.first.cid, equals(coreCid(block.cid)));
       expect(sections.first.bytes, equals(block.data));
     });
 
@@ -112,23 +122,23 @@ void main() {
       final block = await Block.fromData(
         Uint8List.fromList(utf8.encode('header')),
       );
-      final header1 = CarHeader(version: 1, roots: [block.cid]);
-      final header2 = CarHeader(version: 1, roots: [block.cid]);
-      final header3 = CarHeader(version: 2, roots: [block.cid]);
+      final header1 = CarHeader(version: 1, roots: [coreCid(block.cid)]);
+      final header2 = CarHeader(version: 1, roots: [coreCid(block.cid)]);
+      final header3 = CarHeader(version: 2, roots: [coreCid(block.cid)]);
 
       expect(header1, equals(header2));
       expect(header1.hashCode, equals(header2.hashCode));
       expect(header1, isNot(equals(header3)));
       expect(header1.version, equals(1));
-      expect(header1.roots, equals([block.cid]));
+      expect(header1.roots, equals([coreCid(block.cid)]));
     });
 
     test('CarSection reports serialized size', () async {
       final block = await Block.fromData(
         Uint8List.fromList(utf8.encode('block')),
       );
-      final section = CarSection(cid: block.cid, bytes: block.data);
-      final cidBytes = block.cid.toBytes();
+      final section = CarSection(cid: coreCid(block.cid), bytes: block.data);
+      final cidBytes = coreCid(block.cid).toBytes();
       final payloadLength = cidBytes.length + block.data.length;
 
       var varintLength = 0;
@@ -145,8 +155,8 @@ void main() {
       final a = await Block.fromData(Uint8List.fromList(utf8.encode('a')));
       final b = await Block.fromData(Uint8List.fromList(utf8.encode('bb')));
       final builder = IndexBuilder();
-      builder.add(a.cid, 0);
-      builder.add(b.cid, 100);
+      builder.add(coreCid(a.cid), 0);
+      builder.add(coreCid(b.cid), 100);
       final index = builder.build();
 
       expect(
@@ -158,7 +168,7 @@ void main() {
     test('IndexBuilder emits sorted MultihashIndexSorted index', () async {
       final a = await Block.fromData(Uint8List.fromList(utf8.encode('a')));
       final builder = IndexBuilder(multihashSorted: true);
-      builder.add(a.cid, 0);
+      builder.add(coreCid(a.cid), 0);
       final index = builder.build();
 
       expect(
@@ -171,7 +181,7 @@ void main() {
       final block = await Block.fromData(
         Uint8List.fromList(utf8.encode('orphan')),
       );
-      final writer = CarWriter(roots: [block.cid]);
+      final writer = CarWriter(roots: [coreCid(block.cid)]);
       // The root block is never written, so close() should fail validation.
       expect(writer.close(), throwsA(isA<CarHeaderException>()));
     });

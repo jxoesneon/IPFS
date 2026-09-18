@@ -4,7 +4,9 @@ import 'package:test/test.dart';
 import 'package:dart_ipfs/src/core/builders/ipfs_node_builder.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/lifecycle/mobile_lifecycle_adapter.dart';
+import 'package:get_it/get_it.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
@@ -54,6 +56,34 @@ void main() {
       );
 
       await adapter.dispose();
+    });
+
+    test('wires the IPLD ipnsResolver to the IPNS handler', () async {
+      final dir = await Directory.systemTemp.createTemp('ipfs_builder_');
+      try {
+        // IPNS wiring only happens when the DHT handler is registered,
+        // which requires a non-offline (network-enabled) config.
+        final config = IPFSConfig(
+          datastorePath: p.join(dir.path, 'datastore'),
+          blockStorePath: p.join(dir.path, 'blocks'),
+        );
+
+        final builder = IPFSNodeBuilder(config);
+        await builder.build();
+
+        final ipld = GetIt.instance.get<IPLDHandler>();
+        expect(ipld.ipnsResolver, isNotNull);
+        // The resolver delegates to IPNSHandler.resolve — an unresolvable
+        // name fails inside the handler (or times out), proving the wired
+        // closure executes.
+        await ipld.ipnsResolver!('k51_unresolvable_name')
+            .timeout(const Duration(seconds: 5), onTimeout: () => 'unresolved')
+            .catchError((_) => 'unresolved');
+      } finally {
+        if (await dir.exists()) {
+          await dir.delete(recursive: true);
+        }
+      }
     });
 
     test('build offline node with RPC and gateway enabled', () async {

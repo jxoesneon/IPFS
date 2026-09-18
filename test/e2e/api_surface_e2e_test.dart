@@ -203,6 +203,17 @@ void main() {
       expect(providers, isEmpty);
     });
 
+    test('facade subscribe/unsubscribe are no-ops offline', () async {
+      await stopQuietly(node);
+      node = null;
+      ipfs = await IPFS.create(config: offlineConfig(repo.path));
+      await ipfs!.start();
+
+      await ipfs!.subscribe('topic');
+      await ipfs!.unsubscribe('topic');
+      expect(ipfs!.pubsubLs(), isEmpty);
+    });
+
     test('facade resolveIPNS and provide fail fast offline', () async {
       await stopQuietly(node);
       node = null;

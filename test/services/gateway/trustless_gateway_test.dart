@@ -8,6 +8,7 @@ import 'package:dart_ipfs/src/core/data_structures/car.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
@@ -231,6 +232,45 @@ void main() {
           equals('application/vnd.ipfs.car'),
         );
         verify(mockBitswap.wantBlock(cidStr)).called(1);
+      });
+
+      test('CAR with sub-path archives the requested root block too', () async {
+        final fileData = Uint8List.fromList([9, 8, 7]);
+        final fileCid = await CID.computeForData(fileData, format: 'raw');
+        final fileBlock = makeBlock(cid: fileCid.encode(), data: fileData);
+
+        final dirNode = dag_pb.PBNode(
+          links: <dag_pb.PBLink>[
+            dag_pb.PBLink(name: 'file.txt', hash: fileCid.toBytes()),
+          ],
+        );
+        final dirData = Uint8List.fromList(dirNode.writeToBuffer());
+        final dirCid = await CID.computeForData(dirData, format: 'dag-pb');
+        final dirBlock = makeBlock(cid: dirCid.encode(), data: dirData);
+
+        when(
+          mockBlockStore.getBlock(dirCid.encode()),
+        ).thenAnswer((_) async => foundResponse(dirBlock));
+        when(
+          mockBlockStore.getBlock(fileCid.encode()),
+        ).thenAnswer((_) async => foundResponse(fileBlock));
+
+        final request = Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/ipfs/${dirCid.encode()}/file.txt?format=car',
+          ),
+        );
+        final response = await handler.handlePath(request);
+        expect(response.statusCode, equals(200));
+
+        final body = await response.read().expand((i) => i).toList();
+        final reader = CarReader.fromBytes(Uint8List.fromList(body));
+        final sections = await reader.sections().toList();
+        // The archive must contain both the resolved file target and the
+        // originally requested directory root.
+        final cids = sections.map((s) => s.cid.encode()).toSet();
+        expect(cids, containsAll([dirCid.encode(), fileCid.encode()]));
       });
     });
 

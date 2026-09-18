@@ -445,6 +445,19 @@ void main() {
       expect(message.listenAddrs.length, equals(1));
     });
 
+    test('buildIdentifyMessage skips unparseable listen addresses', () async {
+      router.setListenAddresses(['/ip4/127.0.0.1/tcp/4001', 'not-a-multiaddr']);
+
+      final handler = IdentifyHandler(
+        router: router,
+        publicKeyBytes: publicKeyBytes,
+        peerIdBytes: peerIdBytes,
+      );
+
+      final message = await handler.buildIdentifyMessage();
+      expect(message.listenAddrs.length, equals(1));
+    });
+
     test('peerIdBytes getter returns copy', () async {
       final handler = IdentifyHandler(
         router: router,

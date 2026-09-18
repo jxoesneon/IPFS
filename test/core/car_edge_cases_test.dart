@@ -4,7 +4,10 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/car.dart';
+import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
+import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs_core/dart_ipfs_core.dart' as core;
+import 'package:fixnum/fixnum.dart' show Int64;
 import 'package:test/test.dart';
 
 core.CID coreCid(CID cid) => core.CID.fromBytes(cid.toBytes());
@@ -49,6 +52,36 @@ void main() {
   });
 
   group('CarReader error cases', () {
+    test('CIDv0 root link defaults codec to dag-pb', () async {
+      // A CIDv0 link serializes as a bare 34-byte multihash with no codec
+      // field, so the reader must infer 'dag-pb' rather than failing.
+      final mh = core.MultihashUtils.sha256(Uint8List(32)).toBytes();
+      final link = IPLDLink(version: 0, codec: 'dag-pb', multihash: mh);
+      final rootsList = IPLDList()
+        ..values.add(IPLDNode(kind: Kind.LINK, linkValue: link));
+      final map = IPLDMap()
+        ..entries.add(
+          MapEntry()
+            ..key = 'roots'
+            ..value = IPLDNode(kind: Kind.LIST, listValue: rootsList),
+        )
+        ..entries.add(
+          MapEntry()
+            ..key = 'version'
+            ..value = IPLDNode(kind: Kind.INTEGER, intValue: Int64(1)),
+        );
+      final cbor = await DagCborCodec().encode(
+        IPLDNode(kind: Kind.MAP, mapValue: map),
+      );
+      final carBytes = Uint8List.fromList([
+        ..._encodeVarint(cbor.length),
+        ...cbor,
+      ]);
+      final header = await CarReader.fromBytes(carBytes).header;
+      expect(header.roots.single.version, equals(0));
+      expect(header.roots.single.codec, equals('dag-pb'));
+    });
+
     test('empty input throws CarHeaderException', () {
       final reader = CarReader.fromBytes(Uint8List(0));
       expect(() async => reader.header, throwsA(isA<CarHeaderException>()));

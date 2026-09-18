@@ -34,12 +34,18 @@ import 'web_block_store.dart';
 /// or use a WebRTC/WebSocket relay supported by the router.
 class IPFSWebNode {
   /// Creates a new web IPFS node.
-  IPFSWebNode({IPFSConfig? config, this.bootstrapPeers = const []}) {
+  IPFSWebNode({
+    IPFSConfig? config,
+    this.bootstrapPeers = const [],
+    RouterInterface? router,
+    BitswapHandler? bitswap,
+  }) {
     _platform = getPlatform();
     _config = config ?? IPFSConfig(offline: true);
 
     // Initialize networking components
-    _router = Libp2pRouter(_config, seed: _config.libp2pIdentitySeed);
+    _router = router ?? Libp2pRouter(_config, seed: _config.libp2pIdentitySeed);
+    _injectedBitswap = bitswap;
     _blockStore = WebBlockStore(_platform);
 
     // Other components initialized in start()
@@ -50,6 +56,7 @@ class IPFSWebNode {
   late final RouterInterface _router;
   late final WebBlockStore _blockStore;
   late BitswapHandler _bitswap;
+  BitswapHandler? _injectedBitswap;
   late PubSubClient _pubsub;
   late SecurityManagerWeb _securityManager;
   late IPNSHandler _ipns;
@@ -73,6 +80,13 @@ class IPFSWebNode {
   /// Access to security manager.
   SecurityManagerWeb get securityManager => _securityManager;
 
+  /// The node's listen multiaddresses, empty when not started.
+  List<String> get addresses =>
+      _started ? _router.listeningAddresses : const [];
+
+  /// Connects to a peer given a full multiaddr (`/ip4/.../p2p/<peerId>`).
+  Future<void> connectToPeer(String multiaddr) => _router.connect(multiaddr);
+
   /// Starts the web node.
   Future<void> start() async {
     if (_started) return;
@@ -81,7 +95,8 @@ class IPFSWebNode {
     await _router.initialize();
 
     // Initialize components that depend on Router/PeerID
-    _bitswap = BitswapHandler(_config, _blockStore, _router);
+    _bitswap =
+        _injectedBitswap ?? BitswapHandler(_config, _blockStore, _router);
     _pubsub = PubSubClient(_router, _router.peerID);
 
     // Security & IPNS

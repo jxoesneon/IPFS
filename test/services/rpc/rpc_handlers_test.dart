@@ -13,10 +13,14 @@ import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/car_writer.dart';
+import 'package:dart_ipfs/src/core/data_structures/car.dart' show CarReader;
+import 'package:dart_ipfs_core/dart_ipfs_core.dart' as core;
 import 'package:shelf/shelf.dart';
 import 'dart:typed_data';
 
 import 'rpc_handlers_test.mocks.dart';
+
+core.CID coreCid(CID cid) => core.CID.fromBytes(cid.toBytes());
 
 @GenerateNiceMocks([
   MockSpec<IPFSNode>(),
@@ -701,10 +705,59 @@ void main() {
       expect(response.statusCode, equals(500));
     });
 
+    test('handleDagExport returns a CAR archive of the DAG', () async {
+      final block = await Block.fromData(
+        Uint8List.fromList([5, 6, 7]),
+        format: 'raw',
+      );
+      final pbResp = GetBlockResponse()
+        ..found = true
+        ..block = block.toProto();
+      when(
+        mockBlockStore.getBlock(block.cid.toString()),
+      ).thenAnswer((_) async => pbResp);
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dag/export?arg=${block.cid}'),
+      );
+      final response = await handlers.handleDagExport(request);
+      expect(response.statusCode, equals(200));
+      expect(
+        response.headers['Content-Type'],
+        equals('application/vnd.ipld.car'),
+      );
+
+      final body = await response.read().expand((i) => i).toList();
+      final reader = CarReader.fromBytes(Uint8List.fromList(body));
+      final header = await reader.header;
+      expect(header.roots.length, equals(1));
+      final sections = await reader.sections().toList();
+      expect(sections.length, equals(1));
+      expect(sections.first.bytes, equals(block.data));
+    });
+
+    test('handleDagExport errors when the root block is missing', () async {
+      final block = await Block.fromData(
+        Uint8List.fromList([5, 6, 7]),
+        format: 'raw',
+      );
+      when(
+        mockBlockStore.getBlock(block.cid.toString()),
+      ).thenAnswer((_) async => GetBlockResponse()..found = false);
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dag/export?arg=${block.cid}'),
+      );
+      final response = await handlers.handleDagExport(request);
+      expect(response.statusCode, equals(500));
+    });
+
     test('handleDagImport stores blocks that hash-verify', () async {
       final block = await Block.fromData(Uint8List.fromList([1, 2, 3, 4]));
-      final writer = CarWriter(roots: [block.cid]);
-      await writer.write(block.cid, block.data);
+      final writer = CarWriter(roots: [coreCid(block.cid)]);
+      await writer.write(coreCid(block.cid), block.data);
       final carData = await writer.close();
 
       final request = Request(
@@ -721,8 +774,11 @@ void main() {
       'handleDagImport rejects block whose data does not match CID',
       () async {
         final block = await Block.fromData(Uint8List.fromList([1, 2, 3, 4]));
-        final writer = CarWriter(roots: [block.cid]);
-        await writer.write(block.cid, Uint8List.fromList([9, 9, 9, 9]));
+        final writer = CarWriter(roots: [coreCid(block.cid)]);
+        await writer.write(
+          coreCid(block.cid),
+          Uint8List.fromList([9, 9, 9, 9]),
+        );
         final carData = await writer.close();
 
         final request = Request(

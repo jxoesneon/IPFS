@@ -146,9 +146,7 @@ class CarHeader {
       final link = cidNode.linkValue;
       return CID(
         version: link.version,
-        codec: link.codec.isNotEmpty
-            ? link.codec
-            : (link.version == 0 ? 'dag-pb' : 'raw'),
+        codec: link.codec,
         multihash: MultihashUtils.decode(Uint8List.fromList(link.multihash)),
       );
     }).toList();

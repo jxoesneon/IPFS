@@ -467,6 +467,131 @@ void main() {
       expect(result, isNull);
     });
 
+    test(
+      'findPeer merges non-self closer peers into the query queue',
+      () async {
+        await client.initialize();
+        final knownPeer = PeerId.fromBase58(
+          'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+        );
+        final closerPeer = PeerId.fromBase58(
+          'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w',
+        );
+        final target = PeerId.fromBase58(
+          'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8x',
+        );
+        await client.kademliaRoutingTable.addPeer(knownPeer, knownPeer);
+
+        // Every response advertises the same non-self closer peer — the
+        // iterative loop must enqueue it (and dedupe on the second round).
+        final responseMsg = kad.Message()
+          ..type = kad.Message_MessageType.FIND_NODE
+          ..closerPeers.add(kad.Peer()..id = closerPeer.value);
+
+        _mockEnvelopeResponse(mockRouter, knownPeer.toBase58(), responseMsg);
+
+        final result = await client
+            .findPeer(target)
+            .timeout(const Duration(seconds: 10), onTimeout: () => null);
+        expect(result, isNull);
+        // The advertised peer was queried too — proof it entered the queue.
+        verify(
+          mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
+        ).called(greaterThan(1));
+      },
+    );
+
+    test('getValue collects non-self closer peers', () async {
+      await client.initialize();
+      final knownPeer = PeerId.fromBase58(
+        'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+      );
+      final closerPeer = PeerId.fromBase58(
+        'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w',
+      );
+      await client.kademliaRoutingTable.addPeer(knownPeer, knownPeer);
+      when(mockStorage.get(any)).thenAnswer((_) async => null);
+
+      // A miss with an empty record falls through to closer-peer collection.
+      final responseMsg = kad.Message()
+        ..type = kad.Message_MessageType.GET_VALUE
+        ..record = dht_proto.Record()
+        ..closerPeers.add(kad.Peer()..id = closerPeer.value);
+
+      _mockEnvelopeResponse(mockRouter, knownPeer.toBase58(), responseMsg);
+
+      final result = await client
+          .getValue(Uint8List(32))
+          .timeout(const Duration(seconds: 10), onTimeout: () => null);
+      expect(result, isNull);
+    });
+
+    test('inbound packet before initialization returns early', () async {
+      await client.initialize();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.last
+              as void Function(NetworkPacket);
+      await client.stop();
+
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+          datagram: DHTEnvelope(
+            requestId: '',
+            payload: (kad.Message()..type = kad.Message_MessageType.PING)
+                .writeToBuffer(),
+          ).toBytes(),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      // No response should be sent for a stopped (uninitialized) client.
+      verifyNever(
+        mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
+      );
+    });
+
+    test('GET_PROVIDERS answers from the local provider index', () async {
+      await client.initialize();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.last
+              as void Function(NetworkPacket);
+
+      final providerPeer = PeerId.fromBase58(
+        'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8w',
+      );
+      when(
+        mockDhtHandler.getLocalProvidersForCid(any),
+      ).thenReturn(<PeerId>[providerPeer]);
+
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+          datagram: DHTEnvelope(
+            requestId: 'gp-1',
+            payload:
+                (kad.Message()
+                      ..type = kad.Message_MessageType.GET_PROVIDERS
+                      ..key = Uint8List.fromList([
+                        0x12,
+                        0x20,
+                        ...List.filled(32, 1),
+                      ]))
+                    .writeToBuffer(),
+          ).toBytes(),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      verify(mockDhtHandler.getLocalProvidersForCid(any)).called(1);
+      verify(
+        mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
+      ).called(1);
+    });
+
     test('handlePacket with unknown message type ignores', () async {
       await client.initialize();
       final capturedHandler =

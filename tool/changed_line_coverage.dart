@@ -60,8 +60,18 @@ void main(List<String> args) {
       }
       continue;
     }
-    final missed = changed.where(uncoveredByFile[file]!.contains).toList()
-      ..sort();
+    // Even with a coverage record the VM emits DA rows for lines that carry
+    // no statement (closing parens, signature fragments, doc comments) and
+    // can never be hit — filter those the same way as no-record files.
+    final missed =
+        changed
+            .where(
+              (n) =>
+                  uncoveredByFile[file]!.contains(n) &&
+                  _looksExecutable(_sourceLine(file, n)),
+            )
+            .toList()
+          ..sort();
     if (missed.isNotEmpty) {
       report[file] = missed;
       totalUncovered += missed.length;
@@ -87,10 +97,15 @@ void main(List<String> args) {
   }
 }
 
+final _fileLines = <String, List<String>>{};
+
 /// Returns the 1-based [lineNo] of [file] from disk, or '' when unreadable.
 String _sourceLine(String file, int lineNo) {
   try {
-    final lines = File(file).readAsLinesSync();
+    final lines = _fileLines.putIfAbsent(
+      file,
+      () => File(file).readAsLinesSync(),
+    );
     return lineNo >= 1 && lineNo <= lines.length ? lines[lineNo - 1] : '';
   } catch (_) {
     return '';
@@ -99,8 +114,10 @@ String _sourceLine(String file, int lineNo) {
 
 /// Heuristic: does this source line contain executable code?
 ///
-/// Excludes blanks, comments, and pure directive lines (import/export/part),
-/// which produce no instrumentable line records even when a file is loaded.
+/// Excludes blanks, comments, pure directive lines (import/export/part), and
+/// VM-coverage artifacts: punctuation-only continuation lines (`);`, `}`) and
+/// multi-line signature fragments (`T name(params) {`) get DA rows that can
+/// never be hit — a dead function still flags through its body lines.
 bool _looksExecutable(String line) {
   final t = line.trim();
   if (t.isEmpty ||
@@ -110,6 +127,15 @@ bool _looksExecutable(String line) {
     return false;
   }
   if (RegExp(r'^(import|export|part|library)\b').hasMatch(t)) return false;
+  if (RegExp(r'^[{}()\[\];,.]*$').hasMatch(t)) return false;
+  if (t.endsWith('{') &&
+      !t.contains('=') &&
+      RegExp(r'^\w[\w<>\[\]?]*\s+\w+\s*\(').hasMatch(t) &&
+      !RegExp(
+        r'^(if|for|while|switch|return|throw|await|yield|assert|case)\b',
+      ).hasMatch(t)) {
+    return false;
+  }
   return true;
 }
 

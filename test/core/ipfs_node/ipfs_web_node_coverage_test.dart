@@ -4,7 +4,34 @@ import 'package:test/test.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/config/network_config.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/web_block_store.dart';
+import 'package:dart_ipfs/src/platform/platform.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
+
+import '../../fakes/fake_router.dart';
+
+class _PeerConnectedRouter extends FakeRouter {
+  @override
+  Set<String> get connectedPeers => const {'QmRemotePeer'};
+}
+
+class _ServingBitswap extends BitswapHandler {
+  _ServingBitswap(
+    IPFSConfig config,
+    IBlockStore store,
+    RouterInterface router,
+    this._block,
+  ) : super(config, store, router);
+
+  final Block _block;
+
+  @override
+  Future<Block?> wantBlock(String cid) async => _block;
+}
 
 IPFSConfig _localConfig() => IPFSConfig(
   nodeId: 'test-node',
@@ -62,15 +89,27 @@ void main() {
       expect(() => node.addFile(null), throwsA(isA<UnimplementedError>()));
     });
 
-    test('get fallback to Bitswap (uncovered branch)', () async {
-      final node = IPFSWebNode();
+    test('get falls back to Bitswap when peers are connected', () async {
+      final router = _PeerConnectedRouter();
+      final content = Uint8List.fromList([9, 8, 7, 6]);
+      final cid = await CID.fromContent(content);
+      final bitswap = _ServingBitswap(
+        _localConfig(),
+        WebBlockStore(getPlatform()),
+        router,
+        Block(cid: cid, data: content),
+      );
+      final node = IPFSWebNode(
+        config: _localConfig(),
+        router: router,
+        bitswap: bitswap,
+      );
       await node.start();
 
-      // We don't have connected peers in WebStubRouter by default,
-      // so we can't easily test the bitswap fallback without more mocking.
-      // But we can check it returns null for missing content.
-      final result = await node.get('QmNonExistent');
-      expect(result, isNull);
+      // The CID is absent locally, so get() must consult Bitswap and return
+      // the raw block payload served by the injected peer-side handler.
+      final result = await node.get(cid.encode());
+      expect(result, equals(content));
 
       await node.stop();
     });
