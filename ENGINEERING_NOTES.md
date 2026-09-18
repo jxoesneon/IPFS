@@ -52,7 +52,7 @@ Automated surfaces (do not hand-edit versions in these):
 - `README.md` (install snippet + "(current: vX.Y.Z)" marker), `ROADMAP.md` (current version fields)
 - `CHANGELOG.md` must contain a `## [X.Y.Z]` section for the release version (presence is gated; content is authored)
 
-Still manual on each publish: the CHANGELOG entry itself, README "What's New" narrative, ROADMAP prose, the git tag + GitHub release notes, the coverage gate above, and maintainer sign-off. Sub-packages (`dart_ipfs_core`, `dart_ipfs_quic`) are versioned independently — their tags only gate their own `pubspec.yaml` + `CHANGELOG.md`.
+Still manual on each publish: the CHANGELOG entry itself, README "What's New" narrative, ROADMAP prose, the git tag, the coverage gate above, and maintainer sign-off. Pushing a `v*` tag publishes to pub.dev and creates the GitHub Release with notes extracted from the tag's CHANGELOG section (`github-release` job in `publish.yml`); `core-v*`/`quic-v*` tags publish only their package, no release. Sub-packages (`dart_ipfs_core`, `dart_ipfs_quic`) are versioned independently — their tags only gate their own `pubspec.yaml` + `CHANGELOG.md`.
 
 ## Work-Package Boundaries
 

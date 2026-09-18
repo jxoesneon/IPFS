@@ -205,3 +205,37 @@ jobs:
       - name: Publish to pub.dev
         if: inputs.dry_run != true && steps.version-check.outputs.already_published != 'true'
         run: dart pub publish -f
+
+  github-release:
+    name: GitHub Release
+    needs: [publish-umbrella]
+    if: always() && needs.publish-umbrella.result == 'success' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" {found=1; next}
+            found && /^## / {exit}
+            found {print}
+          ' CHANGELOG.md > release_notes.md
+          if [ ! -s release_notes.md ]; then
+            echo "::error::no CHANGELOG section for [$VERSION]"
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file release_notes.md \
+            --latest \
+            --verify-tag
