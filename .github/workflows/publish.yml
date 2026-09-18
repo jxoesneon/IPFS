@@ -241,8 +241,8 @@ jobs:
 
   publish-umbrella:
     name: Publish dart_ipfs (Umbrella)
-    needs: [release-gate, quality-gate, publish-quic]
-    if: always() && needs.release-gate.result == 'success' && needs.quality-gate.result == 'success' && (needs.publish-quic.result == 'success' || needs.publish-quic.result == 'skipped') && (inputs.target == 'umbrella' || inputs.target == 'all' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
+    needs: [release-gate, quality-gate, publish-core, publish-quic]
+    if: always() && needs.release-gate.result == 'success' && needs.quality-gate.result == 'success' && (needs.publish-core.result == 'success' || needs.publish-core.result == 'skipped') && (needs.publish-quic.result == 'success' || needs.publish-quic.result == 'skipped') && (inputs.target == 'umbrella' || inputs.target == 'all' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
     runs-on: ubuntu-latest
     permissions:
       contents: read
