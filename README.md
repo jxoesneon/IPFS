@@ -62,7 +62,7 @@ A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) a
 
 ---
 
-## What's New in v1.16 (current: v1.16.3)
+## What's New in v1.16 (current: v1.16.4)
 
 ### Major Features & Fixes
 
@@ -205,7 +205,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_ipfs: ^1.16.3
+  dart_ipfs: ^1.16.4
 ```
 
 Or from Git for latest development:

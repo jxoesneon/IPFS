@@ -23,4 +23,4 @@ labels:
 
 images:
   - name: ghcr.io/jxoesneon/dart-ipfs
-    newTag: "1.16.3"
+    newTag: "1.16.4"
