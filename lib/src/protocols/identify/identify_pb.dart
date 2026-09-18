@@ -55,7 +55,7 @@ class IdentifyPb {
   /// The protocol version string (e.g. "ipfs/0.1.0").
   final String? protocolVersion;
 
-  /// The agent version string (e.g. "dart_ipfs/1.11.5").
+  /// The agent version string (e.g. "dart_ipfs/x.y.z").
   final String? agentVersion;
 
   /// The signed peer record envelope bytes.

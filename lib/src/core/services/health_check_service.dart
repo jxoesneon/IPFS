@@ -1,4 +1,5 @@
 // lib/src/core/services/health_check_service.dart
+import '../../version.dart';
 import '../ipfs_node/ipfs_node.dart';
 
 /// Service responsible for monitoring and reporting the health of IPFS node components.
@@ -27,7 +28,7 @@ class HealthCheckService {
       'status': overallStatus,
       'timestamp': DateTime.now().toIso8601String(),
       'peerId': _node.peerID,
-      'version': '1.11.5',
+      'version': packageVersion,
       'uptime_seconds': _node.isRunning
           ? DateTime.now().difference(_startTime).inSeconds
           : 0,

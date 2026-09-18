@@ -246,7 +246,7 @@ void main() {
 
       expect(router.lastResponse, isNotNull);
       final identify = IdentifyPb.decode(router.lastResponse!);
-      expect(identify.agentVersion, equals('dart_ipfs/1.11.5'));
+      expect(identify.agentVersion, equals(identifyAgentVersion));
       expect(identify.protocolVersion, equals('ipfs/0.1.0'));
       expect(identify.protocols, contains('/ipfs/bitswap/1.2.0'));
       expect(identify.protocols, contains('/ipfs/ping/1.0.0'));
@@ -441,7 +441,7 @@ void main() {
       );
 
       final message = await handler.buildIdentifyMessage();
-      expect(message.agentVersion, equals('dart_ipfs/1.11.5'));
+      expect(message.agentVersion, equals(identifyAgentVersion));
       expect(message.protocolVersion, equals('ipfs/0.1.0'));
       expect(message.protocols, equals(['/ipfs/ping/1.0.0']));
       expect(message.listenAddrs.length, equals(1));
@@ -671,7 +671,7 @@ void main() {
         protocols: ['/ipfs/ping/1.0.0', '/ipfs/bitswap/1.2.0'],
         observedAddr: Uint8List.fromList([8, 9]),
         protocolVersion: 'ipfs/0.1.0',
-        agentVersion: 'dart_ipfs/1.11.5',
+        agentVersion: identifyAgentVersion,
         signedPeerRecord: Uint8List.fromList([10, 11, 12]),
       );
 
@@ -709,12 +709,12 @@ void main() {
     test('toString contains useful info', () {
       final msg = IdentifyPb(
         protocolVersion: 'ipfs/0.1.0',
-        agentVersion: 'dart_ipfs/1.11.5',
+        agentVersion: identifyAgentVersion,
         protocols: ['/ipfs/ping/1.0.0'],
         signedPeerRecord: Uint8List.fromList([1]),
       );
       final s = msg.toString();
-      expect(s, contains('dart_ipfs/1.11.5'));
+      expect(s, contains(identifyAgentVersion));
       expect(s, contains('ipfs/0.1.0'));
       expect(s, contains('hasSignedPeerRecord: true'));
     });

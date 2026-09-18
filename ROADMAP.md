@@ -1,13 +1,13 @@
 # dart_ipfs Roadmap
 
-**Current Version**: 1.12.0 (Multi-Platform Production Ready)  
-**Last Updated**: 2026-09-03
+**Current Version**: 1.16.1 (Multi-Platform Production Ready)  
+**Last Updated**: 2026-09-17
 
 ---
 
 ## Current Status
 
-dart_ipfs **v1.12.0** is **multi-platform production ready** with:
+dart_ipfs **v1.16.1** is **multi-platform production ready** with:
 
 - **IpfsPlatform**: Unified abstraction layer for IO and Web.
 - **WebRTC Multiplexing**: Native p2p connectivity for browsers with standard libp2p stream support.
@@ -467,7 +467,7 @@ This roadmap is updated as priorities change. Feedback is welcome on:
 
 ---
 
-**Last Updated**: 2026-09-03 (v1.12.0) — parity and superiority backlog added
+**Last Updated**: 2026-09-17 (v1.16.1) — parity and superiority backlog added
 **Status**: Active Development  
-**Current Version:** 1.12.0
+**Current Version:** 1.16.1
 **Target for Next Release:** 2.0.0 (Q4 2026)

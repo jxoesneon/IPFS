@@ -21,6 +21,7 @@ import '../../core/peer/peer_record.dart';
 import '../../core/peer/peer_record_pb.dart';
 import '../../transport/router_interface.dart';
 import '../../utils/logger.dart';
+import '../../version.dart';
 import 'identify_pb.dart';
 
 /// The protocol ID for the identify protocol.
@@ -30,7 +31,7 @@ const String identifyProtocolId = '/ipfs/id/1.0.0';
 const String identifyProtocolVersion = 'ipfs/0.1.0';
 
 /// The agent version string advertised in Identify messages.
-const String identifyAgentVersion = 'dart_ipfs/1.11.5';
+const String identifyAgentVersion = agentVersion;
 
 /// Handler for the libp2p Identify protocol (/ipfs/id/1.0.0).
 ///

@@ -60,7 +60,21 @@ A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) a
 
 ---
 
-## What's New in v1.12 (current: v1.12.0)
+## What's New in v1.16 (current: v1.16.1)
+
+### Major Features & Fixes
+
+| Feature | Description |
+| ------- | ----------- |
+| **IPFS Facade Parity** | Node-only APIs are now exposed on the high-level `IPFS` facade — `connectedPeers`, `connectToPeer`, `addresses`, `provide`, `bandwidthMetrics`, `pinnedCids`, `cat`, `publicKey`, `getHealthStatus`, and more. |
+| **Key Management API** | `keyGen`, `keyList`, `keyImport`, `keyExport`, and `keyRm` backed by the encrypted keystore; named keys can be used with `publishIPNS`. |
+| **PubSub Introspection** | `pubsubLs` and `pubsubPeers` backed by per-topic peer tracking in the pubsub client and gossipsub handler. |
+| **Deterministic Node Identity** | `IPFSConfig.libp2pIdentitySeed` produces a stable peer ID across launches on IO and web. |
+| **Helia Interop Hardening** | Pinned peer-store dependency and validated raw request bodies in the interop harness. |
+
+---
+
+## What's New in v1.12
 
 ### Major Features & Security
 
@@ -74,7 +88,7 @@ A pure-Dart IPFS node supporting Dart VM (Windows, macOS, Linux, iOS, Android) a
 
 ---
 
-## What's New in v1.11 (current: v1.11.6)
+## What's New in v1.11
 
 ### Major Features
 
@@ -189,7 +203,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_ipfs: ^1.11.6
+  dart_ipfs: ^1.16.1
 ```
 
 Or from Git for latest development:

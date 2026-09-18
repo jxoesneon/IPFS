@@ -17,6 +17,7 @@ import '../core/crypto/rsa_signer.dart';
 import '../platform/platform.dart';
 import '../protocols/dht/dht_routing_table_interface.dart';
 import '../utils/logger.dart';
+import '../version.dart';
 import 'pnet/pnet_transport_wrapper.dart';
 import 'pnet/swarm_key_loader.dart';
 import 'quic_transport_probe.dart'
@@ -361,7 +362,7 @@ class Libp2pRouter implements RouterInterface {
         ...transports,
         config.Libp2p.listenAddrs(listenAddresses),
         config.Libp2p.identity(_keyPair!),
-        config.Libp2p.userAgent('dart_ipfs/2.0.0'),
+        config.Libp2p.userAgent(agentVersion),
       ]);
 
       // Wire up the WebRTC host dependency and register the signaling
