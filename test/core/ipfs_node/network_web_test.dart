@@ -62,5 +62,16 @@ void main() {
         throwsUnimplementedError,
       );
     });
+
+    test('defaults to Libp2pRouter with configured seed', () async {
+      final seed = Uint8List.fromList(List.generate(32, (i) => i + 3));
+      final seeded = NetworkHandler(
+        IPFSConfig(
+          libp2pIdentitySeed: seed,
+          network: NetworkConfig(bootstrapPeers: []),
+        ),
+      );
+      expect(seeded.router, isA<RouterInterface>());
+    });
   });
 }
