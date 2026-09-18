@@ -73,6 +73,9 @@ app.post(
   "/api/v0/add",
   express.raw({ type: "*/*", limit: "100mb" }),
   async (req, res) => {
+    if (!Buffer.isBuffer(req.body)) {
+      return res.status(400).json({ Error: "Request body must be raw bytes" });
+    }
     try {
       const helia = await getHelia();
       const s = strings(helia);
@@ -127,6 +130,9 @@ app.post(
   "/api/v0/dag/import",
   express.raw({ type: "*/*", limit: "100mb" }),
   async (req, res) => {
+    if (!Buffer.isBuffer(req.body)) {
+      return res.status(400).json({ Error: "Request body must be raw bytes" });
+    }
     try {
       const helia = await getHelia();
       const c = car(helia);

@@ -15,7 +15,8 @@ import 'ipfs_node.dart';
 class NetworkHandler {
   /// Creates a NetworkHandler for web platform.
   NetworkHandler(this._config, {RouterInterface? router})
-    : _router = router ?? Libp2pRouter(_config),
+    : _router =
+          router ?? Libp2pRouter(_config, seed: _config.libp2pIdentitySeed),
       _networkEventController = StreamController<NetworkEvent>.broadcast();
 
   final CircuitRelayClient? _circuitRelayClient = null;

@@ -22,7 +22,7 @@ import '../utils/base58.dart';
 class Router {
   /// Creates a router with the given [config].
   Router(IPFSConfig config, {RouterInterface? router})
-    : _router = router ?? Libp2pRouter(config),
+    : _router = router ?? Libp2pRouter(config, seed: config.libp2pIdentitySeed),
       _peerDiscoveryController = StreamController<Peer>.broadcast(),
       _connectedPeers = {};
   final RouterInterface _router;

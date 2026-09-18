@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/network/router.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
@@ -171,6 +171,54 @@ void main() {
       config.network.bootstrapPeers.clear();
       final result = await handler.testDialback();
       expect(result, isFalse);
+    });
+  });
+
+  group('libp2pIdentitySeed', () {
+    test('same seed produces the same peer ID across instances', () async {
+      final seed = Uint8List.fromList(List.generate(32, (i) => i + 1));
+
+      IPFSConfig seededConfig() => IPFSConfig(
+        libp2pIdentitySeed: seed,
+        network: NetworkConfig(bootstrapPeers: []),
+      );
+
+      final handlerA = NetworkHandler(seededConfig());
+      final handlerB = NetworkHandler(seededConfig());
+      await handlerA.initialize();
+      await handlerB.initialize();
+
+      expect(handlerA.peerID, isNotEmpty);
+      expect(handlerA.peerID, handlerB.peerID);
+
+      final unseeded = NetworkHandler(
+        IPFSConfig(network: NetworkConfig(bootstrapPeers: [])),
+      );
+      await unseeded.initialize();
+      expect(unseeded.peerID, isNotEmpty);
+      expect(unseeded.peerID, isNot(handlerA.peerID));
+    });
+
+    test('Router forwards the configured seed to Libp2pRouter', () async {
+      final seed = Uint8List.fromList(List.generate(32, (i) => (i * 7) % 256));
+      final config = IPFSConfig(
+        libp2pIdentitySeed: seed,
+        network: NetworkConfig(
+          listenAddresses: ['/ip4/127.0.0.1/tcp/0'],
+          bootstrapPeers: [],
+        ),
+      );
+
+      final routerA = Router(config);
+      final routerB = Router(config);
+      await routerA.start();
+      await routerB.start();
+
+      expect(routerA.peerID, isNotEmpty);
+      expect(routerA.peerID, routerB.peerID);
+
+      await routerA.stop();
+      await routerB.stop();
     });
   });
 }
