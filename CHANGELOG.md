@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.16.4] - 2026-09-18
+
+### Fixed
+- **Remote pinning config durability**: `RemotePinningService` saved its config with an unawaited write that `dispose()` never drained, so `addService`/`removeService` followed by dispose could lose the mutation. Saves are now synchronous and durable at call return.
+
 ## [1.16.3] - 2026-09-18
 
 ### Security
