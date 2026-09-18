@@ -62,6 +62,15 @@ abstract class IpfsPlatform {
   /// (Windows ACLs, Web/IndexedDB) this is a no-op.
   Future<void> restrictToOwner(String path);
 
+  /// Writes [content] to [path] with owner-only permissions applied before
+  /// any secret bytes reach disk.
+  ///
+  /// The file is first created empty, restricted via [restrictToOwner],
+  /// and only then receives [content] — so there is no window where the
+  /// secret sits on disk under the default umask. On platforms where
+  /// [restrictToOwner] is a no-op this behaves like [writeString].
+  Future<void> writeStringRestricted(String path, String content);
+
   // --- System Information ---
 
   /// Returns the name of the operating system.

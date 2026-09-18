@@ -66,6 +66,29 @@ void main() {
       expect(store.getProviders(cid), isNot(contains(peer2)));
     });
 
+    test('evicts the oldest CID when maxProviderCids is reached', () {
+      // Provider records arrive from unauthenticated peers, so the index is
+      // bounded: filling it past capacity evicts the oldest-inserted CID.
+      final lastCid = CID.computeForDataSync(Uint8List.fromList([0xAB, 0xCD]));
+
+      // [cid] is the oldest-inserted record; generated CIDs fill the rest of
+      // the map to capacity.
+      store.addProvider(cid, peer1);
+      for (var i = 0; i < ProviderStore.maxProviderCids - 1; i++) {
+        store.addProvider(
+          CID.computeForDataSync(
+            Uint8List.fromList([i & 0xFF, (i >> 8) & 0xFF, 0xFF]),
+          ),
+          peer1,
+        );
+      }
+
+      store.addProvider(lastCid, peer2);
+
+      expect(store.getProviders(cid), isEmpty);
+      expect(store.getProviders(lastCid), contains(peer2));
+    });
+
     test('getProviders returns list copy', () {
       store.addProvider(cid, peer1);
       final providers1 = store.getProviders(cid);

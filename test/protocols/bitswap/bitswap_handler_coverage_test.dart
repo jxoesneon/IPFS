@@ -272,6 +272,26 @@ void main() {
       await expectLater(handler.want(['QmSomeCid']), throwsStateError);
     });
 
+    test('logs when broadcasting a queued want request fails', () async {
+      await handler.start();
+      // want() passes its connected-peer check, but the peer set is empty by
+      // the time _sendWantRequest broadcasts — the async send fails and the
+      // catchError in _processQueue logs the failure.
+      var connectedPeerReads = 0;
+      when(
+        mockRouter.connectedPeers,
+      ).thenAnswer((_) => connectedPeerReads++ == 0 ? {'peerA'} : <String>{});
+
+      final cid = CID
+          .computeForDataSync(Uint8List.fromList([5, 5, 5]))
+          .encode();
+
+      await expectLater(
+        handler.want([cid], timeout: const Duration(milliseconds: 100)),
+        throwsA(isA<TimeoutException>()),
+      );
+    });
+
     test('remote wantlist does not enter the local wantlist', () async {
       await handler.start();
       final capturedHandler =

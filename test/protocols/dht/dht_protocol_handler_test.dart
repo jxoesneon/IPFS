@@ -1,9 +1,10 @@
 // test/protocols/dht/dht_protocol_handler_test.dart
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/protocols/dht/dht_protocol_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_routing_table_interface.dart';
@@ -255,6 +256,66 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
       expect(router.takeSent().length, equals(1));
       expect(rateLimiter.queueLength, equals(0));
+    });
+  });
+
+  group('PUT_VALUE validation', () {
+    late _FakeRouter router;
+    late _FakeDatastore datastore;
+
+    setUp(() {
+      router = _FakeRouter();
+      datastore = _FakeDatastore();
+    });
+
+    kad.Message putValueMessage(String key, List<int> value) {
+      return kad.Message()
+        ..type = kad.Message_MessageType.PUT_VALUE
+        ..key = utf8.encode(key)
+        ..record = (dht_pb.Record()..value = Uint8List.fromList(value));
+    }
+
+    Future<kad.Message> drive(kad.Message request) async {
+      DHTProtocolHandler(router, datastore);
+      final handler = router._handlers[DHTProtocolHandler.protocolId]!;
+      handler(
+        NetworkPacket(srcPeerId: 'peerPut', datagram: request.writeToBuffer()),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      final sent = router.takeSent();
+      expect(sent, hasLength(1));
+      return kad.Message.fromBuffer(sent.first.$2);
+    }
+
+    test('rejects keys outside the /ipns/ namespace', () async {
+      final response = await drive(putValueMessage('/dht/foo', [1, 2, 3]));
+
+      expect(response.type, equals(kad.Message_MessageType.PUT_VALUE));
+      expect(datastore._values, isEmpty);
+    });
+
+    test('rejects empty values', () async {
+      final response = await drive(putValueMessage('/ipns/QmKey', []));
+
+      expect(response.type, equals(kad.Message_MessageType.PUT_VALUE));
+      expect(datastore._values, isEmpty);
+    });
+
+    test('rejects values exceeding the 1 MiB cap', () async {
+      final oversized = Uint8List(1024 * 1024 + 1);
+      final response = await drive(putValueMessage('/ipns/QmKey', oversized));
+
+      expect(response.type, equals(kad.Message_MessageType.PUT_VALUE));
+      expect(datastore._values, isEmpty);
+    });
+
+    test('stores valid /ipns/ records', () async {
+      final response = await drive(putValueMessage('/ipns/QmKey', [9, 8, 7]));
+
+      expect(response.type, equals(kad.Message_MessageType.PUT_VALUE));
+      final storedKey = Key('/dht/values//ipns/QmKey');
+      expect(datastore._values.containsKey(storedKey), isTrue);
+      expect(datastore._values[storedKey], equals([9, 8, 7]));
     });
   });
 }

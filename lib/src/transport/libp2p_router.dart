@@ -297,8 +297,7 @@ class Libp2pRouter implements RouterInterface {
       final seed = Uint8List.fromList(
         List.generate(32, (_) => Random.secure().nextInt(256)),
       );
-      await platform.writeString(seedPath, base64Encode(seed));
-      await platform.restrictToOwner(seedPath);
+      await platform.writeStringRestricted(seedPath, base64Encode(seed));
       _logger.debug('Persisted new identity seed to $seedPath');
       return seed;
     } catch (e) {

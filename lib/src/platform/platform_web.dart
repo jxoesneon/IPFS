@@ -190,6 +190,12 @@ class IpfsPlatformWeb implements IpfsPlatform {
   }
 
   @override
+  Future<void> writeStringRestricted(String path, String content) async {
+    // No permission layer on web — equivalent to a plain write.
+    await writeString(path, content);
+  }
+
+  @override
   Future<String?> promptPassword(String message) async {
     // In a browser, we could use window.prompt, but it's not secure
     return null;

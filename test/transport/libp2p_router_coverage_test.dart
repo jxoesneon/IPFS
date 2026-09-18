@@ -4,7 +4,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:dart_ipfs/src/transport/libp2p_router.dart';
 import 'package:dart_ipfs/src/transport/router_events.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
@@ -147,7 +146,7 @@ void main() {
       await rA.connect('/ip4/127.0.0.1/tcp/4502/p2p/${rB.peerID}');
       await rA.connect('/ip4/127.0.0.1/tcp/4503/p2p/${rC.peerID}');
 
-      await Future.delayed(Duration(milliseconds: 1000));
+      await Future<void>.delayed(Duration(milliseconds: 1000));
       await rA.broadcastMessage(
         protocol,
         Uint8List.fromList(utf8.encode('hi')),
@@ -177,7 +176,7 @@ void main() {
       });
 
       await rA.connect('/ip4/127.0.0.1/tcp/4602/p2p/${rB.peerID}');
-      await Future.delayed(Duration(milliseconds: 1000));
+      await Future<void>.delayed(Duration(milliseconds: 1000));
 
       final result = await rA.sendRequest(
         rB.peerID,
@@ -227,7 +226,7 @@ void main() {
       rB.registerProtocolHandler(protocol, (_) {});
 
       await rA.connect('/ip4/127.0.0.1/tcp/4702/p2p/${rB.peerID}');
-      await Future.delayed(Duration(milliseconds: 500));
+      await Future<void>.delayed(Duration(milliseconds: 500));
       await rA.sendMessage(rB.peerID, Uint8List(300), protocolId: protocol);
 
       await rA.stop();
@@ -248,7 +247,7 @@ void main() {
     });
 
     test('event methods management', () {
-      final res = [];
+      final res = <dynamic>[];
       void h(dynamic m) => res.add(m);
       router.onEvent('t', h);
       router.emitEvent('t', Uint8List.fromList([1]));
@@ -280,7 +279,71 @@ void main() {
       router.registerProtocolHandler('/p', (_) {});
       router.removeMessageHandler('/p');
       router.registerProtocol('/new');
+      expect(router.supportedProtocols, contains('/new'));
+      expect(() => router.supportedProtocols.add('/x'), throwsUnsupportedError);
     });
+
+    test('unregisterProtocolHandler removes protocol and handler', () async {
+      await router.start();
+      router.registerProtocolHandler('/test/unreg/1.0.0', (_) {});
+      expect(router.supportedProtocols, contains('/test/unreg/1.0.0'));
+      router.unregisterProtocolHandler('/test/unreg/1.0.0');
+      expect(router.supportedProtocols, isNot(contains('/test/unreg/1.0.0')));
+    });
+
+    test('registerRelayedConnection tracks the peer', () async {
+      await router.start();
+      router.registerRelayedConnection(
+        'relay-target',
+        '/p2p/relay/p2p-circuit/p2p/relay-target',
+      );
+      expect(router.isConnectedPeer('relay-target'), isTrue);
+      expect(router.connectedPeers, contains('relay-target'));
+    });
+
+    test('stop closes per-peer message stream controllers', () async {
+      await router.start();
+      // receiveMessages() lazily creates a broadcast controller per peer;
+      // stop() must close it so listeners observe a done event.
+      final done = Completer<void>();
+      router.receiveMessages('peer-x').listen((_) {}, onDone: done.complete);
+
+      await router.stop();
+      await done.future.timeout(const Duration(seconds: 5));
+    });
+
+    test(
+      'start fails when the configured swarm key cannot be read',
+      () async {
+        // A swarm key file that exists but is unreadable makes
+        // loadSwarmKey's platform read throw, which propagates through
+        // _loadPrivateNetworkPsk into start()'s catch -> StateError.
+        final keyFile = File(
+          '${repoDir.path}/swarm.key',
+        )..writeAsStringSync('/key/swarm/psk/1.0.0/\n/base16/\n${'00' * 32}\n');
+        await Process.run('chmod', ['000', keyFile.path]);
+
+        final pskRouter = Libp2pRouter(
+          IPFSConfig(
+            dataPath: '${repoDir.path}/psk_fail',
+            network: NetworkConfig(
+              listenAddresses: const ['/ip4/127.0.0.1/tcp/0'],
+              bootstrapPeers: const [],
+              swarmKeyPath: keyFile.path,
+            ),
+          ),
+        );
+
+        try {
+          await expectLater(pskRouter.start(), throwsStateError);
+          expect(pskRouter.hasStarted, isFalse);
+        } finally {
+          await Process.run('chmod', ['600', keyFile.path]);
+        }
+      },
+      // chmod is POSIX-only; the test environment is Linux.
+      testOn: '!windows',
+    );
 
     group('inbound protocol streams', () {
       IPFSConfig nodeConfig(String name) {
@@ -356,7 +419,7 @@ void main() {
           );
           expect(packet.datagram, equals([7]));
 
-          await Future.delayed(const Duration(milliseconds: 300));
+          await Future<void>.delayed(const Duration(milliseconds: 300));
 
           await rA.stop();
           await rB.stop();
@@ -397,7 +460,7 @@ void main() {
           Uint8List.fromList([9]),
           protocolId: protocol,
         );
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future<void>.delayed(const Duration(milliseconds: 500));
 
         expect(received.length, equals(1));
         expect(received.first, equals([9]));
@@ -435,6 +498,39 @@ void main() {
         await rB.stop();
       });
 
+      test('responder swallows write errors on a closed stream', () async {
+        final rA = Libp2pRouter(nodeConfig('resp_a'));
+        final rB = Libp2pRouter(nodeConfig('resp_b'));
+        await rA.start();
+        await rB.start();
+
+        const protocol = '/test/responder/1.0.0';
+        final completer = Completer<NetworkPacket>();
+        rB.registerProtocolHandler(protocol, completer.complete);
+
+        await rA.connect(await dialAddressOf(rB));
+        // sendMessage writes one message and closes the stream; by the time
+        // the responder is invoked below, B has observed EOF and closed its
+        // side too, so the response write fails and is logged internally.
+        await rA.sendMessage(
+          rB.peerID,
+          Uint8List.fromList([3]),
+          protocolId: protocol,
+        );
+
+        final packet = await completer.future.timeout(
+          const Duration(seconds: 5),
+        );
+        expect(packet.responder, isNotNull);
+
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        // The responder must not propagate the write failure to the handler.
+        await packet.responder!(Uint8List.fromList([9, 9, 9]));
+
+        await rA.stop();
+        await rB.stop();
+      });
+
       test('logs an error when the protocol handler throws', () async {
         final rA = Libp2pRouter(nodeConfig('err_a'));
         final rB = Libp2pRouter(nodeConfig('err_b'));
@@ -455,11 +551,80 @@ void main() {
           Uint8List.fromList([1]),
           protocolId: protocol,
         );
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future<void>.delayed(const Duration(milliseconds: 500));
 
         await rA.stop();
         await rB.stop();
       });
+
+      test(
+        'emits a disconnected event when a connected peer goes away',
+        () async {
+          final rA = Libp2pRouter(nodeConfig('disc_a'));
+          final rB = Libp2pRouter(nodeConfig('disc_b'));
+          await rA.start();
+          await rB.start();
+
+          final connected = Completer<ConnectionEvent>();
+          final disconnected = Completer<ConnectionEvent>();
+          rB.connectionEvents.listen((e) {
+            if (e.peerId != rA.peerID) return;
+            if (e.type == ConnectionEventType.connected &&
+                !connected.isCompleted) {
+              connected.complete(e);
+            }
+            if (e.type == ConnectionEventType.disconnected &&
+                !disconnected.isCompleted) {
+              disconnected.complete(e);
+            }
+          });
+
+          await rA.connect(await dialAddressOf(rB));
+          await connected.future.timeout(const Duration(seconds: 10));
+          expect(rB.isConnectedPeer(rA.peerID), isTrue);
+
+          // Simulate the connection dying: recording a closure on the
+          // SwarmConn's health metrics transitions it to failed, so the
+          // swarm removes the connection and fires disconnectedF (which
+          // emits the event asserted below).
+          final peerId = libp2p.PeerId.fromString(rA.peerID);
+          final conn = rB.host!.network.connsToPeer(peerId).first;
+          (conn as dynamic).healthMetrics.recordClosure();
+
+          final event = await disconnected.future.timeout(
+            const Duration(seconds: 10),
+          );
+          expect(event.type, equals(ConnectionEventType.disconnected));
+          expect(rB.isConnectedPeer(rA.peerID), isFalse);
+
+          await rA.stop();
+          await rB.stop();
+        },
+      );
+
+      test(
+        'resolvePeerId returns listen addrs for self and dialed peers',
+        () async {
+          final rA = Libp2pRouter(nodeConfig('res_a'));
+          final rB = Libp2pRouter(nodeConfig('res_b'));
+          await rA.start();
+          await rB.start();
+
+          // The router's own peer ID resolves to its listening addresses.
+          expect(rA.resolvePeerId(rA.peerID), equals(rA.listeningAddresses));
+          // Unknown peers resolve to an empty list.
+          expect(rA.resolvePeerId('unknown-peer'), isEmpty);
+
+          await rA.connect(await dialAddressOf(rB));
+          final addrs = rA.resolvePeerId(rB.peerID);
+          expect(addrs, isNotEmpty);
+          // The returned list must not be mutable by callers.
+          expect(() => addrs.add('x'), throwsUnsupportedError);
+
+          await rA.stop();
+          await rB.stop();
+        },
+      );
     });
   });
 }

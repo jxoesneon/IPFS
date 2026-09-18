@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:test/test.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/config/dht_config.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
@@ -12,9 +11,13 @@ import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/mfs/mfs_manager.dart';
 import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/reprovider.dart';
 
+import '../../fakes/fake_router.dart';
 import '../../mocks/mock_dht_handler.dart';
 
 void main() {
@@ -55,7 +58,7 @@ void main() {
     await tempDir.delete(recursive: true);
   });
 
-  Reprovider _createReprovider({DHTConfig? dhtConfig}) {
+  Reprovider createReprovider({DHTConfig? dhtConfig}) {
     config =
         dhtConfig ??
         const DHTConfig(
@@ -74,24 +77,24 @@ void main() {
     );
   }
 
-  Future<CID> _addBlock(Uint8List data) async {
+  Future<CID> addBlock(Uint8List data) async {
     final block = await Block.fromData(data);
     await blockStore.putBlock(block);
     return block.cid;
   }
 
-  Future<void> _pinRecursive(CID cid) async {
+  Future<void> pinRecursive(CID cid) async {
     await pinManager.pinBlock(cid.toProto(), PinTypeProto.PIN_TYPE_RECURSIVE);
   }
 
   group('Reprovider strategies', () {
     test('pinned strategy reprovides recursive pins', () async {
-      final cid1 = await _addBlock(Uint8List.fromList([1, 2, 3]));
-      final cid2 = await _addBlock(Uint8List.fromList([4, 5, 6]));
-      await _pinRecursive(cid1);
-      await _pinRecursive(cid2);
+      final cid1 = await addBlock(Uint8List.fromList([1, 2, 3]));
+      final cid2 = await addBlock(Uint8List.fromList([4, 5, 6]));
+      await pinRecursive(cid1);
+      await pinRecursive(cid2);
 
-      reprovider = _createReprovider();
+      reprovider = createReprovider();
       final result = await reprovider.trigger(wait: true);
 
       expect(result.strategy, equals('pinned'));
@@ -103,10 +106,10 @@ void main() {
 
     test('roots strategy reprovides only top-level recursive pins', () async {
       // Simulate a root pin by pinning one block directly.
-      final root = await _addBlock(Uint8List.fromList([7, 8, 9]));
-      await _pinRecursive(root);
+      final root = await addBlock(Uint8List.fromList([7, 8, 9]));
+      await pinRecursive(root);
 
-      reprovider = _createReprovider(
+      reprovider = createReprovider(
         dhtConfig: const DHTConfig(
           reproviderEnabled: false,
           reproviderStrategy: 'roots',
@@ -123,11 +126,12 @@ void main() {
     });
 
     test('all strategy reprovides every block in the blockstore', () async {
-      final cid1 = await _addBlock(Uint8List.fromList([10, 11, 12]));
-      final cid2 = await _addBlock(Uint8List.fromList([13, 14, 15]));
-      // cid2 is not pinned, but should still be announced by the all strategy.
+      await addBlock(Uint8List.fromList([10, 11, 12]));
+      await addBlock(Uint8List.fromList([13, 14, 15]));
+      // The second block is not pinned, but should still be announced by the
+      // all strategy.
 
-      reprovider = _createReprovider(
+      reprovider = createReprovider(
         dhtConfig: const DHTConfig(
           reproviderEnabled: false,
           reproviderStrategy: 'all',
@@ -146,11 +150,10 @@ void main() {
     });
 
     test('pinned+mfs strategy includes MFS root', () async {
-      final cid = await _addBlock(Uint8List.fromList([16, 17, 18]));
-      await _pinRecursive(cid);
-      final mfsRoot = mfsManager.rootCid;
+      final cid = await addBlock(Uint8List.fromList([16, 17, 18]));
+      await pinRecursive(cid);
 
-      reprovider = _createReprovider(
+      reprovider = createReprovider(
         dhtConfig: const DHTConfig(
           reproviderEnabled: false,
           reproviderStrategy: 'pinned+mfs',
@@ -167,11 +170,10 @@ void main() {
     });
 
     test('entities strategy includes root pins and MFS root', () async {
-      final root = await _addBlock(Uint8List.fromList([19, 20, 21]));
-      await _pinRecursive(root);
-      final mfsRoot = mfsManager.rootCid;
+      final root = await addBlock(Uint8List.fromList([19, 20, 21]));
+      await pinRecursive(root);
 
-      reprovider = _createReprovider(
+      reprovider = createReprovider(
         dhtConfig: const DHTConfig(
           reproviderEnabled: false,
           reproviderStrategy: 'entities',
@@ -188,12 +190,98 @@ void main() {
     });
   });
 
+  group('Reprovider sweep optimization', () {
+    test(
+      'groups CIDs by closest routing-table peers with a concrete DHTHandler',
+      () async {
+        // The sweep path requires the concrete DHTHandler so it can consult
+        // the real Kademlia routing table.
+        final router = FakeRouter();
+        final nodeConfig = IPFSConfig(
+          dht: const DHTConfig(requestTimeout: Duration(milliseconds: 100)),
+        );
+        final networkHandler = NetworkHandler(nodeConfig, router: router);
+        final concreteDht = DHTHandler(
+          nodeConfig,
+          router,
+          networkHandler,
+          storage: datastore,
+        );
+        await concreteDht.dhtClient.initialize();
+        addTearDown(() async {
+          await concreteDht.stop();
+        });
+
+        // Seed the routing table so the grouping maps CIDs to a live peer.
+        final closestPeer = PeerId(
+          value: Uint8List.fromList(List.generate(32, (i) => i)),
+        );
+        await concreteDht.dhtClient.kademliaRoutingTable.addPeer(
+          closestPeer,
+          closestPeer,
+        );
+
+        final cid = await addBlock(Uint8List.fromList([31, 32, 33]));
+        await pinRecursive(cid);
+
+        reprovider = Reprovider(
+          config: const DHTConfig(
+            reproviderEnabled: false,
+            reproviderStrategy: 'pinned',
+            reproviderBatchSize: 100,
+            reproviderConcurrency: 10,
+            reproviderSweepOptimization: true,
+          ),
+          dhtHandler: concreteDht,
+          pinManager: pinManager,
+          mfsManager: mfsManager,
+          metrics: metrics,
+        );
+
+        final result = await reprovider.trigger(wait: true);
+
+        expect(result.groupedCids, isNotNull);
+        expect(
+          result.groupedCids!.keys.map((peer) => peer.toBase58()),
+          contains(closestPeer.toBase58()),
+        );
+        expect(result.groupedCids![closestPeer], contains(cid));
+        expect(result.succeeded, equals(result.attempted));
+      },
+    );
+
+    test('falls back to empty grouping with a non-concrete handler', () async {
+      final cid = await addBlock(Uint8List.fromList([34, 35, 36]));
+      await pinRecursive(cid);
+
+      // MockDHTHandler implements IDHTHandler but is not a DHTHandler, so
+      // the sweep optimization cannot consult a routing table.
+      reprovider = Reprovider(
+        config: const DHTConfig(
+          reproviderEnabled: false,
+          reproviderStrategy: 'pinned',
+          reproviderSweepOptimization: true,
+        ),
+        dhtHandler: dhtHandler,
+        pinManager: pinManager,
+        mfsManager: mfsManager,
+        metrics: metrics,
+      );
+
+      final result = await reprovider.trigger(wait: true);
+
+      expect(result.groupedCids, isNotNull);
+      expect(result.groupedCids, isEmpty);
+      expect(result.succeeded, equals(1));
+    });
+  });
+
   group('Reprovider deduplication and status', () {
     test('deduplicates repeated CIDs before providing', () async {
-      final cid = await _addBlock(Uint8List.fromList([22, 23, 24]));
-      await _pinRecursive(cid);
+      final cid = await addBlock(Uint8List.fromList([22, 23, 24]));
+      await pinRecursive(cid);
       // unique strategy is identical to pinned but must still deduplicate.
-      reprovider = _createReprovider(
+      reprovider = createReprovider(
         dhtConfig: const DHTConfig(
           reproviderEnabled: false,
           reproviderStrategy: 'unique',
@@ -209,9 +297,9 @@ void main() {
     });
 
     test('getStatus reports running and last result', () async {
-      final cid = await _addBlock(Uint8List.fromList([25, 26, 27]));
-      await _pinRecursive(cid);
-      reprovider = _createReprovider();
+      final cid = await addBlock(Uint8List.fromList([25, 26, 27]));
+      await pinRecursive(cid);
+      reprovider = createReprovider();
 
       final statusBefore = reprovider.getStatus();
       expect(statusBefore.running, isFalse);
@@ -231,21 +319,21 @@ void main() {
 
   group('Reprovider strategy validation', () {
     test('setStrategy accepts supported strategies', () {
-      reprovider = _createReprovider();
+      reprovider = createReprovider();
       reprovider.setStrategy('roots');
       expect(reprovider.getStatus().strategy, equals('roots'));
     });
 
     test('setStrategy rejects unsupported strategies', () {
-      reprovider = _createReprovider();
+      reprovider = createReprovider();
       expect(() => reprovider.setStrategy('unknown'), throwsArgumentError);
     });
   });
 
   group('Reprovider lifecycle', () {
     test('start schedules periodic timer and stop cancels it', () async {
-      final cid = await _addBlock(Uint8List.fromList([28, 29, 30]));
-      await _pinRecursive(cid);
+      final cid = await addBlock(Uint8List.fromList([28, 29, 30]));
+      await pinRecursive(cid);
       reprovider = Reprovider(
         config: const DHTConfig(
           reproviderEnabled: true,
@@ -289,7 +377,7 @@ void main() {
     });
 
     test('pause stops timer and resume restarts it', () async {
-      reprovider = _createReprovider(
+      reprovider = createReprovider(
         dhtConfig: const DHTConfig(
           reproviderEnabled: true,
           reproviderInterval: Duration(milliseconds: 500),

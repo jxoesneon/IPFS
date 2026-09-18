@@ -8,6 +8,7 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/content_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart' show GatewayMode;
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
@@ -223,6 +224,84 @@ void main() {
 
       final manager = managerWithFallback([gateway], allowPrivate: true);
       final result = await manager.get(block.cid.encode());
+
+      expect(result, isNull);
+      expect(datastore.storedBlocks, isEmpty);
+    });
+  });
+
+  group('ContentManager gateway retrieval', () {
+    late _FakeDatastoreHandler datastore;
+    late StreamController<String> contentController;
+
+    setUp(() {
+      datastore = _FakeDatastoreHandler();
+      contentController = StreamController<String>.broadcast();
+    });
+
+    tearDown(() async {
+      await contentController.close();
+    });
+
+    Future<HttpServer> serveWith(
+      void Function(HttpRequest request) handler,
+    ) async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen(handler);
+      return server;
+    }
+
+    test(
+      'returns hash-verified bytes for a raw-codec CID via custom gateway',
+      () async {
+        final block = await Block.fromData(
+          Uint8List.fromList(utf8.encode('gateway content')),
+        );
+        expect(block.cid.codec, equals('raw'));
+
+        final server = await serveWith((request) {
+          request.response.add(block.data);
+          request.response.close();
+        });
+        addTearDown(() => server.close());
+
+        final manager = ContentManager(
+          datastoreHandler: datastore,
+          newContentController: contentController,
+        );
+        final result = await manager.get(
+          block.cid.encode(),
+          gatewayMode: GatewayMode.custom,
+          customGatewayUrl: 'http://127.0.0.1:${server.port}/ipfs',
+        );
+
+        expect(result, equals(block.data));
+      },
+    );
+
+    test('rejects a raw-codec block that fails hash verification', () async {
+      final block = await Block.fromData(
+        Uint8List.fromList(utf8.encode('expected content')),
+      );
+      expect(block.cid.codec, equals('raw'));
+
+      // The gateway returns bytes that do not hash to the requested CID:
+      // the raw-codec guard must reject them rather than trust the gateway.
+      final server = await serveWith((request) {
+        request.response.add(utf8.encode('forged content'));
+        request.response.close();
+      });
+      addTearDown(() => server.close());
+
+      final manager = ContentManager(
+        datastoreHandler: datastore,
+        newContentController: contentController,
+      );
+      final result = await manager.get(
+        block.cid.encode(),
+        gatewayMode: GatewayMode.custom,
+        customGatewayUrl: 'http://127.0.0.1:${server.port}/ipfs',
+      );
 
       expect(result, isNull);
       expect(datastore.storedBlocks, isEmpty);

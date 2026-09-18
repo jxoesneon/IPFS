@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:cryptography/cryptography.dart' hide KeyPair;
 import 'package:dart_ipfs/src/core/config/security_config.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
@@ -195,7 +193,7 @@ void main() {
       await manager.start();
 
       // Wait for at least one rotation
-      await Future.delayed(Duration(milliseconds: 30));
+      await Future<void>.delayed(Duration(milliseconds: 30));
 
       final status = await manager.getStatus();
       expect(status['key_rotation_enabled'], isTrue);
@@ -328,6 +326,69 @@ void main() {
 
       await noAuthLimitManager.stop();
     });
+
+    test(
+      'shouldRateLimit evicts the oldest client when the log is full',
+      () async {
+        final evicting = SecurityManager(
+          const SecurityConfig(
+            enableRateLimiting: true,
+            maxRequestsPerMinute: 100,
+            enableKeyRotation: false,
+          ),
+          mockMetrics,
+        );
+
+        // Fill the bounded request log to capacity (4096 clients).
+        for (var i = 0; i < 4096; i++) {
+          expect(evicting.shouldRateLimit('client-$i'), isFalse);
+        }
+        expect(
+          (await evicting.getStatus())['active_rate_limits'],
+          equals(4096),
+        );
+
+        // One more distinct client forces the oldest entry out instead of
+        // growing the map unboundedly.
+        expect(evicting.shouldRateLimit('overflow-client'), isFalse);
+        expect(
+          (await evicting.getStatus())['active_rate_limits'],
+          equals(4096),
+        );
+
+        await evicting.stop();
+      },
+    );
+
+    test(
+      'trackAuthAttempt evicts the entry with fewest attempts at capacity',
+      () async {
+        final evicting = SecurityManager(
+          const SecurityConfig(maxAuthAttempts: 5, enableKeyRotation: false),
+          mockMetrics,
+        );
+
+        // 'heavy' accrues 3 failed attempts so it is never the min-attempts
+        // eviction candidate.
+        for (var i = 0; i < 3; i++) {
+          expect(evicting.trackAuthAttempt('heavy', false), isTrue);
+        }
+        for (var i = 0; i < 4095; i++) {
+          expect(evicting.trackAuthAttempt('c-$i', false), isTrue);
+        }
+
+        // The 4097th distinct client evicts a 1-attempt entry; 'heavy' keeps
+        // its accumulated count and is blocked on the 5th attempt.
+        expect(evicting.trackAuthAttempt('newcomer', false), isTrue);
+        expect(evicting.trackAuthAttempt('heavy', false), isTrue); // 4
+        expect(
+          evicting.trackAuthAttempt('heavy', false),
+          isFalse,
+        ); // 5 → blocked
+
+        await evicting.stop();
+      },
+    );
 
     test('migrateKeysFromPlaintext with no keys returns 0', () async {
       await securityManager.unlockKeystore('password123', salt: testSalt);

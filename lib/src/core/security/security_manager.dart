@@ -108,8 +108,7 @@ class SecurityManager implements ISecurityManager {
     if (path == null || getPlatform().isWeb) return;
     _pendingKeystoreWrite = _pendingKeystoreWrite.then((_) async {
       try {
-        await getPlatform().writeString(path, serialized);
-        await getPlatform().restrictToOwner(path);
+        await getPlatform().writeStringRestricted(path, serialized);
       } catch (e) {
         _logger.warning('Failed to persist keystore to $path: $e');
       }

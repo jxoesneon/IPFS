@@ -173,6 +173,37 @@ void main() {
       expect(result, isFalse);
     });
 
+    test(
+      'sendMessageRaw throws TimeoutException when no response arrives',
+      () async {
+        // A tiny requestTimeout makes the pending-request expiry fire quickly.
+        final fastConfig = IPFSConfig(
+          dht: const DHTConfig(requestTimeout: Duration(milliseconds: 50)),
+        );
+        when(mockNetworkHandler.config).thenReturn(fastConfig);
+
+        final timeoutClient = DHTClient(
+          networkHandler: mockNetworkHandler,
+          router: mockRouter,
+        );
+        await timeoutClient.initialize();
+
+        // The send succeeds but the peer never answers: the completer must
+        // expire via onTimeout, drop the pending request, and throw.
+        when(
+          mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
+        ).thenAnswer((_) async {});
+
+        final peer = PeerId.fromBase58(
+          'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+        );
+        await expectLater(
+          timeoutClient.sendMessageRaw(peer, Uint8List.fromList([1, 2, 3])),
+          throwsA(isA<TimeoutException>()),
+        );
+      },
+    );
+
     test('listsEqual', () {
       expect(client.listsEqual([1, 2], [1, 2]), isTrue);
       expect(client.listsEqual([1, 2], [1, 3]), isFalse);

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:test/test.dart';
@@ -9,6 +10,7 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
+import 'package:dart_ipfs/src/core/storage/flat_file_datastore.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
 import 'package:http/http.dart' as http;
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -440,6 +442,54 @@ void main() {
 
       verify(mockClient.addProvider(any, any)).called(3);
     });
+
+    test(
+      'constructor falls back to FlatFileDatastore without injected storage',
+      () async {
+        final dir = await Directory.systemTemp.createTemp('dht_handler_');
+        addTearDown(() async {
+          if (await dir.exists()) await dir.delete(recursive: true);
+        });
+
+        final defaultHandler = DHTHandler(
+          IPFSConfig(datastorePath: dir.path),
+          mockRouter,
+          mockNetworkHandler,
+          client: mockClient,
+        );
+
+        expect(defaultHandler.storage, isA<FlatFileDatastore>());
+      },
+    );
+
+    test(
+      'handleProvideRequest evicts oldest announcement peer and CID at capacity',
+      () async {
+        // Every announcement uses a distinct provider and CID. Past 1024
+        // providers the per-peer announcement map evicts its oldest entry;
+        // past 4096 CIDs the provider index evicts its oldest CID.
+        CID cidFor(int i) => CID.computeForDataSync(
+          Uint8List.fromList([i & 0xFF, (i >> 8) & 0xFF, (i >> 16) & 0xFF]),
+        );
+        PeerId peerFor(int i) => PeerId(
+          value: Uint8List.fromList([i & 0xFF, (i >> 8) & 0xFF, 0xA5]),
+        );
+
+        final firstCid = cidFor(0);
+        const total = DHTHandler.maxProviderCids + 1;
+        for (var i = 0; i < total; i++) {
+          await handler.handleProvideRequest(cidFor(i), peerFor(i));
+        }
+
+        // The oldest CID was evicted from the local index; the newest is kept.
+        expect(handler.getLocalProvidersForCid(firstCid.toString()), isEmpty);
+        expect(
+          handler.getLocalProvidersForCid(cidFor(total - 1).toString()),
+          isNotEmpty,
+        );
+      },
+      timeout: const Timeout(Duration(minutes: 2)),
+    );
 
     test('handleProvideRequest records provider in local index', () async {
       final cid = CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');

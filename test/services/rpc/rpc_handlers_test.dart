@@ -370,6 +370,21 @@ void main() {
       verify(mockBlockStore.putBlock(any)).called(1);
     });
 
+    test('handleBlockPut rejects a body over the 4 MiB cap', () async {
+      // _readBodyBounded must abort the upload instead of buffering an
+      // unbounded request body into memory.
+      final oversized = Uint8List(4 * 1024 * 1024 + 1);
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/block/put'),
+        body: oversized,
+      );
+
+      final response = await handlers.handleBlockPut(request);
+      expect(response.statusCode, equals(500));
+      verifyNever(mockBlockStore.putBlock(any));
+    });
+
     test('handleBlockStat success', () async {
       final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
       final block = Block(

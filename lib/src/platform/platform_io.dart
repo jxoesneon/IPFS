@@ -45,6 +45,15 @@ class IpfsPlatformIO implements IpfsPlatform {
   }
 
   @override
+  Future<void> writeStringRestricted(String path, String content) async {
+    // Create the file first so it can be chmod'd before the secret bytes
+    // land — an empty file under the default umask exposes nothing.
+    await writeString(path, '');
+    await restrictToOwner(path);
+    await writeString(path, content);
+  }
+
+  @override
   Future<Uint8List?> readBytes(String path) async {
     final file = File(path);
     if (!await file.exists()) return null;
