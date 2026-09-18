@@ -479,7 +479,7 @@ class BitswapHandler implements ILifecycle {
               // For simplicity in this implementation, we'll just throttle the initial sending.
             })
             .catchError((Object e) {
-              _logger.error('Failed to send want request for $cid: $Object e');
+              _logger.error('Failed to send want request for $cid: $e');
             })
             .whenComplete(() {
               _activeRequests--;

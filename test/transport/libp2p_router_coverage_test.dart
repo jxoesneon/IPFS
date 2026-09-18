@@ -8,7 +8,19 @@ import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:dart_ipfs/src/transport/libp2p_router.dart';
 import 'package:dart_ipfs/src/transport/router_events.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
+import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 import 'package:test/test.dart';
+
+List<int> _varintBytes(int value) {
+  final out = <int>[];
+  var n = value;
+  while (n >= 0x80) {
+    out.add((n & 0x7F) | 0x80);
+    n >>= 7;
+  }
+  out.add(n);
+  return out;
+}
 
 void main() {
   group('Libp2pRouter Coverage', () {
@@ -317,36 +329,39 @@ void main() {
         await rB.stop();
       });
 
-      test('closes the inbound stream after the remote peer finishes', () async {
-        final rA = Libp2pRouter(nodeConfig('close_a'));
-        final rB = Libp2pRouter(nodeConfig('close_b'));
-        await rA.start();
-        await rB.start();
+      test(
+        'closes the inbound stream after the remote peer finishes',
+        () async {
+          final rA = Libp2pRouter(nodeConfig('close_a'));
+          final rB = Libp2pRouter(nodeConfig('close_b'));
+          await rA.start();
+          await rB.start();
 
-        const protocol = '/test/close/1.0.0';
-        final completer = Completer<NetworkPacket>();
-        rB.registerProtocolHandler(protocol, completer.complete);
+          const protocol = '/test/close/1.0.0';
+          final completer = Completer<NetworkPacket>();
+          rB.registerProtocolHandler(protocol, completer.complete);
 
-        await rA.connect(await dialAddressOf(rB));
-        // sendMessage writes one length-prefixed message and closes the
-        // stream; the server observes EOF, exits its read loop, and closes
-        // its side of the stream in the finally block.
-        await rA.sendMessage(
-          rB.peerID,
-          Uint8List.fromList([7]),
-          protocolId: protocol,
-        );
+          await rA.connect(await dialAddressOf(rB));
+          // sendMessage writes one length-prefixed message and closes the
+          // stream; the server observes EOF, exits its read loop, and closes
+          // its side of the stream in the finally block.
+          await rA.sendMessage(
+            rB.peerID,
+            Uint8List.fromList([7]),
+            protocolId: protocol,
+          );
 
-        final packet = await completer.future.timeout(
-          const Duration(seconds: 5),
-        );
-        expect(packet.datagram, equals([7]));
+          final packet = await completer.future.timeout(
+            const Duration(seconds: 5),
+          );
+          expect(packet.datagram, equals([7]));
 
-        await Future.delayed(const Duration(milliseconds: 300));
+          await Future.delayed(const Duration(milliseconds: 300));
 
-        await rA.stop();
-        await rB.stop();
-      });
+          await rA.stop();
+          await rB.stop();
+        },
+      );
 
       test('rejects an oversized inbound message', () async {
         final rA = Libp2pRouter(nodeConfig('big_a'));
@@ -360,18 +375,20 @@ void main() {
 
         await rA.connect(await dialAddressOf(rB));
 
-        // One byte over the 4 MiB inbound cap: the server rejects the
-        // length prefix (FormatException) and drops the message without
-        // invoking the handler.
+        // Advertise a body one byte over the 4 MiB inbound cap: the server
+        // rejects the length prefix (FormatException) and drops the stream
+        // without invoking the handler.
+        final stream = await rA.host!.newStream(
+          libp2p.PeerId.fromString(rB.peerID),
+          [protocol],
+          libp2p.Context(timeout: const Duration(seconds: 10)),
+        );
         try {
-          await rA.sendMessage(
-            rB.peerID,
-            Uint8List(4 * 1024 * 1024 + 1),
-            protocolId: protocol,
+          await stream.write(
+            Uint8List.fromList(_varintBytes(4 * 1024 * 1024 + 1)),
           );
-        } catch (_) {
-          // The write may fail once the server resets the stream; either
-          // way the oversized prefix was delivered and rejected.
+        } finally {
+          await stream.close();
         }
 
         // The connection still serves well-formed messages afterwards.
@@ -384,6 +401,61 @@ void main() {
 
         expect(received.length, equals(1));
         expect(received.first, equals([9]));
+
+        await rA.stop();
+        await rB.stop();
+      });
+
+      test('warns and continues on an empty inbound message', () async {
+        final rA = Libp2pRouter(nodeConfig('empty_a'));
+        final rB = Libp2pRouter(nodeConfig('empty_b'));
+        await rA.start();
+        await rB.start();
+
+        const protocol = '/test/empty/1.0.0';
+        final completer = Completer<NetworkPacket>();
+        rB.registerProtocolHandler(protocol, completer.complete);
+
+        await rA.connect(await dialAddressOf(rB));
+        // A zero-length body decodes to an empty datagram: the server logs a
+        // warning and keeps reading instead of dispatching to the handler.
+        await rA.sendMessage(rB.peerID, Uint8List(0), protocolId: protocol);
+        await rA.sendMessage(
+          rB.peerID,
+          Uint8List.fromList([5]),
+          protocolId: protocol,
+        );
+
+        final packet = await completer.future.timeout(
+          const Duration(seconds: 5),
+        );
+        expect(packet.datagram, equals([5]));
+
+        await rA.stop();
+        await rB.stop();
+      });
+
+      test('logs an error when the protocol handler throws', () async {
+        final rA = Libp2pRouter(nodeConfig('err_a'));
+        final rB = Libp2pRouter(nodeConfig('err_b'));
+        await rA.start();
+        await rB.start();
+
+        const protocol = '/test/throwing/1.0.0';
+        rB.registerProtocolHandler(
+          protocol,
+          (_) => throw StateError('handler boom'),
+        );
+
+        await rA.connect(await dialAddressOf(rB));
+        // The throw escapes the dispatch loop into the stream-level catch;
+        // the stream is still closed in the finally block.
+        await rA.sendMessage(
+          rB.peerID,
+          Uint8List.fromList([1]),
+          protocolId: protocol,
+        );
+        await Future.delayed(const Duration(milliseconds: 500));
 
         await rA.stop();
         await rB.stop();

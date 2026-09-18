@@ -5,7 +5,6 @@ import 'package:dart_ipfs/src/core/builders/ipfs_node_builder.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/lifecycle/mobile_lifecycle_adapter.dart';
-import 'package:dart_ipfs/src/core/lifecycle/mobile_lifecycle_coordinator.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
@@ -49,7 +48,10 @@ void main() {
       expect(node, isA<IPFSNode>());
       expect(node.mobileCoordinator, isNotNull);
       expect(node.mobileCoordinator!.adapter, equals(adapter));
-      expect(node.mobileCoordinator!.currentPowerMode, equals(IpfsPowerMode.fullActive));
+      expect(
+        node.mobileCoordinator!.currentPowerMode,
+        equals(IpfsPowerMode.fullActive),
+      );
 
       await adapter.dispose();
     });

@@ -3,7 +3,7 @@ name: dart-ipfs
 description: A Helm chart for deploying the dart_ipfs daemon on Kubernetes.
 type: application
 version: 0.1.1
-appVersion: "1.16.2"
+appVersion: "1.16.3"
 home: https://github.com/jxoesneon/IPFS
 sources:
   - https://github.com/jxoesneon/IPFS

@@ -539,6 +539,9 @@ class Libp2pRouter implements RouterInterface {
           const Duration(seconds: 5),
           onTimeout: () => _logger.warning('Host close timed out'),
         );
+        // Clear the reference so nothing attaches handlers to the closed
+        // host between stop() and the next start().
+        _host = null;
       }
       _connectedPeers.clear();
       _hasStarted = false;

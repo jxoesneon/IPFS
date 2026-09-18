@@ -221,27 +221,30 @@ void main() {
       return jsonEncode(parsed);
     }
 
-    test('unlocks a verifier-less keystore by trial-decrypting a key', () async {
-      final original = EncryptedKeystore();
-      await original.unlock('pw');
-      await original.generateKey('legacy-key');
-      final json = legacyJson(original);
-      original.lock();
+    test(
+      'unlocks a verifier-less keystore by trial-decrypting a key',
+      () async {
+        final original = EncryptedKeystore();
+        await original.unlock('pw');
+        await original.generateKey('legacy-key');
+        final json = legacyJson(original);
+        original.lock();
 
-      final restored = EncryptedKeystore.deserialize(json);
-      await restored.unlock('pw');
+        final restored = EncryptedKeystore.deserialize(json);
+        await restored.unlock('pw');
 
-      expect(restored.isUnlocked, isTrue);
-      expect(await restored.getKey('legacy-key'), isNotNull);
+        expect(restored.isUnlocked, isTrue);
+        expect(await restored.getKey('legacy-key'), isNotNull);
 
-      // The unlock establishes a verifier so subsequent unlocks verify the
-      // password directly.
-      final reserialized =
-          jsonDecode(restored.serialize()) as Map<String, dynamic>;
-      expect(reserialized['verifier'], isNotNull);
+        // The unlock establishes a verifier so subsequent unlocks verify the
+        // password directly.
+        final reserialized =
+            jsonDecode(restored.serialize()) as Map<String, dynamic>;
+        expect(reserialized['verifier'], isNotNull);
 
-      restored.lock();
-    });
+        restored.lock();
+      },
+    );
 
     test('rejects a wrong password on a verifier-less keystore', () async {
       final original = EncryptedKeystore();

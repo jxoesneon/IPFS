@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+## [1.16.3] - 2026-09-18
+
+### Security
+- **RPC API-key authentication** (#78): write operations on the HTTP RPC API now require the configured `X-API-Key` header and return 403 otherwise; wildcard CORS headers were removed from write paths.
+- **Bounded inbound libp2p reads** (#79): inbound stream parsing now enforces a 10-byte varint prefix cap, a 4 MiB message cap, 64 KiB read chunks, a 30-second idle timeout, and a 5-minute total stream lifetime.
+- **IPNS record validation** (#80): DHT PUT_VALUE ingest and GET_VALUE resolution now require signed, unexpired records whose public key derives the queried `/ipns/` key; keys outside `/ipns/` are rejected, and sequence numbers must advance. V1 signable order corrected to Kubo's `value + "EOL" + validity` so self-published records verify.
+- **CID validation on untrusted ingest** (#81): CAR import sections and HTTP-gateway blocks are hash-verified against their CIDs before entering the blockstore; raw-codec blocks fetched via the explicit gateway path are likewise verified.
+- **Bounded remote-controlled state** (#87): pubsub message caches and peer indexes, bitswap wantlists/providers/pending requests, DHT provider/key/security maps, kademlia and gossipsub tables, PeerKeyRegistry, ProviderStore, and SecurityManager per-client maps are all capacity-bounded with eviction; the in-memory block cache is a bounded LRU over a filename index instead of loading every block eagerly.
+- **File permissions and secret hygiene**: identity seed and encrypted keystore files are restricted to owner-only (0600) on POSIX; `ipfs config` output redacts `libp2pIdentitySeed` and `rpcApiKey`; RPC bodies are capped (`dag/import` 1 GiB, `block/put` 4 MiB).
+
+### Added
+- **Persistence across restarts** (#86): libp2p identity seed, pinned CIDs (additive merge), keystore (queued, drained at shutdown, password-verified unlock), IPNS records, and DHT value/provider state now survive process restarts under `dataPath`; `datastorePath` is honored and moved into its own subdirectory.
+
+### Fixed
+- **PubSub pipeline** (#82): messages are bridged from the libp2p layer into the pubsub event stream in production startup; publish/mesh/topic-peer delivery works; errors propagate instead of being swallowed; outbound messages are signed with the persisted node identity; `start()` is idempotent.
+- **Lifecycle wiring** (#84): identify and ping handlers are registered and lifecycle-managed; protocol handlers registered before the libp2p host exists are replayed on start; `LifecycleManager` deduplicates registrations; DCUtR can reach the live host.
+- **Restart correctness** (#87): `NetworkHandler`, `CircuitRelayClient`, `PubSubHandler`, and long-lived event controllers survive stop/start cycles; CLI commands that need a running node now start it; peer IP extraction no longer mis-decodes multiaddrs.
+- **Config surface** (#85): `libp2pListenAddress`, `logLevel`, `enableMetrics`, gateway TLS/security options, and `enableMDNS` are wired; options with no backing subsystem (`enableQuotaManagement`, `defaultBandwidthQuota`, `enableLibp2pBridge`, storage-class selection, selector limits, `dhtDifficulty`, key-rotation stub, GC loop) are marked `@Deprecated` as ignored.
+- **Dead code removal** (#87): removed the unwired gossipsub reference stack, unused network/protocol/message/event layers, obsolete response abstractions, and stale interfaces; implementation inventory corrected to 27 complete + 1 removed spec.
+
+### Changed
+- **Efficiency**: O(1) `LedgerManager` bandwidth totals, `Queue`-based bitswap request queue, O(1) `TimedLRUCache` timestamp cleanup via `onEvict`, precomputed distances in the reprovider sort, no SHA-256 rehash on block reads from disk, and no `_pendingRequests` leak on DHT request timeout.
+- **DHT storage** now defaults to `FlatFileDatastore`, consistent with the node's primary datastore engine.
+
 ## [1.16.2] - 2026-09-18
 
 ### Fixed

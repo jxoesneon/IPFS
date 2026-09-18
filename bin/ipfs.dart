@@ -684,7 +684,10 @@ class ConfigCommand extends IpfsCommand {
     await file.writeAsString(
       const JsonEncoder.withIndent('  ').convert(jsonMap),
     );
-    printJson({'Key': key, 'Value': _parseValue(value)});
+    printJson({
+      'Key': key,
+      'Value': _isSecretConfigKey(key) ? '<redacted>' : _parseValue(value),
+    });
   }
 }
 

@@ -32,6 +32,10 @@ class DHTProtocolHandler {
   /// Kademlia protocol ID.
   static const String protocolId = '/ipfs/kad/1.0.0';
 
+  /// Maximum accepted PUT_VALUE record size — mirrors DHTClient's cap so
+  /// oversized remote records are rejected before touching storage.
+  static const int _maxDhtValueSize = 1024 * 1024;
+
   final RouterInterface _router;
   final Datastore _storage;
   final RateLimiter? _rateLimiter;
@@ -114,12 +118,23 @@ class DHTProtocolHandler {
 
       case kad.Message_MessageType.PUT_VALUE:
         if (message.hasRecord()) {
-          final keyStr = utf8.decode(message.key);
+          // Per the libp2p DHT spec, PUT_VALUE keys must live in a
+          // namespaced validator domain; `/ipns/` is the only namespace
+          // served here. Arbitrary keys are rejected — accepting them
+          // would let any peer fill local storage unauthenticated.
+          final value = Uint8List.fromList(message.record.value);
+          final keyStr = utf8.decode(message.key, allowMalformed: true);
+          if (!keyStr.startsWith('/ipns/') ||
+              value.isEmpty ||
+              value.length > _maxDhtValueSize) {
+            _logger.warning(
+              'Rejected PUT_VALUE for key outside /ipns/ namespace',
+            );
+            response.type = kad.Message_MessageType.PUT_VALUE;
+            return response;
+          }
           final storageKey = Key('/dht/values/$keyStr');
-          await _storage.put(
-            storageKey,
-            Uint8List.fromList(message.record.value),
-          );
+          await _storage.put(storageKey, value);
           _logger.debug('Stored value for key: $keyStr');
         }
         response.type = kad.Message_MessageType.PUT_VALUE;
