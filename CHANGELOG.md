@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [1.16.1] - 2026-09-18
+
+### Fixed
+- **Deterministic node identity** (fixes #77): `IPFSConfig.libp2pIdentitySeed` is now forwarded to `Libp2pRouter` at all default construction sites (`NetworkHandler` on IO and web, `Router`, and `IPFSWebNode`). A configured seed produces a stable peer ID across launches instead of a fresh Ed25519 identity each start.
+
+### Security
+- **Helia interop harness**: pinned `@libp2p/peer-store` to `^12.0.24` via npm overrides (resolves 12.0.28), addressing a peer-store advisory affecting `test/interop/helia` (Dependabot alert #10). Verified the interop server boots and serves `/id`, `/add`, and `/cat` against libp2p@2.x.
+- **Helia interop harness**: raw request bodies in `/api/v0/add` and `/api/v0/dag/import` are validated and normalized before use, resolving a type-confusion static-analysis finding (CodeQL alert #1).
+
 ## [1.16.0] - 2026-09-17
 
 ### Added
