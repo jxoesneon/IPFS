@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:test/test.dart';
 import 'package:dart_ipfs/src/core/builders/ipfs_node_builder.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -50,6 +52,29 @@ void main() {
       expect(node.mobileCoordinator!.currentPowerMode, equals(IpfsPowerMode.fullActive));
 
       await adapter.dispose();
+    });
+
+    test('build offline node with RPC and gateway enabled', () async {
+      final dir = await Directory.systemTemp.createTemp('ipfs_builder_');
+      try {
+        final config = IPFSConfig(
+          offline: true,
+          enableRPC: true,
+          rpcApiKey: 'test-api-key',
+          gateway: const GatewayConfig(enabled: true, port: 0),
+          datastorePath: p.join(dir.path, 'datastore'),
+          blockStorePath: p.join(dir.path, 'blocks'),
+          keystorePath: p.join(dir.path, 'keystore.json'),
+        );
+
+        final builder = IPFSNodeBuilder(config);
+        final node = await builder.build();
+        expect(node, isA<IPFSNode>());
+      } finally {
+        if (await dir.exists()) {
+          await dir.delete(recursive: true);
+        }
+      }
     });
   });
 }

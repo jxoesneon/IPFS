@@ -32,6 +32,29 @@ class RPCHandlers {
 
   final _logger = Logger('RPCHandlers');
 
+  /// Maximum buffered request body for [handleDagImport] (matches the
+  /// `handleAdd` total request cap).
+  static const int _maxImportBodyBytes = 1024 * 1024 * 1024;
+
+  /// Maximum buffered request body for [handleBlockPut] — a single block,
+  /// matching the 4 MiB inbound libp2p message cap.
+  static const int _maxBlockPutBytes = 4 * 1024 * 1024;
+
+  /// Reads the request body into memory, rejecting bodies over [maxBytes].
+  static Future<Uint8List> _readBodyBounded(
+    Request request,
+    int maxBytes,
+  ) async {
+    final builder = BytesBuilder();
+    await for (final chunk in request.read()) {
+      if (builder.length + chunk.length > maxBytes) {
+        throw ArgumentError('Request body exceeds limit of $maxBytes bytes');
+      }
+      builder.add(chunk);
+    }
+    return builder.toBytes();
+  }
+
   /// GET /api/v0/version - Get IPFS version
   Future<Response> handleVersion(Request request) async {
     final response = {
@@ -311,11 +334,7 @@ class RPCHandlers {
   /// POST /api/v0/dag/import - Import a CAR v1/v2 archive into the blockstore.
   Future<Response> handleDagImport(Request request) async {
     try {
-      final builder = BytesBuilder();
-      await for (final chunk in request.read()) {
-        builder.add(chunk);
-      }
-      final body = builder.toBytes();
+      final body = await _readBodyBounded(request, _maxImportBodyBytes);
       final reader = CarReader.fromBytes(body);
       final roots = (await reader.header).roots;
       var count = 0;
@@ -606,9 +625,7 @@ class RPCHandlers {
   /// POST /api/v0/block/put - Add raw block
   Future<Response> handleBlockPut(Request request) async {
     try {
-      final data = await request.read().toList();
-      final bytes = data.expand((x) => x).toList();
-      final uint8Bytes = Uint8List.fromList(bytes);
+      final uint8Bytes = await _readBodyBounded(request, _maxBlockPutBytes);
 
       final cid = await CID.fromContent(uint8Bytes);
 
@@ -616,7 +633,7 @@ class RPCHandlers {
       final block = Block(cid: cid, data: uint8Bytes);
       await node.blockStore.putBlock(block);
 
-      return _jsonResponse({'Key': cid.encode(), 'Size': bytes.length});
+      return _jsonResponse({'Key': cid.encode(), 'Size': uint8Bytes.length});
     } catch (e, st) {
       _logger.error('Block put failed', e, st);
       return _errorResponse('Block put failed');

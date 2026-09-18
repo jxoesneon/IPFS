@@ -73,6 +73,10 @@ class NetworkHandler {
       // Register AutoNAT dialback protocol handler
       _registerDialbackHandler();
 
+      // Re-subscribe event routing (both cancelled on stop).
+      _setupEventHandlers();
+      _listenForNetworkEvents();
+
       _logger.info('Network services started successfully');
     } catch (e, stackTrace) {
       _logger.error('Error starting network services', e, stackTrace);
@@ -95,10 +99,12 @@ class NetworkHandler {
         await sub.cancel();
       }
       _subscriptions.clear();
+      _listeningForEvents = false;
+      _handlersWired = false;
       _logger.verbose('Network event subscriptions canceled');
 
-      await _networkEventController.close();
-      _logger.verbose('Network event controller closed');
+      // The broadcast controller is long-lived — it stays open across
+      // stop/start so the node can be restarted.
 
       _logger.info('Network services stopped successfully');
     } catch (e, stackTrace) {
@@ -157,8 +163,12 @@ class NetworkHandler {
     });
   }
 
+  bool _listeningForEvents = false;
+
   /// Listens for network events and handles them appropriately.
   void _listenForNetworkEvents() {
+    if (_listeningForEvents) return;
+    _listeningForEvents = true;
     _logger.verbose('Setting up network event stream listener');
     final sub = _networkEventController.stream.listen(
       (event) {
@@ -253,7 +263,11 @@ class NetworkHandler {
     }
   }
 
+  bool _handlersWired = false;
+
   void _setupEventHandlers() {
+    if (_handlersWired) return;
+    _handlersWired = true;
     _logger.verbose('Setting up network event handlers');
 
     _subscriptions.add(

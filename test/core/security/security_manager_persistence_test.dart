@@ -93,6 +93,26 @@ void main() {
       expect(() => second.unlockKeystore('wrong'), throwsA(anything));
     });
 
+    test('survives an unwritable keystore path', () async {
+      // Place a regular file where the keystore's parent directory would
+      // need to be created, so every queued persist write fails. Failures
+      // are logged, never thrown.
+      final blocker = File('${repoDir.path}/blocker')
+        ..writeAsStringSync('not a directory');
+      final blocked = SecurityManager(
+        config,
+        _MockMetricsCollector(),
+        keystorePath: '${blocker.path}/keystore.json',
+      );
+
+      await blocked.unlockKeystore('pw');
+      await blocked.secureKeystore.generateKey('k');
+      await blocked.keystoreWritesIdle;
+
+      expect(blocked.isKeystoreUnlocked, isTrue);
+      expect(File('${blocker.path}/keystore.json').existsSync(), isFalse);
+    });
+
     test('mutations queue sequential writes (last state wins)', () async {
       final first = manager();
       await first.unlockKeystore('pw');

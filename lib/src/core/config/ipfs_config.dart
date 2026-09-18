@@ -117,7 +117,7 @@ class IPFSConfig {
     @Deprecated('No bandwidth quota subsystem exists; this flag is ignored.')
     this.defaultBandwidthQuota = 1048576,
     this.maxConcurrentBitswapRequests = 10,
-    this.datastorePath = './ipfs_data',
+    this.datastorePath = './ipfs_data/datastore',
     this.keystorePath = './ipfs_keystore',
     this.blockStorePath = 'blocks',
     @Deprecated('No libp2p bridge transport exists; this flag is ignored.')
@@ -241,7 +241,7 @@ class IPFSConfig {
       // ignore: deprecated_member_use_from_same_package
       garbageCollectionEnabled:
           json['garbageCollectionEnabled'] as bool? ?? true,
-      datastorePath: json['datastorePath'] as String? ?? './ipfs_data',
+      datastorePath: json['datastorePath'] as String? ?? './ipfs_data/datastore',
       keystorePath: json['keystorePath'] as String? ?? './ipfs_keystore',
       blockStorePath: json['blockStorePath'] as String? ?? 'blocks',
       dataPath: json['dataPath'] as String? ?? './ipfs_data',

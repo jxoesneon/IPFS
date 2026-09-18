@@ -17,10 +17,34 @@ class ProviderStore {
   /// Expiry duration for provider records.
   static const Duration providerExpiry = Duration(hours: 24);
 
+  /// Maximum distinct CIDs tracked. Provider records arrive from
+  /// unauthenticated ADD_PROVIDER messages, so the map must stay bounded —
+  /// the oldest-inserted CID is evicted when the cap is hit.
+  static const int maxProviderCids = 4096;
+
+  /// Maximum providers retained per CID.
+  static const int maxProvidersPerCid = 32;
+
   /// Adds a provider for the given [cid].
   void addProvider(CID cid, PeerId peerId) {
     final cidStr = cid.toString();
-    _providers.putIfAbsent(cidStr, () => <PeerId>{}).add(peerId);
+    var providers = _providers[cidStr];
+    if (providers == null) {
+      if (_providers.length >= maxProviderCids) {
+        final evicted = _providers.keys.first;
+        _providers.remove(evicted);
+        _expiryTimes.remove(evicted);
+      }
+      providers = _providers[cidStr] = <PeerId>{};
+    } else {
+      // Refresh recency so frequently-queried CIDs are not the first
+      // eviction candidates.
+      _providers.remove(cidStr);
+      _providers[cidStr] = providers;
+    }
+    if (providers.length < maxProvidersPerCid || providers.contains(peerId)) {
+      providers.add(peerId);
+    }
     _expiryTimes[cidStr] = DateTime.now().add(providerExpiry);
     _logger.debug('Added provider $peerId for CID $cid');
   }

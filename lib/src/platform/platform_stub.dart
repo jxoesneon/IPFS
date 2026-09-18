@@ -54,6 +54,14 @@ abstract class IpfsPlatform {
   /// Returns a [Future] that resolves to the size of a file at [path] in bytes.
   Future<int> getLength(String path);
 
+  /// Best-effort restriction of a file at [path] so only the owner can
+  /// read or write it (POSIX `0600`).
+  ///
+  /// Used for files containing private key material (identity seed,
+  /// encrypted keystore). On platforms without POSIX permissions
+  /// (Windows ACLs, Web/IndexedDB) this is a no-op.
+  Future<void> restrictToOwner(String path);
+
   // --- System Information ---
 
   /// Returns the name of the operating system.

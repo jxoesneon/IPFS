@@ -298,6 +298,7 @@ class Libp2pRouter implements RouterInterface {
         List.generate(32, (_) => Random.secure().nextInt(256)),
       );
       await platform.writeString(seedPath, base64Encode(seed));
+      await platform.restrictToOwner(seedPath);
       _logger.debug('Persisted new identity seed to $seedPath');
       return seed;
     } catch (e) {
@@ -494,6 +495,11 @@ class Libp2pRouter implements RouterInterface {
           },
         ),
       );
+
+      // Attach any protocol handlers registered before the host existed.
+      for (final protocolId in _protocolHandlers.keys.toList()) {
+        _attachStreamHandler(protocolId);
+      }
 
       _hasStarted = true;
       _logger.info(
@@ -742,60 +748,80 @@ class Libp2pRouter implements RouterInterface {
     _registeredProtocols.add(protocolId);
 
     if (_host != null) {
-      _host!.setStreamHandler(protocolId, (stream, remotePeerId) async {
-        final remoteIdStr = remotePeerId.toString();
-        _logger.verbose(
-          'Incoming stream from $remoteIdStr for protocol $protocolId',
-        );
-
-        try {
-          // Some protocols (e.g. Bitswap) send multiple length-prefixed
-          // messages on a single stream, so read until the stream is closed.
-          while (true) {
-            final data = await _readLengthPrefixedMessage(stream);
-            if (data == null) {
-              break;
-            }
-            if (data.isEmpty) {
-              _logger.warning(
-                'Received empty message from $remoteIdStr on $protocolId',
-              );
-              continue;
-            }
-
-            final packet = NetworkPacket(
-              srcPeerId: remoteIdStr,
-              datagram: data,
-              responder: (response) async {
-                try {
-                  final lengthPrefix = _encodeLengthPrefix(response.length);
-                  await stream.write(
-                    Uint8List.fromList([...lengthPrefix, ...response]),
-                  );
-                } catch (e) {
-                  _logger.error('Failed to send response to $remoteIdStr', e);
-                }
-              },
-            );
-            handler(packet);
-            _messagePacketController.add(packet);
-          }
-        } catch (e, stackTrace) {
-          _logger.error(
-            'Error handling stream for $protocolId from $remoteIdStr',
-            e,
-            stackTrace,
-          );
-        } finally {
-          // Close the stream once the peer is done sending messages.
-          try {
-            await stream.close();
-          } catch (_) {}
-        }
-      });
+      _attachStreamHandler(protocolId);
     }
 
     _logger.debug('Registered protocol handler for $protocolId');
+  }
+
+  /// Wires [protocolId] into the live libp2p host so inbound streams dispatch
+  /// to the registered handler. Called from [registerProtocolHandler] when the
+  /// host already exists, and replayed for all registered handlers after the
+  /// host is created in [start].
+  void _attachStreamHandler(String protocolId) {
+    final handler = _protocolHandlers[protocolId];
+    final host = _host;
+    if (handler == null || host == null) return;
+
+    host.setStreamHandler(protocolId, (stream, remotePeerId) async {
+      final remoteIdStr = remotePeerId.toString();
+      _logger.verbose(
+        'Incoming stream from $remoteIdStr for protocol $protocolId',
+      );
+
+      final streamDeadline = DateTime.now().add(_maxStreamLifetime);
+      try {
+        // Some protocols (e.g. Bitswap) send multiple length-prefixed
+        // messages on a single stream, so read until the stream is closed.
+        while (true) {
+          if (DateTime.now().isAfter(streamDeadline)) {
+            _logger.warning(
+              'Closing stream from $remoteIdStr on $protocolId: '
+              'exceeded maximum stream lifetime',
+            );
+            break;
+          }
+          final data = await _readLengthPrefixedMessage(stream);
+          if (data == null) {
+            break;
+          }
+          if (data.isEmpty) {
+            _logger.warning(
+              'Received empty message from $remoteIdStr on $protocolId',
+            );
+            continue;
+          }
+
+          final packet = NetworkPacket(
+            srcPeerId: remoteIdStr,
+            datagram: data,
+            responder: (response) async {
+              try {
+                final lengthPrefix = _encodeLengthPrefix(response.length);
+                await stream.write(
+                  Uint8List.fromList([...lengthPrefix, ...response]),
+                );
+              } catch (e) {
+                _logger.error('Failed to send response to $remoteIdStr', e);
+              }
+            },
+          );
+          handler(packet);
+          _messagePacketController.add(packet);
+        }
+      } catch (e, stackTrace) {
+        _logger.error(
+          'Error handling stream for $protocolId from $remoteIdStr',
+          e,
+          stackTrace,
+        );
+      } finally {
+        // Close the stream once the peer is done sending messages.
+        try {
+          await stream.close();
+        } catch (_) {}
+      }
+    });
   }
 
   @override
@@ -911,6 +937,11 @@ class Libp2pRouter implements RouterInterface {
 
   /// Idle deadline applied to each read on an inbound stream.
   static const Duration _inboundReadIdleTimeout = Duration(seconds: 30);
+
+  /// Total lifetime of an inbound stream. Without this, a peer can hold a
+  /// stream open indefinitely by sending a byte inside each idle window
+  /// (drip-feed DoS). Multi-message protocols get a generous bound.
+  static const Duration _maxStreamLifetime = Duration(minutes: 5);
 
   Uint8List _encodeLengthPrefix(int length) {
     // Simple varint encoding for length prefix

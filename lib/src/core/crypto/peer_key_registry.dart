@@ -14,6 +14,12 @@ import '../types/peer_id.dart';
 /// [PeerKeyRegistry] verifies that any supplied public key cryptographically
 /// hashes to the peer ID before storing it, preventing identity spoofing.
 class PeerKeyRegistry {
+  /// Maximum verified key bindings retained. Keys arrive from remote peers
+  /// (pubsub messages, identify) so the map must stay bounded; the
+  /// oldest-registered binding is evicted when the cap is hit and will be
+  /// re-registered on the peer's next message or identify exchange.
+  static const int maxRegisteredKeys = 4096;
+
   final Map<String, Uint8List> _keys = {};
 
   /// Verifies that [publicKeyBytes] cryptographically derives to [peerId].
@@ -39,6 +45,9 @@ class PeerKeyRegistry {
   bool registerPublicKey(String peerId, Uint8List publicKeyBytes) {
     if (!verifyPeerBinding(peerId, publicKeyBytes)) {
       return false;
+    }
+    if (!_keys.containsKey(peerId) && _keys.length >= maxRegisteredKeys) {
+      _keys.remove(_keys.keys.first);
     }
     _keys[peerId] = Uint8List.fromList(publicKeyBytes);
     return true;

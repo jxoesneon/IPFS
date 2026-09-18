@@ -641,13 +641,19 @@ class ConfigCommand extends IpfsCommand {
     final args = argResults!.rest;
     if (args.isEmpty) {
       final config = await buildConfig();
-      printJson(config.toJson());
+      printJson(_redactSecrets(config.toJson()));
       return;
     }
 
     final key = args.first;
     if (args.length == 1) {
       final config = await buildConfig();
+      if (_isSecretConfigKey(key)) {
+        stderr.writeln(
+          'Error: refusing to print secret config value: $key',
+        );
+        exit(1);
+      }
       final value = _getConfigValue(config.toJson(), key);
       if (value == null) {
         stderr.writeln('Error: config key not found: $key');
@@ -680,6 +686,21 @@ class ConfigCommand extends IpfsCommand {
     );
     printJson({'Key': key, 'Value': _parseValue(value)});
   }
+}
+
+/// Config keys whose values must never be printed to the terminal.
+const _secretConfigKeys = {'libp2pIdentitySeed', 'rpcApiKey'};
+
+bool _isSecretConfigKey(String key) => _secretConfigKeys.contains(key);
+
+/// Returns a copy of [json] with secret values replaced by a marker so
+/// `ipfs config` output cannot leak key material into logs or scrollback.
+Map<String, dynamic> _redactSecrets(Map<String, dynamic> json) {
+  final redacted = Map<String, dynamic>.of(json);
+  for (final key in _secretConfigKeys) {
+    if (redacted[key] != null) redacted[key] = '<redacted>';
+  }
+  return redacted;
 }
 
 dynamic _getConfigValue(Map<String, dynamic> config, String key) {

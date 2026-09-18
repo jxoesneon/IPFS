@@ -794,6 +794,16 @@ class DHTClient {
         publicKey: ipnsPublicKeyFromDhtKey(key),
       );
       if (!record.isSigned || record.isExpired) return -1;
+
+      // The record's public key must derive the queried key — a record
+      // signed by a different key must not win the selection even with a
+      // higher sequence (same check enforced on PUT_VALUE ingest).
+      final expectedKey = ipnsDhtKey(record.publicKey);
+      if (expectedKey.length != key.length) return -1;
+      for (var i = 0; i < key.length; i++) {
+        if (expectedKey[i] != key[i]) return -1;
+      }
+
       if (!await record.verify()) return -1;
       return record.sequence;
     } catch (_) {
@@ -935,7 +945,16 @@ class DHTClient {
       rethrow;
     }
 
-    return completer.future.timeout(_config.requestTimeout);
+    return completer.future.timeout(
+      _config.requestTimeout,
+      onTimeout: () {
+        _pendingRequests.remove(requestId);
+        throw TimeoutException(
+          'DHT request to ${peer.toBase58()} timed out',
+          _config.requestTimeout,
+        );
+      },
+    );
   }
 
   String _generateRequestId() {
@@ -1240,17 +1259,21 @@ class DHTClient {
 
   /// Validates an inbound PUT_VALUE record before storage.
   ///
-  /// Generic values are bounded by [_maxDhtValueSize]. `/ipns/` records must
-  /// additionally decode, be signed, be unexpired, verify their signature,
-  /// match the DHT key derived from their public key, and carry a sequence
-  /// number higher than any record already stored for the key.
+  /// Per the libp2p DHT spec, PUT_VALUE keys must live in a namespace with
+  /// a registered validator; `/ipns/` is the only namespace this node
+  /// serves, so all other keys are rejected — accepting arbitrary keys
+  /// would let any connected peer fill local disk unauthenticated.
+  ///
+  /// `/ipns/` records must decode, be signed, be unexpired, verify their
+  /// signature, match the DHT key derived from their public key, and carry
+  /// a sequence number higher than any record already stored for the key.
   Future<bool> _validateInboundDhtValue(
     Uint8List key,
     Uint8List value,
     dynamic storage,
   ) async {
     if (value.isEmpty || value.length > _maxDhtValueSize) return false;
-    if (!_isIpnsKey(key)) return true;
+    if (!_isIpnsKey(key)) return false;
 
     // Kubo-style records omit the embedded public key; recover it from the
     // DHT key itself ('/ipns/' + identity multihash of the public key).

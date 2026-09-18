@@ -13,10 +13,15 @@ import 'package:dart_ipfs/src/proto/generated/bitswap/bitswap.pb.dart'
 /// - [LedgerManager] for managing ledgers across multiple peers
 class BitLedger {
   /// Creates a new ledger for tracking bitswap exchanges with a specific peer.
-  BitLedger(this.peerId);
+  BitLedger(this.peerId, {this.onBytesChanged});
 
   /// The peer this ledger tracks.
   final String peerId;
+
+  /// Optional callback invoked with each byte delta recorded —
+  /// `(sentDelta, receivedDelta)`. Used by [LedgerManager] to maintain
+  /// aggregate totals without rescanning every ledger.
+  final void Function(int sentDelta, int receivedDelta)? onBytesChanged;
 
   /// Total bytes sent to this peer.
   int sentBytes = 0;
@@ -34,12 +39,14 @@ class BitLedger {
   void addSentBytes(int bytes) {
     if (bytes < 0) throw ArgumentError('Cannot add negative bytes.');
     sentBytes += bytes;
+    onBytesChanged?.call(bytes, 0);
   }
 
   /// Record bytes received from the peer.
   void addReceivedBytes(int bytes) {
     if (bytes < 0) throw ArgumentError('Cannot add negative bytes.');
     receivedBytes += bytes;
+    onBytesChanged?.call(0, bytes);
   }
 
   /// Get the current debt balance.
@@ -98,15 +105,30 @@ class LedgerManager {
   static const int maxLedgers = 1024;
 
   final Map<String, BitLedger> _ledgers = {};
+  int _totalSent = 0;
+  int _totalReceived = 0;
 
   /// Retrieve the ledger for a given peer. If it doesn't exist, create it.
   BitLedger getLedger(String peerId) {
     final existing = _ledgers[peerId];
     if (existing != null) return existing;
     if (_ledgers.length >= maxLedgers) {
-      _ledgers.remove(_ledgers.keys.first);
+      final evicted = _ledgers.remove(_ledgers.keys.first);
+      if (evicted != null) {
+        _totalSent -= evicted.sentBytes;
+        _totalReceived -= evicted.receivedBytes;
+      }
     }
-    return _ledgers.putIfAbsent(peerId, () => BitLedger(peerId));
+    return _ledgers.putIfAbsent(
+      peerId,
+      () => BitLedger(
+        peerId,
+        onBytesChanged: (sent, received) {
+          _totalSent += sent;
+          _totalReceived += received;
+        },
+      ),
+    );
   }
 
   /// Print all ledgers for debugging purposes.
@@ -118,24 +140,23 @@ class LedgerManager {
 
   /// Clear a specific peer ledger.
   void clearLedger(String peerId) {
-    _ledgers.remove(peerId);
+    final removed = _ledgers.remove(peerId);
+    if (removed != null) {
+      _totalSent -= removed.sentBytes;
+      _totalReceived -= removed.receivedBytes;
+    }
   }
 
   /// Clear all peer ledgers.
   void clearAllLedgers() {
     _ledgers.clear();
+    _totalSent = 0;
+    _totalReceived = 0;
   }
 
-  /// Gets the total bandwidth statistics for all ledgers
+  /// Gets the total bandwidth statistics for all ledgers. Totals are
+  /// maintained incrementally — this is O(1) even when called per message.
   Map<String, int> getBandwidthStats() {
-    int totalSent = 0;
-    int totalReceived = 0;
-
-    for (final ledger in _ledgers.values) {
-      totalSent += ledger.sentBytes;
-      totalReceived += ledger.receivedBytes;
-    }
-
-    return {'sent': totalSent, 'received': totalReceived};
+    return {'sent': _totalSent, 'received': _totalReceived};
   }
 }

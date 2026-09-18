@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
@@ -283,8 +284,6 @@ void main() {
 
     test('sendPing success case', () async {
       final peer = PeerId(value: Uint8List.fromList(List.filled(32, 3)));
-      // Mock successful response
-      final completer = Completer<kad.Message>();
       // We can't easily mock the internal completer, so we just verify it doesn't throw
       final result = await tree
           .sendPing(peer)
@@ -293,20 +292,17 @@ void main() {
     });
 
     test('updateConnectionStats', () {
-      final peer = PeerId(value: Uint8List.fromList(List.filled(32, 7)));
       // This is a private method, but we can verify it doesn't throw when called through public methods
       expect(tree, isNotNull);
     });
 
     test('getNodeStats returns stats for known peer', () {
-      final peer = PeerId(value: Uint8List.fromList(List.filled(32, 8)));
       final stats = tree.nodeStats;
       expect(stats, isNotNull);
       expect(stats.isEmpty, isTrue); // No stats added yet
     });
 
     test('getConnectionStats returns stats for known peer', () {
-      final peer = PeerId(value: Uint8List.fromList(List.filled(32, 9)));
       final stats = tree.connectionStats;
       expect(stats, isNotNull);
       expect(stats.isEmpty, isTrue); // No stats added yet
@@ -537,6 +533,33 @@ void main() {
           );
       expect(value, isNull);
       expect(peers, isEmpty);
+    });
+
+    test('periodic value maintenance republishes values and logs failures', () {
+      fakeAsync((async) {
+        // Build the tree inside the fake zone so its periodic maintenance
+        // timers are controllable via elapse().
+        final maintenanceTree = KademliaTree(mockClient);
+
+        // Store a value so the periodic republish has work to do.
+        unawaited(
+          maintenanceTree.storeLocalValue('key', Uint8List.fromList([1])),
+        );
+        async.flushMicrotasks();
+
+        // First republish tick: republishValues runs to completion.
+        async.elapse(KademliaTree.republishInterval);
+        async.flushMicrotasks();
+
+        // Second tick: replication failure is caught and logged.
+        when(
+          mockRoutingTable.findClosestPeers(any, any),
+        ).thenThrow(Exception('lookup failed'));
+        async.elapse(KademliaTree.republishInterval);
+        async.flushMicrotasks();
+
+        maintenanceTree.stop();
+      });
     });
   });
 }

@@ -418,15 +418,13 @@ class Reprovider implements ILifecycle {
     final k = _config.bucketSize;
 
     // Sort by XOR distance from the local peer to improve routing locality.
-    final sorted = List<CID>.from(cids);
-    sorted.sort((a, b) {
-      final keyA = _routingKey(a);
-      final keyB = _routingKey(b);
-      return _xorDistance(
-        keyA,
-        localPeerId,
-      ).compareTo(_xorDistance(keyB, localPeerId));
-    });
+    // Routing keys are SHA-256 derivations — hoist them out of the
+    // comparator so each CID is hashed once instead of O(n·log n) times.
+    final keyed = [
+      for (final cid in cids) (cid, _xorDistance(_routingKey(cid), localPeerId)),
+    ];
+    keyed.sort((a, b) => a.$2.compareTo(b.$2));
+    final sorted = [for (final entry in keyed) entry.$1];
 
     final grouped = <PeerId, List<CID>>{};
     for (final cid in sorted) {

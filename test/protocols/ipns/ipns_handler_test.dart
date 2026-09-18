@@ -4,9 +4,51 @@ import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
+import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:test/test.dart';
+
+/// Minimal [IDHTHandler] that serves a fixed value for every key.
+class _StubDHTHandler implements IDHTHandler {
+  _StubDHTHandler(this._value);
+
+  final Value _value;
+
+  @override
+  Future<void> start() async {}
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> provideAll(List<CID> cids) async {}
+
+  @override
+  Future<Value> getValue(Key key) async => _value;
+
+  @override
+  Future<List<V_PeerInfo>> findPeer(PeerId id) async => [];
+
+  @override
+  Future<void> provide(CID cid) async {}
+
+  @override
+  Future<List<V_PeerInfo>> findProviders(CID cid) async => [];
+
+  @override
+  Future<void> putValue(Key key, Value value) async {}
+
+  @override
+  Future<void> handleRoutingTableUpdate(V_PeerInfo peer) async {}
+
+  @override
+  Future<void> handleProvideRequest(CID cid, PeerId provider) async {}
+}
 
 void main() {
   group('IPNSRecord', () {
@@ -167,6 +209,28 @@ void main() {
     test('fromCBOR throws on invalid data', () {
       final invalidData = Uint8List.fromList([1, 2, 3]);
       expect(() => IPNSRecord.fromCBOR(invalidData), throwsFormatException);
+    });
+  });
+
+  group('IPNSHandler.resolve', () {
+    test('rejects DHT bytes that are not a valid IPNS record', () async {
+      final garbage = Uint8List.fromList(
+        utf8.encode('definitely not an ipns record'),
+      );
+      final dht = _StubDHTHandler(Value(garbage));
+      final handler = IPNSHandler(IPFSConfig(offline: true), null, dht);
+      await handler.start();
+
+      final keyPair = await Ed25519().newKeyPair();
+      final pub = await keyPair.extractPublicKey();
+      final name = deriveIpnsName(Uint8List.fromList(pub.bytes));
+
+      await expectLater(
+        handler.resolve(name),
+        throwsA(isA<IpnsValidationError>()),
+      );
+
+      await handler.stop();
     });
   });
 }

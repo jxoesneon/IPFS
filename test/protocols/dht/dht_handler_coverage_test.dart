@@ -440,5 +440,19 @@ void main() {
 
       verify(mockClient.addProvider(any, any)).called(3);
     });
+
+    test('handleProvideRequest records provider in local index', () async {
+      final cid = CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
+      final provider = PeerId(value: Uint8List.fromList([9, 8, 7]));
+
+      await handler.handleProvideRequest(cid, provider);
+
+      verify(mockClient.addProvider(any, any)).called(1);
+      final localProviders = handler.getLocalProvidersForCid(cid.toString());
+      expect(
+        localProviders.map((peer) => peer.toBase58()),
+        contains(provider.toBase58()),
+      );
+    });
   });
 }

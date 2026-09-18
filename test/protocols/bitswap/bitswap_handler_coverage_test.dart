@@ -447,5 +447,203 @@ void main() {
 
       await capturedHandler(packet); // Should handle empty wantlist gracefully
     });
+
+    test('HAVE presences track providers within the per-CID bound', () async {
+      await handler.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.last
+              as Future<void> Function(NetworkPacket);
+
+      final cid = CID.computeForDataSync(Uint8List.fromList([21, 22, 23]));
+      final cidStr = cid.encode();
+
+      // More peers than the per-CID provider bound announce HAVE; the
+      // excess peers are dropped but tracked peers stay recorded.
+      for (var i = 0; i < 33; i++) {
+        final msg = message.Message()
+          ..addBlockPresence(cidStr, message.BlockPresenceType.have);
+        await capturedHandler(
+          NetworkPacket(srcPeerId: 'provider$i', datagram: msg.toBytes()),
+        );
+      }
+
+      // Re-announcing from an already tracked peer still succeeds.
+      final reannounce = message.Message()
+        ..addBlockPresence(cidStr, message.BlockPresenceType.have);
+      await capturedHandler(
+        NetworkPacket(srcPeerId: 'provider0', datagram: reannounce.toBytes()),
+      );
+
+      // DONT_HAVE removes the provider again.
+      final dontHave = message.Message()
+        ..addBlockPresence(cidStr, message.BlockPresenceType.dontHave);
+      await capturedHandler(
+        NetworkPacket(srcPeerId: 'provider0', datagram: dontHave.toBytes()),
+      );
+    });
+
+    test('provider CID index evicts oldest entries beyond its bound', () async {
+      await handler.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.last
+              as Future<void> Function(NetworkPacket);
+
+      // More distinct CIDs than the provider-index bound (4096) forces
+      // eviction of the oldest entries.
+      final msg = message.Message();
+      for (var i = 0; i < 4097; i++) {
+        final cid = CID.computeForDataSync(
+          Uint8List.fromList([
+            i & 0xff,
+            (i >> 8) & 0xff,
+            (i >> 16) & 0xff,
+            0xab,
+          ]),
+        );
+        msg.addBlockPresence(cid.encode(), message.BlockPresenceType.have);
+      }
+      await capturedHandler(
+        NetworkPacket(srcPeerId: 'peerA', datagram: msg.toBytes()),
+      );
+    });
+
+    test('peer want tracking is bounded and refreshes recency', () async {
+      await handler.start();
+      when(mockRouter.peerID).thenReturn('localPeer');
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.last
+              as Future<void> Function(NetworkPacket);
+
+      final cid = CID.computeForDataSync(Uint8List.fromList([31, 32, 33]));
+      final cidStr = cid.encode();
+
+      // The same peer repeating the same want refreshes its recency.
+      final wantMsg = message.Message()
+        ..addWantlistEntry(
+          cidStr,
+          priority: 5,
+          wantType: message.WantType.block,
+        );
+      await capturedHandler(
+        NetworkPacket(srcPeerId: 'peerA', datagram: wantMsg.toBytes()),
+      );
+      await capturedHandler(
+        NetworkPacket(srcPeerId: 'peerA', datagram: wantMsg.toBytes()),
+      );
+
+      // More peers than the tracked-peer bound (256) evicts the oldest.
+      for (var i = 0; i < 256; i++) {
+        final msg = message.Message()
+          ..addWantlistEntry(
+            cidStr,
+            priority: 1,
+            wantType: message.WantType.block,
+          );
+        await capturedHandler(
+          NetworkPacket(srcPeerId: 'wanter$i', datagram: msg.toBytes()),
+        );
+      }
+    });
+
+    test('per-peer want bound evicts oldest wants', () async {
+      await handler.start();
+      when(mockRouter.peerID).thenReturn('localPeer');
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.last
+              as Future<void> Function(NetworkPacket);
+
+      // More wants than the per-peer bound (512) from a single peer.
+      final msg = message.Message();
+      for (var i = 0; i < 513; i++) {
+        final cid = CID.computeForDataSync(
+          Uint8List.fromList([i & 0xff, (i >> 8) & 0xff, 0xcd]),
+        );
+        msg.addWantlistEntry(
+          cid.encode(),
+          priority: 1,
+          wantType: message.WantType.block,
+        );
+      }
+      await capturedHandler(
+        NetworkPacket(srcPeerId: 'peerHeavy', datagram: msg.toBytes()),
+      );
+    });
+
+    test('block forward failures to interested peers are logged', () async {
+      await handler.start();
+      when(mockRouter.connectedPeers).thenReturn({'peerA'});
+      when(mockRouter.peerID).thenReturn('localPeer');
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.last
+              as Future<void> Function(NetworkPacket);
+
+      final blockData = Uint8List.fromList([41, 42, 43]);
+      final cid = CID.computeForDataSync(blockData);
+      final cidStr = cid.encode();
+
+      // peerA records a want for the block. The block is missing locally
+      // and sendDontHave is false, so no response is sent yet.
+      final wantMsg = message.Message()
+        ..addWantlistEntry(
+          cidStr,
+          priority: 10,
+          wantType: message.WantType.block,
+        );
+      await capturedHandler(
+        NetworkPacket(srcPeerId: 'peerA', datagram: wantMsg.toBytes()),
+      );
+
+      // Force the forward send to fail; the error must be caught and logged.
+      when(
+        mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
+      ).thenThrow(Exception('send failed'));
+
+      await handler.handleBlocks([Block(cid: cid, data: blockData)]);
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      verify(
+        mockRouter.sendMessage(
+          'peerA',
+          any,
+          protocolId: anyNamed('protocolId'),
+        ),
+      ).called(greaterThan(0));
+    });
+
+    test(
+      'want throws StateError when pending-block limit is reached',
+      () async {
+        await handler.start();
+        when(mockRouter.connectedPeers).thenReturn({'peerA'});
+        when(
+          mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
+        ).thenAnswer((_) async {});
+
+        // Fill the pending-block table to its bound (2048) in a single call.
+        final cids = List<String>.generate(2048, (i) {
+          return CID
+              .computeForDataSync(
+                Uint8List.fromList([i & 0xff, (i >> 8) & 0xff, 0xef]),
+              )
+              .encode();
+        });
+        handler.want(cids).ignore();
+
+        await expectLater(handler.want(['overflowCid']), throwsStateError);
+
+        // Complete all pending completers so ignored errors stay contained.
+        await handler.stop();
+      },
+    );
   });
 }

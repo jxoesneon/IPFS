@@ -263,14 +263,14 @@ class PubSubClient implements IPubSub {
             );
             return;
           }
-          // Validate that public key cryptographically derives to claimed sender PeerID
-          if (!PeerKeyRegistry.verifyPeerBinding(sender, pubKeyBytes)) {
+          // Register verifies the binding cryptographically (public key must
+          // derive to the claimed sender PeerID) before storing.
+          if (!_keyRegistry.registerPublicKey(sender, pubKeyBytes)) {
             _logger.warning(
               'Rejected spoofed message: public key does not derive to claimed sender $sender',
             );
             return;
           }
-          _keyRegistry.registerPublicKey(sender, pubKeyBytes);
         } else {
           pubKeyBytes = _keyRegistry.getPublicKey(sender);
           if (pubKeyBytes == null) {

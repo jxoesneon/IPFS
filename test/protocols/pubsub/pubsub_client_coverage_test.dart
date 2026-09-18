@@ -910,4 +910,92 @@ void main() {
       await client.stop();
     });
   });
+
+  group('PubSubClient bounds and eviction', () {
+    Future<void Function(NetworkPacket)> packetHandler() async {
+      await client.start();
+      return verify(
+            mockRouter.registerProtocolHandler(any, captureAny),
+          ).captured.single
+          as void Function(NetworkPacket);
+    }
+
+    NetworkPacket contentPacket(String sender, String topic, String content) {
+      return NetworkPacket(
+        srcPeerId: sender,
+        datagram: Uint8List.fromList(
+          utf8.encode(
+            jsonEncode({'sender': sender, 'topic': topic, 'content': content}),
+          ),
+        ),
+      );
+    }
+
+    NetworkPacket subscribePacket(String peer, String topic) {
+      return NetworkPacket(
+        srcPeerId: peer,
+        datagram: Uint8List.fromList(utf8.encode('subscribe:$topic')),
+      );
+    }
+
+    test('evicts the oldest cached message beyond the per-topic cap', () async {
+      final handler = await packetHandler();
+      when(mockRouter.isConnectedPeer(any)).thenReturn(true);
+
+      // _maxEntriesPerTopic is 512; the 513th distinct message evicts the
+      // oldest cache and dedup entries.
+      for (var i = 0; i < 513; i++) {
+        handler(contentPacket('QmSender', 'topic1', 'content-$i'));
+      }
+
+      await client.stop();
+    });
+
+    test('evicts the oldest topic beyond the tracked-topics cap', () async {
+      final handler = await packetHandler();
+      when(mockRouter.isConnectedPeer(any)).thenReturn(true);
+
+      // _maxTrackedTopics is 256; the 257th topic evicts the oldest from
+      // both the message cache and the dedup set.
+      for (var i = 0; i < 257; i++) {
+        handler(contentPacket('QmSender', 'topic-$i', 'content'));
+      }
+
+      await client.stop();
+    });
+
+    test('evicts the oldest peer beyond the per-topic peer cap', () async {
+      final handler = await packetHandler();
+
+      // _maxPeersPerTopic is 128; the 129th announcer evicts the oldest.
+      for (var i = 0; i < 129; i++) {
+        handler(subscribePacket('QmPeer$i', 'topic1'));
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(client.peersForTopic('topic1'), hasLength(128));
+      await client.stop();
+    });
+
+    test('subscribe grafts peers that already announced the topic', () async {
+      final handler = await packetHandler();
+      handler(subscribePacket('QmAnnouncer', 'topic1'));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      await client.subscribe('topic1');
+
+      // The announcer was grafted into the mesh; it is visible through the
+      // peersForTopic mesh fallback for topics with no recorded peers.
+      expect(client.peersForTopic('unrelated'), contains('QmAnnouncer'));
+      await client.stop();
+    });
+
+    test('evicts the lowest-scored peers beyond the score cap', () {
+      // _maxScoredPeers is 1024; grafting a 1025th peer evicts the
+      // lowest-scored entry.
+      for (var i = 0; i < 1025; i++) {
+        client.graftPeer('peer-$i');
+      }
+    });
+  });
 }

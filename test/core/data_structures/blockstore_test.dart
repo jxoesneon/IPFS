@@ -409,6 +409,26 @@ void main() {
       await newStore.stop();
     });
 
+    test('start indexes files and skips unreadable entries', () async {
+      final data = Uint8List.fromList([7]);
+      final block = Block(cid: CID.computeForDataSync(data), data: data);
+      await store.putBlock(block);
+
+      // A subdirectory inside the store path cannot be sized like a block
+      // file; indexing must skip it instead of failing startup.
+      await getPlatform().createDirectory(p.join(testDirPath, 'stray-entry'));
+      await store.stop();
+
+      final newStore = BlockStore(path: testDirPath);
+      await newStore.start();
+
+      final resp = await newStore.getBlock(block.cid.encode());
+      expect(resp.found, isTrue);
+      expect(resp.block.data, equals([7]));
+
+      await newStore.stop();
+    });
+
     test('gc collects uncached blocks after restart', () async {
       final b1 = Block(
         cid: CID.computeForDataSync(Uint8List.fromList([1])),

@@ -106,7 +106,8 @@ class CircuitRelayClient {
       _pendingCircuitSlots.clear();
 
       _activeCircuits.clear();
-      await _circuitRelayEventsController.close();
+      // The broadcast event controller is long-lived — it stays open
+      // across stop/start so the client can be restarted.
       _logger.info('CircuitRelayClient stopped');
     } catch (e, stackTrace) {
       _logger.error('Error stopping CircuitRelayClient', e, stackTrace);

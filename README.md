@@ -376,7 +376,7 @@ IPFSConfig(
 
   // Storage paths
   dataPath: './ipfs_data',
-  datastorePath: './ipfs_data',
+  datastorePath: './ipfs_data/datastore',
   keystorePath: './ipfs_keystore',
   blockStorePath: 'blocks',
 

@@ -80,6 +80,24 @@ void main() {
       expect(unseeded.peerID, isNot(equals(seededPeerId)));
     });
 
+    test(
+      'falls back to an ephemeral identity when persistence is unavailable',
+      () async {
+        // A dataPath that resolves to a regular file makes
+        // <dataPath>/identity unwritable: the seed persistence attempt
+        // throws, so the router must fall back to an ephemeral identity.
+        final blocker = File('${repoDir.path}/blocker')
+          ..writeAsStringSync('not a directory');
+
+        final router = Libp2pRouter(configFor(blocker.path));
+        await router.initialize();
+
+        expect(router.isInitialized, isTrue);
+        expect(router.peerID, isNotEmpty);
+        expect(File('${blocker.path}/identity').existsSync(), isFalse);
+      },
+    );
+
     test('recovers from a malformed identity file', () async {
       final path = '${repoDir.path}/node';
       Directory(path).createSync(recursive: true);

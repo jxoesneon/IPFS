@@ -13,7 +13,7 @@ void main() {
       expect(config.debug, isTrue);
       expect(config.logLevel, equals('info'));
       expect(config.nodeId, isNotEmpty);
-      expect(config.datastorePath, equals('./ipfs_data'));
+      expect(config.datastorePath, equals('./ipfs_data/datastore'));
       expect(config.blockStorePath, equals('blocks'));
     });
 

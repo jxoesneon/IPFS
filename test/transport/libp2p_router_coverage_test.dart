@@ -269,5 +269,125 @@ void main() {
       router.removeMessageHandler('/p');
       router.registerProtocol('/new');
     });
+
+    group('inbound protocol streams', () {
+      IPFSConfig nodeConfig(String name) {
+        return IPFSConfig(
+          dataPath: '${repoDir.path}/$name',
+          network: NetworkConfig(
+            listenAddresses: const ['/ip4/127.0.0.1/tcp/0'],
+            bootstrapPeers: [],
+          ),
+        );
+      }
+
+      Future<String> dialAddressOf(Libp2pRouter peer) async {
+        final addr = peer.listeningAddresses.firstWhere(
+          (a) => a.contains('/tcp/'),
+        );
+        return '$addr/p2p/${peer.peerID}';
+      }
+
+      test('attaches protocol handlers registered before start', () async {
+        final rA = Libp2pRouter(nodeConfig('pre_a'));
+        final rB = Libp2pRouter(nodeConfig('pre_b'));
+
+        const protocol = '/test/prestart/1.0.0';
+        final completer = Completer<NetworkPacket>();
+        // Registered before the host exists; start() must replay the
+        // attachment once the host is created.
+        rB.registerProtocolHandler(protocol, completer.complete);
+
+        await rA.start();
+        await rB.start();
+
+        await rA.connect(await dialAddressOf(rB));
+        await rA.sendMessage(
+          rB.peerID,
+          Uint8List.fromList([1, 2, 3]),
+          protocolId: protocol,
+        );
+
+        final packet = await completer.future.timeout(
+          const Duration(seconds: 5),
+        );
+        expect(packet.datagram, equals([1, 2, 3]));
+
+        await rA.stop();
+        await rB.stop();
+      });
+
+      test('closes the inbound stream after the remote peer finishes', () async {
+        final rA = Libp2pRouter(nodeConfig('close_a'));
+        final rB = Libp2pRouter(nodeConfig('close_b'));
+        await rA.start();
+        await rB.start();
+
+        const protocol = '/test/close/1.0.0';
+        final completer = Completer<NetworkPacket>();
+        rB.registerProtocolHandler(protocol, completer.complete);
+
+        await rA.connect(await dialAddressOf(rB));
+        // sendMessage writes one length-prefixed message and closes the
+        // stream; the server observes EOF, exits its read loop, and closes
+        // its side of the stream in the finally block.
+        await rA.sendMessage(
+          rB.peerID,
+          Uint8List.fromList([7]),
+          protocolId: protocol,
+        );
+
+        final packet = await completer.future.timeout(
+          const Duration(seconds: 5),
+        );
+        expect(packet.datagram, equals([7]));
+
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        await rA.stop();
+        await rB.stop();
+      });
+
+      test('rejects an oversized inbound message', () async {
+        final rA = Libp2pRouter(nodeConfig('big_a'));
+        final rB = Libp2pRouter(nodeConfig('big_b'));
+        await rA.start();
+        await rB.start();
+
+        const protocol = '/test/oversize/1.0.0';
+        final received = <Uint8List>[];
+        rB.registerProtocolHandler(protocol, (p) => received.add(p.datagram));
+
+        await rA.connect(await dialAddressOf(rB));
+
+        // One byte over the 4 MiB inbound cap: the server rejects the
+        // length prefix (FormatException) and drops the message without
+        // invoking the handler.
+        try {
+          await rA.sendMessage(
+            rB.peerID,
+            Uint8List(4 * 1024 * 1024 + 1),
+            protocolId: protocol,
+          );
+        } catch (_) {
+          // The write may fail once the server resets the stream; either
+          // way the oversized prefix was delivered and rejected.
+        }
+
+        // The connection still serves well-formed messages afterwards.
+        await rA.sendMessage(
+          rB.peerID,
+          Uint8List.fromList([9]),
+          protocolId: protocol,
+        );
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        expect(received.length, equals(1));
+        expect(received.first, equals([9]));
+
+        await rA.stop();
+        await rB.stop();
+      });
+    });
   });
 }

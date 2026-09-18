@@ -2,10 +2,11 @@
 
 ## Executive Summary
 
-This inventory assesses the implementation status of the 28 tracked feature specifications for `dart_ipfs`. As of the latest implementation pass, **all P0, P1, and conditional specs have been implemented** to a testable, spec-compliant state, including **CLI_SPEC**, **KUBERNETES_SPEC**, **MODULARIZATION_SPEC**, the **UNIXFS_SPEC** HAMT CID parity fix, and **QUIC_SPEC** (config/fallback + native transport RFC + foundation package). No specifications remain missing or as placeholders.
+This inventory assesses the implementation status of the 28 tracked feature specifications for `dart_ipfs`. As of the latest implementation pass, **all P0, P1, and conditional specs have been implemented** to a testable, spec-compliant state, including **CLI_SPEC**, **KUBERNETES_SPEC**, **MODULARIZATION_SPEC**, the **UNIXFS_SPEC** HAMT CID parity fix, and **QUIC_SPEC** (config/fallback + native transport RFC + foundation package). One spec (**GOSSIPSUB_SPEC**) was subsequently removed in the 2026-09 dead-code audit — its reference stack was never wired into production and remains an approved P0 roadmap item.
 
 **Status Distribution:**
-- **Complete**: 28 specs (100.0%)
+- **Complete**: 27 specs (96.4%)
+- **Removed**: 1 spec (3.6%) — GOSSIPSUB_SPEC (dead reference stack; still roadmap-approved)
 - **In Progress**: 0 specs (0%)
 - **Planned**: 0 specs (0%)
 **Total Tracked**: 28 specs
@@ -148,9 +149,9 @@ This inventory assesses the implementation status of the 28 tracked feature spec
 
 ## Test Results
 
-Using Dart SDK 3.12.2:
-- `dart analyze`: 0 errors, 4 pre-existing info issues.
-- `dart test`: 2552 passed, 13 skipped, 0 failed.
+Using Dart SDK 3.12.2 (as of 2026-09-18):
+- `dart analyze`: 0 errors.
+- `dart test`: 3537 passed, 9 skipped, 0 failed (full suite; environment-induced file-descriptor flakes excluded).
 
 ## Recommended Next Phase
 

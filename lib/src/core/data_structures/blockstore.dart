@@ -116,7 +116,8 @@ class BlockStore implements IBlockStore {
       if (await getPlatform().exists(blockPath)) {
         final data = await getPlatform().readBytes(blockPath);
         if (data != null) {
-          final block = await Block.fromData(data);
+          // The filename is the CID — no need to rehash the content.
+          final block = Block(cid: CID.decode(cid), data: data);
           _blockCache.put(cid, block);
           return BlockResponseFactory.successGet(block.toProto());
         }
@@ -219,9 +220,10 @@ class BlockStore implements IBlockStore {
         }
         final data = await getPlatform().readBytes(p.join(path, cid));
         if (data != null) {
-          final block = await Block.fromData(data);
-          _blockCache.put(cid, block);
-          blocks.add(block);
+          // Bulk reads bypass the cache deliberately: the returned list
+          // defeats the bound anyway, and churning the LRU would evict
+          // useful entries. Filenames are CIDs — no rehash needed.
+          blocks.add(Block(cid: CID.decode(cid), data: data));
         }
       }
       return blocks;

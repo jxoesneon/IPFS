@@ -6,6 +6,16 @@ import 'package:dart_ipfs/src/core/storage/flat_file_datastore.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
+/// Keeps only entries whose value has exactly [length] bytes.
+class _ValueLengthFilter extends QueryFilter {
+  _ValueLengthFilter(this.length);
+
+  final int length;
+
+  @override
+  bool filter(MapEntry<Key, Uint8List> entry) => entry.value.length == length;
+}
+
 void main() {
   late Directory tempDir;
   late FlatFileDatastore datastore;
@@ -156,6 +166,30 @@ void main() {
             .query(Query(prefix: '/dht/values/', keysOnly: true))
             .toList();
         expect(dht.single.key.toString(), equals('/dht/values/somekey'));
+      });
+
+      test('applies filters to entry values', () async {
+        await datastore.put(Key('/keep'), Uint8List.fromList([1, 2, 3]));
+        await datastore.put(Key('/drop'), Uint8List.fromList([9]));
+
+        final entries = await datastore
+            .query(Query(filters: [_ValueLengthFilter(3)]))
+            .toList();
+
+        expect(entries.length, equals(1));
+        expect(entries.single.key.toString(), equals('/keep'));
+        expect(entries.single.value, equals([1, 2, 3]));
+      });
+
+      test('filters can reject every entry', () async {
+        await datastore.put(Key('/a'), Uint8List.fromList([1]));
+        await datastore.put(Key('/b'), Uint8List.fromList([2]));
+
+        final entries = await datastore
+            .query(Query(filters: [_ValueLengthFilter(99)]))
+            .toList();
+
+        expect(entries, isEmpty);
       });
     });
 

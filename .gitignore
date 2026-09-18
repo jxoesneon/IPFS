@@ -97,6 +97,7 @@ pana_report*.txt
 
 # Coverage
 coverage/
+coverage_*/
 .test_coverage.dart
 coverage.lcov
 coverage*.txt

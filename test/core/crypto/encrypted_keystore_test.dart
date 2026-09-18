@@ -212,6 +212,50 @@ void main() {
     });
   });
 
+  group('EncryptedKeystore legacy verifier migration', () {
+    /// Serializes [keystore] and strips the password verifier, simulating a
+    /// keystore written before the verifier field existed.
+    String legacyJson(EncryptedKeystore keystore) {
+      final parsed = jsonDecode(keystore.serialize()) as Map<String, dynamic>;
+      parsed['verifier'] = null;
+      return jsonEncode(parsed);
+    }
+
+    test('unlocks a verifier-less keystore by trial-decrypting a key', () async {
+      final original = EncryptedKeystore();
+      await original.unlock('pw');
+      await original.generateKey('legacy-key');
+      final json = legacyJson(original);
+      original.lock();
+
+      final restored = EncryptedKeystore.deserialize(json);
+      await restored.unlock('pw');
+
+      expect(restored.isUnlocked, isTrue);
+      expect(await restored.getKey('legacy-key'), isNotNull);
+
+      // The unlock establishes a verifier so subsequent unlocks verify the
+      // password directly.
+      final reserialized =
+          jsonDecode(restored.serialize()) as Map<String, dynamic>;
+      expect(reserialized['verifier'], isNotNull);
+
+      restored.lock();
+    });
+
+    test('rejects a wrong password on a verifier-less keystore', () async {
+      final original = EncryptedKeystore();
+      await original.unlock('right');
+      await original.generateKey('k');
+      final json = legacyJson(original);
+      original.lock();
+
+      final restored = EncryptedKeystore.deserialize(json);
+      await expectLater(restored.unlock('wrong'), throwsArgumentError);
+      expect(restored.isUnlocked, isFalse);
+    });
+  });
+
   group('EncryptedKeystore Locked Operations', () {
     test('generateKey throws when locked', () {
       final keystore = EncryptedKeystore();

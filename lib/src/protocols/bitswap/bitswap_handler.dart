@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -54,7 +55,7 @@ class BitswapHandler implements ILifecycle {
   final LedgerManager _ledgerManager = LedgerManager();
   final Map<String, Completer<Block>> _pendingBlocks = {};
   final Map<String, Set<String>> _providersForBlock = {};
-  final List<String> _requestQueue = [];
+  final Queue<String> _requestQueue = Queue<String>();
 
   /// Remote wantlist demand per peer: peer ID → (CID → priority). Remote
   /// wants are tracked separately so they never pollute the local wantlist.
@@ -467,7 +468,7 @@ class BitswapHandler implements ILifecycle {
 
     while (_activeRequests < _maxConcurrentRequests &&
         _requestQueue.isNotEmpty) {
-      final cid = _requestQueue.removeAt(0);
+      final cid = _requestQueue.removeFirst();
       _activeRequests++;
 
       unawaited(

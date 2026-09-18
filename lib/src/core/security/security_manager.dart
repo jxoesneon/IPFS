@@ -40,6 +40,7 @@ class SecurityManager implements ISecurityManager {
   final Map<String, dynamic> _securityMetrics = {};
 
   // Rate limiting
+  static const int _maxTrackedClients = 4096;
   final Map<String, List<DateTime>> _requestLog = {};
   final Map<String, int> _authAttempts = {};
 
@@ -105,11 +106,14 @@ class SecurityManager implements ISecurityManager {
   void _persistKeystore(String serialized) {
     final path = _keystorePath;
     if (path == null || getPlatform().isWeb) return;
-    _pendingKeystoreWrite = _pendingKeystoreWrite.then(
-      (_) => getPlatform().writeString(path, serialized).catchError((Object e) {
+    _pendingKeystoreWrite = _pendingKeystoreWrite.then((_) async {
+      try {
+        await getPlatform().writeString(path, serialized);
+        await getPlatform().restrictToOwner(path);
+      } catch (e) {
         _logger.warning('Failed to persist keystore to $path: $e');
-      }),
-    );
+      }
+    });
   }
 
   /// Completes when every queued keystore write has finished.
@@ -288,8 +292,13 @@ class SecurityManager implements ISecurityManager {
     final now = DateTime.now();
     final windowStart = now.subtract(const Duration(minutes: 1));
 
-    _requestLog.putIfAbsent(clientId, () => []);
-    final clientLog = _requestLog[clientId]!;
+    var clientLog = _requestLog[clientId];
+    if (clientLog == null) {
+      if (_requestLog.length >= _maxTrackedClients) {
+        _requestLog.remove(_requestLog.keys.first);
+      }
+      clientLog = _requestLog[clientId] = [];
+    }
 
     // Clean up old entries
     clientLog.removeWhere((dt) => dt.isBefore(windowStart));
@@ -310,6 +319,20 @@ class SecurityManager implements ISecurityManager {
     if (success) {
       _authAttempts.remove(clientId);
       return true;
+    }
+
+    if (!_authAttempts.containsKey(clientId) &&
+        _authAttempts.length >= _maxTrackedClients) {
+      // Evict the entry with the fewest recorded attempts.
+      var minAttempts = 1 << 30;
+      String? evictKey;
+      _authAttempts.forEach((key, value) {
+        if (value < minAttempts) {
+          minAttempts = value;
+          evictKey = key;
+        }
+      });
+      if (evictKey != null) _authAttempts.remove(evictKey);
     }
 
     final attempts = (_authAttempts[clientId] ?? 0) + 1;
@@ -337,6 +360,9 @@ class SecurityManager implements ISecurityManager {
     _logger.info('Stopping SecurityManager');
     _keyRotationTimer?.cancel();
     _keyRotationTimer = null;
+    // Drain queued keystore writes so the last mutation is not lost on
+    // shutdown.
+    await keystoreWritesIdle;
     lockKeystore();
   }
 

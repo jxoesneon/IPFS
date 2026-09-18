@@ -206,6 +206,24 @@ void main() {
       expect(cache.get('key'), equals(42));
     });
 
+    test('LRU eviction drops the evicted key timestamp and notifies', () {
+      final evicted = <MapEntry<String, int>>[];
+      final cache = TimedLRUCache<String, int>(
+        capacity: 2,
+        ttl: const Duration(seconds: 10),
+        onEvict: (k, v) => evicted.add(MapEntry(k, v)),
+      );
+
+      cache.put('a', 1);
+      cache.put('b', 2);
+      cache.put('c', 3); // Evicts 'a' through the routed _handleEvict path.
+
+      expect(evicted.single.key, equals('a'));
+      expect(evicted.single.value, equals(1));
+      expect(cache.get('a'), isNull);
+      expect(cache.length, equals(2));
+    });
+
     test('clear empties the timestamps and entries', () {
       final cache = TimedLRUCache<String, int>(
         capacity: 5,

@@ -408,6 +408,11 @@ class IPNSRecord {
   ///
   /// Matches Kubo/go-libp2p: the signature covers the value, the literal
   /// validity type string "EOL", and the validity (RFC3339) bytes.
+  ///
+  /// Note the V1 signature does NOT cover sequence or TTL — a relay could
+  /// rewrite those fields without invalidating it. The V2 signature
+  /// (`ipns-signature:` over the canonical CBOR record) covers the full
+  /// record; verifiers should prefer V2 when present, as [verify] does.
   Uint8List _getSignableData() {
     return Uint8List.fromList([
       ...value,

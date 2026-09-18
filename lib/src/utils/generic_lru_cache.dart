@@ -24,7 +24,7 @@ class GenericLRUCache<K, V> {
   final int capacity;
 
   /// Callback invoked when an entry is evicted.
-  final void Function(K key, V value)? onEvict;
+  void Function(K key, V value)? onEvict;
 
   final Map<K, _Node<K, V>> _cache = {};
   _Node<K, V>? _head;
@@ -179,22 +179,31 @@ class _Node<K, V> {
 /// Timed LRU cache that automatically expires entries.
 class TimedLRUCache<K, V> extends GenericLRUCache<K, V> {
   /// Creates a new [TimedLRUCache] with the given [capacity] and [ttl].
-  TimedLRUCache({required super.capacity, required this.ttl, super.onEvict});
+  TimedLRUCache({
+    required super.capacity,
+    required this.ttl,
+    void Function(K key, V value)? onEvict,
+  }) : _userOnEvict = onEvict {
+    // Route parent evictions through [_handleEvict] so timestamps for
+    // LRU-evicted keys are dropped in O(1) rather than scanning the map.
+    this.onEvict = _handleEvict;
+  }
 
   /// Duration before entries expire.
   final Duration ttl;
 
+  final void Function(K key, V value)? _userOnEvict;
   final Map<K, DateTime> _timestamps = {};
+
+  void _handleEvict(K key, V value) {
+    _timestamps.remove(key);
+    _userOnEvict?.call(key, value);
+  }
 
   @override
   void put(K key, V value) {
     super.put(key, value);
     _timestamps[key] = DateTime.now();
-    // Prune timestamps of entries evicted by the parent's LRU policy so the
-    // timestamp map cannot grow beyond capacity.
-    if (_timestamps.length > capacity) {
-      _timestamps.removeWhere((k, _) => !containsKey(k));
-    }
   }
 
   @override

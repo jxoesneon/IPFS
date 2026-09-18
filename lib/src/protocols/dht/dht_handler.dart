@@ -9,12 +9,12 @@ import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
+import 'package:dart_ipfs/src/core/storage/flat_file_datastore.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/ipns.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
-import 'package:dart_ipfs/src/storage/hive_datastore.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
 import 'package:dart_ipfs/src/utils/keystore.dart';
@@ -42,7 +42,7 @@ class DHTHandler implements IDHTHandler, ILifecycle {
     DenylistService? denylistService,
   }) : _keystore = keystore ?? Keystore(),
        _httpClient = httpClient ?? http.Client(),
-       _storage = storage ?? HiveDatastore(config.datastorePath),
+       _storage = storage ?? FlatFileDatastore(config.datastorePath),
        _denylistService = denylistService {
     _logger = Logger('DHTHandler', debug: config.debug);
     if (storage == null) {
@@ -257,10 +257,12 @@ class DHTHandler implements IDHTHandler, ILifecycle {
 
       final ttl = Int64(3600); // 1 hour
 
+      // Signature input must match IPNSRecord._getSignableData and Kubo:
+      // value + 'EOL' + validity.
       final dataToSign = BytesBuilder();
       dataToSign.add(valuePath);
-      dataToSign.add(validity);
       dataToSign.add(utf8.encode('EOL'));
+      dataToSign.add(validity);
 
       final signature = privateKey.sign(dataToSign.toBytes());
 

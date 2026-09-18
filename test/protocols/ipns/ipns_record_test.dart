@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
+import 'package:dart_ipfs/src/proto/generated/ipns.pb.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:test/test.dart';
 
@@ -168,6 +169,30 @@ void main() {
         final parsed = record.valueCID;
         expect(parsed, isNotNull);
         expect(parsed!.encode(), equals(cid.encode()));
+      });
+    });
+
+    group('fromIpnsEntry', () {
+      test('extracts a public key embedded in the entry', () async {
+        final keyPair = await signer.generateKeyPair();
+        final pubBytes = await signer.extractPublicKeyBytes(keyPair);
+        final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]));
+
+        final record = await IPNSRecord.create(
+          value: cid,
+          keyPair: keyPair,
+          sequence: 5,
+        );
+
+        // Re-encode the entry with the libp2p PublicKey protobuf embedded:
+        // 0x08 0x01 (field 1: Ed25519) 0x12 <len> (field 2: key bytes).
+        final entry = IpnsEntry.fromBuffer(record.toIpnsEntry())
+          ..pubKey = [0x08, 0x01, 0x12, pubBytes.length, ...pubBytes];
+
+        final decoded = IPNSRecord.decode(entry.writeToBuffer());
+        expect(decoded.publicKey, equals(pubBytes));
+        expect(decoded.sequence, equals(5));
+        expect(await decoded.verify(), isTrue);
       });
     });
 

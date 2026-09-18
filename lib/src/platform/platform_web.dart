@@ -184,6 +184,12 @@ class IpfsPlatformWeb implements IpfsPlatform {
   }
 
   @override
+  Future<void> restrictToOwner(String path) async {
+    // IndexedDB has no filesystem permissions; browser storage is
+    // already origin-isolated.
+  }
+
+  @override
   Future<String?> promptPassword(String message) async {
     // In a browser, we could use window.prompt, but it's not secure
     return null;

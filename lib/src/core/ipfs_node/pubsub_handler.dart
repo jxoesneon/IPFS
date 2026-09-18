@@ -60,15 +60,19 @@ class PubSubHandler implements IPubSub, ILifecycle {
   @override
   Set<String> peersForTopic(String topic) => _pubSubClient.peersForTopic(topic);
 
+  bool _started = false;
+
   /// Starts the PubSub client and listens for incoming messages.
   @override
   Future<void> start() async {
+    if (_started) return;
     try {
       await _pubSubClient.start();
     } catch (e, stackTrace) {
       _logger.error('Error starting PubSub client', e, stackTrace);
       rethrow;
     }
+    _started = true;
 
     // Bridge inbound client messages into the public [messages] stream.
     // Without this, publish works but subscribers can never observe a
@@ -90,6 +94,7 @@ class PubSubHandler implements IPubSub, ILifecycle {
   /// Stops the PubSub client.
   @override
   Future<void> stop() async {
+    _started = false;
     await _messageBridge?.cancel();
     _messageBridge = null;
     await _networkEventSub?.cancel();

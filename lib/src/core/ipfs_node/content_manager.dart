@@ -213,7 +213,19 @@ class ContentManager implements ILifecycle {
         url = 'https://ipfs.io/ipfs';
     }
     _logger.debug('Retrieving via Gateway ($url): $cid');
-    return await _httpGatewayClient.get(cid, baseUrl: url);
+    final bytes = await _httpGatewayClient.get(cid, baseUrl: url);
+    if (bytes == null) return null;
+
+    // Raw-codec CIDs address the returned bytes directly and can be
+    // hash-verified. Other codecs return resolved UnixFS content whose
+    // bytes do not hash to the root CID — the configured gateway is
+    // trusted for those, matching Kubo's gateway trust model.
+    if (CID.decode(cid).codec == 'raw' &&
+        !await Block(cid: CID.decode(cid), data: bytes).validate()) {
+      _logger.warning('Gateway $url returned invalid block for $cid');
+      return null;
+    }
+    return bytes;
   }
 
   /// Opt-in HTTP gateway fallback.

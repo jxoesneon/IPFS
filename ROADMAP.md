@@ -14,7 +14,7 @@ dart_ipfs **v1.16.2** is **multi-platform production ready** with:
 - **Bitswap 1.2.0**: Efficient block exchange with smart provider tracking.
 - **SEC-008 Cryptographic Security**: Asymmetric Ed25519 PubSub message signing, PeerKeyRegistry binding validation, and downgrade prevention.
 - **Helia & Kubo Interop**: Complete HTTP RPC test harness and profile-based Docker Compose verification.
-- **90%+ Code Coverage**: 3,470+ automated tests passing across macOS, Windows, and Ubuntu.
+- **90%+ Code Coverage**: 3,500+ automated tests passing across macOS, Windows, and Ubuntu.
 
 ---
 

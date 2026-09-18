@@ -849,7 +849,7 @@ void main() {
       verifyNever(mockStorage.put(any, any));
     });
 
-    test('stores a generic non-IPNS value', () async {
+    test('rejects a value stored under a non-/ipns/ key', () async {
       final handler = await capturedPacketHandler();
       deliverPutValue(
         handler,
@@ -858,7 +858,7 @@ void main() {
       );
       await Future<void>.delayed(const Duration(milliseconds: 100));
 
-      verify(mockStorage.put(any, any)).called(1);
+      verifyNever(mockStorage.put(any, any));
     });
 
     test('rejects an oversized value', () async {
@@ -961,6 +961,132 @@ void main() {
       final result = await client.getValueRaw(Uint8List.fromList([1, 2, 3]));
 
       expect(result, equals([7, 7, 7]));
+    });
+  });
+
+  group('DHTClient local value store paths', () {
+    test(
+      'storeValue returns false when the local replica write fails',
+      () async {
+        await client.initialize();
+        when(mockStorage.put(any, any)).thenThrow(Exception('disk full'));
+
+        // No peers and no local replica: nothing was stored.
+        final result = await client.storeValue(Uint8List(32), Uint8List(10));
+        expect(result, isFalse);
+      },
+    );
+
+    test('getValue returns null when the local store read fails', () async {
+      await client.initialize();
+      when(mockStorage.get(any)).thenThrow(Exception('read failure'));
+
+      final result = await client.getValue(Uint8List(32));
+      expect(result, isNull);
+    });
+
+    test('storeValueRaw pushes the record to connected peers', () async {
+      await client.initialize();
+      const peerStr = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
+      when(mockRouter.connectedPeers).thenReturn({peerStr});
+
+      final result = await client.storeValueRaw(Uint8List(32), Uint8List(10));
+
+      expect(result, isTrue);
+      verify(
+        mockRouter.sendMessage(peerStr, any, protocolId: DHTClient.protocolDht),
+      ).called(1);
+    });
+
+    test('storeValueRaw returns false when the local store fails', () async {
+      await client.initialize();
+      when(mockRouter.connectedPeers).thenReturn(<String>{});
+      when(mockStorage.put(any, any)).thenThrow(Exception('disk full'));
+
+      final result = await client.storeValueRaw(Uint8List(32), Uint8List(10));
+      expect(result, isFalse);
+    });
+  });
+
+  group('DHTClient getValue IPNS selection', () {
+    test(
+      'prefers the highest-sequence valid record across local and remote',
+      () async {
+        final kp = await Ed25519Signer().generateKeyPair(
+          seed: Uint8List.fromList(List.filled(32, 8)),
+        );
+        final pubKey = Uint8List.fromList((await kp.extractPublicKey()).bytes);
+        final dhtKey = ipnsDhtKey(pubKey);
+
+        final staleRecord = await IPNSRecord.create(
+          value: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+          keyPair: kp,
+          sequence: 3,
+        );
+        final freshRecord = await IPNSRecord.create(
+          value: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+          keyPair: kp,
+          sequence: 9,
+        );
+
+        await client.initialize();
+        final otherPeer = PeerId.fromBase58(
+          'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+        );
+        await client.kademliaRoutingTable.addPeer(otherPeer, otherPeer);
+
+        // A valid-but-stale local record enters the IPNS sequence
+        // comparison instead of winning outright.
+        when(
+          mockStorage.get(any),
+        ).thenAnswer((_) async => staleRecord.toIpnsEntry());
+
+        final responseMsg = kad.Message()
+          ..type = kad.Message_MessageType.GET_VALUE
+          ..record = (dht_proto.Record()
+            ..key = dhtKey
+            ..value = freshRecord.toIpnsEntry());
+        _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
+
+        final result = await client.getValue(dhtKey);
+        expect(result, equals(freshRecord.toIpnsEntry()));
+      },
+    );
+
+    test('falls back to the local record when remotes are invalid', () async {
+      final kp = await Ed25519Signer().generateKeyPair(
+        seed: Uint8List.fromList(List.filled(32, 9)),
+      );
+      final pubKey = Uint8List.fromList((await kp.extractPublicKey()).bytes);
+      final dhtKey = ipnsDhtKey(pubKey);
+
+      final localRecord = await IPNSRecord.create(
+        value: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        keyPair: kp,
+        sequence: 7,
+      );
+
+      await client.initialize();
+      final otherPeer = PeerId.fromBase58(
+        'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+      );
+      await client.kademliaRoutingTable.addPeer(otherPeer, otherPeer);
+
+      when(
+        mockStorage.get(any),
+      ).thenAnswer((_) async => localRecord.toIpnsEntry());
+
+      // The remote answer is not a decodable IPNS record: its sequence is -1
+      // and the local record still wins.
+      final responseMsg = kad.Message()
+        ..type = kad.Message_MessageType.GET_VALUE
+        ..record = (dht_proto.Record()
+          ..key = dhtKey
+          ..value = Uint8List.fromList([1, 2, 3]));
+      _mockEnvelopeResponse(mockRouter, otherPeer.toBase58(), responseMsg);
+
+      final result = await client.getValue(dhtKey);
+      expect(result, equals(localRecord.toIpnsEntry()));
     });
   });
 }

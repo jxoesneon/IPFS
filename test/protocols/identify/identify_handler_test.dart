@@ -7,8 +7,10 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:dart_ipfs/src/core/crypto/peer_key_registry.dart';
 import 'package:dart_ipfs/src/core/peer/peer_record.dart';
 import 'package:dart_ipfs/src/core/peer/peer_record_pb.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/identify/identify_handler.dart';
 import 'package:dart_ipfs/src/protocols/identify/identify_pb.dart';
 import 'package:dart_ipfs/src/protocols/identify/identify_push_handler.dart';
@@ -450,6 +452,68 @@ void main() {
       expect(bytes, equals(peerIdBytes));
       // Verify it's a copy
       expect(identical(bytes, peerIdBytes), isFalse);
+    });
+
+    test('identify registers a verified Ed25519 key binding', () async {
+      final registry = PeerKeyRegistry();
+
+      // Build a remote identify response carrying a real Ed25519 public key.
+      final remoteKeyPair = await Ed25519().newKeyPair();
+      final remotePub = await remoteKeyPair.extractPublicKey();
+      final remotePubBytes = Uint8List.fromList(remotePub.bytes);
+      final remotePeerId = PeerId.fromPublicKey(
+        remotePubBytes,
+        type: 'Ed25519',
+      ).toBase58();
+
+      final remoteIdentify = IdentifyPb(
+        publicKey: PublicKeyPb(
+          type: KeyType.ed25519,
+          data: remotePubBytes,
+        ).encode(),
+      );
+      router.setRequestResponse(remotePeerId, remoteIdentify.encode());
+
+      final handler = IdentifyHandler(
+        router: router,
+        publicKeyBytes: publicKeyBytes,
+        peerIdBytes: peerIdBytes,
+        keyRegistry: registry,
+      );
+
+      final result = await handler.identify(remotePeerId);
+      expect(result, isNotNull);
+      expect(registry.hasPublicKey(remotePeerId), isTrue);
+      expect(registry.getPublicKey(remotePeerId), equals(remotePubBytes));
+    });
+
+    test('identify rejects a public key that fails peer binding', () async {
+      final registry = PeerKeyRegistry();
+
+      final remoteKeyPair = await Ed25519().newKeyPair();
+      final remotePub = await remoteKeyPair.extractPublicKey();
+      final remotePubBytes = Uint8List.fromList(remotePub.bytes);
+      // The claimed peer ID does not derive from the advertised key.
+      const claimedPeerId = 'QmSpoofedPeerIdentity';
+
+      final remoteIdentify = IdentifyPb(
+        publicKey: PublicKeyPb(
+          type: KeyType.ed25519,
+          data: remotePubBytes,
+        ).encode(),
+      );
+      router.setRequestResponse(claimedPeerId, remoteIdentify.encode());
+
+      final handler = IdentifyHandler(
+        router: router,
+        publicKeyBytes: publicKeyBytes,
+        peerIdBytes: peerIdBytes,
+        keyRegistry: registry,
+      );
+
+      final result = await handler.identify(claimedPeerId);
+      expect(result, isNotNull);
+      expect(registry.hasPublicKey(claimedPeerId), isFalse);
     });
   });
 

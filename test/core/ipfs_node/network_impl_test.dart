@@ -88,11 +88,22 @@ void main() {
       ).called(3); // circuitRelayClient HOP + STOP + AutoNAT dialback
     });
 
-    test('Stop cancels subscriptions and closes controller', () async {
+    test('Stop cancels subscriptions; controller survives for restart', () async {
       await handler.start();
       await handler.stop();
       verify(mockRouter.start()).called(1);
-      expect(handler.networkEvents, emitsDone);
+      // The event controller is long-lived — a stopped node can be
+      // restarted, so the stream must not emit done.
+      expect(handler.networkEvents.isBroadcast, isTrue);
+
+      // Restart re-wires event routing: a peer event after restart still
+      // updates the routing table.
+      await handler.start();
+      connectionEventsController.add(
+        ConnectionEvent(type: ConnectionEventType.connected, peerId: 'peer9'),
+      );
+      await Future.delayed(Duration(milliseconds: 50));
+      verify(mockRoutingTable.addPeer(any, any)).called(1);
     });
 
     test('peerConnected updates routing table', () async {

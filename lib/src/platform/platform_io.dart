@@ -35,6 +35,16 @@ class IpfsPlatformIO implements IpfsPlatform {
   }
 
   @override
+  Future<void> restrictToOwner(String path) async {
+    // dart:io exposes no chmod; shell out on POSIX. Windows uses ACLs and
+    // has no chmod — skip there.
+    if (Platform.isWindows) return;
+    try {
+      await Process.run('chmod', ['600', path]);
+    } catch (_) {}
+  }
+
+  @override
   Future<Uint8List?> readBytes(String path) async {
     final file = File(path);
     if (!await file.exists()) return null;
