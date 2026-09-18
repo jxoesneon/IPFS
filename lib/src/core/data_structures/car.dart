@@ -2,11 +2,9 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
-import 'package:dart_ipfs/src/proto/generated/core/cid.pb.dart'
-    show IPFSCIDProto, IPFSCIDVersion;
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
+import 'package:dart_ipfs_core/dart_ipfs_core.dart' show CID, MultihashUtils;
 import 'package:fixnum/fixnum.dart' show Int64;
 
 // ---------------------------------------------------------------------------
@@ -146,15 +144,13 @@ class CarHeader {
         throw CarHeaderException('CAR header roots must be CID links');
       }
       final link = cidNode.linkValue;
-      final proto = IPFSCIDProto()
-        ..version = link.version == 0
-            ? IPFSCIDVersion.IPFS_CID_VERSION_0
-            : IPFSCIDVersion.IPFS_CID_VERSION_1
-        ..multihash = link.multihash
-        ..codec = link.codec.isNotEmpty
+      return CID(
+        version: link.version,
+        codec: link.codec.isNotEmpty
             ? link.codec
-            : (link.version == 0 ? 'dag-pb' : 'raw');
-      return CID.fromProto(proto);
+            : (link.version == 0 ? 'dag-pb' : 'raw'),
+        multihash: MultihashUtils.decode(Uint8List.fromList(link.multihash)),
+      );
     }).toList();
 
     final versionEntry = map.entries.firstWhere(

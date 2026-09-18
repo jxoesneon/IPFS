@@ -209,7 +209,7 @@ class CID {
 
   @override
   int get hashCode =>
-      version.hashCode ^ codec.hashCode ^ multihash.toBytes().hashCode;
+      version.hashCode ^ codec.hashCode ^ Object.hashAll(multihash.toBytes());
 
   static bool _bytesEqual(Uint8List a, Uint8List b) {
     if (a.length != b.length) return false;

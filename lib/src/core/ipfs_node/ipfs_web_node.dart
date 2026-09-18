@@ -11,6 +11,7 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager_web.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/delegate_dht_handler.dart';
@@ -192,7 +193,7 @@ class IPFSWebNode {
     // 1. Try local storage via BlockStore
     final response = await _blockStore.getBlock(cidString);
     if (response.found && response.hasBlock()) {
-      return Block.fromProto(response.block).data;
+      return _extractContent(Block.fromProto(response.block));
     }
 
     // 2. Fallback to Bitswap
@@ -201,7 +202,7 @@ class IPFSWebNode {
         final block = await _bitswap.wantBlock(cidString);
         if (block != null) {
           // Block is automatically added to store by BitswapHandler when received
-          return block.data;
+          return _extractContent(block);
         }
       } catch (e) {
         // Networking failed or timed out
@@ -209,6 +210,58 @@ class IPFSWebNode {
     }
 
     return null;
+  }
+
+  /// Extracts user-visible content from a stored [block].
+  ///
+  /// Raw blocks return their payload directly. DAG-PB blocks produced by
+  /// [addStream] are UnixFS file nodes whose content is reassembled from the
+  /// leaf blocks; non-file nodes (directories, non-UnixFS data) return their
+  /// serialized node bytes.
+  Future<Uint8List?> _extractContent(Block block) async {
+    if (block.cid.codec == 'raw') {
+      return block.data;
+    }
+
+    late final UnixFSNode node;
+    try {
+      node = UnixFSNode.fromBlock(block);
+    } catch (_) {
+      return block.data;
+    }
+    if (!node.isFile) {
+      return block.data;
+    }
+
+    final out = BytesBuilder();
+    await _collectFileData(node, out);
+    return out.takeBytes();
+  }
+
+  /// Appends the file payload of [node] — its inline data plus every linked
+  /// child block in order — to [out].
+  Future<void> _collectFileData(UnixFSNode node, BytesBuilder out) async {
+    if (node.cid.codec == 'raw') {
+      out.add(node.data);
+      return;
+    }
+
+    final inner = node.unixfsData;
+    if (inner != null && inner.data.isNotEmpty) {
+      out.add(inner.data);
+    }
+
+    for (final link in node.pbNode.links) {
+      final childCid = CID.fromBytes(Uint8List.fromList(link.hash));
+      final response = await _blockStore.getBlock(childCid.encode());
+      if (!response.found) {
+        throw StateError('Missing linked block ${childCid.encode()}');
+      }
+      await _collectFileData(
+        UnixFSNode.fromBlock(Block.fromProto(response.block)),
+        out,
+      );
+    }
   }
 
   /// Gets data by CID object.
@@ -228,7 +281,8 @@ class IPFSWebNode {
 
   /// Lists all pinned CIDs.
   Future<List<String>> listPins() async {
-    return _platform.listDirectory('pins');
+    final entries = await _platform.listDirectory('pins');
+    return [for (final path in entries) path.split('/').last];
   }
 
   /// Publishes an IPNS record.

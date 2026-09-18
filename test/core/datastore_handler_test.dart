@@ -8,9 +8,12 @@ import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/utils/car_reader.dart';
 import 'package:dart_ipfs/src/utils/car_writer.dart';
+import 'package:dart_ipfs_core/dart_ipfs_core.dart' as core;
 import 'package:test/test.dart';
 
 import '../mocks/in_memory_datastore.dart';
+
+core.CID coreCid(CID cid) => core.CID.fromBytes(cid.toBytes());
 
 // Mock datastore that fails on operations
 class FailingDatastore extends InMemoryDatastore {
@@ -212,8 +215,11 @@ void main() {
       final honestBlock = await Block.fromData(
         Uint8List.fromList([1, 2, 3, 4]),
       );
-      final writer = CarWriter(roots: [honestBlock.cid]);
-      await writer.write(honestBlock.cid, Uint8List.fromList([9, 9, 9, 9]));
+      final writer = CarWriter(roots: [coreCid(honestBlock.cid)]);
+      await writer.write(
+        coreCid(honestBlock.cid),
+        Uint8List.fromList([9, 9, 9, 9]),
+      );
       final carData = await writer.close();
 
       await expectLater(

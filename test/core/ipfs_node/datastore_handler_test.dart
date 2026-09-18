@@ -8,11 +8,14 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_proto;
 import 'package:dart_ipfs/src/utils/car_writer.dart';
+import 'package:dart_ipfs_core/dart_ipfs_core.dart' as core;
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 
 import 'datastore_handler_test.mocks.dart';
+
+core.CID coreCid(CID cid) => core.CID.fromBytes(cid.toBytes());
 
 @GenerateNiceMocks([MockSpec<Datastore>()])
 void main() {
@@ -142,8 +145,8 @@ void main() {
       // must match the block bytes: import validates content authenticity.
       final data = Uint8List.fromList([1, 2, 3]);
       final block = Block(cid: await CID.fromContent(data), data: data);
-      final writer = CarWriter(roots: [block.cid]);
-      await writer.write(block.cid, block.data);
+      final writer = CarWriter(roots: [coreCid(block.cid)]);
+      await writer.write(coreCid(block.cid), block.data);
       final carData = await writer.close();
 
       await handler.importCAR(carData);

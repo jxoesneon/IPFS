@@ -13,6 +13,7 @@ import 'package:dart_ipfs/src/services/rpc/mfs_handlers.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/version.dart';
+import 'package:dart_ipfs_core/dart_ipfs_core.dart' as ipfs_core;
 import 'package:http_parser/http_parser.dart'; // For MediaType
 import 'package:mime/mime.dart';
 import 'package:shelf/shelf.dart';
@@ -340,7 +341,7 @@ class RPCHandlers {
       var count = 0;
       await for (final section in reader.sections()) {
         final block = Block(
-          cid: section.cid,
+          cid: CID.fromBytes(section.cid.toBytes()),
           data: section.bytes,
           format: _codecToFormat(section.cid.codec ?? 'raw'),
         );
@@ -382,7 +383,7 @@ class RPCHandlers {
 
   Future<Uint8List> _exportCar(String rootCidStr) async {
     final root = CID.decode(rootCidStr);
-    final writer = CarWriter(roots: [root]);
+    final writer = CarWriter(roots: [ipfs_core.CID.fromBytes(root.toBytes())]);
     final visited = <String>{};
     await _exportBlock(root, writer, visited);
     return writer.close();
@@ -402,7 +403,7 @@ class RPCHandlers {
       throw StateError('Block not found: $key');
     }
     final block = Block.fromProto(response.block);
-    await writer.write(cid, block.data);
+    await writer.write(ipfs_core.CID.fromBytes(cid.toBytes()), block.data);
 
     if (block.format == 'dag-pb') {
       final pbNode = dag_pb.PBNode.fromBuffer(block.data);

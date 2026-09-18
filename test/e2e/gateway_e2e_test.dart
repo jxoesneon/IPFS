@@ -62,6 +62,32 @@ void main() {
         expect(fetched, isNull);
       },
     );
+
+    test('local gateway mode fetches from 127.0.0.1:8080', () async {
+      // GatewayMode.local is hardcoded to http://127.0.0.1:8080/ipfs —
+      // bind the mock there if the port is free, otherwise this
+      // environment cannot exercise the journey.
+      HttpServer? local;
+      try {
+        local = await HttpServer.bind(InternetAddress.loopbackIPv4, 8080);
+      } on SocketException {
+        return;
+      }
+      gateway = local;
+      final data = utf8Bytes('local gateway content');
+      local.listen((request) {
+        request.response
+          ..statusCode = HttpStatus.ok
+          ..add(data)
+          ..close();
+      });
+
+      final cid = CID.computeForDataSync(data).encode();
+      node!.setGatewayMode(GatewayMode.local);
+      final fetched = await node!.cat(cid);
+
+      expect(fetched, equals(data));
+    });
   });
 
   group('E2E gateway server', () {

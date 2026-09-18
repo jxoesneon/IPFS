@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/ipfs.dart';
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:test/test.dart';
 
@@ -26,6 +28,7 @@ void main() {
     IPFSNode? nodeA;
     IPFSNode? nodeB;
     DHTHandler? aDht;
+    BitswapHandler? aBitswap;
 
     /// Creates A first (capturing its lazily-resolved handles while it owns
     /// the shared registry), then creates and starts B. Returns A's
@@ -36,6 +39,7 @@ void main() {
       await nodeA!.start();
       final aAddr = dialAddress(nodeA!);
       aDht = nodeA!.dhtHandler;
+      aBitswap = nodeA!.bitswap;
 
       repoB = await makeRepoDir('nodeB');
       nodeB = await IPFSNode.create(onlineConfig(repoB.path));
@@ -225,6 +229,135 @@ void main() {
       );
 
       expect(await nodeB!.cat(cid), equals(data));
+    });
+
+    test('connectToPeer rejects a malformed multiaddr', () async {
+      await startBoth();
+
+      await expectLater(
+        nodeB!.connectToPeer('definitely-not-a-multiaddr'),
+        throwsA(anything),
+      );
+      expect(await nodeB!.connectedPeers, isEmpty);
+    });
+
+    test('connection seeds the DHT routing table', () async {
+      final aAddr = await startBoth();
+      await nodeB!.connectToPeer(aAddr);
+
+      await waitFor<bool>(
+        () async => nodeB!.dhtPeerCount >= 1 ? true : null,
+        description: 'B to learn at least one DHT peer',
+      );
+      expect(nodeB!.dhtPeerCount, greaterThanOrEqualTo(1));
+    });
+
+    test('resolvePeerId returns addresses for a connected peer', () async {
+      final aAddr = await startBoth();
+      await nodeB!.connectToPeer(aAddr);
+
+      final addrs = await waitFor<List<String>>(
+        () async => nodeB!.resolvePeerId(nodeA!.peerID).isNotEmpty
+            ? nodeB!.resolvePeerId(nodeA!.peerID)
+            : null,
+        description: 'B to resolve A\'s listen addresses',
+      );
+      expect(addrs, isNotEmpty);
+      expect(addrs.first, contains('/p2p/'));
+    });
+
+    test('bandwidth counters move after a Bitswap transfer', () async {
+      final aAddr = await startBoth();
+      await nodeB!.connectToPeer(aAddr);
+
+      final cid = await nodeA!.addFile(utf8Bytes('metered payload'));
+      await waitFor<Uint8List>(
+        () async => nodeB!.cat(cid),
+        timeout: const Duration(seconds: 30),
+        description: 'B to fetch block via Bitswap',
+      );
+
+      await waitFor<bool>(
+        () async => nodeB!.bandwidthIn > 0 ? true : null,
+        description: 'B inbound bandwidth counter to move',
+      );
+      // A's Bitswap ledger is captured directly — its lazy accessors
+      // resolve to B's services once B owns the shared registry.
+      await waitFor<bool>(
+        () async => aBitswap!.bandwidthSent > 0 ? true : null,
+        description: 'A outbound bandwidth counter to move',
+      );
+    });
+  });
+
+  group('E2E facade messagesFor', () {
+    late Directory repoA;
+    late Directory repoB;
+    IPFS? ipfsA;
+    IPFSNode? nodeB;
+
+    tearDown(() async {
+      try {
+        await ipfsA?.stop();
+      } catch (_) {}
+      await stopQuietly(nodeB);
+      await deleteRepo(repoA);
+      await deleteRepo(repoB);
+    });
+
+    test('messagesFor delivers only the requested topic', () async {
+      // A is the IPFS facade — created first so its lazily-resolved
+      // getters (addresses, peerID) are snapshotted before B exists.
+      repoA = await makeRepoDir('facadeA');
+      ipfsA = await IPFS.create(config: onlineConfig(repoA.path));
+      await ipfsA!.start();
+      final aPeerId = ipfsA!.peerID;
+      final aAddr =
+          '${ipfsA!.addresses.firstWhere((a) => a.contains('/tcp/'))}'
+          '/p2p/$aPeerId';
+
+      repoB = await makeRepoDir('facadeB');
+      nodeB = await IPFSNode.create(onlineConfig(repoB.path));
+      await nodeB!.start();
+      await nodeB!.connectToPeer(aAddr);
+
+      final received = <String>[];
+      final sub = ipfsA!
+          .messagesFor('wanted')
+          .listen((m) => received.add('${m.topic}:${m.content}'));
+
+      await ipfsA!.subscribe('wanted');
+      await ipfsA!.subscribe('other');
+      await nodeB!.subscribe('wanted');
+      await nodeB!.subscribe('other');
+
+      await waitFor<bool>(
+        () async => (await nodeB!.pubsubPeers('wanted')).contains(aPeerId)
+            ? true
+            : null,
+        description: 'B to see A subscribed to wanted',
+      );
+      await waitFor<bool>(
+        () async =>
+            (await nodeB!.pubsubPeers('other')).contains(aPeerId) ? true : null,
+        description: 'B to see A subscribed to other',
+      );
+
+      await nodeB!.publish('wanted', 'yes');
+      await nodeB!.publish('other', 'no');
+
+      await waitFor<bool>(
+        () async => received.isNotEmpty ? true : null,
+        description: 'A facade to receive the wanted message',
+      );
+
+      // The 'other' message must never pass the topic filter, even after
+      // giving it time to arrive on the raw stream.
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      expect(received, contains('wanted:yes'));
+      expect(received.every((m) => m.startsWith('wanted:')), isTrue);
+
+      await sub.cancel();
     });
   });
 }

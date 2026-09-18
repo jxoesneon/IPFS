@@ -6,7 +6,10 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/car.dart';
 import 'package:dart_ipfs/src/utils/car_reader.dart';
 import 'package:dart_ipfs/src/utils/car_writer.dart';
+import 'package:dart_ipfs_core/dart_ipfs_core.dart' as core;
 import 'package:test/test.dart';
+
+core.CID coreCid(CID cid) => core.CID.fromBytes(cid.toBytes());
 
 void main() {
   group('CAR Utilities Deep Coverage', () {
@@ -20,15 +23,15 @@ void main() {
     });
 
     test('CarWriter constructor and basic properties', () async {
-      final writer = CarWriter(roots: [testBlocks.first.cid]);
-      expect(writer.roots, equals([testBlocks.first.cid]));
+      final writer = CarWriter(roots: [coreCid(testBlocks.first.cid)]);
+      expect(writer.roots, equals([coreCid(testBlocks.first.cid)]));
       expect(writer.v2, isFalse);
       expect(writer.index, isFalse);
     });
 
     test('CarWriter v2 with index', () async {
       final writer = CarWriter(
-        roots: [testBlocks.first.cid],
+        roots: [coreCid(testBlocks.first.cid)],
         v2: true,
         index: true,
       );
@@ -38,7 +41,7 @@ void main() {
 
     test('CarWriter rejects index without v2', () {
       expect(
-        () => CarWriter(roots: [testBlocks.first.cid], index: true),
+        () => CarWriter(roots: [coreCid(testBlocks.first.cid)], index: true),
         throwsArgumentError,
       );
     });
@@ -49,32 +52,35 @@ void main() {
     });
 
     test('CarReader/Writer roundtrip v1', () async {
-      final writer = CarWriter(roots: [testBlocks.first.cid]);
+      final writer = CarWriter(roots: [coreCid(testBlocks.first.cid)]);
       for (final block in testBlocks) {
-        await writer.write(block.cid, block.data);
+        await writer.write(coreCid(block.cid), block.data);
       }
       final bytes = await writer.close();
 
       final reader = CarReader.fromBytes(bytes);
       expect((await reader.header).version, equals(1));
-      expect((await reader.header).roots, equals([testBlocks.first.cid]));
+      expect(
+        (await reader.header).roots,
+        equals([coreCid(testBlocks.first.cid)]),
+      );
 
       final sections = await reader.sections().toList();
       expect(sections.length, equals(testBlocks.length));
       for (var i = 0; i < testBlocks.length; i++) {
-        expect(sections[i].cid, equals(testBlocks[i].cid));
+        expect(sections[i].cid, equals(coreCid(testBlocks[i].cid)));
         expect(sections[i].bytes, equals(testBlocks[i].data));
       }
     });
 
     test('CarReader/Writer roundtrip v2 with index', () async {
       final writer = CarWriter(
-        roots: [testBlocks.first.cid],
+        roots: [coreCid(testBlocks.first.cid)],
         v2: true,
         index: true,
       );
       for (final block in testBlocks) {
-        await writer.write(block.cid, block.data);
+        await writer.write(coreCid(block.cid), block.data);
       }
       final bytes = await writer.close();
 
@@ -84,29 +90,29 @@ void main() {
       final sections = await reader.sections().toList();
       expect(sections.length, equals(testBlocks.length));
 
-      final firstOffset = await reader.findCID(testBlocks.first.cid);
-      final secondOffset = await reader.findCID(testBlocks.last.cid);
+      final firstOffset = await reader.findCID(coreCid(testBlocks.first.cid));
+      final secondOffset = await reader.findCID(coreCid(testBlocks.last.cid));
       expect(firstOffset, isNotNull);
       expect(secondOffset, isNotNull);
       expect(secondOffset, greaterThan(firstOffset!));
     });
 
     test('CarReader findCID falls back to linear scan for CAR v1', () async {
-      final writer = CarWriter(roots: [testBlocks.first.cid]);
+      final writer = CarWriter(roots: [coreCid(testBlocks.first.cid)]);
       for (final block in testBlocks) {
-        await writer.write(block.cid, block.data);
+        await writer.write(coreCid(block.cid), block.data);
       }
       final bytes = await writer.close();
 
       final reader = CarReader.fromBytes(bytes);
-      final offset = await reader.findCID(testBlocks.last.cid);
+      final offset = await reader.findCID(coreCid(testBlocks.last.cid));
       expect(offset, isNotNull);
     });
 
     test('CarWriter closeStream yields equivalent bytes', () async {
-      final writer = CarWriter(roots: [testBlocks.first.cid]);
+      final writer = CarWriter(roots: [coreCid(testBlocks.first.cid)]);
       for (final block in testBlocks) {
-        await writer.write(block.cid, block.data);
+        await writer.write(coreCid(block.cid), block.data);
       }
       final streamedBytes = await writer.closeStream().fold<BytesBuilder>(
         BytesBuilder(),
@@ -118,9 +124,9 @@ void main() {
     });
 
     test('CarWriter file roundtrip', () async {
-      final writer = CarWriter(roots: [testBlocks.first.cid]);
+      final writer = CarWriter(roots: [coreCid(testBlocks.first.cid)]);
       for (final block in testBlocks) {
-        await writer.write(block.cid, block.data);
+        await writer.write(coreCid(block.cid), block.data);
       }
       final carData = await writer.close();
 
@@ -136,18 +142,21 @@ void main() {
     });
 
     test('CarReader/Writer preserve cid and block bytes', () async {
-      final writer = CarWriter(roots: [testBlocks.first.cid]);
-      await writer.write(testBlocks.first.cid, testBlocks.first.data);
+      final writer = CarWriter(roots: [coreCid(testBlocks.first.cid)]);
+      await writer.write(coreCid(testBlocks.first.cid), testBlocks.first.data);
       final bytes = await writer.close();
 
       final reader = CarReader.fromBytes(bytes);
       final section = await reader.sections().first;
-      expect(section.cid, equals(testBlocks.first.cid));
+      expect(section.cid, equals(coreCid(testBlocks.first.cid)));
       expect(section.bytes, equals(testBlocks.first.data));
     });
 
     test('CarHeader toString is descriptive', () {
-      final header = CarHeader(version: 1, roots: [testBlocks.first.cid]);
+      final header = CarHeader(
+        version: 1,
+        roots: [coreCid(testBlocks.first.cid)],
+      );
       expect(header.toString(), contains('version: 1'));
     });
   });

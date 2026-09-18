@@ -290,20 +290,24 @@ class IPFSNode {
 
   /// Returns total bytes sent by the P2P node since it started.
   ///
+  /// Aggregates protocol-level counters (DHT, etc.) with the Bitswap
+  /// ledger, which accounts for the dominant block-transfer traffic.
   /// Returns `0` if metrics collection is disabled or the node is offline.
   int get bandwidthOut {
     final collector = metricsCollector;
-    if (collector == null) return 0;
-    return collector.totalBytesSent;
+    final bitswapSent = bitswap?.bandwidthSent ?? 0;
+    return (collector?.totalBytesSent ?? 0) + bitswapSent;
   }
 
   /// Returns total bytes received by the P2P node since it started.
   ///
+  /// Aggregates protocol-level counters (DHT, etc.) with the Bitswap
+  /// ledger, which accounts for the dominant block-transfer traffic.
   /// Returns `0` if metrics collection is disabled or the node is offline.
   int get bandwidthIn {
     final collector = metricsCollector;
-    if (collector == null) return 0;
-    return collector.totalBytesReceived;
+    final bitswapReceived = bitswap?.bandwidthReceived ?? 0;
+    return (collector?.totalBytesReceived ?? 0) + bitswapReceived;
   }
 
   /// Returns the number of peers currently in the Kademlia DHT routing table.

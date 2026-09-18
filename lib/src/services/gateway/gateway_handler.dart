@@ -17,6 +17,7 @@ import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart' as utils_dnslink;
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:dart_ipfs_core/dart_ipfs_core.dart' as ipfs_core;
 import 'package:mime/mime.dart';
 import 'package:multibase/multibase.dart';
 import 'package:shelf/shelf.dart';
@@ -489,7 +490,7 @@ class GatewayHandler {
       return Response.notFound('Block not found');
     }
 
-    final writer = CarWriter(roots: [cid]);
+    final writer = CarWriter(roots: [ipfs_core.CID.fromBytes(cid.toBytes())]);
     final seen = <String>{};
 
     try {
@@ -499,7 +500,10 @@ class GatewayHandler {
       if (cid.encode() != targetCid.encode() && !seen.contains(cid.encode())) {
         final rootBlock = await _getBlockByCid(cid.encode());
         if (rootBlock != null) {
-          await writer.write(cid, rootBlock.data);
+          await writer.write(
+            ipfs_core.CID.fromBytes(cid.toBytes()),
+            rootBlock.data,
+          );
           seen.add(cid.encode());
         }
       }
@@ -547,7 +551,7 @@ class GatewayHandler {
       return;
     }
     seen.add(cidStr);
-    await writer.write(cid, block.data);
+    await writer.write(ipfs_core.CID.fromBytes(cid.toBytes()), block.data);
 
     // Only DAG-PB nodes have navigable links for the full DAG traversal.
     if (block.cid.codec != 'dag-pb') {

@@ -4,7 +4,10 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/car.dart';
+import 'package:dart_ipfs_core/dart_ipfs_core.dart' as core;
 import 'package:test/test.dart';
+
+core.CID coreCid(CID cid) => core.CID.fromBytes(cid.toBytes());
 
 void main() {
   group('CarHeader edge cases', () {
@@ -15,9 +18,9 @@ void main() {
 
     test('CarHeader equals and hashCode are stable', () {
       final root = CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
-      final a = CarHeader(version: 1, roots: [root]);
-      final b = CarHeader(version: 1, roots: [root]);
-      final c = CarHeader(version: 2, roots: [root]);
+      final a = CarHeader(version: 1, roots: [coreCid(root)]);
+      final b = CarHeader(version: 1, roots: [coreCid(root)]);
+      final c = CarHeader(version: 2, roots: [coreCid(root)]);
       expect(a, equals(b));
       expect(a.hashCode, equals(b.hashCode));
       expect(a, isNot(equals(c)));
@@ -27,9 +30,18 @@ void main() {
   group('CarSection edge cases', () {
     test('equals distinguishes bytes', () async {
       final cid = CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
-      final a = CarSection(cid: cid, bytes: Uint8List.fromList([1, 2]));
-      final b = CarSection(cid: cid, bytes: Uint8List.fromList([1, 2]));
-      final c = CarSection(cid: cid, bytes: Uint8List.fromList([3, 4]));
+      final a = CarSection(
+        cid: coreCid(cid),
+        bytes: Uint8List.fromList([1, 2]),
+      );
+      final b = CarSection(
+        cid: coreCid(cid),
+        bytes: Uint8List.fromList([1, 2]),
+      );
+      final c = CarSection(
+        cid: coreCid(cid),
+        bytes: Uint8List.fromList([3, 4]),
+      );
       expect(a, equals(b));
       expect(a, isNot(equals(c)));
       expect(a.serializedSize, greaterThan(0));
@@ -59,8 +71,8 @@ void main() {
         Uint8List.fromList([1, 2, 3]),
         format: 'raw',
       );
-      final writer = CarWriter(roots: [block.cid]);
-      await writer.write(block.cid, block.data);
+      final writer = CarWriter(roots: [coreCid(block.cid)]);
+      await writer.write(coreCid(block.cid), block.data);
       final bytes = await writer.close();
       // Remove the last byte so the final section is truncated.
       final truncated = bytes.sublist(0, bytes.length - 1);
@@ -73,8 +85,8 @@ void main() {
 
     test('section length smaller than CID throws', () async {
       final root = await Block.fromData(Uint8List.fromList([1]), format: 'raw');
-      final writer = CarWriter(roots: [root.cid]);
-      await writer.write(root.cid, root.data);
+      final writer = CarWriter(roots: [coreCid(root.cid)]);
+      await writer.write(coreCid(root.cid), root.data);
       final bytes = await writer.close();
       final headerBytes = bytes.sublist(0, _headerEndOffset(bytes));
       final bad = Uint8List.fromList([
@@ -131,8 +143,8 @@ void main() {
         Uint8List.fromList([1]),
         format: 'raw',
       );
-      final writer = CarWriter(roots: [block.cid], v2: true);
-      await writer.write(block.cid, block.data);
+      final writer = CarWriter(roots: [coreCid(block.cid)], v2: true);
+      await writer.write(coreCid(block.cid), block.data);
       final bytes = await writer.close();
       // Set a non-zero characteristic byte inside the v2 header.
       bytes[11 + 5] = 0x01;
@@ -145,8 +157,12 @@ void main() {
         Uint8List.fromList([1]),
         format: 'raw',
       );
-      final writer = CarWriter(roots: [block.cid], v2: true, index: true);
-      await writer.write(block.cid, block.data);
+      final writer = CarWriter(
+        roots: [coreCid(block.cid)],
+        v2: true,
+        index: true,
+      );
+      await writer.write(coreCid(block.cid), block.data);
       final bytes = await writer.close();
       // Locate the index payload using the v2 header fields.
       final dataOffset = _readUint64le(bytes, 11 + 16);
@@ -157,7 +173,7 @@ void main() {
       // Load the v1 payload first so that the corrupted index payload is cached.
       await reader.sections().toList();
       expect(
-        () async => reader.findCID(block.cid),
+        () async => reader.findCID(coreCid(block.cid)),
         throwsA(isA<CarIndexException>()),
       );
     });
@@ -166,10 +182,10 @@ void main() {
   group('CarWriter error cases', () {
     test('block too large throws CarSectionException', () async {
       final root = await Block.fromData(Uint8List.fromList([1]), format: 'raw');
-      final writer = CarWriter(roots: [root.cid], maxBlockSize: 2);
+      final writer = CarWriter(roots: [coreCid(root.cid)], maxBlockSize: 2);
       final bigBlock = Uint8List.fromList([1, 2, 3, 4]);
       expect(
-        () => writer.write(root.cid, bigBlock),
+        () => writer.write(coreCid(root.cid), bigBlock),
         throwsA(isA<CarSectionException>()),
       );
     });
@@ -180,15 +196,19 @@ void main() {
         Uint8List.fromList([2]),
         format: 'raw',
       );
-      final writer = CarWriter(roots: [root.cid]);
-      await writer.write(other.cid, other.data);
+      final writer = CarWriter(roots: [coreCid(root.cid)]);
+      await writer.write(coreCid(other.cid), other.data);
       expect(writer.close(), throwsA(isA<CarHeaderException>()));
     });
 
     test('rejects index without v2', () {
       expect(
         () => CarWriter(
-          roots: [CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')],
+          roots: [
+            coreCid(
+              CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+            ),
+          ],
           index: true,
         ),
         throwsArgumentError,
@@ -203,7 +223,7 @@ void main() {
         format: 'raw',
       );
       final builder = IndexBuilder(multihashSorted: true);
-      builder.add(block.cid, 0);
+      builder.add(coreCid(block.cid), 0);
       final index = builder.build();
       expect(index.length, greaterThan(4));
       expect(
@@ -218,7 +238,7 @@ void main() {
         format: 'raw',
       );
       final builder = IndexBuilder();
-      builder.add(block.cid, 0);
+      builder.add(coreCid(block.cid), 0);
       final index = builder.build();
       expect(
         index[0] | (index[1] << 8) | (index[2] << 16) | (index[3] << 24),

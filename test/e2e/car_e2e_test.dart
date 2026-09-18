@@ -6,6 +6,7 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/utils/car_writer.dart';
+import 'package:dart_ipfs_core/dart_ipfs_core.dart' as ipfs_core;
 import 'package:test/test.dart';
 
 import 'e2e_helpers.dart';
@@ -79,10 +80,11 @@ void main() {
       'importCAR rejects a block whose data does not match its CID',
       () async {
         final block = await Block.fromData(utf8Bytes('real data'));
-        final writer = CarWriter(roots: [block.cid]);
+        final coreCid = ipfs_core.CID.fromBytes(block.cid.toBytes());
+        final writer = CarWriter(roots: [coreCid]);
         // Write mismatched bytes under the real CID — the importer must
         // validate the hash and refuse to store it.
-        await writer.write(block.cid, Uint8List.fromList([9, 9, 9, 9]));
+        await writer.write(coreCid, Uint8List.fromList([9, 9, 9, 9]));
         final carBytes = await writer.close();
 
         await expectLater(node!.importCAR(carBytes), throwsA(anything));
