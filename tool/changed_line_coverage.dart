@@ -128,6 +128,9 @@ bool _looksExecutable(String line) {
   }
   if (RegExp(r'^(import|export|part|library)\b').hasMatch(t)) return false;
   if (RegExp(r'^[{}()\[\];,.]*$').hasMatch(t)) return false;
+  // `const` declarations are compile-time — the VM still emits DA rows that
+  // can never report a hit (e.g. the package version constant).
+  if (RegExp(r'^(static\s+)?const\s').hasMatch(t)) return false;
   if (t.endsWith('{') &&
       !t.contains('=') &&
       RegExp(r'^\w[\w<>\[\]?]*\s+\w+\s*\(').hasMatch(t) &&
