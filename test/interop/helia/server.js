@@ -25,6 +25,10 @@ function getSingleStringArg(queryArg) {
   return null;
 }
 
+function getRawBody(body) {
+  return Buffer.isBuffer(body) ? body : null;
+}
+
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
@@ -73,18 +77,19 @@ app.post(
   "/api/v0/add",
   express.raw({ type: "*/*", limit: "100mb" }),
   async (req, res) => {
-    if (!Buffer.isBuffer(req.body)) {
+    const body = getRawBody(req.body);
+    if (body === null) {
       return res.status(400).json({ Error: "Request body must be raw bytes" });
     }
     try {
       const helia = await getHelia();
       const s = strings(helia);
-      const text = req.body.toString("utf8");
+      const text = body.toString("utf8");
       const cid = await s.add(text);
       res.json({
         Hash: cid.toString(),
         Name: cid.toString(),
-        Size: req.body.length,
+        Size: body.length,
       });
     } catch (err) {
       res.status(500).json({ Error: err.message });
@@ -130,13 +135,14 @@ app.post(
   "/api/v0/dag/import",
   express.raw({ type: "*/*", limit: "100mb" }),
   async (req, res) => {
-    if (!Buffer.isBuffer(req.body)) {
+    const body = getRawBody(req.body);
+    if (body === null) {
       return res.status(400).json({ Error: "Request body must be raw bytes" });
     }
     try {
       const helia = await getHelia();
       const c = car(helia);
-      await c.import(req.body);
+      await c.import(body);
       res.json({ Status: "success" });
     } catch (err) {
       res.status(500).json({ Error: err.message });
