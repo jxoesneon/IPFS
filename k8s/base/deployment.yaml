@@ -43,7 +43,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: dart-ipfs
-          image: ghcr.io/jxoesneon/dart-ipfs:1.16.1
+          image: ghcr.io/jxoesneon/dart-ipfs:1.16.2
           imagePullPolicy: IfNotPresent
           command:
             - /app/ipfs

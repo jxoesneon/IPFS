@@ -12,7 +12,7 @@ services:
     build:
       context: .
       target: runtime
-    image: ${DART_IPFS_IMAGE:-ghcr.io/jxoesneon/dart-ipfs:1.16.1}
+    image: ${DART_IPFS_IMAGE:-ghcr.io/jxoesneon/dart-ipfs:1.16.2}
     container_name: dart_ipfs_daemon
 
     ports:

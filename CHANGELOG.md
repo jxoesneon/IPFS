@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [1.16.2] - 2026-09-18
+
+### Fixed
+- **Stale runtime version reporting**: `lib/src/version.dart` is now the single source of truth — the identify agent string, libp2p user agent, health-check payload, CLI, RPC `/api/v0/version`, and gateway `Version` all derive from `packageVersion`/`agentVersion`. v1.16.1 shipped stale literals reporting `dart_ipfs/1.14.1`, `dart_ipfs/1.11.5`, and `dart_ipfs/2.0.0`.
+- **Deploy and docs surfaces**: docker-compose files, Helm chart `appVersion`, and k8s manifests now reference the current image (previously pinned to 1.12.0); README install snippet, README/ROADMAP current-version markers updated.
+
+### Added
+- **Release surface gate**: `tool/release_surfaces.dart` audits (`--check`) or rewrites (`--sync`) every version-bearing surface from `pubspec.yaml`, requires a matching CHANGELOG section, rejects hardcoded version literals in `lib/`, and validates `v*`/`core-v*`/`quic-v*` tags against the pubspec they would publish. Wired as a required `release-gate` job in `publish.yml`; available locally as `make release-check` / `make release-sync`.
+
 ## [1.16.1] - 2026-09-18
 
 ### Fixed
