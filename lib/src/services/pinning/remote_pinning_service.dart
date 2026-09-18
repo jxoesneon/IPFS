@@ -148,7 +148,7 @@ class RemotePinningService {
     _services[name] = config;
     _clients[name] = PinningServiceAPIClient(endpoint: endpoint, token: token);
     _logger.info('Registered pinning service: $name');
-    unawaited(_saveConfig());
+    _saveConfig();
   }
 
   /// Removes a registered pinning service by [name].
@@ -162,7 +162,7 @@ class RemotePinningService {
     _clients.remove(name);
     _services.remove(name);
     _logger.info('Removed pinning service: $name');
-    unawaited(_saveConfig());
+    _saveConfig();
   }
 
   /// Lists registered services.
@@ -207,7 +207,7 @@ class RemotePinningService {
 
     final key = '$serviceName:${response.requestId}';
     _remotePins[key] = remotePin;
-    await _saveConfig();
+    _saveConfig();
 
     _logger.info(
       'Pinned $cid on $serviceName with request ID ${response.requestId}',
@@ -232,7 +232,7 @@ class RemotePinningService {
 
     final key = '$serviceName:$requestId';
     _remotePins.remove(key);
-    await _saveConfig();
+    _saveConfig();
 
     _logger.info('Unpinned request $requestId on $serviceName');
   }
@@ -261,7 +261,7 @@ class RemotePinningService {
     );
 
     _remotePins[key] = updated;
-    await _saveConfig();
+    _saveConfig();
 
     return updated;
   }
@@ -371,7 +371,7 @@ class RemotePinningService {
   }
 
   /// Saves service configurations and tracked pins to the config path.
-  Future<void> _saveConfig() async {
+  void _saveConfig() {
     if (_configPath == null) return;
 
     try {
@@ -380,8 +380,9 @@ class RemotePinningService {
         'remotePins': _remotePins.values.map((p) => p.toJson()).toList(),
       };
 
-      final file = File(_configPath);
-      await file.writeAsString(jsonEncode(data));
+      // Synchronous so a mutation is durable before the call returns —
+      // an unawaited write here raced dispose()/load() and could be lost.
+      File(_configPath).writeAsStringSync(jsonEncode(data));
     } catch (e) {
       _logger.error('Failed to save remote pinning config: $e');
     }
