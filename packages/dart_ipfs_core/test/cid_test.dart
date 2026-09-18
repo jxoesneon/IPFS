@@ -75,6 +75,24 @@ void main() {
     test(' CID v0 rejects non-32-byte hash', () {
       expect(() => CID.v0(Uint8List(16)), throwsArgumentError);
     });
+
+    test('equal CIDs share hashCode and work in hash collections', () async {
+      final data = Uint8List.fromList(utf8.encode('hash-contract'));
+      final a = await CID.fromContent(data);
+      final b = CID.decode(a.encode());
+      final c = CID.fromBytes(a.toBytes());
+
+      expect(b, equals(a));
+      expect(c, equals(a));
+      expect(b.hashCode, equals(a.hashCode));
+      expect(c.hashCode, equals(a.hashCode));
+
+      final set = <CID>{a, b, c};
+      expect(set.length, equals(1));
+      final map = <CID, int>{a: 1};
+      expect(map[b], equals(1));
+      expect(map[c], equals(1));
+    });
   });
 
   group('Multicodec', () {
