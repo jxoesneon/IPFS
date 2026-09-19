@@ -5,7 +5,6 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/dart_ipfs.dart' hide CID, Block, IBlock, IBlockStore;
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
@@ -80,7 +79,7 @@ void main() {
     );
 
     test(
-      'small file (single chunk): root has one link and correct filesize',
+      'small file (single chunk): the leaf node itself is the root',
       () async {
         final data = randomBytesRange(rng, 1, 1000);
         final builder = UnixFSBuilder();
@@ -88,13 +87,15 @@ void main() {
         await for (final block in builder.build(_toStream(data))) {
           blocks.add(block);
         }
-        // Small data fits in one chunk: 1 leaf + 1 root.
-        expect(blocks.length, equals(2));
+        // Kubo parity: data that fits in one chunk is addressed by the
+        // leaf node itself — a single block with inline file data.
+        expect(blocks.length, equals(1));
         final root = blocks.last;
         final pbNode = dag_pb.PBNode.fromBuffer(root.data);
         final unixfsData = unixfs_pb.Data.fromBuffer(pbNode.data);
         expect(unixfsData.filesize.toInt(), equals(data.length));
-        expect(pbNode.links.length, equals(1));
+        expect(unixfsData.data, equals(data));
+        expect(pbNode.links, isEmpty);
       },
     );
 
@@ -122,10 +123,11 @@ void main() {
         await for (final block in builder.build(_toStream(data))) {
           blocks.add(block);
         }
-        final leafBlocks = blocks.sublist(0, blocks.length - 1);
-        // Decode each leaf and verify it contains file data.
+        // Every emitted block is a UnixFS file node; leaves carry the
+        // chunks in order and a single-chunk file's only block carries
+        // the data inline.
         var reassembled = <int>[];
-        for (final leaf in leafBlocks) {
+        for (final leaf in blocks) {
           final node = UnixFSNode.fromBlock(leaf);
           expect(node.isFile, isTrue);
           if (node.unixfsData != null) {

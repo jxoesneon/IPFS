@@ -12,6 +12,7 @@ import 'package:args/command_runner.dart';
 import 'package:dart_ipfs/dart_ipfs.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_server.dart';
 import 'package:dart_ipfs/src/services/rpc/rpc_server.dart';
+import 'package:dart_ipfs/src/transport/libp2p_router.dart';
 import 'package:dart_ipfs/src/version.dart';
 import 'package:path/path.dart' as p;
 
@@ -234,8 +235,14 @@ class IdCommand extends IpfsCommand {
     final node = await IPFSNode.create(config);
     await node.start();
     try {
+      // An offline node has no network handler, but its peer identity is
+      // still derivable from the persisted identity seed — the same one an
+      // online start would use (Kubo `ipfs id` semantics).
+      final peerId =
+          node.peerIdOrNull ??
+          await Libp2pRouter.persistedPeerId(config.dataPath);
       printJson({
-        'ID': node.peerId,
+        'ID': peerId ?? '',
         'PublicKey': await node.publicKey,
         'Addresses': node.addresses,
         'AgentVersion': agentVersion,

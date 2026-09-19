@@ -271,11 +271,21 @@ class Libp2pRouter implements RouterInterface {
   ///
   /// Returns `null` when persistence is unavailable (web platform or I/O
   /// failure); the caller then falls back to an ephemeral identity.
-  Future<Uint8List?> _loadOrCreateIdentitySeed() async {
+  Future<Uint8List?> _loadOrCreateIdentitySeed() =>
+      loadOrCreateIdentitySeed(_config.dataPath, logger: _logger);
+
+  /// Static form of [_loadOrCreateIdentitySeed] for callers that need the
+  /// persisted identity without a router instance (e.g. `ipfs id` on an
+  /// offline repo). The seed file lives at `<dataPath>/identity`; it is
+  /// created on first use so the peer identity is stable across restarts.
+  static Future<Uint8List?> loadOrCreateIdentitySeed(
+    String dataPath, {
+    Logger? logger,
+  }) async {
     final platform = getPlatform();
     if (platform.isWeb) return null;
 
-    final seedPath = '${_config.dataPath}/identity';
+    final seedPath = '$dataPath/identity';
     try {
       if (await platform.exists(seedPath)) {
         final encoded = (await platform.readString(seedPath))?.trim();
@@ -283,13 +293,13 @@ class Libp2pRouter implements RouterInterface {
           try {
             final seed = base64Decode(encoded);
             if (seed.length == 32) {
-              _logger.debug('Loaded persisted identity seed from $seedPath');
+              logger?.debug('Loaded persisted identity seed from $seedPath');
               return Uint8List.fromList(seed);
             }
           } on FormatException {
             // Malformed file: fall through and replace it below.
           }
-          _logger.warning('Replacing malformed identity seed at $seedPath');
+          logger?.warning('Replacing malformed identity seed at $seedPath');
         }
       }
 
@@ -299,12 +309,23 @@ class Libp2pRouter implements RouterInterface {
         List.generate(32, (_) => Random.secure().nextInt(256)),
       );
       await platform.writeStringRestricted(seedPath, base64Encode(seed));
-      _logger.debug('Persisted new identity seed to $seedPath');
+      logger?.debug('Persisted new identity seed to $seedPath');
       return seed;
     } catch (e) {
-      _logger.warning('Identity seed persistence unavailable: $e');
+      logger?.warning('Identity seed persistence unavailable: $e');
       return null;
     }
+  }
+
+  /// Returns the peer ID derived from the persisted identity seed at
+  /// [dataPath], creating the seed on first use (same load-or-create
+  /// semantics as an online start). Returns `null` when identity
+  /// persistence is unavailable.
+  static Future<String?> persistedPeerId(String dataPath) async {
+    final seed = await loadOrCreateIdentitySeed(dataPath);
+    if (seed == null) return null;
+    final keyPair = await crypto.generateEd25519KeyPairFromSeed(seed);
+    return libp2p.PeerId.fromPublicKey(keyPair.publicKey).toString();
   }
 
   /// Generates a key pair based on the configured key type.

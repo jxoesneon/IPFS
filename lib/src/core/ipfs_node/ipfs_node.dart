@@ -280,6 +280,18 @@ class IPFSNode {
   /// Throws [StateError] if the network is not initialized (offline mode).
   String get peerId => _networkManager.peerId;
 
+  /// Returns the peer ID, or `null` when the node has no network identity
+  /// (offline mode). Callers that need the repo-persisted identity
+  /// regardless of network state should derive it from the identity seed
+  /// (see `Libp2pRouter.persistedPeerId`).
+  String? get peerIdOrNull {
+    try {
+      return peerId;
+    } on StateError {
+      return null;
+    }
+  }
+
   /// Returns a [Stream] of bandwidth metrics as a [Map].
   Stream<Map<String, dynamic>> get bandwidthMetrics {
     if (_container.isRegistered<MetricsCollector>()) {
