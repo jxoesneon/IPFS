@@ -2,27 +2,12 @@ import 'package:shelf/shelf.dart';
 
 import 'http_server_adapter.dart';
 
-/// Web stub implementation of HTTP server instance.
-class IpfsHttpServerInstanceWeb implements IpfsHttpServerInstance {
-  /// Creates an instance with the given address and port.
-  IpfsHttpServerInstanceWeb(this._address, this._port);
-
-  final String _address;
-  final int _port;
-
-  @override
-  Future<void> close({bool force = false}) async {
-    // No-op on web
-  }
-
-  @override
-  String get host => _address;
-
-  @override
-  int get port => _port;
-}
-
-/// Web stub implementation of HTTP server adapter.
+/// Web implementation of [HttpServerAdapter].
+///
+/// Browsers cannot bind TCP or TLS listening sockets, so both [serve] and
+/// [serveSecure] throw [UnsupportedError] rather than silently pretending
+/// to host a server. HTTP *clients* (gateways, RPC consumers) work on the
+/// web through `package:http`; only server-side binding is unsupported.
 class HttpServerAdapterWeb implements HttpServerAdapter {
   @override
   Future<IpfsHttpServerInstance> serve(
@@ -30,9 +15,11 @@ class HttpServerAdapterWeb implements HttpServerAdapter {
     String address,
     int port,
   ) async {
-    // On web, we generally cannot bind a TCP port.
-    // This is a stub that mainly allows compilation.
-    return IpfsHttpServerInstanceWeb(address, port);
+    throw UnsupportedError(
+      'Cannot bind an HTTP server on the web platform: '
+      'browsers do not allow listening TCP sockets. '
+      'Run the gateway/RPC server on a native platform instead.',
+    );
   }
 
   @override
@@ -42,8 +29,11 @@ class HttpServerAdapterWeb implements HttpServerAdapter {
     int port,
     Object context,
   ) async {
-    // On web, secure TCP binding is not supported.
-    throw UnimplementedError('HTTPS server not supported on web platform');
+    throw UnsupportedError(
+      'Cannot bind an HTTPS server on the web platform: '
+      'browsers do not allow listening TCP/TLS sockets. '
+      'Run the gateway/RPC server on a native platform instead.',
+    );
   }
 }
 

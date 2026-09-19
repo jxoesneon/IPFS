@@ -2,7 +2,12 @@ import 'package:shelf/shelf.dart';
 
 import 'http_server_adapter.dart';
 
-/// Stub implementation of HTTP server adapter for unsupported platforms.
+/// Fallback [HttpServerAdapter] for platforms with no HTTP server backend
+/// (neither `dart:io` sockets nor a browser runtime).
+///
+/// Every method throws [UnsupportedError] naming the missing capability so
+/// callers can distinguish "platform cannot do this" from a real
+/// implementation gap.
 class HttpServerAdapterStub implements HttpServerAdapter {
   @override
   Future<IpfsHttpServerInstance> serve(
@@ -10,8 +15,9 @@ class HttpServerAdapterStub implements HttpServerAdapter {
     String address,
     int port,
   ) async {
-    throw UnimplementedError(
-      'HttpServerAdapter not implemented for this platform',
+    throw UnsupportedError(
+      'HTTP server binding is not supported on this platform '
+      '(no dart:io socket support and no web runtime)',
     );
   }
 
@@ -22,8 +28,9 @@ class HttpServerAdapterStub implements HttpServerAdapter {
     int port,
     Object context,
   ) async {
-    throw UnimplementedError(
-      'HttpServerAdapter not implemented for this platform',
+    throw UnsupportedError(
+      'HTTPS server binding is not supported on this platform '
+      '(no dart:io socket support and no web runtime)',
     );
   }
 }

@@ -1,6 +1,9 @@
 // src/core/ipfs_node/web_block_store.dart
+import 'dart:typed_data';
+
 import '../../platform/platform.dart';
 import '../../proto/generated/core/blockstore.pb.dart';
+import '../../proto/generated/core/dag.pb.dart' as dag_pb;
 import '../cid.dart';
 import '../data_structures/block.dart';
 import '../interfaces/i_block_store.dart';
@@ -98,20 +101,65 @@ class WebBlockStore implements IBlockStore {
     try {
       final blocks = await getAllBlocks();
       final size = blocks.fold<int>(0, (sum, b) => sum + b.size);
+      final pinned = await _pinnedCids();
       return {
         'total_blocks': blocks.length,
         'total_size': size,
-        'pinned_blocks': 0,
+        'pinned_blocks': pinned.length,
       };
     } catch (_) {
       return {'total_blocks': 0, 'total_size': 0};
     }
   }
 
+  /// Returns the set of pinned CID strings recorded under the `pins/`
+  /// prefix (written by `IPFSWebNode.pin`).
+  Future<Set<String>> _pinnedCids() async {
+    try {
+      final entries = await _platform.listDirectory('pins');
+      return {
+        for (final path in entries)
+          if (path.split('/').last.isNotEmpty) path.split('/').last,
+      };
+    } catch (_) {
+      return const {};
+    }
+  }
+
   @override
   Future<int> gc() async {
-    // Basic GC for WebStore - iterate and remove unreferenced (can be expensive)
-    // Note: This needs logic to check pins. Currently a placeholder.
-    return 0;
+    // Pin-aware mark-and-sweep: retain every pinned CID plus the DAG
+    // reachable from it via dag-pb links, then delete everything else.
+    final pinned = await _pinnedCids();
+
+    final keep = <String>{};
+    final queue = pinned.toList();
+    while (queue.isNotEmpty) {
+      final cidStr = queue.removeLast();
+      if (!keep.add(cidStr)) continue;
+
+      final data = await _platform.readBytes('blocks/$cidStr');
+      if (data == null) continue;
+
+      // Traverse dag-pb links so pinned roots retain their children.
+      try {
+        final pbNode = dag_pb.PBNode.fromBuffer(data);
+        for (final link in pbNode.links) {
+          final child = CID.fromBytes(Uint8List.fromList(link.hash));
+          queue.add(child.encode());
+        }
+      } catch (_) {
+        // Not a dag-pb node (e.g. a raw block) — no links to follow.
+      }
+    }
+
+    var removed = 0;
+    for (final key in await _platform.listDirectory('blocks')) {
+      final cidStr = key.startsWith('blocks/') ? key.substring(7) : key;
+      if (cidStr.isEmpty || keep.contains(cidStr)) continue;
+      await _platform.delete(key);
+      removed++;
+    }
+    return removed;
   }
 }

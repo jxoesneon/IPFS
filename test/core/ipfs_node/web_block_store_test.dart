@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:fixnum/fixnum.dart';
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
@@ -6,6 +7,7 @@ import 'package:dart_ipfs/src/core/ipfs_node/web_block_store.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 
 import 'web_block_store_test.mocks.dart';
 
@@ -97,6 +99,22 @@ void main() {
       expect(status['total_size'], equals(3));
     });
 
+    test('getStatus reports pinned block count', () async {
+      when(
+        mockPlatform.listDirectory('blocks'),
+      ).thenAnswer((_) async => ['blocks/$cidStr']);
+      when(
+        mockPlatform.listDirectory('pins'),
+      ).thenAnswer((_) async => ['pins/$cidStr']);
+      when(
+        mockPlatform.readBytes('blocks/$cidStr'),
+      ).thenAnswer((_) async => data);
+
+      final status = await store.getStatus();
+      expect(status['total_blocks'], equals(1));
+      expect(status['pinned_blocks'], equals(1));
+    });
+
     test('getStatus returns empty when error occurs', () async {
       when(mockPlatform.listDirectory(any)).thenThrow(Exception('Error'));
 
@@ -105,9 +123,81 @@ void main() {
       expect(status['total_size'], equals(0));
     });
 
-    test('gc returns 0 (placeholder)', () async {
+    test('gc removes unpinned blocks and keeps pinned ones', () async {
+      final orphanCid = (await CID.fromContent(
+        Uint8List.fromList([9, 9, 9]),
+      )).encode();
+
+      when(
+        mockPlatform.listDirectory('pins'),
+      ).thenAnswer((_) async => ['pins/$cidStr']);
+      when(
+        mockPlatform.listDirectory('blocks'),
+      ).thenAnswer((_) async => ['blocks/$cidStr', 'blocks/$orphanCid']);
+      when(
+        mockPlatform.readBytes('blocks/$cidStr'),
+      ).thenAnswer((_) async => data);
+
       final removed = await store.gc();
-      expect(removed, equals(0));
+
+      expect(removed, equals(1));
+      verify(mockPlatform.delete('blocks/$orphanCid')).called(1);
+      verifyNever(mockPlatform.delete('blocks/$cidStr'));
+    });
+
+    test('gc retains dag-pb children of pinned roots', () async {
+      final childCid = await CID.fromContent(Uint8List.fromList([7, 7]));
+      final childCidStr = childCid.encode();
+      final orphanCid = (await CID.fromContent(
+        Uint8List.fromList([8, 8]),
+      )).encode();
+
+      final pbNode = dag_pb.PBNode()
+        ..links.add(
+          dag_pb.PBLink(
+            hash: childCid.toBytes(),
+            name: 'child',
+            size: Int64(2),
+          ),
+        );
+
+      when(
+        mockPlatform.listDirectory('pins'),
+      ).thenAnswer((_) async => ['pins/$cidStr']);
+      when(mockPlatform.listDirectory('blocks')).thenAnswer(
+        (_) async => [
+          'blocks/$cidStr',
+          'blocks/$childCidStr',
+          'blocks/$orphanCid',
+        ],
+      );
+      when(
+        mockPlatform.readBytes('blocks/$cidStr'),
+      ).thenAnswer((_) async => pbNode.writeToBuffer());
+      when(
+        mockPlatform.readBytes('blocks/$childCidStr'),
+      ).thenAnswer((_) async => Uint8List.fromList([7, 7]));
+
+      final removed = await store.gc();
+
+      expect(removed, equals(1));
+      verifyNever(mockPlatform.delete('blocks/$cidStr'));
+      verifyNever(mockPlatform.delete('blocks/$childCidStr'));
+      verify(mockPlatform.delete('blocks/$orphanCid')).called(1);
+    });
+
+    test('gc removes everything when no pins exist', () async {
+      when(
+        mockPlatform.listDirectory('pins'),
+      ).thenAnswer((_) async => <String>[]);
+      when(
+        mockPlatform.listDirectory('blocks'),
+      ).thenAnswer((_) async => ['blocks/$cidStr']);
+
+      final removed = await store.gc();
+
+      expect(removed, equals(1));
+      verify(mockPlatform.delete('blocks/$cidStr')).called(1);
     });
 
     test('putBlock handles errors', () async {

@@ -166,8 +166,13 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
     final result = await reader.read().toDart;
     reader.releaseLock();
 
-    final value = result.value as JSArrayBuffer;
-    return value.toDart.asUint8List();
+    // A closed readable reports `done: true` and carries no `value`.
+    final dynamic done = result.done;
+    if (done == true) return Uint8List(0);
+
+    final dynamic value = result.value;
+    if (value == null) return Uint8List(0);
+    return (value as JSArrayBuffer).toDart.asUint8List();
   }
 
   @override
@@ -205,8 +210,18 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
     await close();
   }
 
-  /// Gets the stream.
-  Stream<Uint8List> get stream => throw UnimplementedError();
+  /// A [Stream] view of the incoming data on this WebTransport stream.
+  ///
+  /// Yields each chunk delivered by the browser's readable side until the
+  /// remote peer closes the stream (signalled by an empty read) or the
+  /// underlying connection is closed.
+  Stream<Uint8List> get stream async* {
+    while (!_conn.isClosed) {
+      final chunk = await read();
+      if (chunk.isEmpty) return;
+      yield chunk;
+    }
+  }
 
   /// Flushes the stream.
   Future<void> flush() async {}

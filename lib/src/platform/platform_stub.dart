@@ -95,7 +95,10 @@ abstract class IpfsPlatform {
 
 /// Returns the platform-specific implementation of [IpfsPlatform].
 ///
-/// Throws [UnsupportedError] if called from a stub without a proper implementation.
+/// This stub is only reached when neither `dart:io` (native) nor
+/// `dart:js_interop`/`dart:html` (web) is available, and throws
+/// [UnsupportedError] naming the missing capability.
 IpfsPlatform getPlatform() => throw UnsupportedError(
-  'Cannot create platform without dart:io or dart:html',
+  'No IpfsPlatform implementation is available on this platform: '
+  'requires dart:io (native) or dart:js_interop (web)',
 );

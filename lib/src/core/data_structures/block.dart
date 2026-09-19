@@ -34,18 +34,6 @@ class Block implements IBlock {
     return Block(cid: cid, data: data, format: format);
   }
 
-  /// Creates a block from bytes using BaseBlock's fromBytes method
-  // This method needs to be re-evaluated or removed if BaseBlock is gone.
-  // For now, I'll comment it out or adapt it if possible.
-  // Given the new class structure, BaseBlock is removed, so this method needs a new implementation.
-  // Let's assume it's meant to be removed or re-implemented later.
-  /*
-  // Deprecated/Removed method
-  static Block fromBytes(Uint8List bytes) {
-    throw UnimplementedError();
-  }
-  */
-
   @override
   int get size => data.length;
 

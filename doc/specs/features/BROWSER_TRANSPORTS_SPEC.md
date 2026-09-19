@@ -5,7 +5,7 @@
 **Version:** v2.1  
 **Date:** 2026-06-25  
 **Authority:** Maintainer review (2026-06-25)  
-**Status:** P1 Modified — implementation pending  
+**Status:** P1 — Implemented
 **Scope:** WebTransport browser dialer completion (certhash validation), configurable WebRTC STUN/TURN, and elimination of `UnimplementedError` from `libp2p.Conn` fields (`stat`, `scope`, etc.).
 
 ---
@@ -51,20 +51,18 @@ Validate certhash in the browser WebTransport dialer, replace the hardcoded Goog
 
 ### 3.1 Files
 
-- `lib/src/transport/webtransport/webtransport_dialer_web.dart` — browser dialer; currently sets `hash.value = Uint8List(32).toJS` (line 31) instead of the decoded certhash.
-- `lib/src/transport/webtransport/webtransport_dialer_io.dart` — IO stub; no production WebTransport API available.
+- `lib/src/transport/webtransport/webtransport_dialer_web.dart` — browser dialer; decodes the multiaddr certhashes and passes them to `WebTransportOptions.serverCertificateHashes`, failing closed on mismatch. `WebTransportConnectionWeb`/`WebTransportStreamWeb` implement the full `libp2p.Conn`/`libp2p.P2PStream` surface without `UnimplementedError`.
+- `lib/src/transport/webtransport/webtransport_dialer_io.dart` — IO stub; throws `TransportUnavailableException` (no production WebTransport API available on Dart/IO).
 - `lib/src/transport/webtransport/webtransport_listener.dart` — stub listener; non-web WebTransport IO listener is not feasible with current Dart/IO.
 - `lib/src/transport/webtransport/webtransport_transport.dart` — transport wrapper.
-- `lib/src/transport/webrtc/webrtc_transport.dart` — WebRTC transport; hardcodes Google STUN (`stun:stun.l.google.com:19302`) at lines 71 and 228.
-- `lib/src/core/config/network_config.dart` — no STUN/TURN fields.
+- `lib/src/transport/webrtc/webrtc_transport.dart` — WebRTC transport; consumes configurable STUN/TURN via `buildIceServersFromNetworkConfig` and exposes `iceConnectionState`/`signalingState` diagnostics.
+- `lib/src/core/config/network_config.dart` — carries `stunServers` and `turnServers` fields.
 
 ### 3.2 Gaps
 
-- WebTransport browser dialer does not decode or validate the multiaddr certhash; it passes a dummy 32-byte hash.
-- WebTransport `libp2p.Conn` fields (`stat`, `scope`) throw `UnimplementedError`.
-- WebRTC hardcodes Google STUN with no TURN fallback.
-- WebRTC `libp2p.Conn` fields are incomplete.
-- Non-web WebTransport IO listener cannot be implemented with current Dart/IO dependencies and is deferred.
+- Non-web WebTransport IO listener cannot be implemented with current Dart/IO dependencies and is deferred; the IO dialer fails with `TransportUnavailableException`.
+
+All other gaps listed in the original audit (dummy certhash, `UnimplementedError` in `libp2p.Conn` fields, hardcoded Google STUN, missing TURN fallback) have been closed.
 
 ---
 

@@ -5,9 +5,13 @@ import 'package:fixnum/fixnum.dart' as fixnum;
 import '../core/config/network_config.dart';
 import 'router_interface.dart';
 
-/// Handles circuit relay operations for an IPFS node (web stub).
+/// Handles circuit relay operations for an IPFS node (web implementation).
 ///
-/// Note: Circuit relay support on web is limited or not yet implemented.
+/// Circuit Relay v2 client operations are not available on the web
+/// platform: this implementation has no HOP/STOP protocol binding over the
+/// browser transports, so [reserve], [connectThroughRelay], and [connect]
+/// throw [CircuitRelayException]. Lifecycle and event methods still work so
+/// shared code can treat the client uniformly across platforms.
 class CircuitRelayClient {
   /// Creates a new [CircuitRelayClient] using the provided router.
   CircuitRelayClient(RouterInterface router, {CircuitRelayConfig? config});
@@ -31,24 +35,35 @@ class CircuitRelayClient {
   /// [limitData]: Maximum data allowed in bytes.
   /// [limitDuration]: Maximum connection duration in seconds.
   ///
-  /// Throws [UnimplementedError] on web.
+  /// Throws [CircuitRelayException] on web: the Circuit Relay v2 HOP
+  /// protocol has no web binding in this implementation.
   Future<Reservation?> reserve(
     String relayPeerId, {
     Duration? duration,
     int? limitData,
     int? limitDuration,
   }) async {
-    throw UnimplementedError('Circuit Relay not implemented on web');
+    throw CircuitRelayException(
+      'Circuit Relay v2 reservations are not supported on the web platform: '
+      'no HOP protocol transport binding exists for browsers. '
+      'Run on a native platform to use relay reservations.',
+    );
   }
 
   /// Connects to [targetPeerId] through a circuit relay at [relayAddr].
   ///
-  /// Throws [UnimplementedError] on web.
+  /// Throws [CircuitRelayException] on web: relayed connections require the
+  /// Circuit Relay v2 STOP/HOP protocols, which have no web binding in this
+  /// implementation.
   Future<RelayedConnection> connectThroughRelay(
     String relayAddr,
     String targetPeerId,
   ) async {
-    throw UnimplementedError('Circuit Relay connect not implemented on web');
+    throw CircuitRelayException(
+      'Circuit Relay v2 relayed connections are not supported on the web '
+      'platform: no HOP/STOP protocol transport binding exists for '
+      'browsers. Run on a native platform to dial through a relay.',
+    );
   }
 
   /// List of relay addresses for which we hold an active reservation.
@@ -58,9 +73,15 @@ class CircuitRelayClient {
   ///
   /// [peerId]: The target peer ID.
   ///
-  /// Throws [UnimplementedError] on web.
+  /// Throws [CircuitRelayException] on web: relayed connections require the
+  /// Circuit Relay v2 protocols, which have no web binding in this
+  /// implementation.
   Future<void> connect(String peerId) async {
-    throw UnimplementedError('Circuit Relay connect not implemented on web');
+    throw CircuitRelayException(
+      'Circuit Relay v2 relayed connections are not supported on the web '
+      'platform: no HOP/STOP protocol transport binding exists for '
+      'browsers. Run on a native platform to dial through a relay.',
+    );
   }
 
   /// Disconnects from a peer using a circuit relay.
