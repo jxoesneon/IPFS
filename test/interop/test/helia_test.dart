@@ -40,28 +40,49 @@ void main() {
   });
 
   group('Helia Bitswap/CAR interop', () {
-    test(
-      'dart_ipfs can exchange a CAR with Helia',
-      () async {
-        const testData = 'CAR exchange with Helia';
-        final addResult = await helia.add(testData);
-        final cid = addResult['Hash'] as String;
+    test('dart_ipfs can exchange a CAR with Helia', () async {
+      const testData = 'CAR exchange with Helia';
+      final addResult = await helia.add(testData);
+      final cid = addResult['Hash'] as String;
 
-        // Export CAR from Helia and import into dart_ipfs.
-        final carData = await helia.dagExport(cid);
-        await dartIpfs.dagImport(carData);
-        final fromDart = await dartIpfs.blockGet(cid);
-        expect(fromDart, equals(utf8.encode(testData)));
+      // Export CAR from Helia and import into dart_ipfs.
+      final carData = await helia.dagExport(cid);
+      await dartIpfs.dagImport(carData);
+      final fromDart = await dartIpfs.blockGet(cid);
+      expect(fromDart, equals(utf8.encode(testData)));
 
-        // Export CAR from dart_ipfs and import back into Helia.
-        const roundtripData = 'CAR roundtrip from dart_ipfs';
-        final dartCid = await dartIpfs.blockPut(utf8.encode(roundtripData));
-        final dartCar = await dartIpfs.dagExport(dartCid);
-        await helia.dagImport(dartCar);
-        final fromHelia = await helia.cat(dartCid);
-        expect(fromHelia, equals(roundtripData));
-      },
-      timeout: const Timeout(Duration(seconds: 60)),
-    );
+      // Export CAR from dart_ipfs and import back into Helia.
+      const roundtripData = 'CAR roundtrip from dart_ipfs';
+      final dartCid = await dartIpfs.blockPut(utf8.encode(roundtripData));
+      final dartCar = await dartIpfs.dagExport(dartCid);
+      await helia.dagImport(dartCar);
+      final fromHelia = await helia.cat(dartCid);
+      expect(fromHelia, equals(roundtripData));
+    }, timeout: const Timeout(Duration(seconds: 60)));
+
+    test('dart_ipfs and Helia can cat each other\'s added content', () async {
+      // Helia -> dart_ipfs direction. Helia's /api/v0/add stores a raw
+      // block via @helia/strings; dart_ipfs cat returns raw block payloads
+      // directly.
+      const heliaData = 'Hello via cat from Helia!';
+      final heliaAdd = await helia.add(heliaData);
+      final heliaCid = heliaAdd['Hash'] as String;
+
+      await Future<void>.delayed(const Duration(seconds: 5));
+
+      final fromDart = await dartIpfs.cat(heliaCid);
+      expect(fromDart, equals(utf8.encode(heliaData)));
+
+      // dart_ipfs -> Helia direction. Helia's /api/v0/cat is a raw-block
+      // strings endpoint and does not resolve UnixFS DAGs, so the dart_ipfs
+      // side contributes a raw block via block/put.
+      final dartData = utf8.encode('Hello via cat from dart_ipfs!');
+      final dartCid = await dartIpfs.blockPut(dartData);
+
+      await Future<void>.delayed(const Duration(seconds: 5));
+
+      final fromHelia = await helia.cat(dartCid);
+      expect(fromHelia, equals(utf8.decode(dartData)));
+    }, timeout: const Timeout(Duration(seconds: 60)));
   });
 }

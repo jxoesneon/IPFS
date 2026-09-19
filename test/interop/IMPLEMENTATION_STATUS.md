@@ -6,6 +6,28 @@ The Helia interop test infrastructure has been set up to enable wire compatibili
 
 ## Completed Implementation
 
+### Recent Updates (September 19, 2026)
+
+#### Kubo P0/P1 Scenario Tests Implemented
+- **Status**: ✅ Complete
+- **Description**: The previously "not implemented" scenario tests now exist and assert real behavior:
+  - `test/car_test.dart` — P0 CAR exchange with Kubo in both directions, plus local CAR format roundtrip tests.
+  - `test/bitswap_test.dart` — P0 `block get` and `cat` fetches with Kubo in both directions (byte-exact).
+  - `test/gateway_test.dart` — P0 trustless gateway (`?format=raw`, `?format=car`) and default response tests.
+  - `test/dht_test.dart` — P1 DHT provide/find with Kubo in both directions.
+  - `test/ipns_test.dart` — P1 IPNS publish/resolve with Kubo in both directions.
+  - `test/helia_test.dart` — Helia connectivity plus CAR and add/cat exchange tests (nightly, non-blocking).
+- **Location**: `test/interop/test/`
+
+#### add/cat Coverage and Loud Failure Semantics
+- **Status**: ✅ Complete
+- **Description**: `DartIpfsClient` and `KuboClient` now expose `add` (multipart `/api/v0/add`, NDJSON) and `cat` (`/api/v0/cat?arg=`) so the P0 `ipfs cat` requirement of `MAINTAINER_DECISION_INTEROP_SCOPE` §4.2 is covered in both directions. Silent-pass early returns on unreachable required hosts were removed — `car_test.dart` and `gateway_test.dart` now fail loudly when Kubo or dart_ipfs is unreachable. Helia remains optional (nightly profile only).
+- **Location**: `test/interop/lib/`, `test/interop/test/`
+
+#### P1 → P0 Promotion Tracker
+- **Status**: ✅ Complete
+- **Description**: `test/interop/PROMOTION_TRACKER.md` now tracks the §4.5 promotion preconditions for DHT/IPNS, including a release-candidate green-run ledger and the current promotion decision record (both remain P1 pending two consecutive green RC cycles and maintainer approval).
+
 ### Recent Updates (July 8, 2026)
 
 #### CAR Endpoints Added to Helia Server
@@ -105,12 +127,13 @@ Updated to include Helia:
 ### 7. Helia Tests (test/interop/test/helia_test.dart)
 **Status**: ✅ Complete
 
-Implemented basic connectivity tests:
+Implemented tests:
 - Server reachability test
 - Version endpoint test
 - Add/retrieve data cycle test
-- (Skipped) Bitswap interop - pending implementation
-- (Skipped) CAR interop - pending implementation
+- CAR exchange test (export from Helia → import to dart_ipfs, and reverse)
+- add/cat exchange test (Helia → dart_ipfs `cat`, dart_ipfs raw block → Helia `cat`)
+- Direct Bitswap block exchange between Helia and dart_ipfs remains future work (nightly, non-blocking)
 
 ### 8. Documentation (test/interop/README.md)
 **Status**: ✅ Complete
@@ -150,48 +173,35 @@ Created smoke test scripts for Linux and Windows that verify:
    - **Location**: `test/interop/helia/server.js`, `test/interop/generate_swarm_key.js`, `test/interop/swarm.key` (gitignored)
 
 2. **Bitswap Interop Tests**
-   - **Status**: ❌ Not implemented
-   - **Description**: Implement actual Bitswap block exchange between dart_ipfs and Helia
-   - **Impact**: Cannot verify wire compatibility for Bitswap protocol
-   - **Implementation**: 
-     - Ensure dart_ipfs has working Bitswap implementation
-     - Add test that adds block to Helia, fetches via dart_ipfs
-     - Add test that adds block to dart_ipfs, fetches via Helia
+   - **Status**: ✅ Complete (Kubo); ⚠️ Partial (Helia)
+   - **Description**: Bitswap fetch is verified with Kubo in both directions — `block get` and `cat` — with byte-exact assertions in `test/interop/test/bitswap_test.dart` (P0, release-blocking). Helia add/cat exchange is covered in `test/helia_test.dart`; a direct Helia↔dart_ipfs `block get` Bitswap test remains future work.
    - **Location**: `test/interop/test/bitswap_test.dart`, `test/interop/test/helia_test.dart`
 
 3. **CAR Interop Tests**
-   - **Status**: ⚠️ Partially Complete
-   - **Description**: Implement CAR file import/export between implementations
-   - **Impact**: CAR endpoints are implemented on Helia server, but interop tests not yet added
+   - **Status**: ✅ Complete
+   - **Description**: CAR file import/export is verified between implementations
    - **Implementation**:
-     - ✅ Added CAR export/import endpoints to Helia server
-     - ✅ Tested endpoints locally with curl
-     - ❌ Add CAR export/import to RPC clients
-     - ❌ Add test that exports CAR from Helia, imports to dart_ipfs
-     - ❌ Add test that exports CAR from dart_ipfs, imports to Helia
-   - **Location**: `test/interop/test/car_test.dart`, RPC clients
+     - ✅ CAR export/import endpoints on the Helia server
+     - ✅ CAR export/import in `DartIpfsClient`, `KuboClient`, and `HeliaClient`
+     - ✅ dart_ipfs → Kubo and Kubo → dart_ipfs CAR exchange (`test/car_test.dart`, P0)
+     - ✅ Helia ↔ dart_ipfs CAR exchange (`test/helia_test.dart`, nightly)
+   - **Location**: `test/interop/test/car_test.dart`, `test/interop/test/helia_test.dart`, RPC clients
 
 ### Medium Priority
 
 4. **DHT Interop Tests**
-   - **Status**: ❌ Not implemented
-   - **Description**: Test DHT provider/lookup operations
-   - **Impact**: Cannot verify DHT wire compatibility
-   - **Implementation**: Add DHT provide/lookup tests
+   - **Status**: ✅ Implemented (P1, non-blocking)
+   - **Description**: DHT provide/find is tested with Kubo in both directions in `test/interop/test/dht_test.dart`. Runs as the non-blocking `interop-p1` job per `MAINTAINER_DECISION_INTEROP_SCOPE` §4.3; promotion to P0 is tracked in `PROMOTION_TRACKER.md`.
    - **Location**: `test/interop/test/dht_test.dart`
 
 5. **IPNS Interop Tests**
-   - **Status**: ❌ Not implemented
-   - **Description**: Test IPNS publish/resolve operations
-   - **Impact**: Cannot verify IPNS wire compatibility
-   - **Implementation**: Add IPNS publish/resolve tests
+   - **Status**: ✅ Implemented (P1, non-blocking)
+   - **Description**: IPNS publish/resolve is tested with Kubo in both directions in `test/interop/test/ipns_test.dart`. Runs as the non-blocking `interop-p1` job; promotion to P0 is tracked in `PROMOTION_TRACKER.md`.
    - **Location**: `test/interop/test/ipns_test.dart`
 
 6. **Gateway Interop Tests**
-   - **Status**: ❌ Not implemented
-   - **Description**: Test HTTP gateway compatibility
-   - **Impact**: Cannot verify gateway behavior
-   - **Implementation**: Add gateway tests
+   - **Status**: ✅ Complete (P0)
+   - **Description**: Trustless gateway (`?format=raw`, `?format=car`) and default response are tested against the dart_ipfs gateway in `test/interop/test/gateway_test.dart` (P0, release-blocking).
    - **Location**: `test/interop/test/gateway_test.dart`
 
 ### Low Priority
@@ -255,25 +265,21 @@ Created smoke test scripts for Linux and Windows that verify:
 
 ## Known Issues
 
-1. **Bitswap Not Tested**: While the Helia server has Bitswap loaded, actual Bitswap exchange tests are not implemented because dart_ipfs Bitswap implementation may not be complete.
+1. **Helia Direct Bitswap Exchange Not Tested**: Kubo Bitswap fetch (`block get` + `cat`, both directions) is covered by `bitswap_test.dart`, and Helia add/cat exchange is covered by `helia_test.dart`. A direct Helia↔dart_ipfs Bitswap `block get` scenario is still open; the Helia server's `/api/v0/cat` is a raw-block strings endpoint that does not resolve UnixFS DAGs.
 
-2. **CAR Interop Tests Not Complete**: CAR endpoints are implemented on the Helia server and tested locally, but full interop tests between dart_ipfs and Helia are not yet implemented. The RPC clients need to be updated to support CAR import/export.
-
-3. **Windows Line Endings**: The smoke_test.sh script may have Windows line endings if edited on Windows. Use `dos2unix` or Git's autocrlf settings to manage this.
+2. **Windows Line Endings**: The smoke_test.sh script may have Windows line endings if edited on Windows. Use `dos2unix` or Git's autocrlf settings to manage this.
 
 ## Recommendations
 
 ### Immediate Actions
 
-1. **Add CAR Support to RPC Clients**: Implement CAR export/import in the Dart RPC clients to enable CAR interop testing.
+1. **Record RC cycles in PROMOTION_TRACKER.md**: After each release candidate, record the `interop-p1` job outcome so DHT/IPNS can accumulate the two consecutive green cycles required for P0 promotion.
 
-2. **Implement CAR Interop Tests**: Once RPC clients support CAR, add comprehensive interop tests to verify CAR format compatibility between implementations.
-
-3. **Verify dart_ipfs Bitswap**: Before implementing Bitswap interop tests, verify that dart_ipfs has a working Bitswap implementation that can actually exchange blocks.
+2. **Verify Helia↔dart_ipfs Bitswap `block get`**: Extend `helia_test.dart` (or the Helia server endpoints) so a block added to one implementation is fetched directly from the other over Bitswap, mirroring the Kubo P0 coverage.
 
 ### Long-term Actions
 
-1. **CI Integration**: Add the interop tests to the CI pipeline with proper cleanup on failure.
+1. **CI Integration**: ✅ Done — `.github/workflows/interop.yml` runs the P0 (blocking) and P1 (non-blocking) Kubo jobs on PRs touching `lib/src/core/`, `lib/src/protocols/`, `lib/src/services/`, `bin/`, or `test/interop/`; `.github/workflows/interop_nightly.yml` runs the Helia job.
 
 2. **Test Matrix**: Run interop tests against multiple Kubo and Helia versions to ensure backward compatibility.
 
@@ -283,4 +289,4 @@ Created smoke test scripts for Linux and Windows that verify:
 
 ## Conclusion
 
-The Helia interop infrastructure is now functional for basic connectivity testing. The Helia server is running with all necessary modules, the Docker network is properly configured, and basic tests are passing. The remaining work focuses on implementing the actual protocol-level interop tests (Bitswap, CAR, DHT, IPNS) and improving test isolation with the private swarm key.
+The interop suite now covers the full `MAINTAINER_DECISION_INTEROP_SCOPE` §4.2 matrix: P0 release-blocking CAR, Bitswap (`block get` + `cat` both directions), and gateway tests against Kubo; P1 non-blocking DHT and IPNS tests; and nightly Helia tests. Unreachable required hosts fail loudly rather than silently passing. Remaining work is the Helia direct Bitswap `block get` scenario and accumulating the two consecutive green release-candidate cycles in `PROMOTION_TRACKER.md` before DHT/IPNS can be promoted to P0.

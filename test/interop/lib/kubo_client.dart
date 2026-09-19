@@ -150,6 +150,71 @@ class KuboClient {
     }
   }
 
+  /// Adds [data] as a UnixFS file via `POST /api/v0/add` and returns the
+  /// resulting `{Name, Hash, Size}` object (the DAG root entry).
+  // Kubo /api/v0/add expects multipart/form-data and answers NDJSON with one
+  // {Name, Hash, Size} object per added entry.
+  Future<Map<String, dynamic>> add(Uint8List data) async {
+    final uri = Uri.http('$host:$port', '/api/v0/add');
+    final client = HttpClient();
+    try {
+      final request = await client.postUrl(uri);
+      final boundary = '----KuboAdd${DateTime.now().millisecondsSinceEpoch}';
+      request.headers.contentType = ContentType(
+        'multipart',
+        'form-data',
+        charset: 'utf-8',
+        parameters: {'boundary': boundary},
+      );
+      final body = BytesBuilder()
+        ..add(utf8.encode('--$boundary\r\n'))
+        ..add(
+          utf8.encode(
+            'Content-Disposition: form-data; name="file"; filename="data"\r\n',
+          ),
+        )
+        ..add(utf8.encode('Content-Type: application/octet-stream\r\n\r\n'))
+        ..add(data)
+        ..add(utf8.encode('\r\n--$boundary--\r\n'));
+      request.add(body.toBytes());
+      final response = await request.close();
+      final bodyText = await response.transform(utf8.decoder).join();
+      if (response.statusCode != 200) {
+        throw HttpException(
+          'Kubo RPC add returned ${response.statusCode}: $bodyText',
+        );
+      }
+      return _lastNdjsonObject(bodyText, 'add');
+    } finally {
+      client.close();
+    }
+  }
+
+  /// Returns the content addressed by [cid] via `POST /api/v0/cat`,
+  /// resolving UnixFS DAGs to their file payload.
+  Future<Uint8List> cat(String cid) async {
+    final query = {'arg': cid};
+    final uri = Uri.http('$host:$port', '/api/v0/cat', query);
+    final client = HttpClient();
+    try {
+      final request = await client.postUrl(uri);
+      final response = await request.close();
+      final bytes = await response.fold<List<int>>(
+        <int>[],
+        (List<int> previous, List<int> chunk) => previous..addAll(chunk),
+      );
+      if (response.statusCode != 200) {
+        final body = utf8.decode(bytes);
+        throw HttpException(
+          'Kubo RPC cat returned ${response.statusCode}: $body',
+        );
+      }
+      return Uint8List.fromList(bytes);
+    } finally {
+      client.close();
+    }
+  }
+
   Future<String> dhtProvide(String cid) async {
     final response = await _rpc('routing/provide', arg: cid);
     return response;
@@ -242,6 +307,21 @@ class KuboClient {
     } finally {
       client.close();
     }
+  }
+
+  // Parses the last non-empty NDJSON line of an add-style response. When a
+  // request produces multiple entries (e.g. wrap-with-directory) the final
+  // object is the DAG root, matching Kubo's response ordering.
+  Map<String, dynamic> _lastNdjsonObject(String body, String command) {
+    final lines = body
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+    if (lines.isEmpty) {
+      throw HttpException('Kubo RPC $command returned an empty response body');
+    }
+    return jsonDecode(lines.last) as Map<String, dynamic>;
   }
 
   Future<String> _rpc(String command, {String? arg}) async {

@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: [master]
     paths:
+      - 'lib/src/core/**'
       - 'lib/src/protocols/**'
       - 'lib/src/services/**'
       - 'bin/**'

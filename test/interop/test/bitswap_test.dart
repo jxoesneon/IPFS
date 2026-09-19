@@ -44,58 +44,102 @@ void main() {
       }
     });
 
-    test(
-      'dart_ipfs can fetch a block from Kubo via Bitswap',
-      () async {
-        // Test data - a simple block
-        final testData = Uint8List.fromList('Hello from Kubo!'.codeUnits);
+    test('dart_ipfs can fetch a block from Kubo via Bitswap', () async {
+      // Test data - a simple block
+      final testData = Uint8List.fromList('Hello from Kubo!'.codeUnits);
 
-        // Add block to Kubo
-        final kuboCid = await kubo.blockPut(testData);
-        print('Added block to Kubo with CID: $kuboCid');
+      // Add block to Kubo
+      final kuboCid = await kubo.blockPut(testData);
+      print('Added block to Kubo with CID: $kuboCid');
 
-        // Wait a moment for Bitswap to propagate
-        await Future<void>.delayed(const Duration(seconds: 5));
+      // Wait a moment for Bitswap to propagate
+      await Future<void>.delayed(const Duration(seconds: 5));
 
-        // Fetch the same block from dart_ipfs via Bitswap
-        final fetchedData = await dartIpfs.blockGet(kuboCid);
-        print('Fetched block from dart_ipfs');
+      // Fetch the same block from dart_ipfs via Bitswap
+      final fetchedData = await dartIpfs.blockGet(kuboCid);
+      print('Fetched block from dart_ipfs');
 
-        // Verify the content matches
-        expect(
-          bytesEqual(fetchedData, testData),
-          isTrue,
-          reason: 'Fetched data should match original data',
-        );
-      },
-      timeout: const Timeout(Duration(seconds: 60)),
-    );
+      // Verify the content matches
+      expect(
+        bytesEqual(fetchedData, testData),
+        isTrue,
+        reason: 'Fetched data should match original data',
+      );
+    }, timeout: const Timeout(Duration(seconds: 60)));
 
-    test(
-      'Kubo can fetch a block from dart_ipfs via Bitswap',
-      () async {
-        // Test data - a simple block
-        final testData = Uint8List.fromList('Hello from dart_ipfs!'.codeUnits);
+    test('Kubo can fetch a block from dart_ipfs via Bitswap', () async {
+      // Test data - a simple block
+      final testData = Uint8List.fromList('Hello from dart_ipfs!'.codeUnits);
 
-        // Add block to dart_ipfs
-        final dartIpfsCid = await dartIpfs.blockPut(testData);
-        print('Added block to dart_ipfs with CID: $dartIpfsCid');
+      // Add block to dart_ipfs
+      final dartIpfsCid = await dartIpfs.blockPut(testData);
+      print('Added block to dart_ipfs with CID: $dartIpfsCid');
 
-        // Wait a moment for Bitswap to propagate
-        await Future<void>.delayed(const Duration(seconds: 5));
+      // Wait a moment for Bitswap to propagate
+      await Future<void>.delayed(const Duration(seconds: 5));
 
-        // Fetch the same block from Kubo via Bitswap
-        final fetchedData = await kubo.blockGet(dartIpfsCid);
-        print('Fetched block from Kubo');
+      // Fetch the same block from Kubo via Bitswap
+      final fetchedData = await kubo.blockGet(dartIpfsCid);
+      print('Fetched block from Kubo');
 
-        // Verify the content matches (convert Uint8List to List<int> for comparison)
-        expect(
-          bytesEqual(fetchedData, testData),
-          isTrue,
-          reason: 'Fetched data should match original data',
-        );
-      },
-      timeout: const Timeout(Duration(seconds: 60)),
-    );
+      // Verify the content matches (convert Uint8List to List<int> for comparison)
+      expect(
+        bytesEqual(fetchedData, testData),
+        isTrue,
+        reason: 'Fetched data should match original data',
+      );
+    }, timeout: const Timeout(Duration(seconds: 60)));
+
+    test('dart_ipfs can cat a file added to Kubo', () async {
+      // Test data - a UnixFS file (dart_ipfs cat resolves the UnixFS DAG)
+      final testData = Uint8List.fromList(
+        'Hello via ipfs cat from Kubo!'.codeUnits,
+      );
+
+      // Add the file to Kubo
+      final addResult = await kubo.add(testData);
+      final kuboCid = addResult['Hash'] as String;
+      print('Added file to Kubo with CID: $kuboCid');
+
+      // Wait a moment for Bitswap to propagate
+      await Future<void>.delayed(const Duration(seconds: 5));
+
+      // Cat the file from dart_ipfs via Bitswap
+      final fetchedData = await dartIpfs.cat(kuboCid);
+      print('Cat result fetched from dart_ipfs');
+
+      // Verify the content matches byte-exactly
+      expect(
+        bytesEqual(fetchedData, testData),
+        isTrue,
+        reason: 'Cat data should match original data',
+      );
+    }, timeout: const Timeout(Duration(seconds: 60)));
+
+    test('Kubo can cat a file added to dart_ipfs', () async {
+      // Test data - a UnixFS file (Kubo cat resolves the UnixFS DAG)
+      final testData = Uint8List.fromList(
+        'Hello via ipfs cat from dart_ipfs!'.codeUnits,
+      );
+
+      // Add the file to dart_ipfs
+      final addResult = await dartIpfs.add(testData);
+      final dartIpfsCid = addResult['Hash'] as String;
+      print('Added file to dart_ipfs with CID: $dartIpfsCid');
+
+      // Wait a moment for Bitswap to propagate
+      await Future<void>.delayed(const Duration(seconds: 5));
+
+      // Cat the file from Kubo via Bitswap
+      final fetchedData = await kubo.cat(dartIpfsCid);
+      print('Cat result fetched from Kubo');
+
+      // Verify the content matches byte-exactly
+      expect(
+        bytesEqual(fetchedData, testData),
+        isTrue,
+        reason: 'Cat data should match original data',
+      );
+    }, timeout: const Timeout(Duration(seconds: 60)));
   });
 }

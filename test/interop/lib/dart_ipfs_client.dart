@@ -90,6 +90,73 @@ class DartIpfsClient {
     return jsonDecode(response) as Map<String, dynamic>;
   }
 
+  /// Adds [data] as a UnixFS file via `POST /api/v0/add` and returns the
+  /// resulting `{Name, Hash, Size}` object (the DAG root entry).
+  // dart_ipfs /api/v0/add expects multipart/form-data and answers NDJSON,
+  // matching the Kubo add response shape ({Name, Hash, Size}).
+  Future<Map<String, dynamic>> add(List<int> data) async {
+    final uri = Uri.http('$host:$port', '/api/v0/add');
+    final client = HttpClient();
+    try {
+      final request = await client.postUrl(uri);
+      final boundary =
+          '----DartIpfsAdd${DateTime.now().millisecondsSinceEpoch}';
+      request.headers.contentType = ContentType(
+        'multipart',
+        'form-data',
+        charset: 'utf-8',
+        parameters: {'boundary': boundary},
+      );
+      final body = BytesBuilder()
+        ..add(utf8.encode('--$boundary\r\n'))
+        ..add(
+          utf8.encode(
+            'Content-Disposition: form-data; name="file"; '
+            'filename="data"\r\n',
+          ),
+        )
+        ..add(utf8.encode('Content-Type: application/octet-stream\r\n\r\n'))
+        ..add(data)
+        ..add(utf8.encode('\r\n--$boundary--\r\n'));
+      request.add(body.toBytes());
+      final response = await request.close();
+      final bodyText = await response.transform(utf8.decoder).join();
+      if (response.statusCode != 200) {
+        throw HttpException(
+          'dart_ipfs RPC add returned ${response.statusCode}: $bodyText',
+        );
+      }
+      return _lastNdjsonObject(bodyText, 'add');
+    } finally {
+      client.close();
+    }
+  }
+
+  /// Returns the content addressed by [cid] via `POST /api/v0/cat`,
+  /// resolving UnixFS DAGs to their file payload.
+  Future<Uint8List> cat(String cid) async {
+    final query = {'arg': cid};
+    final uri = Uri.http('$host:$port', '/api/v0/cat', query);
+    final client = HttpClient();
+    try {
+      final request = await client.postUrl(uri);
+      final response = await request.close();
+      final bytes = await response.fold<List<int>>(
+        <int>[],
+        (List<int> previous, List<int> chunk) => previous..addAll(chunk),
+      );
+      if (response.statusCode != 200) {
+        final body = utf8.decode(bytes);
+        throw HttpException(
+          'dart_ipfs RPC cat returned ${response.statusCode}: $body',
+        );
+      }
+      return Uint8List.fromList(bytes);
+    } finally {
+      client.close();
+    }
+  }
+
   Future<String> blockPut(List<int> data, {String? codec}) async {
     final query = <String, String>{};
     if (codec != null) {
@@ -132,6 +199,23 @@ class DartIpfsClient {
     } finally {
       client.close();
     }
+  }
+
+  // Parses the last non-empty NDJSON line of an add-style response. When a
+  // request produces multiple entries (e.g. wrap-with-directory) the final
+  // object is the DAG root, matching Kubo's response ordering.
+  Map<String, dynamic> _lastNdjsonObject(String body, String command) {
+    final lines = body
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+    if (lines.isEmpty) {
+      throw HttpException(
+        'dart_ipfs RPC $command returned an empty response body',
+      );
+    }
+    return jsonDecode(lines.last) as Map<String, dynamic>;
   }
 
   Future<String> _rpc(String command, {String? arg}) async {

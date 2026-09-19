@@ -36,34 +36,29 @@ void main() {
   group('P0 Gateway retrieval with Kubo', () {
     late DartIpfsClient dartIpfs;
     late KuboClient kubo;
-    bool hostsReachable = false;
 
     setUpAll(() async {
-      // Check if hosts are reachable (e.g., running in Docker network)
-      final dartIpfsReachable = await _isHostReachable(
-        kDartIpfsApiHost,
-        kDartIpfsApiPort,
-      );
-      final kuboReachable = await _isHostReachable(kKuboApiHost, kKuboApiPort);
-      hostsReachable = dartIpfsReachable && kuboReachable;
-
-      if (!hostsReachable) {
-        // Tests will be skipped in individual test functions
+      // Kubo and dart_ipfs are required members of the P0 matrix. Fail
+      // loudly when either is unreachable instead of silently passing.
+      final unreachable = <String>[
+        if (!await _isHostReachable(kDartIpfsApiHost, kDartIpfsApiPort))
+          '$kDartIpfsApiHost:$kDartIpfsApiPort',
+        if (!await _isHostReachable(kKuboApiHost, kKuboApiPort))
+          '$kKuboApiHost:$kKuboApiPort',
+      ];
+      if (unreachable.isNotEmpty) {
+        throw StateError(
+          'P0 gateway interop requires these hosts to be reachable: '
+          '${unreachable.join(', ')}. Start the interop network '
+          '(test/interop/docker-compose.yml) before running this suite.',
+        );
       }
-    });
-
-    setUp(() {
-      if (!hostsReachable) return;
 
       dartIpfs = DartIpfsClient(host: kDartIpfsApiHost, port: kDartIpfsApiPort);
       kubo = KuboClient(host: kKuboApiHost, port: kKuboApiPort);
     });
 
     test('trustless gateway returns raw block with correct headers', () async {
-      if (!hostsReachable) {
-        return;
-      }
-
       // Create test data
       final testData = utf8.encode('Hello, IPFS Gateway!');
 
@@ -83,10 +78,6 @@ void main() {
     });
 
     test('trustless gateway returns a CAR response', () async {
-      if (!hostsReachable) {
-        return;
-      }
-
       // Create test data
       final testData = utf8.encode('CAR test data');
 
@@ -119,10 +110,6 @@ void main() {
     });
 
     test('default gateway response returns the original content', () async {
-      if (!hostsReachable) {
-        return;
-      }
-
       // Create test data
       final testData = utf8.encode('Default gateway test content');
 
