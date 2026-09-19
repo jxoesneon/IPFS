@@ -91,9 +91,11 @@ void main() {
     test('putValue/getValue operations', () async {
       final key = Key(Uint8List.fromList([1, 1, 1]));
       final value = Value(Uint8List.fromList([2, 2, 2]));
+      when(mockClient.storeValue(any, any)).thenAnswer((_) async => true);
 
       await handler.putValue(key, value);
       verify(mockStorage.put(any, any)).called(1);
+      verify(mockClient.storeValue(any, any)).called(1);
 
       when(
         mockStorage.get(any),
@@ -144,6 +146,7 @@ void main() {
 
       when(mockKeystore.getKeyPair(keyName)).thenReturn(keyPair);
       when(mockStorage.get(any)).thenAnswer((_) async => null);
+      when(mockClient.storeValue(any, any)).thenAnswer((_) async => true);
 
       await handler.publishIPNS(cid, keyName: keyName);
       verify(mockStorage.put(any, any)).called(1);
@@ -163,6 +166,7 @@ void main() {
       when(
         mockStorage.get(any),
       ).thenAnswer((_) async => existingEntry.writeToBuffer());
+      when(mockClient.storeValue(any, any)).thenAnswer((_) async => true);
 
       await handler.publishIPNS(cid, keyName: keyName);
 
@@ -307,39 +311,43 @@ void main() {
       expect(() => handler.getValue(key), throwsA(isA<Exception>()));
     });
 
-    test('putValue handles storage errors', () async {
+    test('putValue propagates storage errors', () async {
       final key = Key(Uint8List.fromList([1, 1, 1]));
       final value = Value(Uint8List.fromList([2, 2, 2]));
       when(mockStorage.put(any, any)).thenThrow(Exception('Storage error'));
 
-      await handler.putValue(key, value);
-      // Should not throw, error is logged
+      expect(() => handler.putValue(key, value), throwsA(isA<Exception>()));
     });
 
-    test('findProviders handles client errors', () async {
+    test('putValue throws when the DHT store fails', () async {
+      final key = Key(Uint8List.fromList([1, 1, 1]));
+      final value = Value(Uint8List.fromList([2, 2, 2]));
+      when(mockClient.storeValue(any, any)).thenAnswer((_) async => false);
+
+      expect(() => handler.putValue(key, value), throwsStateError);
+    });
+
+    test('findProviders propagates client errors', () async {
       final cid = CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
       when(mockClient.findProviders(any)).thenThrow(Exception('Client error'));
 
-      final providers = await handler.findProviders(cid);
-      expect(providers, isEmpty);
+      expect(() => handler.findProviders(cid), throwsA(isA<Exception>()));
     });
 
-    test('provide handles client errors', () async {
+    test('provide propagates client errors', () async {
       final cid = CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn');
       when(mockRouter.peerID).thenReturn('localPeer');
       when(
         mockClient.addProvider(any, any),
       ).thenThrow(Exception('Client error'));
 
-      await handler.provide(cid);
-      // Should not throw, error is logged
+      expect(() => handler.provide(cid), throwsA(isA<Exception>()));
     });
 
-    test('findPeer handles client errors', () async {
+    test('findPeer propagates client errors', () async {
       final peerId = PeerId(value: Uint8List.fromList([1, 2, 3]));
       when(mockClient.findPeer(peerId)).thenThrow(Exception('Client error'));
-      final results = await handler.findPeer(peerId);
-      expect(results, isEmpty);
+      expect(() => handler.findPeer(peerId), throwsA(isA<Exception>()));
     });
 
     test('handleRoutingTableUpdate throws on client errors', () async {
@@ -354,15 +362,17 @@ void main() {
       );
     });
 
-    test('publishIPNS handles keystore errors gracefully', () async {
+    test('publishIPNS propagates keystore errors', () async {
       final cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
       final keyName = 'self';
       when(
         mockKeystore.getKeyPair(keyName),
       ).thenThrow(Exception('Key not found'));
 
-      await handler.publishIPNS(cid, keyName: keyName);
-      // Should not throw, error is handled gracefully
+      expect(
+        () => handler.publishIPNS(cid, keyName: keyName),
+        throwsA(isA<Exception>()),
+      );
     });
 
     test('resolveDNSLink handles storage errors', () async {

@@ -113,6 +113,7 @@ class DHTHandler implements IDHTHandler, ILifecycle {
       _logger.info('DHT client stopped successfully');
     } catch (e, st) {
       _logger.error('Error stopping DHT client', e, st);
+      rethrow;
     }
   }
 
@@ -127,11 +128,16 @@ class DHTHandler implements IDHTHandler, ILifecycle {
           .toList();
     } catch (e, st) {
       _logger.error('Error finding providers for CID: $cid', e, st);
-      return [];
+      rethrow;
     }
   }
 
   /// Publishes a value to the DHT network under a given key.
+  ///
+  /// The value is written to the local DHT store (so [getValue] and inbound
+  /// GET_VALUE queries can serve it) and announced on the wire to the K
+  /// closest peers via [DHTClient.storeValue]. Throws if the value cannot
+  /// be stored.
   @override
   Future<void> putValue(Key key, Value value) async {
     _logger.debug('Publishing value to DHT for key: $key');
@@ -141,11 +147,21 @@ class DHTHandler implements IDHTHandler, ILifecycle {
       // Store the value bytes directly
       await _storage.put(storageKey, Uint8List.fromList(value.bytes));
 
+      // Announce on the wire: PUT_VALUE to the K closest peers.
+      final stored = await dhtClient.storeValue(
+        key.bytes,
+        Uint8List.fromList(value.bytes),
+      );
+      if (!stored) {
+        throw StateError('Failed to store value in DHT for key: $key');
+      }
+
       // Update routing table with key information
       final targetPeerId = PeerId(value: key.bytes);
       await handleRoutingTableUpdate(V_PeerInfo()..peerId = targetPeerId.value);
     } catch (e, st) {
       _logger.error('Error publishing value to DHT for key: $key', e, st);
+      rethrow;
     }
   }
 
@@ -285,6 +301,7 @@ class DHTHandler implements IDHTHandler, ILifecycle {
       _logger.info('Successfully published IPNS record for CID: $cid');
     } catch (e, st) {
       _logger.error('Error publishing IPNS record', e, st);
+      rethrow;
     }
   }
 
@@ -348,7 +365,7 @@ class DHTHandler implements IDHTHandler, ILifecycle {
       return [];
     } catch (e, st) {
       _logger.error('Error finding peer $id', e, st);
-      return [];
+      rethrow;
     }
   }
 
@@ -361,6 +378,7 @@ class DHTHandler implements IDHTHandler, ILifecycle {
       _recordLocalProvider(cid.toString(), _router.peerID);
     } catch (e, st) {
       _logger.error('Error providing CID: $cid', e, st);
+      rethrow;
     }
   }
 
@@ -377,6 +395,7 @@ class DHTHandler implements IDHTHandler, ILifecycle {
       }
     } catch (e, st) {
       _logger.error('Error providing ${cids.length} CIDs', e, st);
+      rethrow;
     }
   }
 

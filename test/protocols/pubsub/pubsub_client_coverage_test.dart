@@ -248,9 +248,13 @@ void main() {
         ),
       );
 
-      // Peer should be removed from mesh.
+      // Peer should be removed from mesh; with no remaining delivery
+      // targets the publish now fails loudly.
       clearInteractions(mockRouter);
-      await client.publish('topic1', 'msg');
+      await expectLater(
+        client.publish('topic1', 'msg'),
+        throwsA(isA<PubSubDeliveryError>()),
+      );
       verifyNever(
         mockRouter.sendMessage(
           'QmSender',
@@ -664,11 +668,14 @@ void main() {
       expect(decoded, equals(''));
     });
 
-    test('publish with empty mesh logs warning', () async {
+    test('publish with empty mesh throws PubSubDeliveryError', () async {
       await client.start();
-      // Don't graft any peers, mesh is empty
-      await client.publish('topic1', 'msg');
-      // Should not throw even with empty mesh
+      // Don't graft any peers, mesh is empty: the message would be
+      // silently dropped, so publish must fail loudly.
+      await expectLater(
+        client.publish('topic1', 'msg'),
+        throwsA(isA<PubSubDeliveryError>()),
+      );
       await client.stop();
     });
 
@@ -807,11 +814,14 @@ void main() {
       await client.stop();
     });
 
-    test('publish with null mesh peer does not throw', () async {
+    test('publish with no delivery targets throws', () async {
       await client.start();
-      // Don't graft any peers
-      await client.publish('topic1', 'msg');
-      // Should not throw even with empty mesh
+      // Don't graft any peers: zero delivery targets is a delivery
+      // failure, not a success.
+      await expectLater(
+        client.publish('topic1', 'msg'),
+        throwsA(isA<PubSubDeliveryError>()),
+      );
       await client.stop();
     });
 

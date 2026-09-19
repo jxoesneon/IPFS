@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:cryptography/cryptography.dart';
+import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
+import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
@@ -75,8 +79,88 @@ void main() {
       // DHT store should be invoked via the legacy putValue fallback.
       verify(mockDHTHandler.putValue(any, any)).called(1);
 
-      // The legacy base64 PubSub broadcast has been removed.
+      // PubSub notifications are disabled by default: nothing is announced.
       verifyNever(mockPubSubHandler.publish('/ipfs/ipns-1.0.0', any));
+    });
+
+    test(
+      'publish() announces the signed record over PubSub when enabled',
+      () async {
+        ipnsHandler = IPNSHandler(
+          IPFSConfig(offline: false, enableIpnsPubSub: true),
+          mockSecurityManager,
+          mockDHTHandler,
+          mockPubSubHandler,
+        );
+        when(mockSecurityManager.isKeystoreUnlocked).thenReturn(true);
+        final keyPair = await Ed25519().newKeyPair();
+        when(
+          mockSecurityManager.getSecureKey(any),
+        ).thenAnswer((_) async => keyPair);
+        when(mockDHTHandler.start()).thenAnswer((_) async {});
+        when(mockDHTHandler.putValue(any, any)).thenAnswer((_) async {});
+        when(mockPubSubHandler.subscribe(any)).thenAnswer((_) async {});
+        when(mockPubSubHandler.publish(any, any)).thenAnswer((_) async {});
+
+        const cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+        await ipnsHandler.start();
+        await ipnsHandler.publish(cid, keyName: 'self');
+
+        final announced =
+            verify(
+                  mockPubSubHandler.publish(
+                    IPNSHandler.ipnsPubSubTopic,
+                    captureAny,
+                  ),
+                ).captured.single
+                as String;
+
+        // The announcement is a base64-encoded signed IPNS record.
+        final record = IPNSRecord.decode(base64Decode(announced));
+        expect(record.isSigned, isTrue);
+        expect(record.valueCID?.encode(), cid);
+      },
+    );
+
+    test('incoming PubSub record refreshes the local IPNS cache', () async {
+      ipnsHandler = IPNSHandler(
+        IPFSConfig(offline: false, enableIpnsPubSub: true),
+        mockSecurityManager,
+        mockDHTHandler,
+        mockPubSubHandler,
+      );
+      when(mockDHTHandler.start()).thenAnswer((_) async {});
+      when(mockPubSubHandler.subscribe(any)).thenAnswer((_) async {});
+
+      await ipnsHandler.start();
+
+      final listener =
+          verify(
+                mockPubSubHandler.onMessage(
+                  IPNSHandler.ipnsPubSubTopic,
+                  captureAny,
+                ),
+              ).captured.single
+              as void Function(String);
+
+      const cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      final record = await IPNSRecord.create(
+        value: CID.decode(cid),
+        keyPair: await Ed25519().newKeyPair(),
+        sequence: 1,
+      );
+
+      // Malformed payloads are dropped without crashing the listener.
+      listener('not base64 at all!!!');
+      listener(base64Encode(utf8.encode('definitely not a record')));
+
+      // A valid signed record announced by a peer updates the cache.
+      listener(base64Encode(record.toCBOR()));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      // Resolution is served from the refreshed cache, with no DHT lookup.
+      expect(await ipnsHandler.resolve(record.name), cid);
+      verifyNever(mockDHTHandler.getValue(any));
     });
   });
 }

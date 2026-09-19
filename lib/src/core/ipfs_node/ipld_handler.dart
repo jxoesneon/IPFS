@@ -28,6 +28,13 @@ import 'package:dart_multihash/dart_multihash.dart' as multihash_lib;
 import 'package:fixnum/fixnum.dart';
 
 /// Handles IPLD (InterPlanetary Linked Data) operations using a Strategy pattern for codecs.
+///
+/// Lifecycle: the handler holds no external resources — codecs are registered
+/// eagerly in the constructor, so it is operational immediately after
+/// creation ([_isRunning] starts as `true`). It is registered with the
+/// node's [LifecycleManager] so that node shutdown flips the running gate
+/// and subsequent operations fail with [ComponentError] rather than
+/// silently succeeding against a stopped node.
 class IPLDHandler implements ILifecycle {
   /// Creates an IPLD handler with config and blockstore.
   IPLDHandler(this._config, this._blockStore) {
@@ -44,6 +51,10 @@ class IPLDHandler implements ILifecycle {
   final Map<String, IPLDCodec> _codecs = {};
   final Map<int, IPLDCodec> _codecsByCode = {};
   late final Logger _logger;
+
+  /// Whether the handler is running. Starts `true` because the handler is
+  /// fully initialized by the constructor and is registered with the node
+  /// lifecycle only to gate operations after shutdown — see the class doc.
   bool _isRunning = true;
 
   /// Optional IPNS name resolver used by [resolvePath] for `/ipns/` paths.
@@ -261,7 +272,10 @@ class IPLDHandler implements ILifecycle {
     return {
       'supported_codecs': _codecs.keys.toList(),
       'supported_codec_codes': _codecsByCode.keys.toList(),
-      'enabled': _config.enableIPLD,
+      // IPLD is a core dependency and is always enabled; the deprecated
+      // `enableIPLD` config flag is ignored, so reporting it here would
+      // falsely suggest the handler could be disabled.
+      'enabled': true,
       'running': _isRunning,
     };
   }

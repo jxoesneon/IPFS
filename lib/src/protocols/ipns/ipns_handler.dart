@@ -71,6 +71,11 @@ class IPNSHandler implements ILifecycle {
   /// Whether PubSub notifications are enabled.
   late final bool _pubSubNotificationsEnabled = _config.enableIpnsPubSub;
 
+  /// PubSub topic used for IPNS record announcements between dart_ipfs
+  /// nodes. Peers publish base64-encoded signed records so subscribers can
+  /// refresh their local IPNS cache without a DHT lookup.
+  static const String ipnsPubSubTopic = '/ipfs/ipns-1.0.0';
+
   /// Starts the IPNS handler.
   @override
   Future<void> start() async {
@@ -83,16 +88,67 @@ class IPNSHandler implements ILifecycle {
     }
 
     if (_pubSubNotificationsEnabled && _pubsubHandler != null) {
-      await _pubsubHandler.subscribe('/ipfs/ipns-1.0.0');
-      _pubsubHandler.onMessage('/ipfs/ipns-1.0.0', _onPubSubMessage);
+      await _pubsubHandler.subscribe(ipnsPubSubTopic);
+      _pubsubHandler.onMessage(ipnsPubSubTopic, _onPubSubMessage);
     }
   }
 
   /// Handles incoming PubSub messages for IPNS records.
+  ///
+  /// A message carries a base64-encoded signed [IPNSRecord]. Valid records
+  /// update the local IPNS cache when their sequence number is newer than
+  /// the cached entry; malformed or invalid messages are logged and
+  /// dropped (an inbound message has no caller to propagate an error to).
   void _onPubSubMessage(dynamic message) {
-    // Placeholder for Gossipsub-based IPNS record propagation. A full
-    // implementation would validate the signed record and update the cache.
-    _logger.debug('Received IPNS PubSub message');
+    unawaited(_applyPubSubRecord(message));
+  }
+
+  Future<void> _applyPubSubRecord(dynamic message) async {
+    final content = message?.toString() ?? '';
+    final Uint8List bytes;
+    try {
+      bytes = base64Decode(content);
+    } on FormatException {
+      _logger.warning('Dropped malformed IPNS pubsub message (bad base64)');
+      return;
+    }
+
+    final IPNSRecord record;
+    try {
+      record = IPNSRecord.decode(bytes);
+    } catch (e) {
+      _logger.warning('Dropped undecodable IPNS pubsub record: $e');
+      return;
+    }
+
+    final String name;
+    try {
+      name = record.name;
+    } catch (e) {
+      _logger.warning('Dropped IPNS pubsub record without a public key: $e');
+      return;
+    }
+
+    try {
+      await _validateRecord(record, name);
+    } on IpnsValidationError catch (e) {
+      _logger.warning('Dropped invalid IPNS pubsub record for $name: $e');
+      return;
+    } catch (e) {
+      // Signature verification or key decoding can throw non-validation
+      // errors; an inbound pubsub message has no caller to propagate to,
+      // so it must be dropped rather than escape as an unhandled error.
+      _logger.warning('Dropped unverifiable IPNS pubsub record for $name: $e');
+      return;
+    }
+
+    final cached = _cache[name];
+    if (cached != null && cached.record.sequence >= record.sequence) {
+      _logger.verbose('Ignored stale IPNS pubsub record for $name');
+      return;
+    }
+    _addToCache(name, _CacheEntry(record, _recordTtl));
+    _logger.debug('IPNS cache updated from pubsub record for $name');
   }
 
   /// Stops the IPNS handler.
@@ -270,24 +326,17 @@ class IPNSHandler implements ILifecycle {
       throw StateError('SecurityManager not available');
     }
 
-    SimpleKeyPair keyPair;
+    final SimpleKeyPair keyPair;
     try {
       keyPair =
           await _securityManager.getSecureKey(resolvedKeyName) as SimpleKeyPair;
     } catch (e) {
-      // Fallback for nodes whose keystore is not unlocked yet (e.g., the
-      // interop daemon). Generate an ephemeral self key for this publish.
-      if (resolvedKeyName == 'self') {
-        _logger.warning(
-          'Keystore not available for $resolvedKeyName; generating ephemeral IPNS key',
-        );
-        final signer = Ed25519Signer();
-        keyPair = await signer.generateKeyPair();
-      } else {
-        throw StateError(
-          'Keystore is locked or key $resolvedKeyName not found',
-        );
-      }
+      // Fail loudly: publishing under a throwaway key would succeed locally
+      // but produce an IPNS name nobody can reach, so the publish must
+      // surface the keystore failure instead.
+      throw StateError(
+        'Keystore is locked or key $resolvedKeyName not found: $e',
+      );
     }
     return publishWithKeyPair(CID.decode(cid), keyPair);
   }
@@ -353,20 +402,27 @@ class IPNSHandler implements ILifecycle {
     // Update local cache so subsequent resolves are served immediately.
     _addToCache(record.name, _CacheEntry(record, _recordTtl));
 
-    // Optional PubSub notification after Gossipsub is landed. The current
-    // PubSub implementation is not spec-compliant, so we intentionally do not
-    // publish here.
+    // Optional PubSub notification: peers subscribed to [ipnsPubSubTopic]
+    // refresh their local IPNS cache from the announced record. This is a
+    // best-effort update channel layered on the authoritative DHT store;
+    // a delivery failure is logged but does not fail the publish.
     if (_pubSubNotificationsEnabled && _pubsubHandler != null) {
-      // Gossipsub path would publish the CBOR record to '/ipns/<name>'.
-      // ignore: dead_code
       await _publishToPubSub(record);
     }
   }
 
   Future<void> _publishToPubSub(IPNSRecord record) async {
-    // Placeholder for Gossipsub-based notifications. The legacy base64 PubSub
-    // broadcast has been removed per the IPNS specification.
-    _logger.debug('Gossipsub notifications not yet enabled');
+    try {
+      await _pubsubHandler.publish(
+        ipnsPubSubTopic,
+        base64Encode(record.toCBOR()),
+      );
+    } catch (e) {
+      _logger.warning(
+        'IPNS pubsub notification for ${record.name} failed '
+        '(record was still stored in the DHT): $e',
+      );
+    }
   }
 
   Future<Uint8List?> _getDHTValue(Uint8List key) async {

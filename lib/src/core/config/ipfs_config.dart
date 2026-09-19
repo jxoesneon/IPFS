@@ -345,7 +345,13 @@ class IPFSConfig {
   /// Enable metrics collection.
   final bool enableMetrics;
 
-  /// Enable IPNS PubSub notifications (requires a Gossipsub-compliant handler).
+  /// Enable IPNS PubSub notifications.
+  ///
+  /// When enabled and a PubSub handler is available, the node publishes a
+  /// base64-encoded signed IPNS record after each successful DHT publish and
+  /// refreshes its local IPNS cache from records announced by peers. This is
+  /// a best-effort cache-update channel; the DHT remains the authoritative
+  /// store, so a notification delivery failure does not fail the publish.
   final bool enableIpnsPubSub;
 
   /// Enable system-wide logging.

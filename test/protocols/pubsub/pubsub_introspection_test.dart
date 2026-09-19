@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
 import 'package:dart_ipfs/src/core/crypto/peer_key_registry.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/protocol_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
@@ -221,7 +220,6 @@ void main() {
       final handler = PubSubHandler(
         router,
         peerId,
-        IpfsNodeNetworkEvents(router),
         strictAuthentication: false,
       );
       final manager = ProtocolManager(pubSubHandler: handler);

@@ -53,15 +53,25 @@ void main() {
       expect(manager.pubsubMessages, isA<Stream<PubSubMessage>>());
     });
 
-    test('resolveIPNS and publishIPNS delegating', () async {
+    test('resolveIPNS delegates to DHT handler', () async {
       manager = ProtocolManager(dhtHandler: mockDHTHandler);
       when(mockDHTHandler.resolveIPNS('name')).thenAnswer((_) async => 'cid');
 
       final result = await manager.resolveIPNS('name');
       expect(result, equals('/ipfs/cid'));
+    });
 
-      await manager.publishIPNS('cid', keyName: 'self');
-      verify(mockDHTHandler.publishIPNS('cid', keyName: 'self')).called(1);
+    test('publishIPNS throws without an IPNS handler', () async {
+      // Only IPNSHandler.publish returns the published name; with only a
+      // DHT handler the method must fail loudly instead of returning ''.
+      manager = ProtocolManager(dhtHandler: mockDHTHandler);
+      expect(
+        () => manager.publishIPNS('cid', keyName: 'self'),
+        throwsA(isA<StateError>()),
+      );
+      verifyNever(
+        mockDHTHandler.publishIPNS(any, keyName: anyNamed('keyName')),
+      );
     });
 
     test('publish throws if PubSubHandler not registered', () async {

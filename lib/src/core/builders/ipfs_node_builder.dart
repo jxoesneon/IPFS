@@ -28,7 +28,6 @@ import '../ipfs_node/content_routing_handler.dart';
 import '../ipfs_node/datastore_handler.dart';
 import '../ipfs_node/dns_link_handler.dart';
 import '../ipfs_node/ipfs_node.dart';
-import '../ipfs_node/ipfs_node_network_events.dart';
 import '../ipfs_node/ipld_handler.dart';
 import '../ipfs_node/lifecycle_manager.dart';
 import '../ipfs_node/mdns_handler.dart';
@@ -124,7 +123,9 @@ class IPFSNodeBuilder {
     _container.registerSingleton(blockStore);
     metrics.registerBlockStore(blockStore);
 
-    _container.registerSingleton(IPLDHandler(_config, blockStore));
+    final ipldHandler = IPLDHandler(_config, blockStore);
+    _container.registerSingleton(ipldHandler);
+    lifecycleManager.register(ipldHandler);
   }
 
   Future<void> _registerNetworkServices() async {
@@ -168,9 +169,6 @@ class IPFSNodeBuilder {
         () => dhtHandler.dhtClient.kademliaRoutingTable.peerCount,
       );
     }
-
-    // Create IpfsNodeNetworkEvents instance
-    final networkEvents = IpfsNodeNetworkEvents(router);
 
     final keyRegistry = PeerKeyRegistry();
     _container.registerSingleton(keyRegistry);
@@ -216,7 +214,6 @@ class IPFSNodeBuilder {
       final pubSubHandler = PubSubHandler(
         router,
         networkHandler.peerID,
-        networkEvents,
         keyPair: pubsubKeyPair,
         keyRegistry: keyRegistry,
       );
@@ -264,7 +261,9 @@ class IPFSNodeBuilder {
     }
 
     if (_config.enableDNSLinkResolution) {
-      _container.registerSingleton(DNSLinkHandler(_config));
+      final dnsLinkHandler = DNSLinkHandler(_config);
+      _container.registerSingleton(dnsLinkHandler);
+      _container.get<LifecycleManager>().register(dnsLinkHandler);
     }
 
     if (_config.enableGraphsync) {

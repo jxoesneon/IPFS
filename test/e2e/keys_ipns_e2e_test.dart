@@ -122,6 +122,9 @@ void main() {
     });
 
     test('publishIPNS returns an IPNS name that resolves to the CID', () async {
+      // Publishing under 'self' requires the key to exist in the keystore;
+      // a missing key fails loudly rather than minting a throwaway key.
+      await node.keyGen('self');
       final cid = await node.addFile(utf8Bytes('ipns content'));
 
       final name = await node.publishIPNS(cid, keyName: 'self');

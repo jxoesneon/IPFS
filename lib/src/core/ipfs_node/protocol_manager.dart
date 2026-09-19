@@ -63,6 +63,7 @@ class ProtocolManager implements ILifecycle {
       _logger.info('Unsubscribed from topic: $topic');
     } catch (e, stackTrace) {
       _logger.error('Failed to unsubscribe from topic $topic', e, stackTrace);
+      rethrow;
     }
   }
 
@@ -134,15 +135,14 @@ class ProtocolManager implements ILifecycle {
         final name = await _ipnsHandler.publish(cid, keyName: keyName);
         return name;
       }
-      if (_dhtHandler == null) {
-        throw ComponentError(
-          'IPNSHandler',
-          'Required for publishing IPNS records',
-        );
-      }
-      _logger.info('Publishing IPNS record for $cid with key $keyName');
-      await _dhtHandler.publishIPNS(cid, keyName: keyName);
-      return '';
+      // Only IPNSHandler.publish returns the published IPNS name; the
+      // legacy DHT path cannot produce one, so no IPNS handler means this
+      // method cannot satisfy its contract. Fail loudly instead of
+      // returning a bogus empty name.
+      throw ComponentError(
+        'IPNSHandler',
+        'Required to publish IPNS records and return the published name',
+      );
     } catch (e, stackTrace) {
       _logger.error('Failed to publish IPNS record for $cid', e, stackTrace);
       rethrow;

@@ -46,20 +46,26 @@ void main() {
       await handler.stop();
     });
 
-    test('falls through to the next resolver on failure', () async {
+    test('falls through to the DNS TXT lookup on failure', () async {
       var calls = 0;
       final handler = handlerWith((request) async {
         calls++;
         if (calls == 1) {
           return http.Response('server error', 500);
         }
+        // The DoH fallback answers with a _dnslink TXT record.
+        expect(request.url.toString(), contains('dns.google'));
         return http.Response(
-          jsonEncode(<String, dynamic>{'Path': 'bafkrei_fallback'}),
+          jsonEncode(<String, dynamic>{
+            'Answer': [
+              {'type': 16, 'data': '"dnslink=/ipfs/bafkrei_fallback"'},
+            ],
+          }),
           200,
         );
       });
 
-      expect(await handler.resolve('example.com'), 'bafkrei_fallback');
+      expect(await handler.resolve('example.com'), '/ipfs/bafkrei_fallback');
       expect(calls, greaterThanOrEqualTo(2));
       await handler.stop();
     });

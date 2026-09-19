@@ -44,18 +44,24 @@ void main() {
       expect(callCount, 1);
     });
 
-    test('resolve tries fallback resolvers on failure', () async {
+    test('resolve falls back to DNS TXT lookup on failure', () async {
       int callCount = 0;
       final mockClient = MockClient((request) async {
         callCount++;
-        // First resolver fails
+        // The JSON resolver fails
         if (request.url.toString().contains('dnslink.io')) {
           return http.Response('Error', 500);
         }
-        // Second resolver succeeds (based on the list order in handler)
-        // Order: dnslink.io -> example.com -> ipfs.io
-        if (request.url.toString().contains('example.com')) {
-          return http.Response(jsonEncode({'cid': 'QmFallback'}), 200);
+        // The DNS-over-HTTPS TXT lookup answers with a dnslink record
+        if (request.url.toString().contains('dns.google')) {
+          return http.Response(
+            jsonEncode({
+              'Answer': [
+                {'type': 16, 'data': '"dnslink=/ipfs/QmFallback"'},
+              ],
+            }),
+            200,
+          );
         }
         return http.Response('Not Found', 404);
       });
@@ -63,7 +69,7 @@ void main() {
       final handler = DNSLinkHandler(config, client: mockClient);
       final result = await handler.resolve('fallback.com');
 
-      expect(result, 'QmFallback');
+      expect(result, '/ipfs/QmFallback');
       expect(callCount, greaterThanOrEqualTo(2));
     });
 

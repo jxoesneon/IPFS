@@ -6,10 +6,8 @@ import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/mdns_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/routing_handler.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/network/mdns_client.dart';
-import 'package:dart_ipfs/src/routing/content_routing.dart';
 import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
 
@@ -54,28 +52,6 @@ class MockClient extends http.BaseClient {
     final body = '{"Path": "/ipfs/QmResolved"}';
     return http.StreamedResponse(Stream.value(body.codeUnits), 200);
   }
-}
-
-class MockContentRouting implements ContentRouting {
-  bool started = false;
-  @override
-  Future<void> start() async {
-    started = true;
-  }
-
-  @override
-  Future<void> stop() async {
-    started = false;
-  }
-
-  @override
-  Future<List<String>> findProviders(String cid) async {
-    if (cid == 'QmFound') return ['Peer1'];
-    return [];
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class MockMDnsClient implements MDnsClient {
@@ -125,34 +101,6 @@ class MockMDnsClient implements MDnsClient {
 }
 
 void main() {
-  group('RoutingHandler', () {
-    late RoutingHandler handler;
-    late MockContentRouting mockContentRouting;
-
-    setUp(() {
-      mockContentRouting = MockContentRouting();
-      handler = RoutingHandler(
-        MockConfig(),
-        MockNetworkHandler(),
-        contentRouting: mockContentRouting,
-      );
-    });
-
-    test('start/stop delegates to ContentRouting', () async {
-      await handler.start();
-      expect(mockContentRouting.started, isTrue);
-      await handler.stop();
-      expect(mockContentRouting.started, isFalse);
-    });
-
-    test('findProviders delegates', () async {
-      final providers = await handler.findProviders('QmFound');
-      expect(providers, ['Peer1']);
-      final empty = await handler.findProviders('QmMissing');
-      expect(empty, isEmpty);
-    });
-  });
-
   group('MDNSHandler', () {
     late MDNSHandler handler;
     late MockMDnsClient mockClient;

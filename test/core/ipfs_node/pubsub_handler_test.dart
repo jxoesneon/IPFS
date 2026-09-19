@@ -1,43 +1,27 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node_network_events.dart';
 import 'package:dart_ipfs/src/core/data_structures/node_stats.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
-import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
 
 import 'pubsub_handler_test.mocks.dart';
 
-@GenerateNiceMocks([
-  MockSpec<RouterInterface>(),
-  MockSpec<IpfsNodeNetworkEvents>(),
-  MockSpec<PubSubClient>(),
-])
+@GenerateNiceMocks([MockSpec<RouterInterface>(), MockSpec<PubSubClient>()])
 void main() {
   late PubSubHandler handler;
   late MockRouterInterface mockRouter;
-  late MockIpfsNodeNetworkEvents mockNetworkEvents;
   late MockPubSubClient mockPubSubClient;
   final peerId = 'QmID';
 
   setUp(() {
     mockRouter = MockRouterInterface();
-    mockNetworkEvents = MockIpfsNodeNetworkEvents();
     mockPubSubClient = MockPubSubClient();
 
-    when(mockNetworkEvents.networkEvents).thenAnswer((_) => Stream.empty());
-
-    handler = PubSubHandler(
-      mockRouter,
-      peerId,
-      mockNetworkEvents,
-      pubSubClient: mockPubSubClient,
-    );
+    handler = PubSubHandler(mockRouter, peerId, pubSubClient: mockPubSubClient);
   });
 
   group('PubSubHandler', () {
@@ -87,30 +71,6 @@ void main() {
     test('onMessage delegating', () {
       handler.onMessage('topic1', (msg) {});
       verify(mockPubSubClient.onMessage(any, any)).called(1);
-    });
-
-    test('handle network event pubsub message', () async {
-      final eventController = StreamController<NetworkEvent>();
-      when(
-        mockNetworkEvents.networkEvents,
-      ).thenAnswer((_) => eventController.stream);
-
-      await handler.start();
-
-      final event = NetworkEvent()
-        ..pubsubMessageReceived = (PubsubMessageReceivedEvent()
-          ..topic = 'topic1'
-          ..peerId = 'sender'
-          ..messageContent = utf8.encode('hello'));
-
-      final receivedFuture = handler.messages.first;
-      eventController.add(event);
-
-      final received = await receivedFuture;
-      expect(received.content, equals('hello'));
-      expect(received.topic, equals('topic1'));
-
-      await eventController.close();
     });
 
     test('resolveDNSLink fail', () async {
@@ -188,37 +148,6 @@ void main() {
         mockPubSubClient.getNodeStats(),
       ).thenThrow(Exception('Stats failed'));
       expect(() => handler.stats(), throwsException);
-    });
-
-    test('handle malformed pubsub message', () async {
-      final eventController = StreamController<NetworkEvent>();
-      when(
-        mockNetworkEvents.networkEvents,
-      ).thenAnswer((_) => eventController.stream);
-
-      await handler.start();
-
-      final event = NetworkEvent()
-        ..pubsubMessageReceived = (PubsubMessageReceivedEvent()
-          ..topic = 'topic1'
-          ..peerId = 'sender'
-          ..messageContent = [0xFF, 0xFE, 0xFD]); // Invalid UTF-8
-
-      // Should not throw or add to stream
-      eventController.add(event);
-
-      // Wait a bit to ensure no message is added
-      await Future.delayed(Duration(milliseconds: 100));
-
-      await eventController.close();
-    });
-
-    test('resolveDNSLink success', () async {
-      // This is tricky because DNSLinkResolver is static.
-      // If we can't mock it, we might need to rely on the fact that it fails in tests.
-      // However, if we want 90% coverage, we might need to mock it or the test environment.
-      // Let's see if we can use a known domain that might have a DNSLink or if we should refactor.
-      // For now, we already have the fail path.
     });
   });
 }

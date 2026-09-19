@@ -317,17 +317,8 @@ class MockBitswapHandler extends BitswapHandler {
   }
 }
 
-class MockIpfsNodeNetworkEvents extends IpfsNodeNetworkEvents {
-  MockIpfsNodeNetworkEvents(super.router);
-
-  final StreamController<NetworkEvent> _controller =
-      StreamController.broadcast();
-  @override
-  Stream<NetworkEvent> get networkEvents => _controller.stream;
-}
-
 class MockPubSubHandler extends PubSubHandler {
-  MockPubSubHandler(super.router, super.peerId, super.events);
+  MockPubSubHandler(super.router, super.peerId);
 
   @override
   Future<void> start() async {}
@@ -373,7 +364,6 @@ void main() {
       // Mocks for Network
       final mockRouter = MockRouter(config);
       final mockRelay = MockCircuitRelayClient(mockRouter);
-      final mockEvents = MockIpfsNodeNetworkEvents(mockRouter);
 
       // final ipfsNodeForMocks = IPFSNode.fromContainer(container); // Unused in new mock
 
@@ -389,7 +379,7 @@ void main() {
       );
 
       container.registerSingleton<PubSubHandler>(
-        MockPubSubHandler(mockRouter, validMockPeerId, mockEvents),
+        MockPubSubHandler(mockRouter, validMockPeerId),
       );
     });
 

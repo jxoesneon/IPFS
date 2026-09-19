@@ -480,6 +480,13 @@ class PubSubClient implements IPubSub {
     }
   }
 
+  /// Publishes [message] to [topic], fanning out to mesh peers and known
+  /// topic subscribers.
+  ///
+  /// Throws a [StateError] if the client is not started, and a
+  /// [PubSubDeliveryError] when no peer could receive the message (empty
+  /// mesh and no known topic subscribers), so callers can distinguish a
+  /// delivered message from a dropped one.
   @override
   Future<void> publish(String topic, String message) async {
     if (!_isStarted) {
@@ -497,7 +504,12 @@ class PubSubClient implements IPubSub {
       // but has not been grafted would otherwise never receive the message.
       final targets = {..._mesh, ...?_topicPeers[topic]};
       if (targets.isEmpty) {
-        _logger.warning('No peers in mesh to publish message to topic: $topic');
+        // A publish that reaches no peer is a delivery failure, not a
+        // success: surface it so callers can distinguish a dropped message
+        // from a delivered one.
+        throw PubSubDeliveryError(
+          'No peers available to deliver message to topic: $topic',
+        );
       }
 
       final List<Future<void>> publishFutures = [];
@@ -926,4 +938,15 @@ class PubSubClient implements IPubSub {
       _logger.warning('Error handling IWANT request from $sender: $e');
     }
   }
+}
+
+/// Error thrown when a published message cannot be delivered to any peer.
+///
+/// Raised by [PubSubClient.publish] when the mesh and the topic's known
+/// subscribers are both empty, i.e. the message would be silently dropped.
+/// Extends [StateError] so existing callers that handle state errors keep
+/// working.
+class PubSubDeliveryError extends StateError {
+  /// Creates a [PubSubDeliveryError] with the given [message].
+  PubSubDeliveryError(super.message);
 }

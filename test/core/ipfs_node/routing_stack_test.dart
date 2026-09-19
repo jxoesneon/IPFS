@@ -3,7 +3,6 @@ import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:http/http.dart' as http;
-import 'package:dart_ipfs/src/core/ipfs_node/routing_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/content_routing_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
@@ -37,56 +36,6 @@ void main() {
     mockContentRouting = MockContentRouting();
     mockDelegatedRouting = MockDelegatedRoutingHandler();
     mockClient = MockClient();
-  });
-
-  group('RoutingHandler', () {
-    late RoutingHandler handler;
-
-    setUp(() {
-      handler = RoutingHandler(
-        config,
-        mockNetworkHandler,
-        contentRouting: mockContentRouting,
-        httpClient: mockClient,
-      );
-    });
-
-    test('start/stop error handling', () async {
-      when(mockContentRouting.start()).thenThrow(Exception('Start fail'));
-      when(mockContentRouting.stop()).thenThrow(Exception('Stop fail'));
-
-      await handler.start(); // Should catch
-      await handler.stop(); // Should catch
-
-      verify(mockContentRouting.start()).called(1);
-      verify(mockContentRouting.stop()).called(1);
-    });
-
-    test('findProviders error handling', () async {
-      when(
-        mockContentRouting.findProviders(any),
-      ).thenThrow(Exception('Find fail'));
-
-      final providers = await handler.findProviders('QmCID');
-      expect(providers, isEmpty);
-    });
-
-    test('resolveDNSLink coverage for exceptions', () async {
-      // DNSLinkResolver.resolve is static and uses https://dnslink.io/domain
-      // It's hard to trigger exception in it since we don't pass the client to RoutingHandler's call to it.
-      // But we can test the fallback catch block.
-
-      // First resolution (static) will return null if it fails or throws.
-      // Then it enters the catch block and tries alternative resolution.
-
-      final domain = 'example.com';
-      final altUrl = Uri.parse('https://dnslink-resolver.example.com/$domain');
-
-      when(mockClient.get(altUrl)).thenThrow(Exception('Alt fail'));
-
-      final result = await handler.resolveDNSLink(domain);
-      expect(result, isNull);
-    });
   });
 
   group('ContentRoutingHandler', () {
@@ -243,22 +192,32 @@ void main() {
       verifyNoMoreInteractions(mockClient);
     });
 
-    test('resolve with multiple resolvers', () async {
+    test('resolve falls back to DNS TXT lookup', () async {
       final domain = 'example.com';
-      // First resolver throws exception, second succeeds
+      // The JSON resolver fails; the DoH TXT lookup answers with a
+      // dnslink record.
       when(
         mockClient.get(Uri.parse('https://dnslink.io/$domain')),
       ).thenThrow(Exception('Network error'));
       when(
         mockClient.get(
-          Uri.parse('https://dnslink-resolver.example.com/$domain'),
+          Uri.parse(
+            'https://dns.google/resolve?name=_dnslink.$domain&type=TXT',
+          ),
         ),
       ).thenAnswer(
-        (_) async => http.Response(jsonEncode({'Path': 'Qm2'}), 200),
+        (_) async => http.Response(
+          jsonEncode({
+            'Answer': [
+              {'type': 16, 'data': '"dnslink=/ipfs/QmTxt"'},
+            ],
+          }),
+          200,
+        ),
       );
 
       final res = await handler.resolve(domain);
-      expect(res, equals('Qm2'));
+      expect(res, equals('/ipfs/QmTxt'));
       verify(mockClient.get(any)).called(2);
     });
 
