@@ -438,6 +438,11 @@ class GraphsyncHandler implements ILifecycle {
   }
 
   /// Parses the selector budget from request extensions.
+  ///
+  /// Extension values are supplied by the remote requester and are therefore
+  /// untrusted: every limit — whether defaulted or parsed — is clamped to the
+  /// server-side maxima in [GraphsyncConfig] so an absent or oversized value
+  /// can never produce an unbounded traversal.
   SelectorBudget _parseBudget(Map<String, List<int>> extensions) {
     int maxDepth = _graphsyncConfig.defaultMaxDepth;
     int maxBlocks = _graphsyncConfig.defaultMaxBlocks;
@@ -459,10 +464,17 @@ class GraphsyncHandler implements ILifecycle {
     }
 
     return SelectorBudget(
-      maxDepth: maxDepth,
-      maxBlocks: maxBlocks,
-      maxBytes: maxBytes,
+      maxDepth: _clampServeBudget(maxDepth, _graphsyncConfig.maxServeDepth),
+      maxBlocks: _clampServeBudget(maxBlocks, _graphsyncConfig.maxServeBlocks),
+      maxBytes: _clampServeBudget(maxBytes, _graphsyncConfig.maxServeBytes),
     );
+  }
+
+  /// Clamps a requester-supplied (or defaulted) budget [value] to the
+  /// server-side [maximum]. Values that overflow a signed 64-bit integer
+  /// parse as negative, so anything out of range collapses to [maximum].
+  int _clampServeBudget(int value, int maximum) {
+    return (value < 0 || value > maximum) ? maximum : value;
   }
 
   int? _parseIntBytes(List<int> bytes) {

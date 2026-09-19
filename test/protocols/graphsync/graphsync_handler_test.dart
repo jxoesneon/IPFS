@@ -450,6 +450,275 @@ void main() {
       );
     });
 
+    test(
+      'handleMessage clamps requester-advertised budgets to serve maxima',
+      () async {
+        final capturedHandler = await captureHandler();
+
+        final dummyBlock = await makeBlock(Uint8List.fromList([4, 5, 6]));
+        final rootCid = dummyBlock.cid;
+        final selector = ipld.ExploreAll(next: ipld.Matcher());
+        final request = GraphsyncRequest()
+          ..id = 9
+          ..root = rootCid.toBytes()
+          ..selector = await ipld.encodeSelectorDagCbor(selector);
+        // Attacker advertises effectively-unbounded budgets. Eight 0xFF
+        // bytes parse to a negative int64 and must still be clamped.
+        const huge = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+        request.extensions['graphsync/max-depth'] = huge;
+        request.extensions['graphsync/max-blocks'] = huge;
+        request.extensions['graphsync/max-bytes'] = huge;
+
+        final message = GraphsyncMessage()..requests.add(request);
+        final packet = NetworkPacket(
+          srcPeerId: 'peerA',
+          datagram: message.writeToBuffer(),
+        );
+
+        when(mockBitswap.wantBlock(any)).thenAnswer((_) async => dummyBlock);
+        when(mockBlockStore.hasBlock(any)).thenAnswer((_) async => false);
+        when(mockBlockStore.getBlock(any)).thenAnswer(
+          (_) async => BlockResponseFactory.successGet(dummyBlock.toProto()),
+        );
+        when(
+          mockIpld.executeSelectorStream(
+            any,
+            any,
+            maxDepth: anyNamed('maxDepth'),
+            maxNodes: anyNamed('maxNodes'),
+          ),
+        ).thenAnswer((_) => const Stream<ipld.SelectedNode>.empty());
+
+        await capturedHandler(packet);
+        await pumpEventQueue();
+
+        // Default serve maxima: depth 32, blocks 10000.
+        verify(
+          mockIpld.executeSelectorStream(
+            any,
+            any,
+            maxDepth: 32,
+            maxNodes: 10000,
+          ),
+        ).called(1);
+
+        final calls = verify(
+          mockRouter.sendMessage(
+            'peerA',
+            captureAny,
+            protocolId: anyNamed('protocolId'),
+          ),
+        ).captured;
+        final terminal = GraphsyncMessage.fromBuffer(calls.last as Uint8List);
+        expect(
+          terminal.responses.first.status,
+          equals(ResponseStatus.RS_COMPLETED),
+        );
+      },
+    );
+
+    test('handleMessage stops traversal at clamped block cap', () async {
+      final limitedHandler = GraphsyncHandler(
+        IPFSConfig(graphsync: GraphsyncConfig(maxServeBlocks: 2)),
+        mockRouter,
+        mockBitswap,
+        mockIpld,
+        mockBlockStore,
+      );
+      await limitedHandler.start();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.single
+              as Function(NetworkPacket);
+
+      final rootBlock = await makeBlock(Uint8List.fromList([1]));
+      final child1 = await makeBlock(Uint8List.fromList([2]));
+      final child2 = await makeBlock(Uint8List.fromList([3]));
+      final selector = ipld.ExploreAll(next: ipld.Matcher());
+      final request = GraphsyncRequest()
+        ..id = 10
+        ..root = rootBlock.cid.toBytes()
+        ..selector = await ipld.encodeSelectorDagCbor(selector);
+      // Advertised budget far above the configured cap of 2.
+      request.extensions['graphsync/max-blocks'] = [
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+        0xFF,
+      ];
+
+      final message = GraphsyncMessage()..requests.add(request);
+      final packet = NetworkPacket(
+        srcPeerId: 'peerA',
+        datagram: message.writeToBuffer(),
+      );
+
+      when(mockBitswap.wantBlock(any)).thenAnswer((_) async => rootBlock);
+      when(mockBlockStore.hasBlock(any)).thenAnswer((_) async => false);
+      when(
+        mockBlockStore.putBlock(any),
+      ).thenAnswer((_) async => BlockResponseFactory.successAdd('added'));
+      when(mockBlockStore.getBlock(any)).thenAnswer(
+        (_) async => BlockResponseFactory.successGet(rootBlock.toProto()),
+      );
+
+      IPLDNode nodeFor(core.Block block) => IPLDNode()
+        ..kind = Kind.BYTES
+        ..bytesValue = block.data;
+      when(
+        mockIpld.executeSelectorStream(
+          any,
+          any,
+          maxDepth: anyNamed('maxDepth'),
+          maxNodes: anyNamed('maxNodes'),
+        ),
+      ).thenAnswer(
+        (_) => Stream.fromIterable([
+          ipld.SelectedNode(
+            cid: child1.cid,
+            node: nodeFor(child1),
+            path: 'child1',
+            remainingDepth: 32,
+          ),
+          ipld.SelectedNode(
+            cid: child2.cid,
+            node: nodeFor(child2),
+            path: 'child2',
+            remainingDepth: 32,
+          ),
+        ]),
+      );
+
+      await capturedHandler(packet);
+      await pumpEventQueue();
+
+      // Root + first child consume the clamped budget of 2; the second
+      // child must trip the block-count cap instead of being served.
+      final calls = verify(
+        mockRouter.sendMessage(
+          'peerA',
+          captureAny,
+          protocolId: anyNamed('protocolId'),
+        ),
+      ).captured;
+      final terminal = GraphsyncMessage.fromBuffer(calls.last as Uint8List);
+      expect(
+        terminal.responses.first.status,
+        equals(ResponseStatus.RS_REJECTED),
+      );
+      expect(
+        terminal.responses.first.metadata['error'],
+        contains('block count'),
+      );
+    });
+
+    test('handleMessage uses defaults for absent budget extensions', () async {
+      final capturedHandler = await captureHandler();
+
+      final dummyBlock = await makeBlock(Uint8List.fromList([4, 5, 6]));
+      final rootCid = dummyBlock.cid;
+      final selector = ipld.ExploreAll(next: ipld.Matcher());
+      final request = GraphsyncRequest()
+        ..id = 11
+        ..root = rootCid.toBytes()
+        ..selector = await ipld.encodeSelectorDagCbor(selector);
+
+      final message = GraphsyncMessage()..requests.add(request);
+      final packet = NetworkPacket(
+        srcPeerId: 'peerA',
+        datagram: message.writeToBuffer(),
+      );
+
+      when(mockBitswap.wantBlock(any)).thenAnswer((_) async => dummyBlock);
+      when(mockBlockStore.hasBlock(any)).thenAnswer((_) async => false);
+      when(mockBlockStore.getBlock(any)).thenAnswer(
+        (_) async => BlockResponseFactory.successGet(dummyBlock.toProto()),
+      );
+      when(
+        mockIpld.executeSelectorStream(
+          any,
+          any,
+          maxDepth: anyNamed('maxDepth'),
+          maxNodes: anyNamed('maxNodes'),
+        ),
+      ).thenAnswer((_) => const Stream<ipld.SelectedNode>.empty());
+
+      await capturedHandler(packet);
+      await pumpEventQueue();
+
+      // Configured defaults (depth 32, blocks 1024) apply when the request
+      // carries no budget extensions.
+      verify(
+        mockIpld.executeSelectorStream(any, any, maxDepth: 32, maxNodes: 1024),
+      ).called(1);
+    });
+
+    test(
+      'handleMessage clamps absent budgets when defaults exceed serve maxima',
+      () async {
+        final limitedHandler = GraphsyncHandler(
+          IPFSConfig(
+            graphsync: GraphsyncConfig(
+              defaultMaxDepth: 64,
+              defaultMaxBlocks: 50000,
+              maxServeDepth: 32,
+              maxServeBlocks: 100,
+            ),
+          ),
+          mockRouter,
+          mockBitswap,
+          mockIpld,
+          mockBlockStore,
+        );
+        await limitedHandler.start();
+        final capturedHandler =
+            verify(
+                  mockRouter.registerProtocolHandler(any, captureAny),
+                ).captured.single
+                as Function(NetworkPacket);
+
+        final dummyBlock = await makeBlock(Uint8List.fromList([4, 5, 6]));
+        final rootCid = dummyBlock.cid;
+        final selector = ipld.ExploreAll(next: ipld.Matcher());
+        final request = GraphsyncRequest()
+          ..id = 12
+          ..root = rootCid.toBytes()
+          ..selector = await ipld.encodeSelectorDagCbor(selector);
+
+        final message = GraphsyncMessage()..requests.add(request);
+        final packet = NetworkPacket(
+          srcPeerId: 'peerA',
+          datagram: message.writeToBuffer(),
+        );
+
+        when(mockBitswap.wantBlock(any)).thenAnswer((_) async => dummyBlock);
+        when(mockBlockStore.hasBlock(any)).thenAnswer((_) async => false);
+        when(mockBlockStore.getBlock(any)).thenAnswer(
+          (_) async => BlockResponseFactory.successGet(dummyBlock.toProto()),
+        );
+        when(
+          mockIpld.executeSelectorStream(
+            any,
+            any,
+            maxDepth: anyNamed('maxDepth'),
+            maxNodes: anyNamed('maxNodes'),
+          ),
+        ).thenAnswer((_) => const Stream<ipld.SelectedNode>.empty());
+
+        await capturedHandler(packet);
+        await pumpEventQueue();
+
+        verify(
+          mockIpld.executeSelectorStream(any, any, maxDepth: 32, maxNodes: 100),
+        ).called(1);
+      },
+    );
+
     test('fetchGraphFromPeer collects blocks from peer', () async {
       final capturedHandler = await captureHandler();
 
