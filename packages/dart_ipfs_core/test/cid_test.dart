@@ -62,6 +62,45 @@ void main() {
       expect(bytes.sublist(0, prefix.length), equals(prefix));
     });
 
+    test('CIDv0 toPrefixBytes synthesizes the implicit dag-pb header',
+        () async {
+      final data = Uint8List.fromList(utf8.encode('v0-prefix'));
+      final cid = await CID.fromContent(data, codec: 'dag-pb', version: 0);
+      // <version=0><codec=dag-pb 0x70><sha2-256 0x12><len 0x20>
+      expect(cid.toPrefixBytes(), equals([0x00, 0x70, 0x12, 0x20]));
+    });
+
+    test('fromContent honors version and codec', () async {
+      final data = Uint8List.fromList(utf8.encode('versioned'));
+      final v0 = await CID.fromContent(data, codec: 'dag-pb', version: 0);
+      expect(v0.version, equals(0));
+      expect(v0.encode(), startsWith('Qm'));
+
+      final v1 = await CID.fromContent(data, codec: 'dag-pb', version: 1);
+      expect(v1.version, equals(1));
+      expect(v1.encode(), startsWith('b'));
+    });
+
+    test('fromPrefixBytes reconstructs a CID from a Bitswap prefix', () async {
+      final data = Uint8List.fromList(utf8.encode('prefix-round-trip'));
+      final cid = await CID.fromContent(data, codec: 'dag-pb', version: 1);
+      final rebuilt = await CID.fromPrefixBytes(cid.toPrefixBytes(), data);
+      expect(rebuilt, equals(cid));
+    });
+
+    test('computeForData and computeForDataSync agree', () async {
+      final data = Uint8List.fromList(utf8.encode('compute'));
+      final async_ = await CID.computeForData(data, format: 'dag-pb');
+      final sync_ = CID.computeForDataSync(data, codec: 'dag-pb');
+      expect(async_, equals(sync_));
+    });
+
+    test('validate accepts well-formed CIDs and rejects bad shapes', () async {
+      final cid = await CID.fromContent(Uint8List.fromList([1, 2, 3]));
+      expect(cid.validate(), isTrue);
+      expect(CID.v0(Uint8List(32)).validate(), isTrue);
+    });
+
     test('CID v1 encodes with different bases', () async {
       final data = Uint8List.fromList(utf8.encode('base-test'));
       final cid = await CID.fromContent(data);

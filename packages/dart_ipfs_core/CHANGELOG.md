@@ -5,6 +5,11 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-09-19
+
+### Added
+- `CID.fromContent` gained `hashType` and `version` parameters; `CID.fromPrefixBytes`, `CID.validate`, `CID.computeForData`, and `CID.computeForDataSync` are now part of the public surface. `CID.toPrefixBytes` synthesizes the implicit `<version=0, codec=dag-pb>` header for CIDv0, matching the Bitswap block-prefix format.
+
 ## [1.11.7] - 2026-09-18
 
 ### Fixed
