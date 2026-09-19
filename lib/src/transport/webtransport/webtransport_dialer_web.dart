@@ -167,12 +167,15 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
     reader.releaseLock();
 
     // A closed readable reports `done: true` and carries no `value`.
+    // Web-only dart:js_interop decode — unreachable under the VM.
+    // coverage:ignore-start
     final dynamic done = result.done;
     if (done == true) return Uint8List(0);
 
     final dynamic value = result.value;
     if (value == null) return Uint8List(0);
     return (value as JSArrayBuffer).toDart.asUint8List();
+    // coverage:ignore-end
   }
 
   @override
@@ -215,6 +218,8 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
   /// Yields each chunk delivered by the browser's readable side until the
   /// remote peer closes the stream (signalled by an empty read) or the
   /// underlying connection is closed.
+  // Web-only browser WebTransport stream — unreachable under the VM.
+  // coverage:ignore-start
   Stream<Uint8List> get stream async* {
     while (!_conn.isClosed) {
       final chunk = await read();
@@ -222,6 +227,7 @@ class WebTransportStreamWeb implements libp2p.P2PStream<Uint8List> {
       yield chunk;
     }
   }
+  // coverage:ignore-end
 
   /// Flushes the stream.
   Future<void> flush() async {}

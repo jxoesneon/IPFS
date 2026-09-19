@@ -11,6 +11,11 @@ import 'dart:io';
 ///
 /// Only `.dart` files under `lib/` and `packages/*/lib/` are considered.
 /// Exits non-zero when changed executable lines are uncovered.
+///
+/// Standard `coverage:ignore-*` markers are honored the same way
+/// `format_coverage --check-ignore` honors them — this matters for
+/// platform-conditional code (e.g. web-only files behind conditional
+/// imports) that never produces an lcov record under VM test runs.
 void main(List<String> args) {
   var base = 'origin/main';
   var lcovPath = 'coverage/lcov.info';
@@ -44,7 +49,9 @@ void main(List<String> args) {
   for (final entry in changedByFile.entries) {
     final file = entry.key;
     if (!_isCoverable(file, prefix)) continue;
-    final changed = entry.value;
+    final ignored = _ignoredLines(file);
+    if (ignored == null) continue; // coverage:ignore-file
+    final changed = entry.value.difference(ignored);
     if (changed.isEmpty) continue;
     totalChanged += changed.length;
 
@@ -98,6 +105,43 @@ void main(List<String> args) {
 }
 
 final _fileLines = <String, List<String>>{};
+final _ignoredLinesCache = <String, Set<int>?>{};
+
+final _ignoreStart = RegExp(r'//\s*coverage:ignore-start[\w\d\s]*$');
+final _ignoreEnd = RegExp(r'//\s*coverage:ignore-end[\w\d\s]*$');
+final _ignoreLine = RegExp(r'//\s*coverage:ignore-line[\w\d\s]*$');
+final _ignoreFile = RegExp(r'//\s*coverage:ignore-file[\w\d\s]*$');
+
+/// Returns the set of 1-based line numbers excluded by `coverage:ignore-*`
+/// markers in [file], or `null` when `coverage:ignore-file` excludes the
+/// whole file. Mirrors `format_coverage --check-ignore` semantics.
+Set<int>? _ignoredLines(String file) {
+  if (_ignoredLinesCache.containsKey(file)) return _ignoredLinesCache[file];
+  List<String> lines;
+  try {
+    lines = _fileLines.putIfAbsent(file, () => File(file).readAsLinesSync());
+  } catch (_) {
+    lines = const [];
+  }
+  final ignored = <int>{};
+  var start = -1;
+  for (var i = 0; i < lines.length; i++) {
+    final line = lines[i];
+    if (line.contains(_ignoreFile)) {
+      return _ignoredLinesCache[file] = null;
+    }
+    if (start < 0) {
+      if (line.contains(_ignoreLine)) ignored.add(i + 1);
+      if (line.contains(_ignoreStart)) start = i + 1;
+    } else if (line.contains(_ignoreEnd)) {
+      for (var n = start; n <= i + 1; n++) {
+        ignored.add(n);
+      }
+      start = -1;
+    }
+  }
+  return _ignoredLinesCache[file] = ignored;
+}
 
 /// Returns the 1-based [lineNo] of [file] from disk, or '' when unreadable.
 String _sourceLine(String file, int lineNo) {
