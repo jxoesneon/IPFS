@@ -89,6 +89,29 @@ void main() {
       final version = jsonDecode(await response.transform(utf8.decoder).join());
       expect(version['Version'], isA<String>());
 
+      // /api/v0/id reports the node's libp2p peer ID, which only exists
+      // on an online node — swap the offline node for an online one
+      // (stopping it first keeps this file's single RPC port owner).
+      await stopQuietly(node);
+      node = await IPFSNode.create(
+        IPFSConfig(
+          offline: false,
+          enableRPC: true,
+          rpcApiKey: apiKey,
+          dataPath: '${repo.path}/repo',
+          datastorePath: '${repo.path}/repo/datastore',
+          keystorePath: '${repo.path}/repo/keystore',
+          blockStorePath: '${repo.path}/repo/blocks',
+          network: NetworkConfig(
+            listenAddresses: const ['/ip4/127.0.0.1/tcp/0'],
+            bootstrapPeers: const [],
+            enableMDNS: false,
+            enableNatTraversal: false,
+          ),
+        ),
+      );
+      await node!.start();
+
       response = await post('/api/v0/id');
       expect(response.statusCode, equals(200));
       final id = jsonDecode(await response.transform(utf8.decoder).join());

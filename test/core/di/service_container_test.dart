@@ -1,5 +1,4 @@
 import 'package:dart_ipfs/src/core/di/service_container.dart';
-import 'package:get_it/get_it.dart';
 import 'package:test/test.dart';
 
 class _ServiceA {
@@ -14,10 +13,6 @@ class _ServiceB {
 
 void main() {
   group('ServiceContainer', () {
-    setUp(() async {
-      await GetIt.instance.reset();
-    });
-
     test('registerSingleton stores and retrieves value', () {
       final container = ServiceContainer();
       container.registerSingleton<_ServiceA>(_ServiceA('first'));
@@ -60,6 +55,23 @@ void main() {
       expect(container.isRegistered(_ServiceA), isTrue);
       expect(container.isRegisteredByType(_ServiceA), isTrue);
       expect(container.isRegisteredByType(_ServiceB), isFalse);
+    });
+
+    test('containers are isolated scopes — no shared registry', () {
+      final first = ServiceContainer();
+      final second = ServiceContainer();
+
+      first.registerSingleton<_ServiceA>(_ServiceA('scoped'));
+
+      expect(first.isRegistered<_ServiceA>(), isTrue);
+      // A different container must not see registrations made elsewhere:
+      // this is what keeps two IPFSNodes' services from cross-wiring.
+      expect(second.isRegistered<_ServiceA>(), isFalse);
+      expect(() => second.get<_ServiceA>(), throwsStateError);
+
+      second.registerSingleton<_ServiceA>(_ServiceA('other'));
+      expect(first.get<_ServiceA>().value, equals('scoped'));
+      expect(second.get<_ServiceA>().value, equals('other'));
     });
   });
 }

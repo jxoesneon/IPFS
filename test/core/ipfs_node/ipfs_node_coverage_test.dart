@@ -2,11 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
-import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/bootstrap_handler.dart';
@@ -30,7 +28,7 @@ import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
-import 'package:get_it/get_it.dart';
+
 import 'package:test/test.dart';
 
 // Manual Mocks
@@ -361,7 +359,6 @@ void main() {
     late MockBootstrapHandler bootstrap;
 
     setUp(() async {
-      await GetIt.instance.reset();
       container = ServiceContainer();
       metrics = MockMetricsCollector();
       security = MockSecurityManager();
@@ -427,7 +424,6 @@ void main() {
     });
 
     test('getHealthStatus with missing service', () async {
-      await GetIt.instance.reset();
       final minimalContainer = ServiceContainer();
       minimalContainer.registerSingleton<MetricsCollector>(metrics);
       minimalContainer.registerSingleton<SecurityManager>(security);
@@ -441,7 +437,6 @@ void main() {
     });
 
     test('addresses getter handles missing NetworkHandler', () async {
-      await GetIt.instance.reset();
       final minimalContainer = ServiceContainer();
       minimalContainer.registerSingleton<MetricsCollector>(metrics);
       minimalContainer.registerSingleton<SecurityManager>(security);
@@ -482,7 +477,6 @@ void main() {
     });
 
     test('dhtClient throws when DHTHandler not registered', () async {
-      await GetIt.instance.reset();
       final minimalContainer = ServiceContainer();
       minimalContainer.registerSingleton<MetricsCollector>(metrics);
       minimalContainer.registerSingleton<SecurityManager>(security);
@@ -497,7 +491,6 @@ void main() {
     test(
       'constructor throws StateError when required service missing',
       () async {
-        await GetIt.instance.reset();
         final emptyContainer = ServiceContainer();
         expect(() => IPFSNode.fromContainer(emptyContainer), throwsStateError);
       },

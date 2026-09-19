@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
@@ -14,8 +13,6 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
-
-import 'package:get_it/get_it.dart';
 
 import 'network_manager_test.mocks.dart';
 
@@ -38,8 +35,7 @@ void main() {
   late MockDatastoreHandler mockDatastoreHandler;
   late MockBitswapHandler mockBitswapHandler;
 
-  setUp(() async {
-    await GetIt.instance.reset();
+  setUp(() {
     container = ServiceContainer();
 
     mockNetworkHandler = MockNetworkHandler();
@@ -122,7 +118,6 @@ void main() {
     });
 
     test('missing dependencies return defaults or throw', () async {
-      await GetIt.instance.reset(); // Clear services for this test
       final emptyManager = NetworkManager();
 
       expect(() => emptyManager.peerId, throwsStateError);

@@ -1,5 +1,4 @@
 import 'package:dart_ipfs/src/core/di/service_container.dart';
-import 'package:get_it/get_it.dart';
 import 'package:test/test.dart';
 
 class TestService {
@@ -11,8 +10,7 @@ void main() {
   group('ServiceContainer', () {
     late ServiceContainer container;
 
-    setUp(() async {
-      await GetIt.instance.reset();
+    setUp(() {
       container = ServiceContainer();
     });
 

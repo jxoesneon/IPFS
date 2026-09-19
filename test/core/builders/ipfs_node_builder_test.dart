@@ -6,7 +6,6 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipld_handler.dart';
 import 'package:dart_ipfs/src/core/lifecycle/mobile_lifecycle_adapter.dart';
-import 'package:get_it/get_it.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
@@ -71,7 +70,7 @@ void main() {
         final builder = IPFSNodeBuilder(config);
         await builder.build();
 
-        final ipld = GetIt.instance.get<IPLDHandler>();
+        final ipld = builder.container.get<IPLDHandler>();
         expect(ipld.ipnsResolver, isNotNull);
         // The resolver delegates to IPNSHandler.resolve — an unresolvable
         // name fails inside the handler (or times out), proving the wired

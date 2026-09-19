@@ -43,6 +43,12 @@ class IPFS {
       _router = _node.router,
       _bitswap = _node.bitswap;
 
+  /// Wraps an existing [IPFSNode] in the high-level [IPFS] facade.
+  ///
+  /// Useful when the node was built through `IPFSNodeBuilder` with custom
+  /// service registrations in its container.
+  factory IPFS.fromNode(IPFSNode node) => IPFS._(node);
+
   /// The underlying IPFSNode instance
   final IPFSNode _node;
 

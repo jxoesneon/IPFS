@@ -95,9 +95,15 @@ void main() {
       expect(stats.bandwidthReceived, equals(0));
     });
 
-    test('facade exposes peerID and addresses', () {
+    test('facade exposes peerID and addresses', () async {
+      // peerID requires a libp2p identity, so this test swaps in an
+      // online node — on an offline node peerID throws StateError.
+      await ipfs!.stop();
+      ipfs = await IPFS.create(config: onlineConfig(repo.path));
+      await ipfs!.start();
+
       expect(ipfs!.peerID, isNotEmpty);
-      expect(ipfs!.addresses, isA<List<String>>());
+      expect(ipfs!.addresses, isNotEmpty);
     });
   });
 }

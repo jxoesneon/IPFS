@@ -50,6 +50,16 @@ class IPFSNodeBuilder {
 
   final IPFSConfig _config;
   final ServiceContainer _container;
+
+  /// The node-scoped service container this builder populates.
+  ///
+  /// Registrations made here are visible only to the node built by this
+  /// builder — each node gets its own container, so services never leak
+  /// between nodes. Exposed so callers can register additional or substitute
+  /// services (e.g. test stubs) before [build] wires them into the node, or
+  /// afterwards for services the node resolves lazily.
+  ServiceContainer get container => _container;
+
   final Logger _logger = Logger('IPFSNodeBuilder');
   MobileLifecycleAdapter? _mobileLifecycleAdapter;
 

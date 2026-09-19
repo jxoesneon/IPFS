@@ -5,10 +5,7 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
-import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/ipfs.dart';
-import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:test/test.dart';
 
 import 'e2e_helpers.dart';
@@ -16,37 +13,36 @@ import 'e2e_helpers.dart';
 /// End-to-end tests between two real IPFSNode instances talking over
 /// loopback libp2p.
 ///
-/// `ServiceContainer` wraps the global GetIt registry, so lazily-resolved
-/// getters (`addresses`, `dhtHandler`, keys, `pinnedCids`) only return the
-/// correct services for the most recently built node. A is created first
-/// and its lazily-resolved handles are captured before B exists; every
-/// other call on both nodes goes through eagerly-injected managers, which
-/// always point at the right node's own services.
+/// Each node resolves lazily-fetched services (`addresses`, `dhtHandler`,
+/// `securityManager`, `bitswap`, keys, `pinnedCids`) from its own scoped
+/// `ServiceContainer`, so creating node B never affects what node A's
+/// getters return.
 void main() {
   group('E2E two-node network', () {
     late Directory repoA;
     late Directory repoB;
     IPFSNode? nodeA;
     IPFSNode? nodeB;
-    DHTHandler? aDht;
-    BitswapHandler? aBitswap;
-    SecurityManager? aSecurity;
 
-    /// Creates A first (capturing its lazily-resolved handles while it owns
-    /// the shared registry), then creates and starts B. Returns A's
+    /// Creates and starts A, then creates and starts B. Returns A's
     /// dialable multiaddr.
     Future<String> startBoth() async {
       repoA = await makeRepoDir('nodeA');
       nodeA = await IPFSNode.create(onlineConfig(repoA.path));
       await nodeA!.start();
       final aAddr = dialAddress(nodeA!);
-      aDht = nodeA!.dhtHandler;
-      aBitswap = nodeA!.bitswap;
-      aSecurity = nodeA!.securityManager;
 
       repoB = await makeRepoDir('nodeB');
       nodeB = await IPFSNode.create(onlineConfig(repoB.path));
       await nodeB!.start();
+
+      // Regression check for the node-scoped service containers: A's
+      // lazily-resolved services must still be A's own after B exists.
+      expect(nodeA!.securityManager, isNot(same(nodeB!.securityManager)));
+      expect(nodeA!.dhtHandler, isNot(same(nodeB!.dhtHandler)));
+      expect(nodeA!.bitswap, isNot(same(nodeB!.bitswap)));
+      expect(nodeA!.blockStore, isNot(same(nodeB!.blockStore)));
+      expect(nodeA!.datastore, isNot(same(nodeB!.datastore)));
 
       return aAddr;
     }
@@ -153,8 +149,8 @@ void main() {
       await nodeB!.connectToPeer(aAddr);
 
       final cid = await nodeA!.addFile(utf8Bytes('ipns over dht'));
-      await aSecurity!.unlockKeystore('e2e-keystore-password');
-      await aSecurity!.generateSecureKey('self');
+      await nodeA!.securityManager.unlockKeystore('e2e-keystore-password');
+      await nodeA!.securityManager.generateSecureKey('self');
       final name = await nodeA!.publishIPNS(cid, keyName: 'self');
       expect(name, isNotEmpty);
 
@@ -180,7 +176,7 @@ void main() {
       // Content A holds but B has never fetched — B's local block check
       // must not short-circuit provider discovery.
       final cid = await nodeA!.addFile(utf8Bytes('provided by A'));
-      await aDht!.provide(CID.decode(cid));
+      await nodeA!.dhtHandler!.provide(CID.decode(cid));
 
       final providers = await waitFor<List<String>>(
         () async {
@@ -286,10 +282,10 @@ void main() {
         () async => nodeB!.bandwidthIn > 0 ? true : null,
         description: 'B inbound bandwidth counter to move',
       );
-      // A's Bitswap ledger is captured directly — its lazy accessors
-      // resolve to B's services once B owns the shared registry.
+      // A's Bitswap ledger resolves from A's own scoped container even
+      // though B was created afterwards.
       await waitFor<bool>(
-        () async => aBitswap!.bandwidthSent > 0 ? true : null,
+        () async => nodeA!.bitswap!.bandwidthSent > 0 ? true : null,
         description: 'A outbound bandwidth counter to move',
       );
     });
@@ -311,8 +307,6 @@ void main() {
     });
 
     test('messagesFor delivers only the requested topic', () async {
-      // A is the IPFS facade — created first so its lazily-resolved
-      // getters (addresses, peerID) are snapshotted before B exists.
       repoA = await makeRepoDir('facadeA');
       ipfsA = await IPFS.create(config: onlineConfig(repoA.path));
       await ipfsA!.start();

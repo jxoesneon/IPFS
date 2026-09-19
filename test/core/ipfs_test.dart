@@ -99,9 +99,11 @@ void main() {
       expect(cid, isNotEmpty);
     });
 
-    test('peerID is exposed (offline returns "offline")', () async {
+    test('peerID throws on an offline node', () async {
       await ipfs.start();
-      expect(ipfs.peerID, isNotEmpty);
+      // An offline node has no libp2p identity; peerID surfaces the
+      // documented StateError rather than a placeholder value.
+      expect(() => ipfs.peerID, throwsStateError);
     });
 
     test(

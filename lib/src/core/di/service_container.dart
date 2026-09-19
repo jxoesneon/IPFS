@@ -2,8 +2,16 @@
 import 'package:get_it/get_it.dart';
 
 /// Service container for dependency injection.
+///
+/// Each [ServiceContainer] wraps its own private registry
+/// (`GetIt.asNewInstance()`), so services registered on one container are
+/// invisible to every other container. An `IPFSNode` resolves its services
+/// exclusively through the container instance it was built from, which keeps
+/// lazily-resolved getters (`node.dhtHandler`, `node.securityManager`,
+/// `node.blockStore`, …) scoped to that node no matter how many nodes exist
+/// in the process.
 class ServiceContainer {
-  final GetIt _getIt = GetIt.instance;
+  final GetIt _getIt = GetIt.asNewInstance();
 
   /// Registers a service in the container as a singleton.
   void registerSingleton<T extends Object>(T service) {

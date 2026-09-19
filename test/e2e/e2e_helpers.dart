@@ -9,12 +9,11 @@ import 'package:path/path.dart' as p;
 /// Shared helpers for end-to-end tests that run real [IPFSNode] instances
 /// against temporary on-disk repositories.
 ///
-/// IMPORTANT: `ServiceContainer` wraps the global `GetIt` registry, so the
-/// most recently created node owns all lazily-resolved services. In
-/// multi-node tests, create the node whose lazy getters you need (keys,
-/// `addresses`, `dhtHandler`, `pinnedCids`, `datastore`, `blockStore`)
-/// LAST, and capture handles to earlier nodes' services before creating
-/// the next node.
+/// Each node carries its own node-scoped `ServiceContainer`, so lazily-
+/// resolved getters (`addresses`, `dhtHandler`, `securityManager`, keys,
+/// `pinnedCids`, `datastore`, `blockStore`) always return that node's own
+/// services regardless of how many nodes exist or in which order they were
+/// created.
 
 /// Creates a fresh temporary repo directory for a test.
 Future<Directory> makeRepoDir(String tag) {

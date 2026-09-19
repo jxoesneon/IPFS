@@ -188,10 +188,15 @@ void main() {
     });
 
     test('findProviders reports self for locally-held content', () async {
+      // The self-provider contract needs a libp2p identity, so this test
+      // swaps in an online node — an offline node has no peer ID to
+      // advertise and reports an empty provider list instead.
+      await stopQuietly(node);
+      node = await IPFSNode.create(onlineConfig(repo.path));
+      await node!.start();
+
       final cid = await node!.addFile(utf8Bytes('local provider'));
       final providers = await node!.findProviders(cid);
-      // Even offline, the node reports itself as the provider of
-      // content it holds locally.
       expect(providers, equals(<String>[node!.peerID]));
     });
 
@@ -284,11 +289,18 @@ void main() {
       expect(await node!.ls(dirCid), isEmpty);
     });
 
-    test('keyGen accepts and ignores an explicit size', () async {
+    test('keyGen accepts size 256 and rejects other sizes', () async {
       await node!.securityManager.unlockKeystore('pw', salt: Uint8List(16));
-      final name = await node!.keyGen('sized', type: 'ed25519', size: 2048);
+      // Ed25519 keys are fixed at 256 bits: an explicit 256 is accepted,
+      // any other size is rejected rather than silently ignored.
+      final name = await node!.keyGen('sized', type: 'ed25519', size: 256);
       expect(name, isNotEmpty);
       expect(await node!.keyList(), contains('sized'));
+
+      await expectLater(
+        node!.keyGen('bad-size', type: 'ed25519', size: 2048),
+        throwsArgumentError,
+      );
     });
 
     test('keystore round-trips survive stop/start', () async {
