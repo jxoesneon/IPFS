@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/ipfs.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
@@ -29,6 +30,7 @@ void main() {
     IPFSNode? nodeB;
     DHTHandler? aDht;
     BitswapHandler? aBitswap;
+    SecurityManager? aSecurity;
 
     /// Creates A first (capturing its lazily-resolved handles while it owns
     /// the shared registry), then creates and starts B. Returns A's
@@ -40,6 +42,7 @@ void main() {
       final aAddr = dialAddress(nodeA!);
       aDht = nodeA!.dhtHandler;
       aBitswap = nodeA!.bitswap;
+      aSecurity = nodeA!.securityManager;
 
       repoB = await makeRepoDir('nodeB');
       nodeB = await IPFSNode.create(onlineConfig(repoB.path));
@@ -150,6 +153,8 @@ void main() {
       await nodeB!.connectToPeer(aAddr);
 
       final cid = await nodeA!.addFile(utf8Bytes('ipns over dht'));
+      await aSecurity!.unlockKeystore('e2e-keystore-password');
+      await aSecurity!.generateSecureKey('self');
       final name = await nodeA!.publishIPNS(cid, keyName: 'self');
       expect(name, isNotEmpty);
 

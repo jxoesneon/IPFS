@@ -26,7 +26,9 @@ void main() {
 
       await node!.start();
       expect(node!.isRunning, isTrue);
-      expect(node!.peerID, isNotEmpty);
+      // An offline node has no network handler, so no peer identity:
+      // peerID throws rather than returning a sentinel value.
+      expect(() => node!.peerID, throwsStateError);
 
       final cid = await node!.addFile(utf8Bytes('lifecycle'));
       expect(await node!.cat(cid), isNotNull);

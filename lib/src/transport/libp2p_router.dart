@@ -584,12 +584,16 @@ class Libp2pRouter implements RouterInterface {
     final addr = libp2p.MultiAddr(transportAddrStr);
     final peerId = libp2p.PeerId.fromString(peerIdStr);
 
-    // Snapshot the peer's previously known addresses. Host.connect seeds the
-    // addrbook with the supplied address to perform the dial; if the
-    // handshake fails, that unverified address must not persist — otherwise
-    // any caller (e.g. an AutoNAT dialback request) could poison the
-    // addrbook with arbitrary addresses for this peer.
+    // Snapshot the peer's previously known addresses, then seed the addrbook
+    // with the supplied address — Host.connect looks the peer up in the
+    // peerstore and will not dial addresses it cannot find there. If the
+    // handshake fails the unverified address must not persist — otherwise any
+    // caller (e.g. an AutoNAT dialback request) could poison the addrbook
+    // with arbitrary addresses for this peer.
     final priorAddrs = await _host!.peerStore.addrBook.addrs(peerId);
+    await _host!.peerStore.addrBook.addAddrs(peerId, [
+      addr,
+    ], const Duration(minutes: 10));
 
     try {
       final addrInfo = libp2p.AddrInfo(peerId, [addr]);

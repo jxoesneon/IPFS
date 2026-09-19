@@ -27,7 +27,9 @@ void main() {
         expect(await ipfs.ls(cid), isEmpty);
         await ipfs.pin(cid);
         expect(await ipfs.pinnedCids, contains(cid));
-        expect(ipfs.peerID, isNotEmpty);
+        // Offline node: no network handler, so peerID throws honestly
+        // rather than returning a sentinel.
+        expect(() => ipfs.peerID, throwsStateError);
         expect(ipfs.messagesFor('t'), isA<Stream<PubSubMessage>>());
         expect(ipfs.pubsubLs(), isEmpty);
       } finally {

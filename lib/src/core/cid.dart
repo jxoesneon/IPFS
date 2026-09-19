@@ -209,6 +209,13 @@ class CID {
   Uint8List toPrefixBytes() {
     final bytes = toBytes();
     final digestLength = multihash.size;
+    if (version == 0) {
+      // CIDv0's binary form is the bare multihash, so synthesize the
+      // implicit <version=0, codec=dag-pb> header that Bitswap
+      // receivers expect in block prefixes.
+      final mhHeader = bytes.sublist(0, bytes.length - digestLength);
+      return Uint8List.fromList([0x00, 0x70, ...mhHeader]);
+    }
     if (bytes.length <= digestLength) {
       return bytes;
     }

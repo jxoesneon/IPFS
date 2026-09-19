@@ -206,13 +206,7 @@ class Message {
       final pbBlock = pb.Message_Block();
       pbBlock.data = block.data;
 
-      if (block.cid.version == 1) {
-        final cidBytes = block.cid.toBytes();
-        final digestSize = block.cid.multihash.digest.length;
-        if (cidBytes.length > digestSize) {
-          pbBlock.prefix = cidBytes.sublist(0, cidBytes.length - digestSize);
-        }
-      }
+      pbBlock.prefix = block.cid.toPrefixBytes();
 
       pbMessage.payload.add(pbBlock);
     }
