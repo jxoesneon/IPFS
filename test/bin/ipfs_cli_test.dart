@@ -1,6 +1,7 @@
 @Tags(['cli'])
 library;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -15,11 +16,19 @@ void main() {
   String tempDataDir() {
     final random = Random.secure().nextInt(0x7fffffff);
     final dir = Directory(
-      '$repoRoot/test_tmp/cli_${DateTime.now().millisecondsSinceEpoch}_${random}',
+      '$repoRoot/test_tmp/cli_${DateTime.now().millisecondsSinceEpoch}_$random',
     );
     dir.createSync(recursive: true);
     return dir.path;
   }
+
+  /// Maximum wall-clock time allowed for a single CLI subprocess.
+  ///
+  /// `dart run` JIT-compiles the whole package on every invocation, so cold
+  /// runs can take tens of seconds (longer on loaded CI runners). Anything
+  /// beyond this limit is a real hang: the process is killed rather than
+  /// leaving an orphaned child holding locks on the temp data dir.
+  final cliTimeout = const Duration(minutes: 2);
 
   Future<ProcessResult> runCli(
     List<String> args, {
@@ -46,11 +55,48 @@ void main() {
     if (configPath != null) {
       env['IPFS_CONFIG_PATH'] = configPath;
     }
-    final result = await Process.run(
-      dart,
-      ['run', cliPath, ...args],
-      environment: env,
-      runInShell: true,
+    // Process.start (not Process.run) so a hung child can be killed.
+    // No runInShell: `dart` is an absolute path (Platform.resolvedExecutable),
+    // and killing the process directly also reaps the CLI it hosts.
+    final process = await Process.start(dart, [
+      'run',
+      cliPath,
+      ...args,
+    ], environment: env);
+    final stdoutBuffer = StringBuffer();
+    final stderrBuffer = StringBuffer();
+    final stdoutDone = process.stdout
+        .transform(utf8.decoder)
+        .listen(stdoutBuffer.write)
+        .asFuture<void>();
+    final stderrDone = process.stderr
+        .transform(utf8.decoder)
+        .listen(stderrBuffer.write)
+        .asFuture<void>();
+    if (input != null) {
+      process.stdin.write(input);
+    }
+    await process.stdin.close();
+
+    final int exitCode;
+    try {
+      exitCode = await process.exitCode.timeout(cliTimeout);
+    } on TimeoutException {
+      process.kill(ProcessSignal.sigkill);
+      await Future.wait([stdoutDone, stderrDone]);
+      throw TimeoutException(
+        '`ipfs ${args.join(' ')}` exceeded $cliTimeout and was killed.\n'
+        'stdout so far: $stdoutBuffer\nstderr so far: $stderrBuffer',
+        cliTimeout,
+      );
+    }
+    await Future.wait([stdoutDone, stderrDone]);
+
+    final result = ProcessResult(
+      process.pid,
+      exitCode,
+      stdoutBuffer.toString(),
+      stderrBuffer.toString(),
     );
     if (result.exitCode != 0) {
       stderr.writeln('CLI stderr: ${result.stderr}');
@@ -226,8 +272,11 @@ void main() {
             jsonDecode(result.stdout as String) as Map<String, dynamic>;
         expect(json['Pins'], contains(cid));
       },
-      skip:
-          'Flaky CLI subprocess test hangs/times out when starting a node in a separate process; tracked separately.',
+      // This test body runs two CLI subprocesses (`pin` then `unpin`), each
+      // of which JIT-compiles the package before executing. The default
+      // 30s timeout (2x via the `cli` tag = 60s) is too tight on loaded CI
+      // runners, which is what used to look like a "hang".
+      timeout: const Timeout(Duration(minutes: 5)),
     );
   });
 

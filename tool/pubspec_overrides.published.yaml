@@ -1,0 +1,19 @@
+# CI-only dependency overrides: resolve monorepo satellite packages from
+# pub.dev instead of the local path overrides in pubspec.yaml.
+#
+# A pubspec_overrides.yaml file *replaces* the whole `dependency_overrides`
+# section of pubspec.yaml, so activating this file also drops the local-only
+# xml/dart_udx security pins — matching how downstream consumers resolve the
+# published package.
+#
+# Usage (also used by the `test-published-deps` job in .github/workflows/test.yml):
+#   cp tool/pubspec_overrides.published.yaml pubspec_overrides.yaml
+#   dart pub get
+#   dart test
+#   rm pubspec_overrides.yaml   # restore local path resolution afterwards
+#
+# Keep these constraints in sync with the `dart_ipfs_core` / `dart_ipfs_quic`
+# entries under `dependencies:` in pubspec.yaml.
+dependency_overrides:
+  dart_ipfs_core: ^1.11.7
+  dart_ipfs_quic: ^0.2.1

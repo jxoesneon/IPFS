@@ -6,6 +6,14 @@ import 'package:dart_ipfs/src/core/cid.dart' as ipfs_cid;
 import 'package:test/test.dart';
 
 void main() {
+  // GatewayMode.public hardcodes https://ipfs.io inside ContentManager
+  // (no injectable URL), so exercising it end-to-end requires live external
+  // network access to the public gateway. That cannot be made hermetic
+  // without changing the implementation, so the test is opt-in: set
+  // IPFS_PUBLIC_GATEWAY_E2E=1 to run it.
+  final runPublicGatewayE2E =
+      Platform.environment['IPFS_PUBLIC_GATEWAY_E2E'] == '1';
+
   group('Gateway Selector Integration', () {
     late HttpServer server;
     late String serverUrl;
@@ -127,7 +135,10 @@ void main() {
           reason: 'Should successfully retrieve content from public gateway',
         );
       },
-      skip: 'Flaky integration test depending on network stack behavior in CI',
+      skip: runPublicGatewayE2E
+          ? false
+          : 'Requires live external network access to the public ipfs.io '
+                'gateway. Opt in by setting IPFS_PUBLIC_GATEWAY_E2E=1.',
     );
   });
 }

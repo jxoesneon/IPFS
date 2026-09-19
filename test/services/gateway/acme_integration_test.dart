@@ -193,17 +193,19 @@ void main() {
     // 2. Port 80 accessible from the internet
     // 3. Manual execution in a production-like environment
 
-    test('Full ACME flow with staging server - MANUAL', () async {
-      // This test is intentionally skipped in automated runs
-      // To run manually:
-      // 1. Set up a domain with DNS pointing to your machine
-      // 2. Ensure port 80 is accessible
-      // 3. Uncomment the test code below
-      // 4. Run with: dart test test/services/gateway/acme_integration_test.dart
+    test(
+      'Full ACME flow with staging server - MANUAL',
+      () async {
+        // This test is intentionally skipped in automated runs
+        // To run manually:
+        // 1. Set up a domain with DNS pointing to your machine
+        // 2. Ensure port 80 is accessible
+        // 3. Uncomment the test code below
+        // 4. Run with: dart test test/services/gateway/acme_integration_test.dart
 
-      expect(true, isTrue); // Placeholder
+        expect(true, isTrue); // Placeholder
 
-      /*
+        /*
       final config = const GatewayConfig(
         autoTls: true,
         autoTlsDomain: 'your-test-domain.com', // Replace with real domain
@@ -228,6 +230,11 @@ void main() {
         await persistence.deleteAll();
       }
       */
-    }, skip: true);
+      },
+      skip:
+          'Manual-only test: requires a real public domain whose DNS resolves '
+          'to the test host and inbound port 80 reachable from the internet. '
+          'Follow the numbered steps in the test body to run it.',
+    );
   });
 }

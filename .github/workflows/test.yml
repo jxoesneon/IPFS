@@ -36,3 +36,40 @@ jobs:
 
       - name: Run tests
         run: dart test --reporter=expanded
+
+  test-published-deps:
+    name: Test (published deps)
+    # Resolve the monorepo satellite packages from pub.dev (as consumers do)
+    # instead of the local path overrides in pubspec.yaml. Catches the
+    # "works against local, broken/unresolvable against published" class of
+    # issues (e.g. the 1.16.5 uninstallable release).
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1
+        with:
+          sdk: stable
+
+      - name: Resolve dependencies against published satellite versions
+        run: |
+          cp tool/pubspec_overrides.published.yaml pubspec_overrides.yaml
+          dart pub get
+
+      - name: Verify satellites resolved from pub.dev
+        run: |
+          for pkg in dart_ipfs_core dart_ipfs_quic; do
+            source=$(grep -A6 "^  $pkg:" pubspec.lock | grep -m1 'source:' | awk '{print $2}')
+            if [ "$source" != "hosted" ]; then
+              echo "::error::$pkg resolved as '$source', expected hosted (pub.dev)"
+              exit 1
+            fi
+            echo "$pkg resolved as $source (pub.dev)"
+          done
+
+      - name: Analyze project source
+        run: dart analyze lib test
+
+      - name: Run tests
+        run: dart test --reporter=expanded
