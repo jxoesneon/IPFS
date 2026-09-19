@@ -33,6 +33,9 @@ void main() {
       final data = Uint8List.fromList([1, 2, 3]);
       final cid = await node.add(data);
 
+      // add stores a UnixFS file node (dag-pb), matching IPFSNode.addFile.
+      expect(cid.codec, equals('dag-pb'));
+
       final retrieved = await node.get(cid.encode());
       expect(retrieved, equals(data));
 

@@ -146,33 +146,39 @@ class IPFSWebNode {
   }
 
   /// Adds data and returns its CID.
-  Future<CID> add(Uint8List data) async {
-    // Create a CID using the fromContent factory
-    final cid = await CID.fromContent(
-      data,
-      codec: 'raw',
-      hashType: 'sha2-256',
-      version: 1,
-    );
-
-    // Store via BlockStore (which handles platform storage)
-    // We create a Block object
-    final block = Block(cid: cid, data: data);
-    await _blockStore.putBlock(block);
-
-    // Also cache in memory for speed (optional, BlockStore relies on platform)
-    // _store is redundant if WebBlockStore uses platform directly.
-    // We remove _store usage to rely on WebBlockStore + Platform.
-
-    return cid;
-  }
+  ///
+  /// The bytes are chunked into a UnixFS DAG with the same layout
+  /// `IPFSNode.addFile` produces on native platforms (Kubo `ipfs add`
+  /// defaults: 256 KiB chunks, raw leaves off): a payload that fits in
+  /// one chunk is stored as a single UnixFS file node whose CID is the
+  /// root, larger payloads produce a DAG-PB root linking each chunk in
+  /// order, and empty input yields the well-known empty-file block.
+  /// Identical bytes therefore produce identical CIDs on web and native
+  /// nodes.
+  ///
+  /// NOTE: CIDs differ from earlier releases of this method, which stored
+  /// a single raw CIDv1 block.
+  Future<CID> add(
+    Uint8List data, {
+    int cidVersion = 0,
+    bool rawLeaves = false,
+  }) => addStream(
+    Stream<List<int>>.value(data),
+    cidVersion: cidVersion,
+    rawLeaves: rawLeaves,
+  );
 
   /// Adds data from a stream and returns the root CID.
   ///
   /// This is memory efficient for large files as it chunks and processes
-  /// the stream incrementally, building a UnixFS DAG.
-  Future<CID> addStream(Stream<List<int>> stream) async {
-    final builder = UnixFSBuilder();
+  /// the stream incrementally, building a UnixFS DAG identical to the one
+  /// `IPFSNode.addFileStream` produces on native platforms.
+  Future<CID> addStream(
+    Stream<List<int>> stream, {
+    int cidVersion = 0,
+    bool rawLeaves = false,
+  }) async {
+    final builder = UnixFSBuilder(cidVersion: cidVersion, rawLeaves: rawLeaves);
     CID? rootCid;
 
     await for (final block in builder.build(stream)) {
@@ -181,7 +187,7 @@ class IPFSWebNode {
     }
 
     if (rootCid == null) {
-      throw StateError('Stream was empty');
+      throw StateError('UnixFS build produced no blocks');
     }
 
     return rootCid;
@@ -189,18 +195,27 @@ class IPFSWebNode {
 
   /// Adds a file to IPFS using chunked streaming.
   ///
-  /// [file] should be a `dart:html` File object or similar (dynamic to avoid import issues).
-  /// This method is designed for web usage.
-  Future<CID> addFile(dynamic file) async {
-    if (_platform.isWeb) {
-      if (file is Stream<List<int>>) {
-        return addStream(file);
-      }
-      throw UnimplementedError(
-        'addFile expecting Stream<List<int>>. Use addStream(file.stream()) instead.',
-      );
+  /// [file] must be a `Stream<List<int>>` of the file's bytes — on the
+  /// web this is typically `file.stream()` from a `dart:html`/
+  /// `package:web` `File` (or a `FileReader` result); on native,
+  /// `file.openRead()`. The stream is consumed via [addStream], so the
+  /// returned CID matches `IPFSNode.addFile` for identical bytes.
+  ///
+  /// Throws [UnsupportedError] for any other input type: this class
+  /// cannot import `dart:html`, so browser `File` objects cannot be read
+  /// here — obtain a byte stream first and pass that (or call [addStream]
+  /// directly). Declared `dynamic` precisely so this library compiles
+  /// without the web-only `File` type.
+  Future<CID> addFile(dynamic file) {
+    if (file is Stream<List<int>>) {
+      return addStream(file);
     }
-    throw UnimplementedError('addFile only supported on Web');
+    throw UnsupportedError(
+      'IPFSWebNode.addFile requires a Stream<List<int>> of file bytes: '
+      'browser File objects cannot be read without dart:html, which this '
+      'library does not import — pass file.stream() (web) or '
+      'file.openRead() (native), or call addStream() directly',
+    );
   }
 
   /// Gets data by CID string.

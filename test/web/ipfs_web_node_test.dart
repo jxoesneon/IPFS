@@ -3,7 +3,7 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/config/network_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
-import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:test/test.dart';
 
@@ -147,8 +147,44 @@ void main() {
       expect(() => newNode.resolveIPNS('name'), throwsStateError);
     });
 
-    test('addFile should throw on IO platform', () async {
-      expect(() => node.addFile(null), throwsUnimplementedError);
+    test('addFile rejects non-stream input with UnsupportedError', () async {
+      // Browser File objects cannot be read here (no dart:html import),
+      // so non-stream input fails honestly naming the missing capability.
+      expect(() => node.addFile(null), throwsUnsupportedError);
+      expect(() => node.addFile('not a stream'), throwsUnsupportedError);
+    });
+
+    test('addFile consumes a byte stream on any platform', () async {
+      final data = Uint8List.fromList('file bytes'.codeUnits);
+      final cid = await node.addFile(Stream<List<int>>.value(data));
+      expect(await node.get(cid.encode()), equals(data));
+    });
+
+    test('add produces the same UnixFS root CID as the IO path', () async {
+      // The IO path (ContentManager.addFile) builds the DAG with
+      // UnixFSBuilder(cidVersion: 0, rawLeaves: false) and returns the
+      // last block's CID — reproduce it here to assert byte-identical
+      // output across platforms.
+      final data = Uint8List.fromList('cross-platform parity'.codeUnits);
+      CID? expected;
+      await for (final block in UnixFSBuilder().build(
+        Stream<List<int>>.value(data),
+      )) {
+        expected = block.cid;
+      }
+
+      final cid = await node.add(data);
+      expect(cid.encode(), equals(expected!.encode()));
+      expect(cid.codec, equals('dag-pb'));
+
+      // The stored UnixFS node round-trips to the original bytes.
+      expect(await node.get(cid.encode()), equals(data));
+    });
+
+    test('add of empty input yields the empty-file dag-pb block', () async {
+      final cid = await node.add(Uint8List(0));
+      expect(cid.codec, equals('dag-pb'));
+      expect(await node.get(cid.encode()), equals(Uint8List(0)));
     });
 
     test('start with bootstrap peers', () async {

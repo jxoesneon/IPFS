@@ -7,6 +7,7 @@ import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_web_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/web_block_store.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
@@ -56,6 +57,30 @@ void main() {
 
       final fetched = await node!.get(cid.encode());
       expect(fetched, equals(data));
+    });
+
+    test('add matches the IO chunked layout for multi-chunk input', () async {
+      node = IPFSWebNode(config: IPFSConfig(offline: true));
+      await node!.start();
+
+      // > 256 KiB forces a dag-pb root linking two chunk leaves — the
+      // same DAG ContentManager.addFile builds on the IO path, so the
+      // root CIDs must be byte-identical.
+      final data = Uint8List.fromList(
+        List<int>.generate(300 * 1024, (i) => i % 256),
+      );
+      final cid = await node!.add(data);
+      expect(cid.codec, equals('dag-pb'));
+
+      CID? expected;
+      await for (final block in UnixFSBuilder().build(
+        Stream<List<int>>.value(data),
+      )) {
+        expected = block.cid;
+      }
+      expect(cid.encode(), equals(expected!.encode()));
+
+      expect(await node!.get(cid.encode()), equals(data));
     });
 
     test('addStream reassembles chunked input', () async {

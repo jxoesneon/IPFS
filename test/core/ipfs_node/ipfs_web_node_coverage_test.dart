@@ -97,10 +97,11 @@ void main() {
       await node.stop();
     });
 
-    test('addFile throws UnimplementedError on non-web', () async {
+    test('addFile throws UnsupportedError for non-stream input', () async {
       final node = IPFSWebNode();
-      // On native, this should throw
-      expect(() => node.addFile(null), throwsA(isA<UnimplementedError>()));
+      // Non-stream input fails honestly on every platform: browser File
+      // objects cannot be read without dart:html.
+      expect(() => node.addFile(null), throwsA(isA<UnsupportedError>()));
     });
 
     test('get falls back to Bitswap when peers are connected', () async {
@@ -219,7 +220,7 @@ void main() {
       await node.stop();
     });
 
-    test('addFile returns Stream on web', () async {
+    test('addFile adds a Stream of file bytes', () async {
       final node = IPFSWebNode();
       await node.start();
 
@@ -227,8 +228,9 @@ void main() {
         yield [1, 2, 3];
       }
 
-      // Since _platform.isWeb is false in tests, this will throw
-      expect(() => node.addFile(fileStream()), throwsUnimplementedError);
+      // A byte stream is consumable on any platform via addStream.
+      final cid = await node.addFile(fileStream());
+      expect(await node.get(cid.encode()), equals([1, 2, 3]));
       await node.stop();
     });
 
@@ -275,7 +277,7 @@ void main() {
       expect(node.isRunning, isFalse);
     });
 
-    test('addFile on non-web throws UnimplementedError', () async {
+    test('addFile accepts a Stream<List<int>> on any platform', () async {
       final node = IPFSWebNode();
       await node.start();
 
@@ -283,17 +285,19 @@ void main() {
         yield [1, 2, 3];
       }
 
-      // Since _platform.isWeb is false in tests, this will throw
-      expect(() => node.addFile(fileStream()), throwsUnimplementedError);
+      // Stream input no longer depends on _platform.isWeb: it is routed
+      // through addStream like IPFSNode.addFileStream.
+      final cid = await node.addFile(fileStream());
+      expect(cid.codec, equals('dag-pb'));
       await node.stop();
     });
 
-    test('addFile with non-stream on web throws', () async {
+    test('addFile with non-stream input throws UnsupportedError', () async {
       final node = IPFSWebNode();
       await node.start();
 
-      // This will throw because it's not a Stream
-      expect(() => node.addFile('not a stream'), throwsUnimplementedError);
+      // This throws because it is not a Stream of bytes.
+      expect(() => node.addFile('not a stream'), throwsUnsupportedError);
       await node.stop();
     });
 
