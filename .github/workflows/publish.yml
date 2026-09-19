@@ -56,6 +56,28 @@ jobs:
         with:
           sdk: stable
 
+      - name: Determine publish targets
+        id: targets
+        run: |
+          REF="${GITHUB_REF}"
+          TARGET="${{ inputs.target }}"
+          CORE=false; QUIC=false; UMBRELLA=false
+          case "$REF" in
+            refs/tags/v*) CORE=true; QUIC=true; UMBRELLA=true ;;
+            refs/tags/core-v*) CORE=true ;;
+            refs/tags/quic-v*) QUIC=true ;;
+          esac
+          case "$TARGET" in
+            all) CORE=true; QUIC=true; UMBRELLA=true ;;
+            core) CORE=true ;;
+            quic) QUIC=true ;;
+            umbrella) UMBRELLA=true ;;
+          esac
+          echo "core=$CORE" >> "$GITHUB_OUTPUT"
+          echo "quic=$QUIC" >> "$GITHUB_OUTPUT"
+          echo "umbrella=$UMBRELLA" >> "$GITHUB_OUTPUT"
+          echo "Publish targets: core=$CORE quic=$QUIC umbrella=$UMBRELLA"
+
       - name: Resolve coverage base ref
         id: base
         run: |
@@ -68,15 +90,19 @@ jobs:
           echo "Coverage base ref: $BASE"
 
       - name: Install dependencies (umbrella)
+        if: steps.targets.outputs.umbrella == 'true'
         run: dart pub get
 
       - name: Analyze umbrella
+        if: steps.targets.outputs.umbrella == 'true'
         run: dart analyze --fatal-warnings
 
       - name: Test umbrella (with coverage)
+        if: steps.targets.outputs.umbrella == 'true'
         run: dart test --coverage=coverage --reporter=expanded
 
       - name: Changed-line coverage gate (umbrella)
+        if: steps.targets.outputs.umbrella == 'true'
         run: |
           dart pub global activate coverage
           dart pub global run coverage:format_coverage \
@@ -86,10 +112,12 @@ jobs:
             --base="${{ steps.base.outputs.base }}" --lcov=coverage/lcov.info
 
       - name: Install dependencies (core)
+        if: steps.targets.outputs.core == 'true'
         working-directory: packages/dart_ipfs_core
         run: dart pub get
 
       - name: Analyze + test core (with coverage)
+        if: steps.targets.outputs.core == 'true'
         working-directory: packages/dart_ipfs_core
         run: |
           dart analyze --fatal-warnings
@@ -99,6 +127,7 @@ jobs:
             --packages=.dart_tool/package_config.json --report-on=lib
 
       - name: Changed-line coverage gate (core)
+        if: steps.targets.outputs.core == 'true'
         run: |
           dart run tool/changed_line_coverage.dart \
             --base="${{ steps.base.outputs.base }}" \
@@ -106,10 +135,12 @@ jobs:
             --prefix=packages/dart_ipfs_core
 
       - name: Install dependencies (quic)
+        if: steps.targets.outputs.quic == 'true'
         working-directory: packages/dart_ipfs_quic
         run: dart pub get
 
       - name: Analyze + test quic (with coverage)
+        if: steps.targets.outputs.quic == 'true'
         working-directory: packages/dart_ipfs_quic
         run: |
           dart analyze --fatal-warnings
@@ -119,6 +150,7 @@ jobs:
             --packages=.dart_tool/package_config.json --report-on=lib
 
       - name: Changed-line coverage gate (quic)
+        if: steps.targets.outputs.quic == 'true'
         run: |
           dart run tool/changed_line_coverage.dart \
             --base="${{ steps.base.outputs.base }}" \
