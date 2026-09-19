@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:convert/convert.dart' show hex;
 import 'package:crypto/crypto.dart';
 import 'package:cryptography/cryptography.dart' show SimpleKeyPair;
 import 'package:http/http.dart' as http;
@@ -13,6 +14,7 @@ import '../../core/types/peer_id.dart';
 import '../../transport/router_interface.dart';
 import '../../utils/base58.dart';
 import '../../utils/logger.dart';
+import '../gossipsub/gossipsub_rpc.dart';
 import 'pubsub_interface.dart';
 import 'pubsub_message.dart';
 
@@ -41,6 +43,19 @@ import 'pubsub_message.dart';
 /// Legacy messages carrying only HMAC tags remain supported in non-strict mode
 /// for backward compatibility with older nodes, functioning as bit-corruption
 /// and deduplication tags only.
+///
+/// **Gossipsub wire interop:** in addition to the legacy JSON-over-`pubsub`
+/// format used between dart_ipfs nodes, the client speaks the real libp2p
+/// gossipsub wire protocol on `/meshsub/1.1.0` and `/meshsub/1.0.0`
+/// (protobuf RPC envelopes — see `protocols/gossipsub/gossipsub_rpc.dart`).
+/// Peers observed sending meshsub frames are tracked as gossipsub-capable
+/// and receive protobuf RPCs; all other peers keep receiving the JSON
+/// format, so dart-to-dart traffic is unchanged. Published gossipsub
+/// messages are signed per the pubsub spec — Ed25519 over
+/// `"libp2p-pubsub:" || marshal(Message{from, data, seqno, topic})` — and
+/// inbound signatures are verified with the carried `key` field or the
+/// public key embedded in an identity-multihash peer ID. Unsigned inbound
+/// messages are accepted only when [strictAuthentication] is disabled.
 class PubSubClient implements IPubSub {
   /// Creates a [PubSubClient] with the provided [_router] and peer identifier.
   ///
@@ -94,6 +109,24 @@ class PubSubClient implements IPubSub {
   /// messages; entries are removed on unsubscribe announcements and PRUNE.
   final Map<String, Set<String>> _topicPeers = {};
 
+  /// Peers observed speaking a meshsub protocol, learned from inbound
+  /// gossipsub frames. These peers receive protobuf RPCs instead of the
+  /// legacy JSON format. Bounded to [_maxGossipsubPeers].
+  final Set<String> _gossipsubPeers = {};
+
+  /// Encoded gossipsub messages retained for IWANT serving and forwarding,
+  /// keyed by hex-encoded message ID. Bounded to
+  /// [_maxGossipsubCachedMessages].
+  final Map<String, Uint8List> _gossipsubMessageCache = {};
+
+  /// Hex-encoded message IDs each peer asked us not to send (IDONTWANT).
+  /// Bounded per-peer and in total peer count.
+  final Map<String, Set<String>> _idontwant = {};
+
+  /// Sequence counter for outbound gossipsub messages (encoded big-endian
+  /// into the 8-byte `seqno` field per the pubsub spec).
+  int _gossipsubSeqno = 0;
+
   bool _isStarted = false;
   Timer? _heartbeatTimer;
 
@@ -101,6 +134,11 @@ class PubSubClient implements IPubSub {
   static const int _targetMeshDegree = 6;
   static const Duration _heartbeatInterval = Duration(seconds: 1);
   static const String _protocolName = 'pubsub';
+
+  /// The meshsub protocol IDs accepted inbound; outbound traffic always
+  /// uses v1.1 (wire-compatible with v1.0 for the implemented subset).
+  static const List<String> _meshsubProtocolIds = kMeshsubProtocolIds;
+  static const String _meshsubPublishProtocol = kMeshsubProtocolV11;
 
   /// Maximum message IDs retained per topic for dedup and IWANT serving.
   static const int _maxEntriesPerTopic = 512;
@@ -113,6 +151,24 @@ class PubSubClient implements IPubSub {
 
   /// Maximum peer score entries retained; lowest-scored peers are evicted.
   static const int _maxScoredPeers = 1024;
+
+  /// Maximum peers tracked as gossipsub-capable; oldest entries evicted.
+  static const int _maxGossipsubPeers = 1024;
+
+  /// Maximum encoded gossipsub messages retained for IWANT serving.
+  static const int _maxGossipsubCachedMessages = 1024;
+
+  /// Maximum message IDs requested in a single IWANT response to IHAVE.
+  static const int _maxIWantIdsRequested = 64;
+
+  /// Maximum messages served per IWANT record.
+  static const int _maxIWantIdsServed = 64;
+
+  /// Maximum peers whose IDONTWANT sets are retained.
+  static const int _maxIdontwantPeers = 256;
+
+  /// Maximum IDONTWANT message IDs retained per peer.
+  static const int _maxIdontwantIdsPerPeer = 512;
 
   /// Indicates whether the PubSub client is currently active.
   bool get isStarted => _isStarted;
@@ -171,6 +227,14 @@ class PubSubClient implements IPubSub {
         _processIncomingPacket(packet);
       }
     });
+
+    // Gossipsub wire interop: accept protobuf RPC frames on the real
+    // meshsub protocol IDs so Kubo/Helia/libp2p peers can mesh with us.
+    // Even an empty frame (a valid, empty RPC) marks the peer as
+    // gossipsub-capable.
+    for (final protocolId in _meshsubProtocolIds) {
+      _router.registerProtocolHandler(protocolId, _processGossipSubPacket);
+    }
 
     _heartbeatTimer = Timer.periodic(_heartbeatInterval, _heartbeat);
 
@@ -428,6 +492,9 @@ class PubSubClient implements IPubSub {
     _scores.clear();
     _topicPeers.clear();
     _mesh.clear();
+    _gossipsubPeers.clear();
+    _gossipsubMessageCache.clear();
+    _idontwant.clear();
     // _messageController is `final` and must survive a stop/start cycle; it
     // is released with the client.
     _isStarted = false;
@@ -449,6 +516,7 @@ class PubSubClient implements IPubSub {
     }
 
     await _announce(await encodeSignedAnnouncement('subscribe', topic));
+    await _announceGossipSubSubscription(topic, subscribe: true);
     _logger.debug('Subscribed to topic: $topic');
   }
 
@@ -459,6 +527,7 @@ class PubSubClient implements IPubSub {
     _subscriptions.remove(topic);
     _router.removeMessageHandler(topic);
     await _announce(await encodeSignedAnnouncement('unsubscribe', topic));
+    await _announceGossipSubSubscription(topic, subscribe: false);
     _logger.debug('Unsubscribed from topic: $topic');
   }
 
@@ -512,16 +581,32 @@ class PubSubClient implements IPubSub {
         );
       }
 
+      // Gossipsub-capable targets receive the protobuf RPC form on
+      // /meshsub/1.1.0; every other target keeps receiving the legacy JSON
+      // form on 'pubsub' (dart-to-dart compatibility).
+      Uint8List? gossipSubPayload;
       final List<Future<void>> publishFutures = [];
       for (final String peerId in targets) {
         publishFutures.add(
           (() async {
             try {
-              await _router.sendMessage(
-                peerId,
-                encodedMessage,
-                protocolId: _protocolName,
-              );
+              if (_gossipsubPeers.contains(peerId)) {
+                gossipSubPayload ??= await _encodeGossipSubPublishRpc(
+                  topic,
+                  message,
+                );
+                await _router.sendMessage(
+                  peerId,
+                  gossipSubPayload!,
+                  protocolId: _meshsubPublishProtocol,
+                );
+              } else {
+                await _router.sendMessage(
+                  peerId,
+                  encodedMessage,
+                  protocolId: _protocolName,
+                );
+              }
             } catch (e) {
               _logger.debug('Failed to send PubSub message to $peerId: $e');
             }
@@ -937,6 +1022,432 @@ class PubSubClient implements IPubSub {
     } catch (e) {
       _logger.warning('Error handling IWANT request from $sender: $e');
     }
+  }
+
+  // --------------------------------------------------------------------
+  // Gossipsub wire interop (/meshsub/1.1.0, /meshsub/1.0.0)
+  // --------------------------------------------------------------------
+
+  /// Processes an incoming meshsub packet: a length-prefixed protobuf
+  /// [GossipSubRpc] frame dispatched by the router per stream message.
+  void _processGossipSubPacket(NetworkPacket packet) {
+    // Capability discovery: any inbound meshsub frame proves the peer
+    // speaks gossipsub. On first discovery we immediately send our current
+    // subscriptions — the "hello" RPC a persistent-stream implementation
+    // emits on stream open.
+    if (_gossipsubPeers.add(packet.srcPeerId)) {
+      while (_gossipsubPeers.length > _maxGossipsubPeers) {
+        _gossipsubPeers.remove(_gossipsubPeers.first);
+      }
+      unawaited(_sendGossipSubSubscriptions(packet.srcPeerId));
+    }
+
+    final GossipSubRpc rpc;
+    try {
+      rpc = GossipSubRpcCodec.decode(packet.datagram);
+    } on FormatException catch (e) {
+      _logger.warning(
+        'Rejected malformed gossipsub RPC from ${packet.srcPeerId}: $e',
+      );
+      return;
+    }
+    unawaited(
+      _handleGossipSubRpc(packet.srcPeerId, rpc).catchError((
+        Object e,
+        StackTrace stackTrace,
+      ) {
+        _logger.error(
+          'Error handling gossipsub RPC from ${packet.srcPeerId}',
+          e,
+          stackTrace,
+        );
+      }),
+    );
+  }
+
+  /// Dispatches a decoded gossipsub RPC: subscriptions, then published
+  /// messages, then the control payload (matching go-libp2p-pubsub's
+  /// processing order).
+  Future<void> _handleGossipSubRpc(String srcPeer, GossipSubRpc rpc) async {
+    for (final sub in rpc.subscriptions) {
+      final topic = sub.topicId;
+      if (topic == null || topic.isEmpty) continue;
+      if (sub.subscribe ?? false) {
+        _trackTopicPeer(srcPeer, topic);
+      } else {
+        _untrackTopicPeer(srcPeer, topic);
+      }
+    }
+
+    for (final msg in rpc.publish) {
+      await _handleGossipSubPublish(srcPeer, msg);
+    }
+
+    final control = rpc.control;
+    if (control != null) {
+      await _handleGossipSubControl(srcPeer, control);
+    }
+  }
+
+  /// Validates and delivers one inbound gossipsub message.
+  ///
+  /// Signed messages are verified against the spec payload
+  /// (`"libp2p-pubsub:" || marshal(msg without signature/key)`) under a
+  /// key carried in the `key` field or embedded in the `from` peer ID.
+  /// Unsigned messages are accepted only when strict authentication is off
+  /// and no verified key is registered for the author (downgrade parity
+  /// with the JSON path).
+  Future<void> _handleGossipSubPublish(
+    String srcPeer,
+    GossipSubMessage msg,
+  ) async {
+    final topic = msg.topic;
+    final from = msg.from;
+    if (topic == null || topic.isEmpty) {
+      _logger.warning('Rejected gossipsub message without topic from $srcPeer');
+      return;
+    }
+    if (from == null || from.isEmpty) {
+      _logger.warning('Rejected gossipsub message without `from` on $topic');
+      return;
+    }
+
+    final sender = Base58().encode(from);
+    final msgId = hex.encode(gossipSubDefaultMessageId(msg));
+    if (_seenMessages[topic]?.contains(msgId) ?? false) {
+      return;
+    }
+
+    final signature = msg.signature;
+    if (signature != null && signature.isNotEmpty) {
+      final pubKey = _resolveGossipSubSigningKey(msg, from, sender);
+      if (pubKey == null) {
+        _logger.warning(
+          'Rejected gossipsub message: unresolvable or spoofed signing '
+          'key for $sender on $topic',
+        );
+        return;
+      }
+      if (!await _verifyGossipSubSignature(pubKey, signature, msg)) {
+        _logger.warning(
+          'Rejected gossipsub message with invalid signature from $sender '
+          'on $topic',
+        );
+        return;
+      }
+    } else {
+      if (_keyRegistry.hasPublicKey(sender)) {
+        _logger.warning(
+          'Rejected unsigned gossipsub message: peer $sender has a known '
+          'Ed25519 key (downgrade attack prevention)',
+        );
+        return;
+      }
+      if (_strictAuthentication) {
+        _logger.warning(
+          'Rejected unsigned gossipsub message from $sender in strict '
+          'authentication mode',
+        );
+        return;
+      }
+    }
+
+    _boundedSetAdd(_seenMessages, topic, msgId, _maxEntriesPerTopic);
+
+    // Only serve/forward traffic heard from a peer we are connected to;
+    // the message author (`from`) is the original publisher and need not
+    // be a direct peer — relayed delivery is the gossipsub norm.
+    if (!_router.isConnectedPeer(srcPeer)) {
+      return;
+    }
+    _scores[srcPeer] = (_scores[srcPeer] ?? 0.0) + 1.0;
+    _evictLowestScores();
+
+    // Retain the encoded message for IWANT serving and forwarding.
+    _gossipsubMessageCache[msgId] = GossipSubRpcCodec.encodeMessage(msg);
+    while (_gossipsubMessageCache.length > _maxGossipsubCachedMessages) {
+      _gossipsubMessageCache.remove(_gossipsubMessageCache.keys.first);
+    }
+
+    _messageController.add(
+      PubSubMessage(
+        topic: topic,
+        content: utf8.decode(msg.data ?? Uint8List(0), allowMalformed: true),
+        sender: sender,
+      ),
+    );
+
+    await _forwardGossipSubPublish(srcPeer, topic, msg, msgId);
+  }
+
+  /// Relays an accepted gossipsub message to mesh and known topic peers
+  /// that speak meshsub, excluding the peer it arrived from and any peer
+  /// that sent IDONTWANT for this message ID.
+  Future<void> _forwardGossipSubPublish(
+    String srcPeer,
+    String topic,
+    GossipSubMessage msg,
+    String msgId,
+  ) async {
+    final targets = <String>{..._mesh, ...?_topicPeers[topic]}
+      ..remove(srcPeer)
+      ..retainWhere(_gossipsubPeers.contains);
+    if (targets.isEmpty) return;
+
+    final rpc = GossipSubRpc(publish: <GossipSubMessage>[msg]);
+    final futures = <Future<void>>[];
+    for (final peer in targets) {
+      if (_idontwant[peer]?.contains(msgId) ?? false) continue;
+      futures.add(_sendGossipSubRpc(peer, rpc));
+    }
+    await Future.wait(futures);
+  }
+
+  /// Handles the control payload of an inbound gossipsub RPC.
+  ///
+  /// All remote-controlled volumes are already bounded by the codec
+  /// (record counts, IDs per record); responses are bounded by
+  /// [_maxIWantIdsRequested] and [_maxIWantIdsServed].
+  Future<void> _handleGossipSubControl(
+    String srcPeer,
+    GossipSubControl control,
+  ) async {
+    // IHAVE → IWANT for message IDs we have not seen.
+    final wantIds = <Uint8List>[];
+    final wantIdSet = <String>{};
+    for (final ihave in control.ihave) {
+      _trackTopicPeer(srcPeer, ihave.topicId);
+      for (final id in ihave.messageIds) {
+        if (wantIds.length >= _maxIWantIdsRequested) break;
+        final idHex = hex.encode(id);
+        if (wantIdSet.contains(idHex)) continue;
+        if (_isSeenGossipSubMsgId(ihave.topicId, idHex)) continue;
+        wantIdSet.add(idHex);
+        wantIds.add(id);
+      }
+    }
+    if (wantIds.isNotEmpty) {
+      await _sendGossipSubRpc(
+        srcPeer,
+        GossipSubRpc(
+          control: GossipSubControl(
+            iwant: <GossipSubIWant>[GossipSubIWant(messageIds: wantIds)],
+          ),
+        ),
+      );
+    }
+
+    // IWANT → serve retained messages by ID.
+    final serve = <GossipSubMessage>[];
+    for (final iwant in control.iwant) {
+      for (final id in iwant.messageIds) {
+        if (serve.length >= _maxIWantIdsServed) break;
+        final idHex = hex.encode(id);
+        if (_idontwant[srcPeer]?.contains(idHex) ?? false) continue;
+        final cached = _gossipsubMessageCache[idHex];
+        if (cached != null) {
+          try {
+            serve.add(GossipSubRpcCodec.decodeMessage(cached));
+          } on FormatException {
+            // Corrupted cache entry — drop it.
+            _gossipsubMessageCache.remove(idHex);
+          }
+        }
+      }
+    }
+    if (serve.isNotEmpty) {
+      await _sendGossipSubRpc(srcPeer, GossipSubRpc(publish: serve));
+    }
+
+    for (final graft in control.graft) {
+      graftPeer(srcPeer);
+      _trackTopicPeer(srcPeer, graft.topicId);
+    }
+    for (final prune in control.prune) {
+      prunePeer(srcPeer);
+      _untrackTopicPeer(srcPeer, prune.topicId);
+    }
+    for (final idontwant in control.idontwant) {
+      final set = _idontwant.putIfAbsent(srcPeer, () => <String>{});
+      for (final id in idontwant.messageIds) {
+        set.add(hex.encode(id));
+        while (set.length > _maxIdontwantIdsPerPeer) {
+          set.remove(set.first);
+        }
+      }
+    }
+    while (_idontwant.length > _maxIdontwantPeers) {
+      _idontwant.remove(_idontwant.keys.first);
+    }
+  }
+
+  /// Whether [msgIdHex] has been recorded as seen — in [topic]'s dedup set
+  /// when known, or in any topic's set otherwise.
+  bool _isSeenGossipSubMsgId(String? topic, String msgIdHex) {
+    if (topic != null && topic.isNotEmpty) {
+      return _seenMessages[topic]?.contains(msgIdHex) ?? false;
+    }
+    return _seenMessages.values.any((ids) => ids.contains(msgIdHex));
+  }
+
+  /// Resolves the Ed25519 public key that must have produced [msg]'s
+  /// signature: the `key` field when present (verified to derive to the
+  /// `from` peer ID), otherwise the key embedded in an identity-multihash
+  /// `from`, otherwise a previously registered key. Returns `null` when no
+  /// trustworthy key can be resolved.
+  Uint8List? _resolveGossipSubSigningKey(
+    GossipSubMessage msg,
+    Uint8List from,
+    String sender,
+  ) {
+    final keyField = msg.key;
+    if (keyField != null && keyField.isNotEmpty) {
+      final pubKey = unmarshalGossipSubPublicKey(keyField);
+      if (pubKey == null) return null;
+      // The carried key must derive to the claimed author peer ID —
+      // otherwise an attacker could sign with their own key while
+      // impersonating another peer.
+      if (!gossipSubPeerIdMatchesKey(from, pubKey)) return null;
+      _keyRegistry.registerPublicKey(sender, pubKey);
+      return pubKey;
+    }
+    final embedded = gossipSubPeerIdPublicKey(from);
+    if (embedded != null) {
+      _keyRegistry.registerPublicKey(sender, embedded);
+      return embedded;
+    }
+    return _keyRegistry.getPublicKey(sender);
+  }
+
+  /// Verifies [signature] over the spec signing payload of [msg].
+  Future<bool> _verifyGossipSubSignature(
+    Uint8List publicKeyBytes,
+    Uint8List signature,
+    GossipSubMessage msg,
+  ) async {
+    try {
+      final publicKey = _ed25519Signer.publicKeyFromBytes(publicKeyBytes);
+      return await _ed25519Signer.verify(
+        gossipSubSigningPayload(msg),
+        signature,
+        publicKey,
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Announces a subscribe/unsubscribe to gossipsub-capable peers as an
+  /// RPC `SubOpts` record. On subscribe, known gossipsub topic peers also
+  /// receive a GRAFT so real gossipsub meshes form with us.
+  Future<void> _announceGossipSubSubscription(
+    String topic, {
+    required bool subscribe,
+  }) async {
+    if (_gossipsubPeers.isEmpty) return;
+
+    final graftPeers = subscribe
+        ? (_topicPeers[topic] ?? const <String>{})
+              .where(_gossipsubPeers.contains)
+              .toSet()
+        : const <String>{};
+
+    final futures = <Future<void>>[];
+    for (final peer in _gossipsubPeers) {
+      futures.add(
+        _sendGossipSubRpc(
+          peer,
+          GossipSubRpc(
+            subscriptions: <GossipSubSubOpts>[
+              GossipSubSubOpts(subscribe: subscribe, topicId: topic),
+            ],
+            control: graftPeers.contains(peer)
+                ? GossipSubControl(
+                    graft: <GossipSubGraft>[GossipSubGraft(topicId: topic)],
+                  )
+                : null,
+          ),
+        ),
+      );
+    }
+    await Future.wait(futures);
+  }
+
+  /// Sends the full current subscription set to [peerId] — used when a
+  /// peer is first discovered to speak meshsub.
+  Future<void> _sendGossipSubSubscriptions(String peerId) async {
+    if (_subscriptions.isEmpty) return;
+    await _sendGossipSubRpc(
+      peerId,
+      GossipSubRpc(
+        subscriptions: <GossipSubSubOpts>[
+          for (final topic in _subscriptions)
+            GossipSubSubOpts(subscribe: true, topicId: topic),
+        ],
+      ),
+    );
+  }
+
+  /// Sends an encoded gossipsub RPC to [peerId] on the meshsub protocol.
+  /// Failures are logged, never thrown — pubsub delivery is best-effort.
+  Future<void> _sendGossipSubRpc(String peerId, GossipSubRpc rpc) async {
+    try {
+      await _router.sendMessage(
+        peerId,
+        GossipSubRpcCodec.encode(rpc),
+        protocolId: _meshsubPublishProtocol,
+      );
+    } catch (e) {
+      _logger.debug('Failed to send gossipsub RPC to $peerId: $e');
+    }
+  }
+
+  /// Encodes a signed gossipsub publish RPC for [message] on [topic].
+  ///
+  /// The message carries the local peer ID as `from`, a big-endian counter
+  /// as `seqno`, and — when a key pair is configured — an Ed25519
+  /// signature over the spec signing payload. The `key` field is set only
+  /// when the local peer ID does not embed the public key (non-identity
+  /// multihash), matching go-libp2p-pubsub.
+  Future<Uint8List> _encodeGossipSubPublishRpc(
+    String topic,
+    String message,
+  ) async {
+    final msg = GossipSubMessage(
+      from: Uint8List.fromList(_peerId.value),
+      data: Uint8List.fromList(utf8.encode(message)),
+      seqno: _nextGossipSubSeqno(),
+      topic: topic,
+    );
+
+    final keyPair = _keyPair;
+    if (keyPair != null) {
+      try {
+        msg.signature = await _ed25519Signer.sign(
+          gossipSubSigningPayload(msg),
+          keyPair,
+        );
+        if (gossipSubPeerIdPublicKey(_peerId.value) == null) {
+          final pubKey = await _getLocalPublicKeyBytes();
+          if (pubKey != null && pubKey.isNotEmpty) {
+            msg.key = marshalGossipSubEd25519PublicKey(pubKey);
+          }
+        }
+      } catch (e) {
+        _logger.warning('Failed to sign gossipsub message: $e');
+      }
+    }
+
+    return GossipSubRpcCodec.encode(
+      GossipSubRpc(publish: <GossipSubMessage>[msg]),
+    );
+  }
+
+  /// Returns the next outbound sequence number as 8 big-endian bytes.
+  Uint8List _nextGossipSubSeqno() {
+    final seqno = Uint8List(8);
+    ByteData.sublistView(seqno).setUint64(0, ++_gossipsubSeqno);
+    return seqno;
   }
 }
 

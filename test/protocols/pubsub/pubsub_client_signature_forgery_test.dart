@@ -67,7 +67,7 @@ void main() {
           await receiverClient.start();
           final capturedHandler =
               verify(
-                    mockRouter.registerProtocolHandler(any, captureAny),
+                    mockRouter.registerProtocolHandler('pubsub', captureAny),
                   ).captured.single
                   as void Function(NetworkPacket);
 
@@ -167,7 +167,7 @@ void main() {
 
           final capturedHandler =
               verify(
-                    mockRouter.registerProtocolHandler(any, captureAny),
+                    mockRouter.registerProtocolHandler('pubsub', captureAny),
                   ).captured.single
                   as void Function(NetworkPacket);
 
@@ -224,7 +224,7 @@ void main() {
 
         final capturedHandler =
             verify(
-                  mockRouter.registerProtocolHandler(any, captureAny),
+                  mockRouter.registerProtocolHandler('pubsub', captureAny),
                 ).captured.single
                 as void Function(NetworkPacket);
 
@@ -265,7 +265,7 @@ void main() {
           await receiverClient.start();
           final capturedHandler =
               verify(
-                    mockRouter.registerProtocolHandler(any, captureAny),
+                    mockRouter.registerProtocolHandler('pubsub', captureAny),
                   ).captured.single
                   as void Function(NetworkPacket);
 
@@ -331,7 +331,7 @@ void main() {
           await receiverClient.start();
           final capturedHandler =
               verify(
-                    mockRouter.registerProtocolHandler(any, captureAny),
+                    mockRouter.registerProtocolHandler('pubsub', captureAny),
                   ).captured.single
                   as void Function(NetworkPacket);
 
@@ -381,7 +381,7 @@ void main() {
           await strictReceiver.start();
           final capturedHandler =
               verify(
-                    mockRouter.registerProtocolHandler(any, captureAny),
+                    mockRouter.registerProtocolHandler('pubsub', captureAny),
                   ).captured.last
                   as void Function(NetworkPacket);
 

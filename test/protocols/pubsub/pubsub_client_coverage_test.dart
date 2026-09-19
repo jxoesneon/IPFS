@@ -28,7 +28,15 @@ void main() {
   group('PubSubClient', () {
     test('start and stop', () async {
       await client.start();
-      verify(mockRouter.registerProtocolHandler(any, any)).called(1);
+      // The client registers the legacy 'pubsub' JSON handler plus the
+      // gossipsub meshsub handlers for real wire interop.
+      verify(mockRouter.registerProtocolHandler('pubsub', any)).called(1);
+      verify(
+        mockRouter.registerProtocolHandler('/meshsub/1.1.0', any),
+      ).called(1);
+      verify(
+        mockRouter.registerProtocolHandler('/meshsub/1.0.0', any),
+      ).called(1);
       await client.stop();
     });
 
@@ -58,7 +66,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -98,7 +106,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -137,7 +145,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -205,7 +213,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -233,7 +241,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -268,7 +276,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -296,7 +304,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -349,7 +357,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -385,7 +393,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -497,7 +505,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -516,7 +524,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -554,7 +562,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -587,7 +595,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -683,7 +691,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -703,7 +711,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -723,7 +731,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -743,7 +751,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -772,7 +780,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -792,7 +800,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -846,7 +854,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -866,7 +874,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -886,7 +894,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -906,7 +914,7 @@ void main() {
       await client.start();
       final capturedHandler =
           verify(
-                mockRouter.registerProtocolHandler(any, captureAny),
+                mockRouter.registerProtocolHandler('pubsub', captureAny),
               ).captured.single
               as void Function(NetworkPacket);
 
@@ -927,7 +935,7 @@ void main() {
     Future<void Function(NetworkPacket)> packetHandler() async {
       await client.start();
       return verify(
-            mockRouter.registerProtocolHandler(any, captureAny),
+            mockRouter.registerProtocolHandler('pubsub', captureAny),
           ).captured.single
           as void Function(NetworkPacket);
     }
@@ -1025,7 +1033,7 @@ void main() {
     Future<void Function(NetworkPacket)> strictHandler() async {
       await strictClient.start();
       return verify(
-            mockRouter.registerProtocolHandler(any, captureAny),
+            mockRouter.registerProtocolHandler('pubsub', captureAny),
           ).captured.last
           as void Function(NetworkPacket);
     }

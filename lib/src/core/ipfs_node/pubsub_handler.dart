@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:cryptography/cryptography.dart';
 
+import '../../protocols/gossipsub/gossipsub_rpc.dart';
 import '../../protocols/pubsub/pubsub_client.dart';
 import '../../protocols/pubsub/pubsub_interface.dart';
 import '../../protocols/pubsub/pubsub_message.dart';
@@ -32,8 +33,13 @@ class PubSubHandler implements IPubSub, ILifecycle {
              keyRegistry: keyRegistry,
              strictAuthentication: strictAuthentication,
            ) {
-    // Register the pubsub protocol immediately upon construction
+    // Register the pubsub protocol immediately upon construction, plus the
+    // real gossipsub (meshsub) protocol IDs so identify advertises wire
+    // interop with Kubo/Helia/libp2p peers before the client starts.
     router.registerProtocol('pubsub');
+    for (final protocolId in kMeshsubProtocolIds) {
+      router.registerProtocol(protocolId);
+    }
   }
   final PubSubClient _pubSubClient;
   final Map<String, Set<void Function(String)>> _subscriptions = {};
