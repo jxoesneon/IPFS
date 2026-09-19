@@ -50,8 +50,43 @@ maintainer sign-off. See `ENGINEERING_NOTES.md` for the full surface list.
     2. Create tag: `git tag v1.2.1`
     3. Push tag: `git push origin v1.2.1`
     4. The `publish.yml` workflow then runs automatically: the release gate
-       verifies surfaces/tag/CHANGELOG, the package publishes to pub.dev,
-       and a GitHub Release is created from the CHANGELOG section.
+       verifies surfaces/tag/CHANGELOG, the quality gate runs analysis,
+       tests, and changed-line coverage for every package, the packages
+       publish to pub.dev in dependency order, and a GitHub Release is
+       created from the CHANGELOG section.
+
+### 5. Multi-Package Tags
+
+This repo publishes three packages. Each has its own tag convention,
+which must match the package's configured tag pattern on pub.dev
+(Admin → Automated publishing → GitHub Actions):
+
+| Tag | Package | pub.dev tag pattern |
+|-----|---------|---------------------|
+| `v1.2.1` | `dart_ipfs` (umbrella, repo root) | `v{{version}}` |
+| `core-v1.2.3` | `packages/dart_ipfs_core` | `core-v{{version}}` |
+| `quic-v0.2.1` | `packages/dart_ipfs_quic` | `quic-v{{version}}` |
+
+pub.dev OIDC publishing rejects tags that do not match the package's
+pattern, so a bare `v*` tag can never publish `dart_ipfs_core`.
+
+**Ordering is fail-closed**: `publish-quic` requires `publish-core`, and
+`publish-umbrella` requires both. An upstream publish failure blocks
+everything downstream — the umbrella can never ship with an
+unresolvable dependency floor.
+
+When a release bumps `dart_ipfs_core` or `dart_ipfs_quic`, publish the
+sub-package **before** the umbrella tag, because the umbrella's pubspec
+floor (`dart_ipfs_core: ^x.y.z`) must already resolve on pub.dev:
+
+1. `git tag core-v1.2.3 && git push origin core-v1.2.3` — wait for the
+   `Publish dart_ipfs_core` job to succeed.
+2. `git tag v1.2.1 && git push origin v1.2.1` for the umbrella.
+
+Tag pushes are idempotent: each publish job first checks whether the
+package version already exists on pub.dev and skips the upload if so.
+A `workflow_dispatch` run with `target=core|quic|umbrella|all` can also
+drive a release without a tag push.
 
 ---
 
