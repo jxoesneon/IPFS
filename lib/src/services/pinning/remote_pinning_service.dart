@@ -382,10 +382,35 @@ class RemotePinningService {
 
       // Synchronous so a mutation is durable before the call returns —
       // an unawaited write here raced dispose()/load() and could be lost.
-      File(_configPath).writeAsStringSync(jsonEncode(data));
+      // The file contains bearer tokens, so it is restricted to the
+      // owner (0600) before any secret bytes reach disk, mirroring
+      // IpfsPlatform.writeStringRestricted.
+      _writeStringRestrictedSync(_configPath, jsonEncode(data));
     } catch (e) {
       _logger.error('Failed to save remote pinning config: $e');
     }
+  }
+
+  /// Writes [content] to [path] with owner-only permissions applied
+  /// before any secret bytes reach disk.
+  ///
+  /// Synchronous equivalent of `IpfsPlatform.writeStringRestricted` —
+  /// see [_saveConfig] for why the write cannot be awaited here.
+  static void _writeStringRestrictedSync(String path, String content) {
+    final file = File(path);
+    file.parent.createSync(recursive: true);
+    file.writeAsStringSync('', flush: true);
+    _restrictToOwnerSync(path);
+    file.writeAsStringSync(content, flush: true);
+  }
+
+  /// Best-effort restriction of [path] so only the owner can read or
+  /// write it (POSIX `0600`). No-op on platforms without chmod.
+  static void _restrictToOwnerSync(String path) {
+    if (Platform.isWindows) return;
+    try {
+      Process.runSync('chmod', ['600', path]);
+    } catch (_) {}
   }
 
   /// Disposes all resources.

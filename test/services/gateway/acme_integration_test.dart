@@ -1,17 +1,14 @@
 // test/services/gateway/acme_integration_test.dart
-import 'dart:io';
-
 import 'package:dart_ipfs/src/core/config/gateway_config.dart';
 import 'package:dart_ipfs/src/services/gateway/acme_client.dart';
 import 'package:dart_ipfs/src/services/gateway/acme_persistence.dart';
-import 'package:dart_ipfs/src/services/gateway/domain_validator.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_tls_manager.dart';
 import 'package:test/test.dart';
 
 void main() {
   group('ACME Integration Tests', () {
     test('AcmePersistence creates and loads account key', () async {
-      final config = GatewayConfig(
+      final config = const GatewayConfig(
         autoTls: true,
         autoTlsDomain: 'example.com',
         autoTlsEmail: 'test@example.com',
@@ -39,7 +36,7 @@ void main() {
     });
 
     test('AcmePersistence checks certificate validity', () async {
-      final config = GatewayConfig(
+      final config = const GatewayConfig(
         autoTls: true,
         autoTlsDomain: 'example.com',
         autoTlsEmail: 'test@example.com',
@@ -66,17 +63,8 @@ void main() {
       } catch (_) {}
     });
 
-    test('DomainValidator validates domain structure', () async {
-      final validator = DomainValidator();
-
-      // This test checks the structure, not actual DNS resolution
-      // since we don't have a real domain to test against
-      expect(validator, isNotNull);
-      expect(validator.expectedIp, isNull);
-    });
-
     test('LetsEncryptAutoTlsProvider requires ToS acceptance', () async {
-      final config = GatewayConfig(
+      final config = const GatewayConfig(
         autoTls: true,
         autoTlsDomain: 'example.com',
         autoTlsEmail: 'test@example.com',
@@ -92,7 +80,7 @@ void main() {
     });
 
     test('LetsEncryptAutoTlsProvider requires domain', () async {
-      final config = GatewayConfig(
+      final config = const GatewayConfig(
         autoTls: true,
         autoTlsDomain: null, // No domain
         autoTlsEmail: 'test@example.com',
@@ -108,7 +96,7 @@ void main() {
     });
 
     test('LetsEncryptAutoTlsProvider requires email', () async {
-      final config = GatewayConfig(
+      final config = const GatewayConfig(
         autoTls: true,
         autoTlsDomain: 'example.com',
         autoTlsEmail: null, // No email
@@ -143,7 +131,7 @@ void main() {
     });
 
     test('GatewayConfig has ACME persistence fields', () {
-      final config = GatewayConfig(
+      final config = const GatewayConfig(
         autoTls: true,
         autoTlsDomain: 'example.com',
         autoTlsEmail: 'test@example.com',
@@ -161,7 +149,7 @@ void main() {
     });
 
     test('GatewayConfig serializes ACME persistence fields', () {
-      final config = GatewayConfig(
+      final config = const GatewayConfig(
         autoTls: true,
         autoTlsDomain: 'example.com',
         autoTlsEmail: 'test@example.com',
@@ -216,7 +204,7 @@ void main() {
       expect(true, isTrue); // Placeholder
 
       /*
-      final config = GatewayConfig(
+      final config = const GatewayConfig(
         autoTls: true,
         autoTlsDomain: 'your-test-domain.com', // Replace with real domain
         autoTlsEmail: 'your-email@example.com', // Replace with real email
@@ -225,19 +213,10 @@ void main() {
       );
 
       final persistence = AcmePersistence(config);
-      final validator = DomainValidator();
-
-      // Pre-flight validation
-      final validation = await validator.validateDomain(config.autoTlsDomain!);
-      if (!validation.success) {
-        print('Domain validation failed: ${validation.message}');
-        fail('Domain validation failed');
-      }
 
       final provider = LetsEncryptAutoTlsProvider(
         staging: true,
         persistence: persistence,
-        domainValidator: validator,
       );
 
       try {

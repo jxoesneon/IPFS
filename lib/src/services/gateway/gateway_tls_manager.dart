@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:pointycastle/asn1.dart' as asn1;
 
 import '../../core/config/gateway_config.dart';
+import '../../platform/platform.dart';
 import '../../utils/logger.dart';
 import 'acme_client.dart';
 import 'acme_persistence.dart';
@@ -130,27 +131,12 @@ class LetsEncryptAutoTlsProvider implements AutoTlsProvider {
         }
 
         // Create SecurityContext from stored certificate
-        final context = SecurityContext();
-        // Write temporary files for SecurityContext to load
-        final tempDir = Directory.systemTemp;
-        final certFile = File(
-          '${tempDir.path}/acme_cert_${DateTime.now().millisecondsSinceEpoch}.pem',
+        final context = await _contextFromPem(
+          certificatePem: certPem,
+          privateKeyPem: keyPem,
         );
-        final keyFile = File(
-          '${tempDir.path}/acme_key_${DateTime.now().millisecondsSinceEpoch}.pem',
-        );
-        try {
-          await certFile.writeAsString(certPem);
-          await keyFile.writeAsString(keyPem);
-          context
-            ..useCertificateChain(certFile.path)
-            ..usePrivateKey(keyFile.path);
-          _state = AutoTlsState.active;
-          return context;
-        } finally {
-          if (certFile.existsSync()) await certFile.delete();
-          if (keyFile.existsSync()) await keyFile.delete();
-        }
+        _state = AutoTlsState.active;
+        return context;
       }
     }
 
@@ -208,26 +194,12 @@ class LetsEncryptAutoTlsProvider implements AutoTlsProvider {
       _state = AutoTlsState.active;
 
       // Create SecurityContext from the result
-      final context = SecurityContext();
-      final tempDir = Directory.systemTemp;
-      final certFile = File(
-        '${tempDir.path}/acme_cert_${DateTime.now().millisecondsSinceEpoch}.pem',
+      final context = await _contextFromPem(
+        certificatePem: result.certificatePem,
+        privateKeyPem: result.privateKeyPem,
       );
-      final keyFile = File(
-        '${tempDir.path}/acme_key_${DateTime.now().millisecondsSinceEpoch}.pem',
-      );
-      try {
-        await certFile.writeAsString(result.certificatePem);
-        await keyFile.writeAsString(result.privateKeyPem);
-        context
-          ..useCertificateChain(certFile.path)
-          ..usePrivateKey(keyFile.path);
-        _logger.info('AutoTLS certificate obtained successfully');
-        return context;
-      } finally {
-        if (certFile.existsSync()) await certFile.delete();
-        if (keyFile.existsSync()) await keyFile.delete();
-      }
+      _logger.info('AutoTLS certificate obtained successfully');
+      return context;
     } catch (e, stackTrace) {
       _state = AutoTlsState.idle;
       _logger.error('AutoTLS certificate acquisition failed', e, stackTrace);
@@ -237,6 +209,36 @@ class LetsEncryptAutoTlsProvider implements AutoTlsProvider {
 
   @override
   Future<DateTime?> certificateExpiry() async => _certificateExpiry;
+
+  /// Builds a [SecurityContext] from PEM strings.
+  ///
+  /// [SecurityContext] only loads key material from file paths, so the
+  /// PEM is staged in a fresh temporary directory (`createTemp` is 0700
+  /// on POSIX via mkdtemp) and each file is written through
+  /// [IpfsPlatform.writeStringRestricted] so owner-only permissions
+  /// (0600) are applied before the secret bytes reach disk. The staging
+  /// directory is always removed afterwards — no key material is left
+  /// world-readable in the shared system temp.
+  static Future<SecurityContext> _contextFromPem({
+    required String certificatePem,
+    required String privateKeyPem,
+  }) async {
+    final stagingDir = await Directory.systemTemp.createTemp('ipfs_acme_');
+    try {
+      final certPath = '${stagingDir.path}/cert.pem';
+      final keyPath = '${stagingDir.path}/key.pem';
+      final platform = getPlatform();
+      await platform.writeStringRestricted(certPath, certificatePem);
+      await platform.writeStringRestricted(keyPath, privateKeyPem);
+      return SecurityContext()
+        ..useCertificateChain(certPath)
+        ..usePrivateKey(keyPath);
+    } finally {
+      try {
+        await stagingDir.delete(recursive: true);
+      } catch (_) {}
+    }
+  }
 
   @override
   Future<void> dispose() async {

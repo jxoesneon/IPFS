@@ -123,8 +123,24 @@ class GatewayServer implements ILifecycle {
   late final Router _router;
   HealthCheckService? _healthCheckService;
 
-  /// Tracks request counts per IP for rate limiting
+  /// Tracks request timestamps per client key for rate limiting.
+  ///
+  /// Bounded by [_maxTrackedClients]; entries whose timestamps have all
+  /// fallen outside the rate-limit window are removed by periodic sweeps
+  /// so the map shrinks without requiring [stop].
   final Map<String, List<DateTime>> _requestLog = {};
+
+  /// Maximum number of distinct client keys tracked in [_requestLog].
+  ///
+  /// Once the cap is reached, the least-recently-active client is evicted
+  /// to make room for a new key. This prevents an attacker from growing
+  /// the map without bound by forging client identities.
+  static const int _maxTrackedClients = 10000;
+
+  /// Number of rate-limited requests between full sweeps of [_requestLog].
+  static const int _requestLogSweepInterval = 256;
+
+  int _requestsSinceSweep = 0;
 
   void _setupRouter() {
     _router = Router();
@@ -275,29 +291,36 @@ class GatewayServer implements ILifecycle {
 
   /// Rate limiting middleware (SEC-007 security fix)
   ///
-  /// Limits requests per IP to [maxRequestsPerIp] per [rateLimitWindowSeconds].
+  /// Limits requests per client to [maxRequestsPerIp] per
+  /// [rateLimitWindowSeconds]. Clients are keyed by their real transport
+  /// peer address when available; the log itself is hard-bounded by
+  /// [_maxTrackedClients] and periodically swept of expired entries.
   Middleware _rateLimitMiddleware() {
     return (Handler handler) {
       return (Request request) async {
-        // Extract client IP
-        final clientIp =
-            request.headers['x-forwarded-for']?.split(',').first ??
-            request.headers['x-real-ip'] ??
-            'unknown';
+        final clientKey = _clientKeyFor(request);
 
         final now = DateTime.now();
         final windowStart = now.subtract(
           Duration(seconds: rateLimitWindowSeconds),
         );
 
-        // Clean old entries and get recent requests
-        _requestLog[clientIp] = (_requestLog[clientIp] ?? [])
+        // Periodic sweep: drop entries whose timestamps have all expired
+        // so the map actually shrinks instead of accumulating empty lists.
+        if (++_requestsSinceSweep >= _requestLogSweepInterval) {
+          _requestsSinceSweep = 0;
+          _sweepRequestLog(windowStart);
+        }
+
+        // Prune expired timestamps for this client.
+        final recent = (_requestLog.remove(clientKey) ?? const <DateTime>[])
             .where((t) => t.isAfter(windowStart))
             .toList();
 
         // Check rate limit
-        if (_requestLog[clientIp]!.length >= maxRequestsPerIp) {
-          _logger.warning('Rate limit exceeded for $clientIp');
+        if (recent.length >= maxRequestsPerIp) {
+          _requestLog[clientKey] = recent;
+          _logger.warning('Rate limit exceeded for $clientKey');
           return Response(
             429,
             body: '{"error": "Rate limit exceeded. Try again later."}',
@@ -308,12 +331,85 @@ class GatewayServer implements ILifecycle {
           );
         }
 
+        // Inserting a new key while at capacity: reclaim expired entries
+        // first, then evict the least-recently-active client.
+        if (recent.isEmpty && _requestLog.length >= _maxTrackedClients) {
+          _sweepRequestLog(windowStart);
+          if (_requestLog.length >= _maxTrackedClients) {
+            _evictOldestClient();
+          }
+        }
+
         // Record request
-        _requestLog[clientIp]!.add(now);
+        recent.add(now);
+        _requestLog[clientKey] = recent;
 
         return handler(request);
       };
     };
+  }
+
+  /// Returns the rate-limit key for [request].
+  ///
+  /// Prefers the real transport peer address that `shelf_io` stores under
+  /// the `shelf.io.connection_info` context key, accessed via `dynamic`
+  /// so this library stays free of `dart:io`. Header-derived identities
+  /// (`x-forwarded-for`, `x-real-ip`) are trivially spoofable by the
+  /// client, so they are only used as an advisory fallback when no
+  /// transport info exists (e.g. unit tests or embedded adapters); in
+  /// that case the hard cap on [_requestLog] still prevents unbounded
+  /// growth from forged identities.
+  String _clientKeyFor(Request request) {
+    final info = request.context['shelf.io.connection_info'];
+    if (info != null) {
+      try {
+        final address = (info as dynamic).remoteAddress.address;
+        if (address is String && address.isNotEmpty) {
+          return address;
+        }
+      } catch (_) {
+        // Fall through to the advisory header fallback.
+      }
+    }
+
+    final forwarded = request.headers['x-forwarded-for']
+        ?.split(',')
+        .first
+        .trim();
+    if (forwarded != null && forwarded.isNotEmpty) {
+      return forwarded;
+    }
+    final realIp = request.headers['x-real-ip'];
+    if (realIp != null && realIp.isNotEmpty) {
+      return realIp;
+    }
+    return 'unknown';
+  }
+
+  /// Removes entries from [_requestLog] whose timestamps have all fallen
+  /// outside the window starting at [windowStart].
+  void _sweepRequestLog(DateTime windowStart) {
+    _requestLog.removeWhere((_, timestamps) {
+      timestamps.removeWhere((t) => !t.isAfter(windowStart));
+      return timestamps.isEmpty;
+    });
+  }
+
+  /// Evicts the client whose most recent request is the oldest.
+  void _evictOldestClient() {
+    String? oldestKey;
+    DateTime? oldestSeen;
+    _requestLog.forEach((key, timestamps) {
+      if (timestamps.isEmpty) return;
+      final last = timestamps.last;
+      if (oldestSeen == null || last.isBefore(oldestSeen!)) {
+        oldestSeen = last;
+        oldestKey = key;
+      }
+    });
+    if (oldestKey != null) {
+      _requestLog.remove(oldestKey);
+    }
   }
 
   /// Subdomain gateway middleware.

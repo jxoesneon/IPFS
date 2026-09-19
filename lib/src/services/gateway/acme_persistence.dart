@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:pointycastle/export.dart' as pc;
 
 import '../../core/config/gateway_config.dart';
+import '../../platform/platform.dart';
 import '../../utils/logger.dart';
 
 /// Manages persistent storage for ACME account keys and certificates.
@@ -57,13 +58,23 @@ class AcmePersistence {
   /// Gets the metadata storage path.
   String get _metadataPath => '$_baseDirectory/metadata.json';
 
-  /// Ensures the storage directory exists.
+  /// Ensures the storage directory exists and is owner-only (0700).
   Future<void> _ensureDirectory() async {
     final dir = Directory(_baseDirectory);
     if (!dir.existsSync()) {
       await dir.create(recursive: true);
       _logger.info('Created ACME storage directory: $_baseDirectory');
     }
+    await _restrictDirectoryToOwner(dir.path);
+  }
+
+  /// Best-effort restriction of a directory so only the owner can
+  /// traverse it (POSIX `0700`). No-op on platforms without chmod.
+  static Future<void> _restrictDirectoryToOwner(String path) async {
+    if (Platform.isWindows) return;
+    try {
+      await Process.run('chmod', ['700', path]);
+    } catch (_) {}
   }
 
   /// Loads the ACME account key from storage.
@@ -136,14 +147,14 @@ class AcmePersistence {
     try {
       await _ensureDirectory();
 
-      // Save certificate
+      // Save certificate (public material — normal write is fine).
       final certFile = File(_certificatePath);
       await certFile.writeAsString(certificatePem);
       _logger.info('Saved certificate to $_certificatePath');
 
-      // Save private key
-      final keyFile = File(_privateKeyPath);
-      await keyFile.writeAsString(privateKeyPem);
+      // Save private key with owner-only permissions (0600) applied
+      // before the secret bytes reach disk.
+      await getPlatform().writeStringRestricted(_privateKeyPath, privateKeyPem);
       _logger.info('Saved private key to $_privateKeyPath');
 
       // Save metadata
@@ -257,8 +268,9 @@ class AcmePersistence {
   Future<void> saveAccountKeyPem(String pem) async {
     try {
       await _ensureDirectory();
-      final file = File(_accountKeyPath);
-      await file.writeAsString(pem);
+      // Account key is secret material: write with owner-only
+      // permissions (0600) applied before the bytes reach disk.
+      await getPlatform().writeStringRestricted(_accountKeyPath, pem);
       _logger.info('Saved ACME account key to $_accountKeyPath');
     } catch (e, stackTrace) {
       _logger.error('Failed to save ACME account key', e, stackTrace);
