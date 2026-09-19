@@ -20,6 +20,9 @@ import 'package:shelf_router/shelf_router.dart';
 /// **Security (SEC-003):** When [apiKey] is provided, all write operations
 /// require the `X-API-Key` header to match. Read-only operations like
 /// `version`, `id`, and `cat` are allowed without authentication.
+///
+/// An empty or whitespace-only [apiKey] is normalized to `null` and treated
+/// as "no authentication configured" — it never enables the auth check.
 class RPCServer implements ILifecycle {
   /// Creates a new [RPCServer] for the given [node].
   RPCServer({
@@ -30,10 +33,10 @@ class RPCServer implements ILifecycle {
       'http://localhost',
       'http://127.0.0.1',
     ], // SEC-006: Restrict CORS
-    this.apiKey,
+    String? apiKey,
     this.metricsCollector,
     this.metricsConfig,
-  }) {
+  }) : apiKey = _normalizeApiKey(apiKey) {
     _handlers = RPCHandlers(node);
     _healthCheckService = HealthCheckService(node);
     _publicEndpoints = {
@@ -45,13 +48,24 @@ class RPCServer implements ILifecycle {
         '/metrics',
     };
     _setupRouter();
-    if (apiKey != null) {
+    if (this.apiKey != null) {
       _logger.info('RPC server configured with API key authentication');
     } else {
       _logger.warning(
         'RPC server running WITHOUT authentication - set apiKey for production!',
       );
     }
+  }
+
+  /// Normalizes a configured API key: trims surrounding whitespace and maps
+  /// an empty/whitespace-only key to `null` so it cannot satisfy the
+  /// constant-time comparison against a missing `X-API-Key` header.
+  static String? _normalizeApiKey(String? key) {
+    final trimmed = key?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return trimmed;
   }
 
   /// The IPFS node to control via RPC.
@@ -68,6 +82,9 @@ class RPCServer implements ILifecycle {
 
   /// Optional API key for authentication.
   /// When set, write operations require `X-API-Key` header.
+  ///
+  /// Normalized in the constructor: `null` when the configured key was
+  /// absent, empty, or whitespace-only.
   final String? apiKey;
 
   /// Optional metrics collector for RPC instrumentation.

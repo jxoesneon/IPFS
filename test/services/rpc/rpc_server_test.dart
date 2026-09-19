@@ -19,6 +19,7 @@ import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/services/rpc/rpc_server.dart';
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart' as logging;
 import 'package:test/test.dart';
 
 class MockBlockStore implements BlockStore {
@@ -197,6 +198,74 @@ void main() {
       expect(response.body, contains('ipfs_rpc_requests_total'));
       expect(response.body, contains('ipfs_rpc_request_duration_seconds'));
       expect(response.body, contains('endpoint="/api/v0/version"'));
+    });
+  });
+
+  group('RPCServer API key normalization', () {
+    const normalizedPort = 8082; // Distinct from the main group's port.
+    late MockIPFSNode mockNode;
+
+    setUp(() {
+      mockNode = MockIPFSNode();
+    });
+
+    test('empty API key is treated as unauthenticated', () async {
+      final server = RPCServer(
+        node: mockNode,
+        port: normalizedPort,
+        apiKey: '',
+      );
+      addTearDown(() async {
+        if (server.isRunning) await server.stop();
+      });
+      expect(server.apiKey, isNull);
+
+      await server.start();
+      final response = await http.post(
+        Uri.parse('http://localhost:$normalizedPort/api/v0/swarm/peers'),
+      );
+      expect(response.statusCode, 200);
+    });
+
+    test('whitespace-only API key is treated as unauthenticated', () {
+      final server = RPCServer(
+        node: mockNode,
+        port: normalizedPort,
+        apiKey: '   ',
+      );
+      expect(server.apiKey, isNull);
+    });
+
+    test('empty API key logs an unauthenticated warning', () {
+      final records = <logging.LogRecord>[];
+      final subscription = logging.Logger(
+        'RPCServer',
+      ).onRecord.listen(records.add);
+      addTearDown(subscription.cancel);
+
+      final server = RPCServer(
+        node: mockNode,
+        port: normalizedPort,
+        apiKey: '',
+      );
+      expect(server.apiKey, isNull);
+      expect(
+        records.any(
+          (record) =>
+              record.level == logging.Level.WARNING &&
+              record.message.contains('WITHOUT authentication'),
+        ),
+        isTrue,
+      );
+    });
+
+    test('non-empty API key with surrounding whitespace is trimmed', () {
+      final server = RPCServer(
+        node: mockNode,
+        port: normalizedPort,
+        apiKey: '  secret-key  ',
+      );
+      expect(server.apiKey, 'secret-key');
     });
   });
 }

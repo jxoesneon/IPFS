@@ -143,12 +143,25 @@ class DaemonCommand extends IpfsCommand {
     await gateway.start();
     print('Gateway running at: ${gateway.url}');
 
+    final rpcApiKey = _normalizeApiKey(
+      Platform.environment['DART_IPFS_API_KEY'] ?? mergedConfig.rpcApiKey,
+    );
+    if (rpcApiKey == null) {
+      stderr.writeln(
+        'WARNING: RPC API is running WITHOUT authentication. '
+        'DART_IPFS_API_KEY / rpcApiKey is unset or empty;',
+      );
+      stderr.writeln(
+        '         all write endpoints are unprotected. '
+        'Set an API key for production use.',
+      );
+    }
+
     final rpc = RPCServer(
       node: node,
       address: apiEndpoint.address,
       port: apiEndpoint.port,
-      apiKey:
-          Platform.environment['DART_IPFS_API_KEY'] ?? mergedConfig.rpcApiKey,
+      apiKey: rpcApiKey,
     );
     await rpc.start();
     print('RPC API running at: ${rpc.url}');
@@ -649,9 +662,7 @@ class ConfigCommand extends IpfsCommand {
     if (args.length == 1) {
       final config = await buildConfig();
       if (_isSecretConfigKey(key)) {
-        stderr.writeln(
-          'Error: refusing to print secret config value: $key',
-        );
+        stderr.writeln('Error: refusing to print secret config value: $key');
         exit(1);
       }
       final value = _getConfigValue(config.toJson(), key);
@@ -799,4 +810,13 @@ Future<IPFSConfig> _buildConfig({String? configPath}) async {
 
 bool _isLocalhost(String address) {
   return address == '127.0.0.1' || address == '::1' || address == 'localhost';
+}
+
+/// Trims an API key sourced from env/config and maps empty or
+/// whitespace-only values to `null` ("no auth configured") so an empty
+/// `DART_IPFS_API_KEY=` cannot silently disable write authentication.
+String? _normalizeApiKey(String? key) {
+  final trimmed = key?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+  return trimmed;
 }
