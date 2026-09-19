@@ -15,5 +15,5 @@
 # Keep these constraints in sync with the `dart_ipfs_core` / `dart_ipfs_quic`
 # entries under `dependencies:` in pubspec.yaml.
 dependency_overrides:
-  dart_ipfs_core: ^1.11.7
+  dart_ipfs_core: ^1.12.0
   dart_ipfs_quic: ^0.2.1
