@@ -119,6 +119,13 @@ class DaemonCommand extends IpfsCommand {
     final config = await buildConfig();
     final configJson = config.toJson();
     configJson['libp2pListenAddress'] = swarmAddr;
+    // --swarm-addr overrides the listen-address list; libp2pListenAddress is
+    // only a fallback used when the list is empty.
+    final networkJson =
+        (configJson['network'] as Map?)?.cast<String, dynamic>() ??
+        <String, dynamic>{};
+    networkJson['listenAddresses'] = <String>[swarmAddr];
+    configJson['network'] = networkJson;
 
     final mergedConfig = IPFSConfig.fromJson(configJson);
 
@@ -126,7 +133,7 @@ class DaemonCommand extends IpfsCommand {
     final node = await IPFSNode.create(mergedConfig);
     await node.start();
 
-    print('Node started with Peer ID: ${node.peerID}');
+    print('Node started with Peer ID: ${node.peerId}');
     print('Listening addresses:');
     for (final addr in node.addresses) {
       print('  $addr');
@@ -171,7 +178,7 @@ class DaemonCommand extends IpfsCommand {
         jsonEncode({
           'level': 'info',
           'message': 'daemon ready',
-          'peer_id': node.peerID,
+          'peer_id': node.peerId,
           'gateway_url': gateway.url,
           'rpc_url': rpc.url,
         }),
@@ -228,7 +235,7 @@ class IdCommand extends IpfsCommand {
     await node.start();
     try {
       printJson({
-        'ID': node.peerID,
+        'ID': node.peerId,
         'PublicKey': await node.publicKey,
         'Addresses': node.addresses,
         'AgentVersion': agentVersion,

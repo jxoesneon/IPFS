@@ -268,4 +268,48 @@ void main() {
       expect(server.apiKey, 'secret-key');
     });
   });
+
+  group('RPCServer custom prometheus endpoint', () {
+    const customPort = 8083;
+
+    test('honors metricsConfig.prometheusEndpoint', () async {
+      final mockNode = MockIPFSNode();
+      final metricsCollector = MetricsCollector(
+        IPFSConfig(
+          metrics: const MetricsConfig(
+            enabled: true,
+            enablePrometheusExport: true,
+            collectionIntervalSeconds: 60,
+          ),
+        ),
+      );
+      final server = RPCServer(
+        node: mockNode,
+        port: customPort,
+        metricsCollector: metricsCollector,
+        metricsConfig: const MetricsConfig(
+          enabled: true,
+          enablePrometheusExport: true,
+          prometheusEndpoint: '/custom-metrics',
+        ),
+      );
+      await server.start();
+      addTearDown(() async {
+        if (server.isRunning) await server.stop();
+        await metricsCollector.stop();
+      });
+
+      final custom = await http.get(
+        Uri.parse('http://localhost:$customPort/custom-metrics'),
+      );
+      expect(custom.statusCode, 200);
+      expect(custom.headers['content-type'], contains('text/plain'));
+
+      // The default path is not registered when a custom endpoint is set.
+      final fallback = await http.get(
+        Uri.parse('http://localhost:$customPort/metrics'),
+      );
+      expect(fallback.statusCode, 404);
+    });
+  });
 }

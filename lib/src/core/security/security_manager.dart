@@ -44,10 +44,6 @@ class SecurityManager implements ISecurityManager {
   final Map<String, List<DateTime>> _requestLog = {};
   final Map<String, int> _authAttempts = {};
 
-  // Key rotation
-  Timer? _keyRotationTimer;
-  DateTime? _lastKeyRotation;
-
   /// Returns the current status of the encrypted keystore.
   @override
   bool get isKeystoreUnlocked => _encryptedKeystore.isUnlocked;
@@ -223,7 +219,10 @@ class SecurityManager implements ISecurityManager {
 
       // ignore: deprecated_member_use_from_same_package
       if (_config.enableKeyRotation) {
-        _setupKeyRotation();
+        _logger.warning(
+          'enableKeyRotation is enabled but key rotation is not implemented; '
+          'no keys will actually be rotated.',
+        );
       }
 
       _logger.debug('SecurityManager initialized successfully');
@@ -259,28 +258,6 @@ class SecurityManager implements ISecurityManager {
     _logger.debug(
       'TLS initialized with certificate: ${_config.tlsCertificatePath}',
     );
-  }
-
-  /// Sets up periodic key rotation.
-  void _setupKeyRotation() {
-    _logger.warning(
-      'enableKeyRotation is enabled but key rotation is not implemented; '
-      'no keys will actually be rotated.',
-    );
-
-    _keyRotationTimer?.cancel();
-    // ignore: deprecated_member_use_from_same_package
-    _keyRotationTimer = Timer.periodic(_config.keyRotationInterval, (timer) {
-      _rotateKeys();
-    });
-  }
-
-  /// Returns a [Future] that completes when security keys are rotated.
-  Future<void> _rotateKeys() async {
-    _logger.info('Rotating security keys');
-    // Implementation would involve generating new session keys
-    _lastKeyRotation = DateTime.now();
-    _recordSecurityMetric('key_rotation');
   }
 
   @override
@@ -357,8 +334,6 @@ class SecurityManager implements ISecurityManager {
   /// Returns a [Future] that completes when the [SecurityManager] has stopped.
   Future<void> stop() async {
     _logger.info('Stopping SecurityManager');
-    _keyRotationTimer?.cancel();
-    _keyRotationTimer = null;
     // Drain queued keystore writes so the last mutation is not lost on
     // shutdown.
     await keystoreWritesIdle;
@@ -372,7 +347,7 @@ class SecurityManager implements ISecurityManager {
       'tls_enabled': _config.enableTLS,
       // ignore: deprecated_member_use_from_same_package
       'key_rotation_enabled': _config.enableKeyRotation,
-      'last_key_rotation': _lastKeyRotation?.toIso8601String(),
+      'last_key_rotation': null,
       'keystore_unlocked': isKeystoreUnlocked,
       'active_rate_limits': _requestLog.length,
       'blocked_clients': _authAttempts.entries

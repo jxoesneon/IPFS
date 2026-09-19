@@ -5,13 +5,27 @@
 class DHTConfig {
   /// Creates a new [DHTConfig] with default Kademlia settings.
   const DHTConfig({
+    @Deprecated(
+      'The Kademlia protocol ID is hardcoded in the DHT client; '
+      'this option is ignored.',
+    )
     this.protocolId = '/ipfs/kad/1.0.0',
     this.alpha = 3,
     this.bucketSize = 20,
+    @Deprecated(
+      'Provider record counts are not limited by config; '
+      'this option is ignored.',
+    )
     this.maxProvidersPerKey = 20,
     this.requestTimeout = const Duration(seconds: 30),
+    @Deprecated(
+      'Query result counts are not limited by config; '
+      'this option is ignored.',
+    )
     this.maxRecordsPerQuery = 20,
+    @Deprecated('Provider records are always stored; this option is ignored.')
     this.enableProviderRecording = true,
+    @Deprecated('Value storage is always enabled; this option is ignored.')
     this.enableValueStorage = true,
     this.validateProviderRecords = true,
     this.reproviderEnabled = true,
@@ -28,16 +42,21 @@ class DHTConfig {
   /// @return A new [DHTConfig] instance.
   factory DHTConfig.fromJson(Map<String, dynamic> json) {
     return DHTConfig(
+      // ignore: deprecated_member_use_from_same_package
       protocolId: (json['protocolId'] as String?) ?? '/ipfs/kad/1.0.0',
       alpha: (json['alpha'] as int?) ?? 3,
       bucketSize: (json['bucketSize'] as int?) ?? 20,
+      // ignore: deprecated_member_use_from_same_package
       maxProvidersPerKey: (json['maxProvidersPerKey'] as int?) ?? 20,
       requestTimeout: Duration(
         seconds: (json['requestTimeoutSeconds'] as int?) ?? 30,
       ),
+      // ignore: deprecated_member_use_from_same_package
       maxRecordsPerQuery: (json['maxRecordsPerQuery'] as int?) ?? 20,
+      // ignore: deprecated_member_use_from_same_package
       enableProviderRecording:
           (json['enableProviderRecording'] as bool?) ?? true,
+      // ignore: deprecated_member_use_from_same_package
       enableValueStorage: (json['enableValueStorage'] as bool?) ?? true,
       validateProviderRecords:
           (json['validateProviderRecords'] as bool?) ?? true,
@@ -54,6 +73,8 @@ class DHTConfig {
   }
 
   /// Protocol identifier for DHT.
+  ///
+  /// Ignored: the Kademlia protocol ID is hardcoded in the DHT client.
   final String protocolId;
 
   /// Number of parallel lookups (alpha value in Kademlia).
@@ -63,18 +84,26 @@ class DHTConfig {
   final int bucketSize;
 
   /// Maximum number of providers to store per key.
+  ///
+  /// Ignored: provider record counts are not limited by config.
   final int maxProvidersPerKey;
 
   /// Time to wait before considering a request as failed.
   final Duration requestTimeout;
 
   /// Maximum number of records to return per query.
+  ///
+  /// Ignored: query result counts are not limited by config.
   final int maxRecordsPerQuery;
 
   /// Whether to enable provider recording.
+  ///
+  /// Ignored: provider records are always stored.
   final bool enableProviderRecording;
 
   /// Whether to enable value storage.
+  ///
+  /// Ignored: value storage is always enabled.
   final bool enableValueStorage;
 
   /// Whether to validate incoming provider records for address sanity and

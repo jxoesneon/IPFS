@@ -125,7 +125,7 @@ void main() {
       await GetIt.instance.reset(); // Clear services for this test
       final emptyManager = NetworkManager();
 
-      expect(emptyManager.peerId, equals('offline'));
+      expect(() => emptyManager.peerId, throwsStateError);
       expect(await emptyManager.connectedPeers, isEmpty);
       expect(() => emptyManager.connectToPeer('addr'), throwsStateError);
       expect(emptyManager.resolvePeerId('p1'), isEmpty);

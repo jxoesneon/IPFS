@@ -93,20 +93,19 @@ persistence:
   annotations: {}
 
 # -- Node configuration supplied to the container via ConfigMap.
+# Only live options are listed; deprecated no-op flags (enableCircuitRelay,
+# enableIPLD, enableStructuredLogging, etc.) are intentionally omitted.
 config:
   offline: false
   enableDHT: true
   enablePubSub: true
   enableRPC: true
   enableMetrics: true
-  enableCircuitRelay: true
   enableContentRouting: true
   enableDNSLinkResolution: true
-  enableIPLD: true
   enableGraphsync: false
   enableIpnsPubSub: false
   logLevel: info
-  enableStructuredLogging: true
   network:
     bootstrapPeers:
       - "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN"

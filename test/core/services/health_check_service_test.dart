@@ -19,13 +19,13 @@ void main() {
     healthCheckService = HealthCheckService(mockNode);
 
     when(mockNode.blockStore).thenReturn(mockBlockStore);
-    when(mockNode.peerID).thenReturn('test-peer');
+    when(mockNode.peerId).thenReturn('test-peer');
   });
 
   group('HealthCheckService', () {
     test('checkHealth returns healthy when everything is fine', () async {
       when(mockNode.isRunning).thenReturn(true);
-      when(mockNode.peerID).thenReturn('test-peer');
+      when(mockNode.peerId).thenReturn('test-peer');
       when(mockNode.getHealthStatus()).thenAnswer(
         (_) async => {
           'network': {'status': 'ok'},

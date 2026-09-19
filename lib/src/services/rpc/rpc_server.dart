@@ -45,7 +45,7 @@ class RPCServer implements ILifecycle {
       '/health',
       if (metricsConfig?.enablePrometheusExport == true &&
           metricsCollector != null)
-        '/metrics',
+        metricsConfig?.prometheusEndpoint ?? '/metrics',
     };
     _setupRouter();
     if (this.apiKey != null) {
@@ -153,12 +153,13 @@ class RPCServer implements ILifecycle {
   }
 
   void _setupMetricsRoute() {
+    final endpoint = metricsConfig?.prometheusEndpoint ?? '/metrics';
     final enabled =
         metricsConfig?.enablePrometheusExport == true &&
         metricsCollector != null;
 
     if (enabled) {
-      _router.get('/metrics', (Request request) async {
+      _router.get(endpoint, (Request request) async {
         final metrics = await metricsCollector!.getPrometheusMetrics();
         return Response.ok(
           metrics,

@@ -52,7 +52,7 @@
 ///   IPFSConfig(offline: false),
 /// );
 /// await node.start();
-/// // print('Peer ID: ${node.peerID}');
+/// // print('Peer ID: ${node.peerId}');
 /// ```
 ///
 /// ## Features

@@ -61,9 +61,16 @@ class NetworkManager implements ILifecycle {
   }
 
   /// Returns the peer ID of this node.
+  ///
+  /// Throws [StateError] if the node is offline and has no network handler;
+  /// callers that need a graceful check should test [NetworkManager] state
+  /// first rather than matching on a sentinel value.
   String get peerId {
-    if (_networkHandler == null) return 'offline';
-    return _networkHandler.peerID;
+    final handler = _networkHandler;
+    if (handler == null) {
+      throw StateError('Peer ID not available: node is offline');
+    }
+    return handler.peerID;
   }
 
   /// Returns a list of currently connected peer IDs.
@@ -152,7 +159,9 @@ class NetworkManager implements ILifecycle {
       if (_datastoreHandler != null) {
         final hasLocal = await _datastoreHandler.hasBlock(cid);
         if (hasLocal) {
-          return [peerId];
+          // Report this node as a provider only when its peer ID is
+          // resolvable; an offline node has no identity to advertise.
+          return _networkHandler != null ? [peerId] : [];
         }
       }
 

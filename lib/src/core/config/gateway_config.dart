@@ -5,8 +5,11 @@ class GatewayConfig {
     this.enabled = false,
     this.port = 8080,
     this.address = '0.0.0.0',
+    @Deprecated('The gateway is read-only; this option is ignored.')
     this.writable = false,
+    @Deprecated('No gateway response cache exists; this option is ignored.')
     this.enableCache = true,
+    @Deprecated('No gateway response cache exists; this option is ignored.')
     this.cacheSize = 104857600, // 100MB
     this.gatewayDomain,
     this.enableSubdomainGateway = false,
@@ -37,8 +40,11 @@ class GatewayConfig {
       enabled: json['enabled'] as bool? ?? false,
       port: json['port'] as int? ?? 8080,
       address: json['address'] as String? ?? '0.0.0.0',
+      // ignore: deprecated_member_use_from_same_package
       writable: json['writable'] as bool? ?? false,
+      // ignore: deprecated_member_use_from_same_package
       enableCache: json['enableCache'] as bool? ?? true,
+      // ignore: deprecated_member_use_from_same_package
       cacheSize: json['cacheSize'] as int? ?? 104857600,
       gatewayDomain: json['gatewayDomain'] as String?,
       enableSubdomainGateway: json['enableSubdomainGateway'] as bool? ?? false,
@@ -79,12 +85,18 @@ class GatewayConfig {
   final String address;
 
   /// Whether the gateway is writable (allows POST/PUT).
+  ///
+  /// Ignored: the gateway is read-only.
   final bool writable;
 
   /// Whether to enable caching for gateway responses.
+  ///
+  /// Ignored: no gateway response cache exists.
   final bool enableCache;
 
   /// The maximum size of the gateway cache in bytes.
+  ///
+  /// Ignored: no gateway response cache exists.
   final int cacheSize;
 
   /// The configured gateway domain for subdomain requests (e.g. `ipfs.example.com`).

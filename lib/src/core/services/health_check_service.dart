@@ -27,7 +27,7 @@ class HealthCheckService {
     return {
       'status': overallStatus,
       'timestamp': DateTime.now().toIso8601String(),
-      'peerId': _node.peerID,
+      'peerId': _safePeerId,
       'version': packageVersion,
       'uptime_seconds': _node.isRunning
           ? DateTime.now().difference(_startTime).inSeconds
@@ -43,6 +43,16 @@ class HealthCheckService {
   }
 
   final DateTime _startTime = DateTime.now();
+
+  /// The node's peer ID, or `null` when the node has no network identity
+  /// (offline mode), where [IPFSNode.peerId] throws a [StateError].
+  String? get _safePeerId {
+    try {
+      return _node.peerId;
+    } on StateError {
+      return null;
+    }
+  }
 
   bool _containsErrors(Map<String, dynamic> status) {
     for (final category in status.values) {

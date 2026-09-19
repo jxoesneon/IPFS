@@ -7,6 +7,10 @@ import 'package:meta/meta.dart';
 class BitswapConfig {
   /// Creates a new [BitswapConfig].
   const BitswapConfig({
+    @Deprecated(
+      'Request concurrency is not limited by config; '
+      'this option is ignored.',
+    )
     this.maxConcurrentRequests = 10,
     this.httpFallbackGateways = const <String>[],
     this.p2pTimeout = const Duration(seconds: 30),
@@ -20,6 +24,7 @@ class BitswapConfig {
   /// Creates a [BitswapConfig] from a JSON map.
   factory BitswapConfig.fromJson(Map<String, dynamic> json) {
     return BitswapConfig(
+      // ignore: deprecated_member_use_from_same_package
       maxConcurrentRequests: json['maxConcurrentRequests'] as int? ?? 10,
       httpFallbackGateways:
           (json['httpFallbackGateways'] as List?)?.cast<String>() ??
@@ -38,6 +43,8 @@ class BitswapConfig {
   }
 
   /// Maximum number of concurrent P2P Bitswap requests.
+  ///
+  /// Ignored: request concurrency is not limited by config.
   final int maxConcurrentRequests;
 
   /// Ordered list of HTTP gateway base URLs to use as a fallback.

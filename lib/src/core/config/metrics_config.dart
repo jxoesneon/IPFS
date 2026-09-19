@@ -19,6 +19,10 @@ class MetricsConfig {
   const MetricsConfig({
     this.enabled = true,
     this.collectionIntervalSeconds = 60,
+    @Deprecated(
+      'System metrics collection is not implemented; '
+      'this option is ignored.',
+    )
     this.collectSystemMetrics = true,
     this.collectNetworkMetrics = true,
     this.collectStorageMetrics = true,
@@ -32,6 +36,7 @@ class MetricsConfig {
       enabled: json['enabled'] as bool? ?? true,
       collectionIntervalSeconds:
           json['collectionIntervalSeconds'] as int? ?? 60,
+      // ignore: deprecated_member_use_from_same_package
       collectSystemMetrics: json['collectSystemMetrics'] as bool? ?? true,
       collectNetworkMetrics: json['collectNetworkMetrics'] as bool? ?? true,
       collectStorageMetrics: json['collectStorageMetrics'] as bool? ?? true,
@@ -47,6 +52,8 @@ class MetricsConfig {
   final int collectionIntervalSeconds;
 
   /// Whether to collect CPU and memory metrics.
+  ///
+  /// Ignored: system metrics collection is not implemented.
   final bool collectSystemMetrics;
 
   /// Whether to collect network bandwidth and peer metrics.

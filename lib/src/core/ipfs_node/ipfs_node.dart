@@ -277,7 +277,7 @@ class IPFSNode {
 
   /// Returns the peer ID of this node.
   ///
-  /// Returns 'offline' if the network is not initialized.
+  /// Throws [StateError] if the network is not initialized (offline mode).
   String get peerId => _networkManager.peerId;
 
   /// Returns a [Stream] of bandwidth metrics as a [Map].
@@ -559,14 +559,15 @@ class IPFSNode {
   /// Returns a [Future] that resolves to the IPNS name (base36-encoded
   /// libp2p-key CID) of a newly generated Ed25519 key stored under [name].
   ///
-  /// [type] currently only accepts `'ed25519'`; [size] is accepted for
-  /// compatibility but ignored for Ed25519 keys.
+  /// [type] currently only accepts `'ed25519'`. Ed25519 keys have a fixed
+  /// 256-bit size, so [size] must be `null` or `256`; any other value is
+  /// rejected rather than silently ignored.
   ///
   /// The key is stored in the node's encrypted keystore, which must be
   /// unlocked first (see [SecurityManager.unlockKeystore]). Once stored, the
   /// key can be used by passing [name] as `keyName` to [publishIPNS].
   ///
-  /// Throws [ArgumentError] if [type] is unsupported.
+  /// Throws [ArgumentError] if [type] is unsupported or [size] is not `256`.
   /// Throws [StateError] if the keystore is locked or [name] already exists.
   Future<String> keyGen(
     String name, {
@@ -578,6 +579,13 @@ class IPFSNode {
         type,
         'type',
         'Only ed25519 keys are supported for IPNS publishing',
+      );
+    }
+    if (size != null && size != 256) {
+      throw ArgumentError.value(
+        size,
+        'size',
+        'Ed25519 keys are fixed at 256 bits; omit size or pass 256',
       );
     }
     final publicKey = await _container.get<SecurityManager>().generateSecureKey(
@@ -747,7 +755,22 @@ class IPFSNode {
   }
 
   /// Returns the peer ID of this node.
-  String get peerID => _networkManager.peerId;
+  ///
+  /// Deprecated alias for [peerId].
+  @Deprecated('Use peerId instead.')
+  String get peerID => peerId;
+
+  /// Returns a broadcast [Stream] of peers discovered via mDNS on the local
+  /// network.
+  ///
+  /// The stream is backed by [MDNSHandler.peerDiscovery]; when mDNS is
+  /// disabled or the node runs offline, this returns an empty stream.
+  Stream<Peer> get discoveredPeers {
+    if (_container.isRegistered<MDNSHandler>()) {
+      return _container.get<MDNSHandler>().peerDiscovery;
+    }
+    return const Stream.empty();
+  }
 
   // Event streams
   /// Returns a [Stream] of new content CIDs added to this node.

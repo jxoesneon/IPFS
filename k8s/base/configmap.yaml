@@ -19,20 +19,17 @@ data:
       "enablePubSub": true,
       "enableRPC": true,
       "enableMetrics": true,
-      "enableCircuitRelay": true,
       "enableContentRouting": true,
       "enableDNSLinkResolution": true,
-      "enableIPLD": true,
       "enableGraphsync": false,
       "enableIpnsPubSub": false,
       "logLevel": "info",
-      "enableStructuredLogging": true,
       "dataPath": "/data/ipfs",
       "datastorePath": "/data/ipfs/datastore",
       "blockStorePath": "/data/ipfs/blocks",
       "keystorePath": "/data/ipfs/keystore",
-      "libp2pListenAddress": "/ip4/0.0.0.0/tcp/4001",
       "network": {
+        "listenAddresses": ["/ip4/0.0.0.0/tcp/4001"],
         "bootstrapPeers": [
           "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
           "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2iUDbD9uMdt3m6Jorh6Y1YCDYNP5E4p"
@@ -45,7 +42,7 @@ data:
       },
       "metrics": {
         "enabled": true,
-        "port": 8081,
-        "path": "/metrics"
+        "enablePrometheusExport": true,
+        "prometheusEndpoint": "/metrics"
       }
     }

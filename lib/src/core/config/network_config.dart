@@ -12,7 +12,6 @@ import '../../utils/base58.dart';
 /// ```dart
 /// final config = NetworkConfig(
 ///   listenAddresses: ['/ip4/0.0.0.0/tcp/4001'],
-///   maxConnections: 100,
 /// );
 /// ```
 class NetworkConfig {
@@ -20,7 +19,11 @@ class NetworkConfig {
   NetworkConfig({
     this.listenAddresses = defaultListenAddresses,
     this.bootstrapPeers = defaultBootstrapPeers,
+    @Deprecated(
+      'No connection-limit enforcement exists; this option is ignored.',
+    )
     this.maxConnections = 50,
+    @Deprecated('Dial timeouts are not configurable; this option is ignored.')
     this.connectionTimeout = const Duration(seconds: 30),
     this.enableNatTraversal = false,
     this.enableMDNS = true,
@@ -28,24 +31,35 @@ class NetworkConfig {
     this.enableWebRtc = true,
     this.enableQuic = false,
     this.quicListenPort = 4002,
+    @Deprecated('No QUIC transport exists; this option is ignored.')
     this.quicMaxStreams = 100,
+    @Deprecated('No QUIC transport exists; this option is ignored.')
     this.preferQuic = false,
     this.circuitRelay = const CircuitRelayConfig(),
     this.stunServers = const [],
     this.turnServers = const [],
+    @Deprecated(
+      'Node identity is derived from the libp2p keypair; '
+      'IPFSConfig.nodeId names the mDNS instance. This option is ignored.',
+    )
     String? nodeId,
     this.delegatedRoutingEndpoint,
     this.ipniEndpoints = const <String>[],
     this.reframeEndpoints = const <String>[],
     this.swarmKeyPath,
     this.privateNetworkPsk,
+    // ignore: deprecated_member_use_from_same_package
   }) : nodeId = nodeId ?? _generateDefaultNodeId();
 
   /// Creates a network configuration with the given options and a generated Peer ID.
   factory NetworkConfig.withGeneratedId({
     List<String> listenAddresses = defaultListenAddresses,
     List<String> bootstrapPeers = defaultBootstrapPeers,
+    @Deprecated(
+      'No connection-limit enforcement exists; this option is ignored.',
+    )
     int maxConnections = 50,
+    @Deprecated('Dial timeouts are not configurable; this option is ignored.')
     Duration connectionTimeout = const Duration(seconds: 30),
     bool enableNatTraversal = false,
     bool enableMDNS = true,
@@ -53,7 +67,9 @@ class NetworkConfig {
     bool enableWebRtc = true,
     bool enableQuic = false,
     int quicListenPort = 4002,
+    @Deprecated('No QUIC transport exists; this option is ignored.')
     int quicMaxStreams = 100,
+    @Deprecated('No QUIC transport exists; this option is ignored.')
     bool preferQuic = false,
     CircuitRelayConfig? circuitRelay,
     List<String> stunServers = const [],
@@ -64,7 +80,9 @@ class NetworkConfig {
     return NetworkConfig(
       listenAddresses: listenAddresses,
       bootstrapPeers: bootstrapPeers,
+      // ignore: deprecated_member_use_from_same_package
       maxConnections: maxConnections,
+      // ignore: deprecated_member_use_from_same_package
       connectionTimeout: connectionTimeout,
       enableNatTraversal: enableNatTraversal,
       enableMDNS: enableMDNS,
@@ -72,11 +90,14 @@ class NetworkConfig {
       enableWebRtc: enableWebRtc,
       enableQuic: enableQuic,
       quicListenPort: quicListenPort,
+      // ignore: deprecated_member_use_from_same_package
       quicMaxStreams: quicMaxStreams,
+      // ignore: deprecated_member_use_from_same_package
       preferQuic: preferQuic,
       circuitRelay: circuitRelay ?? const CircuitRelayConfig(),
       stunServers: stunServers,
       turnServers: turnServers,
+      // ignore: deprecated_member_use_from_same_package
       nodeId: _generateDefaultNodeId(),
       swarmKeyPath: swarmKeyPath,
       privateNetworkPsk: privateNetworkPsk,
@@ -84,11 +105,21 @@ class NetworkConfig {
   }
 
   /// Creates a network configuration from a JSON map.
+  ///
+  /// Keys absent from [json] fall back to the constructor defaults (including
+  /// [defaultListenAddresses] and [defaultBootstrapPeers]); an explicitly
+  /// empty list stays empty.
   factory NetworkConfig.fromJson(Map<String, dynamic> json) {
     return NetworkConfig(
-      listenAddresses: (json['listenAddresses'] as List?)?.cast<String>() ?? [],
-      bootstrapPeers: (json['bootstrapPeers'] as List?)?.cast<String>() ?? [],
+      listenAddresses:
+          (json['listenAddresses'] as List?)?.cast<String>() ??
+          defaultListenAddresses,
+      bootstrapPeers:
+          (json['bootstrapPeers'] as List?)?.cast<String>() ??
+          defaultBootstrapPeers,
+      // ignore: deprecated_member_use_from_same_package
       maxConnections: json['maxConnections'] as int? ?? 50,
+      // ignore: deprecated_member_use_from_same_package
       connectionTimeout: json['connectionTimeoutSeconds'] != null
           ? Duration(seconds: json['connectionTimeoutSeconds'] as int)
           : const Duration(seconds: 30),
@@ -98,7 +129,9 @@ class NetworkConfig {
       enableWebRtc: json['enableWebRtc'] as bool? ?? true,
       enableQuic: json['enableQuic'] as bool? ?? false,
       quicListenPort: json['quicListenPort'] as int? ?? 4002,
+      // ignore: deprecated_member_use_from_same_package
       quicMaxStreams: json['quicMaxStreams'] as int? ?? 100,
+      // ignore: deprecated_member_use_from_same_package
       preferQuic: json['preferQuic'] as bool? ?? false,
       circuitRelay: json['circuitRelay'] != null
           ? CircuitRelayConfig.fromJson(
@@ -113,6 +146,7 @@ class NetworkConfig {
               )
               .toList() ??
           const [],
+      // ignore: deprecated_member_use_from_same_package
       nodeId: json['nodeId'] as String?,
       delegatedRoutingEndpoint: json['delegatedRoutingEndpoint'] as String?,
       ipniEndpoints:
@@ -153,9 +187,13 @@ class NetworkConfig {
   final List<String> bootstrapPeers;
 
   /// Maximum number of concurrent connections.
+  ///
+  /// Ignored: no connection-limit enforcement exists.
   final int maxConnections;
 
   /// Timeout for connection attempts.
+  ///
+  /// Ignored: dial timeouts are not configurable.
   final Duration connectionTimeout;
 
   /// Whether to enable NAT traversal (UPnP/NAT-PMP). Defaults to false for security.
@@ -181,12 +219,13 @@ class NetworkConfig {
   final int quicListenPort;
 
   /// Maximum number of concurrent QUIC streams per connection.
+  ///
+  /// Ignored: no QUIC transport exists.
   final int quicMaxStreams;
 
   /// Whether to prefer QUIC over TCP when dialing a peer that advertises both.
   ///
-  /// This is honored only when [enableQuic] is true and a QUIC transport is
-  /// available at runtime.
+  /// Ignored: no QUIC transport exists.
   final bool preferQuic;
 
   /// STUN servers for WebRTC ICE negotiation. Default is empty; no
@@ -200,6 +239,9 @@ class NetworkConfig {
   final CircuitRelayConfig circuitRelay;
 
   /// Unique identifier for this node.
+  ///
+  /// Ignored: the node identity is derived from the libp2p keypair;
+  /// [IPFSConfig.nodeId] names the mDNS instance.
   final String nodeId;
 
   /// Optional HTTP endpoint for delegated routing.
@@ -251,30 +293,12 @@ class NetworkConfig {
   }
 }
 
-/// Configuration for a specific protocol.
-class ProtocolConfig {
-  /// Creates a new [ProtocolConfig].
-  ProtocolConfig({
-    required this.protocolId,
-    this.messageTimeout = const Duration(seconds: 10),
-    this.maxRetries = 3,
-  });
-
-  /// The protocol identifier.
-  final String protocolId;
-
-  /// Timeout for individual messages.
-  final Duration messageTimeout;
-
-  /// Maximum number of retries per message.
-  final int maxRetries;
-}
-
 /// Configuration for the circuit relay client.
 class CircuitRelayConfig {
   /// Creates a new [CircuitRelayConfig].
   const CircuitRelayConfig({
     this.enabled = true,
+    @Deprecated('Static relays are never dialed; this option is ignored.')
     this.staticRelays = const <String>[],
     this.reservationTimeout = const Duration(seconds: 30),
     this.reservationRefreshInterval = const Duration(minutes: 5),
@@ -285,6 +309,7 @@ class CircuitRelayConfig {
   factory CircuitRelayConfig.fromJson(Map<String, dynamic> json) {
     return CircuitRelayConfig(
       enabled: json['enabled'] as bool? ?? true,
+      // ignore: deprecated_member_use_from_same_package
       staticRelays: (json['staticRelays'] as List?)?.cast<String>() ?? const [],
       reservationTimeout: json['reservationTimeoutSeconds'] != null
           ? Duration(seconds: json['reservationTimeoutSeconds'] as int)
@@ -301,6 +326,8 @@ class CircuitRelayConfig {
   final bool enabled;
 
   /// Static relay multiaddresses to use when no dynamic relay is available.
+  ///
+  /// Ignored: static relays are never dialed.
   final List<String> staticRelays;
 
   /// Timeout for reservation and CONNECT requests.

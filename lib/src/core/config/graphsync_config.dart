@@ -8,6 +8,10 @@
 class GraphsyncConfig {
   /// Creates a [GraphsyncConfig] with the given settings.
   const GraphsyncConfig({
+    @Deprecated(
+      'Graphsync availability is controlled by IPFSConfig.enableGraphsync; '
+      'this flag is only echoed in handler status and is ignored.',
+    )
     this.enabled = true,
     this.defaultMaxDepth = 32,
     this.defaultMaxBlocks = 1024,
@@ -21,6 +25,7 @@ class GraphsyncConfig {
   /// Creates a [GraphsyncConfig] from a JSON map.
   factory GraphsyncConfig.fromJson(Map<String, dynamic> json) {
     return GraphsyncConfig(
+      // ignore: deprecated_member_use_from_same_package
       enabled: json['enabled'] as bool? ?? true,
       defaultMaxDepth: json['defaultMaxDepth'] as int? ?? 32,
       defaultMaxBlocks: json['defaultMaxBlocks'] as int? ?? 1024,
@@ -36,6 +41,10 @@ class GraphsyncConfig {
   static const int _defaultMaxServeBytes = 32 * 1024 * 1024;
 
   /// Whether Graphsync is enabled on this node.
+  ///
+  /// Ignored: Graphsync availability is controlled by
+  /// `IPFSConfig.enableGraphsync`; this flag is only echoed in handler
+  /// status.
   final bool enabled;
 
   /// Default maximum traversal depth for a Graphsync request.

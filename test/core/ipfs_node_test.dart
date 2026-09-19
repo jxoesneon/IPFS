@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'dart:convert';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
@@ -59,14 +58,38 @@ void main() {
     test('should initialize and start in offline mode', () async {
       final node = IPFSNode.fromContainer(container);
 
-      // Check offline indicator
-      expect(node.peerId, 'offline');
+      // Offline node has no peer identity
+      expect(() => node.peerId, throwsStateError);
+      // ignore: deprecated_member_use_from_same_package
+      expect(() => node.peerID, throwsStateError);
 
       await node.start();
 
       // Verify health status to confirm startup
       final health = await node.getHealthStatus();
       expect(health['storage']['datastore']['status'], 'active');
+
+      await node.stop();
+    });
+
+    test('discoveredPeers is empty in offline mode', () async {
+      final node = IPFSNode.fromContainer(container);
+      // No MDNSHandler is registered in offline mode.
+      expect(await node.discoveredPeers.isEmpty, isTrue);
+    });
+
+    test('keyGen rejects a size that is not the fixed Ed25519 size', () async {
+      final node = IPFSNode.fromContainer(container);
+      await node.start();
+
+      // Validation happens before the keystore is touched.
+      await expectLater(
+        node.keyGen('bad-size', size: 512),
+        throwsArgumentError,
+      );
+      // The supported Ed25519 size proceeds to the keystore, which is
+      // locked in this configuration and surfaces a StateError.
+      await expectLater(node.keyGen('ok-size', size: 256), throwsStateError);
 
       await node.stop();
     });

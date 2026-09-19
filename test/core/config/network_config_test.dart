@@ -61,7 +61,7 @@ void main() {
     test('fromJson with enableMDNS and delegatedRoutingEndpoint', () {
       final json = {
         'listenAddresses': ['/ip4/0.0.0.0/tcp/4001'],
-        'bootstrapPeers': [],
+        'bootstrapPeers': <String>[],
         'maxConnections': 50,
         'enableMDNS': false,
         'delegatedRoutingEndpoint': 'https://example.com/routing',
@@ -90,44 +90,25 @@ void main() {
       expect(json['enableMDNS'], false);
       expect(json['delegatedRoutingEndpoint'], 'https://example.com/routing');
     });
-  });
 
-  group('ProtocolConfig', () {
-    test('constructor initializes correctly', () {
-      final config = ProtocolConfig(
-        protocolId: '/test/protocol',
-        messageTimeout: Duration(seconds: 15),
-        maxRetries: 5,
-      );
+    test('fromJson keeps constructor defaults for absent keys', () {
+      final config = NetworkConfig.fromJson(const {});
 
-      expect(config.protocolId, '/test/protocol');
-      expect(config.messageTimeout.inSeconds, 15);
-      expect(config.maxRetries, 5);
+      // Absent keys must fall back to the constructor defaults; a partial
+      // JSON config previously dropped all bootstrap peers and listen
+      // addresses.
+      expect(config.listenAddresses, NetworkConfig.defaultListenAddresses);
+      expect(config.bootstrapPeers, NetworkConfig.defaultBootstrapPeers);
     });
 
-    test('constructor uses default values', () {
-      final config = ProtocolConfig(protocolId: '/test/protocol');
+    test('fromJson preserves explicitly empty lists', () {
+      final config = NetworkConfig.fromJson(const {
+        'listenAddresses': <String>[],
+        'bootstrapPeers': <String>[],
+      });
 
-      expect(config.protocolId, '/test/protocol');
-      expect(config.messageTimeout.inSeconds, 10);
-      expect(config.maxRetries, 3);
-    });
-
-    test('constructor with only required parameters', () {
-      final config = ProtocolConfig(protocolId: '/ipfs/bitswap/1.2.0');
-
-      expect(config.protocolId, '/ipfs/bitswap/1.2.0');
-      expect(config.messageTimeout, isNotNull);
-      expect(config.maxRetries, isNotNull);
-    });
-
-    test('constructor with zero maxRetries', () {
-      final config = ProtocolConfig(
-        protocolId: '/test/protocol',
-        maxRetries: 0,
-      );
-
-      expect(config.maxRetries, 0);
+      expect(config.listenAddresses, isEmpty);
+      expect(config.bootstrapPeers, isEmpty);
     });
   });
 }

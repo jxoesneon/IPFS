@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
-import 'package:dart_ipfs/src/network/router.dart';
+import 'package:dart_ipfs/src/transport/libp2p_router.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -199,7 +199,7 @@ void main() {
       expect(unseeded.peerID, isNot(handlerA.peerID));
     });
 
-    test('Router forwards the configured seed to Libp2pRouter', () async {
+    test('Libp2pRouter honors the configured seed', () async {
       final seed = Uint8List.fromList(List.generate(32, (i) => (i * 7) % 256));
       final config = IPFSConfig(
         libp2pIdentitySeed: seed,
@@ -209,8 +209,8 @@ void main() {
         ),
       );
 
-      final routerA = Router(config);
-      final routerB = Router(config);
+      final routerA = Libp2pRouter(config, seed: config.libp2pIdentitySeed);
+      final routerB = Libp2pRouter(config, seed: config.libp2pIdentitySeed);
       await routerA.start();
       await routerB.start();
 

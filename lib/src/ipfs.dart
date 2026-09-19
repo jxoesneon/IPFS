@@ -142,7 +142,21 @@ class IPFS {
   Stream<String> get onNewContent => _node.onNewContent;
 
   /// Gets the peer ID of the IPFS node.
-  String get peerID => _node.peerID;
+  ///
+  /// Throws [StateError] when the node is offline and has no network
+  /// identity.
+  String get peerId => _node.peerId;
+
+  /// Gets the peer ID of the IPFS node.
+  ///
+  /// Deprecated alias for [peerId].
+  @Deprecated('Use peerId instead.')
+  String get peerID => _node.peerId;
+
+  /// Broadcast stream of peers discovered via mDNS on the local network.
+  ///
+  /// Empty when mDNS is disabled or the node runs offline.
+  Stream<Peer> get discoveredPeers => _node.discoveredPeers;
 
   /// Currently connected swarm peer IDs.
   Future<List<String>> get connectedPeers => _node.connectedPeers;
@@ -253,10 +267,11 @@ class IPFS {
   /// Generates a new Ed25519 key pair stored under [name] and returns its
   /// IPNS name (base36-encoded libp2p-key CID).
   ///
-  /// [type] currently only accepts `'ed25519'`; [size] is accepted for
-  /// compatibility but ignored for Ed25519 keys. The node's keystore must be
-  /// unlocked first. Once stored, [name] can be passed as `keyName` to
-  /// [publishIPNS].
+  /// [type] currently only accepts `'ed25519'`. Ed25519 keys have a fixed
+  /// 256-bit size, so [size] must be `null` or `256`; any other value throws
+  /// [ArgumentError] rather than being silently ignored. The node's keystore
+  /// must be unlocked first. Once stored, [name] can be passed as `keyName`
+  /// to [publishIPNS].
   Future<String> keyGen(String name, {String type = 'ed25519', int? size}) =>
       _node.keyGen(name, type: type, size: size);
 
@@ -296,6 +311,9 @@ class IPFS {
   }
 
   /// Announces to the network that this node provides the given [cid].
+  ///
+  /// Throws when the DHT announcement fails; a completed future means the
+  /// provider record was actually announced.
   Future<void> provide(String cid) async {
     final dht = _node.dhtHandler;
     if (dht == null) {

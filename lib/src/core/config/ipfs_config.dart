@@ -97,6 +97,9 @@ class IPFSConfig {
     this.enableDHT = true,
     this.enableRPC = false,
     this.rpcApiKey,
+    @Deprecated(
+      'Use NetworkConfig.circuitRelay.enabled; this option is ignored.',
+    )
     this.enableCircuitRelay = true,
     this.enableContentRouting = true,
     this.enableDNSLinkResolution = true,
@@ -109,6 +112,10 @@ class IPFSConfig {
     this.enableIpnsPubSub = false,
     @Deprecated('Logging is always enabled; use logLevel to control verbosity.')
     this.enableLogging = true,
+    @Deprecated(
+      'Structured logging is not wired into the node runtime; '
+      'this option is ignored.',
+    )
     this.enableStructuredLogging = false,
     this.ipnsCacheSize = 1000,
     this.logLevel = 'info',
@@ -140,6 +147,7 @@ class IPFSConfig {
     this.maxSelectorDepth = 32,
     @Deprecated('Use GraphsyncConfig.defaultMaxBlocks; this flag is ignored.')
     this.maxSelectorNodes = 10000,
+    @Deprecated('Custom config entries are never read; this option is ignored.')
     this.customConfig = const {},
     this.swarmKeyPath,
     this.privateNetworkPsk,
@@ -210,6 +218,7 @@ class IPFSConfig {
       enableDHT: json['enableDHT'] as bool? ?? true,
       enableRPC: json['enableRPC'] as bool? ?? false,
       rpcApiKey: json['rpcApiKey'] as String?,
+      // ignore: deprecated_member_use_from_same_package
       enableCircuitRelay: json['enableCircuitRelay'] as bool? ?? true,
       enableContentRouting: json['enableContentRouting'] as bool? ?? true,
       enableDNSLinkResolution: json['enableDNSLinkResolution'] as bool? ?? true,
@@ -220,6 +229,7 @@ class IPFSConfig {
       enableIpnsPubSub: json['enableIpnsPubSub'] as bool? ?? false,
       // ignore: deprecated_member_use_from_same_package
       enableLogging: json['enableLogging'] as bool? ?? true,
+      // ignore: deprecated_member_use_from_same_package
       enableStructuredLogging:
           json['enableStructuredLogging'] as bool? ?? false,
       logLevel: json['logLevel'] as String? ?? 'info',
@@ -241,7 +251,8 @@ class IPFSConfig {
       // ignore: deprecated_member_use_from_same_package
       garbageCollectionEnabled:
           json['garbageCollectionEnabled'] as bool? ?? true,
-      datastorePath: json['datastorePath'] as String? ?? './ipfs_data/datastore',
+      datastorePath:
+          json['datastorePath'] as String? ?? './ipfs_data/datastore',
       keystorePath: json['keystorePath'] as String? ?? './ipfs_keystore',
       blockStorePath: json['blockStorePath'] as String? ?? 'blocks',
       dataPath: json['dataPath'] as String? ?? './ipfs_data',
@@ -258,6 +269,7 @@ class IPFSConfig {
               Map<String, dynamic>.from(json['metrics'] as Map),
             )
           : const MetricsConfig(),
+      // ignore: deprecated_member_use_from_same_package
       customConfig: Map<String, dynamic>.from(
         json['customConfig'] as Map? ?? const {},
       ),
@@ -311,6 +323,9 @@ class IPFSConfig {
   final String? rpcApiKey;
 
   /// Enable Circuit Relay support.
+  ///
+  /// Ignored: use [NetworkConfig.circuitRelay] (`network.circuitRelay.enabled`)
+  /// instead; this flag is never read.
   final bool enableCircuitRelay;
 
   /// Enable content routing.
@@ -339,6 +354,8 @@ class IPFSConfig {
   final bool enableLogging;
 
   /// Enable structured (JSON) logging.
+  ///
+  /// Ignored: no live code path reads this flag.
   final bool enableStructuredLogging;
 
   /// The size of the IPNS resolution cache.
@@ -419,6 +436,8 @@ class IPFSConfig {
   final bool offline;
 
   /// Key-value pair for custom configuration options.
+  ///
+  /// Ignored: no consumer reads these entries.
   final Map<String, dynamic> customConfig;
 
   /// Optional path to a libp2p private-network swarm key file.

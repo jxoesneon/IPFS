@@ -17,7 +17,6 @@ import 'package:dart_ipfs/src/protocols/dht/dht_routing_table_interface.dart'
     show DHTRoutingTable;
 import 'package:dart_ipfs/src/core/security/security_manager.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
-import 'package:dart_ipfs/src/network/router.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/ipfs_node_network_events.pb.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
@@ -216,9 +215,6 @@ class MockNetworkHandler implements NetworkHandler {
 
   @override
   RouterInterface get router => _mockRouter;
-
-  @override
-  Router get dhtRouter => Router(IPFSConfig());
 
   @override
   IPFSConfig get config => IPFSConfig(); // stub config

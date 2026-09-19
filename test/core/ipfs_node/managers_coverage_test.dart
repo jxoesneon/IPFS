@@ -189,8 +189,8 @@ void main() {
       await networkManager.stop();
     });
 
-    test('peerId returns offline when no handler', () {
-      expect(networkManager.peerId, equals('offline'));
+    test('peerId throws StateError when no handler', () {
+      expect(() => networkManager.peerId, throwsStateError);
     });
 
     test('connectedPeers returns empty when no handler', () async {

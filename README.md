@@ -356,6 +356,20 @@ void main() async {
 
 ### Full Configuration Reference
 
+Only live options are shown below. No-op options (e.g. `enableCircuitRelay`,
+`enableStructuredLogging`, `customConfig`, `NetworkConfig.maxConnections`,
+`NetworkConfig.connectionTimeout`, `NetworkConfig.nodeId`,
+`NetworkConfig.quicMaxStreams`, `NetworkConfig.preferQuic`,
+`CircuitRelayConfig.staticRelays`, `GatewayConfig.writable`,
+`GatewayConfig.enableCache`, `GatewayConfig.cacheSize`, `DHTConfig.protocolId`,
+`DHTConfig.maxProvidersPerKey`, `DHTConfig.maxRecordsPerQuery`,
+`DHTConfig.enableProviderRecording`, `DHTConfig.enableValueStorage`,
+`SecurityConfig.enableTLS`, `SecurityConfig.maxAuthAttempts`,
+`SecurityConfig.enableRateLimiting`, `SecurityConfig.maxRequestsPerMinute`,
+`SecurityConfig.denylistCompactFormat`, `BitswapConfig.maxConcurrentRequests`,
+`GraphsyncConfig.enabled`, `MetricsConfig.collectSystemMetrics`) are
+`@Deprecated` in `lib/src/core/config/` and are ignored at runtime.
+
 ```dart
 IPFSConfig(
   // Top-level toggles
@@ -363,15 +377,13 @@ IPFSConfig(
   enablePubSub: true,
   enableDHT: true,
   enableRPC: false,
-  enableCircuitRelay: true,
   enableContentRouting: true,
   enableDNSLinkResolution: true,
-  enableIPLD: true,
+  enableIPLD: true, // Deprecated: IPLD is always enabled
   enableGraphsync: true,
   enableMetrics: true,
   enableIpnsPubSub: false,
-  enableLogging: true, // Always on; control verbosity via logLevel
-  enableStructuredLogging: false,
+  enableLogging: true, // Deprecated: always on; control verbosity via logLevel
   enableQuotaManagement: true, // Deprecated: no quota subsystem exists
 
   // Storage paths
@@ -400,13 +412,12 @@ IPFSConfig(
   network: NetworkConfig(
     listenAddresses: ['/ip4/0.0.0.0/tcp/4001'],
     bootstrapPeers: [...],
-    maxConnections: 50,
-    connectionTimeout: Duration(seconds: 30),
     enableNatTraversal: false, // Set true to enable UPnP/NAT-PMP
     enableMDNS: true,
     enableWebTransport: true,
     enableWebRtc: true,
     enableQuic: false,
+    circuitRelay: CircuitRelayConfig(enabled: true),
   ),
 
   // HTTP Gateway
@@ -414,17 +425,12 @@ IPFSConfig(
     enabled: true,
     port: 8080,
     address: '0.0.0.0',
-    writable: false,
-    enableCache: true,
-    cacheSize: 104857600, // 100MB default
   ),
 
   // DHT
   dht: DHTConfig(
-    protocolId: '/ipfs/kad/1.0.0',
     bucketSize: 20,
     alpha: 3,
-    maxProvidersPerKey: 20,
     requestTimeout: Duration(seconds: 30),
     reproviderEnabled: true,
     reproviderInterval: Duration(hours: 12),
@@ -446,12 +452,6 @@ IPFSConfig(
 
   // Security
   security: SecurityConfig(
-    enableTLS: false,
-    enableKeyRotation: false, // Not implemented: throws if enabled
-    keyRotationInterval: Duration(days: 30),
-    maxAuthAttempts: 3,
-    enableRateLimiting: true,
-    maxRequestsPerMinute: 100,
     dhtDifficulty: 0,
     enableDenylist: false,
     denylistRefreshInterval: Duration(hours: 1),
@@ -460,7 +460,6 @@ IPFSConfig(
 
   // Bitswap
   bitswap: BitswapConfig(
-    maxConcurrentRequests: 10,
     enableHttpFallback: false,
     httpFallbackGateways: [],
     p2pTimeout: Duration(seconds: 30),
@@ -469,7 +468,6 @@ IPFSConfig(
 
   // Graphsync
   graphsync: GraphsyncConfig(
-    enabled: true,
     defaultMaxDepth: 32,
     defaultMaxBlocks: 1024,
     defaultMaxBytes: 16 * 1024 * 1024,

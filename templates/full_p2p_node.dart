@@ -36,7 +36,7 @@ void main() async {
   // 4. Start the node
   await node.start();
   print('Full P2P Node started.');
-  print('Peer ID: ${node.peerID}');
+  print('Peer ID: ${node.peerId}');
 
   // Example: Find providers for a known CID
   const targetCid = 'QmYwAPJzv5CZsnA6ULBXebJWvruP6P3wXhHjS2Mtc38E2z';
