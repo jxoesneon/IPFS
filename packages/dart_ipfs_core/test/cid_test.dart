@@ -62,13 +62,15 @@ void main() {
       expect(bytes.sublist(0, prefix.length), equals(prefix));
     });
 
-    test('CIDv0 toPrefixBytes synthesizes the implicit dag-pb header',
-        () async {
-      final data = Uint8List.fromList(utf8.encode('v0-prefix'));
-      final cid = await CID.fromContent(data, codec: 'dag-pb', version: 0);
-      // <version=0><codec=dag-pb 0x70><sha2-256 0x12><len 0x20>
-      expect(cid.toPrefixBytes(), equals([0x00, 0x70, 0x12, 0x20]));
-    });
+    test(
+      'CIDv0 toPrefixBytes synthesizes the implicit dag-pb header',
+      () async {
+        final data = Uint8List.fromList(utf8.encode('v0-prefix'));
+        final cid = await CID.fromContent(data, codec: 'dag-pb', version: 0);
+        // <version=0><codec=dag-pb 0x70><sha2-256 0x12><len 0x20>
+        expect(cid.toPrefixBytes(), equals([0x00, 0x70, 0x12, 0x20]));
+      },
+    );
 
     test('fromContent honors version and codec', () async {
       final data = Uint8List.fromList(utf8.encode('versioned'));
@@ -79,6 +81,36 @@ void main() {
       final v1 = await CID.fromContent(data, codec: 'dag-pb', version: 1);
       expect(v1.version, equals(1));
       expect(v1.encode(), startsWith('b'));
+    });
+
+    test('fromContent rejects unsupported hash types', () async {
+      final data = Uint8List.fromList(utf8.encode('bad-hash'));
+      await expectLater(
+        CID.fromContent(data, hashType: 'sha3-256'),
+        throwsUnsupportedError,
+      );
+    });
+
+    test('toBytes defaults a null codec to raw', () {
+      final digest = Uint8List(32);
+      final cid = CID(
+        version: 1,
+        codec: null,
+        multihash: MultihashUtils.sha256(digest),
+      );
+      final bytes = cid.toBytes();
+      expect(bytes[0], equals(0x01));
+      expect(bytes[1], equals(0x55));
+    });
+
+    test('toBytes rejects an unsupported codec', () {
+      final digest = Uint8List(32);
+      final cid = CID(
+        version: 1,
+        codec: 'not-a-real-codec',
+        multihash: MultihashUtils.sha256(digest),
+      );
+      expect(() => cid.toBytes(), throwsFormatException);
     });
 
     test('fromPrefixBytes reconstructs a CID from a Bitswap prefix', () async {
