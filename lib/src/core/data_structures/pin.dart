@@ -43,7 +43,7 @@ class Pin {
   /// Creates a [Pin] from its Protobuf representation.
   factory Pin.fromProto(PinProto pbPin, BlockStore blockStore) {
     return Pin(
-      cid: CID.fromProto(pbPin.cid),
+      cid: pbPin.cid.toCID(),
       type: pbPin.type,
       timestamp: DateTime.fromMillisecondsSinceEpoch(pbPin.timestamp.toInt()),
       blockStore: blockStore,

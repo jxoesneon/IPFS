@@ -269,7 +269,7 @@ void main() {
         final original = CID.computeForDataSync(utf8.encode('proto rt'));
 
         final proto = original.toProto();
-        final restored = CID.fromProto(proto);
+        final restored = proto.toCID();
 
         expect(restored.version, equals(original.version));
       });

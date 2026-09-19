@@ -21,7 +21,7 @@ import 'dart:typed_data';
 
 import 'rpc_handlers_test.mocks.dart';
 
-core.CID coreCid(CID cid) => core.CID.fromBytes(cid.toBytes());
+core.CID coreCid(CID cid) => cid;
 
 @GenerateNiceMocks([
   MockSpec<IPFSNode>(),

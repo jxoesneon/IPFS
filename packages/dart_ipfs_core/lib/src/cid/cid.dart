@@ -59,12 +59,69 @@ class CID {
     );
   }
 
-  /// Creates a CID by hashing [data] with SHA2-256.
+  /// Creates a CID by hashing [data] with the given [hashType].
   ///
-  /// The [codec] defaults to `raw`.
-  static Future<CID> fromContent(Uint8List data, {String codec = 'raw'}) async {
+  /// The [codec] defaults to `raw` and [version] defaults to 1. Only
+  /// `sha2-256` is currently supported as [hashType].
+  static Future<CID> fromContent(
+    Uint8List data, {
+    String codec = 'raw',
+    String hashType = 'sha2-256',
+    int version = 1,
+  }) async {
+    if (hashType != 'sha2-256') {
+      throw UnsupportedError('Hash type $hashType not supported');
+    }
     final digest = sha256.convert(data).bytes;
-    final mh = MultihashUtils.sha256(Uint8List.fromList(digest));
+    final mh = MultihashUtils.encode(hashType, Uint8List.fromList(digest));
+    if (version == 0) {
+      return CID.v0(Uint8List.fromList(digest));
+    }
+    return CID.v1(codec, mh);
+  }
+
+  /// Reconstructs a CID from a [prefix] (version + codec + multihash function
+  /// + hash length) and the raw block [data].
+  ///
+  /// The digest is computed from [data] using the provided [hashType]. The
+  /// resulting CID is only valid if the computed prefix matches the supplied
+  /// prefix, which is verified by [validate].
+  static Future<CID> fromPrefixBytes(
+    Uint8List prefix,
+    Uint8List data, {
+    String hashType = 'sha2-256',
+  }) async {
+    final codec = _codecFromPrefixBytes(prefix);
+    return fromContent(data, codec: codec, hashType: hashType);
+  }
+
+  static String _codecFromPrefixBytes(Uint8List prefix) {
+    if (prefix.isEmpty) return 'raw';
+    if (prefix[0] == 0x01) {
+      final (codecCode, _) = readVarint(prefix, 1);
+      return Multicodec.supportsByCode(codecCode)
+          ? Multicodec.name(codecCode)
+          : 'unknown';
+    }
+    // CIDv0 is always dag-pb.
+    return 'dag-pb';
+  }
+
+  /// Computes a CID for [data] (async version for compatibility).
+  static Future<CID> computeForData(
+    Uint8List data, {
+    String format = 'raw',
+  }) async {
+    return fromContent(data, codec: format);
+  }
+
+  /// Computes a CID for [data] synchronously.
+  static CID computeForDataSync(Uint8List data, {String codec = 'raw'}) {
+    final digest = sha256.convert(data);
+    final mh = MultihashUtils.encode(
+      'sha2-256',
+      Uint8List.fromList(digest.bytes),
+    );
     return CID.v1(codec, mh);
   }
 
@@ -175,9 +232,14 @@ class CID {
 
     final builder = BytesBuilder();
     builder.addByte(0x01);
-    final codecCode = codec == null
-        ? Multicodec.code('raw')
-        : Multicodec.code(codec!);
+    int codecCode;
+    if (codec == null) {
+      codecCode = Multicodec.code('raw');
+    } else if (Multicodec.supports(codec!)) {
+      codecCode = Multicodec.code(codec!);
+    } else {
+      throw FormatException('Unsupported codec during CID encoding: $codec');
+    }
     builder.add(encodeVarint(codecCode));
     builder.add(multihash.toBytes());
     return builder.toBytes();
@@ -185,13 +247,31 @@ class CID {
 
   /// Returns the CID prefix bytes (version + codec + multihash function + hash
   /// length), omitting the digest itself.
+  ///
+  /// This is the format used by Bitswap/GraphSync block prefixes to allow the
+  /// receiver to reconstruct the CID from the prefix and block data.
   Uint8List toPrefixBytes() {
     final bytes = toBytes();
     final digestLength = multihash.size;
+    if (version == 0) {
+      // CIDv0's binary form is the bare multihash, so synthesize the
+      // implicit <version=0, codec=dag-pb> header that Bitswap
+      // receivers expect in block prefixes.
+      final mhHeader = bytes.sublist(0, bytes.length - digestLength);
+      return Uint8List.fromList([0x00, 0x70, ...mhHeader]);
+    }
     if (bytes.length <= digestLength) {
       return bytes;
     }
     return Uint8List.fromList(bytes.sublist(0, bytes.length - digestLength));
+  }
+
+  /// Validates the CID.
+  bool validate() {
+    if (version != 0 && version != 1) return false;
+    if (version == 0 && codec != 'dag-pb') return false;
+    if (multihash.size <= 0) return false;
+    return true;
   }
 
   /// Returns the encoded CID string.

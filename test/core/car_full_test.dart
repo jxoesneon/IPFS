@@ -9,7 +9,7 @@ import 'package:dart_ipfs/src/utils/car_writer.dart';
 import 'package:dart_ipfs_core/dart_ipfs_core.dart' as core;
 import 'package:test/test.dart';
 
-core.CID coreCid(CID cid) => core.CID.fromBytes(cid.toBytes());
+core.CID coreCid(CID cid) => cid;
 
 void main() {
   group('CAR Utilities Deep Coverage', () {

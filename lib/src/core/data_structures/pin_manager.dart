@@ -79,7 +79,7 @@ class PinManager {
 
   /// Pins a block with the specified type (direct or recursive).
   Future<bool> pinBlock(IPFSCIDProto cidProto, PinTypeProto type) async {
-    final cidStr = CID.fromProto(cidProto).encode();
+    final cidStr = cidProto.toCID().encode();
     bool success = false;
 
     if (type == PinTypeProto.PIN_TYPE_RECURSIVE) {
@@ -99,7 +99,7 @@ class PinManager {
   Future<bool> _pinRecursive(IPFSCIDProto cid) async {
     final Set<String> visited = {};
     final Queue<String> queue = Queue();
-    final String cidStr = CID.fromProto(cid).encode();
+    final String cidStr = cid.toCID().encode();
 
     _pins[cidStr] = PinTypeProto.PIN_TYPE_RECURSIVE;
     queue.add(cidStr);
@@ -202,7 +202,7 @@ class PinManager {
 
   /// Returns whether the block is pinned (directly or indirectly).
   bool isBlockPinned(IPFSCIDProto cid) {
-    final cidStr = CID.fromProto(cid).encode();
+    final cidStr = cid.toCID().encode();
     return _pins.containsKey(cidStr) || _isIndirectlyPinned(cidStr);
   }
 
@@ -214,7 +214,7 @@ class PinManager {
 
   /// Unpins a block and its recursively pinned references.
   Future<bool> unpinBlock(IPFSCIDProto cid) async {
-    final cidStr = CID.fromProto(cid).encode();
+    final cidStr = cid.toCID().encode();
     if (!_pins.containsKey(cidStr)) {
       return false;
     }

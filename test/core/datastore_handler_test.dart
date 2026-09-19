@@ -13,7 +13,7 @@ import 'package:test/test.dart';
 
 import '../mocks/in_memory_datastore.dart';
 
-core.CID coreCid(CID cid) => core.CID.fromBytes(cid.toBytes());
+core.CID coreCid(CID cid) => cid;
 
 // Mock datastore that fails on operations
 class FailingDatastore extends InMemoryDatastore {

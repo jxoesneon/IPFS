@@ -22,6 +22,7 @@ import 'package:dart_ipfs/src/protocols/graphsync/graphsync_types.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/encoding.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
+import 'package:dart_ipfs/src/utils/varint.dart';
 
 /// Graphsync protocol handler for efficient DAG (Directed Acyclic Graph) transfer.
 ///
@@ -517,7 +518,7 @@ class GraphsyncHandler implements ILifecycle {
     if (!response.found) {
       return null;
     }
-    final core.Block block = core.Block.fromProto(response.block);
+    final core.Block block = response.block.toBlock();
     budget.checkBlock(block.data.length);
 
     return Block(prefix: block.cid.toPrefixBytes(), data: block.data);
@@ -843,7 +844,7 @@ class GraphsyncHandler implements ILifecycle {
   String _codecFromPrefix(Uint8List prefix) {
     if (prefix.isEmpty) return 'raw';
     if (prefix[0] == 0x01) {
-      final (codecLen, codecCode) = CID.readVarint(prefix, 1);
+      final (codecCode, _) = decodeVarint(prefix.sublist(1));
       try {
         return EncodingUtils.getCodecFromCode(codecCode);
       } catch (_) {

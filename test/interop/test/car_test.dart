@@ -13,7 +13,6 @@ import '../lib/kubo_client.dart';
 
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/car.dart';
-import 'package:dart_ipfs_core/dart_ipfs_core.dart' as core;
 
 const kKuboApiHost = String.fromEnvironment('KUBO_HOST', defaultValue: 'kubo');
 const kKuboApiPort = int.fromEnvironment('KUBO_PORT', defaultValue: 5001);
@@ -83,9 +82,9 @@ void main() {
       final testData = utf8.encode('CAR roundtrip test data');
       final block = await Block.fromData(Uint8List.fromList(testData));
 
-      // Block uses the lib CID type while the CAR reader/writer use
-      // dart_ipfs_core's CID; convert via the binary CID encoding.
-      final carCid = core.CID.fromBytes(block.cid.toBytes());
+      // Blocks and the CAR reader/writer share the same CID type from
+      // dart_ipfs_core.
+      final carCid = block.cid;
 
       // Export to CAR
       final writer = CarWriter(roots: [carCid]);
@@ -117,10 +116,10 @@ void main() {
         Uint8List.fromList(utf8.encode('block3')),
       );
 
-      // Convert to the dart_ipfs_core CID type used by the CAR reader/writer.
-      final carCid1 = core.CID.fromBytes(block1.cid.toBytes());
-      final carCid2 = core.CID.fromBytes(block2.cid.toBytes());
-      final carCid3 = core.CID.fromBytes(block3.cid.toBytes());
+      // Blocks and the CAR reader/writer share the same CID type.
+      final carCid1 = block1.cid;
+      final carCid2 = block2.cid;
+      final carCid3 = block3.cid;
 
       // Export to CAR with block1 as root
       final writer = CarWriter(roots: [carCid1]);

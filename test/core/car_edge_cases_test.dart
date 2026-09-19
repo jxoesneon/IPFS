@@ -10,7 +10,7 @@ import 'package:dart_ipfs_core/dart_ipfs_core.dart' as core;
 import 'package:fixnum/fixnum.dart' show Int64;
 import 'package:test/test.dart';
 
-core.CID coreCid(CID cid) => core.CID.fromBytes(cid.toBytes());
+core.CID coreCid(CID cid) => cid;
 
 void main() {
   group('CarHeader edge cases', () {

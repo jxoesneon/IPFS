@@ -23,7 +23,7 @@ void main() {
       expect(proto.data, equals(data));
       expect(proto.format, 'raw');
 
-      final reconstructed = Block.fromProto(proto);
+      final reconstructed = proto.toBlock();
       expect(reconstructed.data, equals(data));
       // CID equality check might need comparing encoded strings or hash bytes
       expect(reconstructed.cid.toString(), equals(block.cid.toString()));
@@ -37,7 +37,7 @@ void main() {
       expect(bsProto.data, equals(data));
 
       // Note: fromBitswapProto is async and might re-compute CID
-      final reconstructed = await Block.fromBitswapProto(bsProto);
+      final reconstructed = await bsProto.toBlock();
       expect(reconstructed.data, equals(data));
     });
   });

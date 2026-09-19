@@ -314,7 +314,7 @@ class ContentManager implements ILifecycle {
 
     final blockResult = await _blockStore?.getBlock(cid);
     if (blockResult != null && blockResult.found) {
-      return Block.fromProto(blockResult.block);
+      return blockResult.block.toBlock();
     }
 
     final bitswap = _bitswapHandler;
@@ -387,7 +387,7 @@ class ContentManager implements ILifecycle {
       if (block == null) {
         final blockResult = await _blockStore?.getBlock(cid);
         if (blockResult != null && blockResult.found) {
-          block = Block.fromProto(blockResult.block);
+          block = blockResult.block.toBlock();
         }
       }
 

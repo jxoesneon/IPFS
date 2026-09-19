@@ -1,8 +1,6 @@
 // src/core/ipfs_node/datastore_handler.dart
 import 'dart:typed_data';
 
-import 'package:dart_ipfs_core/dart_ipfs_core.dart' as ipfs_core;
-
 import '../../utils/car_reader.dart';
 import '../../utils/car_writer.dart';
 import '../../utils/logger.dart';
@@ -153,7 +151,7 @@ class DatastoreHandler implements ILifecycle {
 
       await for (final section in reader.sections()) {
         final block = Block(
-          cid: CID.fromBytes(section.cid.toBytes()),
+          cid: section.cid,
           data: section.bytes,
           format: section.cid.codec ?? 'raw',
         );
@@ -200,14 +198,9 @@ class DatastoreHandler implements ILifecycle {
         await _recursiveGetBlocks(rootNode, blocks);
       }
 
-      final writer = CarWriter(
-        roots: [ipfs_core.CID.fromBytes(blocks.first.cid.toBytes())],
-      );
+      final writer = CarWriter(roots: [blocks.first.cid]);
       for (final block in blocks) {
-        await writer.write(
-          ipfs_core.CID.fromBytes(block.cid.toBytes()),
-          block.data,
-        );
+        await writer.write(block.cid, block.data);
       }
 
       final carData = await writer.close();

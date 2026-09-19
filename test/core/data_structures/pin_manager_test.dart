@@ -239,7 +239,7 @@ void main() {
       await manager.pinBlock(c1.toProto(), PinTypeProto.PIN_TYPE_RECURSIVE);
       final blocks = manager.getPinnedBlocks();
       expect(blocks.length, equals(1));
-      expect(CID.fromProto(blocks.first).encode(), equals(c1.encode()));
+      expect(blocks.first.toCID().encode(), equals(c1.encode()));
     });
   });
 }

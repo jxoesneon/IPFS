@@ -19,7 +19,7 @@ class BlockStoreService extends BlockStoreServiceBase {
 
   @override
   Future<AddBlockResponse> addBlock(ServiceCall ctx, BlockProto request) async {
-    final block = Block.fromProto(request);
+    final block = request.toBlock();
     return _blockStore.putBlock(block);
   }
 

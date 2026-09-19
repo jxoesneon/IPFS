@@ -27,7 +27,7 @@ class OperationLogEntry {
       timestamp: DateTime.fromMillisecondsSinceEpoch(pbEntry.timestamp.toInt()),
       operation: pbEntry.operation,
       details: pbEntry.details,
-      cid: pbEntry.hasCid() ? CID.fromProto(pbEntry.cid) : null,
+      cid: pbEntry.hasCid() ? pbEntry.cid.toCID() : null,
       nodeType: pbEntry.hasNodeType() ? pbEntry.nodeType : null,
     );
   }

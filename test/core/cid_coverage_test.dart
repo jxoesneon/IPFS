@@ -29,7 +29,7 @@ void main() {
       expect(proto, isA<IPFSCIDProto>());
       expect(proto.version, equals(IPFSCIDVersion.IPFS_CID_VERSION_1));
 
-      final fromProto = CID.fromProto(proto);
+      final fromProto = proto.toCID();
       expect(fromProto, equals(cid));
       expect(fromProto.codec, equals('dag-pb'));
     });
@@ -129,7 +129,7 @@ void main() {
       // fromProto CIDv0
       final proto = cid.toProto();
       expect(proto.version, equals(IPFSCIDVersion.IPFS_CID_VERSION_0));
-      final fromProto = CID.fromProto(proto);
+      final fromProto = proto.toCID();
       expect(fromProto, equals(cid));
 
       // Invalid v0 length

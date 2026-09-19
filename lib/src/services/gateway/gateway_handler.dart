@@ -19,7 +19,6 @@ import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart' as utils_dnslink;
 import 'package:dart_ipfs/src/utils/logger.dart';
-import 'package:dart_ipfs_core/dart_ipfs_core.dart' as ipfs_core;
 import 'package:mime/mime.dart';
 import 'package:multibase/multibase.dart';
 import 'package:shelf/shelf.dart';
@@ -527,7 +526,7 @@ class GatewayHandler {
       return Response.notFound('Block not found');
     }
 
-    final writer = CarWriter(roots: [ipfs_core.CID.fromBytes(cid.toBytes())]);
+    final writer = CarWriter(roots: [cid]);
     final seen = <String>{};
 
     try {
@@ -537,10 +536,7 @@ class GatewayHandler {
       if (cid.encode() != targetCid.encode() && !seen.contains(cid.encode())) {
         final rootBlock = await _getBlockByCid(cid.encode());
         if (rootBlock != null) {
-          await writer.write(
-            ipfs_core.CID.fromBytes(cid.toBytes()),
-            rootBlock.data,
-          );
+          await writer.write(cid, rootBlock.data);
           seen.add(cid.encode());
         }
       }
@@ -588,7 +584,7 @@ class GatewayHandler {
       return;
     }
     seen.add(cidStr);
-    await writer.write(ipfs_core.CID.fromBytes(cid.toBytes()), block.data);
+    await writer.write(cid, block.data);
 
     // Only DAG-PB nodes have navigable links for the full DAG traversal.
     if (block.cid.codec != 'dag-pb') {
@@ -1290,7 +1286,7 @@ class GatewayHandler {
     try {
       final response = await blockStore.getBlock(cidStr);
       if (response.found) {
-        return Block.fromProto(response.block);
+        return response.block.toBlock();
       }
     } catch (e, stackTrace) {
       _logger.error('Error getting block $cidStr', e, stackTrace);
@@ -1305,7 +1301,7 @@ class GatewayHandler {
           // BitswapHandler stores received blocks in the blockstore; verify.
           final stored = await blockStore.getBlock(cidStr);
           if (stored.found) {
-            return Block.fromProto(stored.block);
+            return stored.block.toBlock();
           }
           return networkBlock;
         }

@@ -19,7 +19,6 @@ import 'package:dart_ipfs/src/services/rpc/mfs_handlers.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/version.dart';
-import 'package:dart_ipfs_core/dart_ipfs_core.dart' as ipfs_core;
 import 'package:fixnum/fixnum.dart';
 import 'package:http_parser/http_parser.dart'; // For MediaType
 import 'package:mime/mime.dart';
@@ -324,7 +323,7 @@ class RPCHandlers {
   Future<int> _cumulativeDagSize(String cid) async {
     final response = await node.blockStore.getBlock(cid);
     if (!response.found) return 0;
-    final block = Block.fromProto(response.block);
+    final block = response.block.toBlock();
     var total = block.data.length;
     if (block.cid.codec == 'dag-pb') {
       try {
@@ -456,7 +455,7 @@ class RPCHandlers {
   Future<Block?> _rpcGetBlock(String cid) async {
     final response = await node.blockStore.getBlock(cid);
     if (response.found) {
-      return Block.fromProto(response.block);
+      return response.block.toBlock();
     }
     final bitswap = node.bitswap;
     if (bitswap != null) {
@@ -629,7 +628,7 @@ class RPCHandlers {
         return _errorResponse('Block not found: $cid', code: 404);
       }
 
-      final block = Block.fromProto(response.block);
+      final block = response.block.toBlock();
       final ipldNode = await _decodeBlockAsIpld(block);
       final dagJson = await DagJsonCodec().encode(ipldNode);
       return Response.ok(
@@ -793,7 +792,7 @@ class RPCHandlers {
       var byteCount = 0;
       await for (final section in reader.sections()) {
         final block = Block(
-          cid: CID.fromBytes(section.cid.toBytes()),
+          cid: section.cid,
           data: section.bytes,
           format: _codecToFormat(section.cid.codec ?? 'raw'),
         );
@@ -855,7 +854,7 @@ class RPCHandlers {
 
   Future<Uint8List> _exportCar(String rootCidStr) async {
     final root = CID.decode(rootCidStr);
-    final writer = CarWriter(roots: [ipfs_core.CID.fromBytes(root.toBytes())]);
+    final writer = CarWriter(roots: [root]);
     final visited = <String>{};
     await _exportBlock(root, writer, visited);
     return writer.close();
@@ -884,8 +883,8 @@ class RPCHandlers {
     if (!response.found) {
       throw StateError('Block not found: $key');
     }
-    final block = Block.fromProto(response.block);
-    await writer.write(ipfs_core.CID.fromBytes(cid.toBytes()), block.data);
+    final block = response.block.toBlock();
+    await writer.write(cid, block.data);
 
     // The CID codec is authoritative; the stored format hint is a fallback
     // for blocks whose CID predates codec-aware storage.

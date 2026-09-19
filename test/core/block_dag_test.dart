@@ -65,7 +65,7 @@ void main() {
     test('proto roundtrip', () async {
       final block = await Block.fromData(Uint8List.fromList([1, 2, 3]));
       final proto = block.toProto();
-      final fromProto = Block.fromProto(proto);
+      final fromProto = proto.toBlock();
 
       expect(fromProto.cid, equals(block.cid));
       expect(fromProto.data, equals(block.data));
@@ -79,7 +79,7 @@ void main() {
       final bitswapProto = block.toBitswapProto();
       expect(bitswapProto.data, equals(data));
 
-      final fromBitswap = await Block.fromBitswapProto(bitswapProto);
+      final fromBitswap = await bitswapProto.toBlock();
       expect(fromBitswap.data, equals(data));
 
       expect(block.toBytes(), equals(data));

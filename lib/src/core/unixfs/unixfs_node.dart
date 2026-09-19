@@ -103,7 +103,7 @@ class UnixFSNode {
 Future<UnixFSNode?> unixfsGetNode(IBlockStore store, CID cid) async {
   final response = await store.getBlock(cid.encode());
   if (!response.found) return null;
-  final block = Block.fromProto(response.block);
+  final block = response.block.toBlock();
   return UnixFSNode.fromBlock(block);
 }
 

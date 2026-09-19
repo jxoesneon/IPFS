@@ -255,7 +255,7 @@ class BitswapHandler implements ILifecycle {
         _blockPresenceCache.put(cidStr, response.found); // Update cache
 
         if (response.found) {
-          outgoingMessage.addBlock(Block.fromProto(response.block));
+          outgoingMessage.addBlock(response.block.toBlock());
           hasContent = true;
         } else if (wantEntry.sendDontHave) {
           outgoingMessage.addBlockPresence(
@@ -646,7 +646,7 @@ class BitswapHandler implements ILifecycle {
     final localResponse = await _blockStore.getBlock(cidStr);
     if (localResponse.found && localResponse.hasBlock()) {
       try {
-        return Block.fromProto(localResponse.block);
+        return localResponse.block.toBlock();
       } catch (e, st) {
         _logger.warning(
           'Failed to deserialize cached block for $cidStr',

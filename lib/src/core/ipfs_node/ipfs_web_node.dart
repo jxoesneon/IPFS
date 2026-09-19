@@ -223,7 +223,7 @@ class IPFSWebNode {
     // 1. Try local storage via BlockStore
     final response = await _blockStore.getBlock(cidString);
     if (response.found && response.hasBlock()) {
-      return _extractContent(Block.fromProto(response.block));
+      return _extractContent(response.block.toBlock());
     }
 
     // 2. Fallback to Bitswap
@@ -258,7 +258,7 @@ class IPFSWebNode {
     if (!response.found) {
       return null;
     }
-    return Block.fromProto(response.block);
+    return response.block.toBlock();
   }
 
   /// Gets data by CID object.

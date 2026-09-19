@@ -15,7 +15,7 @@ import 'package:dart_ipfs/src/core/data_structures/link.dart';
 
 import 'datastore_handler_test.mocks.dart';
 
-core.CID coreCid(CID cid) => core.CID.fromBytes(cid.toBytes());
+core.CID coreCid(CID cid) => cid;
 
 @GenerateNiceMocks([MockSpec<Datastore>()])
 void main() {
