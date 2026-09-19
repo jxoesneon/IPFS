@@ -387,6 +387,49 @@ void main() {
       expect(table.containsPeer(pStart), isTrue);
     });
 
+    test('removePeer drops connection stats bookkeeping', () async {
+      final peer = createPeerId(0x80);
+      await table.addPeer(peer, peer);
+      expect(table.connectionStats.containsKey(peer), isTrue);
+
+      table.removePeer(peer);
+      expect(table.containsPeer(peer), isFalse);
+      expect(table.connectionStats.containsKey(peer), isFalse);
+    });
+
+    test('removePeer drops lastSeen bookkeeping', () async {
+      final peer = createPeerId(0x80);
+      await table.addPeer(peer, peer);
+      table.lastSeen[peer] = DateTime.now();
+
+      table.removePeer(peer);
+      expect(table.lastSeen.containsKey(peer), isFalse);
+    });
+
+    test('stale eviction drops connection stats bookkeeping', () async {
+      final peer = createPeerId(0x80);
+      await table.addPeer(peer, peer);
+      expect(table.connectionStats.containsKey(peer), isTrue);
+
+      final node = table.buckets[0].entries.first.value;
+      node.lastSeen = DateTime.now()
+          .subtract(Duration(hours: 2))
+          .millisecondsSinceEpoch;
+
+      table.refresh();
+      expect(table.containsPeer(peer), isFalse);
+      expect(table.connectionStats.containsKey(peer), isFalse);
+    });
+
+    test('removePeerFromBucket drops connection stats bookkeeping', () async {
+      final peer = createPeerId(0x80);
+      await table.addPeer(peer, peer);
+      expect(table.connectionStats.containsKey(peer), isTrue);
+
+      table.removePeerFromBucket(peer);
+      expect(table.connectionStats.containsKey(peer), isFalse);
+    });
+
     test('stop cancels periodic maintenance timers', () {
       // initialize() spawns refresh/republish/GC timers on the tree; stop()
       // must cancel them so the tree does not outlive the DHT client.

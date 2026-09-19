@@ -63,7 +63,10 @@ class IdentifyPushHandler implements ILifecycle {
   final Logger _logger;
   bool _started = false;
 
-  late StreamController<IdentifyPushEvent> _pushController;
+  /// The controller is `final` and must survive a stop/start cycle; it is
+  /// released with the handler. Closing it in [stop] would permanently kill
+  /// the [pushEvents] stream for a restarted handler.
+  late final StreamController<IdentifyPushEvent> _pushController;
 
   /// Stream of incoming push events from remote peers.
   Stream<IdentifyPushEvent> get pushEvents => _pushController.stream;
@@ -87,7 +90,8 @@ class IdentifyPushHandler implements ILifecycle {
     if (!_started) return;
     _started = false;
     _router.removeMessageHandler(identifyPushProtocolId);
-    await _pushController.close();
+    // _pushController is `final` and must survive a stop/start cycle; it is
+    // released with the handler.
     _logger.info('Identify push handler stopped');
   }
 
@@ -107,7 +111,9 @@ class IdentifyPushHandler implements ILifecycle {
         identify: identify,
       );
 
-      _pushController.add(event);
+      if (!_pushController.isClosed) {
+        _pushController.add(event);
+      }
       _logger.debug(
         'Processed identify push from ${packet.srcPeerId}: '
         'protocols=${identify.protocols.length}, '

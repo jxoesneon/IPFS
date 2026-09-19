@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
@@ -187,6 +188,42 @@ void main() {
           throwsA(isA<ArgumentError>()),
         );
       });
+    });
+
+    test('read stream terminates on read error', () async {
+      await mfs.write('/broken.txt', Stream.value(utf8.encode('data')));
+      final stat = await mfs.stat('/broken.txt');
+
+      // Remove the file's block so the recursive read fails mid-stream.
+      await blockStore.removeBlock(stat.hash);
+
+      final stream = await mfs.read('/broken.txt');
+      // The controller used to addError without closing, leaving consumers
+      // of the stream hanging forever.
+      await expectLater(
+        stream,
+        emitsInOrder([emitsError(anything), emitsDone]),
+      );
+    });
+
+    test('write with offset surfaces read errors instead of hanging', () async {
+      await mfs.write('/fragile.txt', Stream.value(utf8.encode('data')));
+      final stat = await mfs.stat('/fragile.txt');
+      await blockStore.removeBlock(stat.hash);
+
+      // _readAllBytes drives the same read controller; an unclosed stream
+      // would make this hang rather than throw the underlying error.
+      await expectLater(
+        mfs
+            .write(
+              '/fragile.txt',
+              Stream.value(utf8.encode('x')),
+              offset: 0,
+              truncate: false,
+            )
+            .timeout(const Duration(seconds: 5)),
+        throwsA(isNot(isA<TimeoutException>())),
+      );
     });
 
     test('stat honors cid-base', () async {

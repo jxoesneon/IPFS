@@ -706,6 +706,39 @@ void main() {
       expect(router.sentMessages[0].protocolId, equals('/ipfs/id/push/1.0.0'));
     });
 
+    test('pushEvents stays live across stop/start restart', () async {
+      final identifyHandler = IdentifyHandler(
+        router: router,
+        publicKeyBytes: publicKeyBytes,
+        peerIdBytes: peerIdBytes,
+      );
+      final pushHandler = IdentifyPushHandler(
+        router: router,
+        identifyHandler: identifyHandler,
+      );
+
+      // Subscribe once — the push stream must survive a full restart cycle.
+      // Previously stop() closed the controller, making pushEvents dead
+      // after a restart.
+      final events = <IdentifyPushEvent>[];
+      pushHandler.pushEvents.listen(events.add);
+
+      await pushHandler.start();
+      await pushHandler.stop();
+      await pushHandler.start();
+
+      router.simulateIncoming(
+        '/ipfs/id/push/1.0.0',
+        'QmRemote',
+        IdentifyPb(agentVersion: 'test/1.0').encode(),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(events, hasLength(1));
+      expect(events[0].peerId, equals('QmRemote'));
+      expect(events[0].identify.agentVersion, equals('test/1.0'));
+    });
+
     test('pushToPeer warns when not started', () async {
       final identifyHandler = IdentifyHandler(
         router: router,

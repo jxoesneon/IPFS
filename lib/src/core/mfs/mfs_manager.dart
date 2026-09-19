@@ -548,9 +548,17 @@ class MFSManager implements ILifecycle {
     final controller = StreamController<List<int>>();
 
     unawaited(
-      _readRecursive(cid, controller, offset: offset, count: count)
-          .then((_) => controller.close())
-          .catchError((Object e) => controller.addError(e)),
+      _readRecursive(
+        cid,
+        controller,
+        offset: offset,
+        count: count,
+      ).then((_) => controller.close()).catchError((Object e) {
+        controller.addError(e);
+        // Close the stream after the error so consumers terminate
+        // instead of hanging forever.
+        return controller.close();
+      }),
     );
 
     return controller.stream;
@@ -705,9 +713,17 @@ class MFSManager implements ILifecycle {
     final buffer = BytesBuilder();
 
     unawaited(
-      _readRecursive(cid, controller, offset: 0, count: null)
-          .then((_) => controller.close())
-          .catchError((Object e) => controller.addError(e)),
+      _readRecursive(
+        cid,
+        controller,
+        offset: 0,
+        count: null,
+      ).then((_) => controller.close()).catchError((Object e) {
+        controller.addError(e);
+        // Close the stream after the error so consumers terminate
+        // instead of hanging forever.
+        return controller.close();
+      }),
     );
 
     await for (final chunk in controller.stream) {

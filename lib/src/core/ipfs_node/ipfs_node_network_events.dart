@@ -11,6 +11,7 @@ class IpfsNodeNetworkEvents {
   IpfsNodeNetworkEvents(this._router);
   final RouterInterface _router;
   final _networkEventsController = StreamController<NetworkEvent>.broadcast();
+  StreamSubscription<ConnectionEvent>? _connectionEventsSub;
 
   /// A stream of network events.
   Stream<NetworkEvent> get networkEvents => _networkEventsController.stream;
@@ -32,7 +33,9 @@ class IpfsNodeNetworkEvents {
 
   /// Listens for connection events from the router.
   void _listenForConnectionEvents() {
-    _router.connectionEvents.listen((event) {
+    // The subscription is retained so dispose() can cancel it; discarding
+    // it would leave an uncancellable listener on the router.
+    _connectionEventsSub ??= _router.connectionEvents.listen((event) {
       final networkEvent = NetworkEvent();
       switch (event.type) {
         case ConnectionEventType.connected:
@@ -57,6 +60,8 @@ class IpfsNodeNetworkEvents {
 
   /// Stops listening for network events and closes the stream controller.
   void dispose() {
+    unawaited(_connectionEventsSub?.cancel());
+    _connectionEventsSub = null;
     if (!_networkEventsController.isClosed) {
       _networkEventsController.close();
     }

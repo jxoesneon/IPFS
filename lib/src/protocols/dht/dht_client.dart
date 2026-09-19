@@ -90,6 +90,14 @@ class DHTClient {
   late KademliaRoutingTable _kademliaRoutingTable;
   late DHTConfig _config;
   bool _initialized = false;
+
+  // Tracks whether the current routing table's KademliaTree has started its
+  // periodic maintenance timers. The tree starts them in its constructor,
+  // before initialize() can fail later and leave _initialized false — this
+  // flag lets both the initialize() error path and stop() cancel the timers
+  // so a failed initialize() retried later does not leak timers that
+  // multiply on every attempt.
+  bool _routingTableStarted = false;
   final Set<String> _bootstrappedPeers = {};
   StreamSubscription<ConnectionEvent>? _connectionEventSub;
 
@@ -125,26 +133,37 @@ class DHTClient {
 
     _kademliaRoutingTable = KademliaRoutingTable();
     _kademliaRoutingTable.initialize(this);
+    _routingTableStarted = true;
 
-    // Expose the routing table via the router interface for DHT protocol handlers
-    final routingAdapter = KademliaRoutingAdapter(_kademliaRoutingTable);
-    if (_router is Libp2pRouter) {
-      (_router).setDHTRoutingTable(routingAdapter);
-    }
-
-    // Register protocols and handlers
-    _registerProtocols();
-    _setupHandlers();
-
-    // Bootstrap newly-connected peers so that small/private networks converge
-    // even without explicit bootstrap peer lists.
-    _connectionEventSub = _router.connectionEvents.listen((event) {
-      if (event.type == ConnectionEventType.connected) {
-        unawaited(_bootstrapConnectedPeer(event.peerId));
+    try {
+      // Expose the routing table via the router interface for DHT protocol handlers
+      final routingAdapter = KademliaRoutingAdapter(_kademliaRoutingTable);
+      if (_router is Libp2pRouter) {
+        (_router).setDHTRoutingTable(routingAdapter);
       }
-    });
 
-    _initialized = true;
+      // Register protocols and handlers
+      _registerProtocols();
+      _setupHandlers();
+
+      // Bootstrap newly-connected peers so that small/private networks converge
+      // even without explicit bootstrap peer lists.
+      _connectionEventSub = _router.connectionEvents.listen((event) {
+        if (event.type == ConnectionEventType.connected) {
+          unawaited(_bootstrapConnectedPeer(event.peerId));
+        }
+      });
+
+      _initialized = true;
+    } catch (_) {
+      // A partially-initialized table keeps its tree's periodic maintenance
+      // timers running; stop it now so a retry does not multiply timers.
+      _kademliaRoutingTable.stop();
+      _routingTableStarted = false;
+      await _connectionEventSub?.cancel();
+      _connectionEventSub = null;
+      rethrow;
+    }
   }
 
   void _registerProtocols() {
@@ -1381,10 +1400,13 @@ class DHTClient {
       }
       _pendingRequests.clear();
 
-      // Clear routing table
-      if (_initialized) {
+      // Clear routing table. The table's timers are tracked separately from
+      // _initialized so a table created by a failed initialize() is still
+      // stopped rather than leaked.
+      if (_routingTableStarted) {
         _kademliaRoutingTable.clear();
         _kademliaRoutingTable.stop();
+        _routingTableStarted = false;
       }
       _initialized = false;
       _bootstrappedPeers.clear();

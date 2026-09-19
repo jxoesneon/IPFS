@@ -171,16 +171,26 @@ class KademliaRoutingTable {
       );
       bucket.size = bucket.entries.length;
 
-      final String? ip = _peerIps.remove(peerId);
-      if (ip != null) {
-        final int count = _ipCounts[ip] ?? 0;
-        if (count > 1) {
-          _ipCounts[ip] = count - 1;
-        } else {
-          _ipCounts.remove(ip);
-        }
-      }
+      _cleanupPeerTracking(peerId);
       _logger.info('Removed peer $peerId from routing table');
+    }
+  }
+
+  /// Drops bookkeeping entries for a removed peer so the per-peer maps
+  /// ([_connectionStats], [_peerIps]/[_ipCounts] and the tree's lastSeen)
+  /// do not grow unboundedly as peers churn through the table.
+  void _cleanupPeerTracking(PeerId peerId) {
+    _connectionStats.remove(peerId);
+    _tree.lastSeen.remove(peerId);
+
+    final String? ip = _peerIps.remove(peerId);
+    if (ip != null) {
+      final int count = _ipCounts[ip] ?? 0;
+      if (count > 1) {
+        _ipCounts[ip] = count - 1;
+      } else {
+        _ipCounts.remove(ip);
+      }
     }
   }
 
@@ -210,6 +220,7 @@ class KademliaRoutingTable {
     _peerIps.clear();
     _ipCounts.clear();
     _connectionStats.clear();
+    _tree.lastSeen.clear();
   }
 
   /// Cancels the routing table's periodic maintenance timers. Called when the
@@ -217,6 +228,15 @@ class KademliaRoutingTable {
   void stop() {
     _tree.stop();
   }
+
+  /// Whether [stop] has cancelled the tree's periodic maintenance timers.
+  bool get isStopped => _tree.isStopped;
+
+  /// Per-peer connection statistics tracked by the table.
+  Map<PeerId, ConnectionStatistics> get connectionStats => _connectionStats;
+
+  /// Maps peers to the time they were last seen (delegates to the tree).
+  Map<PeerId, DateTime> get lastSeen => _tree.lastSeen;
 
   /// Calculates the XOR distance between two peers.
   int calculateDistance(PeerId a, PeerId b) => _calculateXorDistance(a, b);
@@ -356,6 +376,7 @@ class KademliaRoutingTable {
     for (final entry in bucket.entries.toList()) {
       if (_isStaleNode(entry.value)) {
         bucket.remove(entry.key);
+        _cleanupPeerTracking(entry.key);
         _logger.debug('Evicted stale node ${entry.key} from bucket');
         return true;
       }
@@ -410,6 +431,7 @@ class KademliaRoutingTable {
         bucket.remove(peerId);
         bucket.entries.removeWhere((e) => _peersEqual(e.key, peerId));
         bucket.size = bucket.entries.length;
+        _cleanupPeerTracking(peerId);
         break;
       }
     }

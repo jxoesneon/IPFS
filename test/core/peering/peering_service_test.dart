@@ -251,6 +251,36 @@ void main() {
       expect(status['total_peers'], equals(0));
     });
 
+    test('events stream stays live across stop/start restart', () async {
+      const peerAddr = '/ip4/1.2.3.4/tcp/4001/p2p/QmPeer';
+      fakeRouter.setConnected('QmPeer', true);
+      final service = PeeringService(
+        config,
+        networkHandler,
+        peeringConfig: const PeeringConfig(
+          peers: [peerAddr],
+          checkInterval: Duration(milliseconds: 10),
+        ),
+      );
+
+      // Subscribe once — the events stream must survive a full restart
+      // cycle. Previously stop() closed the controller, so every emit after
+      // a restart threw StateError on the dead controller.
+      final events = <PeeringEvent>[];
+      service.events.listen(events.add);
+
+      await service.start();
+      await service.stop();
+      events.clear();
+
+      await service.start();
+      // The restart's initial connectivity check emits 'connected' for the
+      // still-online peer.
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(events.any((e) => e.type == PeeringEventType.connected), isTrue);
+      await service.stop();
+    });
+
     test('emits disconnected event when peer goes offline', () async {
       const peerAddr = '/ip4/1.2.3.4/tcp/4001/p2p/QmPeer';
       fakeRouter.setConnected('QmPeer', true);

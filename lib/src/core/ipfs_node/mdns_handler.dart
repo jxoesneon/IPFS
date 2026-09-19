@@ -27,7 +27,18 @@ class MDNSHandler implements ILifecycle {
   late final MDnsClient _mdnsClient;
 
   final String _serviceType = '_ipfs-discovery._udp';
+
+  /// Maximum number of discovered peer names retained for dedup.
+  ///
+  /// LAN peers announce arbitrary PTR names, so the set is remote-controlled
+  /// and must stay bounded; when the cap is hit the oldest entry is evicted.
+  static const int _maxDiscoveredPeers = 256;
+
   final Set<String> _discoveredPeers = {};
+
+  /// The controller is `final` and must survive a stop/start cycle; it is
+  /// released with the handler. Closing it in [stop] would permanently kill
+  /// the [peerDiscovery] stream for a restarted handler.
   final StreamController<Peer> _peerDiscoveryController =
       StreamController<Peer>.broadcast();
 
@@ -101,7 +112,9 @@ class MDNSHandler implements ILifecycle {
       _discoveryTimer?.cancel();
 
       await _mdnsClient.stop();
-      await _peerDiscoveryController.close();
+      // _peerDiscoveryController is `final` and must survive a stop/start
+      // cycle; it is released with the handler.
+      _discoveredPeers.clear();
 
       _isRunning = false;
       _logger.info('MDNSHandler stopped successfully');
@@ -165,8 +178,13 @@ class MDNSHandler implements ILifecycle {
 
             final peerInfo = await _resolvePeerInfo(ptr.domainName);
             if (peerInfo != null) {
+              if (_discoveredPeers.length >= _maxDiscoveredPeers) {
+                _discoveredPeers.remove(_discoveredPeers.first);
+              }
               _discoveredPeers.add(ptr.domainName);
-              _peerDiscoveryController.add(peerInfo);
+              if (!_peerDiscoveryController.isClosed) {
+                _peerDiscoveryController.add(peerInfo);
+              }
             }
           }
         }

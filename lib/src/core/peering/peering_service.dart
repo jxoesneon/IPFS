@@ -118,6 +118,10 @@ class PeeringService implements ILifecycle {
   final Map<String, _PeerState> _peerStates = {};
 
   /// Stream controller for peering events.
+  ///
+  /// The controller is `final` and must survive a stop/start cycle; it is
+  /// released with the service. Closing it in [stop] would permanently kill
+  /// the [events] stream for a restarted service.
   final StreamController<PeeringEvent> _eventsController =
       StreamController<PeeringEvent>.broadcast();
 
@@ -192,7 +196,8 @@ class PeeringService implements ILifecycle {
       _checkTimer = null;
       _peerStates.clear();
 
-      await _eventsController.close();
+      // _eventsController is `final` and must survive a stop/start cycle; it
+      // is released with the service.
       _isRunning = false;
       _logger.info('PeeringService stopped successfully');
     } catch (e, stackTrace) {
@@ -271,7 +276,7 @@ class PeeringService implements ILifecycle {
         // Peer just became connected.
         state.connected = true;
         state.reconnectAttempts = 0;
-        _eventsController.add(
+        _emitEvent(
           PeeringEvent(peerId: state.peerId, type: PeeringEventType.connected),
         );
         _logger.info('Peered peer ${state.peerId} is now connected');
@@ -282,7 +287,7 @@ class PeeringService implements ILifecycle {
         state.nextReconnectAt = DateTime.now().add(
           _peeringConfig.initialReconnectDelay,
         );
-        _eventsController.add(
+        _emitEvent(
           PeeringEvent(
             peerId: state.peerId,
             type: PeeringEventType.disconnected,
@@ -298,6 +303,13 @@ class PeeringService implements ILifecycle {
     }
   }
 
+  /// Emits a peering event, dropping it when the controller is closed
+  /// (i.e. while the service is stopped).
+  void _emitEvent(PeeringEvent event) {
+    if (_eventsController.isClosed) return;
+    _eventsController.add(event);
+  }
+
   /// Attempts to connect to a peered peer.
   void _connectPeer(_PeerState state) {
     // Check max reconnection attempts.
@@ -307,7 +319,7 @@ class PeeringService implements ILifecycle {
         'Giving up on peer ${state.peerId} after '
         '${state.reconnectAttempts} reconnection attempts',
       );
-      _eventsController.add(
+      _emitEvent(
         PeeringEvent(peerId: state.peerId, type: PeeringEventType.giveUp),
       );
       _peerStates.remove(state.peerId);

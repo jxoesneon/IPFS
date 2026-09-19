@@ -144,10 +144,15 @@ class KademliaTree {
   }
 
   final List<Timer> _timers = [];
+  bool _stopped = false;
+
+  /// Whether [stop] has cancelled this tree's periodic maintenance timers.
+  bool get isStopped => _stopped;
 
   /// Cancels all periodic maintenance tasks. Call when the owning DHT client
   /// stops; the tree must not outlive it.
   void stop() {
+    _stopped = true;
     for (final timer in _timers) {
       timer.cancel();
     }
