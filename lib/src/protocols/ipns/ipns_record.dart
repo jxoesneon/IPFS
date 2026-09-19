@@ -45,9 +45,15 @@ class IPNSRecord {
     Uint8List? signature,
     Uint8List? signatureV2,
     Uint8List? dataBytes,
+    Uint8List? protoValidityBytes,
+    int? protoTtlNanos,
+    int? protoValidityType,
   }) : _signature = signature,
        _signatureV2 = signatureV2,
-       _dataBytes = dataBytes;
+       _dataBytes = dataBytes,
+       _protoValidityBytes = protoValidityBytes,
+       _protoTtlNanos = protoTtlNanos,
+       _protoValidityType = protoValidityType;
 
   /// Creates a record for internal use (e.g. caching or testing).
   factory IPNSRecord.internal({
@@ -94,6 +100,12 @@ class IPNSRecord {
 
   /// The canonical DAG-CBOR data bytes used for the V2 signature.
   Uint8List? _dataBytes;
+
+  /// Raw proto field values retained when decoding an [IpnsEntry], used to
+  /// check that the signed CBOR data matches the proto-level fields.
+  Uint8List? _protoValidityBytes;
+  int? _protoTtlNanos;
+  int? _protoValidityType;
 
   /// Gets the V1 signature bytes, if signed.
   Uint8List? get signature => _signature;
@@ -212,6 +224,12 @@ class IPNSRecord {
       return false;
     }
 
+    // A record carrying CBOR data must be V2-signed; the V1 signature does
+    // not cover the data fields, so a V1-only record with data is invalid.
+    if (_dataBytes != null && _signatureV2 == null) {
+      return false;
+    }
+
     final signer = Ed25519Signer();
     final pubKey = signer.publicKeyFromBytes(publicKey);
 
@@ -221,6 +239,14 @@ class IPNSRecord {
     // prefix used by different IPNS implementations.
     if (_signatureV2 != null) {
       final v2DataBytes = _dataBytes ?? _buildV2DataBytes();
+
+      // The signature only covers the CBOR data blob; the proto-level fields
+      // used for resolution are independently malleable. Require the signed
+      // data to match those fields (Kubo: validateCborDataMatchesPbData).
+      if (_dataBytes != null && !_signedDataMatchesFields(v2DataBytes)) {
+        return false;
+      }
+
       final v2SignableRaw = v2DataBytes;
       if (await signer.verify(v2SignableRaw, _signatureV2!, pubKey)) {
         return true;
@@ -373,6 +399,9 @@ class IPNSRecord {
           ? Uint8List.fromList(entry.signatureV2)
           : null,
       dataBytes: entry.data.isNotEmpty ? Uint8List.fromList(entry.data) : null,
+      protoValidityBytes: Uint8List.fromList(entry.validity),
+      protoTtlNanos: entry.ttl.toInt(),
+      protoValidityType: entry.validityType.value,
     );
   }
 
@@ -402,6 +431,55 @@ class IPNSRecord {
     } catch (_) {
       return fromCBOR(data);
     }
+  }
+
+  /// Checks that the signed DAG-CBOR data map encodes the same Value,
+  /// ValidityType, Validity, Sequence, and TTL as the fields this record
+  /// resolves from. Records built locally compare against the field values
+  /// the data was encoded from; records decoded from an [IpnsEntry] compare
+  /// against the raw proto fields.
+  bool _signedDataMatchesFields(Uint8List dataBytes) {
+    final CborValue raw;
+    try {
+      raw = cbor.decode(dataBytes);
+    } catch (_) {
+      return false;
+    }
+    if (raw is! CborMap) {
+      return false;
+    }
+    final decoded = raw;
+
+    Uint8List? bytesOf(String key) {
+      final v = decoded[CborString(key)];
+      return v is CborBytes ? Uint8List.fromList(v.bytes) : null;
+    }
+
+    int? intOf(String key) {
+      final v = decoded[CborString(key)];
+      if (v is CborSmallInt) return v.value;
+      if (v is CborInt) return v.toInt();
+      return null;
+    }
+
+    final expectedValidity =
+        _protoValidityBytes ?? Uint8List.fromList(utf8.encode(_validityString));
+    final expectedTtlNanos = _protoTtlNanos ?? ttl.inMicroseconds * 1000;
+    final expectedValidityType = _protoValidityType ?? 0;
+
+    return _bytesEqual(bytesOf('Value'), value) &&
+        intOf('ValidityType') == expectedValidityType &&
+        _bytesEqual(bytesOf('Validity'), expectedValidity) &&
+        intOf('Sequence') == sequence &&
+        intOf('TTL') == expectedTtlNanos;
+  }
+
+  static bool _bytesEqual(Uint8List? a, Uint8List b) {
+    if (a == null || a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   /// Returns the data that gets signed.

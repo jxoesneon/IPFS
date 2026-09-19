@@ -8,6 +8,7 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
 import 'package:dart_ipfs/src/proto/generated/ipns.pb.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -193,6 +194,106 @@ void main() {
         expect(decoded.publicKey, equals(pubBytes));
         expect(decoded.sequence, equals(5));
         expect(await decoded.verify(), isTrue);
+      });
+
+      test('verifies an untampered entry', () async {
+        final keyPair = await signer.generateKeyPair();
+        final pubBytes = await signer.extractPublicKeyBytes(keyPair);
+        final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]));
+
+        final record = await IPNSRecord.create(
+          value: cid,
+          keyPair: keyPair,
+          sequence: 7,
+        );
+        final entry = IpnsEntry.fromBuffer(record.toIpnsEntry())
+          ..pubKey = [0x08, 0x01, 0x12, pubBytes.length, ...pubBytes];
+
+        final decoded = IPNSRecord.decode(entry.writeToBuffer());
+        expect(await decoded.verify(), isTrue);
+      });
+
+      test(
+        'rejects an entry whose proto fields diverge from signed data',
+        () async {
+          final keyPair = await signer.generateKeyPair();
+          final pubBytes = await signer.extractPublicKeyBytes(keyPair);
+          final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]));
+
+          final record = await IPNSRecord.create(
+            value: cid,
+            keyPair: keyPair,
+            sequence: 5,
+          );
+          final entry = IpnsEntry.fromBuffer(record.toIpnsEntry())
+            ..pubKey = [0x08, 0x01, 0x12, pubBytes.length, ...pubBytes];
+
+          // Hijack: keep the signed data, signature and key intact; rewrite
+          // the proto-level fields that resolution uses.
+          final attackerCid = CID.computeForDataSync(
+            Uint8List.fromList([9, 9, 9]),
+          );
+          entry
+            ..value = utf8.encode('/ipfs/${attackerCid.encode()}')
+            ..sequence = Int64(record.sequence + 1);
+
+          final decoded = IPNSRecord.decode(entry.writeToBuffer());
+          expect(await decoded.verify(), isFalse);
+        },
+      );
+
+      test('rejects an entry with a tampered proto sequence only', () async {
+        final keyPair = await signer.generateKeyPair();
+        final pubBytes = await signer.extractPublicKeyBytes(keyPair);
+        final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]));
+
+        final record = await IPNSRecord.create(
+          value: cid,
+          keyPair: keyPair,
+          sequence: 5,
+        );
+        final entry = IpnsEntry.fromBuffer(record.toIpnsEntry())
+          ..pubKey = [0x08, 0x01, 0x12, pubBytes.length, ...pubBytes]
+          ..sequence = Int64(record.sequence + 100);
+
+        final decoded = IPNSRecord.decode(entry.writeToBuffer());
+        expect(await decoded.verify(), isFalse);
+      });
+
+      test('rejects an entry with a tampered proto ttl', () async {
+        final keyPair = await signer.generateKeyPair();
+        final pubBytes = await signer.extractPublicKeyBytes(keyPair);
+        final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]));
+
+        final record = await IPNSRecord.create(
+          value: cid,
+          keyPair: keyPair,
+          sequence: 5,
+        );
+        final entry = IpnsEntry.fromBuffer(record.toIpnsEntry())
+          ..pubKey = [0x08, 0x01, 0x12, pubBytes.length, ...pubBytes]
+          ..ttl = Int64(1);
+
+        final decoded = IPNSRecord.decode(entry.writeToBuffer());
+        expect(await decoded.verify(), isFalse);
+      });
+
+      test('rejects a data-carrying entry without a V2 signature', () async {
+        final keyPair = await signer.generateKeyPair();
+        final pubBytes = await signer.extractPublicKeyBytes(keyPair);
+        final cid = CID.computeForDataSync(Uint8List.fromList([1, 2, 3]));
+
+        final record = await IPNSRecord.create(
+          value: cid,
+          keyPair: keyPair,
+          sequence: 5,
+        );
+        final entry = IpnsEntry.fromBuffer(record.toIpnsEntry())
+          ..pubKey = [0x08, 0x01, 0x12, pubBytes.length, ...pubBytes]
+          ..clearSignatureV2();
+
+        final decoded = IPNSRecord.decode(entry.writeToBuffer());
+        expect(await decoded.verify(), isFalse);
       });
     });
 
