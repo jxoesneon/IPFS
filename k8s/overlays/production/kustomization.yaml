@@ -24,7 +24,7 @@ resources:
 
 images:
   - name: ghcr.io/jxoesneon/dart-ipfs
-    newTag: "1.16.5"
+    newTag: "1.17.0"
 
 replicas:
   - name: dart-ipfs

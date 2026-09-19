@@ -2,6 +2,43 @@
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-09-19
+
+### Security
+- **IPNS records verify the resolved fields** (#98): `IpnsRecord.verify` now decodes the signed CBOR `data` payload and requires parity with the record's `value`, `sequence`, `validity`, and `ttl` (matching Kubo's `validateCborDataMatchesPbData`), closing a name-hijack vector where a signed envelope could be rewrapped around attacker content. Records carrying `data` without V2 fields are rejected.
+- **WebRTC signaling inbound bounds** (#99): the signaling stream handler now enforces the shared bounded reader (varint cap, message-size cap, idle and lifetime limits) instead of unbounded reads.
+- **Graphsync serve budgets clamped** (#100): requester-supplied depth/block/byte budgets are clamped to `GraphsyncConfig` maxima (32 depth / 10k blocks / 32 MiB) so remote peers cannot dictate unbounded traversal work.
+- **RPC auth no longer fails open on empty keys** (#101): empty or whitespace-only API keys normalize to unauthenticated with a loud warning on both the embedded server and the daemon.
+- **AutoNAT dialback hardening** (#106): dialback requests validate requested addresses (public unicast only, port bounds) to prevent SSRF and address-book poisoning.
+- **Secret file permissions** (#107): ACME/TLS key material and remote-pinning tokens are written with owner-only permissions.
+- **Strict keystore semantics**: locked-keystore operations throw instead of silently using a default key; pubsub strict-auth and unvalidated DHT PUT_VALUE paths were hardened (#108).
+
+### Fixed
+- **Bitswap CIDv0 interoperability**: block messages now always carry a CID prefix, and `CID.toPrefixBytes()` synthesizes the implicit CIDv0 header (version + dag-pb codec + multihash), so CIDv0 UnixFS blocks round-trip correctly between nodes (requires `dart_ipfs_core` ^1.12.0).
+- **Direct dialing restored with rollback**: `Libp2pRouter.connect` seeds the address book with the supplied transport address before dialing (required by the host's peerstore lookup) and restores prior state on failure, keeping unverified addresses out of the address book.
+- **Offline `ipfs id`**: the CLI derives the peer identity from the persisted Ed25519 seed under `dataPath` when the node is offline, matching Kubo behavior; `IPFSNode.peerIdOrNull` added alongside the strict `peerId` getter.
+- **Restart-broken controllers** (#102): peering, mDNS, and identify-push broadcast controllers restart cleanly; Kademlia and MFS lifecycle leaks closed.
+- **Bounded gateway maps** (#103): gateway rate-limit keys and preview caches are capacity-bounded; the spoofable rate-limit identity path was hardened.
+- **Dead configuration reconciled** (#104): ~20 accepted-but-unwired options are deprecated, wired, or fail loudly; deprecated flags that still acted are reconciled; `keyGen` honors requested key size (#92); `peerId` no longer returns an `'offline'` sentinel (#93).
+- **Kubo parity** (#105): `add`/`cat` produce and consume canonical UnixFS DAGs; gateway serves chunked files correctly; `ipns-record` uses the correct encoding.
+- **Latent dead ends and swallowed errors** (#109): mDNS discovery output is surfaced, DHT local-only fallbacks fail honestly, `dns_link`/`ipld`/routing handler stubs wired or removed.
+- **Web platform honesty** (#95): `IPFSWebNode` implements real add/get over the shared UnixFS layout, the web `NetworkHandler` delegates to the router for browser-capable transports, and browser-impossible features (inbound sockets, AutoNAT dialback, circuit relay) report honest negatives instead of stubs.
+
+### Added
+- **Gossipsub wire interop** (#91): `/meshsub/1.1.0` and `/meshsub/1.0.0` protobuf RPCs with SubOpts, publish, IHAVE/IWANT, GRAFT/PRUNE, IDONTWANT, signed-message verification with peer-ID binding, and bounded caches — alongside legacy JSON pubsub.
+- **UnixFS reader and CAR round-trips**: shared `unixfsReadFile` reassembly used by both native and web nodes.
+
+### Changed
+- **Unified CID/Block hierarchies** (#89): `dart_ipfs` re-exports the canonical `dart_ipfs_core` CID/Block types (requires `dart_ipfs_core` ^1.12.0).
+- **Node-scoped dependency injection** (#90): services resolve from per-node `ServiceContainer` instances instead of a global registry, so multiple nodes coexist without cross-talk.
+- **Removed `content_service` parallel API** (#97): superseded by the node/facade paths.
+- **Two-node e2e suite is Linux-gated**: real loopback libp2p traffic cannot complete on shared-tenant Windows/macOS CI runners (see #111).
+
+### Internal
+- Interop gate now covers add/cat, fails on unreachable required hosts, and widened triggers (#110); previously skipped tests re-enabled and a published-deps CI variant guards against unreleased satellite constraints (#94, #96).
+- Changed-line coverage gate honors standard `coverage:ignore-*` markers; publish workflow gates each package's quality steps on the publish target.
+- ~317 previously uncovered changed lines are now covered; changed-line coverage vs v1.16.5 is at 100% after documented VM-unreachable exclusions.
+
 ## [1.16.5] - 2026-09-18
 
 ### Security
