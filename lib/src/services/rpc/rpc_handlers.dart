@@ -6,14 +6,21 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/car.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_reader.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
+import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
+    as unixfs_pb;
 import 'package:dart_ipfs/src/services/rpc/mfs_handlers.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
 import 'package:dart_ipfs/src/version.dart';
 import 'package:dart_ipfs_core/dart_ipfs_core.dart' as ipfs_core;
+import 'package:fixnum/fixnum.dart';
 import 'package:http_parser/http_parser.dart'; // For MediaType
 import 'package:mime/mime.dart';
 import 'package:shelf/shelf.dart';
@@ -40,6 +47,15 @@ class RPCHandlers {
   /// Maximum buffered request body for [handleBlockPut] — a single block,
   /// matching the 4 MiB inbound libp2p message cap.
   static const int _maxBlockPutBytes = 4 * 1024 * 1024;
+
+  /// Maximum buffered request body for [handleDagPut] — a single DAG node.
+  static const int _maxDagPutBytes = 8 * 1024 * 1024;
+
+  /// Traversal bounds for DAG export, matching the gateway CAR export
+  /// conventions (`_defaultMaxCarDepth`/`_defaultMaxCarBlocks` in
+  /// `gateway_handler.dart`).
+  static const int _maxExportDepth = 32;
+  static const int _maxExportBlocks = 10000;
 
   /// Reads the request body into memory, rejecting bodies over [maxBytes].
   static Future<Uint8List> _readBodyBounded(
@@ -109,11 +125,21 @@ class RPCHandlers {
         return _errorResponse('Invalid Content-Type: missing boundary');
       }
 
+      // Kubo-compatible add options. `pin` defaults to true like Kubo;
+      // `cid-version`/`raw-leaves` control the produced DAG shape;
+      // `wrap-with-directory` wraps all added entries in a directory node.
+      final params = request.url.queryParameters;
+      final pin = _boolParam(params, 'pin', defaultValue: true);
+      final rawLeaves = _boolParam(params, 'raw-leaves');
+      final wrapWithDirectory = _boolParam(params, 'wrap-with-directory');
+      final cidVersion = int.tryParse(params['cid-version'] ?? '') ?? 0;
+
       // Transform the request stream into multipart parts
       final transformer = MimeMultipartTransformer(boundary);
       final parts = transformer.bind(request.read());
 
       final results = <Map<String, dynamic>>[];
+      final addedEntries = <(String, String)>[]; // (name, cid) for wrapping
       var totalSize = 0;
       const maxRequestSize = 1024 * 1024 * 1024; // 1 GB
       const maxFileSize = 256 * 1024 * 1024; // 256 MB
@@ -137,9 +163,17 @@ class RPCHandlers {
           }
           return builder..add(chunk);
         });
+        final bytes = content.takeBytes();
 
         // Add to IPFS node
-        final cid = await node.addFile(content.takeBytes());
+        final cid = await _addWithOptions(
+          bytes,
+          cidVersion: cidVersion,
+          rawLeaves: rawLeaves,
+        );
+        if (pin) {
+          await _tryPin(cid);
+        }
 
         // Extract filename if available
         final contentDisposition = part.headers['content-disposition'];
@@ -153,15 +187,29 @@ class RPCHandlers {
           }
         }
 
+        addedEntries.add((name, cid));
         results.add({
           'Name': name,
           'Hash': cid,
-          'Size': content.length.toString(),
+          'Size': bytes.length.toString(),
         });
       }
 
       if (results.isEmpty) {
         return _errorResponse('No files found in request');
+      }
+
+      if (wrapWithDirectory) {
+        final wrapped = await _wrapWithDirectory(addedEntries, cidVersion);
+        if (pin) {
+          await _tryPin(wrapped.$1);
+        }
+        results.add({
+          // Kubo emits the wrapping directory with an empty name.
+          'Name': '',
+          'Hash': wrapped.$1,
+          'Size': wrapped.$2.toString(),
+        });
       }
 
       // IPFS `add` can result in multiple JSON objects (NDJSON) or a single one.
@@ -185,6 +233,110 @@ class RPCHandlers {
   String? _getBoundary(String contentType) {
     final parameters = MediaType.parse(contentType).parameters;
     return parameters['boundary'];
+  }
+
+  /// Parses a Kubo-style boolean query option. A present-but-empty value
+  /// (`?flag=`) counts as `true`, matching Kubo's option parsing.
+  static bool _boolParam(
+    Map<String, String> params,
+    String name, {
+    bool defaultValue = false,
+  }) {
+    final value = params[name];
+    if (value == null) return defaultValue;
+    if (value.isEmpty) return true;
+    return value == 'true' || value == '1';
+  }
+
+  /// Adds [data] honoring `cid-version`/`raw-leaves` options.
+  ///
+  /// For Kubo defaults (CIDv0, non-raw leaves) this delegates to
+  /// [IPFSNode.addFile]. For other DAG shapes the blocks are built with
+  /// [UnixFSBuilder] and written to the block store directly.
+  Future<String> _addWithOptions(
+    Uint8List data, {
+    required int cidVersion,
+    required bool rawLeaves,
+  }) async {
+    if (cidVersion == 0 && !rawLeaves) {
+      return node.addFile(data);
+    }
+
+    final builder = UnixFSBuilder(cidVersion: cidVersion, rawLeaves: rawLeaves);
+    String? rootCid;
+    await for (final block in builder.build(Stream<List<int>>.value(data))) {
+      await node.blockStore.putBlock(block);
+      rootCid = block.cid.encode();
+    }
+    if (rootCid == null) {
+      throw StateError('UnixFS build produced no blocks');
+    }
+    return rootCid;
+  }
+
+  /// Best-effort recursive pin for `add`/`dag put`. Pin failures are logged
+  /// but do not fail the request — a node without a pin-capable block store
+  /// can still accept content.
+  Future<void> _tryPin(String cid) async {
+    try {
+      await node.pin(cid);
+    } catch (e, stackTrace) {
+      _logger.warning('Pin failed for $cid', e, stackTrace);
+    }
+  }
+
+  /// Builds a UnixFS directory node wrapping [entries] `(name, cid)` pairs,
+  /// stores it, and returns `(directoryCid, serializedSize)`.
+  Future<(String, int)> _wrapWithDirectory(
+    List<(String, String)> entries,
+    int cidVersion,
+  ) async {
+    final links = <dag_pb.PBLink>[];
+    for (final (name, cid) in entries) {
+      links.add(
+        dag_pb.PBLink(
+          name: name,
+          hash: CID.decode(cid).toBytes(),
+          size: Int64(await _cumulativeDagSize(cid)),
+        ),
+      );
+    }
+
+    final dirData = unixfs_pb.Data(
+      type: unixfs_pb.Data_DataType.Directory,
+    ).writeToBuffer();
+    final node_ = dag_pb.PBNode(data: dirData, links: links);
+    final serialized = node_.writeToBuffer();
+
+    final dirCid = await CID.fromContent(
+      serialized,
+      codec: 'dag-pb',
+      version: cidVersion,
+    );
+    await node.blockStore.putBlock(
+      Block(cid: dirCid, data: serialized, format: 'dag-pb'),
+    );
+    return (dirCid.encode(), serialized.length);
+  }
+
+  /// Computes the cumulative size (PBLink Tsize) of the DAG rooted at [cid]:
+  /// the serialized block size plus the declared sizes of its links.
+  Future<int> _cumulativeDagSize(String cid) async {
+    final response = await node.blockStore.getBlock(cid);
+    if (!response.found) return 0;
+    final block = Block.fromProto(response.block);
+    var total = block.data.length;
+    if (block.cid.codec == 'dag-pb') {
+      try {
+        final pbNode = dag_pb.PBNode.fromBuffer(block.data);
+        for (final link in pbNode.links) {
+          total += link.size.toInt();
+        }
+      } catch (_) {
+        // Non-parseable DAG-PB: count the block alone.
+      }
+    }
+    return total;
   }
 
   Response? _checkDenylist(String cidOrPath, {String source = 'rpc'}) {
@@ -234,10 +386,162 @@ class RPCHandlers {
     }
   }
 
-  /// POST /api/v0/get - Download file/directory
+  /// POST /api/v0/get - Download file/directory as a TAR archive.
+  ///
+  /// Kubo streams a POSIX TAR whose entries are named after the requested
+  /// path's last segment: a file root produces a single file entry, a
+  /// directory root produces the directory tree recursively.
   Future<Response> handleGet(Request request) async {
-    // Similar to cat but with tar archive support
-    return Response(501, body: 'Not implemented');
+    final arg = request.url.queryParameters['arg'];
+    if (arg == null || arg.isEmpty) {
+      return _errorResponse('Missing argument: path');
+    }
+
+    try {
+      // Normalize /ipfs/<cid>[/sub/path] or bare <cid>[/sub/path] arguments.
+      var path = arg;
+      if (path.startsWith('/ipfs/')) {
+        path = path.substring(6);
+      } else if (path.startsWith('ipfs/')) {
+        path = path.substring(5);
+      } else if (path.startsWith('/')) {
+        path = path.substring(1);
+      }
+      final segments = path.split('/').where((s) => s.isNotEmpty).toList();
+      if (segments.isEmpty) {
+        return _errorResponse('Missing argument: path');
+      }
+
+      final blocked = _checkDenylist(segments[0]);
+      if (blocked != null) {
+        return blocked;
+      }
+
+      var block = await _rpcGetBlock(segments[0]);
+      if (block == null) {
+        return _errorResponse('Block not found: ${segments[0]}', code: 404);
+      }
+
+      // Resolve any sub-path through named DAG-PB directory links.
+      for (final segment in segments.sublist(1)) {
+        final childCid = _findNamedLink(block!, segment);
+        if (childCid == null) {
+          return _errorResponse('Path not found: $arg', code: 404);
+        }
+        block = await _rpcGetBlock(childCid.encode());
+        if (block == null) {
+          return _errorResponse('Block not found: $arg', code: 404);
+        }
+      }
+
+      final tar = _TarWriter();
+      await _tarAddNode(tar, segments.last, block!, depth: 0);
+
+      final tarBytes = tar.close();
+      return Response.ok(
+        tarBytes,
+        headers: {
+          'Content-Type': 'application/x-tar',
+          'Content-Length': tarBytes.length.toString(),
+          'X-Stream-Output': '1',
+        },
+      );
+    } catch (e, st) {
+      _logger.error('Get failed for path: $arg', e, st);
+      return _errorResponse('Get failed');
+    }
+  }
+
+  /// Fetches a block from the local block store, falling back to Bitswap.
+  Future<Block?> _rpcGetBlock(String cid) async {
+    final response = await node.blockStore.getBlock(cid);
+    if (response.found) {
+      return Block.fromProto(response.block);
+    }
+    final bitswap = node.bitswap;
+    if (bitswap != null) {
+      final networkBlock = await bitswap.wantBlock(cid);
+      if (networkBlock != null) {
+        await node.blockStore.putBlock(networkBlock);
+        return networkBlock;
+      }
+    }
+    return null;
+  }
+
+  /// Returns the CID of the link named [name] in a DAG-PB [block], or null.
+  CID? _findNamedLink(Block block, String name) {
+    if (block.cid.codec != 'dag-pb') return null;
+    try {
+      final pbNode = dag_pb.PBNode.fromBuffer(block.data);
+      for (final link in pbNode.links) {
+        if (link.name == name) {
+          return CID.fromBytes(Uint8List.fromList(link.hash));
+        }
+      }
+    } catch (_) {
+      // Not parseable as DAG-PB.
+    }
+    return null;
+  }
+
+  /// Appends the node addressed by [block] to [tar] under [name].
+  ///
+  /// UnixFS directories emit a directory entry and recurse into named links;
+  /// everything else (files, raw blocks, non-UnixFS nodes) emits a file entry
+  /// with the reassembled or raw payload.
+  Future<void> _tarAddNode(
+    _TarWriter tar,
+    String name,
+    Block block, {
+    required int depth,
+    int nodes = 1,
+  }) async {
+    if (depth > _maxExportDepth) {
+      throw StateError('TAR export exceeded maximum depth $_maxExportDepth');
+    }
+    if (nodes > _maxExportBlocks) {
+      throw StateError('TAR export exceeded maximum nodes $_maxExportBlocks');
+    }
+
+    var nodeCount = nodes;
+    if (block.cid.codec == 'dag-pb') {
+      try {
+        final pbNode = dag_pb.PBNode.fromBuffer(block.data);
+        if (pbNode.hasData()) {
+          final unixfsData = unixfs_pb.Data.fromBuffer(pbNode.data);
+          if (unixfsData.type == unixfs_pb.Data_DataType.Directory) {
+            tar.addDirectory(name);
+            for (final link in pbNode.links) {
+              final childCid = CID.fromBytes(Uint8List.fromList(link.hash));
+              final child = await _rpcGetBlock(childCid.encode());
+              if (child == null) {
+                throw StateError(
+                  'Missing linked block ${childCid.encode()} during TAR export',
+                );
+              }
+              await _tarAddNode(
+                tar,
+                link.name,
+                child,
+                depth: depth + 1,
+                nodes: ++nodeCount,
+              );
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        if (e is StateError) rethrow;
+        // Not a UnixFS directory: fall through and serve as a file entry.
+      }
+    }
+
+    final data = await unixfsReadFile(
+      block,
+      (cid) => _rpcGetBlock(cid.encode()),
+    );
+    tar.addFile(name, data);
   }
 
   /// POST /api/v0/ls - List directory
@@ -247,18 +551,25 @@ class RPCHandlers {
       return _errorResponse('Missing argument: path');
     }
 
+    // Kubo `resolve-type` defaults to true; Type is the UnixFS DataType enum
+    // (0=Raw, 1=Directory, 2=File, 3=Metadata, 4=Symlink, 5=HAMTShard).
+    final resolveType = _boolParam(
+      request.url.queryParameters,
+      'resolve-type',
+      defaultValue: true,
+    );
+
     try {
       final entries = await node.ls(path);
-      final objects = entries
-          .map(
-            (e) => {
-              'Name': e.name,
-              'Hash': e.cid.encode(),
-              'Size': e.size.toInt(),
-              'Type': 'file', // Default as Link doesn't carry type
-            },
-          )
-          .toList();
+      final objects = <Map<String, dynamic>>[];
+      for (final e in entries) {
+        objects.add({
+          'Name': e.name,
+          'Hash': e.cid.encode(),
+          'Size': e.size.toInt(),
+          'Type': resolveType ? await _unixfsLinkType(e.cid) : 0,
+        });
+      }
 
       final response = {
         'Objects': [
@@ -270,6 +581,32 @@ class RPCHandlers {
     } catch (e, st) {
       _logger.error('Ls failed for path: $path', e, st);
       return _errorResponse('Ls failed');
+    }
+  }
+
+  /// Resolves the UnixFS [DataType] of the node addressed by [cid].
+  ///
+  /// Returns the enum integer value, or 0 (Raw/unknown) when the target
+  /// cannot be resolved to a typed UnixFS node — matching Kubo, which
+  /// reports the protobuf zero value for untyped nodes.
+  Future<int> _unixfsLinkType(CID cid) async {
+    try {
+      if (cid.codec != 'dag-pb') {
+        return 0;
+      }
+      final response = await node.blockStore.getBlock(cid.encode());
+      if (!response.found) {
+        return 0;
+      }
+      final pbNode = dag_pb.PBNode.fromBuffer(
+        Uint8List.fromList(response.block.data),
+      );
+      if (pbNode.data.isEmpty) {
+        return 0;
+      }
+      return unixfs_pb.Data.fromBuffer(pbNode.data).type.value;
+    } catch (_) {
+      return 0;
     }
   }
 
@@ -286,23 +623,137 @@ class RPCHandlers {
     }
 
     try {
-      // Get block and return as JSON
-      final block = await node.blockStore.getBlock(cid);
-      if (!block.found) {
+      // Get block and return as DAG-JSON like Kubo's dag/get.
+      final response = await node.blockStore.getBlock(cid);
+      if (!response.found) {
         return _errorResponse('Block not found: $cid', code: 404);
       }
 
-      // Return raw block data (could be enhanced to parse UnixFS/CBOR)
-      return Response.ok(block.block.data);
+      final block = Block.fromProto(response.block);
+      final ipldNode = await _decodeBlockAsIpld(block);
+      final dagJson = await DagJsonCodec().encode(ipldNode);
+      return Response.ok(
+        dagJson,
+        headers: {'Content-Type': 'application/json'},
+      );
     } catch (e, st) {
       _logger.error('DAG get failed for cid: $cid', e, st);
       return _errorResponse('DAG get failed');
     }
   }
 
-  /// POST /api/v0/dag/put - Add DAG node
+  /// Decodes a block into the canonical IPLD node representation for the
+  /// codec named by its CID.
+  Future<IPLDNode> _decodeBlockAsIpld(Block block) {
+    switch (block.cid.codec) {
+      case 'dag-pb':
+        return DagPbCodec().decode(block.data);
+      case 'dag-cbor':
+        return DagCborCodec().decode(block.data);
+      case 'dag-json':
+        return DagJsonCodec().decode(block.data);
+      case 'raw':
+      default:
+        // Unknown codecs are treated as raw byte payloads.
+        return RawCodec().decode(block.data);
+    }
+  }
+
+  /// POST /api/v0/dag/put - Add DAG node.
+  ///
+  /// Accepts `input-codec` (default `dag-json`), `store-codec` (default
+  /// `dag-cbor`), and `pin` (default `true`) query options, matching Kubo.
+  /// The body may be a multipart file upload or the raw encoded object.
   Future<Response> handleDagPut(Request request) async {
-    return Response(501, body: 'Not implemented');
+    try {
+      final params = request.url.queryParameters;
+      final inputCodec = params['input-codec'] ?? 'dag-json';
+      final storeCodec = params['store-codec'] ?? 'dag-cbor';
+      final pin = _boolParam(params, 'pin', defaultValue: true);
+
+      final input = await _readDagPutBody(request);
+
+      final ipldNode = await _decodeIpldInput(inputCodec, input);
+      final encoded = await _encodeIpldOutput(storeCodec, ipldNode);
+
+      final cid = await CID.fromContent(encoded, codec: storeCodec);
+      await node.blockStore.putBlock(
+        Block(cid: cid, data: encoded, format: storeCodec),
+      );
+      if (pin) {
+        await _tryPin(cid.encode());
+      }
+
+      return _jsonResponse({
+        'Cid': {'/': cid.encode()},
+      });
+    } catch (e, st) {
+      _logger.error('DAG put failed', e, st);
+      return _errorResponse('DAG put failed: $e');
+    }
+  }
+
+  /// Reads the dag/put request body: the first multipart part when the
+  /// request is a form upload, else the bounded raw body.
+  Future<Uint8List> _readDagPutBody(Request request) async {
+    final contentType = request.headers['content-type'];
+    if (contentType != null && contentType.contains('multipart/')) {
+      final boundary = _getBoundary(contentType);
+      if (boundary == null) {
+        throw ArgumentError('Invalid Content-Type: missing boundary');
+      }
+      final parts = MimeMultipartTransformer(boundary).bind(request.read());
+      await for (final part in parts) {
+        final builder = BytesBuilder();
+        await for (final chunk in part) {
+          if (builder.length + chunk.length > _maxDagPutBytes) {
+            throw ArgumentError('Request body exceeds limit');
+          }
+          builder.add(chunk);
+        }
+        return builder.toBytes();
+      }
+      throw ArgumentError('No file part found in multipart request');
+    }
+    return _readBodyBounded(request, _maxDagPutBytes);
+  }
+
+  /// Decodes [input] bytes into an IPLD node per [inputCodec].
+  Future<IPLDNode> _decodeIpldInput(String inputCodec, Uint8List input) {
+    switch (inputCodec) {
+      case 'dag-json':
+      case 'json':
+        return DagJsonCodec().decode(input);
+      case 'dag-cbor':
+      case 'cbor':
+        return DagCborCodec().decode(input);
+      case 'dag-pb':
+      case 'protobuf':
+        return DagPbCodec().decode(input);
+      case 'raw':
+        return RawCodec().decode(input);
+      default:
+        throw ArgumentError('Unsupported input-codec: $inputCodec');
+    }
+  }
+
+  /// Encodes an IPLD node per [storeCodec].
+  Future<Uint8List> _encodeIpldOutput(String storeCodec, IPLDNode node) {
+    switch (storeCodec) {
+      case 'dag-json':
+      case 'json':
+        return DagJsonCodec().encode(node);
+      case 'dag-cbor':
+      case 'cbor':
+        return DagCborCodec().encode(node);
+      case 'dag-pb':
+      case 'protobuf':
+        return DagPbCodec().encode(node);
+      case 'raw':
+        return RawCodec().encode(node);
+      default:
+        throw ArgumentError('Unsupported store-codec: $storeCodec');
+    }
   }
 
   /// POST /api/v0/dag/export - Export the reachable DAG of [cid] as a CAR v1.
@@ -339,6 +790,7 @@ class RPCHandlers {
       final reader = CarReader.fromBytes(body);
       final roots = (await reader.header).roots;
       var count = 0;
+      var byteCount = 0;
       await for (final section in reader.sections()) {
         final block = Block(
           cid: CID.fromBytes(section.cid.toBytes()),
@@ -354,12 +806,32 @@ class RPCHandlers {
         }
         await node.blockStore.putBlock(block);
         count++;
+        byteCount += section.bytes.length;
       }
 
-      return _jsonResponse({
-        'Root': roots.isEmpty ? '' : roots.first.toString(),
-        'Blocks': count,
-      });
+      // Kubo emits one `{"Root":{"Cid":{"/":...},"PinErrorMsg":""}}` line per
+      // CAR root (NDJSON), plus a `{"Stats":{...}}` line when ?stats=true.
+      final lines = <String>[
+        for (final root in roots)
+          json.encode({
+            'Root': {
+              'Cid': {'/': root.toString()},
+              'PinErrorMsg': '',
+            },
+          }),
+      ];
+      if (_boolParam(request.url.queryParameters, 'stats')) {
+        lines.add(
+          json.encode({
+            'Stats': {'BlockCount': count, 'BlockBytesCount': byteCount},
+          }),
+        );
+      }
+
+      return Response.ok(
+        lines.join('\n'),
+        headers: {'Content-Type': 'application/json'},
+      );
     } catch (e, st) {
       _logger.error('DAG import failed', e, st);
       return _errorResponse('DAG import failed: $e');
@@ -392,8 +864,18 @@ class RPCHandlers {
   Future<void> _exportBlock(
     CID cid,
     CarWriter writer,
-    Set<String> visited,
-  ) async {
+    Set<String> visited, {
+    int depth = 0,
+  }) async {
+    if (depth > _maxExportDepth) {
+      throw StateError('DAG export exceeded maximum depth $_maxExportDepth');
+    }
+    if (visited.length >= _maxExportBlocks) {
+      throw StateError(
+        'DAG export exceeded maximum block count $_maxExportBlocks',
+      );
+    }
+
     final key = cid.toString();
     if (visited.contains(key)) return;
     visited.add(key);
@@ -405,11 +887,13 @@ class RPCHandlers {
     final block = Block.fromProto(response.block);
     await writer.write(ipfs_core.CID.fromBytes(cid.toBytes()), block.data);
 
-    if (block.format == 'dag-pb') {
+    // The CID codec is authoritative; the stored format hint is a fallback
+    // for blocks whose CID predates codec-aware storage.
+    if (block.cid.codec == 'dag-pb' || block.format == 'dag-pb') {
       final pbNode = dag_pb.PBNode.fromBuffer(block.data);
       for (final link in pbNode.links) {
         final linkCid = CID.fromBytes(Uint8List.fromList(link.hash));
-        await _exportBlock(linkCid, writer, visited);
+        await _exportBlock(linkCid, writer, visited, depth: depth + 1);
       }
     }
   }
@@ -676,5 +1160,111 @@ class RPCHandlers {
       body: json.encode({'Message': message, 'Code': 0, 'Type': 'error'}),
       headers: {'Content-Type': 'application/json'},
     );
+  }
+}
+
+/// Minimal POSIX ustar writer for the `get` TAR response.
+///
+/// Supports regular files and directories — the only entry kinds `ipfs get`
+/// emits — with ustar `prefix` splitting for names longer than 100 bytes.
+class _TarWriter {
+  final BytesBuilder _out = BytesBuilder();
+
+  /// Adds a directory entry named [name] (a trailing slash is appended when
+  /// missing).
+  void addDirectory(String name) {
+    _writeHeader(
+      name.endsWith('/') ? name : '$name/',
+      typeflag: 0x35, // '5'
+      size: 0,
+    );
+  }
+
+  /// Adds a regular file entry named [name] containing [data].
+  void addFile(String name, List<int> data) {
+    _writeHeader(name, typeflag: 0x30, size: data.length); // '0'
+    _out.add(data);
+    final remainder = data.length % 512;
+    if (remainder != 0) {
+      _out.add(Uint8List(512 - remainder));
+    }
+  }
+
+  /// Terminates the archive with the required 1024 zero bytes and returns
+  /// the complete TAR.
+  Uint8List close() {
+    _out.add(Uint8List(1024));
+    return _out.takeBytes();
+  }
+
+  void _writeHeader(String name, {required int typeflag, required int size}) {
+    final header = Uint8List(512);
+    final nameBytes = utf8.encode(name);
+
+    var nameField = nameBytes;
+    var prefixField = Uint8List(0);
+    if (nameBytes.length > 100) {
+      // ustar prefix split: prefix <= 155 bytes, name <= 100 bytes.
+      final splitAt = name.lastIndexOf('/', 100);
+      if (splitAt > 0) {
+        prefixField = Uint8List.fromList(
+          utf8.encode(name.substring(0, splitAt)),
+        );
+        nameField = Uint8List.fromList(
+          utf8.encode(name.substring(splitAt + 1)),
+        );
+      }
+      if (prefixField.length > 155 || nameField.length > 100) {
+        // Fall back to truncating the name; better than a malformed header.
+        prefixField = Uint8List(0);
+        nameField = Uint8List.fromList(
+          nameBytes.sublist(nameBytes.length - 100),
+        );
+      }
+    }
+
+    _writeStr(header, 0, nameField);
+    _writeOctal(header, 100, 420, 7); // mode 0644
+    _writeOctal(header, 108, 0, 7); // uid
+    _writeOctal(header, 116, 0, 7); // gid
+    _writeOctal(header, 124, size, 11); // size
+    _writeOctal(
+      header,
+      136,
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      11,
+    ); // mtime
+    header[156] = typeflag;
+    _writeStr(header, 257, Uint8List.fromList(utf8.encode('ustar')));
+    header[263] = 0x30; // '0'
+    header[264] = 0x30; // '0'
+    _writeStr(header, 265, Uint8List.fromList(utf8.encode('dart_ipfs')));
+    _writeStr(header, 345, prefixField);
+
+    // Checksum: sum all header bytes with the chksum field as spaces.
+    for (var i = 148; i < 156; i++) {
+      header[i] = 0x20;
+    }
+    var sum = 0;
+    for (final b in header) {
+      sum += b;
+    }
+    _writeOctal(header, 148, sum, 6);
+    header[154] = 0;
+    header[155] = 0x20;
+
+    _out.add(header);
+  }
+
+  static void _writeStr(Uint8List header, int offset, List<int> bytes) {
+    header.setRange(offset, offset + bytes.length, bytes);
+  }
+
+  /// Writes [value] as a zero-padded octal ASCII string of [width] digits.
+  static void _writeOctal(Uint8List header, int offset, int value, int width) {
+    final digits = value.toRadixString(8).padLeft(width, '0');
+    for (var i = 0; i < width; i++) {
+      header[offset + i] = digits.codeUnitAt(i);
+    }
   }
 }

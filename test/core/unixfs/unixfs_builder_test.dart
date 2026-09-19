@@ -52,9 +52,9 @@ void main() {
 
       final blocks = await builder.build(stream).toList();
 
-      // Should likely produce 2 blocks (Leaf + Root) OR 1 if optimized?
-      // Our implementation produces Leaf then Root linking to it.
-      expect(blocks.length, 2);
+      // Kubo parity: a single-chunk file is addressed by the leaf node
+      // itself — no wrapper root is emitted.
+      expect(blocks.length, 1);
 
       final leaf = blocks[0];
       expect(leaf.data.length, greaterThan(5)); // Wrapped

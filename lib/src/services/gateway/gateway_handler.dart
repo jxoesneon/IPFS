@@ -10,6 +10,8 @@ import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_reader.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart';
@@ -384,6 +386,25 @@ class GatewayHandler {
         // Handle directories
         if (unixfsData.type == Data_DataType.Directory) {
           if (subPath.isEmpty) {
+            // Kubo parity: directory requests must end with a trailing
+            // slash; respond with a permanent redirect first. This only
+            // applies to the resolved directory itself — a sub-path like
+            // `/ipfs/<dir>/file.txt` resolves to a file and is served
+            // without a redirect.
+            final redirect = _directorySlashRedirect(request);
+            if (redirect != null) {
+              return redirect;
+            }
+
+            // Kubo parity: a directory containing index.html serves that
+            // file transparently instead of the listing.
+            final indexLink = findLinkByName(pbNode.links, 'index.html');
+            if (indexLink != null) {
+              final indexCid = CID.fromBytes(
+                Uint8List.fromList(indexLink.hash),
+              );
+              return await _serveContent(indexCid.encode(), '', request);
+            }
             return _renderDirectory(cidStr, pbNode, request);
           } else {
             // Navigate to sub-path
@@ -393,7 +414,7 @@ class GatewayHandler {
 
         // Handle files
         if (unixfsData.type == Data_DataType.File) {
-          return _serveFile(unixfsData, pbNode, cidStr, request);
+          return await _serveFile(block, cidStr, request);
         }
       }
     } catch (e) {
@@ -404,14 +425,28 @@ class GatewayHandler {
     return _serveRaw(block, cidStr, request);
   }
 
-  /// Serves a UnixFS file
-  Response _serveFile(
-    Data unixfsData,
-    PBNode pbNode,
+  /// Returns a 301 redirect appending a trailing slash when [request] does
+  /// not already end with one, or `null` when no redirect is needed.
+  Response? _directorySlashRedirect(Request request) {
+    final uri = request.requestedUri;
+    if (uri.path.endsWith('/')) {
+      return null;
+    }
+    return Response.movedPermanently(
+      uri.replace(path: '${uri.path}/').toString(),
+    );
+  }
+
+  /// Serves a UnixFS file, reassembling chunked content from linked blocks.
+  Future<Response> _serveFile(
+    Block block,
     String cidStr,
     Request request,
-  ) {
-    final data = Uint8List.fromList(unixfsData.data);
+  ) async {
+    final data = await unixfsReadFile(
+      block,
+      (cid) => _getBlockByCid(cid.encode()),
+    );
     final contentType = _detectContentType(data);
 
     final headers = {
@@ -420,6 +455,7 @@ class GatewayHandler {
       'X-IPFS-Path': '/ipfs/$cidStr',
       'X-Content-Type-Options': 'nosniff',
       'Cache-Control': 'public, max-age=29030400, immutable',
+      'Etag': '"$cidStr"',
     };
 
     // Handle range requests
@@ -439,6 +475,7 @@ class GatewayHandler {
       'X-IPFS-Path': '/ipfs/$cidStr',
       'X-Content-Type-Options': 'nosniff',
       'Cache-Control': 'public, max-age=29030400, immutable',
+      'Etag': '"$cidStr"',
     };
 
     // Handle range requests
@@ -585,6 +622,12 @@ class GatewayHandler {
   }
 
   /// Serves the signed IPNS record bytes for the requested name.
+  ///
+  /// The `application/vnd.ipfs.ipns-record` media type requires the wire
+  /// `IpnsEntry` protobuf, so whatever encoding the resolver produced
+  /// (the internal CBOR form or already-serialized `IpnsEntry` bytes) is
+  /// normalized through [IPNSRecord.decode] and re-encoded with
+  /// [IPNSRecord.toIpnsEntry].
   Future<Response> _serveIpnsRecord(String name, Request request) async {
     if (ipnsRecordResolver == null) {
       return Response(501, body: 'IPNS record resolution disabled');
@@ -595,29 +638,27 @@ class GatewayHandler {
       return Response.notFound('IPNS record not found');
     }
 
-    final maxAge = _ipnsRecordTtl(recordBytes);
+    final IPNSRecord record;
+    final Uint8List entryBytes;
+    try {
+      record = IPNSRecord.decode(recordBytes, name: name);
+      entryBytes = record.toIpnsEntry();
+    } catch (e, stackTrace) {
+      _logger.warning('Invalid IPNS record for $name', e, stackTrace);
+      return Response.internalServerError(body: 'Invalid IPNS record');
+    }
+
+    final maxAge = record.ttl.inSeconds > 0
+        ? record.ttl.inSeconds
+        : _defaultIpnsTtlSeconds;
     final headers = {
       'Content-Type': 'application/vnd.ipfs.ipns-record',
-      'Content-Length': recordBytes.length.toString(),
+      'Content-Length': entryBytes.length.toString(),
       'X-IPFS-Path': '/ipns/$name',
       'X-Content-Type-Options': 'nosniff',
       'Cache-Control': 'public, max-age=$maxAge',
     };
-    return Response.ok(recordBytes, headers: headers);
-  }
-
-  /// Extracts the TTL in seconds from CBOR-encoded IPNS record bytes.
-  ///
-  /// Falls back to [_defaultIpnsTtlSeconds] if the record cannot be parsed.
-  int _ipnsRecordTtl(Uint8List recordBytes) {
-    try {
-      final record = IPNSRecord.fromCBOR(recordBytes);
-      return record.ttl.inSeconds > 0
-          ? record.ttl.inSeconds
-          : _defaultIpnsTtlSeconds;
-    } catch (e) {
-      return _defaultIpnsTtlSeconds;
-    }
+    return Response.ok(entryBytes, headers: headers);
   }
 
   /// Serves the requested node as canonical DAG-JSON.
@@ -792,6 +833,7 @@ class GatewayHandler {
         'Content-Type': 'text/html; charset=utf-8',
         'X-IPFS-Path': '/ipfs/$cidStr',
         'Cache-Control': 'public, max-age=29030400, immutable',
+        'Etag': '"$cidStr"',
       },
     );
   }

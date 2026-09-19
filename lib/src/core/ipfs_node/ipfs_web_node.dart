@@ -11,7 +11,7 @@ import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/security_manager_web.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_builder.dart';
-import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_reader.dart';
 import 'package:dart_ipfs/src/platform/platform.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/delegate_dht_handler.dart';
@@ -233,50 +233,17 @@ class IPFSWebNode {
   /// [addStream] are UnixFS file nodes whose content is reassembled from the
   /// leaf blocks; non-file nodes (directories, non-UnixFS data) return their
   /// serialized node bytes.
-  Future<Uint8List?> _extractContent(Block block) async {
-    if (block.cid.codec == 'raw') {
-      return block.data;
-    }
-
-    late final UnixFSNode node;
-    try {
-      node = UnixFSNode.fromBlock(block);
-    } catch (_) {
-      return block.data;
-    }
-    if (!node.isFile) {
-      return block.data;
-    }
-
-    final out = BytesBuilder();
-    await _collectFileData(node, out);
-    return out.takeBytes();
+  Future<Uint8List?> _extractContent(Block block) {
+    return unixfsReadFile(block, _fetchBlock);
   }
 
-  /// Appends the file payload of [node] — its inline data plus every linked
-  /// child block in order — to [out].
-  Future<void> _collectFileData(UnixFSNode node, BytesBuilder out) async {
-    if (node.cid.codec == 'raw') {
-      out.add(node.data);
-      return;
+  /// [UnixFSBlockFetcher] backed by the local [WebBlockStore].
+  Future<Block?> _fetchBlock(CID cid) async {
+    final response = await _blockStore.getBlock(cid.encode());
+    if (!response.found) {
+      return null;
     }
-
-    final inner = node.unixfsData;
-    if (inner != null && inner.data.isNotEmpty) {
-      out.add(inner.data);
-    }
-
-    for (final link in node.pbNode.links) {
-      final childCid = CID.fromBytes(Uint8List.fromList(link.hash));
-      final response = await _blockStore.getBlock(childCid.encode());
-      if (!response.found) {
-        throw StateError('Missing linked block ${childCid.encode()}');
-      }
-      await _collectFileData(
-        UnixFSNode.fromBlock(Block.fromProto(response.block)),
-        out,
-      );
-    }
+    return Block.fromProto(response.block);
   }
 
   /// Gets data by CID object.

@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:cbor/cbor.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/security_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
@@ -9,6 +8,7 @@ import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
+import 'package:dart_ipfs/src/proto/generated/ipns.pb.dart';
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
@@ -321,12 +321,21 @@ void main() {
     });
 
     group('?format=ipns-record', () {
-      test('returns signed record bytes via resolver', () async {
-        final record = IPNSRecord.internal(
+      IPNSRecord makeRecord({Duration ttl = const Duration(minutes: 5)}) {
+        return IPNSRecord.internal(
           value: Uint8List.fromList('/ipfs/QmResolvedCid'.codeUnits),
           validity: DateTime.now().add(const Duration(hours: 1)),
-          ttl: const Duration(minutes: 5),
+          ttl: ttl,
+          publicKey: Uint8List.fromList([9, 9, 9]),
+          signature: Uint8List.fromList([8, 8]),
+          signatureV2: Uint8List.fromList([7, 7, 7]),
         );
+      }
+
+      test('returns IpnsEntry protobuf bytes via resolver', () async {
+        final record = makeRecord();
+        // Resolver stores the internal CBOR encoding; the trustless
+        // response must carry Kubo-compatible IpnsEntry protobuf bytes.
         final recordBytes = record.toCBOR();
 
         handler = GatewayHandler(
@@ -349,15 +358,17 @@ void main() {
           equals('public, max-age=300'),
         );
         final body = await response.read().expand((i) => i).toList();
-        expect(body, equals(recordBytes));
+        expect(body, equals(record.toIpnsEntry()));
+        final entry = IpnsEntry.fromBuffer(Uint8List.fromList(body));
+        expect(entry.value, equals('/ipfs/QmResolvedCid'.codeUnits));
       });
 
-      test('returns default TTL when record TTL is missing', () async {
-        final recordBytes = Uint8List.fromList(cbor.encode(CborMap({})));
+      test('returns default TTL when record TTL is zero', () async {
+        final record = makeRecord(ttl: Duration.zero);
 
         handler = GatewayHandler(
           mockBlockStore,
-          ipnsRecordResolver: (name) async => recordBytes,
+          ipnsRecordResolver: (name) async => record.toCBOR(),
         );
 
         final request = Request(

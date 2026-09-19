@@ -4,7 +4,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
+    as unixfs_pb;
+import 'package:fixnum/fixnum.dart';
 import 'package:test/test.dart';
 
 import 'e2e_helpers.dart';
@@ -139,6 +144,71 @@ void main() {
       expect(back, isNotNull);
       expect(back!.length, equals(data.length));
       expect(back, equals(data));
+    });
+
+    test('cat reassembles a file larger than the 256 KiB chunk size', () async {
+      // Kubo parity: add chunks at 256 KiB, so 600 KiB produces a DAG of
+      // three leaf nodes under a linked root — cat must traverse the links.
+      final data = Uint8List.fromList(
+        List<int>.generate(600 * 1024, (i) => (i * 7) & 0xff),
+      );
+      final cid = await node.addFile(data);
+      expect(await node.cat(cid), equals(data));
+      expect(await node.get(cid), equals(data));
+    });
+
+    test('cat reassembles a Kubo-style chunked UnixFS DAG', () async {
+      // Fixture shaped like `ipfs add` output, built by hand rather than by
+      // this package's builder: two dag-pb leaf file nodes linked in order
+      // from a dag-pb root carrying filesize/blocksizes.
+      Future<Block> leaf(List<int> payload) async {
+        final unixfs = unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.File,
+          data: payload,
+          filesize: Int64(payload.length),
+        );
+        final node_ = dag_pb.PBNode(data: unixfs.writeToBuffer());
+        return Block.fromData(node_.writeToBuffer(), format: 'dag-pb');
+      }
+
+      final chunk1 = Uint8List.fromList(
+        List<int>.generate(300 * 1024, (i) => i & 0xff),
+      );
+      final chunk2 = Uint8List.fromList(
+        List<int>.generate(100 * 1024, (i) => (i * 3) & 0xff),
+      );
+      final leaf1 = await leaf(chunk1);
+      final leaf2 = await leaf(chunk2);
+
+      final rootUnixfs = unixfs_pb.Data(
+        type: unixfs_pb.Data_DataType.File,
+        filesize: Int64(chunk1.length + chunk2.length),
+        blocksizes: [Int64(chunk1.length), Int64(chunk2.length)],
+      );
+      final rootNode = dag_pb.PBNode(
+        data: rootUnixfs.writeToBuffer(),
+        links: [
+          dag_pb.PBLink(
+            hash: leaf1.cid.toBytes(),
+            size: Int64(leaf1.data.length),
+          ),
+          dag_pb.PBLink(
+            hash: leaf2.cid.toBytes(),
+            size: Int64(leaf2.data.length),
+          ),
+        ],
+      );
+      final root = await Block.fromData(
+        rootNode.writeToBuffer(),
+        format: 'dag-pb',
+      );
+
+      await node.blockStore.putBlock(leaf1);
+      await node.blockStore.putBlock(leaf2);
+      await node.blockStore.putBlock(root);
+
+      final expected = Uint8List.fromList([...chunk1, ...chunk2]);
+      expect(await node.cat(root.cid.encode()), equals(expected));
     });
 
     test('utf8 text survives a round-trip', () async {

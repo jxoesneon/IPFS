@@ -194,15 +194,98 @@ void main() {
 
       final request = Request(
         'GET',
-        Uri.parse('http://localhost:8080/ipfs/$dirCidStr'),
+        Uri.parse('http://localhost:8080/ipfs/$dirCidStr/'),
       );
       final response = await handler.handlePath(request);
 
       expect(response.statusCode, 200);
       expect(response.headers['Content-Type'], contains('text/html'));
+      expect(response.headers['Etag'], '"$dirCidStr"');
       final body = await response.readAsString();
       expect(body, contains('Index of /ipfs/$dirCidStr'));
       expect(body, contains('testfile.txt'));
+    });
+
+    test(
+      'handlePath redirects directory requests without trailing slash',
+      () async {
+        final dirHeader = Data()..type = Data_DataType.Directory;
+        final dirNode = PBNode()..data = dirHeader.writeToBuffer();
+        final dirData = dirNode.writeToBuffer();
+        final dirCid = CID.computeForDataSync(dirData, codec: 'dag-pb');
+        final dirCidStr = dirCid.encode();
+
+        blockStore.blocks[dirCidStr] = Block(cid: dirCid, data: dirData);
+
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost:8080/ipfs/$dirCidStr'),
+        );
+        final response = await handler.handlePath(request);
+
+        // Kubo parity: directories 301 to the trailing-slash URL.
+        expect(response.statusCode, 301);
+        expect(
+          response.headers['location'],
+          'http://localhost:8080/ipfs/$dirCidStr/',
+        );
+      },
+    );
+
+    test('handlePath serves index.html inside a directory', () async {
+      // index.html file node
+      final indexContent = utf8.encode('<html>hi</html>');
+      final indexHeader = Data()
+        ..type = Data_DataType.File
+        ..data = indexContent
+        ..filesize = Int64(indexContent.length);
+      final indexNode = PBNode()..data = indexHeader.writeToBuffer();
+      final indexData = indexNode.writeToBuffer();
+      final indexCid = CID.computeForDataSync(indexData, codec: 'dag-pb');
+      blockStore.blocks[indexCid.encode()] = Block(
+        cid: indexCid,
+        data: indexData,
+      );
+
+      // Other file that should NOT shadow index.html
+      final otherHeader = Data()
+        ..type = Data_DataType.File
+        ..data = utf8.encode('other');
+      final otherNode = PBNode()..data = otherHeader.writeToBuffer();
+      final otherData = otherNode.writeToBuffer();
+      final otherCid = CID.computeForDataSync(otherData, codec: 'dag-pb');
+      blockStore.blocks[otherCid.encode()] = Block(
+        cid: otherCid,
+        data: otherData,
+      );
+
+      final dirHeader = Data()..type = Data_DataType.Directory;
+      final dirNode = PBNode()
+        ..data = dirHeader.writeToBuffer()
+        ..links.addAll([
+          PBLink()
+            ..name = 'index.html'
+            ..hash = indexCid.toBytes()
+            ..size = Int64(indexData.length),
+          PBLink()
+            ..name = 'other.txt'
+            ..hash = otherCid.toBytes()
+            ..size = Int64(otherData.length),
+        ]);
+      final dirData = dirNode.writeToBuffer();
+      final dirCid = CID.computeForDataSync(dirData, codec: 'dag-pb');
+      blockStore.blocks[dirCid.encode()] = Block(cid: dirCid, data: dirData);
+
+      final request = Request(
+        'GET',
+        Uri.parse('http://localhost:8080/ipfs/${dirCid.encode()}/'),
+      );
+      final response = await handler.handlePath(request);
+
+      // Kubo parity: a directory containing index.html serves the file
+      // instead of a listing.
+      expect(response.statusCode, 200);
+      expect(await response.readAsString(), '<html>hi</html>');
     });
 
     test('handlePath navigates directory to subpath', () async {

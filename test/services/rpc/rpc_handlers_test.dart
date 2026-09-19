@@ -8,6 +8,7 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/core/data_structures/link.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
@@ -244,6 +245,10 @@ void main() {
       expect(response.statusCode, equals(200));
       final body = json.decode(await response.readAsString());
       expect(body['Objects'][0]['Links'][0]['Name'], equals('file.txt'));
+      // Kubo parity: Type is the numeric UnixFS DataType enum, not a
+      // string. The mock link target cannot be resolved, so it reports
+      // the zero value (Raw).
+      expect(body['Objects'][0]['Links'][0]['Type'], isA<int>());
     });
 
     test('handleLs missing arg', () async {
@@ -252,12 +257,14 @@ void main() {
       expect(response.statusCode, equals(500));
     });
 
-    test('handleDagGet success', () async {
-      final cid = 'QmHash';
-      final block = Block(
-        cid: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
-        data: Uint8List.fromList([1, 2, 3]),
+    test('handleDagGet returns DAG-JSON like Kubo', () async {
+      // Kubo parity: dag/get returns the node re-encoded as DAG-JSON, not
+      // the raw stored block bytes.
+      final block = await Block.fromData(
+        Uint8List.fromList([1, 2, 3]),
+        format: 'raw',
       );
+      final cid = block.cid.encode();
       final pbResp = GetBlockResponse()
         ..found = true
         ..block = block.toProto();
@@ -270,10 +277,9 @@ void main() {
       );
       final response = await handlers.handleDagGet(request);
       expect(response.statusCode, equals(200));
-      expect(
-        await response.read().expand((i) => i).toList(),
-        equals([1, 2, 3]),
-      );
+      final body = await response.readAsString();
+      // DAG-JSON encodes a raw block as a {"/":{"bytes":...}} link.
+      expect(json.decode(body), isA<Map<String, dynamic>>());
     });
 
     test('handleDagGet not found', () async {
@@ -423,19 +429,54 @@ void main() {
       verify(mockNode.disconnectFromPeer(addr)).called(1);
     });
 
-    test('handleGet returns 501', () async {
+    test('handleGet requires an arg', () async {
       final request = Request('POST', Uri.parse('http://localhost/api/v0/get'));
       final response = await handlers.handleGet(request);
-      expect(response.statusCode, equals(501));
+      expect(response.statusCode, equals(500));
     });
 
-    test('handleDagPut returns 501', () async {
+    test('handleGet returns a TAR archive for a file', () async {
+      final block = await Block.fromData(
+        Uint8List.fromList(utf8.encode('tar me')),
+        format: 'raw',
+      );
+      when(mockBlockStore.getBlock(block.cid.encode())).thenAnswer(
+        (_) async => GetBlockResponse()
+          ..found = true
+          ..block = block.toProto(),
+      );
+
       final request = Request(
         'POST',
-        Uri.parse('http://localhost/api/v0/dag/put'),
+        Uri.parse('http://localhost/api/v0/get?arg=/ipfs/${block.cid}'),
+      );
+      final response = await handlers.handleGet(request);
+      expect(response.statusCode, equals(200));
+      expect(response.headers['content-type'], equals('application/x-tar'));
+      final tar = await response.read().expand((i) => i).toList();
+      // POSIX ustar: the entry name occupies the first 100 header bytes.
+      expect(
+        utf8.decode(tar.sublist(0, block.cid.encode().length)),
+        equals(block.cid.encode()),
+      );
+      // The file payload follows the 512-byte header.
+      expect(utf8.decode(tar.sublist(512, 512 + 6)), equals('tar me'));
+    });
+
+    test('handleDagPut stores the node and returns a CID link', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dag/put?pin=false'),
+        headers: {'content-type': 'application/json'},
+        body: utf8.encode('{"hello":"world"}'),
       );
       final response = await handlers.handleDagPut(request);
-      expect(response.statusCode, equals(501));
+      expect(response.statusCode, equals(200));
+      final body = json.decode(await response.readAsString());
+      // Kubo shape: {"Cid":{"/":"<cid>"}}.
+      expect(body['Cid'], isA<Map<String, dynamic>>());
+      expect(body['Cid']['/'], isA<String>());
+      verify(mockBlockStore.putBlock(any)).called(1);
     });
 
     test('handleId error', () async {
@@ -735,6 +776,44 @@ void main() {
       final sections = await reader.sections().toList();
       expect(sections.length, equals(1));
       expect(sections.first.bytes, equals(block.data));
+    });
+
+    test('handleDagExport rejects traversal deeper than the bound', () async {
+      // Security bound (#108): export must refuse DAGs deeper than 32 links
+      // rather than recursing without limit. Build a chain of 33 nodes.
+      var child = await Block.fromData(
+        Uint8List.fromList([0]),
+        format: 'dag-pb',
+      );
+      when(mockBlockStore.getBlock(child.cid.toString())).thenAnswer(
+        (_) async => GetBlockResponse()
+          ..found = true
+          ..block = child.toProto(),
+      );
+      for (var i = 0; i < 34; i++) {
+        final node_ = dag_pb.PBNode(
+          links: [dag_pb.PBLink(hash: child.cid.toBytes())],
+        );
+        final parent = await Block.fromData(
+          node_.writeToBuffer(),
+          format: 'dag-pb',
+        );
+        when(mockBlockStore.getBlock(parent.cid.toString())).thenAnswer(
+          (_) async => GetBlockResponse()
+            ..found = true
+            ..block = parent.toProto(),
+        );
+        child = parent;
+      }
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/dag/export?arg=${child.cid}'),
+      );
+      final response = await handlers.handleDagExport(request);
+      expect(response.statusCode, equals(500));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('maximum depth'));
     });
 
     test('handleDagExport errors when the root block is missing', () async {

@@ -20,6 +20,8 @@ import '../errors/node_errors.dart';
 import '../interfaces/i_lifecycle.dart';
 import '../security/denylist_service.dart';
 import '../storage/datastore.dart';
+import '../unixfs/unixfs_builder.dart';
+import '../unixfs/unixfs_reader.dart';
 import 'datastore_handler.dart';
 import 'ipfs_node.dart';
 
@@ -60,33 +62,78 @@ class ContentManager implements ILifecycle {
     _logger.debug('Stopping ContentManager...');
   }
 
-  /// Adds a raw file to IPFS and returns its CID.
-  Future<String> addFile(Uint8List data) async {
+  /// Adds a file to IPFS as a UnixFS DAG and returns the root CID.
+  ///
+  /// The data is chunked into 256 KiB blocks matching Kubo's `ipfs add`
+  /// defaults (`chunker=size-262144`). Files of a single chunk are stored as a
+  /// single UnixFS file node; larger files produce a balanced DAG whose root
+  /// links to each chunk in order. With [rawLeaves] the chunks are stored as
+  /// raw blocks under a DAG-PB root (requires CIDv1 output, like Kubo).
+  ///
+  /// All generated blocks are stored; the returned CID is the DAG-PB (or
+  /// single-node) UnixFS root — for CIDv0 output this is the `Qm…` form a
+  /// Kubo `ipfs add` produces.
+  ///
+  /// NOTE: this changes the CIDs produced for identical bytes compared to
+  /// earlier versions of this package, which stored a single raw block.
+  Future<String> addFile(
+    Uint8List data, {
+    int cidVersion = 0,
+    bool rawLeaves = false,
+  }) async {
     try {
-      final block = await Block.fromData(data);
-      await _datastoreHandler.putBlock(block);
-      await _blockStore?.putBlock(block);
-      _newContentController.add(block.cid.toString());
-      _logger.info('Added file with CID: ${block.cid}');
-      return block.cid.toString();
+      return await _buildAndStore(
+        Stream<List<int>>.value(data),
+        cidVersion: cidVersion,
+        rawLeaves: rawLeaves,
+      );
     } catch (e, stackTrace) {
       _logger.error('Error adding file', e, stackTrace);
       rethrow;
     }
   }
 
-  /// Adds file content from a [dataStream].
-  Future<String> addFileStream(Stream<List<int>> dataStream) async {
+  /// Adds file content from a [dataStream] as a chunked UnixFS DAG.
+  Future<String> addFileStream(
+    Stream<List<int>> dataStream, {
+    int cidVersion = 0,
+    bool rawLeaves = false,
+  }) async {
     try {
-      final builder = BytesBuilder();
-      await for (final chunk in dataStream) {
-        builder.add(chunk);
-      }
-      return addFile(builder.takeBytes());
+      return await _buildAndStore(
+        dataStream,
+        cidVersion: cidVersion,
+        rawLeaves: rawLeaves,
+      );
     } catch (e, stackTrace) {
       _logger.error('Error adding file from stream', e, stackTrace);
       rethrow;
     }
+  }
+
+  /// Builds a UnixFS DAG from [stream], stores every block, and returns the
+  /// root CID string.
+  Future<String> _buildAndStore(
+    Stream<List<int>> stream, {
+    required int cidVersion,
+    required bool rawLeaves,
+  }) async {
+    final builder = UnixFSBuilder(cidVersion: cidVersion, rawLeaves: rawLeaves);
+
+    String? rootCid;
+    await for (final block in builder.build(stream)) {
+      await _datastoreHandler.putBlock(block);
+      await _blockStore?.putBlock(block);
+      rootCid = block.cid.encode();
+    }
+
+    if (rootCid == null) {
+      throw StateError('UnixFS build produced no blocks');
+    }
+
+    _newContentController.add(rootCid);
+    _logger.info('Added file with CID: $rootCid');
+    return rootCid;
   }
 
   /// Adds a directory to IPFS and returns its root CID.
@@ -163,27 +210,9 @@ class ContentManager implements ILifecycle {
         return await _getViaGateway(cid, gatewayMode, customGatewayUrl);
       }
 
-      final block = await _datastoreHandler.getBlock(cid);
-
+      final block = await _fetchBlock(cid);
       if (block != null) {
         return await _extractBlockData(block, path);
-      }
-
-      final blockResult = await _blockStore?.getBlock(cid);
-      if (blockResult != null && blockResult.found) {
-        return await _extractBlockData(
-          Block.fromProto(blockResult.block),
-          path,
-        );
-      }
-
-      if (_bitswapHandler != null) {
-        _logger.debug('Attempting to retrieve block $cid via Bitswap');
-        final networkBlock = await _bitswapHandler.wantBlock(cid);
-        if (networkBlock != null) {
-          await _datastoreHandler.putBlock(networkBlock);
-          return networkBlock.data;
-        }
       }
 
       return await _getViaHttpFallback(cid);
@@ -272,9 +301,44 @@ class ContentManager implements ILifecycle {
     return null;
   }
 
+  /// Fetches a block by CID string from the local datastore, the shared
+  /// block store, or the Bitswap network, in that order.
+  ///
+  /// Blocks retrieved over Bitswap are cached into the datastore so repeated
+  /// traversal of a DAG does not re-fetch them.
+  Future<Block?> _fetchBlock(String cid) async {
+    var block = await _datastoreHandler.getBlock(cid);
+    if (block != null) {
+      return block;
+    }
+
+    final blockResult = await _blockStore?.getBlock(cid);
+    if (blockResult != null && blockResult.found) {
+      return Block.fromProto(blockResult.block);
+    }
+
+    final bitswap = _bitswapHandler;
+    if (bitswap != null) {
+      _logger.debug('Attempting to retrieve block $cid via Bitswap');
+      final networkBlock = await bitswap.wantBlock(cid);
+      if (networkBlock != null) {
+        await _datastoreHandler.putBlock(networkBlock);
+        return networkBlock;
+      }
+    }
+
+    return null;
+  }
+
+  /// Extracts the user-visible payload from [block].
+  ///
+  /// With an empty [path] this reassembles UnixFS file nodes by traversing
+  /// `pbNode.links` in order (Kubo `cat` semantics); raw blocks return their
+  /// payload directly and non-file nodes return their serialized bytes. With
+  /// a non-empty [path] the path is resolved through named directory links.
   Future<Uint8List?> _extractBlockData(Block block, String path) async {
     if (path.isEmpty) {
-      return block.data;
+      return unixfsReadFile(block, (cid) => _fetchBlock(cid.encode()));
     } else {
       final node = MerkleDAGNode.fromBytes(block.data);
       if (node.isDirectory) {
@@ -293,13 +357,12 @@ class ContentManager implements ILifecycle {
 
     for (final link in dirNode.links) {
       if (link.name == pathParts[0]) {
-        final childBlock = await _datastoreHandler.getBlock(
-          link.cid.toString(),
-        );
+        final childBlock = await _fetchBlock(link.cid.encode());
         if (childBlock == null) return null;
 
         if (pathParts.length == 1) {
-          return childBlock.data;
+          // Reassemble chunked UnixFS file targets like `cat` does.
+          return unixfsReadFile(childBlock, (cid) => _fetchBlock(cid.encode()));
         } else {
           final childNode = MerkleDAGNode.fromBytes(childBlock.data);
           return await _resolvePathInDirectory(

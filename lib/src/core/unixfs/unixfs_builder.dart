@@ -30,12 +30,24 @@ class UnixFSBuilder {
   /// Multihash function to use (currently only `sha2-256` is supported).
   final String hashType;
 
-  /// Chunks a stream of bytes and yields Blocks for leaf nodes.
+  /// Chunks a stream of bytes and yields Blocks for leaf nodes followed by
+  /// the DAG-PB root node (when a root is needed).
+  ///
+  /// Matches Kubo's `ipfs add` layout:
+  /// - A single-chunk file is just the leaf itself — the leaf *is* the root
+  ///   and no wrapper node is produced. (With [rawLeaves] the leaf is a raw
+  ///   block, which cannot be a UnixFS root, so a wrapper is always emitted.)
+  /// - An empty stream yields a single DAG-PB node containing
+  ///   `Data{Type: File}` with no filesize field, matching Kubo's well-known
+  ///   empty-file block.
+  /// - Multi-chunk files yield all leaves, then a root node linking to them
+  ///   in order with `filesize` and `blocksizes` set.
   Stream<Block> build(Stream<List<int>> stream) async* {
     final reader = ChunkedStreamReader(stream);
     final links = <dag_pb.PBLink>[];
     final logicalBlockSizes = <Int64>[];
     var totalSize = 0;
+    var leafCount = 0;
 
     try {
       while (true) {
@@ -43,6 +55,7 @@ class UnixFSBuilder {
         if (leafData.isEmpty) break;
 
         final block = await _createLeaf(Uint8List.fromList(leafData));
+        leafCount++;
         yield block;
 
         links.add(
@@ -61,10 +74,17 @@ class UnixFSBuilder {
       await reader.cancel();
     }
 
+    if (leafCount == 1 && !rawLeaves) {
+      // Kubo parity: a file that fits in one chunk is addressed by the leaf
+      // node itself — the last block yielded is already the root.
+      return;
+    }
+
     // Create Root Node (linking to all chunks)
     final unixFs = unixfs_pb.Data(
       type: unixfs_pb.Data_DataType.File,
-      filesize: Int64(totalSize),
+      // Kubo's empty-file block omits the filesize field entirely.
+      filesize: totalSize > 0 ? Int64(totalSize) : null,
       blocksizes: logicalBlockSizes,
     );
 
