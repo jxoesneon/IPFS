@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:mirrors' as mirrors;
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -352,16 +351,11 @@ void main() {
           throwsA(anything),
         );
         await Future<void>.delayed(const Duration(milliseconds: 300));
-        // Tear the host down out from under the in-flight dial: when the
-        // abort surfaces, connect's catch block runs with _host already
-        // null, so the addrbook restore attempt fails and is logged.
-        final host = router.host!;
-        final instance = mirrors.reflect(router);
-        final hostField = instance.type.declarations.keys.firstWhere(
-          (s) => mirrors.MirrorSystem.getName(s) == '_host',
-        );
-        instance.setField(hostField, null);
-        await host.close();
+        // Tear the host down out from under the in-flight dial: stop()
+        // closes the host and clears _host, so when the abort surfaces
+        // connect's catch block runs with _host already null and the
+        // addrbook restore attempt fails and is logged.
+        await router.stop();
         await connectExpectation;
       },
       // The aborted dial should surface promptly; leave headroom for

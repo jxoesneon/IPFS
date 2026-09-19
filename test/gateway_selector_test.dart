@@ -6,14 +6,6 @@ import 'package:dart_ipfs/src/core/cid.dart' as ipfs_cid;
 import 'package:test/test.dart';
 
 void main() {
-  // GatewayMode.public hardcodes https://ipfs.io inside ContentManager
-  // (no injectable URL), so exercising it end-to-end requires live external
-  // network access to the public gateway. That cannot be made hermetic
-  // without changing the implementation, so the test is opt-in: set
-  // IPFS_PUBLIC_GATEWAY_E2E=1 to run it.
-  final runPublicGatewayE2E =
-      Platform.environment['IPFS_PUBLIC_GATEWAY_E2E'] == '1';
-
   group('Gateway Selector Integration', () {
     late HttpServer server;
     late String serverUrl;
@@ -108,37 +100,36 @@ void main() {
       },
     );
 
-    test(
-      'GatewayMode.public uses default ipfs.io logic (Integration Check)',
-      () async {
-        // We can't easily mock the HARDCODED ipfs.io url in HttpGatewayClient without DI.
-        // But we can verify it *tries* to use HttpGatewayClient logic.
-        // Since we can't observe the private internal client URL easily, we will rely on
-        // the fact that it DOESN'T hit our local mock server.
-        node.setGatewayMode(GatewayMode.public);
+    test('GatewayMode.public fetches via the configured gateway URL', () async {
+      // The public-mode URL is configurable (BitswapConfig.publicGatewayUrl,
+      // default https://ipfs.io/ipfs) — pointing it at the mock server makes
+      // this hermetic while exercising the same code path.
+      await node.stop();
+      final config = IPFSConfig(
+        offline: true,
+        dataPath: tempDir.path,
+        datastorePath: '${tempDir.path}/datastore',
+        bitswap: BitswapConfig(publicGatewayUrl: serverUrl),
+      );
+      node = await IPFSNode.create(config);
+      await node.start();
+      node.setGatewayMode(GatewayMode.public);
 
-        // Use a valid CID that exists on public IPFS gateways (empty directory hash)
-        // This ensures we actually test successful connectivity as requested.
-        final validCid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      final result = await node.cat(testCid);
 
-        final result = await node.cat(validCid);
+      expect(
+        serverHit,
+        isTrue,
+        reason: 'Public mode should hit the configured gateway URL',
+      );
+      expect(result, equals([1, 2, 3]));
+    });
 
-        expect(
-          serverHit,
-          isFalse,
-          reason: 'Public mode should not hit the local custom mock server',
-        );
-
-        expect(
-          result,
-          isNotNull,
-          reason: 'Should successfully retrieve content from public gateway',
-        );
-      },
-      skip: runPublicGatewayE2E
-          ? false
-          : 'Requires live external network access to the public ipfs.io '
-                'gateway. Opt in by setting IPFS_PUBLIC_GATEWAY_E2E=1.',
-    );
+    test('BitswapConfig.publicGatewayUrl defaults to ipfs.io', () {
+      expect(
+        const BitswapConfig().publicGatewayUrl,
+        equals('https://ipfs.io/ipfs'),
+      );
+    });
   });
 }

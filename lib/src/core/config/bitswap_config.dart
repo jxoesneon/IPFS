@@ -18,6 +18,7 @@ class BitswapConfig {
     this.enableHttpFallback = false,
     this.maxHttpBlockSize = 2 * 1024 * 1024,
     this.allowPrivateGateways = false,
+    this.publicGatewayUrl = 'https://ipfs.io/ipfs',
     @visibleForTesting this.verifyHttpBlocks = true,
   });
 
@@ -38,6 +39,8 @@ class BitswapConfig {
       enableHttpFallback: json['enableHttpFallback'] as bool? ?? false,
       maxHttpBlockSize: json['maxHttpBlockSize'] as int? ?? 2 * 1024 * 1024,
       allowPrivateGateways: json['allowPrivateGateways'] as bool? ?? false,
+      publicGatewayUrl:
+          json['publicGatewayUrl'] as String? ?? 'https://ipfs.io/ipfs',
       // verifyHttpBlocks is intentionally not exposed in serialised config.
     );
   }
@@ -67,6 +70,14 @@ class BitswapConfig {
   /// Whether private/loopback gateway URLs (e.g. `127.0.0.1`) are allowed.
   final bool allowPrivateGateways;
 
+  /// Gateway base URL used when content retrieval runs in
+  /// `GatewayMode.public` — includes the `/ipfs` mount path.
+  ///
+  /// Defaults to the public `https://ipfs.io/ipfs` gateway; point this at
+  /// another public gateway (or a local gateway in tests) to change the
+  /// resolution target.
+  final String publicGatewayUrl;
+
   /// Whether to verify HTTP-fetched blocks against their CID.
   ///
   /// This is intended as a test-only override. Verification must never be
@@ -82,5 +93,6 @@ class BitswapConfig {
     'enableHttpFallback': enableHttpFallback,
     'maxHttpBlockSize': maxHttpBlockSize,
     'allowPrivateGateways': allowPrivateGateways,
+    'publicGatewayUrl': publicGatewayUrl,
   };
 }

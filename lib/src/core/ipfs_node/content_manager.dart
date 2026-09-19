@@ -228,7 +228,7 @@ class ContentManager implements ILifecycle {
     String url;
     switch (mode) {
       case GatewayMode.public:
-        url = 'https://ipfs.io/ipfs';
+        url = _bitswapConfig.publicGatewayUrl;
         break;
       case GatewayMode.local:
         url = 'http://127.0.0.1:8080/ipfs';
@@ -237,7 +237,7 @@ class ContentManager implements ILifecycle {
         url = customUrl;
         break;
       default:
-        url = 'https://ipfs.io/ipfs';
+        url = _bitswapConfig.publicGatewayUrl;
     }
     _logger.debug('Retrieving via Gateway ($url): $cid');
     final bytes = await _httpGatewayClient.get(cid, baseUrl: url);

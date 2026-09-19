@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added
+- **Configurable public gateway**: `BitswapConfig.publicGatewayUrl` (default `https://ipfs.io/ipfs`) controls which gateway `GatewayMode.public` fetches through, allowing alternative public gateways and hermetic gateway tests.
+
 ## [1.17.0] - 2026-09-19
 
 ### Security
