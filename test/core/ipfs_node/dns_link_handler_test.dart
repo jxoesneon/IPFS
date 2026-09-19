@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:mirrors' as mirrors;
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/dns_link_handler.dart';
@@ -81,6 +82,74 @@ void main() {
       final handler = DNSLinkHandler(config, client: mockClient);
       final result = await handler.resolve('failed.com');
 
+      expect(result, isNull);
+    });
+
+    test('resolve evicts an expired cache entry', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response(jsonEncode({'Path': '/ipfs/QmFresh'}), 200);
+      });
+
+      final handler = DNSLinkHandler(config, client: mockClient);
+
+      // Seed the private cache with an entry whose timestamp is already
+      // beyond the TTL; there is no public seam for pre-aging entries, so
+      // mirrors place a stale _CachedDNSLink directly.
+      final handlerLibrary = mirrors
+          .currentMirrorSystem()
+          .libraries
+          .values
+          .firstWhere(
+            (lib) => lib.uri.path.endsWith('ipfs_node/dns_link_handler.dart'),
+          );
+      final cache =
+          mirrors
+                  .reflect(handler)
+                  .getField(
+                    mirrors.MirrorSystem.getSymbol('_cache', handlerLibrary),
+                  )
+                  .reflectee
+              as Map<dynamic, dynamic>;
+      final entryType =
+          handlerLibrary.declarations[mirrors.MirrorSystem.getSymbol(
+                '_CachedDNSLink',
+                handlerLibrary,
+              )]!
+              as mirrors.ClassMirror;
+      final stale = entryType.newInstance(const Symbol(''), [], {
+        #cid: '/ipfs/QmStale',
+        #timestamp: DateTime.now().subtract(const Duration(hours: 1)),
+      }).reflectee;
+      cache['expired.com'] = stale;
+
+      // The stale entry is evicted and the domain resolves fresh.
+      final result = await handler.resolve('expired.com');
+      expect(result, '/ipfs/QmFresh');
+    });
+
+    test('resolve ignores a malformed JSON resolver body', () async {
+      final mockClient = MockClient((request) async {
+        if (request.url.toString().contains('dnslink.io')) {
+          return http.Response('this is not json', 200);
+        }
+        return http.Response('Failed', 500);
+      });
+
+      final handler = DNSLinkHandler(config, client: mockClient);
+      final result = await handler.resolve('badjson.com');
+      expect(result, isNull);
+    });
+
+    test('resolve ignores a malformed DoH response body', () async {
+      final mockClient = MockClient((request) async {
+        if (request.url.toString().contains('dns.google')) {
+          return http.Response('<html>not json</html>', 200);
+        }
+        return http.Response('Failed', 500);
+      });
+
+      final handler = DNSLinkHandler(config, client: mockClient);
+      final result = await handler.resolve('baddoh.com');
       expect(result, isNull);
     });
 

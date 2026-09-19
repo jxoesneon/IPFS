@@ -78,6 +78,13 @@ void main() {
       expect(await node.discoveredPeers.isEmpty, isTrue);
     });
 
+    test('peerIdOrNull is null in offline mode', () async {
+      final node = IPFSNode.fromContainer(container);
+      // peerId throws StateError without a network identity; the
+      // OrNull variant surfaces that as null instead.
+      expect(node.peerIdOrNull, isNull);
+    });
+
     test('keyGen rejects a size that is not the fixed Ed25519 size', () async {
       final node = IPFSNode.fromContainer(container);
       await node.start();

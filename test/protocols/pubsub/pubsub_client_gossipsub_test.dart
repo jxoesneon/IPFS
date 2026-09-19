@@ -8,16 +8,20 @@
 // dual-stack publish path (protobuf to meshsub peers, JSON to the rest).
 
 import 'dart:convert';
+import 'dart:mirrors' as mirrors;
 import 'dart:typed_data';
 
+import 'package:convert/convert.dart' show hex;
 import 'package:crypto/crypto.dart';
-import 'package:cryptography/cryptography.dart' show SimpleKeyPair;
+import 'package:cryptography/cryptography.dart'
+    show SimpleKeyPair, SimpleKeyPairData, SimplePublicKey;
 import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/gossipsub/gossipsub_rpc.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
 import 'package:dart_ipfs/src/transport/router_events.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
+import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
@@ -622,6 +626,657 @@ void main() {
       expect(rpc.publish.single.signature, equals(msg.signature));
     });
   });
+
+  group('remaining gossipsub branches', () {
+    late Ed25519Signer signer;
+    late SimpleKeyPair authorKeyPair;
+    late Uint8List authorPubKey;
+    late PeerId authorPeerId;
+    late String authorPeerIdStr;
+
+    setUp(() async {
+      signer = Ed25519Signer();
+      authorKeyPair = await signer.generateKeyPair();
+      authorPubKey = await signer.extractPublicKeyBytes(authorKeyPair);
+      authorPeerId = PeerId.fromPublicKey(authorPubKey, type: 'Ed25519');
+      authorPeerIdStr = authorPeerId.toBase58();
+    });
+
+    /// Reads a private field on [instance] via mirrors — used only to seed
+    /// bounded collections that are impractical to fill through the public
+    /// API (caps of 256–1024 entries).
+    T privateField<T>(Object instance, String name) {
+      final instanceMirror = mirrors.reflect(instance);
+      final library = instanceMirror.type.owner! as mirrors.LibraryMirror;
+      return instanceMirror
+              .getField(mirrors.MirrorSystem.getSymbol(name, library))
+              .reflectee
+          as T;
+    }
+
+    /// Builds a spec-conformant signed gossipsub message.
+    Future<GossipSubMessage> signedMessage({
+      required SimpleKeyPair keyPair,
+      required Uint8List from,
+      required String topic,
+      required String content,
+      int seq = 1,
+      Uint8List? keyField,
+    }) async {
+      final msg = GossipSubMessage(
+        from: from,
+        data: Uint8List.fromList(utf8.encode(content)),
+        seqno: _seqno(seq),
+        topic: topic,
+        key: keyField,
+      );
+      msg.signature = await signer.sign(gossipSubSigningPayload(msg), keyPair);
+      msg.key = keyField;
+      return msg;
+    }
+
+    test('rejects unsigned unsubscribe announcements in strict mode', () async {
+      await client.start();
+      final handler = handlerFor('pubsub');
+
+      handler(
+        NetworkPacket(
+          srcPeerId: 'QmAnnouncer',
+          datagram: Uint8List.fromList(utf8.encode('unsubscribe:t1')),
+        ),
+      );
+      await flush();
+
+      expect(client.peersForTopic('t1'), isNot(contains('QmAnnouncer')));
+    });
+
+    test('signed ihave resolves the sender key from the registry and the '
+        'reply iwant is signed', () async {
+      final localKeyPair = await signer.generateKeyPair();
+      final localPub = await signer.extractPublicKeyBytes(localKeyPair);
+      final localId = PeerId.fromPublicKey(
+        localPub,
+        type: 'Ed25519',
+      ).toBase58();
+      final keyedClient = PubSubClient(
+        mockRouter,
+        localId,
+        keyPair: localKeyPair,
+      );
+
+      // The control message carries no inline key, so verification must
+      // fall back to the registry.
+      keyedClient.keyRegistry.registerPublicKey(authorPeerIdStr, authorPubKey);
+
+      await keyedClient.start();
+      final handler = handlerFor('pubsub');
+      when(mockRouter.isConnectedPeer(authorPeerIdStr)).thenReturn(true);
+
+      final sig = await signer.sign(utf8.encode('ihave:topic1'), authorKeyPair);
+      handler(
+        NetworkPacket(
+          srcPeerId: authorPeerIdStr,
+          datagram: Uint8List.fromList(
+            utf8.encode(
+              jsonEncode({
+                'action': 'ihave',
+                'sender': authorPeerIdStr,
+                'topic': 'topic1',
+                'msgIds': ['m1'],
+                'ed25519_signature': base64Encode(sig),
+              }),
+            ),
+          ),
+        ),
+      );
+      await flush();
+
+      final sent =
+          verify(
+                mockRouter.sendMessage(
+                  authorPeerIdStr,
+                  captureAny,
+                  protocolId: 'pubsub',
+                ),
+              ).captured.last
+              as Uint8List;
+      final iwant = jsonDecode(utf8.decode(sent)) as Map<String, dynamic>;
+      expect(iwant['action'], 'iwant');
+      expect(iwant['msgIds'], contains('m1'));
+      expect(iwant['ed25519_signature'], isNotEmpty);
+      expect(iwant['pubkey'], isNotEmpty);
+      await keyedClient.stop();
+    });
+
+    test('evicts the oldest gossipsub peer beyond the cap', () async {
+      await client.start();
+      final handler = handlerFor(_meshsub);
+      final peers = privateField<Set<String>>(client, '_gossipsubPeers');
+      for (var i = 0; i < 1024; i++) {
+        peers.add('peer-$i');
+      }
+
+      deliverGossipSub(handler, 'new-peer', GossipSubRpc());
+      await flush();
+
+      expect(peers, contains('new-peer'));
+      expect(peers.length, 1024);
+    });
+
+    test(
+      'router errors during publish handling are logged, not thrown',
+      () async {
+        final laxClient = PubSubClient(
+          mockRouter,
+          localPeerId,
+          strictAuthentication: false,
+        );
+        await laxClient.start();
+        final handler = handlerFor(_meshsub);
+        when(mockRouter.isConnectedPeer(any)).thenThrow(StateError('boom'));
+
+        final msg = GossipSubMessage(
+          from: Uint8List.fromList([9, 9]),
+          data: Uint8List.fromList(utf8.encode('x')),
+          seqno: _seqno(1),
+          topic: 't',
+        );
+        deliverGossipSub(handler, 'peer-x', GossipSubRpc(publish: [msg]));
+        await flush();
+        await laxClient.stop();
+      },
+    );
+
+    test('rejects gossipsub publishes missing topic or from', () async {
+      await client.start();
+      final handler = handlerFor(_meshsub);
+
+      var delivered = false;
+      final sub = client.messagesStream.listen((_) => delivered = true);
+
+      deliverGossipSub(
+        handler,
+        'peer-x',
+        GossipSubRpc(
+          publish: [
+            GossipSubMessage(
+              from: Uint8List.fromList([9, 9]),
+              data: Uint8List.fromList(utf8.encode('x')),
+              seqno: _seqno(1),
+              topic: '',
+            ),
+          ],
+        ),
+      );
+      deliverGossipSub(
+        handler,
+        'peer-x',
+        GossipSubRpc(
+          publish: [
+            GossipSubMessage(
+              data: Uint8List.fromList(utf8.encode('x')),
+              seqno: _seqno(1),
+              topic: 't',
+            ),
+          ],
+        ),
+      );
+      await flush();
+
+      expect(delivered, isFalse);
+      await sub.cancel();
+    });
+
+    test(
+      'rejects an unsigned publish when the author key is registered',
+      () async {
+        client.keyRegistry.registerPublicKey(authorPeerIdStr, authorPubKey);
+        await client.start();
+        final handler = handlerFor(_meshsub);
+        when(mockRouter.isConnectedPeer('peer-x')).thenReturn(true);
+
+        var delivered = false;
+        final sub = client.messagesStream.listen((_) => delivered = true);
+        deliverGossipSub(
+          handler,
+          'peer-x',
+          GossipSubRpc(
+            publish: [
+              GossipSubMessage(
+                from: authorPeerId.value,
+                data: Uint8List.fromList(utf8.encode('x')),
+                seqno: _seqno(1),
+                topic: 't',
+              ),
+            ],
+          ),
+        );
+        await flush();
+
+        expect(delivered, isFalse);
+        await sub.cancel();
+      },
+    );
+
+    test('evicts the oldest cached gossipsub message beyond the cap', () async {
+      final laxClient = PubSubClient(
+        mockRouter,
+        localPeerId,
+        strictAuthentication: false,
+      );
+      await laxClient.start();
+      final handler = handlerFor(_meshsub);
+      final cache = privateField<Map<String, Uint8List>>(
+        laxClient,
+        '_gossipsubMessageCache',
+      );
+      for (var i = 0; i < 1024; i++) {
+        cache['id$i'] = Uint8List(0);
+      }
+      when(mockRouter.isConnectedPeer('peer-x')).thenReturn(true);
+
+      final msg = GossipSubMessage(
+        from: Uint8List.fromList([9, 9]),
+        data: Uint8List.fromList(utf8.encode('x')),
+        seqno: _seqno(1),
+        topic: 't',
+      );
+      deliverGossipSub(handler, 'peer-x', GossipSubRpc(publish: [msg]));
+      await flush();
+
+      expect(cache.length, 1024);
+      await laxClient.stop();
+    });
+
+    test('forwards publishes to gossipsub peers, honoring IDONTWANT', () async {
+      final laxClient = PubSubClient(
+        mockRouter,
+        localPeerId,
+        strictAuthentication: false,
+      );
+      await laxClient.start();
+      final handler = handlerFor(_meshsub);
+      when(mockRouter.isConnectedPeer('src')).thenReturn(true);
+
+      // peerA and peerB join the mesh for the topic and speak gossipsub.
+      for (final peer in ['peer-a', 'peer-b']) {
+        deliverGossipSub(
+          handler,
+          peer,
+          GossipSubRpc(
+            control: GossipSubControl(graft: [GossipSubGraft(topicId: 't')]),
+          ),
+        );
+      }
+      // The source peer only needs gossipsub capability.
+      deliverGossipSub(handler, 'src', GossipSubRpc());
+      await flush();
+
+      // peerB opted out of this specific message ID.
+      final msg = GossipSubMessage(
+        from: Uint8List.fromList([9, 9]),
+        data: Uint8List.fromList(utf8.encode('fwd')),
+        seqno: _seqno(1),
+        topic: 't',
+      );
+      deliverGossipSub(
+        handler,
+        'peer-b',
+        GossipSubRpc(
+          control: GossipSubControl(
+            idontwant: [
+              GossipSubIDontWant(messageIds: [gossipSubDefaultMessageId(msg)]),
+            ],
+          ),
+        ),
+      );
+      await flush();
+      clearInteractions(mockRouter);
+
+      deliverGossipSub(handler, 'src', GossipSubRpc(publish: [msg]));
+      await flush();
+
+      verify(
+        mockRouter.sendMessage('peer-a', any, protocolId: _meshsub),
+      ).called(1);
+      verifyNever(mockRouter.sendMessage('peer-b', any, protocolId: _meshsub));
+      await laxClient.stop();
+    });
+
+    test('IWANT serves cached messages and drops corrupted entries', () async {
+      final laxClient = PubSubClient(
+        mockRouter,
+        localPeerId,
+        strictAuthentication: false,
+      );
+      await laxClient.start();
+      final handler = handlerFor(_meshsub);
+      final cache = privateField<Map<String, Uint8List>>(
+        laxClient,
+        '_gossipsubMessageCache',
+      );
+
+      final msg = GossipSubMessage(
+        from: Uint8List.fromList([9, 9]),
+        data: Uint8List.fromList(utf8.encode('cached')),
+        seqno: _seqno(2),
+        topic: 't',
+      );
+      final msgId = gossipSubDefaultMessageId(msg);
+      cache[hex.encode(msgId)] = GossipSubRpcCodec.encodeMessage(msg);
+      // Corrupted entry: decodes to a FormatException on serve.
+      cache['aa'] = Uint8List.fromList([0xFF]);
+
+      deliverGossipSub(
+        handler,
+        'peer-x',
+        GossipSubRpc(
+          control: GossipSubControl(
+            iwant: [
+              GossipSubIWant(
+                messageIds: [
+                  msgId,
+                  Uint8List.fromList([0xAA]),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+      await flush();
+
+      expect(cache.containsKey('aa'), isFalse);
+      final sent =
+          verify(
+                mockRouter.sendMessage(
+                  'peer-x',
+                  captureAny,
+                  protocolId: _meshsub,
+                ),
+              ).captured.last
+              as Uint8List;
+      expect(GossipSubRpcCodec.decode(sent).publish, hasLength(1));
+      await laxClient.stop();
+    });
+
+    test('IDONTWANT beyond the per-peer cap evicts oldest ids', () async {
+      await client.start();
+      final handler = handlerFor(_meshsub);
+
+      final ids1 = List.generate(
+        512,
+        (i) => Uint8List.fromList([i & 0xFF, i >> 8]),
+      );
+      final ids2 = List.generate(
+        512,
+        (i) => Uint8List.fromList([i & 0xFF, (i >> 8) | 0x80]),
+      );
+      deliverGossipSub(
+        handler,
+        'peer-x',
+        GossipSubRpc(
+          control: GossipSubControl(
+            idontwant: [
+              GossipSubIDontWant(messageIds: ids1),
+              GossipSubIDontWant(messageIds: ids2),
+            ],
+          ),
+        ),
+      );
+      await flush();
+
+      final map = privateField<Map<String, Set<String>>>(client, '_idontwant');
+      expect(map['peer-x']!.length, 512);
+    });
+
+    test('IDONTWANT beyond the peer cap evicts the oldest peer', () async {
+      await client.start();
+      final handler = handlerFor(_meshsub);
+      final map = privateField<Map<String, Set<String>>>(client, '_idontwant');
+      for (var i = 0; i < 256; i++) {
+        map['p$i'] = <String>{};
+      }
+
+      deliverGossipSub(
+        handler,
+        'new-peer',
+        GossipSubRpc(
+          control: GossipSubControl(
+            idontwant: [
+              GossipSubIDontWant(
+                messageIds: [
+                  Uint8List.fromList([1]),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+      await flush();
+
+      expect(map.length, 256);
+      expect(map, isNot(contains('p0')));
+    });
+
+    test('IHAVE without a topicId checks every seen topic', () async {
+      final laxClient = PubSubClient(
+        mockRouter,
+        localPeerId,
+        strictAuthentication: false,
+      );
+      await laxClient.start();
+      final handler = handlerFor(_meshsub);
+      when(mockRouter.isConnectedPeer('src')).thenReturn(true);
+
+      final msg = GossipSubMessage(
+        from: Uint8List.fromList([9, 9]),
+        data: Uint8List.fromList(utf8.encode('x')),
+        seqno: _seqno(1),
+        topic: 't',
+      );
+      deliverGossipSub(handler, 'src', GossipSubRpc(publish: [msg]));
+      await flush();
+      clearInteractions(mockRouter);
+
+      // The already-seen ID under a null topic hits the fallback scan.
+      deliverGossipSub(
+        handler,
+        'src',
+        GossipSubRpc(
+          control: GossipSubControl(
+            ihave: [
+              GossipSubIHave(messageIds: [gossipSubDefaultMessageId(msg)]),
+            ],
+          ),
+        ),
+      );
+      await flush();
+
+      verifyNever(mockRouter.sendMessage('src', any, protocolId: _meshsub));
+      await laxClient.stop();
+    });
+
+    test(
+      'signed publish resolves a registered key for non-identity from',
+      () async {
+        await client.start();
+        final handler = handlerFor(_meshsub);
+        when(mockRouter.isConnectedPeer('src')).thenReturn(true);
+
+        // A sha256-multihash (Qm-style) author: the key is not embedded, the
+        // message carries no key field, so verification falls back to the
+        // registry. `registerPublicKey` only accepts identity peer IDs, so
+        // the verified binding is injected directly.
+        final digest = _sha256MultihashPeerId(authorPubKey);
+        final qmSender = Base58().encode(digest);
+        privateField<Map<String, Uint8List>>(
+          client.keyRegistry,
+          '_keys',
+        )[qmSender] = authorPubKey;
+
+        final msg = await signedMessage(
+          keyPair: authorKeyPair,
+          from: digest,
+          topic: 'reg-key-topic',
+          content: 'registry key content',
+        );
+
+        final received = client.messagesStream.first;
+        deliverGossipSub(handler, 'src', GossipSubRpc(publish: [msg]));
+
+        final delivered = await received;
+        expect(delivered.content, 'registry key content');
+        expect(delivered.sender, qmSender);
+      },
+    );
+
+    test(
+      'subscribe announces SubOpts and GRAFT to gossipsub topic peers',
+      () async {
+        await client.start();
+        final handler = handlerFor(_meshsub);
+
+        // kuboPeer speaks gossipsub and announced interest in the topic.
+        deliverGossipSub(
+          handler,
+          kuboPeer,
+          GossipSubRpc(
+            control: GossipSubControl(graft: [GossipSubGraft(topicId: 't')]),
+          ),
+        );
+        await flush();
+        clearInteractions(mockRouter);
+
+        await client.subscribe('t');
+        await flush();
+
+        final sent =
+            verify(
+                  mockRouter.sendMessage(
+                    kuboPeer,
+                    captureAny,
+                    protocolId: _meshsub,
+                  ),
+                ).captured.last
+                as Uint8List;
+        final rpc = GossipSubRpcCodec.decode(sent);
+        expect(rpc.subscriptions.single.topicId, 't');
+        expect(rpc.subscriptions.single.subscribe, isTrue);
+        expect(rpc.control!.graft.single.topicId, 't');
+      },
+    );
+
+    test('gossipsub send failures are logged and swallowed', () async {
+      await client.start();
+      final handler = handlerFor(_meshsub);
+
+      deliverGossipSub(handler, kuboPeer, GossipSubRpc());
+      await flush();
+
+      when(
+        mockRouter.sendMessage(kuboPeer, any, protocolId: _meshsub),
+      ).thenThrow(StateError('network down'));
+
+      // The subscription announcement fails on send; subscribe must not.
+      await client.subscribe('t2');
+      await flush();
+      expect(client.subscribedTopics, contains('t2'));
+    });
+
+    test(
+      'publish includes the key field for a non-identity local peer ID',
+      () async {
+        final localKeyPair = await signer.generateKeyPair();
+        final keyedClient = PubSubClient(
+          mockRouter,
+          localPeerId, // Qm-style: no embedded public key
+          keyPair: localKeyPair,
+        );
+        await keyedClient.start();
+        final handler = handlerFor(_meshsub);
+
+        deliverGossipSub(handler, kuboPeer, GossipSubRpc());
+        await flush();
+
+        keyedClient.graftPeer(kuboPeer);
+        await keyedClient.publish('t', 'signed publish');
+
+        final sent =
+            verify(
+                  mockRouter.sendMessage(
+                    kuboPeer,
+                    captureAny,
+                    protocolId: _meshsub,
+                  ),
+                ).captured.last
+                as Uint8List;
+        final msg = GossipSubRpcCodec.decode(sent).publish.single;
+        expect(msg.key, isNotNull);
+        expect(
+          unmarshalGossipSubPublicKey(msg.key!),
+          equals(await signer.extractPublicKeyBytes(localKeyPair)),
+        );
+        expect(msg.signature, isNotNull);
+        await keyedClient.stop();
+      },
+    );
+
+    test('publish proceeds unsigned when signing throws', () async {
+      final realKeyPair = await signer.generateKeyPair();
+      final keyedClient = PubSubClient(
+        mockRouter,
+        localPeerId,
+        keyPair: _SignOnlyFailsKeyPair(await realKeyPair.extractPublicKey()),
+      );
+      await keyedClient.start();
+      final handler = handlerFor(_meshsub);
+
+      deliverGossipSub(handler, kuboPeer, GossipSubRpc());
+      await flush();
+
+      keyedClient.graftPeer(kuboPeer);
+      await keyedClient.publish('t', 'unsigned after sign failure');
+
+      final sent =
+          verify(
+                mockRouter.sendMessage(
+                  kuboPeer,
+                  captureAny,
+                  protocolId: _meshsub,
+                ),
+              ).captured.last
+              as Uint8List;
+      final msg = GossipSubRpcCodec.decode(sent).publish.single;
+      expect(msg.signature, isNull);
+      await keyedClient.stop();
+    });
+  });
+}
+
+/// A [SimpleKeyPair] whose private key material is unavailable — public-key
+/// lookups succeed but any signing attempt throws. Exercises the
+/// signing-failure path in gossipsub publish.
+class _SignOnlyFailsKeyPair implements SimpleKeyPair {
+  _SignOnlyFailsKeyPair(this._publicKey);
+
+  final SimplePublicKey _publicKey;
+
+  @override
+  bool get hasBeenDestroyed => false;
+
+  @override
+  void destroy() {}
+
+  @override
+  Future<SimpleKeyPairData> extract() =>
+      throw StateError('private key unavailable');
+
+  @override
+  Future<List<int>> extractPrivateKeyBytes() =>
+      throw StateError('private key unavailable');
+
+  @override
+  Future<SimplePublicKey> extractPublicKey() async => _publicKey;
 }
 
 /// Builds the sha256-multihash peer ID bytes (`0x12 0x20 <digest>`) for an

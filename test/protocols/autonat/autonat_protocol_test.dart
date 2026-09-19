@@ -131,6 +131,26 @@ void main() {
       final bytes = Uint8List.fromList([0x0a, 0x0a, 0x01]);
       expect(() => DialRequest.decode(bytes), throwsFormatException);
     });
+
+    test('decode skips a length-delimited unknown field', () {
+      // Field 2, wire type 2, length 2 followed by 2 bytes — skipped.
+      final bytes = Uint8List.fromList([0x12, 0x02, 0xaa, 0xbb]);
+      final decoded = DialRequest.decode(bytes);
+      expect(decoded.addrs, isEmpty);
+    });
+
+    test('decode throws FormatException when an unknown field length '
+        'exceeds bounds', () {
+      // Field 2, wire type 2, declared length 10, only 1 byte present.
+      final bytes = Uint8List.fromList([0x12, 0x0a, 0x01]);
+      expect(() => DialRequest.decode(bytes), throwsFormatException);
+    });
+
+    test('decode throws FormatException on unsupported wire type', () {
+      // Field 3, wire type 1 (fixed64) — unsupported.
+      final bytes = Uint8List.fromList([0x19, 0x00]);
+      expect(() => DialRequest.decode(bytes), throwsFormatException);
+    });
   });
 
   group('DialResponse', () {
@@ -174,6 +194,26 @@ void main() {
     test('decode throws FormatException on truncated statusText', () {
       // Field 2, wire type 2, declared length 8, only 1 byte present.
       final bytes = Uint8List.fromList([0x12, 0x08, 0x61]);
+      expect(() => DialResponse.decode(bytes), throwsFormatException);
+    });
+
+    test('decode skips a length-delimited unknown field', () {
+      // Field 3, wire type 2, length 2 followed by 2 bytes — skipped.
+      final bytes = Uint8List.fromList([0x1a, 0x02, 0xaa, 0xbb]);
+      final decoded = DialResponse.decode(bytes);
+      expect(decoded.status, equals(DialResponseStatus.dialError));
+    });
+
+    test('decode throws FormatException when an unknown field length '
+        'exceeds bounds', () {
+      // Field 3, wire type 2, declared length 10, only 1 byte present.
+      final bytes = Uint8List.fromList([0x1a, 0x0a, 0x01]);
+      expect(() => DialResponse.decode(bytes), throwsFormatException);
+    });
+
+    test('decode throws FormatException on unsupported wire type', () {
+      // Field 3, wire type 1 (fixed64) — unsupported.
+      final bytes = Uint8List.fromList([0x19, 0x00]);
       expect(() => DialResponse.decode(bytes), throwsFormatException);
     });
   });

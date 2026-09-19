@@ -104,6 +104,28 @@ void main() {
       expect(KeyType.secp256k1.value, equals(2));
       expect(KeyType.ecdsa.value, equals(3));
     });
+
+    test('decode throws FormatException for unknown KeyType value', () {
+      // field 1 (Type), wire type 0 (varint), value 99 — not a KeyType.
+      final bytes = Uint8List.fromList([0x08, 0x63]);
+      expect(
+        () => PublicKeyPb.decode(bytes),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('Unknown KeyType'),
+          ),
+        ),
+      );
+    });
+
+    test('decode throws FormatException when field length exceeds bounds', () {
+      // field 2 (Data), wire type 2 (length-delimited), declares length
+      // 0x7F but only two payload bytes follow.
+      final bytes = Uint8List.fromList([0x12, 0x7F, 0x01, 0x02]);
+      expect(() => PublicKeyPb.decode(bytes), throwsA(isA<FormatException>()));
+    });
   });
 
   group('EnvelopePb', () {

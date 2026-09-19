@@ -388,6 +388,8 @@ void main() {
 
       // Online mode check
       expect(node.peerId, validMockPeerId);
+      // The OrNull variant returns the identity when one exists.
+      expect(node.peerIdOrNull, validMockPeerId);
 
       await node.start();
 

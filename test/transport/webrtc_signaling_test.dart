@@ -103,6 +103,12 @@ void main() {
       final bytes = Uint8List.fromList([8, 0, 18, 0, 26, 10]);
       expect(() => SignalingMessage.decode(bytes), throwsFormatException);
     });
+
+    test('rejects an unsupported wire type', () {
+      // tag 0x21: field 4, wire type 1 (fixed64) — unsupported.
+      final bytes = Uint8List.fromList([8, 0, 18, 0, 0x21]);
+      expect(() => SignalingMessage.decode(bytes), throwsFormatException);
+    });
   });
 
   group('SignalingProtocol.handleStream bounds', () {

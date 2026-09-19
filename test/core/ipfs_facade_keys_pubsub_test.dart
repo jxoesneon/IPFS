@@ -213,6 +213,28 @@ void main() {
     });
   });
 
+  group('IPFS facade identity and discovery delegates', () {
+    late IPFS ipfs;
+
+    setUp(() async {
+      ipfs = await IPFS.create(config: _offlineConfig('identity'));
+    });
+
+    tearDown(() async {
+      await ipfs.stop();
+    });
+
+    test('peerId and deprecated peerID throw StateError offline', () {
+      expect(() => ipfs.peerId, throwsStateError);
+      // ignore: deprecated_member_use_from_same_package
+      expect(() => ipfs.peerID, throwsStateError);
+    });
+
+    test('discoveredPeers is an empty stream in offline mode', () async {
+      expect(await ipfs.discoveredPeers.isEmpty, isTrue);
+    });
+  });
+
   group('IPFS facade provide with a registered DHTHandler', () {
     late IPFS ipfs;
     late _RecordingDHTHandler dht;
