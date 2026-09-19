@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the multiaddrToBytes function from the dart_ipfs library, for the Dart programming language.">
+  <title>multiaddrToBytes function - dart_ipfs library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs.dart</a></li>
+    <li class="self-crumb">multiaddrToBytes function</li>
+  </ol>
+  <div class="self-name">multiaddrToBytes</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="dart_ipfs&#47;dart_ipfs-library-sidebar.html"
+      data-below-sidebar="">
+      <div>
+<h1><span class="kind-function">multiaddrToBytes</span> function 
+ 
+</h1></div>
+
+    <section class="multi-line-signature">
+        
+<span class="returntype"><a href="https://api.dart.dev/stable/3.13.4/dart-typed_data/Uint8List-class.html">Uint8List</a></span>
+<span class="name ">multiaddrToBytes</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="multiaddrToBytes-param-address"><span class="type-annotation"><a href="../dart_ipfs/FullAddress-class.html">FullAddress</a></span> <span class="parameter-name">address</span></span></li>
+</ol>)
+
+        
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Helper to encode FullAddress to binary multiaddr</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Uint8List multiaddrToBytes(FullAddress address) {
+  final buffer = &lt;int&gt;[];
+  if (address.address.contains(&#39;.&#39;)) {
+    &#47;&#47; IPv4
+    buffer.add(4); &#47;&#47; ip4
+    buffer.addAll(address.address.split(&#39;.&#39;).map(int.parse));
+  } else if (address.address.contains(&#39;:&#39;) || address.address == &#39;::1&#39;) {
+    &#47;&#47; IPv6
+    buffer.add(41); &#47;&#47; ip6
+
+    &#47;&#47; Handle special cases like ::1
+    String expanded = address.address;
+    if (expanded == &#39;::1&#39;) {
+      expanded = &#39;0000:0000:0000:0000:0000:0000:0000:0001&#39;;
+    } else if (expanded.contains(&#39;::&#39;)) {
+      &#47;&#47; Simple expansion for ::
+      final parts = expanded.split(&#39;::&#39;);
+      final left = parts[0].isEmpty ? &lt;String&gt;[] : parts[0].split(&#39;:&#39;);
+      final right = parts[1].isEmpty ? &lt;String&gt;[] : parts[1].split(&#39;:&#39;);
+      final missing = 8 - (left.length + right.length);
+      final mid = List.filled(missing, &#39;0000&#39;);
+      expanded = (left + mid + right).join(&#39;:&#39;);
+    }
+
+    final groups = expanded.split(&#39;:&#39;);
+    for (final group in groups) {
+      final val = int.parse(group.isEmpty ? &#39;0&#39; : group, radix: 16);
+      buffer.add((val &gt;&gt; 8) &amp; 0xFF);
+      buffer.add(val &amp; 0xFF);
+    }
+  } else {
+    return Uint8List(0); &#47;&#47; Unsupported
+  }
+
+  &#47;&#47; Assuming TCP (6) by default for FullAddress as we don&#39;t have protocol field
+  buffer.add(6); &#47;&#47; tcp
+  buffer.add((address.port &gt;&gt; 8) &amp; 0xFF);
+  buffer.add(address.port &amp; 0xFF);
+
+  return Uint8List.fromList(buffer);
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">dart_ipfs</a></li>
+    <li><a href="../dart_ipfs/">dart_ipfs</a></li>
+    <li class="self-crumb">multiaddrToBytes function</li>
+</ol>
+
+    <h5>dart_ipfs library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-left-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    dart_ipfs
+      1.16.5
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
