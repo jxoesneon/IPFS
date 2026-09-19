@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 
+import '../inbound_message_bounds.dart' as inbound;
 import '../router_interface.dart';
 
 /// The type of a signaling message.
@@ -61,11 +62,19 @@ class SignalingMessage {
 
       if (fieldNumber == 1 && wireType == 0) {
         final val = _decodeVarint(bytes, offset);
+        if (val.value < 0 || val.value >= SignalingMessageType.values.length) {
+          throw FormatException('Unknown signaling message type: ${val.value}');
+        }
         type = SignalingMessageType.values[val.value];
         offset = val.newOffset;
       } else if (fieldNumber == 2 && wireType == 2) {
         final lenVal = _decodeVarint(bytes, offset);
         offset = lenVal.newOffset;
+        if (lenVal.value < 0 || lenVal.value > bytes.length - offset) {
+          throw FormatException(
+            'Data field length ${lenVal.value} exceeds message bounds',
+          );
+        }
         data = utf8.decode(bytes.sublist(offset, offset + lenVal.value));
         offset += lenVal.value;
       } else {
@@ -74,15 +83,22 @@ class SignalingMessage {
           offset = _decodeVarint(bytes, offset).newOffset;
         } else if (wireType == 2) {
           final len = _decodeVarint(bytes, offset);
+          if (len.value < 0 || len.value > bytes.length - len.newOffset) {
+            throw FormatException(
+              'Field length ${len.value} exceeds message bounds',
+            );
+          }
           offset = len.newOffset + len.value;
         } else {
-          throw Exception('Unsupported wire type: $wireType');
+          throw FormatException('Unsupported wire type: $wireType');
         }
       }
     }
 
     if (type == null || data == null) {
-      throw Exception('Missing required fields in SignalingMessage');
+      throw const FormatException(
+        'Missing required fields in SignalingMessage',
+      );
     }
     return SignalingMessage(type, data);
   }
@@ -102,6 +118,12 @@ class SignalingMessage {
     var shift = 0;
     var currentOffset = offset;
     while (true) {
+      if (currentOffset >= bytes.length) {
+        throw const FormatException('Truncated varint in SignalingMessage');
+      }
+      if (shift >= 64) {
+        throw const FormatException('Varint exceeds 64 bits');
+      }
       final byte = bytes[currentOffset++];
       result |= (byte & 0x7F) << shift;
       if (byte < 0x80) break;
@@ -142,33 +164,45 @@ class SignalingProtocol {
   Stream<SignalingMessage> get messages => _messageController.stream;
 
   /// Handles an incoming signaling stream.
+  ///
+  /// Reads bounded varint-length-prefixed messages until the stream closes,
+  /// a read stays idle past [inbound.InboundMessageBounds.readIdleTimeout],
+  /// or the stream outlives [inbound.InboundMessageBounds.maxStreamLifetime].
+  /// Malformed input terminates the handler instead of crashing it.
   void handleStream(libp2p.P2PStream<Uint8List> stream) async {
+    final streamDeadline = DateTime.now().add(
+      inbound.InboundMessageBounds.maxStreamLifetime,
+    );
     try {
       while (!stream.isClosed) {
-        final lengthPrefix = await _readVarint(stream);
-        final messageBytes = await stream.read(lengthPrefix);
+        if (DateTime.now().isAfter(streamDeadline)) break;
+        final messageBytes = await inbound.readLengthPrefixedMessage(
+          (size) => _readChunk(stream, size),
+        );
+        if (messageBytes == null) break;
         final message = SignalingMessage.decode(messageBytes);
         _messageController.add(message);
       }
     } catch (e) {
-      // Stream closed or error
+      // Stream closed, read timed out, or malformed message.
     } finally {
       unawaited(_messageController.close());
     }
   }
 
-  Future<int> _readVarint(libp2p.P2PStream<Uint8List> stream) async {
-    var result = 0;
-    var shift = 0;
-    while (true) {
-      final bytes = await stream.read(1);
-      if (bytes.isEmpty) throw Exception('Stream closed while reading varint');
-      final byte = bytes[0];
-      result |= (byte & 0x7F) << shift;
-      if (byte < 0x80) break;
-      shift += 7;
+  Future<Uint8List?> _readChunk(
+    libp2p.P2PStream<Uint8List> stream,
+    int size,
+  ) async {
+    try {
+      final data = await stream
+          .read(size)
+          .timeout(inbound.InboundMessageBounds.readIdleTimeout);
+      if (data.isEmpty) return null;
+      return data;
+    } catch (e) {
+      return null;
     }
-    return result;
   }
 
   /// Sends a signaling message over the given stream.

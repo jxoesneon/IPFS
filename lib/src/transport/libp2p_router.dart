@@ -21,6 +21,7 @@ import '../platform/platform.dart';
 import '../protocols/dht/dht_routing_table_interface.dart';
 import '../utils/logger.dart';
 import '../version.dart';
+import 'inbound_message_bounds.dart' as inbound;
 import 'pnet/pnet_transport_wrapper.dart';
 import 'pnet/swarm_key_loader.dart';
 import 'quic_transport_probe.dart'
@@ -944,22 +945,15 @@ class Libp2pRouter implements RouterInterface {
     return null;
   }
 
-  /// Maximum size in bytes of a varint length prefix (u64).
-  static const int _maxVarintBytes = 10;
-
-  /// Maximum inbound message body size accepted on protocol streams.
-  static const int _maxInboundMessageSize = 4 * 1024 * 1024;
-
-  /// Maximum bytes requested per bulk read on inbound streams.
-  static const int _readChunkSize = 64 * 1024;
-
   /// Idle deadline applied to each read on an inbound stream.
-  static const Duration _inboundReadIdleTimeout = Duration(seconds: 30);
+  static const Duration _inboundReadIdleTimeout =
+      inbound.InboundMessageBounds.readIdleTimeout;
 
   /// Total lifetime of an inbound stream. Without this, a peer can hold a
   /// stream open indefinitely by sending a byte inside each idle window
   /// (drip-feed DoS). Multi-message protocols get a generous bound.
-  static const Duration _maxStreamLifetime = Duration(minutes: 5);
+  static const Duration _maxStreamLifetime =
+      inbound.InboundMessageBounds.maxStreamLifetime;
 
   /// Protocols where the responder speaks first — the dialer opens the
   /// stream and waits for a message without sending a request. Inbound
@@ -997,49 +991,13 @@ class Libp2pRouter implements RouterInterface {
 
   /// Reads one varint-length-prefixed message, pulling body bytes through
   /// [read]. Returns `null` when the source closes before a complete
-  /// message arrives. Throws [FormatException] when the varint prefix
-  /// exceeds [_maxVarintBytes] or the advertised length exceeds
-  /// [_maxInboundMessageSize].
+  /// message arrives. Throws [FormatException] when the varint prefix or
+  /// the advertised length exceeds the shared
+  /// [inbound.InboundMessageBounds].
   @visibleForTesting
   static Future<Uint8List?> readLengthPrefixedMessage(
     Future<Uint8List?> Function(int size) read,
-  ) async {
-    // Read varint length prefix, bounded to u64 width.
-    final lengthBytes = <int>[];
-    while (true) {
-      final chunk = await read(1);
-      if (chunk == null || chunk.isEmpty) return null;
-      lengthBytes.add(chunk[0]);
-      if ((chunk[0] & 0x80) == 0) break;
-      if (lengthBytes.length >= _maxVarintBytes) {
-        throw const FormatException(
-          'Varint length prefix exceeds maximum size',
-        );
-      }
-    }
-
-    final length = decodeVarint(Uint8List.fromList(lengthBytes));
-    if (length == 0) return Uint8List(0);
-    if (length < 0 || length > _maxInboundMessageSize) {
-      throw FormatException(
-        'Inbound message length $length exceeds $_maxInboundMessageSize',
-      );
-    }
-
-    // Read message body in bounded chunks.
-    final builder = BytesBuilder(copy: false);
-    var remaining = length;
-    while (remaining > 0) {
-      final chunk = await read(
-        remaining > _readChunkSize ? _readChunkSize : remaining,
-      );
-      if (chunk == null || chunk.isEmpty) return null;
-      final take = chunk.length > remaining ? remaining : chunk.length;
-      builder.add(Uint8List.fromList(chunk.sublist(0, take)));
-      remaining -= take;
-    }
-    return builder.takeBytes();
-  }
+  ) => inbound.readLengthPrefixedMessage(read);
 
   Future<Uint8List?> _readChunk(
     libp2p.P2PStream<dynamic> stream,
@@ -1057,19 +1015,7 @@ class Libp2pRouter implements RouterInterface {
   /// Decodes a u64 varint. Throws [FormatException] when the encoding
   /// would exceed 64 bits.
   @visibleForTesting
-  static int decodeVarint(Uint8List bytes) {
-    var result = 0;
-    var shift = 0;
-    for (final byte in bytes) {
-      if (shift >= 64) {
-        throw const FormatException('Varint exceeds 64 bits');
-      }
-      result |= (byte & 0x7F) << shift;
-      if ((byte & 0x80) == 0) break;
-      shift += 7;
-    }
-    return result;
-  }
+  static int decodeVarint(Uint8List bytes) => inbound.decodeVarint(bytes);
 
   /// Probes for an available QUIC transport.
   ///
