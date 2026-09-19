@@ -106,6 +106,14 @@ void main() {
       expect(() => ipfs.peerID, throwsStateError);
     });
 
+    test('peerId and discoveredPeers report offline state', () async {
+      await ipfs.start();
+      // The non-deprecated getter surfaces the same StateError as peerID.
+      expect(() => ipfs.peerId, throwsStateError);
+      // mDNS is not registered in offline mode, so the stream stays empty.
+      expect(await ipfs.discoveredPeers.isEmpty, isTrue);
+    });
+
     test(
       'networking facades delegate to underlying node and surface errors',
       () async {

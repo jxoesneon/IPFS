@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
 import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/auto_nat_handler.dart';
@@ -26,6 +27,7 @@ import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/graphsync/graphsync_handler.dart';
 import 'package:dart_ipfs/src/protocols/ipns/ipns_handler.dart';
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/private_key.dart';
 
@@ -64,9 +66,10 @@ class MockSecurityManager implements SecurityManager {
 }
 
 class TestPrivateKey implements IPFSPrivateKey {
+  TestPrivateKey(this.publicKeyBytes);
+
   @override
   final Uint8List publicKeyBytes;
-  TestPrivateKey(this.publicKeyBytes);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -179,12 +182,14 @@ class MockNetworkHandler implements NetworkHandler {
   Future<void> start() async => started = true;
   @override
   Future<void> stop() async => stopped = true;
-  @override
+  // NetworkHandler has no getStatus member; no @override.
   Future<Map<String, dynamic>> getStatus() async => {'status': 'active'};
   @override
   void setIpfsNode(IPFSNode node) => this.node = node;
   @override
   RouterInterface get router => routerInstance;
+  @override
+  String get peerID => routerInstance.peerID;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -212,6 +217,8 @@ class MockMDNSHandler implements MDNSHandler {
   @override
   Future<Map<String, dynamic>> getStatus() async => {'status': 'active'};
   @override
+  Stream<Peer> get peerDiscovery => const Stream.empty();
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -235,8 +242,9 @@ class MockPubSubHandler implements PubSubHandler {
   Future<void> start() async => started = true;
   @override
   Future<void> stop() async => stopped = true;
-  @override
-  Stream<dynamic> get pubsubMessages => const Stream.empty();
+  // PubSubHandler does not declare pubsubMessages (that stream lives on
+  // ProtocolManager), so this is an extra member, not an override.
+  Stream<PubSubMessage> get pubsubMessages => const Stream.empty();
   @override
   Future<Map<String, dynamic>> getStatus() async => {'status': 'active'};
   @override
@@ -423,6 +431,40 @@ void main() {
       expect(health['services']['ipns']['status'], 'active');
     });
 
+    test('discoveredPeers delegates to the registered MDNS handler', () {
+      registerAll();
+      final node = IPFSNode.fromContainer(container);
+      expect(node.discoveredPeers, same(mdns.peerDiscovery));
+    });
+
+    test('discoveredPeers is empty without a registered MDNS handler', () {
+      final minimalContainer = ServiceContainer();
+      minimalContainer.registerSingleton<MetricsCollector>(metrics);
+      minimalContainer.registerSingleton<SecurityManager>(security);
+      minimalContainer.registerSingleton<BlockStore>(blockStore);
+      minimalContainer.registerSingleton<DatastoreHandler>(datastore);
+      minimalContainer.registerSingleton<IPLDHandler>(ipld);
+
+      final node = IPFSNode.fromContainer(minimalContainer);
+      expect(node.discoveredPeers, isA<Stream<Peer>>());
+      expect(node.discoveredPeers, emitsDone);
+    });
+
+    test('peerIdOrNull returns the peer id, or null when offline', () {
+      registerAll();
+      final node = IPFSNode.fromContainer(container);
+      expect(node.peerIdOrNull, equals('QmMock'));
+
+      final minimalContainer = ServiceContainer();
+      minimalContainer.registerSingleton<MetricsCollector>(metrics);
+      minimalContainer.registerSingleton<SecurityManager>(security);
+      minimalContainer.registerSingleton<BlockStore>(blockStore);
+      minimalContainer.registerSingleton<DatastoreHandler>(datastore);
+      minimalContainer.registerSingleton<IPLDHandler>(ipld);
+      final offline = IPFSNode.fromContainer(minimalContainer);
+      expect(offline.peerIdOrNull, isNull);
+    });
+
     test('getHealthStatus with missing service', () async {
       final minimalContainer = ServiceContainer();
       minimalContainer.registerSingleton<MetricsCollector>(metrics);
@@ -451,7 +493,7 @@ void main() {
     test('bandwidthMetrics when MetricsCollector is registered', () {
       registerAll();
       final node = IPFSNode.fromContainer(container);
-      expect(node.bandwidthMetrics, isA<Stream>());
+      expect(node.bandwidthMetrics, isA<Stream<Map<String, dynamic>>>());
     });
 
     test('publicKey with Secp256k1 key', () async {

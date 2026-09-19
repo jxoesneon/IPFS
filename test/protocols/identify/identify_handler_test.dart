@@ -11,11 +11,10 @@ import 'package:dart_ipfs/src/core/crypto/peer_key_registry.dart';
 import 'package:dart_ipfs/src/core/peer/peer_record.dart';
 import 'package:dart_ipfs/src/core/peer/peer_record_pb.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/protocols/dht/dht_routing_table_interface.dart';
 import 'package:dart_ipfs/src/protocols/identify/identify_handler.dart';
 import 'package:dart_ipfs/src/protocols/identify/identify_pb.dart';
 import 'package:dart_ipfs/src/protocols/identify/identify_push_handler.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_routing_table_interface.dart';
-import 'package:dart_ipfs/src/transport/router_events.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
 import 'package:test/test.dart';
@@ -31,7 +30,7 @@ class MockRouter implements RouterInterface {
   final Map<String, Uint8List?> _requestResponses = {};
 
   /// Messages sent via sendMessage (peerId, protocolId, data).
-  final List<_SentMessage> _sentMessages = [];
+  final List<SentMessage> _sentMessages = [];
 
   @override
   String get peerID => 'QmTestPeerId';
@@ -87,7 +86,7 @@ class MockRouter implements RouterInterface {
     String? protocolId,
   }) async {
     _sentMessages.add(
-      _SentMessage(peerIdStr, protocolId ?? '/ipfs/1.0.0', message),
+      SentMessage(peerIdStr, protocolId ?? '/ipfs/1.0.0', message),
     );
   }
 
@@ -200,11 +199,11 @@ class MockRouter implements RouterInterface {
   Uint8List? _lastResponse;
   Uint8List? get lastResponse => _lastResponse;
 
-  List<_SentMessage> get sentMessages => _sentMessages;
+  List<SentMessage> get sentMessages => _sentMessages;
 }
 
-class _SentMessage {
-  _SentMessage(this.peerId, this.protocolId, this.data);
+class SentMessage {
+  SentMessage(this.peerId, this.protocolId, this.data);
   final String peerId;
   final String protocolId;
   final Uint8List data;
@@ -247,7 +246,7 @@ void main() {
       router.simulateIncoming('/ipfs/id/1.0.0', 'QmRemote', Uint8List(0));
 
       // Wait for async response
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
 
       expect(router.lastResponse, isNotNull);
       final identify = IdentifyPb.decode(router.lastResponse!);
@@ -286,7 +285,7 @@ void main() {
 
       await handler.start();
       router.simulateIncoming('/ipfs/id/1.0.0', 'QmRemote', Uint8List(0));
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
 
       final identify = IdentifyPb.decode(router.lastResponse!);
       expect(identify.listenAddrs.length, equals(2));
@@ -308,7 +307,7 @@ void main() {
 
       await handler.start();
       router.simulateIncoming('/ipfs/id/1.0.0', 'QmRemote', Uint8List(0));
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
 
       final identify = IdentifyPb.decode(router.lastResponse!);
       expect(identify.publicKey, isNotNull);
@@ -330,7 +329,7 @@ void main() {
 
       await handler.start();
       router.simulateIncoming('/ipfs/id/1.0.0', 'QmRemote', Uint8List(0));
-      await Future.delayed(const Duration(milliseconds: 200));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
 
       final identify = IdentifyPb.decode(router.lastResponse!);
       expect(identify.signedPeerRecord, isNotNull);
@@ -351,7 +350,7 @@ void main() {
 
       await handler.start();
       router.simulateIncoming('/ipfs/id/1.0.0', 'QmRemote', Uint8List(0));
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
 
       final identify = IdentifyPb.decode(router.lastResponse!);
       expect(identify.signedPeerRecord, isNull);
@@ -597,7 +596,7 @@ void main() {
         remoteIdentify.encode(),
       );
 
-      await Future.delayed(const Duration(milliseconds: 50));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
 
       expect(events.length, equals(1));
       expect(events[0].peerId, equals('QmRemote'));
@@ -622,7 +621,7 @@ void main() {
 
       router.simulateIncoming('/ipfs/id/push/1.0.0', 'QmRemote', Uint8List(0));
 
-      await Future.delayed(const Duration(milliseconds: 50));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(events, isEmpty);
     });
 
@@ -733,7 +732,7 @@ void main() {
         IdentifyPb(agentVersion: 'test/1.0').encode(),
       );
 
-      await Future.delayed(const Duration(milliseconds: 50));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(events, hasLength(1));
       expect(events[0].peerId, equals('QmRemote'));
       expect(events[0].identify.agentVersion, equals('test/1.0'));
@@ -813,6 +812,20 @@ void main() {
       expect(s, contains(identifyAgentVersion));
       expect(s, contains('ipfs/0.1.0'));
       expect(s, contains('hasSignedPeerRecord: true'));
+    });
+
+    test('decode rejects a length-delimited field beyond the message', () {
+      // Field 1 (publicKey), wire type 2, declared length 127 with no
+      // payload bytes remaining — must not read out of bounds.
+      expect(
+        () => IdentifyPb.decode(Uint8List.fromList([0x0A, 0x7F])),
+        throwsFormatException,
+      );
+      // Negative/overlong declared length on field 5 with a short tail.
+      expect(
+        () => IdentifyPb.decode(Uint8List.fromList([0x2A, 0x7F, 0x01])),
+        throwsFormatException,
+      );
     });
   });
 }

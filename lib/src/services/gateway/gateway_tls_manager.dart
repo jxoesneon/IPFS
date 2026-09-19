@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:meta/meta.dart';
 import 'package:pointycastle/asn1.dart' as asn1;
 
 import '../../core/config/gateway_config.dart';
@@ -54,7 +55,10 @@ class LetsEncryptAutoTlsProvider implements AutoTlsProvider {
   LetsEncryptAutoTlsProvider({
     this.staging = false,
     AcmePersistence? persistence,
-  }) : _persistence = persistence;
+    @visibleForTesting
+    AcmeClient Function({required String directoryUrl})? acmeClientFactory,
+  }) : _persistence = persistence,
+       _acmeClientFactory = acmeClientFactory;
 
   /// Whether to use the ACME provider's staging endpoint.
   final bool staging;
@@ -62,6 +66,10 @@ class LetsEncryptAutoTlsProvider implements AutoTlsProvider {
   /// Optional persistence manager for account keys and certificates.
   /// If null, a new one is created on first use.
   final AcmePersistence? _persistence;
+
+  /// Test seam for injecting an [AcmeClient] without contacting a live
+  /// ACME directory; production callers use [AcmeClient.new].
+  final AcmeClient Function({required String directoryUrl})? _acmeClientFactory;
 
   final _logger = Logger('LetsEncryptAutoTlsProvider');
 
@@ -150,7 +158,9 @@ class LetsEncryptAutoTlsProvider implements AutoTlsProvider {
 
       // Create ACME client (account key will be generated if not provided)
       final directoryUrl = _getDirectoryUrl(config.autoTlsProvider);
-      _acmeClient = AcmeClient(directoryUrl: directoryUrl);
+      _acmeClient = (_acmeClientFactory ?? AcmeClient.new)(
+        directoryUrl: directoryUrl,
+      );
 
       // Build domain list
       final domains = <String>[config.autoTlsDomain!, ...config.autoTlsSANs];

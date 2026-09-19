@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:mirrors' as mirrors;
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
@@ -146,15 +147,15 @@ void main() {
       await rA.connect('/ip4/127.0.0.1/tcp/4502/p2p/${rB.peerID}');
       await rA.connect('/ip4/127.0.0.1/tcp/4503/p2p/${rC.peerID}');
 
-      await Future<void>.delayed(Duration(milliseconds: 1000));
+      await Future<void>.delayed(const Duration(milliseconds: 1000));
       await rA.broadcastMessage(
         protocol,
         Uint8List.fromList(utf8.encode('hi')),
       );
 
       await Future.wait([
-        completerB.future.timeout(Duration(seconds: 5)),
-        completerC.future.timeout(Duration(seconds: 5)),
+        completerB.future.timeout(const Duration(seconds: 5)),
+        completerC.future.timeout(const Duration(seconds: 5)),
       ]);
 
       await Future.wait([rA.stop(), rB.stop(), rC.stop()]);
@@ -176,7 +177,7 @@ void main() {
       });
 
       await rA.connect('/ip4/127.0.0.1/tcp/4602/p2p/${rB.peerID}');
-      await Future<void>.delayed(Duration(milliseconds: 1000));
+      await Future<void>.delayed(const Duration(milliseconds: 1000));
 
       final result = await rA.sendRequest(
         rB.peerID,
@@ -226,7 +227,7 @@ void main() {
       rB.registerProtocolHandler(protocol, (_) {});
 
       await rA.connect('/ip4/127.0.0.1/tcp/4702/p2p/${rB.peerID}');
-      await Future<void>.delayed(Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       await rA.sendMessage(rB.peerID, Uint8List(300), protocolId: protocol);
 
       await rA.stop();
@@ -290,6 +291,83 @@ void main() {
       router.unregisterProtocolHandler('/test/unreg/1.0.0');
       expect(router.supportedProtocols, isNot(contains('/test/unreg/1.0.0')));
     });
+
+    test(
+      'persistedPeerId derives a stable peer id from the repo seed',
+      () async {
+        final dir = Directory('${repoDir.path}/pid_repo')..createSync();
+        final first = await Libp2pRouter.persistedPeerId(dir.path);
+        final second = await Libp2pRouter.persistedPeerId(dir.path);
+        expect(first, isNotNull);
+        expect(first, isNotEmpty);
+        // The second call loads the seed written by the first, so the
+        // derived identity is stable across "restarts".
+        expect(second, equals(first));
+      },
+    );
+
+    test(
+      'persistedPeerId returns null when the seed cannot be persisted',
+      () async {
+        final dir = Directory('${repoDir.path}/pid_fail')..createSync();
+        // Occupying the seed path with a directory makes both the read and
+        // the create-write fail, exercising the unavailable-persistence
+        // branch.
+        Directory('${dir.path}/identity').createSync();
+        expect(await Libp2pRouter.persistedPeerId(dir.path), isNull);
+      },
+    );
+
+    test('connect restores the addrbook entry when a dial fails', () async {
+      await router.start();
+      const peerIdStr = '12D3KooWK39Nd6yHE6xy5ZNG95ukvrQZF2axYZr6RSKoyMbAkGD2';
+      final peerId = libp2p.PeerId.fromString(peerIdStr);
+      final verified = libp2p.MultiAddr('/ip4/127.0.0.1/tcp/4999');
+      // Seed the addrbook with a "verified" address so the failed dial has
+      // a prior entry to restore after clearing the unverified one.
+      await router.host!.peerStore.addrBook.addAddrs(peerId, [
+        verified,
+      ], const Duration(minutes: 10));
+
+      // Dialing the dead port fails; the router must clear the seeded
+      // unverified address and restore the prior entry.
+      await expectLater(
+        router.connect('/ip4/127.0.0.1/tcp/1/p2p/$peerIdStr'),
+        throwsA(anything),
+      );
+    });
+
+    test(
+      'connect warns when addrbook restore fails after a failed dial',
+      () async {
+        await router.start();
+        const peerIdStr =
+            '12D3KooWK39Nd6yHE6xy5ZNG95ukvrQZF2axYZr6RSKoyMbAkGD2';
+        // Dial a non-routable address so host.connect stays in flight.
+        // The expectation subscribes immediately — otherwise the error
+        // completing the future while it is unlistened is reported as an
+        // unhandled async error.
+        final connectExpectation = expectLater(
+          router.connect('/ip4/10.255.255.1/tcp/1/p2p/$peerIdStr'),
+          throwsA(anything),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        // Tear the host down out from under the in-flight dial: when the
+        // abort surfaces, connect's catch block runs with _host already
+        // null, so the addrbook restore attempt fails and is logged.
+        final host = router.host!;
+        final instance = mirrors.reflect(router);
+        final hostField = instance.type.declarations.keys.firstWhere(
+          (s) => mirrors.MirrorSystem.getName(s) == '_host',
+        );
+        instance.setField(hostField, null);
+        await host.close();
+        await connectExpectation;
+      },
+      // The aborted dial should surface promptly; leave headroom for
+      // stacks that wait out the internal 30 s dial cap.
+      timeout: const Timeout(Duration(seconds: 60)),
+    );
 
     test('registerRelayedConnection tracks the peer', () async {
       await router.start();
@@ -587,7 +665,7 @@ void main() {
           // connection down mid-response makes the remote's Yamux write
           // race the dead session (observed as an unhandled async error
           // on Windows CI).
-          await Future.delayed(const Duration(seconds: 1));
+          await Future<void>.delayed(const Duration(seconds: 1));
 
           // Simulate the connection dying: recording a closure on the
           // SwarmConn's health metrics transitions it to failed, so the
@@ -631,6 +709,35 @@ void main() {
           await rB.stop();
         },
       );
+    });
+
+    group('decodeVarint', () {
+      test('decodes u64 varints', () {
+        expect(
+          Libp2pRouter.decodeVarint(Uint8List.fromList(_varintBytes(0))),
+          equals(0),
+        );
+        expect(
+          Libp2pRouter.decodeVarint(Uint8List.fromList(_varintBytes(150))),
+          equals(150),
+        );
+        expect(
+          Libp2pRouter.decodeVarint(
+            Uint8List.fromList(_varintBytes(0x7FFFFFFFFFFFFFFF)),
+          ),
+          equals(0x7FFFFFFFFFFFFFFF),
+        );
+      });
+
+      test('throws when the encoding exceeds 64 bits', () {
+        // Eleven continuation bytes push the shift past 64.
+        expect(
+          () => Libp2pRouter.decodeVarint(
+            Uint8List.fromList(List.filled(11, 0x80)),
+          ),
+          throwsFormatException,
+        );
+      });
     });
   });
 }

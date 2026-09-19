@@ -359,4 +359,109 @@ void main() {
       );
     });
   });
+
+  group('decoder edge branches', () {
+    /// Encodes a length-delimited field tag with a varint length prefix.
+    List<int> lenDelim(int field, List<int> payload) {
+      final out = <int>[(field << 3) | 2];
+      var len = payload.length;
+      while (len >= 0x80) {
+        out.add((len & 0x7F) | 0x80);
+        len >>= 7;
+      }
+      out.add(len);
+      return [...out, ...payload];
+    }
+
+    test('control isEmpty considers the idontwant list', () {
+      expect(GossipSubControl().isEmpty, isTrue);
+      expect(
+        GossipSubControl(idontwant: [GossipSubIDontWant()]).isEmpty,
+        isFalse,
+      );
+    });
+
+    test('skips unknown fixed-width and length-delimited top-level fields', () {
+      final rpc = _u8([
+        0x49, ...List.filled(8, 0), // field 9, wire type 1 (64-bit)
+        0x52, 0x02, 0x00, 0x00, // field 10, wire type 2, length 2
+        0x5D, ...List.filled(4, 0), // field 11, wire type 5 (32-bit)
+      ]);
+      final decoded = GossipSubRpcCodec.decode(rpc);
+      expect(decoded.publish, isEmpty);
+      expect(decoded.control, isNull);
+    });
+
+    test('rejects an unsupported wire type while skipping', () {
+      // Field 12 with wire type 3 is not a skippable field.
+      expect(
+        () => GossipSubRpcCodec.decode(_u8([0x63])),
+        throwsFormatException,
+      );
+    });
+
+    test('rejects truncated fixed-width fields while skipping', () {
+      // Field 9, wire type 1 (64-bit) with only 4 payload bytes remaining.
+      expect(
+        () => GossipSubRpcCodec.decode(_u8([0x49, 0, 0, 0, 0])),
+        throwsFormatException,
+      );
+      // Field 11, wire type 5 (32-bit) with only 2 payload bytes remaining.
+      expect(
+        () => GossipSubRpcCodec.decode(_u8([0x5D, 0, 0])),
+        throwsFormatException,
+      );
+    });
+
+    test('skips unknown fields inside nested records', () {
+      final rpc = _u8([
+        ...lenDelim(1, [0x18, 0x01]), // SubOpts field 3 (varint)
+        ...lenDelim(2, [0x38, 0x01]), // Message field 7 (varint)
+        ...lenDelim(3, [
+          0x30, 0x01, // Control field 6 (varint)
+          ...lenDelim(1, [0x18, 0x01]), // IHave field 3
+          ...lenDelim(2, [0x10, 0x01]), // IWant field 2
+          ...lenDelim(3, [0x10, 0x01]), // Graft field 2
+          ...lenDelim(4, [
+            0x12, 0x01, 0x00, // Prune field 2 (PeerInfo, skipped)
+            0x28, 0x01, // Prune field 5
+          ]),
+          ...lenDelim(5, [0x10, 0x01]), // IDontWant field 2
+        ]),
+      ]);
+      expect(() => GossipSubRpcCodec.decode(rpc), returnsNormally);
+    });
+
+    test('rejects a message field exceeding its byte bound', () {
+      // signature is bounded to maxSignatureBytes (1024).
+      final rpc = _u8(lenDelim(2, lenDelim(5, List.filled(1100, 0xAB))));
+      expect(() => GossipSubRpcCodec.decode(rpc), throwsFormatException);
+    });
+
+    test('rejects a length-delimited wire type for varint fields', () {
+      // SubOpts.subscribe (field 1) must be a varint; a wire-type-2 frame
+      // is malformed.
+      final rpc = _u8(lenDelim(1, [0x0A, 0x01, 0x01]));
+      expect(() => GossipSubRpcCodec.decode(rpc), throwsFormatException);
+    });
+
+    test('marshal rejects non-32-byte Ed25519 keys', () {
+      expect(
+        () => marshalGossipSubEd25519PublicKey(_u8(List.filled(31, 0))),
+        throwsArgumentError,
+      );
+    });
+
+    test('unmarshal skips unknown fields in the public key blob', () {
+      final blob = _u8([
+        0x1A, 0x01, 0x00, // unknown field 3
+        0x08, 0x01, // key type Ed25519
+        0x12, 0x20, ...List.filled(32, 7),
+      ]);
+      expect(
+        unmarshalGossipSubPublicKey(blob),
+        equals(Uint8List.fromList(List.filled(32, 7))),
+      );
+    });
+  });
 }

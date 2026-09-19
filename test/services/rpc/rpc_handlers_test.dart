@@ -1,23 +1,30 @@
 import 'dart:convert';
-import 'package:test/test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
-import 'package:dart_ipfs/src/services/rpc/rpc_handlers.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'dart:mirrors' as mirrors;
+import 'dart:typed_data';
+
 import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/data_structures/car.dart' show CarReader;
+import 'package:dart_ipfs/src/core/data_structures/link.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
+import 'package:dart_ipfs/src/core/ipld/codecs/standard_codecs.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
+    as unixfs_pb;
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/core/data_structures/link.dart';
-import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/services/rpc/rpc_handlers.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/car_writer.dart';
-import 'package:dart_ipfs/src/core/data_structures/car.dart' show CarReader;
 import 'package:dart_ipfs_core/dart_ipfs_core.dart' as core;
+import 'package:fixnum/fixnum.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:shelf/shelf.dart';
-import 'dart:typed_data';
+import 'package:test/test.dart';
 
 import 'rpc_handlers_test.mocks.dart';
 
@@ -871,4 +878,728 @@ void main() {
       },
     );
   });
+
+  group('remaining RPC handler branches', () {
+    GetBlockResponse found(Block block) => GetBlockResponse()
+      ..found = true
+      ..block = block.toProto();
+
+    void storeBlock(Block block) {
+      when(
+        mockBlockStore.getBlock(block.cid.encode()),
+      ).thenAnswer((_) async => found(block));
+    }
+
+    String multipartBody(String boundary, String content) =>
+        '--$boundary\r\n'
+        'Content-Disposition: form-data; name="file"; filename="f.txt"\r\n'
+        '\r\n'
+        '$content\r\n'
+        '--$boundary--\r\n';
+
+    test('handleAdd wrap-with-directory emits a wrapping dir entry', () async {
+      // File whose dag-pb block carries a link so cumulative size includes
+      // the declared link Tsize.
+      final child = await Block.fromData(
+        Uint8List.fromList([1]),
+        format: 'raw',
+      );
+      final fileNode = dag_pb.PBNode(
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.File,
+          filesize: Int64(3),
+        ).writeToBuffer(),
+        links: [
+          dag_pb.PBLink(name: 'l', hash: child.cid.toBytes(), size: Int64(9)),
+        ],
+      );
+      final fileBlock = await Block.fromData(
+        fileNode.writeToBuffer(),
+        format: 'dag-pb',
+      );
+      storeBlock(fileBlock);
+      // A dag-pb entry whose stored data cannot be parsed exercises the
+      // cumulative-size fallback that counts the block alone.
+      final badBlock = await Block.fromData(
+        Uint8List.fromList([0xFF, 0xFF, 0xFF, 0xFF]),
+        format: 'dag-pb',
+      );
+      storeBlock(badBlock);
+      // A third entry is simply absent from the blockstore.
+      final missing = await Block.fromData(
+        Uint8List.fromList([7]),
+        format: 'raw',
+      );
+      when(
+        mockBlockStore.getBlock(missing.cid.encode()),
+      ).thenAnswer((_) async => GetBlockResponse()..found = false);
+
+      var call = 0;
+      when(mockNode.addFile(any)).thenAnswer((_) async {
+        call++;
+        return switch (call) {
+          1 => fileBlock.cid.encode(),
+          2 => badBlock.cid.encode(),
+          _ => missing.cid.encode(),
+        };
+      });
+      when(mockNode.pin(any)).thenAnswer((_) async {});
+
+      const boundary = 'b';
+      final body =
+          '--$boundary\r\n'
+          'Content-Disposition: form-data; name="f1"; filename="a.txt"\r\n'
+          '\r\n'
+          'aaa\r\n'
+          '--$boundary\r\n'
+          'Content-Disposition: form-data; name="f2"; filename="b.txt"\r\n'
+          '\r\n'
+          'bbb\r\n'
+          '--$boundary\r\n'
+          'Content-Disposition: form-data; name="f3"; filename="c.txt"\r\n'
+          '\r\n'
+          'ccc\r\n'
+          '--$boundary--\r\n';
+      final request = Request(
+        'POST',
+        Uri.parse(
+          'http://localhost/api/v0/add?wrap-with-directory=true&pin=true',
+        ),
+        headers: {'content-type': 'multipart/form-data; boundary=$boundary'},
+        body: body,
+      );
+      final response = await handlers.handleAdd(request);
+      expect(response.statusCode, equals(200));
+      final lines = (await response.readAsString())
+          .split('\n')
+          .map(json.decode)
+          .toList();
+      // The wrapping directory is emitted with an empty name.
+      expect(lines.last['Name'], equals(''));
+      expect(lines.last['Hash'], isA<String>());
+      verify(mockNode.pin(any)).called(greaterThanOrEqualTo(2));
+    });
+
+    test(
+      'handleAdd builds blocks directly for non-default DAG options',
+      () async {
+        when(mockNode.pin(any)).thenAnswer((_) async {});
+        const boundary = 'b';
+        final request = Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/add?cid-version=1&raw-leaves=true',
+          ),
+          headers: {'content-type': 'multipart/form-data; boundary=$boundary'},
+          body: multipartBody(boundary, 'abc'),
+        );
+        final response = await handlers.handleAdd(request);
+        expect(response.statusCode, equals(200));
+        // Blocks were built locally and stored via the blockstore rather
+        // than delegated to node.addFile.
+        verify(mockBlockStore.putBlock(any)).called(greaterThanOrEqualTo(1));
+        verifyNever(mockNode.addFile(any));
+      },
+    );
+
+    test('handleGet normalizes ipfs path prefixes', () async {
+      final block = await Block.fromData(
+        Uint8List.fromList(utf8.encode('x')),
+        format: 'raw',
+      );
+      storeBlock(block);
+      when(mockNode.bitswap).thenReturn(null);
+
+      for (final prefix in ['/ipfs/', 'ipfs/', '/']) {
+        final request = Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/get?arg=$prefix${block.cid.encode()}',
+          ),
+        );
+        final response = await handlers.handleGet(request);
+        expect(response.statusCode, equals(200), reason: 'prefix $prefix');
+      }
+
+      // A bare '/' argument has no CID segment at all.
+      final empty = await handlers.handleGet(
+        Request('POST', Uri.parse('http://localhost/api/v0/get?arg=/')),
+      );
+      expect(empty.statusCode, equals(500));
+    });
+
+    test(
+      'handleGet resolves named sub-paths through directory links',
+      () async {
+        final child = await Block.fromData(
+          Uint8List.fromList(utf8.encode('sub-data')),
+          format: 'raw',
+        );
+        storeBlock(child);
+        final dirNode = dag_pb.PBNode(
+          links: [dag_pb.PBLink(name: 'sub.txt', hash: child.cid.toBytes())],
+        );
+        final dir = await Block.fromData(
+          dirNode.writeToBuffer(),
+          format: 'dag-pb',
+        );
+        storeBlock(dir);
+        when(mockNode.bitswap).thenReturn(null);
+
+        final request = Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/get?arg=${dir.cid.encode()}/sub.txt',
+          ),
+        );
+        final response = await handlers.handleGet(request);
+        expect(response.statusCode, equals(200));
+        final tar = await response.read().expand((i) => i).toList();
+        expect(utf8.decode(tar.sublist(0, 7)), equals('sub.txt'));
+        expect(utf8.decode(tar.sublist(512, 512 + 8)), equals('sub-data'));
+      },
+    );
+
+    test('handleGet reports missing links and missing child blocks', () async {
+      final missing = await Block.fromData(
+        Uint8List.fromList([9]),
+        format: 'raw',
+      );
+      when(
+        mockBlockStore.getBlock(missing.cid.encode()),
+      ).thenAnswer((_) async => GetBlockResponse()..found = false);
+      final dirNode = dag_pb.PBNode(
+        links: [dag_pb.PBLink(name: 'present', hash: missing.cid.toBytes())],
+      );
+      final dir = await Block.fromData(
+        dirNode.writeToBuffer(),
+        format: 'dag-pb',
+      );
+      storeBlock(dir);
+      when(mockNode.bitswap).thenReturn(null);
+
+      // Link name absent from the directory.
+      var response = await handlers.handleGet(
+        Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/get?arg=${dir.cid.encode()}/absent',
+          ),
+        ),
+      );
+      expect(response.statusCode, equals(404));
+
+      // Link exists but the child block is nowhere.
+      response = await handlers.handleGet(
+        Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/get?arg=${dir.cid.encode()}/present',
+          ),
+        ),
+      );
+      expect(response.statusCode, equals(404));
+
+      // Sub-path against a non-dag-pb root is also "not found".
+      final raw = await Block.fromData(Uint8List.fromList([1]), format: 'raw');
+      storeBlock(raw);
+      response = await handlers.handleGet(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/get?arg=${raw.cid.encode()}/x'),
+        ),
+      );
+      expect(response.statusCode, equals(404));
+
+      // A dag-pb CID whose data is not a decodable PBNode falls back to
+      // the "not found" path inside _findNamedLink.
+      final garbage = await Block.fromData(
+        Uint8List.fromList([0xFF, 0xFF, 0xFF, 0xFF]),
+        format: 'dag-pb',
+      );
+      storeBlock(garbage);
+      response = await handlers.handleGet(
+        Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/get?arg=${garbage.cid.encode()}/x',
+          ),
+        ),
+      );
+      expect(response.statusCode, equals(404));
+    });
+
+    test('handleGet falls back to Bitswap for missing local blocks', () async {
+      final remote = await Block.fromData(
+        Uint8List.fromList(utf8.encode('remote')),
+        format: 'raw',
+      );
+      when(
+        mockBlockStore.getBlock(remote.cid.encode()),
+      ).thenAnswer((_) async => GetBlockResponse()..found = false);
+      final bitswap = _FakeBitswapHandler(remote);
+      when(mockNode.bitswap).thenReturn(bitswap);
+
+      final response = await handlers.handleGet(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/get?arg=${remote.cid.encode()}'),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      // The fetched block is cached into the local blockstore.
+      verify(mockBlockStore.putBlock(any)).called(1);
+
+      // When Bitswap also misses the path yields a 404.
+      when(
+        mockBlockStore.getBlock('nope'),
+      ).thenAnswer((_) async => GetBlockResponse()..found = false);
+      final miss = await handlers.handleGet(
+        Request('POST', Uri.parse('http://localhost/api/v0/get?arg=nope')),
+      );
+      expect(miss.statusCode, equals(404));
+    });
+
+    test('handleGet exports a UnixFS directory tree as TAR', () async {
+      final file = await Block.fromData(
+        Uint8List.fromList(utf8.encode('inner')),
+        format: 'raw',
+      );
+      storeBlock(file);
+      final longName = '${'d' * 95}/${'f' * 30}';
+      final longFile = await Block.fromData(
+        Uint8List.fromList([2]),
+        format: 'raw',
+      );
+      storeBlock(longFile);
+      final veryLongName = 'z' * 150;
+      final veryLongFile = await Block.fromData(
+        Uint8List.fromList([3]),
+        format: 'raw',
+      );
+      storeBlock(veryLongFile);
+
+      final dirNode = dag_pb.PBNode(
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.Directory,
+        ).writeToBuffer(),
+        links: [
+          dag_pb.PBLink(name: 'file.txt', hash: file.cid.toBytes()),
+          dag_pb.PBLink(name: longName, hash: longFile.cid.toBytes()),
+          dag_pb.PBLink(name: veryLongName, hash: veryLongFile.cid.toBytes()),
+        ],
+      );
+      final dir = await Block.fromData(
+        dirNode.writeToBuffer(),
+        format: 'dag-pb',
+      );
+      storeBlock(dir);
+      when(mockNode.bitswap).thenReturn(null);
+
+      final response = await handlers.handleGet(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/get?arg=${dir.cid.encode()}'),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      final tar = await response.read().expand((i) => i).toList();
+      // Directory entry: ustar typeflag '5' at offset 156.
+      expect(tar[156], equals(0x35));
+      // Three file entries follow the directory header.
+      var fileEntries = 0;
+      for (var off = 0; off + 512 <= tar.length; off += 512) {
+        if (tar[off + 156] == 0x30) fileEntries++;
+      }
+      expect(fileEntries, equals(3));
+    });
+
+    test('handleGet fails when a linked TAR block is missing', () async {
+      final missing = await Block.fromData(
+        Uint8List.fromList([9]),
+        format: 'raw',
+      );
+      when(
+        mockBlockStore.getBlock(missing.cid.encode()),
+      ).thenAnswer((_) async => GetBlockResponse()..found = false);
+      final dirNode = dag_pb.PBNode(
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.Directory,
+        ).writeToBuffer(),
+        links: [dag_pb.PBLink(name: 'gone', hash: missing.cid.toBytes())],
+      );
+      final dir = await Block.fromData(
+        dirNode.writeToBuffer(),
+        format: 'dag-pb',
+      );
+      storeBlock(dir);
+      when(mockNode.bitswap).thenReturn(null);
+
+      final response = await handlers.handleGet(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/get?arg=${dir.cid.encode()}'),
+        ),
+      );
+      expect(response.statusCode, equals(500));
+      final body = json.decode(await response.readAsString());
+      expect(body['Message'], contains('Get failed'));
+    });
+
+    test('handleGet reassembles a chunked UnixFS file into TAR', () async {
+      // A chunked file's dag-pb root carries links to leaf blocks, so the
+      // TAR writer's unixfsReadFile call must fetch them through the
+      // blockstore callback.
+      final chunk = await Block.fromData(
+        Uint8List.fromList(utf8.encode('chunked!')),
+        format: 'raw',
+      );
+      storeBlock(chunk);
+      final fileNode = dag_pb.PBNode(
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.File,
+          filesize: Int64(8),
+          blocksizes: [Int64(8)],
+        ).writeToBuffer(),
+        links: [dag_pb.PBLink(hash: chunk.cid.toBytes(), size: Int64(8))],
+      );
+      final fileBlock = await Block.fromData(
+        fileNode.writeToBuffer(),
+        format: 'dag-pb',
+      );
+      storeBlock(fileBlock);
+      when(mockNode.bitswap).thenReturn(null);
+
+      final response = await handlers.handleGet(
+        Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/get?arg=${fileBlock.cid.encode()}',
+          ),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      final tar = await response.read().expand((i) => i).toList();
+      // The reassembled payload follows the 512-byte ustar header.
+      expect(utf8.decode(tar.sublist(512, 512 + 8)), equals('chunked!'));
+    });
+
+    test('TAR traversal enforces depth and node-count bounds', () async {
+      final block = await Block.fromData(
+        Uint8List.fromList([1]),
+        format: 'raw',
+      );
+      final mirror = mirrors.reflect(handlers);
+      // Private members are library-scoped, so resolve them by their
+      // readable names rather than Symbols minted in this library.
+      final lib = mirror.type.owner! as mirrors.LibraryMirror;
+      final tarClass =
+          lib.declarations.entries
+                  .firstWhere(
+                    (e) => mirrors.MirrorSystem.getName(e.key) == '_TarWriter',
+                  )
+                  .value
+              as mirrors.ClassMirror;
+      final tar = tarClass.newInstance(const Symbol(''), []).reflectee;
+      final tarAddSym = mirror.type.declarations.keys.firstWhere(
+        (s) => mirrors.MirrorSystem.getName(s) == '_tarAddNode',
+      );
+
+      await expectLater(
+        mirror
+                .invoke(
+                  tarAddSym,
+                  [tar, 'n', block],
+                  {const Symbol('depth'): 33, const Symbol('nodes'): 1},
+                )
+                .reflectee
+            as Future<void>,
+        throwsStateError,
+      );
+      await expectLater(
+        mirror
+                .invoke(
+                  tarAddSym,
+                  [tar, 'n', block],
+                  {const Symbol('depth'): 0, const Symbol('nodes'): 10001},
+                )
+                .reflectee
+            as Future<void>,
+        throwsStateError,
+      );
+    });
+
+    test(
+      'handleDagGet decodes dag-pb, dag-cbor, dag-json and raw blocks',
+      () async {
+        final node = await DagJsonCodec().decode(utf8.encode('{"k":"v"}'));
+        final cborBytes = await DagCborCodec().encode(node);
+        final cborBlock = await Block.fromData(cborBytes, format: 'dag-cbor');
+        storeBlock(cborBlock);
+        final jsonBlock = await Block.fromData(
+          Uint8List.fromList(utf8.encode('{"j":true}')),
+          format: 'dag-json',
+        );
+        storeBlock(jsonBlock);
+        final rawBlock = await Block.fromData(
+          Uint8List.fromList([1, 2, 3]),
+          format: 'raw',
+        );
+        storeBlock(rawBlock);
+        final pbBlock = await Block.fromData(
+          dag_pb.PBNode(
+            links: [dag_pb.PBLink(name: 'x', hash: rawBlock.cid.toBytes())],
+          ).writeToBuffer(),
+          format: 'dag-pb',
+        );
+        storeBlock(pbBlock);
+
+        for (final block in [cborBlock, jsonBlock, rawBlock, pbBlock]) {
+          final response = await handlers.handleDagGet(
+            Request(
+              'POST',
+              Uri.parse(
+                'http://localhost/api/v0/dag/get?arg=${block.cid.encode()}',
+              ),
+            ),
+          );
+          expect(
+            response.statusCode,
+            equals(200),
+            reason: block.cid.codec ?? 'raw',
+          );
+        }
+      },
+    );
+
+    test('handleDagPut accepts cbor, protobuf and raw codec options', () async {
+      when(mockNode.pin(any)).thenAnswer((_) async {});
+
+      // dag-cbor input with the default dag-cbor store codec.
+      final node = await DagJsonCodec().decode(utf8.encode('{"a":1}'));
+      final cborBytes = await DagCborCodec().encode(node);
+      var response = await handlers.handleDagPut(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/dag/put?input-codec=cbor'),
+          body: cborBytes,
+        ),
+      );
+      expect(response.statusCode, equals(200));
+
+      // json input alias with the dag-json store codec. The store codec
+      // names the CID codec directly, so it must be the canonical name.
+      response = await handlers.handleDagPut(
+        Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/dag/put?input-codec=json'
+            '&store-codec=dag-json',
+          ),
+          body: utf8.encode('{"b":2}'),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+
+      // dag-pb input with the dag-pb store codec (the protobuf alias
+      // shares this switch case).
+      final pbBytes = dag_pb.PBNode(
+        data: unixfs_pb.Data(type: unixfs_pb.Data_DataType.Raw).writeToBuffer(),
+      ).writeToBuffer();
+      response = await handlers.handleDagPut(
+        Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/dag/put?input-codec=dag-pb'
+            '&store-codec=dag-pb',
+          ),
+          body: pbBytes,
+        ),
+      );
+      expect(response.statusCode, equals(200));
+
+      // raw input with the raw store codec.
+      response = await handlers.handleDagPut(
+        Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/dag/put?input-codec=raw'
+            '&store-codec=raw',
+          ),
+          body: Uint8List.fromList([9, 9]),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      verify(mockBlockStore.putBlock(any)).called(greaterThanOrEqualTo(4));
+    });
+
+    test('handleDagPut rejects unsupported codecs', () async {
+      var response = await handlers.handleDagPut(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/dag/put?input-codec=bogus'),
+          body: Uint8List.fromList([1]),
+        ),
+      );
+      expect(response.statusCode, equals(500));
+
+      response = await handlers.handleDagPut(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/dag/put?store-codec=bogus'),
+          body: utf8.encode('{"a":1}'),
+        ),
+      );
+      expect(response.statusCode, equals(500));
+    });
+
+    test(
+      'handleDagPut reads multipart bodies and enforces its limits',
+      () async {
+        when(mockNode.pin(any)).thenAnswer((_) async {});
+        const boundary = 'db';
+
+        // Multipart file upload.
+        final body = multipartBody(boundary, '{"m":1}');
+        var response = await handlers.handleDagPut(
+          Request(
+            'POST',
+            Uri.parse('http://localhost/api/v0/dag/put?pin=false'),
+            headers: {
+              'content-type': 'multipart/form-data; boundary=$boundary',
+            },
+            body: body,
+          ),
+        );
+        expect(response.statusCode, equals(200));
+
+        // Multipart content type without a boundary parameter.
+        response = await handlers.handleDagPut(
+          Request(
+            'POST',
+            Uri.parse('http://localhost/api/v0/dag/put'),
+            headers: {'content-type': 'multipart/form-data'},
+            body: 'x',
+          ),
+        );
+        expect(response.statusCode, equals(500));
+
+        // Multipart framing with no file part at all.
+        response = await handlers.handleDagPut(
+          Request(
+            'POST',
+            Uri.parse('http://localhost/api/v0/dag/put'),
+            headers: {
+              'content-type': 'multipart/form-data; boundary=$boundary',
+            },
+            body: '--$boundary--\r\n',
+          ),
+        );
+        expect(response.statusCode, equals(500));
+
+        // A part over the 8 MiB cap is rejected.
+        final oversized = Uint8List(8 * 1024 * 1024 + 1);
+        final huge =
+            '--$boundary\r\n'
+            'Content-Disposition: form-data; name="f"; filename="f"\r\n'
+            '\r\n';
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/dag/put'),
+          headers: {'content-type': 'multipart/form-data; boundary=$boundary'},
+          body: Stream.fromIterable([
+            utf8.encode(huge),
+            oversized,
+            utf8.encode('\r\n--$boundary--\r\n'),
+          ]),
+        );
+        response = await handlers.handleDagPut(request);
+        expect(response.statusCode, equals(500));
+      },
+    );
+
+    test('handleDagImport reports stats when requested', () async {
+      final block = await Block.fromData(Uint8List.fromList([5, 5, 5]));
+      final writer = CarWriter(roots: [coreCid(block.cid)]);
+      await writer.write(coreCid(block.cid), block.data);
+      final carData = await writer.close();
+
+      final response = await handlers.handleDagImport(
+        Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/dag/import?stats=true'),
+          body: carData,
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      final body = await response.readAsString();
+      expect(body, contains('"Stats"'));
+      expect(body, contains('"BlockCount":1'));
+    });
+
+    test('DAG export enforces the maximum block-count bound', () async {
+      final block = await Block.fromData(
+        Uint8List.fromList([1]),
+        format: 'raw',
+      );
+      final visited = <String>{for (var i = 0; i < 10000; i++) 'k$i'};
+      final mirror = mirrors.reflect(handlers);
+      final exportSym = mirror.type.declarations.keys.firstWhere(
+        (s) => mirrors.MirrorSystem.getName(s) == '_exportBlock',
+      );
+      await expectLater(
+        mirror.invoke(exportSym, [
+              block.cid,
+              CarWriter(roots: [coreCid(block.cid)]),
+              visited,
+            ]).reflectee
+            as Future<void>,
+        throwsStateError,
+      );
+    });
+
+    test('DAG export treats dag-pb format hints as traversable', () async {
+      // A block whose CID codec is not dag-pb but whose stored format hint
+      // is dag-pb still has its links traversed (legacy format fallback).
+      final child = await Block.fromData(
+        Uint8List.fromList([7]),
+        format: 'raw',
+      );
+      storeBlock(child);
+      final pbBytes = dag_pb.PBNode(
+        links: [dag_pb.PBLink(name: 'c', hash: child.cid.toBytes())],
+      ).writeToBuffer();
+      final rawCidBlock = Block(
+        cid: (await Block.fromData(pbBytes, format: 'raw')).cid,
+        data: pbBytes,
+        format: 'dag-pb',
+      );
+      storeBlock(rawCidBlock);
+
+      final response = await handlers.handleDagExport(
+        Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/v0/dag/export?arg=${rawCidBlock.cid}',
+          ),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      final reader = CarReader.fromBytes(
+        Uint8List.fromList(await response.read().expand((i) => i).toList()),
+      );
+      final sections = await reader.sections().toList();
+      expect(sections.length, equals(2));
+    });
+  });
+}
+
+class _FakeBitswapHandler extends Mock implements BitswapHandler {
+  _FakeBitswapHandler(this._block);
+
+  final Block _block;
+
+  @override
+  Future<Block?> wantBlock(String cid) async =>
+      cid == _block.cid.encode() ? _block : null;
 }

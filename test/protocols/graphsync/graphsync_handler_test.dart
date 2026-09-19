@@ -908,6 +908,62 @@ void main() {
       expect(errors, isNotEmpty);
       expect(errors.first, isA<GraphsyncError>());
     });
+
+    test(
+      'fetchGraphFromPeer fails when a peer exceeds the block limit',
+      () async {
+        final capturedHandler = await captureHandler();
+
+        const peer = 'peerC';
+        when(mockRouter.isConnectedPeer(peer)).thenReturn(true);
+        when(
+          mockBlockStore.putBlock(any),
+        ).thenAnswer((_) async => BlockResponseFactory.successAdd('added'));
+
+        final first = await makeBlock(Uint8List.fromList([1]));
+        final second = await makeBlock(Uint8List.fromList([2]));
+
+        // A caller-declared max-blocks budget bounds retained blocks.
+        final future = handler.fetchGraphFromPeer(
+          peer,
+          first.cid,
+          const gs.ExploreAll(next: gs.Matcher()),
+          maxBlocks: 1,
+        );
+        await pumpEventQueue();
+
+        final sentBuffer =
+            verify(
+                  mockRouter.sendMessage(
+                    peer,
+                    captureAny,
+                    protocolId: anyNamed('protocolId'),
+                  ),
+                ).captured.single
+                as Uint8List;
+        final requestId = GraphsyncMessage.fromBuffer(
+          sentBuffer,
+        ).requests.first.id;
+
+        // The peer streams two blocks against a budget of one.
+        final responseMessage = GraphsyncProtocol().createResponse(
+          requestId: requestId,
+          status: ResponseStatus.RS_COMPLETED,
+          blocks: [
+            Block(prefix: first.cid.toPrefixBytes(), data: first.data),
+            Block(prefix: second.cid.toPrefixBytes(), data: second.data),
+          ],
+        );
+        await capturedHandler(
+          NetworkPacket(
+            srcPeerId: peer,
+            datagram: responseMessage.writeToBuffer(),
+          ),
+        );
+
+        await expectLater(future, throwsA(isA<RequestHandlingError>()));
+      },
+    );
   });
 }
 

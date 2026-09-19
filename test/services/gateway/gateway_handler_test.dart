@@ -1,14 +1,20 @@
 import 'dart:typed_data';
-import 'package:test/test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
-import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
-import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
-import 'package:dart_ipfs/src/core/data_structures/block.dart';
+
 import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
+    as unixfs_pb;
+import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+import 'package:dart_ipfs/src/services/gateway/gateway_handler.dart';
+import 'package:fixnum/fixnum.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:multibase/multibase.dart';
 import 'package:shelf/shelf.dart';
+import 'package:test/test.dart';
 
 import 'gateway_handler_test.mocks.dart';
 
@@ -301,5 +307,108 @@ void main() {
       final response = await handler.handlePath(request);
       expect(response.statusCode, equals(200));
     });
+
+    test(
+      'handlePath reassembles a chunked UnixFS file across blocks',
+      () async {
+        // A dag-pb file node whose payload lives in a linked raw block
+        // exercises the _getBlockByCid fetcher inside unixfsReadFile.
+        final chunk = Block(
+          cid: (await Block.fromData(
+            Uint8List.fromList('chunk!'.codeUnits),
+          )).cid,
+          data: Uint8List.fromList('chunk!'.codeUnits),
+        );
+        when(mockBlockStore.getBlock(chunk.cid.encode())).thenAnswer(
+          (_) async => GetBlockResponse()
+            ..found = true
+            ..block = chunk.toProto(),
+        );
+
+        final fileNode = dag_pb.PBNode(
+          data: unixfs_pb.Data(
+            type: unixfs_pb.Data_DataType.File,
+            filesize: Int64(6),
+            blocksizes: [Int64(6)],
+          ).writeToBuffer(),
+          links: [dag_pb.PBLink(hash: chunk.cid.toBytes(), size: Int64(6))],
+        );
+        final fileBlock = await Block.fromData(
+          fileNode.writeToBuffer(),
+          format: 'dag-pb',
+        );
+        when(mockBlockStore.getBlock(fileBlock.cid.encode())).thenAnswer(
+          (_) async => GetBlockResponse()
+            ..found = true
+            ..block = fileBlock.toProto(),
+        );
+
+        final response = await handler.handlePath(
+          Request(
+            'GET',
+            Uri.parse('http://localhost/ipfs/${fileBlock.cid.encode()}'),
+          ),
+        );
+        expect(response.statusCode, equals(200));
+        final body = await response.read().expand((i) => i).toList();
+        expect(body, equals('chunk!'.codeUnits));
+      },
+    );
+
+    test('handlePath returns 500 for an undecodable IPNS record', () async {
+      handler = GatewayHandler(
+        mockBlockStore,
+        ipnsRecordResolver: (name) async =>
+            Uint8List.fromList([0xFF, 0xFF, 0xFF, 0xFF]),
+      );
+      final response = await handler.handlePath(
+        Request(
+          'GET',
+          Uri.parse('http://localhost/ipns/test.local'),
+          headers: {'accept': 'application/vnd.ipfs.ipns-record'},
+        ),
+      );
+      expect(response.statusCode, equals(500));
+      expect(await response.readAsString(), contains('Invalid IPNS record'));
+    });
+
+    test('handlePath serves a block fetched through Bitswap', () async {
+      final remote = await Block.fromData(
+        Uint8List.fromList('network'.codeUnits),
+      );
+      final bitswap = _FakeBitswapHandler(remote);
+      handler = GatewayHandler(mockBlockStore, bitswapHandler: bitswap);
+
+      var calls = 0;
+      when(mockBlockStore.getBlock(remote.cid.encode())).thenAnswer(
+        (_) async => ++calls == 1
+            ? (GetBlockResponse()..found = false)
+            : (GetBlockResponse()
+                ..found = true
+                ..block = remote.toProto()),
+      );
+
+      final response = await handler.handlePath(
+        Request(
+          'GET',
+          Uri.parse('http://localhost/ipfs/${remote.cid.encode()}'),
+        ),
+      );
+      expect(response.statusCode, equals(200));
+      expect(bitswap.requested, contains(remote.cid.encode()));
+    });
   });
+}
+
+class _FakeBitswapHandler extends Mock implements BitswapHandler {
+  _FakeBitswapHandler(this._block);
+
+  final Block _block;
+  final List<String> requested = [];
+
+  @override
+  Future<Block?> wantBlock(String cid) async {
+    requested.add(cid);
+    return cid == _block.cid.encode() ? _block : null;
+  }
 }

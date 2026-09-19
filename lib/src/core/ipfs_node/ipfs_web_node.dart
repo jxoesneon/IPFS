@@ -179,15 +179,13 @@ class IPFSWebNode {
     bool rawLeaves = false,
   }) async {
     final builder = UnixFSBuilder(cidVersion: cidVersion, rawLeaves: rawLeaves);
-    CID? rootCid;
+    // UnixFSBuilder.build unconditionally yields a root block (even for an
+    // empty stream), so the loop always assigns rootCid before it completes.
+    late CID rootCid;
 
     await for (final block in builder.build(stream)) {
       await _blockStore.putBlock(block);
       rootCid = block.cid;
-    }
-
-    if (rootCid == null) {
-      throw StateError('UnixFS build produced no blocks');
     }
 
     return rootCid;

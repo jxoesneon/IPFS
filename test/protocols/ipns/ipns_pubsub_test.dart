@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -161,6 +162,124 @@ void main() {
       // Resolution is served from the refreshed cache, with no DHT lookup.
       expect(await ipnsHandler.resolve(record.name), cid);
       verifyNever(mockDHTHandler.getValue(any));
+    });
+
+    test('pubsub listener drops invalid and unverifiable records', () async {
+      ipnsHandler = IPNSHandler(
+        IPFSConfig(offline: false, enableIpnsPubSub: true),
+        mockSecurityManager,
+        mockDHTHandler,
+        mockPubSubHandler,
+      );
+      when(mockDHTHandler.start()).thenAnswer((_) async {});
+      when(mockPubSubHandler.subscribe(any)).thenAnswer((_) async {});
+      await ipnsHandler.start();
+
+      final listener =
+          verify(
+                mockPubSubHandler.onMessage(
+                  IPNSHandler.ipnsPubSubTopic,
+                  captureAny,
+                ),
+              ).captured.single
+              as void Function(String);
+
+      final value = utf8.encode(
+        '/ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+      );
+
+      // Expired record: validation rejects it before any cache update.
+      final expired = IPNSRecord.internal(
+        value: value,
+        validity: DateTime.now().subtract(const Duration(hours: 1)),
+        publicKey: Uint8List(32),
+        signature: Uint8List(64),
+      );
+      listener(base64Encode(expired.toCBOR()));
+
+      // Signed but undecodable key: verify() throws a non-validation
+      // error which must be dropped rather than escape the listener.
+      final unverifiable = IPNSRecord.internal(
+        value: value,
+        validity: DateTime.now().add(const Duration(hours: 1)),
+        publicKey: Uint8List(10),
+        signature: Uint8List(64),
+      );
+      listener(base64Encode(unverifiable.toCBOR()));
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      verifyNever(mockDHTHandler.getValue(any));
+    });
+
+    test('pubsub listener ignores stale sequence numbers', () async {
+      ipnsHandler = IPNSHandler(
+        IPFSConfig(offline: false, enableIpnsPubSub: true),
+        mockSecurityManager,
+        mockDHTHandler,
+        mockPubSubHandler,
+      );
+      when(mockDHTHandler.start()).thenAnswer((_) async {});
+      when(mockPubSubHandler.subscribe(any)).thenAnswer((_) async {});
+      await ipnsHandler.start();
+
+      final listener =
+          verify(
+                mockPubSubHandler.onMessage(
+                  IPNSHandler.ipnsPubSubTopic,
+                  captureAny,
+                ),
+              ).captured.single
+              as void Function(String);
+
+      const cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      final keyPair = await Ed25519().newKeyPair();
+      final fresh = await IPNSRecord.create(
+        value: CID.decode(cid),
+        keyPair: keyPair,
+        sequence: 5,
+      );
+      final stale = await IPNSRecord.create(
+        value: CID.decode(cid),
+        keyPair: keyPair,
+        sequence: 3,
+      );
+
+      listener(base64Encode(fresh.toCBOR()));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      // The lower-sequence announcement must not replace the cached record.
+      listener(base64Encode(stale.toCBOR()));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(await ipnsHandler.resolve(fresh.name), cid);
+    });
+
+    test('publish still succeeds when the pubsub announce fails', () async {
+      ipnsHandler = IPNSHandler(
+        IPFSConfig(offline: false, enableIpnsPubSub: true),
+        mockSecurityManager,
+        mockDHTHandler,
+        mockPubSubHandler,
+      );
+      when(mockSecurityManager.isKeystoreUnlocked).thenReturn(true);
+      final keyPair = await Ed25519().newKeyPair();
+      when(
+        mockSecurityManager.getSecureKey(any),
+      ).thenAnswer((_) async => keyPair);
+      when(mockDHTHandler.start()).thenAnswer((_) async {});
+      when(mockDHTHandler.putValue(any, any)).thenAnswer((_) async {});
+      when(mockPubSubHandler.subscribe(any)).thenAnswer((_) async {});
+      when(
+        mockPubSubHandler.publish(any, any),
+      ).thenThrow(Exception('pubsub down'));
+
+      const cid = 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn';
+      await ipnsHandler.start();
+
+      // The announcement failure is logged and swallowed: the record was
+      // already stored in the DHT, so publish() must not rethrow.
+      await ipnsHandler.publish(cid, keyName: 'self');
+      verify(mockDHTHandler.putValue(any, any)).called(1);
+      verify(mockPubSubHandler.publish(IPNSHandler.ipnsPubSubTopic, any));
     });
   });
 }

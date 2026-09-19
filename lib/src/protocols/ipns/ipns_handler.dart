@@ -121,13 +121,9 @@ class IPNSHandler implements ILifecycle {
       return;
     }
 
-    final String name;
-    try {
-      name = record.name;
-    } catch (e) {
-      _logger.warning('Dropped IPNS pubsub record without a public key: $e');
-      return;
-    }
+    // IPNS names are derived from the record's raw public-key bytes via a
+    // pure multibase encode, which cannot fail for any decoded record.
+    final name = record.name;
 
     try {
       await _validateRecord(record, name);

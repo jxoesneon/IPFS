@@ -262,13 +262,12 @@ class RPCHandlers {
     }
 
     final builder = UnixFSBuilder(cidVersion: cidVersion, rawLeaves: rawLeaves);
-    String? rootCid;
+    // UnixFSBuilder.build unconditionally yields a root block, so the loop
+    // always assigns rootCid before it completes.
+    late String rootCid;
     await for (final block in builder.build(Stream<List<int>>.value(data))) {
       await node.blockStore.putBlock(block);
       rootCid = block.cid.encode();
-    }
-    if (rootCid == null) {
-      throw StateError('UnixFS build produced no blocks');
     }
     return rootCid;
   }

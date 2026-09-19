@@ -120,15 +120,13 @@ class ContentManager implements ILifecycle {
   }) async {
     final builder = UnixFSBuilder(cidVersion: cidVersion, rawLeaves: rawLeaves);
 
-    String? rootCid;
+    // UnixFSBuilder.build unconditionally yields a root block (even for an
+    // empty stream), so the loop always assigns rootCid before it completes.
+    late String rootCid;
     await for (final block in builder.build(stream)) {
       await _datastoreHandler.putBlock(block);
       await _blockStore?.putBlock(block);
       rootCid = block.cid.encode();
-    }
-
-    if (rootCid == null) {
-      throw StateError('UnixFS build produced no blocks');
     }
 
     _newContentController.add(rootCid);

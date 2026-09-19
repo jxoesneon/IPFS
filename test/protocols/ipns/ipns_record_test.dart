@@ -4,6 +4,7 @@
 
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:cbor/cbor.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
 import 'package:dart_ipfs/src/proto/generated/ipns.pb.dart';
@@ -315,6 +316,45 @@ void main() {
         await record.sign(keyPair2);
 
         expect(record.signature, isNot(equals(sig1)));
+      });
+    });
+
+    group('signed data field comparison', () {
+      test('verify tolerates bignum ints in the signed data map', () async {
+        // An IpnsEntry whose `data` blob encodes an integer as a CBOR
+        // bignum (major type 2) must decode as CborInt during the
+        // signed-data consistency check rather than crashing verify().
+        final dataMap = CborMap({
+          CborString('Value'): CborBytes(
+            Uint8List.fromList(utf8.encode('/ipfs/QmX')),
+          ),
+          CborString('ValidityType'): const CborSmallInt(0),
+          CborString('Validity'): CborBytes(
+            Uint8List.fromList(utf8.encode('2030-01-01T00:00:00.000000000Z')),
+          ),
+          CborString('Sequence'): CborInt(BigInt.parse('18446744073709551616')),
+          CborString('TTL'): const CborSmallInt(3600000000),
+        });
+        final entry = IpnsEntry()
+          ..value = utf8.encode('/ipfs/QmX')
+          ..validityType = IpnsEntry_ValidityType.EOL
+          ..validity = utf8.encode('2030-01-01T00:00:00.000000000Z')
+          ..sequence = Int64(1)
+          ..ttl = Int64(3600000000000)
+          ..signatureV2 = Uint8List(64)
+          ..pubKey = Uint8List.fromList([
+            0x08,
+            0x01,
+            0x12,
+            0x20,
+            ...List.filled(32, 7),
+          ])
+          ..data = cbor.encode(dataMap);
+
+        final record = IPNSRecord.fromIpnsEntry(entry.writeToBuffer());
+        // The bignum sequence does not match the proto field; verification
+        // fails cleanly rather than throwing.
+        expect(await record.verify(), isFalse);
       });
     });
   });

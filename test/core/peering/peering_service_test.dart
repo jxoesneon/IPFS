@@ -1,11 +1,10 @@
 // test/core/peering/peering_service_test.dart
 import 'dart:async';
 
-import 'package:test/test.dart';
-
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/peering/peering_service.dart';
+import 'package:test/test.dart';
 
 import '../../fakes/fake_router.dart';
 
@@ -151,9 +150,9 @@ void main() {
       final service = PeeringService(
         config,
         networkHandler,
-        peeringConfig: PeeringConfig(
+        peeringConfig: const PeeringConfig(
           peers: [peerAddr],
-          checkInterval: const Duration(milliseconds: 10),
+          checkInterval: Duration(milliseconds: 10),
         ),
       );
       final events = <PeeringEvent>[];
@@ -281,6 +280,30 @@ void main() {
       await service.stop();
     });
 
+    test('gives up on a peer after maxReconnectAttempts failures', () async {
+      const peerAddr = '/ip4/1.2.3.4/tcp/4001/p2p/QmGiveUp';
+      fakeRouter.failConnect = true;
+      final service = PeeringService(
+        config,
+        networkHandler,
+        peeringConfig: const PeeringConfig(
+          peers: [peerAddr],
+          checkInterval: Duration(milliseconds: 10),
+          initialReconnectDelay: Duration.zero,
+          maxReconnectAttempts: 1,
+        ),
+      );
+      final events = <PeeringEvent>[];
+      service.events.listen(events.add);
+      await service.start();
+      // First check burns the single allowed attempt; the next periodic
+      // check observes attempts >= max and emits giveUp + drops the peer.
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(events.any((e) => e.type == PeeringEventType.giveUp), isTrue);
+      expect(service.peeredPeerIds, isEmpty);
+      await service.stop();
+    });
+
     test('emits disconnected event when peer goes offline', () async {
       const peerAddr = '/ip4/1.2.3.4/tcp/4001/p2p/QmPeer';
       fakeRouter.setConnected('QmPeer', true);
@@ -289,7 +312,7 @@ void main() {
         networkHandler,
         peeringConfig: const PeeringConfig(
           peers: [peerAddr],
-          checkInterval: const Duration(milliseconds: 10),
+          checkInterval: Duration(milliseconds: 10),
         ),
       );
       final events = <PeeringEvent>[];

@@ -1,16 +1,14 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dart_ipfs/src/core/types/peer_id.dart';
-import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
-import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
+import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
+import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
+import 'package:dart_ipfs/src/protocols/dht/kademlia_routing_table.dart';
 import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart'
     as pb_ts;
-import 'package:dart_ipfs/src/protocols/dht/kademlia_tree/kademlia_tree_node.dart';
-import 'package:dart_ipfs/src/protocols/dht/red_black_tree.dart';
 import 'package:test/test.dart';
 
 // Mocks/Fakes
@@ -33,14 +31,14 @@ class MockNetworkHandler implements NetworkHandler {
 }
 
 class MockDHTClient implements DHTClient {
+  MockDHTClient(this.peerId, this.networkHandler) : associatedPeerId = peerId;
+
   @override
   final PeerId peerId;
   @override
   final PeerId associatedPeerId;
   @override
   final NetworkHandler networkHandler;
-
-  MockDHTClient(this.peerId, this.networkHandler) : associatedPeerId = peerId;
 
   @override
   dynamic noSuchMethod(Invocation invocation) =>
@@ -124,7 +122,7 @@ void main() {
 
       final node = table.buckets[0].entries.first.value;
       node.lastSeen = DateTime.now()
-          .subtract(Duration(hours: 5))
+          .subtract(const Duration(hours: 5))
           .millisecondsSinceEpoch;
 
       table.refresh();
@@ -199,7 +197,7 @@ void main() {
       // Force node stale for 1.5 hours (Default threshold is 1 hour)
       final node = table.buckets[0].entries.first.value;
       node.lastSeen = DateTime.now()
-          .subtract(Duration(minutes: 90))
+          .subtract(const Duration(minutes: 90))
           .millisecondsSinceEpoch;
 
       // Should be stale with default stats (50 connected peers)
@@ -235,7 +233,7 @@ void main() {
       table.updateKeyProviderTimestamp(
         key,
         provider,
-        now.add(Duration(minutes: 1)),
+        now.add(const Duration(minutes: 1)),
       );
     });
 
@@ -303,7 +301,7 @@ void main() {
       final bucket1 = table.buckets[1];
       for (var entry in bucket1.entries.toList()) {
         entry.value.lastSeen = DateTime.now()
-            .subtract(Duration(hours: 10))
+            .subtract(const Duration(hours: 10))
             .millisecondsSinceEpoch;
       }
 
@@ -338,7 +336,7 @@ void main() {
       // Manually make node stale
       final node = table.buckets[0].entries.first.value;
       node.lastSeen = DateTime.now()
-          .subtract(Duration(hours: 2))
+          .subtract(const Duration(hours: 2))
           .millisecondsSinceEpoch;
 
       table.refresh();
@@ -413,7 +411,7 @@ void main() {
 
       final node = table.buckets[0].entries.first.value;
       node.lastSeen = DateTime.now()
-          .subtract(Duration(hours: 2))
+          .subtract(const Duration(hours: 2))
           .millisecondsSinceEpoch;
 
       table.refresh();
@@ -437,6 +435,39 @@ void main() {
       // The table remains queryable for cleanup after stop.
       table.clear();
       expect(table.peerCount, 0);
+    });
+
+    test('shared-IP removal decrements the IP count', () async {
+      const ip = '2.2.2.2';
+      final p1 = createPeerId(0x80, 1);
+      final p2 = createPeerId(0x80, 2);
+      await table.addPeer(p1, p1, address: ip);
+      await table.addPeer(p2, p2, address: ip);
+
+      // Both peers share the IP; removing one must decrement rather than
+      // delete the counter so the diversity cap still applies.
+      table.removePeer(p1);
+      expect(table.containsPeer(p1), isFalse);
+      expect(table.containsPeer(p2), isTrue);
+    });
+
+    test('addPeer evicts a stale node to make room in a full bucket', () async {
+      // Fill bucket 0 to capacity.
+      for (int i = 0; i < 20; i++) {
+        await table.addPeer(createPeerId(0x80, i), localPeerId);
+      }
+
+      // Age one occupant past the stale threshold.
+      final staleEntry = table.buckets[0].entries.first;
+      staleEntry.value.lastSeen = DateTime.now()
+          .subtract(const Duration(hours: 2))
+          .millisecondsSinceEpoch;
+
+      // A 21st peer must evict the stale node rather than being dropped.
+      final extra = createPeerId(0x80, 20);
+      await table.addPeer(extra, extra);
+      expect(table.containsPeer(extra), isTrue);
+      expect(table.buckets[0].entries.contains(staleEntry), isFalse);
     });
   });
 }

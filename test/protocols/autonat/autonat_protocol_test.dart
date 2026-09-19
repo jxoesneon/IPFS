@@ -1,12 +1,12 @@
 // test/protocols/autonat/autonat_protocol_test.dart
 import 'dart:async';
+import 'dart:mirrors' as mirrors;
 import 'dart:typed_data';
-
-import 'package:test/test.dart';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/protocols/autonat/autonat_protocol.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
+import 'package:test/test.dart';
 
 import '../../fakes/fake_router.dart';
 
@@ -468,6 +468,70 @@ void main() {
       expect(router.sentMessages.length, equals(1));
       final response = DialResponse.decode(router.sentMessages.first.message);
       expect(response.status, equals(DialResponseStatus.dialError));
+    });
+
+    test('rate-limit map evicts the oldest peer beyond the cap', () async {
+      server.start();
+      final handler = router.handlers[autonatProtocolId]!;
+
+      // Seed the per-peer rate-limit map to capacity; filling it through
+      // the public API would need 1025 sequential dialbacks.
+      final library =
+          mirrors.reflect(server).type.owner! as mirrors.LibraryMirror;
+      final map =
+          mirrors
+                  .reflect(server)
+                  .getField(
+                    mirrors.MirrorSystem.getSymbol(
+                      '_lastDialbackPerPeer',
+                      library,
+                    ),
+                  )
+                  .reflectee
+              as Map<String, DateTime>;
+      for (var i = 0; i < 1024; i++) {
+        map['p$i'] = DateTime.now().subtract(const Duration(minutes: 10));
+      }
+
+      handler(
+        NetworkPacket(
+          srcPeerId: 'QmPeer',
+          datagram: DialRequest(
+            addrs: [
+              Uint8List.fromList('/ip4/1.2.3.4/tcp/4001/p2p/QmPeer'.codeUnits),
+            ],
+          ).encode(),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(map.length, equals(1024));
+      expect(map, isNot(contains('p0')));
+      expect(router.sentMessages.length, equals(1));
+    });
+
+    test('_attemptDialback refuses an address that does not identify the '
+        'requesting peer', () async {
+      server.start();
+      final library =
+          mirrors.reflect(server).type.owner! as mirrors.LibraryMirror;
+
+      // The candidate list is filtered before dialing; invoke the defense-
+      // in-depth check directly to prove a mismatched /p2p/ never dials.
+      final future =
+          mirrors.reflect(server).invoke(
+                mirrors.MirrorSystem.getSymbol('_attemptDialback', library),
+                [
+                  'QmPeer',
+                  Uint8List.fromList(
+                    '/ip4/10.0.0.2/tcp/4001/p2p/QmOther'.codeUnits,
+                  ),
+                ],
+              ).reflectee
+              as Future<bool>;
+
+      expect(await future, isFalse);
+      expect(router.connectAttempts, isEmpty);
     });
   });
 }

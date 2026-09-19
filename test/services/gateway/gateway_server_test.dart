@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:mirrors' as mirrors;
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
@@ -25,6 +26,21 @@ class MockIpfsHttpServerInstance implements IpfsHttpServerInstance {
 
   @override
   int get port => 8080;
+}
+
+/// Mimics the `HttpConnectionInfo` value `shelf_io` stores under the
+/// `shelf.io.connection_info` request-context key; the production code
+/// reads `remoteAddress.address` through `dynamic` so no shared interface
+/// is required.
+class _FakeConnectionInfo {
+  _FakeConnectionInfo(String address)
+    : remoteAddress = _FakeRemoteAddress(address);
+  final _FakeRemoteAddress remoteAddress;
+}
+
+class _FakeRemoteAddress {
+  _FakeRemoteAddress(this.address);
+  final String address;
 }
 
 class MockHttpServerAdapter implements HttpServerAdapter {
@@ -285,6 +301,44 @@ void main() {
       // The rate limiter should have recorded '2.2.2.2'
     });
 
+    test(
+      'Rate limiting keys on the transport connection info when present',
+      () async {
+        await server.start();
+        final handler = mockAdapter.lastHandler!;
+        final uri = Uri.parse('http://localhost/health');
+
+        // shelf_io stores the real transport peer under this context key.
+        // Forged headers must not change the rate-limit identity: three
+        // requests from the same connection info with different spoofed
+        // headers still hit the limit of 2.
+        for (var i = 0; i < 2; i++) {
+          final response = await handler(
+            Request(
+              'GET',
+              uri,
+              headers: {'x-forwarded-for': '198.51.100.$i'},
+              context: {
+                'shelf.io.connection_info': _FakeConnectionInfo('203.0.113.9'),
+              },
+            ),
+          );
+          expect(response.statusCode, equals(200));
+        }
+        final limited = await handler(
+          Request(
+            'GET',
+            uri,
+            headers: {'x-forwarded-for': '198.51.100.99'},
+            context: {
+              'shelf.io.connection_info': _FakeConnectionInfo('203.0.113.9'),
+            },
+          ),
+        );
+        expect(limited.statusCode, equals(429));
+      },
+    );
+
     test('routing - ipns support', () async {
       final ipnsServer = GatewayServer(
         blockStore: mockBlockStore,
@@ -347,6 +401,91 @@ void main() {
 
       expect(response.statusCode, equals(404));
       await disabledServer.stop();
+    });
+
+    test(
+      'rate limiter sweeps expired entries on the periodic interval',
+      () async {
+        await server.start();
+        final handler = mockAdapter.lastHandler!;
+
+        final mirror = mirrors.reflect(server);
+        Symbol sym(String name) => mirror.type.declarations.keys.firstWhere(
+          (s) => mirrors.MirrorSystem.getName(s) == name,
+        );
+        final log =
+            mirror.getField(sym('_requestLog')).reflectee
+                as Map<String, List<DateTime>>;
+        // A client whose only timestamps are outside the 1s window.
+        log['10.9.9.9'] = [DateTime.now().subtract(const Duration(days: 1))];
+        // Next request trips the sweep interval.
+        mirror.setField(sym('_requestsSinceSweep'), 255);
+
+        final response = await handler(
+          Request(
+            'GET',
+            Uri.parse('http://localhost/health'),
+            headers: {'x-real-ip': '9.9.9.9'},
+          ),
+        );
+        expect(response.statusCode, equals(200));
+        // The sweep removed the fully-expired entry.
+        expect(log.containsKey('10.9.9.9'), isFalse);
+      },
+    );
+
+    test('rate limiter evicts the oldest client at capacity', () async {
+      final capped = GatewayServer(
+        blockStore: mockBlockStore,
+        httpAdapter: mockAdapter,
+        metricsCollector: metricsCollector,
+        // A long window keeps seeded timestamps "live" through the sweep.
+        rateLimitWindowSeconds: 3600,
+      );
+      await capped.start();
+      final handler = mockAdapter.lastHandler!;
+      try {
+        final mirror = mirrors.reflect(capped);
+        final logSym = mirror.type.declarations.keys.firstWhere(
+          (s) => mirrors.MirrorSystem.getName(s) == '_requestLog',
+        );
+        final log =
+            mirror.getField(logSym).reflectee as Map<String, List<DateTime>>;
+        // Fill the 10000-client cap with live entries; the oldest is the
+        // eviction candidate.
+        final now = DateTime.now();
+        for (var i = 0; i < 10000; i++) {
+          log['10.${i ~/ 65536}.${(i ~/ 256) % 256}.${i % 256}'] = [
+            now.subtract(Duration(milliseconds: i == 0 ? 500 : i % 400)),
+          ];
+        }
+
+        final response = await handler(
+          Request(
+            'GET',
+            Uri.parse('http://localhost/health'),
+            headers: {'x-real-ip': '192.0.2.1'},
+          ),
+        );
+        expect(response.statusCode, equals(200));
+        // The oldest client (index 0, 500 ms old) was evicted to make room.
+        expect(log.containsKey('10.0.0.0'), isFalse);
+        expect(log.containsKey('192.0.2.1'), isTrue);
+
+        // The empty-timestamps skip inside _evictOldestClient is only
+        // reachable directly: the request path always sweeps empty lists
+        // away first.
+        log['empty'] = <DateTime>[];
+        log['older'] = [now.subtract(const Duration(minutes: 1))];
+        final evictSym = mirror.type.declarations.keys.firstWhere(
+          (s) => mirrors.MirrorSystem.getName(s) == '_evictOldestClient',
+        );
+        mirror.invoke(evictSym, const []);
+        expect(log.containsKey('older'), isFalse);
+        expect(log.containsKey('empty'), isTrue);
+      } finally {
+        await capped.stop();
+      }
     });
   });
 }

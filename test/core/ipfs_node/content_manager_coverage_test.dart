@@ -6,12 +6,17 @@ import 'dart:typed_data';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
+import 'package:dart_ipfs/src/core/data_structures/link.dart';
+import 'package:dart_ipfs/src/core/data_structures/merkle_dag_node.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/content_manager.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/datastore_handler.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart' show GatewayMode;
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/security/denylist_service.dart';
+import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
+    as unixfs_pb;
 import 'package:dart_ipfs/src/transport/http_gateway_client.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:logging/logging.dart';
@@ -120,6 +125,52 @@ void main() {
         ),
       );
       expect(metrics.securityEvents, contains('denylist_blocked'));
+    });
+  });
+
+  group('ContentManager ls', () {
+    late _FakeDatastoreHandler datastore;
+    late StreamController<String> contentController;
+
+    setUp(() {
+      datastore = _FakeDatastoreHandler();
+      contentController = StreamController<String>.broadcast();
+    });
+
+    tearDown(() async {
+      await contentController.close();
+    });
+
+    test('falls back to the blockstore when the datastore misses', () async {
+      final repoDir = await Directory.systemTemp.createTemp('ipfs_ls_test_');
+      addTearDown(() => repoDir.delete(recursive: true));
+
+      final child = await Block.fromData(
+        Uint8List.fromList([1]),
+        format: 'raw',
+      );
+      final dirNode = MerkleDAGNode(
+        links: [
+          Link(name: 'child.txt', cid: child.cid, size: child.data.length),
+        ],
+        data: unixfs_pb.Data(
+          type: unixfs_pb.Data_DataType.Directory,
+        ).writeToBuffer(),
+      );
+      final dirBlock = Block(cid: dirNode.cid, data: dirNode.toBytes());
+
+      final store = BlockStore(path: repoDir.path);
+      await store.putBlock(dirBlock);
+
+      // Datastore misses and no bitswap handler is registered, so ls must
+      // consult the blockstore and decode the directory links from there.
+      final manager = ContentManager(
+        datastoreHandler: datastore,
+        newContentController: contentController,
+        blockStore: store,
+      );
+      final links = await manager.ls(dirBlock.cid.encode());
+      expect(links.single.name, equals('child.txt'));
     });
   });
 
