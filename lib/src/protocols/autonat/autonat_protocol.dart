@@ -74,6 +74,11 @@ class DialRequest {
       if (fieldNumber == 1 && wireType == 2) {
         final (length, lenLen) = _decodeVarint(bytes, offset);
         offset += lenLen;
+        if (length < 0 || length > bytes.length - offset) {
+          throw FormatException(
+            'DialRequest field length $length exceeds message bounds',
+          );
+        }
         addrs.add(bytes.sublist(offset, offset + length));
         offset += length;
       } else {
@@ -83,7 +88,17 @@ class DialRequest {
           offset += len;
         } else if (wireType == 2) {
           final (length, lenLen) = _decodeVarint(bytes, offset);
-          offset += lenLen + length;
+          offset += lenLen;
+          if (length < 0 || length > bytes.length - offset) {
+            throw FormatException(
+              'DialRequest field length $length exceeds message bounds',
+            );
+          }
+          offset += length;
+        } else {
+          throw FormatException(
+            'Unsupported wire type $wireType in DialRequest',
+          );
         }
       }
     }
@@ -191,10 +206,18 @@ class DialResponse {
       if (fieldNumber == 1 && wireType == 0) {
         final (value, len) = _decodeVarint(bytes, offset);
         offset += len;
+        if (value < 0 || value >= DialResponseStatus.values.length) {
+          throw FormatException('Unknown DialResponse status: $value');
+        }
         status = DialResponseStatus.values[value];
       } else if (fieldNumber == 2 && wireType == 2) {
         final (length, lenLen) = _decodeVarint(bytes, offset);
         offset += lenLen;
+        if (length < 0 || length > bytes.length - offset) {
+          throw FormatException(
+            'DialResponse field length $length exceeds message bounds',
+          );
+        }
         statusText = _decodeUtf8(bytes.sublist(offset, offset + length));
         offset += length;
       } else {
@@ -204,7 +227,17 @@ class DialResponse {
           offset += len;
         } else if (wireType == 2) {
           final (length, lenLen) = _decodeVarint(bytes, offset);
-          offset += lenLen + length;
+          offset += lenLen;
+          if (length < 0 || length > bytes.length - offset) {
+            throw FormatException(
+              'DialResponse field length $length exceeds message bounds',
+            );
+          }
+          offset += length;
+        } else {
+          throw FormatException(
+            'Unsupported wire type $wireType in DialResponse',
+          );
         }
       }
     }
@@ -312,10 +345,13 @@ class AutoNATService {
     try {
       _logger.debug('Sending dialback request to $peerId');
 
-      // Encode observed addresses as multiaddr bytes
-      final addrBytes = _observedAddrs
-          .map((addr) => Uint8List.fromList(addr.codeUnits))
-          .toList();
+      // Encode observed addresses as multiaddr bytes. Dialback servers bind
+      // attempts to the requesting peer's /p2p/<id>, so ensure it is present.
+      final localPeerId = _router.peerID;
+      final addrBytes = _observedAddrs.map((addr) {
+        final full = addr.contains('/p2p/') ? addr : '$addr/p2p/$localPeerId';
+        return Uint8List.fromList(full.codeUnits);
+      }).toList();
 
       final request = DialRequest(addrs: addrBytes);
       final requestBytes = request.encode();
@@ -377,8 +413,21 @@ class AutoNATServer {
   /// Maximum concurrent dialback requests (rate limiting).
   static const int _maxConcurrentDials = 10;
 
+  /// Minimum interval between dialback attempts for the same peer.
+  static const Duration _perPeerDialbackInterval = Duration(seconds: 30);
+
+  /// Maximum peers tracked by the per-peer rate limiter before the oldest
+  /// entries are evicted.
+  static const int _maxRateLimitedPeers = 1024;
+
+  /// Maximum dialback addresses tried per request.
+  static const int _maxDialAttempts = 3;
+
   /// Current number of active dialback requests.
   int _activeDials = 0;
+
+  /// Last accepted dialback time per requesting peer (per-peer rate limit).
+  final Map<String, DateTime> _lastDialbackPerPeer = {};
 
   /// Starts the AutoNAT server by registering the protocol handler.
   void start() {
@@ -411,8 +460,34 @@ class AutoNATServer {
       return;
     }
 
+    // Per-peer rate limiting — a single peer cannot keep this node dialing.
+    final now = DateTime.now();
+    final lastDial = _lastDialbackPerPeer[packet.srcPeerId];
+    if (lastDial != null &&
+        now.difference(lastDial) < _perPeerDialbackInterval) {
+      _logger.warning(
+        'Per-peer rate limited dialback request from ${packet.srcPeerId}',
+      );
+      _sendResponse(
+        packet.srcPeerId,
+        DialResponse(
+          status: DialResponseStatus.dialRefused,
+          statusText: 'Dialback rate limited',
+        ),
+      );
+      return;
+    }
+
     try {
       final request = DialRequest.decode(packet.datagram);
+
+      // Only addresses that embed the requesting peer's own /p2p/<id> are
+      // eligible: a DialRequest must never turn this node into an outbound
+      // dialer for arbitrary host:port targets (SSRF/port scanning).
+      final candidates = request.addrs
+          .where((addr) => _addrIdentifiesPeer(addr, packet.srcPeerId))
+          .take(_maxDialAttempts)
+          .toList();
 
       if (request.addrs.isEmpty) {
         _logger.warning('Dialback request has no addresses');
@@ -426,9 +501,29 @@ class AutoNATServer {
         return;
       }
 
-      // Attempt to dial back to the first address
+      if (candidates.isEmpty) {
+        _logger.warning(
+          'Dialback request from ${packet.srcPeerId} carried no address '
+          'identifying the requesting peer',
+        );
+        _sendResponse(
+          packet.srcPeerId,
+          DialResponse(
+            status: DialResponseStatus.dialError,
+            statusText: 'No address identifies the requesting peer',
+          ),
+        );
+        return;
+      }
+
+      _lastDialbackPerPeer[packet.srcPeerId] = now;
+      if (_lastDialbackPerPeer.length > _maxRateLimitedPeers) {
+        _lastDialbackPerPeer.remove(_lastDialbackPerPeer.keys.first);
+      }
+
+      // Attempt to dial back to the requesting peer's addresses.
       _activeDials++;
-      _attemptDialback(packet.srcPeerId, request.addrs.first).then((success) {
+      _attemptDialbacks(packet.srcPeerId, candidates).then((success) {
         _activeDials--;
         _sendResponse(
           packet.srcPeerId,
@@ -452,10 +547,41 @@ class AutoNATServer {
     }
   }
 
+  /// Whether [addrBytes] is a multiaddr whose `/p2p/<id>` component equals
+  /// [peerId]. Addresses without an embedded peer ID never match.
+  static bool _addrIdentifiesPeer(Uint8List addrBytes, String peerId) {
+    final addr = String.fromCharCodes(addrBytes);
+    final parts = addr.split('/');
+    final p2pIndex = parts.indexOf('p2p');
+    if (p2pIndex == -1 || p2pIndex + 1 >= parts.length) return false;
+    return parts[p2pIndex + 1] == peerId;
+  }
+
+  /// Attempts to dial back to each candidate address until one succeeds.
+  Future<bool> _attemptDialbacks(
+    String peerId,
+    List<Uint8List> candidates,
+  ) async {
+    for (final addrBytes in candidates) {
+      if (await _attemptDialback(peerId, addrBytes)) return true;
+    }
+    return false;
+  }
+
   /// Attempts to dial back to a peer address.
   Future<bool> _attemptDialback(String peerId, Uint8List addrBytes) async {
     try {
       final addr = String.fromCharCodes(addrBytes);
+
+      // Defense in depth: the dialed /p2p/<id> must match the requesting
+      // peer so a request cannot steer dials at third-party targets.
+      if (!_addrIdentifiesPeer(addrBytes, peerId)) {
+        _logger.warning(
+          'Refusing dialback to $addr: does not identify peer $peerId',
+        );
+        return false;
+      }
+
       _logger.debug('Attempting dialback to $addr');
 
       // Try to connect to the address

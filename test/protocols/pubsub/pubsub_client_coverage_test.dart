@@ -20,7 +20,9 @@ void main() {
 
   setUp(() {
     mockRouter = MockRouterInterface();
-    client = PubSubClient(mockRouter, peerId);
+    // These tests exercise the legacy unauthenticated paths; strict
+    // authentication (the default) is covered separately below.
+    client = PubSubClient(mockRouter, peerId, strictAuthentication: false);
   });
 
   group('PubSubClient', () {
@@ -997,5 +999,117 @@ void main() {
         client.graftPeer('peer-$i');
       }
     });
+  });
+
+  group('PubSubClient strict authentication', () {
+    late PubSubClient strictClient;
+
+    setUp(() {
+      strictClient = PubSubClient(mockRouter, peerId);
+    });
+
+    tearDown(() async {
+      if (strictClient.isStarted) await strictClient.stop();
+    });
+
+    Future<void Function(NetworkPacket)> strictHandler() async {
+      await strictClient.start();
+      return verify(
+            mockRouter.registerProtocolHandler(any, captureAny),
+          ).captured.last
+          as void Function(NetworkPacket);
+    }
+
+    test('strict authentication is enabled by default', () {
+      expect(strictClient.isStrictAuthentication, isTrue);
+    });
+
+    test('rejects unsigned content messages', () async {
+      final handler = await strictHandler();
+      when(mockRouter.isConnectedPeer('QmSender')).thenReturn(true);
+
+      var delivered = false;
+      final sub = strictClient.messagesStream.listen((_) => delivered = true);
+      handler(
+        NetworkPacket(
+          srcPeerId: 'QmSender',
+          datagram: Uint8List.fromList(
+            utf8.encode(
+              jsonEncode({
+                'sender': 'QmSender',
+                'topic': 't1',
+                'content': 'unsigned',
+              }),
+            ),
+          ),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(delivered, isFalse);
+      await sub.cancel();
+    });
+
+    test('rejects unsigned plain-text subscribe announcements', () async {
+      final handler = await strictHandler();
+      handler(
+        NetworkPacket(
+          srcPeerId: 'QmAnnouncer',
+          datagram: Uint8List.fromList(utf8.encode('subscribe:t1')),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(strictClient.peersForTopic('t1'), isNot(contains('QmAnnouncer')));
+    });
+
+    test('rejects unsigned JSON subscribe announcements', () async {
+      final handler = await strictHandler();
+      handler(
+        NetworkPacket(
+          srcPeerId: 'QmAnnouncer',
+          datagram: Uint8List.fromList(
+            utf8.encode(
+              jsonEncode({
+                'action': 'subscribe',
+                'sender': 'QmAnnouncer',
+                'topic': 't1',
+              }),
+            ),
+          ),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(strictClient.peersForTopic('t1'), isNot(contains('QmAnnouncer')));
+    });
+
+    test(
+      'rejects control messages whose sender differs from the transport peer',
+      () async {
+        final handler = await strictHandler();
+        handler(
+          NetworkPacket(
+            srcPeerId: 'QmTransport',
+            datagram: Uint8List.fromList(
+              utf8.encode(
+                jsonEncode({
+                  'action': 'graft',
+                  'sender': 'QmOther',
+                  'topic': 't1',
+                }),
+              ),
+            ),
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+
+        expect(strictClient.peersForTopic('t1'), isNot(contains('QmOther')));
+        expect(
+          strictClient.peersForTopic('t1'),
+          isNot(contains('QmTransport')),
+        );
+      },
+    );
   });
 }

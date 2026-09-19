@@ -569,27 +569,29 @@ class Libp2pRouter implements RouterInterface {
   Future<void> connect(String multiaddress) async {
     _checkStarted();
 
+    _logger.debug('Connecting to $multiaddress');
+
+    // Extract peer ID from multiaddress
+    final peerIdStr = _extractPeerIdFromMultiaddr(multiaddress);
+    if (peerIdStr == null) {
+      throw ArgumentError(
+        'Multiaddress must contain /p2p/<peerId>: $multiaddress',
+      );
+    }
+
+    // Strip the /p2p/<id> suffix for the transport address
+    final transportAddrStr = multiaddress.split('/p2p/')[0];
+    final addr = libp2p.MultiAddr(transportAddrStr);
+    final peerId = libp2p.PeerId.fromString(peerIdStr);
+
+    // Snapshot the peer's previously known addresses. Host.connect seeds the
+    // addrbook with the supplied address to perform the dial; if the
+    // handshake fails, that unverified address must not persist — otherwise
+    // any caller (e.g. an AutoNAT dialback request) could poison the
+    // addrbook with arbitrary addresses for this peer.
+    final priorAddrs = await _host!.peerStore.addrBook.addrs(peerId);
+
     try {
-      _logger.debug('Connecting to $multiaddress');
-
-      // Extract peer ID from multiaddress
-      final peerIdStr = _extractPeerIdFromMultiaddr(multiaddress);
-      if (peerIdStr == null) {
-        throw ArgumentError(
-          'Multiaddress must contain /p2p/<peerId>: $multiaddress',
-        );
-      }
-
-      // Strip the /p2p/<id> suffix for the transport address
-      final transportAddrStr = multiaddress.split('/p2p/')[0];
-      final addr = libp2p.MultiAddr(transportAddrStr);
-      final peerId = libp2p.PeerId.fromString(peerIdStr);
-
-      // Explicitly add address to peer store to ensure dial can find it
-      await _host!.peerStore.addrBook.addAddrs(peerId, [
-        addr,
-      ], const Duration(minutes: 10));
-
       final addrInfo = libp2p.AddrInfo(peerId, [addr]);
       await _host!
           .connect(addrInfo)
@@ -603,6 +605,24 @@ class Libp2pRouter implements RouterInterface {
       _peerAddresses[peerIdStr] = [multiaddress];
       _logger.debug('Connected to peer $peerIdStr');
     } catch (e, stackTrace) {
+      // The dial failed: undo the addrbook seeding performed during
+      // Host.connect and restore only addresses learned from verified
+      // handshakes.
+      try {
+        await _host!.peerStore.addrBook.clearAddrs(peerId);
+        if (priorAddrs.isNotEmpty) {
+          await _host!.peerStore.addrBook.addAddrs(
+            peerId,
+            priorAddrs,
+            const Duration(minutes: 10),
+          );
+        }
+      } catch (restoreError) {
+        _logger.warning(
+          'Failed to restore addrbook for $peerIdStr after failed dial: '
+          '$restoreError',
+        );
+      }
       _logger.error('Failed to connect to $multiaddress', e, stackTrace);
       rethrow;
     }

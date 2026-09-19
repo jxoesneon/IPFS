@@ -72,8 +72,15 @@ class GraphsyncHandler implements ILifecycle {
   int _totalBytesSent = 0;
   int _totalBytesReceived = 0;
 
-  /// Active server-side requests, keyed by request id.
-  final Map<int, _ServerRequestContext> _serverRequests = {};
+  /// Active server-side requests, keyed by requesting peer and request id.
+  ///
+  /// Request ids are only unique per peer: keying by id alone would let one
+  /// peer cancel or pause another peer's in-flight request by reusing its id.
+  final Map<String, _ServerRequestContext> _serverRequests = {};
+
+  /// Composite key for [_serverRequests]: `'<peer>#<requestId>'`.
+  static String _serverRequestKey(String peer, int requestId) =>
+      '$peer#$requestId';
 
   /// Active client-side requests, keyed by request id.
   final Map<int, _ClientRequestContext> _clientRequests = {};
@@ -175,7 +182,7 @@ class GraphsyncHandler implements ILifecycle {
   Future<void> _handleCancelRequest(String peer, int requestId) async {
     _logger.debug('Handling cancel request for ID: $requestId from $peer');
     try {
-      final context = _serverRequests[requestId];
+      final context = _serverRequests[_serverRequestKey(peer, requestId)];
       if (context != null) {
         context.cancel();
       }
@@ -198,7 +205,7 @@ class GraphsyncHandler implements ILifecycle {
   Future<void> _handlePauseRequest(String peer, int requestId) async {
     _logger.debug('Handling pause request for ID: $requestId from $peer');
     try {
-      final context = _serverRequests[requestId];
+      final context = _serverRequests[_serverRequestKey(peer, requestId)];
       if (context != null) {
         context.pause();
       }
@@ -220,7 +227,7 @@ class GraphsyncHandler implements ILifecycle {
   Future<void> _handleUnpauseRequest(String peer, int requestId) async {
     _logger.debug('Handling unpause request for ID: $requestId from $peer');
     try {
-      final context = _serverRequests[requestId];
+      final context = _serverRequests[_serverRequestKey(peer, requestId)];
       if (context != null) {
         context.resume();
       }
@@ -252,7 +259,7 @@ class GraphsyncHandler implements ILifecycle {
       peer: peer,
       budget: budget,
     );
-    _serverRequests[request.id] = context;
+    _serverRequests[_serverRequestKey(peer, request.id)] = context;
 
     try {
       if (!request.hasRoot() || !request.hasSelector()) {
@@ -402,7 +409,7 @@ class GraphsyncHandler implements ILifecycle {
       );
     } finally {
       _activeRequests--;
-      _serverRequests.remove(request.id);
+      _serverRequests.remove(_serverRequestKey(peer, request.id));
     }
   }
 
@@ -570,7 +577,17 @@ class GraphsyncHandler implements ILifecycle {
     int? maxBytes,
   }) async {
     final requestId = _nextRequestId++;
-    final context = _ClientRequestContext(requestId: requestId, peer: peer);
+    // Bound retained blocks: a peer streaming an endless run of valid
+    // blocks must not grow memory without limit. When the caller declares
+    // a max-blocks budget it is the bound; otherwise the serve-side cap
+    // applies, since our own server never emits more than that.
+    final context = _ClientRequestContext(
+      requestId: requestId,
+      peer: peer,
+      maxBlocks: (maxBlocks != null && maxBlocks > 0)
+          ? maxBlocks
+          : _graphsyncConfig.maxServeBlocks,
+    );
     _clientRequests[requestId] = context;
 
     final extensions = <String, Uint8List>{};
@@ -783,7 +800,17 @@ class GraphsyncHandler implements ILifecycle {
           continue;
         }
         await _blockStore.putBlock(block);
-        context.addBlock(block);
+        if (!context.addBlock(block)) {
+          _logger.warning(
+            'Peer $peer exceeded the block limit (${context.maxBlocks}) '
+            'for request ${response.id}',
+          );
+          context.error(
+            RequestHandlingError('block limit (${context.maxBlocks}) exceeded'),
+          );
+          _clientRequests.remove(response.id);
+          return;
+        }
       } catch (e, stackTrace) {
         _logger.warning(
           'Failed to decode block for request ${response.id}',
@@ -877,11 +904,20 @@ class _ServerRequestContext {
 
 /// Context for a single client-side Graphsync request.
 class _ClientRequestContext {
-  _ClientRequestContext({required this.requestId, required this.peer});
+  _ClientRequestContext({
+    required this.requestId,
+    required this.peer,
+    this.maxBlocks = 10000,
+  });
 
   final int requestId;
   final String peer;
   bool paused = false;
+
+  /// Maximum blocks retained for this request. Bounds memory growth when a
+  /// peer streams an unbounded run of valid blocks.
+  final int maxBlocks;
+
   final List<core.Block> blocks = [];
   final _responseController = StreamController<GraphsyncResponse>.broadcast();
   final _completer = Completer<List<core.Block>>();
@@ -892,8 +928,12 @@ class _ClientRequestContext {
     _responseController.add(response);
   }
 
-  void addBlock(core.Block block) {
+  /// Retains a received block, or returns `false` when [maxBlocks] is
+  /// already reached and the request should be failed instead.
+  bool addBlock(core.Block block) {
+    if (blocks.length >= maxBlocks) return false;
     blocks.add(block);
+    return true;
   }
 
   void complete() {

@@ -26,7 +26,7 @@ class PubSubHandler implements IPubSub, ILifecycle {
     PubSubClient? pubSubClient,
     SimpleKeyPair? keyPair,
     PeerKeyRegistry? keyRegistry,
-    bool strictAuthentication = false,
+    bool strictAuthentication = true,
   }) : _pubSubClient =
            pubSubClient ??
            PubSubClient(

@@ -123,6 +123,11 @@ List<_PbField> _parseFields(Uint8List data) {
     } else if (wireType == _wireTypeLengthDelimited) {
       final (length, lenSize) = decodeVarint(data, offset);
       offset += lenSize;
+      if (length < 0 || length > data.length - offset) {
+        throw FormatException(
+          'Field $fieldNumber length $length exceeds message bounds',
+        );
+      }
       final payload = data.sublist(offset, offset + length);
       offset += length;
       fields.add(_PbField(fieldNumber, wireType, Uint8List.fromList(payload)));
@@ -170,7 +175,11 @@ class PublicKeyPb {
     var data = Uint8List(0);
     for (final f in _parseFields(bytes)) {
       if (f.fieldNumber == 1 && f.wireType == _wireTypeVarint) {
-        type = KeyType.fromValue(f.value as int);
+        try {
+          type = KeyType.fromValue(f.value as int);
+        } on ArgumentError {
+          throw FormatException('Unknown KeyType value: ${f.value}');
+        }
       } else if (f.fieldNumber == 2 && f.wireType == _wireTypeLengthDelimited) {
         data = f.value as Uint8List;
       }

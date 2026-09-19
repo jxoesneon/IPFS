@@ -78,7 +78,9 @@ void main() {
 
   setUp(() {
     router = _StubRouter();
-    client = PubSubClient(router, peerId);
+    // Introspection tests drive unsigned announcements; strict mode is the
+    // default in production and is exercised in the coverage tests.
+    client = PubSubClient(router, peerId, strictAuthentication: false);
   });
 
   tearDown(() async {
@@ -220,6 +222,7 @@ void main() {
         router,
         peerId,
         IpfsNodeNetworkEvents(router),
+        strictAuthentication: false,
       );
       final manager = ProtocolManager(pubSubHandler: handler);
 

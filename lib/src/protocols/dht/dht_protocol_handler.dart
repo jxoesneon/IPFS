@@ -8,6 +8,7 @@ import '../../proto/generated/dht/kademlia.pb.dart' as kad;
 import '../../transport/router_interface.dart';
 import '../../utils/logger.dart';
 
+import '../ipns/ipns_record.dart';
 import 'rate_limiter.dart';
 
 /// Kademlia DHT protocol message handler.
@@ -118,24 +119,25 @@ class DHTProtocolHandler {
 
       case kad.Message_MessageType.PUT_VALUE:
         if (message.hasRecord()) {
-          // Per the libp2p DHT spec, PUT_VALUE keys must live in a
-          // namespaced validator domain; `/ipns/` is the only namespace
-          // served here. Arbitrary keys are rejected — accepting them
-          // would let any peer fill local storage unauthenticated.
+          // Mirror DHTClient's inbound validation: an /ipns/ record must
+          // decode, be signed and unexpired, bind the DHT key derived from
+          // its public key, verify its signature, and advance the sequence
+          // number past any record already stored for the key. Size/prefix
+          // checks alone would let any peer plant forged or stale records —
+          // and since registerProtocolHandler is last-registration-wins,
+          // this path must be no weaker than the validating client handler.
+          final keyBytes = Uint8List.fromList(message.key);
           final value = Uint8List.fromList(message.record.value);
-          final keyStr = utf8.decode(message.key, allowMalformed: true);
-          if (!keyStr.startsWith('/ipns/') ||
-              value.isEmpty ||
-              value.length > _maxDhtValueSize) {
+          if (await _validateInboundDhtValue(keyBytes, value)) {
+            final keyStr = utf8.decode(message.key, allowMalformed: true);
+            final storageKey = Key('/dht/values/$keyStr');
+            await _storage.put(storageKey, value);
+            _logger.debug('Stored value for key: $keyStr');
+          } else {
             _logger.warning(
-              'Rejected PUT_VALUE for key outside /ipns/ namespace',
+              'Rejected invalid PUT_VALUE record from $srcPeerId',
             );
-            response.type = kad.Message_MessageType.PUT_VALUE;
-            return response;
           }
-          final storageKey = Key('/dht/values/$keyStr');
-          await _storage.put(storageKey, value);
-          _logger.debug('Stored value for key: $keyStr');
         }
         response.type = kad.Message_MessageType.PUT_VALUE;
         return response;
@@ -146,6 +148,62 @@ class DHTProtocolHandler {
         );
         return null;
     }
+  }
+
+  /// Whether [key] is an IPNS record key (`'/ipns/' + identity multihash`).
+  static bool _isIpnsKey(Uint8List key) {
+    const prefix = '/ipns/';
+    if (key.length <= prefix.length) return false;
+    for (var i = 0; i < prefix.length; i++) {
+      if (key[i] != prefix.codeUnitAt(i)) return false;
+    }
+    return true;
+  }
+
+  /// Validates an inbound PUT_VALUE record before storage.
+  ///
+  /// Mirrors `DHTClient._validateInboundDhtValue`: `/ipns/` records must
+  /// decode, be signed, be unexpired, verify their signature, match the DHT
+  /// key derived from their public key, and carry a sequence number higher
+  /// than any record already stored for the key.
+  Future<bool> _validateInboundDhtValue(Uint8List key, Uint8List value) async {
+    if (value.isEmpty || value.length > _maxDhtValueSize) return false;
+    if (!_isIpnsKey(key)) return false;
+
+    // Kubo-style records omit the embedded public key; recover it from the
+    // DHT key itself ('/ipns/' + identity multihash of the public key).
+    final recoveredKey = ipnsPublicKeyFromDhtKey(key);
+    if (recoveredKey == null) return false;
+
+    IPNSRecord record;
+    try {
+      record = IPNSRecord.decode(value, publicKey: recoveredKey);
+    } catch (_) {
+      return false;
+    }
+    if (!record.isSigned || record.isExpired) return false;
+
+    // The record's public key must derive the very key it was stored under.
+    final expectedKey = ipnsDhtKey(record.publicKey);
+    if (expectedKey.length != key.length) return false;
+    for (var i = 0; i < key.length; i++) {
+      if (expectedKey[i] != key[i]) return false;
+    }
+
+    if (!await record.verify()) return false;
+
+    // A stored record with an equal or higher sequence wins.
+    final keyStr = utf8.decode(key, allowMalformed: true);
+    final existing = await _storage.get(Key('/dht/values/$keyStr'));
+    if (existing != null) {
+      try {
+        final stored = IPNSRecord.decode(Uint8List.fromList(existing));
+        if (record.sequence <= stored.sequence) return false;
+      } catch (_) {
+        // Undecodable stored bytes do not block a valid record.
+      }
+    }
+    return true;
   }
 
   /// Finds the closest peers to a given [key].

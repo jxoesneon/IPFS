@@ -44,63 +44,70 @@ void main() {
 
   setUp(() {
     mockRouter = MockRouterInterface();
-    receiverClient = PubSubClient(mockRouter, receiverPeerId);
+    // Legacy (non-strict) receiver: demonstrates the forgeable HMAC mode and
+    // that Ed25519 verification still applies whenever a signature or a
+    // registered peer key is present.
+    receiverClient = PubSubClient(
+      mockRouter,
+      receiverPeerId,
+      strictAuthentication: false,
+    );
   });
 
   tearDown(() async {
     if (receiverClient.isStarted) await receiverClient.stop();
   });
 
-  group('SEC-008: PubSub message tag is forgeable (legacy unauthenticated mode)', () {
-    test(
-      'an unrelated attacker can impersonate a connected victim peer in legacy mode',
-      () async {
-        await receiverClient.start();
-        final capturedHandler =
-            verify(
-                  mockRouter.registerProtocolHandler(any, captureAny),
-                ).captured.single
-                as void Function(NetworkPacket);
+  group(
+    'SEC-008: PubSub message tag is forgeable (legacy unauthenticated mode)',
+    () {
+      test(
+        'an unrelated attacker can impersonate a connected victim peer in legacy mode',
+        () async {
+          await receiverClient.start();
+          final capturedHandler =
+              verify(
+                    mockRouter.registerProtocolHandler(any, captureAny),
+                  ).captured.single
+                  as void Function(NetworkPacket);
 
-        when(mockRouter.isConnectedPeer(victimPeerId)).thenReturn(true);
+          when(mockRouter.isConnectedPeer(victimPeerId)).thenReturn(true);
 
-        const topic = 'general-chat';
-        const forgedContent =
-            'Attacker-controlled message the victim never sent';
+          const topic = 'general-chat';
+          const forgedContent =
+              'Attacker-controlled message the victim never sent';
 
-        final forgedTag = _publiclyComputableTag(
-          victimPeerId,
-          topic,
-          forgedContent,
-        );
+          final forgedTag = _publiclyComputableTag(
+            victimPeerId,
+            topic,
+            forgedContent,
+          );
 
-        final forgedPacket = NetworkPacket(
-          srcPeerId: 'attacker-own-connection-id',
-          datagram: Uint8List.fromList(
-            utf8.encode(
-              jsonEncode({
-                'sender': victimPeerId,
-                'topic': topic,
-                'content': forgedContent,
-                'signature': forgedTag,
-              }),
+          final forgedPacket = NetworkPacket(
+            srcPeerId: 'attacker-own-connection-id',
+            datagram: Uint8List.fromList(
+              utf8.encode(
+                jsonEncode({
+                  'sender': victimPeerId,
+                  'topic': topic,
+                  'content': forgedContent,
+                  'signature': forgedTag,
+                }),
+              ),
             ),
-          ),
-        );
+          );
 
-        final received = receiverClient.messagesStream.first;
-        capturedHandler(forgedPacket);
+          final received = receiverClient.messagesStream.first;
+          capturedHandler(forgedPacket);
 
-        final message = await received;
-        expect(message.sender, equals(victimPeerId));
-        expect(message.content, equals(forgedContent));
-      },
-    );
+          final message = await received;
+          expect(message.sender, equals(victimPeerId));
+          expect(message.content, equals(forgedContent));
+        },
+      );
 
-    test(
-      'the tag depends only on public fields, so an independent party '
-      'reproduces the exact same tag without coordinating on a secret',
-      () {
+      test('the tag depends only on public fields, so an independent party '
+          'reproduces the exact same tag without coordinating on a secret', () {
         const topic = 'topicA';
         const content = 'hello';
 
@@ -117,11 +124,7 @@ void main() {
                     as Map<String, dynamic>)['signature']
                 as String;
 
-        final forgedTag = _publiclyComputableTag(
-          victimPeerId,
-          topic,
-          content,
-        );
+        final forgedTag = _publiclyComputableTag(victimPeerId, topic, content);
 
         expect(
           forgedTag,
@@ -131,84 +134,87 @@ void main() {
               'field, so anyone can reproduce the exact same tag without '
               'ever holding a secret.',
         );
-      },
-    );
-  });
+      });
+    },
+  );
 
-  group('SEC-008 Remediation: Asymmetric Ed25519 authentication prevents forgery', () {
-    late Ed25519Signer signer;
-    late SimpleKeyPair victimKeyPair;
-    late Uint8List victimPubKeyBytes;
-    late String realVictimPeerId;
+  group(
+    'SEC-008 Remediation: Asymmetric Ed25519 authentication prevents forgery',
+    () {
+      late Ed25519Signer signer;
+      late SimpleKeyPair victimKeyPair;
+      late Uint8List victimPubKeyBytes;
+      late String realVictimPeerId;
 
-    setUp(() async {
-      signer = Ed25519Signer();
-      victimKeyPair = await signer.generateKeyPair();
-      victimPubKeyBytes = await signer.extractPublicKeyBytes(victimKeyPair);
-      realVictimPeerId = PeerId.fromPublicKey(
-        victimPubKeyBytes,
-        type: 'Ed25519',
-      ).toBase58();
-    });
-
-    test(
-      'rejects forged HMAC message when victim peer has registered Ed25519 public key',
-      () async {
-        await receiverClient.start();
-        receiverClient.keyRegistry.registerPublicKey(
-          realVictimPeerId,
+      setUp(() async {
+        signer = Ed25519Signer();
+        victimKeyPair = await signer.generateKeyPair();
+        victimPubKeyBytes = await signer.extractPublicKeyBytes(victimKeyPair);
+        realVictimPeerId = PeerId.fromPublicKey(
           victimPubKeyBytes,
-        );
+          type: 'Ed25519',
+        ).toBase58();
+      });
 
-        final capturedHandler =
-            verify(
-                  mockRouter.registerProtocolHandler(any, captureAny),
-                ).captured.single
-                as void Function(NetworkPacket);
+      test(
+        'rejects forged HMAC message when victim peer has registered Ed25519 public key',
+        () async {
+          await receiverClient.start();
+          receiverClient.keyRegistry.registerPublicKey(
+            realVictimPeerId,
+            victimPubKeyBytes,
+          );
 
-        when(mockRouter.isConnectedPeer(realVictimPeerId)).thenReturn(true);
+          final capturedHandler =
+              verify(
+                    mockRouter.registerProtocolHandler(any, captureAny),
+                  ).captured.single
+                  as void Function(NetworkPacket);
 
-        const topic = 'general-chat';
-        const forgedContent = 'Spoofed message with legacy HMAC tag';
-        final forgedTag = _publiclyComputableTag(
-          realVictimPeerId,
-          topic,
-          forgedContent,
-        );
+          when(mockRouter.isConnectedPeer(realVictimPeerId)).thenReturn(true);
 
-        final forgedPacket = NetworkPacket(
-          srcPeerId: 'attacker-own-connection-id',
-          datagram: Uint8List.fromList(
-            utf8.encode(
-              jsonEncode({
-                'sender': realVictimPeerId,
-                'topic': topic,
-                'content': forgedContent,
-                'signature': forgedTag,
-              }),
+          const topic = 'general-chat';
+          const forgedContent = 'Spoofed message with legacy HMAC tag';
+          final forgedTag = _publiclyComputableTag(
+            realVictimPeerId,
+            topic,
+            forgedContent,
+          );
+
+          final forgedPacket = NetworkPacket(
+            srcPeerId: 'attacker-own-connection-id',
+            datagram: Uint8List.fromList(
+              utf8.encode(
+                jsonEncode({
+                  'sender': realVictimPeerId,
+                  'topic': topic,
+                  'content': forgedContent,
+                  'signature': forgedTag,
+                }),
+              ),
             ),
-          ),
-        );
+          );
 
-        var delivered = false;
-        final sub = receiverClient.messagesStream.listen((_) => delivered = true);
+          var delivered = false;
+          final sub = receiverClient.messagesStream.listen(
+            (_) => delivered = true,
+          );
 
-        capturedHandler(forgedPacket);
-        await Future.delayed(const Duration(milliseconds: 50));
+          capturedHandler(forgedPacket);
+          await Future.delayed(const Duration(milliseconds: 50));
 
-        expect(
-          delivered,
-          isFalse,
-          reason: 'Downgrade protection must drop unauthenticated HMAC messages '
-              'when an Ed25519 key is registered for that peer.',
-        );
-        await sub.cancel();
-      },
-    );
+          expect(
+            delivered,
+            isFalse,
+            reason:
+                'Downgrade protection must drop unauthenticated HMAC messages '
+                'when an Ed25519 key is registered for that peer.',
+          );
+          await sub.cancel();
+        },
+      );
 
-    test(
-      'rejects forged messages in strict authentication mode',
-      () async {
+      test('rejects forged messages in strict authentication mode', () async {
         final strictClient = PubSubClient(
           mockRouter,
           receiverPeerId,
@@ -251,112 +257,156 @@ void main() {
         expect(delivered, isFalse);
         await sub.cancel();
         await strictClient.stop();
-      },
-    );
+      });
 
-    test(
-      'rejects spoofed message where attacker signs with own key but claims victim PeerId',
-      () async {
-        await receiverClient.start();
-        final capturedHandler =
-            verify(
-                  mockRouter.registerProtocolHandler(any, captureAny),
-                ).captured.single
-                as void Function(NetworkPacket);
+      test(
+        'rejects spoofed message where attacker signs with own key but claims victim PeerId',
+        () async {
+          await receiverClient.start();
+          final capturedHandler =
+              verify(
+                    mockRouter.registerProtocolHandler(any, captureAny),
+                  ).captured.single
+                  as void Function(NetworkPacket);
 
-        when(mockRouter.isConnectedPeer(realVictimPeerId)).thenReturn(true);
+          when(mockRouter.isConnectedPeer(realVictimPeerId)).thenReturn(true);
 
-        // Attacker creates their own keypair
-        final attackerKeyPair = await signer.generateKeyPair();
-        final attackerPubKeyBytes =
-            await signer.extractPublicKeyBytes(attackerKeyPair);
+          // Attacker creates their own keypair
+          final attackerKeyPair = await signer.generateKeyPair();
+          final attackerPubKeyBytes = await signer.extractPublicKeyBytes(
+            attackerKeyPair,
+          );
 
-        const topic = 'security-announcements';
-        const attackPayload = 'Malicious message claiming to be from victim';
+          const topic = 'security-announcements';
+          const attackPayload = 'Malicious message claiming to be from victim';
 
-        final sig = await signer.sign(
-          Uint8List.fromList(utf8.encode('$topic:$attackPayload')),
-          attackerKeyPair,
-        );
+          final sig = await signer.sign(
+            Uint8List.fromList(utf8.encode('$topic:$attackPayload')),
+            attackerKeyPair,
+          );
 
-        final spoofedPacket = NetworkPacket(
-          srcPeerId: 'attacker-node',
-          datagram: Uint8List.fromList(
-            utf8.encode(
-              jsonEncode({
-                'sender': realVictimPeerId, // Attacker claims victim's PeerId!
-                'topic': topic,
-                'content': attackPayload,
-                'signature': _publiclyComputableTag(
-                  realVictimPeerId,
-                  topic,
-                  attackPayload,
-                ),
-                'ed25519_signature': base64Encode(sig),
-                'pubkey': base64Encode(attackerPubKeyBytes),
-              }),
+          final spoofedPacket = NetworkPacket(
+            srcPeerId: 'attacker-node',
+            datagram: Uint8List.fromList(
+              utf8.encode(
+                jsonEncode({
+                  'sender':
+                      realVictimPeerId, // Attacker claims victim's PeerId!
+                  'topic': topic,
+                  'content': attackPayload,
+                  'signature': _publiclyComputableTag(
+                    realVictimPeerId,
+                    topic,
+                    attackPayload,
+                  ),
+                  'ed25519_signature': base64Encode(sig),
+                  'pubkey': base64Encode(attackerPubKeyBytes),
+                }),
+              ),
             ),
-          ),
-        );
+          );
 
-        var delivered = false;
-        final sub = receiverClient.messagesStream.listen((_) => delivered = true);
+          var delivered = false;
+          final sub = receiverClient.messagesStream.listen(
+            (_) => delivered = true,
+          );
 
-        capturedHandler(spoofedPacket);
-        await Future.delayed(const Duration(milliseconds: 50));
+          capturedHandler(spoofedPacket);
+          await Future.delayed(const Duration(milliseconds: 50));
 
-        expect(
-          delivered,
-          isFalse,
-          reason:
-              'Must drop message when public key does not cryptographically '
-              'derive to claimed sender PeerId.',
-        );
-        await sub.cancel();
-      },
-    );
+          expect(
+            delivered,
+            isFalse,
+            reason:
+                'Must drop message when public key does not cryptographically '
+                'derive to claimed sender PeerId.',
+          );
+          await sub.cancel();
+        },
+      );
 
-    test(
-      'accepts authentic Ed25519-signed message and registers peer public key',
-      () async {
-        await receiverClient.start();
-        final capturedHandler =
-            verify(
-                  mockRouter.registerProtocolHandler(any, captureAny),
-                ).captured.single
-                as void Function(NetworkPacket);
+      test(
+        'accepts authentic Ed25519-signed message and registers peer public key',
+        () async {
+          await receiverClient.start();
+          final capturedHandler =
+              verify(
+                    mockRouter.registerProtocolHandler(any, captureAny),
+                  ).captured.single
+                  as void Function(NetworkPacket);
 
-        when(mockRouter.isConnectedPeer(realVictimPeerId)).thenReturn(true);
+          when(mockRouter.isConnectedPeer(realVictimPeerId)).thenReturn(true);
 
-        final victimClient = PubSubClient(
-          MockRouterInterface(),
-          realVictimPeerId,
-          keyPair: victimKeyPair,
-        );
+          final victimClient = PubSubClient(
+            MockRouterInterface(),
+            realVictimPeerId,
+            keyPair: victimKeyPair,
+          );
 
-        const topic = 'verified-channel';
-        const legitimateContent = 'Authentic message from legitimate key holder';
+          const topic = 'verified-channel';
+          const legitimateContent =
+              'Authentic message from legitimate key holder';
 
-        final legitimateDatagram = await victimClient.encodeSignedPublishRequest(
-          topic,
-          legitimateContent,
-        );
+          final legitimateDatagram = await victimClient
+              .encodeSignedPublishRequest(topic, legitimateContent);
 
-        final authenticPacket = NetworkPacket(
-          srcPeerId: 'any-mesh-relay',
-          datagram: legitimateDatagram,
-        );
+          final authenticPacket = NetworkPacket(
+            srcPeerId: 'any-mesh-relay',
+            datagram: legitimateDatagram,
+          );
 
-        final received = receiverClient.messagesStream.first;
-        capturedHandler(authenticPacket);
+          final received = receiverClient.messagesStream.first;
+          capturedHandler(authenticPacket);
 
-        final message = await received;
-        expect(message.sender, equals(realVictimPeerId));
-        expect(message.content, equals(legitimateContent));
+          final message = await received;
+          expect(message.sender, equals(realVictimPeerId));
+          expect(message.content, equals(legitimateContent));
 
-        // Verify that the receiver cached the peer's verified public key
-        expect(receiverClient.keyRegistry.hasPublicKey(realVictimPeerId), isTrue);
-      },
-    );
-  });
+          // Verify that the receiver cached the peer's verified public key
+          expect(
+            receiverClient.keyRegistry.hasPublicKey(realVictimPeerId),
+            isTrue,
+          );
+        },
+      );
+
+      test(
+        'accepts a signed subscribe announcement in strict authentication mode',
+        () async {
+          final strictReceiver = PubSubClient(
+            mockRouter,
+            receiverPeerId,
+            strictAuthentication: true,
+          );
+          await strictReceiver.start();
+          final capturedHandler =
+              verify(
+                    mockRouter.registerProtocolHandler(any, captureAny),
+                  ).captured.last
+                  as void Function(NetworkPacket);
+
+          final announcer = PubSubClient(
+            MockRouterInterface(),
+            realVictimPeerId,
+            keyPair: victimKeyPair,
+          );
+          final announcement = await announcer.encodeSignedAnnouncement(
+            'subscribe',
+            'announce-topic',
+          );
+
+          capturedHandler(
+            NetworkPacket(srcPeerId: realVictimPeerId, datagram: announcement),
+          );
+          await Future.delayed(const Duration(milliseconds: 50));
+
+          expect(
+            strictReceiver.peersForTopic('announce-topic'),
+            contains(realVictimPeerId),
+          );
+          await strictReceiver.stop();
+        },
+      );
+    },
+  );
 }

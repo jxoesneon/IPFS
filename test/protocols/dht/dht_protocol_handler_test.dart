@@ -3,10 +3,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cryptography/cryptography.dart' show SimpleKeyPair;
+import 'package:dart_ipfs/src/core/cid.dart';
+import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart';
 import 'package:dart_ipfs/src/proto/generated/dht/dht.pb.dart' as dht_pb;
 import 'package:dart_ipfs/src/proto/generated/dht/kademlia.pb.dart' as kad;
 import 'package:dart_ipfs/src/protocols/dht/dht_protocol_handler.dart';
+import 'package:dart_ipfs/src/protocols/ipns/ipns_record.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_routing_table_interface.dart';
 import 'package:dart_ipfs/src/protocols/dht/rate_limiter.dart';
 import 'package:dart_ipfs/src/transport/router_events.dart';
@@ -309,13 +313,98 @@ void main() {
       expect(datastore._values, isEmpty);
     });
 
-    test('stores valid /ipns/ records', () async {
-      final response = await drive(putValueMessage('/ipns/QmKey', [9, 8, 7]));
+    test('rejects undecodable values under an /ipns/ key', () async {
+      final kp = await _keyPair(1);
+      final dhtKey = ipnsDhtKey(await _publicKeyBytes(kp));
+
+      final response = await drive(
+        putValueMessage(utf8.decode(dhtKey, allowMalformed: true), [1, 2, 3]),
+      );
 
       expect(response.type, equals(kad.Message_MessageType.PUT_VALUE));
-      final storedKey = Key('/dht/values//ipns/QmKey');
-      expect(datastore._values.containsKey(storedKey), isTrue);
-      expect(datastore._values[storedKey], equals([9, 8, 7]));
+      expect(datastore._values, isEmpty);
+    });
+
+    test('stores a valid signed /ipns/ record under its DHT key', () async {
+      final kp = await _keyPair(1);
+      final dhtKey = ipnsDhtKey(await _publicKeyBytes(kp));
+      final record = await IPNSRecord.create(
+        value: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        keyPair: kp,
+        sequence: 5,
+      );
+      final value = record.toIpnsEntry();
+
+      final request = kad.Message()
+        ..type = kad.Message_MessageType.PUT_VALUE
+        ..key = dhtKey
+        ..record = (dht_pb.Record()..value = value);
+      final response = await drive(request);
+
+      expect(response.type, equals(kad.Message_MessageType.PUT_VALUE));
+      final keyStr = utf8.decode(dhtKey, allowMalformed: true);
+      final storedKey = Key('/dht/values/$keyStr');
+      expect(datastore._values[storedKey], equals(value));
+    });
+
+    test('rejects a valid record stored under the wrong /ipns/ key', () async {
+      final kp = await _keyPair(1);
+      final otherKp = await _keyPair(2);
+      final wrongKey = ipnsDhtKey(await _publicKeyBytes(otherKp));
+      final record = await IPNSRecord.create(
+        value: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        keyPair: kp,
+        sequence: 5,
+      );
+
+      final request = kad.Message()
+        ..type = kad.Message_MessageType.PUT_VALUE
+        ..key = wrongKey
+        ..record = (dht_pb.Record()..value = record.toIpnsEntry());
+      final response = await drive(request);
+
+      expect(response.type, equals(kad.Message_MessageType.PUT_VALUE));
+      expect(datastore._values, isEmpty);
+    });
+
+    test('rejects a record whose sequence does not advance', () async {
+      final kp = await _keyPair(1);
+      final pubKey = await _publicKeyBytes(kp);
+      final dhtKey = ipnsDhtKey(pubKey);
+      final keyStr = utf8.decode(dhtKey, allowMalformed: true);
+
+      // A newer record (seq 10) is already stored.
+      final newer = await IPNSRecord.create(
+        value: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        keyPair: kp,
+        sequence: 10,
+      );
+      datastore._values[Key('/dht/values/$keyStr')] = newer.toIpnsEntry();
+
+      final stale = await IPNSRecord.create(
+        value: CID.decode('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'),
+        keyPair: kp,
+        sequence: 5,
+      );
+      final request = kad.Message()
+        ..type = kad.Message_MessageType.PUT_VALUE
+        ..key = dhtKey
+        ..record = (dht_pb.Record()..value = stale.toIpnsEntry());
+      final response = await drive(request);
+
+      expect(response.type, equals(kad.Message_MessageType.PUT_VALUE));
+      // Stored record remains the newer one.
+      expect(
+        datastore._values[Key('/dht/values/$keyStr')],
+        equals(newer.toIpnsEntry()),
+      );
     });
   });
 }
+
+Future<SimpleKeyPair> _keyPair(int seed) => Ed25519Signer().generateKeyPair(
+  seed: Uint8List.fromList(List.filled(32, seed)),
+);
+
+Future<Uint8List> _publicKeyBytes(SimpleKeyPair kp) async =>
+    Uint8List.fromList((await kp.extractPublicKey()).bytes);

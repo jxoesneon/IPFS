@@ -32,6 +32,12 @@ import 'pubsub_message.dart';
 /// 3. If a peer's Ed25519 public key is known or [strictAuthentication] is active,
 ///    unauthenticated or forged legacy HMAC tags are rejected (downgrade prevention).
 ///
+/// Control messages (subscribe/unsubscribe/graft/prune/ihave/iwant) are never
+/// relayed, so their `sender` must equal the transport-level peer ID. In
+/// strict authentication mode they must additionally carry a valid Ed25519
+/// signature over `'$action:$topic'`; unsigned plain-text announcements are
+/// rejected.
+///
 /// Legacy messages carrying only HMAC tags remain supported in non-strict mode
 /// for backward compatibility with older nodes, functioning as bit-corruption
 /// and deduplication tags only.
@@ -43,13 +49,15 @@ class PubSubClient implements IPubSub {
   /// - [peerIdStr]: The Base58 encoded string representation of the local PeerID.
   /// - [keyPair]: Optional Ed25519 key pair for authentic message signing.
   /// - [keyRegistry]: Optional peer key registry for caching and validating peer public keys.
-  /// - [strictAuthentication]: If `true`, requires valid Ed25519 signatures on all messages.
+  /// - [strictAuthentication]: If `true` (the default), requires valid Ed25519
+  ///   signatures on all content messages and control announcements. Pass
+  ///   `false` to accept legacy unsigned messages.
   PubSubClient(
     this._router,
     String peerIdStr, {
     SimpleKeyPair? keyPair,
     PeerKeyRegistry? keyRegistry,
-    bool strictAuthentication = false,
+    bool strictAuthentication = true,
   }) : _peerId = PeerId(value: Base58().base58Decode(peerIdStr)),
        _keyPair = keyPair,
        _keyRegistry = keyRegistry ?? PeerKeyRegistry(),
@@ -177,8 +185,18 @@ class PubSubClient implements IPubSub {
       final String decodedData = utf8.decode(packet.datagram);
 
       // Plain-text subscription announcements produced by
-      // [encodeSubscribeRequest] and [encodeUnsubscribeRequest].
+      // [encodeSubscribeRequest] and [encodeUnsubscribeRequest]. They carry
+      // no signature, so strict authentication mode rejects them; signed
+      // JSON announcements (see [encodeSignedAnnouncement]) are required
+      // instead.
       if (decodedData.startsWith('subscribe:')) {
+        if (_strictAuthentication) {
+          _logger.warning(
+            'Rejected unsigned subscribe announcement from ${packet.srcPeerId} '
+            'in strict authentication mode',
+          );
+          return;
+        }
         _trackTopicPeer(
           packet.srcPeerId,
           decodedData.substring('subscribe:'.length),
@@ -186,6 +204,13 @@ class PubSubClient implements IPubSub {
         return;
       }
       if (decodedData.startsWith('unsubscribe:')) {
+        if (_strictAuthentication) {
+          _logger.warning(
+            'Rejected unsigned unsubscribe announcement from ${packet.srcPeerId} '
+            'in strict authentication mode',
+          );
+          return;
+        }
         _untrackTopicPeer(
           packet.srcPeerId,
           decodedData.substring('unsubscribe:'.length),
@@ -207,9 +232,27 @@ class PubSubClient implements IPubSub {
 
       // Handle Gossipsub control actions
       if (action != null) {
+        // Control messages are exchanged only between directly connected
+        // peers — never relayed — so a sender field that does not match the
+        // transport-level peer is a forgery.
+        if (sender != packet.srcPeerId) {
+          _logger.warning(
+            'Rejected $action control message: sender $sender does not match '
+            'transport peer ${packet.srcPeerId}',
+          );
+          return;
+        }
+        if (_strictAuthentication &&
+            !await _verifySignedAnnouncement(action, topic, sender, msgMap)) {
+          _logger.warning(
+            'Rejected unsigned $action announcement from $sender in strict '
+            'authentication mode',
+          );
+          return;
+        }
         switch (action) {
           case 'ihave':
-            _handleIHave(msgMap);
+            await _handleIHave(msgMap);
             return;
           case 'iwant':
             await _handleIWant(msgMap);
@@ -405,7 +448,7 @@ class PubSubClient implements IPubSub {
       graftPeer(peerId);
     }
 
-    await _announce(encodeSubscribeRequest(topic));
+    await _announce(await encodeSignedAnnouncement('subscribe', topic));
     _logger.debug('Subscribed to topic: $topic');
   }
 
@@ -415,7 +458,7 @@ class PubSubClient implements IPubSub {
 
     _subscriptions.remove(topic);
     _router.removeMessageHandler(topic);
-    await _announce(encodeUnsubscribeRequest(topic));
+    await _announce(await encodeSignedAnnouncement('unsubscribe', topic));
     _logger.debug('Unsubscribed from topic: $topic');
   }
 
@@ -502,6 +545,79 @@ class PubSubClient implements IPubSub {
   /// Encodes an unsubscription request for a topic.
   Uint8List encodeUnsubscribeRequest(String topic) {
     return Uint8List.fromList(utf8.encode('unsubscribe:$topic'));
+  }
+
+  /// Encodes a subscription announcement for a topic.
+  ///
+  /// When an Ed25519 [SimpleKeyPair] is configured, the announcement is a
+  /// signed JSON control message (`ed25519_signature` over
+  /// `'$action:$topic'` plus the sender `pubkey`), which strict-mode peers
+  /// require. Without a key pair the legacy plain-text form is produced.
+  Future<Uint8List> encodeSignedAnnouncement(
+    String action,
+    String topic,
+  ) async {
+    final sig = await _signPayload('$action:$topic');
+    final pubKey = await _getLocalPublicKeyBytes();
+    if (sig != null && sig.isNotEmpty && pubKey != null && pubKey.isNotEmpty) {
+      final String senderStr = Base58().encode(_peerId.value);
+      return Uint8List.fromList(
+        utf8.encode(
+          jsonEncode({
+            'action': action,
+            'sender': senderStr,
+            'topic': topic,
+            'ed25519_signature': base64Encode(sig),
+            'pubkey': base64Encode(pubKey),
+          }),
+        ),
+      );
+    }
+    return action == 'unsubscribe'
+        ? encodeUnsubscribeRequest(topic)
+        : encodeSubscribeRequest(topic);
+  }
+
+  /// Verifies the Ed25519 signature on a signed control message.
+  ///
+  /// The signature must cover `'$action:$topic'` and verify under a public
+  /// key that cryptographically derives to [sender] — either carried inline
+  /// in [msgMap] (`pubkey`) or already registered in the key registry.
+  Future<bool> _verifySignedAnnouncement(
+    String action,
+    String? topic,
+    String sender,
+    Map<String, dynamic> msgMap,
+  ) async {
+    final String? sigBase64 =
+        (msgMap['ed25519_signature'] ?? msgMap['ed25519Signature']) as String?;
+    if (sigBase64 == null || sigBase64.isEmpty) return false;
+
+    Uint8List? pubKeyBytes;
+    final String? pubKeyBase64 =
+        (msgMap['pubkey'] ?? msgMap['publicKey']) as String?;
+    if (pubKeyBase64 != null && pubKeyBase64.isNotEmpty) {
+      try {
+        pubKeyBytes = base64Decode(pubKeyBase64);
+      } catch (_) {
+        return false;
+      }
+      // Registration verifies the public key derives to the claimed sender.
+      if (!_keyRegistry.registerPublicKey(sender, pubKeyBytes)) {
+        return false;
+      }
+    } else {
+      pubKeyBytes = _keyRegistry.getPublicKey(sender);
+      if (pubKeyBytes == null) return false;
+    }
+
+    final Uint8List sigBytes;
+    try {
+      sigBytes = base64Decode(sigBase64);
+    } catch (_) {
+      return false;
+    }
+    return _verifyEd25519Signature(pubKeyBytes, sigBytes, '$action:$topic');
   }
 
   /// Encodes a content message for publishing.
@@ -728,7 +844,7 @@ class PubSubClient implements IPubSub {
   }
 
   /// Handles 'ihave' control messages by requesting missing messages.
-  void _handleIHave(Map<String, dynamic> msg) {
+  Future<void> _handleIHave(Map<String, dynamic> msg) async {
     final String? topic = msg['topic'] as String?;
     final List<dynamic>? msgIdsRaw = msg['msgIds'] as List<dynamic>?;
     final String? sender = msg['sender'] as String?;
@@ -755,8 +871,18 @@ class PubSubClient implements IPubSub {
         'sender': Base58().encode(_peerId.value),
       };
 
+      // Sign the control message so strict-mode peers accept it.
+      final sig = await _signPayload('iwant:$topic');
+      final pubKey = await _getLocalPublicKeyBytes();
+      if (sig != null && sig.isNotEmpty) {
+        iwant['ed25519_signature'] = base64Encode(sig);
+      }
+      if (pubKey != null && pubKey.isNotEmpty) {
+        iwant['pubkey'] = base64Encode(pubKey);
+      }
+
       try {
-        _router.sendMessage(
+        await _router.sendMessage(
           sender,
           Uint8List.fromList(utf8.encode(jsonEncode(iwant))),
           protocolId: _protocolName,
@@ -781,7 +907,10 @@ class PubSubClient implements IPubSub {
       for (final String id in msgIds) {
         final String? content = _messageCache[topic]?[id];
         if (content != null) {
-          final Uint8List encoded = encodePublishRequest(topic, content);
+          final Uint8List encoded = await encodeSignedPublishRequest(
+            topic,
+            content,
+          );
           try {
             await _router.sendMessage(
               sender,

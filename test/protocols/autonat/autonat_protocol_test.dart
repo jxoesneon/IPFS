@@ -125,6 +125,12 @@ void main() {
       expect(decoded.addrs.length, equals(1));
       expect(decoded.addrs.first, equals(Uint8List.fromList([1])));
     });
+
+    test('decode throws FormatException on truncated field', () {
+      // Field 1, wire type 2, declared length 10, only 1 byte present.
+      final bytes = Uint8List.fromList([0x0a, 0x0a, 0x01]);
+      expect(() => DialRequest.decode(bytes), throwsFormatException);
+    });
   });
 
   group('DialResponse', () {
@@ -157,6 +163,18 @@ void main() {
       final decoded = DialResponse.decode(bytes);
       expect(decoded.status, equals(DialResponseStatus.dialRefused));
       expect(decoded.statusText, equals('busy'));
+    });
+
+    test('decode throws FormatException on out-of-range status', () {
+      // Field 1, wire type 0, status value 99.
+      final bytes = Uint8List.fromList([0x08, 0x63]);
+      expect(() => DialResponse.decode(bytes), throwsFormatException);
+    });
+
+    test('decode throws FormatException on truncated statusText', () {
+      // Field 2, wire type 2, declared length 8, only 1 byte present.
+      final bytes = Uint8List.fromList([0x12, 0x08, 0x61]);
+      expect(() => DialResponse.decode(bytes), throwsFormatException);
     });
   });
 
@@ -287,7 +305,9 @@ void main() {
         NetworkPacket(
           srcPeerId: 'QmPeer',
           datagram: DialRequest(
-            addrs: [Uint8List.fromList('/ip4/1.2.3.4/tcp/4001'.codeUnits)],
+            addrs: [
+              Uint8List.fromList('/ip4/1.2.3.4/tcp/4001/p2p/QmPeer'.codeUnits),
+            ],
           ).encode(),
         ),
       );
@@ -307,13 +327,62 @@ void main() {
         NetworkPacket(
           srcPeerId: 'QmPeer',
           datagram: DialRequest(
-            addrs: [Uint8List.fromList('/ip4/1.2.3.4/tcp/4001'.codeUnits)],
+            addrs: [
+              Uint8List.fromList('/ip4/1.2.3.4/tcp/4001/p2p/QmPeer'.codeUnits),
+            ],
           ).encode(),
         ),
       );
       await Future<void>.delayed(Duration.zero);
       final response = DialResponse.decode(router.sentMessages.first.message);
       expect(response.status, equals(DialResponseStatus.dialError));
+    });
+
+    test(
+      'refuses dialback to addresses without matching /p2p/ peer id',
+      () async {
+        server.start();
+        final handler = router.handlers[autonatProtocolId]!;
+        handler(
+          NetworkPacket(
+            srcPeerId: 'QmPeer',
+            datagram: DialRequest(
+              addrs: [
+                // No /p2p/ component at all.
+                Uint8List.fromList('/ip4/10.0.0.1/tcp/23'.codeUnits),
+                // Embeds a *different* peer id (SSRF attempt).
+                Uint8List.fromList(
+                  '/ip4/10.0.0.2/tcp/4001/p2p/QmOther'.codeUnits,
+                ),
+              ],
+            ).encode(),
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        expect(router.connectAttempts, isEmpty);
+        expect(router.sentMessages.length, equals(1));
+        final response = DialResponse.decode(router.sentMessages.first.message);
+        expect(response.status, equals(DialResponseStatus.dialError));
+      },
+    );
+
+    test('per-peer rate limit refuses repeated dialback requests', () async {
+      server.start();
+      final handler = router.handlers[autonatProtocolId]!;
+      final request = DialRequest(
+        addrs: [
+          Uint8List.fromList('/ip4/1.2.3.4/tcp/4001/p2p/QmPeer'.codeUnits),
+        ],
+      ).encode();
+      handler(NetworkPacket(srcPeerId: 'QmPeer', datagram: request));
+      await Future<void>.delayed(Duration.zero);
+      handler(NetworkPacket(srcPeerId: 'QmPeer', datagram: request));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(router.sentMessages.length, equals(2));
+      final refused = DialResponse.decode(router.sentMessages.last.message);
+      expect(refused.status, equals(DialResponseStatus.dialRefused));
+      expect(router.connectAttempts.length, equals(1));
     });
 
     test('rate limits concurrent requests', () async {
@@ -326,7 +395,11 @@ void main() {
           NetworkPacket(
             srcPeerId: 'QmPeer$i',
             datagram: DialRequest(
-              addrs: [Uint8List.fromList('/ip4/1.2.3.4/tcp/4001'.codeUnits)],
+              addrs: [
+                Uint8List.fromList(
+                  '/ip4/1.2.3.4/tcp/4001/p2p/QmPeer$i'.codeUnits,
+                ),
+              ],
             ).encode(),
           ),
         );

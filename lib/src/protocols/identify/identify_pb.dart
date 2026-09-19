@@ -113,6 +113,11 @@ class IdentifyPb {
       } else if (wireType == _wireTypeLengthDelimited) {
         final (length, lenSize) = decodeVarint(bytes, offset);
         offset += lenSize;
+        if (length < 0 || length > bytes.length - offset) {
+          throw FormatException(
+            'Field $fieldNumber length $length exceeds message bounds',
+          );
+        }
         final payload = bytes.sublist(offset, offset + length);
         offset += length;
 
