@@ -21,6 +21,8 @@ import '../platform/platform.dart';
 import '../protocols/dht/dht_routing_table_interface.dart';
 import '../utils/logger.dart';
 import '../version.dart';
+import 'dns_multiaddr_resolver_io.dart'
+    if (dart.library.html) 'dns_multiaddr_resolver_web.dart';
 import 'inbound_message_bounds.dart' as inbound;
 import 'pnet/pnet_transport_wrapper.dart';
 import 'pnet/swarm_key_loader.dart';
@@ -602,7 +604,7 @@ class Libp2pRouter implements RouterInterface {
 
     // Strip the /p2p/<id> suffix for the transport address
     final transportAddrStr = multiaddress.split('/p2p/')[0];
-    final addr = libp2p.MultiAddr(transportAddrStr);
+    final addr = libp2p.MultiAddr(await resolveDnsMultiAddr(transportAddrStr));
     final peerId = libp2p.PeerId.fromString(peerIdStr);
 
     // Snapshot the peer's previously known addresses, then seed the addrbook

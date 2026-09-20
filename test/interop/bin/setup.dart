@@ -45,7 +45,9 @@ Future<void> main() async {
     await _waitForPeer('Helia', () => helia.id());
     heliaPresent = true;
   } catch (_) {
-    stdout.writeln('Helia container not running in this interop profile, skipping.');
+    stdout.writeln(
+      'Helia container not running in this interop profile, skipping.',
+    );
   }
 
   // Attempt to bootstrap mutual connectivity. This is best-effort; if the
@@ -57,16 +59,45 @@ Future<void> main() async {
     final kuboPeerId = kuboId['ID'] as String;
     final dartIpfsPeerId = dartIpfsId['ID'] as String;
 
-    await kubo.swarmConnect('/dns4/dart_ipfs/tcp/4001/p2p/$dartIpfsPeerId');
-    await dartIpfs.swarmConnect('/dns4/kubo/tcp/4001/p2p/$kuboPeerId');
+    Future<void> tryConnect(String label, Future<dynamic> Function() connect) {
+      return connect()
+          .then((_) {
+            stdout.writeln('$label: connected.');
+          })
+          .catchError((Object e) {
+            stderr.writeln('$label: connect failed: $e');
+          });
+    }
+
+    await tryConnect(
+      'kubo->dart_ipfs',
+      () => kubo.swarmConnect('/dns4/dart_ipfs/tcp/4001/p2p/$dartIpfsPeerId'),
+    );
+    await tryConnect(
+      'dart_ipfs->kubo',
+      () => dartIpfs.swarmConnect('/dns4/kubo/tcp/4001/p2p/$kuboPeerId'),
+    );
 
     if (heliaPresent) {
       final heliaId = await helia.id();
       final heliaPeerId = heliaId['ID'] as String;
-      await kubo.swarmConnect('/dns4/helia/tcp/4001/p2p/$heliaPeerId');
-      await dartIpfs.swarmConnect('/dns4/helia/tcp/4001/p2p/$heliaPeerId');
-      await helia.swarmConnect('/dns4/kubo/tcp/4001/p2p/$kuboPeerId');
-      await helia.swarmConnect('/dns4/dart_ipfs/tcp/4001/p2p/$dartIpfsPeerId');
+      await tryConnect(
+        'kubo->helia',
+        () => kubo.swarmConnect('/dns4/helia/tcp/4001/p2p/$heliaPeerId'),
+      );
+      await tryConnect(
+        'dart_ipfs->helia',
+        () => dartIpfs.swarmConnect('/dns4/helia/tcp/4001/p2p/$heliaPeerId'),
+      );
+      await tryConnect(
+        'helia->kubo',
+        () => helia.swarmConnect('/dns4/kubo/tcp/4001/p2p/$kuboPeerId'),
+      );
+      await tryConnect(
+        'helia->dart_ipfs',
+        () =>
+            helia.swarmConnect('/dns4/dart_ipfs/tcp/4001/p2p/$dartIpfsPeerId'),
+      );
     }
     stdout.writeln('Bootstrap swarm connect attempted.');
   } catch (e) {
@@ -74,6 +105,10 @@ Future<void> main() async {
   }
 
   stdout.writeln('Interop network bootstrap complete.');
+
+  // Force-exit: keep-alive HTTP sockets from the RPC clients would otherwise
+  // hold the Dart VM's event loop open after main() returns.
+  exit(0);
 }
 
 Future<void> _waitForPeer(String name, Future<dynamic> Function() probe) async {
