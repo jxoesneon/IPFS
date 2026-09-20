@@ -1,7 +1,6 @@
 // src/utils/logger.dart
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:logging/logging.dart' as logging;
 
@@ -110,26 +109,25 @@ class Logger {
     }
   }
 
+  static IOSink? _logSink;
+
   static void _writeToLogFile(String message) {
     if (_platform == null || !_platform!.isIO) return;
 
     try {
+      // Containers set IPFS_LOG_STDOUT so log collection sees daemon logs.
+      if (Platform.environment['IPFS_LOG_STDOUT'] == '1') {
+        stdout.writeln(message);
+        return;
+      }
       // Use platform abstraction for file writing. Use a per-process log file
       // to avoid conflicts when multiple tests/nodes run in parallel.
       final logFile = Platform.environment['IPFS_LOG_FILE'] ?? 'ipfs_$pid.log';
-      _platform!.writeBytes(
-        logFile,
-        // Append mode not directly supported, so we read + write
-        // For simplicity, just log to console on web
-        _stringToBytes('$message\n'),
-      );
+      _logSink ??= File(logFile).openWrite(mode: FileMode.append);
+      _logSink!.writeln(message);
     } catch (e) {
       // Silently fail if log file write fails to avoid recursive issues or unwanted output
     }
-  }
-
-  static Uint8List _stringToBytes(String s) {
-    return Uint8List.fromList(s.codeUnits);
   }
 
   /// Log a debug message

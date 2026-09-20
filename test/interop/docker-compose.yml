@@ -16,6 +16,7 @@ services:
     environment:
       - IPFS_API_ADDR=/ip4/0.0.0.0/tcp/5001
       - IPFS_GATEWAY_ADDR=/ip4/0.0.0.0/tcp/8080
+      - IPFS_LOG_STDOUT=1
     volumes:
       - ./:/app/test/interop:ro
       - dart_ipfs_data:/data/ipfs

@@ -70,7 +70,8 @@ jobs:
           KUBO_VERSION: ${{ steps.kubo_version.outputs.KUBO_VERSION }}
         run: |
           docker compose -f test/interop/docker-compose.yml --profile helia run --rm test-runner \
-            dart test --enable-experiment=native-assets --preset interop --tags helia --reporter expanded
+            dart test --enable-experiment=native-assets --preset interop --reporter expanded \
+              test/interop/test/helia_test.dart test/interop/test/pubsub_test.dart
 
       - name: Collect container logs
         if: always()
