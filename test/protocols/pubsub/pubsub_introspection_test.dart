@@ -18,6 +18,12 @@ class _StubRouter implements RouterInterface {
   /// The handler [PubSubClient.start] registered for the `pubsub` protocol.
   void Function(NetworkPacket)? pubsubPacketHandler;
 
+  /// Connection events the client listens to for gossipsub capability
+  /// announcements; this stub never emits.
+  @override
+  Stream<ConnectionEvent> get connectionEvents =>
+      const Stream<ConnectionEvent>.empty();
+
   /// Peer IDs reported as connected by [isConnectedPeer].
   final Set<String> connected = <String>{};
 

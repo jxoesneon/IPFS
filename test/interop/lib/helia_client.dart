@@ -5,10 +5,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-class HeliaClient {
+import 'pubsub_rpc.dart';
+
+class HeliaClient with PubsubRpc {
   HeliaClient({required this.host, required this.port});
 
+  @override
   final String host;
+  @override
   final int port;
 
   Future<Map<String, dynamic>> id() async {

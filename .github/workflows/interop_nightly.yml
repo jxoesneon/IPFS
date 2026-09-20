@@ -10,10 +10,9 @@ env:
 
 jobs:
   interop-helia:
-    name: Helia Bitswap/CAR Interop
+    name: Helia Bitswap/CAR/PubSub Interop
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    continue-on-error: true
 
     steps:
       - name: Checkout repository
@@ -35,6 +34,9 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+
+      - name: Generate private-network swarm key
+        run: test/interop/generate_swarm_key.sh
 
       - name: Start interop network (with Helia)
         env:
@@ -87,7 +89,6 @@ jobs:
         if: always()
         run: |
           echo "Helia interop status: ${{ steps.helia_tests.outcome }}"
-          echo "Helia failures are allowed and do not block PRs or releases."
 
       - name: Tear down interop network
         if: always()

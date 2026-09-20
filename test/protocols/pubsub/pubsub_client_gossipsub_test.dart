@@ -181,10 +181,15 @@ void main() {
 
       expect(client.peersForTopic('t-graft'), contains(kuboPeer));
 
-      // Mesh membership: publishing now reaches the peer.
+      // Mesh membership: publishing now reaches the peer. (The empty
+      // first-contact hello RPC is filtered out by the payload matcher.)
       await client.publish('t-graft', 'hi');
       verify(
-        mockRouter.sendMessage(kuboPeer, any, protocolId: _meshsub),
+        mockRouter.sendMessage(
+          kuboPeer,
+          argThat(isNotEmpty),
+          protocolId: _meshsub,
+        ),
       ).called(1);
     });
 

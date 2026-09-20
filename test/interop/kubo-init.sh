@@ -34,4 +34,7 @@ ipfs config --json Provide.DHT.Interval '"1m0s"'
 # Enable the experimental bitswap HTTP client (if available) for additional test paths.
 ipfs config --json Experimental.BitswapHTTPClient true 2>/dev/null || true
 
+# Enable PubSub (gossipsub) so interop tests exercise real libp2p pubsub.
+ipfs config --json Pubsub.Enabled true 2>/dev/null || true
+
 # Do not start the daemon here; the Kubo entrypoint will start it.

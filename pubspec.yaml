@@ -114,6 +114,16 @@ dependency_overrides:
     path: packages/dart_ipfs_core
   dart_ipfs_quic:
     path: packages/dart_ipfs_quic
+  # ipfs_libp2p fork: yamux openStream no longer blocks on the remote's ACK.
+  # Upstream waits for the ACK before returning the stream, which deadlocks
+  # against js-yamux (Helia) — it only sends the ACK piggybacked on its
+  # first frame, emitted in response to our own first write. Overrides are
+  # not visible to package consumers; the upstream fix is tracked
+  # separately.
+  ipfs_libp2p:
+    git:
+      url: https://github.com/jxoesneon/ipfs_libp2p.git
+      ref: fcea13917d5afc686acfdf5386c83f8b6c2472c9
 
 
 

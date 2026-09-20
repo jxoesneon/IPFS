@@ -5,11 +5,23 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-class KuboClient {
+import 'pubsub_rpc.dart';
+
+class KuboClient with PubsubRpc {
   KuboClient({required this.host, required this.port});
 
+  @override
   final String host;
+  @override
   final int port;
+
+  /// Kubo requires multibase-encoded `arg` values on pubsub endpoints.
+  @override
+  bool get pubsubMultibaseArgs => true;
+
+  /// Kubo's `pubsub/pub` takes the payload as a multipart file upload.
+  @override
+  bool get pubsubMultipartPublish => true;
 
   Future<Map<String, dynamic>> id() async {
     final response = await _rpc('id');

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:mirrors' as mirrors;
 import 'dart:typed_data';
@@ -15,6 +16,7 @@ import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_pb;
 import 'package:dart_ipfs/src/protocols/bitswap/bitswap_handler.dart';
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/services/rpc/rpc_handlers.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
@@ -1590,6 +1592,134 @@ void main() {
       );
       final sections = await reader.sections().toList();
       expect(sections.length, equals(2));
+    });
+  });
+
+  group('pubsub handlers', () {
+    test('handlePubsubPublish publishes the raw body', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/pub?arg=topic-a'),
+        body: utf8.encode('hello'),
+      );
+      final response = await handlers.handlePubsubPublish(request);
+      expect(response.statusCode, equals(200));
+      verify(mockNode.publish('topic-a', 'hello')).called(1);
+    });
+
+    test('handlePubsubPublish rejects a missing topic', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/pub'),
+        body: utf8.encode('hello'),
+      );
+      final response = await handlers.handlePubsubPublish(request);
+      expect(response.statusCode, equals(400));
+      verifyNever(mockNode.publish(any, any));
+    });
+
+    test('handlePubsubPublish surfaces node errors', () async {
+      when(
+        mockNode.publish('topic-a', any),
+      ).thenThrow(Exception('not started'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/pub?arg=topic-a'),
+        body: utf8.encode('hello'),
+      );
+      final response = await handlers.handlePubsubPublish(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handlePubsubSubscribe streams NDJSON messages', () async {
+      final controller = StreamController<PubSubMessage>();
+      when(mockNode.pubsubMessages).thenAnswer((_) => controller.stream);
+
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/sub?arg=topic-a'),
+      );
+      final response = await handlers.handlePubsubSubscribe(request);
+      expect(response.statusCode, equals(200));
+      verify(mockNode.subscribe('topic-a')).called(1);
+
+      controller.add(
+        PubSubMessage(topic: 'topic-a', sender: 'QmSender', content: 'hi'),
+      );
+      controller.add(
+        PubSubMessage(topic: 'other', sender: 'QmSender', content: 'skip'),
+      );
+      final line = await response
+          .read()
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())
+          .firstWhere((l) => l.trim().isNotEmpty)
+          .timeout(const Duration(seconds: 5));
+      final json = jsonDecode(line) as Map<String, dynamic>;
+      expect(json['from'], equals('QmSender'));
+      expect(json['data'], equals('u${base64Url.encode(utf8.encode('hi'))}'));
+      expect(
+        json['topicIDs'],
+        equals(['u${base64Url.encode(utf8.encode('topic-a'))}']),
+      );
+      await controller.close();
+    });
+
+    test('handlePubsubSubscribe rejects a missing topic', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/sub'),
+      );
+      final response = await handlers.handlePubsubSubscribe(request);
+      expect(response.statusCode, equals(400));
+      verifyNever(mockNode.subscribe(any));
+    });
+
+    test('handlePubsubSubscribe surfaces subscribe errors', () async {
+      when(mockNode.subscribe('topic-a')).thenThrow(Exception('failed'));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/sub?arg=topic-a'),
+      );
+      final response = await handlers.handlePubsubSubscribe(request);
+      expect(response.statusCode, equals(500));
+    });
+
+    test('handlePubsubLs returns the topic list', () async {
+      when(mockNode.pubsubLs()).thenReturn(['a', 'b']);
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/ls'),
+      );
+      final response = await handlers.handlePubsubLs(request);
+      expect(response.statusCode, equals(200));
+      final body = json.decode(await response.readAsString());
+      expect(body['Strings'], equals(['a', 'b']));
+    });
+
+    test('handlePubsubPeers returns peers for the topic', () async {
+      when(
+        mockNode.pubsubPeers('topic-a'),
+      ).thenAnswer((_) async => ['QmA', 'QmB']);
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/peers?arg=topic-a'),
+      );
+      final response = await handlers.handlePubsubPeers(request);
+      expect(response.statusCode, equals(200));
+      final body = json.decode(await response.readAsString());
+      expect(body['Strings'], equals(['QmA', 'QmB']));
+    });
+
+    test('handlePubsubPeers without arg returns an empty list', () async {
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/peers'),
+      );
+      final response = await handlers.handlePubsubPeers(request);
+      expect(response.statusCode, equals(200));
+      final body = json.decode(await response.readAsString());
+      expect(body['Strings'], isEmpty);
     });
   });
 }

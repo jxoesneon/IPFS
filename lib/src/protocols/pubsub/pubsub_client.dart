@@ -129,6 +129,7 @@ class PubSubClient implements IPubSub {
 
   bool _isStarted = false;
   Timer? _heartbeatTimer;
+  StreamSubscription<ConnectionEvent>? _connectionEventsSub;
 
   // Constants
   static const int _targetMeshDegree = 6;
@@ -235,6 +236,14 @@ class PubSubClient implements IPubSub {
     for (final protocolId in _meshsubProtocolIds) {
       _router.registerProtocolHandler(protocolId, _processGossipSubPacket);
     }
+
+    // Proactive capability discovery: announce our subscription set to
+    // every newly connected peer over meshsub. A bare RPC frame marks us
+    // as gossipsub-capable to real libp2p peers even when the set is
+    // empty, so Kubo/Helia nodes can mesh with us without needing to
+    // speak first — inbound capability tracking alone deadlocks when the
+    // remote has nothing to announce.
+    _connectionEventsSub = _router.connectionEvents.listen(_onConnectionEvent);
 
     _heartbeatTimer = Timer.periodic(_heartbeatInterval, _heartbeat);
 
@@ -487,6 +496,8 @@ class PubSubClient implements IPubSub {
 
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
+    await _connectionEventsSub?.cancel();
+    _connectionEventsSub = null;
     _seenMessages.clear();
     _messageCache.clear();
     _scores.clear();
@@ -1031,17 +1042,6 @@ class PubSubClient implements IPubSub {
   /// Processes an incoming meshsub packet: a length-prefixed protobuf
   /// [GossipSubRpc] frame dispatched by the router per stream message.
   void _processGossipSubPacket(NetworkPacket packet) {
-    // Capability discovery: any inbound meshsub frame proves the peer
-    // speaks gossipsub. On first discovery we immediately send our current
-    // subscriptions — the "hello" RPC a persistent-stream implementation
-    // emits on stream open.
-    if (_gossipsubPeers.add(packet.srcPeerId)) {
-      while (_gossipsubPeers.length > _maxGossipsubPeers) {
-        _gossipsubPeers.remove(_gossipsubPeers.first);
-      }
-      unawaited(_sendGossipSubSubscriptions(packet.srcPeerId));
-    }
-
     final GossipSubRpc rpc;
     try {
       rpc = GossipSubRpcCodec.decode(packet.datagram);
@@ -1050,6 +1050,17 @@ class PubSubClient implements IPubSub {
         'Rejected malformed gossipsub RPC from ${packet.srcPeerId}: $e',
       );
       return;
+    }
+
+    // Capability discovery: a well-formed meshsub frame proves the peer
+    // speaks gossipsub. On first discovery we immediately send our current
+    // subscriptions — the "hello" RPC a persistent-stream implementation
+    // emits on stream open.
+    if (_gossipsubPeers.add(packet.srcPeerId)) {
+      while (_gossipsubPeers.length > _maxGossipsubPeers) {
+        _gossipsubPeers.remove(_gossipsubPeers.first);
+      }
+      unawaited(_sendGossipSubSubscriptions(packet.srcPeerId));
     }
     unawaited(
       _handleGossipSubRpc(packet.srcPeerId, rpc).catchError((
@@ -1373,10 +1384,31 @@ class PubSubClient implements IPubSub {
     await Future.wait(futures);
   }
 
+  /// Handles peer connection changes for gossipsub capability tracking.
+  ///
+  /// On connect, our current subscriptions are announced over meshsub —
+  /// the frame itself proves we speak gossipsub. On disconnect, the peer
+  /// is dropped from every gossipsub tracking structure so we stop
+  /// spending sends on a dead target.
+  void _onConnectionEvent(ConnectionEvent event) {
+    if (event.type == ConnectionEventType.connected) {
+      unawaited(_sendGossipSubSubscriptions(event.peerId));
+      return;
+    }
+    _gossipsubPeers.remove(event.peerId);
+    _mesh.remove(event.peerId);
+    _scores.remove(event.peerId);
+    _idontwant.remove(event.peerId);
+    for (final peers in _topicPeers.values) {
+      peers.remove(event.peerId);
+    }
+  }
+
   /// Sends the full current subscription set to [peerId] — used when a
-  /// peer is first discovered to speak meshsub.
+  /// peer is first discovered to speak meshsub, and proactively on every
+  /// new connection so the remote learns our capability immediately.
+  /// An empty subscription list still emits a valid (empty) RPC frame.
   Future<void> _sendGossipSubSubscriptions(String peerId) async {
-    if (_subscriptions.isEmpty) return;
     await _sendGossipSubRpc(
       peerId,
       GossipSubRpc(
@@ -1392,9 +1424,10 @@ class PubSubClient implements IPubSub {
   /// Failures are logged, never thrown — pubsub delivery is best-effort.
   Future<void> _sendGossipSubRpc(String peerId, GossipSubRpc rpc) async {
     try {
+      final encoded = GossipSubRpcCodec.encode(rpc);
       await _router.sendMessage(
         peerId,
-        GossipSubRpcCodec.encode(rpc),
+        encoded,
         protocolId: _meshsubPublishProtocol,
       );
     } catch (e) {

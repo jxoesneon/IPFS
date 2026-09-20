@@ -149,6 +149,12 @@ class RPCServer implements ILifecycle {
     _router.post('/api/v0/block/put', _handlers.handleBlockPut);
     _router.post('/api/v0/block/stat', _handlers.handleBlockStat);
 
+    // PubSub endpoints (Kubo-compatible wire shape)
+    _router.post('/api/v0/pubsub/pub', _handlers.handlePubsubPublish);
+    _router.post('/api/v0/pubsub/sub', _handlers.handlePubsubSubscribe);
+    _router.post('/api/v0/pubsub/ls', _handlers.handlePubsubLs);
+    _router.post('/api/v0/pubsub/peers', _handlers.handlePubsubPeers);
+
     _setupMetricsRoute();
   }
 

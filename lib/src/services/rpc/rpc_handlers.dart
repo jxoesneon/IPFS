@@ -1,4 +1,5 @@
 // lib/src/services/rpc/rpc_handlers.dart
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -15,6 +16,7 @@ import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/ipld/data_model.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
     as unixfs_pb;
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:dart_ipfs/src/services/rpc/mfs_handlers.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/logger.dart';
@@ -49,6 +51,10 @@ class RPCHandlers {
 
   /// Maximum buffered request body for [handleDagPut] — a single DAG node.
   static const int _maxDagPutBytes = 8 * 1024 * 1024;
+
+  /// Maximum buffered request body for [handlePubsubPublish] — a pubsub
+  /// payload is a single message, so 1 MiB is generous.
+  static const int _maxPubsubPubBytes = 1024 * 1024;
 
   /// Traversal bounds for DAG export, matching the gateway CAR export
   /// conventions (`_defaultMaxCarDepth`/`_defaultMaxCarBlocks` in
@@ -1150,6 +1156,106 @@ class RPCHandlers {
       json.encode(data),
       headers: {'Content-Type': 'application/json'},
     );
+  }
+
+  /// POST /api/v0/pubsub/pub - Publish a message to a pubsub topic.
+  ///
+  /// Kubo-compatible: the topic is the `arg` query parameter and the request
+  /// body is the raw message payload. Returns an empty JSON object on
+  /// success.
+  Future<Response> handlePubsubPublish(Request request) async {
+    final topic = request.url.queryParameters['arg'];
+    if (topic == null || topic.isEmpty) {
+      return _errorResponse('Missing or empty arg (topic)', code: 400);
+    }
+
+    try {
+      final body = await _readBodyBounded(request, _maxPubsubPubBytes);
+      await node.publish(topic, utf8.decode(body, allowMalformed: true));
+      return _jsonResponse(const <String, dynamic>{});
+    } on ArgumentError catch (e) {
+      return _errorResponse(e.message.toString(), code: 400);
+    } catch (e, st) {
+      _logger.error('pubsub/pub failed for topic $topic', e, st);
+      return _errorResponse('Failed to publish: $e');
+    }
+  }
+
+  /// POST /api/v0/pubsub/sub - Subscribe to a topic and stream messages.
+  ///
+  /// Kubo-compatible: subscribes the node to the `arg` topic, then holds the
+  /// response open and emits one NDJSON object per received message with
+  /// `from`, `data`, `seqno`, and `topicIDs` fields — binary fields are
+  /// multibase base64url encoded (`u`-prefixed). The stream ends when the
+  /// client disconnects.
+  Future<Response> handlePubsubSubscribe(Request request) async {
+    final topic = request.url.queryParameters['arg'];
+    if (topic == null || topic.isEmpty) {
+      return _errorResponse('Missing or empty arg (topic)', code: 400);
+    }
+
+    try {
+      await node.subscribe(topic);
+    } catch (e, st) {
+      _logger.error('pubsub/sub failed for topic $topic', e, st);
+      return _errorResponse('Failed to subscribe: $e');
+    }
+
+    final controller = StreamController<List<int>>();
+    final subscription = node.pubsubMessages
+        .where((message) => message.topic == topic)
+        .listen((message) {
+          if (controller.isClosed) return;
+          controller.add(
+            utf8.encode('${jsonEncode(_encodePubsubMessage(message))}\n'),
+          );
+        }, onError: controller.addError);
+    controller.onCancel = subscription.cancel;
+
+    return Response.ok(
+      controller.stream,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Chunked-Output': '1',
+        'Trailer': 'X-Stream-Error',
+      },
+    );
+  }
+
+  /// POST /api/v0/pubsub/ls - List subscribed topics.
+  Future<Response> handlePubsubLs(Request request) async {
+    try {
+      return _jsonResponse({'Strings': node.pubsubLs()});
+    } catch (e, st) {
+      _logger.error('pubsub/ls failed', e, st);
+      return _errorResponse('Failed to list subscriptions');
+    }
+  }
+
+  /// POST /api/v0/pubsub/peers - List peers subscribed to a topic.
+  Future<Response> handlePubsubPeers(Request request) async {
+    final topic = request.url.queryParameters['arg'];
+    try {
+      final peers = topic == null || topic.isEmpty
+          ? <String>[]
+          : await node.pubsubPeers(topic);
+      return _jsonResponse({'Strings': peers});
+    } catch (e, st) {
+      _logger.error('pubsub/peers failed', e, st);
+      return _errorResponse('Failed to list pubsub peers');
+    }
+  }
+
+  /// Encodes a [PubSubMessage] in the Kubo `pubsub/sub` wire shape:
+  /// binary fields are multibase base64url (`u`-prefixed), `from` is the
+  /// sender's string peer ID, and `seqno` is empty (not tracked locally).
+  Map<String, dynamic> _encodePubsubMessage(PubSubMessage message) {
+    return {
+      'from': message.sender,
+      'data': 'u${base64Url.encode(utf8.encode(message.content))}',
+      'seqno': 'u',
+      'topicIDs': ['u${base64Url.encode(utf8.encode(message.topic))}'],
+    };
   }
 
   Response _errorResponse(String message, {int code = 500}) {
