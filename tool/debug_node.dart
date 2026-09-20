@@ -28,6 +28,8 @@ Future<void> main(List<String> args) async {
     'bootstrapPeers': <String>[],
   };
   json['dataPath'] = repo.path;
+  const swarmKey = String.fromEnvironment('SWARM_KEY');
+  if (swarmKey.isNotEmpty) json['swarmKeyPath'] = swarmKey;
   final node = await IPFSNode.create(IPFSConfig.fromJson(json));
   await node.start();
   stderr.writeln('PEER_ID=${node.peerId}');

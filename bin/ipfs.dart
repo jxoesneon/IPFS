@@ -128,6 +128,11 @@ class DaemonCommand extends IpfsCommand {
     networkJson['listenAddresses'] = <String>[swarmAddr];
     configJson['network'] = networkJson;
 
+    final logLevelOverride = Platform.environment['IPFS_LOG_LEVEL'];
+    if (logLevelOverride != null && logLevelOverride.isNotEmpty) {
+      configJson['logLevel'] = logLevelOverride;
+    }
+
     final mergedConfig = IPFSConfig.fromJson(configJson);
 
     print('Starting dart_ipfs daemon v$packageVersion');
