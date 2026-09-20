@@ -254,9 +254,8 @@ app.get("/api/v0/dag/export", async (req, res) => {
   try {
     const helia = await getHelia();
     const c = car(helia);
-    const writer = await c.export(CID.parse(cidStr));
     res.setHeader("Content-Type", "application/vnd.ipld.car");
-    for await (const chunk of writer) {
+    for await (const chunk of c.stream(CID.parse(cidStr))) {
       res.write(chunk);
     }
     res.end();
