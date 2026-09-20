@@ -57,6 +57,7 @@ jobs:
             dart pub get --offline
 
       - name: Wait for peers and bootstrap connectivity
+        timeout-minutes: 8
         env:
           KUBO_VERSION: ${{ steps.kubo_version.outputs.KUBO_VERSION }}
         run: |

@@ -225,10 +225,10 @@ class DartIpfsClient with PubsubRpc {
   Future<String> _rpc(String command, {String? arg}) async {
     final query = arg != null ? {'arg': arg} : null;
     final uri = Uri.http('$host:$port', '/api/v0/$command', query);
-    final client = HttpClient();
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 10);
     try {
       final request = await client.postUrl(uri);
-      final response = await request.close();
+      final response = await request.close().timeout(const Duration(seconds: 60));
       final body = await response.transform(utf8.decoder).join();
       if (response.statusCode != 200) {
         throw HttpException(
