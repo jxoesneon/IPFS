@@ -825,6 +825,11 @@ class Libp2pRouter implements RouterInterface {
           await stream.write(
             Uint8List.fromList([...lengthPrefix, ...response]),
           );
+          if (_respondFirstProtocols.contains(protocolId)) {
+            // Respond-first peers (e.g. go-libp2p identify) read delimited
+            // messages until EOF; without FIN their read hangs to timeout.
+            await stream.closeWrite();
+          }
         } catch (e) {
           _logger.error('Failed to send response to $remoteIdStr', e);
         }

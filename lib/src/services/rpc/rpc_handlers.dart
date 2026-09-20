@@ -1164,10 +1164,11 @@ class RPCHandlers {
   /// body is the raw message payload. Returns an empty JSON object on
   /// success.
   Future<Response> handlePubsubPublish(Request request) async {
-    final topic = request.url.queryParameters['arg'];
-    if (topic == null || topic.isEmpty) {
+    final arg = request.url.queryParameters['arg'];
+    if (arg == null || arg.isEmpty) {
       return _errorResponse('Missing or empty arg (topic)', code: 400);
     }
+    final topic = _decodeTopicArg(arg);
 
     try {
       final body = await _readBodyBounded(request, _maxPubsubPubBytes);
@@ -1189,10 +1190,11 @@ class RPCHandlers {
   /// multibase base64url encoded (`u`-prefixed). The stream ends when the
   /// client disconnects.
   Future<Response> handlePubsubSubscribe(Request request) async {
-    final topic = request.url.queryParameters['arg'];
-    if (topic == null || topic.isEmpty) {
+    final arg = request.url.queryParameters['arg'];
+    if (arg == null || arg.isEmpty) {
       return _errorResponse('Missing or empty arg (topic)', code: 400);
     }
+    final topic = _decodeTopicArg(arg);
 
     try {
       await node.subscribe(topic);
@@ -1234,16 +1236,32 @@ class RPCHandlers {
 
   /// POST /api/v0/pubsub/peers - List peers subscribed to a topic.
   Future<Response> handlePubsubPeers(Request request) async {
-    final topic = request.url.queryParameters['arg'];
+    final arg = request.url.queryParameters['arg'];
     try {
-      final peers = topic == null || topic.isEmpty
+      final peers = arg == null || arg.isEmpty
           ? <String>[]
-          : await node.pubsubPeers(topic);
+          : await node.pubsubPeers(_decodeTopicArg(arg));
       return _jsonResponse({'Strings': peers});
     } catch (e, st) {
       _logger.error('pubsub/peers failed', e, st);
       return _errorResponse('Failed to list pubsub peers');
     }
+  }
+
+  /// Decodes a pubsub `arg` topic. Kubo-style clients send topics as
+  /// multibase base64url (`u`-prefixed, unpadded); a `u` value that decodes
+  /// cleanly is treated as multibase, anything else is used literally.
+  static String _decodeTopicArg(String arg) {
+    if (arg.length > 1 && arg.startsWith('u')) {
+      try {
+        return utf8.decode(base64Url.decode(base64Url.normalize(
+          arg.substring(1),
+        )));
+      } catch (_) {
+        // Not a valid multibase value; treat as a literal topic name.
+      }
+    }
+    return arg;
   }
 
   /// Encodes a [PubSubMessage] in the Kubo `pubsub/sub` wire shape:
@@ -1252,9 +1270,12 @@ class RPCHandlers {
   Map<String, dynamic> _encodePubsubMessage(PubSubMessage message) {
     return {
       'from': message.sender,
-      'data': 'u${base64Url.encode(utf8.encode(message.content))}',
+      'data':
+          'u${base64Url.encode(utf8.encode(message.content)).replaceAll('=', '')}',
       'seqno': 'u',
-      'topicIDs': ['u${base64Url.encode(utf8.encode(message.topic))}'],
+      'topicIDs': [
+        'u${base64Url.encode(utf8.encode(message.topic)).replaceAll('=', '')}'
+      ],
     };
   }
 

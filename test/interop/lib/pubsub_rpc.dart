@@ -39,8 +39,9 @@ class PubsubRpcMessage {
 }
 
 /// Multibase base64url (`u`-prefix) encode — Kubo's `arg` wire format.
+/// The `u` multibase code is unpadded, so '=' padding must be stripped.
 String encodeMultibaseBase64Url(List<int> bytes) =>
-    'u${base64Url.encode(bytes)}';
+    'u${base64Url.encode(bytes).replaceAll('=', '')}';
 
 /// Decodes a multibase base64url (`u`-prefixed) value; returns the raw
 /// bytes for empty payloads.

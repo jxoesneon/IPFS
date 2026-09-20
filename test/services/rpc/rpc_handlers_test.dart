@@ -1631,6 +1631,34 @@ void main() {
       expect(response.statusCode, equals(500));
     });
 
+    test('handlePubsubSubscribe decodes multibase base64url arg', () async {
+      final controller = StreamController<PubSubMessage>();
+      when(mockNode.pubsubMessages).thenAnswer((_) => controller.stream);
+
+      // Kubo-style clients send the topic as `u`-prefixed unpadded
+      // base64url; 'topic-a' -> 'dG9waWMtYQ'.
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/sub?arg=udG9waWMtYQ'),
+      );
+      final response = await handlers.handlePubsubSubscribe(request);
+      expect(response.statusCode, equals(200));
+      verify(mockNode.subscribe('topic-a')).called(1);
+      await controller.close();
+    });
+
+    test('handlePubsubPublish decodes multibase base64url arg', () async {
+      when(mockNode.publish('topic-a', any)).thenAnswer((_) async {});
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/pub?arg=udG9waWMtYQ'),
+        body: utf8.encode('hello'),
+      );
+      final response = await handlers.handlePubsubPublish(request);
+      expect(response.statusCode, equals(200));
+      verify(mockNode.publish('topic-a', 'hello')).called(1);
+    });
+
     test('handlePubsubSubscribe streams NDJSON messages', () async {
       final controller = StreamController<PubSubMessage>();
       when(mockNode.pubsubMessages).thenAnswer((_) => controller.stream);
@@ -1657,10 +1685,18 @@ void main() {
           .timeout(const Duration(seconds: 5));
       final json = jsonDecode(line) as Map<String, dynamic>;
       expect(json['from'], equals('QmSender'));
-      expect(json['data'], equals('u${base64Url.encode(utf8.encode('hi'))}'));
+      // Multibase `u` (base64url) is unpadded per spec.
+      expect(
+        json['data'],
+        equals(
+          'u${base64Url.encode(utf8.encode('hi')).replaceAll('=', '')}',
+        ),
+      );
       expect(
         json['topicIDs'],
-        equals(['u${base64Url.encode(utf8.encode('topic-a'))}']),
+        equals([
+          'u${base64Url.encode(utf8.encode('topic-a')).replaceAll('=', '')}'
+        ]),
       );
       await controller.close();
     });

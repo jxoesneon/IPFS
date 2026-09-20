@@ -5,8 +5,14 @@ import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/config/network_config.dart';
+import 'package:dart_ipfs/src/protocols/identify/identify_pb.dart';
 import 'package:dart_ipfs/src/transport/libp2p_router.dart';
-import 'package:dart_ipfs/src/transport/router_interface.dart';
+import 'package:ipfs_libp2p/config/config.dart' as config;
+import 'package:ipfs_libp2p/core/crypto/ed25519.dart' as crypto;
+import 'package:ipfs_libp2p/dart_libp2p.dart' as libp2p;
+import 'package:ipfs_libp2p/p2p/host/resource_manager/limiter.dart';
+import 'package:ipfs_libp2p/p2p/host/resource_manager/resource_manager_impl.dart';
+import 'package:ipfs_libp2p/p2p/transport/tcp_transport.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -119,5 +125,75 @@ void main() {
       final received = await completer.future.timeout(Duration(seconds: 5));
       expect(received, equals(messageContent));
     }, timeout: Timeout(Duration(seconds: 30)));
+
+    test('respond-first handler sends FIN after response', () async {
+      await routerA.start();
+      final addrA = getLocalConnectAddress(routerA);
+
+      routerA.registerProtocolHandler('/ipfs/id/1.0.0', (packet) {
+        packet.responder?.call(
+          IdentifyPb(
+            protocolVersion: 'ipfs/0.1.0',
+            agentVersion: 'dart_ipfs/test',
+            protocols: const ['/ipfs/id/1.0.0'],
+          ).encode(),
+        );
+      });
+
+      // A raw libp2p client emulates go-libp2p's identify reader, which
+      // consumes delimited messages until EOF. If the responder never sends
+      // FIN, the read hangs until the deadline.
+      final keyPair = await crypto.generateEd25519KeyPair();
+      final host = await config.Libp2p.new_([
+        config.Libp2p.transport(
+          TCPTransport(
+            resourceManager: ResourceManagerImpl(limiter: FixedLimiter()),
+          ),
+        ),
+        config.Libp2p.listenAddrs([libp2p.MultiAddr('/ip4/0.0.0.0/tcp/0')]),
+        config.Libp2p.identity(keyPair),
+      ]);
+      await host.start();
+
+      try {
+        final maddr = libp2p.MultiAddr(addrA);
+        final peerId = libp2p.PeerId.fromString(addrA.split('/p2p/').last);
+        await host.peerStore.addrBook.addAddrs(
+          peerId,
+          [maddr],
+          const Duration(minutes: 5),
+        );
+        await host.connect(libp2p.AddrInfo(peerId, [maddr]));
+
+        final stream =
+            await host.newStream(peerId, ['/ipfs/id/1.0.0'], libp2p.Context());
+
+        final buf = <int>[];
+        var sawEof = false;
+        try {
+          while (true) {
+            final chunk = await stream
+                .read(4096)
+                .timeout(const Duration(seconds: 3));
+            if (chunk.isEmpty) {
+              sawEof = true;
+              break;
+            }
+            buf.addAll(chunk);
+          }
+        } on TimeoutException {
+          sawEof = false;
+        }
+
+        expect(buf, isNotEmpty);
+        expect(
+          sawEof,
+          isTrue,
+          reason: 'Responder must closeWrite so read-until-EOF peers finish',
+        );
+      } finally {
+        await host.close();
+      }
+    }, timeout: Timeout(Duration(seconds: 60)));
   });
 }
