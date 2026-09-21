@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
+import 'package:dart_ipfs/src/core/errors/node_errors.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/protocol_manager.dart';
 import 'package:dart_ipfs/src/core/di/service_container.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/pubsub_handler.dart';
@@ -77,6 +80,21 @@ void main() {
     test('publish throws if PubSubHandler not registered', () async {
       manager = ProtocolManager();
       expect(() => manager.publish('topic', 'msg'), throwsA(isA<StateError>()));
+    });
+
+    test('publishData delegates raw bytes to PubSubHandler', () async {
+      manager = ProtocolManager(pubSubHandler: mockPubSubHandler);
+      final data = Uint8List.fromList([0, 159, 255]);
+      await manager.publishData('topic1', data);
+      verify(mockPubSubHandler.publishData('topic1', data)).called(1);
+    });
+
+    test('publishData throws if PubSubHandler not registered', () async {
+      manager = ProtocolManager();
+      expect(
+        () => manager.publishData('topic', Uint8List(0)),
+        throwsA(isA<ComponentError>()),
+      );
     });
 
     test('resolveIPNS throws if DHTHandler not registered', () async {

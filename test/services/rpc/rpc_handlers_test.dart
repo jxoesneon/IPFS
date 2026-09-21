@@ -1771,6 +1771,77 @@ void main() {
       expect(response.statusCode, equals(500));
     });
 
+    test(
+      'handlePubsubSubscribe unsubscribes when the client disconnects',
+      () async {
+        final controller = StreamController<PubSubMessage>();
+        when(mockNode.pubsubMessages).thenAnswer((_) => controller.stream);
+        when(mockNode.pubsubLs()).thenReturn(const []);
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/pubsub/sub?arg=topic-a'),
+        );
+        final response = await handlers.handlePubsubSubscribe(request);
+        expect(response.statusCode, equals(200));
+        verify(mockNode.subscribe('topic-a')).called(1);
+
+        // Cancelling the response body mimics the HTTP client going away.
+        await response.read().listen((_) {}).cancel();
+        verify(mockNode.unsubscribe('topic-a')).called(1);
+        await controller.close();
+      },
+    );
+
+    test(
+      'handlePubsubSubscribe keeps the topic while a subscriber remains',
+      () async {
+        // Broadcast, matching PubSubClient.messagesStream — the node serves
+        // concurrent pubsub/sub consumers.
+        final controller = StreamController<PubSubMessage>.broadcast();
+        when(mockNode.pubsubMessages).thenAnswer((_) => controller.stream);
+        when(mockNode.pubsubLs()).thenReturn(const []);
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/pubsub/sub?arg=topic-a'),
+        );
+        final first = await handlers.handlePubsubSubscribe(request);
+        final second = await handlers.handlePubsubSubscribe(request);
+        verify(mockNode.subscribe('topic-a')).called(2);
+
+        await first.read().listen((_) {}).cancel();
+        verifyNever(mockNode.unsubscribe('topic-a'));
+
+        await second.read().listen((_) {}).cancel();
+        verify(mockNode.unsubscribe('topic-a')).called(1);
+        await controller.close();
+      },
+    );
+
+    test(
+      'handlePubsubSubscribe never unsubscribes a pre-existing topic',
+      () async {
+        final controller = StreamController<PubSubMessage>();
+        when(mockNode.pubsubMessages).thenAnswer((_) => controller.stream);
+        // The node already owns this subscription (e.g. a library caller
+        // subscribed before the RPC client arrived) — the RPC surface must
+        // not tear it down on disconnect.
+        when(mockNode.pubsubLs()).thenReturn(const ['topic-a']);
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/pubsub/sub?arg=topic-a'),
+        );
+        final response = await handlers.handlePubsubSubscribe(request);
+        expect(response.statusCode, equals(200));
+
+        await response.read().listen((_) {}).cancel();
+        verifyNever(mockNode.unsubscribe('topic-a'));
+        await controller.close();
+      },
+    );
+
     test('handlePubsubLs returns the topic list', () async {
       when(mockNode.pubsubLs()).thenReturn(['a', 'b']);
       final request = Request(

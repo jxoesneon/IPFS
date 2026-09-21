@@ -188,6 +188,9 @@ bool _looksExecutable(String line) {
 
 bool _isCoverable(String path, String prefix) {
   final p = path.replaceAll('\\', '/');
+  // protoc output is machine-generated and already excluded from analysis —
+  // gating it would flag generated codec branches no one can author tests for.
+  if (p.contains('/proto/generated/')) return false;
   // With --prefix, only files inside that package are gated (each package
   // enforces coverage of its own lib/ against its own coverage run).
   if (prefix.isNotEmpty) {

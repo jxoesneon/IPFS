@@ -281,6 +281,28 @@ void main() {
 
       await handler.stop();
     });
+
+    test('named keys fail fast when no security manager is wired', () async {
+      // `self` never needs the keystore, but a named key has no signing
+      // source without a SecurityManager — the error must be immediate,
+      // not a hang or a null-deref deeper in the publish path.
+      final handler = IPNSHandler(
+        IPFSConfig(offline: true),
+        null,
+        _StubDHTHandler(Value(Uint8List(0))),
+        null,
+        await Ed25519().newKeyPair(),
+      );
+      await handler.start();
+
+      final block = await Block.fromData(Uint8List.fromList([1]));
+      await expectLater(
+        handler.publish(block.cid.encode(), keyName: 'other'),
+        throwsA(isA<StateError>()),
+      );
+
+      await handler.stop();
+    });
   });
 }
 

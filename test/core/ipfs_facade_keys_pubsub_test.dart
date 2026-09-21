@@ -18,6 +18,7 @@ import 'package:test/test.dart';
 class _StubPubSubHandler extends Fake implements PubSubHandler {
   final Set<String> _topics = {};
   final Map<String, Set<String>> peers = {};
+  final List<Uint8List> publishedData = [];
 
   @override
   List<String> get subscribedTopics => _topics.toList();
@@ -28,6 +29,11 @@ class _StubPubSubHandler extends Fake implements PubSubHandler {
   @override
   Future<void> subscribe(String topic) async {
     _topics.add(topic);
+  }
+
+  @override
+  Future<void> publishData(String topic, Uint8List data) async {
+    publishedData.add(data);
   }
 }
 
@@ -210,6 +216,13 @@ void main() {
         await ipfs.pubsubPeers('t'),
         containsAll(<String>['peer-a', 'peer-b']),
       );
+    });
+
+    test('publishData forwards raw bytes to the handler', () async {
+      final payload = Uint8List.fromList([0, 159, 255]);
+      await ipfs.publishData('t', payload);
+      expect(pubsub.publishedData, hasLength(1));
+      expect(pubsub.publishedData.single, equals(payload));
     });
   });
 

@@ -306,6 +306,31 @@ void main() {
       ).called(1);
     });
 
+    test('addProvider retries on WAN kad when the LAN send fails', () async {
+      await client.initialize();
+      final otherPeer = PeerId.fromBase58(
+        'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+      );
+      await client.kademliaRoutingTable.addPeer(otherPeer, otherPeer);
+
+      // Peers on public networks commonly lack the LAN variant; the send
+      // must fall through to /ipfs/kad/1.0.0 rather than fail outright.
+      when(
+        mockRouter.sendMessage(any, any, protocolId: DHTClient.protocolDhtLan),
+      ).thenThrow(Exception('lan kad not negotiated'));
+      when(
+        mockRouter.sendMessage(any, any, protocolId: DHTClient.protocolDht),
+      ).thenAnswer((_) async {});
+
+      await client.addProvider(
+        'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+        'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+      );
+      verify(
+        mockRouter.sendMessage(any, any, protocolId: DHTClient.protocolDht),
+      ).called(1);
+    });
+
     test('checkValueOnPeer success', () async {
       await client.initialize();
       final otherPeer = PeerId.fromBase58(
@@ -317,6 +342,30 @@ void main() {
         ..record = (dht_proto.Record()..value = Uint8List.fromList([1, 2, 3]));
 
       _mockRawResponse(mockRouter, responseMsg);
+
+      final result = await client.checkValueOnPeer(otherPeer, Uint8List(32));
+      expect(result, isTrue);
+    });
+
+    test('checkValueOnPeer unwraps a legacy DHTEnvelope response', () async {
+      await client.initialize();
+      final otherPeer = PeerId.fromBase58(
+        'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+      );
+
+      // Legacy-lineage peers still wrap same-stream responses in a
+      // DHTEnvelope; when the inner payload verifies as kad it must be
+      // unwrapped, not fed raw to the kad parser.
+      final responseMsg = kad.Message()
+        ..type = kad.Message_MessageType.GET_VALUE
+        ..record = (dht_proto.Record()..value = Uint8List.fromList([1, 2, 3]));
+      final envelopeBytes = DHTEnvelope(
+        requestId: 'legacy-1',
+        payload: responseMsg.writeToBuffer(),
+      ).toBytes();
+      when(
+        mockRouter.sendRequest(any, any, any),
+      ).thenAnswer((_) async => envelopeBytes);
 
       final result = await client.checkValueOnPeer(otherPeer, Uint8List(32));
       expect(result, isTrue);
@@ -757,6 +806,39 @@ void main() {
         ),
       ).called(1);
     });
+
+    test(
+      'bootstrap FIND_NODE retries WAN kad when the LAN send fails',
+      () async {
+        final controller = StreamController<ConnectionEvent>();
+        addTearDown(controller.close);
+        when(mockRouter.connectionEvents).thenAnswer((_) => controller.stream);
+
+        const peerStr = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
+        when(
+          mockRouter.sendMessage(
+            peerStr,
+            any,
+            protocolId: DHTClient.protocolDhtLan,
+          ),
+        ).thenThrow(Exception('lan kad not negotiated'));
+
+        await client.initialize();
+        controller.add(
+          ConnectionEvent(type: ConnectionEventType.connected, peerId: peerStr),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        // The LAN failure is logged and the WAN variant attempted.
+        verify(
+          mockRouter.sendMessage(
+            peerStr,
+            any,
+            protocolId: DHTClient.protocolDht,
+          ),
+        ).called(1);
+      },
+    );
   });
 
   group('DHTClient packet handlers', () {
@@ -852,6 +934,58 @@ void main() {
         verify(mockDhtHandler.handleProvideRequest(any, any)).called(1);
       },
     );
+
+    test('responder-less replies degrade to a fresh kad stream and log '
+        'send failures without crashing', () async {
+      await client.initialize();
+      final capturedHandler =
+          verify(
+                mockRouter.registerProtocolHandler(any, captureAny),
+              ).captured.last
+              as void Function(NetworkPacket);
+
+      when(
+        mockStorage.get(any),
+      ).thenAnswer((_) async => Uint8List.fromList([7, 8, 9]));
+      // Both kad variants reject the outbound response stream — the
+      // failure is fire-and-forget, so it must be swallowed by catchError
+      // rather than surface as an unhandled async error.
+      when(
+        mockRouter.sendMessage(any, any, protocolId: anyNamed('protocolId')),
+      ).thenThrow(Exception('kad stream refused'));
+
+      final datagram =
+          (kad.Message()
+                ..type = kad.Message_MessageType.GET_VALUE
+                ..key = Uint8List.fromList([0xFF, 0x01, 0x02]))
+              .writeToBuffer();
+
+      capturedHandler(
+        NetworkPacket(
+          srcPeerId: 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+          datagram: datagram,
+          // No responder: simulates a transport that delivers datagrams
+          // without an open reply stream.
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+
+      // The response was attempted on a fresh stream (LAN then WAN).
+      verify(
+        mockRouter.sendMessage(
+          'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+          any,
+          protocolId: DHTClient.protocolDhtLan,
+        ),
+      ).called(1);
+      verify(
+        mockRouter.sendMessage(
+          'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v',
+          any,
+          protocolId: DHTClient.protocolDht,
+        ),
+      ).called(1);
+    });
   });
 
   group('DHTClient PUT_VALUE validation', () {
@@ -1106,6 +1240,26 @@ void main() {
           any,
           protocolId: DHTClient.protocolDhtLan,
         ),
+      ).called(1);
+    });
+
+    test('storeValueRaw retries WAN kad when the LAN send fails', () async {
+      await client.initialize();
+      const peerStr = 'QmP8j68w7u6vYpx4BNDPqVvR2Y6a8VvX8v8v8v8v8v8v';
+      when(mockRouter.connectedPeers).thenReturn({peerStr});
+      when(
+        mockRouter.sendMessage(
+          peerStr,
+          any,
+          protocolId: DHTClient.protocolDhtLan,
+        ),
+      ).thenThrow(Exception('lan kad not negotiated'));
+
+      final result = await client.storeValueRaw(Uint8List(32), Uint8List(10));
+
+      expect(result, isTrue);
+      verify(
+        mockRouter.sendMessage(peerStr, any, protocolId: DHTClient.protocolDht),
       ).called(1);
     });
 

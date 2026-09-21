@@ -116,8 +116,10 @@ class Logger {
 
     try {
       // Containers set IPFS_LOG_STDOUT so log collection sees daemon logs.
+      // Env vars can't be mutated in-process, so this branch is exercised
+      // only by the daemon e2e smoke tests, not the VM unit suite.
       if (Platform.environment['IPFS_LOG_STDOUT'] == '1') {
-        stdout.writeln(message);
+        stdout.writeln(message); // coverage:ignore-line
         return;
       }
       // Use platform abstraction for file writing. Use a per-process log file

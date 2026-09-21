@@ -237,7 +237,9 @@ class ContentManager implements ILifecycle {
         url = customUrl;
         break;
       default:
-        url = _bitswapConfig.publicGatewayUrl;
+        // Unreachable via get(): GatewayMode.internal is routed to the
+        // blockstore before this helper is called. Defensive fallback.
+        url = _bitswapConfig.publicGatewayUrl; // coverage:ignore-line
     }
     _logger.debug('Retrieving via Gateway ($url): $cid');
     final bytes = await _httpGatewayClient.get(cid, baseUrl: url);

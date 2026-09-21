@@ -7,6 +7,7 @@
 // rejection, dedup, IHAVE/IWANT exchange, GRAFT/PRUNE, IDONTWANT, and the
 // dual-stack publish path (protobuf to meshsub peers, JSON to the rest).
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:mirrors' as mirrors;
 import 'dart:typed_data';
@@ -222,6 +223,70 @@ void main() {
         throwsA(isA<PubSubDeliveryError>()),
       );
     });
+
+    test('a peer disconnect clears its gossipsub and topic state', () async {
+      final events = StreamController<ConnectionEvent>();
+      addTearDown(events.close);
+      when(mockRouter.connectionEvents).thenAnswer((_) => events.stream);
+      await client.start();
+      final handler = handlerFor(_meshsub);
+
+      deliverGossipSub(
+        handler,
+        kuboPeer,
+        GossipSubRpc(
+          subscriptions: [GossipSubSubOpts(subscribe: true, topicId: 't')],
+          control: GossipSubControl(graft: [GossipSubGraft(topicId: 't')]),
+        ),
+      );
+      await flush();
+      expect(client.peersForTopic('t'), contains(kuboPeer));
+
+      events.add(
+        ConnectionEvent(
+          type: ConnectionEventType.disconnected,
+          peerId: kuboPeer,
+        ),
+      );
+      await flush();
+
+      // Mesh, gossipsub-capability, and topic membership must all forget
+      // the peer — otherwise publishes keep targeting a dead connection.
+      expect(client.peersForTopic('t'), isNot(contains(kuboPeer)));
+    });
+
+    test(
+      'drops publishes sourced from a peer we are not connected to',
+      () async {
+        await client.start();
+        final handler = handlerFor(_meshsub);
+        when(mockRouter.isConnectedPeer(kuboPeer)).thenReturn(false);
+
+        var delivered = false;
+        final sub = client.messagesStream.listen((_) => delivered = true);
+        addTearDown(sub.cancel);
+
+        deliverGossipSub(
+          handler,
+          kuboPeer,
+          GossipSubRpc(
+            publish: [
+              GossipSubMessage(
+                from: Uint8List.fromList([9, 9]),
+                data: Uint8List.fromList(utf8.encode('spoofed')),
+                seqno: _seqno(1),
+                topic: 't',
+              ),
+            ],
+          ),
+        );
+        await flush();
+
+        // A replayed/forged datagram from an address we hold no connection
+        // to must never reach subscribers.
+        expect(delivered, isFalse);
+      },
+    );
 
     test('IHAVE triggers IWANT for unseen message IDs on meshsub', () async {
       await client.start();
