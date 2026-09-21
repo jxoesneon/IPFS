@@ -9,6 +9,7 @@ import '../config/ipfs_config.dart';
 import '../data_structures/blockstore.dart';
 import '../interfaces/i_lifecycle.dart';
 import 'network_metrics.dart';
+import 'otel_exporter.dart';
 
 /// Collects and manages metrics about IPFS node operations.
 ///
@@ -24,6 +25,13 @@ import 'network_metrics.dart';
 /// Collection is configurable via [IPFSConfig.metrics] and runs
 /// periodically when enabled. Metrics are exposed in Prometheus text
 /// format via [getPrometheusMetrics].
+///
+/// When [MetricsConfig.enableOpenTelemetry] is set, metrics are additionally
+/// pushed to the configured OTLP endpoint every
+/// [MetricsConfig.exportIntervalSeconds] and once more on [stop]. The two
+/// export paths are independent; either or both may be enabled. Only metrics
+/// are bridged — this repository has no tracing abstraction, so no spans are
+/// exported.
 class MetricsCollector implements ILifecycle {
   /// Creates a new metrics collector with the given [_config].
   ///
@@ -58,6 +66,10 @@ class MetricsCollector implements ILifecycle {
   BlockStore? _blockStore;
   int Function()? _routingTableProvider;
   Timer? _collectionTimer;
+
+  // Optional OTLP/OpenTelemetry export sink (disabled by default).
+  Timer? _otelExportTimer;
+  OTelExporter? _otelExporter;
 
   final _networkMetrics = NetworkMetrics();
 
@@ -213,6 +225,10 @@ class MetricsCollector implements ILifecycle {
       Duration(seconds: _config.metrics.collectionIntervalSeconds),
       (_) => _collect(),
     );
+
+    if (_config.metrics.enableOpenTelemetry) {
+      _startOtelExport();
+    }
   }
 
   @override
@@ -220,8 +236,56 @@ class MetricsCollector implements ILifecycle {
     _logger.debug('Stopping MetricsCollector...');
     _collectionTimer?.cancel();
     _collectionTimer = null;
+    _otelExportTimer?.cancel();
+    _otelExportTimer = null;
+    // Final flush so the tail of the collection window is not lost.
+    await flushOpenTelemetry();
+    await _otelExporter?.close();
+    _otelExporter = null;
     // _metricsStreamController is `final` and must survive a stop/start
     // cycle; it is released with the collector.
+  }
+
+  void _startOtelExport() {
+    final endpoint = Uri.tryParse(_config.metrics.otlpEndpoint);
+    if (endpoint == null) {
+      _logger.error(
+        'OpenTelemetry export disabled: invalid OTLP endpoint '
+        '"${_config.metrics.otlpEndpoint}"',
+      );
+      return;
+    }
+
+    _otelExportTimer?.cancel();
+    _otelExporter ??= OTelExporter(
+      endpoint: endpoint,
+      headers: _config.metrics.otlpHeaders,
+    );
+    _otelExportTimer = Timer.periodic(
+      Duration(seconds: _config.metrics.exportIntervalSeconds),
+      (_) => unawaited(flushOpenTelemetry()),
+    );
+    _logger.debug(
+      'OpenTelemetry metrics export enabled: ${_config.metrics.otlpEndpoint} '
+      'every ${_config.metrics.exportIntervalSeconds}s',
+    );
+  }
+
+  /// Pushes the current metric families to the configured OTLP endpoint.
+  ///
+  /// This is a no-op unless [MetricsConfig.enableOpenTelemetry] is set and
+  /// the collector has been started. Export failures are logged and
+  /// swallowed so telemetry never disrupts metric recording.
+  Future<void> flushOpenTelemetry() async {
+    final exporter = _otelExporter;
+    if (exporter == null || !_metricsEnabled) return;
+
+    try {
+      final families = await _registry.collectMetricFamilySamples();
+      await exporter.export(families);
+    } catch (e, stackTrace) {
+      _logger.error('Failed to export metrics via OTLP', e, stackTrace);
+    }
   }
 
   /// Registers a [BlockStore] to be queried by the periodic collector.
@@ -532,6 +596,7 @@ class MetricsCollector implements ILifecycle {
       'status': 'active',
       'enabled': _metricsEnabled,
       'prometheus_export_enabled': _config.metrics.enablePrometheusExport,
+      'opentelemetry_export_enabled': _config.metrics.enableOpenTelemetry,
     };
   }
 
