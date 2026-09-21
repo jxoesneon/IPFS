@@ -1014,12 +1014,16 @@ class Libp2pRouter implements RouterInterface {
           if (data == null) {
             break;
           }
-          if (data.isEmpty) {
+          if (data.isEmpty && !isSessionStream) {
             _logger.warning(
               'Received empty message from $remoteIdStr on $protocolId',
             );
             continue;
           }
+          // Session-stream protocols (meshsub/floodsub) carry length-prefixed
+          // protobuf RPCs, and a zero-length frame is a valid empty RPC —
+          // go-libp2p-pubsub sends exactly this as its capability hello, so
+          // it must reach the handler.
 
           final packet = NetworkPacket(
             srcPeerId: remoteIdStr,
@@ -1220,8 +1224,9 @@ class Libp2pRouter implements RouterInterface {
   }) async {
     try {
       final pending = stream.read(size);
-      final data =
-          idleTimeout == null ? await pending : await pending.timeout(idleTimeout);
+      final data = idleTimeout == null
+          ? await pending
+          : await pending.timeout(idleTimeout);
       if (data.isEmpty) return null;
       return Uint8List.fromList(data);
     } catch (e) {

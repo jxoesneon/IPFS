@@ -11,6 +11,7 @@ import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/data_structures/peer.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/ipfs_node.dart';
 import 'package:dart_ipfs/src/ipfs.dart';
+import 'package:dart_ipfs/src/protocols/pubsub/pubsub_message.dart';
 import 'package:test/test.dart';
 
 import 'e2e_helpers.dart';
@@ -138,6 +139,36 @@ void main() {
           description: 'A to receive the published message',
         );
         expect(received, contains('news:hello from B'));
+        await sub.cancel();
+      });
+
+      test('publishData delivers a binary payload verbatim', () async {
+        final aAddr = await startBoth();
+        await nodeB!.connectToPeer(aAddr);
+
+        final payload = Uint8List.fromList(List<int>.generate(256, (i) => i));
+        final received = <PubSubMessage>[];
+        final sub = nodeA!.pubsubMessages.listen(received.add);
+
+        await nodeA!.subscribe('bin');
+        await nodeB!.subscribe('bin');
+
+        await waitFor<bool>(
+          () async => (await nodeB!.pubsubPeers('bin')).contains(nodeA!.peerID)
+              ? true
+              : null,
+          description: 'B to see A subscribed to bin',
+        );
+
+        await nodeB!.publishData('bin', payload);
+
+        await waitFor<bool>(
+          () async => received.isNotEmpty ? true : null,
+          description: 'A to receive the binary message',
+        );
+        // Bytes 0x80+ are invalid UTF-8 — any String conversion on the wire
+        // path corrupts them, so this must match byte-for-byte.
+        expect(received.single.data, equals(payload));
         await sub.cancel();
       });
 

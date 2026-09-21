@@ -1172,7 +1172,9 @@ class RPCHandlers {
 
     try {
       final body = await _readBodyBounded(request, _maxPubsubPubBytes);
-      await node.publish(topic, utf8.decode(body, allowMalformed: true));
+      // The payload is opaque bytes — decoding as UTF-8 here would corrupt
+      // non-text payloads on the wire.
+      await node.publishData(topic, body);
       return _jsonResponse(const <String, dynamic>{});
     } on ArgumentError catch (e) {
       return _errorResponse(e.message.toString(), code: 400);
@@ -1259,9 +1261,9 @@ class RPCHandlers {
   static String _decodeTopicArg(String arg) {
     if (arg.length > 1 && arg.startsWith('u')) {
       try {
-        return utf8.decode(base64Url.decode(base64Url.normalize(
-          arg.substring(1),
-        )));
+        return utf8.decode(
+          base64Url.decode(base64Url.normalize(arg.substring(1))),
+        );
       } catch (_) {
         // Not a valid multibase value; treat as a literal topic name.
       }
@@ -1275,11 +1277,13 @@ class RPCHandlers {
   Map<String, dynamic> _encodePubsubMessage(PubSubMessage message) {
     return {
       'from': message.sender,
-      'data':
-          'u${base64Url.encode(utf8.encode(message.content)).replaceAll('=', '')}',
+      // Kubo-compatible: `data` is the raw payload bytes multibase-base64url
+      // encoded — using `content` (the lossy UTF-8 view) would corrupt
+      // binary payloads.
+      'data': 'u${base64Url.encode(message.data).replaceAll('=', '')}',
       'seqno': 'u',
       'topicIDs': [
-        'u${base64Url.encode(utf8.encode(message.topic)).replaceAll('=', '')}'
+        'u${base64Url.encode(utf8.encode(message.topic)).replaceAll('=', '')}',
       ],
     };
   }

@@ -349,6 +349,14 @@ class IPFS {
     return _node.publish(topic, message);
   }
 
+  /// Publishes a binary payload to a PubSub topic.
+  ///
+  /// Gossipsub peers receive [data] verbatim; see
+  /// [IPFSNode.publishData].
+  Future<void> publishData(String topic, Uint8List data) async {
+    return _node.publishData(topic, data);
+  }
+
   /// Stream of incoming [PubSubMessage]s for all subscribed topics.
   ///
   /// In offline mode this stream emits no events.

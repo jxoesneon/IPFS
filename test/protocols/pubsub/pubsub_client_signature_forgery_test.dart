@@ -16,7 +16,6 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:cryptography/cryptography.dart' show SimpleKeyPair;
 import 'package:dart_ipfs/src/core/crypto/ed25519_signer.dart';
-import 'package:dart_ipfs/src/core/crypto/peer_key_registry.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/pubsub/pubsub_client.dart';
 import 'package:dart_ipfs/src/transport/router_events.dart';

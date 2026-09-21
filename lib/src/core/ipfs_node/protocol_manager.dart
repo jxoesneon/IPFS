@@ -1,5 +1,6 @@
 // src/core/ipfs_node/protocol_manager.dart
 import 'dart:async';
+import 'dart:typed_data';
 
 import '../../protocols/dht/dht_handler.dart';
 import '../../protocols/ipns/ipns_handler.dart';
@@ -78,6 +79,23 @@ class ProtocolManager implements ILifecycle {
       }
       await _pubSubHandler.publish(topic, message);
       _logger.debug('Published message to topic: $topic');
+    } catch (e, stackTrace) {
+      _logger.error('Failed to publish message to topic $topic', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  /// Publishes a binary payload to a PubSub [topic].
+  Future<void> publishData(String topic, Uint8List data) async {
+    try {
+      if (_pubSubHandler == null) {
+        throw ComponentError(
+          'PubSubHandler',
+          'Required for publishing messages',
+        );
+      }
+      await _pubSubHandler.publishData(topic, data);
+      _logger.debug('Published ${data.length} bytes to topic: $topic');
     } catch (e, stackTrace) {
       _logger.error('Failed to publish message to topic $topic', e, stackTrace);
       rethrow;

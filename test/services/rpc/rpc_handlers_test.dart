@@ -1604,7 +1604,20 @@ void main() {
       );
       final response = await handlers.handlePubsubPublish(request);
       expect(response.statusCode, equals(200));
-      verify(mockNode.publish('topic-a', 'hello')).called(1);
+      verify(mockNode.publishData('topic-a', utf8.encode('hello'))).called(1);
+    });
+
+    test('handlePubsubPublish passes binary bodies through verbatim', () async {
+      final payload = Uint8List.fromList(List<int>.generate(256, (i) => i));
+      final request = Request(
+        'POST',
+        Uri.parse('http://localhost/api/v0/pubsub/pub?arg=topic-a'),
+        body: payload,
+      );
+      final response = await handlers.handlePubsubPublish(request);
+      expect(response.statusCode, equals(200));
+      verify(mockNode.publishData('topic-a', payload)).called(1);
+      verifyNever(mockNode.publish(any, any));
     });
 
     test('handlePubsubPublish rejects a missing topic', () async {
@@ -1615,12 +1628,12 @@ void main() {
       );
       final response = await handlers.handlePubsubPublish(request);
       expect(response.statusCode, equals(400));
-      verifyNever(mockNode.publish(any, any));
+      verifyNever(mockNode.publishData(any, any));
     });
 
     test('handlePubsubPublish surfaces node errors', () async {
       when(
-        mockNode.publish('topic-a', any),
+        mockNode.publishData('topic-a', any),
       ).thenThrow(Exception('not started'));
       final request = Request(
         'POST',
@@ -1648,7 +1661,7 @@ void main() {
     });
 
     test('handlePubsubPublish decodes multibase base64url arg', () async {
-      when(mockNode.publish('topic-a', any)).thenAnswer((_) async {});
+      when(mockNode.publishData('topic-a', any)).thenAnswer((_) async {});
       final request = Request(
         'POST',
         Uri.parse('http://localhost/api/v0/pubsub/pub?arg=udG9waWMtYQ'),
@@ -1656,7 +1669,7 @@ void main() {
       );
       final response = await handlers.handlePubsubPublish(request);
       expect(response.statusCode, equals(200));
-      verify(mockNode.publish('topic-a', 'hello')).called(1);
+      verify(mockNode.publishData('topic-a', utf8.encode('hello'))).called(1);
     });
 
     test('handlePubsubSubscribe streams NDJSON messages', () async {
@@ -1688,18 +1701,55 @@ void main() {
       // Multibase `u` (base64url) is unpadded per spec.
       expect(
         json['data'],
-        equals(
-          'u${base64Url.encode(utf8.encode('hi')).replaceAll('=', '')}',
-        ),
+        equals('u${base64Url.encode(utf8.encode('hi')).replaceAll('=', '')}'),
       );
       expect(
         json['topicIDs'],
         equals([
-          'u${base64Url.encode(utf8.encode('topic-a')).replaceAll('=', '')}'
+          'u${base64Url.encode(utf8.encode('topic-a')).replaceAll('=', '')}',
         ]),
       );
       await controller.close();
     });
+
+    test(
+      'handlePubsubSubscribe encodes raw message bytes in the data field',
+      () async {
+        final controller = StreamController<PubSubMessage>();
+        when(mockNode.pubsubMessages).thenAnswer((_) => controller.stream);
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/v0/pubsub/sub?arg=topic-a'),
+        );
+        final response = await handlers.handlePubsubSubscribe(request);
+        expect(response.statusCode, equals(200));
+
+        final payload = Uint8List.fromList(List<int>.generate(256, (i) => i));
+        controller.add(
+          PubSubMessage(
+            topic: 'topic-a',
+            sender: 'QmSender',
+            content: utf8.decode(payload, allowMalformed: true),
+            data: payload,
+          ),
+        );
+        final line = await response
+            .read()
+            .transform(utf8.decoder)
+            .transform(const LineSplitter())
+            .firstWhere((l) => l.trim().isNotEmpty)
+            .timeout(const Duration(seconds: 5));
+        final json = jsonDecode(line) as Map<String, dynamic>;
+        // `data` must round-trip the raw wire bytes — re-encoding the
+        // lossy UTF-8 `content` view would corrupt the payload.
+        expect(
+          json['data'],
+          equals('u${base64Url.encode(payload).replaceAll('=', '')}'),
+        );
+        await controller.close();
+      },
+    );
 
     test('handlePubsubSubscribe rejects a missing topic', () async {
       final request = Request(

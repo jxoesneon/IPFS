@@ -443,6 +443,13 @@ class IPFSNode {
   Future<void> publish(String topic, String message) =>
       _protocolManager.publish(topic, message);
 
+  /// Publishes a binary payload to a PubSub [topic].
+  ///
+  /// Gossipsub peers receive [data] verbatim; see
+  /// [PubSubClient.publishData].
+  Future<void> publishData(String topic, Uint8List data) =>
+      _protocolManager.publishData(topic, data);
+
   /// Returns a [Stream] of incoming [PubSubMessage]s for all subscribed topics.
   Stream<PubSubMessage> get pubsubMessages => _protocolManager.pubsubMessages;
 

@@ -355,6 +355,58 @@ void main() {
       await keyedClient.stop();
     });
 
+    test(
+      'publishData carries binary payloads verbatim on the gossipsub wire',
+      () async {
+        final signer = Ed25519Signer();
+        final keyPair = await signer.generateKeyPair();
+        final pubKeyBytes = await signer.extractPublicKeyBytes(keyPair);
+        final localId = PeerId.fromPublicKey(
+          pubKeyBytes,
+          type: 'Ed25519',
+        ).toBase58();
+
+        final keyedClient = PubSubClient(mockRouter, localId, keyPair: keyPair);
+        await keyedClient.start();
+        final handler = handlerFor(_meshsub);
+
+        deliverGossipSub(handler, kuboPeer, GossipSubRpc());
+        await flush();
+
+        keyedClient.graftPeer(kuboPeer);
+        // Bytes 0x80+ are not valid UTF-8 here — any String conversion on
+        // the publish path would corrupt them.
+        final payload = Uint8List.fromList(List<int>.generate(256, (i) => i));
+        await keyedClient.publishData('binary-topic', payload);
+
+        final sent =
+            verify(
+                  mockRouter.sendMessage(
+                    kuboPeer,
+                    captureAny,
+                    protocolId: _meshsub,
+                  ),
+                ).captured.last
+                as Uint8List;
+        final rpc = GossipSubRpcCodec.decode(sent);
+        expect(rpc.publish, hasLength(1));
+
+        final msg = rpc.publish.single;
+        expect(msg.topic, 'binary-topic');
+        expect(msg.data, equals(payload));
+
+        final embeddedKey = gossipSubPeerIdPublicKey(msg.from!);
+        final valid = await signer.verify(
+          gossipSubSigningPayload(msg),
+          msg.signature!,
+          signer.publicKeyFromBytes(embeddedKey!),
+        );
+        expect(valid, isTrue);
+
+        await keyedClient.stop();
+      },
+    );
+
     test('publish still sends JSON to non-gossipsub peers', () async {
       await client.start();
       client.graftPeer('json-peer');
@@ -562,6 +614,34 @@ void main() {
         await laxClient.stop();
       },
     );
+
+    test('binary payloads survive delivery via PubSubMessage.data', () async {
+      final laxClient = PubSubClient(
+        mockRouter,
+        localPeerId,
+        strictAuthentication: false,
+      );
+      await laxClient.start();
+      final handler = handlerFor(_meshsub);
+      when(mockRouter.isConnectedPeer(kuboPeer)).thenReturn(true);
+
+      final payload = Uint8List.fromList(List<int>.generate(256, (i) => i));
+      final unsigned = GossipSubMessage(
+        from: authorPeerId.value,
+        data: payload,
+        seqno: _seqno(4),
+        topic: 'binary-inbound',
+      );
+
+      final received = laxClient.messagesStream.first;
+      deliverGossipSub(handler, kuboPeer, GossipSubRpc(publish: [unsigned]));
+
+      final delivered = await received;
+      expect(delivered.data, equals(payload));
+      // content is the lossy view — it must not be confused with the payload.
+      expect(utf8.encode(delivered.content), isNot(equals(payload)));
+      await laxClient.stop();
+    });
 
     test('deduplicates repeated messages by from||seqno', () async {
       await client.start();

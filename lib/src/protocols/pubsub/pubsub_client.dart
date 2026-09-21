@@ -568,10 +568,21 @@ class PubSubClient implements IPubSub {
   /// mesh and no known topic subscribers), so callers can distinguish a
   /// delivered message from a dropped one.
   @override
-  Future<void> publish(String topic, String message) async {
+  Future<void> publish(String topic, String message) =>
+      publishData(topic, Uint8List.fromList(utf8.encode(message)));
+
+  /// Publishes a binary payload to [topic], fanning out to mesh peers and
+  /// known topic subscribers.
+  ///
+  /// Gossipsub-capable targets receive [data] verbatim; legacy-protocol
+  /// targets receive its lossy UTF-8 decode (the legacy JSON wire form is
+  /// String-shaped and cannot express arbitrary bytes).
+  @override
+  Future<void> publishData(String topic, Uint8List data) async {
     if (!_isStarted) {
       throw StateError('PubSub client must be started before publishing.');
     }
+    final message = utf8.decode(data, allowMalformed: true);
 
     try {
       final Uint8List encodedMessage = await encodeSignedPublishRequest(
@@ -604,7 +615,7 @@ class PubSubClient implements IPubSub {
               if (_gossipsubPeers.contains(peerId)) {
                 gossipSubPayload ??= await _encodeGossipSubPublishRpc(
                   topic,
-                  message,
+                  data,
                 );
                 await _router.sendMessage(
                   peerId,
@@ -1199,6 +1210,7 @@ class PubSubClient implements IPubSub {
       PubSubMessage(
         topic: topic,
         content: utf8.decode(msg.data ?? Uint8List(0), allowMalformed: true),
+        data: msg.data ?? Uint8List(0),
         sender: sender,
       ),
     );
@@ -1459,11 +1471,11 @@ class PubSubClient implements IPubSub {
   /// multihash), matching go-libp2p-pubsub.
   Future<Uint8List> _encodeGossipSubPublishRpc(
     String topic,
-    String message,
+    Uint8List data,
   ) async {
     final msg = GossipSubMessage(
       from: Uint8List.fromList(_peerId.value),
-      data: Uint8List.fromList(utf8.encode(message)),
+      data: data,
       seqno: _nextGossipSubSeqno(),
       topic: topic,
     );

@@ -1,5 +1,6 @@
 // src/core/ipfs_node/pubsub_handler.dart
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 
@@ -115,6 +116,14 @@ class PubSubHandler implements IPubSub, ILifecycle {
   @override
   Future<void> publish(String topic, String message) async {
     await _pubSubClient.publish(topic, message);
+    _messageCount++;
+  }
+
+  /// Publishes a binary payload to a PubSub topic (see
+  /// [PubSubClient.publishData]).
+  @override
+  Future<void> publishData(String topic, Uint8List data) async {
+    await _pubSubClient.publishData(topic, data);
     _messageCount++;
   }
 
