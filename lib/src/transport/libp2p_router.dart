@@ -168,6 +168,14 @@ class Libp2pRouter implements RouterInterface {
   @override
   List<String> get listeningAddresses {
     if (_hasStarted && _host != null) {
+      // Prefer the host's resolved address set: it expands unspecified
+      // listen addrs (e.g. /ip4/0.0.0.0) into concrete interface addresses
+      // and drops unadvertiseable ones, so identify and the RPC surface
+      // report dialable addrs instead of wildcards.
+      final resolved = _host!.addrs;
+      if (resolved.isNotEmpty) {
+        return resolved.map((a) => a.toString()).toList();
+      }
       return _host!.network.listenAddresses.map((a) => a.toString()).toList();
     }
     return _buildListenAddresses().map((a) => a.toString()).toList();
