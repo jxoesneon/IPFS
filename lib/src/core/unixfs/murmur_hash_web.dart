@@ -9,12 +9,12 @@
 ///
 /// Because the public signature must stay `int` — and web bitwise shifts
 /// only ever observe the low 32 bits of an operand — the function returns
-/// the low 32 bits of the 64-bit `h1` half-word. This is exact for every
-/// HAMT bucket index at depth 0–3 (`shift < 32`); deeper shard recursion
-/// requires a native platform, which is a pre-existing limitation of the
-/// shared `(hash >>> shift) & mask` indexing code rather than of this
-/// function.
+/// the low 32 bits of the 64-bit `h1` half-word. Callers that need the full
+/// 64-bit digest on every platform (the HAMT bit-slicer does) should use
+/// [murmur3X64Hash64Digest], which is exact everywhere.
 library;
+
+import 'dart:typed_data';
 
 /// Computes the MurmurHash3 x64-64 digest of [bytes].
 ///
@@ -24,6 +24,20 @@ library;
 int murmur3X64Hash64(List<int> bytes, {int seed = 0}) {
   final h1 = _murmur3X64Hash128(bytes, seed: seed)[0];
   return (h1 & _mask32).toInt();
+}
+
+/// Computes the MurmurHash3 x64-64 digest of [bytes] and returns it as eight
+/// bytes in little-endian order — the same byte sequence produced by
+/// `murmur3.New64().Sum(nil)` in go-unixfs. Unlike [murmur3X64Hash64] this is
+/// exact on the web platform for the entire 64-bit digest.
+Uint8List murmur3X64Hash64Digest(List<int> bytes, {int seed = 0}) {
+  var h1 = _murmur3X64Hash128(bytes, seed: seed)[0];
+  final out = Uint8List(8);
+  for (var i = 0; i < 8; i++) {
+    out[i] = (h1 & BigInt.from(0xff)).toInt();
+    h1 = h1 >> 8;
+  }
+  return out;
 }
 
 final BigInt _mask64 = (BigInt.one << 64) - BigInt.one;

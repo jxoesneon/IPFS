@@ -1,4 +1,5 @@
 // test/core/unixfs/unixfs_hamt_integration_test.dart
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
@@ -7,6 +8,7 @@ import 'package:dart_ipfs/src/core/interfaces/i_block_store.dart';
 import 'package:dart_ipfs/src/core/responses/block_response_factory.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_directory.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_hamt.dart';
+import 'package:dart_ipfs/src/core/unixfs/unixfs_node.dart';
 import 'package:dart_ipfs/src/core/unixfs/unixfs_resolver.dart';
 import 'package:dart_ipfs/src/proto/generated/core/blockstore.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/unixfs/unixfs.pb.dart'
@@ -293,6 +295,321 @@ void main() {
           expect(newDir, isNotNull);
         }
       }
+    });
+
+    test('hamtBucketIndex consumes bits MSB-first within each digest byte', () {
+      // Digest byte 0xAB = 1010 1011. go-unixfs' hashBits.Next reads the
+      // most significant unconsumed bits of each byte first.
+      final digest = Uint8List.fromList([
+        0xAB,
+        0xCD,
+        0xEF,
+        0x01,
+        0x23,
+        0x45,
+        0x67,
+        0x89,
+      ]);
+
+      // Byte-aligned width (fanout 256): level L takes digest byte L whole.
+      expect(hamtBucketIndex(digest, 0, 8), equals(0xAB));
+      expect(hamtBucketIndex(digest, 8, 8), equals(0xCD));
+
+      // Sub-byte widths (fanout 8 -> 3 bits per level): first-taken bits
+      // become the most significant bits of the index.
+      expect(hamtBucketIndex(digest, 0, 3), equals(0x5)); // 101
+      expect(hamtBucketIndex(digest, 3, 3), equals(0x2)); // 010
+      // A width spanning a byte boundary appends the next byte's top bits.
+      expect(hamtBucketIndex(digest, 6, 4), equals(0xF)); // 11 11
+      // Reading exactly to the end of the digest is allowed.
+      expect(hamtBucketIndex(digest, 56, 8), equals(0x89));
+      // Past the end of the 64-bit digest there is nothing left to consume.
+      expect(() => hamtBucketIndex(digest, 57, 8), throwsStateError);
+    });
+
+    test(
+      'entry count exactly at the threshold stays a plain directory',
+      () async {
+        final entries = <UnixFSDirectoryEntry>[];
+        for (var i = 0; i < 32; i++) {
+          final data = Uint8List.fromList([i]);
+          final cid = await CID.fromContent(data, codec: 'raw');
+          await store.putBlock(Block(cid: cid, data: data));
+          entries.add(
+            UnixFSDirectoryEntry(name: 'edge_$i', cid: cid, tsize: data.length),
+          );
+        }
+
+        final atThreshold = await createDirectory(
+          store,
+          entries,
+          cidVersion: 1,
+          shardThreshold: 32,
+        );
+        expect(atThreshold.isDirectory, isTrue);
+        expect(atThreshold.isHAMTShard, isFalse);
+
+        final extraData = Uint8List.fromList([0xff]);
+        final extraCid = await CID.fromContent(extraData, codec: 'raw');
+        await store.putBlock(Block(cid: extraCid, data: extraData));
+        entries.add(
+          UnixFSDirectoryEntry(
+            name: 'edge_extra',
+            cid: extraCid,
+            tsize: extraData.length,
+          ),
+        );
+
+        final aboveThreshold = await createDirectory(
+          store,
+          entries,
+          cidVersion: 1,
+          shardThreshold: 32,
+        );
+        expect(aboveThreshold.isHAMTShard, isTrue);
+      },
+    );
+
+    test(
+      'entries colliding in the first hash byte are pushed into a sub-shard',
+      () async {
+        // Group names by the first byte of their murmur3-x64-64 digest —
+        // with fanout 256 that byte alone selects the level-0 bucket.
+        final byBucket = <int, List<String>>{};
+        for (var i = 0; i < 2000; i++) {
+          final name = 'collide_$i';
+          final bucket = murmur3X64Hash64Digest(utf8.encode(name))[0];
+          byBucket.putIfAbsent(bucket, () => []).add(name);
+        }
+        final colliding = byBucket.values.firstWhere(
+          (names) => names.length >= 2,
+          orElse: () => fail('expected a bucket collision within 2000 names'),
+        );
+
+        final entries = <UnixFSDirectoryEntry>[];
+        for (final name in colliding) {
+          final data = utf8.encode(name);
+          final cid = await CID.fromContent(
+            Uint8List.fromList(data),
+            codec: 'raw',
+          );
+          await store.putBlock(Block(cid: cid, data: Uint8List.fromList(data)));
+          entries.add(
+            UnixFSDirectoryEntry(name: name, cid: cid, tsize: data.length),
+          );
+        }
+        // Add a non-colliding entry so the root has both kinds of links.
+        final other = Uint8List.fromList([0x42]);
+        final otherCid = await CID.fromContent(other, codec: 'raw');
+        await store.putBlock(Block(cid: otherCid, data: other));
+        entries.add(
+          UnixFSDirectoryEntry(
+            name: 'unrelated.txt',
+            cid: otherCid,
+            tsize: other.length,
+          ),
+        );
+
+        final root = await UnixFSHAMTBuilder(
+          fanout: 256,
+          shardThreshold: 0,
+          cidVersion: 1,
+        ).build(store, entries);
+
+        expect(root.isHAMTShard, isTrue);
+        // A link whose name is exactly the two-char prefix is a sub-shard.
+        final subShardLinks = root.pbNode.links
+            .where((l) => l.name.length == 2)
+            .toList();
+        expect(subShardLinks, hasLength(1));
+
+        // The sub-shard holds the colliding entries.
+        final subShardCid = CID.fromBytes(
+          Uint8List.fromList(subShardLinks.single.hash),
+        );
+        final subShard = await unixfsGetNode(store, subShardCid);
+        expect(subShard, isNotNull);
+        expect(subShard!.isHAMTShard, isTrue);
+
+        // Every entry resolves to its own CID through both shard levels.
+        final resolver = UnixFSPathResolver(store: store);
+        for (final entry in entries) {
+          expect(
+            await resolver.resolve(root.cid, entry.name),
+            equals(entry.cid),
+            reason: 'Failed to resolve ${entry.name}',
+          );
+        }
+      },
+    );
+
+    test('non-byte-aligned fanout (8) shards and resolves correctly', () async {
+      final entries = <UnixFSDirectoryEntry>[];
+      for (var i = 0; i < 24; i++) {
+        final data = Uint8List.fromList([i]);
+        final cid = await CID.fromContent(data, codec: 'raw');
+        await store.putBlock(Block(cid: cid, data: data));
+        entries.add(
+          UnixFSDirectoryEntry(name: 'tiny_$i', cid: cid, tsize: data.length),
+        );
+      }
+
+      final root = await UnixFSHAMTBuilder(
+        fanout: 8,
+        shardThreshold: 0,
+        cidVersion: 1,
+      ).build(store, entries);
+
+      expect(root.isHAMTShard, isTrue);
+      expect(root.fanout, equals(8));
+      // Fanout 8 needs one hex char of prefix (max bucket index 7 -> "7").
+      expect(hamtPrefixWidth(8), equals(1));
+      for (final link in root.pbNode.links) {
+        expect(link.name.length, greaterThanOrEqualTo(1));
+      }
+
+      final resolver = UnixFSPathResolver(store: store);
+      for (final entry in entries) {
+        expect(
+          await resolver.resolve(root.cid, entry.name),
+          equals(entry.cid),
+          reason: 'Failed to resolve ${entry.name}',
+        );
+      }
+    });
+
+    test('hamtLeafEntries flattens a shard tree to real entry names', () async {
+      final entries = <UnixFSDirectoryEntry>[];
+      for (var i = 0; i < 100; i++) {
+        final data = Uint8List.fromList([i]);
+        final cid = await CID.fromContent(data, codec: 'raw');
+        await store.putBlock(Block(cid: cid, data: data));
+        entries.add(
+          UnixFSDirectoryEntry(name: 'leaf_$i', cid: cid, tsize: data.length),
+        );
+      }
+
+      final root = await createDirectory(
+        store,
+        entries,
+        cidVersion: 1,
+        shardThreshold: 32,
+      );
+      expect(root.isHAMTShard, isTrue);
+
+      final flattened = await hamtLeafEntries(store, root);
+      final flattenedNames = flattened.map((e) => e.name).toSet();
+      expect(flattenedNames, equals(entries.map((e) => e.name).toSet()));
+      for (final entry in flattened) {
+        expect(entry.name, isNot(matches(RegExp(r'^[0-9A-F]{2}'))));
+      }
+    });
+
+    test('addChildToDirectory on a sharded directory keeps it sharded and '
+        'preserves every entry', () async {
+      final entries = <UnixFSDirectoryEntry>[];
+      for (var i = 0; i < 60; i++) {
+        final data = Uint8List.fromList([i]);
+        final cid = await CID.fromContent(data, codec: 'raw');
+        await store.putBlock(Block(cid: cid, data: data));
+        entries.add(
+          UnixFSDirectoryEntry(name: 'keep_$i', cid: cid, tsize: data.length),
+        );
+      }
+
+      final sharded = await createDirectory(
+        store,
+        entries,
+        cidVersion: 1,
+        shardThreshold: 32,
+      );
+      expect(sharded.isHAMTShard, isTrue);
+
+      final newData = Uint8List.fromList([9, 9, 9]);
+      final newCid = await CID.fromContent(newData, codec: 'raw');
+      await store.putBlock(Block(cid: newCid, data: newData));
+
+      final updated = await addChildToDirectory(
+        store,
+        sharded.cid,
+        'new_child',
+        newCid,
+        cidVersion: 1,
+      );
+
+      expect(updated.isHAMTShard, isTrue);
+
+      final resolver = UnixFSPathResolver(store: store);
+      expect(await resolver.resolve(updated.cid, 'new_child'), equals(newCid));
+      // Spot-check original entries survive with correct (unprefixed) names.
+      for (final i in [0, 17, 59]) {
+        expect(
+          await resolver.resolve(updated.cid, 'keep_$i'),
+          equals(entries[i].cid),
+        );
+      }
+    });
+
+    test(
+      'resolving a symlink entry inside a HAMT shard follows the target',
+      () async {
+        final fileData = Uint8List.fromList([1, 2, 3]);
+        final fileCid = await CID.fromContent(fileData, codec: 'raw');
+        await store.putBlock(Block(cid: fileCid, data: fileData));
+        final link = await createSymlink(store, 'file.txt', cidVersion: 1);
+
+        final entries = <UnixFSDirectoryEntry>[
+          UnixFSDirectoryEntry(
+            name: 'file.txt',
+            cid: fileCid,
+            tsize: fileData.length,
+          ),
+          UnixFSDirectoryEntry(name: 'link', cid: link.cid, tsize: 0),
+        ];
+        // Pad the directory past the shard threshold.
+        for (var i = 0; i < 40; i++) {
+          final data = Uint8List.fromList([i]);
+          final cid = await CID.fromContent(data, codec: 'raw');
+          await store.putBlock(Block(cid: cid, data: data));
+          entries.add(
+            UnixFSDirectoryEntry(name: 'pad_$i', cid: cid, tsize: data.length),
+          );
+        }
+
+        final root = await createDirectory(
+          store,
+          entries,
+          cidVersion: 1,
+          shardThreshold: 32,
+        );
+        expect(root.isHAMTShard, isTrue);
+
+        final resolver = UnixFSPathResolver(store: store);
+        expect(await resolver.resolve(root.cid, 'link'), equals(fileCid));
+      },
+    );
+
+    test('symlink targets round-trip non-ASCII UTF-8 paths', () async {
+      final link = await createSymlink(store, '文件.txt');
+      expect(link.isSymlink, isTrue);
+      expect(link.symlinkTarget, equals('文件.txt'));
+      final inner = unixfs_pb.Data.fromBuffer(link.pbNode.data);
+      expect(inner.data, equals(utf8.encode('文件.txt')));
+
+      final fileData = Uint8List.fromList([5, 5]);
+      final fileCid = await CID.fromContent(fileData, codec: 'raw');
+      await store.putBlock(Block(cid: fileCid, data: fileData));
+      final dir = await createDirectory(store, [
+        UnixFSDirectoryEntry(
+          name: '文件.txt',
+          cid: fileCid,
+          tsize: fileData.length,
+        ),
+        UnixFSDirectoryEntry(name: 'link', cid: link.cid, tsize: 0),
+      ]);
+
+      final resolver = UnixFSPathResolver(store: store);
+      expect(await resolver.resolve(dir.cid, 'link'), equals(fileCid));
     });
 
     test('UnixFSHAMTBuilder with fanout 256 produces valid shard', () async {

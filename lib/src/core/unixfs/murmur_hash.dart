@@ -4,10 +4,21 @@
 /// The web build uses [murmur_hash_web.dart] instead.
 library;
 
+import 'dart:typed_data';
+
 /// Computes the MurmurHash3 x64-64 digest of [bytes] and returns the first
 /// 64 bits (h1) as the [murmur3-x64-64] hash value.
 int murmur3X64Hash64(List<int> bytes, {int seed = 0}) {
   return _murmur3X64Hash128(bytes, seed: seed)[0];
+}
+
+/// Computes the MurmurHash3 x64-64 digest of [bytes] and returns it as eight
+/// bytes in little-endian order — the same byte sequence produced by
+/// `murmur3.New64().Sum(nil)` in go-unixfs, whose bits the HAMT consumes
+/// most-significant-bit-first within each byte.
+Uint8List murmur3X64Hash64Digest(List<int> bytes, {int seed = 0}) {
+  final h = murmur3X64Hash64(bytes, seed: seed);
+  return (ByteData(8)..setUint64(0, h, Endian.little)).buffer.asUint8List();
 }
 
 /// Computes the MurmurHash3 x64-128 digest of [bytes] as a pair of unsigned

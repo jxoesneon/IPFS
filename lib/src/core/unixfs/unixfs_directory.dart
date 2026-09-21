@@ -231,7 +231,7 @@ Future<UnixFSNode> createSymlink(
   }
   final unixFsData = unixfs_pb.Data(
     type: unixfs_pb.Data_DataType.Symlink,
-    data: Uint8List.fromList(target.codeUnits),
+    data: Uint8List.fromList(utf8.encode(target)),
   );
   final pbNode = dag_pb.PBNode(data: unixFsData.writeToBuffer());
   final bytes = pbNode.writeToBuffer();
@@ -304,6 +304,22 @@ Future<UnixFSNode> addChildToDirectory(
     cid: childCid,
     tsize: tsize,
   );
+
+  if (dirNode.isHAMTShard) {
+    // The shard's link names carry hex hash prefixes and may point at
+    // nested sub-shards; flatten to the underlying leaf entries so the
+    // rebuild hashes the real names. Like Kubo's HAMTDirectory, a sharded
+    // directory stays sharded after edits regardless of [shardThreshold].
+    final entries = await hamtLeafEntries(store, dirNode);
+    entries.removeWhere((entry) => entry.name == name);
+    entries.add(newEntry);
+    return UnixFSHAMTBuilder(
+      fanout: dirNode.fanout > 0 ? dirNode.fanout : kUnixFSHAMTFanout,
+      shardThreshold: 0,
+      cidVersion: cidVersion,
+      hashType: hashType,
+    ).build(store, entries);
+  }
 
   final entries = <UnixFSDirectoryEntry>[newEntry];
   for (final link in dirNode.pbNode.links) {
