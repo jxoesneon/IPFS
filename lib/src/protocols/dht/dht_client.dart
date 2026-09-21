@@ -27,6 +27,7 @@ import 'dht_envelope.dart';
 import 'dht_handler.dart';
 import 'kademlia_routing_adapter.dart';
 import 'kademlia_routing_table.dart';
+import 'provide_result.dart';
 
 /// Kademlia DHT client implementation for IPFS.
 ///
@@ -406,7 +407,24 @@ class DHTClient {
   /// provider. The request is sent to the XOR-closest peers in batches of
   /// [alpha] for concurrency.
   Future<void> addProvider(String cid, String providerId) async {
+    await addProviderDetailed(cid, providerId);
+  }
+
+  /// Adds a provider (ADD_PROVIDER) to the DHT for a given [cid] and
+  /// returns detailed per-peer feedback.
+  ///
+  /// Behaves exactly like [addProvider] but reports how many peer
+  /// announcements were attempted, succeeded, and failed, plus
+  /// human-readable error strings. When [timeout] is provided, remaining
+  /// peer attempts are aborted once it elapses and partial results are
+  /// returned.
+  Future<ProvideResult> addProviderDetailed(
+    String cid,
+    String providerId, {
+    Duration? timeout,
+  }) async {
     _checkInitialized();
+    final stopwatch = Stopwatch()..start();
     if (_kademliaRoutingTable.peerCount == 0) {
       await _seedConnectedPeers();
     }
@@ -429,8 +447,16 @@ class DHTClient {
           .compareTo(_kademliaRoutingTable.calculateDistance(target, b)),
     );
 
-    var successCount = 0;
+    var attempted = 0;
+    var succeeded = 0;
+    final errors = <String>[];
     for (var i = 0; i < closestPeers.length; i += alpha) {
+      if (timeout != null && stopwatch.elapsed >= timeout) {
+        errors.add(
+          'timeout: provide aborted after ${stopwatch.elapsed.inMilliseconds}ms',
+        );
+        break;
+      }
       final batch = closestPeers.sublist(
         i,
         min(i + alpha, closestPeers.length),
@@ -438,10 +464,28 @@ class DHTClient {
       final results = await Future.wait(
         batch.map((peer) => _sendAddProvider(peer, msg)),
       );
-      successCount += results.where((success) => success).length;
+      attempted += batch.length;
+      for (var j = 0; j < batch.length; j++) {
+        if (results[j]) {
+          succeeded++;
+        } else if (errors.length < ProvideResult.maxErrors) {
+          errors.add(
+            'send failed: peer ${Base58().encode(batch[j].value)}',
+          );
+        }
+      }
     }
 
-    _metrics?.recordDhtProvide(successCount > 0);
+    _metrics?.recordDhtProvide(succeeded > 0);
+    stopwatch.stop();
+    return ProvideResult(
+      cid: CID.decode(cid),
+      attempts: attempted,
+      successes: succeeded,
+      failures: attempted - succeeded,
+      duration: stopwatch.elapsed,
+      errors: errors,
+    );
   }
 
   /// Announces a batch of [cids] as provided by [providerId] to the DHT.

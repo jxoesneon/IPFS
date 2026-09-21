@@ -1,24 +1,59 @@
 // test/protocols/dht/reprovider_test.dart
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:test/test.dart';
+import 'package:crypto/crypto.dart';
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
 import 'package:dart_ipfs/src/core/data_structures/block.dart';
 import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/data_structures/pin_manager.dart';
+import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
 import 'package:dart_ipfs/src/core/mfs/mfs_manager.dart';
+import 'package:dart_ipfs/src/core/security/denylist_service.dart';
+import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
 import 'package:dart_ipfs/src/core/storage/memory_datastore.dart';
-import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/proto/generated/core/pin.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_handler.dart';
 import 'package:dart_ipfs/src/protocols/dht/reprovider.dart';
+import 'package:dart_ipfs/src/transport/router_interface.dart';
+import 'package:test/test.dart';
 
 import '../../fakes/fake_router.dart';
 import '../../mocks/mock_dht_handler.dart';
+
+/// A [DHTHandler] that records the order in which CIDs are provided, so
+/// tests can assert the XOR-ordered sweep.
+class _RecordingDHTHandler extends DHTHandler {
+  // DHTHandler's router parameter is a private field formal and cannot be a
+  // super-parameter, so this constructor forwards explicitly.
+  // ignore: use_super_parameters
+  _RecordingDHTHandler(
+    IPFSConfig config,
+    RouterInterface router,
+    NetworkHandler networkHandler, {
+    ds.Datastore? storage,
+    DenylistService? denylistService,
+  }) : super(
+         config,
+         router,
+         networkHandler,
+         storage: storage,
+         denylistService: denylistService,
+       );
+
+  /// CIDs passed to [provideAll], in call order.
+  final List<CID> providedOrder = [];
+
+  @override
+  Future<void> provideAll(List<CID> cids) async {
+    providedOrder.addAll(cids);
+    await super.provideAll(cids);
+  }
+}
 
 void main() {
   late Directory tempDir;
@@ -85,6 +120,33 @@ void main() {
 
   Future<void> pinRecursive(CID cid) async {
     await pinManager.pinBlock(cid.toProto(), PinTypeProto.PIN_TYPE_RECURSIVE);
+  }
+
+  Future<void> pinDirect(CID cid) async {
+    await pinManager.pinBlock(cid.toProto(), PinTypeProto.PIN_TYPE_DIRECT);
+  }
+
+  /// Replicates the reprovider's DHT routing key: SHA-256 of the multihash.
+  PeerId routingKey(CID cid) {
+    return PeerId(
+      value: Uint8List.fromList(
+        sha256.convert(cid.multihash.toBytes()).bytes,
+      ),
+    );
+  }
+
+  /// Replicates the reprovider's big-endian XOR distance.
+  BigInt xorDistance(PeerId a, PeerId b) {
+    final length = a.value.length > b.value.length
+        ? a.value.length
+        : b.value.length;
+    var result = BigInt.zero;
+    for (var i = 0; i < length; i++) {
+      final aByte = i < a.value.length ? a.value[i] : 0;
+      final bByte = i < b.value.length ? b.value[i] : 0;
+      result = (result << 8) | BigInt.from(aByte ^ bByte);
+    }
+    return result;
   }
 
   group('Reprovider strategies', () {
@@ -169,6 +231,20 @@ void main() {
       expect(dhtHandler.getCallCount('provideAll'), equals(1));
     });
 
+    test('pinned strategy includes direct pins alongside recursive', () async {
+      final recursiveCid = await addBlock(Uint8List.fromList([50, 51, 52]));
+      final directCid = await addBlock(Uint8List.fromList([53, 54, 55]));
+      await pinRecursive(recursiveCid);
+      await pinDirect(directCid);
+
+      reprovider = createReprovider();
+      final result = await reprovider.trigger(wait: true);
+
+      // Both the recursive and the direct pin are announced.
+      expect(result.attempted, equals(2));
+      expect(result.succeeded, equals(2));
+    });
+
     test('entities strategy includes root pins and MFS root', () async {
       final root = await addBlock(Uint8List.fromList([19, 20, 21]));
       await pinRecursive(root);
@@ -247,6 +323,65 @@ void main() {
         );
         expect(result.groupedCids![closestPeer], contains(cid));
         expect(result.succeeded, equals(result.attempted));
+      },
+    );
+
+    test(
+      'sweep provides CIDs in XOR-distance order from the local peer',
+      () async {
+        final router = FakeRouter();
+        final nodeConfig = IPFSConfig(
+          dht: const DHTConfig(requestTimeout: Duration(milliseconds: 100)),
+        );
+        final networkHandler = NetworkHandler(nodeConfig, router: router);
+        final recordingHandler = _RecordingDHTHandler(
+          nodeConfig,
+          router,
+          networkHandler,
+          storage: datastore,
+        );
+        await recordingHandler.dhtClient.initialize();
+        addTearDown(() async {
+          await recordingHandler.stop();
+        });
+
+        final cids = <CID>[];
+        for (var i = 0; i < 8; i++) {
+          final cid = await addBlock(Uint8List.fromList([60, i, 61]));
+          await pinRecursive(cid);
+          cids.add(cid);
+        }
+
+        reprovider = Reprovider(
+          config: const DHTConfig(
+            reproviderEnabled: false,
+            reproviderStrategy: 'pinned',
+            reproviderBatchSize: 100,
+            reproviderConcurrency: 10,
+            reproviderSweepOptimization: true,
+          ),
+          dhtHandler: recordingHandler,
+          pinManager: pinManager,
+          mfsManager: mfsManager,
+          metrics: metrics,
+        );
+
+        final result = await reprovider.trigger(wait: true);
+        expect(result.succeeded, equals(result.attempted));
+
+        // The provided order must match ascending XOR distance between each
+        // CID's routing key and the local peer ID.
+        final localPeerId = recordingHandler.dhtClient.peerId;
+        final expected = [...cids]..sort(
+          (a, b) => xorDistance(
+            routingKey(a),
+            localPeerId,
+          ).compareTo(xorDistance(routingKey(b), localPeerId)),
+        );
+        expect(
+          recordingHandler.providedOrder.map((c) => c.toString()).toList(),
+          expected.map((c) => c.toString()).toList(),
+        );
       },
     );
 
@@ -396,6 +531,83 @@ void main() {
       reprovider.resume();
       expect(reprovider.isPaused, isFalse);
       expect(reprovider.getStatus().nextRun, isNotNull);
+    });
+  });
+
+  group('Reprovider denylist filtering', () {
+    test('skips denylisted CIDs before announcing', () async {
+      final allowed = await addBlock(Uint8List.fromList([70, 71, 72]));
+      final blocked = await addBlock(Uint8List.fromList([73, 74, 75]));
+      await pinRecursive(allowed);
+      await pinRecursive(blocked);
+
+      final denylist = DenylistService(
+        const SecurityConfig(
+          enableDenylist: true,
+          denylistDefaultAction: 'block',
+        ),
+        metrics,
+      );
+      denylist.loadCompactBytes(utf8.encode(blocked.encode()));
+
+      final router = FakeRouter();
+      final nodeConfig = IPFSConfig(
+        dht: const DHTConfig(requestTimeout: Duration(milliseconds: 100)),
+      );
+      final networkHandler = NetworkHandler(nodeConfig, router: router);
+      final recordingHandler = _RecordingDHTHandler(
+        nodeConfig,
+        router,
+        networkHandler,
+        storage: datastore,
+        denylistService: denylist,
+      );
+      await recordingHandler.dhtClient.initialize();
+      addTearDown(() async {
+        await recordingHandler.stop();
+      });
+
+      reprovider = Reprovider(
+        config: const DHTConfig(
+          reproviderEnabled: false,
+          reproviderStrategy: 'pinned',
+          reproviderSweepOptimization: false,
+        ),
+        dhtHandler: recordingHandler,
+        pinManager: pinManager,
+        mfsManager: mfsManager,
+        metrics: metrics,
+      );
+
+      final result = await reprovider.trigger(wait: true);
+
+      expect(result.attempted, equals(1));
+      expect(result.succeeded, equals(1));
+      final provided = recordingHandler.providedOrder
+          .map((c) => c.toString())
+          .toList();
+      expect(provided, contains(allowed.toString()));
+      expect(provided, isNot(contains(blocked.toString())));
+    });
+  });
+
+  group('Reprovider concurrency', () {
+    test('trigger without wait returns a busy result during a run', () async {
+      final cid = await addBlock(Uint8List.fromList([80, 81, 82]));
+      await pinRecursive(cid);
+      // Slow the mock handler so the first run is still in flight.
+      dhtHandler.setSimulatedDelay(const Duration(milliseconds: 200));
+
+      reprovider = createReprovider();
+      final run = reprovider.trigger(wait: true);
+      // Give the first run a moment to enter the critical section.
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      final busy = await reprovider.trigger();
+      expect(busy.errors, contains(contains('already running')));
+      expect(busy.attempted, equals(0));
+
+      await run;
     });
   });
 }

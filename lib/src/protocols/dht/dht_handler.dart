@@ -1,9 +1,13 @@
 // src/protocols/dht/dht_handler.dart
+import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dart_ipfs/src/core/cid.dart';
 import 'package:dart_ipfs/src/core/config/ipfs_config.dart';
+import 'package:dart_ipfs/src/core/data_structures/block.dart';
+import 'package:dart_ipfs/src/core/data_structures/blockstore.dart';
 import 'package:dart_ipfs/src/core/interfaces/i_lifecycle.dart';
 import 'package:dart_ipfs/src/core/ipfs_node/network_handler.dart';
 import 'package:dart_ipfs/src/core/metrics/metrics_collector.dart';
@@ -11,10 +15,12 @@ import 'package:dart_ipfs/src/core/security/denylist_service.dart';
 import 'package:dart_ipfs/src/core/storage/datastore.dart' as ds;
 import 'package:dart_ipfs/src/core/storage/flat_file_datastore.dart';
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
+import 'package:dart_ipfs/src/proto/generated/core/dag.pb.dart' as dag_pb;
 import 'package:dart_ipfs/src/proto/generated/dht/common_red_black_tree.pb.dart';
 import 'package:dart_ipfs/src/proto/generated/ipns.pb.dart';
 import 'package:dart_ipfs/src/protocols/dht/dht_client.dart';
 import 'package:dart_ipfs/src/protocols/dht/interface_dht_handler.dart';
+import 'package:dart_ipfs/src/protocols/dht/provide_result.dart';
 import 'package:dart_ipfs/src/transport/router_interface.dart';
 import 'package:dart_ipfs/src/utils/base58.dart';
 import 'package:dart_ipfs/src/utils/dnslink_resolver.dart';
@@ -44,6 +50,7 @@ class DHTHandler implements IDHTHandler, ILifecycle {
   }) : _keystore = keystore ?? Keystore(),
        _httpClient = httpClient ?? http.Client(),
        _storage = storage ?? FlatFileDatastore(config.datastorePath),
+       _metrics = metrics,
        _denylistService = denylistService {
     _logger = Logger('DHTHandler', debug: config.debug);
     if (storage == null) {
@@ -67,7 +74,15 @@ class DHTHandler implements IDHTHandler, ILifecycle {
   final RouterInterface _router;
   final ds.Datastore _storage;
   final http.Client _httpClient;
+  final MetricsCollector? _metrics;
   late final Logger _logger;
+
+  /// Maximum number of pending on-demand provide jobs in the queue.
+  static const int maxProvideQueueSize = 1000;
+
+  /// Pending on-demand provide jobs (see [enqueueProvide]).
+  final Queue<PendingProvide> _provideQueue = Queue<PendingProvide>();
+  bool _provideQueueProcessing = false;
 
   final Set<String> _activeQueries = {};
   final Map<String, Set<String>> _providers = {};
@@ -397,6 +412,258 @@ class DHTHandler implements IDHTHandler, ILifecycle {
       _logger.error('Error providing ${cids.length} CIDs', e, st);
       rethrow;
     }
+  }
+
+  /// Announces that this node provides [cid] and returns detailed feedback.
+  ///
+  /// This is the on-demand provide refinement backing
+  /// `POST /api/v0/dht/provide`:
+  ///
+  /// - `recursive`: enumerate every block reachable from [cid] in the local
+  ///   [blockStore] and announce each CID. When no [blockStore] is supplied,
+  ///   only the root CID is announced and a note is recorded in the result's
+  ///   errors.
+  /// - `timeout`: aborts remaining peer announcements once elapsed; the
+  ///   returned [ProvideResult] contains partial counts.
+  /// - `recordMetrics`: records `on-demand` reprovide metrics when true.
+  ///
+  /// The method does not throw for per-peer send failures — they are
+  /// reported via [ProvideResult.failures] and [ProvideResult.errors].
+  /// Structural failures (e.g. an uninitialized DHT client) surface as a
+  /// failed [ProvideResult] as well.
+  Future<ProvideResult> provideDetailed(
+    CID cid, {
+    bool recursive = false,
+    Duration? timeout,
+    BlockStore? blockStore,
+    bool recordMetrics = true,
+  }) async {
+    _logger.debug(
+      'Detailed provide for CID: $cid (recursive=$recursive, '
+      'timeout=$timeout)',
+    );
+    final stopwatch = Stopwatch()..start();
+    final errors = <String>[];
+    var attempts = 0;
+    var successes = 0;
+    var failures = 0;
+
+    var cids = <CID>[cid];
+    if (recursive) {
+      final store = blockStore;
+      if (store == null) {
+        errors.add(
+          'recursive provide requested without blockstore access; '
+          'announcing root CID only',
+        );
+      } else {
+        cids = await _enumerateDagCids(cid, store, errors);
+      }
+    }
+
+    final deadline = timeout == null ? null : stopwatch.elapsed + timeout;
+    for (final target in cids) {
+      if (deadline != null && stopwatch.elapsed >= deadline) {
+        if (errors.length < ProvideResult.maxErrors) {
+          errors.add(
+            'timeout: provide aborted after '
+            '${stopwatch.elapsed.inMilliseconds}ms',
+          );
+        }
+        break;
+      }
+      try {
+        final result = await dhtClient.addProviderDetailed(
+          target.toString(),
+          _router.peerID,
+          timeout: deadline == null ? null : deadline - stopwatch.elapsed,
+        );
+        attempts += result.attempts;
+        successes += result.successes;
+        failures += result.failures;
+        for (final error in result.errors) {
+          if (errors.length < ProvideResult.maxErrors) {
+            errors.add(error);
+          }
+        }
+        _recordLocalProvider(target.toString(), _router.peerID);
+      } catch (e) {
+        attempts++;
+        failures++;
+        if (errors.length < ProvideResult.maxErrors) {
+          errors.add('${target.toString()}: $e');
+        }
+        _logger.debug('Provide failed for ${target.toString()}: $e');
+      }
+    }
+
+    stopwatch.stop();
+    final result = ProvideResult(
+      cid: cid,
+      attempts: attempts,
+      successes: successes,
+      failures: failures,
+      duration: stopwatch.elapsed,
+      errors: errors,
+      cidsAnnounced: cids.length,
+    );
+    if (recordMetrics) {
+      _metrics?.recordReprovide('on-demand', result.success, result.duration);
+    }
+    _logger.debug(
+      'Detailed provide for $cid finished: $successes/$attempts succeeded, '
+      'failures=$failures',
+    );
+    return result;
+  }
+
+  /// Returns `true` if [cid] is blocked by the configured denylist service.
+  ///
+  /// Used by the reprovider to skip blocked CIDs before announcing them.
+  bool isCidBlocked(CID cid) {
+    final denylist = _denylistService;
+    return denylist != null &&
+        denylist.configuredEnabled &&
+        denylist.isBlocked(cid);
+  }
+
+  /// Enqueues an on-demand provide job for asynchronous processing.
+  ///
+  /// Returns the 1-based queue position, or `null` when the queue has
+  /// reached [maxProvideQueueSize].
+  int? enqueueProvide(
+    CID cid, {
+    bool recursive = false,
+    Duration? timeout,
+    BlockStore? blockStore,
+    bool recordMetrics = true,
+  }) {
+    if (_provideQueue.length >= maxProvideQueueSize) {
+      _logger.warning(
+        'Provide queue full ($maxProvideQueueSize); dropping job for $cid',
+      );
+      return null;
+    }
+    final job = PendingProvide(
+      cid: cid,
+      recursive: recursive,
+      timeout: timeout,
+      blockStore: blockStore,
+      recordMetrics: recordMetrics,
+    );
+    _provideQueue.add(job);
+    // Report the position before kicking the processor — the queue is
+    // drained synchronously up to the first await, so reading the length
+    // after would under-report the job's position.
+    final position = _provideQueue.length;
+    unawaited(_processProvideQueue());
+    return position;
+  }
+
+  /// Enqueues a provide job and returns a future completing with its result.
+  ///
+  /// Throws [StateError] when the queue is full.
+  Future<ProvideResult> enqueueProvideAndWait(
+    CID cid, {
+    bool recursive = false,
+    Duration? timeout,
+    BlockStore? blockStore,
+    bool recordMetrics = true,
+  }) {
+    if (_provideQueue.length >= maxProvideQueueSize) {
+      throw StateError('Provide queue full ($maxProvideQueueSize)');
+    }
+    final job = PendingProvide(
+      cid: cid,
+      recursive: recursive,
+      timeout: timeout,
+      blockStore: blockStore,
+      recordMetrics: recordMetrics,
+    );
+    _provideQueue.add(job);
+    unawaited(_processProvideQueue());
+    return job.result;
+  }
+
+  /// Number of pending provide jobs in the queue.
+  int get provideQueueLength => _provideQueue.length;
+
+  /// Whether the provide queue is currently draining.
+  bool get provideQueueProcessing => _provideQueueProcessing;
+
+  Future<void> _processProvideQueue() async {
+    if (_provideQueueProcessing) return;
+    _provideQueueProcessing = true;
+    try {
+      while (_provideQueue.isNotEmpty) {
+        final job = _provideQueue.removeFirst();
+        try {
+          final result = await provideDetailed(
+            job.cid,
+            recursive: job.recursive,
+            timeout: job.timeout,
+            blockStore: job.blockStore,
+            recordMetrics: job.recordMetrics,
+          );
+          job.complete(result);
+        } catch (e, st) {
+          job.completeError(e, st);
+        }
+      }
+    } finally {
+      _provideQueueProcessing = false;
+    }
+  }
+
+  /// Enumerates the CIDs of the DAG rooted at [root] using the local
+  /// [blockStore], in breadth-first order starting with [root].
+  ///
+  /// Missing blocks stop traversal of that branch and record an error in
+  /// [errors] — content is never fetched from the network.
+  Future<List<CID>> _enumerateDagCids(
+    CID root,
+    BlockStore blockStore,
+    List<String> errors, {
+    int maxBlocks = 10000,
+  }) async {
+    final ordered = <CID>[];
+    final visited = <String>{};
+    final queue = Queue<CID>()..add(root);
+
+    while (queue.isNotEmpty && ordered.length < maxBlocks) {
+      final cid = queue.removeFirst();
+      final cidStr = cid.toString();
+      if (!visited.add(cidStr)) continue;
+      ordered.add(cid);
+
+      try {
+        final response = await blockStore.getBlock(cidStr);
+        if (!response.found) {
+          if (errors.length < ProvideResult.maxErrors) {
+            errors.add('missing block: $cidStr');
+          }
+          continue;
+        }
+        final block = response.block.toBlock();
+        if (block.cid.codec == 'dag-pb' || block.format == 'dag-pb') {
+          try {
+            final pbNode = dag_pb.PBNode.fromBuffer(block.data);
+            for (final link in pbNode.links) {
+              queue.add(CID.fromBytes(Uint8List.fromList(link.hash)));
+            }
+          } catch (_) {
+            // Not a parseable dag-pb node despite the format hint — treat
+            // it as a leaf.
+          }
+        }
+      } catch (e) {
+        if (errors.length < ProvideResult.maxErrors) {
+          errors.add('failed to enumerate $cidStr: $e');
+        }
+      }
+    }
+
+    return ordered;
   }
 
   /// Normalizes [cidStr] to the canonical provider-index key.

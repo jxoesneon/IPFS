@@ -1,9 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:test/test.dart';
-
 import 'package:dart_ipfs/src/core/types/peer_id.dart';
 import 'package:dart_ipfs/src/protocols/dht/xor_distance_metric.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('XorDistanceMetric', () {
@@ -156,6 +155,80 @@ void main() {
         final distanceAC = metric.calculateDistance(peerA, peerC);
 
         expect(distanceAB, lessThan(distanceAC));
+      });
+    });
+
+    group('full-length routing keys (32-byte SHA-256 space)', () {
+      PeerId peerOfByte(int position, int value) {
+        final bytes = Uint8List(32);
+        bytes[position] = value;
+        return PeerId(value: bytes);
+      }
+
+      test('distance to self is zero for 32-byte peer IDs', () {
+        final peer = PeerId(
+          value: Uint8List.fromList(List.generate(32, (i) => i * 7)),
+        );
+        expect(metric.calculateDistance(peer, peer), equals(0));
+      });
+
+      test('distance is symmetric for 32-byte peer IDs', () {
+        final a = PeerId(
+          value: Uint8List.fromList(List.generate(32, (i) => i)),
+        );
+        final b = PeerId(
+          value: Uint8List.fromList(List.generate(32, (i) => 255 - i)),
+        );
+        expect(
+          metric.calculateDistance(a, b),
+          equals(metric.calculateDistance(b, a)),
+        );
+      });
+
+      test('a single differing trailing byte yields distance 1', () {
+        final zero = PeerId(value: Uint8List(32));
+        final close = peerOfByte(31, 0x01);
+        expect(metric.calculateDistance(zero, close), equals(1));
+      });
+
+      test('a single differing leading byte yields a large distance', () {
+        final zero = PeerId(value: Uint8List(32));
+        final far = peerOfByte(0, 0x01);
+        // The leading byte lands in the first 8-byte chunk:
+        // 0x01 << 56 = 72057594037927936.
+        expect(
+          metric.calculateDistance(zero, far),
+          equals(72057594037927936),
+        );
+      });
+
+      test('orders 32-byte peers by XOR distance to a target', () {
+        final target = PeerId(value: Uint8List(32));
+        final close = peerOfByte(31, 0x01); // distance 1
+        final mid = peerOfByte(31, 0x0F); // distance 15
+        final far = peerOfByte(30, 0xFF); // distance 255 << 8
+
+        final distances = [
+          metric.calculateDistance(target, close),
+          metric.calculateDistance(target, mid),
+          metric.calculateDistance(target, far),
+        ];
+
+        expect(distances[0], lessThan(distances[1]));
+        expect(distances[1], lessThan(distances[2]));
+      });
+
+      test('calculateDistanceToKey handles 32-byte routing keys', () {
+        final peer = PeerId(value: Uint8List(32));
+        // A key differing only in the trailing byte has distance 1.
+        final key = List<int>.filled(32, 0)..[31] = 1;
+        expect(metric.calculateDistanceToKey(peer, key), equals(1));
+
+        // Distance to a key equal to the peer ID is zero.
+        expect(
+          metric.calculateDistanceToKey(peer, peer.value),
+          equals(0),
+        );
       });
     });
   });
