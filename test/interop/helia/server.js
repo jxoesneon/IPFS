@@ -131,7 +131,7 @@ app.post("/api/v0/swarm/connect", async (req, res) => {
 // POST /api/v0/pubsub/pub?arg=<topic> — body is the raw message payload.
 app.post(
   "/api/v0/pubsub/pub",
-  express.raw({ type: "*/*", limit: "1mb" }),
+  express.raw({ type: () => true, limit: "1mb" }),
   async (req, res) => {
     const topic = decodeTopicArg(getSingleStringArg(req.query.arg));
     if (!topic) {
@@ -224,7 +224,7 @@ app.post("/api/v0/pubsub/peers", async (req, res) => {
 
 app.post(
   "/api/v0/add",
-  express.raw({ type: "*/*", limit: "100mb" }),
+  express.raw({ type: () => true, limit: "100mb" }),
   async (req, res) => {
     if (
       typeof req.body !== "object" ||
@@ -284,7 +284,7 @@ app.get("/api/v0/dag/export", async (req, res) => {
 
 app.post(
   "/api/v0/dag/import",
-  express.raw({ type: "*/*", limit: "100mb" }),
+  express.raw({ type: () => true, limit: "100mb" }),
   async (req, res) => {
     if (
       typeof req.body !== "object" ||
