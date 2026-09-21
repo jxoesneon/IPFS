@@ -136,11 +136,11 @@ void main() {
 
     test('parses exploreConditional', () {
       final node = ipld.ExploreConditional(
-        condition: const ipld.Matcher(),
+        condition: const ipld.HasFieldCondition('type'),
         next: ipld.ExploreAll(next: const ipld.Matcher()),
       ).toNode();
       final selector = ipld.parseSelector(node) as ipld.ExploreConditional;
-      expect(selector.condition, isA<ipld.Matcher>());
+      expect(selector.condition, isA<ipld.HasFieldCondition>());
       expect(selector.next, isA<ipld.ExploreAll>());
     });
 
@@ -339,8 +339,11 @@ void main() {
       final child = await putBlock({'next': grandchild});
       final root = await putBlock({'next': child});
 
-      final selector = ipld.ExploreRecursive(
-        limit: const ipld.DepthRecursionLimit(2),
+      // Per go-ipld-prime semantics, a depth limit of N visits N levels:
+      // edges in the sequence stop expanding once the decremented limit
+      // would drop below 1.
+      final depth3 = ipld.ExploreRecursive(
+        limit: const ipld.DepthRecursionLimit(3),
         sequence: ipld.ExploreUnion(
           members: [
             const ipld.Matcher(),
@@ -350,15 +353,29 @@ void main() {
       );
 
       final results = await handler
-          .executeSelectorStream(root, selector, includePath: true)
+          .executeSelectorStream(root, depth3, includePath: true)
           .toList();
 
-      // With depth 2 we should reach the grandchild but not traverse beyond it.
+      // With depth 3 we reach the grandchild but traverse no further.
       final paths = results.map((r) => r.path).toList();
       expect(paths, contains(''));
       expect(paths, contains('next'));
       expect(paths, contains('next/next'));
       expect(paths, isNot(contains('next/next/next')));
+
+      final depth1 = ipld.ExploreRecursive(
+        limit: const ipld.DepthRecursionLimit(1),
+        sequence: ipld.ExploreUnion(
+          members: [
+            const ipld.Matcher(),
+            ipld.ExploreAll(next: const ipld.ExploreRecursiveEdge()),
+          ],
+        ),
+      );
+      final shallow = await handler
+          .executeSelectorStream(root, depth1, includePath: true)
+          .toList();
+      expect(shallow.map((r) => r.path).toList(), equals(['']));
     });
 
     test(
@@ -370,9 +387,7 @@ void main() {
             .executeSelectorStream(
               rootCid,
               ipld.ExploreConditional(
-                condition: ipld.ExploreFields(
-                  fields: {'type': const ipld.Matcher()},
-                ),
+                condition: const ipld.HasFieldCondition('type'),
                 next: ipld.ExploreFields(
                   fields: {'data': const ipld.Matcher()},
                 ),

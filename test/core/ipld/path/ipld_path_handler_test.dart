@@ -1,5 +1,3 @@
-import 'package:dart_ipfs/src/core/cid.dart';
-import 'package:dart_ipfs/src/core/errors/ipld_errors.dart';
 import 'package:dart_ipfs/src/core/ipld/path/ipld_path_handler.dart';
 import 'package:test/test.dart';
 

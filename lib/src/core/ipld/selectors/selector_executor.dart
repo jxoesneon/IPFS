@@ -1,6 +1,16 @@
 // src/core/ipld/selectors/selector_executor.dart
 //
 // Spec-compliant IPLD selector execution against a node/block store.
+//
+// Semantics follow go-ipld-prime's traversal/selector implementation:
+//   - only nodes reached by a Matcher are yielded into the result set;
+//     every explored node is in the "covered" set (the merkle proof),
+//   - ExploreRecursive replaces ExploreRecursiveEdge positions with the
+//     recursive selector carrying a decremented depth limit; once the depth
+//     limit is exhausted the edges match nothing further,
+//   - ExploreRecursive.stopAt is a Condition: if it matches a node, neither
+//     the node nor its children are explored,
+//   - links (CIDs) are transparently followed through the loader.
 
 // ignore_for_file: public_member_api_docs, directives_ordering
 
@@ -99,11 +109,27 @@ class SelectorExecutor {
     }
 
     switch (selector) {
-      case Matcher():
+      case Matcher(
+        subset: final subset,
+        label: final label,
+        index: final index,
+        onlyIf: final onlyIf,
+      ):
+        if (onlyIf != null && !onlyIf.matches(node)) {
+          return;
+        }
+        IPLDNode matched = node;
+        if (subset != null) {
+          final sliced = _applySlice(node, subset);
+          if (sliced == null) return; // range does not match this node.
+          matched = sliced;
+        }
         yield SelectedNode(
           cid: cid,
-          node: node,
-          path: includePath ? (path.isEmpty ? '' : path) : null,
+          node: matched,
+          path: includePath ? path : null,
+          label: label,
+          index: index,
           remainingDepth: maxDepth - depth,
         );
       case ExploreAll(next: final next):
@@ -181,28 +207,21 @@ class SelectorExecutor {
         for (final member in members) {
           yield* _apply(node, cid, member, path, depth, recursion);
         }
-      case ExploreRecursive(sequence: final sequence, stopAt: final stopAt):
-        // Check stopAt: if the stopAt selector matches this node, apply the
-        // sequence without expanding recursive edges.
-        if (stopAt != null) {
-          final stop = await _hasMatch(
-            node,
-            cid,
-            stopAt,
-            path,
-            depth,
-            recursion,
-          );
-          if (stop) {
-            yield* _apply(node, cid, sequence, path, depth, null);
-            return;
-          }
+      case ExploreRecursive(
+        sequence: final sequence,
+        stopAt: final stopAt,
+      ):
+        // stopAt: a matching node is not matched and its children are not
+        // explored — the traversal stops descending at this point.
+        if (stopAt != null && stopAt.matches(node)) {
+          return;
         }
 
         // Compute the edge replacement for the next level of recursion.
         final edgeSelector = _decrementRecursion(selector);
         if (edgeSelector == null) {
-          // Budget exhausted: apply the sequence without expanding edges.
+          // Recursion budget exhausted: apply the sequence, but any
+          // ExploreRecursiveEdge positions inside it match nothing.
           yield* _apply(node, cid, sequence, path, depth, null);
           return;
         }
@@ -229,22 +248,10 @@ class SelectorExecutor {
         // to the raw node so that the selector can still traverse the layout.
         yield* _apply(node, cid, next, path, depth, recursion);
       case ExploreConditional(condition: final condition, next: final next):
-        if (condition == null) {
+        if (condition == null || condition.matches(node)) {
           if (next != null) {
             yield* _apply(node, cid, next, path, depth, recursion);
           }
-          return;
-        }
-        final matches = await _hasMatch(
-          node,
-          cid,
-          condition,
-          path,
-          depth,
-          recursion,
-        );
-        if (matches && next != null) {
-          yield* _apply(node, cid, next, path, depth, recursion);
         }
       default:
         throw IPLDValidationError(
@@ -264,52 +271,47 @@ class SelectorExecutor {
     yield* _apply(child, parentCid, next, childPath, depth, recursion);
   }
 
-  Future<bool> _hasMatch(
-    IPLDNode node,
-    CID cid,
-    Selector selector,
-    String path,
-    int depth,
-    _RecursionContext? recursion,
-  ) async {
-    try {
-      await for (final _ in _apply(
-        node,
-        cid,
-        selector,
-        path,
-        depth,
-        recursion,
-      )) {
-        return true;
-      }
-    } catch (_) {
-      // A budget error during a condition check is treated as no match.
-      return false;
-    }
-    return false;
-  }
-
+  /// Returns the selector that replaces [ExploreRecursiveEdge] positions at
+  /// the next recursion level, or `null` when the recursion limit is spent
+  /// (edges then match nothing). Mirrors go-ipld-prime: a depth limit of
+  /// `d` allows `d - 1` further levels of recursion.
   Selector? _decrementRecursion(ExploreRecursive recursive) {
-    if (recursive.limit is DepthRecursionLimit) {
-      final depthLimit = recursive.limit as DepthRecursionLimit;
-      if (depthLimit.depth <= 0) return null;
+    final limit = recursive.limit;
+    if (limit is DepthRecursionLimit) {
+      if (limit.depth <= 1) return null;
       return ExploreRecursive(
-        limit: DepthRecursionLimit(depthLimit.depth - 1),
+        limit: DepthRecursionLimit(limit.depth - 1),
         sequence: recursive.sequence,
         stopAt: recursive.stopAt,
       );
     }
-    if (recursive.limit is NodeCountRecursionLimit) {
-      final countLimit = recursive.limit as NodeCountRecursionLimit;
-      if (countLimit.count <= 0) return null;
-      return ExploreRecursive(
-        limit: NodeCountRecursionLimit(countLimit.count - 1),
-        sequence: recursive.sequence,
-        stopAt: recursive.stopAt,
-      );
+    if (limit is RecursionLimitNone) {
+      // No recursion limit in the selector; the executor's traversal
+      // budget (maxDepth/maxNodes) still bounds the walk.
+      return recursive;
     }
     return null;
+  }
+
+  /// Applies a [Slice] to a string or bytes node. Returns `null` when the
+  /// range fails to match, per the spec's slice rules.
+  IPLDNode? _applySlice(IPLDNode node, Slice slice) {
+    switch (node.kind) {
+      case Kind.STRING:
+        final bounds = slice.resolve(node.stringValue.length);
+        if (bounds == null) return null;
+        return IPLDNode()
+          ..kind = Kind.STRING
+          ..stringValue = node.stringValue.substring(bounds.$1, bounds.$2);
+      case Kind.BYTES:
+        final bounds = slice.resolve(node.bytesValue.length);
+        if (bounds == null) return null;
+        return IPLDNode()
+          ..kind = Kind.BYTES
+          ..bytesValue = node.bytesValue.sublist(bounds.$1, bounds.$2);
+      default:
+        return null;
+    }
   }
 
   CID _cidFromLink(IPLDNode node) {

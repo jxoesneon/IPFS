@@ -105,6 +105,7 @@ void main() {
       final decodedCid = CID.fromBytes(
         Uint8List.fromList(decoded.linkValue.multihash),
       );
+      expect(decodedCid, isNotNull);
       // But we can check codec
       expect(decoded.linkValue.codec, equals('dag-pb'));
     });

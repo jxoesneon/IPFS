@@ -249,10 +249,27 @@ class IPLDSelector {
           'multihash': node.linkValue.multihash,
         };
       case Kind.BIG_INT:
-        return BigInt.parse(String.fromCharCodes(node.bigIntValue));
+        return _decodeBigInt(Uint8List.fromList(node.bigIntValue));
       default:
         throw IPLDDecodingError('Unsupported IPLD kind: ${node.kind}');
     }
+  }
+
+  /// Decodes the internal `[sign, ...bigEndianMagnitudeBytes]` big-integer
+  /// representation used by [IPLDNode.bigIntValue] throughout this package
+  /// (see `EnhancedCBORHandler` and `IPLDHandler`).
+  static BigInt _decodeBigInt(Uint8List bytes) {
+    if (bytes.isEmpty) return BigInt.zero;
+    if (bytes[0] != 0 && bytes[0] != 1) {
+      throw IPLDDecodingError(
+        'Malformed big-integer sign byte: ${bytes[0]}',
+      );
+    }
+    var magnitude = BigInt.zero;
+    for (var i = 1; i < bytes.length; i++) {
+      magnitude = (magnitude << 8) | BigInt.from(bytes[i]);
+    }
+    return bytes[0] == 1 ? -magnitude : magnitude;
   }
 
   /// Decodes CBOR bytes back to an IPLDNode
@@ -436,7 +453,16 @@ class IPLDSelector {
   Selector toSpecSelector() {
     switch (type) {
       case SelectorType.all:
-        return const ExploreAll(next: Matcher());
+        // Match every visited node while recursing across the whole DAG.
+        return ExploreRecursive(
+          limit: const RecursionLimitNone(),
+          sequence: ExploreUnion(
+            members: [
+              const Matcher(),
+              const ExploreAll(next: ExploreRecursiveEdge()),
+            ],
+          ),
+        );
       case SelectorType.none:
         return ExploreFields(fields: <String, Selector>{});
       case SelectorType.matcher:
@@ -446,7 +472,9 @@ class IPLDSelector {
             subSelectors?.firstOrNull?.toSpecSelector() ?? const Matcher();
         return ExploreRecursive(
           limit: DepthRecursionLimit(maxDepth ?? defaultSelectorMaxDepth),
-          sequence: sub,
+          sequence: ExploreUnion(
+            members: [sub, const ExploreAll(next: ExploreRecursiveEdge())],
+          ),
         );
       case SelectorType.union:
         return ExploreUnion(
