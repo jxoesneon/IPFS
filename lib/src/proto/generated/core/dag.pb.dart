@@ -9,7 +9,6 @@
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
 // ignore_for_file: non_constant_identifier_names, prefer_relative_imports
-// ignore_for_file: public_member_api_docs
 
 import 'dart:core' as $core;
 
@@ -25,7 +24,7 @@ class PBLink extends $pb.GeneratedMessage {
     $core.String? name,
     $fixnum.Int64? size,
   }) {
-    final result = create();
+    final result = PBLink._();
     if (hash != null) result.hash = hash;
     if (name != null) result.name = name;
     if (size != null) result.size = size;
@@ -36,16 +35,16 @@ class PBLink extends $pb.GeneratedMessage {
 
   factory PBLink.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
+      PBLink()..mergeFromBuffer(data, registry);
   factory PBLink.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+      PBLink()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PBLink',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'ipfs.core.data_structures'),
-      createEmptyInstance: create)
+      createEmptyInstance: PBLink.$_createMessage)
     ..a<$core.List<$core.int>>(
         1, _omitFieldNames ? '' : 'hash', $pb.PbFieldType.OY)
     ..aOS(2, _omitFieldNames ? '' : 'name')
@@ -63,12 +62,14 @@ class PBLink extends $pb.GeneratedMessage {
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use PBLink() / PBLink.new instead')
   static PBLink create() => PBLink._();
+  static $pb.GeneratedMessage $_createMessage() => PBLink._();
   @$core.override
-  PBLink createEmptyInstance() => create();
+  PBLink createEmptyInstance() => PBLink._();
   @$core.pragma('dart2js:noInline')
-  static PBLink getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PBLink>(create);
+  static PBLink getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PBLink>(PBLink.$_createMessage);
   static PBLink? _defaultInstance;
 
   /// multihash of the target object
@@ -103,12 +104,14 @@ class PBLink extends $pb.GeneratedMessage {
 }
 
 /// PBNode represents a DAG node
+/// Field numbers match the canonical merkledag.proto:
+/// https://github.com/ipfs/specs/blob/main/merkledag/pb/merkledag.proto
 class PBNode extends $pb.GeneratedMessage {
   factory PBNode({
     $core.List<$core.int>? data,
     $core.Iterable<PBLink>? links,
   }) {
-    final result = create();
+    final result = PBNode._();
     if (data != null) result.data = data;
     if (links != null) result.links.addAll(links);
     return result;
@@ -118,19 +121,20 @@ class PBNode extends $pb.GeneratedMessage {
 
   factory PBNode.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
+      PBNode()..mergeFromBuffer(data, registry);
   factory PBNode.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+      PBNode()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PBNode',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'ipfs.core.data_structures'),
-      createEmptyInstance: create)
-    ..pPM<PBLink>(1, _omitFieldNames ? '' : 'links', subBuilder: PBLink.create)
+      createEmptyInstance: PBNode.$_createMessage)
     ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+        1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..pPM<PBLink>(2, _omitFieldNames ? '' : 'links',
+        subBuilder: PBLink.$_createMessage)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -143,27 +147,29 @@ class PBNode extends $pb.GeneratedMessage {
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use PBNode() / PBNode.new instead')
   static PBNode create() => PBNode._();
+  static $pb.GeneratedMessage $_createMessage() => PBNode._();
   @$core.override
-  PBNode createEmptyInstance() => create();
+  PBNode createEmptyInstance() => PBNode._();
   @$core.pragma('dart2js:noInline')
-  static PBNode getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PBNode>(create);
+  static PBNode getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PBNode>(PBNode.$_createMessage);
   static PBNode? _defaultInstance;
 
-  /// refs to other objects
-  @$pb.TagNumber(1)
-  $pb.PbList<PBLink> get links => $_getList(0);
-
   /// opaque user data content
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get data => $_getN(0);
+  @$pb.TagNumber(1)
+  set data($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasData() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearData() => $_clearField(1);
+
+  /// refs to other objects
   @$pb.TagNumber(2)
-  $core.List<$core.int> get data => $_getN(1);
-  @$pb.TagNumber(2)
-  set data($core.List<$core.int> value) => $_setBytes(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasData() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearData() => $_clearField(2);
+  $pb.PbList<PBLink> get links => $_getList(1);
 }
 
 const $core.bool _omitFieldNames =

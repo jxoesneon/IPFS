@@ -529,7 +529,7 @@ void main() {
 
       expect(
         root.cid.toString(),
-        'bafybeiau7conjeofde6zxw3tl6xj3xcjmp265fskbmo3obl4wpo55lnufu',
+        'bafybeihm6mblyhd6uapkc3munv7p44q2gbi4xkdjfvcuoidfjalr3tyfm4',
       );
       expect(root.pbNode.links.length, 2);
       expect(root.pbNode.links[0].name, '4Ab.txt');
@@ -542,9 +542,81 @@ void main() {
       final root = await buildHAMT();
       expect(
         root.cid.toString(),
-        'bafybeiatkojebxy5gt33nqbtdiyvgve3by2inojolpi6ayr6x2lbaqtjv4',
+        'bafybeibzmjjj4zfwr6pgrupdjk5nkhpcpztc4j4skztpo2uxfo3wmxad54',
       );
       expect(root.pbNode.links.length, 168);
+    });
+  });
+
+  group('DAG-PB canonical encoding (merkledag spec)', () {
+    test('PBNode serializes data on field 1 and links on field 2', () {
+      final node = dag_pb.PBNode(
+        data: Uint8List.fromList([1, 2, 3]),
+        links: [
+          dag_pb.PBLink(
+            hash: Uint8List.fromList([9, 9]),
+            name: 'x',
+            size: Int64(2),
+          ),
+        ],
+      );
+      final encoded = node.writeToBuffer();
+      // Canonical wire order: field 1 (data) = 0x0a, field 2 (links) = 0x12.
+      expect(encoded[0], 0x0a);
+      expect(encoded[1], 3);
+      expect(encoded.sublist(2, 5), [1, 2, 3]);
+    });
+
+    test('decodes a kubo-encoded PBNode with data on field 1', () {
+      final content = Uint8List.fromList('kubo-data'.codeUnits);
+      final unixFs = unixfs_pb.Data(
+        type: unixfs_pb.Data_DataType.File,
+        data: content,
+        filesize: Int64(content.length),
+      );
+      final unixFsBytes = unixFs.writeToBuffer();
+      // Canonical wire form: 0x0a <len> <unixfs>, no links field.
+      final kuboBlock = Uint8List.fromList([
+        0x0a,
+        unixFsBytes.length,
+        ...unixFsBytes,
+      ]);
+      final node = dag_pb.PBNode.fromBuffer(kuboBlock);
+      expect(node.links, isEmpty);
+      final decoded = unixfs_pb.Data.fromBuffer(node.data);
+      expect(decoded.data, content);
+    });
+
+    test('rejects the legacy swapped wire form (links on field 1)', () {
+      // Bytes produced by the old swapped encoding must not decode a kubo
+      // file node as links; data must land on field 1.
+      final content = Uint8List.fromList('kubo-data'.codeUnits);
+      final unixFsBytes = unixfs_pb.Data(
+        type: unixfs_pb.Data_DataType.File,
+        data: content,
+        filesize: Int64(content.length),
+      ).writeToBuffer();
+      final node = dag_pb.PBNode.fromBuffer(
+        Uint8List.fromList([0x12, unixFsBytes.length, ...unixFsBytes]),
+      );
+      // 0x12 is field 2 = links; the unixfs bytes decode as link fields, so
+      // data stays empty — guarding the field assignment itself.
+      expect(node.hasData(), isFalse);
+    });
+
+    test('single-chunk file CID matches the kubo add CID', () async {
+      // `ipfs add` of "Hello via ipfs cat from Kubo!" on kubo 0.42 produces
+      // QmazfFaZ3NPhWpd9jQww1Kd8xWmS8Za9534DS6H7Tqof98 (a 37-byte dag-pb
+      // block). Dart must produce the identical multihash.
+      final builder = UnixFSBuilder();
+      final blocks = await builder
+          .build(Stream.value('Hello via ipfs cat from Kubo!'.codeUnits))
+          .toList();
+      expect(blocks.length, 1);
+      final kuboV0 = CID.decode(
+        'QmazfFaZ3NPhWpd9jQww1Kd8xWmS8Za9534DS6H7Tqof98',
+      );
+      expect(blocks.single.cid.multihash.toBytes(), kuboV0.multihash.toBytes());
     });
   });
 }

@@ -15,10 +15,12 @@ message PBLink {
 }
 
 // PBNode represents a DAG node
+// Field numbers match the canonical merkledag.proto:
+// https://github.com/ipfs/specs/blob/main/merkledag/pb/merkledag.proto
 message PBNode {
   // refs to other objects
-  repeated PBLink links = 1;
+  repeated PBLink links = 2;
 
   // opaque user data content
-  bytes data = 2;
+  bytes data = 1;
 } 
